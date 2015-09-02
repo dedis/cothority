@@ -55,7 +55,7 @@ type T struct {
 
 var user string = "-user=ineiti"
 var host string = "-host=users.deterlab.net"
-var DefaultMachs int = 14
+var DefaultMachs int = 16
 var DefaultLoggers int = 3
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
@@ -78,7 +78,7 @@ func RunTest(t T) (RunStats, error) {
 	var rs RunStats
 	nmachs := fmt.Sprintf("-nmachs=%d", t.nmachs)
 	hpn := fmt.Sprintf("-hpn=%d", t.hpn)
-	nmsgs := fmt.Sprintf("-nmsgs=%d", -1)
+	nmsgs := fmt.Sprintf("-nmsgs=%d", 100)
 	bf := fmt.Sprintf("-bf=%d", t.bf)
 	rate := fmt.Sprintf("-rate=%d", t.rate)
 	rounds := fmt.Sprintf("-rounds=%d", t.rounds)
@@ -304,6 +304,7 @@ var VTest = []T{
 }
 
 func main() {
+	log.Println("\n*** Setting up everything")
 	SetDebug(false)
 	flag.Parse()
 	user = fmt.Sprintf("-user=%s", user)
@@ -329,6 +330,7 @@ func main() {
 	cmd.Stderr = os.Stderr
 	cmd.Run()
 
+	log.Println("\n*** Starting tests")
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
 	DefaultRounds = 5
