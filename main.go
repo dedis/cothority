@@ -66,6 +66,7 @@ var debug string = "-debug=false"
 var nobuild bool = false
 
 func init() {
+	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 }
 
@@ -303,6 +304,7 @@ var VTest = []T{
 func main() {
 	SetDebug(false)
 	flag.Parse()
+	user = fmt.Sprintf("-user=%s", user)
 	// view = true
 	os.Chdir("deploy2deter")
 
