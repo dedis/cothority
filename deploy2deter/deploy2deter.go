@@ -2,7 +2,7 @@
 // for deterlab. Given a list of hostnames, it will create an overlay
 // tree topology, using all but the last node. It will create multiple
 // nodes per server and run timestamping processes. The last node is
-// reserved for the logging server, which is forwarded to localhost:8080
+// reserved for the logging server, which is forwarded to localhost:8081
 //
 // options are "bf" which specifies the branching factor
 //
@@ -166,9 +166,12 @@ func main() {
 	if err != nil {
 		log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
 	}
-	err = os.Rename("logserver", "remote/logserver/logserver")
-	if err != nil {
-		log.Fatal("error renaming logserver:", err)
+
+	if build {
+		err = os.Rename("logserver", "remote/logserver/logserver")
+		if err != nil {
+			log.Fatal("error renaming logserver:", err)
+		}
 	}
 
 	b, err := json.Marshal(t)
@@ -215,7 +218,7 @@ func main() {
 	}
 
 	// setup port forwarding for viewing log server
-	// ssh -L 8080:pcXXX:80 username@users.isi.deterlab.net
+	// ssh -L 8081:pcXXX:80 username@users.isi.deterlab.net
 	// ssh username@users.deterlab.net -L 8118:somenode.experiment.YourClass.isi.deterlab.net:80
 	fmt.Println("setup port forwarding for master logger: ", masterLogger)
 	cmd := exec.Command(
@@ -224,7 +227,7 @@ func main() {
 		"-t",
 		fmt.Sprintf("%s@%s", user, host),
 		"-L",
-		"8080:"+masterLogger+":10000")
+		"8081:"+masterLogger+":10000")
 	err = cmd.Start()
 	if err != nil {
 		log.Fatal("failed to setup portforwarding for logging server")
