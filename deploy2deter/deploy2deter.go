@@ -48,6 +48,9 @@ var nmachs int
 var testConnect bool
 var app string
 var suite string
+var build bool
+var user string
+var host string
 
 func init() {
 	flag.IntVar(&bf, "bf", 2, "branching factor: default binary")
@@ -64,6 +67,9 @@ func init() {
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
 	flag.StringVar(&app, "app", "stamp", "app to run")
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
+	flag.BoolVar(&build, "build", false, "build all helpers with go")
+	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
+	flag.StringVar(&user, "host", "users.deterlab.net", "Hostname of the deterlab")
 }
 
 func main() {
@@ -71,38 +77,42 @@ func main() {
 	flag.Parse()
 	log.Println("RUNNING DEPLOY2DETER WITH RATE:", rate, " on machines:", nmachs)
 	os.MkdirAll("remote", 0777)
-	var wg sync.WaitGroup
-	// start building the necessary packages
-	log.Println("Starting to build all executables")
-	packages := []string{"../logserver", "../timeclient", "../exec", "../forkexec", "../deter"}
-	for _, p := range packages {
+	if build {
+		var wg sync.WaitGroup
+		// start building the necessary packages
+		log.Println("Starting to build all executables")
+		packages := []string{"../logserver", "../timeclient", "../exec", "../forkexec", "../deter"}
+		for _, p := range packages {
 
-		log.Println("Building ", p)
-		wg.Add(1)
-		if p == "../deter" {
+			log.Println("Building ", p)
+			wg.Add(1)
+			if p == "../deter" {
+				go func(p string) {
+					defer wg.Done()
+					// the users node has a 386 FreeBSD architecture
+					err := cliutils.Build(p, "386", "freebsd")
+					if err != nil {
+						log.Fatal(err)
+					}
+				}(p)
+				continue
+			}
 			go func(p string) {
 				defer wg.Done()
-				// the users node has a 386 FreeBSD architecture
-				err := cliutils.Build(p, "386", "freebsd")
+				// deter has an amd64, linux architecture
+				err := cliutils.Build(p, "amd64", "linux")
 				if err != nil {
 					log.Fatal(err)
 				}
 			}(p)
-			continue
 		}
-		go func(p string) {
-			defer wg.Done()
-			// deter has an amd64, linux architecture
-			err := cliutils.Build(p, "amd64", "linux")
-			if err != nil {
-				log.Fatal(err)
-			}
-		}(p)
+		// wait for the build to finish
+		wg.Wait()
+		log.Println("Build is finished")
 	}
-
 	// killssh processes on users
 	log.Println("Stopping programs on user.deterlab.net")
-	cliutils.SshRunStdout("ineiti", "users.deterlab.net", "killall ssh scp deter 2>/dev/null 1>/dev/null")
+	cliutils.SshRunStdout(user, host, "killall ssh scp deter 2>/dev/null 1>/dev/null")
 
 	// parse the hosts.txt file to create a separate list (and file)
 	// of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
@@ -146,10 +156,6 @@ func main() {
 	t, hostnames, depth, err := graphs.TreeFromList(virt, hpn, bf)
 	log.Println("DEPTH:", depth)
 	log.Println("TOTAL HOSTS:", len(hostnames))
-
-	// wait for the build to finish
-	wg.Wait()
-	log.Println("Build is finished")
 
 	// copy the logserver directory to the current directory
 	err = exec.Command("rsync", "-au", "../logserver", "remote/").Run()
@@ -196,7 +202,7 @@ func main() {
 			log.Fatal("error unable to rsync file into remote directory:", err)
 		}
 	}
-	err = cliutils.Rsync("ineiti", "users.deterlab.net", "remote", "")
+	err = cliutils.Rsync(user, host, "remote", "")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -216,7 +222,7 @@ func main() {
 		"ssh",
 		"-t",
 		"-t",
-		"ineiti@users.isi.deterlab.net",
+		fmt.Sprintf("%s@%s", user, host),
 		"-L",
 		"8080:"+masterLogger+":10000")
 	err = cmd.Start()
@@ -227,18 +233,18 @@ func main() {
 	// run the deter lab boss nodes process
 	// it will be responsible for forwarding the files and running the individual
 	// timestamping servers
-	log.Fatal(cliutils.SshRunStdout("ineiti", "users.isi.deterlab.net",
+	log.Fatal(cliutils.SshRunStdout(user, host,
 		"GOMAXPROCS=8 remote/deter -nmsgs="+strconv.Itoa(nmsgs)+
-			" -hpn="+strconv.Itoa(hpn)+
-			" -bf="+strconv.Itoa(bf)+
-			" -rate="+strconv.Itoa(rate)+
-			" -rounds="+strconv.Itoa(rounds)+
-			" -debug="+strconv.FormatBool(debug)+
-			" -failures="+strconv.Itoa(failures)+
-			" -rfail="+strconv.Itoa(rFail)+
-			" -ffail="+strconv.Itoa(fFail)+
-			" -test_connect="+strconv.FormatBool(testConnect)+
-			" -app="+app+
-			" -suite="+suite+
-			" -kill="+strconv.FormatBool(kill)))
+		" -hpn="+strconv.Itoa(hpn)+
+		" -bf="+strconv.Itoa(bf)+
+		" -rate="+strconv.Itoa(rate)+
+		" -rounds="+strconv.Itoa(rounds)+
+		" -debug="+strconv.FormatBool(debug)+
+		" -failures="+strconv.Itoa(failures)+
+		" -rfail="+strconv.Itoa(rFail)+
+		" -ffail="+strconv.Itoa(fFail)+
+		" -test_connect="+strconv.FormatBool(testConnect)+
+		" -app="+app+
+		" -suite="+suite+
+		" -kill="+strconv.FormatBool(kill)))
 }

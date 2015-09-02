@@ -37,6 +37,7 @@ import (
 	"os/exec"
 	"strconv"
 	"time"
+	"flag"
 )
 
 type T struct {
@@ -52,6 +53,8 @@ type T struct {
 	app         string
 }
 
+var user string = "-user=ineiti"
+var host string = "-host=users.deterlab.net"
 var DefaultMachs int = 14
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
@@ -60,6 +63,11 @@ var DefaultRounds int = 1
 
 var view bool
 var debug string = "-debug=false"
+var nobuild bool = false
+
+func init(){
+	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
+}
 
 // hpn, bf, nmsgsG
 func RunTest(t T) (RunStats, error) {
@@ -77,7 +85,8 @@ func RunTest(t T) (RunStats, error) {
 	fFail := fmt.Sprintf("-ffail=%d", t.fFail)
 	tcon := fmt.Sprintf("-test_connect=%t", t.testConnect)
 	app := fmt.Sprintf("-app=%s", t.app)
-	cmd := exec.Command("./deploy2deter", nmachs, hpn, nmsgs, bf, rate, rounds, debug, failures, rFail, fFail, tcon, app)
+	cmd := exec.Command("./deploy2deter", nmachs, hpn, nmsgs, bf, rate, rounds, debug, failures, rFail,
+		fFail, tcon, app, user, host)
 	log.Println("RUNNING TEST:", cmd.Args)
 	log.Println("FAILURES PERCENT:", t.failures)
 	cmd.Stdout = os.Stdout
@@ -292,6 +301,7 @@ var VTest = []T{
 
 func main() {
 	SetDebug(false)
+	flag.Parse()
 	// view = true
 	os.Chdir("deploy2deter")
 
@@ -302,7 +312,14 @@ func main() {
 		log.Fatalln("error building deploy2deter:", err)
 	}
 	log.Println("KILLING REMAINING PROCESSES")
-	cmd := exec.Command("./deploy2deter", "-kill=true", fmt.Sprintf("-nmachs=%d", DefaultMachs))
+	build := "-build=true"
+	if nobuild {
+		build = "-build=false"
+	}
+	log.Println("Building is ", build)
+
+	cmd := exec.Command("./deploy2deter", "-kill=true", build,
+		fmt.Sprintf("-nmachs=%d", DefaultMachs), user, host)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
