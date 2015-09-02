@@ -14,5 +14,5 @@ server-12.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.13
 server-13.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.14     
 server-14.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.15     
 server-15.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.16     
-server-16.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.16     
-server-17.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.16     
+server-16.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.17
+server-17.Dissent-CS.SAFER.isi.deterlab.net      10.255.0.18     
