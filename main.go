@@ -154,7 +154,7 @@ func RunTests(name string, ts []T) {
 			// Clean Up after test
 			log.Println("KILLING REMAINING PROCESSES")
 			cmd := exec.Command("./deploy2deter", "-kill=true",
-				fmt.Sprintf("-nmachs=%d", DefaultMachs))
+				fmt.Sprintf("-nmachs=%d", DefaultMachs), user)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()
