@@ -55,13 +55,11 @@ type T struct {
 
 var user string = "-user=ineiti"
 var host string = "-host=users.deterlab.net"
-var DefaultMachs int = 14
-var DefaultLoggers int = 3
 
 var hosts_file string = "deploy2deter/hosts.txt"
 var project string = "Dissent-CS"
-var machines int
-var loggers int
+var machines int = 16
+var loggers int = 3
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
@@ -74,8 +72,8 @@ var nobuild bool = false
 func init() {
 	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
-	flag.IntVar(&machines, "machines", DefaultMachs, "Number of machines (servers running the client)")
-	flag.IntVar(&loggers, "loggers", DefaultLoggers, "Number of loggers")
+	flag.IntVar(&machines, "machines", machines, "Number of machines (servers running the client)")
+	flag.IntVar(&loggers, "loggers", loggers, "Number of loggers")
 	flag.StringVar(&project, "project", project, "Name of the project on DeterLab")
 }
 
@@ -95,7 +93,7 @@ func RunTest(t T) (RunStats, error) {
 	fFail := fmt.Sprintf("-ffail=%d", t.fFail)
 	tcon := fmt.Sprintf("-test_connect=%t", t.testConnect)
 	app := fmt.Sprintf("-app=%s", t.app)
-	loggers := fmt.Sprintf("-nloggers=%d", DefaultLoggers)
+	loggers := fmt.Sprintf("-nloggers=%d", loggers)
 	cmd := exec.Command("./deploy2deter", nmachs, hpn, nmsgs, bf, rate, rounds, debug, failures, rFail,
 		fFail, tcon, app, user, host, loggers)
 	log.Println("RUNNING TEST:", cmd.Args)
@@ -164,7 +162,7 @@ func RunTests(name string, ts []T) {
 			// Clean Up after test
 			log.Println("KILLING REMAINING PROCESSES")
 			cmd := exec.Command("./deploy2deter", "-kill=true",
-				fmt.Sprintf("-nmachs=%d", DefaultMachs), user)
+				fmt.Sprintf("-nmachs=%d", machines), user)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()
@@ -214,58 +212,58 @@ func RunTests(name string, ts []T) {
 // high and low specify how many milliseconds between messages
 func RateLoadTest(hpn, bf int) []T {
 	return []T{
-		{DefaultMachs, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
-		{DefaultMachs, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
-		{DefaultMachs, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"},  // 10 per round
-		{DefaultMachs, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"},   // 100 per round
-		{DefaultMachs, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"},   // 1000 per round
+		{machines, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
+		{machines, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
+		{machines, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"},  // 10 per round
+		{machines, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"},   // 100 per round
+		{machines, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"},   // 1000 per round
 	}
 }
 
 func DepthTest(hpn, low, high, step int) []T {
 	ts := make([]T, 0)
 	for bf := low; bf <= high; bf += step {
-		ts = append(ts, T{DefaultMachs, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
+		ts = append(ts, T{machines, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
 	}
 	return ts
 }
 
 func DepthTestFixed(hpn int) []T {
 	return []T{
-		{DefaultMachs, hpn, 1, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 2, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 4, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 8, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 16, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 32, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 64, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 128, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 256, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{DefaultMachs, hpn, 512, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 1, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 2, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 4, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 8, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 16, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 32, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 64, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 128, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 256, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{machines, hpn, 512, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
 	}
 }
 
 func ScaleTest(bf, low, high, mult int) []T {
 	ts := make([]T, 0)
 	for hpn := low; hpn <= high; hpn *= mult {
-		ts = append(ts, T{DefaultMachs, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
+		ts = append(ts, T{machines, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
 	}
 	return ts
 }
 
 // nmachs=32, hpn=128, bf=16, rate=500, failures=20, root failures, failures
 var FailureTests = []T{
-	{DefaultMachs, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 64, 16, 30, 50, 0, 5, 0, false, "stamp"},
-	{DefaultMachs, 64, 16, 30, 50, 0, 10, 0, false, "stamp"},
-	{DefaultMachs, 64, 16, 30, 50, 5, 0, 5, false, "stamp"},
-	{DefaultMachs, 64, 16, 30, 50, 5, 0, 10, false, "stamp"},
-	{DefaultMachs, 64, 16, 30, 50, 5, 0, 10, true, "stamp"},
+	{machines, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	{machines, 64, 16, 30, 50, 0, 5, 0, false, "stamp"},
+	{machines, 64, 16, 30, 50, 0, 10, 0, false, "stamp"},
+	{machines, 64, 16, 30, 50, 5, 0, 5, false, "stamp"},
+	{machines, 64, 16, 30, 50, 5, 0, 10, false, "stamp"},
+	{machines, 64, 16, 30, 50, 5, 0, 10, true, "stamp"},
 }
 
 var VotingTest = []T{
-	{DefaultMachs, 64, 16, 30, 50, 0, 0, 0, true, "stamp"},
-	{DefaultMachs, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	{machines, 64, 16, 30, 50, 0, 0, 0, true, "stamp"},
+	{machines, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }
 
 func FullTests() []T {
@@ -290,25 +288,25 @@ func FullTests() []T {
 }
 
 var HostsTest = []T{
-	{DefaultMachs, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{DefaultMachs, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	{machines, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }
 
 var VTest = []T{
-	{DefaultMachs, 1, 3, 10000000, 20, 0, 0, 0, false, "vote"},
-	{DefaultMachs, 2, 4, 10000000, 20, 0, 0, 0, false, "vote"},
-	{DefaultMachs, 4, 6, 10000000, 20, 0, 0, 0, false, "vote"},
-	{DefaultMachs, 8, 8, 10000000, 20, 0, 0, 0, false, "vote"},
-	{DefaultMachs, 16, 16, 10000000, 20, 0, 0, 0, false, "vote"},
-	{DefaultMachs, 32, 16, 10000000, 20, 0, 0, 0, false, "vote"},
-	{DefaultMachs, 64, 16, 10000000, 20, 0, 0, 0, false, "vote"},
-	{DefaultMachs, 128, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 1, 3, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 2, 4, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 4, 6, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 8, 8, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 16, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 32, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 64, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{machines, 128, 16, 10000000, 20, 0, 0, 0, false, "vote"},
 }
 
 /*
@@ -341,6 +339,7 @@ func GenerateHostsFile(project string, num_servers int) error {
 
 }
 func main() {
+	log.Println("\n*** Setting up everything")
 	SetDebug(false)
 	flag.Parse()
 	user = fmt.Sprintf("-user=%s", user)
@@ -368,11 +367,12 @@ func main() {
 	log.Println("Building is ", build)
 
 	cmd := exec.Command("./deploy2deter", "-kill=true", build,
-		fmt.Sprintf("-nmachs=%d", DefaultMachs), user, host)
+		fmt.Sprintf("-nmachs=%d", machines), user, host)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
 
+	log.Println("\n*** Starting tests")
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
 	DefaultRounds = 5

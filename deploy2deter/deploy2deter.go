@@ -170,8 +170,6 @@ func main() {
 			log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
 		}
 
-		log.Println("rsync 1", depth)
-
 		err = os.Rename("logserver", "remote/logserver/logserver")
 		if err != nil {
 			log.Fatal("error renaming logserver:", err)
@@ -186,8 +184,6 @@ func main() {
 			log.Fatal("unable to write configuration file")
 		}
 
-		log.Println("rsync 2", depth)
-
 		// NOTE: now remote/logserver is ready for transfer
 		// it has logserver/ folder, binary, and cfg.json, and phys.txt, virt.txt
 
@@ -198,8 +194,6 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		log.Println("rsync 3", depth)
 
 		// scp the files that we need over to the boss node
 		files := []string{"timeclient", "exec", "forkexec", "deter"}
@@ -223,7 +217,7 @@ func main() {
 	killssh.Stderr = os.Stderr
 	err = killssh.Run()
 	if err != nil {
-		log.Print(err)
+		log.Print("Stopping ssh: ", err)
 	}
 
 	// setup port forwarding for viewing log server
