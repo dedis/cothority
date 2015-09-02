@@ -69,7 +69,7 @@ func init() {
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
 	flag.BoolVar(&build, "build", false, "build all helpers with go")
 	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
-	flag.StringVar(&user, "host", "users.deterlab.net", "Hostname of the deterlab")
+	flag.StringVar(&host, "host", "users.deterlab.net", "Hostname of the deterlab")
 }
 
 func main() {
