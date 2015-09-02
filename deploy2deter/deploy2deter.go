@@ -60,7 +60,7 @@ func init() {
 	flag.IntVar(&fFail, "ffail", 0, "number of consecutive rounds each follower runs before it fails")
 	flag.IntVar(&rounds, "rounds", 100, "number of rounds to run for")
 	flag.BoolVar(&kill, "kill", false, "kill all running processes (but don't start anything)")
-	flag.IntVar(&nmachs, "nmachs", 16, "number of machines to use")
+	flag.IntVar(&nmachs, "nmachs", 14, "number of machines to use")
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
 	flag.StringVar(&app, "app", "stamp", "app to run")
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")

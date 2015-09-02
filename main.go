@@ -52,7 +52,7 @@ type T struct {
 	app         string
 }
 
-var DefaultMachs int = 15
+var DefaultMachs int = 14
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
@@ -293,7 +293,7 @@ var VTest = []T{
 func main() {
 	SetDebug(false)
 	// view = true
-	os.Chdir("..")
+	os.Chdir("deploy2deter")
 
 	MkTestDir()
 
