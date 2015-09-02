@@ -84,7 +84,7 @@ func RunTest(t T) (RunStats, error) {
 	var rs RunStats
 	nmachs := fmt.Sprintf("-nmachs=%d", t.nmachs)
 	hpn := fmt.Sprintf("-hpn=%d", t.hpn)
-	nmsgs := fmt.Sprintf("-nmsgs=%d", 100)
+	nmsgs := fmt.Sprintf("-nmsgs=%d", -1)
 	bf := fmt.Sprintf("-bf=%d", t.bf)
 	rate := fmt.Sprintf("-rate=%d", t.rate)
 	rounds := fmt.Sprintf("-rounds=%d", t.rounds)
