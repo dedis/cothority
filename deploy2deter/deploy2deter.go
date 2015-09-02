@@ -51,6 +51,7 @@ var suite string
 var build bool
 var user string
 var host string
+var nloggers int
 
 func init() {
 	flag.IntVar(&bf, "bf", 2, "branching factor: default binary")
@@ -64,6 +65,7 @@ func init() {
 	flag.IntVar(&rounds, "rounds", 100, "number of rounds to run for")
 	flag.BoolVar(&kill, "kill", false, "kill all running processes (but don't start anything)")
 	flag.IntVar(&nmachs, "nmachs", 20, "number of machines to use")
+	flag.IntVar(&nloggers, "nloggers", 3, "number of loggers in pool")
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
 	flag.StringVar(&app, "app", "stamp", "app to run")
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
@@ -126,7 +128,6 @@ func main() {
 		phys = append(phys, physVirt[i])
 		virt = append(virt, physVirt[i+1])
 	}
-	nloggers := 3
 	// only use the number of machines that we need
 	if nmachs + nloggers > len(phys) {
 		log.Fatal("Error, having only ", len(phys), " hosts while ", nmachs + nloggers, " are needed")
@@ -158,14 +159,16 @@ func main() {
 	log.Println("TOTAL HOSTS:", len(hostnames))
 
 	// copy the logserver directory to the current directory
-	err = exec.Command("rsync", "-au", "../logserver", "remote/").Run()
+	err = exec.Command("rsync", "-Pau", "../logserver", "remote/").Run()
 	if err != nil {
 		log.Fatal("error rsyncing logserver directory into remote directory:", err)
 	}
-	err = exec.Command("rsync", "-au", "remote/phys.txt", "remote/virt.txt", "remote/logserver/").Run()
+	err = exec.Command("rsync", "-Pau", "remote/phys.txt", "remote/virt.txt", "remote/logserver/").Run()
 	if err != nil {
 		log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
 	}
+
+	log.Println("rsync 1", depth)
 
 	if build {
 		err = os.Rename("logserver", "remote/logserver/logserver")
@@ -183,6 +186,8 @@ func main() {
 		log.Fatal("unable to write configuration file")
 	}
 
+	log.Println("rsync 2", depth)
+
 	// NOTE: now remote/logserver is ready for transfer
 	// it has logserver/ folder, binary, and cfg.json, and phys.txt, virt.txt
 
@@ -194,10 +199,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("rsync 3", depth)
+
 	// scp the files that we need over to the boss node
 	files := []string{"timeclient", "exec", "forkexec", "deter"}
 	for _, f := range files {
-		cmd := exec.Command("rsync", "-au", f, "remote/")
+		cmd := exec.Command("rsync", "-Pau", f, "remote/")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()

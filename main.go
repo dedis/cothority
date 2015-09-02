@@ -56,6 +56,7 @@ type T struct {
 var user string = "-user=ineiti"
 var host string = "-host=users.deterlab.net"
 var DefaultMachs int = 14
+var DefaultLoggers int = 3
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
@@ -86,8 +87,9 @@ func RunTest(t T) (RunStats, error) {
 	fFail := fmt.Sprintf("-ffail=%d", t.fFail)
 	tcon := fmt.Sprintf("-test_connect=%t", t.testConnect)
 	app := fmt.Sprintf("-app=%s", t.app)
+	loggers := fmt.Sprintf("-loggers=%d", DefaultLoggers)
 	cmd := exec.Command("./deploy2deter", nmachs, hpn, nmsgs, bf, rate, rounds, debug, failures, rFail,
-		fFail, tcon, app, user, host)
+		fFail, tcon, app, user, host, loggers)
 	log.Println("RUNNING TEST:", cmd.Args)
 	log.Println("FAILURES PERCENT:", t.failures)
 	cmd.Stdout = os.Stdout
