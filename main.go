@@ -65,7 +65,7 @@ var view bool
 var debug string = "-debug=false"
 var nobuild bool = false
 
-func init(){
+func init() {
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 }
 
@@ -142,7 +142,7 @@ func RunTests(name string, ts []T) {
 	stopOnSuccess := true
 	for i, t := range ts {
 		// run test t nTimes times
-		// take the average of all successfull runs
+		// take the average of all successful runs
 		var runs []RunStats
 		for r := 0; r < nTimes; r++ {
 			run, err := RunTest(t)
@@ -152,7 +152,8 @@ func RunTests(name string, ts []T) {
 
 			// Clean Up after test
 			log.Println("KILLING REMAINING PROCESSES")
-			cmd := exec.Command("./deploy2deter", "-kill=true")
+			cmd := exec.Command("./deploy2deter", "-kill=true",
+				fmt.Sprintf("-nmachs=%d", DefaultMachs))
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()
