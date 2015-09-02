@@ -7,7 +7,7 @@ import (
 
 	"github.com/dedis/prifi/coco/test/logutils"
 	"github.com/dedis/prifi/coco/test/oldconfig"
-	"github.com/dedis/prifi/coco/test/timeclient/stampclient"
+	"github.com/ineiti/cothorities/timeclient/stampclient"
 )
 
 var server string
