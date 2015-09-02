@@ -326,13 +326,13 @@ func main() {
 	cmd.Run()
 
 	// test the testing framework
-	RunTests("vote_test_no_signing.csv", VTest)
-	// DefaultRounds = 5
+	//RunTests("vote_test_no_signing.csv", VTest)
+	DefaultRounds = 5
 	// t := FailureTests
 	// RunTests("failure_test.csv", t)
 	// RunTests("vote_test", VotingTest)
 	// RunTests("failure_test", FailureTests)
-	// RunTests("host_test", HostsTest)
+	RunTests("host_test", HostsTest)
 	// t := FailureTests
 	// RunTests("failure_test", t)
 	// t = ScaleTest(10, 1, 100, 2)
