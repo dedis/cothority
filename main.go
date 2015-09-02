@@ -30,6 +30,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -37,7 +38,6 @@ import (
 	"os/exec"
 	"strconv"
 	"time"
-	"flag"
 )
 
 type T struct {
@@ -58,6 +58,11 @@ var host string = "-host=users.deterlab.net"
 var DefaultMachs int = 16
 var DefaultLoggers int = 3
 
+var hosts_file string = "deploy2deter/hosts.txt"
+var project string = "Dissent-CS"
+var machines int
+var loggers int
+
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
 var DefaultRounds int = 1
@@ -69,12 +74,15 @@ var nobuild bool = false
 func init() {
 	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
+	flag.IntVar(&machines, "machines", DefaultMachs, "Number of machines (servers running the client)")
+	flag.IntVar(&loggers, "loggers", DefaultLoggers, "Number of loggers")
+	flag.StringVar(&project, "project", project, "Name of the project on DeterLab")
 }
 
 // hpn, bf, nmsgsG
 func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
-	done := make(chan struct {})
+	done := make(chan struct{})
 	var rs RunStats
 	nmachs := fmt.Sprintf("-nmachs=%d", t.nmachs)
 	hpn := fmt.Sprintf("-hpn=%d", t.hpn)
@@ -108,7 +116,7 @@ func RunTest(t T) (RunStats, error) {
 		rs = Monitor(t.bf)
 		cmd.Process.Kill()
 		fmt.Println("TEST COMPLETE:", rs)
-		done <- struct {}{}
+		done <- struct{}{}
 	}()
 
 	// timeout the command if it takes too long
@@ -208,9 +216,9 @@ func RateLoadTest(hpn, bf int) []T {
 	return []T{
 		{DefaultMachs, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
 		{DefaultMachs, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
-		{DefaultMachs, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"}, // 10 per round
-		{DefaultMachs, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"}, // 100 per round
-		{DefaultMachs, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"}, // 1000 per round
+		{DefaultMachs, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"},  // 10 per round
+		{DefaultMachs, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"},   // 100 per round
+		{DefaultMachs, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"},   // 1000 per round
 	}
 }
 
@@ -303,12 +311,48 @@ var VTest = []T{
 	{DefaultMachs, 128, 16, 10000000, 20, 0, 0, 0, false, "vote"},
 }
 
+/*
+* Write the hosts.txt file automatically
+* from project name and number of servers
+ */
+func GenerateHostsFile(project string, num_servers int) error {
+
+	// open and erase file if needed
+	if _, err1 := os.Stat(hosts_file); err1 == nil {
+		log.Print(fmt.Sprintf("Hosts file %s already exists. Erasing ...", hosts_file))
+		os.Remove(hosts_file)
+	}
+	// create the file
+	f, err := os.Create(hosts_file)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Could not create hosts file description %s ><", hosts_file), err)
+		return err
+	}
+	defer f.Close()
+
+	// write the name of the server + \t + IP address
+	ip := "10.255.0."
+	name := "SAFER.isi.deterlab.net"
+	for i := 1; i <= num_servers; i++ {
+		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i-1, project, name, ip, i))
+	}
+	log.Print(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
+	return err
+
+}
 func main() {
 	log.Println("\n*** Setting up everything")
 	SetDebug(false)
 	flag.Parse()
 	user = fmt.Sprintf("-user=%s", user)
+
+	// generate hosts file
+	if e := GenerateHostsFile(project, machines+loggers); e != nil {
+		log.Fatal("Error for creation of host file. Abort.")
+		os.Exit(1)
+	}
 	// view = true
+
 	os.Chdir("deploy2deter")
 
 	MkTestDir()
