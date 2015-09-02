@@ -58,8 +58,10 @@ var host string = "-host=users.deterlab.net"
 var DefaultMachs int = 14
 var DefaultLoggers int = 3
 
-var hosts_file string = "hosts.txt"
-var default_project string = "Dissent-CS"
+var hosts_file string = "deploy2deter/hosts.txt"
+var project string = "Dissent-CS"
+var machines int
+var loggers int
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
@@ -72,7 +74,9 @@ var nobuild bool = false
 func init() {
 	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
-
+	flag.IntVar(&machines, "machines", DefaultMachs, "Number of machines (servers running the client)")
+	flat.IntVar(&loggers, "loggers", DefaultsLoggers, "Number of loggers")
+	flat.StringVar(&project, "project", project, "Name of the project on DeterLab")
 }
 
 // hpn, bf, nmsgsG
@@ -312,7 +316,13 @@ func main() {
 	flag.Parse()
 	user = fmt.Sprintf("-user=%s", user)
 	// view = true
-	os.Chdir("deploy2deter")
+	os.Chdir("deter")
+
+	// generate hosts file
+	if e := generateHostsFile(project, machines); e != nil {
+		log.Fatal("Error for creation of host file. Abort.")
+		os.Exit(1)
+	}
 
 	MkTestDir()
 
