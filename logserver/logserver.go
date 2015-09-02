@@ -231,7 +231,7 @@ func main() {
 		var err error
 		homePage, err = template.ParseFiles("home.html")
 		if err != nil {
-			log.Fatal("unable to parse home.html")
+			log.Fatal("unable to parse home.html", err)
 		}
 
 		debugServers := getDebugServers()
