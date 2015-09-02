@@ -87,7 +87,7 @@ func RunTest(t T) (RunStats, error) {
 	fFail := fmt.Sprintf("-ffail=%d", t.fFail)
 	tcon := fmt.Sprintf("-test_connect=%t", t.testConnect)
 	app := fmt.Sprintf("-app=%s", t.app)
-	loggers := fmt.Sprintf("-loggers=%d", DefaultLoggers)
+	loggers := fmt.Sprintf("-nloggers=%d", DefaultLoggers)
 	cmd := exec.Command("./deploy2deter", nmachs, hpn, nmsgs, bf, rate, rounds, debug, failures, rFail,
 		fFail, tcon, app, user, host, loggers)
 	log.Println("RUNNING TEST:", cmd.Args)

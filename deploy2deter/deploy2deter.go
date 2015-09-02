@@ -79,6 +79,36 @@ func main() {
 	flag.Parse()
 	log.Println("RUNNING DEPLOY2DETER WITH RATE:", rate, " on machines:", nmachs)
 	os.MkdirAll("remote", 0777)
+
+	// killssh processes on users
+	log.Println("Stopping programs on user.deterlab.net")
+	cliutils.SshRunStdout(user, host, "killall ssh scp deter 2>/dev/null 1>/dev/null")
+
+	// parse the hosts.txt file to create a separate list (and file)
+	// of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
+	// corresponds to each host on line i, in virt.txt.
+	physVirt, err := cliutils.ReadLines("hosts.txt")
+	log.Println("Getting list of hosts ", len(physVirt), ":", nmachs)
+
+	phys := make([]string, 0, len(physVirt)/2)
+	virt := make([]string, 0, len(physVirt)/2)
+	for i := 0; i < len(physVirt); i += 2 {
+		phys = append(phys, physVirt[i])
+		virt = append(virt, physVirt[i+1])
+	}
+	// only use the number of machines that we need
+	if nmachs + nloggers > len(phys) {
+		log.Fatal("Error, having only ", len(phys), " hosts while ", nmachs + nloggers, " are needed")
+	}
+	phys = phys[:nmachs+nloggers]
+	virt = virt[:nmachs+nloggers]
+	physOut := strings.Join(phys, "\n")
+	virtOut := strings.Join(virt, "\n")
+	masterLogger := phys[0]
+	// slaveLogger1 := phys[1]
+	// slaveLogger2 := phys[2]
+
+	// If we have to build, we do it for all programs and then copy them to 'host'
 	if build {
 		var wg sync.WaitGroup
 		// start building the necessary packages
@@ -111,111 +141,83 @@ func main() {
 		// wait for the build to finish
 		wg.Wait()
 		log.Println("Build is finished")
-	}
-	// killssh processes on users
-	log.Println("Stopping programs on user.deterlab.net")
-	cliutils.SshRunStdout(user, host, "killall ssh scp deter 2>/dev/null 1>/dev/null")
 
-	// parse the hosts.txt file to create a separate list (and file)
-	// of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
-	// corresponds to each host on line i, in virt.txt.
-	physVirt, err := cliutils.ReadLines("hosts.txt")
-	log.Println("Getting list of hosts ", len(physVirt), ":", nmachs)
+		// phys.txt and virt.txt only contain the number of machines that we need
+		log.Println("Reading phys and virt")
+		err := ioutil.WriteFile("remote/phys.txt", []byte(physOut), 0666)
+		if err != nil {
+			log.Fatal("failed to write physical nodes file", err)
+		}
 
-	phys := make([]string, 0, len(physVirt)/2)
-	virt := make([]string, 0, len(physVirt)/2)
-	for i := 0; i < len(physVirt); i += 2 {
-		phys = append(phys, physVirt[i])
-		virt = append(virt, physVirt[i+1])
-	}
-	// only use the number of machines that we need
-	if nmachs + nloggers > len(phys) {
-		log.Fatal("Error, having only ", len(phys), " hosts while ", nmachs + nloggers, " are needed")
-	}
-	phys = phys[:nmachs+nloggers]
-	virt = virt[:nmachs+nloggers]
-	physOut := strings.Join(phys, "\n")
-	virtOut := strings.Join(virt, "\n")
+		err = ioutil.WriteFile("remote/virt.txt", []byte(virtOut), 0666)
+		if err != nil {
+			log.Fatal("failed to write virtual nodes file", err)
+		}
 
-	// phys.txt and virt.txt only contain the number of machines that we need
-	log.Println("Reading phys and virt")
-	err = ioutil.WriteFile("remote/phys.txt", []byte(physOut), 0666)
-	if err != nil {
-		log.Fatal("failed to write physical nodes file", err)
-	}
+		virt = virt[3:]
+		phys = phys[3:]
+		t, hostnames, depth, err := graphs.TreeFromList(virt, hpn, bf)
+		log.Println("DEPTH:", depth)
+		log.Println("TOTAL HOSTS:", len(hostnames))
 
-	err = ioutil.WriteFile("remote/virt.txt", []byte(virtOut), 0666)
-	if err != nil {
-		log.Fatal("failed to write virtual nodes file", err)
-	}
+		// copy the logserver directory to the current directory
+		err = exec.Command("rsync", "-Pauz", "../logserver", "remote/").Run()
+		if err != nil {
+			log.Fatal("error rsyncing logserver directory into remote directory:", err)
+		}
+		err = exec.Command("rsync", "-Pauz", "remote/phys.txt", "remote/virt.txt", "remote/logserver/").Run()
+		if err != nil {
+			log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
+		}
 
-	masterLogger := phys[0]
-	// slaveLogger1 := phys[1]
-	// slaveLogger2 := phys[2]
-	virt = virt[3:]
-	phys = phys[3:]
-	t, hostnames, depth, err := graphs.TreeFromList(virt, hpn, bf)
-	log.Println("DEPTH:", depth)
-	log.Println("TOTAL HOSTS:", len(hostnames))
+		log.Println("rsync 1", depth)
 
-	// copy the logserver directory to the current directory
-	err = exec.Command("rsync", "-Pau", "../logserver", "remote/").Run()
-	if err != nil {
-		log.Fatal("error rsyncing logserver directory into remote directory:", err)
-	}
-	err = exec.Command("rsync", "-Pau", "remote/phys.txt", "remote/virt.txt", "remote/logserver/").Run()
-	if err != nil {
-		log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
-	}
-
-	log.Println("rsync 1", depth)
-
-	if build {
 		err = os.Rename("logserver", "remote/logserver/logserver")
 		if err != nil {
 			log.Fatal("error renaming logserver:", err)
 		}
-	}
 
-	b, err := json.Marshal(t)
-	if err != nil {
-		log.Fatal("unable to generate tree from list")
-	}
-	err = ioutil.WriteFile("remote/logserver/cfg.json", b, 0660)
-	if err != nil {
-		log.Fatal("unable to write configuration file")
-	}
-
-	log.Println("rsync 2", depth)
-
-	// NOTE: now remote/logserver is ready for transfer
-	// it has logserver/ folder, binary, and cfg.json, and phys.txt, virt.txt
-
-	// generate the configuration file from the tree
-	cf := config.ConfigFromTree(t, hostnames)
-	cfb, err := json.Marshal(cf)
-	err = ioutil.WriteFile("remote/cfg.json", cfb, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("rsync 3", depth)
-
-	// scp the files that we need over to the boss node
-	files := []string{"timeclient", "exec", "forkexec", "deter"}
-	for _, f := range files {
-		cmd := exec.Command("rsync", "-Pau", f, "remote/")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		b, err := json.Marshal(t)
 		if err != nil {
-			log.Fatal("error unable to rsync file into remote directory:", err)
+			log.Fatal("unable to generate tree from list")
+		}
+		err = ioutil.WriteFile("remote/logserver/cfg.json", b, 0660)
+		if err != nil {
+			log.Fatal("unable to write configuration file")
+		}
+
+		log.Println("rsync 2", depth)
+
+		// NOTE: now remote/logserver is ready for transfer
+		// it has logserver/ folder, binary, and cfg.json, and phys.txt, virt.txt
+
+		// generate the configuration file from the tree
+		cf := config.ConfigFromTree(t, hostnames)
+		cfb, err := json.Marshal(cf)
+		err = ioutil.WriteFile("remote/cfg.json", cfb, 0666)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Println("rsync 3", depth)
+
+		// scp the files that we need over to the boss node
+		files := []string{"timeclient", "exec", "forkexec", "deter"}
+		for _, f := range files {
+			cmd := exec.Command("rsync", "-Pauz", f, "remote/")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err := cmd.Run()
+			if err != nil {
+				log.Fatal("error unable to rsync file into remote directory:", err)
+			}
+		}
+		err = cliutils.Rsync(user, host, "remote", "")
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
-	err = cliutils.Rsync(user, host, "remote", "")
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	killssh := exec.Command("pkill", "-f", "ssh -t -t")
 	killssh.Stdout = os.Stdout
 	killssh.Stderr = os.Stderr
