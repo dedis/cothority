@@ -75,8 +75,8 @@ func init() {
 	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.IntVar(&machines, "machines", DefaultMachs, "Number of machines (servers running the client)")
-	flat.IntVar(&loggers, "loggers", DefaultsLoggers, "Number of loggers")
-	flat.StringVar(&project, "project", project, "Name of the project on DeterLab")
+	flag.IntVar(&loggers, "loggers", DefaultLoggers, "Number of loggers")
+	flag.StringVar(&project, "project", project, "Name of the project on DeterLab")
 }
 
 // hpn, bf, nmsgsG
@@ -311,18 +311,48 @@ var VTest = []T{
 	{DefaultMachs, 128, 16, 10000000, 20, 0, 0, 0, false, "vote"},
 }
 
+/*
+* Write the hosts.txt file automatically
+* from project name and number of servers
+ */
+func GenerateHostsFile(project string, num_servers int) error {
+
+	// open and erase file if needed
+	if _, err1 := os.Stat(hosts_file); err1 == nil {
+		log.Print(fmt.Sprintf("Hosts file %s already exists. Erasing ...", hosts_file))
+		os.Remove(hosts_file)
+	}
+	// create the file
+	f, err := os.Create(hosts_file)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Could not create hosts file description %s ><", hosts_file), err)
+		return err
+	}
+	defer f.Close()
+
+	// write the name of the server + \t + IP address
+	ip := "10.255.0."
+	name := "SAFER.isi.deterlab.net"
+	for i := 1; i <= num_servers; i++ {
+		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i-1, project, name, ip, i))
+	}
+	log.Print(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
+	return err
+
+}
 func main() {
 	SetDebug(false)
 	flag.Parse()
 	user = fmt.Sprintf("-user=%s", user)
-	// view = true
-	os.Chdir("deter")
 
 	// generate hosts file
-	if e := generateHostsFile(project, machines); e != nil {
+	if e := GenerateHostsFile(project, machines+loggers); e != nil {
 		log.Fatal("Error for creation of host file. Abort.")
 		os.Exit(1)
 	}
+	// view = true
+
+	os.Chdir("deploy2deter")
 
 	MkTestDir()
 
@@ -388,34 +418,4 @@ func SetDebug(b bool) {
 
 func isZero(f float64) bool {
 	return math.Abs(f) < 0.0000001
-}
-
-/*
-* Write the hosts.txt file automatically
-* from project name and number of servers
- */
-func GenerateHostsFile(project string, num_servers int) error {
-
-	// open and erase file if needed
-	if _, err1 := os.Stat(hosts_file); err1 == nil {
-		log.Print(fmt.Sprintf("Hosts file %s already exists. Erasing ...", hosts_file))
-		os.Remove(hosts_file)
-	}
-	// create the file
-	f, err := os.Create(hosts_file)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Could not create hosts file description %s ><", hosts_file))
-		return err
-	}
-	defer f.Close()
-
-	// write the name of the server + \t + IP address
-	ip := "10.255.0."
-	name := "SAFER.isi.deterlab.net"
-	for i := 1; i <= num_servers; i++ {
-		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i-1, project, name, ip, i))
-	}
-	log.Print(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
-	return err
-
 }
