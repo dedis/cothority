@@ -60,7 +60,7 @@ func init() {
 	flag.IntVar(&fFail, "ffail", 0, "number of consecutive rounds each follower runs before it fails")
 	flag.IntVar(&rounds, "rounds", 100, "number of rounds to run for")
 	flag.BoolVar(&kill, "kill", false, "kill all running processes (but don't start anything)")
-	flag.IntVar(&nmachs, "nmachs", 14, "number of machines to use")
+	flag.IntVar(&nmachs, "nmachs", 20, "number of machines to use")
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
 	flag.StringVar(&app, "app", "stamp", "app to run")
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
@@ -69,13 +69,14 @@ func init() {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	flag.Parse()
-	log.Println("RUNNING DEPLOY2DETER WITH RATE:", rate)
+	log.Println("RUNNING DEPLOY2DETER WITH RATE:", rate, " on machines:", nmachs)
 	os.MkdirAll("remote", 0777)
 	var wg sync.WaitGroup
 	// start building the necessary packages
 	log.Println("Starting to build all executables")
 	packages := []string{"../logserver", "../timeclient", "../exec", "../forkexec", "../deter"}
 	for _, p := range packages {
+
 		log.Println("Building ", p)
 		wg.Add(1)
 		if p == "../deter" {

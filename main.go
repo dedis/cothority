@@ -56,7 +56,7 @@ var DefaultMachs int = 14
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
-var DefaultRounds int = 20
+var DefaultRounds int = 1
 
 var view bool
 var debug string = "-debug=false"
@@ -64,7 +64,7 @@ var debug string = "-debug=false"
 // hpn, bf, nmsgsG
 func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
-	done := make(chan struct{})
+	done := make(chan struct {})
 	var rs RunStats
 	nmachs := fmt.Sprintf("-nmachs=%d", t.nmachs)
 	hpn := fmt.Sprintf("-hpn=%d", t.hpn)
@@ -96,7 +96,7 @@ func RunTest(t T) (RunStats, error) {
 		rs = Monitor(t.bf)
 		cmd.Process.Kill()
 		fmt.Println("TEST COMPLETE:", rs)
-		done <- struct{}{}
+		done <- struct {}{}
 	}()
 
 	// timeout the command if it takes too long
@@ -195,9 +195,9 @@ func RateLoadTest(hpn, bf int) []T {
 	return []T{
 		{DefaultMachs, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
 		{DefaultMachs, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
-		{DefaultMachs, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"},  // 10 per round
-		{DefaultMachs, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"},   // 100 per round
-		{DefaultMachs, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"},   // 1000 per round
+		{DefaultMachs, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"}, // 10 per round
+		{DefaultMachs, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"}, // 100 per round
+		{DefaultMachs, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"}, // 1000 per round
 	}
 }
 
@@ -302,7 +302,7 @@ func main() {
 		log.Fatalln("error building deploy2deter:", err)
 	}
 	log.Println("KILLING REMAINING PROCESSES")
-	cmd := exec.Command("./deploy2deter", "-kill=true")
+	cmd := exec.Command("./deploy2deter", "-kill=true", fmt.Sprintf("-nmachs=%d", DefaultMachs))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
