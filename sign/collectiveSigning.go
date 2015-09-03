@@ -391,7 +391,7 @@ func (sn *Node) initResponseCrypto(Round int) {
 }
 
 func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
-	log.Println(sn.Name(), "couting response on view, round", view, Round, "Nchildren", sn.Children(view))
+	log.Println(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
@@ -443,6 +443,7 @@ func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 			round.r_hat.Add(round.r_hat, sm.Rm.R_hat)
 
 			sn.add(exceptionV_hat, sm.Rm.ExceptionV_hat)
+
 			sn.add(exceptionX_hat, sm.Rm.ExceptionX_hat)
 			round.ExceptionList = append(round.ExceptionList, sm.Rm.ExceptionList...)
 
