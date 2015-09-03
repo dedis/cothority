@@ -373,6 +373,7 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 
 	// log.Println(sn.Name(), "In challenge before response")
 	sn.initResponseCrypto(chm.Round)
+	// if we are a leaf, send the respond up
 	if len(sn.Children(view)) == 0 {
 		sn.Respond(view, chm.Round, nil)
 	}
