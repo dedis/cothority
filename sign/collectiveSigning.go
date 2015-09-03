@@ -263,7 +263,9 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 	round.ExceptionList = make([]abstract.Point, 0)
 
 	// Create the mapping between children and their respective public key + commitment
+	// V for commitment
 	round.ChildV_hat = make(map[string]abstract.Point, len(sn.Children(view)))
+	// X for public key
 	round.ChildX_hat = make(map[string]abstract.Point, len(sn.Children(view)))
 	children := sn.Children(view)
 
@@ -280,13 +282,14 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 	// TODO: fill in missing commit messages, and add back exception code
 	for _, sm := range round.Commits {
 		from := sm.From
-
+		// MTR ==> root of sub-merkle tree
 		round.Leaves = append(round.Leaves, sm.Com.MTRoot)
 		round.LeavesFrom = append(round.LeavesFrom, from)
 		round.ChildV_hat[from] = sm.Com.V_hat
 		round.ChildX_hat[from] = sm.Com.X_hat
 		round.ExceptionList = append(round.ExceptionList, sm.Com.ExceptionList...)
 
+		// Aggregation
 		// add good child server to combined public key, and point commit
 		sn.add(round.X_hat, sm.Com.X_hat)
 		sn.add(round.Log.V_hat, sm.Com.V_hat)
