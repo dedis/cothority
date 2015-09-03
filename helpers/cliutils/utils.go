@@ -33,7 +33,7 @@ func Rsync(username, host, file, dest string) error {
 	if username != "" {
 		addr = username + "@" + addr
 	}
-	cmd := exec.Command("rsync", "-aWu", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
+	cmd := exec.Command("rsync", "-Pau", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

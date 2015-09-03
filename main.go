@@ -58,7 +58,7 @@ var host string = "-host=users.deterlab.net"
 
 var hosts_file string = "deploy2deter/hosts.txt"
 var project string = "Dissent-CS"
-var machines int = 16
+var machines int = 3
 var loggers int = 3
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now

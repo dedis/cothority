@@ -176,6 +176,7 @@ func main() {
 			log.Fatal("error renaming logserver:", err)
 		}
 
+		log.Println("Going to generate tree-lists")
 		b, err := json.Marshal(t)
 		if err != nil {
 			log.Fatal("unable to generate tree from list")
