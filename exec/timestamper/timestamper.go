@@ -83,7 +83,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 	}
 
 	defer func(sn *sign.Node) {
-		log.Panicln("program has terminated:", hostname)
+		//log.Panicln("program has terminated:", hostname)
 		sn.Close()
 	}(hc.SNodes[0])
 
@@ -96,9 +96,11 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 			iters := 10
 
 			for i := 0; i < iters; i++ {
+				time.Sleep(3 * time.Second)
 				start = time.Now()
 				//fmt.Println("ANNOUNCING")
 				hc.SNodes[0].LogTest = []byte("Hello World")
+				log.Println("Going to launch announcement ", hc.SNodes[0].Name())
 				err = hc.SNodes[0].Announce(0,
 					&sign.AnnouncementMessage{
 						LogTest: hc.SNodes[0].LogTest,
@@ -109,7 +111,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 				elapsed := time.Since(start)
 				log.WithFields(log.Fields{
 					"file":  logutils.File(),
-					"type":  "root_announce",
+					"type":  "root_announced",
 					"round": i,
 					"time":  elapsed,
 				}).Info("")

@@ -298,6 +298,17 @@ var HostsTest = []T{
 	{machines, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }
 
+var SignTest = []T{
+	{machines, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
+	{machines, 2, 3, 30, 20, 0, 0, 0, false, "sign"},
+	{machines, 4, 3, 30, 20, 0, 0, 0, false, "sign"},
+	{machines, 8, 8, 30, 20, 0, 0, 0, false, "sign"},
+	{machines, 16, 16, 30, 20, 0, 0, 0, false, "sign"},
+	{machines, 32, 16, 30, 20, 0, 0, 0, false, "sign"},
+	{machines, 64, 16, 30, 20, 0, 0, 0, false, "sign"},
+	{machines, 128, 16, 30, 50, 0, 0, 0, false, "sign"},
+}
+
 var VTest = []T{
 	{machines, 1, 3, 10000000, 20, 0, 0, 0, false, "vote"},
 	{machines, 2, 4, 10000000, 20, 0, 0, 0, false, "vote"},
@@ -380,7 +391,7 @@ func main() {
 	// RunTests("failure_test.csv", t)
 	// RunTests("vote_test", VotingTest)
 	// RunTests("failure_test", FailureTests)
-	RunTests("host_test", HostsTest)
+	RunTests("sign_test", SignTest)
 	// t := FailureTests
 	// RunTests("failure_test", t)
 	// t = ScaleTest(10, 1, 100, 2)

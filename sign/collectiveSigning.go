@@ -204,7 +204,7 @@ func (sn *Node) get() error {
 }
 
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
-	log.Println(sn.Name(), "RECEIVED annoucement on", view)
+	log.Println(sn.Name(), "RECEIVED announcement on", view)
 
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
