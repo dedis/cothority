@@ -121,7 +121,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 			time.Sleep(30 * time.Second)
 		}
 	} else if app == "stamp" || app == "vote" {
-		// log.Println("RUNNING TIMESTAMPER")
+		log.Println("RUNNING TIMESTAMPER")
 		stampers, _, err := hc.RunTimestamper(0, hostname)
 		// get rid of the hc information so it can be GC'ed
 		hc = nil
