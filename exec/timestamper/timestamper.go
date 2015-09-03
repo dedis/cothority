@@ -5,14 +5,13 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/helpers/oldconfig"
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
-//	"github.com/dedis/prifi/coco"
-	"github.com/dedis/prifi/coco/sign"
-	"github.com/dedis/prifi/coco/test/logutils"
-	"github.com/dedis/prifi/coco/test/oldconfig"
+	"github.com/ineiti/cothorities/helpers/logutils"
 )
 
 func GetSuite(suite string) abstract.Suite {
@@ -121,7 +120,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 			time.Sleep(30 * time.Second)
 		}
 	} else if app == "stamp" || app == "vote" {
-		// log.Println("RUNNING TIMESTAMPER")
+		log.Println("RUNNING TIMESTAMPER")
 		stampers, _, err := hc.RunTimestamper(0, hostname)
 		// get rid of the hc information so it can be GC'ed
 		hc = nil

@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/prifi/coco/test/logutils"
+	"github.com/ineiti/cothorities/helpers/logutils"
 )
 
 // Wrapper around exec.go to enable measuring of cpu time

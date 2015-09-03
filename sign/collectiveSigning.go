@@ -10,8 +10,8 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/prifi/coco/coconet"
-	"github.com/dedis/prifi/coco/hashid"
+	"github.com/ineiti/cothorities/coconet"
+	"github.com/ineiti/cothorities/hashid"
 	// "strconv"
 	// "os"
 )
@@ -231,7 +231,6 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	}
 
 	// return sn.Commit(view, am)
-	// it is a LEAF
 	if len(sn.Children(view)) == 0 {
 		sn.Commit(view, am.Round, nil)
 	}
@@ -250,11 +249,10 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		return nil
 	}
 
-	// signing message sm is not null,i.e. it comes from at least a child
 	if sm != nil {
 		round.Commits = append(round.Commits, sm)
 	}
-	// make sure the number of commits equals the number of children we have for this node
+
 	if len(round.Commits) != len(sn.Children(view)) {
 		return nil
 	}
@@ -271,7 +269,6 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 
 	// Commits from children are the first Merkle Tree leaves for the round
 	round.Leaves = make([]hashid.HashId, 0)
-	// ??
 	round.LeavesFrom = make([]string, 0)
 
 	for key := range children {

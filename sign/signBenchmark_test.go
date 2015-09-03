@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/dedis/prifi/coco/sign"
-	"github.com/dedis/prifi/coco/test/oldconfig"
+	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/helpers/oldconfig"
 )
 
 // func init() {

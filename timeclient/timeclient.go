@@ -5,9 +5,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/dedis/prifi/coco/test/logutils"
-	"github.com/dedis/prifi/coco/test/oldconfig"
+	"github.com/ineiti/cothorities/helpers/oldconfig"
 	"github.com/ineiti/cothorities/timeclient/stampclient"
+	"github.com/ineiti/cothorities/helpers/logutils"
 )
 
 var server string

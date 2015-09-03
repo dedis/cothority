@@ -8,9 +8,9 @@ import (
 	"log"
 
 	"github.com/dedis/crypto/nist"
-	"github.com/dedis/prifi/coco/hashid"
-	"github.com/dedis/prifi/coco/proof"
-	"github.com/dedis/prifi/coco/sign"
+	"github.com/ineiti/cothorities/hashid"
+	"github.com/ineiti/cothorities/proof"
+	"github.com/ineiti/cothorities/sign"
 )
 
 func init() {
