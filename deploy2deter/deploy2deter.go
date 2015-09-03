@@ -97,8 +97,8 @@ func main() {
 		virt = append(virt, physVirt[i+1])
 	}
 	// only use the number of machines that we need
-	if nmachs + nloggers > len(phys) {
-		log.Fatal("Error, having only ", len(phys), " hosts while ", nmachs + nloggers, " are needed")
+	if nmachs+nloggers > len(phys) {
+		log.Fatal("Error, having only ", len(phys), " hosts while ", nmachs+nloggers, " are needed")
 	}
 	phys = phys[:nmachs+nloggers]
 	virt = virt[:nmachs+nloggers]
@@ -161,6 +161,7 @@ func main() {
 		log.Println("TOTAL HOSTS:", len(hostnames))
 
 		// copy the logserver directory to the current directory
+		log.Print("RSync logserver to remote ...")
 		err = exec.Command("rsync", "-Pauz", "../logserver", "remote/").Run()
 		if err != nil {
 			log.Fatal("error rsyncing logserver directory into remote directory:", err)
@@ -241,16 +242,16 @@ func main() {
 	// timestamping servers
 	log.Fatal(cliutils.SshRunStdout(user, host,
 		"GOMAXPROCS=8 remote/deter -nmsgs="+strconv.Itoa(nmsgs)+
-		" -hpn="+strconv.Itoa(hpn)+
-		" -bf="+strconv.Itoa(bf)+
-		" -rate="+strconv.Itoa(rate)+
-		" -rounds="+strconv.Itoa(rounds)+
-		" -debug="+strconv.FormatBool(debug)+
-		" -failures="+strconv.Itoa(failures)+
-		" -rfail="+strconv.Itoa(rFail)+
-		" -ffail="+strconv.Itoa(fFail)+
-		" -test_connect="+strconv.FormatBool(testConnect)+
-		" -app="+app+
-		" -suite="+suite+
-		" -kill="+strconv.FormatBool(kill)))
+			" -hpn="+strconv.Itoa(hpn)+
+			" -bf="+strconv.Itoa(bf)+
+			" -rate="+strconv.Itoa(rate)+
+			" -rounds="+strconv.Itoa(rounds)+
+			" -debug="+strconv.FormatBool(debug)+
+			" -failures="+strconv.Itoa(failures)+
+			" -rfail="+strconv.Itoa(rFail)+
+			" -ffail="+strconv.Itoa(fFail)+
+			" -test_connect="+strconv.FormatBool(testConnect)+
+			" -app="+app+
+			" -suite="+suite+
+			" -kill="+strconv.FormatBool(kill)))
 }
