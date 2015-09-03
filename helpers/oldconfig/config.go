@@ -488,13 +488,13 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 		sn.Host.Listen()
 	}
 
-	for _, sn := range hostnames {
+	for h, sn := range hostnames {
 		var err error
 		// exponential backoff for attempting to connect to parent
 		startTime := time.Duration(200)
 		maxTime := time.Duration(2000)
 		for i := 0; i < 2000; i++ {
-			// log.Println("attempting to connect to parent")
+			log.Println(fmt.Sprintf(" attempting to connect to parent %s", h))
 			// the host should connect with the parent
 			err = sn.Connect(0)
 			if err == nil {
@@ -508,9 +508,9 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 				startTime = maxTime
 			}
 		}
-		log.Println("Succssfully connected to parent")
+		log.Println(fmt.Sprintf("Succssfully connected to parent %s", h))
 		if err != nil {
-			log.Fatal("failed to connect to parent")
+			log.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
 			return errors.New("failed to connect")
 		}
 	}

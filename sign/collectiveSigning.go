@@ -373,6 +373,7 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 
 	// log.Println(sn.Name(), "In challenge before response")
 	sn.initResponseCrypto(chm.Round)
+	// if we are a leaf, send the respond up
 	if len(sn.Children(view)) == 0 {
 		sn.Respond(view, chm.Round, nil)
 	}
@@ -390,7 +391,7 @@ func (sn *Node) initResponseCrypto(Round int) {
 }
 
 func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
-	log.Println(sn.Name(), "couting response on view, round", view, Round, "Nchildren", sn.Children(view))
+	log.Println(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
@@ -442,6 +443,7 @@ func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 			round.r_hat.Add(round.r_hat, sm.Rm.R_hat)
 
 			sn.add(exceptionV_hat, sm.Rm.ExceptionV_hat)
+
 			sn.add(exceptionX_hat, sm.Rm.ExceptionX_hat)
 			round.ExceptionList = append(round.ExceptionList, sm.Rm.ExceptionList...)
 
