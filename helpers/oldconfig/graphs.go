@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"github.com/ineiti/cothorities/sign"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/prifi/coco/coconet"
-	"github.com/dedis/prifi/coco/sign"
+	"github.com/ineiti/cothorities/coconet"
 )
 
 // var testSuite = openssl.NewAES128SHA256P256()

@@ -10,10 +10,9 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
-	_ "github.com/dedis/prifi/coco"
-	"github.com/dedis/prifi/coco/coconet"
-	"github.com/dedis/prifi/coco/sign"
-	"github.com/dedis/prifi/coco/test/oldconfig"
+	"github.com/ineiti/cothorities/coconet"
+	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/helpers/oldconfig"
 )
 
 // NOTE: when announcing must provide round numbers

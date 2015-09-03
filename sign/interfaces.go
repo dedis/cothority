@@ -2,8 +2,8 @@ package sign
 
 import (
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/prifi/coco/hashid"
-	"github.com/dedis/prifi/coco/proof"
+	"github.com/ineiti/cothorities/hashid"
+	"github.com/ineiti/cothorities/proof"
 )
 
 var DEBUG bool // to avoid veryfing paths and signatures all the time

@@ -17,12 +17,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/ineiti/cothorities/sign"
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/nist"
-	"github.com/dedis/prifi/coco/coconet"
-	"github.com/dedis/prifi/coco/sign"
-	"github.com/dedis/prifi/coco/stamp"
+	"github.com/ineiti/cothorities/coconet"
+	"github.com/ineiti/cothorities/stamp"
 )
 
 /*

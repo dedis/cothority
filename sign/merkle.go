@@ -11,9 +11,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/dedis/prifi/coco/coconet"
-	"github.com/dedis/prifi/coco/hashid"
-	"github.com/dedis/prifi/coco/proof"
+	"github.com/ineiti/cothorities/coconet"
+	"github.com/ineiti/cothorities/hashid"
+	"github.com/ineiti/cothorities/proof"
 )
 
 func (sn *Node) AddChildrenMerkleRoots(Round int) {

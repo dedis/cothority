@@ -25,9 +25,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/prifi/coco/test/cliutils"
-	"github.com/dedis/prifi/coco/test/config"
-	"github.com/dedis/prifi/coco/test/graphs"
+	"github.com/ineiti/cothorities/helpers/cliutils"
+	"github.com/ineiti/cothorities/helpers/config"
+	"github.com/ineiti/cothorities/helpers/graphs"
 )
 
 // bf is the branching factor of the tree that we want to build

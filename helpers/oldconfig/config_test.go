@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dedis/prifi/coco/sign"
+	"github.com/ineiti/cothorities/sign"
 )
 
 func TestLoadConfig(t *testing.T) {

@@ -3,10 +3,10 @@ package oldconfig
 import (
 	"fmt"
 	"testing"
+	"github.com/ineiti/cothorities/sign"
 
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/prifi/coco/sign"
 )
 
 func TestTreeFromRandomGraph(t *testing.T) {

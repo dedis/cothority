@@ -5,8 +5,8 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/nist"
-	"github.com/dedis/prifi/coco/hashid"
-	"github.com/dedis/prifi/coco/proof"
+	"github.com/ineiti/cothorities/hashid"
+	"github.com/ineiti/cothorities/proof"
 	"github.com/dedis/protobuf"
 )
 

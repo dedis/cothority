@@ -17,8 +17,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/prifi/coco/test/cliutils"
-	"github.com/dedis/prifi/coco/test/graphs"
+	"github.com/ineiti/cothorities/helpers/cliutils"
+	"github.com/ineiti/cothorities/helpers/graphs"
 
 	"golang.org/x/net/websocket"
 )

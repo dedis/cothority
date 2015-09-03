@@ -22,9 +22,8 @@ import (
 	_ "expvar"
 
 	log "github.com/Sirupsen/logrus"
-
-	"github.com/dedis/prifi/coco/test/exec/timestamper"
-	"github.com/dedis/prifi/coco/test/logutils"
+	"github.com/ineiti/cothorities/exec/timestamper"
+	"github.com/ineiti/cothorities/helpers/logutils"
 )
 
 var hostname string

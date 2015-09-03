@@ -5,14 +5,13 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/helpers/oldconfig"
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
-//	"github.com/dedis/prifi/coco"
-	"github.com/dedis/prifi/coco/sign"
-	"github.com/dedis/prifi/coco/test/logutils"
-	"github.com/dedis/prifi/coco/test/oldconfig"
+	"github.com/ineiti/cothorities/helpers/logutils"
 )
 
 func GetSuite(suite string) abstract.Suite {
