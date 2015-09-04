@@ -88,7 +88,7 @@ func logEntryHandler(ws *websocket.Conn) {
 	log.Println("log server client error:", err)
 }
 
-f unc logHandler(ws *websocket.Conn) {
+f	unc logHandler(ws *websocket.Conn) {
 	log.Println("LOG HANDLER")
 	i := 0
 	for {
