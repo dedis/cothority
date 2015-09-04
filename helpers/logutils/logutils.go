@@ -81,8 +81,6 @@ retry:
 
 // Fire is called when a log event is fired.
 func (hook *LoggerHook) Fire(entry *logrus.Entry) error {
-	//fmt.Printf("In Fire", entry)
-	//log.Println("Loggin in fire", entry)
 	serialized, err := hook.f.Format(entry)
 	if err != nil {
 		return fmt.Errorf("Failed to fields to format, %v", err)
