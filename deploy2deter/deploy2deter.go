@@ -53,6 +53,10 @@ var user string
 var host string
 var nloggers int
 var masterLogger string
+var phys []string
+var virt []string
+var physOut string
+var virtOut string
 
 func init() {
 	flag.IntVar(&bf, "bf", 2, "branching factor: default binary")
@@ -75,15 +79,18 @@ func init() {
 	flag.StringVar(&host, "host", "users.deterlab.net", "Hostname of the deterlab")
 }
 
-func doBuild(){
+func readHosts(){
 	// parse the hosts.txt file to create a separate list (and file)
 	// of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
 	// corresponds to each host on line i, in virt.txt.
 	physVirt, err := cliutils.ReadLines("hosts.txt")
+	if err != nil{
+		log.Panic("Couldn't find hosts.txt")
+	}
 	log.Println("Getting list of hosts ", len(physVirt), ":", nmachs)
 
-	phys := make([]string, 0, len(physVirt)/2)
-	virt := make([]string, 0, len(physVirt)/2)
+	phys = make([]string, 0, len(physVirt)/2)
+	virt = make([]string, 0, len(physVirt)/2)
 	for i := 0; i < len(physVirt); i += 2 {
 		phys = append(phys, physVirt[i])
 		virt = append(virt, physVirt[i+1])
@@ -94,11 +101,14 @@ func doBuild(){
 	}
 	phys = phys[:nmachs+nloggers]
 	virt = virt[:nmachs+nloggers]
-	physOut := strings.Join(phys, "\n")
-	virtOut := strings.Join(virt, "\n")
+	physOut = strings.Join(phys, "\n")
+	virtOut = strings.Join(virt, "\n")
 	masterLogger = phys[0]
 	// slaveLogger1 := phys[1]
 	// slaveLogger2 := phys[2]
+}
+
+func doBuild(){
 
 	var wg sync.WaitGroup
 	// start building the necessary packages
@@ -135,7 +145,7 @@ func doBuild(){
 
 	// phys.txt and virt.txt only contain the number of machines that we need
 	log.Println("Reading phys and virt")
-	err = ioutil.WriteFile("remote/phys.txt", []byte(physOut), 0666)
+	err := ioutil.WriteFile("remote/phys.txt", []byte(physOut), 0666)
 	if err != nil {
 		log.Fatal("failed to write physical nodes file", err)
 	}
@@ -203,6 +213,7 @@ func doBuild(){
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Done building")
 }
 
 func main() {
@@ -210,6 +221,7 @@ func main() {
 	flag.Parse()
 	log.Println("RUNNING DEPLOY2DETER WITH RATE:", rate, " on machines:", nmachs)
 	os.MkdirAll("remote", 0777)
+	readHosts()
 
 	// killssh processes on users
 	log.Println("Stopping programs on user.deterlab.net")
@@ -243,6 +255,7 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to setup portforwarding for logging server")
 	}
+
 	log.Println("runnning deter with nmsgs:", nmsgs)
 	// run the deter lab boss nodes process
 	// it will be responsible for forwarding the files and running the individual
@@ -261,4 +274,6 @@ func main() {
 			" -app="+app+
 			" -suite="+suite+
 			" -kill="+strconv.FormatBool(kill)))
+
+	log.Println("END OF DEPLOY2DETER")
 }
