@@ -351,7 +351,7 @@ func GenerateHostsFile(project string, num_servers int) error {
 }
 func main() {
 	log.Println("\n*** Setting up everything")
-	SetDebug(false)
+	SetDebug(true)
 	flag.Parse()
 	user = fmt.Sprintf("-user=%s", user)
 

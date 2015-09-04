@@ -135,6 +135,23 @@ func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
 	log.Println("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
 	//host := r.Host
 	// fmt.Println(host)
+	for i, _ := range Log.Msgs {
+		var jsonlog map[string]*json.RawMessage
+		err := json.Unmarshal(Log.Msgs[i], &jsonlog)
+		if err != nil {
+			log.Error("Couldn't unmarshal string")
+		}
+
+		w.Write([]byte(fmt.Sprintf("%s - %s - %s - %s", *jsonlog["etime"], *jsonlog["eapp"],
+			*jsonlog["ehost"], *jsonlog["emsg"])))
+		w.Write([]byte("\n"))
+	}
+}
+
+func logHandlerHtmlReverse(w http.ResponseWriter, r *http.Request) {
+	log.Println("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
+	//host := r.Host
+	// fmt.Println(host)
 	for i := len(Log.Msgs) - 1; i >= 0; i-- {
 		var jsonlog map[string]*json.RawMessage
 		err := json.Unmarshal(Log.Msgs[i], &jsonlog)
@@ -259,13 +276,10 @@ func main() {
 			log.Fatal("unable to parse home.html", err)
 		}
 
-		/*
-			debugServers := getDebugServers()
-
-			for _, s := range debugServers {
-				reverseProxy(s)
-			}
-		*/
+		debugServers := getDebugServers()
+		for _, s := range debugServers {
+			reverseProxy(s)
+		}
 
 		log.Println(fmt.Sprintf("Log server %s running at : %s", role, addr))
 		// /bower_components/Chart.js/Chart.min.js
@@ -290,6 +304,7 @@ func main() {
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))
 	http.HandleFunc("/htmllog", logHandlerHtml)
+	http.HandleFunc("/htmllogrev", logHandlerHtmlReverse)
 	Log.Msgs = append(Log.Msgs, []byte("{\"eapp\":\"sign\",\"ehost\":\"10.255.0.4:2000\",\"elevel\":\"error\",\"emsg\":\"tcpconn: put: connection closed\",\"etime\":\"2015-09-04T05:37:34-07:00\",\"remote\":\"ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log\"}"))
 	Log.Msgs = append(Log.Msgs, []byte("{\"eapp\":\"sign\",\"ehost\":\"10.255.0.4:2000\",\"elevel\":\"info\",\"emsg\":\"map[elevel:info remote:ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log ehost:10.255.0.4:2000 eapp:sign etime:2015-09-04T05:37:34-07:00 emsg:*** 5 11]\",\"etime\":\"2015-09-04T05:37:34-07:00\",\"remote\":\"ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log\"}"))
 	log.Println("Length is", len(Log.Msgs))
