@@ -75,7 +75,7 @@ func logEntryHandler(ws *websocket.Conn) {
 	err := websocket.Message.Receive(ws, &data)
 	for err == nil {
 		if !isMaster {
-			websocket.Message.Send(wsmaster, data)
+			websocket.Message.Send(wsmaster, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr.String())), data...))
 		} else {
 			Log.Mlock.Lock()
 			Log.Msgs = append(Log.Msgs, data)
@@ -142,7 +142,7 @@ func NewReverseProxy(target *url.URL) *httputil.ReverseProxy {
 		r.URL.Path = target.Path + "/" + strings.Join(pathComp, "/")
 		log.Println("redirected to: ", r.URL.String())
 	}
-	//log.Println("setup reverse proxy for destination url:", target.Host, target.Path)
+	log.Println("setup reverse proxy for destination url:", target.Host, target.Path)
 	return &httputil.ReverseProxy{Director: director}
 }
 
@@ -226,7 +226,13 @@ func main() {
 	if master == "" {
 		isMaster = true
 	}
-	log.Println("running logserver with nmsgs branching factor:", nmsgs, bf)
+	var role string
+	if isMaster {
+		role = "Master"
+	} else {
+		role = "Servent"
+	}
+	log.Println(fmt.Sprintf("running logserver %s  with nmsgs %d branching factor: %d", role, nmsgs, bf))
 	if isMaster {
 		var err error
 		homePage, err = template.ParseFiles("home.html")
@@ -240,7 +246,7 @@ func main() {
 			reverseProxy(s)
 		}
 
-		log.Println("LOG SERVER RUNNING AT:", addr)
+		log.Println(fmt.Sprintf("Log server %s running at : %s", role, addr))
 		// /bower_components/Chart.js/Chart.min.js
 		http.HandleFunc("/", homeHandler)
 		fs := http.FileServer(http.Dir("bower_components/"))
@@ -255,7 +261,7 @@ func main() {
 			time.Sleep(time.Second)
 			goto retry
 		}
-		log.Println("LOG SLAVE RUNNING AT:", addr)
+		log.Println(fmt.Sprintf("Log server %s running at : %s ", role, addr))
 	}
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))
