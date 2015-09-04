@@ -76,10 +76,10 @@ func logEntryHandler(ws *websocket.Conn) {
 	err := websocket.Message.Receive(ws, &data)
 	for err == nil {
 		if !isMaster {
-			websocket.Message.Send(wsmaster, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr().String())), data...))
+			websocket.Message.Send(wsmaster, data)
 		} else {
 			Log.Mlock.Lock()
-			Log.Msgs = append(Log.Msgs, data)
+			Log.Msgs = append(Log.Msgs, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr().String())), data...))
 			Log.End += 1
 			Log.Mlock.Unlock()
 		}
@@ -233,7 +233,7 @@ func main() {
 	} else {
 		role = "Servent"
 	}
-	log.Println(fmt.Sprintf("running logserver %s  with nmsgs %d branching factor: %d", role, nmsgs, bf))
+	log.Println(fmt.Sprintf("running logserver %s  with nmsgs %s branching factor: %s", role, nmsgs, bf))
 	if isMaster {
 		var err error
 		homePage, err = template.ParseFiles("home.html")
