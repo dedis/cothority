@@ -494,7 +494,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 		startTime := time.Duration(200)
 		maxTime := time.Duration(2000)
 		for i := 0; i < 2000; i++ {
-			log.Println(fmt.Sprintf(" attempting to connect to parent %s", h))
+			log.Println(fmt.Sprintf(" %s attempting to connect to parent %s", h, sn.Name()))
 			// the host should connect with the parent
 			err = sn.Connect(0)
 			if err == nil {
@@ -508,7 +508,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 				startTime = maxTime
 			}
 		}
-		log.Println(fmt.Sprintf("Succssfully connected to parent %s", h))
+		log.Println(fmt.Sprintf("%s Succssfully connected to parent %s", h, sn.Name()))
 		if err != nil {
 			log.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
 			return errors.New("failed to connect")
