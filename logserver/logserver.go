@@ -43,7 +43,7 @@ func init() {
 	flag.StringVar(&addr, "addr", "", "the address of the logging server")
 	flag.StringVar(&hosts, "hosts", "", "number of hosts in config file")
 	flag.StringVar(&depth, "depth", "", "the depth of the tree")
-	flag.StringVar(&bf, "bf", "", "the branching factor of the tree")
+	flag.StringVar(&bf, "bf", "Ma", "the branching factor of the tree")
 	flag.StringVar(&hpn, "hpn", "", "number of hosts per node")
 	flag.StringVar(&rate, "rate", "", "the rate of messages")
 	flag.StringVar(&nmsgs, "nmsgs", "", "number of messages per round")
@@ -79,6 +79,7 @@ func logEntryHandler(ws *websocket.Conn) {
 			websocket.Message.Send(wsmaster, data)
 		} else {
 			Log.Mlock.Lock()
+			log.Info("IP ", ws.RemoteAddr().String(), data)
 			Log.Msgs = append(Log.Msgs, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr().String())), data...))
 			Log.End += 1
 			Log.Mlock.Unlock()
@@ -89,7 +90,7 @@ func logEntryHandler(ws *websocket.Conn) {
 }
 
 func logHandler(ws *websocket.Conn) {
-	log.Println("LOG HANDLER")
+	log.Println(fmt.Sprintf("%s log server serving /log (websocket)", master))
 	i := 0
 	for {
 		Log.Mlock.RLock()
@@ -102,7 +103,7 @@ func logHandler(ws *websocket.Conn) {
 		Log.Mlock.RLock()
 		msg := Log.Msgs[i]
 		Log.Mlock.RUnlock()
-		_, err := ws.Write([]byte(fmt.Sprintf("test %s",msg)))
+		_, err := ws.Write(msg)
 		if err != nil {
 			log.Println("unable to write to log websocket")
 			return
@@ -118,7 +119,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	log.Println("HOME HANDLER: ", r.URL)
+	log.Println(fmt.Sprintf("%s log server serving %s ", master, r.URL))
 	host := r.Host
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
@@ -254,15 +255,18 @@ func main() {
 		http.Handle("/bower_components/", http.StripPrefix("/bower_components/", fs))
 	} else {
 	retry:
+		tries := 0
 		var err error
 		origin := "http://localhost/"
 		url := "ws://" + master + "/_log"
 		wsmaster, err = websocket.Dial(url, "", origin)
 		if err != nil {
+			tries += 1
 			time.Sleep(time.Second)
+			log.Println(fmt.Sprintf("Slave log server could not connect to logger master (%s) .. Trying again (%d tries)", master, tries))
 			goto retry
 		}
-		log.Println(fmt.Sprintf("Log server %s running at : %s ", role, addr))
+		log.Println(fmt.Sprintf("Slave Log server %s running at : %s & connected to Master ", role, addr))
 	}
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))
