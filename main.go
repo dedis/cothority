@@ -381,7 +381,10 @@ func main() {
 		fmt.Sprintf("-nmachs=%d", machines), user, host)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalln("Couldn't run deploy2deter ", cmd.Args)
+	}
 
 	log.Println("\n*** Starting tests")
 	// test the testing framework

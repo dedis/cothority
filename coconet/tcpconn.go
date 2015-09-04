@@ -168,7 +168,7 @@ func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 		}
 		// if it is an irrecoverable error
 		// close the channel and return that it has been closed
-		log.Errorln("Couldn't decode packet:", err)
+		log.Errorln("Couldn't decode packet at", tc.name, "error:", err)
 		tc.Close()
 		return ErrClosed
 	}
