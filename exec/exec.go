@@ -71,9 +71,9 @@ func main() {
 	// connect with the logging server
 	if logger != "" && (amroot || debug) {
 		// blocks until we can connect to the logger
-		log.Println("Connecting to Logger")
+		log.Println(hostname, "Connecting to Logger")
 		lh, err := logutils.NewLoggerHook(logger, hostname, app)
-		log.Println("Connected to Logger")
+		log.Println(hostname, "Connected to Logger", hostname)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -82,12 +82,12 @@ func main() {
 		log.AddHook(lh)
 		//log.SetOutput(ioutil.Discard)
 		//fmt.Println("exiting logger block")
-		log.Println("Done setting up hook")
+		log.Println(hostname, "Done setting up hook")
 	}
 	if physaddr == "" {
 		h, _, err := net.SplitHostPort(hostname)
 		if err != nil {
-			log.Fatal("improperly formatted hostname")
+			log.Fatal(hostname, "improperly formatted hostname")
 		}
 		physaddr = h
 	}
@@ -96,7 +96,7 @@ func main() {
 	go func() {
 		_, port, err := net.SplitHostPort(hostname)
 		if err != nil {
-			log.Fatal("improperly formatted hostname: should be host:port")
+			log.Fatal(hostname, "improperly formatted hostname: should be host:port")
 		}
 		p, _ := strconv.Atoi(port)
 		// uncomment if more fine grained memory debuggin is needed

@@ -259,13 +259,10 @@ func main() {
 			log.Fatal("unable to parse home.html", err)
 		}
 
-		/*
 		debugServers := getDebugServers()
-
 		for _, s := range debugServers {
 			reverseProxy(s)
 		}
-		*/
 
 		log.Println(fmt.Sprintf("Log server %s running at : %s", role, addr))
 		// /bower_components/Chart.js/Chart.min.js
