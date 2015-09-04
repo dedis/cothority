@@ -7,6 +7,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	//"runtime/debug"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -144,6 +145,7 @@ func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 // Returns io.EOF on an irrecoveralbe error.
 // Returns given error if it is Temporary.
 func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
+	log.Println("TCPConn-Get", tc.name)
 	if tc.Closed() {
 		log.Errorln("tcpconn: get: connection closed")
 		return ErrClosed
@@ -166,6 +168,7 @@ func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 		}
 		// if it is an irrecoverable error
 		// close the channel and return that it has been closed
+		log.Errorln("Couldn't decode packet:", err)
 		tc.Close()
 		return ErrClosed
 	}
@@ -178,7 +181,7 @@ func (tc *TCPConn) Close() {
 	tc.encLock.Lock()
 	defer tc.encLock.Unlock()
 	if tc.conn != nil {
-		// ignore error becuase only other possibility was an invalid
+		// ignore error because only other possibility was an invalid
 		// connection. but we don't care if we close a connection twice.
 		tc.conn.Close()
 	}

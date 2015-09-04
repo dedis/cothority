@@ -28,6 +28,7 @@ func (sn *Node) get() error {
 	defer log.Println(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
+	log.Println("Going to get", sn.Name())
 	msgchan := sn.Host.Get()
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
@@ -59,7 +60,7 @@ func (sn *Node) get() error {
 
 			// if it is a non-fatal error try again
 			if err != nil {
-				log.Errorln("error getting message: continueing")
+				log.Errorln("error getting message: continuing")
 				continue
 			}
 			// interpret network message as Siging Message
