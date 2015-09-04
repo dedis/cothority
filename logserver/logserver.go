@@ -75,8 +75,9 @@ func logEntryHandler(ws *websocket.Conn) {
 	var data []byte
 	err := websocket.Message.Receive(ws, &data)
 	for err == nil {
+		//log.Println("logEntryHandler", isMaster)
 		if !isMaster {
-			websocket.Message.Send(wsmaster, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr().String())), data...))
+			websocket.Message.Send(wsmaster, data)
 		} else {
 			Log.Mlock.Lock()
 			Log.Msgs = append(Log.Msgs, data)
@@ -102,7 +103,7 @@ func logHandler(ws *websocket.Conn) {
 		Log.Mlock.RLock()
 		msg := Log.Msgs[i]
 		Log.Mlock.RUnlock()
-		_, err := ws.Write([]byte(fmt.Sprintf("test %s",msg)))
+		_, err := ws.Write([]byte(fmt.Sprintf("test %s", msg)))
 		if err != nil {
 			log.Println("unable to write to log websocket")
 			return
@@ -127,6 +128,23 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 		log.Fatal(err)
+	}
+}
+
+func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
+	log.Println("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
+	//host := r.Host
+	// fmt.Println(host)
+	for i := len(Log.Msgs) - 1; i >= 0; i-- {
+		var jsonlog map[string]*json.RawMessage
+		err := json.Unmarshal(Log.Msgs[i], &jsonlog)
+		if err != nil {
+			log.Error("Couldn't unmarshal string")
+		}
+
+		w.Write([]byte(fmt.Sprintf("%s - %s - %s - %s", *jsonlog["etime"], *jsonlog["eapp"],
+			*jsonlog["ehost"], *jsonlog["emsg"])))
+		w.Write([]byte("\n"))
 	}
 }
 
@@ -174,7 +192,7 @@ func reverseProxy(server string) {
 
 	//log.Println("setup proxy for: /d/"+short+"/", " it points to : "+server)
 	// register the reverse proxy forwarding for this server
-	http.HandleFunc("/d/"+short+"/", proxyDebugHandler(proxy))
+	http.HandleFunc("/d/" + short + "/", proxyDebugHandler(proxy))
 }
 
 func getDebugServers() []string {
@@ -210,7 +228,7 @@ func getDebugServers() []string {
 			log.Fatal("improperly formatted hostport:", err)
 		}
 		pn, _ := strconv.Atoi(p)
-		s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn+2))
+		s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn + 2))
 		debugServers = append(debugServers, s)
 	})
 	return debugServers
@@ -241,11 +259,13 @@ func main() {
 			log.Fatal("unable to parse home.html", err)
 		}
 
+		/*
 		debugServers := getDebugServers()
 
 		for _, s := range debugServers {
 			reverseProxy(s)
 		}
+		*/
 
 		log.Println(fmt.Sprintf("Log server %s running at : %s", role, addr))
 		// /bower_components/Chart.js/Chart.min.js
@@ -253,7 +273,7 @@ func main() {
 		fs := http.FileServer(http.Dir("bower_components/"))
 		http.Handle("/bower_components/", http.StripPrefix("/bower_components/", fs))
 	} else {
-	retry:
+		retry:
 		var err error
 		origin := "http://localhost/"
 		url := "ws://" + master + "/_log"
@@ -266,6 +286,10 @@ func main() {
 	}
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))
+	http.HandleFunc("/htmllog", logHandlerHtml)
+	Log.Msgs = append(Log.Msgs, []byte("{\"eapp\":\"sign\",\"ehost\":\"10.255.0.4:2000\",\"elevel\":\"error\",\"emsg\":\"tcpconn: put: connection closed\",\"etime\":\"2015-09-04T05:37:34-07:00\",\"remote\":\"ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log\"}"))
+	Log.Msgs = append(Log.Msgs, []byte("{\"eapp\":\"sign\",\"ehost\":\"10.255.0.4:2000\",\"elevel\":\"info\",\"emsg\":\"map[elevel:info remote:ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log ehost:10.255.0.4:2000 eapp:sign etime:2015-09-04T05:37:34-07:00 emsg:*** 5 11]\",\"etime\":\"2015-09-04T05:37:34-07:00\",\"remote\":\"ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log\"}"))
+	log.Println("Length is", len(Log.Msgs))
 	log.Fatalln("ERROR: ", http.ListenAndServe(addr, nil))
 	// now combine that port
 }

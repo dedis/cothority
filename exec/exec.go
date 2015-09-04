@@ -82,6 +82,7 @@ func main() {
 		log.AddHook(lh)
 		//log.SetOutput(ioutil.Discard)
 		//fmt.Println("exiting logger block")
+		log.Println("Done setting up hook")
 	}
 	if physaddr == "" {
 		h, _, err := net.SplitHostPort(hostname)
