@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"math/rand"
@@ -75,7 +76,7 @@ func logEntryHandler(ws *websocket.Conn) {
 	err := websocket.Message.Receive(ws, &data)
 	for err == nil {
 		if !isMaster {
-			websocket.Message.Send(wsmaster, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr.String())), data...))
+			websocket.Message.Send(wsmaster, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr().String())), data...))
 		} else {
 			Log.Mlock.Lock()
 			Log.Msgs = append(Log.Msgs, data)
