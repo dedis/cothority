@@ -247,7 +247,7 @@ func main() {
 	// run the deter lab boss nodes process
 	// it will be responsible for forwarding the files and running the individual
 	// timestamping servers
-	log.Fatal(cliutils.SshRunStdout(user, host,
+	log.Println(cliutils.SshRunStdout(user, host,
 		"GOMAXPROCS=8 remote/deter -nmsgs="+strconv.Itoa(nmsgs)+
 			" -hpn="+strconv.Itoa(hpn)+
 			" -bf="+strconv.Itoa(bf)+

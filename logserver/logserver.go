@@ -102,7 +102,7 @@ func logHandler(ws *websocket.Conn) {
 		Log.Mlock.RLock()
 		msg := Log.Msgs[i]
 		Log.Mlock.RUnlock()
-		_, err := ws.Write(msg)
+		_, err := ws.Write([]byte(fmt.Sprintf("test %s",msg)))
 		if err != nil {
 			log.Println("unable to write to log websocket")
 			return
