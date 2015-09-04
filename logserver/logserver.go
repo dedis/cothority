@@ -43,7 +43,7 @@ func init() {
 	flag.StringVar(&addr, "addr", "", "the address of the logging server")
 	flag.StringVar(&hosts, "hosts", "", "number of hosts in config file")
 	flag.StringVar(&depth, "depth", "", "the depth of the tree")
-	flag.StringVar(&bf, "bf", "", "the branching factor of the tree")
+	flag.StringVar(&bf, "bf", "Ma", "the branching factor of the tree")
 	flag.StringVar(&hpn, "hpn", "", "number of hosts per node")
 	flag.StringVar(&rate, "rate", "", "the rate of messages")
 	flag.StringVar(&nmsgs, "nmsgs", "", "number of messages per round")
@@ -90,7 +90,7 @@ func logEntryHandler(ws *websocket.Conn) {
 }
 
 func logHandler(ws *websocket.Conn) {
-	log.Println("LOG HANDLER")
+	log.Println(fmt.Sprintf("%s log server serving /log (websocket)", master))
 	i := 0
 	for {
 		Log.Mlock.RLock()
@@ -103,7 +103,7 @@ func logHandler(ws *websocket.Conn) {
 		Log.Mlock.RLock()
 		msg := Log.Msgs[i]
 		Log.Mlock.RUnlock()
-		_, err := ws.Write([]byte(fmt.Sprintf("test %s", msg)))
+		_, err := ws.Write(msg)
 		if err != nil {
 			log.Println("unable to write to log websocket")
 			return
@@ -119,7 +119,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	log.Println("HOME HANDLER: ", r.URL)
+	log.Println(fmt.Sprintf("%s log server serving %s ", master, r.URL))
 	host := r.Host
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
@@ -192,7 +192,7 @@ func reverseProxy(server string) {
 
 	//log.Println("setup proxy for: /d/"+short+"/", " it points to : "+server)
 	// register the reverse proxy forwarding for this server
-	http.HandleFunc("/d/" + short + "/", proxyDebugHandler(proxy))
+	http.HandleFunc("/d/"+short+"/", proxyDebugHandler(proxy))
 }
 
 func getDebugServers() []string {
@@ -228,7 +228,7 @@ func getDebugServers() []string {
 			log.Fatal("improperly formatted hostport:", err)
 		}
 		pn, _ := strconv.Atoi(p)
-		s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn + 2))
+		s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn+2))
 		debugServers = append(debugServers, s)
 	})
 	return debugServers
@@ -251,7 +251,7 @@ func main() {
 	} else {
 		role = "Servent"
 	}
-	log.Println(fmt.Sprintf("running logserver %s  with nmsgs %d branching factor: %d", role, nmsgs, bf))
+	log.Println(fmt.Sprintf("running logserver %s  with nmsgs %s branching factor: %s", role, nmsgs, bf))
 	if isMaster {
 		var err error
 		homePage, err = template.ParseFiles("home.html")
@@ -270,16 +270,19 @@ func main() {
 		fs := http.FileServer(http.Dir("bower_components/"))
 		http.Handle("/bower_components/", http.StripPrefix("/bower_components/", fs))
 	} else {
-		retry:
+	retry:
+		tries := 0
 		var err error
 		origin := "http://localhost/"
 		url := "ws://" + master + "/_log"
 		wsmaster, err = websocket.Dial(url, "", origin)
 		if err != nil {
+			tries += 1
 			time.Sleep(time.Second)
+			log.Println(fmt.Sprintf("Slave log server could not connect to logger master (%s) .. Trying again (%d tries)", master, tries))
 			goto retry
 		}
-		log.Println(fmt.Sprintf("Log server %s running at : %s ", role, addr))
+		log.Println(fmt.Sprintf("Slave Log server %s running at : %s & connected to Master ", role, addr))
 	}
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))

@@ -20,7 +20,9 @@ func init() {
 type LoggerHook struct {
 	HostPort string
 	Conn     *websocket.Conn
-	f        logrus.Formatter
+	Host     string
+	App      string
+	f        *JSONFormatter
 }
 
 func File() string {
@@ -40,17 +42,23 @@ func File() string {
 	return file + ":" + strconv.Itoa(line)
 }
 
-func (lh *LoggerHook) Connect() {
+func (lh *LoggerHook) Connect() error {
 	hostport := lh.HostPort
+	tries := 0
 retry:
 	addr := "ws://" + hostport + "/_log"
 	ws, err := websocket.Dial(addr, "", "http://localhost/")
 	if err != nil {
+		tries += 1
 		log.Println("failed to connect to logger:", addr)
 		time.Sleep(time.Second)
+		if tries > 5 {
+			return err
+		}
 		goto retry
 	}
 	lh.Conn = ws
+	return nil
 }
 
 // host is my host: what machine I am running on
@@ -64,7 +72,11 @@ retry:
 		time.Sleep(time.Second)
 		goto retry
 	}
-	return &LoggerHook{hostport, ws, &JSONFormatter{host, app}}, err
+	logger := &LoggerHook{hostport, ws, host, app, &JSONFormatter{host, app}}
+	logrus.SetFormatter(logger.f)
+	err = logger.Connect()
+	return logger, err
+
 }
 
 // Fire is called when a log event is fired.
@@ -77,6 +89,7 @@ func (hook *LoggerHook) Fire(entry *logrus.Entry) error {
 	}
 	_, err = hook.Conn.Write(serialized)
 	if err != nil {
+		fmt.Printf("Failed to write the log from %s(%s): %v\n", hook.f.App, hook.f.Host, err)
 		return err
 	}
 
