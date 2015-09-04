@@ -141,7 +141,6 @@ func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error("Couldn't unmarshal string")
 		}
-
 		w.Write([]byte(fmt.Sprintf("%s - %s - %s - %s", *jsonlog["etime"], *jsonlog["eapp"],
 			*jsonlog["ehost"], *jsonlog["emsg"])))
 		w.Write([]byte("\n"))
