@@ -79,8 +79,7 @@ func logEntryHandler(ws *websocket.Conn) {
 			websocket.Message.Send(wsmaster, data)
 		} else {
 			Log.Mlock.Lock()
-			log.Info("IP ", ws.RemoteAddr().String(), data)
-			Log.Msgs = append(Log.Msgs, append([]byte(fmt.Sprintf("IP : %s", ws.RemoteAddr().String())), data...))
+			Log.Msgs = append(Log.Msgs, data)
 			Log.End += 1
 			Log.Mlock.Unlock()
 		}
