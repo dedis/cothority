@@ -72,19 +72,19 @@ func init() {
 	flag.IntVar(&nmachs, "nmachs", 20, "number of machines to use")
 	flag.IntVar(&nloggers, "nloggers", 3, "number of loggers in pool")
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
-	flag.StringVar(&app, "app", "stamp", "app to run")
-	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
+	flag.StringVar(&app, "app", "sign", "app to run")
+	flag.StringVar(&suite, "suite", "ed25519", "abstract suite to use [nist256, nist512, ed25519]")
 	flag.BoolVar(&build, "build", false, "build all helpers with go")
 	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
 	flag.StringVar(&host, "host", "users.deterlab.net", "Hostname of the deterlab")
 }
 
-func readHosts(){
+func readHosts() {
 	// parse the hosts.txt file to create a separate list (and file)
 	// of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
 	// corresponds to each host on line i, in virt.txt.
 	physVirt, err := cliutils.ReadLines("hosts.txt")
-	if err != nil{
+	if err != nil {
 		log.Panic("Couldn't find hosts.txt")
 	}
 	log.Println("Getting list of hosts ", len(physVirt), ":", nmachs)
@@ -108,7 +108,7 @@ func readHosts(){
 	// slaveLogger2 := phys[2]
 }
 
-func doBuild(){
+func doBuild() {
 
 	var wg sync.WaitGroup
 	// start building the necessary packages

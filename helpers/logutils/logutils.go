@@ -1,17 +1,16 @@
 package logutils
 
 import (
-	"bytes"
-	"encoding/gob"
-	//"encoding/json"
+	"encoding/json"
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"golang.org/x/net/websocket"
 	"log"
 	"math/rand"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/Sirupsen/logrus"
+	"golang.org/x/net/websocket"
 )
 
 func init() {
@@ -115,7 +114,6 @@ func (f *JSONFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	data["elevel"] = entry.Level.String()
 
 	serialized, err := json.Marshal(data)
-
 	if err != nil {
 		return nil, fmt.Errorf("Failed to marshal fields to JSON, %v", err)
 	}

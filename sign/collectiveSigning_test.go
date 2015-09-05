@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
 	"github.com/ineiti/cothorities/coconet"
@@ -54,7 +55,8 @@ var DefaultView = 0
 
 func runStaticTest(signType sign.Type, RoundsPerView int, faultyNodes ...int) error {
 	// Crypto setup
-	suite := nist.NewAES128SHA256P256()
+	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := nist.NewAES128SHA256P256()
 	rand := suite.Cipher([]byte("example"))
 
 	// number of nodes for the test
