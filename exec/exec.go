@@ -106,6 +106,5 @@ func main() {
 
 	log.Println(hostname, "Running")
 	// log.Println("!!!!!!!!!!!!!!!Running timestamp with rFail and fFail: ", rFail, fFail)
-	log.Println(hostname, " running ...")
 	timestamper.Run(hostname, cfg, app, rounds, rootwait, debug, testConnect, failures, rFail, fFail, logger, suite)
 }
