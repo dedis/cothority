@@ -1,0 +1,47 @@
+set ns [new Simulator]
+source tb_compat.tcl
+
+set server_count 6
+set node_count 0
+set server_delay 50ms
+set client_delay 50ms
+set lanstr ""
+
+# There is no real benefit for modifying this for a special case of 1 client
+
+for {set i 0} {$i < $server_count} {incr i} {
+        set server($i) [$ns node]
+# If you can't deploy delete the following
+#       tb-set-hardware $server($i) MicroCloud
+        tb-set-node-os $server($i) Ubuntu1204-64-STD
+        append server_lanstr "$server($i) "
+
+        if { $node_count > 0 } {
+                set client_lanstr "$server($i) "
+
+                for {set j 0} {$j < $node_count} {incr j} {
+                        set client($i-$j) [$ns node]
+                        tb-set-node-os $client($i-$j) Ubuntu1204-64-STD
+                        append client_lanstr "$client($i-$j) "
+                }
+
+                set clientlan($i) [$ns make-lan "$client_lanstr" 100Mb 0ms]
+                tb-set-noshaping $clientlan($i) 1
+
+                tb-set-node-lan-delay $server($i) $clientlan($i) $client_delay
+                tb-set-ip-lan $server($i) $clientlan($i) 10.0.$i.254
+        }
+}
+
+set serverlan [$ns make-lan "$server_lanstr" 100Mb $server_delay]
+tb-set-noshaping $serverlan 1
+
+for {set i 0} {$i < $server_count} {incr i} {
+        tb-set-ip-lan $server($i) $serverlan 10.255.0.[expr {$i + 1}]
+        for { set j 0} {$j < $node_count} {incr j} {
+                tb-set-ip-lan $client($i-$j) $clientlan($i) 10.0.$i.[expr {$j + 1}]
+        }
+}
+
+$ns rtproto Static
+$ns run
