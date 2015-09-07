@@ -157,7 +157,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.doneChan[c.reqno] = make(chan error, 1) // new done channel for new req
 	c.Mux.Unlock()
 	// send request to TSServer
-	log.Println(c.Name(), "SENDING TIME STAMP REQUEST TO: ", TSServerName)
+	//log.Debug(c.Name(), "SENDING TIME STAMP REQUEST TO: ", TSServerName)
 	err := c.PutToServer(TSServerName,
 		&TimeStampMessage{
 			Type:  StampRequestType,

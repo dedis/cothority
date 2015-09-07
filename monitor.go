@@ -106,7 +106,6 @@ retry:
 			k++
 			rs.StdDev = math.Sqrt(S / (k - 1))
 		} else if bytes.Contains(data, []byte("forkexec")) {
-			log.Println("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 			if rootDone {
 				continue
 			}
@@ -118,12 +117,12 @@ retry:
 			rs.SysTime = ss.SysTime
 			rs.UserTime = ss.UserTime
 			log.Println("FORKEXEC:", ss)
+			rootDone = true
+			log.Println("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 			if clientDone {
 				break
 			}
-			rootDone = true
 		} else if bytes.Contains(data, []byte("client_msg_stats")) {
-			log.Println("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
 			if clientDone {
 				continue
 			}
@@ -146,10 +145,11 @@ retry:
 			observed = 1 / observed
 			rs.Rate = observed
 			rs.Times = cms.Times
+			log.Println("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
+			clientDone = true
 			if rootDone {
 				break
 			}
-			clientDone = true
 		}
 	}
 	return rs
