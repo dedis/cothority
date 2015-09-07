@@ -111,6 +111,7 @@ func readHosts() {
 func doBuild() {
 
 	var wg sync.WaitGroup
+
 	// start building the necessary packages
 	log.Println("Starting to build all executables")
 	packages := []string{"../logserver", "../timeclient", "../exec", "../forkexec", "../deter"}
@@ -125,6 +126,7 @@ func doBuild() {
 				// the users node has a 386 FreeBSD architecture
 				err := cliutils.Build(p, "386", "freebsd")
 				if err != nil {
+					cliutils.KillGo()
 					log.Fatal(err)
 				}
 			}(p)
@@ -135,6 +137,7 @@ func doBuild() {
 			// deter has an amd64, linux architecture
 			err := cliutils.Build(p, "amd64", "linux")
 			if err != nil {
+				cliutils.KillGo()
 				log.Fatal(err)
 			}
 		}(p)
