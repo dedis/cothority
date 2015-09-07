@@ -394,7 +394,8 @@ func main() {
 	// RunTests("failure_test.csv", t)
 	// RunTests("vote_test", VotingTest)
 	// RunTests("failure_test", FailureTests)
-	RunTests("sign_test", SignTest)
+	RunTests("sign_test", HostsTest)
+	// RunTests("sign_test", SignTest)
 	// t := FailureTests
 	// RunTests("failure_test", t)
 	// t = ScaleTest(10, 1, 100, 2)

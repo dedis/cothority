@@ -531,7 +531,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 
 // run each host in hostnameSlice with the number of clients given
 func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*stamp.Server, []*stamp.Client, error) {
-	//log.Println("RunTimestamper")
+	log.Println("RunTimestamper")
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
 	if hostnameSlice == nil {

@@ -99,7 +99,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 			iters := 10
 
 			for i := 0; i < iters; i++ {
-				time.Sleep(3 * time.Second)
+				//time.Sleep(3 * time.Second)
 				start = time.Now()
 				//fmt.Println("ANNOUNCING")
 				hc.SNodes[0].LogTest = []byte("Hello World")
@@ -114,7 +114,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 				elapsed := time.Since(start)
 				log.WithFields(log.Fields{
 					"file":  logutils.File(),
-					"type":  "root_announced",
+					"type":  "root_announce",
 					"round": i,
 					"time":  elapsed,
 				}).Info("")

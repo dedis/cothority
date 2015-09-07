@@ -299,6 +299,7 @@ func (s *Server) Run(role string, nRounds int) {
 	// 	s.Close()
 	// }()
 
+	log.Println("Stamp-server starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()

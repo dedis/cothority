@@ -236,6 +236,7 @@ func main() {
 			if err != nil {
 				log.Println(err)
 			}
+			log.Println("Finished with timeclient", i)
 		}(i, p)
 		i = (i + 1) % len(loggerports)
 	}
@@ -256,10 +257,11 @@ func main() {
 			if err != nil {
 				log.Fatal("ERROR STARTING TIMESTAMPER:", err)
 			}
+			log.Println("Finished with Timestamper", phys)
 		}(phys, cmd)
 
 	}
 	// wait for the servers to finish before stopping
 	wg.Wait()
-	time.Sleep(10 * time.Minute)
+	//time.Sleep(10 * time.Minute)
 }
