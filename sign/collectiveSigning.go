@@ -7,11 +7,10 @@ import (
 	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
-	"golang.org/x/net/context"
-
 	"github.com/dedis/crypto/abstract"
 	"github.com/ineiti/cothorities/coconet"
 	"github.com/ineiti/cothorities/hashid"
+	"golang.org/x/net/context"
 	// "strconv"
 	// "os"
 )
@@ -608,9 +607,9 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 	// intermediary nodes check partial responses aginst their partial keys
 	// the root node is also able to check against the challenge it emitted
 	if !T.Equal(round.Log.V_hat) || (isroot && !round.c.Equal(c2)) {
-		// if coco.DEBUG == true {
-		panic(sn.Name() + "reports ElGamal Collective Signature failed for Round" + strconv.Itoa(Round))
-		// }
+		if DEBUG == true {
+			panic(sn.Name() + "reports ElGamal Collective Signature failed for Round" + strconv.Itoa(Round))
+		}
 		// return errors.New("Veryfing ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
 	}
 

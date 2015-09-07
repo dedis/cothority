@@ -92,9 +92,9 @@ retry:
 
 			if err == io.EOF || err == coconet.ErrClosed {
 				if err == io.EOF {
-					log.Printf("CLIENT DONE: terminating due to EOF")
+					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to EOF")
 				} else {
-					log.Printf("CLIENT DONE: terminating due to Connection Error Closed")
+					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed")
 				}
 				log.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
