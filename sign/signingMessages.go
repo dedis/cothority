@@ -4,10 +4,11 @@ import (
 	"reflect"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/nist"
+	"github.com/dedis/crypto/edwards"
+	//"github.com/dedis/crypto/nist"
+	"github.com/dedis/protobuf"
 	"github.com/ineiti/cothorities/hashid"
 	"github.com/ineiti/cothorities/proof"
-	"github.com/dedis/protobuf"
 )
 
 // All message structures defined in this package are used in the
@@ -77,7 +78,9 @@ type SigningMessage struct {
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
 }
 
-var msgSuite abstract.Suite = nist.NewAES128SHA256P256()
+var msgSuite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
+
+//var msgSuite abstract.Suite = nist.NewAES128SHA256P256()
 
 func NewSigningMessage() interface{} {
 	return &SigningMessage{}

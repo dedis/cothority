@@ -53,14 +53,14 @@ func (sn *Node) get() error {
 
 			// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
-				log.Errorf("getting from closed host")
+				log.Errorf(sn.Name(), " getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}
 
 			// if it is a non-fatal error try again
 			if err != nil {
-				log.Errorln("error getting message: continuing")
+				log.Errorln(sn.Name(), " error getting message (still continuing) ", err)
 				continue
 			}
 			// interpret network message as Siging Message
@@ -73,7 +73,7 @@ func (sn *Node) get() error {
 			sn.viewmu.Lock()
 			if sm.View > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
-					log.Warnln("not caught up for view change", sn.LastSeenVote, sn.LastAppliedVote)
+					log.Warnln(sn.Name(), "not caught up for view change", sn.LastSeenVote, sn.LastAppliedVote)
 					return errors.New("not caught up for view change")
 				}
 			}

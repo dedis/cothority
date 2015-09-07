@@ -20,7 +20,8 @@ import (
 	"github.com/ineiti/cothorities/sign"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/nist"
+	"github.com/dedis/crypto/edwards"
+	//	"github.com/dedis/crypto/nist"
 	"github.com/ineiti/cothorities/coconet"
 	"github.com/ineiti/cothorities/stamp"
 )
@@ -438,7 +439,8 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 			}
 		}
 	}
-	suite := nist.NewAES128SHA256P256()
+	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := nist.NewAES128SHA256P256()
 	if opts.Suite != nil {
 		suite = opts.Suite
 	}
