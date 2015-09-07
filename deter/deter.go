@@ -234,9 +234,9 @@ func main() {
 				" -debug="+debug+
 				" -rate="+strconv.Itoa(rate))
 			if err != nil {
-				log.Println(err)
+				log.Println("Deter.go : timeclient error ", err)
 			}
-			log.Println("Finished with timeclient", i)
+			log.Println("Deter.go : Finished with timeclient", i)
 		}(i, p)
 		i = (i + 1) % len(loggerports)
 	}
