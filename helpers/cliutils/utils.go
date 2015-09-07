@@ -85,6 +85,11 @@ func Build(path, goarch, goos string) error {
 	return cmd.Run()
 }
 
+func KillGo() {
+	cmd := exec.Command("killall", "go")
+	cmd.Run()
+}
+
 func TimeoutRun(d time.Duration, f func() error) error {
 	echan := make(chan error)
 	go func() {
