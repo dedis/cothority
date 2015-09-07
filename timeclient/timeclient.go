@@ -4,7 +4,7 @@ import (
 	"flag"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/crypto/suite"
+	//"github.com/dedis/crypto/suite"
 	"github.com/ineiti/cothorities/helpers/logutils"
 	"github.com/ineiti/cothorities/helpers/oldconfig"
 	"github.com/ineiti/cothorities/timeclient/stampclient"
