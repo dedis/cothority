@@ -20,21 +20,21 @@ func Monitor(bf int) RunStats {
 	log.Println("MONITORING")
 	defer fmt.Println("DONE MONITORING")
 retry_dial:
-	ws, err := websocket.Dial("ws://localhost:8081/log", "", "http://localhost/")
+	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
 	if err != nil {
 		time.Sleep(1 * time.Second)
 		goto retry_dial
 	}
 retry:
 	// Get HTML of webpage for data (NHosts, Depth, ...)
-	doc, err := goquery.NewDocument("http://localhost:8081/")
+	doc, err := goquery.NewDocument(fmt.Sprintf("http://localhost:%d/", port))
 	if err != nil {
 		log.Println("unable to get log data: retrying:", err)
 		time.Sleep(10 * time.Second)
 		goto retry
 	}
 	if view {
-		browser.OpenURL("http://localhost:8081/")
+		browser.OpenURL(fmt.Sprintf("http://localhost:%d/", port))
 	}
 	nhosts := doc.Find("#numhosts").First().Text()
 	log.Println("hosts:", nhosts)

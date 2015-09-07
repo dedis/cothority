@@ -60,6 +60,7 @@ var hosts_file string = "deploy2deter/hosts.txt"
 var project string = "Dissent-CS"
 var machines int = 3
 var loggers int = 3
+var port int = 8081
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
@@ -74,6 +75,7 @@ func init() {
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.IntVar(&machines, "machines", machines, "Number of machines (servers running the client)")
 	flag.IntVar(&loggers, "loggers", loggers, "Number of loggers")
+	flag.IntVar(&port, "port", port, "Port to forward debugging-information")
 	flag.StringVar(&project, "project", project, "Name of the project on DeterLab")
 }
 
