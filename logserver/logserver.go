@@ -304,9 +304,6 @@ func main() {
 	http.Handle("/log", websocket.Handler(logHandler))
 	http.HandleFunc("/htmllog", logHandlerHtml)
 	http.HandleFunc("/htmllogrev", logHandlerHtmlReverse)
-	Log.Msgs = append(Log.Msgs, []byte("{\"eapp\":\"sign\",\"ehost\":\"10.255.0.4:2000\",\"elevel\":\"error\",\"emsg\":\"tcpconn: put: connection closed\",\"etime\":\"2015-09-04T05:37:34-07:00\",\"remote\":\"ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log\"}"))
-	Log.Msgs = append(Log.Msgs, []byte("{\"eapp\":\"sign\",\"ehost\":\"10.255.0.4:2000\",\"elevel\":\"info\",\"emsg\":\"map[elevel:info remote:ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log ehost:10.255.0.4:2000 eapp:sign etime:2015-09-04T05:37:34-07:00 emsg:*** 5 11]\",\"etime\":\"2015-09-04T05:37:34-07:00\",\"remote\":\"ws://server-1.Dissent-CS.SAFER.isi.deterlab.net:10000/_log\"}"))
-	log.Println("Length is", len(Log.Msgs))
 	log.Fatalln("ERROR: ", http.ListenAndServe(addr, nil))
 	// now combine that port
 }
