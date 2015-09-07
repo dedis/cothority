@@ -139,7 +139,7 @@ type ExpVar struct {
 }
 
 func Memstats(server string) (*ExpVar, error) {
-	url := "localhost:8080/d/" + server + "/debug/vars"
+	url := "localhost:8081/d/" + server + "/debug/vars"
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

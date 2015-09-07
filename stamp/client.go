@@ -14,24 +14,24 @@ import (
 )
 
 type Client struct {
-	Mux sync.Mutex // coarse grained mutex
+	Mux         sync.Mutex              // coarse grained mutex
 
-	name    string
-	Servers map[string]coconet.Conn // signing nodes I work/ communicate with
+	name        string
+	Servers     map[string]coconet.Conn // signing nodes I work/ communicate with
 
-	// client history maps request numbers to replies from TSServer
-	// maybe at later phases we will want pair(reqno, TSServer) as key
-	history map[SeqNo]TimeStampMessage
-	reqno   SeqNo // next request number in communications with TSServer
+										// client history maps request numbers to replies from TSServer
+										// maybe at later phases we will want pair(reqno, TSServer) as key
+	history     map[SeqNo]TimeStampMessage
+	reqno       SeqNo                   // next request number in communications with TSServer
 
-	// maps response request numbers to channels confirming
-	// where response confirmations are sent
-	doneChan map[SeqNo]chan error
+										// maps response request numbers to channels confirming
+										// where response confirmations are sent
+	doneChan    map[SeqNo]chan error
 
-	nRounds     int    // # of last round messages were received in, as perceived by client
-	curRoundSig []byte // merkle tree root of last round
-	// roundChan   chan int // round numberd are sent in as rounds change
-	Error error
+	nRounds     int                     // # of last round messages were received in, as perceived by client
+	curRoundSig []byte                  // merkle tree root of last round
+										// roundChan   chan int // round numberd are sent in as rounds change
+	Error       error
 }
 
 func NewClient(name string) (c *Client) {
@@ -181,18 +181,18 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	// wait until ProcessStampReply signals that reply was received
 	select {
 	case err = <-myChan:
-		// log.Println("-------------client received  response from" + TSServerName)
+		log.Println("-------------client received  response from" + TSServerName)
 		break
 	case <-time.After(10 * ROUND_TIME):
 		if sign.DEBUG == true {
 			log.Errorln(errors.New("client timeouted on waiting for response from" + TSServerName))
 		}
 		break
-		// err = ErrClientToTSTimeout
+	// err = ErrClientToTSTimeout
 	}
 	if err != nil {
 		if sign.DEBUG {
-			log.Errorln("error received from DoneChan:", err)
+			log.Errorln(c.Name(), "error received from DoneChan:", err)
 		}
 		return err
 	}

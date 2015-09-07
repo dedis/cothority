@@ -37,7 +37,7 @@ func removeTrailingZeroes(a []int64) []int64 {
 			break
 		}
 	}
-	return a[:i+1]
+	return a[:i + 1]
 }
 
 var muStats sync.Mutex
@@ -61,15 +61,16 @@ func streamMessgs(c *stamp.Client, servers []string, rate int) {
 	buck := make([]int64, MAX_N_SECONDS)
 	// roundsAfter[i] = # of timestamp requests that were processed i rounds late
 	roundsAfter := make([]int64, MAX_N_ROUNDS)
-	times := make([]int64, MAX_N_SECONDS*1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
+	times := make([]int64, MAX_N_SECONDS * 1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
 	ticker := time.Tick(time.Duration(rate) * time.Millisecond)
 	msg := genRandomMessages(1)[0]
 	i := 0
 	nServers := len(servers)
 
-retry:
+	retry:
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
+		log.Println("CLIENT ", c.Name(), "DONE: couldn't connect to TimeStamp")
 		log.Fatal(AggregateStats(buck, roundsAfter, times))
 	} else if err == stamp.ErrClientToTSTimeout {
 		log.Errorln(err)
@@ -92,9 +93,9 @@ retry:
 
 			if err == io.EOF || err == coconet.ErrClosed {
 				if err == io.EOF {
-					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to EOF")
+					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to EOF", s)
 				} else {
-					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed")
+					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed", s)
 				}
 				log.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
@@ -108,7 +109,7 @@ retry:
 			secToTimeStamp := t.Seconds()
 			secSinceFirst := time.Since(tFirst).Seconds()
 			atomic.AddInt64(&buck[int(secSinceFirst)], 1)
-			index := int(secToTimeStamp) / int(stamp.ROUND_TIME/time.Second)
+			index := int(secToTimeStamp) / int(stamp.ROUND_TIME / time.Second)
 			atomic.AddInt64(&roundsAfter[index], 1)
 			atomic.AddInt64(&times[tick], t.Nanoseconds())
 
@@ -120,11 +121,10 @@ retry:
 }
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
-var MAX_N_ROUNDS int = MAX_N_SECONDS / int(stamp.ROUND_TIME/time.Second)
+var MAX_N_ROUNDS int = MAX_N_SECONDS / int(stamp.ROUND_TIME / time.Second)
 
 func Run(server string, nmsgs int, name string, rate int, debug bool) {
 	c := stamp.NewClient(name)
-	msgs := genRandomMessages(nmsgs + 20)
 	servers := strings.Split(server, ",")
 
 	// connect to all the servers listed
@@ -134,18 +134,23 @@ func Run(server string, nmsgs int, name string, rate int, debug bool) {
 			log.Fatal("improperly formatted host")
 		}
 		pn, _ := strconv.Atoi(p)
-		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn+1))))
+		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn + 1))))
 	}
 
+	// Check if somebody asks for the old way
+	if rate < 0 {
+		log.Fatal("ROUNDS BASED RATE LIMITING DEPRECATED")
+	}
+
+	// Stream time stamp requests
 	// if rate specified send out one message every rate milliseconds
-	if rate > 0 {
-		// Stream time stamp requests
-		log.Println("Starting to stream at rate", rate)
-		streamMessgs(c, servers, rate)
-		log.Printf("CLIENT (stampclient) ", c.Name(), "Run() Leaving...")
-		return
-	}
+	log.Println("Starting to stream at rate", rate)
+	streamMessgs(c, servers, rate)
+	log.Println("Finished streaming")
+	return
 
+	/*
+	msgs := genRandomMessages(nmsgs + 20)
 	// rounds based messaging
 	r := 0
 	s := 0
@@ -184,4 +189,5 @@ func Run(server string, nmsgs int, name string, rate int, debug bool) {
 		//}).Info("client round")
 		r++
 	}
+	*/
 }
