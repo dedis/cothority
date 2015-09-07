@@ -86,7 +86,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect
 
 	defer func(sn *sign.Node) {
 		//log.Panicln("program has terminated:", hostname)
-		log.Println("Program has terminated:", hostname)
+		log.Println("Program timestamper has terminated:", hostname)
 		sn.Close()
 	}(hc.SNodes[0])
 

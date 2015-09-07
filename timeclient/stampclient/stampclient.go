@@ -14,8 +14,8 @@ import (
 
 	"github.com/ineiti/cothorities/coconet"
 	"github.com/ineiti/cothorities/hashid"
-	"github.com/ineiti/cothorities/stamp"
 	"github.com/ineiti/cothorities/helpers/logutils"
+	"github.com/ineiti/cothorities/stamp"
 )
 
 func genRandomMessages(n int) [][]byte {
@@ -91,7 +91,11 @@ retry:
 			t := time.Since(t0)
 
 			if err == io.EOF || err == coconet.ErrClosed {
-				log.Printf("CLIENT DONE: terminating")
+				if err == io.EOF {
+					log.Printf("CLIENT DONE: terminating due to EOF")
+				} else {
+					log.Printf("CLIENT DONE: terminating due to Connection Error Closed")
+				}
 				log.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
 				// ignore errors
