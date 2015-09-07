@@ -166,7 +166,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
 			if sign.DEBUG {
-				log.Warn("error timestamping: ", err)
+				log.Warn(c.Name(), "error timestamping: ", err)
 			}
 		}
 		// pass back up all errors from putting to server
@@ -192,7 +192,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	}
 	if err != nil {
 		if sign.DEBUG {
-			log.Errorln("error received from DoneChan:", err)
+			log.Errorln(c.Name(), "error received from DoneChan:", err)
 		}
 		return err
 	}
