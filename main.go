@@ -123,7 +123,7 @@ func RunTest(t T) (RunStats, error) {
 	select {
 	case <-done:
 		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
-			return rs, errors.New("unable to get good data")
+			return rs, errors.New(fmt.Sprintf("unable to get good data: %+v", rs))
 		}
 		return rs, nil
 	case <-time.After(5 * time.Minute):

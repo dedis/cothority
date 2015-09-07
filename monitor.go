@@ -78,6 +78,7 @@ retry:
 			log.Println("Monitor() root_round  msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 
 			if clientDone || rootDone {
+				log.Println("Continuing searching data")
 				// ignore after we have received our first EOF
 				continue
 			}
@@ -86,13 +87,19 @@ retry:
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
-			log.Println("root_round:", entry)
+			if entry.Type != "root_round"{
+				log.Println("Wrong debugging message - ignoring")
+				continue
+			}
+			log.Println(fmt.Sprintf("root_round: %+v", entry))
 			if first {
 				first = false
+				log.Println("Setting min-time to", entry.Time)
 				rs.MinTime = entry.Time
 				rs.MaxTime = entry.Time
 			}
 			if entry.Time < rs.MinTime {
+				log.Println("Setting min-time to", entry.Time)
 				rs.MinTime = entry.Time
 			} else if entry.Time > rs.MaxTime {
 				rs.MaxTime = entry.Time
