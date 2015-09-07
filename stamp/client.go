@@ -181,7 +181,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	// wait until ProcessStampReply signals that reply was received
 	select {
 	case err = <-myChan:
-		log.Println("-------------client received  response from" + TSServerName)
+		//log.Println("-------------client received  response from" + TSServerName)
 		break
 	case <-time.After(10 * ROUND_TIME):
 		if sign.DEBUG == true {

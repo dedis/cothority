@@ -149,7 +149,7 @@ func RunTests(name string, ts []T) {
 		log.Fatal("error syncing test file:", err)
 	}
 
-	nTimes := 2
+	nTimes := 1
 	stopOnSuccess := true
 	for i, t := range ts {
 		// run test t nTimes times
@@ -291,12 +291,13 @@ func FullTests() []T {
 
 var HostsTest = []T{
 	{machines, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
+/*	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
 	{machines, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
 	{machines, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
 	{machines, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{machines, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{machines, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
+*/
 	{machines, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }
 
