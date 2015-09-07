@@ -14,24 +14,24 @@ import (
 )
 
 type Client struct {
-	Mux sync.Mutex // coarse grained mutex
+	Mux         sync.Mutex              // coarse grained mutex
 
-	name    string
-	Servers map[string]coconet.Conn // signing nodes I work/ communicate with
+	name        string
+	Servers     map[string]coconet.Conn // signing nodes I work/ communicate with
 
-	// client history maps request numbers to replies from TSServer
-	// maybe at later phases we will want pair(reqno, TSServer) as key
-	history map[SeqNo]TimeStampMessage
-	reqno   SeqNo // next request number in communications with TSServer
+										// client history maps request numbers to replies from TSServer
+										// maybe at later phases we will want pair(reqno, TSServer) as key
+	history     map[SeqNo]TimeStampMessage
+	reqno       SeqNo                   // next request number in communications with TSServer
 
-	// maps response request numbers to channels confirming
-	// where response confirmations are sent
-	doneChan map[SeqNo]chan error
+										// maps response request numbers to channels confirming
+										// where response confirmations are sent
+	doneChan    map[SeqNo]chan error
 
-	nRounds     int    // # of last round messages were received in, as perceived by client
-	curRoundSig []byte // merkle tree root of last round
-	// roundChan   chan int // round numberd are sent in as rounds change
-	Error error
+	nRounds     int                     // # of last round messages were received in, as perceived by client
+	curRoundSig []byte                  // merkle tree root of last round
+										// roundChan   chan int // round numberd are sent in as rounds change
+	Error       error
 }
 
 func NewClient(name string) (c *Client) {
@@ -157,7 +157,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.doneChan[c.reqno] = make(chan error, 1) // new done channel for new req
 	c.Mux.Unlock()
 	// send request to TSServer
-	// log.Println("SENDING TIME STAMP REQUEST TO: ", TSServerName)
+	log.Println(c.Name(), "SENDING TIME STAMP REQUEST TO: ", TSServerName)
 	err := c.PutToServer(TSServerName,
 		&TimeStampMessage{
 			Type:  StampRequestType,
@@ -166,7 +166,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
 			if sign.DEBUG {
-				log.Warn(c.Name(), "error timestamping: ", err)
+				log.Warn(c.Name(), "error timestamping to ", TSServerName, ": ", err)
 			}
 		}
 		// pass back up all errors from putting to server
@@ -188,7 +188,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 			log.Errorln(errors.New("client timeouted on waiting for response from" + TSServerName))
 		}
 		break
-		// err = ErrClientToTSTimeout
+	// err = ErrClientToTSTimeout
 	}
 	if err != nil {
 		if sign.DEBUG {

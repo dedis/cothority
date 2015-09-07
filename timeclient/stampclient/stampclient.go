@@ -100,6 +100,7 @@ func streamMessgs(c *stamp.Client, servers []string, rate int) {
 				log.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
 				// ignore errors
+				log.Printf("CLIENT ", c.Name(), "Leaving out streamMessages. ", err)
 				return
 			}
 
@@ -136,9 +137,19 @@ func Run(server string, nmsgs int, name string, rate int, debug bool) {
 		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn + 1))))
 	}
 
+<<<<<<< HEAD
 	// Check if somebody asks for the old way
 	if rate < 0 {
 		log.Fatal("ROUNDS BASED RATE LIMITING DEPRECATED")
+=======
+	// if rate specified send out one message every rate milliseconds
+	if rate > 0 {
+		// Stream time stamp requests
+		log.Println("Starting to stream at rate", rate)
+		streamMessgs(c, servers, rate)
+		log.Printf("CLIENT (stampclient) ", c.Name(), "Run() Leaving...")
+		return
+>>>>>>> d7d176ff23e697c21ef7796380cef54db533bff1
 	}
 
 	// Stream time stamp requests

@@ -66,7 +66,7 @@ var loggers int = 3
 var DefaultRounds int = 1
 
 var view bool
-var debug string = "-debug=false"
+var debug string = "-debug=true"
 var nobuild bool = false
 
 func init() {
@@ -124,7 +124,7 @@ func RunTest(t T) (RunStats, error) {
 			return rs, errors.New("unable to get good data")
 		}
 		return rs, nil
-	case <-time.After(10 * time.Minute):
+	case <-time.After(5 * time.Minute):
 		return rs, errors.New("timed out")
 	}
 }
