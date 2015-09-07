@@ -56,7 +56,7 @@ func AggregateStats(buck, roundsAfter, times []int64) string {
 }
 
 func streamMessgs(c *stamp.Client, servers []string, rate int) {
-	//log.Println("STREAMING: GIVEN RATE")
+	log.Println("STREAMING: GIVEN RATE", rate)
 	// buck[i] = # of timestamp responses received in second i
 	buck := make([]int64, MAX_N_SECONDS)
 	// roundsAfter[i] = # of timestamp requests that were processed i rounds late
@@ -135,6 +135,7 @@ func Run(server string, nmsgs int, name string, rate int, debug bool) {
 	// if rate specified send out one message every rate milliseconds
 	if rate > 0 {
 		// Stream time stamp requests
+		log.Println("Starting to stream at rate", rate)
 		streamMessgs(c, servers, rate)
 		return
 	}

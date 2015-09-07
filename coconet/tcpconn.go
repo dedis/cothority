@@ -145,7 +145,6 @@ func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 // Returns io.EOF on an irrecoveralbe error.
 // Returns given error if it is Temporary.
 func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
-	log.Println("TCPConn-Get", tc.name)
 	if tc.Closed() {
 		log.Errorln("tcpconn: get: connection closed")
 		return ErrClosed

@@ -216,7 +216,7 @@ func main() {
 
 	// wait a little bit for the logserver to start up
 	time.Sleep(5 * time.Second)
-	fmt.Println("starting time clients")
+	fmt.Println("starting", len(physToServer), "time clients")
 
 	// start up one timeclient per physical machine
 	// it requests timestamps from all the servers on that machine
