@@ -171,6 +171,8 @@ func RunTests(name string, ts []T) {
 				if stopOnSuccess {
 					break
 				}
+			} else {
+				log.Println("Error for test ", r, " : ", err)
 			}
 
 		}
