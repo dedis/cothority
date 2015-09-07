@@ -70,6 +70,7 @@ func streamMessgs(c *stamp.Client, servers []string, rate int) {
 	retry:
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
+		log.Println("CLIENT ", c.Name(), "DONE: couldn't connect to TimeStamp")
 		log.Fatal(AggregateStats(buck, roundsAfter, times))
 	} else if err == stamp.ErrClientToTSTimeout {
 		log.Errorln(err)
