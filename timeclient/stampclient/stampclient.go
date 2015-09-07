@@ -99,6 +99,7 @@ retry:
 				log.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
 				// ignore errors
+				log.Printf("CLIENT ", c.Name(), "Leaving out streamMessages. ", err)
 				return
 			}
 
@@ -141,6 +142,7 @@ func Run(server string, nmsgs int, name string, rate int, debug bool) {
 		// Stream time stamp requests
 		log.Println("Starting to stream at rate", rate)
 		streamMessgs(c, servers, rate)
+		log.Printf("CLIENT (stampclient) ", c.Name(), "Run() Leaving...")
 		return
 	}
 

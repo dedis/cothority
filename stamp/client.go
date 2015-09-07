@@ -157,7 +157,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.doneChan[c.reqno] = make(chan error, 1) // new done channel for new req
 	c.Mux.Unlock()
 	// send request to TSServer
-	// log.Println("SENDING TIME STAMP REQUEST TO: ", TSServerName)
+	log.Println(c.Name(), "SENDING TIME STAMP REQUEST TO: ", TSServerName)
 	err := c.PutToServer(TSServerName,
 		&TimeStampMessage{
 			Type:  StampRequestType,
@@ -166,7 +166,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
 			if sign.DEBUG {
-				log.Warn("error timestamping: ", err)
+				log.Warn(c.Name(), "error timestamping to ", TSServerName, ": ", err)
 			}
 		}
 		// pass back up all errors from putting to server

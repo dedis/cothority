@@ -40,4 +40,5 @@ func main() {
 		log.AddHook(lh)
 	}
 	stampclient.Run(server, nmsgs, name, rate, debug)
+	log.Printf("Timeclient.go ", name, "main() ", name, " finished...")
 }

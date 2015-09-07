@@ -75,6 +75,8 @@ retry:
 				rootDone, clientDone)
 		}
 		if bytes.Contains(data, []byte("root_round")) {
+			log.Println("Monitor() root_round  msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+
 			if clientDone || rootDone {
 				// ignore after we have received our first EOF
 				continue
@@ -104,6 +106,7 @@ retry:
 			k++
 			rs.StdDev = math.Sqrt(S / (k - 1))
 		} else if bytes.Contains(data, []byte("forkexec")) {
+			log.Println("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 			if rootDone {
 				continue
 			}
@@ -120,6 +123,7 @@ retry:
 			}
 			rootDone = true
 		} else if bytes.Contains(data, []byte("client_msg_stats")) {
+			log.Println("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
 			if clientDone {
 				continue
 			}

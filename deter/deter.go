@@ -236,7 +236,7 @@ func main() {
 			if err != nil {
 				log.Println("Deter.go : timeclient error ", err)
 			}
-			log.Println("Deter.go : Finished with timeclient", i)
+			log.Println("Deter.go : Finished with timeclient", p)
 		}(i, p)
 		i = (i + 1) % len(loggerports)
 	}
