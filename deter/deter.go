@@ -37,11 +37,12 @@ import (
 
 var rootname string
 
+// Generate all commands on one single physicial machines to launch every "nodes"
 func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerport, rootwait string, random_leaf string) string {
 	total := ""
 	for _, n := range names {
 		connect := false
-		log.Printf("name == %s, random_leaf == %s, testConnect = %t", n, random_leaf, testConnect)
+		log.Printf("deter.go Generate cmd timestamper : name == %s, random_leaf == %s, testConnect = %t", n, random_leaf, testConnect)
 		if n == random_leaf && testConnect {
 			connect = true
 		}
@@ -218,9 +219,33 @@ func main() {
 	time.Sleep(5 * time.Second)
 	fmt.Println("starting", len(physToServer), "time clients")
 
+	rootwait := strconv.Itoa(10)
+
+	i := 0
+	for phys, virts := range physToServer {
+		if len(virts) == 0 {
+			continue
+		}
+		log.Println("starting timestamper")
+		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], rootwait, random_leaf)
+		i = (i + 1) % len(loggerports)
+		wg.Add(1)
+		time.Sleep(500 * time.Millisecond)
+		go func(phys, cmd string) {
+			//log.Println("running on ", phys, cmd)
+			defer wg.Done()
+			log.Println("deter.go Starting clients on physical machine ", phys)
+			err := cliutils.SshRunStdout("", phys, cmd)
+			if err != nil {
+				log.Fatal("ERROR STARTING TIMESTAMPER:", err)
+			}
+			log.Println("Finished with Timestamper", phys)
+		}(phys, cmd)
+
+	}
+
 	// start up one timeclient per physical machine
 	// it requests timestamps from all the servers on that machine
-	i := 0
 	for p, ss := range physToServer {
 		if len(ss) == 0 {
 			continue
@@ -240,27 +265,7 @@ func main() {
 		}(i, p)
 		i = (i + 1) % len(loggerports)
 	}
-	rootwait := strconv.Itoa(10)
-	for phys, virts := range physToServer {
-		if len(virts) == 0 {
-			continue
-		}
-		log.Println("starting timestamper")
-		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], rootwait, random_leaf)
-		i = (i + 1) % len(loggerports)
-		wg.Add(1)
-		time.Sleep(500 * time.Millisecond)
-		go func(phys, cmd string) {
-			//log.Println("running on ", phys, cmd)
-			defer wg.Done()
-			err := cliutils.SshRunStdout("", phys, cmd)
-			if err != nil {
-				log.Fatal("ERROR STARTING TIMESTAMPER:", err)
-			}
-			log.Println("Finished with Timestamper", phys)
-		}(phys, cmd)
 
-	}
 	// wait for the servers to finish before stopping
 	wg.Wait()
 	//time.Sleep(10 * time.Minute)

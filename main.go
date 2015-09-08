@@ -60,6 +60,8 @@ var hosts_file string = "deploy2deter/hosts.txt"
 var project string = "Dissent-CS"
 var machines int = 3
 var loggers int = 3
+var bf int = 2
+var hpn = 1
 var port int = 8081
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
@@ -77,6 +79,8 @@ func init() {
 	flag.IntVar(&loggers, "loggers", loggers, "Number of loggers")
 	flag.IntVar(&port, "port", port, "Port to forward debugging-information")
 	flag.StringVar(&project, "project", project, "Name of the project on DeterLab")
+	flag.IntVar(&bf, "branch", bf, "Branching Factor")
+	flag.IntVar(&hpn, "hpn", hpn, "Host per node (physical machine)")
 }
 
 // hpn, bf, nmsgsG
@@ -134,8 +138,10 @@ func RunTest(t T) (RunStats, error) {
 // RunTests runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, ts []T) {
-	for _, t := range ts {
-		t.nmachs = machines
+	for i, _ := range ts {
+		ts[i].nmachs = machines
+		ts[i].bf = bf
+		ts[i].hpn = hpn
 	}
 
 	rs := make([]RunStats, len(ts))
@@ -362,6 +368,7 @@ func main() {
 	log.Println("\n*** Setting up everything")
 	SetDebug(true)
 	flag.Parse()
+	log.Println(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", machines, loggers, user, project))
 	user = fmt.Sprintf("-user=%s", user)
 
 	// generate hosts file
