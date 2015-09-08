@@ -84,8 +84,8 @@ func main() {
 		"-suite=" + suite,
 	}
 	cmd := exec.Command("./exec", args...)
-	cmd.Stdout = log.StandardLogger().Writer()
-	cmd.Stderr = log.StandardLogger().Writer()
+	//cmd.Stdout = log.StandardLogger().Writer()
+	//cmd.Stderr = log.StandardLogger().Writer()
 	// log.Println("running command:", cmd)
 	err := cmd.Run()
 	if err != nil {
