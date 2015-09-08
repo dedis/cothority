@@ -134,6 +134,9 @@ func RunTest(t T) (RunStats, error) {
 // RunTests runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, ts []T) {
+	for _, t := range ts {
+		t.nmachs = machines
+	}
 
 	rs := make([]RunStats, len(ts))
 	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
@@ -294,13 +297,13 @@ func FullTests() []T {
 
 var HostsTest = []T{
 	{machines, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
-/*	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
-*/
+	/*	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
+		{machines, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
+		{machines, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
+		{machines, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
+		{machines, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
+		{machines, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	*/
 	{machines, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }
 
@@ -417,7 +420,6 @@ func main() {
 	// RunTests("load_rate_test_bf50.csv", t)
 
 }
-
 func MkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
