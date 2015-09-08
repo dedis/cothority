@@ -82,6 +82,7 @@ func init() {
 // hpn, bf, nmsgsG
 func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
+	log.Printf("%+v", t)
 	done := make(chan struct{})
 	var rs RunStats
 	nmachs := fmt.Sprintf("-nmachs=%d", t.nmachs)
@@ -134,9 +135,10 @@ func RunTest(t T) (RunStats, error) {
 // RunTests runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, ts []T) {
-	for _, t := range ts {
-		t.nmachs = machines
+	for a, _ := range ts {
+		ts[a].nmachs = machines
 	}
+	log.Println(fmt.Sprintf("%+v", ts))
 
 	rs := make([]RunStats, len(ts))
 	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
