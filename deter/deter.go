@@ -226,7 +226,7 @@ func main() {
 		if len(virts) == 0 {
 			continue
 		}
-		log.Println("starting timestamper")
+		log.Println("Deter.go : Starting timestamper on ", phys, " with virtuals : ", virts)
 		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], rootwait, random_leaf)
 		i = (i + 1) % len(loggerports)
 		wg.Add(1)
@@ -234,7 +234,7 @@ func main() {
 		go func(phys, cmd string) {
 			//log.Println("running on ", phys, cmd)
 			defer wg.Done()
-			log.Println("deter.go Starting clients on physical machine ", phys)
+			//log.Println("deter.go Starting clients on physical machine ", phys)
 			err := cliutils.SshRunStdout("", phys, cmd)
 			if err != nil {
 				log.Fatal("ERROR STARTING TIMESTAMPER:", err)

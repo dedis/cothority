@@ -61,7 +61,7 @@ var project string = "Dissent-CS"
 var machines int = 3
 var loggers int = 3
 var bf int = 2
-var hpn = 1
+var hpn = -1
 var port int = 8081
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
@@ -141,7 +141,9 @@ func RunTests(name string, ts []T) {
 	for i, _ := range ts {
 		ts[i].nmachs = machines
 		ts[i].bf = bf
-		ts[i].hpn = hpn
+		if hpn > 0 {
+			ts[i].hpn = hpn
+		}
 	}
 
 	rs := make([]RunStats, len(ts))
