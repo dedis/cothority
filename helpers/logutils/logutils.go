@@ -64,6 +64,9 @@ retry:
 		time.Sleep(time.Second)
 		goto retry
 	}
+
+	logrus.SetFormatter(&JSONFormatter{})
+
 	return &LoggerHook{hostport, ws, &JSONFormatter{host, app}}, err
 }
 

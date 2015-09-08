@@ -11,6 +11,7 @@ import (
 
 	"github.com/ineiti/cothorities/coconet"
 	"github.com/ineiti/cothorities/sign"
+	"fmt"
 )
 
 type Client struct {
@@ -137,7 +138,7 @@ func (c *Client) PutToServer(name string, data coconet.BinaryMarshaler) error {
 	defer c.Mux.Unlock()
 	conn := c.Servers[name]
 	if conn == nil {
-		return errors.New("INVALID SERVER/NOT CONNECTED")
+		return errors.New(fmt.Sprintf("INVALID SERVER/NOT CONNECTED", name, c.Servers[name]))
 	}
 	return conn.Put(data)
 }

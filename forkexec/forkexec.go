@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/ineiti/cothorities/helpers/logutils"
+	"os"
 )
 
 // Wrapper around exec.go to enable measuring of cpu time
@@ -86,7 +87,9 @@ func main() {
 	cmd := exec.Command("./exec", args...)
 	//cmd.Stdout = log.StandardLogger().Writer()
 	//cmd.Stderr = log.StandardLogger().Writer()
-	// log.Println("running command:", cmd)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log.Println("running command:", cmd)
 	err := cmd.Run()
 	if err != nil {
 		log.Errorln("cmd run:", err)

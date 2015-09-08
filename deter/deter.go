@@ -251,7 +251,7 @@ func main() {
 		wg.Add(1)
 		time.Sleep(500 * time.Millisecond)
 		go func(phys, cmd string) {
-			//log.Println("running on ", phys, cmd)
+			log.Println("running on ", phys, cmd)
 			defer wg.Done()
 			err := cliutils.SshRunStdout("", phys, cmd)
 			if err != nil {
