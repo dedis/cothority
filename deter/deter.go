@@ -38,41 +38,48 @@ import (
 var rootname string
 
 // Generate all commands on one single physicial machines to launch every "nodes"
-func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerport, rootwait string, random_leaf string) string {
-	total := ""
-	for _, n := range names {
-		connect := false
-		log.Printf("deter.go Generate cmd timestamper : name == %s, random_leaf == %s, testConnect = %t", n, random_leaf, testConnect)
-		if n == random_leaf && testConnect {
+func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerport, random_leaf string) string {
+	connect := false
+	cmd := ""
+	bg := " & "
+	for i, name := range names {
+		log.Printf("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect)
+		if name == random_leaf && testConnect {
 			connect = true
 		}
 		amroot := " -amroot=false"
-		if n == rootname {
+		if name == rootname {
 			amroot = " -amroot=true"
 		}
-		total += "(cd remote; sudo ./forkexec -rootwait=" + rootwait +
-			" -rfail=" + strconv.Itoa(rFail) +
-			" -ffail=" + strconv.Itoa(fFail) +
-			" -failures=" + strconv.Itoa(failures) +
-			" -physaddr=" + phys +
-			" -hostname=" + n +
-			" -logger=" + loggerport +
-			" -debug=" + debug +
-			" -suite=" + suite +
-			" -rounds=" + strconv.Itoa(rounds) +
-			" -app=" + app +
-			" -test_connect=" + strconv.FormatBool(connect) +
-			amroot +
-			" ); "
-		//" </dev/null 2>/dev/null 1>/dev/null &); "
+
+		if i == len(names) - 1{
+			bg = ""
+		}
+		cmd += "(cd remote; sudo ./forkexec" +
+		" -rfail=" + strconv.Itoa(rFail) +
+		" -ffail=" + strconv.Itoa(fFail) +
+		" -failures=" + strconv.Itoa(failures) +
+		" -physaddr=" + phys +
+		" -hostname=" + name +
+		" -logger=" + loggerport +
+		" -debug=" + strconv.Itoa(debug) +
+		" -suite=" + suite +
+		" -rounds=" + strconv.Itoa(rounds) +
+		" -app=" + app +
+		" -test_connect=" + strconv.FormatBool(connect) +
+		" -config=" + configFile +
+		" -pprof=" + pprofaddr +
+		" -rootwait=" + strconv.Itoa(rootwait) +
+		amroot + bg +
+		" ); "
 	}
-	return total
+	return cmd
 }
 
 var nmsgs string
 var hpn string
 var bf string
-var debug string
+var debug int
 var rate int
 var failures int
 var rFail int
@@ -82,12 +89,15 @@ var kill bool
 var testConnect bool
 var app string
 var suite string
+var pprofaddr string
+var configFile string
+var rootwait int
 
 func init() {
 	flag.StringVar(&nmsgs, "nmsgs", "100", "the number of messages per round")
 	flag.StringVar(&hpn, "hpn", "", "number of hosts per node")
 	flag.StringVar(&bf, "bf", "", "branching factor")
-	flag.StringVar(&debug, "debug", "false", "set debug mode")
+	flag.IntVar(&debug, "debug", 2, "set debug level")
 	flag.IntVar(&rate, "rate", -1, "number of milliseconds between messages")
 	flag.IntVar(&failures, "failures", 0, "percent showing per node probability of failure")
 	flag.IntVar(&rFail, "rfail", 0, "number of consecutive rounds each root runs before it fails")
@@ -97,6 +107,9 @@ func init() {
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
 	flag.StringVar(&app, "app", "stamp", "app to run")
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
+	flag.StringVar(&pprofaddr, "pprof", ":10000", "the address to run the pprof server at")
+	flag.StringVar(&configFile, "config", "cfg.json", "the json configuration file")
+	flag.IntVar(&rootwait, "rootwait", 30, "the amount of time the root should wait")
 }
 
 func main() {
@@ -124,7 +137,7 @@ func main() {
 			defer wg.Done()
 			cliutils.SshRun("", h, "sudo killall exec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall forkexec 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall exec 2>/dev/null >/dev/null")
 		}(h)
 	}
 	wg.Wait()
@@ -201,63 +214,39 @@ func main() {
 		// redirect to the master logger
 		master := masterLogger + ":10000"
 		// if this is the master logger than don't set the master to anything
-		if loggerport == masterLogger+":10000" {
+		if loggerport == masterLogger + ":10000" {
 			master = ""
 		}
 
-		go cliutils.SshRunStdout("", logger, "cd remote/logserver; sudo ./logserver -addr="+loggerport+
-			" -hosts="+strconv.Itoa(len(hostnames))+
-			" -depth="+strconv.Itoa(depth)+
-			" -bf="+bf+
-			" -hpn="+hpn+
-			" -nmsgs="+nmsgs+
-			" -rate="+strconv.Itoa(rate)+
-			" -master="+master)
+		go cliutils.SshRunStdout("", logger, "cd remote/logserver; sudo ./logserver -addr=" + loggerport +
+		" -hosts=" + strconv.Itoa(len(hostnames)) +
+		" -depth=" + strconv.Itoa(depth) +
+		" -bf=" + bf +
+		" -hpn=" + hpn +
+		" -nmsgs=" + nmsgs +
+		" -rate=" + strconv.Itoa(rate) +
+		" -master=" + master)
 	}
 
 	// wait a little bit for the logserver to start up
 	time.Sleep(5 * time.Second)
 	fmt.Println("starting", len(physToServer), "time clients")
-
-	rootwait := strconv.Itoa(10)
-
-	i := 0
-	for phys, virts := range physToServer {
-		if len(virts) == 0 {
-			continue
-		}
-		log.Println("starting timestamper")
-		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], rootwait, random_leaf)
-		i = (i + 1) % len(loggerports)
-		wg.Add(1)
-		time.Sleep(500 * time.Millisecond)
-		go func(phys, cmd string) {
-			//log.Println("running on ", phys, cmd)
-			defer wg.Done()
-			log.Println("deter.go Starting clients on physical machine ", phys)
-			err := cliutils.SshRunStdout("", phys, cmd)
-			if err != nil {
-				log.Fatal("ERROR STARTING TIMESTAMPER:", err)
-			}
-			log.Println("Finished with Timestamper", phys)
-		}(phys, cmd)
-
-	}
-
 	// start up one timeclient per physical machine
 	// it requests timestamps from all the servers on that machine
+
+	i := 0
 	for p, ss := range physToServer {
 		if len(ss) == 0 {
 			continue
 		}
 		servers := strings.Join(ss, ",")
 		go func(i int, p string) {
-			_, err := cliutils.SshRun("", p, "cd remote; sudo ./timeclient -nmsgs="+nmsgs+
-				" -name=client@"+p+
-				" -server="+servers+
-				" -logger="+loggerports[i]+
-				" -debug="+debug+
-				" -rate="+strconv.Itoa(rate))
+			_, err := cliutils.SshRun("", p, "cd remote; sudo ./timeclient -nmsgs=" + nmsgs +
+			" -name=client@" + p +
+			" -server=" + servers +
+			" -logger=" + loggerports[i] +
+			" -debug=" + strconv.Itoa(debug) +
+			" -rate=" + strconv.Itoa(rate))
 			if err != nil {
 				log.Println("Deter.go : timeclient error ", err)
 			}
@@ -265,6 +254,29 @@ func main() {
 		}(i, p)
 		i = (i + 1) % len(loggerports)
 	}
+
+	for phys, virts := range physToServer {
+		if len(virts) == 0 {
+			continue
+		}
+		log.Println("starting timestampers for", virts)
+		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], random_leaf)
+		i = (i + 1) % len(loggerports)
+		wg.Add(1)
+		time.Sleep(100 * time.Millisecond)
+		go func(phys, cmd string) {
+			//log.Println("running on ", phys, cmd)
+			defer wg.Done()
+			log.Println("deter.go Starting clients on physical machine ", phys, cmd)
+			err := cliutils.SshRunStdout("", phys, cmd)
+			if err != nil {
+				log.Fatal("ERROR STARTING TIMESTAMPER:", err, phys, virts)
+			}
+			log.Println("Finished with Timestamper", phys)
+		}(phys, cmd)
+
+	}
+
 	// wait for the servers to finish before stopping
 	wg.Wait()
 	//time.Sleep(10 * time.Minute)

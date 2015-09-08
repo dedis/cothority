@@ -65,13 +65,21 @@ retry:
 		goto retry
 	}
 
-	logrus.SetFormatter(&JSONFormatter{})
+	//logrus.SetFormatter(&JSONFormatter{})
 
 	return &LoggerHook{hostport, ws, &JSONFormatter{host, app}}, err
 }
 
 // Fire is called when a log event is fired.
 func (hook *LoggerHook) Fire(entry *logrus.Entry) error {
+	/*
+	entry.data["ehost"] = f.Host // the host that this is running on
+	entry.data["eapp"] = f.App   // what app we are running (timeclient, timestamper, signer)
+	entry.data["etime"] = entry.Time.Format(time.RFC3339)
+	entry.data["emsg"] = entry.Message
+	entry.data["elevel"] = entry.Level.String()
+	*/
+
 	serialized, err := hook.f.Format(entry)
 	if err != nil {
 		return fmt.Errorf("Failed to fields to format, %v", err)

@@ -88,7 +88,7 @@ func (c *Client) handleResponse(tsm *TimeStampMessage) {
 func (c *Client) AddServer(name string, conn coconet.Conn) {
 	//c.Servers[name] = conn
 	go func(conn coconet.Conn) {
-		maxwait := 1 * time.Second
+		maxwait := 20 * time.Second
 		curWait := 100 * time.Millisecond
 		for {
 			err := conn.Connect()
