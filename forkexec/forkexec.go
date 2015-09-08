@@ -19,7 +19,7 @@ var app string
 var pprofaddr string
 var physaddr string
 var rootwait int
-var debug bool
+var debug int
 var failures int
 var rFail int
 var fFail int
@@ -38,7 +38,7 @@ func init() {
 	flag.StringVar(&pprofaddr, "pprof", ":10000", "the address to run the pprof server at")
 	flag.StringVar(&physaddr, "physaddr", "", "the physical address of the noded [for deterlab]")
 	flag.IntVar(&rootwait, "rootwait", 30, "the amount of time the root should wait")
-	flag.BoolVar(&debug, "debug", false, "set debugging")
+	flag.IntVar(&debug, "debug", 2, "set debugging-level")
 	flag.IntVar(&failures, "failures", 0, "percent showing per node probability of failure")
 	flag.IntVar(&rFail, "rfail", 0, "number of consecutive rounds each root runs before it fails")
 	flag.IntVar(&fFail, "ffail", 0, "number of consecutive rounds each follower runs before it fails")
@@ -50,7 +50,7 @@ func init() {
 func main() {
 	flag.Parse()
 	// connect with the logging server
-	if logger != "" && (amroot || debug) {
+	if logger != "" && (amroot || debug > 0) {
 		// blocks until we can connect to the logger
 		lh, err := logutils.NewLoggerHook(logger, hostname, app)
 		if err != nil {
@@ -78,7 +78,7 @@ func main() {
 		"-pprof=" + pprofaddr,
 		"-physaddr=" + physaddr,
 		"-rootwait=" + strconv.Itoa(rootwait),
-		"-debug=" + strconv.FormatBool(debug),
+		"-debug=" + strconv.Itoa(debug),
 		"-rounds=" + strconv.Itoa(rounds),
 		"-amroot=" + strconv.FormatBool(amroot),
 		"-test_connect=" + strconv.FormatBool(testConnect),
@@ -89,7 +89,7 @@ func main() {
 	//cmd.Stderr = log.StandardLogger().Writer()
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	log.Println("running command:", cmd)
+	log.Println("fork-exec is running command:", cmd)
 	err := cmd.Run()
 	if err != nil {
 		log.Errorln("cmd run:", err)

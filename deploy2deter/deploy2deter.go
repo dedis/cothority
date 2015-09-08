@@ -37,7 +37,7 @@ var bf int
 var hpn int
 
 var nmsgs int
-var debug bool
+var debug int
 var rate int
 var failures int
 var rFail int
@@ -63,7 +63,7 @@ func init() {
 	flag.IntVar(&hpn, "hpn", 1, "hosts per node: default 1")
 	flag.IntVar(&nmsgs, "nmsgs", 100, "number of messages per round")
 	flag.IntVar(&rate, "rate", -1, "number of milliseconds between messages: if rate > 0 then used")
-	flag.BoolVar(&debug, "debug", false, "run in debugging mode")
+	flag.IntVar(&debug, "debug", 2, "debugging-level: 0 is silent, 5 is flooding")
 	flag.IntVar(&failures, "failures", 0, "percent showing per node probability of failure")
 	flag.IntVar(&rFail, "rfail", 0, "number of consecutive rounds each root runs before it fails")
 	flag.IntVar(&fFail, "ffail", 0, "number of consecutive rounds each follower runs before it fails")
@@ -142,7 +142,8 @@ func doBuild() {
 
 	// start building the necessary packages
 	log.Println("Starting to build all executables")
-	packages := []string{"../logserver", "../timeclient", "../exec", "../forkexec", "../deter"}
+	packages := []string{"../logserver", "../timeclient", "../forkexec", "../exec", "../deter"}
+	//packages := []string{"../deter"}
 	//packages := []string{"../logserver"}
 	for _, p := range packages {
 
@@ -197,7 +198,7 @@ func doBuild() {
 		log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
 	}
 
-	err = os.Rename("logserver", "remote/logserver/logserver")
+	err = exec.Command("rsync", "-Pauz", "logserver", "remote/logserver/logserver").Run()
 	if err != nil {
 		log.Fatal("error renaming logserver:", err)
 	}
@@ -274,7 +275,7 @@ func main() {
 			" -bf="+strconv.Itoa(bf)+
 			" -rate="+strconv.Itoa(rate)+
 			" -rounds="+strconv.Itoa(rounds)+
-			" -debug="+strconv.FormatBool(debug)+
+			" -debug="+strconv.Itoa(debug)+
 			" -failures="+strconv.Itoa(failures)+
 			" -rfail="+strconv.Itoa(rFail)+
 			" -ffail="+strconv.Itoa(fFail)+

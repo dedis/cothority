@@ -30,9 +30,9 @@ func GetSuite(suite string) abstract.Suite {
 	return s
 }
 
-func Run(hostname, cfg, app string, rounds int, rootwait int, debug, testConnect bool, failureRate, rFail, fFail int, logger, suite string) {
+func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testConnect bool, failureRate, rFail, fFail int, logger, suite string) {
 	log.Println(hostname, "Starting to run")
-	if debug {
+	if debug > 1{
 		sign.DEBUG = true
 	}
 

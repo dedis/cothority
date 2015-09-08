@@ -40,7 +40,7 @@ func (v *View) AddChildren(children ...string) {
 
 func (v *View) SetHostList(hostlist []string) {
 	v.Lock()
-	log.Println("setting host list", hostlist)
+	//log.Println("setting host list", hostlist)
 	v.HostList = make([]string, len(hostlist))
 	copy(v.HostList, hostlist)
 	v.Unlock()
@@ -206,7 +206,7 @@ func (v *Views) SetHostList(view int, hostlist []string) {
 	v.Lock()
 	v.Views[view].SetHostList(hostlist)
 	v.Unlock()
-	log.Println("just set", v.HostList(view))
+	//log.Println("just set", v.HostList(view))
 }
 
 func (v *Views) AddChildren(view int, children ...string) {

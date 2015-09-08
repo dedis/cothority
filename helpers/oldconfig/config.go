@@ -445,7 +445,7 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 		suite = opts.Suite
 	}
 	rand := suite.Cipher([]byte("example"))
-	fmt.Println("hosts", hosts)
+	//fmt.Println("hosts", hosts)
 	_, err = ConstructTree(cf.Tree, hc, "", suite, rand, hosts, nameToAddr, opts)
 	if connT != GoC {
 		hc.Dir = nil
@@ -463,7 +463,7 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 		sortable.Sort()
 		copy(sn.HostList, sortable)
 		// set host list on view 0
-		log.Println("in config hostlist", sn.HostList)
+		//log.Println("in config hostlist", sn.HostList)
 		sn.SetHostList(0, sn.HostList)
 	}
 
