@@ -265,7 +265,6 @@ func main() {
 		}(i, p)
 		i = (i + 1) % len(loggerports)
 	}
-
 	// wait for the servers to finish before stopping
 	wg.Wait()
 	//time.Sleep(10 * time.Minute)
