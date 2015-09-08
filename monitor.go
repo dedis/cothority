@@ -89,7 +89,7 @@ retry:
 			}
 			if entry.Type != "root_round"{
 				log.Println("Wrong debugging message - ignoring")
-				continue
+				//continue
 			}
 			log.Println(fmt.Sprintf("root_round: %+v", entry))
 			if first {

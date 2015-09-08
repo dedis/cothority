@@ -108,6 +108,35 @@ func readHosts() {
 	// slaveLogger2 := phys[2]
 }
 
+func calculateGraph(){
+	virt = virt[3:]
+	phys = phys[3:]
+	t, hostnames, depth, err := graphs.TreeFromList(virt, hpn, bf)
+	log.Println("DEPTH:", depth)
+	log.Println("TOTAL HOSTS:", len(hostnames))
+
+	log.Println("Going to generate tree-lists")
+	b, err := json.Marshal(t)
+	if err != nil {
+		log.Fatal("unable to generate tree from list")
+	}
+	err = ioutil.WriteFile("remote/logserver/cfg.json", b, 0660)
+	if err != nil {
+		log.Fatal("unable to write configuration file")
+	}
+
+	// NOTE: now remote/logserver is ready for transfer
+	// it has logserver/ folder, binary, and cfg.json, and phys.txt, virt.txt
+
+	// generate the configuration file from the tree
+	cf := config.ConfigFromTree(t, hostnames)
+	cfb, err := json.Marshal(cf)
+	err = ioutil.WriteFile("remote/cfg.json", cfb, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func doBuild() {
 
 	var wg sync.WaitGroup
@@ -158,12 +187,6 @@ func doBuild() {
 		log.Fatal("failed to write virtual nodes file", err)
 	}
 
-	virt = virt[3:]
-	phys = phys[3:]
-	t, hostnames, depth, err := graphs.TreeFromList(virt, hpn, bf)
-	log.Println("DEPTH:", depth)
-	log.Println("TOTAL HOSTS:", len(hostnames))
-
 	// copy the logserver directory to the current directory
 	log.Print("RSync logserver to remote ...")
 	err = exec.Command("rsync", "-Pauz", "../logserver", "remote/").Run()
@@ -180,27 +203,6 @@ func doBuild() {
 		log.Fatal("error renaming logserver:", err)
 	}
 
-	log.Println("Going to generate tree-lists")
-	b, err := json.Marshal(t)
-	if err != nil {
-		log.Fatal("unable to generate tree from list")
-	}
-	err = ioutil.WriteFile("remote/logserver/cfg.json", b, 0660)
-	if err != nil {
-		log.Fatal("unable to write configuration file")
-	}
-
-	// NOTE: now remote/logserver is ready for transfer
-	// it has logserver/ folder, binary, and cfg.json, and phys.txt, virt.txt
-
-	// generate the configuration file from the tree
-	cf := config.ConfigFromTree(t, hostnames)
-	cfb, err := json.Marshal(cf)
-	err = ioutil.WriteFile("remote/cfg.json", cfb, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// scp the files that we need over to the boss node
 	files := []string{"timeclient", "exec", "forkexec", "deter"}
 	for _, f := range files {
@@ -211,10 +213,6 @@ func doBuild() {
 		if err != nil {
 			log.Fatal("error unable to rsync file into remote directory:", err)
 		}
-	}
-	err = cliutils.Rsync(user, host, "remote", "")
-	if err != nil {
-		log.Fatal(err)
 	}
 	log.Println("Done building")
 }
@@ -241,6 +239,14 @@ func main() {
 	err := killssh.Run()
 	if err != nil {
 		log.Print("Stopping ssh: ", err)
+	}
+
+	calculateGraph()
+
+	// Copy everything over to deterlabs
+	err = cliutils.Rsync(user, host, "remote", "")
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// setup port forwarding for viewing log server

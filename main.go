@@ -183,6 +183,7 @@ func RunTests(name string, ts []T) {
 		}
 
 		rs[i] = RunStatsAvg(runs)
+		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
 		_, err := f.Write(rs[i].CSV())
 		if err != nil {
 			log.Fatal("error writing data to test file:", err)

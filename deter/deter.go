@@ -249,7 +249,7 @@ func main() {
 		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], rootwait, random_leaf)
 		i = (i + 1) % len(loggerports)
 		wg.Add(1)
-		//time.Sleep(500 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		go func(phys, cmd string) {
 			//log.Println("running on ", phys, cmd)
 			defer wg.Done()
