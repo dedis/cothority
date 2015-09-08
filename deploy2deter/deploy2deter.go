@@ -87,7 +87,6 @@ func readHosts() {
 	if err != nil {
 		log.Panic("Couldn't find hosts.txt")
 	}
-	log.Println("Getting list of hosts ", len(physVirt), ":", nmachs)
 
 	phys = make([]string, 0, len(physVirt)/2)
 	virt = make([]string, 0, len(physVirt)/2)
@@ -246,7 +245,7 @@ func main() {
 	// Copy everything over to deterlabs
 	err = cliutils.Rsync(user, host, "remote", "")
 	if err != nil {
-		log.Fatal(err)
+			log.Fatal(err)
 	}
 
 	// setup port forwarding for viewing log server

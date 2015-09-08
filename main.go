@@ -82,8 +82,7 @@ func init() {
 // hpn, bf, nmsgsG
 func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
-	log.Printf("%+v", t)
-	done := make(chan struct{})
+	done := make(chan struct {})
 	var rs RunStats
 	nmachs := fmt.Sprintf("-nmachs=%d", t.nmachs)
 	hpn := fmt.Sprintf("-hpn=%d", t.hpn)
@@ -117,7 +116,7 @@ func RunTest(t T) (RunStats, error) {
 		rs = Monitor(t.bf)
 		cmd.Process.Kill()
 		fmt.Println("TEST COMPLETE:", rs)
-		done <- struct{}{}
+		done <- struct {}{}
 	}()
 
 	// timeout the command if it takes too long
@@ -138,10 +137,9 @@ func RunTests(name string, ts []T) {
 	for a, _ := range ts {
 		ts[a].nmachs = machines
 	}
-	log.Println(fmt.Sprintf("%+v", ts))
 
 	rs := make([]RunStats, len(ts))
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+	f, err := os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
@@ -201,8 +199,8 @@ func RunTests(name string, ts []T) {
 		}
 
 		cl, err := os.OpenFile(
-			TestFile("client_latency_"+name+"_"+strconv.Itoa(i)),
-			os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+			TestFile("client_latency_" + name + "_" + strconv.Itoa(i)),
+			os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 		if err != nil {
 			log.Fatal("error opening test file:", err)
 		}
@@ -224,9 +222,9 @@ func RateLoadTest(hpn, bf int) []T {
 	return []T{
 		{machines, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
 		{machines, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
-		{machines, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"},  // 10 per round
-		{machines, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"},   // 100 per round
-		{machines, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"},   // 1000 per round
+		{machines, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"}, // 10 per round
+		{machines, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"}, // 100 per round
+		{machines, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"}, // 1000 per round
 	}
 }
 
@@ -299,14 +297,15 @@ func FullTests() []T {
 
 var HostsTest = []T{
 	{machines, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
-	/*	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
-		{machines, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
-		{machines, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
-		{machines, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
-		{machines, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
-		{machines, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	*/
+	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	/*
+	{machines, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{machines, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{machines, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	*/
 }
 
 var SignTest = []T{
@@ -354,7 +353,7 @@ func GenerateHostsFile(project string, num_servers int) error {
 	ip := "10.255.0."
 	name := "SAFER.isi.deterlab.net"
 	for i := 1; i <= num_servers; i++ {
-		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i-1, project, name, ip, i))
+		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i - 1, project, name, ip, i))
 	}
 	log.Print(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
 	return err
@@ -367,7 +366,7 @@ func main() {
 	user = fmt.Sprintf("-user=%s", user)
 
 	// generate hosts file
-	if e := GenerateHostsFile(project, machines+loggers); e != nil {
+	if e := GenerateHostsFile(project, machines + loggers); e != nil {
 		log.Fatal("Error for creation of host file. Abort.")
 		os.Exit(1)
 	}

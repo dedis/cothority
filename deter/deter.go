@@ -255,7 +255,7 @@ func main() {
 			defer wg.Done()
 			err := cliutils.SshRunStdout("", phys, cmd)
 			if err != nil {
-				log.Fatal("ERROR STARTING TIMESTAMPER:", err)
+				log.Fatal("ERROR STARTING TIMESTAMPER:", err, phys, cmd)
 			}
 			log.Println("Finished with Timestamper", phys)
 		}(phys, cmd)
