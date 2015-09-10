@@ -142,11 +142,12 @@ func RunTest(t T) (RunStats, error) {
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, ts []T) {
 	for i, _ := range ts {
-		ts[i].nmachs = machines
 		ts[i].bf = bf
 		if hpn > 0 {
 			ts[i].hpn = hpn
 		}
+
+		ts[i].nmachs = machines
 	}
 
 	rs := make([]RunStats, len(ts))
@@ -231,58 +232,58 @@ func RunTests(name string, ts []T) {
 // high and low specify how many milliseconds between messages
 func RateLoadTest(hpn, bf int) []T {
 	return []T{
-		{machines, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
-		{machines, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
-		{machines, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"}, // 10 per round
-		{machines, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"}, // 100 per round
-		{machines, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"}, // 1000 per round
+		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
+		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
+		{0, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"}, // 10 per round
+		{0, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"}, // 100 per round
+		{0, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"}, // 1000 per round
 	}
 }
 
 func DepthTest(hpn, low, high, step int) []T {
 	ts := make([]T, 0)
 	for bf := low; bf <= high; bf += step {
-		ts = append(ts, T{machines, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
+		ts = append(ts, T{0, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
 	}
 	return ts
 }
 
 func DepthTestFixed(hpn int) []T {
 	return []T{
-		{machines, hpn, 1, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 2, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 4, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 8, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 16, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 32, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 64, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 128, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 256, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{machines, hpn, 512, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 1, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 2, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 4, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 8, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 16, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 32, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 64, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 128, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 256, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 512, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
 	}
 }
 
 func ScaleTest(bf, low, high, mult int) []T {
 	ts := make([]T, 0)
 	for hpn := low; hpn <= high; hpn *= mult {
-		ts = append(ts, T{machines, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
+		ts = append(ts, T{0, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
 	}
 	return ts
 }
 
 // nmachs=32, hpn=128, bf=16, rate=500, failures=20, root failures, failures
 var FailureTests = []T{
-	{machines, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
-	{machines, 64, 16, 30, 50, 0, 5, 0, false, "stamp"},
-	{machines, 64, 16, 30, 50, 0, 10, 0, false, "stamp"},
-	{machines, 64, 16, 30, 50, 5, 0, 5, false, "stamp"},
-	{machines, 64, 16, 30, 50, 5, 0, 10, false, "stamp"},
-	{machines, 64, 16, 30, 50, 5, 0, 10, true, "stamp"},
+	{0, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	{0, 64, 16, 30, 50, 0, 5, 0, false, "stamp"},
+	{0, 64, 16, 30, 50, 0, 10, 0, false, "stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 5, false, "stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 10, false, "stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 10, true, "stamp"},
 }
 
 var VotingTest = []T{
-	{machines, 64, 16, 30, 50, 0, 0, 0, true, "stamp"},
-	{machines, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	{0, 64, 16, 30, 50, 0, 0, 0, true, "stamp"},
+	{0, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }
 
 func FullTests() []T {
@@ -307,38 +308,36 @@ func FullTests() []T {
 }
 
 var HostsTest = []T{
-	{machines, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
-	/*
-	{machines, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{machines, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
-	*/
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }
 
 var SignTest = []T{
-	{machines, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
-	{machines, 2, 3, 30, 20, 0, 0, 0, false, "sign"},
-	{machines, 4, 3, 30, 20, 0, 0, 0, false, "sign"},
-	{machines, 8, 8, 30, 20, 0, 0, 0, false, "sign"},
-	{machines, 16, 16, 30, 20, 0, 0, 0, false, "sign"},
-	{machines, 32, 16, 30, 20, 0, 0, 0, false, "sign"},
-	{machines, 64, 16, 30, 20, 0, 0, 0, false, "sign"},
-	{machines, 128, 16, 30, 50, 0, 0, 0, false, "sign"},
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 2, 3, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 4, 3, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 8, 8, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 16, 16, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 32, 16, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 64, 16, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 128, 16, 30, 50, 0, 0, 0, false, "sign"},
 }
 
 var VTest = []T{
-	{machines, 1, 3, 10000000, 20, 0, 0, 0, false, "vote"},
-	{machines, 2, 4, 10000000, 20, 0, 0, 0, false, "vote"},
-	{machines, 4, 6, 10000000, 20, 0, 0, 0, false, "vote"},
-	{machines, 8, 8, 10000000, 20, 0, 0, 0, false, "vote"},
-	{machines, 16, 16, 10000000, 20, 0, 0, 0, false, "vote"},
-	{machines, 32, 16, 10000000, 20, 0, 0, 0, false, "vote"},
-	{machines, 64, 16, 10000000, 20, 0, 0, 0, false, "vote"},
-	{machines, 128, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 1, 3, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 2, 4, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 4, 6, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 8, 8, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 16, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 32, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 64, 16, 10000000, 20, 0, 0, 0, false, "vote"},
+	{0, 128, 16, 10000000, 20, 0, 0, 0, false, "vote"},
 }
 
 /*
@@ -415,8 +414,8 @@ func main() {
 	// RunTests("failure_test.csv", t)
 	// RunTests("vote_test", VotingTest)
 	// RunTests("failure_test", FailureTests)
-	RunTests("sign_test", HostsTest)
-	// RunTests("sign_test", SignTest)
+	//RunTests("hosts_test", HostsTest)
+	RunTests("sign_test", SignTest)
 	// t := FailureTests
 	// RunTests("failure_test", t)
 	// t = ScaleTest(10, 1, 100, 2)
