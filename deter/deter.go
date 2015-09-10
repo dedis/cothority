@@ -52,26 +52,26 @@ func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerp
 			amroot = " -amroot=true"
 		}
 
-		if i == len(names) - 1{
+		if i == len(names)-1 {
 			bg = ""
 		}
 		cmd += "(cd remote; sudo ./forkexec" +
-		" -rfail=" + strconv.Itoa(rFail) +
-		" -ffail=" + strconv.Itoa(fFail) +
-		" -failures=" + strconv.Itoa(failures) +
-		" -physaddr=" + phys +
-		" -hostname=" + name +
-		" -logger=" + loggerport +
-		" -debug=" + strconv.Itoa(debug) +
-		" -suite=" + suite +
-		" -rounds=" + strconv.Itoa(rounds) +
-		" -app=" + app +
-		" -test_connect=" + strconv.FormatBool(connect) +
-		" -config=" + configFile +
-		" -pprof=" + pprofaddr +
-		" -rootwait=" + strconv.Itoa(rootwait) +
-		amroot + bg +
-		" ); "
+			" -rfail=" + strconv.Itoa(rFail) +
+			" -ffail=" + strconv.Itoa(fFail) +
+			" -failures=" + strconv.Itoa(failures) +
+			" -physaddr=" + phys +
+			" -hostname=" + name +
+			" -logger=" + loggerport +
+			" -debug=" + strconv.Itoa(debug) +
+			" -suite=" + suite +
+			" -rounds=" + strconv.Itoa(rounds) +
+			" -app=" + app +
+			" -test_connect=" + strconv.FormatBool(connect) +
+			" -config=" + configFile +
+			" -pprof=" + pprofaddr +
+			" -rootwait=" + strconv.Itoa(rootwait) +
+			amroot + bg +
+			" ); "
 	}
 	return cmd
 }
@@ -215,18 +215,18 @@ func main() {
 		// redirect to the master logger
 		master := masterLogger + ":10000"
 		// if this is the master logger than don't set the master to anything
-		if loggerport == masterLogger + ":10000" {
+		if loggerport == masterLogger+":10000" {
 			master = ""
 		}
 
-		go cliutils.SshRunStdout("", logger, "cd remote/logserver; sudo ./logserver -addr=" + loggerport +
-		" -hosts=" + strconv.Itoa(len(hostnames)) +
-		" -depth=" + strconv.Itoa(depth) +
-		" -bf=" + bf +
-		" -hpn=" + hpn +
-		" -nmsgs=" + nmsgs +
-		" -rate=" + strconv.Itoa(rate) +
-		" -master=" + master)
+		go cliutils.SshRunStdout("", logger, "cd remote/logserver; sudo ./logserver -addr="+loggerport+
+			" -hosts="+strconv.Itoa(len(hostnames))+
+			" -depth="+strconv.Itoa(depth)+
+			" -bf="+bf+
+			" -hpn="+hpn+
+			" -nmsgs="+nmsgs+
+			" -rate="+strconv.Itoa(rate)+
+			" -master="+master)
 	}
 
 	// wait a little bit for the logserver to start up
@@ -242,12 +242,12 @@ func main() {
 		}
 		servers := strings.Join(ss, ",")
 		go func(i int, p string) {
-			_, err := cliutils.SshRun("", p, "cd remote; sudo ./timeclient -nmsgs=" + nmsgs +
-			" -name=client@" + p +
-			" -server=" + servers +
-			" -logger=" + loggerports[i] +
-			" -debug=" + strconv.Itoa(debug) +
-			" -rate=" + strconv.Itoa(rate))
+			_, err := cliutils.SshRun("", p, "cd remote; sudo ./timeclient -nmsgs="+nmsgs+
+				" -name=client@"+p+
+				" -server="+servers+
+				" -logger="+loggerports[i]+
+				" -debug="+strconv.Itoa(debug)+
+				" -rate="+strconv.Itoa(rate))
 			if err != nil {
 				log.Println("Deter.go : timeclient error ", err)
 			}
