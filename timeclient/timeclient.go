@@ -39,6 +39,7 @@ func main() {
 		}
 		log.AddHook(lh)
 	}
+	log.Println("Timeclient starts")
 	stampclient.Run(server, nmsgs, name, rate, debug)
 	log.Printf("Timeclient.go ", name, "main() ", name, " finished...")
 }
