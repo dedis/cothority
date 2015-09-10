@@ -177,6 +177,7 @@ func main() {
 	}
 
 	hostnames := cf.Hosts
+	log.Println("hostnames:", hostnames)
 
 	depth := graphs.Depth(cf.Tree)
 	var random_leaf string
@@ -205,7 +206,7 @@ func main() {
 	}
 
 	// start up the logging server on the final host at port 10000
-	fmt.Println("starting up logserver")
+	fmt.Println("starting up logservers: ", loggers)
 	// start up the master logger
 	loggerports := make([]string, len(loggers))
 	for i, logger := range loggers {

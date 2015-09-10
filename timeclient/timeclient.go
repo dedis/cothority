@@ -14,7 +14,7 @@ var nmsgs int
 var name string
 var logger string
 var rate int
-var debug bool
+var debug int
 
 func init() {
 	addr, _ := oldconfig.GetAddress()
@@ -25,7 +25,7 @@ func init() {
 	flag.StringVar(&name, "name", addr, "name for the client")
 	flag.StringVar(&logger, "logger", "", "remote logger")
 	flag.IntVar(&rate, "rate", -1, "milliseconds between timestamp requests")
-	flag.BoolVar(&debug, "debug", false, "set debug mode")
+	flag.IntVar(&debug, "debug", 0, "set debug mode-level")
 	//log.SetFormatter(&log.JSONFormatter{})
 }
 

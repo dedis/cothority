@@ -82,12 +82,12 @@ func (s RunStats) CSV() []byte {
 		s.NHosts,
 		s.Depth,
 		s.BF,
-		s.MinTime,
-		s.MaxTime,
-		s.AvgTime,
-		s.StdDev,
-		s.SysTime,
-		s.UserTime,
+		s.MinTime/1e9,
+		s.MaxTime/1e9,
+		s.AvgTime/1e9,
+		s.StdDev/1e9,
+		s.SysTime/1e9,
+		s.UserTime/1e9,
 		s.Rate)
 	return buf.Bytes()
 }
@@ -96,7 +96,7 @@ func (s RunStats) TimesCSV() []byte {
 	times := bytes.Buffer{}
 	times.WriteString("client_times\n")
 	for _, t := range s.Times {
-		times.WriteString(strconv.FormatFloat(t, 'f', 15, 64))
+		times.WriteString(strconv.FormatFloat(t/1e9, 'f', 15, 64))
 		times.WriteRune('\n')
 	}
 	return times.Bytes()

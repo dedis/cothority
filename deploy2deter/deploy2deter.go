@@ -105,6 +105,23 @@ func readHosts() {
 	masterLogger = phys[0]
 	// slaveLogger1 := phys[1]
 	// slaveLogger2 := phys[2]
+
+	// phys.txt and virt.txt only contain the number of machines that we need
+	log.Println("Reading phys and virt")
+	err = ioutil.WriteFile("remote/phys.txt", []byte(physOut), 0666)
+	if err != nil {
+		log.Fatal("failed to write physical nodes file", err)
+	}
+
+	err = ioutil.WriteFile("remote/virt.txt", []byte(virtOut), 0666)
+	if err != nil {
+		log.Fatal("failed to write virtual nodes file", err)
+	}
+
+	err = exec.Command("rsync", "-Pauz", "remote/phys.txt", "remote/virt.txt", "remote/logserver/").Run()
+	if err != nil {
+		log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
+	}
 }
 
 func calculateGraph(){
@@ -175,27 +192,11 @@ func doBuild() {
 	wg.Wait()
 	log.Println("Build is finished")
 
-	// phys.txt and virt.txt only contain the number of machines that we need
-	log.Println("Reading phys and virt")
-	err := ioutil.WriteFile("remote/phys.txt", []byte(physOut), 0666)
-	if err != nil {
-		log.Fatal("failed to write physical nodes file", err)
-	}
-
-	err = ioutil.WriteFile("remote/virt.txt", []byte(virtOut), 0666)
-	if err != nil {
-		log.Fatal("failed to write virtual nodes file", err)
-	}
-
 	// copy the logserver directory to the current directory
 	log.Print("RSync logserver to remote ...")
-	err = exec.Command("rsync", "-Pauz", "../logserver", "remote/").Run()
+	err := exec.Command("rsync", "-Pauz", "../logserver", "remote/").Run()
 	if err != nil {
 		log.Fatal("error rsyncing logserver directory into remote directory:", err)
-	}
-	err = exec.Command("rsync", "-Pauz", "remote/phys.txt", "remote/virt.txt", "remote/logserver/").Run()
-	if err != nil {
-		log.Fatal("error rsyncing phys, virt, and remote/logserver:", err)
 	}
 
 	err = exec.Command("rsync", "-Pauz", "logserver", "remote/logserver/logserver").Run()
