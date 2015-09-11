@@ -242,6 +242,7 @@ func RunTest(t T) (RunStats, error) {
 	dbg.Lvl1("Failures percent is", t.failures)
 
 	platform.Configure(cfg)
+	platform.Deploy()
 	err := platform.Start()
 	if err != nil {
 		log.Fatal(err)

@@ -32,7 +32,7 @@ var suite string
 // TODO: add debug flag for more debugging information (memprofilerate...)
 func init() {
 	flag.StringVar(&hostname, "hostname", "", "the hostname of this node")
-	flag.StringVar(&configFile, "config", "cfg.json", "the json configuration file")
+	flag.StringVar(&configFile, "config", "tree.json", "the json configuration file")
 	flag.StringVar(&logger, "logger", "", "remote logger")
 	flag.StringVar(&app, "app", "stamp", "application to run [sign|stamp|vote]")
 	flag.IntVar(&rounds, "rounds", 100, "number of rounds to run")

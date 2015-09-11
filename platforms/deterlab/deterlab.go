@@ -38,6 +38,8 @@ import (
 	"encoding/json"
 	"github.com/ineiti/cothorities/helpers/config"
 	"strconv"
+	"bytes"
+	"github.com/BurntSushi/toml"
 )
 
 
@@ -74,7 +76,7 @@ func (d *Deter) Configure(config *platforms.Config) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.DeterDir = pwd + "/platforms/deterlab"
-	d.DeployDir = d.DeterDir + "/remote"
+	d.DeployDir = d.DeterDir + "/deploy"
 	d.BuildDir = d.DeterDir + "/build"
 }
 
@@ -135,16 +137,17 @@ func (d *Deter) Deploy() (error) {
 	d.generateHostsFile()
 	d.readHosts()
 	d.calculateGraph()
+	d.WriteConfig()
 
 	// copy the webfile-directory of the logserver to the remote directory
-	err := exec.Command("cp", "-a", "logserver/webfiles", d.DeployDir).Run()
+	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles", d.BuildDir + "/", d.DeployDir).Run()
 	if err != nil {
-		log.Fatal("error copying webfiles directory into building directory:", err)
+		log.Fatal("error copying webfiles and build-dir:", err)
 	}
 	dbg.Lvl2("Done building")
 
 	// Copy everything over to deterlabs
-	err = cliutils.Rsync(d.Login, d.Host, d.BuildDir + "/", "remote/")
+	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir + "/", "remote/")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -195,7 +198,7 @@ func (d *Deter) Stop() (error) {
 	killssh.Stderr = os.Stderr
 	err := killssh.Run()
 	if err != nil {
-		log.Print("Stopping ssh: ", err)
+		dbg.Lvl2("Stopping ssh: ", err)
 	}
 
 	return nil
@@ -283,10 +286,36 @@ func (d *Deter)calculateGraph() {
 	// generate the configuration file from the tree
 	cf := config.ConfigFromTree(t, hostnames)
 	cfb, err := json.Marshal(cf)
-	err = ioutil.WriteFile(d.DeployDir + "/cfg.json", cfb, 0666)
+	err = ioutil.WriteFile(d.DeployDir + "/tree.json", cfb, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (d *Deter)WriteConfig(){
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(d); err != nil {
+		log.Fatal(err)
+	}
+	err := ioutil.WriteFile(d.DeployDir + "/config.toml", buf.Bytes(), 0444)
+	if err != nil{
+		log.Fatal(err)
+	}
+}
+
+func ReadConfig()(*Deter){
+	buf, err := ioutil.ReadFile("config.toml")
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	var deter Deter
+	_, err = toml.Decode(string(buf), &deter)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	return &deter
 }
 
 /*

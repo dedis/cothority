@@ -18,14 +18,19 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/ineiti/cothorities/helpers/cliutils"
 	"github.com/ineiti/cothorities/helpers/graphs"
 
 	"golang.org/x/net/websocket"
+	"github.com/ineiti/cothorities/helpers/config"
+	"github.com/ineiti/cothorities/platforms/deterlab"
 )
 
+var deter *platform_deter.Deter
 var addr, hosts, depth, bf, hpn, nmsgs, master, rate string
 var homePage *template.Template
+var debug int
 
 type Home struct {
 	LogServer        string
@@ -48,6 +53,10 @@ func init() {
 	flag.StringVar(&rate, "rate", "", "the rate of messages")
 	flag.StringVar(&nmsgs, "nmsgs", "", "number of messages per round")
 	flag.StringVar(&master, "master", "", "address of the master of this node")
+	flag.IntVar(&debug, "debug", 3, "Debugging-level")
+
+	deter = platform_deter.ReadConfig()
+	dbg.DebugVisible = deter.Config.Debug
 
 	Log = Logger{
 		Slock: sync.RWMutex{},
@@ -75,7 +84,7 @@ func logEntryHandler(ws *websocket.Conn) {
 	var data []byte
 	err := websocket.Message.Receive(ws, &data)
 	for err == nil {
-		//log.Println("logEntryHandler", isMaster)
+		//dbg.Lvl3("logEntryHandler", isMaster)
 		if !isMaster {
 			websocket.Message.Send(wsmaster, data)
 		} else {
@@ -86,11 +95,11 @@ func logEntryHandler(ws *websocket.Conn) {
 		}
 		err = websocket.Message.Receive(ws, &data)
 	}
-	log.Println("log server client error:", err)
+	dbg.Lvl3("log server client error:", err)
 }
 
 func logHandler(ws *websocket.Conn) {
-	log.Println(fmt.Sprintf("%s log server serving /log (websocket)", master))
+	dbg.Lvl3(fmt.Sprintf("%s log server serving /log (websocket)", master))
 	i := 0
 	for {
 		Log.Mlock.RLock()
@@ -105,7 +114,7 @@ func logHandler(ws *websocket.Conn) {
 		Log.Mlock.RUnlock()
 		_, err := ws.Write(msg)
 		if err != nil {
-			log.Println("unable to write to log websocket")
+			dbg.Lvl3("unable to write to log websocket")
 			return
 		}
 
@@ -115,11 +124,11 @@ func logHandler(ws *websocket.Conn) {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		log.Println("home handler is handling non-home request")
+		dbg.Lvl3("home handler is handling non-home request")
 		http.NotFound(w, r)
 		return
 	}
-	log.Println(fmt.Sprintf("%s log server serving %s ", master, r.URL))
+	dbg.Lvl3(fmt.Sprintf("%s log server serving %s ", master, r.URL))
 	host := r.Host
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
@@ -132,7 +141,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
-	log.Println("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
+	dbg.Lvl3("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
 	//host := r.Host
 	// fmt.Println(host)
 	for i, _ := range Log.Msgs {
@@ -148,7 +157,7 @@ func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
 }
 
 func logHandlerHtmlReverse(w http.ResponseWriter, r *http.Request) {
-	log.Println("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
+	dbg.Lvl3("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
 	//host := r.Host
 	// fmt.Println(host)
 	for i := len(Log.Msgs) - 1; i >= 0; i-- {
@@ -175,15 +184,15 @@ func NewReverseProxy(target *url.URL) *httputil.ReverseProxy {
 		// remove the first two components /d/short_name
 		pathComp = pathComp[3:]
 		r.URL.Path = target.Path + "/" + strings.Join(pathComp, "/")
-		log.Println("redirected to: ", r.URL.String())
+		dbg.Lvl3("redirected to: ", r.URL.String())
 	}
-	log.Println("setup reverse proxy for destination url:", target.Host, target.Path)
+	dbg.Lvl3("setup reverse proxy for destination url:", target.Host, target.Path)
 	return &httputil.ReverseProxy{Director: director}
 }
 
 func proxyDebugHandler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("proxy serving request for: ", r.URL)
+		dbg.Lvl3("proxy serving request for: ", r.URL)
 		p.ServeHTTP(w, r)
 	}
 }
@@ -206,9 +215,9 @@ func reverseProxy(server string) {
 	//
 	proxy := NewReverseProxy(remote)
 
-	//log.Println("setup proxy for: /d/"+short+"/", " it points to : "+server)
+	//dbg.Lvl3("setup proxy for: /d/"+short+"/", " it points to : "+server)
 	// register the reverse proxy forwarding for this server
-	http.HandleFunc("/d/"+short+"/", proxyDebugHandler(proxy))
+	http.HandleFunc("/d/" + short + "/", proxyDebugHandler(proxy))
 }
 
 func getDebugServers() []string {
@@ -229,22 +238,24 @@ func getDebugServers() []string {
 	}
 
 	// now read in the hosttree to get a list of servers
-	cfg, e := ioutil.ReadFile("cfg.json")
+	cfg, e := ioutil.ReadFile("tree.json")
 	if e != nil {
 		log.Fatal("Error Reading Configuration File:", e)
 	}
-
-	var tree graphs.Tree
-	json.Unmarshal(cfg, &tree)
+	var cf config.ConfigFile
+	err = json.Unmarshal(cfg, &cf)
+	if err != nil {
+		log.Fatal("unable to unmarshal config.ConfigFile:", err)
+	}
 
 	debugServers := make([]string, 0, len(virt))
-	tree.TraverseTree(func(t *graphs.Tree) {
+	cf.Tree.TraverseTree(func(t *graphs.Tree) {
 		h, p, err := net.SplitHostPort(t.Name)
 		if err != nil {
 			log.Fatal("improperly formatted hostport:", err)
 		}
 		pn, _ := strconv.Atoi(p)
-		s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn+2))
+		s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn + 2))
 		debugServers = append(debugServers, s)
 	})
 	return debugServers
@@ -267,10 +278,10 @@ func main() {
 	} else {
 		role = "Servent"
 	}
-	log.Println(fmt.Sprintf("running logserver %s  with nmsgs %s branching factor: %s", role, nmsgs, bf))
+	dbg.Lvl3(fmt.Sprintf("running logserver %s  with nmsgs %s branching factor: %s", role, nmsgs, bf))
 	if isMaster {
 		var err error
-		homePage, err = template.ParseFiles("home.html")
+		homePage, err = template.ParseFiles("webfiles/home.html")
 		if err != nil {
 			log.Fatal("unable to parse home.html", err)
 		}
@@ -280,13 +291,13 @@ func main() {
 			reverseProxy(s)
 		}
 
-		log.Println(fmt.Sprintf("Log server %s running at : %s", role, addr))
+		dbg.Lvl3(fmt.Sprintf("Log server %s running at : %s", role, addr))
 		// /webfiles/Chart.js/Chart.min.js
 		http.HandleFunc("/", homeHandler)
 		fs := http.FileServer(http.Dir("webfiles/"))
 		http.Handle("/bower_components/", http.StripPrefix("/bower_components/", fs))
 	} else {
-	retry:
+		retry:
 		tries := 0
 		var err error
 		origin := "http://localhost/"
@@ -295,10 +306,10 @@ func main() {
 		if err != nil {
 			tries += 1
 			time.Sleep(time.Second)
-			log.Println(fmt.Sprintf("Slave log server could not connect to logger master (%s) .. Trying again (%d tries)", master, tries))
+			dbg.Lvl3(fmt.Sprintf("Slave log server could not connect to logger master (%s) .. Trying again (%d tries)", master, tries))
 			goto retry
 		}
-		log.Println(fmt.Sprintf("Slave Log server %s running at : %s & connected to Master ", role, addr))
+		dbg.Lvl3(fmt.Sprintf("Slave Log server %s running at : %s & connected to Master ", role, addr))
 	}
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))

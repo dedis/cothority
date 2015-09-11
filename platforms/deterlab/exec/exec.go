@@ -1,8 +1,8 @@
 // usage exec:
 //
-// exec -name "hostname" -config "cfg.json"
+// exec -name "hostname" -config "tree.json"
 //
-// -name indicates the name of the node in the cfg.json
+// -name indicates the name of the node in the tree.json
 //
 // -config points to the file that holds the configuration.
 //     This configuration must be in terms of the final hostnames.
@@ -46,7 +46,7 @@ var suite string
 // TODO: add debug flag for more debugging information (memprofilerate...)
 func init() {
 	flag.StringVar(&hostname, "hostname", "", "the hostname of this node")
-	flag.StringVar(&cfg, "config", "cfg.json", "the json configuration file")
+	flag.StringVar(&cfg, "config", "tree.json", "the json configuration file")
 	flag.StringVar(&logger, "logger", "", "remote logger")
 	flag.StringVar(&app, "app", "stamp", "application to run [sign|time]")
 	flag.IntVar(&rounds, "rounds", 100, "number of rounds to run")

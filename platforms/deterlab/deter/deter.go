@@ -1,13 +1,13 @@
 // deter is the deterlab process that should run on the boss node
 //
 // It spawns multiple timestampers and clients, while constructing
-// the topology defined on cfg.json. It assumes that hosts.txt has
+// the topology defined on tree.json. It assumes that hosts.txt has
 // the entire list of hosts to run timestampers on and that the final
 // host is the designated logging server.
 //
-// The overall topology that is created is defined by cfg.json.
+// The overall topology that is created is defined by tree.json.
 // The port layout for each node, however, is specified here.
-// cfg.json will assign each node a port p. This is the port
+// tree.json will assign each node a port p. This is the port
 // that each singing node is listening on. The timestamp server
 // to which clients connect is listneing on port p+1. And the
 // pprof server for each node is listening on port p+2. This
@@ -70,7 +70,7 @@ func init() {
 	flag.StringVar(&app, "app", "stamp", "app to run")
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
 	flag.StringVar(&pprofaddr, "pprof", ":10000", "the address to run the pprof server at")
-	flag.StringVar(&configFile, "config", "cfg.json", "the json configuration file")
+	flag.StringVar(&configFile, "config", "tree.json", "the json configuration file")
 	flag.IntVar(&rootwait, "rootwait", 30, "the amount of time the root should wait")
 }
 
@@ -128,7 +128,7 @@ func main() {
 	virt = virt[nloggers:]
 
 	// Read in and parse the configuration file
-	file, err := ioutil.ReadFile("remote/cfg.json")
+	file, err := ioutil.ReadFile("remote/tree.json")
 	if err != nil {
 		log.Fatal("deter.go: error reading configuration file: %v\n", err)
 	}
@@ -182,7 +182,7 @@ func main() {
 			master = ""
 		}
 
-		go cliutils.SshRunStdout("", logger, "cd remote/logserver; sudo ./logserver -addr="+loggerport+
+		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr="+loggerport+
 			" -hosts="+strconv.Itoa(len(hostnames))+
 			" -depth="+strconv.Itoa(depth)+
 			" -bf="+bf+
@@ -252,7 +252,7 @@ func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerp
 	cmd := ""
 	bg := " & "
 	for i, name := range names {
-		dbg.Lvl2("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect)
+		dbg.Lvl2(fmt.Sprintf("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect))
 		if name == random_leaf && testConnect {
 			connect = true
 		}
