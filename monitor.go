@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/pkg/browser"
 	"golang.org/x/net/websocket"
@@ -17,7 +18,7 @@ import (
 
 // Monitor monitors log aggregates results into RunStats
 func Monitor(bf int) RunStats {
-	log.Println("MONITORING")
+	dbg.Lvl1("Starting monitoring")
 	defer fmt.Println("DONE MONITORING")
 retry_dial:
 	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
@@ -29,7 +30,7 @@ retry:
 	// Get HTML of webpage for data (NHosts, Depth, ...)
 	doc, err := goquery.NewDocument(fmt.Sprintf("http://localhost:%d/", port))
 	if err != nil {
-		log.Println("unable to get log data: retrying:", err)
+		dbg.Lvl3("unable to get log data: retrying:", err)
 		time.Sleep(10 * time.Second)
 		goto retry
 	}
@@ -37,9 +38,9 @@ retry:
 		browser.OpenURL(fmt.Sprintf("http://localhost:%d/", port))
 	}
 	nhosts := doc.Find("#numhosts").First().Text()
-	log.Println("hosts:", nhosts)
+	dbg.Lvl3("hosts:", nhosts)
 	depth := doc.Find("#depth").First().Text()
-	log.Println("depth:", depth)
+	dbg.Lvl3("depth:", depth)
 	nh, err := strconv.Atoi(nhosts)
 	if err != nil {
 		log.Fatal("unable to convert hosts to be a number:", nhosts)
@@ -64,21 +65,21 @@ retry:
 		if err != nil {
 			// if it is an eof error than stop reading
 			if err == io.EOF {
-				log.Println("websocket terminated before emitting EOF or terminating string")
+				dbg.Lvl3("websocket terminated before emitting EOF or terminating string")
 				break
 			}
 			continue
 		}
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
-			log.Printf(
+			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone(%t) clientDone(%t)",
 				rootDone, clientDone)
 		}
 		if bytes.Contains(data, []byte("root_round")) {
-			log.Println("Monitor() root_round  msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl3("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 
 			if clientDone || rootDone {
-				log.Println("Continuing searching data")
+				dbg.Lvl3("Continuing searching data")
 				// ignore after we have received our first EOF
 				continue
 			}
@@ -88,18 +89,18 @@ retry:
 				log.Fatal("json unmarshalled improperly:", err)
 			}
 			if entry.Type != "root_round"{
-				log.Println("Wrong debugging message - ignoring")
-				//continue
+				dbg.Lvl1("Wrong debugging message - ignoring")
+				continue
 			}
-			log.Println(fmt.Sprintf("root_round: %+v", entry))
+			dbg.Lvl3(fmt.Sprintf("root_round: %+v", entry))
 			if first {
 				first = false
-				log.Println("Setting min-time to", entry.Time)
+				dbg.Lvl3("Setting min-time to", entry.Time)
 				rs.MinTime = entry.Time
 				rs.MaxTime = entry.Time
 			}
 			if entry.Time < rs.MinTime {
-				log.Println("Setting min-time to", entry.Time)
+				dbg.Lvl3("Setting min-time to", entry.Time)
 				rs.MinTime = entry.Time
 			} else if entry.Time > rs.MaxTime {
 				rs.MaxTime = entry.Time
@@ -123,9 +124,9 @@ retry:
 			}
 			rs.SysTime = ss.SysTime
 			rs.UserTime = ss.UserTime
-			log.Println("FORKEXEC:", ss)
+			dbg.Lvl3("FORKEXEC:", ss)
 			rootDone = true
-			log.Println("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl3("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 			if clientDone {
 				break
 			}
@@ -152,7 +153,7 @@ retry:
 			observed = 1 / observed
 			rs.Rate = observed
 			rs.Times = cms.Times
-			log.Println("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
+			dbg.Lvl3("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
 			clientDone = true
 			if rootDone {
 				break

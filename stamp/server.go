@@ -7,6 +7,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 
 	"github.com/ineiti/cothorities/coconet"
 	"github.com/ineiti/cothorities/hashid"
@@ -72,7 +73,7 @@ func NewServer(signer sign.Signer) *Server {
 var clientNumber int = 0
 
 func (s *Server) Close() {
-	log.Printf("closing stampserver: %p", s)
+	dbg.Lvl3("closing stampserver: %p", s)
 	s.closeChan <- true
 	s.Signer.Close()
 }
@@ -81,7 +82,7 @@ func (s *Server) Close() {
 // this server needs to be running on a different port
 // than the Signer that is beneath it
 func (s *Server) Listen() error {
-	// log.Println("Listening @ ", s.name)
+	// dbg.Lvl3("Listening @ ", s.name)
 	ln, err := net.Listen("tcp4", s.name)
 	if err != nil {
 		panic(err)
@@ -89,7 +90,7 @@ func (s *Server) Listen() error {
 
 	go func() {
 		for {
-			// log.Printf("LISTENING TO CLIENTS: %p", s)
+			// dbg.Lvl3("LISTENING TO CLIENTS: %p", s)
 			conn, err := ln.Accept()
 			if err != nil {
 				// handle error
@@ -98,7 +99,7 @@ func (s *Server) Listen() error {
 			}
 
 			c := coconet.NewTCPConnFromNet(conn)
-			// log.Println("CLIENT TCP CONNECTION SUCCESSFULLY ESTABLISHED:", c)
+			// dbg.Lvl3("CLIENT TCP CONNECTION SUCCESSFULLY ESTABLISHED:", c)
 
 			if _, ok := s.Clients[c.Name()]; !ok {
 				s.Clients[c.Name()] = c
@@ -116,7 +117,7 @@ func (s *Server) Listen() error {
 						default:
 							log.Errorf("Message of unknown type: %v\n", tsm.Type)
 						case StampRequestType:
-							// log.Println("RECEIVED STAMP REQUEST")
+							// dbg.Lvl3("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
 							READING := s.READING
 							s.Queue[READING] = append(s.Queue[READING],
@@ -136,7 +137,7 @@ func (s *Server) Listen() error {
 // Used for goconns
 // should only be used if clients are created in batch
 func (s *Server) ListenToClients() {
-	// log.Printf("LISTENING TO CLIENTS: %p", s, s.Clients)
+	// dbg.Lvl3("LISTENING TO CLIENTS: %p", s, s.Clients)
 	for _, c := range s.Clients {
 		go func(c coconet.Conn) {
 			for {
@@ -156,7 +157,7 @@ func (s *Server) ListenToClients() {
 				default:
 					log.Errorln("Message of unknown type")
 				case StampRequestType:
-					// log.Println("STAMP REQUEST")
+					// dbg.Lvl3("STAMP REQUEST")
 					s.mux.Lock()
 					READING := s.READING
 					s.Queue[READING] = append(s.Queue[READING],
@@ -171,12 +172,12 @@ func (s *Server) ListenToClients() {
 func (s *Server) ConnectToLogger() {
 	return
 	if s.Logger == "" || s.Hostname == "" || s.App == "" {
-		log.Println("skipping connect to logger")
+		dbg.Lvl3("skipping connect to logger")
 		return
 	}
-	log.Println("Connecting to Logger")
+	dbg.Lvl3("Connecting to Logger")
 	lh, _ := logutils.NewLoggerHook(s.Logger, s.Hostname, s.App)
-	log.Println("Connected to Logger")
+	dbg.Lvl3("Connected to Logger")
 	log.AddHook(lh)
 }
 
@@ -193,7 +194,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 			"file": logutils.File(),
 			"type": "role_change",
 		}).Infoln(messg)
-		// log.Printf("role change: %p", s)
+		// dbg.Lvl3("role change: %p", s)
 
 	} else {
 		var messg = s.Name() + " remained regular"
@@ -206,7 +207,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 				"file": logutils.File(),
 				"type": "role_change",
 			}).Infoln(messg)
-			log.Printf("role change: %p", s)
+			dbg.Lvl3("role change: %p", s)
 		}
 
 	}
@@ -221,17 +222,17 @@ func (s *Server) runAsRoot(nRounds int) string {
 		return "close"
 	}
 
-	log.Infoln(s.Name(), "running as root", s.LastRound(), int64(nRounds))
+	dbg.Lvl2(s.Name(), "running as root", s.LastRound(), int64(nRounds))
 	for {
 		select {
 		case nextRole := <-s.ViewChangeCh():
-			log.Println(s.Name(), "assuming next role")
+			dbg.Lvl3(s.Name(), "assuming next role")
 			return nextRole
 			// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
 			start := time.Now()
-			log.Println(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound()+1, "of", nRounds)
+			dbg.Lvl3(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound()+1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -299,7 +300,7 @@ func (s *Server) Run(role string, nRounds int) {
 	// 	s.Close()
 	// }()
 
-	log.Println("Stamp-server starting with ", role, "and rounds", nRounds)
+	dbg.Lvl3("Stamp-server starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()
@@ -313,15 +314,15 @@ func (s *Server) Run(role string, nRounds int) {
 			for _ = range ticker {
 				select {
 				case <-closed:
-					log.Println("server.Run: received closed")
+					dbg.Lvl3("server.Run: received closed")
 					return
 				default:
 				}
 				if i%2 == 0 {
-					log.Println("removing self")
+					dbg.Lvl3("removing self")
 					s.Signer.RemoveSelf()
 				} else {
-					log.Println("adding self: ", hostlist[(i/2)%len(hostlist)])
+					dbg.Lvl3("adding self: ", hostlist[(i/2)%len(hostlist)])
 					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
 				}
 				i++
@@ -337,23 +338,23 @@ func (s *Server) Run(role string, nRounds int) {
 		switch role {
 
 		case "root":
-			log.Println("running as root")
+			dbg.Lvl3("running as root")
 			nextRole = s.runAsRoot(nRounds)
 		case "regular":
-			log.Println("running as regular")
+			dbg.Lvl3("running as regular")
 			nextRole = s.runAsRegular()
 		case "test":
-			log.Println("running as test")
+			dbg.Lvl3("running as test")
 			ticker := time.Tick(2000 * time.Millisecond)
 			for _ = range ticker {
 				s.AggregateCommits(0)
 			}
 		default:
-			log.Println("UNABLE TO RUN AS ANYTHING")
+			dbg.Lvl3("UNABLE TO RUN AS ANYTHING")
 			return
 		}
 
-		// log.Println(s.Name(), "nextRole: ", nextRole)
+		// dbg.Lvl3(s.Name(), "nextRole: ", nextRole)
 		if nextRole == "close" {
 			s.Close()
 			return
@@ -369,7 +370,7 @@ func (s *Server) Run(role string, nRounds int) {
 
 func (s *Server) OnAnnounce() sign.CommitFunc {
 	return func(view int) []byte {
-		//log.Println("Aggregating Commits")
+		//dbg.Lvl3("Aggregating Commits")
 		return s.AggregateCommits(view)
 	}
 }
@@ -403,7 +404,7 @@ func (s *Server) OnDone() sign.DoneFunc {
 }
 
 func (s *Server) AggregateCommits(view int) []byte {
-	//log.Println(s.Name(), "calling AggregateCommits")
+	//dbg.Lvl3(s.Name(), "calling AggregateCommits")
 	s.mux.Lock()
 	// get data from s once to avoid refetching from structure
 	Queue := s.Queue
@@ -445,7 +446,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	s.Root, s.Proofs = proof.ProofTree(s.Suite().Hash, s.Leaves)
 	if sign.DEBUG == true {
 		if proof.CheckLocalProofs(s.Suite().Hash, s.Root, s.Leaves, s.Proofs) == true {
-			log.Println("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
+			dbg.Lvl3("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
 		} else {
 			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}

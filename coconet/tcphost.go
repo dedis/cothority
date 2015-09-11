@@ -9,6 +9,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -155,7 +156,7 @@ func (h *TCPHost) Listen() error {
 			h.PeerLock.Lock()
 			h.Ready[name] = true
 			h.peers[name] = tp
-			log.Infoln("CONNECTED TO CHILD:", tp, tp.conn)
+			dbg.Lvl3("CONNECTED TO CHILD:", tp, tp.conn)
 			h.PeerLock.Unlock()
 
 			go func() {
@@ -220,7 +221,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	h.peers[parent] = tp
 	// h.PendingPeers[parent] = true
 	h.PeerLock.Unlock()
-	log.Infoln("CONNECTED TO PARENT:", parent)
+	dbg.Lvl3("CONNECTED TO PARENT:", parent)
 
 	go func() {
 		for {

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 
 	"github.com/ineiti/cothorities/coconet"
 	"github.com/ineiti/cothorities/hashid"
@@ -56,7 +57,7 @@ func AggregateStats(buck, roundsAfter, times []int64) string {
 }
 
 func streamMessgs(c *stamp.Client, servers []string, rate int) {
-	log.Println("STREAMING: GIVEN RATE", rate)
+	dbg.Lvl3("STREAMING: GIVEN RATE", rate)
 	// buck[i] = # of timestamp responses received in second i
 	buck := make([]int64, MAX_N_SECONDS)
 	// roundsAfter[i] = # of timestamp requests that were processed i rounds late
@@ -70,7 +71,7 @@ func streamMessgs(c *stamp.Client, servers []string, rate int) {
 	retry:
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
-		log.Println("CLIENT ", c.Name(), "DONE: couldn't connect to TimeStamp")
+		dbg.Lvl3("CLIENT ", c.Name(), "DONE: couldn't connect to TimeStamp")
 		log.Fatal(AggregateStats(buck, roundsAfter, times))
 	} else if err == stamp.ErrClientToTSTimeout {
 		log.Errorln(err)
@@ -93,14 +94,14 @@ func streamMessgs(c *stamp.Client, servers []string, rate int) {
 
 			if err == io.EOF || err == coconet.ErrClosed {
 				if err == io.EOF {
-					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to EOF", s)
+					dbg.Lvl3("CLIENT ", c.Name(), "DONE: terminating due to EOF", s)
 				} else {
-					log.Printf("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed", s)
+					dbg.Lvl3("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed", s)
 				}
 				log.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
 				// ignore errors
-				log.Printf("CLIENT ", c.Name(), "Leaving out streamMessages. ", err)
+				dbg.Lvl3("CLIENT ", c.Name(), "Leaving out streamMessages. ", err)
 				return
 			}
 
@@ -124,7 +125,7 @@ var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(stamp.ROUND_TIME / time.Second)
 
 func Run(server string, nmsgs int, name string, rate int, debug int) {
-	log.Println("Starting to run stampclient")
+	dbg.Lvl3("Starting to run stampclient")
 	c := stamp.NewClient(name)
 	servers := strings.Split(server, ",")
 
@@ -145,9 +146,9 @@ func Run(server string, nmsgs int, name string, rate int, debug int) {
 
 	// Stream time stamp requests
 	// if rate specified send out one message every rate milliseconds
-	log.Println("Starting to stream at rate", rate)
+	dbg.Lvl1(name, "starting to stream at rate", rate)
 	streamMessgs(c, servers, rate)
-	log.Println("Finished streaming")
+	dbg.Lvl3("Finished streaming")
 	return
 
 	/*
@@ -181,7 +182,7 @@ func Run(server string, nmsgs int, name string, rate int, debug int) {
 		}
 		wg.Wait()
 		//elapsed := time.Since(start)
-		log.Println("client done with round")
+		dbg.Lvl3("client done with round")
 		//log.WithFields(log.Fields{
 		//"file":  logutils.File(),
 		//"type":  "client_round",

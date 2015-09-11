@@ -17,6 +17,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/ineiti/cothorities/sign"
 
 	"github.com/dedis/crypto/abstract"
@@ -215,28 +216,28 @@ func ConstructTree(
 
 	// if the JSON holds the fields field is set load from there
 	if len(n.PubKey) != 0 {
-		// log.Println("decoding point")
+		// dbg.Lvl3("decoding point")
 		encoded, err := hex.DecodeString(string(n.PubKey))
 		if err != nil {
-			log.Print("failed to decode hex from encoded")
+			log.Error("failed to decode hex from encoded")
 			return 0, err
 		}
 		pubkey = suite.Point()
 		err = pubkey.UnmarshalBinary(encoded)
 		if err != nil {
-			log.Print("failed to decode point from hex")
+			log.Error("failed to decode point from hex")
 			return 0, err
 		}
-		// log.Println("decoding point")
+		// dbg.Lvl3("decoding point")
 		encoded, err = hex.DecodeString(string(n.PriKey))
 		if err != nil {
-			log.Print("failed to decode hex from encoded")
+			log.Error("failed to decode hex from encoded")
 			return 0, err
 		}
 		prikey = suite.Secret()
 		err = prikey.UnmarshalBinary(encoded)
 		if err != nil {
-			log.Print("failed to decode point from hex")
+			log.Error("failed to decode point from hex")
 			return 0, err
 		}
 	}
@@ -260,16 +261,16 @@ func ConstructTree(
 			prikey = sn.PrivKey
 			pubkey = sn.PubKey
 		}
-		// log.Println("pubkey:", sn.PubKey)
-		// log.Println("given: ", pubkey)
+		// dbg.Lvl3("pubkey:", sn.PubKey)
+		// dbg.Lvl3("given: ", pubkey)
 	}
 	// if the parent of this call is empty then this must be the root node
 	if parent != "" && generate {
 		h.AddParent(0, parent)
 	}
-	// log.Println("name: ", n.Name)
-	// log.Println("prikey: ", prikey)
-	// log.Println("pubkey: ", pubkey)
+	// dbg.Lvl3("name: ", n.Name)
+	// dbg.Lvl3("prikey: ", prikey)
+	// dbg.Lvl3("pubkey: ", pubkey)
 	height := 0
 	for _, c := range n.Children {
 		// connect this node to its children
@@ -284,7 +285,7 @@ func ConstructTree(
 		}
 
 		// recursively construct the children
-		// log.Print("ConstructTree:", h, suite, rand, hosts, nameToAddr, opts)
+		dbg.Lvl3("ConstructTree:", h, suite, rand, hosts, nameToAddr, opts)
 		h, err := ConstructTree(c, hc, name, suite, rand, hosts, nameToAddr, opts)
 		if err != nil {
 			return 0, err
@@ -295,9 +296,9 @@ func ConstructTree(
 	if generate {
 		sn.Height = height
 	}
-	// log.Println("name: ", n.Name)
-	// log.Println("final x_hat: ", x_hat)
-	// log.Println("final pubkey: ", pubkey)
+	// dbg.Lvl3("name: ", n.Name)
+	// dbg.Lvl3("final x_hat: ", x_hat)
+	// dbg.Lvl3("final pubkey: ", pubkey)
 	return height, nil
 }
 
@@ -308,7 +309,7 @@ var ipv4host = "NONE"
 func GetAddress() (string, error) {
 	name, err := os.Hostname()
 	if err != nil {
-		log.Print("Error Resolving Hostname:", err)
+		log.Error("Error Resolving Hostname:", err)
 		return "", err
 	}
 
@@ -321,9 +322,9 @@ func GetAddress() (string, error) {
 		addr := ""
 
 		for _, a := range as {
-			log.Printf("a = %+v", a)
+			dbg.Lvl3("a = %+v", a)
 			if ipv4Reg.MatchString(a) {
-				log.Print("matches")
+				dbg.Lvl3("matches")
 				addr = a
 			}
 		}
@@ -407,17 +408,17 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 			if opts.GenHosts {
 				p := strconv.Itoa(StartConfigPort)
 				addr = localAddr + ":" + p
-				//log.Println("created new host address: ", addr)
+				//dbg.Lvl3("created new host address: ", addr)
 				StartConfigPort += 10
 			} else if opts.Port != "" {
-				log.Println("attempting to rewrite port: ", opts.Port)
+				dbg.Lvl3("attempting to rewrite port: ", opts.Port)
 				// if the port has been specified change the port
 				hostport := strings.Split(addr, ":")
-				log.Println(hostport)
+				dbg.Lvl3(hostport)
 				if len(hostport) == 2 {
 					addr = hostport[0] + ":" + opts.Port
 				}
-				log.Println(addr)
+				dbg.Lvl3(addr)
 			} else if len(opts.Hostnames) != 0 {
 				addr = opts.Hostnames[i]
 			}
@@ -451,7 +452,7 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 		hc.Dir = nil
 	}
 
-	log.Println("IN LOAD JSON")
+	dbg.Lvl3("IN LOAD JSON")
 	// add a hostlist to each of the signing nodes
 	var hostList []string
 	for h := range hosts {
@@ -463,7 +464,7 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 		sortable.Sort()
 		copy(sn.HostList, sortable)
 		// set host list on view 0
-		//log.Println("in config hostlist", sn.HostList)
+		//dbg.Lvl3("in config hostlist", sn.HostList)
 		sn.SetHostList(0, sn.HostList)
 	}
 
@@ -496,7 +497,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 		startTime := time.Duration(200)
 		maxTime := time.Duration(2000)
 		for i := 0; i < 2000; i++ {
-			log.Println(fmt.Sprintf("Attempting to connect to parent %s", h))
+			dbg.Lvl3(fmt.Sprintf("Attempting to connect to parent %s", h))
 			// the host should connect with the parent
 			err = sn.Connect(0)
 			if err == nil {
@@ -510,7 +511,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 				startTime = maxTime
 			}
 		}
-		log.Println(fmt.Sprintf("Succssfully connected to parent %s", h))
+		dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
 		if err != nil {
 			log.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
 			return errors.New("failed to connect")
@@ -531,7 +532,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 
 // run each host in hostnameSlice with the number of clients given
 func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*stamp.Server, []*stamp.Client, error) {
-	log.Println("RunTimestamper")
+	dbg.Lvl3("RunTimestamper")
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
 	if hostnameSlice == nil {
@@ -556,11 +557,11 @@ func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*
 		}
 		stampers = append(stampers, stamp.NewServer(sn))
 		if hc.Dir == nil {
-			//log.Println("listening for clients")
+			//dbg.Lvl3("listening for clients")
 			stampers[len(stampers)-1].Listen()
 		}
 	}
-	//log.Println("stampers:", stampers)
+	//dbg.Lvl3("stampers:", stampers)
 	clientsLists := make([][]*stamp.Client, len(hc.SNodes[1:]))
 	for i, s := range stampers[1:] {
 		// cant assume the type of connection
@@ -579,7 +580,7 @@ func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*
 			log.Fatal("port is not valid integer")
 		}
 		hp := net.JoinHostPort(h, strconv.Itoa(pn+1))
-		//log.Println("client connecting to:", hp)
+		//dbg.Lvl3("client connecting to:", hp)
 
 		for j := range clients {
 			clients[j] = stamp.NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
@@ -588,10 +589,10 @@ func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*
 			// if we are using tcp connections
 			if hc.Dir == nil {
 				// the timestamp server serves at the old port + 1
-				//log.Println("new tcp conn")
+				//dbg.Lvl3("new tcp conn")
 				c = coconet.NewTCPConn(hp)
 			} else {
-				//log.Println("new go conn")
+				//dbg.Lvl3("new go conn")
 				c, _ = coconet.NewGoConn(hc.Dir, clients[j].Name(), s.Name())
 				stoc, _ := coconet.NewGoConn(hc.Dir, s.Name(), clients[j].Name())
 				s.Clients[clients[j].Name()] = stoc

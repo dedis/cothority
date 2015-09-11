@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"github.com/ineiti/cothorities/coconet"
 	"github.com/ineiti/cothorities/hashid"
@@ -23,11 +24,11 @@ import (
 
 // Get multiplexes all messages from TCPHost using application logic
 func (sn *Node) get() error {
-	log.Println(sn.Name(), "getting")
-	defer log.Println(sn.Name(), "done getting")
+	dbg.Lvl3(sn.Name(), "getting")
+	defer dbg.Lvl3(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
-	log.Println("Going to get", sn.Name())
+	dbg.Lvl3("Going to get", sn.Name())
 	msgchan := sn.Host.Get()
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
@@ -66,7 +67,7 @@ func (sn *Node) get() error {
 			//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
-			// log.Println(sn.Name(), "received message: ", sm.Type)
+			// dbg.Lvl3(sn.Name(), "received message: ", sm.Type)
 
 			// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
@@ -86,11 +87,11 @@ func (sn *Node) get() error {
 			case Announcement:
 				sn.ReceivedHeartbeat(sm.View)
 
-				// log.Println("RECEIVED ANNOUNCEMENT MESSAGE")
+				// dbg.Lvl3("RECEIVED ANNOUNCEMENT MESSAGE")
 				var err error
 				if sm.Am.Vote != nil {
 					err = sn.Propose(sm.View, sm.Am, sm.From)
-					log.Println(sn.Name(), "done proposing")
+					dbg.Lvl3(sn.Name(), "done proposing")
 				} else {
 					if !sn.IsParent(sm.View, sm.From) {
 						log.Fatalln(sn.Name(), "received announcement from non-parent on view", sm.View)
@@ -136,7 +137,7 @@ func (sn *Node) get() error {
 					log.Errorln(sn.Name(), "commit error:", err)
 				}
 			case Response:
-				log.Println(sn.Name(), "received response from", sm.From)
+				dbg.Lvl3(sn.Name(), "received response from", sm.From)
 				if !sn.IsChild(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received response from non-child on view", sm.View)
 					continue
@@ -184,19 +185,19 @@ func (sn *Node) get() error {
 				sn.PutUp(context.TODO(), sm.View, sm)
 			case GroupChanged:
 				if !sm.Gcm.V.Confirmed {
-					log.Println(sn.Name(), " received attempt to group change not confirmed")
+					dbg.Lvl3(sn.Name(), " received attempt to group change not confirmed")
 					continue
 				}
 				if sm.Gcm.V.Type == RemoveVT {
-					log.Println(sn.Name(), " received removal notice")
+					dbg.Lvl3(sn.Name(), " received removal notice")
 				} else if sm.Gcm.V.Type == AddVT {
-					log.Println(sn.Name(), " received addition notice")
+					dbg.Lvl3(sn.Name(), " received addition notice")
 					sn.NewView(sm.View, sm.From, nil, sm.Gcm.HostList)
 				} else {
 					log.Errorln(sn.Name(), "received GroupChanged for unacceptable action")
 				}
 			case Error:
-				log.Println("Received Error Message:", ErrUnknownMessageType, sm, sm.Err)
+				dbg.Lvl3("Received Error Message:", ErrUnknownMessageType, sm, sm.Err)
 			}
 		}
 	}
@@ -204,7 +205,7 @@ func (sn *Node) get() error {
 }
 
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
-	log.Println(sn.Name(), "RECEIVED announcement on", view)
+	dbg.Lvl3(sn.Name(), "RECEIVED announcement on", view)
 
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
@@ -293,10 +294,10 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 	}
 
 	if sn.Type == PubKey {
-		log.Println("sign.Node.Commit using PubKey")
+		dbg.Lvl3("sign.Node.Commit using PubKey")
 		return sn.actOnCommits(view, Round)
 	} else {
-		log.Println("sign.Node.Commit using Merkle")
+		dbg.Lvl3("sign.Node.Commit using Merkle")
 		sn.AddChildrenMerkleRoots(Round)
 		sn.AddLocalMerkleRoot(view, Round)
 		sn.HashLog(Round)
@@ -326,7 +327,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 			Round:         Round}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
-		log.Println(sn.Name(), "puts up commit")
+		dbg.Lvl3(sn.Name(), "puts up commit")
 		ctx := context.TODO()
 		err = sn.PutUp(ctx, view, &SigningMessage{
 			View:         view,
@@ -353,12 +354,12 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 	round.c = chm.C
 
 	if sn.Type == PubKey {
-		log.Println(sn.Name(), "challenge: using pubkey", sn.Type, chm.Vote)
+		dbg.Lvl3(sn.Name(), "challenge: using pubkey", sn.Type, chm.Vote)
 		if err := sn.SendChildrenChallenges(view, chm); err != nil {
 			return err
 		}
 	} else {
-		log.Println(sn.Name(), "challenge: using merkle proofs")
+		dbg.Lvl3(sn.Name(), "challenge: using merkle proofs")
 		// messages from clients, proofs computed
 		if sn.CommitedFor(round) {
 			if err := sn.SendLocalMerkleProof(view, chm); err != nil {
@@ -371,13 +372,13 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 		}
 	}
 
-	// log.Println(sn.Name(), "In challenge before response")
+	// dbg.Lvl3(sn.Name(), "In challenge before response")
 	sn.initResponseCrypto(chm.Round)
 	// if we are a leaf, send the respond up
 	if len(sn.Children(view)) == 0 {
 		sn.Respond(view, chm.Round, nil)
 	}
-	// log.Println(sn.Name(), "Done handling challenge message")
+	// dbg.Lvl3(sn.Name(), "Done handling challenge message")
 	return nil
 }
 
@@ -391,7 +392,7 @@ func (sn *Node) initResponseCrypto(Round int) {
 }
 
 func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
-	log.Println(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
+	dbg.Lvl3(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
@@ -423,7 +424,7 @@ func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 		switch sm.Type {
 		default:
 			// default == no response from child
-			// log.Println(sn.Name(), "default in respose for child", from, sm)
+			// dbg.Lvl3(sn.Name(), "default in respose for child", from, sm)
 			if children[from] != nil {
 				round.ExceptionList = append(round.ExceptionList, children[from].PubKey())
 
@@ -439,7 +440,7 @@ func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 				continue
 			}
 
-			// log.Println(sn.Name(), "accepts response from", from, sm.Type)
+			// dbg.Lvl3(sn.Name(), "accepts response from", from, sm.Type)
 			round.r_hat.Add(round.r_hat, sm.Rm.R_hat)
 
 			sn.add(exceptionV_hat, sm.Rm.ExceptionV_hat)
@@ -469,7 +470,7 @@ func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 }
 
 func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, exceptionX_hat abstract.Point) error {
-	log.Println(sn.Name(), "got all responses for view, round", view, Round)
+	dbg.Lvl3(sn.Name(), "got all responses for view, round", view, Round)
 	round := sn.Rounds[Round]
 	err := sn.VerifyResponses(view, Round)
 
@@ -483,7 +484,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 	// if no error send up own response
 	if err == nil && !isroot {
 		if round.Log.v == nil && sn.ShouldIFail("response") {
-			log.Println(sn.Name(), "failing on response")
+			dbg.Lvl3(sn.Name(), "failing on response")
 			return nil
 		}
 
@@ -497,7 +498,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		ctx := context.TODO()
-		log.Println(sn.Name(), "put up response to", sn.Parent(view))
+		dbg.Lvl3(sn.Name(), "put up response to", sn.Parent(view))
 		err = sn.PutUp(ctx, view, &SigningMessage{
 			Type:         Response,
 			View:         view,
@@ -506,7 +507,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 	}
 
 	if sn.TimeForViewChange() {
-		log.Println("acting on responses: trying viewchanges")
+		dbg.Lvl3("acting on responses: trying viewchanges")
 		err := sn.TryViewChange(view + 1)
 		if err != nil {
 			log.Errorln(err)
@@ -522,7 +523,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 }
 
 func (sn *Node) TryViewChange(view int) error {
-	log.Println(sn.Name(), "TRY VIEW CHANGE on", view, "with last view", sn.ViewNo)
+	dbg.Lvl3(sn.Name(), "TRY VIEW CHANGE on", view, "with last view", sn.ViewNo)
 	// should ideally be compare and swap
 	sn.viewmu.Lock()
 	if view <= sn.ViewNo {
@@ -538,7 +539,7 @@ func (sn *Node) TryViewChange(view int) error {
 
 	// take action if new view root
 	if sn.Name() == sn.RootFor(view) {
-		log.Println(sn.Name(), "INITIATING VIEW CHANGE FOR VIEW:", view)
+		dbg.Lvl3(sn.Name(), "INITIATING VIEW CHANGE FOR VIEW:", view)
 		go func() {
 			err := sn.StartVotingRound(
 				&Vote{
@@ -610,16 +611,16 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 		if DEBUG == true {
 			panic(sn.Name() + "reports ElGamal Collective Signature failed for Round" + strconv.Itoa(Round))
 		}
-		// return errors.New("Veryfing ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
+		// return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
 	}
 
 	if isroot {
-		log.Println(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
+		dbg.Lvl3(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
 		nel := len(round.ExceptionList)
 		nhl := len(sn.HostListOn(view))
 		p := strconv.FormatFloat(float64(nel)/float64(nhl), 'f', 6, 64)
 		log.Infoln(sn.Name(), "reports", nel, "out of", nhl, "percentage", p, "failed in round", Round)
-		// log.Println(round.MTRoot)
+		// dbg.Lvl3(round.MTRoot)
 	}
 	return nil
 }
@@ -630,14 +631,14 @@ func (sn *Node) TimeForViewChange() bool {
 
 	// if this round is last one for this view
 	if sn.LastSeenRound%sn.RoundsPerView == 0 {
-		// log.Println(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
+		// dbg.Lvl3(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
 		return true
 	}
 	return false
 }
 
 func (sn *Node) PutUpError(view int, err error) {
-	// log.Println(sn.Name(), "put up response with err", err)
+	// dbg.Lvl3(sn.Name(), "put up response with err", err)
 	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	ctx := context.TODO()
 	sn.PutUp(ctx, view, &SigningMessage{

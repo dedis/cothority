@@ -6,7 +6,7 @@ import (
 	"github.com/ineiti/cothorities/proof"
 )
 
-var DEBUG bool // to avoid veryfing paths and signatures all the time
+var DEBUG bool // to avoid verifying paths and signatures all the time
 
 // Returns commitment contribution for a round
 type CommitFunc func(view int) []byte

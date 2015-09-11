@@ -3,13 +3,13 @@ package logutils
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	//"log"
 	"math/rand"
 	"runtime"
 	"strconv"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"golang.org/x/net/websocket"
 )
 
@@ -20,7 +20,7 @@ func init() {
 type LoggerHook struct {
 	HostPort string
 	Conn     *websocket.Conn
-	f        logrus.Formatter
+	f        log.Formatter
 }
 
 func File() string {
@@ -32,7 +32,7 @@ func File() string {
 	short := file
 	for i := len(file) - 1; i > 0; i-- {
 		if file[i] == '/' {
-			short = file[i+1:]
+			short = file[i + 1:]
 			break
 		}
 	}
@@ -42,7 +42,7 @@ func File() string {
 
 func (lh *LoggerHook) Connect() {
 	hostport := lh.HostPort
-retry:
+	retry:
 	addr := "ws://" + hostport + "/_log"
 	ws, err := websocket.Dial(addr, "", "http://localhost/")
 	if err != nil {
@@ -57,29 +57,31 @@ retry:
 // hostport is the address of the logging server
 // host
 func NewLoggerHook(hostport, host, app string) (*LoggerHook, error) {
-retry:
-	addr := "ws://" + hostport + "/_log"
-	ws, err := websocket.Dial(addr, "", "http://localhost/")
-	if err != nil {
-		time.Sleep(time.Second)
-		goto retry
+	log.SetFormatter(&JSONFormatter{host, app})
+
+	if hostport != "" {
+		retry:
+		addr := "ws://" + hostport + "/_log"
+		ws, err := websocket.Dial(addr, "", "http://localhost/")
+		if err != nil {
+			time.Sleep(time.Second)
+			goto retry
+		}
+
+		return &LoggerHook{hostport, ws, &JSONFormatter{host, app}}, err
 	}
+	return nil, nil
+}
 
-	//logrus.SetFormatter(&JSONFormatter{})
-
-	return &LoggerHook{hostport, ws, &JSONFormatter{host, app}}, err
+func NewLoggerHookSimple(host, app string) {
+	lh, err := NewLoggerHook("", host, app)
+	if err != nil{
+		log.AddHook(lh)
+	}
 }
 
 // Fire is called when a log event is fired.
-func (hook *LoggerHook) Fire(entry *logrus.Entry) error {
-	/*
-	entry.data["ehost"] = f.Host // the host that this is running on
-	entry.data["eapp"] = f.App   // what app we are running (timeclient, timestamper, signer)
-	entry.data["etime"] = entry.Time.Format(time.RFC3339)
-	entry.data["emsg"] = entry.Message
-	entry.data["elevel"] = entry.Level.String()
-	*/
-
+func (hook *LoggerHook) Fire(entry *log.Entry) error {
 	serialized, err := hook.f.Format(entry)
 	if err != nil {
 		return fmt.Errorf("Failed to fields to format, %v", err)
@@ -93,14 +95,14 @@ func (hook *LoggerHook) Fire(entry *logrus.Entry) error {
 }
 
 // Levels returns the available logging levels.
-func (hook *LoggerHook) Levels() []logrus.Level {
-	return []logrus.Level{
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-		logrus.WarnLevel,
-		logrus.InfoLevel,
-		logrus.DebugLevel,
+func (hook *LoggerHook) Levels() []log.Level {
+	return []log.Level{
+		log.PanicLevel,
+		log.FatalLevel,
+		log.ErrorLevel,
+		log.WarnLevel,
+		log.InfoLevel,
+		log.DebugLevel,
 	}
 }
 
@@ -113,8 +115,8 @@ type JSONFormatter struct {
 	App  string
 }
 
-func (f *JSONFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	data := make(logrus.Fields, len(entry.Data)+5)
+func (f *JSONFormatter) Format(entry *log.Entry) ([]byte, error) {
+	data := make(log.Fields, len(entry.Data) + 5)
 	for k, v := range entry.Data {
 		data[k] = v
 	}

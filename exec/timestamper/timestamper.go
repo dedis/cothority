@@ -9,10 +9,11 @@ import (
 	"github.com/ineiti/cothorities/sign"
 
 	"github.com/dedis/crypto/abstract"
-	//"github.com/dedis/crypto/edwards"
+//"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
 	"github.com/ineiti/cothorities/helpers/logutils"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 )
 
 func GetSuite(suite string) abstract.Suite {
@@ -31,8 +32,8 @@ func GetSuite(suite string) abstract.Suite {
 }
 
 func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testConnect bool, failureRate, rFail, fFail int, logger, suite string) {
-	log.Println(hostname, "Starting to run")
-	if debug > 1{
+	dbg.Lvl1(hostname, "Starting to run")
+	if debug > 1 {
 		sign.DEBUG = true
 	}
 
@@ -43,7 +44,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 	}
 
 	// load the configuration
-	//log.Println("loading configuration")
+	//dbg.Lvl2("loading configuration")
 	var hc *oldconfig.HostConfig
 	var err error
 	s := GetSuite(suite)
@@ -78,7 +79,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 	}
 
 	// run this specific host
-	// log.Println("RUNNING HOST CONFIG")
+	// dbg.Lvl3("RUNNING HOST CONFIG")
 	err = hc.Run(app != "sign", sign.MerkleTree, hostname)
 	if err != nil {
 		log.Fatal(err)
@@ -86,12 +87,12 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 
 	defer func(sn *sign.Node) {
 		//log.Panicln("program has terminated:", hostname)
-		log.Println("Program timestamper has terminated:", hostname)
+		dbg.Lvl1("Program timestamper has terminated:", hostname)
 		sn.Close()
 	}(hc.SNodes[0])
 
 	if app == "sign" {
-		//log.Println("RUNNING Node")
+		//dbg.Lvl2("RUNNING Node")
 		// if I am root do the announcement message
 		if hc.SNodes[0].IsRoot(0) {
 			time.Sleep(3 * time.Second)
@@ -103,13 +104,13 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 				start = time.Now()
 				//fmt.Println("ANNOUNCING")
 				hc.SNodes[0].LogTest = []byte("Hello World")
-				log.Println("Going to launch announcement ", hc.SNodes[0].Name())
+				dbg.Lvl2("Going to launch announcement ", hc.SNodes[0].Name())
 				err = hc.SNodes[0].Announce(0,
 					&sign.AnnouncementMessage{
 						LogTest: hc.SNodes[0].LogTest,
 						Round:   i})
 				if err != nil {
-					log.Println(err)
+					dbg.Lvl1(err)
 				}
 				elapsed := time.Since(start)
 				log.WithFields(log.Fields{
@@ -125,7 +126,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 			time.Sleep(30 * time.Second)
 		}
 	} else if app == "stamp" || app == "vote" {
-		log.Println("RUNNING TIMESTAMPER on", hostname)
+		dbg.Lvl1("RUNNING TIMESTAMPER on", hostname)
 		stampers, _, err := hc.RunTimestamper(0, hostname)
 		// get rid of the hc information so it can be GC'ed
 		hc = nil
@@ -139,22 +140,22 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 				s.Hostname = hostname
 				s.App = app
 				if s.IsRoot(0) {
-					log.Println("RUNNING ROOT SERVER AT:", hostname, rounds)
+					dbg.Lvl1("RUNNING ROOT SERVER AT:", hostname, rounds)
 					log.Printf("Waiting: %d s\n", rootwait)
 					// wait for the other nodes to get set up
 					time.Sleep(time.Duration(rootwait) * time.Second)
 
-					log.Println("STARTING ROOT ROUND")
+					dbg.Lvl1("STARTING ROOT ROUND")
 					s.Run("root", rounds)
-					// log.Println("\n\nROOT DONE\n\n")
+					// dbg.Lvl2("\n\nROOT DONE\n\n")
 
 				} else if !testConnect {
-					log.Println("RUNNING REGULAR AT:", hostname)
+					dbg.Lvl1("RUNNING REGULAR AT:", hostname)
 					s.Run("regular", rounds)
-					// log.Println("\n\nREGULAR DONE\n\n")
+					// dbg.Lvl1("\n\nREGULAR DONE\n\n")
 				} else {
 					// testing connection
-					log.Println("RUNNING TEST_CONNNECT AT:", hostname)
+					dbg.Lvl1("RUNNING TEST_CONNNECT AT:", hostname)
 					s.Run("test_connect", rounds)
 				}
 			}

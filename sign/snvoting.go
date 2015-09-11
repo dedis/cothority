@@ -5,6 +5,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"golang.org/x/net/context"
 )
 
@@ -47,7 +48,7 @@ func (sn *Node) AddAction(view int, v *Vote) {
 }
 
 func (sn *Node) ApplyAction(view int, v *Vote) {
-	log.Println(sn.Name(), "APPLYING ACTION")
+	dbg.Lvl3(sn.Name(), "APPLYING ACTION")
 	switch v.Type {
 	case AddVT:
 		sn.AddPeerToHostlist(view, v.Av.Name)
@@ -65,7 +66,7 @@ func (sn *Node) ApplyAction(view int, v *Vote) {
 }
 
 func (sn *Node) NotifyOfAction(view int, v *Vote) {
-	log.Println(sn.Name(), "Notifying node to be added/removed of action")
+	dbg.Lvl3(sn.Name(), "Notifying node to be added/removed of action")
 	gcm := &SigningMessage{
 		Type:         GroupChanged,
 		From:         sn.Name(),
@@ -90,13 +91,13 @@ func (sn *Node) NotifyOfAction(view int, v *Vote) {
 }
 
 func (sn *Node) AddSelf(parent string) error {
-	log.Println("AddSelf: connecting to:", parent)
+	dbg.Lvl3("AddSelf: connecting to:", parent)
 	err := sn.ConnectTo(parent)
 	if err != nil {
 		return err
 	}
 
-	log.Println("AddSelf: putting group change message to:", parent)
+	dbg.Lvl3("AddSelf: putting group change message to:", parent)
 	return sn.PutTo(
 		context.TODO(),
 		parent,
@@ -127,7 +128,7 @@ func (sn *Node) RemoveSelf() error {
 }
 
 func (sn *Node) CatchUp(vi int, from string) {
-	log.Println(sn.Name(), "attempting to catch up vote", vi)
+	dbg.Lvl3(sn.Name(), "attempting to catch up vote", vi)
 
 	ctx := context.TODO()
 	sn.PutTo(ctx, from,
@@ -153,7 +154,7 @@ func (sn *Node) StartGossip() {
 				sn.randmu.Lock()
 				from := c[sn.Rand.Int()%len(c)]
 				sn.randmu.Unlock()
-				log.Println("Gossiping with: ", from)
+				dbg.Lvl2("Gossiping with: ", from)
 				sn.CatchUp(int(atomic.LoadInt64(&sn.LastAppliedVote)+1), from)
 			case <-sn.closed:
 				log.Warnln("stopping gossip: closed")

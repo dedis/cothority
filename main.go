@@ -32,12 +32,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
+	//"log"
 	"math"
 	"os"
 	"os/exec"
 	"strconv"
 	"time"
+	log "github.com/Sirupsen/logrus"
+	"github.com/ineiti/cothorities/helpers/logutils"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 )
 
 type T struct {
@@ -53,9 +56,9 @@ type T struct {
 	app         string
 }
 
+// Configuration-variables
 var user string = "-user=ineiti"
 var host string = "-host=users.deterlab.net"
-
 var hosts_file string = "deploy2deter/hosts.txt"
 var project string = "Dissent-CS"
 var machines int = 3
@@ -63,15 +66,14 @@ var loggers int = 3
 var bf int = 2
 var hpn = -1
 var port int = 8081
+var view bool
+var debug int = 2 // Debugging level of whole application - 0 is silent, 5 is flooding
+var nobuild bool = false
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
 var DefaultRounds int = 1
 
-var view bool
-// Debugging level of whole application - 0 is silent, 5 is flooding
-var debug int = 2
-var nobuild bool = false
 
 func init() {
 	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
@@ -83,6 +85,71 @@ func init() {
 	flag.IntVar(&bf, "branch", bf, "Branching Factor")
 	flag.IntVar(&hpn, "hpn", hpn, "Host per node (physical machine)")
 	flag.IntVar(&debug, "debug", debug, "Debugging-level. 0 is silent, 5 is flood")
+}
+
+func main() {
+	logutils.NewLoggerHookSimple("local", "MAIN")
+	dbg.Lvl1("*** Setting up everything")
+	flag.Parse()
+	dbg.Lvl1(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", machines, loggers, user, project))
+	user = fmt.Sprintf("-user=%s", user)
+
+	// generate hosts file
+	if e := GenerateHostsFile(project, machines + loggers); e != nil {
+		log.Fatal("Error for creation of host file. Abort.")
+		os.Exit(1)
+	}
+	// view = true
+
+	os.Chdir("deploy2deter")
+
+	MkTestDir()
+
+	err := exec.Command("go", "build", "-v").Run()
+	if err != nil {
+		log.Fatalln("error building deploy2deter:", err)
+	}
+	dbg.Lvl1("KILLING REMAINING PROCESSES")
+	build := "-build=true"
+	if nobuild {
+		build = "-build=false"
+	}
+	dbg.Lvl3("Building is ", build)
+
+	cmd := exec.Command("./deploy2deter", "-kill=true", build,
+		fmt.Sprintf("-nmachs=%d", machines), user, host)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalln("Couldn't run deploy2deter ", cmd.Args)
+	}
+
+	dbg.Lvl1("\n*** Starting tests")
+	DefaultRounds = 5
+	RunTests("hosts_test_single", HostsTestSingle)
+	// test the testing framework
+	//RunTests("vote_test_no_signing.csv", VTest)
+	//RunTests("hosts_test", HostsTest)
+	// t := FailureTests
+	// RunTests("failure_test.csv", t)
+	// RunTests("vote_test", VotingTest)
+	// RunTests("failure_test", FailureTests)
+	//RunTests("sign_test", SignTest)
+	// t := FailureTests
+	// RunTests("failure_test", t)
+	// t = ScaleTest(10, 1, 100, 2)
+	// RunTests("scale_test.csv", t)
+	// how does the branching factor effect speed
+	// t = DepthTestFixed(100)
+	// RunTests("depth_test.csv", t)
+
+	// load test the client
+	// t = RateLoadTest(40, 10)
+	// RunTests("load_rate_test_bf10.csv", t)
+	// t = RateLoadTest(40, 50)
+	// RunTests("load_rate_test_bf50.csv", t)
+
 }
 
 // hpn, bf, nmsgsG
@@ -105,8 +172,8 @@ func RunTest(t T) (RunStats, error) {
 	debug := fmt.Sprintf("-debug=%d", debug)
 	cmd := exec.Command("./deploy2deter", nmachs, hpn, nmsgs, bf, rate, rounds, debug, failures, rFail,
 		fFail, tcon, app, user, host, loggers)
-	log.Println("RUNNING TEST:", cmd.Args)
-	log.Println("FAILURES PERCENT:", t.failures)
+	dbg.Lvl1("RUNNING TEST:", cmd.Args)
+	dbg.Lvl1("FAILURES PERCENT:", t.failures)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -173,11 +240,11 @@ func RunTests(name string, ts []T) {
 		for r := 0; r < nTimes; r++ {
 			run, err := RunTest(t)
 			if err != nil {
-				log.Println("error running test:", err)
+				log.Fatalln("error running test:", err)
 			}
 
 			// Clean Up after test
-			log.Println("KILLING REMAINING PROCESSES")
+			dbg.Lvl1("KILLING REMAINING PROCESSES")
 			cmd := exec.Command("./deploy2deter", "-kill=true",
 				fmt.Sprintf("-nmachs=%d", machines), user)
 			cmd.Stdout = os.Stdout
@@ -189,13 +256,13 @@ func RunTests(name string, ts []T) {
 					break
 				}
 			} else {
-				log.Println("Error for test ", r, " : ", err)
+				dbg.Lvl1("Error for test ", r, " : ", err)
 			}
 
 		}
 
 		if len(runs) == 0 {
-			log.Println("unable to get any data for test:", t)
+			dbg.Lvl1("unable to get any data for test:", t)
 			continue
 		}
 
@@ -307,6 +374,10 @@ func FullTests() []T {
 	return tests
 }
 
+var HostsTestSingle = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
+}
+
 var HostsTest = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
@@ -348,7 +419,7 @@ func GenerateHostsFile(project string, num_servers int) error {
 
 	// open and erase file if needed
 	if _, err1 := os.Stat(hosts_file); err1 == nil {
-		log.Print(fmt.Sprintf("Hosts file %s already exists. Erasing ...", hosts_file))
+		dbg.Lvl3(fmt.Sprintf("Hosts file %s already exists. Erasing ...", hosts_file))
 		os.Remove(hosts_file)
 	}
 	// create the file
@@ -365,70 +436,8 @@ func GenerateHostsFile(project string, num_servers int) error {
 	for i := 1; i <= num_servers; i++ {
 		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i - 1, project, name, ip, i))
 	}
-	log.Print(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
+	dbg.Lvl3(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
 	return err
-
-}
-func main() {
-	log.Println("\n*** Setting up everything")
-	flag.Parse()
-	log.Println(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", machines, loggers, user, project))
-	user = fmt.Sprintf("-user=%s", user)
-
-	// generate hosts file
-	if e := GenerateHostsFile(project, machines + loggers); e != nil {
-		log.Fatal("Error for creation of host file. Abort.")
-		os.Exit(1)
-	}
-	// view = true
-
-	os.Chdir("deploy2deter")
-
-	MkTestDir()
-
-	err := exec.Command("go", "build", "-v").Run()
-	if err != nil {
-		log.Fatalln("error building deploy2deter:", err)
-	}
-	log.Println("KILLING REMAINING PROCESSES")
-	build := "-build=true"
-	if nobuild {
-		build = "-build=false"
-	}
-	log.Println("Building is ", build)
-
-	cmd := exec.Command("./deploy2deter", "-kill=true", build,
-		fmt.Sprintf("-nmachs=%d", machines), user, host)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		log.Fatalln("Couldn't run deploy2deter ", cmd.Args)
-	}
-
-	log.Println("\n*** Starting tests")
-	// test the testing framework
-	//RunTests("vote_test_no_signing.csv", VTest)
-	DefaultRounds = 5
-	// t := FailureTests
-	// RunTests("failure_test.csv", t)
-	// RunTests("vote_test", VotingTest)
-	// RunTests("failure_test", FailureTests)
-	//RunTests("hosts_test", HostsTest)
-	RunTests("sign_test", SignTest)
-	// t := FailureTests
-	// RunTests("failure_test", t)
-	// t = ScaleTest(10, 1, 100, 2)
-	// RunTests("scale_test.csv", t)
-	// how does the branching factor effect speed
-	// t = DepthTestFixed(100)
-	// RunTests("depth_test.csv", t)
-
-	// load test the client
-	// t = RateLoadTest(40, 10)
-	// RunTests("load_rate_test_bf10.csv", t)
-	// t = RateLoadTest(40, 50)
-	// RunTests("load_rate_test_bf50.csv", t)
 
 }
 func MkTestDir() {

@@ -24,7 +24,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/ineiti/cothorities/exec/timestamper"
 	"github.com/ineiti/cothorities/helpers/logutils"
-	"os/exec"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 )
 
 var hostname string
@@ -64,7 +64,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	log.Println("Running Timestamper:", logger)
+	dbg.Lvl1("Running Timestamper:", logger)
 	defer func() {
 		log.Errorln("TERMINATING HOST")
 	}()
@@ -72,9 +72,8 @@ func main() {
 	// connect with the logging server
 	if logger != "" && (amroot || debug > 0) {
 		// blocks until we can connect to the logger
-		log.Println(hostname, "Connecting to Logger")
+		dbg.Lvl1(hostname, "Connecting to Logger")
 		lh, err := logutils.NewLoggerHook(logger, hostname, app)
-		log.Println(hostname, "Connected to Logger", hostname)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -83,7 +82,7 @@ func main() {
 		log.AddHook(lh)
 		//log.SetOutput(ioutil.Discard)
 		//fmt.Println("exiting logger block")
-		log.Println(hostname, "Done setting up hook")
+		dbg.Lvl3(hostname, "Done setting up hook")
 	}
 	if physaddr == "" {
 		h, _, err := net.SplitHostPort(hostname)
@@ -102,11 +101,9 @@ func main() {
 		p, _ := strconv.Atoi(port)
 		// uncomment if more fine grained memory debuggin is needed
 		//runtime.MemProfileRate = 1
-		log.Println(http.ListenAndServe(net.JoinHostPort(physaddr, strconv.Itoa(p+2)), nil))
+		dbg.Lvl2(http.ListenAndServe(net.JoinHostPort(physaddr, strconv.Itoa(p+2)), nil))
 	}()
 
-	log.Println(hostname, "Running")
-	// log.Println("!!!!!!!!!!!!!!!Running timestamp with rFail and fFail: ", rFail, fFail)
+	dbg.Lvl2("Running timestamp with rFail and fFail: ", rFail, fFail)
 	timestamper.Run(hostname, cfg, app, rounds, rootwait, debug, testConnect, failures, rFail, fFail, logger, suite)
-	exec.Command("time").Run()
 }

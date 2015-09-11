@@ -30,6 +30,7 @@ import (
 	"sync"
 	"time"
 
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/ineiti/cothorities/helpers/cliutils"
 	"github.com/ineiti/cothorities/helpers/config"
 	"github.com/ineiti/cothorities/helpers/graphs"
@@ -43,7 +44,7 @@ func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerp
 	cmd := ""
 	bg := " & "
 	for i, name := range names {
-		log.Printf("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect)
+		dbg.Lvl2("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect)
 		if name == random_leaf && testConnect {
 			connect = true
 		}
@@ -169,7 +170,7 @@ func main() {
 	if err != nil {
 		log.Fatal("deter.go: error reading configuration file: %v\n", err)
 	}
-	log.Println("cfg file:", string(file))
+	dbg.Lvl3("cfg file:", string(file))
 	var cf config.ConfigFile
 	err = json.Unmarshal(file, &cf)
 	if err != nil {
@@ -177,7 +178,7 @@ func main() {
 	}
 
 	hostnames := cf.Hosts
-	log.Println("hostnames:", hostnames)
+	dbg.Lvl3("hostnames:", hostnames)
 
 	depth := graphs.Depth(cf.Tree)
 	var random_leaf string
@@ -192,7 +193,7 @@ func main() {
 
 	rootname = hostnames[0]
 
-	log.Println("depth of tree:", depth)
+	dbg.Lvl3("depth of tree:", depth)
 
 	// mapping from physical node name to the timestamp servers that are running there
 	// essentially a reverse mapping of vpmap except ports are also used
@@ -231,7 +232,7 @@ func main() {
 
 	// wait a little bit for the logserver to start up
 	time.Sleep(5 * time.Second)
-	fmt.Println("starting", len(physToServer), "time clients")
+	dbg.Lvl1("starting", len(physToServer), "time clients:", physToServer)
 	// start up one timeclient per physical machine
 	// it requests timestamps from all the servers on that machine
 
@@ -249,9 +250,9 @@ func main() {
 				" -debug="+strconv.Itoa(debug)+
 				" -rate="+strconv.Itoa(rate))
 			if err != nil {
-				log.Println("Deter.go : timeclient error ", err)
+				dbg.Lvl3("Deter.go : timeclient error ", err)
 			}
-			log.Println("Deter.go : Finished with timeclient", p)
+			dbg.Lvl3("Deter.go : Finished with timeclient", p)
 		}(i, p)
 		i = (i + 1) % len(loggerports)
 	}
@@ -260,20 +261,20 @@ func main() {
 		if len(virts) == 0 {
 			continue
 		}
-		log.Println("starting timestampers for", virts)
+		dbg.Lvl1("starting timestampers for", virts)
 		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], random_leaf)
 		i = (i + 1) % len(loggerports)
 		wg.Add(1)
 		time.Sleep(100 * time.Millisecond)
 		go func(phys, cmd string) {
-			//log.Println("running on ", phys, cmd)
+			//dbg.Lvl3("running on ", phys, cmd)
 			defer wg.Done()
-			log.Println("deter.go Starting clients on physical machine ", phys, cmd)
+			dbg.Lvl3("deter.go Starting clients on physical machine ", phys, cmd)
 			err := cliutils.SshRunStdout("", phys, cmd)
 			if err != nil {
 				log.Fatal("ERROR STARTING TIMESTAMPER:", err, phys, virts)
 			}
-			log.Println("Finished with Timestamper", phys)
+			dbg.Lvl3("Finished with Timestamper", phys)
 		}(phys, cmd)
 
 	}

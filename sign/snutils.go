@@ -7,6 +7,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 
@@ -59,7 +60,7 @@ func (sn *Node) ReceivedHeartbeat(view int) {
 	if sn.heartbeat != nil {
 		sn.heartbeat.Stop()
 		sn.heartbeat = time.AfterFunc(HEARTBEAT, func() {
-			log.Println(sn.Name(), "NO HEARTBEAT - try view change:", view)
+			dbg.Lvl3(sn.Name(), "NO HEARTBEAT - try view change:", view)
 			sn.TryViewChange(view + 1)
 		})
 	}
@@ -133,12 +134,12 @@ func (sn *Node) setUpRound(view int, am *AnnouncementMessage) error {
 	// TODO: accept annoucements on old views?? linearizabiltity?
 	sn.viewmu.Lock()
 	// if (sn.ChangingView && am.Vote == nil) || (sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil) {
-	// 	log.Println(sn.Name(), "currently chaning view")
+	// 	dbg.Lvl3(sn.Name(), "currently chaning view")
 	// 	sn.viewmu.Unlock()
 	// 	return ChangingViewError
 	// }
 	if sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil {
-		log.Println(sn.Name(), "currently chaning view")
+		dbg.Lvl3(sn.Name(), "currently chaning view")
 		sn.viewmu.Unlock()
 		return ChangingViewError
 	}
@@ -156,7 +157,7 @@ func (sn *Node) setUpRound(view int, am *AnnouncementMessage) error {
 		sn.RoundTypes = append(sn.RoundTypes, make([]RoundType, max(len(sn.RoundTypes), Round+1))...)
 	}
 	if am.Vote == nil {
-		log.Println("***", Round, len(sn.RoundTypes))
+		dbg.Lvl3("***", Round, len(sn.RoundTypes))
 		sn.RoundTypes[Round] = SigningRT
 	} else {
 		sn.RoundTypes[Round] = RoundType(am.Vote.Type)

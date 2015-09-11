@@ -195,7 +195,7 @@ func (sn *Node) logFirstPhase(firstRoundTime time.Duration) {
 func (sn *Node) logSecondPhase(secondRoundTime time.Duration) {
 	log.WithFields(log.Fields{
 		"file":  logutils.File(),
-		"type":  "root_challenge",
+		"type":  "root_challenge second",
 		"round": sn.nRounds,
 		"time":  secondRoundTime,
 	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
@@ -204,7 +204,7 @@ func (sn *Node) logSecondPhase(secondRoundTime time.Duration) {
 func (sn *Node) logTotalTime(totalTime time.Duration) {
 	log.WithFields(log.Fields{
 		"file":  logutils.File(),
-		"type":  "root_challenge",
+		"type":  "root_challenge total",
 		"round": sn.nRounds,
 		"time":  totalTime,
 	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
