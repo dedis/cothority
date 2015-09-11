@@ -32,97 +32,62 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	//"log"
 	"math"
 	"os"
-	"os/exec"
 	"strconv"
 	"time"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
+	"github.com/ineiti/cothorities/platforms"
+	"github.com/ineiti/cothorities/platforms/deterlab"
 )
 
-type T struct {
-	nmachs      int
-	hpn         int
-	bf          int
-	rate        int
-	rounds      int
-	failures    int
-	rFail       int
-	fFail       int
-	testConnect bool
-	app         string
-}
-
 // Configuration-variables
-var user string = "-user=ineiti"
-var host string = "-host=users.deterlab.net"
-var hosts_file string = "deploy2deter/hosts.txt"
+var config *platforms.Config
+var platform platforms.Platform
+var login string = "ineiti"
+var host string = "users.deterlab.net"
 var project string = "Dissent-CS"
-var machines int = 3
-var loggers int = 3
-var bf int = 2
-var hpn = -1
-var port int = 8081
-var view bool
-var debug int = 2 // Debugging level of whole application - 0 is silent, 5 is flooding
 var nobuild bool = false
-
+var port int = 8081
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
 var DefaultRounds int = 1
 
+func NewPlatform() platforms.Platform {
+	return &platform_deter.Deter{Config:platforms.NewConfig()}
+}
 
 func init() {
-	flag.StringVar(&user, "user", "ineiti", "User on the deterlab-machines")
-	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
-	flag.IntVar(&machines, "machines", machines, "Number of machines (servers running the client)")
-	flag.IntVar(&loggers, "loggers", loggers, "Number of loggers")
-	flag.IntVar(&port, "port", port, "Port to forward debugging-information")
+	config = platforms.NewConfig()
+	platform = NewPlatform()
+
+	flag.StringVar(&login, "user", login, "User on the deterlab-machines")
+	flag.StringVar(&host, "host", host, "User on the deterlab-machines")
 	flag.StringVar(&project, "project", project, "Name of the project on DeterLab")
-	flag.IntVar(&bf, "branch", bf, "Branching Factor")
-	flag.IntVar(&hpn, "hpn", hpn, "Host per node (physical machine)")
-	flag.IntVar(&debug, "debug", debug, "Debugging-level. 0 is silent, 5 is flood")
+
+	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
+	flag.IntVar(&config.Nmachs, "machines", config.Nmachs, "Number of machines (servers running the client)")
+	flag.IntVar(&config.Nloggers, "loggers", config.Nloggers, "Number of loggers")
+	flag.IntVar(&port, "port", port, "Port to forward debugging-information")
+	flag.IntVar(&config.Bf, "branch", config.Bf, "Branching Factor")
+	flag.IntVar(&config.Hpn, "hpn", config.Hpn, "Host per node (physical machine)")
+	flag.IntVar(&config.Debug, "debug", config.Debug, "Debugging-level. 0 is silent, 5 is flood")
 }
 
 func main() {
 	flag.Parse()
-	dbg.DebugVisible = debug
+	platform.Configure(config)
+	dbg.DebugVisible = config.Debug
 
 	dbg.Lvl1("*** Setting up everything")
-	dbg.Lvl1(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", machines, loggers, user, project))
-	user = fmt.Sprintf("-user=%s", user)
+	dbg.Lvl1(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", config.Nmachs, config.Nloggers, login, project))
+	login = fmt.Sprintf("-user=%s", login)
 
-	// generate hosts file
-	if e := GenerateHostsFile(project, machines + loggers); e != nil {
-		log.Fatal("Error for creation of host file. Abort.")
-		os.Exit(1)
-	}
-	// view = true
+	platform.Stop()
 
-	os.Chdir("deploy2deter")
-
-	MkTestDir()
-
-	err := exec.Command("go", "build", "-v").Run()
-	if err != nil {
-		log.Fatalln("error building deploy2deter:", err)
-	}
-	dbg.Lvl1("KILLING REMAINING PROCESSES")
-	build := "-build=true"
-	if nobuild {
-		build = "-build=false"
-	}
-	dbg.Lvl3("Building is ", build)
-
-	cmd := exec.Command("./deploy2deter", "-kill=true", build,
-		fmt.Sprintf("-nmachs=%d", machines), user, host)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		log.Fatalln("Couldn't run deploy2deter ", cmd.Args)
+	if nobuild == false{
+		platform.Build()
 	}
 
 	dbg.Lvl1("\n*** Starting tests")
@@ -153,71 +118,19 @@ func main() {
 
 }
 
-// hpn, bf, nmsgsG
-func RunTest(t T) (RunStats, error) {
-	// add timeout for 10 minutes?
-	done := make(chan struct {})
-	var rs RunStats
-	nmachs := fmt.Sprintf("-nmachs=%d", t.nmachs)
-	hpn := fmt.Sprintf("-hpn=%d", t.hpn)
-	nmsgs := fmt.Sprintf("-nmsgs=%d", -1)
-	bf := fmt.Sprintf("-bf=%d", t.bf)
-	rate := fmt.Sprintf("-rate=%d", t.rate)
-	rounds := fmt.Sprintf("-rounds=%d", t.rounds)
-	failures := fmt.Sprintf("-failures=%d", t.failures)
-	rFail := fmt.Sprintf("-rfail=%d", t.rFail)
-	fFail := fmt.Sprintf("-ffail=%d", t.fFail)
-	tcon := fmt.Sprintf("-test_connect=%t", t.testConnect)
-	app := fmt.Sprintf("-app=%s", t.app)
-	loggers := fmt.Sprintf("-nloggers=%d", loggers)
-	debug := fmt.Sprintf("-debug=%d", debug)
-	cmd := exec.Command("./deploy2deter", nmachs, hpn, nmsgs, bf, rate, rounds, debug, failures, rFail,
-		fFail, tcon, app, user, host, loggers)
-	dbg.Lvl1("RUNNING TEST:", cmd.Args)
-	dbg.Lvl1("FAILURES PERCENT:", t.failures)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-		return rs, nil
-	}
-
-	// give it a while to start up
-	time.Sleep(30 * time.Second)
-
-	go func() {
-		rs = Monitor(t.bf)
-		cmd.Process.Kill()
-		fmt.Println("TEST COMPLETE:", rs)
-		done <- struct {}{}
-	}()
-
-	// timeout the command if it takes too long
-	select {
-	case <-done:
-		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
-			return rs, errors.New(fmt.Sprintf("unable to get good data: %+v", rs))
-		}
-		return rs, nil
-	case <-time.After(5 * time.Minute):
-		return rs, errors.New("timed out")
-	}
-}
-
 // RunTests runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, ts []T) {
 	for i, _ := range ts {
-		ts[i].bf = bf
-		if hpn > 0 {
-			ts[i].hpn = hpn
+		ts[i].bf = config.Bf
+		if config.Hpn > 0 {
+			ts[i].hpn = config.Hpn
 		}
 
-		ts[i].nmachs = machines
+		ts[i].nmachs = config.Nmachs
 	}
 
+	MkTestDir()
 	rs := make([]RunStats, len(ts))
 	f, err := os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
@@ -244,14 +157,7 @@ func RunTests(name string, ts []T) {
 				log.Fatalln("error running test:", err)
 			}
 
-			// Clean Up after test
-			dbg.Lvl1("KILLING REMAINING PROCESSES")
-			cmd := exec.Command("./deploy2deter", "-kill=true",
-				fmt.Sprintf("-nmachs=%d", machines), user)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			cmd.Run()
-			if err == nil {
+			if platform.Stop() == nil{
 				runs = append(runs, run)
 				if stopOnSuccess {
 					break
@@ -259,7 +165,6 @@ func RunTests(name string, ts []T) {
 			} else {
 				dbg.Lvl1("Error for test ", r, " : ", err)
 			}
-
 		}
 
 		if len(runs) == 0 {
@@ -295,6 +200,62 @@ func RunTests(name string, ts []T) {
 		cl.Close()
 
 	}
+}
+
+// hpn, bf, nmsgsG
+func RunTest(t T) (RunStats, error) {
+	// add timeout for 10 minutes?
+	done := make(chan struct {})
+	var rs RunStats
+	cfg := &platforms.Config{
+		t.nmachs, config.Nloggers, t.bf, t.hpn,
+		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
+		config.Debug, config.App, config.Suite }
+
+	dbg.Lvl1(fmt.Sprintf("Running test with parameters %+v", cfg))
+	dbg.Lvl1("Failures percent is", t.failures)
+
+	platform.Configure(cfg)
+	err := platform.Start()
+	if err != nil {
+		log.Fatal(err)
+		return rs, nil
+	}
+
+	// give it a while to start up
+	time.Sleep(30 * time.Second)
+
+	go func() {
+		rs = Monitor(t.bf)
+		platform.Stop()
+		fmt.Println("TEST COMPLETE:", rs)
+		done <- struct {}{}
+	}()
+
+	// timeout the command if it takes too long
+	select {
+	case <-done:
+		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
+			return rs, errors.New(fmt.Sprintf("unable to get good data: %+v", rs))
+		}
+		return rs, nil
+	case <-time.After(5 * time.Minute):
+		return rs, errors.New("timed out")
+	}
+}
+
+
+type T struct {
+	nmachs      int
+	hpn         int
+	bf          int
+	rate        int
+	rounds      int
+	failures    int
+	rFail       int
+	fFail       int
+	testConnect bool
+	app         string
 }
 
 // high and low specify how many milliseconds between messages
@@ -416,35 +377,6 @@ var VTest = []T{
 	{0, 128, 16, 10000000, 20, 0, 0, 0, false, "vote"},
 }
 
-/*
-* Write the hosts.txt file automatically
-* from project name and number of servers
- */
-func GenerateHostsFile(project string, num_servers int) error {
-
-	// open and erase file if needed
-	if _, err1 := os.Stat(hosts_file); err1 == nil {
-		dbg.Lvl3(fmt.Sprintf("Hosts file %s already exists. Erasing ...", hosts_file))
-		os.Remove(hosts_file)
-	}
-	// create the file
-	f, err := os.Create(hosts_file)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Could not create hosts file description %s ><", hosts_file), err)
-		return err
-	}
-	defer f.Close()
-
-	// write the name of the server + \t + IP address
-	ip := "10.255.0."
-	name := "SAFER.isi.deterlab.net"
-	for i := 1; i <= num_servers; i++ {
-		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i - 1, project, name, ip, i))
-	}
-	dbg.Lvl3(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
-	return err
-
-}
 func MkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {

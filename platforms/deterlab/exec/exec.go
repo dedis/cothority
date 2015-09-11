@@ -22,7 +22,7 @@ import (
 	_ "expvar"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/ineiti/cothorities/exec/timestamper"
+	"github.com/ineiti/cothorities/platforms/deterlab/exec/timestamper"
 	"github.com/ineiti/cothorities/helpers/logutils"
 	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 )

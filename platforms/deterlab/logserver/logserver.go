@@ -281,9 +281,9 @@ func main() {
 		}
 
 		log.Println(fmt.Sprintf("Log server %s running at : %s", role, addr))
-		// /bower_components/Chart.js/Chart.min.js
+		// /webfiles/Chart.js/Chart.min.js
 		http.HandleFunc("/", homeHandler)
-		fs := http.FileServer(http.Dir("bower_components/"))
+		fs := http.FileServer(http.Dir("webfiles/"))
 		http.Handle("/bower_components/", http.StripPrefix("/bower_components/", fs))
 	} else {
 	retry:

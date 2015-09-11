@@ -6,7 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/ineiti/cothorities/helpers/logutils"
 	"github.com/ineiti/cothorities/helpers/oldconfig"
-	"github.com/ineiti/cothorities/timeclient/stampclient"
+	"github.com/ineiti/cothorities/platforms/deterlab/timeclient/stampclient"
 )
 
 var server string

@@ -12,7 +12,6 @@ import (
 
 	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/pkg/browser"
 	"golang.org/x/net/websocket"
 )
 
@@ -33,9 +32,6 @@ retry:
 		dbg.Lvl3("unable to get log data: retrying:", err)
 		time.Sleep(10 * time.Second)
 		goto retry
-	}
-	if view {
-		browser.OpenURL(fmt.Sprintf("http://localhost:%d/", port))
 	}
 	nhosts := doc.Find("#numhosts").First().Text()
 	dbg.Lvl3("hosts:", nhosts)

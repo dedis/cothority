@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 )
 
 func ReadLines(filename string) ([]string, error) {
@@ -76,12 +77,14 @@ func SshRunBackground(username, host, command string) error {
 
 }
 
-func Build(path, goarch, goos string) error {
+func Build(path, out, goarch, goos string) error {
 	var cmd *exec.Cmd
-	cmd = exec.Command("go", "build", "-v", path)
+	cmd = exec.Command("go", "build", "-v", "-o", out, path)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
+	dbg.Lvl2(os.Getwd())
+	dbg.Lvl2("Command:", cmd.Args)
 	return cmd.Run()
 }
 
