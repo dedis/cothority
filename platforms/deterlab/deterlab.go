@@ -50,6 +50,8 @@ type Deter struct {
 	// The name of the internal hosts
 	Project      string
 	// Directory where everything is copied into
+	DeployDir     string
+	// Directory for building
 	BuildDir     string
 	// Working directory of deterlab
 	DeterDir	 string
@@ -68,14 +70,12 @@ func (d *Deter) Configure(config *platforms.Config) {
 	d.Login = "ineiti"
 	d.Host = "users.deterlab.net"
 	d.Project = "Dissent-CS"
-	d.DeterDir = "platform/deterlab"
-	pwd, _ := os.Getwd()
-	d.BuildDir = pwd + "/" + d.DeterDir + "/build"
-	os.MkdirAll(d.BuildDir, 0777)
 
-	d.generateHostsFile()
-	d.readHosts()
-	d.calculateGraph()
+	// Directory setup - would also be possible in /tmp
+	pwd, _ := os.Getwd()
+	d.DeterDir = pwd + "/platforms/deterlab"
+	d.DeployDir = d.DeterDir + "/remote"
+	d.BuildDir = d.DeterDir + "/build"
 }
 
 func (d *Deter) Build() (error) {
@@ -91,54 +91,60 @@ func (d *Deter) Build() (error) {
 	os.Chdir(d.DeterDir)
 	os.RemoveAll(d.BuildDir)
 	os.Mkdir(d.BuildDir, 0777)
-	dbg.Lvl1(os.Getwd())
-	dbg.Lvl1(d.DeterDir)
-	dbg.Lvl1(d.BuildDir)
 
 	// start building the necessary packages
-	dbg.Lvl2("Starting to build all executables")
 	packages := []string{"logserver", "timeclient", "forkexec", "exec", "deter"}
+	dbg.Lvl2("Starting to build all executables", packages)
 	for _, p := range packages {
-		dbg.Lvl2("Building ", p)
+		dbg.Lvl3("Building ", p)
 		wg.Add(1)
+		src := p + "/" + p + ".go"
+		dst := d.BuildDir + "/" + p
 		if p == "deter" {
-			go func(p string) {
+			go func(s, d string) {
 				defer wg.Done()
 				// the users node has a 386 FreeBSD architecture
-				err := cliutils.Build(p, d.BuildDir + "/" + p, "386", "freebsd")
+				err := cliutils.Build(s, d, "386", "freebsd")
 				if err != nil {
 					cliutils.KillGo()
 					log.Fatal(err)
 				}
-			}(p)
+			}(src, dst)
 			continue
 		}
-		go func(p string) {
+		go func(s, d string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
-			err := cliutils.Build(p, d.BuildDir + "/" + p, "amd64", "linux")
+			err := cliutils.Build(s, d, "amd64", "linux")
 			if err != nil {
 				cliutils.KillGo()
 				log.Fatal(err)
 			}
-		}(p)
+		}(src, dst)
 	}
 	// wait for the build to finish
 	wg.Wait()
 	dbg.Lvl2("Build is finished")
-
-	// copy the webfile-directory of the logserver to the build directory
-	err := exec.Command("cp", "-a", "logserver/webfiles", d.BuildDir).Run()
-	if err != nil {
-		log.Fatal("error copying webfiles directory into building directory:", err)
-	}
-	dbg.Lvl2("Done building")
 	return nil
 }
 
 func (d *Deter) Deploy() (error) {
+	os.RemoveAll(d.DeployDir)
+	os.Mkdir(d.DeployDir, 0777)
+
+	d.generateHostsFile()
+	d.readHosts()
+	d.calculateGraph()
+
+	// copy the webfile-directory of the logserver to the remote directory
+	err := exec.Command("cp", "-a", "logserver/webfiles", d.DeployDir).Run()
+	if err != nil {
+		log.Fatal("error copying webfiles directory into building directory:", err)
+	}
+	dbg.Lvl2("Done building")
+
 	// Copy everything over to deterlabs
-	err := cliutils.Rsync(d.Login, d.Host, d.BuildDir + "/", "remote/")
+	err = cliutils.Rsync(d.Login, d.Host, d.BuildDir + "/", "remote/")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -200,7 +206,7 @@ func (d *Deter) Stop() (error) {
 * from project name and number of servers
  */
 func (d *Deter)generateHostsFile() error {
-	hosts_file := d.BuildDir + "/hosts.txt"
+	hosts_file := d.DeployDir + "/hosts.txt"
 	num_servers := d.Config.Nmachs + d.Config.Nloggers
 
 	// open and erase file if needed
@@ -231,7 +237,7 @@ func (d *Deter)generateHostsFile() error {
 // of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
 // corresponds to each host on line i, in virt.txt.
 func (d *Deter)readHosts() {
-	hosts_file := d.BuildDir + "/hosts.txt"
+	hosts_file := d.DeployDir + "/hosts.txt"
 	nmachs, nloggers := d.Config.Nmachs, d.Config.Nloggers
 
 	physVirt, err := cliutils.ReadLines(hosts_file)
@@ -255,12 +261,12 @@ func (d *Deter)readHosts() {
 
 	// phys.txt and virt.txt only contain the number of machines that we need
 	dbg.Lvl2("Reading phys and virt")
-	err = ioutil.WriteFile(d.BuildDir + "/phys.txt", []byte(d.physOut), 0666)
+	err = ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(d.physOut), 0666)
 	if err != nil {
 		log.Fatal("failed to write physical nodes file", err)
 	}
 
-	err = ioutil.WriteFile(d.BuildDir + "/virt.txt", []byte(d.virtOut), 0666)
+	err = ioutil.WriteFile(d.DeployDir + "/virt.txt", []byte(d.virtOut), 0666)
 	if err != nil {
 		log.Fatal("failed to write virtual nodes file", err)
 	}
@@ -277,7 +283,7 @@ func (d *Deter)calculateGraph() {
 	// generate the configuration file from the tree
 	cf := config.ConfigFromTree(t, hostnames)
 	cfb, err := json.Marshal(cf)
-	err = ioutil.WriteFile(d.BuildDir + "/cfg.json", cfb, 0666)
+	err = ioutil.WriteFile(d.DeployDir + "/cfg.json", cfb, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}

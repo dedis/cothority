@@ -83,8 +83,8 @@ func Build(path, out, goarch, goos string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
-	dbg.Lvl2(os.Getwd())
-	dbg.Lvl2("Command:", cmd.Args)
+	dbg.Lvl3(os.Getwd())
+	dbg.Lvl3("Command:", cmd.Args)
 	return cmd.Run()
 }
 

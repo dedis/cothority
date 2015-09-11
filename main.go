@@ -75,6 +75,32 @@ func init() {
 	flag.IntVar(&config.Debug, "debug", config.Debug, "Debugging-level. 0 is silent, 5 is flood")
 }
 
+
+type T struct {
+	nmachs      int
+	hpn         int
+	bf          int
+
+	rate        int
+	rounds      int
+	failures    int
+
+	rFail       int
+	fFail       int
+	testConnect bool
+	app         string
+}
+
+var StampTestSingle = []T{
+	{0, 1, 2,
+		30, 20, 0,
+		0, 0, false, "stamp"},
+}
+
+var SignTestSingle = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
+}
+
 func main() {
 	flag.Parse()
 	platform.Configure(config)
@@ -86,7 +112,7 @@ func main() {
 
 	platform.Stop()
 
-	if nobuild == false{
+	if nobuild == false {
 		platform.Build()
 	}
 
@@ -157,7 +183,7 @@ func RunTests(name string, ts []T) {
 				log.Fatalln("error running test:", err)
 			}
 
-			if platform.Stop() == nil{
+			if platform.Stop() == nil {
 				runs = append(runs, run)
 				if stopOnSuccess {
 					break
@@ -208,7 +234,7 @@ func RunTest(t T) (RunStats, error) {
 	done := make(chan struct {})
 	var rs RunStats
 	cfg := &platforms.Config{
-		t.nmachs, config.Nloggers, t.bf, t.hpn,
+		t.nmachs, config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
 		config.Debug, config.App, config.Suite }
 
@@ -244,19 +270,6 @@ func RunTest(t T) (RunStats, error) {
 	}
 }
 
-
-type T struct {
-	nmachs      int
-	hpn         int
-	bf          int
-	rate        int
-	rounds      int
-	failures    int
-	rFail       int
-	fFail       int
-	testConnect bool
-	app         string
-}
 
 // high and low specify how many milliseconds between messages
 func RateLoadTest(hpn, bf int) []T {
@@ -336,10 +349,6 @@ func FullTests() []T {
 	return tests
 }
 
-var StampTestSingle = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
-}
-
 var HostsTest = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
@@ -349,10 +358,6 @@ var HostsTest = []T{
 	{0, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
-}
-
-var SignTestSingle = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
 }
 
 var SignTest = []T{

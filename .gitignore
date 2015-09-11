@@ -11,3 +11,6 @@ deploy2deter/logserver
 forkexec/forkexec
 .idea
 notes.txt
+platforms/deterlab/build
+platforms/deterlab/deploy
+test_data
