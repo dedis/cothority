@@ -16,6 +16,6 @@ func ExampleLevel2() {
 	dbg.Lvl5("Level5")
 
 	// Output:
-	// 1: (debug_lvl_test.go: 12) - Level1
-	// 2: (debug_lvl_test.go: 13) - Level2
+	// 1: (debug_lvl_test.ExampleLevel2: 0) - Level1
+	// 2: (debug_lvl_test.ExampleLevel2: 0) - Level2
 }

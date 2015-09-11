@@ -32,8 +32,16 @@ func init(){
 }
 
 func Lvl(lvl int, args ...interface{}) {
-	_, file, line, _ := runtime.Caller(2)
-	caller := fmt.Sprintf("%s: %d", regexpPaths.ReplaceAllString(file, ""), line)
+	pc, _, line, _ := runtime.Caller(2)
+	name := regexpPaths.ReplaceAllString(runtime.FuncForPC(pc).Name(), "")
+
+	// For the testing-framework, we check the resulting string. So as not to
+	// have the tests fail every time somebody moves the functions, we put
+	// the line-# to 0
+	if Testing {
+		line = 0
+	}
+	caller := fmt.Sprintf("%s: %d", name, line)
 	DebugLog.WithFields(logrus.Fields{
 		"debug_lvl": lvl,
 		"caller": caller}).Println(args...)
