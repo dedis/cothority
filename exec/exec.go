@@ -64,6 +64,8 @@ func init() {
 
 func main() {
 	flag.Parse()
+	dbg.DebugVisible = debug
+
 	dbg.Lvl1("Running Timestamper:", logger)
 	defer func() {
 		log.Errorln("TERMINATING HOST")

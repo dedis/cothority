@@ -83,7 +83,9 @@ func init() {
 
 func main() {
 	flag.Parse()
+	dbg.DebugVisible = debug
 	dbg.Lvl2("RUNNING DEPLOY2DETER WITH RATE:", rate, " on machines:", nmachs)
+
 	os.MkdirAll("remote", 0777)
 	readHosts()
 

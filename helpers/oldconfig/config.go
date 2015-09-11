@@ -514,7 +514,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 		dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
 		if err != nil {
 			log.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
-			return errors.New("failed to connect")
+			//return errors.New("failed to connect")
 		}
 	}
 
@@ -589,10 +589,10 @@ func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*
 			// if we are using tcp connections
 			if hc.Dir == nil {
 				// the timestamp server serves at the old port + 1
-				//dbg.Lvl3("new tcp conn")
+				dbg.Lvl3("new tcp conn")
 				c = coconet.NewTCPConn(hp)
 			} else {
-				//dbg.Lvl3("new go conn")
+				dbg.Lvl3("new go conn")
 				c, _ = coconet.NewGoConn(hc.Dir, clients[j].Name(), s.Name())
 				stoc, _ := coconet.NewGoConn(hc.Dir, s.Name(), clients[j].Name())
 				s.Clients[clients[j].Name()] = stoc

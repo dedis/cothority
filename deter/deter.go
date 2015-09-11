@@ -38,45 +38,6 @@ import (
 
 var rootname string
 
-// Generate all commands on one single physicial machines to launch every "nodes"
-func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerport, random_leaf string) string {
-	connect := false
-	cmd := ""
-	bg := " & "
-	for i, name := range names {
-		dbg.Lvl2("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect)
-		if name == random_leaf && testConnect {
-			connect = true
-		}
-		amroot := " -amroot=false"
-		if name == rootname {
-			amroot = " -amroot=true"
-		}
-
-		if i == len(names)-1 {
-			bg = ""
-		}
-		cmd += "(cd remote; sudo ./forkexec" +
-			" -rfail=" + strconv.Itoa(rFail) +
-			" -ffail=" + strconv.Itoa(fFail) +
-			" -failures=" + strconv.Itoa(failures) +
-			" -physaddr=" + phys +
-			" -hostname=" + name +
-			" -logger=" + loggerport +
-			" -debug=" + strconv.Itoa(debug) +
-			" -suite=" + suite +
-			" -rounds=" + strconv.Itoa(rounds) +
-			" -app=" + app +
-			" -test_connect=" + strconv.FormatBool(connect) +
-			" -config=" + configFile +
-			" -pprof=" + pprofaddr +
-			" -rootwait=" + strconv.Itoa(rootwait) +
-			amroot + bg +
-			" ); "
-	}
-	return cmd
-}
-
 var nmsgs string
 var hpn string
 var bf string
@@ -115,7 +76,8 @@ func init() {
 
 func main() {
 	flag.Parse()
-	log.SetFlags(log.Lshortfile)
+	dbg.DebugVisible = debug
+
 	fmt.Println("running deter with nmsgs:", nmsgs, rate, rounds)
 
 	virt, err := cliutils.ReadLines("remote/virt.txt")
@@ -282,4 +244,43 @@ func main() {
 	// wait for the servers to finish before stopping
 	wg.Wait()
 	//time.Sleep(10 * time.Minute)
+}
+
+// Generate all commands on one single physicial machines to launch every "nodes"
+func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerport, random_leaf string) string {
+	connect := false
+	cmd := ""
+	bg := " & "
+	for i, name := range names {
+		dbg.Lvl2("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect)
+		if name == random_leaf && testConnect {
+			connect = true
+		}
+		amroot := " -amroot=false"
+		if name == rootname {
+			amroot = " -amroot=true"
+		}
+
+		if i == len(names)-1 {
+			bg = ""
+		}
+		cmd += "(cd remote; sudo ./forkexec" +
+		" -rfail=" + strconv.Itoa(rFail) +
+		" -ffail=" + strconv.Itoa(fFail) +
+		" -failures=" + strconv.Itoa(failures) +
+		" -physaddr=" + phys +
+		" -hostname=" + name +
+		" -logger=" + loggerport +
+		" -debug=" + strconv.Itoa(debug) +
+		" -suite=" + suite +
+		" -rounds=" + strconv.Itoa(rounds) +
+		" -app=" + app +
+		" -test_connect=" + strconv.FormatBool(connect) +
+		" -config=" + configFile +
+		" -pprof=" + pprofaddr +
+		" -rootwait=" + strconv.Itoa(rootwait) +
+		amroot + bg +
+		" ); "
+	}
+	return cmd
 }

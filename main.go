@@ -87,8 +87,10 @@ func init() {
 }
 
 func main() {
-	dbg.Lvl1("*** Setting up everything")
 	flag.Parse()
+	dbg.DebugVisible = debug
+
+	dbg.Lvl1("*** Setting up everything")
 	dbg.Lvl1(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", machines, loggers, user, project))
 	user = fmt.Sprintf("-user=%s", user)
 
@@ -125,8 +127,8 @@ func main() {
 
 	dbg.Lvl1("\n*** Starting tests")
 	DefaultRounds = 5
-	//RunTests("hosts_test_single", HostsTestSingle)
-	RunTests("sing_test_single", SignTestSingle)
+	RunTests("stamp_test_single", StampTestSingle)
+	//RunTests("sing_test_single", SignTestSingle)
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
 	//RunTests("hosts_test", HostsTest)
@@ -373,7 +375,7 @@ func FullTests() []T {
 	return tests
 }
 
-var HostsTestSingle = []T{
+var StampTestSingle = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
 }
 

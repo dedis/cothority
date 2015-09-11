@@ -185,7 +185,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// connect to the parent
 	conn, err := net.Dial("tcp4", parent)
 	if err != nil {
-		log.Warnln("tcphost: failed to connect to parent:", err)
+		dbg.Lvl2("tcphost: failed to connect to parent:", err)
 		return err
 	}
 	tp := NewTCPConnFromNet(conn)

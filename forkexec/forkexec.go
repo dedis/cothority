@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/ineiti/cothorities/helpers/logutils"
 	"os"
 )
@@ -49,6 +50,8 @@ func init() {
 
 func main() {
 	flag.Parse()
+	dbg.DebugVisible = debug
+
 	// connect with the logging server
 	if logger != "" && (amroot || debug > 0) {
 		// blocks until we can connect to the logger
