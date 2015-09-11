@@ -39,7 +39,6 @@ import (
 	"strconv"
 	"time"
 	log "github.com/Sirupsen/logrus"
-	"github.com/ineiti/cothorities/helpers/logutils"
 	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 )
 
@@ -88,7 +87,6 @@ func init() {
 }
 
 func main() {
-	logutils.NewLoggerHookSimple("local", "MAIN")
 	dbg.Lvl1("*** Setting up everything")
 	flag.Parse()
 	dbg.Lvl1(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", machines, loggers, user, project))
@@ -127,7 +125,8 @@ func main() {
 
 	dbg.Lvl1("\n*** Starting tests")
 	DefaultRounds = 5
-	RunTests("hosts_test_single", HostsTestSingle)
+	//RunTests("hosts_test_single", HostsTestSingle)
+	RunTests("sing_test_single", SignTestSingle)
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
 	//RunTests("hosts_test", HostsTest)
@@ -387,6 +386,10 @@ var HostsTest = []T{
 	{0, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
+}
+
+var SignTestSingle = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
 }
 
 var SignTest = []T{
