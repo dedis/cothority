@@ -335,29 +335,60 @@ func produceSchnorrResponse(keyPoly, randomPoly SharedPoly, hash abstract.Secret
 }
 
 // Populate the amtrix with the "sigma" of the schnorr signature
-func computeSchnorrSignatures(keyPoly, randomPoly SharedPoly) {
-	n := len(keyPoly)
-	omega := func(l, j int) int64 {
-		val := 1
-		for i := 1; i <= l; i++ {
-			if i == j {
-				continue
-			}
-			val = val * ((i) / (i - j))
-		}
-		return int64(val)
+//func computeSchnorrSignatures(keyPoly, randomPoly SharedPoly) {
+//	n := len(keyPoly)
+//	// compute the coef of the lagrange interpolation
+//	// l is number of peers needed to reconstruct poly
+//	// j is index of the peer we are evaluating the coef for (so it gets skipped)
+//	omega := func(l, j int) int64 {
+//		val := 1.0
+//		for i := 1; i <= l; i += 1 {
+//			if i == j {
+//				continue
+//			}
+//			val = val * ((float64(i)) / (i - j))
+//		}
+//		return int64(val)
+//	}
+//	k := keyPoly[0].DistPubPoly.GetK()
+//	kr := randomPoly[0].DistPubPoly.GetK()
+//	if k != kr {
+//		fmt.Printf("Error : Public Poly's K (%d) differs from random Poly's K (%d)\n", k, kr)
+//		os.Exit(1)
+//	}
+//	val := suite.Secret()
+//	om := suite.Secret()
+//	// compute the 4. step in stinson01provably.pdf paper
+//	for i := 1; i <= k; i++ {
+//		om = om.SetInt64(omega(k, i))
+//		val = val.Add(*(keyPoly[i-1].ChallengeResponse), om)
+//	}
+//	// broadcast it
+//	for i := 0; i < n; i++ {
+//		keyPoly[i].Signature = &val
+//		randomPoly[i].Signature = &val
+//	}
+//}
+//
+// use prishares lagrange interpolation
+func computeSchnorrSignatures2(keyPoly, randomPoly SharedPoly) {
+	k := keyPoly[0].DistPubPoly.GetK()
+	kr := randomPoly[0].DistPubPoly.GetK()
+	if k != kr {
+		fmt.Printf("Error : Public Poly's K (%d) differs from random Poly's K (%d)\n", k, kr)
+		os.Exit(1)
 	}
-	val := suite.Secret()
-	om := suite.Secret()
-	// compute the 4. step in stinson01provably.pdf paper
-	for i := 1; i <= n; i++ {
-		om = om.SetInt64(omega(n, i))
-		val = val.Add(*(keyPoly[i-1].ChallengeResponse), om)
+	pri := poly.PriShares{}
+	pri.Empty(suite, k, len(keyPoly))
+	for i := range keyPoly {
+		pri.SetShare(i, *keyPoly[i].ChallengeResponse)
 	}
-	// broadcast it
-	for i := 0; i < n; i++ {
-		keyPoly[i].Signature = &val
-		randomPoly[i].Signature = &val
+	sig := pri.Secret()
+	for i := range keyPoly {
+		keyPoly[i].Signature = &sig
+	}
+	for i := range randomPoly {
+		randomPoly[i].Signature = &sig
 	}
 }
 
@@ -424,7 +455,7 @@ func distributedSecureSchnorrSignature() {
 	produceSchnorrResponse(keyMatrix, randomMatrix, hash)
 	fmt.Printf("[+] Produced Schnorr Responses for each peers!\n")
 	verifySchnorrReponses(keyMatrix, randomMatrix, msg)
-	computeSchnorrSignatures(keyMatrix, randomMatrix)
+	computeSchnorrSignatures2(keyMatrix, randomMatrix)
 	fmt.Printf("[+] Produced SIGMA of the signature & broadcasted it!\n")
 	verifySharedSignature(keyMatrix, randomMatrix, msg)
 
