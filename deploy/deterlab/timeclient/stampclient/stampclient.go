@@ -11,12 +11,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 
-	"github.com/ineiti/cothorities/helpers/coconet"
-	"github.com/ineiti/cothorities/helpers/hashid"
-	_ "github.com/ineiti/cothorities/helpers/logutils"
-	"github.com/ineiti/cothorities/application/stamp"
+	"github.com/dedis/cothority/helpers/coconet"
+	"github.com/dedis/cothority/helpers/hashid"
+	"github.com/dedis/cothority/helpers/logutils"
+	"github.com/dedis/cothority/application/stamp"
 )
 
 func genRandomMessages(n int) [][]byte {
@@ -44,9 +44,6 @@ func removeTrailingZeroes(a []int64) []int64 {
 var muStats sync.Mutex
 
 func AggregateStats(buck, roundsAfter, times []int64) string {
-	/*
-	 * What are these stats for?
-	 
 	muStats.Lock()
 	log.WithFields(log.Fields{
 		"file":        logutils.File(),
@@ -56,7 +53,6 @@ func AggregateStats(buck, roundsAfter, times []int64) string {
 		"times":       removeTrailingZeroes(times),
 	}).Info("")
 	muStats.Unlock()
-	*/
 	return "Client Finished Aggregating Statistics"
 }
 

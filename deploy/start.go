@@ -28,7 +28,7 @@ import (
 	"strconv"
 	"time"
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 )
 
 // Configuration-variables

@@ -1,7 +1,0 @@
-server-0.dissent-cs.SAFER.isi.deterlab.net	10.255.0.1
-server-1.dissent-cs.SAFER.isi.deterlab.net	10.255.0.2
-server-2.dissent-cs.SAFER.isi.deterlab.net	10.255.0.3
-server-3.dissent-cs.SAFER.isi.deterlab.net	10.255.0.4
-server-4.dissent-cs.SAFER.isi.deterlab.net	10.255.0.5
-server-5.dissent-cs.SAFER.isi.deterlab.net	10.255.0.6
-server-6.dissent-cs.SAFER.isi.deterlab.net	10.255.0.7

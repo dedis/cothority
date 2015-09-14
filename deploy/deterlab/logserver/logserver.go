@@ -18,13 +18,13 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
-	"github.com/ineiti/cothorities/helpers/cliutils"
-	"github.com/ineiti/cothorities/helpers/graphs"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/helpers/cliutils"
+	"github.com/dedis/cothority/helpers/graphs"
 
 	"golang.org/x/net/websocket"
-	"github.com/ineiti/cothorities/helpers/config"
-	"github.com/ineiti/cothorities/deploy"
+	"github.com/dedis/cothority/helpers/config"
+	"github.com/dedis/cothority/deploy"
 )
 
 var deter *deploy.Deter
@@ -65,6 +65,61 @@ func init() {
 		Msgs:  make([][]byte, 0, 100000),
 	}
 	rand.Seed(42)
+}
+
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	// read in from flags the port I should be listening on
+	flag.Parse()
+	if master == "" {
+		isMaster = true
+	}
+	var role string
+	if isMaster {
+		role = "Master"
+	} else {
+		role = "Servent"
+	}
+	dbg.Lvl3(fmt.Sprintf("running logserver %s  with nmsgs %s branching factor: %s", role, nmsgs, bf))
+	if isMaster {
+		var err error
+		homePage, err = template.ParseFiles("webfiles/home.html")
+		if err != nil {
+			log.Fatal("unable to parse home.html", err)
+		}
+
+		debugServers := getDebugServers()
+		for _, s := range debugServers {
+			reverseProxy(s)
+		}
+
+		dbg.Lvl3(fmt.Sprintf("Log server %s running at : %s", role, addr))
+		// /webfiles/Chart.js/Chart.min.js
+		http.HandleFunc("/", homeHandler)
+		fs := http.FileServer(http.Dir("webfiles/"))
+		http.Handle("/webfiles/", http.StripPrefix("/webfiles/", fs))
+	} else {
+		retry:
+		tries := 0
+		var err error
+		origin := "http://localhost/"
+		url := "ws://" + master + "/_log"
+		wsmaster, err = websocket.Dial(url, "", origin)
+		if err != nil {
+			tries += 1
+			time.Sleep(time.Second)
+			dbg.Lvl3(fmt.Sprintf("Slave log server could not connect to logger master (%s) .. Trying again (%d tries)", master, tries))
+			goto retry
+		}
+		dbg.Lvl3(fmt.Sprintf("Slave Log server %s running at : %s & connected to Master ", role, addr))
+	}
+	http.Handle("/_log", websocket.Handler(logEntryHandler))
+	http.Handle("/log", websocket.Handler(logHandler))
+	http.HandleFunc("/htmllog", logHandlerHtml)
+	http.HandleFunc("/htmllogrev", logHandlerHtmlReverse)
+	log.Fatalln("ERROR: ", http.ListenAndServe(addr, nil))
+	// now combine that port
 }
 
 type Logger struct {
@@ -264,57 +319,3 @@ func getDebugServers() []string {
 var isMaster bool
 var wsmaster *websocket.Conn
 
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	// read in from flags the port I should be listening on
-	flag.Parse()
-	if master == "" {
-		isMaster = true
-	}
-	var role string
-	if isMaster {
-		role = "Master"
-	} else {
-		role = "Servent"
-	}
-	dbg.Lvl3(fmt.Sprintf("running logserver %s  with nmsgs %s branching factor: %s", role, nmsgs, bf))
-	if isMaster {
-		var err error
-		homePage, err = template.ParseFiles("webfiles/home.html")
-		if err != nil {
-			log.Fatal("unable to parse home.html", err)
-		}
-
-		debugServers := getDebugServers()
-		for _, s := range debugServers {
-			reverseProxy(s)
-		}
-
-		dbg.Lvl3(fmt.Sprintf("Log server %s running at : %s", role, addr))
-		// /webfiles/Chart.js/Chart.min.js
-		http.HandleFunc("/", homeHandler)
-		fs := http.FileServer(http.Dir("webfiles/"))
-		http.Handle("/webfiles/", http.StripPrefix("/webfiles/", fs))
-	} else {
-		retry:
-		tries := 0
-		var err error
-		origin := "http://localhost/"
-		url := "ws://" + master + "/_log"
-		wsmaster, err = websocket.Dial(url, "", origin)
-		if err != nil {
-			tries += 1
-			time.Sleep(time.Second)
-			dbg.Lvl3(fmt.Sprintf("Slave log server could not connect to logger master (%s) .. Trying again (%d tries)", master, tries))
-			goto retry
-		}
-		dbg.Lvl3(fmt.Sprintf("Slave Log server %s running at : %s & connected to Master ", role, addr))
-	}
-	http.Handle("/_log", websocket.Handler(logEntryHandler))
-	http.Handle("/log", websocket.Handler(logHandler))
-	http.HandleFunc("/htmllog", logHandlerHtml)
-	http.HandleFunc("/htmllogrev", logHandlerHtmlReverse)
-	log.Fatalln("ERROR: ", http.ListenAndServe(addr, nil))
-	// now combine that port
-}

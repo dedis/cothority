@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ineiti/cothorities/sign"
+	"github.com/dedis/cothority/sign"
 )
 
 func TestLoadConfig(t *testing.T) {

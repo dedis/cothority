@@ -4,10 +4,10 @@ import (
 	"flag"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
-	"github.com/ineiti/cothorities/helpers/logutils"
-	"github.com/ineiti/cothorities/helpers/oldconfig"
-	"github.com/ineiti/cothorities/deploy/deterlab/timeclient/stampclient"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/helpers/logutils"
+	"github.com/dedis/cothority/helpers/oldconfig"
+	"github.com/dedis/cothority/deploy/deterlab/timeclient/stampclient"
 )
 
 var server string

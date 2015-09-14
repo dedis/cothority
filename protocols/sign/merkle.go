@@ -10,11 +10,11 @@ import (
 	"strconv"
 
 	//log "github.com/Sirupsen/logrus"
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 
-	"github.com/ineiti/cothorities/helpers/coconet"
-	"github.com/ineiti/cothorities/helpers/hashid"
-	"github.com/ineiti/cothorities/helpers/proof"
+	"github.com/dedis/cothority/helpers/coconet"
+	"github.com/dedis/cothority/helpers/hashid"
+	"github.com/dedis/cothority/helpers/proof"
 )
 
 func (sn *Node) AddChildrenMerkleRoots(Round int) {

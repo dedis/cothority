@@ -1,8 +1,8 @@
 package main
 import "flag"
 import (
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
-	"github.com/ineiti/cothorities/deploy"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/deploy"
 )
 
 var deploy_dst = "deterlab"
