@@ -15,7 +15,7 @@ import (
 
 	"github.com/ineiti/cothorities/helpers/coconet"
 	"github.com/ineiti/cothorities/helpers/hashid"
-	"github.com/ineiti/cothorities/helpers/logutils"
+	_ "github.com/ineiti/cothorities/helpers/logutils"
 	"github.com/ineiti/cothorities/application/stamp"
 )
 
