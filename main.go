@@ -38,13 +38,13 @@ import (
 	"time"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
-	"github.com/ineiti/cothorities/platforms"
-	"github.com/ineiti/cothorities/platforms/deterlab"
+	"github.com/ineiti/cothorities/deploy"
+	"github.com/ineiti/cothorities/deploy/deterlab"
 )
 
 // Configuration-variables
-var config *platforms.Config
-var platform platforms.Platform
+var config *deploy.Config
+var platform deploy.Platform
 var login string = "ineiti"
 var host string = "users.deterlab.net"
 var project string = "Dissent-CS"
@@ -54,12 +54,12 @@ var port int = 8081
 // this leaves us with 7 minutes for test setup and tear-down
 var DefaultRounds int = 1
 
-func NewPlatform() platforms.Platform {
-	return &platform_deter.Deter{Config:platforms.NewConfig()}
+func NewPlatform() deploy.Platform {
+	return &platform_deter.Deter{Config:deploy.NewConfig()}
 }
 
 func init() {
-	config = platforms.NewConfig()
+	config = deploy.NewConfig()
 	platform = NewPlatform()
 
 	flag.StringVar(&login, "user", login, "User on the deterlab-machines")
@@ -233,7 +233,7 @@ func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
 	done := make(chan struct {})
 	var rs RunStats
-	cfg := &platforms.Config{
+	cfg := &deploy.Config{
 		t.nmachs, config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
 		config.Debug, config.App, config.Suite }
