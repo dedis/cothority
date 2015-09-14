@@ -1,7 +1,7 @@
-server-0.Dissent-CS.SAFER.isi.deterlab.net
-server-1.Dissent-CS.SAFER.isi.deterlab.net
-server-2.Dissent-CS.SAFER.isi.deterlab.net
-server-3.Dissent-CS.SAFER.isi.deterlab.net
-server-4.Dissent-CS.SAFER.isi.deterlab.net
-server-5.Dissent-CS.SAFER.isi.deterlab.net
-server-6.Dissent-CS.SAFER.isi.deterlab.net
+server-0.dissent-cs.SAFER.isi.deterlab.net
+server-1.dissent-cs.SAFER.isi.deterlab.net
+server-2.dissent-cs.SAFER.isi.deterlab.net
+server-3.dissent-cs.SAFER.isi.deterlab.net
+server-4.dissent-cs.SAFER.isi.deterlab.net
+server-5.dissent-cs.SAFER.isi.deterlab.net
+server-6.dissent-cs.SAFER.isi.deterlab.net

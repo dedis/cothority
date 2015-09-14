@@ -1,6 +1,6 @@
 Login = "ineiti"
 Host = "users.deterlab.net"
-Project = "Dissent-CS"
+Project = "dissent-cs"
 DeployDir = "/Users/epfl/cothorities/deploy/deterlab/deploy"
 BuildDir = "/Users/epfl/cothorities/deploy/deterlab/build"
 DeterDir = "/Users/epfl/cothorities/deploy/deterlab"
@@ -16,6 +16,6 @@ DeterDir = "/Users/epfl/cothorities/deploy/deterlab"
   Failures = 0
   RFail = 0
   FFail = 0
-  Debug = 1
+  Debug = 2
   App = "stamp"
   Suite = "ed25519"

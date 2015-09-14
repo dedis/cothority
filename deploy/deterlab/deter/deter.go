@@ -78,7 +78,7 @@ func main() {
 	flag.Parse()
 	dbg.DebugVisible = debug
 
-	dbg.Lvl1("running deter with nmsgs:", nmsgs, rate, rounds)
+	dbg.Lvl1("running deter with nmsgs-rate-rounds-debug:", nmsgs, rate, rounds, debug)
 
 	virt, err := cliutils.ReadLines("remote/virt.txt")
 	if err != nil {

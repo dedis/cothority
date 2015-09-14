@@ -139,7 +139,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 				s.Hostname = hostname
 				s.App = app
 				if s.IsRoot(0) {
-					dbg.Lvl1("Root timestamper at:", hostname, rounds, "Waiting: %d", rootwait)
+					dbg.Lvl1("Root timestamper at:", hostname, rounds, "Waiting: ", rootwait)
 					// wait for the other nodes to get set up
 					time.Sleep(time.Duration(rootwait) * time.Second)
 

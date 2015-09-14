@@ -24,10 +24,10 @@ import (
 
 	"golang.org/x/net/websocket"
 	"github.com/ineiti/cothorities/helpers/config"
-	"github.com/ineiti/cothorities/deploy/deterlab"
+	"github.com/ineiti/cothorities/deploy"
 )
 
-var deter *deploy_deter.Deter
+var deter *deploy.Deter
 var addr, hosts, depth, bf, hpn, nmsgs, master, rate string
 var homePage *template.Template
 var debug int
@@ -55,7 +55,7 @@ func init() {
 	flag.StringVar(&master, "master", "", "address of the master of this node")
 	flag.IntVar(&debug, "debug", 3, "Debugging-level")
 
-	deter = deploy_deter.ReadConfig()
+	deter, _ = deploy.ReadConfig()
 	dbg.DebugVisible = deter.Config.Debug
 
 	Log = Logger{

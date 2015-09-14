@@ -44,6 +44,7 @@ func removeTrailingZeroes(a []int64) []int64 {
 var muStats sync.Mutex
 
 func AggregateStats(buck, roundsAfter, times []int64) string {
+	return "Client Finished Aggregating Statistics"
 	muStats.Lock()
 	log.WithFields(log.Fields{
 		"file":        logutils.File(),
@@ -53,7 +54,6 @@ func AggregateStats(buck, roundsAfter, times []int64) string {
 		"times":       removeTrailingZeroes(times),
 	}).Info("")
 	muStats.Unlock()
-	return "Client Finished Aggregating Statistics"
 }
 
 func streamMessgs(c *stamp.Client, servers []string, rate int) {
@@ -71,7 +71,7 @@ func streamMessgs(c *stamp.Client, servers []string, rate int) {
 	retry:
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
-		dbg.Lvl3("CLIENT ", c.Name(), "DONE: couldn't connect to TimeStamp")
+		dbg.Lvl3("Client", c.Name(), "DONE: couldn't connect to TimeStamp")
 		log.Fatal(AggregateStats(buck, roundsAfter, times))
 	} else if err == stamp.ErrClientToTSTimeout {
 		log.Errorln(err)

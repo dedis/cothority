@@ -8,6 +8,10 @@ type Platform interface {
 	Stop() (error)
 }
 
+func NewPlatform() Platform {
+	return &Deter{Config:NewConfig()}
+}
+
 type Config struct {
 	// Number of machines/nodes
 	// Total number of hosts = hpn * nmachs
