@@ -30,10 +30,10 @@ import (
 	"sync"
 	"time"
 
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
-	"github.com/ineiti/cothorities/helpers/cliutils"
-	"github.com/ineiti/cothorities/helpers/config"
-	"github.com/ineiti/cothorities/helpers/graphs"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/helpers/cliutils"
+	"github.com/dedis/cothority/helpers/config"
+	"github.com/dedis/cothority/helpers/graphs"
 )
 
 var rootname string

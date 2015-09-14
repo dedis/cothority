@@ -5,7 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/ineiti/cothorities/helpers/graphs"
+	"github.com/dedis/cothority/helpers/graphs"
 )
 
 type ConfigFile struct {

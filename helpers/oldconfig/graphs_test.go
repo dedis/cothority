@@ -3,7 +3,7 @@ package oldconfig
 import (
 	"fmt"
 	"testing"
-	"github.com/ineiti/cothorities/sign"
+	"github.com/dedis/cothority/sign"
 
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/random"

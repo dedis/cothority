@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ineiti/cothorities/sign"
-	"github.com/ineiti/cothorities/helpers/oldconfig"
+	"github.com/dedis/cothority/sign"
+	"github.com/dedis/cothority/helpers/oldconfig"
 )
 
 // Configuration file data/exconf.json

@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"github.com/ineiti/cothorities/hashid"
+	"github.com/dedis/cothority/hashid"
 )
 
 func TestPath(t *testing.T) {

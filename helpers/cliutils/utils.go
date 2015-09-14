@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 )
 
 func ReadLines(filename string) ([]string, error) {

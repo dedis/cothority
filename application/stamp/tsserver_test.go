@@ -9,10 +9,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/ineiti/cothorities/coconet"
-	"github.com/ineiti/cothorities/sign"
-	"github.com/ineiti/cothorities/stamp"
-	"github.com/ineiti/cothorities/helpers/oldconfig"
+	"github.com/dedis/cothority/coconet"
+	"github.com/dedis/cothority/sign"
+	"github.com/dedis/cothority/stamp"
+	"github.com/dedis/cothority/helpers/oldconfig"
 )
 
 // TODO: messages should be sent hashed eventually

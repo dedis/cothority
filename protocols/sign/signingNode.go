@@ -17,9 +17,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/ineiti/cothorities/helpers/coconet"
-	"github.com/ineiti/cothorities/helpers/hashid"
-	"github.com/ineiti/cothorities/helpers/logutils"
+	"github.com/dedis/cothority/helpers/coconet"
+	"github.com/dedis/cothority/helpers/hashid"
+	"github.com/dedis/cothority/helpers/logutils"
 )
 
 type Type int // used by other modules as sign.Type

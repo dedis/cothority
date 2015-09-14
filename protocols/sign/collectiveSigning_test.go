@@ -11,9 +11,9 @@ import (
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
-	"github.com/ineiti/cothorities/coconet"
-	"github.com/ineiti/cothorities/helpers/oldconfig"
-	"github.com/ineiti/cothorities/sign"
+	"github.com/dedis/cothority/coconet"
+	"github.com/dedis/cothority/helpers/oldconfig"
+	"github.com/dedis/cothority/sign"
 )
 
 // NOTE: when announcing must provide round numbers

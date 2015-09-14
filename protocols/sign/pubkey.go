@@ -1,6 +1,6 @@
 package sign
 
-import "github.com/ineiti/cothorities/helpers/coconet"
+import "github.com/dedis/cothority/helpers/coconet"
 
 // Functions used in collective signing
 // That are direclty related to the generation/ verification/ sending

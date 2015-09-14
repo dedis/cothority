@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/websocket"
 )

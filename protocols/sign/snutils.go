@@ -7,12 +7,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 
-	"github.com/ineiti/cothorities/helpers/coconet"
-	"github.com/ineiti/cothorities/helpers/logutils"
+	"github.com/dedis/cothority/helpers/coconet"
+	"github.com/dedis/cothority/helpers/logutils"
 )
 
 func (sn *Node) multiplexOnChildren(view int, sm *SigningMessage) {
