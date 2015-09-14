@@ -20,7 +20,7 @@ Protocols
     * collective signing
     * joint threshold signing - work in progress
 
-= Deployment
+# Deployment
 	Configure(*Config)
 	Build() (error)
 	Deploy() (error)
@@ -28,6 +28,7 @@ Protocols
 	Stop() (error)
 
 The Life of a simulation:
+
 1. Configure
     * read configuration
     * compile eventual files
@@ -47,29 +48,29 @@ The Life of a simulation:
 6. Stats - work in progress
     * copy everything to local
     
-= Applications
+# Applications
 
-== Timestamping
+## Timestamping
 
 For the moment the only running application - it sets up servers that listen for client-requests, collect all
 requests and handle them to a root-node.
 
-== Signing
+## Signing
 
 A simple mechanism that only receives a message, signs it, and returns it.
 
-== Voting
+## Voting
 
 Not done yet
 
-= Protocols
+# Protocols
 
 We want to compare different protocols for signing and timestamping uses.
 
-== Collective signing
+## Collective signing
 
 This one runs well and is described in a pre-print from Dylan Visher.
 
-== Join threshold signing
+## Join threshold signing
 
 A baseline-comparison being developed by the DeDiS-lab at EPFL.
