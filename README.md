@@ -22,6 +22,19 @@ Protocols
 
     * collective signing
     * joint threshold signing - work in progress
+    
+# How to run
+
+For the moment only the timestamping on Deterlab works:
+
+In the top-level directory, type
+
+```go get ./...
+go build
+./cothority```
+
+then enter the name of the deterlab-installation, your username and your project-name, and you should
+be ready to go.
 
 # Deployment
 	Configure(*Config)
