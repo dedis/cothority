@@ -5,6 +5,7 @@ deployment, application and protocols. The basic cryptographic code comes from D
 are used:
 
 Deploy
+
     * Deter - running
     * Go-routines - in preparation
     * Future:
@@ -12,11 +13,13 @@ Deploy
         * LXC
 
 Applications
+
     * timestamping
     * signing - needs to collect more data
     * vote - doesn't run yet.
     
 Protocols
+
     * collective signing
     * joint threshold signing - work in progress
 
