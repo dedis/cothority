@@ -3,6 +3,6 @@ cothorities
 .idea
 notes.txt
 deploy/deterlab/build
-deploy/deterlab/deploy
+deploy/deterlab/deploy/*
 deploy/deterlab/config.toml
 test_data

@@ -15,7 +15,7 @@ import (
 
 	"github.com/dedis/cothority/helpers/coconet"
 	"github.com/dedis/cothority/helpers/hashid"
-	_ "github.com/dedis/cothority/helpers/logutils"
+	"github.com/dedis/cothority/helpers/logutils"
 	"github.com/dedis/cothority/application/stamp"
 )
 
@@ -44,9 +44,6 @@ func removeTrailingZeroes(a []int64) []int64 {
 var muStats sync.Mutex
 
 func AggregateStats(buck, roundsAfter, times []int64) string {
-	/*
-	 * What are these stats for?
-	 
 	muStats.Lock()
 	log.WithFields(log.Fields{
 		"file":        logutils.File(),
@@ -56,7 +53,6 @@ func AggregateStats(buck, roundsAfter, times []int64) string {
 		"times":       removeTrailingZeroes(times),
 	}).Info("")
 	muStats.Unlock()
-	*/
 	return "Client Finished Aggregating Statistics"
 }
 
