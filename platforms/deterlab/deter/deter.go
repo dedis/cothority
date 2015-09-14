@@ -71,7 +71,7 @@ func init() {
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
 	flag.StringVar(&pprofaddr, "pprof", ":10000", "the address to run the pprof server at")
 	flag.StringVar(&configFile, "config", "tree.json", "the json configuration file")
-	flag.IntVar(&rootwait, "rootwait", 30, "the amount of time the root should wait")
+	flag.IntVar(&rootwait, "rootwait", 10, "the amount of time the root should wait")
 }
 
 func main() {

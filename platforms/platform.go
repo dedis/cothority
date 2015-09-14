@@ -43,7 +43,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		4, 3, 2, 4,
+		4, 3, 1, 2,
 		100, 30, 10, 0, 0, 0,
 		2, "stamp", "edwards"}
 }

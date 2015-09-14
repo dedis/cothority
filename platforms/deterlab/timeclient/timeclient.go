@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 	"github.com/ineiti/cothorities/helpers/logutils"
 	"github.com/ineiti/cothorities/helpers/oldconfig"
 	"github.com/ineiti/cothorities/platforms/deterlab/timeclient/stampclient"
@@ -39,7 +40,7 @@ func main() {
 		}
 		log.AddHook(lh)
 	}
-	log.Println("Timeclient starts")
+	dbg.Lvl2("Timeclient starts")
 	stampclient.Run(server, nmsgs, name, rate, debug)
-	log.Printf("Timeclient.go ", name, "main() ", name, " finished...")
+	dbg.Lvl2("Timeclient.go ", name, "main() ", name, " finished...")
 }

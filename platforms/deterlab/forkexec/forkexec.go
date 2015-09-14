@@ -92,7 +92,7 @@ func main() {
 	//cmd.Stderr = log.StandardLogger().Writer()
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	log.Println("fork-exec is running command:", cmd)
+	dbg.Lvl2("fork-exec is running command:", cmd)
 	err := cmd.Run()
 	if err != nil {
 		log.Errorln("cmd run:", err)
