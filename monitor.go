@@ -18,7 +18,7 @@ import (
 // Monitor monitors log aggregates results into RunStats
 func Monitor(bf int) RunStats {
 	dbg.Lvl1("Starting monitoring")
-	defer fmt.Println("DONE MONITORING")
+	defer dbg.Lvl1("DONE MONITORING")
 retry_dial:
 	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
 	if err != nil {
@@ -68,8 +68,7 @@ retry:
 		}
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
-				"EOF/terminating Detected: need forkexec to report and clients: rootDone(%t) clientDone(%t)",
-				rootDone, clientDone)
+				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
 		}
 		if bytes.Contains(data, []byte("root_round")) {
 			dbg.Lvl3("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")

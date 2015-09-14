@@ -35,7 +35,7 @@ func Rsync(username, host, file, dest string) error {
 		addr = username + "@" + addr
 	}
 	cmd := exec.Command("rsync", "-Pauz", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
-	cmd.Stdout = os.Stdout
+	//cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
@@ -80,7 +80,8 @@ func SshRunBackground(username, host, command string) error {
 func Build(path, out, goarch, goos string) error {
 	var cmd *exec.Cmd
 	cmd = exec.Command("go", "build", "-v", "-o", out, path)
-	cmd.Stdout = os.Stdout
+	dbg.Lvl2("Building", path)
+	//cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
 	dbg.Lvl3(os.Getwd())

@@ -37,7 +37,7 @@ type Config struct {
 	Debug    int
 	// Which app to run
 	App      string
-	// Coding-suite to run
+	// Coding-suite to run 	[nist256, nist512, ed25519]
 	Suite    string
 }
 
@@ -45,6 +45,6 @@ func NewConfig() *Config {
 	return &Config{
 		4, 3, 1, 2,
 		100, 30, 10, 0, 0, 0,
-		2, "stamp", "edwards"}
+		2, "stamp", "ed25519"}
 }
 

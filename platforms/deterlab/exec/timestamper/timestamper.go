@@ -126,7 +126,6 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 			time.Sleep(30 * time.Second)
 		}
 	} else if app == "stamp" || app == "vote" {
-		dbg.Lvl2("RUNNING TIMESTAMPER on", hostname)
 		stampers, _, err := hc.RunTimestamper(0, hostname)
 		// get rid of the hc information so it can be GC'ed
 		hc = nil
@@ -140,21 +139,21 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 				s.Hostname = hostname
 				s.App = app
 				if s.IsRoot(0) {
-					dbg.Lvl1("RUNNING ROOT SERVER AT:", hostname, rounds, "Waiting: %d", rootwait)
+					dbg.Lvl1("Root timestamper at:", hostname, rounds, "Waiting: %d", rootwait)
 					// wait for the other nodes to get set up
 					time.Sleep(time.Duration(rootwait) * time.Second)
 
-					dbg.Lvl1("STARTING ROOT ROUND")
+					dbg.Lvl1("Starting root-round")
 					s.Run("root", rounds)
 					// dbg.Lvl2("\n\nROOT DONE\n\n")
 
 				} else if !testConnect {
-					dbg.Lvl1("RUNNING REGULAR AT:", hostname)
+					dbg.Lvl1("Running regular timestamper on:", hostname)
 					s.Run("regular", rounds)
 					// dbg.Lvl1("\n\nREGULAR DONE\n\n")
 				} else {
 					// testing connection
-					dbg.Lvl1("RUNNING TEST_CONNNECT AT:", hostname)
+					dbg.Lvl1("Running connection-test on:", hostname)
 					s.Run("test_connect", rounds)
 				}
 			}

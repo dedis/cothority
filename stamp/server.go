@@ -73,7 +73,7 @@ func NewServer(signer sign.Signer) *Server {
 var clientNumber int = 0
 
 func (s *Server) Close() {
-	dbg.Lvl3("closing stampserver: %p", s)
+	dbg.Lvl3("closing stampserver: %p", s.name)
 	s.closeChan <- true
 	s.Signer.Close()
 }
@@ -262,7 +262,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 			}
 
 			if s.LastRound()+1 >= nRounds {
-				log.Errorln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
+				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				return "close"
 			}
 

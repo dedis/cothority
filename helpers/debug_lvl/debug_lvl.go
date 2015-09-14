@@ -29,6 +29,9 @@ var LinePadding = 3
 // output to fmt
 var Testing = false
 
+// If this variable is set, it will be outputted between the position and the message
+var StaticMsg = ""
+
 // Holds the logrus-structure to do our logging
 var DebugLog = &logrus.Logger{
 	Out: os.Stdout,
@@ -61,6 +64,9 @@ func Lvl(lvl int, args ...interface{}) {
 	}
 	fmtstr := fmt.Sprintf("%%%ds: %%%dd", NamePadding, LinePadding)
 	caller := fmt.Sprintf(fmtstr, name, line)
+	if StaticMsg != ""{
+		caller += "@" + StaticMsg
+	}
 	DebugLog.WithFields(logrus.Fields{
 		"debug_lvl": lvl,
 		"caller": caller}).Println(args...)

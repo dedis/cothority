@@ -106,7 +106,7 @@ func main() {
 	platform.Configure(config)
 	dbg.DebugVisible = config.Debug
 
-	dbg.Lvl1("*** Setting up everything")
+	dbg.Lvl1("Setting up everything")
 	dbg.Lvl1(fmt.Sprintf("Options : machines %d,loggers %d, user %s, project %s", config.Nmachs, config.Nloggers, login, project))
 	login = fmt.Sprintf("-user=%s", login)
 
@@ -116,7 +116,7 @@ func main() {
 		platform.Build()
 	}
 
-	dbg.Lvl1("\n*** Starting tests")
+	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
 	RunTests("stamp_test_single", StampTestSingle)
 	//RunTests("sing_test_single", SignTestSingle)
@@ -250,12 +250,12 @@ func RunTest(t T) (RunStats, error) {
 	}
 
 	// give it a while to start up
-	time.Sleep(30 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	go func() {
 		rs = Monitor(t.bf)
 		platform.Stop()
-		fmt.Println("TEST COMPLETE:", rs)
+		dbg.Lvl2("TEST COMPLETE:", rs)
 		done <- struct {}{}
 	}()
 

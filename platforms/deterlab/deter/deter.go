@@ -71,14 +71,14 @@ func init() {
 	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
 	flag.StringVar(&pprofaddr, "pprof", ":10000", "the address to run the pprof server at")
 	flag.StringVar(&configFile, "config", "tree.json", "the json configuration file")
-	flag.IntVar(&rootwait, "rootwait", 10, "the amount of time the root should wait")
+	flag.IntVar(&rootwait, "rootwait", 30, "the amount of time the root should wait")
 }
 
 func main() {
 	flag.Parse()
 	dbg.DebugVisible = debug
 
-	fmt.Println("running deter with nmsgs:", nmsgs, rate, rounds)
+	dbg.Lvl1("running deter with nmsgs:", nmsgs, rate, rounds)
 
 	virt, err := cliutils.ReadLines("remote/virt.txt")
 	if err != nil {
@@ -169,7 +169,7 @@ func main() {
 	}
 
 	// start up the logging server on the final host at port 10000
-	fmt.Println("starting up logservers: ", loggers)
+	dbg.Lvl1("starting up logservers: ", loggers)
 	// start up the master logger
 	loggerports := make([]string, len(loggers))
 	for i, logger := range loggers {
@@ -194,7 +194,7 @@ func main() {
 
 	// wait a little bit for the logserver to start up
 	time.Sleep(5 * time.Second)
-	dbg.Lvl1("starting", len(physToServer), "time clients:", physToServer)
+	dbg.Lvl1("starting", len(physToServer), "time clients")
 	// start up one timeclient per physical machine
 	// it requests timestamps from all the servers on that machine
 
@@ -223,7 +223,7 @@ func main() {
 		if len(virts) == 0 {
 			continue
 		}
-		dbg.Lvl1("starting timestampers for", virts)
+		dbg.Lvl1("starting timestampers for", len(virts), "clients")
 		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], random_leaf)
 		i = (i + 1) % len(loggerports)
 		wg.Add(1)

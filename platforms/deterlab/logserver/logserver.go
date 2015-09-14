@@ -295,7 +295,7 @@ func main() {
 		// /webfiles/Chart.js/Chart.min.js
 		http.HandleFunc("/", homeHandler)
 		fs := http.FileServer(http.Dir("webfiles/"))
-		http.Handle("/bower_components/", http.StripPrefix("/bower_components/", fs))
+		http.Handle("/webfiles/", http.StripPrefix("/webfiles/", fs))
 	} else {
 		retry:
 		tries := 0

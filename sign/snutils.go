@@ -157,7 +157,7 @@ func (sn *Node) setUpRound(view int, am *AnnouncementMessage) error {
 		sn.RoundTypes = append(sn.RoundTypes, make([]RoundType, max(len(sn.RoundTypes), Round+1))...)
 	}
 	if am.Vote == nil {
-		dbg.Lvl3("***", Round, len(sn.RoundTypes))
+		dbg.Lvl3(Round, len(sn.RoundTypes))
 		sn.RoundTypes[Round] = SigningRT
 	} else {
 		sn.RoundTypes[Round] = RoundType(am.Vote.Type)

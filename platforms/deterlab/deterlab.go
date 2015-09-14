@@ -40,6 +40,8 @@ import (
 	"strconv"
 	"bytes"
 	"github.com/BurntSushi/toml"
+	"time"
+	_ "errors"
 )
 
 
@@ -52,11 +54,11 @@ type Deter struct {
 	// The name of the internal hosts
 	Project      string
 	// Directory where everything is copied into
-	DeployDir     string
+	DeployDir    string
 	// Directory for building
 	BuildDir     string
 	// Working directory of deterlab
-	DeterDir	 string
+	DeterDir     string
 	// Where the main logging machine resides
 	masterLogger string
 	// DNS-resolvable names
@@ -65,6 +67,9 @@ type Deter struct {
 	virt         []string
 	physOut      string
 	virtOut      string
+
+	// Channel to communication stopping of experiment
+	sshDeter     chan string
 }
 
 func (d *Deter) Configure(config *platforms.Config) {
@@ -78,6 +83,9 @@ func (d *Deter) Configure(config *platforms.Config) {
 	d.DeterDir = pwd + "/platforms/deterlab"
 	d.DeployDir = d.DeterDir + "/deploy"
 	d.BuildDir = d.DeterDir + "/build"
+
+	// Setting up channel
+	d.sshDeter = make(chan string)
 }
 
 func (d *Deter) Build() (error) {
@@ -176,18 +184,23 @@ func (d *Deter) Start() (error) {
 	// run the deter lab boss nodes process
 	// it will be responsible for forwarding the files and running the individual
 	// timestamping servers
-	dbg.Lvl2(cliutils.SshRunStdout(d.Login, d.Host,
-		"GOMAXPROCS=8 remote/deter -nmsgs=" + strconv.Itoa(d.Config.Nmsgs) +
-		" -hpn=" + strconv.Itoa(d.Config.Hpn) +
-		" -bf=" + strconv.Itoa(d.Config.Bf) +
-		" -rate=" + strconv.Itoa(d.Config.Rate) +
-		" -rounds=" + strconv.Itoa(d.Config.Rounds) +
-		" -debug=" + strconv.Itoa(d.Config.Debug) +
-		" -failures=" + strconv.Itoa(d.Config.Failures) +
-		" -rfail=" + strconv.Itoa(d.Config.RFail) +
-		" -ffail=" + strconv.Itoa(d.Config.FFail) +
-		" -app=" + d.Config.App +
-		" -suite=" + d.Config.Suite))
+
+	go func() {
+		dbg.Lvl2(cliutils.SshRunStdout(d.Login, d.Host,
+			"GOMAXPROCS=8 remote/deter -nmsgs=" + strconv.Itoa(d.Config.Nmsgs) +
+			" -hpn=" + strconv.Itoa(d.Config.Hpn) +
+			" -bf=" + strconv.Itoa(d.Config.Bf) +
+			" -rate=" + strconv.Itoa(d.Config.Rate) +
+			" -rounds=" + strconv.Itoa(d.Config.Rounds) +
+			" -debug=" + strconv.Itoa(d.Config.Debug) +
+			" -failures=" + strconv.Itoa(d.Config.Failures) +
+			" -rfail=" + strconv.Itoa(d.Config.RFail) +
+			" -ffail=" + strconv.Itoa(d.Config.FFail) +
+			" -app=" + d.Config.App +
+			" -suite=" + d.Config.Suite))
+		dbg.Lvl2("Sending stop of ssh")
+		d.sshDeter <- "stop"
+	}()
 
 	return nil
 }
@@ -200,7 +213,17 @@ func (d *Deter) Stop() (error) {
 	if err != nil {
 		dbg.Lvl2("Stopping ssh: ", err)
 	}
-
+	select {
+	case msg := <-d.sshDeter:
+		if msg == "stop" {
+			dbg.Lvl2("SSh is stopped")
+		}else {
+			dbg.Lvl1("Received other command", msg)
+		}
+	case <-time.After(time.Second * 3):
+		dbg.Lvl1("Timeout error when waiting for end of ssh")
+		//return errors.New("Timeout")
+	}
 	return nil
 }
 
@@ -292,26 +315,26 @@ func (d *Deter)calculateGraph() {
 	}
 }
 
-func (d *Deter)WriteConfig(){
+func (d *Deter)WriteConfig() {
 	buf := new(bytes.Buffer)
 	if err := toml.NewEncoder(buf).Encode(d); err != nil {
 		log.Fatal(err)
 	}
 	err := ioutil.WriteFile(d.DeployDir + "/config.toml", buf.Bytes(), 0444)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func ReadConfig()(*Deter){
+func ReadConfig() (*Deter) {
 	buf, err := ioutil.ReadFile("config.toml")
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	var deter Deter
 	_, err = toml.Decode(string(buf), &deter)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
