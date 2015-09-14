@@ -44,7 +44,9 @@ func removeTrailingZeroes(a []int64) []int64 {
 var muStats sync.Mutex
 
 func AggregateStats(buck, roundsAfter, times []int64) string {
-	return "Client Finished Aggregating Statistics"
+	/*
+	 * What are these stats for?
+	 
 	muStats.Lock()
 	log.WithFields(log.Fields{
 		"file":        logutils.File(),
@@ -54,6 +56,8 @@ func AggregateStats(buck, roundsAfter, times []int64) string {
 		"times":       removeTrailingZeroes(times),
 	}).Info("")
 	muStats.Unlock()
+	*/
+	return "Client Finished Aggregating Statistics"
 }
 
 func streamMessgs(c *stamp.Client, servers []string, rate int) {
