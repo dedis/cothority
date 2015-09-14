@@ -1,4 +1,4 @@
-# cothority
+# Cothority
 
 The code permits the testing and running of a cothority-system together with the applications. It is split up in 
 deployment, application and protocols. The basic cryptographic code comes from DeDiS/crypto. The following modules
