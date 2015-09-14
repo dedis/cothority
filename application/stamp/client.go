@@ -9,8 +9,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/ineiti/cothorities/coconet"
-	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/helpers/coconet"
+	"github.com/ineiti/cothorities/protocols/sign"
 	"fmt"
 )
 

@@ -6,7 +6,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/ineiti/cothorities/helpers/oldconfig"
-	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/protocols/sign"
 
 	"github.com/dedis/crypto/abstract"
 //"github.com/dedis/crypto/edwards"

@@ -55,7 +55,7 @@ var port int = 8081
 var DefaultRounds int = 1
 
 func NewPlatform() deploy.Platform {
-	return &platform_deter.Deter{Config:deploy.NewConfig()}
+	return &deploy_deter.Deter{Config:deploy.NewConfig()}
 }
 
 func init() {

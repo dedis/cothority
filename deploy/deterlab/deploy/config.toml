@@ -1,15 +1,15 @@
 Login = "ineiti"
 Host = "users.deterlab.net"
 Project = "Dissent-CS"
-DeployDir = "/Users/epfl/cothorities/platforms/deterlab/deploy"
-BuildDir = "/Users/epfl/cothorities/platforms/deterlab/build"
-DeterDir = "/Users/epfl/cothorities/platforms/deterlab"
+DeployDir = "/Users/epfl/cothorities/deploy/deterlab/deploy"
+BuildDir = "/Users/epfl/cothorities/deploy/deterlab/build"
+DeterDir = "/Users/epfl/cothorities/deploy/deterlab"
 
 [Config]
-  Nmachs = 5
+  Nmachs = 4
   Nloggers = 3
-  Hpn = 32
-  Bf = 4
+  Hpn = 1
+  Bf = 2
   Nmsgs = -1
   Rate = 30
   Rounds = 20

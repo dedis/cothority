@@ -11,7 +11,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 
-	"github.com/ineiti/cothorities/coconet"
+	"github.com/ineiti/cothorities/helpers/coconet"
 	"github.com/ineiti/cothorities/helpers/logutils"
 )
 

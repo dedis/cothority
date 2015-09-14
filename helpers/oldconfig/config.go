@@ -18,13 +18,13 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
-	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/protocols/sign"
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	//	"github.com/dedis/crypto/nist"
-	"github.com/ineiti/cothorities/coconet"
-	"github.com/ineiti/cothorities/stamp"
+	"github.com/ineiti/cothorities/helpers/coconet"
+	"github.com/ineiti/cothorities/application/stamp"
 )
 
 /*

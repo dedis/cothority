@@ -13,10 +13,10 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/ineiti/cothorities/helpers/debug_lvl"
 
-	"github.com/ineiti/cothorities/coconet"
-	"github.com/ineiti/cothorities/hashid"
+	"github.com/ineiti/cothorities/helpers/coconet"
+	"github.com/ineiti/cothorities/helpers/hashid"
 	"github.com/ineiti/cothorities/helpers/logutils"
-	"github.com/ineiti/cothorities/stamp"
+	"github.com/ineiti/cothorities/application/stamp"
 )
 
 func genRandomMessages(n int) [][]byte {

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/ineiti/cothorities/hashid"
-	"github.com/ineiti/cothorities/proof"
+	"github.com/ineiti/cothorities/helpers/hashid"
+	"github.com/ineiti/cothorities/helpers/proof"
 )
 
 type SeqNo byte

@@ -1,8 +1,8 @@
 package sign
 
 import "github.com/dedis/crypto/abstract"
-import "github.com/ineiti/cothorities/hashid"
-import "github.com/ineiti/cothorities/proof"
+import "github.com/ineiti/cothorities/helpers/hashid"
+import "github.com/ineiti/cothorities/helpers/proof"
 
 const FIRST_ROUND int = 1 // start counting rounds at 1
 

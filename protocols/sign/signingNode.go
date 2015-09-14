@@ -17,8 +17,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/ineiti/cothorities/coconet"
-	"github.com/ineiti/cothorities/hashid"
+	"github.com/ineiti/cothorities/helpers/coconet"
+	"github.com/ineiti/cothorities/helpers/hashid"
 	"github.com/ineiti/cothorities/helpers/logutils"
 )
 

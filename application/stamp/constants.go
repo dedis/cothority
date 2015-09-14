@@ -3,7 +3,7 @@ package stamp
 import (
 	"time"
 
-	"github.com/ineiti/cothorities/sign"
+	"github.com/ineiti/cothorities/protocols/sign"
 )
 
 // time we wait between rounds
