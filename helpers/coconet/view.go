@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 )
 
 type View struct {
@@ -137,7 +138,7 @@ func NewViews() *Views {
 }
 
 func (v *Views) NewView(view int, parent string, children []string, hostlist []string) {
-	log.Println("NEW VIEW", view, hostlist)
+	dbg.Lvl2("New view", view, hostlist)
 	v.Lock()
 	vi := &View{Num: view, Parent: parent}
 	vi.HostList = make([]string, len(hostlist))

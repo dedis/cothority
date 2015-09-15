@@ -139,7 +139,7 @@ func (d *Deter) Build(build string) (error) {
 	}
 	// wait for the build to finish
 	wg.Wait()
-	dbg.Lvl2("Build is finished after", time.Since(start))
+	dbg.Lvl1("Build is finished after", time.Since(start))
 	return nil
 }
 
