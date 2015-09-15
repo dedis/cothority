@@ -25,61 +25,52 @@ import (
 	"github.com/dedis/cothority/deploy/deterlab/exec/timestamper"
 	"github.com/dedis/cothority/helpers/logutils"
 	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/deploy"
 )
 
+
+var deter *deploy.Deter
+var conf *deploy.Config
 var hostname string
-var cfg string
 var logger string
-var app string
-var rounds int
-var pprofaddr string
 var physaddr string
-var rootwait int
-var debug int
-var failures int
-var rFail int
-var fFail int
 var amroot bool
 var testConnect bool
-var suite string
 
 // TODO: add debug flag for more debugging information (memprofilerate...)
 func init() {
 	flag.StringVar(&hostname, "hostname", "", "the hostname of this node")
-	flag.StringVar(&cfg, "config", "tree.json", "the json configuration file")
 	flag.StringVar(&logger, "logger", "", "remote logger")
-	flag.StringVar(&app, "app", "stamp", "application to run [sign|time]")
-	flag.IntVar(&rounds, "rounds", 100, "number of rounds to run")
-	flag.StringVar(&pprofaddr, "pprof", ":10000", "the address to run the pprof server at")
 	flag.StringVar(&physaddr, "physaddr", "", "the physical address of the noded [for deterlab]")
-	flag.IntVar(&rootwait, "rootwait", 30, "the amount of time the root should wait")
-	flag.IntVar(&debug, "debug", 2, "set debugging-level")
-	flag.IntVar(&failures, "failures", 0, "percent showing per node probability of failure")
-	flag.IntVar(&rFail, "rfail", 0, "number of consecutive rounds each root runs before it fails")
-	flag.IntVar(&fFail, "ffail", 0, "number of consecutive rounds each follower runs before it fails")
 	flag.BoolVar(&amroot, "amroot", false, "am I root node")
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
-	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
+
 }
 
 func main() {
+	deter, err := deploy.ReadConfig()
+	if err != nil {
+		log.Fatal("Couldn't load config-file in exec")
+	}
+	conf = deter.Config
+	dbg.DebugVisible = conf.Debug
+
 	flag.Parse()
-	dbg.DebugVisible = debug
 
 	dbg.Lvl1("Running Timestamper", hostname, "with logger", logger)
 	defer func() {
-		log.Errorln("TERMINATING HOST")
+		log.Errorln("Terminating host", hostname)
 	}()
 
 	// connect with the logging server
-	if logger != "" && (amroot || debug > 0) {
+	if logger != "" && (amroot || conf.Debug > 0) {
 		// blocks until we can connect to the logger
 		dbg.Lvl1(hostname, "Connecting to Logger")
-		lh, err := logutils.NewLoggerHook(logger, hostname, app)
+		lh, err := logutils.NewLoggerHook(logger, hostname, conf.App)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
-			}).Fatalln("ERROR SETTING UP LOGGING SERVER:", err)
+			}).Fatalln("Error setting up logging server:", err)
 		}
 		log.AddHook(lh)
 		//log.SetOutput(ioutil.Discard)
@@ -103,9 +94,11 @@ func main() {
 		p, _ := strconv.Atoi(port)
 		// uncomment if more fine grained memory debuggin is needed
 		//runtime.MemProfileRate = 1
-		dbg.Lvl2(http.ListenAndServe(net.JoinHostPort(physaddr, strconv.Itoa(p+2)), nil))
+		dbg.Lvl2(http.ListenAndServe(net.JoinHostPort(physaddr, strconv.Itoa(p + 2)), nil))
 	}()
 
-	dbg.Lvl2("Running timestamp with rFail and fFail: ", rFail, fFail)
-	timestamper.Run(hostname, cfg, app, rounds, rootwait, debug, testConnect, failures, rFail, fFail, logger, suite)
+	dbg.Lvl2("Running timestamp with rFail and fFail: ", conf.RFail, conf.FFail)
+
+	timestamper.Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
+		testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
 }

@@ -21,7 +21,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -34,51 +33,28 @@ import (
 	"github.com/dedis/cothority/helpers/cliutils"
 	"github.com/dedis/cothority/helpers/config"
 	"github.com/dedis/cothority/helpers/graphs"
+	"github.com/dedis/cothority/deploy"
 )
 
+var deter deploy.Deter
+var conf *deploy.Config
 var rootname string
-
-var nmsgs string
-var hpn string
-var bf string
-var debug int
-var rate int
-var failures int
-var rFail int
-var fFail int
-var rounds int
-var kill bool
-var testConnect bool
-var app string
-var suite string
-var pprofaddr string
-var configFile string
-var rootwait int
+var kill = false
 
 func init() {
-	flag.StringVar(&nmsgs, "nmsgs", "100", "the number of messages per round")
-	flag.StringVar(&hpn, "hpn", "", "number of hosts per node")
-	flag.StringVar(&bf, "bf", "", "branching factor")
-	flag.IntVar(&debug, "debug", 2, "set debug level")
-	flag.IntVar(&rate, "rate", -1, "number of milliseconds between messages")
-	flag.IntVar(&failures, "failures", 0, "percent showing per node probability of failure")
-	flag.IntVar(&rFail, "rfail", 0, "number of consecutive rounds each root runs before it fails")
-	flag.IntVar(&fFail, "ffail", 0, "number of consecutive rounds each follower runs before it fails")
-	flag.IntVar(&rounds, "rounds", 100, "number of rounds to timestamp")
 	flag.BoolVar(&kill, "kill", false, "kill everything (and don't start anything)")
-	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
-	flag.StringVar(&app, "app", "stamp", "app to run")
-	flag.StringVar(&suite, "suite", "nist256", "abstract suite to use [nist256, nist512, ed25519]")
-	flag.StringVar(&pprofaddr, "pprof", ":10000", "the address to run the pprof server at")
-	flag.StringVar(&configFile, "config", "tree.json", "the json configuration file")
-	flag.IntVar(&rootwait, "rootwait", 30, "the amount of time the root should wait")
+
 }
 
 func main() {
-	flag.Parse()
-	dbg.DebugVisible = debug
+	deter, err := deploy.ReadConfig("remote")
+	if err != nil {
+		log.Fatal("Couldn't read config in deter:", err)
+	}
+	conf = deter.Config
+	dbg.DebugVisible = conf.Debug
 
-	dbg.Lvl1("running deter with nmsgs-rate-rounds-debug:", nmsgs, rate, rounds, debug)
+	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:", conf.Rounds, "debug:", conf.Debug)
 
 	virt, err := cliutils.ReadLines("remote/virt.txt")
 	if err != nil {
@@ -178,18 +154,12 @@ func main() {
 		// redirect to the master logger
 		master := masterLogger + ":10000"
 		// if this is the master logger than don't set the master to anything
-		if loggerport == masterLogger+":10000" {
+		if loggerport == masterLogger + ":10000" {
 			master = ""
 		}
 
-		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr="+loggerport+
-			" -hosts="+strconv.Itoa(len(hostnames))+
-			" -depth="+strconv.Itoa(depth)+
-			" -bf="+bf+
-			" -hpn="+hpn+
-			" -nmsgs="+nmsgs+
-			" -rate="+strconv.Itoa(rate)+
-			" -master="+master)
+		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +
+		" -master=" + master)
 	}
 
 	// wait a little bit for the logserver to start up
@@ -205,12 +175,10 @@ func main() {
 		}
 		servers := strings.Join(ss, ",")
 		go func(i int, p string) {
-			_, err := cliutils.SshRun("", p, "cd remote; sudo ./timeclient -nmsgs="+nmsgs+
-				" -name=client@"+p+
-				" -server="+servers+
-				" -logger="+loggerports[i]+
-				" -debug="+strconv.Itoa(debug)+
-				" -rate="+strconv.Itoa(rate))
+			_, err := cliutils.SshRun("", p, "cd remote; sudo ./timeclient " +
+			" -name=client@" + p +
+			" -server=" + servers +
+			" -logger=" + loggerports[i])
 			if err != nil {
 				dbg.Lvl3("Deter.go : timeclient error ", err)
 			}
@@ -224,7 +192,7 @@ func main() {
 			continue
 		}
 		dbg.Lvl1("starting timestampers for", len(virts), "clients")
-		cmd := GenExecCmd(rFail, fFail, failures, phys, virts, loggerports[i], random_leaf)
+		cmd := GenExecCmd(phys, virts, loggerports[i], random_leaf)
 		i = (i + 1) % len(loggerports)
 		wg.Add(1)
 		time.Sleep(100 * time.Millisecond)
@@ -234,7 +202,7 @@ func main() {
 			dbg.Lvl3("deter.go Starting clients on physical machine ", phys, cmd)
 			err := cliutils.SshRunStdout("", phys, cmd)
 			if err != nil {
-				log.Fatal("ERROR STARTING TIMESTAMPER:", err, phys, virts)
+				log.Fatal("Error starting timestamper:", err, phys, virts)
 			}
 			dbg.Lvl3("Finished with Timestamper", phys)
 		}(phys, cmd)
@@ -247,13 +215,17 @@ func main() {
 }
 
 // Generate all commands on one single physicial machines to launch every "nodes"
-func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerport, random_leaf string) string {
+func GenExecCmd(phys string, names []string, loggerport, random_leaf string) string {
+	dbg.Lvl2("Random_leaf", random_leaf)
+	dbg.Lvl2("Names", names)
 	connect := false
 	cmd := ""
 	bg := " & "
 	for i, name := range names {
-		dbg.Lvl2(fmt.Sprintf("deter.go Generate cmd timestamper : names == %s, random_leaf == %s, testConnect = %t", name, random_leaf, testConnect))
-		if name == random_leaf && testConnect {
+		dbg.Lvl2("deter.go Generate cmd timestamper : name ==", name)
+		dbg.Lvl2("random_leaf ==", random_leaf)
+		dbg.Lvl2("testconnect is", deter.TestConnect)
+		if name == random_leaf && deter.TestConnect {
 			connect = true
 		}
 		amroot := " -amroot=false"
@@ -261,24 +233,14 @@ func GenExecCmd(rFail, fFail, failures int, phys string, names []string, loggerp
 			amroot = " -amroot=true"
 		}
 
-		if i == len(names)-1 {
+		if i == len(names) - 1 {
 			bg = ""
 		}
 		cmd += "(cd remote; sudo ./forkexec" +
-		" -rfail=" + strconv.Itoa(rFail) +
-		" -ffail=" + strconv.Itoa(fFail) +
-		" -failures=" + strconv.Itoa(failures) +
 		" -physaddr=" + phys +
 		" -hostname=" + name +
 		" -logger=" + loggerport +
-		" -debug=" + strconv.Itoa(debug) +
-		" -suite=" + suite +
-		" -rounds=" + strconv.Itoa(rounds) +
-		" -app=" + app +
 		" -test_connect=" + strconv.FormatBool(connect) +
-		" -config=" + configFile +
-		" -pprof=" + pprofaddr +
-		" -rootwait=" + strconv.Itoa(rootwait) +
 		amroot + bg +
 		" ); "
 	}

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"bytes"
+	"bufio"
 )
 
 func ReadLines(filename string) ([]string, error) {
@@ -81,16 +83,21 @@ func SshRunBackground(username, host, command string) error {
 
 }
 
-func Build(path, out, goarch, goos string) error {
+func Build(path, out, goarch, goos string) (string, error) {
 	var cmd *exec.Cmd
+	var b bytes.Buffer
+	build_buffer := bufio.NewWriter(&b)
 	cmd = exec.Command("go", "build", "-v", "-o", out, path)
-	dbg.Lvl2("Building", path)
-	//cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	dbg.Lvl3("Building", path)
+	cmd.Stdout = build_buffer
+	cmd.Stderr = build_buffer
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
-	dbg.Lvl3(os.Getwd())
+	wd, err := os.Getwd()
+	dbg.Lvl3(wd)
 	dbg.Lvl3("Command:", cmd.Args)
-	return cmd.Run()
+	err = cmd.Run()
+	dbg.Lvl3(b.String())
+	return b.String(), err
 }
 
 func KillGo() {

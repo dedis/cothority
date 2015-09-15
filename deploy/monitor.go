@@ -18,7 +18,7 @@ import (
 // Monitor monitors log aggregates results into RunStats
 func Monitor(bf int) RunStats {
 	dbg.Lvl1("Starting monitoring")
-	defer dbg.Lvl1("DONE MONITORING")
+	defer dbg.Lvl1("Done monitoring")
 retry_dial:
 	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
 	if err != nil {
@@ -87,7 +87,7 @@ retry:
 				dbg.Lvl1("Wrong debugging message - ignoring")
 				continue
 			}
-			dbg.Lvl3(fmt.Sprintf("root_round: %+v", entry))
+			dbg.Lvl3("root_round:", entry)
 			if first {
 				first = false
 				dbg.Lvl3("Setting min-time to", entry.Time)

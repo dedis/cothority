@@ -33,7 +33,7 @@ import (
 
 // Configuration-variables
 var deploy_config *Config
-var platform Platform
+var deployP Platform
 var nobuild bool = false
 var port int = 8081
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
@@ -42,7 +42,7 @@ var DefaultRounds int = 1
 
 func init() {
 	deploy_config = NewConfig()
-	platform = NewPlatform()
+	deployP = NewPlatform()
 }
 
 // nmachs, hpn, bf
@@ -58,22 +58,22 @@ var SignTestSingle = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
 }
 
-func Start(destination string, nbld bool) {
-	platform.Configure(deploy_config)
-	dbg.DebugVisible = deploy_config.Debug
+func Start(destination string, nbld bool, build string, machines int) {
+	deployP.Configure(deploy_config)
 	nobuild = nbld
+	deploy_config.Nmachs = machines
 
-	dbg.Lvl1("Setting up everything")
-
-	platform.Stop()
+	deployP.Stop()
 
 	if nobuild == false {
-		platform.Build()
+		deployP.Build(build)
 	}
 
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
-	RunTests("stamp_test_single", StampTestSingle)
+	//RunTests("hosts_test_short", HostsTestShort)
+	RunTests("hosts_test", HostsTest)
+	//RunTests("stamp_test_single", StampTestSingle)
 	//RunTests("sing_test_single", SignTestSingle)
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
@@ -96,7 +96,6 @@ func Start(destination string, nbld bool) {
 	// RunTests("load_rate_test_bf10.csv", t)
 	// t = RateLoadTest(40, 50)
 	// RunTests("load_rate_test_bf50.csv", t)
-
 }
 
 // RunTests runs the given tests and puts the output into the
@@ -104,10 +103,6 @@ func Start(destination string, nbld bool) {
 func RunTests(name string, ts []T) {
 	for i, _ := range ts {
 		ts[i].bf = deploy_config.Bf
-		if deploy_config.Hpn > 0 {
-			ts[i].hpn = deploy_config.Hpn
-		}
-
 		ts[i].nmachs = deploy_config.Nmachs
 	}
 
@@ -138,7 +133,7 @@ func RunTests(name string, ts []T) {
 				log.Fatalln("error running test:", err)
 			}
 
-			if platform.Stop() == nil {
+			if deployP.Stop() == nil {
 				runs = append(runs, run)
 				if stopOnSuccess {
 					break
@@ -191,14 +186,14 @@ func RunTest(t T) (RunStats, error) {
 	cfg := &Config{
 		t.nmachs, deploy_config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
-		deploy_config.Debug, deploy_config.App, deploy_config.Suite }
+		deploy_config.Debug, deploy_config.RootWait, deploy_config.App, deploy_config.Suite }
 
-	dbg.Lvl1(fmt.Sprintf("Running test with parameters %+v", cfg))
+	dbg.Lvl1("Running test with parameters", cfg)
 	dbg.Lvl1("Failures percent is", t.failures)
 
-	platform.Configure(cfg)
-	platform.Deploy()
-	err := platform.Start()
+	deployP.Configure(cfg)
+	deployP.Deploy()
+	err := deployP.Start()
 	if err != nil {
 		log.Fatal(err)
 		return rs, nil
@@ -209,7 +204,7 @@ func RunTest(t T) (RunStats, error) {
 
 	go func() {
 		rs = Monitor(t.bf)
-		platform.Stop()
+		deployP.Stop()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct {}{}
 	}()
@@ -319,13 +314,21 @@ func FullTests() []T {
 	return tests
 }
 
+var HostsTestShort = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
+}
+
 var HostsTest = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
+/*
 	{0, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	*/
 	{0, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
 	{0, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
 }

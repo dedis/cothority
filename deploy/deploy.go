@@ -2,7 +2,7 @@ package deploy
 
 type Platform interface {
 	Configure(*Config)
-	Build() (error)
+	Build(build string) (error)
 	Deploy() (error)
 	Start() (error)
 	Stop() (error)
@@ -39,6 +39,8 @@ type Config struct {
 
 	// Debugging-level: 0 is none - 5 is everything
 	Debug    int
+	// RootWait - how long the root timestamper waits for the clients to start up
+	RootWait int
 	// Which app to run
 	App      string
 	// Coding-suite to run 	[nist256, nist512, ed25519]
@@ -49,6 +51,6 @@ func NewConfig() *Config {
 	return &Config{
 		4, 3, 1, 2,
 		100, 30, 10, 0, 0, 0,
-		2, "stamp", "ed25519"}
+		1, 10, "stamp", "ed25519"}
 }
 
