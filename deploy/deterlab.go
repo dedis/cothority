@@ -82,8 +82,6 @@ func (d *Deter) Configure(config *Config) {
 	// Setting up channel
 	d.sshDeter = make(chan string)
 	d.checkDeterlabVars()
-
-	dbg.Lvl1("Running with", d.Config.Nmachs, "machines and", d.Config.Nloggers, "loggers")
 }
 
 func (d *Deter) Build(build string) (error) {
@@ -154,7 +152,8 @@ func (d *Deter) Deploy() (error) {
 	d.WriteConfig()
 
 	// copy the webfile-directory of the logserver to the remote directory
-	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles", d.BuildDir + "/", d.DeployDir).Run()
+	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles", d.BuildDir + "/",
+		d.DeterDir + "/cothority.conf", d.DeployDir).Run()
 	if err != nil {
 		log.Fatal("error copying webfiles and build-dir:", err)
 	}
@@ -171,9 +170,10 @@ func (d *Deter) Deploy() (error) {
 }
 
 func (d *Deter) Start() (error) {
+	dbg.Lvl1("Running with", d.Config.Nmachs, "nodes *", d.Config.Hpn, "hosts per node =",
+		d.Config.Nmachs * d.Config.Hpn, "and", d.Config.Nloggers, "loggers")
+
 	// setup port forwarding for viewing log server
-	// ssh -L 8081:pcXXX:80 username@users.isi.deterlab.net
-	// ssh username@users.deterlab.net -L 8118:somenode.experiment.YourClass.isi.deterlab.net:80
 	dbg.Lvl2("setup port forwarding for master logger: ", d.masterLogger, d.Login, d.Host)
 	cmd := exec.Command(
 		"ssh",
@@ -228,8 +228,7 @@ func (d *Deter) Stop() (error) {
 			dbg.Lvl1("Received other command", msg)
 		}
 	case <-time.After(time.Second * 3):
-		dbg.Lvl1("Timeout error when waiting for end of ssh")
-	//return errors.New("Timeout")
+		dbg.Lvl2("Timeout error when waiting for end of ssh")
 	}
 	return nil
 }

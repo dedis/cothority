@@ -54,7 +54,7 @@ func main() {
 	conf = deter.Config
 	dbg.DebugVisible = conf.Debug
 
-	dbg.Lvl1("running deter with nmsgs-rate-rounds-debug:", conf.Nmsgs, conf.Rate, conf.Rounds, conf.Debug)
+	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:", conf.Rounds, "debug:", conf.Debug)
 
 	virt, err := cliutils.ReadLines("remote/virt.txt")
 	if err != nil {
