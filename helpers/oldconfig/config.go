@@ -497,7 +497,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 		startTime := time.Duration(200)
 		maxTime := time.Duration(2000)
 		for i := 0; i < 2000; i++ {
-			dbg.Lvl3(fmt.Sprintf("Attempting to connect to parent %s", h))
+			dbg.Lvl3("Attempting to connect to parent", h)
 			// the host should connect with the parent
 			err = sn.Connect(0)
 			if err == nil {

@@ -8,6 +8,12 @@
 // Creates the following directory structure in remote:
 // build/ - where all cross-compiled executables are stored
 // deploy/ - directory to be copied to the deterlab server
+//
+// The following apps are used:
+//   deter - runs on the user-machine in deterlab and launches the others
+//   logserver - runs on the first three servers - first is the master, then two slaves
+//   forkexec - runs on the other servers and launches exec, so it can measure it's cpu usage
+//
 package deploy
 
 import (
@@ -58,6 +64,9 @@ type Deter struct {
 
 	// Channel to communication stopping of experiment
 	sshDeter     chan string
+
+	// Testing the connection?
+	TestConnect	bool
 }
 
 func (d *Deter) Configure(config *Config) {
@@ -68,21 +77,24 @@ func (d *Deter) Configure(config *Config) {
 	d.DeterDir = pwd + "/deploy/deterlab"
 	d.DeployDir = d.DeterDir + "/deploy"
 	d.BuildDir = d.DeterDir + "/build"
+	d.Config.Debug = dbg.DebugVisible
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
+	d.checkDeterlabVars()
 
-	dbg.Lvl1("Running with machines", d.Config.Nmachs, "loggers", d.Config.Nloggers)
+	dbg.Lvl1("Running with", d.Config.Nmachs, "machines and", d.Config.Nloggers, "loggers")
 }
 
-func (d *Deter) Build() (error) {
-	dbg.Lvl1("Building for", d.Login, d.Host, d.Project)
+func (d *Deter) Build(build string) (error) {
+	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build)
+	start := time.Now()
 
 	var wg sync.WaitGroup
 
 	// Start with a clean build-directory
 	current, _ := os.Getwd()
-	dbg.Lvl1(current)
+	dbg.Lvl3("Current dir is:", current)
 	defer os.Chdir(current)
 
 	// Go into deterlab-dir and create the build-dir
@@ -92,6 +104,9 @@ func (d *Deter) Build() (error) {
 
 	// start building the necessary packages
 	packages := []string{"logserver", "timeclient", "forkexec", "exec", "deter"}
+	if build != "" {
+		packages = strings.Split(build, ",")
+	}
 	dbg.Lvl2("Starting to build all executables", packages)
 	for _, p := range packages {
 		dbg.Lvl3("Building ", p)
@@ -102,9 +117,10 @@ func (d *Deter) Build() (error) {
 			go func(s, d string) {
 				defer wg.Done()
 				// the users node has a 386 FreeBSD architecture
-				err := cliutils.Build(s, d, "386", "freebsd")
+				out, err := cliutils.Build(s, d, "386", "freebsd")
 				if err != nil {
 					cliutils.KillGo()
+					fmt.Println(out)
 					log.Fatal(err)
 				}
 			}(src, dst)
@@ -113,22 +129,21 @@ func (d *Deter) Build() (error) {
 		go func(s, d string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
-			err := cliutils.Build(s, d, "amd64", "linux")
+			out, err := cliutils.Build(s, d, "amd64", "linux")
 			if err != nil {
 				cliutils.KillGo()
+				fmt.Println(out)
 				log.Fatal(err)
 			}
 		}(src, dst)
 	}
 	// wait for the build to finish
 	wg.Wait()
-	dbg.Lvl2("Build is finished")
+	dbg.Lvl2("Build is finished after", time.Since(start))
 	return nil
 }
 
 func (d *Deter) Deploy() (error) {
-	d.checkDeterlabVars()
-
 	dbg.Lvl1("Assembling all files and configuration options")
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
@@ -265,7 +280,7 @@ func (d *Deter)generateHostsFile() error {
 
 	// open and erase file if needed
 	if _, err1 := os.Stat(hosts_file); err1 == nil {
-		dbg.Lvl3(fmt.Sprintf("Hosts file %s already exists. Erasing ...", hosts_file))
+		dbg.Lvl3("Hosts file", hosts_file, "already exists. Erasing ...")
 		os.Remove(hosts_file)
 	}
 	// create the file

@@ -27,10 +27,10 @@ import (
 	"github.com/dedis/cothority/deploy"
 )
 
-var deter *deploy.Deter
-var addr, hosts, depth, bf, hpn, nmsgs, master, rate string
+var deter deploy.Deter
+var cfg *deploy.Config
+var addr, master string
 var homePage *template.Template
-var debug int
 
 type Home struct {
 	LogServer        string
@@ -46,17 +46,7 @@ var Log Logger
 
 func init() {
 	flag.StringVar(&addr, "addr", "", "the address of the logging server")
-	flag.StringVar(&hosts, "hosts", "", "number of hosts in config file")
-	flag.StringVar(&depth, "depth", "", "the depth of the tree")
-	flag.StringVar(&bf, "bf", "Ma", "the branching factor of the tree")
-	flag.StringVar(&hpn, "hpn", "", "number of hosts per node")
-	flag.StringVar(&rate, "rate", "", "the rate of messages")
-	flag.StringVar(&nmsgs, "nmsgs", "", "number of messages per round")
 	flag.StringVar(&master, "master", "", "address of the master of this node")
-	flag.IntVar(&debug, "debug", 3, "Debugging-level")
-
-	deter, _ = deploy.ReadConfig()
-	dbg.DebugVisible = deter.Config.Debug
 
 	Log = Logger{
 		Slock: sync.RWMutex{},
@@ -68,10 +58,17 @@ func init() {
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	deter, err := deploy.ReadConfig()
+	if err != nil {
+		log.Fatal("Couldn't read config in logserver:", err)
+	}
+	cfg = deter.Config
+	dbg.DebugVisible = cfg.Debug
 
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	// read in from flags the port I should be listening on
 	flag.Parse()
+
 	if master == "" {
 		isMaster = true
 	}
@@ -81,7 +78,7 @@ func main() {
 	} else {
 		role = "Servent"
 	}
-	dbg.Lvl3(fmt.Sprintf("running logserver %s  with nmsgs %s branching factor: %s", role, nmsgs, bf))
+	dbg.Lvl1("running logserver", role, "with nmsgs", cfg.Nmsgs, "branching factor: ", cfg.Bf)
 	if isMaster {
 		var err error
 		homePage, err = template.ParseFiles("webfiles/home.html")
@@ -94,7 +91,7 @@ func main() {
 			reverseProxy(s)
 		}
 
-		dbg.Lvl3(fmt.Sprintf("Log server %s running at : %s", role, addr))
+		dbg.Lvl3("Log server", role, "running at :", addr)
 		// /webfiles/Chart.js/Chart.min.js
 		http.HandleFunc("/", homeHandler)
 		fs := http.FileServer(http.Dir("webfiles/"))
@@ -109,15 +106,16 @@ func main() {
 		if err != nil {
 			tries += 1
 			time.Sleep(time.Second)
-			dbg.Lvl3(fmt.Sprintf("Slave log server could not connect to logger master (%s) .. Trying again (%d tries)", master, tries))
+			dbg.Lvl3("Slave log server could not connect to logger master (", master, ") .. Trying again (", tries, ")")
 			goto retry
 		}
-		dbg.Lvl3(fmt.Sprintf("Slave Log server %s running at : %s & connected to Master ", role, addr))
+		dbg.Lvl3("Slave Log server", role, "running at :", addr, "& connected to Master ")
 	}
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))
 	http.HandleFunc("/htmllog", logHandlerHtml)
 	http.HandleFunc("/htmllogrev", logHandlerHtmlReverse)
+	dbg.Lvl1("Log-server", addr, "ready for service")
 	log.Fatalln("ERROR: ", http.ListenAndServe(addr, nil))
 	// now combine that port
 }
@@ -154,7 +152,7 @@ func logEntryHandler(ws *websocket.Conn) {
 }
 
 func logHandler(ws *websocket.Conn) {
-	dbg.Lvl3(fmt.Sprintf("%s log server serving /log (websocket)", master))
+	dbg.Lvl3(master, "log server serving /log (websocket)")
 	i := 0
 	for {
 		Log.Mlock.RLock()
@@ -183,12 +181,13 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	dbg.Lvl3(fmt.Sprintf("%s log server serving %s ", master, r.URL))
+	dbg.Lvl3(master, "log server serving ", r.URL)
 	host := r.Host
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
 
-	err := homePage.Execute(w, Home{ws, hosts, depth, bf, hpn, nmsgs, rate})
+	err := homePage.Execute(w, Home{ws, strconv.Itoa(cfg.Nmachs * cfg.Hpn), strconv.Itoa(cfg.Hpn), strconv.Itoa(cfg.Bf),
+		strconv.Itoa(cfg.Hpn), strconv.Itoa(cfg.Nmsgs), strconv.Itoa(cfg.Rate)})
 	if err != nil {
 		panic(err)
 		log.Fatal(err)
@@ -196,7 +195,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
-	dbg.Lvl3("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
+	dbg.Lvl3("Log handler: ", r.URL, "-", len(Log.Msgs))
 	//host := r.Host
 	// fmt.Println(host)
 	for i, _ := range Log.Msgs {
@@ -212,7 +211,7 @@ func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
 }
 
 func logHandlerHtmlReverse(w http.ResponseWriter, r *http.Request) {
-	dbg.Lvl3("LOG HANDLER: ", r.URL, "-", len(Log.Msgs))
+	dbg.Lvl3("Log handler: ", r.URL, "-", len(Log.Msgs))
 	//host := r.Host
 	// fmt.Println(host)
 	for i := len(Log.Msgs) - 1; i >= 0; i-- {

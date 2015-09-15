@@ -15,6 +15,7 @@ import (
 	"golang.org/x/net/context"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/helpers/debug_lvl"
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/helpers/coconet"
@@ -218,7 +219,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	sn.AnnounceLock.Lock()
 	defer sn.AnnounceLock.Unlock()
 
-	log.Infoln("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
+	dbg.Lvl1("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
 
 	first := time.Now()
 	total := time.Now()

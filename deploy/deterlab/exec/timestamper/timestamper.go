@@ -31,7 +31,8 @@ func GetSuite(suite string) abstract.Suite {
 	return s
 }
 
-func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testConnect bool, failureRate, rFail, fFail int, logger, suite string) {
+func Run(hostname, app string, rounds int, rootwait int, debug int, testConnect bool,
+		failureRate, rFail, fFail int, logger, suite string) {
 	dbg.Lvl1(hostname, "Starting to run")
 	if debug > 1 {
 		sign.DEBUG = true
@@ -52,7 +53,7 @@ func Run(hostname, cfg, app string, rounds int, rootwait int, debug int, testCon
 	if failureRate > 0 || fFail > 0 {
 		opts.Faulty = true
 	}
-	hc, err = oldconfig.LoadConfig(cfg, opts)
+	hc, err = oldconfig.LoadConfig("tree.json", opts)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
