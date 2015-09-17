@@ -23,8 +23,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/deterlab/exec/timestamper"
-	"github.com/dedis/cothority/helpers/logutils"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/deploy"
 )
 

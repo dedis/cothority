@@ -29,9 +29,11 @@ For the moment only the timestamping on Deterlab works:
 
 In the top-level directory, type
 
-```go get ./...
+```
+go get ./...
 go build
-./cothority```
+./cothority
+```
 
 then enter the name of the deterlab-installation, your username and your project-name, and you should
 be ready to go. The arguments are:

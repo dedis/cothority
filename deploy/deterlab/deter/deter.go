@@ -29,10 +29,10 @@ import (
 	"sync"
 	"time"
 
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
-	"github.com/dedis/cothority/helpers/cliutils"
-	"github.com/dedis/cothority/helpers/config"
-	"github.com/dedis/cothority/helpers/graphs"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/deploy"
 )
 
