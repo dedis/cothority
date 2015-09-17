@@ -22,10 +22,12 @@ import (
 	_ "expvar"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/deploy/deterlab/exec/timestamper"
 	"github.com/dedis/cothority/lib/logutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/deploy"
+	"github.com/dedis/cothority/app/sign"
+	"github.com/dedis/cothority/app/schnorr_sign"
+	"github.com/dedis/cothority/app/stamp"
 )
 
 
@@ -36,6 +38,8 @@ var logger string
 var physaddr string
 var amroot bool
 var testConnect bool
+var app string
+var mode string
 
 // TODO: add debug flag for more debugging information (memprofilerate...)
 func init() {
@@ -44,6 +48,8 @@ func init() {
 	flag.StringVar(&physaddr, "physaddr", "", "the physical address of the noded [for deterlab]")
 	flag.BoolVar(&amroot, "amroot", false, "am I root node")
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
+	flag.StringVar(&app, "app", app, "Which application to run [sign, stamp]")
+	flag.StringVar(&mode, "mode", mode, "Run the app in [server,client] mode")
 
 }
 
@@ -99,6 +105,14 @@ func main() {
 
 	dbg.Lvl2("Running timestamp with rFail and fFail: ", conf.RFail, conf.FFail)
 
-	timestamper.Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
-		testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
+	switch app{
+	case "sign":
+		sign.Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
+			testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
+	case "stamp":
+		stamp.Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
+			testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
+	case "schnorr_sign":
+		schnorr_sign.Run(mode, conf)
+	}
 }

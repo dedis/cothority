@@ -1,4 +1,4 @@
-package timestamper
+package main
 
 import (
 	"fmt"
