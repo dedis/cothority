@@ -107,10 +107,9 @@ func main() {
 
 	switch app{
 	case "sign":
-		sign.Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
-			testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
+		sign.Run(mode, conf)
 	case "stamp":
-		stamp.Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
+		Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
 			testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
 	case "schnorr_sign":
 		schnorr_sign.Run(mode, conf)
