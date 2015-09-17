@@ -74,9 +74,9 @@ func main() {
 		wg.Add(1)
 		go func(h string) {
 			defer wg.Done()
-			cliutils.SshRun("", h, "sudo killall exec logserver timeclient scp ssh 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall app logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall exec 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall app 2>/dev/null >/dev/null")
 		}(h)
 	}
 	wg.Wait()
@@ -182,7 +182,7 @@ func main() {
 		}
 		servers := strings.Join(ss, ",")
 		go func(i int, p string) {
-			_, err := cliutils.SshRun("", p, "cd remote; sudo ./timeclient " +
+			_, err := cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
 			" -name=client@" + p +
 			" -server=" + servers +
 			" -logger=" + loggerports[i])

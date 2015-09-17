@@ -128,7 +128,7 @@ func runStaticTest(signType sign.Type, RoundsPerView int, faultyNodes ...int) er
 	// Have root node initiate the signing protocol
 	// via a simple annoucement
 	nodes[0].LogTest = []byte("Hello World")
-	// return nodes[0].Announce(DefaultView, &sign.AnnouncementMessage{LogTest: nodes[0].LogTest, Round: 1})
+	// return nodes[0].Announce(DefaultView, &coll_sign.AnnouncementMessage{LogTest: nodes[0].LogTest, Round: 1})
 	return nodes[0].StartAnnouncement(&sign.AnnouncementMessage{LogTest: nodes[0].LogTest, Round: 1})
 }
 
@@ -456,7 +456,7 @@ func TestViewChangeTCP(t *testing.T) {
 // 	if err != nil {
 // 		t.Error()
 // 	}
-// 	err = hc.Run(false, sign.MerkleTree)
+// 	err = hc.Run(false, coll_sign.MerkleTree)
 // 	if err != nil {
 // 		t.Fatal(err)
 // 	}

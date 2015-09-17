@@ -36,6 +36,7 @@ import (
 	_ "errors"
 	"github.com/dedis/cothority/lib/config"
 	"bufio"
+	"path"
 )
 
 
@@ -101,16 +102,17 @@ func (d *Deter) Build(build string) (error) {
 	os.Mkdir(d.BuildDir, 0777)
 
 	// start building the necessary packages
-	packages := []string{"logserver", "timeclient", "forkexec", "exec", "deter"}
+	packages := []string{"logserver", "forkexec", "../../app", "deter"}
 	if build != "" {
 		packages = strings.Split(build, ",")
 	}
 	dbg.Lvl2("Starting to build all executables", packages)
 	for _, p := range packages {
-		dbg.Lvl3("Building ", p)
+		basename := path.Base(p)
+		dbg.Lvl3("Building ", p, "into", basename)
 		wg.Add(1)
-		src := p + "/" + p + ".go"
-		dst := d.BuildDir + "/" + p
+		src := p + "/" + basename + ".go"
+		dst := d.BuildDir + "/" + basename
 		if p == "deter" {
 			go func(s, d string) {
 				defer wg.Done()

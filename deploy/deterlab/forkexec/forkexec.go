@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 	"os"
 "github.com/dedis/cothority/deploy"
+	"fmt"
 )
 
 // Wrapper around exec.go to enable measuring of cpu time
@@ -53,14 +54,17 @@ func main() {
 		log.AddHook(lh)
 	}
 
+	app := fmt.Sprintf("-app=%s", conf.App)
 	args := []string{
 		"-hostname=" + hostname,
 		"-logger=" + logger,
 		"-physaddr=" + physaddr,
 		"-amroot=" + strconv.FormatBool(amroot),
 		"-test_connect=" + strconv.FormatBool(testConnect),
+		"-mode=server",
+		app,
 	}
-	cmd := exec.Command("./exec", args...)
+	cmd := exec.Command("./app", args...)
 	//cmd.Stdout = log.StandardLogger().Writer()
 	//cmd.Stderr = log.StandardLogger().Writer()
 	cmd.Stdout = os.Stdout

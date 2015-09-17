@@ -23,7 +23,7 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 )
 
-type Type int // used by other modules as sign.Type
+type Type int // used by other modules as coll_sign.Type
 
 const (
 	// Default Signature involves creating Merkle Trees

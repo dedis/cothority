@@ -55,7 +55,7 @@ var StampTestSingle = []T{
 }
 
 var SignTestSingle = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "sign"},
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
 }
 
 func Start(destination string, nbld bool, build string, machines int) {
@@ -72,9 +72,9 @@ func Start(destination string, nbld bool, build string, machines int) {
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
 	//RunTests("hosts_test_short", HostsTestShort)
-	RunTests("hosts_test", HostsTest)
+	//RunTests("hosts_test", HostsTest)
 	//RunTests("stamp_test_single", StampTestSingle)
-	//RunTests("sing_test_single", SignTestSingle)
+	RunTests("sing_test_single", SignTestSingle)
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
 	//RunTests("hosts_test", HostsTest)

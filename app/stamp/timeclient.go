@@ -1,4 +1,4 @@
-package main
+package stamp
 
 import (
 	"flag"
@@ -6,27 +6,14 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
-	"github.com/dedis/cothority/lib/oldconfig"
-	"github.com/dedis/cothority/deploy/deterlab/timeclient/stampclient"
 	"github.com/dedis/cothority/deploy"
 )
 
 var deter *deploy.Deter
 var conf *deploy.Config
-var server string
 var name string
-var logger string
 
-func init() {
-	addr, _ := oldconfig.GetAddress()
-	// TODO: change to take in list of servers: comma separated no spaces
-	//   -server=s1,s2,s3,...
-	flag.StringVar(&server, "server", "", "the timestamping servers to contact")
-	flag.StringVar(&name, "name", addr, "name for the client")
-	flag.StringVar(&logger, "logger", "", "remote logger")
-}
-
-func main() {
+func RunClient(server, logger string) {
 	deter, err := deploy.ReadConfig()
 	if err != nil {
 		log.Fatal("Couldn't load config-file in timeclient:", err)
@@ -46,6 +33,6 @@ func main() {
 		log.AddHook(lh)
 	}
 	dbg.Lvl2("Timeclient starts")
-	stampclient.Run(server, conf.Nmsgs, name, conf.Rate)
+	Run(server, conf.Nmsgs, name, conf.Rate)
 	dbg.Lvl2("Timeclient.go ", name, "main() ", name, " finished...")
 }
