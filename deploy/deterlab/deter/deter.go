@@ -158,13 +158,6 @@ func main() {
 			master = ""
 		}
 
-		// Copy configuration file to make higher file-limits
-		err = cliutils.SshRunStdout("", logger, "sudo cp remote/cothority.conf /etc/security/limits.d")
-
-		if err != nil {
-			log.Fatal("Couldn't copy limit-file:", err)
-		}
-
 		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +
 		" -master=" + master)
 	}

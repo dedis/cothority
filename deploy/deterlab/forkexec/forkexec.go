@@ -39,6 +39,12 @@ func main() {
 	conf = deter.Config
 	dbg.DebugVisible = conf.Debug
 
+	// Copy configuration file to make higher file-limits
+	err = exec.Command("sudo", "cp", "remote/cothority.conf", "/etc/security/limits.d").Run()
+	if err != nil {
+		log.Fatal("Couldn't copy limit-file:", err)
+	}
+
 	flag.Parse()
 
 	// connect with the logging server
