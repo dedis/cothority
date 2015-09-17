@@ -1,11 +1,11 @@
 // usage exec:
 //
-// exec -name "hostname" -config "tree.json"
+// exec -name "appConf.Hostname" -config "tree.json"
 //
 // -name indicates the name of the node in the tree.json
 //
 // -config points to the file that holds the configuration.
-//     This configuration must be in terms of the final hostnames.
+//     This configuration must be in terms of the final appConf.Hostnames.
 //
 // pprof runs on the physical address space [if there is a virtual and physical network layer]
 // and if one is specified.
@@ -26,32 +26,25 @@ import (
 	"github.com/dedis/cothority/app/coll_sign"
 	"github.com/dedis/cothority/app/schnorr_sign"
 	"github.com/dedis/cothority/app/coll_stamp"
+	"github.com/dedis/cothority/lib/config"
+	"os"
 )
-
 
 var deter *deploy.Deter
 var conf *deploy.Config
-var hostname string
-var logger string
-var physaddr string
-var amroot bool
-var testConnect bool
-var app string
-var mode string
-var server string
-var name string
+var appConf config.AppConfig
 
 // TODO: add debug flag for more debugging information (memprofilerate...)
 func init() {
-	flag.StringVar(&hostname, "hostname", "", "the hostname of this node")
-	flag.StringVar(&logger, "logger", "", "remote logger")
-	flag.StringVar(&physaddr, "physaddr", "", "the physical address of the noded [for deterlab]")
-	flag.BoolVar(&amroot, "amroot", false, "am I root node")
-	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
-	flag.StringVar(&app, "app", app, "Which application to run [coll_sign, coll_stamp]")
-	flag.StringVar(&mode, "mode", mode, "Run the app in [server,client] mode")
-	flag.StringVar(&name, "name", name, "Name of the node")
-	flag.StringVar(&server, "server", "", "the timestamping servers to contact")
+	flag.StringVar(&appConf.Hostname, "hostname", "", "the appConf.Hostname of this node")
+	flag.StringVar(&appConf.Logger, "logger", "", "remote appConf.Logger")
+	flag.StringVar(&appConf.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
+	flag.BoolVar(&appConf.AmRoot, "amroot", false, "am I root node")
+	flag.BoolVar(&appConf.TestConnect, "test_connect", false, "test connecting and disconnecting")
+	flag.StringVar(&appConf.App, "app", appConf.App, "Which application to run [coll_sign, coll_stamp]")
+	flag.StringVar(&appConf.Mode, "mode", appConf.Mode, "Run the app in [server,client] mode")
+	flag.StringVar(&appConf.Name, "name", appConf.Name, "Name of the node")
+	flag.StringVar(&appConf.Server, "server", "", "the timestamping servers to contact")
 }
 
 func main() {
@@ -64,16 +57,16 @@ func main() {
 
 	flag.Parse()
 
-	dbg.Lvl1("Running Timestamper", hostname, "with logger", logger)
+	dbg.Lvl1("Running Timestamper", appConf.Hostname, "with logger at", appConf.Logger)
 	defer func() {
-		log.Errorln("Terminating host", hostname)
+		log.Errorln("Terminating host", appConf.Hostname)
 	}()
 
 	// connect with the logging server
-	if logger != "" && (amroot || conf.Debug > 0) {
-		// blocks until we can connect to the logger
-		dbg.Lvl1(hostname, "Connecting to Logger")
-		lh, err := logutils.NewLoggerHook(logger, hostname, conf.App)
+	if appConf.Logger != "" && (appConf.AmRoot || conf.Debug > 0) {
+		// blocks until we can connect to the appConf.Logger
+		dbg.Lvl1(appConf.Hostname, "Connecting to Logger")
+		lh, err := logutils.NewLoggerHook(appConf.Logger, appConf.Hostname, conf.App)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -81,43 +74,41 @@ func main() {
 		}
 		log.AddHook(lh)
 		//log.SetOutput(ioutil.Discard)
-		//fmt.Println("exiting logger block")
-		dbg.Lvl3(hostname, "Done setting up hook")
-	}
-	if physaddr == "" {
-		h, _, err := net.SplitHostPort(hostname)
-		if err != nil {
-			log.Fatal(hostname, "improperly formatted hostname")
-		}
-		physaddr = h
+		//fmt.Println("exiting appConf.Logger block")
+		dbg.Lvl3(appConf.Hostname, "Done setting up hook")
 	}
 
-	// run an http server to serve the cpu and memory profiles
-	go func() {
-		_, port, err := net.SplitHostPort(hostname)
-		if err != nil {
-			log.Fatal(hostname, "improperly formatted hostname: should be host:port")
+	if appConf.Mode == "server" {
+		if appConf.PhysAddr == "" {
+			h, _, err := net.SplitHostPort(appConf.Hostname)
+			if err != nil {
+				log.Fatal(appConf.Hostname, "improperly formatted hostname", os.Args)
+			}
+			appConf.PhysAddr = h
 		}
-		p, _ := strconv.Atoi(port)
-		// uncomment if more fine grained memory debuggin is needed
-		//runtime.MemProfileRate = 1
-		dbg.Lvl2(http.ListenAndServe(net.JoinHostPort(physaddr, strconv.Itoa(p + 2)), nil))
-	}()
+
+		// run an http server to serve the cpu and memory profiles
+		go func() {
+			_, port, err := net.SplitHostPort(appConf.Hostname)
+			if err != nil {
+				log.Fatal(appConf.Hostname, "improperly formatted hostname: should be host:port")
+			}
+			p, _ := strconv.Atoi(port)
+			// uncomment if more fine grained memory debuggin is needed
+			//runtime.MemProfileRate = 1
+			dbg.Lvl2(http.ListenAndServe(net.JoinHostPort(appConf.PhysAddr, strconv.Itoa(p + 2)), nil))
+		}()
+	}
 
 	dbg.Lvl2("Running timestamp with rFail and fFail: ", conf.RFail, conf.FFail)
 
-	switch app{
+	switch appConf.App{
 	case "coll_sign":
-		coll_sign.Run(mode, hostname, conf)
+		coll_sign.Run(&appConf, conf)
 	case "coll_stamp":
-		if mode == "server" {
-			coll_stamp.RunServer(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
-				testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
-		}else {
-			coll_stamp.RunClientSetup(logger, server);
-		}
+		coll_stamp.Run(&appConf, conf)
 	case "schnorr_sign":
-		schnorr_sign.Run(mode, conf)
+		schnorr_sign.Run(&appConf, conf)
 	}
 }
 

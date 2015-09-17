@@ -13,15 +13,14 @@ import (
 )
 
 // Dispatch-function for running either client or server (mode-parameter)
-func Run(mode string, hostname string, conf *deploy.Config) {
+func Run(app *config.AppConfig, conf *deploy.Config) {
 	// Do some common setup
-	dbg.Lvl1(hostname, "Starting to run")
+	dbg.Lvl1(app.Hostname, "Starting to run")
 	if conf.Debug > 1 {
 		sign.DEBUG = true
 	}
 
-	// fmt.Println("EXEC TIMESTAMPER: " + hostname)
-	if hostname == "" {
+	if app.Hostname == "" {
 		fmt.Println("hostname is empty")
 		log.Fatal("no hostname given")
 	}
@@ -31,7 +30,7 @@ func Run(mode string, hostname string, conf *deploy.Config) {
 	var hc *config.HostConfig
 	var err error
 	s := GetSuite(conf.Suite)
-	opts := config.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
+	opts := config.ConfigOptions{ConnType: "tcp", Host: app.Hostname, Suite: s}
 	if conf.Failures > 0 || conf.FFail > 0 {
 		opts.Faulty = true
 	}
@@ -62,17 +61,17 @@ func Run(mode string, hostname string, conf *deploy.Config) {
 	}
 
 	// run this specific host
-	err = hc.Run(true, sign.MerkleTree, hostname)
+	err = hc.Run(true, sign.MerkleTree, app.Hostname)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer func(sn *sign.Node) {
-		dbg.Lvl1("Collective Signing", hostname, "has terminated in mode", mode)
+		dbg.Lvl1("Collective Signing", app.Hostname, "has terminated in mode", app.Mode)
 		sn.Close()
 	}(hc.SNodes[0])
 
-	switch mode{
+	switch app.Mode{
 	case "client":
 		RunClient(conf, hc)
 	case "server":

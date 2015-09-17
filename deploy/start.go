@@ -64,6 +64,10 @@ var SignTestMulti = []T{
 	{0, 4, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
 }
 
+var HostsTestSingle = []T{
+	{0, 64, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
+}
+
 func Start(destination string, nbld bool, build string, machines int) {
 	deployP.Configure(deploy_config)
 	nobuild = nbld
@@ -109,7 +113,6 @@ func Start(destination string, nbld bool, build string, machines int) {
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, ts []T) {
 	for i, _ := range ts {
-		ts[i].bf = deploy_config.Bf
 		ts[i].nmachs = deploy_config.Nmachs
 	}
 
@@ -319,10 +322,6 @@ func FullTests() []T {
 	}
 
 	return tests
-}
-
-var HostsTestSingle = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 
 var HostsTestShort = []T{

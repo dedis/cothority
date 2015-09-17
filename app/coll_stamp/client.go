@@ -1,226 +1,152 @@
 package coll_stamp
 
 import (
-	"bytes"
-	"errors"
+	"crypto/rand"
 	"io"
+	"net"
+	"strconv"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/coconet"
-	"github.com/dedis/cothority/proto/sign"
-	"fmt"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/logutils"
 )
 
-type Client struct {
-	Mux         sync.Mutex              // coarse grained mutex
+var muStats sync.Mutex
+var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
+var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
 
-	name        string
-	Servers     map[string]coconet.Conn // signing nodes I work/ communicate with
 
-										// client history maps request numbers to replies from TSServer
-										// maybe at later phases we will want pair(reqno, TSServer) as key
-	history     map[SeqNo]TimeStampMessage
-	reqno       SeqNo                   // next request number in communications with TSServer
+func RunClient(server string, nmsgs int, name string, rate int) {
+	dbg.Lvl3("Starting to run stampclient")
+	c := NewClient(name)
+	servers := strings.Split(server, ",")
 
-										// maps response request numbers to channels confirming
-										// where response confirmations are sent
-	doneChan    map[SeqNo]chan error
+	// connect to all the servers listed
+	for _, s := range servers {
+		h, p, err := net.SplitHostPort(s)
+		if err != nil {
+			log.Fatal("improperly formatted host")
+		}
+		pn, _ := strconv.Atoi(p)
+		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn + 1))))
+	}
 
-	nRounds     int                     // # of last round messages were received in, as perceived by client
-	curRoundSig []byte                  // merkle tree root of last round
-										// roundChan   chan int // round numberd are sent in as rounds change
-	Error       error
-}
+	// Check if somebody asks for the old way
+	if rate < 0 {
+		log.Fatal("ROUNDS BASED RATE LIMITING DEPRECATED")
+	}
 
-func NewClient(name string) (c *Client) {
-	c = &Client{name: name}
-	c.Servers = make(map[string]coconet.Conn)
-	c.history = make(map[SeqNo]TimeStampMessage)
-	c.doneChan = make(map[SeqNo]chan error)
-	// c.roundChan = make(chan int)
+	// Stream time coll_stamp requests
+	// if rate specified send out one message every rate milliseconds
+	dbg.Lvl1(name, "starting to stream at rate", rate)
+	streamMessgs(c, servers, rate)
+	dbg.Lvl3("Finished streaming")
 	return
 }
 
-func (c *Client) Name() string {
-	return c.name
+func AggregateStats(buck, roundsAfter, times []int64) string {
+	muStats.Lock()
+	log.WithFields(log.Fields{
+		"file":        logutils.File(),
+		"type":        "client_msg_stats",
+		"buck":        removeTrailingZeroes(buck),
+		"roundsAfter": removeTrailingZeroes(roundsAfter),
+		"times":       removeTrailingZeroes(times),
+	}).Info("")
+	muStats.Unlock()
+	return "Client Finished Aggregating Statistics"
 }
 
-func (c *Client) Close() {
-	for _, c := range c.Servers {
-		c.Close()
-	}
-}
-
-func (c *Client) handleServer(s coconet.Conn) error {
-	for {
-		tsm := &TimeStampMessage{}
-		err := s.Get(tsm)
+func genRandomMessages(n int) [][]byte {
+	msgs := make([][]byte, n)
+	for i := range msgs {
+		msgs[i] = make([]byte, hashid.Size)
+		_, err := rand.Read(msgs[i])
 		if err != nil {
-			if err == coconet.ErrNotEstablished {
-				continue
-			}
-			if sign.DEBUG {
-				log.Warn("error getting from connection:", err)
-			}
-			return err
+			log.Fatal("failed to generate random commit:", err)
 		}
-		c.handleResponse(tsm)
 	}
+	return msgs
 }
 
-// Act on type of response received from srrvr
-func (c *Client) handleResponse(tsm *TimeStampMessage) {
-	switch tsm.Type {
-	default:
-		log.Println("Message of unknown type")
-	case StampReplyType:
-		// Process reply and inform done channel associated with
-		// reply sequence number that the reply was received
-		// we know that there is no error at this point
-		c.ProcessStampReply(tsm)
-
+func removeTrailingZeroes(a []int64) []int64 {
+	i := len(a) - 1
+	for ; i >= 0; i-- {
+		if a[i] != 0 {
+			break
+		}
 	}
+	return a[:i + 1]
 }
 
-func (c *Client) AddServer(name string, conn coconet.Conn) {
-	//c.Servers[name] = conn
-	go func(conn coconet.Conn) {
-		maxwait := 30 * time.Second
-		curWait := 100 * time.Millisecond
-		for {
-			err := conn.Connect()
-			if err != nil {
-				time.Sleep(curWait)
-				curWait = curWait * 2
-				if curWait > maxwait {
-					curWait = maxwait
-				}
-				continue
-			} else {
-				c.Mux.Lock()
-				c.Servers[name] = conn
-				c.Mux.Unlock()
-				if sign.DEBUG {
-					log.Println("SUCCESS: connected to server:", conn)
-				}
-				err := c.handleServer(conn)
-				// if a server encounters any terminating error
-				// terminate all pending client transactions and kill the client
-				if err != nil {
-					if sign.DEBUG {
-						log.Errorln("EOF DETECTED: sending EOF to all pending TimeStamps")
-					}
-					c.Mux.Lock()
-					for _, ch := range c.doneChan {
-						if sign.DEBUG {
-							log.Println("Sending to Receiving Channel")
-						}
-						ch <- io.EOF
-					}
-					c.Error = io.EOF
-					c.Mux.Unlock()
-					return
+func streamMessgs(c *Client, servers []string, rate int) {
+	dbg.Lvl3("STREAMING: GIVEN RATE", rate)
+	// buck[i] = # of timestamp responses received in second i
+	buck := make([]int64, MAX_N_SECONDS)
+	// roundsAfter[i] = # of timestamp requests that were processed i rounds late
+	roundsAfter := make([]int64, MAX_N_ROUNDS)
+	times := make([]int64, MAX_N_SECONDS * 1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
+	ticker := time.Tick(time.Duration(rate) * time.Millisecond)
+	msg := genRandomMessages(1)[0]
+	i := 0
+	nServers := len(servers)
+
+	retry:
+	err := c.TimeStamp(msg, servers[0])
+	if err == io.EOF || err == coconet.ErrClosed {
+		dbg.Lvl3("Client", c.Name(), "DONE: couldn't connect to TimeStamp")
+		log.Fatal(AggregateStats(buck, roundsAfter, times))
+	} else if err == ErrClientToTSTimeout {
+		log.Errorln(err)
+	} else if err != nil {
+		time.Sleep(500 * time.Millisecond)
+		goto retry
+	}
+
+	tFirst := time.Now()
+
+	// every tick send a time coll_stamp request to every server specified
+	// this will stream until we get an EOF
+	tick := 0
+	for _ = range ticker {
+		tick += 1
+		go func(msg []byte, s string, tick int) {
+			t0 := time.Now()
+			err := c.TimeStamp(msg, s)
+			t := time.Since(t0)
+
+			if err == io.EOF || err == coconet.ErrClosed {
+				if err == io.EOF {
+					dbg.Lvl3("CLIENT ", c.Name(), "DONE: terminating due to EOF", s)
 				} else {
-					// try reconnecting if it didn't close the channel
-					continue
+					dbg.Lvl3("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed", s)
 				}
+				log.Fatal(AggregateStats(buck, roundsAfter, times))
+			} else if err != nil {
+				// ignore errors
+				dbg.Lvl3("CLIENT ", c.Name(), "Leaving out streamMessages. ", err)
+				return
 			}
-		}
-	}(conn)
-}
 
-// Send data to server given by name (data should be a timestamp request)
-func (c *Client) PutToServer(name string, data coconet.BinaryMarshaler) error {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	conn := c.Servers[name]
-	if conn == nil {
-		return errors.New(fmt.Sprintf("INVALID SERVER/NOT CONNECTED", name, c.Servers[name]))
-	}
-	return conn.Put(data)
-}
+			// TODO: we might want to subtract a buffer from secToTimeStamp
+			// to account for computation time
+			secToTimeStamp := t.Seconds()
+			secSinceFirst := time.Since(tFirst).Seconds()
+			atomic.AddInt64(&buck[int(secSinceFirst)], 1)
+			index := int(secToTimeStamp) / int(ROUND_TIME / time.Second)
+			atomic.AddInt64(&roundsAfter[index], 1)
+			atomic.AddInt64(&times[tick], t.Nanoseconds())
 
-var ErrClientToTSTimeout error = errors.New("client timeouted on waiting for response")
+		}(msg, servers[i], tick)
 
-// When client asks for val to be timestamped
-// It blocks until it get a coll_stamp reply back
-func (c *Client) TimeStamp(val []byte, TSServerName string) error {
-	c.Mux.Lock()
-	if c.Error != nil {
-		c.Mux.Unlock()
-		return c.Error
-	}
-	c.reqno++
-	myReqno := c.reqno
-	c.doneChan[c.reqno] = make(chan error, 1) // new done channel for new req
-	c.Mux.Unlock()
-	// send request to TSServer
-	//log.Debug(c.Name(), "SENDING TIME STAMP REQUEST TO: ", TSServerName)
-	err := c.PutToServer(TSServerName,
-		&TimeStampMessage{
-			Type:  StampRequestType,
-			ReqNo: myReqno,
-			Sreq:  &StampRequest{Val: val}})
-	if err != nil {
-		if err != coconet.ErrNotEstablished {
-			if sign.DEBUG {
-				log.Warn(c.Name(), "error timestamping to ", TSServerName, ": ", err)
-			}
-		}
-		// pass back up all errors from putting to server
-		return err
+		i = (i + 1) % nServers
 	}
 
-	// get channel associated with request
-	c.Mux.Lock()
-	myChan := c.doneChan[myReqno]
-	c.Mux.Unlock()
-
-	// wait until ProcessStampReply signals that reply was received
-	select {
-	case err = <-myChan:
-		//log.Println("-------------client received  response from" + TSServerName)
-		break
-	case <-time.After(10 * ROUND_TIME):
-		if sign.DEBUG == true {
-			log.Errorln(errors.New("client timeouted on waiting for response from" + TSServerName))
-		}
-		break
-	// err = ErrClientToTSTimeout
-	}
-	if err != nil {
-		if sign.DEBUG {
-			log.Errorln(c.Name(), "error received from DoneChan:", err)
-		}
-		return err
-	}
-
-	// delete channel as it is of no longer meaningful
-	c.Mux.Lock()
-	delete(c.doneChan, myReqno)
-	c.Mux.Unlock()
-	return err
-}
-
-func (c *Client) ProcessStampReply(tsm *TimeStampMessage) {
-	// update client history
-	c.Mux.Lock()
-	c.history[tsm.ReqNo] = *tsm
-	done := c.doneChan[tsm.ReqNo]
-
-	// can keep track of rounds by looking at changes in the signature
-	// sent back in a messages
-	if bytes.Compare(tsm.Srep.Sig, c.curRoundSig) != 0 {
-		c.curRoundSig = tsm.Srep.Sig
-		c.nRounds++
-
-		c.Mux.Unlock()
-		//c.roundChan <- c.nRounds
-	} else {
-		c.Mux.Unlock()
-	}
-	done <- nil
 }

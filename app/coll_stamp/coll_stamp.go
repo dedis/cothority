@@ -7,14 +7,24 @@ import (
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/config"
 	"time"
-	"github.com/dedis/cothority/lib/logutils"
 	"fmt"
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/abstract"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/deploy"
 )
+
+func Run(app *config.AppConfig, proto *deploy.Config) {
+	switch app.Mode{
+	case "server":
+		RunServer(app.Hostname, app.App, proto.Rounds, proto.RootWait, proto.Debug, app.TestConnect,
+			proto.Failures, proto.RFail, proto.FFail, app.Logger, proto.Suite)
+	case "client":
+		RunClient(app.Server, proto.Nmsgs, app.Name, proto.Rate)
+	}
+}
 
 
 func GetSuite(suite string) abstract.Suite {
@@ -31,6 +41,7 @@ func GetSuite(suite string) abstract.Suite {
 	}
 	return s
 }
+
 
 func RunServer(hostname, app string, rounds int, rootwait int, debug int, testConnect bool,
 failureRate, rFail, fFail int, logger, suite string) {
@@ -60,23 +71,17 @@ failureRate, rFail, fFail int, logger, suite string) {
 		log.Fatal(err)
 	}
 
-	// set FailureRates
-	if failureRate > 0 {
-		for i := range hc.SNodes {
+	for i := range hc.SNodes {
+		// set FailureRates
+		if failureRate > 0 {
 			hc.SNodes[i].FailureRate = failureRate
 		}
-	}
-
-	// set root failures
-	if rFail > 0 {
-		for i := range hc.SNodes {
+		// set root failures
+		if rFail > 0 {
 			hc.SNodes[i].FailAsRootEvery = rFail
-
 		}
-	}
-	// set follower failures
-	// a follower fails on %ffail round with failureRate probability
-	for i := range hc.SNodes {
+		// set follower failures
+		// a follower fails on %ffail round with failureRate probability
 		hc.SNodes[i].FailAsFollowerEvery = fFail
 	}
 
@@ -93,75 +98,38 @@ failureRate, rFail, fFail int, logger, suite string) {
 		sn.Close()
 	}(hc.SNodes[0])
 
-	if app == "coll_sign" {
-		//dbg.Lvl2("RUNNING Node")
-		// if I am root do the announcement message
-		if hc.SNodes[0].IsRoot(0) {
-			time.Sleep(3 * time.Second)
-			start := time.Now()
-			iters := 10
+	stampers, _, err := RunTimestamper(hc, 0, hostname)
+	// get rid of the hc information so it can be GC'ed
+	hc = nil
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, s := range stampers {
+		// only listen if this is the hostname specified
+		if s.Name() == hostname {
+			s.Logger = logger
+			s.Hostname = hostname
+			s.App = app
+			if s.IsRoot(0) {
+				dbg.Lvl1("Root timestamper at:", hostname, rounds, "Waiting: ", rootwait)
+				// wait for the other nodes to get set up
+				time.Sleep(time.Duration(rootwait) * time.Second)
 
-			for i := 0; i < iters; i++ {
-				//time.Sleep(3 * time.Second)
-				start = time.Now()
-				//fmt.Println("ANNOUNCING")
-				hc.SNodes[0].LogTest = []byte("Hello World")
-				dbg.Lvl2("Going to launch announcement ", hc.SNodes[0].Name())
-				err = hc.SNodes[0].Announce(0,
-					&sign.AnnouncementMessage{
-						LogTest: hc.SNodes[0].LogTest,
-						Round:   i})
-				if err != nil {
-					dbg.Lvl1(err)
-				}
-				elapsed := time.Since(start)
-				log.WithFields(log.Fields{
-					"file":  logutils.File(),
-					"type":  "root_announce",
-					"round": i,
-					"time":  elapsed,
-				}).Info("")
-			}
+				dbg.Lvl1("Starting root-round")
+				s.Run("root", rounds)
+				// dbg.Lvl2("\n\nROOT DONE\n\n")
 
-		} else {
-			// otherwise wait a little bit (hopefully it finishes by the end of this)
-			time.Sleep(30 * time.Second)
-		}
-	} else if app == "coll_stamp" || app == "vote" {
-		stampers, _, err := RunTimestamper(hc, 0, hostname)
-		// get rid of the hc information so it can be GC'ed
-		hc = nil
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, s := range stampers {
-			// only listen if this is the hostname specified
-			if s.Name() == hostname {
-				s.Logger = logger
-				s.Hostname = hostname
-				s.App = app
-				if s.IsRoot(0) {
-					dbg.Lvl1("Root timestamper at:", hostname, rounds, "Waiting: ", rootwait)
-					// wait for the other nodes to get set up
-					time.Sleep(time.Duration(rootwait) * time.Second)
-
-					dbg.Lvl1("Starting root-round")
-					s.Run("root", rounds)
-					// dbg.Lvl2("\n\nROOT DONE\n\n")
-
-				} else if !testConnect {
-					dbg.Lvl1("Running regular timestamper on:", hostname)
-					s.Run("regular", rounds)
-					// dbg.Lvl1("\n\nREGULAR DONE\n\n")
-				} else {
-					// testing connection
-					dbg.Lvl1("Running connection-test on:", hostname)
-					s.Run("test_connect", rounds)
-				}
+			} else if !testConnect {
+				dbg.Lvl1("Running regular timestamper on:", hostname)
+				s.Run("regular", rounds)
+				// dbg.Lvl1("\n\nREGULAR DONE\n\n")
+			} else {
+				// testing connection
+				dbg.Lvl1("Running connection-test on:", hostname)
+				s.Run("test_connect", rounds)
 			}
 		}
 	}
-
 }
 
 // run each host in hostnameSlice with the number of clients given
