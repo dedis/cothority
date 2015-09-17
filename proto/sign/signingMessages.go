@@ -7,8 +7,8 @@ import (
 	"github.com/dedis/crypto/edwards"
 	//"github.com/dedis/crypto/nist"
 	"github.com/dedis/protobuf"
-	"github.com/dedis/cothority/helpers/hashid"
-	"github.com/dedis/cothority/helpers/proof"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
 )
 
 // All message structures defined in this package are used in the

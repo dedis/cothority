@@ -1,7 +1,7 @@
 package debug_lvl_test
 
 import (
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 func init(){

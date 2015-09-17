@@ -5,7 +5,7 @@
 package main
 import "flag"
 import (
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/deploy"
 )
 

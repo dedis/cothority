@@ -7,13 +7,13 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/cothority/helpers/coconet"
-	"github.com/dedis/cothority/helpers/hashid"
-	"github.com/dedis/cothority/helpers/proof"
-	"github.com/dedis/cothority/protocols/sign"
-	"github.com/dedis/cothority/helpers/logutils"
+	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/logutils"
 )
 
 type Server struct {
