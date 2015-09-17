@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/sign"
-	"github.com/dedis/cothority/lib/oldconfig"
+	"github.com/dedis/cothority/lib/config"
 )
 
 // Configuration file data/exconf.json
@@ -15,7 +15,7 @@ import (
 //    / \   \
 //   2   3   5
 func TestTreeSmallConfigVote(t *testing.T) {
-	hc, err := oldconfig.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("../test/data/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestTreeSmallConfigVote(t *testing.T) {
 }
 
 func TestTCPStaticConfigVote(t *testing.T) {
-	hc, err := oldconfig.LoadConfig("../test/data/extcpconf.json", oldconfig.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Error(err)
 	}

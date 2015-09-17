@@ -6,7 +6,7 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"fmt"
 	"log"
-	"github.com/dedis/cothority/lib/oldconfig"
+	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/crypto/nist"
 "github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/abstract"
@@ -28,14 +28,14 @@ func Run(mode string, hostname string, conf *deploy.Config) {
 
 	// load the configuration
 	//dbg.Lvl2("loading configuration")
-	var hc *oldconfig.HostConfig
+	var hc *config.HostConfig
 	var err error
 	s := GetSuite(conf.Suite)
-	opts := oldconfig.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
+	opts := config.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
 	if conf.Failures > 0 || conf.FFail > 0 {
 		opts.Faulty = true
 	}
-	hc, err = oldconfig.LoadConfig("tree.json", opts)
+	hc, err = config.LoadConfig("tree.json", opts)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)

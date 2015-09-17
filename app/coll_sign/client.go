@@ -6,10 +6,10 @@ import (
 	"github.com/dedis/cothority/proto/sign"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/oldconfig"
+	"github.com/dedis/cothority/lib/config"
 )
 
-func RunClient(conf *deploy.Config, hc *oldconfig.HostConfig) {
+func RunClient(conf *deploy.Config, hc *config.HostConfig) {
 	if hc.SNodes[0].IsRoot(0) {
 		time.Sleep(3 * time.Second)
 		start := time.Now()

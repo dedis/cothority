@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/sign"
-	"github.com/dedis/cothority/lib/oldconfig"
+	"github.com/dedis/cothority/lib/config"
 )
 
 // func init() {
@@ -14,7 +14,7 @@ import (
 
 // one after the other by the root (one signature per message created)
 func SimpleRoundsThroughput(N int, b *testing.B) {
-	hc, _ := oldconfig.LoadConfig("../test/data/extcpconf.json", oldconfig.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, _ := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	hc.Run(false, sign.PubKey)
 
 	for n := 0; n < b.N; n++ {

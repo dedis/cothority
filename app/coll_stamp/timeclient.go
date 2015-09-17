@@ -13,7 +13,7 @@ var deter *deploy.Deter
 var conf *deploy.Config
 var name string
 
-func RunClient(server, logger string) {
+func RunClientSetup(server, logger string) {
 	deter, err := deploy.ReadConfig()
 	if err != nil {
 		log.Fatal("Couldn't load config-file in timeclient:", err)
@@ -33,6 +33,6 @@ func RunClient(server, logger string) {
 		log.AddHook(lh)
 	}
 	dbg.Lvl2("Timeclient starts")
-	Run(server, conf.Nmsgs, name, conf.Rate)
+	RunClient(server, conf.Nmsgs, name, conf.Rate)
 	dbg.Lvl2("Timeclient.go ", name, "main() ", name, " finished...")
 }

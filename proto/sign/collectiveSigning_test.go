@@ -12,8 +12,10 @@ import (
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/cothority/coconet"
-	"github.com/dedis/cothority/lib/oldconfig"
+	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/sign"
+	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/coconet"
 )
 
 // NOTE: when announcing must provide round numbers
@@ -184,14 +186,14 @@ func TestSmallConfigFaulty2(t *testing.T) {
 }
 
 func runTreeSmallConfig(signType sign.Type, RoundsPerView int, suite abstract.Suite, failureRate int, faultyNodes ...int) error {
-	var hc *oldconfig.HostConfig
+	var hc *config.HostConfig
 	var err error
-	opts := oldconfig.ConfigOptions{Suite: suite}
+	opts := config.ConfigOptions{Suite: suite}
 
 	if len(faultyNodes) > 0 {
 		opts.Faulty = true
 	}
-	hc, err = oldconfig.LoadConfig("../test/data/exconf.json", opts)
+	hc, err = config.LoadConfig("../test/data/exconf.json", opts)
 	if err != nil {
 		return err
 	}
@@ -236,7 +238,7 @@ func TestTreeFromBigConfig(t *testing.T) {
 	// not mixing view changes in
 	RoundsPerView := 100
 
-	hc, err := oldconfig.LoadConfig("../test/data/exwax.json")
+	hc, err := config.LoadConfig("../test/data/exwax.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +273,7 @@ func TestMultipleRounds(t *testing.T) {
 	}
 	// not mixing view changes in
 	RoundsPerView := 100
-	hc, err := oldconfig.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("../test/data/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -308,7 +310,7 @@ func TestTCPStaticConfig(t *testing.T) {
 	// not mixing view changes in
 	RoundsPerView := 100
 	time.Sleep(5 * time.Second)
-	hc, err := oldconfig.LoadConfig("../test/data/extcpconf.json", oldconfig.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Error(err)
 	}
@@ -342,7 +344,7 @@ func TestTCPStaticConfigRounds(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
-	hc, err := oldconfig.LoadConfig("../test/data/extcpconf.json", oldconfig.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Fatal("error loading configuration: ", err)
 	}
@@ -379,7 +381,7 @@ func TestViewChangeChan(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
-	hc, err := oldconfig.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("../test/data/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -424,7 +426,7 @@ func TestViewChangeTCP(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
-	hc, err := oldconfig.LoadConfig("../test/data/extcpconf.json", oldconfig.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Fatal("error loading configuration: ", err)
 	}

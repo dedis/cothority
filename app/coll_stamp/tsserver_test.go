@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/cothority/coconet"
 	"github.com/dedis/cothority/sign"
 	"github.com/dedis/cothority/stamp"
-	"github.com/dedis/cothority/lib/oldconfig"
+	"github.com/dedis/cothority/lib/config"
 )
 
 // TODO: messages should be sent hashed eventually
@@ -130,15 +130,15 @@ func TestTSSViewChangeOnFollowerFailureWithRate(t *testing.T) {
 // # Messages per round, # rounds, failure rate[0..100], list of faulty nodes
 func runTSSIntegration(RoundsPerView, nMessages, nRounds, failureRate, failAsRootEvery, failAsFollowerEvery int, faultyNodes ...int) error {
 	//coll_stamp.ROUND_TIME = 1 * time.Second
-	var hostConfig *oldconfig.HostConfig
+	var hostConfig *config.HostConfig
 	var err error
 
 	// load config with faulty or healthy hosts
-	opts := oldconfig.ConfigOptions{}
+	opts := config.ConfigOptions{}
 	if len(faultyNodes) > 0 {
 		opts.Faulty = true
 	}
-	hostConfig, err = oldconfig.LoadConfig("../test/data/exconf.json", opts)
+	hostConfig, err = config.LoadConfig("../test/data/exconf.json", opts)
 	if err != nil {
 		return err
 	}
@@ -212,12 +212,12 @@ func runTSSIntegration(RoundsPerView, nMessages, nRounds, failureRate, failAsRoo
 }
 
 func TestGoConnTimestampFromConfig(t *testing.T) {
-	oldconfig.StartConfigPort += 2010
+	config.StartConfigPort += 2010
 	nMessages := 1
 	nClients := 1
 	nRounds := 1
 
-	hc, err := oldconfig.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("../test/data/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -327,15 +327,15 @@ func TestTCPTimestampFromConfigVote(t *testing.T) {
 }
 
 func runTCPTimestampFromConfig(RoundsPerView int, signType, nMessages, nClients, nRounds, failureRate int, faultyNodes ...int) error {
-	var hc *oldconfig.HostConfig
+	var hc *config.HostConfig
 	var err error
-	oldconfig.StartConfigPort += 2010
+	config.StartConfigPort += 2010
 
 	// load config with faulty or healthy hosts
 	if len(faultyNodes) > 0 {
-		hc, err = oldconfig.LoadConfig("../test/data/extcpconf.json", oldconfig.ConfigOptions{ConnType: "tcp", GenHosts: true, Faulty: true})
+		hc, err = config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true, Faulty: true})
 	} else {
-		hc, err = oldconfig.LoadConfig("../test/data/extcpconf.json", oldconfig.ConfigOptions{ConnType: "tcp", GenHosts: true})
+		hc, err = config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	}
 	if err != nil {
 		return err

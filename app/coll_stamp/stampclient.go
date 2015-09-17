@@ -123,7 +123,7 @@ func streamMessgs(c *Client, servers []string, rate int) {
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
 
-func Run(server string, nmsgs int, name string, rate int) {
+func RunClient(server string, nmsgs int, name string, rate int) {
 	dbg.Lvl3("Starting to run stampclient")
 	c := NewClient(name)
 	servers := strings.Split(server, ",")
