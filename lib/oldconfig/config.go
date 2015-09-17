@@ -24,7 +24,7 @@ import (
 	"github.com/dedis/crypto/edwards"
 	//	"github.com/dedis/crypto/nist"
 	"github.com/dedis/cothority/lib/coconet"
-	"github.com/dedis/cothority/app/stamp"
+	"github.com/dedis/cothority/app/coll_stamp"
 )
 
 /*
@@ -531,7 +531,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 }
 
 // run each host in hostnameSlice with the number of clients given
-func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*stamp.Server, []*stamp.Client, error) {
+func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*coll_stamp.Server, []*coll_stamp.Client, error) {
 	dbg.Lvl3("RunTimestamper")
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
@@ -547,25 +547,25 @@ func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*
 		}
 	}
 
-	Clients := make([]*stamp.Client, 0, len(hostnames)*nclients)
+	Clients := make([]*coll_stamp.Client, 0, len(hostnames)*nclients)
 	// for each client in
-	stampers := make([]*stamp.Server, 0, len(hostnames))
+	stampers := make([]*coll_stamp.Server, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
 		if _, ok := hostnames[sn.Name()]; !ok {
 			log.Errorln("signing node not in hostnmaes")
 			continue
 		}
-		stampers = append(stampers, stamp.NewServer(sn))
+		stampers = append(stampers, coll_stamp.NewServer(sn))
 		if hc.Dir == nil {
 			//dbg.Lvl3("listening for clients")
 			stampers[len(stampers)-1].Listen()
 		}
 	}
 	//dbg.Lvl3("stampers:", stampers)
-	clientsLists := make([][]*stamp.Client, len(hc.SNodes[1:]))
+	clientsLists := make([][]*coll_stamp.Client, len(hc.SNodes[1:]))
 	for i, s := range stampers[1:] {
 		// cant assume the type of connection
-		clients := make([]*stamp.Client, nclients)
+		clients := make([]*coll_stamp.Client, nclients)
 
 		h, p, err := net.SplitHostPort(s.Name())
 		if hc.Dir != nil {
@@ -583,7 +583,7 @@ func (hc *HostConfig) RunTimestamper(nclients int, hostnameSlice ...string) ([]*
 		//dbg.Lvl3("client connecting to:", hp)
 
 		for j := range clients {
-			clients[j] = stamp.NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
+			clients[j] = coll_stamp.NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
 			var c coconet.Conn
 
 			// if we are using tcp connections

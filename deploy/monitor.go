@@ -69,6 +69,7 @@ retry:
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
+			break
 		}
 		if bytes.Contains(data, []byte("root_round")) {
 			dbg.Lvl3("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")

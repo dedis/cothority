@@ -1,4 +1,4 @@
-package stamp_test
+package coll_stamp_test
 
 import (
 	"fmt"
@@ -129,7 +129,7 @@ func TestTSSViewChangeOnFollowerFailureWithRate(t *testing.T) {
 
 // # Messages per round, # rounds, failure rate[0..100], list of faulty nodes
 func runTSSIntegration(RoundsPerView, nMessages, nRounds, failureRate, failAsRootEvery, failAsFollowerEvery int, faultyNodes ...int) error {
-	//stamp.ROUND_TIME = 1 * time.Second
+	//coll_stamp.ROUND_TIME = 1 * time.Second
 	var hostConfig *oldconfig.HostConfig
 	var err error
 

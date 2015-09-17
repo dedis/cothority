@@ -1,4 +1,4 @@
-package stamp
+package coll_stamp
 
 import (
 	"bytes"
@@ -146,7 +146,7 @@ func (c *Client) PutToServer(name string, data coconet.BinaryMarshaler) error {
 var ErrClientToTSTimeout error = errors.New("client timeouted on waiting for response")
 
 // When client asks for val to be timestamped
-// It blocks until it get a stamp reply back
+// It blocks until it get a coll_stamp reply back
 func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.Mux.Lock()
 	if c.Error != nil {

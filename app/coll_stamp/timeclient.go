@@ -1,4 +1,4 @@
-package stamp
+package coll_stamp
 
 import (
 	"flag"

@@ -373,7 +373,7 @@ func TestTCPStaticConfigRounds(t *testing.T) {
 
 // Tests the integration of View Change with Signer (ability to reach consensus on a view change)
 // After achieving consensus, View is not actually changed, because of Signer test framework limitations
-// See tests in stamp/ for the actual view change ocurring
+// See tests in coll_stamp/ for the actual view change ocurring
 // Go channels, static configuration, multiple rounds
 func TestViewChangeChan(t *testing.T) {
 	if testing.Short() {
@@ -418,7 +418,7 @@ func TestViewChangeChan(t *testing.T) {
 
 // Tests the integration of View Change with Signer (ability to reach consensus on a view change)
 // After achieving consensus, View is not actually changed, because of Signer test framework limitations
-// See tests in stamp/ for the actual view change ocurring
+// See tests in coll_stamp/ for the actual view change ocurring
 func TestViewChangeTCP(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	if testing.Short() {

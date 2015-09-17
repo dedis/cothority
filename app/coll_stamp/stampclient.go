@@ -1,4 +1,4 @@
-package stamp
+package coll_stamp
 
 import (
 	"crypto/rand"
@@ -81,7 +81,7 @@ func streamMessgs(c *Client, servers []string, rate int) {
 
 	tFirst := time.Now()
 
-	// every tick send a time stamp request to every server specified
+	// every tick send a time coll_stamp request to every server specified
 	// this will stream until we get an EOF
 	tick := 0
 	for _ = range ticker {
@@ -143,7 +143,7 @@ func Run(server string, nmsgs int, name string, rate int) {
 		log.Fatal("ROUNDS BASED RATE LIMITING DEPRECATED")
 	}
 
-	// Stream time stamp requests
+	// Stream time coll_stamp requests
 	// if rate specified send out one message every rate milliseconds
 	dbg.Lvl1(name, "starting to stream at rate", rate)
 	streamMessgs(c, servers, rate)

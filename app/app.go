@@ -19,8 +19,6 @@ import (
 	_ "net/http/pprof"
 	"strconv"
 
-	_ "expvar"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/logutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -34,7 +32,7 @@ import (
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/abstract"
 	"time"
-	"github.com/dedis/cothority/app/stamp"
+	"github.com/dedis/cothority/app/coll_stamp"
 )
 
 
@@ -57,7 +55,7 @@ func init() {
 	flag.StringVar(&physaddr, "physaddr", "", "the physical address of the noded [for deterlab]")
 	flag.BoolVar(&amroot, "amroot", false, "am I root node")
 	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
-	flag.StringVar(&app, "app", app, "Which application to run [coll_sign, stamp]")
+	flag.StringVar(&app, "app", app, "Which application to run [coll_sign, coll_stamp]")
 	flag.StringVar(&mode, "mode", mode, "Run the app in [server,client] mode")
 	flag.StringVar(&name, "name", name, "Name of the node")
 	flag.StringVar(&server, "server", "", "the timestamping servers to contact")
@@ -118,12 +116,12 @@ func main() {
 	switch app{
 	case "coll_sign":
 		coll_sign.Run(mode, hostname, conf)
-	case "stamp":
+	case "coll_stamp":
 		if mode == "server" {
 			Run(hostname, conf.App, conf.Rounds, conf.RootWait, conf.Debug,
 				testConnect, conf.Failures, conf.RFail, conf.FFail, logger, conf.Suite)
 		}else {
-			stamp.RunClient(logger, server);
+			coll_stamp.RunClient(logger, server);
 		}
 	case "schnorr_sign":
 		schnorr_sign.Run(mode, conf)
@@ -241,7 +239,7 @@ failureRate, rFail, fFail int, logger, suite string) {
 			// otherwise wait a little bit (hopefully it finishes by the end of this)
 			time.Sleep(30 * time.Second)
 		}
-	} else if app == "stamp" || app == "vote" {
+	} else if app == "coll_stamp" || app == "vote" {
 		stampers, _, err := hc.RunTimestamper(0, hostname)
 		// get rid of the hc information so it can be GC'ed
 		hc = nil

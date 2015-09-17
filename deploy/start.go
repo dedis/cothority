@@ -51,11 +51,17 @@ func init() {
 var StampTestSingle = []T{
 	{0, 1, 2,
 		30, 20, 0,
-		0, 0, false, "stamp"},
+		0, 0, false, "coll_stamp"},
 }
 
 var SignTestSingle = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
+}
+
+var SignTestMulti = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 2, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 4, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
 }
 
 func Start(destination string, nbld bool, build string, machines int) {
@@ -74,7 +80,8 @@ func Start(destination string, nbld bool, build string, machines int) {
 	//RunTests("hosts_test_short", HostsTestShort)
 	//RunTests("hosts_test", HostsTest)
 	//RunTests("stamp_test_single", StampTestSingle)
-	RunTests("sing_test_single", SignTestSingle)
+	//RunTests("sign_test_single", SignTestSingle)
+	RunTests("sign_test_multi", SignTestMulti)
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
 	//RunTests("hosts_test", HostsTest)
@@ -239,58 +246,58 @@ type T struct {
 // high and low specify how many milliseconds between messages
 func RateLoadTest(hpn, bf int) []T {
 	return []T{
-		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // never send a message
-		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "stamp"}, // one per round
-		{0, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "stamp"}, // 10 per round
-		{0, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "stamp"}, // 100 per round
-		{0, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "stamp"}, // 1000 per round
+		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // never send a message
+		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // one per round
+		{0, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // 10 per round
+		{0, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // 100 per round
+		{0, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // 1000 per round
 	}
 }
 
 func DepthTest(hpn, low, high, step int) []T {
 	ts := make([]T, 0)
 	for bf := low; bf <= high; bf += step {
-		ts = append(ts, T{0, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
+		ts = append(ts, T{0, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "coll_stamp"})
 	}
 	return ts
 }
 
 func DepthTestFixed(hpn int) []T {
 	return []T{
-		{0, hpn, 1, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 2, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 4, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 8, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 16, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 32, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 64, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 128, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 256, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
-		{0, hpn, 512, 30, DefaultRounds, 0, 0, 0, false, "stamp"},
+		{0, hpn, 1, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 2, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 4, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 8, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 16, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 32, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 64, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 128, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 256, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
+		{0, hpn, 512, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},
 	}
 }
 
 func ScaleTest(bf, low, high, mult int) []T {
 	ts := make([]T, 0)
 	for hpn := low; hpn <= high; hpn *= mult {
-		ts = append(ts, T{0, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "stamp"})
+		ts = append(ts, T{0, hpn, bf, 10, DefaultRounds, 0, 0, 0, false, "coll_stamp"})
 	}
 	return ts
 }
 
 // nmachs=32, hpn=128, bf=16, rate=500, failures=20, root failures, failures
 var FailureTests = []T{
-	{0, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
-	{0, 64, 16, 30, 50, 0, 5, 0, false, "stamp"},
-	{0, 64, 16, 30, 50, 0, 10, 0, false, "stamp"},
-	{0, 64, 16, 30, 50, 5, 0, 5, false, "stamp"},
-	{0, 64, 16, 30, 50, 5, 0, 10, false, "stamp"},
-	{0, 64, 16, 30, 50, 5, 0, 10, true, "stamp"},
+	{0, 64, 16, 30, 50, 0, 0, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 0, 5, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 0, 10, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 5, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 10, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 10, true, "coll_stamp"},
 }
 
 var VotingTest = []T{
-	{0, 64, 16, 30, 50, 0, 0, 0, true, "stamp"},
-	{0, 64, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	{0, 64, 16, 30, 50, 0, 0, 0, true, "coll_stamp"},
+	{0, 64, 16, 30, 50, 0, 0, 0, false, "coll_stamp"},
 }
 
 func FullTests() []T {
@@ -305,7 +312,7 @@ func FullTests() []T {
 		for _, hpn := range hpns {
 			for _, bf := range bfs {
 				for _, rate := range rates {
-					tests = append(tests, T{nmach, hpn, bf, rate, DefaultRounds, failures, 0, 0, false, "stamp"})
+					tests = append(tests, T{nmach, hpn, bf, rate, DefaultRounds, failures, 0, 0, false, "coll_stamp"})
 				}
 			}
 		}
@@ -315,22 +322,22 @@ func FullTests() []T {
 }
 
 var HostsTestShort = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
-	{0, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{0, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 2, 3, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 4, 3, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 
 var HostsTest = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_stamp"},
 /*
-	{0, 2, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{0, 4, 3, 30, 20, 0, 0, 0, false, "stamp"},
-	{0, 8, 8, 30, 20, 0, 0, 0, false, "stamp"},
-	{0, 16, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{0, 32, 16, 30, 20, 0, 0, 0, false, "stamp"},
+	{0, 2, 3, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 4, 3, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 8, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 16, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 32, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 	*/
-	{0, 64, 16, 30, 20, 0, 0, 0, false, "stamp"},
-	{0, 128, 16, 30, 50, 0, 0, 0, false, "stamp"},
+	{0, 64, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 128, 16, 30, 50, 0, 0, 0, false, "coll_stamp"},
 }
 
 var SignTest = []T{

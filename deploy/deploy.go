@@ -51,6 +51,6 @@ func NewConfig() *Config {
 	return &Config{
 		4, 3, 1, 2,
 		100, 30, 10, 0, 0, 0,
-		1, 10, "stamp", "ed25519"}
+		1, 10, "coll_stamp", "ed25519"}
 }
 

@@ -168,6 +168,10 @@ func (d *Deter) Deploy() (error) {
 	}
 
 	dbg.Lvl1("Done copying")
+
+	dbg.Lvl2(cliutils.SshRunStdout(d.Login, d.Host,
+		""))
+
 	return nil
 }
 
