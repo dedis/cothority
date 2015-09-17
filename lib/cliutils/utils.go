@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"bytes"
 	"bufio"
 )

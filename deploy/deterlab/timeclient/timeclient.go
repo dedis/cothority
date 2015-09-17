@@ -4,9 +4,9 @@ import (
 	"flag"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
-	"github.com/dedis/cothority/helpers/logutils"
-	"github.com/dedis/cothority/helpers/oldconfig"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/oldconfig"
 	"github.com/dedis/cothority/deploy/deterlab/timeclient/stampclient"
 	"github.com/dedis/cothority/deploy"
 )

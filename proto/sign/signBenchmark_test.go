@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/sign"
-	"github.com/dedis/cothority/helpers/oldconfig"
+	"github.com/dedis/cothority/lib/oldconfig"
 )
 
 // func init() {

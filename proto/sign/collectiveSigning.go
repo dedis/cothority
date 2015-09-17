@@ -7,10 +7,10 @@ import (
 	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/helpers/coconet"
-	"github.com/dedis/cothority/helpers/hashid"
+	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/hashid"
 	"golang.org/x/net/context"
 	// "strconv"
 	// "os"

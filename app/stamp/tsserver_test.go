@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/cothority/coconet"
 	"github.com/dedis/cothority/sign"
 	"github.com/dedis/cothority/stamp"
-	"github.com/dedis/cothority/helpers/oldconfig"
+	"github.com/dedis/cothority/lib/oldconfig"
 )
 
 // TODO: messages should be sent hashed eventually

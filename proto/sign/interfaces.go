@@ -2,8 +2,8 @@ package sign
 
 import (
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/helpers/hashid"
-	"github.com/dedis/cothority/helpers/proof"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
 )
 
 var DEBUG bool // to avoid verifying paths and signatures all the time

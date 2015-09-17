@@ -9,7 +9,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )

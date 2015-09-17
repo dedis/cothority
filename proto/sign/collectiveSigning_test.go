@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/cothority/coconet"
-	"github.com/dedis/cothority/helpers/oldconfig"
+	"github.com/dedis/cothority/lib/oldconfig"
 	"github.com/dedis/cothority/sign"
 )
 

@@ -22,19 +22,19 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/dedis/cothority/helpers/cliutils"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/lib/cliutils"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"fmt"
 	"strings"
 	"io/ioutil"
-	"github.com/dedis/cothority/helpers/graphs"
+	"github.com/dedis/cothority/lib/graphs"
 	"encoding/json"
 	"strconv"
 	"bytes"
 	"github.com/BurntSushi/toml"
 	"time"
 	_ "errors"
-	"github.com/dedis/cothority/helpers/config"
+	"github.com/dedis/cothority/lib/config"
 	"bufio"
 )
 

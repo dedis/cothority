@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
-	"github.com/dedis/cothority/helpers/logutils"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
 	"os"
 "github.com/dedis/cothority/deploy"
 )
