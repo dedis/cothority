@@ -94,11 +94,12 @@ func main() {
 	}
 	wg.Wait()
 
-	nloggers := 3
+	nloggers := conf.Nloggers
 	masterLogger := phys[0]
-	slaveLogger1 := phys[1]
-	slaveLogger2 := phys[2]
-	loggers := []string{masterLogger, slaveLogger1, slaveLogger2}
+	loggers := []string{masterLogger}
+	for n := 1; n <= nloggers; n++ {
+		loggers = append(loggers, phys[n])
+	}
 
 	phys = phys[nloggers:]
 	virt = virt[nloggers:]
