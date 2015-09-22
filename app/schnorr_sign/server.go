@@ -21,6 +21,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	for i, h := range hosts.Hosts {
 		if h == app.PhysAddr {
 			indexPeer = i
+			break
 		}
 	}
 	if indexPeer == -1 {
