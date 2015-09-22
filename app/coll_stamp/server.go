@@ -94,7 +94,7 @@ func (s *Server) Listen() error {
 			conn, err := ln.Accept()
 			if err != nil {
 				// handle error
-				log.Errorln("failed to accept connection")
+				dbg.Lvl3("failed to accept connection")
 				continue
 			}
 

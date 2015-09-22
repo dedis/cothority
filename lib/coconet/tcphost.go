@@ -115,7 +115,7 @@ func (h *TCPHost) Listen() error {
 			conn, err := ln.Accept()
 			dbg.Lvl3(h.Name(), "Connection request - handling")
 			if err != nil {
-				log.Errorln("failed to accept connection: ", err)
+				dbg.Lvl3("failed to accept connection: ", err)
 				// if the host has been closed then stop listening
 				if atomic.LoadInt64(&h.closed) == 1 {
 					return
@@ -276,7 +276,7 @@ func (h *TCPHost) NewViewFromPrev(view int, parent string) {
 
 // Close closes all the connections currently open.
 func (h *TCPHost) Close() {
-	log.Println("tcphost: closing")
+	dbg.Lvl3("tcphost: closing")
 	// stop accepting new connections
 	atomic.StoreInt64(&h.closed, 1)
 	h.listener.Close()

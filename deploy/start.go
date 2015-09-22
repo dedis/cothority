@@ -90,8 +90,8 @@ func Start(destination string, nbld bool, build string, machines int) {
 
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
-	RunTests("sign_test_single", SignTestSingle)
-	//RunTests("sign_test_multi", SignTestMulti)
+	//RunTests("sign_test_single", SignTestSingle)
+	RunTests("sign_test_multi", SignTestMulti)
 	//RunTests("hosts_test_single", HostsTestSingle)
 	//RunTests("hosts_test_short", HostsTestShort)
 	//RunTests("hosts_test", HostsTest)

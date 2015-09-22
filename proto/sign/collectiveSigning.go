@@ -54,7 +54,7 @@ func (sn *Node) get() error {
 
 			// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
-				log.Errorf(sn.Name(), " getting from closed host")
+				dbg.Lvl3(sn.Name(), " getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}

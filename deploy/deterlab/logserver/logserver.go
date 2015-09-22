@@ -78,7 +78,7 @@ func main() {
 	} else {
 		role = "Servent"
 	}
-	dbg.Lvl1("running logserver", role, "with nmsgs", cfg.Nmsgs, "branching factor: ", cfg.Bf)
+	dbg.Lvl3("running logserver", role, "with nmsgs", cfg.Nmsgs, "branching factor: ", cfg.Bf)
 	if isMaster {
 		var err error
 		homePage, err = template.ParseFiles("webfiles/home.html")

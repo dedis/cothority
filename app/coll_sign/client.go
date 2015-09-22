@@ -31,7 +31,7 @@ func RunClient(conf *deploy.Config, hc *config.HostConfig) {
 	tFirst := time.Now()
 
 	for i := 0; i < conf.Rounds; i++ {
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Second)
 		//fmt.Println("ANNOUNCING")
 		hc.SNodes[0].LogTest = []byte("Hello World")
 		dbg.Lvl3("Going to launch announcement ", hc.SNodes[0].Name())

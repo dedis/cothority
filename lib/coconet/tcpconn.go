@@ -122,7 +122,7 @@ func IsTemporary(err error) bool {
 // Returns actual error if it is Temporary.
 func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 	if tc.Closed() {
-		log.Errorln("tcpconn: put: connection closed")
+		dbg.Lvl3("tcpconn: put: connection closed")
 		return ErrClosed
 	}
 	tc.encLock.Lock()
@@ -149,7 +149,7 @@ func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 // Returns given error if it is Temporary.
 func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 	if tc.Closed() {
-		log.Errorln("tcpconn: get: connection closed")
+		dbg.Lvl3("tcpconn: get: connection closed")
 		return ErrClosed
 	}
 	tc.encLock.Lock()
@@ -170,8 +170,8 @@ func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 		}
 		// if it is an irrecoverable error
 		// close the channel and return that it has been closed
-		if err != io.EOF{
-			log.Errorln("Couldn't decode packet at", tc.name, "error:", err)
+		if err != io.EOF && err.Error() != "read tcp4"{
+			dbg.Lvl2("Couldn't decode packet at", tc.name, "error:", err)
 		} else {
 			dbg.Lvl3("Closing connection by EOF")
 		}
