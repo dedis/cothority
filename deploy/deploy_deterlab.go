@@ -76,7 +76,7 @@ func (d *Deter) Configure(config *Config) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.DeterDir = pwd + "/deploy/deterlab"
-	d.DeployDir = d.DeterDir + "/deploy"
+	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
 	d.Config.Debug = dbg.DebugVisible
 
