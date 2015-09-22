@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"testing"
 	"github.com/dedis/crypto/edwards/ed25519"
+	"testing"
 	//"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
-
 
 func TestRand(t *testing.T) {
 
@@ -23,18 +22,16 @@ func TestRand(t *testing.T) {
 		//pri := suite.Secret().Pick(rand)
 		//srvkeys[i] = servers[i].pubKey
 		srvname[i] = fmt.Sprintf("server%d", i)
-		host := newChanHost(net, srvname[i])
+		host := newChanHost(net, srvname[i], srv[i].serve)
 		srv[i].init(host, suite)
-		go srv[i].run()
 	}
 
 	cli := Client{}
 	//cpri := suite.Secret().Pick(rand)
-	chost := newChanHost(net, "client")
+	chost := newChanHost(net, "client", nil)
 	cli.init(chost, suite, rand, srvname)
 
 	if err := cli.run(); err != nil {
 		panic(err)
 	}
 }
-

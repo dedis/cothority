@@ -2,29 +2,28 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
 )
 
 // should go in abstract Net package
 type Host interface {
-	Name() string			// this host's name
-	Find(name string) Peer		// find a Peer by name
-	Recv() (msg []byte, from Peer)	// receive from any Peer
+	Name() string          // this host's name
+	Open(name string) Conn // open connection with named peer
+	//Recv() (msg []byte, from Conn)	// receive from any Conn
 	// XXX RecvFrom?
 }
 
-type Peer interface {
-	Name() string
-	Send(msg []byte) error
-	//Recv() ([]byte, error)	// receive only from this Peer
+type Conn interface {
+	PeerName() string      // name of peer host
+	Send(msg []byte) error // send message to connected peer
+	Recv() ([]byte, error) // receive message from peer
 }
-
-
 
 // XXX channel-based virtual network; move to chanNet.go
 
-
 type chanNet struct {
-	hosts	map[string]*chanHost
+	hosts map[string]*chanHost
 }
 
 func newChanNet() *chanNet {
@@ -33,23 +32,25 @@ func newChanNet() *chanNet {
 	return cn
 }
 
-
 type chanHost struct {
-	net *chanNet		// virtual network on which we're a host
-	name string		// my hostname on this (virtual) network
-	rq chan chanMsg		// host's undirected message receive queue
+	net  *chanNet // virtual network on which we're a host
+	name string   // my hostname on this (virtual) network
+	//rq chan chanMsg	// host's undirected message receive queue
+	srv func(Conn) error // connection-processing function for servers
 }
 
+/*
 type chanMsg struct {
 	msg []byte		// content of message
-	src *chanPeer		// sender of this message
+	src *chanConn		// sender of this message
 }
+*/
 
-func newChanHost(net *chanNet, name string) *chanHost {
+func newChanHost(net *chanNet, name string, server func(Conn) error) *chanHost {
 	if _, exists := net.hosts[name]; exists {
 		panic(fmt.Sprintf("host %s already exists", name))
 	}
-	ch := &chanHost{net, name, make(chan chanMsg)}
+	ch := &chanHost{net, name, server}
 	net.hosts[name] = ch
 	return ch
 }
@@ -58,35 +59,72 @@ func (ch *chanHost) Name() string {
 	return ch.name
 }
 
-func (ch *chanHost) Find(name string) Peer {
-	return &chanPeer{ch, ch.net.hosts[name], nil}
+func (ch *chanHost) Open(name string) Conn {
+	dst := ch.net.hosts[name]
+
+	var ci, cr chanConn
+	ci = chanConn{ch, dst, make(chan []byte), &cr}
+	cr = chanConn{dst, ch, make(chan []byte), &ci}
+
+	// Launch a server goroutine to service this client
+	go func() {
+		if err := dst.srv(&cr); err != nil {
+			log.Printf("server %s error: %s", dst.name, err)
+		} else {
+			log.Printf("server %s completed", dst.name)
+		}
+		cr.Close()
+	}()
+
+	return &ci
 }
 
-func (ch *chanHost) Recv() ([]byte, Peer) {
+/*
+func (ch *chanHost) Recv() ([]byte, Conn) {
 	cm := <-ch.rq
 	return cm.msg, cm.src
 }
 
 
+type peerName struct {
+	src string
+	dst string
+}
+*/
 
-type chanPeer struct {
-	src *chanHost		// source this object is associated with
-	dst *chanHost		// destination this object represents
-	rev *chanPeer		// reverse-direction chanPeer with src <-> dst
+type chanConn struct {
+	src *chanHost   // source this object is associated with
+	dst *chanHost   // destination this object represents
+	srq chan []byte // src's message receive queue
+	rev *chanConn   // reverse-direction chanConn with src <-> dst
 }
 
-
-
-func (cp *chanPeer) Name() string {
+func (cp *chanConn) PeerName() string {
 	return cp.dst.name
 }
 
-func (cp *chanPeer) Send(msg []byte) error {
-	if cp.rev == nil {	// create reverse-direction chanPeer
-		cp.rev = &chanPeer{cp.dst, cp.src, cp}
-	}
-	cp.dst.rq <- chanMsg{msg, cp.rev}
+func (cp *chanConn) Send(msg []byte) error {
+	cp.rev.srq <- msg
 	return nil
 }
 
+func (cp *chanConn) Recv() ([]byte, error) {
+	srq := cp.srq
+	if srq == nil {
+		return nil, io.EOF // message queue already closed
+	}
+	msg := <-srq
+	if msg == nil {
+		cp.srq = nil
+		return nil, io.EOF // message queue just now closed
+	}
+	return msg, nil
+}
 
+func (cp *chanConn) Close() error {
+	srq := cp.rev.srq
+	if srq != nil {
+		srq <- nil
+	}
+	return nil
+}
