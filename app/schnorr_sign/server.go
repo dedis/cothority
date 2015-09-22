@@ -5,6 +5,7 @@ import "github.com/dedis/cothority/deploy"
 import "github.com/dedis/cothority/lib/config"
 import "github.com/dedis/crypto/poly"
 import dbg "github.com/dedis/cothority/lib/debug_lvl"
+import "time"
 
 func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Config) {
 	s := config.GetSuite(depl.Suite)
@@ -39,4 +40,6 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	for _, h := range hosts.Hosts[indexPeer:] {
 		p.ConnectTo(h)
 	}
+	time.Sleep(time.Seconds * 10)
+	dbg.Lvl2("Peer ", app.Hostname, "is leaving ...")
 }
