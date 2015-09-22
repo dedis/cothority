@@ -71,7 +71,7 @@ var StampTestSingle = []T{
 }
 
 var SignTestSingle = []T{
-	{0, 4, 2, 30, 10, 0, 0, 0, false, "coll_sign"},
+	{0, 32, 2, 30, 10, 0, 0, 0, false, "coll_sign"},
 }
 
 var SignTestMulti = []T{
@@ -106,8 +106,8 @@ func Start(destination string, nbld bool, build string, machines int) {
 
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
-	//RunTests("sign_test_single", SignTestSingle)
-	RunTests("sign_test_multi", SignTestMulti)
+	RunTests("sign_test_single", SignTestSingle)
+	//RunTests("sign_test_multi", SignTestMulti)
 	//RunTests("hosts_test_single", HostsTestSingle)
 	//RunTests("hosts_test_short", HostsTestShort)
 	//RunTests("hosts_test", HostsTest)
@@ -223,11 +223,7 @@ func RunTest(t T) (RunStats, error) {
 	cfg := &Config{
 		t.nmachs, deploy_config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
-<<<<<<< HEAD
 		deploy_config.Debug, deploy_config.RootWait, t.app, deploy_config.Suite }
-=======
-		deploy_config.Debug, deploy_config.RootWait, deploy_config.App, deploy_config.Suite}
->>>>>>> app_abstraction
 
 	dbg.Lvl1("Running test with parameters", cfg)
 	dbg.Lvl1("Failures percent is", t.failures)
@@ -246,13 +242,8 @@ func RunTest(t T) (RunStats, error) {
 	go func() {
 		rs = Monitor(t.bf)
 		deployP.Stop()
-<<<<<<< HEAD
-		dbg.Lvl3("Test complete:", rs)
-		done <- struct {}{}
-=======
 		dbg.Lvl2("Test complete:", rs)
-		done <- struct{}{}
->>>>>>> app_abstraction
+		done <- struct {}{}
 	}()
 
 	// timeout the command if it takes too long

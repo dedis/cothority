@@ -201,6 +201,7 @@ func ConstructTree(
 
 	// generate indicates whether we should generate the signing
 	// node for this hostname
+	dbg.LLvl4("opts.Host - name", opts.Host, name)
 	generate := opts.Host == "" || opts.Host == name
 
 	// check to make sure the this hostname is in the tree

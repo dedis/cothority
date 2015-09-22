@@ -237,7 +237,11 @@ func (v *Views) RemovePeer(view int, child string) bool {
 func (v *Views) Children(view int) []string {
 	v.RLock()
 	defer v.RUnlock()
-	return v.Views[view].Children
+	if view < len(v.Views){
+		return v.Views[view].Children
+	} else {
+		return nil
+	}
 }
 
 func (v *Views) NChildren(view int) int {

@@ -202,11 +202,11 @@ func main() {
 		go func(phys string) {
 			//dbg.Lvl4("running on ", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys)
+			dbg.LLvl4("Starting servers on physical machine ", phys)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
 			" -physaddr=" + phys + " -logger=" + loggerports[i])
 			if err != nil {
-				log.Fatal("Error starting timestamper:", err, phys, virts)
+				log.Fatal("Error starting timestamper:", err, phys)
 			}
 			dbg.Lvl4("Finished with Timestamper", phys)
 		}(phys)
