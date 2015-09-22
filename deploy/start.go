@@ -215,7 +215,7 @@ func RunTest(t T) (RunStats, error) {
 	cfg := &Config{
 		t.nmachs, deploy_config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
-		deploy_config.Debug, deploy_config.RootWait, deploy_config.App, deploy_config.Suite}
+		deploy_config.Debug, deploy_config.RootWait, t.app, deploy_config.Suite}
 
 	dbg.Lvl1("Running test with parameters", cfg)
 	dbg.Lvl1("Failures percent is", t.failures)
