@@ -92,6 +92,11 @@ func Lvl5(args ...interface{}) {
 	Lvl(5, args...)
 }
 
+func Fatal(args ...interface{}){
+	Lvl(0, args...)
+	os.Exit(1)
+}
+
 // To easy print a debug-message anyway without discarding the level
 func LLvl2(args ...interface{}){Lvl(1, args...)}
 func LLvl3(args ...interface{}){Lvl(1, args...)}
@@ -116,6 +121,9 @@ func (f *DebugLvl) Format(entry *logrus.Entry) ([]byte, error) {
 			return b.Bytes(), nil
 		}
 	} else {
+		if len(entry.Message) > 2048 {
+			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(entry.Message))
+		}
 		return nil, nil
 	}
 }
