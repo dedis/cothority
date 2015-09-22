@@ -71,18 +71,20 @@ var StampTestSingle = []T{
 }
 
 var SignTestSingle = []T{
-	{0, 2, 2, 30, 10, 0, 0, 0, false, "coll_sign"},
+	{0, 64, 2, 30, 10, 0, 0, 0, false, "coll_sign"},
 }
 
 var SignTestMulti = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
 	{0, 8, 8, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 32, 8, 30, 20, 0, 0, 0, false, "coll_sign"},
 	{0, 64, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
 	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 256, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
 }
 
 var HostsTestSingle = []T{
-	{0, 4, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 2, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 
 var HostsTestShort = []T{
@@ -110,8 +112,8 @@ func Start(destination string, nbld bool, build string, machines int) {
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
 	//RunTests("schnorr_host_single", SchnorrHostSingle)
-	RunTests("sign_test_single", SignTestSingle)
-	//RunTests("sign_test_multi", SignTestMulti)
+	//RunTests("sign_test_single", SignTestSingle)
+	RunTests("sign_test_multi", SignTestMulti)
 	//RunTests("hosts_test_single", HostsTestSingle)
 	//RunTests("hosts_test_short", HostsTestShort)
 	//RunTests("hosts_test", HostsTest)

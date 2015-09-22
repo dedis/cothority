@@ -20,9 +20,15 @@ func Run(app *config.AppConfig, depl *deploy.Config) {
 
 	dbg.Lvl2(app.Hostname, "Starting to run as ", app.Mode)
 	var err error
-	_, err = ReadHostsJson("tree.json")
+	hosts, err := ReadHostsJson("tree.json")
 	if err != nil {
 		log.Fatal("Error while reading JSON hosts file on", app.Hostname, ". Abort")
+	}
+	switch app.Mode {
+	case "client":
+		RunClient(depl)
+	case "server":
+		RunServer(hosts, app, depl)
 	}
 }
 

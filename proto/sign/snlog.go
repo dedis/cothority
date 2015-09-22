@@ -24,10 +24,10 @@ type SNLog struct {
 func (snLog SNLog) MarshalBinary() ([]byte, error) {
 	// abstract.Write used to encode/ marshal crypto types
 	b := bytes.Buffer{}
-	snLog.Suite.Write(&b, &snLog.v, &snLog.V, &snLog.V_hat)
-	//abstract.Write(&b, &snLog.v, snLog.Suite)
-	//abstract.Write(&b, &snLog.V, snLog.Suite)
-	//abstract.Write(&b, &snLog.V_hat, snLog.Suite)
+	//snLog.Suite.Write(&b, &snLog.v, &snLog.V, &snLog.V_hat)
+	abstract.Write(&b, &snLog.v, snLog.Suite)
+	abstract.Write(&b, &snLog.V, snLog.Suite)
+	abstract.Write(&b, &snLog.V_hat, snLog.Suite)
 	////// gob is used to encode non-crypto types
 	enc := gob.NewEncoder(&b)
 	err := enc.Encode(snLog.CMTRoots)
@@ -37,8 +37,8 @@ func (snLog SNLog) MarshalBinary() ([]byte, error) {
 func (snLog *SNLog) UnmarshalBinary(data []byte) error {
 	// abstract.Read used to decode/ unmarshal crypto types
 	b := bytes.NewBuffer(data)
-	err := snLog.Suite.Read(b, &snLog.v, &snLog.V, &snLog.V_hat)
-	//err := abstract.Read(b, snLog, snLog.Suite)
+	//err := snLog.Suite.Read(b, &snLog.v, &snLog.V, &snLog.V_hat)
+	err := abstract.Read(b, snLog, snLog.Suite)
 	// gob is used to decode non-crypto types
 	rem, _ := snLog.MarshalBinary()
 	snLog.CMTRoots = data[len(rem):]

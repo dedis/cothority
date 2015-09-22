@@ -202,7 +202,7 @@ func main() {
 		go func(phys string) {
 			//dbg.Lvl4("running on ", phys, cmd)
 			defer wg.Done()
-			dbg.LLvl4("Starting servers on physical machine ", phys)
+			dbg.Lvl4("Starting servers on physical machine ", phys)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
 			" -physaddr=" + phys + " -logger=" + loggerports[i])
 			if err != nil {
