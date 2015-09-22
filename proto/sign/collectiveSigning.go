@@ -24,11 +24,11 @@ import (
 
 // Get multiplexes all messages from TCPHost using application logic
 func (sn *Node) get() error {
-	dbg.LLvl4(sn.Name(), "getting")
+	dbg.Lvl4(sn.Name(), "getting")
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
-	dbg.LLvl4("Going to get", sn.Name())
+	dbg.Lvl4("Going to get", sn.Name())
 	msgchan := sn.Host.Get()
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
@@ -48,7 +48,7 @@ func (sn *Node) get() error {
 			sn.StopHeartbeat()
 			return nil
 		default:
-			dbg.LLvl4(sn.Name(), "waiting for message")
+			dbg.Lvl4(sn.Name(), "waiting for message")
 			nm, ok := <-msgchan
 			err := nm.Err
 
@@ -68,7 +68,7 @@ func (sn *Node) get() error {
 			//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
-			dbg.LLvl4(sn.Name(), "received message:", sm.Type)
+			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
 
 			// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
@@ -86,7 +86,7 @@ func (sn *Node) get() error {
 			default:
 				continue
 			case Announcement:
-				dbg.LLvl4(sn.Name(), "got announcement")
+				dbg.Lvl4(sn.Name(), "got announcement")
 				sn.ReceivedHeartbeat(sm.View)
 
 				var err error
@@ -105,7 +105,7 @@ func (sn *Node) get() error {
 				}
 
 			case Challenge:
-				dbg.LLvl4(sn.Name(), "got challenge")
+				dbg.Lvl4(sn.Name(), "got challenge")
 				if !sn.IsParent(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
 					continue
@@ -124,7 +124,7 @@ func (sn *Node) get() error {
 
 			// if it is a commitment or response it is from the child
 			case Commitment:
-				dbg.LLvl4(sn.Name(), "got commitment")
+				dbg.Lvl4(sn.Name(), "got commitment")
 				if !sn.IsChild(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received commitment from non-child on view", sm.View)
 					continue
@@ -140,7 +140,7 @@ func (sn *Node) get() error {
 					log.Errorln(sn.Name(), "commit error:", err)
 				}
 			case Response:
-				dbg.LLvl4(sn.Name(), "received response from", sm.From)
+				dbg.Lvl4(sn.Name(), "received response from", sm.From)
 				if !sn.IsChild(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received response from non-child on view", sm.View)
 					continue
@@ -214,7 +214,7 @@ func (sn *Node) get() error {
 }
 
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
-	dbg.LLvl4(sn.Name(), "received announcement on", view)
+	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
@@ -234,7 +234,7 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 			Am:           am}
 		messgs[i] = &sm
 	}
-	dbg.LLvl4(sn.Name(), "sending to all children")
+	dbg.Lvl4(sn.Name(), "sending to all children")
 	ctx := context.TODO()
 	//ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	if err := sn.PutDown(ctx, view, messgs); err != nil {
@@ -402,7 +402,7 @@ func (sn *Node) initResponseCrypto(Round int) {
 }
 
 func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
-	dbg.LLvl4(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
+	dbg.Lvl4(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
@@ -515,7 +515,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			Rm:           rm})
 	} else {
-		dbg.LLvl4("Root received response")
+		dbg.Lvl4("Root received response")
 	}
 
 	if sn.TimeForViewChange() {
@@ -679,7 +679,7 @@ func (sn *Node) CloseAll(view int) error {
 
 	// At the leaves
 	if len(sn.Children(view)) == 0 {
-		dbg.Lvl2(sn.Name(), "in CloseAll is root leave")
+		dbg.Lvl2(sn.Name(), "in CloseAll is root leaf")
 	} else {
 		dbg.Lvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
 
@@ -700,6 +700,7 @@ func (sn *Node) CloseAll(view int) error {
 		sn.Close()
 	}
 
+	log.Fatal("Closing down shop")
 	return nil
 }
 

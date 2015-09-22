@@ -154,7 +154,7 @@ func (sn *Node) StartGossip() {
 				sn.randmu.Lock()
 				from := c[sn.Rand.Int()%len(c)]
 				sn.randmu.Unlock()
-				dbg.Lvl3("Gossiping with: ", from)
+				dbg.Lvl4("Gossiping with: ", from)
 				sn.CatchUp(int(atomic.LoadInt64(&sn.LastAppliedVote)+1), from)
 			case <-sn.closed:
 				log.Warnln("stopping gossip: closed")

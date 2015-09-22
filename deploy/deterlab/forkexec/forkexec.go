@@ -90,7 +90,7 @@ func main() {
 				dbg.Lvl3("fork-exec is running command:", args)
 				err = cmdApp.Run()
 				if err != nil {
-					log.Errorln("cmd run:", err)
+					dbg.Lvl2("cmd run:", err)
 				}
 
 				// get CPU usage stats

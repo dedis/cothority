@@ -7,10 +7,11 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/config"
 	"sync/atomic"
-	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/lib/hashid"
+
 	"strconv"
-	)
+"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/lib/hashid"
+)
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
@@ -37,25 +38,18 @@ func RunClient(conf *deploy.Config, hc *config.HostConfig) {
 		start = time.Now()
 		t0 := time.Now()
 
-		/*
-		err := hc.SNodes[0].Announce(0,
-			&sign.AnnouncementMessage{
-				LogTest: hc.SNodes[0].LogTest,
-				Round:   i})
-				*/
 		err := hc.SNodes[0].StartSigningRound()
 		if err != nil {
 			dbg.Lvl1(err)
 		}
-		/*
+
 		select {
 		case msg := <-done:
-			dbg.LLvl3("Received reply from children", msg)
+			dbg.Lvl3("Received reply from children", msg)
 		case <-time.After(10 * ROUND_TIME):
 			dbg.Lvl3("client timeouted on waiting for response from")
 			continue
 		}
-		*/
 
 		t := time.Since(t0)
 		elapsed := time.Since(start)
@@ -87,14 +81,21 @@ func RunClient(conf *deploy.Config, hc *config.HostConfig) {
 		"roundsAfter": removeTrailingZeroes(roundsAfter),
 		"times":       removeTrailingZeroes(times),
 	}).Info("")
+
+	// And tell everybody to quit
+	err := hc.SNodes[0].CloseAll(0)
+	if err != nil {
+		log.Fatal("Couldn't close:", err)
+	}
+}
+
+func RoundDone(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof) {
+	dbg.LLvl3(view, "finished round")
+	done <- "Done with view: " + strconv.Itoa(view)
 }
 
 func RunClientStandalone(conf *deploy.Config, hc *config.HostConfig){
 
-}
-
-func RoundDone(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof) {
-	done <- "Done with view: " + strconv.Itoa(view)
 }
 
 func removeTrailingZeroes(a []int64) []int64 {

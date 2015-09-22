@@ -1,6 +1,7 @@
 package coconet
 
-import (
+import
+(
 	"encoding/gob"
 	"errors"
 	"math/rand"
@@ -10,8 +11,10 @@ import (
 	//"runtime/debug"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/crypto/abstract"
+	"io"
 )
 
 var Latency = 100
@@ -167,7 +170,11 @@ func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 		}
 		// if it is an irrecoverable error
 		// close the channel and return that it has been closed
-		log.Errorln("Couldn't decode packet at", tc.name, "error:", err)
+		if err != io.EOF{
+			log.Errorln("Couldn't decode packet at", tc.name, "error:", err)
+		} else {
+			dbg.Lvl3("Closing connection by EOF")
+		}
 		tc.Close()
 		return ErrClosed
 	}
@@ -176,7 +183,7 @@ func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 
 // Close closes the connection.
 func (tc *TCPConn) Close() {
-	log.Errorln("tcpconn: closing connection")
+	dbg.Lvl3("tcpconn: closing connection")
 	tc.encLock.Lock()
 	defer tc.encLock.Unlock()
 	if tc.conn != nil {

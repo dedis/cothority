@@ -532,9 +532,9 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 	}
 	var canceled int64
 	var wg sync.WaitGroup
-	dbg.LLvl4(h.Name(), "sending to", len(children), "children")
+	dbg.Lvl4(h.Name(), "sending to", len(children), "children")
 	for i, c := range children {
-		dbg.LLvl4("Sending to child", c)
+		dbg.Lvl4("Sending to child", c)
 		wg.Add(1)
 		go func(i int, c string) {
 			defer wg.Done()
@@ -556,10 +556,10 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 						err = e
 						errLock.Unlock()
 					}
-					dbg.LLvl4("Informed child", c)
+					dbg.Lvl4("Informed child", c)
 					return
 				}
-				dbg.LLvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)
+				dbg.Lvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)
 				time.Sleep(250 * time.Millisecond)
 			}
 

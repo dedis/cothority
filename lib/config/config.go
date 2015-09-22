@@ -356,7 +356,7 @@ type ConfigOptions struct {
 
 // run the given hostnames
 func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...string) error {
-	dbg.LLvl3(hc.Hosts, "going to connect everything for", hostnameSlice)
+	dbg.Lvl3(hc.Hosts, "going to connect everything for", hostnameSlice)
 	hostnames := make(map[string]*sign.Node)
 	if hostnameSlice == nil {
 		hostnames = hc.Hosts
@@ -369,7 +369,8 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 			hostnames[h] = sn
 		}
 	}
-	// set all hosts to be listening
+
+	// set all hosts to be listening - open the port and connect to the channel
 	for _, sn := range hostnames {
 		sn.Type = signType
 		dbg.Lvl3("Listening on", sn.Host)
@@ -409,11 +410,12 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 	// time.Sleep(1000 * time.Millisecond)
 
 	if !stamper {
+		// This will call the dispatcher in collectiveSigning for every request
+		dbg.Lvl4("Starting to listen for", hostnames)
 		for _, sn := range hostnames {
 			go sn.Listen()
 		}
 	}
-
 
 	return nil
 }

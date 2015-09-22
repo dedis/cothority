@@ -51,7 +51,7 @@ func Run(app *config.AppConfig, conf *deploy.Config) {
 		_, err := os.Stat("coll_stamp_up")
 		if err == nil {
 			files, _ := ioutil.ReadDir("coll_stamp_up")
-			dbg.LLvl4(app.Hostname, "waiting for others to finish", len(files))
+			dbg.Lvl4(app.Hostname, "waiting for others to finish", len(files))
 			time.Sleep(time.Second)
 		} else {
 			break

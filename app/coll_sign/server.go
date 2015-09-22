@@ -1,5 +1,6 @@
 package coll_sign
-import (
+import
+(
 	"github.com/dedis/cothority/deploy"
 	"time"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -10,7 +11,7 @@ import (
 
 func RunServer(app *config.AppConfig, conf *deploy.Config, hc *config.HostConfig) {
 	// run this specific host
-	err := hc.Run(true, sign.MerkleTree, app.Hostname)
+	err := hc.Run(false, sign.MerkleTree, app.Hostname)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -21,10 +22,10 @@ func RunServer(app *config.AppConfig, conf *deploy.Config, hc *config.HostConfig
 	if hc.SNodes[0].IsRoot(0) {
 		dbg.Lvl1(app.Hostname, "started client")
 		RunClient(conf, hc)
-	}
-
-	// Endless-loop till we stop by tearing down the connections
-	for {
-		time.Sleep(time.Minute)
+	} else{
+		// Endless-loop till we stop by tearing down the connections
+		for {
+			time.Sleep(time.Minute)
+		}
 	}
 }
