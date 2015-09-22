@@ -23,7 +23,7 @@ func TestRand(t *testing.T) {
 		//srvkeys[i] = servers[i].pubKey
 		srvname[i] = fmt.Sprintf("server%d", i)
 		host := newChanHost(net, srvname[i], srv[i].serve)
-		srv[i].init(host, suite)
+		srv[i].init(host, suite, srv)
 	}
 
 	cli := Client{}

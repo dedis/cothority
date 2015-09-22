@@ -1,11 +1,40 @@
 package main
 
 import (
+	"fmt"
 	"bytes"
 	"errors"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
+	"github.com/dedis/crypto/random"
+	"github.com/dedis/crypto/poly"
 	"github.com/dedis/protobuf"
 )
+
+// XXX should be config items
+const thresT = 2
+const thresR = 2
+const thresN = 3
+
+func pickInsurers(suite abstract.Suite, group []Server,
+		Rc, Rs []byte) ([]int, []abstract.Point) {
+
+	// Seed the PRNG for insurer selection
+	var key []byte
+	key = append(key, Rc...)
+	key = append(key, Rs...)
+	prng := suite.Cipher(key)
+
+	ntrustees := thresN
+	nservers := len(group)
+	sel := make([]int, ntrustees)
+	pub := make([]abstract.Point, ntrustees)
+	for i := 0; i < ntrustees; i++ {
+		sel[i] = int(random.Uint64(prng) % uint64(nservers))
+		pub[i] = group[sel[i]].keypair.Public
+	}
+	return sel, pub
+}
 
 type Server struct {
 
@@ -17,17 +46,19 @@ type Server struct {
 	suite   abstract.Suite
 	rand    abstract.Cipher
 	keysize int
-	//	pubKey	abstract.Point
-	//	priKey	abstract.Secret
+	keypair	config.KeyPair
+
+	// XXX servers shouldn't really need to know everyone else
+	group	[]Server
 }
 
-func (s *Server) init(host Host, suite abstract.Suite) {
+func (s *Server) init(host Host, suite abstract.Suite, group []Server) {
 	s.host = host
 	s.suite = suite
 	s.rand = suite.Cipher(abstract.RandomKey)
 	s.keysize = s.rand.KeySize()
-	//	s.priKey = priKey
-	//	s.pubKey = suite.Point().Mul(nil, priKey)
+	s.keypair.Gen(suite, s.rand)
+	s.group = group
 }
 
 func (s *Server) serve(conn Conn) (err error) {
@@ -65,24 +96,32 @@ func (s *Server) serve(conn Conn) (err error) {
 	if err = protobuf.Decode(msg, &i2); err != nil {
 		return
 	}
-	HRc := abstract.Sum(s.suite, i2.Rc)
+	Rc := i2.Rc
+	HRc := abstract.Sum(s.suite, Rc)
 	if !bytes.Equal(HRc, i1.HRc) {
 		err = errors.New("client random hash mismatch")
 		return
 	}
 
 	// Construct our Deal
-	// XXX
+	secPair := &config.KeyPair{}
+	secPair.Gen(s.suite, random.Stream)
+	_, inspub := pickInsurers(s.suite, s.group, Rc, Rs)
+	deal := &poly.Promise{}
+	deal.ConstructPromise(secPair, &s.keypair, thresT, thresR, inspub)
+	dealb, err := deal.MarshalBinary()
+	if err != nil {
+		return
+	}
 
 	// Send our R2
-	var r2 R2
-	r2.Rs = Rs
+	r2 := R2{ Rs: Rs, Deal: dealb }
 	r2b, err := protobuf.Encode(&r2)
 	if err != nil {
-		return err
+		return
 	}
 	if err = conn.Send(r2b); err != nil {
-		return err
+		return
 	}
 
 	// Receive client's I3
