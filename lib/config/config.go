@@ -16,14 +16,14 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/proto/sign"
 
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/graphs"
-"strings"
-	"sort"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-	"strconv"
 	"io/ioutil"
+	"sort"
+	"strconv"
+	"strings"
 )
 
 /*
@@ -48,7 +48,6 @@ ex.json
 }
 */
 
-
 type JSONPoint json.RawMessage
 
 type Node struct {
@@ -64,7 +63,6 @@ type HostConfig struct {
 	Hosts  map[string]*sign.Node // maps hostname to host
 	Dir    *coconet.GoDirectory  // the directory mapping hostnames to goPeers
 }
-
 
 func ConfigFromTree(t *graphs.Tree, hosts []string) *ConfigFile {
 	cf := &ConfigFile{}
@@ -82,8 +80,8 @@ func (hc *HostConfig) Verify() error {
 }
 
 func traverseTree(p *sign.Node,
-hc *HostConfig,
-f func(*sign.Node, *HostConfig) error) error {
+	hc *HostConfig,
+	f func(*sign.Node, *HostConfig) error) error {
 	if err := f(p, hc); err != nil {
 		return err
 	}
@@ -138,9 +136,9 @@ func writeHC(b *bytes.Buffer, hc *HostConfig, p *sign.Node) error {
 	}
 	prk, _ := p.PrivKey.MarshalBinary()
 	pbk, _ := p.PubKey.MarshalBinary()
-	fmt.Fprint(b, "{\"name\":", "\"" + p.Name() + "\",")
-	fmt.Fprint(b, "\"prikey\":", "\"" + string(hex.EncodeToString(prk)) + "\",")
-	fmt.Fprint(b, "\"pubkey\":", "\"" + string(hex.EncodeToString(pbk)) + "\",")
+	fmt.Fprint(b, "{\"name\":", "\""+p.Name()+"\",")
+	fmt.Fprint(b, "\"prikey\":", "\""+string(hex.EncodeToString(prk))+"\",")
+	fmt.Fprint(b, "\"pubkey\":", "\""+string(hex.EncodeToString(pbk))+"\",")
 
 	// recursively format children
 	fmt.Fprint(b, "\"children\":[")
@@ -184,14 +182,14 @@ func max(a, b int) int {
 // config file. ConstructTree must be called AFTER populating the HostConfig with
 // ALL the possible hosts.
 func ConstructTree(
-n *Node,
-hc *HostConfig,
-parent string,
-suite abstract.Suite,
-rand cipher.Stream,
-hosts map[string]coconet.Host,
-nameToAddr map[string]string,
-opts ConfigOptions) (int, error) {
+	n *Node,
+	hc *HostConfig,
+	parent string,
+	suite abstract.Suite,
+	rand cipher.Stream,
+	hosts map[string]coconet.Host,
+	nameToAddr map[string]string,
+	opts ConfigOptions) (int, error) {
 	// passes up its X_hat, and/or an error
 
 	// get the name associated with this address
@@ -258,7 +256,7 @@ opts ConfigOptions) (int, error) {
 			hc.SNodes = append(hc.SNodes, sn)
 			h.SetPubKey(sn.PubKey)
 		}
-		sn = hc.SNodes[len(hc.SNodes) - 1]
+		sn = hc.SNodes[len(hc.SNodes)-1]
 		hc.Hosts[name] = sn
 		if prikey == nil {
 			prikey = sn.PrivKey
@@ -293,7 +291,7 @@ opts ConfigOptions) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		height = max(h + 1, height)
+		height = max(h+1, height)
 		// if generating all csn will be availible
 	}
 	if generate {
@@ -350,6 +348,9 @@ type ConfigOptions struct {
 	Port      string         // if specified rewrites all ports to be this
 	Faulty    bool           // if true, use FaultyHost wrapper around Hosts
 	Suite     abstract.Suite // suite to use for Hosts
+	NoTree    bool           // bool flag to tell wether we want to construct
+	// the tree or not. Setting this to false will
+	// construct the tree. True will not.
 }
 
 // run the given hostnames
@@ -392,10 +393,11 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 				startTime = maxTime
 			}
 		}
-		dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
 		if err != nil {
 			log.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
 			//return errors.New("failed to connect")
+		} else {
+			dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
 		}
 	}
 
@@ -410,8 +412,6 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 	}
 	return nil
 }
-
-
 
 // TODO: if in tcp mode associate each hostname in the file with a different
 // port. Get the remote address of this computer to combine with those for the
@@ -438,6 +438,8 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	if err != nil {
 		return hc, err
 	}
+
+	// TODO remove this duplicate check of tcp conn
 	connT := GoC
 	if cf.Conn == "tcp" {
 		connT = TcpC
@@ -521,7 +523,10 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	}
 	rand := suite.Cipher([]byte("example"))
 	//fmt.Println("hosts", hosts)
-	_, err = ConstructTree(cf.Tree, hc, "", suite, rand, hosts, nameToAddr, opts)
+	// default value = false
+	if opts.NoTree == false {
+		_, err = ConstructTree(cf.Tree, hc, "", suite, rand, hosts, nameToAddr, opts)
+	}
 	if connT != GoC {
 		hc.Dir = nil
 	}
@@ -544,4 +549,3 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 
 	return hc, err
 }
-

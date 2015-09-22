@@ -1,15 +1,15 @@
 package coll_sign
 
 import (
-	"github.com/dedis/cothority/deploy"
-	"github.com/dedis/cothority/proto/sign"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"fmt"
-	"log"
+	"github.com/dedis/cothority/deploy"
 	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/crypto/nist"
-"github.com/dedis/crypto/edwards/ed25519"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/nist"
+	"log"
 )
 
 // Dispatch-function for running either client or server (mode-parameter)
@@ -71,7 +71,7 @@ func Run(app *config.AppConfig, conf *deploy.Config) {
 		sn.Close()
 	}(hc.SNodes[0])
 
-	switch app.Mode{
+	switch app.Mode {
 	case "client":
 		RunClient(conf, hc)
 	case "server":
