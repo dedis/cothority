@@ -10,7 +10,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/hashid"
 	"strconv"
-)
+	)
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
@@ -37,6 +37,12 @@ func RunClient(conf *deploy.Config, hc *config.HostConfig) {
 		start = time.Now()
 		t0 := time.Now()
 
+		/*
+		err := hc.SNodes[0].Announce(0,
+			&sign.AnnouncementMessage{
+				LogTest: hc.SNodes[0].LogTest,
+				Round:   i})
+				*/
 		err := hc.SNodes[0].StartSigningRound()
 		if err != nil {
 			dbg.Lvl1(err)

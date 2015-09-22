@@ -24,11 +24,11 @@ import (
 
 // Get multiplexes all messages from TCPHost using application logic
 func (sn *Node) get() error {
-	dbg.Lvl4(sn.Name(), "getting")
+	dbg.LLvl4(sn.Name(), "getting")
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
-	dbg.Lvl4("Going to get", sn.Name())
+	dbg.LLvl4("Going to get", sn.Name())
 	msgchan := sn.Host.Get()
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
@@ -48,6 +48,7 @@ func (sn *Node) get() error {
 			sn.StopHeartbeat()
 			return nil
 		default:
+			dbg.LLvl4(sn.Name(), "waiting for message")
 			nm, ok := <-msgchan
 			err := nm.Err
 
@@ -67,7 +68,7 @@ func (sn *Node) get() error {
 			//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
-			// dbg.Lvl4(sn.Name(), "received message: ", sm.Type)
+			dbg.LLvl4(sn.Name(), "received message:", sm.Type)
 
 			// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()

@@ -159,7 +159,7 @@ func (h *TCPHost) Listen() error {
 			h.PeerLock.Lock()
 			h.Ready[name] = true
 			h.peers[name] = tp
-			dbg.Lvl3("Connected to child:", tp, tp.conn)
+			dbg.Lvl3("Connected to child:", tp.Name())
 			h.PeerLock.Unlock()
 
 			go func() {
@@ -532,7 +532,9 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 	}
 	var canceled int64
 	var wg sync.WaitGroup
+	dbg.LLvl4(h.Name(), "sending to", len(children), "children")
 	for i, c := range children {
+		dbg.LLvl4("Sending to child", c)
 		wg.Add(1)
 		go func(i int, c string) {
 			defer wg.Done()
@@ -554,10 +556,11 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 						err = e
 						errLock.Unlock()
 					}
+					dbg.LLvl4("Informed child", c)
 					return
 				}
+				dbg.LLvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)
 				time.Sleep(250 * time.Millisecond)
-				dbg.Lvl4("Waiting to put down msg from", h.Name(), "to", c)
 			}
 
 		}(i, c)
