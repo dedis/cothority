@@ -8,9 +8,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/coconet"
-	"github.com/dedis/cothority/proto/sign"
 	"fmt"
 )
 
@@ -62,9 +62,7 @@ func (c *Client) handleServer(s coconet.Conn) error {
 			if err == coconet.ErrNotEstablished {
 				continue
 			}
-			if sign.DEBUG {
-				log.Warn("error getting from connection:", err)
-			}
+			log.Warn("error getting from connection:", err)
 			return err
 		}
 		c.handleResponse(tsm)
@@ -103,21 +101,15 @@ func (c *Client) AddServer(name string, conn coconet.Conn) {
 				c.Mux.Lock()
 				c.Servers[name] = conn
 				c.Mux.Unlock()
-				if sign.DEBUG {
-					log.Println("SUCCESS: connected to server:", conn)
-				}
+				dbg.Lvl3("Success: connected to server:", conn)
 				err := c.handleServer(conn)
 				// if a server encounters any terminating error
 				// terminate all pending client transactions and kill the client
 				if err != nil {
-					if sign.DEBUG {
-						log.Errorln("EOF DETECTED: sending EOF to all pending TimeStamps")
-					}
+					log.Errorln("EOF detected: sending EOF to all pending TimeStamps")
 					c.Mux.Lock()
 					for _, ch := range c.doneChan {
-						if sign.DEBUG {
-							log.Println("Sending to Receiving Channel")
-						}
+						log.Println("Sending to Receiving Channel")
 						ch <- io.EOF
 					}
 					c.Error = io.EOF
@@ -138,7 +130,7 @@ func (c *Client) PutToServer(name string, data coconet.BinaryMarshaler) error {
 	defer c.Mux.Unlock()
 	conn := c.Servers[name]
 	if conn == nil {
-		return errors.New(fmt.Sprintf("INVALID SERVER/NOT CONNECTED", name, c.Servers[name]))
+		return errors.New(fmt.Sprintf("Invalid server/not connected", name, c.Servers[name]))
 	}
 	return conn.Put(data)
 }
@@ -158,7 +150,6 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.doneChan[c.reqno] = make(chan error, 1) // new done channel for new req
 	c.Mux.Unlock()
 	// send request to TSServer
-	//log.Debug(c.Name(), "SENDING TIME STAMP REQUEST TO: ", TSServerName)
 	err := c.PutToServer(TSServerName,
 		&TimeStampMessage{
 			Type:  StampRequestType,
@@ -166,9 +157,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 			Sreq:  &StampRequest{Val: val}})
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
-			if sign.DEBUG {
-				log.Warn(c.Name(), "error timestamping to ", TSServerName, ": ", err)
-			}
+			log.Warn(c.Name(), "error timestamping to ", TSServerName, ": ", err)
 		}
 		// pass back up all errors from putting to server
 		return err
@@ -182,19 +171,15 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	// wait until ProcessStampReply signals that reply was received
 	select {
 	case err = <-myChan:
-		//log.Println("-------------client received  response from" + TSServerName)
+	//log.Println("-------------client received  response from" + TSServerName)
 		break
 	case <-time.After(10 * ROUND_TIME):
-		if sign.DEBUG == true {
-			log.Errorln(errors.New("client timeouted on waiting for response from" + TSServerName))
-		}
+		dbg.Lvl3("client timeouted on waiting for response from" + TSServerName)
 		break
 	// err = ErrClientToTSTimeout
 	}
 	if err != nil {
-		if sign.DEBUG {
-			log.Errorln(c.Name(), "error received from DoneChan:", err)
-		}
+		log.Errorln(c.Name(), "error received from DoneChan:", err)
 		return err
 	}
 

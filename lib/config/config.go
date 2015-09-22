@@ -219,7 +219,7 @@ opts ConfigOptions) (int, error) {
 
 	// if the JSON holds the fields field is set load from there
 	if len(n.PubKey) != 0 {
-		// dbg.Lvl3("decoding point")
+		// dbg.Lvl4("decoding point")
 		encoded, err := hex.DecodeString(string(n.PubKey))
 		if err != nil {
 			log.Error("failed to decode hex from encoded")
@@ -231,7 +231,7 @@ opts ConfigOptions) (int, error) {
 			log.Error("failed to decode point from hex")
 			return 0, err
 		}
-		// dbg.Lvl3("decoding point")
+		// dbg.Lvl4("decoding point")
 		encoded, err = hex.DecodeString(string(n.PriKey))
 		if err != nil {
 			log.Error("failed to decode hex from encoded")
@@ -264,16 +264,17 @@ opts ConfigOptions) (int, error) {
 			prikey = sn.PrivKey
 			pubkey = sn.PubKey
 		}
-		// dbg.Lvl3("pubkey:", sn.PubKey)
-		// dbg.Lvl3("given: ", pubkey)
+		// dbg.Lvl4("pubkey:", sn.PubKey)
+		// dbg.Lvl4("given: ", pubkey)
 	}
 	// if the parent of this call is empty then this must be the root node
 	if parent != "" && generate {
+		dbg.Lvl5("Adding parent for", h.Name(), "to", parent)
 		h.AddParent(0, parent)
 	}
-	// dbg.Lvl3("name: ", n.Name)
-	// dbg.Lvl3("prikey: ", prikey)
-	// dbg.Lvl3("pubkey: ", pubkey)
+	// dbg.Lvl4("name: ", n.Name)
+	// dbg.Lvl4("prikey: ", prikey)
+	// dbg.Lvl4("pubkey: ", pubkey)
 	height := 0
 	for _, c := range n.Children {
 		// connect this node to its children
@@ -284,11 +285,12 @@ opts ConfigOptions) (int, error) {
 		}
 
 		if generate {
+			dbg.Lvl4("Adding children for", h.Name())
 			h.AddChildren(0, cname)
 		}
 
 		// recursively construct the children
-		dbg.Lvl3("ConstructTree:", h, suite, rand, hosts, nameToAddr, opts)
+		dbg.Lvl5("ConstructTree:", h, suite, rand, hosts, nameToAddr, opts)
 		h, err := ConstructTree(c, hc, name, suite, rand, hosts, nameToAddr, opts)
 		if err != nil {
 			return 0, err
@@ -299,9 +301,9 @@ opts ConfigOptions) (int, error) {
 	if generate {
 		sn.Height = height
 	}
-	// dbg.Lvl3("name: ", n.Name)
-	// dbg.Lvl3("final x_hat: ", x_hat)
-	// dbg.Lvl3("final pubkey: ", pubkey)
+	// dbg.Lvl4("name: ", n.Name)
+	// dbg.Lvl4("final x_hat: ", x_hat)
+	// dbg.Lvl4("final pubkey: ", pubkey)
 	return height, nil
 }
 
@@ -325,9 +327,9 @@ func GetAddress() (string, error) {
 		addr := ""
 
 		for _, a := range as {
-			dbg.Lvl3("a = %+v", a)
+			dbg.Lvl4("a = %+v", a)
 			if ipv4Reg.MatchString(a) {
-				dbg.Lvl3("matches")
+				dbg.Lvl4("matches")
 				addr = a
 			}
 		}
@@ -354,6 +356,7 @@ type ConfigOptions struct {
 
 // run the given hostnames
 func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...string) error {
+	dbg.LLvl3(hc.Hosts, "going to connect everything for", hostnameSlice)
 	hostnames := make(map[string]*sign.Node)
 	if hostnameSlice == nil {
 		hostnames = hc.Hosts
@@ -369,6 +372,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 	// set all hosts to be listening
 	for _, sn := range hostnames {
 		sn.Type = signType
+		dbg.Lvl3("Listening on", sn.Host)
 		sn.Host.Listen()
 	}
 
@@ -392,7 +396,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 				startTime = maxTime
 			}
 		}
-		dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
+		dbg.Lvl4(fmt.Sprintf("Successfully connected to parent %s", h))
 		if err != nil {
 			log.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
 			//return errors.New("failed to connect")
@@ -403,11 +407,14 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 	// wait for a little bit for connections to establish fully
 	// get rid of waits they hide true bugs
 	// time.Sleep(1000 * time.Millisecond)
+
 	if !stamper {
 		for _, sn := range hostnames {
 			go sn.Listen()
 		}
 	}
+
+
 	return nil
 }
 
@@ -482,17 +489,17 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 			if opts.GenHosts {
 				p := strconv.Itoa(StartConfigPort)
 				addr = localAddr + ":" + p
-				//dbg.Lvl3("created new host address: ", addr)
+				//dbg.Lvl4("created new host address: ", addr)
 				StartConfigPort += 10
 			} else if opts.Port != "" {
-				dbg.Lvl3("attempting to rewrite port: ", opts.Port)
+				dbg.Lvl4("attempting to rewrite port: ", opts.Port)
 				// if the port has been specified change the port
 				hostport := strings.Split(addr, ":")
-				dbg.Lvl3(hostport)
+				dbg.Lvl4(hostport)
 				if len(hostport) == 2 {
 					addr = hostport[0] + ":" + opts.Port
 				}
-				dbg.Lvl3(addr)
+				dbg.Lvl4(addr)
 			} else if len(opts.Hostnames) != 0 {
 				addr = opts.Hostnames[i]
 			}
@@ -514,6 +521,8 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 			}
 		}
 	}
+
+
 	suite := edwards.NewAES128SHA256Ed25519(true)
 	//suite := nist.NewAES128SHA256P256()
 	if opts.Suite != nil {
@@ -526,19 +535,20 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 		hc.Dir = nil
 	}
 
-	dbg.Lvl3("IN LOAD JSON")
 	// add a hostlist to each of the signing nodes
 	var hostList []string
 	for h := range hosts {
 		hostList = append(hostList, h)
 	}
+
+
 	for _, sn := range hc.SNodes {
 		sn.HostList = make([]string, len(hostList))
 		sortable := sort.StringSlice(hostList)
 		sortable.Sort()
 		copy(sn.HostList, sortable)
 		// set host list on view 0
-		//dbg.Lvl3("in config hostlist", sn.HostList)
+		//dbg.Lvl4("in config hostlist", sn.HostList)
 		sn.SetHostList(0, sn.HostList)
 	}
 

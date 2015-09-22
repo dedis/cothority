@@ -138,7 +138,7 @@ func NewViews() *Views {
 }
 
 func (v *Views) NewView(view int, parent string, children []string, hostlist []string) {
-	dbg.Lvl2("New view", view, hostlist)
+	dbg.Lvl3("New view", view, hostlist)
 	v.Lock()
 	vi := &View{Num: view, Parent: parent}
 	vi.HostList = make([]string, len(hostlist))

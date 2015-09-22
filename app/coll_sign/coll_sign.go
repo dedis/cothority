@@ -10,23 +10,28 @@ import (
 	"github.com/dedis/crypto/nist"
 "github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/abstract"
+	"time"
+	"os"
+	"io/ioutil"
 )
 
 // Dispatch-function for running either client or server (mode-parameter)
 func Run(app *config.AppConfig, conf *deploy.Config) {
 	// Do some common setup
-	dbg.Lvl1(app.Hostname, "Starting to run")
+	if app.Mode == "client"{
+		app.Hostname = app.Name
+	}
+	dbg.Lvl3(app.Hostname, "Starting to run")
 	if conf.Debug > 1 {
 		sign.DEBUG = true
 	}
 
 	if app.Hostname == "" {
-		fmt.Println("hostname is empty")
-		log.Fatal("no hostname given")
+		log.Fatal("no hostname given", app.Hostname)
 	}
 
 	// load the configuration
-	//dbg.Lvl2("loading configuration")
+	dbg.Lvl3("loading configuration for", app.Hostname)
 	var hc *config.HostConfig
 	var err error
 	s := GetSuite(conf.Suite)
@@ -39,6 +44,19 @@ func Run(app *config.AppConfig, conf *deploy.Config) {
 		fmt.Println(err)
 		log.Fatal(err)
 	}
+
+	// Wait for everybody to be ready before going on
+	ioutil.WriteFile("coll_stamp_up/up" + app.Hostname, []byte("started"), 0666)
+	for {
+		_, err := os.Stat("coll_stamp_up")
+		if err == nil {
+			dbg.LLvl4(app.Hostname, "waiting for others to finish")
+			time.Sleep(time.Second)
+		} else {
+			break
+		}
+	}
+	dbg.Lvl2(app.Hostname, "thinks everybody's here")
 
 	// set FailureRates
 	if conf.Failures > 0 {
@@ -60,22 +78,15 @@ func Run(app *config.AppConfig, conf *deploy.Config) {
 		hc.SNodes[i].FailAsFollowerEvery = conf.FFail
 	}
 
-	// run this specific host
-	err = hc.Run(true, sign.MerkleTree, app.Hostname)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer func(sn *sign.Node) {
+	defer func() {
 		dbg.Lvl1("Collective Signing", app.Hostname, "has terminated in mode", app.Mode)
-		sn.Close()
-	}(hc.SNodes[0])
+	}()
 
 	switch app.Mode{
 	case "client":
-		RunClient(conf, hc)
+		log.Panic("No client mode")
 	case "server":
-		RunServer(conf)
+		RunServer(app, conf, hc)
 	}
 }
 

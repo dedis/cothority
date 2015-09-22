@@ -93,7 +93,7 @@ func (d *Deter) Build(build string) (error) {
 
 	// Start with a clean build-directory
 	current, _ := os.Getwd()
-	dbg.Lvl3("Current dir is:", current)
+	dbg.Lvl4("Current dir is:", current)
 	defer os.Chdir(current)
 
 	// Go into deterlab-dir and create the build-dir
@@ -106,10 +106,10 @@ func (d *Deter) Build(build string) (error) {
 	if build != "" {
 		packages = strings.Split(build, ",")
 	}
-	dbg.Lvl2("Starting to build all executables", packages)
+	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
 		basename := path.Base(p)
-		dbg.Lvl3("Building ", p, "into", basename)
+		dbg.Lvl4("Building ", p, "into", basename)
 		wg.Add(1)
 		src := p + "/" + basename + ".go"
 		dst := d.BuildDir + "/" + basename
@@ -169,7 +169,7 @@ func (d *Deter) Deploy() (error) {
 
 	dbg.Lvl1("Done copying")
 
-	dbg.Lvl2(cliutils.SshRunStdout(d.Login, d.Host,
+	dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host,
 		""))
 
 	return nil
@@ -180,7 +180,7 @@ func (d *Deter) Start() (error) {
 		d.Config.Nmachs * d.Config.Hpn, "and", d.Config.Nloggers, "loggers")
 
 	// setup port forwarding for viewing log server
-	dbg.Lvl2("setup port forwarding for master logger: ", d.masterLogger, d.Login, d.Host)
+	dbg.Lvl3("setup port forwarding for master logger: ", d.masterLogger, d.Login, d.Host)
 	cmd := exec.Command(
 		"ssh",
 		"-t",
@@ -193,13 +193,13 @@ func (d *Deter) Start() (error) {
 		log.Fatal("failed to setup portforwarding for logging server")
 	}
 
-	dbg.Lvl2("runnning deter with nmsgs:", d.Config.Nmsgs, d.Login, d.Host)
+	dbg.Lvl3("runnning deter with nmsgs:", d.Config.Nmsgs, d.Login, d.Host)
 	// run the deter lab boss nodes process
 	// it will be responsible for forwarding the files and running the individual
 	// timestamping servers
 
 	go func() {
-		dbg.Lvl2(cliutils.SshRunStdout(d.Login, d.Host,
+		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host,
 			"GOMAXPROCS=8 remote/deter -nmsgs=" + strconv.Itoa(d.Config.Nmsgs) +
 			" -hpn=" + strconv.Itoa(d.Config.Hpn) +
 			" -bf=" + strconv.Itoa(d.Config.Bf) +
@@ -211,7 +211,7 @@ func (d *Deter) Start() (error) {
 			" -ffail=" + strconv.Itoa(d.Config.FFail) +
 			" -app=" + d.Config.App +
 			" -suite=" + d.Config.Suite))
-		dbg.Lvl2("Sending stop of ssh")
+		dbg.Lvl3("Sending stop of ssh")
 		d.sshDeter <- "stop"
 	}()
 
@@ -224,17 +224,17 @@ func (d *Deter) Stop() (error) {
 	killssh.Stderr = os.Stderr
 	err := killssh.Run()
 	if err != nil {
-		dbg.Lvl2("Stopping ssh: ", err)
+		dbg.Lvl3("Stopping ssh: ", err)
 	}
 	select {
 	case msg := <-d.sshDeter:
 		if msg == "stop" {
-			dbg.Lvl2("SSh is stopped")
+			dbg.Lvl3("SSh is stopped")
 		}else {
 			dbg.Lvl1("Received other command", msg)
 		}
 	case <-time.After(time.Second * 3):
-		dbg.Lvl2("Timeout error when waiting for end of ssh")
+		dbg.Lvl3("Timeout error when waiting for end of ssh")
 	}
 	return nil
 }
@@ -252,7 +252,7 @@ func (d *Deter) WriteConfig(dirOpt ...string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dbg.Lvl3("Wrote login", d.Login, "to", dir)
+	dbg.Lvl4("Wrote login", d.Login, "to", dir)
 }
 
 func ReadConfig(dirOpt ...string) (*Deter, error) {
@@ -285,7 +285,7 @@ func (d *Deter)generateHostsFile() error {
 
 	// open and erase file if needed
 	if _, err1 := os.Stat(hosts_file); err1 == nil {
-		dbg.Lvl3("Hosts file", hosts_file, "already exists. Erasing ...")
+		dbg.Lvl4("Hosts file", hosts_file, "already exists. Erasing ...")
 		os.Remove(hosts_file)
 	}
 	// create the file
@@ -302,7 +302,7 @@ func (d *Deter)generateHostsFile() error {
 	for i := 1; i <= num_servers; i++ {
 		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i - 1, d.Project, name, ip, i))
 	}
-	dbg.Lvl3(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
+	dbg.Lvl4(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
 	return err
 
 }
@@ -334,7 +334,7 @@ func (d *Deter)readHosts() {
 	// slaveLogger2 := phys[2]
 
 	// phys.txt and virt.txt only contain the number of machines that we need
-	dbg.Lvl2("Reading phys and virt")
+	dbg.Lvl3("Reading phys and virt")
 	err = ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(d.physOut), 0666)
 	if err != nil {
 		log.Fatal("failed to write physical nodes file", err)
@@ -348,11 +348,17 @@ func (d *Deter)readHosts() {
 
 // Calculates a tree that is used for the timestampers
 func (d *Deter)calculateGraph() {
-	d.virt = d.virt[3:]
-	d.phys = d.phys[3:]
+	d.virt = d.virt[d.Config.Nloggers:]
+	d.phys = d.phys[d.Config.Nloggers:]
 	t, hostnames, depth, err := graphs.TreeFromList(d.virt, d.Config.Hpn, d.Config.Bf)
-	dbg.Lvl2("DEPTH:", depth)
-	dbg.Lvl2("TOTAL HOSTS:", len(hostnames))
+	dbg.Lvl2("Depth:", depth)
+	dbg.Lvl2("Total hosts:", len(hostnames))
+	total := d.Config.Nmachs * d.Config.Hpn
+	if len(hostnames) != total {
+		dbg.Lvl1("Only calculated", len(hostnames), "out of", total, "hosts - try changing number of",
+		"machines or hosts per node")
+		log.Fatal("Didn't calculate enough hosts")
+	}
 
 	// generate the configuration file from the tree
 	cf := config.ConfigFromTree(t, hostnames)

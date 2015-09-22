@@ -138,11 +138,11 @@ func (sn *Node) Close() {
 	if sn.heartbeat != nil {
 		sn.heartbeat.Stop()
 		sn.heartbeat = nil
-		log.Println("after close", sn.Name(), "has heartbeat=", sn.heartbeat)
+		dbg.LLvl4("after close", sn.Name(), "has heartbeat=", sn.heartbeat)
 	}
 	if !sn.isclosed {
 		close(sn.closed)
-		log.Printf("signing node: closing: %s", sn.Name())
+		dbg.LLvl4("signing node: closing: %s", sn.Name())
 		sn.Host.Close()
 	}
 	sn.isclosed = true

@@ -63,7 +63,7 @@ func SshRunStdout(username, host, command string) error {
 		addr = username + "@" + addr
 	}
 
-	dbg.Lvl2("Going to ssh to ", addr, command)
+	dbg.Lvl4("Going to ssh to ", addr, command)
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
 	cmd.Stderr = os.Stderr
@@ -88,15 +88,15 @@ func Build(path, out, goarch, goos string) (string, error) {
 	var b bytes.Buffer
 	build_buffer := bufio.NewWriter(&b)
 	cmd = exec.Command("go", "build", "-v", "-o", out, path)
-	dbg.Lvl3("Building", path)
+	dbg.Lvl4("Building", path)
 	cmd.Stdout = build_buffer
 	cmd.Stderr = build_buffer
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
 	wd, err := os.Getwd()
-	dbg.Lvl3(wd)
-	dbg.Lvl3("Command:", cmd.Args)
+	dbg.Lvl4(wd)
+	dbg.Lvl4("Command:", cmd.Args)
 	err = cmd.Run()
-	dbg.Lvl3(b.String())
+	dbg.Lvl4(b.String())
 	return b.String(), err
 }
 

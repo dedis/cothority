@@ -10,8 +10,8 @@ func init(){
 
 func ExampleLevel2() {
 	dbg.Lvl1("Level1")
-	dbg.Lvl2("Level2")
-	dbg.Lvl3("Level3")
+	dbg.Lvl3("Level2")
+	dbg.Lvl4("Level3")
 	dbg.Lvl4("Level4")
 	dbg.Lvl5("Level5")
 

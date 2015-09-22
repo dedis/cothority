@@ -57,7 +57,7 @@ func main() {
 
 	flag.Parse()
 
-	dbg.Lvl1("Running Timestamper", appConf.Hostname, "with logger at", appConf.Logger)
+	dbg.Lvl3("Running", appConf.App, appConf.Hostname, "with logger at", appConf.Logger)
 	defer func() {
 		log.Errorln("Terminating host", appConf.Hostname)
 	}()
@@ -65,7 +65,7 @@ func main() {
 	// connect with the logging server
 	if appConf.Logger != "" && (appConf.AmRoot || conf.Debug > 0) {
 		// blocks until we can connect to the appConf.Logger
-		dbg.Lvl1(appConf.Hostname, "Connecting to Logger")
+		dbg.Lvl3(appConf.Hostname, "Connecting to Logger")
 		lh, err := logutils.NewLoggerHook(appConf.Logger, appConf.Hostname, conf.App)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -75,7 +75,7 @@ func main() {
 		log.AddHook(lh)
 		//log.SetOutput(ioutil.Discard)
 		//fmt.Println("exiting appConf.Logger block")
-		dbg.Lvl3(appConf.Hostname, "Done setting up hook")
+		dbg.Lvl4(appConf.Hostname, "Done setting up hook")
 	}
 
 	if appConf.Mode == "server" {
@@ -96,11 +96,11 @@ func main() {
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			dbg.Lvl2(http.ListenAndServe(net.JoinHostPort(appConf.PhysAddr, strconv.Itoa(p + 2)), nil))
+			dbg.Lvl3(http.ListenAndServe(net.JoinHostPort(appConf.PhysAddr, strconv.Itoa(p + 2)), nil))
 		}()
 	}
 
-	dbg.Lvl2("Running timestamp with rFail and fFail: ", conf.RFail, conf.FFail)
+	dbg.Lvl3("Running timestamp with rFail and fFail: ", conf.RFail, conf.FFail)
 
 	switch appConf.App{
 	case "coll_sign":
