@@ -204,7 +204,7 @@ func ConstructTree(
 
 	// generate indicates whether we should generate the signing
 	// node for this hostname
-	dbg.Lvl4("opts.Host - name", opts.Host, name)
+	//dbg.Lvl4("opts.Host - name", opts.Host, name)
 	generate := opts.Host == "" || opts.Host == name
 
 	// check to make sure the this hostname is in the tree
@@ -272,7 +272,7 @@ func ConstructTree(
 	}
 	// if the parent of this call is empty then this must be the root node
 	if parent != "" && generate {
-		dbg.Lvl5("Adding parent for", h.Name(), "to", parent)
+		//dbg.Lvl5("Adding parent for", h.Name(), "to", parent)
 		h.AddParent(0, parent)
 	}
 
@@ -289,7 +289,7 @@ func ConstructTree(
 		}
 
 		if generate {
-			dbg.Lvl4("Adding children for", h.Name())
+			//dbg.Lvl4("Adding children for", h.Name())
 			h.AddChildren(0, cname)
 		}
 
