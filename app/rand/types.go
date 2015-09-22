@@ -80,3 +80,23 @@ type R4Share struct {
 	Share		[]byte		// Decrypted share dealt to this server
 }
 
+type Transcript struct {
+	I1	[]byte			// I1 message signed by client
+	R1	[][]byte		// R1 messages signed by resp servers
+	I2	[]byte
+	R2	[][]byte
+	I3	[]byte
+	R3	[][]byte
+	I4	[]byte
+	R4	[][]byte
+}
+
+/*
+func (t *Transcript) Verify(suite abstract.Suite) error {
+
+	...
+
+	var i1 I1
+}
+*/
+
