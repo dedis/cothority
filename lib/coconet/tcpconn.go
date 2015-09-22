@@ -1,7 +1,6 @@
 package coconet
 
-import
-(
+import (
 	"encoding/gob"
 	"errors"
 	"math/rand"
@@ -10,7 +9,6 @@ import
 	"time"
 	//"runtime/debug"
 
-	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/crypto/abstract"

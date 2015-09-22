@@ -1,18 +1,18 @@
 package coll_sign
 
 import (
-	"github.com/dedis/cothority/deploy"
-	"github.com/dedis/cothority/proto/sign"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"fmt"
-	"log"
+	"github.com/dedis/cothority/deploy"
 	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/crypto/nist"
-"github.com/dedis/crypto/edwards/ed25519"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
 	"time"
 	"os"
 	"io/ioutil"
+	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/nist"
+	"log"
 )
 
 // Dispatch-function for running either client or server (mode-parameter)
@@ -83,7 +83,7 @@ func Run(app *config.AppConfig, conf *deploy.Config) {
 		dbg.Lvl1("Collective Signing", app.Hostname, "has terminated in mode", app.Mode)
 	}()
 
-	switch app.Mode{
+	switch app.Mode {
 	case "client":
 		log.Panic("No client mode")
 	case "server":

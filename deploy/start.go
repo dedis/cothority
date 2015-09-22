@@ -23,12 +23,12 @@ package deploy
 import (
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"math"
 	"os"
 	"strconv"
 	"time"
-	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 // Configuration-variables
@@ -36,6 +36,7 @@ var deploy_config *Config
 var deployP Platform
 var nobuild bool = false
 var port int = 8081
+
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
 // this leaves us with 7 minutes for test setup and tear-down
 var DefaultRounds int = 1
@@ -43,6 +44,21 @@ var DefaultRounds int = 1
 func init() {
 	deploy_config = NewConfig()
 	deployP = NewPlatform()
+}
+
+type T struct {
+	nmachs int
+	hpn    int
+	bf     int
+
+	rate     int
+	rounds   int
+	failures int
+
+	rFail       int
+	fFail       int
+	testConnect bool
+	app         string
 }
 
 // nmachs, hpn, bf
@@ -129,7 +145,7 @@ func RunTests(name string, ts []T) {
 
 	MkTestDir()
 	rs := make([]RunStats, len(ts))
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
@@ -181,8 +197,8 @@ func RunTests(name string, ts []T) {
 		}
 
 		cl, err := os.OpenFile(
-			TestFile("client_latency_" + name + "_" + strconv.Itoa(i)),
-			os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+			TestFile("client_latency_"+name+"_"+strconv.Itoa(i)),
+			os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 		if err != nil {
 			log.Fatal("error opening test file:", err)
 		}
@@ -202,12 +218,16 @@ func RunTests(name string, ts []T) {
 // hpn, bf, nmsgsG
 func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
-	done := make(chan struct {})
+	done := make(chan struct{})
 	var rs RunStats
 	cfg := &Config{
 		t.nmachs, deploy_config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
+<<<<<<< HEAD
 		deploy_config.Debug, deploy_config.RootWait, t.app, deploy_config.Suite }
+=======
+		deploy_config.Debug, deploy_config.RootWait, deploy_config.App, deploy_config.Suite}
+>>>>>>> app_abstraction
 
 	dbg.Lvl1("Running test with parameters", cfg)
 	dbg.Lvl1("Failures percent is", t.failures)
@@ -226,8 +246,13 @@ func RunTest(t T) (RunStats, error) {
 	go func() {
 		rs = Monitor(t.bf)
 		deployP.Stop()
+<<<<<<< HEAD
 		dbg.Lvl3("Test complete:", rs)
 		done <- struct {}{}
+=======
+		dbg.Lvl2("Test complete:", rs)
+		done <- struct{}{}
+>>>>>>> app_abstraction
 	}()
 
 	// timeout the command if it takes too long
@@ -244,29 +269,14 @@ func RunTest(t T) (RunStats, error) {
 	}
 }
 
-type T struct {
-	nmachs      int
-	hpn         int
-	bf          int
-
-	rate        int
-	rounds      int
-	failures    int
-
-	rFail       int
-	fFail       int
-	testConnect bool
-	app         string
-}
-
 // high and low specify how many milliseconds between messages
 func RateLoadTest(hpn, bf int) []T {
 	return []T{
 		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // never send a message
 		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // one per round
-		{0, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // 10 per round
-		{0, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // 100 per round
-		{0, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // 1000 per round
+		{0, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "coll_stamp"},  // 10 per round
+		{0, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "coll_stamp"},   // 100 per round
+		{0, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},   // 1000 per round
 	}
 }
 
