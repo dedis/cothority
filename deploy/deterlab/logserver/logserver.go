@@ -78,7 +78,7 @@ func main() {
 	} else {
 		role = "Servent"
 	}
-	dbg.Lvl1("running logserver", role, "with nmsgs", cfg.Nmsgs, "branching factor: ", cfg.Bf)
+	dbg.Lvl3("running logserver", role, "with nmsgs", cfg.Nmsgs, "branching factor: ", cfg.Bf)
 	if isMaster {
 		var err error
 		homePage, err = template.ParseFiles("webfiles/home.html")
@@ -91,7 +91,7 @@ func main() {
 			reverseProxy(s)
 		}
 
-		dbg.Lvl3("Log server", role, "running at :", addr)
+		dbg.Lvl4("Log server", role, "running at :", addr)
 		// /webfiles/Chart.js/Chart.min.js
 		http.HandleFunc("/", homeHandler)
 		fs := http.FileServer(http.Dir("webfiles/"))
@@ -106,10 +106,10 @@ func main() {
 		if err != nil {
 			tries += 1
 			time.Sleep(time.Second)
-			dbg.Lvl3("Slave log server could not connect to logger master (", master, ") .. Trying again (", tries, ")")
+			dbg.Lvl4("Slave log server could not connect to logger master (", master, ") .. Trying again (", tries, ")")
 			goto retry
 		}
-		dbg.Lvl3("Slave Log server", role, "running at :", addr, "& connected to Master ")
+		dbg.Lvl4("Slave Log server", role, "running at :", addr, "& connected to Master ")
 	}
 	http.Handle("/_log", websocket.Handler(logEntryHandler))
 	http.Handle("/log", websocket.Handler(logHandler))
@@ -137,7 +137,7 @@ func logEntryHandler(ws *websocket.Conn) {
 	var data []byte
 	err := websocket.Message.Receive(ws, &data)
 	for err == nil {
-		//dbg.Lvl3("logEntryHandler", isMaster)
+		//dbg.Lvl4("logEntryHandler", isMaster)
 		if !isMaster {
 			websocket.Message.Send(wsmaster, data)
 		} else {
@@ -148,11 +148,11 @@ func logEntryHandler(ws *websocket.Conn) {
 		}
 		err = websocket.Message.Receive(ws, &data)
 	}
-	dbg.Lvl3("log server client error:", err)
+	dbg.Lvl4("log server client error:", err)
 }
 
 func logHandler(ws *websocket.Conn) {
-	dbg.Lvl3(master, "log server serving /log (websocket)")
+	dbg.Lvl4(master, "log server serving /log (websocket)")
 	i := 0
 	for {
 		Log.Mlock.RLock()
@@ -167,7 +167,7 @@ func logHandler(ws *websocket.Conn) {
 		Log.Mlock.RUnlock()
 		_, err := ws.Write(msg)
 		if err != nil {
-			dbg.Lvl3("unable to write to log websocket")
+			dbg.Lvl4("unable to write to log websocket")
 			return
 		}
 
@@ -177,11 +177,11 @@ func logHandler(ws *websocket.Conn) {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		dbg.Lvl3("home handler is handling non-home request")
+		dbg.Lvl4("home handler is handling non-home request")
 		http.NotFound(w, r)
 		return
 	}
-	dbg.Lvl3(master, "log server serving ", r.URL)
+	dbg.Lvl4(master, "log server serving ", r.URL)
 	host := r.Host
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
@@ -195,7 +195,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
-	dbg.Lvl3("Log handler: ", r.URL, "-", len(Log.Msgs))
+	dbg.Lvl4("Log handler: ", r.URL, "-", len(Log.Msgs))
 	//host := r.Host
 	// fmt.Println(host)
 	for i, _ := range Log.Msgs {
@@ -211,7 +211,7 @@ func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
 }
 
 func logHandlerHtmlReverse(w http.ResponseWriter, r *http.Request) {
-	dbg.Lvl3("Log handler: ", r.URL, "-", len(Log.Msgs))
+	dbg.Lvl4("Log handler: ", r.URL, "-", len(Log.Msgs))
 	//host := r.Host
 	// fmt.Println(host)
 	for i := len(Log.Msgs) - 1; i >= 0; i-- {
@@ -238,15 +238,15 @@ func NewReverseProxy(target *url.URL) *httputil.ReverseProxy {
 		// remove the first two components /d/short_name
 		pathComp = pathComp[3:]
 		r.URL.Path = target.Path + "/" + strings.Join(pathComp, "/")
-		dbg.Lvl3("redirected to: ", r.URL.String())
+		dbg.Lvl4("redirected to: ", r.URL.String())
 	}
-	dbg.Lvl3("setup reverse proxy for destination url:", target.Host, target.Path)
+	dbg.Lvl4("setup reverse proxy for destination url:", target.Host, target.Path)
 	return &httputil.ReverseProxy{Director: director}
 }
 
 func proxyDebugHandler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		dbg.Lvl3("proxy serving request for: ", r.URL)
+		dbg.Lvl4("proxy serving request for: ", r.URL)
 		p.ServeHTTP(w, r)
 	}
 }
@@ -269,7 +269,7 @@ func reverseProxy(server string) {
 	//
 	proxy := NewReverseProxy(remote)
 
-	//dbg.Lvl3("setup proxy for: /d/"+short+"/", " it points to : "+server)
+	//dbg.Lvl4("setup proxy for: /d/"+short+"/", " it points to : "+server)
 	// register the reverse proxy forwarding for this server
 	http.HandleFunc("/d/" + short + "/", proxyDebugHandler(proxy))
 }

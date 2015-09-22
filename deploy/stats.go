@@ -13,19 +13,6 @@ import (
 	"time"
 )
 
-/*
-{
-	"eapp":"time",
-	"ehost":"10.255.0.13:2000",
-	"elevel":"info",
-	"emsg":"root round",
-	"etime":"2015-02-27T09:50:45-08:00",
-	"file":"server.go:195",
-	"round":59,
-	"time":893709029,
-	"type":"root_round"
-}
-*/
 type StatsEntry struct {
 	App     string  `json:"eapp"`
 	Host    string  `json:"ehost"`

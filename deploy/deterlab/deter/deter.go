@@ -34,6 +34,7 @@ import (
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/deploy"
+	"os"
 )
 
 var deter deploy.Deter
@@ -74,9 +75,13 @@ func main() {
 		wg.Add(1)
 		go func(h string) {
 			defer wg.Done()
-			cliutils.SshRun("", h, "sudo killall app logserver timeclient scp ssh 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall app forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
 			cliutils.SshRun("", h, "sudo killall app 2>/dev/null >/dev/null")
+			if dbg.DebugVisible > 3 {
+				dbg.Lvl4("Killing report:")
+				cliutils.SshRunStdout("", h, "ps ax")
+			}
 		}(h)
 	}
 	wg.Wait()
@@ -109,7 +114,7 @@ func main() {
 	if err != nil {
 		log.Fatal("deter.go: error reading configuration file: %v\n", err)
 	}
-	dbg.Lvl3("cfg file:", string(file))
+	dbg.Lvl4("cfg file:", string(file))
 	var cf config.ConfigFile
 	err = json.Unmarshal(file, &cf)
 	if err != nil {
@@ -117,7 +122,7 @@ func main() {
 	}
 
 	hostnames := cf.Hosts
-	dbg.Lvl3("hostnames:", hostnames)
+	dbg.Lvl4("hostnames:", hostnames)
 
 	depth := graphs.Depth(cf.Tree)
 	var random_leaf string
@@ -132,7 +137,7 @@ func main() {
 
 	rootname = hostnames[0]
 
-	dbg.Lvl3("depth of tree:", depth)
+	dbg.Lvl4("depth of tree:", depth)
 
 	// mapping from physical node name to the timestamp servers that are running there
 	// essentially a reverse mapping of vpmap except ports are also used
@@ -172,49 +177,98 @@ func main() {
 
 	// wait a little bit for the logserver to start up
 	time.Sleep(5 * time.Second)
-	dbg.Lvl1("starting", len(physToServer), "time clients")
-	// start up one timeclient per physical machine
-	// it requests timestamps from all the servers on that machine
 
 	i := 0
-	for p, ss := range physToServer {
-		if len(ss) == 0 {
-			continue
-		}
-		servers := strings.Join(ss, ",")
-		go func(i int, p string) {
-			_, err := cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
-			" -name=client@" + p +
-			" -server=" + servers +
-			" -logger=" + loggerports[i])
-			if err != nil {
-				dbg.Lvl3("Deter.go : timeclient error ", err)
-			}
-			dbg.Lvl3("Deter.go : Finished with timeclient", p)
-		}(i, p)
-		i = (i + 1) % len(loggerports)
+	// For coll_stamp we have to wait for everything in place which takes quite some time
+	// We set up a directory and every host writes a file once he's ready to listen
+	// When everybody is ready, the directory is deleted and the test starts
+	coll_stamp_dir := "remote/coll_stamp_up"
+	if conf.App == "coll_stamp" || conf.App == "coll_sign" {
+		os.RemoveAll(coll_stamp_dir)
+		os.MkdirAll(coll_stamp_dir, 0777)
+		time.Sleep(time.Second)
 	}
-
+	dbg.Lvl1("starting", len(physToServer), "forkexecs")
+	totalServers := 0
 	for phys, virts := range physToServer {
 		if len(virts) == 0 {
 			continue
 		}
-		dbg.Lvl1("starting timestampers for", len(virts), "clients")
-		cmd := GenExecCmd(phys, virts, loggerports[i], random_leaf)
+		totalServers += len(virts)
+		dbg.Lvl1("Launching forkexec for", len(virts), "clients on", phys)
+		//cmd := GenExecCmd(phys, virts, loggerports[i], random_leaf)
 		i = (i + 1) % len(loggerports)
 		wg.Add(1)
-		time.Sleep(100 * time.Millisecond)
-		go func(phys, cmd string) {
-			//dbg.Lvl3("running on ", phys, cmd)
+		go func(phys string) {
+			//dbg.Lvl4("running on ", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl3("deter.go Starting clients on physical machine ", phys, cmd)
-			err := cliutils.SshRunStdout("", phys, cmd)
+			dbg.LLvl4("Starting servers on physical machine ", phys)
+			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
+			" -physaddr=" + phys + " -logger=" + loggerports[i])
 			if err != nil {
-				log.Fatal("Error starting timestamper:", err, phys, virts)
+				log.Fatal("Error starting timestamper:", err, phys)
 			}
-			dbg.Lvl3("Finished with Timestamper", phys)
-		}(phys, cmd)
+			dbg.Lvl4("Finished with Timestamper", phys)
+		}(phys)
+	}
 
+	if conf.App == "coll_stamp" || conf.App == "coll_sign" {
+		// Every stampserver that started up (mostly waiting for configuration-reading)
+		// writes its name in coll_stamp_dir - once everybody is there, the directory
+		// is cleaned to flag it's OK to go on.
+		start_config := time.Now()
+		for {
+			files, err := ioutil.ReadDir(coll_stamp_dir)
+			if err != nil {
+				log.Fatal("Couldn't read directory", coll_stamp_dir, err)
+			} else {
+				dbg.Lvl1("Stampservers started:", len(files), "/", totalServers, "after", time.Since(start_config))
+				if len(files) == totalServers {
+					os.RemoveAll(coll_stamp_dir)
+					// 1st second for everybody to see the deleted directory
+					// 2nd second for everybody to start up listening
+					time.Sleep(2 * time.Second)
+					break
+				}
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	switch conf.App{
+	case "coll_stamp":
+		dbg.Lvl1("starting", len(physToServer), "time clients")
+		// start up one timeclient per physical machine
+		// it requests timestamps from all the servers on that machine
+		for p, ss := range physToServer {
+			if len(ss) == 0 {
+				continue
+			}
+			servers := strings.Join(ss, ",")
+			go func(i int, p string) {
+				_, err := cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
+				" -name=client@" + p +
+				" -server=" + servers +
+				" -logger=" + loggerports[i])
+				if err != nil {
+					dbg.Lvl4("Deter.go : timeclient error ", err)
+				}
+				dbg.Lvl4("Deter.go : Finished with timeclient", p)
+			}(i, p)
+			i = (i + 1) % len(loggerports)
+		}
+	case "coll_sign_no":
+		// TODO: for now it's only a simple startup from the server
+		dbg.Lvl1("Starting only one client")
+		/*
+		p := physToServer[0][0]
+		servers := strings.Join(physToServer[0][1], ",")
+		_, err = cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
+		" -name=client@" + p +
+		" -server=" + servers +
+		" -logger=" + loggerports[i])
+		i = (i + 1) % len(loggerports)
+		*/
 	}
 
 	// wait for the servers to finish before stopping
@@ -224,15 +278,15 @@ func main() {
 
 // Generate all commands on one single physicial machines to launch every "nodes"
 func GenExecCmd(phys string, names []string, loggerport, random_leaf string) string {
-	dbg.Lvl2("Random_leaf", random_leaf)
-	dbg.Lvl2("Names", names)
+	dbg.Lvl3("Random_leaf", random_leaf)
+	dbg.Lvl3("Names", names)
 	connect := false
 	cmd := ""
 	bg := " & "
 	for i, name := range names {
-		dbg.Lvl2("deter.go Generate cmd timestamper : name ==", name)
-		dbg.Lvl2("random_leaf ==", random_leaf)
-		dbg.Lvl2("testconnect is", deter.TestConnect)
+		dbg.Lvl3("deter.go Generate cmd timestamper : name ==", name)
+		dbg.Lvl3("random_leaf ==", random_leaf)
+		dbg.Lvl3("testconnect is", deter.TestConnect)
 		if name == random_leaf && deter.TestConnect {
 			connect = true
 		}

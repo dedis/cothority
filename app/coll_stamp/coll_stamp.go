@@ -14,9 +14,14 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/deploy"
+	"io/ioutil"
+	"os"
 )
 
+var totalHosts int
+
 func Run(app *config.AppConfig, proto *deploy.Config) {
+	totalHosts = proto.Nmachs * proto.Hpn
 	switch app.Mode{
 	case "server":
 		RunServer(app.Hostname, app.App, proto.Rounds, proto.RootWait, proto.Debug, app.TestConnect,
@@ -45,19 +50,18 @@ func GetSuite(suite string) abstract.Suite {
 
 func RunServer(hostname, app string, rounds int, rootwait int, debug int, testConnect bool,
 failureRate, rFail, fFail int, logger, suite string) {
-	dbg.Lvl1(hostname, "Starting to run")
+	dbg.Lvl3(hostname, "Starting to run")
 	if debug > 1 {
 		sign.DEBUG = true
 	}
 
 	// fmt.Println("EXEC TIMESTAMPER: " + hostname)
 	if hostname == "" {
-		fmt.Println("hostname is empty")
 		log.Fatal("no hostname given")
 	}
 
 	// load the configuration
-	//dbg.Lvl2("loading configuration")
+	//dbg.Lvl3("loading configuration")
 	var hc *config.HostConfig
 	var err error
 	s := GetSuite(suite)
@@ -65,11 +69,14 @@ failureRate, rFail, fFail int, logger, suite string) {
 	if failureRate > 0 || fFail > 0 {
 		opts.Faulty = true
 	}
+
+	configTime := time.Now()
 	hc, err = config.LoadConfig("tree.json", opts)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
 	}
+	dbg.Lvl3(hostname, "finished loading config after", time.Since(configTime))
 
 	for i := range hc.SNodes {
 		// set FailureRates
@@ -85,8 +92,19 @@ failureRate, rFail, fFail int, logger, suite string) {
 		hc.SNodes[i].FailAsFollowerEvery = fFail
 	}
 
-	// run this specific host
-	// dbg.Lvl3("RUNNING HOST CONFIG")
+	// Wait for everybody to be ready before going on
+	ioutil.WriteFile("coll_stamp_up/up" + hostname, []byte("started"), 0666)
+	for {
+		_, err := os.Stat("coll_stamp_up")
+		if err == nil {
+			dbg.Lvl4(hostname, "waiting for others to finish")
+			time.Sleep(time.Second)
+		} else {
+			break
+		}
+	}
+	dbg.Lvl3(hostname, "thinks everybody's here")
+
 	err = hc.Run(app != "coll_sign", sign.MerkleTree, hostname)
 	if err != nil {
 		log.Fatal(err)
@@ -117,10 +135,10 @@ failureRate, rFail, fFail int, logger, suite string) {
 
 				dbg.Lvl1("Starting root-round")
 				s.Run("root", rounds)
-				// dbg.Lvl2("\n\nROOT DONE\n\n")
+				// dbg.Lvl3("\n\nROOT DONE\n\n")
 
 			} else if !testConnect {
-				dbg.Lvl1("Running regular timestamper on:", hostname)
+				dbg.Lvl2("Running regular timestamper on:", hostname)
 				s.Run("regular", rounds)
 				// dbg.Lvl1("\n\nREGULAR DONE\n\n")
 			} else {
@@ -134,7 +152,7 @@ failureRate, rFail, fFail int, logger, suite string) {
 
 // run each host in hostnameSlice with the number of clients given
 func RunTimestamper(hc *config.HostConfig, nclients int, hostnameSlice ...string) ([]*Server, []*Client, error) {
-	dbg.Lvl3("RunTimestamper")
+	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
 	if hostnameSlice == nil {
@@ -159,11 +177,11 @@ func RunTimestamper(hc *config.HostConfig, nclients int, hostnameSlice ...string
 		}
 		stampers = append(stampers, NewServer(sn))
 		if hc.Dir == nil {
-			//dbg.Lvl3("listening for clients")
+			dbg.Lvl3(hc.Hosts, "listening for clients")
 			stampers[len(stampers) - 1].Listen()
 		}
 	}
-	//dbg.Lvl3("stampers:", stampers)
+	dbg.Lvl3("stampers:", stampers)
 	clientsLists := make([][]*Client, len(hc.SNodes[1:]))
 	for i, s := range stampers[1:] {
 		// cant assume the type of connection
@@ -182,7 +200,7 @@ func RunTimestamper(hc *config.HostConfig, nclients int, hostnameSlice ...string
 			log.Fatal("port is not valid integer")
 		}
 		hp := net.JoinHostPort(h, strconv.Itoa(pn + 1))
-		//dbg.Lvl3("client connecting to:", hp)
+		//dbg.Lvl4("client connecting to:", hp)
 
 		for j := range clients {
 			clients[j] = NewClient("client" + strconv.Itoa((i - 1) * len(stampers) + j))
@@ -191,10 +209,10 @@ func RunTimestamper(hc *config.HostConfig, nclients int, hostnameSlice ...string
 			// if we are using tcp connections
 			if hc.Dir == nil {
 				// the timestamp server serves at the old port + 1
-				dbg.Lvl3("new tcp conn")
+				dbg.Lvl4("new tcp conn")
 				c = coconet.NewTCPConn(hp)
 			} else {
-				dbg.Lvl3("new go conn")
+				dbg.Lvl4("new go conn")
 				c, _ = coconet.NewGoConn(hc.Dir, clients[j].Name(), s.Name())
 				stoc, _ := coconet.NewGoConn(hc.Dir, s.Name(), clients[j].Name())
 				s.Clients[clients[j].Name()] = stoc

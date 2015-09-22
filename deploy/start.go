@@ -71,17 +71,26 @@ var StampTestSingle = []T{
 }
 
 var SignTestSingle = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 64, 2, 30, 10, 0, 0, 0, false, "coll_sign"},
 }
 
 var SignTestMulti = []T{
 	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
-	{0, 2, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
-	{0, 4, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 8, 8, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 64, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
 }
 
 var HostsTestSingle = []T{
-	{3, 1, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 4, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
+}
+
+var HostsTestShort = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 8, 4, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 32, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 var SchnorrHostSingle = []T{
 	{3, 1, 8, 30, 20, 0, 0, 0, false, "schnorr_sign"},
@@ -101,9 +110,12 @@ func Start(destination string, nbld bool, build string, machines int) {
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
 	RunTests("schnorr_host_single", SchnorrHostSingle)
+	//RunTests("sign_test_single", SignTestSingle)
+	//RunTests("sign_test_multi", SignTestMulti)
+	//RunTests("hosts_test_single", HostsTestSingle)
+	//RunTests("hosts_test_short", HostsTestShort)
 	//RunTests("hosts_test", HostsTest)
 	//RunTests("stamp_test_single", StampTestSingle)
-	//RunTests("sign_test_single", SignTestSingle)
 	//RunTests("sign_test_multi", SignTestMulti)
 	// test the testing framework
 	//RunTests("vote_test_no_signing.csv", VTest)
@@ -235,7 +247,7 @@ func RunTest(t T) (RunStats, error) {
 		rs = Monitor(t.bf)
 		deployP.Stop()
 		dbg.Lvl2("Test complete:", rs)
-		done <- struct{}{}
+		done <- struct {}{}
 	}()
 
 	// timeout the command if it takes too long
@@ -245,8 +257,10 @@ func RunTest(t T) (RunStats, error) {
 			return rs, errors.New(fmt.Sprintf("unable to get good data: %+v", rs))
 		}
 		return rs, nil
+		/* No time out for the moment
 	case <-time.After(5 * time.Minute):
 		return rs, errors.New("timed out")
+		*/
 	}
 }
 
@@ -326,12 +340,6 @@ func FullTests() []T {
 	}
 
 	return tests
-}
-
-var HostsTestShort = []T{
-	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_stamp"},
-	{0, 4, 3, 30, 20, 0, 0, 0, false, "coll_stamp"},
-	{0, 16, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 
 var HostsTest = []T{

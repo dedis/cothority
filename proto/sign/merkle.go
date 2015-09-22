@@ -91,8 +91,8 @@ func (sn *Node) SendLocalMerkleProof(view int, chm *ChallengeMessage) error {
 		proofForClient = append(proofForClient, round.Proofs["local"]...)
 
 		// if want to verify partial and full proofs
-		// dbg.Lvl3("*****")
-		// dbg.Lvl3(sn.Name(), chm.Round, proofForClient)
+		// dbg.Lvl4("*****")
+		// dbg.Lvl4(sn.Name(), chm.Round, proofForClient)
 		if DEBUG == true {
 			sn.VerifyAllProofs(view, chm, proofForClient)
 		}
@@ -123,7 +123,7 @@ func (sn *Node) SendChildrenChallengesProofs(view int, chm *ChallengeMessage) er
 		messg = &SigningMessage{View: view, Type: Challenge, Chm: &newChm}
 
 		// send challenge message to child
-		// dbg.Lvl3("connection: sending children challenge proofs:", name, conn)
+		// dbg.Lvl4("connection: sending children challenge proofs:", name, conn)
 		if err := conn.Put(messg); err != nil {
 			return err
 		}
@@ -175,7 +175,7 @@ func (sn *Node) checkChildrenProofs(Round int) {
 	}
 
 	if proof.CheckLocalProofs(sn.Suite().Hash, round.MTRoot, cmtAndLocal, proofs) == true {
-		dbg.Lvl3("Chidlren Proofs of", sn.Name(), "successful for round "+strconv.Itoa(sn.nRounds))
+		dbg.Lvl4("Chidlren Proofs of", sn.Name(), "successful for round "+strconv.Itoa(sn.nRounds))
 	} else {
 		panic("Children Proofs" + sn.Name() + " unsuccessful for round " + strconv.Itoa(sn.nRounds))
 	}
@@ -188,7 +188,7 @@ func (sn *Node) VerifyAllProofs(view int, chm *ChallengeMessage, proofForClient 
 	// proof from client to my root
 	proof.CheckProof(sn.Suite().Hash, round.MTRoot, round.LocalMTRoot, round.Proofs["local"])
 	// proof from my root to big root
-	dbg.Lvl3(sn.Name(), "verifying for view", view)
+	dbg.Lvl4(sn.Name(), "verifying for view", view)
 	proof.CheckProof(sn.Suite().Hash, chm.MTRoot, round.MTRoot, chm.Proof)
 	// proof from client to big root
 	proof.CheckProof(sn.Suite().Hash, chm.MTRoot, round.LocalMTRoot, proofForClient)

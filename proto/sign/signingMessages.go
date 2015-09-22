@@ -28,6 +28,8 @@ const (
 	CatchUpResp
 	GroupChange
 	GroupChanged
+	StatusConnections
+	CloseAll
 	Default // for internal use
 	Error
 )
@@ -52,6 +54,10 @@ func (m MessageType) String() string {
 		return "GroupChange"
 	case GroupChanged:
 		return "GroupChanged"
+	case StatusConnections:
+		return "StatusConnections"
+	case CloseAll:
+		return "CloseAll"
 	case Default: // for internal use
 		return "Default"
 	case Error:
@@ -60,8 +66,8 @@ func (m MessageType) String() string {
 	return "INVALID TYPE"
 }
 
-// Signing Messages are used for all comunications between servers
-// It is imporant for encoding/ decoding for type to be kept as first field
+// Signing Messages are used for all communications between servers
+// It is important for encoding/ decoding for type to be kept as first field
 type SigningMessage struct {
 	Type         MessageType
 	Am           *AnnouncementMessage

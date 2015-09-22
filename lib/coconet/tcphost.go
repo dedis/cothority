@@ -101,6 +101,7 @@ func (s *StringMarshaler) UnmarshalBinary(b []byte) error {
 // Only after that point can be communicated with.
 func (h *TCPHost) Listen() error {
 	var err error
+	dbg.Lvl3("Starting to listen on", h.name)
 	ln, err := net.Listen("tcp4", h.name)
 	if err != nil {
 		log.Println("failed to listen:", err)
@@ -110,9 +111,11 @@ func (h *TCPHost) Listen() error {
 	go func() {
 		for {
 			var err error
+			dbg.Lvl3(h.Name(), "Accepting incoming")
 			conn, err := ln.Accept()
+			dbg.Lvl3(h.Name(), "Connection request - handling")
 			if err != nil {
-				log.Errorln("failed to accept connection: ", err)
+				dbg.Lvl3("failed to accept connection: ", err)
 				// if the host has been closed then stop listening
 				if atomic.LoadInt64(&h.closed) == 1 {
 					return
@@ -156,7 +159,7 @@ func (h *TCPHost) Listen() error {
 			h.PeerLock.Lock()
 			h.Ready[name] = true
 			h.peers[name] = tp
-			dbg.Lvl3("CONNECTED TO CHILD:", tp, tp.conn)
+			dbg.Lvl3("Connected to child:", tp.Name())
 			h.PeerLock.Unlock()
 
 			go func() {
@@ -185,7 +188,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// connect to the parent
 	conn, err := net.Dial("tcp4", parent)
 	if err != nil {
-		dbg.Lvl2("tcphost: failed to connect to parent:", err)
+		dbg.Lvl3("tcphost:", h.Name(), "failed to connect to parent:", err)
 		return err
 	}
 	tp := NewTCPConnFromNet(conn)
@@ -221,7 +224,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	h.peers[parent] = tp
 	// h.PendingPeers[parent] = true
 	h.PeerLock.Unlock()
-	dbg.Lvl3("CONNECTED TO PARENT:", parent)
+	dbg.Lvl4("CONNECTED TO PARENT:", parent)
 
 	go func() {
 		for {
@@ -273,7 +276,7 @@ func (h *TCPHost) NewViewFromPrev(view int, parent string) {
 
 // Close closes all the connections currently open.
 func (h *TCPHost) Close() {
-	log.Println("tcphost: closing")
+	dbg.Lvl3("tcphost: closing")
 	// stop accepting new connections
 	atomic.StoreInt64(&h.closed, 1)
 	h.listener.Close()
@@ -302,7 +305,7 @@ func (h *TCPHost) AddParent(view int, c string) {
 	// remove from pending peers list
 	delete(h.PendingPeers, c)
 	h.PeerLock.Unlock()
-	dbg.Lvl2("Adding parent to views")
+	dbg.Lvl4("Adding parent to views on", h.Name(), "for", c)
 	h.views.AddParent(view, c)
 }
 
@@ -520,7 +523,7 @@ func (h *TCPHost) PutUp(ctx context.Context, view int, data BinaryMarshaler) err
 // whatever 'network' interface each child Peer implements.
 func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler) error {
 	// Try to send the message to all children
-	// If at least on of the attempts fails, return a non-nil error
+	// If at least one of the attempts fails, return a non-nil error
 	var err error
 	var errLock sync.Mutex
 	children := h.views.Children(view)
@@ -529,11 +532,13 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 	}
 	var canceled int64
 	var wg sync.WaitGroup
+	dbg.Lvl4(h.Name(), "sending to", len(children), "children")
 	for i, c := range children {
+		dbg.Lvl4("Sending to child", c)
 		wg.Add(1)
 		go func(i int, c string) {
 			defer wg.Done()
-			// try until it is canceled, successful, or timedout
+			// try until it is canceled, successful, or timed-out
 			for {
 				// check to see if it has been canceled
 				if atomic.LoadInt64(&canceled) == 1 {
@@ -551,8 +556,10 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 						err = e
 						errLock.Unlock()
 					}
+					dbg.Lvl4("Informed child", c)
 					return
 				}
+				dbg.Lvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)
 				time.Sleep(250 * time.Millisecond)
 			}
 

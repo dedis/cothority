@@ -19,12 +19,12 @@ import (
 )
 
 var muStats sync.Mutex
+
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
 
-
 func RunClient(server string, nmsgs int, name string, rate int) {
-	dbg.Lvl3("Starting to run stampclient")
+	dbg.Lvl4("Starting to run stampclient")
 	c := NewClient(name)
 	servers := strings.Split(server, ",")
 
@@ -40,14 +40,14 @@ func RunClient(server string, nmsgs int, name string, rate int) {
 
 	// Check if somebody asks for the old way
 	if rate < 0 {
-		log.Fatal("ROUNDS BASED RATE LIMITING DEPRECATED")
+		log.Fatal("Rounds based limiting deprecated")
 	}
 
 	// Stream time coll_stamp requests
 	// if rate specified send out one message every rate milliseconds
 	dbg.Lvl1(name, "starting to stream at rate", rate)
 	streamMessgs(c, servers, rate)
-	dbg.Lvl3("Finished streaming")
+	dbg.Lvl4("Finished streaming")
 	return
 }
 
@@ -87,7 +87,7 @@ func removeTrailingZeroes(a []int64) []int64 {
 }
 
 func streamMessgs(c *Client, servers []string, rate int) {
-	dbg.Lvl3("STREAMING: GIVEN RATE", rate)
+	dbg.Lvl4(c.Name(), "streaming at given rate", rate)
 	// buck[i] = # of timestamp responses received in second i
 	buck := make([]int64, MAX_N_SECONDS)
 	// roundsAfter[i] = # of timestamp requests that were processed i rounds late
@@ -99,16 +99,18 @@ func streamMessgs(c *Client, servers []string, rate int) {
 	nServers := len(servers)
 
 	retry:
+	dbg.Lvl3(c.Name(), "checking if", servers[0], "is already up")
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
-		dbg.Lvl3("Client", c.Name(), "DONE: couldn't connect to TimeStamp")
+		dbg.Lvl4("Client", c.Name(), "DONE: couldn't connect to TimeStamp")
 		log.Fatal(AggregateStats(buck, roundsAfter, times))
 	} else if err == ErrClientToTSTimeout {
-		log.Errorln(err)
+		dbg.Lvl4(err.Error())
 	} else if err != nil {
 		time.Sleep(500 * time.Millisecond)
 		goto retry
 	}
+	dbg.Lvl3(c.Name(), "successfully connected to", servers[0])
 
 	tFirst := time.Now()
 
@@ -124,14 +126,14 @@ func streamMessgs(c *Client, servers []string, rate int) {
 
 			if err == io.EOF || err == coconet.ErrClosed {
 				if err == io.EOF {
-					dbg.Lvl3("CLIENT ", c.Name(), "DONE: terminating due to EOF", s)
+					dbg.Lvl4("CLIENT ", c.Name(), "DONE: terminating due to EOF", s)
 				} else {
-					dbg.Lvl3("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed", s)
+					dbg.Lvl4("CLIENT ", c.Name(), "DONE: terminating due to Connection Error Closed", s)
 				}
 				log.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
 				// ignore errors
-				dbg.Lvl3("CLIENT ", c.Name(), "Leaving out streamMessages. ", err)
+				dbg.Lvl4("Client", c.Name(), "Leaving out streamMessages. ", err)
 				return
 			}
 

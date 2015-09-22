@@ -49,7 +49,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		3, 3, 3, 2,
+		4, 3, 1, 2,
 		100, 30, 10, 0, 0, 0,
 		1, 10, "coll_stamp", "ed25519"}
 }

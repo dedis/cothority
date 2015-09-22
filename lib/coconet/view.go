@@ -138,7 +138,7 @@ func NewViews() *Views {
 }
 
 func (v *Views) NewView(view int, parent string, children []string, hostlist []string) {
-	dbg.Lvl2("New view", view, hostlist)
+	dbg.Lvl3("New view", view, hostlist)
 	v.Lock()
 	vi := &View{Num: view, Parent: parent}
 	vi.HostList = make([]string, len(hostlist))
@@ -237,7 +237,11 @@ func (v *Views) RemovePeer(view int, child string) bool {
 func (v *Views) Children(view int) []string {
 	v.RLock()
 	defer v.RUnlock()
-	return v.Views[view].Children
+	if view < len(v.Views){
+		return v.Views[view].Children
+	} else {
+		return nil
+	}
 }
 
 func (v *Views) NChildren(view int) int {

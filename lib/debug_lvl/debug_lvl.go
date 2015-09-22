@@ -92,6 +92,12 @@ func Lvl5(args ...interface{}) {
 	Lvl(5, args...)
 }
 
+// To easy print a debug-message anyway without discarding the level
+func LLvl2(args ...interface{}){Lvl(1, args...)}
+func LLvl3(args ...interface{}){Lvl(1, args...)}
+func LLvl4(args ...interface{}){Lvl(1, args...)}
+func LLvl5(args ...interface{}){Lvl(1, args...)}
+
 type DebugLvl struct {
 }
 
