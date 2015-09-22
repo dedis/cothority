@@ -15,6 +15,13 @@ type ConfigFileOld struct {
 	Tree  *Node    `json:"tree"`
 }
 
+// Simplest config representig the type of connection we want to do (tcp / goroutines ?)
+// and the list of hostnames like "10.0.4.10:2000
+type HostsConfig struct {
+	Conn  string   `json:"conn,omitempty"`
+	Hosts []string `json:"hosts"`
+}
+
 type AppConfig struct {
 	Hostname    string // Hostname like server-0.cs-dissent ?
 	Logger      string // ip addr of the logger to connect to

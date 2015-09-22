@@ -83,6 +83,9 @@ var SignTestMulti = []T{
 var HostsTestSingle = []T{
 	{3, 1, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
+var SchnorrHostSingle = []T{
+	{3, 1, 8, 30, 20, 0, 0, 0, false, "schnorr_sign"},
+}
 
 func Start(destination string, nbld bool, build string, machines int) {
 	deployP.Configure(deploy_config)
