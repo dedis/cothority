@@ -83,14 +83,14 @@ func RunClient(conf *deploy.Config, hc *config.HostConfig) {
 	}).Info("")
 
 	// And tell everybody to quit
-	err := hc.SNodes[0].CloseAll(0)
+	err := hc.SNodes[0].CloseAll(hc.SNodes[0].Round)
 	if err != nil {
 		log.Fatal("Couldn't close:", err)
 	}
 }
 
 func RoundDone(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof) {
-	dbg.LLvl3(view, "finished round")
+	dbg.Lvl3(view, "finished round")
 	done <- "Done with view: " + strconv.Itoa(view)
 }
 

@@ -157,7 +157,7 @@ func (sn *Node) StartGossip() {
 				dbg.Lvl4("Gossiping with: ", from)
 				sn.CatchUp(int(atomic.LoadInt64(&sn.LastAppliedVote)+1), from)
 			case <-sn.closed:
-				log.Warnln("stopping gossip: closed")
+				dbg.Lvl3("stopping gossip: closed")
 				return
 			}
 		}

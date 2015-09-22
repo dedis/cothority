@@ -16,7 +16,7 @@ func RunServer(app *config.AppConfig, conf *deploy.Config, hc *config.HostConfig
 		log.Fatal(err)
 	}
 
-	dbg.Lvl1(app.Hostname, "started up in server-mode")
+	dbg.Lvl3(app.Hostname, "started up in server-mode")
 
 	// Let's start the client if we're the root-node
 	if hc.SNodes[0].IsRoot(0) {
