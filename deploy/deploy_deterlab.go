@@ -147,6 +147,8 @@ func (d *Deter) Deploy() error {
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
 
+	dbg.Lvl1("Writing config-files")
+
 	d.generateHostsFile()
 	d.readHosts()
 	d.calculateGraph()

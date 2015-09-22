@@ -92,6 +92,11 @@ func Lvl5(args ...interface{}) {
 	Lvl(5, args...)
 }
 
+func Fatal(args ...interface{}){
+	Lvl(0, args...)
+	os.Exit(1)
+}
+
 // To easy print a debug-message anyway without discarding the level
 func LLvl2(args ...interface{}){Lvl(1, args...)}
 func LLvl3(args ...interface{}){Lvl(1, args...)}

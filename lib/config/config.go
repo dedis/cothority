@@ -1,6 +1,7 @@
 package config
 
-import (
+import
+(
 	"bytes"
 	"crypto/cipher"
 	"encoding/hex"
@@ -245,6 +246,7 @@ func ConstructTree(
 			return 0, err
 		}
 	}
+
 	if generate {
 		if prikey != nil {
 			// if we have been given a private key load that
@@ -273,6 +275,7 @@ func ConstructTree(
 		dbg.Lvl5("Adding parent for", h.Name(), "to", parent)
 		h.AddParent(0, parent)
 	}
+
 	// dbg.Lvl4("name: ", n.Name)
 	// dbg.Lvl4("prikey: ", prikey)
 	// dbg.Lvl4("pubkey: ", pubkey)
@@ -291,7 +294,8 @@ func ConstructTree(
 		}
 
 		// recursively construct the children
-		dbg.Lvl5("ConstructTree:", h, suite, rand, hosts, nameToAddr, opts)
+		// Don't enable this debugging-line - it will make the constructtree VERY slow
+		//dbg.Lvl5("ConstructTree:", h, suite, rand, hosts, nameToAddr, opts)
 		h, err := ConstructTree(c, hc, name, suite, rand, hosts, nameToAddr, opts)
 		if err != nil {
 			return 0, err
@@ -302,6 +306,7 @@ func ConstructTree(
 	if generate {
 		sn.Height = height
 	}
+
 	// dbg.Lvl4("name: ", n.Name)
 	// dbg.Lvl4("final x_hat: ", x_hat)
 	// dbg.Lvl4("final pubkey: ", pubkey)
@@ -538,9 +543,14 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	rand := suite.Cipher([]byte("example"))
 	//fmt.Println("hosts", hosts)
 	// default value = false
+	if err != nil {
+		log.Fatal(err)
+	}
+	start := time.Now()
 	if opts.NoTree == false {
 		_, err = ConstructTree(cf.Tree, hc, "", suite, rand, hosts, nameToAddr, opts)
 	}
+	dbg.Lvl3("Timing for ConstructTree", time.Since(start))
 	if connT != GoC {
 		hc.Dir = nil
 	}
