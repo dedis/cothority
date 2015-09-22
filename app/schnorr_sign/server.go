@@ -20,7 +20,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	}
 	indexPeer := -1
 	for i, h := range hosts.Hosts {
-		if h == app.PhysAddr {
+		if h == app.Hostname {
 			indexPeer = i
 			break
 		}
@@ -40,6 +40,6 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	for _, h := range hosts.Hosts[indexPeer:] {
 		p.ConnectTo(h)
 	}
-	time.Sleep(time.Seconds * 10)
+	time.Sleep(time.Second * 10)
 	dbg.Lvl2("Peer ", app.Hostname, "is leaving ...")
 }
