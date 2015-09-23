@@ -1,0 +1,106 @@
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Dissent: Coco: Logging Server</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="webfiles/Chart.js/Chart.min.js"></script>
+    <style>
+      #log {font-size: 14px}
+      .error {color: red}
+      .warn {color: orange}
+    </style>
+</head>
+
+<body>
+	<div>Number of Hosts: <span id="numhosts">{{.Hosts}}</span></div>
+	<div>Depth: <span id="depth">{{.Depth}}</span></div>
+	<div>Branching Factor: <span id="bf">{{.BranchingFactor}}</span></div>
+	<div>Hosts Per Node: {{.HostsPerNode}}</div>
+	<div>Message Rate: {{.Rate}}</div>
+	<div>Minimum Time: <span id="mintime"></span> s</div>
+	<div>Maximum Time: <span id="maxtime"></span> s</div>
+	<div>Average Time: <span id="avgtime"></span> s</div>
+	<div>Standard Deviation: <span id="stddev"></span> s</div>
+  <div width="820px" height="409px">
+    <canvas id="announce_chart" width="818px" height="409px"></canvas>
+  </div>
+  <div id="log"></div>
+</body>
+<script>
+	// setup chart spaces
+	Chart.defaults.global.animation = false;
+	var actx = document.getElementById("announce_chart").getContext("2d");
+	var adata = {
+		labels: [0],
+		datasets: [{
+			label: "",
+			fillColor: "rgba(220,220,220,0.2)",
+			strokeColor: "rgba(220,220,220,1)",
+			pointColor: "rgba(220,220,220,1)",
+			pointStrokeColor: "#fff",
+			pointHighlightFill: "#fff",
+			pointHighlightStroke: "rgba(220,220,220,1)",
+			data: []
+		}]
+	};
+	var first = true;
+	var mintime = 1000000;
+	var maxtime = 0;
+	var avgtime = 0;
+	var stddev = 0;
+	
+	// for standard deviation
+	var M = 0;
+	var S = 0;
+	var k = 1;
+  var achart = new Chart(actx).Line(adata, {bezierCurveTension : 0.1, pointDotRadius : 2, pointHitDetectionRadius : 2});
+  // var i = 0;
+	$(function() {
+		var ws = new WebSocket({{.LogServer}});
+		ws.onmessage = function(event) {
+			var logline = '<class>'+event.data+'<div><br>';
+			var obj = JSON.parse(event.data);
+			if (obj.elevel == "error") {
+				logline = '<div class="error">'+event.data+'<div>';
+			}
+			if (obj.elevel == "warning") {
+				logline = '<div class="warn">'+event.data+'<div>';
+			}
+
+			$('#log').append(logline);
+			if (obj.type == "root_round") {
+				var label = "";
+				if (obj.round % 10 == 0) {
+					label = obj.round;
+				}
+				achart.addData([obj.time/(1000000000)], label);
+				if (first === true) {
+					first = false;
+					mintime = obj.time;
+					avgtime = obj.time;
+					maxtime = obj.time;
+				}
+				if (obj.time < mintime) {
+					mintime = obj.time;
+				} else if (obj.time > maxtime) {
+					maxtime = obj.time;
+				}
+
+				avgtime = ((avgtime*(k-1)) + obj.time) / k;
+				
+				var tM = M;
+				M += (obj.time - tM) / k;
+				S += (obj.time - tM) * (obj.time - M);
+				k++; // increase round number
+				stddev = Math.sqrt(S/(k-1)); // assume all the samples are here
+
+				document.getElementById("mintime").textContent = (mintime/1000000000).toString();
+				document.getElementById("maxtime").textContent = (maxtime/1000000000).toString();
+				document.getElementById("avgtime").textContent = (avgtime/1000000000).toString();
+				document.getElementById("stddev").textContent = (stddev/1000000000).toString();
+			}
+		}
+	});
+    </script>
+</html>

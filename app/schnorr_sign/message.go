@@ -9,7 +9,7 @@ import (
 // message to send at the end of a "round" or a "setup" to tell wether it's ok or not
 type Ack struct {
 	Id    int
-	valid bool // flag to tell wether the remote peer is OK or NOT
+	Valid bool // flag to tell wether the remote peer is OK or NOT
 }
 
 // message to send at the beginning of a connection to tell the remote peer
