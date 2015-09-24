@@ -35,7 +35,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	p := NewPeer(indexPeer, app.Hostname, info, indexPeer == 0)
 
 	// make it listen
-	dbg.Lvl2("Peer ", app.Hostname, "is now listening for incoming connections")
+	dbg.Lvl2("Peer", app.Hostname, "is now listening for incoming connections")
 	go p.Listen()
 
 	// then connect it to its successor in the list
@@ -59,12 +59,12 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	// send setup time
 	delta := time.Since(t1)
 	dbg.Lvl2(p.String(), "setup accomplished in ", delta)
-	//log.WithFields(log.Fields{
-	//	"file":  logutils.File(),
-	//	"type":  "root_round",
-	//	"round": 0,
-	//	"time":  delta,
-	//}).Info("")
+	log.WithFields(log.Fields{
+		"file":  logutils.File(),
+		"type":  "schnorr_setup",
+		"round": 0,
+		"time":  delta,
+	}).Info("")
 
 	// Then issue a signature !
 	t2 := time.Now()
@@ -87,7 +87,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	dbg.Lvl2(p.String(), "signature done in ", delta2)
 	log.WithFields(log.Fields{
 		"file":  logutils.File(),
-		"type":  "root_round",
+		"type":  "schnorr_round",
 		"round": 0,
 		"time":  delta,
 	}).Info("")
