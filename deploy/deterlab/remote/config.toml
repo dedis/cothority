@@ -7,7 +7,7 @@ DeterDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/deploy/det
 TestConnect = false
 
 [Config]
-  Nmachs = 3
+  Nmachs = 8
   Nloggers = 3
   Hpn = 1
   Bf = 8
@@ -17,7 +17,7 @@ TestConnect = false
   Failures = 0
   RFail = 0
   FFail = 0
-  Debug = 3
+  Debug = 1
   RootWait = 10
   App = "schnorr_sign"
   Suite = "ed25519"

@@ -4,3 +4,8 @@ server-2.dissent-cs2.SAFER.isi.deterlab.net
 server-3.dissent-cs2.SAFER.isi.deterlab.net
 server-4.dissent-cs2.SAFER.isi.deterlab.net
 server-5.dissent-cs2.SAFER.isi.deterlab.net
+server-6.dissent-cs2.SAFER.isi.deterlab.net
+server-7.dissent-cs2.SAFER.isi.deterlab.net
+server-8.dissent-cs2.SAFER.isi.deterlab.net
+server-9.dissent-cs2.SAFER.isi.deterlab.net
+server-10.dissent-cs2.SAFER.isi.deterlab.net
