@@ -1,16 +1,17 @@
 package sign_test
 
-import (
+import
+(
 	"bytes"
 	"reflect"
 	"testing"
 
 	"log"
 
-	"github.com/dedis/crypto/nist"
-	"github.com/dedis/cothority/hashid"
-	"github.com/dedis/cothority/proof"
-	"github.com/dedis/cothority/sign"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/crypto/edwards"
 )
 
 func init() {
@@ -60,7 +61,8 @@ func TestMUChallenge(t *testing.T) {
 	nHashIds := 3
 
 	var err error
-	suite := nist.NewAES128SHA256P256()
+	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := nist.NewAES128SHA256P256()
 	rand := suite.Cipher([]byte("example"))
 
 	cm := &sign.ChallengeMessage{}
@@ -92,7 +94,8 @@ func TestMUChallenge(t *testing.T) {
 // Important: when making empty HashIds len should be set to HASH_SIZE
 func TestMUCommit(t *testing.T) {
 	var err error
-	suite := nist.NewAES128SHA256P256()
+	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := nist.NewAES128SHA256P256()
 	rand := suite.Cipher([]byte("exampfsdjkhujgkjsgfjgle"))
 	rand2 := suite.Cipher([]byte("examplsfhsjedgjhsge2"))
 
