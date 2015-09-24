@@ -3,6 +3,7 @@ cothority
 notes.txt
 deploy/deterlab/build
 deploy/deterlab/deploy/*
+deploy/deterlab/remote/*
 deploy/deterlab/config.toml
 test_data
 app/app
