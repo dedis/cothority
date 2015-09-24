@@ -40,7 +40,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	go p.Listen()
 
 	// then connect it to its successor in the list
-	for _, h := range hosts.Hosts[indexPeer + 1:] {
+	for _, h := range hosts.Hosts[indexPeer+1:] {
 		dbg.Lvl2("Peer ", app.Hostname, " will connect to ", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
@@ -80,17 +80,17 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	}
 
 	for round := 0; round < depl.Rounds; round++ {
-		if p.IsRoot(){
+		if p.IsRoot() {
 			dbg.Lvl2("Starting round", round)
 		}
 
 		// Then issue a signature !
 		start = time.Now()
 		msg := "hello world"
-		sig := p.SchnorrSig([]byte(msg))
 
 		// Only root calculates if it's OK and sends a log-message
 		if p.IsRoot() {
+			sig := p.SchnorrSigRoot([]byte(msg))
 			err := p.VerifySchnorrSig(sig, []byte(msg))
 			if err != nil {
 				dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
@@ -106,6 +106,9 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 				"round": round,
 				"time":  delta,
 			}).Info("")
+		} else {
+			// Compute the partial sig and send it to the root
+			p.SchnorrSigPeer([]byte(msg))
 		}
 	}
 
