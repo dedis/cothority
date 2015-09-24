@@ -30,7 +30,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 		log.Fatal("Peer ", app.Hostname, "(", app.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
-	dbg.Lvl2("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
+	dbg.Lvl1("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, app.Hostname, info, indexPeer == 0)
 
