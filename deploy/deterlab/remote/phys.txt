@@ -1,6 +1,0 @@
-server-0.dissent-cs2.SAFER.isi.deterlab.net
-server-1.dissent-cs2.SAFER.isi.deterlab.net
-server-2.dissent-cs2.SAFER.isi.deterlab.net
-server-3.dissent-cs2.SAFER.isi.deterlab.net
-server-4.dissent-cs2.SAFER.isi.deterlab.net
-server-5.dissent-cs2.SAFER.isi.deterlab.net

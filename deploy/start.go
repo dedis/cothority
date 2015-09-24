@@ -71,7 +71,7 @@ var StampTestSingle = []T{
 }
 
 var SignTestSingle = []T{
-	{0, 2, 8, 30, 10, 0, 0, 0, false, "coll_sign"},
+	{0, 8, 8, 30, 10, 0, 0, 0, false, "coll_sign"},
 }
 
 var SignTestMulti = []T{
