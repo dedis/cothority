@@ -101,7 +101,7 @@ var HostsTestShort = []T{
 	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 var SchnorrHostSingle = []T{
-	{3, 1, 8, 30, 20, 0, 0, 0, false, "schnorr_sign"},
+	{8, 8, 8, 30, 20, 0, 0, 0, false, "schnorr_sign"},
 }
 
 func Start(destination string, nbld bool, build string, machines int) {
@@ -256,7 +256,7 @@ func RunTest(t T) (RunStats, error) {
 		rs = Monitor(t.bf)
 		deployP.Stop()
 		dbg.Lvl2("Test complete:", rs)
-		done <- struct {}{}
+		done <- struct{}{}
 	}()
 
 	// timeout the command if it takes too long
@@ -267,8 +267,8 @@ func RunTest(t T) (RunStats, error) {
 		}
 		return rs, nil
 		/* No time out for the moment
-	case <-time.After(5 * time.Minute):
-		return rs, errors.New("timed out")
+		case <-time.After(5 * time.Minute):
+			return rs, errors.New("timed out")
 		*/
 	}
 }

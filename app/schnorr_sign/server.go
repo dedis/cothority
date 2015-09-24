@@ -1,10 +1,12 @@
 package schnorr_sign
 
 import log "github.com/Sirupsen/logrus"
+import "github.com/dedis/cothority/lib/logutils"
 import "github.com/dedis/cothority/deploy"
 import "github.com/dedis/cothority/lib/config"
 import "github.com/dedis/crypto/poly"
 import dbg "github.com/dedis/cothority/lib/debug_lvl"
+import "time"
 
 func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Config) {
 	s := config.GetSuite(depl.Suite)
@@ -44,25 +46,52 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	}
 	// Wait until this peer is connected / SYN'd with each other peer
 	p.WaitSYNs()
-	// Wait until this peer knows that each other peer is also SYN'd
-	p.SendACKs()
-	p.WaitACKs()
+
+	// start to record
+	t1 := time.Now()
+
 	// Setup the schnorr system amongst peers
 	p.SetupDistributedSchnorr()
 	p.SendACKs()
 	p.WaitACKs()
+	dbg.Lvl1(p.String(), "completed Schnorr setup")
+
+	// send setup time
+	delta := time.Since(t1)
+	dbg.Lvl2(p.String(), "setup accomplished in ", delta)
+	//log.WithFields(log.Fields{
+	//	"file":  logutils.File(),
+	//	"type":  "root_round",
+	//	"round": 0,
+	//	"time":  delta,
+	//}).Info("")
+
 	// Then issue a signature !
+	t2 := time.Now()
 	msg := "hello world"
 	sig := p.SchnorrSig([]byte(msg))
-	//err := p.VerifySchnorrSig(sig)
-	arr := p.BroadcastSignature(sig)
-	for i, _ := range arr {
-		err := p.VerifySchnorrSig(arr[i], []byte(msg))
-		if err != nil {
-			dbg.Fatal(p.String(), "could not verify issued schnorr signature : ", err)
-		}
+	err := p.VerifySchnorrSig(sig, []byte(msg))
+	if err != nil {
+		dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
 	}
-	dbg.Lvl1(p.String(), "verified ALL schnorr sig !")
+	//arr := p.BroadcastSignature(sig)
+	//for i, _ := range arr {
+	//	err := p.VerifySchnorrSig(arr[i], []byte(msg))
+	//	if err != nil {
+	//		dbg.Fatal(p.String(), "could not verify issued schnorr signature : ", err)
+	//	}
+	//}
+	dbg.Lvl1(p.String(), "verified the schnorr sig !")
+	// record time
+	delta2 := time.Since(t2)
+	dbg.Lvl2(p.String(), "signature done in ", delta2)
+	log.WithFields(log.Fields{
+		"file":  logutils.File(),
+		"type":  "root_round",
+		"round": 0,
+		"time":  delta,
+	}).Info("")
 
-	dbg.Lvl1("Peer ", app.Hostname, "is leaving ...")
+	p.WaitFins()
+	dbg.Lvl1(p.String(), "is leaving ...")
 }

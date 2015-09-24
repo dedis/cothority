@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/crypto/poly"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -68,7 +69,7 @@ type Peer struct {
 	// channel that handles the synchronization of ACK between  the peers
 	ackChan chan Ack
 	// channel that handles the synchronization of the END of the algorithm between the peers
-	finChan chan Finish
+	wgFin sync.WaitGroup
 }
 
 // NewPeer returns a new peer with its id and the number of peers in the schnorr signature algo
@@ -97,7 +98,6 @@ func NewPeer(id int, name string, p poly.PolyInfo, isRoot bool) *Peer {
 		schnorr: new(poly.Schnorr),
 		synChan: make(chan Syn),
 		ackChan: make(chan Ack),
-		finChan: make(chan Finish),
 	}
 }
 func (p *Peer) IsRoot() bool {
@@ -172,7 +172,6 @@ func (p *Peer) WaitSYNs() {
 			break
 		}
 	}
-	dbg.Lvl3(p.Name, " PUBLIC KEY LIST = ", p.pubKeys)
 }
 
 // SendACKS will send an ACK to everyone
@@ -189,43 +188,65 @@ func (p *Peer) SendACKs() {
 
 // WaitAcks will make  a peer  waits for all others peers to send an ACK to it
 func (p *Peer) WaitACKs() {
-	n := 0
+	var wg sync.WaitGroup
 	fn := func(rp RemotePeer) {
 		a := Ack{}
 		err := poly.SUITE.Read(rp.Conn, &a)
 		if err != nil {
 			dbg.Lvl1(p.Name, "could not receive an ACK from ", rp.String(), " (err ", err, ")")
 		}
-		p.ackChan <- a
+		//p.ackChan <- a
+		wg.Done()
 	}
-
+	wg.Add(len(p.remote))
 	p.ForRemotePeers(fn)
 
 	dbg.Lvl2(p.Name, "is waiting for acks ...")
-	for {
-		a := <-p.ackChan
-		if a.Valid {
-			n += 1
-		}
-		if n == p.info.N-1 {
-			dbg.Lvl2(p.Name, "received all acks. Continue")
-			break
-		}
-	}
+	wg.Wait()
+	dbg.Lvl2(p.String(), "received ALL ACKs")
+	//n := 0
+	//for {
+	//	a := <-p.ackChan
+	//	if a.Valid {
+	//		n += 1
+	//	}
+	//	if n == p.info.N-1 {
+	//		dbg.Lvl2(p.Name, "received all acks. Continue")
+	//		break
+	//	}
+	//}
 }
 
 // Wait for the end of the alo so we can close connection nicely
 func (p *Peer) WaitFins() {
-	for {
-		f := <-p.finChan
-		rp, ok := p.remote[f.Id]
-		if !ok {
-			dbg.Lvl2(p.Name, "received invalid FIN : wrong ID ", rp.Id, " ... ")
-		} else {
-			rp.Conn.Close()
-			dbg.Lvl2(p.Name, "received FIN from ", rp.String(), " => closed connection")
+	p.wgFin.Add(len(p.remote))
+	fn := func(rp RemotePeer) {
+		f := Finish{p.Id}
+		err := poly.SUITE.Write(rp.Conn, &f)
+		if err != nil {
+			dbg.Fatal(p.String(), "could not send FIN to ", rp.String())
 		}
+		p.wgFin.Done()
 	}
+	dbg.Lvl2(p.String(), "sending FIN to all")
+	p.ForRemotePeers(fn)
+	dbg.Lvl2(p.String(), "waiting to send all FIN's packets")
+	p.wgFin.Wait()
+	// close all connections
+	for _, rp := range p.remote {
+		rp.Conn.Close()
+	}
+	dbg.Lvl2(p.String(), "close every connections")
+	//for {
+	//	f := <-p.finChan
+	//	rp, ok := p.remote[f.Id]
+	//	if !ok {
+	//		dbg.Lvl2(p.Name, "received invalid FIN : wrong ID ", rp.Id, " ... ")
+	//	} else {
+	//		rp.Conn.Close()
+	//		dbg.Lvl2(p.Name, "received FIN from ", rp.String(), " => closed connection")
+	//	}
+	//}
 }
 
 // Peer logic after it has syn'd with another peer
@@ -296,7 +317,6 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 	if p.pubKeys[s2.Id] != nil {
 		log.Fatal(p.Name, "already received a SYN for this index ")
 	}
-	dbg.Lvl3(p.Name, "received SYN from ", conn.RemoteAddr().String(), " => ", s2.Public)
 	p.pubKeys[s2.Id] = s2.Public
 	rp := RemotePeer{Conn: conn, Id: s2.Id, Hostname: conn.RemoteAddr().String()}
 	p.remote[s2.Id] = rp
