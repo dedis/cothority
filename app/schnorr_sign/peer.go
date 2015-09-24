@@ -103,19 +103,17 @@ func NewPeer(id int, name string, p poly.PolyInfo, isRoot bool) *Peer {
 func (p *Peer) IsRoot() bool {
 	return p.root
 }
-func (p *Peer) Listen() error {
+func (p *Peer) Listen() {
 	results := strings.Split(p.Name, ":")
 	port := ":" + results[1]
 	ln, err := net.Listen("tcp", port)
 	if err != nil {
-		dbg.Lvl1(p.Name, ": Error while listening on port ", port, "ABORT  => ", err)
-		return err
+		dbg.Fatal(p.Name, ": Error while listening on port ", port, "ABORT  => ", err)
 	}
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			dbg.Lvl1(p.Name, ": Error while listening on port ", port, " => ", err)
-			continue
+			dbg.Fatal(p.Name, ": Error while listening on port ", port, " => ", err)
 		}
 		go p.synWithPeer(conn)
 	}
@@ -131,17 +129,16 @@ func (p *Peer) ConnectTo(host string) error {
 		if err != nil {
 			// we have tried too many times => abort
 			if count == ConnRetry {
-				dbg.Lvl1(p.Name, "could not connect to", host, " ", ConnRetry, "times. Abort.")
 				tick.Stop()
-				return err
+				dbg.Fatal(p.Name, "could not connect to", host, " ", ConnRetry, "times. Abort.")
 				// let's try again one more time
 			} else {
-				dbg.Lvl1(p.Name, "could not connect to", host, ". Retry in ", ConnWaitRetry.String())
+				dbg.Lvl2(p.Name, "could not connect to", host, ". Retry in ", ConnWaitRetry.String())
 				count += 1
 			}
 		}
 		// handle successful connection
-		dbg.Lvl2(p.Name, "has connected with peer ", host)
+		dbg.Lvl3(p.Name, "has connected with peer ", host)
 		tick.Stop()
 		// start to syn with the respective peer
 		go p.synWithPeer(conn)
@@ -162,13 +159,13 @@ func (p *Peer) ForRemotePeers(fn func(RemotePeer)) {
 func (p *Peer) WaitSYNs() {
 	for {
 		s := <-p.synChan
-		dbg.Lvl2(p.Name, " synChan received Syn id ", s.Id)
+		dbg.Lvl3(p.Name, " synChan received Syn id ", s.Id)
 		_, ok := p.remote[s.Id]
 		if !ok {
 			dbg.Fatal(p.Name, "received syn'd notification of an unknown peer... ABORT")
 		}
 		if len(p.remote) == p.info.N-1 {
-			dbg.Lvl1(p.Name, "is SYN'd with every one")
+			dbg.Lvl2(p.Name, "is SYN'd with every one")
 			break
 		}
 	}
@@ -182,7 +179,7 @@ func (p *Peer) SendACKs() {
 	}
 	err := p.SendToAll(&a)
 	if err != nil {
-		dbg.Lvl2(p.Name, "could not sent its ACKs to every one : ", err)
+		dbg.Fatal(p.Name, "could not sent its ACKs to every one : ", err)
 	}
 }
 
@@ -193,7 +190,7 @@ func (p *Peer) WaitACKs() {
 		a := Ack{}
 		err := poly.SUITE.Read(rp.Conn, &a)
 		if err != nil {
-			dbg.Lvl1(p.Name, "could not receive an ACK from ", rp.String(), " (err ", err, ")")
+			dbg.Fatal(p.Name, "could not receive an ACK from ", rp.String(), " (err ", err, ")")
 		}
 		//p.ackChan <- a
 		wg.Done()
@@ -201,7 +198,7 @@ func (p *Peer) WaitACKs() {
 	wg.Add(len(p.remote))
 	p.ForRemotePeers(fn)
 
-	dbg.Lvl2(p.Name, "is waiting for acks ...")
+	dbg.Lvlr3(p.Name, "is waiting for acks ...")
 	wg.Wait()
 	dbg.Lvl2(p.String(), "received ALL ACKs")
 	//n := 0
@@ -228,7 +225,6 @@ func (p *Peer) WaitFins() {
 		}
 		p.wgFin.Done()
 	}
-	dbg.Lvl2(p.String(), "sending FIN to all")
 	p.ForRemotePeers(fn)
 	dbg.Lvl2(p.String(), "waiting to send all FIN's packets")
 	p.wgFin.Wait()
@@ -303,24 +299,24 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 	}
 	err := poly.SUITE.Write(conn, &s)
 	if err != nil {
-		log.Fatal(p.Name, "could not send SYN to ", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "could not send SYN to ", conn.RemoteAddr().String())
 	}
 	// Receive the other SYN
 	s2 := Syn{}
 	err = poly.SUITE.Read(conn, &s2)
 	if err != nil {
-		log.Fatal(p.Name, "could not receive SYN from ", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "could not receive SYN from ", conn.RemoteAddr().String())
 	}
 	if s2.Id < 0 || s2.Id >= p.info.N {
-		log.Fatal(p.Name, "received wrong SYN info from ", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "received wrong SYN info from ", conn.RemoteAddr().String())
 	}
 	if p.pubKeys[s2.Id] != nil {
-		log.Fatal(p.Name, "already received a SYN for this index ")
+		dbg.Fatal(p.Name, "already received a SYN for this index ")
 	}
 	p.pubKeys[s2.Id] = s2.Public
 	rp := RemotePeer{Conn: conn, Id: s2.Id, Hostname: conn.RemoteAddr().String()}
 	p.remote[s2.Id] = rp
-	dbg.Lvl2(p.String(), "has SYN'd with peer ", rp.String())
+	dbg.Lvl3(p.String(), "has SYN'd with peer ", rp.String())
 	p.synChan <- s2
 }
 
@@ -353,14 +349,14 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 			d := new(poly.Dealer).UnmarshalInit(p.info)
 			err := poly.SUITE.Read(rp.Conn, d)
 			if err != nil {
-				dbg.Lvl2(p.Name, " received a strange dealer from ", rp.String())
+				dbg.Fatal(p.Name, " received a strange dealer from ", rp.String())
 			}
 			dealChan <- d
 		}(rp)
 	}
 
 	// wait to get all dealers
-	dbg.Lvl2(p.Name, "wait to receive every other peer's dealer...")
+	dbg.Lvl3(p.Name, "wait to receive every other peer's dealer...")
 	n := 0
 	for {
 		// get the dealer and add it
@@ -444,9 +440,8 @@ func (p *Peer) SchnorrSig(msg []byte) *poly.SchnorrSig {
 
 	sign, err := p.schnorr.SchnorrSig()
 	if err != nil {
-		dbg.Lvl2(p.String(), "could not generate the global SchnorrSig", err)
+		dbg.Fatal(p.String(), "could not generate the global SchnorrSig", err)
 	}
-	dbg.Lvl1(p.String(), "generated Schnorr Signature !!")
 	return sign
 }
 

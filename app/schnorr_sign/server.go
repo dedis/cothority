@@ -30,7 +30,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 		log.Fatal("Peer ", app.Hostname, "(", app.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
-	dbg.Lvl2("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
+	dbg.Lvl1("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, app.Hostname, info, indexPeer == 0)
 
@@ -70,6 +70,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	t2 := time.Now()
 	msg := "hello world"
 	sig := p.SchnorrSig([]byte(msg))
+	dbg.Lvl1(p.String(), "generated Schnorr Signature !!")
 	err := p.VerifySchnorrSig(sig, []byte(msg))
 	if err != nil {
 		dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
