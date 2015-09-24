@@ -39,7 +39,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	go p.Listen()
 
 	// then connect it to its successor in the list
-	for _, h := range hosts.Hosts[indexPeer+1:] {
+	for _, h := range hosts.Hosts[indexPeer + 1:] {
 		dbg.Lvl2("Peer ", app.Hostname, " will connect to ", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
@@ -56,41 +56,47 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	p.WaitACKs()
 	dbg.Lvl1(p.String(), "completed Schnorr setup")
 
-	// send setup time
-	delta := time.Since(t1)
-	dbg.Lvl2(p.String(), "setup accomplished in ", delta)
-	log.WithFields(log.Fields{
-		"file":  logutils.File(),
-		"type":  "schnorr_setup",
-		"round": 0,
-		"time":  delta,
-	}).Info("")
-
-	// Then issue a signature !
-	t2 := time.Now()
-	msg := "hello world"
-	sig := p.SchnorrSig([]byte(msg))
-	err := p.VerifySchnorrSig(sig, []byte(msg))
-	if err != nil {
-		dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
+	// send setup time if we're root
+	if p.IsRoot() {
+		delta := time.Since(t1)
+		dbg.Lvl2(p.String(), "setup accomplished in ", delta)
+		log.WithFields(log.Fields{
+			"file":  logutils.File(),
+			"type":  "schnorr_setup",
+			"round": 0,
+			"time":  delta,
+		}).Info("")
 	}
-	//arr := p.BroadcastSignature(sig)
-	//for i, _ := range arr {
-	//	err := p.VerifySchnorrSig(arr[i], []byte(msg))
-	//	if err != nil {
-	//		dbg.Fatal(p.String(), "could not verify issued schnorr signature : ", err)
-	//	}
-	//}
-	dbg.Lvl1(p.String(), "verified the schnorr sig !")
-	// record time
-	delta2 := time.Since(t2)
-	dbg.Lvl2(p.String(), "signature done in ", delta2)
-	log.WithFields(log.Fields{
-		"file":  logutils.File(),
-		"type":  "schnorr_round",
-		"round": 0,
-		"time":  delta,
-	}).Info("")
+
+	for round := 0; round < depl.Rounds; round++ {
+		if p.IsRoot(){
+			dbg.Lvl2("Starting round", round)
+		}
+
+		// Then issue a signature !
+		t2 := time.Now()
+		msg := "hello world"
+		sig := p.SchnorrSig([]byte(msg))
+
+		// Only root calculates if it's OK and sends a log-message
+		if p.IsRoot() {
+			err := p.VerifySchnorrSig(sig, []byte(msg))
+			if err != nil {
+				dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
+			}
+
+			dbg.Lvl2(p.String(), "verified the schnorr sig !")
+			// record time
+			delta2 := time.Since(t2)
+			dbg.Lvl2(p.String(), "signature done in ", delta2)
+			log.WithFields(log.Fields{
+				"file":  logutils.File(),
+				"type":  "schnorr_round",
+				"round": round,
+				"time":  delta2,
+			}).Info("")
+		}
+	}
 
 	p.WaitFins()
 	dbg.Lvl1(p.String(), "is leaving ...")

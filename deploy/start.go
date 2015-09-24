@@ -101,7 +101,7 @@ var HostsTestShort = []T{
 	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 var SchnorrHostSingle = []T{
-	{8, 8, 8, 30, 20, 0, 0, 0, false, "schnorr_sign"},
+	{8, 2, 8, 30, 20, 0, 0, 0, false, "schnorr_sign"},
 }
 
 func Start(destination string, nbld bool, build string, machines int) {
@@ -117,8 +117,8 @@ func Start(destination string, nbld bool, build string, machines int) {
 
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
-	//RunTests("schnorr_host_single", SchnorrHostSingle)
-	RunTests("sign_test_single", SignTestSingle)
+	RunTests("schnorr_host_single", SchnorrHostSingle)
+	//RunTests("sign_test_single", SignTestSingle)
 	//RunTests("sign_test_multi2", SignTestMulti2)
 	//RunTests("sign_test_multi", SignTestMulti)
 	//RunTests("hosts_test_single", HostsTestSingle)
