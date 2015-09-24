@@ -1,34 +1,35 @@
-package schnorr_sign
+package main
 
 import (
 	"encoding/json"
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/deploy"
 	"github.com/dedis/cothority/lib/config"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io/ioutil"
 	//"os"
+	"github.com/dedis/cothority/lib/app"
 )
 
 // Dispatch-function for running either client or server (mode-parameter)
-func Run(app *config.AppConfig, depl *deploy.Config) {
+func main() {
+	ac := app.ReadConfig()
 
 	// we must know who we are
-	if app.Hostname == "" {
+	if ac.Flags.Hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}
 
-	dbg.Lvl2(app.Hostname, "Starting to run as ", app.Mode)
+	dbg.Lvl2(ac.Flags.Hostname, "Starting to run as ", ac.Flags.Mode)
 	var err error
 	hosts, err := ReadHostsJson("tree.json")
 	if err != nil {
-		log.Fatal("Error while reading JSON hosts file on", app.Hostname, ". Abort")
+		log.Fatal("Error while reading JSON hosts file on", ac.Flags.Hostname, ". Abort")
 	}
-	switch app.Mode {
+	switch ac.Flags.Mode {
 	case "client":
-		RunClient(depl)
+		RunClient(ac.Conf)
 	case "server":
-		RunServer(hosts, app, depl)
+		RunServer(hosts, ac)
 	}
 }
 

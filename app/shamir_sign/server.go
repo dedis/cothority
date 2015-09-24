@@ -1,14 +1,18 @@
-package schnorr_sign
+package main
 
-import log "github.com/Sirupsen/logrus"
-import "github.com/dedis/cothority/lib/logutils"
-import "github.com/dedis/cothority/deploy"
-import "github.com/dedis/cothority/lib/config"
-import "github.com/dedis/crypto/poly"
-import dbg "github.com/dedis/cothority/lib/debug_lvl"
-import "time"
+import (
+	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/crypto/poly"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"time"
+	"github.com/dedis/cothority/lib/app"
+)
 
-func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Config) {
+func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
+	app := ac.Flags
+	depl := ac.Conf
 	s := config.GetSuite(depl.Suite)
 	poly.SUITE = s
 	poly.SECURITY = poly.MODERATE
@@ -40,7 +44,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	go p.Listen()
 
 	// then connect it to its successor in the list
-	for _, h := range hosts.Hosts[indexPeer+1:] {
+	for _, h := range hosts.Hosts[indexPeer + 1:] {
 		dbg.Lvl2("Peer ", app.Hostname, " will connect to ", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
@@ -48,7 +52,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	// Wait until this peer is connected / SYN'd with each other peer
 	p.WaitSYNs()
 
-	if p.IsRoot(){
+	if p.IsRoot() {
 		delta := time.Since(start)
 		dbg.Lvl2(p.String(), "Connections accomplished in", delta)
 		log.WithFields(log.Fields{
@@ -116,10 +120,10 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	p.WaitFins()
 	dbg.Lvl1(p.String(), "is leaving ...")
 
-	if p.IsRoot(){
+	if p.IsRoot() {
 		log.WithFields(log.Fields{
 			"file": logutils.File(),
-			"type":	"schnorr_end",
+			"type":    "schnorr_end",
 		}).Info("")
 	}
 }

@@ -33,7 +33,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/cothority/deploy"
+	"github.com/dedis/cothority/lib/deploy"
 	"os"
 )
 
@@ -48,11 +48,11 @@ func init() {
 }
 
 func main() {
-	deter, err := deploy.ReadConfig("remote")
+	conf := deploy.Config{}
+	err := deploy.ReadConfig(&deter, "deploy.toml", "remote")
 	if err != nil {
 		log.Fatal("Couldn't read config in deter:", err)
 	}
-	conf = deter.Config
 	dbg.DebugVisible = conf.Debug
 
 	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:", conf.Rounds, "debug:", conf.Debug)

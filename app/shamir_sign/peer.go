@@ -1,4 +1,4 @@
-package schnorr_sign
+package main
 
 import (
 	"fmt"

@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/net/websocket"
 	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/cothority/deploy"
+	"github.com/dedis/cothority/lib/deploy"
 )
 
 var deter deploy.Deter
@@ -58,12 +58,12 @@ func init() {
 }
 
 func main() {
-	deter, err := deploy.ReadConfig()
+	conf := deploy.Config{}
+	err := deploy.ReadConfig(&deter, "deploy.toml")
 	if err != nil {
 		log.Fatal("Couldn't read config in logserver:", err)
 	}
-	cfg = deter.Config
-	dbg.DebugVisible = cfg.Debug
+	dbg.DebugVisible = conf.Debug
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	// read in from flags the port I should be listening on
@@ -78,7 +78,7 @@ func main() {
 	} else {
 		role = "Servent"
 	}
-	dbg.Lvl3("running logserver", role, "with nmsgs", cfg.Nmsgs, "branching factor: ", cfg.Bf)
+	dbg.Lvl3("running logserver", role, "with nmsgs", conf.Nmsgs, "branching factor: ", conf.Bf)
 	if isMaster {
 		var err error
 		homePage, err = template.ParseFiles("webfiles/home.html")

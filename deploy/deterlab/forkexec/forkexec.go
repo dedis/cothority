@@ -1,6 +1,7 @@
 package main
 
-import (
+import
+(
 	"flag"
 	"os/exec"
 	"strconv"
@@ -9,7 +10,6 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
 	"os"
-	"github.com/dedis/cothority/deploy"
 	"github.com/dedis/cothority/lib/cliutils"
 	"net"
 	"github.com/dedis/cothority/lib/config"
@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 	"github.com/dedis/cothority/lib/graphs"
 	"sync"
+	"github.com/dedis/cothority/lib/deploy"
 )
 
 // Wrapper around exec.go to enable measuring of cpu time
@@ -35,11 +36,11 @@ func init() {
 }
 
 func main() {
-	deter, err := deploy.ReadConfig()
+	conf := deploy.Config{}
+	err := deploy.ReadConfig(&deter, "deploy.toml")
 	if err != nil {
 		log.Fatal("Couldn't load config-file in forkexec:", err)
 	}
-	conf = deter.Config
 	dbg.DebugVisible = conf.Debug
 
 	flag.Parse()

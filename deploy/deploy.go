@@ -1,55 +1,41 @@
-package deploy
+// Cothority - framework for co-authority based research
+//
+//
 
-type Platform interface {
-	Configure(*Config)
-	Build(build string) error
-	Deploy() error
-	Start() error
-	Stop() error
+package main
+import (
+	"flag"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+)
+
+var deploy_dst = "deterlab"
+var app = ""
+var nobuild = false
+var build = ""
+var machines = 3
+
+func init() {
+	flag.StringVar(&deploy_dst, "deploy", deploy_dst, "if you want to deploy, chose [deterlab]")
+	flag.StringVar(&app, "app", app, "start [server,client] locally")
+	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Debugging-level. 0 is silent, 5 is flood")
+	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
+	flag.StringVar(&build, "build", "", "List of packages to build")
+	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 }
 
-func NewPlatform() Platform {
-	return &Deter{Config: NewConfig()}
-}
+func main() {
+	flag.Parse()
 
-type Config struct {
-	// Number of machines/nodes
-	// Total number of hosts = hpn * nmachs
-	Nmachs int
-	// How many logservers to start up
-	// Total number of servers used: nmachs + nloggers
-	Nloggers int
-	// hpn is the replication factor of hosts per node: how many hosts do we want per node
-	Hpn int
-	// bf is the branching factor of the tree that we want to build
-	Bf int
-
-	// How many messages to send
-	Nmsgs int
-	// The speed of messages/s
-	Rate int
-	// How many rounds
-	Rounds int
-	// Pre-defined failure rate
-	Failures int
-	// Rounds for root to wait before failing
-	RFail int
-	// Rounds for follower to wait before failing
-	FFail int
-
-	// Debugging-level: 0 is none - 5 is everything
-	Debug int
-	// RootWait - how long the root timestamper waits for the clients to start up
-	RootWait int
-	// Which app to run
-	App string
-	// Coding-suite to run 	[nist256, nist512, ed25519]
-	Suite string
-}
-
-func NewConfig() *Config {
-	return &Config{
-		4, 3, 1, 2,
-		100, 30, 10, 0, 0, 0,
-		1, 10, "coll_stamp", "ed25519"}
+	switch app{
+	default:
+		switch deploy_dst{
+		default:
+			dbg.Lvl1("Sorry, deployment method", deploy_dst, "not yet implemented")
+		case "deterlab":
+			dbg.Lvl1("Deploying to deterlab")
+			Start("deterlab")
+		}
+	case "server", "client":
+		dbg.Lvl1("Sorry,", app, "not yet implemented")
+	}
 }

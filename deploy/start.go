@@ -18,7 +18,7 @@
 // latency on y-axis, timestamp servers on x-axis push timestampers as higher as possible
 //
 //
-package deploy
+package main
 
 import (
 	"errors"
@@ -29,12 +29,12 @@ import (
 	"os"
 	"strconv"
 	"time"
+	"github.com/dedis/cothority/lib/deploy"
 )
 
 // Configuration-variables
-var deploy_config *Config
-var deployP Platform
-var nobuild bool = false
+var deploy_config *deploy.Config
+var deployP deploy.Platform
 var port int = 8081
 
 // time-per-round * DefaultRounds = 10 * 20 = 3.3 minutes now
@@ -42,8 +42,8 @@ var port int = 8081
 var DefaultRounds int = 1
 
 func init() {
-	deploy_config = NewConfig()
-	deployP = NewPlatform()
+	deploy_config = &deploy.Config{Nmachs:4, Nloggers:4}
+	deployP = deploy.NewPlatform()
 }
 
 type T struct {
@@ -101,19 +101,14 @@ var HostsTestShort = []T{
 	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 var SchnorrHostSingle = []T{
-	{8, 2, 2, 30, 20, 0, 0, 0, false, "schnorr_sign"},
+	{8, 2, 2, 30, 20, 0, 0, 0, false, "shamir_sign"},
 }
 
-func Start(destination string, nbld bool, build string, machines int) {
+func Start(destination string) {
 	deployP.Configure(deploy_config)
-	nobuild = nbld
 	deploy_config.Nmachs = machines
 
 	deployP.Stop()
-
-	if nobuild == false {
-		deployP.Build(build)
-	}
 
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
@@ -154,6 +149,10 @@ func Start(destination string, nbld bool, build string, machines int) {
 func RunTests(name string, ts []T) {
 	for i, _ := range ts {
 		ts[i].nmachs = deploy_config.Nmachs
+	}
+
+	if nobuild == false {
+		deployP.Build(build, ts[0].app)
 	}
 
 	MkTestDir()
@@ -233,7 +232,7 @@ func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
 	done := make(chan struct{})
 	var rs RunStats
-	cfg := &Config{
+	cfg := &deploy.Config{
 		t.nmachs, deploy_config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
 		deploy_config.Debug, deploy_config.RootWait, t.app, deploy_config.Suite}
@@ -242,8 +241,8 @@ func RunTest(t T) (RunStats, error) {
 	dbg.Lvl1("Failures percent is", t.failures)
 
 	deployP.Configure(cfg)
-	deployP.Deploy()
-	err := deployP.Start()
+	deployP.Deploy(cfg)
+	err := deployP.Start(cfg)
 	if err != nil {
 		log.Fatal(err)
 		return rs, nil

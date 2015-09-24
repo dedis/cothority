@@ -4,7 +4,7 @@ notes.txt
 deploy/deterlab/build
 deploy/deterlab/deploy/*
 deploy/deterlab/remote/*
-deploy/deterlab/config.toml
+deploy/deterlab/deter.toml
 test_data
 app/app
 deploy/deterlab/remote/*
