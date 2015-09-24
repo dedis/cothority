@@ -251,7 +251,7 @@ func (c *Client) recvR4(i int, r4 *R4) (err error) {
 	if c.R4[i], err = c.srv[i].Recv(); err != nil {
 		return
 	}
-	e := protobuf.Encoding{}.SetConstructor(c.suite)
+	e := protobuf.Encoding{Constructor: c.suite}
 	if err = e.Decode(c.R4[i], r4); err != nil {
 		return
 	}

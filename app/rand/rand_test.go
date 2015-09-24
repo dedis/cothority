@@ -14,7 +14,7 @@ func TestRand(t *testing.T) {
 	suite := ed25519.NewAES128SHA256Ed25519(false)
 	rand := random.Stream
 
-	nservers := 100
+	nservers := 10
 	srv := make([]Server, nservers)
 	group := make([]abstract.Point, nservers)
 	srvname := make([]string, nservers)
