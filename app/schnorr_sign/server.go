@@ -30,6 +30,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 		log.Fatal("Peer ", app.Hostname, "(", app.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
+	start := time.Now()
 	dbg.Lvl1("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, app.Hostname, info, indexPeer == 0)
@@ -46,9 +47,19 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	}
 	// Wait until this peer is connected / SYN'd with each other peer
 	p.WaitSYNs()
+	if p.IsRoot(){
+		delta := time.Since(start)
+		dbg.Lvl2(p.String(), "Connections accomplished in", delta)
+		log.WithFields(log.Fields{
+			"file":  logutils.File(),
+			"type":  "schnorr_connect",
+			"round": 0,
+			"time":  delta,
+		}).Info("")
+	}
 
 	// start to record
-	t1 := time.Now()
+	start = time.Now()
 
 	// Setup the schnorr system amongst peers
 	p.SetupDistributedSchnorr()
@@ -58,7 +69,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 
 	// send setup time if we're root
 	if p.IsRoot() {
-		delta := time.Since(t1)
+		delta := time.Since(start)
 		dbg.Lvl2(p.String(), "setup accomplished in ", delta)
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
@@ -74,7 +85,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 		}
 
 		// Then issue a signature !
-		t2 := time.Now()
+		start = time.Now()
 		msg := "hello world"
 		sig := p.SchnorrSig([]byte(msg))
 
@@ -87,13 +98,13 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 
 			dbg.Lvl2(p.String(), "verified the schnorr sig !")
 			// record time
-			delta2 := time.Since(t2)
-			dbg.Lvl2(p.String(), "signature done in ", delta2)
+			delta := time.Since(start)
+			dbg.Lvl2(p.String(), "signature done in ", delta)
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "schnorr_round",
 				"round": round,
-				"time":  delta2,
+				"time":  delta,
 			}).Info("")
 		}
 	}

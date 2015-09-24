@@ -198,7 +198,7 @@ func (p *Peer) WaitACKs() {
 	wg.Add(len(p.remote))
 	p.ForRemotePeers(fn)
 
-	dbg.Lvlr3(p.Name, "is waiting for acks ...")
+	dbg.Lvl3(p.Name, "is waiting for acks ...")
 	wg.Wait()
 	dbg.Lvl2(p.String(), "received ALL ACKs")
 	//n := 0
