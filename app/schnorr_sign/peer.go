@@ -198,7 +198,7 @@ func (p *Peer) WaitACKs() {
 	wg.Add(len(p.remote))
 	p.ForRemotePeers(fn)
 
-	dbg.Lvlr3(p.Name, "is waiting for acks ...")
+	dbg.Lvl3(p.Name, "is waiting for acks ...")
 	wg.Wait()
 	dbg.Lvl2(p.String(), "received ALL ACKs")
 	//n := 0
@@ -321,7 +321,13 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 }
 
 func (p *Peer) String() string {
-	return fmt.Sprintf("%s (%d) : ", p.Name, p.Id)
+	role := ""
+	if p.root {
+		role = "Root: "
+	} else {
+		role = "Peer: "
+	}
+	return fmt.Sprintf("%s: %s (%d) : ", role, p.Name, p.Id)
 }
 
 // ComputeSharedSecret will make the exchange of dealers between
@@ -392,11 +398,11 @@ func (p *Peer) SetupDistributedSchnorr() {
 	p.schnorr = p.schnorr.Init(p.info, long)
 }
 
-// SchnorrSig will first generate a
+// SchnorrSigRoot will first generate a
 // random shared secret, then start a new round
-// It will make the exchange of the partial signatures
+// It will wait for the partial sig of the peers
 // to finally render a SchnorrSig struct
-func (p *Peer) SchnorrSig(msg []byte) *poly.SchnorrSig {
+func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 	// First, gen. a random secret
 	random := p.ComputeSharedSecret()
 	// launch the new round
@@ -409,8 +415,9 @@ func (p *Peer) SchnorrSig(msg []byte) *poly.SchnorrSig {
 	ps := p.schnorr.RevealPartialSig()
 	// add its own
 	p.schnorr.AddPartialSig(ps)
-	// then send it to every one
-	p.SendToAll(ps)
+
+	// no need to send to all if you are the root
+	//	p.SendToAll(ps)
 	// then receive every partial sig
 	sigChan := make(chan *poly.PartialSchnorrSig)
 	fn := func(rp RemotePeer) {
@@ -443,6 +450,21 @@ func (p *Peer) SchnorrSig(msg []byte) *poly.SchnorrSig {
 		dbg.Fatal(p.String(), "could not generate the global SchnorrSig", err)
 	}
 	return sign
+}
+
+func (p *Peer) SchnorrSigPeer(msg []byte) {
+	// First, gen. a random secret
+	random := p.ComputeSharedSecret()
+	// launch the new round
+	err := p.schnorr.NewRound(random, msg)
+	if err != nil {
+		dbg.Fatal(p.String(), "could not make a new round : ", err)
+	}
+
+	// compute its own share of the signature
+	ps := p.schnorr.RevealPartialSig()
+	// then send it to root only
+	p.SendToRoot(ps)
 }
 
 // VerifySchnorrSig will basically verify the validity of the issued signature
