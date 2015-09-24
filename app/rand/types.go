@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/dedis/crypto/abstract"
 	"time"
 	//	"github.com/dedis/crypto/poly/promise"
 )
@@ -52,7 +53,9 @@ type R2 struct {
 
 type I3 struct {
 	//	SID		SessionID	// Unique session identifier tuple
-	R2s [][]byte // Client's list of signed R2 messages
+	// Client's list of signed R2 messages;
+	// empty slices represent missing R2 messages.
+	R2s [][]byte
 }
 
 type R3 struct {
@@ -61,23 +64,25 @@ type R3 struct {
 }
 
 type R3Resp struct {
-	//	Dealer		int		// Server number of dealer
-	Resp []byte // Encoded response to dealer's Deal
+	Dealer int    // Server number of dealer
+	Resp   []byte // Encoded response to dealer's Deal
 }
 
 type I4 struct {
 	//	SID		SessionID	// Unique session identifier tuple
-	R2s [][]byte // Client's list of signed R2 messages
+	// Client's list of signed R2 messages;
+	// empty slices for missing or invalid R2s.
+	R2s [][]byte
 }
 
 type R4 struct {
 	//	HI4		[]byte		// Hash of I4 message responding to
-	Share []R4Share // Revealed secret-shares
+	Shares []R4Share // Revealed secret-shares
 }
 
 type R4Share struct {
-	Dealer int    // Server number of dealer
-	Share  []byte // Decrypted share dealt to this server
+	Dealer int             // Server number of dealer
+	Share  abstract.Secret // Decrypted share dealt to this server
 }
 
 type Transcript struct {

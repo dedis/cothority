@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
 	"errors"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/random"
 	"github.com/dedis/crypto/poly"
+	"github.com/dedis/crypto/random"
 	"github.com/dedis/protobuf"
 )
 
@@ -17,7 +16,7 @@ const thresR = 2
 const thresN = 3
 
 func pickInsurers(suite abstract.Suite, group []Server,
-		Rc, Rs []byte) ([]int, []abstract.Point) {
+	Rc, Rs []byte) ([]int, []abstract.Point) {
 
 	// Seed the PRNG for insurer selection
 	var key []byte
@@ -46,10 +45,11 @@ type Server struct {
 	suite   abstract.Suite
 	rand    abstract.Cipher
 	keysize int
-	keypair	config.KeyPair
+	keypair config.KeyPair
 
 	// XXX servers shouldn't really need to know everyone else
-	group	[]Server
+	group []Server
+	self  int // our server index
 }
 
 func (s *Server) init(host Host, suite abstract.Suite, group []Server) {
@@ -59,6 +59,15 @@ func (s *Server) init(host Host, suite abstract.Suite, group []Server) {
 	s.keysize = s.rand.KeySize()
 	s.keypair.Gen(suite, s.rand)
 	s.group = group
+
+	// Find our own index
+	for i := range group {
+		if s == &group[i] {
+			s.self = i
+			return
+		}
+	}
+	panic("this server is not part of the group!?")
 }
 
 func (s *Server) serve(conn Conn) (err error) {
@@ -115,7 +124,7 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Send our R2
-	r2 := R2{ Rs: Rs, Deal: dealb }
+	r2 := R2{Rs: Rs, Deal: dealb}
 	r2b, err := protobuf.Encode(&r2)
 	if err != nil {
 		return
@@ -125,18 +134,74 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Receive client's I3
+	var i3 I3
 	if msg, err = conn.Recv(); err != nil {
 		return
 	}
-	var i3 I3
 	if err = protobuf.Decode(msg, &i3); err != nil {
 		return
 	}
 
-	// XXX cross-check Deals
+	// Decrypt and validate all the shares we've been dealt.
+	nsrv := len(s.group)
+	if len(i3.R2s) != nsrv {
+		return errors.New("wrong-length R2 array in I3 message")
+	}
+	shares := []R4Share{}
+	r3resps := []R3Resp{}
+	for i := 0; i < nsrv; i++ {
+		r2i := R2{}
+		r2ib := i3.R2s[i]
+		if len(r2ib) == 0 {
+			continue // Missing R2 - that's OK, just skip
+		}
+		if err = protobuf.Decode(r2ib, &r2i); err != nil {
+			return
+		}
+		// XXX equivocation-check other servers' responses
+
+		// Which insurers did server i deal its secret to?
+		shareidx := -1
+		sel, _ := pickInsurers(s.suite, s.group, Rc, r2i.Rs)
+		for j := range sel {
+			if sel[j] == s.self {
+				shareidx = j
+				break
+			}
+		}
+		if shareidx < 0 {
+			continue // we weren't dealt a share
+		}
+
+		// Unmarshal and validate the Deal
+		deal := &poly.Promise{}
+		deal.UnmarshalInit(thresT, thresR, thresN, s.suite)
+		if err = deal.UnmarshalBinary(r2i.Deal); err != nil {
+			return
+		}
+
+		// Now decrypt and validate the specific share we were dealt
+		// XXX produce response rather than returning if invalid
+		share, resp, err := deal.ProduceResponse(shareidx, &s.keypair)
+		if err != nil {
+			return err
+		}
+
+		// Marshal the response to return to the client
+		var r3resp R3Resp
+		r3resp.Dealer = i
+		r3resp.Resp, err = resp.MarshalBinary()
+		if err != nil {
+			return err
+		}
+		r3resps = append(r3resps, r3resp)
+
+		// Save the revealed share for later
+		shares = append(shares, R4Share{i, share})
+	}
 
 	// Send our R3
-	var r3 R3
+	r3 := R3{Resp: r3resps}
 	r3b, err := protobuf.Encode(&r3)
 	if err != nil {
 		return err
@@ -154,10 +219,19 @@ func (s *Server) serve(conn Conn) (err error) {
 		return
 	}
 
-	// XXX validate
+	// Validate the R4, mainly just making sure it's a subset of the R3 set
+	if len(i4.R2s) != nsrv {
+		return errors.New("wrong-length R2 array in I4 message")
+	}
+	for i := 0; i < nsrv; i++ {
+		r2ib := i4.R2s[i]
+		if len(r2ib) != 0 && !bytes.Equal(r2ib, i3.R2s[i]) {
+			return errors.New("R2 set in I4 not a subset of I3")
+		}
+	}
 
 	// Send our R4
-	var r4 R4
+	r4 := R4{Shares: shares}
 	r4b, err := protobuf.Encode(&r4)
 	if err != nil {
 		return
@@ -168,4 +242,3 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	return
 }
-

@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"errors"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/poly"
 	"github.com/dedis/protobuf"
 	"log"
 )
@@ -67,7 +68,7 @@ func (c *Client) run() error {
 	for i := 0; i < c.nsrv; i++ {
 		if c.srv[i] != nil {
 			if err := c.recvR1(i, &r1[i]); err != nil {
-				log.Printf("Server %d failed: %s", i, err)
+				log.Printf("recvR1 server %d: %s", i, err)
 				c.srv[i] = nil
 			}
 		}
@@ -87,10 +88,11 @@ func (c *Client) run() error {
 	}
 	r2 := make([]R2, c.nsrv)
 	c.R2 = make([][]byte, c.nsrv)
+	deals := make([]*poly.Promise, c.nsrv)
 	for i := 0; i < c.nsrv; i++ {
 		if c.srv[i] != nil {
-			if err := c.recvR2(i, &r1[i], &r2[i]); err != nil {
-				log.Printf("Server %d failed: %s", i, err)
+			if err := c.recvR2(i, &r1[i], &r2[i], &deals[i]); err != nil {
+				log.Printf("recvR2 server %d: %s", i, err)
 				c.srv[i] = nil
 			}
 		}
@@ -112,8 +114,8 @@ func (c *Client) run() error {
 	c.R3 = make([][]byte, c.nsrv)
 	for i := 0; i < c.nsrv; i++ {
 		if c.srv[i] != nil {
-			if err := c.recvR3(i, &r3[i]); err != nil {
-				log.Printf("Server %d failed: %s", i, err)
+			if err := c.recvR3(i, &r3[i], deals); err != nil {
+				log.Printf("recvR3 server %d: %s", i, err)
 				c.srv[i] = nil
 			}
 		}
@@ -136,7 +138,7 @@ func (c *Client) run() error {
 	for i := 0; i < c.nsrv; i++ {
 		if c.srv[i] != nil {
 			if err := c.recvR4(i, &r4[i]); err != nil {
-				log.Printf("Server %d failed: %s", i, err)
+				log.Printf("recvR4 server %d: %s", i, err)
 				c.srv[i] = nil
 			}
 		}
@@ -159,7 +161,7 @@ func (c *Client) recvR1(i int, r1 *R1) (err error) {
 	return
 }
 
-func (c *Client) recvR2(i int, r1 *R1, r2 *R2) (err error) {
+func (c *Client) recvR2(i int, r1 *R1, r2 *R2, dealp **poly.Promise) (err error) {
 
 	if c.R2[i], err = c.srv[i].Recv(); err != nil {
 		return
@@ -174,12 +176,19 @@ func (c *Client) recvR2(i int, r1 *R1, r2 *R2) (err error) {
 		err = errors.New("server random hash mismatch")
 		return err
 	}
-	// XXX check the Deal's basic validity
+
+	// Unmarshal and validate the Deal
+	deal := &poly.Promise{}
+	deal.UnmarshalInit(thresT, thresR, thresN, c.suite)
+	if err = deal.UnmarshalBinary(r2.Deal); err != nil {
+		return
+	}
+	*dealp = deal
 
 	return
 }
 
-func (c *Client) recvR3(i int, r3 *R3) (err error) {
+func (c *Client) recvR3(i int, r3 *R3, deals []*poly.Promise) (err error) {
 
 	if c.R3[i], err = c.srv[i].Recv(); err != nil {
 		return
@@ -188,8 +197,21 @@ func (c *Client) recvR3(i int, r3 *R3) (err error) {
 		return
 	}
 
-	// Validate the R3 response
-	// XXX
+	// Validate the R3 responses and use them to eliminate bad shares
+	for _, r3resp := range r3.Resp {
+		j := r3resp.Dealer
+		resp := &poly.Response{}
+		resp.UnmarshalInit(c.suite)
+		if err = resp.UnmarshalBinary(r3resp.Resp); err != nil {
+			return
+		}
+		// XXX check that resp is securely bound to promise!!! FIX
+		if !resp.Good() {
+			log.Printf("server %d dealt bad promise to %d",
+				j, i)
+			c.R2[j] = []byte{}
+		}
+	}
 
 	return
 }
@@ -199,7 +221,8 @@ func (c *Client) recvR4(i int, r4 *R4) (err error) {
 	if c.R4[i], err = c.srv[i].Recv(); err != nil {
 		return
 	}
-	if err = protobuf.Decode(c.R4[i], r4); err != nil {
+	e := protobuf.Encoding{}.SetConstructor(c.suite)
+	if err = e.Decode(c.R4[i], r4); err != nil {
 		return
 	}
 
