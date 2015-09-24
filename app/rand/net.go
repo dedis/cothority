@@ -18,6 +18,7 @@ type Conn interface {
 	PeerName() string      // name of peer host
 	Send(msg []byte) error // send message to connected peer
 	Recv() ([]byte, error) // receive message from peer
+	Close() error          // close connection
 }
 
 // XXX channel-based virtual network; move to chanNet.go
@@ -78,19 +79,6 @@ func (ch *chanHost) Open(name string) Conn {
 
 	return &ci
 }
-
-/*
-func (ch *chanHost) Recv() ([]byte, Conn) {
-	cm := <-ch.rq
-	return cm.msg, cm.src
-}
-
-
-type peerName struct {
-	src string
-	dst string
-}
-*/
 
 type chanConn struct {
 	src *chanHost   // source this object is associated with
