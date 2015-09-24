@@ -1,10 +1,12 @@
 package schnorr_sign
 
 import log "github.com/Sirupsen/logrus"
+import "github.com/dedis/cothority/lib/logutils"
 import "github.com/dedis/cothority/deploy"
 import "github.com/dedis/cothority/lib/config"
 import "github.com/dedis/crypto/poly"
 import dbg "github.com/dedis/cothority/lib/debug_lvl"
+import "time"
 
 func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Config) {
 	s := config.GetSuite(depl.Suite)
@@ -56,7 +58,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 
 	// send setup time
 	delta := time.Since(t1)
-	dbt.Lvl2(p.String(), "setup accomplished in ", delta, " sec")
+	dbg.Lvl2(p.String(), "setup accomplished in ", delta)
 	//log.WithFields(log.Fields{
 	//	"file":  logutils.File(),
 	//	"type":  "root_round",
@@ -82,7 +84,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	dbg.Lvl1(p.String(), "verified the schnorr sig !")
 	// record time
 	delta2 := time.Since(t2)
-	dbg.Lvl2(p.String(), "signature done in ", delta2, "secs")
+	dbg.Lvl2(p.String(), "signature done in ", delta2)
 	log.WithFields(log.Fields{
 		"file":  logutils.File(),
 		"type":  "root_round",
