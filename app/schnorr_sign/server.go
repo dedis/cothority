@@ -47,6 +47,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	}
 	// Wait until this peer is connected / SYN'd with each other peer
 	p.WaitSYNs()
+
 	if p.IsRoot(){
 		delta := time.Since(start)
 		dbg.Lvl2(p.String(), "Connections accomplished in", delta)
@@ -114,4 +115,11 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 
 	p.WaitFins()
 	dbg.Lvl1(p.String(), "is leaving ...")
+
+	if p.IsRoot(){
+		log.WithFields(log.Fields{
+			"file": logutils.File(),
+			"type":	"schnorr_end",
+		}).Info("")
+	}
 }

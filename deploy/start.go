@@ -101,7 +101,7 @@ var HostsTestShort = []T{
 	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 var SchnorrHostSingle = []T{
-	{8, 4, 8, 30, 20, 0, 0, 0, false, "schnorr_sign"},
+	{8, 2, 2, 30, 20, 0, 0, 0, false, "schnorr_sign"},
 }
 
 func Start(destination string, nbld bool, build string, machines int) {

@@ -140,6 +140,7 @@ func Monitor(bf int) RunStats {
 			S += (entry.Time - tM) * (entry.Time - M)
 			k++
 			rs.StdDev = math.Sqrt(S / (k - 1))
+		} else if bytes.Contains(data, []byte("schnorr_end")){
 			break
 		} else if bytes.Contains(data, []byte("forkexec")) {
 			if rootDone {
