@@ -6,3 +6,4 @@ deploy/deterlab/deploy/*
 deploy/deterlab/config.toml
 test_data
 app/app
+deploy/deterlab/remote/*
