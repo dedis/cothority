@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"bytes"
 	"errors"
 	"github.com/dedis/crypto/abstract"
@@ -11,12 +12,12 @@ import (
 )
 
 // XXX should be config items
-const thresT = 2
-const thresR = 2
-const thresN = 3
+const thresT = 3
+const thresR = 3
+const thresN = 5
 
-func pickInsurers(suite abstract.Suite, group []Server,
-	Rc, Rs []byte) ([]int, []abstract.Point) {
+func pickInsurers(suite abstract.Suite, group []abstract.Point,
+	Rc, Rs []byte) ([]int) {
 
 	// Seed the PRNG for insurer selection
 	var key []byte
@@ -27,12 +28,10 @@ func pickInsurers(suite abstract.Suite, group []Server,
 	ntrustees := thresN
 	nservers := len(group)
 	sel := make([]int, ntrustees)
-	pub := make([]abstract.Point, ntrustees)
 	for i := 0; i < ntrustees; i++ {
 		sel[i] = int(random.Uint64(prng) % uint64(nservers))
-		pub[i] = group[sel[i]].keypair.Public
 	}
-	return sel, pub
+	return sel
 }
 
 type Server struct {
@@ -48,26 +47,19 @@ type Server struct {
 	keypair config.KeyPair
 
 	// XXX servers shouldn't really need to know everyone else
-	group []Server
+	group []abstract.Point
 	self  int // our server index
 }
 
-func (s *Server) init(host Host, suite abstract.Suite, group []Server) {
+func (s *Server) init(host Host, suite abstract.Suite,
+			group []abstract.Point, self int) {
 	s.host = host
 	s.suite = suite
 	s.rand = suite.Cipher(abstract.RandomKey)
 	s.keysize = s.rand.KeySize()
 	s.keypair.Gen(suite, s.rand)
 	s.group = group
-
-	// Find our own index
-	for i := range group {
-		if s == &group[i] {
-			s.self = i
-			return
-		}
-	}
-	panic("this server is not part of the group!?")
+	s.self = self
 }
 
 func (s *Server) serve(conn Conn) (err error) {
@@ -115,9 +107,13 @@ func (s *Server) serve(conn Conn) (err error) {
 	// Construct our Deal
 	secPair := &config.KeyPair{}
 	secPair.Gen(s.suite, random.Stream)
-	_, inspub := pickInsurers(s.suite, s.group, Rc, Rs)
+	sel := pickInsurers(s.suite, s.group, Rc, Rs)
+	selkeys := make([]abstract.Point, len(sel))
+	for i := range sel {
+		selkeys[i] = s.group[sel[i]]
+	}
 	deal := &poly.Promise{}
-	deal.ConstructPromise(secPair, &s.keypair, thresT, thresR, inspub)
+	deal.ConstructPromise(secPair, &s.keypair, thresT, thresR, selkeys)
 	dealb, err := deal.MarshalBinary()
 	if err != nil {
 		return
@@ -160,44 +156,44 @@ func (s *Server) serve(conn Conn) (err error) {
 		}
 		// XXX equivocation-check other servers' responses
 
-		// Which insurers did server i deal its secret to?
-		shareidx := -1
-		sel, _ := pickInsurers(s.suite, s.group, Rc, r2i.Rs)
-		for j := range sel {
-			if sel[j] == s.self {
-				shareidx = j
-				break
-			}
-		}
-		if shareidx < 0 {
-			continue // we weren't dealt a share
-		}
-
-		// Unmarshal and validate the Deal
+		// Unmarshal and validate server i's Deal
 		deal := &poly.Promise{}
 		deal.UnmarshalInit(thresT, thresR, thresN, s.suite)
 		if err = deal.UnmarshalBinary(r2i.Deal); err != nil {
 			return
 		}
 
-		// Now decrypt and validate the specific share we were dealt
-		// XXX produce response rather than returning if invalid
-		share, resp, err := deal.ProduceResponse(shareidx, &s.keypair)
-		if err != nil {
-			return err
-		}
+		// Which insurers did server i deal its secret to?
+		sel := pickInsurers(s.suite, s.group, Rc, r2i.Rs)
+		for k := range sel {
+			if sel[k] != s.self {
+				continue	// share dealt to someone else
+			}
 
-		// Marshal the response to return to the client
-		var r3resp R3Resp
-		r3resp.Dealer = i
-		r3resp.Resp, err = resp.MarshalBinary()
-		if err != nil {
-			return err
-		}
-		r3resps = append(r3resps, r3resp)
+			// Decrypt and validate the specific share we were dealt
+			// XXX produce response rather than returning if invalid
+			share, resp, err := deal.ProduceResponse(
+				k, &s.keypair)
+			if err != nil {
+				return err
+			}
 
-		// Save the revealed share for later
-		shares = append(shares, R4Share{i, share})
+			// Marshal the response to return to the client
+			var r3resp R3Resp
+			r3resp.Dealer = i
+			r3resp.Index = k
+			r3resp.Resp, err = resp.MarshalBinary()
+			if err != nil {
+				return err
+			}
+			r3resps = append(r3resps, r3resp)
+
+			// Save the revealed share for later
+			shares = append(shares, R4Share{i, k, share})
+
+			log.Printf("server %d dealt server %d share %d",
+				i, s.self, k)
+		}
 	}
 
 	// Send our R3
@@ -231,6 +227,7 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Send our R4
+	// XXX but only if our deal is still included?
 	r4 := R4{Shares: shares}
 	r4b, err := protobuf.Encode(&r4)
 	if err != nil {
