@@ -65,7 +65,7 @@ type R3 struct {
 
 type R3Resp struct {
 	Dealer int    // Server number of dealer
-	Index int	// Share number in deal we are validating
+	Index  int    // Share number in deal we are validating
 	Resp   []byte // Encoded response to dealer's Deal
 }
 
@@ -83,7 +83,7 @@ type R4 struct {
 
 type R4Share struct {
 	Dealer int             // Server number of dealer
-	Index int		// Share number in dealer's Deal
+	Index  int             // Share number in dealer's Deal
 	Share  abstract.Secret // Decrypted share dealt to this server
 }
 

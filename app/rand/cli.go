@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"errors"
+	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/protobuf"
 	"log"
-	"fmt"
 )
 
 type Client struct {
@@ -23,15 +23,15 @@ type Client struct {
 	//	pubKey	abstract.Point
 	//	priKey	abstract.Secret
 
-	nsrv int
-	srv  []Conn		// Connections to communicate with each server
-	group []abstract.Point	// Public keys of all servers in group
+	nsrv  int
+	srv   []Conn           // Connections to communicate with each server
+	group []abstract.Point // Public keys of all servers in group
 
-	Transcript		// Third-party verifiable message transcript
-	Rc []byte		// Client's trustee-selection random value
-	Rs [][]byte		// Servers' trustee-selection random values
-	deals []*poly.Promise	// Unmarshaled deals from servers
-	shares []poly.PriShares	// Revealed shares
+	Transcript                  // Third-party verifiable message transcript
+	Rc         []byte           // Client's trustee-selection random value
+	Rs         [][]byte         // Servers' trustee-selection random values
+	deals      []*poly.Promise  // Unmarshaled deals from servers
+	shares     []poly.PriShares // Revealed shares
 }
 
 func (c *Client) init(host Host, suite abstract.Suite, rand cipher.Stream,
@@ -163,7 +163,8 @@ func (c *Client) run() error {
 	output := c.suite.Secret().Zero()
 	for i := range c.shares {
 		if c.R2[i] != nil {
-			log.Printf("reconstruct secret %d\n", i)
+			log.Printf("reconstruct secret %d from %d shares\n",
+				i, c.shares[i].NumShares())
 			// XXX handle not-enough-shares gracefully
 			secret := c.shares[i].Secret()
 			output.Add(output, secret)
@@ -247,9 +248,13 @@ func (c *Client) recvR3(i int, r3 *R3, deals []*poly.Promise) (err error) {
 
 func (c *Client) recvR4(i int, r4 *R4) (err error) {
 
-	if c.R4[i], err = c.srv[i].Recv(); err != nil { return }
+	if c.R4[i], err = c.srv[i].Recv(); err != nil {
+		return
+	}
 	e := protobuf.Encoding{}.SetConstructor(c.suite)
-	if err = e.Decode(c.R4[i], r4); err != nil { return }
+	if err = e.Decode(c.R4[i], r4); err != nil {
+		return
+	}
 
 	// Validate the R4 response and all the revealed shares
 	Rc := c.Rc
@@ -272,14 +277,15 @@ func (c *Client) recvR4(i int, r4 *R4) (err error) {
 
 		// Verify the share
 		err = c.deals[j].VerifyRevealedShare(idx, share)
-		if err != nil { return }
+		if err != nil {
+			return
+		}
 
 		// Stash it for reconstruction
 		c.shares[j].SetShare(idx, share)
 		log.Printf("dealer %d share %d for server %d received\n",
-				j, idx, i)
+			j, idx, i)
 	}
 
 	return
 }
-

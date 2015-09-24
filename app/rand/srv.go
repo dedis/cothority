@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"bytes"
 	"errors"
 	"github.com/dedis/crypto/abstract"
@@ -9,6 +8,7 @@ import (
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
 	"github.com/dedis/protobuf"
+	"log"
 )
 
 // XXX should be config items
@@ -17,7 +17,7 @@ const thresR = 3
 const thresN = 5
 
 func pickInsurers(suite abstract.Suite, group []abstract.Point,
-	Rc, Rs []byte) ([]int) {
+	Rc, Rs []byte) []int {
 
 	// Seed the PRNG for insurer selection
 	var key []byte
@@ -52,7 +52,7 @@ type Server struct {
 }
 
 func (s *Server) init(host Host, suite abstract.Suite,
-			group []abstract.Point, self int) {
+	group []abstract.Point, self int) {
 	s.host = host
 	s.suite = suite
 	s.rand = suite.Cipher(abstract.RandomKey)
@@ -167,7 +167,7 @@ func (s *Server) serve(conn Conn) (err error) {
 		sel := pickInsurers(s.suite, s.group, Rc, r2i.Rs)
 		for k := range sel {
 			if sel[k] != s.self {
-				continue	// share dealt to someone else
+				continue // share dealt to someone else
 			}
 
 			// Decrypt and validate the specific share we were dealt

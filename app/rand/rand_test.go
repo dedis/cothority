@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/dedis/crypto/edwards/ed25519"
-	"testing"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/random"
+	"testing"
 )
 
 func TestRand(t *testing.T) {
@@ -14,7 +14,7 @@ func TestRand(t *testing.T) {
 	suite := ed25519.NewAES128SHA256Ed25519(false)
 	rand := random.Stream
 
-	nservers := 2
+	nservers := 100
 	srv := make([]Server, nservers)
 	group := make([]abstract.Point, nservers)
 	srvname := make([]string, nservers)
