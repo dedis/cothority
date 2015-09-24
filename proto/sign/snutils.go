@@ -124,6 +124,7 @@ func (sn *Node) initCommitCrypto(Round int) {
 	round.Log.V = sn.suite.Point().Mul(nil, round.Log.v)
 	// initialize product of point commitments
 	round.Log.V_hat = sn.suite.Point().Null()
+	round.Log.Suite = sn.suite
 	sn.add(round.Log.V_hat, round.Log.V)
 
 	round.X_hat = sn.suite.Point().Null()
