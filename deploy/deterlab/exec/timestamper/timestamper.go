@@ -5,15 +5,15 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/helpers/oldconfig"
-	"github.com/dedis/cothority/protocols/sign"
+	"github.com/dedis/cothority/lib/oldconfig"
+	"github.com/dedis/cothority/proto/sign"
 
 	"github.com/dedis/crypto/abstract"
 //"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
-	"github.com/dedis/cothority/helpers/logutils"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 func GetSuite(suite string) abstract.Suite {

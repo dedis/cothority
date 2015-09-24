@@ -29,10 +29,10 @@ import (
 	"sync"
 	"time"
 
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
-	"github.com/dedis/cothority/helpers/cliutils"
-	"github.com/dedis/cothority/helpers/config"
-	"github.com/dedis/cothority/helpers/graphs"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/deploy"
 )
 
@@ -156,6 +156,13 @@ func main() {
 		// if this is the master logger than don't set the master to anything
 		if loggerport == masterLogger + ":10000" {
 			master = ""
+		}
+
+		// Copy configuration file to make higher file-limits
+		err = cliutils.SshRunStdout("", logger, "sudo cp remote/cothority.conf /etc/security/limits.d")
+
+		if err != nil {
+			log.Fatal("Couldn't copy limit-file:", err)
 		}
 
 		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +

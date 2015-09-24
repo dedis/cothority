@@ -18,12 +18,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
-	"github.com/dedis/cothority/helpers/cliutils"
-	"github.com/dedis/cothority/helpers/graphs"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/graphs"
 
 	"golang.org/x/net/websocket"
-	"github.com/dedis/cothority/helpers/config"
+	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/deploy"
 )
 

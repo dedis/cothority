@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
-	"github.com/dedis/cothority/helpers/logutils"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
 	"os"
 "github.com/dedis/cothority/deploy"
 )
@@ -38,12 +38,6 @@ func main() {
 	}
 	conf = deter.Config
 	dbg.DebugVisible = conf.Debug
-
-	// Copy configuration file to make higher file-limits
-	err = exec.Command("sudo", "cp", "remote/cothority.conf", "/etc/security/limits.d").Run()
-	if err != nil {
-		log.Fatal("Couldn't copy limit-file:", err)
-	}
 
 	flag.Parse()
 

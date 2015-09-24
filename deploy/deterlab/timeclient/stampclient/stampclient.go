@@ -11,12 +11,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/helpers/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/cothority/helpers/coconet"
-	"github.com/dedis/cothority/helpers/hashid"
-	"github.com/dedis/cothority/helpers/logutils"
-	"github.com/dedis/cothority/application/stamp"
+	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/app/stamp"
 )
 
 func genRandomMessages(n int) [][]byte {
