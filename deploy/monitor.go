@@ -19,13 +19,13 @@ import (
 func Monitor(bf int) RunStats {
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
-retry_dial:
+	retry_dial:
 	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
 	if err != nil {
 		time.Sleep(1 * time.Second)
 		goto retry_dial
 	}
-retry:
+	retry:
 	// Get HTML of webpage for data (NHosts, Depth, ...)
 	doc, err := goquery.NewDocument(fmt.Sprintf("http://localhost:%d/", port))
 	if err != nil {
@@ -83,7 +83,7 @@ retry:
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
-			if entry.Type != "root_round"{
+			if entry.Type != "root_round" {
 				dbg.Lvl1("Wrong debugging message - ignoring")
 				continue
 			}
@@ -108,6 +108,39 @@ retry:
 			S += (entry.Time - tM) * (entry.Time - M)
 			k++
 			rs.StdDev = math.Sqrt(S / (k - 1))
+		} else if bytes.Contains(data, []byte("schnorr_round")) {
+
+			var entry StatsEntry
+			err := json.Unmarshal(data, &entry)
+			if err != nil {
+				log.Fatal("json unmarshalled improperly:", err)
+			}
+			if entry.Type != "schnorr_round" {
+				dbg.Lvl1("Wrong debugging message - ignoring")
+				continue
+			}
+			dbg.Lvl4("schnorr_round:", entry)
+			if first {
+				first = false
+				dbg.Lvl4("Setting min-time to", entry.Time)
+				rs.MinTime = entry.Time
+				rs.MaxTime = entry.Time
+			}
+			if entry.Time < rs.MinTime {
+				dbg.Lvl4("Setting min-time to", entry.Time)
+				rs.MinTime = entry.Time
+			} else if entry.Time > rs.MaxTime {
+				rs.MaxTime = entry.Time
+			}
+
+			rs.AvgTime = ((rs.AvgTime * (k - 1)) + entry.Time) / k
+
+			var tM = M
+			M += (entry.Time - tM) / k
+			S += (entry.Time - tM) * (entry.Time - M)
+			k++
+			rs.StdDev = math.Sqrt(S / (k - 1))
+			break
 		} else if bytes.Contains(data, []byte("forkexec")) {
 			if rootDone {
 				continue
