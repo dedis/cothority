@@ -71,10 +71,12 @@ func main() {
 	}
 	// kill old processes
 	var wg sync.WaitGroup
-	for _, h := range phys {
+	doneHosts := make([]bool, len(phys))
+	for i, h := range phys {
 		wg.Add(1)
-		go func(h string) {
+		go func(i int, h string) {
 			defer wg.Done()
+			dbg.Lvl4("Cleaning up host", h)
 			cliutils.SshRun("", h, "sudo killall app forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
 			cliutils.SshRun("", h, "sudo killall app 2>/dev/null >/dev/null")
@@ -82,14 +84,36 @@ func main() {
 				dbg.Lvl4("Killing report:")
 				cliutils.SshRunStdout("", h, "ps ax")
 			}
-		}(h)
+			doneHosts[i] = true
+			dbg.Lvl3("Host", h, "cleaned up")
+		}(i, h)
 	}
-	wg.Wait()
+
+	cleanupChannel := make( chan string )
+	go func() {
+		wg.Wait()
+		dbg.Lvl3("Done waiting")
+		cleanupChannel <- "done"
+	}()
+	select {
+	case msg := <-cleanupChannel:
+		dbg.Lvl3("Received msg from cleanupChannel", msg)
+	case <-time.After(time.Second * 10):
+		for i, m := range doneHosts {
+			if !m {
+				dbg.Lvl1("Missing host:", phys[i])
+			}
+		}
+		dbg.Fatal("Didn't receive all replies.")
+	}
 
 	if kill {
+		dbg.Lvl1("Returning only from cleanup")
 		return
 	}
 
+	/*
+	 * Why copy the stuff to the other nodes? We have NFS, no?
 	for _, h := range phys {
 		wg.Add(1)
 		go func(h string) {
@@ -98,11 +122,13 @@ func main() {
 		}(h)
 	}
 	wg.Wait()
+	*/
 
 	nloggers := conf.Nloggers
 	masterLogger := phys[0]
 	loggers := []string{masterLogger}
-	for n := 1; n <= nloggers; n++ {
+	dbg.Lvl3("Going to create", nloggers, "loggers")
+	for n := 1; n < nloggers; n++ {
 		loggers = append(loggers, phys[n])
 	}
 
@@ -174,9 +200,6 @@ func main() {
 		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +
 		" -master=" + master)
 	}
-
-	// wait a little bit for the logserver to start up
-	time.Sleep(5 * time.Second)
 
 	i := 0
 	// For coll_stamp we have to wait for everything in place which takes quite some time
@@ -260,15 +283,15 @@ func main() {
 	case "coll_sign_no":
 		// TODO: for now it's only a simple startup from the server
 		dbg.Lvl1("Starting only one client")
-		/*
-		p := physToServer[0][0]
-		servers := strings.Join(physToServer[0][1], ",")
-		_, err = cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
-		" -name=client@" + p +
-		" -server=" + servers +
-		" -logger=" + loggerports[i])
-		i = (i + 1) % len(loggerports)
-		*/
+	/*
+	p := physToServer[0][0]
+	servers := strings.Join(physToServer[0][1], ",")
+	_, err = cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
+	" -name=client@" + p +
+	" -server=" + servers +
+	" -logger=" + loggerports[i])
+	i = (i + 1) % len(loggerports)
+	*/
 	}
 
 	// wait for the servers to finish before stopping

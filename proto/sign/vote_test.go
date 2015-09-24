@@ -1,10 +1,11 @@
 package sign_test
 
-import (
+import
+(
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/sign"
+	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/config"
 )
 
@@ -15,7 +16,7 @@ import (
 //    / \   \
 //   2   3   5
 func TestTreeSmallConfigVote(t *testing.T) {
-	hc, err := config.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("testdata/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +37,7 @@ func TestTreeSmallConfigVote(t *testing.T) {
 }
 
 func TestTCPStaticConfigVote(t *testing.T) {
-	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("testdata/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Error(err)
 	}

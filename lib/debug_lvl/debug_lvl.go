@@ -121,7 +121,7 @@ func (f *DebugLvl) Format(entry *logrus.Entry) ([]byte, error) {
 			return b.Bytes(), nil
 		}
 	} else {
-		if len(entry.Message) > 2048 {
+		if len(entry.Message) > 2048  && DebugVisible > 1{
 			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(entry.Message))
 		}
 		return nil, nil

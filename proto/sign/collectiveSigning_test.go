@@ -1,6 +1,7 @@
 package sign_test
 
-import (
+import
+(
 	"fmt"
 	"log"
 	"strconv"
@@ -10,10 +11,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/edwards/ed25519"
-	"github.com/dedis/crypto/nist"
-	"github.com/dedis/cothority/coconet"
 	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/cothority/sign"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/coconet"
 )
@@ -141,7 +139,8 @@ func runStaticTest(signType sign.Type, RoundsPerView int, faultyNodes ...int) er
 //    / \   \
 //   2   3   5
 func TestSmallConfigHealthy(t *testing.T) {
-	suite := nist.NewAES128SHA256P256()
+	//suite := nist.NewAES128SHA256P256()
+	suite := edwards.NewAES128SHA256Ed25519(true)
 	RoundsPerView := 100
 	if err := runTreeSmallConfig(sign.MerkleTree, RoundsPerView, suite, 0); err != nil {
 		t.Fatal(err)
@@ -149,7 +148,8 @@ func TestSmallConfigHealthy(t *testing.T) {
 }
 
 func TestSmallConfigHealthyNistQR512(t *testing.T) {
-	suite := nist.NewAES128SHA256QR512()
+	//suite := nist.NewAES128SHA256QR512()
+	suite := edwards.NewAES128SHA256Ed25519(true)
 	RoundsPerView := 100
 	if err := runTreeSmallConfig(sign.MerkleTree, RoundsPerView, suite, 0); err != nil {
 		t.Fatal(err)
@@ -167,7 +167,8 @@ func TestSmallConfigHealthyEd25519(t *testing.T) {
 func TestSmallConfigFaulty(t *testing.T) {
 	faultyNodes := make([]int, 0)
 	faultyNodes = append(faultyNodes, 2, 5)
-	suite := nist.NewAES128SHA256P256()
+	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := nist.NewAES128SHA256P256()
 	RoundsPerView := 100
 	if err := runTreeSmallConfig(sign.MerkleTree, RoundsPerView, suite, 1, faultyNodes...); err != nil {
 		t.Fatal(err)
@@ -179,7 +180,8 @@ func TestSmallConfigFaulty2(t *testing.T) {
 	faultyNodes := make([]int, 0)
 	faultyNodes = append(faultyNodes, 1, 2, 3, 4, 5)
 	RoundsPerView := 100
-	suite := nist.NewAES128SHA256P256()
+	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := nist.NewAES128SHA256P256()
 	if err := runTreeSmallConfig(sign.MerkleTree, RoundsPerView, suite, failureRate, faultyNodes...); err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +195,7 @@ func runTreeSmallConfig(signType sign.Type, RoundsPerView int, suite abstract.Su
 	if len(faultyNodes) > 0 {
 		opts.Faulty = true
 	}
-	hc, err = config.LoadConfig("../test/data/exconf.json", opts)
+	hc, err = config.LoadConfig("testdata/exconf.json", opts)
 	if err != nil {
 		return err
 	}
@@ -238,7 +240,7 @@ func TestTreeFromBigConfig(t *testing.T) {
 	// not mixing view changes in
 	RoundsPerView := 100
 
-	hc, err := config.LoadConfig("../test/data/exwax.json")
+	hc, err := config.LoadConfig("testdata/exwax.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,7 +275,7 @@ func TestMultipleRounds(t *testing.T) {
 	}
 	// not mixing view changes in
 	RoundsPerView := 100
-	hc, err := config.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("testdata/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -310,7 +312,7 @@ func TestTCPStaticConfig(t *testing.T) {
 	// not mixing view changes in
 	RoundsPerView := 100
 	time.Sleep(5 * time.Second)
-	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("testdata/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Error(err)
 	}
@@ -344,7 +346,7 @@ func TestTCPStaticConfigRounds(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
-	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("testdata/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Fatal("error loading configuration: ", err)
 	}
@@ -381,7 +383,7 @@ func TestViewChangeChan(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
-	hc, err := config.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("testdata/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -426,7 +428,7 @@ func TestViewChangeTCP(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
-	hc, err := config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
+	hc, err := config.LoadConfig("testdata/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	if err != nil {
 		t.Fatal("error loading configuration: ", err)
 	}

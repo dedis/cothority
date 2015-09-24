@@ -138,7 +138,7 @@ func runTSSIntegration(RoundsPerView, nMessages, nRounds, failureRate, failAsRoo
 	if len(faultyNodes) > 0 {
 		opts.Faulty = true
 	}
-	hostConfig, err = config.LoadConfig("../test/data/exconf.json", opts)
+	hostConfig, err = config.LoadConfig("testdata/exconf.json", opts)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func TestGoConnTimestampFromConfig(t *testing.T) {
 	nClients := 1
 	nRounds := 1
 
-	hc, err := config.LoadConfig("../test/data/exconf.json")
+	hc, err := config.LoadConfig("testdata/exconf.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -333,9 +333,9 @@ func runTCPTimestampFromConfig(RoundsPerView int, signType, nMessages, nClients,
 
 	// load config with faulty or healthy hosts
 	if len(faultyNodes) > 0 {
-		hc, err = config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true, Faulty: true})
+		hc, err = config.LoadConfig("testdata/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true, Faulty: true})
 	} else {
-		hc, err = config.LoadConfig("../test/data/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
+		hc, err = config.LoadConfig("testdata/extcpconf.json", config.ConfigOptions{ConnType: "tcp", GenHosts: true})
 	}
 	if err != nil {
 		return err
