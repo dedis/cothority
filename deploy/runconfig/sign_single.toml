@@ -1,0 +1,5 @@
+Machines = 8
+App = "sign"
+
+hpn, bf, rounds, rate
+8, 8, 30, 10

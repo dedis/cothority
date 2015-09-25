@@ -36,6 +36,8 @@ import (
 	"time"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"github.com/BurntSushi/toml"
 )
 
 type Deter struct {
@@ -61,28 +63,37 @@ type Deter struct {
 	virt         []string
 	physOut      string
 	virtOut      string
-
+	// Which app to run
+	App          string
+	// Number of machines
+	Machines     int
+	// Number of loggers
+	Loggers      int
 	// Channel to communication stopping of experiment
 	sshDeter     chan string
+	// Debugging-level: 0 is none - 5 is everything
+	Debug int
 
 	// Testing the connection?
 	TestConnect  bool
 }
 
-func (d *Deter) Configure(config *Config) {
+func (d *Deter) Configure(config *Deter) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.DeterDir = pwd + "/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
 	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
+	d.Machines = config.Machines
+	d.App = config.App
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
 	d.checkDeterlabVars()
 }
 
-func (d *Deter) Build(build, app string) error {
+func (d *Deter) Build(build string) error {
 	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build)
 	start := time.Now()
 
@@ -106,7 +117,7 @@ func (d *Deter) Build(build, app string) error {
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
 		if p == "app" {
-			p = "../../app/" + app
+			p = "../../app/" + d.App
 		}
 		basename := path.Base(p)
 		dst := d.BuildDir + "/" + basename
@@ -148,18 +159,18 @@ func (d *Deter) Build(build, app string) error {
 	return nil
 }
 
-func (d *Deter) Deploy(conf *Config) error {
+func (d *Deter) Deploy(conf string) error {
 	dbg.Lvl1("Assembling all files and configuration options")
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
 
 	dbg.Lvl1("Writing config-files")
 
-	d.generateHostsFile(conf)
-	d.readHosts(conf)
+	d.generateHostsFile()
+	d.readHosts()
 	d.calculateGraph(conf)
 	WriteConfig(d, "deter.toml", d.DeployDir)
-	WriteConfig(conf, "deploy.toml", d.DeployDir)
+	ioutil.WriteFile(d.DeployDir + "/app.toml", []byte(conf), 0666)
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles",
@@ -187,10 +198,7 @@ func (d *Deter) Deploy(conf *Config) error {
 	return nil
 }
 
-func (d *Deter) Start(conf *Config) error {
-	dbg.Lvl1("Running with", conf.Nmachs, "nodes *", conf.Hpn, "hosts per node =",
-		conf.Nmachs * conf.Hpn, "and", conf.Nloggers, "loggers")
-
+func (d *Deter) Start() error {
 	// setup port forwarding for viewing log server
 	dbg.Lvl3("setup port forwarding for master logger: ", d.masterLogger, d.Login, d.Host)
 	cmd := exec.Command(
@@ -235,24 +243,27 @@ func (d *Deter) Stop() error {
 	return nil
 }
 
-func ReadConfigDeter(deter *Deter, conf *Config){
+func ReadConfigDeter(deter *Deter, conf *Config) {
 	err := ReadConfig(deter, "deter.toml")
+	_, caller, line, _ := runtime.Caller(1)
+	who := caller + ":" + strconv.Itoa(line)
 	if err != nil {
-		log.Fatal("Couldn't read config in", runtime.Caller(1), ":", err)
+		log.Fatal("Couldn't read config in", who, ":", err)
 	}
 	err = ReadConfig(conf, "deploy.toml")
 	if err != nil {
-		log.Fatal("Couldn't read config in", runtime.Caller(1), ":", err)
+		log.Fatal("Couldn't read config in", who, ":", err)
 	}
+	dbg.DebugVisible = deter.Debug
 }
 
 /*
 * Write the hosts.txt file automatically
 * from project name and number of servers
  */
-func (d *Deter) generateHostsFile(conf *Config) error {
+func (d *Deter) generateHostsFile() error {
 	hosts_file := d.DeployDir + "/hosts.txt"
-	num_servers := conf.Nmachs + conf.Nloggers
+	num_servers := d.Machines + d.Loggers
 
 	// open and erase file if needed
 	if _, err1 := os.Stat(hosts_file); err1 == nil {
@@ -281,9 +292,9 @@ func (d *Deter) generateHostsFile(conf *Config) error {
 // parse the hosts.txt file to create a separate list (and file)
 // of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
 // corresponds to each host on line i, in virt.txt.
-func (d *Deter) readHosts(conf *Config) {
+func (d *Deter) readHosts() {
 	hosts_file := d.DeployDir + "/hosts.txt"
-	nmachs, nloggers := conf.Nmachs, conf.Nloggers
+	nmachs, nloggers := d.Machines, d.Loggers
 
 	physVirt, err := cliutils.ReadLines(hosts_file)
 	if err != nil {
@@ -316,13 +327,15 @@ func (d *Deter) readHosts(conf *Config) {
 }
 
 // Calculates a tree that is used for the timestampers
-func (d *Deter) calculateGraph(conf *Config) {
-	d.virt = d.virt[conf.Nloggers:]
-	d.phys = d.phys[conf.Nloggers:]
+func (d *Deter) calculateGraph(conf_str string) {
+	conf := Config{}
+	toml.Decode(conf_str, &conf)
+	d.virt = d.virt[d.Loggers:]
+	d.phys = d.phys[d.Loggers:]
 	t, hostnames, depth, err := graphs.TreeFromList(d.virt, conf.Hpn, conf.Bf)
 	dbg.Lvl2("Depth:", depth)
 	dbg.Lvl2("Total hosts:", len(hostnames))
-	total := conf.Nmachs * conf.Hpn
+	total := d.Machines * conf.Hpn
 	if len(hostnames) != total {
 		dbg.Lvl1("Only calculated", len(hostnames), "out of", total, "hosts - try changing number of",
 			"machines or hosts per node")

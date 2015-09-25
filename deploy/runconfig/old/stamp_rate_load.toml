@@ -1,0 +1,10 @@
+// high and low specify how many milliseconds between messages
+func RateLoadTest(hpn, bf int) []T {
+	return []T{
+		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // never send a message
+		{0, hpn, bf, 5000, DefaultRounds, 0, 0, 0, false, "coll_stamp"}, // one per round
+		{0, hpn, bf, 500, DefaultRounds, 0, 0, 0, false, "coll_stamp"},  // 10 per round
+		{0, hpn, bf, 50, DefaultRounds, 0, 0, 0, false, "coll_stamp"},   // 100 per round
+		{0, hpn, bf, 30, DefaultRounds, 0, 0, 0, false, "coll_stamp"},   // 1000 per round
+	}
+}

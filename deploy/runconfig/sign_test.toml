@@ -1,0 +1,6 @@
+App = 'sign'
+Machines = 4
+---
+Hpn, Bf, Rate, Rounds, Failures
+2, 8, 30, 20, 0
+4, 8, 30, 20, 0

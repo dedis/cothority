@@ -59,7 +59,6 @@ func init() {
 
 func main() {
 	deploy.ReadConfigDeter(&deter, &conf)
-	dbg.DebugVisible = conf.Debug
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	// read in from flags the port I should be listening on
@@ -182,7 +181,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
 
-	err := homePage.Execute(w, Home{ws, strconv.Itoa(conf.Nmachs * conf.Hpn), strconv.Itoa(conf.Hpn), strconv.Itoa(conf.Bf),
+	dbg.Lvl1("Machines, hpn", deter.Machines, conf.Hpn)
+	err := homePage.Execute(w, Home{ws, strconv.Itoa(deter.Machines * conf.Hpn), strconv.Itoa(conf.Hpn), strconv.Itoa(conf.Bf),
 		strconv.Itoa(conf.Hpn), strconv.Itoa(conf.Nmsgs), strconv.Itoa(conf.Rate)})
 	if err != nil {
 		panic(err)

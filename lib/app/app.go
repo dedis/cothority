@@ -54,7 +54,7 @@ func ReadConfig()(*AppConfig) {
 	if err != nil {
 		log.Fatal("Couldn't load config-file in exec")
 	}
-	err = deploy.ReadConfig(ac.Conf, "deploy.toml")
+	err = deploy.ReadConfig(ac.Conf, "app.toml")
 	dbg.DebugVisible = ac.Conf.Debug
 
 	flag.Parse()

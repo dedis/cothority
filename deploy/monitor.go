@@ -16,7 +16,7 @@ import (
 )
 
 // Monitor monitors log aggregates results into RunStats
-func Monitor(bf int) RunStats {
+func Monitor() RunStats {
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
 	retry_dial:
@@ -33,17 +33,23 @@ func Monitor(bf int) RunStats {
 		time.Sleep(10 * time.Second)
 		goto retry
 	}
-	nhosts := doc.Find("#numhosts").First().Text()
-	dbg.Lvl4("hosts:", nhosts)
-	depth := doc.Find("#depth").First().Text()
-	dbg.Lvl4("depth:", depth)
-	nh, err := strconv.Atoi(nhosts)
+	nhosts_str := doc.Find("#numhosts").First().Text()
+	dbg.Lvl4("hosts:", nhosts_str)
+	depth_str := doc.Find("#depth").First().Text()
+	dbg.Lvl4("depth:", depth_str)
+	bf_str := doc.Find("#bf").First().Text()
+	dbg.Lvl4("bf:", bf_str)
+	nh, err := strconv.Atoi(nhosts_str)
 	if err != nil {
-		log.Fatal("unable to convert hosts to be a number:", nhosts)
+		log.Fatal("unable to convert hosts to be a number:", nhosts_str)
 	}
-	d, err := strconv.Atoi(depth)
+	d, err := strconv.Atoi(depth_str)
 	if err != nil {
-		log.Fatal("unable to convert depth to be a number:", depth)
+		log.Fatal("unable to convert depth to be a number:", depth_str)
+	}
+	bf, err := strconv.Atoi(bf_str)
+	if err != nil {
+		log.Fatal("unable to convert bf to be a number:", bf_str)
 	}
 	clientDone := false
 	rootDone := false

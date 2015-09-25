@@ -1,0 +1,7 @@
+Machines = 8
+App = "shamir_sign"
+
+hpn, bf, rounds
+1, 2, 10
+2, 2, 10
+3, 2, 10

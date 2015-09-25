@@ -47,7 +47,6 @@ func init() {
 
 func main() {
 	deploy.ReadConfigDeter(&deter, &conf)
-	dbg.DebugVisible = conf.Debug
 
 	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:", conf.Rounds, "debug:", conf.Debug)
 
@@ -106,7 +105,7 @@ func main() {
 		return
 	}
 
-	nloggers := conf.Nloggers
+	nloggers := deter.Loggers
 	masterLogger := phys[0]
 	loggers := []string{masterLogger}
 	dbg.Lvl3("Going to create", nloggers, "loggers")
@@ -173,7 +172,7 @@ func main() {
 		}
 
 		// Copy configuration file to make higher file-limits
-		err = cliutils.SshRunStdout("", logger, "sudo cp cothority.conf /etc/security/limits.d")
+		err = cliutils.SshRunStdout("", logger, "sudo cp remote/cothority.conf /etc/security/limits.d")
 
 		if err != nil {
 			log.Fatal("Couldn't copy limit-file:", err)

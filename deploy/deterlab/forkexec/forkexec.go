@@ -37,7 +37,6 @@ func init() {
 
 func main() {
 	deploy.ReadConfigDeter(&deter, &conf)
-	dbg.DebugVisible = conf.Debug
 
 	flag.Parse()
 
@@ -84,7 +83,7 @@ func main() {
 				cmdApp.Stdout = os.Stdout
 				cmdApp.Stderr = os.Stderr
 				dbg.Lvl3("fork-exec is running command:", args)
-				err = cmdApp.Run()
+				err := cmdApp.Run()
 				if err != nil {
 					dbg.Lvl2("cmd run:", err)
 				}
@@ -128,7 +127,7 @@ func setup_deter() {
 	for i := range virt {
 		vpmap[virt[i]] = phys[i]
 	}
-	nloggers := conf.Nloggers
+	nloggers := deter.Loggers
 	masterLogger := phys[0]
 	loggers := []string{masterLogger}
 	for n := 1; n <= nloggers; n++ {

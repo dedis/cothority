@@ -8,10 +8,10 @@ import (
 )
 
 type Platform interface {
-	Configure(*Config)
-	Build(build, app string) error
-	Deploy(*Config) error
-	Start(*Config) error
+	Configure(*Deter)
+	Build(build string) error
+	Deploy(string) error
+	Start() error
 	Stop() error
 }
 
@@ -20,12 +20,6 @@ func NewPlatform() Platform {
 }
 
 type Config struct {
-	// Number of machines/nodes
-	// Total number of hosts = hpn * nmachs
-	Nmachs int
-	// How many logservers to start up
-	// Total number of servers used: nmachs + nloggers
-	Nloggers int
 	// hpn is the replication factor of hosts per node: how many hosts do we want per node
 	Hpn int
 	// bf is the branching factor of the tree that we want to build
@@ -44,8 +38,6 @@ type Config struct {
 	// Rounds for follower to wait before failing
 	FFail int
 
-	// Debugging-level: 0 is none - 5 is everything
-	Debug int
 	// RootWait - how long the root timestamper waits for the clients to start up
 	RootWait int
 	// Which app to run
