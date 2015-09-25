@@ -46,23 +46,16 @@ func init() {
 }
 
 func main() {
-	err := deploy.ReadConfig(&deter, "remote/deter.toml")
-	if err != nil {
-		log.Fatal("Couldn't read config in deter :", err)
-	}
-	err = deploy.ReadConfig(&conf, "remote/deploy.toml")
-	if err != nil {
-		log.Fatal("Couldn't read config in deter :", err)
-	}
+	deploy.ReadConfigDeter(&deter, &conf)
 	dbg.DebugVisible = conf.Debug
 
 	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:", conf.Rounds, "debug:", conf.Debug)
 
-	virt, err := cliutils.ReadLines("remote/virt.txt")
+	virt, err := cliutils.ReadLines("virt.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	phys, err := cliutils.ReadLines("remote/phys.txt")
+	phys, err := cliutils.ReadLines("phys.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -125,7 +118,7 @@ func main() {
 	virt = virt[nloggers:]
 
 	// Read in and parse the configuration file
-	file, err := ioutil.ReadFile("remote/tree.json")
+	file, err := ioutil.ReadFile("tree.json")
 	if err != nil {
 		log.Fatal("deter.go: error reading configuration file: %v\n", err)
 	}
@@ -180,13 +173,13 @@ func main() {
 		}
 
 		// Copy configuration file to make higher file-limits
-		err = cliutils.SshRunStdout("", logger, "sudo cp remote/cothority.conf /etc/security/limits.d")
+		err = cliutils.SshRunStdout("", logger, "sudo cp cothority.conf /etc/security/limits.d")
 
 		if err != nil {
 			log.Fatal("Couldn't copy limit-file:", err)
 		}
 
-		dbg.LLvl3("Logger:", logger)
+		dbg.Lvl3("Logger:", logger)
 		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +
 		" -master=" + master)
 	}
@@ -195,7 +188,7 @@ func main() {
 	// For coll_stamp we have to wait for everything in place which takes quite some time
 	// We set up a directory and every host writes a file once he's ready to listen
 	// When everybody is ready, the directory is deleted and the test starts
-	coll_stamp_dir := "remote/coll_stamp_up"
+	coll_stamp_dir := "coll_stamp_up"
 	if conf.App == "coll_stamp" || conf.App == "coll_sign" {
 		os.RemoveAll(coll_stamp_dir)
 		os.MkdirAll(coll_stamp_dir, 0777)

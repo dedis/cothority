@@ -58,14 +58,7 @@ func init() {
 }
 
 func main() {
-	err := deploy.ReadConfig(&deter, "deter.toml")
-	if err != nil {
-		log.Fatal("Couldn't load config-file in logserver:", err)
-	}
-	err = deploy.ReadConfig(&conf, "deploy.toml")
-	if err != nil {
-		log.Fatal("Couldn't load config-file in logserver:", err)
-	}
+	deploy.ReadConfigDeter(&deter, &conf)
 	dbg.DebugVisible = conf.Debug
 
 	runtime.GOMAXPROCS(runtime.NumCPU())

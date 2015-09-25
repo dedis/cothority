@@ -35,6 +35,7 @@ import (
 	"strings"
 	"time"
 	"path/filepath"
+	"runtime"
 )
 
 type Deter struct {
@@ -74,7 +75,7 @@ func (d *Deter) Configure(config *Config) {
 	d.DeterDir = pwd + "/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
-	dbg.LLvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
+	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
@@ -205,7 +206,7 @@ func (d *Deter) Start(conf *Config) error {
 	}
 
 	go func() {
-		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "GOMAXPROCS=8 remote/deter"))
+		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./deter"))
 		dbg.Lvl3("Sending stop of ssh")
 		d.sshDeter <- "stop"
 	}()
@@ -232,6 +233,17 @@ func (d *Deter) Stop() error {
 		dbg.Lvl3("Timeout error when waiting for end of ssh")
 	}
 	return nil
+}
+
+func ReadConfigDeter(deter *Deter, conf *Config){
+	err := ReadConfig(deter, "deter.toml")
+	if err != nil {
+		log.Fatal("Couldn't read config in", runtime.Caller(1), ":", err)
+	}
+	err = ReadConfig(conf, "deploy.toml")
+	if err != nil {
+		log.Fatal("Couldn't read config in", runtime.Caller(1), ":", err)
+	}
 }
 
 /*
