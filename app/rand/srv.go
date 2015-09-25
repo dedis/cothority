@@ -8,32 +8,13 @@ import (
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
 	"github.com/dedis/crypto/sig"
-	"github.com/dedis/protobuf"
 	//"log"
 )
 
 // XXX should be config items
-const thresT = 3
-const thresR = 3
-const thresN = 5
-
-func pickInsurers(suite abstract.Suite, srvpub []abstract.Point,
-	Rc, Rs []byte) []int {
-
-	// Seed the PRNG for insurer selection
-	var key []byte
-	key = append(key, Rc...)
-	key = append(key, Rs...)
-	prng := suite.Cipher(key)
-
-	ntrustees := thresN
-	nservers := len(srvpub)
-	sel := make([]int, ntrustees)
-	for i := 0; i < ntrustees; i++ {
-		sel[i] = int(random.Uint64(prng) % uint64(nservers))
-	}
-	return sel
-}
+const thresT = 2
+const thresR = 2
+const thresN = 3
 
 type Server struct {
 
@@ -50,19 +31,22 @@ type Server struct {
 	// XXX servers shouldn't really need to know everyone else
 	conn   Conn
 	clipub sig.PublicKey // client's public key
-	srvpub []abstract.Point
+	srvpub []sig.SchnorrPublicKey
+	srvsec sig.SchnorrSecretKey
 	self   int // our server index
 }
 
 func (s *Server) init(host Host, suite abstract.Suite,
-	clipub sig.PublicKey, srvpub []abstract.Point, self int) {
+	clipub sig.PublicKey, srvpub []sig.SchnorrPublicKey,
+	srvsec sig.SchnorrSecretKey, self int) {
 	s.host = host
 	s.suite = suite
 	s.rand = suite.Cipher(abstract.RandomKey)
 	s.keysize = s.rand.KeySize()
-	s.keypair.Gen(suite, s.rand)
 	s.clipub = clipub
 	s.srvpub = srvpub
+	s.srvsec = srvsec
+	s.keypair = config.KeyPair{suite, srvsec.Point, srvsec.Secret} // XXX
 	s.self = self
 }
 
@@ -82,11 +66,8 @@ func (s *Server) serve(conn Conn) (err error) {
 	// Send our R1
 	var r1 R1
 	r1.HRs = abstract.Sum(s.suite, Rs)
-	r1b, err := protobuf.Encode(&r1)
+	err = s.send(&r1)
 	if err != nil {
-		return err
-	}
-	if err = conn.Send(r1b); err != nil {
 		return err
 	}
 
@@ -107,7 +88,7 @@ func (s *Server) serve(conn Conn) (err error) {
 	sel := pickInsurers(s.suite, s.srvpub, Rc, Rs)
 	selkeys := make([]abstract.Point, len(sel))
 	for i := range sel {
-		selkeys[i] = s.srvpub[sel[i]]
+		selkeys[i] = s.srvpub[sel[i]].Point
 	}
 	deal := &poly.Promise{}
 	deal.ConstructPromise(secPair, &s.keypair, thresT, thresR, selkeys)
@@ -118,11 +99,8 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Send our R2
 	r2 := R2{Rs: Rs, Deal: dealb}
-	r2b, err := protobuf.Encode(&r2)
+	err = s.send(&r2)
 	if err != nil {
-		return
-	}
-	if err = conn.Send(r2b); err != nil {
 		return
 	}
 
@@ -145,7 +123,7 @@ func (s *Server) serve(conn Conn) (err error) {
 		if len(r2ib) == 0 {
 			continue // Missing R2 - that's OK, just skip
 		}
-		if err = protobuf.Decode(r2ib, &r2i); err != nil {
+		if err = sigDecode(s.suite, &s.srvpub[i], r2ib, &r2i); err != nil {
 			return
 		}
 		// XXX equivocation-check other servers' responses
@@ -192,11 +170,8 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Send our R3
 	r3 := R3{Resp: r3resps}
-	r3b, err := protobuf.Encode(&r3)
+	err = s.send(&r3)
 	if err != nil {
-		return err
-	}
-	if err = conn.Send(r3b); err != nil {
 		return err
 	}
 
@@ -220,11 +195,8 @@ func (s *Server) serve(conn Conn) (err error) {
 	// Send our R4
 	// XXX but only if our deal is still included?
 	r4 := R4{Shares: shares}
-	r4b, err := protobuf.Encode(&r4)
+	err = s.send(&r4)
 	if err != nil {
-		return
-	}
-	if err = conn.Send(r4b); err != nil {
 		return
 	}
 
@@ -240,9 +212,21 @@ func (s *Server) recv(obj interface{}) (err error) {
 	}
 
 	// Decode the message and verify its signature
-	rd := sig.Reader(bytes.NewReader(msg), s.clipub)
-	enc := protobuf.Encoding{Constructor: s.suite}
-	if err = enc.Read(rd, obj); err != nil {
+	if err = sigDecode(s.suite, s.clipub, msg, obj); err != nil {
+		return
+	}
+
+	return
+}
+
+func (s *Server) send(obj interface{}) (err error) {
+
+	var msg []byte
+	if msg, err = sigEncode(s.suite, &s.srvsec, s.rand, obj); err != nil {
+		return
+	}
+
+	if err = s.conn.Send(msg); err != nil {
 		return
 	}
 

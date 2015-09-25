@@ -8,7 +8,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/sig"
-	"github.com/dedis/protobuf"
 	"log"
 	"reflect"
 )
@@ -27,9 +26,9 @@ type Client struct {
 	//	pubKey	abstract.Point
 	//	priKey	abstract.Secret
 
-	nsrv  int
-	srv   []Conn           // Connections to communicate with each server
-	group []abstract.Point // Public keys of all servers in group
+	nsrv   int
+	srv    []Conn                 // Connections to communicate with each server
+	srvpub []sig.SchnorrPublicKey // Public keys of all servers in group
 
 	t Transcript // Third-party verifiable message transcript
 
@@ -45,7 +44,7 @@ type Client struct {
 }
 
 func (c *Client) init(host Host, suite abstract.Suite, rand cipher.Stream,
-	clisec sig.SecretKey, srvname []string, srvpub []abstract.Point) {
+	clisec sig.SecretKey, srvname []string, srvpub []sig.SchnorrPublicKey) {
 	c.host = host
 
 	c.suite = suite
@@ -60,7 +59,7 @@ func (c *Client) init(host Host, suite abstract.Suite, rand cipher.Stream,
 	for i := 0; i < c.nsrv; i++ {
 		c.srv[i] = host.Open(srvname[i])
 	}
-	c.group = srvpub
+	c.srvpub = srvpub
 }
 
 func (c *Client) run() (err error) {
@@ -71,6 +70,7 @@ func (c *Client) run() (err error) {
 	c.Rc = Rc
 
 	// Phase 1: Send client's I1 message
+	log.Printf("Client: I1")
 	var i1 I1
 	i1.HRc = abstract.Sum(c.suite, Rc)
 	if c.t.I1, err = c.send(&i1); err != nil {
@@ -83,6 +83,7 @@ func (c *Client) run() (err error) {
 	c.recv(c.t.R1, c.r1, c.processR1)
 
 	// Phase 2
+	log.Printf("Client: I2")
 	i2 := I2{Rc: Rc}
 	if c.t.I2, err = c.send(&i2); err != nil {
 		return err
@@ -94,6 +95,7 @@ func (c *Client) run() (err error) {
 	c.recv(c.t.R2, c.r2, c.processR2)
 
 	// Phase 3
+	log.Printf("Client: I3")
 	i3 := I3{R2s: c.t.R2}
 	if c.t.I3, err = c.send(&i3); err != nil {
 		return err
@@ -104,6 +106,7 @@ func (c *Client) run() (err error) {
 	c.recv(c.t.R3, c.r3, c.processR3)
 
 	// Phase 4
+	log.Printf("Client: I4")
 	i4 := I4{R2s: c.t.R2}
 	if c.t.I4, err = c.send(&i4); err != nil {
 		return err
@@ -134,8 +137,6 @@ func (c *Client) run() (err error) {
 	}
 
 	log.Printf("Output value: %v", output)
-
-	println("done")
 	return nil
 }
 
@@ -143,17 +144,9 @@ func (c *Client) run() (err error) {
 func (c *Client) send(obj interface{}) (msg []byte, err error) {
 
 	// Encode and sign the client's message.
-	buf := &bytes.Buffer{}
-	wr := sig.Writer(buf, c.seckey, c.rand)
-	enc := protobuf.Encoding{Constructor: c.suite}
-	if err = enc.Write(wr, obj); err != nil {
+	if msg, err = sigEncode(c.suite, c.seckey, c.rand, obj); err != nil {
 		return
 	}
-	if err = wr.Close(); err != nil {
-		return
-	}
-	msg = buf.Bytes()
-	println("msglen", len(msg))
 
 	// Send it to all servers.
 	for i := 0; i < c.nsrv; i++ {
@@ -198,8 +191,7 @@ func (c *Client) recvFrom(i int, msgs [][]byte, objs interface{},
 	// objs should be an array of the appropriate message type.
 	objsv := reflect.ValueOf(objs)
 	objp := objsv.Index(i).Addr().Interface()
-	enc := protobuf.Encoding{Constructor: c.suite}
-	if err = enc.Decode(msgs[i], objp); err != nil {
+	if err = sigDecode(c.suite, &c.srvpub[i], msgs[i], objp); err != nil {
 		return
 	}
 
@@ -287,7 +279,7 @@ func (c *Client) processR4(i int) (err error) {
 		j := r4share.Dealer
 		idx := r4share.Index
 		share := r4share.Share
-		if j < 0 || j >= len(c.group) {
+		if j < 0 || j >= len(c.srvpub) {
 			return errors.New(fmt.Sprintf(
 				"bad dealer number %d in R3Resp", j))
 		}
@@ -297,7 +289,7 @@ func (c *Client) processR4(i int) (err error) {
 		}
 
 		// Verify that the share really was assigned to server i
-		sel := pickInsurers(c.suite, c.group, Rc, c.r2[j].Rs)
+		sel := pickInsurers(c.suite, c.srvpub, Rc, c.r2[j].Rs)
 		if sel[idx] != i {
 			return errors.New(fmt.Sprintf(
 				"server %d claimed share it wasn't dealt",
