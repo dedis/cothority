@@ -46,6 +46,11 @@ func init() {
 	deployP = NewPlatform()
 }
 
+// Constant Applications marker
+const ShamirSign string = "schnorr_sign"
+const CollSign string = "coll_sign"
+const CollStamp string = "coll_stamp"
+
 type T struct {
 	nmachs int
 	hpn    int
@@ -157,34 +162,23 @@ func RunTests(name string, ts []T) {
 	}
 
 	MkTestDir()
-	rs := make([]RunStats, len(ts))
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
-	if err != nil {
-		log.Fatal("error opening test file:", err)
-	}
-	_, err = f.Write(rs[0].CSVHeader())
-	if err != nil {
-		log.Fatal("error writing test file header:", err)
-	}
-	err = f.Sync()
-	if err != nil {
-		log.Fatal("error syncing test file:", err)
-	}
-
+	rs := make([]Stats, len(ts))
+	headerWritten := false
 	nTimes := 1
 	stopOnSuccess := true
+	var f *os.File
 	for i, t := range ts {
 		// run test t nTimes times
 		// take the average of all successful runs
-		var runs []RunStats
+		runs := make([]Stats)
 		for r := 0; r < nTimes; r++ {
-			run, err := RunTest(t)
+			stats, err := RunTest(t)
 			if err != nil {
 				log.Fatalln("error running test:", err)
 			}
 
 			if deployP.Stop() == nil {
-				runs = append(runs, run)
+				runs = append(runs, stats)
 				if stopOnSuccess {
 					break
 				}
@@ -198,9 +192,27 @@ func RunTests(name string, ts []T) {
 			continue
 		}
 
-		rs[i] = RunStatsAvg(runs)
+		rs[i] = AverageStats(runs)
+		rs[i].WriteTo(f)
+		// Write the header if you still havent done it
+		if !headerWritten {
+			f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+			defer f.Close()
+			if err != nil {
+				log.Fatal("error opening test file:", err)
+			}
+			err = rs[i].ServerCSVHeader()
+			if err != nil {
+				log.Fatal("error writing test file header:", err)
+			}
+			err = f.Sync()
+			if err != nil {
+				log.Fatal("error syncing test file:", err)
+			}
+			headerWritter = true
+		}
 		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
-		_, err := f.Write(rs[i].CSV())
+		err := rs[i].ServerCSV()
 		if err != nil {
 			log.Fatal("error writing data to test file:", err)
 		}
@@ -215,7 +227,10 @@ func RunTests(name string, ts []T) {
 		if err != nil {
 			log.Fatal("error opening test file:", err)
 		}
-		_, err = cl.Write(rs[i].TimesCSV())
+		defer cl.Close()
+		rs[i].WriteTo(cl)
+		err = rs[i].ClientCSVHeader()
+		err = rs[i].CLientCSV()
 		if err != nil {
 			log.Fatal("error writing client latencies to file:", err)
 		}
@@ -223,7 +238,6 @@ func RunTests(name string, ts []T) {
 		if err != nil {
 			log.Fatal("error syncing data to latency file:", err)
 		}
-		cl.Close()
 
 	}
 }
@@ -232,7 +246,8 @@ func RunTests(name string, ts []T) {
 func RunTest(t T) (RunStats, error) {
 	// add timeout for 10 minutes?
 	done := make(chan struct{})
-	var rs RunStats
+	// get the right statistics for the test
+	stats := GetStat(t)
 	cfg := &Config{
 		t.nmachs, deploy_config.Nloggers, t.hpn, t.bf,
 		-1, t.rate, t.rounds, t.failures, t.rFail, t.fFail,
@@ -253,7 +268,7 @@ func RunTest(t T) (RunStats, error) {
 	time.Sleep(10 * time.Second)
 
 	go func() {
-		rs = Monitor(t.bf)
+		Monitor(&stats)
 		deployP.Stop()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct{}{}
@@ -265,7 +280,7 @@ func RunTest(t T) (RunStats, error) {
 		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
 			return rs, errors.New(fmt.Sprintf("unable to get good data: %+v", rs))
 		}
-		return rs, nil
+		return stats, nil
 		/* No time out for the moment
 		case <-time.After(5 * time.Minute):
 			return rs, errors.New("timed out")
