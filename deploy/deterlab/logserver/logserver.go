@@ -1,6 +1,6 @@
 package main
 
-import (
+import  (
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -28,7 +28,7 @@ import (
 )
 
 var deter deploy.Deter
-var cfg *deploy.Config
+var conf deploy.Config
 var addr, master string
 var homePage *template.Template
 
@@ -58,10 +58,13 @@ func init() {
 }
 
 func main() {
-	conf := deploy.Config{}
-	err := deploy.ReadConfig(&deter, "deploy.toml")
+	err := deploy.ReadConfig(&deter, "deter.toml")
 	if err != nil {
-		log.Fatal("Couldn't read config in logserver:", err)
+		log.Fatal("Couldn't load config-file in logserver:", err)
+	}
+	err = deploy.ReadConfig(&conf, "deploy.toml")
+	if err != nil {
+		log.Fatal("Couldn't load config-file in logserver:", err)
 	}
 	dbg.DebugVisible = conf.Debug
 
@@ -186,8 +189,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
 
-	err := homePage.Execute(w, Home{ws, strconv.Itoa(cfg.Nmachs * cfg.Hpn), strconv.Itoa(cfg.Hpn), strconv.Itoa(cfg.Bf),
-		strconv.Itoa(cfg.Hpn), strconv.Itoa(cfg.Nmsgs), strconv.Itoa(cfg.Rate)})
+	err := homePage.Execute(w, Home{ws, strconv.Itoa(conf.Nmachs * conf.Hpn), strconv.Itoa(conf.Hpn), strconv.Itoa(conf.Bf),
+		strconv.Itoa(conf.Hpn), strconv.Itoa(conf.Nmsgs), strconv.Itoa(conf.Rate)})
 	if err != nil {
 		panic(err)
 		log.Fatal(err)

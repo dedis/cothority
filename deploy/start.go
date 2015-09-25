@@ -101,10 +101,20 @@ var HostsTestShort = []T{
 	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 var SchnorrHostSingle = []T{
+	{8, 1, 2, 30, 20, 0, 0, 0, false, "shamir_sign"},
 	{8, 2, 2, 30, 20, 0, 0, 0, false, "shamir_sign"},
+	{8, 4, 2, 30, 20, 0, 0, 0, false, "shamir_sign"},
+	{8, 8, 2, 30, 20, 0, 0, 0, false, "shamir_sign"},
+	{8, 16, 2, 30, 20, 0, 0, 0, false, "shamir_sign"},
 }
 
-func Start(destination string) {
+func Start(simulation []string) {
+/*
+	if len(simulation) == 0 {
+		dbg.Fatal("Please give a simulation to run")
+	}
+*/
+
 	deployP.Configure(deploy_config)
 	deploy_config.Nmachs = machines
 
@@ -270,6 +280,23 @@ func RunTest(t T) (RunStats, error) {
 			return rs, errors.New("timed out")
 		*/
 	}
+}
+
+type runFile struct{
+	Machines int
+	Args string
+	Runs string
+}
+
+func ReadRunfile(file string)([]T){
+	var tests []T
+
+	tests = append(tests, T{0, 1, 2, 3, 4, 5, 6, 7, false, "9"})
+	return tests
+}
+
+func (t *T)Hpn()(int){
+	return t.hpn
 }
 
 // high and low specify how many milliseconds between messages

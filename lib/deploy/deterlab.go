@@ -32,9 +32,9 @@ import (
 	"github.com/dedis/cothority/lib/graphs"
 	"io/ioutil"
 	"path"
-	"strconv"
 	"strings"
 	"time"
+	"path/filepath"
 )
 
 type Deter struct {
@@ -42,8 +42,10 @@ type Deter struct {
 	Login        string
 	// The outside host on the platform
 	Host         string
-	// The name of the internal hosts
+	// The name of the project
 	Project      string
+	// Name of the Experiment - also name of hosts
+	Experiment   string
 	// Directory where everything is copied into
 	DeployDir    string
 	// Directory for building
@@ -72,6 +74,7 @@ func (d *Deter) Configure(config *Config) {
 	d.DeterDir = pwd + "/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
+	dbg.LLvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
@@ -107,33 +110,36 @@ func (d *Deter) Build(build, app string) error {
 		basename := path.Base(p)
 		dst := d.BuildDir + "/" + basename
 
-		dbg.Lvl4("Building ", p, "into", basename)
+		src_dir := d.DeterDir + "/" + p
+		dbg.Lvl3("Building ", p, "from", src_dir, "into", basename)
 		wg.Add(1)
 		if p == "deter" {
-			go func(s, d string) {
+			go func(src, dest string) {
 				defer wg.Done()
 				// the users node has a 386 FreeBSD architecture
-				os.Chdir(s)
-				out, err := cliutils.Build(".", d, "386", "freebsd")
+				// go won't compile on an absolute path so we need to
+				// convert it to a relative one
+				src_rel, _ := filepath.Rel(d.DeterDir, src)
+				out, err := cliutils.Build("./" + src_rel, dest, "386", "freebsd")
 				if err != nil {
 					cliutils.KillGo()
 					fmt.Println(out)
 					log.Fatal(err)
 				}
-			}(p, dst)
+			}(src_dir, dst)
 			continue
 		}
-		go func(s, d string) {
+		go func(src, dest string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
-			os.Chdir(s)
-			out, err := cliutils.Build(".", d, "amd64", "linux")
+			src_rel, _ := filepath.Rel(d.DeterDir, src)
+			out, err := cliutils.Build("./" + src_rel, dest, "amd64", "linux")
 			if err != nil {
 				cliutils.KillGo()
 				fmt.Println(out)
 				log.Fatal(err)
 			}
-		}(p, dst)
+		}(src_dir, dst)
 	}
 	// wait for the build to finish
 	wg.Wait()
@@ -151,8 +157,8 @@ func (d *Deter) Deploy(conf *Config) error {
 	d.generateHostsFile(conf)
 	d.readHosts(conf)
 	d.calculateGraph(conf)
-	WriteConfig(d, "deter.toml")
-	WriteConfig(conf, "deploy.toml")
+	WriteConfig(d, "deter.toml", d.DeployDir)
+	WriteConfig(conf, "deploy.toml", d.DeployDir)
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles",
@@ -177,9 +183,6 @@ func (d *Deter) Deploy(conf *Config) error {
 
 	dbg.Lvl1("Done copying")
 
-	dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host,
-		""))
-
 	return nil
 }
 
@@ -201,24 +204,8 @@ func (d *Deter) Start(conf *Config) error {
 		log.Fatal("failed to setup portforwarding for logging server")
 	}
 
-	dbg.Lvl3("runnning deter with nmsgs:", conf.Nmsgs, d.Login, d.Host)
-	// run the deter lab boss nodes process
-	// it will be responsible for forwarding the files and running the individual
-	// timestamping servers
-
 	go func() {
-		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host,
-			"GOMAXPROCS=8 remote/deter -nmsgs=" + strconv.Itoa(conf.Nmsgs) +
-			" -hpn=" + strconv.Itoa(conf.Hpn) +
-			" -bf=" + strconv.Itoa(conf.Bf) +
-			" -rate=" + strconv.Itoa(conf.Rate) +
-			" -rounds=" + strconv.Itoa(conf.Rounds) +
-			" -debug=" + strconv.Itoa(conf.Debug) +
-			" -failures=" + strconv.Itoa(conf.Failures) +
-			" -rfail=" + strconv.Itoa(conf.RFail) +
-			" -ffail=" + strconv.Itoa(conf.FFail) +
-			" -app=" + conf.App +
-			" -suite=" + conf.Suite))
+		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "GOMAXPROCS=8 remote/deter"))
 		dbg.Lvl3("Sending stop of ssh")
 		d.sshDeter <- "stop"
 	}()
@@ -270,9 +257,9 @@ func (d *Deter) generateHostsFile(conf *Config) error {
 
 	// write the name of the server + \t + IP address
 	ip := "10.255.0."
-	name := "SAFER.isi.deterlab.net"
+	name := d.Project + ".isi.deterlab.net"
 	for i := 1; i <= num_servers; i++ {
-		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i - 1, d.Project, name, ip, i))
+		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i - 1, d.Experiment, name, ip, i))
 	}
 	dbg.Lvl4(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
 	return err
@@ -302,8 +289,6 @@ func (d *Deter) readHosts(conf *Config) {
 	d.physOut = strings.Join(d.phys, "\n")
 	d.virtOut = strings.Join(d.virt, "\n")
 	d.masterLogger = d.phys[0]
-	// slaveLogger1 := phys[1]
-	// slaveLogger2 := phys[2]
 
 	// phys.txt and virt.txt only contain the number of machines that we need
 	dbg.Lvl3("Reading phys and virt")
@@ -355,22 +340,27 @@ func (d *Deter) checkDeterlabVars() {
 	}
 
 	if config.Host == "" {
-		d.Host = readString("Please enter the hostname of deterlab (enter for 'users.deterlab.net'): ",
-			"users.deterlab.net")
+		d.Host = readString("Please enter the hostname of deterlab", "users.deterlab.net")
 	} else {
 		d.Host = config.Host
 	}
 
 	if config.Login == "" {
-		d.Login = readString("Please enter the login-name on " + d.Host + ":", "")
+		d.Login = readString("Please enter the login-name on " + d.Host, "")
 	} else {
 		d.Login = config.Login
 	}
 
 	if config.Project == "" {
-		d.Project = readString("Please enter the project on deterlab: ", "Dissent-CS")
+		d.Project = readString("Please enter the project on deterlab", "SAFER")
 	} else {
 		d.Project = config.Project
+	}
+
+	if config.Experiment == "" {
+		d.Experiment = readString("Please enter the Experiment on " + d.Project, "Dissent-CS")
+	} else {
+		d.Experiment = config.Experiment
 	}
 
 	WriteConfig(*d, "deter.toml", d.DeterDir)
@@ -378,7 +368,7 @@ func (d *Deter) checkDeterlabVars() {
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string
 func readString(msg, dft string) string {
-	fmt.Print(msg)
+	fmt.Printf("%s [%s]: ", msg, dft)
 
 	reader := bufio.NewReader(os.Stdin)
 	strnl, _ := reader.ReadString('\n')

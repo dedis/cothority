@@ -47,7 +47,7 @@ func init() {
 }
 
 func ReadConfig()(*AppConfig) {
-	ac := AppConfig{&deploy.Deter{}, &deploy.Config{}, &FlagConfig{}}
+	ac := AppConfig{&deploy.Deter{}, &deploy.Config{}, &flags}
 
 	var err error
 	err = deploy.ReadConfig(ac.Deter, "deter.toml")
@@ -60,9 +60,6 @@ func ReadConfig()(*AppConfig) {
 	flag.Parse()
 
 	dbg.Lvl3("Running", flags.App, flags.Hostname, "with logger at", flags.Logger)
-	defer func() {
-		log.Errorln("Terminating host", flags.Hostname)
-	}()
 
 	// connect with the logging server
 	if flags.Logger != "" && (flags.AmRoot || ac.Conf.Debug > 0) {

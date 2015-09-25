@@ -22,8 +22,8 @@ import
 
 // Wrapper around exec.go to enable measuring of cpu time
 
-var deter *deploy.Deter
-var conf *deploy.Config
+var deter deploy.Deter
+var conf deploy.Config
 var logger string
 var physaddr string
 var testConnect bool
@@ -36,8 +36,11 @@ func init() {
 }
 
 func main() {
-	conf := deploy.Config{}
-	err := deploy.ReadConfig(&deter, "deploy.toml")
+	err := deploy.ReadConfig(&deter, "deter.toml")
+	if err != nil {
+		log.Fatal("Couldn't load config-file in forkexec:", err)
+	}
+	err = deploy.ReadConfig(&conf, "deploy.toml")
 	if err != nil {
 		log.Fatal("Couldn't load config-file in forkexec:", err)
 	}
@@ -63,7 +66,7 @@ func main() {
 	var wg sync.WaitGroup
 	virts := physToServer[physaddr]
 	if len(virts) > 0 {
-		dbg.Lvl3("starting timestampers for", len(virts), "client(s)", virts)
+		dbg.Lvl3("starting", len(virts), "servers of", conf.App, "on", virts)
 		i = (i + 1) % len(loggerports)
 		for _, name := range virts {
 			dbg.Lvl4("Starting", name, "on", physaddr)
@@ -79,11 +82,10 @@ func main() {
 					"-amroot=" + strconv.FormatBool(nameport == rootname),
 					"-test_connect=" + strconv.FormatBool(testConnect),
 					"-mode=server",
-					"-app=" + conf.App,
 				}
 
 				dbg.Lvl3("Starting on", physaddr, "with args", args)
-				cmdApp := exec.Command("./app", args...)
+				cmdApp := exec.Command("./" + conf.App, args...)
 				//cmd.Stdout = log.StandardLogger().Writer()
 				//cmd.Stderr = log.StandardLogger().Writer()
 				cmdApp.Stdout = os.Stdout

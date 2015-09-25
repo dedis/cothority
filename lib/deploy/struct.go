@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"bytes"
+	"os"
 )
 
 type Platform interface {
@@ -75,6 +76,8 @@ func ReadConfig(conf interface{}, filename string, dirOpt ...string) (error) {
 	}
 	buf, err := ioutil.ReadFile(dir + "/" + filename)
 	if err != nil {
+		pwd, _ := os.Getwd()
+		dbg.Lvl1("Didn't find", filename, "in", pwd)
 		return err
 	}
 

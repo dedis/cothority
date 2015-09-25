@@ -33,7 +33,7 @@ func main() {
 			dbg.Lvl1("Sorry, deployment method", deploy_dst, "not yet implemented")
 		case "deterlab":
 			dbg.Lvl1("Deploying to deterlab")
-			Start("deterlab")
+			Start(flag.Args())
 		}
 	case "server", "client":
 		dbg.Lvl1("Sorry,", app, "not yet implemented")

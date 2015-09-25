@@ -24,7 +24,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -38,20 +37,22 @@ import (
 )
 
 var deter deploy.Deter
-var conf *deploy.Config
+var conf deploy.Config
 var rootname string
 var kill = false
 
 func init() {
 	flag.BoolVar(&kill, "kill", false, "kill everything (and don't start anything)")
-
 }
 
 func main() {
-	conf := deploy.Config{}
-	err := deploy.ReadConfig(&deter, "deploy.toml", "remote")
+	err := deploy.ReadConfig(&deter, "remote/deter.toml")
 	if err != nil {
-		log.Fatal("Couldn't read config in deter:", err)
+		log.Fatal("Couldn't read config in deter :", err)
+	}
+	err = deploy.ReadConfig(&conf, "remote/deploy.toml")
+	if err != nil {
+		log.Fatal("Couldn't read config in deter :", err)
 	}
 	dbg.DebugVisible = conf.Debug
 
@@ -77,12 +78,12 @@ func main() {
 		go func(i int, h string) {
 			defer wg.Done()
 			dbg.Lvl4("Cleaning up host", h)
-			cliutils.SshRun("", h, "sudo killall app forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall " + conf.App + " forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall app 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall "+ conf.App + " 2>/dev/null >/dev/null")
 			if dbg.DebugVisible > 3 {
-				dbg.Lvl4("Killing report:")
-				cliutils.SshRunStdout("", h, "ps ax")
+				dbg.Lvl4("Cleaning report:")
+				cliutils.SshRunStdout("", h, "ps aux")
 			}
 			doneHosts[i] = true
 			dbg.Lvl3("Host", h, "cleaned up")
@@ -111,18 +112,6 @@ func main() {
 		dbg.Lvl1("Returning only from cleanup")
 		return
 	}
-
-	/*
-	 * Why copy the stuff to the other nodes? We have NFS, no?
-	for _, h := range phys {
-		wg.Add(1)
-		go func(h string) {
-			defer wg.Done()
-			cliutils.Rsync("", h, "remote", "")
-		}(h)
-	}
-	wg.Wait()
-	*/
 
 	nloggers := conf.Nloggers
 	masterLogger := phys[0]
@@ -197,6 +186,7 @@ func main() {
 			log.Fatal("Couldn't copy limit-file:", err)
 		}
 
+		dbg.LLvl3("Logger:", logger)
 		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +
 		" -master=" + master)
 	}
@@ -219,7 +209,6 @@ func main() {
 		}
 		totalServers += len(virts)
 		dbg.Lvl1("Launching forkexec for", len(virts), "clients on", phys)
-		//cmd := GenExecCmd(phys, virts, loggerports[i], random_leaf)
 		i = (i + 1) % len(loggerports)
 		wg.Add(1)
 		go func(phys string) {
@@ -269,65 +258,23 @@ func main() {
 			}
 			servers := strings.Join(ss, ",")
 			go func(i int, p string) {
-				_, err := cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
+				_, err := cliutils.SshRun("", p, "cd remote; sudo ./" + conf.App + " -mode=client " +
 				" -name=client@" + p +
 				" -server=" + servers +
 				" -logger=" + loggerports[i])
 				if err != nil {
-					dbg.Lvl4("Deter.go : timeclient error ", err)
+					dbg.Lvl4("Deter.go : error for", conf.App, err)
 				}
-				dbg.Lvl4("Deter.go : Finished with timeclient", p)
+				dbg.Lvl4("Deter.go : Finished with", conf.App, p)
 			}(i, p)
 			i = (i + 1) % len(loggerports)
 		}
 	case "coll_sign_no":
 		// TODO: for now it's only a simple startup from the server
 		dbg.Lvl1("Starting only one client")
-	/*
-	p := physToServer[0][0]
-	servers := strings.Join(physToServer[0][1], ",")
-	_, err = cliutils.SshRun("", p, "cd remote; sudo ./app -mode=client -app=" + conf.App +
-	" -name=client@" + p +
-	" -server=" + servers +
-	" -logger=" + loggerports[i])
-	i = (i + 1) % len(loggerports)
-	*/
 	}
 
 	// wait for the servers to finish before stopping
 	wg.Wait()
 	//time.Sleep(10 * time.Minute)
-}
-
-// Generate all commands on one single physicial machines to launch every "nodes"
-func GenExecCmd(phys string, names []string, loggerport, random_leaf string) string {
-	dbg.Lvl3("Random_leaf", random_leaf)
-	dbg.Lvl3("Names", names)
-	connect := false
-	cmd := ""
-	bg := " & "
-	for i, name := range names {
-		dbg.Lvl3("deter.go Generate cmd timestamper : name ==", name)
-		dbg.Lvl3("random_leaf ==", random_leaf)
-		dbg.Lvl3("testconnect is", deter.TestConnect)
-		if name == random_leaf && deter.TestConnect {
-			connect = true
-		}
-		amroot := " -amroot=false"
-		if name == rootname {
-			amroot = " -amroot=true"
-		}
-
-		if i == len(names) - 1 {
-			bg = ""
-		}
-		cmd += "(cd remote; sudo ./forkexec" +
-		" -physaddr=" + phys +
-		" -hostname=" + name +
-		" -logger=" + loggerport +
-		" -test_connect=" + strconv.FormatBool(connect) +
-		amroot + bg +
-		" ); "
-	}
-	return cmd
 }
