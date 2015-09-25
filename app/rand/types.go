@@ -36,7 +36,7 @@ type I1 struct {
 }
 
 type R1 struct {
-	//	HI1		[]byte		// Hash of I1 message responding to
+	HI1 []byte // Hash of I1 message responding to
 	HRs []byte // Server's trustee-randomness commit
 }
 
@@ -46,7 +46,7 @@ type I2 struct {
 }
 
 type R2 struct {
-	//	HI2		[]byte		// Hash of I2 message responding to
+	HI2  []byte // Hash of I2 message responding to
 	Rs   []byte // Server's trustee-selection randomness
 	Deal []byte // Server's secret-sharing to trustees
 }
@@ -59,7 +59,7 @@ type I3 struct {
 }
 
 type R3 struct {
-	//	HI3		[]byte		// Hash of I3 message responding to
+	HI3  []byte   // Hash of I3 message responding to
 	Resp []R3Resp // Responses to dealt secret-shares
 }
 
@@ -77,7 +77,7 @@ type I4 struct {
 }
 
 type R4 struct {
-	//	HI4		[]byte		// Hash of I4 message responding to
+	HI4    []byte    // Hash of I4 message responding to
 	Shares []R4Share // Revealed secret-shares
 }
 

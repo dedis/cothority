@@ -23,8 +23,6 @@ type Client struct {
 	rand              cipher.Stream
 	keysize, hashsize int
 	seckey            sig.SecretKey
-	//	pubKey	abstract.Point
-	//	priKey	abstract.Secret
 
 	nsrv   int
 	srv    []Conn                 // Connections to communicate with each server
@@ -70,7 +68,7 @@ func (c *Client) run() (err error) {
 	c.Rc = Rc
 
 	// Phase 1: Send client's I1 message
-	log.Printf("Client: I1")
+	//log.Printf("Client: I1")
 	var i1 I1
 	i1.HRc = abstract.Sum(c.suite, Rc)
 	if c.t.I1, err = c.send(&i1); err != nil {
@@ -83,7 +81,7 @@ func (c *Client) run() (err error) {
 	c.recv(c.t.R1, c.r1, c.processR1)
 
 	// Phase 2
-	log.Printf("Client: I2")
+	//log.Printf("Client: I2")
 	i2 := I2{Rc: Rc}
 	if c.t.I2, err = c.send(&i2); err != nil {
 		return err
@@ -95,7 +93,7 @@ func (c *Client) run() (err error) {
 	c.recv(c.t.R2, c.r2, c.processR2)
 
 	// Phase 3
-	log.Printf("Client: I3")
+	//log.Printf("Client: I3")
 	i3 := I3{R2s: c.t.R2}
 	if c.t.I3, err = c.send(&i3); err != nil {
 		return err
@@ -106,7 +104,7 @@ func (c *Client) run() (err error) {
 	c.recv(c.t.R3, c.r3, c.processR3)
 
 	// Phase 4
-	log.Printf("Client: I4")
+	//log.Printf("Client: I4")
 	i4 := I4{R2s: c.t.R2}
 	if c.t.I4, err = c.send(&i4); err != nil {
 		return err
@@ -196,7 +194,7 @@ func (c *Client) recvFrom(i int, msgs [][]byte, objs interface{},
 	}
 
 	// Process the message
-	if err := process(i); err != nil {
+	if err = process(i); err != nil {
 		return
 	}
 }
@@ -210,6 +208,10 @@ func (c *Client) fail(i int, err error) {
 
 func (c *Client) processR1(i int) (err error) {
 
+	// Validate the R1 response
+	if !bytes.Equal(c.r1[i].HI1, abstract.Sum(c.suite, c.t.I1)) {
+		return errors.New("server responded to wrong I1")
+	}
 	HRs := c.r1[i].HRs
 	if len(HRs) != c.hashsize {
 		return errors.New("HRs wrong length")
@@ -221,6 +223,9 @@ func (c *Client) processR1(i int) (err error) {
 func (c *Client) processR2(i int) (err error) {
 
 	// Validate the R2 response
+	if !bytes.Equal(c.r2[i].HI2, abstract.Sum(c.suite, c.t.I2)) {
+		return errors.New("server responded to wrong I2")
+	}
 	Rs := c.r2[i].Rs
 	if len(Rs) != c.keysize {
 		return errors.New("Rs wrong length")
@@ -243,6 +248,9 @@ func (c *Client) processR2(i int) (err error) {
 func (c *Client) processR3(i int) (err error) {
 
 	// Validate the R3 responses and use them to eliminate bad shares
+	if !bytes.Equal(c.r3[i].HI3, abstract.Sum(c.suite, c.t.I3)) {
+		return errors.New("server responded to wrong I3")
+	}
 	for _, r3resp := range c.r3[i].Resp {
 		j := r3resp.Dealer
 		if j < 0 || j >= c.nsrv {
@@ -274,6 +282,9 @@ func (c *Client) processR3(i int) (err error) {
 func (c *Client) processR4(i int) (err error) {
 
 	// Validate the R4 response and all the revealed shares
+	if !bytes.Equal(c.r4[i].HI4, abstract.Sum(c.suite, c.t.I4)) {
+		return errors.New("server responded to wrong I3")
+	}
 	Rc := c.Rc
 	for _, r4share := range c.r4[i].Shares {
 		j := r4share.Dealer

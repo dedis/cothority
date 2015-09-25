@@ -11,11 +11,6 @@ import (
 	//"log"
 )
 
-// XXX should be config items
-const thresT = 2
-const thresR = 2
-const thresN = 3
-
 type Server struct {
 
 	// Network interface
@@ -55,7 +50,8 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Receive client's I1
 	var i1 I1
-	if err = s.recv(&i1); err != nil {
+	var msg []byte
+	if msg, err = s.recv(&i1); err != nil {
 		return
 	}
 
@@ -64,8 +60,8 @@ func (s *Server) serve(conn Conn) (err error) {
 	s.rand.XORKeyStream(Rs, Rs)
 
 	// Send our R1
-	var r1 R1
-	r1.HRs = abstract.Sum(s.suite, Rs)
+	r1 := R1{HI1: abstract.Sum(s.suite, msg),
+		HRs: abstract.Sum(s.suite, Rs)}
 	err = s.send(&r1)
 	if err != nil {
 		return err
@@ -73,7 +69,7 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Receive client's I2
 	var i2 I2
-	if err = s.recv(&i2); err != nil {
+	if msg, err = s.recv(&i2); err != nil {
 		return
 	}
 	Rc := i2.Rc
@@ -98,7 +94,7 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Send our R2
-	r2 := R2{Rs: Rs, Deal: dealb}
+	r2 := R2{HI2: abstract.Sum(s.suite, msg), Rs: Rs, Deal: dealb}
 	err = s.send(&r2)
 	if err != nil {
 		return
@@ -106,7 +102,7 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Receive client's I3
 	var i3 I3
-	if err = s.recv(&i3); err != nil {
+	if msg, err = s.recv(&i3); err != nil {
 		return
 	}
 
@@ -126,7 +122,12 @@ func (s *Server) serve(conn Conn) (err error) {
 		if err = sigDecode(s.suite, &s.srvpub[i], r2ib, &r2i); err != nil {
 			return
 		}
-		// XXX equivocation-check other servers' responses
+
+		// Ensure that the client-provided R2 response from server i
+		// is responding to the same I2 message as the one we saw.
+		if !bytes.Equal(r2i.HI2, r2.HI2) {
+			return errors.New("R2 responds to wrong I2")
+		}
 
 		// Unmarshal and validate server i's Deal
 		deal := &poly.Promise{}
@@ -169,7 +170,7 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Send our R3
-	r3 := R3{Resp: r3resps}
+	r3 := R3{HI3: abstract.Sum(s.suite, msg), Resp: r3resps}
 	err = s.send(&r3)
 	if err != nil {
 		return err
@@ -177,7 +178,7 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Receive client's I4
 	var i4 I4
-	if err = s.recv(&i4); err != nil {
+	if msg, err = s.recv(&i4); err != nil {
 		return
 	}
 
@@ -194,7 +195,7 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Send our R4
 	// XXX but only if our deal is still included?
-	r4 := R4{Shares: shares}
+	r4 := R4{HI4: abstract.Sum(s.suite, msg), Shares: shares}
 	err = s.send(&r4)
 	if err != nil {
 		return
@@ -203,10 +204,9 @@ func (s *Server) serve(conn Conn) (err error) {
 	return
 }
 
-func (s *Server) recv(obj interface{}) (err error) {
+func (s *Server) recv(obj interface{}) (msg []byte, err error) {
 
 	// Receive the client's next message
-	var msg []byte
 	if msg, err = s.conn.Recv(); err != nil {
 		return
 	}

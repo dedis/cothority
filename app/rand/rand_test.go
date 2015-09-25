@@ -15,7 +15,7 @@ func TestRand(t *testing.T) {
 	suite := ed25519.NewAES128SHA256Ed25519(false)
 	rand := random.Stream
 
-	nservers := 3
+	nservers := 10
 
 	// Signing keypairs for client and servers
 	clisec := sig.SchnorrScheme{Suite: suite}.SecretKey()
