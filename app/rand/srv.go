@@ -7,8 +7,9 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
+	"github.com/dedis/crypto/sig"
 	"github.com/dedis/protobuf"
-	"log"
+	//"log"
 )
 
 // XXX should be config items
@@ -16,7 +17,7 @@ const thresT = 3
 const thresR = 3
 const thresN = 5
 
-func pickInsurers(suite abstract.Suite, group []abstract.Point,
+func pickInsurers(suite abstract.Suite, srvpub []abstract.Point,
 	Rc, Rs []byte) []int {
 
 	// Seed the PRNG for insurer selection
@@ -26,7 +27,7 @@ func pickInsurers(suite abstract.Suite, group []abstract.Point,
 	prng := suite.Cipher(key)
 
 	ntrustees := thresN
-	nservers := len(group)
+	nservers := len(srvpub)
 	sel := make([]int, ntrustees)
 	for i := 0; i < ntrustees; i++ {
 		sel[i] = int(random.Uint64(prng) % uint64(nservers))
@@ -47,30 +48,30 @@ type Server struct {
 	keypair config.KeyPair
 
 	// XXX servers shouldn't really need to know everyone else
-	group []abstract.Point
-	self  int // our server index
+	conn   Conn
+	clipub sig.PublicKey // client's public key
+	srvpub []abstract.Point
+	self   int // our server index
 }
 
 func (s *Server) init(host Host, suite abstract.Suite,
-	group []abstract.Point, self int) {
+	clipub sig.PublicKey, srvpub []abstract.Point, self int) {
 	s.host = host
 	s.suite = suite
 	s.rand = suite.Cipher(abstract.RandomKey)
 	s.keysize = s.rand.KeySize()
 	s.keypair.Gen(suite, s.rand)
-	s.group = group
+	s.clipub = clipub
+	s.srvpub = srvpub
 	s.self = self
 }
 
 func (s *Server) serve(conn Conn) (err error) {
+	s.conn = conn
 
 	// Receive client's I1
-	var msg []byte
-	if msg, err = conn.Recv(); err != nil {
-		return
-	}
 	var i1 I1
-	if err = protobuf.Decode(msg, &i1); err != nil {
+	if err = s.recv(&i1); err != nil {
 		return
 	}
 
@@ -90,27 +91,23 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Receive client's I2
-	if msg, err = conn.Recv(); err != nil {
-		return
-	}
 	var i2 I2
-	if err = protobuf.Decode(msg, &i2); err != nil {
+	if err = s.recv(&i2); err != nil {
 		return
 	}
 	Rc := i2.Rc
 	HRc := abstract.Sum(s.suite, Rc)
 	if !bytes.Equal(HRc, i1.HRc) {
-		err = errors.New("client random hash mismatch")
-		return
+		return errors.New("client random hash mismatch")
 	}
 
 	// Construct our Deal
 	secPair := &config.KeyPair{}
 	secPair.Gen(s.suite, random.Stream)
-	sel := pickInsurers(s.suite, s.group, Rc, Rs)
+	sel := pickInsurers(s.suite, s.srvpub, Rc, Rs)
 	selkeys := make([]abstract.Point, len(sel))
 	for i := range sel {
-		selkeys[i] = s.group[sel[i]]
+		selkeys[i] = s.srvpub[sel[i]]
 	}
 	deal := &poly.Promise{}
 	deal.ConstructPromise(secPair, &s.keypair, thresT, thresR, selkeys)
@@ -131,15 +128,12 @@ func (s *Server) serve(conn Conn) (err error) {
 
 	// Receive client's I3
 	var i3 I3
-	if msg, err = conn.Recv(); err != nil {
-		return
-	}
-	if err = protobuf.Decode(msg, &i3); err != nil {
+	if err = s.recv(&i3); err != nil {
 		return
 	}
 
 	// Decrypt and validate all the shares we've been dealt.
-	nsrv := len(s.group)
+	nsrv := len(s.srvpub)
 	if len(i3.R2s) != nsrv {
 		return errors.New("wrong-length R2 array in I3 message")
 	}
@@ -164,7 +158,7 @@ func (s *Server) serve(conn Conn) (err error) {
 		}
 
 		// Which insurers did server i deal its secret to?
-		sel := pickInsurers(s.suite, s.group, Rc, r2i.Rs)
+		sel := pickInsurers(s.suite, s.srvpub, Rc, r2i.Rs)
 		for k := range sel {
 			if sel[k] != s.self {
 				continue // share dealt to someone else
@@ -191,8 +185,8 @@ func (s *Server) serve(conn Conn) (err error) {
 			// Save the revealed share for later
 			shares = append(shares, R4Share{i, k, share})
 
-			log.Printf("server %d dealt server %d share %d",
-				i, s.self, k)
+			//log.Printf("server %d dealt server %d share %d",
+			//	i, s.self, k)
 		}
 	}
 
@@ -207,11 +201,8 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Receive client's I4
-	if msg, err = conn.Recv(); err != nil {
-		return
-	}
 	var i4 I4
-	if err = protobuf.Decode(msg, &i4); err != nil {
+	if err = s.recv(&i4); err != nil {
 		return
 	}
 
@@ -234,6 +225,24 @@ func (s *Server) serve(conn Conn) (err error) {
 		return
 	}
 	if err = conn.Send(r4b); err != nil {
+		return
+	}
+
+	return
+}
+
+func (s *Server) recv(obj interface{}) (err error) {
+
+	// Receive the client's next message
+	var msg []byte
+	if msg, err = s.conn.Recv(); err != nil {
+		return
+	}
+
+	// Decode the message and verify its signature
+	rd := sig.Reader(bytes.NewReader(msg), s.clipub)
+	enc := protobuf.Encoding{Constructor: s.suite}
+	if err = enc.Read(rd, obj); err != nil {
 		return
 	}
 

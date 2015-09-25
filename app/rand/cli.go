@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
+	"github.com/dedis/crypto/sig"
 	"github.com/dedis/protobuf"
 	"log"
 	"reflect"
@@ -22,6 +23,7 @@ type Client struct {
 	suite             abstract.Suite
 	rand              cipher.Stream
 	keysize, hashsize int
+	seckey            sig.SecretKey
 	//	pubKey	abstract.Point
 	//	priKey	abstract.Secret
 
@@ -43,7 +45,7 @@ type Client struct {
 }
 
 func (c *Client) init(host Host, suite abstract.Suite, rand cipher.Stream,
-	srvname []string, srvpub []abstract.Point) {
+	clisec sig.SecretKey, srvname []string, srvpub []abstract.Point) {
 	c.host = host
 
 	c.suite = suite
@@ -51,9 +53,7 @@ func (c *Client) init(host Host, suite abstract.Suite, rand cipher.Stream,
 	cipher := c.suite.Cipher(abstract.NoKey)
 	c.keysize = cipher.KeySize()
 	c.hashsize = cipher.HashSize()
-
-	//	c.priKey = priKey
-	//	c.pubKey = suite.Point().Mul(nil, priKey)
+	c.seckey = clisec
 
 	c.nsrv = len(srvname)
 	c.srv = make([]Conn, c.nsrv)
@@ -125,8 +125,10 @@ func (c *Client) run() (err error) {
 		if c.t.R2[i] != nil {
 			log.Printf("reconstruct secret %d from %d shares\n",
 				i, c.shares[i].NumShares())
-			// XXX handle not-enough-shares gracefully
-			secret := c.shares[i].Secret()
+			secret, err := c.shares[i].Secret()
+			if err != nil { // not enough shares!?
+				return err
+			}
 			output.Add(output, secret)
 		}
 	}
@@ -139,9 +141,21 @@ func (c *Client) run() (err error) {
 
 // Protobufs encode, sign, and send a message to all the servers.
 func (c *Client) send(obj interface{}) (msg []byte, err error) {
-	if msg, err = protobuf.Encode(obj); err != nil {
+
+	// Encode and sign the client's message.
+	buf := &bytes.Buffer{}
+	wr := sig.Writer(buf, c.seckey, c.rand)
+	enc := protobuf.Encoding{Constructor: c.suite}
+	if err = enc.Write(wr, obj); err != nil {
 		return
 	}
+	if err = wr.Close(); err != nil {
+		return
+	}
+	msg = buf.Bytes()
+	println("msglen", len(msg))
+
+	// Send it to all servers.
 	for i := 0; i < c.nsrv; i++ {
 		if c.srv[i] == nil {
 			continue
@@ -298,8 +312,8 @@ func (c *Client) processR4(i int) (err error) {
 
 		// Stash it for reconstruction
 		c.shares[j].SetShare(idx, share)
-		log.Printf("dealer %d share %d for server %d received\n",
-			j, idx, i)
+		//log.Printf("dealer %d share %d for server %d received\n",
+		//	j, idx, i)
 	}
 
 	return

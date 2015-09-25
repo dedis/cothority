@@ -71,8 +71,6 @@ func (ch *chanHost) Open(name string) Conn {
 	go func() {
 		if err := dst.srv(&cr); err != nil {
 			log.Printf("server %s error: %s", dst.name, err)
-		} else {
-			log.Printf("server %s completed", dst.name)
 		}
 		cr.Close()
 	}()
