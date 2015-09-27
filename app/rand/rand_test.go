@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/crypto/random"
 	"github.com/dedis/crypto/sig"
 	"testing"
+	"time"
 )
 
 func TestRand(t *testing.T) {
@@ -16,20 +17,33 @@ func TestRand(t *testing.T) {
 	rand := random.Stream
 
 	nservers := 10
+	ntrustees := 5
 
 	// Signing keypairs for client and servers
 	clisec := sig.SchnorrScheme{Suite: suite}.SecretKey()
 	clisec.Pick(rand)
 	clipub := clisec.PublicKey()
+	clipubb, _ := clipub.MarshalBinary()
 
 	srvsec := make([]sig.SchnorrSecretKey, nservers)
 	srvpub := make([]sig.SchnorrPublicKey, nservers)
+	srvhost := make([]HostInfo, nservers)
 	for i := range srvsec {
 		srvsec[i].Suite = suite
 		srvsec[i].Pick(rand)
 		srvpub[i] = srvsec[i].SchnorrPublicKey
 		//log.Printf("server %d public key %v", i, srvpub[i])
+		srvpubb, _ := srvpub[i].MarshalBinary()
+		srvhost[i] = HostInfo{srvpubb, nil}
 	}
+
+	clihost := HostInfo{clipubb, nil}
+	session := &Session{clihost, "test", time.Now()}
+
+	group := &Group{Servers: srvhost,
+		F: nservers / 3,
+		L: nservers - (nservers / 3),
+		K: ntrustees, T: (ntrustees + 1) / 2}
 
 	srv := make([]Server, nservers)
 	srvname := make([]string, nservers)
@@ -43,7 +57,7 @@ func TestRand(t *testing.T) {
 	cli := Client{}
 	//cpri := suite.Secret().Pick(rand)
 	chost := newChanHost(net, "client", nil)
-	cli.init(chost, suite, rand, clisec, srvname, srvpub)
+	cli.init(chost, suite, rand, session, group, clisec, srvname, srvpub)
 
 	if err := cli.run(); err != nil {
 		panic(err)

@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/sig"
+	"github.com/dedis/protobuf"
 	"log"
 	"reflect"
 )
@@ -23,6 +24,9 @@ type Client struct {
 	rand              cipher.Stream
 	keysize, hashsize int
 	seckey            sig.SecretKey
+
+	session *Session // Unique session identifier tuple
+	group   *Group   // Group parameter block
 
 	nsrv   int
 	srv    []Conn                 // Connections to communicate with each server
@@ -42,11 +46,16 @@ type Client struct {
 }
 
 func (c *Client) init(host Host, suite abstract.Suite, rand cipher.Stream,
+	session *Session, group *Group,
 	clisec sig.SecretKey, srvname []string, srvpub []sig.SchnorrPublicKey) {
-	c.host = host
 
+	c.host = host
 	c.suite = suite
 	c.rand = rand
+
+	c.session = session
+	c.group = group
+
 	cipher := c.suite.Cipher(abstract.NoKey)
 	c.keysize = cipher.KeySize()
 	c.hashsize = cipher.HashSize()
@@ -67,10 +76,24 @@ func (c *Client) run() (err error) {
 	c.rand.XORKeyStream(Rc, Rc)
 	c.Rc = Rc
 
+	// Compute Session ID
+	sessionb, err := protobuf.Encode(c.session)
+	if err != nil {
+		return err
+	}
+	sid := abstract.Sum(c.suite, sessionb)
+
+	// Compute Group ID
+	groupb, err := protobuf.Encode(c.group)
+	if err != nil {
+		panic(err)
+	}
+	gid := abstract.Sum(c.suite, groupb)
+
 	// Phase 1: Send client's I1 message
 	//log.Printf("Client: I1")
-	var i1 I1
-	i1.HRc = abstract.Sum(c.suite, Rc)
+	i1 := I1{SID: sid, GID: gid, HRc: abstract.Sum(c.suite, Rc),
+		S: sessionb, G: groupb}
 	if c.t.I1, err = c.send(&i1); err != nil {
 		return err
 	}
@@ -82,7 +105,7 @@ func (c *Client) run() (err error) {
 
 	// Phase 2
 	//log.Printf("Client: I2")
-	i2 := I2{Rc: Rc}
+	i2 := I2{SID: sid, Rc: Rc}
 	if c.t.I2, err = c.send(&i2); err != nil {
 		return err
 	}
@@ -94,7 +117,7 @@ func (c *Client) run() (err error) {
 
 	// Phase 3
 	//log.Printf("Client: I3")
-	i3 := I3{R2s: c.t.R2}
+	i3 := I3{SID: sid, R2s: c.t.R2}
 	if c.t.I3, err = c.send(&i3); err != nil {
 		return err
 	}
@@ -105,7 +128,7 @@ func (c *Client) run() (err error) {
 
 	// Phase 4
 	//log.Printf("Client: I4")
-	i4 := I4{R2s: c.t.R2}
+	i4 := I4{SID: sid, R2s: c.t.R2}
 	if c.t.I4, err = c.send(&i4); err != nil {
 		return err
 	}

@@ -8,8 +8,13 @@ import (
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
 	"github.com/dedis/crypto/sig"
+	"github.com/dedis/protobuf"
 	//"log"
+	"time"
 )
+
+// XXX should be config parameter
+const timeWindow = 24 * time.Hour
 
 type Server struct {
 
@@ -55,6 +60,26 @@ func (s *Server) serve(conn Conn) (err error) {
 		return
 	}
 
+	// Validate the client's Session block
+	// XXX add a parameterized way to preconfigure Session info
+	var session Session
+	err = protobuf.Decode(i1.S, &session)
+	if err != nil {
+		return
+	}
+	// XXX validate client public key - how should this work?
+	now := time.Now()
+	if now.Before(session.Time.Add(-timeWindow)) {
+		return errors.New("not close enough to scheduled session time")
+	}
+	if now.After(session.Time.Add(timeWindow)) {
+		return errors.New("too far past scheduled session time")
+	}
+	sid := abstract.Sum(s.suite, i1.S)
+	if !bytes.Equal(i1.SID, sid) {
+		return errors.New("wrong session ID in I1 message")
+	}
+
 	// Choose server's trustee-selection randomness
 	Rs := make([]byte, s.keysize)
 	s.rand.XORKeyStream(Rs, Rs)
@@ -71,6 +96,9 @@ func (s *Server) serve(conn Conn) (err error) {
 	var i2 I2
 	if msg, err = s.recv(&i2); err != nil {
 		return
+	}
+	if !bytes.Equal(i2.SID, sid) {
+		return errors.New("wrong session ID in I2 message")
 	}
 	Rc := i2.Rc
 	HRc := abstract.Sum(s.suite, Rc)
@@ -104,6 +132,9 @@ func (s *Server) serve(conn Conn) (err error) {
 	var i3 I3
 	if msg, err = s.recv(&i3); err != nil {
 		return
+	}
+	if !bytes.Equal(i3.SID, sid) {
+		return errors.New("wrong session ID in I3 message")
 	}
 
 	// Decrypt and validate all the shares we've been dealt.
@@ -180,6 +211,9 @@ func (s *Server) serve(conn Conn) (err error) {
 	var i4 I4
 	if msg, err = s.recv(&i4); err != nil {
 		return
+	}
+	if !bytes.Equal(i4.SID, sid) {
+		return errors.New("wrong session ID in I4 message")
 	}
 
 	// Validate the R4, mainly just making sure it's a subset of the R3 set

@@ -3,36 +3,35 @@ package main
 import (
 	"github.com/dedis/crypto/abstract"
 	"time"
-	//	"github.com/dedis/crypto/poly/promise"
 )
 
-type HostID struct {
-	PubKeyID string // Fingerprint of host's public key
-	Location string // Network location: hostname[:port]
+type HostInfo struct {
+	PubKey   []byte  // Fingerprint of host's public key
+	Location *string // Optional network location hint, hostname[:port]
 }
 
-type Config struct {
-}
-
-// Session ID uniquely identifying a RandHound protocol run.
-type SessionID struct {
-	Client  []byte    // Initiating client
+// Session information uniquely identifying a RandHound protocol run.
+type Session struct {
+	Client  HostInfo  // Initiating client
 	Purpose string    // Purpose of randomness
 	Time    time.Time // Scheduled initiation time
 }
 
-type GroupConfig struct {
-	Servers []HostID // List of servers used
-	F       int      // Faulty (Byzantine) hosts tolerated
-	L       int      // Hosts that must be live
-	K       int      // Trustee set size
-	T       int      // Trustee set threshold
+// Group parameters for a protocol run
+type Group struct {
+	Servers []HostInfo // List of servers used
+	F       int        // Faulty (Byzantine) hosts tolerated
+	L       int        // Hosts that must be live
+	K       int        // Trustee set size
+	T       int        // Trustee set threshold
 }
 
 type I1 struct {
-	//XXX	SID		SessionID	// Unique session identifier tuple
-	//XXX	Config		GroupConfig	// XXX allow indirect reference?
+	SID []byte // Session identifier: hash of Session info block
+	GID []byte // Group identifier: hash of Group parameter block
 	HRc []byte // Client's trustee-randomness commit
+	S   []byte // Optional: full session info block
+	G   []byte // Optional: full group parameter block
 }
 
 type R1 struct {
@@ -41,8 +40,8 @@ type R1 struct {
 }
 
 type I2 struct {
-	//	SID		SessionID	// Unique session identifier tuple
-	Rc []byte // Client's trustee-selection randomness
+	SID []byte // Unique session identifier
+	Rc  []byte // Client's trustee-selection randomness
 }
 
 type R2 struct {
@@ -52,7 +51,8 @@ type R2 struct {
 }
 
 type I3 struct {
-	//	SID		SessionID	// Unique session identifier tuple
+	SID []byte // Unique session identifier
+
 	// Client's list of signed R2 messages;
 	// empty slices represent missing R2 messages.
 	R2s [][]byte
@@ -70,7 +70,7 @@ type R3Resp struct {
 }
 
 type I4 struct {
-	//	SID		SessionID	// Unique session identifier tuple
+	SID []byte // Unique session identifier
 	// Client's list of signed R2 messages;
 	// empty slices for missing or invalid R2s.
 	R2s [][]byte
@@ -87,6 +87,39 @@ type R4Share struct {
 	Share  abstract.Secret // Decrypted share dealt to this server
 }
 
+// Error response reported by a server
+type RError struct {
+	Code   ErrorCode // Machine-readable error code
+	String string    // Human-readable error message
+}
+
+type ErrorCode int
+
+const (
+	NoError ErrorCode = iota
+	UnknownSessionID
+	UnknownGroupID
+)
+
+// IMessage represents any message a RandHound initiator/client can send.
+// The fields of this struct should be treated as a protobuf 'oneof'.
+type IMessage struct {
+	I1 *I1
+	I2 *I2
+	I3 *I3
+	I4 *I4
+}
+
+// RMessage represents any message a RandHound responder/server can send.
+// The fields of this struct should be treated as a protobuf 'oneof'.
+type RMessage struct {
+	RE *RError
+	R1 *R1
+	R2 *R2
+	R3 *R3
+	R4 *R4
+}
+
 type Transcript struct {
 	I1 []byte   // I1 message signed by client
 	R1 [][]byte // R1 messages signed by resp servers
@@ -97,12 +130,3 @@ type Transcript struct {
 	I4 []byte
 	R4 [][]byte
 }
-
-/*
-func (t *Transcript) Verify(suite abstract.Suite) error {
-
-	...
-
-	var i1 I1
-}
-*/
