@@ -1,4 +1,4 @@
-package coll_stamp
+package main
 
 import (
 	"bytes"

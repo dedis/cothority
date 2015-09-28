@@ -43,7 +43,7 @@ func main() {
 	// connect with the logging server
 	if logger != "" {
 		// blocks until we can connect to the logger
-		lh, err := logutils.NewLoggerHook(logger, physaddr, conf.App)
+		lh, err := logutils.NewLoggerHook(logger, physaddr, deter.App)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -58,7 +58,7 @@ func main() {
 	var wg sync.WaitGroup
 	virts := physToServer[physaddr]
 	if len(virts) > 0 {
-		dbg.Lvl3("starting", len(virts), "servers of", conf.App, "on", virts)
+		dbg.Lvl3("starting", len(virts), "servers of", deter.App, "on", virts)
 		i = (i + 1) % len(loggerports)
 		for _, name := range virts {
 			dbg.Lvl4("Starting", name, "on", physaddr)
@@ -77,7 +77,7 @@ func main() {
 				}
 
 				dbg.Lvl3("Starting on", physaddr, "with args", args)
-				cmdApp := exec.Command("./" + conf.App, args...)
+				cmdApp := exec.Command("./" + deter.App, args...)
 				//cmd.Stdout = log.StandardLogger().Writer()
 				//cmd.Stderr = log.StandardLogger().Writer()
 				cmdApp.Stdout = os.Stdout
@@ -85,7 +85,7 @@ func main() {
 				dbg.Lvl3("fork-exec is running command:", args)
 				err := cmdApp.Run()
 				if err != nil {
-					dbg.Lvl2("cmd run:", err)
+					dbg.Lvl1("cmd run:", err)
 				}
 
 				// get CPU usage stats

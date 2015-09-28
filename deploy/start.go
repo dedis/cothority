@@ -68,9 +68,10 @@ func Start(runconfigs []string) {
 
 		deployP.Stop()
 
-		dbg.Lvl3("Going to run tests for", runconfig, strings.Replace(strings.Join(tests, "--"),
-			"\n", ", ", -1))
-		RunTests(filepath.Base(runconfig), tests)
+		testprint := strings.Replace(strings.Join(tests, "--"), "\n", ", ", -1)
+		dbg.Lvl3("Going to run tests for", runconfig, testprint)
+		logname := strings.Replace(filepath.Base(runconfig), ".toml", "", 1)
+		RunTests(logname, tests)
 	}
 }
 

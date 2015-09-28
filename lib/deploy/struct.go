@@ -40,8 +40,6 @@ type Config struct {
 
 	// RootWait - how long the root timestamper waits for the clients to start up
 	RootWait int
-	// Which app to run
-	App string
 	// Coding-suite to run 	[nist256, nist512, ed25519]
 	Suite string
 }

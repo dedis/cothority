@@ -35,7 +35,7 @@ func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
 	}
 
 	start := time.Now()
-	dbg.Lvl1("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
+	dbg.Lvl2("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, app.Hostname, info, indexPeer == 0)
 
@@ -70,7 +70,7 @@ func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
 	p.SetupDistributedSchnorr()
 	p.SendACKs()
 	p.WaitACKs()
-	dbg.Lvl1(p.String(), "completed Schnorr setup")
+	dbg.Lvl2(p.String(), "completed Schnorr setup")
 
 	// send setup time if we're root
 	if p.IsRoot() {
@@ -118,7 +118,7 @@ func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
 	}
 
 	p.WaitFins()
-	dbg.Lvl1(p.String(), "is leaving ...")
+	dbg.Lvl2(p.String(), "is leaving ...")
 
 	if p.IsRoot() {
 		log.WithFields(log.Fields{

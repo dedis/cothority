@@ -1,8 +1,7 @@
-package coll_sign
+package main
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/deploy"
 	"github.com/dedis/cothority/lib/config"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/proto/sign"
@@ -13,30 +12,39 @@ import (
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
 	"log"
+	"github.com/dedis/cothority/lib/app"
 )
 
 // Dispatch-function for running either client or server (mode-parameter)
-func Run(app *config.AppConfig, conf *deploy.Config) {
-	// Do some common setup
-	if app.Mode == "client"{
-		app.Hostname = app.Name
+func main() {
+	ac := app.ReadConfig()
+
+	// we must know who we are
+	if ac.Flags.Hostname == "" {
+		log.Fatal("Hostname empty : Abort")
 	}
-	dbg.Lvl3(app.Hostname, "Starting to run")
-	if conf.Debug > 1 {
+	
+	// Do some common setup
+	if ac.Flags.Mode == "client"{
+		ac.Flags.Hostname = ac.Flags.Name
+	}
+	hostname := ac.Flags.Hostname
+	dbg.Lvl3(ac.Flags.Hostname, "Starting to run")
+	if ac.Deter.Debug > 1 {
 		sign.DEBUG = true
 	}
 
-	if app.Hostname == "" {
-		log.Fatal("no hostname given", app.Hostname)
+	if hostname == "" {
+		log.Fatal("no hostname given", hostname)
 	}
 
 	// load the configuration
-	dbg.Lvl3("loading configuration for", app.Hostname)
+	dbg.Lvl3("loading configuration for", hostname)
 	var hc *config.HostConfig
 	var err error
-	s := GetSuite(conf.Suite)
-	opts := config.ConfigOptions{ConnType: "tcp", Host: app.Hostname, Suite: s}
-	if conf.Failures > 0 || conf.FFail > 0 {
+	s := GetSuite(ac.Conf.Suite)
+	opts := config.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
+	if ac.Conf.Failures > 0 || ac.Conf.FFail > 0 {
 		opts.Faulty = true
 	}
 	hc, err = config.LoadConfig("tree.json", opts)
@@ -46,48 +54,48 @@ func Run(app *config.AppConfig, conf *deploy.Config) {
 	}
 
 	// Wait for everybody to be ready before going on
-	ioutil.WriteFile("coll_stamp_up/up" + app.Hostname, []byte("started"), 0666)
+	ioutil.WriteFile("coll_stamp_up/up" + hostname, []byte("started"), 0666)
 	for {
 		_, err := os.Stat("coll_stamp_up")
 		if err == nil {
 			files, _ := ioutil.ReadDir("coll_stamp_up")
-			dbg.Lvl4(app.Hostname, "waiting for others to finish", len(files))
+			dbg.Lvl4(hostname, "waiting for others to finish", len(files))
 			time.Sleep(time.Second)
 		} else {
 			break
 		}
 	}
-	dbg.Lvl2(app.Hostname, "thinks everybody's here")
+	dbg.Lvl2(hostname, "thinks everybody's here")
 
 	// set FailureRates
-	if conf.Failures > 0 {
+	if ac.Conf.Failures > 0 {
 		for i := range hc.SNodes {
-			hc.SNodes[i].FailureRate = conf.Failures
+			hc.SNodes[i].FailureRate = ac.Conf.Failures
 		}
 	}
 
 	// set root failures
-	if conf.RFail > 0 {
+	if ac.Conf.RFail > 0 {
 		for i := range hc.SNodes {
-			hc.SNodes[i].FailAsRootEvery = conf.RFail
+			hc.SNodes[i].FailAsRootEvery = ac.Conf.RFail
 
 		}
 	}
 	// set follower failures
 	// a follower fails on %ffail round with failureRate probability
 	for i := range hc.SNodes {
-		hc.SNodes[i].FailAsFollowerEvery = conf.FFail
+		hc.SNodes[i].FailAsFollowerEvery = ac.Conf.FFail
 	}
 
 	defer func() {
-		dbg.Lvl1("Collective Signing", app.Hostname, "has terminated in mode", app.Mode)
+		dbg.Lvl1("Collective Signing", hostname, "has terminated in mode", ac.Flags.Mode)
 	}()
 
-	switch app.Mode {
+	switch ac.Flags.Mode {
 	case "client":
 		log.Panic("No client mode")
 	case "server":
-		RunServer(app, conf, hc)
+		RunServer(ac, hc)
 	}
 }
 

@@ -1,6 +1,6 @@
-package coll_sign
+package main
 import (
-	"github.com/dedis/cothority/deploy"
+	"github.com/dedis/cothority/lib/deploy"
 	"time"
 	"github.com/dedis/cothority/lib/logutils"
 	log "github.com/Sirupsen/logrus"
@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 
 	"strconv"
-"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/hashid"
 )
 

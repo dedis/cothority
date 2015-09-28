@@ -1,4 +1,4 @@
-package coll_stamp_test
+package main
 
 import (
 	"fmt"
@@ -13,6 +13,8 @@ import (
 	"github.com/dedis/cothority/sign"
 	"github.com/dedis/cothority/stamp"
 	"github.com/dedis/cothority/lib/config"
+"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/prifi/coco/stamp"
 )
 
 // TODO: messages should be sent hashed eventually

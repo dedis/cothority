@@ -1,5 +1,5 @@
-package coll_stamp
-import (
+package main
+import(
 	"github.com/dedis/cothority/lib/coconet"
 	"strconv"
 	"net"
@@ -13,21 +13,24 @@ import (
 	"github.com/dedis/crypto/abstract"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/deploy"
 	"io/ioutil"
 	"os"
+	"github.com/dedis/cothority/lib/app"
 )
 
 var totalHosts int
 
-func Run(app *config.AppConfig, proto *deploy.Config) {
-	totalHosts = proto.Nmachs * proto.Hpn
-	switch app.Mode{
+func main() {
+	ac := app.ReadConfig()
+
+	totalHosts = ac.Deter.Machines * ac.Conf.Hpn
+	switch ac.Flags.Mode{
 	case "server":
-		RunServer(app.Hostname, app.App, proto.Rounds, proto.RootWait, proto.Debug, app.TestConnect,
-			proto.Failures, proto.RFail, proto.FFail, app.Logger, proto.Suite)
+		RunServer(ac.Flags.Hostname, ac.Deter.App, ac.Conf.Rounds, ac.Conf.RootWait,
+			ac.Deter.Debug, ac.Deter.TestConnect,
+			ac.Conf.Failures, ac.Conf.RFail, ac.Conf.FFail, ac.Flags.Logger, ac.Conf.Suite)
 	case "client":
-		RunClient(app.Server, proto.Nmsgs, app.Name, proto.Rate)
+		RunClient(ac.Flags.Server, ac.Conf.Nmsgs, ac.Flags.Name, ac.Conf.Rate)
 	}
 }
 
@@ -105,7 +108,7 @@ failureRate, rFail, fFail int, logger, suite string) {
 	}
 	dbg.Lvl3(hostname, "thinks everybody's here")
 
-	err = hc.Run(app != "coll_sign", sign.MerkleTree, hostname)
+	err = hc.Run(true, sign.MerkleTree, hostname)
 	if err != nil {
 		log.Fatal(err)
 	}

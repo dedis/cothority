@@ -26,7 +26,6 @@ type FlagConfig struct {
 	PhysAddr    string // physical IP addr of the host
 	AmRoot      bool   // is the host root (i.e. special operations)
 	TestConnect bool   // Dylan-code to only test the connection and exit afterwards
-	App         string // which app are we running on this host ["coll_sign","coll_stamp","schnorr_sign"]
 	Mode        string // ["server", "client"]
 	Name        string // Comes from deter.go:187 - "Name of the node"
 	Server      string // Timestamping servers to contact
@@ -40,7 +39,6 @@ func init() {
 	flag.StringVar(&flags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
 	flag.BoolVar(&flags.AmRoot, "amroot", false, "am I root node")
 	flag.BoolVar(&flags.TestConnect, "test_connect", false, "test connecting and disconnecting")
-	flag.StringVar(&flags.App, "app", flags.App, "Which application to run [coll_sign, coll_stamp]")
 	flag.StringVar(&flags.Mode, "mode", flags.Mode, "Run the app in [server,client] mode")
 	flag.StringVar(&flags.Name, "name", flags.Name, "Name of the node")
 	flag.StringVar(&flags.Server, "server", "", "the timestamping servers to contact")
@@ -52,20 +50,23 @@ func ReadConfig()(*AppConfig) {
 	var err error
 	err = deploy.ReadConfig(ac.Deter, "deter.toml")
 	if err != nil {
-		log.Fatal("Couldn't load config-file in exec")
+		log.Fatal("Couldn't load deter-config-file in exec")
 	}
 	err = deploy.ReadConfig(ac.Conf, "app.toml")
-	dbg.DebugVisible = ac.Conf.Debug
+	if err != nil {
+		log.Fatal("Couldn't load app-config-file in exec")
+	}
+	dbg.DebugVisible = ac.Deter.Debug
 
 	flag.Parse()
 
-	dbg.Lvl3("Running", flags.App, flags.Hostname, "with logger at", flags.Logger)
+	dbg.Lvl3("Running", ac.Deter.App, flags.Hostname, "with logger at", flags.Logger)
 
 	// connect with the logging server
-	if flags.Logger != "" && (flags.AmRoot || ac.Conf.Debug > 0) {
+	if flags.Logger != "" && (flags.AmRoot || ac.Deter.Debug > 0) {
 		// blocks until we can connect to the flags.Logger
 		dbg.Lvl3(flags.Hostname, "Connecting to Logger")
-		lh, err := logutils.NewLoggerHook(flags.Logger, flags.Hostname, ac.Conf.App)
+		lh, err := logutils.NewLoggerHook(flags.Logger, flags.Hostname, ac.Deter.App)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),

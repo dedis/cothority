@@ -48,7 +48,8 @@ func init() {
 func main() {
 	deploy.ReadConfigDeter(&deter, &conf)
 
-	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:", conf.Rounds, "debug:", conf.Debug)
+	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:",
+		conf.Rounds, "debug:", deter.Debug, "hpn:", conf.Hpn, "machines:", deter.Machines)
 
 	virt, err := cliutils.ReadLines("virt.txt")
 	if err != nil {
@@ -70,9 +71,9 @@ func main() {
 		go func(i int, h string) {
 			defer wg.Done()
 			dbg.Lvl4("Cleaning up host", h)
-			cliutils.SshRun("", h, "sudo killall " + conf.App + " forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall " + deter.App + " forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall "+ conf.App + " 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall "+ deter.App + " 2>/dev/null >/dev/null")
 			if dbg.DebugVisible > 3 {
 				dbg.Lvl4("Cleaning report:")
 				cliutils.SshRunStdout("", h, "ps aux")
@@ -188,7 +189,7 @@ func main() {
 	// We set up a directory and every host writes a file once he's ready to listen
 	// When everybody is ready, the directory is deleted and the test starts
 	coll_stamp_dir := "coll_stamp_up"
-	if conf.App == "coll_stamp" || conf.App == "coll_sign" {
+	if deter.App == "stamp" || deter.App == "sign" {
 		os.RemoveAll(coll_stamp_dir)
 		os.MkdirAll(coll_stamp_dir, 0777)
 		time.Sleep(time.Second)
@@ -216,7 +217,7 @@ func main() {
 		}(phys)
 	}
 
-	if conf.App == "coll_stamp" || conf.App == "coll_sign" {
+	if deter.App == "stamp" || deter.App == "sign" {
 		// Every stampserver that started up (mostly waiting for configuration-reading)
 		// writes its name in coll_stamp_dir - once everybody is there, the directory
 		// is cleaned to flag it's OK to go on.
@@ -239,8 +240,8 @@ func main() {
 		}
 	}
 
-	switch conf.App{
-	case "coll_stamp":
+	switch deter.App{
+	case "stamp":
 		dbg.Lvl1("starting", len(physToServer), "time clients")
 		// start up one timeclient per physical machine
 		// it requests timestamps from all the servers on that machine
@@ -250,18 +251,18 @@ func main() {
 			}
 			servers := strings.Join(ss, ",")
 			go func(i int, p string) {
-				_, err := cliutils.SshRun("", p, "cd remote; sudo ./" + conf.App + " -mode=client " +
+				_, err := cliutils.SshRun("", p, "cd remote; sudo ./" + deter.App + " -mode=client " +
 				" -name=client@" + p +
 				" -server=" + servers +
 				" -logger=" + loggerports[i])
 				if err != nil {
-					dbg.Lvl4("Deter.go : error for", conf.App, err)
+					dbg.Lvl4("Deter.go : error for", deter.App, err)
 				}
-				dbg.Lvl4("Deter.go : Finished with", conf.App, p)
+				dbg.Lvl4("Deter.go : Finished with", deter.App, p)
 			}(i, p)
 			i = (i + 1) % len(loggerports)
 		}
-	case "coll_sign_no":
+	case "sign_no":
 		// TODO: for now it's only a simple startup from the server
 		dbg.Lvl1("Starting only one client")
 	}

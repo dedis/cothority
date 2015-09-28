@@ -181,7 +181,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println(host)
 	ws := "ws://" + host + "/log"
 
-	dbg.Lvl1("Machines, hpn", deter.Machines, conf.Hpn)
 	err := homePage.Execute(w, Home{ws, strconv.Itoa(deter.Machines * conf.Hpn), strconv.Itoa(conf.Hpn), strconv.Itoa(conf.Bf),
 		strconv.Itoa(conf.Hpn), strconv.Itoa(conf.Nmsgs), strconv.Itoa(conf.Rate)})
 	if err != nil {

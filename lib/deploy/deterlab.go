@@ -72,7 +72,7 @@ type Deter struct {
 	// Channel to communication stopping of experiment
 	sshDeter     chan string
 	// Debugging-level: 0 is none - 5 is everything
-	Debug int
+	Debug        int
 
 	// Testing the connection?
 	TestConnect  bool
@@ -87,6 +87,7 @@ func (d *Deter) Configure(config *Deter) {
 	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
 	d.Machines = config.Machines
 	d.App = config.App
+	d.Debug = dbg.DebugVisible
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
@@ -250,7 +251,7 @@ func ReadConfigDeter(deter *Deter, conf *Config) {
 	if err != nil {
 		log.Fatal("Couldn't read config in", who, ":", err)
 	}
-	err = ReadConfig(conf, "deploy.toml")
+	err = ReadConfig(conf, "app.toml")
 	if err != nil {
 		log.Fatal("Couldn't read config in", who, ":", err)
 	}

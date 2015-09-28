@@ -1,5 +1,5 @@
 Machines = 4
-App = "sign"
+App = "stamp"
 
 hpn, bf, rounds, rate, suite
-1, 2, 30, 10, "ed25519"
+1, 2, 10, 10, "ed25519"

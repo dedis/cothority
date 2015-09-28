@@ -1,5 +1,5 @@
-Machines = 8
+Machines = 4
 App = "shamir_sign"
 
-hpn, bf, rounds
+Hpn, Bf, Rounds
 1, 2, 10
