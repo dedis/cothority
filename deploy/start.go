@@ -106,7 +106,7 @@ var HostsTestShort = []T{
 	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 var SchnorrHostSingle = []T{
-	{8, 2, 2, 30, 20, 0, 0, 0, false, "schnorr_sign"},
+	{3, 1, 2, 30, 20, 0, 0, 0, false, "schnorr_sign"},
 }
 
 func Start(destination string, nbld bool, build string, machines int) {
@@ -170,7 +170,7 @@ func RunTests(name string, ts []T) {
 	for i, t := range ts {
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]Stats)
+		runs := make([]Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
@@ -192,7 +192,11 @@ func RunTests(name string, ts []T) {
 			continue
 		}
 
-		rs[i] = AverageStats(runs)
+		s, err := AverageStats(runs...)
+		if err != nil {
+			dbg.Fatal("Could not average stats for test ", i)
+		}
+		rs[i] = s
 		rs[i].WriteTo(f)
 		// Write the header if you still havent done it
 		if !headerWritten {
@@ -201,6 +205,7 @@ func RunTests(name string, ts []T) {
 			if err != nil {
 				log.Fatal("error opening test file:", err)
 			}
+			rs[i].WriteTo(f)
 			err = rs[i].ServerCSVHeader()
 			if err != nil {
 				log.Fatal("error writing test file header:", err)
@@ -209,10 +214,10 @@ func RunTests(name string, ts []T) {
 			if err != nil {
 				log.Fatal("error syncing test file:", err)
 			}
-			headerWritter = true
+			headerWritten = true
 		}
 		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
-		err := rs[i].ServerCSV()
+		err = rs[i].ServerCSV()
 		if err != nil {
 			log.Fatal("error writing data to test file:", err)
 		}
@@ -230,7 +235,7 @@ func RunTests(name string, ts []T) {
 		defer cl.Close()
 		rs[i].WriteTo(cl)
 		err = rs[i].ClientCSVHeader()
-		err = rs[i].CLientCSV()
+		err = rs[i].ClientCSV()
 		if err != nil {
 			log.Fatal("error writing client latencies to file:", err)
 		}
@@ -243,7 +248,7 @@ func RunTests(name string, ts []T) {
 }
 
 // hpn, bf, nmsgsG
-func RunTest(t T) (RunStats, error) {
+func RunTest(t T) (Stats, error) {
 	// add timeout for 10 minutes?
 	done := make(chan struct{})
 	// get the right statistics for the test
@@ -261,24 +266,24 @@ func RunTest(t T) (RunStats, error) {
 	err := deployP.Start()
 	if err != nil {
 		log.Fatal(err)
-		return rs, nil
+		return stats, nil
 	}
 
 	// give it a while to start up
 	time.Sleep(10 * time.Second)
 
 	go func() {
-		Monitor(&stats)
+		Monitor(stats)
 		deployP.Stop()
-		dbg.Lvl2("Test complete:", rs)
+		dbg.Lvl2("Test complete:", stats)
 		done <- struct{}{}
 	}()
 
 	// timeout the command if it takes too long
 	select {
 	case <-done:
-		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
-			return rs, errors.New(fmt.Sprintf("unable to get good data: %+v", rs))
+		if !stats.Valid() {
+			return stats, errors.New(fmt.Sprintf("unable to get good data: %+v", stats))
 		}
 		return stats, nil
 		/* No time out for the moment

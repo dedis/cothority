@@ -1,10 +1,10 @@
 package deploy
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/debug_lvl"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io"
 	"io/ioutil"
 	"log"
@@ -37,7 +37,7 @@ type StreamStats struct {
 // needed to compute the avg + dev
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
 func (t *StreamStats) Update(newTime float64) {
-	n += 1
+	t.n += 1
 	if t.min > newTime {
 		t.min = newTime
 	}
@@ -45,17 +45,17 @@ func (t *StreamStats) Update(newTime float64) {
 		t.max = newTime
 	}
 
-	if n == 1 {
+	if t.n == 1 {
 		t.oldM = newTime
 		t.newM = newTime
 		t.oldS = 0.0
 	} else {
-		t.newM = oldM + (newTime-oldM)/n
-		t.newS = oldS + (newTime-oldM)*(newTime-newM)
-		t.oldM = newM
-		t.oldS = newS
+		t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
+		t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
+		t.oldM = t.newM
+		t.oldS = t.newS
 	}
-	t.dev = math.Sqrt(newS / (n - 1))
+	t.dev = math.Sqrt(t.newS / float64(t.n-1))
 
 }
 
@@ -68,11 +68,12 @@ func StreamStatsAverage(st ...StreamStats) StreamStats {
 		t.newM += s.newM
 		t.dev += s.dev
 	}
-	l := len(st)
+	l := float64(len(st))
 	t.min /= l
 	t.max /= l
 	t.newM /= l
 	t.dev /= l
+	return t
 }
 
 func (t *StreamStats) Min() float64 {
@@ -164,6 +165,9 @@ type Stats interface {
 	// incoporate the Entry into theses stats
 	// i is the "Index" of this entry (i.e. # times we have added entries)
 	AddEntry(e Entry) error
+	// Valid tells is the stats received some real data and is not
+	// empty or full of garbage
+	Valid() bool
 }
 
 // statistics about the shamir_sign app
@@ -177,6 +181,9 @@ type ShamirStats struct {
 	round StreamStats
 	// times for the setup
 	setup StreamStats
+
+	SysTime  float64
+	UserTime float64
 }
 
 func (s *ShamirStats) WriteTo(w io.Writer) {
@@ -190,11 +197,11 @@ func (s *ShamirStats) ServerCSVHeader() error {
 	return err
 }
 
-func (s *ShamirStats) ServerCSV() []byte {
+func (s *ShamirStats) ServerCSV() error {
 	_, err := fmt.Fprintf(s.Writer, "%d, %s,%s\n",
 		s.NHosts,
-		round.String(),
-		setup.String())
+		s.round.String(),
+		s.setup.String())
 	return err
 }
 
@@ -207,7 +214,7 @@ func (s *ShamirStats) ClientCSV() error {
 
 // Add an entry to the global stats
 func (s *ShamirStats) AddEntry(e Entry) error {
-	switch e.(type) {
+	switch t := e.(type) {
 	// the entry is a ShamirEntry !
 	case ShamirEntry:
 		st := e.(ShamirEntry)
@@ -219,35 +226,51 @@ func (s *ShamirStats) AddEntry(e Entry) error {
 		} else {
 			dbg.Fatal("Received unknown shamir entry : ", st.Type)
 		}
+	case SysEntry:
+		st := e.(SysEntry)
+		s.SysTime = st.SysTime
+		s.UserTime = st.UserTime
 	default:
-		dbg.Fatal("Received unknown entry type : ", e.(type))
+		dbg.Fatal("Received unknown entry type : ", t)
 	}
+	return nil
+}
+
+// basic check to see if we got somme real data
+func (s *ShamirStats) Valid() bool {
+	return s.round.Avg() > 0.0 //&& s.setup.Avg() > 0.0
 }
 
 // Average all these stats
-func ShamirStatsAverage(stats ...Stats) (StreamStats, error) {
-	var s ShamirStats
-	if len(stats) < 1 {
-		return s
-	}
-	s.NHosts = stats[0].NHosts
-	s.Writer = stats[0].Writer
+func shamirStatsAverage(stats ...Stats) (Stats, error) {
+	var s *ShamirStats = new(ShamirStats)
 
-	for _, si := range stats {
-		switch si.(type) {
-		case ShamirStats:
-			ss := si.(ShamirStats)
-			s.round.Update(ss.round)
-			s.setup.Update(ss.setup)
+	if len(stats) < 1 {
+		return s, nil
+	}
+	stset := make([]StreamStats, 0, len(stats))
+	stround := make([]StreamStats, 0, len(stats))
+	for i, _ := range stats {
+		switch stats[i].(type) {
+		case *ShamirStats:
+			ss := stats[i].(*ShamirStats)
+			stset = append(stset, ss.setup)
+			stround = append(stset, ss.round)
+			s.NHosts = ss.NHosts
+			s.Writer = ss.Writer
 		default:
 			return s, errors.New("Average() received a stats that is not ShamirStat")
 		}
 	}
+	s.setup = StreamStatsAverage(stset...)
+	s.round = StreamStatsAverage(stround...)
 	return s, nil
 }
 
 // Collective signing stats
 type CollStats struct {
+	// number of hosts
+	NHosts int
 	// Writer where to write the data
 	Writer io.Writer
 
@@ -261,6 +284,10 @@ type CollStats struct {
 
 	Rate  float64
 	Times []float64
+}
+
+func (c *CollStats) Valid() bool {
+	return c.round.Avg() > 0.0 && c.Rate > 0.0
 }
 
 // Simple setter for the writer
@@ -317,13 +344,13 @@ func (s *CollStats) AddEntry(e Entry) error {
 		// avg is how many messages per second, we want how many milliseconds between messages
 		cce := e.(CollClientEntry)
 		avg, _, _, _ := ArrStats(cce.Buckets)
-		obs := avg / 1000
-		obs = 1 / observed
+		observed := avg / 1000
+		observed = 1 / observed
 		s.Rate = observed
 		s.Times = cce.Times
 	case SysEntry:
 		se := e.(SysEntry)
-		s.Systime = se.SysTime
+		s.SysTime = se.SysTime
 		s.UserTime = se.UserTime
 	default:
 		dbg.Fatal("AddEntry did not receive any Coll*Entry.")
@@ -332,21 +359,25 @@ func (s *CollStats) AddEntry(e Entry) error {
 }
 
 // Average a collection of Stats that better be CollStats !
-func collStatsAverage(stats ...Stats) (CollStats, error) {
-	var s CollStats
-	if len(rs) == 0 {
+func collStatsAverage(stats ...Stats) (Stats, error) {
+	var s *CollStats = new(CollStats)
+	if len(stats) == 0 {
 		return s, errors.New("No stats given to average on CollStats")
 	}
-	s.NHosts = rs[0].NHosts
-	s.Depth = rs[0].Depth
-	s.BF = rs[0].BF
-	s.Times = make([]float64, len(stats[0].Times))
-
-	for _, b := range rs {
+	first, ok := stats[0].(*CollStats)
+	if !ok {
+		return s, errors.New("Received non CollStats into collStatsAverage")
+	}
+	s.NHosts = first.NHosts
+	s.Depth = first.Depth
+	s.BF = first.BF
+	s.Times = make([]float64, len(first.Times))
+	st := make([]StreamStats, 0, len(stats))
+	for _, b := range stats {
 		switch b.(type) {
-		case CollStats:
-			a := b.(CollStats)
-			s.round.Average(a.round)
+		case *CollStats:
+			a := b.(*CollStats)
+			st = append(st, a.round)
 			s.SysTime += a.SysTime
 			s.UserTime += a.UserTime
 			s.Rate += a.Rate
@@ -355,11 +386,8 @@ func collStatsAverage(stats ...Stats) (CollStats, error) {
 			return s, errors.New("Average did not receive a CollStats struct")
 		}
 	}
+	s.round = StreamStatsAverage(st...)
 	l := float64(len(stats))
-	s.MinTime /= l
-	s.MaxTime /= l
-	s.AvgTime /= l
-	s.StdDev /= l
 	s.SysTime /= l
 	s.UserTime /= l
 	s.Rate /= l
@@ -373,34 +401,37 @@ func AverageStats(stats ...Stats) (Stats, error) {
 		return nil, errors.New("No stats given to average")
 	}
 	switch stats[0].(type) {
-	case CollStats:
-		return collStatsAverage(stats)
-	case ShamirStats:
-		return shamirStatsAverage(stats)
+	case *CollStats:
+		return collStatsAverage(stats...)
+	case *ShamirStats:
+		return shamirStatsAverage(stats...)
 	}
+	return nil, errors.New("Unknown type of stats given to AverageStats()")
 }
 
 // helper function to get the right Stats depending on the test
-func GetStat(t Test) Stats {
-	switch test.app {
+func GetStat(t T) Stats {
+	switch t.app {
 	case ShamirSign:
 		return NewShamirStats(t)
 	case CollSign, CollStamp:
 		return NewCollStats(t)
 	}
+	return nil
 }
 
-func NewShamirStats(t Test) ShamirStats {
-	return ShamirStats{NHosts: t.nmachs * t.hpn}
+func NewShamirStats(t T) *ShamirStats {
+	return &ShamirStats{NHosts: t.nmachs * t.hpn}
 }
-func NewCollStats(t Test) CollStats {
-	depth := math.Log(t.nmachs*t.hpn) * t.bf
-	depth /= math.Log(t.bf)
+
+func NewCollStats(t T) *CollStats {
+	depth := math.Log(float64(t.nmachs*t.hpn)) * float64(t.bf-1)
+	depth /= math.Log(float64(t.bf))
 	depth -= 1
-	return CollStats{
+	return &CollStats{
 		BF:     t.bf,
 		NHosts: t.nmachs * t.hpn,
-		Depth:  depth,
+		Depth:  int(math.Floor(depth)),
 	}
 }
 

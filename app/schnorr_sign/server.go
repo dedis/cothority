@@ -48,7 +48,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	// Wait until this peer is connected / SYN'd with each other peer
 	p.WaitSYNs()
 
-	if p.IsRoot(){
+	if p.IsRoot() {
 		delta := time.Since(start)
 		dbg.Lvl2(p.String(), "Connections accomplished in", delta)
 		log.WithFields(log.Fields{
@@ -74,7 +74,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 		dbg.Lvl2(p.String(), "setup accomplished in ", delta)
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
-			"type":  "schnorr_setup",
+			"type":  "shamir_setup",
 			"round": 0,
 			"time":  delta,
 		}).Info("")
@@ -103,7 +103,7 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 			dbg.Lvl2(p.String(), "signature done in ", delta)
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
-				"type":  "schnorr_round",
+				"type":  "shamir_round",
 				"round": round,
 				"time":  delta,
 			}).Info("")
@@ -116,10 +116,10 @@ func RunServer(hosts *config.HostsConfig, app *config.AppConfig, depl *deploy.Co
 	p.WaitFins()
 	dbg.Lvl1(p.String(), "is leaving ...")
 
-	if p.IsRoot(){
+	if p.IsRoot() {
 		log.WithFields(log.Fields{
 			"file": logutils.File(),
-			"type":	"schnorr_end",
+			"type": "schnorr_end",
 		}).Info("")
 	}
 }
