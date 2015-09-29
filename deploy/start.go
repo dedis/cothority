@@ -49,37 +49,37 @@ func init() {
  * it takes a slice of strings to configuration-files that are to be
  * copied over to the deterlab-server
  */
-func Start(runconfigs []string) {
-	if len(runconfigs) == 0 {
+func Start(simulations []string) {
+	if len(simulations) == 0 {
 		dbg.Fatal("Please give a simulation to run")
 	}
 
-	for _, runconfig := range runconfigs {
-		deter, tests := ReadRunfile(runconfig)
+	for _, simulation := range simulations {
+		deter, runconfigs := ReadRunfile(simulation)
 		deter.Debug = dbg.DebugVisible
-		if len(tests) == 0 {
-			dbg.Fatal("No tests found in", runconfig)
+		if len(runconfigs) == 0 {
+			dbg.Fatal("No tests found in", simulation)
 		}
 		if deter.App == "" {
-			dbg.Fatal("No app defined in", runconfig)
+			dbg.Fatal("No app defined in", simulation)
 		}
 
 		deployP.Configure(&deter)
 
 		deployP.Stop()
 
-		testprint := strings.Replace(strings.Join(tests, "--"), "\n", ", ", -1)
-		dbg.Lvl3("Going to run tests for", runconfig, testprint)
-		logname := strings.Replace(filepath.Base(runconfig), ".toml", "", 1)
-		RunTests(logname, tests)
+		//testprint := strings.Replace(strings.Join(runconfigs, "--"), "\n", ", ", -1)
+		//dbg.Lvl3("Going to run tests for", simulation, testprint)
+		logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
+		RunTests(logname, runconfigs)
 	}
 }
 
 // Runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
-func RunTests(name string, tests []string) {
+func RunTests(name string, runconfigs []deploy.RunConfig) {
 	s := stats{}
-	s.InitStats(name, tests)
+	s.InitStats(name, runconfigs)
 	if nobuild == false {
 		deployP.Build(build)
 	}
@@ -87,7 +87,7 @@ func RunTests(name string, tests []string) {
 	MkTestDir()
 	nTimes := 1
 	stopOnSuccess := true
-	for run, t := range tests {
+	for run, t := range runconfigs {
 		// run test t nTimes times
 		// take the average of all successful runs
 		var runs []RunStats
@@ -113,11 +113,11 @@ func RunTests(name string, tests []string) {
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(t string) (RunStats, error) {
+func RunTest(rc deploy.RunConfig) (RunStats, error) {
 	done := make(chan struct{})
 	var rs RunStats
 
-	deployP.Deploy(t)
+	deployP.Deploy(rc)
 	err := deployP.Start()
 	if err != nil {
 		log.Fatal(err)
@@ -147,15 +147,15 @@ func RunTest(t string) (RunStats, error) {
 type stats struct {
 	rs          []RunStats
 	name        string
-	simulations []string
+	runconfigs  []deploy.RunConfig
 	file        *os.File
 }
 
-func (s *stats)InitStats(name string, simulations []string) {
+func (s *stats)InitStats(name string, runconfigs []deploy.RunConfig) {
 	var err error
 	s.name = name
-	s.simulations = simulations
-	s.rs = make([]RunStats, len(simulations))
+	s.runconfigs = runconfigs
+	s.rs = make([]RunStats, len(runconfigs))
 	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
@@ -172,7 +172,7 @@ func (s *stats)InitStats(name string, simulations []string) {
 
 func (s *stats)WriteStats(run int, runs []RunStats) {
 	if len(runs) == 0 {
-		dbg.Lvl1("unable to get any data for test:", s.simulations[run])
+		dbg.Lvl1("unable to get any data for test:", s.runconfigs[run])
 		return
 	}
 
@@ -222,9 +222,9 @@ type runFile struct {
  * The Name1...Namen are general configuration-options for deploy.
  * n1..nn are configuration-options for the 'app'
  */
-func ReadRunfile(filename string) (deploy.Deter, []string) {
-	var deter deploy.Deter
-	var tests []string
+func ReadRunfile(filename string) (deploy.Deterlab, []deploy.RunConfig) {
+	var deter deploy.Deterlab
+	var runconfigs []deploy.RunConfig
 
 	dbg.Lvl3("Reading file", filename)
 
@@ -245,14 +245,14 @@ func ReadRunfile(filename string) (deploy.Deter, []string) {
 	scanner.Scan()
 	args := strings.Split(scanner.Text(), ", ")
 	for scanner.Scan() {
-		test := ""
+		rc := ""
 		for i, value := range strings.Split(scanner.Text(), ", ") {
-			test += args[i] + " = " + value + "\n"
+			rc += args[i] + " = " + value + "\n"
 		}
-		tests = append(tests, test)
+		runconfigs = append(runconfigs, deploy.RunConfig(rc))
 	}
 
-	return deter, tests
+	return deter, runconfigs
 }
 
 func MkTestDir() {

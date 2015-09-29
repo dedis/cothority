@@ -12,7 +12,7 @@ import (
 
 // Dispatch-function for running either client or server (mode-parameter)
 func main() {
-	ac := app.ReadConfig()
+	ac := app.ReadAppConfig()
 
 	// we must know who we are
 	if ac.Flags.Hostname == "" {

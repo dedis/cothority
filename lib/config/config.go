@@ -1,7 +1,6 @@
 package config
 
-import
-(
+import (
 	"bytes"
 	"crypto/cipher"
 	"encoding/hex"
@@ -23,10 +22,10 @@ import
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
-	"io/ioutil"
 	"sort"
 	"strconv"
 	"strings"
+	"github.com/dedis/cothority/lib/app"
 )
 
 /*
@@ -185,7 +184,7 @@ func max(a, b int) int {
 // config file. ConstructTree must be called AFTER populating the HostConfig with
 // ALL the possible hosts.
 func ConstructTree(
-	n *Node,
+	node *graphs.Tree,
 	hc *HostConfig,
 	parent string,
 	suite abstract.Suite,
@@ -196,9 +195,9 @@ func ConstructTree(
 	// passes up its X_hat, and/or an error
 
 	// get the name associated with this address
-	name, ok := nameToAddr[n.Name]
+	name, ok := nameToAddr[node.Name]
 	if !ok {
-		fmt.Println("unknown name in address book:", n.Name)
+		fmt.Println("unknown name in address book:", node.Name)
 		return 0, errors.New("unknown name in address book")
 	}
 
@@ -220,9 +219,9 @@ func ConstructTree(
 	var sn *sign.Node
 
 	// if the JSON holds the fields field is set load from there
-	if len(n.PubKey) != 0 {
+	if len(node.PubKey) != 0 {
 		// dbg.Lvl4("decoding point")
-		encoded, err := hex.DecodeString(string(n.PubKey))
+		encoded, err := hex.DecodeString(string(node.PubKey))
 		if err != nil {
 			log.Error("failed to decode hex from encoded")
 			return 0, err
@@ -234,7 +233,7 @@ func ConstructTree(
 			return 0, err
 		}
 		// dbg.Lvl4("decoding point")
-		encoded, err = hex.DecodeString(string(n.PriKey))
+		encoded, err = hex.DecodeString(string(node.PriKey))
 		if err != nil {
 			log.Error("failed to decode hex from encoded")
 			return 0, err
@@ -280,11 +279,11 @@ func ConstructTree(
 	// dbg.Lvl4("prikey: ", prikey)
 	// dbg.Lvl4("pubkey: ", pubkey)
 	height := 0
-	for _, c := range n.Children {
+	for _, c := range node.Children {
 		// connect this node to its children
 		cname, ok := nameToAddr[c.Name]
 		if !ok {
-			fmt.Println("unknown name in address book:", n.Name)
+			fmt.Println("unknown name in address book:", node.Name)
 			return 0, errors.New("unknown name in address book")
 		}
 
@@ -435,33 +434,15 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 // complete hostnames to be used by the hosts.
 // LoadConfig loads a configuration file in the format specified above. It
 // populates a HostConfig with HostNode Hosts and goPeer Peers.
-func LoadConfig(fname string, opts ...ConfigOptions) (*HostConfig, error) {
-	file, err := ioutil.ReadFile(fname)
-	if err != nil {
-		return nil, err
-	}
-	return LoadJSON(file, opts...)
-}
-
-func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
+func LoadConfig(conf app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	opts := ConfigOptions{}
 	if len(optsSlice) > 0 {
 		opts = optsSlice[0]
 	}
 
 	hc := NewHostConfig()
-	var cf ConfigFileOld
-	err := json.Unmarshal(file, &cf)
-	if err != nil {
-		return hc, err
-	}
 
-	// TODO remove this duplicate check of tcp conn
 	connT := GoC
-	if cf.Conn == "tcp" {
-		connT = TcpC
-	}
-
 	// options override file
 	if opts.ConnType == "tcp" {
 		connT = TcpC
@@ -472,7 +453,7 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	nameToAddr := make(map[string]string)
 
 	if connT == GoC {
-		for _, h := range cf.Hosts {
+		for _, h := range conf.Hosts {
 			if _, ok := hc.Hosts[h]; !ok {
 				nameToAddr[h] = h
 				// it doesn't make sense to only make 1 go host
@@ -489,13 +470,14 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 		localAddr := ""
 
 		if opts.GenHosts {
+			var err error
 			localAddr, err = GetAddress()
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		for i, h := range cf.Hosts {
+		for i, h := range conf.Hosts {
 
 			addr := h
 			if opts.GenHosts {
@@ -543,12 +525,12 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	rand := suite.Cipher([]byte("example"))
 	//fmt.Println("hosts", hosts)
 	// default value = false
-	if err != nil {
-		log.Fatal(err)
-	}
 	start := time.Now()
 	if opts.NoTree == false {
-		_, err = ConstructTree(cf.Tree, hc, "", suite, rand, hosts, nameToAddr, opts)
+		_, err := ConstructTree(conf.Tree, hc, "", suite, rand, hosts, nameToAddr, opts)
+		if err != nil{
+			dbg.Fatal("Couldn't construct tree:", err)
+		}
 	}
 	dbg.Lvl3("Timing for ConstructTree", time.Since(start))
 	if connT != GoC {
@@ -572,7 +554,7 @@ func LoadJSON(file []byte, optsSlice ...ConfigOptions) (*HostConfig, error) {
 		sn.SetHostList(0, sn.HostList)
 	}
 
-	return hc, err
+	return hc, nil
 }
 
 // Helper functions that will return the suite used during the process from a string name

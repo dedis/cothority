@@ -5,31 +5,27 @@
 // nodes per server and run timestamping processes. The last node is
 // reserved for the logging server, which is forwarded to localhost:8081
 //
-// Creates the following directory structure in remote:
+// Creates the following directory structure:
 // build/ - where all cross-compiled executables are stored
-// deploy/ - directory to be copied to the deterlab server
+// remote/ - directory to be copied to the deterlab server
 //
 // The following apps are used:
 //   deter - runs on the user-machine in deterlab and launches the others
-//   logserver - runs on the first three servers - first is the master, then two slaves
-//   forkexec - runs on the other servers and launches exec, so it can measure it's cpu usage
-//
+//   logserver - runs on the first 'Loggers' servers - first is the master, rest are slaves
+//   forkexec - runs on the other servers and launches the app, so it can measure its cpu usage
+
 package deploy
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"sync"
 
 	"bufio"
-	"encoding/json"
 	_ "errors"
 	"fmt"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/config"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/graphs"
 	"io/ioutil"
 	"path"
 	"strings"
@@ -37,10 +33,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/app"
 )
 
-type Deter struct {
+type Deterlab struct {
 	// The login on the platform
 	Login        string
 	// The outside host on the platform
@@ -56,13 +53,12 @@ type Deter struct {
 	// Working directory of deterlab
 	DeterDir     string
 	// Where the main logging machine resides
-	masterLogger string
+	MasterLogger string
 	// DNS-resolvable names
-	phys         []string
+	Phys         []string
 	// VLAN-IP names
-	virt         []string
-	physOut      string
-	virtOut      string
+	Virt         []string
+
 	// Which app to run
 	App          string
 	// Number of machines
@@ -74,27 +70,31 @@ type Deter struct {
 	// Debugging-level: 0 is none - 5 is everything
 	Debug        int
 
+	// All hostnames used concatenated with the port
+	Hostnames    []string
+
 	// Testing the connection?
 	TestConnect  bool
 }
 
-func (d *Deter) Configure(config *Deter) {
+func (d *Deterlab) Configure(config *Deterlab) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.DeterDir = pwd + "/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
 	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
+	d.LoadAndCheckDeterlabVars()
+
 	d.Machines = config.Machines
 	d.App = config.App
 	d.Debug = dbg.DebugVisible
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
-	d.checkDeterlabVars()
 }
 
-func (d *Deter) Build(build string) error {
+func (d *Deterlab) Build(build string) error {
 	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build)
 	start := time.Now()
 
@@ -111,7 +111,7 @@ func (d *Deter) Build(build string) error {
 	os.Mkdir(d.BuildDir, 0777)
 
 	// start building the necessary packages
-	packages := []string{"logserver", "forkexec", "app", "deter"}
+	packages := []string{"logserver", "forkexec", "app", "users"}
 	if build != "" {
 		packages = strings.Split(build, ",")
 	}
@@ -126,7 +126,7 @@ func (d *Deter) Build(build string) error {
 		src_dir := d.DeterDir + "/" + p
 		dbg.Lvl3("Building ", p, "from", src_dir, "into", basename)
 		wg.Add(1)
-		if p == "deter" {
+		if p == "users" {
 			go func(src, dest string) {
 				defer wg.Done()
 				// the users node has a 386 FreeBSD architecture
@@ -137,7 +137,7 @@ func (d *Deter) Build(build string) error {
 				if err != nil {
 					cliutils.KillGo()
 					fmt.Println(out)
-					log.Fatal(err)
+					dbg.Fatal(err)
 				}
 			}(src_dir, dst)
 			continue
@@ -150,7 +150,7 @@ func (d *Deter) Build(build string) error {
 			if err != nil {
 				cliutils.KillGo()
 				fmt.Println(out)
-				log.Fatal(err)
+				dbg.Fatal(err)
 			}
 		}(src_dir, dst)
 	}
@@ -160,30 +160,62 @@ func (d *Deter) Build(build string) error {
 	return nil
 }
 
-func (d *Deter) Deploy(conf string) error {
+func (d *Deterlab) Deploy(rc RunConfig) error {
 	dbg.Lvl1("Assembling all files and configuration options")
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
 
 	dbg.Lvl1("Writing config-files")
 
-	d.generateHostsFile()
-	d.readHosts()
-	d.calculateGraph(conf)
-	WriteConfig(d, "deter.toml", d.DeployDir)
-	ioutil.WriteFile(d.DeployDir + "/app.toml", []byte(conf), 0666)
+	// Initialize the deter-struct with our current structure (for debug-levels
+	// and such), then read in the app-configuration to overwrite eventual
+	// 'Machines', 'Hpn', 'Loggers' or other fields
+	deter := *d
+	appConfig := d.DeployDir + "/app.toml"
+	deterConfig := d.DeployDir + "/deter.toml"
+	ioutil.WriteFile(appConfig, []byte(rc), 0666)
+	deter.ReadConfig(appConfig)
+
+	deter.createHostsFile()
+	deter.readHosts()
+	d.MasterLogger = deter.MasterLogger
+	app.WriteTomlConfig(deter, deterConfig)
+
+	// Prepare special configuration preparation for each application
+	switch d.App{
+	case "sign", "stamp":
+		conf := app.ConfigColl{}
+		app.ReadTomlConfig(&conf, deterConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		// Calculates a tree that is used for the timestampers
+		var depth int
+		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Bf)
+		dbg.Lvl2("Depth:", depth)
+		dbg.Lvl2("Total hosts:", len(conf.Hosts))
+		total := deter.Machines * conf.Hpn
+		if len(conf.Hosts) != total {
+			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
+				"machines or hosts per node")
+		}
+		deter.Hostnames = conf.Hosts
+		// re-write the new configuration-file
+		app.WriteTomlConfig(conf, appConfig)
+	case "shamir_sign":
+	case "randhound":
+	}
+	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles",
 		d.DeterDir + "/cothority.conf", d.DeployDir).Run()
 	if err != nil {
-		log.Fatal("error copying webfiles:", err)
+		dbg.Fatal("error copying webfiles:", err)
 	}
 	build, err := ioutil.ReadDir(d.BuildDir)
 	for _, file := range build {
 		err = exec.Command("cp", d.BuildDir + "/" + file.Name(), d.DeployDir).Run()
 		if err != nil {
-			log.Fatal("error copying build-file:", err)
+			dbg.Fatal("error copying build-file:", err)
 		}
 	}
 
@@ -191,7 +223,7 @@ func (d *Deter) Deploy(conf string) error {
 	// Copy everything over to deterlabs
 	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir + "/", "remote/")
 	if err != nil {
-		log.Fatal(err)
+		dbg.Fatal(err)
 	}
 
 	dbg.Lvl1("Done copying")
@@ -199,23 +231,23 @@ func (d *Deter) Deploy(conf string) error {
 	return nil
 }
 
-func (d *Deter) Start() error {
+func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
-	dbg.Lvl3("setup port forwarding for master logger: ", d.masterLogger, d.Login, d.Host)
+	dbg.LLvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
 	cmd := exec.Command(
 		"ssh",
 		"-t",
 		"-t",
 		fmt.Sprintf("%s@%s", d.Login, d.Host),
 		"-L",
-		"8081:" + d.masterLogger + ":10000")
+		"8081:" + d.MasterLogger + ":10000")
 	err := cmd.Start()
 	if err != nil {
-		log.Fatal("failed to setup portforwarding for logging server")
+		dbg.Fatal("failed to setup portforwarding for logging server")
 	}
 
 	go func() {
-		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./deter"))
+		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users"))
 		dbg.Lvl3("Sending stop of ssh")
 		d.sshDeter <- "stop"
 	}()
@@ -223,7 +255,7 @@ func (d *Deter) Start() error {
 	return nil
 }
 
-func (d *Deter) Stop() error {
+func (d *Deterlab) Stop() error {
 	killssh := exec.Command("pkill", "-f", "ssh -t -t")
 	killssh.Stdout = os.Stdout
 	killssh.Stderr = os.Stderr
@@ -244,25 +276,26 @@ func (d *Deter) Stop() error {
 	return nil
 }
 
-func ReadConfigDeter(deter *Deter, conf *Config) {
-	err := ReadConfig(deter, "deter.toml")
+// Reads in the deterlab-config and drops out if there is an error
+func (d *Deterlab)ReadConfig(name... string) {
+	configName := "deter.toml"
+	if len(name) > 0 {
+		configName = name[0]
+	}
+	err := app.ReadTomlConfig(d, configName)
 	_, caller, line, _ := runtime.Caller(1)
 	who := caller + ":" + strconv.Itoa(line)
 	if err != nil {
-		log.Fatal("Couldn't read config in", who, ":", err)
+		dbg.Fatal("Couldn't read config in", who, ":", err)
 	}
-	err = ReadConfig(conf, "app.toml")
-	if err != nil {
-		log.Fatal("Couldn't read config in", who, ":", err)
-	}
-	dbg.DebugVisible = deter.Debug
+	dbg.DebugVisible = d.Debug
 }
 
 /*
 * Write the hosts.txt file automatically
 * from project name and number of servers
  */
-func (d *Deter) generateHostsFile() error {
+func (d *Deterlab) createHostsFile() error {
 	hosts_file := d.DeployDir + "/hosts.txt"
 	num_servers := d.Machines + d.Loggers
 
@@ -274,7 +307,7 @@ func (d *Deter) generateHostsFile() error {
 	// create the file
 	f, err := os.Create(hosts_file)
 	if err != nil {
-		log.Fatal("Could not create hosts file description: ", hosts_file, " :: ", err)
+		dbg.Fatal("Could not create hosts file description: ", hosts_file, " :: ", err)
 		return err
 	}
 	defer f.Close()
@@ -293,62 +326,37 @@ func (d *Deter) generateHostsFile() error {
 // parse the hosts.txt file to create a separate list (and file)
 // of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
 // corresponds to each host on line i, in virt.txt.
-func (d *Deter) readHosts() {
+func (d *Deterlab) readHosts() {
 	hosts_file := d.DeployDir + "/hosts.txt"
 	nmachs, nloggers := d.Machines, d.Loggers
 
 	physVirt, err := cliutils.ReadLines(hosts_file)
 	if err != nil {
-		log.Panic("Couldn't find", hosts_file)
+		dbg.Fatal("Couldn't find", hosts_file)
 	}
 
-	d.phys = make([]string, 0, len(physVirt) / 2)
-	d.virt = make([]string, 0, len(physVirt) / 2)
+	d.Phys = make([]string, 0, len(physVirt) / 2)
+	d.Virt = make([]string, 0, len(physVirt) / 2)
 	for i := 0; i < len(physVirt); i += 2 {
-		d.phys = append(d.phys, physVirt[i])
-		d.virt = append(d.virt, physVirt[i + 1])
+		d.Phys = append(d.Phys, physVirt[i])
+		d.Virt = append(d.Virt, physVirt[i + 1])
 	}
-	d.phys = d.phys[:nmachs + nloggers]
-	d.virt = d.virt[:nmachs + nloggers]
-	d.physOut = strings.Join(d.phys, "\n")
-	d.virtOut = strings.Join(d.virt, "\n")
-	d.masterLogger = d.phys[0]
+	d.Phys = d.Phys[:nmachs + nloggers]
+	d.Virt = d.Virt[:nmachs + nloggers]
+	physOut := strings.Join(d.Phys, "\n")
+	virtOut := strings.Join(d.Virt, "\n")
+	d.MasterLogger = d.Phys[0]
 
 	// phys.txt and virt.txt only contain the number of machines that we need
 	dbg.Lvl3("Reading phys and virt")
-	err = ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(d.physOut), 0666)
+	err = ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(physOut), 0666)
 	if err != nil {
-		log.Fatal("failed to write physical nodes file", err)
+		dbg.Fatal("failed to write physical nodes file", err)
 	}
 
-	err = ioutil.WriteFile(d.DeployDir + "/virt.txt", []byte(d.virtOut), 0666)
+	err = ioutil.WriteFile(d.DeployDir + "/virt.txt", []byte(virtOut), 0666)
 	if err != nil {
-		log.Fatal("failed to write virtual nodes file", err)
-	}
-}
-
-// Calculates a tree that is used for the timestampers
-func (d *Deter) calculateGraph(conf_str string) {
-	conf := Config{}
-	toml.Decode(conf_str, &conf)
-	d.virt = d.virt[d.Loggers:]
-	d.phys = d.phys[d.Loggers:]
-	t, hostnames, depth, err := graphs.TreeFromList(d.virt, conf.Hpn, conf.Bf)
-	dbg.Lvl2("Depth:", depth)
-	dbg.Lvl2("Total hosts:", len(hostnames))
-	total := d.Machines * conf.Hpn
-	if len(hostnames) != total {
-		dbg.Lvl1("Only calculated", len(hostnames), "out of", total, "hosts - try changing number of",
-			"machines or hosts per node")
-		log.Fatal("Didn't calculate enough hosts")
-	}
-
-	// generate the configuration file from the tree
-	cf := config.ConfigFromTree(t, hostnames)
-	cfb, err := json.Marshal(cf)
-	err = ioutil.WriteFile(d.DeployDir + "/tree.json", cfb, 0666)
-	if err != nil {
-		log.Fatal(err)
+		dbg.Fatal("failed to write virtual nodes file", err)
 	}
 }
 
@@ -356,40 +364,35 @@ func (d *Deter) calculateGraph(conf_str string) {
 // ask on the command-line.
 // For the login-variable, it will try to set up a connection to d.Host and copy over the
 // public key for a more easy communication
-func (d *Deter) checkDeterlabVars() {
+func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	// Write
-	config := Deter{}
-	err := ReadConfig(&config, "deter.toml", d.DeterDir)
+	err := app.ReadTomlConfig(d, "deter.toml", d.DeterDir)
 
 	if err != nil {
 		dbg.Lvl1("Couldn't read config-file - asking for default values")
 	}
 
-	if config.Host == "" {
+	if d.Host == "" {
 		d.Host = readString("Please enter the hostname of deterlab", "users.deterlab.net")
-	} else {
-		d.Host = config.Host
 	}
 
-	if config.Login == "" {
+	if d.Login == "" {
 		d.Login = readString("Please enter the login-name on " + d.Host, "")
-	} else {
-		d.Login = config.Login
 	}
 
-	if config.Project == "" {
+	if d.Project == "" {
 		d.Project = readString("Please enter the project on deterlab", "SAFER")
-	} else {
-		d.Project = config.Project
 	}
 
-	if config.Experiment == "" {
+	if d.Experiment == "" {
 		d.Experiment = readString("Please enter the Experiment on " + d.Project, "Dissent-CS")
-	} else {
-		d.Experiment = config.Experiment
 	}
 
-	WriteConfig(*d, "deter.toml", d.DeterDir)
+	if d.Loggers == 0 {
+		d.Loggers = 3
+	}
+
+	app.WriteTomlConfig(*d, "deter.toml", d.DeterDir)
 }
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string

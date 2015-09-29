@@ -34,11 +34,11 @@ func Monitor() RunStats {
 		goto retry
 	}
 	nhosts_str := doc.Find("#numhosts").First().Text()
-	dbg.Lvl4("hosts:", nhosts_str)
+	dbg.Lvl3("hosts:", nhosts_str)
 	depth_str := doc.Find("#depth").First().Text()
-	dbg.Lvl4("depth:", depth_str)
+	dbg.Lvl3("depth:", depth_str)
 	bf_str := doc.Find("#bf").First().Text()
-	dbg.Lvl4("bf:", bf_str)
+	dbg.Lvl3("bf:", bf_str)
 	nh, err := strconv.Atoi(nhosts_str)
 	if err != nil {
 		log.Fatal("unable to convert hosts to be a number:", nhosts_str)
@@ -72,12 +72,13 @@ func Monitor() RunStats {
 			}
 			continue
 		}
+		dbg.LLvl5("Received msg", data)
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
 		}
 		if bytes.Contains(data, []byte("root_round")) {
-			dbg.Lvl4("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl3("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 
 			if clientDone || rootDone {
 				dbg.Lvl4("Continuing searching data")

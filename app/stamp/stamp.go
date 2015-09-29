@@ -21,16 +21,14 @@ import(
 var totalHosts int
 
 func main() {
-	ac := app.ReadConfig()
+	var conf app.ConfigColl
+	app.ReadConfig(&conf)
 
-	totalHosts = ac.Deter.Machines * ac.Conf.Hpn
-	switch ac.Flags.Mode{
+	switch app.Flags.Mode{
 	case "server":
-		RunServer(ac.Flags.Hostname, ac.Deter.App, ac.Conf.Rounds, ac.Conf.RootWait,
-			ac.Deter.Debug, ac.Deter.TestConnect,
-			ac.Conf.Failures, ac.Conf.RFail, ac.Conf.FFail, ac.Flags.Logger, ac.Conf.Suite)
+		RunServer(app.Flags, conf)
 	case "client":
-		RunClient(ac.Flags.Server, ac.Conf.Nmsgs, ac.Flags.Name, ac.Conf.Rate)
+		RunClient(app.Flags, conf)
 	}
 }
 
@@ -51,15 +49,19 @@ func GetSuite(suite string) abstract.Suite {
 }
 
 
-func RunServer(hostname, app string, rounds int, rootwait int, debug int, testConnect bool,
-failureRate, rFail, fFail int, logger, suite string) {
-	dbg.Lvl3(hostname, "Starting to run")
-	if debug > 1 {
+func RunServer(Flags *app.FlagConfig, conf *app.ConfigColl){
+	hostname := Flags.Hostname
+	//app :=
+    //string, rounds int, rootwait int, debug int, testConnect bool,
+	//failureRate, rFail, fFail int, logger, suite string
+
+	dbg.Lvl3(Flags.Hostname, "Starting to run")
+	if conf.Debug > 1 {
 		sign.DEBUG = true
 	}
 
 	// fmt.Println("EXEC TIMESTAMPER: " + hostname)
-	if hostname == "" {
+	if Flags.Hostname == "" {
 		log.Fatal("no hostname given")
 	}
 
@@ -67,9 +69,9 @@ failureRate, rFail, fFail int, logger, suite string) {
 	//dbg.Lvl3("loading configuration")
 	var hc *config.HostConfig
 	var err error
-	s := GetSuite(suite)
+	s := GetSuite(conf.Suite)
 	opts := config.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
-	if failureRate > 0 || fFail > 0 {
+	if conf.Failures > 0 || conf.FFail > 0 {
 		opts.Faulty = true
 	}
 
@@ -83,16 +85,16 @@ failureRate, rFail, fFail int, logger, suite string) {
 
 	for i := range hc.SNodes {
 		// set FailureRates
-		if failureRate > 0 {
-			hc.SNodes[i].FailureRate = failureRate
+		if conf.Failures > 0 {
+			hc.SNodes[i].FailureRate = conf.Failures
 		}
 		// set root failures
-		if rFail > 0 {
-			hc.SNodes[i].FailAsRootEvery = rFail
+		if conf.RFail > 0 {
+			hc.SNodes[i].FailAsRootEvery = conf.RFail
 		}
 		// set follower failures
 		// a follower fails on %ffail round with failureRate probability
-		hc.SNodes[i].FailAsFollowerEvery = fFail
+		hc.SNodes[i].FailAsFollowerEvery = conf.FFail
 	}
 
 	// Wait for everybody to be ready before going on
@@ -128,26 +130,26 @@ failureRate, rFail, fFail int, logger, suite string) {
 	for _, s := range stampers {
 		// only listen if this is the hostname specified
 		if s.Name() == hostname {
-			s.Logger = logger
+			s.Logger = Flags.Logger
 			s.Hostname = hostname
 			s.App = app
 			if s.IsRoot(0) {
-				dbg.Lvl1("Root timestamper at:", hostname, rounds, "Waiting: ", rootwait)
+				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting: ", conf.RootWait)
 				// wait for the other nodes to get set up
-				time.Sleep(time.Duration(rootwait) * time.Second)
+				time.Sleep(time.Duration(conf.RootWait) * time.Second)
 
 				dbg.Lvl1("Starting root-round")
-				s.Run("root", rounds)
+				s.Run("root", conf.Rounds)
 				// dbg.Lvl3("\n\nROOT DONE\n\n")
 
-			} else if !testConnect {
+			} else if !conf.TestConnect {
 				dbg.Lvl2("Running regular timestamper on:", hostname)
-				s.Run("regular", rounds)
+				s.Run("regular", conf.Rounds)
 				// dbg.Lvl1("\n\nREGULAR DONE\n\n")
 			} else {
 				// testing connection
 				dbg.Lvl1("Running connection-test on:", hostname)
-				s.Run("test_connect", rounds)
+				s.Run("test_connect", conf.Rounds)
 			}
 		}
 	}

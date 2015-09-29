@@ -1,6 +1,6 @@
 package main
-import (
-	"github.com/dedis/cothority/lib/deploy"
+import
+(
 	"time"
 	"github.com/dedis/cothority/lib/logutils"
 	log "github.com/Sirupsen/logrus"
@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/app"
 )
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
@@ -19,7 +20,7 @@ var ROUND_TIME time.Duration = 1 * time.Second
 
 var done = make(chan string, 1)
 
-func RunClient(conf *deploy.Config, hc *config.HostConfig) {
+func RunClient(conf *app.ConfigColl, hc *config.HostConfig) {
 	buck := make([]int64, 300)
 	roundsAfter := make([]int64, MAX_N_ROUNDS)
 	times := make([]int64, MAX_N_SECONDS * 1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
@@ -92,10 +93,6 @@ func RunClient(conf *deploy.Config, hc *config.HostConfig) {
 func RoundDone(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof) {
 	dbg.Lvl3(view, "finished round")
 	done <- "Done with view: " + strconv.Itoa(view)
-}
-
-func RunClientStandalone(conf *deploy.Config, hc *config.HostConfig){
-
 }
 
 func removeTrailingZeroes(a []int64) []int64 {

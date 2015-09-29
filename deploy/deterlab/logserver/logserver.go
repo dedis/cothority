@@ -25,10 +25,11 @@ import  (
 	"golang.org/x/net/websocket"
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/lib/app"
 )
 
-var deter deploy.Deter
-var conf deploy.Config
+var deter deploy.Deterlab
+var conf app.ConfigColl
 var addr, master string
 var homePage *template.Template
 
@@ -58,7 +59,8 @@ func init() {
 }
 
 func main() {
-	deploy.ReadConfigDeter(&deter, &conf)
+	deter.ReadConfig()
+	app.ReadTomlConfig(&conf, "app.toml")
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	// read in from flags the port I should be listening on

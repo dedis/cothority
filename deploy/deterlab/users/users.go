@@ -19,7 +19,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -30,15 +29,11 @@ import (
 
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/deploy"
 	"os"
 )
 
-var deter deploy.Deter
-var conf deploy.Config
-var rootname string
+var deterlab deploy.Deterlab
 var kill = false
 
 func init() {
@@ -46,34 +41,23 @@ func init() {
 }
 
 func main() {
-	deploy.ReadConfigDeter(&deter, &conf)
+	deterlab.ReadConfig()
 
-	dbg.Lvl1("running deter with nmsgs:", conf.Nmsgs, "rate:", conf.Rate, "rounds:",
-		conf.Rounds, "debug:", deter.Debug, "hpn:", conf.Hpn, "machines:", deter.Machines)
-
-	virt, err := cliutils.ReadLines("virt.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	phys, err := cliutils.ReadLines("phys.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
 	vpmap := make(map[string]string)
-	for i := range virt {
-		vpmap[virt[i]] = phys[i]
+	for i := range deterlab.Virt {
+		vpmap[deterlab.Virt[i]] = deterlab.Phys[i]
 	}
 	// kill old processes
 	var wg sync.WaitGroup
-	doneHosts := make([]bool, len(phys))
-	for i, h := range phys {
+	doneHosts := make([]bool, len(deterlab.Phys))
+	for i, h := range deterlab.Phys {
 		wg.Add(1)
 		go func(i int, h string) {
 			defer wg.Done()
 			dbg.Lvl4("Cleaning up host", h)
-			cliutils.SshRun("", h, "sudo killall " + deter.App + " forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall " + deterlab.App + " forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall "+ deter.App + " 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall "+ deterlab.App + " 2>/dev/null >/dev/null")
 			if dbg.DebugVisible > 3 {
 				dbg.Lvl4("Cleaning report:")
 				cliutils.SshRunStdout("", h, "ps aux")
@@ -95,7 +79,7 @@ func main() {
 	case <-time.After(time.Second * 10):
 		for i, m := range doneHosts {
 			if !m {
-				dbg.Lvl1("Missing host:", phys[i])
+				dbg.Lvl1("Missing host:", deterlab.Phys[i])
 			}
 		}
 		dbg.Fatal("Didn't receive all replies.")
@@ -106,46 +90,16 @@ func main() {
 		return
 	}
 
-	nloggers := deter.Loggers
-	masterLogger := phys[0]
+	nloggers := deterlab.Loggers
+	masterLogger := deterlab.Phys[0]
 	loggers := []string{masterLogger}
 	dbg.Lvl3("Going to create", nloggers, "loggers")
 	for n := 1; n < nloggers; n++ {
-		loggers = append(loggers, phys[n])
+		loggers = append(loggers, deterlab.Phys[n])
 	}
 
-	phys = phys[nloggers:]
-	virt = virt[nloggers:]
-
-	// Read in and parse the configuration file
-	file, err := ioutil.ReadFile("tree.json")
-	if err != nil {
-		log.Fatal("deter.go: error reading configuration file: %v\n", err)
-	}
-	dbg.Lvl4("cfg file:", string(file))
-	var cf config.ConfigFile
-	err = json.Unmarshal(file, &cf)
-	if err != nil {
-		log.Fatal("unable to unmarshal config.ConfigFile:", err)
-	}
-
-	hostnames := cf.Hosts
+	hostnames := deterlab.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
-
-	depth := graphs.Depth(cf.Tree)
-	var random_leaf string
-	cf.Tree.TraverseTree(func(t *graphs.Tree) {
-		if random_leaf != "" {
-			return
-		}
-		if len(t.Children) == 0 {
-			random_leaf = t.Name
-		}
-	})
-
-	rootname = hostnames[0]
-
-	dbg.Lvl4("depth of tree:", depth)
 
 	// mapping from physical node name to the timestamp servers that are running there
 	// essentially a reverse mapping of vpmap except ports are also used
@@ -156,6 +110,17 @@ func main() {
 		ss := physToServer[p]
 		ss = append(ss, virt)
 		physToServer[p] = ss
+	}
+
+	for phys, _ := range physToServer {
+		dbg.Lvl3("Setting the file-limit higher on", phys)
+
+		// Copy configuration file to make higher file-limits
+		err := cliutils.SshRunStdout("", phys, "sudo cp remote/cothority.conf /etc/security/limits.d")
+
+		if err != nil {
+			log.Fatal("Couldn't copy limit-file:", err)
+		}
 	}
 
 	// start up the logging server on the final host at port 10000
@@ -172,13 +137,6 @@ func main() {
 			master = ""
 		}
 
-		// Copy configuration file to make higher file-limits
-		err = cliutils.SshRunStdout("", logger, "sudo cp remote/cothority.conf /etc/security/limits.d")
-
-		if err != nil {
-			log.Fatal("Couldn't copy limit-file:", err)
-		}
-
 		dbg.Lvl3("Logger:", logger)
 		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +
 		" -master=" + master)
@@ -189,7 +147,7 @@ func main() {
 	// We set up a directory and every host writes a file once he's ready to listen
 	// When everybody is ready, the directory is deleted and the test starts
 	coll_stamp_dir := "coll_stamp_up"
-	if deter.App == "stamp" || deter.App == "sign" {
+	if deterlab.App == "stamp" || deterlab.App == "sign" {
 		os.RemoveAll(coll_stamp_dir)
 		os.MkdirAll(coll_stamp_dir, 0777)
 		time.Sleep(time.Second)
@@ -217,7 +175,7 @@ func main() {
 		}(phys)
 	}
 
-	if deter.App == "stamp" || deter.App == "sign" {
+	if deterlab.App == "stamp" || deterlab.App == "sign" {
 		// Every stampserver that started up (mostly waiting for configuration-reading)
 		// writes its name in coll_stamp_dir - once everybody is there, the directory
 		// is cleaned to flag it's OK to go on.
@@ -240,7 +198,7 @@ func main() {
 		}
 	}
 
-	switch deter.App{
+	switch deterlab.App{
 	case "stamp":
 		dbg.Lvl1("starting", len(physToServer), "time clients")
 		// start up one timeclient per physical machine
@@ -251,14 +209,14 @@ func main() {
 			}
 			servers := strings.Join(ss, ",")
 			go func(i int, p string) {
-				_, err := cliutils.SshRun("", p, "cd remote; sudo ./" + deter.App + " -mode=client " +
+				_, err := cliutils.SshRun("", p, "cd remote; sudo ./" + deterlab.App + " -mode=client " +
 				" -name=client@" + p +
 				" -server=" + servers +
 				" -logger=" + loggerports[i])
 				if err != nil {
-					dbg.Lvl4("Deter.go : error for", deter.App, err)
+					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
 				}
-				dbg.Lvl4("Deter.go : Finished with", deter.App, p)
+				dbg.Lvl4("Deter.go : Finished with", deterlab.App, p)
 			}(i, p)
 			i = (i + 1) % len(loggerports)
 		}

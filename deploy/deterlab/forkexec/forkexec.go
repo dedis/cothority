@@ -1,7 +1,6 @@
 package main
 
-import
-(
+import (
 	"flag"
 	"os/exec"
 	"strconv"
@@ -12,38 +11,26 @@ import
 	"os"
 	"github.com/dedis/cothority/lib/cliutils"
 	"net"
-	"github.com/dedis/cothority/lib/config"
-	"encoding/json"
-	"io/ioutil"
-	"github.com/dedis/cothority/lib/graphs"
 	"sync"
 	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/lib/app"
 )
 
-// Wrapper around exec.go to enable measuring of cpu time
+// Wrapper around app to enable measuring of cpu time
 
-var deter deploy.Deter
-var conf deploy.Config
-var logger string
-var physaddr string
+var deter deploy.Deterlab
 var testConnect bool
 
-// TODO: add debug flag for more debugging information (memprofilerate...)
-func init() {
-	flag.StringVar(&logger, "logger", "", "remote logger")
-	flag.StringVar(&physaddr, "physaddr", "", "the physical address of the noded [for deterlab]")
-	flag.BoolVar(&testConnect, "test_connect", false, "test connecting and disconnecting")
-}
-
 func main() {
-	deploy.ReadConfigDeter(&deter, &conf)
-
+	deter.ReadConfig()
+	// The flags are defined in lib/app
 	flag.Parse()
 
 	// connect with the logging server
-	if logger != "" {
+	if app.Flags.Logger != "" {
+		dbg.Lvl4("Setting up logger at", app.Flags.Logger)
 		// blocks until we can connect to the logger
-		lh, err := logutils.NewLoggerHook(logger, physaddr, deter.App)
+		lh, err := logutils.NewLoggerHook(app.Flags.Logger, app.Flags.PhysAddr, deter.App)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -56,27 +43,27 @@ func main() {
 
 	i := 0
 	var wg sync.WaitGroup
-	virts := physToServer[physaddr]
+	virts := physToServer[app.Flags.PhysAddr]
 	if len(virts) > 0 {
 		dbg.Lvl3("starting", len(virts), "servers of", deter.App, "on", virts)
 		i = (i + 1) % len(loggerports)
 		for _, name := range virts {
-			dbg.Lvl4("Starting", name, "on", physaddr)
+			dbg.Lvl3("Starting", name, "on", app.Flags.PhysAddr)
 			wg.Add(1)
 			go func(nameport string) {
-				dbg.Lvl3("Running on", physaddr, "starting", nameport)
+				dbg.Lvl3("Running on", app.Flags.PhysAddr, "starting", nameport)
 				defer wg.Done()
 
 				args := []string{
 					"-hostname=" + nameport,
-					"-logger=" + logger,
-					"-physaddr=" + physaddr,
+					"-logger=" + app.Flags.Logger,
+					"-physaddr=" + app.Flags.PhysAddr,
 					"-amroot=" + strconv.FormatBool(nameport == rootname),
 					"-test_connect=" + strconv.FormatBool(testConnect),
 					"-mode=server",
 				}
 
-				dbg.Lvl3("Starting on", physaddr, "with args", args)
+				dbg.Lvl3("Starting on", app.Flags.PhysAddr, "with args", args)
 				cmdApp := exec.Command("./" + deter.App, args...)
 				//cmd.Stdout = log.StandardLogger().Writer()
 				//cmd.Stderr = log.StandardLogger().Writer()
@@ -98,20 +85,19 @@ func main() {
 					"usertime": ut,
 				}).Info("")
 
-				dbg.Lvl2("Finished with Timestamper", physaddr)
+				dbg.Lvl2("Finished with Timestamper", app.Flags.PhysAddr)
 			}(name)
 		}
-		dbg.Lvl3(physaddr, "Finished starting timestampers")
+		dbg.Lvl3(app.Flags.PhysAddr, "Finished starting timestampers")
 		wg.Wait()
 	} else {
-		dbg.Lvl2("No timestampers for", physaddr)
+		dbg.Lvl2("No timestampers for", app.Flags.PhysAddr)
 	}
-	dbg.Lvl2(physaddr, "timestampers exited")
+	dbg.Lvl2(app.Flags.PhysAddr, "timestampers exited")
 }
 
 var physToServer map[string][]string
 var loggerports []string
-var random_leaf string
 var rootname string
 
 func setup_deter() {
@@ -137,34 +123,10 @@ func setup_deter() {
 	phys = phys[nloggers:]
 	virt = virt[nloggers:]
 
-	// Read in and parse the configuration file
-	file, err := ioutil.ReadFile("tree.json")
-	if err != nil {
-		log.Fatal("deter.go: error reading configuration file: %v\n", err)
-	}
-	dbg.Lvl4("cfg file:", string(file))
-	var cf config.ConfigFile
-	err = json.Unmarshal(file, &cf)
-	if err != nil {
-		log.Fatal("unable to unmarshal config.ConfigFile:", err)
-	}
-
-	hostnames := cf.Hosts
+	hostnames := deter.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
 
-	depth := graphs.Depth(cf.Tree)
-	cf.Tree.TraverseTree(func(t *graphs.Tree) {
-		if random_leaf != "" {
-			return
-		}
-		if len(t.Children) == 0 {
-			random_leaf = t.Name
-		}
-	})
-
 	rootname = hostnames[0]
-
-	dbg.Lvl4("depth of tree:", depth)
 
 	// mapping from physical node name to the timestamp servers that are running there
 	// essentially a reverse mapping of vpmap except ports are also used

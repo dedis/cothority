@@ -8,7 +8,7 @@ import (
 	"github.com/dedis/cothority/lib/app"
 )
 
-func RunServer(app *app.AppConfig, hc *config.HostConfig) {
+func RunServer(conf *app.ConfigColl, hc *config.HostConfig) {
 	// run this specific host
 	err := hc.Run(false, sign.MerkleTree, app.Flags.Hostname)
 	if err != nil {
@@ -20,7 +20,7 @@ func RunServer(app *app.AppConfig, hc *config.HostConfig) {
 	// Let's start the client if we're the root-node
 	if hc.SNodes[0].IsRoot(0) {
 		dbg.Lvl1(app.Flags.Hostname, "started client")
-		RunClient(app.Conf, hc)
+		RunClient(conf, hc)
 	} else{
 		// Endless-loop till we stop by tearing down the connections
 		for {

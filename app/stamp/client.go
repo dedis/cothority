@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/app"
 )
 
 var muStats sync.Mutex
@@ -23,10 +24,11 @@ var muStats sync.Mutex
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
 
-func RunClient(server string, nmsgs int, name string, rate int) {
+func RunClient(flags *app.FlagConfig, conf *app.ConfigColl){
+//server string, nmsgs int, name string, rate int) {
 	dbg.Lvl4("Starting to run stampclient")
-	c := NewClient(name)
-	servers := strings.Split(server, ",")
+	c := NewClient(flags.Name)
+	servers := strings.Split(flags.Server, ",")
 
 	// connect to all the servers listed
 	for _, s := range servers {
@@ -39,14 +41,14 @@ func RunClient(server string, nmsgs int, name string, rate int) {
 	}
 
 	// Check if somebody asks for the old way
-	if rate < 0 {
+	if conf.Rate < 0 {
 		log.Fatal("Rounds based limiting deprecated")
 	}
 
 	// Stream time coll_stamp requests
 	// if rate specified send out one message every rate milliseconds
-	dbg.Lvl1(name, "starting to stream at rate", rate)
-	streamMessgs(c, servers, rate)
+	dbg.Lvl1(flags.Name, "starting to stream at rate", conf.Rate)
+	streamMessgs(c, servers, conf.Rate)
 	dbg.Lvl4("Finished streaming")
 	return
 }

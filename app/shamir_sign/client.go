@@ -1,8 +1,8 @@
 package main
 import (
-	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/lib/app"
 )
 
-func RunClient(conf *deploy.Config) {
+func RunClient(conf *app.ConfigColl) {
 
 }

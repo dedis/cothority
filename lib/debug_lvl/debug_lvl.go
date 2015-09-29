@@ -72,6 +72,10 @@ func Lvl(lvl int, args ...interface{}) {
 		"caller": caller}).Println(args...)
 }
 
+func Print(args ...interface{}) {
+	Lvl(-1, args...)
+}
+
 func Lvl1(args ...interface{}) {
 	Lvl(1, args...)
 }
@@ -95,6 +99,11 @@ func Lvl5(args ...interface{}) {
 func Fatal(args ...interface{}){
 	Lvl(0, args...)
 	os.Exit(1)
+}
+
+func Panic(args ...interface{}){
+	Lvl(0, args...)
+	panic(args)
 }
 
 // To easy print a debug-message anyway without discarding the level
