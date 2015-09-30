@@ -10,4 +10,5 @@ app/sign/sign
 app/stamp/stamp
 app/shamir/shamir
 deploy/deterlab/remote/*
+deploy/deploy
 test/
