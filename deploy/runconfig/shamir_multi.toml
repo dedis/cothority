@@ -1,5 +1,5 @@
 Machines = 8
-App = "shamir_sign"
+App = "shamir"
 
 hpn, bf, rounds
 1, 2, 10

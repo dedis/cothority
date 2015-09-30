@@ -181,7 +181,11 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	d.MasterLogger = deter.MasterLogger
 	app.WriteTomlConfig(deter, deterConfig)
 
-	// Prepare special configuration preparation for each application
+	// Prepare special configuration preparation for each application - the
+	// reading in twice of the configuration file, once for the deterConfig,
+	// then for the appConfig, sets the deterConfig as defaults and overwrites
+	// everything else with the actual appConfig (which comes from the
+	// runconfig-file)
 	switch d.App{
 	case "sign", "stamp":
 		conf := app.ConfigColl{}
@@ -201,6 +205,13 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 	case "shamir_sign":
+		conf := app.ConfigShamir{}
+		app.ReadTomlConfig(&conf, deterConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Hpn)
+		deter.Hostnames = conf.Hosts
+		// re-write the new configuration-file
+		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
@@ -233,7 +244,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
-	dbg.LLvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
+	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
 	cmd := exec.Command(
 		"ssh",
 		"-t",

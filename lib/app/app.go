@@ -68,7 +68,7 @@ func ReadConfig(conf interface{}, dir ...string) {
 
 	flag.Parse()
 
-	dbg.LLvl3("Running", Flags.Hostname, "with logger at", Flags.Logger)
+	dbg.Lvl3("Running", Flags.Hostname, "with logger at", Flags.Logger)
 	ConnectLogservers()
 	ServeMemoryStats()
 }
@@ -80,7 +80,7 @@ func ConnectLogservers() {
 	// connect with the logging server
 	if Flags.Logger != "" && Flags.AmRoot{
 		// blocks until we can connect to the flags.Logger
-		dbg.LLvl3(Flags.Hostname, "Connecting to Logger", Flags.Logger)
+		dbg.Lvl3(Flags.Hostname, "Connecting to Logger", Flags.Logger)
 		lh, err := logutils.NewLoggerHook(Flags.Logger, Flags.Hostname, "unknown")
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -92,7 +92,7 @@ func ConnectLogservers() {
 		//fmt.Println("exiting flags.Logger block")
 		dbg.Lvl4(Flags.Hostname, "Done setting up hook")
 	} else {
-		dbg.LLvl4("Not connecting to logger - logger:", Flags.Logger, "AmRoot:", Flags.AmRoot)
+		dbg.Lvl4("Not connecting to logger - logger:", Flags.Logger, "AmRoot:", Flags.AmRoot)
 	}
 }
 

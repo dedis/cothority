@@ -434,7 +434,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 // complete hostnames to be used by the hosts.
 // LoadConfig loads a configuration file in the format specified above. It
 // populates a HostConfig with HostNode Hosts and goPeer Peers.
-func LoadConfig(conf app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, error) {
+func LoadConfig(conf *app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	opts := ConfigOptions{}
 	if len(optsSlice) > 0 {
 		opts = optsSlice[0]

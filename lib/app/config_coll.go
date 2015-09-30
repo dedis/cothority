@@ -4,7 +4,6 @@ import (
 )
 
 type ConfigColl struct {
-	// Machines is the number of machines
 	// hpn is the replication factor of hosts per node: how many hosts do we want per node
 	Hpn         int
 	// bf is the branching factor of the tree that we build

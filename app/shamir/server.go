@@ -10,13 +10,12 @@ import (
 	"github.com/dedis/cothority/lib/app"
 )
 
-func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
-	app := ac.Flags
-	depl := ac.Conf
-	s := config.GetSuite(depl.Suite)
+func RunServer(conf *app.ConfigShamir) {
+	app := app.Flags
+	s := config.GetSuite(conf.Suite)
 	poly.SUITE = s
 	poly.SECURITY = poly.MODERATE
-	n := len(hosts.Hosts)
+	n := len(conf.Hosts)
 
 	info := poly.PolyInfo{
 		N: n,
@@ -24,7 +23,7 @@ func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
 		T: n,
 	}
 	indexPeer := -1
-	for i, h := range hosts.Hosts {
+	for i, h := range conf.Hosts {
 		if h == app.Hostname {
 			indexPeer = i
 			break
@@ -44,7 +43,7 @@ func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
 	go p.Listen()
 
 	// then connect it to its successor in the list
-	for _, h := range hosts.Hosts[indexPeer + 1:] {
+	for _, h := range conf.Hosts[indexPeer + 1:] {
 		dbg.Lvl2("Peer ", app.Hostname, " will connect to ", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
@@ -84,7 +83,7 @@ func RunServer(hosts *config.HostsConfig, ac *app.AppConfig) {
 		}).Info("")
 	}
 
-	for round := 0; round < depl.Rounds; round++ {
+	for round := 0; round < conf.Rounds; round++ {
 		if p.IsRoot() {
 			dbg.Lvl2("Starting round", round)
 		}

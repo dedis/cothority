@@ -31,6 +31,8 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/deploy"
 	"os"
+	"os/exec"
+	"fmt"
 )
 
 var deterlab deploy.Deterlab
@@ -57,7 +59,7 @@ func main() {
 			dbg.Lvl4("Cleaning up host", h)
 			cliutils.SshRun("", h, "sudo killall " + deterlab.App + " forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall "+ deterlab.App + " 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall " + deterlab.App + " 2>/dev/null >/dev/null")
 			if dbg.DebugVisible > 3 {
 				dbg.Lvl4("Cleaning report:")
 				cliutils.SshRunStdout("", h, "ps aux")
@@ -67,7 +69,7 @@ func main() {
 		}(i, h)
 	}
 
-	cleanupChannel := make( chan string )
+	cleanupChannel := make(chan string)
 	go func() {
 		wg.Wait()
 		dbg.Lvl3("Done waiting")
@@ -80,9 +82,17 @@ func main() {
 		for i, m := range doneHosts {
 			if !m {
 				dbg.Lvl1("Missing host:", deterlab.Phys[i])
+				// expinfo gets a list of all mappings from physical to logical
+				// node names. Then we grep the missing host and keep only
+				// the logical node
+				grep := "grep \"" + strings.Split(deterlab.Phys[i], ".")[0] + " \" | sed -e 's/.* //'"
+				cmd := fmt.Sprintf("expinfo -e %s,%s -m | %s",
+					deterlab.Project, deterlab.Experiment, grep)
+				info, _ := exec.Command("bash", "-c " + cmd).Output()
+				dbg.Lvl1("You might want to run\nnode_reboot", string(info), cmd)
 			}
 		}
-		dbg.Fatal("Didn't receive all replies.")
+		dbg.Fatal("Didn't receive all replies while cleaning up - aborting.")
 	}
 
 	if kill {
@@ -112,16 +122,22 @@ func main() {
 		physToServer[p] = ss
 	}
 
-	for phys, _ := range physToServer {
-		dbg.Lvl3("Setting the file-limit higher on", phys)
+	for _, phys := range deterlab.Phys {
+		wg.Add(1)
+		go func(server string) {
+			defer wg.Done()
+			dbg.Lvl3("Setting the file-limit higher on", server)
 
-		// Copy configuration file to make higher file-limits
-		err := cliutils.SshRunStdout("", phys, "sudo cp remote/cothority.conf /etc/security/limits.d")
+			// Copy configuration file to make higher file-limits
+			err := cliutils.SshRunStdout("", server, "sudo cp remote/cothority.conf /etc/security/limits.d")
 
-		if err != nil {
-			log.Fatal("Couldn't copy limit-file:", err)
-		}
+			if err != nil {
+				log.Fatal("Couldn't copy limit-file:", err)
+			}
+		}(phys)
 	}
+	wg.Wait()
+	dbg.Lvl2("Done copying cothority.conf for higher file-limits")
 
 	// start up the logging server on the final host at port 10000
 	dbg.Lvl1("starting up logservers: ", loggers)

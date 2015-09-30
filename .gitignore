@@ -6,6 +6,8 @@ deploy/deterlab/deploy/*
 deploy/deterlab/remote/*
 deploy/deterlab/deter.toml
 test_data
-app/app
+app/sign/sign
+app/stamp/stamp
+app/shamir/shamir
 deploy/deterlab/remote/*
 test/

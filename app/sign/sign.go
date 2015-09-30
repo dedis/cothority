@@ -18,8 +18,8 @@ import (
 
 // Dispatch-function for running either client or server (mode-parameter)
 func main() {
-	var conf app.ConfigColl
-	app.ReadConfig(&conf)
+	conf := &app.ConfigColl{}
+	app.ReadConfig(conf)
 
 	// we must know who we are
 	if app.Flags.Hostname == "" {
@@ -97,7 +97,7 @@ func main() {
 	case "client":
 		log.Panic("No client mode")
 	case "server":
-		RunServer(&conf, hc)
+		RunServer(conf, hc)
 	}
 }
 

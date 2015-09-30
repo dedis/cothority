@@ -72,7 +72,7 @@ func Monitor() RunStats {
 			}
 			continue
 		}
-		dbg.LLvl5("Received msg", data)
+		dbg.Lvl5("Received msg", data)
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
@@ -150,7 +150,9 @@ func Monitor() RunStats {
 		} else if bytes.Contains(data, []byte("schnorr_end")){
 			break
 		} else if bytes.Contains(data, []byte("forkexec")) {
+			dbg.Lvl3("Received forkexec")
 			if rootDone {
+				dbg.Lvl2("RootDone is true - continuing")
 				continue
 			}
 			var ss SysStats
@@ -162,12 +164,13 @@ func Monitor() RunStats {
 			rs.UserTime = ss.UserTime
 			dbg.Lvl4("forkexec:", ss)
 			rootDone = true
-			dbg.Lvl2("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl2("Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 			if clientDone {
 				break
 			}
 		} else if bytes.Contains(data, []byte("client_msg_stats")) {
 			if clientDone {
+				dbg.Lvl2("Continuing because client is already done")
 				continue
 			}
 			var cms ClientMsgStats
@@ -189,7 +192,7 @@ func Monitor() RunStats {
 			observed = 1 / observed
 			rs.Rate = observed
 			rs.Times = cms.Times
-			dbg.Lvl2("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
+			dbg.Lvl2("Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
 			clientDone = true
 			if rootDone {
 				break

@@ -3,6 +3,6 @@ import (
 	"github.com/dedis/cothority/lib/app"
 )
 
-func RunClient(conf *app.ConfigColl) {
+func RunClient(conf *app.ConfigShamir) {
 
 }

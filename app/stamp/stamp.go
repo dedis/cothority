@@ -18,17 +18,15 @@ import(
 	"github.com/dedis/cothority/lib/app"
 )
 
-var totalHosts int
-
 func main() {
-	var conf app.ConfigColl
-	app.ReadConfig(&conf)
+	conf := &app.ConfigColl{}
+	app.ReadConfig(conf)
 
 	switch app.Flags.Mode{
 	case "server":
-		RunServer(app.Flags, conf)
+		RunServer(&app.Flags, conf)
 	case "client":
-		RunClient(app.Flags, conf)
+		RunClient(&app.Flags, conf)
 	}
 }
 
@@ -51,9 +49,6 @@ func GetSuite(suite string) abstract.Suite {
 
 func RunServer(Flags *app.FlagConfig, conf *app.ConfigColl){
 	hostname := Flags.Hostname
-	//app :=
-    //string, rounds int, rootwait int, debug int, testConnect bool,
-	//failureRate, rFail, fFail int, logger, suite string
 
 	dbg.Lvl3(Flags.Hostname, "Starting to run")
 	if conf.Debug > 1 {
@@ -75,13 +70,11 @@ func RunServer(Flags *app.FlagConfig, conf *app.ConfigColl){
 		opts.Faulty = true
 	}
 
-	configTime := time.Now()
-	hc, err = config.LoadConfig("tree.json", opts)
+	hc, err = config.LoadConfig(conf, opts)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
 	}
-	dbg.Lvl3(hostname, "finished loading config after", time.Since(configTime))
 
 	for i := range hc.SNodes {
 		// set FailureRates
@@ -132,7 +125,7 @@ func RunServer(Flags *app.FlagConfig, conf *app.ConfigColl){
 		if s.Name() == hostname {
 			s.Logger = Flags.Logger
 			s.Hostname = hostname
-			s.App = app
+			s.App = "stamp"
 			if s.IsRoot(0) {
 				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting: ", conf.RootWait)
 				// wait for the other nodes to get set up

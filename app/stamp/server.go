@@ -350,7 +350,7 @@ func (s *Server) Run(role string, nRounds int) {
 				s.AggregateCommits(0)
 			}
 		default:
-			dbg.Lvl4("UNABLE TO RUN AS ANYTHING")
+			dbg.Fatal("Unable to run as anything")
 			return
 		}
 
