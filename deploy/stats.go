@@ -432,7 +432,7 @@ func NewShamirStats(t T) *ShamirStats {
 func NewCollStats(t T) *CollStats {
 	depth := math.Log(float64(t.nmachs*t.hpn)*float64(t.bf-1) + 1)
 	depth /= math.Log(float64(t.bf))
-	depth = math.Ceil(depth)
+	depth = math.Floor(depth)
 	depth -= 1
 	return &CollStats{
 		BF:     t.bf,
