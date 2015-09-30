@@ -95,7 +95,7 @@ var SignTestMulti2 = []T{
 }
 
 var HostsTestSingle = []T{
-	{0, 2, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{3, 1, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
 }
 
 var HostsTestShort = []T{
@@ -122,7 +122,8 @@ func Start(destination string, nbld bool, build string, machines int) {
 
 	dbg.Lvl1("Starting tests")
 	DefaultRounds = 5
-	RunTests("schnorr_host_single", SchnorrHostSingle)
+	//RunTests("shamir_single", SchnorrHostSingle)
+	RunTests("stamp_single", HostsTestSingle)
 	//RunTests("sign_test_single", SignTestSingle)
 	//RunTests("sign_test_multi2", SignTestMulti2)
 	//RunTests("sign_test_multi", SignTestMulti)
@@ -200,7 +201,8 @@ func RunTests(name string, ts []T) {
 		rs[i].WriteTo(f)
 		// Write the header if you still havent done it
 		if !headerWritten {
-			f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+			var err error
+			f, err = os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 			defer f.Close()
 			if err != nil {
 				log.Fatal("error opening test file:", err)
@@ -275,7 +277,7 @@ func RunTest(t T) (Stats, error) {
 	go func() {
 		Monitor(stats)
 		deployP.Stop()
-		dbg.Lvl2("Test complete:", stats)
+		dbg.Lvl2(fmt.Sprintf("Test complete: %+v", stats))
 		done <- struct{}{}
 	}()
 

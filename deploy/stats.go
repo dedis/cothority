@@ -38,7 +38,8 @@ type StreamStats struct {
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
 func (t *StreamStats) Update(newTime float64) {
 	t.n += 1
-	if t.min > newTime {
+	// nothings takes 0 ms to complete, so we know it's the first time
+	if t.min > newTime || t.min == 0.0 {
 		t.min = newTime
 	}
 	if t.max < newTime {
@@ -73,6 +74,7 @@ func StreamStatsAverage(st ...StreamStats) StreamStats {
 	t.max /= l
 	t.newM /= l
 	t.dev /= l
+	t.n = len(st)
 	return t
 }
 
@@ -89,24 +91,21 @@ func (t *StreamStats) NumValue() int {
 }
 
 func (t *StreamStats) Avg() float64 {
-	if t.n > 0 {
-		return t.newM
-	}
-	return 0.0
+	return t.newM
 }
 
 func (t *StreamStats) Dev() float64 {
-	if t.n > 1 {
-		return t.dev
-	}
-	return 0.0
+	return t.dev
 }
 
+func (t *StreamStats) Header(prefix string) string {
+	return fmt.Sprintf("%smin, %smax, %savg, %sdev", prefix, prefix, prefix, prefix)
+}
 func (t *StreamStats) String() string {
 	return fmt.Sprintf("%f, %f, %f, %f", t.Min()/1e9, t.Max()/1e9, t.Avg()/1e9, t.Dev()/1e9)
 }
 
-////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
 
 // generic typing of a Entry containing some timing data
 type Entry interface{}
@@ -193,15 +192,17 @@ func (s *ShamirStats) WriteTo(w io.Writer) {
 // Return the CSV header of theses stats.
 // Could be implemented using reflection for automatic detection later .. ?
 func (s *ShamirStats) ServerCSVHeader() error {
-	_, err := fmt.Fprintf(s.Writer, "Hosts, round_min, round_max, round_avg, setup_min, setup_max, setup_avg\n")
+	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, user, system\n", s.round.Header("round_"), s.setup.Header("setup_"))
 	return err
 }
 
 func (s *ShamirStats) ServerCSV() error {
-	_, err := fmt.Fprintf(s.Writer, "%d, %s,%s\n",
+	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %f, %f\n",
 		s.NHosts,
 		s.round.String(),
-		s.setup.String())
+		s.setup.String(),
+		s.UserTime/1e9,
+		s.SysTime/1e9)
 	return err
 }
 
@@ -238,7 +239,7 @@ func (s *ShamirStats) AddEntry(e Entry) error {
 
 // basic check to see if we got somme real data
 func (s *ShamirStats) Valid() bool {
-	return s.round.Avg() > 0.0 //&& s.setup.Avg() > 0.0
+	return s.round.Avg() > 0.0 && s.setup.Avg() > 0.0
 }
 
 // Average all these stats
@@ -248,22 +249,26 @@ func shamirStatsAverage(stats ...Stats) (Stats, error) {
 	if len(stats) < 1 {
 		return s, nil
 	}
-	stset := make([]StreamStats, 0, len(stats))
-	stround := make([]StreamStats, 0, len(stats))
+	stset := make([]StreamStats, len(stats))
+	stround := make([]StreamStats, len(stats))
 	for i, _ := range stats {
 		switch stats[i].(type) {
 		case *ShamirStats:
 			ss := stats[i].(*ShamirStats)
-			stset = append(stset, ss.setup)
-			stround = append(stset, ss.round)
+			stset[i] = ss.setup
+			stround[i] = ss.round
 			s.NHosts = ss.NHosts
 			s.Writer = ss.Writer
+			s.SysTime += ss.SysTime
+			s.UserTime += ss.UserTime
 		default:
 			return s, errors.New("Average() received a stats that is not ShamirStat")
 		}
 	}
 	s.setup = StreamStatsAverage(stset...)
 	s.round = StreamStatsAverage(stround...)
+	s.SysTime /= float64(len(stats))
+	s.UserTime /= float64(len(stats))
 	return s, nil
 }
 
@@ -297,11 +302,11 @@ func (c *CollStats) WriteTo(w io.Writer) {
 
 // Write the CSV Header for stats about collective signing
 func (s *CollStats) ServerCSVHeader() error {
-	_, err := fmt.Fprintf(s.Writer, "hosts, depth, bf, min, max, avg, stddev, rate, systime, usertime\n")
+	_, err := fmt.Fprintf(s.Writer, "hosts, depth, bf, %s, rate, systime, usertime\n", s.round.Header(""))
 	return err
 }
 func (s *CollStats) ServerCSV() error {
-	_, err := fmt.Fprintf(s.Writer, "%d, %d, %d, %s, %f, %f, %f, %f, %f, %f, %f\n",
+	_, err := fmt.Fprintf(s.Writer, "%d, %d, %d, %s, %f, %f, %f\n",
 		s.NHosts,
 		s.Depth,
 		s.BF,
@@ -425,13 +430,14 @@ func NewShamirStats(t T) *ShamirStats {
 }
 
 func NewCollStats(t T) *CollStats {
-	depth := math.Log(float64(t.nmachs*t.hpn)) * float64(t.bf-1)
+	depth := math.Log(float64(t.nmachs*t.hpn)*float64(t.bf-1) + 1)
 	depth /= math.Log(float64(t.bf))
+	depth = math.Ceil(depth)
 	depth -= 1
 	return &CollStats{
 		BF:     t.bf,
 		NHosts: t.nmachs * t.hpn,
-		Depth:  int(math.Floor(depth)),
+		Depth:  int(depth),
 	}
 }
 

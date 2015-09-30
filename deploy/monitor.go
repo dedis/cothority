@@ -66,19 +66,16 @@ retry_dial:
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
-			dbg.Lvl2("Monitor() : received schnorr_round:", entry)
 			stats.AddEntry(entry)
-			//} else if bytes.Contains(data, []byte("schnorr_setup")) {
-			//	var entry ShamirEntry
-			//	err := json.Unmarshal(data, &entry)
-			//	if err != nil {
-			//		log.Fatal("json unmarshalled improperly:", err)
-			//	}
-			//	if entry.Type != "schnorr_setup" {
-			//		dbg.Lvl1("Wrong entrx message type - ignoring")
-			//	}
-			//	dbg.Lvl2("schnorr_setup entry:", entry)
-			//	stats.AddEntry(entry)
+			dbg.Lvl2("Monitor() : received shamir_round:", entry)
+		} else if bytes.Contains(data, []byte(ShamirSetupType)) {
+			var entry ShamirEntry
+			err := json.Unmarshal(data, &entry)
+			if err != nil {
+				log.Fatal("json unmarshalled improperly:", err)
+			}
+			dbg.Lvl2("shamir_setup entry:", entry)
+			stats.AddEntry(entry)
 		} else if bytes.Contains(data, []byte("schnorr_end")) {
 			break
 		} else if bytes.Contains(data, []byte("forkexec")) {
