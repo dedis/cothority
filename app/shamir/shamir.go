@@ -12,12 +12,12 @@ func main() {
 	app.ReadConfig(conf)
 
 	// we must know who we are
-	if app.Flags.Hostname == "" {
+	if app.RunFlags.Hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}
 
-	dbg.Lvl2(app.Flags.Hostname, "Starting to run as ", app.Flags.Mode)
-	switch app.Flags.Mode {
+	dbg.Lvl2(app.RunFlags.Hostname, "Starting to run as ", app.RunFlags.Mode)
+	switch app.RunFlags.Mode {
 	case "client":
 		RunClient(conf)
 	case "server":

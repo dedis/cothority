@@ -22,11 +22,11 @@ func main() {
 	conf := &app.ConfigColl{}
 	app.ReadConfig(conf)
 
-	switch app.Flags.Mode{
+	switch app.RunFlags.Mode{
 	case "server":
-		RunServer(&app.Flags, conf)
+		RunServer(&app.RunFlags, conf)
 	case "client":
-		RunClient(&app.Flags, conf)
+		RunClient(&app.RunFlags, conf)
 	}
 }
 
@@ -47,7 +47,7 @@ func GetSuite(suite string) abstract.Suite {
 }
 
 
-func RunServer(Flags *app.FlagConfig, conf *app.ConfigColl){
+func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 	hostname := Flags.Hostname
 
 	dbg.Lvl3(Flags.Hostname, "Starting to run")

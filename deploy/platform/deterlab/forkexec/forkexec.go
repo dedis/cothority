@@ -27,10 +27,10 @@ func main() {
 	flag.Parse()
 
 	// connect with the logging server
-	if app.Flags.Logger != "" {
-		dbg.Lvl4("Setting up logger at", app.Flags.Logger)
+	if app.RunFlags.Logger != "" {
+		dbg.Lvl4("Setting up logger at", app.RunFlags.Logger)
 		// blocks until we can connect to the logger
-		lh, err := logutils.NewLoggerHook(app.Flags.Logger, app.Flags.PhysAddr, deter.App)
+		lh, err := logutils.NewLoggerHook(app.RunFlags.Logger, app.RunFlags.PhysAddr, deter.App)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -43,27 +43,27 @@ func main() {
 
 	i := 0
 	var wg sync.WaitGroup
-	virts := physToServer[app.Flags.PhysAddr]
+	virts := physToServer[app.RunFlags.PhysAddr]
 	if len(virts) > 0 {
 		dbg.Lvl3("starting", len(virts), "servers of", deter.App, "on", virts)
 		i = (i + 1) % len(loggerports)
 		for _, name := range virts {
-			dbg.Lvl3("Starting", name, "on", app.Flags.PhysAddr)
+			dbg.Lvl3("Starting", name, "on", app.RunFlags.PhysAddr)
 			wg.Add(1)
 			go func(nameport string) {
-				dbg.Lvl3("Running on", app.Flags.PhysAddr, "starting", nameport)
+				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport)
 				defer wg.Done()
 
 				args := []string{
 					"-hostname=" + nameport,
-					"-logger=" + app.Flags.Logger,
-					"-physaddr=" + app.Flags.PhysAddr,
+					"-logger=" + app.RunFlags.Logger,
+					"-physaddr=" + app.RunFlags.PhysAddr,
 					"-amroot=" + strconv.FormatBool(nameport == rootname),
 					"-test_connect=" + strconv.FormatBool(testConnect),
 					"-mode=server",
 				}
 
-				dbg.Lvl3("Starting on", app.Flags.PhysAddr, "with args", args)
+				dbg.Lvl3("Starting on", app.RunFlags.PhysAddr, "with args", args)
 				cmdApp := exec.Command("./" + deter.App, args...)
 				//cmd.Stdout = log.StandardLogger().Writer()
 				//cmd.Stderr = log.StandardLogger().Writer()
@@ -85,15 +85,15 @@ func main() {
 					"usertime": ut,
 				}).Info("")
 
-				dbg.Lvl2("Finished with Timestamper", app.Flags.PhysAddr)
+				dbg.Lvl2("Finished with Timestamper", app.RunFlags.PhysAddr)
 			}(name)
 		}
-		dbg.Lvl3(app.Flags.PhysAddr, "Finished starting timestampers")
+		dbg.Lvl3(app.RunFlags.PhysAddr, "Finished starting timestampers")
 		wg.Wait()
 	} else {
-		dbg.Lvl2("No timestampers for", app.Flags.PhysAddr)
+		dbg.Lvl2("No timestampers for", app.RunFlags.PhysAddr)
 	}
-	dbg.Lvl2(app.Flags.PhysAddr, "timestampers exited")
+	dbg.Lvl2(app.RunFlags.PhysAddr, "timestampers exited")
 }
 
 var physToServer map[string][]string

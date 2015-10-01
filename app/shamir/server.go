@@ -11,7 +11,7 @@ import (
 )
 
 func RunServer(conf *app.ConfigShamir) {
-	app := app.Flags
+	app := app.RunFlags
 	s := config.GetSuite(conf.Suite)
 	poly.SUITE = s
 	poly.SECURITY = poly.MODERATE

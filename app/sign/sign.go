@@ -22,16 +22,16 @@ func main() {
 	app.ReadConfig(conf)
 
 	// we must know who we are
-	if app.Flags.Hostname == "" {
+	if app.RunFlags.Hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}
 	
 	// Do some common setup
-	if app.Flags.Mode == "client"{
-		app.Flags.Hostname = app.Flags.Name
+	if app.RunFlags.Mode == "client"{
+		app.RunFlags.Hostname = app.RunFlags.Name
 	}
-	hostname := app.Flags.Hostname
-	dbg.Lvl3(app.Flags.Hostname, "Starting to run")
+	hostname := app.RunFlags.Hostname
+	dbg.Lvl3(app.RunFlags.Hostname, "Starting to run")
 	if conf.Debug > 1 {
 		sign.DEBUG = true
 	}
@@ -90,10 +90,10 @@ func main() {
 	}
 
 	defer func() {
-		dbg.Lvl1("Collective Signing", hostname, "has terminated in mode", app.Flags.Mode)
+		dbg.Lvl1("Collective Signing", hostname, "has terminated in mode", app.RunFlags.Mode)
 	}()
 
-	switch app.Flags.Mode {
+	switch app.RunFlags.Mode {
 	case "client":
 		log.Panic("No client mode")
 	case "server":
