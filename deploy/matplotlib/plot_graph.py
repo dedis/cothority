@@ -77,7 +77,7 @@ readCSV(sys.argv[1])
 l1 = plt.fill_between(x, tmin, tmax, facecolor='honeydew')
 # Make an empty plot for the legend
 #plt.plot([], [], color='honeydew', linewidth=10, label="MinMax")
-l2 = plt.errorbar(x, avg, std, None, label='Collective', linestyle='-', marker='^', color='green')
+l2 = plt.errorbar(x, avg, std, None, label='Cothority', linestyle='-', marker='^', color='green')
 l3 = None
 l4 = None
 
@@ -88,7 +88,7 @@ if len(sys.argv) > 2:
     l3 = plt.fill_between(x, tmin, tmax, facecolor='#FCDFFF')
     # Make an empty plot for the legend
     #plt.plot([], [], color='red', linewidth=10, label="Shamir sign")
-    l4 = plt.errorbar(x, avg, std, None, label='Shamir', linestyle='-', marker='^', ecolor='red')
+    l4 = plt.errorbar(x, avg, std, None, label='JVSS', linestyle='-', marker='^', ecolor='red')
 
 
 # Add labels to the axis
