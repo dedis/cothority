@@ -204,7 +204,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		deter.Hostnames = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
-	case "shamir_sign":
+	case "shamir":
 		conf := app.ConfigShamir{}
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
