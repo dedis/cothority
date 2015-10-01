@@ -160,7 +160,10 @@ func main() {
 		os.MkdirAll(coll_stamp_dir, 0777)
 		time.Sleep(time.Second)
 	}
-	dbg.Lvl1("starting", len(physToServer), "forkexecs")
+
+	servers := len(physToServer)
+	hpn := len(deterlab.Hostnames)
+	dbg.Lvl1("starting", servers, "forkexecs with", hpn, "processes each =", servers * hpn)
 	totalServers := 0
 	for phys, virts := range physToServer {
 		if len(virts) == 0 {
