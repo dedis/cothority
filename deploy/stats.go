@@ -37,15 +37,15 @@ type StreamStats struct {
 // needed to compute the avg + dev
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
 func (t *StreamStats) Update(newTime float64) {
-	t.n += 1
 	// nothings takes 0 ms to complete, so we know it's the first time
-	if t.min > newTime || t.min == 0.0 {
+	if t.min > newTime || t.n == 0 {
 		t.min = newTime
 	}
 	if t.max < newTime {
 		t.max = newTime
 	}
 
+	t.n += 1
 	if t.n == 1 {
 		t.oldM = newTime
 		t.newM = newTime
@@ -252,18 +252,16 @@ func shamirStatsAverage(stats ...Stats) (Stats, error) {
 	stset := make([]StreamStats, len(stats))
 	stround := make([]StreamStats, len(stats))
 	for i, _ := range stats {
-		switch stats[i].(type) {
-		case *ShamirStats:
-			ss := stats[i].(*ShamirStats)
-			stset[i] = ss.setup
-			stround[i] = ss.round
-			s.NHosts = ss.NHosts
-			s.Writer = ss.Writer
-			s.SysTime += ss.SysTime
-			s.UserTime += ss.UserTime
-		default:
-			return s, errors.New("Average() received a stats that is not ShamirStat")
+		ss, ok := stats[i].(*ShamirStats)
+		if !ok {
+			return nil, errors.New("Average() received a non-shamir stats ")
 		}
+		stset[i] = ss.setup
+		stround[i] = ss.round
+		s.NHosts = ss.NHosts
+		s.Writer = ss.Writer
+		s.SysTime += ss.SysTime
+		s.UserTime += ss.UserTime
 	}
 	s.setup = StreamStatsAverage(stset...)
 	s.round = StreamStatsAverage(stround...)
@@ -379,17 +377,15 @@ func collStatsAverage(stats ...Stats) (Stats, error) {
 	s.Times = make([]float64, len(first.Times))
 	st := make([]StreamStats, 0, len(stats))
 	for _, b := range stats {
-		switch b.(type) {
-		case *CollStats:
-			a := b.(*CollStats)
-			st = append(st, a.round)
-			s.SysTime += a.SysTime
-			s.UserTime += a.UserTime
-			s.Rate += a.Rate
-			s.Times = append(s.Times, a.Times...)
-		default:
-			return s, errors.New("Average did not receive a CollStats struct")
+		a, ok := b.(*CollStats)
+		if !ok {
+			return nil, errors.New("Average() did not receive a CollStats struct")
 		}
+		st = append(st, a.round)
+		s.SysTime += a.SysTime
+		s.UserTime += a.UserTime
+		s.Rate += a.Rate
+		s.Times = append(s.Times, a.Times...)
 	}
 	s.round = StreamStatsAverage(st...)
 	l := float64(len(stats))
@@ -432,7 +428,7 @@ func NewShamirStats(t T) *ShamirStats {
 func NewCollStats(t T) *CollStats {
 	depth := math.Log(float64(t.nmachs*t.hpn)*float64(t.bf-1) + 1)
 	depth /= math.Log(float64(t.bf))
-	depth = math.Floor(depth)
+	depth = math.Ceil(depth)
 	depth -= 1
 	return &CollStats{
 		BF:     t.bf,

@@ -159,16 +159,35 @@ func Start(destination string, nbld bool, build string, machines int) {
 // RunTests runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, ts []T) {
+	if len(ts) == 0 {
+		return
+	}
 	for i, _ := range ts {
 		ts[i].nmachs = deploy_config.Nmachs
 	}
 
 	MkTestDir()
 	rs := make([]Stats, len(ts))
-	headerWritten := false
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
+	// Write the header
+	firstStat := GetStat(ts[0])
+	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+	defer f.Close()
+	if err != nil {
+		log.Fatal("error opening test file:", err)
+	}
+	firstStat.WriteTo(f)
+	err = firstStat.ServerCSVHeader()
+	if err != nil {
+		log.Fatal("error writing test file header:", err)
+	}
+	err = f.Sync()
+	if err != nil {
+		log.Fatal("error syncing test file:", err)
+	}
+
 	for i, t := range ts {
 		// run test t nTimes times
 		// take the average of all successful runs
@@ -178,7 +197,6 @@ func RunTests(name string, ts []T) {
 			if err != nil {
 				log.Fatalln("error running test:", err)
 			}
-
 			if deployP.Stop() == nil {
 				runs = append(runs, stats)
 				if stopOnSuccess {
@@ -200,25 +218,6 @@ func RunTests(name string, ts []T) {
 		}
 		rs[i] = s
 		rs[i].WriteTo(f)
-		// Write the header if you still havent done it
-		if !headerWritten {
-			var err error
-			f, err = os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
-			defer f.Close()
-			if err != nil {
-				log.Fatal("error opening test file:", err)
-			}
-			rs[i].WriteTo(f)
-			err = rs[i].ServerCSVHeader()
-			if err != nil {
-				log.Fatal("error writing test file header:", err)
-			}
-			err = f.Sync()
-			if err != nil {
-				log.Fatal("error syncing test file:", err)
-			}
-			headerWritten = true
-		}
 		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
 		err = rs[i].ServerCSV()
 		if err != nil {
