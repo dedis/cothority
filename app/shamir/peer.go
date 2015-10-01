@@ -292,6 +292,9 @@ func (p *Peer) rootConn() net.Conn {
 // If all goes well, it will add the peer to the remotePeer array
 // and notify to the channel synChan
 func (p *Peer) synWithPeer(conn net.Conn) {
+	if conn == nil {
+		dbg.Fatal("Connection of", p.String(), "is nil")
+	}
 	// First we need to SYN mutually
 	s := Syn{
 		Id:     p.Id,
