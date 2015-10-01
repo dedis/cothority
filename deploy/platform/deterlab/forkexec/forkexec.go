@@ -12,13 +12,13 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"net"
 	"sync"
-	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
 )
 
 // Wrapper around app to enable measuring of cpu time
 
-var deter deploy.Deterlab
+var deter platform.Deterlab
 var testConnect bool
 
 func main() {

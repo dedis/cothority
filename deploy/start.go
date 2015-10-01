@@ -29,25 +29,25 @@ import (
 	"os"
 	"strconv"
 	"time"
-	"github.com/dedis/cothority/lib/deploy"
 	"bufio"
 	"github.com/BurntSushi/toml"
 	"strings"
 	"path/filepath"
+	"github.com/dedis/cothority/deploy/platform"
 )
 
 // Configuration-variables
-var deployP deploy.Platform
+var deployP platform.Platform
 var port int = 8081
 
 func init() {
-	deployP = deploy.NewPlatform()
+	deployP = platform.NewPlatform()
 }
 
 /*
  * Starting the simulation
  * it takes a slice of strings to configuration-files that are to be
- * copied over to the deterlab-server
+ * copied for each app
  */
 func Start(simulations []string) {
 	if len(simulations) == 0 {
@@ -55,16 +55,12 @@ func Start(simulations []string) {
 	}
 
 	for _, simulation := range simulations {
-		deter, runconfigs := ReadRunfile(simulation)
-		deter.Debug = dbg.DebugVisible
+		runconfigs := ReadRunfile(simulation)
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		if deter.App == "" {
-			dbg.Fatal("No app defined in", simulation)
-		}
 
-		deployP.Configure(&deter)
+		deployP.Configure()
 
 		deployP.Stop()
 
@@ -77,7 +73,7 @@ func Start(simulations []string) {
 
 // Runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
-func RunTests(name string, runconfigs []deploy.RunConfig) {
+func RunTests(name string, runconfigs []platform.RunConfig) {
 	s := stats{}
 	s.InitStats(name, runconfigs)
 	if nobuild == false {
@@ -113,7 +109,7 @@ func RunTests(name string, runconfigs []deploy.RunConfig) {
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc deploy.RunConfig) (RunStats, error) {
+func RunTest(rc platform.RunConfig) (RunStats, error) {
 	done := make(chan struct{})
 	var rs RunStats
 
@@ -147,11 +143,11 @@ func RunTest(rc deploy.RunConfig) (RunStats, error) {
 type stats struct {
 	rs          []RunStats
 	name        string
-	runconfigs  []deploy.RunConfig
+	runconfigs  []platform.RunConfig
 	file        *os.File
 }
 
-func (s *stats)InitStats(name string, runconfigs []deploy.RunConfig) {
+func (s *stats)InitStats(name string, runconfigs []platform.RunConfig) {
 	var err error
 	s.name = name
 	s.runconfigs = runconfigs
@@ -222,9 +218,8 @@ type runFile struct {
  * The Name1...Namen are general configuration-options for deploy.
  * n1..nn are configuration-options for the 'app'
  */
-func ReadRunfile(filename string) (deploy.Deterlab, []deploy.RunConfig) {
-	var deter deploy.Deterlab
-	var runconfigs []deploy.RunConfig
+func ReadRunfile(filename string) ([]platform.RunConfig) {
+	var runconfigs []platform.RunConfig
 
 	dbg.Lvl3("Reading file", filename)
 
@@ -238,8 +233,8 @@ func ReadRunfile(filename string) (deploy.Deterlab, []deploy.RunConfig) {
 		if scanner.Text() == "" {
 			break
 		}
-		toml.Decode(scanner.Text(), &deter)
-		dbg.Lvl4("Deter is now", deter)
+		toml.Decode(scanner.Text(), deployP)
+		dbg.Lvl4("Deter is now", deployP)
 	}
 
 	scanner.Scan()
@@ -249,10 +244,10 @@ func ReadRunfile(filename string) (deploy.Deterlab, []deploy.RunConfig) {
 		for i, value := range strings.Split(scanner.Text(), ", ") {
 			rc += args[i] + " = " + value + "\n"
 		}
-		runconfigs = append(runconfigs, deploy.RunConfig(rc))
+		runconfigs = append(runconfigs, platform.RunConfig(rc))
 	}
 
-	return deter, runconfigs
+	return runconfigs
 }
 
 func MkTestDir() {

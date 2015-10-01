@@ -29,13 +29,13 @@ import (
 
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/deploy/platform"
 	"os"
 	"os/exec"
 	"fmt"
 )
 
-var deterlab deploy.Deterlab
+var deterlab platform.Deterlab
 var kill = false
 
 func init() {

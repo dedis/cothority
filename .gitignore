@@ -1,14 +1,12 @@
 cothority
 .idea
 notes.txt
-deploy/deterlab/build
-deploy/deterlab/deploy/*
-deploy/deterlab/remote/*
-deploy/deterlab/deter.toml
 test_data
 app/sign/sign
 app/stamp/stamp
 app/shamir/shamir
-deploy/deterlab/remote/*
+deploy/platform/deterlab/build
+deploy/platform/deterlab/remote/*
+deploy/platform/deterlab/deter.toml
 deploy/deploy
 test/

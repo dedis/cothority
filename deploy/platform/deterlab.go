@@ -14,7 +14,7 @@
 //   logserver - runs on the first 'Loggers' servers - first is the master, rest are slaves
 //   forkexec - runs on the other servers and launches the app, so it can measure its cpu usage
 
-package deploy
+package platform
 
 import (
 	"os"
@@ -46,6 +46,8 @@ type Deterlab struct {
 	Project      string
 	// Name of the Experiment - also name of hosts
 	Experiment   string
+	// Directory of applications
+	AppDir       string
 	// Directory where everything is copied into
 	DeployDir    string
 	// Directory for building
@@ -77,18 +79,21 @@ type Deterlab struct {
 	TestConnect  bool
 }
 
-func (d *Deterlab) Configure(config *Deterlab) {
+func (d *Deterlab) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.DeterDir = pwd + "/deterlab"
+	d.DeterDir = pwd + "/platform/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
-	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
+	d.AppDir = pwd + "/../app"
+	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir)
+	dbg.Lvl3("Dirs are:", d.BuildDir, d.AppDir)
 	d.LoadAndCheckDeterlabVars()
 
-	d.Machines = config.Machines
-	d.App = config.App
 	d.Debug = dbg.DebugVisible
+	if d.App == "" {
+		dbg.Fatal("No app defined in simulation")
+	}
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
@@ -117,13 +122,13 @@ func (d *Deterlab) Build(build string) error {
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
+		src_dir := d.DeterDir + "/" + p
 		if p == "app" {
-			p = "../../app/" + d.App
+			src_dir = d.AppDir + "/" + d.App
 		}
 		basename := path.Base(p)
 		dst := d.BuildDir + "/" + basename
 
-		src_dir := d.DeterDir + "/" + p
 		dbg.Lvl3("Building ", p, "from", src_dir, "into", basename)
 		wg.Add(1)
 		if p == "users" {
@@ -146,6 +151,7 @@ func (d *Deterlab) Build(build string) error {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
 			src_rel, _ := filepath.Rel(d.DeterDir, src)
+			dbg.Lvl3("Relative-path is", src, src_rel, d.DeterDir)
 			out, err := cliutils.Build("./" + src_rel, dest, "amd64", "linux")
 			if err != nil {
 				cliutils.KillGo()
@@ -376,8 +382,10 @@ func (d *Deterlab) readHosts() {
 // For the login-variable, it will try to set up a connection to d.Host and copy over the
 // public key for a more easy communication
 func (d *Deterlab) LoadAndCheckDeterlabVars() {
-	// Write
-	err := app.ReadTomlConfig(d, "deter.toml", d.DeterDir)
+	deter := Deterlab{}
+	err := app.ReadTomlConfig(&deter, "deter.toml", d.DeterDir)
+	d.Host, d.Login, d.Project, d.Experiment, d.Loggers =
+		deter.Host, deter.Login, deter.Project, deter.Experiment, deter.Loggers
 
 	if err != nil {
 		dbg.Lvl1("Couldn't read config-file - asking for default values")

@@ -1,9 +1,9 @@
-package deploy
+package platform
 
 type RunConfig string;
 
 type Platform interface {
-	Configure(*Deterlab)
+	Configure()
 	Build(string) error
 	Deploy(RunConfig) error
 	Start() error

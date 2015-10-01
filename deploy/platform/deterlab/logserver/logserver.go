@@ -24,11 +24,11 @@ import  (
 
 	"golang.org/x/net/websocket"
 	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
 )
 
-var deter deploy.Deterlab
+var deter platform.Deterlab
 var conf app.ConfigColl
 var addr, master string
 var homePage *template.Template
