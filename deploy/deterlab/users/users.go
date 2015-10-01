@@ -64,6 +64,14 @@ func main() {
 				dbg.Lvl4("Cleaning report:")
 				cliutils.SshRunStdout("", h, "ps aux")
 			}
+
+			dbg.Lvl3("Setting the file-limit higher on", h)
+
+			// Copy configuration file to make higher file-limits
+			err := cliutils.SshRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
+			if err != nil {
+				dbg.Fatal("Couldn't copy limit-file:", err)
+			}
 			doneHosts[i] = true
 			dbg.Lvl3("Host", h, "cleaned up")
 		}(i, h)
@@ -85,7 +93,7 @@ func main() {
 				// expinfo gets a list of all mappings from physical to logical
 				// node names. Then we grep the missing host and keep only
 				// the logical node
-				grep := "grep \"" + strings.Split(deterlab.Phys[i], ".")[0] + " \" | sed -e 's/.* //'"
+				grep := "grep '" + strings.Split(deterlab.Phys[i], ".")[0] + " ' | sed -e 's/.* //'"
 				cmd := fmt.Sprintf("expinfo -e %s,%s -m | %s",
 					deterlab.Project, deterlab.Experiment, grep)
 				info, _ := exec.Command("bash", "-c", "\"" + cmd + "\"").Output()
@@ -122,22 +130,6 @@ func main() {
 		physToServer[p] = ss
 	}
 
-	for _, phys := range deterlab.Phys {
-		wg.Add(1)
-		go func(server string) {
-			defer wg.Done()
-			dbg.Lvl3("Setting the file-limit higher on", server)
-
-			// Copy configuration file to make higher file-limits
-			err := cliutils.SshRunStdout("", server, "sudo cp remote/cothority.conf /etc/security/limits.d")
-
-			if err != nil {
-				log.Fatal("Couldn't copy limit-file:", err)
-			}
-		}(phys)
-	}
-	wg.Wait()
-	dbg.Lvl2("Done copying cothority.conf for higher file-limits")
 
 	// start up the logging server on the final host at port 10000
 	dbg.Lvl1("starting up logservers: ", loggers)
