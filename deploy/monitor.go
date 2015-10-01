@@ -95,6 +95,10 @@ func Monitor() RunStats {
 				continue
 			}
 			dbg.Lvl4("root_round:", entry)
+			if entry.Round == 1{
+				dbg.Lvl1("Throwing away first round")
+				continue
+			}
 			if first {
 				first = false
 				dbg.Lvl4("Setting min-time to", entry.Time)
