@@ -6,21 +6,21 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
-// Dispatch-function for running either client or server (mode-parameter)
 func main() {
-	conf := &app.ConfigShamir{}
+
+	conf := new(app.NaiveSign)
 	app.ReadConfig(conf)
 
-	// we must know who we are
-	if app.RunFlags.Hostname == "" {
+	if app.RunFlags.hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}
 
-	dbg.Lvl2(app.RunFlags.Hostname, "Starting to run as ", app.RunFlags.Mode)
+	dbg.Lvl2(app.RunFlags.Hostname, "starting to run as ", app.RunFlags.Mode)
 	switch app.RunFlags.Mode {
 	case "client":
-		RunClient(conf)
+		break
 	case "server":
 		RunServer(conf)
 	}
+
 }
