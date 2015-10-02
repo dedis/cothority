@@ -1,6 +1,7 @@
 Machines = 4
-Logservers = 4
+Logservers = 0
 App = "shamir"
+Suite = "ed25519"
 
-Hpn, Bf, Rounds
-1, 2, 10
+Hpn,  Rounds
+1, 10

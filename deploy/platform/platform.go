@@ -1,6 +1,6 @@
 package platform
 
-type RunConfig string;
+type RunConfig string
 
 type Platform interface {
 	Configure()
@@ -10,6 +10,18 @@ type Platform interface {
 	Stop() error
 }
 
-func NewPlatform() Platform {
-	return &Deterlab{}
+var deterlab string = "deterlab"
+var localhost string = "localhost"
+
+// Return the appropriate platform
+// [deterlab,localhost]
+func NewPlatform(t string) Platform {
+	var p Platform
+	switch t {
+	case deterlab:
+		p = &Deterlab{}
+	case localhost:
+		p = &Localhost{}
+	}
+	return p
 }

@@ -1,0 +1,33 @@
+Hpn = 1
+Bf = 2
+Suite = "ed25519"
+Nmsgs = 0
+Rate = 10
+Rounds = 10
+Failures = 0
+RFail = 0
+FFail = 0
+Debug = 4
+RootWait = 0
+TestConnect = false
+Hosts = ["127.0.0.1:2000", "127.0.0.1:2005", "127.0.0.1:2010", "127.0.0.1:2015"]
+
+[Tree]
+  Name = "127.0.0.1:2000"
+  PriKey = ""
+  PubKey = ""
+
+  [[Tree.Children]]
+    Name = "127.0.0.1:2005"
+    PriKey = ""
+    PubKey = ""
+
+    [[Tree.Children.Children]]
+      Name = "127.0.0.1:2015"
+      PriKey = ""
+      PubKey = ""
+
+  [[Tree.Children]]
+    Name = "127.0.0.1:2010"
+    PriKey = ""
+    PubKey = ""
