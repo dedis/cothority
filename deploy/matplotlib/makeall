@@ -1,0 +1,4 @@
+#!/bin/bash
+python plot_graph.py 0 shs2.csv smah.csv comparison_roundtime.png
+python plot_graph.py 1 shs2.csv smah.csv comparison_systime.png
+python plot_graph.py 2 shs2.csv smah.csv comparison_systime_filled.png
