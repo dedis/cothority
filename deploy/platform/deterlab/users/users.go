@@ -162,7 +162,7 @@ func main() {
 	}
 
 	servers := len(physToServer)
-	hpn := len(deterlab.Hostnames)
+	hpn := len(deterlab.Hostnames) / servers
 	dbg.Lvl1("starting", servers, "forkexecs with", hpn, "processes each =", servers * hpn)
 	totalServers := 0
 	for phys, virts := range physToServer {
