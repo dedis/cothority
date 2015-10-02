@@ -130,7 +130,6 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 		done <- struct{}{}
 	}()
 
-	// timeout the command if it takes too long
 	select {
 	case <-done:
 		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
