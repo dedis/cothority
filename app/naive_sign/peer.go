@@ -1,102 +1,115 @@
 package main
 
 import (
+	"fmt"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/network_draft/network"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards"
 )
 
 // Impl of the "naive sign" protocol
 // i.e. leader collects every signature from every other peers
 
+const ServRole string = "server"
+const LeadRole string = "leader"
+
 const msgMaxLenght int = 256
 
-const suite = edwards.NewAES128SHA256Ed25519(true)
+var suite abstract.Suite
 
 var MessageSigningType network.Type
-var BasicSignature network.Type
+var BasicSignatureType network.Type
 
+// Set up some global variables such as the different messages used during
+// this protocol and the general suite to be used
 func init() {
+	suite = edwards.NewAES128SHA256Ed25519(true)
 	network.Suite = suite
 	MessageSigningType = network.RegisterProtocolType(MessageSigning{})
-	BasicSignature = network.RegisterProtocolType(BasicSignature{})
+	BasicSignatureType = network.RegisterProtocolType(BasicSignature{})
 }
 
-type Leader struct {
+// the struct representing the role of leader
+type Peer struct {
 	network.Host
+
+	// the longterm key of the peer
+	priv abstract.Secret
+	pub  abstract.Point
+
+	// role is server or leader
+	role string
+
+	// leader part
 	Conns      []network.Conn
 	Pubs       []abstract.Point
 	Signatures []BasicSignature
 }
 
-type Server struct {
-	network.Host
-
-	Pub  abstract.Point
-	done bool
-}
-
-type PublicKey struct {
-	Pub abstract.Point
-}
-
+// Message used to transmit our generated signature
 type BasicSignature struct {
+	Pub   abstract.Point
 	Chall abstract.Secret
 	Resp  abstract.Secret
 }
 
+// The message used to transmit our message to be signed
+// TODO modify network so we can build packet that will be
+// decoded with our own marshalbinary /unmarshal. We could
+// then pass the size of the msg to be read before the msg
+// itself.
 type MessageSigning struct {
-	msg [msgMaxLenght]byte
+	Msg [msgMaxLenght]byte
 }
 
-func (l *Leader) String() {
-	return l.Host.Name() + fmt.Sprintf(" Leader (%d sigs)", len(l.Signatures))
+func (l *Peer) String() string {
+	return fmt.Sprintf("%s %s (%d sigs)", l.Host.Name(), l.role, len(l.Signatures))
 }
 
-func (s *Server) String() {
-	return s.Host.Name() + fmt.Sprintf(" Server (done %v)", s.done)
-}
-
-func (l *Leader) SendMessage(msg []byte) {
+// Will send the message to be signed to everyone
+func (l *Peer) SendMessage(msg []byte, c network.Conn) {
 	if len(msg) > msgMaxLenght {
 		dbg.Fatal("Tried to send a too big message to sign. Abort")
 	}
-	ms := new(messageSigning)
-	copy(ms.msg, msg)
+	ms := new(MessageSigning)
+	copy(ms.Msg[:], msg)
 
-	for c := range l.Conns {
-		err := c.Send(ms)
-		if err != nil {
-			dbg.Fatal("Could not send message to ", c.PeerName())
-		}
+	err := c.Send(ms)
+	if err != nil {
+		dbg.Fatal("Could not send message to ", c.PeerName())
 	}
 }
 
-func (l *Leader) ReceiveBasicSignatures() {
-	ch := make(chan BasicSignature)
+// Wait for the leader to receive the generated signatures from the servers
+func (l *Peer) ReceiveBasicSignature(c network.Conn) BasicSignature {
 
-	for c := range l.Conns {
-		go func(con network.Conn) {
-			appMsg, err := con.Receive()
-			if err != nil {
-				dbg.Fatal(l.String(), "error decoding message from ", c.PeerName())
-			}
-			if appMsg.MsgType != BasicSignatureType {
-				dbg.Fatal(l.String(), "Received an unknown type : ", app.MsgType.String())
-			}
-			bs := appMsg.Msg.(BasicSignature)
-			ch <- bs
-		}()
+	appMsg, err := c.Receive()
+	if err != nil {
+		dbg.Fatal(l.String(), "error decoding message from ", c.PeerName())
 	}
-	dbg.Lvl2(l.String(), "Waiting on basic signatures from servers ...")
-	for {
-		bs := <-ch
-		l.Signatures = append(l.Signatures, bs)
-		if len(l.Signatures) == len(l.Conns) {
-			break
-		}
+	if appMsg.MsgType != BasicSignatureType {
+		dbg.Fatal(l.String(), "Received an unknown type : ", appMsg.MsgType.String())
 	}
-	dbg.Lvl2(l.String(), "Received all signatures..")
+	bs := appMsg.Msg.(BasicSignature)
+	return bs
 }
 
-func (l *Leader) VerifySignatures(msg []byte) {
+func (l *Peer) Signature(msg []byte) BasicSignature {
+	rand := suite.Cipher([]byte("cipher"))
+	x := suite.Secret().Pick(rand)
 
+	sign := SchnorrSign(suite, rand, msg, x)
+	sign.Pub = l.pub
+	return sign
+}
+
+func NewPeer(host network.Host, role string, secret abstract.Secret,
+	public abstract.Point) *Peer {
+	return &Peer{
+		role: role,
+		Host: host,
+		priv: secret,
+		pub:  public,
+	}
 }

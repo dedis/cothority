@@ -2,7 +2,8 @@ package app
 
 import ()
 
-type NaiveSign struct {
+// what a name
+type NaiveConfig struct {
 	// Hpn
 	Hpn int
 

@@ -1,5 +1,11 @@
 package main
 
+import (
+	"errors"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/cipher"
+)
+
 // Returns a secret that depends on on a message and a point
 func hashSchnorr(suite abstract.Suite, message []byte, p abstract.Point) abstract.Secret {
 	pb, _ := p.MarshalBinary()
@@ -13,7 +19,7 @@ func hashSchnorr(suite abstract.Suite, message []byte, p abstract.Point) abstrac
 // The ring structure is removed and
 // The anonimity set is reduced to one public key = no anonimity
 func SchnorrSign(suite abstract.Suite, random cipher.Stream, message []byte,
-	privateKey abstract.Secret) []byte {
+	privateKey abstract.Secret) BasicSignature {
 
 	// Create random secret v and public point commitment T
 	v := suite.Secret().Pick(random)
@@ -26,26 +32,18 @@ func SchnorrSign(suite abstract.Suite, random cipher.Stream, message []byte,
 	r := suite.Secret()
 	r.Mul(privateKey, c).Sub(v, r)
 
-	// Return verifiable signature {c, r}
+	// Return verifiable si,gnature {c, r}
 	// Verifier will be able to compute v = r + x*c
 	// And check that hashElgamal for T and the message == c
-	buf := bytes.Buffer{}
-	sig := basicSig{c, r}
-	suite.Write(&buf, &sig)
-	return buf.Bytes()
+	sig := BasicSignature{Chall: c, Resp: r}
+	return sig
 }
 
-func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Point,
-	signatureBuffer []byte) error {
-
-	// Decode the signature
-	buf := bytes.NewBuffer(signatureBuffer)
-	sig := basicSig{}
-	if err := suite.Read(buf, &sig); err != nil {
-		return err
-	}
-	r := sig.R
-	c := sig.C
+func SchnorrVerify(suite abstract.Suite, message []byte,
+	signature BasicSignature) error {
+	publicKey := signature.Pub
+	r := signature.Resp
+	c := signature.Chall
 
 	// Compute base**(r + x*c) == T
 	var P, T abstract.Point
@@ -56,7 +54,7 @@ func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Poin
 	// Verify that the hash based on the message and T
 	// matches the challange c from the signature
 	c = hashSchnorr(suite, message, T)
-	if !c.Equal(sig.C) {
+	if !c.Equal(signature.Chall) {
 		return errors.New("invalid signature")
 	}
 

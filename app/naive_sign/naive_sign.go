@@ -8,19 +8,14 @@ import (
 
 func main() {
 
-	conf := new(app.NaiveSign)
+	conf := new(app.NaiveConfig)
 	app.ReadConfig(conf)
 
-	if app.RunFlags.hostname == "" {
+	if app.RunFlags.Hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}
 
 	dbg.Lvl2(app.RunFlags.Hostname, "starting to run as ", app.RunFlags.Mode)
-	switch app.RunFlags.Mode {
-	case "client":
-		break
-	case "server":
-		RunServer(conf)
-	}
+	RunServer(conf)
 
 }
