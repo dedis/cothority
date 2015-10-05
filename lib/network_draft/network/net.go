@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"net"
 	"os"
@@ -108,7 +109,7 @@ const ListenPort = "5000"
 type Host interface {
 	Name() string
 	Open(name string) Conn
-	Listen(fn func(Conn)) // the srv processing function
+	Listen(addr string, fn func(Conn)) // the srv processing function
 }
 
 type Conn interface {
@@ -198,12 +199,12 @@ func (t *TcpHost) Open(name string) Conn {
 
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
-func (t *TcpHost) Listen(fn func(Conn)) {
-	ln, err := net.Listen("tcp", ":"+ListenPort)
+func (t *TcpHost) Listen(addr string, fn func(Conn)) {
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		fmt.Printf("error listening (host %s)\n", t.name)
 	}
-	fmt.Printf("Waiting for connections ..\n")
+	dbg.Lvl3(t.Name(), "Waiting for connections on addr ", addr, "..\n")
 	for {
 		conn, err := ln.Accept()
 		if err != nil {

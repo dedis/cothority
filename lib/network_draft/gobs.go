@@ -116,7 +116,7 @@ func main() {
 	client := new(SimpleClient).Init(clientHost, clientPub)
 	server := new(SimpleServer).Init(serverHost, serverPub)
 
-	go server.Listen(server.ExchangeWithClient)
+	go server.Listen("127.0.0.1:5000", server.ExchangeWithClient)
 	time.Sleep(1 * time.Second)
-	client.ExchangeWithServer("127.0.0.1:" + network.ListenPort)
+	client.ExchangeWithServer("127.0.0.1:5000")
 }
