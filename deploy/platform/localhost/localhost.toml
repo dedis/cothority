@@ -1,5 +1,5 @@
 Logger = ""
-App = "sign"
+App = "naive"
 AppDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/deploy/../app"
 LocalDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/deploy"
 RunDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/deploy/platform/localhost"

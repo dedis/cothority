@@ -161,7 +161,7 @@ func (d *Localhost) Start() error {
 		go func() {
 			err := cmd.Run()
 			if err != nil {
-				dbg.Lvl3("Error running localhost ", h)
+				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
 		}()
 
