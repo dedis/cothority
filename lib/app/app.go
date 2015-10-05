@@ -7,15 +7,15 @@ import (
 	_ "net/http/pprof"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/lib/logutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"os"
-	"reflect"
 	"bytes"
 	"github.com/BurntSushi/toml"
+	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"reflect"
 )
 
 type Flags struct {
@@ -45,24 +45,17 @@ func init() {
 }
 
 /*
- * Reads in the config from deterlab and for the application -
+ * Reads in the config for the application -
  * also parses the init-flags
- * It first reads the configuration of deterlab, in case the
- * application needs any of these configuration-options, then
- * loads over that the configuration of the app.toml
  */
 func ReadConfig(conf interface{}, dir ...string) {
 	var err error
-	err = ReadTomlConfig(conf, "deter.toml", dir...)
-	if err != nil {
-		dbg.Lvl2("Couldn't load deter-config")
-	}
 	err = ReadTomlConfig(conf, "app.toml", dir...)
 	if err != nil {
 		log.Fatal("Couldn't load app-config-file in exec")
 	}
 	debug := reflect.ValueOf(conf).Elem().FieldByName("Debug")
-	if debug.IsValid(){
+	if debug.IsValid() {
 		dbg.DebugVisible = debug.Interface().(int)
 	}
 
@@ -78,7 +71,7 @@ func ReadConfig(conf interface{}, dir ...string) {
  */
 func ConnectLogservers() {
 	// connect with the logging server
-	if RunFlags.Logger != "" && RunFlags.AmRoot{
+	if RunFlags.Logger != "" && RunFlags.AmRoot {
 		// blocks until we can connect to the flags.Logger
 		dbg.Lvl3(RunFlags.Hostname, "Connecting to Logger", RunFlags.Logger)
 		lh, err := logutils.NewLoggerHook(RunFlags.Logger, RunFlags.Hostname, "unknown")
@@ -118,12 +111,11 @@ func ServeMemoryStats() {
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p + 2)), nil)
+			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
 			dbg.Lvl3("Memory-stats server:", res)
 		}()
 	}
 }
-
 
 /*
  * Writes any structure to a toml-file
@@ -146,7 +138,7 @@ func WriteTomlConfig(conf interface{}, filename string, dirOpt ...string) {
  *
  * Takes a filename and an optional directory-name
  */
-func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) (error) {
+func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 	buf, err := ioutil.ReadFile(getFullName(filename, dirOpt...))
 	if err != nil {
 		pwd, _ := os.Getwd()
@@ -171,12 +163,12 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) (error)
  * - filename in absolute path
  * - filename and additional path
  */
-func getFullName(filename string, dirOpt ...string) string{
+func getFullName(filename string, dirOpt ...string) string {
 	dir := filepath.Dir(filename)
 	if len(dirOpt) > 0 {
 		dir = dirOpt[0]
 	} else {
-		if dir == ""{
+		if dir == "" {
 			dir = "."
 		}
 	}

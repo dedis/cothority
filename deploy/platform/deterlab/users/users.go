@@ -96,7 +96,7 @@ func main() {
 				grep := "grep '" + strings.Split(deterlab.Phys[i], ".")[0] + " ' | sed -e 's/.* //'"
 				cmd := fmt.Sprintf("expinfo -e %s,%s -m | %s",
 					deterlab.Project, deterlab.Experiment, grep)
-				info, _ := exec.Command("bash", "-c", "\"" + cmd + "\"").Output()
+				info, _ := exec.Command("bash", "-c", cmd).CombinedOutput()
 				dbg.Lvl1("You might want to run\nnode_reboot", string(info), cmd)
 			}
 		}

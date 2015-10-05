@@ -322,7 +322,7 @@ func (d *Deterlab) createHosts() error {
 	d.Virt = make([]string, 0, num_servers)
 	for i := 1; i <= num_servers; i++ {
 		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i - 1, d.Experiment, name))
-		d.Virt = append(d.Virt, fmt.Sprintf("\t%s%d\n", ip, i))
+		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
 
 	// only take the machines we need
