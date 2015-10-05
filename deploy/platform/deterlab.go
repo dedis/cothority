@@ -220,6 +220,13 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		deter.Hostnames = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
+	case "naive":
+		conf := app.NaiveConfig{}
+		app.ReadTomlConfig(&conf, localConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		dbg.Lvl4("Localhost : naive applications :", conf.Hosts)
+		app.WriteTomlConfig(conf, appConfig)
+
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
@@ -328,32 +335,31 @@ func (d *Deterlab) createHosts() error {
 	d.Phys = make([]string, 0, num_servers)
 	d.Virt = make([]string, 0, num_servers)
 	for i := 1; i <= num_servers; i++ {
-		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i - 1, d.Experiment, name))
+		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i-1, d.Experiment, name))
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
 
 	// only take the machines we need
-	d.Phys = d.Phys[:nmachs + nloggers]
-	d.Virt = d.Virt[:nmachs + nloggers]
+	d.Phys = d.Phys[:nmachs+nloggers]
+	d.Virt = d.Virt[:nmachs+nloggers]
 	physOut := strings.Join(d.Phys, "\n")
 	virtOut := strings.Join(d.Virt, "\n")
 	d.MasterLogger = d.Phys[0]
 
 	// phys.txt and virt.txt only contain the number of machines that we need
 	dbg.Lvl3("Writing phys and virt")
-	err := ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(physOut), 0666)
+	err := ioutil.WriteFile(d.DeployDir+"/phys.txt", []byte(physOut), 0666)
 	if err != nil {
 		dbg.Fatal("failed to write physical nodes file", err)
 	}
 
-	err = ioutil.WriteFile(d.DeployDir + "/virt.txt", []byte(virtOut), 0666)
+	err = ioutil.WriteFile(d.DeployDir+"/virt.txt", []byte(virtOut), 0666)
 	if err != nil {
 		dbg.Fatal("failed to write virtual nodes file", err)
 	}
 
 	return nil
 }
-
 
 // Checks whether host, login and project are defined. If any of them are missing, it will
 // ask on the command-line.
