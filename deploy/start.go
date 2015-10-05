@@ -130,7 +130,6 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 		done <- struct{}{}
 	}()
 
-	// timeout the command if it takes too long
 	select {
 	case <-done:
 		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
@@ -152,6 +151,7 @@ func (s *stats)InitStats(name string, runconfigs []platform.RunConfig) {
 	s.name = name
 	s.runconfigs = runconfigs
 	s.rs = make([]RunStats, len(runconfigs))
+	MkTestDir()
 	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
@@ -183,6 +183,7 @@ func (s *stats)WriteStats(run int, runs []RunStats) {
 		log.Fatal("error syncing data to test file:", err)
 	}
 
+	MkTestDir()
 	cl, err := os.OpenFile(
 		TestFile("client_latency_" + s.name + "_" + strconv.Itoa(run)),
 		os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
@@ -251,9 +252,9 @@ func ReadRunfile(filename string) ([]platform.RunConfig) {
 }
 
 func MkTestDir() {
-	err := os.MkdirAll("test_data/", 0777)
+	err := os.MkdirAll("test_data", 0777)
 	if err != nil {
-		log.Fatal("failed to make test directory")
+		dbg.Fatal("failed to make test directory")
 	}
 }
 
