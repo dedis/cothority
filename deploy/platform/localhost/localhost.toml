@@ -1,8 +1,0 @@
-Logger = ""
-App = "shamir"
-AppDir = "/Users/ligasser/cothority/deploy/../app"
-LocalDir = "/Users/ligasser/cothority/deploy"
-RunDir = "/Users/ligasser/cothority/deploy/platform/localhost"
-Debug = 1
-Machines = 4
-Hosts = ["127.0.0.1:2000", "127.0.0.1:2005", "127.0.0.1:2010", "127.0.0.1:2015"]
