@@ -99,8 +99,8 @@ func Monitor() RunStats {
 				continue
 			}
 			dbg.Lvl4("root_round:", entry)
-			if entry.Round == 1{
-				dbg.Lvl1("Throwing away first round")
+			if entry.Round == 0{
+				dbg.Lvl1("Discarding away first round")
 				continue
 			}
 			if first {
