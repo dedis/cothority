@@ -34,7 +34,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // Configuration-variables
@@ -142,9 +141,6 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 		return rs, nil
 	}
 
-	// give it a while to start up
-	time.Sleep(10 * time.Second)
-
 	go func() {
 		rs = Monitor()
 		deployP.Stop()
@@ -174,7 +170,8 @@ func (s *stats) InitStats(name string, runconfigs []platform.RunConfig) {
 	s.name = name
 	s.runconfigs = runconfigs
 	s.rs = make([]RunStats, len(runconfigs))
-	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+	MkTestDir()
+	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
@@ -205,9 +202,10 @@ func (s *stats) WriteStats(run int, runs []RunStats) {
 		log.Fatal("error syncing data to test file:", err)
 	}
 
+	MkTestDir()
 	cl, err := os.OpenFile(
-		TestFile("client_latency_"+s.name+"_"+strconv.Itoa(run)),
-		os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+		TestFile("client_latency_" + s.name + "_" + strconv.Itoa(run)),
+		os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
