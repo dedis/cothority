@@ -62,7 +62,7 @@ func main() {
 	if deployP == nil {
 		dbg.Fatal("Platform not recognized.", deploy_dst)
 	}
-	dbg.Lvl1("Deploying to ", deploy_dst)
+	dbg.Lvl1("Deploying to", deploy_dst)
 	Start(flag.Args())
 }
 
