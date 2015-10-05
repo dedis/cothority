@@ -11,4 +11,7 @@ app/stamp/stamp
 app/shamir/shamir
 deploy/deterlab/remote/*
 deploy/deploy
+deploy/matplotlib/*csv
+deploy/matplotlib/*png
+deploy/matplotlib/imgs
 test/
