@@ -1,8 +1,0 @@
-Logger = ""
-App = "naive"
-AppDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/deploy/../app"
-LocalDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/deploy"
-RunDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/deploy/platform/localhost"
-Debug = 4
-Machines = 3
-Hosts = ["127.0.0.1:2000", "127.0.0.1:2005", "127.0.0.1:2010"]
