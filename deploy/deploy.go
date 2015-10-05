@@ -34,21 +34,20 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // Configuration-variables
 var deployP platform.Platform
 var port int = 8081
 
-var deploy_dst = "deterlab"
+var platform_dst = "deterlab"
 var app = ""
 var nobuild = false
 var build = ""
 var machines = 3
 
 func init() {
-	flag.StringVar(&deploy_dst, "deploy", deploy_dst, "if you want to deploy, chose [deterlab,localhost]")
+	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
 	flag.StringVar(&app, "app", app, "start [server,client] locally")
 	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Debugging-level. 0 is silent, 5 is flood")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
@@ -58,11 +57,11 @@ func init() {
 
 func main() {
 	flag.Parse()
-	deployP = platform.NewPlatform(deploy_dst)
+	deployP = platform.NewPlatform(platform_dst)
 	if deployP == nil {
-		dbg.Fatal("Platform not recognized.", deploy_dst)
+		dbg.Fatal("Platform not recognized.", platform_dst)
 	}
-	dbg.Lvl1("Deploying to ", deploy_dst)
+	dbg.Lvl1("Deploying to", platform_dst)
 	Start(flag.Args())
 }
 
@@ -142,9 +141,6 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 		return rs, nil
 	}
 
-	// give it a while to start up
-	time.Sleep(10 * time.Second)
-
 	go func() {
 		rs = Monitor()
 		deployP.Stop()
@@ -174,7 +170,8 @@ func (s *stats) InitStats(name string, runconfigs []platform.RunConfig) {
 	s.name = name
 	s.runconfigs = runconfigs
 	s.rs = make([]RunStats, len(runconfigs))
-	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+	MkTestDir()
+	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
@@ -205,9 +202,10 @@ func (s *stats) WriteStats(run int, runs []RunStats) {
 		log.Fatal("error syncing data to test file:", err)
 	}
 
+	MkTestDir()
 	cl, err := os.OpenFile(
-		TestFile("client_latency_"+s.name+"_"+strconv.Itoa(run)),
-		os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+		TestFile("client_latency_" + s.name + "_" + strconv.Itoa(run)),
+		os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}

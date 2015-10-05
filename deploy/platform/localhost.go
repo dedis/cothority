@@ -24,30 +24,35 @@ var defaultConfigName = "localhost.toml"
 // Localhost is the platform for launching thee apps locally
 type Localhost struct {
 
-	// Address of the logger (can be local or not)
-	Logger string
+					   // Address of the logger (can be local or not)
+	Logger      string
 
-	// App to run [shamir,coll_sign..]
-	App    string
-	AppDir string // where the app is located
+					   // App to run [shamir,coll_sign..]
+	App         string
+	AppDir      string // where the app is located
 
-	// Where is the Localhost package located
-	LocalDir string
-	// Where to build the executables +
-	// where to read the config file
-	// it will be assembled like LocalDir/RunDir
-	RunDir string
+					   // Where is the Localhost package located
+	LocalDir    string
+					   // Where to build the executables +
+					   // where to read the config file
+					   // it will be assembled like LocalDir/RunDir
+	RunDir      string
 
-	// Debug level 1 - 5
-	Debug int
+					   // Debug level 1 - 5
+	Debug       int
 
-	// ////////////////////////////
-	// Number of processes to launch
-	// ////////////////////////////
-	Machines int
-	// hosts used with the applications
-	// example: localhost:2000, ...:2010 , ...
-	Hosts []string
+					   // ////////////////////////////
+					   // Number of processes to launch
+					   // ////////////////////////////
+	Machines    int
+					   // hosts used with the applications
+					   // example: localhost:2000, ...:2010 , ...
+	Hosts       []string
+
+					   // Signal that the process is finished
+	channelDone chan string
+					   // Whether we started a simulation
+	running bool
 }
 
 // Configure various
@@ -57,6 +62,8 @@ func (d *Localhost) Configure() {
 	d.RunDir = pwd + "/platform/localhost"
 	d.LocalDir = pwd
 	d.Debug = dbg.DebugVisible
+	d.running = false
+	d.channelDone = make(chan string)
 	if d.App == "" {
 		dbg.Fatal("No app defined in simulation")
 	}
@@ -66,7 +73,7 @@ func (d *Localhost) Configure() {
 
 // Will build the application
 func (d *Localhost) Build(build string) error {
-	src, _ := filepath.Rel(d.LocalDir, d.AppDir+"/"+d.App)
+	src, _ := filepath.Rel(d.LocalDir, d.AppDir + "/" + d.App)
 	dst := d.RunDir + "/" + d.App
 	start := time.Now()
 	// build for the local machine
@@ -74,9 +81,9 @@ func (d *Localhost) Build(build string) error {
 	if err != nil {
 		dbg.Fatal("Error while building for localhost (src ", src, ", dst ", dst, " : ", res)
 	}
-	dbg.Lvl3("Localhost : Build src ", src, ", dst ", dst)
-	dbg.Lvl3("Localhost : Results of localhost build : ", res)
-	dbg.Lvl1("Localhost : build finished in ", time.Since(start))
+	dbg.Lvl3("Localhost : Build src", src, ", dst", dst)
+	dbg.Lvl3("Localhost : Results of localhost build :", res)
+	dbg.Lvl1("Localhost : build finished in", time.Since(start))
 	return err
 }
 
@@ -152,6 +159,8 @@ func (d *Localhost) Start() error {
 	dbg.Lvl4("Localhost : chdir into ", d.RunDir)
 	ex := d.RunDir + "/" + d.App
 	dbg.Lvl4("Localhost: in Start() => hosts ", d.Hosts)
+	d.running = true
+	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for _, h := range d.Hosts {
 		args := []string{"-hostname", h, "-mode", "server"}
 		cmd := exec.Command(ex, args...)
@@ -163,6 +172,7 @@ func (d *Localhost) Start() error {
 			if err != nil {
 				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
+			d.channelDone <- "Done"
 		}()
 		time.Sleep(100 * time.Millisecond)
 
@@ -171,15 +181,23 @@ func (d *Localhost) Start() error {
 }
 
 func (d *Localhost) Stop() error {
-	ex := d.AppDir + "/" + d.App + "/" + d.App
-	cmd := exec.Command("pkill", ex)
+	if d.running {
+		select {
+		case <-d.channelDone:
+			dbg.Lvl2("Simulation is done")
+		case <-time.After(time.Minute * 2):
+			dbg.Lvl1("Timeout of 2 minutes reached - aborting")
+		}
+	}
+	ex := d.RunDir + "/" + d.App
+	cmd := exec.Command("pkill", "-f", ex)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		dbg.Lvl3("Error stoping localhost")
+		dbg.Lvl3("Error stoping localhost", err)
 	}
-	return err
+	return nil
 }
 
 // Reads in the localhost-config and drops out if there is an error
@@ -205,7 +223,7 @@ func (d *Localhost) GenerateHosts() {
 	port := 2000
 	inc := 5
 	for i := 0; i < d.Machines; i++ {
-		s := "127.0.0.1:" + strconv.Itoa(port+inc*i)
+		s := "127.0.0.1:" + strconv.Itoa(port + inc * i)
 		d.Hosts[i] = s
 	}
 	dbg.Lvl4("Localhost: Generated hosts list ", d.Hosts)

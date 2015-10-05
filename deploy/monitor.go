@@ -17,6 +17,10 @@ import (
 
 // Monitor monitors log aggregates results into RunStats
 func Monitor() RunStats {
+	if platform_dst != "deterlab"{
+		dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
+		return RunStats{}
+	}
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
 	retry_dial:
@@ -95,8 +99,8 @@ func Monitor() RunStats {
 				continue
 			}
 			dbg.Lvl4("root_round:", entry)
-			if entry.Round == 1{
-				dbg.Lvl1("Throwing away first round")
+			if entry.Round == 0{
+				dbg.Lvl1("Discarding away first round")
 				continue
 			}
 			if first {

@@ -185,8 +185,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	ioutil.WriteFile(appConfig, []byte(rc), 0666)
 	deter.ReadConfig(appConfig)
 
-	deter.createHostsFile()
-	deter.readHosts()
+	deter.createHosts()
 	d.MasterLogger = deter.MasterLogger
 	app.WriteTomlConfig(deter, deterConfig)
 
@@ -319,70 +318,42 @@ func (d *Deterlab) ReadConfig(name ...string) {
 * Write the hosts.txt file automatically
 * from project name and number of servers
  */
-func (d *Deterlab) createHostsFile() error {
-	hosts_file := d.DeployDir + "/hosts.txt"
+func (d *Deterlab) createHosts() error {
 	num_servers := d.Machines + d.Loggers
-
-	// open and erase file if needed
-	if _, err1 := os.Stat(hosts_file); err1 == nil {
-		dbg.Lvl4("Hosts file", hosts_file, "already exists. Erasing ...")
-		os.Remove(hosts_file)
-	}
-	// create the file
-	f, err := os.Create(hosts_file)
-	if err != nil {
-		dbg.Fatal("Could not create hosts file description: ", hosts_file, " :: ", err)
-		return err
-	}
-	defer f.Close()
+	nmachs, nloggers := d.Machines, d.Loggers
 
 	// write the name of the server + \t + IP address
 	ip := "10.255.0."
 	name := d.Project + ".isi.deterlab.net"
+	d.Phys = make([]string, 0, num_servers)
+	d.Virt = make([]string, 0, num_servers)
 	for i := 1; i <= num_servers; i++ {
-		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i-1, d.Experiment, name, ip, i))
-	}
-	dbg.Lvl4(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
-	return err
-
-}
-
-// parse the hosts.txt file to create a separate list (and file)
-// of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
-// corresponds to each host on line i, in virt.txt.
-func (d *Deterlab) readHosts() {
-	hosts_file := d.DeployDir + "/hosts.txt"
-	nmachs, nloggers := d.Machines, d.Loggers
-
-	physVirt, err := cliutils.ReadLines(hosts_file)
-	if err != nil {
-		dbg.Fatal("Couldn't find", hosts_file)
+		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i - 1, d.Experiment, name))
+		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
 
-	d.Phys = make([]string, 0, len(physVirt)/2)
-	d.Virt = make([]string, 0, len(physVirt)/2)
-	for i := 0; i < len(physVirt); i += 2 {
-		d.Phys = append(d.Phys, physVirt[i])
-		d.Virt = append(d.Virt, physVirt[i+1])
-	}
-	d.Phys = d.Phys[:nmachs+nloggers]
-	d.Virt = d.Virt[:nmachs+nloggers]
+	// only take the machines we need
+	d.Phys = d.Phys[:nmachs + nloggers]
+	d.Virt = d.Virt[:nmachs + nloggers]
 	physOut := strings.Join(d.Phys, "\n")
 	virtOut := strings.Join(d.Virt, "\n")
 	d.MasterLogger = d.Phys[0]
 
 	// phys.txt and virt.txt only contain the number of machines that we need
-	dbg.Lvl3("Reading phys and virt")
-	err = ioutil.WriteFile(d.DeployDir+"/phys.txt", []byte(physOut), 0666)
+	dbg.Lvl3("Writing phys and virt")
+	err := ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(physOut), 0666)
 	if err != nil {
 		dbg.Fatal("failed to write physical nodes file", err)
 	}
 
-	err = ioutil.WriteFile(d.DeployDir+"/virt.txt", []byte(virtOut), 0666)
+	err = ioutil.WriteFile(d.DeployDir + "/virt.txt", []byte(virtOut), 0666)
 	if err != nil {
 		dbg.Fatal("failed to write virtual nodes file", err)
 	}
+
+	return nil
 }
+
 
 // Checks whether host, login and project are defined. If any of them are missing, it will
 // ask on the command-line.

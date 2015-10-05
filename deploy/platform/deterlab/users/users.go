@@ -96,7 +96,7 @@ func main() {
 				grep := "grep '" + strings.Split(deterlab.Phys[i], ".")[0] + " ' | sed -e 's/.* //'"
 				cmd := fmt.Sprintf("expinfo -e %s,%s -m | %s",
 					deterlab.Project, deterlab.Experiment, grep)
-				info, _ := exec.Command("bash", "-c", "\"" + cmd + "\"").Output()
+				info, _ := exec.Command("bash", "-c", cmd).Output()
 				dbg.Lvl1("You might want to run\nnode_reboot", string(info), cmd)
 			}
 		}
@@ -162,7 +162,7 @@ func main() {
 	}
 
 	servers := len(physToServer)
-	hpn := len(deterlab.Hostnames)
+	hpn := len(deterlab.Hostnames) / servers
 	dbg.Lvl1("starting", servers, "forkexecs with", hpn, "processes each =", servers * hpn)
 	totalServers := 0
 	for phys, virts := range physToServer {
