@@ -5,6 +5,7 @@ test_data
 app/sign/sign
 app/stamp/stamp
 app/shamir/shamir
+app/naive/naive
 deploy/platform/deterlab/build
 deploy/platform/deterlab/remote/*
 deploy/platform/deterlab/deter.toml

@@ -25,7 +25,7 @@ var InvTypeRegistry = make(map[reflect.Type]Type)
 // Register a custom "struct" / "packet" and get
 // the allocated Type
 // Pass simply an your non-initialized struct
-func RegisterProtocolType(msg interface{}) Type {
+func RegisterProtocolType(msg ProtocolMessage) Type {
 	currType += 1
 	t := reflect.TypeOf(msg)
 	TypeRegistry[currType] = t
@@ -58,7 +58,7 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = Suite.Write(buf, &am.Msg)
+	err = Suite.Write(buf, am.Msg)
 	if err != nil {
 		return nil, err
 	}

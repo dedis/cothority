@@ -164,6 +164,7 @@ func (d *Localhost) Start() error {
 				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
 		}()
+		time.Sleep(100 * time.Millisecond)
 
 	}
 	return nil
