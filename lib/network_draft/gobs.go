@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/dedis/cothority/lib/network_draft/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
+	"io"
 	"os"
 	"time"
 )
@@ -13,10 +15,36 @@ type PublicPacket struct {
 	Point abstract.Point
 }
 
+func (p *PublicPacket) String() string {
+	return "PublicPacket"
+}
+func (p *PublicPacket) MarshalTo(w io.Writer) (int, error) {
+	err := network.Suite.Write(w, &p.Point)
+	return 0, err
+}
+func (p *PublicPacket) MarshalBinary() ([]byte, error) {
+	var b bytes.Buffer
+	err := network.Suite.Write(&b, &p.Point)
+	return b.Bytes(), err
+}
+func (p *PublicPacket) UnmarshalFrom(r io.Reader) (int, error) {
+	err := network.Suite.Read(r, &p.Point)
+	return 0, err
+}
+func (p *PublicPacket) UnmarshalBinary(buf []byte) error {
+	b := bytes.NewBuffer(buf)
+	err := network.Suite.Read(b, &p.Point)
+	return err
+}
+
+func (p *PublicPacket) MarshalSize() int {
+	return 0
+}
+
 var PublicType network.Type
 
 func init() {
-	PublicType = network.RegisterProtocolType(&PublicPacket{})
+	PublicType = network.RegisterProtocolType(PublicPacket{})
 }
 
 type SimpleClient struct {
@@ -48,7 +76,7 @@ func (s *SimpleClient) ExchangeWithServer(name string) {
 		Point: s.Pub,
 	}
 	// Send it
-	c.Send(&p)
+	c.Send(p)
 	fmt.Printf("%s has sent its PublicPacket to %s\n", s.Name(), c.PeerName())
 
 	// Receive the response
@@ -62,7 +90,7 @@ func (s *SimpleClient) ExchangeWithServer(name string) {
 		fmt.Printf("Received a non-wanted packet.\n")
 		os.Exit(1)
 	}
-	pub := am.Msg.(*PublicPacket)
+	pub := am.Msg.(PublicPacket)
 
 	fmt.Printf("%s received the remote key from %s : %s\n", s.Name(), c.PeerName(), pub.Point.String())
 	c.Close()
@@ -84,7 +112,7 @@ func (s *SimpleServer) ExchangeWithClient(c network.Conn) {
 		Point: s.Pub,
 	}
 
-	c.Send(&p)
+	c.Send(p)
 	fmt.Printf("%s has sent its PublicPacket to %s\n", s.Name(), c.PeerName())
 	am, err := c.Receive()
 	if err != nil {
@@ -94,7 +122,7 @@ func (s *SimpleServer) ExchangeWithClient(c network.Conn) {
 		fmt.Printf("Server received a non-wanted packet\n")
 		os.Exit(1)
 	}
-	pub := am.Msg.(*PublicPacket)
+	pub := am.Msg.(PublicPacket)
 	fmt.Printf("%s received the remote key from %s : %s\n", s.Name(), c.PeerName(), pub.Point.String())
 	c.Close()
 	fmt.Printf("%s is closing ...\n", s.Name())
