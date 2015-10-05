@@ -40,14 +40,14 @@ import (
 var deployP platform.Platform
 var port int = 8081
 
-var deploy_dst = "deterlab"
+var platform_dst = "deterlab"
 var app = ""
 var nobuild = false
 var build = ""
 var machines = 3
 
 func init() {
-	flag.StringVar(&deploy_dst, "deploy", deploy_dst, "if you want to deploy, chose [deterlab,localhost]")
+	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
 	flag.StringVar(&app, "app", app, "start [server,client] locally")
 	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Debugging-level. 0 is silent, 5 is flood")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
@@ -57,11 +57,11 @@ func init() {
 
 func main() {
 	flag.Parse()
-	deployP = platform.NewPlatform(deploy_dst)
+	deployP = platform.NewPlatform(platform_dst)
 	if deployP == nil {
-		dbg.Fatal("Platform not recognized.", deploy_dst)
+		dbg.Fatal("Platform not recognized.", platform_dst)
 	}
-	dbg.Lvl1("Deploying to", deploy_dst)
+	dbg.Lvl1("Deploying to", platform_dst)
 	Start(flag.Args())
 }
 
