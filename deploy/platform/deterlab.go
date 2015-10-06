@@ -226,6 +226,8 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		conf := app.NaiveConfig{}
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
+		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Hpn)
+		deter.Hostnames = conf.Hosts
 		dbg.Lvl3("Deterlab : naive applications :", conf.Hosts)
 		app.WriteTomlConfig(conf, appConfig)
 
