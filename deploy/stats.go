@@ -167,6 +167,9 @@ type Stats interface {
 	// Valid tells is the stats received some real data and is not
 	// empty or full of garbage
 	Valid() bool
+
+	// Average will let you average a bunch of stats from a already existing
+	Average(stats ...Stats) (Stats, error)
 }
 
 // statistics about the shamir_sign app
@@ -243,12 +246,12 @@ func (s *ShamirStats) Valid() bool {
 }
 
 // Average all these stats
-func shamirStatsAverage(stats ...Stats) (Stats, error) {
-	var s *ShamirStats = new(ShamirStats)
-
+func (s *ShamirStats) Average(stats ...Stats) (Stats, error) {
 	if len(stats) < 1 {
 		return s, nil
 	}
+	s.SysTime = 0
+	s.UserTime = 0
 	stset := make([]StreamStats, len(stats))
 	stround := make([]StreamStats, len(stats))
 	for i, _ := range stats {
@@ -258,8 +261,6 @@ func shamirStatsAverage(stats ...Stats) (Stats, error) {
 		}
 		stset[i] = ss.setup
 		stround[i] = ss.round
-		s.NHosts = ss.NHosts
-		s.Writer = ss.Writer
 		s.SysTime += ss.SysTime
 		s.UserTime += ss.UserTime
 	}
@@ -362,20 +363,15 @@ func (s *CollStats) AddEntry(e Entry) error {
 }
 
 // Average a collection of Stats that better be CollStats !
-func collStatsAverage(stats ...Stats) (Stats, error) {
-	var s *CollStats = new(CollStats)
+func (s *CollStats) Average(stats ...Stats) (Stats, error) {
 	if len(stats) == 0 {
 		return s, errors.New("No stats given to average on CollStats")
 	}
-	first, ok := stats[0].(*CollStats)
-	if !ok {
-		return s, errors.New("Received non CollStats into collStatsAverage")
-	}
-	s.NHosts = first.NHosts
-	s.Depth = first.Depth
-	s.BF = first.BF
-	s.Times = make([]float64, len(first.Times))
+	s.Times = make([]float64, len(s.Times))
 	st := make([]StreamStats, 0, len(stats))
+	s.SysTime = 0
+	s.UserTime = 0
+	s.Rate = 0
 	for _, b := range stats {
 		a, ok := b.(*CollStats)
 		if !ok {
@@ -401,13 +397,7 @@ func AverageStats(stats ...Stats) (Stats, error) {
 	if len(stats) == 0 {
 		return nil, errors.New("No stats given to average")
 	}
-	switch stats[0].(type) {
-	case *CollStats:
-		return collStatsAverage(stats...)
-	case *ShamirStats:
-		return shamirStatsAverage(stats...)
-	}
-	return nil, errors.New("Unknown type of stats given to AverageStats()")
+	return stats[0].Average(stats...)
 }
 
 // helper function to get the right Stats depending on the test
