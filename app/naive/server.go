@@ -135,9 +135,9 @@ func GoServer(conf *app.NaiveConfig) {
 	host := network.NewTcpHost(app.RunFlags.Hostname)
 	key := cliutils.KeyPair(suite)
 	server := NewPeer(host, ServRole, key.Secret, key.Public)
-	dbg.Lvl2(server.String(), "Server will contact leader .")
+	dbg.Lvl2(server.String(), "will contact leader .")
 	l := server.Open(conf.Hosts[0])
-	dbg.Lvl1(server.String(), "Server is connected to leader ", l.PeerName())
+	dbg.Lvl1(server.String(), "is connected to leader ", l.PeerName())
 
 	// make the protocol for each rounds
 	for i := 0; i < conf.Rounds; i++ {

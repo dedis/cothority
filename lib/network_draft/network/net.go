@@ -106,6 +106,9 @@ func (am *ApplicationMessage) ConstructFrom(obj ProtocolMessage) error {
 
 const ListenPort = "5000"
 
+// How many times should we try to connect
+const maxRetry = 5
+
 type Host interface {
 	Name() string
 	Open(name string) Conn
@@ -181,9 +184,18 @@ func (t *TcpHost) Name() string {
 	return t.name
 }
 func (t *TcpHost) Open(name string) Conn {
-	conn, err := net.Dial("tcp", name)
-	if err != nil {
-		fmt.Printf("Error opening connection to %s\n", name)
+	var conn net.Conn
+	var err error
+	for i := 0; i < maxRetry; i++ {
+
+		conn, err = net.Dial("tcp", name)
+		if err != nil {
+			fmt.Printf("Error opening connection to %s\n", name)
+		} else {
+			break
+		}
+	}
+	if conn == nil {
 		os.Exit(1)
 	}
 	c := TcpConn{
