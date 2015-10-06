@@ -77,8 +77,8 @@ func GoLeader(conf *app.NaiveConfig) {
 			go func() {
 				// send the new SignatureChannel to every conn
 				for newSigChan := range masterRoundChan {
-					for _, c := range roundChanns {
-						c <- newSigChan
+					for i, _ := range roundChanns {
+						go func(j int) { roundChans[j] <- newSigChan }(i)
 					}
 				}
 				//close when finished
@@ -93,7 +93,7 @@ func GoLeader(conf *app.NaiveConfig) {
 		"file": logutils.File(),
 		"type": "naive_setup",
 		"time": time.Since(now)}).Info("")
-	dbg.Lvl1(leader.String(), "got all channels ready => starting the ", conf.Rounds, " rounds")
+	dbg.Lvl2(leader.String(), "got all channels ready => starting the ", conf.Rounds, " rounds")
 	for i := 0; i < conf.Rounds; i++ {
 		now = time.Now()
 		n := 0
@@ -134,7 +134,7 @@ func GoServer(conf *app.NaiveConfig) {
 	server := NewPeer(host, ServRole, key.Secret, key.Public)
 	dbg.Lvl2(server.String(), "will contact leader ", conf.Hosts[0])
 	l := server.Open(conf.Hosts[0])
-	dbg.Lvl1(server.String(), "is connected to leader ", l.PeerName())
+	dbg.Lvl2(server.String(), "is connected to leader ", l.PeerName())
 
 	// make the protocol for each rounds
 	for i := 0; i < conf.Rounds; i++ {
@@ -155,6 +155,6 @@ func GoServer(conf *app.NaiveConfig) {
 		dbg.Lvl2(server.String(), "round ", i, " sent the signature to leader")
 	}
 	l.Close()
-	dbg.Lvl1(app.RunFlags.Hostname, "Finished")
+	dbg.Lvl2(app.RunFlags.Hostname, "Finished")
 
 }
