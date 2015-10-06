@@ -179,7 +179,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	// err = ErrClientToTSTimeout
 	}
 	if err != nil {
-		log.Errorln(c.Name(), "error received from DoneChan:", err)
+		dbg.Lvl3(c.Name(), "error received from DoneChan:", err)
 		return err
 	}
 
