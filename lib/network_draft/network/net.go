@@ -190,7 +190,7 @@ func (t *TcpHost) Open(name string) Conn {
 
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
-			fmt.Printf("Error opening connection to %s\n", name)
+			fmt.Printf("%s Error opening connection to %s\n", t.Name(), name)
 		} else {
 			break
 		}

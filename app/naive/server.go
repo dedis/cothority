@@ -7,7 +7,6 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/network_draft/network"
-	"strings"
 	"time"
 )
 
@@ -23,27 +22,24 @@ func RunServer(conf *app.NaiveConfig) {
 	}
 
 	if indexPeer == 0 {
-		dbg.Lvl3("Launching a naiv_sign. : Leader ", app.RunFlags.Hostname)
+		dbg.Lvl2("Launching a naiv_sign. : Leader ", app.RunFlags.Hostname)
 		GoLeader(conf)
 	} else {
-		dbg.Lvl3("Launching a naiv_sign : Server ", app.RunFlags.Hostname)
+		dbg.Lvl2("Launching a naiv_sign : Server ", app.RunFlags.Hostname)
 		GoServer(conf)
 	}
 
 }
 
 func GoLeader(conf *app.NaiveConfig) {
-	// TODO remove this dirty fix and make
-	// ... a clean one.
-	ip := strings.Split(app.RunFlags.Hostname, ":")[0]
 
-	host := network.NewTcpHost(ip)
+	host := network.NewTcpHost(app.RunFlags.Hostname)
 	key := cliutils.KeyPair(suite)
 	leader := NewPeer(host, LeadRole, key.Secret, key.Public)
 
 	msg := []byte("Hello World\n")
 	// Listen for connections
-	dbg.Lvl1(app.RunFlags.Hostname, "Leader making connections ...")
+	dbg.Lvl1(leader.String(), "making connections ...")
 	// each conn will create its own channel to be used to handle rounds
 	roundChans := make(chan chan chan *BasicSignature)
 	// Send the message to be signed
@@ -97,7 +93,7 @@ func GoLeader(conf *app.NaiveConfig) {
 		"file": logutils.File(),
 		"type": "naive_setup",
 		"time": time.Since(now)}).Info("")
-	dbg.Lvl1(leader.String(), "got all channels ready => starting rounds")
+	dbg.Lvl1(leader.String(), "got all channels ready => starting the ", conf.Rounds, " rounds")
 	for i := 0; i < conf.Rounds; i++ {
 		now = time.Now()
 		n := 0
@@ -132,10 +128,11 @@ func GoLeader(conf *app.NaiveConfig) {
 }
 
 func GoServer(conf *app.NaiveConfig) {
+	time.Sleep(2 * time.Second)
 	host := network.NewTcpHost(app.RunFlags.Hostname)
 	key := cliutils.KeyPair(suite)
 	server := NewPeer(host, ServRole, key.Secret, key.Public)
-	dbg.Lvl2(server.String(), "will contact leader .")
+	dbg.Lvl2(server.String(), "will contact leader ", conf.Hosts[0])
 	l := server.Open(conf.Hosts[0])
 	dbg.Lvl1(server.String(), "is connected to leader ", l.PeerName())
 
