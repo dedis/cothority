@@ -25,7 +25,6 @@ var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
 
 func RunClient(flags *app.Flags, conf *app.ConfigColl){
-//server string, nmsgs int, name string, rate int) {
 	dbg.Lvl4("Starting to run stampclient")
 	c := NewClient(flags.Name)
 	servers := strings.Split(flags.Server, ",")
@@ -40,20 +39,19 @@ func RunClient(flags *app.Flags, conf *app.ConfigColl){
 		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn + 1))))
 	}
 
-	// Check if somebody asks for the old way
-	if conf.Rate < 0 {
-		log.Fatal("Rounds based limiting deprecated")
-	}
-
 	// Stream time coll_stamp requests
 	// if rate specified send out one message every rate milliseconds
-	dbg.Lvl1(flags.Name, "starting to stream at rate", conf.Rate)
-	streamMessgs(c, servers, conf.Rate)
-	dbg.Lvl4("Finished streaming")
+	dbg.Lvl3(flags.Name, "starting to stream at rate", conf.Rate, "with root", flags.AmRoot)
+	buck, roundsAfter, times := streamMessgs(c, servers, conf.Rate)
+	if flags.AmRoot{
+		dbg.Lvl3("Printing stats")
+		AggregateStats(buck, roundsAfter, times)
+	}
+	dbg.Lvl4("Finished streaming", flags.Name)
 	return
 }
 
-func AggregateStats(buck, roundsAfter, times []int64) string {
+func AggregateStats(buck, roundsAfter, times []int64) {
 	muStats.Lock()
 	log.WithFields(log.Fields{
 		"file":        logutils.File(),
@@ -63,7 +61,6 @@ func AggregateStats(buck, roundsAfter, times []int64) string {
 		"times":       removeTrailingZeroes(times),
 	}).Info("")
 	muStats.Unlock()
-	return "Client Finished Aggregating Statistics"
 }
 
 func genRandomMessages(n int) [][]byte {
@@ -88,14 +85,14 @@ func removeTrailingZeroes(a []int64) []int64 {
 	return a[:i + 1]
 }
 
-func streamMessgs(c *Client, servers []string, rate int) {
+func streamMessgs(c *Client, servers []string, rate int) ([]int64, []int64, []int64){
 	dbg.Lvl4(c.Name(), "streaming at given rate", rate)
 	// buck[i] = # of timestamp responses received in second i
 	buck := make([]int64, MAX_N_SECONDS)
 	// roundsAfter[i] = # of timestamp requests that were processed i rounds late
 	roundsAfter := make([]int64, MAX_N_ROUNDS)
 	times := make([]int64, MAX_N_SECONDS * 1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
-	ticker := time.Tick(time.Duration(rate) * time.Millisecond)
+	ticker := time.NewTicker(time.Duration(rate) * time.Millisecond)
 	msg := genRandomMessages(1)[0]
 	i := 0
 	nServers := len(servers)
@@ -104,8 +101,8 @@ func streamMessgs(c *Client, servers []string, rate int) {
 	dbg.Lvl3(c.Name(), "checking if", servers[0], "is already up")
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
-		dbg.LLvl4("Client", c.Name(), "Couldn't connect to TimeStamp")
-		dbg.Fatal(AggregateStats(buck, roundsAfter, times))
+		dbg.Lvl4("Client", c.Name(), "Couldn't connect to TimeStamp")
+		return buck, roundsAfter, times
 	} else if err == ErrClientToTSTimeout {
 		dbg.Lvl4(err.Error())
 	} else if err != nil {
@@ -119,7 +116,8 @@ func streamMessgs(c *Client, servers []string, rate int) {
 	// every tick send a time coll_stamp request to every server specified
 	// this will stream until we get an EOF
 	tick := 0
-	for _ = range ticker {
+	abort := false
+	for _ = range ticker.C {
 		tick += 1
 		go func(msg []byte, s string, tick int) {
 			t0 := time.Now()
@@ -128,11 +126,12 @@ func streamMessgs(c *Client, servers []string, rate int) {
 
 			if err == io.EOF || err == coconet.ErrClosed {
 				if err == io.EOF {
-					dbg.LLvl4("Client", c.Name(), "terminating due to EOF", s)
+					dbg.Lvl4("Client", c.Name(), "terminating due to EOF", s)
 				} else {
-					dbg.LLvl4("Client", c.Name(), "terminating due to Connection Error Closed", s)
+					dbg.Lvl4("Client", c.Name(), "terminating due to Connection Error Closed", s)
 				}
-				dbg.Fatal(AggregateStats(buck, roundsAfter, times))
+				abort = true
+				return
 			} else if err != nil {
 				// ignore errors
 				dbg.Lvl4("Client", c.Name(), "Leaving out streamMessages. ", err)
@@ -151,6 +150,10 @@ func streamMessgs(c *Client, servers []string, rate int) {
 		}(msg, servers[i], tick)
 
 		i = (i + 1) % nServers
+		if abort {
+			break
+		}
 	}
 
+	return buck, roundsAfter, times
 }
