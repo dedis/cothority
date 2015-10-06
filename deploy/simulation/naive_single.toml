@@ -1,7 +1,6 @@
 Machines = 3
-Logservers = 0
 App = "naive"
 Suite = "ed25519"
 
 Hpn,  Rounds
-1, 1
+1, 3

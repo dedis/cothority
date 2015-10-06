@@ -106,7 +106,7 @@ func (m *MessageSigning) UnmarshalBinary(buf []byte) error {
 	return err
 }
 func (l *Peer) String() string {
-	return fmt.Sprintf("%s %s (%d sigs)", l.Host.Name(), l.role, len(l.Signatures))
+	return fmt.Sprintf("%s %s", l.Host.Name(), l.role)
 }
 
 // Will send the message to be signed to everyone

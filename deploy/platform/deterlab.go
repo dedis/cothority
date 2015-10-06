@@ -19,7 +19,6 @@ package platform
 import (
 	"os"
 	"os/exec"
-	"reflect"
 	"sync"
 
 	"bufio"
@@ -222,18 +221,14 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.WriteTomlConfig(conf, appConfig)
 	case "naive":
 		conf := app.NaiveConfig{}
-		app.ReadTomlConfig(&conf, localConfig)
+		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		dbg.Lvl4("Localhost : naive applications :", conf.Hosts)
+		dbg.Lvl3("Deterlab : naive applications :", conf.Hosts)
 		app.WriteTomlConfig(conf, appConfig)
 
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
-	debug := reflect.ValueOf(deter).Elem().FieldByName("Debug")
-	if debug.IsValid() {
-		dbg.DebugVisible = debug.Interface().(int)
-	}
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir+"/logserver/webfiles",

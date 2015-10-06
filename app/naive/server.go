@@ -1,11 +1,14 @@
 package main
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/network_draft/network"
 	"strings"
+	"time"
 )
 
 func RunServer(conf *app.NaiveConfig) {
@@ -41,33 +44,91 @@ func GoLeader(conf *app.NaiveConfig) {
 	msg := []byte("Hello World\n")
 	// Listen for connections
 	dbg.Lvl1(app.RunFlags.Hostname, "Leader making connections ...")
-	connChan := make(chan *BasicSignature)
+	// each conn will create its own channel to be used to handle rounds
+	roundChans := make(chan chan chan *BasicSignature)
 	// Send the message to be signed
 	proto := func(c network.Conn) {
-		dbg.Lvl3(leader.String(), "sending message ", msg, "to server ", c.PeerName())
-		leader.SendMessage(msg, c)
-		dbg.Lvl3(leader.String(), "receivng signature from server", c.PeerName())
-		sig := leader.ReceiveBasicSignature(c)
+		// make the chan that will receive a new chan
+		// for each round where to send the signature
+		roundChan := make(chan chan *BasicSignature)
+		roundChans <- roundChan
+		n := 0
+		// wait for the next round
+		for sigChan := range roundChan {
+			dbg.Lvl3(leader.String(), "Round ", n, " sending message ", msg, "to server ", c.PeerName())
+			leader.SendMessage(msg, c)
+			dbg.Lvl3(leader.String(), "Round ", n, " receivng signature from server", c.PeerName())
+			sig := leader.ReceiveBasicSignature(c)
+			sigChan <- sig
+			n += 1
+		}
 		c.Close()
 		dbg.Lvl3(leader.String(), "closed connection with server", c.PeerName())
-		connChan <- sig
 	}
-
+	now := time.Now()
 	go leader.Listen(app.RunFlags.Hostname, proto)
-	dbg.Lvl1(app.RunFlags.Hostname, "Leader Listening for signatures..")
-	n := 0
-	faulty := 0
-	// verify each coming signatures
-	for n < len(conf.Hosts)-1 {
-		bs := <-connChan
-		dbg.Lvl2(app.RunFlags.Hostname, "Leader received signature")
-		if err := SchnorrVerify(suite, msg, *bs); err != nil {
-			faulty += 1
-			dbg.Lvl2(app.RunFlags.Hostname, "Leader received a faulty signature !")
+	dbg.Lvl2(leader.String(), "Listening for channels creation..")
+	// listen for round chans + signatures for each round
+	masterRoundChan := make(chan chan *BasicSignature)
+	roundChanns := make([]chan chan *BasicSignature, 0)
+	//  Make the "setup" of channels
+	for {
+		ch := <-roundChans
+		roundChanns = append(roundChanns, ch)
+		//Received round channels from every connections-
+		if len(roundChanns) == len(conf.Hosts)-1 {
+			// make the Fanout => master will send to all
+			go func() {
+				// send the new SignatureChannel to every conn
+				for newSigChan := range masterRoundChan {
+					for _, c := range roundChanns {
+						c <- newSigChan
+					}
+				}
+				//close when finished
+				for _, c := range roundChanns {
+					close(c)
+				}
+			}()
+			break
 		}
-		n += 1
 	}
-	dbg.Lvl1(app.RunFlags.Hostname, "Leader received ", len(conf.Hosts)-1, "signatures (", faulty, " faulty sign)")
+	log.WithFields(log.Fields{
+		"file": logutils.File(),
+		"type": "naive_setup",
+		"time": time.Since(now)}).Info("")
+	dbg.Lvl1(leader.String(), "got all channels ready => starting rounds")
+	for i := 0; i < conf.Rounds; i++ {
+		now = time.Now()
+		n := 0
+		faulty := 0
+		// launch a new round
+		connChan := make(chan *BasicSignature)
+		masterRoundChan <- connChan
+		// verify each coming signatures
+		for n < len(conf.Hosts)-1 {
+			bs := <-connChan
+			if err := SchnorrVerify(suite, msg, *bs); err != nil {
+				faulty += 1
+				dbg.Lvl2(leader.String(), "Round ", i, " received a faulty signature !")
+			} else {
+				dbg.Lvl2(leader.String(), "Round ", i, " received Good signature")
+			}
+			n += 1
+		}
+		dbg.Lvl1(leader.String(), "Round ", i, " received ", len(conf.Hosts)-1, "signatures (", faulty, " faulty sign)")
+		log.WithFields(log.Fields{
+			"file":  logutils.File(),
+			"type":  "naive_round",
+			"round": i,
+			"time":  time.Since(now),
+		}).Info("")
+	}
+	close(masterRoundChan)
+	dbg.Lvl1(leader.String(), " Has done all rounds")
+	log.WithFields(log.Fields{
+		"file": logutils.File(),
+		"type": "end"}).Info("")
 }
 
 func GoServer(conf *app.NaiveConfig) {
@@ -77,20 +138,26 @@ func GoServer(conf *app.NaiveConfig) {
 	dbg.Lvl2(server.String(), "Server will contact leader .")
 	l := server.Open(conf.Hosts[0])
 	dbg.Lvl1(server.String(), "Server is connected to leader ", l.PeerName())
-	m, err := l.Receive()
-	dbg.Lvl2(server.String(), "received the message to be signed from the leader")
-	if err != nil {
-		dbg.Fatal(server.String(), "server received error waiting msg")
+
+	// make the protocol for each rounds
+	for i := 0; i < conf.Rounds; i++ {
+		// Receive message
+		m, err := l.Receive()
+		dbg.Lvl2(server.String(), " round ", i, " received the message to be signed from the leader")
+		if err != nil {
+			dbg.Fatal(server.String(), "round ", i, " received error waiting msg")
+		}
+		if m.MsgType != MessageSigningType {
+			dbg.Fatal(app.RunFlags.Hostname, "round ", i, "  wanted to receive a msg to sign but..", m.MsgType.String())
+		}
+		msg := m.Msg.(MessageSigning).Msg
+		dbg.Lvl3(server.String(), "round ", i, " received msg : ", msg[:])
+		// Gen signature & send
+		s := server.Signature(msg[:])
+		l.Send(*s)
+		dbg.Lvl2(server.String(), "round ", i, " sent the signature to leader")
 	}
-	if m.MsgType != MessageSigningType {
-		dbg.Fatal(app.RunFlags.Hostname, "Server wanted to receive a msg to sign but..", m.MsgType.String())
-	}
-	msg := m.Msg.(MessageSigning).Msg
-	dbg.Lvl3(server.String(), "received msg : ", msg[:])
-	s := server.Signature(msg[:])
-	dbg.Lvl2(server.String(), "will send the signature to leader")
-	l.Send(*s)
 	l.Close()
-	dbg.Lvl1(app.RunFlags.Hostname, "Server sent signature.Fin")
+	dbg.Lvl1(app.RunFlags.Hostname, "Finished")
 
 }
