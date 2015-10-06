@@ -19,6 +19,7 @@ import(
 func main() {
 	conf := &app.ConfigColl{}
 	app.ReadConfig(conf)
+	dbg.Print("Starting Stamper with level", conf.Debug, dbg.DebugVisible)
 
 	switch app.RunFlags.Mode{
 	case "server":

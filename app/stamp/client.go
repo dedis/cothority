@@ -105,7 +105,7 @@ func streamMessgs(c *Client, servers []string, rate int) {
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
 		dbg.LLvl4("Client", c.Name(), "Couldn't connect to TimeStamp")
-		log.Fatal(AggregateStats(buck, roundsAfter, times))
+		dbg.Fatal(AggregateStats(buck, roundsAfter, times))
 	} else if err == ErrClientToTSTimeout {
 		dbg.Lvl4(err.Error())
 	} else if err != nil {
@@ -132,7 +132,7 @@ func streamMessgs(c *Client, servers []string, rate int) {
 				} else {
 					dbg.LLvl4("Client", c.Name(), "terminating due to Connection Error Closed", s)
 				}
-				log.Fatal(AggregateStats(buck, roundsAfter, times))
+				dbg.Fatal(AggregateStats(buck, roundsAfter, times))
 			} else if err != nil {
 				// ignore errors
 				dbg.Lvl4("Client", c.Name(), "Leaving out streamMessages. ", err)
