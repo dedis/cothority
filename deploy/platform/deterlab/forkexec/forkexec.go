@@ -9,7 +9,6 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
 	"os"
-	"github.com/dedis/cothority/lib/cliutils"
 	"net"
 	"sync"
 	"github.com/dedis/cothority/deploy/platform"
@@ -20,6 +19,9 @@ import (
 
 var deter platform.Deterlab
 var testConnect bool
+var physToServer map[string][]string
+var loggerports []string
+var rootname string
 
 func main() {
 	deter.ReadConfig()
@@ -96,11 +98,8 @@ func main() {
 	dbg.Lvl2(app.RunFlags.PhysAddr, "timestampers exited")
 }
 
-var physToServer map[string][]string
-var loggerports []string
-var rootname string
-
 func setup_deter() {
+	/*
 	virt, err := cliutils.ReadLines("virt.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -109,19 +108,20 @@ func setup_deter() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	*/
 	vpmap := make(map[string]string)
-	for i := range virt {
-		vpmap[virt[i]] = phys[i]
+	for i := range deter.Virt {
+		vpmap[deter.Virt[i]] = deter.Phys[i]
 	}
 	nloggers := deter.Loggers
-	masterLogger := phys[0]
+	masterLogger := deter.Phys[0]
 	loggers := []string{masterLogger}
 	for n := 1; n <= nloggers; n++ {
-		loggers = append(loggers, phys[n])
+		loggers = append(loggers, deter.Phys[n])
 	}
 
-	phys = phys[nloggers:]
-	virt = virt[nloggers:]
+	deter.Phys = deter.Phys[nloggers:]
+	deter.Virt = deter.Virt[nloggers:]
 
 	hostnames := deter.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)

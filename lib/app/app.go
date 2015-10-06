@@ -16,6 +16,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/nist"
 )
 
 type Flags struct {
@@ -173,4 +177,20 @@ func getFullName(filename string, dirOpt ...string) string {
 		}
 	}
 	return dir + "/" + filepath.Base(filename)
+}
+
+// Helper functions that will return the suite used during the process from a string name
+func GetSuite(suite string) abstract.Suite {
+	var s abstract.Suite
+	switch {
+	case suite == "nist256":
+		s = nist.NewAES128SHA256P256()
+	case suite == "nist512":
+		s = nist.NewAES128SHA256QR512()
+	case suite == "ed25519":
+		s = ed25519.NewAES128SHA256Ed25519(true)
+	default:
+		s = nist.NewAES128SHA256P256()
+	}
+	return s
 }

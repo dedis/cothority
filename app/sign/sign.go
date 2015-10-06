@@ -2,15 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/graphs"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
 	"time"
 	"os"
 	"io/ioutil"
-	"github.com/dedis/crypto/edwards/ed25519"
-	"github.com/dedis/crypto/nist"
 	"log"
 	"github.com/dedis/cothority/lib/app"
 )
@@ -42,14 +39,14 @@ func main() {
 
 	// load the configuration
 	dbg.Lvl3("loading configuration for", hostname)
-	var hc *config.HostConfig
+	var hc *graphs.HostConfig
 	var err error
-	s := GetSuite(conf.Suite)
-	opts := config.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
+	s := app.GetSuite(conf.Suite)
+	opts := graphs.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
 	if conf.Failures > 0 || conf.FFail > 0 {
 		opts.Faulty = true
 	}
-	hc, err = config.LoadConfig(conf, opts)
+	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
@@ -99,19 +96,4 @@ func main() {
 	case "server":
 		RunServer(conf, hc)
 	}
-}
-
-func GetSuite(suite string) abstract.Suite {
-	var s abstract.Suite
-	switch {
-	case suite == "nist256":
-		s = nist.NewAES128SHA256P256()
-	case suite == "nist512":
-		s = nist.NewAES128SHA256QR512()
-	case suite == "ed25519":
-		s = ed25519.NewAES128SHA256Ed25519(true)
-	default:
-		s = nist.NewAES128SHA256P256()
-	}
-	return s
 }

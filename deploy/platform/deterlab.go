@@ -19,7 +19,6 @@ package platform
 import (
 	"os"
 	"os/exec"
-	"reflect"
 	"sync"
 
 	"bufio"
@@ -40,44 +39,46 @@ import (
 
 type Deterlab struct {
 	// The login on the platform
-	Login string
+	Login        string
 	// The outside host on the platform
-	Host string
+	Host         string
 	// The name of the project
-	Project string
+	Project      string
 	// Name of the Experiment - also name of hosts
-	Experiment string
+	Experiment   string
 	// Directory of applications
-	AppDir string
+	AppDir       string
 	// Directory where everything is copied into
-	DeployDir string
+	DeployDir    string
 	// Directory for building
-	BuildDir string
+	BuildDir     string
 	// Working directory of deterlab
-	DeterDir string
+	DeterDir     string
 	// Where the main logging machine resides
 	MasterLogger string
 	// DNS-resolvable names
-	Phys []string
+	Phys         []string
 	// VLAN-IP names
-	Virt []string
+	Virt         []string
 
 	// Which app to run
-	App string
+	App          string
 	// Number of machines
-	Machines int
+	Machines     int
 	// Number of loggers
-	Loggers int
+	Loggers      int
 	// Channel to communication stopping of experiment
-	sshDeter chan string
+	sshDeter     chan string
+	// Whether the simulation is started
+	started      bool
 	// Debugging-level: 0 is none - 5 is everything
-	Debug int
+	Debug        int
 
 	// All hostnames used concatenated with the port
-	Hostnames []string
+	Hostnames    []string
 
 	// Testing the connection?
-	TestConnect bool
+	TestConnect  bool
 }
 
 func (d *Deterlab) Configure() {
@@ -126,13 +127,14 @@ func (d *Deterlab) Build(build string) error {
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
 		src_dir := d.DeterDir + "/" + p
+		basename := path.Base(p)
 		if p == "app" {
 			src_dir = d.AppDir + "/" + d.App
+			basename = d.App
 		}
-		basename := path.Base(p)
 		dst := d.BuildDir + "/" + basename
 
-		dbg.Lvl3("Building ", p, "from", src_dir, "into", basename)
+		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
 		wg.Add(1)
 		if p == "users" {
 			go func(src, dest string) {
@@ -141,7 +143,7 @@ func (d *Deterlab) Build(build string) error {
 				// go won't compile on an absolute path so we need to
 				// convert it to a relative one
 				src_rel, _ := filepath.Rel(d.DeterDir, src)
-				out, err := cliutils.Build("./"+src_rel, dest, "386", "freebsd")
+				out, err := cliutils.Build("./" + src_rel, dest, "386", "freebsd")
 				if err != nil {
 					cliutils.KillGo()
 					fmt.Println(out)
@@ -155,7 +157,7 @@ func (d *Deterlab) Build(build string) error {
 			// deter has an amd64, linux architecture
 			src_rel, _ := filepath.Rel(d.DeterDir, src)
 			dbg.Lvl3("Relative-path is", src, src_rel, d.DeterDir)
-			out, err := cliutils.Build("./"+src_rel, dest, "amd64", "linux")
+			out, err := cliutils.Build("./" + src_rel, dest, "amd64", "linux")
 			if err != nil {
 				cliutils.KillGo()
 				fmt.Println(out)
@@ -223,20 +225,23 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
+	/*
+	dbg.Printf("%+v", deter)
 	debug := reflect.ValueOf(deter).Elem().FieldByName("Debug")
 	if debug.IsValid() {
 		dbg.DebugVisible = debug.Interface().(int)
 	}
+	*/
 
 	// copy the webfile-directory of the logserver to the remote directory
-	err := exec.Command("cp", "-a", d.DeterDir+"/logserver/webfiles",
-		d.DeterDir+"/cothority.conf", d.DeployDir).Run()
+	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles",
+		d.DeterDir + "/cothority.conf", d.DeployDir).Run()
 	if err != nil {
 		dbg.Fatal("error copying webfiles:", err)
 	}
 	build, err := ioutil.ReadDir(d.BuildDir)
 	for _, file := range build {
-		err = exec.Command("cp", d.BuildDir+"/"+file.Name(), d.DeployDir).Run()
+		err = exec.Command("cp", d.BuildDir + "/" + file.Name(), d.DeployDir).Run()
 		if err != nil {
 			dbg.Fatal("error copying build-file:", err)
 		}
@@ -244,7 +249,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
 	// Copy everything over to deterlabs
-	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir+"/", "remote/")
+	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir + "/", "remote/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -256,6 +261,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
+	d.started = true
 	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
 	cmd := exec.Command(
 		"ssh",
@@ -263,16 +269,18 @@ func (d *Deterlab) Start() error {
 		"-t",
 		fmt.Sprintf("%s@%s", d.Login, d.Host),
 		"-L",
-		"8081:"+d.MasterLogger+":10000")
+		"8081:" + d.MasterLogger + ":10000")
 	err := cmd.Start()
 	if err != nil {
 		dbg.Fatal("failed to setup portforwarding for logging server")
 	}
 
 	go func() {
-		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users"))
-		dbg.Lvl3("Sending stop of ssh")
-		d.sshDeter <- "stop"
+		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		if err != nil{
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "finished"
 	}()
 
 	return nil
@@ -284,18 +292,48 @@ func (d *Deterlab) Stop() error {
 	killssh.Stderr = os.Stderr
 	err := killssh.Run()
 	if err != nil {
-		dbg.Lvl3("Stopping ssh: ", err)
+		dbg.Lvl3("Stopping ssh:", err)
 	}
-	select {
-	case msg := <-d.sshDeter:
-		if msg == "stop" {
-			dbg.Lvl3("SSh is stopped")
-		} else {
-			dbg.Lvl1("Received other command", msg)
+
+	if d.started {
+		dbg.Lvl3("Simulation is started")
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "finished" {
+				dbg.Lvl3("Received finished-message, not killing users")
+				return nil
+			} else {
+				dbg.Lvl1("Received out-of-line message", msg)
+			}
+		case <-time.After(time.Second):
+			dbg.Lvl3("No message waiting")
 		}
-	case <-time.After(time.Second * 3):
-		dbg.Lvl3("Timeout error when waiting for end of ssh")
 	}
+
+	dbg.Lvl3("Going to kill everything")
+	go func() {
+		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; ./users -kill")
+		if err != nil{
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "stopped"
+	}()
+
+	for {
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "stopped" {
+				dbg.Lvl3("Users stopped")
+				return nil
+			} else {
+				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
+			}
+		case <-time.After(time.Second * 20):
+			dbg.Lvl3("Timeout error when waiting for end of ssh")
+			return nil
+		}
+	}
+
 	return nil
 }
 
@@ -335,21 +373,7 @@ func (d *Deterlab) createHosts() error {
 	// only take the machines we need
 	d.Phys = d.Phys[:nmachs + nloggers]
 	d.Virt = d.Virt[:nmachs + nloggers]
-	physOut := strings.Join(d.Phys, "\n")
-	virtOut := strings.Join(d.Virt, "\n")
 	d.MasterLogger = d.Phys[0]
-
-	// phys.txt and virt.txt only contain the number of machines that we need
-	dbg.Lvl3("Writing phys and virt")
-	err := ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(physOut), 0666)
-	if err != nil {
-		dbg.Fatal("failed to write physical nodes file", err)
-	}
-
-	err = ioutil.WriteFile(d.DeployDir + "/virt.txt", []byte(virtOut), 0666)
-	if err != nil {
-		dbg.Fatal("failed to write virtual nodes file", err)
-	}
 
 	return nil
 }
@@ -363,7 +387,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	deter := Deterlab{}
 	err := app.ReadTomlConfig(&deter, "deter.toml", d.DeterDir)
 	d.Host, d.Login, d.Project, d.Experiment, d.Loggers =
-		deter.Host, deter.Login, deter.Project, deter.Experiment, deter.Loggers
+	deter.Host, deter.Login, deter.Project, deter.Experiment, deter.Loggers
 
 	if err != nil {
 		dbg.Lvl1("Couldn't read config-file - asking for default values")
@@ -374,7 +398,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	}
 
 	if d.Login == "" {
-		d.Login = readString("Please enter the login-name on "+d.Host, "")
+		d.Login = readString("Please enter the login-name on " + d.Host, "")
 	}
 
 	if d.Project == "" {
@@ -382,7 +406,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	}
 
 	if d.Experiment == "" {
-		d.Experiment = readString("Please enter the Experiment on "+d.Project, "Dissent-CS")
+		d.Experiment = readString("Please enter the Experiment on " + d.Project, "Dissent-CS")
 	}
 
 	if d.Loggers == 0 {

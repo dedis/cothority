@@ -44,6 +44,7 @@ func init() {
 
 func main() {
 	deterlab.ReadConfig()
+	flag.Parse()
 
 	vpmap := make(map[string]string)
 	for i := range deterlab.Virt {
@@ -65,12 +66,14 @@ func main() {
 				cliutils.SshRunStdout("", h, "ps aux")
 			}
 
-			dbg.Lvl3("Setting the file-limit higher on", h)
+			if !kill {
+				dbg.Lvl3("Setting the file-limit higher on", h)
 
-			// Copy configuration file to make higher file-limits
-			err := cliutils.SshRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
-			if err != nil {
-				dbg.Fatal("Couldn't copy limit-file:", err)
+				// Copy configuration file to make higher file-limits
+				err := cliutils.SshRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
+				if err != nil {
+					dbg.Fatal("Couldn't copy limit-file:", err)
+				}
 			}
 			doneHosts[i] = true
 			dbg.Lvl3("Host", h, "cleaned up")

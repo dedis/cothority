@@ -1,16 +1,14 @@
 package main
+
 import(
 	"github.com/dedis/cothority/lib/coconet"
 	"strconv"
 	"net"
 	"errors"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/graphs"
 	"time"
 	"fmt"
-	"github.com/dedis/crypto/nist"
-	"github.com/dedis/crypto/edwards/ed25519"
-	"github.com/dedis/crypto/abstract"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io/ioutil"
@@ -31,22 +29,6 @@ func main() {
 }
 
 
-func GetSuite(suite string) abstract.Suite {
-	var s abstract.Suite
-	switch {
-	case suite == "nist256":
-		s = nist.NewAES128SHA256P256()
-	case suite == "nist512":
-		s = nist.NewAES128SHA256QR512()
-	case suite == "ed25519":
-		s = ed25519.NewAES128SHA256Ed25519(true)
-	default:
-		s = nist.NewAES128SHA256P256()
-	}
-	return s
-}
-
-
 func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 	hostname := Flags.Hostname
 
@@ -62,15 +44,15 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 
 	// load the configuration
 	//dbg.Lvl3("loading configuration")
-	var hc *config.HostConfig
+	var hc *graphs.HostConfig
 	var err error
-	s := GetSuite(conf.Suite)
-	opts := config.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
+	s := app.GetSuite(conf.Suite)
+	opts := graphs.ConfigOptions{ConnType: "tcp", Host: hostname, Suite: s}
 	if conf.Failures > 0 || conf.FFail > 0 {
 		opts.Faulty = true
 	}
 
-	hc, err = config.LoadConfig(conf, opts)
+	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
@@ -149,7 +131,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunTimestamper(hc *config.HostConfig, nclients int, hostnameSlice ...string) ([]*Server, []*Client, error) {
+func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string) ([]*Server, []*Client, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run

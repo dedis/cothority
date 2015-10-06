@@ -5,13 +5,13 @@ import
 	"github.com/dedis/cothority/lib/logutils"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/config"
 	"sync/atomic"
 
 	"strconv"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/graphs"
 )
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
@@ -20,7 +20,7 @@ var ROUND_TIME time.Duration = 1 * time.Second
 
 var done = make(chan string, 1)
 
-func RunClient(conf *app.ConfigColl, hc *config.HostConfig) {
+func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	buck := make([]int64, 300)
 	roundsAfter := make([]int64, MAX_N_ROUNDS)
 	times := make([]int64, MAX_N_SECONDS * 1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
