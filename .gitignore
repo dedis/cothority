@@ -10,4 +10,7 @@ deploy/platform/deterlab/remote/*
 deploy/platform/deterlab/deter.toml
 deploy/platform/localhost
 deploy/deploy
+deploy/matplotlib/*csv
+deploy/matplotlib/*png
+deploy/matplotlib/imgs
 test/
