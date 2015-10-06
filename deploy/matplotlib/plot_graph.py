@@ -166,26 +166,33 @@ def CoJVTime(cothority, jvss, bars = False):
     plt.legend()
     plotEnd(cothority)
 
+def arrow(text, x, top, color):
+    plt.annotate(text, xy=(x, top), xytext=(x, top - 1),
+                arrowprops=dict(facecolor=color, frac=0.4, width=8, headwidth=20, edgecolor='white'),
+                 horizontalalignment='center', )
+
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
 # the last two values from JVSS are off-grid and writes them with arrows
 # directly on the plot
-def plotAvg(cothority, jvss):
+def plotAvg(cothority, jvss, naive):
     plotPrepareLogLog()
 
     xmin = -1
     readCSV(jvss)
     plt.plot(x, avg, label='JVSS', linestyle='-', marker='^', color=color2_dark, zorder=3)
     plotFilledLegend(x, tmin, tmax, "min-max", color2_light, z=0)
-    plt.annotate("{:.1f} sec      ".format(avg[-2]), xy=(x[-2], 4), xytext=(x[-2], 3.0),
-                arrowprops=dict(facecolor=color2_dark, frac=0.4, width=8, headwidth=20, edgecolor='white'),
-                 horizontalalignment='center', )
-    plt.annotate("      {:.0f} sec".format(avg[-1]), xy=(x[-1], 4), xytext=(x[-1], 3.0),
-                arrowprops=dict(facecolor=color2_dark, frac=0.4, width=8, headwidth=20, edgecolor='white'),
-                 horizontalalignment='center', )
+    arrow("{:.1f} sec      ".format(avg[-2]), x[-2], 4, color2_dark)
+    arrow("      {:.0f} sec".format(avg[-1]), x[-1], 4, color2_dark)
 
     readCSV(cothority)
     plt.plot(x, avg, label='Cothority', linestyle='-', marker='o', color=color1_dark, zorder=5)
     plotFilledLegend(x, tmin, tmax, "min-max", color1_light, z=4)
+
+    readCSV(naive)
+    plt.plot(x, avg, label='Naive', linestyle='-', marker='s', color=color3_dark, zorder=5)
+    plotFilledLegend(x, tmin, tmax, "min-max", color3_light, z=4)
+    arrow("{:.1f} sec      ".format(avg[-2]), x[-2], 4, color3_dark)
+    arrow("      {:.0f} sec".format(avg[-1]), x[-1], 4, color3_dark)
 
     # Make horizontal lines and add arrows for JVSS
     plt.ylim(ymin, 4)
@@ -203,21 +210,23 @@ color2_light = '#FCDFFF'
 color2_dark = 'red'
 color2_light = 'lightblue'
 color2_dark = 'blue'
+color3_light = 'yellow'
+color3_dark = 'brown'
 
-if len(sys.argv) < 4:
+if len(sys.argv) < 5:
     print("Error: Please give a mode and 2 .csv-files as argument\n")
-    print("Mode: (0=printAverage, 1=printSystemUserTimes)\n")
+    print("Mode: (0=printAverage, 1=printSystemUserTimes with bars, 2=printSystemUserTimes with areas)\n")
     print("CSV: cothority.csv jvss.csv\n")
     exit(1)
 
 show_fig = True
-if len(sys.argv) > 4:
+if len(sys.argv) > 5:
     show_fig = False
-    pngname = sys.argv[4]
+    pngname = sys.argv[5]
 
 option = sys.argv[1]
 if option == "0":
-    plotAvg(sys.argv[2], sys.argv[3])
+    plotAvg(sys.argv[2], sys.argv[3], sys.argv[4])
 elif option == "1":
     CoJVTime(sys.argv[2], sys.argv[3])
 elif option == "2":
