@@ -312,7 +312,7 @@ func (d *Deterlab) Stop() error {
 
 	dbg.Lvl3("Going to kill everything")
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; ./users -kill")
+		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil{
 			dbg.Lvl3(err)
 		}
