@@ -7,6 +7,7 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/network_draft/network"
+	"sync"
 	"time"
 )
 
@@ -78,7 +79,7 @@ func GoLeader(conf *app.NaiveConfig) {
 				// send the new SignatureChannel to every conn
 				for newSigChan := range masterRoundChan {
 					for i, _ := range roundChanns {
-						go func(j int) { roundChans[j] <- newSigChan }(i)
+						go func(j int) { roundChanns[j] <- newSigChan }(i)
 					}
 				}
 				//close when finished
@@ -101,17 +102,23 @@ func GoLeader(conf *app.NaiveConfig) {
 		// launch a new round
 		connChan := make(chan *BasicSignature)
 		masterRoundChan <- connChan
+		var wg sync.WaitGroup
+		wg.Add(len(conf.Hosts) - 1)
 		// verify each coming signatures
 		for n < len(conf.Hosts)-1 {
 			bs := <-connChan
-			if err := SchnorrVerify(suite, msg, *bs); err != nil {
-				faulty += 1
-				dbg.Lvl2(leader.String(), "Round ", i, " received a faulty signature !")
-			} else {
-				dbg.Lvl2(leader.String(), "Round ", i, " received Good signature")
-			}
+			go func(b *BasicSignature) {
+				if err := SchnorrVerify(suite, msg, *b); err != nil {
+					faulty += 1
+					dbg.Lvl2(leader.String(), "Round ", i, " received a faulty signature !")
+				} else {
+					dbg.Lvl2(leader.String(), "Round ", i, " received Good signature")
+				}
+				wg.Done()
+			}(bs)
 			n += 1
 		}
+		wg.Wait()
 		dbg.Lvl1(leader.String(), "Round ", i, " received ", len(conf.Hosts)-1, "signatures (", faulty, " faulty sign)")
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
