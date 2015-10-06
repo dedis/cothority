@@ -1,4 +1,4 @@
-package config
+package graphs
 
 import (
 	"bytes"
@@ -17,15 +17,11 @@ import (
 	"github.com/dedis/cothority/proto/sign"
 
 	"github.com/dedis/cothority/lib/coconet"
-	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-	"github.com/dedis/crypto/edwards/ed25519"
-	"github.com/dedis/crypto/nist"
 	"sort"
 	"strconv"
 	"strings"
-	"github.com/dedis/cothority/lib/app"
 )
 
 /*
@@ -64,37 +60,6 @@ type HostConfig struct {
 	SNodes []*sign.Node          // an array of signing nodes
 	Hosts  map[string]*sign.Node // maps hostname to host
 	Dir    *coconet.GoDirectory  // the directory mapping hostnames to goPeers
-}
-
-func ConfigFromTree(t *graphs.Tree, hosts []string) *ConfigFile {
-	cf := &ConfigFile{}
-	cf.Hosts = make([]string, len(hosts))
-	copy(cf.Hosts, hosts)
-	cf.Tree = t
-	return cf
-}
-
-func (hc *HostConfig) Verify() error {
-	// root := hc.SNodes[0]
-	// traverseTree(root, hc, publicKeyCheck)
-	fmt.Println("tree verified")
-	return nil
-}
-
-func traverseTree(p *sign.Node,
-	hc *HostConfig,
-	f func(*sign.Node, *HostConfig) error) error {
-	if err := f(p, hc); err != nil {
-		return err
-	}
-	for _, cn := range p.Children(0) {
-		c := hc.Hosts[cn.Name()]
-		err := traverseTree(c, hc, f)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (hc *HostConfig) String() string {
@@ -184,7 +149,7 @@ func max(a, b int) int {
 // config file. ConstructTree must be called AFTER populating the HostConfig with
 // ALL the possible hosts.
 func ConstructTree(
-	node *graphs.Tree,
+	node *Tree,
 	hc *HostConfig,
 	parent string,
 	suite abstract.Suite,
@@ -434,7 +399,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 // complete hostnames to be used by the hosts.
 // LoadConfig loads a configuration file in the format specified above. It
 // populates a HostConfig with HostNode Hosts and goPeer Peers.
-func LoadConfig(conf *app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, error) {
+func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	opts := ConfigOptions{}
 	if len(optsSlice) > 0 {
 		opts = optsSlice[0]
@@ -453,7 +418,7 @@ func LoadConfig(conf *app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, 
 	nameToAddr := make(map[string]string)
 
 	if connT == GoC {
-		for _, h := range conf.Hosts {
+		for _, h := range appHosts {
 			if _, ok := hc.Hosts[h]; !ok {
 				nameToAddr[h] = h
 				// it doesn't make sense to only make 1 go host
@@ -477,7 +442,7 @@ func LoadConfig(conf *app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, 
 			}
 		}
 
-		for i, h := range conf.Hosts {
+		for i, h := range appHosts {
 
 			addr := h
 			if opts.GenHosts {
@@ -527,7 +492,7 @@ func LoadConfig(conf *app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, 
 	// default value = false
 	start := time.Now()
 	if opts.NoTree == false {
-		_, err := ConstructTree(conf.Tree, hc, "", suite, rand, hosts, nameToAddr, opts)
+		_, err := ConstructTree(appTree, hc, "", suite, rand, hosts, nameToAddr, opts)
 		if err != nil{
 			dbg.Fatal("Couldn't construct tree:", err)
 		}
@@ -557,18 +522,3 @@ func LoadConfig(conf *app.ConfigColl, optsSlice ...ConfigOptions) (*HostConfig, 
 	return hc, nil
 }
 
-// Helper functions that will return the suite used during the process from a string name
-func GetSuite(suite string) abstract.Suite {
-	var s abstract.Suite
-	switch {
-	case suite == "nist256":
-		s = nist.NewAES128SHA256P256()
-	case suite == "nist512":
-		s = nist.NewAES128SHA256QR512()
-	case suite == "ed25519":
-		s = ed25519.NewAES128SHA256Ed25519(true)
-	default:
-		s = nist.NewAES128SHA256P256()
-	}
-	return s
-}

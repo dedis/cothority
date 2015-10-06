@@ -69,6 +69,8 @@ type Deterlab struct {
 	Loggers int
 	// Channel to communication stopping of experiment
 	sshDeter chan string
+	// Whether the simulation is started
+	started bool
 	// Debugging-level: 0 is none - 5 is everything
 	Debug int
 
@@ -125,13 +127,14 @@ func (d *Deterlab) Build(build string) error {
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
 		src_dir := d.DeterDir + "/" + p
+		basename := path.Base(p)
 		if p == "app" {
 			src_dir = d.AppDir + "/" + d.App
+			basename = d.App
 		}
-		basename := path.Base(p)
 		dst := d.BuildDir + "/" + basename
 
-		dbg.Lvl3("Building ", p, "from", src_dir, "into", basename)
+		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
 		wg.Add(1)
 		if p == "users" {
 			go func(src, dest string) {
@@ -229,6 +232,13 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
+	/*
+		dbg.Printf("%+v", deter)
+		debug := reflect.ValueOf(deter).Elem().FieldByName("Debug")
+		if debug.IsValid() {
+			dbg.DebugVisible = debug.Interface().(int)
+		}
+	*/
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir+"/logserver/webfiles",
@@ -258,6 +268,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
+	d.started = true
 	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
 	cmd := exec.Command(
 		"ssh",
@@ -272,9 +283,11 @@ func (d *Deterlab) Start() error {
 	}
 
 	go func() {
-		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users"))
-		dbg.Lvl3("Sending stop of ssh")
-		d.sshDeter <- "stop"
+		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		if err != nil {
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "finished"
 	}()
 
 	return nil
@@ -286,18 +299,48 @@ func (d *Deterlab) Stop() error {
 	killssh.Stderr = os.Stderr
 	err := killssh.Run()
 	if err != nil {
-		dbg.Lvl3("Stopping ssh: ", err)
+		dbg.Lvl3("Stopping ssh:", err)
 	}
-	select {
-	case msg := <-d.sshDeter:
-		if msg == "stop" {
-			dbg.Lvl3("SSh is stopped")
-		} else {
-			dbg.Lvl1("Received other command", msg)
+
+	if d.started {
+		dbg.Lvl3("Simulation is started")
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "finished" {
+				dbg.Lvl3("Received finished-message, not killing users")
+				return nil
+			} else {
+				dbg.Lvl1("Received out-of-line message", msg)
+			}
+		case <-time.After(time.Second):
+			dbg.Lvl3("No message waiting")
 		}
-	case <-time.After(time.Second * 3):
-		dbg.Lvl3("Timeout error when waiting for end of ssh")
 	}
+
+	dbg.Lvl3("Going to kill everything")
+	go func() {
+		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; ./users -kill")
+		if err != nil {
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "stopped"
+	}()
+
+	for {
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "stopped" {
+				dbg.Lvl3("Users stopped")
+				return nil
+			} else {
+				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
+			}
+		case <-time.After(time.Second * 20):
+			dbg.Lvl3("Timeout error when waiting for end of ssh")
+			return nil
+		}
+	}
+
 	return nil
 }
 
@@ -334,24 +377,9 @@ func (d *Deterlab) createHosts() error {
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
 
-	// only take the machines we need
 	d.Phys = d.Phys[:nmachs+nloggers]
 	d.Virt = d.Virt[:nmachs+nloggers]
-	physOut := strings.Join(d.Phys, "\n")
-	virtOut := strings.Join(d.Virt, "\n")
 	d.MasterLogger = d.Phys[0]
-
-	// phys.txt and virt.txt only contain the number of machines that we need
-	dbg.Lvl3("Writing phys and virt")
-	err := ioutil.WriteFile(d.DeployDir+"/phys.txt", []byte(physOut), 0666)
-	if err != nil {
-		dbg.Fatal("failed to write physical nodes file", err)
-	}
-
-	err = ioutil.WriteFile(d.DeployDir+"/virt.txt", []byte(virtOut), 0666)
-	if err != nil {
-		dbg.Fatal("failed to write virtual nodes file", err)
-	}
 
 	return nil
 }

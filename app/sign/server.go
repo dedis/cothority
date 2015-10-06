@@ -2,13 +2,13 @@ package main
 import (
 	"time"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/graphs"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/app"
 )
 
-func RunServer(conf *app.ConfigColl, hc *config.HostConfig) {
+func RunServer(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	// run this specific host
 	err := hc.Run(false, sign.MerkleTree, app.RunFlags.Hostname)
 	if err != nil {

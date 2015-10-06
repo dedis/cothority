@@ -143,7 +143,6 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 
 	go func() {
 		rs = Monitor()
-		deployP.Stop()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct{}{}
 	}()

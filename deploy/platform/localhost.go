@@ -195,7 +195,7 @@ func (d *Localhost) Stop() error {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		dbg.Lvl3("Error stoping localhost", err)
+		dbg.Lvl3("Error stopping localhost", err)
 	}
 	return nil
 }

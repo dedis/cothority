@@ -71,7 +71,7 @@ func Monitor() RunStats {
 		if err != nil {
 			// if it is an eof error than stop reading
 			if err == io.EOF {
-				dbg.Lvl4("websocket terminated before emitting EOF or terminating string")
+				dbg.Lvl1("websocket terminated before emitting EOF or terminating string")
 				break
 			}
 			continue

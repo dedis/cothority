@@ -1,4 +1,4 @@
-package config
+package graphs_test
 
 import (
 	"sync"
