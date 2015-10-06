@@ -72,6 +72,18 @@ func Lvl(lvl int, args ...interface{}) {
 		"caller": caller}).Println(args...)
 }
 
+func Lvlf(lvl int, f string, args ...interface{}){
+	Lvl(lvl, fmt.Sprintf(f, args...))
+}
+
+func Print(args ...interface{}) {
+	Lvl(-1, args...)
+}
+
+func Printf(f string, args ...interface{}) {
+	Lvlf(-1, f, args...)
+}
+
 func Lvl1(args ...interface{}) {
 	Lvl(1, args...)
 }
@@ -97,11 +109,55 @@ func Fatal(args ...interface{}){
 	os.Exit(1)
 }
 
+func Panic(args ...interface{}){
+	Lvl(0, args...)
+	panic(args)
+}
+
+func Lvlf1(f string, args ...interface{}) {
+	Lvlf(1, f, args...)
+}
+
+func Lvlf2(f string, args ...interface{}) {
+	Lvlf(2, f, args...)
+}
+
+func Lvlf3(f string, args ...interface{}) {
+	Lvlf(3, f, args...)
+}
+
+func Lvlf4(f string, args ...interface{}) {
+	Lvlf(4, f, args...)
+}
+
+func Lvlf5(f string, args ...interface{}) {
+	Lvlf(5, f, args...)
+}
+
+func Fatalf(f string, args ...interface{}){
+	Lvlf(0, f, args...)
+	os.Exit(1)
+}
+
+func Panicf(f string, args ...interface{}){
+	Lvlf(0, f, args...)
+	panic(args)
+}
+
 // To easy print a debug-message anyway without discarding the level
-func LLvl2(args ...interface{}){Lvl(1, args...)}
-func LLvl3(args ...interface{}){Lvl(1, args...)}
-func LLvl4(args ...interface{}){Lvl(1, args...)}
-func LLvl5(args ...interface{}){Lvl(1, args...)}
+// Just add an additional "L" in front, and remove it later:
+// - easy hack to turn on other debug-messages
+// - easy removable by searching/replacing 'LLvl' with 'Lvl'
+func LLvl1(args ...interface{}){Lvl(-1, args...)}
+func LLvl2(args ...interface{}){Lvl(-1, args...)}
+func LLvl3(args ...interface{}){Lvl(-1, args...)}
+func LLvl4(args ...interface{}){Lvl(-1, args...)}
+func LLvl5(args ...interface{}){Lvl(-1, args...)}
+func LLvlf1(f string, args ...interface{}){Lvlf(-1, f, args...)}
+func LLvlf2(f string, args ...interface{}){Lvlf(-1, f, args...)}
+func LLvlf3(f string, args ...interface{}){Lvlf(-1, f, args...)}
+func LLvlf4(f string, args ...interface{}){Lvlf(-1, f, args...)}
+func LLvlf5(f string, args ...interface{}){Lvlf(-1, f, args...)}
 
 type DebugLvl struct {
 }
