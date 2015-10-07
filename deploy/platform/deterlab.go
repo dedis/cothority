@@ -146,7 +146,7 @@ func (d *Deterlab) Build(build string) error {
 				out, err := cliutils.Build("./"+src_rel, dest, "386", "freebsd")
 				if err != nil {
 					cliutils.KillGo()
-					fmt.Println(out)
+					dbg.Lvl1(out)
 					dbg.Fatal(err)
 				}
 			}(src_dir, dst)
@@ -160,7 +160,7 @@ func (d *Deterlab) Build(build string) error {
 			out, err := cliutils.Build("./"+src_rel, dest, "amd64", "linux")
 			if err != nil {
 				cliutils.KillGo()
-				fmt.Println(out)
+				dbg.Lvl1(out)
 				dbg.Fatal(err)
 			}
 		}(src_dir, dst)
@@ -323,8 +323,8 @@ func (d *Deterlab) Stop() error {
 
 	dbg.Lvl3("Going to kill everything")
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; ./users -kill")
-		if err != nil {
+		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		if err != nil{
 			dbg.Lvl3(err)
 		}
 		d.sshDeter <- "stopped"

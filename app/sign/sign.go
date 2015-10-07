@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/dedis/cothority/lib/graphs"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/proto/sign"
@@ -48,7 +47,6 @@ func main() {
 	}
 	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal(err)
 	}
 

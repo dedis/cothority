@@ -157,7 +157,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 			Sreq:  &StampRequest{Val: val}})
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
-			log.Warn(c.Name(), "error timestamping to ", TSServerName, ": ", err)
+			dbg.Lvl3(c.Name(), "error timestamping to ", TSServerName, ": ", err)
 		}
 		// pass back up all errors from putting to server
 		return err

@@ -196,7 +196,7 @@ func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
 		var jsonlog map[string]*json.RawMessage
 		err := json.Unmarshal(Log.Msgs[i], &jsonlog)
 		if err != nil {
-			log.Error("Couldn't unmarshal string")
+			dbg.Lvl1("Couldn't unmarshal string")
 		}
 		w.Write([]byte(fmt.Sprintf("%s - %s - %s - %s", *jsonlog["etime"], *jsonlog["eapp"],
 			*jsonlog["ehost"], *jsonlog["emsg"])))
@@ -212,7 +212,7 @@ func logHandlerHtmlReverse(w http.ResponseWriter, r *http.Request) {
 		var jsonlog map[string]*json.RawMessage
 		err := json.Unmarshal(Log.Msgs[i], &jsonlog)
 		if err != nil {
-			log.Error("Couldn't unmarshal string")
+			dbg.Lvl1("Couldn't unmarshal string")
 		}
 
 		w.Write([]byte(fmt.Sprintf("%s - %s - %s - %s", *jsonlog["etime"], *jsonlog["eapp"],

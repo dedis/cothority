@@ -8,7 +8,6 @@ import(
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/graphs"
 	"time"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io/ioutil"
@@ -19,7 +18,6 @@ import(
 func main() {
 	conf := &app.ConfigColl{}
 	app.ReadConfig(conf)
-	dbg.Print("Starting Stamper with level", conf.Debug, dbg.DebugVisible)
 
 	switch app.RunFlags.Mode{
 	case "server":
@@ -55,8 +53,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 
 	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
 	if err != nil {
-		fmt.Println(err)
-		log.Fatal(err)
+		dbg.Fatal(err)
 	}
 
 	for i := range hc.SNodes {
@@ -93,7 +90,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 
 	defer func(sn *sign.Node) {
 		//log.Panicln("program has terminated:", hostname)
-		dbg.Lvl1("Program timestamper has terminated:", hostname)
+		dbg.Lvl2("Program timestamper has terminated:", hostname)
 		sn.Close()
 	}(hc.SNodes[0])
 
@@ -153,7 +150,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 	stampers := make([]*Server, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
 		if _, ok := hostnames[sn.Name()]; !ok {
-			log.Errorln("signing node not in hostnmaes")
+			dbg.Lvl1("signing node not in hostnmaes")
 			continue
 		}
 		stampers = append(stampers, NewServer(sn))
