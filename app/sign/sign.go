@@ -51,7 +51,6 @@ func main() {
 	}
 	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal(err)
 	}
 

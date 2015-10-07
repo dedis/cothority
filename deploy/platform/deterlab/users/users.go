@@ -33,6 +33,7 @@ import (
 	"os"
 	"os/exec"
 	"fmt"
+	"strconv"
 )
 
 var deterlab platform.Deterlab
@@ -217,21 +218,28 @@ func main() {
 		dbg.Lvl1("starting", len(physToServer), "time clients")
 		// start up one timeclient per physical machine
 		// it requests timestamps from all the servers on that machine
+		amroot := true
 		for p, ss := range physToServer {
 			if len(ss) == 0 {
+				dbg.Lvl3("ss is empty - not starting")
 				continue
 			}
 			servers := strings.Join(ss, ",")
-			go func(i int, p string) {
-				_, err := cliutils.SshRun("", p, "cd remote; sudo ./" + deterlab.App + " -mode=client " +
+			dbg.Lvl3("Starting with ss=", ss)
+			go func(i int, p string, a bool) {
+				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
 				" -name=client@" + p +
 				" -server=" + servers +
-				" -logger=" + loggerports[i])
+				" -amroot=" + strconv.FormatBool(a) +
+				" -logger=" + loggerports[i]
+				dbg.Print(cmdstr)
+				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
 					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
 				}
 				dbg.Lvl4("Deter.go : Finished with", deterlab.App, p)
-			}(i, p)
+			}(i, p, amroot)
+			amroot = false
 			i = (i + 1) % len(loggerports)
 		}
 	case "sign_no":
@@ -241,5 +249,4 @@ func main() {
 
 	// wait for the servers to finish before stopping
 	wg.Wait()
-	//time.Sleep(10 * time.Minute)
 }
