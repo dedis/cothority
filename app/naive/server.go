@@ -1,5 +1,11 @@
 package main
 
+/*
+ * This is a simple (naive) implementation of a multi-signature protocol
+ * where the *leader* sends the message to every *signer* who signs it and
+ * returns the result to the server.
+ */
+
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
@@ -11,6 +17,8 @@ import (
 	"time"
 )
 
+// Searches for the index in the hostlist and decides if we're the leader
+// or one of the clients
 func RunServer(conf *app.NaiveConfig) {
 	indexPeer := -1
 	for i, h := range conf.Hosts {
@@ -26,21 +34,24 @@ func RunServer(conf *app.NaiveConfig) {
 		dbg.Lvl2("Launching a naiv_sign. : Leader ", app.RunFlags.Hostname)
 		GoLeader(conf)
 	} else {
-		dbg.Lvl2("Launching a naiv_sign : Server ", app.RunFlags.Hostname)
-		GoServer(conf)
+		dbg.Lvl2("Launching a naiv_sign : Signer ", app.RunFlags.Hostname)
+		GoSigner(conf)
 	}
-
 }
 
+// This is the leader who waits for all connections and then sends the
+// message to be signed
 func GoLeader(conf *app.NaiveConfig) {
 
 	host := net.NewTcpHost(app.RunFlags.Hostname)
 	key := cliutils.KeyPair(suite)
 	leader := NewPeer(host, LeadRole, key.Secret, key.Public)
 
+	// Setting up the connections
+
 	msg := []byte("Hello World\n")
 	// Listen for connections
-	dbg.Lvl1(leader.String(), "making connections ...")
+	dbg.Lvl2(leader.String(), "making connections ...")
 	// each conn will create its own channel to be used to handle rounds
 	roundChans := make(chan chan chan *net.BasicSignature)
 	// Send the message to be signed
@@ -52,16 +63,19 @@ func GoLeader(conf *app.NaiveConfig) {
 		n := 0
 		// wait for the next round
 		for sigChan := range roundChan {
-			dbg.Lvl3(leader.String(), "Round ", n, " sending message ", msg, "to server ", c.PeerName())
+			dbg.Lvl3(leader.String(), "Round ", n, " sending message ", msg, "to signer ", c.PeerName())
 			leader.SendMessage(msg, c)
-			dbg.Lvl3(leader.String(), "Round ", n, " receivng signature from server", c.PeerName())
+			dbg.Lvl3(leader.String(), "Round ", n, " receivng signature from signer", c.PeerName())
 			sig := leader.ReceiveBasicSignature(c)
 			sigChan <- sig
 			n += 1
 		}
 		c.Close()
-		dbg.Lvl3(leader.String(), "closed connection with server", c.PeerName())
+		dbg.Lvl3(leader.String(), "closed connection with signer", c.PeerName())
 	}
+
+	// Connecting to the signer
+
 	now := time.Now()
 	go leader.Listen(app.RunFlags.Hostname, proto)
 	dbg.Lvl2(leader.String(), "Listening for channels creation..")
@@ -95,7 +109,10 @@ func GoLeader(conf *app.NaiveConfig) {
 		"type": "naive_setup",
 		"time": time.Since(now)}).Info("")
 	dbg.Lvl2(leader.String(), "got all channels ready => starting the ", conf.Rounds, " rounds")
-	for i := 0; i < conf.Rounds; i++ {
+
+	// Starting to run the simulation for conf.Rounds rounds
+
+	for round := 0; round < conf.Rounds; round++ {
 		now = time.Now()
 		n := 0
 		faulty := 0
@@ -107,59 +124,79 @@ func GoLeader(conf *app.NaiveConfig) {
 		// verify each coming signatures
 		for n < len(conf.Hosts)-1 {
 			bs := <-connChan
-			go func(b *net.BasicSignature) {
-				if err := SchnorrVerify(suite, msg, *b); err != nil {
-					faulty += 1
-					dbg.Lvl2(leader.String(), "Round ", i, " received a faulty signature !")
-				} else {
-					dbg.Lvl2(leader.String(), "Round ", i, " received Good signature")
-				}
+			//			go func(b *net.BasicSignature) {
+			//				if err := SchnorrVerify(suite, msg, *b); err != nil {
+			//					faulty += 1
+			//					dbg.Lvl2(leader.String(), "Round ", i, " received a faulty signature !")
+			//				} else {
+			//					dbg.Lvl2(leader.String(), "Round ", i, " received Good signature")
+			//				}
+			if conf.SkipChecks {
+				dbg.Lvl2("Skipping check for round", round)
 				wg.Done()
-			}(bs)
+			} else {
+				go func(b *BasicSignature) {
+					if err := SchnorrVerify(suite, msg, *b); err != nil {
+						faulty += 1
+						dbg.Lvl2(leader.String(), "Round ", round, " received a faulty signature !")
+					} else {
+						dbg.Lvl2(leader.String(), "Round ", round, " received Good signature")
+					}
+					wg.Done()
+				}(bs)
+			}
 			n += 1
 		}
 		wg.Wait()
-		dbg.Lvl1(leader.String(), "Round ", i, " received ", len(conf.Hosts)-1, "signatures (", faulty, " faulty sign)")
+		dbg.Lvl2(leader.String(), "Round ", round, " received ", len(conf.Hosts)-1, "signatures (",
+			faulty, " faulty sign)")
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
 			"type":  "naive_round",
-			"round": i,
+			"round": round,
 			"time":  time.Since(now),
 		}).Info("")
 	}
+
+	// Close down all connections
+
 	close(masterRoundChan)
-	dbg.Lvl1(leader.String(), " Has done all rounds")
+	dbg.Lvl2(leader.String(), " Has done all rounds")
 	log.WithFields(log.Fields{
 		"file": logutils.File(),
 		"type": "end"}).Info("")
 }
 
-func GoServer(conf *app.NaiveConfig) {
+// The signer connects to the leader and then waits for a message to be
+// signed
+func GoSigner(conf *app.NaiveConfig) {
+	// Wait for leader to be ready
 	time.Sleep(2 * time.Second)
 	host := net.NewTcpHost(app.RunFlags.Hostname)
 	key := cliutils.KeyPair(suite)
-	server := NewPeer(host, ServRole, key.Secret, key.Public)
-	dbg.Lvl2(server.String(), "will contact leader ", conf.Hosts[0])
-	l := server.Open(conf.Hosts[0])
-	dbg.Lvl2(server.String(), "is connected to leader ", l.PeerName())
+	signer := NewPeer(host, ServRole, key.Secret, key.Public)
+	dbg.Lvl2(signer.String(), "will contact leader ", conf.Hosts[0])
+	l := signer.Open(conf.Hosts[0])
+	dbg.Lvl2(signer.String(), "is connected to leader ", l.PeerName())
 
-	// make the protocol for each rounds
-	for i := 0; i < conf.Rounds; i++ {
+	// make the protocol for each round
+	for round := 0; round < conf.Rounds; round++ {
 		// Receive message
 		m, err := l.Receive()
-		dbg.Lvl2(server.String(), " round ", i, " received the message to be signed from the leader")
+		dbg.Lvl2(signer.String(), " round ", round, " received the message to be signed from the leader")
 		if err != nil {
-			dbg.Fatal(server.String(), "round ", i, " received error waiting msg")
+			dbg.Fatal(signer.String(), "round ", round, " received error waiting msg")
 		}
-		if m.MsgType != net.MessageSigningType {
-			dbg.Fatal(app.RunFlags.Hostname, "round ", i, "  wanted to receive a msg to sign but..", m.MsgType.String())
+		if m.MsgType != MessageSigningType {
+			dbg.Fatal(app.RunFlags.Hostname, "round ", round, "  wanted to receive a msg to sign but..",
+				m.MsgType.String())
 		}
-		msg := m.Msg.(net.MessageSigning).Msg
-		dbg.Lvl3(server.String(), "round ", i, " received msg : ", msg[:])
-		// Gen signature & send
-		s := server.Signature(msg[:])
+		msg := m.Msg.(MessageSigning).Msg
+		dbg.Lvl3(signer.String(), "round ", round, " received msg : ", msg[:])
+		// Generate signature & send
+		s := signer.Signature(msg[:])
 		l.Send(*s)
-		dbg.Lvl2(server.String(), "round ", i, " sent the signature to leader")
+		dbg.Lvl2(signer.String(), "round ", round, " sent the signature to leader")
 	}
 	l.Close()
 	dbg.Lvl2(app.RunFlags.Hostname, "Finished")
