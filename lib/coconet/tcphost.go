@@ -433,7 +433,7 @@ func (h *TCPHost) AddPeers(cs ...string) {
 }
 
 // ErrClosed indicates that the connection has been closed.
-var ErrClosed = errors.New("connection closed")
+var ErrClosed = errors.New("connection closed!")
 
 func (h *TCPHost) PutTo(ctx context.Context, host string, data BinaryMarshaler) error {
 	pname := host

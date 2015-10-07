@@ -7,40 +7,43 @@ are used:
 Deploy
 
     * Deter - running
-    * Go-routines - in preparation
+    * Localhost
     * Future:
+	    * Go-routines - in preparation
         * Docker
         * LXC
 
 Applications
 
     * timestamping
-    * signing - needs to collect more data
-    * vote - doesn't run yet.
+    * signing
+    * shamir-signing
+    * To come:
+    	* Randhound - decentrailzed randomness cothority
+	    * vote - doesn't run yet.
     
 Protocols
 
     * collective signing
-    * joint threshold signing - work in progress
+    * shamir signing
     
 # How to run
 
-For the moment only the timestamping on Deterlab works:
-
-In the top-level directory, type
+The apps will be stand-alone (not yet tested) in each directory app/*. For the moment they
+can be run only through the deterlab-testbed in the ```deploy```-directory:
 
 ```
 go get ./...
+cd deploy
 go build
-./cothority
+./deploy runconfig/sign_single.toml
 ```
 
-then enter the name of the deterlab-installation, your username and your project-name, and you should
+then enter the name of the deterlab-installation, your username, project- and experiment-name, and you should
 be ready to go. The arguments are:
 
+	* runconfig - any .toml-file in the runconfig/-directory
 	* -debug - number between 0 and 5 - 0 is silent, 5 is very verbose
-	* -deploy [deterlab,gochannels] - by default is "deterlab" - gochannels are next
-	* -app [server,client] - whether to run the application as server or client - not yet implemented
 
 For the sake of easy development there are some switches that are to be used only for the
 deterlab implementation:
@@ -59,13 +62,12 @@ deterlab implementation:
 The Life of a simulation:
 
 1. Configure
-    * read configuration
-    * compile eventual files
+	* Prepare global specific configuration (deterlab or localhost)
 2. Build
-    * builds all files
-    * eventually for different platforms
+    * builds all files for the target platforms
 3. Deploy
     * make sure the environment is up and running
+    * prepare configuration for the app to run
     * copy files
 4. Start
     * start all logservers
@@ -81,16 +83,16 @@ The Life of a simulation:
 
 ## Timestamping
 
-For the moment the only running application - it sets up servers that listen for client-requests, collect all
-requests and handle them to a root-node.
+It sets up servers that listen for client-requests, collect all
+requests and handles them to a root-node.
 
 ## Signing
 
 A simple mechanism that only receives a message, signs it, and returns it.
 
-## Voting
+## Randhound
 
-Not done yet
+Test-implementation of a randomization-protocol based on the cothority
 
 # Protocols
 
@@ -100,7 +102,6 @@ We want to compare different protocols for signing and timestamping uses.
 
 This one runs well and is described in a pre-print from Dylan Visher.
 
-## Join threshold signing
+## Shamir signing
 
-A baseline-comparison being developed by the DeDiS-lab at EPFL.
-
+A textbook shamir signing for baseline-comparison against the collective signing protocol.

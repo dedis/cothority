@@ -1,4 +1,4 @@
-package deploy
+package main
 
 import (
 	"bytes"
@@ -16,7 +16,11 @@ import (
 )
 
 // Monitor monitors log aggregates results into RunStats
-func Monitor(bf int) RunStats {
+func Monitor() RunStats {
+	if platform_dst != "deterlab"{
+		dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
+		return RunStats{}
+	}
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
 	retry_dial:
@@ -33,17 +37,23 @@ func Monitor(bf int) RunStats {
 		time.Sleep(10 * time.Second)
 		goto retry
 	}
-	nhosts := doc.Find("#numhosts").First().Text()
-	dbg.Lvl4("hosts:", nhosts)
-	depth := doc.Find("#depth").First().Text()
-	dbg.Lvl4("depth:", depth)
-	nh, err := strconv.Atoi(nhosts)
+	nhosts_str := doc.Find("#numhosts").First().Text()
+	dbg.Lvl3("hosts:", nhosts_str)
+	depth_str := doc.Find("#depth").First().Text()
+	dbg.Lvl3("depth:", depth_str)
+	bf_str := doc.Find("#bf").First().Text()
+	dbg.Lvl3("bf:", bf_str)
+	nh, err := strconv.Atoi(nhosts_str)
 	if err != nil {
-		log.Fatal("unable to convert hosts to be a number:", nhosts)
+		log.Fatal("unable to convert hosts to be a number:", nhosts_str)
 	}
-	d, err := strconv.Atoi(depth)
+	d, err := strconv.Atoi(depth_str)
 	if err != nil {
-		log.Fatal("unable to convert depth to be a number:", depth)
+		log.Fatal("unable to convert depth to be a number:", depth_str)
+	}
+	bf, err := strconv.Atoi(bf_str)
+	if err != nil {
+		log.Fatal("unable to convert bf to be a number:", bf_str)
 	}
 	clientDone := false
 	rootDone := false
@@ -61,17 +71,18 @@ func Monitor(bf int) RunStats {
 		if err != nil {
 			// if it is an eof error than stop reading
 			if err == io.EOF {
-				dbg.Lvl4("websocket terminated before emitting EOF or terminating string")
+				dbg.Lvl1("websocket terminated before emitting EOF or terminating string")
 				break
 			}
 			continue
 		}
+		dbg.Lvl5("Received msg", data)
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
 		}
 		if bytes.Contains(data, []byte("root_round")) {
-			dbg.Lvl4("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl3("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 
 			if clientDone || rootDone {
 				dbg.Lvl4("Continuing searching data")
@@ -88,6 +99,10 @@ func Monitor(bf int) RunStats {
 				continue
 			}
 			dbg.Lvl4("root_round:", entry)
+			if entry.Round == 0{
+				dbg.Lvl1("Discarding away first round")
+				continue
+			}
 			if first {
 				first = false
 				dbg.Lvl4("Setting min-time to", entry.Time)
@@ -143,7 +158,9 @@ func Monitor(bf int) RunStats {
 		} else if bytes.Contains(data, []byte("schnorr_end")){
 			break
 		} else if bytes.Contains(data, []byte("forkexec")) {
+			dbg.Lvl3("Received forkexec")
 			if rootDone {
+				dbg.Lvl2("RootDone is true - continuing")
 				continue
 			}
 			var ss SysStats
@@ -155,12 +172,13 @@ func Monitor(bf int) RunStats {
 			rs.UserTime = ss.UserTime
 			dbg.Lvl4("forkexec:", ss)
 			rootDone = true
-			dbg.Lvl2("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl2("Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 			if clientDone {
 				break
 			}
 		} else if bytes.Contains(data, []byte("client_msg_stats")) {
 			if clientDone {
+				dbg.Lvl2("Continuing because client is already done")
 				continue
 			}
 			var cms ClientMsgStats
@@ -182,7 +200,7 @@ func Monitor(bf int) RunStats {
 			observed = 1 / observed
 			rs.Rate = observed
 			rs.Times = cms.Times
-			dbg.Lvl2("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
+			dbg.Lvl2("Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
 			clientDone = true
 			if rootDone {
 				break
