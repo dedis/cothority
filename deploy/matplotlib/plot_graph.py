@@ -97,7 +97,7 @@ def plotStacked(x, y1, y2, label1, label2, color1, color2, ymin = None):
 # calculation necessary to sum up everything
 def plotStackedBars(x, y1, y2, label1, label2, color1, color2, ymin = None,
                     delta_x = 0):
-    width = [(t * 0.25 + delta_x * t * 0.018) for t in x]
+    width = [(t * 0.125 + delta_x * t * 0.018) for t in x]
 
     zero = [min(y1) for t in y1]
     xd = [t[0] + delta_x * t[1] for t in zip(x, width)]
@@ -140,24 +140,47 @@ def plotEnd(name):
 
 # This one takes two csv-files which represent a Cothority and a JVSS
 # run, stacking the user and system-time one upon the other.
-def CoJVTime(cothority, jvss, bars = False):
+def CoJVTimeArea(cothority, jvss):
     plotPrepareLogLog();
     xmin = -1
     readCSV(jvss)
-    if bars:
-        plotStackedBars(x, tsys, tusr, "JVSS system time", "JVSS user time",
-            color2_light, color2_dark, delta_x = -1 )
-    else:
-        plotStacked(x, tsys, tusr, "JVSS system time", "JVSS user time",
-            color2_light, color2_dark)
+    plotStacked(x, tsys, tusr, "JVSS system time", "JVSS user time",
+        color2_light, color2_dark)
     mm = [min(tsys), max(tusr)]
 
     readCSV(cothority)
-    if bars:
-        plotStackedBars(x, tsys, tusr, "Cothority system time", "Cothority user time",
+    plotStacked(x, tsys, tusr, "Cothority system time", "Cothority user time",
             color1_light, color1_dark, min(mm) )
-    else:
-        plotStacked(x, tsys, tusr, "Cothority system time", "Cothority user time",
+    mm = [min(mm[0], min(tsys)), max(mm[1], max(tusr))]
+
+    plt.ylim(min(tsys), mm[1])
+    plt.xlim(xmin, xmax * 1.3)
+    plt.legend()
+    plotEnd(cothority)
+
+# This one takes two csv-files which represent a Cothority and a JVSS
+# run, stacking the user and system-time one upon the other.
+def CoJVTimeBars(cothority, jvss, naive, naive_sc):
+    plotPrepareLogLog();
+    xmin = -1
+
+    readCSV(naive_sc)
+    plotStackedBars(x, tsys, tusr, "Naive skipCheck system time", "Naive skipCheck user time",
+            color4_light, color4_dark, delta_x = 0.9 )
+    mm = [min(tsys), max(tusr)]
+
+    readCSV(naive)
+    plotStackedBars(x, tsys, tusr, "Naive system time", "Naive user time",
+            color3_light, color3_dark, delta_x = 1.7 )
+    mm = [min(tsys), max(tusr)]
+
+    readCSV(jvss)
+    plotStackedBars(x, tsys, tusr, "JVSS system time", "JVSS user time",
+            color2_light, color2_dark, delta_x = -1 )
+    mm = [min(tsys), max(tusr)]
+
+    readCSV(cothority)
+    plotStackedBars(x, tsys, tusr, "Cothority system time", "Cothority user time",
             color1_light, color1_dark, min(mm) )
     mm = [min(mm[0], min(tsys)), max(mm[1], max(tusr))]
 
@@ -174,7 +197,7 @@ def arrow(text, x, top, color):
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
 # the last two values from JVSS are off-grid and writes them with arrows
 # directly on the plot
-def plotAvg(cothority, jvss, naive):
+def plotAvg(cothority, jvss, naive, naive_sc):
     plotPrepareLogLog()
 
     xmin = -1
@@ -194,6 +217,10 @@ def plotAvg(cothority, jvss, naive):
     arrow("{:.1f} sec      ".format(avg[-2]), x[-2], 4, color3_dark)
     arrow("      {:.0f} sec".format(avg[-1]), x[-1], 4, color3_dark)
 
+    readCSV(naive_sc)
+    plt.plot(x, avg, label='Naive skip check', linestyle='-', marker='s', color=color4_dark, zorder=5)
+    plotFilledLegend(x, tmin, tmax, "min-max", color4_light, z=4)
+
     # Make horizontal lines and add arrows for JVSS
     plt.ylim(ymin, 4)
     plt.xlim(xmin, xmax * 1.2)
@@ -206,28 +233,30 @@ def plotAvg(cothority, jvss, naive):
 color1_light = 'lightgreen'
 color1_dark = 'green'
 # Colors for the JVSS
-color2_light = '#FCDFFF'
-color2_dark = 'red'
+#color2_light = '#FCDFFF'
+#color2_dark = 'red'
 color2_light = 'lightblue'
 color2_dark = 'blue'
 color3_light = 'yellow'
 color3_dark = 'brown'
+color4_light = 'red'
+color4_dark = 'pink'
 
-if len(sys.argv) < 5:
-    print("Error: Please give a mode and 2 .csv-files as argument\n")
+if len(sys.argv) < 6:
+    print("Error: Please give a mode and 4 .csv-files as argument\n")
     print("Mode: (0=printAverage, 1=printSystemUserTimes with bars, 2=printSystemUserTimes with areas)\n")
     print("CSV: cothority.csv jvss.csv\n")
     exit(1)
 
 show_fig = True
-if len(sys.argv) > 5:
+if len(sys.argv) > 6:
     show_fig = False
-    pngname = sys.argv[5]
+    pngname = sys.argv[-1]
 
 option = sys.argv[1]
 if option == "0":
-    plotAvg(sys.argv[2], sys.argv[3], sys.argv[4])
+    plotAvg(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
 elif option == "1":
-    CoJVTime(sys.argv[2], sys.argv[3])
+    CoJVTimeBars(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
 elif option == "2":
-    CoJVTime(sys.argv[2], sys.argv[3], True)
+    CoJVTimeArea(sys.argv[2], sys.argv[3])
