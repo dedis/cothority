@@ -1,6 +1,6 @@
-Machines = 3
+Machines = 128
 App = "naive"
 Suite = "ed25519"
 
 Hpn,  Rounds
-1, 3
+512, 3

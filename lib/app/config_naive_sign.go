@@ -1,17 +1,26 @@
 package app
 
-import ()
+import (
+)
 
-// what a name
+// Configuration-structure for the 'naive' signing-implementation
 type NaiveConfig struct {
-	// Hpn
-	Hpn int
+	// Hosts per node
+	Hpn        int
 
-	Hosts []string
+	// A list of all hosts that will participate. The first one in the list
+	// is the master
+	Hosts      []string
 
-	Suite string
+	// What suite to use - standard is ed25519
+	Suite      string
 
-	Rounds int
+	// How many rounds to measure
+	Rounds     int
 
-	Debug int
+	// The debug-level to use when running the application
+	Debug      int
+
+	// Whether to skip the checks
+	SkipChecks bool
 }

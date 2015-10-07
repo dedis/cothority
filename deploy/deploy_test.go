@@ -22,7 +22,7 @@ func TestReadRunfile(t *testing.T) {
 		dbg.Fatal("Couldn't create file:", err)
 	}
 
-	deter, tests := ReadRunfile( tmpfile )
+	tests := ReadRunfile( tmpfile )
 	dbg.Lvl1(deter)
 	fmt.Printf("%+v\n", tests[0])
 	if deter.App != "sign"{

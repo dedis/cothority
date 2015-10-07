@@ -246,6 +246,7 @@ func ReadRunfile(filename string) []platform.RunConfig {
 	if err != nil {
 		dbg.Fatal("Couldn't open file", file, err)
 	}
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		dbg.Lvl4("Decoding", scanner.Text())
@@ -253,7 +254,7 @@ func ReadRunfile(filename string) []platform.RunConfig {
 			break
 		}
 		toml.Decode(scanner.Text(), deployP)
-		dbg.Lvl4("Deter is now", deployP)
+		dbg.Lvl4("Platform-config is now", deployP)
 	}
 
 	scanner.Scan()
