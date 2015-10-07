@@ -28,9 +28,10 @@ func main() {
 	// The flags are defined in lib/app
 	flag.Parse()
 
+	/*
 	// connect with the logging server
 	if app.RunFlags.Logger != "" {
-		dbg.Lvl4("Setting up logger at", app.RunFlags.Logger)
+		dbg.LLvl4("Setting up logger at", app.RunFlags.Logger)
 		// blocks until we can connect to the logger
 		lh, err := logutils.NewLoggerHook(app.RunFlags.Logger, app.RunFlags.PhysAddr, deter.App)
 		if err != nil {
@@ -40,8 +41,10 @@ func main() {
 		}
 		log.AddHook(lh)
 	}
+	*/
 
 	setup_deter()
+	app.ConnectLogservers()
 
 	i := 0
 	var wg sync.WaitGroup
@@ -56,11 +59,12 @@ func main() {
 				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport)
 				defer wg.Done()
 
+				amroot := nameport == rootname
 				args := []string{
 					"-hostname=" + nameport,
 					"-logger=" + app.RunFlags.Logger,
 					"-physaddr=" + app.RunFlags.PhysAddr,
-					"-amroot=" + strconv.FormatBool(nameport == rootname),
+					"-amroot=" + strconv.FormatBool(amroot),
 					"-test_connect=" + strconv.FormatBool(testConnect),
 					"-mode=server",
 				}
@@ -77,38 +81,31 @@ func main() {
 					dbg.Lvl1("cmd run:", err)
 				}
 
-				// get CPU usage stats
-				st := cmdApp.ProcessState.SystemTime()
-				ut := cmdApp.ProcessState.UserTime()
-				log.WithFields(log.Fields{
-					"file":     logutils.File(),
-					"type":     "forkexec",
-					"systime":  st,
-					"usertime": ut,
-				}).Info("")
+				if amroot {
+					// get CPU usage stats, but only for root
+					st := cmdApp.ProcessState.SystemTime()
+					ut := cmdApp.ProcessState.UserTime()
+					log.WithFields(log.Fields{
+						"file":     logutils.File(),
+						"type":     "forkexec",
+						"systime":  st,
+						"usertime": ut,
+					}).Info("")
+					log.WithField("type", "end").Info("")
+				}
 
-				dbg.Lvl2("Finished with Timestamper", app.RunFlags.PhysAddr)
+				dbg.Lvl2("Finished with app", app.RunFlags.PhysAddr)
 			}(name)
 		}
-		dbg.Lvl3(app.RunFlags.PhysAddr, "Finished starting timestampers")
+		dbg.Lvl3(app.RunFlags.PhysAddr, "Finished starting apps")
 		wg.Wait()
 	} else {
-		dbg.Lvl2("No timestampers for", app.RunFlags.PhysAddr)
+		dbg.Lvl2("No apps for", app.RunFlags.PhysAddr)
 	}
-	dbg.Lvl2(app.RunFlags.PhysAddr, "timestampers exited")
+	dbg.Lvl2(app.RunFlags.PhysAddr, "apps exited")
 }
 
 func setup_deter() {
-	/*
-	virt, err := cliutils.ReadLines("virt.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	phys, err := cliutils.ReadLines("phys.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	*/
 	vpmap := make(map[string]string)
 	for i := range deter.Virt {
 		vpmap[deter.Virt[i]] = deter.Phys[i]
@@ -128,7 +125,7 @@ func setup_deter() {
 
 	rootname = hostnames[0]
 
-	// mapping from physical node name to the timestamp servers that are running there
+	// mapping from physical node name to the app servers that are running there
 	// essentially a reverse mapping of vpmap except ports are also used
 	physToServer = make(map[string][]string)
 	for _, virt := range hostnames {
