@@ -3,5 +3,5 @@ App = "naive"
 Suite = "ed25519"
 SkipChecks = true
 
-Hpn,  Rounds, SkipChecks
-1, 3, true
+Hpn,  Rounds
+1, 3
