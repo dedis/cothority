@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/proto/sign"
-	"time"
-	"os"
 	"io/ioutil"
 	"log"
-	"github.com/dedis/cothority/lib/app"
+	"os"
+	"time"
 )
-
 
 // Dispatch-function for running either client or server (mode-parameter)
 func main() {
@@ -22,12 +21,16 @@ func main() {
 	if app.RunFlags.Hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}
-	
+
 	// Do some common setup
-	if app.RunFlags.Mode == "client"{
+	if app.RunFlags.Mode == "client" {
 		app.RunFlags.Hostname = app.RunFlags.Name
 	}
 	hostname := app.RunFlags.Hostname
+	if hostname == conf.Hosts[0] {
+		fmt.Println("Tree is")
+		fmt.Println(conf.Tree.String(0))
+	}
 	dbg.Lvl3(app.RunFlags.Hostname, "Starting to run")
 	if conf.Debug > 1 {
 		sign.DEBUG = true
@@ -53,7 +56,7 @@ func main() {
 	}
 
 	// Wait for everybody to be ready before going on
-	ioutil.WriteFile("coll_stamp_up/up" + hostname, []byte("started"), 0666)
+	ioutil.WriteFile("coll_stamp_up/up"+hostname, []byte("started"), 0666)
 	for {
 		_, err := os.Stat("coll_stamp_up")
 		if err == nil {
