@@ -21,11 +21,9 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -76,7 +74,7 @@ func Start(simulations []string) {
 	}
 
 	for _, simulation := range simulations {
-		runconfigs := ReadRunfile(simulation)
+		runconfigs := platform.ReadRunFile(deployP, simulation)
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
@@ -223,50 +221,6 @@ type runFile struct {
 	Machines int
 	Args     string
 	Runs     string
-}
-
-/* Reads in a configuration-file for a run. The configuration-file has the
- * following syntax:
- * Name1 = value1
- * Name2 = value2
- * [empty line]
- * n1, n2, n3, n4
- * v11, v12, v13, v14
- * v21, v22, v23, v24
- *
- * The Name1...Namen are general configuration-options for deploy.
- * n1..nn are configuration-options for the 'app'
- */
-func ReadRunfile(filename string) []platform.RunConfig {
-	var runconfigs []platform.RunConfig
-
-	dbg.Lvl3("Reading file", filename)
-
-	file, err := os.Open(filename)
-	if err != nil {
-		dbg.Fatal("Couldn't open file", file, err)
-	}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		dbg.Lvl4("Decoding", scanner.Text())
-		if scanner.Text() == "" {
-			break
-		}
-		toml.Decode(scanner.Text(), deployP)
-		dbg.Lvl4("Deter is now", deployP)
-	}
-
-	scanner.Scan()
-	args := strings.Split(scanner.Text(), ", ")
-	for scanner.Scan() {
-		rc := ""
-		for i, value := range strings.Split(scanner.Text(), ", ") {
-			rc += args[i] + " = " + value + "\n"
-		}
-		runconfigs = append(runconfigs, platform.RunConfig(rc))
-	}
-
-	return runconfigs
 }
 
 func MkTestDir() {

@@ -1,0 +1,7 @@
+Machines = 128
+App = "naive"
+Suite = "ed25519"
+SkipChecks = true
+
+Hpn,  Rounds
+1, 3
