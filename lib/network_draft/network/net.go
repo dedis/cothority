@@ -2,6 +2,7 @@ package network
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/binary"
 	"encoding/gob"
 	"errors"
@@ -11,6 +12,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"time"
 )
 
 /// Encoding part ///
@@ -31,9 +33,6 @@ func RegisterProtocolType(msg ProtocolMessage) Type {
 	TypeRegistry[currType] = t
 	InvTypeRegistry[t] = currType
 	return currType
-}
-
-func init() {
 }
 
 func (t Type) String() string {
@@ -79,13 +78,24 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 		fmt.Printf("Type %d is not registered so we can not allocate this type %s\n", t, t.String())
 		os.Exit(1)
 	}
-	v := reflect.New(ty).Elem()
-	err = Suite.Read(b, v.Addr().Interface())
+
+	am.MsgType = t
+
+	// Look if the type supports UnmarshalBinary
+	ptr := reflect.New(ty)
+	v := ptr.Elem()
+	if bu, ok := ptr.Interface().(encoding.BinaryUnmarshaler); ok {
+		// Bytes() returns the UNREAD portion of bytes ;)
+		err := bu.UnmarshalBinary(b.Bytes())
+		am.Msg = ptr.Elem().Interface()
+		return err
+	}
+	// Otherwise decode it ourself
+	err = Suite.Read(b, ptr.Interface()) // v.Addr().Interface())
 	if err != nil {
 		fmt.Printf("Error decoding ProtocolMessage : %v\n", err)
 		os.Exit(1)
 	}
-	am.MsgType = t
 	am.Msg = v.Interface()
 	//fmt.Printf("UnmarshalBinary() : Decoded type %s => %v\n", t.String(), ty)
 	return nil
@@ -108,6 +118,7 @@ const ListenPort = "5000"
 
 // How many times should we try to connect
 const maxRetry = 5
+const waitRetry = 1 * time.Second
 
 type Host interface {
 	Name() string
@@ -190,10 +201,11 @@ func (t *TcpHost) Open(name string) Conn {
 
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
-			fmt.Printf("%s Error opening connection to %s\n", t.Name(), name)
+			fmt.Printf("%s (%d/%d) Error opening connection to %s\n", t.Name(), i, maxRetry, name)
 		} else {
 			break
 		}
+		time.Sleep(waitRetry)
 	}
 	if conn == nil {
 		os.Exit(1)

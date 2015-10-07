@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	. "github.com/dedis/cothority/lib/network_draft/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cipher"
 )
