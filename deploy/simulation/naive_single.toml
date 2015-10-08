@@ -1,4 +1,4 @@
-Machines = 128
+Machines = 8
 App = "naive"
 Suite = "ed25519"
 SkipChecks = false

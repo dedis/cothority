@@ -17,6 +17,7 @@ func RunServer(conf *app.NTreeConfig) {
 		RunRoot(conf)
 	} else {
 		RunPeer(conf)
+		//RunServer2(conf)
 	}
 }
 
@@ -25,7 +26,7 @@ func RunRoot(conf *app.NTreeConfig) {
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, LeadRole, key.Secret, key.Public)
-	dbg.Lvl1(peer.String(), "Up and will make connections...")
+	dbg.Lvl2(peer.String(), "Up and will make connections...")
 	// msg to be sent + signed
 	msg := []byte("Hello World")
 
@@ -47,7 +48,7 @@ func RunRoot(conf *app.NTreeConfig) {
 			masterRoundChan <- roundSigChan
 			// each rounds...
 			for lsigChan := range roundSigChan {
-				dbg.Lvl4(peer.String(), "starting new round !")
+				dbg.Lvl4(peer.String(), "starting new round with", c.PeerName())
 				m := net.MessageSigning{
 					Length: len(msg),
 					Msg:    msg,
@@ -168,14 +169,19 @@ func RunPeer(conf *app.NTreeConfig) {
 	dbg.Lvl1(peer.String(), "Up and will make connections...")
 
 	// Chan used to communicate the message from the parent to the children
-	// Must do a Fan in to communicate this message to all children
+	// Must do a Fan out to communicate this message to all children
 	masterMsgChan := make(chan net.MessageSigning)
 	childrenMsgChan := make([]chan net.MessageSigning, len(conf.Tree.Children))
 	go func() {
+		// init
+		for i := range childrenMsgChan {
+			childrenMsgChan[i] = make(chan net.MessageSigning)
+		}
 		// for each message
 		for msg := range masterMsgChan {
 			// broadcast to each channels
-			for _, ch := range childrenMsgChan {
+			for i, ch := range childrenMsgChan {
+				dbg.Lvl4(peer.String(), "dispatching msg to children (", i+1, "/", len(conf.Tree.Children), ")...")
 				ch <- msg
 			}
 		}
@@ -184,8 +190,40 @@ func RunPeer(conf *app.NTreeConfig) {
 			close(ch)
 		}
 	}()
+
 	// chan used to communicate the signature from the children to the parent
-	roundSigChan := make(chan chan net.ListBasicSignature)
+	// It is also used to specify the start of a new round (coming from the parent
+	// connection)
+	masterRoundChan := make(chan chan net.ListBasicSignature)
+	// dispatch new round to each children
+	childRoundChan := make([]chan chan net.ListBasicSignature, len(conf.Tree.Children))
+	dbg.Lvl3(peer.String(), "created children Signal Channels (length = ", len(childRoundChan), ")")
+	go func() {
+		// init
+		for i := range childRoundChan {
+			childRoundChan[i] = make(chan chan net.ListBasicSignature)
+		}
+		// For each new round started by the parent's connection
+		for sigChan := range masterRoundChan {
+			// if no children, no signature will come
+			// so close immediatly so parent connection will continue
+			if len(conf.Tree.Children) == 0 {
+				dbg.Lvl3(peer.String(), "Has no children so closing childRoundChan")
+				close(sigChan)
+			} else {
+				// otherwise, dispatch to children
+				for i, _ := range childRoundChan {
+					dbg.Lvl4(peer.String(), "Dispatching signature channel to children (", i+1, "/", len(conf.Tree.Children), ")...")
+					childRoundChan[i] <- sigChan
+				}
+			}
+		}
+		dbg.Lvl3(peer.String(), "closing the children sig channels...")
+		for _, ch := range childRoundChan {
+			close(ch)
+		}
+	}()
+
 	// chan used to tell the end of the protocols
 	done := make(chan bool)
 	// The parent protocol
@@ -196,7 +234,7 @@ func RunPeer(conf *app.NTreeConfig) {
 			// Create the chan for this round
 			sigChan := make(chan net.ListBasicSignature)
 			// that wil be used for children to pass up their signatures
-			roundSigChan <- sigChan
+			masterRoundChan <- sigChan
 			dbg.Lvl3(peer.String(), "starting round ", i)
 			// First, receive the message to be signed
 			app, err := c.Receive()
@@ -218,7 +256,9 @@ func RunPeer(conf *app.NTreeConfig) {
 
 			// for each ListBasicSignature
 			n := 0
+			dbg.Lvl3(peer.String(), "round ", i, " : waiting on signatures from children ...")
 			for lsig := range sigChan {
+				dbg.Lvl3(peer.String(), "round", i, " : receievd a ListSignature !")
 				// Add each independant signature
 				for _, sig := range lsig.Sigs {
 					sigs = append(sigs, sig)
@@ -242,32 +282,13 @@ func RunPeer(conf *app.NTreeConfig) {
 			}
 			dbg.Lvl2(peer.String(), "round ", i, " : sent the array of sigs to parent")
 		}
-		close(roundSigChan)
+		close(masterRoundChan)
 		c.Close()
 		done <- true
 	}
 
 	dbg.Lvl2(peer.String(), "listen for the parent connection...")
 	go peer.Listen(conf.Name, proto)
-	// dispatch new round to each children
-	childrenSigChan := make([]chan chan net.ListBasicSignature, len(conf.Tree.Children))
-	go func() {
-		for sigChan := range roundSigChan {
-			// if no children, no signature will come
-			// so close immediatly so parent connection will continue
-			if len(conf.Tree.Children) == 0 {
-				close(sigChan)
-			} else {
-				// otherwise, dispatch to children
-				for _, ch := range childrenSigChan {
-					ch <- sigChan
-				}
-			}
-		}
-		for _, ch := range childrenSigChan {
-			close(ch)
-		}
-	}()
 
 	// Connect to the children
 	// Relay the msg
@@ -276,20 +297,21 @@ func RunPeer(conf *app.NTreeConfig) {
 	// To stop when every children has done all rounds
 	// Connect to every children
 	for i, c := range conf.Tree.Children {
-		dbg.Lvl3(peer.String(), "is connecting to ", c.Name)
+		dbg.Lvl3(peer.String(), "is connecting to ", c.Name, "(", i, ")")
 		conn := peer.Open(c.Name)
 		if conn == nil {
 			dbg.Fatal(peer.String(), "Could not connect to ", c.Name)
 		}
 		// Children protocol
 		go func(child int, c net.Conn) {
-			dbg.Lvl3(peer.String(), "is connected to children ", c.PeerName())
+			dbg.Lvl3(peer.String(), "is connected to children ", c.PeerName(), "(", child, ")")
 
 			// For each rounds new round
-			for sigChan := range childrenSigChan[child] {
-
+			for sigChan := range childRoundChan[child] {
+				dbg.Lvl3(peer.String(), "starting new round with children ", c.PeerName(), "(", child, ")")
 				// get & relay the message
 				msg := <-childrenMsgChan[child]
+				dbg.Lvl3(peer.String(), "will relay message to child ", c.PeerName(), "(", child, ")")
 				err := c.Send(msg)
 				if err != nil {
 					dbg.Fatal(peer.String(), "Could not relay message to children ", c.PeerName())
@@ -316,4 +338,136 @@ func RunPeer(conf *app.NTreeConfig) {
 	<-done
 	dbg.Lvl2(peer.String(), "leaving...")
 
+}
+
+func RunServer2(conf *app.NTreeConfig) {
+
+	host := net.NewTcpHost(app.RunFlags.Hostname)
+	key := cliutils.KeyPair(suite)
+
+	peer := NewPeer(host, ServRole, key.Secret, key.Public)
+	dbg.Lvl1(peer.String(), "Up and will make connections...")
+
+	nChildren := len(conf.Tree.Children)
+	dbg.Lvl3(peer.String(), "starting with ", nChildren, "children")
+	// Channel that will be used to transmit messages down to the children conn
+	masterMsgChan := make(chan net.MessageSigning)
+	// mster will broadcast to these children channels
+	childrenMsgChan := make([]chan net.MessageSigning, nChildren)
+
+	// make the fan out routine
+	dbg.Lvl3(peer.String(), "launching the fan-out channels")
+	go func() {
+		// init
+		for i := range childrenMsgChan {
+			childrenMsgChan[i] = make(chan net.MessageSigning)
+		}
+		for sig := range masterMsgChan {
+			for _, ch := range childrenMsgChan {
+				ch <- sig
+			}
+		}
+		for _, ch := range childrenMsgChan {
+			close(ch)
+		}
+	}()
+
+	// Channel that will be used to transmit signature from children
+	// to parent connection
+	masterSigChan := make(chan net.ListBasicSignature)
+	// if we are a leaf
+	if nChildren == 0 {
+		// no need to wait for childrens signature!
+		dbg.Lvl3(peer.String(), "has no children: closing masterSigChan")
+		close(masterSigChan)
+	}
+
+	// channel to signal the end of protocol
+	done := make(chan bool)
+	// protocol for the parent <-> peer connection
+	parent := func(c net.Conn) {
+		// for each round
+		dbg.Lvl2(peer.String(), "connected to parent : ", c.PeerName())
+		for i := 0; i < conf.Rounds; i++ {
+			dbg.Lvl3(peer.String(), "starting new round ", i, " with parent ", c.PeerName())
+			// Receive message
+			msg := peer.ReceiveMessage(c)
+			// braodcast down
+			masterMsgChan <- msg
+
+			dbg.Lvl3(peer.String(), "received msg from parent & broadcasted msg to children")
+
+			// wait for list basic signatures from children
+			sigs := make([]net.BasicSignature, 0)
+			// append its own signature
+			own := peer.Signature(msg.Msg)
+			sigs = append(sigs, *own)
+			n := 0
+			for lbs := range masterSigChan {
+				dbg.Lvl4(peer.String(), "appending a new LBS from child")
+				// append all individual signatures
+				for _, sig := range lbs.Sigs {
+					sigs = append(sigs, sig)
+				}
+				n += 1
+				if n == nChildren {
+					// all sigs received
+					break
+				}
+			}
+			dbg.Lvl4(peer.String(), "received all LBS from children")
+
+			// send back to parent
+			lbs := net.ListBasicSignature{
+				Length: len(sigs),
+				Sigs:   sigs,
+			}
+			if err := c.Send(lbs); err != nil {
+				dbg.Fatal(peer.String(), "could not sent the aggregate signatures to parent ", c.PeerName())
+			}
+		}
+		// finished
+		c.Close()
+		done <- true
+	}
+	// go listen
+	go peer.Listen(peer.Name(), parent)
+
+	// the protocol for the peer <-> children connection
+	children := func(c net.Conn, msgChan chan net.MessageSigning) {
+		dbg.Lvl2(peer.String(), "connected with children ", c.PeerName())
+		for i := 0; i < conf.Rounds; i++ {
+			dbg.Lvl3(peer.String(), "(", i, ") waiting upstream message for ", c.PeerName())
+			// wait for the message
+			msg := <-msgChan
+			// send it
+			if err := c.Send(msg); err != nil {
+				dbg.Fatal(peer.String(), "(", i, ") could not send msg down to children ", c.PeerName(), " : ", err)
+			}
+			dbg.Lvl3(peer.String(), "(", i, ") sent upstream msg to ", c.PeerName())
+
+			// wait for the response sigs
+			lbs := peer.ReceiveListBasicSignature(c)
+			dbg.Lvl3(peer.String(), "(", i, ") received ListBasicSignature from children : ", c.PeerName())
+			// dispatch to the parent conn
+			masterSigChan <- lbs
+		}
+		dbg.Lvl3(peer.String(), " conn with children will close.")
+		c.Close()
+	}
+
+	// launch the children connections
+	for i := 0; i < nChildren; i++ {
+		c := peer.Open(conf.Tree.Children[i].Name)
+		if c == nil {
+			dbg.Fatal(peer.String(), "could not open connection to ", conf.Tree.Children[i].Name)
+		}
+		go children(c, childrenMsgChan[i])
+	}
+
+	// wait for the end
+	dbg.Lvl2(peer.String(), "waiting the end of the rounds ...")
+	<-done
+	close(masterMsgChan)
+	dbg.Lvl2(peer.String(), "is finished !")
 }

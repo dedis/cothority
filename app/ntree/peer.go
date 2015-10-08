@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	net "github.com/dedis/cothority/lib/network_draft/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
@@ -51,6 +52,30 @@ func (l *Peer) Signature(msg []byte) *net.BasicSignature {
 	return &sign
 }
 
+func (l *Peer) ReceiveMessage(c net.Conn) net.MessageSigning {
+	app, err := c.Receive()
+	if err != nil {
+		dbg.Fatal(l.String(), "could not receive message from ", c.PeerName())
+
+	}
+	if app.MsgType != net.MessageSigningType {
+		dbg.Fatal(l.String(), "MS error : received ", app.MsgType.String(), " from ", c.PeerName())
+	}
+	return app.Msg.(net.MessageSigning)
+}
+
+func (l *Peer) ReceiveListBasicSignature(c net.Conn) net.ListBasicSignature {
+	app, err := c.Receive()
+	if err != nil {
+		dbg.Fatal(l.String(), "could not receive listbasicsig from ", c.PeerName())
+	}
+
+	if app.MsgType != net.ListBasicSignatureType {
+		dbg.Fatal(l.String(), "LBS error : received ", app.MsgType.String(), "from ", c.PeerName())
+	}
+	return app.Msg.(net.ListBasicSignature)
+
+}
 func NewPeer(host net.Host, role string, secret abstract.Secret,
 	public abstract.Point) *Peer {
 	return &Peer{

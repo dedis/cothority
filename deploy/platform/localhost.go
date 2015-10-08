@@ -147,7 +147,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
-		dbg.Lvl4("Localhost : naive Tree applications :", conf.Tree)
+		dbg.Lvl3("Localhost : naive Tree applications :", conf.Hosts)
 		d.Hosts = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
