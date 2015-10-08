@@ -10,10 +10,19 @@ import (
 type RunConfig string
 
 type Platform interface {
+	// Does the initial configuration of all structures needed for the platform
 	Configure()
+	// Builds all necessary binaries
 	Build(string) error
+	// Copies the binaries to the appropriate directory/machines, together with
+	// the necessary configuration. RunConfig is a simple string that should
+	// be copied as 'app.toml' to the directory where the app resides
 	Deploy(RunConfig) error
+	// Starts the application and returns - non-blocking!
 	Start() error
+	// Waits for the application to quit
+	Wait() error
+	// Stops the application and cleans up eventual other processes
 	Stop() error
 }
 

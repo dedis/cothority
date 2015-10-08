@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strconv"
 	"time"
+	"sync"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes
@@ -24,35 +25,39 @@ var defaultConfigName = "localhost.toml"
 // Localhost is the platform for launching thee apps locally
 type Localhost struct {
 
-					   // Address of the logger (can be local or not)
+	// Address of the logger (can be local or not)
 	Logger      string
 
-					   // App to run [shamir,coll_sign..]
+	// App to run [shamir,coll_sign..]
 	App         string
-	AppDir      string // where the app is located
+	// where the app is located
+	AppDir      string
 
-					   // Where is the Localhost package located
+	// Where is the Localhost package located
 	LocalDir    string
-					   // Where to build the executables +
-					   // where to read the config file
-					   // it will be assembled like LocalDir/RunDir
+	// Where to build the executables +
+	// where to read the config file
+	// it will be assembled like LocalDir/RunDir
 	RunDir      string
 
-					   // Debug level 1 - 5
+	// Debug level 1 - 5
 	Debug       int
 
-					   // ////////////////////////////
-					   // Number of processes to launch
-					   // ////////////////////////////
+	// Number of machines - so we can use the same
+	// configuration-files
 	Machines    int
-					   // hosts used with the applications
-					   // example: localhost:2000, ...:2010 , ...
+	// This gives the number of hosts per node (machine)
+	Hpn         int
+	// hosts used with the applications
+	// example: localhost:2000, ...:2010 , ...
 	Hosts       []string
 
-					   // Signal that the process is finished
+	// Signal that the process is finished
 	channelDone chan string
-					   // Whether we started a simulation
-	running bool
+	// Whether we started a simulation
+	running     bool
+	// WaitGroup for running processes
+	wg_run      sync.WaitGroup
 }
 
 // Configure various
@@ -155,21 +160,33 @@ func (d *Localhost) Start() error {
 	dbg.Lvl4("Localhost: in Start() => hosts ", d.Hosts)
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
-	for _, h := range d.Hosts {
-		args := []string{"-hostname", h, "-mode", "server"}
+	for index, host := range d.Hosts {
+		args := []string{"-hostname", host, "-mode", "server"}
 		cmd := exec.Command(ex, args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		dbg.Lvl3("Localhost : will start host ", h)
-		go func() {
+		dbg.Lvl3("Localhost : will start host ", host)
+		go func(i int, h string) {
+			d.wg_run.Add(1)
 			err := cmd.Run()
 			if err != nil {
 				dbg.Lvl3("Error running localhost ", h)
 			}
+			d.wg_run.Done()
+			dbg.LLvl3(index, "on host", host, "done")
 			d.channelDone <- "Done"
-		}()
+		}(index, host)
 
 	}
+	return nil
+}
+
+// Waits for all processes to be done by listening to the
+// d.channelDone
+func (d *Localhost) Wait() error {
+	dbg.LLvl3("Waiting for processes to finish")
+	d.wg_run.Wait()
+	dbg.LLvl2("Processes finished")
 	return nil
 }
 
@@ -212,10 +229,11 @@ func (d *Localhost) ReadConfig(name ...string) {
 // GenerateHosts will generate the list of hosts
 // with a new port each
 func (d *Localhost) GenerateHosts() {
-	d.Hosts = make([]string, d.Machines)
+	nrhosts := d.Machines * d.Hpn
+	d.Hosts = make([]string, nrhosts)
 	port := 2000
 	inc := 5
-	for i := 0; i < d.Machines; i++ {
+	for i := 0; i < nrhosts; i++ {
 		s := "127.0.0.1:" + strconv.Itoa(port + inc * i)
 		d.Hosts[i] = s
 	}

@@ -12,8 +12,6 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"golang.org/x/net/context"
-	// "strconv"
-	// "os"
 )
 
 // Collective Signing via ElGamal
@@ -205,6 +203,7 @@ func (sn *Node) get() error {
 			case CloseAll:
 				sn.ReceivedHeartbeat(sm.View)
 				err = sn.CloseAll(sm.View)
+				return nil
 			case Error:
 				dbg.Lvl4("Received Error Message:", ErrUnknownMessageType, sm, sm.Err)
 			}
@@ -675,13 +674,13 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 }
 
 func (sn *Node) CloseAll(view int) error {
-	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
+	dbg.LLvl2(sn.Name(), "received CloseAll on", view)
 
 	// At the leaves
 	if len(sn.Children(view)) == 0 {
-		dbg.Lvl2(sn.Name(), "in CloseAll is root leaf")
+		dbg.LLvl2(sn.Name(), "in CloseAll is root leaf")
 	} else {
-		dbg.Lvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
+		dbg.LLvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
 
 		// Inform all children of announcement
 		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -700,7 +699,8 @@ func (sn *Node) CloseAll(view int) error {
 		sn.Close()
 	}
 
-	log.Fatal("Closing down shop")
+	dbg.LLvl3("Closing down shop")
+	//sn.closed <- fmt.Errorf("Closing connection")
 	return nil
 }
 

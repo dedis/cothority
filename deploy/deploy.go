@@ -142,7 +142,7 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 	go func() {
 		if platform_dst != "deterlab" {
 			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
-
+			deployP.Wait()
 			rs = RunStats{}
 		} else {
 			rs = Monitor()

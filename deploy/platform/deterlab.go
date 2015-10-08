@@ -79,6 +79,8 @@ type Deterlab struct {
 
 	// Testing the connection?
 	TestConnect  bool
+	// Wait-group for running process
+	wg_run       sync.WaitGroup
 }
 
 func (d *Deterlab) Configure() {
@@ -276,13 +278,23 @@ func (d *Deterlab) Start() error {
 	}
 
 	go func() {
+		d.wg_run.Add(1)
 		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
-		if err != nil{
+		if err != nil {
 			dbg.Lvl3(err)
 		}
+		d.wg_run.Done()
 		d.sshDeter <- "finished"
 	}()
 
+	return nil
+}
+
+// Waiting for the process to finish
+func (d *Deterlab) Wait() error {
+	dbg.LLvl3("Waiting for process")
+	d.wg_run.Wait()
+	dbg.LLvl2("Process terminated")
 	return nil
 }
 
@@ -313,7 +325,7 @@ func (d *Deterlab) Stop() error {
 	dbg.Lvl3("Going to kill everything")
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
-		if err != nil{
+		if err != nil {
 			dbg.Lvl3(err)
 		}
 		d.sshDeter <- "stopped"
