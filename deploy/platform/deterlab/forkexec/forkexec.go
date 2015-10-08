@@ -73,8 +73,8 @@ func main() {
 					log.WithFields(log.Fields{
 						"file":     logutils.File(),
 						"type":     "forkexec",
-						"systime":  st / deter.Rounds,
-						"usertime": ut / deter.Rounds,
+						"systime":  st,
+						"usertime": ut,
 					}).Info("")
 					log.WithField("type", "end").Info("")
 				}

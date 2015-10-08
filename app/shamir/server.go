@@ -106,8 +106,8 @@ func RunServer(conf *app.ConfigShamir) {
 				"file":  logutils.File(),
 				"type":  "schnorr_round",
 				"round": round,
-				//"time": time.Since(start),
-				"time":  dSys + dUsr,
+				"time": time.Since(start),
+				//"time":  dSys + dUsr,
 			}).Info("")
 		} else {
 			// Compute the partial sig and send it to the root
