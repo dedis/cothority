@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
@@ -28,8 +27,7 @@ func main() {
 	}
 	hostname := app.RunFlags.Hostname
 	if hostname == conf.Hosts[0] {
-		fmt.Println("Tree is")
-		fmt.Println(conf.Tree.String(0))
+		dbg.Lvlf3("Tree is %+v", conf.Tree.String(0))
 	}
 	dbg.Lvl3(app.RunFlags.Hostname, "Starting to run")
 	if conf.Debug > 1 {

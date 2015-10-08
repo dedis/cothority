@@ -36,7 +36,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		dbg.Lvl3("Going to launch announcement ", hc.SNodes[0].Name())
 		start = time.Now()
 		t0 := time.Now()
-		sys, usr := app.GetRTime()
+		//sys, usr := app.GetRTime()
 
 		err := hc.SNodes[0].StartSigningRound()
 		if err != nil {
@@ -66,7 +66,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 			"time":  elapsed,
 		}).Info("")
 
-		dSys, dUsr := app.GetDiffRTime(sys, usr)
+		//dSys, dUsr := app.GetDiffRTime(sys, usr)
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
 			"type":  "root_round",
