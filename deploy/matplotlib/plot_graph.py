@@ -77,11 +77,10 @@ def readCSV(name):
 # the legend
 def plotFilledLegend(x, y1, y2, label, color, z = None):
     if z:
-        print z
         fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white', zorder = z)
     else:
         fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white', zorder = 3)
-    plt.plot([], [], '-', label=label, color=color, linewidth=10)
+    #plt.plot([], [], '-', label=label, color=color, linewidth=10)
 
 # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
 # calculation necessary to sum up everything
@@ -102,8 +101,9 @@ def plotStackedBars(x, y1, y2, label1, label2, color1, color2, ymin = None,
     zero = [min(y1) for t in y1]
     xd = [t[0] + delta_x * t[1] for t in zip(x, width)]
     y12 = [sum(t) for t in zip(y1, y2)]
+    #plt.bar(xd, y12, width, color=color2, bottom=y1, label=label2, zorder=3)
     plt.bar(xd, y12, width, color=color2, bottom=y1, label=label2, zorder=3)
-    plt.bar(xd, y1, width, color=color1, label=label1, bottom=zero, zorder=3)
+    plt.bar(xd, y1, width, color=color1, bottom=zero, zorder=3)
 
 
 # Puts the most used arguments for starting a plot with
@@ -184,9 +184,15 @@ def CoJVTimeBars(cothority, jvss, naive, naive_sc):
             color1_light, color1_dark, min(mm) )
     mm = [min(mm[0], min(tsys)), max(mm[1], max(tusr))]
 
-    plt.ylim(min(tsys), mm[1])
+    plt.ylim(min(tsys) / 2, mm[1])
     plt.xlim(xmin, xmax * 1.3)
-    plt.legend()
+    plt.legend(loc = u'lower right')
+
+    #img = imread("cirque.jpg")
+    #x0,x1 = plt.get_xlim()
+    #y0,y1 = plt.get_ylim()
+    #plt.imshow(img, extent=[x0, x1, y0, y1], aspect='auto')
+
     plotEnd(cothority)
 
 def arrow(text, x, top, color):
@@ -214,7 +220,7 @@ def plotAvg(cothority, jvss, naive, naive_sc):
     readCSV(naive)
     plt.plot(x, avg, label='Naive', linestyle='-', marker='s', color=color3_dark, zorder=5)
     plotFilledLegend(x, tmin, tmax, "min-max", color3_light, z=4)
-    arrow("{:.1f} sec      ".format(avg[-2]), x[-2], 4, color3_dark)
+    #arrow("{:.1f} sec      ".format(avg[-2]), x[-2], 4, color3_dark)
     arrow("      {:.0f} sec".format(avg[-1]), x[-1], 4, color3_dark)
 
     readCSV(naive_sc)
@@ -222,7 +228,7 @@ def plotAvg(cothority, jvss, naive, naive_sc):
     plotFilledLegend(x, tmin, tmax, "min-max", color4_light, z=4)
 
     # Make horizontal lines and add arrows for JVSS
-    plt.ylim(ymin, 4)
+    plt.ylim(ymin / 2, 4)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
 
@@ -239,8 +245,8 @@ color2_light = 'lightblue'
 color2_dark = 'blue'
 color3_light = 'yellow'
 color3_dark = 'brown'
-color4_light = 'red'
-color4_dark = 'pink'
+color4_light = 'pink'
+color4_dark = 'red'
 
 if len(sys.argv) < 6:
     print("Error: Please give a mode and 4 .csv-files as argument\n")
