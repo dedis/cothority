@@ -154,10 +154,12 @@ func GoLeader(conf *app.NaiveConfig) {
 	// Close down all connections
 
 	close(masterRoundChan)
-	dbg.Lvl2(leader.String(), " Has done all rounds")
+	dbg.Lvl2(leader.String(), "has done all rounds")
+	/*
 	log.WithFields(log.Fields{
 		"file": logutils.File(),
 		"type": "end"}).Info("")
+		*/
 }
 
 // The signer connects to the leader and then waits for a message to be
