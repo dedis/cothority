@@ -128,7 +128,7 @@ func GoLeader(conf *app.NaiveConfig) {
 				dbg.Lvl2("Skipping check for round", round)
 				wg.Done()
 			} else {
-				go func(b *BasicSignature) {
+				go func(b *net.BasicSignature) {
 					if err := SchnorrVerify(suite, msg, *b); err != nil {
 						faulty += 1
 						dbg.Lvl2(leader.String(), "Round ", round, " received a faulty signature !")
@@ -180,11 +180,11 @@ func GoSigner(conf *app.NaiveConfig) {
 		if err != nil {
 			dbg.Fatal(signer.String(), "round ", round, " received error waiting msg")
 		}
-		if m.MsgType != MessageSigningType {
+		if m.MsgType != net.MessageSigningType {
 			dbg.Fatal(app.RunFlags.Hostname, "round ", round, "  wanted to receive a msg to sign but..",
 				m.MsgType.String())
 		}
-		msg := m.Msg.(MessageSigning).Msg
+		msg := m.Msg.(net.MessageSigning).Msg
 		dbg.Lvl3(signer.String(), "round ", round, " received msg : ", msg[:])
 		// Generate signature & send
 		s := signer.Signature(msg[:])
