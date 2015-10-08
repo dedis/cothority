@@ -106,10 +106,10 @@ func (c *Client) AddServer(name string, conn coconet.Conn) {
 				// if a server encounters any terminating error
 				// terminate all pending client transactions and kill the client
 				if err != nil {
-					log.Errorln("EOF detected: sending EOF to all pending TimeStamps")
+					dbg.Lvl2("EOF detected: sending EOF to all pending TimeStamps")
 					c.Mux.Lock()
 					for _, ch := range c.doneChan {
-						log.Println("Sending to Receiving Channel")
+						dbg.Lvl2("Sending to Receiving Channel")
 						ch <- io.EOF
 					}
 					c.Error = io.EOF
@@ -157,7 +157,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 			Sreq:  &StampRequest{Val: val}})
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
-			log.Warn(c.Name(), "error timestamping to ", TSServerName, ": ", err)
+			dbg.Lvl3(c.Name(), "error timestamping to ", TSServerName, ": ", err)
 		}
 		// pass back up all errors from putting to server
 		return err
@@ -179,7 +179,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	// err = ErrClientToTSTimeout
 	}
 	if err != nil {
-		log.Errorln(c.Name(), "error received from DoneChan:", err)
+		dbg.Lvl3(c.Name(), "error received from DoneChan:", err)
 		return err
 	}
 

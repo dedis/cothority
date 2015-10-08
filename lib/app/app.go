@@ -7,18 +7,22 @@ import (
 	_ "net/http/pprof"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/lib/logutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"os"
-	"reflect"
 	"bytes"
 	"github.com/BurntSushi/toml"
+	log "github.com/Sirupsen/logrus"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"reflect"
+
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/nist"
 )
 
-type FlagConfig struct {
+type Flags struct {
 	Hostname    string // Hostname like server-0.cs-dissent ?
 	Logger      string // ip addr of the logger to connect to
 	PhysAddr    string // physical IP addr of the host
@@ -31,45 +35,42 @@ type FlagConfig struct {
 
 // Initialize before 'init' so we can directly use the fields as parameters
 // to 'Flag'
-var Flags FlagConfig
+var RunFlags Flags
 
 func init() {
-	flag.StringVar(&Flags.Hostname, "hostname", "", "the hostname of this node")
-	flag.StringVar(&Flags.Logger, "logger", "", "remote logger")
-	flag.StringVar(&Flags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
-	flag.BoolVar(&Flags.AmRoot, "amroot", false, "am I root node")
-	flag.BoolVar(&Flags.TestConnect, "test_connect", false, "test connecting and disconnecting")
-	flag.StringVar(&Flags.Mode, "mode", Flags.Mode, "Run the app in [server,client] mode")
-	flag.StringVar(&Flags.Name, "name", Flags.Name, "Name of the node")
-	flag.StringVar(&Flags.Server, "server", "", "the timestamping servers to contact")
+	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
+	flag.StringVar(&RunFlags.Logger, "logger", "", "remote logger")
+	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
+	flag.BoolVar(&RunFlags.AmRoot, "amroot", false, "am I root node")
+	flag.BoolVar(&RunFlags.TestConnect, "test_connect", false, "test connecting and disconnecting")
+	flag.StringVar(&RunFlags.Mode, "mode", RunFlags.Mode, "Run the app in [server,client] mode")
+	flag.StringVar(&RunFlags.Name, "name", RunFlags.Name, "Name of the node")
+	flag.StringVar(&RunFlags.Server, "server", "", "the timestamping servers to contact")
 }
 
 /*
- * Reads in the config from deterlab and for the application -
+ * Reads in the config for the application -
  * also parses the init-flags
- * It first reads the configuration of deterlab, in case the
- * application needs any of these configuration-options, then
- * loads over that the configuration of the app.toml
  */
 func ReadConfig(conf interface{}, dir ...string) {
 	var err error
-	err = ReadTomlConfig(conf, "deter.toml", dir...)
-	if err != nil {
-		dbg.Lvl2("Couldn't load deter-config")
-	}
 	err = ReadTomlConfig(conf, "app.toml", dir...)
 	if err != nil {
 		log.Fatal("Couldn't load app-config-file in exec")
 	}
 	debug := reflect.ValueOf(conf).Elem().FieldByName("Debug")
-	if debug.IsValid(){
+	if debug.IsValid() {
 		dbg.DebugVisible = debug.Interface().(int)
 	}
 
 	flag.Parse()
 
-	dbg.Lvl3("Running", Flags.Hostname, "with logger at", Flags.Logger)
-	ConnectLogservers()
+	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
+	if RunFlags.AmRoot{
+		ConnectLogservers()
+	} else {
+		dbg.Lvl4("Not connecting to logger - logger:", RunFlags.Logger, "AmRoot:", RunFlags.AmRoot)
+	}
 	ServeMemoryStats()
 }
 
@@ -78,10 +79,10 @@ func ReadConfig(conf interface{}, dir ...string) {
  */
 func ConnectLogservers() {
 	// connect with the logging server
-	if Flags.Logger != "" && Flags.AmRoot{
+	if RunFlags.Logger != "" {
 		// blocks until we can connect to the flags.Logger
-		dbg.Lvl3(Flags.Hostname, "Connecting to Logger", Flags.Logger)
-		lh, err := logutils.NewLoggerHook(Flags.Logger, Flags.Hostname, "unknown")
+		dbg.Lvl3(RunFlags.Hostname, "Connecting to Logger", RunFlags.Logger)
+		lh, err := logutils.NewLoggerHook(RunFlags.Logger, RunFlags.Hostname, "unknown")
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -90,9 +91,7 @@ func ConnectLogservers() {
 		log.AddHook(lh)
 		//log.SetOutput(ioutil.Discard)
 		//fmt.Println("exiting flags.Logger block")
-		dbg.Lvl4(Flags.Hostname, "Done setting up hook")
-	} else {
-		dbg.Lvl4("Not connecting to logger - logger:", Flags.Logger, "AmRoot:", Flags.AmRoot)
+		dbg.Lvl4(RunFlags.Hostname, "Done setting up hook")
 	}
 }
 
@@ -100,30 +99,29 @@ func ConnectLogservers() {
  * Opens a port at 'flags.Hostname + 1' and serves memory-statistics of this process
  */
 func ServeMemoryStats() {
-	if Flags.Mode == "server" {
-		if Flags.PhysAddr == "" {
-			h, _, err := net.SplitHostPort(Flags.Hostname)
+	if RunFlags.Mode == "server" {
+		if RunFlags.PhysAddr == "" {
+			h, _, err := net.SplitHostPort(RunFlags.Hostname)
 			if err != nil {
-				log.Fatal(Flags.Hostname, "improperly formatted hostname", os.Args)
+				log.Fatal(RunFlags.Hostname, "improperly formatted hostname", os.Args)
 			}
-			Flags.PhysAddr = h
+			RunFlags.PhysAddr = h
 		}
 
 		// run an http server to serve the cpu and memory profiles
 		go func() {
-			_, port, err := net.SplitHostPort(Flags.Hostname)
+			_, port, err := net.SplitHostPort(RunFlags.Hostname)
 			if err != nil {
-				log.Fatal(Flags.Hostname, "improperly formatted hostname: should be host:port")
+				log.Fatal(RunFlags.Hostname, "improperly formatted hostname: should be host:port")
 			}
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(Flags.PhysAddr, strconv.Itoa(p + 2)), nil)
+			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
 			dbg.Lvl3("Memory-stats server:", res)
 		}()
 	}
 }
-
 
 /*
  * Writes any structure to a toml-file
@@ -146,7 +144,7 @@ func WriteTomlConfig(conf interface{}, filename string, dirOpt ...string) {
  *
  * Takes a filename and an optional directory-name
  */
-func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) (error) {
+func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 	buf, err := ioutil.ReadFile(getFullName(filename, dirOpt...))
 	if err != nil {
 		pwd, _ := os.Getwd()
@@ -171,14 +169,30 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) (error)
  * - filename in absolute path
  * - filename and additional path
  */
-func getFullName(filename string, dirOpt ...string) string{
+func getFullName(filename string, dirOpt ...string) string {
 	dir := filepath.Dir(filename)
 	if len(dirOpt) > 0 {
 		dir = dirOpt[0]
 	} else {
-		if dir == ""{
+		if dir == "" {
 			dir = "."
 		}
 	}
 	return dir + "/" + filepath.Base(filename)
+}
+
+// Helper functions that will return the suite used during the process from a string name
+func GetSuite(suite string) abstract.Suite {
+	var s abstract.Suite
+	switch {
+	case suite == "nist256":
+		s = nist.NewAES128SHA256P256()
+	case suite == "nist512":
+		s = nist.NewAES128SHA256QR512()
+	case suite == "ed25519":
+		s = ed25519.NewAES128SHA256Ed25519(true)
+	default:
+		s = nist.NewAES128SHA256P256()
+	}
+	return s
 }

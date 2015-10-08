@@ -3,7 +3,6 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/logutils"
-	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/crypto/poly"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"time"
@@ -11,8 +10,8 @@ import (
 )
 
 func RunServer(conf *app.ConfigShamir) {
-	app := app.Flags
-	s := config.GetSuite(conf.Suite)
+	flags := app.RunFlags
+	s := app.GetSuite(conf.Suite)
 	poly.SUITE = s
 	poly.SECURITY = poly.MODERATE
 	n := len(conf.Hosts)
@@ -24,27 +23,27 @@ func RunServer(conf *app.ConfigShamir) {
 	}
 	indexPeer := -1
 	for i, h := range conf.Hosts {
-		if h == app.Hostname {
+		if h == flags.Hostname {
 			indexPeer = i
 			break
 		}
 	}
 	if indexPeer == -1 {
-		log.Fatal("Peer ", app.Hostname, "(", app.PhysAddr, ") did not find any match for its name.Abort")
+		log.Fatal("Peer ", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
 	start := time.Now()
-	dbg.Lvl2("Creating new peer ", app.Hostname, "(", app.PhysAddr, ") ...")
+	dbg.Lvl2("Creating new peer ", flags.Hostname, "(", flags.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
-	p := NewPeer(indexPeer, app.Hostname, info, indexPeer == 0)
+	p := NewPeer(indexPeer, flags.Hostname, info, indexPeer == 0)
 
 	// make it listen
-	dbg.Lvl2("Peer", app.Hostname, "is now listening for incoming connections")
+	dbg.Lvl2("Peer", flags.Hostname, "is now listening for incoming connections")
 	go p.Listen()
 
 	// then connect it to its successor in the list
 	for _, h := range conf.Hosts[indexPeer + 1:] {
-		dbg.Lvl2("Peer ", app.Hostname, " will connect to ", h)
+		dbg.Lvl2("Peer ", flags.Hostname, " will connect to ", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
 	}

@@ -1,11 +1,10 @@
 package main
 
-import  (
+import (
 	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -19,16 +18,14 @@ import  (
 
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/graphs"
 
 	"golang.org/x/net/websocket"
-	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
 )
 
-var deter deploy.Deterlab
+var deter platform.Deterlab
 var conf app.ConfigColl
 var addr, master string
 var homePage *template.Template
@@ -199,7 +196,7 @@ func logHandlerHtml(w http.ResponseWriter, r *http.Request) {
 		var jsonlog map[string]*json.RawMessage
 		err := json.Unmarshal(Log.Msgs[i], &jsonlog)
 		if err != nil {
-			log.Error("Couldn't unmarshal string")
+			dbg.Lvl1("Couldn't unmarshal string")
 		}
 		w.Write([]byte(fmt.Sprintf("%s - %s - %s - %s", *jsonlog["etime"], *jsonlog["eapp"],
 			*jsonlog["ehost"], *jsonlog["emsg"])))
@@ -215,7 +212,7 @@ func logHandlerHtmlReverse(w http.ResponseWriter, r *http.Request) {
 		var jsonlog map[string]*json.RawMessage
 		err := json.Unmarshal(Log.Msgs[i], &jsonlog)
 		if err != nil {
-			log.Error("Couldn't unmarshal string")
+			dbg.Lvl1("Couldn't unmarshal string")
 		}
 
 		w.Write([]byte(fmt.Sprintf("%s - %s - %s - %s", *jsonlog["etime"], *jsonlog["eapp"],
@@ -272,43 +269,26 @@ func reverseProxy(server string) {
 }
 
 func getDebugServers() []string {
-	// read in physical nodes and virtual nodes into global variables
-	phys, err := cliutils.ReadLines("phys.txt")
-	if err != nil {
-		log.Errorln(err)
-	}
-	virt, err := cliutils.ReadLines("virt.txt")
-	if err != nil {
-		log.Errorln(err)
-	}
+	dbg.Lvl3("Creating list of debug-servers")
 
 	// create mapping from virtual nodes to physical nodes
 	vpmap := make(map[string]string)
-	for i := range phys {
-		vpmap[virt[i]] = phys[i]
+	for i := range deter.Phys {
+		vpmap[deter.Virt[i]] = deter.Phys[i]
 	}
 
-	// now read in the hosttree to get a list of servers
-	cfg, e := ioutil.ReadFile("tree.json")
-	if e != nil {
-		log.Fatal("Error Reading Configuration File:", e)
+	debugServers := make([]string, 0, len(deter.Virt))
+	if conf.Tree != nil {
+		conf.Tree.TraverseTree(func(t *graphs.Tree) {
+			h, p, err := net.SplitHostPort(t.Name)
+			if err != nil {
+				log.Fatal("improperly formatted hostport:", err)
+			}
+			pn, _ := strconv.Atoi(p)
+			s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn + 2))
+			debugServers = append(debugServers, s)
+		})
 	}
-	var cf config.ConfigFile
-	err = json.Unmarshal(cfg, &cf)
-	if err != nil {
-		log.Fatal("unable to unmarshal config.ConfigFile:", err)
-	}
-
-	debugServers := make([]string, 0, len(virt))
-	cf.Tree.TraverseTree(func(t *graphs.Tree) {
-		h, p, err := net.SplitHostPort(t.Name)
-		if err != nil {
-			log.Fatal("improperly formatted hostport:", err)
-		}
-		pn, _ := strconv.Atoi(p)
-		s := net.JoinHostPort(vpmap[h], strconv.Itoa(pn + 2))
-		debugServers = append(debugServers, s)
-	})
 	return debugServers
 }
 

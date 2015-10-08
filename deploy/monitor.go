@@ -17,6 +17,10 @@ import (
 
 // Monitor monitors log aggregates results into RunStats
 func Monitor() RunStats {
+	if platform_dst != "deterlab"{
+		dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
+		return RunStats{}
+	}
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
 	retry_dial:
@@ -67,7 +71,7 @@ func Monitor() RunStats {
 		if err != nil {
 			// if it is an eof error than stop reading
 			if err == io.EOF {
-				dbg.Lvl4("websocket terminated before emitting EOF or terminating string")
+				dbg.Lvl1("websocket terminated before emitting EOF or terminating string")
 				break
 			}
 			continue
@@ -95,6 +99,10 @@ func Monitor() RunStats {
 				continue
 			}
 			dbg.Lvl4("root_round:", entry)
+			if entry.Round == 0{
+				dbg.Lvl1("Discarding away first round")
+				continue
+			}
 			if first {
 				first = false
 				dbg.Lvl4("Setting min-time to", entry.Time)

@@ -29,13 +29,14 @@ import (
 
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/deploy/platform"
 	"os"
 	"os/exec"
 	"fmt"
+	"strconv"
 )
 
-var deterlab deploy.Deterlab
+var deterlab platform.Deterlab
 var kill = false
 
 func init() {
@@ -44,6 +45,7 @@ func init() {
 
 func main() {
 	deterlab.ReadConfig()
+	flag.Parse()
 
 	vpmap := make(map[string]string)
 	for i := range deterlab.Virt {
@@ -63,6 +65,16 @@ func main() {
 			if dbg.DebugVisible > 3 {
 				dbg.Lvl4("Cleaning report:")
 				cliutils.SshRunStdout("", h, "ps aux")
+			}
+
+			if !kill {
+				dbg.Lvl3("Setting the file-limit higher on", h)
+
+				// Copy configuration file to make higher file-limits
+				err := cliutils.SshRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
+				if err != nil {
+					dbg.Fatal("Couldn't copy limit-file:", err)
+				}
 			}
 			doneHosts[i] = true
 			dbg.Lvl3("Host", h, "cleaned up")
@@ -85,10 +97,10 @@ func main() {
 				// expinfo gets a list of all mappings from physical to logical
 				// node names. Then we grep the missing host and keep only
 				// the logical node
-				grep := "grep \"" + strings.Split(deterlab.Phys[i], ".")[0] + " \" | sed -e 's/.* //'"
+				grep := "grep '" + strings.Split(deterlab.Phys[i], ".")[0] + " ' | sed -e 's/.* //'"
 				cmd := fmt.Sprintf("expinfo -e %s,%s -m | %s",
 					deterlab.Project, deterlab.Experiment, grep)
-				info, _ := exec.Command("bash", "-c " + cmd).Output()
+				info, _ := exec.Command("bash", "-c", cmd).Output()
 				dbg.Lvl1("You might want to run\nnode_reboot", string(info), cmd)
 			}
 		}
@@ -122,22 +134,6 @@ func main() {
 		physToServer[p] = ss
 	}
 
-	for _, phys := range deterlab.Phys {
-		wg.Add(1)
-		go func(server string) {
-			defer wg.Done()
-			dbg.Lvl3("Setting the file-limit higher on", server)
-
-			// Copy configuration file to make higher file-limits
-			err := cliutils.SshRunStdout("", server, "sudo cp remote/cothority.conf /etc/security/limits.d")
-
-			if err != nil {
-				log.Fatal("Couldn't copy limit-file:", err)
-			}
-		}(phys)
-	}
-	wg.Wait()
-	dbg.Lvl2("Done copying cothority.conf for higher file-limits")
 
 	// start up the logging server on the final host at port 10000
 	dbg.Lvl1("starting up logservers: ", loggers)
@@ -168,7 +164,10 @@ func main() {
 		os.MkdirAll(coll_stamp_dir, 0777)
 		time.Sleep(time.Second)
 	}
-	dbg.Lvl1("starting", len(physToServer), "forkexecs")
+
+	servers := len(physToServer)
+	hpn := len(deterlab.Hostnames) / servers
+	dbg.Lvl1("starting", servers, "forkexecs with", hpn, "processes each =", servers * hpn)
 	totalServers := 0
 	for phys, virts := range physToServer {
 		if len(virts) == 0 {
@@ -219,21 +218,28 @@ func main() {
 		dbg.Lvl1("starting", len(physToServer), "time clients")
 		// start up one timeclient per physical machine
 		// it requests timestamps from all the servers on that machine
+		amroot := true
 		for p, ss := range physToServer {
 			if len(ss) == 0 {
+				dbg.Lvl3("ss is empty - not starting")
 				continue
 			}
 			servers := strings.Join(ss, ",")
-			go func(i int, p string) {
-				_, err := cliutils.SshRun("", p, "cd remote; sudo ./" + deterlab.App + " -mode=client " +
+			dbg.Lvl3("Starting with ss=", ss)
+			go func(i int, p string, a bool) {
+				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
 				" -name=client@" + p +
 				" -server=" + servers +
-				" -logger=" + loggerports[i])
+				" -amroot=" + strconv.FormatBool(a) +
+				" -logger=" + loggerports[i]
+				dbg.Print(cmdstr)
+				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
 					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
 				}
 				dbg.Lvl4("Deter.go : Finished with", deterlab.App, p)
-			}(i, p)
+			}(i, p, amroot)
+			amroot = false
 			i = (i + 1) % len(loggerports)
 		}
 	case "sign_no":
@@ -243,5 +249,4 @@ func main() {
 
 	// wait for the servers to finish before stopping
 	wg.Wait()
-	//time.Sleep(10 * time.Minute)
 }

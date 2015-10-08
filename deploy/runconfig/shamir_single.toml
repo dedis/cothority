@@ -1,6 +1,0 @@
-Machines = 4
-Logservers = 4
-App = "shamir"
-
-Hpn, Bf, Rounds
-1, 2, 10

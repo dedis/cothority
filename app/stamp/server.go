@@ -109,13 +109,13 @@ func (s *Server) Listen() error {
 						tsm := TimeStampMessage{}
 						err := c.Get(&tsm)
 						if err != nil {
-							log.Errorf("%p Failed to get from child:", s, err)
+							dbg.Lvlf1("%p Failed to get from child:", s, err)
 							s.Close()
 							return
 						}
 						switch tsm.Type {
 						default:
-							log.Errorf("Message of unknown type: %v\n", tsm.Type)
+							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
 						case StampRequestType:
 							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
@@ -144,18 +144,16 @@ func (s *Server) ListenToClients() {
 				tsm := TimeStampMessage{}
 				err := c.Get(&tsm)
 				if err == coconet.ErrClosed {
-					log.Errorf("%p Failed to get from client:", s, err)
+					dbg.Lvlf1("%p Failed to get from client:", s, err)
 					s.Close()
 					return
 				}
 				if err != nil {
-					log.WithFields(log.Fields{
-						"file": logutils.File(),
-					}).Errorf("%p failed To get message:", s, err)
+					dbg.Lvlf1("%p failed To get message:", s, err)
 				}
 				switch tsm.Type {
 				default:
-					log.Errorln("Message of unknown type")
+					dbg.Lvl1("Message of unknown type")
 				case StampRequestType:
 					// dbg.Lvl4("STAMP REQUEST")
 					s.mux.Lock()
@@ -218,7 +216,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
 	if s.LastRound()+1 > nRounds {
-		log.Errorln(s.Name(), "runAsRoot called with too large round number")
+		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
 
@@ -256,7 +254,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 				time.Sleep(1 * time.Second)
 				break
 			} else if err != nil {
-				log.Errorln(err)
+				dbg.Lvl3(err)
 				time.Sleep(1 * time.Second)
 				break
 			}
@@ -281,10 +279,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 func (s *Server) runAsRegular() string {
 	select {
 	case <-s.closeChan:
-		log.WithFields(log.Fields{
-			"file": logutils.File(),
-			"type": "close",
-		}).Infoln("server" + s.Name() + "has closed")
+		dbg.Lvl3("server", s.Name(), "has closed the connection")
 		return ""
 
 	case nextRole := <-s.ViewChangeCh():

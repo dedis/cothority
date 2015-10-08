@@ -9,17 +9,19 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
 	"os"
-	"github.com/dedis/cothority/lib/cliutils"
 	"net"
 	"sync"
-	"github.com/dedis/cothority/lib/deploy"
+	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
 )
 
 // Wrapper around app to enable measuring of cpu time
 
-var deter deploy.Deterlab
+var deter platform.Deterlab
 var testConnect bool
+var physToServer map[string][]string
+var loggerports []string
+var rootname string
 
 func main() {
 	deter.ReadConfig()
@@ -27,10 +29,10 @@ func main() {
 	flag.Parse()
 
 	// connect with the logging server
-	if app.Flags.Logger != "" {
-		dbg.Lvl4("Setting up logger at", app.Flags.Logger)
+	if app.RunFlags.Logger != "" {
+		dbg.Lvl4("Setting up logger at", app.RunFlags.Logger)
 		// blocks until we can connect to the logger
-		lh, err := logutils.NewLoggerHook(app.Flags.Logger, app.Flags.PhysAddr, deter.App)
+		lh, err := logutils.NewLoggerHook(app.RunFlags.Logger, app.RunFlags.PhysAddr, deter.App)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"file": logutils.File(),
@@ -43,27 +45,27 @@ func main() {
 
 	i := 0
 	var wg sync.WaitGroup
-	virts := physToServer[app.Flags.PhysAddr]
+	virts := physToServer[app.RunFlags.PhysAddr]
 	if len(virts) > 0 {
 		dbg.Lvl3("starting", len(virts), "servers of", deter.App, "on", virts)
 		i = (i + 1) % len(loggerports)
 		for _, name := range virts {
-			dbg.Lvl3("Starting", name, "on", app.Flags.PhysAddr)
+			dbg.Lvl3("Starting", name, "on", app.RunFlags.PhysAddr)
 			wg.Add(1)
 			go func(nameport string) {
-				dbg.Lvl3("Running on", app.Flags.PhysAddr, "starting", nameport)
+				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport)
 				defer wg.Done()
 
 				args := []string{
 					"-hostname=" + nameport,
-					"-logger=" + app.Flags.Logger,
-					"-physaddr=" + app.Flags.PhysAddr,
+					"-logger=" + app.RunFlags.Logger,
+					"-physaddr=" + app.RunFlags.PhysAddr,
 					"-amroot=" + strconv.FormatBool(nameport == rootname),
 					"-test_connect=" + strconv.FormatBool(testConnect),
 					"-mode=server",
 				}
 
-				dbg.Lvl3("Starting on", app.Flags.PhysAddr, "with args", args)
+				dbg.Lvl3("Starting on", app.RunFlags.PhysAddr, "with args", args)
 				cmdApp := exec.Command("./" + deter.App, args...)
 				//cmd.Stdout = log.StandardLogger().Writer()
 				//cmd.Stderr = log.StandardLogger().Writer()
@@ -85,22 +87,19 @@ func main() {
 					"usertime": ut,
 				}).Info("")
 
-				dbg.Lvl2("Finished with Timestamper", app.Flags.PhysAddr)
+				dbg.Lvl2("Finished with Timestamper", app.RunFlags.PhysAddr)
 			}(name)
 		}
-		dbg.Lvl3(app.Flags.PhysAddr, "Finished starting timestampers")
+		dbg.Lvl3(app.RunFlags.PhysAddr, "Finished starting timestampers")
 		wg.Wait()
 	} else {
-		dbg.Lvl2("No timestampers for", app.Flags.PhysAddr)
+		dbg.Lvl2("No timestampers for", app.RunFlags.PhysAddr)
 	}
-	dbg.Lvl2(app.Flags.PhysAddr, "timestampers exited")
+	dbg.Lvl2(app.RunFlags.PhysAddr, "timestampers exited")
 }
 
-var physToServer map[string][]string
-var loggerports []string
-var rootname string
-
 func setup_deter() {
+	/*
 	virt, err := cliutils.ReadLines("virt.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -109,19 +108,20 @@ func setup_deter() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	*/
 	vpmap := make(map[string]string)
-	for i := range virt {
-		vpmap[virt[i]] = phys[i]
+	for i := range deter.Virt {
+		vpmap[deter.Virt[i]] = deter.Phys[i]
 	}
 	nloggers := deter.Loggers
-	masterLogger := phys[0]
+	masterLogger := deter.Phys[0]
 	loggers := []string{masterLogger}
 	for n := 1; n <= nloggers; n++ {
-		loggers = append(loggers, phys[n])
+		loggers = append(loggers, deter.Phys[n])
 	}
 
-	phys = phys[nloggers:]
-	virt = virt[nloggers:]
+	deter.Phys = deter.Phys[nloggers:]
+	deter.Virt = deter.Virt[nloggers:]
 
 	hostnames := deter.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)

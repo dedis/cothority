@@ -14,7 +14,7 @@
 //   logserver - runs on the first 'Loggers' servers - first is the master, rest are slaves
 //   forkexec - runs on the other servers and launches the app, so it can measure its cpu usage
 
-package deploy
+package platform
 
 import (
 	"os"
@@ -24,17 +24,17 @@ import (
 	"bufio"
 	_ "errors"
 	"fmt"
+	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/graphs"
 	"io/ioutil"
 	"path"
-	"strings"
-	"time"
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/cothority/lib/app"
+	"strings"
+	"time"
 )
 
 type Deterlab struct {
@@ -46,6 +46,8 @@ type Deterlab struct {
 	Project      string
 	// Name of the Experiment - also name of hosts
 	Experiment   string
+	// Directory of applications
+	AppDir       string
 	// Directory where everything is copied into
 	DeployDir    string
 	// Directory for building
@@ -67,6 +69,8 @@ type Deterlab struct {
 	Loggers      int
 	// Channel to communication stopping of experiment
 	sshDeter     chan string
+	// Whether the simulation is started
+	started      bool
 	// Debugging-level: 0 is none - 5 is everything
 	Debug        int
 
@@ -77,23 +81,28 @@ type Deterlab struct {
 	TestConnect  bool
 }
 
-func (d *Deterlab) Configure(config *Deterlab) {
+func (d *Deterlab) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.DeterDir = pwd + "/deterlab"
+	d.DeterDir = pwd + "/platform/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
-	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir, d.BuildDir)
+	d.AppDir = pwd + "/../app"
+	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir)
+	dbg.Lvl3("Dirs are:", d.BuildDir, d.AppDir)
 	d.LoadAndCheckDeterlabVars()
 
-	d.Machines = config.Machines
-	d.App = config.App
 	d.Debug = dbg.DebugVisible
+	if d.App == "" {
+		dbg.Fatal("No app defined in simulation")
+	}
 
 	// Setting up channel
 	d.sshDeter = make(chan string)
 }
 
+// build is the name of the app to build
+// empty = all otherwise build specific package
 func (d *Deterlab) Build(build string) error {
 	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build)
 	start := time.Now()
@@ -117,14 +126,15 @@ func (d *Deterlab) Build(build string) error {
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
-		if p == "app" {
-			p = "../../app/" + d.App
-		}
+		src_dir := d.DeterDir + "/" + p
 		basename := path.Base(p)
+		if p == "app" {
+			src_dir = d.AppDir + "/" + d.App
+			basename = d.App
+		}
 		dst := d.BuildDir + "/" + basename
 
-		src_dir := d.DeterDir + "/" + p
-		dbg.Lvl3("Building ", p, "from", src_dir, "into", basename)
+		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
 		wg.Add(1)
 		if p == "users" {
 			go func(src, dest string) {
@@ -136,7 +146,7 @@ func (d *Deterlab) Build(build string) error {
 				out, err := cliutils.Build("./" + src_rel, dest, "386", "freebsd")
 				if err != nil {
 					cliutils.KillGo()
-					fmt.Println(out)
+					dbg.Lvl1(out)
 					dbg.Fatal(err)
 				}
 			}(src_dir, dst)
@@ -146,10 +156,11 @@ func (d *Deterlab) Build(build string) error {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
 			src_rel, _ := filepath.Rel(d.DeterDir, src)
+			dbg.Lvl3("Relative-path is", src, src_rel, d.DeterDir)
 			out, err := cliutils.Build("./" + src_rel, dest, "amd64", "linux")
 			if err != nil {
 				cliutils.KillGo()
-				fmt.Println(out)
+				dbg.Lvl1(out)
 				dbg.Fatal(err)
 			}
 		}(src_dir, dst)
@@ -176,8 +187,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	ioutil.WriteFile(appConfig, []byte(rc), 0666)
 	deter.ReadConfig(appConfig)
 
-	deter.createHostsFile()
-	deter.readHosts()
+	deter.createHosts()
 	d.MasterLogger = deter.MasterLogger
 	app.WriteTomlConfig(deter, deterConfig)
 
@@ -186,7 +196,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	// then for the appConfig, sets the deterConfig as defaults and overwrites
 	// everything else with the actual appConfig (which comes from the
 	// runconfig-file)
-	switch d.App{
+	switch d.App {
 	case "sign", "stamp":
 		conf := app.ConfigColl{}
 		app.ReadTomlConfig(&conf, deterConfig)
@@ -204,7 +214,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		deter.Hostnames = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
-	case "shamir_sign":
+	case "shamir":
 		conf := app.ConfigShamir{}
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
@@ -215,6 +225,13 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
+	/*
+	dbg.Printf("%+v", deter)
+	debug := reflect.ValueOf(deter).Elem().FieldByName("Debug")
+	if debug.IsValid() {
+		dbg.DebugVisible = debug.Interface().(int)
+	}
+	*/
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir + "/logserver/webfiles",
@@ -244,6 +261,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
+	d.started = true
 	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
 	cmd := exec.Command(
 		"ssh",
@@ -258,9 +276,11 @@ func (d *Deterlab) Start() error {
 	}
 
 	go func() {
-		dbg.Lvl3(cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users"))
-		dbg.Lvl3("Sending stop of ssh")
-		d.sshDeter <- "stop"
+		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		if err != nil{
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "finished"
 	}()
 
 	return nil
@@ -272,23 +292,53 @@ func (d *Deterlab) Stop() error {
 	killssh.Stderr = os.Stderr
 	err := killssh.Run()
 	if err != nil {
-		dbg.Lvl3("Stopping ssh: ", err)
+		dbg.Lvl3("Stopping ssh:", err)
 	}
-	select {
-	case msg := <-d.sshDeter:
-		if msg == "stop" {
-			dbg.Lvl3("SSh is stopped")
-		} else {
-			dbg.Lvl1("Received other command", msg)
+
+	if d.started {
+		dbg.Lvl3("Simulation is started")
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "finished" {
+				dbg.Lvl3("Received finished-message, not killing users")
+				return nil
+			} else {
+				dbg.Lvl1("Received out-of-line message", msg)
+			}
+		case <-time.After(time.Second):
+			dbg.Lvl3("No message waiting")
 		}
-	case <-time.After(time.Second * 3):
-		dbg.Lvl3("Timeout error when waiting for end of ssh")
 	}
+
+	dbg.Lvl3("Going to kill everything")
+	go func() {
+		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		if err != nil{
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "stopped"
+	}()
+
+	for {
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "stopped" {
+				dbg.Lvl3("Users stopped")
+				return nil
+			} else {
+				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
+			}
+		case <-time.After(time.Second * 20):
+			dbg.Lvl3("Timeout error when waiting for end of ssh")
+			return nil
+		}
+	}
+
 	return nil
 }
 
 // Reads in the deterlab-config and drops out if there is an error
-func (d *Deterlab)ReadConfig(name... string) {
+func (d *Deterlab) ReadConfig(name ...string) {
 	configName := "deter.toml"
 	if len(name) > 0 {
 		configName = name[0]
@@ -306,78 +356,38 @@ func (d *Deterlab)ReadConfig(name... string) {
 * Write the hosts.txt file automatically
 * from project name and number of servers
  */
-func (d *Deterlab) createHostsFile() error {
-	hosts_file := d.DeployDir + "/hosts.txt"
+func (d *Deterlab) createHosts() error {
 	num_servers := d.Machines + d.Loggers
-
-	// open and erase file if needed
-	if _, err1 := os.Stat(hosts_file); err1 == nil {
-		dbg.Lvl4("Hosts file", hosts_file, "already exists. Erasing ...")
-		os.Remove(hosts_file)
-	}
-	// create the file
-	f, err := os.Create(hosts_file)
-	if err != nil {
-		dbg.Fatal("Could not create hosts file description: ", hosts_file, " :: ", err)
-		return err
-	}
-	defer f.Close()
+	nmachs, nloggers := d.Machines, d.Loggers
 
 	// write the name of the server + \t + IP address
 	ip := "10.255.0."
 	name := d.Project + ".isi.deterlab.net"
+	d.Phys = make([]string, 0, num_servers)
+	d.Virt = make([]string, 0, num_servers)
 	for i := 1; i <= num_servers; i++ {
-		f.WriteString(fmt.Sprintf("server-%d.%s.%s\t%s%d\n", i - 1, d.Experiment, name, ip, i))
-	}
-	dbg.Lvl4(fmt.Sprintf("Created hosts file description (%d hosts)", num_servers))
-	return err
-
-}
-
-// parse the hosts.txt file to create a separate list (and file)
-// of physical nodes and virtual nodes. Such that each host on line i, in phys.txt
-// corresponds to each host on line i, in virt.txt.
-func (d *Deterlab) readHosts() {
-	hosts_file := d.DeployDir + "/hosts.txt"
-	nmachs, nloggers := d.Machines, d.Loggers
-
-	physVirt, err := cliutils.ReadLines(hosts_file)
-	if err != nil {
-		dbg.Fatal("Couldn't find", hosts_file)
+		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i - 1, d.Experiment, name))
+		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
 
-	d.Phys = make([]string, 0, len(physVirt) / 2)
-	d.Virt = make([]string, 0, len(physVirt) / 2)
-	for i := 0; i < len(physVirt); i += 2 {
-		d.Phys = append(d.Phys, physVirt[i])
-		d.Virt = append(d.Virt, physVirt[i + 1])
-	}
+	// only take the machines we need
 	d.Phys = d.Phys[:nmachs + nloggers]
 	d.Virt = d.Virt[:nmachs + nloggers]
-	physOut := strings.Join(d.Phys, "\n")
-	virtOut := strings.Join(d.Virt, "\n")
 	d.MasterLogger = d.Phys[0]
 
-	// phys.txt and virt.txt only contain the number of machines that we need
-	dbg.Lvl3("Reading phys and virt")
-	err = ioutil.WriteFile(d.DeployDir + "/phys.txt", []byte(physOut), 0666)
-	if err != nil {
-		dbg.Fatal("failed to write physical nodes file", err)
-	}
-
-	err = ioutil.WriteFile(d.DeployDir + "/virt.txt", []byte(virtOut), 0666)
-	if err != nil {
-		dbg.Fatal("failed to write virtual nodes file", err)
-	}
+	return nil
 }
+
 
 // Checks whether host, login and project are defined. If any of them are missing, it will
 // ask on the command-line.
 // For the login-variable, it will try to set up a connection to d.Host and copy over the
 // public key for a more easy communication
 func (d *Deterlab) LoadAndCheckDeterlabVars() {
-	// Write
-	err := app.ReadTomlConfig(d, "deter.toml", d.DeterDir)
+	deter := Deterlab{}
+	err := app.ReadTomlConfig(&deter, "deter.toml", d.DeterDir)
+	d.Host, d.Login, d.Project, d.Experiment, d.Loggers =
+	deter.Host, deter.Login, deter.Project, deter.Experiment, deter.Loggers
 
 	if err != nil {
 		dbg.Lvl1("Couldn't read config-file - asking for default values")
