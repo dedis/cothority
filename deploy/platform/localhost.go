@@ -24,34 +24,34 @@ var defaultConfigName = "localhost.toml"
 // Localhost is the platform for launching thee apps locally
 type Localhost struct {
 
-					   // Address of the logger (can be local or not)
-	Logger      string
+	// Address of the logger (can be local or not)
+	Logger string
 
-					   // App to run [shamir,coll_sign..]
-	App         string
-	AppDir      string // where the app is located
+	// App to run [shamir,coll_sign..]
+	App    string
+	AppDir string // where the app is located
 
-					   // Where is the Localhost package located
-	LocalDir    string
-					   // Where to build the executables +
-					   // where to read the config file
-					   // it will be assembled like LocalDir/RunDir
-	RunDir      string
+	// Where is the Localhost package located
+	LocalDir string
+	// Where to build the executables +
+	// where to read the config file
+	// it will be assembled like LocalDir/RunDir
+	RunDir string
 
-					   // Debug level 1 - 5
-	Debug       int
+	// Debug level 1 - 5
+	Debug int
 
-					   // ////////////////////////////
-					   // Number of processes to launch
-					   // ////////////////////////////
-	Machines    int
-					   // hosts used with the applications
-					   // example: localhost:2000, ...:2010 , ...
-	Hosts       []string
+	// ////////////////////////////
+	// Number of processes to launch
+	// ////////////////////////////
+	Machines int
+	// hosts used with the applications
+	// example: localhost:2000, ...:2010 , ...
+	Hosts []string
 
-					   // Signal that the process is finished
+	// Signal that the process is finished
 	channelDone chan string
-					   // Whether we started a simulation
+	// Whether we started a simulation
 	running bool
 }
 
@@ -73,7 +73,7 @@ func (d *Localhost) Configure() {
 
 // Will build the application
 func (d *Localhost) Build(build string) error {
-	src, _ := filepath.Rel(d.LocalDir, d.AppDir + "/" + d.App)
+	src, _ := filepath.Rel(d.LocalDir, d.AppDir+"/"+d.App)
 	dst := d.RunDir + "/" + d.App
 	start := time.Now()
 	// build for the local machine
@@ -141,6 +141,15 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		dbg.Lvl4("Localhost : naive applications :", conf.Hosts)
 		app.WriteTomlConfig(conf, appConfig)
+	case "ntree":
+		conf := app.NTreeConfig{}
+		app.ReadTomlConfig(&conf, localConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		conf.Hosts = d.Hosts
+		dbg.Lvl4("Localhost : naive Tree applications :", conf.Tree)
+		d.Hosts = conf.Hosts
+		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
 	}
 	//app.WriteTomlConfig(d, defaultConfigName, d.RunDir)
@@ -167,13 +176,13 @@ func (d *Localhost) Start() error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		dbg.Lvl3("Localhost : will start host ", h)
-		go func() {
-			err := cmd.Run()
+		go func(c *exec.Cmd) {
+			err := c.Run()
 			if err != nil {
 				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
 			d.channelDone <- "Done"
-		}()
+		}(cmd)
 		time.Sleep(100 * time.Millisecond)
 
 	}
@@ -223,7 +232,7 @@ func (d *Localhost) GenerateHosts() {
 	port := 2000
 	inc := 5
 	for i := 0; i < d.Machines; i++ {
-		s := "127.0.0.1:" + strconv.Itoa(port + inc * i)
+		s := "127.0.0.1:" + strconv.Itoa(port+inc*i)
 		d.Hosts[i] = s
 	}
 	dbg.Lvl4("Localhost: Generated hosts list ", d.Hosts)

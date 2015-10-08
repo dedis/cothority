@@ -123,7 +123,7 @@ retry:
 			S += (entry.Time - tM) * (entry.Time - M)
 			k++
 			rs.StdDev = math.Sqrt(S / (k - 1))
-		} else if bytes.Contains(data, []byte("schnorr_round")) || bytes.Contains(data, []byte("naive_round")) {
+		} else if bytes.Contains(data, []byte("schnorr_round")) || bytes.Contains(data, []byte("naive_round")) || bytes.Contains(data, []byte("ntree_round")) {
 
 			var entry StatsEntry
 			err := json.Unmarshal(data, &entry)
