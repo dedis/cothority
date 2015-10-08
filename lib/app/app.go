@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
+	"syscall"
 )
 
 type Flags struct {
@@ -66,7 +67,7 @@ func ReadConfig(conf interface{}, dir ...string) {
 	flag.Parse()
 
 	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
-	if RunFlags.AmRoot{
+	if RunFlags.AmRoot {
 		ConnectLogservers()
 	} else {
 		dbg.Lvl4("Not connecting to logger - logger:", RunFlags.Logger, "AmRoot:", RunFlags.AmRoot)
@@ -117,7 +118,7 @@ func ServeMemoryStats() {
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
+			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p + 2)), nil)
 			dbg.Lvl3("Memory-stats server:", res)
 		}()
 	}
@@ -195,4 +196,18 @@ func GetSuite(suite string) abstract.Suite {
 		s = nist.NewAES128SHA256P256()
 	}
 	return s
+}
+
+// Gets the sytem and the user time so far
+func GetRTime() (tSys, tUsr float64) {
+	rusage := syscall.Rusage{}
+	syscall.Getrusage(syscall.RUSAGE_SELF, rusage)
+	s, u := rusage.Stime, rusage.Utime
+	return s.Sec + s.Usec / 10^6, u.Sec + u.Usec / 10^6
+}
+
+// Returns the difference to the given system- and user-time
+func GetDiffRTime(tSys, tUsr float64)(tDiffSys, tDiffUsr float64){
+	nowSys, nowUsr := GetRTime()
+	return nowSys - tSys, nowUsr - tUsr
 }

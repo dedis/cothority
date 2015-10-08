@@ -28,21 +28,6 @@ func main() {
 	// The flags are defined in lib/app
 	flag.Parse()
 
-	/*
-	// connect with the logging server
-	if app.RunFlags.Logger != "" {
-		dbg.LLvl4("Setting up logger at", app.RunFlags.Logger)
-		// blocks until we can connect to the logger
-		lh, err := logutils.NewLoggerHook(app.RunFlags.Logger, app.RunFlags.PhysAddr, deter.App)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"file": logutils.File(),
-			}).Fatalln("Error setting up logging server:", err)
-		}
-		log.AddHook(lh)
-	}
-	*/
-
 	setup_deter()
 	app.ConnectLogservers()
 
