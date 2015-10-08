@@ -10,26 +10,26 @@ import (
 	"strconv"
 	"time"
 
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/PuerkitoBio/goquery"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"golang.org/x/net/websocket"
 )
 
 // Monitor monitors log aggregates results into RunStats
 func Monitor() RunStats {
-	if platform_dst != "deterlab"{
+	if platform_dst != "deterlab" {
 		dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
 		return RunStats{}
 	}
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
-	retry_dial:
+retry_dial:
 	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
 	if err != nil {
 		time.Sleep(1 * time.Second)
 		goto retry_dial
 	}
-	retry:
+retry:
 	// Get HTML of webpage for data (NHosts, Depth, ...)
 	doc, err := goquery.NewDocument(fmt.Sprintf("http://localhost:%d/", port))
 	if err != nil {
@@ -99,7 +99,7 @@ func Monitor() RunStats {
 				continue
 			}
 			dbg.Lvl4("root_round:", entry)
-			if entry.Round == 0{
+			if entry.Round == 0 {
 				dbg.Lvl1("Discarding away first round")
 				continue
 			}
@@ -123,18 +123,14 @@ func Monitor() RunStats {
 			S += (entry.Time - tM) * (entry.Time - M)
 			k++
 			rs.StdDev = math.Sqrt(S / (k - 1))
-		} else if bytes.Contains(data, []byte("schnorr_round")) {
+		} else if bytes.Contains(data, []byte("schnorr_round")) || bytes.Contains(data, []byte("naive_round")) {
 
 			var entry StatsEntry
 			err := json.Unmarshal(data, &entry)
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
-			if entry.Type != "schnorr_round" {
-				dbg.Lvl1("Wrong debugging message - ignoring")
-				continue
-			}
-			dbg.Lvl4("schnorr_round:", entry)
+			dbg.Lvl4(entry.Type, ":", entry)
 			if first {
 				first = false
 				dbg.Lvl4("Setting min-time to", entry.Time)
@@ -155,7 +151,7 @@ func Monitor() RunStats {
 			S += (entry.Time - tM) * (entry.Time - M)
 			k++
 			rs.StdDev = math.Sqrt(S / (k - 1))
-		} else if bytes.Contains(data, []byte("schnorr_end")){
+		} else if bytes.Contains(data, []byte("schnorr_end")) || bytes.Contains(data, []byte("end")) {
 			break
 		} else if bytes.Contains(data, []byte("forkexec")) {
 			dbg.Lvl3("Received forkexec")

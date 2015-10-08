@@ -135,6 +135,12 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		dbg.Lvl4("Localhost : graphs.Tree for shamir ", conf.Hosts)
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
+	case "naive":
+		conf := app.NaiveConfig{}
+		app.ReadTomlConfig(&conf, localConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		dbg.Lvl4("Localhost : naive applications :", conf.Hosts)
+		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
 	}
 	//app.WriteTomlConfig(d, defaultConfigName, d.RunDir)
@@ -164,10 +170,11 @@ func (d *Localhost) Start() error {
 		go func() {
 			err := cmd.Run()
 			if err != nil {
-				dbg.Lvl3("Error running localhost ", h)
+				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
 			d.channelDone <- "Done"
 		}()
+		time.Sleep(100 * time.Millisecond)
 
 	}
 	return nil

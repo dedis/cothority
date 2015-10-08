@@ -1,0 +1,6 @@
+Machines = 3
+App = "naive"
+Suite = "ed25519"
+
+Hpn,  Rounds
+1, 3
