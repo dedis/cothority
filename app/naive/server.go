@@ -124,13 +124,6 @@ func GoLeader(conf *app.NaiveConfig) {
 		// verify each coming signatures
 		for n < len(conf.Hosts)-1 {
 			bs := <-connChan
-			//			go func(b *net.BasicSignature) {
-			//				if err := SchnorrVerify(suite, msg, *b); err != nil {
-			//					faulty += 1
-			//					dbg.Lvl2(leader.String(), "Round ", i, " received a faulty signature !")
-			//				} else {
-			//					dbg.Lvl2(leader.String(), "Round ", i, " received Good signature")
-			//				}
 			if conf.SkipChecks {
 				dbg.Lvl2("Skipping check for round", round)
 				wg.Done()

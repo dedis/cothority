@@ -121,6 +121,10 @@ func RunRoot(conf *app.NTreeConfig) {
 			// Here it launches one go routine to verify a bundle
 			verifyWg.Add(1)
 			go func(s *net.ListBasicSignature) {
+				if conf.SkipChecks {
+					verifyWg.Done()
+					return
+				}
 				// verify each independant signatures
 				for _, sig := range s.Sigs {
 					if err := SchnorrVerify(suite, msg, sig); err != nil {
@@ -306,7 +310,7 @@ func RunPeer(conf *app.NTreeConfig) {
 			}
 			dbg.Lvl3(peer.String(), "finished with children ", c.PeerName())
 			c.Close()
-		}(i-1, conn)
+		}(i, conn)
 	}
 	// Wait for the whole thing to be done (parent connection == master)
 	<-done
