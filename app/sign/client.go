@@ -71,7 +71,8 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 			"file":  logutils.File(),
 			"type":  "root_round",
 			"round": i,
-			"time":  dSys + dUsr,
+			"time":  elapsed,
+			//"time":  dSys + dUsr,
 		}).Info("root round")
 	}
 
