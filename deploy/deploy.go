@@ -21,7 +21,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"math"
@@ -30,7 +29,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -76,7 +74,7 @@ func Start(simulations []string) {
 	}
 
 	for _, simulation := range simulations {
-		runconfigs := ReadRunfile(simulation)
+		runconfigs := platform.ReadRunFile(deployP, simulation)
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
