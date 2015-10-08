@@ -22,4 +22,6 @@ type NTreeConfig struct {
 	Name string
 
 	Root bool
+
+	SkipChecks bool
 }

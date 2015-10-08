@@ -22,8 +22,12 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/deploy/platform"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"math"
 	"os"
 	"path/filepath"
@@ -31,9 +35,6 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/deploy/platform"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 // Configuration-variables

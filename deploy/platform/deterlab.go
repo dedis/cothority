@@ -232,6 +232,15 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Hpn)
 		deter.Hostnames = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
+	case "ntree":
+		conf := app.NTreeConfig{}
+		app.ReadTomlConfig(&conf, deterConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		var depth int
+		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Bf)
+		dbg.Lvl2("Depth : ", depth)
+		deter.Hostnames = conf.Hosts
+		app.WriteTomlConfig(conf, appConfig)
 
 	case "randhound":
 	}
