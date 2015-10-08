@@ -21,6 +21,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"flag"
 	"fmt"
@@ -32,6 +33,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/BurntSushi/toml"
 )
 
 // Configuration-variables
@@ -148,8 +151,8 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 	// timeout the command if it takes too long
 	select {
 	case <-done:
-		if isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0) {
-			return rs, errors.New(fmt.Sprintf("unable to get good data: %+v", rs))
+		if platform_dst == "deterlab" && (isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0)) {
+			return rs, fmt.Errorf("unable to get good data: %+v", rs)
 		}
 		return rs, nil
 	}
@@ -168,7 +171,7 @@ func (s *stats) InitStats(name string, runconfigs []platform.RunConfig) {
 	s.runconfigs = runconfigs
 	s.rs = make([]RunStats, len(runconfigs))
 	MkTestDir()
-	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
@@ -201,8 +204,8 @@ func (s *stats) WriteStats(run int, runs []RunStats) {
 
 	MkTestDir()
 	cl, err := os.OpenFile(
-		TestFile("client_latency_" + s.name + "_" + strconv.Itoa(run)),
-		os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+		TestFile("client_latency_"+s.name+"_"+strconv.Itoa(run)),
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}

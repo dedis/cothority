@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
-	"github.com/dedis/cothority/lib/network_draft/network"
+	net "github.com/dedis/cothority/lib/network_draft/network"
 	"sync"
 	"time"
 )
@@ -43,7 +43,7 @@ func RunServer(conf *app.NaiveConfig) {
 // message to be signed
 func GoLeader(conf *app.NaiveConfig) {
 
-	host := network.NewTcpHost(app.RunFlags.Hostname)
+	host := net.NewTcpHost(app.RunFlags.Hostname)
 	key := cliutils.KeyPair(suite)
 	leader := NewPeer(host, LeadRole, key.Secret, key.Public)
 
@@ -53,12 +53,12 @@ func GoLeader(conf *app.NaiveConfig) {
 	// Listen for connections
 	dbg.Lvl2(leader.String(), "making connections ...")
 	// each conn will create its own channel to be used to handle rounds
-	roundChans := make(chan chan chan *BasicSignature)
+	roundChans := make(chan chan chan *net.BasicSignature)
 	// Send the message to be signed
-	proto := func(c network.Conn) {
+	proto := func(c net.Conn) {
 		// make the chan that will receive a new chan
 		// for each round where to send the signature
-		roundChan := make(chan chan *BasicSignature)
+		roundChan := make(chan chan *net.BasicSignature)
 		roundChans <- roundChan
 		n := 0
 		// wait for the next round
@@ -80,8 +80,8 @@ func GoLeader(conf *app.NaiveConfig) {
 	go leader.Listen(app.RunFlags.Hostname, proto)
 	dbg.Lvl2(leader.String(), "Listening for channels creation..")
 	// listen for round chans + signatures for each round
-	masterRoundChan := make(chan chan *BasicSignature)
-	roundChanns := make([]chan chan *BasicSignature, 0)
+	masterRoundChan := make(chan chan *net.BasicSignature)
+	roundChanns := make([]chan chan *net.BasicSignature, 0)
 	//  Make the "setup" of channels
 	for {
 		ch := <-roundChans
@@ -117,18 +117,18 @@ func GoLeader(conf *app.NaiveConfig) {
 		n := 0
 		faulty := 0
 		// launch a new round
-		connChan := make(chan *BasicSignature)
+		connChan := make(chan *net.BasicSignature)
 		masterRoundChan <- connChan
 		var wg sync.WaitGroup
 		wg.Add(len(conf.Hosts) - 1)
 		// verify each coming signatures
 		for n < len(conf.Hosts)-1 {
 			bs := <-connChan
-			if conf.SkipChecks{
+			if conf.SkipChecks {
 				dbg.Lvl2("Skipping check for round", round)
 				wg.Done()
 			} else {
-				go func(b *BasicSignature) {
+				go func(b *net.BasicSignature) {
 					if err := SchnorrVerify(suite, msg, *b); err != nil {
 						faulty += 1
 						dbg.Lvl2(leader.String(), "Round ", round, " received a faulty signature !")
@@ -167,7 +167,7 @@ func GoLeader(conf *app.NaiveConfig) {
 func GoSigner(conf *app.NaiveConfig) {
 	// Wait for leader to be ready
 	time.Sleep(2 * time.Second)
-	host := network.NewTcpHost(app.RunFlags.Hostname)
+	host := net.NewTcpHost(app.RunFlags.Hostname)
 	key := cliutils.KeyPair(suite)
 	signer := NewPeer(host, ServRole, key.Secret, key.Public)
 	dbg.Lvl2(signer.String(), "will contact leader ", conf.Hosts[0])
@@ -182,11 +182,11 @@ func GoSigner(conf *app.NaiveConfig) {
 		if err != nil {
 			dbg.Fatal(signer.String(), "round ", round, " received error waiting msg")
 		}
-		if m.MsgType != MessageSigningType {
+		if m.MsgType != net.MessageSigningType {
 			dbg.Fatal(app.RunFlags.Hostname, "round ", round, "  wanted to receive a msg to sign but..",
 				m.MsgType.String())
 		}
-		msg := m.Msg.(MessageSigning).Msg
+		msg := m.Msg.(net.MessageSigning).Msg
 		dbg.Lvl3(signer.String(), "round ", round, " received msg : ", msg[:])
 		// Generate signature & send
 		s := signer.Signature(msg[:])

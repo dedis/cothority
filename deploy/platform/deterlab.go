@@ -232,6 +232,15 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Hpn)
 		deter.Hostnames = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
+	case "ntree":
+		conf := app.NTreeConfig{}
+		app.ReadTomlConfig(&conf, deterConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		var depth int
+		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Bf)
+		dbg.Lvl2("Depth : ", depth)
+		deter.Hostnames = conf.Hosts
+		app.WriteTomlConfig(conf, appConfig)
 
 	case "randhound":
 	}
@@ -323,8 +332,12 @@ func (d *Deterlab) Stop() error {
 
 	dbg.Lvl3("Going to kill everything")
 	go func() {
+		//err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; ./users -kill")
+		//if err != nil {
+		//err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		//if err != nil{
 		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
-		if err != nil{
+		if err != nil {
 			dbg.Lvl3(err)
 		}
 		d.sshDeter <- "stopped"
