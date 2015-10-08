@@ -1,6 +1,5 @@
 package main
-import
-(
+import (
 	"time"
 	"github.com/dedis/cothority/lib/logutils"
 	log "github.com/Sirupsen/logrus"
@@ -12,7 +11,6 @@ import
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/graphs"
-	"syscall"
 )
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds

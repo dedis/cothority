@@ -198,12 +198,16 @@ func GetSuite(suite string) abstract.Suite {
 	return s
 }
 
+func iiToF(sec int64, usec int32) float64{
+	return float64(sec) + float64(usec) / 1000000.0
+}
+
 // Gets the sytem and the user time so far
 func GetRTime() (tSys, tUsr float64) {
-	rusage := syscall.Rusage{}
+	rusage := &syscall.Rusage{}
 	syscall.Getrusage(syscall.RUSAGE_SELF, rusage)
 	s, u := rusage.Stime, rusage.Utime
-	return s.Sec + s.Usec / 10^6, u.Sec + u.Usec / 10^6
+	return iiToF(s.Sec, s.Usec), iiToF(u.Sec, u.Usec)
 }
 
 // Returns the difference to the given system- and user-time

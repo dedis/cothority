@@ -21,8 +21,6 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
@@ -33,8 +31,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/BurntSushi/toml"
 )
 
 // Configuration-variables
