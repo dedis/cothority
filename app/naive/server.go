@@ -150,7 +150,7 @@ func GoLeader(conf *app.NaiveConfig) {
 			"type":  "naive_round",
 			"round": round,
 			//"time":  time.Since(now),
-			"time":  dSys, dUsr,
+			"time":  dSys + dUsr,
 		}).Info("")
 	}
 
