@@ -21,7 +21,6 @@ package main
 import (
 	"flag"
 	"io/ioutil"
-	"log"
 	"net"
 	"strings"
 	"sync"
@@ -34,6 +33,7 @@ import (
 	"os/exec"
 	"fmt"
 	"strconv"
+	log "github.com/Sirupsen/logrus"
 )
 
 var deterlab platform.Deterlab

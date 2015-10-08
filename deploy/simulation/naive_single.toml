@@ -1,7 +1,7 @@
-Machines = 128
+Machines = 2
 App = "naive"
 Suite = "ed25519"
 SkipChecks = false
 
 Hpn,  Rounds
-1, 3
+16, 3
