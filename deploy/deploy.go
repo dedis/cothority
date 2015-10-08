@@ -21,7 +21,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"math"
@@ -30,7 +29,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -76,7 +74,7 @@ func Start(simulations []string) {
 	}
 
 	for _, simulation := range simulations {
-		runconfigs := ReadRunfile(simulation)
+		runconfigs := platform.ReadRunFile(deployP, simulation)
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
@@ -142,8 +140,14 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 	}
 
 	go func() {
-		rs = Monitor()
-		dbg.Lvl2("Test complete:", rs)
+		if platform_dst != "deterlab" {
+			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
+
+			rs = RunStats{}
+		} else {
+			rs = Monitor()
+			dbg.Lvl2("Test complete:", rs)
+		}
 		done <- struct{}{}
 	}()
 
@@ -170,7 +174,7 @@ func (s *stats) InitStats(name string, runconfigs []platform.RunConfig) {
 	s.runconfigs = runconfigs
 	s.rs = make([]RunStats, len(runconfigs))
 	MkTestDir()
-	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
@@ -203,8 +207,8 @@ func (s *stats) WriteStats(run int, runs []RunStats) {
 
 	MkTestDir()
 	cl, err := os.OpenFile(
-		TestFile("client_latency_"+s.name+"_"+strconv.Itoa(run)),
-		os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+		TestFile("client_latency_" + s.name + "_" + strconv.Itoa(run)),
+		os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
