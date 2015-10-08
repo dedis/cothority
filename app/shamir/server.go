@@ -89,7 +89,7 @@ func RunServer(conf *app.ConfigShamir) {
 
 		// Then issue a signature !
 		start = time.Now()
-		sys, usr := app.GetRTime()
+		//sys, usr := app.GetRTime()
 		msg := "hello world"
 
 		// Only root calculates if it's OK and sends a log-message
@@ -101,7 +101,7 @@ func RunServer(conf *app.ConfigShamir) {
 			}
 
 			dbg.Lvl2(p.String(), "verified the schnorr sig !")
-			dSys, dUsr := app.GetDiffRTime(sys, usr)
+			//dSys, dUsr := app.GetDiffRTime(sys, usr)
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "schnorr_round",
