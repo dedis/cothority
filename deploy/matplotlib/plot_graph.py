@@ -219,7 +219,7 @@ def arrow(text, x, top, color):
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
 # the last two values from JVSS are off-grid and writes them with arrows
 # directly on the plot
-def plotAvg(cothority, jvss, naive):
+def plotAvg(cothority, jvss, naive, ntree):
     plotPrepareLogLog()
 
     xmin = -1
@@ -234,6 +234,12 @@ def plotAvg(cothority, jvss, naive):
     plotFilledLegend(x, tmin, tmax, "min-max", color3_light, z=0)
     # arrow("{:.1f} sec      ".format(avg[-2]), x[-2], 4, color3_dark)
     arrow("      {:.0f} sec".format(avg[-1]), x[-1], 4, color3_dark)
+
+    readCSV(ntree)
+    plt.plot(x, avg, label='Ntree', linestyle='-', marker='s', color=color4_dark, zorder=3)
+    plotFilledLegend(x, tmin, tmax, "min-max", color4_light, z=0)
+    # arrow("{:.1f} sec      ".format(avg[-2]), x[-2], 4, color3_dark)
+    #arrow("      {:.0f} sec".format(avg[-1]), x[-1], 4, color3_dark)
 
     readCSV(cothority)
     plt.plot(x, avg, label='Cothority', linestyle='-', marker='o', color=color1_dark, zorder=5)
@@ -279,28 +285,29 @@ color3_light = 'yellow'
 color3_dark = 'brown'
 color4_light = 'pink'
 color4_dark = 'red'
+args = 5
 
 vers = matplotlib.__version__
 if vers != "1.4.3":
-    print "\nWrong matlib-version, please install 1.4.3"
+    print "\nWrong matlib-version " + vers + ", please install 1.4.3"
     print "http://matplotlib.org/faq/installing_faq.html\n"
     exit(1)
 
-if len(sys.argv) < 6:
-    print("Error: Please give a mode and 4 .csv-files as argument\n")
+if len(sys.argv) < args + 1:
+    print("Error: Please give a mode and " + str(args) + " .csv-files as argument - "+str(len(sys.argv))+"\n")
     print("Mode: (0=printAverage, 1=printSystemUserTimes with bars, 2=printSystemUserTimes with areas)\n")
     print("CSV: cothority.csv jvss.csv\n")
     exit(1)
 
 show_fig = True
-if len(sys.argv) > 6:
+if len(sys.argv) > args + 2:
     show_fig = False
     pngname = sys.argv[-1]
 
 option = sys.argv[1]
-cothority, jvss, naive, naive_sc = sys.argv[2:6]
+cothority, jvss, naive, naive_sc, ntree = sys.argv[2:args+2]
 if option == "0":
-    plotAvg(cothority, jvss, naive)
+    plotAvg(cothority, jvss, naive, ntree)
 elif option == "1":
     CoJVTimeBars(cothority, jvss, naive)
 elif option == "2":

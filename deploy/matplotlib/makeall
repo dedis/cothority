@@ -1,12 +1,12 @@
 #!/bin/bash
 
-CSVS="shs2.csv smah.csv naive.csv naive_sc.csv"
+CSV="shs2.csv smah.csv naive.csv naive_sc.csv ntree.csv"
 
-#python plot_graph.py 0 shs2.csv smah.csv naive.csv naive_sc.csv comparison_roundtime.png
-#python plot_graph.py 0 shs2.csv smah.csv naive.csv naive_sc.csv
+python plot_graph.py 0 $CSV comparison_roundtime.png
+#python2.7 plot_graph.py 0 $CSV
 
-#python plot_graph.py 1 shs2.csv smah.csv naive.csv naive_sc.csv comparison_systime.png
-#python plot_graph.py 1 shs2.csv smah.csv naive.csv naive_sc.csv
+#python plot_graph.py 1 $CSV comparison_systime.png
+#python plot_graph.py 1 $CSV
 
 #python plot_graph.py 3 $CSVS comparison_check.png
-python plot_graph.py 3 $CSVS
+#python plot_graph.py 3 $CSVS
