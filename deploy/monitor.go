@@ -1,4 +1,4 @@
-package deploy
+package main
 
 import (
 	"bytes"
@@ -14,6 +14,10 @@ import (
 
 // Monitor monitors log aggregates results into RunStats
 func Monitor(stats Stats) {
+	if platform_dst != "deterlab" {
+		dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
+		return
+	}
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
 retry_dial:
@@ -31,17 +35,18 @@ retry_dial:
 		if err != nil {
 			// if it is an eof error than stop reading
 			if err == io.EOF {
-				dbg.Lvl4("websocket terminated before emitting EOF or terminating string")
+				dbg.Lvl1("websocket terminated before emitting EOF or terminating string")
 				break
 			}
 			continue
 		}
+		dbg.Lvl5("Received msg", data)
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
 		}
 		if bytes.Contains(data, []byte("root_round")) {
-			dbg.Lvl4("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl3("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 
 			if clientDone || rootDone {
 				dbg.Lvl4("Continuing searching data")
@@ -60,26 +65,31 @@ retry_dial:
 			dbg.Lvl4("root_round:", entry)
 			stats.AddEntry(entry)
 		} else if bytes.Contains(data, []byte(BasicRoundType)) {
-
 			var entry BasicEntry
 			err := json.Unmarshal(data, &entry)
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
 			stats.AddEntry(entry)
-			dbg.Lvl2("Monitor() : received shamir_round:", entry)
+			dbg.Lvl2("Monitor - basic round entry:", entry)
 		} else if bytes.Contains(data, []byte(BasicSetupType)) {
 			var entry BasicEntry
 			err := json.Unmarshal(data, &entry)
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
-			dbg.Lvl2("shamir_setup entry:", entry)
+			dbg.Lvl2("Monitor - basic setup entry:", entry)
 			stats.AddEntry(entry)
-		} else if bytes.Contains(data, []byte("schnorr_end")) {
-			break
-		} else if bytes.Contains(data, []byte("forkexec")) {
+		} else if bytes.Contains(data, []byte("end")) {
+			clientDone = true
+			dbg.Lvl2("Monitor - received end (client = true && root = ", rootDone, ")")
 			if rootDone {
+				break
+			}
+		} else if bytes.Contains(data, []byte("forkexec")) {
+			dbg.Lvl3("Received forkexec")
+			if rootDone {
+				dbg.Lvl2("RootDone is true - continuing")
 				continue
 			}
 			var ss SysEntry
@@ -89,12 +99,13 @@ retry_dial:
 			}
 			stats.AddEntry(ss)
 			rootDone = true
-			dbg.Lvl2("Monitor() Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl2("Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 			if clientDone {
 				break
 			}
 		} else if bytes.Contains(data, []byte("client_msg_stats")) {
 			if clientDone {
+				dbg.Lvl2("Continuing because client is already done")
 				continue
 			}
 			var cms CollClientEntry

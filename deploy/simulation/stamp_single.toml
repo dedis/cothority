@@ -1,0 +1,5 @@
+Machines = 4
+App = "stamp"
+
+hpn, bf, rounds, rate, suite
+1, 2, 10, 10, "ed25519"

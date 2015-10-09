@@ -95,8 +95,12 @@ func Build(path, out, goarch, goos string) (string, error) {
 	var cmd *exec.Cmd
 	var b bytes.Buffer
 	build_buffer := bufio.NewWriter(&b)
+
+	wd, _ := os.Getwd()
+	dbg.Lvl4("In directory", wd)
+
 	cmd = exec.Command("go", "build", "-v", "-o", out, path)
-	dbg.Lvl4("Building", path)
+	dbg.Lvl4("Building", cmd.Args, "in", path)
 	cmd.Stdout = build_buffer
 	cmd.Stderr = build_buffer
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)

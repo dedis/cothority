@@ -1,0 +1,7 @@
+var HostsTestShort = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 8, 4, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 32, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
+	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_stamp"},
+}

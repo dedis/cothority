@@ -1,9 +1,10 @@
-package deploy
+package main
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	platf "github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io"
 	"io/ioutil"
@@ -110,9 +111,9 @@ func (t *StreamStats) String() string {
 // generic typing of a Entry containing some timing data
 type Entry interface{}
 
-var BasicRoundType string = "shamir_round"
-var BasicSetupType string = "shamir_setup"
-var BasicVerifyType string = "shamir_verify"
+var BasicRoundType string = "round"
+var BasicSetupType string = "setup"
+var BasicVerifyType string = "verify"
 
 // concrete impl
 type BasicEntry struct {
@@ -410,30 +411,58 @@ func AverageStats(stats ...Stats) (Stats, error) {
 }
 
 // helper function to get the right Stats depending on the test
-func GetStat(t T) Stats {
-	switch t.app {
+func GetStats(rc platf.RunConfig) Stats {
+	switch rc.Get("app") {
 	case ShamirSign:
-		return NewBasicStats(t)
+		return NewBasicStats(rc)
 	case CollSign, CollStamp:
-		return NewCollStats(t)
+		return NewCollStats(rc)
+	default:
+		dbg.Fatal("Stats does not know this app : ", []byte(rc.Get("app")), " vs shamir = ", []byte(ShamirSign))
+		return nil
 	}
-	return nil
 }
 
-func NewBasicStats(t T) *BasicStats {
-	return &BasicStats{NHosts: t.nmachs * t.hpn}
+// Set up some fields such as number of node from a runconfig
+// For example, it compute the depth of the tree from the branching factor,
+// hpn and number of machines
+func NewBasicStats(rc platf.RunConfig) *BasicStats {
+	return &BasicStats{NHosts: getNHosts(rc)}
 }
 
-func NewCollStats(t T) *CollStats {
-	depth := math.Log(float64(t.nmachs*t.hpn)*float64(t.bf-1) + 1)
-	depth /= math.Log(float64(t.bf))
+// Also set up some fields for the CollStats
+func NewCollStats(rc platf.RunConfig) *CollStats {
+	bf, err := strconv.Atoi(rc.Get("bf"))
+	if err != nil {
+		dbg.Fatal("Can not instantiate CollStats without Branching Factor field (bf)")
+	}
+	var n int = getNHosts(rc)
+	depth := math.Log(float64(n)*float64(bf-1) + 1)
+	depth /= math.Log(float64(bf))
 	depth = math.Ceil(depth)
 	depth -= 1
 	return &CollStats{
-		BF:     t.bf,
-		NHosts: t.nmachs * t.hpn,
+		BF:     bf,
+		NHosts: n,
 		Depth:  int(depth),
 	}
+}
+
+// For the moment simply tries to convert the fields
+// like machines , hpn to a number of hosts
+func getNHosts(rc platf.RunConfig) int {
+	var nhosts int
+	machs, err := strconv.Atoi(rc.Get("machines"))
+	if err != nil {
+		dbg.Fatal("Can not create stats from RunConfig with no 'machines'")
+	}
+	nhosts = machs
+	hpn, err := strconv.Atoi(rc.Get("hpn"))
+	// if hpn is present, mult with hosts
+	if err == nil {
+		nhosts *= hpn
+	}
+	return nhosts
 }
 
 type ExpVar struct {
