@@ -93,6 +93,8 @@ func ConnectLogservers() {
 		//log.SetOutput(ioutil.Discard)
 		//fmt.Println("exiting flags.Logger block")
 		dbg.Lvl4(RunFlags.Hostname, "Done setting up hook")
+	} else {
+		dbg.Lvl3("Not setting up logserver for", RunFlags.Hostname)
 	}
 }
 
