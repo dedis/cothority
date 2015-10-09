@@ -1,3 +1,15 @@
+// This package is kind of a "networking library". You have Hosts which can
+// issue connections to others hosts, and Conn which are the connections itself.
+// Hosts and COnns are interfaces and can be of type Tcp, or Chans, or Udp or
+// whatever protocols you think might implement this interface.
+// In this library we also provide a way to encode / decode any kind of packet /
+// structs. When you want to send a struct to a conn, you first register
+// (one-time operation) this packet to the library, and then directly pass the
+// struct itself to the conn that will recognize its type. When decoding,
+// it will automatically detect the underlying type of struct given, and decode
+// it accordingly. You can provide your own decode / encode methods if for
+// example, you have a variable length packet structure. For this, just
+// implements MarshalBinary or UnmarshalBinary.
 package network
 
 import (
