@@ -123,7 +123,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 
 		dbg.Lvl2("Depth:", graphs.Depth(conf.Tree))
 		dbg.Lvl2("Total hosts:", len(conf.Hosts))
-		total := d.Machines
+		total := d.Machines * d.Hpn
 		if len(conf.Hosts) != total {
 			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
 				"machines or hosts per node")
@@ -173,7 +173,7 @@ func (d *Localhost) Start() error {
 				dbg.Lvl3("Error running localhost ", h)
 			}
 			d.wg_run.Done()
-			dbg.LLvl3(index, "on host", host, "done")
+			dbg.Lvl3(index, "on host", host, "done")
 			d.channelDone <- "Done"
 		}(index, host)
 
@@ -184,9 +184,9 @@ func (d *Localhost) Start() error {
 // Waits for all processes to be done by listening to the
 // d.channelDone
 func (d *Localhost) Wait() error {
-	dbg.LLvl3("Waiting for processes to finish")
+	dbg.Lvl3("Waiting for processes to finish")
 	d.wg_run.Wait()
-	dbg.LLvl2("Processes finished")
+	dbg.Lvl2("Processes finished")
 	return nil
 }
 
@@ -207,6 +207,9 @@ func (d *Localhost) Stop() error {
 	if err != nil {
 		dbg.Lvl3("Error stopping localhost", err)
 	}
+
+	// Wait for eventual connections to clean up
+	time.Sleep(time.Second)
 	return nil
 }
 

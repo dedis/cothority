@@ -292,9 +292,9 @@ func (d *Deterlab) Start() error {
 
 // Waiting for the process to finish
 func (d *Deterlab) Wait() error {
-	dbg.LLvl3("Waiting for process")
+	dbg.Lvl3("Waiting for process")
 	d.wg_run.Wait()
-	dbg.LLvl2("Process terminated")
+	dbg.Lvl2("Process terminated")
 	return nil
 }
 

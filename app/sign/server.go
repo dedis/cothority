@@ -19,12 +19,12 @@ func RunServer(conf *app.ConfigColl, hc *graphs.HostConfig) {
 
 	// Let's start the client if we're the root-node
 	if hc.SNodes[0].IsRoot(0) {
-		dbg.Lvl1(app.RunFlags.Hostname, "started client")
+		dbg.Lvl2(app.RunFlags.Hostname, "started client")
 		RunClient(conf, hc)
 	} else{
 		// Endless-loop till we stop by tearing down the connections
-		for {
-			time.Sleep(time.Minute)
+		for !hc.SNodes[0].Isclosed {
+			time.Sleep(time.Second)
 		}
 	}
 }
