@@ -108,11 +108,11 @@ func RunRoot(conf *app.NTreeConfig) {
 				close(lsigChan) // we have finished for this round
 			}
 		}
-		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "ntree_round",
-			"round": i,
-			"time":  time.Since(start)}).Info("")
+		//	log.WithFields(log.Fields{
+		//		"file":  logutils.File(),
+		//		"type":  "ntree_round",
+		//		"round": i,
+		//		"time":  time.Since(start)}).Info("")
 		dbg.Lvl2(peer.String(), "Receive all signatures ... ")
 		var verifyWg sync.WaitGroup
 		var faulty uint64 = 0
@@ -142,10 +142,11 @@ func RunRoot(conf *app.NTreeConfig) {
 		verifyWg.Wait()
 		// finished verifying => time it !
 		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "ntree_verify",
-			"round": i,
-			"time":  time.Since(verify)}).Info("")
+			"file":        logutils.File(),
+			"type":        "ntree_round",
+			"round":       i,
+			"time":        time.Since(start),
+			"time_verify": time.Since(verify)}).Info("")
 		dbg.Lvl1(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
 	}
 
