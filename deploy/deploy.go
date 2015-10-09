@@ -160,6 +160,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		if err != nil {
 			dbg.Fatal("Could not average stats for test ", i)
 		}
+		dbg.Print("AVERAGE FIISHED : ", s)
 		rs[i] = s
 		rs[i].WriteTo(f)
 		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))

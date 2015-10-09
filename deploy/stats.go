@@ -199,12 +199,12 @@ func (s *BasicStats) WriteTo(w io.Writer) {
 // Return the CSV header of theses stats.
 // Could be implemented using reflection for automatic detection later .. ?
 func (s *BasicStats) ServerCSVHeader() error {
-	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, user, system\n", s.round.Header("round_"), s.setup.Header("setup_"), s.verify.Header("verify_"))
+	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, %s, user, system\n", s.round.Header("round_"), s.setup.Header("setup_"), s.verify.Header("verify_"))
 	return err
 }
 
 func (s *BasicStats) ServerCSV() error {
-	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %f, %f\n",
+	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %s, %f, %f\n",
 		s.NHosts,
 		s.round.String(),
 		s.setup.String(),
@@ -257,13 +257,15 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 	if len(stats) < 1 {
 		return s, nil
 	}
-	s.SysTime = 0
-	s.UserTime = 0
+	fSys := s.SysTime
+	fUs := s.UserTime
 	stset := make([]StreamStats, len(stats))
 	stround := make([]StreamStats, len(stats))
 	stverify := make([]StreamStats, len(stats))
+	dbg.Print("AVERAGE ON stats ==> ", len(stats))
 	for i, _ := range stats {
 		ss, ok := stats[i].(*BasicStats)
+		dbg.Print(" n ", i, " => ", ss)
 		if !ok {
 			return nil, errors.New("Average() received a non-shamir stats ")
 		}
@@ -272,10 +274,13 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 		stverify[i] = ss.verify
 		s.SysTime += ss.SysTime
 		s.UserTime += ss.UserTime
+		dbg.Print("Average user ", ss.UserTime, " / sys ", ss.SysTime)
 	}
 	s.setup = StreamStatsAverage(stset...)
 	s.round = StreamStatsAverage(stround...)
 	s.verify = StreamStatsAverage(stverify...)
+	s.SysTime -= fSys
+	s.UserTime -= fUs
 	s.SysTime /= float64(len(stats))
 	s.UserTime /= float64(len(stats))
 	return s, nil
@@ -379,6 +384,8 @@ func (s *CollStats) Average(stats ...Stats) (Stats, error) {
 	}
 	s.Times = make([]float64, len(s.Times))
 	st := make([]StreamStats, 0, len(stats))
+	fSys := s.SysTime
+	fUs := s.UserTime
 	s.SysTime = 0
 	s.UserTime = 0
 	s.Rate = 0
@@ -395,6 +402,8 @@ func (s *CollStats) Average(stats ...Stats) (Stats, error) {
 	}
 	s.round = StreamStatsAverage(st...)
 	l := float64(len(stats))
+	s.SysTime -= fSys
+	s.UserTime -= fUs
 	s.SysTime /= l
 	s.UserTime /= l
 	s.Rate /= l

@@ -46,7 +46,7 @@ retry_dial:
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
 		}
 		if bytes.Contains(data, []byte("root_round")) {
-			dbg.Lvl3("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl2("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
 
 			if clientDone || rootDone {
 				dbg.Lvl4("Continuing searching data")
