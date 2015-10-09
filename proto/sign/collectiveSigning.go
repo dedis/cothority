@@ -522,7 +522,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 		dbg.Lvl4("acting on responses: trying viewchanges")
 		err := sn.TryViewChange(view + 1)
 		if err != nil {
-			log.Errorln(err)
+			dbg.Lvl3(err)
 		}
 	}
 

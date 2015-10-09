@@ -3,6 +3,7 @@ package graphs
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/dedis/crypto/abstract"
 )
@@ -23,6 +24,35 @@ func (t *Tree) TraverseTree(f func(*Tree)) {
 	for _, c := range t.Children {
 		c.TraverseTree(f)
 	}
+}
+
+// Simply organizes a list of nodes into a tree with a branching factor = bf
+// bfs style
+func CreateLocalTree(nodeNames []string, bf int) *Tree {
+
+	var root *Tree = new(Tree)
+	root.Name = nodeNames[0]
+	var index int = 1
+	bfs := make([]*Tree, 1)
+	bfs[0] = root
+	for len(bfs) > 0 && index < len(nodeNames) {
+		t := bfs[0]
+		t.Children = make([]*Tree, 0)
+		lbf := 0
+		// create space for enough children
+		// init them
+		for lbf < bf && index < len(nodeNames) {
+			child := new(Tree)
+			child.Name = nodeNames[index]
+			// append the children to the list of trees to visit
+			bfs = append(bfs, child)
+			t.Children = append(t.Children, child)
+			index += 1
+			lbf += 1
+		}
+		bfs = bfs[1:]
+	}
+	return root
 }
 
 // generate keys for the tree
@@ -54,4 +84,12 @@ func Depth(t *Tree) int {
 		}
 	}
 	return md + 1
+}
+
+func (t *Tree) String(depth int) string {
+	str := strings.Repeat("\t", depth) + t.Name + "\n"
+	for _, c := range t.Children {
+		str += c.String(depth + 1)
+	}
+	return str + "\n"
 }
