@@ -32,7 +32,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"os/signal"
 )
 
 // Configuration-variables
