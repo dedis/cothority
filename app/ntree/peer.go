@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	net "github.com/dedis/cothority/lib/network_draft/network"
+	net "github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 )

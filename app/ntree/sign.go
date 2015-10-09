@@ -6,7 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
-	net "github.com/dedis/cothority/lib/network_draft/network"
+	net "github.com/dedis/cothority/lib/network"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -75,10 +75,10 @@ func RunRoot(conf *app.NTreeConfig) {
 		}(conn)
 	}
 	// First collect every "ready-connections"
-	rounds := make([]chan chan *net.ListBasicSignature, 0)
+	children := make([]chan chan *net.ListBasicSignature, 0)
 	for round := range masterRoundChan {
-		rounds = append(rounds, round)
-		if len(rounds) == len(conf.Tree.Children) {
+		children = append(children, round)
+		if len(children) == len(conf.Tree.Children) {
 			dbg.Lvl3(peer.String(), "collected each children channels")
 			break
 		}
@@ -87,43 +87,45 @@ func RunRoot(conf *app.NTreeConfig) {
 	// Then for each rounds tell them to start the protocol
 	for i := 1; i <= conf.Rounds; i++ {
 		dbg.Lvl3(peer.String(), "will start a new round ", i)
-		// Start of the round timing
-		start := time.Now()
 		// the signature channel used for this round
 		lsigChan := make(chan *net.ListBasicSignature)
 		// notify each connections
-		for _, ch := range rounds {
+		for _, ch := range children {
 			ch <- lsigChan
 		}
+		// Start of the round timing
+		start := time.Now()
 
+		childrenSigs := make([]*net.ListBasicSignature, 0)
 		// Wait for listsignatures coming
 		dbg.Lvl2(peer.String(), "Waiting on signatures for round ", i, "...")
 
+		for sigs := range lsigChan {
+			dbg.Lvl3(peer.String(), "will analyze one ListBasicSignature...")
+			childrenSigs = append(childrenSigs, sigs)
+			// we have received all bundled signatures so time it
+			if len(childrenSigs) == len(conf.Tree.Children) {
+				close(lsigChan) // we have finished for this round
+			}
+		}
+		log.WithFields(log.Fields{
+			"file":  logutils.File(),
+			"type":  "ntree_round",
+			"round": i,
+			"time":  time.Since(start)}).Info("")
+		dbg.Lvl2(peer.String(), "Receive all signatures ... ")
 		var verifyWg sync.WaitGroup
 		var faulty uint64 = 0
 		var total uint64 = 0
-		// how many listsigs have we received
-		// == len(children) ? ==> timing !
-		var listSigNb int = 0
 		// start timing verification
 		verify := time.Now()
-		for sigs := range lsigChan {
-			dbg.Lvl3(peer.String(), "will analyze one ListBasicSignature...")
-			listSigNb += 1
-			// we have received all bundled signatures so time it
-			if listSigNb == len(conf.Tree.Children) {
-				log.WithFields(log.Fields{
-					"file":  logutils.File(),
-					"type":  "ntree_round",
-					"round": i,
-					"time":  time.Since(start)}).Info("")
-				close(lsigChan) // we have finished for this round
-			}
+
+		for _, sigs := range childrenSigs {
 			// Here it launches one go routine to verify a bundle
 			verifyWg.Add(1)
 			go func(s *net.ListBasicSignature) {
+				defer verifyWg.Done()
 				if conf.SkipChecks {
-					verifyWg.Done()
 					return
 				}
 				// verify each independant signatures
@@ -134,7 +136,6 @@ func RunRoot(conf *app.NTreeConfig) {
 					}
 					atomic.AddUint64(&total, 1)
 				}
-				verifyWg.Done()
 			}(sigs)
 		}
 		// wait for all verifications
@@ -149,7 +150,7 @@ func RunRoot(conf *app.NTreeConfig) {
 	}
 
 	// cLosing each channels
-	for _, ch := range rounds {
+	for _, ch := range children {
 		close(ch)
 	}
 
