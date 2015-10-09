@@ -59,17 +59,17 @@ retry_dial:
 			}
 			dbg.Lvl4("root_round:", entry)
 			stats.AddEntry(entry)
-		} else if bytes.Contains(data, []byte(ShamirRoundType)) {
+		} else if bytes.Contains(data, []byte(BasicRoundType)) {
 
-			var entry ShamirEntry
+			var entry BasicEntry
 			err := json.Unmarshal(data, &entry)
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
 			stats.AddEntry(entry)
 			dbg.Lvl2("Monitor() : received shamir_round:", entry)
-		} else if bytes.Contains(data, []byte(ShamirSetupType)) {
-			var entry ShamirEntry
+		} else if bytes.Contains(data, []byte(BasicSetupType)) {
+			var entry BasicEntry
 			err := json.Unmarshal(data, &entry)
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)

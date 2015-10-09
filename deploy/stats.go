@@ -110,11 +110,12 @@ func (t *StreamStats) String() string {
 // generic typing of a Entry containing some timing data
 type Entry interface{}
 
-var ShamirRoundType string = "shamir_round"
-var ShamirSetupType string = "shamir_setup"
+var BasicRoundType string = "shamir_round"
+var BasicSetupType string = "shamir_setup"
+var BasicVerifyType string = "shamir_verify"
 
 // concrete impl
-type ShamirEntry struct {
+type BasicEntry struct {
 	Type  string  `json:"type"`
 	Round int     `json:"round"`
 	Time  float64 `json:"time"`
@@ -173,7 +174,7 @@ type Stats interface {
 }
 
 // statistics about the shamir_sign app
-type ShamirStats struct {
+type BasicStats struct {
 	// the writer to write the stats
 	Writer io.Writer
 	// number of hosts
@@ -183,50 +184,55 @@ type ShamirStats struct {
 	round StreamStats
 	// times for the setup
 	setup StreamStats
+	// times for the verification
+	verify StreamStats
 
 	SysTime  float64
 	UserTime float64
 }
 
-func (s *ShamirStats) WriteTo(w io.Writer) {
+func (s *BasicStats) WriteTo(w io.Writer) {
 	s.Writer = w
 }
 
 // Return the CSV header of theses stats.
 // Could be implemented using reflection for automatic detection later .. ?
-func (s *ShamirStats) ServerCSVHeader() error {
-	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, user, system\n", s.round.Header("round_"), s.setup.Header("setup_"))
+func (s *BasicStats) ServerCSVHeader() error {
+	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, user, system\n", s.round.Header("round_"), s.setup.Header("setup_"), s.verify.Header("verify_"))
 	return err
 }
 
-func (s *ShamirStats) ServerCSV() error {
+func (s *BasicStats) ServerCSV() error {
 	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %f, %f\n",
 		s.NHosts,
 		s.round.String(),
 		s.setup.String(),
+		s.verify.String(),
 		s.UserTime/1e9,
 		s.SysTime/1e9)
 	return err
 }
 
-func (s *ShamirStats) ClientCSVHeader() error {
+func (s *BasicStats) ClientCSVHeader() error {
 	return nil
 }
-func (s *ShamirStats) ClientCSV() error {
+func (s *BasicStats) ClientCSV() error {
 	return nil
 }
 
 // Add an entry to the global stats
-func (s *ShamirStats) AddEntry(e Entry) error {
+func (s *BasicStats) AddEntry(e Entry) error {
 	switch t := e.(type) {
-	// the entry is a ShamirEntry !
-	case ShamirEntry:
-		st := e.(ShamirEntry)
+	// the entry is a BasicEntry !
+	case BasicEntry:
+		st := e.(BasicEntry)
 		// is it about the Round , or the setup
-		if st.Type == ShamirRoundType {
+		if st.Type == BasicRoundType {
 			s.round.Update(st.Time)
-		} else if st.Type == ShamirSetupType {
+		} else if st.Type == BasicSetupType {
 			s.setup.Update(st.Time)
+		} else if st.Type == BasicVerifyType {
+			s.verify.Update(st.Time)
 		} else {
 			dbg.Fatal("Received unknown shamir entry : ", st.Type)
 		}
@@ -241,12 +247,12 @@ func (s *ShamirStats) AddEntry(e Entry) error {
 }
 
 // basic check to see if we got somme real data
-func (s *ShamirStats) Valid() bool {
-	return s.round.Avg() > 0.0 && s.setup.Avg() > 0.0
+func (s *BasicStats) Valid() bool {
+	return s.round.Avg() > 0.0
 }
 
 // Average all these stats
-func (s *ShamirStats) Average(stats ...Stats) (Stats, error) {
+func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 	if len(stats) < 1 {
 		return s, nil
 	}
@@ -254,18 +260,21 @@ func (s *ShamirStats) Average(stats ...Stats) (Stats, error) {
 	s.UserTime = 0
 	stset := make([]StreamStats, len(stats))
 	stround := make([]StreamStats, len(stats))
+	stverify := make([]StreamStats, len(stats))
 	for i, _ := range stats {
-		ss, ok := stats[i].(*ShamirStats)
+		ss, ok := stats[i].(*BasicStats)
 		if !ok {
 			return nil, errors.New("Average() received a non-shamir stats ")
 		}
 		stset[i] = ss.setup
 		stround[i] = ss.round
+		stverify[i] = ss.verify
 		s.SysTime += ss.SysTime
 		s.UserTime += ss.UserTime
 	}
 	s.setup = StreamStatsAverage(stset...)
 	s.round = StreamStatsAverage(stround...)
+	s.verify = StreamStatsAverage(stverify...)
 	s.SysTime /= float64(len(stats))
 	s.UserTime /= float64(len(stats))
 	return s, nil
@@ -404,15 +413,15 @@ func AverageStats(stats ...Stats) (Stats, error) {
 func GetStat(t T) Stats {
 	switch t.app {
 	case ShamirSign:
-		return NewShamirStats(t)
+		return NewBasicStats(t)
 	case CollSign, CollStamp:
 		return NewCollStats(t)
 	}
 	return nil
 }
 
-func NewShamirStats(t T) *ShamirStats {
-	return &ShamirStats{NHosts: t.nmachs * t.hpn}
+func NewBasicStats(t T) *BasicStats {
+	return &BasicStats{NHosts: t.nmachs * t.hpn}
 }
 
 func NewCollStats(t T) *CollStats {
