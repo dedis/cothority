@@ -99,16 +99,6 @@ func main() {
 }
 
 func setup_deter() {
-	/*
-	virt, err := cliutils.ReadLines("virt.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	phys, err := cliutils.ReadLines("phys.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	*/
 	vpmap := make(map[string]string)
 	for i := range deter.Virt {
 		vpmap[deter.Virt[i]] = deter.Phys[i]

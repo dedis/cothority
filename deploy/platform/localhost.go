@@ -52,8 +52,6 @@ type Localhost struct {
 	// example: localhost:2000, ...:2010 , ...
 	Hosts       []string
 
-	// Signal that the process is finished
-	channelDone chan string
 	// Whether we started a simulation
 	running     bool
 	// WaitGroup for running processes
@@ -68,7 +66,6 @@ func (d *Localhost) Configure() {
 	d.LocalDir = pwd
 	d.Debug = dbg.DebugVisible
 	d.running = false
-	d.channelDone = make(chan string)
 	if d.App == "" {
 		dbg.Fatal("No app defined in simulation")
 	}
@@ -90,6 +87,18 @@ func (d *Localhost) Build(build string) error {
 	dbg.Lvl3("Localhost : Results of localhost build :", res)
 	dbg.Lvl1("Localhost : build finished in", time.Since(start))
 	return err
+}
+
+func (d *Localhost) Cleanup() error {
+	ex := d.RunDir + "/" + d.App
+	err := exec.Command("pkill", "-f", ex).Run()
+	if err != nil {
+		dbg.Lvl3("Error stopping localhost", err)
+	}
+
+	// Wait for eventual connections to clean up
+	time.Sleep(time.Second)
+	return nil
 }
 
 func (d *Localhost) Deploy(rc RunConfig) error {
@@ -174,42 +183,17 @@ func (d *Localhost) Start() error {
 			}
 			d.wg_run.Done()
 			dbg.Lvl3(index, "on host", host, "done")
-			d.channelDone <- "Done"
 		}(index, host)
 
 	}
 	return nil
 }
 
-// Waits for all processes to be done by listening to the
-// d.channelDone
+// Waits for all processes to finish
 func (d *Localhost) Wait() error {
 	dbg.Lvl3("Waiting for processes to finish")
 	d.wg_run.Wait()
 	dbg.Lvl2("Processes finished")
-	return nil
-}
-
-func (d *Localhost) Stop() error {
-	if d.running {
-		select {
-		case <-d.channelDone:
-			dbg.Lvl2("Simulation is done")
-		case <-time.After(time.Minute * 2):
-			dbg.Lvl1("Timeout of 2 minutes reached - aborting")
-		}
-	}
-	ex := d.RunDir + "/" + d.App
-	cmd := exec.Command("pkill", "-f", ex)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		dbg.Lvl3("Error stopping localhost", err)
-	}
-
-	// Wait for eventual connections to clean up
-	time.Sleep(time.Second)
 	return nil
 }
 

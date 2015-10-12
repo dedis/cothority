@@ -74,7 +74,7 @@ func main() {
 
 		deployP.Configure()
 
-		deployP.Stop()
+		deployP.Cleanup()
 
 		//testprint := strings.Replace(strings.Join(runconfigs, "--"), "\n", ", ", -1)
 		//dbg.Lvl3("Going to run tests for", simulation, testprint)
@@ -100,18 +100,14 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		// take the average of all successful runs
 		var runs []RunStats
 		for r := 0; r < nTimes; r++ {
-			run, err := RunTest(t)
+			rtest, err := RunTest(t)
 			if err != nil {
 				log.Fatalln("error running test:", err)
 			}
 
-			if deployP.Stop() == nil {
-				runs = append(runs, run)
-				if stopOnSuccess {
-					break
-				}
-			} else {
-				dbg.Lvl1("Error for test ", r, " : ", err)
+			runs = append(runs, rtest)
+			if stopOnSuccess {
+				break
 			}
 		}
 
