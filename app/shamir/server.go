@@ -12,11 +12,11 @@ import (
 func RunServer(conf *app.ConfigShamir) {
 	flags := app.RunFlags
 	s := app.GetSuite(conf.Suite)
-	poly.SUITE = s
-	poly.SECURITY = poly.MODERATE
+	poly.REVEAL_SHARE_CHECK = poly.CHECK_OFF
+	defer func() { poly.REVEAL_SHARE_CHECK = poly.CHECK_ON }()
 	n := len(conf.Hosts)
 
-	info := poly.PolyInfo{
+	info := poly.Threshold{
 		N: n,
 		R: n,
 		T: n,
@@ -35,7 +35,7 @@ func RunServer(conf *app.ConfigShamir) {
 	start := time.Now()
 	dbg.Lvl2("Creating new peer ", flags.Hostname, "(", flags.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
-	p := NewPeer(indexPeer, flags.Hostname, info, indexPeer == 0)
+	p := NewPeer(indexPeer, flags.Hostname, s, info, indexPeer == 0)
 
 	// make it listen
 	dbg.Lvl2("Peer", flags.Hostname, "is now listening for incoming connections")

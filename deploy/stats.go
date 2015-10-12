@@ -262,7 +262,6 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 	stset := make([]StreamStats, len(stats))
 	stround := make([]StreamStats, len(stats))
 	stverify := make([]StreamStats, len(stats))
-	dbg.Print("AVERAGE ON stats ==> ", len(stats))
 	for i, _ := range stats {
 		ss, ok := stats[i].(*BasicStats)
 		dbg.Print(" n ", i, " => ", ss)
@@ -274,7 +273,6 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 		stverify[i] = ss.verify
 		s.SysTime += ss.SysTime
 		s.UserTime += ss.UserTime
-		dbg.Print("Average user ", ss.UserTime, " / sys ", ss.SysTime)
 	}
 	s.setup = StreamStatsAverage(stset...)
 	s.round = StreamStatsAverage(stround...)
