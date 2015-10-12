@@ -174,7 +174,7 @@ func (d *Deterlab) Build(build string) error {
 // Kills all eventually remaining processes from the last Deploy-run
 func (d *Deterlab) Cleanup() error {
 	// Cleanup eventual ssh from the proxy-forwarding to the logserver
-	err := exec.Command("pkill", "-f", "ssh -t -t").Run()
+	err := exec.Command("pkill", "-9", "-f", "ssh -t -t").Run()
 	if err != nil {
 		dbg.Lvl3("Stopping ssh:", err)
 	}
@@ -301,6 +301,10 @@ func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
 	d.started = true
 	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
+	out, err := exec.Command("ps", "ax").Output()
+	if strings.Contains(string(out), "ssh -t -t") || err != nil{
+		dbg.Fatal("There is probably still a proxy-forwarder running!\nsudo killall ssh")
+	}
 	cmd := exec.Command(
 		"ssh",
 		"-t",
@@ -308,7 +312,7 @@ func (d *Deterlab) Start() error {
 		fmt.Sprintf("%s@%s", d.Login, d.Host),
 		"-L",
 		"8081:" + d.MasterLogger + ":10000")
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		dbg.Fatal("failed to setup portforwarding for logging server")
 	}

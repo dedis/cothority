@@ -122,6 +122,7 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 	var rs RunStats
 
 	deployP.Deploy(rc)
+	deployP.Cleanup()
 	err := deployP.Start()
 	if err != nil {
 		log.Fatal(err)

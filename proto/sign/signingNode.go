@@ -145,6 +145,7 @@ func (sn *Node) Close() {
 		dbg.Lvl4("signing node: closing:", sn.Name())
 		sn.Host.Close()
 	}
+	dbg.Lvl3("Closed connection")
 	sn.Isclosed = true
 	sn.hbLock.Unlock()
 }

@@ -72,7 +72,7 @@ func Monitor() RunStats {
 			}
 			continue
 		}
-		dbg.Lvl5("Received msg", data)
+		dbg.Lvl5("Received msg", string(data))
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
