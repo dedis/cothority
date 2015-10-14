@@ -1,34 +1,128 @@
 package main
 
-import(
-	"github.com/dedis/cothority/lib/coconet"
-	"strconv"
-	"net"
+import (
 	"errors"
-	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/cothority/lib/graphs"
-	"time"
+	"flag"
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"io/ioutil"
-	"os"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/coconet"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/crypto/abstract"
+	"io/ioutil"
+	"net"
+	"os"
+	"strconv"
+	"time"
 )
 
-func main() {
-	conf := &app.ConfigColl{}
-	app.ReadConfig(conf)
+// Main part
+// Actions possible
+const (
+	// Generate key and write to file
+	key = "key"
+	// Wait for the developement team to contact it and validate this node
+	validate = "validate"
+	// Will check a specific node that is supposed to be in validate mode
+	check = "check"
+	// Run an actual node in the cothority tree
+	run = "run"
+	// Launch an help descriptor
+	help = "help"
+)
 
-	switch app.RunFlags.Mode{
-	case "server":
-		RunServer(&app.RunFlags, conf)
-	case "client":
-		RunClient(&app.RunFlags, conf)
+// Which suite to use
+var suiteString string = "ed25519"
+var suite abstract.Suite
+
+//// 		Key part 		////
+// where to write the key file .priv + .pub
+var out string = "key"
+
+// Returns the name of the file for the private key
+func namePriv() string {
+	return out + ".priv"
+}
+
+// Returns the name of the file for the public key
+func namePub() string {
+	return out + ".pub"
+}
+
+//// 	Validation / Checking part 	////
+const listenPort = 2000
+
+///////////////////////
+
+// Init function set up the flag reading
+func init() {
+	flag.StringVar(&suiteString, "suite", suiteString, "Suite to use throughout the process [ed25519]")
+	flag.StringVar(&out, "out", out, "basename of the files where to write or read the public and private key ")
+}
+
+func main() {
+	// parse the flags
+	flag.Parse()
+	// setup the suite
+	suite = app.GetSuite(suiteString)
+	// Lets check everything is in order
+	verifyArgs()
+
+	switch flag.Arg(0) {
+	case key:
+		dbg.Lvl1("Starting conode -> generation of key pair")
+		KeyGeneration()
+	case validate:
+		dbg.Lvl1("Starting conode -> in validation mode")
+		Validation()
+	case check:
+		dbg.Lvl1("Starting conode -> in check mode")
+		Check()
+	case run:
+		dbg.Lvl2("Starting conode -> in run mode")
+	}
+	dbg.Lvl1("Bye !")
+	//	conf := &app.ConfigColl{}
+	//	app.ReadConfig(conf)
+	//
+	//	switch app.RunFlags.Mode {
+	//	case "server":
+	//		RunServer(&app.RunFlags, conf)
+	//	case "client":
+	//		RunClient(&app.RunFlags, conf)
+	//	}
+}
+
+// verifyArgs will check if some arguments get the right value or is some are
+// missing
+func verifyArgs() {
+	if suite == nil {
+		dbg.Fatal("Suite could not be recognized. Use a proper suite [ed25519] ( given ", suiteString, ")")
 	}
 }
 
+// KeyGEneration will generate a fresh public / private key pair
+// and write those down into two separate files
+func KeyGeneration() {
+	// gen keypair
+	kp := cliutils.KeyPair(suite)
+	// Write private
+	if err := cliutils.WritePrivKey(kp.Secret, suite, namePriv()); err != nil {
+		dbg.Fatal("Error writing private key file : ", err)
+	}
 
-func RunServer(Flags *app.Flags, conf *app.ConfigColl){
+	// Write public
+	if err := cliutils.WritePubKey(kp.Public, suite, namePub()); err != nil {
+		dbg.Fatal("Error writing public key file : ", err)
+	}
+
+	dbg.Lvl1("Keypair generated and written to ", namePriv(), " / ", namePub())
+
+}
+
+func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	hostname := Flags.Hostname
 
 	dbg.Lvl3(Flags.Hostname, "Starting to run")
@@ -71,7 +165,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 	}
 
 	// Wait for everybody to be ready before going on
-	ioutil.WriteFile("coll_stamp_up/up" + hostname, []byte("started"), 0666)
+	ioutil.WriteFile("coll_stamp_up/up"+hostname, []byte("started"), 0666)
 	for {
 		_, err := os.Stat("coll_stamp_up")
 		if err == nil {
@@ -145,7 +239,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		}
 	}
 
-	Clients := make([]*Client, 0, len(hostnames) * nclients)
+	Clients := make([]*Client, 0, len(hostnames)*nclients)
 	// for each client in
 	stampers := make([]*Server, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
@@ -156,7 +250,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		stampers = append(stampers, NewServer(sn))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
-			stampers[len(stampers) - 1].Listen()
+			stampers[len(stampers)-1].Listen()
 		}
 	}
 	dbg.Lvl3("stampers:", stampers)
@@ -177,11 +271,11 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		} else if err != nil {
 			log.Fatal("port is not valid integer")
 		}
-		hp := net.JoinHostPort(h, strconv.Itoa(pn + 1))
+		hp := net.JoinHostPort(h, strconv.Itoa(pn+1))
 		//dbg.Lvl4("client connecting to:", hp)
 
 		for j := range clients {
-			clients[j] = NewClient("client" + strconv.Itoa((i - 1) * len(stampers) + j))
+			clients[j] = NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
 			var c coconet.Conn
 
 			// if we are using tcp connections

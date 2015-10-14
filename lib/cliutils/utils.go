@@ -5,22 +5,12 @@ import (
 	"bytes"
 	"errors"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/random"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 )
-
-// KeyPair will generate a keypair (private + public key) from a given suite
-func KeyPair(s abstract.Suite) config.KeyPair {
-	kp := config.KeyPair{}
-	kp.Gen(s, random.Stream)
-	return kp
-}
 
 func ReadLines(filename string) ([]string, error) {
 	b, err := ioutil.ReadFile(filename)

@@ -1,25 +1,25 @@
 package main
 
-import(
-	"github.com/dedis/cothority/lib/coconet"
-	"strconv"
-	"net"
+import (
 	"errors"
-	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/cothority/lib/graphs"
-	"time"
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"io/ioutil"
-	"os"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/coconet"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/proto/sign"
+	"io/ioutil"
+	"net"
+	"os"
+	"strconv"
+	"time"
 )
 
 func main() {
 	conf := &app.ConfigColl{}
 	app.ReadConfig(conf)
 
-	switch app.RunFlags.Mode{
+	switch app.RunFlags.Mode {
 	case "server":
 		RunServer(&app.RunFlags, conf)
 	case "client":
@@ -27,8 +27,7 @@ func main() {
 	}
 }
 
-
-func RunServer(Flags *app.Flags, conf *app.ConfigColl){
+func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	hostname := Flags.Hostname
 
 	dbg.Lvl3(Flags.Hostname, "Starting to run")
@@ -71,7 +70,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl){
 	}
 
 	// Wait for everybody to be ready before going on
-	ioutil.WriteFile("coll_stamp_up/up" + hostname, []byte("started"), 0666)
+	ioutil.WriteFile("coll_stamp_up/up"+hostname, []byte("started"), 0666)
 	for {
 		_, err := os.Stat("coll_stamp_up")
 		if err == nil {
@@ -145,7 +144,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		}
 	}
 
-	Clients := make([]*Client, 0, len(hostnames) * nclients)
+	Clients := make([]*Client, 0, len(hostnames)*nclients)
 	// for each client in
 	stampers := make([]*Server, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
@@ -156,7 +155,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		stampers = append(stampers, NewServer(sn))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
-			stampers[len(stampers) - 1].Listen()
+			stampers[len(stampers)-1].Listen()
 		}
 	}
 	dbg.Lvl3("stampers:", stampers)
@@ -177,11 +176,11 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		} else if err != nil {
 			log.Fatal("port is not valid integer")
 		}
-		hp := net.JoinHostPort(h, strconv.Itoa(pn + 1))
+		hp := net.JoinHostPort(h, strconv.Itoa(pn+1))
 		//dbg.Lvl4("client connecting to:", hp)
 
 		for j := range clients {
-			clients[j] = NewClient("client" + strconv.Itoa((i - 1) * len(stampers) + j))
+			clients[j] = NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
 			var c coconet.Conn
 
 			// if we are using tcp connections
