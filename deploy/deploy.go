@@ -57,13 +57,13 @@ const (
 
 func init() {
 	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
-	flag.StringVar(&app, "app", app, "start [server,client] locally")
 	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Debugging-level. 0 is silent, 5 is flood")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 }
 
+// Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
 	deployP = platform.NewPlatform(platform_dst)
@@ -71,15 +71,8 @@ func main() {
 		dbg.Fatal("Platform not recognized.", platform_dst)
 	}
 	dbg.Lvl1("Deploying to", platform_dst)
-	Start(flag.Args())
-}
 
-/*
- * Starting the simulation
- * it takes a slice of strings to configuration-files that are to be
- * copied for each app
- */
-func Start(simulations []string) {
+	simulations := flag.Args()
 	if len(simulations) == 0 {
 		dbg.Fatal("Please give a simulation to run")
 	}
@@ -92,7 +85,7 @@ func Start(simulations []string) {
 		}
 		deployP.Configure()
 
-		deployP.Stop()
+		deployP.Cleanup()
 
 		//testprint := strings.Replace(strings.Join(runconfigs, "--"), "\n", ", ", -1)
 		//dbg.Lvl3("Going to run tests for", simulation, testprint)
@@ -141,13 +134,9 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 				log.Fatalln("error running test:", err)
 			}
 
-			if deployP.Stop() == nil {
-				runs = append(runs, stats)
-				if stopOnSuccess {
-					break
-				}
-			} else {
-				dbg.Lvl1("Error for test ", r, " : ", err)
+			runs = append(runs, stats)
+			if stopOnSuccess {
+				break
 			}
 		}
 
@@ -200,7 +189,7 @@ func RunTest(rc platform.RunConfig) (Stats, error) {
 	var rs Stats = GetStats(rc)
 
 	deployP.Deploy(rc)
-	//deployP.App
+	deployP.Cleanup()
 	err := deployP.Start()
 	if err != nil {
 		log.Fatal(err)
@@ -208,7 +197,13 @@ func RunTest(rc platform.RunConfig) (Stats, error) {
 	}
 
 	go func() {
-		Monitor(rs)
+		if platform_dst != "deterlab" {
+			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
+			rs = RunStats{}
+		} else {
+			rs = Monitor()
+		}
+		deployP.Wait()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct{}{}
 	}()

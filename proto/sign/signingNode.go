@@ -76,7 +76,7 @@ type Node struct {
 	peerKeys  map[string]abstract.Point // map of all peer public keys
 
 	closed      chan error // error sent when connection closed
-	isclosed    bool
+	Isclosed bool
 	done        chan int // round number sent when round done
 	commitsDone chan int // round number sent when announce/commit phase done
 
@@ -140,12 +140,13 @@ func (sn *Node) Close() {
 		sn.heartbeat = nil
 		dbg.Lvl4("after close", sn.Name(), "has heartbeat=", sn.heartbeat)
 	}
-	if !sn.isclosed {
+	if !sn.Isclosed {
 		close(sn.closed)
 		dbg.Lvl4("signing node: closing:", sn.Name())
 		sn.Host.Close()
 	}
-	sn.isclosed = true
+	dbg.Lvl3("Closed connection")
+	sn.Isclosed = true
 	sn.hbLock.Unlock()
 }
 

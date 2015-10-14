@@ -232,7 +232,6 @@ func main() {
 				" -server=" + servers +
 				" -amroot=" + strconv.FormatBool(a) +
 				" -logger=" + loggerports[i]
-				dbg.Print(cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
 					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
