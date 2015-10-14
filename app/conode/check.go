@@ -94,3 +94,10 @@ func verifyHost(sys SystemPacket, sig []byte, pub abstract.Point) Ack {
 
 	return ack
 }
+
+func HelpCheck(b *bytes.Buffer) {
+	b.WriteString(cliutils.Boldify("check") + "\tip_address:port [-public publicFile]\n")
+	b.WriteString("\tcheck will launch the check on the host. Basically, it requests some system stats, \n\tand a signature in order to check the host system and the public / private keys of the host.\n")
+	b.WriteString("\tip_address:port is the address of the host we want to verify\n")
+	b.WriteString("\n\t-public publicFile is the file where the public key of the hosts can be read\n")
+}

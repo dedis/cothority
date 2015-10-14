@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+func Boldify(s string) string {
+	return "\033[1m" + s + "\033[0m"
+}
+
 func ReadLines(filename string) ([]string, error) {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {

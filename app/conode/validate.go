@@ -122,3 +122,8 @@ func readKeyPair() config.KeyPair {
 		Public: pub,
 	}
 }
+
+func HelpValidate(b *bytes.Buffer) {
+	b.WriteString(cliutils.Boldify("validate") + "\n")
+	b.WriteString("\tValidate waits for the connection of a verifier / checker from the head of the cothority project. \n\tIt will send some systems stats and a signature on it in order to verify the public / private keys.\n")
+}

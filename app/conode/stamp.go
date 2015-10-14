@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
@@ -82,6 +84,9 @@ func main() {
 		Check()
 	case run:
 		dbg.Lvl2("Starting conode -> in run mode")
+	case help:
+		Help()
+		os.Exit(0)
 	}
 	dbg.Lvl1("Bye !")
 	//	conf := &app.ConfigColl{}
@@ -120,6 +125,24 @@ func KeyGeneration() {
 
 	dbg.Lvl1("Keypair generated and written to ", namePriv(), " / ", namePub())
 
+}
+
+// Help will print a little summary of help
+func Help() {
+	var b bytes.Buffer
+	b.WriteString("\t\t" + cliutils.Boldify("Conode") + "\n")
+	HelpKey(&b)
+	b.WriteString("\n")
+	HelpValidate(&b)
+	b.WriteString("\n")
+	HelpCheck(&b)
+	fmt.Println(b.String())
+}
+
+func HelpKey(b *bytes.Buffer) {
+	b.WriteString(cliutils.Boldify("key") + "\n")
+	b.WriteString("\tKey will generate the keys that will be used in the cothority project and will write them to files\n")
+	b.WriteString("\n\t-out fileName is the basename file where you want keys to be written. The output is two files : fileName.priv / fileName.pub\n")
 }
 
 func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
