@@ -171,6 +171,44 @@ func (d *Deterlab) Build(build string) error {
 	return nil
 }
 
+// Kills all eventually remaining processes from the last Deploy-run
+func (d *Deterlab) Cleanup() error {
+	// Cleanup eventual ssh from the proxy-forwarding to the logserver
+	err := exec.Command("pkill", "-9", "-f", "ssh -t -t").Run()
+	if err != nil {
+		dbg.Lvl3("Stopping ssh:", err)
+	}
+
+	// SSH to the deterlab-server and end all running users-processes
+	dbg.Lvl3("Going to kill everything")
+	go func() {
+		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		if err != nil {
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "stopped"
+	}()
+
+	for {
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "stopped" {
+				dbg.Lvl3("Users stopped")
+				return nil
+			} else {
+				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
+			}
+		case <-time.After(time.Second * 20):
+			dbg.Lvl3("Timeout error when waiting for end of ssh")
+			return nil
+		}
+	}
+
+	return nil
+}
+
+// Creates the appropriate configuration-files and copies everything to the
+// deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
 	dbg.Lvl1("Assembling all files and configuration options")
 	os.RemoveAll(d.DeployDir)
@@ -263,6 +301,10 @@ func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
 	d.started = true
 	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
+	out, err := exec.Command("ps", "ax").Output()
+	if strings.Contains(string(out), "ssh -t -t") || err != nil{
+		dbg.Fatal("There is probably still a proxy-forwarder running!\nsudo killall ssh")
+	}
 	cmd := exec.Command(
 		"ssh",
 		"-t",
@@ -270,14 +312,14 @@ func (d *Deterlab) Start() error {
 		fmt.Sprintf("%s@%s", d.Login, d.Host),
 		"-L",
 		"8081:" + d.MasterLogger + ":10000")
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		dbg.Fatal("failed to setup portforwarding for logging server")
 	}
 
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
-		if err != nil{
+		if err != nil {
 			dbg.Lvl3(err)
 		}
 		d.sshDeter <- "finished"
@@ -286,15 +328,8 @@ func (d *Deterlab) Start() error {
 	return nil
 }
 
-func (d *Deterlab) Stop() error {
-	killssh := exec.Command("pkill", "-f", "ssh -t -t")
-	killssh.Stdout = os.Stdout
-	killssh.Stderr = os.Stderr
-	err := killssh.Run()
-	if err != nil {
-		dbg.Lvl3("Stopping ssh:", err)
-	}
-
+// Waiting for the process to finish
+func (d *Deterlab) Wait() error {
 	if d.started {
 		dbg.Lvl3("Simulation is started")
 		select {
@@ -308,32 +343,8 @@ func (d *Deterlab) Stop() error {
 		case <-time.After(time.Second):
 			dbg.Lvl3("No message waiting")
 		}
+		d.started = false
 	}
-
-	dbg.Lvl3("Going to kill everything")
-	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
-		if err != nil{
-			dbg.Lvl3(err)
-		}
-		d.sshDeter <- "stopped"
-	}()
-
-	for {
-		select {
-		case msg := <-d.sshDeter:
-			if msg == "stopped" {
-				dbg.Lvl3("Users stopped")
-				return nil
-			} else {
-				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
-			}
-		case <-time.After(time.Second * 20):
-			dbg.Lvl3("Timeout error when waiting for end of ssh")
-			return nil
-		}
-	}
-
 	return nil
 }
 

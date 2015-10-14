@@ -84,7 +84,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	}).Info("")
 
 	// And tell everybody to quit
-	err := hc.SNodes[0].CloseAll(hc.SNodes[0].Round)
+	err := hc.SNodes[0].CloseAll(hc.SNodes[0].ViewNo)
 	if err != nil {
 		log.Fatal("Couldn't close:", err)
 	}

@@ -21,9 +21,9 @@ func main() {
 	if app.RunFlags.Hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}
-	
+
 	// Do some common setup
-	if app.RunFlags.Mode == "client"{
+	if app.RunFlags.Mode == "client" {
 		app.RunFlags.Hostname = app.RunFlags.Name
 	}
 	hostname := app.RunFlags.Hostname
@@ -84,14 +84,11 @@ func main() {
 		hc.SNodes[i].FailAsFollowerEvery = conf.FFail
 	}
 
-	defer func() {
-		dbg.Lvl1("Collective Signing", hostname, "has terminated in mode", app.RunFlags.Mode)
-	}()
-
 	switch app.RunFlags.Mode {
 	case "client":
 		log.Panic("No client mode")
 	case "server":
 		RunServer(conf, hc)
 	}
+	dbg.Lvl2("Collective Signing", hostname, "has terminated in mode", app.RunFlags.Mode)
 }
