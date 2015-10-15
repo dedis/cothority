@@ -53,7 +53,10 @@ type Peer struct {
 	root bool
 
 	// N, R, T parameters + suite used throughout the process
-	info poly.PolyInfo
+	info poly.Threshold
+
+	// suite used
+	suite abstract.Suite
 
 	// its own private / public key pair
 	key conf.KeyPair
@@ -74,14 +77,14 @@ type Peer struct {
 
 // NewPeer returns a new peer with its id and the number of peers in the schnorr signature algo
 // TODO verification of string addr:port
-func NewPeer(id int, name string, p poly.PolyInfo, isRoot bool) *Peer {
+func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot bool) *Peer {
 
 	if id >= p.N {
 		log.Fatal("Error while NewPeer : gien ", id, " as id whereas polyinfo.N = ", p.N)
 
 	}
 	// Setup of the private / public pair
-	key := cliutils.KeyPair(poly.SUITE)
+	key := cliutils.KeyPair(suite)
 	// setup of the public list of key
 	pubKeys := make([]abstract.Point, p.N)
 	pubKeys[id] = key.Public
@@ -93,6 +96,7 @@ func NewPeer(id int, name string, p poly.PolyInfo, isRoot bool) *Peer {
 		root:    isRoot,
 		Name:    name,
 		info:    p,
+		suite:   suite,
 		key:     key,
 		pubKeys: pubKeys,
 		schnorr: new(poly.Schnorr),
@@ -188,7 +192,7 @@ func (p *Peer) WaitACKs() {
 	var wg sync.WaitGroup
 	fn := func(rp RemotePeer) {
 		a := Ack{}
-		err := poly.SUITE.Read(rp.Conn, &a)
+		err := p.suite.Read(rp.Conn, &a)
 		if err != nil {
 			dbg.Fatal(p.Name, "could not receive an ACK from ", rp.String(), " (err ", err, ")")
 		}
@@ -219,7 +223,7 @@ func (p *Peer) WaitFins() {
 	p.wgFin.Add(len(p.remote))
 	fn := func(rp RemotePeer) {
 		f := Finish{p.Id}
-		err := poly.SUITE.Write(rp.Conn, &f)
+		err := p.suite.Write(rp.Conn, &f)
 		if err != nil {
 			dbg.Fatal(p.String(), "could not send FIN to ", rp.String())
 		}
@@ -261,7 +265,7 @@ func (p *Peer) SendAcks(rp RemotePeer) {
 
 // Helpers to send any aribtrary data to the n-peer
 func (p *Peer) SendToPeer(i int, data interface{}) error {
-	return poly.SUITE.Write(p.nConn(i), data)
+	return p.suite.Write(p.nConn(i), data)
 }
 func (p *Peer) SendToRoot(data interface{}) error {
 	return p.SendToPeer(0, data)
@@ -300,13 +304,13 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 		Id:     p.Id,
 		Public: p.key.Public,
 	}
-	err := poly.SUITE.Write(conn, &s)
+	err := p.suite.Write(conn, &s)
 	if err != nil {
 		dbg.Fatal(p.Name, "could not send SYN to ", conn.RemoteAddr().String())
 	}
 	// Receive the other SYN
 	s2 := Syn{}
-	err = poly.SUITE.Read(conn, &s2)
+	err = p.suite.Read(conn, &s2)
 	if err != nil {
 		dbg.Fatal(p.Name, "could not receive SYN from ", conn.RemoteAddr().String())
 	}
@@ -337,10 +341,10 @@ func (p *Peer) String() string {
 // the peers and will compute the sharedsecret at the end
 func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 	// Construct the dealer
-	dealerKey := cliutils.KeyPair(poly.SUITE)
-	dealer := poly.NewDealer(p.info, &p.key, &dealerKey, p.pubKeys)
+	dealerKey := cliutils.KeyPair(p.suite)
+	dealer := poly.NewDealer(p.suite, p.info, &p.key, &dealerKey, p.pubKeys)
 	// Construct the receiver
-	receiver := poly.NewReceiver(p.info, &p.key)
+	receiver := poly.NewReceiver(p.suite, p.info, &p.key)
 	// add already its own dealer
 	_, err := receiver.AddDealer(p.Id, dealer)
 	if err != nil {
@@ -355,8 +359,8 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 	dealChan := make(chan *poly.Dealer)
 	for _, rp := range p.remote {
 		go func(rp RemotePeer) {
-			d := new(poly.Dealer).UnmarshalInit(p.info)
-			err := poly.SUITE.Read(rp.Conn, d)
+			d := new(poly.Dealer).UnmarshalInit(p.suite, p.info)
+			err := p.suite.Read(rp.Conn, d)
 			if err != nil {
 				dbg.Fatal(p.Name, " received a strange dealer from ", rp.String())
 			}
@@ -398,7 +402,7 @@ func (p *Peer) SetupDistributedSchnorr() {
 	// first, we have to get the long term shared secret
 	long := p.ComputeSharedSecret()
 	// Then instantiate the Schnoor struct
-	p.schnorr = p.schnorr.Init(p.info, long)
+	p.schnorr = p.schnorr.Init(p.suite, p.info, long)
 }
 
 // SchnorrSigRoot will first generate a
@@ -422,10 +426,10 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 	// no need to send to all if you are the root
 	//	p.SendToAll(ps)
 	// then receive every partial sig
-	sigChan := make(chan *poly.PartialSchnorrSig)
+	sigChan := make(chan *poly.SchnorrPartialSig)
 	fn := func(rp RemotePeer) {
-		psig := new(poly.PartialSchnorrSig)
-		err := poly.SUITE.Read(rp.Conn, psig)
+		psig := new(poly.SchnorrPartialSig)
+		err := p.suite.Read(rp.Conn, psig)
 		if err != nil {
 			dbg.Fatal(p.String(), "could not decode PartialSig of ", rp.String())
 		}
@@ -448,7 +452,7 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 		}
 	}
 
-	sign, err := p.schnorr.SchnorrSig()
+	sign, err := p.schnorr.Sig()
 	if err != nil {
 		dbg.Fatal(p.String(), "could not generate the global SchnorrSig", err)
 	}
@@ -487,8 +491,8 @@ func (p *Peer) BroadcastSignature(s *poly.SchnorrSig) []*poly.SchnorrSig {
 
 	sigChan := make(chan *poly.SchnorrSig)
 	fn := func(rp RemotePeer) {
-		sch := new(poly.SchnorrSig).Init(p.info)
-		err := poly.SUITE.Read(rp.Conn, sch)
+		sch := new(poly.SchnorrSig).Init(p.suite, p.info)
+		err := p.suite.Read(rp.Conn, sch)
 		if err != nil {
 			dbg.Fatal(p.String(), "could not decode schnorr sig from ", rp.String())
 		}
