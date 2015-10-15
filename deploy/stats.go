@@ -22,8 +22,8 @@ import (
 // it reprensent the time to an action (setup, shamir round, coll round etc)
 // use it to compute streaming mean + dev
 type StreamStats struct {
-	min float64
-	max float64
+	min  float64
+	max  float64
 
 	n    int
 	oldM float64
@@ -53,12 +53,12 @@ func (t *StreamStats) Update(newTime float64) {
 		t.newM = newTime
 		t.oldS = 0.0
 	} else {
-		t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
-		t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
+		t.newM = t.oldM + (newTime - t.oldM) / float64(t.n)
+		t.newS = t.oldS + (newTime - t.oldM) * (newTime - t.newM)
 		t.oldM = t.newM
 		t.oldS = t.newS
 	}
-	t.dev = math.Sqrt(t.newS / float64(t.n-1))
+	t.dev = math.Sqrt(t.newS / float64(t.n - 1))
 
 }
 
@@ -104,7 +104,7 @@ func (t *StreamStats) Header(prefix string) string {
 	return fmt.Sprintf("%smin, %smax, %savg, %sdev", prefix, prefix, prefix, prefix)
 }
 func (t *StreamStats) String() string {
-	return fmt.Sprintf("%f, %f, %f, %f", t.Min()/1e9, t.Max()/1e9, t.Avg()/1e9, t.Dev()/1e9)
+	return fmt.Sprintf("%f, %f, %f, %f", t.Min() / 1e9, t.Max() / 1e9, t.Avg() / 1e9, t.Dev() / 1e9)
 }
 
 ////////////////////////////////////////////////////////
@@ -178,16 +178,16 @@ type Stats interface {
 // statistics about the shamir_sign app
 type BasicStats struct {
 	// the writer to write the stats
-	Writer io.Writer
+	Writer   io.Writer
 	// number of hosts
-	NHosts int
+	NHosts   int
 
 	// times for the rounds
-	round StreamStats
+	round    StreamStats
 	// times for the setup
-	setup StreamStats
+	setup    StreamStats
 	// times for the verification
-	verify StreamStats
+	verify   StreamStats
 
 	SysTime  float64
 	UserTime float64
@@ -210,8 +210,8 @@ func (s *BasicStats) ServerCSV() error {
 		s.round.String(),
 		s.setup.String(),
 		s.verify.String(),
-		s.UserTime/1e9,
-		s.SysTime/1e9)
+		s.UserTime / 1e9,
+		s.SysTime / 1e9)
 	return err
 }
 
@@ -265,9 +265,8 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 	stverify := make([]StreamStats, len(stats))
 	for i, _ := range stats {
 		ss, ok := stats[i].(*BasicStats)
-		dbg.Print(" n ", i, " => ", ss)
 		if !ok {
-			return nil, errors.New("Average() received a non-shamir stats ")
+			return nil, errors.New("Average() received a non-basic stats")
 		}
 		stset[i] = ss.setup
 		stround[i] = ss.round
@@ -288,20 +287,20 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 // Collective signing stats
 type CollStats struct {
 	// number of hosts
-	NHosts int
+	NHosts   int
 	// Writer where to write the data
-	Writer io.Writer
+	Writer   io.Writer
 
-	Depth int
+	Depth    int
 
-	BF    int
-	round StreamStats
+	BF       int
+	round    StreamStats
 
 	SysTime  float64
 	UserTime float64
 
-	Rate  float64
-	Times []float64
+	Rate     float64
+	Times    []float64
 }
 
 func (c *CollStats) Valid() bool {
@@ -325,8 +324,8 @@ func (s *CollStats) ServerCSV() error {
 		s.BF,
 		s.round.String(),
 		s.Rate,
-		s.SysTime/1e9,
-		s.UserTime/1e9)
+		s.SysTime / 1e9,
+		s.UserTime / 1e9)
 	return err
 }
 
@@ -336,7 +335,7 @@ func (s *CollStats) ClientCSVHeader() error {
 }
 func (s *CollStats) ClientCSV() error {
 	for _, t := range s.Times {
-		_, err := fmt.Fprintf(s.Writer, strconv.FormatFloat(t/1e9, 'f', 15, 64)+"\n")
+		_, err := fmt.Fprintf(s.Writer, strconv.FormatFloat(t / 1e9, 'f', 15, 64) + "\n")
 		if err != nil {
 			return err
 		}
@@ -421,12 +420,10 @@ func AverageStats(stats ...Stats) (Stats, error) {
 // helper function to get the right Stats depending on the test
 func GetStats(rc platf.RunConfig) Stats {
 	switch rc.Get("app") {
-	case ShamirSign:
+	case ShamirSign, Naive, NTree:
 		return NewBasicStats(rc)
 	case CollSign, CollStamp:
 		return NewCollStats(rc)
-	case Naive, NTree:
-		return NewBasicStats(rc)
 	default:
 		dbg.Fatal("Stats does not know this app:", rc.Get("app"))
 		return nil
@@ -447,7 +444,7 @@ func NewCollStats(rc platf.RunConfig) *CollStats {
 		dbg.Fatal("Can not instantiate CollStats without Branching Factor field (bf)")
 	}
 	var n int = getNHosts(rc)
-	depth := math.Log(float64(n)*float64(bf-1) + 1)
+	depth := math.Log(float64(n) * float64(bf - 1) + 1)
 	depth /= math.Log(float64(bf))
 	depth = math.Ceil(depth)
 	depth -= 1
@@ -526,7 +523,7 @@ func ArrStats(stream []float64) (avg float64, min float64, max float64, stddev f
 			break
 		}
 	}
-	stream = stream[:i+1]
+	stream = stream[:i + 1]
 
 	k := float64(1)
 	first := true

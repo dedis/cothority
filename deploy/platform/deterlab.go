@@ -334,7 +334,7 @@ func (d *Deterlab) Start() error {
 		fmt.Sprintf("%s@%s", d.Login, d.Host),
 		"-L",
 		"8081:" + d.MasterLogger + ":10000")
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		dbg.Fatal("failed to setup portforwarding for logging server")
 	}
