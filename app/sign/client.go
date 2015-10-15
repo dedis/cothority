@@ -1,5 +1,4 @@
 package main
-
 import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -33,11 +32,11 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 
 	for i := 0; i < conf.Rounds; i++ {
 		time.Sleep(time.Second)
-		//fmt.Println("ANNOUNCING")
 		hc.SNodes[0].LogTest = []byte("Hello World")
 		dbg.Lvl3("Going to launch announcement ", hc.SNodes[0].Name())
 		start = time.Now()
 		t0 := time.Now()
+		//sys, usr := app.GetRTime()
 
 		err := hc.SNodes[0].StartSigningRound()
 		if err != nil {
@@ -48,7 +47,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		case msg := <-done:
 			dbg.Lvl3("Received reply from children", msg)
 		case <-time.After(10 * ROUND_TIME):
-			dbg.Lvl3("client timeouted on waiting for response from")
+			dbg.Fatal("client timeouted on waiting for response")
 			continue
 		}
 
@@ -65,6 +64,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 			"type":  "root_round",
 			"round": i,
 			"time":  elapsed,
+			//"time":  dSys + dUsr,
 		}).Info("root round")
 	}
 
