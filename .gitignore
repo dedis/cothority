@@ -11,3 +11,5 @@ deploy/platform/deterlab/deter.toml
 deploy/platform/localhost
 deploy/deploy
 test/
+key.*
+app/conode/conode
