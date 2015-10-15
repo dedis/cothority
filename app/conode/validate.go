@@ -29,13 +29,13 @@ func Validation() {
 	// Then wait for the connection
 
 	// Accept incoming connections
-	ln, err := net.Listen("tcp", ":" + strconv.Itoa(listenPort))
+	ln, err := net.Listen("tcp", ":"+strconv.Itoa(listenPort))
 	if err != nil {
 		dbg.Fatal("Could not listen for validation : ", err)
 	}
 
 	var conn net.Conn
-	for ;; conn.Close() {
+	for ; ; conn.Close() {
 		dbg.Lvl1("Will wait for the verifier connection ...")
 		// Accept the one
 		conn, err = ln.Accept()
@@ -109,7 +109,7 @@ func signSystemPacket(sys SystemPacket, kp config.KeyPair) []byte {
 // to contact it. WHen connection is made, it is returned.
 func waitConnection() net.Conn {
 	// Wait for any input connections
-	ln, err := net.Listen("tcp", ":" + strconv.Itoa(listenPort))
+	ln, err := net.Listen("tcp", ":"+strconv.Itoa(listenPort))
 	if err != nil {
 		dbg.Fatal("Could not listen for validation : ", err)
 	}
@@ -128,7 +128,7 @@ func readKeyPair() config.KeyPair {
 	if err != nil {
 		dbg.Fatal("Could not read private key : ", err)
 	}
-	pub, err := cliutils.ReadPubKey(suite, namePub())
+	pub, _, err := cliutils.ReadPubKey(suite, namePub())
 	if err != nil {
 		dbg.Fatal("Could not read public key : ", err)
 	}

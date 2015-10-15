@@ -37,7 +37,7 @@ type Flags struct {
 // to 'Flag'
 var RunFlags Flags
 
-func init() {
+func FlagInit() {
 	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
 	flag.StringVar(&RunFlags.Logger, "logger", "", "remote logger")
 	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
@@ -62,11 +62,11 @@ func ReadConfig(conf interface{}, dir ...string) {
 	if debug.IsValid() {
 		dbg.DebugVisible = debug.Interface().(int)
 	}
-
+	FlagInit()
 	flag.Parse()
 
 	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
-	if RunFlags.AmRoot{
+	if RunFlags.AmRoot {
 		ConnectLogservers()
 	} else {
 		dbg.Lvl4("Not connecting to logger - logger:", RunFlags.Logger, "AmRoot:", RunFlags.AmRoot)

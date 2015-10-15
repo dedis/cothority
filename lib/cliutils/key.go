@@ -1,10 +1,15 @@
 package cliutils
 
 import (
+	"encoding/base64"
+	"errors"
+	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
+	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // This file manage every operations related to keys
@@ -27,6 +32,7 @@ func WritePrivKey(priv abstract.Secret, suite abstract.Suite, fileName string) e
 	defer privFile.Close()
 
 	// Writing down !
+
 	err = suite.Write(privFile, priv)
 	if err != nil {
 		return err
@@ -35,8 +41,11 @@ func WritePrivKey(priv abstract.Secret, suite abstract.Suite, fileName string) e
 }
 
 // WritePubKey will write the public key into the filename using the suite
+// before is if you want to write something before the actual key like in ssh
+// format hostname KEY_in_base_64
+// if before contains a space it will throw an error
 // Returns an error if anything went wrong during file handling or writing key
-func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string) error {
+func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string, before string) error {
 
 	pubFile, err := os.OpenFile(fileName, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0744)
 	if err != nil {
@@ -44,10 +53,17 @@ func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string) erro
 	}
 	defer pubFile.Close()
 
-	err = suite.Write(pubFile, pub)
+	if strings.Contains(before, " ") {
+		return errors.New("The string to insert before public key contains some space. Invalid !")
+	}
+	pubFile.WriteString(before + " ")
+
+	encoder := base64.NewEncoder(base64.StdEncoding, pubFile)
+	err = suite.Write(encoder, pub)
 	if err != nil {
 		return err
 	}
+	encoder.Close()
 
 	return nil
 }
@@ -74,23 +90,37 @@ func ReadPrivKey(suite abstract.Suite, fileName string) (abstract.Secret, error)
 
 // ReadPubKey will read the file and decrypt the public key inside
 // It takes a suite to decrypt and a file name
-// Returns the public key and an error if anything went wrong
-func ReadPubKey(suite abstract.Suite, fileName string) (abstract.Point, error) {
+// Returns the public key, whatever text is in front and an error if anything went wrong
+func ReadPubKey(suite abstract.Suite, fileName string) (abstract.Point, string, error) {
 
 	public := suite.Point()
 	// Opening files
 	pubFile, err := os.Open(fileName)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer pubFile.Close()
 
-	// Some readings
-	err = suite.Read(pubFile, &public)
+	// read the string before
+	by, err := ioutil.ReadAll(pubFile)
 	if err != nil {
-		return nil, err
+		return nil, "", errors.New(fmt.Sprintf("Error reading the whole file  %s", err))
+	}
+	splits := strings.Split(string(by), " ")
+	if len(splits) != 2 {
+		return nil, "", errors.New(fmt.Sprintf("Error reading pub key file format is not correct (val space val)"))
 	}
 
-	return public, nil
+	before := splits[0]
+	key := strings.NewReader(splits[1])
+
+	// Some readings
+	dec := base64.NewDecoder(base64.StdEncoding, key)
+	err = suite.Read(dec, &public)
+	if err != nil {
+		return nil, "", errors.New(fmt.Sprintf("Error reading the public key itself : %s", err))
+	}
+
+	return public, before, nil
 
 }

@@ -30,7 +30,7 @@ func Check(host string) {
 	dbg.Lvl1("Checking if", host, "is connected and has correct private key")
 
 	//  get the right public key
-	pub, err := cliutils.ReadPubKey(suite, pubKeyFile)
+	pub, _, err := cliutils.ReadPubKey(suite, pubKeyFile)
 	if err != nil {
 		dbg.Fatal("Could not read the public key from the file : ", err)
 	}
