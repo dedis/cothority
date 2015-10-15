@@ -17,10 +17,6 @@ import (
 
 // Monitor monitors log aggregates results into RunStats
 func Monitor() RunStats {
-	if platform_dst != "deterlab" {
-		dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
-		return RunStats{}
-	}
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
 retry_dial:
