@@ -2,6 +2,7 @@ package main
 import (
 	"flag"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"net"
 )
 
 var file string
@@ -23,4 +24,11 @@ func main() {
 	if server == ""{
 		server = "localhost"
 	}
+
+	// Then get a connection
+	conn, err := net.Dial("tcp", server)
+	if err != nil {
+		dbg.Fatal("Error when getting the connection to the host : ", err)
+	}
+
 }
