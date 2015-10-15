@@ -380,14 +380,8 @@ func (s *CollStats) Average(stats ...Stats) (Stats, error) {
 	if len(stats) == 0 {
 		return s, errors.New("No stats given to average on CollStats")
 	}
-	s.Times = make([]float64, len(s.Times))
-	st := make([]StreamStats, 0, len(stats))
-	fSys := s.SysTime
-	fUs := s.UserTime
-	s.SysTime = 0
-	s.UserTime = 0
-	s.Rate = 0
-	for _, b := range stats {
+	st := []StreamStats{s.round}
+	for _, b := range stats[1:] {
 		a, ok := b.(*CollStats)
 		if !ok {
 			return nil, errors.New("Average() did not receive a CollStats struct")
@@ -400,8 +394,6 @@ func (s *CollStats) Average(stats ...Stats) (Stats, error) {
 	}
 	s.round = StreamStatsAverage(st...)
 	l := float64(len(stats))
-	s.SysTime -= fSys
-	s.UserTime -= fUs
 	s.SysTime /= l
 	s.UserTime /= l
 	s.Rate /= l
