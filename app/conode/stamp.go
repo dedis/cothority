@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"flag"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
@@ -20,20 +18,8 @@ import (
 	"time"
 )
 
-// Main part
-// Actions possible
-const (
-	// Generate key and write to file
-	key = "key"
-	// Wait for the developement team to contact it and validate this node
-	validate = "validate"
-	// Will check a specific node that is supposed to be in validate mode
-	check = "check"
-	// Run an actual node in the cothority tree
-	run = "run"
-	// Launch an help descriptor
-	help = "help"
-)
+var key, validate bool
+var check, build string
 
 // Which suite to use
 var suiteString string = "ed25519"
@@ -61,7 +47,15 @@ const listenPort = 2000
 // Init function set up the flag reading
 func init() {
 	flag.StringVar(&suiteString, "suite", suiteString, "Suite to use throughout the process [ed25519]")
-	flag.StringVar(&out, "out", out, "basename of the files where to write or read the public and private key ")
+	flag.StringVar(&out, "out", out, "basename of the files where to write or read the public and private key - fileName.priv / fileName.pub")
+	flag.BoolVar(&key, "key", false, "Key will generate the keys that will be used in the cothority project and will write them to files\n")
+	flag.BoolVar(&validate, "validate", false, "Validate waits for the connection of a verifier / checker from the head of the cothority project.\n" +
+	"\tIt will send some systems stats and a signature on it in order to verify the public / private keys.\n")
+	flag.StringVar(&check, "check", "", "ip_address:port [-public publicFile]\n" +
+	"\tcheck will launch the check on the host. Basically, it requests some system stats, \n" +
+	"\tand a signature in order to check the host system and the public / private keys of the host.\n" +
+	"\tip_address:port is the address of the host we want to verify\n")
+	flag.StringVar(&build, "build", "", "Builds the tree out of a file with hostnames")
 }
 
 func main() {
@@ -72,23 +66,17 @@ func main() {
 	// Lets check everything is in order
 	verifyArgs()
 
-	switch flag.Arg(0) {
+	switch{
 	case key:
-		dbg.Lvl1("Starting conode -> generation of key pair")
 		KeyGeneration()
 	case validate:
-		dbg.Lvl1("Starting conode -> in validation mode")
 		Validation()
-	case check:
-		dbg.Lvl1("Starting conode -> in check mode")
-		Check()
-	case run:
-		dbg.Lvl2("Starting conode -> in run mode")
-	case help:
-		Help()
-		os.Exit(0)
-	}
-	dbg.Lvl1("Bye !")
+	case check != "":
+		Check(check)
+	case build != "":
+		BuildTree(build)
+	default:
+		dbg.Lvl1("Starting conode -> in run mode")
 	//	conf := &app.ConfigColl{}
 	//	app.ReadConfig(conf)
 	//
@@ -98,6 +86,7 @@ func main() {
 	//	case "client":
 	//		RunClient(&app.RunFlags, conf)
 	//	}
+	}
 }
 
 // verifyArgs will check if some arguments get the right value or is some are
@@ -124,25 +113,6 @@ func KeyGeneration() {
 	}
 
 	dbg.Lvl1("Keypair generated and written to ", namePriv(), " / ", namePub())
-
-}
-
-// Help will print a little summary of help
-func Help() {
-	var b bytes.Buffer
-	b.WriteString("\t\t" + cliutils.Boldify("Conode") + "\n")
-	HelpKey(&b)
-	b.WriteString("\n")
-	HelpValidate(&b)
-	b.WriteString("\n")
-	HelpCheck(&b)
-	fmt.Println(b.String())
-}
-
-func HelpKey(b *bytes.Buffer) {
-	b.WriteString(cliutils.Boldify("key") + "\n")
-	b.WriteString("\tKey will generate the keys that will be used in the cothority project and will write them to files\n")
-	b.WriteString("\n\t-out fileName is the basename file where you want keys to be written. The output is two files : fileName.priv / fileName.pub\n")
 }
 
 func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
@@ -188,7 +158,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	}
 
 	// Wait for everybody to be ready before going on
-	ioutil.WriteFile("coll_stamp_up/up"+hostname, []byte("started"), 0666)
+	ioutil.WriteFile("coll_stamp_up/up" + hostname, []byte("started"), 0666)
 	for {
 		_, err := os.Stat("coll_stamp_up")
 		if err == nil {
@@ -262,7 +232,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		}
 	}
 
-	Clients := make([]*Client, 0, len(hostnames)*nclients)
+	Clients := make([]*Client, 0, len(hostnames) * nclients)
 	// for each client in
 	stampers := make([]*Server, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
@@ -273,7 +243,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		stampers = append(stampers, NewServer(sn))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
-			stampers[len(stampers)-1].Listen()
+			stampers[len(stampers) - 1].Listen()
 		}
 	}
 	dbg.Lvl3("stampers:", stampers)
@@ -294,11 +264,11 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		} else if err != nil {
 			log.Fatal("port is not valid integer")
 		}
-		hp := net.JoinHostPort(h, strconv.Itoa(pn+1))
+		hp := net.JoinHostPort(h, strconv.Itoa(pn + 1))
 		//dbg.Lvl4("client connecting to:", hp)
 
 		for j := range clients {
-			clients[j] = NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
+			clients[j] = NewClient("client" + strconv.Itoa((i - 1) * len(stampers) + j))
 			var c coconet.Conn
 
 			// if we are using tcp connections

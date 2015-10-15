@@ -26,12 +26,9 @@ func init() {
 }
 
 // Main entry point for the check mode
-func Check() {
-	// First get the host we want to contact
-	host = flag.Arg(1)
-	if host == "" {
-		dbg.Fatal("No host given to check ...")
-	}
+func Check(host string) {
+	dbg.Lvl1("Checking if", host, "is connected and has correct private key")
+
 	//  get the right public key
 	pub, err := cliutils.ReadPubKey(suite, pubKeyFile)
 	if err != nil {
@@ -44,6 +41,7 @@ func Check() {
 		dbg.Fatal("Error when getting the connection to the host : ", err)
 	}
 	defer conn.Close()
+
 	dbg.Lvl1("Verifier connected to the host. Validation in progress...")
 	// Get the system packet message
 	var sys SystemPacket
@@ -93,11 +91,4 @@ func verifyHost(sys SystemPacket, sig []byte, pub abstract.Point) Ack {
 	}
 
 	return ack
-}
-
-func HelpCheck(b *bytes.Buffer) {
-	b.WriteString(cliutils.Boldify("check") + "\tip_address:port [-public publicFile]\n")
-	b.WriteString("\tcheck will launch the check on the host. Basically, it requests some system stats, \n\tand a signature in order to check the host system and the public / private keys of the host.\n")
-	b.WriteString("\tip_address:port is the address of the host we want to verify\n")
-	b.WriteString("\n\t-public publicFile is the file where the public key of the hosts can be read\n")
 }
