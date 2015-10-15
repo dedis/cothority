@@ -744,3 +744,8 @@ func (sn *Node) hashLog(Round int) ([]byte, error) {
 	h.Write(logBytes)
 	return h.Sum(nil), nil
 }
+
+// Getting actual View
+func (sn *Node)GetView() int{
+	return sn.ViewNo
+}

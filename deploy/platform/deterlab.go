@@ -222,7 +222,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	deter := *d
 	appConfig := d.DeployDir + "/app.toml"
 	deterConfig := d.DeployDir + "/deter.toml"
-	ioutil.WriteFile(appConfig, []byte(rc), 0666)
+	ioutil.WriteFile(appConfig, rc.Toml(), 0666)
 	deter.ReadConfig(appConfig)
 
 	deter.createHosts()
@@ -322,7 +322,7 @@ func (d *Deterlab) Start() error {
 	d.started = true
 	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
 	out, err := exec.Command("ps", "ax").Output()
-	if strings.Contains(string(out), "ssh -t -t") || err != nil{
+	if strings.Contains(string(out), "ssh -t -t") || err != nil {
 		dbg.Fatal("There is probably still a proxy-forwarder running!\nsudo killall ssh")
 	}
 	cmd := exec.Command(
@@ -331,7 +331,7 @@ func (d *Deterlab) Start() error {
 		"-t",
 		fmt.Sprintf("%s@%s", d.Login, d.Host),
 		"-L",
-		"8081:" + d.MasterLogger + ":10000")
+		"8081:"+d.MasterLogger+":10000")
 	err = cmd.Start()
 	if err != nil {
 		dbg.Fatal("failed to setup portforwarding for logging server")
@@ -401,8 +401,9 @@ func (d *Deterlab) createHosts() error {
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
 
-	d.Phys = d.Phys[:nmachs+nloggers]
-	d.Virt = d.Virt[:nmachs+nloggers]
+	// only take the machines we need
+	d.Phys = d.Phys[:nmachs + nloggers]
+	d.Virt = d.Virt[:nmachs + nloggers]
 	d.MasterLogger = d.Phys[0]
 
 	return nil
