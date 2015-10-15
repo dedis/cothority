@@ -149,6 +149,7 @@ retry:
 			rs.StdDev = math.Sqrt(S / (k - 1))
 		} else if bytes.Contains(data, []byte("schnorr_end")) || bytes.Contains(data, []byte("end")) {
 			clientDone = true
+			break
 		} else if bytes.Contains(data, []byte("forkexec")) {
 			dbg.Lvl3("Received forkexec")
 			if rootDone {

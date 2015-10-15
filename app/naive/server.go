@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
-	net "github.com/dedis/cothority/lib/network_draft/network"
+	net "github.com/dedis/cothority/lib/network"
 	"sync"
 	"time"
 )
