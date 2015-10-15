@@ -59,7 +59,7 @@ func init() {
 		"\tcheck will launch the check on the host. Basically, it requests some system stats, \n"+
 		"\tand a signature in order to check the host system and the public / private keys of the host.\n"+
 		"\tip_address:port is the address of the host we want to verify\n")
-	flag.StringVar(&build, "build", "", "Builds the tree out of a file with hostnames")
+	flag.StringVar(&build, "build", "", "Builds the configuration file (included the tree) out of a file with hostnames")
 }
 
 func main() {
@@ -78,7 +78,7 @@ func main() {
 	case check != "":
 		Check(check)
 	case build != "":
-		BuildTree(build)
+		Build(build)
 	default:
 		dbg.Lvl1("Starting conode -> in run mode")
 		//	conf := &app.ConfigColl{}
