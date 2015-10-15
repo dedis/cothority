@@ -22,13 +22,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -197,10 +197,10 @@ func RunTest(rc platform.RunConfig) (Stats, error) {
 	}
 
 	go func() {
-		if platform_dst != "deterlab" {
-			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
-		} else {
+		if platform_dst == "deterlab" {
 			Monitor(rs)
+		} else {
+			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
 		}
 		deployP.Wait()
 		dbg.Lvl2("Test complete:", rs)
