@@ -425,8 +425,10 @@ func GetStats(rc platf.RunConfig) Stats {
 		return NewBasicStats(rc)
 	case CollSign, CollStamp:
 		return NewCollStats(rc)
+	case Naive, NTree:
+		return NewBasicStats(rc)
 	default:
-		dbg.Fatal("Stats does not know this app : ", []byte(rc.Get("app")), " vs shamir = ", []byte(ShamirSign))
+		dbg.Fatal("Stats does not know this app:", rc.Get("app"))
 		return nil
 	}
 }

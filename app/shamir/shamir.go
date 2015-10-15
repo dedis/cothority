@@ -2,8 +2,8 @@ package main
 
 import (
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/app"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 // Dispatch-function for running either client or server (mode-parameter)

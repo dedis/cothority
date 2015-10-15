@@ -260,6 +260,26 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		deter.Hostnames = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
+	case "naive":
+		conf := app.NaiveConfig{}
+		app.ReadTomlConfig(&conf, deterConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Hpn)
+		deter.Hostnames = conf.Hosts
+		dbg.Lvl3("Deterlab : naive applications :", conf.Hosts)
+		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Hpn)
+		deter.Hostnames = conf.Hosts
+		app.WriteTomlConfig(conf, appConfig)
+	case "ntree":
+		conf := app.NTreeConfig{}
+		app.ReadTomlConfig(&conf, deterConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		var depth int
+		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[deter.Loggers:], conf.Hpn, conf.Bf)
+		dbg.Lvl2("Depth : ", depth)
+		deter.Hostnames = conf.Hosts
+		app.WriteTomlConfig(conf, appConfig)
+
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
@@ -382,8 +402,8 @@ func (d *Deterlab) createHosts() error {
 	}
 
 	// only take the machines we need
-	d.Phys = d.Phys[:nmachs+nloggers]
-	d.Virt = d.Virt[:nmachs+nloggers]
+	d.Phys = d.Phys[:nmachs + nloggers]
+	d.Virt = d.Virt[:nmachs + nloggers]
 	d.MasterLogger = d.Phys[0]
 
 	return nil
