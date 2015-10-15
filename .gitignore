@@ -5,11 +5,17 @@ test_data
 app/sign/sign
 app/stamp/stamp
 app/shamir/shamir
+app/naive/naive
+app/ntree/ntree
 deploy/platform/deterlab/build
 deploy/platform/deterlab/remote/*
 deploy/platform/deterlab/deter.toml
+deploy/platform/localhost/*
 deploy/platform/localhost
 deploy/deploy
+deploy/matplotlib/*csv
+deploy/matplotlib/*png
+deploy/matplotlib/imgs
 test/
 key.*
 app/conode/conode

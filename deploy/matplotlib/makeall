@@ -1,0 +1,12 @@
+#!/bin/bash
+
+CSV="shs2.csv smah.csv naive.csv naive_sc.csv ntree.csv"
+
+python time_plot.py 0 $CSV comparison_roundtime.png
+#python2.7 time_plot.py 0 $CSV
+
+#python time_plot.py 1 $CSV comparison_systime.png
+#python time_plot.py 1 $CSV
+
+#python time_plot.py 3 $CSVS comparison_check.png
+#python time_plot.py 3 $CSVS

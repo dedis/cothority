@@ -19,6 +19,19 @@ type Tree struct {
 	Children []*Tree `json:"children,omitempty"`
 }
 
+func (t *Tree) FindByName(name string, depth int) (*Tree, int) {
+	if t.Name == name {
+		return t, depth
+	}
+	for _, c := range t.Children {
+		ct, d := c.FindByName(name, depth+1)
+		if ct != nil {
+			return ct, d
+		}
+	}
+	return nil, depth
+}
+
 func (t *Tree) TraverseTree(f func(*Tree)) {
 	f(t)
 	for _, c := range t.Children {
@@ -29,7 +42,9 @@ func (t *Tree) TraverseTree(f func(*Tree)) {
 // Simply organizes a list of nodes into a tree with a branching factor = bf
 // bfs style
 func CreateLocalTree(nodeNames []string, bf int) *Tree {
-
+	if bf < 1 {
+		panic("Branching Factor < 1 in CreateLocalTree :/")
+	}
 	var root *Tree = new(Tree)
 	root.Name = nodeNames[0]
 	var index int = 1

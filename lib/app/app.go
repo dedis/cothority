@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
+	"syscall"
 )
 
 type Flags struct {
@@ -92,6 +93,8 @@ func ConnectLogservers() {
 		//log.SetOutput(ioutil.Discard)
 		//fmt.Println("exiting flags.Logger block")
 		dbg.Lvl4(RunFlags.Hostname, "Done setting up hook")
+	} else {
+		dbg.Lvl3("Not setting up logserver for", RunFlags.Hostname)
 	}
 }
 
@@ -117,7 +120,7 @@ func ServeMemoryStats() {
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
+			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p + 2)), nil)
 			dbg.Lvl3("Memory-stats server:", res)
 		}()
 	}
@@ -195,4 +198,22 @@ func GetSuite(suite string) abstract.Suite {
 		s = nist.NewAES128SHA256P256()
 	}
 	return s
+}
+
+func iiToF(sec int64, usec int64) float64{
+	return float64(sec) + float64(usec) / 1000000.0
+}
+
+// Gets the sytem and the user time so far
+func GetRTime() (tSys, tUsr float64) {
+	rusage := &syscall.Rusage{}
+	syscall.Getrusage(syscall.RUSAGE_SELF, rusage)
+	s, u := rusage.Stime, rusage.Utime
+	return iiToF(int64(s.Sec), int64(s.Usec)), iiToF(int64(u.Sec), int64(u.Usec))
+}
+
+// Returns the difference to the given system- and user-time
+func GetDiffRTime(tSys, tUsr float64)(tDiffSys, tDiffUsr float64){
+	nowSys, nowUsr := GetRTime()
+	return nowSys - tSys, nowUsr - tUsr
 }

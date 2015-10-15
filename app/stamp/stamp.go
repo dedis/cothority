@@ -88,7 +88,6 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	}
 
 	defer func(sn *sign.Node) {
-		//log.Panicln("program has terminated:", hostname)
 		dbg.Lvl2("Program timestamper has terminated:", hostname)
 		sn.Close()
 	}(hc.SNodes[0])
