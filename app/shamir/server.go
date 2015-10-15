@@ -75,7 +75,7 @@ func RunServer(conf *app.ConfigShamir) {
 		dbg.Lvl2(p.String(), "setup accomplished in ", delta)
 		log.WithFields(log.Fields{
 			"file": logutils.File(),
-			"type": "setup",
+			"type": "basic_setup",
 			"time": delta,
 		}).Info("")
 	}
@@ -103,7 +103,7 @@ func RunServer(conf *app.ConfigShamir) {
 			dbg.Lvl2(p.String(), "signature done in ", delta)
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
-				"type":  "round",
+				"type":  "basic_round",
 				"round": round,
 				"time":  delta,
 			}).Info("")

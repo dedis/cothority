@@ -11,6 +11,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"reflect"
 	"runtime"
 	"strconv"
 	"time"
@@ -111,9 +112,9 @@ func (t *StreamStats) String() string {
 // generic typing of a Entry containing some timing data
 type Entry interface{}
 
-var BasicRoundType string = "round"
-var BasicSetupType string = "setup"
-var BasicVerifyType string = "verify"
+var BasicRoundType string = "basic_round"
+var BasicSetupType string = "basic_setup"
+var BasicVerifyType string = "basic_verify"
 
 // concrete impl
 type BasicEntry struct {
@@ -370,7 +371,7 @@ func (s *CollStats) AddEntry(e Entry) error {
 		s.SysTime = se.SysTime
 		s.UserTime = se.UserTime
 	default:
-		dbg.Fatal("AddEntry did not receive any Coll*Entry.")
+		dbg.Fatal("AddEntry did not receive any Coll*Entry : ", reflect.TypeOf(e))
 	}
 	return nil
 }
