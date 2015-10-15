@@ -1,5 +1,5 @@
 App = "shamir"
-Rounds = 10
+Rounds = 20
 
 Machines, hpn
 2, 1
