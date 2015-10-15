@@ -143,7 +143,7 @@ func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 }
 
 // Get gets data from the connection.
-// Returns io.EOF on an irrecoveralbe error.
+// Returns io.EOF on an irrecoverable error.
 // Returns given error if it is Temporary.
 func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 	if tc.Closed() {
