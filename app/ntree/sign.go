@@ -143,7 +143,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		// finished verifying => time it !
 		log.WithFields(log.Fields{
 			"file":        logutils.File(),
-			"type":        "ntree_round",
+			"type":        "basic_round",
 			"round":       i,
 			"time":        time.Since(start),
 			"time_verify": time.Since(verify)}).Info("")

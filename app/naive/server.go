@@ -145,7 +145,7 @@ func GoLeader(conf *app.NaiveConfig) {
 			faulty, " faulty sign)")
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
-			"type":  "naive_round",
+			"type":  "basic_round",
 			"round": round,
 			"time":  time.Since(now),
 		}).Info("")
