@@ -173,6 +173,44 @@ func (d *Deterlab) Build(build string) error {
 	return nil
 }
 
+// Kills all eventually remaining processes from the last Deploy-run
+func (d *Deterlab) Cleanup() error {
+	// Cleanup eventual ssh from the proxy-forwarding to the logserver
+	err := exec.Command("pkill", "-9", "-f", "ssh -t -t").Run()
+	if err != nil {
+		dbg.Lvl3("Stopping ssh:", err)
+	}
+
+	// SSH to the deterlab-server and end all running users-processes
+	dbg.Lvl3("Going to kill everything")
+	go func() {
+		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		if err != nil {
+			dbg.Lvl3(err)
+		}
+		d.sshDeter <- "stopped"
+	}()
+
+	for {
+		select {
+		case msg := <-d.sshDeter:
+			if msg == "stopped" {
+				dbg.Lvl3("Users stopped")
+				return nil
+			} else {
+				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
+			}
+		case <-time.After(time.Second * 20):
+			dbg.Lvl3("Timeout error when waiting for end of ssh")
+			return nil
+		}
+	}
+
+	return nil
+}
+
+// Creates the appropriate configuration-files and copies everything to the
+// deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
 	dbg.Lvl1("Assembling all files and configuration options")
 	os.RemoveAll(d.DeployDir)
@@ -186,7 +224,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	deter := *d
 	appConfig := d.DeployDir + "/app.toml"
 	deterConfig := d.DeployDir + "/deter.toml"
-	ioutil.WriteFile(appConfig, []byte(rc), 0666)
+	ioutil.WriteFile(appConfig, rc.Toml(), 0666)
 	deter.ReadConfig(appConfig)
 
 	deter.createHosts()
@@ -285,6 +323,10 @@ func (d *Deterlab) Start() error {
 	// setup port forwarding for viewing log server
 	d.started = true
 	dbg.Lvl3("setting up port forwarding for master logger: ", d.MasterLogger, d.Login, d.Host)
+	out, err := exec.Command("ps", "ax").Output()
+	if strings.Contains(string(out), "ssh -t -t") || err != nil {
+		dbg.Fatal("There is probably still a proxy-forwarder running!\nsudo killall ssh")
+	}
 	cmd := exec.Command(
 		"ssh",
 		"-t",
@@ -308,15 +350,8 @@ func (d *Deterlab) Start() error {
 	return nil
 }
 
-func (d *Deterlab) Stop() error {
-	killssh := exec.Command("pkill", "-f", "ssh -t -t")
-	killssh.Stdout = os.Stdout
-	killssh.Stderr = os.Stderr
-	err := killssh.Run()
-	if err != nil {
-		dbg.Lvl3("Stopping ssh:", err)
-	}
-
+// Waiting for the process to finish
+func (d *Deterlab) Wait() error {
 	if d.started {
 		dbg.Lvl3("Simulation is started")
 		select {
@@ -330,32 +365,8 @@ func (d *Deterlab) Stop() error {
 		case <-time.After(time.Second):
 			dbg.Lvl3("No message waiting")
 		}
+		d.started = false
 	}
-
-	dbg.Lvl3("Going to kill everything")
-	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
-		if err != nil{
-			dbg.Lvl3(err)
-		}
-		d.sshDeter <- "stopped"
-	}()
-
-	for {
-		select {
-		case msg := <-d.sshDeter:
-			if msg == "stopped" {
-				dbg.Lvl3("Users stopped")
-				return nil
-			} else {
-				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
-			}
-		case <-time.After(time.Second * 20):
-			dbg.Lvl3("Timeout error when waiting for end of ssh")
-			return nil
-		}
-	}
-
 	return nil
 }
 
@@ -392,6 +403,7 @@ func (d *Deterlab) createHosts() error {
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
 
+	// only take the machines we need
 	d.Phys = d.Phys[:nmachs + nloggers]
 	d.Virt = d.Virt[:nmachs + nloggers]
 	d.MasterLogger = d.Phys[0]

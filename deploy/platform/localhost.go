@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -28,8 +29,9 @@ type Localhost struct {
 	Logger string
 
 	// App to run [shamir,coll_sign..]
-	App    string
-	AppDir string // where the app is located
+	App string
+	// where the app is located
+	AppDir string
 
 	// Where is the Localhost package located
 	LocalDir string
@@ -41,18 +43,19 @@ type Localhost struct {
 	// Debug level 1 - 5
 	Debug int
 
-	// ////////////////////////////
-	// Number of processes to launch
-	// ////////////////////////////
+	// Number of machines - so we can use the same
+	// configuration-files
 	Machines int
+	// This gives the number of hosts per node (machine)
+	Hpn int
 	// hosts used with the applications
 	// example: localhost:2000, ...:2010 , ...
 	Hosts []string
 
-	// Signal that the process is finished
-	channelDone chan string
 	// Whether we started a simulation
 	running bool
+	// WaitGroup for running processes
+	wg_run sync.WaitGroup
 }
 
 // Configure various
@@ -63,7 +66,6 @@ func (d *Localhost) Configure() {
 	d.LocalDir = pwd
 	d.Debug = dbg.DebugVisible
 	d.running = false
-	d.channelDone = make(chan string)
 	if d.App == "" {
 		dbg.Fatal("No app defined in simulation")
 	}
@@ -87,6 +89,18 @@ func (d *Localhost) Build(build string) error {
 	return err
 }
 
+func (d *Localhost) Cleanup() error {
+	ex := d.RunDir + "/" + d.App
+	err := exec.Command("pkill", "-f", ex).Run()
+	if err != nil {
+		dbg.Lvl3("Error stopping localhost", err)
+	}
+
+	// Wait for eventual connections to clean up
+	time.Sleep(time.Second)
+	return nil
+}
+
 func (d *Localhost) Deploy(rc RunConfig) error {
 	dbg.Lvl1("Localhost : Writing config-files")
 
@@ -95,7 +109,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	// 'Machines', 'Hpn', 'Loggers' or other fields
 	appConfig := d.RunDir + "/app.toml"
 	localConfig := d.RunDir + "/" + defaultConfigName
-	ioutil.WriteFile(appConfig, []byte(rc), 0666)
+	ioutil.WriteFile(appConfig, rc.Toml(), 0666)
 	d.ReadConfig(appConfig)
 	d.GenerateHosts()
 
@@ -118,7 +132,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 
 		dbg.Lvl2("Depth:", graphs.Depth(conf.Tree))
 		dbg.Lvl2("Total hosts:", len(conf.Hosts))
-		total := d.Machines
+		total := d.Machines * d.Hpn
 		if len(conf.Hosts) != total {
 			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
 				"machines or hosts per node")
@@ -147,7 +161,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
-		dbg.Lvl4("Localhost : naive Tree applications :", conf.Tree)
+		dbg.Lvl3("Localhost : naive Tree applications :", conf.Hosts)
 		d.Hosts = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
@@ -170,42 +184,31 @@ func (d *Localhost) Start() error {
 	dbg.Lvl4("Localhost: in Start() => hosts ", d.Hosts)
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
-	for _, h := range d.Hosts {
-		args := []string{"-hostname", h, "-mode", "server"}
+	for index, host := range d.Hosts {
+		args := []string{"-hostname", host, "-mode", "server"}
 		cmd := exec.Command(ex, args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		dbg.Lvl3("Localhost : will start host ", h)
-		go func(c *exec.Cmd) {
-			err := c.Run()
+		dbg.Lvl3("Localhost : will start host ", host)
+		go func(i int, h string) {
+			d.wg_run.Add(1)
+			err := cmd.Run()
 			if err != nil {
 				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
-			d.channelDone <- "Done"
-		}(cmd)
-		time.Sleep(100 * time.Millisecond)
+			d.wg_run.Done()
+			dbg.Lvl3(index, "on host", host, "done")
+		}(index, host)
 
 	}
 	return nil
 }
 
-func (d *Localhost) Stop() error {
-	if d.running {
-		select {
-		case <-d.channelDone:
-			dbg.Lvl2("Simulation is done")
-		case <-time.After(time.Minute * 2):
-			dbg.Lvl1("Timeout of 2 minutes reached - aborting")
-		}
-	}
-	ex := d.RunDir + "/" + d.App
-	cmd := exec.Command("pkill", "-f", ex)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		dbg.Lvl3("Error stopping localhost", err)
-	}
+// Waits for all processes to finish
+func (d *Localhost) Wait() error {
+	dbg.Lvl3("Waiting for processes to finish")
+	d.wg_run.Wait()
+	dbg.Lvl2("Processes finished")
 	return nil
 }
 
@@ -228,10 +231,11 @@ func (d *Localhost) ReadConfig(name ...string) {
 // GenerateHosts will generate the list of hosts
 // with a new port each
 func (d *Localhost) GenerateHosts() {
-	d.Hosts = make([]string, d.Machines)
+	nrhosts := d.Machines * d.Hpn
+	d.Hosts = make([]string, nrhosts)
 	port := 2000
 	inc := 5
-	for i := 0; i < d.Machines; i++ {
+	for i := 0; i < nrhosts; i++ {
 		s := "127.0.0.1:" + strconv.Itoa(port+inc*i)
 		d.Hosts[i] = s
 	}

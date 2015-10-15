@@ -2,21 +2,21 @@ package main
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/app"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/crypto/poly"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"time"
-	"github.com/dedis/cothority/lib/app"
 )
 
 func RunServer(conf *app.ConfigShamir) {
 	flags := app.RunFlags
 	s := app.GetSuite(conf.Suite)
-	poly.SUITE = s
-	poly.SECURITY = poly.MODERATE
+	poly.REVEAL_SHARE_CHECK = poly.CHECK_OFF
+	defer func() { poly.REVEAL_SHARE_CHECK = poly.CHECK_ON }()
 	n := len(conf.Hosts)
 
-	info := poly.PolyInfo{
+	info := poly.Threshold{
 		N: n,
 		R: n,
 		T: n,
@@ -35,14 +35,14 @@ func RunServer(conf *app.ConfigShamir) {
 	start := time.Now()
 	dbg.Lvl2("Creating new peer ", flags.Hostname, "(", flags.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
-	p := NewPeer(indexPeer, flags.Hostname, info, indexPeer == 0)
+	p := NewPeer(indexPeer, flags.Hostname, s, info, indexPeer == 0)
 
 	// make it listen
 	dbg.Lvl2("Peer", flags.Hostname, "is now listening for incoming connections")
 	go p.Listen()
 
 	// then connect it to its successor in the list
-	for _, h := range conf.Hosts[indexPeer + 1:] {
+	for _, h := range conf.Hosts[indexPeer+1:] {
 		dbg.Lvl2("Peer ", flags.Hostname, " will connect to ", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
@@ -54,10 +54,9 @@ func RunServer(conf *app.ConfigShamir) {
 		delta := time.Since(start)
 		dbg.Lvl2(p.String(), "Connections accomplished in", delta)
 		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "schnorr_connect",
-			"round": 0,
-			"time":  delta,
+			"file": logutils.File(),
+			"type": "connect",
+			"time": delta,
 		}).Info("")
 	}
 
@@ -75,10 +74,9 @@ func RunServer(conf *app.ConfigShamir) {
 		delta := time.Since(start)
 		dbg.Lvl2(p.String(), "setup accomplished in ", delta)
 		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "schnorr_setup",
-			"round": 0,
-			"time":  delta,
+			"file": logutils.File(),
+			"type": "basic_setup",
+			"time": delta,
 		}).Info("")
 	}
 
@@ -104,7 +102,7 @@ func RunServer(conf *app.ConfigShamir) {
 			//dSys, dUsr := app.GetDiffRTime(sys, usr)
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
-				"type":  "schnorr_round",
+				"type":  "basic_round",
 				"round": round,
 				"time": time.Since(start),
 				//"time":  dSys + dUsr,
@@ -121,7 +119,7 @@ func RunServer(conf *app.ConfigShamir) {
 	if p.IsRoot() {
 		log.WithFields(log.Fields{
 			"file": logutils.File(),
-			"type":    "schnorr_end",
+			"type": "end",
 		}).Info("")
 	}
 }

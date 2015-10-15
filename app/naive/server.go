@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
-	net "github.com/dedis/cothority/lib/network_draft/network"
+	net "github.com/dedis/cothority/lib/network"
 	"sync"
 	"time"
 )
@@ -147,7 +147,7 @@ func GoLeader(conf *app.NaiveConfig) {
 		dSys, dUsr := app.GetDiffRTime(sys, usr)
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
-			"type":  "naive_round",
+			"type":  "basic_round",
 			"round": round,
 			//"time":  time.Since(now),
 			"time":  dSys + dUsr,
@@ -159,10 +159,10 @@ func GoLeader(conf *app.NaiveConfig) {
 	close(masterRoundChan)
 	dbg.Lvl2(leader.String(), "has done all rounds")
 	/*
-	log.WithFields(log.Fields{
-		"file": logutils.File(),
-		"type": "end"}).Info("")
-		*/
+		log.WithFields(log.Fields{
+			"file": logutils.File(),
+			"type": "end"}).Info("")
+	*/
 }
 
 // The signer connects to the leader and then waits for a message to be

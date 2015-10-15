@@ -23,14 +23,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/deploy/platform"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/deploy/platform"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 // Configuration-variables
@@ -43,15 +44,28 @@ var nobuild = false
 var build = ""
 var machines = 3
 
+// SHORT TERM solution of referencing
+// the different apps.
+// TODO: make the lib/app/*COnfig.go have their own reference
+// so they can issue Stats, read their own config depending on platform,
+// etc etc
+const (
+	ShamirSign string = "shamir"
+	CollSign   string = "sign"
+	CollStamp  string = "stamp"
+	Naive 	   string = "naive"
+	NTree      string = "ntree"
+)
+
 func init() {
 	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
-	flag.StringVar(&app, "app", app, "start [server,client] locally")
 	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Debugging-level. 0 is silent, 5 is flood")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 }
 
+// Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
 	deployP = platform.NewPlatform(platform_dst)
@@ -59,28 +73,21 @@ func main() {
 		dbg.Fatal("Platform not recognized.", platform_dst)
 	}
 	dbg.Lvl1("Deploying to", platform_dst)
-	Start(flag.Args())
-}
 
-/*
- * Starting the simulation
- * it takes a slice of strings to configuration-files that are to be
- * copied for each app
- */
-func Start(simulations []string) {
+	simulations := flag.Args()
 	if len(simulations) == 0 {
 		dbg.Fatal("Please give a simulation to run")
 	}
 
 	for _, simulation := range simulations {
 		runconfigs := platform.ReadRunFile(deployP, simulation)
+
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-
 		deployP.Configure()
 
-		deployP.Stop()
+		deployP.Cleanup()
 
 		//testprint := strings.Replace(strings.Join(runconfigs, "--"), "\n", ", ", -1)
 		//dbg.Lvl3("Going to run tests for", simulation, testprint)
@@ -92,46 +99,99 @@ func Start(simulations []string) {
 // Runs the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, runconfigs []platform.RunConfig) {
-	s := stats{}
-	s.InitStats(name, runconfigs)
+
 	if nobuild == false {
 		deployP.Build(build)
 	}
 
 	MkTestDir()
+	rs := make([]Stats, len(runconfigs))
 	nTimes := 1
 	stopOnSuccess := true
-	for run, t := range runconfigs {
+	var f *os.File
+	// Write the header
+	firstStat := GetStats(runconfigs[0])
+	f, err := os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+	defer f.Close()
+	if err != nil {
+		log.Fatal("error opening test file:", err)
+	}
+	firstStat.WriteTo(f)
+	err = firstStat.ServerCSVHeader()
+	if err != nil {
+		log.Fatal("error writing test file header:", err)
+	}
+	err = f.Sync()
+	if err != nil {
+		log.Fatal("error syncing test file:", err)
+	}
+
+	for i, t := range runconfigs {
 		// run test t nTimes times
 		// take the average of all successful runs
-		var runs []RunStats
+		runs := make([]Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
-			run, err := RunTest(t)
+			stats, err := RunTest(t)
 			if err != nil {
 				log.Fatalln("error running test:", err)
 			}
 
-			if deployP.Stop() == nil {
-				runs = append(runs, run)
-				if stopOnSuccess {
-					break
-				}
-			} else {
-				dbg.Lvl1("Error for test ", r, " : ", err)
+			runs = append(runs, stats)
+			if stopOnSuccess {
+				break
 			}
 		}
 
-		s.WriteStats(run, runs)
+		if len(runs) == 0 {
+			dbg.Lvl1("unable to get any data for test:", t)
+			continue
+		}
+
+		s, err := AverageStats(runs...)
+		if err != nil {
+			dbg.Fatal("Could not average stats for test ", i)
+		}
+		rs[i] = s
+		rs[i].WriteTo(f)
+		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
+		err = rs[i].ServerCSV()
+		if err != nil {
+			log.Fatal("error writing data to test file:", err)
+		}
+		err = f.Sync()
+		if err != nil {
+			log.Fatal("error syncing data to test file:", err)
+		}
+
+		cl, err := os.OpenFile(
+			TestFile("client_latency_" + name + "_" + strconv.Itoa(i)),
+			os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+		if err != nil {
+			log.Fatal("error opening test file:", err)
+		}
+		defer cl.Close()
+		rs[i].WriteTo(cl)
+		err = rs[i].ClientCSVHeader()
+		err = rs[i].ClientCSV()
+		if err != nil {
+			log.Fatal("error writing client latencies to file:", err)
+		}
+		err = cl.Sync()
+		if err != nil {
+			log.Fatal("error syncing data to latency file:", err)
+		}
+
 	}
 }
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (RunStats, error) {
+func RunTest(rc platform.RunConfig) (Stats, error) {
 	done := make(chan struct{})
-	var rs RunStats
+	var rs Stats = GetStats(rc)
 
 	deployP.Deploy(rc)
+	deployP.Cleanup()
 	err := deployP.Start()
 	if err != nil {
 		log.Fatal(err)
@@ -139,7 +199,12 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 	}
 
 	go func() {
-		rs = Monitor()
+		if platform_dst == "deterlab" {
+			Monitor(rs)
+		} else {
+			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
+		}
+		deployP.Wait()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct{}{}
 	}()
@@ -147,73 +212,11 @@ func RunTest(rc platform.RunConfig) (RunStats, error) {
 	// timeout the command if it takes too long
 	select {
 	case <-done:
-		if platform_dst == "deterlab" && (isZero(rs.MinTime) || isZero(rs.MaxTime) || isZero(rs.AvgTime) || math.IsNaN(rs.Rate) || math.IsInf(rs.Rate, 0)) {
-			return rs, fmt.Errorf("unable to get good data: %+v", rs)
+		if platform_dst == "deterlab" && !rs.Valid() {
+			return rs, fmt.Errorf("unable to get good data:  %+v", rs)
 		}
 		return rs, nil
 	}
-}
-
-type stats struct {
-	rs         []RunStats
-	name       string
-	runconfigs []platform.RunConfig
-	file       *os.File
-}
-
-func (s *stats) InitStats(name string, runconfigs []platform.RunConfig) {
-	var err error
-	s.name = name
-	s.runconfigs = runconfigs
-	s.rs = make([]RunStats, len(runconfigs))
-	MkTestDir()
-	s.file, err = os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
-	if err != nil {
-		log.Fatal("error opening test file:", err)
-	}
-	_, err = s.file.Write(s.rs[0].CSVHeader())
-	if err != nil {
-		log.Fatal("error writing test file header:", err)
-	}
-	err = s.file.Sync()
-	if err != nil {
-		log.Fatal("error syncing test file:", err)
-	}
-}
-
-func (s *stats) WriteStats(run int, runs []RunStats) {
-	if len(runs) == 0 {
-		dbg.Lvl1("unable to get any data for test:", s.runconfigs[run])
-		return
-	}
-
-	s.rs[run] = RunStatsAvg(runs)
-	//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
-	_, err := s.file.Write(s.rs[run].CSV())
-	if err != nil {
-		log.Fatal("error writing data to test file:", err)
-	}
-	err = s.file.Sync()
-	if err != nil {
-		log.Fatal("error syncing data to test file:", err)
-	}
-
-	MkTestDir()
-	cl, err := os.OpenFile(
-		TestFile("client_latency_"+s.name+"_"+strconv.Itoa(run)),
-		os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
-	if err != nil {
-		log.Fatal("error opening test file:", err)
-	}
-	_, err = cl.Write(s.rs[run].TimesCSV())
-	if err != nil {
-		log.Fatal("error writing client latencies to file:", err)
-	}
-	err = cl.Sync()
-	if err != nil {
-		log.Fatal("error syncing data to latency file:", err)
-	}
-	cl.Close()
 }
 
 type runFile struct {

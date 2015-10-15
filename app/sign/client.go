@@ -1,20 +1,20 @@
 package main
 import (
-	"time"
-	"github.com/dedis/cothority/lib/logutils"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
 	"sync/atomic"
+	"time"
 
-	"strconv"
-	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
+	"strconv"
 )
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
-var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
+var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME/time.Second)
 var ROUND_TIME time.Duration = 1 * time.Second
 
 var done = make(chan string, 1)
@@ -22,7 +22,7 @@ var done = make(chan string, 1)
 func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	buck := make([]int64, 300)
 	roundsAfter := make([]int64, MAX_N_ROUNDS)
-	times := make([]int64, MAX_N_SECONDS * 1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
+	times := make([]int64, MAX_N_SECONDS*1000) // maximum number of milliseconds (maximum rate > 1 per millisecond)
 
 	dbg.Lvl1("Going to run client and asking servers to print")
 	time.Sleep(3 * time.Second)
@@ -56,17 +56,9 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		secToTimeStamp := t.Seconds()
 		secSinceFirst := time.Since(tFirst).Seconds()
 		atomic.AddInt64(&buck[int(secSinceFirst)], 1)
-		index := int(secToTimeStamp) / int(ROUND_TIME / time.Second)
+		index := int(secToTimeStamp) / int(ROUND_TIME/time.Second)
 		atomic.AddInt64(&roundsAfter[index], 1)
 		atomic.AddInt64(&times[i], t.Nanoseconds())
-		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "root_announce",
-			"round": i,
-			"time":  elapsed,
-		}).Info("")
-
-		//dSys, dUsr := app.GetDiffRTime(sys, usr)
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
 			"type":  "root_round",
@@ -85,7 +77,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	}).Info("")
 
 	// And tell everybody to quit
-	err := hc.SNodes[0].CloseAll(hc.SNodes[0].Round)
+	err := hc.SNodes[0].CloseAll(hc.SNodes[0].ViewNo)
 	if err != nil {
 		log.Fatal("Couldn't close:", err)
 	}
@@ -103,6 +95,5 @@ func removeTrailingZeroes(a []int64) []int64 {
 			break
 		}
 	}
-	return a[:i + 1]
+	return a[:i+1]
 }
-
