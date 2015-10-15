@@ -105,22 +105,6 @@ func signSystemPacket(sys SystemPacket, kp config.KeyPair) []byte {
 	return sig
 }
 
-// WaitConnection will simply wait on the default port for the development team
-// to contact it. WHen connection is made, it is returned.
-func waitConnection() net.Conn {
-	// Wait for any input connections
-	ln, err := net.Listen("tcp", ":"+strconv.Itoa(listenPort))
-	if err != nil {
-		dbg.Fatal("Could not listen for validation : ", err)
-	}
-	// Accept the one
-	conn, err := ln.Accept()
-	if err != nil {
-		dbg.Fatal("Could not accept an input connection : ", err)
-	}
-	return conn
-}
-
 // readKeyPair will read both private and public files
 // and returns a keypair containing the respective private and public keys
 func readKeyPair() config.KeyPair {
