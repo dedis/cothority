@@ -114,7 +114,7 @@ func GoLeader(conf *app.NaiveConfig) {
 
 	for round := 0; round < conf.Rounds; round++ {
 		now = time.Now()
-		sys, usr := app.GetRTime()
+		//sys, usr := app.GetRTime()
 		n := 0
 		faulty := 0
 		// launch a new round
@@ -144,13 +144,13 @@ func GoLeader(conf *app.NaiveConfig) {
 		wg.Wait()
 		dbg.Lvl2(leader.String(), "Round ", round, " received ", len(conf.Hosts)-1, "signatures (",
 			faulty, " faulty sign)")
-		dSys, dUsr := app.GetDiffRTime(sys, usr)
+		//dSys, dUsr := app.GetDiffRTime(sys, usr)
 		log.WithFields(log.Fields{
 			"file":  logutils.File(),
 			"type":  "basic_round",
 			"round": round,
-			//"time":  time.Since(now),
-			"time":  dSys + dUsr,
+			"time":  time.Since(now),
+			//"time":  (dSys + dUsr) * 1e9,
 		}).Info("")
 	}
 

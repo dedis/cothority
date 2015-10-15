@@ -53,7 +53,7 @@ const (
 	ShamirSign string = "shamir"
 	CollSign   string = "sign"
 	CollStamp  string = "stamp"
-	Naive 	   string = "naive"
+	Naive       string = "naive"
 	NTree      string = "ntree"
 )
 
