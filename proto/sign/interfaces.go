@@ -45,6 +45,8 @@ type Signer interface {
 	ViewChangeCh() chan string
 
 	Close()
+	CloseAll(int) error
+	GetView() int
 	Listen() error
 
 	AddSelf(host string) error
