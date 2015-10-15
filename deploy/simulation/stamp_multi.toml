@@ -1,6 +1,7 @@
 Machines = 8
-App = "sign"
-Rounds = 2
+App = "stamp"
+Rounds = 10
+Rate = 10
 Suite = "ed25519"
 
 hpn, bf

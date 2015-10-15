@@ -14,10 +14,6 @@ import (
 
 // Monitor monitors log aggregates results into RunStats
 func Monitor(stats Stats) {
-	if platform_dst != "deterlab" {
-		dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
-		return
-	}
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
 retry_dial:
@@ -40,7 +36,7 @@ retry_dial:
 			}
 			continue
 		}
-		dbg.Lvl5("Received msg", data)
+		dbg.Lvl5("Received msg", string(data))
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
 			dbg.Lvl2(
 				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)

@@ -60,11 +60,20 @@ func NewRunConfig() *RunConfig {
 // one could imagine EC2 or OpenStack or whatever you can as long as you
 // implement this interface !
 type Platform interface {
+	// Does the initial configuration of all structures needed for the platform
 	Configure()
+	// Builds all necessary binaries
 	Build(string) error
+	// Makes sure that there is no part of the application still running
+	Cleanup() error
+	// Copies the binaries to the appropriate directory/machines, together with
+	// the necessary configuration. RunConfig is a simple string that should
+	// be copied as 'app.toml' to the directory where the app resides
 	Deploy(RunConfig) error
+	// Starts the application and returns - non-blocking!
 	Start() error
-	Stop() error
+	// Waits for the application to quit
+	Wait() error
 }
 
 var deterlab string = "deterlab"
