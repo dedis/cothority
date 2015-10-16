@@ -102,24 +102,6 @@ func (sn *Node) get() error {
 					log.Errorln(sn.Name(), "announce error:", err)
 				}
 
-			case Challenge:
-				dbg.Lvl4(sn.Name(), "got challenge")
-				if !sn.IsParent(sm.View, sm.From) {
-					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
-					continue
-				}
-				sn.ReceivedHeartbeat(sm.View)
-
-				var err error
-				if sm.Chm.Vote != nil {
-					err = sn.Accept(sm.View, sm.Chm)
-				} else {
-					err = sn.Challenge(sm.View, sm.Chm)
-				}
-				if err != nil {
-					log.Errorln(sn.Name(), "challenge error:", err)
-				}
-
 			// if it is a commitment or response it is from the child
 			case Commitment:
 				dbg.Lvl4(sn.Name(), "got commitment")
@@ -137,6 +119,23 @@ func (sn *Node) get() error {
 				if err != nil {
 					log.Errorln(sn.Name(), "commit error:", err)
 				}
+			case Challenge:
+				dbg.Lvl4(sn.Name(), "got challenge")
+				if !sn.IsParent(sm.View, sm.From) {
+					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
+					continue
+				}
+				sn.ReceivedHeartbeat(sm.View)
+
+				var err error
+				if sm.Chm.Vote != nil {
+					err = sn.Accept(sm.View, sm.Chm)
+				} else {
+					err = sn.Challenge(sm.View, sm.Chm)
+				}
+				if err != nil {
+					log.Errorln(sn.Name(), "challenge error:", err)
+				}
 			case Response:
 				dbg.Lvl4(sn.Name(), "received response from", sm.From)
 				if !sn.IsChild(sm.View, sm.From) {
@@ -153,6 +152,9 @@ func (sn *Node) get() error {
 				if err != nil {
 					log.Errorln(sn.Name(), "response error:", err)
 				}
+			case SignatureBroadcast:
+				sn.ReceivedHeartbeat(sm.View)
+				err = sn.SignatureBroadcast(sm.View, sm.SBm)
 			case CatchUpReq:
 				v := sn.VoteLog.Get(sm.Cureq.Index)
 				ctx := context.TODO()
@@ -371,7 +373,7 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 		dbg.Lvl4(sn.Name(), "challenge: using merkle proofs")
 		// messages from clients, proofs computed
 		if sn.CommitedFor(round) {
-			if err := sn.SendLocalMerkleProof(view, chm); err != nil {
+			if err := sn.StoreLocalMerkleProof(view, chm); err != nil {
 				return err
 			}
 
@@ -527,6 +529,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 
 	// root reports round is done
 	if isroot {
+		sn.SignatureBroadcast(view, nil)
 		sn.done <- Round
 	}
 
@@ -627,10 +630,12 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 
 	if isroot {
 		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
+		/*
 		nel := len(round.ExceptionList)
 		nhl := len(sn.HostListOn(view))
 		p := strconv.FormatFloat(float64(nel) / float64(nhl), 'f', 6, 64)
 		log.Infoln(sn.Name(), "reports", nel, "out of", nhl, "percentage", p, "failed in round", Round)
+		*/
 		// dbg.Lvl4(round.MTRoot)
 	}
 	return nil
@@ -673,6 +678,54 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	return nil
 }
 
+func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage) error {
+	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
+
+	if sb == nil {
+		if sn.IsRoot(view) {
+			sb = &SignatureBroadcastMessage{
+				R0_hat: sn.suite.Secret().One(),
+				C:      sn.suite.Secret().One(),
+				X0_hat: sn.suite.Point().Null(),
+				V0_hat: sn.suite.Point().Null(),
+			}
+		}
+	}
+	// messages from clients, proofs computed
+	//if sn.CommitedFor(sn.Round) {
+	sn.SendLocalMerkleProof(view, sb)
+	//}
+
+	// Inform all children of announcement
+	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+	for i := range messgs {
+		sm := SigningMessage{
+			Type:         SignatureBroadcast,
+			View:         view,
+			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			SBm:          sb,
+		}
+		messgs[i] = &sm
+	}
+
+	if len(sn.Children(view)) > 0 {
+		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
+		ctx := context.TODO()
+		if err := sn.PutDown(ctx, view, messgs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+
+func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
+	if sn.DoneFunc != nil {
+		sn.DoneFunc(view, sn.MTRoot, nil, sn.Proof, sb)
+	}
+}
+
+
 func (sn *Node) CloseAll(view int) error {
 	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
 
@@ -702,7 +755,6 @@ func (sn *Node) CloseAll(view int) error {
 	dbg.Lvl3("Closing down shop", sn.Isclosed)
 	return nil
 }
-
 
 
 func (sn *Node) PutUpError(view int, err error) {
@@ -746,6 +798,6 @@ func (sn *Node) hashLog(Round int) ([]byte, error) {
 }
 
 // Getting actual View
-func (sn *Node)GetView() int{
+func (sn *Node)GetView() int {
 	return sn.ViewNo
 }

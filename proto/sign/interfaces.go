@@ -13,7 +13,8 @@ type CommitFunc func(view int) []byte
 
 // Called at the end of a round
 // Allows client of Signer to receive signature, proof, and error via RPC
-type DoneFunc func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof)
+type DoneFunc func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
+	signature *SignatureBroadcastMessage)
 
 // todo: see where Signer should be located
 type Signer interface {

@@ -3,6 +3,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"encoding/gob"
 	"bytes"
+	"github.com/dedis/cothority/proto/sign"
 )
 
 type MessageType int
@@ -21,8 +22,9 @@ type StampRequest struct {
 }
 
 type StampReply struct {
-	Sig []byte      // Signature on the root
-	Prf proof.Proof // Merkle proof of value
+	Sig      []byte                         // Signature on the root
+	Prf      proof.Proof                    // Merkle proof of value
+	SigBroad sign.SignatureBroadcastMessage // All other elements necessary
 }
 
 func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
@@ -43,6 +45,8 @@ func (Srep StampReply) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
 	err := enc.Encode(Srep.Sig)
+	err = enc.Encode(Srep.Prf)
+	err = enc.Encode(Srep.SigBroad)
 	return b.Bytes(), err
 }
 
@@ -50,15 +54,17 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
 	err := dec.Decode(&Srep.Sig)
+	err = dec.Decode(&Srep.Prf)
+	err = dec.Decode(&Srep.SigBroad)
 	return err
 }
 
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
-	// ErrorReply *ErrorReply // Generic error reply to any request
-	Type MessageType
-	Sreq *StampRequest
-	Srep *StampReply
+				// ErrorReply *ErrorReply // Generic error reply to any request
+	Type  MessageType
+	Sreq  *StampRequest
+	Srep  *StampReply
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
