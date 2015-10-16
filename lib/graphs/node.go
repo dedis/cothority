@@ -358,7 +358,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 		startTime := time.Duration(200)
 		maxTime := time.Duration(2000)
 		for i := 0; i < 2000; i++ {
-			dbg.Lvl3("Attempting to connect to parent", h)
+			dbg.Lvl3(h, "attempting to connect to parent")
 			// the host should connect with the parent
 			err = sn.Connect(0)
 			if err == nil {
@@ -387,7 +387,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 
 	if !stamper {
 		// This will call the dispatcher in collectiveSigning for every request
-		dbg.Lvl4("Starting to listen for", hostnames)
+		dbg.Lvl4("Starting to listen for incoming stamp-requests on", hostnames)
 		for _, sn := range hostnames {
 			go sn.Listen()
 		}

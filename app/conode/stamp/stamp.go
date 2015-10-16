@@ -37,7 +37,6 @@ import (
 // Flag-variables
 var stamp = ""
 var server = "localhost"
-var debug = 1
 var suiteString = "ed25519"
 var check = ""
 
@@ -45,7 +44,6 @@ func init() {
 	flag.StringVar(&stamp, "stamp", stamp, "Stamp that file")
 	flag.StringVar(&check, "verify", check, "Verify that a signature-file contains a valid signature")
 	flag.StringVar(&server, "server", server, "The server to connect to [localhost]")
-	flag.IntVar(&debug, "debug", debug, "Debug-level: 1 - few, 5 - lots")
 	flag.StringVar(&suiteString, "suite", suiteString, "Which suite to use [ed25519]")
 }
 
@@ -114,6 +112,7 @@ func StampFile(file, server string) {
 	if err != nil {
 		dbg.Fatal("Error while receiving signature")
 	}
+	dbg.Printf("%+v", tsm.Srep)
 
 	// Asking to close the connection
 	err = conn.Put(&defs.TimeStampMessage{

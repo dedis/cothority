@@ -84,7 +84,7 @@ func (sn *Node) get() error {
 			default:
 				continue
 			case Announcement:
-				dbg.Lvl4(sn.Name(), "got announcement")
+				dbg.Lvl2(sn.Name(), "got announcement")
 				sn.ReceivedHeartbeat(sm.View)
 
 				var err error
