@@ -9,4 +9,6 @@ type ConfigConode struct {
 	Suite string
 	// Tree for knowing whom to connect
 	Tree *graphs.Tree
+	// hosts
+	Hosts []string
 }

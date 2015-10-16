@@ -82,6 +82,13 @@ func (t *Tree) GenKeys(suite abstract.Suite, rand abstract.Cipher) {
 	})
 }
 
+func (t *Tree) Visit(fn func(*Tree)) {
+	fn(t)
+	for _, c := range t.Children {
+		c.Visit(fn)
+	}
+}
+
 func PrintTreeNode(t *Tree) {
 	fmt.Println(t.Name)
 

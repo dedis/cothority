@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
 	"net"
-	"strconv"
 )
 
 // This file handles the validation process
@@ -24,12 +23,13 @@ import (
 // Main entry point of the validation mode
 func Validation() {
 
-	// First, retrieve our public / private key pair
-	kp := readKeyPair()
+	// First, retrieve our public / private key pair + address for which it has
+	// been created
+	kp, addr := readKeyFile()
 	// Then wait for the connection
 
 	// Accept incoming connections
-	ln, err := net.Listen("tcp", ":"+strconv.Itoa(listenPort))
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		dbg.Fatal("Could not listen for validation : ", err)
 	}
@@ -69,7 +69,7 @@ func Validation() {
 		} else if ack.Code == SYS_WRONG_SOFT {
 			dbg.Lvl1(er + "SOFT limits")
 		} else if ack.Code == SYS_WRONG_SIG {
-			dbg.Lvl1(er + "Wrong signature !")
+			dbg.Lvl1(er + "signature !")
 		} else {
 			dbg.Lvl1("Validation received unknown ACK : type = ", ack.Type, " Code = ", ack.Code)
 			continue
@@ -107,12 +107,12 @@ func signSystemPacket(sys SystemPacket, kp config.KeyPair) []byte {
 
 // readKeyPair will read both private and public files
 // and returns a keypair containing the respective private and public keys
-func readKeyPair() config.KeyPair {
+func readKeyFile() (config.KeyPair, string) {
 	sec, err := cliutils.ReadPrivKey(suite, namePriv())
 	if err != nil {
 		dbg.Fatal("Could not read private key : ", err)
 	}
-	pub, _, err := cliutils.ReadPubKey(suite, namePub())
+	pub, addr, err := cliutils.ReadPubKey(suite, namePub())
 	if err != nil {
 		dbg.Fatal("Could not read public key : ", err)
 	}
@@ -120,5 +120,5 @@ func readKeyPair() config.KeyPair {
 		Suite:  suite,
 		Secret: sec,
 		Public: pub,
-	}
+	}, addr
 }
