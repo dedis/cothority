@@ -44,8 +44,15 @@ var regexpPaths, _ = regexp.Compile(".*/")
 func init(){
 }
 
+// Needs two functions to keep the caller-depth the same and find who calls us
+// Lvlf1 -> Lvlf -> Lvl
+// or
+// Lvl1 -> Lvld -> Lvl
+func Lvld(lvl int, args ...interface{}){
+	Lvl(lvl, args...)
+}
 func Lvl(lvl int, args ...interface{}) {
-	pc, _, line, _ := runtime.Caller(2)
+	pc, _, line, _ := runtime.Caller(3)
 	name := regexpPaths.ReplaceAllString(runtime.FuncForPC(pc).Name(), "")
 	lineStr := fmt.Sprintf("%d", line)
 
@@ -77,7 +84,7 @@ func Lvlf(lvl int, f string, args ...interface{}){
 }
 
 func Print(args ...interface{}) {
-	Lvl(-1, args...)
+	Lvld(-1, args...)
 }
 
 func Printf(f string, args ...interface{}) {
@@ -85,32 +92,32 @@ func Printf(f string, args ...interface{}) {
 }
 
 func Lvl1(args ...interface{}) {
-	Lvl(1, args...)
+	Lvld(1, args...)
 }
 
 func Lvl2(args ...interface{}) {
-	Lvl(2, args...)
+	Lvld(2, args...)
 }
 
 func Lvl3(args ...interface{}) {
-	Lvl(3, args...)
+	Lvld(3, args...)
 }
 
 func Lvl4(args ...interface{}) {
-	Lvl(4, args...)
+	Lvld(4, args...)
 }
 
 func Lvl5(args ...interface{}) {
-	Lvl(5, args...)
+	Lvld(5, args...)
 }
 
 func Fatal(args ...interface{}){
-	Lvl(0, args...)
+	Lvld(0, args...)
 	os.Exit(1)
 }
 
 func Panic(args ...interface{}){
-	Lvl(0, args...)
+	Lvld(0, args...)
 	panic(args)
 }
 
