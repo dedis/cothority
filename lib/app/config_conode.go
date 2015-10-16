@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/crypto/abstract"
 )
 
 type ConfigConode struct {
@@ -11,4 +12,9 @@ type ConfigConode struct {
 	Tree *graphs.Tree
 	// hosts
 	Hosts []string
+
+	////// Only used during process and never written to file /////
+	// Private / public keys
+	Secret abstract.Secret
+	Public abstract.Point
 }

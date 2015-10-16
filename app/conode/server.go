@@ -303,34 +303,10 @@ func (s *Server) Run(role string) {
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()
-	if role == "test_connect" {
-		role = "regular"
-		go func() {
-			//time.Sleep(30 * time.Second)
-			hostlist := s.Hostlist()
-			ticker := time.Tick(15 * time.Second)
-			i := 0
-			for _ = range ticker {
-				select {
-				case <-closed:
-					dbg.Lvl4("server.Run: received closed")
-					return
-				default:
-				}
-				if i%2 == 0 {
-					dbg.Lvl4("removing self")
-					s.Signer.RemoveSelf()
-				} else {
-					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
-					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
-				}
-				i++
-			}
-		}()
-	}
 	s.rLock.Lock()
+
 	// TODO: remove this hack
-	s.maxRounds = 1000000000
+	s.maxRounds = 5
 	s.rLock.Unlock()
 
 	var nextRole string // next role when view changes
@@ -343,12 +319,6 @@ func (s *Server) Run(role string) {
 		case "regular":
 			dbg.Lvl4("running as regular")
 			nextRole = s.runAsRegular()
-		case "test":
-			dbg.Lvl4("running as test")
-			ticker := time.Tick(2000 * time.Millisecond)
-			for _ = range ticker {
-				s.AggregateCommits(0)
-			}
 		default:
 			dbg.Fatal("Unable to run as anything")
 			return

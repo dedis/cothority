@@ -2,11 +2,13 @@ package cliutils
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -58,12 +60,10 @@ func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string, prep
 	}
 	pubFile.WriteString(prepend + " ")
 
-	encoder := base64.NewEncoder(base64.StdEncoding, pubFile)
-	err = suite.Write(encoder, pub)
+	err = WritePub64(pubFile, suite, pub)
 	if err != nil {
 		return err
 	}
-	encoder.Close()
 
 	return nil
 }
@@ -115,12 +115,45 @@ func ReadPubKey(suite abstract.Suite, fileName string) (abstract.Point, string, 
 	key := strings.NewReader(splits[1])
 
 	// Some readings
-	dec := base64.NewDecoder(base64.StdEncoding, key)
-	err = suite.Read(dec, &public)
+	public, err = ReadPub64(key, suite)
 	if err != nil {
 		return nil, "", errors.New(fmt.Sprintf("Error reading the public key itself : %s", err))
 	}
 
 	return public, before, nil
 
+}
+
+// Read a public point to a base64 representation
+func ReadPub64(r io.Reader, suite abstract.Suite) (abstract.Point, error) {
+	public := suite.Point()
+	dec := base64.NewDecoder(base64.StdEncoding, r)
+	err := suite.Read(dec, &public)
+	return public, err
+}
+
+// Write a public point to a base64 representation
+func WritePub64(w io.Writer, suite abstract.Suite, point abstract.Point) error {
+	enc := base64.NewEncoder(base64.StdEncoding, w)
+	err := suite.Write(enc, point)
+	enc.Close()
+	return err
+}
+
+// COnvert a Public point to a hexadecimal reprensation
+func PubHex(suite abstract.Suite, point abstract.Point) (string, error) {
+	pbuf, err := point.MarshalBinary()
+	return hex.EncodeToString(pbuf), err
+}
+
+// Read a hexadecimal representation of a public point and convert it to the
+// right struct
+func ReadPubHex(s string, suite abstract.Suite) (abstract.Point, error) {
+	encoded, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+	point := suite.Point()
+	err = point.UnmarshalBinary(encoded)
+	return point, err
 }

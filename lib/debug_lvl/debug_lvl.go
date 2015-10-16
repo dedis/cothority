@@ -1,11 +1,13 @@
 package debug_lvl
+
 import (
-	"fmt"
 	"bytes"
+	"flag"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"os"
-	"runtime"
 	"regexp"
+	"runtime"
 )
 
 // These are information-debugging levels that can be turned on or off.
@@ -34,14 +36,15 @@ var StaticMsg = ""
 
 // Holds the logrus-structure to do our logging
 var DebugLog = &logrus.Logger{
-	Out: os.Stdout,
+	Out:       os.Stdout,
 	Formatter: &DebugLvl{},
-	Hooks: make(logrus.LevelHooks),
-	Level: logrus.InfoLevel}
+	Hooks:     make(logrus.LevelHooks),
+	Level:     logrus.InfoLevel}
 
 var regexpPaths, _ = regexp.Compile(".*/")
 
-func init(){
+func init() {
+	flag.IntVar(&DebugVisible, "debug", DebugVisible, "How much debug you from 1 (discrete) - 5 (very noisy). Default 1")
 }
 
 func Lvl(lvl int, args ...interface{}) {
@@ -56,23 +59,23 @@ func Lvl(lvl int, args ...interface{}) {
 		line = 0
 	}
 
-	if len(name) > NamePadding && NamePadding > 0{
+	if len(name) > NamePadding && NamePadding > 0 {
 		NamePadding = len(name)
 	}
-	if len(lineStr) > LinePadding && LinePadding > 0{
+	if len(lineStr) > LinePadding && LinePadding > 0 {
 		LinePadding = len(name)
 	}
 	fmtstr := fmt.Sprintf("%%%ds: %%%dd", NamePadding, LinePadding)
 	caller := fmt.Sprintf(fmtstr, name, line)
-	if StaticMsg != ""{
+	if StaticMsg != "" {
 		caller += "@" + StaticMsg
 	}
 	DebugLog.WithFields(logrus.Fields{
 		"debug_lvl": lvl,
-		"caller": caller}).Println(args...)
+		"caller":    caller}).Println(args...)
 }
 
-func Lvlf(lvl int, f string, args ...interface{}){
+func Lvlf(lvl int, f string, args ...interface{}) {
 	Lvl(lvl, fmt.Sprintf(f, args...))
 }
 
@@ -104,12 +107,12 @@ func Lvl5(args ...interface{}) {
 	Lvl(5, args...)
 }
 
-func Fatal(args ...interface{}){
+func Fatal(args ...interface{}) {
 	Lvl(0, args...)
 	os.Exit(1)
 }
 
-func Panic(args ...interface{}){
+func Panic(args ...interface{}) {
 	Lvl(0, args...)
 	panic(args)
 }
@@ -134,12 +137,12 @@ func Lvlf5(f string, args ...interface{}) {
 	Lvlf(5, f, args...)
 }
 
-func Fatalf(f string, args ...interface{}){
+func Fatalf(f string, args ...interface{}) {
 	Lvlf(0, f, args...)
 	os.Exit(1)
 }
 
-func Panicf(f string, args ...interface{}){
+func Panicf(f string, args ...interface{}) {
 	Lvlf(0, f, args...)
 	panic(args)
 }
@@ -148,16 +151,16 @@ func Panicf(f string, args ...interface{}){
 // Just add an additional "L" in front, and remove it later:
 // - easy hack to turn on other debug-messages
 // - easy removable by searching/replacing 'LLvl' with 'Lvl'
-func LLvl1(args ...interface{}){Lvl(-1, args...)}
-func LLvl2(args ...interface{}){Lvl(-1, args...)}
-func LLvl3(args ...interface{}){Lvl(-1, args...)}
-func LLvl4(args ...interface{}){Lvl(-1, args...)}
-func LLvl5(args ...interface{}){Lvl(-1, args...)}
-func LLvlf1(f string, args ...interface{}){Lvlf(-1, f, args...)}
-func LLvlf2(f string, args ...interface{}){Lvlf(-1, f, args...)}
-func LLvlf3(f string, args ...interface{}){Lvlf(-1, f, args...)}
-func LLvlf4(f string, args ...interface{}){Lvlf(-1, f, args...)}
-func LLvlf5(f string, args ...interface{}){Lvlf(-1, f, args...)}
+func LLvl1(args ...interface{})            { Lvl(-1, args...) }
+func LLvl2(args ...interface{})            { Lvl(-1, args...) }
+func LLvl3(args ...interface{})            { Lvl(-1, args...) }
+func LLvl4(args ...interface{})            { Lvl(-1, args...) }
+func LLvl5(args ...interface{})            { Lvl(-1, args...) }
+func LLvlf1(f string, args ...interface{}) { Lvlf(-1, f, args...) }
+func LLvlf2(f string, args ...interface{}) { Lvlf(-1, f, args...) }
+func LLvlf3(f string, args ...interface{}) { Lvlf(-1, f, args...) }
+func LLvlf4(f string, args ...interface{}) { Lvlf(-1, f, args...) }
+func LLvlf5(f string, args ...interface{}) { Lvlf(-1, f, args...) }
 
 type DebugLvl struct {
 }
@@ -177,10 +180,9 @@ func (f *DebugLvl) Format(entry *logrus.Entry) ([]byte, error) {
 			return b.Bytes(), nil
 		}
 	} else {
-		if len(entry.Message) > 2048  && DebugVisible > 1{
+		if len(entry.Message) > 2048 && DebugVisible > 1 {
 			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(entry.Message))
 		}
 		return nil, nil
 	}
 }
-

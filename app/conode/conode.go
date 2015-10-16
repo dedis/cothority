@@ -13,10 +13,11 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"net"
 	"strconv"
+	"strings"
 )
 
 // which mode are we running
-var key, validate bool
+var keygen, validate bool
 var check, build string
 
 // Which suite to use
@@ -28,16 +29,16 @@ var suite abstract.Suite
 var address string = ""
 
 // where to write the key file .priv + .pub
-var out string = "key"
+var key string = "key"
 
 // Returns the name of the file for the private key
 func namePriv() string {
-	return out + ".priv"
+	return key + ".priv"
 }
 
 // Returns the name of the file for the public key
 func namePub() string {
-	return out + ".pub"
+	return key + ".pub"
 }
 
 ///////////////////////
@@ -45,8 +46,9 @@ func namePub() string {
 // Init function set up the flag reading
 func init() {
 	flag.StringVar(&suiteString, "suite", suiteString, "Suite to use throughout the process [ed25519]")
-	flag.BoolVar(&key, "key", false, "Key will generate the keys that will be used in the cothority project and will write them to files\n")
-	flag.StringVar(&address, "address", "", "External IP address so we know who you are. If not supplied when calling 'key' or in run mode, it will panic!")
+	flag.BoolVar(&keygen, "keygen", false, "Keygen will generate the keys that will be used in the cothority project and will write them to files\n")
+	flag.StringVar(&key, "key", key, "key is where to read / write for key files. Convention is [key].priv and [key].pub for private / public key. Default is 'key'.")
+	flag.StringVar(&address, "address", "", "External IP address so we know who you are. If not supplied when calling 'key',it will panic!")
 	flag.BoolVar(&validate, "validate", false, "Validate waits for the connection of a verifier / checker from the head of the cothority project.\n"+
 		"\tIt will send some systems stats and a signature on it in order to verify the public / private keys.\n")
 	flag.StringVar(&check, "check", "", "ip_address:port [-public publicFile]\n"+
@@ -66,7 +68,7 @@ func main() {
 	verifyArgs()
 
 	switch {
-	case key:
+	case keygen:
 		KeyGeneration()
 	case validate:
 		Validation()
@@ -76,11 +78,24 @@ func main() {
 		Build(build)
 	default:
 		dbg.Lvl1("Starting conode -> in run mode")
+		// Read the global config
 		conf := &app.ConfigConode{}
 		if err := app.ReadTomlConfig(conf, configFile); err != nil {
 			dbg.Fatal("Could not read toml config... : ", err)
 		}
 		dbg.Lvl1("Configuration file read")
+		// Read the private / public keys + binded address
+		if sec, err := cliutils.ReadPrivKey(suite, namePriv()); err != nil {
+			dbg.Fatal("Error reading private key file  :", err)
+		} else {
+			conf.Secret = sec
+		}
+		if pub, addr, err := cliutils.ReadPubKey(suite, namePub()); err != nil {
+			dbg.Fatal("Error reading public key file :", err)
+		} else {
+			conf.Public = pub
+			address = addr
+		}
 		RunServer(conf)
 	}
 }
@@ -126,6 +141,11 @@ func RunServer(conf *app.ConfigConode) {
 	if err != nil {
 		dbg.Fatal(err)
 	}
+
+	// For retro compatibility issues, convert the base64 encoded key into hex
+	// encoded keys....
+	convertTree(conf.Tree)
+
 	// load the configuration
 	//dbg.Lvl3("loading configuration")
 	var hc *graphs.HostConfig
@@ -214,4 +234,22 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 	}
 
 	return stampers, nil
+}
+
+// Simple ephemereal helper for comptability issues
+// From base64 => hexadecimal
+func convertTree(t *graphs.Tree) {
+	point, err := cliutils.ReadPub64(strings.NewReader(t.PubKey), suite)
+	if err != nil {
+		dbg.Fatal("Could not decode base64 public key")
+	}
+
+	str, err := cliutils.PubHex(suite, point)
+	if err != nil {
+		dbg.Fatal("Could not encode point to hexadecimal ")
+	}
+	t.PubKey = str
+	for _, c := range t.Children {
+		convertTree(c)
+	}
 }

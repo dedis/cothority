@@ -197,8 +197,10 @@ func ConstructTree(
 			log.Error("failed to decode point from hex")
 			return 0, err
 		}
+	}
+	if len(node.PriKey) != 0 {
 		// dbg.Lvl4("decoding point")
-		encoded, err = hex.DecodeString(string(node.PriKey))
+		encoded, err := hex.DecodeString(string(node.PriKey))
 		if err != nil {
 			log.Error("failed to decode hex from encoded")
 			return 0, err
@@ -481,7 +483,6 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 		}
 	}
 
-
 	suite := edwards.NewAES128SHA256Ed25519(true)
 	//suite := nist.NewAES128SHA256P256()
 	if opts.Suite != nil {
@@ -493,7 +494,7 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 	start := time.Now()
 	if opts.NoTree == false {
 		_, err := ConstructTree(appTree, hc, "", suite, rand, hosts, nameToAddr, opts)
-		if err != nil{
+		if err != nil {
 			dbg.Fatal("Couldn't construct tree:", err)
 		}
 	}
@@ -508,7 +509,6 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 		hostList = append(hostList, h)
 	}
 
-
 	for _, sn := range hc.SNodes {
 		sn.HostList = make([]string, len(hostList))
 		sortable := sort.StringSlice(hostList)
@@ -521,4 +521,3 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 
 	return hc, nil
 }
-

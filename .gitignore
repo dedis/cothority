@@ -17,5 +17,5 @@ deploy/matplotlib/*csv
 deploy/matplotlib/*png
 deploy/matplotlib/imgs
 test/
-key.*
+app/conode/key*
 app/conode/conode
