@@ -1,3 +1,23 @@
+/*
+ * Stamp - works together with a cothority-tree to sign a file. It can also verify
+ * that a signature is valid.
+ *
+ * # Signature
+ * For use in signature, run
+ * ```./stamp -stamp <file>```
+ * It will connect to the stampserver running on the localhost. If you want to
+ * connect to another stampserver, you can give the address with the ```-server```
+ * argument.
+ * At the end a file signature.sig will be generated which holds all necessary
+ * information necessary to check the signature.
+ *
+ * # Verification
+ * If you want to verify whether a file is correctly signed, you can run
+ * ```./stamp -verify <file.sig>```
+ * which will tell whether the signature is valid. If the file referenced in the
+ * file.sig is in the current directoy, it will also check it's hash.
+ */
+
 package main
 import (
 	"flag"
@@ -5,42 +25,72 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/app/conode/defs"
-	"os"
 	"strings"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/coconet"
 	"encoding/base64"
+	"io"
+	"os"
+	"bytes"
 )
 
-var file string
-var server string
-var debug int
-var suiteString string = "ed25519"
-var suite abstract.Suite
+// Flag-variables
+var stamp = ""
+var server = "localhost"
+var debug = 1
+var suiteString = "ed25519"
+var check = ""
 
 func init() {
-	flag.StringVar(&file, "file", "", "The file to be stamped")
-	flag.StringVar(&server, "server", "localhost", "The server to connect to")
-	flag.IntVar(&debug, "debug", 1, "Debug-level: 1 - few, 5 - lots")
+	flag.StringVar(&stamp, "stamp", stamp, "Stamp that file")
+	flag.StringVar(&check, "verify", check, "Verify that a signature-file contains a valid signature")
+	flag.StringVar(&server, "server", server, "The server to connect to [localhost]")
+	flag.IntVar(&debug, "debug", debug, "Debug-level: 1 - few, 5 - lots")
 	flag.StringVar(&suiteString, "suite", suiteString, "Which suite to use [ed25519]")
 }
 
+// For the file-output we want a structure with base64-encoded strings, so it can be
+// easily copy/pasted
+type SignatureFile struct {
+	// name of the file
+	Name      string
+	// hash of our file
+	Hash      string
+	// the inclusion-proof
+	Proof     string
+	// signature returned by the root-node
+	Signature string
+}
 
+// Our crypto-suite used in the program
+var suite abstract.Suite
+
+// If the server is only given with it's hostname, it supposes that the stamp
+// server is run on port 2001. Else you will have to add the port yourself.
 func main() {
 	flag.Parse()
-	if file == "" {
-		dbg.Fatal("Please give a filename")
-	}
-	if server == "" {
-		server = "localhost"
-	}
 	if ! strings.Contains(server, ":") {
 		server += ":2001"
 	}
 
 	suite = app.GetSuite(suiteString)
 
-	// Then get a connection
+	switch{
+	case stamp != "":
+		StampFile(stamp, server)
+	case check != "":
+		VerifySignature(check)
+	}
+
+}
+
+// Takes a 'file' to hash and being stamped at the 'server'. The output of the
+// signing will be written to 'file'.sig
+func StampFile(file, server string) {
+	// Create the hash of the file and send it over the net
+	myHash := hashFile(file)
+
+	// First get a connection
 	dbg.Lvl1("Connecting to", server)
 	conn := coconet.NewTCPConn(server)
 	err := conn.Connect()
@@ -48,9 +98,6 @@ func main() {
 		dbg.Fatal("Error when getting the connection to the host:", err)
 	}
 
-	// Creating the hash of the file and send it over the net
-
-	var myHash hashid.HashId
 	msg := &defs.TimeStampMessage{
 		Type:  defs.StampRequestType,
 		ReqNo: 0,
@@ -75,33 +122,115 @@ func main() {
 	})
 	conn.Close()
 
-	err = verifySignature(myHash, tsm.Srep)
-	if err != nil{
-		dbg.Fatal("Verification of signature failde:", err)
+	// Verify if what we received is correct
+	if !verifySignature(myHash, tsm.Srep){
+		dbg.Fatal("Verification of signature failed")
 	}
 
-	// Print to the screen, and write to file
-	dbg.Printf("%+v", tsm)
-	f, err := os.Create("signature.sign")
+	// Write the signature to the file
+	err = WriteSignatureFile(file + ".sig", stamp, myHash, tsm.Srep)
 	if err != nil {
-		dbg.Fatal("Couldn't create signature.sign")
+		dbg.Fatal("Couldn't write file", err)
 	}
-	file := base64.NewEncoder(base64.StdEncoding, f)
 
-	err = suite.Write(file, msg.Sreq)
-	if err != nil {
-		dbg.Fatal("Couldn't write to file")
-	}
-	err = suite.Write(file, tsm.Srep)
-	if err != nil {
-		dbg.Fatal("Couldn't write to file")
-	}
-	file.Close()
-	f.Close()
 	dbg.Print("All done - file is written")
 }
 
-func verifySignature(message hashid.HashId, reply defs.StampReply) error{
+// Takes a signature-file and checks the information therein. If the file referenced
+// in 'sigFile' is available, the hash is also checkd.
+func VerifySignature(sigFile string) bool {
+	err, file, hashOrig, reply := ReadSignatureFile(sigFile)
+	if err != nil {
+		dbg.Fatal("Couldn't read signature-file", sigFile)
+	}
+
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		dbg.Lvl1("Didn't find the signed file in our directory:", file)
+	} else {
+		hash := hashFile(file)
+		if bytes.Compare(hash, hashOrig) == 0 {
+			dbg.Lvl1("Hash-check: passed")
+		} else {
+			dbg.Lvl1("Hash-check: FAILED")
+			dbg.Lvl1("If you want to check the correctness of the signature, please\n" +
+			"remove the file", file)
+			return false
+		}
+	}
+	return verifySignature(hashOrig, reply)
+}
+
+// Verifies that the 'message' is included in the signature and that it
+// is correct.
+func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 	dbg.Lvl1("Not checking signature")
+	return true
+}
+
+// Takes the different part of the signature and writes them to a toml-
+// file in copy/pastable base64
+func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampReply) error {
+	p := ""
+	dbg.Printf("%+v", stamp.Prf)
+	for _, pr := range (stamp.Prf) {
+		p += base64.StdEncoding.EncodeToString(pr) + " "
+	}
+	sigStr := &SignatureFile{
+		Name:file,
+		Hash:base64.StdEncoding.EncodeToString(hash),
+		Proof:base64.StdEncoding.EncodeToString([]byte(p)),
+		Signature:base64.StdEncoding.EncodeToString(stamp.Sig),
+	}
+
+	// Print to the screen, and write to file
+	dbg.Printf("Signature-file will be:\n%+v", sigStr)
+
+	app.WriteTomlConfig(sigStr, nameSig)
 	return nil
+}
+
+// The inverse of 'WriteSignatureFile' where each field of the toml-file is
+// decoded and put back in a 'StampReply'-structure
+func ReadSignatureFile(name string) (error, string, []byte, *defs.StampReply) {
+	// Read in the toml-file
+	sigStr := &SignatureFile{}
+	err := app.ReadTomlConfig(sigStr, name)
+	if err != nil {
+		return err, "", nil, nil
+	}
+
+	reply := &defs.StampReply{}
+	// Convert fields from Base64 to binary
+	hash, err := base64.StdEncoding.DecodeString(sigStr.Hash)
+	for _, pr := range (strings.Fields(sigStr.Proof)) {
+		pro, err := base64.StdEncoding.DecodeString(pr)
+		if err != nil {
+			dbg.Lvl1("Couldn't decode proof:", pr)
+			return err, "", nil, nil
+		}
+		reply.Prf = append(reply.Prf, pro)
+	}
+	reply.Sig, err = base64.StdEncoding.DecodeString(sigStr.Signature)
+	return nil, sigStr.Name, hash, reply
+}
+
+// Takes a file to be hashed - reads in chunks of 1MB
+func hashFile(name string) []byte {
+	hash := suite.Hash()
+	file, err := os.Open(name)
+	if err != nil {
+		dbg.Fatal("Couldn't open file", name)
+	}
+
+	buflen := 1024 * 1024
+	buf := make([]byte, buflen)
+	read := buflen
+	for read == buflen {
+		read, err = file.Read(buf)
+		if err != nil && err != io.EOF {
+			dbg.Fatal("Error while reading bytes")
+		}
+		hash.Write(buf)
+	}
+	return hash.Sum(nil)
 }
