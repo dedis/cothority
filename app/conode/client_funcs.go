@@ -12,6 +12,7 @@ import (
 
 	"github.com/dedis/cothority/lib/coconet"
 	"fmt"
+	"github.com/dedis/cothority/app/conode/defs"
 )
 
 type Client struct {
@@ -22,12 +23,12 @@ type Client struct {
 
 										// client history maps request numbers to replies from TSServer
 										// maybe at later phases we will want pair(reqno, TSServer) as key
-	history     map[SeqNo]TimeStampMessage
-	reqno       SeqNo                   // next request number in communications with TSServer
+	history     map[defs.SeqNo]defs.TimeStampMessage
+	reqno       defs.SeqNo                   // next request number in communications with TSServer
 
 										// maps response request numbers to channels confirming
 										// where response confirmations are sent
-	doneChan    map[SeqNo]chan error
+	doneChan    map[defs.SeqNo]chan error
 
 	nRounds     int                     // # of last round messages were received in, as perceived by client
 	curRoundSig []byte                  // merkle tree root of last round
@@ -38,8 +39,8 @@ type Client struct {
 func NewClient(name string) (c *Client) {
 	c = &Client{name: name}
 	c.Servers = make(map[string]coconet.Conn)
-	c.history = make(map[SeqNo]TimeStampMessage)
-	c.doneChan = make(map[SeqNo]chan error)
+	c.history = make(map[defs.SeqNo]defs.TimeStampMessage)
+	c.doneChan = make(map[defs.SeqNo]chan error)
 	// c.roundChan = make(chan int)
 	return
 }
@@ -56,7 +57,7 @@ func (c *Client) Close() {
 
 func (c *Client) handleServer(s coconet.Conn) error {
 	for {
-		tsm := &TimeStampMessage{}
+		tsm := &defs.TimeStampMessage{}
 		err := s.Get(tsm)
 		if err != nil {
 			if err == coconet.ErrNotEstablished {
@@ -70,11 +71,11 @@ func (c *Client) handleServer(s coconet.Conn) error {
 }
 
 // Act on type of response received from srrvr
-func (c *Client) handleResponse(tsm *TimeStampMessage) {
+func (c *Client) handleResponse(tsm *defs.TimeStampMessage) {
 	switch tsm.Type {
 	default:
 		log.Println("Message of unknown type")
-	case StampReplyType:
+	case defs.StampReplyType:
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received
 		// we know that there is no error at this point
@@ -151,10 +152,10 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.Mux.Unlock()
 	// send request to TSServer
 	err := c.PutToServer(TSServerName,
-		&TimeStampMessage{
-			Type:  StampRequestType,
+		&defs.TimeStampMessage{
+			Type:  defs.StampRequestType,
 			ReqNo: myReqno,
-			Sreq:  &StampRequest{Val: val}})
+			Sreq:  &defs.StampRequest{Val: val}})
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
 			dbg.Lvl3(c.Name(), "error timestamping to ", TSServerName, ": ", err)
@@ -190,7 +191,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	return err
 }
 
-func (c *Client) ProcessStampReply(tsm *TimeStampMessage) {
+func (c *Client) ProcessStampReply(tsm *defs.TimeStampMessage) {
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm

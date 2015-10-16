@@ -116,6 +116,8 @@ func (s *Server) Listen() error {
 						switch tsm.Type {
 						default:
 							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
+							c.Close()
+							return
 						case StampRequestType:
 							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()

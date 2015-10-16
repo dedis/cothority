@@ -14,31 +14,32 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/app/conode/defs"
 )
 
 type Server struct {
 	sign.Signer
-	name    string
-	Clients map[string]coconet.Conn
+	name       string
+	Clients    map[string]coconet.Conn
 
-	// for aggregating messages from clients
+							   // for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
 	READING    int
 	PROCESSING int
 
-	// Leaves, Root and Proof for a round
-	Leaves []hashid.HashId // can be removed after we verify protocol
-	Root   hashid.HashId
-	Proofs []proof.Proof
+							   // Leaves, Root and Proof for a round
+	Leaves     []hashid.HashId // can be removed after we verify protocol
+	Root       hashid.HashId
+	Proofs     []proof.Proof
 
-	rLock     sync.Mutex
-	maxRounds int
-	closeChan chan bool
+	rLock      sync.Mutex
+	maxRounds  int
+	closeChan  chan bool
 
-	Logger   string
-	Hostname string
-	App      string
+	Logger     string
+	Hostname   string
+	App        string
 }
 
 func NewServer(signer sign.Signer) *Server {
@@ -62,7 +63,7 @@ func NewServer(signer sign.Signer) *Server {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s.name = net.JoinHostPort(h, strconv.Itoa(i+1))
+		s.name = net.JoinHostPort(h, strconv.Itoa(i + 1))
 	}
 	s.Queue[s.READING] = make([]MustReplyMessage, 0)
 	s.Queue[s.PROCESSING] = make([]MustReplyMessage, 0)
@@ -90,7 +91,7 @@ func (s *Server) Listen() error {
 
 	go func() {
 		for {
-			// dbg.Lvl4("LISTENING TO CLIENTS: %p", s)
+			dbg.LLvl2("Listening to sign-requests: %p", s)
 			conn, err := ln.Accept()
 			if err != nil {
 				// handle error
@@ -99,35 +100,38 @@ func (s *Server) Listen() error {
 			}
 
 			c := coconet.NewTCPConnFromNet(conn)
-			// dbg.Lvl4("CLIENT TCP CONNECTION SUCCESSFULLY ESTABLISHED:", c)
+			dbg.LLvl2("Established connection with client:", c)
 
 			if _, ok := s.Clients[c.Name()]; !ok {
 				s.Clients[c.Name()] = c
 
 				go func(c coconet.Conn) {
 					for {
-						tsm := TimeStampMessage{}
+						tsm := defs.TimeStampMessage{}
 						err := c.Get(&tsm)
 						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child:", s, err)
+							dbg.Lvlf1("%p Failed to get from child: %s", s, err)
 							s.Close()
 							return
 						}
 						switch tsm.Type {
 						default:
 							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
-						case StampRequestType:
+						case defs.StampRequestType:
 							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
 							READING := s.READING
 							s.Queue[READING] = append(s.Queue[READING],
 								MustReplyMessage{Tsm: tsm, To: c.Name()})
 							s.mux.Unlock()
+						case defs.StampClose:
+							dbg.LLvl2("Closing connection")
+							s.Close()
+							return
 						}
 					}
 				}(c)
 			}
-
 		}
 	}()
 
@@ -141,7 +145,7 @@ func (s *Server) ListenToClients() {
 	for _, c := range s.Clients {
 		go func(c coconet.Conn) {
 			for {
-				tsm := TimeStampMessage{}
+				tsm := defs.TimeStampMessage{}
 				err := c.Get(&tsm)
 				if err == coconet.ErrClosed {
 					dbg.Lvlf1("%p Failed to get from client:", s, err)
@@ -154,7 +158,7 @@ func (s *Server) ListenToClients() {
 				switch tsm.Type {
 				default:
 					dbg.Lvl1("Message of unknown type")
-				case StampRequestType:
+				case defs.StampRequestType:
 					// dbg.Lvl4("STAMP REQUEST")
 					s.mux.Lock()
 					READING := s.READING
@@ -215,7 +219,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound()+1 > nRounds {
+	if s.LastRound() + 1 > nRounds {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
@@ -226,11 +230,11 @@ func (s *Server) runAsRoot(nRounds int) string {
 		case nextRole := <-s.ViewChangeCh():
 			dbg.Lvl4(s.Name(), "assuming next role")
 			return nextRole
-			// s.reRunWith(nextRole, nRounds, true)
+		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
 			start := time.Now()
-			dbg.Lvl4(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound()+1, "of", nRounds)
+			dbg.Lvl4(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound() + 1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -259,8 +263,8 @@ func (s *Server) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound()+1 >= nRounds {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
+			if s.LastRound() + 1 >= nRounds {
+				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound() + 1, ">=", nRounds)
 				return "close"
 			}
 
@@ -313,12 +317,12 @@ func (s *Server) Run(role string, nRounds int) {
 					return
 				default:
 				}
-				if i%2 == 0 {
+				if i % 2 == 0 {
 					dbg.Lvl4("removing self")
 					s.Signer.RemoveSelf()
 				} else {
-					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
-					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
+					dbg.Lvl4("adding self: ", hostlist[(i / 2) % len(hostlist)])
+					s.Signer.AddSelf(hostlist[(i / 2) % len(hostlist)])
 				}
 				i++
 			}
@@ -386,10 +390,10 @@ func (s *Server) OnDone() sign.DoneFunc {
 				proof.CheckProof(s.Signer.(*sign.Node).Suite().Hash, SNRoot, s.Leaves[i], combProof)
 			}
 
-			respMessg := TimeStampMessage{
-				Type:  StampReplyType,
+			respMessg := defs.TimeStampMessage{
+				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &StampReply{Sig: SNRoot, Prf: combProof}}
+				Srep:  &defs.StampReply{Sig: SNRoot, Prf: combProof}}
 
 			s.PutToClient(msg.To, respMessg)
 		}
@@ -441,7 +445,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	s.Root, s.Proofs = proof.ProofTree(s.Suite().Hash, s.Leaves)
 	if sign.DEBUG == true {
 		if proof.CheckLocalProofs(s.Suite().Hash, s.Root, s.Leaves, s.Proofs) == true {
-			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
+			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round " + strconv.Itoa(int(s.LastRound())))
 		} else {
 			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}

@@ -41,11 +41,11 @@ func WritePrivKey(priv abstract.Secret, suite abstract.Suite, fileName string) e
 }
 
 // WritePubKey will write the public key into the filename using the suite
-// before is if you want to write something before the actual key like in ssh
+// 'prepend' is if you want to write something before the actual key like in ssh
 // format hostname KEY_in_base_64
 // if before contains a space it will throw an error
 // Returns an error if anything went wrong during file handling or writing key
-func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string, before string) error {
+func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string, prepend string) error {
 
 	pubFile, err := os.OpenFile(fileName, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0744)
 	if err != nil {
@@ -53,10 +53,10 @@ func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string, befo
 	}
 	defer pubFile.Close()
 
-	if strings.Contains(before, " ") {
+	if strings.Contains(prepend, " ") {
 		return errors.New("The string to insert before public key contains some space. Invalid !")
 	}
-	pubFile.WriteString(before + " ")
+	pubFile.WriteString(prepend + " ")
 
 	encoder := base64.NewEncoder(base64.StdEncoding, pubFile)
 	err = suite.Write(encoder, pub)
