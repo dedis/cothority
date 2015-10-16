@@ -342,11 +342,11 @@ func (p *Peer) String() string {
 func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 	// Construct the dealer
 	dealerKey := cliutils.KeyPair(p.suite)
-	dealer := poly.NewDealer(p.suite, p.info, &p.key, &dealerKey, p.pubKeys)
+	dealer := new(poly.Deal).ConstructDeal(&dealerKey, &p.key, p.info.T, p.info.R, p.pubKeys)
 	// Construct the receiver
 	receiver := poly.NewReceiver(p.suite, p.info, &p.key)
 	// add already its own dealer
-	_, err := receiver.AddDealer(p.Id, dealer)
+	_, err := receiver.AddDeal(p.Id, dealer)
 	if err != nil {
 		dbg.Fatal(p.String(), "could not add its own dealer >< ABORT")
 	}
@@ -356,10 +356,10 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 	dbg.Lvl2(p.Name, "sent its dealer to every peers. (err = ", err, ")")
 	// Receive the dealer struct FROM every one
 	// wait with a chan to get ALL dealers
-	dealChan := make(chan *poly.Dealer)
+	dealChan := make(chan *poly.Deal)
 	for _, rp := range p.remote {
 		go func(rp RemotePeer) {
-			d := new(poly.Dealer).UnmarshalInit(p.suite, p.info)
+			d := new(poly.Deal).UnmarshalInit(p.info.T, p.info.R, p.info.N, p.suite)
 			err := p.suite.Read(rp.Conn, d)
 			if err != nil {
 				dbg.Fatal(p.Name, " received a strange dealer from ", rp.String())
@@ -376,7 +376,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 		d := <-dealChan
 		dbg.Lvl3(p.Name, "collected one more dealer (count = ", n, ")")
 		// TODO: get the response back to the dealer
-		_, err := receiver.AddDealer(p.Id, d)
+		_, err := receiver.AddDeal(p.Id, d)
 		if err != nil {
 			dbg.Fatal(p.Name, "has error when adding the dealer : ", err)
 		}
@@ -412,8 +412,11 @@ func (p *Peer) SetupDistributedSchnorr() {
 func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 	// First, gen. a random secret
 	random := p.ComputeSharedSecret()
+	// gen the hash out of the msg
+	h := p.suite.Hash()
+	h.Write(msg)
 	// launch the new round
-	err := p.schnorr.NewRound(random, msg)
+	err := p.schnorr.NewRound(random, h)
 	if err != nil {
 		dbg.Fatal(p.String(), "could not make a new round : ", err)
 	}
@@ -463,7 +466,9 @@ func (p *Peer) SchnorrSigPeer(msg []byte) {
 	// First, gen. a random secret
 	random := p.ComputeSharedSecret()
 	// launch the new round
-	err := p.schnorr.NewRound(random, msg)
+	h := p.suite.Hash()
+	h.Write(msg)
+	err := p.schnorr.NewRound(random, h)
 	if err != nil {
 		dbg.Fatal(p.String(), "could not make a new round : ", err)
 	}
@@ -476,7 +481,9 @@ func (p *Peer) SchnorrSigPeer(msg []byte) {
 
 // VerifySchnorrSig will basically verify the validity of the issued signature
 func (p *Peer) VerifySchnorrSig(ps *poly.SchnorrSig, msg []byte) error {
-	return p.schnorr.VerifySchnorrSig(ps, msg)
+	h := p.suite.Hash()
+	h.Write(msg)
+	return p.schnorr.VerifySchnorrSig(ps, h)
 }
 
 // BroadcastSIgnature will broadcast the given signature to every other peer
