@@ -104,7 +104,7 @@ func (t *StreamStats) Header(prefix string) string {
 	return fmt.Sprintf("%smin, %smax, %savg, %sdev", prefix, prefix, prefix, prefix)
 }
 func (t *StreamStats) String() string {
-	return fmt.Sprintf("%f, %f, %f, %f", t.Min() / 1e9, t.Max() / 1e9, t.Avg() / 1e9, t.Dev() / 1e9)
+	return fmt.Sprintf("%f, %f, %f, %f", t.Min(), t.Max(), t.Avg(), t.Dev())
 }
 
 ////////////////////////////////////////////////////////
@@ -112,9 +112,10 @@ func (t *StreamStats) String() string {
 // generic typing of a Entry containing some timing data
 type Entry interface{}
 
-var BasicRoundType string = "basic_round"
 var BasicSetupType string = "basic_setup"
+var BasicCalcType string = "basic_calc"
 var BasicVerifyType string = "basic_verify"
+var BasicRoundType string = "basic_round"
 
 // concrete impl
 type BasicEntry struct {
@@ -188,6 +189,8 @@ type BasicStats struct {
 	setup    StreamStats
 	// times for the verification
 	verify   StreamStats
+	// times for the calculation
+	calc     StreamStats
 
 	SysTime  float64
 	UserTime float64
@@ -200,18 +203,20 @@ func (s *BasicStats) WriteTo(w io.Writer) {
 // Return the CSV header of theses stats.
 // Could be implemented using reflection for automatic detection later .. ?
 func (s *BasicStats) ServerCSVHeader() error {
-	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, %s, user, system\n", s.round.Header("round_"), s.setup.Header("setup_"), s.verify.Header("verify_"))
+	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, %s, %s, user, system\n", s.round.Header("round_"),
+		s.setup.Header("setup_"), s.verify.Header("verify_"), s.calc.Header("calc_"))
 	return err
 }
 
 func (s *BasicStats) ServerCSV() error {
-	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %s, %f, %f\n",
+	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %s, %s, %f, %f\n",
 		s.NHosts,
 		s.round.String(),
 		s.setup.String(),
 		s.verify.String(),
-		s.UserTime / 1e9,
-		s.SysTime / 1e9)
+		s.calc.String(),
+		s.UserTime,
+		s.SysTime)
 	return err
 }
 
@@ -229,14 +234,17 @@ func (s *BasicStats) AddEntry(e Entry) error {
 	case BasicEntry:
 		st := e.(BasicEntry)
 		// is it about the Round , or the setup
-		if st.Type == BasicRoundType {
-			s.round.Update(st.Time)
-		} else if st.Type == BasicSetupType {
+		switch st.Type{
+		default:
+			dbg.Fatal("Received unknown basic entry : ", st.Type)
+		case BasicSetupType:
 			s.setup.Update(st.Time)
-		} else if st.Type == BasicVerifyType {
+		case BasicVerifyType:
 			s.verify.Update(st.Time)
-		} else {
-			dbg.Fatal("Received unknown shamir entry : ", st.Type)
+		case BasicCalcType:
+			s.calc.Update(st.Time)
+		case BasicRoundType:
+			s.round.Update(st.Time)
 		}
 	case SysEntry:
 		st := e.(SysEntry)
@@ -263,6 +271,7 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 	stset := make([]StreamStats, len(stats))
 	stround := make([]StreamStats, len(stats))
 	stverify := make([]StreamStats, len(stats))
+	stcalc := make([]StreamStats, len(stats))
 	for i, _ := range stats {
 		ss, ok := stats[i].(*BasicStats)
 		if !ok {
@@ -271,12 +280,14 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 		stset[i] = ss.setup
 		stround[i] = ss.round
 		stverify[i] = ss.verify
+		stcalc[i] = ss.calc
 		s.SysTime += ss.SysTime
 		s.UserTime += ss.UserTime
 	}
 	s.setup = StreamStatsAverage(stset...)
 	s.round = StreamStatsAverage(stround...)
 	s.verify = StreamStatsAverage(stverify...)
+	s.calc = StreamStatsAverage(stcalc...)
 	s.SysTime -= fSys
 	s.UserTime -= fUs
 	s.SysTime /= float64(len(stats))
@@ -324,8 +335,8 @@ func (s *CollStats) ServerCSV() error {
 		s.BF,
 		s.round.String(),
 		s.Rate,
-		s.SysTime / 1e9,
-		s.UserTime / 1e9)
+		s.SysTime,
+		s.UserTime)
 	return err
 }
 
@@ -335,7 +346,7 @@ func (s *CollStats) ClientCSVHeader() error {
 }
 func (s *CollStats) ClientCSV() error {
 	for _, t := range s.Times {
-		_, err := fmt.Fprintf(s.Writer, strconv.FormatFloat(t / 1e9, 'f', 15, 64) + "\n")
+		_, err := fmt.Fprintf(s.Writer, strconv.FormatFloat(t, 'f', 15, 64) + "\n")
 		if err != nil {
 			return err
 		}

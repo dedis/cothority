@@ -60,22 +60,14 @@ retry_dial:
 			}
 			dbg.Lvl4("root_round:", entry)
 			stats.AddEntry(entry)
-		} else if bytes.Contains(data, []byte(BasicRoundType)) {
+		} else if bytes.Contains(data, []byte("basic_")) {
 			var entry BasicEntry
 			err := json.Unmarshal(data, &entry)
 			if err != nil {
 				log.Fatal("json unmarshalled improperly:", err)
 			}
 			stats.AddEntry(entry)
-			dbg.Lvl2("Monitor - basic round entry:", entry)
-		} else if bytes.Contains(data, []byte(BasicSetupType)) {
-			var entry BasicEntry
-			err := json.Unmarshal(data, &entry)
-			if err != nil {
-				log.Fatal("json unmarshalled improperly:", err)
-			}
-			dbg.Lvl2("Monitor - basic setup entry:", entry)
-			stats.AddEntry(entry)
+			dbg.Lvl2("Monitor - basic entry:", entry)
 		} else if bytes.Contains(data, []byte("end")) {
 			clientDone = true
 			dbg.Lvl2("Monitor - received end (client = true && root = ", rootDone, ")")

@@ -7,14 +7,13 @@ package main
  */
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	net "github.com/dedis/cothority/lib/network"
 	"sync"
 	"time"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 // Searches for the index in the hostlist and decides if we're the leader
@@ -76,18 +75,19 @@ func GoLeader(conf *app.NaiveConfig) {
 
 	// Connecting to the signer
 
-	now := time.Now()
+	measure := monitor.NewMeasure()
 	go leader.Listen(app.RunFlags.Hostname, proto)
 	dbg.Lvl2(leader.String(), "Listening for channels creation..")
 	// listen for round chans + signatures for each round
 	masterRoundChan := make(chan chan *net.BasicSignature)
 	roundChanns := make([]chan chan *net.BasicSignature, 0)
+	numberHosts := len(conf.Hosts)
 	//  Make the "setup" of channels
 	for {
 		ch := <-roundChans
 		roundChanns = append(roundChanns, ch)
 		//Received round channels from every connections-
-		if len(roundChanns) == len(conf.Hosts)-1 {
+		if len(roundChanns) == numberHosts-1 {
 			// make the Fanout => master will send to all
 			go func() {
 				// send the new SignatureChannel to every conn
@@ -104,26 +104,22 @@ func GoLeader(conf *app.NaiveConfig) {
 			break
 		}
 	}
-	log.WithFields(log.Fields{
-		"file": logutils.File(),
-		"type": "naive_setup",
-		"time": time.Since(now)}).Info("")
+	measure.MeasureCPU("basic_setup")
 	dbg.Lvl2(leader.String(), "got all channels ready => starting the ", conf.Rounds, " rounds")
 
 	// Starting to run the simulation for conf.Rounds rounds
 
 	for round := 0; round < conf.Rounds; round++ {
-		now = time.Now()
-		//sys, usr := app.GetRTime()
+		measure.Update()
 		n := 0
 		faulty := 0
 		// launch a new round
 		connChan := make(chan *net.BasicSignature)
 		masterRoundChan <- connChan
 		var wg sync.WaitGroup
-		wg.Add(len(conf.Hosts) - 1)
+		wg.Add(numberHosts - 1)
 		// verify each coming signatures
-		for n < len(conf.Hosts)-1 {
+		for n < numberHosts-1 {
 			bs := <-connChan
 			if conf.SkipChecks {
 				dbg.Lvl2("Skipping check for round", round)
@@ -144,14 +140,8 @@ func GoLeader(conf *app.NaiveConfig) {
 		wg.Wait()
 		dbg.Lvl2(leader.String(), "Round ", round, " received ", len(conf.Hosts)-1, "signatures (",
 			faulty, " faulty sign)")
-		//dSys, dUsr := app.GetDiffRTime(sys, usr)
-		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "basic_round",
-			"round": round,
-			"time":  time.Since(now),
-			//"time":  (dSys + dUsr) * 1e9,
-		}).Info("")
+		measure.MeasureWall("basic_round")
+		measure.MeasureCPU("basic_calc")
 	}
 
 	// Close down all connections
