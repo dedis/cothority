@@ -13,8 +13,10 @@ type ConfigConode struct {
 	// hosts
 	Hosts []string
 
+	// Aggregated long term public keys of all the peers in the tree
+	AggPubKey string
 	////// Only used during process and never written to file /////
-	// Private / public keys
+	// Private / public keys of your host
 	Secret abstract.Secret
 	Public abstract.Point
 }

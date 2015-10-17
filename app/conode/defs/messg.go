@@ -1,8 +1,9 @@
 package defs
+
 import (
-	"github.com/dedis/cothority/lib/proof"
-	"encoding/gob"
 	"bytes"
+	"encoding/gob"
+	"github.com/dedis/cothority/lib/proof"
 )
 
 type MessageType int
@@ -96,4 +97,3 @@ func (sm *TimeStampMessage) UnmarshalBinary(data []byte) error {
 	}
 	return err
 }
-

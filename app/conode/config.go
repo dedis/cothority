@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/crypto/abstract"
 	"os"
 	"strings"
 )
@@ -43,16 +45,35 @@ func Build(hostFile string) {
 
 	// Then construct the tree
 	tree := constructTree(hosts, pubs, bf)
+	// then constrcut the aggregated public key K0
+	k0 := aggregateKeys(pubs)
+	var b bytes.Buffer
+	err = cliutils.WritePub64(&b, suite, k0)
+	if err != nil {
+		dbg.Fatal("Could not aggregate public keys in base64")
+	}
 
 	// Then write the config
 	conf := app.ConfigConode{
-		Suite: suiteString,
-		Tree:  tree,
-		Hosts: hosts,
+		Suite:     suiteString,
+		Tree:      tree,
+		Hosts:     hosts,
+		AggPubKey: b.String(),
 	}
 
 	app.WriteTomlConfig(conf, configFile)
 	dbg.Lvl1("Written config file with tree to ", configFile)
+}
+
+// SImply adds all the public keys we give to it
+func aggregateKeys(pubs []string) abstract.Point {
+	k0 := suite.Point().Null()
+	for _, ki := range pubs {
+		// convert from string to public key
+		kip, _ := cliutils.ReadPub64(strings.NewReader(ki), suite)
+		k0 = k0.Add(k0, kip)
+	}
+	return k0
 }
 
 // readHostFile will read the host file

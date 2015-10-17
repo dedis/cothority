@@ -19,19 +19,21 @@
  */
 
 package main
+
 import (
-	"flag"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/app/conode/defs"
-	"strings"
-	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/coconet"
+	"bytes"
 	"encoding/base64"
+	"errors"
+	"flag"
+	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/coconet"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/crypto/abstract"
 	"io"
 	"os"
-	"bytes"
+	"strings"
 )
 
 // Flag-variables
@@ -39,11 +41,13 @@ var stamp = ""
 var server = "localhost"
 var suiteString = "ed25519"
 var check = ""
+var configFile = "client_config.toml"
 
 func init() {
 	flag.StringVar(&stamp, "stamp", stamp, "Stamp that file")
 	flag.StringVar(&check, "verify", check, "Verify that a signature-file contains a valid signature")
 	flag.StringVar(&server, "server", server, "The server to connect to [localhost]")
+	flag.StringVar(&configFile, "config", configFile, "Configuration file of the tree used")
 	flag.StringVar(&suiteString, "suite", suiteString, "Which suite to use [ed25519]")
 }
 
@@ -51,11 +55,11 @@ func init() {
 // easily copy/pasted
 type SignatureFile struct {
 	// name of the file
-	Name      string
+	Name string
 	// hash of our file
-	Hash      string
+	Hash string
 	// the inclusion-proof
-	Proof     string
+	Proof string
 	// signature returned by the root-node
 	Signature string
 }
@@ -63,17 +67,21 @@ type SignatureFile struct {
 // Our crypto-suite used in the program
 var suite abstract.Suite
 
+// the configuration file of the cothority tree used
+var conf app.ConfigClient
+
 // If the server is only given with it's hostname, it supposes that the stamp
 // server is run on port 2001. Else you will have to add the port yourself.
 func main() {
 	flag.Parse()
-	if ! strings.Contains(server, ":") {
+	if !strings.Contains(server, ":") {
 		server += ":2001"
 	}
 
 	suite = app.GetSuite(suiteString)
-
-	switch{
+	conf = app.ConfigClient{}
+	app.ReadTomlConfig(conf, configFile)
+	switch {
 	case stamp != "":
 		StampFile(stamp, server)
 	case check != "":
@@ -116,18 +124,18 @@ func StampFile(file, server string) {
 
 	// Asking to close the connection
 	err = conn.Put(&defs.TimeStampMessage{
-		ReqNo:1,
-		Type: defs.StampClose,
+		ReqNo: 1,
+		Type:  defs.StampClose,
 	})
 	conn.Close()
 
 	// Verify if what we received is correct
-	if !verifySignature(myHash, tsm.Srep){
+	if !verifySignature(myHash, tsm.Srep) {
 		dbg.Fatal("Verification of signature failed")
 	}
 
 	// Write the signature to the file
-	err = WriteSignatureFile(file + ".sig", stamp, myHash, tsm.Srep)
+	err = WriteSignatureFile(file+".sig", stamp, myHash, tsm.Srep)
 	if err != nil {
 		dbg.Fatal("Couldn't write file", err)
 	}
@@ -151,8 +159,8 @@ func VerifySignature(sigFile string) bool {
 			dbg.Lvl1("Hash-check: passed")
 		} else {
 			dbg.Lvl1("Hash-check: FAILED")
-			dbg.Lvl1("If you want to check the correctness of the signature, please\n" +
-			"remove the file", file)
+			dbg.Lvl1("If you want to check the correctness of the signature, please\n"+
+				"remove the file", file)
 			return false
 		}
 	}
@@ -163,7 +171,45 @@ func VerifySignature(sigFile string) bool {
 // is correct.
 func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 	dbg.Lvl1("Not checking signature")
+	pub := conf.K0
+	if err := SchnorrVerify(suite, []byte(message), pub, reply.Sig); err != nil {
+		dbg.Lvl1("Schnorr verification failed. ", err)
+		return false
+	}
+	dbg.Lvl1("Schnorr verification succeeded !")
 	return true
+}
+
+//TAKEN FROM SIG_TEST from abstract
+func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Point, signatureBuffer []byte) error {
+
+	// Decode the signature
+	buf := bytes.NewBuffer(signatureBuffer)
+	sig := defs.BasicSignature{}
+	if err := suite.Read(buf, &sig); err != nil {
+		return err
+	}
+	r := sig.Resp
+	c := sig.Chall
+
+	// Compute base**(r + x*c) == T
+	var P, T abstract.Point
+	P = suite.Point()
+	T = suite.Point()
+	T.Add(T.Mul(nil, r), P.Mul(publicKey, c))
+
+	// Verify that the hash based on the message and T
+	// matches the challange c from the signature
+	// copy of hashSchnorr
+	bufPoint, _ := T.MarshalBinary()
+	cipher := suite.Cipher(bufPoint)
+	cipher.Message(nil, nil, message)
+	hash := suite.Secret().Pick(cipher)
+	if !hash.Equal(sig.Chall) {
+		return errors.New("invalid signature")
+	}
+
+	return nil
 }
 
 // Takes the different part of the signature and writes them to a toml-
@@ -171,14 +217,14 @@ func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampReply) error {
 	p := ""
 	dbg.Printf("%+v", stamp.Prf)
-	for _, pr := range (stamp.Prf) {
+	for _, pr := range stamp.Prf {
 		p += base64.StdEncoding.EncodeToString(pr) + " "
 	}
 	sigStr := &SignatureFile{
-		Name:file,
-		Hash:base64.StdEncoding.EncodeToString(hash),
-		Proof:base64.StdEncoding.EncodeToString([]byte(p)),
-		Signature:base64.StdEncoding.EncodeToString(stamp.Sig),
+		Name:      file,
+		Hash:      base64.StdEncoding.EncodeToString(hash),
+		Proof:     base64.StdEncoding.EncodeToString([]byte(p)),
+		Signature: base64.StdEncoding.EncodeToString(stamp.Sig),
 	}
 
 	// Print to the screen, and write to file
@@ -201,7 +247,7 @@ func ReadSignatureFile(name string) (error, string, []byte, *defs.StampReply) {
 	reply := &defs.StampReply{}
 	// Convert fields from Base64 to binary
 	hash, err := base64.StdEncoding.DecodeString(sigStr.Hash)
-	for _, pr := range (strings.Fields(sigStr.Proof)) {
+	for _, pr := range strings.Fields(sigStr.Proof) {
 		pro, err := base64.StdEncoding.DecodeString(pr)
 		if err != nil {
 			dbg.Lvl1("Couldn't decode proof:", pr)
