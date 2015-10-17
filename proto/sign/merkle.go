@@ -76,9 +76,10 @@ func (sn *Node) ComputeCombinedMerkleRoot(view, Round int) {
 	sn.SeparateProofs(proofs, round.Leaves, Round)
 }
 
-// Create Merkle Proof for local client (timestamp server)
-// Send Merkle Proof to local client (timestamp server)
-func (sn *Node) SendLocalMerkleProof(view int, chm *ChallengeMessage) error {
+// Create Merkle Proof for local client (timestamp server) and
+// store it in Node so that we can send it to the clients during
+// the SignatureBroadcast
+func (sn *Node) StoreLocalMerkleProof(view int, chm *ChallengeMessage) error {
 	if sn.DoneFunc != nil {
 		sn.roundLock.RLock()
 		round := sn.Rounds[chm.Round]
@@ -91,15 +92,11 @@ func (sn *Node) SendLocalMerkleProof(view int, chm *ChallengeMessage) error {
 		proofForClient = append(proofForClient, round.Proofs["local"]...)
 
 		// if want to verify partial and full proofs
-		// dbg.Lvl4("*****")
-		// dbg.Lvl4(sn.Name(), chm.Round, proofForClient)
 		if DEBUG == true {
 			sn.VerifyAllProofs(view, chm, proofForClient)
 		}
-
-		// 'reply' to client
-		// TODO: add error to done function
-		sn.DoneFunc(view, chm.MTRoot, round.MTRoot, proofForClient)
+		sn.Proof = proofForClient
+		sn.MTRoot = chm.MTRoot
 	}
 
 	return nil

@@ -131,9 +131,7 @@ func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 	enc := tc.enc
 	tc.encLock.Unlock()
 
-	dbg.Printf("Put bm: %+v", bm)
 	err := enc.Encode(bm)
-	dbg.Printf("Put enc: %+v", enc)
 	if err != nil {
 		if IsTemporary(err) {
 			return err

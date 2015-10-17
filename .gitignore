@@ -19,3 +19,4 @@ deploy/matplotlib/imgs
 test/
 app/conode/key*
 app/conode/conode
+app/conode/stamp/stamp/

@@ -24,6 +24,7 @@ const (
 	Commitment
 	Challenge
 	Response
+	SignatureBroadcast
 	CatchUpReq
 	CatchUpResp
 	GroupChange
@@ -46,6 +47,8 @@ func (m MessageType) String() string {
 		return "Challenge"
 	case Response:
 		return "Response"
+	case SignatureBroadcast:
+		return "SignatureBroadcast"
 	case CatchUpReq:
 		return "CatchUpRequest"
 	case CatchUpResp:
@@ -74,6 +77,7 @@ type SigningMessage struct {
 	Com          *CommitmentMessage
 	Chm          *ChallengeMessage
 	Rm           *ResponseMessage
+	SBm          *SignatureBroadcastMessage
 	Cureq        *CatchUpRequest
 	Curesp       *CatchUpResponse
 	Vrm          *VoteRequestMessage
@@ -162,7 +166,7 @@ type ResponseMessage struct {
 
 // 5th message going from root to leaves to send the
 // signature
-type SignatureBroadcast struct {
+type SignatureBroadcastMessage struct {
 	// Aggregate response of root
 	R0_hat abstract.Secret
 	// Challenge

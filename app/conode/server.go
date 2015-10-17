@@ -237,8 +237,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
-			start := time.Now()
-			dbg.Lvl4(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound() + 1, "of", nRounds)
+			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound() + 1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -271,15 +270,6 @@ func (s *Server) runAsRoot(nRounds int) string {
 				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound() + 1, ">=", nRounds)
 				return "close"
 			}
-
-			elapsed := time.Since(start)
-			log.WithFields(log.Fields{
-				"file":  logutils.File(),
-				"type":  "root_round",
-				"round": s.LastRound(),
-				"time":  elapsed,
-			}).Info("root round")
-
 		}
 	}
 }
@@ -350,7 +340,8 @@ func (s *Server) OnAnnounce() sign.CommitFunc {
 }
 
 func (s *Server) OnDone() sign.DoneFunc {
-	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof) {
+	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
+				sb *sign.SignatureBroadcastMessage) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
@@ -367,10 +358,11 @@ func (s *Server) OnDone() sign.DoneFunc {
 				dbg.LLvl2("Inclusion-proof failed")
 			}
 
+			dbg.Printf("%+v", sb)
 			respMessg := defs.TimeStampMessage{
 				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &defs.StampReply{Sig: SNRoot, Prf: combProof}}
+				Srep:  &defs.StampReply{Sig: SNRoot, Prf: combProof, SigBroad: *sb}}
 			s.PutToClient(msg.To, respMessg)
 		}
 		s.mux.Unlock()
