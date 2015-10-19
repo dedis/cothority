@@ -154,7 +154,7 @@ func (sn *Node) get() error {
 				}
 			case SignatureBroadcast:
 				sn.ReceivedHeartbeat(sm.View)
-				err = sn.SignatureBroadcast(sm.View, sm.SBm)
+				err = sn.SignatureBroadcast(sm.View, sm.SBm, 0)
 			case CatchUpReq:
 				v := sn.VoteLog.Get(sm.Cureq.Index)
 				ctx := context.TODO()
@@ -302,6 +302,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		// add good child server to combined public key, and point commit
 		sn.add(round.X_hat, sm.Com.X_hat)
 		sn.add(round.Log.V_hat, sm.Com.V_hat)
+		dbg.Print("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
 	if sn.Type == PubKey {
@@ -324,6 +325,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 	var err error
 
 	if sn.IsRoot(view) {
+		dbg.Print("Commit root : Aggregate Public Key :", round.X_hat)
 		sn.commitsDone <- Round
 		err = sn.FinalizeCommits(view, Round)
 	} else {
@@ -529,7 +531,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 
 	// root reports round is done
 	if isroot {
-		sn.SignatureBroadcast(view, nil)
+		sn.SignatureBroadcast(view, nil, Round)
 		sn.done <- Round
 	}
 
@@ -625,10 +627,8 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 		if DEBUG == true {
 			panic(sn.Name() + "reports ElGamal Collective Signature failed for Round" + strconv.Itoa(Round))
 		}
-		// return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
-	}
-
-	if isroot {
+		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
+	} else if isroot {
 		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
 		/*
 			nel := len(round.ExceptionList)
@@ -678,16 +678,19 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	return nil
 }
 
-func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage) error {
+// This will broadcast the final signature to give to client
+// it contins the global Response adn global challenge
+func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
 	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
-
+	// Root is creating the sig broadcast
 	if sb == nil {
+		r := sn.Rounds[round]
 		if sn.IsRoot(view) {
 			sb = &SignatureBroadcastMessage{
-				R0_hat: sn.suite.Secret().One(),
-				C:      sn.suite.Secret().One(),
-				X0_hat: sn.suite.Point().Null(),
-				V0_hat: sn.suite.Point().Null(),
+				R0_hat: r.r_hat,
+				C:      r.c,
+				X0_hat: r.X_hat,
+				V0_hat: r.Log.V_hat,
 			}
 		}
 	}

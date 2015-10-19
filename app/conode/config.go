@@ -68,11 +68,13 @@ func Build(hostFile string) {
 // SImply adds all the public keys we give to it
 func aggregateKeys(pubs []string) abstract.Point {
 	k0 := suite.Point().Null()
-	for _, ki := range pubs {
+	for i, ki := range pubs {
 		// convert from string to public key
 		kip, _ := cliutils.ReadPub64(strings.NewReader(ki), suite)
 		k0 = k0.Add(k0, kip)
+		dbg.Print("Public key n* ", i, " : ", kip)
 	}
+	dbg.Print("Aggregated public key : ", k0)
 	return k0
 }
 

@@ -31,6 +31,7 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"io"
 	"os"
@@ -170,35 +171,50 @@ func VerifySignature(sigFile string) bool {
 
 // Verifies that the 'message' is included in the signature and that it
 // is correct.
+// Message is your own hash, and reply contains the inclusion proof + signature
+// on the aggregated message
 func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 	dbg.Lvl1("Checking signature")
-	pub, err := cliutils.ReadPub64(strings.NewReader(conf.AggPubKey), suite)
-	if err != nil {
-		dbg.Fatal("Could not read aggregate public key from config file : ", err)
-	}
 	sig := defs.BasicSignature{
 		Chall: reply.SigBroad.C,
 		Resp:  reply.SigBroad.R0_hat,
 	}
-	if err := SchnorrVerify(suite, []byte(message), pub, sig); err != nil {
+	public, _ := cliutils.ReadPub64(strings.NewReader(conf.AggPubKey), suite)
+	if err := SchnorrVerify(suite, reply.I0, public, sig); err != nil {
 		dbg.Lvl1("Schnorr verification failed. ", err)
 		return false
 	}
 	dbg.Lvl1("Schnorr verification succeeded !")
+
+	// Verify inclusion proof
+	dbg.Lvl1("Verify inclusion proof ...")
+	if !proof.CheckProof(suite.Hash, reply.I0, message, reply.Prf) {
+		dbg.Lvl1("Inclusion proof checking failed.")
+		return false
+	}
+	dbg.Lvl1("Inclusion proof verification succeeded !")
 	return true
 }
 
 //TAKEN FROM SIG_TEST from abstract
 func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Point, sig defs.BasicSignature) error {
-
 	r := sig.Resp
 	c := sig.Chall
 
-	// Compute base**(r + x*c) == T
-	var P, T abstract.Point
-	P = suite.Point()
-	T = suite.Point()
-	T.Add(T.Mul(nil, r), P.Mul(publicKey, c))
+	// Check that: base**r_hat * X_hat**c == V_hat
+	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
+	Aux := suite.Point()
+	V_clean := suite.Point()
+	V_clean.Add(V_clean.Mul(nil, r), Aux.Mul(publicKey, c))
+	// T is the recreated V_hat
+	T := suite.Point().Null()
+	T.Add(T, V_clean)
+
+	//// Compute base**(r + x*c) == T
+	//var P, T abstract.Point
+	//P = suite.Point()
+	//T = suite.Point()
+	//T.Add(T.Mul(nil, r), P.Mul(publicKey, c))
 
 	// Verify that the hash based on the message and T
 	// matches the challange c from the signature

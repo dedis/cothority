@@ -3,11 +3,11 @@ package defs
 import (
 	"bytes"
 	"encoding/gob"
+	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/app"
 )
 
 type MessageType int
@@ -30,7 +30,7 @@ type StampRequest struct {
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampReply struct {
 	Suite    abstract.Suite
-	I0       []byte                         // Signature on the root
+	I0       []byte                         // Signature on the root // MTRoot ?
 	PrfLen   int                            // Length of proof
 	Prf      proof.Proof                    // Merkle proof of value
 	SigBroad sign.SignatureBroadcastMessage // All other elements necessary

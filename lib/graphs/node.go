@@ -18,7 +18,6 @@ import (
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"sort"
 	"strconv"
 	"strings"
@@ -401,7 +400,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 // complete hostnames to be used by the hosts.
 // LoadConfig loads a configuration file in the format specified above. It
 // populates a HostConfig with HostNode Hosts and goPeer Peers.
-func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*HostConfig, error) {
+func LoadConfig(appHosts []string, appTree *Tree, suite abstract.Suite, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	opts := ConfigOptions{}
 	if len(optsSlice) > 0 {
 		opts = optsSlice[0]
@@ -483,7 +482,7 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 		}
 	}
 
-	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := edwards.NewAES128SHA256Ed25519(true)
 	//suite := nist.NewAES128SHA256P256()
 	if opts.Suite != nil {
 		suite = opts.Suite

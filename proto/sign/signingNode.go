@@ -17,22 +17,22 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/crypto/abstract"
 )
 
 type Type int // used by other modules as coll_sign.Type
 
 const (
-// Default Signature involves creating Merkle Trees
+	// Default Signature involves creating Merkle Trees
 	MerkleTree = iota
-// Basic Signature removes all Merkle Trees
-// Collective public keys are still created and can be used
+	// Basic Signature removes all Merkle Trees
+	// Collective public keys are still created and can be used
 	PubKey
-// Basic Signature on aggregated votes
+	// Basic Signature on aggregated votes
 	Voter
 )
 
@@ -41,73 +41,73 @@ var _ Signer = &Node{}
 type Node struct {
 	coconet.Host
 
-												  // Signing Node will Fail at FailureRate probability
+	// Signing Node will Fail at FailureRate probability
 	FailureRate         int
 	FailAsRootEvery     int
 	FailAsFollowerEvery int
 
-	randmu              sync.Mutex
-	Rand                *rand.Rand
+	randmu sync.Mutex
+	Rand   *rand.Rand
 
-	Type                Type
-	Height              int
+	Type   Type
+	Height int
 
-	HostList            []string
+	HostList []string
 
-	suite               abstract.Suite
-	PubKey              abstract.Point            // long lasting public key
-	PrivKey             abstract.Secret           // long lasting private key
+	suite   abstract.Suite
+	PubKey  abstract.Point  // long lasting public key
+	PrivKey abstract.Secret // long lasting private key
 
-	nRounds             int
-	Rounds              map[int]*Round
-	Round               int                       // *only* used by Root( by annoucer)
-	RoundTypes          []RoundType
-	roundmu             sync.Mutex
-	LastSeenRound       int                       // largest round number I have seen
-	RoundsAsRoot        int                       // latest continuous streak of rounds with sn root
+	nRounds       int
+	Rounds        map[int]*Round
+	Round         int // *only* used by Root( by annoucer)
+	RoundTypes    []RoundType
+	roundmu       sync.Mutex
+	LastSeenRound int // largest round number I have seen
+	RoundsAsRoot  int // latest continuous streak of rounds with sn root
 
-	AnnounceLock        sync.Mutex
+	AnnounceLock sync.Mutex
 
-	CommitFunc          CommitFunc
-	DoneFunc            DoneFunc
+	CommitFunc CommitFunc
+	DoneFunc   DoneFunc
 
-												  // NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
-	roundLock           sync.RWMutex
-	LogTest             []byte                    // for testing purposes
-	peerKeys            map[string]abstract.Point // map of all peer public keys
+	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
+	roundLock sync.RWMutex
+	LogTest   []byte                    // for testing purposes
+	peerKeys  map[string]abstract.Point // map of all peer public keys
 
-	closed              chan error                // error sent when connection closed
-	Isclosed            bool
-	done                chan int                  // round number sent when round done
-	commitsDone         chan int                  // round number sent when announce/commit phase done
+	closed      chan error // error sent when connection closed
+	Isclosed    bool
+	done        chan int // round number sent when round done
+	commitsDone chan int // round number sent when announce/commit phase done
 
-	RoundsPerView       int
-												  // "root" or "regular" are sent on this channel to
-												  // notify the maker of the sn what role sn plays in the new view
-	viewChangeCh        chan string
-	ChangingView        bool                      // TRUE if node is currently engaged in changing the view
-	viewmu              sync.Mutex
-	ViewNo              int
+	RoundsPerView int
+	// "root" or "regular" are sent on this channel to
+	// notify the maker of the sn what role sn plays in the new view
+	viewChangeCh chan string
+	ChangingView bool // TRUE if node is currently engaged in changing the view
+	viewmu       sync.Mutex
+	ViewNo       int
 
-	timeout             time.Duration
-	timeLock            sync.RWMutex
+	timeout  time.Duration
+	timeLock sync.RWMutex
 
-	hbLock              sync.Mutex
-	heartbeat           *time.Timer
+	hbLock    sync.Mutex
+	heartbeat *time.Timer
 
-												  // ActionsLock sync.Mutex
-												  // Actions     []*VoteRequest
+	// ActionsLock sync.Mutex
+	// Actions     []*VoteRequest
 
-	VoteLog             *VoteLog                  // log of all confirmed votes, useful for replay
-	LastSeenVote        int64                     // max of all Highest Votes we've seen, and our last commited vote
-	LastAppliedVote     int64                     // last vote we have committed to our log
+	VoteLog         *VoteLog // log of all confirmed votes, useful for replay
+	LastSeenVote    int64    // max of all Highest Votes we've seen, and our last commited vote
+	LastAppliedVote int64    // last vote we have committed to our log
 
-	Actions             map[int][]*Vote
+	Actions map[int][]*Vote
 
 	// These are stored during the challenge phase so that they can
 	// be sent to the client during the SignatureBroadcast
-	Proof               proof.Proof
-	MTRoot              hashid.HashId             // the very root of the big Merkle Tree
+	Proof  proof.Proof
+	MTRoot hashid.HashId // the very root of the big Merkle Tree
 }
 
 // Start listening for messages coming from parent(up)
@@ -176,7 +176,7 @@ func (sn *Node) RootFor(view int) string {
 		// safer to use the previous view's hostlist, always
 		hl = sn.HostListOn(view - 1)
 	}
-	return hl[view % len(hl)]
+	return hl[view%len(hl)]
 }
 
 func (sn *Node) SetFailureRate(v int) {
@@ -229,10 +229,10 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	dbg.Lvl1("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
 
 	/*
-	first := time.Now()
-	total := time.Now()
-	var firstRoundTime time.Duration
-	var totalTime time.Duration
+		first := time.Now()
+		total := time.Now()
+		var firstRoundTime time.Duration
+		var totalTime time.Duration
 	*/
 
 	ctx, cancel := context.WithTimeout(context.Background(), MAX_WILLING_TO_WAIT)
@@ -255,7 +255,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	// 1st Phase succeeded or connection error
 	select {
 	case _ = <-sn.commitsDone:
-	// log time it took for first round to complete
+		// log time it took for first round to complete
 		//firstRoundTime = time.Since(first)
 		//sn.logFirstPhase(firstRoundTime)
 		break
@@ -272,7 +272,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	// 2nd Phase succeeded or connection error
 	select {
 	case _ = <-sn.done:
-	// log time it took for second round to complete
+		// log time it took for second round to complete
 		//totalTime = time.Since(total)
 		//sn.logSecondPhase(totalTime - firstRoundTime)
 		//sn.logTotalTime(totalTime)
@@ -368,6 +368,7 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn := &Node{Host: hn, suite: suite, PrivKey: PrivKey}
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
 
+	msgSuite = suite
 	sn.peerKeys = make(map[string]abstract.Point)
 	sn.Rounds = make(map[int]*Round)
 
@@ -392,7 +393,7 @@ func (sn *Node) ShouldIFail(phase string) bool {
 	if sn.FailureRate > 0 {
 		// If we were manually set to always fail
 		if sn.Host.(*coconet.FaultyHost).IsDead() ||
-		sn.Host.(*coconet.FaultyHost).IsDeadFor(phase) {
+			sn.Host.(*coconet.FaultyHost).IsDeadFor(phase) {
 			// log.Println(sn.Name(), "dead for "+phase)
 			return true
 		}
@@ -503,7 +504,7 @@ func (sn *Node) UpdateTimeout(t ...time.Duration) {
 	if len(t) > 0 {
 		sn.SetTimeout(t[0])
 	} else {
-		tt := time.Duration(sn.Height) * sn.DefaultTimeout() + sn.DefaultTimeout()
+		tt := time.Duration(sn.Height)*sn.DefaultTimeout() + sn.DefaultTimeout()
 		sn.SetTimeout(tt)
 	}
 }
