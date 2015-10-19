@@ -93,6 +93,17 @@ func constructCli() *cli.App {
 	stamp := cli.NewApp()
 	stamp.Name = "collective"
 	stamp.Usage = "Used to sign files to a cothority tree and to verify issued signatures"
+	stamp.Version = "0.0.1"
+	stamp.Authors = []cli.Author{
+		{
+			Name:  "ineiti",
+			Email: "",
+		},
+		{
+			Name:  "nikkolasg",
+			Email: "",
+		},
+	}
 	stamp.Commands = []cli.Command{
 		{
 			Name:    "sign",
