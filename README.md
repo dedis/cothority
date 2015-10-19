@@ -49,34 +49,7 @@ deterlab implementation:
 	* -build "helper1,helper2" - only build the helpers, separated by a "," - speeds up recompiling
 	* -machines # - tells how many machines are to be used for the run
 
-# Deployment
-	Configure(*Config)
-	Build() (error)
-	Deploy() (error)
-	Start() (error)
-	Stop() (error)
 
-The Life of a simulation:
-
-1. Configure
-    * read configuration
-    * compile eventual files
-2. Build
-    * builds all files
-    * eventually for different platforms
-3. Deploy
-    * make sure the environment is up and running
-    * copy files
-4. Start
-    * start all logservers
-    * start all nodes
-    * start all clients
-5. Stop
-    * abort after timeout OR
-    * wait for final message
-6. Stats - work in progress
-    * copy everything to local
-    
 # Applications
 
 ## Timestamping
