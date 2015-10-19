@@ -5,6 +5,9 @@ import (
 	"encoding/gob"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/crypto/abstract"
 )
 
 type MessageType int
@@ -26,7 +29,9 @@ type StampRequest struct {
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampReply struct {
-	Sig      []byte                         // Signature on the root
+	Suite abstract.Suite
+	I0       []byte                         // Signature on the root
+	PrfLen   int                            // Length of proof
 	Prf      proof.Proof                    // Merkle proof of value
 	SigBroad sign.SignatureBroadcastMessage // All other elements necessary
 }
@@ -48,27 +53,35 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 func (Srep StampReply) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
-	err := enc.Encode(Srep.Sig)
+	err := enc.Encode(Srep.I0)
+	err = enc.Encode(len(Srep.Prf))
 	err = enc.Encode(Srep.Prf)
-	err = enc.Encode(Srep.SigBroad)
+	err = Srep.Suite.Write(&b, Srep.SigBroad)
 	return b.Bytes(), err
 }
 
 func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
-	err := dec.Decode(&Srep.Sig)
+	err := dec.Decode(&Srep.I0)
+	err = dec.Decode(&Srep.PrfLen)
+	Srep.Prf = make([]hashid.HashId, Srep.PrfLen)
+	dbg.Printf("%+v", Srep)
+	dbg.Printf("%+v", Srep.Prf)
+	dbg.Printf("%+v", Srep.PrfLen)
 	err = dec.Decode(&Srep.Prf)
-	err = dec.Decode(&Srep.SigBroad)
+	Srep.SigBroad = sign.SignatureBroadcastMessage{}
+	dbg.Printf("%+v", Srep.SigBroad)
+	err = Srep.Suite.Read(b, &Srep.SigBroad)
 	return err
 }
 
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
-	// ErrorReply *ErrorReply // Generic error reply to any request
-	Type MessageType
-	Sreq *StampRequest
-	Srep *StampReply
+				// ErrorReply *ErrorReply // Generic error reply to any request
+	Type  MessageType
+	Sreq  *StampRequest
+	Srep  *StampReply
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {

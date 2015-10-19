@@ -116,6 +116,7 @@ func StampFile(file, server string) {
 
 	// Wait for the signed message
 	tsm := &defs.TimeStampMessage{}
+	tsm.Suite = app.GetSuite(conf.Suite)
 	err = conn.Get(tsm)
 	if err != nil {
 		dbg.Fatal("Error while receiving signature")
@@ -172,7 +173,7 @@ func VerifySignature(sigFile string) bool {
 func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 	dbg.Lvl1("Not checking signature")
 	pub := conf.K0
-	if err := SchnorrVerify(suite, []byte(message), pub, reply.Sig); err != nil {
+	if err := SchnorrVerify(suite, []byte(message), pub, reply.I0); err != nil {
 		dbg.Lvl1("Schnorr verification failed. ", err)
 		return false
 	}

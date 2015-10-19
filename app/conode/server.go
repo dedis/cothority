@@ -111,7 +111,7 @@ func (s *Server) Listen() error {
 						err := c.Get(&tsm)
 						if err != nil {
 							dbg.Lvlf1("%p Failed to get from child: %s", s, err)
-							s.Close()
+							c.Close()
 							return
 						}
 						switch tsm.Type {
@@ -362,7 +362,7 @@ func (s *Server) OnDone() sign.DoneFunc {
 			respMessg := defs.TimeStampMessage{
 				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &defs.StampReply{Sig: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  &defs.StampReply{I0: SNRoot, Prf: combProof, SigBroad: *sb}}
 			s.PutToClient(msg.To, respMessg)
 		}
 		s.mux.Unlock()
