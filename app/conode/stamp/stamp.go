@@ -119,7 +119,7 @@ func StampFile(file, server string) {
 	tsm.Srep.Suite = suite
 	err = conn.Get(tsm)
 	if err != nil {
-		dbg.Fatal("Error while receiving signature")
+		dbg.Fatal("Error while receiving signature:", err)
 	}
 	dbg.Printf("%+v", tsm.Srep)
 
