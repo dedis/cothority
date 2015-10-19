@@ -199,8 +199,8 @@ func (c *Client) ProcessStampReply(tsm *defs.TimeStampMessage) {
 
 	// can keep track of rounds by looking at changes in the signature
 	// sent back in a messages
-	if bytes.Compare(tsm.Srep.Sig, c.curRoundSig) != 0 {
-		c.curRoundSig = tsm.Srep.Sig
+	if bytes.Compare(tsm.Srep.I0, c.curRoundSig) != 0 {
+		c.curRoundSig = tsm.Srep.I0
 		c.nRounds++
 
 		c.Mux.Unlock()

@@ -20,3 +20,4 @@ test/
 app/conode/key*
 app/conode/conode
 app/conode/stamp/stamp/
+app/conode/stamp

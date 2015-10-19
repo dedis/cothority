@@ -1,5 +1,6 @@
 Suite = "ed25519"
-Hosts = ["localhost:2000", "localhost:2010", "localhost:2020"]
+Hosts = ["localhost:2000", "localhost:2010", "localhost:2020", "localhost:2000", "localhost:2010", "localhost:2020"]
+AggPubKey = "o+mTb3c72BnlTZdS32Wal4TZgtgIc6/aFtSsfNxRDuA="
 
 [Tree]
   Name = "localhost:2000"
@@ -11,7 +12,22 @@ Hosts = ["localhost:2000", "localhost:2010", "localhost:2020"]
     PriKey = ""
     PubKey = "lxyqlfI5XatrLyOeo0SWSp1uWM4e0AZKho2gisMIkKU="
 
+    [[Tree.Children.Children]]
+      Name = "localhost:2000"
+      PriKey = ""
+      PubKey = "rMkwsT4rhLxqTkFgWFWVBx+dIGmtY6ANXyF2XGfYg0g="
+
+    [[Tree.Children.Children]]
+      Name = "localhost:2010"
+      PriKey = ""
+      PubKey = "WhVUW/ha0Nnh2bFHkX2vBl72SpMC3u4QI+GBXtSMSaY="
+
   [[Tree.Children]]
     Name = "localhost:2020"
     PriKey = ""
     PubKey = "mFMX0GvIRQm8Y6m8tfQ4P9nFAQ2IWYKtpRzVNfkreHE="
+
+    [[Tree.Children.Children]]
+      Name = "localhost:2020"
+      PriKey = ""
+      PubKey = "p3UXRgRz3LfDReNm9KX6lvNaZateehxsEx+YGFaTOtw="
