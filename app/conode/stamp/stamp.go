@@ -79,6 +79,7 @@ func main() {
 	conf = new(app.ConfigConode)
 	app.ReadTomlConfig(conf, configFile)
 	suite = app.GetSuite(conf.Suite)
+	dbg.Printf("Suite used is : %v", suite)
 	switch {
 	case stamp != "":
 		StampFile(stamp, server)
@@ -175,7 +176,11 @@ func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 	if err != nil {
 		dbg.Fatal("Could not read aggregate public key from config file")
 	}
-	if err := SchnorrVerify(suite, []byte(message), pub, reply.I0); err != nil {
+	sig := defs.BasicSignature{
+		Chall: reply.SigBroad.C,
+		Resp:  reply.SigBroad.R0_hat,
+	}
+	if err := SchnorrVerify(suite, []byte(message), pub, sig); err != nil {
 		dbg.Lvl1("Schnorr verification failed. ", err)
 		return false
 	}
@@ -184,14 +189,8 @@ func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 }
 
 //TAKEN FROM SIG_TEST from abstract
-func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Point, signatureBuffer []byte) error {
+func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Point, sig defs.BasicSignature) error {
 
-	// Decode the signature
-	buf := bytes.NewBuffer(signatureBuffer)
-	sig := defs.BasicSignature{}
-	if err := suite.Read(buf, &sig); err != nil {
-		return err
-	}
 	r := sig.Resp
 	c := sig.Chall
 

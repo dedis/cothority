@@ -3,10 +3,10 @@ package defs
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/proto/sign"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/app"
 )
@@ -78,16 +78,17 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	dbg.Printf("%+v", Srep.Suite)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
 	dbg.Printf("%+v", Srep.SigBroad)
+	dbg.Printf("Suite : %+v", Srep.Suite)
 	err = Srep.Suite.Read(b, &Srep.SigBroad)
 	return err
 }
 
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
-				// ErrorReply *ErrorReply // Generic error reply to any request
-	Type  MessageType
-	Sreq  *StampRequest
-	Srep  *StampReply
+	// ErrorReply *ErrorReply // Generic error reply to any request
+	Type MessageType
+	Sreq *StampRequest
+	Srep *StampReply
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
