@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/app"
 )
 
 type MessageType int
@@ -56,6 +57,7 @@ func (Srep StampReply) MarshalBinary() ([]byte, error) {
 	err := enc.Encode(Srep.I0)
 	err = enc.Encode(len(Srep.Prf))
 	err = enc.Encode(Srep.Prf)
+	err = enc.Encode(Srep.Suite.String())
 	err = Srep.Suite.Write(&b, Srep.SigBroad)
 	return b.Bytes(), err
 }
@@ -70,6 +72,10 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	dbg.Printf("%+v", Srep.Prf)
 	dbg.Printf("%+v", Srep.PrfLen)
 	err = dec.Decode(&Srep.Prf)
+	var suiteStr string
+	err = dec.Decode(&suiteStr)
+	Srep.Suite = app.GetSuite("ed25519")
+	dbg.Printf("%+v", Srep.Suite)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
 	dbg.Printf("%+v", Srep.SigBroad)
 	dbg.Printf("Suite : %+v", Srep.Suite)
