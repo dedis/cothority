@@ -1,18 +1,35 @@
 Suite = "ed25519"
+<<<<<<< HEAD
 Hosts = ["127.0.0.1:2000", "127.0.0.1:2010", "127.0.0.1:2020"]
 AggPubKey = "wtvPtBGZ9mgcK89zuyhIllRqJXPb/t3Lal6p50x2eZw="
+=======
+Hosts = ["localhost:2000", "localhost:2010", "localhost:2020"]
+AggPubKey = "YUvEEgjtf/8Nl95ESOQOaazlZsp1j920FHGNKUTyZKc="
+>>>>>>> 210388fc7ee39d2e71634c8a04b06816bc21837c
 
 [Tree]
   Name = "127.0.0.1:2000"
   PriKey = ""
+<<<<<<< HEAD
   PubKey = "TmkSi32bJ8zwX+BU/jdpNcn97r4mMQVXoaKSat4/tAM="
+=======
+  PubKey = "rMkwsT4rhLxqTkFgWFWVBx+dIGmtY6ANXyF2XGfYg0g="
+>>>>>>> 210388fc7ee39d2e71634c8a04b06816bc21837c
 
   [[Tree.Children]]
     Name = "127.0.0.1:2010"
     PriKey = ""
+<<<<<<< HEAD
     PubKey = "DyBQIKOjuqGJBItrzzSzFu7kxz2FNFu3qZ+UV0J8IEU="
+=======
+    PubKey = "WhVUW/ha0Nnh2bFHkX2vBl72SpMC3u4QI+GBXtSMSaY="
+>>>>>>> 210388fc7ee39d2e71634c8a04b06816bc21837c
 
   [[Tree.Children]]
     Name = "127.0.0.1:2020"
     PriKey = ""
+<<<<<<< HEAD
     PubKey = "kavVl9VBtLAI8Aoc+wHtUrJ6q2J0FQWYJA9Y5e6j9AI="
+=======
+    PubKey = "p3UXRgRz3LfDReNm9KX6lvNaZateehxsEx+YGFaTOtw="
+>>>>>>> 210388fc7ee39d2e71634c8a04b06816bc21837c
