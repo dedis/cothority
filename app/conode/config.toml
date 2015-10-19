@@ -1,33 +1,18 @@
 Suite = "ed25519"
-Hosts = ["localhost:2000", "localhost:2010", "localhost:2020", "localhost:2000", "localhost:2010", "localhost:2020"]
-AggPubKey = "o+mTb3c72BnlTZdS32Wal4TZgtgIc6/aFtSsfNxRDuA="
+Hosts = ["127.0.0.1:2000", "127.0.0.1:2010", "127.0.0.1:2020"]
+AggPubKey = "wtvPtBGZ9mgcK89zuyhIllRqJXPb/t3Lal6p50x2eZw="
 
 [Tree]
-  Name = "localhost:2000"
+  Name = "127.0.0.1:2000"
   PriKey = ""
-  PubKey = "IOHRgdQkfJ1e3Cz64MilR8rnT9J0mUey2AV8PKYwlNs="
+  PubKey = "TmkSi32bJ8zwX+BU/jdpNcn97r4mMQVXoaKSat4/tAM="
 
   [[Tree.Children]]
-    Name = "localhost:2010"
+    Name = "127.0.0.1:2010"
     PriKey = ""
-    PubKey = "lxyqlfI5XatrLyOeo0SWSp1uWM4e0AZKho2gisMIkKU="
-
-    [[Tree.Children.Children]]
-      Name = "localhost:2000"
-      PriKey = ""
-      PubKey = "rMkwsT4rhLxqTkFgWFWVBx+dIGmtY6ANXyF2XGfYg0g="
-
-    [[Tree.Children.Children]]
-      Name = "localhost:2010"
-      PriKey = ""
-      PubKey = "WhVUW/ha0Nnh2bFHkX2vBl72SpMC3u4QI+GBXtSMSaY="
+    PubKey = "DyBQIKOjuqGJBItrzzSzFu7kxz2FNFu3qZ+UV0J8IEU="
 
   [[Tree.Children]]
-    Name = "localhost:2020"
+    Name = "127.0.0.1:2020"
     PriKey = ""
-    PubKey = "mFMX0GvIRQm8Y6m8tfQ4P9nFAQ2IWYKtpRzVNfkreHE="
-
-    [[Tree.Children.Children]]
-      Name = "localhost:2020"
-      PriKey = ""
-      PubKey = "p3UXRgRz3LfDReNm9KX6lvNaZateehxsEx+YGFaTOtw="
+    PubKey = "kavVl9VBtLAI8Aoc+wHtUrJ6q2J0FQWYJA9Y5e6j9AI="
