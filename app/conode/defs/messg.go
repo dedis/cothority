@@ -29,11 +29,11 @@ type StampRequest struct {
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampReply struct {
-	Suite    abstract.Suite
-	I0       []byte                         // Signature on the root // MTRoot ?
-	PrfLen   int                            // Length of proof
-	Prf      proof.Proof                    // Merkle proof of value
-	SigBroad sign.SignatureBroadcastMessage // All other elements necessary
+	Suite      abstract.Suite
+	MerkleRoot []byte                         // root of the merkle tree
+	PrfLen     int                            // Length of proof
+	Prf        proof.Proof                    // Merkle proof of value
+	SigBroad   sign.SignatureBroadcastMessage // All other elements necessary
 }
 
 func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
@@ -53,7 +53,7 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 func (Srep StampReply) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
-	err := enc.Encode(Srep.I0)
+	err := enc.Encode(Srep.MerkleRoot)
 	err = enc.Encode(len(Srep.Prf))
 	err = enc.Encode(Srep.Prf)
 	err = enc.Encode(Srep.Suite.String())
@@ -64,7 +64,7 @@ func (Srep StampReply) MarshalBinary() ([]byte, error) {
 func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
-	err := dec.Decode(&Srep.I0)
+	err := dec.Decode(&Srep.MerkleRoot)
 	err = dec.Decode(&Srep.PrfLen)
 	Srep.Prf = make([]hashid.HashId, Srep.PrfLen)
 	err = dec.Decode(&Srep.Prf)

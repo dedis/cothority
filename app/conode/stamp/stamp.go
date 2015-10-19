@@ -24,7 +24,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
-	"flag"
+	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app/conode/defs"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
@@ -32,6 +32,7 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
 	"io"
 	"os"
@@ -42,13 +43,26 @@ import (
 var stamp = ""
 var server = "localhost"
 var check = ""
-var configFile = "config.toml"
+
+// Default config file
+const defaultConfigFile = "config.toml"
+
+// Default port where conodes listens
+const defaultPort = "2001"
+
+// extension given to a signature file
+const sigExtension = ".sig"
+
+// Helper ffunction to get the signature file from a file name
+func signatureFile(file string) string {
+	return file + sigExtension
+}
 
 func init() {
-	flag.StringVar(&stamp, "stamp", stamp, "Stamp that file")
-	flag.StringVar(&check, "verify", check, "Verify that a signature-file contains a valid signature")
-	flag.StringVar(&server, "server", server, "The server to connect to [localhost]")
-	flag.StringVar(&configFile, "config", configFile, "Configuration file of the tree used")
+	//flag.StringVar(&stamp, "stamp", stamp, "Stamp that file")
+	//flag.StringVar(&check, "verify", check, "Verify that a signature-file contains a valid signature")
+	//flag.StringVar(&server, "server", server, "The server to connect to [localhost]")
+	//flag.StringVar(&configFile, "config", configFile, "Configuration file of the tree used")
 }
 
 // For the file-output we want a structure with base64-encoded strings, so it can be
@@ -58,10 +72,14 @@ type SignatureFile struct {
 	Name string
 	// hash of our file
 	Hash string
-	// the inclusion-proof
+	// the root of the merkle tree
+	Root string
+	// the inclusion-proof from root to the hash'd file
 	Proof string
-	// signature returned by the root-node
-	Signature string
+	// The signature challenge
+	Challenge string
+	// The signature response
+	Response string
 }
 
 // Our crypto-suite used in the program
@@ -70,24 +88,75 @@ var suite abstract.Suite
 // the configuration file of the cothority tree used
 var conf *app.ConfigConode
 
+// Actual definition of the Command Line Interface
+func constructCli() *cli.App {
+	stamp := cli.NewApp()
+	stamp.Name = "collective"
+	stamp.Usage = "Used to sign files to a cothority tree and to verify issued signatures"
+	stamp.Commands = []cli.Command{
+		{
+			Name:    "sign",
+			Aliases: []string{"s"},
+			Usage:   "Request a signed time-stamp on a file. Provide with FILE.",
+			Action: func(c *cli.Context) {
+				dbg.Lvl1("Requesting a timestamp on a cothority tree")
+				server = c.String("server")
+				if !strings.Contains(server, ":") {
+					server += ":" + defaultPort
+				}
+				StampFile(c.Args().First(), server)
+			},
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server, s",
+					Value: "",
+					Usage: "Server in the cothority tree we wish to contact. If not given, it will select a random one.",
+				},
+			},
+		},
+		{
+			Name:    "check",
+			Aliases: []string{"c"},
+			Usage:   "Verify a given signature against a file",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "sig",
+					Value: "",
+					Usage: "signature file to verify",
+				},
+			},
+			Action: func(c *cli.Context) {
+				dbg.Lvl2("Requesting a verification of a file given its signature. Provide with FILE.")
+				VerifySignature(c.Args().First(), c.String("sig"))
+			},
+		},
+	}
+	stamp.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: defaultConfigFile,
+			Usage: "Configuration file of the cothority tree we are using.",
+		},
+	}
+	// Read the config file before
+	stamp.Before = func(c *cli.Context) error {
+		var cf string = c.String("config")
+		if c.String("config") == "" {
+			cf = defaultConfigFile
+		}
+		conf = new(app.ConfigConode)
+		err := app.ReadTomlConfig(conf, cf)
+		suite = app.GetSuite(conf.Suite)
+		return err
+	}
+	return stamp
+}
+
 // If the server is only given with it's hostname, it supposes that the stamp
 // server is run on port 2001. Else you will have to add the port yourself.
 func main() {
-	flag.Parse()
-	if !strings.Contains(server, ":") {
-		server += ":2001"
-	}
-	conf = new(app.ConfigConode)
-	app.ReadTomlConfig(conf, configFile)
-	suite = app.GetSuite(conf.Suite)
-	dbg.Printf("Suite used is : %v", suite)
-	switch {
-	case stamp != "":
-		StampFile(stamp, server)
-	case check != "":
-		VerifySignature(check)
-	}
-
+	app := constructCli()
+	app.Run(os.Args)
 }
 
 // Takes a 'file' to hash and being stamped at the 'server'. The output of the
@@ -145,27 +214,32 @@ func StampFile(file, server string) {
 	dbg.Print("All done - file is written")
 }
 
-// Takes a signature-file and checks the information therein. If the file referenced
-// in 'sigFile' is available, the hash is also checkd.
-func VerifySignature(sigFile string) bool {
-	err, file, hashOrig, reply := ReadSignatureFile(sigFile)
-	if err != nil {
-		dbg.Fatal("Couldn't read signature-file", sigFile)
+// Verify signature takes a file name and the name of the signature file
+// if signature file is empty ( sigFile == ""), then the signature file is
+// simply the name of the file appended with ".sig" extension.
+func VerifySignature(file, sigFile string) bool {
+	if file == "" {
+		dbg.Fatal("Can not verify anything with an empty file name !")
 	}
 
-	if _, err := os.Stat(file); os.IsNotExist(err) {
-		dbg.Lvl1("Didn't find the signed file in our directory:", file)
-	} else {
-		hash := hashFile(file)
-		if bytes.Compare(hash, hashOrig) == 0 {
-			dbg.Lvl1("Hash-check: passed")
-		} else {
-			dbg.Lvl1("Hash-check: FAILED")
-			dbg.Lvl1("If you want to check the correctness of the signature, please\n"+
-				"remove the file", file)
-			return false
-		}
+	// by default
+	if sigFile == "" {
+		sigFile = signatureFile(file)
 	}
+	// read the sig
+	hashOrig, reply, err := ReadSignatureFile(sigFile)
+	if err != nil {
+		dbg.Fatal("Couldn't read signature-file", sigFile, " : ", err)
+	}
+	// compute the hash again to verify if hash is good
+	hash := hashFile(file)
+	if bytes.Compare(hash, hashOrig) == 0 {
+		dbg.Lvl1("Hash-check: OK")
+	} else {
+		dbg.Lvl1("Hash-check: FAILED")
+		return false
+	}
+	// Then verify the proper signature
 	return verifySignature(hashOrig, reply)
 }
 
@@ -174,28 +248,27 @@ func VerifySignature(sigFile string) bool {
 // Message is your own hash, and reply contains the inclusion proof + signature
 // on the aggregated message
 func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
-	dbg.Lvl1("Checking signature")
 	sig := defs.BasicSignature{
 		Chall: reply.SigBroad.C,
 		Resp:  reply.SigBroad.R0_hat,
 	}
 	public, _ := cliutils.ReadPub64(strings.NewReader(conf.AggPubKey), suite)
-	if err := SchnorrVerify(suite, reply.I0, public, sig); err != nil {
-		dbg.Lvl1("Schnorr verification failed. ", err)
+	if err := SchnorrVerify(suite, reply.MerkleRoot, public, sig); err != nil {
+		dbg.Lvl1("Signature-check : FAILED (", err, ")")
 		return false
 	}
-	dbg.Lvl1("Schnorr verification succeeded !")
+	dbg.Lvl1("Signature-check : OK")
 
 	// Verify inclusion proof
-	dbg.Lvl1("Verify inclusion proof ...")
-	if !proof.CheckProof(suite.Hash, reply.I0, message, reply.Prf) {
-		dbg.Lvl1("Inclusion proof checking failed.")
+	if !proof.CheckProof(suite.Hash, reply.MerkleRoot, message, reply.Prf) {
+		dbg.Lvl1("Inclusion-check : FAILED")
 		return false
 	}
-	dbg.Lvl1("Inclusion proof verification succeeded !")
+	dbg.Lvl1("Inclusion-check : OK")
 	return true
 }
 
+// A simple verification of a schnorr signature given the message
 //TAKEN FROM SIG_TEST from abstract
 func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Point, sig defs.BasicSignature) error {
 	r := sig.Resp
@@ -226,7 +299,6 @@ func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Poin
 	if !hash.Equal(sig.Chall) {
 		return errors.New("invalid signature")
 	}
-
 	return nil
 }
 
@@ -238,11 +310,23 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampRepl
 	for _, pr := range stamp.Prf {
 		p += base64.StdEncoding.EncodeToString(pr) + " "
 	}
+	// Write challenge and response part
+	var bufChall bytes.Buffer
+	var bufResp bytes.Buffer
+	if err := cliutils.WriteSecret64(&bufChall, suite, stamp.SigBroad.C); err != nil {
+		dbg.Fatal("Could not write secret challenge :", err)
+	}
+	if err := cliutils.WriteSecret64(&bufResp, suite, stamp.SigBroad.R0_hat); err != nil {
+		dbg.Fatal("Could not write secret response : ", err)
+	}
+	// Signature file struct containing everything needed
 	sigStr := &SignatureFile{
 		Name:      file,
 		Hash:      base64.StdEncoding.EncodeToString(hash),
 		Proof:     base64.StdEncoding.EncodeToString([]byte(p)),
-		Signature: base64.StdEncoding.EncodeToString(stamp.I0),
+		Root:      base64.StdEncoding.EncodeToString(stamp.MerkleRoot),
+		Challenge: bufChall.String(),
+		Response:  bufResp.String(),
 	}
 
 	// Print to the screen, and write to file
@@ -254,27 +338,40 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampRepl
 
 // The inverse of 'WriteSignatureFile' where each field of the toml-file is
 // decoded and put back in a 'StampReply'-structure
-func ReadSignatureFile(name string) (error, string, []byte, *defs.StampReply) {
+// Returns the hash of the file, the signature itself with all informations +
+// error if any
+func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
 	// Read in the toml-file
 	sigStr := &SignatureFile{}
 	err := app.ReadTomlConfig(sigStr, name)
 	if err != nil {
-		return err, "", nil, nil
+		return nil, nil, nil
 	}
 
 	reply := &defs.StampReply{}
+	reply.SigBroad = sign.SignatureBroadcastMessage{}
 	// Convert fields from Base64 to binary
 	hash, err := base64.StdEncoding.DecodeString(sigStr.Hash)
 	for _, pr := range strings.Fields(sigStr.Proof) {
 		pro, err := base64.StdEncoding.DecodeString(pr)
 		if err != nil {
 			dbg.Lvl1("Couldn't decode proof:", pr)
-			return err, "", nil, nil
+			return nil, nil, err
 		}
 		reply.Prf = append(reply.Prf, pro)
 	}
-	reply.I0, err = base64.StdEncoding.DecodeString(sigStr.Signature)
-	return nil, sigStr.Name, hash, reply
+	// Read the root, the challenge and response
+	reply.MerkleRoot, err = base64.StdEncoding.DecodeString(sigStr.Root)
+	if err != nil {
+		dbg.Fatal("Could not decode Merkle Root from sig file :", err)
+	}
+	reply.SigBroad.R0_hat, err = cliutils.ReadSecretHex(suite, sigStr.Challenge)
+	if err != nil {
+		dbg.Fatal("Could not read secret challenge : ", err)
+	}
+	reply.SigBroad.C, err = cliutils.ReadSecretHex(suite, sigStr.Response)
+	return hash, reply, err
+
 }
 
 // Takes a file to be hashed - reads in chunks of 1MB

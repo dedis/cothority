@@ -140,6 +140,20 @@ func WritePub64(w io.Writer, suite abstract.Suite, point abstract.Point) error {
 	return err
 }
 
+func WriteSecret64(w io.Writer, suite abstract.Suite, secret abstract.Secret) error {
+	enc := base64.NewEncoder(base64.StdEncoding, w)
+	err := suite.Write(enc, secret)
+	enc.Close()
+	return err
+}
+
+func ReadSecret64(r io.Reader, suite abstract.Suite) (abstract.Secret, error) {
+	sec := suite.Secret()
+	dec := base64.NewDecoder(base64.StdEncoding, r)
+	err := suite.Read(dec, &sec)
+	return sec, err
+}
+
 // COnvert a Public point to a hexadecimal reprensation
 func PubHex(suite abstract.Suite, point abstract.Point) (string, error) {
 	pbuf, err := point.MarshalBinary()
@@ -162,4 +176,15 @@ func ReadPubHex(s string, suite abstract.Suite) (abstract.Point, error) {
 func SecretHex(suite abstract.Suite, secret abstract.Secret) (string, error) {
 	sbuf, err := secret.MarshalBinary()
 	return hex.EncodeToString(sbuf), err
+}
+
+// Read a secret in hexadceimal from string
+func ReadSecretHex(suite abstract.Suite, str string) (abstract.Secret, error) {
+	enc, err := hex.DecodeString(str)
+	if err != nil {
+		return nil, err
+	}
+	sec := suite.Secret()
+	err = sec.UnmarshalBinary(enc)
+	return sec, err
 }

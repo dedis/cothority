@@ -363,7 +363,7 @@ func (s *Server) OnDone() sign.DoneFunc {
 			respMessg := defs.TimeStampMessage{
 				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &defs.StampReply{Suite: suite, I0: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  &defs.StampReply{Suite: suite, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
 			dbg.Print("Message : ", SNRoot)
 			dbg.Print("Challenge : ", sb.C)
 			dbg.Print("Response : ", sb.R0_hat)
