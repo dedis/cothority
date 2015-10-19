@@ -8,6 +8,7 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/app"
 )
 
 type MessageType int
@@ -29,7 +30,7 @@ type StampRequest struct {
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampReply struct {
-	Suite abstract.Suite
+	Suite    abstract.Suite
 	I0       []byte                         // Signature on the root
 	PrfLen   int                            // Length of proof
 	Prf      proof.Proof                    // Merkle proof of value
@@ -56,6 +57,7 @@ func (Srep StampReply) MarshalBinary() ([]byte, error) {
 	err := enc.Encode(Srep.I0)
 	err = enc.Encode(len(Srep.Prf))
 	err = enc.Encode(Srep.Prf)
+	err = enc.Encode(Srep.Suite.String())
 	err = Srep.Suite.Write(&b, Srep.SigBroad)
 	return b.Bytes(), err
 }
@@ -70,6 +72,10 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	dbg.Printf("%+v", Srep.Prf)
 	dbg.Printf("%+v", Srep.PrfLen)
 	err = dec.Decode(&Srep.Prf)
+	var suiteStr string
+	err = dec.Decode(&suiteStr)
+	Srep.Suite = app.GetSuite(suiteStr)
+	dbg.Printf("%+v", Srep.Suite)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
 	dbg.Printf("%+v", Srep.SigBroad)
 	err = Srep.Suite.Read(b, &Srep.SigBroad)
