@@ -145,13 +145,15 @@ func RunServer(conf *app.ConfigConode) {
 	// For retro compatibility issues, convert the base64 encoded key into hex
 	// encoded keys....
 	convertTree(conf.Tree)
-
+	// Add our private key to the tree (compatiblity issues again with graphs/
+	// lib)
+	addPrivateKey(conf)
 	// load the configuration
 	//dbg.Lvl3("loading configuration")
 	var hc *graphs.HostConfig
 	opts := graphs.ConfigOptions{ConnType: "tcp", Host: address, Suite: suite}
 
-	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
+	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, suite, opts)
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -252,4 +254,22 @@ func convertTree(t *graphs.Tree) {
 	for _, c := range t.Children {
 		convertTree(c)
 	}
+}
+
+// Add our own private key in the tree. This function exists because of
+// compatilibty issues with the graphs/ lib.
+func addPrivateKey(conf *app.ConfigConode) {
+	fn := func(t *graphs.Tree) {
+		// this is our node in the tree
+		if t.Name == address {
+			// convert to hexa
+			s, err := cliutils.SecretHex(suite, conf.Secret)
+			if err != nil {
+				dbg.Fatal("Error converting our secret key to hexadecimal")
+			}
+			// adds it
+			t.PriKey = s
+		}
+	}
+	conf.Tree.TraverseTree(fn)
 }

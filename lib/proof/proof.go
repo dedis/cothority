@@ -5,9 +5,8 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/crypto/abstract"
 	"hash"
 	"strconv"
 )
@@ -73,11 +72,7 @@ func CheckProof(newHash HashFunc, root hashid.HashId, leaf hashid.HashId, proof 
 	// log.Println("Leaf", len(leaf), leaf)
 	// log.Println("Proof", proof)
 	// log.Println("\n")
-	if proof.Check(newHash, root, leaf) == false {
-		log.Errorln("FAILED TO CHECK")
-		panic("check failed at leaf")
-	}
-	return true
+	return proof.Check(newHash, root, leaf)
 }
 
 func CheckLocalProofs(newHash HashFunc, root hashid.HashId, leaves []hashid.HashId, proofs []Proof) bool {

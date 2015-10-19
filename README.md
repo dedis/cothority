@@ -1,85 +1,59 @@
 # Cothority
 
 The code permits the testing and running of a cothority-system together with the applications. It is split up in 
-deployment, application and protocols. The basic cryptographic code comes from DeDiS/crypto. The following modules
-are used:
+deployment, application and protocols. The basic cryptographic code comes from DeDiS/crypto. 
 
-Deploy
+## Deploy
 
-    * Deter - running
+    * Deter
     * Localhost
     * Future:
-	    * Go-routines - in preparation
         * Docker
         * LXC
 
-Applications
+## Applications
 
     * timestamping
     * signing
-    * shamir-signing
+    * shamir-secret-service signing
+    * shamir-secret-service with tree signing
     * To come:
     	* Randhound - decentrailzed randomness cothority
-	    * vote - doesn't run yet.
+	* vote - doesn't run yet.
     
-Protocols
+## Protocols
 
     * collective signing
-    * shamir signing
-    
+
 # How to run
 
-The apps will be stand-alone (not yet tested) in each directory app/*. For the moment they
-can be run only through the deterlab-testbed in the ```deploy```-directory:
+The apps are stand-alone (with the correct configuration) in each directory app/*. They can be used with either
+the ```localhost```- or the ```deterlab```-deployment. For a simple check on localhost, you can use the following:
 
 ```
 go get ./...
 cd deploy
 go build
-./deploy runconfig/sign_single.toml
+./deploy -deploy localhost simulation/sign_single.toml
 ```
 
-then enter the name of the deterlab-installation, your username, project- and experiment-name, and you should
-be ready to go. The arguments are:
+## How to run on deterlab
 
-	* runconfig - any .toml-file in the runconfig/-directory
-	* -debug - number between 0 and 5 - 0 is silent, 5 is very verbose
+If you use ```-deploy deterlab```, then you will have to enter the name of the deterlab-installation, your username, project- and experiment-name. Furthermore the your public ssh-key has to be installed on the deterlab-site.
 
 For the sake of easy development there are some switches that are to be used only for the
 deterlab implementation:
 
 	* -nobuild - don't build any of the helpers - useful if you're working on the main code
 	* -build "helper1,helper2" - only build the helpers, separated by a "," - speeds up recompiling
-	* -machines # - tells how many machines are to be used for the run
 
-# Deployment
-	Configure(*Config)
-	Build() (error)
-	Deploy() (error)
-	Start() (error)
-	Stop() (error)
-
-The Life of a simulation:
-
-1. Configure
-	* Prepare global specific configuration (deterlab or localhost)
-2. Build
-    * builds all files for the target platforms
-3. Deploy
-    * make sure the environment is up and running
-    * prepare configuration for the app to run
-    * copy files
-4. Start
-    * start all logservers
-    * start all nodes
-    * start all clients
-5. Stop
-    * abort after timeout OR
-    * wait for final message
-6. Stats - work in progress
-    * copy everything to local
-    
 # Applications
+
+## Conode
+
+You will find more information about the conode in it's README:
+
+https://github.com/dedis/cothority/app/conode/README.md
 
 ## Timestamping
 

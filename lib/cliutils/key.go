@@ -157,3 +157,9 @@ func ReadPubHex(s string, suite abstract.Suite) (abstract.Point, error) {
 	err = point.UnmarshalBinary(encoded)
 	return point, err
 }
+
+// Encode a secret to hexadecimal
+func SecretHex(suite abstract.Suite, secret abstract.Secret) (string, error) {
+	sbuf, err := secret.MarshalBinary()
+	return hex.EncodeToString(sbuf), err
+}
