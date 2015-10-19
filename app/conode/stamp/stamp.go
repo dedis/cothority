@@ -27,6 +27,7 @@ import (
 	"flag"
 	"github.com/dedis/cothority/app/conode/defs"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
@@ -39,16 +40,14 @@ import (
 // Flag-variables
 var stamp = ""
 var server = "localhost"
-var suiteString = "ed25519"
 var check = ""
-var configFile = "client_config.toml"
+var configFile = "config.toml"
 
 func init() {
 	flag.StringVar(&stamp, "stamp", stamp, "Stamp that file")
 	flag.StringVar(&check, "verify", check, "Verify that a signature-file contains a valid signature")
 	flag.StringVar(&server, "server", server, "The server to connect to [localhost]")
 	flag.StringVar(&configFile, "config", configFile, "Configuration file of the tree used")
-	flag.StringVar(&suiteString, "suite", suiteString, "Which suite to use [ed25519]")
 }
 
 // For the file-output we want a structure with base64-encoded strings, so it can be
@@ -68,7 +67,7 @@ type SignatureFile struct {
 var suite abstract.Suite
 
 // the configuration file of the cothority tree used
-var conf app.ConfigClient
+var conf *app.ConfigConode
 
 // If the server is only given with it's hostname, it supposes that the stamp
 // server is run on port 2001. Else you will have to add the port yourself.
@@ -77,10 +76,9 @@ func main() {
 	if !strings.Contains(server, ":") {
 		server += ":2001"
 	}
-
-	suite = app.GetSuite(suiteString)
-	conf = app.ConfigClient{}
+	conf = new(app.ConfigConode)
 	app.ReadTomlConfig(conf, configFile)
+	suite = app.GetSuite(conf.Suite)
 	switch {
 	case stamp != "":
 		StampFile(stamp, server)
@@ -170,8 +168,11 @@ func VerifySignature(sigFile string) bool {
 // Verifies that the 'message' is included in the signature and that it
 // is correct.
 func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
-	dbg.Lvl1("Not checking signature")
-	pub := conf.K0
+	dbg.Lvl1("Checking signature")
+	pub, err := cliutils.ReadPub64(strings.NewReader(conf.AggPubKey), suite)
+	if err != nil {
+		dbg.Fatal("Could not read aggregate public key from config file")
+	}
 	if err := SchnorrVerify(suite, []byte(message), pub, reply.Sig); err != nil {
 		dbg.Lvl1("Schnorr verification failed. ", err)
 		return false
