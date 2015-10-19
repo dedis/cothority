@@ -114,6 +114,7 @@ func StampFile(file, server string) {
 
 	// Wait for the signed message
 	tsm := &defs.TimeStampMessage{}
+	tsm.Srep = &defs.StampReply{}
 	tsm.Srep.Suite = suite
 	err = conn.Get(tsm)
 	if err != nil {
