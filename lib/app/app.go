@@ -21,6 +21,7 @@ import (
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/crypto/nist"
 	"syscall"
+	"strings"
 )
 
 type Flags struct {
@@ -186,18 +187,17 @@ func getFullName(filename string, dirOpt ...string) string {
 
 // Helper functions that will return the suite used during the process from a string name
 func GetSuite(suite string) abstract.Suite {
-	var s abstract.Suite
-	switch {
-	case suite == "nist256":
-		s = nist.NewAES128SHA256P256()
-	case suite == "nist512":
-		s = nist.NewAES128SHA256QR512()
-	case suite == "ed25519":
-		s = ed25519.NewAES128SHA256Ed25519(true)
+	switch strings.ToLower(suite){
+	case "nist256", "p256":
+		return nist.NewAES128SHA256P256()
+	case "nist512", "p512":
+		return nist.NewAES128SHA256QR512()
+	case "ed25519":
+		return ed25519.NewAES128SHA256Ed25519(true)
 	default:
-		s = ed25519.NewAES128SHA256Ed25519(true)
+		dbg.Lvl1("Got unknown suite", suite)
+		return ed25519.NewAES128SHA256Ed25519(true)
 	}
-	return s
 }
 
 func iiToF(sec int64, usec int64) float64 {

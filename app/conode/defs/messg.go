@@ -3,7 +3,6 @@ package defs
 import (
 	"bytes"
 	"encoding/gob"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
@@ -68,17 +67,11 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	err := dec.Decode(&Srep.I0)
 	err = dec.Decode(&Srep.PrfLen)
 	Srep.Prf = make([]hashid.HashId, Srep.PrfLen)
-	dbg.Printf("%+v", Srep)
-	dbg.Printf("%+v", Srep.Prf)
-	dbg.Printf("%+v", Srep.PrfLen)
 	err = dec.Decode(&Srep.Prf)
 	var suiteStr string
 	err = dec.Decode(&suiteStr)
-	Srep.Suite = app.GetSuite("ed25519")
-	dbg.Printf("%+v", Srep.Suite)
+	Srep.Suite = app.GetSuite(suiteStr)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
-	dbg.Printf("%+v", Srep.SigBroad)
-	dbg.Printf("Suite : %+v", Srep.Suite)
 	err = Srep.Suite.Read(b, &Srep.SigBroad)
 	return err
 }
