@@ -74,7 +74,7 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	err = dec.Decode(&Srep.Prf)
 	var suiteStr string
 	err = dec.Decode(&suiteStr)
-	Srep.Suite = app.GetSuite(suiteStr)
+	Srep.Suite = app.GetSuite("ed25519")
 	dbg.Printf("%+v", Srep.Suite)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
 	dbg.Printf("%+v", Srep.SigBroad)
