@@ -79,6 +79,7 @@ func main() {
 	conf = new(app.ConfigConode)
 	app.ReadTomlConfig(conf, configFile)
 	suite = app.GetSuite(conf.Suite)
+	dbg.Printf("Suite used is : %v", suite)
 	switch {
 	case stamp != "":
 		StampFile(stamp, server)

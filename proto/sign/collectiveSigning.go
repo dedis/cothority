@@ -7,10 +7,10 @@ import (
 	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/coconet"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
 
@@ -50,25 +50,25 @@ func (sn *Node) get() error {
 			nm, ok := <-msgchan
 			err := nm.Err
 
-		// TODO: graceful shutdown voting
+			// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
 				dbg.Lvl3(sn.Name(), " getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}
 
-		// if it is a non-fatal error try again
+			// if it is a non-fatal error try again
 			if err != nil {
 				log.Errorln(sn.Name(), " error getting message (still continuing) ", err)
 				continue
 			}
-		// interpret network message as Signing Message
-		//log.Printf("got message: %#v with error %v\n", sm, err)
+			// interpret network message as Signing Message
+			//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
 			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
 
-		// don't act on future view if not caught up, must be done after updating vote index
+			// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
 			if sm.View > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
@@ -172,7 +172,7 @@ func (sn *Node) get() error {
 				// put in votelog to be streamed and applied
 				sn.VoteLog.Put(vi, sm.Curesp.Vote)
 				// continue catching up
-				sn.CatchUp(vi + 1, sm.From)
+				sn.CatchUp(vi+1, sm.From)
 			case GroupChange:
 				if sm.View == -1 {
 					sm.View = sn.ViewNo
@@ -631,10 +631,10 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 	if isroot {
 		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
 		/*
-		nel := len(round.ExceptionList)
-		nhl := len(sn.HostListOn(view))
-		p := strconv.FormatFloat(float64(nel) / float64(nhl), 'f', 6, 64)
-		log.Infoln(sn.Name(), "reports", nel, "out of", nhl, "percentage", p, "failed in round", Round)
+			nel := len(round.ExceptionList)
+			nhl := len(sn.HostListOn(view))
+			p := strconv.FormatFloat(float64(nel) / float64(nhl), 'f', 6, 64)
+			log.Infoln(sn.Name(), "reports", nel, "out of", nhl, "percentage", p, "failed in round", Round)
 		*/
 		// dbg.Lvl4(round.MTRoot)
 	}
@@ -646,7 +646,7 @@ func (sn *Node) TimeForViewChange() bool {
 	defer sn.roundmu.Unlock()
 
 	// if this round is last one for this view
-	if sn.LastSeenRound % sn.RoundsPerView == 0 {
+	if sn.LastSeenRound%sn.RoundsPerView == 0 {
 		// dbg.Lvl4(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
 		return true
 	}
@@ -718,13 +718,11 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage) erro
 	return nil
 }
 
-
 func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
 	if sn.DoneFunc != nil {
-		sn.DoneFunc(view, sn.MTRoot, nil, sn.Proof, sb)
+		sn.DoneFunc(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
 	}
 }
-
 
 func (sn *Node) CloseAll(view int) error {
 	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
@@ -755,7 +753,6 @@ func (sn *Node) CloseAll(view int) error {
 	dbg.Lvl3("Closing down shop", sn.Isclosed)
 	return nil
 }
-
 
 func (sn *Node) PutUpError(view int, err error) {
 	// dbg.Lvl4(sn.Name(), "put up response with err", err)
@@ -798,6 +795,6 @@ func (sn *Node) hashLog(Round int) ([]byte, error) {
 }
 
 // Getting actual View
-func (sn *Node)GetView() int {
+func (sn *Node) GetView() int {
 	return sn.ViewNo
 }
