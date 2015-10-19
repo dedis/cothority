@@ -174,7 +174,7 @@ func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 	dbg.Lvl1("Checking signature")
 	pub, err := cliutils.ReadPub64(strings.NewReader(conf.AggPubKey), suite)
 	if err != nil {
-		dbg.Fatal("Could not read aggregate public key from config file")
+		dbg.Fatal("Could not read aggregate public key from config file : ", err)
 	}
 	sig := defs.BasicSignature{
 		Chall: reply.SigBroad.C,

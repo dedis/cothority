@@ -120,7 +120,7 @@ func ServeMemoryStats() {
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p + 2)), nil)
+			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
 			dbg.Lvl3("Memory-stats server:", res)
 		}()
 	}
@@ -195,13 +195,13 @@ func GetSuite(suite string) abstract.Suite {
 	case suite == "ed25519":
 		s = ed25519.NewAES128SHA256Ed25519(true)
 	default:
-		s = nist.NewAES128SHA256P256()
+		s = ed25519.NewAES128SHA256Ed25519(true)
 	}
 	return s
 }
 
-func iiToF(sec int64, usec int64) float64{
-	return float64(sec) + float64(usec) / 1000000.0
+func iiToF(sec int64, usec int64) float64 {
+	return float64(sec) + float64(usec)/1000000.0
 }
 
 // Gets the sytem and the user time so far
@@ -213,7 +213,7 @@ func GetRTime() (tSys, tUsr float64) {
 }
 
 // Returns the difference to the given system- and user-time
-func GetDiffRTime(tSys, tUsr float64)(tDiffSys, tDiffUsr float64){
+func GetDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
 	nowSys, nowUsr := GetRTime()
 	return nowSys - tSys, nowUsr - tUsr
 }
