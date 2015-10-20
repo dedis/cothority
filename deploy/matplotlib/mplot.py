@@ -11,26 +11,10 @@ import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerLine2D, HandlerRegularPolyCollection
 
 
-# Our CSVs have a space after the comma, so we need a new 'dialect', here
-# called 'deploy'
-csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='', lineterminator='\n', escapechar='',
-                     quoting=csv.QUOTE_NONE, skipinitialspace=True)
-
 class MPlot:
     show_fig = True
     pngname = ""
     plt = None
-    x = []
-    tmin = []
-    tmax = []
-    avg = []
-    std = []
-    tsys = []
-    tusr = []
-    xmin = -1
-    xmax = 0
-    ymin = -1
-    ymax = 0
 
     def __init__(self):
         vers = matplotlib.__version__
@@ -40,78 +24,54 @@ class MPlot:
             exit(1)
         self.plt = plt
 
-    # reads in a cvs and fills up the corresponding arrays
-    # also fills in xmin, xmax, ymin and ymax which are
-    # valid over multiple calls to readCVS!
-    # If you want to start a new set, put xmin = -1
-    def readCSV(self, name):
-        self.x = []
-        self.tmin = []
-        self.tmax = []
-        self.avg = []
-        self.std = []
-        self.tsys = []
-        self.tusr = []
-        # Read in all lines of the CSV and store in the arrays
-        with open(name) as csvfile:
-            reader = csv.DictReader(csvfile, dialect='deploy')
-            for row in reader:
-                self.x.append(float(row['hosts']))
-                self.tmin.append(float(row['min']))
-                self.tmax.append(float(row['max']))
-                self.avg.append(float(row['avg']))
-                self.std.append(float(row['stddev']))
-                self.tsys.append(float(row['systime']))
-                self.tusr.append(float(row['usertime']))
-        # I suppose that x is > 0 anyway, so I can test on -1
-        # and max will always be >= 0
-        if self.xmin == -1:
-            # Suppose it's the start, so also init ymin
-            self.xmin = min(self.x)
-            self.ymin = min(self.avg)
-        else:
-            self.xmin = min(self.xmin, min(self.x))
-            self.ymin = min(self.ymin, min(self.avg))
-        self.xmax = max(self.xmax, max(self.x))
-        self.ymax = max(self.ymax, max(self.tmax))
-
-
     # Adds a fill_between and the corresponding 'empty' plot to show up in
     # the legend
-    def plotFilledLegend(self, x, y1, y2, label, color, z=None):
+    def plotFilledLegend(self, stats, col1, col2, label, color, z=None):
+        stats.reset_min_max()
+        y1 = stats.update_values(col1)
+        y2 = stats.update_values(col2)
         if z:
-            fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white', zorder=z)
+            fb = plt.fill_between(stats.x, y1, y2, facecolor=color, edgecolor='white', zorder=z)
         else:
-            fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white', zorder=3)
+            fb = plt.fill_between(stats.x, y1, y2, facecolor=color, edgecolor='white', zorder=3)
         # plt.plot([], [], '-', label=label, color=color, linewidth=10)
 
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
-    def plotStacked(self, x, y1, y2, label1, label2, color1, color2, ymin=None):
+    def plotStacked(self, stats, col1, col2, label1, label2, color1, color2, ymin=None):
+        stats.reset_min_max()
+        y1 = stats.update_values(col1)
+        y2 = stats.update_values(col2)
         if ymin == None:
             ymin = min(min(y1), min(y2))
         ymins = [ymin] * len(x)
         ysum = [sum(t) for t in zip(y1, y2)]
-        self.plotFilledLegend(x, y1, ysum, label2, color2)
-        self.plotFilledLegend(x, ymins, y1, label1, color1)
+        self.plotFilledLegend(stats.x, y1, ysum, label2, color2)
+        self.plotFilledLegend(stats.x, ymins, y1, label1, color1)
 
 
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
-    def plotStackedBars(self, x, y1, y2, label1, label2, color1, color2, ymin=None,
+    def plotStackedBars(self, stats, col1, col2, label1, label2, color1, color2, ymin=None,
                     delta_x=0):
+        stats.reset_min_max()
+        y1 = stats.update_values(col1)
+        y2 = stats.update_values(col2)
         width = [(t * 0.125 + delta_x * t * 0.018) for t in x]
 
         zero = [min(y1) for t in y1]
-        xd = [t[0] + delta_x * t[1] for t in zip(x, width)]
+        xd = [t[0] + delta_x * t[1] for t in zip(stats.x, width)]
         y12 = [sum(t) for t in zip(y1, y2)]
         plt.bar(xd, y12, width, color=color1, bottom=y1, zorder=3, label=label1)
         plt.bar(xd, y1, width, color=color2, bottom=zero, zorder=3, label=label2)
 
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
-    def plotStackedBarsHatched(self, x, y1, y2, label, color, ymin=None,
+    def plotStackedBarsHatched(self, stats, col1, col2, label, color, ymin=None,
                            delta_x=0):
+        stats.reset_min_max()
+        y1 = stats.update_values(col1)
+        y2 = stats.update_values(col2)
         width = [(t * 0.18 + delta_x * t * 0.018) for t in x]
 
         zero = [min(y1) for t in y1]

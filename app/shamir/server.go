@@ -4,9 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/crypto/poly"
-	"time"
 	"github.com/dedis/cothority/lib/monitor"
 )
 

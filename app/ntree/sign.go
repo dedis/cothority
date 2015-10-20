@@ -1,15 +1,12 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	net "github.com/dedis/cothority/lib/network"
 	"sync"
 	"sync/atomic"
-	"time"
 	"github.com/dedis/cothority/lib/monitor"
 )
 

@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 type Server struct {
@@ -229,8 +230,8 @@ func (s *Server) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
-			start := time.Now()
-			dbg.Lvl4(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound() + 1, "of", nRounds)
+			measure := monitor.NewMeasure()
+			dbg.Lvl4(s.Name(), "is stamp server starting signing round for:", s.LastRound() + 1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -243,6 +244,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 			} else {
 				err = s.StartSigningRound()
 			}
+			measure.MeasureCPUWall("basic_calc", "basic_round")
 
 			if err == sign.ChangingViewError {
 				// report change in view, and continue with the select
@@ -266,18 +268,9 @@ func (s *Server) runAsRoot(nRounds int) string {
 				if err != nil {
 					log.Fatal("Couldn't close:", err)
 				}
-
+				monitor.LogEnd()
 				return "close"
 			}
-
-			elapsed := time.Since(start)
-			log.WithFields(log.Fields{
-				"file":  logutils.File(),
-				"type":  "root_round",
-				"round": s.LastRound(),
-				"time":  elapsed,
-			}).Info("root round")
-
 		}
 	}
 }
@@ -296,11 +289,6 @@ func (s *Server) runAsRegular() string {
 // Listen on client connections. If role is root also send annoucement
 // for all of the nRounds
 func (s *Server) Run(role string, nRounds int) {
-	// defer func() {
-	// 	log.Infoln(s.Name(), "CLOSE AFTER RUN")
-	// 	s.Close()
-	// }()
-
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 

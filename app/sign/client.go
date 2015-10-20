@@ -2,7 +2,6 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	"sync/atomic"
 	"time"
 
@@ -63,14 +62,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		measure_wall.MeasureWall("root_round")
 	}
 
-	log.WithFields(log.Fields{
-		"file":        logutils.File(),
-		"type":        "client_msg_stats",
-		"buck":        removeTrailingZeroes(buck),
-		"roundsAfter": removeTrailingZeroes(roundsAfter),
-		"times":       removeTrailingZeroes(times),
-	}).Info("")
-
+	monitor.LogEnd()
 	// And tell everybody to quit
 	err := hc.SNodes[0].CloseAll(hc.SNodes[0].ViewNo)
 	if err != nil {
