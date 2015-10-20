@@ -642,6 +642,10 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 }
 
 func (sn *Node) TimeForViewChange() bool {
+	if sn.RoundsPerView == 0{
+		// No view change asked
+		return false
+	}
 	sn.roundmu.Lock()
 	defer sn.roundmu.Unlock()
 

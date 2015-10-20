@@ -149,7 +149,7 @@ in the conode-directory.
 We propose to watch the availability of his node over a period of at least 24h.
 To check, whether his server is up and running, type the following:
 
-```./conode verify keyname.pub```
+```./conode check keyname.pub```
 
 ```keyname.pub``` is the public keyfile of the user. Conode will verify that the
 server is available at the given address and whether his private key corresponds
