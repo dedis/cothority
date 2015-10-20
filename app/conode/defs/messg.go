@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"github.com/dedis/cothority/lib/app"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
@@ -53,27 +54,55 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 func (Srep StampReply) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
-	err := enc.Encode(Srep.MerkleRoot)
-	err = enc.Encode(len(Srep.Prf))
-	err = enc.Encode(Srep.Prf)
-	err = enc.Encode(Srep.Suite.String())
-	err = Srep.Suite.Write(&b, Srep.SigBroad)
+	var err error
+	if err = enc.Encode(Srep.MerkleRoot); err != nil {
+		dbg.Lvl1("encoding stampreply merkleroot : ", err)
+		return nil, err
+	}
+	if err = enc.Encode(len(Srep.Prf)); err != nil {
+		dbg.Lvl1("encoding stampreply proof length:", err)
+		return nil, err
+	}
+	if err = enc.Encode(Srep.Prf); err != nil {
+		dbg.Lvl1("encoding stampreply proof :", err)
+		return nil, err
+	}
+	if err = enc.Encode(Srep.Suite.String()); err != nil {
+		dbg.Lvl1("encoding stampreply suite string : ", err)
+		return nil, err
+	}
+	if err = Srep.Suite.Write(&b, Srep.SigBroad); err != nil {
+		dbg.Lvl1("encoding stampreply signature broadcast :", err)
+		return nil, err
+	}
 	return b.Bytes(), err
 }
 
 func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
-	err := dec.Decode(&Srep.MerkleRoot)
-	err = dec.Decode(&Srep.PrfLen)
+	var err error
+	if err = dec.Decode(&Srep.MerkleRoot); err != nil {
+		dbg.Fatal("decoding stampreply merkle root : ", err)
+	}
+
+	if err = dec.Decode(&Srep.PrfLen); err != nil {
+		dbg.Fatal("decoding stampreply proof len :", err)
+	}
 	Srep.Prf = make([]hashid.HashId, Srep.PrfLen)
-	err = dec.Decode(&Srep.Prf)
+	if err = dec.Decode(&Srep.Prf); err != nil {
+		dbg.Fatal("decoding stampreply proof :", err)
+	}
 	var suiteStr string
-	err = dec.Decode(&suiteStr)
+	if err = dec.Decode(&suiteStr); err != nil {
+		dbg.Fatal("decoding suite : ", err)
+	}
 	Srep.Suite = app.GetSuite(suiteStr)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
-	err = Srep.Suite.Read(b, &Srep.SigBroad)
-	return err
+	if err = Srep.Suite.Read(b, &Srep.SigBroad); err != nil {
+		dbg.Fatal("decoding signature broadcast : ", err)
+	}
+	return nil
 }
 
 type TimeStampMessage struct {

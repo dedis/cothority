@@ -1,118 +1,110 @@
 package main
 
 import (
-	"errors"
-	"flag"
-	log "github.com/Sirupsen/logrus"
+	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app/conode/defs"
-	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
-	"net"
-	"strconv"
-	"strings"
+	"github.com/dedis/crypto/edwards"
+	"os"
 )
 
-// which mode are we running
-var keygen, validate bool
-var check, build string
-
 // Which suite to use
-var suiteString string = "ed25519"
-var suite abstract.Suite
+const suiteStr string = "ed25519"
 
-//// 		Key part 		////
-// The hostname / address of the host we generate key for
-var address string = ""
+var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
 
 // where to write the key file .priv + .pub
-var key string = "key"
+var defaultKeyFile string = "key"
 
 // Returns the name of the file for the private key
-func namePriv() string {
+func namePriv(key string) string {
 	return key + ".priv"
 }
 
 // Returns the name of the file for the public key
-func namePub() string {
+func namePub(key string) string {
 	return key + ".pub"
 }
 
+// config file by default
+const defaultConfigFile string = "config.toml"
+
 ///////////////////////
+// will sotre each files / packages commands before creating the cli
+var commands []cli.Command = make([]cli.Command, 0)
 
-// Init function set up the flag reading
-func init() {
-	flag.StringVar(&suiteString, "suite", suiteString, "Suite to use throughout the process [ed25519]")
-	flag.BoolVar(&keygen, "keygen", false, "Keygen will generate the keys that will be used in the cothority project and will write them to files\n")
-	flag.StringVar(&key, "key", key, "key is where to read / write for key files. Convention is [key].priv and [key].pub for private / public key. Default is 'key'.")
-	flag.StringVar(&address, "address", "", "External IP address so we know who you are. If not supplied when calling 'key',it will panic!")
-	flag.BoolVar(&validate, "validate", false, "Validate waits for the connection of a verifier / checker from the head of the cothority project.\n"+
-		"\tIt will send some systems stats and a signature on it in order to verify the public / private keys.\n")
-	flag.StringVar(&check, "check", "", "ip_address:port [-public publicFile]\n"+
-		"\tcheck will launch the check on the host. Basically, it requests some system stats, \n"+
-		"\tand a signature in order to check the host system and the public / private keys of the host.\n"+
-		"\tip_address:port is the address of the host we want to verify\n")
-	flag.StringVar(&build, "build", "", "Builds the configuration file (included the tree) out of a file with hostnames")
+// register a new command to be added to the cli
+func registerCommand(com cli.Command) {
+	commands = append(commands, com)
+}
 
+// Create the CLI of conode
+func NewCli() *cli.App {
+	conode := cli.NewApp()
+	conode.Name = "Conode"
+	conode.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
+	conode.Version = "0.0.1"
+	conode.Authors = []cli.Author{
+		{
+			Name:  "Linus Gasser",
+			Email: "linus.gasser@epfl.ch",
+		},
+		{
+			Name:  "nikkolasg",
+			Email: "not provided yet",
+		},
+	}
+	// already create the key gen command
+	keyGen := cli.Command{
+		Name:      "keygen",
+		Aliases:   []string{"k"},
+		Usage:     "Create a new key pair and binding the public part to your address. ",
+		ArgsUsage: "ADRESS[:PORT] will be the address binded to the generated public key",
+		Action: func(c *cli.Context) {
+			if c.String("key") != "" {
+				KeyGeneration(c.String("key"), c.Args().First())
+			} else {
+				KeyGeneration(defaultKeyFile, c.Args().First())
+			}
+		},
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name: "key, k",
+				Usage: "Basename of the files where reside the keys. If key = 'key'," +
+					"then conode will search through 'key.pub' and 'key.priv'",
+				Value: defaultKeyFile,
+			},
+		},
+	}
+	commands = append(commands, keyGen)
+	conode.Commands = commands
+	conode.Flags = []cli.Flag{
+		cli.IntFlag{
+			Name:  "debug, d",
+			Usage: "debug level from 1 (only major operations) to 5 (very noisy text)",
+			Value: 1,
+		},
+	}
+	// sets the right debug options
+	conode.Before = func(c *cli.Context) error {
+		dbg.DebugVisible = c.GlobalInt("debug")
+		return nil
+	}
+	return conode
 }
 
 func main() {
-	// parse the flags
-	flag.Parse()
-	// setup the suite
-	suite = app.GetSuite(suiteString)
-	// Lets check everything is in order
-	verifyArgs()
-
-	switch {
-	case keygen:
-		KeyGeneration()
-	case validate:
-		Validation()
-	case check != "":
-		Check(check)
-	case build != "":
-		Build(build)
-	default:
-		dbg.Lvl1("Starting conode -> in run mode")
-		// Read the global config
-		conf := &app.ConfigConode{}
-		if err := app.ReadTomlConfig(conf, configFile); err != nil {
-			dbg.Fatal("Could not read toml config... : ", err)
-		}
-		dbg.Lvl1("Configuration file read")
-		// Read the private / public keys + binded address
-		if sec, err := cliutils.ReadPrivKey(suite, namePriv()); err != nil {
-			dbg.Fatal("Error reading private key file  :", err)
-		} else {
-			conf.Secret = sec
-		}
-		if pub, addr, err := cliutils.ReadPubKey(suite, namePub()); err != nil {
-			dbg.Fatal("Error reading public key file :", err)
-		} else {
-			conf.Public = pub
-			address = addr
-		}
-		RunServer(conf)
-	}
-}
-
-// verifyArgs will check if some arguments get the right value or is some are
-// missing
-func verifyArgs() {
-	if suite == nil {
-		dbg.Fatal("Suite could not be recognized. Use a proper suite [ed25519] ( given ", suiteString, ")")
-	}
+	conode := NewCli()
+	conode.Run(os.Args)
 }
 
 // KeyGeneration will generate a fresh public / private key pair
 // and write those down into two separate files
-func KeyGeneration() {
+func KeyGeneration(key, address string) {
 	if address == "" {
-		dbg.Fatal("You must call key with -address [ipadress] !")
+		dbg.Fatal("You must call keygen with ipadress !")
 	}
 	address, err := cliutils.UpsertPort(address, defs.DefaultPort)
 	if err != nil {
@@ -121,155 +113,14 @@ func KeyGeneration() {
 	// gen keypair
 	kp := cliutils.KeyPair(suite)
 	// Write private
-	if err := cliutils.WritePrivKey(kp.Secret, suite, namePriv()); err != nil {
+	if err := cliutils.WritePrivKey(kp.Secret, suite, namePriv(key)); err != nil {
 		dbg.Fatal("Error writing private key file : ", err)
 	}
 
 	// Write public
-	if err := cliutils.WritePubKey(kp.Public, suite, namePub(), address); err != nil {
+	if err := cliutils.WritePubKey(kp.Public, suite, namePub(key), address); err != nil {
 		dbg.Fatal("Error writing public key file : ", err)
 	}
 
-	dbg.Lvl1("Keypair generated and written to ", namePriv(), " / ", namePub())
-}
-
-func RunServer(conf *app.ConfigConode) {
-
-	var err error
-	// make sure address has a port or insert default one
-	address, err = cliutils.UpsertPort(address, defs.DefaultPort)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-
-	// For retro compatibility issues, convert the base64 encoded key into hex
-	// encoded keys....
-	convertTree(conf.Tree)
-	// Add our private key to the tree (compatiblity issues again with graphs/
-	// lib)
-	addPrivateKey(conf)
-	// load the configuration
-	//dbg.Lvl3("loading configuration")
-	var hc *graphs.HostConfig
-	opts := graphs.ConfigOptions{ConnType: "tcp", Host: address, Suite: suite}
-
-	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, suite, opts)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-
-	err = hc.Run(true, sign.MerkleTree, address)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-
-	defer func(sn *sign.Node) {
-		dbg.Lvl2("Program timestamper has terminated:", address)
-		sn.Close()
-	}(hc.SNodes[0])
-
-	stampers, err := RunTimestamper(hc, 0, address)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-	for _, s := range stampers {
-		// only listen if this is the hostname specified
-		if s.Name() == address {
-			s.Hostname = address
-			s.App = "stamp"
-			if s.IsRoot(0) {
-				dbg.Lvl1("Root timestamper at:", address)
-				s.Run("root")
-
-			} else {
-				dbg.Lvl1("Running regular timestamper on:", address)
-				s.Run("regular")
-			}
-		}
-	}
-}
-
-// run each host in hostnameSlice with the number of clients given
-func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string) ([]*Server, error) {
-	dbg.Lvl3("RunTimestamper on", hc.Hosts)
-	hostnames := make(map[string]*sign.Node)
-	// make a list of hostnames we want to run
-	if hostnameSlice == nil {
-		hostnames = hc.Hosts
-	} else {
-		for _, h := range hostnameSlice {
-			sn, ok := hc.Hosts[h]
-			if !ok {
-				return nil, errors.New("hostname given not in config file:" + h)
-			}
-			hostnames[h] = sn
-		}
-	}
-	// for each client in
-	stampers := make([]*Server, 0, len(hostnames))
-	for _, sn := range hc.SNodes {
-		if _, ok := hostnames[sn.Name()]; !ok {
-			dbg.Lvl1("signing node not in hostnmaes")
-			continue
-		}
-		stampers = append(stampers, NewServer(sn))
-		if hc.Dir == nil {
-			dbg.Lvl3(hc.Hosts, "listening for clients")
-			stampers[len(stampers)-1].Listen()
-		}
-	}
-	dbg.Lvl3("stampers:", stampers)
-	for _, s := range stampers[1:] {
-
-		_, p, err := net.SplitHostPort(s.Name())
-		if err != nil {
-			log.Fatal("RunTimestamper: bad Tcp host")
-		}
-		pn, err := strconv.Atoi(p)
-		if hc.Dir != nil {
-			pn = 0
-		} else if err != nil {
-			log.Fatal("port ", pn, "is not valid integer")
-		}
-		//dbg.Lvl4("client connecting to:", hp)
-
-	}
-
-	return stampers, nil
-}
-
-// Simple ephemereal helper for comptability issues
-// From base64 => hexadecimal
-func convertTree(t *graphs.Tree) {
-	point, err := cliutils.ReadPub64(strings.NewReader(t.PubKey), suite)
-	if err != nil {
-		dbg.Fatal("Could not decode base64 public key")
-	}
-
-	str, err := cliutils.PubHex(suite, point)
-	if err != nil {
-		dbg.Fatal("Could not encode point to hexadecimal ")
-	}
-	t.PubKey = str
-	for _, c := range t.Children {
-		convertTree(c)
-	}
-}
-
-// Add our own private key in the tree. This function exists because of
-// compatilibty issues with the graphs/ lib.
-func addPrivateKey(conf *app.ConfigConode) {
-	fn := func(t *graphs.Tree) {
-		// this is our node in the tree
-		if t.Name == address {
-			// convert to hexa
-			s, err := cliutils.SecretHex(suite, conf.Secret)
-			if err != nil {
-				dbg.Fatal("Error converting our secret key to hexadecimal")
-			}
-			// adds it
-			t.PriKey = s
-		}
-	}
-	conf.Tree.TraverseTree(fn)
+	dbg.Lvl1("Keypair generated and written to ", namePriv(key), " / ", namePub(key))
 }

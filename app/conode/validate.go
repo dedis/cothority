@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
@@ -20,12 +21,28 @@ import (
 // An FIN msg means something went wrong and you should contact
 // the development team about it.
 
+func init() {
+	command := cli.Command{
+		Name:    "validate",
+		Aliases: []string{"v"},
+		Usage:   "conode will wait in validation mode",
+		Description: "It will be running conode a whole day, and " +
+			"the development team will run the check mode many times during the day" +
+			"to see if your server is elligible to being incorporated in the cothority tree",
+		ArgsUsage: "Key files is the basename of where to find the public / private keys of this host to be verified",
+		Action: func(c *cli.Context) {
+			Validation(c.Args().First())
+		},
+	}
+	registerCommand(command)
+}
+
 // Main entry point of the validation mode
-func Validation() {
+func Validation(keyFile string) {
 
 	// First, retrieve our public / private key pair + address for which it has
 	// been created
-	kp, addr := readKeyFile()
+	kp, addr := readKeyFile(keyFile)
 	// Then wait for the connection
 
 	// Accept incoming connections
@@ -107,12 +124,12 @@ func signSystemPacket(sys SystemPacket, kp config.KeyPair) []byte {
 
 // readKeyPair will read both private and public files
 // and returns a keypair containing the respective private and public keys
-func readKeyFile() (config.KeyPair, string) {
-	sec, err := cliutils.ReadPrivKey(suite, namePriv())
+func readKeyFile(keyFile string) (config.KeyPair, string) {
+	sec, err := cliutils.ReadPrivKey(suite, namePriv(keyFile))
 	if err != nil {
 		dbg.Fatal("Could not read private key : ", err)
 	}
-	pub, addr, err := cliutils.ReadPubKey(suite, namePub())
+	pub, addr, err := cliutils.ReadPubKey(suite, namePub(keyFile))
 	if err != nil {
 		dbg.Fatal("Could not read public key : ", err)
 	}

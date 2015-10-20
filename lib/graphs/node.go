@@ -484,9 +484,6 @@ func LoadConfig(appHosts []string, appTree *Tree, suite abstract.Suite, optsSlic
 
 	//suite := edwards.NewAES128SHA256Ed25519(true)
 	//suite := nist.NewAES128SHA256P256()
-	if opts.Suite != nil {
-		suite = opts.Suite
-	}
 	rand := suite.Cipher([]byte("example"))
 	//fmt.Println("hosts", hosts)
 	// default value = false

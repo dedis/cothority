@@ -35,10 +35,10 @@ import (
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
 	"io"
-	"os"
-	"strings"
 	"math/rand"
+	"os"
 	"strconv"
+	"strings"
 )
 
 // Default config file
@@ -54,17 +54,17 @@ const sigExtension = ".sig"
 // easily copy/pasted
 type SignatureFile struct {
 	// name of the file
-	Name      string
+	Name string
 	// hash of our file
-	Hash      string
+	Hash string
 	// the root of the merkle tree
-	Root      string
+	Root string
 	// the inclusion-proof from root to the hash'd file
-	Proof     []string
+	Proof []string
 	// The signature challenge
 	Challenge string
 	// The signature response
-	Response  string
+	Response string
 }
 
 // Our crypto-suite used in the program
@@ -131,6 +131,11 @@ func main() {
 			Value: defaultConfigFile,
 			Usage: "Configuration file of the cothority tree we are using.",
 		},
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 1,
+			Usage: "debug level from 1 (major operations) to 5 (very noisy text)",
+		},
 	}
 	// Read the config file before
 	stamp.Before = func(c *cli.Context) error {
@@ -141,8 +146,12 @@ func main() {
 		conf = new(app.ConfigConode)
 		err := app.ReadTomlConfig(conf, cf)
 		suite = app.GetSuite(conf.Suite)
+
+		// sets the right debug options
+		dbg.DebugVisible = c.GlobalInt("debug")
 		return err
 	}
+
 	stamp.Run(os.Args)
 }
 
@@ -152,23 +161,23 @@ func StampFile(file, server string) {
 	// Create the hash of the file and send it over the net
 	myHash := hashFile(file)
 
-	// First get a connection
+	// First get a connection. Get a random one if no server provided
 	if server == "" {
 		serverPort := strings.Split(conf.Hosts[rand.Intn(len(conf.Hosts))], ":")
 		server = serverPort[0]
 		port, _ := strconv.Atoi(serverPort[1])
-		server += ":" + strconv.Itoa(port + 1)
+		server += ":" + strconv.Itoa(port+1)
 	}
 	if !strings.Contains(server, ":") {
 		server += ":" + defaultPort
 	}
-	dbg.Lvl1("Connecting to", server)
+	dbg.Lvl2("Connecting to", server)
 	conn := coconet.NewTCPConn(server)
 	err := conn.Connect()
 	if err != nil {
 		dbg.Fatal("Error when getting the connection to the host:", err)
 	}
-
+	dbg.Lvl1("Connected to ", server)
 	msg := &defs.TimeStampMessage{
 		Type:  defs.StampRequestType,
 		ReqNo: 0,
@@ -178,7 +187,7 @@ func StampFile(file, server string) {
 	if err != nil {
 		dbg.Fatal("Couldn't send hash-message to server: ", err)
 	}
-
+	dbg.Lvl1("Sent signature request")
 	// Wait for the signed message
 	tsm := &defs.TimeStampMessage{}
 	tsm.Srep = &defs.StampReply{}
@@ -187,6 +196,7 @@ func StampFile(file, server string) {
 	if err != nil {
 		dbg.Fatal("Error while receiving signature:", err)
 	}
+	dbg.Lvl1("Got signature response")
 
 	// Asking to close the connection
 	err = conn.Put(&defs.TimeStampMessage{
@@ -194,19 +204,19 @@ func StampFile(file, server string) {
 		Type:  defs.StampClose,
 	})
 	conn.Close()
-
+	dbg.Lvl2("Connection closed with server")
 	// Verify if what we received is correct
 	if !verifySignature(myHash, tsm.Srep) {
 		dbg.Fatal("Verification of signature failed")
 	}
 
 	// Write the signature to the file
-	err = WriteSignatureFile(file + ".sig", file, myHash, tsm.Srep)
+	err = WriteSignatureFile(file+".sig", file, myHash, tsm.Srep)
 	if err != nil {
 		dbg.Fatal("Couldn't write file", err)
 	}
 
-	dbg.Lvl1("Signature file", file + ".sig", "written.")
+	dbg.Lvl1("Signature file", file+".sig", "written.")
 }
 
 // Verify signature takes a file name and the name of the signature file

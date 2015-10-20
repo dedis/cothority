@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"flag"
+	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
@@ -15,26 +15,31 @@ import (
 // Basically, it will contact the host, waiting for its message containing some
 // basics information about its system, and the signature associated
 
-// Where to read the file for the host we want to check
-var pubKeyFile string = namePub()
-
-// The actual host to check
-var host string
-
 func init() {
-	flag.StringVar(&pubKeyFile, "public", pubKeyFile, "File where the public key of the host to check resides.")
+	command := cli.Command{
+		Name:        "check",
+		Aliases:     []string{"c"},
+		Usage:       "Check a host to determine if it is a valid node to get incorporated into the cothority tree.",
+		Description: "It checks the public key given and the availability of the server. It will be contacted multiple times a day during 24 hours",
+		ArgsUsage:   "Public-key-file : file where reside the public key of the host to check",
+		Action: func(c *cli.Context) {
+			if c.Args().First() == "" {
+				dbg.Fatal("No public key file given !!")
+			}
+			Check(c.Args().First())
+		},
+	}
+	registerCommand(command)
 }
 
 // Main entry point for the check mode
-func Check(host string) {
-	dbg.Lvl1("Checking if", host, "is connected and has correct private key")
-
+func Check(pubKeyFile string) {
 	//  get the right public key
-	pub, _, err := cliutils.ReadPubKey(suite, pubKeyFile)
+	pub, host, err := cliutils.ReadPubKey(suite, pubKeyFile)
 	if err != nil {
 		dbg.Fatal("Could not read the public key from the file : ", err)
 	}
-
+	dbg.Lvl1("Public key file read")
 	// Then get a connection
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
