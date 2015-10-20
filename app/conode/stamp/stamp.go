@@ -191,7 +191,7 @@ func StampFile(file, server string) {
 	// Wait for the signed message
 	tsm := &defs.TimeStampMessage{}
 	tsm.Srep = &defs.StampReply{}
-	tsm.Srep.Suite = suite
+	tsm.Srep.SuiteStr = suite.String()
 	err = conn.Get(tsm)
 	if err != nil {
 		dbg.Fatal("Error while receiving signature:", err)

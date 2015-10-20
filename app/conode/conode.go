@@ -90,6 +90,7 @@ func NewCli() *cli.App {
 	// sets the right debug options
 	conode.Before = func(c *cli.Context) error {
 		dbg.DebugVisible = c.GlobalInt("debug")
+		dbg.Print("Suite : ", suite.String())
 		return nil
 	}
 	return conode

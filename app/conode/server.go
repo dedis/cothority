@@ -223,7 +223,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound()+1 > nRounds  && nRounds >= 0{
+	if s.LastRound()+1 > nRounds && nRounds >= 0 {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
@@ -266,7 +266,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound()+1 >= nRounds && nRounds >= 0{
+			if s.LastRound()+1 >= nRounds && nRounds >= 0 {
 				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				return "close"
 			}
@@ -362,10 +362,11 @@ func (s *Server) OnDone() sign.DoneFunc {
 			respMessg := defs.TimeStampMessage{
 				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &defs.StampReply{Suite: suite, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  &defs.StampReply{SuiteStr: suite.String(), MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
 			dbg.Print("Message : ", SNRoot)
 			dbg.Print("Challenge : ", sb.C)
 			dbg.Print("Response : ", sb.R0_hat)
+			dbg.Print("Suite : ", suite.String())
 			s.PutToClient(msg.To, respMessg)
 		}
 		s.mux.Unlock()

@@ -8,7 +8,6 @@ import (
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
 )
 
 type MessageType int
@@ -30,7 +29,7 @@ type StampRequest struct {
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampReply struct {
-	Suite      abstract.Suite
+	SuiteStr   string
 	MerkleRoot []byte                         // root of the merkle tree
 	PrfLen     int                            // Length of proof
 	Prf        proof.Proof                    // Merkle proof of value
@@ -67,11 +66,12 @@ func (Srep StampReply) MarshalBinary() ([]byte, error) {
 		dbg.Lvl1("encoding stampreply proof :", err)
 		return nil, err
 	}
-	if err = enc.Encode(Srep.Suite.String()); err != nil {
+	if err = enc.Encode(Srep.SuiteStr); err != nil {
 		dbg.Lvl1("encoding stampreply suite string : ", err)
 		return nil, err
 	}
-	if err = Srep.Suite.Write(&b, Srep.SigBroad); err != nil {
+	suite := app.GetSuite(Srep.SuiteStr)
+	if err = suite.Write(&b, Srep.SigBroad); err != nil {
 		dbg.Lvl1("encoding stampreply signature broadcast :", err)
 		return nil, err
 	}
@@ -93,13 +93,13 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	if err = dec.Decode(&Srep.Prf); err != nil {
 		dbg.Fatal("decoding stampreply proof :", err)
 	}
-	var suiteStr string
-	if err = dec.Decode(&suiteStr); err != nil {
+	if err = dec.Decode(&Srep.SuiteStr); err != nil {
 		dbg.Fatal("decoding suite : ", err)
 	}
-	Srep.Suite = app.GetSuite(suiteStr)
+	suite := app.GetSuite(Srep.SuiteStr)
+	dbg.Print("Stampreply decoding suite after: ", suite)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
-	if err = Srep.Suite.Read(b, &Srep.SigBroad); err != nil {
+	if err = suite.Read(b, &Srep.SigBroad); err != nil {
 		dbg.Fatal("decoding signature broadcast : ", err)
 	}
 	return nil
