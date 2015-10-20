@@ -106,28 +106,27 @@ func (s *Server) Listen() error {
 			if _, ok := s.Clients[c.Name()]; !ok {
 				s.Clients[c.Name()] = c
 
-				go func(c coconet.Conn) {
+				go func(co coconet.Conn) {
 					for {
 						tsm := defs.TimeStampMessage{}
-						err := c.Get(&tsm)
+						err := co.Get(&tsm)
 						if err != nil {
 							dbg.Lvlf1("%p Failed to get from child: %s", s, err)
-							c.Close()
+							co.Close()
 							return
 						}
 						switch tsm.Type {
 						default:
 							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
 						case defs.StampRequestType:
-							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
 							READING := s.READING
 							s.Queue[READING] = append(s.Queue[READING],
-								MustReplyMessage{Tsm: tsm, To: c.Name()})
+								MustReplyMessage{Tsm: tsm, To: co.Name()})
 							s.mux.Unlock()
 						case defs.StampClose:
 							dbg.LLvl2("Closing connection")
-							c.Close()
+							co.Close()
 							return
 						}
 					}
@@ -144,10 +143,10 @@ func (s *Server) Listen() error {
 func (s *Server) ListenToClients() {
 	// dbg.Lvl4("LISTENING TO CLIENTS: %p", s, s.Clients)
 	for _, c := range s.Clients {
-		go func(c coconet.Conn) {
+		go func(co coconet.Conn) {
 			for {
 				tsm := defs.TimeStampMessage{}
-				err := c.Get(&tsm)
+				err := co.Get(&tsm)
 				if err == coconet.ErrClosed {
 					dbg.Lvlf1("%p Failed to get from client:", s, err)
 					s.Close()
@@ -164,11 +163,11 @@ func (s *Server) ListenToClients() {
 					s.mux.Lock()
 					READING := s.READING
 					s.Queue[READING] = append(s.Queue[READING],
-						MustReplyMessage{Tsm: tsm, To: c.Name()})
+						MustReplyMessage{Tsm: tsm, To: co.Name()})
 					s.mux.Unlock()
 				case defs.StampClose:
 					dbg.Lvl2("Closing channel")
-					c.Close()
+					co.Close()
 					return
 				}
 			}
