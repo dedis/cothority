@@ -359,7 +359,7 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.Host.SetSuite(suite)
 	sn.VoteLog = NewVoteLog()
 	sn.Actions = make(map[int][]*Vote)
-	sn.RoundsPerView = 100
+	sn.RoundsPerView = 0
 	return sn
 }
 
@@ -385,7 +385,7 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn.Host.SetSuite(suite)
 	sn.VoteLog = NewVoteLog()
 	sn.Actions = make(map[int][]*Vote)
-	sn.RoundsPerView = 100
+	sn.RoundsPerView = 0
 	return sn
 }
 
