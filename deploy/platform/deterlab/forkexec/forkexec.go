@@ -5,14 +5,13 @@ import (
 	"os/exec"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	"os"
 	"net"
 	"sync"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 // Wrapper around app to enable measuring of cpu time
@@ -41,6 +40,7 @@ func main() {
 			dbg.Lvl3("Starting", name, "on", app.RunFlags.PhysAddr)
 			wg.Add(1)
 			go func(nameport string) {
+				measure := monitor.NewMeasure()
 				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport)
 				defer wg.Done()
 
@@ -56,8 +56,6 @@ func main() {
 
 				dbg.Lvl3("Starting on", app.RunFlags.PhysAddr, "with args", args)
 				cmdApp := exec.Command("./" + deter.App, args...)
-				//cmd.Stdout = log.StandardLogger().Writer()
-				//cmd.Stderr = log.StandardLogger().Writer()
 				cmdApp.Stdout = os.Stdout
 				cmdApp.Stderr = os.Stderr
 				dbg.Lvl3("fork-exec is running command:", args)
@@ -67,16 +65,7 @@ func main() {
 				}
 
 				if amroot {
-					// get CPU usage stats, but only for root
-					st := cmdApp.ProcessState.SystemTime()
-					ut := cmdApp.ProcessState.UserTime()
-					log.WithFields(log.Fields{
-						"file":     logutils.File(),
-						"type":     "forkexec",
-						"systime":  st,
-						"usertime": ut,
-					}).Info("")
-					log.WithField("type", "end").Info("")
+					measure.MeasureWall("end")
 				}
 
 				dbg.Lvl2("Finished with app", app.RunFlags.PhysAddr)

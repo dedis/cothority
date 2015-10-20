@@ -110,7 +110,7 @@ func GoLeader(conf *app.NaiveConfig) {
 	// Starting to run the simulation for conf.Rounds rounds
 
 	for round := 0; round < conf.Rounds; round++ {
-		measure.Update()
+		measure_wall := monitor.NewMeasure()
 		n := 0
 		faulty := 0
 		// launch a new round
@@ -118,6 +118,8 @@ func GoLeader(conf *app.NaiveConfig) {
 		masterRoundChan <- connChan
 		var wg sync.WaitGroup
 		wg.Add(numberHosts - 1)
+		measure.MeasureCPU("basic_calc")
+
 		// verify each coming signatures
 		for n < numberHosts-1 {
 			bs := <-connChan
@@ -138,10 +140,10 @@ func GoLeader(conf *app.NaiveConfig) {
 			n += 1
 		}
 		wg.Wait()
+		measure.MeasureCPU("basic_verify")
+		measure_wall.MeasureWall("basic_round")
 		dbg.Lvl2(leader.String(), "Round ", round, " received ", len(conf.Hosts)-1, "signatures (",
 			faulty, " faulty sign)")
-		measure.MeasureWall("basic_round")
-		measure.MeasureCPU("basic_calc")
 	}
 
 	// Close down all connections

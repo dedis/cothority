@@ -18,32 +18,32 @@ func NewMeasure() *Measure {
 	return m
 }
 
+func (m *Measure)MeasureWall(message string, d ...float64) {
+	div := 1.0
+	if len(d) > 0{
+		div = d[0]
+	}
+	logWF(message, float64(time.Since(m.WallTime)) / 1.0e9 / div)
+	m.Update()
+}
+
+func (m *Measure)MeasureCPU(message string, d ...float64) {
+	div := 1.0
+	if len(d) > 0{
+		div = d[0]
+	}
+	sys, usr := getDiffRTime(m.CPUTimeSys, m.CPUTimeUser)
+	logWF(message, (sys + usr) / div)
+	m.Update()
+}
+
 func (m *Measure)Update(){
 	m.CPUTimeSys, m.CPUTimeUser = GetRTime()
 	m.WallTime = time.Now()
 }
 
-func (m *Measure)MeasureWall(message string, d ...int) {
-	div := 1
-	if len(d) > 0{
-		div = d[0]
-	}
-	log.WithFields(log.Fields{
-		"file": logutils.File(),
-		"type": message,
-		"time": float64(time.Since(m.WallTime)) / 1.e9 / div}).Info("")
-}
-
-func (m *Measure)MeasureCPU(message string, d ...int) {
-	div := 1
-	if len(d) > 0{
-		div = d[0]
-	}
-	sys, usr := GetDiffRTime(m.CPUTimeSys, m.CPUTimeUser)
-	log.WithFields(log.Fields{
-		"file": logutils.File(),
-		"type": message,
-		"time": (sys + usr) / div}).Info("")
+func LogEnd(){
+	logWF("end", 0.0)
 }
 
 func iiToF(sec int64, usec int64) float64 {
@@ -59,7 +59,15 @@ func GetRTime() (tSys, tUsr float64) {
 }
 
 // Returns the difference to the given system- and user-time
-func GetDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
+func getDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
 	nowSys, nowUsr := GetRTime()
 	return nowSys - tSys, nowUsr - tUsr
 }
+
+func logWF(message string, time float64){
+	log.WithFields(log.Fields{
+		"file": logutils.File(),
+		"type": message,
+		"time": time}).Info("")
+}
+

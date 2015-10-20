@@ -16,15 +16,13 @@ import (
 func Monitor(stats Stats) {
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
-retry_dial:
+	retry_dial:
 	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
 	if err != nil {
 		time.Sleep(1 * time.Second)
 		dbg.Lvl2("Can not connect to websocket. Retrying...")
 		goto retry_dial
 	}
-	clientDone := false
-	rootDone := false
 	for {
 		var data []byte
 		err := websocket.Message.Receive(ws, &data)
@@ -38,17 +36,11 @@ retry_dial:
 		}
 		dbg.Lvl3("Received msg", string(data))
 		if bytes.Contains(data, []byte("EOF")) || bytes.Contains(data, []byte("terminating")) {
-			dbg.Lvl2(
-				"EOF/terminating Detected: need forkexec to report and clients: rootDone", rootDone, "clientDone", clientDone)
+			dbg.Lvl2("EOF/terminating Detected: need forkexec to report.")
 		}
 		if bytes.Contains(data, []byte("root_round")) {
-			dbg.Lvl2("root_round msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
+			dbg.Lvl2("root_round msg received")
 
-			if clientDone || rootDone {
-				dbg.Lvl4("Continuing searching data")
-				// ignore after we have received our first EOF
-				continue
-			}
 			var entry CollServerEntry
 			err := json.Unmarshal(data, &entry)
 			if err != nil {
@@ -67,46 +59,10 @@ retry_dial:
 				log.Fatal("json unmarshalled improperly:", err)
 			}
 			stats.AddEntry(entry)
-			dbg.Lvl2("Monitor - basic entry:", entry)
+			dbg.Lvl2("Basic entry:", entry)
 		} else if bytes.Contains(data, []byte("end")) {
-			clientDone = true
-			dbg.Lvl2("Monitor - received end (client = true && root = ", rootDone, ")")
-			if rootDone {
-				break
-			}
-		} else if bytes.Contains(data, []byte("forkexec")) {
-			dbg.Lvl3("Received forkexec")
-			if rootDone {
-				dbg.Lvl2("RootDone is true - continuing")
-				continue
-			}
-			var ss SysEntry
-			err := json.Unmarshal(data, &ss)
-			if err != nil {
-				log.Fatal("unable to unmarshal forkexec:", ss)
-			}
-			stats.AddEntry(ss)
-			rootDone = true
-			dbg.Lvl2("Forkexec msg received (clientDone = ", clientDone, ", rootDone = ", rootDone, ")")
-			if clientDone {
-				break
-			}
-		} else if bytes.Contains(data, []byte("client_msg_stats")) {
-			if clientDone {
-				dbg.Lvl2("Continuing because client is already done")
-				continue
-			}
-			var cms CollClientEntry
-			err := json.Unmarshal(data, &cms)
-			if err != nil {
-				log.Fatal("unable to unmarshal client_msg_stats:", string(data))
-			}
-			stats.AddEntry(cms)
-			dbg.Lvl2("Monitor() Client Msg stats received (clientDone = ", clientDone, ",rootDone = ", rootDone, ")")
-			clientDone = true
-			if rootDone {
-				break
-			}
+			dbg.Lvl2("Received end")
+			break
 		}
 	}
 }
