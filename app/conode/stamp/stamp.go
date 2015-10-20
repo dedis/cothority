@@ -37,12 +37,9 @@ import (
 	"io"
 	"os"
 	"strings"
+	"math/rand"
+	"strconv"
 )
-
-// Flag-variables
-var stamp = ""
-var server = "localhost"
-var check = ""
 
 // Default config file
 const defaultConfigFile = "config.toml"
@@ -53,33 +50,21 @@ const defaultPort = "2001"
 // extension given to a signature file
 const sigExtension = ".sig"
 
-// Helper ffunction to get the signature file from a file name
-func signatureFile(file string) string {
-	return file + sigExtension
-}
-
-func init() {
-	//flag.StringVar(&stamp, "stamp", stamp, "Stamp that file")
-	//flag.StringVar(&check, "verify", check, "Verify that a signature-file contains a valid signature")
-	//flag.StringVar(&server, "server", server, "The server to connect to [localhost]")
-	//flag.StringVar(&configFile, "config", configFile, "Configuration file of the tree used")
-}
-
 // For the file-output we want a structure with base64-encoded strings, so it can be
 // easily copy/pasted
 type SignatureFile struct {
 	// name of the file
-	Name string
+	Name      string
 	// hash of our file
-	Hash string
+	Hash      string
 	// the root of the merkle tree
-	Root string
+	Root      string
 	// the inclusion-proof from root to the hash'd file
-	Proof string
+	Proof     []string
 	// The signature challenge
 	Challenge string
 	// The signature response
-	Response string
+	Response  string
 }
 
 // Our crypto-suite used in the program
@@ -88,16 +73,17 @@ var suite abstract.Suite
 // the configuration file of the cothority tree used
 var conf *app.ConfigConode
 
-// Actual definition of the Command Line Interface
-func constructCli() *cli.App {
+// If the server is only given with it's hostname, it supposes that the stamp
+// server is run on port 2001. Else you will have to add the port yourself.
+func main() {
 	stamp := cli.NewApp()
 	stamp.Name = "collective"
 	stamp.Usage = "Used to sign files to a cothority tree and to verify issued signatures"
 	stamp.Version = "0.0.1"
 	stamp.Authors = []cli.Author{
 		{
-			Name:  "ineiti",
-			Email: "",
+			Name:  "Linus Gasser",
+			Email: "linus.gasser@epfl.ch",
 		},
 		{
 			Name:  "nikkolasg",
@@ -111,10 +97,7 @@ func constructCli() *cli.App {
 			Usage:   "Request a signed time-stamp on a file. Provide with FILE.",
 			Action: func(c *cli.Context) {
 				dbg.Lvl1("Requesting a timestamp on a cothority tree")
-				server = c.String("server")
-				if !strings.Contains(server, ":") {
-					server += ":" + defaultPort
-				}
+				server := c.String("server")
 				StampFile(c.Args().First(), server)
 			},
 			Flags: []cli.Flag{
@@ -160,14 +143,7 @@ func constructCli() *cli.App {
 		suite = app.GetSuite(conf.Suite)
 		return err
 	}
-	return stamp
-}
-
-// If the server is only given with it's hostname, it supposes that the stamp
-// server is run on port 2001. Else you will have to add the port yourself.
-func main() {
-	app := constructCli()
-	app.Run(os.Args)
+	stamp.Run(os.Args)
 }
 
 // Takes a 'file' to hash and being stamped at the 'server'. The output of the
@@ -177,6 +153,15 @@ func StampFile(file, server string) {
 	myHash := hashFile(file)
 
 	// First get a connection
+	if server == "" {
+		serverPort := strings.Split(conf.Hosts[rand.Intn(len(conf.Hosts))], ":")
+		server = serverPort[0]
+		port, _ := strconv.Atoi(serverPort[1])
+		server += ":" + strconv.Itoa(port + 1)
+	}
+	if !strings.Contains(server, ":") {
+		server += ":" + defaultPort
+	}
 	dbg.Lvl1("Connecting to", server)
 	conn := coconet.NewTCPConn(server)
 	err := conn.Connect()
@@ -202,7 +187,6 @@ func StampFile(file, server string) {
 	if err != nil {
 		dbg.Fatal("Error while receiving signature:", err)
 	}
-	dbg.Printf("%+v", tsm.Srep)
 
 	// Asking to close the connection
 	err = conn.Put(&defs.TimeStampMessage{
@@ -217,12 +201,12 @@ func StampFile(file, server string) {
 	}
 
 	// Write the signature to the file
-	err = WriteSignatureFile(file+".sig", stamp, myHash, tsm.Srep)
+	err = WriteSignatureFile(file + ".sig", file, myHash, tsm.Srep)
 	if err != nil {
 		dbg.Fatal("Couldn't write file", err)
 	}
 
-	dbg.Print("All done - file is written")
+	dbg.Lvl1("Signature file", file + ".sig", "written.")
 }
 
 // Verify signature takes a file name and the name of the signature file
@@ -235,7 +219,7 @@ func VerifySignature(file, sigFile string) bool {
 
 	// by default
 	if sigFile == "" {
-		sigFile = signatureFile(file)
+		sigFile = file + sigExtension
 	}
 	// read the sig
 	hashOrig, reply, err := ReadSignatureFile(sigFile)
@@ -294,12 +278,6 @@ func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Poin
 	T := suite.Point().Null()
 	T.Add(T, V_clean)
 
-	//// Compute base**(r + x*c) == T
-	//var P, T abstract.Point
-	//P = suite.Point()
-	//T = suite.Point()
-	//T.Add(T.Mul(nil, r), P.Mul(publicKey, c))
-
 	// Verify that the hash based on the message and T
 	// matches the challange c from the signature
 	// copy of hashSchnorr
@@ -316,10 +294,9 @@ func SchnorrVerify(suite abstract.Suite, message []byte, publicKey abstract.Poin
 // Takes the different part of the signature and writes them to a toml-
 // file in copy/pastable base64
 func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampReply) error {
-	p := ""
-	dbg.Printf("%+v", stamp.Prf)
+	var p []string
 	for _, pr := range stamp.Prf {
-		p += base64.StdEncoding.EncodeToString(pr) + " "
+		p = append(p, base64.StdEncoding.EncodeToString(pr))
 	}
 	// Write challenge and response part
 	var bufChall bytes.Buffer
@@ -334,14 +311,14 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampRepl
 	sigStr := &SignatureFile{
 		Name:      file,
 		Hash:      base64.StdEncoding.EncodeToString(hash),
-		Proof:     base64.StdEncoding.EncodeToString([]byte(p)),
+		Proof:     p,
 		Root:      base64.StdEncoding.EncodeToString(stamp.MerkleRoot),
 		Challenge: bufChall.String(),
 		Response:  bufResp.String(),
 	}
 
 	// Print to the screen, and write to file
-	dbg.Printf("Signature-file will be:\n%+v", sigStr)
+	dbg.Lvl2("Signature-file will be:\n%+v", sigStr)
 
 	app.WriteTomlConfig(sigStr, nameSig)
 	return nil
@@ -363,7 +340,7 @@ func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
 	reply.SigBroad = sign.SignatureBroadcastMessage{}
 	// Convert fields from Base64 to binary
 	hash, err := base64.StdEncoding.DecodeString(sigStr.Hash)
-	for _, pr := range strings.Fields(sigStr.Proof) {
+	for _, pr := range sigStr.Proof {
 		pro, err := base64.StdEncoding.DecodeString(pr)
 		if err != nil {
 			dbg.Lvl1("Couldn't decode proof:", pr)
@@ -376,11 +353,11 @@ func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
 	if err != nil {
 		dbg.Fatal("Could not decode Merkle Root from sig file :", err)
 	}
-	reply.SigBroad.R0_hat, err = cliutils.ReadSecretHex(suite, sigStr.Challenge)
+	reply.SigBroad.R0_hat, err = cliutils.ReadSecret64(strings.NewReader(sigStr.Response), suite)
 	if err != nil {
 		dbg.Fatal("Could not read secret challenge : ", err)
 	}
-	reply.SigBroad.C, err = cliutils.ReadSecretHex(suite, sigStr.Response)
+	reply.SigBroad.C, err = cliutils.ReadSecret64(strings.NewReader(sigStr.Challenge), suite)
 	return hash, reply, err
 
 }

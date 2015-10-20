@@ -224,7 +224,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound()+1 > nRounds {
+	if s.LastRound()+1 > nRounds  && nRounds >= 0{
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
@@ -267,7 +267,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound()+1 >= nRounds {
+			if s.LastRound()+1 >= nRounds && nRounds >= 0{
 				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				return "close"
 			}
@@ -301,7 +301,7 @@ func (s *Server) Run(role string) {
 	s.rLock.Lock()
 
 	// TODO: remove this hack
-	s.maxRounds = 1000
+	s.maxRounds = -1
 	s.rLock.Unlock()
 
 	var nextRole string // next role when view changes
