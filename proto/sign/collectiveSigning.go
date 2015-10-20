@@ -302,7 +302,6 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		// add good child server to combined public key, and point commit
 		sn.add(round.X_hat, sm.Com.X_hat)
 		sn.add(round.Log.V_hat, sm.Com.V_hat)
-		dbg.Print("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
 	if sn.Type == PubKey {
@@ -325,7 +324,6 @@ func (sn *Node) actOnCommits(view, Round int) error {
 	var err error
 
 	if sn.IsRoot(view) {
-		dbg.Print("Commit root : Aggregate Public Key :", round.X_hat)
 		sn.commitsDone <- Round
 		err = sn.FinalizeCommits(view, Round)
 	} else {
@@ -642,7 +640,7 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 }
 
 func (sn *Node) TimeForViewChange() bool {
-	if sn.RoundsPerView == 0{
+	if sn.RoundsPerView == 0 {
 		// No view change asked
 		return false
 	}

@@ -29,9 +29,15 @@ func init() {
 		Description: "It will be running conode a whole day, and " +
 			"the development team will run the check mode many times during the day" +
 			"to see if your server is elligible to being incorporated in the cothority tree",
-		ArgsUsage: "Key files is the basename of where to find the public / private keys of this host to be verified",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "key, k",
+				Usage: "KEY : the basename of where to find the public / private keys of this host to be verified",
+				Value: defaultKeyFile,
+			},
+		},
 		Action: func(c *cli.Context) {
-			Validation(c.Args().First())
+			Validation(c.String("key"))
 		},
 	}
 	registerCommand(command)

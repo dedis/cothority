@@ -70,7 +70,7 @@ func Build(hostFile string, bf int, configFile string) {
 	// then constrcut the aggregated public key K0
 	k0 := aggregateKeys(pubs)
 	var b bytes.Buffer
-	err = cliutils.WritePub64(&b, suite, k0)
+	err = cliutils.WritePub64(suite, &b, k0)
 	if err != nil {
 		dbg.Fatal("Could not aggregate public keys in base64")
 	}
@@ -92,11 +92,11 @@ func aggregateKeys(pubs []string) abstract.Point {
 	k0 := suite.Point().Null()
 	for i, ki := range pubs {
 		// convert from string to public key
-		kip, _ := cliutils.ReadPub64(strings.NewReader(ki), suite)
+		kip, _ := cliutils.ReadPub64(suite, strings.NewReader(ki))
 		k0 = k0.Add(k0, kip)
-		dbg.Print("Public key n* ", i, " : ", kip)
+		dbg.Lvl2("Public key n* ", i, " : ", kip)
 	}
-	dbg.Print("Aggregated public key : ", k0)
+	dbg.Lvl1("Aggregated public key : ", k0)
 	return k0
 }
 

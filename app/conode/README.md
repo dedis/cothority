@@ -116,7 +116,7 @@ to that directory, too.
 
 After compilation, you can be use it like this:
 
-```./stamp file```
+```./stamp sign file```
 
 Where *file* is the file you want to stamp. It will write the signature
 and the inclusion-proof in ```file.sig```.

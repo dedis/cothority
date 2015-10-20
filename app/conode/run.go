@@ -174,7 +174,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 // Simple ephemereal helper for comptability issues
 // From base64 => hexadecimal
 func convertTree(t *graphs.Tree) {
-	point, err := cliutils.ReadPub64(strings.NewReader(t.PubKey), suite)
+	point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
 	if err != nil {
 		dbg.Fatal("Could not decode base64 public key")
 	}

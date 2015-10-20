@@ -257,7 +257,7 @@ func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 		Chall: reply.SigBroad.C,
 		Resp:  reply.SigBroad.R0_hat,
 	}
-	public, _ := cliutils.ReadPub64(strings.NewReader(conf.AggPubKey), suite)
+	public, _ := cliutils.ReadPub64(suite, strings.NewReader(conf.AggPubKey))
 	if err := SchnorrVerify(suite, reply.MerkleRoot, public, sig); err != nil {
 		dbg.Lvl1("Signature-check : FAILED (", err, ")")
 		return false
@@ -311,10 +311,10 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampRepl
 	// Write challenge and response part
 	var bufChall bytes.Buffer
 	var bufResp bytes.Buffer
-	if err := cliutils.WriteSecret64(&bufChall, suite, stamp.SigBroad.C); err != nil {
+	if err := cliutils.WriteSecret64(suite, &bufChall, stamp.SigBroad.C); err != nil {
 		dbg.Fatal("Could not write secret challenge :", err)
 	}
-	if err := cliutils.WriteSecret64(&bufResp, suite, stamp.SigBroad.R0_hat); err != nil {
+	if err := cliutils.WriteSecret64(suite, &bufResp, stamp.SigBroad.R0_hat); err != nil {
 		dbg.Fatal("Could not write secret response : ", err)
 	}
 	// Signature file struct containing everything needed
@@ -363,11 +363,11 @@ func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
 	if err != nil {
 		dbg.Fatal("Could not decode Merkle Root from sig file :", err)
 	}
-	reply.SigBroad.R0_hat, err = cliutils.ReadSecret64(strings.NewReader(sigStr.Response), suite)
+	reply.SigBroad.R0_hat, err = cliutils.ReadSecret64(suite, strings.NewReader(sigStr.Response))
 	if err != nil {
 		dbg.Fatal("Could not read secret challenge : ", err)
 	}
-	reply.SigBroad.C, err = cliutils.ReadSecret64(strings.NewReader(sigStr.Challenge), suite)
+	reply.SigBroad.C, err = cliutils.ReadSecret64(suite, strings.NewReader(sigStr.Challenge))
 	return hash, reply, err
 
 }

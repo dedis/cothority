@@ -11,9 +11,8 @@ import (
 )
 
 // Which suite to use
-const suiteStr string = "ed25519"
-
 var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
+var suiteStr string = suite.String()
 
 // where to write the key file .priv + .pub
 var defaultKeyFile string = "key"
@@ -90,7 +89,6 @@ func NewCli() *cli.App {
 	// sets the right debug options
 	conode.Before = func(c *cli.Context) error {
 		dbg.DebugVisible = c.GlobalInt("debug")
-		dbg.Print("Suite : ", suite.String())
 		return nil
 	}
 	return conode
@@ -114,12 +112,12 @@ func KeyGeneration(key, address string) {
 	// gen keypair
 	kp := cliutils.KeyPair(suite)
 	// Write private
-	if err := cliutils.WritePrivKey(kp.Secret, suite, namePriv(key)); err != nil {
+	if err := cliutils.WritePrivKey(suite, namePriv(key), kp.Secret); err != nil {
 		dbg.Fatal("Error writing private key file : ", err)
 	}
 
 	// Write public
-	if err := cliutils.WritePubKey(kp.Public, suite, namePub(key), address); err != nil {
+	if err := cliutils.WritePubKey(suite, namePub(key), kp.Public, address); err != nil {
 		dbg.Fatal("Error writing public key file : ", err)
 	}
 

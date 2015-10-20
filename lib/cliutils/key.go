@@ -25,7 +25,7 @@ func KeyPair(s abstract.Suite) config.KeyPair {
 // WritePrivKey will write the private key into the filename given
 // It takes a suite in order to adequatly write the secret
 // Returns an error if anything went wrong during file handling or writing key
-func WritePrivKey(priv abstract.Secret, suite abstract.Suite, fileName string) error {
+func WritePrivKey(suite abstract.Suite, fileName string, priv abstract.Secret) error {
 	// Opening file
 	privFile, err := os.OpenFile(fileName, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0744)
 	if err != nil {
@@ -34,11 +34,11 @@ func WritePrivKey(priv abstract.Secret, suite abstract.Suite, fileName string) e
 	defer privFile.Close()
 
 	// Writing down !
-
 	err = suite.Write(privFile, priv)
 	if err != nil {
 		return err
 	}
+	privFile.WriteString("\n")
 	return nil
 }
 
@@ -47,7 +47,7 @@ func WritePrivKey(priv abstract.Secret, suite abstract.Suite, fileName string) e
 // format hostname KEY_in_base_64
 // if before contains a space it will throw an error
 // Returns an error if anything went wrong during file handling or writing key
-func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string, prepend string) error {
+func WritePubKey(suite abstract.Suite, fileName string, pub abstract.Point, prepend string) error {
 
 	pubFile, err := os.OpenFile(fileName, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0744)
 	if err != nil {
@@ -60,11 +60,11 @@ func WritePubKey(pub abstract.Point, suite abstract.Suite, fileName string, prep
 	}
 	pubFile.WriteString(prepend + " ")
 
-	err = WritePub64(pubFile, suite, pub)
+	err = WritePub64(suite, pubFile, pub)
 	if err != nil {
 		return err
 	}
-
+	pubFile.WriteString("\n")
 	return nil
 }
 
@@ -115,7 +115,7 @@ func ReadPubKey(suite abstract.Suite, fileName string) (abstract.Point, string, 
 	key := strings.NewReader(splits[1])
 
 	// Some readings
-	public, err = ReadPub64(key, suite)
+	public, err = ReadPub64(suite, key)
 	if err != nil {
 		return nil, "", errors.New(fmt.Sprintf("Error reading the public key itself : %s", err))
 	}
@@ -125,7 +125,7 @@ func ReadPubKey(suite abstract.Suite, fileName string) (abstract.Point, string, 
 }
 
 // Read a public point to a base64 representation
-func ReadPub64(r io.Reader, suite abstract.Suite) (abstract.Point, error) {
+func ReadPub64(suite abstract.Suite, r io.Reader) (abstract.Point, error) {
 	public := suite.Point()
 	dec := base64.NewDecoder(base64.StdEncoding, r)
 	err := suite.Read(dec, &public)
@@ -133,21 +133,21 @@ func ReadPub64(r io.Reader, suite abstract.Suite) (abstract.Point, error) {
 }
 
 // Write a public point to a base64 representation
-func WritePub64(w io.Writer, suite abstract.Suite, point abstract.Point) error {
+func WritePub64(suite abstract.Suite, w io.Writer, point abstract.Point) error {
 	enc := base64.NewEncoder(base64.StdEncoding, w)
 	err := suite.Write(enc, point)
 	enc.Close()
 	return err
 }
 
-func WriteSecret64(w io.Writer, suite abstract.Suite, secret abstract.Secret) error {
+func WriteSecret64(suite abstract.Suite, w io.Writer, secret abstract.Secret) error {
 	enc := base64.NewEncoder(base64.StdEncoding, w)
 	err := suite.Write(enc, secret)
 	enc.Close()
 	return err
 }
 
-func ReadSecret64(r io.Reader, suite abstract.Suite) (abstract.Secret, error) {
+func ReadSecret64(suite abstract.Suite, r io.Reader) (abstract.Secret, error) {
 	sec := suite.Secret()
 	dec := base64.NewDecoder(base64.StdEncoding, r)
 	err := suite.Read(dec, &sec)
@@ -162,7 +162,7 @@ func PubHex(suite abstract.Suite, point abstract.Point) (string, error) {
 
 // Read a hexadecimal representation of a public point and convert it to the
 // right struct
-func ReadPubHex(s string, suite abstract.Suite) (abstract.Point, error) {
+func ReadPubHex(suite abstract.Suite, s string) (abstract.Point, error) {
 	encoded, err := hex.DecodeString(s)
 	if err != nil {
 		return nil, err

@@ -97,7 +97,6 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 		dbg.Fatal("decoding suite : ", err)
 	}
 	suite := app.GetSuite(Srep.SuiteStr)
-	dbg.Print("Stampreply decoding suite after: ", suite)
 	Srep.SigBroad = sign.SignatureBroadcastMessage{}
 	if err = suite.Read(b, &Srep.SigBroad); err != nil {
 		dbg.Fatal("decoding signature broadcast : ", err)

@@ -358,16 +358,12 @@ func (s *Server) OnDone() sign.DoneFunc {
 				dbg.LLvl2("Inclusion-proof failed")
 			}
 
-			dbg.Printf("%+v", sb)
 			respMessg := defs.TimeStampMessage{
 				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
 				Srep:  &defs.StampReply{SuiteStr: suite.String(), MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
-			dbg.Print("Message : ", SNRoot)
-			dbg.Print("Challenge : ", sb.C)
-			dbg.Print("Response : ", sb.R0_hat)
-			dbg.Print("Suite : ", suite.String())
 			s.PutToClient(msg.To, respMessg)
+			dbg.Lvl1("Sent signature response back to client")
 		}
 		s.mux.Unlock()
 	}
