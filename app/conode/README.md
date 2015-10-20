@@ -91,7 +91,9 @@ conode:
 Be sure to stop the other conode first before running that command.
 Else 'screen' will tell you that a session with the name 'conode'
 already exists.
-
+By default, it will try to read the config file "config.toml".
+However, if you have another name for the config file, please specify it with
+the option ```-config configFile```.
 Again, if you changed the key-file name, don't forget to add
 ```-key keyname```
 
