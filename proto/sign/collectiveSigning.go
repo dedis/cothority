@@ -217,6 +217,9 @@ func (sn *Node) get() error {
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
+	if sn.AnnounceFunc != nil {
+		sn.AnnounceFunc(am)
+	}
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
 	}
@@ -243,6 +246,7 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	}
 
 	// return sn.Commit(view, am)
+	// If we are a leaf, start the commit phase process
 	if len(sn.Children(view)) == 0 {
 		sn.Commit(view, am.Round, nil)
 	}
@@ -261,6 +265,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		return nil
 	}
 
+	// signingmessage nil <=> we are a leaf
 	if sm != nil {
 		round.Commits = append(round.Commits, sm)
 	}
@@ -302,6 +307,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		// add good child server to combined public key, and point commit
 		sn.add(round.X_hat, sm.Com.X_hat)
 		sn.add(round.Log.V_hat, sm.Com.V_hat)
+		dbg.Print("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
 	if sn.Type == PubKey {
@@ -310,7 +316,12 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 	} else {
 		dbg.Lvl4("sign.Node.Commit using Merkle")
 		sn.AddChildrenMerkleRoots(Round)
-		sn.AddLocalMerkleRoot(view, Round)
+		// compute the localmerkle root
+		if sn.CommitFunc != nil {
+			sn.AddLocalMerkleRoot(view, Round, sn.CommitFunc(view))
+		} else {
+			sn.AddLocalMerkleRoot(view, Round, make([]byte, hashid.Size))
+		}
 		sn.HashLog(Round)
 		sn.ComputeCombinedMerkleRoot(view, Round)
 		return sn.actOnCommits(view, Round)
@@ -324,6 +335,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 	var err error
 
 	if sn.IsRoot(view) {
+		dbg.Print("Commit root : Aggregate Public Key :", round.X_hat)
 		sn.commitsDone <- Round
 		err = sn.FinalizeCommits(view, Round)
 	} else {
@@ -576,7 +588,7 @@ func (sn *Node) FinalizeCommits(view int, Round int) error {
 
 	// challenge = Hash(Merkle Tree Root/ Announcement Message, sn.Log.V_hat)
 	if sn.Type == PubKey {
-		round.c = hashElGamal(sn.suite, sn.LogTest, round.Log.V_hat)
+		round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
 	} else {
 		round.c = hashElGamal(sn.suite, round.MTRoot, round.Log.V_hat)
 	}
@@ -611,8 +623,8 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 		// round challenge must be recomputed given potential
 		// exception list
 		if sn.Type == PubKey {
-			round.c = hashElGamal(sn.suite, sn.LogTest, round.Log.V_hat)
-			c2 = hashElGamal(sn.suite, sn.LogTest, T)
+			round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
+			c2 = hashElGamal(sn.suite, sn.Message, T)
 		} else {
 			round.c = hashElGamal(sn.suite, round.MTRoot, round.Log.V_hat)
 			c2 = hashElGamal(sn.suite, round.MTRoot, T)
@@ -640,7 +652,7 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 }
 
 func (sn *Node) TimeForViewChange() bool {
-	if sn.RoundsPerView == 0 {
+	if sn.RoundsPerView == 0{
 		// No view change asked
 		return false
 	}

@@ -50,7 +50,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 		opts.Faulty = true
 	}
 
-	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
+	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, s, opts)
 	if err != nil {
 		dbg.Fatal(err)
 	}

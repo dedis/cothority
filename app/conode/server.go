@@ -33,6 +33,8 @@ type Server struct {
 	Leaves []hashid.HashId // can be removed after we verify protocol
 	Root   hashid.HashId
 	Proofs []proof.Proof
+	// Timestamp message for this Round
+	Timestamp int64
 
 	rLock     sync.Mutex
 	maxRounds int
@@ -52,7 +54,8 @@ func NewServer(signer sign.Signer) *Server {
 	s.PROCESSING = 1
 
 	s.Signer = signer
-	s.Signer.RegisterAnnounceFunc(s.OnAnnounce())
+	s.Signer.RegisterAnnounceFunc(s.AnnounceFunc())
+	s.Signer.RegisterCommitFunc(s.CommitFunc())
 	s.Signer.RegisterDoneFunc(s.OnDone())
 	s.rLock = sync.Mutex{}
 
@@ -250,7 +253,6 @@ func (s *Server) runAsRoot(nRounds int) string {
 			} else {
 				err = s.StartSigningRound()
 			}
-
 			if err == sign.ChangingViewError {
 				// report change in view, and continue with the select
 				log.WithFields(log.Fields{
@@ -332,7 +334,18 @@ func (s *Server) Run(role string) {
 
 }
 
-func (s *Server) OnAnnounce() sign.CommitFunc {
+// AnnounceFunc will keep the timestamp generated for this round
+func (s *Server) AnnounceFunc() sign.AnnounceFunc {
+	return func(am *sign.AnnouncementMessage) {
+		t := time.Time{}
+		if err := t.UnmarshalBinary(am.Message); err != nil {
+			dbg.Lvl1("Unmashaling timestamp has failed")
+		}
+		s.Timestamp = t.Unix()
+	}
+}
+
+func (s *Server) CommitFunc() sign.CommitFunc {
 	return func(view int) []byte {
 		//dbg.Lvl4("Aggregating Commits")
 		return s.AggregateCommits(view)
@@ -361,11 +374,12 @@ func (s *Server) OnDone() sign.DoneFunc {
 			respMessg := defs.TimeStampMessage{
 				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &defs.StampReply{SuiteStr: suite.String(), MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  &defs.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
 			s.PutToClient(msg.To, respMessg)
 			dbg.Lvl1("Sent signature response back to client")
 		}
 		s.mux.Unlock()
+		s.Timestamp = 0
 	}
 
 }

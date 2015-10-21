@@ -57,8 +57,8 @@ func TestPubKeysOneNode(t *testing.T) {
 			mu.Unlock()
 
 			if hc.SNodes[0].IsRoot(0) {
-				hc.SNodes[0].LogTest = []byte("Hello World")
-				err = hc.SNodes[0].Announce(0, &sign.AnnouncementMessage{LogTest: hc.SNodes[0].LogTest})
+				hc.SNodes[0].Message = []byte("Hello World")
+				err = hc.SNodes[0].Announce(0, &sign.AnnouncementMessage{Message: hc.SNodes[0].Message})
 				if err != nil {
 					t.Fatal(err)
 				}

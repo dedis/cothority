@@ -111,9 +111,8 @@ func (sm *SigningMessage) UnmarshalBinary(data []byte) error {
 
 // Broadcasted message initiated and signed by proposer
 type AnnouncementMessage struct {
-	LogTest []byte // TODO: change LogTest to Messg
+	Message []byte
 	Round   int
-
 	// VoteRequest *VoteRequest
 	Vote *Vote // Vote Request (propose)
 }

@@ -34,16 +34,12 @@ func (sn *Node) AddChildrenMerkleRoots(Round int) {
 	}
 }
 
-func (sn *Node) AddLocalMerkleRoot(view, Round int) {
+func (sn *Node) AddLocalMerkleRoot(view, Round int, localMTroot hashid.HashId) {
 	sn.roundLock.RLock()
 	round := sn.Rounds[Round]
 	sn.roundLock.RUnlock()
 	// add own local mtroot to leaves
-	if sn.CommitFunc != nil {
-		round.LocalMTRoot = sn.CommitFunc(view)
-	} else {
-		round.LocalMTRoot = make([]byte, hashid.Size)
-	}
+	round.LocalMTRoot = localMTroot // sn.CommitFunc(view)
 	round.Leaves = append(round.Leaves, round.LocalMTRoot)
 }
 

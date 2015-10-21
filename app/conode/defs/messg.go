@@ -30,6 +30,7 @@ type StampRequest struct {
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampReply struct {
 	SuiteStr   string
+	Timestamp  int64                          // The timestamp requested for the file
 	MerkleRoot []byte                         // root of the merkle tree
 	PrfLen     int                            // Length of proof
 	Prf        proof.Proof                    // Merkle proof of value
@@ -54,6 +55,9 @@ func (Srep StampReply) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
 	var err error
+	if err = enc.Encode(Srep.Timestamp); err != nil {
+		dbg.Lvl1("encoding stampreply timestamp failed : ", err)
+	}
 	if err = enc.Encode(Srep.MerkleRoot); err != nil {
 		dbg.Lvl1("encoding stampreply merkleroot : ", err)
 		return nil, err
@@ -82,6 +86,9 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
 	var err error
+	if err = dec.Decode(&Srep.Timestamp); err != nil {
+		dbg.Fatal("Decoding stampreply timestamp failed :", err)
+	}
 	if err = dec.Decode(&Srep.MerkleRoot); err != nil {
 		dbg.Fatal("decoding stampreply merkle root : ", err)
 	}

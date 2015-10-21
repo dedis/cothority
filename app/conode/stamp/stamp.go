@@ -55,6 +55,8 @@ const sigExtension = ".sig"
 type SignatureFile struct {
 	// name of the file
 	Name string
+	// The time it has been timestamped
+	Timestamp int64
 	// hash of our file
 	Hash string
 	// the root of the merkle tree
@@ -320,6 +322,7 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampRepl
 	// Signature file struct containing everything needed
 	sigStr := &SignatureFile{
 		Name:      file,
+		Timestamp: stamp.Timestamp,
 		Hash:      base64.StdEncoding.EncodeToString(hash),
 		Proof:     p,
 		Root:      base64.StdEncoding.EncodeToString(stamp.MerkleRoot),
@@ -347,8 +350,8 @@ func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
 	}
 
 	reply := &defs.StampReply{}
-	reply.SigBroad = sign.SignatureBroadcastMessage{}
-	// Convert fields from Base64 to binary
+	reply.Timestamp = sigStr.Timestamp
+	reply.SigBroad = sign.SignatureBroadcastMessage{} // Convert fields from Base64 to binary
 	hash, err := base64.StdEncoding.DecodeString(sigStr.Hash)
 	for _, pr := range sigStr.Proof {
 		pro, err := base64.StdEncoding.DecodeString(pr)

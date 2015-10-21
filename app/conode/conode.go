@@ -1,13 +1,14 @@
 package main
 
 import (
+	"os"
+
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app/conode/defs"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-	"os"
 )
 
 // Which suite to use

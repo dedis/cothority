@@ -67,13 +67,13 @@ type Node struct {
 	RoundsAsRoot  int // latest continuous streak of rounds with sn root
 
 	AnnounceLock sync.Mutex
-
-	CommitFunc CommitFunc
-	DoneFunc   DoneFunc
+	AnnounceFunc AnnounceFunc
+	CommitFunc   CommitFunc
+	DoneFunc     DoneFunc
 
 	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
 	roundLock sync.RWMutex
-	LogTest   []byte                    // for testing purposes
+	Message   []byte                    // for testing purposes
 	peerKeys  map[string]abstract.Point // map of all peer public keys
 
 	closed      chan error // error sent when connection closed
@@ -183,7 +183,7 @@ func (sn *Node) SetFailureRate(v int) {
 	sn.FailureRate = v
 }
 
-func (sn *Node) RegisterAnnounceFunc(cf CommitFunc) {
+func (sn *Node) RegisterCommitFunc(cf CommitFunc) {
 	sn.CommitFunc = cf
 }
 
@@ -222,9 +222,18 @@ var MAX_WILLING_TO_WAIT time.Duration = 50 * time.Second
 
 var ChangingViewError error = errors.New("In the process of changing view")
 
+func (sn *Node) RegisterAnnounceFunc(af AnnounceFunc) {
+	sn.AnnounceFunc = af
+}
+
 func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	sn.AnnounceLock.Lock()
 	defer sn.AnnounceLock.Unlock()
+
+	// notify upstream of announcement
+	if sn.AnnounceFunc != nil {
+		sn.AnnounceFunc(am)
+	}
 
 	dbg.Lvl1("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
 
@@ -242,6 +251,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 		if am.Vote != nil {
 			err = sn.Propose(am.Vote.View, am, "")
 		} else {
+			// Launch the announcement process
 			err = sn.Announce(sn.ViewNo, am)
 		}
 
@@ -317,7 +327,7 @@ func (sn *Node) StartVotingRound(v *Vote) error {
 		v.Vcv.View = sn.ViewNo + 1
 	}
 	return sn.StartAnnouncement(
-		&AnnouncementMessage{LogTest: []byte("vote round"), Round: sn.nRounds, Vote: v})
+		&AnnouncementMessage{Message: []byte("vote round"), Round: sn.nRounds, Vote: v})
 }
 
 func (sn *Node) StartSigningRound() error {
@@ -333,8 +343,10 @@ func (sn *Node) StartSigningRound() error {
 	sn.viewmu.Unlock()
 
 	sn.nRounds++
+	// Adding timestamp
+	ts, _ := time.Now().MarshalBinary()
 	return sn.StartAnnouncement(
-		&AnnouncementMessage{LogTest: []byte("sign round"), Round: sn.nRounds})
+		&AnnouncementMessage{Message: ts, Round: sn.nRounds})
 }
 
 func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {
