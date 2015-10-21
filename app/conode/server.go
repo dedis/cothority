@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"net"
 	"strconv"
 	"sync"
@@ -406,8 +408,15 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 	// pull out to be Merkle Tree leaves
 	s.Leaves = make([]hashid.HashId, 0)
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.LittleEndian, s.Timestamp); err != nil {
+		dbg.Lvl2("Timestamp have not been marshalled ! ", err)
+	}
+	bbuf := buf.Bytes()
 	for _, msg := range Queue[PROCESSING] {
-		s.Leaves = append(s.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
+		// append timestamp on the msg
+		leaf := append(msg.Tsm.Sreq.Val, bbuf...)
+		s.Leaves = append(s.Leaves, hashid.HashId(leaf))
 	}
 	s.mux.Unlock()
 

@@ -23,6 +23,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/binary"
 	"errors"
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app/conode/defs"
@@ -267,7 +268,15 @@ func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
 	dbg.Lvl1("Signature-check : OK")
 
 	// Verify inclusion proof
-	if !proof.CheckProof(suite.Hash, reply.MerkleRoot, message, reply.Prf) {
+	// First, concat the timestamp to the message
+	buf := []byte(message)
+	bt := new(bytes.Buffer)
+	if err := binary.Write(bt, binary.LittleEndian, reply.Timestamp); err != nil {
+		dbg.Fatal("Timestamp have not been appended to the message. Abort")
+	}
+	messageConcat := append(buf, bt.Bytes()...)
+	// Then check the proof
+	if !proof.CheckProof(suite.Hash, reply.MerkleRoot, hashid.HashId(messageConcat), reply.Prf) {
 		dbg.Lvl1("Inclusion-check : FAILED")
 		return false
 	}
