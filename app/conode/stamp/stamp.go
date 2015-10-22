@@ -1,22 +1,22 @@
 /*
- * Stamp - works together with a cothority-tree to sign a file. It can also verify
- * that a signature is valid.
- *
- * # Signature
- * For use in signature, run
- * ```./stamp -stamp <file>```
- * It will connect to the stampserver running on the localhost. If you want to
- * connect to another stampserver, you can give the address with the ```-server```
- * argument.
- * At the end a file signature.sig will be generated which holds all necessary
- * information necessary to check the signature.
- *
- * # Verification
- * If you want to verify whether a file is correctly signed, you can run
- * ```./stamp -verify <file.sig>```
- * which will tell whether the signature is valid. If the file referenced in the
- * file.sig is in the current directoy, it will also check it's hash.
- */
+* Stamp - works together with a cothority-tree to sign a file. It can also verify
+* that a signature is valid.
+*
+* # Signature
+* For use in signature, run
+* ```./stamp -stamp <file>```
+* It will connect to the stampserver running on the localhost. If you want to
+* connect to another stampserver, you can give the address with the ```-server```
+* argument.
+* At the end a file signature.sig will be generated which holds all necessary
+* information necessary to check the signature.
+*
+* # Verification
+* If you want to verify whether a file is correctly signed, you can run
+* ```./stamp -verify <file.sig>```
+* which will tell whether the signature is valid. If the file referenced in the
+* file.sig is in the current directoy, it will also check it's hash.
+*/
 
 package main
 
@@ -55,19 +55,19 @@ const sigExtension = ".sig"
 // easily copy/pasted
 type SignatureFile struct {
 	// name of the file
-	Name string
+	Name      string
 	// The time it has been timestamped
 	Timestamp int64
 	// hash of our file
-	Hash string
+	Hash      string
 	// the root of the merkle tree
-	Root string
+	Root      string
 	// the inclusion-proof from root to the hash'd file
-	Proof []string
+	Proof     []string
 	// The signature challenge
 	Challenge string
 	// The signature response
-	Response string
+	Response  string
 }
 
 // Our crypto-suite used in the program
@@ -169,7 +169,7 @@ func StampFile(file, server string) {
 		serverPort := strings.Split(conf.Hosts[rand.Intn(len(conf.Hosts))], ":")
 		server = serverPort[0]
 		port, _ := strconv.Atoi(serverPort[1])
-		server += ":" + strconv.Itoa(port+1)
+		server += ":" + strconv.Itoa(port + 1)
 	}
 	if !strings.Contains(server, ":") {
 		server += ":" + defaultPort
@@ -214,12 +214,12 @@ func StampFile(file, server string) {
 	}
 
 	// Write the signature to the file
-	err = WriteSignatureFile(file+".sig", file, myHash, tsm.Srep)
+	err = WriteSignatureFile(file + ".sig", file, myHash, tsm.Srep)
 	if err != nil {
 		dbg.Fatal("Couldn't write file", err)
 	}
 
-	dbg.Lvl1("Signature file", file+".sig", "written.")
+	dbg.Lvl1("Signature file", file + ".sig", "written.")
 }
 
 // Verify signature takes a file name and the name of the signature file

@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
+	"encoding/hex"
 )
 
 type MessageType int
@@ -41,6 +42,7 @@ func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
 	err := enc.Encode(Sreq.Val)
+	dbg.Printf("%s", hex.EncodeToString(b.Bytes()))
 	return b.Bytes(), err
 }
 
