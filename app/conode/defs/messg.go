@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"encoding/hex"
+	"encoding/json"
 )
 
 type MessageType int
@@ -38,11 +39,32 @@ type StampReply struct {
 	SigBroad   sign.SignatureBroadcastMessage // All other elements necessary
 }
 
+
+type JSONdata struct {
+	Len  int64
+	Data []byte
+}
+
+func (sr *StampRequest) MarshalJSON() ([]byte, error) {
+	data, _ := sr.MarshalBinary()
+	j, err := json.Marshal(JSONdata{
+		Len: int64(len(data)),
+		Data: data,
+	})
+	dbg.Printf("%s", hex.EncodeToString(j))
+	return j, err
+}
+
+func (sr *StampRequest) UnmarshalJSON(dataJSON []byte) error {
+	jdata := JSONdata{}
+	json.Unmarshal(dataJSON, &jdata)
+	return sr.UnmarshalBinary(jdata.Data)
+}
+
 func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
 	err := enc.Encode(Sreq.Val)
-	dbg.Printf("%s", hex.EncodeToString(b.Bytes()))
 	return b.Bytes(), err
 }
 
@@ -51,6 +73,20 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 	dec := gob.NewDecoder(b)
 	err := dec.Decode(&Sreq.Val)
 	return err
+}
+
+func (sr *StampReply) MarshalJSON() ([]byte, error) {
+	data, _ := sr.MarshalBinary()
+	return json.Marshal(JSONdata{
+		Len: int64(len(data)),
+		Data: data,
+	})
+}
+
+func (sr *StampReply) UnmarshalJSON(dataJSON []byte) error {
+	jdata := JSONdata{}
+	json.Unmarshal(dataJSON, &jdata)
+	return sr.UnmarshalBinary(jdata.Data)
 }
 
 func (Srep StampReply) MarshalBinary() ([]byte, error) {
@@ -115,10 +151,10 @@ func (Srep *StampReply) UnmarshalBinary(data []byte) error {
 
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
-	// ErrorReply *ErrorReply // Generic error reply to any request
-	Type MessageType
-	Sreq *StampRequest
-	Srep *StampReply
+				// ErrorReply *ErrorReply // Generic error reply to any request
+	Type  MessageType
+	Sreq  *StampRequest
+	Srep  *StampReply
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
