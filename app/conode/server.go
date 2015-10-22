@@ -339,11 +339,11 @@ func (s *Server) Run(role string) {
 // AnnounceFunc will keep the timestamp generated for this round
 func (s *Server) AnnounceFunc() sign.AnnounceFunc {
 	return func(am *sign.AnnouncementMessage) {
-		t := time.Time{}
-		if err := t.UnmarshalBinary(am.Message); err != nil {
+		var t int64
+		if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
 			dbg.Lvl1("Unmashaling timestamp has failed")
 		}
-		s.Timestamp = t.Unix()
+		s.Timestamp = t
 	}
 }
 
@@ -408,15 +408,8 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 	// pull out to be Merkle Tree leaves
 	s.Leaves = make([]hashid.HashId, 0)
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.LittleEndian, s.Timestamp); err != nil {
-		dbg.Lvl2("Timestamp have not been marshalled ! ", err)
-	}
-	bbuf := buf.Bytes()
 	for _, msg := range Queue[PROCESSING] {
-		// append timestamp on the msg
-		leaf := append(msg.Tsm.Sreq.Val, bbuf...)
-		s.Leaves = append(s.Leaves, hashid.HashId(leaf))
+		s.Leaves = append(s.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
 	}
 	s.mux.Unlock()
 

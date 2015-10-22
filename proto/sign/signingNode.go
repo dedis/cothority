@@ -344,9 +344,11 @@ func (sn *Node) StartSigningRound() error {
 
 	sn.nRounds++
 	// Adding timestamp
-	ts, _ := time.Now().MarshalBinary()
+	ts := time.Now().UTC()
+	var b bytes.Buffer
+	binary.Write(&b, binary.LittleEndian, ts.Unix())
 	return sn.StartAnnouncement(
-		&AnnouncementMessage{Message: ts, Round: sn.nRounds})
+		&AnnouncementMessage{Message: b.Bytes(), Round: sn.nRounds})
 }
 
 func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {

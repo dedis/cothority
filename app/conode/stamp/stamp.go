@@ -68,6 +68,8 @@ type SignatureFile struct {
 	Challenge string
 	// The signature response
 	Response  string
+	// The aggregated commitment used for signing
+	Commitment string
 }
 
 // Our crypto-suite used in the program
@@ -256,32 +258,63 @@ func VerifySignature(file, sigFile string) bool {
 // Message is your own hash, and reply contains the inclusion proof + signature
 // on the aggregated message
 func verifySignature(message hashid.HashId, reply *defs.StampReply) bool {
+	// First check if the challenge is ok
+	if err := verifyChallenge(suite, reply); err != nil {
+		dbg.Lvl1("Challenge-check : FAILED (", err, ")")
+		return false
+	}
+	dbg.Lvl1("Challenge-check : OK")
+	// Then check if the signature is ok
 	sig := defs.BasicSignature{
 		Chall: reply.SigBroad.C,
 		Resp:  reply.SigBroad.R0_hat,
 	}
 	public, _ := cliutils.ReadPub64(suite, strings.NewReader(conf.AggPubKey))
-	if err := SchnorrVerify(suite, reply.MerkleRoot, public, sig); err != nil {
+	// Incorporate the timestamp in the message since the verification process
+	// is done by reconstructing the challenge
+	var b bytes.Buffer
+	if err := binary.Write(&b, binary.LittleEndian, reply.Timestamp); err != nil {
+		dbg.Lvl1("Error marshaling the timestamp for signature verification")
+	}
+	msg := append(b.Bytes(), []byte(reply.MerkleRoot)...)
+	if err := SchnorrVerify(suite, msg, public, sig); err != nil {
 		dbg.Lvl1("Signature-check : FAILED (", err, ")")
 		return false
 	}
 	dbg.Lvl1("Signature-check : OK")
 
-	// Verify inclusion proof
-	// First, concat the timestamp to the message
-	buf := []byte(message)
-	bt := new(bytes.Buffer)
-	if err := binary.Write(bt, binary.LittleEndian, reply.Timestamp); err != nil {
-		dbg.Fatal("Timestamp have not been appended to the message. Abort")
-	}
-	messageConcat := append(buf, bt.Bytes()...)
-	// Then check the proof
-	if !proof.CheckProof(suite.Hash, reply.MerkleRoot, hashid.HashId(messageConcat), reply.Prf) {
+	// finally check the proof
+	if !proof.CheckProof(suite.Hash, reply.MerkleRoot, hashid.HashId(message), reply.Prf) {
 		dbg.Lvl1("Inclusion-check : FAILED")
 		return false
 	}
 	dbg.Lvl1("Inclusion-check : OK")
 	return true
+}
+
+// verifyChallenge will recontstruct the challenge in order to see if any of the
+// components of the challenge has been spoofed or not. It may be a different
+// timestamp .
+func verifyChallenge(suite abstract.Suite, reply *defs.StampReply) error {
+
+	// marshal the V
+	pbuf, err := reply.SigBroad.V0_hat.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	c := suite.Cipher(pbuf)
+	// concat timestamp and merkle root
+	var b bytes.Buffer
+	if err := binary.Write(&b, binary.LittleEndian, reply.Timestamp); err != nil {
+		return err
+	}
+	cbuf := append(b.Bytes(), reply.MerkleRoot...)
+	c.Message(nil, nil, cbuf)
+	challenge := suite.Secret().Pick(c)
+	if challenge.Equal(reply.SigBroad.C) {
+		return nil
+	}
+	return errors.New("Challenge reconstructed is not equal to the one given ><")
 }
 
 // A simple verification of a schnorr signature given the message
@@ -319,24 +352,29 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampRepl
 	for _, pr := range stamp.Prf {
 		p = append(p, base64.StdEncoding.EncodeToString(pr))
 	}
-	// Write challenge and response part
+	// Write challenge and response + commitment part
 	var bufChall bytes.Buffer
 	var bufResp bytes.Buffer
+	var bufCommit bytes.Buffer
 	if err := cliutils.WriteSecret64(suite, &bufChall, stamp.SigBroad.C); err != nil {
 		dbg.Fatal("Could not write secret challenge :", err)
 	}
 	if err := cliutils.WriteSecret64(suite, &bufResp, stamp.SigBroad.R0_hat); err != nil {
 		dbg.Fatal("Could not write secret response : ", err)
 	}
+	if err := cliutils.WritePub64(suite, &bufCommit, stamp.SigBroad.V0_hat); err != nil {
+		dbg.Fatal("Could not write aggregated commitment : ", err)
+	}
 	// Signature file struct containing everything needed
 	sigStr := &SignatureFile{
-		Name:      file,
-		Timestamp: stamp.Timestamp,
-		Hash:      base64.StdEncoding.EncodeToString(hash),
-		Proof:     p,
-		Root:      base64.StdEncoding.EncodeToString(stamp.MerkleRoot),
-		Challenge: bufChall.String(),
-		Response:  bufResp.String(),
+		Name:       file,
+		Timestamp:  stamp.Timestamp,
+		Hash:       base64.StdEncoding.EncodeToString(hash),
+		Proof:      p,
+		Root:       base64.StdEncoding.EncodeToString(stamp.MerkleRoot),
+		Challenge:  bufChall.String(),
+		Response:   bufResp.String(),
+		Commitment: bufCommit.String(),
 	}
 
 	// Print to the screen, and write to file
@@ -379,7 +417,11 @@ func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
 	if err != nil {
 		dbg.Fatal("Could not read secret challenge : ", err)
 	}
-	reply.SigBroad.C, err = cliutils.ReadSecret64(suite, strings.NewReader(sigStr.Challenge))
+	if reply.SigBroad.C, err = cliutils.ReadSecret64(suite, strings.NewReader(sigStr.Challenge)); err != nil {
+		dbg.Fatal("Could not read the aggregate commitment :", err)
+	}
+	reply.SigBroad.V0_hat, err = cliutils.ReadPub64(suite, strings.NewReader(sigStr.Commitment))
+
 	return hash, reply, err
 
 }
