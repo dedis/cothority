@@ -57,7 +57,7 @@ func (c *Client) Close() {
 func (c *Client) handleServer(s coconet.Conn) error {
 	for {
 		tsm := &TimeStampMessage{}
-		err := s.Get(tsm)
+		err := s.GetData(tsm)
 		if err != nil {
 			if err == coconet.ErrNotEstablished {
 				continue
@@ -132,7 +132,7 @@ func (c *Client) PutToServer(name string, data coconet.BinaryMarshaler) error {
 	if conn == nil {
 		return errors.New(fmt.Sprintf("Invalid server/not connected", name, c.Servers[name]))
 	}
-	return conn.Put(data)
+	return conn.PutData(data)
 }
 
 var ErrClientToTSTimeout error = errors.New("client timeouted on waiting for response")

@@ -117,7 +117,7 @@ func (sn *Node) SendChildrenChallengesProofs(view int, chm *ChallengeMessage) er
 
 		// send challenge message to child
 		// dbg.Lvl4("connection: sending children challenge proofs:", name, conn)
-		if err := conn.Put(messg); err != nil {
+		if err := conn.PutData(messg); err != nil {
 			return err
 		}
 	}

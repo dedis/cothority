@@ -126,7 +126,7 @@ func (h *TCPHost) Listen() error {
 			// Read in name of client
 			tp := NewTCPConnFromNet(conn)
 			var mname StringMarshaler
-			err = tp.Get(&mname)
+			err = tp.GetData(&mname)
 			if err != nil {
 				log.Errorln("failed to establish connection: getting name: ", err)
 				tp.Close()
@@ -140,7 +140,7 @@ func (h *TCPHost) Listen() error {
 			// get and set public key
 			suite := h.suite
 			pubkey := suite.Point()
-			err = tp.Get(pubkey)
+			err = tp.GetData(pubkey)
 			if err != nil {
 				log.Errorln("failed to establish connection: getting pubkey:", err)
 				tp.Close()
@@ -149,7 +149,7 @@ func (h *TCPHost) Listen() error {
 			tp.SetPubKey(pubkey)
 
 			// give child the public key
-			err = tp.Put(h.Pubkey)
+			err = tp.PutData(h.Pubkey)
 			if err != nil {
 				log.Errorln("failed to send public key:", err)
 				continue
@@ -165,7 +165,7 @@ func (h *TCPHost) Listen() error {
 			go func() {
 				for {
 					data := h.pool.Get().(BinaryUnmarshaler)
-					err := tp.Get(data)
+					err := tp.GetData(data)
 
 					h.msgchan <- NetworkMessg{Data: data, From: tp.Name(), Err: err}
 				}
@@ -194,7 +194,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	tp := NewTCPConnFromNet(conn)
 
 	mname := StringMarshaler(h.Name())
-	err = tp.Put(&mname)
+	err = tp.PutData(&mname)
 	if err != nil {
 		log.Errorln(err)
 		return err
@@ -202,7 +202,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	tp.SetName(parent)
 
 	// give parent the public key
-	err = tp.Put(h.Pubkey)
+	err = tp.PutData(h.Pubkey)
 	if err != nil {
 		log.Errorln("failed to send public key")
 		return err
@@ -211,7 +211,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// get and set the parents public key
 	suite := h.suite
 	pubkey := suite.Point()
-	err = tp.Get(pubkey)
+	err = tp.GetData(pubkey)
 	if err != nil {
 		log.Errorln("failed to establish connection: getting pubkey:", err)
 		tp.Close()
@@ -229,7 +229,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	go func() {
 		for {
 			data := h.pool.Get().(BinaryUnmarshaler)
-			err := tp.Get(data)
+			err := tp.GetData(data)
 
 			h.msgchan <- NetworkMessg{Data: data, From: tp.Name(), Err: err}
 		}
@@ -464,7 +464,7 @@ func (h *TCPHost) PutTo(ctx context.Context, host string, data BinaryMarshaler) 
 				return
 			}
 			// if the connection has been closed put will fail
-			done <- parent.Put(data)
+			done <- parent.PutData(data)
 			return
 		}
 	}()
@@ -505,7 +505,7 @@ func (h *TCPHost) PutUp(ctx context.Context, view int, data BinaryMarshaler) err
 				return
 			}
 			// if the connection has been closed put will fail
-			done <- parent.Put(data)
+			done <- parent.PutData(data)
 			return
 		}
 	}()
@@ -551,7 +551,7 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 				conn := h.peers[c]
 				h.PeerLock.Unlock()
 				if Ready {
-					if e := conn.Put(data[i]); e != nil {
+					if e := conn.PutData(data[i]); e != nil {
 						errLock.Lock()
 						err = e
 						errLock.Unlock()

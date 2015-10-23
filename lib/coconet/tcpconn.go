@@ -118,7 +118,7 @@ func IsTemporary(err error) bool {
 // Put puts data to the connection.
 // Returns io.EOF on an irrecoverable error.
 // Returns actual error if it is Temporary.
-func (tc *TCPConn) Put(bm BinaryMarshaler) error {
+func (tc *TCPConn) PutData(bm BinaryMarshaler) error {
 	if tc.Closed() {
 		dbg.Lvl3("tcpconn: put: connection closed")
 		return ErrClosed
@@ -145,7 +145,7 @@ func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 // Get gets data from the connection.
 // Returns io.EOF on an irrecoverable error.
 // Returns given error if it is Temporary.
-func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
+func (tc *TCPConn) GetData(bum BinaryUnmarshaler) error {
 	if tc.Closed() {
 		dbg.Lvl3("tcpconn: get: connection closed")
 		return ErrClosed
