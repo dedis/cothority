@@ -227,6 +227,9 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	if err := sn.setUpRound(view, am); err != nil {
 		return err
 	}
+	// Store the message for the round
+	round := sn.Rounds[am.Round]
+	round.msg = am.Message
 
 	// Inform all children of announcement
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -307,7 +310,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		// add good child server to combined public key, and point commit
 		sn.add(round.X_hat, sm.Com.X_hat)
 		sn.add(round.Log.V_hat, sm.Com.V_hat)
-		//dbg.Print("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
+		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
 	if sn.Type == PubKey {
@@ -335,7 +338,11 @@ func (sn *Node) actOnCommits(view, Round int) error {
 	var err error
 
 	if sn.IsRoot(view) {
-		dbg.Lvl3("Commit root : Aggregate Public Key :", round.X_hat)
+		dbg.Lvl5("Commit root : Aggregate Public Key :", round.X_hat)
+		//fmt.Println("Message is ", round.msg)
+		//if round.X_hat.Equal(sn.suite.Point().Null()) {
+		//	fmt.Println("Committt", round.X_hat)
+		//}
 		sn.commitsDone <- Round
 		err = sn.FinalizeCommits(view, Round)
 	} else {
@@ -414,6 +421,8 @@ func (sn *Node) initResponseCrypto(Round int) {
 	round.r_hat = round.r
 }
 
+// Respond send the response UP from leaf to parent
+// called initially by the all the bottom leaves
 func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 	dbg.Lvl4(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
 	// update max seen round
@@ -540,6 +549,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 	}
 
 	// root reports round is done
+	// Sends the final signature to every one
 	if isroot {
 		sn.SignatureBroadcast(view, nil, Round)
 		sn.done <- Round
@@ -587,10 +597,12 @@ func (sn *Node) FinalizeCommits(view int, Round int) error {
 	round := sn.Rounds[Round]
 
 	// challenge = Hash(Merkle Tree Root/ Announcement Message, sn.Log.V_hat)
+	msg := round.msg
+	msg = append(msg, []byte(round.MTRoot)...)
 	if sn.Type == PubKey {
 		round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
 	} else {
-		round.c = hashElGamal(sn.suite, round.MTRoot, round.Log.V_hat)
+		round.c = hashElGamal(sn.suite, msg, round.Log.V_hat)
 	}
 
 	proof := make([]hashid.HashId, 0)
@@ -626,17 +638,16 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 			round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
 			c2 = hashElGamal(sn.suite, sn.Message, T)
 		} else {
-			round.c = hashElGamal(sn.suite, round.MTRoot, round.Log.V_hat)
-			c2 = hashElGamal(sn.suite, round.MTRoot, T)
+			msg := round.msg
+			msg = append(msg, []byte(round.MTRoot)...)
+			round.c = hashElGamal(sn.suite, msg, round.Log.V_hat)
+			c2 = hashElGamal(sn.suite, msg, T)
 		}
 	}
 
 	// intermediary nodes check partial responses aginst their partial keys
 	// the root node is also able to check against the challenge it emitted
 	if !T.Equal(round.Log.V_hat) || (isroot && !round.c.Equal(c2)) {
-		if DEBUG == true {
-			panic(sn.Name() + "reports ElGamal Collective Signature failed for Round" + strconv.Itoa(Round))
-		}
 		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
 	} else if isroot {
 		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
@@ -652,7 +663,7 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 }
 
 func (sn *Node) TimeForViewChange() bool {
-	if sn.RoundsPerView == 0{
+	if sn.RoundsPerView == 0 {
 		// No view change asked
 		return false
 	}

@@ -3,10 +3,8 @@ package coconet
 import (
 	"encoding/json"
 	"errors"
-	"math/rand"
 	"net"
 	"sync"
-	"time"
 	//"runtime/debug"
 
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -158,9 +156,9 @@ func (tc *TCPConn) GetData(bum BinaryUnmarshaler) error {
 	dec := tc.dec
 	tc.encLock.Unlock()
 
-	if Latency != 0 {
-		time.Sleep(time.Duration(rand.Intn(Latency)) * time.Millisecond)
-	}
+	//if Latency != 0 {
+	//	time.Sleep(time.Duration(rand.Intn(Latency)) * time.Millisecond)
+	//}
 	err := dec.Decode(bum)
 	if err != nil {
 		if IsTemporary(err) {
@@ -169,7 +167,7 @@ func (tc *TCPConn) GetData(bum BinaryUnmarshaler) error {
 		}
 		// if it is an irrecoverable error
 		// close the channel and return that it has been closed
-		if err != io.EOF && err.Error() != "read tcp4"{
+		if err != io.EOF && err.Error() != "read tcp4" {
 			dbg.Lvl2("Couldn't decode packet at", tc.name, "error:", err)
 		} else {
 			dbg.Lvl3("Closing connection by EOF: ", err)
