@@ -24,3 +24,6 @@ app/conode/stamp
 *.toml
 hosts.list
 hostfiles
+app/conode/conode-*
+app/conode/local_keys
+app/conode/real

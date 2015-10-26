@@ -84,7 +84,7 @@ func Build(hostFile string, bf int, configFile string) {
 	}
 
 	app.WriteTomlConfig(conf, configFile)
-	dbg.Lvl1("Written config file with tree to ", configFile)
+	dbg.Lvl1("Written config file with tree to", configFile)
 }
 
 // SImply adds all the public keys we give to it
@@ -94,9 +94,9 @@ func aggregateKeys(pubs []string) abstract.Point {
 		// convert from string to public key
 		kip, _ := cliutils.ReadPub64(suite, strings.NewReader(ki))
 		k0 = k0.Add(k0, kip)
-		dbg.Lvl2("Public key n* ", i, " : ", kip)
+		dbg.Lvl2("Public key n#", i, ":", kip)
 	}
-	dbg.Lvl1("Aggregated public key : ", k0)
+	dbg.Lvl1("Aggregated public key:", k0)
 	return k0
 }
 
