@@ -97,7 +97,7 @@ func (s *Server) Listen() error {
 
 	go func() {
 		for {
-			dbg.LLvl2("Listening to sign-requests: %p", s)
+			dbg.Lvl2("Listening to sign-requests: %p", s)
 			conn, err := ln.Accept()
 			if err != nil {
 				// handle error
@@ -106,7 +106,7 @@ func (s *Server) Listen() error {
 			}
 
 			c := coconet.NewTCPConnFromNet(conn)
-			dbg.LLvl2("Established connection with client:", c)
+			dbg.Lvl2("Established connection with client:", c)
 
 			if _, ok := s.Clients[c.Name()]; !ok {
 				s.Clients[c.Name()] = c
@@ -114,7 +114,7 @@ func (s *Server) Listen() error {
 				go func(co coconet.Conn) {
 					for {
 						tsm := defs.TimeStampMessage{}
-						err := co.Get(&tsm)
+						err := co.GetData(&tsm)
 						if err != nil {
 							dbg.Lvlf1("%p Failed to get from child: %s", s, err)
 							co.Close()
@@ -130,7 +130,7 @@ func (s *Server) Listen() error {
 								MustReplyMessage{Tsm: tsm, To: co.Name()})
 							s.mux.Unlock()
 						case defs.StampClose:
-							dbg.LLvl2("Closing connection")
+							dbg.Lvl2("Closing connection")
 							co.Close()
 							return
 						}
@@ -151,7 +151,7 @@ func (s *Server) ListenToClients() {
 		go func(co coconet.Conn) {
 			for {
 				tsm := defs.TimeStampMessage{}
-				err := co.Get(&tsm)
+				err := co.GetData(&tsm)
 				if err == coconet.ErrClosed {
 					dbg.Lvlf1("%p Failed to get from client:", s, err)
 					s.Close()
@@ -368,12 +368,12 @@ func (s *Server) OnDone() sign.DoneFunc {
 
 			// proof that I can get from a leaf message to the big root
 			if proof.CheckProof(s.Signer.(*sign.Node).Suite().Hash, SNRoot, s.Leaves[i], combProof) {
-				dbg.LLvl2("Proof is OK")
+				dbg.Lvl2("Proof is OK")
 			} else {
-				dbg.LLvl2("Inclusion-proof failed")
+				dbg.Lvl2("Inclusion-proof failed")
 			}
 
-			respMessg := defs.TimeStampMessage{
+			respMessg := &defs.TimeStampMessage{
 				Type:  defs.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
 				Srep:  &defs.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
@@ -440,7 +440,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 // Send message to client given by name
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := s.Clients[name].Put(data)
+	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
 		s.Close()
 		return

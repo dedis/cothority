@@ -64,7 +64,7 @@ Before we will add you to our tree of conodes, we want to make sure that your
 server is up and running for at least 24 hours. For this, run conode with the
 following command:
 
-```screen -S conode -Hdm conode validate```
+```screen -S conode -dm conode validate```
 
 This will run conode on the address given in the step 'Create private/public-key
 pair' with the file key.pub/key.priv. If you changed the keyname, don't forget to
@@ -86,7 +86,7 @@ future conode, we will send you a config.toml-file that has to be copied
 to the conode-directory. Once it is copied there, you can restart
 conode:
 
-```screen -S conode -Hdm conode run```
+```screen -S conode -dm conode run```
 
 Be sure to stop the other conode first before running that command.
 Else 'screen' will tell you that a session with the name 'conode'

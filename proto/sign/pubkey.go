@@ -13,7 +13,7 @@ func (sn *Node) SendChildrenChallenges(view int, chm *ChallengeMessage) error {
 		messg = &SigningMessage{View: view, Type: Challenge, Chm: chm}
 
 		// fmt.Println(sn.Name(), "send to", i, child, "on view", view)
-		if err := child.Put(messg); err != nil {
+		if err := child.PutData(messg); err != nil {
 			return err
 		}
 	}

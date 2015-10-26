@@ -40,6 +40,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"encoding/json"
 )
 
 // Default config file
@@ -188,7 +189,7 @@ func StampFile(file, server string) {
 		ReqNo: 0,
 		Sreq:  &defs.StampRequest{Val: myHash}}
 
-	err = conn.Put(msg)
+	err = conn.PutData(msg)
 	if err != nil {
 		dbg.Fatal("Couldn't send hash-message to server: ", err)
 	}
@@ -197,14 +198,14 @@ func StampFile(file, server string) {
 	tsm := &defs.TimeStampMessage{}
 	tsm.Srep = &defs.StampReply{}
 	tsm.Srep.SuiteStr = suite.String()
-	err = conn.Get(tsm)
+	err = conn.GetData(tsm)
 	if err != nil {
 		dbg.Fatal("Error while receiving signature:", err)
 	}
 	dbg.Lvl1("Got signature response")
 
 	// Asking to close the connection
-	err = conn.Put(&defs.TimeStampMessage{
+	err = conn.PutData(&defs.TimeStampMessage{
 		ReqNo: 1,
 		Type:  defs.StampClose,
 	})

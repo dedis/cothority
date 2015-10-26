@@ -144,7 +144,7 @@ func (s *Server) ListenToClients() {
 		go func(c coconet.Conn) {
 			for {
 				tsm := TimeStampMessage{}
-				err := c.Get(&tsm)
+				err := c.GetData(&tsm)
 				if err == coconet.ErrClosed {
 					dbg.Lvlf1("%p Failed to get from client:", s, err)
 					s.Close()
@@ -460,7 +460,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 // Send message to client given by name
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := s.Clients[name].Put(data)
+	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
 		s.Close()
 		return

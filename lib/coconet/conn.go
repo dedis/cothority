@@ -15,11 +15,11 @@ type Conn interface {
 	SetPubKey(abstract.Point)
 
 	// Put puts data to the connection, calling the MarshalBinary method as needed.
-	Put(data BinaryMarshaler) error
+	PutData(data BinaryMarshaler) error
 	// Get gets data from the connection, calling the UnmarshalBinary method as needed.
 	// It blocks until it successfully receives data or there was a network error.
 	// It returns io.EOF if the channel has been closed.
-	Get(data BinaryUnmarshaler) error
+	GetData(data BinaryUnmarshaler) error
 
 	// Connect establishes the connection. Before using the Put and Get
 	// methods of a Conn, Connect must first be called.
@@ -37,10 +37,12 @@ type Conn interface {
 // All messages passing through our conn must implement their own  BinaryMarshaler
 type BinaryMarshaler interface {
 	MarshalBinary() (data []byte, err error)
+	//MarshalJSON()([]byte, error)
 }
 
 // Taken from: http://golang.org/pkg/encoding/#BinaryMarshaler
 // All messages passing through our conn must implement their own BinaryUnmarshaler
 type BinaryUnmarshaler interface {
 	UnmarshalBinary(data []byte) error
+	//UnmarshalJSON(data []byte) error
 }

@@ -200,7 +200,7 @@ func GetSuite(suite string) abstract.Suite {
 		return nist256
 	case nist512Str: //"p512":
 		return nist512
-	case edwardsStr:
+	case edwardsStr, "ed25519":
 		return edward
 	default:
 		dbg.Lvl1("Got unknown suite", suite)
