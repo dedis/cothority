@@ -16,7 +16,7 @@ import (
 func Monitor(stats Stats) {
 	dbg.Lvl1("Starting monitoring")
 	defer dbg.Lvl1("Done monitoring")
-	retry_dial:
+retry_dial:
 	ws, err := websocket.Dial(fmt.Sprintf("ws://localhost:%d/log", port), "", "http://localhost/")
 	if err != nil {
 		time.Sleep(1 * time.Second)

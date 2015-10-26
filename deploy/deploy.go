@@ -36,7 +36,7 @@ import (
 
 // Configuration-variables
 var deployP platform.Platform
-var port int = 8081
+var port string = "8081"
 
 var platform_dst = "deterlab"
 var app = ""
@@ -53,7 +53,7 @@ const (
 	ShamirSign string = "shamir"
 	CollSign   string = "sign"
 	CollStamp  string = "stamp"
-	Naive       string = "naive"
+	Naive      string = "naive"
 	NTree      string = "ntree"
 )
 
@@ -110,17 +110,13 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	stopOnSuccess := true
 	var f *os.File
 	// Write the header
-	firstStat := GetStats(runconfigs[0])
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+	firstStat := monitor.NewStats(runconfigs[0])
+	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 	defer f.Close()
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
-	firstStat.WriteTo(f)
-	err = firstStat.ServerCSVHeader()
-	if err != nil {
-		log.Fatal("error writing test file header:", err)
-	}
+	firstStat.WriteHeader(f)
 	err = f.Sync()
 	if err != nil {
 		log.Fatal("error syncing test file:", err)
@@ -129,7 +125,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	for i, t := range runconfigs {
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]Stats, 0, nTimes)
+		runs := make([]monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
@@ -147,14 +143,12 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			continue
 		}
 
-		s, err := AverageStats(runs...)
+		s, err := monitor.AverageStats(runs...)
 		if err != nil {
 			dbg.Fatal("Could not average stats for test ", i)
 		}
 		rs[i] = s
-		rs[i].WriteTo(f)
-		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
-		err = rs[i].ServerCSV()
+		err = rs[i].WriteValues(f)
 		if err != nil {
 			log.Fatal("error writing data to test file:", err)
 		}
@@ -162,25 +156,6 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		if err != nil {
 			log.Fatal("error syncing data to test file:", err)
 		}
-
-		cl, err := os.OpenFile(
-			TestFile("client_latency_" + name + "_" + strconv.Itoa(i)),
-			os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
-		if err != nil {
-			log.Fatal("error opening test file:", err)
-		}
-		defer cl.Close()
-		rs[i].WriteTo(cl)
-		err = rs[i].ClientCSVHeader()
-		err = rs[i].ClientCSV()
-		if err != nil {
-			log.Fatal("error writing client latencies to file:", err)
-		}
-		err = cl.Sync()
-		if err != nil {
-			log.Fatal("error syncing data to latency file:", err)
-		}
-
 	}
 }
 
@@ -188,7 +163,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (Stats, error) {
 	done := make(chan struct{})
-	var rs Stats = GetStats(rc)
+	rs := monitor.NewStats(rc)
 
 	deployP.Deploy(rc)
 	deployP.Cleanup()
@@ -199,22 +174,15 @@ func RunTest(rc platform.RunConfig) (Stats, error) {
 	}
 
 	go func() {
-		if platform_dst == "deterlab" {
-			Monitor(rs)
-		} else {
-			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
-		}
+		monitor.Monitor("127.0.0.1:"+port, rs)
 		deployP.Wait()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct{}{}
 	}()
 
-	// timeout the command if it takes too long
+	// can timeout the command if it takes too long
 	select {
 	case <-done:
-		if platform_dst == "deterlab" && !rs.Valid() {
-			return rs, fmt.Errorf("unable to get good data:  %+v", rs)
-		}
 		return rs, nil
 	}
 }

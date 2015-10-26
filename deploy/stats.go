@@ -18,12 +18,12 @@ import (
 )
 
 ////////////////////// HELPERS FUNCTIONS / STRUCT /////////////////
-// StreamStats is used to compute the statistics
+// SimpleMeasure is used to compute the statistics
 // it reprensent the time to an action (setup, shamir round, coll round etc)
 // use it to compute streaming mean + dev
-type StreamStats struct {
-	min  float64
-	max  float64
+type SimpleMeasure struct {
+	min float64
+	max float64
 
 	n    int
 	oldM float64
@@ -38,7 +38,7 @@ type StreamStats struct {
 // k is the number of times we've added something ("index" of the update)
 // needed to compute the avg + dev
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
-func (t *StreamStats) Update(newTime float64) {
+func (t *SimpleMeasure) Update(newTime float64) {
 	// nothings takes 0 ms to complete, so we know it's the first time
 	if t.min > newTime || t.n == 0 {
 		t.min = newTime
@@ -53,18 +53,18 @@ func (t *StreamStats) Update(newTime float64) {
 		t.newM = newTime
 		t.oldS = 0.0
 	} else {
-		t.newM = t.oldM + (newTime - t.oldM) / float64(t.n)
-		t.newS = t.oldS + (newTime - t.oldM) * (newTime - t.newM)
+		t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
+		t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
 		t.oldM = t.newM
 		t.oldS = t.newS
 	}
-	t.dev = math.Sqrt(t.newS / float64(t.n - 1))
+	t.dev = math.Sqrt(t.newS / float64(t.n-1))
 
 }
 
-// Average will set the current StreamStats to the average of all StreamStats
-func StreamStatsAverage(st ...StreamStats) StreamStats {
-	var t StreamStats
+// Average will set the current SimpleMeasure to the average of all SimpleMeasure
+func SimpleMeasureAverage(st ...SimpleMeasure) SimpleMeasure {
+	var t SimpleMeasure
 	for _, s := range st {
 		t.min += s.min
 		t.max += s.max
@@ -80,31 +80,62 @@ func StreamStatsAverage(st ...StreamStats) StreamStats {
 	return t
 }
 
-func (t *StreamStats) Min() float64 {
+func (t *SimpleMeasure) Min() float64 {
 	return t.min
 }
-func (t *StreamStats) Max() float64 {
+func (t *SimpleMeasure) Max() float64 {
 	return t.max
 }
 
 // return the number of value added
-func (t *StreamStats) NumValue() int {
+func (t *SimpleMeasure) NumValue() int {
 	return t.n
 }
 
-func (t *StreamStats) Avg() float64 {
+func (t *SimpleMeasure) Avg() float64 {
 	return t.newM
 }
 
-func (t *StreamStats) Dev() float64 {
+func (t *SimpleMeasure) Dev() float64 {
 	return t.dev
 }
 
-func (t *StreamStats) Header(prefix string) string {
+func (t *SimpleMeasure) Values() map[string]float64 {
+	m := make(map[string]float64)
+	m["min"] = t.Min()
+	m["max"] = t.Max()
+	m["avg"] = t.Avg()
+	m["dev"] = t.Dev()
+}
+
+func (t *SimpleMeasure) Header(prefix string) string {
 	return fmt.Sprintf("%smin, %smax, %savg, %sdev", prefix, prefix, prefix, prefix)
 }
-func (t *StreamStats) String() string {
+func (t *SimpleMeasure) String() string {
 	return fmt.Sprintf("%f, %f, %f, %f", t.Min(), t.Max(), t.Avg(), t.Dev())
+}
+
+type Measure interface {
+	// Returns a map of values for this measure such as
+	// avg,dev...
+	// That way a cpu measure can add
+	// user_avg
+	// sys_avg
+	// ...
+	Values() map[string]float64
+}
+
+type CpuMeasure struct {
+	User   Measure
+	System Measure
+}
+
+func (c *CpuMeasure) Values() map[string]float64 {
+	user := c.User.Values()
+	for key, val := range c.System.Values() {
+		user[key] = val
+	}
+	return user
 }
 
 ////////////////////////////////////////////////////////
@@ -116,6 +147,8 @@ var BasicSetupType string = "basic_setup"
 var BasicCalcType string = "basic_calc"
 var BasicVerifyType string = "basic_verify"
 var BasicRoundType string = "basic_round"
+var BasicCpuUserType string = "basic_cpu_user"
+var BasicCpuSysType string = "basic_cpu_sys"
 
 // concrete impl
 type BasicEntry struct {
@@ -142,13 +175,6 @@ type CollClientEntry struct {
 	Buckets     []float64 `json:"buck,omitempty"`
 	RoundsAfter []float64 `json:"roundsAfter,omitempty"`
 	Times       []float64 `json:"times,omitempty"`
-}
-
-type SysEntry struct {
-	File     string  `json:"file"`
-	Type     string  `json:"type"`
-	SysTime  float64 `json:"systime"`
-	UserTime float64 `json:"usertime"`
 }
 
 // General interface to have each app have its own statistics displayed
@@ -179,21 +205,21 @@ type Stats interface {
 // statistics about the shamir_sign app
 type BasicStats struct {
 	// the writer to write the stats
-	Writer   io.Writer
+	Writer io.Writer
 	// number of hosts
-	NHosts   int
+	NHosts int
 
 	// times for the rounds
-	round    StreamStats
+	round SimpleMeasure
 	// times for the setup
-	setup    StreamStats
+	setup SimpleMeasure
 	// times for the verification
-	verify   StreamStats
+	verify CpuMeasure
 	// times for the calculation
-	calc     StreamStats
+	calc CpuMeasure
 
-	SysTime  float64
-	UserTime float64
+	// the cpu time taken by user / system
+	global CpuMeasure
 }
 
 func (s *BasicStats) WriteTo(w io.Writer) {
@@ -203,20 +229,20 @@ func (s *BasicStats) WriteTo(w io.Writer) {
 // Return the CSV header of theses stats.
 // Could be implemented using reflection for automatic detection later .. ?
 func (s *BasicStats) ServerCSVHeader() error {
-	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, %s, %s, user, system\n", s.round.Header("round_"),
-		s.setup.Header("setup_"), s.verify.Header("verify_"), s.calc.Header("calc_"))
+	_, err := fmt.Fprintf(s.Writer, "Hosts, %s, %s, %s, %s, %s,%s\n", s.round.Header("round_"),
+		s.setup.Header("setup_"), s.verify.Header("verify_"), s.calc.Header("calc_"), s.cpu_sys.Header("system_"), s.cpu_user.Header("user_"))
 	return err
 }
 
 func (s *BasicStats) ServerCSV() error {
-	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %s, %s, %f, %f\n",
+	_, err := fmt.Fprintf(s.Writer, "%d, %s, %s, %s, %s, %s, %s\n",
 		s.NHosts,
 		s.round.String(),
 		s.setup.String(),
 		s.verify.String(),
 		s.calc.String(),
-		s.UserTime,
-		s.SysTime)
+		s.cpu_sys.String(),
+		s.cpu_user.String())
 	return err
 }
 
@@ -234,7 +260,7 @@ func (s *BasicStats) AddEntry(e Entry) error {
 	case BasicEntry:
 		st := e.(BasicEntry)
 		// is it about the Round , or the setup
-		switch st.Type{
+		switch st.Type {
 		default:
 			dbg.Fatal("Received unknown basic entry : ", st.Type)
 		case BasicSetupType:
@@ -245,11 +271,11 @@ func (s *BasicStats) AddEntry(e Entry) error {
 			s.calc.Update(st.Time)
 		case BasicRoundType:
 			s.round.Update(st.Time)
+		case BasicCpuUserType:
+			s.cpu_user.Update(st.Time)
+		case BasicCpuSysType:
+			s.cpu_sys.Update(st.Time)
 		}
-	case SysEntry:
-		st := e.(SysEntry)
-		s.SysTime = st.SysTime
-		s.UserTime = st.UserTime
 	default:
 		dbg.Fatal("Received unknown entry type : ", t)
 	}
@@ -266,8 +292,8 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 	if len(stats) < 1 {
 		return s, nil
 	}
-	fSys := s.SysTime
-	fUs := s.UserTime
+	stcpu_user := make([]StreamStats, len(stats))
+	stcpu_sys := make([]StreamStats, len(stats))
 	stset := make([]StreamStats, len(stats))
 	stround := make([]StreamStats, len(stats))
 	stverify := make([]StreamStats, len(stats))
@@ -281,37 +307,35 @@ func (s *BasicStats) Average(stats ...Stats) (Stats, error) {
 		stround[i] = ss.round
 		stverify[i] = ss.verify
 		stcalc[i] = ss.calc
-		s.SysTime += ss.SysTime
-		s.UserTime += ss.UserTime
+		stcpu_user[i] = ss.cpu_user
+		stcpu_sys[i] = ss.cpu_sys
 	}
 	s.setup = StreamStatsAverage(stset...)
 	s.round = StreamStatsAverage(stround...)
 	s.verify = StreamStatsAverage(stverify...)
 	s.calc = StreamStatsAverage(stcalc...)
-	s.SysTime -= fSys
-	s.UserTime -= fUs
-	s.SysTime /= float64(len(stats))
-	s.UserTime /= float64(len(stats))
+	s.cpu_user = StreamStatsAverage(stcpu_user...)
+	s.cpu_sys = StreamStatsAverage(stcpu_sys...)
 	return s, nil
 }
 
 // Collective signing stats
 type CollStats struct {
 	// number of hosts
-	NHosts   int
+	NHosts int
 	// Writer where to write the data
-	Writer   io.Writer
+	Writer io.Writer
 
-	Depth    int
+	Depth int
 
-	BF       int
-	round    StreamStats
+	BF    int
+	round StreamStats
 
 	SysTime  float64
 	UserTime float64
 
-	Rate     float64
-	Times    []float64
+	Rate  float64
+	Times []float64
 }
 
 func (c *CollStats) Valid() bool {
@@ -346,7 +370,7 @@ func (s *CollStats) ClientCSVHeader() error {
 }
 func (s *CollStats) ClientCSV() error {
 	for _, t := range s.Times {
-		_, err := fmt.Fprintf(s.Writer, strconv.FormatFloat(t, 'f', 15, 64) + "\n")
+		_, err := fmt.Fprintf(s.Writer, strconv.FormatFloat(t, 'f', 15, 64)+"\n")
 		if err != nil {
 			return err
 		}
@@ -376,8 +400,8 @@ func (s *CollStats) AddEntry(e Entry) error {
 		observed = 1 / observed
 		s.Rate = observed
 		s.Times = cce.Times
-	case SysEntry:
-		se := e.(SysEntry)
+	case CpuEntry:
+		se := e.(CpuEntry)
 		s.SysTime = se.SysTime
 		s.UserTime = se.UserTime
 	default:
@@ -447,7 +471,7 @@ func NewCollStats(rc platf.RunConfig) *CollStats {
 		dbg.Fatal("Can not instantiate CollStats without Branching Factor field (bf)")
 	}
 	var n int = getNHosts(rc)
-	depth := math.Log(float64(n) * float64(bf - 1) + 1)
+	depth := math.Log(float64(n)*float64(bf-1) + 1)
 	depth /= math.Log(float64(bf))
 	depth = math.Ceil(depth)
 	depth -= 1
@@ -526,7 +550,7 @@ func ArrStats(stream []float64) (avg float64, min float64, max float64, stddev f
 			break
 		}
 	}
-	stream = stream[:i + 1]
+	stream = stream[:i+1]
 
 	k := float64(1)
 	first := true

@@ -1,113 +1,88 @@
-/*
- * Time-measurement functions.
- *
- * Usage:
- * ```measure := monitor.NewMeasure()```
- * ```// Do some calculations```
- * ```measure.MeasureWall("CPU on calculations")```
- */
-
 package monitor
+
 import (
-	"time"
-	"syscall"
-	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/lib/logutils"
+	"encoding/json"
+	"fmt"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"net"
+	"strings"
+	"sync"
 )
 
-type Measure struct {
-	WallTime    time.Time
-	CPUTimeUser float64
-	CPUTimeSys  float64
-	allowUpdate bool
+// This file handles the collection of measurements, aggregates them and
+// write CSV file reports
+
+// listen is the address where to listen for the monitor. The endpoint can be a
+// monitor.Proxy or a direct connection with measure.go
+var listen string
+
+// mutex is used to update the global stats from many connections
+var mutex *sync.Mutex
+
+func init() {
+	mutex = &sync.Mutex{}
 }
 
-// Creates a new measure-struct
-func NewMeasure() *Measure {
-	m := &Measure{}
-	m.Update()
-	return m
-}
-
-// Prints the wall-clock time used for that measurement,
-// also updates the clock
-func (m *Measure)MeasureWall(message string, d ...float64) {
-	div := 1.0
-	if len(d) > 0 {
-		div = d[0]
+// Monitor will start listening for incoming connections on this address
+// It needs the stats struct pointer to update when measures come
+// This is a BLOCKING operation.
+// Return an error if something went wrong during the connection setup
+func Monitor(addr string, stats *Stats) error {
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("Error while monitor is binding address : %v", err)
 	}
-	logWF(message, float64(time.Since(m.WallTime)) / 1.0e9 / div)
-	m.Update()
+	var wg sync.WaitGroup
+	go func() {
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				dbg.Lvl1("Error while monitor accept connection : ", err)
+				continue
+			}
+			wg.Add(1)
+			go handleConnection(conn, &wg, stats)
+		}
+	}()
+
+	// Wait
+	wg.Wait()
+
+	return nil
 }
 
-// Prints the CPU-clock time used for that measurement,
-// also updates the clock
-func (m *Measure)MeasureCPU(message string, d ...float64) {
-	div := 1.0
-	if len(d) > 0 {
-		div = d[0]
+// handleConnection will decode the data received and aggregates it into its
+// stats
+func handleConnection(conn net.Conn, wg *sync.WaitGroup, stats *Stats) {
+	dec := json.NewDecoder(conn)
+	var m Measure
+	nerr := 0
+	for {
+		if err := dec.Decode(&m); err != nil {
+			dbg.Lvl1("Error monitor decoding from ", conn.RemoteAddr().String(), " : ", err)
+			nerr += 1
+			if nerr > 1 {
+				dbg.Lvl1("Monitor : too many errors from ", conn.RemoteAddr().String(), " : Abort.")
+				break
+			}
+		}
+
+		// Special case where the measurement is indicating a FINISHED step
+		if strings.ToLower(m.Name) == "end" {
+			break
+		}
+		updateMeasures(stats, m)
+		m = Measure{}
 	}
-	sys, usr := getDiffRTime(m.CPUTimeSys, m.CPUTimeUser)
-	logWF(message, (sys + usr) / div)
-	m.Update()
+	// finished
+	wg.Done()
 }
 
-// Prints the wall-clock and the CPU-time used for that measurement,
-// also updates the clock
-func (m *Measure)MeasureCPUWall(messageCPU, messageWall string, d ...float64) {
-	au := m.allowUpdate
-	m.UpdatePref(false)
-	m.MeasureCPU(messageCPU)
-	m.MeasureWall(messageWall)
-	m.UpdatePref(au)
+// updateMeasures will add that specific measure to the global stats
+// in a concurrently safe manner
+func updateMeasures(stats *Stats, m Measure) {
+	mutex.Lock()
+	// updating
+	stats.Update(m)
+	mutex.Unlock()
 }
-
-// Whether the measurement should be updated automatically
-// after each MeasureCPU and MeasureWall. If called with
-// true, updates also the clock
-func (m *Measure)UpdatePref(allow bool) {
-	m.allowUpdate = allow
-	m.Update()
-}
-
-// Sets 'now' as the start-time
-func (m *Measure)Update() {
-	if m.allowUpdate {
-		m.CPUTimeSys, m.CPUTimeUser = GetRTime()
-		m.WallTime = time.Now()
-	}
-}
-
-// Prints a message to end the logging
-func LogEnd() {
-	logWF("end", 0.0)
-}
-
-// Convert microseconds to seconds
-func iiToF(sec int64, usec int64) float64 {
-	return float64(sec) + float64(usec) / 1000000.0
-}
-
-// Gets the sytem and the user time so far
-func GetRTime() (tSys, tUsr float64) {
-	rusage := &syscall.Rusage{}
-	syscall.Getrusage(syscall.RUSAGE_SELF, rusage)
-	s, u := rusage.Stime, rusage.Utime
-	return iiToF(int64(s.Sec), int64(s.Usec)), iiToF(int64(u.Sec), int64(u.Usec))
-}
-
-// Returns the difference to the given system- and user-time
-func getDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
-	nowSys, nowUsr := GetRTime()
-	return nowSys - tSys, nowUsr - tUsr
-}
-
-// Writes a message to the logger that will be caught by the
-// main system
-func logWF(message string, time float64) {
-	log.WithFields(log.Fields{
-		"file": logutils.File(),
-		"type": message,
-		"time": time}).Info("")
-}
-

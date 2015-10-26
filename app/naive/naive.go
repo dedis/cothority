@@ -10,6 +10,9 @@ func main() {
 	conf := new(app.NaiveConfig)
 	app.ReadConfig(conf)
 
+	// TODO option configuration
+	monitor.ConnectSink("users.deterlab.net:4000")
+
 	if app.RunFlags.Hostname == "" {
 		log.Fatal("Hostname empty : Abort")
 	}

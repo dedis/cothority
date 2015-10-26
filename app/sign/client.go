@@ -1,4 +1,5 @@
 package main
+
 import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -8,9 +9,9 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"strconv"
-	"github.com/dedis/cothority/lib/monitor"
 )
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
@@ -58,7 +59,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		index := int(secToTimeStamp) / int(ROUND_TIME/time.Second)
 		atomic.AddInt64(&roundsAfter[index], 1)
 		atomic.AddInt64(&times[i], t.Nanoseconds())
-		measure.MeasureCPU("root_calc")
+		measure.MeasureCPU("basic_cpu")
 		measure_wall.MeasureWall("root_round")
 	}
 

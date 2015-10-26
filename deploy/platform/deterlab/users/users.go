@@ -26,14 +26,14 @@ import (
 	"sync"
 	"time"
 
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/cliutils"
+	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
+	"github.com/dedis/cothority/lib/cliutils"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"os"
 	"os/exec"
-	"fmt"
 	"strconv"
-	log "github.com/Sirupsen/logrus"
 )
 
 var deterlab platform.Deterlab
@@ -59,9 +59,9 @@ func main() {
 		go func(i int, h string) {
 			defer wg.Done()
 			dbg.Lvl4("Cleaning up host", h)
-			cliutils.SshRun("", h, "sudo killall " + deterlab.App + " forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall "+deterlab.App+" forkexec logserver timeclient scp ssh 2>/dev/null >/dev/null")
 			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall " + deterlab.App + " 2>/dev/null >/dev/null")
+			cliutils.SshRun("", h, "sudo killall "+deterlab.App+" 2>/dev/null >/dev/null")
 			if dbg.DebugVisible > 3 {
 				dbg.Lvl4("Cleaning report:")
 				cliutils.SshRunStdout("", h, "ps aux")
@@ -112,6 +112,10 @@ func main() {
 		return
 	}
 
+	// ADDITIONS : the monitoring part
+	// TODO configuration options for these IP addresses
+	monitor.Proxy("127.0.0.1:4000", "users.deterlab.net:4000")
+
 	nloggers := deterlab.Loggers
 	masterLogger := deterlab.Phys[0]
 	loggers := []string{masterLogger}
@@ -134,7 +138,6 @@ func main() {
 		physToServer[p] = ss
 	}
 
-
 	// start up the logging server on the final host at port 10000
 	dbg.Lvl1("starting up logservers: ", loggers)
 	// start up the master logger
@@ -145,13 +148,13 @@ func main() {
 		// redirect to the master logger
 		master := masterLogger + ":10000"
 		// if this is the master logger than don't set the master to anything
-		if loggerport == masterLogger + ":10000" {
+		if loggerport == masterLogger+":10000" {
 			master = ""
 		}
 
 		dbg.Lvl3("Logger:", logger)
-		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr=" + loggerport +
-		" -master=" + master)
+		go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr="+loggerport+
+			" -master="+master)
 	}
 
 	i := 0
@@ -167,7 +170,7 @@ func main() {
 
 	servers := len(physToServer)
 	hpn := len(deterlab.Hostnames) / servers
-	dbg.Lvl1("starting", servers, "forkexecs with", hpn, "processes each =", servers * hpn)
+	dbg.Lvl1("starting", servers, "forkexecs with", hpn, "processes each =", servers*hpn)
 	totalServers := 0
 	for phys, virts := range physToServer {
 		if len(virts) == 0 {
@@ -181,8 +184,8 @@ func main() {
 			//dbg.Lvl4("running on ", phys, cmd)
 			defer wg.Done()
 			dbg.Lvl4("Starting servers on physical machine ", phys)
-			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
-			" -physaddr=" + phys + " -logger=" + loggerports[i])
+			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
+				" -physaddr="+phys+" -logger="+loggerports[i])
 			if err != nil {
 				log.Fatal("Error starting timestamper:", err, phys)
 			}
@@ -213,7 +216,7 @@ func main() {
 		}
 	}
 
-	switch deterlab.App{
+	switch deterlab.App {
 	case "stamp":
 		dbg.Lvl1("starting", len(physToServer), "time clients")
 		// start up one timeclient per physical machine
@@ -228,10 +231,10 @@ func main() {
 			dbg.Lvl3("Starting with ss=", ss)
 			go func(i int, p string, a bool) {
 				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
-				" -name=client@" + p +
-				" -server=" + servers +
-				" -amroot=" + strconv.FormatBool(a) +
-				" -logger=" + loggerports[i]
+					" -name=client@" + p +
+					" -server=" + servers +
+					" -amroot=" + strconv.FormatBool(a) +
+					" -logger=" + loggerports[i]
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
 					dbg.Lvl4("Deter.go : error for", deterlab.App, err)

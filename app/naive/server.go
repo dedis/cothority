@@ -10,10 +10,10 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/monitor"
 	net "github.com/dedis/cothority/lib/network"
 	"sync"
 	"time"
-	"github.com/dedis/cothority/lib/monitor"
 )
 
 // Searches for the index in the hostlist and decides if we're the leader
@@ -75,7 +75,7 @@ func GoLeader(conf *app.NaiveConfig) {
 
 	// Connecting to the signer
 
-	measure := monitor.NewMeasure()
+	setup := monitor.NewMeasure("setup")
 	go leader.Listen(app.RunFlags.Hostname, proto)
 	dbg.Lvl2(leader.String(), "Listening for channels creation..")
 	// listen for round chans + signatures for each round
@@ -104,44 +104,47 @@ func GoLeader(conf *app.NaiveConfig) {
 			break
 		}
 	}
-	measure.MeasureCPU("basic_setup")
+	setup.Measure()
 	dbg.Lvl2(leader.String(), "got all channels ready => starting the ", conf.Rounds, " rounds")
 
 	// Starting to run the simulation for conf.Rounds rounds
 
+	round := monitor.NewMeasure("round")
 	for round := 0; round < conf.Rounds; round++ {
-		measure_wall := monitor.NewMeasure()
+		// Measure calculation time
+		calc := monitor.NewMeasure("calc")
 		n := 0
 		faulty := 0
 		// launch a new round
 		connChan := make(chan *net.BasicSignature)
 		masterRoundChan <- connChan
-		var wg sync.WaitGroup
-		wg.Add(numberHosts - 1)
-		measure.MeasureCPU("basic_calc")
 
-		// verify each coming signatures
+		// Wait each signatures
+		sigs := make([]*net.BasicSignature)
 		for n < numberHosts-1 {
 			bs := <-connChan
-			if conf.SkipChecks {
-				dbg.Lvl2("Skipping check for round", round)
-				wg.Done()
-			} else {
-				go func(b *net.BasicSignature) {
-					if err := SchnorrVerify(suite, msg, *b); err != nil {
-						faulty += 1
-						dbg.Lvl2(leader.String(), "Round ", round, " received a faulty signature !")
-					} else {
-						dbg.Lvl2(leader.String(), "Round ", round, " received Good signature")
-					}
-					wg.Done()
-				}(bs)
-			}
+			sigs = append(sigs, bs)
 			n += 1
 		}
-		wg.Wait()
-		measure.MeasureCPU("basic_verify")
-		measure_wall.MeasureWall("basic_round")
+		calc.Measure()
+
+		// verify each signatures
+		if conf.SkipChecks {
+			dbg.Lvl2("Skipping check for round", round)
+			continue
+		}
+		// Measure verificationt time
+		verify := monitor.NewMeasure("verify")
+		for _, sig := range sigs {
+			if err := SchnorrVerify(suite, msg, *sig); err != nil {
+				faulty += 1
+				dbg.Lvl2(leader.String(), "Round ", round, " received a faulty signature !")
+			} else {
+				dbg.Lvl2(leader.String(), "Round ", round, " received Good signature")
+			}
+		}
+		verify.Measure()
+		round.Measure()
 		dbg.Lvl2(leader.String(), "Round ", round, " received ", len(conf.Hosts)-1, "signatures (",
 			faulty, " faulty sign)")
 	}
@@ -150,11 +153,7 @@ func GoLeader(conf *app.NaiveConfig) {
 
 	close(masterRoundChan)
 	dbg.Lvl2(leader.String(), "has done all rounds")
-	/*
-		log.WithFields(log.Fields{
-			"file": logutils.File(),
-			"type": "end"}).Info("")
-	*/
+	monitor.End()
 }
 
 // The signer connects to the leader and then waits for a message to be
