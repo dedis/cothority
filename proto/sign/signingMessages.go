@@ -111,14 +111,12 @@ func (sm *SigningMessage) UnmarshalBinary(data []byte) error {
 }
 
 type JSONdata struct{
-		Len int64
 		Data []byte
 }
 
 func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
 	data, _ := sm.MarshalBinary()
 	return json.Marshal(JSONdata{
-		Len: int64(len(data)),
 		Data: data,
 	})
 }
