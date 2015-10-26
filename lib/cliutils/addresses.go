@@ -17,10 +17,10 @@ func init() {
 	addressRegexp = regexp.MustCompile(`^[^:]*(:)(\d{1,5})?$`)
 }
 
-// Upsert port checks if an address contains a port. If it does not, it add the
+// Checks if an address contains a port. If it does not, it add the
 // given port to that and returns the new address. If it does, it returns
 // directly. Both operation checks if the port is correct.
-func UpsertPort(address, port string) (string, error) {
+func VerifyPort(address, port string) (string, error) {
 	// address does not contains a port
 	if subs := addressRegexp.FindStringSubmatch(address); len(subs) == 0 {
 		return address + ":" + port, checkPort(port)
@@ -33,12 +33,12 @@ func UpsertPort(address, port string) (string, error) {
 }
 
 // Returns the global-binding address
-func GlobalBind(address, port string)(string, error){
-	addr, err := UpsertPort(address, port)
-	if err != nil{
-		return "", err
+func GlobalBind(address string)(string, error){
+	addr := strings.Split(address, ":")
+	if len(addr) != 2 {
+		return "", errors.New("Not a host:port address")
 	}
-	return "0.0.0.0:" + strings.Split(addr, ":")[1], nil
+	return "0.0.0.0:" + addr[1], nil
 }
 
 // Simply returns an error if the port is invalid

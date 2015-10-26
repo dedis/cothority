@@ -70,7 +70,7 @@ func RunServer(address string, conf *app.ConfigConode) {
 
 	var err error
 	// make sure address has a port or insert default one
-	address, err = cliutils.GlobalBind(address, defs.DefaultPort)
+	address, err = cliutils.VerifyPort(address, defs.DefaultPort)
 	if err != nil {
 		dbg.Fatal(err)
 	}
