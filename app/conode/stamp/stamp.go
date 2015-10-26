@@ -189,8 +189,6 @@ func StampFile(file, server string) {
 		ReqNo: 0,
 		Sreq:  &defs.StampRequest{Val: myHash}}
 
-	out, _ := json.Marshal(msg)
-	dbg.Print(string(out))
 	err = conn.PutData(msg)
 	if err != nil {
 		dbg.Fatal("Couldn't send hash-message to server: ", err)

@@ -9,6 +9,7 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
+	"os/signal"
 )
 
 // Which suite to use
@@ -40,8 +41,8 @@ func registerCommand(com cli.Command) {
 	commands = append(commands, com)
 }
 
-// Create the CLI of conode
-func NewCli() *cli.App {
+
+func main() {
 	conode := cli.NewApp()
 	conode.Name = "Conode"
 	conode.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
@@ -73,7 +74,7 @@ func NewCli() *cli.App {
 			cli.StringFlag{
 				Name: "key, k",
 				Usage: "Basename of the files where reside the keys. If key = 'key'," +
-					"then conode will search through 'key.pub' and 'key.priv'",
+				"then conode will search through 'key.pub' and 'key.priv'",
 				Value: defaultKeyFile,
 			},
 		},
@@ -92,11 +93,7 @@ func NewCli() *cli.App {
 		dbg.DebugVisible = c.GlobalInt("debug")
 		return nil
 	}
-	return conode
-}
 
-func main() {
-	conode := NewCli()
 	conode.Run(os.Args)
 }
 

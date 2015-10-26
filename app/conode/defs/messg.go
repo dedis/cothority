@@ -36,12 +36,6 @@ type StampReply struct {
 	SigBroad   sign.SignatureBroadcastMessage // All other elements necessary
 }
 
-
-type JSONdata struct {
-	Len  int64
-	Data []byte
-}
-
 func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
 	dbg.Fatal("Don't want to do that")
 	return nil, nil
@@ -98,68 +92,6 @@ func (Sreq *StampReply) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-/*
-func (Srep StampReply) MarshalBinary() ([]byte, error) {
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b)
-	var err error
-	if err = enc.Encode(Srep.Timestamp); err != nil {
-		dbg.Lvl1("encoding stampreply timestamp failed : ", err)
-	}
-	if err = enc.Encode(Srep.MerkleRoot); err != nil {
-		dbg.Lvl1("encoding stampreply merkleroot : ", err)
-		return nil, err
-	}
-	if err = enc.Encode(len(Srep.Prf)); err != nil {
-		dbg.Lvl1("encoding stampreply proof length:", err)
-		return nil, err
-	}
-	if err = enc.Encode(Srep.Prf); err != nil {
-		dbg.Lvl1("encoding stampreply proof :", err)
-		return nil, err
-	}
-	if err = enc.Encode(Srep.SuiteStr); err != nil {
-		dbg.Lvl1("encoding stampreply suite string : ", err)
-		return nil, err
-	}
-	suite := app.GetSuite(Srep.SuiteStr)
-	if err = suite.Write(&b, Srep.SigBroad); err != nil {
-		dbg.Lvl1("encoding stampreply signature broadcast :", err)
-		return nil, err
-	}
-	return b.Bytes(), err
-}
-
-func (Srep *StampReply) UnmarshalBinary(data []byte) error {
-	b := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(b)
-	var err error
-	if err = dec.Decode(&Srep.Timestamp); err != nil {
-		dbg.Fatal("Decoding stampreply timestamp failed :", err)
-	}
-	if err = dec.Decode(&Srep.MerkleRoot); err != nil {
-		dbg.Fatal("decoding stampreply merkle root : ", err)
-	}
-
-	if err = dec.Decode(&Srep.PrfLen); err != nil {
-		dbg.Fatal("decoding stampreply proof len :", err)
-	}
-	Srep.Prf = make([]hashid.HashId, Srep.PrfLen)
-	if err = dec.Decode(&Srep.Prf); err != nil {
-		dbg.Fatal("decoding stampreply proof :", err)
-	}
-	if err = dec.Decode(&Srep.SuiteStr); err != nil {
-		dbg.Fatal("decoding suite : ", err)
-	}
-	suite := app.GetSuite(Srep.SuiteStr)
-	Srep.SigBroad = sign.SignatureBroadcastMessage{}
-	if err = suite.Read(b, &Srep.SigBroad); err != nil {
-		dbg.Fatal("decoding signature broadcast : ", err)
-	}
-	return nil
-}
-*/
-
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
 				// ErrorReply *ErrorReply // Generic error reply to any request
@@ -177,59 +109,3 @@ func (sm *TimeStampMessage) UnmarshalBinary(data []byte) error {
 	dbg.Fatal("Don't want to do that")
 	return nil
 }
-
-/*
-func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
-	var b bytes.Buffer
-	var sub []byte
-	var err error
-	b.WriteByte(byte(tsm.Type))
-	b.WriteByte(byte(tsm.ReqNo))
-	// marshal sub message based on its Type
-	switch tsm.Type {
-	case StampRequestType:
-		//sub, err = tsm.Sreq.MarshalBinary()
-	case StampReplyType:
-		sub, err = tsm.Srep.MarshalBinary()
-	}
-	if err == nil {
-		b.Write(sub)
-	}
-	return b.Bytes(), err
-}
-
-func (sm *TimeStampMessage) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Don't want to do that")
-	sm.Type = MessageType(data[0])
-	sm.ReqNo = SeqNo(data[1])
-	msgBytes := data[2:]
-	var err error
-	switch sm.Type {
-	case StampRequestType:
-		//sm.Sreq = &StampRequest{}
-		//err = sm.Sreq.UnmarshalBinary(msgBytes)
-	case StampReplyType:
-		sm.Srep = &StampReply{}
-		err = sm.Srep.UnmarshalBinary(msgBytes)
-
-	}
-	return err
-}
-
-func (tsm *TimeStampMessage) MarshalJSON() ([]byte, error) {
-	data, _ := tsm.MarshalBinary()
-	j, err := json.Marshal(JSONdata{
-		Len: int64(len(data)),
-		Data: data,
-	})
-	dbg.Printf("%s", hex.EncodeToString(j))
-	return j, err
-}
-
-func (tsm *TimeStampMessage) UnmarshalJSON(dataJSON []byte) error {
-	jdata := JSONdata{}
-	dbg.Printf("%s", hex.EncodeToString(dataJSON))
-	json.Unmarshal(dataJSON, &jdata)
-	return tsm.UnmarshalBinary(jdata.Data)
-}
-*/

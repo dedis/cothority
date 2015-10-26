@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo Cross-compiling for platforms and cpus
+
+compile(){
+BINARY=$1
+rm -rf conode-bin
+mkdir conode-bin
+for GOOS in linux; do
+  for GOARCH in amd64 386; do
+    echo Doing $GOOS / $GOARCH
+    export GOOS GOARCH
+    go build -o conode-bin/$BINARY-$GOOS-$GOARCH .
+  done
+done
+}
+
+#compile conode
+cd stamp
+#compile stamp
+cd ..
+mv stamp/conode-bin/* conode-bin
+cp start-conode conode-bin
+cp config.toml conode-bin
+tar cf conode-latest.tar.gz -C conode-bin .
