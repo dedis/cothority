@@ -12,8 +12,6 @@ import (
 func RunServer(conf *app.ConfigShamir) {
 	flags := app.RunFlags
 	s := app.GetSuite(conf.Suite)
-	poly.REVEAL_SHARE_CHECK = poly.CHECK_OFF
-	defer func() { poly.REVEAL_SHARE_CHECK = poly.CHECK_ON }()
 	n := len(conf.Hosts)
 
 	info := poly.Threshold{
@@ -104,7 +102,7 @@ func RunServer(conf *app.ConfigShamir) {
 				"file":  logutils.File(),
 				"type":  "basic_round",
 				"round": round,
-				"time": time.Since(start),
+				"time":  time.Since(start),
 				//"time":  dSys + dUsr,
 			}).Info("")
 		} else {
