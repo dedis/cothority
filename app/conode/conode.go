@@ -9,7 +9,6 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-	"os/signal"
 )
 
 // Which suite to use

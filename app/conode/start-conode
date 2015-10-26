@@ -76,6 +76,7 @@ search_arch(){
 #!/bin/bash
 ./$CONODE \$@
 EOF
+	sed -e "s/conode/stamp/" conode > stamp
         chmod a+x conode
         echo Found $CONODE to run here
         return

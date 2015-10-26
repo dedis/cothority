@@ -19,8 +19,7 @@ deploy/matplotlib/imgs
 test/
 app/conode/key*
 app/conode/conode
-app/conode/stamp/stamp/
-app/conode/stamp
+app/conode/stamp/stamp
 *.toml
 hosts.list
 hostfiles
