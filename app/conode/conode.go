@@ -9,7 +9,6 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-	"os/signal"
 )
 
 // Which suite to use
@@ -40,7 +39,6 @@ var commands []cli.Command = make([]cli.Command, 0)
 func registerCommand(com cli.Command) {
 	commands = append(commands, com)
 }
-
 
 func main() {
 	conode := cli.NewApp()
@@ -103,7 +101,7 @@ func KeyGeneration(key, address string) {
 	if address == "" {
 		dbg.Fatal("You must call keygen with ipadress !")
 	}
-	address, err := cliutils.UpsertPort(address, defs.DefaultPort)
+	address, err := cliutils.GlobalBind(address, defs.DefaultPort)
 	if err != nil {
 		dbg.Fatal(err)
 	}

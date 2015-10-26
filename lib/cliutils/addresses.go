@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // This file handles manipulations of IP address with ports
@@ -29,6 +30,15 @@ func UpsertPort(address, port string) (string, error) {
 		return address, checkPort(subs[2])
 	}
 	return address, errors.New("Could not anaylze address ><")
+}
+
+// Returns the global-binding address
+func GlobalBind(address, port string)(string, error){
+	addr, err := UpsertPort(address, port)
+	if err != nil{
+		return "", err
+	}
+	return "0.0.0.0:" + strings.Split(addr, ":")[1], nil
 }
 
 // Simply returns an error if the port is invalid
