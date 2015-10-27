@@ -31,7 +31,7 @@ rmdir stamp/conode-bin
 
 echo Copying scripts to the binary-directory
 cp start-conode conode-bin
-cp config.toml conode-bin
+cp real/config.toml conode-bin
 TAR=conode-$VERSION.tar.gz
 
 echo Creating $TAR
