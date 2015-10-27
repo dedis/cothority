@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io"
 	"math"
@@ -148,6 +147,10 @@ func AverageMeasurements(measurements []Measurement) Measurement {
 	return m
 }
 
+func (m *Measurement) String() string {
+	return fmt.Sprintf("{Measurement %s : wall = %v, system = %v, user = %v}", m.Name, m.Wall, m.User, m.System)
+}
+
 // Stats holds the different measurements done
 type Stats struct {
 	// How many peers do we have
@@ -163,7 +166,7 @@ type Stats struct {
 	Additionals map[string]int
 
 	// The measures we have and the keys ordered
-	measures map[string]Measurement
+	measures map[string]*Measurement
 	keys     []string
 }
 
@@ -176,7 +179,7 @@ var DefaultMeasurements = [...]string{"setup", "round", "calc", "verify"}
 
 // Return a NewStats with some fields extracted from the platform run config
 // It enforces the default set of measure to do.
-func NewStats(rc platform.RunConfig) *Stats {
+func NewStats(rc map[string]string) *Stats {
 	s := new(Stats).Init()
 	s.readRunConfig(rc)
 	for _, d := range DefaultMeasurements {
@@ -186,13 +189,13 @@ func NewStats(rc platform.RunConfig) *Stats {
 }
 
 // Read a config file and fills up some fields for Stats struct
-func (s *Stats) readRunConfig(rc platform.RunConfig) {
-	if machs, err := strconv.Atoi(rc.Get("machines")); err != nil {
+func (s *Stats) readRunConfig(rc map[string]string) {
+	if machs, err := strconv.Atoi(rc["machines"]); err != nil {
 		dbg.Fatal("Can not create stats from RunConfig with no machines")
 	} else {
 		s.Machines = machs
 	}
-	if ppm, err := strconv.Atoi(rc.Get("ppm")); err != nil {
+	if ppm, err := strconv.Atoi(rc["ppm"]); err != nil {
 		dbg.Fatal("Can not create stats from RunConfig with no ppm")
 	} else {
 		s.PPM = ppm
@@ -200,7 +203,7 @@ func (s *Stats) readRunConfig(rc platform.RunConfig) {
 	s.Peers = s.Machines * s.PPM
 	// Add some extra fields if recognized
 	for _, f := range extraFields {
-		if ef, err := strconv.Atoi(rc.Get(f)); err != nil {
+		if ef, err := strconv.Atoi(rc[f]); err != nil {
 			continue
 		} else {
 			s.Additionals[f] = ef
@@ -210,7 +213,7 @@ func (s *Stats) readRunConfig(rc platform.RunConfig) {
 }
 
 func (s *Stats) Init() *Stats {
-	s.measures = make(map[string]Measurement)
+	s.measures = make(map[string]*Measurement)
 	s.keys = make([]string, 0)
 	s.Additionals = make(map[string]int)
 	return s
@@ -223,7 +226,7 @@ func (s *Stats) Init() *Stats {
 func (s *Stats) AddMeasurements(measurements ...string) {
 	for _, name := range measurements {
 		if _, ok := s.measures[name]; !ok {
-			s.measures[name] = Measurement{Name: name}
+			s.measures[name] = &Measurement{Name: name}
 			s.keys = append(s.keys, name)
 		}
 	}
@@ -242,29 +245,32 @@ func (s *Stats) WriteHeader(w io.Writer) {
 		m := s.measures[k]
 		m.WriteHeader(w)
 	}
+	fmt.Fprintf(w, "\n")
 }
 
 // WriteValues will write the values to the specified writer
 func (s *Stats) WriteValues(w io.Writer) {
 	// write basic info
-	fmt.Fprintf(w, "%d, %d, %d, ", s.Peers, s.PPM, s.Machines)
+	fmt.Fprintf(w, "%d, %d, %d", s.Peers, s.PPM, s.Machines)
 	// write additionals fields
 	for _, v := range s.Additionals {
-		fmt.Fprintf(w, "%d, ", v)
+		fmt.Fprintf(w, ", %d", v)
 	}
 	// write the values
 	for _, k := range s.keys {
+		fmt.Fprintf(w, ", ")
 		m := s.measures[k]
 		m.WriteValues(w)
 	}
+	fmt.Fprintf(w, "\n")
 }
 
 // AverageStats will make an average of the given stats
-func AverageStats(stats []Stats) *Stats {
+func AverageStats(stats []Stats) Stats {
 	if len(stats) < 1 {
-		return &Stats{}
+		return Stats{}
 	}
-	s := new(Stats)
+	s := new(Stats).Init()
 	s.Machines = stats[0].Machines
 	s.PPM = stats[0].PPM
 	s.Peers = stats[0].Peers
@@ -282,12 +288,13 @@ func AverageStats(stats []Stats) *Stats {
 			if !ok {
 				continue
 			}
-			measurements[i] = sub
+			measurements[i] = *sub
 		}
 		// make the average
-		s.measures[k] = AverageMeasurements(measurements)
+		avg := AverageMeasurements(measurements)
+		s.measures[k] = &avg
 	}
-	return s
+	return *s
 }
 
 // Update will update the Stats with this given measure
@@ -298,4 +305,12 @@ func (s *Stats) Update(m Measure) {
 		return
 	}
 	meas.Update(m)
+}
+
+func (s *Stats) String() string {
+	var str string
+	for _, v := range s.measures {
+		str += fmt.Sprintf("%v", v)
+	}
+	return fmt.Sprintf("{Stats: Peers %d, Measures : %s}", s.Peers, str)
 }

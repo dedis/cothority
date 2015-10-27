@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"bytes"
 	"fmt"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"net"
@@ -11,47 +12,49 @@ import (
 // D is the proxy. It will listen for incoming connections on the side of B
 // And will connect to A
 
-// server is the address of A,i.e. the monitor process receiving the stats
-var server string
-
 // serverConn is the connection object to the server
 var serverConn net.Conn
 
-// listen is the address to listen to for producer (processes that send
-// measurements data)  to connect to. That way
-// processes will connect to the proxy using this address and will send their
-// data that will be relayed by the proxy to the server address.
-var listenProxy string
+// proxy connections opened
+var proxyConns []net.Conn
 
 // connectServer will try to connect to the server ...
-func connectServer(addr string) error {
-	conn, err := net.Dial("tcp", addr)
+func connectSink(redirection string) error {
+	conn, err := net.Dial("tcp", redirection)
 	if err != nil {
-		fmt.Errorf("Proxy connection to server failed : %v", err)
+		return fmt.Errorf("Proxy connection to server %s failed : %v", redirection, err)
 	}
-	server = addr
 	serverConn = conn
+	return nil
 }
 
 // Proxy will launch a routines that waits for input connections
-// It takes the server address to relay messages to, and the listen address
-// where clients will contact the proxy
+// It takes a redirection address soas to where redirect incoming packets
+// Proxy will listen on Sink:SinkPort variables so that the user do not
+// differentiate between connecting to a proxy or directly to the sink
 // It will panic if it can not contact the server or can not bind to the address
-func Proxy(server, listen string) {
-	if err := connectServer(server); err != nil {
+func Proxy(redirection string) {
+	// Connect to the sink
+	if err := connectSink(redirection); err != nil {
 		panic(err)
 	}
-	ln, err := net.Listen("tcp", addr)
+	dbg.Lvl2("Proxy connected to sink ", redirection)
+	// Here it listens the same way monitor.go would
+	// usually 0.0.0.0:4000
+	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
-		panic(fmt.Errorf("Error while binding proxy to addr %s : %v", addr, err))
+		panic(fmt.Errorf("Error while binding proxy to addr %s : %v", Sink+":"+SinkPort, err))
 	}
-	listenProxy = addr
+	dbg.Lvl2("Proxy listening on ", Sink+":"+SinkPort)
+	proxyConns := make([]net.Conn, 0)
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			dbg.Lvl1("Error proxy accepting connection : ", err)
+			continue
 		}
 		dbg.Lvl2("Proxy accepting incoming connection from : ", conn.RemoteAddr().String())
+		proxyConns = append(proxyConns, conn)
 		go proxyConnection(conn)
 	}
 }
@@ -69,11 +72,20 @@ func proxyConnection(conn net.Conn) {
 			nerr += 1
 			if nerr > 1 {
 				dbg.Lvl1("Too many error from ", conn.RemoteAddr().String(), " : Abort connection")
+				break
 			}
 		}
+		if bytes.Contains(buf[:n], []byte("end")) {
+			// the end
+			conn.Close()
+			dbg.Lvl2("Proxy detected end of measurement. Closing conn")
+			break
+		}
 		// Proxy data
-		n, err = serverConn.Write(buf[:n])
+		_, err = serverConn.Write(buf[:n])
 		if err != nil {
+			dbg.Lvl1("Error proxying data :", err)
+			break
 		}
 	}
 }
