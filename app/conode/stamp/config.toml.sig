@@ -1,4 +1,0 @@
-Name = "config.toml"
-Hash = "iu3v94IZHPNsCg4QYKhAcLyodvOKsDsx9PRiZDWZRPk="
-Proof = "MGFQWUJFbG5VZnJwWjhNNHpaQUg0cGdVUTgrTi8wdFBVdUtwQXJhallPQT0gbHRUUkFDb2NiMUJyeDNUOVdsNnZHT0I0NEZTS203Ny9sVWpuejZ5eVpFcz0gQlpxTmRrc2pXL0R4SGl3SGZFbEdDK2t3Wm81REdTWlRBSDZVWUtoQXEvdz0g"
-Signature = "XpZqo4d/F9rFpIUu0kkWwvvYwaybOM+A+OqZQBVda7s="
