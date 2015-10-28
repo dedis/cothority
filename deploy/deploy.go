@@ -22,21 +22,19 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"math"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 // Configuration-variables
 var deployP platform.Platform
-var port string = "8081"
 
 var platform_dst = "deterlab"
 var app = ""
@@ -105,12 +103,12 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 
 	MkTestDir()
-	rs := make([]Stats, len(runconfigs))
+	rs := make([]monitor.Stats, len(runconfigs))
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
 	// Write the header
-	firstStat := monitor.NewStats(runconfigs[0])
+	firstStat := monitor.NewStats(runconfigs[0].Map())
 	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 	defer f.Close()
 	if err != nil {
@@ -143,15 +141,9 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			continue
 		}
 
-		s, err := monitor.AverageStats(runs...)
-		if err != nil {
-			dbg.Fatal("Could not average stats for test ", i)
-		}
+		s := monitor.AverageStats(runs)
 		rs[i] = s
-		err = rs[i].WriteValues(f)
-		if err != nil {
-			log.Fatal("error writing data to test file:", err)
-		}
+		rs[i].WriteValues(f)
 		err = f.Sync()
 		if err != nil {
 			log.Fatal("error syncing data to test file:", err)
@@ -161,20 +153,24 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (Stats, error) {
+func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	done := make(chan struct{})
-	rs := monitor.NewStats(rc)
+	rs := monitor.NewStats(rc.Map())
 
 	deployP.Deploy(rc)
 	deployP.Cleanup()
+	// Start monitor before so ssh tunnel can connect to the monitor
+	// in case of deterlab.
+	dbg.Print("Deployement + cleanup done")
 	err := deployP.Start()
+	dbg.Print("deployement started")
 	if err != nil {
 		log.Fatal(err)
-		return rs, nil
+		return *rs, nil
 	}
 
 	go func() {
-		monitor.Monitor("127.0.0.1:"+port, rs)
+		monitor.Monitor(rs)
 		deployP.Wait()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct{}{}
@@ -183,7 +179,7 @@ func RunTest(rc platform.RunConfig) (Stats, error) {
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
-		return rs, nil
+		return *rs, nil
 	}
 }
 

@@ -4,10 +4,10 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/monitor"
 	net "github.com/dedis/cothority/lib/network"
 	"sync"
 	"sync/atomic"
-	"github.com/dedis/cothority/lib/monitor"
 )
 
 func RunServer(conf *app.NTreeConfig) {
@@ -17,6 +17,7 @@ func RunServer(conf *app.NTreeConfig) {
 		RunPeer(conf)
 		//RunServer2(conf)
 	}
+
 }
 
 func RunRoot(conf *app.NTreeConfig) {
@@ -25,8 +26,21 @@ func RunRoot(conf *app.NTreeConfig) {
 
 	peer := NewPeer(host, LeadRole, key.Secret, key.Public)
 	dbg.Lvl2(peer.String(), "Up and will make connections...")
+
+	// monitor
+	if app.RunFlags.Logger == "" {
+		monitor.Disable()
+	} else {
+		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+			dbg.Fatal(peer.String(), "could not connect to the monitor : ", err)
+		}
+	}
+
 	// msg to be sent + signed
 	msg := []byte("Hello World")
+
+	// make setup measurement
+	setup := monitor.NewMeasure("setup")
 
 	// masterRoundChan is used to tell that everyone is ready
 	masterRoundChan := make(chan chan chan *net.ListBasicSignature)
@@ -82,18 +96,19 @@ func RunRoot(conf *app.NTreeConfig) {
 		}
 	}
 	close(masterRoundChan)
+	setup.Measure()
+
 	// Then for each rounds tell them to start the protocol
+	round := monitor.NewMeasure("round")
 	for i := 1; i <= conf.Rounds; i++ {
 		dbg.Lvl3(peer.String(), "will start a new round ", i)
+		calc := monitor.NewMeasure("calc")
 		// the signature channel used for this round
 		lsigChan := make(chan *net.ListBasicSignature)
 		// notify each connections
 		for _, ch := range children {
 			ch <- lsigChan
 		}
-		// Start of the round timing
-		measure := monitor.NewMeasure()
-		measure_round := monitor.NewMeasure()
 
 		childrenSigs := make([]*net.ListBasicSignature, 0)
 		// Wait for listsignatures coming
@@ -108,12 +123,13 @@ func RunRoot(conf *app.NTreeConfig) {
 			}
 		}
 		dbg.Lvl2(peer.String(), "Received all signatures ... ")
+		calc.Measure()
+
 		var verifyWg sync.WaitGroup
 		var faulty uint64 = 0
 		var total uint64 = 0
-		measure.MeasureCPU("basic_calc")
 		// start timing verification
-
+		verify := monitor.NewMeasure("verify")
 		for _, sigs := range childrenSigs {
 			// Here it launches one go routine to verify a bundle
 			verifyWg.Add(1)
@@ -135,9 +151,9 @@ func RunRoot(conf *app.NTreeConfig) {
 		// wait for all verifications
 		verifyWg.Wait()
 		// finished verifying => time it !
-		measure.MeasureCPU("basic_verify")
-		measure_round.MeasureWall("basic_round")
-		dbg.Lvl1(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total - faulty, "/", total, " good signatures")
+		verify.Measure()
+		round.Measure()
+		dbg.Lvl1(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
 	}
 
 	// cLosing each channels
@@ -145,7 +161,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		close(ch)
 	}
 
-	monitor.LogEnd()
+	monitor.End()
 	dbg.Lvl2(peer.String(), "leaving ...")
 }
 
@@ -170,7 +186,7 @@ func RunPeer(conf *app.NTreeConfig) {
 		for msg := range masterMsgChan {
 			// broadcast to each channels
 			for i, ch := range childrenMsgChan {
-				dbg.Lvl4(peer.String(), "dispatching msg to children (", i + 1, "/", len(conf.Tree.Children), ")...")
+				dbg.Lvl4(peer.String(), "dispatching msg to children (", i+1, "/", len(conf.Tree.Children), ")...")
 				ch <- msg
 			}
 		}
@@ -202,7 +218,7 @@ func RunPeer(conf *app.NTreeConfig) {
 			} else {
 				// otherwise, dispatch to children
 				for i, _ := range childRoundChan {
-					dbg.Lvl4(peer.String(), "Dispatching signature channel to children (", i + 1, "/", len(conf.Tree.Children), ")...")
+					dbg.Lvl4(peer.String(), "Dispatching signature channel to children (", i+1, "/", len(conf.Tree.Children), ")...")
 					childRoundChan[i] <- sigChan
 				}
 			}

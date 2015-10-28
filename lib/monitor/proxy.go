@@ -1,7 +1,7 @@
 package monitor
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"net"
@@ -15,8 +15,17 @@ import (
 // serverConn is the connection object to the server
 var serverConn net.Conn
 
+// to write back the measure to the server
+var serverEnc *json.Encoder
+
 // proxy connections opened
 var proxyConns []net.Conn
+
+var proxyDone chan bool
+
+func init() {
+	proxyDone = make(chan bool)
+}
 
 // connectServer will try to connect to the server ...
 func connectSink(redirection string) error {
@@ -25,6 +34,7 @@ func connectSink(redirection string) error {
 		return fmt.Errorf("Proxy connection to server %s failed : %v", redirection, err)
 	}
 	serverConn = conn
+	serverEnc = json.NewEncoder(conn)
 	return nil
 }
 
@@ -46,28 +56,52 @@ func Proxy(redirection string) {
 		panic(fmt.Errorf("Error while binding proxy to addr %s : %v", Sink+":"+SinkPort, err))
 	}
 	dbg.Lvl2("Proxy listening on ", Sink+":"+SinkPort)
-	proxyConns := make([]net.Conn, 0)
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			dbg.Lvl1("Error proxy accepting connection : ", err)
-			continue
+	var newConn = make(chan bool)
+	var closeConn = make(chan bool)
+	var finished = false
+	// Listen for every incoming connections
+	go func() {
+		for finished == false {
+			conn, err := ln.Accept()
+			if err != nil {
+				dbg.Lvl1("Error proxy accepting connection : ", err)
+				continue
+			}
+			dbg.Lvl2("Proxy accepting incoming connection from : ", conn.RemoteAddr().String())
+			newConn <- true
+			go proxyConnection(conn, closeConn)
 		}
-		dbg.Lvl2("Proxy accepting incoming connection from : ", conn.RemoteAddr().String())
-		proxyConns = append(proxyConns, conn)
-		go proxyConnection(conn)
+	}()
+
+	// notify every new connection and every end of connections. When every
+	// conenctions are ended, send an "end" measure to the sink.
+	var nconn int
+	for finished == false {
+		select {
+		case <-newConn:
+			nconn += 1
+		case <-closeConn:
+			nconn -= 1
+			if nconn == 0 {
+				// everything is finished
+				serverEnc.Encode(Measure{Name: "end"})
+				serverConn.Close()
+				finished = true
+				break
+			}
+		}
 	}
 }
 
 // The core of the file : read any input from the connection and outputs it into
 // the server connection
-func proxyConnection(conn net.Conn) {
-	var buf [1024]byte
+func proxyConnection(conn net.Conn, done chan bool) {
+	dec := json.NewDecoder(conn)
 	nerr := 0
+	m := Measure{}
 	for {
 		// Receive data
-		n, err := conn.Read(buf[:])
-		if err != nil {
+		if err := dec.Decode(&m); err != nil {
 			dbg.Lvl1("Error receiving data from ", conn.RemoteAddr().String(), " : ", err)
 			nerr += 1
 			if nerr > 1 {
@@ -75,19 +109,20 @@ func proxyConnection(conn net.Conn) {
 				break
 			}
 		}
-		if bytes.Contains(buf[:n], []byte("end")) {
+		if m.Name == "end" {
 			// the end
-			conn.Close()
 			dbg.Lvl2("Proxy detected end of measurement. Closing conn")
 			break
 		}
 		// Proxy data
-		_, err = serverConn.Write(buf[:n])
-		if err != nil {
-			dbg.Lvl1("Error proxying data :", err)
+		if err := serverEnc.Encode(m); err != nil {
+			dbg.Lvl2("Error proxying data :", err)
 			break
 		}
+		m = Measure{}
 	}
+	conn.Close()
+	done <- true
 }
 
 // proxyDataServer send the data to the server...

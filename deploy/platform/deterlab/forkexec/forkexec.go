@@ -5,13 +5,12 @@ import (
 	"os/exec"
 	"strconv"
 
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"os"
-	"net"
-	"sync"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/monitor"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"net"
+	"os"
+	"sync"
 )
 
 // Wrapper around app to enable measuring of cpu time
@@ -28,7 +27,6 @@ func main() {
 	flag.Parse()
 
 	setup_deter()
-	app.ConnectLogservers()
 
 	i := 0
 	var wg sync.WaitGroup
@@ -40,32 +38,26 @@ func main() {
 			dbg.Lvl3("Starting", name, "on", app.RunFlags.PhysAddr)
 			wg.Add(1)
 			go func(nameport string) {
-				measure := monitor.NewMeasure()
 				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport)
 				defer wg.Done()
 
 				amroot := nameport == rootname
 				args := []string{
 					"-hostname=" + nameport,
-					"-logger=" + app.RunFlags.Logger,
 					"-physaddr=" + app.RunFlags.PhysAddr,
 					"-amroot=" + strconv.FormatBool(amroot),
 					"-test_connect=" + strconv.FormatBool(testConnect),
+					"-logger=" + app.RunFlags.Logger,
 					"-mode=server",
 				}
 
 				dbg.Lvl3("Starting on", app.RunFlags.PhysAddr, "with args", args)
-				cmdApp := exec.Command("./" + deter.App, args...)
+				cmdApp := exec.Command("./"+deter.App, args...)
 				cmdApp.Stdout = os.Stdout
 				cmdApp.Stderr = os.Stderr
-				dbg.Lvl3("fork-exec is running command:", args)
 				err := cmdApp.Run()
 				if err != nil {
 					dbg.Lvl1("cmd run:", err)
-				}
-
-				if amroot {
-					measure.MeasureWall("end")
 				}
 
 				dbg.Lvl2("Finished with app", app.RunFlags.PhysAddr)

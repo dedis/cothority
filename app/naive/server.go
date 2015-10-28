@@ -12,7 +12,6 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/monitor"
 	net "github.com/dedis/cothority/lib/network"
-	"sync"
 	"time"
 )
 
@@ -47,7 +46,12 @@ func GoLeader(conf *app.NaiveConfig) {
 	leader := NewPeer(host, LeadRole, key.Secret, key.Public)
 
 	// Setting up the connections
-
+	// notably to the monitoring process
+	if app.RunFlags.Logger != "" {
+		monitor.ConnectSink(app.RunFlags.Logger)
+	} else {
+		monitor.Disable()
+	}
 	msg := []byte("Hello World\n")
 	// Listen for connections
 	dbg.Lvl2(leader.String(), "making connections ...")
@@ -74,7 +78,6 @@ func GoLeader(conf *app.NaiveConfig) {
 	}
 
 	// Connecting to the signer
-
 	setup := monitor.NewMeasure("setup")
 	go leader.Listen(app.RunFlags.Hostname, proto)
 	dbg.Lvl2(leader.String(), "Listening for channels creation..")
@@ -109,7 +112,7 @@ func GoLeader(conf *app.NaiveConfig) {
 
 	// Starting to run the simulation for conf.Rounds rounds
 
-	round := monitor.NewMeasure("round")
+	roundM := monitor.NewMeasure("round")
 	for round := 0; round < conf.Rounds; round++ {
 		// Measure calculation time
 		calc := monitor.NewMeasure("calc")
@@ -120,12 +123,13 @@ func GoLeader(conf *app.NaiveConfig) {
 		masterRoundChan <- connChan
 
 		// Wait each signatures
-		sigs := make([]*net.BasicSignature)
+		sigs := make([]*net.BasicSignature, 0)
 		for n < numberHosts-1 {
 			bs := <-connChan
 			sigs = append(sigs, bs)
 			n += 1
 		}
+		// All sigs reeived <=> all calcs are done
 		calc.Measure()
 
 		// verify each signatures
@@ -144,7 +148,7 @@ func GoLeader(conf *app.NaiveConfig) {
 			}
 		}
 		verify.Measure()
-		round.Measure()
+		roundM.Measure()
 		dbg.Lvl2(leader.String(), "Round ", round, " received ", len(conf.Hosts)-1, "signatures (",
 			faulty, " faulty sign)")
 	}
@@ -152,8 +156,8 @@ func GoLeader(conf *app.NaiveConfig) {
 	// Close down all connections
 
 	close(masterRoundChan)
-	dbg.Lvl2(leader.String(), "has done all rounds")
 	monitor.End()
+	dbg.Lvl2(leader.String(), "has done all rounds")
 }
 
 // The signer connects to the leader and then waits for a message to be

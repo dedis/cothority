@@ -2,5 +2,5 @@ Machines = 3
 App = "ntree"
 Suite = "ed25519"
 
-Hpn,  Bf, Rounds
+Ppm,  Bf, Rounds
 2, 2, 3

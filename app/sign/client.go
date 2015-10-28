@@ -30,12 +30,11 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	hc.SNodes[0].RegisterDoneFunc(RoundDone)
 	tFirst := time.Now()
 
+	round := monitor.NewMeasure("round")
 	for i := 0; i < conf.Rounds; i++ {
 		time.Sleep(time.Second)
 		hc.SNodes[0].LogTest = []byte("Hello World")
 		dbg.Lvl3("Going to launch announcement ", hc.SNodes[0].Name())
-		measure := monitor.NewMeasure()
-		measure_wall := monitor.NewMeasure()
 		t0 := time.Now()
 		//sys, usr := app.GetRTime()
 
@@ -59,11 +58,10 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		index := int(secToTimeStamp) / int(ROUND_TIME/time.Second)
 		atomic.AddInt64(&roundsAfter[index], 1)
 		atomic.AddInt64(&times[i], t.Nanoseconds())
-		measure.MeasureCPU("basic_cpu")
-		measure_wall.MeasureWall("root_round")
+		round.Measure()
 	}
 
-	monitor.LogEnd()
+	monitor.End()
 	// And tell everybody to quit
 	err := hc.SNodes[0].CloseAll(hc.SNodes[0].ViewNo)
 	if err != nil {

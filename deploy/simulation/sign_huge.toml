@@ -2,7 +2,7 @@ Machines = 16
 App = "sign"
 Suite = "ed25519"
 
-hpn, bf, rounds, rate, suite
+ppm, bf, rounds, rate, suite
 1, 8, 30, 10, "ed25519"
 2, 8, 30, 10, "ed25519"
 4, 8, 30, 10, "ed25519"

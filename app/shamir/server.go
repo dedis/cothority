@@ -4,8 +4,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/poly"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/crypto/poly"
 )
 
 func RunServer(conf *app.ConfigShamir) {
@@ -33,8 +33,16 @@ func RunServer(conf *app.ConfigShamir) {
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, flags.Hostname, s, info, indexPeer == 0)
 
+	// monitor connect
+	if app.RunFlags.Logger == "" {
+		monitor.Disable()
+	} else {
+		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+			dbg.Fatal(p.String(), "could not connect to monitor :", err)
+		}
+	}
 	// make it listen
-	measure := monitor.NewMeasure()
+	setup := monitor.NewMeasure("setup")
 	dbg.Lvl2("Peer", flags.Hostname, "is now listening for incoming connections")
 	go p.Listen()
 
@@ -47,10 +55,6 @@ func RunServer(conf *app.ConfigShamir) {
 	// Wait until this peer is connected / SYN'd with each other peer
 	p.WaitSYNs()
 
-	if p.IsRoot() {
-		measure.MeasureWall("basic_connect")
-	}
-
 	// Setup the schnorr system amongst peers
 	p.SetupDistributedSchnorr()
 	p.SendACKs()
@@ -59,16 +63,15 @@ func RunServer(conf *app.ConfigShamir) {
 
 	// send setup time if we're root
 	if p.IsRoot() {
-		measure.MeasureWall("basic_setup")
+		setup.Measure()
 	}
 
+	roundm := monitor.NewMeasure("round")
 	for round := 0; round < conf.Rounds; round++ {
 		if p.IsRoot() {
 			dbg.Lvl2("Starting round", round)
 		}
-
-		measure.Update()
-		measure_wall := monitor.NewMeasure()
+		calc := monitor.NewMeasure("calc")
 		// Then issue a signature !
 		//sys, usr := app.GetRTime()
 		msg := "hello world"
@@ -76,16 +79,15 @@ func RunServer(conf *app.ConfigShamir) {
 		// Only root calculates if it's OK and sends a log-message
 		if p.IsRoot() {
 			sig := p.SchnorrSigRoot([]byte(msg))
-			measure.MeasureCPU("basic_calc")
-
+			calc.Measure()
+			verify := monitor.NewMeasure("verify")
 			err := p.VerifySchnorrSig(sig, []byte(msg))
-			measure.MeasureCPU("basic_verify")
 			if err != nil {
 				dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
 			}
-
+			verify.Measure()
+			roundm.Measure()
 			dbg.Lvl2(p.String(), "verified the schnorr sig !")
-			measure_wall.MeasureWall("basic_round")
 		} else {
 			// Compute the partial sig and send it to the root
 			p.SchnorrSigPeer([]byte(msg))
@@ -96,6 +98,6 @@ func RunServer(conf *app.ConfigShamir) {
 	dbg.Lvl2(p.String(), "is leaving ...")
 
 	if p.IsRoot() {
-		monitor.LogEnd()
+		monitor.End()
 	}
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -66,35 +65,7 @@ func ReadConfig(conf interface{}, dir ...string) {
 	flag.Parse()
 
 	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
-	if RunFlags.AmRoot {
-		ConnectLogservers()
-	} else {
-		dbg.Lvl4("Not connecting to logger - logger:", RunFlags.Logger, "AmRoot:", RunFlags.AmRoot)
-	}
-	ServeMemoryStats()
-}
-
-/*
- * Connects to the logservers for external logging
- */
-func ConnectLogservers() {
-	// connect with the logging server
-	if RunFlags.Logger != "" {
-		// blocks until we can connect to the flags.Logger
-		dbg.Lvl3(RunFlags.Hostname, "Connecting to Logger", RunFlags.Logger)
-		lh, err := logutils.NewLoggerHook(RunFlags.Logger, RunFlags.Hostname, "unknown")
-		if err != nil {
-			log.WithFields(log.Fields{
-				"file": logutils.File(),
-			}).Fatalln("Error setting up logging server:", err)
-		}
-		log.AddHook(lh)
-		//log.SetOutput(ioutil.Discard)
-		//fmt.Println("exiting flags.Logger block")
-		dbg.Lvl4(RunFlags.Hostname, "Done setting up hook")
-	} else {
-		dbg.Lvl3("Not setting up logserver for", RunFlags.Hostname)
-	}
+	//ServeMemoryStats()
 }
 
 /*
@@ -119,7 +90,7 @@ func ServeMemoryStats() {
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p + 2)), nil)
+			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
 			dbg.Lvl3("Memory-stats server:", res)
 		}()
 	}

@@ -6,7 +6,6 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io"
 	"net"
-	"reflect"
 	"strings"
 	"sync"
 )
@@ -17,7 +16,7 @@ import (
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
 var Sink = "0.0.0.0"
-var SinkPort = "4000"
+var SinkPort = "3000"
 
 // mutex is used to update the global stats from many connections
 var mutex *sync.Mutex
@@ -51,7 +50,12 @@ func Monitor(stats *Stats) error {
 			}
 			conn, err := ln.Accept()
 			if err != nil {
-				dbg.Lvl1("Error while monitor accept connection : ", err, reflect.TypeOf(err))
+				operr := err.(*net.OpError)
+				// We cant accept anymore we closed the listener
+				if operr.Op == "accept" {
+					break
+				}
+				dbg.Lvl1("Error while monitor accept connection : ", operr)
 				continue
 			}
 			dbg.Lvl3("Monitor : new connection from ", conn.RemoteAddr().String())
@@ -70,13 +74,13 @@ func Monitor(stats *Stats) error {
 			nconn -= 1
 			if nconn == 0 {
 				ln.Close()
-				close(done)
 				finished = true
 				break
 			}
 		}
 	}
 	dbg.Lvl2("Monitor finished waiting !")
+	conns = make([]net.Conn, 0)
 	return nil
 }
 
@@ -116,7 +120,7 @@ func handleConnection(conn net.Conn, stats *Stats) {
 		if strings.ToLower(m.Name) == "end" {
 			break
 		}
-		dbg.Lvl3("Monitor : received a Measure from ", conn.RemoteAddr().String(), " : ", m)
+		dbg.Lvl4("Monitor : received a Measure from ", conn.RemoteAddr().String(), " : ", m)
 		updateMeasures(stats, m)
 		m = Measure{}
 	}

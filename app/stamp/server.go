@@ -7,39 +7,40 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/proto/sign"
 )
 
 type Server struct {
 	sign.Signer
-	name       string
-	Clients    map[string]coconet.Conn
+	name    string
+	Clients map[string]coconet.Conn
 
-							   // for aggregating messages from clients
+	// for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
 	READING    int
 	PROCESSING int
 
-							   // Leaves, Root and Proof for a round
-	Leaves     []hashid.HashId // can be removed after we verify protocol
-	Root       hashid.HashId
-	Proofs     []proof.Proof
+	// Leaves, Root and Proof for a round
+	Leaves []hashid.HashId // can be removed after we verify protocol
+	Root   hashid.HashId
+	Proofs []proof.Proof
 
-	rLock      sync.Mutex
-	maxRounds  int
-	closeChan  chan bool
+	rLock     sync.Mutex
+	maxRounds int
+	closeChan chan bool
 
-	Logger     string
-	Hostname   string
-	App        string
+	Logger   string
+	Hostname string
+	App      string
 }
 
 func NewServer(signer sign.Signer) *Server {
@@ -63,7 +64,7 @@ func NewServer(signer sign.Signer) *Server {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s.name = net.JoinHostPort(h, strconv.Itoa(i + 1))
+		s.name = net.JoinHostPort(h, strconv.Itoa(i+1))
 	}
 	s.Queue[s.READING] = make([]MustReplyMessage, 0)
 	s.Queue[s.PROCESSING] = make([]MustReplyMessage, 0)
@@ -216,11 +217,18 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound() + 1 > nRounds {
+	if s.LastRound()+1 > nRounds {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
 
+	if app.RunFlags.Logger == "" {
+		monitor.Disable()
+	} else {
+		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+			dbg.Fatal("Root could not connect to monitor sink :", err)
+		}
+	}
 	dbg.Lvl3(s.Name(), "running as root", s.LastRound(), int64(nRounds))
 	for {
 		select {
@@ -230,8 +238,8 @@ func (s *Server) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
-			measure := monitor.NewMeasure()
-			dbg.Lvl4(s.Name(), "is stamp server starting signing round for:", s.LastRound() + 1, "of", nRounds)
+			round := monitor.NewMeasure("round")
+			dbg.Lvl4(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -244,7 +252,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 			} else {
 				err = s.StartSigningRound()
 			}
-			measure.MeasureCPUWall("basic_calc", "basic_round")
+			round.Measure()
 
 			if err == sign.ChangingViewError {
 				// report change in view, and continue with the select
@@ -261,14 +269,14 @@ func (s *Server) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound() + 1 >= nRounds {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound() + 1, ">=", nRounds)
+			if s.LastRound()+1 >= nRounds {
+				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				// And tell everybody to quit
 				err := s.CloseAll(s.GetView())
 				if err != nil {
 					log.Fatal("Couldn't close:", err)
 				}
-				monitor.LogEnd()
+				monitor.End()
 				return "close"
 			}
 		}
@@ -307,12 +315,12 @@ func (s *Server) Run(role string, nRounds int) {
 					return
 				default:
 				}
-				if i % 2 == 0 {
+				if i%2 == 0 {
 					dbg.Lvl4("removing self")
 					s.Signer.RemoveSelf()
 				} else {
-					dbg.Lvl4("adding self: ", hostlist[(i / 2) % len(hostlist)])
-					s.Signer.AddSelf(hostlist[(i / 2) % len(hostlist)])
+					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
+					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
 				}
 				i++
 			}
@@ -435,7 +443,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	s.Root, s.Proofs = proof.ProofTree(s.Suite().Hash, s.Leaves)
 	if sign.DEBUG == true {
 		if proof.CheckLocalProofs(s.Suite().Hash, s.Root, s.Leaves, s.Proofs) == true {
-			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round " + strconv.Itoa(int(s.LastRound())))
+			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
 		} else {
 			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}
