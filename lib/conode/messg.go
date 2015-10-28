@@ -1,4 +1,4 @@
-package defs
+package conode
 
 import (
 	"bytes"
