@@ -40,7 +40,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"encoding/json"
 )
 
 // Default config file

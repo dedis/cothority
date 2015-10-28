@@ -12,25 +12,26 @@ BINARY=$1
 echo Compiling $BINARY
 rm -rf conode-bin
 mkdir conode-bin
-for GOOS in linux; do
+for GOOS in linux darwin; do
   for GOARCH in amd64 386; do
     echo Doing $GOOS / $GOARCH
     export GOOS GOARCH
     go build -o conode-bin/$BINARY-$GOOS-$GOARCH .
   done
 done
+rm conode-bin/$BINARY-darwin-386
 }
 
-#compile conode
+compile conode
 cd stamp
-#compile stamp
+compile stamp
 cd ..
 mv stamp/conode-bin/* conode-bin
 rmdir stamp/conode-bin
 
 echo Copying scripts to the binary-directory
 cp start-conode conode-bin
-cp config.toml conode-bin
+cp real/config.toml conode-bin
 TAR=conode-$VERSION.tar.gz
 
 echo Creating $TAR
