@@ -40,7 +40,6 @@ func registerCommand(com cli.Command) {
 	commands = append(commands, com)
 }
 
-
 func main() {
 	conode := cli.NewApp()
 	conode.Name = "Conode"
@@ -102,7 +101,7 @@ func KeyGeneration(key, address string) {
 	if address == "" {
 		dbg.Fatal("You must call keygen with ipadress !")
 	}
-	address, err := cliutils.UpsertPort(address, defs.DefaultPort)
+	address, err := cliutils.VerifyPort(address, defs.DefaultPort)
 	if err != nil {
 		dbg.Fatal(err)
 	}

@@ -123,7 +123,7 @@ func readHostFile(file string) ([]string, []string, error) {
 			return nil, nil, errors.New(fmt.Sprintf("Hostfile misformatted at line %s", ln))
 		}
 		// add it HOSTS -> PUBLIC KEY
-		h, err := cliutils.UpsertPort(spl[0], defs.DefaultPort)
+		h, err := cliutils.VerifyPort(spl[0], defs.DefaultPort)
 		if err != nil {
 			dbg.Fatal("Error reading address in host file :", spl[0], err)
 		}
