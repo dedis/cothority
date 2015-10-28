@@ -11,7 +11,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
@@ -115,7 +115,7 @@ func (s *Server) Listen() error {
 
 				go func(co coconet.Conn) {
 					for {
-						tsm := defs.TimeStampMessage{}
+						tsm := conode.TimeStampMessage{}
 						err := co.GetData(&tsm)
 						dbg.Lvl2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
 						if err != nil {
@@ -126,13 +126,13 @@ func (s *Server) Listen() error {
 						switch tsm.Type {
 						default:
 							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
-						case defs.StampRequestType:
+						case conode.StampRequestType:
 							s.mux.Lock()
 							READING := s.READING
 							s.Queue[READING] = append(s.Queue[READING],
 								MustReplyMessage{Tsm: tsm, To: co.Name()})
 							s.mux.Unlock()
-						case defs.StampClose:
+						case conode.StampClose:
 							dbg.Lvl2("Closing connection")
 							co.Close()
 							return
@@ -339,10 +339,10 @@ func (s *Server) OnDone() sign.DoneFunc {
 				dbg.Lvl2("Inclusion-proof failed")
 			}
 
-			respMessg := &defs.TimeStampMessage{
-				Type:  defs.StampReplyType,
+			respMessg := &conode.TimeStampMessage{
+				Type:  conode.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &defs.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  &conode.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
 			s.PutToClient(msg.To, respMessg)
 			dbg.Lvl1("Sent signature response back to client")
 		}

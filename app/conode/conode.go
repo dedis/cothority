@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
@@ -101,7 +101,7 @@ func KeyGeneration(key, address string) {
 	if address == "" {
 		dbg.Fatal("You must call keygen with ipadress !")
 	}
-	address, err := cliutils.VerifyPort(address, defs.DefaultPort)
+	address, err := cliutils.VerifyPort(address, conode.DefaultPort)
 	if err != nil {
 		dbg.Fatal(err)
 	}

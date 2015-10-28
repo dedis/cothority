@@ -19,26 +19,27 @@ func VerifySignature(suite abstract.Suite, reply *StampReply, public abstract.Po
 		dbg.Lvl1("Challenge-check : FAILED (", err, ")")
 		return false
 	}
-	dbg.Lvl1("Challenge-check : OK")
+	dbg.Lvl2("Challenge-check : OK")
 	// Incorporate the timestamp in the message since the verification process
 	// is done by reconstructing the challenge
 	var b bytes.Buffer
 	if err := binary.Write(&b, binary.LittleEndian, reply.Timestamp); err != nil {
 		dbg.Lvl1("Error marshaling the timestamp for signature verification")
+		return false
 	}
 	msg := append(b.Bytes(), []byte(reply.MerkleRoot)...)
 	if err := VerifySchnorr(suite, msg, public, reply.SigBroad.C, reply.SigBroad.R0_hat); err != nil {
 		dbg.Lvl1("Signature-check : FAILED (", err, ")")
 		return false
 	}
-	dbg.Lvl1("Signature-check : OK")
+	dbg.Lvl2("Signature-check : OK")
 
 	// finally check the proof
 	if !proof.CheckProof(suite.Hash, reply.MerkleRoot, hashid.HashId(message), reply.Prf) {
-		dbg.Lvl1("Inclusion-check : FAILED")
+		dbg.Lvl2("Inclusion-check : FAILED")
 		return false
 	}
-	dbg.Lvl1("Inclusion-check : OK")
+	dbg.Lvl2("Inclusion-check : OK")
 	return true
 }
 
@@ -61,6 +62,7 @@ func VerifyChallenge(suite abstract.Suite, reply *StampReply) error {
 	cbuf := append(b.Bytes(), reply.MerkleRoot...)
 	c.Message(nil, nil, cbuf)
 	challenge := suite.Secret().Pick(c)
+	dbg.Lvlf3("challenge: %+v", challenge)
 	if challenge.Equal(reply.SigBroad.C) {
 		return nil
 	}

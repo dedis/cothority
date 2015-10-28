@@ -23,16 +23,12 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/binary"
-	"errors"
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
 	"io"
@@ -40,7 +36,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"github.com/dedis/cothority/lib/conode"
 )
 
 // Default config file
@@ -56,19 +51,19 @@ const sigExtension = ".sig"
 // easily copy/pasted
 type SignatureFile struct {
 	// name of the file
-	Name      string
+	Name       string
 	// The time it has been timestamped
-	Timestamp int64
+	Timestamp  int64
 	// hash of our file
-	Hash      string
+	Hash       string
 	// the root of the merkle tree
-	Root      string
+	Root       string
 	// the inclusion-proof from root to the hash'd file
-	Proof     []string
+	Proof      []string
 	// The signature challenge
-	Challenge string
+	Challenge  string
 	// The signature response
-	Response  string
+	Response   string
 	// The aggregated commitment used for signing
 	Commitment string
 }
@@ -78,6 +73,9 @@ var suite abstract.Suite
 
 // the configuration file of the cothority tree used
 var conf *app.ConfigConode
+
+// The public aggregate X0
+var public_X0 abstract.Point
 
 // If the server is only given with it's hostname, it supposes that the stamp
 // server is run on port 2001. Else you will have to add the port yourself.
@@ -127,7 +125,11 @@ func main() {
 			},
 			Action: func(c *cli.Context) {
 				dbg.Lvl2("Requesting a verification of a file given its signature. Provide with FILE.")
-				VerifyFileSignature(c.Args().First(), c.String("sig"))
+				if VerifyFileSignature(c.Args().First(), c.String("sig")) {
+					dbg.Lvl1("Verification OK")
+				} else {
+					dbg.Lvl1("Verification of file failed")
+				}
 			},
 		},
 	}
@@ -152,6 +154,8 @@ func main() {
 		conf = new(app.ConfigConode)
 		err := app.ReadTomlConfig(conf, cf)
 		suite = app.GetSuite(conf.Suite)
+		pub, _ := base64.StdEncoding.DecodeString(conf.AggPubKey)
+		suite.Read(bytes.NewReader(pub), &public_X0)
 
 		// sets the right debug options
 		dbg.DebugVisible = c.GlobalInt("debug")
@@ -184,10 +188,10 @@ func StampFile(file, server string) {
 		dbg.Fatal("Error when getting the connection to the host:", err)
 	}
 	dbg.Lvl1("Connected to ", server)
-	msg := &defs.TimeStampMessage{
-		Type:  defs.StampRequestType,
+	msg := &conode.TimeStampMessage{
+		Type:  conode.StampRequestType,
 		ReqNo: 0,
-		Sreq:  &defs.StampRequest{Val: myHash}}
+		Sreq:  &conode.StampRequest{Val: myHash}}
 
 	err = conn.PutData(msg)
 	if err != nil {
@@ -195,8 +199,8 @@ func StampFile(file, server string) {
 	}
 	dbg.Lvl1("Sent signature request")
 	// Wait for the signed message
-	tsm := &defs.TimeStampMessage{}
-	tsm.Srep = &defs.StampReply{}
+	tsm := &conode.TimeStampMessage{}
+	tsm.Srep = &conode.StampReply{}
 	tsm.Srep.SuiteStr = suite.String()
 	err = conn.GetData(tsm)
 	if err != nil {
@@ -205,15 +209,17 @@ func StampFile(file, server string) {
 	dbg.Lvl1("Got signature response")
 
 	// Asking to close the connection
-	err = conn.PutData(&defs.TimeStampMessage{
+	err = conn.PutData(&conode.TimeStampMessage{
 		ReqNo: 1,
-		Type:  defs.StampClose,
+		Type:  conode.StampClose,
 	})
 	conn.Close()
 	dbg.Lvl2("Connection closed with server")
 	// Verify if what we received is correct
-	if !conode.VerifySignature(suite, tsm.Srep, conf.AggPubKey, myHash) {
+	if !conode.VerifySignature(suite, tsm.Srep, public_X0, myHash) {
 		dbg.Fatal("Verification of signature failed")
+	} else {
+		dbg.Lvl1("Verification OK")
 	}
 
 	// Write the signature to the file
@@ -245,18 +251,18 @@ func VerifyFileSignature(file, sigFile string) bool {
 	// compute the hash again to verify if hash is good
 	hash := hashFile(file)
 	if bytes.Compare(hash, hashOrig) == 0 {
-		dbg.Lvl1("Hash-check: OK")
+		dbg.Lvl2("Hash-check: OK")
 	} else {
-		dbg.Lvl1("Hash-check: FAILED")
+		dbg.Lvl2("Hash-check: FAILED")
 		return false
 	}
 	// Then verify the proper signature
-	return conode.VerifySignature(hashOrig, reply, conf.AggPubKey, hash)
+	return conode.VerifySignature(suite, reply, public_X0, hash)
 }
 
 // Takes the different part of the signature and writes them to a toml-
 // file in copy/pastable base64
-func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampReply) error {
+func WriteSignatureFile(nameSig, file string, hash []byte, stamp *conode.StampReply) error {
 	var p []string
 	for _, pr := range stamp.Prf {
 		p = append(p, base64.StdEncoding.EncodeToString(pr))
@@ -297,7 +303,7 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *defs.StampRepl
 // decoded and put back in a 'StampReply'-structure
 // Returns the hash of the file, the signature itself with all informations +
 // error if any
-func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
+func ReadSignatureFile(name string) ([]byte, *conode.StampReply, error) {
 	// Read in the toml-file
 	sigStr := &SignatureFile{}
 	err := app.ReadTomlConfig(sigStr, name)
@@ -305,7 +311,7 @@ func ReadSignatureFile(name string) ([]byte, *defs.StampReply, error) {
 		return nil, nil, nil
 	}
 
-	reply := &defs.StampReply{}
+	reply := &conode.StampReply{}
 	reply.Timestamp = sigStr.Timestamp
 	reply.SigBroad = sign.SignatureBroadcastMessage{} // Convert fields from Base64 to binary
 	hash, err := base64.StdEncoding.DecodeString(sigStr.Hash)
