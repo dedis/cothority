@@ -11,8 +11,7 @@ mkdir $KEY_DIR
 
 for a in $( seq 1 $NUMBER ); do
   PORT=$(( 20000 + $a * 10 ))
-  ./conode keygen localhost:$PORT
-   -key $KEYS$a
+  ./conode keygen localhost:$PORT -key $KEYS$a
 done
 cat $KEYS*.pub >> $HOSTLIST
 

@@ -22,6 +22,28 @@ And some technical additions that we would like to do:
 
 ## Participate in the EPFL-conode
 
+The most easy way to participate in the EPFL-conode is to use the precompiled
+binary (for linux/64 linux/32 and MacOSX) available at:
+
+https://github.com/dedis/cothority/releases/latest
+
+If you are very security-conscious, you can also go to 'compile your own version'
+section.
+
+These are the steps to be part in the EPFL-conode-project:
+
+1. Download the binary distribution
+2. Create and send the public-key
+3. Validate the installation
+4. Start your conode
+5. Stamp your documents
+
+### Download the binary distribution
+
+
+
+## Participate in the EPFL-conode - compile your own version
+
 These are the steps to be part in the EPFL-conode-project:
 
 1. Create a private/public-key pair
