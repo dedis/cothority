@@ -21,13 +21,13 @@ import (
 // 4. Response
 
 // Get multiplexes all messages from TCPHost using application logic
-func (sn *Node) get() error {
+func (sn *Node) getMessages() error {
 	dbg.Lvl4(sn.Name(), "getting")
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
 	dbg.Lvl4("Going to get", sn.Name())
-	msgchan := sn.Host.Get()
+	msgchan := sn.Host.GetNetworkMessg()
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
 	sn.heartbeat = time.NewTimer(500 * time.Second)

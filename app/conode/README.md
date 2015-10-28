@@ -33,14 +33,65 @@ section.
 These are the steps to be part in the EPFL-conode-project:
 
 1. Download the binary distribution
-2. Create and send the public-key
-3. Validate the installation
-4. Start your conode
-5. Stamp your documents
+2. Create the keypair and validate the installation
+3. Start your conode
+4. Stamp your documents
 
 ### Download the binary distribution
 
+Make a directory and cd into it:
 
+```mkdir conode
+cd conode```
+
+Go to the page
+
+https://github.com/dedis/cothority/releases/latest
+
+and download the latest .tar.gz and untar it (replace with latest version)
+
+```wget http:///DeDiS/cothority/releases/download/0.5/conode-0.5.2.tar.gz
+tar xf conode-0.5.2.tar.gz```
+
+### Create the keypair and validate the installation
+
+Now you're ready to create a new private/public key pair and start to validate
+the installation. Best thing to do is to open a ```screen``` for background
+running:
+
+```screen -S conode
+./start-conode setup <your IP>```
+
+This command will create a new key-pair and print the public key on the command
+line. Please send that key to dev.dedis@epfl.ch and wait further instructions.
+The command will wait for us to verify your installation, so please keep it
+running. If you want to quit the ```screen```, you can do so by typing
+```<ctrl>a + d```. To go back to your screen session, run
+
+```screen -r conode```
+
+### Start your conode
+
+Once the installation has been verified, change back to the screen and abort
+the running conode with ```<ctrl>c```. Now you can run the real conode:
+
+```./start-conode run```
+
+Because the ```config.toml``` which descsribes the other nodes is missing, it
+will download the newest package and install that one.
+
+### Stamp some documents
+
+If everything is running correctly, you can start stamping documents:
+
+```./stamp sign file```
+
+Where *file* is the file you want to stamp. It will write the signature
+and the inclusion-proof in ```file.sig```.
+
+To verify whether a document is correctly stamped and still valid, run
+
+```./stamp verify file```
 
 ## Participate in the EPFL-conode - compile your own version
 

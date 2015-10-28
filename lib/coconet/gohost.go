@@ -489,7 +489,7 @@ func (h *GoHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler) 
 
 // Get returns two channels. One of messages that are received, and another of errors
 // associated with each message.
-func (h *GoHost) Get() chan NetworkMessg {
+func (h *GoHost) GetNetworkMessg() chan NetworkMessg {
 	return h.msgchan
 }
 

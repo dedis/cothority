@@ -115,7 +115,7 @@ func (sn *Node) Listen() error {
 	if sn.Pool() == nil {
 		sn.GenSetPool()
 	}
-	err := sn.get()
+	err := sn.getMessages()
 	return err
 }
 

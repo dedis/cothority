@@ -591,7 +591,7 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 //
 // TODO: each of these goroutines could be spawned when we initally connect to
 // them instead.
-func (h *TCPHost) Get() chan NetworkMessg {
+func (h *TCPHost) GetNetworkMessg() chan NetworkMessg {
 	return h.msgchan
 }
 

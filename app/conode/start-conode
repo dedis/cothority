@@ -9,9 +9,9 @@ main(){
   setup)
     if [ -f key.pub ]; then
       echo "Key.pub already exists - if you want to re-create, please delete it first"
-      exit 1
+    else
+      ./conode keygen $2
     fi
-    ./conode keygen $2
     cat key.pub
     ./conode validate
     ;;
@@ -76,8 +76,8 @@ search_arch(){
 #!/bin/bash
 ./$CONODE \$@
 EOF
-	sed -e "s/conode/stamp/" conode > stamp
-        chmod a+x conode
+	    sed -e "s/conode/stamp/" conode > stamp
+        chmod a+x conode stamp
         echo Found $CONODE to run here
         return
       fi

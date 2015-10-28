@@ -52,7 +52,8 @@ func Validation(keyFile string) {
 	// Then wait for the connection
 
 	// Accept incoming connections
-	ln, err := net.Listen("tcp", addr)
+	global, _ := cliutils.GlobalBind(addr)
+	ln, err := net.Listen("tcp", global)
 	if err != nil {
 		dbg.Fatal("Could not listen for validation : ", err)
 	}

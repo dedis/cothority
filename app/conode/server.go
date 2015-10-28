@@ -18,6 +18,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/cliutils"
 )
 
 type Server struct {
@@ -89,8 +90,9 @@ func (s *Server) Close() {
 // this server needs to be running on a different port
 // than the Signer that is beneath it
 func (s *Server) Listen() error {
-	dbg.Lvl3("Listening in server at", s.name)
-	ln, err := net.Listen("tcp4", s.name)
+	global, _ := cliutils.GlobalBind(s.name)
+	dbg.LLvl3("Listening in server at", global)
+	ln, err := net.Listen("tcp4", global)
 	if err != nil {
 		panic(err)
 	}

@@ -26,6 +26,7 @@ import (
 	"os"
 	"reflect"
 	"time"
+	"github.com/dedis/cothority/lib/cliutils"
 )
 
 /// Encoding part ///
@@ -288,7 +289,8 @@ func (t *TcpHost) Open(name string) Conn {
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
 func (t *TcpHost) Listen(addr string, fn func(Conn)) {
-	ln, err := net.Listen("tcp", addr)
+	global, _ := cliutils.GlobalBind(addr)
+	ln, err := net.Listen("tcp", global)
 	if err != nil {
 		fmt.Printf("error listening (host %s)\n", t.name)
 	}
