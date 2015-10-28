@@ -12,13 +12,13 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/cliutils"
 )
 
 type Server struct {
@@ -117,6 +117,7 @@ func (s *Server) Listen() error {
 					for {
 						tsm := defs.TimeStampMessage{}
 						err := co.GetData(&tsm)
+						dbg.Lvl2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
 						if err != nil {
 							dbg.Lvlf1("%p Failed to get from child: %s", s, err)
 							co.Close()
@@ -143,43 +144,6 @@ func (s *Server) Listen() error {
 	}()
 
 	return nil
-}
-
-// Used for goconns
-// should only be used if clients are created in batch
-func (s *Server) ListenToClients() {
-	// dbg.Lvl4("LISTENING TO CLIENTS: %p", s, s.Clients)
-	for _, c := range s.Clients {
-		go func(co coconet.Conn) {
-			for {
-				tsm := defs.TimeStampMessage{}
-				err := co.GetData(&tsm)
-				if err == coconet.ErrClosed {
-					dbg.Lvlf1("%p Failed to get from client:", s, err)
-					s.Close()
-					return
-				}
-				if err != nil {
-					dbg.Lvlf1("%p failed To get message:", s, err)
-				}
-				switch tsm.Type {
-				default:
-					dbg.Lvl1("Message of unknown type")
-				case defs.StampRequestType:
-					// dbg.Lvl4("STAMP REQUEST")
-					s.mux.Lock()
-					READING := s.READING
-					s.Queue[READING] = append(s.Queue[READING],
-						MustReplyMessage{Tsm: tsm, To: co.Name()})
-					s.mux.Unlock()
-				case defs.StampClose:
-					dbg.Lvl2("Closing channel")
-					co.Close()
-					return
-				}
-			}
-		}(c)
-	}
 }
 
 func (s *Server) ConnectToLogger() {
