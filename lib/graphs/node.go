@@ -386,7 +386,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 
 	if !stamper {
 		// This will call the dispatcher in collectiveSigning for every request
-		dbg.LLvl4("Starting to listen for incoming stamp-requests on", hostnames)
+		dbg.Lvl4("Starting to listen for incoming stamp-requests on", hostnames)
 		for _, sn := range hostnames {
 			go sn.Listen()
 		}
