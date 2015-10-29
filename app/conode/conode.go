@@ -12,7 +12,7 @@ import (
 )
 
 // Which suite to use
-var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
+var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
 var suiteStr string = suite.String()
 
 // where to write the key file .priv + .pub

@@ -89,7 +89,7 @@ type SigningMessage struct {
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
 }
 
-var msgSuite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
+var msgSuite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
 
 //var msgSuite abstract.Suite = nist.NewAES128SHA256P256()
 
