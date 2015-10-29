@@ -20,20 +20,25 @@ func init() {
 // Checks if an address contains a port. If it does not, it add the
 // given port to that and returns the new address. If it does, it returns
 // directly. Both operation checks if the port is correct.
-func VerifyPort(address, port string) (string, error) {
-	// address does not contains a port
+func VerifyPort(address string, port int) (string, error) {
+	p := strconv.Itoa(port)
 	if subs := addressRegexp.FindStringSubmatch(address); len(subs) == 0 {
-		return address + ":" + port, checkPort(port)
+		// address does not contain a port
+		return address + ":" + p, checkPort(port)
 	} else if len(subs) == 3 && subs[2] == "" { // we got a addres: style ..??
-		return address + port, checkPort(port)
+		return address + p, checkPort(port)
 	} else if len(subs) == 3 { // we got full address already address:port
-		return address, checkPort(subs[2])
+		sp, err := strconv.Atoi(subs[2])
+		if err != nil{
+			return address, errors.New("Not a valid port-number given")
+		}
+		return address, checkPort(sp)
 	}
-	return address, errors.New("Could not anaylze address ><")
+	return address, errors.New("Could not anaylze address")
 }
 
 // Returns the global-binding address
-func GlobalBind(address string)(string, error){
+func GlobalBind(address string) (string, error) {
 	addr := strings.Split(address, ":")
 	if len(addr) != 2 {
 		return "", errors.New("Not a host:port address")
@@ -42,12 +47,9 @@ func GlobalBind(address string)(string, error){
 }
 
 // Simply returns an error if the port is invalid
-func checkPort(port string) error {
-	porti, err := strconv.Atoi(port)
-	if err != nil {
-		return err
-	} else if porti < 1 || porti >= 65536 {
-		return fmt.Errorf("Port number invalid %d !", porti)
+func checkPort(port int) error {
+	if port < 1 || port > 65535 {
+		return fmt.Errorf("Port number invalid %d !", port)
 	}
 	return nil
 }

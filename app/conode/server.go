@@ -19,12 +19,13 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
+	"os"
 )
 
 // struct to ease keeping track of who requires a reply after
 // tsm is processed/ aggregated by the TSServer
 type MustReplyMessage struct {
-	Tsm defs.TimeStampMessage
+	Tsm conode.TimeStampMessage
 	To  string // name of reply destination
 }
 
@@ -143,6 +144,9 @@ func (s *Server) Listen() error {
 							dbg.Lvl2("Closing connection")
 							co.Close()
 							return
+						case conode.StampExit:
+							dbg.Lvl1("Exiting server upon request")
+							os.Exit(-1)
 						}
 					}
 				}(c)

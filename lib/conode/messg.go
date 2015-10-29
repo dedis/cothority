@@ -11,7 +11,7 @@ import (
 
 // Default port for the conode-setup - the stamping-request port
 // is at ```DefaultPort + 1```
-var DefaultPort string = "2000"
+var DefaultPort int = 2000
 
 type MessageType int
 
@@ -22,6 +22,7 @@ const (
 	StampRequestType
 	StampReplyType
 	StampClose
+	StampExit
 )
 
 type StampRequest struct {
