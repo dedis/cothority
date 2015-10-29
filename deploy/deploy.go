@@ -161,9 +161,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	deployP.Cleanup()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
-	dbg.Print("Deployement + cleanup done")
 	err := deployP.Start()
-	dbg.Print("deployement started")
 	if err != nil {
 		log.Fatal(err)
 		return *rs, nil
