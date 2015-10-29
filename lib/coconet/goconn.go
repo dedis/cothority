@@ -140,7 +140,7 @@ func (c *GoConn) PubKey() abstract.Point {
 }
 
 // Put puts data on the connection.
-func (c *GoConn) Put(data BinaryMarshaler) error {
+func (c *GoConn) PutData(data BinaryMarshaler) error {
 	if c.Closed() {
 		return ErrClosed
 	}
@@ -179,7 +179,7 @@ retry:
 }
 
 // Get receives data from the sender.
-func (c *GoConn) Get(bum BinaryUnmarshaler) error {
+func (c *GoConn) GetData(bum BinaryUnmarshaler) error {
 	if c.Closed() {
 		return ErrClosed
 	}

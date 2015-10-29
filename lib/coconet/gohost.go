@@ -110,13 +110,13 @@ func (h *GoHost) ConnectTo(parent string) error {
 
 	// send the hostname to the destination
 	mname := StringMarshaler(h.Name())
-	err := conn.Put(&mname)
+	err := conn.PutData(&mname)
 	if err != nil {
 		log.Fatal("failed to connect: putting name:", err)
 	}
 
 	// give the parent the public key
-	err = conn.Put(h.Pubkey)
+	err = conn.PutData(h.Pubkey)
 	if err != nil {
 		log.Fatal("failed to send public key:", err)
 	}
@@ -124,7 +124,7 @@ func (h *GoHost) ConnectTo(parent string) error {
 	// get the public key of the parent
 	suite := h.suite
 	pubkey := suite.Point()
-	err = conn.Get(pubkey)
+	err = conn.GetData(pubkey)
 	if err != nil {
 		log.Fatal("failed to establish connection: getting pubkey:", err)
 	}
@@ -138,7 +138,7 @@ func (h *GoHost) ConnectTo(parent string) error {
 	go func() {
 		for {
 			data := h.pool.Get().(BinaryUnmarshaler)
-			err := conn.Get(data)
+			err := conn.GetData(data)
 
 			h.msgchan <- NetworkMessg{Data: data, From: conn.Name(), Err: err}
 		}
@@ -173,7 +173,7 @@ func (h *GoHost) Listen() error {
 			h.PeerLock.Unlock()
 
 			var mname StringMarshaler
-			err := conn.Get(&mname)
+			err := conn.GetData(&mname)
 			if err != nil {
 				log.Fatal("failed to establish connection: getting name:", err)
 			}
@@ -181,13 +181,13 @@ func (h *GoHost) Listen() error {
 			suite := h.suite
 			pubkey := suite.Point()
 
-			e := conn.Get(pubkey)
+			e := conn.GetData(pubkey)
 			if e != nil {
 				log.Fatal("unable to get pubkey from child")
 			}
 			conn.SetPubKey(pubkey)
 
-			err = conn.Put(h.Pubkey)
+			err = conn.PutData(h.Pubkey)
 			if err != nil {
 				log.Fatal("failed to send public key:", err)
 			}
@@ -200,7 +200,7 @@ func (h *GoHost) Listen() error {
 			go func() {
 				for {
 					data := h.pool.Get().(BinaryUnmarshaler)
-					err := conn.Get(data)
+					err := conn.GetData(data)
 
 					h.msgchan <- NetworkMessg{Data: data, From: conn.Name(), Err: err}
 				}
@@ -383,7 +383,7 @@ func (h *GoHost) PutTo(ctx context.Context, host string, data BinaryMarshaler) e
 
 			if Ready {
 				// if closed put will return ErrClosed
-				done <- parent.Put(data)
+				done <- parent.PutData(data)
 				return
 			}
 			time.Sleep(250 * time.Millisecond)
@@ -418,7 +418,7 @@ func (h *GoHost) PutUp(ctx context.Context, view int, data BinaryMarshaler) erro
 
 			if Ready {
 				// if closed put will return ErrClosed
-				done <- parent.Put(data)
+				done <- parent.PutData(data)
 				return
 			}
 			time.Sleep(250 * time.Millisecond)
@@ -458,7 +458,7 @@ func (h *GoHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler) 
 				h.PeerLock.Unlock()
 
 				if Ready {
-					e := conn.Put(data[i])
+					e := conn.PutData(data[i])
 					if e != nil {
 						errLock.Lock()
 						err = e
@@ -489,7 +489,7 @@ func (h *GoHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler) 
 
 // Get returns two channels. One of messages that are received, and another of errors
 // associated with each message.
-func (h *GoHost) Get() chan NetworkMessg {
+func (h *GoHost) GetNetworkMessg() chan NetworkMessg {
 	return h.msgchan
 }
 

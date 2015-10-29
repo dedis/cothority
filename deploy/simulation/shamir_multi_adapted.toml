@@ -1,5 +1,5 @@
 App = "shamir"
-Rounds = 10
+Rounds = 20
 
 Machines, ppm
 2, 1

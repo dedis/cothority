@@ -307,8 +307,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	*/
 
 	// copy the webfile-directory of the logserver to the remote directory
-	err := exec.Command("cp", "-a",
-		d.DeterDir+"/cothority.conf", d.DeployDir).Run()
+	err := exec.Command("cp", "-a", d.DeterDir+"/cothority.conf", d.DeployDir).Run()
 	if err != nil {
 		dbg.Fatal("error copying webfiles:", err)
 	}

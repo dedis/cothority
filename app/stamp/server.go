@@ -52,7 +52,7 @@ func NewServer(signer sign.Signer) *Server {
 	s.PROCESSING = 1
 
 	s.Signer = signer
-	s.Signer.RegisterAnnounceFunc(s.OnAnnounce())
+	s.Signer.RegisterCommitFunc(s.CommitFunc())
 	s.Signer.RegisterDoneFunc(s.OnDone())
 	s.rLock = sync.Mutex{}
 
@@ -118,6 +118,8 @@ func (s *Server) Listen() error {
 						switch tsm.Type {
 						default:
 							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
+							c.Close()
+							return
 						case StampRequestType:
 							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
@@ -144,7 +146,7 @@ func (s *Server) ListenToClients() {
 		go func(c coconet.Conn) {
 			for {
 				tsm := TimeStampMessage{}
-				err := c.Get(&tsm)
+				err := c.GetData(&tsm)
 				if err == coconet.ErrClosed {
 					dbg.Lvlf1("%p Failed to get from client:", s, err)
 					s.Close()
@@ -365,7 +367,7 @@ func (s *Server) Run(role string, nRounds int) {
 
 }
 
-func (s *Server) OnAnnounce() sign.CommitFunc {
+func (s *Server) CommitFunc() sign.CommitFunc {
 	return func(view int) []byte {
 		//dbg.Lvl4("Aggregating Commits")
 		return s.AggregateCommits(view)
@@ -454,7 +456,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 // Send message to client given by name
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := s.Clients[name].Put(data)
+	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
 		s.Close()
 		return

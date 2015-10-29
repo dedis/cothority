@@ -18,7 +18,6 @@ import (
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"sort"
 	"strconv"
 	"strings"
@@ -197,8 +196,10 @@ func ConstructTree(
 			log.Error("failed to decode point from hex")
 			return 0, err
 		}
+	}
+	if len(node.PriKey) != 0 {
 		// dbg.Lvl4("decoding point")
-		encoded, err = hex.DecodeString(string(node.PriKey))
+		encoded, err := hex.DecodeString(string(node.PriKey))
 		if err != nil {
 			log.Error("failed to decode hex from encoded")
 			return 0, err
@@ -356,7 +357,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 		startTime := time.Duration(200)
 		maxTime := time.Duration(2000)
 		for i := 0; i < 2000; i++ {
-			dbg.Lvl3("Attempting to connect to parent", h)
+			dbg.Lvl3(h, "attempting to connect to parent")
 			// the host should connect with the parent
 			err = sn.Connect(0)
 			if err == nil {
@@ -385,7 +386,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 
 	if !stamper {
 		// This will call the dispatcher in collectiveSigning for every request
-		dbg.Lvl4("Starting to listen for", hostnames)
+		dbg.Lvl4("Starting to listen for incoming stamp-requests on", hostnames)
 		for _, sn := range hostnames {
 			go sn.Listen()
 		}
@@ -399,7 +400,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 // complete hostnames to be used by the hosts.
 // LoadConfig loads a configuration file in the format specified above. It
 // populates a HostConfig with HostNode Hosts and goPeer Peers.
-func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*HostConfig, error) {
+func LoadConfig(appHosts []string, appTree *Tree, suite abstract.Suite, optsSlice ...ConfigOptions) (*HostConfig, error) {
 	opts := ConfigOptions{}
 	if len(optsSlice) > 0 {
 		opts = optsSlice[0]
@@ -481,19 +482,15 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 		}
 	}
 
-
-	suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := edwards.NewAES128SHA256Ed25519(true)
 	//suite := nist.NewAES128SHA256P256()
-	if opts.Suite != nil {
-		suite = opts.Suite
-	}
 	rand := suite.Cipher([]byte("example"))
 	//fmt.Println("hosts", hosts)
 	// default value = false
 	start := time.Now()
 	if opts.NoTree == false {
 		_, err := ConstructTree(appTree, hc, "", suite, rand, hosts, nameToAddr, opts)
-		if err != nil{
+		if err != nil {
 			dbg.Fatal("Couldn't construct tree:", err)
 		}
 	}
@@ -508,7 +505,6 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 		hostList = append(hostList, h)
 	}
 
-
 	for _, sn := range hc.SNodes {
 		sn.HostList = make([]string, len(hostList))
 		sortable := sort.StringSlice(hostList)
@@ -521,4 +517,3 @@ func LoadConfig(appHosts []string, appTree *Tree, optsSlice ...ConfigOptions) (*
 
 	return hc, nil
 }
-

@@ -33,7 +33,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	round := monitor.NewMeasure("round")
 	for i := 0; i < conf.Rounds; i++ {
 		time.Sleep(time.Second)
-		hc.SNodes[0].LogTest = []byte("Hello World")
+		hc.SNodes[0].Message = []byte("Hello World")
 		dbg.Lvl3("Going to launch announcement ", hc.SNodes[0].Name())
 		t0 := time.Now()
 		//sys, usr := app.GetRTime()
