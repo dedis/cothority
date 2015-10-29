@@ -2,10 +2,8 @@ package app
 
 import (
 	"flag"
-	"net"
-	"net/http"
 	_ "net/http/pprof"
-	"strconv"
+	"strings"
 
 	"bytes"
 	"github.com/BurntSushi/toml"
