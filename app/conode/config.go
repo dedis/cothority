@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -123,7 +123,7 @@ func readHostFile(file string) ([]string, []string, error) {
 			return nil, nil, errors.New(fmt.Sprintf("Hostfile misformatted at line %s", ln))
 		}
 		// add it HOSTS -> PUBLIC KEY
-		h, err := cliutils.VerifyPort(spl[0], defs.DefaultPort)
+		h, err := cliutils.VerifyPort(spl[0], conode.DefaultPort)
 		if err != nil {
 			dbg.Fatal("Error reading address in host file :", spl[0], err)
 		}

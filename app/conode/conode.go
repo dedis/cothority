@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
@@ -41,11 +41,11 @@ func registerCommand(com cli.Command) {
 }
 
 func main() {
-	conode := cli.NewApp()
-	conode.Name = "Conode"
-	conode.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
-	conode.Version = "0.0.1"
-	conode.Authors = []cli.Author{
+	coApp := cli.NewApp()
+	coApp.Name = "Conode"
+	coApp.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
+	coApp.Version = "0.0.1"
+	coApp.Authors = []cli.Author{
 		{
 			Name:  "Linus Gasser",
 			Email: "linus.gasser@epfl.ch",
@@ -78,8 +78,8 @@ func main() {
 		},
 	}
 	commands = append(commands, keyGen)
-	conode.Commands = commands
-	conode.Flags = []cli.Flag{
+	coApp.Commands = commands
+	coApp.Flags = []cli.Flag{
 		cli.IntFlag{
 			Name:  "debug, d",
 			Usage: "debug level from 1 (only major operations) to 5 (very noisy text)",
@@ -87,12 +87,12 @@ func main() {
 		},
 	}
 	// sets the right debug options
-	conode.Before = func(c *cli.Context) error {
+	coApp.Before = func(c *cli.Context) error {
 		dbg.DebugVisible = c.GlobalInt("debug")
 		return nil
 	}
 
-	conode.Run(os.Args)
+	coApp.Run(os.Args)
 }
 
 // KeyGeneration will generate a fresh public / private key pair
@@ -101,7 +101,7 @@ func KeyGeneration(key, address string) {
 	if address == "" {
 		dbg.Fatal("You must call keygen with ipadress !")
 	}
-	address, err := cliutils.VerifyPort(address, defs.DefaultPort)
+	address, err := cliutils.VerifyPort(address, conode.DefaultPort)
 	if err != nil {
 		dbg.Fatal(err)
 	}
