@@ -31,7 +31,7 @@ main(){
     update
     echo Sleeping a bit
     sleep 10
-    ./start-conode run
+    exec ./start-conode run
     ;;
   *)
     echo Usage:
