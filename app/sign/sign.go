@@ -47,7 +47,7 @@ func main() {
 	if conf.Failures > 0 || conf.FFail > 0 {
 		opts.Faulty = true
 	}
-	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, opts)
+	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, s, opts)
 	if err != nil {
 		log.Fatal(err)
 	}
