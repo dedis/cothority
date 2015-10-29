@@ -21,6 +21,13 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// struct to ease keeping track of who requires a reply after
+// tsm is processed/ aggregated by the TSServer
+type MustReplyMessage struct {
+	Tsm defs.TimeStampMessage
+	To  string // name of reply destination
+}
+
 type Server struct {
 	sign.Signer
 	name    string
