@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -70,7 +70,7 @@ func RunServer(address string, conf *app.ConfigConode) {
 
 	var err error
 	// make sure address has a port or insert default one
-	address, err = cliutils.VerifyPort(address, defs.DefaultPort)
+	address, err = cliutils.VerifyPort(address, conode.DefaultPort)
 	if err != nil {
 		dbg.Fatal(err)
 	}

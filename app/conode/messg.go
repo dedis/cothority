@@ -3,18 +3,18 @@ package main
 import (
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/app/conode/defs"
+	"github.com/dedis/cothority/lib/conode"
 )
 
 // struct to ease keeping track of who requires a reply after
 // tsm is processed/ aggregated by the TSServer
 type MustReplyMessage struct {
-	Tsm defs.TimeStampMessage
+	Tsm conode.TimeStampMessage
 	To  string // name of reply destination
 }
 
 type LogEntry struct {
-	Seq  defs.SeqNo         // Consecutively-incrementing log entry sequence number
+	Seq  conode.SeqNo         // Consecutively-incrementing log entry sequence number
 	Root hashid.HashId // Merkle root of values committed this time-step
 	Time *int64        // Optional wall-clock time this entry was created
 }
@@ -28,7 +28,7 @@ type SignedEntry struct {
 // a cryptographic proof that it happened before a given newer entry.
 // The TSServer may be unable to process if Seq is beyond the retention window.
 type EntryRequest struct {
-	Seq defs.SeqNo // Sequence number of old entry requested
+	Seq conode.SeqNo // Sequence number of old entry requested
 }
 type EntryReply struct {
 	Log SignedEntry // Signed log entry
@@ -39,7 +39,7 @@ type EntryReply struct {
 // and the root of the history values committed within the node.
 // The TSServer may be unable to process if Old is beyond the retention window.
 type ProofRequest struct {
-	Old, New defs.SeqNo // Sequence number of old and new log records
+	Old, New conode.SeqNo // Sequence number of old and new log records
 }
 type ProofReply struct {
 	Prf proof.Proof // Requested Merkle proof
