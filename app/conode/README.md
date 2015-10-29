@@ -106,11 +106,27 @@ for anything else than running the conode. But there is no 100% guarantee!
 
 These are the steps to be part in the EPFL-conode-project:
 
+0. Compile Conode
 1. Create a private/public-key pair
 2. Send the public-key
 3. Validate the installation
 4. Start your conode
 5. Stamp your documents
+
+### Compile Conode
+
+For Conode to compile, you need to have the dedis/crypto-library in branch
+```shamir``` and the conode in branch ```development```. We suppose you have
+a running 
+
+```go get https://github.com/dedis/cothority
+cd $GOPATH/src/github.com/dedis/crypto
+git checkout shamir
+cd ../cothority
+git checkout development
+cd app/conode
+go build
+```
 
 ### Create private/public-key pair
 
