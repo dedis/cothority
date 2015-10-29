@@ -13,32 +13,6 @@ import (
 	"encoding/binary"
 )
 
-type test_sig struct {
-	Suite      string
-	AggPubKey  string
-	Name       string
-	Timestamp  int
-	Hash       string
-	Root       string
-	Proof      []string
-	Challenge  string
-	Response   string
-	Commitment string
-}
-
-var test_sig_1 = test_sig{
-	"25519",
-	"wuFmm+eMZX/6x8cYOCvIDgecdaQBMWuvBMbhvwqLbkE=",
-	"stamp",
-	1446036562,
-	"0wJIkPa+ekv1eYwWjNEXq0qz9WAQOv9mKUWWGaKDx20=",
-	"JdcMnvf+KMQ7LtJskjShtVDgh8pdcMP07fADg352zJA=",
-	[]string{"3rPzWy+trCfx6xk7vLABGhXW1o93Y3M4Mj+j4LrVHdE=", "SFe5UjALjJTJfCfIQuI+/re4tKS+NqprmKIhKtg30Lk=", "3rPzWy+trCfx6xk7vLABGhXW1o93Y3M4Mj+j4LrVHdE="},
-	"G6XTXmSMqL5vGyd+c/1EeF+DqBuYG9vm/D/PaIFmWfc=",
-	"DDMeJSRxxYk+RfnsGtqAkNvCsw29rBhZ/iLaj145f0g=",
-	"ixyyZ3kryOm4TLJU29wUzB1tEP0v3EkXP1W7bAGf/4E=",
-}
-
 var reply conode.StampReply
 var X0 abstract.Point
 var suite abstract.Suite
@@ -48,29 +22,32 @@ func init() {
 	dbg.DebugVisible = 1
 }
 
+// Verifies whether the Challenge is correct
 func TestVerifyChallenge(t *testing.T) {
-	readTestSig(test_sig_1)
+	setupTestSig()
 
 	err := conode.VerifyChallenge(suite, &reply)
-	if err == nil {
-		dbg.Lvl2("Verification passed")
+	if err != nil {
+		t.Error("Verification failed")
 	} else {
-		dbg.Fatal("Verification failed")
+		dbg.Lvl2("Verification passed")
 	}
 }
 
+// Verifies whether the X0 and hash is correct
 func TestVerifySignature(t *testing.T) {
-	readTestSig(test_sig_1)
+	setupTestSig()
 
-	if conode.VerifySignature(suite, &reply, X0, hash) {
-		dbg.Lvl2("Verification passed")
+	if !conode.VerifySignature(suite, &reply, X0, hash) {
+		t.Error("Verification failed")
 	} else {
-		dbg.Fatal("Verification failed")
+		dbg.Lvl2("Verification passed")
 	}
 }
 
+// Verifies whether the Schnorr signature is correct
 func TestVerifySchnorr(t *testing.T) {
-	readTestSig(test_sig_1)
+	setupTestSig()
 	var b bytes.Buffer
 	if err := binary.Write(&b, binary.LittleEndian, reply.Timestamp); err != nil {
 		dbg.Lvl1("Error marshaling the timestamp for signature verification")
@@ -84,16 +61,43 @@ func TestVerifySchnorr(t *testing.T) {
 	}
 }
 
-func TestReadTestSig(t *testing.T) {
-	readTestSig(test_sig_1)
-	if reply.SigBroad.X0_hat.Equal(X0) {
-		dbg.Lvl2("X0 is OK")
+// Checks the correct setup of the signature
+func TestsetupTestSig(t *testing.T) {
+	setupTestSig()
+	if !reply.SigBroad.X0_hat.Equal(X0) {
+		t.Error("X0 is not equal")
 	} else {
-		dbg.Fatal("X0 is not equal")
+		dbg.Lvl2("X0 is OK")
 	}
 }
 
-func readTestSig(sig test_sig) {
+type test_sig struct {
+	Suite      string
+	AggPubKey  string
+	Name       string
+	Timestamp  int
+	Hash       string
+	Root       string
+	Proof      []string
+	Challenge  string
+	Response   string
+	Commitment string
+}
+
+func setupTestSig() {
+	var sig = test_sig{
+		"25519",
+		"wuFmm+eMZX/6x8cYOCvIDgecdaQBMWuvBMbhvwqLbkE=",
+		"stamp",
+		1446036562,
+		"0wJIkPa+ekv1eYwWjNEXq0qz9WAQOv9mKUWWGaKDx20=",
+		"JdcMnvf+KMQ7LtJskjShtVDgh8pdcMP07fADg352zJA=",
+		[]string{"3rPzWy+trCfx6xk7vLABGhXW1o93Y3M4Mj+j4LrVHdE=", "SFe5UjALjJTJfCfIQuI+/re4tKS+NqprmKIhKtg30Lk=", "3rPzWy+trCfx6xk7vLABGhXW1o93Y3M4Mj+j4LrVHdE="},
+		"G6XTXmSMqL5vGyd+c/1EeF+DqBuYG9vm/D/PaIFmWfc=",
+		"DDMeJSRxxYk+RfnsGtqAkNvCsw29rBhZ/iLaj145f0g=",
+		"ixyyZ3kryOm4TLJU29wUzB1tEP0v3EkXP1W7bAGf/4E=",
+	}
+
 	suite = app.GetSuite(sig.Suite)
 	suite.Read(get64R(sig.AggPubKey), &X0)
 

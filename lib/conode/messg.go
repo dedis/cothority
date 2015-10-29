@@ -9,6 +9,10 @@ import (
 	"encoding/json"
 )
 
+// Default port for the conode-setup - the stamping-request port
+// is at ```DefaultPort + 1```
+var DefaultPort string = "2000"
+
 type MessageType int
 
 type SeqNo byte
