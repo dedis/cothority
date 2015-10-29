@@ -1,12 +1,10 @@
 package coconet
 
 import (
-	"encoding/gob"
+	"encoding/json"
 	"errors"
-	"math/rand"
 	"net"
 	"sync"
-	"time"
 	//"runtime/debug"
 
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -23,8 +21,8 @@ type TCPConn struct {
 	encLock sync.Mutex
 	name    string
 	conn    net.Conn
-	enc     *gob.Encoder
-	dec     *gob.Decoder
+	enc     *json.Encoder
+	dec     *json.Decoder
 
 	// pkLock guards the public key
 	pkLock sync.Mutex
@@ -41,8 +39,8 @@ func NewTCPConnFromNet(conn net.Conn) *TCPConn {
 	return &TCPConn{
 		name: conn.RemoteAddr().String(),
 		conn: conn,
-		enc:  gob.NewEncoder(conn),
-		dec:  gob.NewDecoder(conn)}
+		enc:  json.NewEncoder(conn),
+		dec:  json.NewDecoder(conn)}
 
 }
 
@@ -69,8 +67,8 @@ func (tc *TCPConn) Connect() error {
 	}
 	tc.encLock.Lock()
 	tc.conn = conn
-	tc.enc = gob.NewEncoder(conn)
-	tc.dec = gob.NewDecoder(conn)
+	tc.enc = json.NewEncoder(conn)
+	tc.dec = json.NewDecoder(conn)
 	tc.encLock.Unlock()
 	return nil
 }
@@ -118,7 +116,7 @@ func IsTemporary(err error) bool {
 // Put puts data to the connection.
 // Returns io.EOF on an irrecoverable error.
 // Returns actual error if it is Temporary.
-func (tc *TCPConn) Put(bm BinaryMarshaler) error {
+func (tc *TCPConn) PutData(bm BinaryMarshaler) error {
 	if tc.Closed() {
 		dbg.Lvl3("tcpconn: put: connection closed")
 		return ErrClosed
@@ -143,9 +141,9 @@ func (tc *TCPConn) Put(bm BinaryMarshaler) error {
 }
 
 // Get gets data from the connection.
-// Returns io.EOF on an irrecoveralbe error.
+// Returns io.EOF on an irrecoverable error.
 // Returns given error if it is Temporary.
-func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
+func (tc *TCPConn) GetData(bum BinaryUnmarshaler) error {
 	if tc.Closed() {
 		dbg.Lvl3("tcpconn: get: connection closed")
 		return ErrClosed
@@ -158,20 +156,21 @@ func (tc *TCPConn) Get(bum BinaryUnmarshaler) error {
 	dec := tc.dec
 	tc.encLock.Unlock()
 
-	if Latency != 0 {
-		time.Sleep(time.Duration(rand.Intn(Latency)) * time.Millisecond)
-	}
+	//if Latency != 0 {
+	//	time.Sleep(time.Duration(rand.Intn(Latency)) * time.Millisecond)
+	//}
 	err := dec.Decode(bum)
 	if err != nil {
 		if IsTemporary(err) {
+			dbg.Lvl2("Temporary error")
 			return err
 		}
 		// if it is an irrecoverable error
 		// close the channel and return that it has been closed
-		if err != io.EOF && err.Error() != "read tcp4"{
+		if err != io.EOF && err.Error() != "read tcp4" {
 			dbg.Lvl2("Couldn't decode packet at", tc.name, "error:", err)
 		} else {
-			dbg.Lvl3("Closing connection by EOF")
+			dbg.Lvl3("Closing connection by EOF: ", err)
 		}
 		tc.Close()
 		return ErrClosed

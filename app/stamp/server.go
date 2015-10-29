@@ -11,34 +11,34 @@ import (
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/cothority/lib/logutils"
 )
 
 type Server struct {
 	sign.Signer
-	name       string
-	Clients    map[string]coconet.Conn
+	name    string
+	Clients map[string]coconet.Conn
 
-							   // for aggregating messages from clients
+	// for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
 	READING    int
 	PROCESSING int
 
-							   // Leaves, Root and Proof for a round
-	Leaves     []hashid.HashId // can be removed after we verify protocol
-	Root       hashid.HashId
-	Proofs     []proof.Proof
+	// Leaves, Root and Proof for a round
+	Leaves []hashid.HashId // can be removed after we verify protocol
+	Root   hashid.HashId
+	Proofs []proof.Proof
 
-	rLock      sync.Mutex
-	maxRounds  int
-	closeChan  chan bool
+	rLock     sync.Mutex
+	maxRounds int
+	closeChan chan bool
 
-	Logger     string
-	Hostname   string
-	App        string
+	Logger   string
+	Hostname string
+	App      string
 }
 
 func NewServer(signer sign.Signer) *Server {
@@ -50,7 +50,7 @@ func NewServer(signer sign.Signer) *Server {
 	s.PROCESSING = 1
 
 	s.Signer = signer
-	s.Signer.RegisterAnnounceFunc(s.OnAnnounce())
+	s.Signer.RegisterCommitFunc(s.CommitFunc())
 	s.Signer.RegisterDoneFunc(s.OnDone())
 	s.rLock = sync.Mutex{}
 
@@ -62,7 +62,7 @@ func NewServer(signer sign.Signer) *Server {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s.name = net.JoinHostPort(h, strconv.Itoa(i + 1))
+		s.name = net.JoinHostPort(h, strconv.Itoa(i+1))
 	}
 	s.Queue[s.READING] = make([]MustReplyMessage, 0)
 	s.Queue[s.PROCESSING] = make([]MustReplyMessage, 0)
@@ -116,6 +116,8 @@ func (s *Server) Listen() error {
 						switch tsm.Type {
 						default:
 							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
+							c.Close()
+							return
 						case StampRequestType:
 							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
@@ -142,7 +144,7 @@ func (s *Server) ListenToClients() {
 		go func(c coconet.Conn) {
 			for {
 				tsm := TimeStampMessage{}
-				err := c.Get(&tsm)
+				err := c.GetData(&tsm)
 				if err == coconet.ErrClosed {
 					dbg.Lvlf1("%p Failed to get from client:", s, err)
 					s.Close()
@@ -215,7 +217,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound() + 1 > nRounds {
+	if s.LastRound()+1 > nRounds {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
@@ -230,7 +232,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 		case <-ticker:
 
 			start := time.Now()
-			dbg.Lvl4(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound() + 1, "of", nRounds)
+			dbg.Lvl4(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound()+1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -259,8 +261,8 @@ func (s *Server) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound() + 1 >= nRounds {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound() + 1, ">=", nRounds)
+			if s.LastRound()+1 >= nRounds {
+				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				// And tell everybody to quit
 				err := s.CloseAll(s.GetView())
 				if err != nil {
@@ -319,12 +321,12 @@ func (s *Server) Run(role string, nRounds int) {
 					return
 				default:
 				}
-				if i % 2 == 0 {
+				if i%2 == 0 {
 					dbg.Lvl4("removing self")
 					s.Signer.RemoveSelf()
 				} else {
-					dbg.Lvl4("adding self: ", hostlist[(i / 2) % len(hostlist)])
-					s.Signer.AddSelf(hostlist[(i / 2) % len(hostlist)])
+					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
+					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
 				}
 				i++
 			}
@@ -369,7 +371,7 @@ func (s *Server) Run(role string, nRounds int) {
 
 }
 
-func (s *Server) OnAnnounce() sign.CommitFunc {
+func (s *Server) CommitFunc() sign.CommitFunc {
 	return func(view int) []byte {
 		//dbg.Lvl4("Aggregating Commits")
 		return s.AggregateCommits(view)
@@ -447,7 +449,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	s.Root, s.Proofs = proof.ProofTree(s.Suite().Hash, s.Leaves)
 	if sign.DEBUG == true {
 		if proof.CheckLocalProofs(s.Suite().Hash, s.Root, s.Leaves, s.Proofs) == true {
-			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round " + strconv.Itoa(int(s.LastRound())))
+			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
 		} else {
 			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}
@@ -458,7 +460,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 // Send message to client given by name
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := s.Clients[name].Put(data)
+	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
 		s.Close()
 		return

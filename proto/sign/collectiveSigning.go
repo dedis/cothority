@@ -7,10 +7,10 @@ import (
 	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/coconet"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
 
@@ -21,13 +21,13 @@ import (
 // 4. Response
 
 // Get multiplexes all messages from TCPHost using application logic
-func (sn *Node) get() error {
+func (sn *Node) getMessages() error {
 	dbg.Lvl4(sn.Name(), "getting")
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
 	dbg.Lvl4("Going to get", sn.Name())
-	msgchan := sn.Host.Get()
+	msgchan := sn.Host.GetNetworkMessg()
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
 	sn.heartbeat = time.NewTimer(500 * time.Second)
@@ -50,25 +50,25 @@ func (sn *Node) get() error {
 			nm, ok := <-msgchan
 			err := nm.Err
 
-		// TODO: graceful shutdown voting
+			// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
 				dbg.Lvl3(sn.Name(), " getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}
 
-		// if it is a non-fatal error try again
+			// if it is a non-fatal error try again
 			if err != nil {
 				log.Errorln(sn.Name(), " error getting message (still continuing) ", err)
 				continue
 			}
-		// interpret network message as Signing Message
-		//log.Printf("got message: %#v with error %v\n", sm, err)
+			// interpret network message as Signing Message
+			//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
 			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
 
-		// don't act on future view if not caught up, must be done after updating vote index
+			// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
 			if sm.View > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
@@ -84,7 +84,7 @@ func (sn *Node) get() error {
 			default:
 				continue
 			case Announcement:
-				dbg.Lvl4(sn.Name(), "got announcement")
+				dbg.Lvl2(sn.Name(), "got announcement")
 				sn.ReceivedHeartbeat(sm.View)
 
 				var err error
@@ -100,24 +100,6 @@ func (sn *Node) get() error {
 				}
 				if err != nil {
 					log.Errorln(sn.Name(), "announce error:", err)
-				}
-
-			case Challenge:
-				dbg.Lvl4(sn.Name(), "got challenge")
-				if !sn.IsParent(sm.View, sm.From) {
-					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
-					continue
-				}
-				sn.ReceivedHeartbeat(sm.View)
-
-				var err error
-				if sm.Chm.Vote != nil {
-					err = sn.Accept(sm.View, sm.Chm)
-				} else {
-					err = sn.Challenge(sm.View, sm.Chm)
-				}
-				if err != nil {
-					log.Errorln(sn.Name(), "challenge error:", err)
 				}
 
 			// if it is a commitment or response it is from the child
@@ -137,6 +119,23 @@ func (sn *Node) get() error {
 				if err != nil {
 					log.Errorln(sn.Name(), "commit error:", err)
 				}
+			case Challenge:
+				dbg.Lvl4(sn.Name(), "got challenge")
+				if !sn.IsParent(sm.View, sm.From) {
+					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
+					continue
+				}
+				sn.ReceivedHeartbeat(sm.View)
+
+				var err error
+				if sm.Chm.Vote != nil {
+					err = sn.Accept(sm.View, sm.Chm)
+				} else {
+					err = sn.Challenge(sm.View, sm.Chm)
+				}
+				if err != nil {
+					log.Errorln(sn.Name(), "challenge error:", err)
+				}
 			case Response:
 				dbg.Lvl4(sn.Name(), "received response from", sm.From)
 				if !sn.IsChild(sm.View, sm.From) {
@@ -153,6 +152,9 @@ func (sn *Node) get() error {
 				if err != nil {
 					log.Errorln(sn.Name(), "response error:", err)
 				}
+			case SignatureBroadcast:
+				sn.ReceivedHeartbeat(sm.View)
+				err = sn.SignatureBroadcast(sm.View, sm.SBm, 0)
 			case CatchUpReq:
 				v := sn.VoteLog.Get(sm.Cureq.Index)
 				ctx := context.TODO()
@@ -170,7 +172,7 @@ func (sn *Node) get() error {
 				// put in votelog to be streamed and applied
 				sn.VoteLog.Put(vi, sm.Curesp.Vote)
 				// continue catching up
-				sn.CatchUp(vi + 1, sm.From)
+				sn.CatchUp(vi+1, sm.From)
 			case GroupChange:
 				if sm.View == -1 {
 					sm.View = sn.ViewNo
@@ -215,6 +217,9 @@ func (sn *Node) get() error {
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
+	if sn.AnnounceFunc != nil {
+		sn.AnnounceFunc(am)
+	}
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
 	}
@@ -222,6 +227,9 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	if err := sn.setUpRound(view, am); err != nil {
 		return err
 	}
+	// Store the message for the round
+	round := sn.Rounds[am.Round]
+	round.msg = am.Message
 
 	// Inform all children of announcement
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -241,6 +249,7 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	}
 
 	// return sn.Commit(view, am)
+	// If we are a leaf, start the commit phase process
 	if len(sn.Children(view)) == 0 {
 		sn.Commit(view, am.Round, nil)
 	}
@@ -259,6 +268,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		return nil
 	}
 
+	// signingmessage nil <=> we are a leaf
 	if sm != nil {
 		round.Commits = append(round.Commits, sm)
 	}
@@ -300,6 +310,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		// add good child server to combined public key, and point commit
 		sn.add(round.X_hat, sm.Com.X_hat)
 		sn.add(round.Log.V_hat, sm.Com.V_hat)
+		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
 	if sn.Type == PubKey {
@@ -308,7 +319,12 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 	} else {
 		dbg.Lvl4("sign.Node.Commit using Merkle")
 		sn.AddChildrenMerkleRoots(Round)
-		sn.AddLocalMerkleRoot(view, Round)
+		// compute the localmerkle root
+		if sn.CommitFunc != nil {
+			sn.AddLocalMerkleRoot(view, Round, sn.CommitFunc(view))
+		} else {
+			sn.AddLocalMerkleRoot(view, Round, make([]byte, hashid.Size))
+		}
 		sn.HashLog(Round)
 		sn.ComputeCombinedMerkleRoot(view, Round)
 		return sn.actOnCommits(view, Round)
@@ -322,6 +338,11 @@ func (sn *Node) actOnCommits(view, Round int) error {
 	var err error
 
 	if sn.IsRoot(view) {
+		dbg.Lvl5("Commit root : Aggregate Public Key :", round.X_hat)
+		//fmt.Println("Message is ", round.msg)
+		//if round.X_hat.Equal(sn.suite.Point().Null()) {
+		//	fmt.Println("Committt", round.X_hat)
+		//}
 		sn.commitsDone <- Round
 		err = sn.FinalizeCommits(view, Round)
 	} else {
@@ -371,7 +392,7 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 		dbg.Lvl4(sn.Name(), "challenge: using merkle proofs")
 		// messages from clients, proofs computed
 		if sn.CommitedFor(round) {
-			if err := sn.SendLocalMerkleProof(view, chm); err != nil {
+			if err := sn.StoreLocalMerkleProof(view, chm); err != nil {
 				return err
 			}
 
@@ -400,6 +421,8 @@ func (sn *Node) initResponseCrypto(Round int) {
 	round.r_hat = round.r
 }
 
+// Respond send the response UP from leaf to parent
+// called initially by the all the bottom leaves
 func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 	dbg.Lvl4(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
 	// update max seen round
@@ -526,7 +549,9 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 	}
 
 	// root reports round is done
+	// Sends the final signature to every one
 	if isroot {
+		sn.SignatureBroadcast(view, nil, Round)
 		sn.done <- Round
 	}
 
@@ -572,10 +597,12 @@ func (sn *Node) FinalizeCommits(view int, Round int) error {
 	round := sn.Rounds[Round]
 
 	// challenge = Hash(Merkle Tree Root/ Announcement Message, sn.Log.V_hat)
+	msg := round.msg
+	msg = append(msg, []byte(round.MTRoot)...)
 	if sn.Type == PubKey {
-		round.c = hashElGamal(sn.suite, sn.LogTest, round.Log.V_hat)
+		round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
 	} else {
-		round.c = hashElGamal(sn.suite, round.MTRoot, round.Log.V_hat)
+		round.c = hashElGamal(sn.suite, msg, round.Log.V_hat)
 	}
 
 	proof := make([]hashid.HashId, 0)
@@ -608,40 +635,43 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 		// round challenge must be recomputed given potential
 		// exception list
 		if sn.Type == PubKey {
-			round.c = hashElGamal(sn.suite, sn.LogTest, round.Log.V_hat)
-			c2 = hashElGamal(sn.suite, sn.LogTest, T)
+			round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
+			c2 = hashElGamal(sn.suite, sn.Message, T)
 		} else {
-			round.c = hashElGamal(sn.suite, round.MTRoot, round.Log.V_hat)
-			c2 = hashElGamal(sn.suite, round.MTRoot, T)
+			msg := round.msg
+			msg = append(msg, []byte(round.MTRoot)...)
+			round.c = hashElGamal(sn.suite, msg, round.Log.V_hat)
+			c2 = hashElGamal(sn.suite, msg, T)
 		}
 	}
 
 	// intermediary nodes check partial responses aginst their partial keys
 	// the root node is also able to check against the challenge it emitted
 	if !T.Equal(round.Log.V_hat) || (isroot && !round.c.Equal(c2)) {
-		if DEBUG == true {
-			panic(sn.Name() + "reports ElGamal Collective Signature failed for Round" + strconv.Itoa(Round))
-		}
-		// return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
-	}
-
-	if isroot {
+		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
+	} else if isroot {
 		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
-		nel := len(round.ExceptionList)
-		nhl := len(sn.HostListOn(view))
-		p := strconv.FormatFloat(float64(nel) / float64(nhl), 'f', 6, 64)
-		log.Infoln(sn.Name(), "reports", nel, "out of", nhl, "percentage", p, "failed in round", Round)
+		/*
+			nel := len(round.ExceptionList)
+			nhl := len(sn.HostListOn(view))
+			p := strconv.FormatFloat(float64(nel) / float64(nhl), 'f', 6, 64)
+			log.Infoln(sn.Name(), "reports", nel, "out of", nhl, "percentage", p, "failed in round", Round)
+		*/
 		// dbg.Lvl4(round.MTRoot)
 	}
 	return nil
 }
 
 func (sn *Node) TimeForViewChange() bool {
+	if sn.RoundsPerView == 0 {
+		// No view change asked
+		return false
+	}
 	sn.roundmu.Lock()
 	defer sn.roundmu.Unlock()
 
 	// if this round is last one for this view
-	if sn.LastSeenRound % sn.RoundsPerView == 0 {
+	if sn.LastSeenRound%sn.RoundsPerView == 0 {
 		// dbg.Lvl4(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
 		return true
 	}
@@ -673,6 +703,55 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	return nil
 }
 
+// This will broadcast the final signature to give to client
+// it contins the global Response adn global challenge
+func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
+	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
+	// Root is creating the sig broadcast
+	if sb == nil {
+		r := sn.Rounds[round]
+		if sn.IsRoot(view) {
+			sb = &SignatureBroadcastMessage{
+				R0_hat: r.r_hat,
+				C:      r.c,
+				X0_hat: r.X_hat,
+				V0_hat: r.Log.V_hat,
+			}
+		}
+	}
+	// messages from clients, proofs computed
+	//if sn.CommitedFor(sn.Round) {
+	sn.SendLocalMerkleProof(view, sb)
+	//}
+
+	// Inform all children of announcement
+	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+	for i := range messgs {
+		sm := SigningMessage{
+			Type:         SignatureBroadcast,
+			View:         view,
+			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			SBm:          sb,
+		}
+		messgs[i] = &sm
+	}
+
+	if len(sn.Children(view)) > 0 {
+		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
+		ctx := context.TODO()
+		if err := sn.PutDown(ctx, view, messgs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
+	if sn.DoneFunc != nil {
+		sn.DoneFunc(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
+	}
+}
+
 func (sn *Node) CloseAll(view int) error {
 	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
 
@@ -702,8 +781,6 @@ func (sn *Node) CloseAll(view int) error {
 	dbg.Lvl3("Closing down shop", sn.Isclosed)
 	return nil
 }
-
-
 
 func (sn *Node) PutUpError(view int, err error) {
 	// dbg.Lvl4(sn.Name(), "put up response with err", err)
@@ -746,6 +823,6 @@ func (sn *Node) hashLog(Round int) ([]byte, error) {
 }
 
 // Getting actual View
-func (sn *Node)GetView() int{
+func (sn *Node) GetView() int {
 	return sn.ViewNo
 }

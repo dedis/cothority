@@ -10,10 +10,10 @@ func (sn *Node) ChangeView(vcv *ViewChangeVote) {
 	sn.ViewNo = vcv.View
 	sn.viewmu.Unlock()
 	if sn.RootFor(vcv.View) == sn.Name() {
-		log.Println(sn.Name(), "CHANGE VIEW TO ROOT", "children", sn.Children(vcv.View))
+		log.Println(sn.Name(), "Change view to root", "children", sn.Children(vcv.View))
 		sn.viewChangeCh <- "root"
 	} else {
-		log.Println(sn.Name(), "CHANGE VIEW TO REGULAR")
+		log.Println(sn.Name(), "Change view to regular")
 		sn.viewChangeCh <- "regular"
 	}
 

@@ -38,8 +38,8 @@ func TestErrorMessage(t *testing.T) {
 // the various types of signing messages
 
 func TestMUAnnouncement(t *testing.T) {
-	logTest := []byte("Hello World")
-	sm := &sign.SigningMessage{Type: sign.Announcement, Am: &sign.AnnouncementMessage{LogTest: logTest}}
+	Message := []byte("Hello World")
+	sm := &sign.SigningMessage{Type: sign.Announcement, Am: &sign.AnnouncementMessage{Message: Message}}
 	dataBytes, err := sm.MarshalBinary()
 	if err != nil {
 		t.Error("Marshaling didn't work")

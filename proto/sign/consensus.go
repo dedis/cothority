@@ -8,6 +8,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/coconet"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 func (sn *Node) SetupProposal(view int, am *AnnouncementMessage, from string) error {
@@ -132,7 +133,7 @@ func (sn *Node) Promise(view, Round int, sm *SigningMessage) error {
 func (sn *Node) actOnPromises(view, Round int) error {
 	round := sn.Rounds[Round]
 	var err error
-
+	dbg.Lvl1("Act on Promise")
 	if sn.IsRoot(view) {
 		sn.commitsDone <- Round
 

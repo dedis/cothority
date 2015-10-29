@@ -18,8 +18,9 @@ import (
 	"reflect"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/nist"
+	"strings"
 	"syscall"
 )
 
@@ -38,7 +39,7 @@ type Flags struct {
 // to 'Flag'
 var RunFlags Flags
 
-func init() {
+func FlagInit() {
 	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
 	flag.StringVar(&RunFlags.Logger, "logger", "", "remote logger")
 	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
@@ -63,7 +64,7 @@ func ReadConfig(conf interface{}, dir ...string) {
 	if debug.IsValid() {
 		dbg.DebugVisible = debug.Interface().(int)
 	}
-
+	FlagInit()
 	flag.Parse()
 
 	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
@@ -120,7 +121,7 @@ func ServeMemoryStats() {
 			p, _ := strconv.Atoi(port)
 			// uncomment if more fine grained memory debuggin is needed
 			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p + 2)), nil)
+			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
 			dbg.Lvl3("Memory-stats server:", res)
 		}()
 	}
@@ -184,24 +185,31 @@ func getFullName(filename string, dirOpt ...string) string {
 	return dir + "/" + filepath.Base(filename)
 }
 
+// The various suites we can use
+var nist256 abstract.Suite = nist.NewAES128SHA256P256()
+var nist512 abstract.Suite = nist.NewAES128SHA256QR512()
+var edward abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
+var nist256Str string = strings.ToLower(nist256.String())
+var nist512Str string = strings.ToLower(nist512.String())
+var edwardsStr string = strings.ToLower(edward.String())
+
 // Helper functions that will return the suite used during the process from a string name
 func GetSuite(suite string) abstract.Suite {
-	var s abstract.Suite
-	switch {
-	case suite == "nist256":
-		s = nist.NewAES128SHA256P256()
-	case suite == "nist512":
-		s = nist.NewAES128SHA256QR512()
-	case suite == "ed25519":
-		s = ed25519.NewAES128SHA256Ed25519(true)
+	switch strings.ToLower(suite) {
+	case nist256Str: //"nist256", "p256":
+		return nist256
+	case nist512Str: //"p512":
+		return nist512
+	case edwardsStr, "ed25519":
+		return edward
 	default:
-		s = nist.NewAES128SHA256P256()
+		dbg.Lvl1("Got unknown suite", suite)
+		return edward
 	}
-	return s
 }
 
-func iiToF(sec int64, usec int64) float64{
-	return float64(sec) + float64(usec) / 1000000.0
+func iiToF(sec int64, usec int64) float64 {
+	return float64(sec) + float64(usec)/1000000.0
 }
 
 // Gets the sytem and the user time so far
@@ -213,7 +221,7 @@ func GetRTime() (tSys, tUsr float64) {
 }
 
 // Returns the difference to the given system- and user-time
-func GetDiffRTime(tSys, tUsr float64)(tDiffSys, tDiffUsr float64){
+func GetDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
 	nowSys, nowUsr := GetRTime()
 	return nowSys - tSys, nowUsr - tUsr
 }

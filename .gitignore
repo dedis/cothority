@@ -17,3 +17,12 @@ deploy/matplotlib/*csv
 deploy/matplotlib/*png
 deploy/matplotlib/imgs
 test/
+app/conode/key*
+app/conode/conode
+app/conode/stamp/stamp
+*.toml
+hosts.list
+hostfiles
+app/conode/conode-*
+app/conode/local_keys
+app/conode/real

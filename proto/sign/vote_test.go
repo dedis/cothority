@@ -56,7 +56,7 @@ func TestTCPStaticConfigVote(t *testing.T) {
 	// give it some time to set up
 	time.Sleep(2 * time.Second)
 
-	hc.SNodes[0].LogTest = []byte("Hello Voting")
+	hc.SNodes[0].Message = []byte("Hello Voting")
 	vote := &sign.Vote{Type: sign.RemoveVT, Rv: &sign.RemoveVote{Name: "host5", Parent: "host4"}}
 	err = hc.SNodes[0].StartVotingRound(vote)
 

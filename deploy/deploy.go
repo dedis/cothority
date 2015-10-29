@@ -53,13 +53,12 @@ const (
 	ShamirSign string = "shamir"
 	CollSign   string = "sign"
 	CollStamp  string = "stamp"
-	Naive       string = "naive"
+	Naive      string = "naive"
 	NTree      string = "ntree"
 )
 
 func init() {
 	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
-	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Debugging-level. 0 is silent, 5 is flood")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
@@ -111,7 +110,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	var f *os.File
 	// Write the header
 	firstStat := GetStats(runconfigs[0])
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 	defer f.Close()
 	if err != nil {
 		log.Fatal("error opening test file:", err)
@@ -164,8 +163,8 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		}
 
 		cl, err := os.OpenFile(
-			TestFile("client_latency_" + name + "_" + strconv.Itoa(i)),
-			os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
+			TestFile("client_latency_"+name+"_"+strconv.Itoa(i)),
+			os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 		if err != nil {
 			log.Fatal("error opening test file:", err)
 		}

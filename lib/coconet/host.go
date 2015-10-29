@@ -75,7 +75,7 @@ type Host interface {
 	// Multiple listeners will receive disjoint sets of messages.
 	// When receiving from the channels always recieve from both the network
 	// messages channel as well as the error channel.
-	Get() chan NetworkMessg
+	GetNetworkMessg() chan NetworkMessg
 
 	// Connect connects to the parent in the given view.
 	Connect(view int) error
