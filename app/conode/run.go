@@ -91,6 +91,13 @@ func RunServer(address string, conf *app.ConfigConode) {
 		dbg.Fatal(err)
 	}
 
+	// Listen to stamp-requests on port 2001
+	stampers, err := RunTimestamper(hc, 0, address)
+	if err != nil {
+		dbg.Fatal(err)
+	}
+
+	// Start the cothority-listener on port 2000
 	err = hc.Run(true, sign.MerkleTree, address)
 	if err != nil {
 		dbg.Fatal(err)
@@ -101,10 +108,6 @@ func RunServer(address string, conf *app.ConfigConode) {
 		sn.Close()
 	}(hc.SNodes[0])
 
-	stampers, err := RunTimestamper(hc, 0, address)
-	if err != nil {
-		dbg.Fatal(err)
-	}
 	for _, s := range stampers {
 		// only listen if this is the hostname specified
 		if s.Name() == address {

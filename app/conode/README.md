@@ -14,11 +14,10 @@ Some known limitations that we would like to address as soon as possible:
 
 * No exception-handling if a node is down
 * Each time you add nodes to your tree, the collective public signature changes
-
-And some technical additions that we would like to do:
-
-* Update automatically the tree on a running conode
-* Update the program while the conode is running
+* BACKDOOR-POSSIBILITY: the script ```start-conode``` downloads the latest
+version of the conode-binaries, together with the definition of the tree. This
+means we have to trust github for not putting up something fancy, and you have
+to trust me I don't do it neither.
 
 ## Participate in the EPFL-conode
 
@@ -36,6 +35,7 @@ These are the steps to be part in the EPFL-conode-project:
 2. Create the keypair and validate the installation
 3. Start your conode
 4. Stamp your documents
+5. Updating the binaries
 
 ### Download the binary distribution
 
@@ -93,15 +93,40 @@ To verify whether a document is correctly stamped and still valid, run
 
 ```./stamp verify file```
 
+### Updating the binaries
+
+Every time the conode quits (for example the root-node quit), it searches on
+github to see if there is a new version of the script available. If it finds
+a new one, it downloads it, untars it and re-launches the script.
+
+This of course is a high security-risk. We do our best not to use your server
+for anything else than running the conode. But there is no 100% guarantee!
+
 ## Participate in the EPFL-conode - compile your own version
 
 These are the steps to be part in the EPFL-conode-project:
 
+0. Compile Conode
 1. Create a private/public-key pair
 2. Send the public-key
 3. Validate the installation
 4. Start your conode
 5. Stamp your documents
+
+### Compile Conode
+
+For Conode to compile, you need to have the dedis/crypto-library in branch
+```shamir``` and the conode in branch ```development```. We suppose you have
+a running 
+
+```go get https://github.com/dedis/cothority
+cd $GOPATH/src/github.com/dedis/crypto
+git checkout shamir
+cd ../cothority
+git checkout development
+cd app/conode
+go build
+```
 
 ### Create private/public-key pair
 

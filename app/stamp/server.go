@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/crypto/abstract"
 )
 
 type Server struct {
@@ -109,7 +110,7 @@ func (s *Server) Listen() error {
 				go func(c coconet.Conn) {
 					for {
 						tsm := TimeStampMessage{}
-						err := c.Get(&tsm)
+						err := c.GetData(&tsm)
 						if err != nil {
 							dbg.Lvlf1("%p Failed to get from child:", s, err)
 							s.Close()
@@ -375,7 +376,8 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 }
 
 func (s *Server) OnDone() sign.DoneFunc {
-	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof) {
+	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
+	sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
