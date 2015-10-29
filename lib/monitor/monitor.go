@@ -50,9 +50,9 @@ func Monitor(stats *Stats) error {
 			}
 			conn, err := ln.Accept()
 			if err != nil {
-				operr := err.(*net.OpError)
+				operr, ok := err.(*net.OpError)
 				// We cant accept anymore we closed the listener
-				if operr.Op == "accept" {
+				if ok && operr.Op == "accept" {
 					break
 				}
 				dbg.Lvl1("Error while monitor accept connection : ", operr)

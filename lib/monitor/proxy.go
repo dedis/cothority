@@ -64,6 +64,11 @@ func Proxy(redirection string) {
 		for finished == false {
 			conn, err := ln.Accept()
 			if err != nil {
+				operr, ok := err.(*net.OpError)
+				// the listener is closed
+				if ok && operr.Op == "accept" {
+					break
+				}
 				dbg.Lvl1("Error proxy accepting connection : ", err)
 				continue
 			}
@@ -86,6 +91,7 @@ func Proxy(redirection string) {
 				// everything is finished
 				serverEnc.Encode(Measure{Name: "end"})
 				serverConn.Close()
+				ln.Close()
 				finished = true
 				break
 			}
