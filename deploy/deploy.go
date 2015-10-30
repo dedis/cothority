@@ -25,6 +25,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -159,8 +160,8 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		ppms := rc.Get("ppm")
 		mach, _ := strconv.Atoi(machs)
 		ppm, _ := strconv.Atoi(ppms)
-		rc.Put("machines", 1)
-		rc.Put("ppm", ppm*mach)
+		rc.Put("machines", "1")
+		rc.Put("ppm", strconv.Itoa(ppm*mach))
 	}
 	rs := monitor.NewStats(rc.Map())
 
