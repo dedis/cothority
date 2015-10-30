@@ -8,7 +8,7 @@ main(){
   case "$1" in
   setup)
     if [ -f key.pub ]; then
-      echo "Key.pub already exists - if you want to re-create, please delete it first"
+      echo -e "\n*** Key.pub already exists - if you want to re-create, please delete it first\n"
     else
       ./conode keygen $2
     fi

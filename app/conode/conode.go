@@ -62,11 +62,7 @@ func main() {
 		Usage:     "Create a new key pair and binding the public part to your address. ",
 		ArgsUsage: "ADRESS[:PORT] will be the address binded to the generated public key",
 		Action: func(c *cli.Context) {
-			if c.String("key") != "" {
-				KeyGeneration(c.String("key"), c.Args().First())
-			} else {
-				KeyGeneration(defaultKeyFile, c.Args().First())
-			}
+			KeyGeneration(c.String("key"), c.Args().First())
 		},
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -102,6 +98,7 @@ func KeyGeneration(key, address string) {
 		dbg.Fatal("You must call keygen with ipadress !")
 	}
 	address, err := cliutils.VerifyPort(address, conode.DefaultPort)
+	dbg.Print("Address is", address)
 	if err != nil {
 		dbg.Fatal(err)
 	}
