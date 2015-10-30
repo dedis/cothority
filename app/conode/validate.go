@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
 	"net"
+	"os"
 )
 
 // This file handles the validation process
@@ -27,8 +28,8 @@ func init() {
 		Aliases: []string{"v"},
 		Usage:   "conode will wait in validation mode",
 		Description: "It will be running conode a whole day, and " +
-			"the development team will run the check mode many times during the day" +
-			"to see if your server is elligible to being incorporated in the cothority tree",
+		"the development team will run the check mode many times during the day" +
+		"to see if your server is elligible to being incorporated in the cothority tree",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "key, k",
@@ -59,7 +60,7 @@ func Validation(keyFile string) {
 	}
 
 	var conn net.Conn
-	for ; ; conn.Close() {
+	for ;; conn.Close() {
 		dbg.Lvl1("Will wait for the verifier connection ...")
 		// Accept the one
 		conn, err = ln.Accept()
@@ -86,17 +87,22 @@ func Validation(keyFile string) {
 
 		var er string = "Validation is NOT correct, something is wrong about your "
 		// All went fine
-		if ack.Code == SYS_OK {
-			dbg.Lvl1("Validation is done and correct ! You should receive an email from development team soon.")
-		} else if ack.Code == SYS_WRONG_HOST {
-			dbg.Lvl1(er + "HOSTNAME")
-		} else if ack.Code == SYS_WRONG_SOFT {
-			dbg.Lvl1(er + "SOFT limits")
-		} else if ack.Code == SYS_WRONG_SIG {
-			dbg.Lvl1(er + "signature !")
-		} else {
+		dbg.Lvl2("Received code", ack)
+		switch ack.Code{
+		default:
 			dbg.Lvl1("Validation received unknown ACK : type = ", ack.Type, " Code = ", ack.Code)
 			continue
+		case SYS_OK:
+			dbg.Lvl1("Validation is done and correct ! You should receive an email from development team soon.")
+		case SYS_WRONG_HOST:
+			dbg.Lvl1(er + "HOSTNAME")
+		case SYS_WRONG_SOFT:
+			dbg.Lvl1(er + "SOFT limits")
+		case SYS_WRONG_SIG:
+			dbg.Lvl1(er + "signature !")
+		case SYS_EXIT:
+			dbg.Lvl1("Exiting - need to update to get config.toml")
+			os.Exit(1)
 		}
 	}
 }

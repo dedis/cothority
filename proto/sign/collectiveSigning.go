@@ -338,6 +338,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 	var err error
 
 	if sn.IsRoot(view) {
+		// BUG: when removing the dbg.Lvl5, returns 'invalid elliptic curve'
 		dbg.Lvl5("Commit root : Aggregate Public Key :", round.X_hat)
 		//fmt.Println("Message is ", round.msg)
 		//if round.X_hat.Equal(sn.suite.Point().Null()) {
