@@ -8,12 +8,17 @@ main(){
   case "$1" in
   setup)
     if [ -f key.pub ]; then
-      echo "Key.pub already exists - if you want to re-create, please delete it first"
+      echo -e "\n*** Key.pub already exists - if you want to re-create, please delete it first\n"
     else
       ./conode keygen $2
     fi
     cat key.pub
     ./conode validate
+    if [ "$?" = "1" ]; then
+      echo Received exit-command - will update and run
+      update
+      exec ./start-conode run
+    fi
     ;;
   run)
     if [ ! -f config.toml ]; then

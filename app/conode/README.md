@@ -8,7 +8,7 @@ signed hash together with the inclusion-proof.
 A simple program is given that can get the hash of a file signed and check
 the validity of a signature-file.
 
-## Limitations
+## Limitations / Disclaimer
 
 Some known limitations that we would like to address as soon as possible:
 
@@ -50,8 +50,8 @@ https://github.com/dedis/cothority/releases/latest
 
 and download the latest .tar.gz and untar it (replace with latest version)
 
-```wget http:///DeDiS/cothority/releases/download/0.5/conode-0.5.2.tar.gz
-tar xf conode-0.5.2.tar.gz```
+```wget http:///DeDiS/cothority/releases/download/0.5/conode-0.5.5.tar.gz
+tar xf conode-0.5.5.tar.gz```
 
 ### Create the keypair and validate the installation
 
@@ -70,15 +70,17 @@ running. If you want to quit the ```screen```, you can do so by typing
 
 ```screen -r conode```
 
+If everything goes well and your conode is active for at least 24h, it will 
+automatically exit, get the tree-information and start to run in
+conode-mode.
+
 ### Start your conode
 
-Once the installation has been verified, change back to the screen and abort
-the running conode with ```<ctrl>c```. Now you can run the real conode:
+Once the installation has been verified, it will change automatically into
+running mode. If at a later time you stop it and want to restart it, use
+the following command:
 
 ```./start-conode run```
-
-Because the ```config.toml``` which descsribes the other nodes is missing, it
-will download the newest package and install that one.
 
 ### Stamp some documents
 
