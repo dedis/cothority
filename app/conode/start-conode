@@ -14,6 +14,11 @@ main(){
     fi
     cat key.pub
     ./conode validate
+    if [ "$?" = "1" ]; then
+      echo Received exit-command - will update and run
+      update
+      exec ./start-conode run
+    fi
     ;;
   run)
     if [ ! -f config.toml ]; then
