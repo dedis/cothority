@@ -16,7 +16,7 @@ import (
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
 var Sink = "0.0.0.0"
-var SinkPort = "3000"
+var SinkPort = "10000"
 
 // mutex is used to update the global stats from many connections
 var mutex *sync.Mutex
@@ -55,7 +55,7 @@ func Monitor(stats *Stats) error {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl1("Error while monitor accept connection : ", operr)
+				dbg.Lvl2("Error while monitor accept connection : ", operr)
 				continue
 			}
 			dbg.Lvl3("Monitor : new connection from ", conn.RemoteAddr().String())

@@ -20,13 +20,13 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"net"
 	"os"
 	"reflect"
 	"time"
-	"github.com/dedis/cothority/lib/cliutils"
 )
 
 /// Encoding part ///
@@ -229,7 +229,7 @@ func (c *TcpConn) Send(obj ProtocolMessage) error {
 	err = c.enc.Encode(&am)
 	if err != nil {
 		fmt.Printf("Error sending application message ..")
-		os.Exit(1)
+		return err
 	}
 	return err
 }
