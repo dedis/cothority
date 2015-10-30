@@ -11,9 +11,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/proof"
@@ -349,11 +349,20 @@ func (s *Server) OnDone() sign.DoneFunc {
 			} else {
 				dbg.Lvl2("Inclusion-proof failed")
 			}
-
+			reply := &conode.StampReply{
+				AggPublic:  sb.X0_hat,
+				AggCommit:  sb.V0_hat,
+				Response:   sb.R0_hat,
+				Challenge:  sb.C,
+				Timestamp:  s.Timestamp,
+				SuiteStr:   suite.String(),
+				MerkleRoot: SNRoot,
+				Prf:        combProof,
+			}
 			respMessg := &conode.TimeStampMessage{
 				Type:  conode.StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &conode.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  reply}
 			s.PutToClient(msg.To, respMessg)
 			dbg.Lvl1("Sent signature response back to client")
 		}
@@ -411,7 +420,6 @@ func (s *Server) AggregateCommits(view int) []byte {
 			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}
 	}
-
 	return s.Root
 }
 
@@ -419,6 +427,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
+		dbg.Lvl3("Error putting to client : ", err)
 		s.Close()
 		return
 	}

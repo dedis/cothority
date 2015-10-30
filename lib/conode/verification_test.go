@@ -1,16 +1,16 @@
 package conode_test
 
 import (
-	"github.com/dedis/cothority/lib/conode"
-	"testing"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/app"
-	"encoding/base64"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"bytes"
-	"io"
-	"github.com/dedis/cothority/lib/hashid"
+	"encoding/base64"
 	"encoding/binary"
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/conode"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/crypto/abstract"
+	"io"
+	"testing"
 )
 
 var reply conode.StampReply
@@ -53,7 +53,7 @@ func TestVerifySchnorr(t *testing.T) {
 		dbg.Lvl1("Error marshaling the timestamp for signature verification")
 	}
 	msg := append(b.Bytes(), []byte(reply.MerkleRoot)...)
-	err := conode.VerifySchnorr(suite, msg, X0, reply.SigBroad.C, reply.SigBroad.R0_hat);
+	err := conode.VerifySchnorr(suite, msg, X0, reply.Challenge, reply.Response)
 	if err != nil {
 		dbg.Fatal("Schnorr verification failed")
 	} else {
@@ -64,7 +64,7 @@ func TestVerifySchnorr(t *testing.T) {
 // Checks the correct setup of the signature
 func TestsetupTestSig(t *testing.T) {
 	setupTestSig()
-	if !reply.SigBroad.X0_hat.Equal(X0) {
+	if !reply.AggPublic.Equal(X0) {
 		t.Error("X0 is not equal")
 	} else {
 		dbg.Lvl2("X0 is OK")
@@ -104,24 +104,23 @@ func setupTestSig() {
 	reply.SuiteStr = sig.Suite
 	reply.Timestamp = int64(sig.Timestamp)
 	reply.MerkleRoot = get64(sig.Root)
-	reply.PrfLen = 0
 	var proof []hashid.HashId
-	for _, p := range (sig.Proof) {
+	for _, p := range sig.Proof {
 		proof = append(proof, get64(p))
 	}
 	reply.Prf = proof
 
-	suite.Read(get64R(sig.Challenge), &reply.SigBroad.C)
-	suite.Read(get64R(sig.Response), &reply.SigBroad.R0_hat)
-	suite.Read(get64R(sig.Commitment), &reply.SigBroad.V0_hat)
-	suite.Read(get64R(sig.AggPubKey), &reply.SigBroad.X0_hat)
+	suite.Read(get64R(sig.Challenge), &reply.Challenge)
+	suite.Read(get64R(sig.Response), &reply.Response)
+	suite.Read(get64R(sig.Commitment), &reply.AggCommit)
+	suite.Read(get64R(sig.AggPubKey), &reply.AggPublic)
 
 	hash = get64(sig.Hash)
 
-	dbg.Lvl3("Challenge", reply.SigBroad.C)
-	dbg.Lvl3("Response", reply.SigBroad.R0_hat)
-	dbg.Lvl3("Commitment", reply.SigBroad.V0_hat)
-	dbg.Lvl3("AggPubKey", reply.SigBroad.X0_hat)
+	dbg.Lvl3("Challenge", reply.Challenge)
+	dbg.Lvl3("Response", reply.Response)
+	dbg.Lvl3("Commitment", reply.AggCommit)
+	dbg.Lvl3("AggPubKey", reply.AggPublic)
 }
 
 func get64R(str string) io.Reader {
