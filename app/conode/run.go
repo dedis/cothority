@@ -174,7 +174,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 	return stampers, nil
 }
 
-// Simple ephemereal helper for comptability issues
+// Simple ephemeral helper for comptability issues
 // From base64 => hexadecimal
 func convertTree(t *graphs.Tree) {
 	point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
@@ -193,7 +193,7 @@ func convertTree(t *graphs.Tree) {
 }
 
 // Add our own private key in the tree. This function exists because of
-// compatilibty issues with the graphs/ lib.
+// compatibility issues with the graphs/ lib.
 func addPrivateKey(address string, conf *app.ConfigConode) {
 	fn := func(t *graphs.Tree) {
 		// this is our node in the tree
