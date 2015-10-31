@@ -1,4 +1,4 @@
-package main
+package conode
 
 import (
 	"bytes"
@@ -11,7 +11,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
@@ -22,14 +21,16 @@ import (
 	"os"
 )
 
+var ROUND_TIME time.Duration = sign.ROUND_TIME
+
 // struct to ease keeping track of who requires a reply after
 // tsm is processed/ aggregated by the TSServer
 type MustReplyMessage struct {
-	Tsm conode.TimeStampMessage
+	Tsm TimeStampMessage
 	To  string // name of reply destination
 }
 
-type Server struct {
+type ConodeServer struct {
 	sign.Signer
 	name    string
 	Clients map[string]coconet.Conn
@@ -56,8 +57,8 @@ type Server struct {
 	App      string
 }
 
-func NewServer(signer sign.Signer) *Server {
-	s := &Server{}
+func NewServer(signer sign.Signer) *ConodeServer {
+	s := &ConodeServer{}
 
 	s.Clients = make(map[string]coconet.Conn)
 	s.Queue = make([][]MustReplyMessage, 2)
@@ -88,7 +89,7 @@ func NewServer(signer sign.Signer) *Server {
 
 var clientNumber int = 0
 
-func (s *Server) Close() {
+func (s *ConodeServer) Close() {
 	dbg.Lvl4("closing stampserver: %p", s.name)
 	s.closeChan <- true
 	s.Signer.Close()
@@ -97,7 +98,7 @@ func (s *Server) Close() {
 // listen for clients connections
 // this server needs to be running on a different port
 // than the Signer that is beneath it
-func (s *Server) Listen() error {
+func (s *ConodeServer) Listen() error {
 	global, _ := cliutils.GlobalBind(s.name)
 	dbg.LLvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
@@ -123,7 +124,7 @@ func (s *Server) Listen() error {
 
 				go func(co coconet.Conn) {
 					for {
-						tsm := conode.TimeStampMessage{}
+						tsm := TimeStampMessage{}
 						err := co.GetData(&tsm)
 						dbg.Lvl2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
 						if err != nil {
@@ -134,17 +135,17 @@ func (s *Server) Listen() error {
 						switch tsm.Type {
 						default:
 							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
-						case conode.StampRequestType:
+						case StampRequestType:
 							s.mux.Lock()
 							READING := s.READING
 							s.Queue[READING] = append(s.Queue[READING],
 								MustReplyMessage{Tsm: tsm, To: co.Name()})
 							s.mux.Unlock()
-						case conode.StampClose:
+						case StampClose:
 							dbg.Lvl2("Closing connection")
 							co.Close()
 							return
-						case conode.StampExit:
+						case StampExit:
 							dbg.Lvl1("Exiting server upon request")
 							os.Exit(-1)
 						}
@@ -157,7 +158,7 @@ func (s *Server) Listen() error {
 	return nil
 }
 
-func (s *Server) ConnectToLogger() {
+func (s *ConodeServer) ConnectToLogger() {
 	return
 	if s.Logger == "" || s.Hostname == "" || s.App == "" {
 		dbg.Lvl4("skipping connect to logger")
@@ -169,7 +170,7 @@ func (s *Server) ConnectToLogger() {
 	log.AddHook(lh)
 }
 
-func (s *Server) LogReRun(nextRole string, curRole string) {
+func (s *ConodeServer) LogReRun(nextRole string, curRole string) {
 	if nextRole == "root" {
 		var messg = s.Name() + " became root"
 		if curRole == "root" {
@@ -202,7 +203,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 
 }
 
-func (s *Server) runAsRoot(nRounds int) string {
+func (s *ConodeServer) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
 	if s.LastRound()+1 > nRounds && nRounds >= 0 {
@@ -255,7 +256,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 	}
 }
 
-func (s *Server) runAsRegular() string {
+func (s *ConodeServer) runAsRegular() string {
 	select {
 	case <-s.closeChan:
 		dbg.Lvl3("server", s.Name(), "has closed the connection")
@@ -268,7 +269,7 @@ func (s *Server) runAsRegular() string {
 
 // Listen on client connections. If role is root also send annoucement
 // for all of the nRounds
-func (s *Server) Run(role string) {
+func (s *ConodeServer) Run(role string) {
 	// defer func() {
 	// 	log.Infoln(s.Name(), "CLOSE AFTER RUN")
 	// 	s.Close()
@@ -314,7 +315,7 @@ func (s *Server) Run(role string) {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (s *Server) AnnounceFunc() sign.AnnounceFunc {
+func (s *ConodeServer) AnnounceFunc() sign.AnnounceFunc {
 	return func(am *sign.AnnouncementMessage) {
 		var t int64
 		if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
@@ -324,14 +325,14 @@ func (s *Server) AnnounceFunc() sign.AnnounceFunc {
 	}
 }
 
-func (s *Server) CommitFunc() sign.CommitFunc {
+func (s *ConodeServer) CommitFunc() sign.CommitFunc {
 	return func(view int) []byte {
 		//dbg.Lvl4("Aggregating Commits")
 		return s.AggregateCommits(view)
 	}
 }
 
-func (s *Server) OnDone() sign.DoneFunc {
+func (s *ConodeServer) OnDone() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
 		sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 		s.mux.Lock()
@@ -350,10 +351,10 @@ func (s *Server) OnDone() sign.DoneFunc {
 				dbg.Lvl2("Inclusion-proof failed")
 			}
 
-			respMessg := &conode.TimeStampMessage{
-				Type:  conode.StampReplyType,
+			respMessg := &TimeStampMessage{
+				Type:  StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &conode.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  &StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
 			s.PutToClient(msg.To, respMessg)
 			dbg.Lvl1("Sent signature response back to client")
 		}
@@ -363,7 +364,7 @@ func (s *Server) OnDone() sign.DoneFunc {
 
 }
 
-func (s *Server) AggregateCommits(view int) []byte {
+func (s *ConodeServer) AggregateCommits(view int) []byte {
 	//dbg.Lvl4(s.Name(), "calling AggregateCommits")
 	s.mux.Lock()
 	// get data from s once to avoid refetching from structure
@@ -416,7 +417,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 }
 
 // Send message to client given by name
-func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
+func (s *ConodeServer) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
 		s.Close()
