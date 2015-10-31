@@ -263,7 +263,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 			}
 
 			if s.LastRound()+1 >= nRounds {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
+				//log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				// And tell everybody to quit
 				err := s.CloseAll(s.GetView())
 				if err != nil {
@@ -307,7 +307,7 @@ func (s *Server) Run(role string, nRounds int) {
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()
+	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Signer closed:", err) }()
 	if role == "test_connect" {
 		role = "regular"
 		go func() {
