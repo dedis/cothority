@@ -183,7 +183,7 @@ func StampFile(file, server string) {
 		dbg.Fatal("Couldn't write file", err)
 	}
 
-	dbg.Lvl1("Signature file", file + ".sig", "written.")
+	dbg.Lvl1("Stamp OK - signature file", file + ".sig", "written.")
 }
 
 // Verify signature takes a file name and the name of the signature file
