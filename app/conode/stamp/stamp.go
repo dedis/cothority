@@ -27,14 +27,11 @@ import (
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
 	"io"
-	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -171,55 +168,13 @@ func StampFile(file, server string) {
 	// Create the hash of the file and send it over the net
 	myHash := hashFile(file)
 
-	// First get a connection. Get a random one if no server provided
-	if server == "" {
-		serverPort := strings.Split(conf.Hosts[rand.Intn(len(conf.Hosts))], ":")
-		server = serverPort[0]
-		port, _ := strconv.Atoi(serverPort[1])
-		server += ":" + strconv.Itoa(port + 1)
-	}
-	if !strings.Contains(server, ":") {
-		server += ":" + defaultPort
-	}
-	dbg.Lvl2("Connecting to", server)
-	conn := coconet.NewTCPConn(server)
-	err := conn.Connect()
+	stamper, err := conode.NewStamp("config.toml")
 	if err != nil {
-		dbg.Fatal("Error when getting the connection to the host:", err)
+		dbg.Fatal("Couldn't setup stamper:", err)
 	}
-	dbg.Lvl1("Connected to ", server)
-	msg := &conode.TimeStampMessage{
-		Type:  conode.StampRequestType,
-		ReqNo: 0,
-		Sreq:  &conode.StampRequest{Val: myHash}}
-
-	err = conn.PutData(msg)
+	tsm, err := stamper.GetStamp(string(myHash), server)
 	if err != nil {
-		dbg.Fatal("Couldn't send hash-message to server: ", err)
-	}
-	dbg.Lvl1("Sent signature request")
-	// Wait for the signed message
-	tsm := &conode.TimeStampMessage{}
-	tsm.Srep = &conode.StampReply{}
-	tsm.Srep.SuiteStr = suite.String()
-	err = conn.GetData(tsm)
-	if err != nil {
-		dbg.Fatal("Error while receiving signature:", err)
-	}
-	dbg.Lvl1("Got signature response")
-
-	// Asking to close the connection
-	err = conn.PutData(&conode.TimeStampMessage{
-		ReqNo: 1,
-		Type:  conode.StampClose,
-	})
-	conn.Close()
-	dbg.Lvl2("Connection closed with server")
-	// Verify if what we received is correct
-	if !conode.VerifySignature(suite, tsm.Srep, public_X0, myHash) {
-		dbg.Fatal("Verification of signature failed")
-	} else {
-		dbg.Lvl1("Verification OK")
+		dbg.Fatal("Stamper didn't succeed:", err)
 	}
 
 	// Write the signature to the file
