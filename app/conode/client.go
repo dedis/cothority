@@ -144,7 +144,7 @@ func streamMessgs(c *Client, servers []string, rate int) ([]int64, []int64, []in
 			secToTimeStamp := t.Seconds()
 			secSinceFirst := time.Since(tFirst).Seconds()
 			atomic.AddInt64(&buck[int(secSinceFirst)], 1)
-			index := int(secToTimeStamp) / int(ROUND_TIME / time.Second)
+			index := int(secToTimeStamp) / int(conode.ROUND_TIME / time.Second)
 			atomic.AddInt64(&roundsAfter[index], 1)
 			atomic.AddInt64(&times[tick], t.Nanoseconds())
 

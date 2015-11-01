@@ -15,7 +15,7 @@ import (
 
 
 // Make connections and run server.go
-func RunServer(address string, conf *app.ConfigConode) {
+func RunServer(address string, conf *app.ConfigConode, cb Callbacks) {
 	suite := app.GetSuite(conf.Suite)
 
 	var err error
@@ -42,7 +42,7 @@ func RunServer(address string, conf *app.ConfigConode) {
 	}
 
 	// Listen to stamp-requests on port 2001
-	stampers, err := RunTimestamper(hc, 0, address)
+	stampers, err := RunTimestamper(hc, 0, cb, address)
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func RunServer(address string, conf *app.ConfigConode) {
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string) ([]*ConodeServer, error) {
+func RunTimestamper(hc *graphs.HostConfig, nclients int, cb Callbacks, hostnameSlice ...string) ([]*Peer, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
@@ -92,13 +92,13 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 		}
 	}
 	// for each client in
-	stampers := make([]*ConodeServer, 0, len(hostnames))
+	stampers := make([]*Peer, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
 		if _, ok := hostnames[sn.Name()]; !ok {
 			dbg.Lvl1("signing node not in hostnmaes")
 			continue
 		}
-		stampers = append(stampers, NewServer(sn))
+		stampers = append(stampers, NewPeer(sn, cb))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
 			stampers[len(stampers) - 1].Listen()
@@ -126,7 +126,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 
 // Simple ephemereal helper for comptability issues
 // From base64 => hexadecimal
-func convertTree(suite *abstract.Suite, t *graphs.Tree) {
+func convertTree(suite abstract.Suite, t *graphs.Tree) {
 	point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
 	if err != nil {
 		dbg.Fatal("Could not decode base64 public key")
@@ -138,7 +138,7 @@ func convertTree(suite *abstract.Suite, t *graphs.Tree) {
 	}
 	t.PubKey = str
 	for _, c := range t.Children {
-		convertTree(c, suite)
+		convertTree(suite, c)
 	}
 }
 

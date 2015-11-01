@@ -1,17 +1,11 @@
 package main
 
 import (
-	"errors"
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/cothority/proto/sign"
-	"net"
-	"strconv"
-	"strings"
 )
 
 func init() {
@@ -61,6 +55,5 @@ func Run(configFile, key string) {
 		conf.Public = pub
 		address = addr
 	}
-	RunServer(address, conf)
-
+	conode.RunServer(address, conf, conode.NewCallbacksStamper())
 }
