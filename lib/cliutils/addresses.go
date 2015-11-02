@@ -22,14 +22,18 @@ func init() {
 // directly. Both operation checks if the port is correct.
 func VerifyPort(address string, port int) (string, error) {
 	p := strconv.Itoa(port)
-	if subs := addressRegexp.FindStringSubmatch(address); len(subs) == 0 {
+	subs := addressRegexp.FindStringSubmatch(address)
+	switch{
+	case len(subs) == 0:
 		// address does not contain a port
 		return address + ":" + p, checkPort(port)
-	} else if len(subs) == 3 && subs[2] == "" { // we got a addres: style ..??
+	case len(subs) == 3 && subs[2] == "":
+		// we got a addres: style ..??
 		return address + p, checkPort(port)
-	} else if len(subs) == 3 { // we got full address already address:port
+	case len(subs) == 3:
+		// we got full address already address:port
 		sp, err := strconv.Atoi(subs[2])
-		if err != nil{
+		if err != nil {
 			return address, errors.New("Not a valid port-number given")
 		}
 		return address, checkPort(sp)
