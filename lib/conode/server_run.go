@@ -1,18 +1,17 @@
 package conode
 
 import (
+	"errors"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/proto/sign"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"errors"
-	"strconv"
-"net"
-"strings"
 	"github.com/dedis/crypto/abstract"
+	"net"
+	"strconv"
+	"strings"
 )
-
 
 // Make connections and run server.go
 func RunServer(address string, conf *app.ConfigConode, cb Callbacks) {
@@ -101,7 +100,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, cb Callbacks, hostnameS
 		stampers = append(stampers, NewPeer(sn, cb))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
-			stampers[len(stampers) - 1].Listen()
+			stampers[len(stampers)-1].Setup()
 		}
 	}
 	dbg.Lvl3("stampers:", stampers)

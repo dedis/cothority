@@ -9,51 +9,62 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
-"github.com/dedis/cothority/lib/cliutils"
-"net"
+	"net"
 	"os"
 )
-
 
 // Callbacks holds the functions that are used to define the
 // behaviour of a peer. All different peer-types use the
 // cothority-tree, but they can interact differently with
 // each other
 type Callbacks interface {
-	// AnnounceFunc is called from the root-node whenever an
+	// RoundMessageFunc is called from the root-node whenever an
 	// announcement is made. It returns an AnnounceFunc which
 	// has to write the "Message"-field of its AnnouncementMessage
 	// argument.
-	AnnounceFunc(*Peer) sign.AnnounceFunc
+	RoundMessageFunc() sign.RoundMessageFunc
+	// OnAnnounceFunc returns an OnAnnouncFunc which takes a AnnouncementMessage as
+	// a parameters. It is used so clients of this api can save the message for this round
+	// and give to any application layer they need.
+	OnAnnounceFunc() sign.OnAnnounceFunc
 	// CommitFunc is called whenever a commitement is ready to
 	// be signed. It's sign.CommitFunc has to return a slice
 	// of bytes that will go into the merkle-tree.
 	CommitFunc(*Peer) sign.CommitFunc
+
+	// ValidateFunc is called in validation mode. In validation mode, each
+	// signer's contribution is broadcasted and is run through this function.
+	// It must returns false if this peer does not validate the message (for
+	// example a certificate for a domain owned by someone else!)
+	//	ValidateFunc() sign.ValidateFunc
 	// OnDone is called whenever the signature is completed and
 	// the results are propagated through the tree.
-	OnDone(*Peer) sign.DoneFunc
-	// Listen starts the port to let timestamps enter the system
-	Listen(*Peer) error
+	OnDone(*Peer) sign.OnDoneFunc
+	// Setup will be called before the peer joins the tree
+	// You can do any stuff inside like listening for clients connections etc
+	Setup(*Peer) error
 }
 
+// CallbacksStamper is an implementation fo Callbacks which define a stamper
+// server
 type CallbacksStamper struct {
-							   // for aggregating messages from clients
+	// for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
 	READING    int
 	PROCESSING int
 
-							   // Leaves, Root and Proof for a round
-	Leaves     []hashid.HashId // can be removed after we verify protocol
-	Root       hashid.HashId
-	Proofs     []proof.Proof
-							   // Timestamp message for this Round
-	Timestamp  int64
+	// Leaves, Root and Proof for a round
+	Leaves []hashid.HashId // can be removed after we verify protocol
+	Root   hashid.HashId
+	Proofs []proof.Proof
+	// Timestamp message for this Round
+	Timestamp int64
 
 	Clients map[string]coconet.Conn
 }
@@ -70,8 +81,15 @@ func NewCallbacksStamper() *CallbacksStamper {
 	return cbs
 }
 
+// StartAnnouncementFunc is the function that will return the current timestamp
+// in unix int64 format. This message will be forwarded along the tree so every
+// signatures for this round will have this timestamp
+func (cs *CallbacksStamper) RoundMessageFunc() sign.RoundMessageFunc {
+	return sign.DefaultRoundMessageFunc
+}
+
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *CallbacksStamper) AnnounceFunc(p *Peer) sign.AnnounceFunc {
+func (cs *CallbacksStamper) OnAnnounceFunc() sign.OnAnnounceFunc {
 	return func(am *sign.AnnouncementMessage) {
 		var t int64
 		if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
@@ -125,7 +143,7 @@ func (cs *CallbacksStamper) CommitFunc(p *Peer) sign.CommitFunc {
 		cs.Root, cs.Proofs = proof.ProofTree(p.Suite().Hash, cs.Leaves)
 		if sign.DEBUG == true {
 			if proof.CheckLocalProofs(p.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
-				dbg.Lvl4("Local Proofs of", p.Name(), "successful for round " + strconv.Itoa(int(p.LastRound())))
+				dbg.Lvl4("Local Proofs of", p.Name(), "successful for round "+strconv.Itoa(int(p.LastRound())))
 			} else {
 				panic("Local Proofs" + p.Name() + " unsuccessful for round " + strconv.Itoa(int(p.LastRound())))
 			}
@@ -135,9 +153,16 @@ func (cs *CallbacksStamper) CommitFunc(p *Peer) sign.CommitFunc {
 	}
 }
 
-func (cs *CallbacksStamper) OnDone(p *Peer) sign.DoneFunc {
+// ValidateFunc returns a alwaays-true function since we did not implement
+// validation mode yet.
+func (cs *CallbacksStamper) ValidateFunc() sign.ValidateFunc {
+	return func(vbm *sign.ValidationBroadcastMessage) bool {
+		return true
+	}
+}
+func (cs *CallbacksStamper) OnDone(p *Peer) sign.OnDoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, pr proof.Proof,
-	sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+		sb *sign.SignatureBroadcastMessage) {
 		cs.mux.Lock()
 		for i, msg := range cs.Queue[cs.PROCESSING] {
 			// proof to get from s.Root to big root
@@ -157,7 +182,7 @@ func (cs *CallbacksStamper) OnDone(p *Peer) sign.DoneFunc {
 			respMessg := &TimeStampMessage{
 				Type:  StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &StampReply{SuiteStr: suite.String(), Timestamp: cs.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+				Srep:  &StampReply{SuiteStr: p.Suite().String(), Timestamp: cs.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
 			cs.PutToClient(p, msg.To, respMessg)
 			dbg.Lvl1("Sent signature response back to client")
 		}
@@ -179,8 +204,8 @@ func (cs *CallbacksStamper) PutToClient(p *Peer, name string, data coconet.Binar
 	}
 }
 
-// Starts to listen for stamper-requests
-func (cs *CallbacksStamper) Listen(p *Peer) error{
+// Setu will start to listen to clients connections for stamping request
+func (cs *CallbacksStamper) Setup(p *Peer) error {
 	global, _ := cliutils.GlobalBind(p.name)
 	dbg.LLvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
