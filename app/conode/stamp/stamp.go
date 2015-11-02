@@ -202,7 +202,7 @@ func StampFile(file, server string) {
 	dbg.Lvl1("Sent signature request")
 	// Wait for the signed message
 	tsm := &conode.TimeStampMessage{}
-	tsm.Srep = &conode.StampReply{}
+	tsm.Srep = &conode.StampSignature{}
 	tsm.Srep.SuiteStr = suite.String()
 	err = conn.GetData(tsm)
 	if err != nil {
@@ -244,7 +244,7 @@ func VerifyFileSignature(file, sigFile string) bool {
 		sigFile = file + sigExtension
 	}
 	// read the sig
-	signature := conode.StampReply{
+	signature := conode.StampSignature{
 		SuiteStr: suite.String(),
 	}
 	if err := signature.Open(sigFile); err != nil {

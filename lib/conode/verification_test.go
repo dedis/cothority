@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-var reply conode.StampReply
+var reply conode.StampSignature
 var X0 abstract.Point
 var suite abstract.Suite
 var hash []byte

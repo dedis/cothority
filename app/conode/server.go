@@ -349,7 +349,7 @@ func (s *Server) OnDone() sign.DoneFunc {
 			} else {
 				dbg.Lvl2("Inclusion-proof failed")
 			}
-			reply := &conode.StampReply{
+			reply := &conode.StampSignature{
 				AggPublic:  sb.X0_hat,
 				AggCommit:  sb.V0_hat,
 				Response:   sb.R0_hat,
@@ -360,7 +360,7 @@ func (s *Server) OnDone() sign.DoneFunc {
 				Prf:        combProof,
 			}
 			respMessg := &conode.TimeStampMessage{
-				Type:  conode.StampReplyType,
+				Type:  conode.StampSignatureType,
 				ReqNo: msg.Tsm.ReqNo,
 				Srep:  reply}
 			s.PutToClient(msg.To, respMessg)

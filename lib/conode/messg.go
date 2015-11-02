@@ -24,7 +24,7 @@ type SeqNo byte
 const (
 	Error MessageType = iota
 	StampRequestType
-	StampReplyType
+	StampSignatureType
 	StampClose
 	StampExit
 )
@@ -36,7 +36,7 @@ type StampRequest struct {
 // NOTE: In order to decoe correctly the Proof, we need to the get the suite
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
-type StampReply struct {
+type StampSignature struct {
 	SuiteStr   string
 	Timestamp  int64           // The timestamp requested for the file
 	MerkleRoot []byte          // root of the merkle tree
@@ -56,7 +56,7 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-func (sr *StampReply) MarshalJSON() ([]byte, error) {
+func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 	var b bytes.Buffer
 	suite := app.GetSuite(sr.SuiteStr)
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic); err != nil {
@@ -77,7 +77,7 @@ func (sr *StampReply) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (sr *StampReply) UnmarshalJSON(dataJSON []byte) error {
+func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	aux := &struct {
 		SignatureInfo []byte
 		Timestamp     int64
@@ -118,7 +118,7 @@ type sigFile struct {
 
 // Write will write the struct in a human readable format into this writer
 // The format is TOML and most fields are written in base64
-func (sr *StampReply) Save(file string) error {
+func (sr *StampSignature) Save(file string) error {
 	var p []string
 	for _, pr := range sr.Prf {
 		p = append(p, base64.StdEncoding.EncodeToString(pr))
@@ -160,7 +160,7 @@ func (sr *StampReply) Save(file string) error {
 	return nil
 }
 
-func (sr *StampReply) Open(file string) error {
+func (sr *StampSignature) Open(file string) error {
 	// Read in the toml-file
 	sigStr := &sigFile{}
 	err := app.ReadTomlConfig(sigStr, file)
@@ -200,11 +200,11 @@ func (sr *StampReply) Open(file string) error {
 	return nil
 }
 
-func (Sreq StampReply) MarshalBinary() ([]byte, error) {
+func (Sreq StampSignature) MarshalBinary() ([]byte, error) {
 	dbg.Fatal("Don't want to do MarshalBinary on StampReply")
 	return nil, nil
 }
-func (Sreq *StampReply) UnmarshalBinary(data []byte) error {
+func (Sreq *StampSignature) UnmarshalBinary(data []byte) error {
 	dbg.Fatal("Don't want to do UnarmsahlBinary on StampReply")
 	return nil
 }
@@ -214,7 +214,7 @@ type TimeStampMessage struct {
 	// ErrorReply *ErrorReply // Generic error reply to any request
 	Type MessageType
 	Sreq *StampRequest
-	Srep *StampReply
+	Srep *StampSignature
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {

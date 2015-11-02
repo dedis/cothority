@@ -14,7 +14,7 @@ import (
 // is correct.
 // Message is your own hash, and reply contains the inclusion proof + signature
 // on the aggregated message
-func VerifySignature(suite abstract.Suite, reply *StampReply, public abstract.Point, message []byte) bool {
+func VerifySignature(suite abstract.Suite, reply *StampSignature, public abstract.Point, message []byte) bool {
 	// Check if aggregate public key is correct
 	if !public.Equal(reply.AggPublic) {
 		dbg.Lvl1("Aggregate-public-key check : FAILED (maybe you have an outdated config file of the tree)")
@@ -53,7 +53,7 @@ func VerifySignature(suite abstract.Suite, reply *StampReply, public abstract.Po
 // verifyChallenge will reconstruct the challenge in order to see if any of the
 // components of the challenge has been spoofed or not. It may be a different
 // timestamp .
-func VerifyChallenge(suite abstract.Suite, reply *StampReply) error {
+func VerifyChallenge(suite abstract.Suite, reply *StampSignature) error {
 
 	// marshal the V
 	pbuf, err := reply.AggCommit.MarshalBinary()
