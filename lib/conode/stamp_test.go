@@ -1,9 +1,10 @@
 package conode_test
+
 import (
-	"testing"
 	"github.com/dedis/cothority/lib/conode"
 	"os"
 	"os/exec"
+	"testing"
 	"time"
 )
 
@@ -15,7 +16,7 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't open config-file:", err)
 	}
 
-	tsm, err := s.GetStamp("test", "")
+	tsm, err := s.GetStamp([]byte("test"), "")
 	if err != nil {
 		t.Fatal("Couldn't get stamp from server:", err)
 	}
@@ -38,6 +39,6 @@ func runConode() {
 	time.Sleep(time.Second * 2)
 }
 
-func stopConode(){
+func stopConode() {
 	exec.Command("killall", "conode").Run()
 }

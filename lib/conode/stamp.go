@@ -5,17 +5,18 @@
  * cothority.
  */
 package conode
+
 import (
-	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/coconet"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"strings"
-	"strconv"
-	"math/rand"
-	"github.com/dedis/crypto/abstract"
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/coconet"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/crypto/abstract"
+	"math/rand"
+	"strconv"
+	"strings"
 )
 
 type Stamp struct {
@@ -43,7 +44,11 @@ func NewStamp(file string) (*Stamp, error) {
 
 // GetStamp contacts the "server" and waits for the "msg" to
 // be signed
-func (s *Stamp)GetStamp(msg, server string) (*TimeStampMessage, error) {
+// If server is empty, it will contact one randomly
+func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
+	if server == "" {
+		server = s.Config.Hosts[rand.Intn(len(s.Config.Hosts))]
+	}
 	err := s.connect(server)
 	if err != nil {
 		return nil, err
@@ -60,7 +65,7 @@ func (s *Stamp)GetStamp(msg, server string) (*TimeStampMessage, error) {
 	}
 
 	// Verify if what we received is correct
-	if !VerifySignature(s.Suite, tsm.Srep, s.X0, []byte(msg)) {
+	if !VerifySignature(s.Suite, tsm.Srep, s.X0, msg) {
 		return nil, fmt.Errorf("Verification of signature failed")
 	}
 
@@ -68,13 +73,13 @@ func (s *Stamp)GetStamp(msg, server string) (*TimeStampMessage, error) {
 }
 
 // Used to connect to server
-func (s *Stamp)connect(server string) error {
+func (s *Stamp) connect(server string) error {
 	// First get a connection. Get a random one if no server provided
 	if server == "" {
 		serverPort := strings.Split(s.Config.Hosts[rand.Intn(len(s.Config.Hosts))], ":")
 		server = serverPort[0]
 		port, _ := strconv.Atoi(serverPort[1])
-		server += ":" + strconv.Itoa(port + 1)
+		server += ":" + strconv.Itoa(port+1)
 	}
 	if !strings.Contains(server, ":") {
 		server += ":2000"
@@ -92,11 +97,11 @@ func (s *Stamp)connect(server string) error {
 
 // This stamps the message, but the connection already needs
 // to be set up
-func (s *Stamp)stamp(msg string)(*TimeStampMessage, error) {
+func (s *Stamp) stamp(msg []byte) (*TimeStampMessage, error) {
 	tsmsg := &TimeStampMessage{
 		Type:  StampRequestType,
 		ReqNo: 0,
-		Sreq:  &StampRequest{Val: []byte(msg)}}
+		Sreq:  &StampRequest{Val: msg}}
 
 	err := s.conn.PutData(tsmsg)
 	if err != nil {
@@ -117,12 +122,12 @@ func (s *Stamp)stamp(msg string)(*TimeStampMessage, error) {
 }
 
 // Asking to close the connection
-func (s *Stamp)disconnect() error {
+func (s *Stamp) disconnect() error {
 	err := s.conn.PutData(&TimeStampMessage{
 		ReqNo: 1,
 		Type:  StampClose,
 	})
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
