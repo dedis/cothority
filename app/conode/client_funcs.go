@@ -174,7 +174,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	case err = <-myChan:
 		//log.Println("-------------client received  response from" + TSServerName)
 		break
-	case <-time.After(10 * ROUND_TIME):
+	case <-time.After(10 * conode.ROUND_TIME):
 		dbg.Lvl3("client timeouted on waiting for response from" + TSServerName)
 		break
 		// err = ErrClientToTSTimeout
