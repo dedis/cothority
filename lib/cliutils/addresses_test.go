@@ -27,3 +27,21 @@ func TestVerifyPort(t *testing.T) {
 		t.Error("address should generated is not correct: added port and :")
 	}
 }
+
+func TestGetPort(t *testing.T){
+	if GetPort("localhost", 2000 ) != 2000 {
+		t.Error("Didn't get correct default-port")
+	}
+	if GetPort("localhost:2001", 2000) != 2001{
+		t.Error("Didn't extract correct port")
+	}
+}
+
+func TestGetAddress(t *testing.T){
+	if GetAddress("localhost") != "localhost"{
+		t.Error("Didn't get correct address for address-only")
+	}
+	if GetAddress("localhost:2000") != "localhost"{
+		t.Error("Didn't separate address and port")
+	}
+}
