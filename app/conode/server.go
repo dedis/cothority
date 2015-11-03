@@ -239,7 +239,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 				log.WithFields(log.Fields{
 					"file": logutils.File(),
 					"type": "view_change",
-				}).Info("Tried to stary signing round on " + s.Name() + " but it reports view change in progress")
+				}).Info("Tried to start signing round on " + s.Name() + " but it reports view change in progress")
 				// skip # of failed round
 				time.Sleep(1 * time.Second)
 				break
@@ -323,49 +323,8 @@ func (s *Server) AnnounceFunc() sign.OnAnnounceFunc {
 			dbg.Lvl1("Unmashaling timestamp has failed")
 		}
 		s.Timestamp = t
+		s.Signer.(*sign.Node).Messages = 0
 	}
-}
-
-func (s *Server) CommitFunc() sign.CommitFunc {
-	return func(view int) []byte {
-		//dbg.Lvl4("Aggregating Commits")
-		return s.AggregateCommits(view)
-	}
-}
-
-func (s *Server) OnDone() sign.OnDoneFunc {
-	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	sb *sign.SignatureBroadcastMessage) {
-		s.mux.Lock()
-		s.Signer.(*sign.Node).MessagesInRun += s.Signer.(*sign.Node).Messages
-		dbg.Lvl1("Messages in round", s.LastRound(), ":",
-			sb.Messages, "; Overall number of messages:", s.Signer.(*sign.Node).MessagesInRun)
-		for i, msg := range s.Queue[s.PROCESSING] {
-			// proof to get from s.Root to big root
-			combProof := make(proof.Proof, len(p))
-			copy(combProof, p)
-
-			// add my proof to get from a leaf message to my root s.Root
-			combProof = append(combProof, s.Proofs[i]...)
-
-			// proof that I can get from a leaf message to the big root
-			if proof.CheckProof(s.Signer.(*sign.Node).Suite().Hash, SNRoot, s.Leaves[i], combProof) {
-				dbg.Lvl2("Proof is OK")
-			} else {
-				dbg.Lvl2("Inclusion-proof failed")
-			}
-
-			respMessg := &conode.TimeStampMessage{
-				Type:  conode.StampReplyType,
-				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &conode.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
-			s.PutToClient(msg.To, respMessg)
-			dbg.Lvl1("Sent signature response back to client")
-		}
-		s.mux.Unlock()
-		s.Timestamp = 0
-	}
-
 }
 
 func (s *Server) AggregateCommits(view int) []byte {
@@ -421,6 +380,48 @@ func (s *Server) AggregateCommits(view int) []byte {
 	}
 
 	return s.Root
+}
+
+func (s *Server) CommitFunc() sign.CommitFunc {
+	return func(view int) []byte {
+		//dbg.Lvl4("Aggregating Commits")
+		return s.AggregateCommits(view)
+	}
+}
+
+func (s *Server) OnDone() sign.OnDoneFunc {
+	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
+	sb *sign.SignatureBroadcastMessage) {
+		s.mux.Lock()
+		s.Signer.(*sign.Node).MessagesInRun += s.Signer.(*sign.Node).Messages
+		dbg.Lvl1("Messages in round", s.LastRound(), ":",
+			sb.Messages, "; Overall number of messages:", s.Signer.(*sign.Node).MessagesInRun)
+		for i, msg := range s.Queue[s.PROCESSING] {
+			// proof to get from s.Root to big root
+			combProof := make(proof.Proof, len(p))
+			copy(combProof, p)
+
+			// add my proof to get from a leaf message to my root s.Root
+			combProof = append(combProof, s.Proofs[i]...)
+
+			// proof that I can get from a leaf message to the big root
+			if proof.CheckProof(s.Signer.(*sign.Node).Suite().Hash, SNRoot, s.Leaves[i], combProof) {
+				dbg.Lvl2("Proof is OK")
+			} else {
+				dbg.Lvl2("Inclusion-proof failed")
+			}
+
+			respMessg := &conode.TimeStampMessage{
+				Type:  conode.StampReplyType,
+				ReqNo: msg.Tsm.ReqNo,
+				Srep:  &conode.StampReply{SuiteStr: suite.String(), Timestamp: s.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+			s.PutToClient(msg.To, respMessg)
+			dbg.Lvl1("Sent signature response back to client")
+		}
+		s.mux.Unlock()
+		s.Timestamp = 0
+	}
+
 }
 
 // Send message to client given by name
