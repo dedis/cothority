@@ -18,7 +18,6 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
 	"os"
 )
 
@@ -336,7 +335,7 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 
 func (s *Server) OnDone() sign.OnDoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+	sb *sign.SignatureBroadcastMessage) {
 		s.mux.Lock()
 		s.Signer.(*sign.Node).MessagesInRun += s.Signer.(*sign.Node).Messages
 		dbg.Lvl1("Messages in round", s.LastRound(), ":",
