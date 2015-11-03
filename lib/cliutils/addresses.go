@@ -50,6 +50,26 @@ func GlobalBind(address string) (string, error) {
 	return "0.0.0.0:" + addr[1], nil
 }
 
+// Gets the port-number, if none is found, returns
+// 'def'
+func GetPort(address string, def int)int{
+	if strings.Contains(address, ":"){
+		port, err := strconv.Atoi(strings.Split(address, ":")[1])
+		if err == nil {
+			return port
+		}
+	}
+	return def
+}
+
+// Gets the address-part and ignores the port
+func GetAddress(address string) string{
+	if strings.Contains(address, ":"){
+		return strings.Split(address, ":")[0]
+	}
+	return address
+}
+
 // Simply returns an error if the port is invalid
 func checkPort(port int) error {
 	if port < 1 || port > 65535 {

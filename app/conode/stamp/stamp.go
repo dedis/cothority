@@ -172,7 +172,7 @@ func StampFile(file, server string) {
 	if err != nil {
 		dbg.Fatal("Couldn't setup stamper:", err)
 	}
-	tsm, err := stamper.GetStamp(string(myHash), server)
+	tsm, err := stamper.GetStamp(myHash, server)
 	if err != nil {
 		dbg.Fatal("Stamper didn't succeed:", err)
 	}
