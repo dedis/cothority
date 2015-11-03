@@ -65,9 +65,9 @@ func NewServer(signer sign.Signer) *Server {
 	s.PROCESSING = 1
 
 	s.Signer = signer
-	s.Signer.RegisterAnnounceFunc(s.AnnounceFunc())
+	s.Signer.RegisterOnAnnounceFunc(s.AnnounceFunc())
 	s.Signer.RegisterCommitFunc(s.CommitFunc())
-	s.Signer.RegisterDoneFunc(s.OnDone())
+	s.Signer.RegisterOnDoneFunc(s.OnDone())
 	s.rLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -205,7 +205,7 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 
 func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
-	ticker := time.Tick(ROUND_TIME)
+	ticker := time.Tick(conode.ROUND_TIME)
 	if s.LastRound() + 1 > nRounds && nRounds >= 0 {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
@@ -317,7 +317,7 @@ func (s *Server) Run(role string) {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (s *Server) AnnounceFunc() sign.AnnounceFunc {
+func (s *Server) AnnounceFunc() sign.OnAnnounceFunc {
 	return func(am *sign.AnnouncementMessage) {
 		var t int64
 		if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
@@ -334,7 +334,7 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 	}
 }
 
-func (s *Server) OnDone() sign.DoneFunc {
+func (s *Server) OnDone() sign.OnDoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
 	sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 		s.mux.Lock()

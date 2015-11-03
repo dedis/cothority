@@ -66,10 +66,11 @@ type Node struct {
 	LastSeenRound       int                       // largest round number I have seen
 	RoundsAsRoot        int                       // latest continuous streak of rounds with sn root
 
-	AnnounceLock        sync.Mutex
-	AnnounceFunc        AnnounceFunc
-	CommitFunc          CommitFunc
-	DoneFunc            DoneFunc
+	AnnounceLock     sync.Mutex
+	OnAnnounceFunc   OnAnnounceFunc
+	RoundMessageFunc RoundMessageFunc
+	CommitFunc       CommitFunc
+	OnDoneFunc       OnDoneFunc
 
 												  // NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
 	roundLock           sync.RWMutex
@@ -192,8 +193,12 @@ func (sn *Node) RegisterCommitFunc(cf CommitFunc) {
 	sn.CommitFunc = cf
 }
 
-func (sn *Node) RegisterDoneFunc(df DoneFunc) {
-	sn.DoneFunc = df
+func (sn *Node) RegisterOnDoneFunc(df OnDoneFunc) {
+	sn.OnDoneFunc = df
+}
+
+func (sn *Node) RegisterRoundMessageFunc(rm RoundMessageFunc) {
+	sn.RoundMessageFunc = rm
 }
 
 func (sn *Node) logFirstPhase(firstRoundTime time.Duration) {
@@ -227,8 +232,8 @@ var MAX_WILLING_TO_WAIT time.Duration = 50 * time.Second
 
 var ChangingViewError error = errors.New("In the process of changing view")
 
-func (sn *Node) RegisterAnnounceFunc(af AnnounceFunc) {
-	sn.AnnounceFunc = af
+func (sn *Node) RegisterOnAnnounceFunc(af OnAnnounceFunc) {
+	sn.OnAnnounceFunc = af
 }
 
 func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
@@ -236,8 +241,8 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	defer sn.AnnounceLock.Unlock()
 
 	// notify upstream of announcement
-	if sn.AnnounceFunc != nil {
-		sn.AnnounceFunc(am)
+	if sn.OnAnnounceFunc != nil {
+		sn.OnAnnounceFunc(am)
 	}
 
 	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
@@ -349,9 +354,13 @@ func (sn *Node) StartSigningRound() error {
 
 	sn.nRounds++
 	// Adding timestamp
-	ts := time.Now().UTC()
 	var b bytes.Buffer
-	binary.Write(&b, binary.LittleEndian, ts.Unix())
+	if sn.RoundMessageFunc != nil {
+		b.Write(sn.RoundMessageFunc(sn.nRounds))
+	} else {
+		ts := time.Now().UTC()
+		binary.Write(&b, binary.LittleEndian, ts.Unix())
+	}
 	return sn.StartAnnouncement(
 		&AnnouncementMessage{Message: b.Bytes(), Round: sn.nRounds})
 }
