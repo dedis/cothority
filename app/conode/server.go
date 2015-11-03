@@ -338,8 +338,9 @@ func (s *Server) OnDone() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
 	sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 		s.mux.Lock()
-		dbg.Lvl1("Got signature broadcast for round", s.LastRound(), "- whole tree did",
-			sb.Messages, "signatures during that round")
+		s.Signer.(*sign.Node).MessagesInRun += s.Signer.(*sign.Node).Messages
+		dbg.Lvl1("Messages in round", s.LastRound(), ":",
+			sb.Messages, "; Overall number of messages:", s.Signer.(*sign.Node).MessagesInRun)
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
 			combProof := make(proof.Proof, len(p))

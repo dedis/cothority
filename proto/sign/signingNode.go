@@ -109,6 +109,7 @@ type Node struct {
 	Proof               proof.Proof
 	MTRoot              hashid.HashId             // the very root of the big Merkle Tree
 	Messages            int                       // Number of messages to be signed received
+	MessagesInRun       int                       // Total number of messages since start of run
 
 	PeerStatus          StatusReturnMessage       // Actual status of children peers
 	PeerStatusRcvd      int                       // How many peers sent status
