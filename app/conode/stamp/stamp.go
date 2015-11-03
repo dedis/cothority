@@ -178,7 +178,7 @@ func StampFile(file, server string) {
 	}
 
 	// Write the signature to the file
-	err = WriteSignatureFile(file + ".sig", file, myHash, tsm.Srep)
+	err = writeSignatureFile(file + ".sig", file, myHash, tsm.Srep)
 	if err != nil {
 		dbg.Fatal("Couldn't write file", err)
 	}
@@ -199,7 +199,7 @@ func VerifyFileSignature(file, sigFile string) bool {
 		sigFile = file + sigExtension
 	}
 	// read the sig
-	hashOrig, reply, err := ReadSignatureFile(sigFile)
+	hashOrig, reply, err := readSignatureFile(sigFile)
 	if err != nil {
 		dbg.Fatal("Couldn't read signature-file", sigFile, " : ", err)
 	}
@@ -217,7 +217,7 @@ func VerifyFileSignature(file, sigFile string) bool {
 
 // Takes the different part of the signature and writes them to a toml-
 // file in copy/pastable base64
-func WriteSignatureFile(nameSig, file string, hash []byte, stamp *conode.StampReply) error {
+func writeSignatureFile(nameSig, file string, hash []byte, stamp *conode.StampReply) error {
 	var p []string
 	for _, pr := range stamp.Prf {
 		p = append(p, base64.StdEncoding.EncodeToString(pr))
@@ -258,7 +258,7 @@ func WriteSignatureFile(nameSig, file string, hash []byte, stamp *conode.StampRe
 // decoded and put back in a 'StampReply'-structure
 // Returns the hash of the file, the signature itself with all informations +
 // error if any
-func ReadSignatureFile(name string) ([]byte, *conode.StampReply, error) {
+func readSignatureFile(name string) ([]byte, *conode.StampReply, error) {
 	// Read in the toml-file
 	sigStr := &SignatureFile{}
 	err := app.ReadTomlConfig(sigStr, name)
