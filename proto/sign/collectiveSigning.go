@@ -217,8 +217,8 @@ func (sn *Node) getMessages() error {
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
-	if sn.AnnounceFunc != nil {
-		sn.AnnounceFunc(am)
+	if sn.OnAnnounceFunc != nil {
+		sn.OnAnnounceFunc(am)
 	}
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
@@ -748,8 +748,8 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 }
 
 func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
-	if sn.DoneFunc != nil {
-		sn.DoneFunc(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
+	if sn.OnDoneFunc != nil {
+		sn.OnDoneFunc(view, sn.MTRoot, nil, sn.Proof, sb)
 	}
 }
 

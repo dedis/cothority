@@ -69,7 +69,7 @@ func VerifyChallenge(suite abstract.Suite, reply *StampReply) error {
 	return errors.New("Challenge reconstructed is not equal to the one given ><")
 }
 
-// A simple verification of a schnorr signature given the message
+// A simple verification of a Schnorr signature given the message
 func VerifySchnorr(suite abstract.Suite, message []byte, publicKey abstract.Point, c, r abstract.Secret) error {
 
 	// Check that: base**r_hat * X_hat**c == V_hat

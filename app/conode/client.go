@@ -17,12 +17,13 @@ import (
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/conode"
 )
 
 var muStats sync.Mutex
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
-var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
+var MAX_N_ROUNDS int = MAX_N_SECONDS / int(conode.ROUND_TIME / time.Second)
 
 func RunClient(flags *app.Flags, conf *app.ConfigColl){
 	dbg.Lvl4("Starting to run stampclient")
@@ -143,7 +144,7 @@ func streamMessgs(c *Client, servers []string, rate int) ([]int64, []int64, []in
 			secToTimeStamp := t.Seconds()
 			secSinceFirst := time.Since(tFirst).Seconds()
 			atomic.AddInt64(&buck[int(secSinceFirst)], 1)
-			index := int(secToTimeStamp) / int(ROUND_TIME / time.Second)
+			index := int(secToTimeStamp) / int(conode.ROUND_TIME / time.Second)
 			atomic.AddInt64(&roundsAfter[index], 1)
 			atomic.AddInt64(&times[tick], t.Nanoseconds())
 
