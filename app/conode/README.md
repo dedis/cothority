@@ -26,7 +26,7 @@ binary (for linux/64 linux/32 and MacOSX) available at:
 
 https://github.com/dedis/cothority/releases/latest
 
-If you are very security-conscious, you can also go to 'compile your own version'
+If you are more security-conscious, you can also go to 'compile your own version'
 section.
 
 These are the steps to be part in the EPFL-conode-project:
