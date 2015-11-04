@@ -12,8 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"strconv"
-	"github.com/dedis/crypto/abstract"
-"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/proto/sign"
 )
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
@@ -29,7 +28,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 
 	dbg.Lvl1("Going to run client and asking servers to print")
 	time.Sleep(3 * time.Second)
-	hc.SNodes[0].RegisterDoneFunc(RoundDone)
+	hc.SNodes[0].RegisterOnDoneFunc(RoundDone)
 	tFirst := time.Now()
 
 	round := monitor.NewMeasure("round")
@@ -72,7 +71,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 }
 
 func RoundDone(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+sig *sign.SignatureBroadcastMessage) {
 	dbg.Lvl3(view, "finished round")
 	done <- "Done with view: " + strconv.Itoa(view)
 }
