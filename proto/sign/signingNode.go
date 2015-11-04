@@ -240,7 +240,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 		sn.OnAnnounceFunc(am)
 	}
 
-	dbg.Lvl1("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
+	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
 
 	/*
 		first := time.Now()

@@ -73,11 +73,11 @@ func RunServer(address string, conf *app.ConfigConode, cb Callbacks) {
 			s.Hostname = address
 			s.App = "stamp"
 			if s.IsRoot(0) {
-				dbg.Lvl1("Root timestamper at:", address)
+				dbg.Lvl2("Root timestamper at:", address)
 				s.Run("root")
 
 			} else {
-				dbg.Lvl1("Running regular timestamper on:", address)
+				dbg.Lvl2("Running regular timestamper on:", address)
 				s.Run("regular")
 			}
 		}
@@ -210,7 +210,7 @@ func (cs *CallbacksStamper) OnDone(p *Peer) sign.OnDoneFunc {
 			if proof.CheckProof(p.Signer.(*sign.Node).Suite().Hash, SNRoot, cs.Leaves[i], combProof) {
 				dbg.Lvl2("Proof is OK")
 			} else {
-				dbg.Lvl2("Inclusion-proof failed")
+				dbg.Lvl1("Inclusion-proof failed")
 			}
 
 			respMessg := &TimeStampMessage{
@@ -218,7 +218,7 @@ func (cs *CallbacksStamper) OnDone(p *Peer) sign.OnDoneFunc {
 				ReqNo: msg.Tsm.ReqNo,
 				Srep:  &StampReply{SuiteStr: p.Suite().String(), Timestamp: cs.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
 			cs.PutToClient(p, msg.To, respMessg)
-			dbg.Lvl1("Sent signature response back to client")
+			dbg.Lvl2("Sent signature response back to client")
 		}
 		cs.mux.Unlock()
 		cs.Timestamp = 0
@@ -234,14 +234,14 @@ func (cs *CallbacksStamper) PutToClient(p *Peer, name string, data coconet.Binar
 		return
 	}
 	if err != nil && err != coconet.ErrNotEstablished {
-		dbg.Lvl2("%p error putting to client: %v", cs, err)
+		dbg.Lvl1("%p error putting to client: %v", cs, err)
 	}
 }
 
 // Setu will start to listen to clients connections for stamping request
 func (cs *CallbacksStamper) Setup(p *Peer) error {
 	global, _ := cliutils.GlobalBind(p.name)
-	dbg.LLvl3("Listening in server at", global)
+	dbg.Lvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
 	if err != nil {
 		panic(err)
@@ -287,7 +287,7 @@ func (cs *CallbacksStamper) Setup(p *Peer) error {
 							co.Close()
 							return
 						case StampExit:
-							dbg.Lvl1("Exiting server upon request")
+							dbg.Lvl2("Exiting server upon request")
 							os.Exit(-1)
 						}
 					}
