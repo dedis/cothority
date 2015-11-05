@@ -14,8 +14,8 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"github.com/dedis/crypto/abstract"
-"github.com/dedis/cothority/lib/cliutils"
-"net"
+	"github.com/dedis/cothority/lib/cliutils"
+	"net"
 	"os"
 )
 
@@ -33,7 +33,8 @@ type CallbacksStamper struct {
 							   // Timestamp message for this Round
 	Timestamp  int64
 
-	Clients map[string]coconet.Conn
+	Clients    map[string]coconet.Conn
+	peer       *sign.Peer
 }
 
 func NewCallbacksStamper() *CallbacksStamper {
@@ -49,68 +50,52 @@ func NewCallbacksStamper() *CallbacksStamper {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *CallbacksStamper) AnnounceFunc(p *sign.Peer) sign.AnnounceFunc {
-	return func(am *sign.AnnouncementMessage) {
-		var t int64
-		if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
-			dbg.Lvl1("Unmashaling timestamp has failed")
-		}
-		cs.Timestamp = t
+func (cs *CallbacksStamper) Announcement(am *sign.AnnouncementMessage) {
+	var t int64
+	if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
+		dbg.Lvl1("Unmashaling timestamp has failed")
 	}
+	cs.Timestamp = t
 }
 
-func (cs *CallbacksStamper) CommitFunc(p *sign.Peer) sign.CommitFunc {
-	return func(view int) []byte {
-		//dbg.Lvl4(cs.Name(), "calling AggregateCommits")
-		cs.mux.Lock()
-		// get data from s once to avoid refetching from structure
-		Queue := cs.Queue
-		READING := cs.READING
-		PROCESSING := cs.PROCESSING
-		// messages read will now be processed
-		READING, PROCESSING = PROCESSING, READING
-		cs.READING, cs.PROCESSING = cs.PROCESSING, cs.READING
-		cs.Queue[READING] = cs.Queue[READING][:0]
+func (cs *CallbacksStamper) Commitment() []byte {
+	//dbg.Lvl4(cs.Name(), "calling AggregateCommits")
+	cs.mux.Lock()
+	// get data from s once to avoid refetching from structure
+	Queue := cs.Queue
+	READING := cs.READING
+	PROCESSING := cs.PROCESSING
+	// messages read will now be processed
+	READING, PROCESSING = PROCESSING, READING
+	cs.READING, cs.PROCESSING = cs.PROCESSING, cs.READING
+	cs.Queue[READING] = cs.Queue[READING][:0]
 
-		// give up if nothing to process
-		if len(Queue[PROCESSING]) == 0 {
-			cs.mux.Unlock()
-			cs.Root = make([]byte, hashid.Size)
-			cs.Proofs = make([]proof.Proof, 1)
-			return cs.Root
-		}
-
-		// pull out to be Merkle Tree leaves
-		cs.Leaves = make([]hashid.HashId, 0)
-		for _, msg := range Queue[PROCESSING] {
-			cs.Leaves = append(cs.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
-		}
+	// give up if nothing to process
+	if len(Queue[PROCESSING]) == 0 {
 		cs.mux.Unlock()
-
-		// non root servers keep track of rounds here
-		if !p.IsRoot(view) {
-			p.RLock.Lock()
-			lsr := p.LastRound()
-			mr := p.MaxRounds
-			p.RLock.Unlock()
-			// if this is our last round then close the connections
-			if lsr >= mr && mr >= 0 {
-				p.CloseChan <- true
-			}
-		}
-
-		// create Merkle tree for this round's messages and check corectness
-		cs.Root, cs.Proofs = proof.ProofTree(p.Suite().Hash, cs.Leaves)
-		if sign.DEBUG == true {
-			if proof.CheckLocalProofs(p.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
-				dbg.Lvl4("Local Proofs of", p.Name(), "successful for round " + strconv.Itoa(int(p.LastRound())))
-			} else {
-				panic("Local Proofs" + p.Name() + " unsuccessful for round " + strconv.Itoa(int(p.LastRound())))
-			}
-		}
-
+		cs.Root = make([]byte, hashid.Size)
+		cs.Proofs = make([]proof.Proof, 1)
 		return cs.Root
 	}
+
+	// pull out to be Merkle Tree leaves
+	cs.Leaves = make([]hashid.HashId, 0)
+	for _, msg := range Queue[PROCESSING] {
+		cs.Leaves = append(cs.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
+	}
+	cs.mux.Unlock()
+
+	// create Merkle tree for this round's messages and check corectness
+	cs.Root, cs.Proofs = proof.ProofTree(cs.peer.Suite().Hash, cs.Leaves)
+	if sign.DEBUG == true {
+		if proof.CheckLocalProofs(cs.peer.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
+			dbg.Lvl4("Local Proofs of", cs.peer.Name(), "successful for round " + strconv.Itoa(int(cs.peer.LastRound())))
+		} else {
+			panic("Local Proofs" + cs.peer.Name() + " unsuccessful for round " + strconv.Itoa(int(cs.peer.LastRound())))
+		}
+	}
+
+	return cs.Root
 }
 
 func (cs *CallbacksStamper) OnDone(p *sign.Peer) sign.DoneFunc {
@@ -158,7 +143,8 @@ func (cs *CallbacksStamper) PutToClient(p *sign.Peer, name string, data coconet.
 }
 
 // Starts to listen for stamper-requests
-func (cs *CallbacksStamper) Listen(p *sign.Peer) error{
+func (cs *CallbacksStamper) Setup(p *sign.Peer) error {
+	cs.peer = p
 	global, _ := cliutils.GlobalBind(p.NameP)
 	dbg.Lvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)

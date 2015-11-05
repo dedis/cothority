@@ -6,18 +6,19 @@ package sign
 // each other
 type Callbacks interface {
 	// AnnounceFunc is called from the root-node whenever an
-	// announcement is made. It returns an AnnounceFunc which
-	// has to write the "Message"-field of its AnnouncementMessage
-	// argument.
-	AnnounceFunc(*Peer) AnnounceFunc
-	// CommitFunc is called whenever a commitement is ready to
-	// be d. It's CommitFunc has to return a slice
-	// of bytes that will go into the merkle-tree.
-	CommitFunc(*Peer) CommitFunc
+	// announcement is made.
+	Announcement(*AnnouncementMessage)
+	// CommitFunc is called whenever a commitment is ready to
+	// be sent. It takes the messages of its children and returns
+	// the new message to be sent
+	///Commitment([]CommitmentMessage) *CommitmentMessage
+	// Actual Commitment which only returns new Merkle-tree
+	Commitment() []byte
 	// OnDone is called whenever the ture is completed and
 	// the results are propagated through the tree.
 	OnDone(*Peer) DoneFunc
-	// Listen starts the port to let timestamps enter the system
-	Listen(*Peer) error
+	// Setup can be used to start listening on a port for requests or
+	// any other setup that needs to be done
+	Setup(*Peer) error
 }
 

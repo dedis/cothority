@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/conode"
+"github.com/dedis/cothority/proto/sign"
 )
 
 type Client struct {
@@ -174,7 +175,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	case err = <-myChan:
 		//log.Println("-------------client received  response from" + TSServerName)
 		break
-	case <-time.After(10 * conode.ROUND_TIME):
+	case <-time.After(10 * sign.ROUND_TIME):
 		dbg.Lvl3("client timeouted on waiting for response from" + TSServerName)
 		break
 		// err = ErrClientToTSTimeout

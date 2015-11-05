@@ -66,9 +66,8 @@ type Node struct {
 	LastSeenRound int // largest round number I have seen
 	RoundsAsRoot  int // latest continuous streak of rounds with sn root
 
+	callbacks Callbacks
 	AnnounceLock sync.Mutex
-	AnnounceFunc AnnounceFunc
-	CommitFunc   CommitFunc
 	DoneFunc     DoneFunc
 
 	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
@@ -108,6 +107,11 @@ type Node struct {
 	// be sent to the client during the SignatureBroadcast
 	Proof  proof.Proof
 	MTRoot hashid.HashId // the very root of the big Merkle Tree
+}
+
+// Set callback-functions for the different steps of the algorithm
+func (sn *Node)SetCallbacks(cb Callbacks){
+	sn.callbacks = cb
 }
 
 // Start listening for messages coming from parent(up)
@@ -183,10 +187,6 @@ func (sn *Node) SetFailureRate(v int) {
 	sn.FailureRate = v
 }
 
-func (sn *Node) RegisterCommitFunc(cf CommitFunc) {
-	sn.CommitFunc = cf
-}
-
 func (sn *Node) RegisterDoneFunc(df DoneFunc) {
 	sn.DoneFunc = df
 }
@@ -222,17 +222,13 @@ var MAX_WILLING_TO_WAIT time.Duration = 50 * time.Second
 
 var ChangingViewError error = errors.New("In the process of changing view")
 
-func (sn *Node) RegisterAnnounceFunc(af AnnounceFunc) {
-	sn.AnnounceFunc = af
-}
-
 func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	sn.AnnounceLock.Lock()
 	defer sn.AnnounceLock.Unlock()
 
 	// notify upstream of announcement
-	if sn.AnnounceFunc != nil {
-		sn.AnnounceFunc(am)
+	if sn.callbacks != nil {
+		sn.callbacks.Announcement(am)
 	}
 
 	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)

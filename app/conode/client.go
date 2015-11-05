@@ -17,15 +17,15 @@ import (
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/proto/sign"
 )
 
 var muStats sync.Mutex
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
-var MAX_N_ROUNDS int = MAX_N_SECONDS / int(conode.ROUND_TIME / time.Second)
+var MAX_N_ROUNDS int = MAX_N_SECONDS / int(sign.ROUND_TIME / time.Second)
 
-func RunClient(flags *app.Flags, conf *app.ConfigColl){
+func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 	dbg.Lvl4("Starting to run stampclient")
 	c := NewClient(flags.Name)
 	servers := strings.Split(flags.Server, ",")
@@ -44,7 +44,7 @@ func RunClient(flags *app.Flags, conf *app.ConfigColl){
 	// if rate specified send out one message every rate milliseconds
 	dbg.Lvl3(flags.Name, "starting to stream at rate", conf.Rate, "with root", flags.AmRoot)
 	buck, roundsAfter, times := streamMessgs(c, servers, conf.Rate)
-	if flags.AmRoot{
+	if flags.AmRoot {
 		dbg.Lvl3("Printing stats")
 		AggregateStats(buck, roundsAfter, times)
 	}
@@ -86,7 +86,7 @@ func removeTrailingZeroes(a []int64) []int64 {
 	return a[:i + 1]
 }
 
-func streamMessgs(c *Client, servers []string, rate int) ([]int64, []int64, []int64){
+func streamMessgs(c *Client, servers []string, rate int) ([]int64, []int64, []int64) {
 	dbg.Lvl4(c.Name(), "streaming at given rate", rate)
 	// buck[i] = # of timestamp responses received in second i
 	buck := make([]int64, MAX_N_SECONDS)
@@ -144,7 +144,7 @@ func streamMessgs(c *Client, servers []string, rate int) ([]int64, []int64, []in
 			secToTimeStamp := t.Seconds()
 			secSinceFirst := time.Since(tFirst).Seconds()
 			atomic.AddInt64(&buck[int(secSinceFirst)], 1)
-			index := int(secToTimeStamp) / int(conode.ROUND_TIME / time.Second)
+			index := int(secToTimeStamp) / int(sign.ROUND_TIME / time.Second)
 			atomic.AddInt64(&roundsAfter[index], 1)
 			atomic.AddInt64(&times[tick], t.Nanoseconds())
 

@@ -8,8 +8,8 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"errors"
 	"strconv"
-"net"
-"strings"
+	"net"
+	"strings"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -42,7 +42,7 @@ func RunServer(address string, conf *app.ConfigConode, cb sign.Callbacks) {
 	}
 
 	// Listen to stamp-requests on port 2001
-	stampers, err := RunTimestamper(hc, 0, cb, address)
+	stampers, err := RunPeer(hc, 0, cb, address)
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -76,36 +76,34 @@ func RunServer(address string, conf *app.ConfigConode, cb sign.Callbacks) {
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunTimestamper(hc *graphs.HostConfig, nclients int, cb sign.Callbacks, hostnameSlice ...string) ([]*sign.Peer, error) {
+func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Callbacks, hostname string) ([]*sign.Peer, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
-	if hostnameSlice == nil {
+	if hostname == "" {
 		hostnames = hc.Hosts
 	} else {
-		for _, h := range hostnameSlice {
-			sn, ok := hc.Hosts[h]
-			if !ok {
-				return nil, errors.New("hostname given not in config file:" + h)
-			}
-			hostnames[h] = sn
+		sn, ok := hc.Hosts[hostname]
+		if !ok {
+			return nil, errors.New("hostname given not in config file:" + hostname)
 		}
+		hostnames[hostname] = sn
 	}
 	// for each client in
-	stampers := make([]*sign.Peer, 0, len(hostnames))
+	peers := make([]*sign.Peer, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
 		if _, ok := hostnames[sn.Name()]; !ok {
 			dbg.Lvl1("signing node not in hostnmaes")
 			continue
 		}
-		stampers = append(stampers, sign.NewPeer(sn, cb))
+		peers = append(peers, sign.NewPeer(sn, cb))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
-			stampers[len(stampers) - 1].Listen()
+			peers[len(peers) - 1].Setup()
 		}
 	}
-	dbg.Lvl3("stampers:", stampers)
-	for _, s := range stampers[1:] {
+	dbg.Lvl3("peers:", peers)
+	for _, s := range peers[1:] {
 
 		_, p, err := net.SplitHostPort(s.Name())
 		if err != nil {
@@ -121,7 +119,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, cb sign.Callbacks, host
 
 	}
 
-	return stampers, nil
+	return peers, nil
 }
 
 // Simple ephemereal helper for comptability issues

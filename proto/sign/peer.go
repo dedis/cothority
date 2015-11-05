@@ -23,7 +23,7 @@ type Peer struct {
 	Logger    string
 	Hostname  string
 	App       string
-	Cb        Callbacks
+	Cb Callbacks
 }
 
 func NewPeer(signer Signer, cb Callbacks) *Peer {
@@ -31,8 +31,9 @@ func NewPeer(signer Signer, cb Callbacks) *Peer {
 
 	s.Signer = signer
 	s.Cb = cb
-	s.Signer.RegisterAnnounceFunc(cb.AnnounceFunc(s))
-	s.Signer.RegisterCommitFunc(cb.CommitFunc(s))
+	s.Signer.SetCallbacks(cb)
+	//s.Signer.RegisterAnnounceFunc(cb.AnnounceFunc(s))
+	//s.Signer.RegisterCommitFunc(cb.CommitFunc(s))
 	s.Signer.RegisterDoneFunc(cb.OnDone(s))
 	s.RLock = sync.Mutex{}
 
@@ -167,10 +168,8 @@ func (s *Peer) Close() {
 }
 
 // listen for clients connections
-// this server needs to be running on a different port
-// than the Signer that is beneath it
-func (s *Peer) Listen() error {
-	return s.Cb.Listen(s)
+func (s *Peer) Setup() error {
+	return s.Cb.Setup(s)
 }
 
 func (s *Peer) ConnectToLogger() {

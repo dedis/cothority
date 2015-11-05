@@ -9,10 +9,10 @@ import (
 var DEBUG bool // to avoid verifying paths and signatures all the time
 
 // Func to call when we receive a announcement
-type AnnounceFunc func(msg *AnnouncementMessage)
+//type AnnounceFunc func(msg *AnnouncementMessage)
 
 // Returns commitment contribution for a round
-type CommitFunc func(view int) []byte
+//type CommitFunc func(view int) []byte
 
 // Called at the end of a round
 // Allows client of Signer to receive signature, proof, and error
@@ -36,13 +36,7 @@ type Signer interface {
 	// // could add option field for Sign
 	// Sign([]byte) (hashid.HashId, proof.Proof, error)
 
-	// Registers a announcement function that is to be called for every
-	// Announcement message a node receives (the message can contains some useful data .. ;)
-	RegisterAnnounceFunc(af AnnounceFunc)
-	// registers a commitment function to be called
-	// for every commit phase. It returns the aggregated merkle root for a node
-	RegisterCommitFunc(cf CommitFunc)
-
+	SetCallbacks(Callbacks)
 	RegisterDoneFunc(df DoneFunc)
 
 	// Allows user of Signer to inform Signer to run with simulated failures

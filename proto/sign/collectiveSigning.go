@@ -217,8 +217,8 @@ func (sn *Node) getMessages() error {
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
-	if sn.AnnounceFunc != nil {
-		sn.AnnounceFunc(am)
+	if sn.callbacks != nil {
+		sn.callbacks.Announcement(am)
 	}
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
@@ -319,9 +319,9 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 	} else {
 		dbg.Lvl4("sign.Node.Commit using Merkle")
 		sn.AddChildrenMerkleRoots(Round)
-		// compute the localmerkle root
-		if sn.CommitFunc != nil {
-			sn.AddLocalMerkleRoot(view, Round, sn.CommitFunc(view))
+		// compute the local Merkle root
+		if sn.callbacks != nil {
+			sn.AddLocalMerkleRoot(view, Round, sn.callbacks.Commitment())
 		} else {
 			sn.AddLocalMerkleRoot(view, Round, make([]byte, hashid.Size))
 		}
