@@ -110,8 +110,8 @@ func (sm *SigningMessage) UnmarshalBinary(data []byte) error {
 	return protobuf.DecodeWithConstructors(data, sm, cons)
 }
 
-type JSONdata struct{
-		Data []byte
+type JSONdata struct {
+	Data []byte
 }
 
 func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
@@ -192,6 +192,8 @@ type SignatureBroadcastMessage struct {
 	X0_hat abstract.Point
 	// Aggregate public commitment
 	V0_hat abstract.Point
+
+	Round  int
 }
 
 type ErrorMessage struct {

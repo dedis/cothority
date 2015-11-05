@@ -217,9 +217,6 @@ func (sn *Node) getMessages() error {
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
-	if sn.callbacks != nil {
-		sn.callbacks.Announcement(am)
-	}
 	if err := sn.TryFailure(view, am.Round); err != nil {
 		return err
 	}
@@ -230,6 +227,9 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	// Store the message for the round
 	round := sn.Rounds[am.Round]
 	round.msg = am.Message
+	if sn.callbacks != nil {
+		sn.callbacks.Announcement(am, round)
+	}
 
 	// Inform all children of announcement
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -282,10 +282,10 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 
 	// Create the mapping between children and their respective public key + commitment
 	// V for commitment
-	round.ChildV_hat = make(map[string]abstract.Point, len(sn.Children(view)))
-	// X for public key
-	round.ChildX_hat = make(map[string]abstract.Point, len(sn.Children(view)))
 	children := sn.Children(view)
+	round.ChildV_hat = make(map[string]abstract.Point, len(children))
+	// X for public key
+	round.ChildX_hat = make(map[string]abstract.Point, len(children))
 
 	// Commits from children are the first Merkle Tree leaves for the round
 	round.Leaves = make([]hashid.HashId, 0)
@@ -297,8 +297,10 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 	}
 
 	// TODO: fill in missing commit messages, and add back exception code
+	commits := make([]*CommitmentMessage, len(children))
 	for _, sm := range round.Commits {
 		from := sm.From
+		commits = append(commits, sm.Com)
 		// MTR ==> root of sub-merkle tree
 		round.Leaves = append(round.Leaves, sm.Com.MTRoot)
 		round.LeavesFrom = append(round.LeavesFrom, from)
@@ -318,12 +320,12 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		return sn.actOnCommits(view, Round)
 	} else {
 		dbg.Lvl4("sign.Node.Commit using Merkle")
-		sn.AddChildrenMerkleRoots(Round)
+		MerkleAddChildren(round)
 		// compute the local Merkle root
 		if sn.callbacks != nil {
-			sn.AddLocalMerkleRoot(view, Round, sn.callbacks.Commitment())
+			MerkleAddLocal(round, sn.callbacks.Commitment(commits).MTRoot)
 		} else {
-			sn.AddLocalMerkleRoot(view, Round, make([]byte, hashid.Size))
+			MerkleAddLocal(round, make([]byte, hashid.Size))
 		}
 		sn.HashLog(Round)
 		sn.ComputeCombinedMerkleRoot(view, Round)

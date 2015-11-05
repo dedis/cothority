@@ -96,3 +96,4 @@ func (rt RoundType) String() string {
 		return ""
 	}
 }
+

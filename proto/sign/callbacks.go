@@ -13,14 +13,14 @@ type Callbacks interface {
 	// Announcement: root -> nodes
 	// This is called from the root-node whenever an
 	// announcement is made.
-	Announcement(*AnnouncementMessage)
+	Announcement(*AnnouncementMessage, *Round)
 	// Commitment: nodes -> root
 	// This is called whenever a commitment is ready to
 	// be sent. It takes the messages of its children and returns
 	// the new message to be sent.
 	///Commitment([]CommitmentMessage) *CommitmentMessage
 	// Actual Commitment which only returns new Merkle-tree
-	Commitment() []byte
+	Commitment([]*CommitmentMessage) *CommitmentMessage
 	// Challenge: root -> nodes
 	// This is called with the message to be signed. If necessary,
 	// each node can change the message for its children.

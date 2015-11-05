@@ -137,7 +137,7 @@ func (sn *Node) printRoundTypes() {
 		if i > sn.LastSeenRound {
 			break
 		}
-		log.Println("Round", i, "type", rt.String())
+		dbg.Print("Round", i, "type", rt.String())
 	}
 }
 
@@ -170,7 +170,7 @@ func (sn *Node) Hostlist() []string {
 // Returns name of node who should be the root for the next view
 // round robin is used on the array of host names to determine the next root
 func (sn *Node) RootFor(view int) string {
-	// log.Println(sn.Name(), "ROOT FOR", view)
+	dbg.Lvl2(sn.Name(), "Root for view", view)
 	var hl []string
 	if view == 0 {
 		hl = sn.HostListOn(view)
@@ -221,19 +221,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	sn.AnnounceLock.Lock()
 	defer sn.AnnounceLock.Unlock()
 
-	// notify upstream of announcement
-	if sn.callbacks != nil {
-		sn.callbacks.Announcement(am)
-	}
-
 	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
-
-	/*
-		first := time.Now()
-		total := time.Now()
-		var firstRoundTime time.Duration
-		var totalTime time.Duration
-	*/
 
 	ctx, cancel := context.WithTimeout(context.Background(), MAX_WILLING_TO_WAIT)
 	var cancelederr error
@@ -247,7 +235,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 		}
 
 		if err != nil {
-			log.Errorln(err)
+			dbg.Lvl1(err)
 			cancelederr = err
 			cancel()
 		}
@@ -263,7 +251,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	case <-sn.closed:
 		return errors.New("closed")
 	case <-ctx.Done():
-		log.Errorln(ctx.Err())
+		dbg.Lvl1(ctx.Err())
 		if ctx.Err() == context.Canceled {
 			return cancelederr
 		}
@@ -281,7 +269,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	case <-sn.closed:
 		return errors.New("closed")
 	case <-ctx.Done():
-		log.Errorln(ctx.Err())
+		dbg.Lvl1(ctx.Err())
 		if ctx.Err() == context.Canceled {
 			return cancelederr
 		}
@@ -290,12 +278,12 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 }
 
 func (sn *Node) StartVotingRound(v *Vote) error {
-	log.Println(sn.Name(), "start voting round")
+	dbg.Lvl2(sn.Name(), "start voting round")
 	sn.nRounds = sn.LastSeenRound
 
 	// during view changes, only accept view change related votes
 	if sn.ChangingView && v.Vcv == nil {
-		log.Println(sn.Name(), "start signing round: changingViewError")
+		dbg.Lvl2(sn.Name(), "start signing round: changingViewError")
 		return ChangingViewError
 	}
 
@@ -327,7 +315,7 @@ func (sn *Node) StartSigningRound() error {
 	// report view is being change, and sleep before retrying
 	sn.viewmu.Lock()
 	if sn.ChangingView {
-		log.Println(sn.Name(), "start signing round: changingViewError")
+		dbg.Lvl1(sn.Name(), "start signing round: changingViewError")
 		sn.viewmu.Unlock()
 		return ChangingViewError
 	}
@@ -399,13 +387,13 @@ func (sn *Node) ShouldIFail(phase string) bool {
 		// If we were manually set to always fail
 		if sn.Host.(*coconet.FaultyHost).IsDead() ||
 			sn.Host.(*coconet.FaultyHost).IsDeadFor(phase) {
-			// log.Println(sn.Name(), "dead for "+phase)
+			dbg.Lvl2(sn.Name(), "dead for "+phase)
 			return true
 		}
 
 		// If we were only given a probability of failing
 		if p := sn.Rand.Int() % 100; p < sn.FailureRate {
-			// log.Println(sn.Name(), "died for "+phase, "p", p, "with prob ", sn.FailureRate)
+			dbg.Lvl2(sn.Name(), "died for "+phase, "p", p, "with prob ", sn.FailureRate)
 			return true
 		}
 
@@ -470,12 +458,12 @@ func (sn *Node) AddVotes(Round int, v *Vote) {
 	}
 	sn.randmu.Unlock()
 
-	// log.Infoln(sn.Name(), "added votes. for:", cv.For, "against:", cv.Against)
+	dbg.Lvl2(sn.Name(), "added votes. for:", cv.For, "against:", cv.Against)
 
 	// Generate signature on Vote with OwnVote *counted* in
 	b, err := v.MarshalBinary()
 	if err != nil {
-		log.Fatal("Marshal Binary on Counted Votes failed")
+		dbg.Fatal("Marshal Binary on Counted Votes failed")
 	}
 	rand := sn.suite.Cipher([]byte(sn.Name() + strconv.Itoa(Round)))
 	vresp.Sig = ElGamalSign(sn.suite, rand, b, sn.PrivKey)
@@ -521,7 +509,7 @@ func (sn *Node) SetBackLink(Round int) {
 		// My Backlink = Hash(prevRound, sn.Rounds[prevRound].BackLink, sn.Rounds[prevRound].MTRoot)
 		h := sn.suite.Hash()
 		if sn.Rounds[prevRound] == nil {
-			log.Errorln(sn.Name(), "not setting back link")
+			dbg.Lvl1(sn.Name(), "not setting back link")
 			return
 		}
 		h.Write(intToByteSlice(prevRound))

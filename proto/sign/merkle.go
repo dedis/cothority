@@ -17,10 +17,8 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 )
 
-func (sn *Node) AddChildrenMerkleRoots(Round int) {
-	sn.roundLock.RLock()
-	round := sn.Rounds[Round]
-	sn.roundLock.RUnlock()
+
+func MerkleAddChildren(round *Round) {
 	// children commit roots
 	round.CMTRoots = make([]hashid.HashId, len(round.Leaves))
 	copy(round.CMTRoots, round.Leaves)
@@ -34,12 +32,9 @@ func (sn *Node) AddChildrenMerkleRoots(Round int) {
 	}
 }
 
-func (sn *Node) AddLocalMerkleRoot(view, Round int, localMTroot hashid.HashId) {
-	sn.roundLock.RLock()
-	round := sn.Rounds[Round]
-	sn.roundLock.RUnlock()
+func MerkleAddLocal(round *Round, localMTroot hashid.HashId) {
 	// add own local mtroot to leaves
-	round.LocalMTRoot = localMTroot // sn.CommitFunc(view)
+	round.LocalMTRoot = localMTroot
 	round.Leaves = append(round.Leaves, round.LocalMTRoot)
 }
 

@@ -35,6 +35,7 @@ type CallbacksStamper struct {
 
 	Clients    map[string]coconet.Conn
 	peer       *sign.Peer
+	Round      *sign.Round
 }
 
 func NewCallbacksStamper() *CallbacksStamper {
@@ -50,15 +51,16 @@ func NewCallbacksStamper() *CallbacksStamper {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *CallbacksStamper) Announcement(am *sign.AnnouncementMessage) {
+func (cs *CallbacksStamper) Announcement(am *sign.AnnouncementMessage, r *sign.Round) {
 	var t int64
 	if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
 		dbg.Lvl1("Unmashaling timestamp has failed")
 	}
 	cs.Timestamp = t
+	cs.Round = r
 }
 
-func (cs *CallbacksStamper) Commitment() []byte {
+func (cs *CallbacksStamper) Commitment(children []*sign.CommitmentMessage) *sign.CommitmentMessage {
 	//dbg.Lvl4(cs.Name(), "calling AggregateCommits")
 	cs.mux.Lock()
 	// get data from s once to avoid refetching from structure
@@ -75,32 +77,31 @@ func (cs *CallbacksStamper) Commitment() []byte {
 		cs.mux.Unlock()
 		cs.Root = make([]byte, hashid.Size)
 		cs.Proofs = make([]proof.Proof, 1)
-		return cs.Root
-	}
+	} else {
+		// pull out to be Merkle Tree leaves
+		cs.Leaves = make([]hashid.HashId, 0)
+		for _, msg := range Queue[PROCESSING] {
+			cs.Leaves = append(cs.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
+		}
+		cs.mux.Unlock()
 
-	// pull out to be Merkle Tree leaves
-	cs.Leaves = make([]hashid.HashId, 0)
-	for _, msg := range Queue[PROCESSING] {
-		cs.Leaves = append(cs.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
-	}
-	cs.mux.Unlock()
-
-	// create Merkle tree for this round's messages and check corectness
-	cs.Root, cs.Proofs = proof.ProofTree(cs.peer.Suite().Hash, cs.Leaves)
-	if dbg.DebugVisible > 2 {
-		if proof.CheckLocalProofs(cs.peer.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
-			dbg.Lvl4("Local Proofs of", cs.peer.Name(), "successful for round " + strconv.Itoa(int(cs.peer.LastRound())))
-		} else {
-			panic("Local Proofs" + cs.peer.Name() + " unsuccessful for round " + strconv.Itoa(int(cs.peer.LastRound())))
+		// create Merkle tree for this round's messages and check corectness
+		cs.Root, cs.Proofs = proof.ProofTree(cs.peer.Suite().Hash, cs.Leaves)
+		if dbg.DebugVisible > 2 {
+			if proof.CheckLocalProofs(cs.peer.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
+				dbg.Lvl4("Local Proofs of", cs.peer.Name(), "successful for round " + strconv.Itoa(int(cs.peer.LastRound())))
+			} else {
+				panic("Local Proofs" + cs.peer.Name() + " unsuccessful for round " + strconv.Itoa(int(cs.peer.LastRound())))
+			}
 		}
 	}
 
-	return cs.Root
+	return &sign.CommitmentMessage{MTRoot:cs.Root}
 }
 
 // Not used dummy-functions
-func (cs *CallbacksStamper)	Challenge(*sign.ChallengeMessage){}
-func (cs *CallbacksStamper)	Response(*sign.ResponseMessage){}
+func (cs *CallbacksStamper)    Challenge(*sign.ChallengeMessage) {}
+func (cs *CallbacksStamper)    Response(*sign.ResponseMessage) {}
 
 func (cs *CallbacksStamper) SignatureBroadcast(view int, SNRoot hashid.HashId, LogHash hashid.HashId, pr proof.Proof,
 sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
