@@ -98,36 +98,37 @@ func (cs *CallbacksStamper) Commitment() []byte {
 	return cs.Root
 }
 
-func (cs *CallbacksStamper) OnDone(p *sign.Peer) sign.DoneFunc {
-	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, pr proof.Proof,
-	sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
-		cs.mux.Lock()
-		for i, msg := range cs.Queue[cs.PROCESSING] {
-			// proof to get from s.Root to big root
-			combProof := make(proof.Proof, len(pr))
-			copy(combProof, pr)
+// Not used dummy-functions
+func (cs *CallbacksStamper)	Challenge(*sign.ChallengeMessage){}
+func (cs *CallbacksStamper)	Response(*sign.ResponseMessage){}
 
-			// add my proof to get from a leaf message to my root s.Root
-			combProof = append(combProof, cs.Proofs[i]...)
+func (cs *CallbacksStamper) SignatureBroadcast(view int, SNRoot hashid.HashId, LogHash hashid.HashId, pr proof.Proof,
+sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+	cs.mux.Lock()
+	for i, msg := range cs.Queue[cs.PROCESSING] {
+		// proof to get from s.Root to big root
+		combProof := make(proof.Proof, len(pr))
+		copy(combProof, pr)
 
-			// proof that I can get from a leaf message to the big root
-			if proof.CheckProof(p.Signer.(*sign.Node).Suite().Hash, SNRoot, cs.Leaves[i], combProof) {
-				dbg.Lvl2("Proof is OK")
-			} else {
-				dbg.Lvl2("Inclusion-proof failed")
-			}
+		// add my proof to get from a leaf message to my root s.Root
+		combProof = append(combProof, cs.Proofs[i]...)
 
-			respMessg := &TimeStampMessage{
-				Type:  StampReplyType,
-				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &StampReply{SuiteStr: suite.String(), Timestamp: cs.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
-			cs.PutToClient(p, msg.To, respMessg)
-			dbg.Lvl2("Sent signature response back to client")
+		// proof that I can get from a leaf message to the big root
+		if proof.CheckProof(cs.peer.Signer.(*sign.Node).Suite().Hash, SNRoot, cs.Leaves[i], combProof) {
+			dbg.Lvl2("Proof is OK")
+		} else {
+			dbg.Lvl2("Inclusion-proof failed")
 		}
-		cs.mux.Unlock()
-		cs.Timestamp = 0
-	}
 
+		respMessg := &TimeStampMessage{
+			Type:  StampReplyType,
+			ReqNo: msg.Tsm.ReqNo,
+			Srep:  &StampReply{SuiteStr: suite.String(), Timestamp: cs.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+		cs.PutToClient(cs.peer, msg.To, respMessg)
+		dbg.Lvl2("Sent signature response back to client")
+	}
+	cs.mux.Unlock()
+	cs.Timestamp = 0
 }
 
 // Send message to client given by name

@@ -68,7 +68,6 @@ type Node struct {
 
 	callbacks Callbacks
 	AnnounceLock sync.Mutex
-	DoneFunc     DoneFunc
 
 	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
 	roundLock sync.RWMutex
@@ -185,10 +184,6 @@ func (sn *Node) RootFor(view int) string {
 
 func (sn *Node) SetFailureRate(v int) {
 	sn.FailureRate = v
-}
-
-func (sn *Node) RegisterDoneFunc(df DoneFunc) {
-	sn.DoneFunc = df
 }
 
 func (sn *Node) logFirstPhase(firstRoundTime time.Duration) {

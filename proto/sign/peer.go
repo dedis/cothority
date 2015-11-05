@@ -32,9 +32,6 @@ func NewPeer(signer Signer, cb Callbacks) *Peer {
 	s.Signer = signer
 	s.Cb = cb
 	s.Signer.SetCallbacks(cb)
-	//s.Signer.RegisterAnnounceFunc(cb.AnnounceFunc(s))
-	//s.Signer.RegisterCommitFunc(cb.CommitFunc(s))
-	s.Signer.RegisterDoneFunc(cb.OnDone(s))
 	s.RLock = sync.Mutex{}
 
 	// listen for client requests at one port higher

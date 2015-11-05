@@ -748,8 +748,8 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 }
 
 func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
-	if sn.DoneFunc != nil {
-		sn.DoneFunc(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
+	if sn.callbacks != nil {
+		sn.callbacks.SignatureBroadcast(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
 	}
 }
 
