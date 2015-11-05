@@ -4,8 +4,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-var DEBUG bool // to avoid verifying paths and signatures all the time
-
 // todo: see where Signer should be located
 type Signer interface {
 	Name() string
@@ -23,6 +21,7 @@ type Signer interface {
 	// // could add option field for Sign
 	// Sign([]byte) (hashid.HashId, proof.Proof, error)
 
+	// Installs new callbacks for the steps of the signing-algorithm
 	SetCallbacks(Callbacks)
 
 	// Allows user of Signer to inform Signer to run with simulated failures

@@ -87,7 +87,7 @@ func (cs *CallbacksStamper) Commitment() []byte {
 
 	// create Merkle tree for this round's messages and check corectness
 	cs.Root, cs.Proofs = proof.ProofTree(cs.peer.Suite().Hash, cs.Leaves)
-	if sign.DEBUG == true {
+	if dbg.DebugVisible > 2 {
 		if proof.CheckLocalProofs(cs.peer.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
 			dbg.Lvl4("Local Proofs of", cs.peer.Name(), "successful for round " + strconv.Itoa(int(cs.peer.LastRound())))
 		} else {

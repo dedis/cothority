@@ -30,9 +30,6 @@ func main() {
 		dbg.Lvlf3("Tree is %+v", conf.Tree.String(0))
 	}
 	dbg.Lvl3(app.RunFlags.Hostname, "Starting to run")
-	if conf.Debug > 1 {
-		sign.DEBUG = true
-	}
 
 	if hostname == "" {
 		log.Fatal("no hostname given", hostname)

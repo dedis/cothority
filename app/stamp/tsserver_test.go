@@ -30,10 +30,6 @@ import (
 //     1   4
 //    / \   \
 //   2   3   5
-func init() {
-	sign.DEBUG = true
-}
-
 func TestTSSIntegrationHealthy(t *testing.T) {
 	failAsRootEvery := 0     // never fail on announce
 	failAsFollowerEvery := 0 // never fail on commit or response

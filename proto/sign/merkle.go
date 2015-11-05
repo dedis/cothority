@@ -88,7 +88,7 @@ func (sn *Node) StoreLocalMerkleProof(view int, chm *ChallengeMessage) error {
 		proofForClient = append(proofForClient, round.Proofs["local"]...)
 
 		// if want to verify partial and full proofs
-		if DEBUG == true {
+		if dbg.DebugVisible > 2{
 			sn.VerifyAllProofs(view, chm, proofForClient)
 		}
 		sn.Proof = proofForClient

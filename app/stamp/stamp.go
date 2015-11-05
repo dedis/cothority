@@ -31,9 +31,6 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	hostname := Flags.Hostname
 
 	dbg.Lvl3(Flags.Hostname, "Starting to run")
-	if conf.Debug > 1 {
-		sign.DEBUG = true
-	}
 
 	// fmt.Println("EXEC TIMESTAMPER: " + hostname)
 	if Flags.Hostname == "" {

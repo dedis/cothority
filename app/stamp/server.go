@@ -392,7 +392,7 @@ func (s *Server) OnDone() sign.DoneFunc {
 			combProof = append(combProof, s.Proofs[i]...)
 
 			// proof that i can get from a leaf message to the big root
-			if sign.DEBUG == true {
+			if dbg.DebugVisible > 2 {
 				proof.CheckProof(s.Signer.(*sign.Node).Suite().Hash, SNRoot, s.Leaves[i], combProof)
 			}
 
