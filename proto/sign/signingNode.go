@@ -26,6 +26,10 @@ import (
 
 type Type int // used by other modules as coll_sign.Type
 
+var MAX_WILLING_TO_WAIT time.Duration = 50 * time.Second
+
+var ChangingViewError error = errors.New("In the process of changing view")
+
 const (
 	// Default Signature involves creating Merkle Trees
 	MerkleTree = iota
@@ -122,14 +126,6 @@ func (sn *Node) Listen() error {
 	return err
 }
 
-// func (sn *Node) CheckRoundTypes(rts []RoundType) error {
-// 	if len(rts) != len(sn.RoundTypes)
-// 	for i := range sn.RoundTypes {
-//
-//
-// 	}
-// }
-//
 func (sn *Node) printRoundTypes() {
 	sn.roundmu.Lock()
 	defer sn.roundmu.Unlock()
@@ -212,10 +208,6 @@ func (sn *Node) logTotalTime(totalTime time.Duration) {
 		"time":  totalTime,
 	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
 }
-
-var MAX_WILLING_TO_WAIT time.Duration = 50 * time.Second
-
-var ChangingViewError error = errors.New("In the process of changing view")
 
 func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	sn.AnnounceLock.Lock()
