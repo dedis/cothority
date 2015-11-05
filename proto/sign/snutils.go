@@ -131,64 +131,6 @@ func (sn *Node) initCommitCrypto(Round int) {
 	sn.add(round.X_hat, sn.PubKey)
 }
 
-func (sn *Node) setUpRound(view int, am *AnnouncementMessage) error {
-	// TODO: accept annoucements on old views?? linearizabiltity?
-	sn.viewmu.Lock()
-	// if (sn.ChangingView && am.Vote == nil) || (sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil) {
-	// 	dbg.Lvl4(sn.Name(), "currently chaning view")
-	// 	sn.viewmu.Unlock()
-	// 	return ChangingViewError
-	// }
-	if sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil {
-		dbg.Lvl4(sn.Name(), "currently chaning view")
-		sn.viewmu.Unlock()
-		return ChangingViewError
-	}
-	sn.viewmu.Unlock()
-
-	sn.roundmu.Lock()
-	Round := am.Round
-	if Round <= sn.LastSeenRound {
-		sn.roundmu.Unlock()
-		return ErrPastRound
-	}
-
-	// make space for round type
-	if len(sn.RoundTypes) <= Round {
-		sn.RoundTypes = append(sn.RoundTypes, make([]RoundType, max(len(sn.RoundTypes), Round+1))...)
-	}
-	if am.Vote == nil {
-		dbg.Lvl4(Round, len(sn.RoundTypes))
-		sn.RoundTypes[Round] = SigningRT
-	} else {
-		sn.RoundTypes[Round] = RoundType(am.Vote.Type)
-	}
-	sn.roundmu.Unlock()
-
-	// set up commit and response channels for the new round
-	sn.Rounds[Round] = NewRound(sn.suite)
-	sn.initCommitCrypto(Round)
-	sn.Rounds[Round].Vote = am.Vote
-
-	// update max seen round
-	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, Round)
-	sn.roundmu.Unlock()
-
-	// the root is the only node that keeps track of round # internally
-	if sn.IsRoot(view) {
-		sn.RoundsAsRoot += 1
-		// TODO: is sn.Round needed if we have LastSeenRound
-		sn.Round = Round
-
-		// Create my back link to previous round
-		sn.SetBackLink(Round)
-		// sn.SetAccountableRound(Round)
-	}
-
-	return nil
-}
-
 // Figure out which kids did not submit messages
 // Add default messages to messgs, one per missing child
 // as to make it easier to identify and add them to exception lists in one place

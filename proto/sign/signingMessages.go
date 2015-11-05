@@ -129,10 +129,10 @@ func (sm *SigningMessage) UnmarshalJSON(dataJSON []byte) error {
 
 // Broadcasted message initiated and signed by proposer
 type AnnouncementMessage struct {
-	Message []byte
-	Round   int
-				  // VoteRequest *VoteRequest
-	Vote    *Vote // Vote Request (propose)
+	Message  []byte
+	RoundNbr int
+				   // VoteRequest *VoteRequest
+	Vote     *Vote // Vote Request (propose)
 }
 
 type CommitmentMessage struct {
@@ -149,20 +149,20 @@ type CommitmentMessage struct {
 								 // CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
 	Vote          *Vote          // Vote Response (promise)
 
-	Round         int
+	RoundNbr      int
 }
 
 type ChallengeMessage struct {
-	C      abstract.Secret // challenge
+	C        abstract.Secret // challenge
 
-						   // Depth  byte
-	MTRoot hashid.HashId   // the very root of the big Merkle Tree
-	Proof  proof.Proof     // Merkle Path of Proofs from root to us
+							 // Depth  byte
+	MTRoot   hashid.HashId   // the very root of the big Merkle Tree
+	Proof    proof.Proof     // Merkle Path of Proofs from root to us
 
-						   // CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
-	Vote   *Vote           // Vote Confirmerd/ Rejected (accept)
+							 // CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
+	Vote     *Vote           // Vote Confirmerd/ Rejected (accept)
 
-	Round  int
+	RoundNbr int
 }
 
 type ResponseMessage struct {
@@ -178,22 +178,22 @@ type ResponseMessage struct {
 
 	Vote           *Vote           // Vote Ack/Nack in thr log (ack/nack)
 
-	Round          int
+	RoundNbr       int
 }
 
 // 5th message going from root to leaves to send the
 // signature
 type SignatureBroadcastMessage struct {
 	// Aggregate response of root
-	R0_hat abstract.Secret
+	R0_hat   abstract.Secret
 	// Challenge
-	C      abstract.Secret
+	C        abstract.Secret
 	// Aggregate public key
-	X0_hat abstract.Point
+	X0_hat   abstract.Point
 	// Aggregate public commitment
-	V0_hat abstract.Point
+	V0_hat   abstract.Point
 
-	Round  int
+	RoundNbr int
 }
 
 type ErrorMessage struct {

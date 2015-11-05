@@ -36,6 +36,7 @@ type CallbacksStamper struct {
 	Clients    map[string]coconet.Conn
 	peer       *sign.Peer
 	Round      *sign.Round
+	RoundNbr   int
 }
 
 func NewCallbacksStamper() *CallbacksStamper {
@@ -58,6 +59,7 @@ func (cs *CallbacksStamper) Announcement(am *sign.AnnouncementMessage, r *sign.R
 	}
 	cs.Timestamp = t
 	cs.Round = r
+	cs.RoundNbr = am.RoundNbr
 }
 
 func (cs *CallbacksStamper) Commitment(children []*sign.CommitmentMessage) *sign.CommitmentMessage {

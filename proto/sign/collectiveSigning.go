@@ -112,9 +112,9 @@ func (sn *Node) getMessages() error {
 
 				var err error
 				if sm.Com.Vote != nil {
-					err = sn.Promise(sm.View, sm.Com.Round, sm)
+					err = sn.Promise(sm.View, sm.Com.RoundNbr, sm)
 				} else {
-					err = sn.Commit(sm.View, sm.Com.Round, sm)
+					err = sn.Commit(sm.View, sm.Com.RoundNbr, sm)
 				}
 				if err != nil {
 					log.Errorln(sn.Name(), "commit error:", err)
@@ -145,9 +145,9 @@ func (sn *Node) getMessages() error {
 
 				var err error
 				if sm.Rm.Vote != nil {
-					err = sn.Accepted(sm.View, sm.Rm.Round, sm)
+					err = sn.Accepted(sm.View, sm.Rm.RoundNbr, sm)
 				} else {
-					err = sn.Respond(sm.View, sm.Rm.Round, sm)
+					err = sn.Respond(sm.View, sm.Rm.RoundNbr, sm)
 				}
 				if err != nil {
 					log.Errorln(sn.Name(), "response error:", err)
@@ -217,15 +217,15 @@ func (sn *Node) getMessages() error {
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
-	if err := sn.TryFailure(view, am.Round); err != nil {
+	if err := sn.TryFailure(view, am.RoundNbr); err != nil {
 		return err
 	}
 
-	if err := sn.setUpRound(view, am); err != nil {
+	if err := RoundSetup(sn, view, am); err != nil {
 		return err
 	}
 	// Store the message for the round
-	round := sn.Rounds[am.Round]
+	round := sn.Rounds[am.RoundNbr]
 	round.msg = am.Message
 	if sn.callbacks != nil {
 		sn.callbacks.Announcement(am, round)
@@ -251,7 +251,7 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	// return sn.Commit(view, am)
 	// If we are a leaf, start the commit phase process
 	if len(sn.Children(view)) == 0 {
-		sn.Commit(view, am.Round, nil)
+		sn.Commit(view, am.RoundNbr, nil)
 	}
 	return nil
 }
@@ -357,7 +357,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 			MTRoot:        round.MTRoot,
 			ExceptionList: round.ExceptionList,
 			Vote:          round.Vote,
-			Round:         Round}
+			RoundNbr:         Round}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		dbg.Lvl4(sn.Name(), "puts up commit")
@@ -375,10 +375,10 @@ func (sn *Node) actOnCommits(view, Round int) error {
 func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 	// update max seen round
 	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, chm.Round)
+	sn.LastSeenRound = max(sn.LastSeenRound, chm.RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[chm.Round]
+	round := sn.Rounds[chm.RoundNbr]
 	if round == nil {
 		return nil
 	}
@@ -406,10 +406,10 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 	}
 
 	// dbg.Lvl4(sn.Name(), "In challenge before response")
-	sn.initResponseCrypto(chm.Round)
+	sn.initResponseCrypto(chm.RoundNbr)
 	// if we are a leaf, send the respond up
 	if len(sn.Children(view)) == 0 {
-		sn.Respond(view, chm.Round, nil)
+		sn.Respond(view, chm.RoundNbr, nil)
 	}
 	// dbg.Lvl4(sn.Name(), "Done handling challenge message")
 	return nil
@@ -529,7 +529,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 			ExceptionList:  round.ExceptionList,
 			ExceptionV_hat: exceptionV_hat,
 			ExceptionX_hat: exceptionX_hat,
-			Round:          Round}
+			RoundNbr:          Round}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		ctx := context.TODO()
@@ -613,7 +613,7 @@ func (sn *Node) FinalizeCommits(view int, Round int) error {
 		C:      round.c,
 		MTRoot: round.MTRoot,
 		Proof:  proof,
-		Round:  Round,
+		RoundNbr:  Round,
 		Vote:   round.Vote})
 	return err
 }
@@ -701,7 +701,7 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	}
 
 	if len(sn.Children(view)) == 0 {
-		sn.Commit(view, am.Round, nil)
+		sn.Commit(view, am.RoundNbr, nil)
 	}
 	return nil
 }

@@ -73,7 +73,7 @@ func (sn *Node) ComputeCombinedMerkleRoot(view, Round int) {
 func (sn *Node) StoreLocalMerkleProof(view int, chm *ChallengeMessage) error {
 	if sn.callbacks != nil {
 		sn.roundLock.RLock()
-		round := sn.Rounds[chm.Round]
+		round := sn.Rounds[chm.RoundNbr]
 		sn.roundLock.RUnlock()
 		proofForClient := make(proof.Proof, len(chm.Proof))
 		copy(proofForClient, chm.Proof)
@@ -96,7 +96,7 @@ func (sn *Node) StoreLocalMerkleProof(view int, chm *ChallengeMessage) error {
 // Create Personalized Merkle Proofs for children servers
 // Send Personalized Merkle Proofs to children servers
 func (sn *Node) SendChildrenChallengesProofs(view int, chm *ChallengeMessage) error {
-	round := sn.Rounds[chm.Round]
+	round := sn.Rounds[chm.RoundNbr]
 	// proof from big root to our root will be sent to all children
 	baseProof := make(proof.Proof, len(chm.Proof))
 	copy(baseProof, chm.Proof)
@@ -171,7 +171,7 @@ func (sn *Node) checkChildrenProofs(Round int) {
 
 func (sn *Node) VerifyAllProofs(view int, chm *ChallengeMessage, proofForClient proof.Proof) {
 	sn.roundLock.RLock()
-	round := sn.Rounds[chm.Round]
+	round := sn.Rounds[chm.RoundNbr]
 	sn.roundLock.RUnlock()
 	// proof from client to my root
 	proof.CheckProof(sn.Suite().Hash, round.MTRoot, round.LocalMTRoot, round.Proofs["local"])

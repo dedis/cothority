@@ -67,11 +67,11 @@ func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
 		return err
 	}
 
-	if err := sn.setUpRound(view, am); err != nil {
+	if err := RoundSetup(sn, view, am); err != nil {
 		return err
 	}
 	// log.Println(sn.Name(), "propose on view", view, sn.HostListOn(view))
-	sn.Rounds[am.Round].Vote = am.Vote
+	sn.Rounds[am.RoundNbr].Vote = am.Vote
 
 	// Inform all children of proposal
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -91,7 +91,7 @@ func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
 
 	if len(sn.Children(view)) == 0 {
 		log.Println(sn.Name(), "no children")
-		sn.Promise(view, am.Round, nil)
+		sn.Promise(view, am.RoundNbr, nil)
 	}
 	return nil
 }
@@ -146,14 +146,14 @@ func (sn *Node) actOnPromises(view, Round int) error {
 		round.c = hashElGamal(sn.suite, b, round.Log.V_hat)
 		err = sn.Accept(view, &ChallengeMessage{
 			C:     round.c,
-			Round: Round,
+			RoundNbr: Round,
 			Vote:  round.Vote})
 
 	} else {
 		// create and putup own commit message
 		com := &CommitmentMessage{
 			Vote:  round.Vote,
-			Round: Round}
+			RoundNbr: Round}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		// log.Println(sn.Name(), "puts up promise on view", view, "to", sn.Parent(view))
@@ -171,10 +171,10 @@ func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
 	log.Println(sn.Name(), "GOT ", "Accept", chm)
 	// update max seen round
 	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, chm.Round)
+	sn.LastSeenRound = max(sn.LastSeenRound, chm.RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[chm.Round]
+	round := sn.Rounds[chm.RoundNbr]
 	if round == nil {
 		log.Errorln("error round is nil")
 		return nil
@@ -192,7 +192,7 @@ func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
 	}
 
 	if len(sn.Children(view)) == 0 {
-		sn.Accepted(view, chm.Round, nil)
+		sn.Accepted(view, chm.RoundNbr, nil)
 	}
 
 	return nil
@@ -227,7 +227,7 @@ func (sn *Node) Accepted(view, Round int, sm *SigningMessage) error {
 		// create and putup own response message
 		rm := &ResponseMessage{
 			Vote:  round.Vote,
-			Round: Round}
+			RoundNbr: Round}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		ctx := context.TODO()

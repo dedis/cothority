@@ -306,7 +306,7 @@ func (sn *Node) StartVotingRound(v *Vote) error {
 		v.Vcv.View = sn.ViewNo + 1
 	}
 	return sn.StartAnnouncement(
-		&AnnouncementMessage{Message: []byte("vote round"), Round: sn.nRounds, Vote: v})
+		&AnnouncementMessage{Message: []byte("vote round"), RoundNbr: sn.nRounds, Vote: v})
 }
 
 func (sn *Node) StartSigningRound() error {
@@ -327,7 +327,7 @@ func (sn *Node) StartSigningRound() error {
 	var b bytes.Buffer
 	binary.Write(&b, binary.LittleEndian, ts.Unix())
 	return sn.StartAnnouncement(
-		&AnnouncementMessage{Message: b.Bytes(), Round: sn.nRounds})
+		&AnnouncementMessage{Message: b.Bytes(), RoundNbr: sn.nRounds})
 }
 
 func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {

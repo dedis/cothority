@@ -129,7 +129,7 @@ func runStaticTest(signType sign.Type, RoundsPerView int, faultyNodes ...int) er
 	// via a simple annoucement
 	nodes[0].Message = []byte("Hello World")
 	// return nodes[0].Announce(DefaultView, &coll_sign.AnnouncementMessage{Message: nodes[0].Message, Round: 1})
-	return nodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: nodes[0].Message, Round: 1})
+	return nodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: nodes[0].Message, RoundNbr: 1})
 }
 
 // Configuration file data/exconf.json
@@ -228,7 +228,7 @@ func runTreeSmallConfig(signType sign.Type, RoundsPerView int, suite abstract.Su
 	}
 	// Have root node initiate the signing protocol via a simple annoucement
 	hc.SNodes[0].Message = []byte("Hello World")
-	hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, Round: 1})
+	hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, RoundNbr: 1})
 
 	return nil
 }
@@ -262,7 +262,7 @@ func TestTreeFromBigConfig(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	hc.SNodes[0].Message = []byte("hello world")
-	err = hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, Round: 1})
+	err = hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, RoundNbr: 1})
 	if err != nil {
 		t.Error(err)
 	}
@@ -301,7 +301,7 @@ func TestMultipleRounds(t *testing.T) {
 	// via a simple annoucement
 	for i := 1; i <= N; i++ {
 		hc.SNodes[0].Message = []byte("Hello World" + strconv.Itoa(i))
-		err = hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, Round: i})
+		err = hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, RoundNbr: i})
 		if err != nil {
 			t.Error(err)
 		}
@@ -335,7 +335,7 @@ func TestTCPStaticConfig(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	hc.SNodes[0].Message = []byte("hello world")
-	hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, Round: 1})
+	hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, RoundNbr: 1})
 	log.Println("Test Done")
 }
 
@@ -371,7 +371,7 @@ func TestTCPStaticConfigRounds(t *testing.T) {
 	N := 5
 	for i := 1; i <= N; i++ {
 		hc.SNodes[0].Message = []byte("hello world")
-		hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, Round: i})
+		hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, RoundNbr: i})
 	}
 }
 
@@ -406,7 +406,7 @@ func TestViewChangeChan(t *testing.T) {
 	N := 6
 	for i := 1; i <= N; i++ {
 		hc.SNodes[0].Message = []byte("Hello World" + strconv.Itoa(i))
-		err = hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, Round: i})
+		err = hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, RoundNbr: i})
 		if err == sign.ChangingViewError {
 			log.Println("Attempted round", i, "but received view change. waiting then retrying")
 			time.Sleep(3 * time.Second)
@@ -448,7 +448,7 @@ func TestViewChangeTCP(t *testing.T) {
 	N := 6
 	for i := 1; i <= N; i++ {
 		hc.SNodes[0].Message = []byte("hello world")
-		hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, Round: i})
+		hc.SNodes[0].StartAnnouncement(&sign.AnnouncementMessage{Message: hc.SNodes[0].Message, RoundNbr: i})
 	}
 }
 
