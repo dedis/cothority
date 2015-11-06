@@ -185,7 +185,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
-		return *rs, nil
+		return rs, nil
 	}
 }
 

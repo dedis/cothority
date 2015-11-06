@@ -24,6 +24,7 @@ func main() {
 	deter.ReadConfig()
 	app.FlagInit()
 	// The flags are defined in lib/app
+	app.FlagInit()
 	flag.Parse()
 
 	setup_deter()
