@@ -21,7 +21,7 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't get stamp from server:", err)
 	}
 
-	if !tsm.Srep.SigBroad.X0_hat.Equal(s.X0) {
+	if !tsm.Srep.AggPublic.Equal(s.X0) {
 		t.Fatal("Not correct aggregate public key")
 	}
 	stopConode()

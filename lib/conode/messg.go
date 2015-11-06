@@ -144,7 +144,7 @@ func (sr *StampSignature) Save(file string) error {
 	// Signature file struct containing everything needed
 	sigStr := &sigFile{
 		Name:          file,
-		SuiteStr:      suite,
+		SuiteStr:      suite.String(),
 		Timestamp:     sr.Timestamp,
 		Proof:         p,
 		MerkleRoot:    base64.StdEncoding.EncodeToString(sr.MerkleRoot),
