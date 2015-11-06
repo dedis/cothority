@@ -1,6 +1,7 @@
 package conode_test
 
 import (
+	"fmt"
 	"github.com/dedis/cothority/lib/conode"
 	"os"
 	"os/exec"
@@ -10,7 +11,7 @@ import (
 
 // Runs two conodes and tests if the value returned is OK
 func TestStamp(t *testing.T) {
-	runConode()
+	runConode(t)
 	s, err := conode.NewStamp("config.toml")
 	if err != nil {
 		t.Fatal("Couldn't open config-file:", err)
@@ -27,15 +28,14 @@ func TestStamp(t *testing.T) {
 	stopConode()
 }
 
-func runConode() {
+func runConode(t *testing.T) {
 	os.Chdir("testdata")
-	exec.Command("go", "build", "../../../app/conode").Run()
-	go func() {
-		exec.Command("./conode", "run", "-key", "key1").Run()
-	}()
-	go func() {
-		exec.Command("./conode", "run", "-key", "key2").Run()
-	}()
+	if err := exec.Command("go", "build", "../../../app/conode").Run(); err != nil {
+		t.Error(fmt.Sprintf("Error building : %v", err))
+	}
+
+	go exec.Command("./conode", "run", "-key", "key1").Run()
+	go exec.Command("./conode", "run", "-key", "key2").Run()
 	time.Sleep(time.Second * 2)
 }
 

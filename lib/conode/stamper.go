@@ -58,7 +58,7 @@ func (cs *CallbacksStamper) RoundMessageFunc() sign.RoundMessageFunc {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *CallbacksStamper) OnAnnounceFunc() sign.AnnounceFunc {
+func (cs *CallbacksStamper) AnnounceFunc(p *Peer) sign.AnnounceFunc {
 	return func(am *sign.AnnouncementMessage) {
 		var t int64
 		if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
@@ -177,7 +177,7 @@ func (cs *CallbacksStamper) PutToClient(p *Peer, name string, data coconet.Binar
 }
 
 // Setu will start to listen to clients connections for stamping request
-func (cs *CallbacksStamper) Setup(p *Peer) error {
+func (cs *CallbacksStamper) Listen(p *Peer) error {
 	global, _ := cliutils.GlobalBind(p.name)
 	dbg.LLvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
