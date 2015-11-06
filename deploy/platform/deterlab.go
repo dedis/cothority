@@ -335,7 +335,6 @@ func (d *Deterlab) Start() error {
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R", d.ProxyRedirectionPort + ":" + d.ProxyRedirectionAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
-	dbg.Print("Will ssh command : ", cmd)
 	exCmd := exec.Command("ssh", cmd...)
 	if err := exCmd.Start(); err != nil {
 		dbg.Fatal("Failed to start the ssh port forwarding : ", err)
@@ -344,7 +343,6 @@ func (d *Deterlab) Start() error {
 		dbg.Fatal("ssh port forwarding exited in failure : ", err)
 	}
 	dbg.Lvl2("Setup remote port forwarding ", exCmd)
-	dbg.Print("WILL WAIT 5mn !Do YOur Stuff")
 	//time.Sleep(5 * time.Minute)
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
