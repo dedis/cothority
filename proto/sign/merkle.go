@@ -76,7 +76,7 @@ func (sn *Node) ComputeCombinedMerkleRoot(view, Round int) {
 // store it in Node so that we can send it to the clients during
 // the SignatureBroadcast
 func (sn *Node) StoreLocalMerkleProof(view int, chm *ChallengeMessage) error {
-	if sn.OnDoneFunc != nil {
+	if sn.DoneFunc != nil {
 		sn.roundLock.RLock()
 		round := sn.Rounds[chm.Round]
 		sn.roundLock.RUnlock()

@@ -24,16 +24,16 @@ type MustReplyMessage struct {
 
 type Peer struct {
 	sign.Signer
-	name string
+	name      string
 
 	rLock     sync.Mutex
 	maxRounds int
 	closeChan chan bool
 
-	Logger   string
-	Hostname string
-	App      string
-	Cb       Callbacks
+	Logger    string
+	Hostname  string
+	App       string
+	Cb        Callbacks
 }
 
 func NewPeer(signer sign.Signer, cb Callbacks) *Peer {
@@ -41,10 +41,9 @@ func NewPeer(signer sign.Signer, cb Callbacks) *Peer {
 
 	s.Signer = signer
 	s.Cb = cb
-	s.Signer.RegisterRoundMessageFunc(cb.RoundMessageFunc())
-	s.Signer.RegisterOnAnnounceFunc(cb.OnAnnounceFunc())
+	s.Signer.RegisterAnnounceFunc(cb.AnnounceFunc(s))
 	s.Signer.RegisterCommitFunc(cb.CommitFunc(s))
-	s.Signer.RegisterOnDoneFunc(cb.OnDone(s))
+	s.Signer.RegisterDoneFunc(cb.OnDone(s))
 	s.rLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -55,7 +54,7 @@ func NewPeer(signer sign.Signer, cb Callbacks) *Peer {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s.name = net.JoinHostPort(h, strconv.Itoa(i+1))
+		s.name = net.JoinHostPort(h, strconv.Itoa(i + 1))
 	}
 	s.closeChan = make(chan bool, 5)
 	return s
@@ -110,7 +109,7 @@ func (s *Peer) Run(role string) {
 func (s *Peer) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound()+1 > nRounds && nRounds >= 0 {
+	if s.LastRound() + 1 > nRounds && nRounds >= 0 {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
@@ -124,7 +123,7 @@ func (s *Peer) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
-			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound()+1, "of", nRounds)
+			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound() + 1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -152,8 +151,8 @@ func (s *Peer) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound()+1 >= nRounds && nRounds >= 0 {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
+			if s.LastRound() + 1 >= nRounds && nRounds >= 0 {
+				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound() + 1, ">=", nRounds)
 				return "close"
 			}
 		}
@@ -177,10 +176,11 @@ func (s *Peer) Close() {
 	s.Signer.Close()
 }
 
-// Setup will wait for any client connections.
-// TODO: this is called setup so
-func (s *Peer) Setup() error {
-	return s.Cb.Setup(s)
+// listen for clients connections
+// this server needs to be running on a different port
+// than the Signer that is beneath it
+func (s *Peer) Listen() error {
+	return s.Cb.Listen(s)
 }
 
 func (s *Peer) ConnectToLogger() {
@@ -227,3 +227,5 @@ func (s *Peer) LogReRun(nextRole string, curRole string) {
 	}
 
 }
+
+
