@@ -211,7 +211,7 @@ func RunTest(rc platform.RunConfig) (Stats, error) {
 	// timeout the command if it takes too long
 	select {
 	case <-done:
-		if platform_dst == "deterlab" && !rs.Valid() {
+		if platform_dst == "deterlab" {
 			return rs, fmt.Errorf("unable to get good data:  %+v", rs)
 		}
 		return rs, nil
