@@ -5,13 +5,14 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/poly"
 	"time"
 )
 
 func RunServer(conf *app.ConfigShamir) {
 	flags := app.RunFlags
-	s := app.GetSuite(conf.Suite)
+	s := edwards.NewAES128SHA256Ed25519(false)
 	n := len(conf.Hosts)
 
 	info := poly.Threshold{
