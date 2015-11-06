@@ -16,7 +16,6 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
 )
 
 type Server struct {
@@ -54,7 +53,7 @@ func NewServer(signer sign.Signer) *Server {
 
 	s.Signer = signer
 	s.Signer.RegisterCommitFunc(s.CommitFunc())
-	s.Signer.RegisterDoneFunc(s.OnDone())
+	s.Signer.RegisterOnDoneFunc(s.OnDone())
 	s.rLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -273,7 +272,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 			}
 
 			if s.LastRound()+1 >= nRounds {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
+				//log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				// And tell everybody to quit
 				err := s.CloseAll(s.GetView())
 				if err != nil {
@@ -303,7 +302,7 @@ func (s *Server) Run(role string, nRounds int) {
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()
+	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Signer closed:", err) }()
 	if role == "test_connect" {
 		role = "regular"
 		go func() {
@@ -375,9 +374,9 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 	}
 }
 
-func (s *Server) OnDone() sign.DoneFunc {
+func (s *Server) OnDone() sign.OnDoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-		sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+		sig *sign.SignatureBroadcastMessage) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
