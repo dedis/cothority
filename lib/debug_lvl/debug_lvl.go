@@ -55,6 +55,9 @@ func Lvld(lvl int, args ...interface{}) {
 	Lvl(lvl, args...)
 }
 func Lvl(lvl int, args ...interface{}) {
+	if lvl > DebugVisible {
+		return
+	}
 	pc, _, line, _ := runtime.Caller(3)
 	name := regexpPaths.ReplaceAllString(runtime.FuncForPC(pc).Name(), "")
 	lineStr := fmt.Sprintf("%d", line)
@@ -83,7 +86,9 @@ func Lvl(lvl int, args ...interface{}) {
 }
 
 func Lvlf(lvl int, f string, args ...interface{}) {
-	Lvl(lvl, fmt.Sprintf(f, args...))
+	if lvl > DebugVisible {
+		Lvl(lvl, fmt.Sprintf(f, args...))
+	}
 }
 
 func Print(args ...interface{}) {
@@ -158,11 +163,11 @@ func Panicf(f string, args ...interface{}) {
 // Just add an additional "L" in front, and remove it later:
 // - easy hack to turn on other debug-messages
 // - easy removable by searching/replacing 'LLvl' with 'Lvl'
-func LLvl1(args ...interface{})            { Lvl(-1, args...) }
-func LLvl2(args ...interface{})            { Lvl(-1, args...) }
-func LLvl3(args ...interface{})            { Lvl(-1, args...) }
-func LLvl4(args ...interface{})            { Lvl(-1, args...) }
-func LLvl5(args ...interface{})            { Lvl(-1, args...) }
+func LLvl1(args ...interface{}) { Lvl(-1, args...) }
+func LLvl2(args ...interface{}) { Lvl(-1, args...) }
+func LLvl3(args ...interface{}) { Lvl(-1, args...) }
+func LLvl4(args ...interface{}) { Lvl(-1, args...) }
+func LLvl5(args ...interface{}) { Lvl(-1, args...) }
 func LLvlf1(f string, args ...interface{}) { Lvlf(-1, f, args...) }
 func LLvlf2(f string, args ...interface{}) { Lvlf(-1, f, args...) }
 func LLvlf3(f string, args ...interface{}) { Lvlf(-1, f, args...) }
@@ -182,14 +187,9 @@ func (f *DebugLvl) Format(entry *logrus.Entry) ([]byte, error) {
 
 		if Testing {
 			fmt.Print(b)
-			return nil, nil
 		} else {
 			return b.Bytes(), nil
 		}
-	} else {
-		if len(entry.Message) > 2048 && DebugVisible > 1 {
-			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(entry.Message))
-		}
-		return nil, nil
 	}
+	return nil, nil
 }
