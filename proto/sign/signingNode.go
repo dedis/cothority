@@ -70,7 +70,7 @@ type Node struct {
 	LastSeenRound int // largest round number I have seen
 	RoundsAsRoot  int // latest continuous streak of rounds with sn root
 
-	callbacks Callbacks
+	Callbacks Callbacks
 	AnnounceLock sync.Mutex
 
 	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
@@ -114,7 +114,7 @@ type Node struct {
 
 // Set callback-functions for the different steps of the algorithm
 func (sn *Node)SetCallbacks(cb Callbacks){
-	sn.callbacks = cb
+	sn.Callbacks = cb
 }
 
 // Start listening for messages coming from parent(up)

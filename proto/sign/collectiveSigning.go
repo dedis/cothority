@@ -217,38 +217,17 @@ func (sn *Node) getMessages() error {
 func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 
-	if err := sn.TryFailure(view, am.RoundNbr); err != nil {
+	messgs, err := sn.Callbacks.Announcement(sn, am)
+	if err != nil{
 		return err
 	}
 
-	if err := RoundSetup(sn, view, am); err != nil {
-		return err
-	}
-	// Store the message for the round
-	round := sn.Rounds[am.RoundNbr]
-	round.msg = am.Message
-	if sn.callbacks != nil {
-		sn.callbacks.Announcement(am, round)
-	}
-
-	// Inform all children of announcement
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
-	for i := range messgs {
-		sm := SigningMessage{
-			Type:         Announcement,
-			View:         view,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			Am:           am}
-		messgs[i] = &sm
-	}
 	dbg.Lvl4(sn.Name(), "sending to all children")
 	ctx := context.TODO()
-	//ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	if err := sn.PutDown(ctx, view, messgs); err != nil {
 		return err
 	}
 
-	// return sn.Commit(view, am)
 	// If we are a leaf, start the commit phase process
 	if len(sn.Children(view)) == 0 {
 		sn.Commit(view, am.RoundNbr, nil)
@@ -256,13 +235,13 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	return nil
 }
 
-func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
+func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 	// update max seen round
 	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, Round)
+	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[Round]
+	round := sn.Rounds[roundNbr]
 	if round == nil {
 		// was not announced of this round, should retreat
 		return nil
@@ -317,26 +296,26 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 
 	if sn.Type == PubKey {
 		dbg.Lvl4("sign.Node.Commit using PubKey")
-		return sn.actOnCommits(view, Round)
+		return sn.actOnCommits(view, roundNbr)
 	} else {
 		dbg.Lvl4("sign.Node.Commit using Merkle")
 		MerkleAddChildren(round)
 		// compute the local Merkle root
-		if sn.callbacks != nil {
-			MerkleAddLocal(round, sn.callbacks.Commitment(commits).MTRoot)
+		if sn.Callbacks != nil {
+			MerkleAddLocal(round, sn.Callbacks.Commitment(commits).MTRoot)
 		} else {
 			MerkleAddLocal(round, make([]byte, hashid.Size))
 		}
-		sn.HashLog(Round)
-		sn.ComputeCombinedMerkleRoot(view, Round)
-		return sn.actOnCommits(view, Round)
+		sn.HashLog(roundNbr)
+		sn.ComputeCombinedMerkleRoot(view, roundNbr)
+		return sn.actOnCommits(view, roundNbr)
 	}
 }
 
 // Finalize commits by initiating the challenge pahse if root
 // Send own commitment message up to parent if non-root
-func (sn *Node) actOnCommits(view, Round int) error {
-	round := sn.Rounds[Round]
+func (sn *Node) actOnCommits(view, roundNbr int) error {
+	round := sn.Rounds[roundNbr]
 	var err error
 
 	if sn.IsRoot(view) {
@@ -346,8 +325,8 @@ func (sn *Node) actOnCommits(view, Round int) error {
 		//if round.X_hat.Equal(sn.suite.Point().Null()) {
 		//	fmt.Println("Committt", round.X_hat)
 		//}
-		sn.commitsDone <- Round
-		err = sn.FinalizeCommits(view, Round)
+		sn.commitsDone <- roundNbr
+		err = sn.FinalizeCommits(view, roundNbr)
 	} else {
 		// create and putup own commit message
 		com := &CommitmentMessage{
@@ -357,7 +336,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 			MTRoot:        round.MTRoot,
 			ExceptionList: round.ExceptionList,
 			Vote:          round.Vote,
-			RoundNbr:         Round}
+			RoundNbr:         roundNbr}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		dbg.Lvl4(sn.Name(), "puts up commit")
@@ -415,8 +394,8 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 	return nil
 }
 
-func (sn *Node) initResponseCrypto(Round int) {
-	round := sn.Rounds[Round]
+func (sn *Node) initResponseCrypto(roundNbr int) {
+	round := sn.Rounds[roundNbr]
 	// generate response   r = v - xc
 	round.r = sn.suite.Secret()
 	round.r.Mul(sn.PrivKey, round.c).Sub(round.Log.v, round.r)
@@ -426,14 +405,14 @@ func (sn *Node) initResponseCrypto(Round int) {
 
 // Respond send the response UP from leaf to parent
 // called initially by the all the bottom leaves
-func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
-	dbg.Lvl4(sn.Name(), "couting response on view, round", view, Round, "Nchildren", len(sn.Children(view)))
+func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
+	dbg.Lvl4(sn.Name(), "couting response on view, round", view, roundNbr, "Nchildren", len(sn.Children(view)))
 	// update max seen round
 	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, Round)
+	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[Round]
+	round := sn.Rounds[roundNbr]
 	if round == nil || round.Log.v == nil {
 		// If I was not announced of this round, or I failed to commit
 		return nil
@@ -501,13 +480,13 @@ func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 	sn.sub(round.X_hat, exceptionX_hat)
 	round.exceptionV_hat = exceptionV_hat
 
-	return sn.actOnResponses(view, Round, exceptionV_hat, exceptionX_hat)
+	return sn.actOnResponses(view, roundNbr, exceptionV_hat, exceptionX_hat)
 }
 
-func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, exceptionX_hat abstract.Point) error {
-	dbg.Lvl4(sn.Name(), "got all responses for view, round", view, Round)
-	round := sn.Rounds[Round]
-	err := sn.VerifyResponses(view, Round)
+func (sn *Node) actOnResponses(view, roundNbr int, exceptionV_hat abstract.Point, exceptionX_hat abstract.Point) error {
+	dbg.Lvl4(sn.Name(), "got all responses for view, round", view, roundNbr)
+	round := sn.Rounds[roundNbr]
+	err := sn.VerifyResponses(view, roundNbr)
 
 	isroot := sn.IsRoot(view)
 	// if error put it up if parent exists
@@ -529,7 +508,7 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 			ExceptionList:  round.ExceptionList,
 			ExceptionV_hat: exceptionV_hat,
 			ExceptionX_hat: exceptionX_hat,
-			RoundNbr:          Round}
+			RoundNbr:          roundNbr}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		ctx := context.TODO()
@@ -554,8 +533,8 @@ func (sn *Node) actOnResponses(view, Round int, exceptionV_hat abstract.Point, e
 	// root reports round is done
 	// Sends the final signature to every one
 	if isroot {
-		sn.SignatureBroadcast(view, nil, Round)
-		sn.done <- Round
+		sn.SignatureBroadcast(view, nil, roundNbr)
+		sn.done <- roundNbr
 	}
 
 	return err
@@ -596,11 +575,11 @@ func (sn *Node) TryViewChange(view int) error {
 }
 
 // Called *only* by root node after receiving all commits
-func (sn *Node) FinalizeCommits(view int, Round int) error {
-	round := sn.Rounds[Round]
+func (sn *Node) FinalizeCommits(view int, roundNbr int) error {
+	round := sn.Rounds[roundNbr]
 
 	// challenge = Hash(Merkle Tree Root/ Announcement Message, sn.Log.V_hat)
-	msg := round.msg
+	msg := round.Msg
 	msg = append(msg, []byte(round.MTRoot)...)
 	if sn.Type == PubKey {
 		round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
@@ -613,14 +592,14 @@ func (sn *Node) FinalizeCommits(view int, Round int) error {
 		C:      round.c,
 		MTRoot: round.MTRoot,
 		Proof:  proof,
-		RoundNbr:  Round,
+		RoundNbr:  roundNbr,
 		Vote:   round.Vote})
 	return err
 }
 
 // Called by every node after receiving aggregate responses from descendants
-func (sn *Node) VerifyResponses(view, Round int) error {
-	round := sn.Rounds[Round]
+func (sn *Node) VerifyResponses(view, roundNbr int) error {
+	round := sn.Rounds[roundNbr]
 
 	// Check that: base**r_hat * X_hat**c == V_hat
 	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
@@ -641,7 +620,7 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 			round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
 			c2 = hashElGamal(sn.suite, sn.Message, T)
 		} else {
-			msg := round.msg
+			msg := round.Msg
 			msg = append(msg, []byte(round.MTRoot)...)
 			round.c = hashElGamal(sn.suite, msg, round.Log.V_hat)
 			c2 = hashElGamal(sn.suite, msg, T)
@@ -651,9 +630,9 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 	// intermediary nodes check partial responses aginst their partial keys
 	// the root node is also able to check against the challenge it emitted
 	if !T.Equal(round.Log.V_hat) || (isroot && !round.c.Equal(c2)) {
-		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
+		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(roundNbr))
 	} else if isroot {
-		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
+		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", roundNbr, "view", view)
 		/*
 			nel := len(round.ExceptionList)
 			nhl := len(sn.HostListOn(view))
@@ -750,8 +729,8 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 }
 
 func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
-	if sn.callbacks != nil {
-		sn.callbacks.SignatureBroadcast(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
+	if sn.Callbacks != nil {
+		sn.Callbacks.SignatureBroadcast(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
 	}
 }
 
@@ -805,16 +784,16 @@ func hashElGamal(suite abstract.Suite, message []byte, p abstract.Point) abstrac
 }
 
 // Called when log for round if full and ready to be hashed
-func (sn *Node) HashLog(Round int) error {
-	round := sn.Rounds[Round]
+func (sn *Node) HashLog(roundNbr int) error {
+	round := sn.Rounds[roundNbr]
 	var err error
-	round.HashedLog, err = sn.hashLog(Round)
+	round.HashedLog, err = sn.hashLog(roundNbr)
 	return err
 }
 
 // Auxilary function to perform the actual hashing of the log
-func (sn *Node) hashLog(Round int) ([]byte, error) {
-	round := sn.Rounds[Round]
+func (sn *Node) hashLog(roundNbr int) ([]byte, error) {
+	round := sn.Rounds[roundNbr]
 
 	h := sn.suite.Hash()
 	logBytes, err := round.Log.MarshalBinary()

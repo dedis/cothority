@@ -68,14 +68,14 @@ func (sn *Node) ReceivedHeartbeat(view int) {
 
 }
 
-func (sn *Node) TryRootFailure(view, Round int) bool {
+func (sn *Node) TryRootFailure(view, roundNbr int) bool {
 	if sn.IsRoot(view) && sn.FailAsRootEvery != 0 {
 		if sn.RoundsAsRoot != 0 && sn.RoundsAsRoot%sn.FailAsRootEvery == 0 {
-			log.Errorln(sn.Name() + "was imposed root failure on round" + strconv.Itoa(Round))
+			log.Errorln(sn.Name() + "was imposed root failure on round" + strconv.Itoa(roundNbr))
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "root_failure",
-				"round": Round,
+				"round": roundNbr,
 			}).Info(sn.Name() + "Root imposed failure")
 			// It doesn't make sense to try view change twice
 			// what we essentially end up doing is double setting sn.ViewChanged
@@ -88,26 +88,27 @@ func (sn *Node) TryRootFailure(view, Round int) bool {
 	return false
 }
 
-func (sn *Node) TryFailure(view, Round int) error {
-	if sn.TryRootFailure(view, Round) {
+// Simulate failure in system
+func (sn *Node) TryFailure(view, roundNbr int) error {
+	if sn.TryRootFailure(view, roundNbr) {
 		return ErrImposedFailure
 	}
 
-	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && Round%sn.FailAsFollowerEvery == 0 {
+	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && roundNbr %sn.FailAsFollowerEvery == 0 {
 		// when failure rate given fail with that probability
 		if (sn.FailureRate > 0 && sn.ShouldIFail("")) || (sn.FailureRate == 0) {
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "follower_failure",
-				"round": Round,
+				"round": roundNbr,
 			}).Info(sn.Name() + "Follower imposed failure")
-			return errors.New(sn.Name() + "was imposed follower failure on round" + strconv.Itoa(Round))
+			return errors.New(sn.Name() + "was imposed follower failure on round" + strconv.Itoa(roundNbr))
 		}
 	}
 
 	// doing this before annoucing children to avoid major drama
 	if !sn.IsRoot(view) && sn.ShouldIFail("commit") {
-		log.Warn(sn.Name(), "not announcing or commiting for round", Round)
+		log.Warn(sn.Name(), "not announcing or commiting for round", roundNbr)
 		return ErrImposedFailure
 	}
 	return nil
@@ -115,8 +116,8 @@ func (sn *Node) TryFailure(view, Round int) error {
 
 // Create round lasting secret and commit point v and V
 // Initialize log structure for the round
-func (sn *Node) initCommitCrypto(Round int) {
-	round := sn.Rounds[Round]
+func (sn *Node) initCommitCrypto(roundNbr int) {
+	round := sn.Rounds[roundNbr]
 	// generate secret and point commitment for this round
 	rand := sn.suite.Cipher([]byte(sn.Name()))
 	round.Log = SNLog{}

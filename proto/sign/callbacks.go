@@ -3,6 +3,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/coconet"
 )
 
 // Callbacks holds the functions that are used to define the
@@ -13,7 +14,9 @@ type Callbacks interface {
 	// Announcement: root -> nodes
 	// This is called from the root-node whenever an
 	// announcement is made.
-	Announcement(*AnnouncementMessage, *Round)
+	// TODO: remove Node-argument from function - this should be kept as
+	// internal variable in CallbackStamper
+	Announcement(*Node, *AnnouncementMessage) ([]coconet.BinaryMarshaler, error)
 	// Commitment: nodes -> root
 	// This is called whenever a commitment is ready to
 	// be sent. It takes the messages of its children and returns
