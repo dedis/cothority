@@ -122,7 +122,7 @@ func (sn *Node) Listen() error {
 	if sn.Pool() == nil {
 		sn.GenSetPool()
 	}
-	err := sn.getMessages()
+	err := sn.ProcessMessages()
 	return err
 }
 

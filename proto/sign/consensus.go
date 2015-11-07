@@ -187,7 +187,7 @@ func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
 		// potentially initiates signing node action based on vote
 		sn.actOnVotes(view, chm.Vote)
 	}
-	if err := sn.SendChildrenChallenges(view, chm); err != nil {
+	if err := round.SendChildrenChallenges(chm); err != nil {
 		return err
 	}
 

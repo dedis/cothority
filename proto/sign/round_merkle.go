@@ -7,12 +7,30 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"errors"
+"github.com/dedis/cothority/lib/coconet"
 )
 
 /*
  * This is a module for the round-struct that does all the
  * calculation for a merkle-hash-tree.
  */
+
+// Create round lasting secret and commit point v and V
+// Initialize log structure for the round
+func (round *Round) InitCommitCrypto() {
+	// generate secret and point commitment for this round
+	rand := round.Suite.Cipher([]byte(round.Name))
+	round.Log = SNLog{}
+	round.Log.v = round.Suite.Secret().Pick(rand)
+	round.Log.V = round.Suite.Point().Mul(nil, round.Log.v)
+	// initialize product of point commitments
+	round.Log.V_hat = round.Suite.Point().Null()
+	round.Log.Suite = round.Suite
+	round.Add(round.Log.V_hat, round.Log.V)
+
+	round.X_hat = round.Suite.Point().Null()
+	round.Add(round.X_hat, round.PubKey)
+}
 
 // Adds a child-node to the Merkle-tree and updates the root-hashes
 func (round *Round) MerkleAddChildren() {
@@ -191,3 +209,43 @@ func (round *Round) VerifyResponses() error {
 	return nil
 }
 
+// Create Personalized Merkle Proofs for children servers
+// Send Personalized Merkle Proofs to children servers
+func (round *Round) SendChildrenChallengesProofs(chm *ChallengeMessage) error {
+	// proof from big root to our root will be sent to all children
+	baseProof := make(proof.Proof, len(chm.Proof))
+	copy(baseProof, chm.Proof)
+
+	// for each child, create personalized part of proof
+	// embed it in SigningMessage, and send it
+	for name, conn := range round.Children {
+		newChm := *chm
+		newChm.Proof = append(baseProof, round.Proofs[name]...)
+
+		var messg coconet.BinaryMarshaler
+		messg = &SigningMessage{View: round.View, Type: Challenge, Chm: &newChm}
+
+		// send challenge message to child
+		// dbg.Lvl4("connection: sending children challenge proofs:", name, conn)
+		if err := conn.PutData(messg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Send children challenges
+func (round *Round) SendChildrenChallenges(chm *ChallengeMessage) error {
+	for _, child := range round.Children {
+		var messg coconet.BinaryMarshaler
+		messg = &SigningMessage{View: round.View, Type: Challenge, Chm: chm}
+
+		// fmt.Println(sn.Name(), "send to", i, child, "on view", view)
+		if err := child.PutData(messg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

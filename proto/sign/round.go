@@ -22,7 +22,7 @@ type Round struct {
 	Log            SNLog           // round lasting log structure
 	HashedLog      []byte
 
-	R_hat abstract.Secret // aggregate of responses
+	R_hat          abstract.Secret // aggregate of responses
 
 	X_hat          abstract.Point  // aggregate of public keys
 
@@ -42,6 +42,7 @@ type Round struct {
 	CMTRootNames   []string
 	Proofs         map[string]proof.Proof
 	Proof          []hashid.HashId
+	PubKey         abstract.Point
 	PrivKey        abstract.Secret
 	Name           string
 
@@ -120,14 +121,16 @@ func RoundSetup(sn *Node, view int, am *AnnouncementMessage) error {
 	sn.roundmu.Unlock()
 
 	// set up commit and response channels for the new round
-	sn.Rounds[roundNbr] = NewRound(sn.suite)
-	sn.initCommitCrypto(roundNbr)
-	sn.Rounds[roundNbr].Vote = am.Vote
-	sn.Rounds[roundNbr].Children = sn.Children(view)
-	sn.Rounds[roundNbr].Parent = sn.Parent(view)
-	sn.Rounds[roundNbr].View = view
-	sn.Rounds[roundNbr].PrivKey = sn.PrivKey
-	sn.Rounds[roundNbr].Name = sn.Name()
+	round := NewRound(sn.suite)
+	round.Vote = am.Vote
+	round.Children = sn.Children(view)
+	round.Parent = sn.Parent(view)
+	round.View = view
+	round.PubKey = sn.PubKey
+	round.PrivKey = sn.PrivKey
+	round.Name = sn.Name()
+	round.InitCommitCrypto()
+	sn.Rounds[roundNbr] = round
 
 	// update max seen round
 	sn.roundmu.Lock()
@@ -188,10 +191,10 @@ func (r *Round) Sub(a abstract.Point, b abstract.Point) {
 	}
 }
 
-func (r *Round) IsRoot()bool{
+func (r *Round) IsRoot() bool {
 	return r.Parent == ""
 }
 
-func (r *Round) IsLeaf()bool{
+func (r *Round) IsLeaf() bool {
 	return len(r.Children) == 0
 }

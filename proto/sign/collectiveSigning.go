@@ -3,13 +3,11 @@ package sign
 import (
 	"errors"
 	"io"
-	"strconv"
 	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
 
@@ -20,7 +18,7 @@ import (
 // 4. Response
 
 // Get multiplexes all messages from TCPHost using application logic
-func (sn *Node) getMessages() error {
+func (sn *Node) ProcessMessages() error {
 	dbg.Lvl4(sn.Name(), "getting")
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
@@ -323,7 +321,7 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 		return err
 	}
 
-	if err := sn.SendChildrenChallengesProofs(view, chm); err != nil {
+	if err := round.SendChildrenChallengesProofs(chm); err != nil {
 		return err
 	}
 
@@ -475,145 +473,3 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	return nil
 }
 
-func (sn *Node) TryViewChange(view int) error {
-	dbg.Lvl4(sn.Name(), "TRY VIEW CHANGE on", view, "with last view", sn.ViewNo)
-	// should ideally be compare and swap
-	sn.viewmu.Lock()
-	if view <= sn.ViewNo {
-		sn.viewmu.Unlock()
-		return errors.New("trying to view change on previous/ current view")
-	}
-	if sn.ChangingView {
-		sn.viewmu.Unlock()
-		return ChangingViewError
-	}
-	sn.ChangingView = true
-	sn.viewmu.Unlock()
-
-	// take action if new view root
-	if sn.Name() == sn.RootFor(view) {
-		dbg.Lvl4(sn.Name(), "INITIATING VIEW CHANGE FOR VIEW:", view)
-		go func() {
-			err := sn.StartVotingRound(
-				&Vote{
-					View: view,
-					Type: ViewChangeVT,
-					Vcv: &ViewChangeVote{
-						View: view,
-						Root: sn.Name()}})
-			if err != nil {
-				log.Errorln(sn.Name(), "TRY VIEW CHANGE FAILED: ", err)
-			}
-		}()
-	}
-	return nil
-}
-
-// Called by every node after receiving aggregate responses from descendants
-func (sn *Node) VerifyResponses(view, roundNbr int) error {
-	round := sn.Rounds[roundNbr]
-
-	// Check that: base**r_hat * X_hat**c == V_hat
-	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
-	Aux := sn.suite.Point()
-	V_clean := sn.suite.Point()
-	V_clean.Add(V_clean.Mul(nil, round.R_hat), Aux.Mul(round.X_hat, round.C))
-	// T is the recreated V_hat
-	T := sn.suite.Point().Null()
-	T.Add(T, V_clean)
-	T.Add(T, round.ExceptionV_hat)
-
-	var c2 abstract.Secret
-	isroot := sn.IsRoot(view)
-	if isroot {
-		// round challenge must be recomputed given potential
-		// exception list
-		if sn.Type == PubKey {
-			round.C = HashElGamal(sn.suite, sn.Message, round.Log.V_hat)
-			c2 = HashElGamal(sn.suite, sn.Message, T)
-		} else {
-			msg := round.Msg
-			msg = append(msg, []byte(round.MTRoot)...)
-			round.C = HashElGamal(sn.suite, msg, round.Log.V_hat)
-			c2 = HashElGamal(sn.suite, msg, T)
-		}
-	}
-
-	// intermediary nodes check partial responses aginst their partial keys
-	// the root node is also able to check against the challenge it emitted
-	if !T.Equal(round.Log.V_hat) || (isroot && !round.C.Equal(c2)) {
-		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(roundNbr))
-	} else if isroot {
-		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", roundNbr, "view", view)
-		/*
-			nel := len(round.ExceptionList)
-			nhl := len(sn.HostListOn(view))
-			p := strconv.FormatFloat(float64(nel) / float64(nhl), 'f', 6, 64)
-			log.Infoln(sn.Name(), "reports", nel, "out of", nhl, "percentage", p, "failed in round", Round)
-		*/
-		// dbg.Lvl4(round.MTRoot)
-	}
-	return nil
-}
-
-func (sn *Node) TimeForViewChange() bool {
-	if sn.RoundsPerView == 0 {
-		// No view change asked
-		return false
-	}
-	sn.roundmu.Lock()
-	defer sn.roundmu.Unlock()
-
-	// if this round is last one for this view
-	if sn.LastSeenRound % sn.RoundsPerView == 0 {
-		// dbg.Lvl4(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
-		return true
-	}
-	return false
-}
-
-func (sn *Node) CloseAll(view int) error {
-	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
-
-	// At the leaves
-	if len(sn.Children(view)) == 0 {
-		dbg.Lvl2(sn.Name(), "in CloseAll is root leaf")
-	} else {
-		dbg.Lvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
-
-		// Inform all children of announcement
-		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
-		for i := range messgs {
-			sm := SigningMessage{
-				Type:         CloseAll,
-				View:         view,
-				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			}
-			messgs[i] = &sm
-		}
-		ctx := context.TODO()
-		if err := sn.PutDown(ctx, view, messgs); err != nil {
-			return err
-		}
-	}
-
-	sn.Close()
-	dbg.Lvl3("Closing down shop", sn.Isclosed)
-	return nil
-}
-
-func (sn *Node) PutUpError(view int, err error) {
-	// dbg.Lvl4(sn.Name(), "put up response with err", err)
-	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
-	ctx := context.TODO()
-	sn.PutUp(ctx, view, &SigningMessage{
-		Type:         Error,
-		View:         view,
-		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-		Err:          &ErrorMessage{Err: err.Error()}})
-}
-
-// Getting actual View
-func (sn *Node) GetView() int {
-	return sn.ViewNo
-}

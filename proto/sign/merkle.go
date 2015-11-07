@@ -5,101 +5,106 @@ package sign
 // of the Merkle Tree Signature
 
 import (
-	"strconv"
-
-	//log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/coconet"
-	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/proof"
+	"errors"
+	"sync/atomic"
+	"golang.org/x/net/context"
 )
 
-
-// Create Merkle Proof for local client (timestamp server) and
-// store it in Node so that we can send it to the clients during
-// the SignatureBroadcast
-func (sn *Node) StoreLocalMerkleProof(view int, chm *ChallengeMessage) error {
-	if sn.Callbacks != nil {
-		sn.roundLock.RLock()
-		round := sn.Rounds[chm.RoundNbr]
-		sn.roundLock.RUnlock()
-		proofForClient := make(proof.Proof, len(chm.Proof))
-		copy(proofForClient, chm.Proof)
-
-		// To the proof from our root to big root we must add the separated proof
-		// from the localMKT of the client (timestamp server) to our root
-		proofForClient = append(proofForClient, round.Proofs["local"]...)
-
-		// if want to verify partial and full proofs
-		if dbg.DebugVisible > 2{
-			sn.VerifyAllProofs(view, chm, proofForClient)
-		}
-		sn.Proof = proofForClient
-		sn.MTRoot = chm.MTRoot
+func (sn *Node) TryViewChange(view int) error {
+	dbg.Lvl4(sn.Name(), "TRY VIEW CHANGE on", view, "with last view", sn.ViewNo)
+	// should ideally be compare and swap
+	sn.viewmu.Lock()
+	if view <= sn.ViewNo {
+		sn.viewmu.Unlock()
+		return errors.New("trying to view change on previous/ current view")
 	}
+	if sn.ChangingView {
+		sn.viewmu.Unlock()
+		return ChangingViewError
+	}
+	sn.ChangingView = true
+	sn.viewmu.Unlock()
 
+	// take action if new view root
+	if sn.Name() == sn.RootFor(view) {
+		dbg.Lvl4(sn.Name(), "INITIATING VIEW CHANGE FOR VIEW:", view)
+		go func() {
+			err := sn.StartVotingRound(
+				&Vote{
+					View: view,
+					Type: ViewChangeVT,
+					Vcv: &ViewChangeVote{
+						View: view,
+						Root: sn.Name()}})
+			if err != nil {
+				dbg.Lvl2(sn.Name(), "Try view change failed:", err)
+			}
+		}()
+	}
 	return nil
 }
 
-// Create Personalized Merkle Proofs for children servers
-// Send Personalized Merkle Proofs to children servers
-func (sn *Node) SendChildrenChallengesProofs(view int, chm *ChallengeMessage) error {
-	round := sn.Rounds[chm.RoundNbr]
-	// proof from big root to our root will be sent to all children
-	baseProof := make(proof.Proof, len(chm.Proof))
-	copy(baseProof, chm.Proof)
+func (sn *Node) TimeForViewChange() bool {
+	if sn.RoundsPerView == 0 {
+		// No view change asked
+		return false
+	}
+	sn.roundmu.Lock()
+	defer sn.roundmu.Unlock()
 
-	// for each child, create personalized part of proof
-	// embed it in SigningMessage, and send it
-	for name, conn := range sn.Children(view) {
-		newChm := *chm
-		newChm.Proof = append(baseProof, round.Proofs[name]...)
+	// if this round is last one for this view
+	if sn.LastSeenRound % sn.RoundsPerView == 0 {
+		// dbg.Lvl4(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
+		return true
+	}
+	return false
+}
 
-		var messg coconet.BinaryMarshaler
-		messg = &SigningMessage{View: view, Type: Challenge, Chm: &newChm}
+func (sn *Node) CloseAll(view int) error {
+	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
 
-		// send challenge message to child
-		// dbg.Lvl4("connection: sending children challenge proofs:", name, conn)
-		if err := conn.PutData(messg); err != nil {
+	// At the leaves
+	if len(sn.Children(view)) == 0 {
+		dbg.Lvl2(sn.Name(), "in CloseAll is root leaf")
+	} else {
+		dbg.Lvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
+
+		// Inform all children of announcement
+		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+		for i := range messgs {
+			sm := SigningMessage{
+				Type:         CloseAll,
+				View:         view,
+				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			}
+			messgs[i] = &sm
+		}
+		ctx := context.TODO()
+		if err := sn.PutDown(ctx, view, messgs); err != nil {
 			return err
 		}
 	}
 
+	sn.Close()
+	dbg.Lvl3("Closing down shop", sn.Isclosed)
 	return nil
 }
 
-// Check that starting from its own committed message each child can reach our subtrees' mtroot
-// Also checks that starting from local mt root we can get to  our subtrees' mtroot <-- could be in diff fct
-func (sn *Node) checkChildrenProofs(Round int) {
-	sn.roundLock.RLock()
-	round := sn.Rounds[Round]
-	sn.roundLock.RUnlock()
-	cmtAndLocal := make([]hashid.HashId, len(round.CMTRoots))
-	copy(cmtAndLocal, round.CMTRoots)
-	cmtAndLocal = append(cmtAndLocal, round.LocalMTRoot)
-
-	proofs := make([]proof.Proof, 0)
-	for _, name := range round.CMTRootNames {
-		proofs = append(proofs, round.Proofs[name])
-	}
-
-	if proof.CheckLocalProofs(sn.Suite().Hash, round.MTRoot, cmtAndLocal, proofs) == true {
-		dbg.Lvl4("Chidlren Proofs of", sn.Name(), "successful for round "+strconv.Itoa(sn.nRounds))
-	} else {
-		panic("Children Proofs" + sn.Name() + " unsuccessful for round " + strconv.Itoa(sn.nRounds))
-	}
+func (sn *Node) PutUpError(view int, err error) {
+	// dbg.Lvl4(sn.Name(), "put up response with err", err)
+	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
+	ctx := context.TODO()
+	sn.PutUp(ctx, view, &SigningMessage{
+		Type:         Error,
+		View:         view,
+		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+		Err:          &ErrorMessage{Err: err.Error()}})
 }
 
-func (sn *Node) VerifyAllProofs(view int, chm *ChallengeMessage, proofForClient proof.Proof) {
-	sn.roundLock.RLock()
-	round := sn.Rounds[chm.RoundNbr]
-	sn.roundLock.RUnlock()
-	// proof from client to my root
-	proof.CheckProof(sn.Suite().Hash, round.MTRoot, round.LocalMTRoot, round.Proofs["local"])
-	// proof from my root to big root
-	dbg.Lvl4(sn.Name(), "verifying for view", view)
-	proof.CheckProof(sn.Suite().Hash, chm.MTRoot, round.MTRoot, chm.Proof)
-	// proof from client to big root
-	proof.CheckProof(sn.Suite().Hash, chm.MTRoot, round.LocalMTRoot, proofForClient)
+// Getting actual View
+func (sn *Node) GetView() int {
+	return sn.ViewNo
 }

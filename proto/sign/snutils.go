@@ -114,24 +114,6 @@ func (sn *Node) TryFailure(view, roundNbr int) error {
 	return nil
 }
 
-// Create round lasting secret and commit point v and V
-// Initialize log structure for the round
-func (sn *Node) initCommitCrypto(roundNbr int) {
-	round := sn.Rounds[roundNbr]
-	// generate secret and point commitment for this round
-	rand := sn.suite.Cipher([]byte(sn.Name()))
-	round.Log = SNLog{}
-	round.Log.v = sn.suite.Secret().Pick(rand)
-	round.Log.V = sn.suite.Point().Mul(nil, round.Log.v)
-	// initialize product of point commitments
-	round.Log.V_hat = sn.suite.Point().Null()
-	round.Log.Suite = sn.suite
-	sn.add(round.Log.V_hat, round.Log.V)
-
-	round.X_hat = sn.suite.Point().Null()
-	sn.add(round.X_hat, sn.PubKey)
-}
-
 // Figure out which kids did not submit messages
 // Add default messages to messgs, one per missing child
 // as to make it easier to identify and add them to exception lists in one place
@@ -188,6 +170,28 @@ func (sn *Node) updateLastSeenVote(hv int, from string) {
 	if int(atomic.LoadInt64(&sn.LastSeenVote)) < hv {
 		atomic.StoreInt64(&sn.LastSeenVote, int64(hv))
 	}
+}
+
+func (sn *Node) ChangeView(vcv *ViewChangeVote) {
+	// log.Println(sn.Name(), " in CHANGE VIEW")
+	// at this point actions have already been applied
+	// all we need to do is switch our default view
+	sn.viewmu.Lock()
+	sn.ViewNo = vcv.View
+	sn.viewmu.Unlock()
+	if sn.RootFor(vcv.View) == sn.Name() {
+		log.Println(sn.Name(), "Change view to root", "children", sn.Children(vcv.View))
+		sn.viewChangeCh <- "root"
+	} else {
+		log.Println(sn.Name(), "Change view to regular")
+		sn.viewChangeCh <- "regular"
+	}
+
+	sn.viewmu.Lock()
+	sn.ChangingView = false
+	sn.viewmu.Unlock()
+	log.Println("VIEW CHANGED")
+	// TODO: garbage collect old connections
 }
 
 func max(a int, b int) int {
