@@ -221,21 +221,31 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 	if err != nil {
 		return err
 	}
-	msgs_bm := make([]coconet.BinaryMarshaler, len(msgs))
-	for i, m := range (msgs) {
-		msgs_bm[i] = m
-	}
 
-	dbg.Lvl4(sn.Name(), "sending to all children")
-	ctx := context.TODO()
-	if err := sn.PutDown(ctx, view, msgs_bm); err != nil {
-		return err
-	}
-
-	// If we are a leaf, start the commit phase process
 	if len(sn.Children(view)) == 0 {
+		// If we are a leaf, start the commit phase process
 		sn.Commit(view, am.RoundNbr, nil)
+	} else {
+		// Transform the AnnouncementMessages to SigningMessages to send to the
+		// Children
+		msgs_bm := make([]coconet.BinaryMarshaler, sn.NChildren(sn.ViewNo))
+		for i := range msgs {
+			sm := SigningMessage{
+				Type:         Announcement,
+				View:         sn.ViewNo,
+				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+				Am:           msgs[i]}
+			msgs_bm[i] = &sm
+		}
+
+		// And sending to all our children-nodes
+		dbg.Lvl4(sn.Name(), "sending to all children")
+		ctx := context.TODO()
+		if err := sn.PutDown(ctx, view, msgs_bm); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 

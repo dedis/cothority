@@ -3,8 +3,6 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/coconet"
-	"github.com/dedis/prifi/coco/sign"
 )
 
 // Callbacks holds the functions that are used to define the
@@ -17,7 +15,7 @@ type Callbacks interface {
 	// announcement is made.
 	// TODO: remove Node-argument from function - this should be kept as
 	// internal variable in CallbackStamper
-	Announcement(*Node, *AnnouncementMessage) ([]sign.AnnouncementMessage, error)
+	Announcement(*Node, *AnnouncementMessage) ([]*AnnouncementMessage, error)
 	// Commitment: nodes -> root
 	// This is called whenever a commitment is ready to
 	// be sent. It takes the messages of its children and returns

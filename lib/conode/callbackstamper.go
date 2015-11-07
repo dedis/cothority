@@ -17,7 +17,6 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"net"
 	"os"
-	"sync/atomic"
 )
 
 type CallbacksStamper struct {
@@ -53,7 +52,7 @@ func NewCallbacksStamper() *CallbacksStamper {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMessage) ([]sign.AnnouncementMessage, error) {
+func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMessage) ([]*sign.AnnouncementMessage, error) {
 	var t int64
 	if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
 		dbg.Lvl1("Unmashaling timestamp has failed")
@@ -73,15 +72,10 @@ func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMes
 	round.Msg = am.Message
 	cs.Round = round
 
-	// Inform all children of announcement
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(sn.ViewNo))
+	// Inform all children of announcement - just copy the one that came in
+	messgs := make([]*sign.AnnouncementMessage, sn.NChildren(sn.ViewNo))
 	for i := range messgs {
-		sm := sign.SigningMessage{
-			Type:         sign.Announcement,
-			View:         sn.ViewNo,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			Am:           am}
-		messgs[i] = &sm
+		messgs[i] = am
 	}
 	return messgs, nil
 }
