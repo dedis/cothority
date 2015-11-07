@@ -166,7 +166,6 @@ func (sn *Node) add(a abstract.Point, b abstract.Point) {
 	if b != nil {
 		a.Add(a, b)
 	}
-
 }
 
 // accommodate nils
@@ -177,7 +176,6 @@ func (sn *Node) sub(a abstract.Point, b abstract.Point) {
 	if b != nil {
 		a.Sub(a, b)
 	}
-
 }
 
 func (sn *Node) subExceptions(a abstract.Point, keys []abstract.Point) {

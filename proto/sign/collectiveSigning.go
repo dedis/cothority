@@ -9,7 +9,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -270,77 +269,20 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 		return nil
 	}
 
-	// prepare to handle exceptions
-	round.ExceptionList = make([]abstract.Point, 0)
+	// TODO - there should be a real passage of values and not just
+	// a filled-up round
+	sn.Callbacks.Commitment(nil)
 
-	// Create the mapping between children and their respective public key + commitment
-	// V for commitment
-	children := sn.Children(view)
-	round.ChildV_hat = make(map[string]abstract.Point, len(children))
-	// X for public key
-	round.ChildX_hat = make(map[string]abstract.Point, len(children))
-
-	// Commits from children are the first Merkle Tree leaves for the round
-	round.Leaves = make([]hashid.HashId, 0)
-	round.LeavesFrom = make([]string, 0)
-
-	for key := range children {
-		round.ChildX_hat[key] = sn.suite.Point().Null()
-		round.ChildV_hat[key] = sn.suite.Point().Null()
-	}
-
-	// TODO: fill in missing commit messages, and add back exception code
-	commits := make([]*CommitmentMessage, len(children))
-	for _, sm := range round.Commits {
-		from := sm.From
-		commits = append(commits, sm.Com)
-		// MTR ==> root of sub-merkle tree
-		round.Leaves = append(round.Leaves, sm.Com.MTRoot)
-		round.LeavesFrom = append(round.LeavesFrom, from)
-		round.ChildV_hat[from] = sm.Com.V_hat
-		round.ChildX_hat[from] = sm.Com.X_hat
-		round.ExceptionList = append(round.ExceptionList, sm.Com.ExceptionList...)
-
-		// Aggregation
-		// add good child server to combined public key, and point commit
-		sn.add(round.X_hat, sm.Com.X_hat)
-		sn.add(round.Log.V_hat, sm.Com.V_hat)
-		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
-	}
-
-	if sn.Type == PubKey {
-		dbg.Lvl4("sign.Node.Commit using PubKey")
-		return sn.actOnCommits(view, roundNbr)
-	} else {
-		dbg.Lvl4("sign.Node.Commit using Merkle")
-		MerkleAddChildren(round)
-		// compute the local Merkle root
-		if sn.Callbacks != nil {
-			MerkleAddLocal(round, sn.Callbacks.Commitment(commits).MTRoot)
-		} else {
-			MerkleAddLocal(round, make([]byte, hashid.Size))
-		}
-		sn.HashLog(roundNbr)
-		sn.ComputeCombinedMerkleRoot(view, roundNbr)
-		return sn.actOnCommits(view, roundNbr)
-	}
-}
-
-// Finalize commits by initiating the challenge pahse if root
-// Send own commitment message up to parent if non-root
-func (sn *Node) actOnCommits(view, roundNbr int) error {
-	round := sn.Rounds[roundNbr]
 	var err error
-
-	if sn.IsRoot(view) {
-		// BUG: when removing the dbg.Lvl5, returns 'invalid elliptic curve'
-		dbg.Lvl5("Commit root : Aggregate Public Key :", round.X_hat)
-		//fmt.Println("Message is ", round.msg)
-		//if round.X_hat.Equal(sn.suite.Point().Null()) {
-		//	fmt.Println("Committt", round.X_hat)
-		//}
+	if round.Parent == "" {
+		dbg.Lvl3("Commit root : Aggregate Public Key :", round.X_hat)
 		sn.commitsDone <- roundNbr
-		err = sn.FinalizeCommits(view, roundNbr)
+		err = sn.Challenge(view, &ChallengeMessage{
+			C:      round.C,
+			MTRoot: round.MTRoot,
+			Proof:  round.Proof,
+			RoundNbr:  roundNbr,
+			Vote:   round.Vote})
 	} else {
 		// create and putup own commit message
 		com := &CommitmentMessage{
@@ -377,7 +319,7 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 	}
 
 	// register challenge
-	round.c = chm.C
+	round.C = chm.C
 
 	if sn.Type == PubKey {
 		dbg.Lvl4(sn.Name(), "challenge: using pubkey", sn.Type, chm.Vote)
@@ -411,10 +353,10 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 func (sn *Node) initResponseCrypto(roundNbr int) {
 	round := sn.Rounds[roundNbr]
 	// generate response   r = v - xc
-	round.r = sn.suite.Secret()
-	round.r.Mul(sn.PrivKey, round.c).Sub(round.Log.v, round.r)
+	round.R = sn.suite.Secret()
+	round.R.Mul(sn.PrivKey, round.C).Sub(round.Log.v, round.R)
 	// initialize sum of children's responses
-	round.r_hat = round.r
+	round.r_hat = round.R
 }
 
 // Respond send the response UP from leaf to parent
@@ -588,29 +530,6 @@ func (sn *Node) TryViewChange(view int) error {
 	return nil
 }
 
-// Called *only* by root node after receiving all commits
-func (sn *Node) FinalizeCommits(view int, roundNbr int) error {
-	round := sn.Rounds[roundNbr]
-
-	// challenge = Hash(Merkle Tree Root/ Announcement Message, sn.Log.V_hat)
-	msg := round.Msg
-	msg = append(msg, []byte(round.MTRoot)...)
-	if sn.Type == PubKey {
-		round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
-	} else {
-		round.c = hashElGamal(sn.suite, msg, round.Log.V_hat)
-	}
-
-	proof := make([]hashid.HashId, 0)
-	err := sn.Challenge(view, &ChallengeMessage{
-		C:      round.c,
-		MTRoot: round.MTRoot,
-		Proof:  proof,
-		RoundNbr:  roundNbr,
-		Vote:   round.Vote})
-	return err
-}
-
 // Called by every node after receiving aggregate responses from descendants
 func (sn *Node) VerifyResponses(view, roundNbr int) error {
 	round := sn.Rounds[roundNbr]
@@ -619,7 +538,7 @@ func (sn *Node) VerifyResponses(view, roundNbr int) error {
 	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 	Aux := sn.suite.Point()
 	V_clean := sn.suite.Point()
-	V_clean.Add(V_clean.Mul(nil, round.r_hat), Aux.Mul(round.X_hat, round.c))
+	V_clean.Add(V_clean.Mul(nil, round.r_hat), Aux.Mul(round.X_hat, round.C))
 	// T is the recreated V_hat
 	T := sn.suite.Point().Null()
 	T.Add(T, V_clean)
@@ -631,19 +550,19 @@ func (sn *Node) VerifyResponses(view, roundNbr int) error {
 		// round challenge must be recomputed given potential
 		// exception list
 		if sn.Type == PubKey {
-			round.c = hashElGamal(sn.suite, sn.Message, round.Log.V_hat)
-			c2 = hashElGamal(sn.suite, sn.Message, T)
+			round.C = HashElGamal(sn.suite, sn.Message, round.Log.V_hat)
+			c2 = HashElGamal(sn.suite, sn.Message, T)
 		} else {
 			msg := round.Msg
 			msg = append(msg, []byte(round.MTRoot)...)
-			round.c = hashElGamal(sn.suite, msg, round.Log.V_hat)
-			c2 = hashElGamal(sn.suite, msg, T)
+			round.C = HashElGamal(sn.suite, msg, round.Log.V_hat)
+			c2 = HashElGamal(sn.suite, msg, T)
 		}
 	}
 
 	// intermediary nodes check partial responses aginst their partial keys
 	// the root node is also able to check against the challenge it emitted
-	if !T.Equal(round.Log.V_hat) || (isroot && !round.c.Equal(c2)) {
+	if !T.Equal(round.Log.V_hat) || (isroot && !round.C.Equal(c2)) {
 		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(roundNbr))
 	} else if isroot {
 		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", roundNbr, "view", view)
@@ -709,7 +628,7 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 		if sn.IsRoot(view) {
 			sb = &SignatureBroadcastMessage{
 				R0_hat: r.r_hat,
-				C:      r.c,
+				C:      r.C,
 				X0_hat: r.X_hat,
 				V0_hat: r.Log.V_hat,
 			}
@@ -790,7 +709,7 @@ func (sn *Node) PutUpError(view int, err error) {
 }
 
 // Returns a secret that depends on on a message and a point
-func hashElGamal(suite abstract.Suite, message []byte, p abstract.Point) abstract.Secret {
+func HashElGamal(suite abstract.Suite, message []byte, p abstract.Point) abstract.Secret {
 	pb, _ := p.MarshalBinary()
 	c := suite.Cipher(pb)
 	c.Message(nil, nil, message)
@@ -801,21 +720,16 @@ func hashElGamal(suite abstract.Suite, message []byte, p abstract.Point) abstrac
 func (sn *Node) HashLog(roundNbr int) error {
 	round := sn.Rounds[roundNbr]
 	var err error
-	round.HashedLog, err = sn.hashLog(roundNbr)
-	return err
-}
-
-// Auxilary function to perform the actual hashing of the log
-func (sn *Node) hashLog(roundNbr int) ([]byte, error) {
-	round := sn.Rounds[roundNbr]
 
 	h := sn.suite.Hash()
 	logBytes, err := round.Log.MarshalBinary()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	h.Write(logBytes)
-	return h.Sum(nil), nil
+
+	round.HashedLog = h.Sum(nil)
+	return err
 }
 
 // Getting actual View

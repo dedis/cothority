@@ -23,7 +23,7 @@ func ElGamalSign(suite abstract.Suite, random cipher.Stream, message []byte,
 	T := suite.Point().Mul(nil, v)
 
 	// Create challenge c based on message and T
-	c := hashElGamal(suite, message, T)
+	c := HashElGamal(suite, message, T)
 
 	// Compute response r = v - x*c
 	r := suite.Secret()
@@ -47,7 +47,7 @@ func ElGamalVerify(suite abstract.Suite, message []byte, publicKey abstract.Poin
 
 	// Verify that the hash based on the message and T
 	// matches the challange c from the signature
-	c = hashElGamal(suite, message, T)
+	c = HashElGamal(suite, message, T)
 	if !c.Equal(sig.C) {
 		return errors.New("invalid signature")
 	}

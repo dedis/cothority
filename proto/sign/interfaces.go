@@ -4,7 +4,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-// todo: see where Signer should be located
 type Signer interface {
 	Name() string
 	IsRoot(view int) bool

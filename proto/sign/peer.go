@@ -14,16 +14,16 @@ import (
 
 type Peer struct {
 	Signer
-	NameP string
+	NameP     string
 
-	RLock sync.Mutex
+	RLock     sync.Mutex
 	MaxRounds int
 	CloseChan chan bool
 
 	Logger    string
 	Hostname  string
 	App       string
-	Cb Callbacks
+	Cb        Callbacks
 }
 
 // NewPeer returns a peer that can be used to set up

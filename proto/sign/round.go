@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/coconet"
 )
 
 const FIRST_ROUND int = 1 // start counting rounds at 1
@@ -15,8 +16,8 @@ type Round struct {
 								   // the round for this round . It will be included in the challenge, and then
 								   // can be verified by the client
 	Msg            []byte
-	c              abstract.Secret // round lasting challenge
-	r              abstract.Secret // round lasting response
+	C              abstract.Secret // round lasting challenge
+	R              abstract.Secret // round lasting response
 
 	Log            SNLog           // round lasting log structure
 	HashedLog      []byte
@@ -39,6 +40,7 @@ type Round struct {
 	CMTRoots       []hashid.HashId
 	CMTRootNames   []string
 	Proofs         map[string]proof.Proof
+	Proof          []hashid.HashId
 
 								   // round-lasting public keys of children servers that did not
 								   // respond to latest commit or respond phase, in subtree
@@ -54,8 +56,11 @@ type Round struct {
 	AccRound       []byte
 
 	Vote           *Vote
-								   // VoteRequest  *VoteRequest  // Vote Request vote on in the round
-								   // CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
+	Suite          abstract.Suite
+
+	Children       map[string]coconet.Conn
+	Parent         string
+	View           int
 }
 
 type RoundType int
@@ -75,18 +80,15 @@ func NewRound(suite abstract.Suite) *Round {
 	round.Commits = make([]*SigningMessage, 0)
 	round.Responses = make([]*SigningMessage, 0)
 	round.ExceptionList = make([]abstract.Point, 0)
+	round.Suite = suite
 	round.Log.Suite = suite
 	return round
 }
 
+// Sets up a round according to the needs stated in the
+// Announcementmessage.
 func RoundSetup(sn *Node, view int, am *AnnouncementMessage) error {
-	// TODO: accept annoucements on old views?? linearizabiltity?
 	sn.viewmu.Lock()
-	// if (sn.ChangingView && am.Vote == nil) || (sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil) {
-	// 	dbg.Lvl4(sn.Name(), "currently chaning view")
-	// 	sn.viewmu.Unlock()
-	// 	return ChangingViewError
-	// }
 	if sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil {
 		dbg.Lvl4(sn.Name(), "currently chaning view")
 		sn.viewmu.Unlock()
@@ -117,6 +119,9 @@ func RoundSetup(sn *Node, view int, am *AnnouncementMessage) error {
 	sn.Rounds[roundNbr] = NewRound(sn.suite)
 	sn.initCommitCrypto(roundNbr)
 	sn.Rounds[roundNbr].Vote = am.Vote
+	sn.Rounds[roundNbr].Children = sn.Children(view)
+	sn.Rounds[roundNbr].Parent = sn.Parent(view)
+	sn.Rounds[roundNbr].View = view
 
 	// update max seen round
 	sn.roundmu.Lock()
@@ -154,5 +159,25 @@ func (rt RoundType) String() string {
 		return "noop"
 	default:
 		return ""
+	}
+}
+
+// Adding-function for crypto-points that accepts nil
+func (r *Round) Add(a abstract.Point, b abstract.Point) {
+	if a == nil {
+		a = r.Suite.Point().Null()
+	}
+	if b != nil {
+		a.Add(a, b)
+	}
+}
+
+// Substraction-function for crypto-points that accepts nil
+func (r *Round) Sub(a abstract.Point, b abstract.Point) {
+	if a == nil {
+		a = r.Suite.Point().Null()
+	}
+	if b != nil {
+		a.Sub(a, b)
 	}
 }

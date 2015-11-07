@@ -80,8 +80,49 @@ func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMes
 	return messgs, nil
 }
 
-func (cs *CallbacksStamper) Commitment(children []*sign.CommitmentMessage) *sign.CommitmentMessage {
-	//dbg.Lvl4(cs.Name(), "calling AggregateCommits")
+func (cs *CallbacksStamper) Commitment(_ []*sign.CommitmentMessage) *sign.CommitmentMessage {
+	// prepare to handle exceptions
+	round := cs.Round
+	round.ExceptionList = make([]abstract.Point, 0)
+
+	// Create the mapping between children and their respective public key + commitment
+	// V for commitment
+	children := round.Children
+	round.ChildV_hat = make(map[string]abstract.Point, len(children))
+	// X for public key
+	round.ChildX_hat = make(map[string]abstract.Point, len(children))
+
+	// Commits from children are the first Merkle Tree leaves for the round
+	round.Leaves = make([]hashid.HashId, 0)
+	round.LeavesFrom = make([]string, 0)
+
+	for key := range children {
+		round.ChildX_hat[key] = round.Suite.Point().Null()
+		round.ChildV_hat[key] = round.Suite.Point().Null()
+	}
+
+	commits := make([]*sign.CommitmentMessage, len(children))
+	for _, sm := range round.Commits {
+		from := sm.From
+		commits = append(commits, sm.Com)
+		// MTR ==> root of sub-merkle tree
+		round.Leaves = append(round.Leaves, sm.Com.MTRoot)
+		round.LeavesFrom = append(round.LeavesFrom, from)
+		round.ChildV_hat[from] = sm.Com.V_hat
+		round.ChildX_hat[from] = sm.Com.X_hat
+		round.ExceptionList = append(round.ExceptionList, sm.Com.ExceptionList...)
+
+		// Aggregation
+		// add good child server to combined public key, and point commit
+		round.Add(round.X_hat, sm.Com.X_hat)
+		round.Add(round.Log.V_hat, sm.Com.V_hat)
+		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
+	}
+
+	dbg.Lvl4("sign.Node.Commit using Merkle")
+	round.MerkleAddChildren()
+	// compute the local Merkle root
+
 	cs.mux.Lock()
 	// get data from s once to avoid refetching from structure
 	Queue := cs.Queue
@@ -106,15 +147,24 @@ func (cs *CallbacksStamper) Commitment(children []*sign.CommitmentMessage) *sign
 		cs.mux.Unlock()
 
 		// create Merkle tree for this round's messages and check corectness
-		cs.Root, cs.Proofs = proof.ProofTree(cs.peer.Suite().Hash, cs.Leaves)
+		cs.Root, cs.Proofs = proof.ProofTree(cs.Round.Suite.Hash, cs.Leaves)
 		if dbg.DebugVisible > 2 {
-			if proof.CheckLocalProofs(cs.peer.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
+			if proof.CheckLocalProofs(cs.Round.Suite.Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
 				dbg.Lvl4("Local Proofs of", cs.peer.Name(), "successful for round " + strconv.Itoa(int(cs.peer.LastRound())))
 			} else {
 				panic("Local Proofs" + cs.peer.Name() + " unsuccessful for round " + strconv.Itoa(int(cs.peer.LastRound())))
 			}
 		}
 	}
+
+	round.MerkleAddLocal(cs.Root)
+	round.MerkleHashLog()
+	round.ComputeCombinedMerkleRoot()
+	msg := round.Msg
+	msg = append(msg, []byte(round.MTRoot)...)
+	round.C = sign.HashElGamal(round.Suite, msg, round.Log.V_hat)
+
+	round.Proof = make([]hashid.HashId, 0)
 
 	return &sign.CommitmentMessage{MTRoot:cs.Root}
 }

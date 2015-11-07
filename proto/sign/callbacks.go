@@ -20,8 +20,6 @@ type Callbacks interface {
 	// This is called whenever a commitment is ready to
 	// be sent. It takes the messages of its children and returns
 	// the new message to be sent.
-	///Commitment([]CommitmentMessage) *CommitmentMessage
-	// Actual Commitment which only returns new Merkle-tree
 	Commitment([]*CommitmentMessage) *CommitmentMessage
 	// Challenge: root -> nodes
 	// This is called with the message to be signed. If necessary,

@@ -143,9 +143,9 @@ func (sn *Node) actOnPromises(view, Round int) error {
 			// log.Fatal("Marshal Binary failed for CountedVotes")
 			return err
 		}
-		round.c = hashElGamal(sn.suite, b, round.Log.V_hat)
+		round.C = HashElGamal(sn.suite, b, round.Log.V_hat)
 		err = sn.Accept(view, &ChallengeMessage{
-			C:     round.c,
+			C:     round.C,
 			RoundNbr: Round,
 			Vote:  round.Vote})
 

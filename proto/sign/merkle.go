@@ -5,8 +5,6 @@ package sign
 // of the Merkle Tree Signature
 
 import (
-	"bytes"
-	"sort"
 	"strconv"
 
 	//log "github.com/Sirupsen/logrus"
@@ -17,55 +15,6 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 )
 
-
-func MerkleAddChildren(round *Round) {
-	// children commit roots
-	round.CMTRoots = make([]hashid.HashId, len(round.Leaves))
-	copy(round.CMTRoots, round.Leaves)
-	round.CMTRootNames = make([]string, len(round.Leaves))
-	copy(round.CMTRootNames, round.LeavesFrom)
-
-	// concatenate children commit roots in one binary blob for easy marshalling
-	round.Log.CMTRoots = make([]byte, 0)
-	for _, leaf := range round.Leaves {
-		round.Log.CMTRoots = append(round.Log.CMTRoots, leaf...)
-	}
-}
-
-func MerkleAddLocal(round *Round, localMTroot hashid.HashId) {
-	// add own local mtroot to leaves
-	round.LocalMTRoot = localMTroot
-	round.Leaves = append(round.Leaves, round.LocalMTRoot)
-}
-
-func (sn *Node) ComputeCombinedMerkleRoot(view, Round int) {
-	sn.roundLock.RLock()
-	round := sn.Rounds[Round]
-	sn.roundLock.RUnlock()
-	// add hash of whole log to leaves
-	round.Leaves = append(round.Leaves, round.HashedLog)
-
-	// compute MT root based on Log as right child and
-	// MT of leaves as left child and send it up to parent
-	sort.Sort(hashid.ByHashId(round.Leaves))
-	left, proofs := proof.ProofTree(sn.Suite().Hash, round.Leaves)
-	right := round.HashedLog
-	moreLeaves := make([]hashid.HashId, 0)
-	moreLeaves = append(moreLeaves, left, right)
-	round.MTRoot, _ = proof.ProofTree(sn.Suite().Hash, moreLeaves)
-
-	// Hashed Log has to come first in the proof; len(sn.CMTRoots)+1 proofs
-	round.Proofs = make(map[string]proof.Proof, 0)
-	children := sn.Children(view)
-	for name := range children {
-		round.Proofs[name] = append(round.Proofs[name], right)
-	}
-	round.Proofs["local"] = append(round.Proofs["local"], right)
-
-	// separate proofs by children (need to send personalized proofs to children)
-	// also separate local proof (need to send it to timestamp server)
-	sn.SeparateProofs(proofs, round.Leaves, Round)
-}
 
 // Create Merkle Proof for local client (timestamp server) and
 // store it in Node so that we can send it to the clients during
@@ -118,33 +67,6 @@ func (sn *Node) SendChildrenChallengesProofs(view int, chm *ChallengeMessage) er
 	}
 
 	return nil
-}
-
-// Identify which proof corresponds to which leaf
-// Needed given that the leaves are sorted before passed to the function that create
-// the Merkle Tree and its Proofs
-func (sn *Node) SeparateProofs(proofs []proof.Proof, leaves []hashid.HashId, Round int) {
-	sn.roundLock.RLock()
-	round := sn.Rounds[Round]
-	sn.roundLock.RUnlock()
-	// separate proofs for children servers mt roots
-	for i := 0; i < len(round.CMTRoots); i++ {
-		name := round.CMTRootNames[i]
-		for j := 0; j < len(leaves); j++ {
-			if bytes.Compare(round.CMTRoots[i], leaves[j]) == 0 {
-				// sn.Proofs[i] = append(sn.Proofs[i], proofs[j]...)
-				round.Proofs[name] = append(round.Proofs[name], proofs[j]...)
-				continue
-			}
-		}
-	}
-
-	// separate proof for local mt root
-	for j := 0; j < len(leaves); j++ {
-		if bytes.Compare(round.LocalMTRoot, leaves[j]) == 0 {
-			round.Proofs["local"] = append(round.Proofs["local"], proofs[j]...)
-		}
-	}
 }
 
 // Check that starting from its own committed message each child can reach our subtrees' mtroot
