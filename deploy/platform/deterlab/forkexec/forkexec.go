@@ -6,13 +6,13 @@ import (
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
-	"os"
-	"net"
-	"sync"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/logutils"
+	"net"
+	"os"
+	"sync"
 )
 
 // Wrapper around app to enable measuring of cpu time
@@ -26,6 +26,7 @@ var rootname string
 func main() {
 	deter.ReadConfig()
 	// The flags are defined in lib/app
+	app.FlagInit()
 	flag.Parse()
 
 	setup_deter()
@@ -55,7 +56,7 @@ func main() {
 				}
 
 				dbg.Lvl3("Starting on", app.RunFlags.PhysAddr, "with args", args)
-				cmdApp := exec.Command("./" + deter.App, args...)
+				cmdApp := exec.Command("./"+deter.App, args...)
 				//cmd.Stdout = log.StandardLogger().Writer()
 				//cmd.Stderr = log.StandardLogger().Writer()
 				cmdApp.Stdout = os.Stdout
