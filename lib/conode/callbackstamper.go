@@ -53,7 +53,7 @@ func NewCallbacksStamper() *CallbacksStamper {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMessage) ([]coconet.BinaryMarshaler, error) {
+func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMessage) ([]sign.AnnouncementMessage, error) {
 	var t int64
 	if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
 		dbg.Lvl1("Unmashaling timestamp has failed")
