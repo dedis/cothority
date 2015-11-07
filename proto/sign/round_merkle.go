@@ -2,8 +2,9 @@ package sign
 import (
 	"github.com/dedis/cothority/lib/hashid"
 	"sort"
-"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/lib/proof"
 	"bytes"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 /*
@@ -96,5 +97,32 @@ func (round *Round) SeparateProofs(proofs []proof.Proof, leaves []hashid.HashId)
 			round.Proofs["local"] = append(round.Proofs["local"], proofs[j]...)
 		}
 	}
+}
+
+func (round *Round) InitResponseCrypto() {
+	round.R = round.Suite.Secret()
+	round.R.Mul(round.PrivKey, round.C).Sub(round.Log.v, round.R)
+	// initialize sum of children's responses
+	round.r_hat = round.R
+}
+
+// Create Merkle Proof for local client (timestamp server) and
+// store it in Node so that we can send it to the clients during
+// the SignatureBroadcast
+func (round *Round) StoreLocalMerkleProof(chm *ChallengeMessage) error {
+	proofForClient := make(proof.Proof, len(chm.Proof))
+	copy(proofForClient, chm.Proof)
+
+	// To the proof from our root to big root we must add the separated proof
+	// from the localMKT of the client (timestamp server) to our root
+	proofForClient = append(proofForClient, round.Proofs["local"]...)
+
+	// if want to verify partial and full proofs
+	if dbg.DebugVisible > 2 {
+		//sn.VerifyAllProofs(view, chm, proofForClient)
+	}
+	round.Proof = proofForClient
+	round.MTRoot = chm.MTRoot
+	return nil
 }
 

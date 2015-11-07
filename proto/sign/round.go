@@ -41,6 +41,7 @@ type Round struct {
 	CMTRootNames   []string
 	Proofs         map[string]proof.Proof
 	Proof          []hashid.HashId
+	PrivKey         abstract.Secret
 
 								   // round-lasting public keys of children servers that did not
 								   // respond to latest commit or respond phase, in subtree
@@ -122,6 +123,7 @@ func RoundSetup(sn *Node, view int, am *AnnouncementMessage) error {
 	sn.Rounds[roundNbr].Children = sn.Children(view)
 	sn.Rounds[roundNbr].Parent = sn.Parent(view)
 	sn.Rounds[roundNbr].View = view
+	sn.Rounds[roundNbr].PrivKey = sn.PrivKey
 
 	// update max seen round
 	sn.roundmu.Lock()

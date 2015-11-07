@@ -318,45 +318,21 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 		return nil
 	}
 
-	// register challenge
-	round.C = chm.C
-
-	if sn.Type == PubKey {
-		dbg.Lvl4(sn.Name(), "challenge: using pubkey", sn.Type, chm.Vote)
-		if err := sn.SendChildrenChallenges(view, chm); err != nil {
-			return err
-		}
-	} else {
-		dbg.Lvl4(sn.Name(), "challenge: using merkle proofs")
-		// messages from clients, proofs computed
-		if sn.CommitedFor(round) {
-			if err := sn.StoreLocalMerkleProof(view, chm); err != nil {
-				return err
-			}
-
-		}
-		if err := sn.SendChildrenChallengesProofs(view, chm); err != nil {
-			return err
-		}
+	err := sn.Callbacks.Challenge(chm)
+	if err != nil{
+		return err
 	}
 
-	// dbg.Lvl4(sn.Name(), "In challenge before response")
-	sn.initResponseCrypto(chm.RoundNbr)
+	if err := sn.SendChildrenChallengesProofs(view, chm); err != nil {
+		return err
+	}
+
 	// if we are a leaf, send the respond up
 	if len(sn.Children(view)) == 0 {
 		sn.Respond(view, chm.RoundNbr, nil)
 	}
 	// dbg.Lvl4(sn.Name(), "Done handling challenge message")
 	return nil
-}
-
-func (sn *Node) initResponseCrypto(roundNbr int) {
-	round := sn.Rounds[roundNbr]
-	// generate response   r = v - xc
-	round.R = sn.suite.Secret()
-	round.R.Mul(sn.PrivKey, round.C).Sub(round.Log.v, round.R)
-	// initialize sum of children's responses
-	round.r_hat = round.R
 }
 
 // Respond send the response UP from leaf to parent
@@ -439,6 +415,47 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 	return sn.actOnResponses(view, roundNbr, exceptionV_hat, exceptionX_hat)
 }
 
+func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
+	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
+	// Root is creating the sig broadcast
+	if sb == nil {
+		r := sn.Rounds[round]
+		if sn.IsRoot(view) {
+			sb = &SignatureBroadcastMessage{
+				R0_hat: r.r_hat,
+				C:      r.C,
+				X0_hat: r.X_hat,
+				V0_hat: r.Log.V_hat,
+			}
+		}
+	}
+	// messages from clients, proofs computed
+	//if sn.CommitedFor(sn.Round) {
+	sn.SendLocalMerkleProof(view, sb)
+	//}
+
+	// Inform all children of announcement
+	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+	for i := range messgs {
+		sm := SigningMessage{
+			Type:         SignatureBroadcast,
+			View:         view,
+			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			SBm:          sb,
+		}
+		messgs[i] = &sm
+	}
+
+	if len(sn.Children(view)) > 0 {
+		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
+		ctx := context.TODO()
+		if err := sn.PutDown(ctx, view, messgs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (sn *Node) actOnResponses(view, roundNbr int, exceptionV_hat abstract.Point, exceptionX_hat abstract.Point) error {
 	dbg.Lvl4(sn.Name(), "got all responses for view, round", view, roundNbr)
 	round := sn.Rounds[roundNbr]
@@ -494,6 +511,15 @@ func (sn *Node) actOnResponses(view, roundNbr int, exceptionV_hat abstract.Point
 	}
 
 	return err
+}
+
+func (sn *Node) initResponseCrypto(roundNbr int) {
+	round := sn.Rounds[roundNbr]
+	// generate response   r = v - xc
+	round.R = sn.suite.Secret()
+	round.R.Mul(sn.PrivKey, round.C).Sub(round.Log.v, round.R)
+	// initialize sum of children's responses
+	round.r_hat = round.R
 }
 
 func (sn *Node) TryViewChange(view int) error {
@@ -620,50 +646,9 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 
 // This will broadcast the final signature to give to client
 // it contins the global Response adn global challenge
-func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
-	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
-	// Root is creating the sig broadcast
-	if sb == nil {
-		r := sn.Rounds[round]
-		if sn.IsRoot(view) {
-			sb = &SignatureBroadcastMessage{
-				R0_hat: r.r_hat,
-				C:      r.C,
-				X0_hat: r.X_hat,
-				V0_hat: r.Log.V_hat,
-			}
-		}
-	}
-	// messages from clients, proofs computed
-	//if sn.CommitedFor(sn.Round) {
-	sn.SendLocalMerkleProof(view, sb)
-	//}
-
-	// Inform all children of announcement
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
-	for i := range messgs {
-		sm := SigningMessage{
-			Type:         SignatureBroadcast,
-			View:         view,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			SBm:          sb,
-		}
-		messgs[i] = &sm
-	}
-
-	if len(sn.Children(view)) > 0 {
-		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
-		ctx := context.TODO()
-		if err := sn.PutDown(ctx, view, messgs); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
 	if sn.Callbacks != nil {
-		sn.Callbacks.SignatureBroadcast(view, sn.MTRoot, nil, sn.Proof, sb, sn.suite)
+		sn.Callbacks.SignatureBroadcast(sb)
 	}
 }
 

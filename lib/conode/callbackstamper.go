@@ -170,22 +170,38 @@ func (cs *CallbacksStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commit
 }
 
 // Not used dummy-functions
-func (cs *CallbacksStamper)    Challenge(*sign.ChallengeMessage) {}
-func (cs *CallbacksStamper)    Response(*sign.ResponseMessage) {}
+func (cs *CallbacksStamper) Challenge(chm *sign.ChallengeMessage) error {
+	// register challenge
+	cs.Round.C = chm.C
+	cs.Round.InitResponseCrypto()
+	dbg.Lvl4("challenge: using merkle proofs")
+	// messages from clients, proofs computed
+	if cs.Round.Log.Getv() != nil {
+		if err := cs.Round.StoreLocalMerkleProof(chm); err != nil {
+			return err
+		}
 
-func (cs *CallbacksStamper) SignatureBroadcast(view int, SNRoot hashid.HashId, LogHash hashid.HashId, pr proof.Proof,
-sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+	}
+	return nil
+}
+
+func (cs *CallbacksStamper) Response(*sign.ResponseMessage) error {
+	return nil
+}
+
+func (cs *CallbacksStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
 	cs.mux.Lock()
 	for i, msg := range cs.Queue[cs.PROCESSING] {
 		// proof to get from s.Root to big root
-		combProof := make(proof.Proof, len(pr))
-		copy(combProof, pr)
+		combProof := make(proof.Proof, len(cs.Round.Proof))
+		copy(combProof, cs.Round.Proof)
 
 		// add my proof to get from a leaf message to my root s.Root
 		combProof = append(combProof, cs.Proofs[i]...)
 
 		// proof that I can get from a leaf message to the big root
-		if proof.CheckProof(cs.peer.Signer.(*sign.Node).Suite().Hash, SNRoot, cs.Leaves[i], combProof) {
+		if proof.CheckProof(cs.Round.Suite.Hash, cs.Round.MTRoot,
+			cs.Leaves[i], combProof) {
 			dbg.Lvl2("Proof is OK")
 		} else {
 			dbg.Lvl2("Inclusion-proof failed")
@@ -194,7 +210,8 @@ sb *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 		respMessg := &TimeStampMessage{
 			Type:  StampReplyType,
 			ReqNo: msg.Tsm.ReqNo,
-			Srep:  &StampReply{SuiteStr: suite.String(), Timestamp: cs.Timestamp, MerkleRoot: SNRoot, Prf: combProof, SigBroad: *sb}}
+			Srep:  &StampReply{SuiteStr: cs.Round.Suite.String(), Timestamp: cs.Timestamp,
+				MerkleRoot: cs.Round.MTRoot, Prf: combProof, SigBroad: *sb}}
 		cs.PutToClient(cs.peer, msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client")
 	}

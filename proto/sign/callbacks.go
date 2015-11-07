@@ -1,8 +1,5 @@
 package sign
 import (
-	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/hashid"
 )
 
 // Callbacks holds the functions that are used to define the
@@ -24,16 +21,15 @@ type Callbacks interface {
 	// Challenge: root -> nodes
 	// This is called with the message to be signed. If necessary,
 	// each node can change the message for its children.
-	Challenge(*ChallengeMessage)
+	Challenge(*ChallengeMessage) error
 	// Response: nodes -> root
 	// This is called with the signature of the challenge-message
 	// or with updated ExceptionList* in case of refusal to sign.
-	Response(*ResponseMessage)
+	Response(*ResponseMessage) error
 	// SignatureBroadcast: root -> nodes
 	// This is called whenever the turn is completed and
 	// the results are propagated through the tree.
-	SignatureBroadcast(view int, SNRoot hashid.HashId, LogHash hashid.HashId, pr proof.Proof,
-	sb *SignatureBroadcastMessage, suite abstract.Suite)
+	SignatureBroadcast(*SignatureBroadcastMessage)
 	// Statistics: nodes -> root
 	// This is called at the end to collect eventual statistics
 	// about the round.
