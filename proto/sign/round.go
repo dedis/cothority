@@ -22,7 +22,8 @@ type Round struct {
 	Log            SNLog           // round lasting log structure
 	HashedLog      []byte
 
-	r_hat          abstract.Secret // aggregate of responses
+	R_hat abstract.Secret // aggregate of responses
+
 	X_hat          abstract.Point  // aggregate of public keys
 
 	Commits        []*SigningMessage
@@ -41,7 +42,8 @@ type Round struct {
 	CMTRootNames   []string
 	Proofs         map[string]proof.Proof
 	Proof          []hashid.HashId
-	PrivKey         abstract.Secret
+	PrivKey        abstract.Secret
+	Name           string
 
 								   // round-lasting public keys of children servers that did not
 								   // respond to latest commit or respond phase, in subtree
@@ -51,7 +53,8 @@ type Round struct {
 								   // combined public keys of children servers in subtree
 	ChildX_hat     map[string]abstract.Point
 								   // for internal verification purposes
-	exceptionV_hat abstract.Point
+	ExceptionX_hat abstract.Point
+	ExceptionV_hat abstract.Point
 
 	BackLink       hashid.HashId
 	AccRound       []byte
@@ -124,6 +127,7 @@ func RoundSetup(sn *Node, view int, am *AnnouncementMessage) error {
 	sn.Rounds[roundNbr].Parent = sn.Parent(view)
 	sn.Rounds[roundNbr].View = view
 	sn.Rounds[roundNbr].PrivKey = sn.PrivKey
+	sn.Rounds[roundNbr].Name = sn.Name()
 
 	// update max seen round
 	sn.roundmu.Lock()
@@ -182,4 +186,12 @@ func (r *Round) Sub(a abstract.Point, b abstract.Point) {
 	if b != nil {
 		a.Sub(a, b)
 	}
+}
+
+func (r *Round) IsRoot()bool{
+	return r.Parent == ""
+}
+
+func (r *Round) IsLeaf()bool{
+	return len(r.Children) == 0
 }

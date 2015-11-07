@@ -17,6 +17,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"net"
 	"os"
+	"errors"
 )
 
 type CallbacksStamper struct {
@@ -169,7 +170,6 @@ func (cs *CallbacksStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commit
 	return &sign.CommitmentMessage{MTRoot:cs.Root}
 }
 
-// Not used dummy-functions
 func (cs *CallbacksStamper) Challenge(chm *sign.ChallengeMessage) error {
 	// register challenge
 	cs.Round.C = chm.C
@@ -185,8 +185,65 @@ func (cs *CallbacksStamper) Challenge(chm *sign.ChallengeMessage) error {
 	return nil
 }
 
-func (cs *CallbacksStamper) Response(*sign.ResponseMessage) error {
-	return nil
+func (cs *CallbacksStamper) Response(sms []*sign.SigningMessage) error {
+	// initialize exception handling
+	exceptionV_hat := cs.Round.Suite.Point().Null()
+	exceptionX_hat := cs.Round.Suite.Point().Null()
+	cs.Round.ExceptionList = make([]abstract.Point, 0)
+	nullPoint := cs.Round.Suite.Point().Null()
+
+	children := cs.Round.Children
+	for _, sm := range sms {
+		from := sm.From
+		switch sm.Type {
+		default:
+			// default == no response from child
+			// dbg.Lvl4(sn.Name(), "default in respose for child", from, sm)
+			if children[from] != nil {
+				cs.Round.ExceptionList = append(cs.Round.ExceptionList, children[from].PubKey())
+
+				// remove public keys and point commits from subtree of failed child
+				cs.Round.Add(exceptionX_hat, cs.Round.ChildX_hat[from])
+				cs.Round.Add(exceptionV_hat, cs.Round.ChildV_hat[from])
+			}
+			continue
+		case sign.Response:
+			// disregard response from children who did not commit
+			_, ok := cs.Round.ChildV_hat[from]
+			if ok == true && cs.Round.ChildV_hat[from].Equal(nullPoint) {
+				continue
+			}
+
+			// dbg.Lvl4(sn.Name(), "accepts response from", from, sm.Type)
+			cs.Round.R_hat.Add(cs.Round.R_hat, sm.Rm.R_hat)
+
+			cs.Round.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
+
+			cs.Round.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
+			cs.Round.ExceptionList = append(cs.Round.ExceptionList, sm.Rm.ExceptionList...)
+
+		case sign.Error:
+			if sm.Err == nil {
+				log.Errorln("Error message with no error")
+				continue
+			}
+
+			// Report up non-networking error, probably signature failure
+			log.Errorln(cs.Round.Name, "Error in respose for child", from, sm)
+			err := errors.New(sm.Err.Err)
+			return err
+		}
+	}
+
+	// remove exceptions from subtree that failed
+	cs.Round.Sub(cs.Round.X_hat, exceptionX_hat)
+	cs.Round.ExceptionV_hat = exceptionV_hat
+	cs.Round.ExceptionX_hat = exceptionX_hat
+
+	dbg.Lvl4(cs.Round.Name, "got all responses")
+	err := cs.Round.VerifyResponses()
+
+	return err
 }
 
 func (cs *CallbacksStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {

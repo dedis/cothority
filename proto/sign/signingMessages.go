@@ -135,6 +135,8 @@ type AnnouncementMessage struct {
 	Vote     *Vote // Vote Request (propose)
 }
 
+// Commitment of all nodes together with the data they want
+// to have signed
 type CommitmentMessage struct {
 	V             abstract.Point // commitment Point
 	V_hat         abstract.Point // product of subtree participating nodes' commitment points
@@ -152,6 +154,7 @@ type CommitmentMessage struct {
 	RoundNbr      int
 }
 
+// The challenge calculated by the root-node
 type ChallengeMessage struct {
 	C        abstract.Secret // challenge
 
@@ -165,6 +168,8 @@ type ChallengeMessage struct {
 	RoundNbr int
 }
 
+// Every node replies with eventual exceptions if they
+// are not OK
 type ResponseMessage struct {
 	R_hat          abstract.Secret // response
 
@@ -196,14 +201,17 @@ type SignatureBroadcastMessage struct {
 	RoundNbr int
 }
 
+// In case of an error, this message is sent
 type ErrorMessage struct {
 	Err string
 }
 
+// For request of a vote on tree-structure change
 type VoteRequestMessage struct {
 	Vote *Vote
 }
 
+// Whenever the group changed
 type GroupChangedMessage struct {
 	V        *Vote
 	// if vote not accepted rest of fields are nil

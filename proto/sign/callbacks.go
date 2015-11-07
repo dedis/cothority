@@ -25,7 +25,7 @@ type Callbacks interface {
 	// Response: nodes -> root
 	// This is called with the signature of the challenge-message
 	// or with updated ExceptionList* in case of refusal to sign.
-	Response(*ResponseMessage) error
+	Response([]*SigningMessage) error
 	// SignatureBroadcast: root -> nodes
 	// This is called whenever the turn is completed and
 	// the results are propagated through the tree.

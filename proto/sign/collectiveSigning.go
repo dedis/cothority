@@ -274,7 +274,7 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 	sn.Callbacks.Commitment(nil)
 
 	var err error
-	if round.Parent == "" {
+	if round.IsRoot() {
 		dbg.Lvl3("Commit root : Aggregate Public Key :", round.X_hat)
 		sn.commitsDone <- roundNbr
 		err = sn.Challenge(view, &ChallengeMessage{
@@ -319,7 +319,7 @@ func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
 	}
 
 	err := sn.Callbacks.Challenge(chm)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -344,124 +344,22 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[roundNbr]
-	if round == nil || round.Log.v == nil {
+	Round := sn.Rounds[roundNbr]
+	if Round == nil || Round.Log.v == nil {
 		// If I was not announced of this round, or I failed to commit
 		return nil
 	}
 
+	// Check if we have all replies from the children
 	if sm != nil {
-		round.Responses = append(round.Responses, sm)
+		Round.Responses = append(Round.Responses, sm)
 	}
-	if len(round.Responses) != len(sn.Children(view)) {
+	if len(Round.Responses) != len(sn.Children(view)) {
 		return nil
 	}
 
-	// initialize exception handling
-	exceptionV_hat := sn.suite.Point().Null()
-	exceptionX_hat := sn.suite.Point().Null()
-	round.ExceptionList = make([]abstract.Point, 0)
-	nullPoint := sn.suite.Point().Null()
-	allmessgs := sn.FillInWithDefaultMessages(view, round.Responses)
-
-	children := sn.Children(view)
-	for _, sm := range allmessgs {
-		from := sm.From
-		switch sm.Type {
-		default:
-			// default == no response from child
-			// dbg.Lvl4(sn.Name(), "default in respose for child", from, sm)
-			if children[from] != nil {
-				round.ExceptionList = append(round.ExceptionList, children[from].PubKey())
-
-				// remove public keys and point commits from subtree of failed child
-				sn.add(exceptionX_hat, round.ChildX_hat[from])
-				sn.add(exceptionV_hat, round.ChildV_hat[from])
-			}
-			continue
-		case Response:
-			// disregard response from children who did not commit
-			_, ok := round.ChildV_hat[from]
-			if ok == true && round.ChildV_hat[from].Equal(nullPoint) {
-				continue
-			}
-
-			// dbg.Lvl4(sn.Name(), "accepts response from", from, sm.Type)
-			round.r_hat.Add(round.r_hat, sm.Rm.R_hat)
-
-			sn.add(exceptionV_hat, sm.Rm.ExceptionV_hat)
-
-			sn.add(exceptionX_hat, sm.Rm.ExceptionX_hat)
-			round.ExceptionList = append(round.ExceptionList, sm.Rm.ExceptionList...)
-
-		case Error:
-			if sm.Err == nil {
-				log.Errorln("Error message with no error")
-				continue
-			}
-
-			// Report up non-networking error, probably signature failure
-			log.Errorln(sn.Name(), "Error in respose for child", from, sm)
-			err := errors.New(sm.Err.Err)
-			sn.PutUpError(view, err)
-			return err
-		}
-	}
-
-	// remove exceptions from subtree that failed
-	sn.sub(round.X_hat, exceptionX_hat)
-	round.exceptionV_hat = exceptionV_hat
-
-	return sn.actOnResponses(view, roundNbr, exceptionV_hat, exceptionX_hat)
-}
-
-func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
-	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
-	// Root is creating the sig broadcast
-	if sb == nil {
-		r := sn.Rounds[round]
-		if sn.IsRoot(view) {
-			sb = &SignatureBroadcastMessage{
-				R0_hat: r.r_hat,
-				C:      r.C,
-				X0_hat: r.X_hat,
-				V0_hat: r.Log.V_hat,
-			}
-		}
-	}
-	// messages from clients, proofs computed
-	//if sn.CommitedFor(sn.Round) {
-	sn.SendLocalMerkleProof(view, sb)
-	//}
-
-	// Inform all children of announcement
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
-	for i := range messgs {
-		sm := SigningMessage{
-			Type:         SignatureBroadcast,
-			View:         view,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			SBm:          sb,
-		}
-		messgs[i] = &sm
-	}
-
-	if len(sn.Children(view)) > 0 {
-		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
-		ctx := context.TODO()
-		if err := sn.PutDown(ctx, view, messgs); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (sn *Node) actOnResponses(view, roundNbr int, exceptionV_hat abstract.Point, exceptionX_hat abstract.Point) error {
-	dbg.Lvl4(sn.Name(), "got all responses for view, round", view, roundNbr)
-	round := sn.Rounds[roundNbr]
-	err := sn.VerifyResponses(view, roundNbr)
-
-	isroot := sn.IsRoot(view)
+	err := sn.Callbacks.Response(Round.FillInWithDefaultMessages())
+	isroot := Round.IsRoot()
 	// if error put it up if parent exists
 	if err != nil && !isroot {
 		sn.PutUpError(view, err)
@@ -470,17 +368,17 @@ func (sn *Node) actOnResponses(view, roundNbr int, exceptionV_hat abstract.Point
 
 	// if no error send up own response
 	if err == nil && !isroot {
-		if round.Log.v == nil && sn.ShouldIFail("response") {
-			dbg.Lvl4(sn.Name(), "failing on response")
+		if Round.Log.Getv() == nil && sn.ShouldIFail("response") {
+			dbg.Lvl4(Round.Name, "failing on response")
 			return nil
 		}
 
 		// create and putup own response message
 		rm := &ResponseMessage{
-			R_hat:          round.r_hat,
-			ExceptionList:  round.ExceptionList,
-			ExceptionV_hat: exceptionV_hat,
-			ExceptionX_hat: exceptionX_hat,
+			R_hat:          Round.R_hat,
+			ExceptionList:  Round.ExceptionList,
+			ExceptionV_hat: Round.ExceptionV_hat,
+			ExceptionX_hat: Round.ExceptionX_hat,
 			RoundNbr:          roundNbr}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
@@ -513,13 +411,68 @@ func (sn *Node) actOnResponses(view, roundNbr int, exceptionV_hat abstract.Point
 	return err
 }
 
-func (sn *Node) initResponseCrypto(roundNbr int) {
-	round := sn.Rounds[roundNbr]
-	// generate response   r = v - xc
-	round.R = sn.suite.Secret()
-	round.R.Mul(sn.PrivKey, round.C).Sub(round.Log.v, round.R)
-	// initialize sum of children's responses
-	round.r_hat = round.R
+func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
+	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
+	// Root is creating the sig broadcast
+	if sb == nil {
+		r := sn.Rounds[round]
+		if sn.IsRoot(view) {
+			sb = &SignatureBroadcastMessage{
+				R0_hat: r.R_hat,
+				C:      r.C,
+				X0_hat: r.X_hat,
+				V0_hat: r.Log.V_hat,
+			}
+		}
+	}
+
+	sn.Callbacks.SignatureBroadcast(sb)
+
+	// Inform all children of announcement
+	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+	for i := range messgs {
+		sm := SigningMessage{
+			Type:         SignatureBroadcast,
+			View:         view,
+			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			SBm:          sb,
+		}
+		messgs[i] = &sm
+	}
+
+	if len(sn.Children(view)) > 0 {
+		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
+		ctx := context.TODO()
+		if err := sn.PutDown(ctx, view, messgs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
+	dbg.Lvl2(sn.Name(), "StatusConnected", view)
+
+	// Ask connection-count on all connected children
+	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+	for i := range messgs {
+		sm := SigningMessage{
+			Type:         StatusConnections,
+			View:         view,
+			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			Am:           am}
+		messgs[i] = &sm
+	}
+
+	ctx := context.TODO()
+	if err := sn.PutDown(ctx, view, messgs); err != nil {
+		return err
+	}
+
+	if len(sn.Children(view)) == 0 {
+		sn.Commit(view, am.RoundNbr, nil)
+	}
+	return nil
 }
 
 func (sn *Node) TryViewChange(view int) error {
@@ -564,11 +517,11 @@ func (sn *Node) VerifyResponses(view, roundNbr int) error {
 	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 	Aux := sn.suite.Point()
 	V_clean := sn.suite.Point()
-	V_clean.Add(V_clean.Mul(nil, round.r_hat), Aux.Mul(round.X_hat, round.C))
+	V_clean.Add(V_clean.Mul(nil, round.R_hat), Aux.Mul(round.X_hat, round.C))
 	// T is the recreated V_hat
 	T := sn.suite.Point().Null()
 	T.Add(T, V_clean)
-	T.Add(T, round.exceptionV_hat)
+	T.Add(T, round.ExceptionV_hat)
 
 	var c2 abstract.Secret
 	isroot := sn.IsRoot(view)
@@ -619,39 +572,6 @@ func (sn *Node) TimeForViewChange() bool {
 	return false
 }
 
-func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
-	dbg.Lvl2(sn.Name(), "StatusConnected", view)
-
-	// Ask connection-count on all connected children
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
-	for i := range messgs {
-		sm := SigningMessage{
-			Type:         StatusConnections,
-			View:         view,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			Am:           am}
-		messgs[i] = &sm
-	}
-
-	ctx := context.TODO()
-	if err := sn.PutDown(ctx, view, messgs); err != nil {
-		return err
-	}
-
-	if len(sn.Children(view)) == 0 {
-		sn.Commit(view, am.RoundNbr, nil)
-	}
-	return nil
-}
-
-// This will broadcast the final signature to give to client
-// it contins the global Response adn global challenge
-func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
-	if sn.Callbacks != nil {
-		sn.Callbacks.SignatureBroadcast(sb)
-	}
-}
-
 func (sn *Node) CloseAll(view int) error {
 	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
 
@@ -691,30 +611,6 @@ func (sn *Node) PutUpError(view int, err error) {
 		View:         view,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		Err:          &ErrorMessage{Err: err.Error()}})
-}
-
-// Returns a secret that depends on on a message and a point
-func HashElGamal(suite abstract.Suite, message []byte, p abstract.Point) abstract.Secret {
-	pb, _ := p.MarshalBinary()
-	c := suite.Cipher(pb)
-	c.Message(nil, nil, message)
-	return suite.Secret().Pick(c)
-}
-
-// Called when log for round if full and ready to be hashed
-func (sn *Node) HashLog(roundNbr int) error {
-	round := sn.Rounds[roundNbr]
-	var err error
-
-	h := sn.suite.Hash()
-	logBytes, err := round.Log.MarshalBinary()
-	if err != nil {
-		return err
-	}
-	h.Write(logBytes)
-
-	round.HashedLog = h.Sum(nil)
-	return err
 }
 
 // Getting actual View
