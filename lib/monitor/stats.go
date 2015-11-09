@@ -235,13 +235,14 @@ func (s *Stats) AddMeasurements(measurements ...string) {
 // WriteHeader will write the header to the writer
 func (s *Stats) WriteHeader(w io.Writer) {
 	// write basic info
-	fmt.Fprintf(w, "Peers, ppm, machines, ")
+	fmt.Fprintf(w, "Peers, ppm, machines")
 	// write additionals fields
 	for k, _ := range s.Additionals {
-		fmt.Fprintf(w, "%s, ", k)
+		fmt.Fprintf(w, ", %s", k)
 	}
 	// Write the values header
 	for _, k := range s.keys {
+		fmt.Fprintf(w, ", ")
 		m := s.measures[k]
 		m.WriteHeader(w)
 	}
