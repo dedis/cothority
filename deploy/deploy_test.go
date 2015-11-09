@@ -28,7 +28,7 @@ func TestCompileDeploy(t *testing.T) {
 
 	// Check if it's a "test_.*\.toml"-file and run it with deploy
 	for _, sim := range (simulations) {
-		testfile, err := regexp.MatchString("test_na.*\\.toml", sim)
+		testfile, err := regexp.MatchString("test_.*\\.toml", sim)
 		checkFatal(t, "Error in matching", err)
 		if testfile {
 			sim_out, err := exec.Command("./deploy", "simulation/" + sim).Output()
