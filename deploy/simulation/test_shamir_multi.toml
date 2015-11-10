@@ -1,4 +1,4 @@
-Machines = 8
+Machines = 2
 App = "shamir"
 Rounds = 10
 
@@ -6,7 +6,3 @@ ppm, bf
 1, 2
 2, 2
 4, 2
-8, 2
-16, 2
-32, 2
-64, 2

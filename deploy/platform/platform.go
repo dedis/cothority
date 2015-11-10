@@ -40,6 +40,15 @@ func (r *RunConfig) Toml() []byte {
 	return buf.Bytes()
 }
 
+// Returns this config as a Map
+func (r *RunConfig) Map() map[string]string {
+	tomap := make(map[string]string)
+	for k := range r.fields {
+		tomap[k] = r.Get(k)
+	}
+	return tomap
+}
+
 // Clone this runconfig so it has all fields-value relationship already present
 func (r *RunConfig) Clone() *RunConfig {
 	rc := NewRunConfig()

@@ -7,13 +7,11 @@ package main
  */
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/monitor"
 	net "github.com/dedis/cothority/lib/network"
-	"sync"
 	"time"
 )
 
@@ -48,7 +46,12 @@ func GoLeader(conf *app.NaiveConfig) {
 	leader := NewPeer(host, LeadRole, key.Secret, key.Public)
 
 	// Setting up the connections
-
+	// notably to the monitoring process
+	if app.RunFlags.Logger != "" {
+		monitor.ConnectSink(app.RunFlags.Logger)
+	} else {
+		monitor.Disable()
+	}
 	msg := []byte("Hello World\n")
 	// Listen for connections
 	dbg.Lvl2(leader.String(), "making connections ...")
@@ -75,19 +78,19 @@ func GoLeader(conf *app.NaiveConfig) {
 	}
 
 	// Connecting to the signer
-
-	now := time.Now()
+	setup := monitor.NewMeasure("setup")
 	go leader.Listen(app.RunFlags.Hostname, proto)
 	dbg.Lvl2(leader.String(), "Listening for channels creation..")
 	// listen for round chans + signatures for each round
 	masterRoundChan := make(chan chan *net.BasicSignature)
 	roundChanns := make([]chan chan *net.BasicSignature, 0)
+	numberHosts := len(conf.Hosts)
 	//  Make the "setup" of channels
 	for {
 		ch := <-roundChans
 		roundChanns = append(roundChanns, ch)
 		//Received round channels from every connections-
-		if len(roundChanns) == len(conf.Hosts)-1 {
+		if len(roundChanns) == numberHosts-1 {
 			// make the Fanout => master will send to all
 			go func() {
 				// send the new SignatureChannel to every conn
@@ -104,65 +107,57 @@ func GoLeader(conf *app.NaiveConfig) {
 			break
 		}
 	}
-	log.WithFields(log.Fields{
-		"file": logutils.File(),
-		"type": "naive_setup",
-		"time": time.Since(now)}).Info("")
+	setup.Measure()
 	dbg.Lvl2(leader.String(), "got all channels ready => starting the ", conf.Rounds, " rounds")
 
 	// Starting to run the simulation for conf.Rounds rounds
 
+	roundM := monitor.NewMeasure("round")
 	for round := 0; round < conf.Rounds; round++ {
-		now = time.Now()
-		//sys, usr := app.GetRTime()
+		// Measure calculation time
+		calc := monitor.NewMeasure("calc")
 		n := 0
 		faulty := 0
 		// launch a new round
 		connChan := make(chan *net.BasicSignature)
 		masterRoundChan <- connChan
-		var wg sync.WaitGroup
-		wg.Add(len(conf.Hosts) - 1)
-		// verify each coming signatures
-		for n < len(conf.Hosts)-1 {
+
+		// Wait each signatures
+		sigs := make([]*net.BasicSignature, 0)
+		for n < numberHosts-1 {
 			bs := <-connChan
-			if conf.SkipChecks {
-				dbg.Lvl2("Skipping check for round", round)
-				wg.Done()
-			} else {
-				go func(b *net.BasicSignature) {
-					if err := SchnorrVerify(suite, msg, *b); err != nil {
-						faulty += 1
-						dbg.Lvl2(leader.String(), "Round ", round, " received a faulty signature !")
-					} else {
-						dbg.Lvl2(leader.String(), "Round ", round, " received Good signature")
-					}
-					wg.Done()
-				}(bs)
-			}
+			sigs = append(sigs, bs)
 			n += 1
 		}
-		wg.Wait()
+		// All sigs reeived <=> all calcs are done
+		calc.Measure()
+
+		// verify each signatures
+		if conf.SkipChecks {
+			dbg.Lvl2("Skipping check for round", round)
+			continue
+		}
+		// Measure verificationt time
+		verify := monitor.NewMeasure("verify")
+		for _, sig := range sigs {
+			if err := SchnorrVerify(suite, msg, *sig); err != nil {
+				faulty += 1
+				dbg.Lvl2(leader.String(), "Round ", round, " received a faulty signature !")
+			} else {
+				dbg.Lvl2(leader.String(), "Round ", round, " received Good signature")
+			}
+		}
+		verify.Measure()
+		roundM.Measure()
 		dbg.Lvl2(leader.String(), "Round ", round, " received ", len(conf.Hosts)-1, "signatures (",
 			faulty, " faulty sign)")
-		//dSys, dUsr := app.GetDiffRTime(sys, usr)
-		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "basic_round",
-			"round": round,
-			"time":  time.Since(now),
-			//"time":  (dSys + dUsr) * 1e9,
-		}).Info("")
 	}
 
 	// Close down all connections
 
 	close(masterRoundChan)
+	monitor.End()
 	dbg.Lvl2(leader.String(), "has done all rounds")
-	/*
-		log.WithFields(log.Fields{
-			"file": logutils.File(),
-			"type": "end"}).Info("")
-	*/
 }
 
 // The signer connects to the leader and then waits for a message to be

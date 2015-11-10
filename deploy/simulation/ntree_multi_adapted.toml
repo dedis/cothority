@@ -2,7 +2,7 @@ App = "ntree"
 Suite = "ed25519"
 Rounds = 20
 
-Machines, Hpn, Bf
+Machines, Ppm, Bf
 2, 1, 2
 4, 1, 3
 8, 1, 4

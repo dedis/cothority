@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/monitor"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -47,7 +48,7 @@ type Localhost struct {
 	// configuration-files
 	Machines int
 	// This gives the number of hosts per node (machine)
-	Hpn int
+	Ppm int
 	// hosts used with the applications
 	// example: localhost:2000, ...:2010 , ...
 	Hosts []string
@@ -106,7 +107,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 
 	// Initialize the deter-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual
-	// 'Machines', 'Hpn', 'Loggers' or other fields
+	// 'Machines', 'Ppm', 'Loggers' or other fields
 	appConfig := d.RunDir + "/app.toml"
 	localConfig := d.RunDir + "/" + defaultConfigName
 	ioutil.WriteFile(appConfig, rc.Toml(), 0666)
@@ -126,13 +127,13 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, localConfig)
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers
-		// hpn = 1
+		// ppm = 1
 		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
 
 		dbg.Lvl2("Depth:", graphs.Depth(conf.Tree))
 		dbg.Lvl2("Total hosts:", len(conf.Hosts))
-		total := d.Machines * d.Hpn
+		total := d.Machines * d.Ppm
 		if len(conf.Hosts) != total {
 			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
 				"machines or hosts per node")
@@ -185,19 +186,19 @@ func (d *Localhost) Start() error {
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
-		args := []string{"-hostname", host, "-mode", "server"}
+		args := []string{"-hostname", host, "-mode", "server", "-logger", "localhost:" + monitor.SinkPort}
 		cmd := exec.Command(ex, args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		dbg.Lvl3("Localhost : will start host ", host)
 		go func(i int, h string) {
+			dbg.Lvl3("Localhost : will start host ", host)
 			d.wg_run.Add(1)
 			err := cmd.Run()
 			if err != nil {
 				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
 			d.wg_run.Done()
-			dbg.Lvl3(index, "on host", host, "done")
+			dbg.Lvl3("host (index ", i, ") ", h, "done")
 		}(index, host)
 
 	}
@@ -231,7 +232,7 @@ func (d *Localhost) ReadConfig(name ...string) {
 // GenerateHosts will generate the list of hosts
 // with a new port each
 func (d *Localhost) GenerateHosts() {
-	nrhosts := d.Machines * d.Hpn
+	nrhosts := d.Machines * d.Ppm
 	d.Hosts = make([]string, nrhosts)
 	port := 2000
 	inc := 5

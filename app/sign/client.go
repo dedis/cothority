@@ -1,17 +1,19 @@
 package main
+
 import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	"sync/atomic"
 	"time"
 
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"strconv"
 	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/crypto/abstract"
 )
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
@@ -27,15 +29,14 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 
 	dbg.Lvl1("Going to run client and asking servers to print")
 	time.Sleep(3 * time.Second)
-	hc.SNodes[0].RegisterOnDoneFunc(RoundDone)
-	start := time.Now()
+	hc.SNodes[0].RegisterDoneFunc(RoundDone)
 	tFirst := time.Now()
 
+	round := monitor.NewMeasure("round")
 	for i := 0; i < conf.Rounds; i++ {
 		time.Sleep(time.Second)
 		hc.SNodes[0].Message = []byte("Hello World")
 		dbg.Lvl3("Going to launch announcement ", hc.SNodes[0].Name())
-		start = time.Now()
 		t0 := time.Now()
 		//sys, usr := app.GetRTime()
 
@@ -53,30 +54,16 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		}
 
 		t := time.Since(t0)
-		elapsed := time.Since(start)
 		secToTimeStamp := t.Seconds()
 		secSinceFirst := time.Since(tFirst).Seconds()
 		atomic.AddInt64(&buck[int(secSinceFirst)], 1)
 		index := int(secToTimeStamp) / int(ROUND_TIME / time.Second)
 		atomic.AddInt64(&roundsAfter[index], 1)
 		atomic.AddInt64(&times[i], t.Nanoseconds())
-		log.WithFields(log.Fields{
-			"file":  logutils.File(),
-			"type":  "root_round",
-			"round": i,
-			"time":  elapsed,
-			//"time":  dSys + dUsr,
-		}).Info("root round")
+		round.Measure()
 	}
 
-	log.WithFields(log.Fields{
-		"file":        logutils.File(),
-		"type":        "client_msg_stats",
-		"buck":        removeTrailingZeroes(buck),
-		"roundsAfter": removeTrailingZeroes(roundsAfter),
-		"times":       removeTrailingZeroes(times),
-	}).Info("")
-
+	monitor.End()
 	// And tell everybody to quit
 	err := hc.SNodes[0].CloseAll(hc.SNodes[0].ViewNo)
 	if err != nil {
@@ -85,7 +72,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 }
 
 func RoundDone(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-sig *sign.SignatureBroadcastMessage) {
+sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 	dbg.Lvl3(view, "finished round")
 	done <- "Done with view: " + strconv.Itoa(view)
 }

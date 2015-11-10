@@ -1,11 +1,13 @@
 package main
+
 import (
-	"time"
+	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
-	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/cothority/lib/app"
+	"time"
 )
 
 func RunServer(conf *app.ConfigColl, hc *graphs.HostConfig) {
@@ -20,8 +22,15 @@ func RunServer(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	// Let's start the client if we're the root-node
 	if hc.SNodes[0].IsRoot(0) {
 		dbg.Lvl2(app.RunFlags.Hostname, "started client")
+		if app.RunFlags.Logger == "" {
+			monitor.Disable()
+		} else {
+			if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+				dbg.Fatal("Signing root error connecting to monitor :", err)
+			}
+		}
 		RunClient(conf, hc)
-	} else{
+	} else {
 		// Endless-loop till we stop by tearing down the connections
 		for !hc.SNodes[0].Isclosed {
 			time.Sleep(time.Second)
