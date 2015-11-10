@@ -117,7 +117,7 @@ func main() {
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
 	// RedirectionAddress:RedirectionPort. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
+	dbg.Print("Launching proxy redirecting to", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
 	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
 
 	hostnames := deterlab.Hostnames

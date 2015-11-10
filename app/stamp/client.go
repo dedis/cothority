@@ -12,17 +12,17 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
+	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/app"
 )
 
 var muStats sync.Mutex
 
 var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
-var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME / time.Second)
+var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME/time.Second)
 
-func RunClient(flags *app.Flags, conf *app.ConfigColl){
+func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 	dbg.Lvl4("Starting to run stampclient")
 	c := NewClient(flags.Name)
 	servers := strings.Split(flags.Server, ",")
@@ -34,7 +34,7 @@ func RunClient(flags *app.Flags, conf *app.ConfigColl){
 			log.Fatal("improperly formatted host")
 		}
 		pn, _ := strconv.Atoi(p)
-		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn + 1))))
+		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn+1))))
 	}
 
 	// Stream time coll_stamp requests
@@ -64,17 +64,17 @@ func removeTrailingZeroes(a []int64) []int64 {
 			break
 		}
 	}
-	return a[:i + 1]
+	return a[:i+1]
 }
 
-func streamMessgs(c *Client, servers []string, rate int){
+func streamMessgs(c *Client, servers []string, rate int) {
 	dbg.Lvl4(c.Name(), "streaming at given rate", rate)
 	ticker := time.NewTicker(time.Duration(rate) * time.Millisecond)
 	msg := genRandomMessages(1)[0]
 	i := 0
 	nServers := len(servers)
 
-	retry:
+retry:
 	dbg.Lvl3(c.Name(), "checking if", servers[0], "is already up")
 	err := c.TimeStamp(msg, servers[0])
 	if err == io.EOF || err == coconet.ErrClosed {
