@@ -43,7 +43,6 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		if err != nil {
 			dbg.Lvl1(err)
 		}
-
 		select {
 		case msg := <-done:
 			dbg.Lvl3("Received reply from children", msg)
