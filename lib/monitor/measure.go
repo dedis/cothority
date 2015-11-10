@@ -61,11 +61,11 @@ func send(v interface{}) {
 
 // Disable / Enable the monitoring library
 func Disable() {
-	dbg.Lvl3("Monitor Measure disabled")
+	dbg.Lvl5("Monitor Measure disabled")
 	enabled = false
 }
 func Enable() {
-	dbg.Lvl3("Monitor Measure enabled")
+	dbg.Lvl5("Monitor Measure enabled")
 	enabled = true
 }
 

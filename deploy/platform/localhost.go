@@ -167,6 +167,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
 	}
+
 	//app.WriteTomlConfig(d, defaultConfigName, d.RunDir)
 	debug := reflect.ValueOf(d).Elem().FieldByName("Debug")
 	if debug.IsValid() {
@@ -178,7 +179,9 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 
 }
 
-func (d *Localhost) Start() error {
+// Start now takes a list of arguments to gives to the app binary
+// it already has a default set of argument to pass, so args can be nil.
+func (d *Localhost) Start(args ...string) error {
 	os.Chdir(d.RunDir)
 	dbg.Lvl4("Localhost : chdir into ", d.RunDir)
 	ex := d.RunDir + "/" + d.App
@@ -186,7 +189,8 @@ func (d *Localhost) Start() error {
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
-		args := []string{"-hostname", host, "-mode", "server", "-logger", "localhost:" + monitor.SinkPort}
+		defaultArgs := []string{"-hostname", host, "-mode", "server", "-logger", "localhost:" + monitor.SinkPort}
+		args = append(args, defaultArgs...)
 		cmd := exec.Command(ex, args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

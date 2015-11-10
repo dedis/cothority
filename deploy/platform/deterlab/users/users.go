@@ -22,6 +22,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,6 +30,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
+	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/monitor"
@@ -46,6 +48,7 @@ func init() {
 
 func main() {
 	deterlab.ReadConfig()
+	app.FlagInit()
 	flag.Parse()
 
 	vpmap := make(map[string]string)
@@ -117,7 +120,7 @@ func main() {
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
 	// RedirectionAddress:RedirectionPort. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
+	dbg.Print("Launching proxy redirecting to", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
 	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
 
 	hostnames := deterlab.Hostnames
