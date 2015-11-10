@@ -1,12 +1,59 @@
 package monitor
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io"
 	"math"
 	"strconv"
+	"strings"
 )
+
+// How many measures do I discard before aggregating the statistics
+type Discards struct {
+	measures map[string]bool
+}
+
+var discards Discards
+
+func (d *Discards) String() string {
+	var arr []string
+	for name, _ := range d.measures {
+		arr = append(arr, name)
+	}
+	return strings.Join(arr, ",")
+}
+func (d *Discards) Set(s string) error {
+	arr := strings.Split(s, ",")
+	if len(d.measures) > 0 {
+		return errors.New("Discards flag already set")
+	}
+	d.measures = make(map[string]bool, len(arr))
+	for _, meas := range arr {
+		d.measures[meas] = true
+	}
+	return nil
+}
+
+// Does this measure is contained in the list of discards
+// if it is, look if we already discarded it or not
+// Think of discardss like a middleware passing or not the value downstream
+func (d *Discards) Update(newMeasure Measure, reference *Measurement) {
+	for name, disc := range d.measures {
+		// we must discard it and we havent seen it yet
+		if name == newMeasure.Name && disc {
+			d.measures[name] = !disc
+			dbg.Lvl3("Monitor: discarding measure", name)
+			return
+		}
+	}
+	reference.Update(newMeasure)
+}
+func init() {
+	flag.Var(&discards, "discard", "Measures where we want to discard the first round")
+}
 
 ////////////////////// HELPERS FUNCTIONS / STRUCT /////////////////
 // Value is used to compute the statistics
@@ -103,10 +150,11 @@ func (t *Value) String() string {
 // measurement "verify" will hold a wallclock Value, cpu_user Value, cpu_system
 // Value
 type Measurement struct {
-	Name   string
-	Wall   Value
-	User   Value
-	System Value
+	Name    string
+	Wall    Value
+	User    Value
+	System  Value
+	Discard bool
 }
 
 // WriteHeader will write the header to the specified writer
@@ -305,7 +353,7 @@ func (s *Stats) Update(m Measure) {
 		dbg.Lvl2("Stats Update received unknown type of measure : ", m.Name)
 		return
 	}
-	meas.Update(m)
+	discards.Update(m, meas)
 }
 
 func (s *Stats) String() string {
