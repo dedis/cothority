@@ -80,7 +80,7 @@ type Platform interface {
 	// be copied as 'app.toml' to the directory where the app resides
 	Deploy(RunConfig) error
 	// Starts the application and returns - non-blocking!
-	Start() error
+	Start(args ...string) error
 	// Waits for the application to quit
 	Wait() error
 }

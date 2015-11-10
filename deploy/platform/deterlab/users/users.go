@@ -22,6 +22,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,6 +30,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
+	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/monitor"
@@ -46,6 +48,7 @@ func init() {
 
 func main() {
 	deterlab.ReadConfig()
+	app.FlagInit()
 	flag.Parse()
 
 	vpmap := make(map[string]string)

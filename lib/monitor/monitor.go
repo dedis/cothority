@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io"
@@ -12,6 +13,9 @@ import (
 
 // This file handles the collection of measurements, aggregates them and
 // write CSV file reports
+
+// How many measures do I discard before aggregating the statistics
+var Discard = 1
 
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
@@ -28,6 +32,7 @@ var conns = make([]net.Conn, 0)
 
 func init() {
 	mutex = &sync.Mutex{}
+	flag.IntVar(&Discard, "discard", 1, "How many measures do I discard before aggregating statistics (per-connections)")
 }
 
 // Monitor will start listening for incoming connections on this address
@@ -101,6 +106,7 @@ func handleConnection(conn net.Conn, stats *Stats) {
 	dec := json.NewDecoder(conn)
 	var m Measure
 	nerr := 0
+	nmes := 0
 	for {
 		if err := dec.Decode(&m); err != nil {
 			// if end of connection
@@ -121,7 +127,12 @@ func handleConnection(conn net.Conn, stats *Stats) {
 			break
 		}
 		dbg.Lvl4("Monitor : received a Measure from ", conn.RemoteAddr().String(), " : ", m)
-		updateMeasures(stats, m)
+		if nmes > Discard {
+			updateMeasures(stats, m)
+		} else {
+			dbg.Lvl4("Monitor: discarding measure")
+			nmes += 1
+		}
 		m = Measure{}
 	}
 	// finished

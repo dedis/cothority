@@ -30,6 +30,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
+	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/monitor"
 )
@@ -38,7 +39,6 @@ import (
 var deployP platform.Platform
 
 var platform_dst = "localhost"
-var app = ""
 var nobuild = false
 var build = ""
 var machines = 3
@@ -65,6 +65,7 @@ func init() {
 
 // Reads in the platform that we want to use and prepares for the tests
 func main() {
+	app.FlagInit()
 	flag.Parse()
 	deployP = platform.NewPlatform(platform_dst)
 	if deployP == nil {
