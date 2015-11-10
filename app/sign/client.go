@@ -12,7 +12,6 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
 	"strconv"
 )
 
@@ -60,7 +59,6 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 		index := int(secToTimeStamp) / int(ROUND_TIME/time.Second)
 		atomic.AddInt64(&roundsAfter[index], 1)
 		atomic.AddInt64(&times[i], t.Nanoseconds())
-		// discard the firsts rounds
 		round.Measure()
 	}
 
@@ -73,7 +71,7 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 }
 
 func RoundDone(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+	sig *sign.SignatureBroadcastMessage) {
 	dbg.Lvl3(view, "finished round")
 	done <- "Done with view: " + strconv.Itoa(view)
 }

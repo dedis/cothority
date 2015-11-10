@@ -11,13 +11,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"math/rand"
 	"strconv"
 	"strings"
-	"github.com/dedis/cothority/lib/cliutils"
 )
 
 type Stamp struct {
@@ -50,7 +50,7 @@ func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
 	if server == "" {
 		server = s.Config.Hosts[rand.Intn(len(s.Config.Hosts))]
 	}
-	portstr := strconv.Itoa( cliutils.GetPort(server, DefaultPort) + 1 )
+	portstr := strconv.Itoa(cliutils.GetPort(server, DefaultPort) + 1)
 	err := s.connect(cliutils.GetAddress(server) + ":" + portstr)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func (s *Stamp) stamp(msg []byte) (*TimeStampMessage, error) {
 
 	// Wait for the signed message
 	tsm := &TimeStampMessage{}
-	tsm.Srep = &StampReply{}
+	tsm.Srep = &StampSignature{}
 	tsm.Srep.SuiteStr = s.Suite.String()
 	err = s.conn.GetData(tsm)
 	if err != nil {

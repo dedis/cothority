@@ -1,12 +1,24 @@
 package sign
 
 import (
+	"bytes"
+	"encoding/binary"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
+	"time"
 )
 
 var DEBUG bool // to avoid verifying paths and signatures all the time
+// Func that will be called at the start of each round to generate the message
+type RoundMessageFunc func() []byte
+
+var DefaultRoundMessageFunc = func() []byte {
+	t := time.Now().Unix()
+	var b bytes.Buffer
+	_ = binary.Write(&b, binary.LittleEndian, t)
+	return b.Bytes()
+}
 
 // Func to call when we receive a announcement
 type AnnounceFunc func(msg *AnnouncementMessage)
@@ -17,7 +29,7 @@ type CommitFunc func(view int) []byte
 // Called at the end of a round
 // Allows client of Signer to receive signature, proof, and error
 type DoneFunc func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	signature *SignatureBroadcastMessage, suite abstract.Suite)
+	signature *SignatureBroadcastMessage)
 
 // todo: see where Signer should be located
 type Signer interface {
