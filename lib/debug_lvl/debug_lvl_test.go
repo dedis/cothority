@@ -9,16 +9,15 @@ func init(){
 }
 
 func ExampleLevel2() {
-	dbg.DebugVisible = 2
 	dbg.Lvl1("Level1")
-	dbg.Lvl2("Level2")
-	dbg.Lvl3("Level3")
+	dbg.Lvl3("Level2")
+	dbg.Lvl4("Level3")
 	dbg.Lvl4("Level4")
 	dbg.Lvl5("Level5")
 
 	// Output:
-	// 1: (            debug_lvl_test.ExampleLevel2:   0) - Level1
-	// 2: (            debug_lvl_test.ExampleLevel2:   0) - Level2
+	// 1: (            debug_lvl_test.ExampleLevel2: 0) - Level1
+	// 2: (            debug_lvl_test.ExampleLevel2: 0) - Level2
 }
 
 func thisIsAVeryLongFunctionNameThatWillOverflow(){
@@ -31,9 +30,9 @@ func ExampleLongFunctions() {
 	dbg.Lvl1("After")
 
 	// Output:
-	// 1: (     debug_lvl_test.ExampleLongFunctions:   0) - Before
-	// 1: (debug_lvl_test.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
-	// 1: (                       debug_lvl_test.ExampleLongFunctions:   0) - After
+	// 1: (     debug_lvl_test.ExampleLongFunctions: 0) - Before
+	// 1: (debug_lvl_test.thisIsAVeryLongFunctionNameThatWillOverflow: 0) - Overflow
+	// 1: (                       debug_lvl_test.ExampleLongFunctions: 0) - After
 }
 
 func ExampleLongFunctionsLimit() {
@@ -43,7 +42,7 @@ func ExampleLongFunctionsLimit() {
 	dbg.Lvl1("After")
 
 	// Output:
-	// 1: (debug_lvl_test.ExampleLongFunctionsLimit:   0) - Before
-	// 1: (debug_lvl_test.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
-	// 1: (debug_lvl_test.ExampleLongFunctionsLimit:   0) - After
+	// 1: (debug_lvl_test.ExampleLongFunctionsLimit: 0) - Before
+	// 1: (debug_lvl_test.thisIsAVeryLongFunctionNameThatWillOverflow: 0) - Overflow
+	// 1: (debug_lvl_test.ExampleLongFunctionsLimit: 0) - After
 }
