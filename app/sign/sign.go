@@ -63,7 +63,7 @@ func main() {
 			break
 		}
 	}
-	dbg.Lvl2(hostname, "thinks everybody's here")
+	dbg.Lvl3(hostname, "thinks everybody's here")
 
 	// set FailureRates
 	if conf.Failures > 0 {

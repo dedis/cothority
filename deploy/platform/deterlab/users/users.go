@@ -120,14 +120,6 @@ func main() {
 	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
 	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
 
-	nloggers := deterlab.Loggers
-	masterLogger := deterlab.Phys[0]
-	loggers := []string{masterLogger}
-	dbg.Lvl3("Going to create", nloggers, "loggers")
-	for n := 1; n < nloggers; n++ {
-		loggers = append(loggers, deterlab.Phys[n])
-	}
-
 	hostnames := deterlab.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
 
@@ -142,24 +134,6 @@ func main() {
 		physToServer[p] = ss
 	}
 
-	// start up the master logger
-	loggerports := make([]string, len(loggers))
-	for i, logger := range loggers {
-		loggerport := logger + ":10000"
-		loggerports[i] = loggerport
-		// redirect to the master logger
-		//master := masterLogger + ":10000"
-		// if this is the master logger than don't set the master to anything
-		//	if loggerport == masterLogger+":10000" {
-		/* master = ""*/
-		//}
-
-		//dbg.Lvl3("Logger:", logger)
-		//go cliutils.SshRunStdout("", logger, "cd remote; sudo ./logserver -addr="+loggerport+
-		//" -master="+master)
-	}
-
-	i := 0
 	// For coll_stamp we have to wait for everything in place which takes quite some time
 	// We set up a directory and every host writes a file once he's ready to listen
 	// When everybody is ready, the directory is deleted and the test starts
@@ -180,7 +154,6 @@ func main() {
 		}
 		totalServers += len(virts)
 		dbg.Lvl1("Launching forkexec for", len(virts), "clients on", phys)
-		i = (i + 1) % len(loggerports)
 		wg.Add(1)
 		go func(phys string) {
 			//dbg.Lvl4("running on ", phys, cmd)
@@ -231,7 +204,7 @@ func main() {
 			}
 			servers := strings.Join(ss, ",")
 			dbg.Lvl3("Starting with ss=", ss)
-			go func(i int, p string, a bool) {
+			go func(p string, a bool) {
 				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
 					" -name=client@" + p +
 					" -server=" + servers +
@@ -241,9 +214,8 @@ func main() {
 					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
 				}
 				dbg.Lvl4("Deter.go : Finished with", deterlab.App, p)
-			}(i, p, amroot)
+			}(p, amroot)
 			amroot = false
-			i = (i + 1) % len(loggerports)
 		}
 	case "sign_no":
 		// TODO: for now it's only a simple startup from the server

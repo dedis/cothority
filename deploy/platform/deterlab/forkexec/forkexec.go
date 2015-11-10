@@ -18,7 +18,6 @@ import (
 var deter platform.Deterlab
 var testConnect bool
 var physToServer map[string][]string
-var loggerports []string
 var rootname string
 
 func main() {
@@ -29,12 +28,10 @@ func main() {
 
 	setup_deter()
 
-	i := 0
 	var wg sync.WaitGroup
 	virts := physToServer[app.RunFlags.PhysAddr]
 	if len(virts) > 0 {
 		dbg.Lvl3("starting", len(virts), "servers of", deter.App, "on", virts)
-		i = (i + 1) % len(loggerports)
 		for _, name := range virts {
 			dbg.Lvl3("Starting", name, "on", app.RunFlags.PhysAddr)
 			wg.Add(1)
@@ -77,15 +74,9 @@ func setup_deter() {
 	for i := range deter.Virt {
 		vpmap[deter.Virt[i]] = deter.Phys[i]
 	}
-	nloggers := deter.Loggers
-	masterLogger := deter.Phys[0]
-	loggers := []string{masterLogger}
-	for n := 1; n <= nloggers; n++ {
-		loggers = append(loggers, deter.Phys[n])
-	}
 
-	deter.Phys = deter.Phys[nloggers:]
-	deter.Virt = deter.Virt[nloggers:]
+	deter.Phys = deter.Phys[:]
+	deter.Virt = deter.Virt[:]
 
 	hostnames := deter.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
@@ -103,10 +94,5 @@ func setup_deter() {
 		physToServer[p] = ss
 	}
 	dbg.Lvl3("PhysToServer is", physToServer)
-
-	loggerports = make([]string, len(loggers))
-	for i, logger := range loggers {
-		loggerports[i] = logger + ":10000"
-	}
 
 }

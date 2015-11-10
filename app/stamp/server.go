@@ -53,7 +53,7 @@ func NewServer(signer sign.Signer) *Server {
 
 	s.Signer = signer
 	s.Signer.RegisterCommitFunc(s.CommitFunc())
-	s.Signer.RegisterOnDoneFunc(s.OnDone())
+	s.Signer.RegisterDoneFunc(s.Done())
 	s.rLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -374,7 +374,7 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 	}
 }
 
-func (s *Server) OnDone() sign.OnDoneFunc {
+func (s *Server) Done() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
 		sig *sign.SignatureBroadcastMessage) {
 		s.mux.Lock()

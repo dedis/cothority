@@ -25,6 +25,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -36,7 +37,7 @@ import (
 // Configuration-variables
 var deployP platform.Platform
 
-var platform_dst = "deterlab"
+var platform_dst = "localhost"
 var app = ""
 var nobuild = false
 var build = ""
@@ -154,6 +155,14 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	done := make(chan struct{})
+	if platform_dst == "localhost" {
+		machs := rc.Get("machines")
+		ppms := rc.Get("ppm")
+		mach, _ := strconv.Atoi(machs)
+		ppm, _ := strconv.Atoi(ppms)
+		rc.Put("machines", "1")
+		rc.Put("ppm", strconv.Itoa(ppm*mach))
+	}
 	rs := monitor.NewStats(rc.Map())
 
 	deployP.Deploy(rc)

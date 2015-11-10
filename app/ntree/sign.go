@@ -153,7 +153,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		// finished verifying => time it !
 		verify.Measure()
 		round.Measure()
-		dbg.Lvl1(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
+		dbg.Lvl2(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
 	}
 
 	// cLosing each channels
@@ -162,7 +162,7 @@ func RunRoot(conf *app.NTreeConfig) {
 	}
 
 	monitor.End()
-	dbg.Lvl2(peer.String(), "leaving ...")
+	dbg.Lvl1(peer.String(), "Finished all rounds successfully.")
 }
 
 func RunPeer(conf *app.NTreeConfig) {
@@ -171,7 +171,7 @@ func RunPeer(conf *app.NTreeConfig) {
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, ServRole, key.Secret, key.Public)
-	dbg.Lvl1(peer.String(), "Up and will make connections...")
+	dbg.Lvl2(peer.String(), "Up and will make connections...")
 
 	// Chan used to communicate the message from the parent to the children
 	// Must do a Fan out to communicate this message to all children
@@ -351,7 +351,7 @@ func RunServer2(conf *app.NTreeConfig) {
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, ServRole, key.Secret, key.Public)
-	dbg.Lvl1(peer.String(), "Up and will make connections...")
+	dbg.Lvl2(peer.String(), "Up and will make connections...")
 
 	nChildren := len(conf.Tree.Children)
 	dbg.Lvl3(peer.String(), "starting with ", nChildren, "children")
