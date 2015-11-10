@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/crypto/abstract"
 )
 
 type Server struct {
@@ -53,7 +54,7 @@ func NewServer(signer sign.Signer) *Server {
 
 	s.Signer = signer
 	s.Signer.RegisterCommitFunc(s.CommitFunc())
-	s.Signer.RegisterOnDoneFunc(s.OnDone())
+	s.Signer.RegisterDoneFunc(s.Done())
 	s.rLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -374,9 +375,9 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 	}
 }
 
-func (s *Server) OnDone() sign.OnDoneFunc {
+func (s *Server) Done() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	sig *sign.SignatureBroadcastMessage) {
+	sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
