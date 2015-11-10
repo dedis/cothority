@@ -16,7 +16,6 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
 )
 
 type Server struct {
@@ -377,7 +376,7 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 
 func (s *Server) Done() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+		sig *sign.SignatureBroadcastMessage) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
@@ -393,9 +392,9 @@ func (s *Server) Done() sign.DoneFunc {
 			}
 
 			respMessg := TimeStampMessage{
-				Type:  StampReplyType,
+				Type:  StampSignatureType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &StampReply{Sig: SNRoot, Prf: combProof}}
+				Srep:  &StampSignature{Sig: SNRoot, Prf: combProof}}
 
 			s.PutToClient(msg.To, respMessg)
 		}

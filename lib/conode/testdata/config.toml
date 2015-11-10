@@ -1,0 +1,13 @@
+Suite = "25519"
+Hosts = ["localhost:2010", "localhost:2020"]
+AggPubKey = "Nyi29tp2zVDkOu8kRiBMjO8HBLYPfS1T/LVwgV79A3Q="
+
+[Tree]
+  Name = "localhost:2010"
+  PriKey = ""
+  PubKey = "2tqiGgugnZgaDPTdFPdsTjazmjgSlRJydcL+EdvdK9Q="
+
+  [[Tree.Children]]
+    Name = "localhost:2020"
+    PriKey = ""
+    PubKey = "gs3y37T3nmyq6fuAojP+8NIZEpeIZA4p01Vc8V6Ew5M="
