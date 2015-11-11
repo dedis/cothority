@@ -180,6 +180,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 
 		for j := range clients {
 			clients[j] = NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
+			dbg.Lvl3("Created a new client from stamp.go")
 			var c coconet.Conn
 
 			// if we are using tcp connections
@@ -194,6 +195,8 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 				s.Clients[clients[j].Name()] = stoc
 			}
 			// connect to the server from the client
+			// This will connect to stampe server and waits for response.
+			// Sending stamp request is done in client.go..... ><
 			clients[j].AddServer(s.Name(), c)
 			//clients[j].Sns[s.Name()] = c
 			//clients[j].Connect()

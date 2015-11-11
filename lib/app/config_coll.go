@@ -14,8 +14,10 @@ type ConfigColl struct {
 
 	// How many messages to send
 	Nmsgs int
-	// The speed of messages/s
+	// The speed of request stamping/ms
 	Rate int
+	// Percentage of stamp server we want to request on (0% = only leader)
+	StampPerc int
 	// How many rounds
 	Rounds int
 	// Pre-defined failure rate

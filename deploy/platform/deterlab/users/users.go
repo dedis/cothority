@@ -209,6 +209,7 @@ func main() {
 					" -name=client@" + p +
 					" -server=" + servers +
 					" -amroot=" + strconv.FormatBool(a)
+				dbg.Lvl3("Users will launch client :", cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
 					dbg.Lvl4("Deter.go : error for", deterlab.App, err)

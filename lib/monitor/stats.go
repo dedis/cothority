@@ -171,7 +171,7 @@ type Stats struct {
 }
 
 // ExtraFIelds in a RunConfig argument that we may want to parse if present
-var extraFields = [...]string{"bf"}
+var extraFields = [...]string{"bf", "rate"}
 
 // DefaultMeasurements are the default measurements we want to do anyway
 // For now these will be the fields that will appear in the output csv file

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -122,7 +123,6 @@ func (s *Server) Listen() error {
 							c.Close()
 							return
 						case StampRequestType:
-							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
 							READING := s.READING
 							s.Queue[READING] = append(s.Queue[READING],
@@ -377,7 +377,7 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 
 func (s *Server) Done() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+		sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
@@ -396,7 +396,6 @@ func (s *Server) Done() sign.DoneFunc {
 				Type:  StampReplyType,
 				ReqNo: msg.Tsm.ReqNo,
 				Srep:  &StampReply{Sig: SNRoot, Prf: combProof}}
-
 			s.PutToClient(msg.To, respMessg)
 		}
 		s.mux.Unlock()
@@ -460,10 +459,11 @@ func (s *Server) AggregateCommits(view int) []byte {
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
+		dbg.Lvl3("Stamper error putting to client :", err)
 		s.Close()
 		return
 	}
 	if err != nil && err != coconet.ErrNotEstablished {
-		log.Warnf("%p error putting to client: %v", s, err)
+		dbg.Lvl3(fmt.Sprintf("%p error putting to client: %v", s, err))
 	}
 }

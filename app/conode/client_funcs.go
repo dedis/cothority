@@ -60,12 +60,14 @@ func (c *Client) handleServer(s coconet.Conn) error {
 		tsm := &conode.TimeStampMessage{}
 		err := s.GetData(tsm)
 		if err != nil {
+			dbg.Lvl4("Client : received response WITH ERROR", err)
 			if err == coconet.ErrNotEstablished {
 				continue
 			}
-			log.Warn("error getting from connection:", err)
+			dbg.Lvl3("error getting from connection:", err)
 			return err
 		}
+		dbg.Lvl4("Client : Received response from server")
 		c.handleResponse(tsm)
 	}
 }
@@ -74,7 +76,7 @@ func (c *Client) handleServer(s coconet.Conn) error {
 func (c *Client) handleResponse(tsm *conode.TimeStampMessage) {
 	switch tsm.Type {
 	default:
-		log.Println("Message of unknown type")
+		dbg.Lvl4("Client : Message of unknown type")
 	case conode.StampReplyType:
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received
@@ -192,6 +194,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 }
 
 func (c *Client) ProcessStampReply(tsm *conode.TimeStampMessage) {
+	dbg.LLvl4("StampClient received StampReply")
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm
