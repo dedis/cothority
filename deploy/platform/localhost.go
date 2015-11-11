@@ -178,7 +178,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 
 }
 
-func (d *Localhost) Start() error {
+func (d *Localhost) Start(args ...string) error {
 	os.Chdir(d.RunDir)
 	dbg.Lvl4("Localhost : chdir into ", d.RunDir)
 	ex := d.RunDir + "/" + d.App
@@ -186,7 +186,8 @@ func (d *Localhost) Start() error {
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
-		args := []string{"-hostname", host, "-mode", "server", "-logger", "localhost:" + monitor.SinkPort}
+		defaultArgs := []string{"-hostname", host, "-mode", "server", "-logger", "localhost:" + monitor.SinkPort}
+		args = append(args, defaultArgs...)
 		cmd := exec.Command(ex, args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

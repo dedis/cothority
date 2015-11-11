@@ -18,6 +18,7 @@ package platform
 import (
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"bufio"
@@ -327,7 +328,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	return nil
 }
 
-func (d *Deterlab) Start() error {
+func (d *Deterlab) Start(args ...string) error {
 	// setup port forwarding for viewing log server
 	d.started = true
 	// Remote tunneling : the sink port is used both for the sink and for the
@@ -345,7 +346,7 @@ func (d *Deterlab) Start() error {
 	dbg.Lvl2("Setup remote port forwarding ", exCmd)
 	//time.Sleep(5 * time.Minute)
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users "+strings.Join(args, " "))
 		if err != nil {
 			dbg.Lvl3(err)
 		}
