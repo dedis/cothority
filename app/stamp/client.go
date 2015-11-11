@@ -66,9 +66,9 @@ func scaleServers(flags *app.Flags, conf *app.ConfigColl, servers []string) []st
 		}
 	}
 	// else take the right perc
-	i := int(math.Floor((float64(conf.StampPerc) / 100.0) * float64(len(servers))))
-	dbg.Lvl3("Client will contact", i, "servers")
-	return servers[0 : i+1]
+	i := int(math.Ceil((float64(conf.StampPerc) / 100.0) * float64(len(servers))))
+	dbg.Lvl3("Client will contact", i, "/", len(servers), "servers")
+	return servers[0:i]
 }
 
 func genRandomMessages(n int) [][]byte {
