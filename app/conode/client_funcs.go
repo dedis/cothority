@@ -64,7 +64,7 @@ func (c *Client) handleServer(s coconet.Conn) error {
 			if err == coconet.ErrNotEstablished {
 				continue
 			}
-			dbg.Lvl3("error getting from connection:", err)
+			dbg.Lvl4("error getting from connection:", err)
 			return err
 		}
 		dbg.Lvl4("Client : Received response from server")
@@ -76,8 +76,8 @@ func (c *Client) handleServer(s coconet.Conn) error {
 func (c *Client) handleResponse(tsm *conode.TimeStampMessage) {
 	switch tsm.Type {
 	default:
-		dbg.Lvl4("Client : Message of unknown type")
-	case conode.StampReplyType:
+		log.Println("Message of unknown type")
+	case conode.StampSignatureType:
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received
 		// we know that there is no error at this point
@@ -171,7 +171,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	myChan := c.doneChan[myReqno]
 	c.Mux.Unlock()
 
-	// wait until ProcessStampReply signals that reply was received
+	// wait until ProcessStampSignature signals that reply was received
 	select {
 	case err = <-myChan:
 		//log.Println("-------------client received  response from" + TSServerName)
@@ -182,7 +182,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 		// err = ErrClientToTSTimeout
 	}
 	if err != nil {
-		dbg.Lvl3(c.Name(), "error received from DoneChan:", err)
+		dbg.Lvl4(c.Name(), "error received from DoneChan:", err)
 		return err
 	}
 
@@ -194,7 +194,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 }
 
 func (c *Client) ProcessStampReply(tsm *conode.TimeStampMessage) {
-	dbg.LLvl4("StampClient received StampReply")
+	dbg.Lvl4("StampClient received StampReply")
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm

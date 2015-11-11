@@ -74,11 +74,11 @@ func (c *Client) handleResponse(tsm *TimeStampMessage) {
 	switch tsm.Type {
 	default:
 		log.Println("Message of unknown type")
-	case StampReplyType:
+	case StampSignatureType:
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received
 		// we know that there is no error at this point
-		c.ProcessStampReply(tsm)
+		c.ProcessStampSignature(tsm)
 
 	}
 }
@@ -169,7 +169,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	myChan := c.doneChan[myReqno]
 	c.Mux.Unlock()
 
-	// wait until ProcessStampReply signals that reply was received
+	// wait until ProcessStampSignature signals that reply was received
 	select {
 	case err = <-myChan:
 		//log.Println("-------------client received  response from" + TSServerName)
@@ -191,7 +191,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	return err
 }
 
-func (c *Client) ProcessStampReply(tsm *TimeStampMessage) {
+func (c *Client) ProcessStampSignature(tsm *TimeStampMessage) {
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm
