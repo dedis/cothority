@@ -16,8 +16,12 @@ type Discards struct {
 	measures map[string]bool
 }
 
+// Holds the value to discard
 var discards Discards
 
+// Discards must implement the Var interface to be read by flag
+// This way it allows to specify multiple measure to discard with a separated
+// comma list.
 func (d *Discards) String() string {
 	var arr []string
 	for name, _ := range d.measures {
@@ -52,7 +56,7 @@ func (d *Discards) Update(newMeasure Measure, reference *Measurement) {
 	reference.Update(newMeasure)
 }
 func init() {
-	flag.Var(&discards, "discard", "Measures where we want to discard the first round")
+	flag.Var(&discards, "discard", "Measures where we want to discard the first round ( can specify a list m1,m2,m3 ...)")
 }
 
 ////////////////////// HELPERS FUNCTIONS / STRUCT /////////////////
@@ -150,11 +154,10 @@ func (t *Value) String() string {
 // measurement "verify" will hold a wallclock Value, cpu_user Value, cpu_system
 // Value
 type Measurement struct {
-	Name    string
-	Wall    Value
-	User    Value
-	System  Value
-	Discard bool
+	Name   string
+	Wall   Value
+	User   Value
+	System Value
 }
 
 // WriteHeader will write the header to the specified writer
