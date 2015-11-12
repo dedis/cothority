@@ -41,6 +41,13 @@ func (d *Discards) Set(s string) error {
 	return nil
 }
 
+// Reset sets every flags to true
+func (d *Discards) Reset() {
+	for k := range d.measures {
+		d.measures[k] = true
+	}
+}
+
 // Does this measure is contained in the list of discards
 // if it is, look if we already discarded it or not
 // Think of discardss like a middleware passing or not the value downstream
@@ -315,6 +322,9 @@ func (s *Stats) WriteValues(w io.Writer) {
 		m.WriteValues(w)
 	}
 	fmt.Fprintf(w, "\n")
+
+	// Reset the discards
+	discards.Reset()
 }
 
 // AverageStats will make an average of the given stats
