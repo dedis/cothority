@@ -34,7 +34,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -249,6 +248,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	switch d.App {
 	case "sign", "stamp":
 		conf := app.ConfigColl{}
+		conf.StampsPerRound = -1
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers

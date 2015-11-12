@@ -27,6 +27,10 @@ type ConfigColl struct {
 	// Debug-level
 	Debug int
 
+	// How many stamps per round are we signing limiting rate
+	// if StampsPerRound == -1 ==> no limits
+	StampsPerRound int
+
 	// RootWait - how long the root timestamper waits for the clients to start up
 	RootWait int
 	// Just set up the connections and then quit

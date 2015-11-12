@@ -2,6 +2,7 @@ Machines = 3
 App = "stamp"
 Rounds = 10
 Rate = 10
+StampsPerRound = 2
 Suite = "ed25519"
 
 ppm, bf

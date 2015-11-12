@@ -92,7 +92,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 		sn.Close()
 	}(hc.SNodes[0])
 
-	stampers, _, err := RunTimestamper(hc, 0, hostname)
+	stampers, _, err := RunTimestamper(hc, 0, conf, hostname)
 	// get rid of the hc information so it can be GC'ed
 	hc = nil
 	if err != nil {
@@ -127,7 +127,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string) ([]*Server, []*Client, error) {
+func RunTimestamper(hc *graphs.HostConfig, nclients int, conf *app.ConfigColl, hostnameSlice ...string) ([]*Server, []*Client, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
@@ -151,7 +151,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 			dbg.Lvl1("signing node not in hostnmaes")
 			continue
 		}
-		stampers = append(stampers, NewServer(sn))
+		stampers = append(stampers, NewServer(conf, sn))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
 			stampers[len(stampers)-1].Listen()
