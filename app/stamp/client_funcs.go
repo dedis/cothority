@@ -62,7 +62,7 @@ func (c *Client) handleServer(s coconet.Conn) error {
 			if err == coconet.ErrNotEstablished {
 				continue
 			}
-			log.Warn("error getting from connection:", err)
+			dbg.Lvl3("error getting from connection:", err)
 			return err
 		}
 		c.handleResponse(tsm)

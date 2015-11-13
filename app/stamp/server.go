@@ -241,7 +241,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 		case <-ticker:
 
 			round := monitor.NewMeasure("round")
-			dbg.Lvl4(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
+			dbg.Lvl1(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {

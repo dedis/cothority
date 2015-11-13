@@ -171,7 +171,7 @@ type Stats struct {
 	keys     []string
 }
 
-// ExtraFIelds in a RunConfig argument that we may want to parse if present
+// ExtraFields in a RunConfig argument that we may want to parse if present
 var extraFields = [...]string{"bf", "rate", "stampperc"}
 
 // DefaultMeasurements are the default measurements we want to do anyway
@@ -211,7 +211,6 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 			s.addKeys = append(s.addKeys, f)
 		}
 	}
-
 }
 
 func (s *Stats) Init() *Stats {
