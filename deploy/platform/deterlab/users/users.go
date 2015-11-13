@@ -59,15 +59,18 @@ func main() {
 		wg.Add(1)
 		go func(i int, h string) {
 			defer wg.Done()
-			dbg.Lvl4("Cleaning up host", h)
-			cliutils.SshRun("", h, "sudo killall "+deterlab.App+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
-			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall "+deterlab.App+" 2>/dev/null >/dev/null")
-			if dbg.DebugVisible > 3 {
-				dbg.Lvl4("Cleaning report:")
-				cliutils.SshRunStdout("", h, "ps aux")
-			}
+			if kill {
 
+				dbg.Lvl4("Cleaning up host", h)
+				cliutils.SshRun("", h, "sudo killall "+deterlab.App+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
+				time.Sleep(1 * time.Second)
+				cliutils.SshRun("", h, "sudo killall "+deterlab.App+" 2>/dev/null >/dev/null")
+				if dbg.DebugVisible > 3 {
+					dbg.Lvl4("Cleaning report:")
+					cliutils.SshRunStdout("", h, "ps aux")
+				}
+				dbg.Lvl3("Host", h, "cleaned up")
+			}
 			if !kill {
 				dbg.Lvl3("Setting the file-limit higher on", h)
 
@@ -78,7 +81,6 @@ func main() {
 				}
 			}
 			doneHosts[i] = true
-			dbg.Lvl3("Host", h, "cleaned up")
 		}(i, h)
 	}
 
