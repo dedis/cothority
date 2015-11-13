@@ -242,7 +242,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 		case <-ticker:
 
 			round := monitor.NewMeasure("round")
-			dbg.Lvl4(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
+			dbg.Lvl1(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -420,7 +420,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	if len(s.Queue[READING]) < upperBound || upperBound == -1 {
 		upperBound = len(s.Queue[READING])
 	}
-	dbg.Print("Aggregate COMMIT :", upperBound, " TAKEN /", len(s.Queue[READING]))
+	dbg.Lvl4("Aggregate COMMIT :", upperBound, " TAKEN /", len(s.Queue[READING]))
 	// Take the maximum number of stamprequest for this round
 	s.Queue[PROCESSING] = s.Queue[READING][0:upperBound]
 	// And let the rest adjust it self
