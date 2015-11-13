@@ -117,8 +117,8 @@ func main() {
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
 	// RedirectionAddress:RedirectionPort. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
-	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
+	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyAddress, ":", monitor.GetProxyPort())
+	go monitor.Proxy(deterlab.ProxyAddress + ":" + monitor.GetProxyPort())
 
 	hostnames := deterlab.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
@@ -158,9 +158,9 @@ func main() {
 		go func(phys string) {
 			//dbg.Lvl4("running on ", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", deterlab.MonitorAddress+":"+monitor.SinkPort)
+			dbg.Lvl4("Starting servers on physical machine ", phys, "with monitor = ", deterlab.MonitorAddress+":"+monitor.SinkPort)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
-				" -physaddr="+phys+" -logger="+deterlab.MonitorAddress+":"+monitor.SinkPort)
+				" -physaddr="+phys+" -monitor="+deterlab.MonitorAddress+":"+monitor.SinkPort)
 			if err != nil {
 				log.Fatal("Error starting timestamper:", err, phys)
 			}

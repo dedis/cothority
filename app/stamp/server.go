@@ -224,10 +224,10 @@ func (s *Server) runAsRoot(nRounds int) string {
 		return "close"
 	}
 
-	if app.RunFlags.Logger == "" {
+	if app.RunFlags.Monitor == "" {
 		monitor.Disable()
 	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+		if err := monitor.ConnectSink(app.RunFlags.Monitor); err != nil {
 			dbg.Fatal("Root could not connect to monitor sink :", err)
 		}
 	}

@@ -45,7 +45,7 @@ func main() {
 					"-physaddr=" + app.RunFlags.PhysAddr,
 					"-amroot=" + strconv.FormatBool(amroot),
 					"-test_connect=" + strconv.FormatBool(testConnect),
-					"-logger=" + app.RunFlags.Logger,
+					"-monitor=" + app.RunFlags.Monitor,
 					"-mode=server",
 				}
 

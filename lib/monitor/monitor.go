@@ -8,6 +8,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"strconv"
 )
 
 // This file handles the collection of measurements, aggregates them and
@@ -34,7 +35,7 @@ func init() {
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func Monitor(stats *Stats) error {
-	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
+	ln, err := net.Listen("tcp", Sink + ":" + SinkPort)
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address : %v", err)
 	}
@@ -65,8 +66,8 @@ func Monitor(stats *Stats) error {
 	for !finished {
 		select {
 		case c := <-ch:
-			// TODO : maybe change to a more statefull approache with struct for each
-			// connections...
+		// TODO : maybe change to a more statefull approache with struct for each
+		// connections...
 			conns = append(conns, c)
 			nconn += 1
 			go handleConnection(c, stats)
@@ -93,6 +94,12 @@ func Stop() {
 		done <- true
 	}
 
+}
+
+// Gets the proxy port which is just 1 above the monitor-port
+func GetProxyPort() string{
+	proxyPort, _ := strconv.Atoi(SinkPort)
+	return strconv.Itoa(proxyPort + 1)
 }
 
 // handleConnection will decode the data received and aggregates it into its

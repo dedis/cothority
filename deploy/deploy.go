@@ -42,6 +42,7 @@ var app = ""
 var nobuild = false
 var build = ""
 var machines = 3
+var monitor_port = 10000
 
 // SHORT TERM solution of referencing
 // the different apps.
@@ -61,11 +62,13 @@ func init() {
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
+	flag.IntVar(&monitor_port, "mport", monitor_port, "Port-number for monitor")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
+	monitor.SinkPort = strconv.Itoa(monitor_port)
 	deployP = platform.NewPlatform(platform_dst)
 	if deployP == nil {
 		dbg.Fatal("Platform not recognized.", platform_dst)

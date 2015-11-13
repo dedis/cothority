@@ -186,7 +186,7 @@ func (d *Localhost) Start(args ...string) error {
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
-		defaultArgs := []string{"-hostname", host, "-mode", "server", "-logger", "localhost:" + monitor.SinkPort}
+		defaultArgs := []string{"-hostname", host, "-mode", "server", "-monitor", "localhost:" + monitor.SinkPort}
 		args = append(args, defaultArgs...)
 		cmd := exec.Command(ex, args...)
 		cmd.Stdout = os.Stdout

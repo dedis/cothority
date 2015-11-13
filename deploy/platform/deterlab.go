@@ -61,11 +61,9 @@ type Deterlab struct {
 	// VLAN-IP names
 	Virt []string
 
-	// ProxyRedirectionAddress : the proxy will redirect every traffic it
+	// ProxyAddress : the proxy will redirect every traffic it
 	// receives to this address
-	ProxyRedirectionAddress string
-	// Proxy redirection port
-	ProxyRedirectionPort string
+	ProxyAddress string
 	// MonitorAddress is the address given to clients to connect to the monitor
 	// It is actually the Proxy that will listen to that address and clients
 	// won't know a thing about it
@@ -334,7 +332,8 @@ func (d *Deterlab) Start(args ...string) error {
 	// proxy => the proxy redirects packets to the same port the sink is
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
-	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R", d.ProxyRedirectionPort + ":" + d.ProxyRedirectionAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
+	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
+		monitor.GetProxyPort() + ":" + d.ProxyAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
 	exCmd := exec.Command("ssh", cmd...)
 	if err := exCmd.Start(); err != nil {
 		dbg.Fatal("Failed to start the ssh port forwarding : ", err)
@@ -422,9 +421,9 @@ func (d *Deterlab) createHosts() error {
 func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	deter := Deterlab{}
 	err := app.ReadTomlConfig(&deter, "deter.toml", d.DeterDir)
-	d.Host, d.Login, d.Project, d.Experiment, d.ProxyRedirectionPort, d.ProxyRedirectionAddress, d.MonitorAddress =
+	d.Host, d.Login, d.Project, d.Experiment, d.ProxyAddress, d.MonitorAddress =
 		deter.Host, deter.Login, deter.Project, deter.Experiment,
-		deter.ProxyRedirectionPort, deter.ProxyRedirectionAddress, deter.MonitorAddress
+		deter.ProxyAddress, deter.MonitorAddress
 
 	if err != nil {
 		dbg.Lvl1("Couldn't read config-file - asking for default values")
@@ -449,11 +448,8 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	if d.MonitorAddress == "" {
 		d.MonitorAddress = readString("Please enter the Monitor address (where clients will connect)", "users.isi.deterlab.net")
 	}
-	if d.ProxyRedirectionPort == "" {
-		d.ProxyRedirectionPort = readString("Please enter the proxy redirection port", "4001")
-	}
-	if d.ProxyRedirectionAddress == "" {
-		d.ProxyRedirectionAddress = readString("Please enter the proxy redirection address", "localhost")
+	if d.ProxyAddress == "" {
+		d.ProxyAddress = readString("Please enter the proxy redirection address", "localhost")
 	}
 
 	app.WriteTomlConfig(*d, "deter.toml", d.DeterDir)

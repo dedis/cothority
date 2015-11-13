@@ -101,7 +101,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	for _, s := range stampers {
 		// only listen if this is the hostname specified
 		if s.Name() == hostname {
-			s.Logger = Flags.Logger
+			s.Logger = Flags.Monitor
 			s.Hostname = hostname
 			s.App = "stamp"
 			if s.IsRoot(0) {

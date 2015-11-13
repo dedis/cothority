@@ -22,10 +22,10 @@ func RunServer(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	// Let's start the client if we're the root-node
 	if hc.SNodes[0].IsRoot(0) {
 		dbg.Lvl2(app.RunFlags.Hostname, "started client")
-		if app.RunFlags.Logger == "" {
+		if app.RunFlags.Monitor == "" {
 			monitor.Disable()
 		} else {
-			if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+			if err := monitor.ConnectSink(app.RunFlags.Monitor); err != nil {
 				dbg.Fatal("Signing root error connecting to monitor :", err)
 			}
 		}

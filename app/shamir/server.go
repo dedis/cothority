@@ -35,10 +35,10 @@ func RunServer(conf *app.ConfigShamir) {
 	p := NewPeer(indexPeer, flags.Hostname, s, info, indexPeer == 0)
 
 	// monitor connect
-	if app.RunFlags.Logger == "" {
+	if app.RunFlags.Monitor == "" {
 		monitor.Disable()
 	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+		if err := monitor.ConnectSink(app.RunFlags.Monitor); err != nil {
 			dbg.Fatal(p.String(), "could not connect to monitor :", err)
 		}
 	}
