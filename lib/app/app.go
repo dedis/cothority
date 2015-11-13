@@ -23,7 +23,6 @@ import (
 type Flags struct {
 	Hostname    string // Hostname like server-0.cs-dissent ?
 	Monitor     string // ip addr of the logger to connect to
-	MonitorPort string // the port of the monitor
 	PhysAddr    string // physical IP addr of the host
 	AmRoot      bool   // is the host root (i.e. special operations)
 	TestConnect bool   // Dylan-code to only test the connection and exit afterwards
@@ -39,7 +38,6 @@ var RunFlags Flags
 func FlagInit() {
 	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
 	flag.StringVar(&RunFlags.Monitor, "monitor", "", "remote monitor")
-	flag.StringVar(&RunFlags.MonitorPort, "mport", "", "port for monitor")
 	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
 	flag.BoolVar(&RunFlags.AmRoot, "amroot", false, "am I root node")
 	flag.BoolVar(&RunFlags.TestConnect, "test_connect", false, "test connecting and disconnecting")
@@ -64,7 +62,6 @@ func ReadConfig(conf interface{}, dir ...string) {
 	}
 	FlagInit()
 	flag.Parse()
-	monitor.SinkPort = RunFlags.MonitorPort
 
 	dbg.Lvl3("Running", RunFlags.Hostname, "with monitor at", RunFlags.Monitor)
 }
