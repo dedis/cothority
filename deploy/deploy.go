@@ -85,8 +85,6 @@ func main() {
 		}
 		deployP.Configure()
 
-		deployP.Cleanup()
-
 		//testprint := strings.Replace(strings.Join(runconfigs, "--"), "\n", ", ", -1)
 		//dbg.Lvl3("Going to run tests for", simulation, testprint)
 		logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
