@@ -1,7 +1,6 @@
 package monitor
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -31,9 +30,6 @@ func (d *Discards) String() string {
 }
 func (d *Discards) Set(s string) error {
 	arr := strings.Split(s, ",")
-	if len(d.measures) > 0 {
-		return errors.New("Discards flag already set")
-	}
 	d.measures = make(map[string]bool, len(arr))
 	for _, meas := range arr {
 		d.measures[meas] = true
@@ -63,6 +59,7 @@ func (d *Discards) Update(newMeasure Measure, reference *Measurement) {
 	reference.Update(newMeasure)
 }
 func init() {
+	discards.Set("round,verify")
 	flag.Var(&discards, "discard", "Measures where we want to discard the first round ( can specify a list m1,m2,m3 ...)")
 }
 
