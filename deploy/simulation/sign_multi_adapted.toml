@@ -2,7 +2,7 @@ App = "sign"
 Suite = "ed25519"
 Rounds = 20
 
-Machines, Hpn, bf
+Machines, ppm, bf
 2, 1, 2
 4, 1, 3
 8, 1, 4
