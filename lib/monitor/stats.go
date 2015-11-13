@@ -164,6 +164,7 @@ type Stats struct {
 	// running config. It will try to read some known fields such as "depth" or
 	// "bf" (branching factor) and add then to its struct
 	Additionals map[string]int
+	addKeys     []string
 
 	// The measures we have and the keys ordered
 	measures map[string]*Measurement
@@ -207,6 +208,7 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 			continue
 		} else {
 			s.Additionals[f] = ef
+			s.addKeys = append(s.addKeys, f)
 		}
 	}
 
@@ -216,6 +218,7 @@ func (s *Stats) Init() *Stats {
 	s.measures = make(map[string]*Measurement)
 	s.keys = make([]string, 0)
 	s.Additionals = make(map[string]int)
+	s.addKeys = make([]string, 0)
 	return s
 }
 
@@ -237,7 +240,7 @@ func (s *Stats) WriteHeader(w io.Writer) {
 	// write basic info
 	fmt.Fprintf(w, "Peers, ppm, machines")
 	// write additionals fields
-	for k, _ := range s.Additionals {
+	for _, k := range s.addKeys {
 		fmt.Fprintf(w, ", %s", k)
 	}
 	// Write the values header
@@ -254,7 +257,8 @@ func (s *Stats) WriteValues(w io.Writer) {
 	// write basic info
 	fmt.Fprintf(w, "%d, %d, %d", s.Peers, s.PPM, s.Machines)
 	// write additionals fields
-	for _, v := range s.Additionals {
+	for _, k := range s.addKeys {
+		v := s.Additionals[k]
 		fmt.Fprintf(w, ", %d", v)
 	}
 	// write the values
