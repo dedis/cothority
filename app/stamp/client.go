@@ -50,14 +50,14 @@ func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 // request. If percentage is 0, only contact the leader (if the client is on the
 // same physical machine than the leader/root).
 func scaleServers(flags *app.Flags, conf *app.ConfigColl, servers []string) []string {
-	if len(servers) == 0 || conf.StampPerc < 0 || conf.StampPerc > 100 {
-		dbg.Lvl3("Client wont change the servers percentage ")
+	if len(servers) == 0 || conf.StampPerc > 100 {
+		dbg.Lvl1("Client wont change the servers percentage ")
 		return servers
 	}
-	if conf.StampPerc == 0 {
+	if conf.StampPerc == -1 {
 		// take only the root if  we are a "root client" also
 		if flags.AmRoot {
-			dbg.Lvl3("Client will only contact root")
+			dbg.Lvl1("Client will only contact root")
 			return []string{servers[0]}
 		} else {
 			// others client dont do nothing
@@ -67,7 +67,11 @@ func scaleServers(flags *app.Flags, conf *app.ConfigColl, servers []string) []st
 	}
 	// else take the right perc
 	i := int(math.Ceil((float64(conf.StampPerc) / 100.0) * float64(len(servers))))
-	dbg.Lvl3("Client will contact", i, "/", len(servers), "servers")
+	fn := dbg.Lvl3
+	if flags.AmRoot {
+		fn = dbg.Lvl1
+	}
+	fn("Client will contact", i, "/", len(servers), "servers")
 	return servers[0:i]
 }
 
@@ -94,15 +98,16 @@ func removeTrailingZeroes(a []int64) []int64 {
 }
 
 func streamMessgs(c *Client, servers []string, rate int) {
-	dbg.Lvl3(c.Name(), "streaming at given rate", rate, " msg / ms")
-	ticker := time.NewTicker(time.Duration(rate) * time.Millisecond)
-	msg := genRandomMessages(1)[0]
-	i := 0
 	nServers := len(servers)
 	if nServers == 0 {
 		dbg.Lvl3("Stamp Client wont stream messages")
 		return
 	}
+	ticker := time.NewTicker(time.Second / time.Duration(rate))
+	dbg.Lvl1(c.Name(), "streaming at given rate", rate, " msg / s")
+	msg := genRandomMessages(1)[0]
+	i := 0
+
 retry:
 	dbg.Lvl3(c.Name(), "checking if", servers[0], "is already up")
 	err := c.TimeStamp(msg, servers[0])

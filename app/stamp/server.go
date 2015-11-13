@@ -112,13 +112,13 @@ func (s *Server) Listen() error {
 						tsm := TimeStampMessage{}
 						err := c.GetData(&tsm)
 						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child:", s, err)
+							dbg.Lvl2("%p Failed to get from client:", s, err)
 							s.Close()
 							return
 						}
 						switch tsm.Type {
 						default:
-							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
+							dbg.Lvl2("Message of unknown type: %v\n", tsm.Type)
 							c.Close()
 							return
 						case StampRequestType:

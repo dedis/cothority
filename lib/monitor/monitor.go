@@ -16,7 +16,7 @@ import (
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
 var Sink = "0.0.0.0"
-var SinkPort = "10000"
+var SinkPort = "10003"
 
 // mutex is used to update the global stats from many connections
 var mutex *sync.Mutex

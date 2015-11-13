@@ -259,7 +259,6 @@ func (s *Stats) WriteValues(w io.Writer) {
 		v, ok := s.Additionals[k]
 		if ok {
 			fmt.Fprintf(w, ", %d", v)
-			dbg.Print("Value for", k, "=", v)
 		}
 	}
 	// write the values
