@@ -45,8 +45,7 @@ type Server struct {
 	Logger   string
 	Hostname string
 	App      string
-
-	conf *app.ConfigColl
+	conf     *app.ConfigColl
 }
 
 func NewServer(conf *app.ConfigColl, signer sign.Signer) *Server {
@@ -246,9 +245,10 @@ func (s *Server) runAsRoot(nRounds int) string {
 						Name:   "test-add-node"}}
 				err = s.StartVotingRound(vote)
 			} else {
+				round := monitor.NewMeasure("round")
 				err = s.StartSigningRound()
+				round.Measure()
 			}
-			round.Measure()
 
 			if err == sign.ChangingViewError {
 				// report change in view, and continue with the select
@@ -450,6 +450,8 @@ func (s *Server) AggregateCommits(view int) []byte {
 		if lsr >= mr && mr >= 0 {
 			s.closeChan <- true
 		}
+	} else {
+		dbg.Lvl2("Root has received", len(s.Leaves), "stamps request for this round")
 	}
 
 	// create Merkle tree for this round's messages and check corectness

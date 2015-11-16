@@ -125,6 +125,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	case "sign", "stamp":
 		conf := app.ConfigColl{}
 		conf.StampsPerRound = -1
+		conf.StampRatio = 1.0
 		app.ReadTomlConfig(&conf, localConfig)
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers

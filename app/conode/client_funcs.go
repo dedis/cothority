@@ -81,7 +81,7 @@ func (c *Client) handleResponse(tsm *conode.TimeStampMessage) {
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received
 		// we know that there is no error at this point
-		c.ProcessStampSignature(tsm)
+		c.ProcessStampReply(tsm)
 
 	}
 }
@@ -193,7 +193,8 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	return err
 }
 
-func (c *Client) ProcessStampSignature(tsm *conode.TimeStampMessage) {
+func (c *Client) ProcessStampReply(tsm *conode.TimeStampMessage) {
+	dbg.Lvl4("StampClient received StampReply")
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm

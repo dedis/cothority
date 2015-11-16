@@ -3,7 +3,7 @@ App = "stamp"
 Rounds = 20
 Rate = 10
 StampsPerRound = 2
-StampPerc = 50
+StampRatio = 0.50
 Suite = "ed25519"
 
 ppm, bf
