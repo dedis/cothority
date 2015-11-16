@@ -84,7 +84,7 @@ func (sn *Node) getMessages() error {
 			default:
 				continue
 			case Announcement:
-				dbg.Lvl2(sn.Name(), "got announcement")
+				dbg.Lvl3(sn.Name(), "got announcement")
 				sn.ReceivedHeartbeat(sm.View)
 
 				var err error
@@ -104,7 +104,7 @@ func (sn *Node) getMessages() error {
 
 			// if it is a commitment or response it is from the child
 			case Commitment:
-				dbg.Lvl4(sn.Name(), "got commitment")
+				dbg.Lvl3(sn.Name(), "got commitment")
 				if !sn.IsChild(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received commitment from non-child on view", sm.View)
 					continue
@@ -120,7 +120,7 @@ func (sn *Node) getMessages() error {
 					log.Errorln(sn.Name(), "commit error:", err)
 				}
 			case Challenge:
-				dbg.Lvl4(sn.Name(), "got challenge")
+				dbg.Lvl3(sn.Name(), "got challenge")
 				if !sn.IsParent(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
 					continue
@@ -137,7 +137,7 @@ func (sn *Node) getMessages() error {
 					log.Errorln(sn.Name(), "challenge error:", err)
 				}
 			case Response:
-				dbg.Lvl4(sn.Name(), "received response from", sm.From)
+				dbg.Lvl3(sn.Name(), "received response from", sm.From)
 				if !sn.IsChild(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received response from non-child on view", sm.View)
 					continue
@@ -153,6 +153,7 @@ func (sn *Node) getMessages() error {
 					log.Errorln(sn.Name(), "response error:", err)
 				}
 			case SignatureBroadcast:
+				dbg.Lvl3(sn.Name(), "received SignatureBroadcast", sm.From)
 				sn.ReceivedHeartbeat(sm.View)
 				err = sn.SignatureBroadcast(sm.View, sm.SBm, 0)
 			case StatusReturn:
@@ -279,6 +280,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		sn.Messages += sm.Com.Messages
 	}
 
+	dbg.Lvl3("Got", len(round.Commits), "of", len(sn.Children(view)), "commits")
 	if len(round.Commits) != len(sn.Children(view)) {
 		return nil
 	}
@@ -690,7 +692,7 @@ func (sn *Node) TimeForViewChange() bool {
 }
 
 func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
-	dbg.Lvl2(sn.Name(), "StatusConnected", view)
+	dbg.Lvl3(sn.Name(), "StatusConnected", view)
 
 	// Ask connection-count on all connected children
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -717,9 +719,8 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 // This will broadcast the final signature to give to client
 // it contins the global Response adn global challenge
 func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
-	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
+	dbg.Lvl3(sn.Name(), "received SignatureBroadcast on", view)
 	sn.PeerStatusRcvd = 0
-
 	// Root is creating the sig broadcast
 	if sb == nil {
 		r := sn.Rounds[round]
@@ -755,7 +756,7 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 	}
 
 	if len(sn.Children(view)) > 0 {
-		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
+		dbg.Lvl3(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
 		ctx := context.TODO()
 		if err := sn.PutDown(ctx, view, messgs); err != nil {
 			return err
@@ -804,13 +805,13 @@ func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
 }
 
 func (sn *Node) CloseAll(view int) error {
-	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
+	dbg.Lvl3(sn.Name(), "received CloseAll on", view)
 
 	// At the leaves
 	if len(sn.Children(view)) == 0 {
-		dbg.Lvl2(sn.Name(), "in CloseAll is root leaf")
+		dbg.Lvl3(sn.Name(), "in CloseAll is root leaf")
 	} else {
-		dbg.Lvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
+		dbg.Lvl3(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
 
 		// Inform all children of announcement
 		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))

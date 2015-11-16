@@ -1,13 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/coconet"
@@ -20,27 +20,27 @@ import (
 
 type Server struct {
 	sign.Signer
-	name    string
-	Clients map[string]coconet.Conn
+	name       string
+	Clients    map[string]coconet.Conn
 
-	// for aggregating messages from clients
+							   // for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
 	READING    int
 	PROCESSING int
 
-	// Leaves, Root and Proof for a round
-	Leaves []hashid.HashId // can be removed after we verify protocol
-	Root   hashid.HashId
-	Proofs []proof.Proof
+							   // Leaves, Root and Proof for a round
+	Leaves     []hashid.HashId // can be removed after we verify protocol
+	Root       hashid.HashId
+	Proofs     []proof.Proof
 
-	rLock     sync.Mutex
-	maxRounds int
-	closeChan chan bool
+	rLock      sync.Mutex
+	maxRounds  int
+	closeChan  chan bool
 
-	Logger   string
-	Hostname string
-	App      string
+	Logger     string
+	Hostname   string
+	App        string
 }
 
 func NewServer(signer sign.Signer) *Server {
@@ -64,7 +64,7 @@ func NewServer(signer sign.Signer) *Server {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s.name = net.JoinHostPort(h, strconv.Itoa(i+1))
+		s.name = net.JoinHostPort(h, strconv.Itoa(i + 1))
 	}
 	s.Queue[s.READING] = make([]MustReplyMessage, 0)
 	s.Queue[s.PROCESSING] = make([]MustReplyMessage, 0)
@@ -111,17 +111,16 @@ func (s *Server) Listen() error {
 						tsm := TimeStampMessage{}
 						err := c.GetData(&tsm)
 						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child:", s, err)
+							dbg.Lvlf3("%p Failed to get from client:", s, err)
 							s.Close()
 							return
 						}
 						switch tsm.Type {
 						default:
-							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
+							dbg.Lvl2("Message of unknown type: %v\n", tsm.Type)
 							c.Close()
 							return
 						case StampRequestType:
-							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
 							READING := s.READING
 							s.Queue[READING] = append(s.Queue[READING],
@@ -148,12 +147,12 @@ func (s *Server) ListenToClients() {
 				tsm := TimeStampMessage{}
 				err := c.GetData(&tsm)
 				if err == coconet.ErrClosed {
-					dbg.Lvlf1("%p Failed to get from client:", s, err)
+					dbg.Lvlf3("%p Failed to get from client:", s, err)
 					s.Close()
 					return
 				}
 				if err != nil {
-					dbg.Lvlf1("%p failed To get message:", s, err)
+					dbg.Lvlf3("%p failed To get message:", s, err)
 				}
 				switch tsm.Type {
 				default:
@@ -219,18 +218,11 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 func (s *Server) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound()+1 > nRounds {
+	if s.LastRound() + 1 > nRounds {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
 
-	if app.RunFlags.Logger == "" {
-		monitor.Disable()
-	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal("Root could not connect to monitor sink :", err)
-		}
-	}
 	dbg.Lvl3(s.Name(), "running as root", s.LastRound(), int64(nRounds))
 	for {
 		select {
@@ -241,7 +233,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 		case <-ticker:
 
 			round := monitor.NewMeasure("round")
-			dbg.Lvl4(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
+			dbg.Lvl1(s.Name(), "is stamp server starting signing round for:", s.LastRound() + 1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -271,7 +263,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound()+1 >= nRounds {
+			if s.LastRound() + 1 >= nRounds {
 				//log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				// And tell everybody to quit
 				err := s.CloseAll(s.GetView())
@@ -302,7 +294,7 @@ func (s *Server) Run(role string, nRounds int) {
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Signer closed:", err) }()
+	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl3("Signer closed:", err) }()
 	if role == "test_connect" {
 		role = "regular"
 		go func() {
@@ -317,12 +309,12 @@ func (s *Server) Run(role string, nRounds int) {
 					return
 				default:
 				}
-				if i%2 == 0 {
+				if i % 2 == 0 {
 					dbg.Lvl4("removing self")
 					s.Signer.RemoveSelf()
 				} else {
-					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
-					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
+					dbg.Lvl4("adding self: ", hostlist[(i / 2) % len(hostlist)])
+					s.Signer.AddSelf(hostlist[(i / 2) % len(hostlist)])
 				}
 				i++
 			}
@@ -376,7 +368,7 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 
 func (s *Server) Done() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-		sig *sign.SignatureBroadcastMessage) {
+	sig *sign.SignatureBroadcastMessage) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
@@ -405,6 +397,10 @@ func (s *Server) Done() sign.DoneFunc {
 
 func (s *Server) AggregateCommits(view int) []byte {
 	//dbg.Lvl4(s.Name(), "calling AggregateCommits")
+	var aggregate *monitor.Measure
+	if s.IsRoot(view) {
+		aggregate = monitor.NewMeasure("aggregate")
+	}
 	s.mux.Lock()
 	// get data from s once to avoid refetching from structure
 	Queue := s.Queue
@@ -425,6 +421,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 	// pull out to be Merkle Tree leaves
 	s.Leaves = make([]hashid.HashId, 0)
+	dbg.Lvl3("Hashing stamp-messages:", len(Queue[PROCESSING]))
 	for _, msg := range Queue[PROCESSING] {
 		s.Leaves = append(s.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
 	}
@@ -446,12 +443,15 @@ func (s *Server) AggregateCommits(view int) []byte {
 	s.Root, s.Proofs = proof.ProofTree(s.Suite().Hash, s.Leaves)
 	if sign.DEBUG == true {
 		if proof.CheckLocalProofs(s.Suite().Hash, s.Root, s.Leaves, s.Proofs) == true {
-			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
+			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round " + strconv.Itoa(int(s.LastRound())))
 		} else {
 			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}
 	}
 
+	if len(Queue[PROCESSING]) > 0 && s.IsRoot(view){
+		aggregate.Measure()
+	}
 	return s.Root
 }
 
@@ -459,10 +459,11 @@ func (s *Server) AggregateCommits(view int) []byte {
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
+		dbg.Lvl3("Stamper error putting to client :", err)
 		s.Close()
 		return
 	}
 	if err != nil && err != coconet.ErrNotEstablished {
-		log.Warnf("%p error putting to client: %v", s, err)
+		dbg.Lvl3(fmt.Sprintf("%p error putting to client: %v", s, err))
 	}
 }

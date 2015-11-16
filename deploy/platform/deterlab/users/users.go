@@ -88,6 +88,7 @@ func main() {
 				}
 			}
 			doneHosts[i] = true
+			dbg.Lvl3("Host", h, "cleaned up")
 		}(i, h)
 	}
 

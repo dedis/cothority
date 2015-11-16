@@ -169,7 +169,7 @@ func (p *Peer) WaitSYNs() {
 			dbg.Fatal(p.Name, "received syn'd notification of an unknown peer... ABORT")
 		}
 		if len(p.remote) == p.info.N-1 {
-			dbg.Lvl2(p.Name, "is SYN'd with every one")
+			dbg.Lvl3(p.Name, "is SYN'd with every one")
 			break
 		}
 	}
@@ -204,7 +204,7 @@ func (p *Peer) WaitACKs() {
 
 	dbg.Lvl3(p.Name, "is waiting for acks ...")
 	wg.Wait()
-	dbg.Lvl2(p.String(), "received ALL ACKs")
+	dbg.Lvl3(p.String(), "received all ACKs")
 	//n := 0
 	//for {
 	//	a := <-p.ackChan
@@ -212,7 +212,7 @@ func (p *Peer) WaitACKs() {
 	//		n += 1
 	//	}
 	//	if n == p.info.N-1 {
-	//		dbg.Lvl2(p.Name, "received all acks. Continue")
+	//		dbg.Lvl3(p.Name, "received all acks. Continue")
 	//		break
 	//	}
 	//}
@@ -230,21 +230,21 @@ func (p *Peer) WaitFins() {
 		p.wgFin.Done()
 	}
 	p.ForRemotePeers(fn)
-	dbg.Lvl2(p.String(), "waiting to send all FIN's packets")
+	dbg.Lvl3(p.String(), "waiting to send all FIN's packets")
 	p.wgFin.Wait()
 	// close all connections
 	for _, rp := range p.remote {
 		rp.Conn.Close()
 	}
-	dbg.Lvl2(p.String(), "close every connections")
+	dbg.Lvl3(p.String(), "close every connections")
 	//for {
 	//	f := <-p.finChan
 	//	rp, ok := p.remote[f.Id]
 	//	if !ok {
-	//		dbg.Lvl2(p.Name, "received invalid FIN : wrong ID ", rp.Id, " ... ")
+	//		dbg.Lvl3(p.Name, "received invalid FIN : wrong ID ", rp.Id, " ... ")
 	//	} else {
 	//		rp.Conn.Close()
-	//		dbg.Lvl2(p.Name, "received FIN from ", rp.String(), " => closed connection")
+	//		dbg.Lvl3(p.Name, "received FIN from ", rp.String(), " => closed connection")
 	//	}
 	//}
 }
@@ -353,7 +353,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 
 	// Send the dealer struct TO every one
 	err = p.SendToAll(dealer)
-	dbg.Lvl2(p.Name, "sent its dealer to every peers. (err = ", err, ")")
+	dbg.Lvl3(p.Name, "sent its dealer to every peers. (err = ", err, ")")
 	// Receive the dealer struct FROM every one
 	// wait with a chan to get ALL dealers
 	dealChan := make(chan *poly.Deal)
@@ -383,7 +383,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 		n += 1
 		// we get enough dealers to compute the shared secret
 		if n == p.info.T-1 {
-			dbg.Lvl2(p.Name, "received every Dealers")
+			dbg.Lvl3(p.Name, "received every Dealers")
 			break
 		}
 	}
@@ -392,7 +392,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 	if err != nil {
 		dbg.Fatal(p.Name, "could not produce shared secret. Abort. (err ", err, ")")
 	}
-	dbg.Lvl2(p.Name, "produced shared secret !")
+	dbg.Lvl3(p.Name, "produced shared secret !")
 	return sh
 }
 
@@ -450,7 +450,7 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 		}
 		n += 1
 		if n == p.info.N-1 {
-			dbg.Lvl2(p.String(), "received every other partial sig.")
+			dbg.Lvl3(p.String(), "received every other partial sig.")
 			break
 		}
 	}
@@ -513,7 +513,7 @@ func (p *Peer) BroadcastSignature(s *poly.SchnorrSig) []*poly.SchnorrSig {
 		arr = append(arr, sig)
 		n += 1
 		if n == p.info.N-1 {
-			dbg.Lvl2(p.String(), "received every other schnorr sig.")
+			dbg.Lvl3(p.String(), "received every other schnorr sig.")
 			break
 		}
 	}

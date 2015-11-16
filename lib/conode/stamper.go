@@ -22,20 +22,20 @@ import (
 // CallbacksStamper is an implementation fo Callbacks which define a stamper
 // server
 type CallbacksStamper struct {
-	// for aggregating messages from clients
+							   // for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
 	READING    int
 	PROCESSING int
 
-	// Leaves, Root and Proof for a round
-	Leaves []hashid.HashId // can be removed after we verify protocol
-	Root   hashid.HashId
-	Proofs []proof.Proof
-	// Timestamp message for this Round
-	Timestamp int64
+							   // Leaves, Root and Proof for a round
+	Leaves     []hashid.HashId // can be removed after we verify protocol
+	Root       hashid.HashId
+	Proofs     []proof.Proof
+							   // Timestamp message for this Round
+	Timestamp  int64
 
-	Clients map[string]coconet.Conn
+	Clients    map[string]coconet.Conn
 }
 
 func NewCallbacksStamper() *CallbacksStamper {
@@ -112,7 +112,7 @@ func (cs *CallbacksStamper) CommitFunc(p *Peer) sign.CommitFunc {
 		cs.Root, cs.Proofs = proof.ProofTree(p.Suite().Hash, cs.Leaves)
 		if sign.DEBUG == true {
 			if proof.CheckLocalProofs(p.Suite().Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
-				dbg.Lvl4("Local Proofs of", p.Name(), "successful for round "+strconv.Itoa(int(p.LastRound())))
+				dbg.Lvl4("Local Proofs of", p.Name(), "successful for round " + strconv.Itoa(int(p.LastRound())))
 			} else {
 				panic("Local Proofs" + p.Name() + " unsuccessful for round " + strconv.Itoa(int(p.LastRound())))
 			}
@@ -124,7 +124,7 @@ func (cs *CallbacksStamper) CommitFunc(p *Peer) sign.CommitFunc {
 
 func (cs *CallbacksStamper) Done(p *Peer) sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, pr proof.Proof,
-		sb *sign.SignatureBroadcastMessage) {
+	sb *sign.SignatureBroadcastMessage) {
 		cs.mux.Lock()
 		for i, msg := range cs.Queue[cs.PROCESSING] {
 			// proof to get from s.Root to big root
@@ -179,7 +179,7 @@ func (cs *CallbacksStamper) PutToClient(p *Peer, name string, data coconet.Binar
 // Setu will start to listen to clients connections for stamping request
 func (cs *CallbacksStamper) Listen(p *Peer) error {
 	global, _ := cliutils.GlobalBind(p.name)
-	dbg.LLvl3("Listening in server at", global)
+	dbg.Lvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
 	if err != nil {
 		panic(err)
@@ -263,7 +263,7 @@ func runTimestamper(hc *graphs.HostConfig, nclients int, cb Callbacks, hostnameS
 		stampers = append(stampers, NewPeer(sn, cb))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
-			stampers[len(stampers)-1].Listen()
+			stampers[len(stampers) - 1].Listen()
 		}
 	}
 	dbg.Lvl3("stampers:", stampers)
