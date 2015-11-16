@@ -16,7 +16,7 @@ func TestProxy(t *testing.T) {
 	fresh := stat.String()
 	// First set up monitor listening
 	go Monitor(stat)
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	// Then setup proxy
 	// change port so the proxy does not listen to the same
 	// than the original monitor
@@ -34,7 +34,7 @@ func TestProxy(t *testing.T) {
 		return
 	}
 
-	meas := NewMeasure("round")
+	meas := NewMeasure("setup")
 	time.Sleep(100 * time.Millisecond)
 	meas.Measure()
 	End()
