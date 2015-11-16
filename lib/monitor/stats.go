@@ -8,6 +8,7 @@ import (
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type DataFilter struct {
@@ -26,8 +27,9 @@ func NewDataFilter(config map[string]string) DataFilter {
 	df := DataFilter{
 		percentiles: make(map[string]float64),
 	}
-	reg, err := regexp.Compile("/discard_(\\w+)/")
+	reg, err := regexp.Compile("filter_(\\w+)")
 	if err != nil {
+		dbg.Lvl1("DataFilter: Error compiling regexp:", err)
 		return df
 	}
 	// analyse the each entry
@@ -38,11 +40,14 @@ func NewDataFilter(config map[string]string) DataFilter {
 			// this value must be filtered by how many ?
 			perc, err := strconv.ParseFloat(v, 64)
 			if err != nil {
+				dbg.Lvl1("DataFilter: Cannot parse value for filter measure:", measure)
 				continue
 			}
+			measure = strings.Replace(measure, "filter_", "", -1)
 			df.percentiles[measure] = perc
 		}
 	}
+	dbg.Lvl2("Filtering:", df.percentiles)
 	return df
 }
 
@@ -68,9 +73,11 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 	}
 	// check if we foud something to filter out
 	if maxIndex == -1 {
+		dbg.Lvl3("Filtering: nothing to filter for", measure)
 		return values
 	}
 	// return the values below the percentile
+	dbg.Lvl2("Filtering: filters out ", measure, " :", maxIndex, " /", len(values))
 	return values[:maxIndex]
 }
 
@@ -93,8 +100,8 @@ type Value struct {
 	store []float64
 }
 
-func NewValue() Value {
-	return Value{store: make([]float64, 0)}
+func NewValue() *Value {
+	return &Value{store: make([]float64, 0)}
 }
 
 // Store takes this new time and stores it for later analysis
@@ -137,7 +144,7 @@ func (t *Value) Aggregate(measure string, df DataFilter) {
 }
 
 // Average will set the current Value to the average of all Value
-func AverageValue(st ...Value) Value {
+func AverageValue(st ...*Value) *Value {
 	var t Value
 	for _, s := range st {
 		t.min += s.min
@@ -151,7 +158,7 @@ func AverageValue(st ...Value) Value {
 	t.newM /= l
 	t.dev /= l
 	t.n = len(st)
-	return t
+	return &t
 }
 
 func (t *Value) Min() float64 {
@@ -187,9 +194,9 @@ func (t *Value) String() string {
 // Value
 type Measurement struct {
 	Name   string
-	Wall   Value
-	User   Value
-	System Value
+	Wall   *Value
+	User   *Value
+	System *Value
 	Filter DataFilter
 }
 
@@ -212,9 +219,6 @@ func (m *Measurement) WriteHeader(w io.Writer) {
 // WriteValues will write a new entry for this entry in the writer
 // First compute the values then write to writer
 func (m *Measurement) WriteValues(w io.Writer) {
-	m.Wall.Aggregate(m.Name, m.Filter)
-	m.User.Aggregate(m.Name, m.Filter)
-	m.System.Aggregate(m.Name, m.Filter)
 	fmt.Fprintf(w, "%s, %s, %s", m.Wall.String(), m.User.String(), m.System.String())
 }
 
@@ -232,10 +236,13 @@ func (m *Measurement) Update(measure Measure) {
 // measurements, etc.
 func AverageMeasurements(measurements []Measurement) Measurement {
 	m := NewMeasurement(measurements[0].Name, measurements[0].Filter)
-	walls := make([]Value, len(measurements))
-	users := make([]Value, len(measurements))
-	systems := make([]Value, len(measurements))
+	walls := make([]*Value, len(measurements))
+	users := make([]*Value, len(measurements))
+	systems := make([]*Value, len(measurements))
 	for i, m := range measurements {
+		m.Wall.Aggregate(m.Name, m.Filter)
+		m.User.Aggregate(m.Name, m.Filter)
+		m.System.Aggregate(m.Name, m.Filter)
 		walls[i] = m.Wall
 		users[i] = m.User
 		systems[i] = m.System
