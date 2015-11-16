@@ -231,6 +231,12 @@ func (m *Measurement) Update(measure Measure) {
 	m.System.Store(measure.CPUTimeSys)
 }
 
+func (m *Measurement) Aggregate() {
+	m.Wall.Aggregate(m.Name, m.Filter)
+	m.User.Aggregate(m.Name, m.Filter)
+	m.System.Aggregate(m.Name, m.Filter)
+}
+
 // AverageMeasurements takes an slice of measurements and make the average
 // between them. i.e. it takes the average of the Wall value from each
 // measurements, etc.
@@ -239,13 +245,11 @@ func AverageMeasurements(measurements []Measurement) Measurement {
 	walls := make([]*Value, len(measurements))
 	users := make([]*Value, len(measurements))
 	systems := make([]*Value, len(measurements))
-	for i, m := range measurements {
-		m.Wall.Aggregate(m.Name, m.Filter)
-		m.User.Aggregate(m.Name, m.Filter)
-		m.System.Aggregate(m.Name, m.Filter)
-		walls[i] = m.Wall
-		users[i] = m.User
-		systems[i] = m.System
+	for i, m2 := range measurements {
+		m2.Aggregate()
+		walls[i] = m2.Wall
+		users[i] = m2.User
+		systems[i] = m2.System
 	}
 	m.Wall = AverageValue(walls...)
 	m.User = AverageValue(users...)
@@ -431,4 +435,12 @@ func (s *Stats) String() string {
 		str += fmt.Sprintf("%v", v)
 	}
 	return fmt.Sprintf("{Stats: Peers %d, Measures : %s}", s.Peers, str)
+}
+
+// Simply make the final computations before stringing or writing.
+// Autmatically done in other methods anyway.
+func (s *Stats) Aggregate() {
+	for _, v := range s.measures {
+		v.Aggregate()
+	}
 }

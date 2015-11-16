@@ -35,3 +35,30 @@ func TestDataFilterFilter(t *testing.T) {
 		}
 	}
 }
+
+func TestStatsUpdate(t *testing.T) {
+	rc := make(map[string]string)
+	rc["machines"] = "2"
+	rc["ppm"] = "2"
+	stats := NewStats(rc)
+
+	m1 := Measure{
+		Name:        "round",
+		WallTime:    10,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	m2 := Measure{
+		Name:        "round",
+		WallTime:    10,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	stats.Update(m1)
+	stats.Update(m2)
+	stats.Aggregate()
+	meas := stats.measures["round"]
+	if meas.Wall.Avg() != 10 || meas.User.Avg() != 20 {
+		t.Error("Aggregate or Update not working")
+	}
+}
