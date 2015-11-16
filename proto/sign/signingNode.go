@@ -242,13 +242,6 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 
 	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
 
-	/*
-		first := time.Now()
-		total := time.Now()
-		var firstRoundTime time.Duration
-		var totalTime time.Duration
-	*/
-
 	ctx, cancel := context.WithTimeout(context.Background(), MAX_WILLING_TO_WAIT)
 	var cancelederr error
 	go func() {

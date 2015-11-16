@@ -44,7 +44,7 @@ func main() {
 	coApp := cli.NewApp()
 	coApp.Name = "Conode"
 	coApp.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
-	coApp.Version = "0.0.1"
+	coApp.Version = "0.1.0"
 	coApp.Authors = []cli.Author{
 		{
 			Name:  "Linus Gasser",
