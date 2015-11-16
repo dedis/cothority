@@ -4,7 +4,7 @@ import (
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"io/ioutil"
-	"strings"
+//	"strings"
 	"testing"
 )
 
@@ -16,7 +16,7 @@ Ppm, Rounds
 4, 30`
 
 func TestReadRunfile(t *testing.T) {
-	dbg.DebugVisible = 0
+	dbg.TestOutput(testing.Verbose(), 2)
 	tplat := &TPlat{}
 
 	tmpfile := "/tmp/testrun.toml"
@@ -34,7 +34,7 @@ func TestReadRunfile(t *testing.T) {
 	if len(tests) != 2 {
 		dbg.Fatal("There should be 2 tests")
 	}
-	if !strings.Contains(string(tests[0]), "Machines = 8\n") {
+	if tests[0].Get("machines") != "8"{
 		dbg.Fatal("Machines = 8 has not been copied into RunConfig")
 	}
 }
@@ -44,8 +44,10 @@ type TPlat struct {
 	Machines int
 }
 
-func (t *TPlat) Configure()                         {}
-func (t *TPlat) Build(s string) error               { return nil }
+func (t *TPlat) Configure() {}
+func (t *TPlat) Build(s string) error { return nil }
 func (t *TPlat) Deploy(rc platform.RunConfig) error { return nil }
-func (t *TPlat) Start() error                       { return nil }
-func (t *TPlat) Stop() error                        { return nil }
+func (t *TPlat) Start(...string) error { return nil }
+func (t *TPlat) Stop() error { return nil }
+func (t *TPlat) Cleanup() error {return nil}
+func (t *TPlat) Wait() error {return nil}

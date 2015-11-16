@@ -7,12 +7,8 @@ import (
 	"time"
 )
 
-func init() {
-	dbg.DebugVisible = 2
-}
-
 func TestProxy(t *testing.T) {
-
+	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
 	m["machines"] = "1"
 	m["ppm"] = "1"
@@ -39,7 +35,8 @@ func TestProxy(t *testing.T) {
 	}
 
 	meas := NewMeasure("round")
-	time.Sleep(100 * time.Millisecond)
+	meas.Measure()
+	time.Sleep(200 * time.Millisecond)
 	meas.Measure()
 	End()
 	time.Sleep(100 * time.Millisecond)

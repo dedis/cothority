@@ -114,6 +114,11 @@ func Lvl5(args ...interface{}) {
 	Lvld(5, args...)
 }
 
+func Error(args ...interface{}) {
+	Lvld(0, args...)
+	os.Exit(1)
+}
+
 func Fatal(args ...interface{}) {
 	Lvld(0, args...)
 	os.Exit(1)
@@ -149,9 +154,26 @@ func Fatalf(f string, args ...interface{}) {
 	os.Exit(1)
 }
 
+func Errorf(f string, args ...interface{}) {
+	Lvlf(0, f, args...)
+	os.Exit(1)
+}
+
 func Panicf(f string, args ...interface{}) {
 	Lvlf(0, f, args...)
 	panic(args)
+}
+
+// TestOutput sets the DebugVisible to 0 if 'show'
+// is false, else it will set DebugVisible to 'level'
+//
+// Usage: TestOutput( test.Verbose(), 2 )
+func TestOutput(show bool, level int){
+	if show {
+		DebugVisible = level
+	} else {
+		DebugVisible = 0
+	}
 }
 
 // To easy print a debug-message anyway without discarding the level
