@@ -30,7 +30,7 @@ func RunServer(conf *app.ConfigShamir) {
 		log.Fatal("Peer ", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
-	dbg.Lvl2("Creating new peer ", flags.Hostname, "(", flags.PhysAddr, ") ...")
+	dbg.Lvl3("Creating new peer ", flags.Hostname, "(", flags.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, flags.Hostname, s, info, indexPeer == 0)
 
@@ -44,12 +44,12 @@ func RunServer(conf *app.ConfigShamir) {
 	}
 	// make it listen
 	setup := monitor.NewMeasure("setup")
-	dbg.Lvl2("Peer", flags.Hostname, "is now listening for incoming connections")
+	dbg.Lvl3("Peer", flags.Hostname, "is now listening for incoming connections")
 	go p.Listen()
 
 	// then connect it to its successor in the list
 	for _, h := range conf.Hosts[indexPeer+1:] {
-		dbg.Lvl2("Peer ", flags.Hostname, " will connect to ", h)
+		dbg.Lvl3("Peer ", flags.Hostname, " will connect to ", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
 	}
@@ -60,7 +60,7 @@ func RunServer(conf *app.ConfigShamir) {
 	p.SetupDistributedSchnorr()
 	p.SendACKs()
 	p.WaitACKs()
-	dbg.Lvl2(p.String(), "completed Schnorr setup")
+	dbg.Lvl3(p.String(), "completed Schnorr setup")
 
 	// send setup time if we're root
 	if p.IsRoot() {
@@ -69,9 +69,6 @@ func RunServer(conf *app.ConfigShamir) {
 
 	roundm := monitor.NewMeasure("round")
 	for round := 0; round < conf.Rounds; round++ {
-		if p.IsRoot() {
-			dbg.Lvl2("Starting round", round)
-		}
 		calc := monitor.NewMeasure("calc")
 		// Then issue a signature !
 		//sys, usr := app.GetRTime()
@@ -79,6 +76,7 @@ func RunServer(conf *app.ConfigShamir) {
 
 		// Only root calculates if it's OK and sends a log-message
 		if p.IsRoot() {
+			dbg.Lvl1("Starting round", round)
 			sig := p.SchnorrSigRoot([]byte(msg))
 			calc.Measure()
 			verify := monitor.NewMeasure("verify")
@@ -88,7 +86,7 @@ func RunServer(conf *app.ConfigShamir) {
 			}
 			verify.Measure()
 			roundm.Measure()
-			dbg.Lvl2(p.String(), "verified the schnorr sig !")
+			dbg.Lvl3(p.String(), "verified the schnorr sig !")
 		} else {
 			// Compute the partial sig and send it to the root
 			p.SchnorrSigPeer([]byte(msg))
@@ -96,7 +94,7 @@ func RunServer(conf *app.ConfigShamir) {
 	}
 
 	p.WaitFins()
-	dbg.Lvl2(p.String(), "is leaving ...")
+	dbg.Lvl3(p.String(), "is leaving ...")
 
 	if p.IsRoot() {
 		monitor.End()

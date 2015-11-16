@@ -58,7 +58,7 @@ func main() {
 					dbg.Lvl1("cmd run:", err)
 				}
 
-				dbg.Lvl2("Finished with app", app.RunFlags.PhysAddr)
+				dbg.Lvl3("Finished with app", app.RunFlags.PhysAddr)
 			}(name)
 		}
 		dbg.Lvl3(app.RunFlags.PhysAddr, "Finished starting apps")

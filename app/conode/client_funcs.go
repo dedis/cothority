@@ -60,12 +60,14 @@ func (c *Client) handleServer(s coconet.Conn) error {
 		tsm := &conode.TimeStampMessage{}
 		err := s.GetData(tsm)
 		if err != nil {
+			dbg.Lvl4("Client : received response WITH ERROR", err)
 			if err == coconet.ErrNotEstablished {
 				continue
 			}
-			log.Warn("error getting from connection:", err)
+			dbg.Lvl4("error getting from connection:", err)
 			return err
 		}
+		dbg.Lvl4("Client : Received response from server")
 		c.handleResponse(tsm)
 	}
 }
@@ -107,10 +109,10 @@ func (c *Client) AddServer(name string, conn coconet.Conn) {
 				// if a server encounters any terminating error
 				// terminate all pending client transactions and kill the client
 				if err != nil {
-					dbg.Lvl2("EOF detected: sending EOF to all pending TimeStamps")
+					dbg.Lvl3("EOF detected: sending EOF to all pending TimeStamps")
 					c.Mux.Lock()
 					for _, ch := range c.doneChan {
-						dbg.Lvl2("Sending to Receiving Channel")
+						dbg.Lvl3("Sending to Receiving Channel")
 						ch <- io.EOF
 					}
 					c.Error = io.EOF
@@ -180,7 +182,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 		// err = ErrClientToTSTimeout
 	}
 	if err != nil {
-		dbg.Lvl3(c.Name(), "error received from DoneChan:", err)
+		dbg.Lvl4(c.Name(), "error received from DoneChan:", err)
 		return err
 	}
 
