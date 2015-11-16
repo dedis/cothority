@@ -156,6 +156,8 @@ func (sn *Node) getMessages() error {
 				dbg.Lvl3(sn.Name(), "received SignatureBroadcast", sm.From)
 				sn.ReceivedHeartbeat(sm.View)
 				err = sn.SignatureBroadcast(sm.View, sm.SBm, 0)
+			case StatusReturn:
+				sn.StatusReturn(sm.View, sm.SRm)
 			case CatchUpReq:
 				v := sn.VoteLog.Get(sm.Cureq.Index)
 				ctx := context.TODO()
@@ -242,6 +244,7 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 			Am:           am}
 		messgs[i] = &sm
 	}
+	sn.Messages = 0
 	dbg.Lvl4(sn.Name(), "sending to all children")
 	ctx := context.TODO()
 	//ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
@@ -269,9 +272,12 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		return nil
 	}
 
+	// Collect number of messages of children peers
 	// signingmessage nil <=> we are a leaf
 	if sm != nil {
 		round.Commits = append(round.Commits, sm)
+		dbg.Lvl3(sn.Name(), ": Found", sm.Com.Messages, "messages in com-msg")
+		sn.Messages += sm.Com.Messages
 	}
 
 	dbg.Lvl3("Got", len(round.Commits), "of", len(sn.Children(view)), "commits")
@@ -350,6 +356,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 		err = sn.FinalizeCommits(view, Round)
 	} else {
 		// create and putup own commit message
+		dbg.Lvl3("Number of messages in comMsg:", sn.Messages)
 		com := &CommitmentMessage{
 			V:             round.Log.V,
 			V_hat:         round.Log.V_hat,
@@ -357,7 +364,9 @@ func (sn *Node) actOnCommits(view, Round int) error {
 			MTRoot:        round.MTRoot,
 			ExceptionList: round.ExceptionList,
 			Vote:          round.Vote,
-			Round:         Round}
+			Round:         Round,
+			Messages: sn.Messages}
+		sn.Messages = 0
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		dbg.Lvl4(sn.Name(), "puts up commit")
@@ -432,6 +441,7 @@ func (sn *Node) Respond(view, Round int, sm *SigningMessage) error {
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
 	sn.roundmu.Unlock()
+	sn.PeerStatus = StatusReturnMessage{1, len(sn.Children(view))}
 
 	round := sn.Rounds[Round]
 	if round == nil || round.Log.v == nil {
@@ -710,17 +720,23 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 // it contins the global Response adn global challenge
 func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
 	dbg.Lvl3(sn.Name(), "received SignatureBroadcast on", view)
+	sn.PeerStatusRcvd = 0
 	// Root is creating the sig broadcast
 	if sb == nil {
 		r := sn.Rounds[round]
 		if sn.IsRoot(view) {
+			dbg.Lvl2(sn.Name(), ": sending number of messages:", sn.Messages)
 			sb = &SignatureBroadcastMessage{
 				R0_hat: r.r_hat,
 				C:      r.c,
 				X0_hat: r.X_hat,
 				V0_hat: r.Log.V_hat,
+				Messages: sn.Messages,
 			}
 		}
+	} else {
+		dbg.Lvl2(sn.Name(), ": sbm tells number of messages is:", sb.Messages)
+		sn.Messages = sb.Messages
 	}
 	// messages from clients, proofs computed
 	//if sn.CommitedFor(sn.Round) {
@@ -745,8 +761,41 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 		if err := sn.PutDown(ctx, view, messgs); err != nil {
 			return err
 		}
+	} else {
+		dbg.Lvl2(sn.Name(), "sending StatusReturn")
+		return sn.StatusReturn(view, &StatusReturnMessage{})
 	}
 	return nil
+}
+
+// StatusReturn just adds up all children and sends the result to
+// the parent
+func (sn *Node) StatusReturn(view int, sr *StatusReturnMessage) error {
+	sn.PeerStatusRcvd += 1
+	sn.PeerStatus.Responders += sr.Responders
+	sn.PeerStatus.Peers += sr.Peers
+
+	// Wait for other children before propagating the message
+	if sn.PeerStatusRcvd < len(sn.Children(view)) {
+		dbg.Lvl3(sn.Name(), "Waiting for other children")
+		return nil
+	}
+
+	var err error = nil
+	if sn.IsRoot(view) {
+		// Add the root-node
+		sn.PeerStatus.Peers += 1
+		dbg.Lvl2("We got", sn.PeerStatus.Responders, "responses from", sn.PeerStatus.Peers, "peers.")
+	} else {
+		dbg.Lvl4(sn.Name(), "puts up statusReturn for", sn.PeerStatus)
+		ctx := context.TODO()
+		err = sn.PutUp(ctx, view, &SigningMessage{
+			View:         view,
+			Type:         StatusReturn,
+			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			SRm: &sn.PeerStatus, })
+	}
+	return err
 }
 
 func (sn *Node) SendLocalMerkleProof(view int, sb *SignatureBroadcastMessage) {
@@ -796,14 +845,6 @@ func (sn *Node) PutUpError(view int, err error) {
 		Err:          &ErrorMessage{Err: err.Error()}})
 }
 
-// Returns a secret that depends on on a message and a point
-func hashElGamal(suite abstract.Suite, message []byte, p abstract.Point) abstract.Secret {
-	pb, _ := p.MarshalBinary()
-	c := suite.Cipher(pb)
-	c.Message(nil, nil, message)
-	return suite.Secret().Pick(c)
-}
-
 // Called when log for round if full and ready to be hashed
 func (sn *Node) HashLog(Round int) error {
 	round := sn.Rounds[Round]
@@ -828,4 +869,12 @@ func (sn *Node) hashLog(Round int) ([]byte, error) {
 // Getting actual View
 func (sn *Node) GetView() int {
 	return sn.ViewNo
+}
+
+// Returns a secret that depends on on a message and a point
+func hashElGamal(suite abstract.Suite, message []byte, p abstract.Point) abstract.Secret {
+	pb, _ := p.MarshalBinary()
+	c := suite.Cipher(pb)
+	c.Message(nil, nil, message)
+	return suite.Secret().Pick(c)
 }
