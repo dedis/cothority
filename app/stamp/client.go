@@ -50,11 +50,11 @@ func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 // request. If percentage is 0, only contact the leader (if the client is on the
 // same physical machine than the leader/root).
 func scaleServers(flags *app.Flags, conf *app.ConfigColl, servers []string) []string {
-	if len(servers) == 0 || conf.StampPerc > 100 {
+	if len(servers) == 0 || conf.StampRatio > 1 {
 		dbg.Lvl1("Client wont change the servers percentage ")
 		return servers
 	}
-	if conf.StampPerc == -1 {
+	if conf.StampRatio == -1 {
 		// take only the root if  we are a "root client" also
 		if flags.AmRoot {
 			dbg.Lvl1("Client will only contact root")
@@ -66,7 +66,7 @@ func scaleServers(flags *app.Flags, conf *app.ConfigColl, servers []string) []st
 		}
 	}
 	// else take the right perc
-	i := int(math.Ceil((float64(conf.StampPerc) / 100.0) * float64(len(servers))))
+	i := int(math.Ceil(conf.StampRatio * float64(len(servers))))
 	fn := dbg.Lvl3
 	if flags.AmRoot {
 		fn = dbg.Lvl1

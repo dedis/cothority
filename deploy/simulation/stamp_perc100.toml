@@ -2,10 +2,9 @@ Machines = 16
 App = "stamp"
 Rounds = 10
 Suite = "ed25519"
-<<<<<<< HEAD
 ppm = 256
 bf = 8
-StampPerc = 100
+StampRatio = 1
 
 rate
 10

@@ -17,7 +17,7 @@ type ConfigColl struct {
 	// The speed of request stamping/ms
 	Rate int
 	// Percentage of stamp server we want to request on (0% = only leader)
-	StampPerc int
+	StampRatio float64
 	// How many rounds
 	Rounds int
 	// Pre-defined failure rate
