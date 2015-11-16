@@ -34,8 +34,9 @@ func TestProxy(t *testing.T) {
 		return
 	}
 
-	meas := NewMeasure("setup")
-	time.Sleep(100 * time.Millisecond)
+	meas := NewMeasure("round")
+	meas.Measure()
+	time.Sleep(200 * time.Millisecond)
 	meas.Measure()
 	End()
 	time.Sleep(100 * time.Millisecond)
