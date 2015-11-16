@@ -24,7 +24,7 @@ var MAX_N_SECONDS int = 1 * 60 * 60 // 1 hours' worth of seconds
 var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME/time.Second)
 
 func RunClient(flags *app.Flags, conf *app.ConfigColl) {
-	dbg.Lvl3("Starting to run stampclient")
+	dbg.Lvl4("Starting to run stampclient")
 	c := NewClient(flags.Name)
 	servers := strings.Split(flags.Server, ",")
 	// take the right percentage of servers
