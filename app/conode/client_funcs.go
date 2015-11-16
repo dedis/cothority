@@ -109,10 +109,10 @@ func (c *Client) AddServer(name string, conn coconet.Conn) {
 				// if a server encounters any terminating error
 				// terminate all pending client transactions and kill the client
 				if err != nil {
-					dbg.Lvl2("EOF detected: sending EOF to all pending TimeStamps")
+					dbg.Lvl3("EOF detected: sending EOF to all pending TimeStamps")
 					c.Mux.Lock()
 					for _, ch := range c.doneChan {
-						dbg.Lvl2("Sending to Receiving Channel")
+						dbg.Lvl3("Sending to Receiving Channel")
 						ch <- io.EOF
 					}
 					c.Error = io.EOF

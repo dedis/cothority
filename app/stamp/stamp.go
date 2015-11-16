@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/proto/sign"
 	"io/ioutil"
 	"net"
@@ -88,7 +89,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	}
 
 	defer func(sn *sign.Node) {
-		dbg.Lvl2("Program timestamper has terminated:", hostname)
+		dbg.Lvl3("Program timestamper has terminated:", hostname)
 		sn.Close()
 	}(hc.SNodes[0])
 
@@ -105,6 +106,14 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 			s.Hostname = hostname
 			s.App = "stamp"
 			if s.IsRoot(0) {
+				if app.RunFlags.Logger == "" {
+					monitor.Disable()
+				} else {
+					if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+						dbg.Fatal("Root could not connect to monitor sink :", err)
+					}
+				}
+
 				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting: ", conf.RootWait)
 				// wait for the other nodes to get set up
 				time.Sleep(time.Duration(conf.RootWait) * time.Second)
@@ -114,7 +123,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 				// dbg.Lvl3("\n\nROOT DONE\n\n")
 
 			} else if !conf.TestConnect {
-				dbg.Lvl2("Running regular timestamper on:", hostname)
+				dbg.Lvl3("Running regular timestamper on:", hostname)
 				s.Run("regular", conf.Rounds)
 				// dbg.Lvl1("\n\nREGULAR DONE\n\n")
 			} else {
@@ -195,7 +204,6 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 				s.Clients[clients[j].Name()] = stoc
 			}
 			// connect to the server from the client
-			// This will connect to stampe server and waits for response.
 			// Sending stamp request is done in client.go..... ><
 			clients[j].AddServer(s.Name(), c)
 			//clients[j].Sns[s.Name()] = c

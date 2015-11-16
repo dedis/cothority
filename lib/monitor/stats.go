@@ -52,7 +52,7 @@ func (d *Discards) Update(newMeasure Measure, reference *Measurement) {
 		// we must discard it and we havent seen it yet
 		if name == newMeasure.Name && disc {
 			d.measures[name] = !disc
-			dbg.Lvl3("Monitor: discarding measure", name)
+			dbg.Lvl2("Monitor: discarding measure", name)
 			return
 		}
 	}
@@ -178,6 +178,7 @@ func (m *Measurement) WriteValues(w io.Writer) {
 // Update takes a measure received from the network and update the wall system
 // and user values
 func (m *Measurement) Update(measure Measure) {
+	dbg.Lvl2("Got measurement for", m.Name, measure.WallTime, measure.CPUTimeUser, measure.CPUTimeSys)
 	m.Wall.Update(measure.WallTime)
 	m.User.Update(measure.CPUTimeUser)
 	m.System.Update(measure.CPUTimeSys)
@@ -230,7 +231,7 @@ var extraFields = [...]string{"bf", "rate", "stampratio"}
 
 // DefaultMeasurements are the default measurements we want to do anyway
 // For now these will be the fields that will appear in the output csv file
-var DefaultMeasurements = [...]string{"setup", "round", "calc", "verify"}
+var DefaultMeasurements = [...]string{"setup", "round", "calc", "verify", "aggregate"}
 
 // Return a NewStats with some fields extracted from the platform run config
 // It enforces the default set of measure to do.

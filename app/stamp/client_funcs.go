@@ -15,24 +15,24 @@ import (
 )
 
 type Client struct {
-	Mux sync.Mutex // coarse grained mutex
+	Mux         sync.Mutex              // coarse grained mutex
 
-	name    string
-	Servers map[string]coconet.Conn // signing nodes I work/ communicate with
+	name        string
+	Servers     map[string]coconet.Conn // signing nodes I work/ communicate with
 
-	// client history maps request numbers to replies from TSServer
-	// maybe at later phases we will want pair(reqno, TSServer) as key
-	history map[SeqNo]TimeStampMessage
-	reqno   SeqNo // next request number in communications with TSServer
+										// client history maps request numbers to replies from TSServer
+										// maybe at later phases we will want pair(reqno, TSServer) as key
+	history     map[SeqNo]TimeStampMessage
+	reqno       SeqNo                   // next request number in communications with TSServer
 
-	// maps response request numbers to channels confirming
-	// where response confirmations are sent
-	doneChan map[SeqNo]chan error
+										// maps response request numbers to channels confirming
+										// where response confirmations are sent
+	doneChan    map[SeqNo]chan error
 
-	nRounds     int    // # of last round messages were received in, as perceived by client
-	curRoundSig []byte // merkle tree root of last round
-	// roundChan   chan int // round numberd are sent in as rounds change
-	Error error
+	nRounds     int                     // # of last round messages were received in, as perceived by client
+	curRoundSig []byte                  // merkle tree root of last round
+										// roundChan   chan int // round numberd are sent in as rounds change
+	Error       error
 }
 
 func NewClient(name string) (c *Client) {
@@ -106,10 +106,10 @@ func (c *Client) AddServer(name string, conn coconet.Conn) {
 				// if a server encounters any terminating error
 				// terminate all pending client transactions and kill the client
 				if err != nil {
-					dbg.Lvl2("EOF detected: sending EOF to all pending TimeStamps")
+					dbg.Lvl3("EOF detected: sending EOF to all pending TimeStamps")
 					c.Mux.Lock()
 					for _, ch := range c.doneChan {
-						dbg.Lvl2("Sending to Receiving Channel")
+						dbg.Lvl3("Sending to Receiving Channel")
 						ch <- io.EOF
 					}
 					c.Error = io.EOF

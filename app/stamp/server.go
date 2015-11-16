@@ -8,7 +8,6 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/coconet"
@@ -112,7 +111,7 @@ func (s *Server) Listen() error {
 						tsm := TimeStampMessage{}
 						err := c.GetData(&tsm)
 						if err != nil {
-							dbg.Lvl2("%p Failed to get from client:", s, err)
+							dbg.Lvlf3("%p Failed to get from client:", s, err)
 							s.Close()
 							return
 						}
@@ -148,12 +147,12 @@ func (s *Server) ListenToClients() {
 				tsm := TimeStampMessage{}
 				err := c.GetData(&tsm)
 				if err == coconet.ErrClosed {
-					dbg.Lvlf1("%p Failed to get from client:", s, err)
+					dbg.Lvlf3("%p Failed to get from client:", s, err)
 					s.Close()
 					return
 				}
 				if err != nil {
-					dbg.Lvlf1("%p failed To get message:", s, err)
+					dbg.Lvlf3("%p failed To get message:", s, err)
 				}
 				switch tsm.Type {
 				default:
@@ -224,13 +223,6 @@ func (s *Server) runAsRoot(nRounds int) string {
 		return "close"
 	}
 
-	if app.RunFlags.Logger == "" {
-		monitor.Disable()
-	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal("Root could not connect to monitor sink :", err)
-		}
-	}
 	dbg.Lvl3(s.Name(), "running as root", s.LastRound(), int64(nRounds))
 	for {
 		select {
@@ -240,6 +232,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
+			round := monitor.NewMeasure("round")
 			dbg.Lvl1(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
 
 			var err error
@@ -302,7 +295,7 @@ func (s *Server) Run(role string, nRounds int) {
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Signer closed:", err) }()
+	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl3("Signer closed:", err) }()
 	if role == "test_connect" {
 		role = "regular"
 		go func() {
@@ -405,6 +398,10 @@ func (s *Server) Done() sign.DoneFunc {
 
 func (s *Server) AggregateCommits(view int) []byte {
 	//dbg.Lvl4(s.Name(), "calling AggregateCommits")
+	var aggregate *monitor.Measure
+	if s.IsRoot(view) {
+		aggregate = monitor.NewMeasure("aggregate")
+	}
 	s.mux.Lock()
 	// get data from s once to avoid refetching from structure
 	Queue := s.Queue
@@ -425,6 +422,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 	// pull out to be Merkle Tree leaves
 	s.Leaves = make([]hashid.HashId, 0)
+	dbg.Lvl3("Hashing stamp-messages:", len(Queue[PROCESSING]))
 	for _, msg := range Queue[PROCESSING] {
 		s.Leaves = append(s.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
 	}
@@ -454,6 +452,9 @@ func (s *Server) AggregateCommits(view int) []byte {
 		}
 	}
 
+	if len(Queue[PROCESSING]) > 0 && s.IsRoot(view) {
+		aggregate.Measure()
+	}
 	return s.Root
 }
 
