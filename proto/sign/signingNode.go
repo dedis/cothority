@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 )
@@ -229,7 +230,6 @@ func (sn *Node) RegisterAnnounceFunc(af AnnounceFunc) {
 func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	sn.AnnounceLock.Lock()
 	defer sn.AnnounceLock.Unlock()
-
 	// notify upstream of announcement
 	if sn.AnnounceFunc != nil {
 		sn.AnnounceFunc(am)

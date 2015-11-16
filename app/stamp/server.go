@@ -240,7 +240,6 @@ func (s *Server) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
-			round := monitor.NewMeasure("round")
 			dbg.Lvl1(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
 
 			var err error
@@ -252,9 +251,10 @@ func (s *Server) runAsRoot(nRounds int) string {
 						Name:   "test-add-node"}}
 				err = s.StartVotingRound(vote)
 			} else {
+				round := monitor.NewMeasure("round")
 				err = s.StartSigningRound()
+				round.Measure()
 			}
-			round.Measure()
 
 			if err == sign.ChangingViewError {
 				// report change in view, and continue with the select
@@ -440,6 +440,8 @@ func (s *Server) AggregateCommits(view int) []byte {
 		if lsr >= mr && mr >= 0 {
 			s.closeChan <- true
 		}
+	} else {
+		dbg.Lvl2("Root has received", len(s.Leaves), "stamps request for this round")
 	}
 
 	// create Merkle tree for this round's messages and check corectness
