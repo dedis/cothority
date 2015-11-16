@@ -91,5 +91,5 @@ func main() {
 	case "server":
 		RunServer(conf, hc)
 	}
-	dbg.Lvl2("Collective Signing", hostname, "has terminated in mode", app.RunFlags.Mode)
+	dbg.Lvl3("Collective Signing", hostname, "has terminated in mode", app.RunFlags.Mode)
 }
