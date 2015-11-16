@@ -14,11 +14,7 @@ func TestBuild(t *testing.T) {
 }
 
 func TestMakeConfig(t *testing.T) {
-	if testing.Verbose(){
-		dbg.DebugVisible = 2
-	} else {
-		dbg.DebugVisible = 0
-	}
+	dbg.TestOutput(testing.Verbose(), 2)
 	os.Chdir("/tmp")
 	KeyGeneration("key1", "localhost:2000")
 	KeyGeneration("key2", "localhost:2010")

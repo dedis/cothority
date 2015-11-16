@@ -2,10 +2,10 @@ package graphs
 
 import (
 	"encoding/hex"
-	"fmt"
 	"strings"
 
 	"github.com/dedis/crypto/abstract"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 // tree easy to deal with
@@ -90,10 +90,10 @@ func (t *Tree) Visit(fn func(*Tree)) {
 }
 
 func PrintTreeNode(t *Tree) {
-	fmt.Println(t.Name)
+	dbg.Lvl3(t.Name)
 
 	for _, c := range t.Children {
-		fmt.Println("\t", c.Name)
+		dbg.Lvl3("\t", c.Name)
 	}
 }
 

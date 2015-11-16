@@ -7,12 +7,8 @@ import (
 	"time"
 )
 
-func init() {
-	dbg.DebugVisible = 2
-}
-
 func TestProxy(t *testing.T) {
-
+	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
 	m["machines"] = "1"
 	m["ppm"] = "1"
@@ -20,7 +16,7 @@ func TestProxy(t *testing.T) {
 	fresh := stat.String()
 	// First set up monitor listening
 	go Monitor(stat)
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	// Then setup proxy
 	// change port so the proxy does not listen to the same
 	// than the original monitor
