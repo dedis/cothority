@@ -77,35 +77,51 @@ type Value struct {
 	oldS float64
 	newS float64
 	dev  float64
+
+	// Store where are kept the values
+	store []float64
 }
 
-// Update will update the time struct with the min / max  change
-// + compute new avg + new dev
-// k is the number of times we've added something ("index" of the update)
-// needed to compute the avg + dev
+func NewValue() Value {
+	return Value{store: make([]float64, 0)}
+}
+
+// Store takes this new time and stores it for later analysis
+// Since we might want to do percentile sorting, we need to have all the values
+// For the moment, we do a simple store of the value, but note that some
+// streaming percentile algorithm exists in case the number of messages is
+// growing to big.
+func (t *Value) Store(newTime float64) {
+	t.store = append(t.store, newTime)
+}
+
+// Aggregate will aggregate all values stored in the store's Value.
+// It is kept as a streaming average / dev processus fr the moment (not the most
+// optimized).
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
-func (t *Value) Update(newTime float64) {
-	// nothings takes 0 ms to complete, so we know it's the first time
-	if t.min > newTime || t.n == 0 {
-		t.min = newTime
-	}
-	if t.max < newTime {
-		t.max = newTime
-	}
+func (t *Value) Aggregate() {
+	for _, newTime := range t.store {
+		// nothings takes 0 ms to complete, so we know it's the first time
+		if t.min > newTime || t.n == 0 {
+			t.min = newTime
+		}
+		if t.max < newTime {
+			t.max = newTime
+		}
 
-	t.n += 1
-	if t.n == 1 {
-		t.oldM = newTime
-		t.newM = newTime
-		t.oldS = 0.0
-	} else {
-		t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
-		t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
-		t.oldM = t.newM
-		t.oldS = t.newS
+		t.n += 1
+		if t.n == 1 {
+			t.oldM = newTime
+			t.newM = newTime
+			t.oldS = 0.0
+		} else {
+			t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
+			t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
+			t.oldM = t.newM
+			t.oldS = t.newS
+		}
+		t.dev = math.Sqrt(t.newS / float64(t.n-1))
 	}
-	t.dev = math.Sqrt(t.newS / float64(t.n-1))
-
 }
 
 // Average will set the current Value to the average of all Value
@@ -164,6 +180,15 @@ type Measurement struct {
 	System Value
 }
 
+func NewMeasurement(name string) Measurement {
+	return Measurement{
+		Name:   name,
+		Wall:   NewValue(),
+		User:   NewValue(),
+		System: NewValue(),
+	}
+}
+
 // WriteHeader will write the header to the specified writer
 func (m *Measurement) WriteHeader(w io.Writer) {
 	fmt.Fprintf(w, "%s, %s, %s", m.Wall.Header(m.Name+"_wall"),
@@ -171,7 +196,11 @@ func (m *Measurement) WriteHeader(w io.Writer) {
 }
 
 // WriteValues will write a new entry for this entry in the writer
+// First compute the values then write to writer
 func (m *Measurement) WriteValues(w io.Writer) {
+	m.Wall.Aggregate()
+	m.User.Aggregate()
+	m.System.Aggregate()
 	fmt.Fprintf(w, "%s, %s, %s", m.Wall.String(), m.User.String(), m.System.String())
 }
 
@@ -179,16 +208,16 @@ func (m *Measurement) WriteValues(w io.Writer) {
 // and user values
 func (m *Measurement) Update(measure Measure) {
 	dbg.Lvl2("Got measurement for", m.Name, measure.WallTime, measure.CPUTimeUser, measure.CPUTimeSys)
-	m.Wall.Update(measure.WallTime)
-	m.User.Update(measure.CPUTimeUser)
-	m.System.Update(measure.CPUTimeSys)
+	m.Wall.Store(measure.WallTime)
+	m.User.Store(measure.CPUTimeUser)
+	m.System.Store(measure.CPUTimeSys)
 }
 
 // AverageMeasurements takes an slice of measurements and make the average
 // between them. i.e. it takes the average of the Wall value from each
 // measurements, etc.
 func AverageMeasurements(measurements []Measurement) Measurement {
-	m := Measurement{Name: measurements[0].Name}
+	m := NewMeasurement(measurements[0].Name)
 	walls := make([]Value, len(measurements))
 	users := make([]Value, len(measurements))
 	systems := make([]Value, len(measurements))
@@ -281,7 +310,8 @@ func (s *Stats) Init() *Stats {
 func (s *Stats) AddMeasurements(measurements ...string) {
 	for _, name := range measurements {
 		if _, ok := s.measures[name]; !ok {
-			s.measures[name] = &Measurement{Name: name}
+			m := NewMeasurement(name)
+			s.measures[name] = &m
 			s.keys = append(s.keys, name)
 		}
 	}
