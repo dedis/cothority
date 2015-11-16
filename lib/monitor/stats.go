@@ -1,66 +1,84 @@
 package monitor
 
 import (
-	"flag"
 	"fmt"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/montanaflynn/stats"
 	"io"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
-// How many measures do I discard before aggregating the statistics
-type Discards struct {
-	measures map[string]bool
+type DataFilter struct {
+	// percentiles maps the measurements name to the percentile we need to take
+	// to filter thoses measuremements with the percentile
+	percentiles map[string]float64
 }
 
-// Holds the value to discard
-var discards Discards
-
-// Discards must implement the Var interface to be read by flag
-// This way it allows to specify multiple measure to discard with a separated
-// comma list.
-func (d *Discards) String() string {
-	var arr []string
-	for name, _ := range d.measures {
-		arr = append(arr, name)
+// NewDataFilter returns a new data filter initialized with the rights values
+// taken out from the run config. If absent, will take defaults values.
+// Keys expected are:
+// discard_measurementname = perc => will take the lower and upper percentile =
+// perc
+// discard_measurementname = lower,upper => will take different percentiles
+func NewDataFilter(config map[string]string) DataFilter {
+	df := DataFilter{
+		percentiles: make(map[string]float64),
 	}
-	return strings.Join(arr, ",")
-}
-func (d *Discards) Set(s string) error {
-	arr := strings.Split(s, ",")
-	d.measures = make(map[string]bool, len(arr))
-	for _, meas := range arr {
-		d.measures[meas] = true
+	reg, err := regexp.Compile("filter_(\\w+)")
+	if err != nil {
+		dbg.Lvl1("DataFilter: Error compiling regexp:", err)
+		return df
 	}
-	return nil
-}
-
-// Reset sets every flags to true
-func (d *Discards) Reset() {
-	for k := range d.measures {
-		d.measures[k] = true
-	}
-}
-
-// Does this measure is contained in the list of discards
-// if it is, look if we already discarded it or not
-// Think of discardss like a middleware passing or not the value downstream
-func (d *Discards) Update(newMeasure Measure, reference *Measurement) {
-	for name, disc := range d.measures {
-		// we must discard it and we havent seen it yet
-		if name == newMeasure.Name && disc {
-			d.measures[name] = !disc
-			dbg.Lvl2("Monitor: discarding measure", name)
-			return
+	// analyse the each entry
+	for k, v := range config {
+		if measure := reg.FindString(k); measure == "" {
+			continue
+		} else {
+			// this value must be filtered by how many ?
+			perc, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				dbg.Lvl1("DataFilter: Cannot parse value for filter measure:", measure)
+				continue
+			}
+			measure = strings.Replace(measure, "filter_", "", -1)
+			df.percentiles[measure] = perc
 		}
 	}
-	reference.Update(newMeasure)
+	dbg.Lvl2("Filtering:", df.percentiles)
+	return df
 }
-func init() {
-	discards.Set("round,verify")
-	flag.Var(&discards, "discard", "Measures where we want to discard the first round ( can specify a list m1,m2,m3 ...)")
+
+// Filter out a serie of values
+func (df *DataFilter) Filter(measure string, values []float64) []float64 {
+	// do we have a filter for this measure ?
+	if _, ok := df.percentiles[measure]; !ok {
+		return values
+	}
+	// Compute the percentile value
+	max, err := stats.PercentileNearestRank(values, df.percentiles[measure])
+	if err != nil {
+		dbg.Lvl2("Monitor: Error filtering data:", err)
+		return values
+	}
+
+	// Find the index from where to filter
+	maxIndex := -1
+	for i, v := range values {
+		if v > max {
+			maxIndex = i
+		}
+	}
+	// check if we foud something to filter out
+	if maxIndex == -1 {
+		dbg.Lvl3("Filtering: nothing to filter for", measure)
+		return values
+	}
+	// return the values below the percentile
+	dbg.Lvl2("Filtering: filters out ", measure, " :", maxIndex, " /", len(values))
+	return values[:maxIndex]
 }
 
 ////////////////////// HELPERS FUNCTIONS / STRUCT /////////////////
@@ -77,39 +95,56 @@ type Value struct {
 	oldS float64
 	newS float64
 	dev  float64
+
+	// Store where are kept the values
+	store []float64
 }
 
-// Update will update the time struct with the min / max  change
-// + compute new avg + new dev
-// k is the number of times we've added something ("index" of the update)
-// needed to compute the avg + dev
+func NewValue() *Value {
+	return &Value{store: make([]float64, 0)}
+}
+
+// Store takes this new time and stores it for later analysis
+// Since we might want to do percentile sorting, we need to have all the values
+// For the moment, we do a simple store of the value, but note that some
+// streaming percentile algorithm exists in case the number of messages is
+// growing to big.
+func (t *Value) Store(newTime float64) {
+	t.store = append(t.store, newTime)
+}
+
+// Aggregate will aggregate all values stored in the store's Value.
+// It is kept as a streaming average / dev processus fr the moment (not the most
+// optimized).
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
-func (t *Value) Update(newTime float64) {
-	// nothings takes 0 ms to complete, so we know it's the first time
-	if t.min > newTime || t.n == 0 {
-		t.min = newTime
-	}
-	if t.max < newTime {
-		t.max = newTime
-	}
+func (t *Value) Aggregate(measure string, df DataFilter) {
+	t.store = df.Filter(measure, t.store)
+	for _, newTime := range t.store {
+		// nothings takes 0 ms to complete, so we know it's the first time
+		if t.min > newTime || t.n == 0 {
+			t.min = newTime
+		}
+		if t.max < newTime {
+			t.max = newTime
+		}
 
-	t.n += 1
-	if t.n == 1 {
-		t.oldM = newTime
-		t.newM = newTime
-		t.oldS = 0.0
-	} else {
-		t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
-		t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
-		t.oldM = t.newM
-		t.oldS = t.newS
+		t.n += 1
+		if t.n == 1 {
+			t.oldM = newTime
+			t.newM = newTime
+			t.oldS = 0.0
+		} else {
+			t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
+			t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
+			t.oldM = t.newM
+			t.oldS = t.newS
+		}
+		t.dev = math.Sqrt(t.newS / float64(t.n-1))
 	}
-	t.dev = math.Sqrt(t.newS / float64(t.n-1))
-
 }
 
 // Average will set the current Value to the average of all Value
-func AverageValue(st ...Value) Value {
+func AverageValue(st ...*Value) *Value {
 	var t Value
 	for _, s := range st {
 		t.min += s.min
@@ -123,7 +158,7 @@ func AverageValue(st ...Value) Value {
 	t.newM /= l
 	t.dev /= l
 	t.n = len(st)
-	return t
+	return &t
 }
 
 func (t *Value) Min() float64 {
@@ -159,9 +194,20 @@ func (t *Value) String() string {
 // Value
 type Measurement struct {
 	Name   string
-	Wall   Value
-	User   Value
-	System Value
+	Wall   *Value
+	User   *Value
+	System *Value
+	Filter DataFilter
+}
+
+func NewMeasurement(name string, df DataFilter) Measurement {
+	return Measurement{
+		Name:   name,
+		Wall:   NewValue(),
+		User:   NewValue(),
+		System: NewValue(),
+		Filter: df,
+	}
 }
 
 // WriteHeader will write the header to the specified writer
@@ -171,6 +217,7 @@ func (m *Measurement) WriteHeader(w io.Writer) {
 }
 
 // WriteValues will write a new entry for this entry in the writer
+// First compute the values then write to writer
 func (m *Measurement) WriteValues(w io.Writer) {
 	fmt.Fprintf(w, "%s, %s, %s", m.Wall.String(), m.User.String(), m.System.String())
 }
@@ -179,20 +226,23 @@ func (m *Measurement) WriteValues(w io.Writer) {
 // and user values
 func (m *Measurement) Update(measure Measure) {
 	dbg.Lvl2("Got measurement for", m.Name, measure.WallTime, measure.CPUTimeUser, measure.CPUTimeSys)
-	m.Wall.Update(measure.WallTime)
-	m.User.Update(measure.CPUTimeUser)
-	m.System.Update(measure.CPUTimeSys)
+	m.Wall.Store(measure.WallTime)
+	m.User.Store(measure.CPUTimeUser)
+	m.System.Store(measure.CPUTimeSys)
 }
 
 // AverageMeasurements takes an slice of measurements and make the average
 // between them. i.e. it takes the average of the Wall value from each
 // measurements, etc.
 func AverageMeasurements(measurements []Measurement) Measurement {
-	m := Measurement{Name: measurements[0].Name}
-	walls := make([]Value, len(measurements))
-	users := make([]Value, len(measurements))
-	systems := make([]Value, len(measurements))
+	m := NewMeasurement(measurements[0].Name, measurements[0].Filter)
+	walls := make([]*Value, len(measurements))
+	users := make([]*Value, len(measurements))
+	systems := make([]*Value, len(measurements))
 	for i, m := range measurements {
+		m.Wall.Aggregate(m.Name, m.Filter)
+		m.User.Aggregate(m.Name, m.Filter)
+		m.System.Aggregate(m.Name, m.Filter)
 		walls[i] = m.Wall
 		users[i] = m.User
 		systems[i] = m.System
@@ -224,6 +274,9 @@ type Stats struct {
 	// The measures we have and the keys ordered
 	measures map[string]*Measurement
 	keys     []string
+
+	// The filter used to filter out abberant data
+	filter DataFilter
 }
 
 // ExtraFields in a RunConfig argument that we may want to parse if present
@@ -265,6 +318,8 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 			s.Additionals[f] = ef
 		}
 	}
+	// let the filter figure out itself what it is supposed to be doing
+	s.filter = NewDataFilter(rc)
 }
 
 func (s *Stats) Init() *Stats {
@@ -281,7 +336,8 @@ func (s *Stats) Init() *Stats {
 func (s *Stats) AddMeasurements(measurements ...string) {
 	for _, name := range measurements {
 		if _, ok := s.measures[name]; !ok {
-			s.measures[name] = &Measurement{Name: name}
+			m := NewMeasurement(name, s.filter)
+			s.measures[name] = &m
 			s.keys = append(s.keys, name)
 		}
 	}
@@ -325,8 +381,6 @@ func (s *Stats) WriteValues(w io.Writer) {
 	}
 	fmt.Fprintf(w, "\n")
 
-	// Reset the discards
-	discards.Reset()
 }
 
 // AverageStats will make an average of the given stats
@@ -368,7 +422,7 @@ func (s *Stats) Update(m Measure) {
 		dbg.Lvl2("Stats Update received unknown type of measure : ", m.Name)
 		return
 	}
-	discards.Update(m, meas)
+	meas.Update(m)
 }
 
 func (s *Stats) String() string {
