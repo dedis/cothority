@@ -65,20 +65,21 @@ func main() {
 		wg.Add(1)
 		go func(i int, h string) {
 			defer wg.Done()
-			dbg.Lvl4("Cleaning up host", h, ".")
-			cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
-			time.Sleep(1 * time.Second)
-			cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" 2>/dev/null >/dev/null")
-			time.Sleep(1 * time.Second)
-			// Also kill all other process that start with "./" and are probably
-			// locally started processes
-			cliutils.SshRun("", h, "sudo pkill -9 -f '\\./'")
-			time.Sleep(1 * time.Second)
-			if dbg.DebugVisible > 3 {
-				dbg.Lvl4("Cleaning report:")
-				cliutils.SshRunStdout("", h, "ps aux")
-			}
-			if !kill {
+			if kill {
+				dbg.Lvl4("Cleaning up host", h, ".")
+				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " logserver forkexec timeclient scp 2>/dev/null >/dev/null")
+				time.Sleep(1 * time.Second)
+				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " 2>/dev/null >/dev/null")
+				time.Sleep(1 * time.Second)
+				// Also kill all other process that start with "./" and are probably
+				// locally started processes
+				cliutils.SshRun("", h, "sudo pkill -9 -f '\\./'")
+				time.Sleep(1 * time.Second)
+				if dbg.DebugVisible > 3 {
+					dbg.Lvl4("Cleaning report:")
+					cliutils.SshRunStdout("", h, "ps aux")
+				}
+			} else {
 				dbg.Lvl3("Setting the file-limit higher on", h)
 
 				// Copy configuration file to make higher file-limits
