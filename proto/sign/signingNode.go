@@ -106,8 +106,13 @@ type Node struct {
 
 	// These are stored during the challenge phase so that they can
 	// be sent to the client during the SignatureBroadcast
-	Proof  proof.Proof
-	MTRoot hashid.HashId // the very root of the big Merkle Tree
+	Proof         proof.Proof
+	MTRoot        hashid.HashId // the very root of the big Merkle Tree
+	Messages      int           // Number of messages to be signed received
+	MessagesInRun int           // Total number of messages since start of run
+
+	PeerStatus     StatusReturnMessage // Actual status of children peers
+	PeerStatusRcvd int                 // How many peers sent status
 }
 
 // Start listening for messages coming from parent(up)
@@ -229,7 +234,6 @@ func (sn *Node) RegisterAnnounceFunc(af AnnounceFunc) {
 func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 	sn.AnnounceLock.Lock()
 	defer sn.AnnounceLock.Unlock()
-
 	// notify upstream of announcement
 	if sn.AnnounceFunc != nil {
 		sn.AnnounceFunc(am)

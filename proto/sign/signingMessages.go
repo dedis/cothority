@@ -15,7 +15,7 @@ import (
 // All message structures defined in this package are used in the
 // Collective Signing Protocol
 // Over the network they are sent as byte slices, so each message
-// has its own MarshlBinary and UnmarshalBinary method
+// has its own MarshalBinary and UnmarshalBinary method
 
 type MessageType int
 
@@ -26,6 +26,7 @@ const (
 	Challenge
 	Response
 	SignatureBroadcast
+	StatusReturn
 	CatchUpReq
 	CatchUpResp
 	GroupChange
@@ -50,6 +51,8 @@ func (m MessageType) String() string {
 		return "Response"
 	case SignatureBroadcast:
 		return "SignatureBroadcast"
+	case StatusReturn:
+		return "StatusReturn"
 	case CatchUpReq:
 		return "CatchUpRequest"
 	case CatchUpResp:
@@ -79,6 +82,7 @@ type SigningMessage struct {
 	Chm          *ChallengeMessage
 	Rm           *ResponseMessage
 	SBm          *SignatureBroadcastMessage
+	SRm          *StatusReturnMessage
 	Cureq        *CatchUpRequest
 	Curesp       *CatchUpResponse
 	Vrm          *VoteRequestMessage
@@ -110,8 +114,8 @@ func (sm *SigningMessage) UnmarshalBinary(data []byte) error {
 	return protobuf.DecodeWithConstructors(data, sm, cons)
 }
 
-type JSONdata struct{
-		Data []byte
+type JSONdata struct {
+	Data []byte
 }
 
 func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
@@ -149,6 +153,7 @@ type CommitmentMessage struct {
 								 // CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
 	Vote          *Vote          // Vote Response (promise)
 
+	Messages      int            // Actual number of messages signed
 	Round         int
 }
 
@@ -185,13 +190,25 @@ type ResponseMessage struct {
 // signature
 type SignatureBroadcastMessage struct {
 	// Aggregate response of root
-	R0_hat abstract.Secret
+	R0_hat   abstract.Secret
 	// Challenge
-	C      abstract.Secret
+	C        abstract.Secret
 	// Aggregate public key
-	X0_hat abstract.Point
+	X0_hat   abstract.Point
 	// Aggregate public commitment
-	V0_hat abstract.Point
+	V0_hat   abstract.Point
+	// Number of messages signed
+	Messages int
+}
+
+// StatusReturnMessage carries the last status after the
+// SignatureBroadcastMessage has been sent to everybody.
+// Every node should just add up the stats from its children.
+type StatusReturnMessage struct {
+	// How many nodes sent a 'respond' message
+	Responders int
+	// How many peers contacted for a challenge
+	Peers      int
 }
 
 type ErrorMessage struct {

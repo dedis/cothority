@@ -181,7 +181,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	go func() {
 		monitor.Monitor(rs)
 		deployP.Wait()
-		dbg.Lvl2("Test complete:", rs)
+		dbg.Lvl3("Test complete:", rs)
 		done <- struct{}{}
 	}()
 

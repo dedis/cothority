@@ -31,11 +31,11 @@ func RunClient(conf *app.ConfigColl, hc *graphs.HostConfig) {
 	hc.SNodes[0].RegisterDoneFunc(RoundDone)
 	tFirst := time.Now()
 
-	round := monitor.NewMeasure("round")
 	for i := 0; i < conf.Rounds; i++ {
 		time.Sleep(time.Second)
+		round := monitor.NewMeasure("round")
 		hc.SNodes[0].Message = []byte("Hello World")
-		dbg.Lvl3("Going to launch announcement ", hc.SNodes[0].Name())
+		dbg.Lvl1("Going to launch announcement", hc.SNodes[0].Name(), "for round", i)
 		t0 := time.Now()
 		//sys, usr := app.GetRTime()
 
