@@ -9,10 +9,10 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
-	"github.com/dedis/cothority/lib/cliutils"
 )
 
 // Ensure that TCPHost satisfies the Host interface.
@@ -104,12 +104,12 @@ func (h *TCPHost) Listen() error {
 	var err error
 	dbg.Lvl3("Starting to listen on", h.name)
 	address, err := cliutils.GlobalBind(h.name)
-	if err != nil{
+	if err != nil {
 		dbg.Fatal("Didn't get global binding for ", address, err)
 	}
 	ln, err := net.Listen("tcp4", address)
 	if err != nil {
-		log.Println("failed to listen:", err)
+		dbg.Lvl2("failed to listen on ", address, ":", err)
 		return err
 	}
 	h.listener = ln

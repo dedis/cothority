@@ -7,14 +7,15 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
-	"github.com/dedis/crypto/abstract"
 )
 
 type Server struct {
@@ -52,7 +53,7 @@ func NewServer(signer sign.Signer) *Server {
 
 	s.Signer = signer
 	s.Signer.RegisterCommitFunc(s.CommitFunc())
-	s.Signer.RegisterDoneFunc(s.OnDone())
+	s.Signer.RegisterDoneFunc(s.Done())
 	s.rLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -223,6 +224,13 @@ func (s *Server) runAsRoot(nRounds int) string {
 		return "close"
 	}
 
+	if app.RunFlags.Logger == "" {
+		monitor.Disable()
+	} else {
+		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+			dbg.Fatal("Root could not connect to monitor sink :", err)
+		}
+	}
 	dbg.Lvl3(s.Name(), "running as root", s.LastRound(), int64(nRounds))
 	for {
 		select {
@@ -232,8 +240,8 @@ func (s *Server) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
-			start := time.Now()
-			dbg.Lvl4(s.Name(), "is STAMP SERVER STARTING SIGNING ROUND FOR:", s.LastRound()+1, "of", nRounds)
+			round := monitor.NewMeasure("round")
+			dbg.Lvl4(s.Name(), "is stamp server starting signing round for:", s.LastRound()+1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -246,6 +254,7 @@ func (s *Server) runAsRoot(nRounds int) string {
 			} else {
 				err = s.StartSigningRound()
 			}
+			round.Measure()
 
 			if err == sign.ChangingViewError {
 				// report change in view, and continue with the select
@@ -263,24 +272,15 @@ func (s *Server) runAsRoot(nRounds int) string {
 			}
 
 			if s.LastRound()+1 >= nRounds {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
+				//log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				// And tell everybody to quit
 				err := s.CloseAll(s.GetView())
 				if err != nil {
 					log.Fatal("Couldn't close:", err)
 				}
-
+				monitor.End()
 				return "close"
 			}
-
-			elapsed := time.Since(start)
-			log.WithFields(log.Fields{
-				"file":  logutils.File(),
-				"type":  "root_round",
-				"round": s.LastRound(),
-				"time":  elapsed,
-			}).Info("root round")
-
 		}
 	}
 }
@@ -299,15 +299,10 @@ func (s *Server) runAsRegular() string {
 // Listen on client connections. If role is root also send annoucement
 // for all of the nRounds
 func (s *Server) Run(role string, nRounds int) {
-	// defer func() {
-	// 	log.Infoln(s.Name(), "CLOSE AFTER RUN")
-	// 	s.Close()
-	// }()
-
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()
+	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Signer closed:", err) }()
 	if role == "test_connect" {
 		role = "regular"
 		go func() {
@@ -379,9 +374,9 @@ func (s *Server) CommitFunc() sign.CommitFunc {
 	}
 }
 
-func (s *Server) OnDone() sign.DoneFunc {
+func (s *Server) Done() sign.DoneFunc {
 	return func(view int, SNRoot hashid.HashId, LogHash hashid.HashId, p proof.Proof,
-	sig *sign.SignatureBroadcastMessage, suite abstract.Suite) {
+		sig *sign.SignatureBroadcastMessage) {
 		s.mux.Lock()
 		for i, msg := range s.Queue[s.PROCESSING] {
 			// proof to get from s.Root to big root
@@ -397,9 +392,9 @@ func (s *Server) OnDone() sign.DoneFunc {
 			}
 
 			respMessg := TimeStampMessage{
-				Type:  StampReplyType,
+				Type:  StampSignatureType,
 				ReqNo: msg.Tsm.ReqNo,
-				Srep:  &StampReply{Sig: SNRoot, Prf: combProof}}
+				Srep:  &StampSignature{Sig: SNRoot, Prf: combProof}}
 
 			s.PutToClient(msg.To, respMessg)
 		}

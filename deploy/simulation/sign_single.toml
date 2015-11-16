@@ -1,5 +1,5 @@
-Machines = 4
+Machines = 3
 App = "sign"
 
-hpn, bf, rounds, rate, suite
+ppm, bf, rounds, rate, suite
 1, 2, 10, 10, "ed25519"

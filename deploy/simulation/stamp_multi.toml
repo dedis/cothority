@@ -4,7 +4,7 @@ Rounds = 10
 Rate = 10
 Suite = "ed25519"
 
-hpn, bf
+ppm, bf
 1, 2
 4, 3
 8, 4

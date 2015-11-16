@@ -40,6 +40,15 @@ func (r *RunConfig) Toml() []byte {
 	return buf.Bytes()
 }
 
+// Returns this config as a Map
+func (r *RunConfig) Map() map[string]string {
+	tomap := make(map[string]string)
+	for k := range r.fields {
+		tomap[k] = r.Get(k)
+	}
+	return tomap
+}
+
 // Clone this runconfig so it has all fields-value relationship already present
 func (r *RunConfig) Clone() *RunConfig {
 	rc := NewRunConfig()
@@ -71,7 +80,7 @@ type Platform interface {
 	// be copied as 'app.toml' to the directory where the app resides
 	Deploy(RunConfig) error
 	// Starts the application and returns - non-blocking!
-	Start() error
+	Start(args ...string) error
 	// Waits for the application to quit
 	Wait() error
 }

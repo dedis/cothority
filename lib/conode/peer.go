@@ -41,10 +41,9 @@ func NewPeer(signer sign.Signer, cb Callbacks) *Peer {
 
 	s.Signer = signer
 	s.Cb = cb
-	s.Signer.RegisterRoundMessageFunc(cb.RoundMessageFunc())
-	s.Signer.RegisterOnAnnounceFunc(cb.OnAnnounceFunc())
+	s.Signer.RegisterAnnounceFunc(cb.AnnounceFunc(s))
 	s.Signer.RegisterCommitFunc(cb.CommitFunc(s))
-	s.Signer.RegisterOnDoneFunc(cb.OnDone(s))
+	s.Signer.RegisterDoneFunc(cb.Done(s))
 	s.rLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -177,10 +176,11 @@ func (s *Peer) Close() {
 	s.Signer.Close()
 }
 
-// Setup will wait for any client connections.
-// TODO: this is called setup so
-func (s *Peer) Setup() error {
-	return s.Cb.Setup(s)
+// listen for clients connections
+// this server needs to be running on a different port
+// than the Signer that is beneath it
+func (s *Peer) Listen() error {
+	return s.Cb.Listen(s)
 }
 
 func (s *Peer) ConnectToLogger() {

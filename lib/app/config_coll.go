@@ -5,8 +5,8 @@ import (
 )
 
 type ConfigColl struct {
-	// hpn is the replication factor of hosts per node: how many hosts do we want per node
-	Hpn int
+	// ppm is the replication factor of hosts per node: how many hosts do we want per node
+	Ppm int
 	// bf is the branching factor of the tree that we build
 	Bf int
 	// Coding-suite to run 	[nist256, nist512, ed25519]

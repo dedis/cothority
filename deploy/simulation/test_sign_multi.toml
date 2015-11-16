@@ -1,0 +1,9 @@
+Machines = 2
+App = "sign"
+Rounds = 2
+Suite = "ed25519"
+
+ppm, bf
+1, 2
+2, 3
+4, 4

@@ -5,11 +5,11 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-	//"github.com/dedis/crypto/nist"
-	"encoding/json"
+//"github.com/dedis/crypto/nist"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/protobuf"
+	"encoding/json"
 )
 
 // All message structures defined in this package are used in the
@@ -27,7 +27,6 @@ const (
 	Response
 	SignatureBroadcast
 	StatusReturn
-	ValidationBroadcast
 	CatchUpReq
 	CatchUpResp
 	GroupChange
@@ -54,8 +53,6 @@ func (m MessageType) String() string {
 		return "SignatureBroadcast"
 	case StatusReturn:
 		return "StatusReturn"
-	case ValidationBroadcast:
-		return "ValidationBroadcastMessage"
 	case CatchUpReq:
 		return "CatchUpRequest"
 	case CatchUpResp:
@@ -86,7 +83,6 @@ type SigningMessage struct {
 	Rm           *ResponseMessage
 	SBm          *SignatureBroadcastMessage
 	SRm          *StatusReturnMessage
-	Vbm          *ValidationBroadcastMessage
 	Cureq        *CatchUpRequest
 	Curesp       *CatchUpResponse
 	Vrm          *VoteRequestMessage
@@ -97,7 +93,6 @@ type SigningMessage struct {
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
 }
 
-// TODO REMOVE THAT !
 var msgSuite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
 
 //var msgSuite abstract.Suite = nist.NewAES128SHA256P256()
@@ -140,56 +135,55 @@ func (sm *SigningMessage) UnmarshalJSON(dataJSON []byte) error {
 type AnnouncementMessage struct {
 	Message []byte
 	Round   int
-	// VoteRequest *VoteRequest
-	Vote *Vote // Vote Request (propose)
+				  // VoteRequest *VoteRequest
+	Vote    *Vote // Vote Request (propose)
 }
 
 type CommitmentMessage struct {
-	V     abstract.Point // commitment Point
-	V_hat abstract.Point // product of subtree participating nodes' commitment points
-	X_hat abstract.Point // product of subtree participating nodes' public keys
+	V             abstract.Point // commitment Point
+	V_hat         abstract.Point // product of subtree participating nodes' commitment points
+	X_hat         abstract.Point // product of subtree participating nodes' public keys
 
-	MTRoot hashid.HashId // root of Merkle (sub)Tree
+	MTRoot        hashid.HashId  // root of Merkle (sub)Tree
 
-	// public keys of children servers that did not respond to
-	// annoucement from root
+								 // public keys of children servers that did not respond to
+								 // annoucement from root
 	ExceptionList []abstract.Point
 
-	// CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
-	Vote *Vote // Vote Response (promise)
+								 // CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
+	Vote          *Vote          // Vote Response (promise)
 
 	Messages      int            // Actual number of messages signed
-
 	Round         int
 }
 
 type ChallengeMessage struct {
-	C abstract.Secret // challenge
+	C      abstract.Secret // challenge
 
-	// Depth  byte
-	MTRoot hashid.HashId // the very root of the big Merkle Tree
-	Proof  proof.Proof   // Merkle Path of Proofs from root to us
+						   // Depth  byte
+	MTRoot hashid.HashId   // the very root of the big Merkle Tree
+	Proof  proof.Proof     // Merkle Path of Proofs from root to us
 
-	// CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
-	Vote *Vote // Vote Confirmerd/ Rejected (accept)
+						   // CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
+	Vote   *Vote           // Vote Confirmerd/ Rejected (accept)
 
-	Round int
+	Round  int
 }
 
 type ResponseMessage struct {
-	R_hat abstract.Secret // response
+	R_hat          abstract.Secret // response
 
-	// public keys of children servers that did not respond to
-	// challenge from root
-	ExceptionList []abstract.Point
-	// cummulative point commits of nodes that failed after commit
+								   // public keys of children servers that did not respond to
+								   // challenge from root
+	ExceptionList  []abstract.Point
+								   // cummulative point commits of nodes that failed after commit
 	ExceptionV_hat abstract.Point
-	// cummulative public keys of nodes that failed after commit
+								   // cummulative public keys of nodes that failed after commit
 	ExceptionX_hat abstract.Point
 
-	Vote *Vote // Vote Ack/Nack in thr log (ack/nack)
+	Vote           *Vote           // Vote Ack/Nack in thr log (ack/nack)
 
-	Round int
+	Round          int
 }
 
 // 5th message going from root to leaves to send the
@@ -217,26 +211,6 @@ type StatusReturnMessage struct {
 	Peers      int
 }
 
-// ValidationBroadcastMessage is used in validation mode when every peers
-// validate each other's signer contributions. Each signer receive this message
-// and validate it or not depending on application specific rules.
-type ValidationBroadcastMessage struct {
-	PeerName string
-	Message  []byte
-}
-
-// ValidateResponseMessage is used in validation mode when every peers
-// will validate each others's signer contributions. When receiving a
-// ValidationBroadcastMessage, each signer reply with a
-// ValidationResponseMessage with an Accept flag set to true if it is OK.
-// Otherwise, Accept is false, and Error is a string explaining the reason why
-// it does not validate
-type ValidationResponseMessage struct {
-	PeerName string
-	Accept   bool
-	Error    string
-}
-
 type ErrorMessage struct {
 	Err string
 }
@@ -246,7 +220,7 @@ type VoteRequestMessage struct {
 }
 
 type GroupChangedMessage struct {
-	V *Vote
+	V        *Vote
 	// if vote not accepted rest of fields are nil
 	HostList []string
 }

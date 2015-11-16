@@ -2,16 +2,13 @@ package app
 
 import (
 	"flag"
-	"net"
-	"net/http"
 	_ "net/http/pprof"
-	"strconv"
+	"strings"
 
 	"bytes"
 	"github.com/BurntSushi/toml"
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/logutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,8 +17,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/nist"
-	"strings"
-	"syscall"
 )
 
 type Flags struct {
@@ -68,63 +63,6 @@ func ReadConfig(conf interface{}, dir ...string) {
 	flag.Parse()
 
 	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
-	if RunFlags.AmRoot {
-		ConnectLogservers()
-	} else {
-		dbg.Lvl4("Not connecting to logger - logger:", RunFlags.Logger, "AmRoot:", RunFlags.AmRoot)
-	}
-	ServeMemoryStats()
-}
-
-/*
- * Connects to the logservers for external logging
- */
-func ConnectLogservers() {
-	// connect with the logging server
-	if RunFlags.Logger != "" {
-		// blocks until we can connect to the flags.Logger
-		dbg.Lvl3(RunFlags.Hostname, "Connecting to Logger", RunFlags.Logger)
-		lh, err := logutils.NewLoggerHook(RunFlags.Logger, RunFlags.Hostname, "unknown")
-		if err != nil {
-			log.WithFields(log.Fields{
-				"file": logutils.File(),
-			}).Fatalln("Error setting up logging server:", err)
-		}
-		log.AddHook(lh)
-		//log.SetOutput(ioutil.Discard)
-		//fmt.Println("exiting flags.Logger block")
-		dbg.Lvl4(RunFlags.Hostname, "Done setting up hook")
-	} else {
-		dbg.Lvl3("Not setting up logserver for", RunFlags.Hostname)
-	}
-}
-
-/*
- * Opens a port at 'flags.Hostname + 1' and serves memory-statistics of this process
- */
-func ServeMemoryStats() {
-	if RunFlags.Mode == "server" {
-		if RunFlags.PhysAddr == "" {
-			h, _, err := net.SplitHostPort(RunFlags.Hostname)
-			if err != nil {
-				log.Fatal(RunFlags.Hostname, "improperly formatted hostname", os.Args)
-			}
-			RunFlags.PhysAddr = h
-		}
-
-		// run an http server to serve the cpu and memory profiles
-		go func() {
-			_, port, err := net.SplitHostPort(RunFlags.Hostname)
-			if err != nil {
-				log.Fatal(RunFlags.Hostname, "improperly formatted hostname: should be host:port")
-			}
-			p, _ := strconv.Atoi(port)
-			// uncomment if more fine grained memory debuggin is needed
-			//runtime.MemProfileRate = 1
-			res := http.ListenAndServe(net.JoinHostPort(RunFlags.PhysAddr, strconv.Itoa(p+2)), nil)
-			dbg.Lvl3("Memory-stats server:", res)
-		}()
-	}
 }
 
 /*
@@ -206,22 +144,4 @@ func GetSuite(suite string) abstract.Suite {
 		dbg.Lvl1("Got unknown suite", suite)
 		return edward
 	}
-}
-
-func iiToF(sec int64, usec int64) float64 {
-	return float64(sec) + float64(usec)/1000000.0
-}
-
-// Gets the sytem and the user time so far
-func GetRTime() (tSys, tUsr float64) {
-	rusage := &syscall.Rusage{}
-	syscall.Getrusage(syscall.RUSAGE_SELF, rusage)
-	s, u := rusage.Stime, rusage.Utime
-	return iiToF(int64(s.Sec), int64(s.Usec)), iiToF(int64(u.Sec), int64(u.Usec))
-}
-
-// Returns the difference to the given system- and user-time
-func GetDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
-	nowSys, nowUsr := GetRTime()
-	return nowSys - tSys, nowUsr - tUsr
 }

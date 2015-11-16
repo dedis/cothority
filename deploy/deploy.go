@@ -22,7 +22,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -32,13 +31,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 // Configuration-variables
 var deployP platform.Platform
-var port int = 8081
 
-var platform_dst = "deterlab"
+var platform_dst = "localhost"
 var app = ""
 var nobuild = false
 var build = ""
@@ -86,8 +85,6 @@ func main() {
 		}
 		deployP.Configure()
 
-		deployP.Cleanup()
-
 		//testprint := strings.Replace(strings.Join(runconfigs, "--"), "\n", ", ", -1)
 		//dbg.Lvl3("Going to run tests for", simulation, testprint)
 		logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
@@ -104,22 +101,18 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 
 	MkTestDir()
-	rs := make([]Stats, len(runconfigs))
+	rs := make([]monitor.Stats, len(runconfigs))
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
 	// Write the header
-	firstStat := GetStats(runconfigs[0])
+	firstStat := monitor.NewStats(runconfigs[0].Map())
 	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
 	defer f.Close()
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
-	firstStat.WriteTo(f)
-	err = firstStat.ServerCSVHeader()
-	if err != nil {
-		log.Fatal("error writing test file header:", err)
-	}
+	firstStat.WriteHeader(f)
 	err = f.Sync()
 	if err != nil {
 		log.Fatal("error syncing test file:", err)
@@ -128,7 +121,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	for i, t := range runconfigs {
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]Stats, 0, nTimes)
+		runs := make([]monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
@@ -146,75 +139,51 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			continue
 		}
 
-		s, err := AverageStats(runs...)
-		if err != nil {
-			dbg.Fatal("Could not average stats for test ", i)
-		}
+		s := monitor.AverageStats(runs)
 		rs[i] = s
-		rs[i].WriteTo(f)
-		//log.Println(fmt.Sprintf("Writing to CSV for %d: %+v", i, rs[i]))
-		err = rs[i].ServerCSV()
-		if err != nil {
-			log.Fatal("error writing data to test file:", err)
-		}
+		rs[i].WriteValues(f)
 		err = f.Sync()
 		if err != nil {
 			log.Fatal("error syncing data to test file:", err)
 		}
-
-		cl, err := os.OpenFile(
-			TestFile("client_latency_"+name+"_"+strconv.Itoa(i)),
-			os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
-		if err != nil {
-			log.Fatal("error opening test file:", err)
-		}
-		defer cl.Close()
-		rs[i].WriteTo(cl)
-		err = rs[i].ClientCSVHeader()
-		err = rs[i].ClientCSV()
-		if err != nil {
-			log.Fatal("error writing client latencies to file:", err)
-		}
-		err = cl.Sync()
-		if err != nil {
-			log.Fatal("error syncing data to latency file:", err)
-		}
-
 	}
 }
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (Stats, error) {
+func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	done := make(chan struct{})
-	var rs Stats = GetStats(rc)
+	if platform_dst == "localhost" {
+		machs := rc.Get("machines")
+		ppms := rc.Get("ppm")
+		mach, _ := strconv.Atoi(machs)
+		ppm, _ := strconv.Atoi(ppms)
+		rc.Put("machines", "1")
+		rc.Put("ppm", strconv.Itoa(ppm*mach))
+	}
+	rs := monitor.NewStats(rc.Map())
 
 	deployP.Deploy(rc)
 	deployP.Cleanup()
+	// Start monitor before so ssh tunnel can connect to the monitor
+	// in case of deterlab.
 	err := deployP.Start()
 	if err != nil {
 		log.Fatal(err)
-		return rs, nil
+		return *rs, nil
 	}
 
 	go func() {
-		if platform_dst == "deterlab" {
-			Monitor(rs)
-		} else {
-			dbg.Lvl1("Not starting monitor as not in deterlab-mode!")
-		}
+		monitor.Monitor(rs)
 		deployP.Wait()
 		dbg.Lvl2("Test complete:", rs)
 		done <- struct{}{}
 	}()
 
-	// timeout the command if it takes too long
+	// can timeout the command if it takes too long
 	select {
 	case <-done:
-		if platform_dst == "deterlab" && !rs.Valid() {
-			return rs, fmt.Errorf("unable to get good data:  %+v", rs)
-		}
-		return rs, nil
+		return *rs, nil
 	}
 }
 

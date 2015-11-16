@@ -362,7 +362,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 			d := new(poly.Deal).UnmarshalInit(p.info.T, p.info.R, p.info.N, p.suite)
 			err := p.suite.Read(rp.Conn, d)
 			if err != nil {
-				dbg.Fatal(p.Name, " received a strange dealer from ", rp.String())
+				dbg.Fatal(p.Name, " received a strange dealer from ", rp.String(), ": ", err)
 			}
 			dealChan <- d
 		}(rp)

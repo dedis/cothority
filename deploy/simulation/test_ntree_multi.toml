@@ -1,4 +1,4 @@
-Machines = 8
+Machines = 2
 App = "ntree"
 Suite = "ed25519"
 
@@ -6,7 +6,3 @@ Ppm, Bf, Rounds
 1, 8, 10
 2, 8, 10
 4, 8, 10
-8, 8, 10
-16, 8, 10
-32, 8, 10 
-64, 8, 10

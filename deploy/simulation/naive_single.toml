@@ -1,7 +1,7 @@
-Machines = 2
+Machines = 3
 App = "naive"
 Suite = "ed25519"
 SkipChecks = false
 
-Hpn,  Rounds
-16, 3
+PPM,  Rounds
+1, 3
