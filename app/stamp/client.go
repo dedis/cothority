@@ -68,7 +68,7 @@ func removeTrailingZeroes(a []int64) []int64 {
 }
 
 func streamMessgs(c *Client, servers []string, rate int) {
-	dbg.Lvl1(c.Name(), "streaming at given rate", rate)
+	dbg.Lvl4(c.Name(), "streaming at given rate", rate, "msgs per seconds")
 	ticker := time.NewTicker(time.Second / time.Duration(rate))
 	msg := genRandomMessages(1)[0]
 	i := 0

@@ -1,8 +1,8 @@
-App = "naive"
-Suite = "ed25519"
+App = "shamir"
 Rounds = 20
 
-Machines, Ppm
+Machines, ppm
+16, 1
 2, 1
 4, 1
 8, 1
