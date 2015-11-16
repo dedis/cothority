@@ -34,6 +34,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"fmt"
 )
 
 var deterlab platform.Deterlab

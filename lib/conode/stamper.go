@@ -179,7 +179,7 @@ func (cs *CallbacksStamper) PutToClient(p *Peer, name string, data coconet.Binar
 // Setu will start to listen to clients connections for stamping request
 func (cs *CallbacksStamper) Listen(p *Peer) error {
 	global, _ := cliutils.GlobalBind(p.name)
-	dbg.LLvl3("Listening in server at", global)
+	dbg.Lvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
 	if err != nil {
 		panic(err)

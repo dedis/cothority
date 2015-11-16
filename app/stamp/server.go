@@ -421,7 +421,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 	// pull out to be Merkle Tree leaves
 	s.Leaves = make([]hashid.HashId, 0)
-	dbg.LLvl3("Hashing stamp-messages:", len(Queue[PROCESSING]))
+	dbg.Lvl3("Hashing stamp-messages:", len(Queue[PROCESSING]))
 	for _, msg := range Queue[PROCESSING] {
 		s.Leaves = append(s.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
 	}

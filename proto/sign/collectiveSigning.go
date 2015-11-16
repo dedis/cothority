@@ -274,7 +274,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		round.Commits = append(round.Commits, sm)
 	}
 
-	dbg.LLvl3("Got", len(round.Commits), "of", len(sn.Children(view)), "commits")
+	dbg.Lvl3("Got", len(round.Commits), "of", len(sn.Children(view)), "commits")
 	if len(round.Commits) != len(sn.Children(view)) {
 		return nil
 	}
