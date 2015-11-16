@@ -26,7 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/cliutils"
@@ -35,6 +34,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"fmt"
 )
 
 var deterlab platform.Deterlab
@@ -81,6 +81,7 @@ func main() {
 				}
 			}
 			doneHosts[i] = true
+			dbg.Lvl3("Host", h, "cleaned up")
 		}(i, h)
 	}
 
@@ -211,6 +212,7 @@ func main() {
 					" -name=client@" + p +
 					" -server=" + servers +
 					" -amroot=" + strconv.FormatBool(a)
+				dbg.Lvl3("Users will launch client :", cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
 					dbg.Lvl4("Deter.go : error for", deterlab.App, err)

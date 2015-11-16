@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -114,17 +115,16 @@ func (s *Server) Listen() error {
 						tsm := TimeStampMessage{}
 						err := c.GetData(&tsm)
 						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child:", s, err)
+							dbg.Lvlf3("%p Failed to get from client:", s, err)
 							s.Close()
 							return
 						}
 						switch tsm.Type {
 						default:
-							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
+							dbg.Lvl2("Message of unknown type: %v\n", tsm.Type)
 							c.Close()
 							return
 						case StampRequestType:
-							// dbg.Lvl4("RECEIVED STAMP REQUEST")
 							s.mux.Lock()
 							s.Queue[READING] = append(s.Queue[READING],
 								MustReplyMessage{Tsm: tsm, To: c.Name()})
@@ -150,12 +150,12 @@ func (s *Server) ListenToClients() {
 				tsm := TimeStampMessage{}
 				err := c.GetData(&tsm)
 				if err == coconet.ErrClosed {
-					dbg.Lvlf1("%p Failed to get from client:", s, err)
+					dbg.Lvlf3("%p Failed to get from client:", s, err)
 					s.Close()
 					return
 				}
 				if err != nil {
-					dbg.Lvlf1("%p failed To get message:", s, err)
+					dbg.Lvlf3("%p failed To get message:", s, err)
 				}
 				switch tsm.Type {
 				default:
@@ -225,13 +225,6 @@ func (s *Server) runAsRoot(nRounds int) string {
 		return "close"
 	}
 
-	if app.RunFlags.Logger == "" {
-		monitor.Disable()
-	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal("Root could not connect to monitor sink :", err)
-		}
-	}
 	dbg.Lvl3(s.Name(), "running as root", s.LastRound(), int64(nRounds))
 	for {
 		select {
@@ -303,7 +296,7 @@ func (s *Server) Run(role string, nRounds int) {
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Signer closed:", err) }()
+	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl3("Signer closed:", err) }()
 	if role == "test_connect" {
 		role = "regular"
 		go func() {
@@ -406,6 +399,10 @@ func (s *Server) Done() sign.DoneFunc {
 
 func (s *Server) AggregateCommits(view int) []byte {
 	//dbg.Lvl4(s.Name(), "calling AggregateCommits")
+	var aggregate *monitor.Measure
+	if s.IsRoot(view) {
+		aggregate = monitor.NewMeasure("aggregate")
+	}
 	s.mux.Lock()
 	// get data from s once to avoid refetching from structure
 	/* Queue := s.Queue*/
@@ -436,6 +433,8 @@ func (s *Server) AggregateCommits(view int) []byte {
 
 	// pull out to be Merkle Tree leaves
 	s.Leaves = make([]hashid.HashId, 0)
+
+	dbg.Lvl3("Hashing stamp-messages:", len(s.Queue[PROCESSING]))
 	for _, msg := range s.Queue[PROCESSING] {
 		s.Leaves = append(s.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
 	}
@@ -463,6 +462,9 @@ func (s *Server) AggregateCommits(view int) []byte {
 		}
 	}
 
+	if len(s.Queue[PROCESSING]) > 0 && s.IsRoot(view) {
+		aggregate.Measure()
+	}
 	return s.Root
 }
 
@@ -470,10 +472,11 @@ func (s *Server) AggregateCommits(view int) []byte {
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
+		dbg.Lvl3("Stamper error putting to client :", err)
 		s.Close()
 		return
 	}
 	if err != nil && err != coconet.ErrNotEstablished {
-		log.Warnf("%p error putting to client: %v", s, err)
+		dbg.Lvl3(fmt.Sprintf("%p error putting to client: %v", s, err))
 	}
 }

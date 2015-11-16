@@ -52,7 +52,7 @@ func (d *Discards) Update(newMeasure Measure, reference *Measurement) {
 		// we must discard it and we havent seen it yet
 		if name == newMeasure.Name && disc {
 			d.measures[name] = !disc
-			dbg.Lvl3("Monitor: discarding measure", name)
+			dbg.Lvl2("Monitor: discarding measure", name)
 			return
 		}
 	}
@@ -178,6 +178,7 @@ func (m *Measurement) WriteValues(w io.Writer) {
 // Update takes a measure received from the network and update the wall system
 // and user values
 func (m *Measurement) Update(measure Measure) {
+	dbg.Lvl2("Got measurement for", m.Name, measure.WallTime, measure.CPUTimeUser, measure.CPUTimeSys)
 	m.Wall.Update(measure.WallTime)
 	m.User.Update(measure.CPUTimeUser)
 	m.System.Update(measure.CPUTimeSys)
@@ -225,12 +226,12 @@ type Stats struct {
 	keys     []string
 }
 
-// ExtraFIelds in a RunConfig argument that we may want to parse if present
-var extraFields = [...]string{"bf"}
+// ExtraFields in a RunConfig argument that we may want to parse if present
+var extraFields = [...]string{"bf", "rate", "stampperc"}
 
 // DefaultMeasurements are the default measurements we want to do anyway
 // For now these will be the fields that will appear in the output csv file
-var DefaultMeasurements = [...]string{"setup", "round", "calc", "verify"}
+var DefaultMeasurements = [...]string{"setup", "round", "calc", "verify", "aggregate"}
 
 // Return a NewStats with some fields extracted from the platform run config
 // It enforces the default set of measure to do.
@@ -264,7 +265,6 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 			s.Additionals[f] = ef
 		}
 	}
-
 }
 
 func (s *Stats) Init() *Stats {
@@ -292,8 +292,10 @@ func (s *Stats) WriteHeader(w io.Writer) {
 	// write basic info
 	fmt.Fprintf(w, "Peers, ppm, machines")
 	// write additionals fields
-	for k, _ := range s.Additionals {
-		fmt.Fprintf(w, ", %s", k)
+	for _, k := range extraFields {
+		if _, ok := s.Additionals[k]; ok {
+			fmt.Fprintf(w, ", %s", k)
+		}
 	}
 	// Write the values header
 	for _, k := range s.keys {
@@ -309,8 +311,11 @@ func (s *Stats) WriteValues(w io.Writer) {
 	// write basic info
 	fmt.Fprintf(w, "%d, %d, %d", s.Peers, s.PPM, s.Machines)
 	// write additionals fields
-	for _, v := range s.Additionals {
-		fmt.Fprintf(w, ", %d", v)
+	for _, k := range extraFields {
+		v, ok := s.Additionals[k]
+		if ok {
+			fmt.Fprintf(w, ", %d", v)
+		}
 	}
 	// write the values
 	for _, k := range s.keys {
