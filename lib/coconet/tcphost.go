@@ -201,7 +201,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	mname := StringMarshaler(h.Name())
 	err = tp.PutData(&mname)
 	if err != nil {
-		log.Errorln(err)
+		log.Errorln("Putting data error:", err)
 		return err
 	}
 	tp.SetName(parent)
