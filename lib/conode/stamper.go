@@ -12,9 +12,9 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/proto/sign"
 	"net"
-	"os"
 	"strconv"
 	"sync"
+	"os"
 )
 
 // This file provides a callback implementation of a timestamper server.

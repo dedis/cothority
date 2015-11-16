@@ -103,8 +103,8 @@ func streamMessgs(c *Client, servers []string, rate int) {
 		dbg.Lvl3("Stamp Client wont stream messages")
 		return
 	}
-	dbg.Lvl2(c.Name(), "streaming at given rate", rate, " msg / s")
 	ticker := time.NewTicker(time.Second / time.Duration(rate))
+	dbg.Lvl2(c.Name(), "streaming at given rate", rate, " msg / s")
 	msg := genRandomMessages(1)[0]
 
 	i := 0

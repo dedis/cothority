@@ -98,7 +98,7 @@ func KeyGeneration(key, address string) {
 		dbg.Fatal("You must call keygen with ipadress !")
 	}
 	address, err := cliutils.VerifyPort(address, conode.DefaultPort)
-	dbg.Print("Address is", address)
+	dbg.Lvl1("Address is", address)
 	if err != nil {
 		dbg.Fatal(err)
 	}

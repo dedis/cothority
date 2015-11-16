@@ -14,6 +14,7 @@ import (
 )
 
 var ROUND_TIME time.Duration = sign.ROUND_TIME
+var PeerMaxRounds = -1
 
 // struct to ease keeping track of who requires a reply after
 // tsm is processed/ aggregated by the TSServer
@@ -45,6 +46,7 @@ func NewPeer(signer sign.Signer, cb Callbacks) *Peer {
 	s.Signer.RegisterCommitFunc(cb.CommitFunc(s))
 	s.Signer.RegisterDoneFunc(cb.Done(s))
 	s.rLock = sync.Mutex{}
+	s.maxRounds = PeerMaxRounds
 
 	// listen for client requests at one port higher
 	// than the signing node
@@ -71,12 +73,7 @@ func (s *Peer) Run(role string) {
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()
-	s.rLock.Lock()
-
-	// TODO: remove this hack
-	s.maxRounds = -1
-	s.rLock.Unlock()
+	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Listened and error:", err) }()
 
 	var nextRole string // next role when view changes
 	for {
@@ -152,7 +149,7 @@ func (s *Peer) runAsRoot(nRounds int) string {
 			}
 
 			if s.LastRound()+1 >= nRounds && nRounds >= 0 {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
+				dbg.Lvl2(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				return "close"
 			}
 		}
