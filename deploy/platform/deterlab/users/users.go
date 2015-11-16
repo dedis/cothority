@@ -34,7 +34,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"fmt"
+	"regexp"
 )
 
 var deterlab platform.Deterlab
@@ -54,24 +54,32 @@ func main() {
 	}
 	// kill old processes
 	var wg sync.WaitGroup
-	doneHosts := make([]bool, len(deterlab.Phys))
-	for i, h := range deterlab.Phys {
+	re := regexp.MustCompile(" +")
+	hosts, _ := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	hosts_trimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
+	hostlist := strings.Split(hosts_trimmed, " ")
+	doneHosts := make([]bool, len(hostlist))
+	dbg.Lvl2("Found the following hosts:", hostlist)
+	dbg.Lvl1("Cleaning up", len(hostlist), "hosts.")
+	for i, h := range hostlist {
 		wg.Add(1)
 		go func(i int, h string) {
 			defer wg.Done()
 			if kill {
-
-				dbg.Lvl4("Cleaning up host", h)
-				cliutils.SshRun("", h, "sudo killall "+deterlab.App+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
+				dbg.Lvl4("Cleaning up host", h, ".")
+				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " logserver forkexec timeclient scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				cliutils.SshRun("", h, "sudo killall "+deterlab.App+" 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " 2>/dev/null >/dev/null")
+				time.Sleep(1 * time.Second)
+				// Also kill all other process that start with "./" and are probably
+				// locally started processes
+				cliutils.SshRun("", h, "sudo pkill -9 -f '\\./'")
+				time.Sleep(1 * time.Second)
 				if dbg.DebugVisible > 3 {
 					dbg.Lvl4("Cleaning report:")
 					cliutils.SshRunStdout("", h, "ps aux")
 				}
-				dbg.Lvl3("Host", h, "cleaned up")
-			}
-			if !kill {
+			} else {
 				dbg.Lvl3("Setting the file-limit higher on", h)
 
 				// Copy configuration file to make higher file-limits
@@ -94,18 +102,11 @@ func main() {
 	select {
 	case msg := <-cleanupChannel:
 		dbg.Lvl3("Received msg from cleanupChannel", msg)
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Second * 20):
 		for i, m := range doneHosts {
 			if !m {
-				dbg.Lvl1("Missing host:", deterlab.Phys[i])
-				// expinfo gets a list of all mappings from physical to logical
-				// node names. Then we grep the missing host and keep only
-				// the logical node
-				grep := "grep '" + strings.Split(deterlab.Phys[i], ".")[0] + " ' | sed -e 's/.* //'"
-				cmd := fmt.Sprintf("expinfo -e %s,%s -m | %s",
-					deterlab.Project, deterlab.Experiment, grep)
-				info, _ := exec.Command("bash", "-c", cmd).Output()
-				dbg.Lvl1("You might want to run\nnode_reboot", string(info), cmd)
+				dbg.Lvl1("Missing host:", hostlist[i], "- You should run")
+				dbg.Lvl1("/usr/testbed/bin/node_reboot", hostlist[i])
 			}
 		}
 		dbg.Fatal("Didn't receive all replies while cleaning up - aborting.")
