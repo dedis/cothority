@@ -20,7 +20,7 @@ import (
 	"errors"
 )
 
-type CallbacksStamper struct {
+type RoundStamper struct {
 							   // for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
@@ -40,8 +40,8 @@ type CallbacksStamper struct {
 	RoundNbr   int
 }
 
-func NewCallbacksStamper() *CallbacksStamper {
-	cbs := &CallbacksStamper{}
+func NewRoundStamper() *RoundStamper {
+	cbs := &RoundStamper{}
 	cbs.Queue = make([][]MustReplyMessage, 2)
 	cbs.READING = 0
 	cbs.PROCESSING = 1
@@ -53,7 +53,7 @@ func NewCallbacksStamper() *CallbacksStamper {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMessage) ([]*sign.AnnouncementMessage, error) {
+func (cs *RoundStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMessage) ([]*sign.AnnouncementMessage, error) {
 	var t int64
 	if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
 		dbg.Lvl1("Unmashaling timestamp has failed")
@@ -81,7 +81,7 @@ func (cs *CallbacksStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMes
 	return messgs, nil
 }
 
-func (cs *CallbacksStamper) Commitment(_ []*sign.CommitmentMessage) *sign.CommitmentMessage {
+func (cs *RoundStamper) Commitment(_ []*sign.CommitmentMessage) *sign.CommitmentMessage {
 	// prepare to handle exceptions
 	round := cs.Round
 	round.ExceptionList = make([]abstract.Point, 0)
@@ -170,7 +170,7 @@ func (cs *CallbacksStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commit
 	return &sign.CommitmentMessage{MTRoot:cs.Root}
 }
 
-func (cs *CallbacksStamper) Challenge(chm *sign.ChallengeMessage) error {
+func (cs *RoundStamper) Challenge(chm *sign.ChallengeMessage) error {
 	// register challenge
 	cs.Round.C = chm.C
 	cs.Round.InitResponseCrypto()
@@ -185,7 +185,7 @@ func (cs *CallbacksStamper) Challenge(chm *sign.ChallengeMessage) error {
 	return nil
 }
 
-func (cs *CallbacksStamper) Response(sms []*sign.SigningMessage) error {
+func (cs *RoundStamper) Response(sms []*sign.SigningMessage) error {
 	// initialize exception handling
 	exceptionV_hat := cs.Round.Suite.Point().Null()
 	exceptionX_hat := cs.Round.Suite.Point().Null()
@@ -246,7 +246,7 @@ func (cs *CallbacksStamper) Response(sms []*sign.SigningMessage) error {
 	return err
 }
 
-func (cs *CallbacksStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
+func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
 	cs.mux.Lock()
 	for i, msg := range cs.Queue[cs.PROCESSING] {
 		// proof to get from s.Root to big root
@@ -285,7 +285,7 @@ func (cs *CallbacksStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessag
 }
 
 // Send message to client given by name
-func (cs *CallbacksStamper) PutToClient(p *sign.Peer, name string, data coconet.BinaryMarshaler) {
+func (cs *RoundStamper) PutToClient(p *sign.Peer, name string, data coconet.BinaryMarshaler) {
 	err := cs.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
 		p.Close()
@@ -297,7 +297,7 @@ func (cs *CallbacksStamper) PutToClient(p *sign.Peer, name string, data coconet.
 }
 
 // Starts to listen for stamper-requests
-func (cs *CallbacksStamper) Setup(p *sign.Peer) error {
+func (cs *RoundStamper) Setup(p *sign.Peer) error {
 	cs.peer = p
 	global, _ := cliutils.GlobalBind(p.NameP)
 	dbg.Lvl3("Listening in server at", global)
