@@ -1,4 +1,4 @@
-package sign
+package conode
 
 import (
 	"net"
@@ -10,11 +10,12 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/sign"
 )
 
 type Peer struct {
-	*Node
-	NameP     string
+	*sign.Node
+	NameP string
 
 	RLock     sync.Mutex
 	MaxRounds int
@@ -23,13 +24,13 @@ type Peer struct {
 	Logger   string
 	Hostname string
 	App      string
-	Cb Round
+	Cb       sign.Round
 }
 
 // NewPeer returns a peer that can be used to set up
 // connections. It takes a signer and a callbacks-struct
 // that need to be initialised already.
-func NewPeer(node *Node, cb Round) *Peer {
+func NewPeer(node *sign.Node, cb sign.Round) *Peer {
 	s := &Peer{}
 
 	s.Node = node
@@ -45,7 +46,7 @@ func NewPeer(node *Node, cb Round) *Peer {
 		if err != nil {
 			log.Fatal(err)
 		}
-		s.NameP = net.JoinHostPort(h, strconv.Itoa(i + 1))
+		s.NameP = net.JoinHostPort(h, strconv.Itoa(i+1))
 	}
 	s.CloseChan = make(chan bool, 5)
 	return s
@@ -53,7 +54,7 @@ func NewPeer(node *Node, cb Round) *Peer {
 
 // listen for clients connections
 func (s *Peer) Setup() error {
-	return s.Cb.Setup(s)
+	return s.Cb.Setup(s.NameP)
 }
 
 // Listen on client connections. If role is root also send annoucement
@@ -105,7 +106,7 @@ func (s *Peer) Close() {
 // the role
 func (s *Peer) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
-	ticker := time.Tick(ROUND_TIME)
+	ticker := time.Tick(sign.ROUND_TIME)
 	if s.LastRound()+1 > nRounds && nRounds >= 0 {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
@@ -124,16 +125,16 @@ func (s *Peer) runAsRoot(nRounds int) string {
 
 			var err error
 			if s.App == "vote" {
-				vote := &Vote{
-					Type: AddVT,
-					Av: &AddVote{
+				vote := &sign.Vote{
+					Type: sign.AddVT,
+					Av: &sign.AddVote{
 						Parent: s.Name(),
 						Name:   "test-add-node"}}
 				err = s.StartVotingRound(vote)
 			} else {
 				err = s.StartSigningRound()
 			}
-			if err == ChangingViewError {
+			if err == sign.ChangingViewError {
 				// report change in view, and continue with the select
 				log.WithFields(log.Fields{
 					"file": logutils.File(),

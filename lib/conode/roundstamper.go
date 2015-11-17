@@ -9,35 +9,35 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
+	"errors"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/cliutils"
 	"net"
 	"os"
-	"errors"
 )
 
 type RoundStamper struct {
-							   // for aggregating messages from clients
+	// for aggregating messages from clients
 	mux        sync.Mutex
 	Queue      [][]MustReplyMessage
 	READING    int
 	PROCESSING int
 
-							   // Leaves, Root and Proof for a round
-	Leaves     []hashid.HashId // can be removed after we verify protocol
-	Root       hashid.HashId
-	Proofs     []proof.Proof
-							   // Timestamp message for this Round
-	Timestamp  int64
+	// Leaves, Root and Proof for a round
+	Leaves []hashid.HashId // can be removed after we verify protocol
+	Root   hashid.HashId
+	Proofs []proof.Proof
+	// Timestamp message for this Round
+	Timestamp int64
 
-	Clients    map[string]coconet.Conn
-	peer       *sign.Peer
-	Round      *sign.RoundMerkle
-	RoundNbr   int
+	Clients  map[string]coconet.Conn
+	peer     *Peer
+	Round    *sign.RoundMerkle
+	RoundNbr int
 }
 
 func NewRoundStamper() *RoundStamper {
@@ -151,7 +151,7 @@ func (cs *RoundStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commitment
 		cs.Root, cs.Proofs = proof.ProofTree(cs.Round.Suite.Hash, cs.Leaves)
 		if dbg.DebugVisible > 2 {
 			if proof.CheckLocalProofs(cs.Round.Suite.Hash, cs.Root, cs.Leaves, cs.Proofs) == true {
-				dbg.Lvl4("Local Proofs of", cs.peer.Name(), "successful for round " + strconv.Itoa(int(cs.peer.LastRound())))
+				dbg.Lvl4("Local Proofs of", cs.peer.Name(), "successful for round "+strconv.Itoa(int(cs.peer.LastRound())))
 			} else {
 				panic("Local Proofs" + cs.peer.Name() + " unsuccessful for round " + strconv.Itoa(int(cs.peer.LastRound())))
 			}
@@ -167,7 +167,7 @@ func (cs *RoundStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commitment
 
 	round.Proof = make([]hashid.HashId, 0)
 
-	return &sign.CommitmentMessage{MTRoot:cs.Root}
+	return &sign.CommitmentMessage{MTRoot: cs.Root}
 }
 
 func (cs *RoundStamper) Challenge(chm *sign.ChallengeMessage) error {
@@ -267,17 +267,17 @@ func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
 		respMessg := &TimeStampMessage{
 			Type:  StampSignatureType,
 			ReqNo: msg.Tsm.ReqNo,
-			Srep:  &StampSignature{
-				SuiteStr: cs.Round.Suite.String(),
-				Timestamp: cs.Timestamp,
+			Srep: &StampSignature{
+				SuiteStr:   cs.Round.Suite.String(),
+				Timestamp:  cs.Timestamp,
 				MerkleRoot: cs.Round.MTRoot,
-				Prf: combProof,
-				Response: sb.R0_hat,
-				Challenge: sb.C,
-				AggCommit: sb.V0_hat,
-				AggPublic: sb.X0_hat,
+				Prf:        combProof,
+				Response:   sb.R0_hat,
+				Challenge:  sb.C,
+				AggCommit:  sb.V0_hat,
+				AggPublic:  sb.X0_hat,
 			}}
-		cs.PutToClient(cs.peer, msg.To, respMessg)
+		cs.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client")
 	}
 	cs.mux.Unlock()
@@ -285,10 +285,10 @@ func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
 }
 
 // Send message to client given by name
-func (cs *RoundStamper) PutToClient(p *sign.Peer, name string, data coconet.BinaryMarshaler) {
+func (cs *RoundStamper) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := cs.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
-		p.Close()
+		cs.Clients[name].Close()
 		return
 	}
 	if err != nil && err != coconet.ErrNotEstablished {
@@ -297,9 +297,8 @@ func (cs *RoundStamper) PutToClient(p *sign.Peer, name string, data coconet.Bina
 }
 
 // Starts to listen for stamper-requests
-func (cs *RoundStamper) Setup(p *sign.Peer) error {
-	cs.peer = p
-	global, _ := cliutils.GlobalBind(p.NameP)
+func (cs *RoundStamper) Setup(address string) error {
+	global, _ := cliutils.GlobalBind(address)
 	dbg.Lvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
 	if err != nil {
@@ -328,7 +327,7 @@ func (cs *RoundStamper) Setup(p *sign.Peer) error {
 						err := co.GetData(&tsm)
 						dbg.Lvl2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
 						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child: %s", p, err)
+							dbg.Lvlf1("%p Failed to get from child: %s", address, err)
 							co.Close()
 							return
 						}

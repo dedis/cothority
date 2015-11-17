@@ -36,6 +36,6 @@ type Round interface {
 
 	// Setup can be used to start listening on a port for requests or
 	// any other setup that needs to be done
-	Setup(*Peer) error
+	Setup(string) error
 }
 

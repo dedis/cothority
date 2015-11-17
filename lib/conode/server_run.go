@@ -76,7 +76,7 @@ func RunServer(address string, conf *app.ConfigConode, cb sign.Round) {
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Round, hostname string) ([]*sign.Peer, error) {
+func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Round, hostname string) ([]*Peer, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
@@ -90,13 +90,13 @@ func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Round, hostname string
 		hostnames[hostname] = sn
 	}
 	// for each client in
-	peers := make([]*sign.Peer, 0, len(hostnames))
+	peers := make([]*Peer, 0, len(hostnames))
 	for _, sn := range hc.SNodes {
 		if _, ok := hostnames[sn.Name()]; !ok {
 			dbg.Lvl1("signing node not in hostnmaes")
 			continue
 		}
-		peers = append(peers, sign.NewPeer(sn, cb))
+		peers = append(peers, NewPeer(sn, cb))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
 			peers[len(peers) - 1].Setup()
