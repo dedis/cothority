@@ -23,13 +23,13 @@ type Peer struct {
 	Logger   string
 	Hostname string
 	App      string
-	Cb       Callbacks
+	Cb Round
 }
 
 // NewPeer returns a peer that can be used to set up
 // connections. It takes a signer and a callbacks-struct
 // that need to be initialised already.
-func NewPeer(signer Signer, cb Callbacks) *Peer {
+func NewPeer(signer Signer, cb Round) *Peer {
 	s := &Peer{}
 
 	s.Signer = signer

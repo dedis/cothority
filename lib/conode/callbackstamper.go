@@ -36,7 +36,7 @@ type CallbacksStamper struct {
 
 	Clients    map[string]coconet.Conn
 	peer       *sign.Peer
-	Round      *sign.Round
+	Round      *sign.RoundMerkle
 	RoundNbr   int
 }
 

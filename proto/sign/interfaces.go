@@ -21,7 +21,7 @@ type Signer interface {
 	// Sign([]byte) (hashid.HashId, proof.Proof, error)
 
 	// Installs new callbacks for the steps of the signing-algorithm
-	SetCallbacks(Callbacks)
+	SetCallbacks(Round)
 
 	// Allows user of Signer to inform Signer to run with simulated failures
 	// As to test robustness of Signer

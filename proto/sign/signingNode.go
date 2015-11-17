@@ -63,14 +63,14 @@ type Node struct {
 	PrivKey abstract.Secret // long lasting private key
 
 	nRounds       int
-	Rounds        map[int]*Round
+	Rounds        map[int]*RoundMerkle
 	Round         int // *only* used by Root( by annoucer)
 	RoundTypes    []RoundType
 	roundmu       sync.Mutex
 	LastSeenRound int // largest round number I have seen
 	RoundsAsRoot  int // latest continuous streak of rounds with sn root
 
-	Callbacks Callbacks
+	Callbacks Round
 	AnnounceLock sync.Mutex
 
 	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
@@ -118,7 +118,7 @@ type Node struct {
 }
 
 // Set callback-functions for the different steps of the algorithm
-func (sn *Node)SetCallbacks(cb Callbacks){
+func (sn *Node)SetCallbacks(cb Round){
 	sn.Callbacks = cb
 }
 
@@ -334,7 +334,7 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
 
 	sn.peerKeys = make(map[string]abstract.Point)
-	sn.Rounds = make(map[int]*Round)
+	sn.Rounds = make(map[int]*RoundMerkle)
 
 	sn.closed = make(chan error, 20)
 	sn.done = make(chan int, 10)
@@ -360,7 +360,7 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 
 	msgSuite = suite
 	sn.peerKeys = make(map[string]abstract.Point)
-	sn.Rounds = make(map[int]*Round)
+	sn.Rounds = make(map[int]*RoundMerkle)
 
 	sn.closed = make(chan error, 20)
 	sn.done = make(chan int, 10)
@@ -423,7 +423,7 @@ func (sn *Node) SetLastSeenRound(round int) {
 	sn.LastSeenRound = round
 }
 
-func (sn *Node) CommitedFor(round *Round) bool {
+func (sn *Node) CommitedFor(round *RoundMerkle) bool {
 	sn.roundLock.RLock()
 	defer sn.roundLock.RUnlock()
 

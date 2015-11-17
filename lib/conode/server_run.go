@@ -15,7 +15,7 @@ import (
 
 
 // Make connections and run server.go
-func RunServer(address string, conf *app.ConfigConode, cb sign.Callbacks) {
+func RunServer(address string, conf *app.ConfigConode, cb sign.Round) {
 	suite := app.GetSuite(conf.Suite)
 
 	var err error
@@ -76,7 +76,7 @@ func RunServer(address string, conf *app.ConfigConode, cb sign.Callbacks) {
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Callbacks, hostname string) ([]*sign.Peer, error) {
+func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Round, hostname string) ([]*sign.Peer, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
