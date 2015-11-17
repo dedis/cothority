@@ -81,7 +81,7 @@ func (sn *Node) ProcessMessages() error {
 			default:
 				continue
 			case Announcement:
-				dbg.Lvl2(sn.Name(), "got announcement")
+				dbg.Lvl3(sn.Name(), "got announcement")
 				sn.ReceivedHeartbeat(sm.View)
 
 				var err error
@@ -101,7 +101,7 @@ func (sn *Node) ProcessMessages() error {
 
 			// if it is a commitment or response it is from the child
 			case Commitment:
-				dbg.Lvl4(sn.Name(), "got commitment")
+				dbg.Lvl3(sn.Name(), "got commitment")
 				if !sn.IsChild(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received commitment from non-child on view", sm.View)
 					continue
@@ -117,7 +117,7 @@ func (sn *Node) ProcessMessages() error {
 					log.Errorln(sn.Name(), "commit error:", err)
 				}
 			case Challenge:
-				dbg.Lvl4(sn.Name(), "got challenge")
+				dbg.Lvl3(sn.Name(), "got challenge")
 				if !sn.IsParent(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
 					continue
@@ -134,7 +134,7 @@ func (sn *Node) ProcessMessages() error {
 					log.Errorln(sn.Name(), "challenge error:", err)
 				}
 			case Response:
-				dbg.Lvl4(sn.Name(), "received response from", sm.From)
+				dbg.Lvl3(sn.Name(), "received response from", sm.From)
 				if !sn.IsChild(sm.View, sm.From) {
 					log.Fatalln(sn.Name(), "received response from non-child on view", sm.View)
 					continue
@@ -150,8 +150,11 @@ func (sn *Node) ProcessMessages() error {
 					log.Errorln(sn.Name(), "response error:", err)
 				}
 			case SignatureBroadcast:
+				dbg.Lvl3(sn.Name(), "received SignatureBroadcast", sm.From)
 				sn.ReceivedHeartbeat(sm.View)
 				err = sn.SignatureBroadcast(sm.View, sm.SBm, 0)
+			case StatusReturn:
+				sn.StatusReturn(sm.View, sm.SRm)
 			case CatchUpReq:
 				v := sn.VoteLog.Get(sm.Cureq.Index)
 				ctx := context.TODO()
@@ -258,11 +261,15 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 		return nil
 	}
 
+	// Collect number of messages of children peers
 	// signingmessage nil <=> we are a leaf
 	if sm != nil {
 		round.Commits = append(round.Commits, sm)
+		dbg.Lvl3(sn.Name(), ": Found", sm.Com.Messages, "messages in com-msg")
+		sn.Messages += sm.Com.Messages
 	}
 
+	dbg.Lvl3("Got", len(round.Commits), "of", len(sn.Children(view)), "commits")
 	if len(round.Commits) != len(sn.Children(view)) {
 		return nil
 	}
@@ -283,6 +290,7 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 			Vote:   round.Vote})
 	} else {
 		// create and putup own commit message
+		dbg.Lvl3("Number of messages in comMsg:", sn.Messages)
 		com := &CommitmentMessage{
 			V:             round.Log.V,
 			V_hat:         round.Log.V_hat,
@@ -290,7 +298,9 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 			MTRoot:        round.MTRoot,
 			ExceptionList: round.ExceptionList,
 			Vote:          round.Vote,
-			RoundNbr:         roundNbr}
+			RoundNbr:         roundNbr,
+			Messages: sn.Messages}
+		sn.Messages = 0
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		dbg.Lvl4(sn.Name(), "puts up commit")
@@ -341,6 +351,7 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
 	sn.roundmu.Unlock()
+	sn.PeerStatus = StatusReturnMessage{1, len(sn.Children(view))}
 
 	Round := sn.Rounds[roundNbr]
 	if Round == nil || Round.Log.v == nil {
@@ -409,19 +420,49 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 	return err
 }
 
+
+func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
+	dbg.Lvl3(sn.Name(), "StatusConnected", view)
+
+	// Ask connection-count on all connected children
+	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+	for i := range messgs {
+		sm := SigningMessage{
+			Type:         StatusConnections,
+			View:         view,
+			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			Am:           am}
+		messgs[i] = &sm
+	}
+
+	ctx := context.TODO()
+	if err := sn.PutDown(ctx, view, messgs); err != nil {
+		return err
+	}
+	return nil
+}
+
+// This will broadcast the final signature to give to client
+// it contins the global Response adn global challenge
 func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
-	dbg.Lvl2(sn.Name(), "received SignatureBroadcast on", view)
+	dbg.Lvl3(sn.Name(), "received SignatureBroadcast on", view)
+	sn.PeerStatusRcvd = 0
 	// Root is creating the sig broadcast
 	if sb == nil {
 		r := sn.Rounds[round]
 		if sn.IsRoot(view) {
+			dbg.Lvl2(sn.Name(), ": sending number of messages:", sn.Messages)
 			sb = &SignatureBroadcastMessage{
 				R0_hat: r.R_hat,
 				C:      r.C,
 				X0_hat: r.X_hat,
 				V0_hat: r.Log.V_hat,
+				Messages: sn.Messages,
 			}
 		}
+	} else {
+		dbg.Lvl2(sn.Name(), ": sbm tells number of messages is:", sb.Messages)
+		sn.Messages = sb.Messages
 	}
 
 	sn.Callbacks.SignatureBroadcast(sb)
@@ -439,37 +480,44 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 	}
 
 	if len(sn.Children(view)) > 0 {
-		dbg.Lvl2(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
+		dbg.Lvl3(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
 		ctx := context.TODO()
 		if err := sn.PutDown(ctx, view, messgs); err != nil {
 			return err
 		}
+	} else {
+		dbg.Lvl2(sn.Name(), "sending StatusReturn")
+		return sn.StatusReturn(view, &StatusReturnMessage{})
 	}
 	return nil
 }
 
-func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
-	dbg.Lvl2(sn.Name(), "StatusConnected", view)
+// StatusReturn just adds up all children and sends the result to
+// the parent
+func (sn *Node) StatusReturn(view int, sr *StatusReturnMessage) error {
+	sn.PeerStatusRcvd += 1
+	sn.PeerStatus.Responders += sr.Responders
+	sn.PeerStatus.Peers += sr.Peers
 
-	// Ask connection-count on all connected children
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
-	for i := range messgs {
-		sm := SigningMessage{
-			Type:         StatusConnections,
+	// Wait for other children before propagating the message
+	if sn.PeerStatusRcvd < len(sn.Children(view)) {
+		dbg.Lvl3(sn.Name(), "Waiting for other children")
+		return nil
+	}
+
+	var err error = nil
+	if sn.IsRoot(view) {
+		// Add the root-node
+		sn.PeerStatus.Peers += 1
+		dbg.Lvl2("We got", sn.PeerStatus.Responders, "responses from", sn.PeerStatus.Peers, "peers.")
+	} else {
+		dbg.Lvl4(sn.Name(), "puts up statusReturn for", sn.PeerStatus)
+		ctx := context.TODO()
+		err = sn.PutUp(ctx, view, &SigningMessage{
 			View:         view,
+			Type:         StatusReturn,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			Am:           am}
-		messgs[i] = &sm
+			SRm: &sn.PeerStatus, })
 	}
-
-	ctx := context.TODO()
-	if err := sn.PutDown(ctx, view, messgs); err != nil {
-		return err
-	}
-
-	if len(sn.Children(view)) == 0 {
-		sn.Commit(view, am.RoundNbr, nil)
-	}
-	return nil
+	return err
 }
-

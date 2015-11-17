@@ -1,17 +1,18 @@
 package conode_test
 
 import (
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"strconv"
 	"testing"
 	"time"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/app"
-	"strconv"
 )
 
 // Runs two conodes and tests if the value returned is OK
 func TestStamp(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 2)
 	conf := readConfig()
 	go runConode(conf, 1)
 	// conf will hold part of the configuration for each server,
@@ -30,7 +31,7 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't get stamp from server:", err)
 	}
 
-	if !tsm.Srep.SigBroad.X0_hat.Equal(s.X0) {
+	if !tsm.Srep.AggPublic.Equal(s.X0) {
 		t.Fatal("Not correct aggregate public key")
 	}
 	//stopConode()
@@ -50,12 +51,12 @@ func runConode(conf *app.ConfigConode, id int) {
 	// Read the private / public keys + binded address
 	keybase := "testdata/key" + strconv.Itoa(id)
 	address := ""
-	if sec, err := cliutils.ReadPrivKey(suite, keybase + ".priv"); err != nil {
+	if sec, err := cliutils.ReadPrivKey(suite, keybase+".priv"); err != nil {
 		dbg.Fatal("Error reading private key file  :", err)
 	} else {
 		conf.Secret = sec
 	}
-	if pub, addr, err := cliutils.ReadPubKey(suite, keybase + ".pub"); err != nil {
+	if pub, addr, err := cliutils.ReadPubKey(suite, keybase+".pub"); err != nil {
 		dbg.Fatal("Error reading public key file :", err)
 	} else {
 		conf.Public = pub

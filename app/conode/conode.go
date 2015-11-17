@@ -44,7 +44,7 @@ func main() {
 	coApp := cli.NewApp()
 	coApp.Name = "Conode"
 	coApp.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
-	coApp.Version = "0.0.1"
+	coApp.Version = "0.1.0"
 	coApp.Authors = []cli.Author{
 		{
 			Name:  "Linus Gasser",
@@ -98,7 +98,7 @@ func KeyGeneration(key, address string) {
 		dbg.Fatal("You must call keygen with ipadress !")
 	}
 	address, err := cliutils.VerifyPort(address, conode.DefaultPort)
-	dbg.Print("Address is", address)
+	dbg.Lvl1("Address is", address)
 	if err != nil {
 		dbg.Fatal(err)
 	}

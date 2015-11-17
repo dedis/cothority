@@ -31,7 +31,7 @@ type SignedEntry struct {
 type StampRequest struct {
 	Val []byte // Hash-size value to timestamp
 }
-type StampReply struct {
+type StampSignature struct {
 	Sig []byte      // Signature on the root
 	Prf proof.Proof // Merkle proof of value
 }
@@ -75,7 +75,7 @@ type MessageType int
 const (
 	Error MessageType = iota
 	StampRequestType
-	StampReplyType
+	StampSignatureType
 )
 
 type TimeStampMessage struct {
@@ -83,7 +83,7 @@ type TimeStampMessage struct {
 	// ErrorReply *ErrorReply // Generic error reply to any request
 	Type MessageType
 	Sreq *StampRequest
-	Srep *StampReply
+	Srep *StampSignature
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
@@ -96,7 +96,7 @@ func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
 	switch tsm.Type {
 	case StampRequestType:
 		sub, err = tsm.Sreq.MarshalBinary()
-	case StampReplyType:
+	case StampSignatureType:
 		sub, err = tsm.Srep.MarshalBinary()
 	}
 	if err == nil {
@@ -114,8 +114,8 @@ func (sm *TimeStampMessage) UnmarshalBinary(data []byte) error {
 	case StampRequestType:
 		sm.Sreq = &StampRequest{}
 		err = sm.Sreq.UnmarshalBinary(msgBytes)
-	case StampReplyType:
-		sm.Srep = &StampReply{}
+	case StampSignatureType:
+		sm.Srep = &StampSignature{}
 		err = sm.Srep.UnmarshalBinary(msgBytes)
 
 	}
@@ -136,14 +136,14 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 	return err
 }
 
-func (Srep StampReply) MarshalBinary() ([]byte, error) {
+func (Srep StampSignature) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
 	err := enc.Encode(Srep.Sig)
 	return b.Bytes(), err
 }
 
-func (Srep *StampReply) UnmarshalBinary(data []byte) error {
+func (Srep *StampSignature) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
 	err := dec.Decode(&Srep.Sig)

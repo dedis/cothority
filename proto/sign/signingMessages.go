@@ -15,7 +15,7 @@ import (
 // All message structures defined in this package are used in the
 // Collective Signing Protocol
 // Over the network they are sent as byte slices, so each message
-// has its own MarshlBinary and UnmarshalBinary method
+// has its own MarshalBinary and UnmarshalBinary method
 
 type MessageType int
 
@@ -26,6 +26,7 @@ const (
 	Challenge
 	Response
 	SignatureBroadcast
+	StatusReturn
 	CatchUpReq
 	CatchUpResp
 	GroupChange
@@ -50,6 +51,8 @@ func (m MessageType) String() string {
 		return "Response"
 	case SignatureBroadcast:
 		return "SignatureBroadcast"
+	case StatusReturn:
+		return "StatusReturn"
 	case CatchUpReq:
 		return "CatchUpRequest"
 	case CatchUpResp:
@@ -79,6 +82,7 @@ type SigningMessage struct {
 	Chm          *ChallengeMessage
 	Rm           *ResponseMessage
 	SBm          *SignatureBroadcastMessage
+	SRm          *StatusReturnMessage
 	Cureq        *CatchUpRequest
 	Curesp       *CatchUpResponse
 	Vrm          *VoteRequestMessage
@@ -152,6 +156,7 @@ type CommitmentMessage struct {
 	Vote          *Vote          // Vote Response (promise)
 
 	RoundNbr      int
+	Messages      int            // Actual number of messages signed
 }
 
 // The challenge calculated by the root-node
@@ -199,6 +204,18 @@ type SignatureBroadcastMessage struct {
 	V0_hat   abstract.Point
 
 	RoundNbr int
+	// Number of messages signed
+	Messages int
+}
+
+// StatusReturnMessage carries the last status after the
+// SignatureBroadcastMessage has been sent to everybody.
+// Every node should just add up the stats from its children.
+type StatusReturnMessage struct {
+	// How many nodes sent a 'respond' message
+	Responders int
+	// How many peers contacted for a challenge
+	Peers      int
 }
 
 // In case of an error, this message is sent

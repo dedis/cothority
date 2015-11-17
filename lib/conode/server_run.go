@@ -64,11 +64,11 @@ func RunServer(address string, conf *app.ConfigConode, cb sign.Callbacks) {
 			s.Hostname = address
 			s.App = "stamp"
 			if s.IsRoot(0) {
-				dbg.Lvl2("Root timestamper at:", address)
+				dbg.Lvl3("Root timestamper at:", address)
 				s.Run("root")
 
 			} else {
-				dbg.Lvl2("Running regular timestamper on:", address)
+				dbg.Lvl3("Running regular timestamper on:", address)
 				s.Run("regular")
 			}
 		}

@@ -5,7 +5,7 @@ import (
 )
 
 type NTreeConfig struct {
-	Hpn int
+	Ppm int
 
 	Bf int
 

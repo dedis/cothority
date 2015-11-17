@@ -5,8 +5,8 @@ import (
 )
 
 type ConfigColl struct {
-	// hpn is the replication factor of hosts per node: how many hosts do we want per node
-	Hpn int
+	// ppm is the replication factor of hosts per node: how many hosts do we want per node
+	Ppm int
 	// bf is the branching factor of the tree that we build
 	Bf int
 	// Coding-suite to run 	[nist256, nist512, ed25519]
@@ -14,8 +14,10 @@ type ConfigColl struct {
 
 	// How many messages to send
 	Nmsgs int
-	// The speed of messages/s
+	// The speed of request stamping/ms
 	Rate int
+	// Percentage of stamp server we want to request on (0% = only leader)
+	StampRatio float64
 	// How many rounds
 	Rounds int
 	// Pre-defined failure rate
@@ -26,6 +28,10 @@ type ConfigColl struct {
 	FFail int
 	// Debug-level
 	Debug int
+
+	// How many stamps per round are we signing limiting rate
+	// if StampsPerRound == -1 ==> no limits
+	StampsPerRound int
 
 	// RootWait - how long the root timestamper waits for the clients to start up
 	RootWait int

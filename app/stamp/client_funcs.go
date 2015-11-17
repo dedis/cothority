@@ -10,8 +10,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/cothority/lib/coconet"
 	"fmt"
+	"github.com/dedis/cothority/lib/coconet"
 )
 
 type Client struct {
@@ -62,7 +62,7 @@ func (c *Client) handleServer(s coconet.Conn) error {
 			if err == coconet.ErrNotEstablished {
 				continue
 			}
-			log.Warn("error getting from connection:", err)
+			dbg.Lvl3("error getting from connection:", err)
 			return err
 		}
 		c.handleResponse(tsm)
@@ -74,11 +74,11 @@ func (c *Client) handleResponse(tsm *TimeStampMessage) {
 	switch tsm.Type {
 	default:
 		log.Println("Message of unknown type")
-	case StampReplyType:
+	case StampSignatureType:
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received
 		// we know that there is no error at this point
-		c.ProcessStampReply(tsm)
+		c.ProcessStampSignature(tsm)
 
 	}
 }
@@ -106,10 +106,10 @@ func (c *Client) AddServer(name string, conn coconet.Conn) {
 				// if a server encounters any terminating error
 				// terminate all pending client transactions and kill the client
 				if err != nil {
-					dbg.Lvl2("EOF detected: sending EOF to all pending TimeStamps")
+					dbg.Lvl3("EOF detected: sending EOF to all pending TimeStamps")
 					c.Mux.Lock()
 					for _, ch := range c.doneChan {
-						dbg.Lvl2("Sending to Receiving Channel")
+						dbg.Lvl3("Sending to Receiving Channel")
 						ch <- io.EOF
 					}
 					c.Error = io.EOF
@@ -162,21 +162,22 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 		// pass back up all errors from putting to server
 		return err
 	}
+	dbg.Lvl4("Client Sent timestamp request to", TSServerName)
 
 	// get channel associated with request
 	c.Mux.Lock()
 	myChan := c.doneChan[myReqno]
 	c.Mux.Unlock()
 
-	// wait until ProcessStampReply signals that reply was received
+	// wait until ProcessStampSignature signals that reply was received
 	select {
 	case err = <-myChan:
-	//log.Println("-------------client received  response from" + TSServerName)
+		//log.Println("-------------client received  response from" + TSServerName)
 		break
 	case <-time.After(10 * ROUND_TIME):
 		dbg.Lvl3("client timeouted on waiting for response from" + TSServerName)
 		break
-	// err = ErrClientToTSTimeout
+		// err = ErrClientToTSTimeout
 	}
 	if err != nil {
 		dbg.Lvl3(c.Name(), "error received from DoneChan:", err)
@@ -190,7 +191,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	return err
 }
 
-func (c *Client) ProcessStampReply(tsm *TimeStampMessage) {
+func (c *Client) ProcessStampSignature(tsm *TimeStampMessage) {
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm

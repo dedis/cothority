@@ -1,9 +1,9 @@
 Machines = 8
 App = "sign"
-Rounds = 2
+Rounds = 20
 Suite = "ed25519"
 
-hpn, bf
+ppm, bf
 1, 2
 4, 3
 8, 4

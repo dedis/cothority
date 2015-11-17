@@ -265,10 +265,18 @@ func (cs *CallbacksStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessag
 		}
 
 		respMessg := &TimeStampMessage{
-			Type:  StampReplyType,
+			Type:  StampSignatureType,
 			ReqNo: msg.Tsm.ReqNo,
-			Srep:  &StampReply{SuiteStr: cs.Round.Suite.String(), Timestamp: cs.Timestamp,
-				MerkleRoot: cs.Round.MTRoot, Prf: combProof, SigBroad: *sb}}
+			Srep:  &StampSignature{
+				SuiteStr: cs.Round.Suite.String(),
+				Timestamp: cs.Timestamp,
+				MerkleRoot: cs.Round.MTRoot,
+				Prf: combProof,
+				Response: sb.R0_hat,
+				Challenge: sb.C,
+				AggCommit: sb.V0_hat,
+				AggPublic: sb.X0_hat,
+			}}
 		cs.PutToClient(cs.peer, msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client")
 	}

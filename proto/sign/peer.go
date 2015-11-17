@@ -20,10 +20,10 @@ type Peer struct {
 	MaxRounds int
 	CloseChan chan bool
 
-	Logger    string
-	Hostname  string
-	App       string
-	Cb        Callbacks
+	Logger   string
+	Hostname string
+	App      string
+	Cb       Callbacks
 }
 
 // NewPeer returns a peer that can be used to set up
@@ -106,7 +106,7 @@ func (s *Peer) Close() {
 func (s *Peer) runAsRoot(nRounds int) string {
 	// every 5 seconds start a new round
 	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound() + 1 > nRounds && nRounds >= 0 {
+	if s.LastRound()+1 > nRounds && nRounds >= 0 {
 		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
 		return "close"
 	}
@@ -120,7 +120,7 @@ func (s *Peer) runAsRoot(nRounds int) string {
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
 
-			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound() + 1, "of", nRounds)
+			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound()+1, "of", nRounds)
 
 			var err error
 			if s.App == "vote" {
@@ -148,8 +148,8 @@ func (s *Peer) runAsRoot(nRounds int) string {
 				break
 			}
 
-			if s.LastRound() + 1 >= nRounds && nRounds >= 0 {
-				log.Infoln(s.Name(), "reports exceeded the max round: terminating", s.LastRound() + 1, ">=", nRounds)
+			if s.LastRound()+1 >= nRounds && nRounds >= 0 {
+				dbg.Lvl2(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
 				return "close"
 			}
 		}

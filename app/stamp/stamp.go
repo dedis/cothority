@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/proto/sign"
 	"io/ioutil"
 	"net"
@@ -85,11 +86,11 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 	}
 
 	defer func(sn *sign.Node) {
-		dbg.Lvl2("Program timestamper has terminated:", hostname)
+		dbg.Lvl3("Program timestamper has terminated:", hostname)
 		sn.Close()
 	}(hc.SNodes[0])
 
-	stampers, _, err := RunTimestamper(hc, 0, hostname)
+	stampers, _, err := RunTimestamper(hc, 0, conf, hostname)
 	// get rid of the hc information so it can be GC'ed
 	hc = nil
 	if err != nil {
@@ -102,6 +103,14 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 			s.Hostname = hostname
 			s.App = "stamp"
 			if s.IsRoot(0) {
+				if app.RunFlags.Logger == "" {
+					monitor.Disable()
+				} else {
+					if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
+						dbg.Fatal("Root could not connect to monitor sink :", err)
+					}
+				}
+
 				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting: ", conf.RootWait)
 				// wait for the other nodes to get set up
 				time.Sleep(time.Duration(conf.RootWait) * time.Second)
@@ -111,7 +120,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 				// dbg.Lvl3("\n\nROOT DONE\n\n")
 
 			} else if !conf.TestConnect {
-				dbg.Lvl2("Running regular timestamper on:", hostname)
+				dbg.Lvl3("Running regular timestamper on:", hostname)
 				s.Run("regular", conf.Rounds)
 				// dbg.Lvl1("\n\nREGULAR DONE\n\n")
 			} else {
@@ -124,7 +133,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string) ([]*Server, []*Client, error) {
+func RunTimestamper(hc *graphs.HostConfig, nclients int, conf *app.ConfigColl, hostnameSlice ...string) ([]*Server, []*Client, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
@@ -148,7 +157,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 			dbg.Lvl1("signing node not in hostnmaes")
 			continue
 		}
-		stampers = append(stampers, NewServer(sn))
+		stampers = append(stampers, NewServer(conf, sn))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
 			stampers[len(stampers)-1].Listen()
@@ -177,6 +186,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 
 		for j := range clients {
 			clients[j] = NewClient("client" + strconv.Itoa((i-1)*len(stampers)+j))
+			dbg.Lvl3("Created a new client from stamp.go")
 			var c coconet.Conn
 
 			// if we are using tcp connections
@@ -191,6 +201,7 @@ func RunTimestamper(hc *graphs.HostConfig, nclients int, hostnameSlice ...string
 				s.Clients[clients[j].Name()] = stoc
 			}
 			// connect to the server from the client
+			// Sending stamp request is done in client.go..... ><
 			clients[j].AddServer(s.Name(), c)
 			//clients[j].Sns[s.Name()] = c
 			//clients[j].Connect()

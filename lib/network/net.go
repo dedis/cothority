@@ -20,13 +20,13 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"net"
 	"os"
 	"reflect"
 	"time"
-	"github.com/dedis/cothority/lib/cliutils"
 )
 
 /// Encoding part ///
@@ -152,7 +152,7 @@ func (am *ApplicationMessage) ConstructFrom(obj ProtocolMessage) error {
 // Network part //
 
 // How many times should we try to connect
-const maxRetry = 5
+const maxRetry = 10
 const waitRetry = 1 * time.Second
 
 // Host is the basic interface to represent a Host of any kind
@@ -210,8 +210,7 @@ func (c *TcpConn) Receive() (ApplicationMessage, error) {
 	var am ApplicationMessage
 	err := c.dec.Decode(&am)
 	if err != nil {
-		fmt.Printf("Error decoding ApplicationMessage : %v\n", err)
-		os.Exit(1)
+		dbg.Fatal("Error decoding ApplicationMessage : ", err)
 	}
 	return am, nil
 }
@@ -223,13 +222,11 @@ func (c *TcpConn) Send(obj ProtocolMessage) error {
 	am := ApplicationMessage{}
 	err := am.ConstructFrom(obj)
 	if err != nil {
-		fmt.Printf("Error converting packet : %v\n", err)
-		os.Exit(1) // should not happen . I know.
+		return fmt.Errorf("Error converting packet : %v\n", err)
 	}
 	err = c.enc.Encode(&am)
 	if err != nil {
-		fmt.Printf("Error sending application message ..")
-		os.Exit(1)
+		return fmt.Errorf("Error sending message : %v", err)
 	}
 	return err
 }
@@ -238,8 +235,7 @@ func (c *TcpConn) Send(obj ProtocolMessage) error {
 func (c *TcpConn) Close() {
 	err := c.Conn.Close()
 	if err != nil {
-		fmt.Printf("Error while closing tcp conn : %v\n", err)
-		os.Exit(1)
+		dbg.Fatal("Error while closing tcp conn : ", err)
 	}
 }
 
@@ -266,14 +262,15 @@ func (t *TcpHost) Open(name string) Conn {
 
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
-			fmt.Printf("%s (%d/%d) Error opening connection to %s\n", t.Name(), i, maxRetry, name)
+			dbg.Lvl3(t.Name(), "(", i, "/", maxRetry, ") Error opening connection to ", name)
+			time.Sleep(waitRetry)
 		} else {
 			break
 		}
 		time.Sleep(waitRetry)
 	}
 	if conn == nil {
-		os.Exit(1)
+		dbg.Fatal(t.Name(), "could not connect to ", name, " : ABORT")
 	}
 	c := TcpConn{
 		Peer: name,
@@ -292,14 +289,14 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		fmt.Printf("error listening (host %s)\n", t.name)
+		dbg.Fatal("error listening (host ", t.Name(), ")")
 	}
 	dbg.Lvl3(t.Name(), "Waiting for connections on addr ", addr, "..\n")
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			fmt.Printf("Error accepting connection : %v\n", err)
-			os.Exit(1)
+			dbg.Lvl2(t.Name(), "error accepting connection : ", err)
+			continue
 		}
 		c := TcpConn{
 			Peer: conn.RemoteAddr().String(),
