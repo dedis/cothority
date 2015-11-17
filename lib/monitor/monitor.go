@@ -1,3 +1,14 @@
+// Monitor package handle the logging, collection and computation of
+// statisticals data. Every application can send some Measure (for the moment,
+// we mostly measure the CPU time but it can be applied later for any kind of
+// measures). The Monitor receives them and update a Stats struct. This Statss
+// struct can hold many different kinds of Measurement (the measure of an
+// specific action such as "round time" or "verify time" etc). Theses
+// measurements contains Values which compute the actual min/max/dev/avg values.
+// There exists the Proxy file so we can have a Proxy relaying Measure from
+// clients to the Monitor listening. An starter feature is also the DataFilter
+// which can apply somes filtering rules to the data before making any
+// statistics about them.
 package monitor
 
 import (
@@ -21,6 +32,9 @@ var SinkPort = "10003"
 func init() {
 }
 
+// Monitor struct is used to collect measures and make the statistics about
+// them. It takes a stats object so it update that in a concurrent-safe manner
+// for each new measure it receives.
 type Monitor struct {
 	listener net.Listener
 
@@ -42,6 +56,7 @@ type Monitor struct {
 	done chan string
 }
 
+// NewMonitor returns a new monitor given the stats
 func NewMonitor(stats *Stats) Monitor {
 	return Monitor{
 		conns:      make(map[string]monitorConnection),
@@ -136,6 +151,7 @@ type monitorConnection struct {
 	stats chan Measure
 }
 
+// Stop will close this connection and notify the monitor associated
 func (mc *monitorConnection) Stop() {
 	str := mc.conn.RemoteAddr().String()
 	mc.conn.Close()
@@ -185,6 +201,7 @@ func (m *Monitor) update(meas Measure) {
 	m.mutexStats.Unlock()
 }
 
+// Stats returns the updated stats in a concurrent-safe manner
 func (m *Monitor) Stats() *Stats {
 	m.mutexStats.Lock()
 	s := m.stats

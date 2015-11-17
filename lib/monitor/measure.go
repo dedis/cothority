@@ -69,7 +69,8 @@ func Enable() {
 	enabled = true
 }
 
-// Measure holds the different values taht ca n be computed for a measure
+// Measure holds the different values taht can be computed for a measure
+// It is what the client sends to the monitor.
 type Measure struct {
 	Name        string
 	WallTime    float64

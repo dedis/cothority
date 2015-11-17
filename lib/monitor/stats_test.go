@@ -56,7 +56,7 @@ func TestStatsUpdate(t *testing.T) {
 	}
 	stats.Update(m1)
 	stats.Update(m2)
-	stats.Aggregate()
+	stats.Collect()
 	meas := stats.measures["round"]
 	if meas.Wall.Avg() != 10 || meas.User.Avg() != 20 {
 		t.Error("Aggregate or Update not working")
