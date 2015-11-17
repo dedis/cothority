@@ -13,7 +13,7 @@ import (
 )
 
 type Peer struct {
-	Signer
+	*Node
 	NameP     string
 
 	RLock     sync.Mutex
@@ -29,17 +29,17 @@ type Peer struct {
 // NewPeer returns a peer that can be used to set up
 // connections. It takes a signer and a callbacks-struct
 // that need to be initialised already.
-func NewPeer(signer Signer, cb Round) *Peer {
+func NewPeer(node *Node, cb Round) *Peer {
 	s := &Peer{}
 
-	s.Signer = signer
+	s.Node = node
 	s.Cb = cb
-	s.Signer.SetCallbacks(cb)
+	s.Node.SetCallbacks(cb)
 	s.RLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
 	// than the signing node
-	h, p, err := net.SplitHostPort(s.Signer.Name())
+	h, p, err := net.SplitHostPort(s.Node.Name())
 	if err == nil {
 		i, err := strconv.Atoi(p)
 		if err != nil {
@@ -62,7 +62,7 @@ func (s *Peer) Run(role string) {
 	dbg.Lvl3("Stamp-server", s.NameP, "starting with ", role)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); log.Error(err) }()
+	go func() { err := s.Node.Listen(); closed <- true; s.Close(); log.Error(err) }()
 	s.RLock.Lock()
 
 	// TODO: remove this hack
@@ -98,7 +98,7 @@ func (s *Peer) Run(role string) {
 func (s *Peer) Close() {
 	dbg.Lvl4("closing stampserver: %p", s.NameP)
 	s.CloseChan <- true
-	s.Signer.Close()
+	s.Node.Close()
 }
 
 // This node is the root-node - still possible to change

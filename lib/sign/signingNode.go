@@ -40,8 +40,6 @@ const (
 	Voter
 )
 
-var _ Signer = &Node{}
-
 type Node struct {
 	coconet.Host
 
