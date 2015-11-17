@@ -4,7 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"errors"
 	"strconv"

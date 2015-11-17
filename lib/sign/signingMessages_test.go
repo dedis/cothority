@@ -10,7 +10,7 @@ import
 
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/crypto/edwards"
 )
 

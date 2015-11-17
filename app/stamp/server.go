@@ -16,7 +16,7 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 )
 
 const (

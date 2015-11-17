@@ -13,7 +13,7 @@ import (
 	"time"
 
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/crypto/abstract"

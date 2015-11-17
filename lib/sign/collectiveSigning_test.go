@@ -12,7 +12,7 @@ import
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/cothority/lib/config"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/cothority/lib/coconet"
 )
 

@@ -5,7 +5,7 @@ import
 	"strconv"
 	"testing"
 
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/cothority/lib/config"
 )
 

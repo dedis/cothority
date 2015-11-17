@@ -6,7 +6,7 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 	"time"
 )
 
