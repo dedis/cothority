@@ -121,9 +121,9 @@ These are the steps to be part in the EPFL-conode-project:
 
 ### Compile Conode
 
-For Conode to compile, you need to have the dedis/crypto-library in branch
-```shamir``` and the conode in branch ```development```. We suppose you have
-a running
+We suppose you have a running Go implementation. For Conode to compile, you need
+to have the dedis/crypto-library in branch ```shamir``` and the conode in branch
+```development```. Execute the following steps:
 
 ```
 go get https://github.com/dedis/cothority
