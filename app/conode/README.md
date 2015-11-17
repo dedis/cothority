@@ -41,8 +41,10 @@ These are the steps to be part in the EPFL-conode-project:
 
 Make a directory and cd into it:
 
-```mkdir conode
-cd conode```
+```
+mkdir conode
+cd conode
+```
 
 Go to the page
 
@@ -59,8 +61,10 @@ Now you're ready to create a new private/public key pair and start to validate
 the installation. Best thing to do is to open a ```screen``` for background
 running:
 
-```screen -S conode
-./start-conode setup <your IP>```
+```
+screen -S conode
+./start-conode setup <your IP>
+```
 
 This command will create a new key-pair and print the public key on the command
 line. Please send that key to dev.dedis@epfl.ch and wait further instructions.
@@ -70,7 +74,7 @@ running. If you want to quit the ```screen```, you can do so by typing
 
 ```screen -r conode```
 
-If everything goes well and your conode is active for at least 24h, it will 
+If everything goes well and your conode is active for at least 24h, it will
 automatically exit, get the tree-information and start to run in
 conode-mode.
 
@@ -119,9 +123,10 @@ These are the steps to be part in the EPFL-conode-project:
 
 For Conode to compile, you need to have the dedis/crypto-library in branch
 ```shamir``` and the conode in branch ```development```. We suppose you have
-a running 
+a running
 
-```go get https://github.com/dedis/cothority
+```
+go get https://github.com/dedis/cothority
 cd $GOPATH/src/github.com/dedis/crypto
 git checkout shamir
 cd ../cothority
@@ -136,13 +141,13 @@ Once conode is compiled, you can call it with
 
 ```conode keygen address [-key keyname]```
 
-Where ```address``` is the public IP of your server. This will create two 
+Where ```address``` is the public IP of your server. This will create two
 files in your directory:
 
 * key.pub
 * key.priv
 
-The key.priv is the secret for your conode, this is not to be shared under 
+The key.priv is the secret for your conode, this is not to be shared under
 any circumstances!
 
 If you add ```-key keyname```, the files will be named keyname.pub and
@@ -151,7 +156,7 @@ keyname.priv respectively.
 ### Send the public-key
 
 For Conode to work, you need access to a server that is running permanently
-and has a public IP-address. Conode uses the port 2000 (for internal 
+and has a public IP-address. Conode uses the port 2000 (for internal
 communication) and 2001 (for stamp-requests) for communication, so
 if you have set up a firewall, these ports must be opened.
 
@@ -258,11 +263,13 @@ to the given public key.
 ### Build - create config-file
 
 Once you checked the server to a corresponding key.pub-file is available,
-you can concatenate them to build a host-list, then pass it to the 
+you can concatenate them to build a host-list, then pass it to the
 ```conode```-binary:
 
-```cat key*pub > hostlist```
-```./conode build hostlist```
+```
+cat key*pub > hostlist
+./conode build hostlist
+```
 
 Now you can pass the generated ```config.toml```-file to all your users who
 have to restart their conode in ```run```-mode.
