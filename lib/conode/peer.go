@@ -9,8 +9,15 @@ import (
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
-	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/sign"
+	"os"
+)
+
+const (
+	READING = iota
+	PROCESSING
 )
 
 type Peer struct {
@@ -24,18 +31,21 @@ type Peer struct {
 	Logger   string
 	Hostname string
 	App      string
-	Cb       sign.Round
+
+	Clients map[string]coconet.Conn
+
+	// for aggregating messages from clients
+	Mux   sync.Mutex
+	Queue [][]MustReplyMessage
 }
 
 // NewPeer returns a peer that can be used to set up
 // connections. It takes a signer and a callbacks-struct
 // that need to be initialised already.
-func NewPeer(node *sign.Node, cb sign.Round) *Peer {
+func NewPeer(node *sign.Node) *Peer {
 	s := &Peer{}
 
 	s.Node = node
-	s.Cb = cb
-	s.Node.SetCallbacks(cb)
 	s.RLock = sync.Mutex{}
 
 	// listen for client requests at one port higher
@@ -49,12 +59,73 @@ func NewPeer(node *sign.Node, cb sign.Round) *Peer {
 		s.NameP = net.JoinHostPort(h, strconv.Itoa(i+1))
 	}
 	s.CloseChan = make(chan bool, 5)
+	s.Queue = make([][]MustReplyMessage, 2)
+	s.Queue[READING] = make([]MustReplyMessage, 0)
+	s.Queue[PROCESSING] = make([]MustReplyMessage, 0)
+	s.Clients = make(map[string]coconet.Conn)
+
 	return s
 }
 
 // listen for clients connections
 func (s *Peer) Setup() error {
-	return s.Cb.Setup(s.NameP)
+	dbg.Lvl3("Setup Peer")
+	global, _ := cliutils.GlobalBind(s.NameP)
+	dbg.Lvl3("Listening in server at", global)
+	ln, err := net.Listen("tcp4", global)
+	if err != nil {
+		panic(err)
+	}
+
+	go func() {
+		for {
+			dbg.Lvl2("Listening to sign-requests: %p", s)
+			conn, err := ln.Accept()
+			if err != nil {
+				// handle error
+				dbg.Lvl3("failed to accept connection")
+				continue
+			}
+
+			c := coconet.NewTCPConnFromNet(conn)
+			dbg.Lvl2("Established connection with client:", c)
+
+			if _, ok := s.Clients[c.Name()]; !ok {
+				s.Clients[c.Name()] = c
+
+				go func(co coconet.Conn) {
+					for {
+						tsm := TimeStampMessage{}
+						err := co.GetData(&tsm)
+						dbg.Lvl2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
+						if err != nil {
+							dbg.Lvlf1("%p Failed to get from child: %s", s.NameP, err)
+							co.Close()
+							return
+						}
+						switch tsm.Type {
+						default:
+							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
+						case StampRequestType:
+							s.Mux.Lock()
+							s.Queue[READING] = append(s.Queue[READING],
+								MustReplyMessage{Tsm: tsm, To: co.Name()})
+							s.Mux.Unlock()
+						case StampClose:
+							dbg.Lvl2("Closing connection")
+							co.Close()
+							return
+						case StampExit:
+							dbg.Lvl2("Exiting server upon request")
+							os.Exit(-1)
+						}
+					}
+				}(c)
+			}
+		}
+	}()
+
+	return nil
 }
 
 // Listen on client connections. If role is root also send annoucement
@@ -124,26 +195,8 @@ func (s *Peer) runAsRoot(nRounds int) string {
 			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound()+1, "of", nRounds)
 
 			var err error
-			if s.App == "vote" {
-				vote := &sign.Vote{
-					Type: sign.AddVT,
-					Av: &sign.AddVote{
-						Parent: s.Name(),
-						Name:   "test-add-node"}}
-				err = s.StartVotingRound(vote)
-			} else {
-				err = s.StartSigningRound()
-			}
-			if err == sign.ChangingViewError {
-				// report change in view, and continue with the select
-				log.WithFields(log.Fields{
-					"file": logutils.File(),
-					"type": "view_change",
-				}).Info("Tried to stary signing round on " + s.Name() + " but it reports view change in progress")
-				// skip # of failed round
-				time.Sleep(1 * time.Second)
-				break
-			} else if err != nil {
+			err = s.StartAnnouncement(NewRoundStamper(s.Node, s))
+			if err != nil {
 				dbg.Lvl3(err)
 				time.Sleep(1 * time.Second)
 				break
@@ -159,6 +212,7 @@ func (s *Peer) runAsRoot(nRounds int) string {
 
 // This node is a child of the root-node
 func (s *Peer) runAsRegular() string {
+	s.Node.Callbacks = NewRoundStamper(s.Node, s)
 	select {
 	case <-s.CloseChan:
 		dbg.Lvl3("server", s.Name(), "has closed the connection")

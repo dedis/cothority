@@ -33,9 +33,5 @@ type Round interface {
 	// Statistics: nodes -> root
 	// This is called at the end to collect eventual statistics
 	// about the round.
-
-	// Setup can be used to start listening on a port for requests or
-	// any other setup that needs to be done
-	Setup(string) error
 }
 

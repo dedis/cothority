@@ -30,7 +30,8 @@ func (sn *Node) TryViewChange(view int) error {
 
 	// take action if new view root
 	if sn.Name() == sn.RootFor(view) {
-		dbg.Lvl4(sn.Name(), "INITIATING VIEW CHANGE FOR VIEW:", view)
+		dbg.Fatal(sn.Name(), "Initiating view change for view:", view, "BTH")
+		/*
 		go func() {
 			err := sn.StartVotingRound(
 				&Vote{
@@ -43,6 +44,7 @@ func (sn *Node) TryViewChange(view int) error {
 				dbg.Lvl2(sn.Name(), "Try view change failed:", err)
 			}
 		}()
+		*/
 	}
 	return nil
 }

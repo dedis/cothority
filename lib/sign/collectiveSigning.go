@@ -182,7 +182,8 @@ func (sn *Node) ProcessMessages() error {
 				}
 				// TODO sanity checks: check if view is == sn.ViewNo
 				if sn.RootFor(sm.View) == sn.Name() {
-					go sn.StartVotingRound(sm.Vrm.Vote)
+					dbg.Fatal("Group change not implementekd. BTH")
+					//go sn.StartVotingRound(sm.Vrm.Vote)
 					continue
 				}
 				sn.PutUp(context.TODO(), sm.View, sm)

@@ -15,7 +15,7 @@ import (
 
 
 // Make connections and run server.go
-func RunServer(address string, conf *app.ConfigConode, cb sign.Round) {
+func RunServer(address string, conf *app.ConfigConode) {
 	suite := app.GetSuite(conf.Suite)
 
 	var err error
@@ -42,7 +42,7 @@ func RunServer(address string, conf *app.ConfigConode, cb sign.Round) {
 	}
 
 	// Listen to stamp-requests on port 2001
-	stampers, err := RunPeer(hc, 0, cb, address)
+	stampers, err := RunPeer(hc, 0, address)
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func RunServer(address string, conf *app.ConfigConode, cb sign.Round) {
 }
 
 // run each host in hostnameSlice with the number of clients given
-func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Round, hostname string) ([]*Peer, error) {
+func RunPeer(hc *graphs.HostConfig, nclients int, hostname string) ([]*Peer, error) {
 	dbg.Lvl3("RunTimestamper on", hc.Hosts)
 	hostnames := make(map[string]*sign.Node)
 	// make a list of hostnames we want to run
@@ -96,7 +96,7 @@ func RunPeer(hc *graphs.HostConfig, nclients int, cb sign.Round, hostname string
 			dbg.Lvl1("signing node not in hostnmaes")
 			continue
 		}
-		peers = append(peers, NewPeer(sn, cb))
+		peers = append(peers, NewPeer(sn))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
 			peers[len(peers) - 1].Setup()

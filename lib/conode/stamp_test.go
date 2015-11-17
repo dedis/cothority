@@ -12,7 +12,7 @@ import (
 
 // Runs two conodes and tests if the value returned is OK
 func TestStamp(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 2)
+	dbg.TestOutput(testing.Verbose(), 4)
 	conf := readConfig()
 	go runConode(conf, 1)
 	// conf will hold part of the configuration for each server,
@@ -62,5 +62,5 @@ func runConode(conf *app.ConfigConode, id int) {
 		conf.Public = pub
 		address = addr
 	}
-	conode.RunServer(address, conf, conode.NewRoundStamper())
+	conode.RunServer(address, conf)
 }

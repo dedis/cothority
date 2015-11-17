@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"golang.org/x/net/context"
@@ -212,8 +211,27 @@ func (sn *Node) logTotalTime(totalTime time.Duration) {
 	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
 }
 
-func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
+func (sn *Node) StartAnnouncement(round Round) error {
+	sn.Callbacks = round
 	sn.AnnounceLock.Lock()
+	sn.nRounds = sn.LastSeenRound
+
+	// report view is being change, and sleep before retrying
+	sn.viewmu.Lock()
+	if sn.ChangingView {
+		dbg.Lvl1(sn.Name(), "start signing round: changingViewError")
+		sn.viewmu.Unlock()
+		return ChangingViewError
+	}
+	sn.viewmu.Unlock()
+
+	sn.nRounds++
+	// Adding timestamp
+	ts := time.Now().UTC()
+	var b bytes.Buffer
+	binary.Write(&b, binary.LittleEndian, ts.Unix())
+	am := &AnnouncementMessage{Message: b.Bytes(), RoundNbr: sn.nRounds}
+
 	defer sn.AnnounceLock.Unlock()
 
 	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
@@ -270,59 +288,6 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 		}
 		return errors.New("Really bad. Round did not finish response phase and did not report network errors.")
 	}
-}
-
-func (sn *Node) StartVotingRound(v *Vote) error {
-	dbg.Lvl2(sn.Name(), "start voting round")
-	sn.nRounds = sn.LastSeenRound
-
-	// during view changes, only accept view change related votes
-	if sn.ChangingView && v.Vcv == nil {
-		dbg.Lvl2(sn.Name(), "start signing round: changingViewError")
-		return ChangingViewError
-	}
-
-	sn.nRounds++
-	v.Round = sn.nRounds
-	v.Index = int(atomic.LoadInt64(&sn.LastSeenVote)) + 1
-	v.Count = &Count{}
-	v.Confirmed = false
-	// only default fill-in view numbers when not prefilled
-	if v.View == 0 {
-		v.View = sn.ViewNo
-	}
-	if v.Av != nil && v.Av.View == 0 {
-		v.Av.View = sn.ViewNo + 1
-	}
-	if v.Rv != nil && v.Rv.View == 0 {
-		v.Rv.View = sn.ViewNo + 1
-	}
-	if v.Vcv != nil && v.Vcv.View == 0 {
-		v.Vcv.View = sn.ViewNo + 1
-	}
-	return sn.StartAnnouncement(
-		&AnnouncementMessage{Message: []byte("vote round"), RoundNbr: sn.nRounds, Vote: v})
-}
-
-func (sn *Node) StartSigningRound() error {
-	sn.nRounds = sn.LastSeenRound
-
-	// report view is being change, and sleep before retrying
-	sn.viewmu.Lock()
-	if sn.ChangingView {
-		dbg.Lvl1(sn.Name(), "start signing round: changingViewError")
-		sn.viewmu.Unlock()
-		return ChangingViewError
-	}
-	sn.viewmu.Unlock()
-
-	sn.nRounds++
-	// Adding timestamp
-	ts := time.Now().UTC()
-	var b bytes.Buffer
-	binary.Write(&b, binary.LittleEndian, ts.Unix())
-	return sn.StartAnnouncement(
-		&AnnouncementMessage{Message: b.Bytes(), RoundNbr: sn.nRounds})
 }
 
 func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {

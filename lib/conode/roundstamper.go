@@ -4,29 +4,19 @@ import (
 	"bytes"
 	"encoding/binary"
 	"strconv"
-	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"errors"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/crypto/abstract"
-	"net"
-	"os"
 )
 
 type RoundStamper struct {
-	// for aggregating messages from clients
-	mux        sync.Mutex
-	Queue      [][]MustReplyMessage
-	READING    int
-	PROCESSING int
-
 	// Leaves, Root and Proof for a round
 	Leaves []hashid.HashId // can be removed after we verify protocol
 	Root   hashid.HashId
@@ -34,21 +24,14 @@ type RoundStamper struct {
 	// Timestamp message for this Round
 	Timestamp int64
 
-	Clients  map[string]coconet.Conn
 	peer     *Peer
 	Round    *sign.RoundMerkle
 	RoundNbr int
 }
 
-func NewRoundStamper() *RoundStamper {
+func NewRoundStamper(sn *sign.Node, peer *Peer) *RoundStamper {
 	cbs := &RoundStamper{}
-	cbs.Queue = make([][]MustReplyMessage, 2)
-	cbs.READING = 0
-	cbs.PROCESSING = 1
-	cbs.Queue[cbs.READING] = make([]MustReplyMessage, 0)
-	cbs.Queue[cbs.PROCESSING] = make([]MustReplyMessage, 0)
-	cbs.Clients = make(map[string]coconet.Conn)
-
+	cbs.peer = peer
 	return cbs
 }
 
@@ -124,19 +107,16 @@ func (cs *RoundStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commitment
 	round.MerkleAddChildren()
 	// compute the local Merkle root
 
-	cs.mux.Lock()
+	cs.peer.Mux.Lock()
 	// get data from s once to avoid refetching from structure
-	Queue := cs.Queue
-	READING := cs.READING
-	PROCESSING := cs.PROCESSING
+	Queue := cs.peer.Queue
 	// messages read will now be processed
-	READING, PROCESSING = PROCESSING, READING
-	cs.READING, cs.PROCESSING = cs.PROCESSING, cs.READING
-	cs.Queue[READING] = cs.Queue[READING][:0]
+	cs.peer.Queue[READING], cs.peer.Queue[PROCESSING] = cs.peer.Queue[PROCESSING], cs.peer.Queue[READING]
+	cs.peer.Queue[READING] = cs.peer.Queue[READING][:0]
 
 	// give up if nothing to process
 	if len(Queue[PROCESSING]) == 0 {
-		cs.mux.Unlock()
+		cs.peer.Mux.Unlock()
 		cs.Root = make([]byte, hashid.Size)
 		cs.Proofs = make([]proof.Proof, 1)
 	} else {
@@ -145,7 +125,7 @@ func (cs *RoundStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commitment
 		for _, msg := range Queue[PROCESSING] {
 			cs.Leaves = append(cs.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
 		}
-		cs.mux.Unlock()
+		cs.peer.Mux.Unlock()
 
 		// create Merkle tree for this round's messages and check corectness
 		cs.Root, cs.Proofs = proof.ProofTree(cs.Round.Suite.Hash, cs.Leaves)
@@ -247,8 +227,8 @@ func (cs *RoundStamper) Response(sms []*sign.SigningMessage) error {
 }
 
 func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
-	cs.mux.Lock()
-	for i, msg := range cs.Queue[cs.PROCESSING] {
+	cs.peer.Mux.Lock()
+	for i, msg := range cs.peer.Queue[PROCESSING] {
 		// proof to get from s.Root to big root
 		combProof := make(proof.Proof, len(cs.Round.Proof))
 		copy(combProof, cs.Round.Proof)
@@ -280,79 +260,18 @@ func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
 		cs.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client")
 	}
-	cs.mux.Unlock()
+	cs.peer.Mux.Unlock()
 	cs.Timestamp = 0
 }
 
 // Send message to client given by name
 func (cs *RoundStamper) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := cs.Clients[name].PutData(data)
+	err := cs.peer.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
-		cs.Clients[name].Close()
+		cs.peer.Clients[name].Close()
 		return
 	}
 	if err != nil && err != coconet.ErrNotEstablished {
 		log.Warnf("%p error putting to client: %v", cs, err)
 	}
-}
-
-// Starts to listen for stamper-requests
-func (cs *RoundStamper) Setup(address string) error {
-	global, _ := cliutils.GlobalBind(address)
-	dbg.Lvl3("Listening in server at", global)
-	ln, err := net.Listen("tcp4", global)
-	if err != nil {
-		panic(err)
-	}
-
-	go func() {
-		for {
-			dbg.Lvl2("Listening to sign-requests: %p", cs)
-			conn, err := ln.Accept()
-			if err != nil {
-				// handle error
-				dbg.Lvl3("failed to accept connection")
-				continue
-			}
-
-			c := coconet.NewTCPConnFromNet(conn)
-			dbg.Lvl2("Established connection with client:", c)
-
-			if _, ok := cs.Clients[c.Name()]; !ok {
-				cs.Clients[c.Name()] = c
-
-				go func(co coconet.Conn) {
-					for {
-						tsm := TimeStampMessage{}
-						err := co.GetData(&tsm)
-						dbg.Lvl2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
-						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child: %s", address, err)
-							co.Close()
-							return
-						}
-						switch tsm.Type {
-						default:
-							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
-						case StampRequestType:
-							cs.mux.Lock()
-							READING := cs.READING
-							cs.Queue[READING] = append(cs.Queue[READING],
-								MustReplyMessage{Tsm: tsm, To: co.Name()})
-							cs.mux.Unlock()
-						case StampClose:
-							dbg.Lvl2("Closing connection")
-							co.Close()
-							return
-						case StampExit:
-							dbg.Lvl2("Exiting server upon request")
-							os.Exit(-1)
-						}
-					}
-				}(c)
-			}
-		}
-	}()
-
-	return nil
 }
