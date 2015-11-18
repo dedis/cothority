@@ -245,7 +245,6 @@ func (sn *Node) Announce(view, RoundNbr int, am *AnnouncementMessage) error {
 
 	if len(sn.Children(view)) == 0 {
 		// If we are a leaf, start the commit phase process
-		dbg.Print(sn.Name(), "leaf going to commit (rnbr =", RoundNbr)
 		sn.Commit(view, RoundNbr, nil)
 	} else {
 		// Transform the AnnouncementMessages to SigningMessages to send to the
