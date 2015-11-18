@@ -82,13 +82,23 @@ func TestStatsNotWriteUnknownMeasures(t *testing.T) {
 		CPUTimeUser: 20,
 		CPUTimeSys:  30,
 	}
+	m3 := Measure{
+		Name:        "test2",
+		WallTime:    30,
+		CPUTimeUser: 30,
+		CPUTimeSys:  30,
+	}
 	stats.Update(m1)
+	stats.Update(m3)
 	var writer = new(bytes.Buffer)
 	stats.WriteHeader(writer)
 	stats.WriteValues(writer)
 	output := writer.Bytes()
 	if !bytes.Contains(output, []byte("10")) {
 		t.Error(fmt.Sprintf("Stats should write the right measures: %s", writer))
+	}
+	if !bytes.Contains(output, []byte("test2")) || !bytes.Contains(output, []byte("test1")) {
+		t.Error(fmt.Sprintf("Stats should write the right header values"))
 	}
 	stats.Update(m2)
 	stats.WriteValues(writer)
