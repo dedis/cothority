@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"strconv"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -16,6 +17,9 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// The name type of this round implementation
+const RoundStamperType = "stamper"
+
 type RoundStamper struct {
 	// Leaves, Root and Proof for a round
 	Leaves []hashid.HashId // can be removed after we verify protocol
@@ -27,37 +31,48 @@ type RoundStamper struct {
 	peer     *Peer
 	Round    *sign.RoundMerkle
 	RoundNbr int
+	sn       *sign.Node
 }
 
-func NewRoundStamper(sn *sign.Node, peer *Peer) *RoundStamper {
+func NewRoundStamper(peer *Peer) *RoundStamper {
 	cbs := &RoundStamper{}
 	cbs.peer = peer
+	cbs.sn = peer.Node
 	return cbs
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (cs *RoundStamper) Announcement(sn *sign.Node, am *sign.AnnouncementMessage) ([]*sign.AnnouncementMessage, error) {
-	var t int64
-	if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
-		dbg.Lvl1("Unmashaling timestamp has failed")
+func (cs *RoundStamper) Announcement(RoundNbr int, am *sign.AnnouncementMessage) ([]*sign.AnnouncementMessage, error) {
+	// We are root !
+	if am == nil {
+		// Adding timestamp
+		ts := time.Now().UTC()
+		var b bytes.Buffer
+		cs.Timestamp = ts.Unix()
+		binary.Write(&b, binary.LittleEndian, ts.Unix())
+		am = &sign.AnnouncementMessage{Message: b.Bytes(), RoundType: RoundStamperType}
+	} else {
+		// otherwise decode it
+		var t int64
+		if err := binary.Read(bytes.NewBuffer(am.Message), binary.LittleEndian, &t); err != nil {
+			dbg.Lvl1("Unmashaling timestamp has failed")
+		}
+		cs.Timestamp = t
 	}
-	cs.Timestamp = t
-	cs.RoundNbr = am.RoundNbr
-
-	if err := sn.TryFailure(sn.ViewNo, am.RoundNbr); err != nil {
+	cs.RoundNbr = RoundNbr
+	if err := cs.sn.TryFailure(cs.sn.ViewNo, RoundNbr); err != nil {
 		return nil, err
 	}
 
-	if err := sign.RoundSetup(sn, sn.ViewNo, am); err != nil {
+	if err := sign.RoundSetup(cs.sn, cs.sn.ViewNo, RoundNbr, am); err != nil {
 		return nil, err
 	}
 	// Store the message for the round
-	round := sn.Rounds[am.RoundNbr]
-	round.Msg = am.Message
-	cs.Round = round
+	cs.Round = cs.sn.Rounds[RoundNbr]
+	cs.Round.Msg = am.Message
 
 	// Inform all children of announcement - just copy the one that came in
-	messgs := make([]*sign.AnnouncementMessage, sn.NChildren(sn.ViewNo))
+	messgs := make([]*sign.AnnouncementMessage, cs.sn.NChildren(cs.sn.ViewNo))
 	for i := range messgs {
 		messgs[i] = am
 	}
@@ -141,31 +156,62 @@ func (cs *RoundStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commitment
 	round.MerkleAddLocal(cs.Root)
 	round.MerkleHashLog()
 	round.ComputeCombinedMerkleRoot()
-	msg := round.Msg
-	msg = append(msg, []byte(round.MTRoot)...)
-	round.C = sign.HashElGamal(round.Suite, msg, round.Log.V_hat)
 
-	round.Proof = make([]hashid.HashId, 0)
+	com := &sign.CommitmentMessage{
+		V:             round.Log.V,
+		V_hat:         round.Log.V_hat,
+		X_hat:         round.X_hat,
+		MTRoot:        round.MTRoot,
+		ExceptionList: round.ExceptionList,
+		Vote:          round.Vote,
+		Messages:      cs.sn.Messages}
+	cs.sn.Messages = 0 // TODO : why ?
+	return com
 
-	return &sign.CommitmentMessage{MTRoot: cs.Root}
 }
 
-func (cs *RoundStamper) Challenge(chm *sign.ChallengeMessage) error {
-	// register challenge
-	cs.Round.C = chm.C
+func (cs *RoundStamper) Challenge(chm *sign.ChallengeMessage) ([]*sign.ChallengeMessage, error) {
+
+	round := cs.Round
+	// we are root
+	if chm == nil {
+		msg := cs.Round.Msg
+		msg = append(msg, []byte(round.MTRoot)...)
+		cs.Round.C = sign.HashElGamal(round.Suite, msg, cs.Round.Log.V_hat)
+		//proof := make([]hashid.HashId, 0)
+	} else { // we are a leaf
+		// register challenge
+		cs.Round.C = chm.C
+	}
+	// compute response share already + localmerkle proof
 	cs.Round.InitResponseCrypto()
 	dbg.Lvl4("challenge: using merkle proofs")
+	cm := &sign.ChallengeMessage{
+		C:      cs.Round.C,
+		MTRoot: cs.Round.MTRoot,
+		Proof:  cs.Round.Proof,
+		Vote:   cs.Round.Vote}
+
+	//dbg.Print("CHALLENGE STEP: challenge:", cs.Round.C, " MTRoot", cs.Round.MTRoot)
 	// messages from clients, proofs computed
 	if cs.Round.Log.Getv() != nil {
-		if err := cs.Round.StoreLocalMerkleProof(chm); err != nil {
-			return err
+		if err := cs.Round.StoreLocalMerkleProof(cm); err != nil {
+			return nil, err
 		}
 
 	}
-	return nil
+	// Inform all children of announcement - just copy the one that came in
+	messgs := make([]*sign.ChallengeMessage, cs.sn.NChildren(cs.sn.ViewNo))
+	for i := range messgs {
+		messgs[i] = cm
+	}
+
+	return messgs, nil
 }
 
-func (cs *RoundStamper) Response(sms []*sign.SigningMessage) error {
+// TODO make that sms == nil in case we are a leaf to stay consistent with
+// others calls
+func (cs *RoundStamper) Response(sms []*sign.SigningMessage) (*sign.ResponseMessage, error) {
 	// initialize exception handling
 	exceptionV_hat := cs.Round.Suite.Point().Null()
 	exceptionX_hat := cs.Round.Suite.Point().Null()
@@ -204,14 +250,14 @@ func (cs *RoundStamper) Response(sms []*sign.SigningMessage) error {
 
 		case sign.Error:
 			if sm.Err == nil {
-				log.Errorln("Error message with no error")
+				dbg.Lvl2("Error message with no error")
 				continue
 			}
 
 			// Report up non-networking error, probably signature failure
-			log.Errorln(cs.Round.Name, "Error in respose for child", from, sm)
+			dbg.Lvl2(cs.Round.Name, "Error in respose for child", from, sm)
 			err := errors.New(sm.Err.Err)
-			return err
+			return nil, err
 		}
 	}
 
@@ -222,11 +268,40 @@ func (cs *RoundStamper) Response(sms []*sign.SigningMessage) error {
 
 	dbg.Lvl4(cs.Round.Name, "got all responses")
 	err := cs.Round.VerifyResponses()
-
-	return err
+	if err != nil {
+		dbg.Lvl3(cs.sn.Name(), "Could not verify responses..")
+		return nil, err
+	}
+	rm := &sign.ResponseMessage{
+		R_hat:          cs.Round.R_hat,
+		ExceptionList:  cs.Round.ExceptionList,
+		ExceptionV_hat: cs.Round.ExceptionV_hat,
+		ExceptionX_hat: cs.Round.ExceptionX_hat,
+	}
+	return rm, nil
 }
 
-func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
+func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) ([]*sign.SignatureBroadcastMessage, error) {
+	// Root is creating the sig broadcast
+
+	if sb == nil && cs.sn.IsRoot(cs.Round.View) {
+		dbg.Lvl2(cs.sn.Name(), ": sending number of messages:", cs.sn.Messages)
+		sb = &sign.SignatureBroadcastMessage{
+			R0_hat:   cs.Round.R_hat,
+			C:        cs.Round.C,
+			X0_hat:   cs.Round.X_hat,
+			V0_hat:   cs.Round.Log.V_hat,
+			Messages: cs.sn.Messages,
+		}
+	} else {
+		cs.sn.Messages = sb.Messages
+	}
+	// Inform all children of broadcast  - just copy the one that came in
+	messgs := make([]*sign.SignatureBroadcastMessage, cs.sn.NChildren(cs.sn.ViewNo))
+	for i := range messgs {
+		messgs[i] = sb
+	}
+	// Send back signature to clients
 	cs.peer.Mux.Lock()
 	for i, msg := range cs.peer.Queue[PROCESSING] {
 		// proof to get from s.Root to big root
@@ -239,7 +314,7 @@ func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
 		// proof that I can get from a leaf message to the big root
 		if proof.CheckProof(cs.Round.Suite.Hash, cs.Round.MTRoot,
 			cs.Leaves[i], combProof) {
-			dbg.Lvl2("Proof is OK")
+			dbg.Lvl2("Proof is OK for msg", msg)
 		} else {
 			dbg.Lvl2("Inclusion-proof failed")
 		}
@@ -257,11 +332,13 @@ func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) {
 				AggCommit:  sb.V0_hat,
 				AggPublic:  sb.X0_hat,
 			}}
+
 		cs.PutToClient(msg.To, respMessg)
-		dbg.Lvl2("Sent signature response back to client")
+		dbg.Lvl2("Sent signature response back to client", msg.To)
 	}
 	cs.peer.Mux.Unlock()
 	cs.Timestamp = 0
+	return messgs, nil
 }
 
 // Send message to client given by name

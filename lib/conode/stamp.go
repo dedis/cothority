@@ -50,6 +50,7 @@ func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
 	if server == "" {
 		server = s.Config.Hosts[rand.Intn(len(s.Config.Hosts))]
 	}
+	dbg.Lvl2("StampClient will stamp on server", server)
 	portstr := strconv.Itoa(cliutils.GetPort(server, DefaultPort) + 1)
 	err := s.connect(cliutils.GetAddress(server) + ":" + portstr)
 	if err != nil {
