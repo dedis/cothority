@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 )
@@ -60,5 +61,40 @@ func TestStatsUpdate(t *testing.T) {
 	meas := stats.measures["round"]
 	if meas.Wall.Avg() != 10 || meas.User.Avg() != 20 {
 		t.Error("Aggregate or Update not working")
+	}
+}
+
+func TestStatsNotWriteUnknownMeasures(t *testing.T) {
+	rc := make(map[string]string)
+	rc["machines"] = "2"
+	rc["ppm"] = "2"
+	stats := NewStats(rc)
+
+	m1 := Measure{
+		Name:        "test1",
+		WallTime:    10,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	m2 := Measure{
+		Name:        "round2",
+		WallTime:    70,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	stats.Update(m1)
+	var writer = new(bytes.Buffer)
+	stats.WriteHeader(writer)
+	stats.WriteValues(writer)
+	output := writer.Bytes()
+	if !bytes.Contains(output, []byte("10")) {
+		t.Error(fmt.Sprintf("Stats should write the right measures: %s", writer))
+	}
+	stats.Update(m2)
+	stats.WriteValues(writer)
+
+	output = writer.Bytes()
+	if bytes.Contains(output, []byte("70")) {
+		t.Error("Stats should not contain any new measurements after first write")
 	}
 }

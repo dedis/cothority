@@ -19,10 +19,6 @@ import (
 // ExtraFields in a RunConfig argument that we may want to parse if present
 var extraFields = [...]string{"bf", "rate", "stampratio"}
 
-// DefaultMeasurements are the default measurements we want to do anyway
-// For now these will be the fields that will appear in the output csv file
-var DefaultMeasurements = [...]string{"setup", "round", "calc", "verify", "aggregate"}
-
 // Stats holds the different measurements done
 type Stats struct {
 	// How many peers do we have
@@ -36,11 +32,15 @@ type Stats struct {
 	// running config. It will try to read some known fields such as "depth" or
 	// "bf" (branching factor) and add then to its struct
 	Additionals map[string]int
-
+	addKeys     []string
 	// The measures we have and the keys ordered
 	measures map[string]*Measurement
 	keys     []string
 
+	// ValuesWritten  is to know wether we have already written some values or
+	// not. If yes, we can make sure we dont write new measurements otherwise
+	// the CSV would be garbage
+	valuesWritten bool
 	// The filter used to filter out abberant data
 	filter DataFilter
 }
@@ -50,9 +50,6 @@ type Stats struct {
 func NewStats(rc map[string]string) *Stats {
 	s := new(Stats).Init()
 	s.readRunConfig(rc)
-	for _, d := range DefaultMeasurements {
-		s.AddMeasurements(d)
-	}
 	return s
 }
 
@@ -68,13 +65,20 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 	} else {
 		s.PPM = ppm
 	}
+	rc2 := make(map[string]string)
+	for k, v := range rc {
+		if k != "machines" && k != "ppm" {
+			rc2[k] = v
+		}
+	}
 	s.Peers = s.Machines * s.PPM
-	// Add some extra fields if recognized
-	for _, f := range extraFields {
-		if ef, err := strconv.Atoi(rc[f]); err != nil {
+	// Add ALL extra fields
+	for k, v := range rc2 {
+		if ef, err := strconv.Atoi(v); err != nil {
 			continue
 		} else {
-			s.Additionals[f] = ef
+			s.Additionals[k] = ef
+			s.addKeys = append(s.addKeys, k)
 		}
 	}
 	// let the filter figure out itself what it is supposed to be doing
@@ -85,21 +89,9 @@ func (s *Stats) Init() *Stats {
 	s.measures = make(map[string]*Measurement)
 	s.keys = make([]string, 0)
 	s.Additionals = make(map[string]int)
+	s.addKeys = make([]string, 0)
+	s.valuesWritten = false
 	return s
-}
-
-// AddMeasurement is used to notify which measures we want to record
-// Each name given will be outputted in the CSV file
-// If stats receive a Measure which is not known, it will be discarded.
-// THIS IS THE DEFAULT BEHAVIOR FOR NOW.
-func (s *Stats) AddMeasurements(measurements ...string) {
-	for _, name := range measurements {
-		if _, ok := s.measures[name]; !ok {
-			m := NewMeasurement(name, s.filter)
-			s.measures[name] = &m
-			s.keys = append(s.keys, name)
-		}
-	}
 }
 
 // WriteHeader will write the header to the writer
@@ -107,7 +99,7 @@ func (s *Stats) WriteHeader(w io.Writer) {
 	// write basic info
 	fmt.Fprintf(w, "Peers, ppm, machines")
 	// write additionals fields
-	for _, k := range extraFields {
+	for _, k := range s.addKeys {
 		if _, ok := s.Additionals[k]; ok {
 			fmt.Fprintf(w, ", %s", k)
 		}
@@ -123,10 +115,12 @@ func (s *Stats) WriteHeader(w io.Writer) {
 
 // WriteValues will write the values to the specified writer
 func (s *Stats) WriteValues(w io.Writer) {
+	// by default
+	s.Collect()
 	// write basic info
 	fmt.Fprintf(w, "%d, %d, %d", s.Peers, s.PPM, s.Machines)
 	// write additionals fields
-	for _, k := range extraFields {
+	for _, k := range s.addKeys {
 		v, ok := s.Additionals[k]
 		if ok {
 			fmt.Fprintf(w, ", %d", v)
@@ -139,7 +133,7 @@ func (s *Stats) WriteValues(w io.Writer) {
 		m.WriteValues(w)
 	}
 	fmt.Fprintf(w, "\n")
-
+	s.valuesWritten = true
 }
 
 // AverageStats will make an average of the given stats
@@ -152,10 +146,7 @@ func AverageStats(stats []Stats) Stats {
 	s.PPM = stats[0].PPM
 	s.Peers = stats[0].Peers
 	s.Additionals = stats[0].Additionals
-	// Collect measurements name
-	for _, stat := range stats {
-		s.AddMeasurements(stat.keys...)
-	}
+	s.addKeys = stats[0].addKeys
 	// Average
 	for _, k := range s.keys {
 		// Collect measurements for a given key
@@ -176,10 +167,17 @@ func AverageStats(stats []Stats) Stats {
 
 // Update will update the Stats with this given measure
 func (s *Stats) Update(m Measure) {
+	var meas *Measurement
 	meas, ok := s.measures[m.Name]
 	if !ok {
-		dbg.Lvl2("Stats Update received unknown type of measure : ", m.Name)
-		return
+		// if we already written some values, we can not take new ones
+		if s.valuesWritten {
+			dbg.Lvl2("Stats Update received unknown type of measure : ", m.Name)
+			return
+		}
+		meas = NewMeasurement(m.Name, s.filter)
+		s.measures[m.Name] = meas
+		s.keys = append(s.keys, m.Name)
 	}
 	meas.Update(m)
 }
@@ -391,8 +389,8 @@ type Measurement struct {
 }
 
 // NewMeasurement returns a new measurements with this name
-func NewMeasurement(name string, df DataFilter) Measurement {
-	return Measurement{
+func NewMeasurement(name string, df DataFilter) *Measurement {
+	return &Measurement{
 		Name:   name,
 		Wall:   newValue(),
 		User:   newValue(),
@@ -445,7 +443,7 @@ func AverageMeasurements(measurements []Measurement) Measurement {
 	m.Wall = AverageValue(walls...)
 	m.User = AverageValue(users...)
 	m.System = AverageValue(systems...)
-	return m
+	return *m
 }
 
 func (m *Measurement) String() string {
