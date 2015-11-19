@@ -40,8 +40,7 @@ type Peer struct {
 }
 
 // NewPeer returns a peer that can be used to set up
-// connections. It takes a signer and a callbacks-struct
-// that need to be initialised already.
+// connections.
 func NewPeer(node *sign.Node) *Peer {
 	s := &Peer{}
 
@@ -63,7 +62,7 @@ func NewPeer(node *sign.Node) *Peer {
 	s.Queue[READING] = make([]MustReplyMessage, 0)
 	s.Queue[PROCESSING] = make([]MustReplyMessage, 0)
 	s.Clients = make(map[string]coconet.Conn)
-
+	s.Node = node
 	return s
 }
 
@@ -132,6 +131,10 @@ func (s *Peer) Setup() error {
 // for all of the nRounds
 func (s *Peer) Run(role string) {
 	dbg.Lvl3("Stamp-server", s.NameP, "starting with ", role)
+	fn := func(*sign.Node) sign.Round {
+		return NewRoundStamper(s)
+	}
+	sign.RegisterRoundFactory(RoundStamperType, fn)
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Node.Listen(); closed <- true; s.Close(); log.Error(err) }()
@@ -195,7 +198,7 @@ func (s *Peer) runAsRoot(nRounds int) string {
 			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound()+1, "of", nRounds)
 
 			var err error
-			err = s.StartAnnouncement(NewRoundStamper(s.Node, s))
+			err = s.StartAnnouncement(NewRoundStamper(s))
 			if err != nil {
 				dbg.Lvl3(err)
 				time.Sleep(1 * time.Second)
@@ -212,7 +215,6 @@ func (s *Peer) runAsRoot(nRounds int) string {
 
 // This node is a child of the root-node
 func (s *Peer) runAsRegular() string {
-	s.Node.Callbacks = NewRoundStamper(s.Node, s)
 	select {
 	case <-s.CloseChan:
 		dbg.Lvl3("server", s.Name(), "has closed the connection")

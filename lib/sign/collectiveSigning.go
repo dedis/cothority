@@ -2,6 +2,7 @@ package sign
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"sync/atomic"
 
@@ -47,25 +48,25 @@ func (sn *Node) ProcessMessages() error {
 			nm, ok := <-msgchan
 			err := nm.Err
 
-		// TODO: graceful shutdown voting
+			// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
 				dbg.Lvl3(sn.Name(), " getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}
 
-		// if it is a non-fatal error try again
+			// if it is a non-fatal error try again
 			if err != nil {
 				log.Errorln(sn.Name(), " error getting message (still continuing) ", err)
 				continue
 			}
-		// interpret network message as Signing Message
-		//log.Printf("got message: %#v with error %v\n", sm, err)
+			// interpret network message as Signing Message
+			//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
 			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
 
-		// don't act on future view if not caught up, must be done after updating vote index
+			// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
 			if sm.View > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
@@ -86,14 +87,14 @@ func (sn *Node) ProcessMessages() error {
 
 				var err error
 				if sm.Am.Vote != nil {
-					err = sn.Propose(sm.View, sm.Am, sm.From)
+					err = sn.Propose(sm.View, sm.RoundNbr, sm.Am, sm.From)
 					dbg.Lvl4(sn.Name(), "done proposing")
 				} else {
 					if !sn.IsParent(sm.View, sm.From) {
 						log.Fatalln(sn.Name(), "received announcement from non-parent on view", sm.View)
 						continue
 					}
-					err = sn.Announce(sm.View, sm.Am)
+					err = sn.Announce(sm.View, sm.RoundNbr, sm.Am)
 				}
 				if err != nil {
 					log.Errorln(sn.Name(), "announce error:", err)
@@ -109,9 +110,9 @@ func (sn *Node) ProcessMessages() error {
 
 				var err error
 				if sm.Com.Vote != nil {
-					err = sn.Promise(sm.View, sm.Com.RoundNbr, sm)
+					err = sn.Promise(sm.View, sm.RoundNbr, sm)
 				} else {
-					err = sn.Commit(sm.View, sm.Com.RoundNbr, sm)
+					err = sn.Commit(sm.View, sm.RoundNbr, sm)
 				}
 				if err != nil {
 					log.Errorln(sn.Name(), "commit error:", err)
@@ -126,9 +127,9 @@ func (sn *Node) ProcessMessages() error {
 
 				var err error
 				if sm.Chm.Vote != nil {
-					err = sn.Accept(sm.View, sm.Chm)
+					err = sn.Accept(sm.View, sm.RoundNbr, sm.Chm)
 				} else {
-					err = sn.Challenge(sm.View, sm.Chm)
+					err = sn.Challenge(sm.View, sm.RoundNbr, sm.Chm)
 				}
 				if err != nil {
 					log.Errorln(sn.Name(), "challenge error:", err)
@@ -142,9 +143,9 @@ func (sn *Node) ProcessMessages() error {
 
 				var err error
 				if sm.Rm.Vote != nil {
-					err = sn.Accepted(sm.View, sm.Rm.RoundNbr, sm)
+					err = sn.Accepted(sm.View, sm.RoundNbr, sm)
 				} else {
-					err = sn.Respond(sm.View, sm.Rm.RoundNbr, sm)
+					err = sn.Respond(sm.View, sm.RoundNbr, sm)
 				}
 				if err != nil {
 					log.Errorln(sn.Name(), "response error:", err)
@@ -152,7 +153,7 @@ func (sn *Node) ProcessMessages() error {
 			case SignatureBroadcast:
 				dbg.Lvl3(sn.Name(), "received SignatureBroadcast", sm.From)
 				sn.ReceivedHeartbeat(sm.View)
-				err = sn.SignatureBroadcast(sm.View, sm.SBm, 0)
+				err = sn.SignatureBroadcast(sm.View, sm.RoundNbr, sm.SBm)
 			case StatusReturn:
 				sn.StatusReturn(sm.View, sm.SRm)
 			case CatchUpReq:
@@ -172,7 +173,7 @@ func (sn *Node) ProcessMessages() error {
 				// put in votelog to be streamed and applied
 				sn.VoteLog.Put(vi, sm.Curesp.Vote)
 				// continue catching up
-				sn.CatchUp(vi + 1, sm.From)
+				sn.CatchUp(vi+1, sm.From)
 			case GroupChange:
 				if sm.View == -1 {
 					sm.View = sn.ViewNo
@@ -215,17 +216,36 @@ func (sn *Node) ProcessMessages() error {
 
 }
 
-func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
+func (sn *Node) Announce(view, RoundNbr int, am *AnnouncementMessage) error {
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
+	var ri Round
+	ri = sn.RoundsInterface[RoundNbr]
+	if ri == nil {
+		if am == nil {
+			return fmt.Errorf("Got a nil announcement on a non root nde?")
+		}
 
-	msgs, err := sn.Callbacks.Announcement(sn, am)
+		sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
+		rtype := am.RoundType
+		// create the new round and save it
+		r, err := NewRoundFromType(rtype, sn)
+		if err != nil {
+			dbg.Lvl3(sn.Name(), "Error getting new round in announcement")
+			return err
+		}
+		sn.RoundsInterface[RoundNbr] = r
+		ri = r
+
+	}
+	msgs, err := ri.Announcement(RoundNbr, am)
 	if err != nil {
+		dbg.Lvl3(sn.Name(), "Error on announcement", err)
 		return err
 	}
 
 	if len(sn.Children(view)) == 0 {
 		// If we are a leaf, start the commit phase process
-		sn.Commit(view, am.RoundNbr, nil)
+		sn.Commit(view, RoundNbr, nil)
 	} else {
 		// Transform the AnnouncementMessages to SigningMessages to send to the
 		// Children
@@ -235,6 +255,7 @@ func (sn *Node) Announce(view int, am *AnnouncementMessage) error {
 				Type:         Announcement,
 				View:         sn.ViewNo,
 				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+				RoundNbr:     RoundNbr,
 				Am:           msgs[i]}
 			msgs_bm[i] = &sm
 		}
@@ -258,7 +279,7 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 
 	round := sn.Rounds[roundNbr]
 	if round == nil {
-		// was not announced of this round, should retreat
+		dbg.Lvl3("Commit number was not announced of this round, should retreat")
 		return nil
 	}
 
@@ -271,37 +292,31 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 	}
 
 	dbg.Lvl3("Got", len(round.Commits), "of", len(sn.Children(view)), "commits")
+	// not enough commits yet (not all children replied)
 	if len(round.Commits) != len(sn.Children(view)) {
+		dbg.Lvl3(sn.Name(), "Not enough commits received to call the Commit of the round")
 		return nil
 	}
 
-	// TODO - there should be a real passage of values and not just
-	// a filled-up round
-	sn.Callbacks.Commitment(nil)
+	ri := sn.RoundsInterface[roundNbr]
+	if ri == nil {
+		dbg.Lvl3(sn.Name(), "No round interface for commit round number", roundNbr)
+		return fmt.Errorf("No Round Interface defined for this round number (commitment)")
+	}
+	commits := make([]*CommitmentMessage, len(round.Commits))
+	for _, sigmsg := range round.Commits {
+		commits = append(commits, sigmsg.Com)
+	}
+	commit := ri.Commitment(commits)
 
 	var err error
 	if round.IsRoot() {
 		dbg.Lvl3("Commit root : Aggregate Public Key :", round.X_hat)
 		sn.commitsDone <- roundNbr
-		err = sn.Challenge(view, &ChallengeMessage{
-			C:      round.C,
-			MTRoot: round.MTRoot,
-			Proof:  round.Proof,
-			RoundNbr:  roundNbr,
-			Vote:   round.Vote})
+		err = sn.Challenge(view, roundNbr, nil)
 	} else {
 		// create and putup own commit message
 		dbg.Lvl3("Number of messages in comMsg:", sn.Messages)
-		com := &CommitmentMessage{
-			V:             round.Log.V,
-			V_hat:         round.Log.V_hat,
-			X_hat:         round.X_hat,
-			MTRoot:        round.MTRoot,
-			ExceptionList: round.ExceptionList,
-			Vote:          round.Vote,
-			RoundNbr:         roundNbr,
-			Messages: sn.Messages}
-		sn.Messages = 0
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		dbg.Lvl4(sn.Name(), "puts up commit")
@@ -310,35 +325,39 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 			View:         view,
 			Type:         Commitment,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			Com:          com})
+			RoundNbr:     roundNbr,
+			Com:          commit})
 	}
 	return err
 }
 
 // initiated by root, propagated by all others
-func (sn *Node) Challenge(view int, chm *ChallengeMessage) error {
+func (sn *Node) Challenge(view, RoundNbr int, chm *ChallengeMessage) error {
 	// update max seen round
 	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, chm.RoundNbr)
+	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[chm.RoundNbr]
+	round := sn.Rounds[RoundNbr]
 	if round == nil {
 		return nil
 	}
-
-	err := sn.Callbacks.Challenge(chm)
-	if err != nil {
+	ri := sn.RoundsInterface[RoundNbr]
+	if ri == nil {
+		return fmt.Errorf("No Round Interface created for this round")
+	}
+	challs, err := ri.Challenge(chm)
+	if err != nil || len(challs) != len(round.Children) {
 		return err
 	}
-
-	if err := round.SendChildrenChallengesProofs(chm); err != nil {
-		return err
-	}
-
 	// if we are a leaf, send the respond up
 	if len(sn.Children(view)) == 0 {
-		sn.Respond(view, chm.RoundNbr, nil)
+		sn.Respond(view, RoundNbr, nil)
+	} else { // otherwise continue to pass down challenge
+		// TODO remove this hack of using the first one. Should be separate messages
+		if err := round.SendChildrenChallengesProofs(RoundNbr, challs[0]); err != nil {
+			return err
+		}
 	}
 	// dbg.Lvl4(sn.Name(), "Done handling challenge message")
 	return nil
@@ -368,7 +387,16 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 		return nil
 	}
 
-	err := sn.Callbacks.Response(Round.FillInWithDefaultMessages())
+	ri := sn.RoundsInterface[roundNbr]
+	if ri == nil {
+		return fmt.Errorf("No Round Interface for this round nbr :(")
+	}
+	// Fillinwithdefaultmessage is used to fill the exception with missing
+	// children and all
+	resp, err := ri.Response(Round.FillInWithDefaultMessages())
+	if err != nil {
+		return err
+	}
 	isroot := Round.IsRoot()
 	// if error put it up if parent exists
 	if err != nil && !isroot {
@@ -378,27 +406,21 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 
 	// if no error send up own response
 	if err == nil && !isroot {
-		if Round.Log.Getv() == nil && sn.ShouldIFail("response") {
-			dbg.Lvl4(Round.Name, "failing on response")
-			return nil
-		}
+		/*if Round.Log.Getv() == nil && sn.ShouldIFail("response") {*/
+		//dbg.Lvl4(Round.Name, "failing on response")
+		//return nil
+		/*}*/
 
 		// create and putup own response message
-		rm := &ResponseMessage{
-			R_hat:          Round.R_hat,
-			ExceptionList:  Round.ExceptionList,
-			ExceptionV_hat: Round.ExceptionV_hat,
-			ExceptionX_hat: Round.ExceptionX_hat,
-			RoundNbr:          roundNbr}
-
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		ctx := context.TODO()
 		dbg.Lvl4(sn.Name(), "put up response to", sn.Parent(view))
 		err = sn.PutUp(ctx, view, &SigningMessage{
 			Type:         Response,
 			View:         view,
+			RoundNbr:     roundNbr,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			Rm:           rm})
+			Rm:           resp})
 	} else {
 		dbg.Lvl4("Root received response")
 	}
@@ -414,13 +436,12 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 	// root reports round is done
 	// Sends the final signature to every one
 	if isroot {
-		sn.SignatureBroadcast(view, nil, roundNbr)
+		sn.SignatureBroadcast(view, roundNbr, nil)
 		sn.done <- roundNbr
 	}
 
 	return err
 }
-
 
 func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	dbg.Lvl3(sn.Name(), "StatusConnected", view)
@@ -445,45 +466,33 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 
 // This will broadcast the final signature to give to client
 // it contins the global Response adn global challenge
-func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, round int) error {
+func (sn *Node) SignatureBroadcast(view, RoundNbr int, sb *SignatureBroadcastMessage) error {
 	dbg.Lvl3(sn.Name(), "received SignatureBroadcast on", view)
 	sn.PeerStatusRcvd = 0
-	// Root is creating the sig broadcast
-	if sb == nil {
-		r := sn.Rounds[round]
-		if sn.IsRoot(view) {
-			dbg.Lvl2(sn.Name(), ": sending number of messages:", sn.Messages)
-			sb = &SignatureBroadcastMessage{
-				R0_hat: r.R_hat,
-				C:      r.C,
-				X0_hat: r.X_hat,
-				V0_hat: r.Log.V_hat,
-				Messages: sn.Messages,
-			}
-		}
-	} else {
-		dbg.Lvl2(sn.Name(), ": sbm tells number of messages is:", sb.Messages)
-		sn.Messages = sb.Messages
+
+	ri := sn.RoundsInterface[RoundNbr]
+	if ri == nil {
+		return fmt.Errorf("No round created for this round number (signature broadcast)")
 	}
-
-	sn.Callbacks.SignatureBroadcast(sb)
-
-	// Inform all children of announcement
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
-	for i := range messgs {
-		sm := SigningMessage{
-			Type:         SignatureBroadcast,
-			View:         view,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			SBm:          sb,
-		}
-		messgs[i] = &sm
+	sbms, err := ri.SignatureBroadcast(sb)
+	if err != nil {
+		return err
 	}
 
 	if len(sn.Children(view)) > 0 {
 		dbg.Lvl3(sn.Name(), "in SignatureBroadcast is calling", len(sn.Children(view)), "children")
 		ctx := context.TODO()
-		if err := sn.PutDown(ctx, view, messgs); err != nil {
+		msgs := make([]coconet.BinaryMarshaler, len(sbms))
+		for i := range sbms {
+			msgs[i] = &SigningMessage{
+				Type:         SignatureBroadcast,
+				View:         view,
+				RoundNbr:     RoundNbr,
+				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+				SBm:          sbms[i],
+			}
+		}
+		if err := sn.PutDown(ctx, view, msgs); err != nil {
 			return err
 		}
 	} else {
@@ -518,7 +527,7 @@ func (sn *Node) StatusReturn(view int, sr *StatusReturnMessage) error {
 			View:         view,
 			Type:         StatusReturn,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			SRm: &sn.PeerStatus, })
+			SRm:          &sn.PeerStatus})
 	}
 	return err
 }

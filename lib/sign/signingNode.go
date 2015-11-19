@@ -59,15 +59,15 @@ type Node struct {
 	PubKey  abstract.Point  // long lasting public key
 	PrivKey abstract.Secret // long lasting private key
 
-	nRounds       int
-	Rounds        map[int]*RoundMerkle
-	Round         int // *only* used by Root( by annoucer)
-	RoundTypes    []RoundType
-	roundmu       sync.Mutex
-	LastSeenRound int // largest round number I have seen
-	RoundsAsRoot  int // latest continuous streak of rounds with sn root
+	nRounds         int
+	Rounds          map[int]*RoundMerkle
+	Round           int // *only* used by Root( by annoucer)
+	RoundsInterface map[int]Round
+	RoundTypes      []RoundType
+	roundmu         sync.Mutex
+	LastSeenRound   int // largest round number I have seen
+	RoundsAsRoot    int // latest continuous streak of rounds with sn root
 
-	Callbacks Round
 	AnnounceLock sync.Mutex
 
 	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
@@ -112,11 +112,6 @@ type Node struct {
 
 	PeerStatus     StatusReturnMessage // Actual status of children peers
 	PeerStatusRcvd int                 // How many peers sent status
-}
-
-// Set callback-functions for the different steps of the algorithm
-func (sn *Node)SetCallbacks(cb Round){
-	sn.Callbacks = cb
 }
 
 // Start listening for messages coming from parent(up)
@@ -212,7 +207,6 @@ func (sn *Node) logTotalTime(totalTime time.Duration) {
 }
 
 func (sn *Node) StartAnnouncement(round Round) error {
-	sn.Callbacks = round
 	sn.AnnounceLock.Lock()
 	sn.nRounds = sn.LastSeenRound
 
@@ -226,11 +220,8 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	sn.viewmu.Unlock()
 
 	sn.nRounds++
-	// Adding timestamp
-	ts := time.Now().UTC()
-	var b bytes.Buffer
-	binary.Write(&b, binary.LittleEndian, ts.Unix())
-	am := &AnnouncementMessage{Message: b.Bytes(), RoundNbr: sn.nRounds}
+	sn.RoundsInterface[sn.nRounds] = round
+	am := &AnnouncementMessage{}
 
 	defer sn.AnnounceLock.Unlock()
 
@@ -241,10 +232,10 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	go func() {
 		var err error
 		if am.Vote != nil {
-			err = sn.Propose(am.Vote.View, am, "")
+			err = sn.Propose(am.Vote.View, sn.nRounds, am, "")
 		} else {
 			// Launch the announcement process
-			err = sn.Announce(sn.ViewNo, am)
+			err = sn.Announce(sn.ViewNo, sn.nRounds, nil)
 		}
 
 		if err != nil {
@@ -313,6 +304,7 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.VoteLog = NewVoteLog()
 	sn.Actions = make(map[int][]*Vote)
 	sn.RoundsPerView = 0
+	sn.RoundsInterface = make(map[int]Round)
 	return sn
 }
 
@@ -339,6 +331,7 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn.VoteLog = NewVoteLog()
 	sn.Actions = make(map[int][]*Vote)
 	sn.RoundsPerView = 0
+	sn.RoundsInterface = make(map[int]Round)
 	return sn
 }
 

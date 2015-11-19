@@ -61,17 +61,17 @@ func (sn *Node) SetupProposal(view int, am *AnnouncementMessage, from string) er
 // A propose for a view change would come on current view + sth
 // when we receive view change  message on a future view,
 // we must be caught up, create that view  and apply actions on it
-func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
+func (sn *Node) Propose(view int, RoundNbr int, am *AnnouncementMessage, from string) error {
 	log.Println(sn.Name(), "GOT ", "Propose", am)
 	if err := sn.SetupProposal(view, am, from); err != nil {
 		return err
 	}
 
-	if err := RoundSetup(sn, view, am); err != nil {
+	if err := RoundSetup(sn, view, RoundNbr, am); err != nil {
 		return err
 	}
 	// log.Println(sn.Name(), "propose on view", view, sn.HostListOn(view))
-	sn.Rounds[am.RoundNbr].Vote = am.Vote
+	sn.Rounds[RoundNbr].Vote = am.Vote
 
 	// Inform all children of proposal
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -80,6 +80,7 @@ func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
 			Type:         Announcement,
 			View:         view,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			RoundNbr:     RoundNbr,
 			Am:           am}
 		messgs[i] = &sm
 	}
@@ -91,7 +92,7 @@ func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
 
 	if len(sn.Children(view)) == 0 {
 		log.Println(sn.Name(), "no children")
-		sn.Promise(view, am.RoundNbr, nil)
+		sn.Promise(view, RoundNbr, nil)
 	}
 	return nil
 }
@@ -144,16 +145,15 @@ func (sn *Node) actOnPromises(view, Round int) error {
 			return err
 		}
 		round.C = HashElGamal(sn.suite, b, round.Log.V_hat)
-		err = sn.Accept(view, &ChallengeMessage{
-			C:     round.C,
-			RoundNbr: Round,
-			Vote:  round.Vote})
+		err = sn.Accept(view, Round, &ChallengeMessage{
+			C:    round.C,
+			Vote: round.Vote})
 
 	} else {
 		// create and putup own commit message
 		com := &CommitmentMessage{
-			Vote:  round.Vote,
-			RoundNbr: Round}
+			Vote: round.Vote,
+		}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		// log.Println(sn.Name(), "puts up promise on view", view, "to", sn.Parent(view))
@@ -162,19 +162,20 @@ func (sn *Node) actOnPromises(view, Round int) error {
 			View:         view,
 			Type:         Commitment,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			RoundNbr:     Round,
 			Com:          com})
 	}
 	return err
 }
 
-func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
+func (sn *Node) Accept(view, RoundNbr int, chm *ChallengeMessage) error {
 	log.Println(sn.Name(), "GOT ", "Accept", chm)
 	// update max seen round
 	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, chm.RoundNbr)
+	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[chm.RoundNbr]
+	round := sn.Rounds[RoundNbr]
 	if round == nil {
 		log.Errorln("error round is nil")
 		return nil
@@ -192,7 +193,7 @@ func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
 	}
 
 	if len(sn.Children(view)) == 0 {
-		sn.Accepted(view, chm.RoundNbr, nil)
+		sn.Accepted(view, RoundNbr, nil)
 	}
 
 	return nil
@@ -226,14 +227,15 @@ func (sn *Node) Accepted(view, Round int, sm *SigningMessage) error {
 	} else {
 		// create and putup own response message
 		rm := &ResponseMessage{
-			Vote:  round.Vote,
-			RoundNbr: Round}
+			Vote: round.Vote,
+		}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		ctx := context.TODO()
 		return sn.PutUp(ctx, view, &SigningMessage{
 			Type:         Response,
 			View:         view,
+			RoundNbr:     Round,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			Rm:           rm})
 	}
