@@ -55,7 +55,11 @@ func main() {
 	// kill old processes
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(" +")
-	hosts, _ := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+    if err != nil {
+        dbg.Fatal("Deterlab experiment", deterlab.Project + "/" + deterlab.Experiment, "seems not to be swapped in. Aborting.")
+        os.Exit(-1)
+    }
 	hosts_trimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
 	hostlist := strings.Split(hosts_trimmed, " ")
 	doneHosts := make([]bool, len(hostlist))
