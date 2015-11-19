@@ -40,6 +40,7 @@ var deployP platform.Platform
 var platform_dst = "localhost"
 var app = ""
 var nobuild = false
+var clean = true
 var build = ""
 var machines = 3
 
@@ -59,6 +60,7 @@ const (
 func init() {
 	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
+	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 }
@@ -85,12 +87,13 @@ func main() {
 		}
 		deployP.Configure()
 
-		deployP.Cleanup()
-
-		//testprint := strings.Replace(strings.Join(runconfigs, "--"), "\n", ", ", -1)
-		//dbg.Lvl3("Going to run tests for", simulation, testprint)
-		logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
-		RunTests(logname, runconfigs)
+		if clean{
+			deployP.Deploy(runconfigs[0])
+			deployP.Cleanup()
+		} else {
+			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
+			RunTests(logname, runconfigs)
+		}
 	}
 }
 
@@ -167,6 +170,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 
 	deployP.Deploy(rc)
 	deployP.Cleanup()
+
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
 	err := deployP.Start()
