@@ -302,7 +302,7 @@ func (round *RoundMerkle) StoreLocalMerkleProof(chm *ChallengeMessage) error {
 
 	// if want to verify partial and full proofs
 	if dbg.DebugVisible > 2 {
-		//sn.VerifyAllProofs(view, chm, proofForClient)
+		//round.sn.VerifyAllProofs(view, chm, proofForClient)
 	}
 	round.Proof = proofForClient
 	round.MTRoot = chm.MTRoot
@@ -404,7 +404,6 @@ func (round *RoundMerkle) SendChildrenChallenges(chm *ChallengeMessage) error {
 		var messg coconet.BinaryMarshaler
 		messg = &SigningMessage{View: round.View, Type: Challenge, Chm: chm}
 
-		// fmt.Println(sn.Name(), "send to", i, child, "on view", view)
 		if err := child.PutData(messg); err != nil {
 			return err
 		}

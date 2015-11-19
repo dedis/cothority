@@ -26,7 +26,7 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't open config-file:", err)
 	}
 
-	tsm, err := s.GetStamp([]byte("test"), "")
+	tsm, err := s.GetStamp([]byte("test"), "localhost:2000")
 	if err != nil {
 		t.Fatal("Couldn't get stamp from server:", err)
 	}
@@ -34,7 +34,14 @@ func TestStamp(t *testing.T) {
 	if !tsm.Srep.AggPublic.Equal(s.X0) {
 		t.Fatal("Not correct aggregate public key")
 	}
-	//stopConode()
+	tsm, err = s.GetStamp([]byte("test"), "localhost:2010")
+	if err != nil {
+		t.Fatal("Couldn't get stamp from server:", err)
+	}
+
+	if !tsm.Srep.AggPublic.Equal(s.X0) {
+		t.Fatal("Not correct aggregate public key")
+	} //stopConode()
 }
 
 func readConfig() *app.ConfigConode {
