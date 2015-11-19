@@ -153,17 +153,17 @@ func (cs *RoundStamper) Commitment(_ []*sign.CommitmentMessage) *sign.Commitment
 		}
 	}
 
-	round.MerkleAddLocal(cs.Root)
-	round.MerkleHashLog()
-	round.ComputeCombinedMerkleRoot()
+	cs.Round.MerkleAddLocal(cs.Root)
+	cs.Round.MerkleHashLog()
+	cs.Round.ComputeCombinedMerkleRoot()
 
 	com := &sign.CommitmentMessage{
-		V:             round.Log.V,
-		V_hat:         round.Log.V_hat,
-		X_hat:         round.X_hat,
-		MTRoot:        round.MTRoot,
-		ExceptionList: round.ExceptionList,
-		Vote:          round.Vote,
+		V:             cs.Round.Log.V,
+		V_hat:         cs.Round.Log.V_hat,
+		X_hat:         cs.Round.X_hat,
+		MTRoot:        cs.Round.MTRoot,
+		ExceptionList: cs.Round.ExceptionList,
+		Vote:          cs.Round.Vote,
 		Messages:      cs.sn.Messages}
 	cs.sn.Messages = 0 // TODO : why ?
 	return com
@@ -179,31 +179,30 @@ func (cs *RoundStamper) Challenge(chm *sign.ChallengeMessage) ([]*sign.Challenge
 		msg = append(msg, []byte(round.MTRoot)...)
 		cs.Round.C = sign.HashElGamal(round.Suite, msg, cs.Round.Log.V_hat)
 		//proof := make([]hashid.HashId, 0)
+
+		chm = &sign.ChallengeMessage{
+			C:      cs.Round.C,
+			MTRoot: cs.Round.MTRoot,
+			Proof:  cs.Round.Proof,
+			Vote:   cs.Round.Vote}
 	} else { // we are a leaf
 		// register challenge
 		cs.Round.C = chm.C
+		//cs.Round.MTRoot = chm.MTRoot
 	}
 	// compute response share already + localmerkle proof
 	cs.Round.InitResponseCrypto()
-	dbg.Lvl4("challenge: using merkle proofs")
-	cm := &sign.ChallengeMessage{
-		C:      cs.Round.C,
-		MTRoot: cs.Round.MTRoot,
-		Proof:  cs.Round.Proof,
-		Vote:   cs.Round.Vote}
-
-	//dbg.Print("CHALLENGE STEP: challenge:", cs.Round.C, " MTRoot", cs.Round.MTRoot)
 	// messages from clients, proofs computed
 	if cs.Round.Log.Getv() != nil {
-		if err := cs.Round.StoreLocalMerkleProof(cm); err != nil {
+		if err := cs.Round.StoreLocalMerkleProof(chm); err != nil {
 			return nil, err
 		}
-
 	}
+
 	// Inform all children of announcement - just copy the one that came in
-	messgs := make([]*sign.ChallengeMessage, cs.sn.NChildren(cs.sn.ViewNo))
+	messgs := make([]*sign.ChallengeMessage, len(cs.Round.Children))
 	for i := range messgs {
-		messgs[i] = cm
+		messgs[i] = chm
 	}
 
 	return messgs, nil
@@ -332,7 +331,6 @@ func (cs *RoundStamper) SignatureBroadcast(sb *sign.SignatureBroadcastMessage) (
 				AggCommit:  sb.V0_hat,
 				AggPublic:  sb.X0_hat,
 			}}
-
 		cs.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client", msg.To)
 	}
