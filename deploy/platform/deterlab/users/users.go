@@ -142,7 +142,7 @@ func main() {
 	// We set up a directory and every host writes a file once he's ready to listen
 	// When everybody is ready, the directory is deleted and the test starts
 	coll_stamp_dir := "coll_stamp_up"
-	if deterlab.App == "stamp" || deterlab.App == "sign" {
+	if deterlab.App == "stamp" || deterlab.App == "sign" || deterlab.App == "ntree"{
 		os.RemoveAll(coll_stamp_dir)
 		os.MkdirAll(coll_stamp_dir, 0777)
 		time.Sleep(time.Second)
@@ -172,7 +172,7 @@ func main() {
 		}(phys)
 	}
 
-	if deterlab.App == "stamp" || deterlab.App == "sign" {
+	if deterlab.App == "stamp" || deterlab.App == "sign" || deterlab.App == "ntree"{
 		// Every stampserver that started up (mostly waiting for configuration-reading)
 		// writes its name in coll_stamp_dir - once everybody is there, the directory
 		// is cleaned to flag it's OK to go on.

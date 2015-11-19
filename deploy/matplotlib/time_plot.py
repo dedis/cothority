@@ -75,7 +75,7 @@ def plotAvgMM(co, jvss, naive, nt):
                        dict(label='Naive', linestyle='-', marker='s', color=color3_dark, zorder=3))
     na_p = naive.get_values('round_wall')
     #mplot.arrow("{:.1f} sec      ".format(na_p.avg[8]), na_p.x[8], 4, color3_dark)
-    mplot.arrow("      {:.0f} sec".format(na_p.avg[9]), na_p.x[9], 8, color3_dark)
+    #mplot.arrow("      {:.0f} sec".format(na_p.avg[9]), na_p.x[9], 8, color3_dark)
 
     co = mplot.plotMMA(cothority, 'round_wall', color1_light, 4,
                        dict(label='Cothority', linestyle='-', marker='o', color=color1_dark, zorder=5))

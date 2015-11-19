@@ -1,11 +1,17 @@
 App = "naive"
 Suite = "ed25519"
-Rounds = 20
+Rounds = 10
+filter_round = 80
 
 Machines, Ppm
 2, 1
 4, 1
 8, 1
-16, 1
-16, 2
-16, 4
+8, 2
+8, 4
+8, 8
+8, 16
+8, 32
+8, 64
+8, 128
+8, 256
