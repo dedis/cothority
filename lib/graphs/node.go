@@ -46,13 +46,6 @@ ex.json
 
 type JSONPoint json.RawMessage
 
-type Node struct {
-	Name     string  `json:"name"`
-	PriKey   string  `json:"prikey,omitempty"`
-	PubKey   string  `json:"pubkey,omitempty"`
-	Children []*Node `json:"children,omitempty"`
-}
-
 // HostConfig stores all of the relevant information of the configuration file.
 type HostConfig struct {
 	SNodes []*sign.Node          // an array of signing nodes
