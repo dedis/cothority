@@ -70,7 +70,7 @@ func (sn *Node) NotifyOfAction(view int, v *Vote) {
 	gcm := &SigningMessage{
 		Type:         GroupChanged,
 		From:         sn.Name(),
-		View:         view,
+		ViewNbr:         view,
 		LastSeenVote: int(sn.LastSeenVote),
 		Gcm: &GroupChangedMessage{
 			V:        v,
@@ -103,7 +103,7 @@ func (sn *Node) AddSelf(parent string) error {
 		parent,
 		&SigningMessage{
 			Type: GroupChange,
-			View: -1,
+			ViewNbr: -1,
 			Vrm: &VoteRequestMessage{
 				Vote: &Vote{
 					Type: AddVT,
@@ -118,7 +118,7 @@ func (sn *Node) RemoveSelf() error {
 		int(sn.ViewNo),
 		&SigningMessage{
 			Type: GroupChange,
-			View: -1,
+			ViewNbr: -1,
 			Vrm: &VoteRequestMessage{
 				Vote: &Vote{
 					Type: RemoveVT,

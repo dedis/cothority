@@ -212,7 +212,7 @@ func (sn *Node) logTotalTime(totalTime time.Duration) {
 	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
 }
 
-func (sn *Node) StartAnnouncement(round Round) error {
+func (sn *Node) StartAnnouncement(roundNbr Round) error {
 	sn.AnnounceLock.Lock()
 	sn.nRounds = sn.LastSeenRound
 
@@ -226,7 +226,7 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	sn.viewmu.Unlock()
 
 	sn.nRounds++
-	sn.Rounds[sn.nRounds] = round
+	sn.Rounds[sn.nRounds] = roundNbr
 	am := &AnnouncementMessage{}
 
 	defer sn.AnnounceLock.Unlock()
@@ -244,7 +244,7 @@ func (sn *Node) StartAnnouncement(round Round) error {
 			err = sn.Announce(&SigningMessage{
 				Type:     Announcement,
 				RoundNbr: sn.nRounds,
-				View:     sn.ViewNo,
+				ViewNbr:     sn.ViewNo,
 				Am: &AnnouncementMessage{},
 			})
 		}
@@ -391,27 +391,27 @@ func (sn *Node) LastRound() int {
 	return lsr
 }
 
-func (sn *Node) SetLastSeenRound(round int) {
-	sn.LastSeenRound = round
+func (sn *Node) SetLastSeenRound(roundNbr int) {
+	sn.LastSeenRound = roundNbr
 }
 
-func (sn *Node) CommitedFor(round *MerkleStruct) bool {
+func (sn *Node) CommitedFor(merkle *MerkleStruct) bool {
 	sn.roundLock.RLock()
 	defer sn.roundLock.RUnlock()
 
-	if round.Log.v != nil {
+	if merkle.Log.v != nil {
 		return true
 	}
 	return false
 }
 
 // Cast on vote for Vote
-func (sn *Node) AddVotes(Round int, v *Vote) {
+func (sn *Node) AddVotes(roundNbr int, v *Vote) {
 	if v == nil {
 		return
 	}
 
-	round := sn.MerkleStructs[Round]
+	round := sn.MerkleStructs[roundNbr]
 	cv := round.Vote.Count
 	vresp := &VoteResponse{Name: sn.Name()}
 
@@ -434,7 +434,7 @@ func (sn *Node) AddVotes(Round int, v *Vote) {
 	if err != nil {
 		dbg.Fatal("Marshal Binary on Counted Votes failed")
 	}
-	rand := sn.suite.Cipher([]byte(sn.Name() + strconv.Itoa(Round)))
+	rand := sn.suite.Cipher([]byte(sn.Name() + strconv.Itoa(roundNbr)))
 	vresp.Sig = ElGamalSign(sn.suite, rand, b, sn.PrivKey)
 
 	// Add VoteResponse to Votes
@@ -442,21 +442,21 @@ func (sn *Node) AddVotes(Round int, v *Vote) {
 	round.Vote = v
 }
 
-func intToByteSlice(Round int) []byte {
+func intToByteSlice(roundNbr int) []byte {
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, Round)
+	binary.Write(buf, binary.LittleEndian, roundNbr)
 	return buf.Bytes()
 }
 
 // *only* called by root node
-func (sn *Node) SetAccountableRound(Round int) {
+func (sn *Node) SetAccountableRound(roundNbr int) {
 	// Create my back link to previous round
-	sn.SetBackLink(Round)
+	sn.SetBackLink(roundNbr)
 
 	h := sn.suite.Hash()
-	h.Write(intToByteSlice(Round))
-	h.Write(sn.MerkleStructs[Round].BackLink)
-	sn.MerkleStructs[Round].AccRound = h.Sum(nil)
+	h.Write(intToByteSlice(roundNbr))
+	h.Write(sn.MerkleStructs[roundNbr].BackLink)
+	sn.MerkleStructs[roundNbr].AccRound = h.Sum(nil)
 
 	// here I could concatenate sn.Round after the hash for easy keeping track of round
 	// todo: check this
@@ -471,9 +471,9 @@ func (sn *Node) UpdateTimeout(t ...time.Duration) {
 	}
 }
 
-func (sn *Node) SetBackLink(Round int) {
-	prevRound := Round - 1
-	sn.MerkleStructs[Round].BackLink = hashid.HashId(make([]byte, hashid.Size))
+func (sn *Node) SetBackLink(roundNbr int) {
+	prevRound := roundNbr - 1
+	sn.MerkleStructs[roundNbr].BackLink = hashid.HashId(make([]byte, hashid.Size))
 	if prevRound >= FIRST_ROUND {
 		// My Backlink = Hash(prevRound, sn.Rounds[prevRound].BackLink, sn.Rounds[prevRound].MTRoot)
 		h := sn.suite.Hash()
@@ -484,7 +484,7 @@ func (sn *Node) SetBackLink(Round int) {
 		h.Write(intToByteSlice(prevRound))
 		h.Write(sn.MerkleStructs[prevRound].BackLink)
 		h.Write(sn.MerkleStructs[prevRound].MTRoot)
-		sn.MerkleStructs[Round].BackLink = h.Sum(nil)
+		sn.MerkleStructs[roundNbr].BackLink = h.Sum(nil)
 	}
 }
 

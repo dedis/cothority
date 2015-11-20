@@ -1,6 +1,7 @@
 package conode
 import (
 	"github.com/dedis/cothority/lib/sign"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 /*
@@ -30,10 +31,13 @@ func NewRoundCosiStamper(peer *Peer) *RoundCosiStamper {
 	return round
 }
 
-func (round *RoundCosiStamper) Announcement(roundNbr int, in *sign.SigningMessage,
+func (round *RoundCosiStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage,
 out []*sign.SigningMessage) error {
-	round.RoundStamper.Announcement(roundNbr, in, out)
-	round.RoundCosi.Announcement(roundNbr, in, out)
+	dbg.Lvl3("Starting new announcement")
+	round.RoundStamper.Announcement(viewNbr, roundNbr, in, out)
+	round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
+	// TODO: this should go away later
+	round.RoundCosi.Timestamp = round.RoundStamper.Timestamp
 	for i := range (out) {
 		out[i].Am.RoundType = RoundCosiStamperType
 	}

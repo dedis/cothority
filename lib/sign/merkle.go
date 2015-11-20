@@ -79,7 +79,7 @@ func (sn *Node) CloseAll(view int) error {
 		for i := range messgs {
 			sm := SigningMessage{
 				Type:         CloseAll,
-				View:         view,
+				ViewNbr:         view,
 				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			}
 			messgs[i] = &sm
@@ -101,7 +101,7 @@ func (sn *Node) PutUpError(view int, err error) {
 	ctx := context.TODO()
 	sn.PutUp(ctx, view, &SigningMessage{
 		Type:         Error,
-		View:         view,
+		ViewNbr:         view,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		Err:          &ErrorMessage{Err: err.Error()}})
 }

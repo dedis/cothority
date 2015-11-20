@@ -68,7 +68,7 @@ func (sn *Node) ProcessMessages() error {
 
 		// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
-			if sm.View > sn.ViewNo {
+			if sm.ViewNbr > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
 					log.Warnln(sn.Name(), "not caught up for view change", sn.LastSeenVote, sn.LastAppliedVote)
 					return errors.New("not caught up for view change")
@@ -83,15 +83,15 @@ func (sn *Node) ProcessMessages() error {
 				continue
 			case Announcement:
 				dbg.Lvl3(sn.Name(), "got announcement")
-				sn.ReceivedHeartbeat(sm.View)
+				sn.ReceivedHeartbeat(sm.ViewNbr)
 
 				var err error
 				if sm.Am.Vote != nil {
-					err = sn.Propose(sm.View, sm.RoundNbr, sm.Am, sm.From)
+					err = sn.Propose(sm.ViewNbr, sm.RoundNbr, sm.Am, sm.From)
 					dbg.Lvl4(sn.Name(), "done proposing")
 				} else {
-					if !sn.IsParent(sm.View, sm.From) {
-						log.Fatalln(sn.Name(), "received announcement from non-parent on view", sm.View)
+					if !sn.IsParent(sm.ViewNbr, sm.From) {
+						log.Fatalln(sn.Name(), "received announcement from non-parent on view", sm.ViewNbr)
 						continue
 					}
 					err = sn.Announce(sm)
@@ -103,14 +103,14 @@ func (sn *Node) ProcessMessages() error {
 			// if it is a commitment or response it is from the child
 			case Commitment:
 				dbg.Lvl3(sn.Name(), "got commitment")
-				if !sn.IsChild(sm.View, sm.From) {
-					log.Fatalln(sn.Name(), "received commitment from non-child on view", sm.View)
+				if !sn.IsChild(sm.ViewNbr, sm.From) {
+					log.Fatalln(sn.Name(), "received commitment from non-child on view", sm.ViewNbr)
 					continue
 				}
 
 				var err error
 				if sm.Com.Vote != nil {
-					err = sn.Promise(sm.View, sm.RoundNbr, sm)
+					err = sn.Promise(sm.ViewNbr, sm.RoundNbr, sm)
 				} else {
 					err = sn.Commit(sm)
 				}
@@ -119,15 +119,15 @@ func (sn *Node) ProcessMessages() error {
 				}
 			case Challenge:
 				dbg.Lvl3(sn.Name(), "got challenge")
-				if !sn.IsParent(sm.View, sm.From) {
-					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.View)
+				if !sn.IsParent(sm.ViewNbr, sm.From) {
+					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.ViewNbr)
 					continue
 				}
-				sn.ReceivedHeartbeat(sm.View)
+				sn.ReceivedHeartbeat(sm.ViewNbr)
 
 				var err error
 				if sm.Chm.Vote != nil {
-					err = sn.Accept(sm.View, sm.RoundNbr, sm.Chm)
+					err = sn.Accept(sm.ViewNbr, sm.RoundNbr, sm.Chm)
 				} else {
 					err = sn.Challenge(sm)
 				}
@@ -136,14 +136,14 @@ func (sn *Node) ProcessMessages() error {
 				}
 			case Response:
 				dbg.Lvl3(sn.Name(), "received response from", sm.From)
-				if !sn.IsChild(sm.View, sm.From) {
-					log.Fatalln(sn.Name(), "received response from non-child on view", sm.View)
+				if !sn.IsChild(sm.ViewNbr, sm.From) {
+					log.Fatalln(sn.Name(), "received response from non-child on view", sm.ViewNbr)
 					continue
 				}
 
 				var err error
 				if sm.Rm.Vote != nil {
-					err = sn.Accepted(sm.View, sm.RoundNbr, sm)
+					err = sn.Accepted(sm.ViewNbr, sm.RoundNbr, sm)
 				} else {
 					err = sn.Respond(sm)
 				}
@@ -152,10 +152,10 @@ func (sn *Node) ProcessMessages() error {
 				}
 			case SignatureBroadcast:
 				dbg.Lvl3(sn.Name(), "received SignatureBroadcast", sm.From)
-				sn.ReceivedHeartbeat(sm.View)
+				sn.ReceivedHeartbeat(sm.ViewNbr)
 				err = sn.SignatureBroadcast(sm)
 			case StatusReturn:
-				sn.StatusReturn(sm.View, sm.SRm)
+				sn.StatusReturn(sm.ViewNbr, sm.SRm)
 			case CatchUpReq:
 				v := sn.VoteLog.Get(sm.Cureq.Index)
 				ctx := context.TODO()
@@ -175,19 +175,19 @@ func (sn *Node) ProcessMessages() error {
 				// continue catching up
 				sn.CatchUp(vi + 1, sm.From)
 			case GroupChange:
-				if sm.View == -1 {
-					sm.View = sn.ViewNo
+				if sm.ViewNbr == -1 {
+					sm.ViewNbr = sn.ViewNo
 					if sm.Vrm.Vote.Type == AddVT {
 						sn.AddPeerToPending(sm.From)
 					}
 				}
 				// TODO sanity checks: check if view is == sn.ViewNo
-				if sn.RootFor(sm.View) == sn.Name() {
+				if sn.RootFor(sm.ViewNbr) == sn.Name() {
 					dbg.Fatal("Group change not implementekd. BTH")
 					//go sn.StartVotingRound(sm.Vrm.Vote)
 					continue
 				}
-				sn.PutUp(context.TODO(), sm.View, sm)
+				sn.PutUp(context.TODO(), sm.ViewNbr, sm)
 			case GroupChanged:
 				if !sm.Gcm.V.Confirmed {
 					dbg.Lvl4(sn.Name(), " received attempt to group change not confirmed")
@@ -197,16 +197,16 @@ func (sn *Node) ProcessMessages() error {
 					dbg.Lvl4(sn.Name(), " received removal notice")
 				} else if sm.Gcm.V.Type == AddVT {
 					dbg.Lvl4(sn.Name(), " received addition notice")
-					sn.NewView(sm.View, sm.From, nil, sm.Gcm.HostList)
+					sn.NewView(sm.ViewNbr, sm.From, nil, sm.Gcm.HostList)
 				} else {
 					log.Errorln(sn.Name(), "received GroupChanged for unacceptable action")
 				}
 			case StatusConnections:
-				sn.ReceivedHeartbeat(sm.View)
-				err = sn.StatusConnections(sm.View, sm.Am)
+				sn.ReceivedHeartbeat(sm.ViewNbr)
+				err = sn.StatusConnections(sm.ViewNbr, sm.Am)
 			case CloseAll:
-				sn.ReceivedHeartbeat(sm.View)
-				err = sn.CloseAll(sm.View)
+				sn.ReceivedHeartbeat(sm.ViewNbr)
+				err = sn.CloseAll(sm.ViewNbr)
 				return nil
 			case Error:
 				dbg.Lvl4("Received Error Message:", ErrUnknownMessageType, sm, sm.Err)
@@ -217,7 +217,7 @@ func (sn *Node) ProcessMessages() error {
 }
 
 func (sn *Node) Announce(sm *SigningMessage) error {
-	view := sm.View
+	view := sm.ViewNbr
 	RoundNbr := sm.RoundNbr
 	am := sm.Am
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
@@ -246,13 +246,13 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	for i := range out {
 		out[i] = &SigningMessage{
 			Type:         Announcement,
-			View:         sn.ViewNo,
+			ViewNbr:         sn.ViewNo,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			RoundNbr:     RoundNbr,
 			Am: &AnnouncementMessage{},
 		}
 	}
-	err := ri.Announcement(RoundNbr, sm, out)
+	err := ri.Announcement(view, RoundNbr, sm, out)
 	if err != nil {
 		dbg.Lvl3(sn.Name(), "Error on announcement", err)
 		return err
@@ -263,7 +263,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 		sn.Commit(&SigningMessage{
 			Type:     Commitment,
 			RoundNbr: RoundNbr,
-			View:     view,
+			ViewNbr:     view,
 		})
 	} else {
 		// Transform the AnnouncementMessages to SigningMessages to send to the
@@ -285,7 +285,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 }
 
 func (sn *Node) Commit(sm *SigningMessage) error {
-	view := sm.View
+	view := sm.ViewNbr
 	roundNbr := sm.RoundNbr
 	// update max seen round
 	sn.roundmu.Lock()
@@ -326,7 +326,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		return fmt.Errorf("No Round Interface defined for this round number (commitment)")
 	}
 	out := &SigningMessage{
-		View:         view,
+		ViewNbr:         view,
 		Type:         Commitment,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		RoundNbr:     roundNbr,
@@ -345,7 +345,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		err = sn.Challenge(&SigningMessage{
 			RoundNbr: roundNbr,
 			Type:     Challenge,
-			View:     view,
+			ViewNbr:     view,
 		})
 	} else {
 		// create and putup own commit message
@@ -361,7 +361,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 
 // initiated by root, propagated by all others
 func (sn *Node) Challenge(sm *SigningMessage) error {
-	view := sm.View
+	view := sm.ViewNbr
 	RoundNbr := sm.RoundNbr
 	// update max seen round
 	sn.roundmu.Lock()
@@ -378,7 +378,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	}
 	challs := make([]*SigningMessage, sn.NChildren(view))
 	for i := range challs {
-		challs[i] = &SigningMessage{View: view, RoundNbr: RoundNbr, Type: Challenge}
+		challs[i] = &SigningMessage{ViewNbr: view, RoundNbr: RoundNbr, Type: Challenge}
 	}
 
 	err := ri.Challenge(sm, challs)
@@ -390,7 +390,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	if len(sn.Children(view)) == 0 {
 		sn.Respond(&SigningMessage{
 			Type:     Response,
-			View:     view,
+			ViewNbr:     view,
 			RoundNbr: RoundNbr,
 		})
 	} else { // otherwise continue to pass down challenge
@@ -408,7 +408,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 // Respond send the response UP from leaf to parent
 // called initially by the all the bottom leaves
 func (sn *Node) Respond(sm *SigningMessage) error {
-	view := sm.View
+	view := sm.ViewNbr
 	roundNbr := sm.RoundNbr
 	dbg.Lvl4(sn.Name(), "couting response on view, round", view, roundNbr, "Nchildren", len(sn.Children(view)))
 	// update max seen round
@@ -449,7 +449,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	Round.Responses = responseList
 	out := &SigningMessage{
 		Type:         Response,
-		View:         view,
+		ViewNbr:         view,
 		RoundNbr:     roundNbr,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 	}
@@ -494,7 +494,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	if isroot {
 		sn.SignatureBroadcast(&SigningMessage{
 			Type:     SignatureBroadcast,
-			View:     view,
+			ViewNbr:     view,
 			RoundNbr: roundNbr,
 		})
 		sn.done <- roundNbr
@@ -511,7 +511,7 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	for i := range messgs {
 		sm := SigningMessage{
 			Type:         StatusConnections,
-			View:         view,
+			ViewNbr:         view,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			Am:           am}
 		messgs[i] = &sm
@@ -527,7 +527,7 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 // This will broadcast the final signature to give to client
 // it contins the global Response adn global challenge
 func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
-	view := sm.View
+	view := sm.ViewNbr
 	RoundNbr := sm.RoundNbr
 	dbg.Lvl3(sn.Name(), "received SignatureBroadcast on", view)
 	sn.PeerStatusRcvd = 0
@@ -540,7 +540,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 	for i := range out {
 		out[i] = &SigningMessage{
 			Type:     SignatureBroadcast,
-			View:     view,
+			ViewNbr:     view,
 			RoundNbr: RoundNbr,
 		}
 	}
@@ -589,7 +589,7 @@ func (sn *Node) StatusReturn(view int, sr *StatusReturnMessage) error {
 		dbg.Lvl4(sn.Name(), "puts up statusReturn for", sn.PeerStatus)
 		ctx := context.TODO()
 		err = sn.PutUp(ctx, view, &SigningMessage{
-			View:         view,
+			ViewNbr:         view,
 			Type:         StatusReturn,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			SRm:          &sn.PeerStatus})

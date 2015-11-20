@@ -1,10 +1,7 @@
 package conode
 
 import (
-	"bytes"
-	"encoding/binary"
 	"strconv"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -21,6 +18,7 @@ import (
 const RoundCosiType = "cosi"
 
 type RoundCosi struct {
+	*RoundStructure
 							   // Leaves, Root and Proof for a round
 	CosiLeaves []hashid.HashId // can be removed after we verify protocol
 	CosiRoot   hashid.HashId
@@ -30,7 +28,6 @@ type RoundCosi struct {
 
 	peer       *Peer
 	Merkle     *sign.MerkleStruct
-	RoundNbr   int
 	Node       *sign.Node
 
 	Queue      []ReplyMessage
@@ -50,41 +47,24 @@ func RegisterRoundCosi(p *Peer) {
 }
 
 func NewRoundCosi(peer *Peer) *RoundCosi {
-	cbs := &RoundCosi{}
-	cbs.peer = peer
-	cbs.Node = peer.Node
-	return cbs
+	round := &RoundCosi{}
+	round.peer = peer
+	round.Node = peer.Node
+	return round
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (round *RoundCosi) Announcement(RoundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
-	// We are root !
-	if round.Node.IsRoot(round.Node.ViewNo) {
-		// Adding timestamp
-		ts := time.Now().UTC()
-		var b bytes.Buffer
-		round.Timestamp = ts.Unix()
-		binary.Write(&b, binary.LittleEndian, ts.Unix())
-		in.Am.Message = b.Bytes()
-		in.Am.RoundType = RoundCosiType
-	} else {
-		// otherwise decode it
-		var t int64
-		if err := binary.Read(bytes.NewBuffer(in.Am.Message), binary.LittleEndian, &t); err != nil {
-			dbg.Lvl1("Unmashaling timestamp has failed")
-		}
-		round.Timestamp = t
-	}
-	round.RoundNbr = RoundNbr
-	if err := round.Node.TryFailure(round.Node.ViewNo, RoundNbr); err != nil {
+func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	round.RoundStructure = NewRoundStructure(round.Node, viewNbr, roundNbr)
+	if err := round.Node.TryFailure(round.Node.ViewNo, roundNbr); err != nil {
 		return err
 	}
 
-	if err := sign.MerkleSetup(round.Node, round.Node.ViewNo, RoundNbr, in.Am); err != nil {
+	if err := sign.MerkleSetup(round.Node, round.Node.ViewNo, roundNbr, in.Am); err != nil {
 		return err
 	}
 	// Store the message for the round
-	round.Merkle = round.Node.MerkleStructs[RoundNbr]
+	round.Merkle = round.Node.MerkleStructs[roundNbr]
 	round.Merkle.Msg = in.Am.Message
 
 	// Inform all children of announcement - just copy the one that came in

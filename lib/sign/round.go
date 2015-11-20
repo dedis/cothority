@@ -14,9 +14,7 @@ type Round interface {
 	// Announcement: root -> nodes
 	// This is called from the root-node whenever an
 	// announcement is made.
-	// TODO: remove Node-argument from function - this should be kept as
-	// internal variable in CallbackStamper
-	Announcement(int, *SigningMessage, []*SigningMessage) error
+	Announcement(int, int, *SigningMessage, []*SigningMessage) error
 	// Commitment: nodes -> root
 	// This is called whenever a commitment is ready to
 	// be sent. It takes the messages of its children and returns

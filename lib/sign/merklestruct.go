@@ -329,7 +329,7 @@ func (merkle *MerkleStruct) FillInWithDefaultMessages() []*SigningMessage {
 		}
 
 		if !found {
-			allmessgs = append(allmessgs, &SigningMessage{View: merkle.View,
+			allmessgs = append(allmessgs, &SigningMessage{ViewNbr: merkle.View,
 				Type: Default, From: c})
 		}
 	}
@@ -386,7 +386,7 @@ func (merkle *MerkleStruct) SendChildrenChallengesProofs(RoundNbr int, chm *Chal
 		newChm.Proof = append(baseProof, merkle.Proofs[name]...)
 
 		var messg coconet.BinaryMarshaler
-		messg = &SigningMessage{View: merkle.View, RoundNbr: RoundNbr, Type: Challenge, Chm: &newChm}
+		messg = &SigningMessage{ViewNbr: merkle.View, RoundNbr: RoundNbr, Type: Challenge, Chm: &newChm}
 
 		// send challenge message to child
 		// dbg.Lvl4("connection: sending children challenge proofs:", name, conn)
@@ -402,7 +402,7 @@ func (merkle *MerkleStruct) SendChildrenChallengesProofs(RoundNbr int, chm *Chal
 func (merkle *MerkleStruct) SendChildrenChallenges(chm *ChallengeMessage) error {
 	for _, child := range merkle.Children {
 		var messg coconet.BinaryMarshaler
-		messg = &SigningMessage{View: merkle.View, Type: Challenge, Chm: chm}
+		messg = &SigningMessage{ViewNbr: merkle.View, Type: Challenge, Chm: chm}
 
 		if err := child.PutData(messg); err != nil {
 			return err
