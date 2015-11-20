@@ -1,7 +1,6 @@
 package conode
 import (
 	"github.com/dedis/cothority/lib/sign"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 /*
