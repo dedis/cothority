@@ -15,20 +15,20 @@ type Round interface {
 	// announcement is made.
 	// TODO: remove Node-argument from function - this should be kept as
 	// internal variable in CallbackStamper
-	Announcement(int, *AnnouncementMessage) ([]*AnnouncementMessage, error)
+	Announcement(int, *SigningMessage, []*SigningMessage) error
 	// Commitment: nodes -> root
 	// This is called whenever a commitment is ready to
 	// be sent. It takes the messages of its children and returns
 	// the new message to be sent.
-	Commitment([]*CommitmentMessage) *CommitmentMessage
+	Commitment([]*SigningMessage, *SigningMessage) error
 	// Challenge: root -> nodes
 	// This is called with the message to be signed. If necessary,
 	// each node can change the message for its children.
-	Challenge(*ChallengeMessage) ([]*ChallengeMessage, error)
+	Challenge(*SigningMessage, []*SigningMessage) error
 	// Response: nodes -> root
 	// This is called with the signature of the challenge-message
 	// or with updated ExceptionList* in case of refusal to sign.
-	Response([]*SigningMessage) (*ResponseMessage, error)
+	Response([]*SigningMessage, *SigningMessage) error
 	// SignatureBroadcast: root -> nodes
 	// This is called whenever the turn is completed and
 	// the results are propagated through the tree.
@@ -36,7 +36,7 @@ type Round interface {
 	// return array of sigbroadcast because if we are root we want to put
 	// whatever we need inside. Give fine grained control to user as to what
 	// final signature is given to which peer.
-	SignatureBroadcast(*SignatureBroadcastMessage) ([]*SignatureBroadcastMessage, error)
+	SignatureBroadcast(*SigningMessage, []*SigningMessage) error
 	// Statistics: nodes -> root
 	// This is called at the end to collect eventual statistics
 	// about the round.

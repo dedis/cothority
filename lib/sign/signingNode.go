@@ -241,7 +241,11 @@ func (sn *Node) StartAnnouncement(round Round) error {
 			err = sn.Propose(am.Vote.View, sn.nRounds, am, "")
 		} else {
 			// Launch the announcement process
-			err = sn.Announce(sn.ViewNo, sn.nRounds, nil)
+			err = sn.Announce(&SigningMessage{
+				Type:     Announcement,
+				RoundNbr: sn.nRounds,
+				View:     sn.ViewNo,
+			})
 		}
 
 		if err != nil {
