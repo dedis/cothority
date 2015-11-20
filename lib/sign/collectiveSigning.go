@@ -361,20 +361,17 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	merkle := sn.MerkleStructs[RoundNbr]
-	if merkle == nil {
-		return nil
-	}
-	ri := sn.Rounds[RoundNbr]
-	if ri == nil {
+	round := sn.Rounds[RoundNbr]
+	if round == nil {
 		return fmt.Errorf("No Round Interface created for this round")
 	}
 	challs := make([]*SigningMessage, sn.NChildren(view))
 	for i := range challs {
-		challs[i] = &SigningMessage{ViewNbr: view, RoundNbr: RoundNbr, Type: Challenge}
+		challs[i] = &SigningMessage{ViewNbr: view, RoundNbr: RoundNbr, Type: Challenge,
+		Chm: &ChallengeMessage{}}
 	}
 
-	err := ri.Challenge(sm, challs)
+	err := round.Challenge(sm, challs)
 
 	if err != nil {
 		return err
@@ -390,8 +387,9 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 		// TODO remove this hack of using the first one. Should be separate messages
 		// + SendChildrenChallengesProof should be put into roundstamper or
 		// round interface
-		if err := merkle.SendChildrenChallengesProofs(RoundNbr, challs[0].Chm); err != nil {
-			return err
+		for _, out := range(challs){
+			conn := sn.Children(view)[out.To]
+			conn.PutData(out)
 		}
 	}
 	// dbg.Lvl4(sn.Name(), "Done handling challenge message")
@@ -411,11 +409,6 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	sn.PeerStatus = StatusReturnMessage{1, len(sn.Children(view))}
 
 	merkle := sn.MerkleStructs[roundNbr]
-	if merkle == nil || merkle.Log.v == nil {
-		// If I was not announced of this round, or I failed to commit
-		dbg.Lvl3(sn.Name(), "Was non announced or did not commit for this round's response")
-		return nil
-	}
 
 	responseList, ok := sn.RoundResponses[roundNbr]
 	if !ok {

@@ -89,6 +89,7 @@ type SigningMessage struct {
 	Gcm          *GroupChangedMessage
 	Err          *ErrorMessage
 	From         string
+	To           string
 	ViewNbr      int
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
 	RoundNbr     int

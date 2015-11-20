@@ -12,6 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/crypto/abstract"
+	"fmt"
 )
 
 // The name type of this round implementation
@@ -169,38 +170,51 @@ func (round *RoundCosi) QueueSet(Queue [][]MustReplyMessage) {
 	}
 }
 
-func (round *RoundCosi) Challenge(chm *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 
 	merkle := round.Merkle
 	// we are root
-	if chm.Chm == nil {
-		msg := round.Merkle.Msg
+	if in.Chm == nil {
+		msg := merkle.Msg
 		msg = append(msg, []byte(merkle.MTRoot)...)
-		round.Merkle.C = sign.HashElGamal(merkle.Suite, msg, round.Merkle.Log.V_hat)
+		merkle.C = sign.HashElGamal(merkle.Suite, msg, merkle.Log.V_hat)
 		//proof := make([]hashid.HashId, 0)
 
-		chm.Chm = &sign.ChallengeMessage{
-			C:      round.Merkle.C,
-			MTRoot: round.Merkle.MTRoot,
-			Proof:  round.Merkle.Proof,
-			Vote:   round.Merkle.Vote}
+		in.Chm = &sign.ChallengeMessage{
+			C:      merkle.C,
+			MTRoot: merkle.MTRoot,
+			Proof:  merkle.Proof,
+			Vote:   merkle.Vote}
 	} else { // we are a leaf
 		// register challenge
-		round.Merkle.C = chm.Chm.C
+		merkle.C = in.Chm.C
 	}
 	// compute response share already + localmerkle proof
-	round.Merkle.InitResponseCrypto()
+	merkle.InitResponseCrypto()
 	// messages from clients, proofs computed
-	if round.Merkle.Log.Getv() != nil {
-		if err := round.Merkle.StoreLocalMerkleProof(chm.Chm); err != nil {
+	if merkle.Log.Getv() != nil {
+		if err := merkle.StoreLocalMerkleProof(in.Chm); err != nil {
 			return err
 		}
 	}
-	// Inform all children of announcement - just copy the one that came in
-	for i := range out {
-		out[i].Chm = chm.Chm
-	}
 
+	// proof from big root to our root will be sent to all children
+	baseProof := make(proof.Proof, len(in.Chm.Proof))
+	copy(baseProof, in.Chm.Proof)
+
+	if len(merkle.Children) != len(out) {
+		return fmt.Errorf("Children and output are of different length")
+	}
+	// for each child, create personalized part of proof
+	// embed it in SigningMessage, and send it
+	var i = 0
+	for name, _ := range merkle.Children {
+		out[i].Chm.C = in.Chm.C
+		out[i].Chm.MTRoot = in.Chm.MTRoot
+		out[i].Chm.Proof = append(baseProof, merkle.Proofs[name]...)
+		out[i].To = name
+		i++
+	}
 	return nil
 }
 
