@@ -17,27 +17,26 @@ func init() {
 }
 
 func NewRoundCosi(node *Node) *RoundCosi{
-	rt := &RoundCosi{}
-	return rt
+	round := &RoundCosi{}
+	return round
 }
 
-func (rt *RoundCosi) Announcement(round int, in *SigningMessage,
-out []*SigningMessage) error {
+func (round *RoundCosi) Announcement(RoundNbr int, in *SigningMessage, out []*SigningMessage) error {
 	return nil
 }
 
-func (rt *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) error {
 	return nil
 }
 
-func (rt *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) error {
 	return nil
 }
 
-func (rt *RoundCosi) Response(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundCosi) Response(in []*SigningMessage, out *SigningMessage) error {
 	return nil
 }
 
-func (rt *RoundCosi) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundCosi) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
 	return nil
 }
