@@ -29,7 +29,7 @@ type RoundStamper struct {
 	Timestamp  int64
 
 	peer       *Peer
-	Merkle     *sign.Merkle
+	Merkle     *sign.MerkleStruct
 	RoundNbr   int
 	sn         *sign.Node
 }

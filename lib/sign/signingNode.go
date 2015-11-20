@@ -60,7 +60,7 @@ type Node struct {
 	PrivKey             abstract.Secret           // long lasting private key
 
 	nRounds             int
-	MerkleStructs       map[int]*Merkle
+	MerkleStructs       map[int]*MerkleStruct
 	RoundNbr            int                       // *only* used by Root( by annoucer)
 	Rounds              map[int]Round
 	RoundTypes          []MerkleType
@@ -298,7 +298,7 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
 
 	sn.peerKeys = make(map[string]abstract.Point)
-	sn.MerkleStructs = make(map[int]*Merkle)
+	sn.MerkleStructs = make(map[int]*MerkleStruct)
 
 	sn.closed = make(chan error, 20)
 	sn.done = make(chan int, 10)
@@ -327,7 +327,7 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 
 	msgSuite = suite
 	sn.peerKeys = make(map[string]abstract.Point)
-	sn.MerkleStructs = make(map[int]*Merkle)
+	sn.MerkleStructs = make(map[int]*MerkleStruct)
 
 	sn.closed = make(chan error, 20)
 	sn.done = make(chan int, 10)
@@ -394,7 +394,7 @@ func (sn *Node) SetLastSeenRound(round int) {
 	sn.LastSeenRound = round
 }
 
-func (sn *Node) CommitedFor(round *Merkle) bool {
+func (sn *Node) CommitedFor(round *MerkleStruct) bool {
 	sn.roundLock.RLock()
 	defer sn.roundLock.RUnlock()
 
