@@ -292,8 +292,8 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.MerkleStructs[roundNbr]
-	if round == nil {
+	merkle := sn.MerkleStructs[roundNbr]
+	if merkle == nil {
 		dbg.Lvl3("Commit number was not announced of this round, should retreat")
 		return nil
 	}
@@ -340,7 +340,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	}
 
 	if sn.IsRoot(view) {
-		dbg.Lvl3("Commit root : Aggregate Public Key :", round.X_hat)
+		dbg.Lvl3("Commit root : Aggregate Public Key :", merkle.X_hat)
 		sn.commitsDone <- roundNbr
 		err = sn.Challenge(&SigningMessage{
 			RoundNbr: roundNbr,
@@ -368,8 +368,8 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.MerkleStructs[RoundNbr]
-	if round == nil {
+	merkle := sn.MerkleStructs[RoundNbr]
+	if merkle == nil {
 		return nil
 	}
 	ri := sn.Rounds[RoundNbr]
@@ -397,7 +397,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 		// TODO remove this hack of using the first one. Should be separate messages
 		// + SendChildrenChallengesProof should be put into roundstamper or
 		// round interface
-		if err := round.SendChildrenChallengesProofs(RoundNbr, challs[0].Chm); err != nil {
+		if err := merkle.SendChildrenChallengesProofs(RoundNbr, challs[0].Chm); err != nil {
 			return err
 		}
 	}
@@ -417,8 +417,8 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	sn.roundmu.Unlock()
 	sn.PeerStatus = StatusReturnMessage{1, len(sn.Children(view))}
 
-	Round := sn.MerkleStructs[roundNbr]
-	if Round == nil || Round.Log.v == nil {
+	merkle := sn.MerkleStructs[roundNbr]
+	if merkle == nil || merkle.Log.v == nil {
 		// If I was not announced of this round, or I failed to commit
 		dbg.Lvl3(sn.Name(), "Was non announced or did not commit for this round's response")
 		return nil
@@ -446,14 +446,14 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	}
 	// Fillinwithdefaultmessage is used to fill the exception with missing
 	// children and all
-	Round.Responses = responseList
+	merkle.Responses = responseList
 	out := &SigningMessage{
 		Type:         Response,
 		ViewNbr:         view,
 		RoundNbr:     roundNbr,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 	}
-	err := ri.Response(Round.FillInWithDefaultMessages(), out)
+	err := ri.Response(merkle.FillInWithDefaultMessages(), out)
 	delete(sn.RoundResponses, roundNbr)
 	if err != nil {
 		return err

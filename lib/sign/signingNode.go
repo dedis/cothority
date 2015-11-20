@@ -395,53 +395,6 @@ func (sn *Node) SetLastSeenRound(roundNbr int) {
 	sn.LastSeenRound = roundNbr
 }
 
-func (sn *Node) CommitedFor(merkle *MerkleStruct) bool {
-	sn.roundLock.RLock()
-	defer sn.roundLock.RUnlock()
-
-	if merkle.Log.v != nil {
-		return true
-	}
-	return false
-}
-
-// Cast on vote for Vote
-func (sn *Node) AddVotes(roundNbr int, v *Vote) {
-	if v == nil {
-		return
-	}
-
-	merkle := sn.MerkleStructs[roundNbr]
-	cv := merkle.Vote.Count
-	vresp := &VoteResponse{Name: sn.Name()}
-
-	// accept what admin requested with x% probability
-	// TODO: replace with non-probabilistic approach, maybe callback
-	forProbability := 100
-	sn.randmu.Lock()
-	if p := sn.Rand.Int() % 100; p < forProbability {
-		cv.For += 1
-		vresp.Accepted = true
-	} else {
-		cv.Against += 1
-	}
-	sn.randmu.Unlock()
-
-	dbg.Lvl2(sn.Name(), "added votes. for:", cv.For, "against:", cv.Against)
-
-	// Generate signature on Vote with OwnVote *counted* in
-	b, err := v.MarshalBinary()
-	if err != nil {
-		dbg.Fatal("Marshal Binary on Counted Votes failed")
-	}
-	rand := sn.suite.Cipher([]byte(sn.Name() + strconv.Itoa(roundNbr)))
-	vresp.Sig = ElGamalSign(sn.suite, rand, b, sn.PrivKey)
-
-	// Add VoteResponse to Votes
-	v.Count.Responses = append(v.Count.Responses, vresp)
-	merkle.Vote = v
-}
-
 func intToByteSlice(roundNbr int) []byte {
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.LittleEndian, roundNbr)
