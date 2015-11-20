@@ -48,25 +48,25 @@ func (sn *Node) ProcessMessages() error {
 			nm, ok := <-msgchan
 			err := nm.Err
 
-			// TODO: graceful shutdown voting
+		// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
 				dbg.Lvl3(sn.Name(), " getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}
 
-			// if it is a non-fatal error try again
+		// if it is a non-fatal error try again
 			if err != nil {
 				log.Errorln(sn.Name(), " error getting message (still continuing) ", err)
 				continue
 			}
-			// interpret network message as Signing Message
-			//log.Printf("got message: %#v with error %v\n", sm, err)
+		// interpret network message as Signing Message
+		//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
 			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
 
-			// don't act on future view if not caught up, must be done after updating vote index
+		// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
 			if sm.View > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
@@ -173,7 +173,7 @@ func (sn *Node) ProcessMessages() error {
 				// put in votelog to be streamed and applied
 				sn.VoteLog.Put(vi, sm.Curesp.Vote)
 				// continue catching up
-				sn.CatchUp(vi+1, sm.From)
+				sn.CatchUp(vi + 1, sm.From)
 			case GroupChange:
 				if sm.View == -1 {
 					sm.View = sn.ViewNo
@@ -249,6 +249,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 			View:         sn.ViewNo,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			RoundNbr:     RoundNbr,
+			Am: &AnnouncementMessage{},
 		}
 	}
 	err := ri.Announcement(RoundNbr, sm, out)

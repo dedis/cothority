@@ -1,15 +1,19 @@
 package conode
-import "github.com/dedis/cothority/lib/sign"
+import (
+	"github.com/dedis/cothority/lib/sign"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+)
 
 /*
 Implements a test-round which uses RoundCosi and RoundStamp
  */
 
-const RoundCosiStamperType = "test"
+const RoundCosiStamperType = "cosistamper"
 
 type RoundCosiStamper struct {
 	*RoundStamper
 	*RoundCosi
+	peer *Peer
 }
 
 func RegisterRoundCosiStamper(p *Peer) {
@@ -19,40 +23,49 @@ func RegisterRoundCosiStamper(p *Peer) {
 		})
 }
 
-func NewRoundCosiStamper(peer *Peer) *RoundCosiStamper{
-	rt := &RoundCosiStamper{}
-	rt.RoundStamper = NewRoundStamper(peer)
-	rt.RoundCosi = NewRoundCosi(peer.Node)
-	return rt
+func NewRoundCosiStamper(peer *Peer) *RoundCosiStamper {
+	round := &RoundCosiStamper{}
+	round.RoundStamper = NewRoundStamper(peer)
+	round.RoundCosi = NewRoundCosi(peer)
+	round.peer = peer
+	return round
 }
 
-func (rt *RoundCosiStamper) Announcement(round int, in *sign.SigningMessage,
+func (round *RoundCosiStamper) Announcement(roundNbr int, in *sign.SigningMessage,
 out []*sign.SigningMessage) error {
-	rt.RoundStamper.Announcement(round, in, out)
-	rt.RoundCosi.Announcement(round, in, out)
+	round.RoundStamper.Announcement(roundNbr, in, out)
+	round.RoundCosi.Announcement(roundNbr, in, out)
+	for i := range (out) {
+		out[i].Am.RoundType = RoundCosiStamperType
+	}
 	return nil
 }
 
-func (rt *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
-	rt.RoundStamper.Commitment(in, out)
-	rt.RoundCosi.Commitment(in, out)
+func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+	round.peer.Mux.Lock()
+	// get data from s once to avoid refetching from structure
+	round.RoundCosi.QueueSet(round.peer.Queue)
+	round.peer.Mux.Unlock()
+
+	round.RoundStamper.Commitment(in, out)
+	round.RoundCosi.Commitment(in, out)
 	return nil
 }
 
-func (rt *RoundCosiStamper) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
-	rt.RoundStamper.Challenge(in, out)
-	rt.RoundCosi.Challenge(in, out)
+func (round *RoundCosiStamper) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	round.RoundStamper.Challenge(in, out)
+	round.RoundCosi.Challenge(in, out)
 	return nil
 }
 
-func (rt *RoundCosiStamper) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
-	rt.RoundStamper.Response(in, out)
-	rt.RoundCosi.Response(in, out)
+func (round *RoundCosiStamper) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+	round.RoundStamper.Response(in, out)
+	round.RoundCosi.Response(in, out)
 	return nil
 }
 
-func (rt *RoundCosiStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
-	rt.RoundStamper.SignatureBroadcast(in, out)
-	rt.RoundCosi.SignatureBroadcast(in, out)
+func (round *RoundCosiStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	round.RoundStamper.SignatureBroadcast(in, out)
+	round.RoundCosi.SignatureBroadcast(in, out)
 	return nil
 }

@@ -2,6 +2,7 @@ package sign
 
 import (
 	"fmt"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 // Round  holds the functions that are used to define the
@@ -51,17 +52,20 @@ var RoundFactories map[string]RoundFactory
 
 // Init function init the map
 func init() {
-	RoundFactories = make(map[string]RoundFactory)
 }
 
 // RegisterRoundFactory register a new round factory given its name type.
 func RegisterRoundFactory(roundType string, rf RoundFactory) {
+	if RoundFactories == nil {
+		RoundFactories = make(map[string]RoundFactory)
+	}
 	RoundFactories[roundType] = rf
 }
 
 // Return the RoundFactory for this round type. Return an error if this round
 // has not been registered before.
 func NewRoundFromType(rtype string, sn *Node) (Round, error) {
+	dbg.Lvl3("Creating round-type:", rtype, "out of", RoundFactories)
 	rf, ok := RoundFactories[rtype]
 	if !ok {
 		return nil, fmt.Errorf("RoundFactory not registered for the type %s", rtype)
