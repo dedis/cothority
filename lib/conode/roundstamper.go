@@ -31,7 +31,15 @@ type RoundStamper struct {
 	peer       *Peer
 	Merkle     *sign.MerkleStruct
 	RoundNbr   int
-	sn         *sign.Node
+	Node       *sign.Node
+
+	Queue      []ReplyMessage
+}
+
+type ReplyMessage struct {
+	Val   []byte
+	To    string
+	ReqNo byte
 }
 
 func RegisterRoundStamper(p *Peer) {
@@ -44,7 +52,7 @@ func RegisterRoundStamper(p *Peer) {
 func NewRoundStamper(peer *Peer) *RoundStamper {
 	cbs := &RoundStamper{}
 	cbs.peer = peer
-	cbs.sn = peer.Node
+	cbs.Node = peer.Node
 	return cbs
 }
 
@@ -68,15 +76,15 @@ func (round *RoundStamper) Announcement(RoundNbr int, in *sign.SigningMessage, o
 		round.Timestamp = t
 	}
 	round.RoundNbr = RoundNbr
-	if err := round.sn.TryFailure(round.sn.ViewNo, RoundNbr); err != nil {
+	if err := round.Node.TryFailure(round.Node.ViewNo, RoundNbr); err != nil {
 		return err
 	}
 
-	if err := sign.MerkleSetup(round.sn, round.sn.ViewNo, RoundNbr, am); err != nil {
+	if err := sign.MerkleSetup(round.Node, round.Node.ViewNo, RoundNbr, am); err != nil {
 		return err
 	}
 	// Store the message for the round
-	round.Merkle = round.sn.MerkleStructs[RoundNbr]
+	round.Merkle = round.Node.MerkleStructs[RoundNbr]
 	round.Merkle.Msg = am.Message
 
 	// Inform all children of announcement - just copy the one that came in
@@ -129,31 +137,27 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 
 	round.peer.Mux.Lock()
 	// get data from s once to avoid refetching from structure
-	Queue := round.peer.Queue
-	// messages read will now be processed
-	round.peer.Queue[READING], round.peer.Queue[PROCESSING] = round.peer.Queue[PROCESSING], round.peer.Queue[READING]
-	round.peer.Queue[READING] = round.peer.Queue[READING][:0]
+	round.QueueSet(round.peer.Queue)
+	round.peer.Mux.Unlock()
 
 	// give up if nothing to process
-	if len(Queue[PROCESSING]) == 0 {
-		round.peer.Mux.Unlock()
+	if len(round.Queue) == 0 {
 		round.CosiRoot = make([]byte, hashid.Size)
 		round.CosiProofs = make([]proof.Proof, 1)
 	} else {
 		// pull out to be Merkle Tree leaves
 		round.CosiLeaves = make([]hashid.HashId, 0)
-		for _, msg := range Queue[PROCESSING] {
-			round.CosiLeaves = append(round.CosiLeaves, hashid.HashId(msg.Tsm.Sreq.Val))
+		for _, msg := range round.Queue {
+			round.CosiLeaves = append(round.CosiLeaves, hashid.HashId(msg.Val))
 		}
-		round.peer.Mux.Unlock()
 
 		// create Merkle tree for this round's messages and check corectness
 		round.CosiRoot, round.CosiProofs = proof.ProofTree(round.Merkle.Suite.Hash, round.CosiLeaves)
 		if dbg.DebugVisible > 2 {
 			if proof.CheckLocalProofs(round.Merkle.Suite.Hash, round.CosiRoot, round.CosiLeaves, round.CosiProofs) == true {
-				dbg.Lvl4("Local Proofs of", round.peer.Name(), "successful for round " + strconv.Itoa(int(round.peer.LastRound())))
+				dbg.Lvl4("Local Proofs of", round.Node.Name(), "successful for round " + strconv.Itoa(int(round.Node.LastRound())))
 			} else {
-				panic("Local Proofs" + round.peer.Name() + " unsuccessful for round " + strconv.Itoa(int(round.peer.LastRound())))
+				panic("Local Proofs" + round.Node.Name() + " unsuccessful for round " + strconv.Itoa(int(round.Node.LastRound())))
 			}
 		}
 	}
@@ -169,11 +173,25 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 		MTRoot:        round.Merkle.MTRoot,
 		ExceptionList: round.Merkle.ExceptionList,
 		Vote:          round.Merkle.Vote,
-		Messages:      round.sn.Messages}
-	round.sn.Messages = 0 // TODO : why ?
+		Messages:      round.Node.Messages}
+	round.Node.Messages = 0 // TODO : why ?
 	out.Com = com
 	return nil
 
+}
+
+func (round *RoundStamper) QueueSet(Queue [][]MustReplyMessage) {
+	// messages read will now be processed
+	Queue[READING], Queue[PROCESSING] = Queue[PROCESSING], Queue[READING]
+	Queue[READING] = Queue[READING][:0]
+	round.Queue = make([]ReplyMessage, len(Queue[PROCESSING]))
+	for i, q := range (Queue[PROCESSING]) {
+		round.Queue[i] = ReplyMessage{
+			Val: q.Tsm.Sreq.Val,
+			To: q.To,
+			ReqNo: byte(q.Tsm.ReqNo),
+		}
+	}
 }
 
 func (round *RoundStamper) Challenge(chm *sign.SigningMessage, out []*sign.SigningMessage) error {
@@ -271,7 +289,7 @@ func (round *RoundStamper) Response(sms []*sign.SigningMessage, out *sign.Signin
 	dbg.Lvl4(round.Merkle.Name, "got all responses")
 	err := round.Merkle.VerifyResponses()
 	if err != nil {
-		dbg.Lvl3(round.sn.Name(), "Could not verify responses..")
+		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
 	rm := &sign.ResponseMessage{
@@ -287,25 +305,24 @@ func (round *RoundStamper) Response(sms []*sign.SigningMessage, out *sign.Signin
 func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	// Root is creating the sig broadcast
 	sb := in.SBm
-	if sb == nil && round.sn.IsRoot(round.Merkle.View) {
-		dbg.Lvl2(round.sn.Name(), ": sending number of messages:", round.sn.Messages)
+	if sb == nil && round.Node.IsRoot(round.Merkle.View) {
+		dbg.Lvl2(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
 		sb = &sign.SignatureBroadcastMessage{
 			R0_hat:   round.Merkle.R_hat,
 			C:        round.Merkle.C,
 			X0_hat:   round.Merkle.X_hat,
 			V0_hat:   round.Merkle.Log.V_hat,
-			Messages: round.sn.Messages,
+			Messages: round.Node.Messages,
 		}
 	} else {
-		round.sn.Messages = sb.Messages
+		round.Node.Messages = sb.Messages
 	}
 	// Inform all children of broadcast  - just copy the one that came in
 	for i := range out {
 		out[i].SBm = sb
 	}
 	// Send back signature to clients
-	round.peer.Mux.Lock()
-	for i, msg := range round.peer.Queue[PROCESSING] {
+	for i, msg := range round.Queue {
 		// proof to get from s.Root to big root
 		combProof := make(proof.Proof, len(round.Merkle.Proof))
 		copy(combProof, round.Merkle.Proof)
@@ -323,7 +340,7 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 
 		respMessg := &TimeStampMessage{
 			Type:  StampSignatureType,
-			ReqNo: msg.Tsm.ReqNo,
+			ReqNo: SeqNo(msg.ReqNo),
 			Srep: &StampSignature{
 				SuiteStr:   round.Merkle.Suite.String(),
 				Timestamp:  round.Timestamp,
@@ -337,7 +354,6 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 		round.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client", msg.To)
 	}
-	round.peer.Mux.Unlock()
 	round.Timestamp = 0
 	return nil
 }
