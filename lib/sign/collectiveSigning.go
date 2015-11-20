@@ -292,12 +292,6 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
 	sn.roundmu.Unlock()
 
-	merkle := sn.MerkleStructs[roundNbr]
-	if merkle == nil {
-		dbg.Lvl3("Commit number was not announced of this round, should retreat")
-		return nil
-	}
-
 	commitList, ok := sn.RoundCommits[roundNbr]
 	if !ok {
 		// first time we see a commit message for this round
@@ -340,7 +334,6 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	}
 
 	if sn.IsRoot(view) {
-		dbg.Lvl3("Commit root : Aggregate Public Key :", merkle.X_hat)
 		sn.commitsDone <- roundNbr
 		err = sn.Challenge(&SigningMessage{
 			RoundNbr: roundNbr,
