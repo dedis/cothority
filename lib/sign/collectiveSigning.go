@@ -283,17 +283,24 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 		return nil
 	}
 
+	commitList, ok := sn.RoundCommits[roundNbr]
+	if !ok {
+		// first time we see a commit message for this round
+		commitList = make([]*SigningMessage, 0)
+		sn.RoundCommits[roundNbr] = commitList
+	}
 	// Collect number of messages of children peers
 	// signingmessage nil <=> we are a leaf
 	if sm != nil {
-		round.Commits = append(round.Commits, sm)
+		commitList = append(commitList, sm)
+		sn.RoundCommits[roundNbr] = commitList
 		dbg.Lvl3(sn.Name(), ": Found", sm.Com.Messages, "messages in com-msg")
 		sn.Messages += sm.Com.Messages
 	}
 
-	dbg.Lvl3("Got", len(round.Commits), "of", len(sn.Children(view)), "commits")
+	dbg.Lvl3("Got", len(sn.RoundCommits[roundNbr]), "of", len(sn.Children(view)), "commits")
 	// not enough commits yet (not all children replied)
-	if len(round.Commits) != len(sn.Children(view)) {
+	if len(sn.RoundCommits[roundNbr]) != len(sn.Children(view)) {
 		dbg.Lvl3(sn.Name(), "Not enough commits received to call the Commit of the round")
 		return nil
 	}
@@ -307,7 +314,11 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 	for _, sigmsg := range round.Commits {
 		commits = append(commits, sigmsg.Com)
 	}
+	round.Commits = sn.RoundCommits[roundNbr]
 	commit := ri.Commitment(commits)
+
+	// now we can delete the commits for this round
+	delete(sn.RoundCommits, roundNbr)
 
 	var err error
 	if sn.IsRoot(view) {
@@ -379,11 +390,18 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 		return nil
 	}
 
+	responseList, ok := sn.RoundResponses[roundNbr]
+	if !ok {
+		responseList = make([]*SigningMessage, 0)
+		sn.RoundResponses[roundNbr] = responseList
+	}
+
 	// Check if we have all replies from the children
 	if sm != nil {
-		Round.Responses = append(Round.Responses, sm)
+		responseList = append(responseList, sm)
 	}
-	if len(Round.Responses) != len(sn.Children(view)) {
+	if len(responseList) != len(sn.Children(view)) {
+		sn.RoundResponses[roundNbr] = responseList
 		return nil
 	}
 
@@ -393,7 +411,9 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 	}
 	// Fillinwithdefaultmessage is used to fill the exception with missing
 	// children and all
+	Round.Responses = responseList
 	resp, err := ri.Response(Round.FillInWithDefaultMessages())
+	delete(sn.RoundResponses, roundNbr)
 	if err != nil {
 		return err
 	}

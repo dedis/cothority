@@ -68,6 +68,12 @@ type Node struct {
 	LastSeenRound   int // largest round number I have seen
 	RoundsAsRoot    int // latest continuous streak of rounds with sn root
 
+	// Little hack for the moment where we keep the number of responses +
+	// commits for each round so we know when to pass down the messages to the
+	// round interfaces.(it was the role of the RoundMerkle before)
+	RoundCommits   map[int][]*SigningMessage
+	RoundResponses map[int][]*SigningMessage
+
 	AnnounceLock sync.Mutex
 
 	// NOTE: reuse of channels via round-number % Max-Rounds-In-Mermory can be used
@@ -295,6 +301,8 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.commitsDone = make(chan int, 10)
 	sn.viewChangeCh = make(chan string, 0)
 
+	sn.RoundCommits = make(map[int][]*SigningMessage)
+	sn.RoundResponses = make(map[int][]*SigningMessage)
 	sn.FailureRate = 0
 	h := fnv.New32a()
 	h.Write([]byte(hn.Name()))
@@ -321,6 +329,9 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn.done = make(chan int, 10)
 	sn.commitsDone = make(chan int, 10)
 	sn.viewChangeCh = make(chan string, 0)
+
+	sn.RoundCommits = make(map[int][]*SigningMessage)
+	sn.RoundResponses = make(map[int][]*SigningMessage)
 
 	sn.FailureRate = 0
 	h := fnv.New32a()
