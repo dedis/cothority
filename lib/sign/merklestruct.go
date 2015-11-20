@@ -329,32 +329,6 @@ func (merkle *MerkleStruct) VerifyResponses() error {
 	return nil
 }
 
-// Create Personalized Merkle Proofs for children servers
-// Send Personalized Merkle Proofs to children servers
-func (merkle *MerkleStruct) SendChildrenChallengesProofs(RoundNbr int, chm *ChallengeMessage) error {
-	// proof from big root to our root will be sent to all children
-	baseProof := make(proof.Proof, len(chm.Proof))
-	copy(baseProof, chm.Proof)
-
-	// for each child, create personalized part of proof
-	// embed it in SigningMessage, and send it
-	for name, conn := range merkle.Children {
-		newChm := *chm
-		newChm.Proof = append(baseProof, merkle.Proofs[name]...)
-
-		var messg coconet.BinaryMarshaler
-		messg = &SigningMessage{ViewNbr: merkle.ViewNbr, RoundNbr: RoundNbr, Type: Challenge, Chm: &newChm}
-
-		// send challenge message to child
-		// dbg.Lvl4("connection: sending children challenge proofs:", name, conn)
-		if err := conn.PutData(messg); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Send children challenges
 func (merkle *MerkleStruct) SendChildrenChallenges(chm *ChallengeMessage) error {
 	for _, child := range merkle.Children {
