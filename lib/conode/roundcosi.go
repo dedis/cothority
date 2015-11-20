@@ -280,7 +280,7 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	// Root is creating the sig broadcast
 	sb := in.SBm
-	if sb == nil && round.Node.IsRoot(round.Merkle.View) {
+	if sb == nil && round.Node.IsRoot(round.Merkle.ViewNbr) {
 		dbg.Lvl2(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
 		sb = &sign.SignatureBroadcastMessage{
 			R0_hat:   round.Merkle.R_hat,

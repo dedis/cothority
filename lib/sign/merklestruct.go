@@ -68,7 +68,7 @@ type MerkleStruct struct {
 
 	Children map[string]coconet.Conn
 	Parent   string
-	View     int
+	ViewNbr int
 }
 
 type MerkleType int
@@ -95,57 +95,18 @@ func NewMerkle(suite abstract.Suite) *MerkleStruct {
 
 // Sets up a round according to the needs stated in the
 // Announcementmessage.
-func MerkleSetup(sn *Node, view, RoundNbr int, am *AnnouncementMessage) error {
-	sn.viewmu.Lock()
-	if sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil {
-		dbg.Lvl4(sn.Name(), "currently chaning view")
-		sn.viewmu.Unlock()
-		return ChangingViewError
-	}
-	sn.viewmu.Unlock()
-
-	sn.roundmu.Lock()
-	roundNbr := RoundNbr
-	if roundNbr < sn.LastSeenRound {
-		sn.roundmu.Unlock()
-		return ErrPastRound
-	}
-
-	// make space for round type
-	if len(sn.RoundTypes) <= roundNbr {
-		sn.RoundTypes = append(sn.RoundTypes, make([]MerkleType, max(len(sn.RoundTypes), roundNbr+1))...)
-	}
-	if am.Vote == nil {
-		dbg.Lvl4(roundNbr, len(sn.RoundTypes))
-		sn.RoundTypes[roundNbr] = SigningRT
-	} else {
-		sn.RoundTypes[roundNbr] = MerkleType(am.Vote.Type)
-	}
-	sn.roundmu.Unlock()
-
+func MerkleSetup(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) error {
 	// set up commit and response channels for the new round
 	merkle := NewMerkle(sn.suite)
 	merkle.Vote = am.Vote
-	merkle.Children = sn.Children(view)
-	merkle.Parent = sn.Parent(view)
-	merkle.View = view
+	merkle.Children = sn.Children(viewNbr)
+	merkle.Parent = sn.Parent(viewNbr)
+	merkle.ViewNbr = viewNbr
 	merkle.PubKey = sn.PubKey
 	merkle.PrivKey = sn.PrivKey
 	merkle.Name = sn.Name()
 	merkle.InitCommitCrypto()
 	sn.MerkleStructs[roundNbr] = merkle
-
-	// update max seen round
-	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
-	sn.roundmu.Unlock()
-
-	// the root is the only node that keeps track of round # internally
-	if sn.IsRoot(view) {
-		sn.RoundsAsRoot += 1
-		// TODO: is sn.Round needed if we have LastSeenRound
-		sn.RoundNbr = roundNbr
-	}
 	return nil
 }
 
@@ -325,7 +286,7 @@ func (merkle *MerkleStruct) FillInWithDefaultMessages() []*SigningMessage {
 		}
 
 		if !found {
-			allmessgs = append(allmessgs, &SigningMessage{ViewNbr: merkle.View,
+			allmessgs = append(allmessgs, &SigningMessage{ViewNbr: merkle.ViewNbr,
 				Type: Default, From: c})
 		}
 	}
@@ -382,7 +343,7 @@ func (merkle *MerkleStruct) SendChildrenChallengesProofs(RoundNbr int, chm *Chal
 		newChm.Proof = append(baseProof, merkle.Proofs[name]...)
 
 		var messg coconet.BinaryMarshaler
-		messg = &SigningMessage{ViewNbr: merkle.View, RoundNbr: RoundNbr, Type: Challenge, Chm: &newChm}
+		messg = &SigningMessage{ViewNbr: merkle.ViewNbr, RoundNbr: RoundNbr, Type: Challenge, Chm: &newChm}
 
 		// send challenge message to child
 		// dbg.Lvl4("connection: sending children challenge proofs:", name, conn)
@@ -398,7 +359,7 @@ func (merkle *MerkleStruct) SendChildrenChallengesProofs(RoundNbr int, chm *Chal
 func (merkle *MerkleStruct) SendChildrenChallenges(chm *ChallengeMessage) error {
 	for _, child := range merkle.Children {
 		var messg coconet.BinaryMarshaler
-		messg = &SigningMessage{ViewNbr: merkle.View, Type: Challenge, Chm: chm}
+		messg = &SigningMessage{ViewNbr: merkle.ViewNbr, Type: Challenge, Chm: chm}
 
 		if err := child.PutData(messg); err != nil {
 			return err
