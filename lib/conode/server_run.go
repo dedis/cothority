@@ -99,7 +99,7 @@ func RunPeer(hc *graphs.HostConfig, nclients int, hostname string) ([]*Peer, err
 		peers = append(peers, NewPeer(sn))
 		if hc.Dir == nil {
 			dbg.Lvl3(hc.Hosts, "listening for clients")
-			peers[len(peers) - 1].Setup()
+			peers[len(peers) - 1].ListenRequests()
 		}
 	}
 	dbg.Lvl3("peers:", peers)
