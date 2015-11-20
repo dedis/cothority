@@ -67,11 +67,11 @@ func (sn *Node) Propose(view int, RoundNbr int, am *AnnouncementMessage, from st
 		return err
 	}
 
-	if err := RoundSetup(sn, view, RoundNbr, am); err != nil {
+	if err := MerkleSetup(sn, view, RoundNbr, am); err != nil {
 		return err
 	}
 	// log.Println(sn.Name(), "propose on view", view, sn.HostListOn(view))
-	sn.Rounds[RoundNbr].Vote = am.Vote
+	sn.RemoveMerkle[RoundNbr].Vote = am.Vote
 
 	// Inform all children of proposal
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -104,7 +104,7 @@ func (sn *Node) Promise(view, Round int, sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[Round]
+	round := sn.RemoveMerkle[Round]
 	if round == nil {
 		// was not announced of this round, should retreat
 		return nil
@@ -132,7 +132,7 @@ func (sn *Node) Promise(view, Round int, sm *SigningMessage) error {
 }
 
 func (sn *Node) actOnPromises(view, Round int) error {
-	round := sn.Rounds[Round]
+	round := sn.RemoveMerkle[Round]
 	var err error
 	dbg.Lvl1("Act on Promise")
 	if sn.IsRoot(view) {
@@ -175,7 +175,7 @@ func (sn *Node) Accept(view, RoundNbr int, chm *ChallengeMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[RoundNbr]
+	round := sn.RemoveMerkle[RoundNbr]
 	if round == nil {
 		log.Errorln("error round is nil")
 		return nil
@@ -206,7 +206,7 @@ func (sn *Node) Accepted(view, Round int, sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[Round]
+	round := sn.RemoveMerkle[Round]
 	if round == nil {
 		// TODO: if combined with cosi pubkey, check for round.Log.v existing needed
 		// If I was not announced of this round, or I failed to commit

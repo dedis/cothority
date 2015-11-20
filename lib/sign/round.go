@@ -49,13 +49,11 @@ type RoundFactory func(*Node) Round
 // "type name" that can be associated with its RoundFactory
 var RoundFactories map[string]RoundFactory
 
-// Init function init the map
-func init() {
-	RoundFactories = make(map[string]RoundFactory)
-}
-
 // RegisterRoundFactory register a new round factory given its name type.
 func RegisterRoundFactory(roundType string, rf RoundFactory) {
+	if RoundFactories == nil {
+		RoundFactories = make(map[string]RoundFactory)
+	}
 	RoundFactories[roundType] = rf
 }
 

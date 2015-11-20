@@ -28,26 +28,31 @@ func NewRoundCosiStamper(peer *Peer) *RoundCosiStamper{
 
 func (rt *RoundCosiStamper) Announcement(round int, in *sign.SigningMessage,
 out []*sign.SigningMessage) error {
+	rt.RoundStamper.Announcement(round, in, out)
 	rt.RoundCosi.Announcement(round, in, out)
-	return rt.RoundStamper.Announcement(round, in, out)
+	return nil
 }
 
 func (rt *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+	rt.RoundStamper.Commitment(in, out)
 	rt.RoundCosi.Commitment(in, out)
-	return rt.RoundStamper.Commitment(in, out)
+	return nil
 }
 
 func (rt *RoundCosiStamper) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	rt.RoundStamper.Challenge(in, out)
 	rt.RoundCosi.Challenge(in, out)
-	return rt.RoundStamper.Challenge(in, out)
+	return nil
 }
 
 func (rt *RoundCosiStamper) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+	rt.RoundStamper.Response(in, out)
 	rt.RoundCosi.Response(in, out)
-	return rt.RoundStamper.Response(in, out)
+	return nil
 }
 
 func (rt *RoundCosiStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	rt.RoundStamper.SignatureBroadcast(in, out)
 	rt.RoundCosi.SignatureBroadcast(in, out)
-	return rt.RoundStamper.SignatureBroadcast(in, out)
+	return nil
 }
