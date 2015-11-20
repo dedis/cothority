@@ -411,8 +411,8 @@ func (sn *Node) AddVotes(roundNbr int, v *Vote) {
 		return
 	}
 
-	round := sn.MerkleStructs[roundNbr]
-	cv := round.Vote.Count
+	merkle := sn.MerkleStructs[roundNbr]
+	cv := merkle.Vote.Count
 	vresp := &VoteResponse{Name: sn.Name()}
 
 	// accept what admin requested with x% probability
@@ -439,7 +439,7 @@ func (sn *Node) AddVotes(roundNbr int, v *Vote) {
 
 	// Add VoteResponse to Votes
 	v.Count.Responses = append(v.Count.Responses, vresp)
-	round.Vote = v
+	merkle.Vote = v
 }
 
 func intToByteSlice(roundNbr int) []byte {
@@ -448,43 +448,12 @@ func intToByteSlice(roundNbr int) []byte {
 	return buf.Bytes()
 }
 
-// *only* called by root node
-func (sn *Node) SetAccountableRound(roundNbr int) {
-	// Create my back link to previous round
-	sn.SetBackLink(roundNbr)
-
-	h := sn.suite.Hash()
-	h.Write(intToByteSlice(roundNbr))
-	h.Write(sn.MerkleStructs[roundNbr].BackLink)
-	sn.MerkleStructs[roundNbr].AccRound = h.Sum(nil)
-
-	// here I could concatenate sn.Round after the hash for easy keeping track of round
-	// todo: check this
-}
-
 func (sn *Node) UpdateTimeout(t ...time.Duration) {
 	if len(t) > 0 {
 		sn.SetTimeout(t[0])
 	} else {
 		tt := time.Duration(sn.Height) * sn.DefaultTimeout() + sn.DefaultTimeout()
 		sn.SetTimeout(tt)
-	}
-}
-
-func (sn *Node) SetBackLink(roundNbr int) {
-	prevRound := roundNbr - 1
-	sn.MerkleStructs[roundNbr].BackLink = hashid.HashId(make([]byte, hashid.Size))
-	if prevRound >= FIRST_ROUND {
-		// My Backlink = Hash(prevRound, sn.Rounds[prevRound].BackLink, sn.Rounds[prevRound].MTRoot)
-		h := sn.suite.Hash()
-		if sn.MerkleStructs[prevRound] == nil {
-			dbg.Lvl1(sn.Name(), "not setting back link")
-			return
-		}
-		h.Write(intToByteSlice(prevRound))
-		h.Write(sn.MerkleStructs[prevRound].BackLink)
-		h.Write(sn.MerkleStructs[prevRound].MTRoot)
-		sn.MerkleStructs[roundNbr].BackLink = h.Sum(nil)
 	}
 }
 

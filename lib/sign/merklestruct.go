@@ -145,10 +145,6 @@ func MerkleSetup(sn *Node, view, RoundNbr int, am *AnnouncementMessage) error {
 		sn.RoundsAsRoot += 1
 		// TODO: is sn.Round needed if we have LastSeenRound
 		sn.RoundNbr = roundNbr
-
-		// Create my back link to previous round
-		sn.SetBackLink(roundNbr)
-		// sn.SetAccountableRound(Round)
 	}
 	return nil
 }
