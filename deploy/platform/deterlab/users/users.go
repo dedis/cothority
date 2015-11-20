@@ -163,7 +163,7 @@ func main() {
 			continue
 		}
 		totalServers += len(virts)
-		dbg.Lvl1("Launching forkexec for", len(virts), "clients on", phys)
+		dbg.Lvl2("Launching forkexec for", len(virts), "clients on", phys)
 		wg.Add(1)
 		go func(phys string) {
 			//dbg.Lvl4("running on ", phys, cmd)
