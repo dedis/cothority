@@ -34,6 +34,13 @@ type RoundStamper struct {
 	sn       *sign.Node
 }
 
+func RegisterRoundStamper(p *Peer) {
+	sign.RegisterRoundFactory(RoundStamperType,
+		func(s *sign.Node) sign.Round {
+			return NewRoundStamper(p)
+		})
+}
+
 func NewRoundStamper(peer *Peer) *RoundStamper {
 	cbs := &RoundStamper{}
 	cbs.peer = peer
