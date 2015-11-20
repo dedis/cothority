@@ -26,22 +26,19 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't open config-file:", err)
 	}
 
-	tsm, err := s.GetStamp([]byte("test"), "localhost:2000")
-	if err != nil {
-		t.Fatal("Couldn't get stamp from server:", err)
-	}
+	for _, port := range ([]int{2000, 2010}) {
+		stamper := "localhost:" + strconv.Itoa(port)
+		dbg.Lvl2("Contacting stamper", stamper)
+		tsm, err := s.GetStamp([]byte("test"), stamper)
+		if err != nil {
+			t.Fatal("Couldn't get stamp from server:", err)
+		}
 
-	if !tsm.Srep.AggPublic.Equal(s.X0) {
-		t.Fatal("Not correct aggregate public key")
+		if !tsm.Srep.AggPublic.Equal(s.X0) {
+			t.Fatal("Not correct aggregate public key")
+		}
 	}
-	tsm, err = s.GetStamp([]byte("test"), "localhost:2010")
-	if err != nil {
-		t.Fatal("Couldn't get stamp from server:", err)
-	}
-
-	if !tsm.Srep.AggPublic.Equal(s.X0) {
-		t.Fatal("Not correct aggregate public key")
-	} //stopConode()
+	//stopConode()
 }
 
 func readConfig() *app.ConfigConode {
@@ -58,12 +55,12 @@ func runConode(conf *app.ConfigConode, id int) {
 	// Read the private / public keys + binded address
 	keybase := "testdata/key" + strconv.Itoa(id)
 	address := ""
-	if sec, err := cliutils.ReadPrivKey(suite, keybase+".priv"); err != nil {
+	if sec, err := cliutils.ReadPrivKey(suite, keybase + ".priv"); err != nil {
 		dbg.Fatal("Error reading private key file  :", err)
 	} else {
 		conf.Secret = sec
 	}
-	if pub, addr, err := cliutils.ReadPubKey(suite, keybase+".pub"); err != nil {
+	if pub, addr, err := cliutils.ReadPubKey(suite, keybase + ".pub"); err != nil {
 		dbg.Fatal("Error reading public key file :", err)
 	} else {
 		conf.Public = pub
