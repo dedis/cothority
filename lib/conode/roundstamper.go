@@ -21,17 +21,17 @@ import (
 const RoundStamperType = "stamper"
 
 type RoundStamper struct {
-							  // Leaves, Root and Proof for a round
-	Leaves    []hashid.HashId // can be removed after we verify protocol
-	Root      hashid.HashId
-	Proofs    []proof.Proof
-							  // Timestamp message for this Round
-	Timestamp int64
+							   // Leaves, Root and Proof for a round
+	CosiLeaves []hashid.HashId // can be removed after we verify protocol
+	CosiRoot   hashid.HashId
+	CosiProofs []proof.Proof
+							   // Timestamp message for this Round
+	Timestamp  int64
 
-	peer      *Peer
-	Merkle    *sign.RoundMerkle
-	RoundNbr  int
-	sn        *sign.Node
+	peer       *Peer
+	Merkle     *sign.Merkle
+	RoundNbr   int
+	sn         *sign.Node
 }
 
 func RegisterRoundStamper(p *Peer) {
@@ -72,11 +72,11 @@ func (round *RoundStamper) Announcement(RoundNbr int, in *sign.SigningMessage, o
 		return err
 	}
 
-	if err := sign.RoundSetup(round.sn, round.sn.ViewNo, RoundNbr, am); err != nil {
+	if err := sign.MerkleSetup(round.sn, round.sn.ViewNo, RoundNbr, am); err != nil {
 		return err
 	}
 	// Store the message for the round
-	round.Merkle = round.sn.Rounds[RoundNbr]
+	round.Merkle = round.sn.MerkleStructs[RoundNbr]
 	round.Merkle.Msg = am.Message
 
 	// Inform all children of announcement - just copy the one that came in
@@ -99,15 +99,14 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 	// X for public key
 	merkle.ChildX_hat = make(map[string]abstract.Point, len(children))
 
-	// Commits from children are the first Merkle Tree leaves for the round
-	merkle.Leaves = make([]hashid.HashId, 0)
-	merkle.LeavesFrom = make([]string, 0)
-
 	for key := range children {
 		merkle.ChildX_hat[key] = merkle.Suite.Point().Null()
 		merkle.ChildV_hat[key] = merkle.Suite.Point().Null()
 	}
 
+	// Commits from children are the first Merkle Tree leaves for the round
+	merkle.Leaves = make([]hashid.HashId, 0)
+	merkle.LeavesFrom = make([]string, 0)
 	for _, sm := range merkle.Commits {
 		from := sm.From
 		// MTR ==> root of sub-merkle tree
@@ -138,20 +137,20 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 	// give up if nothing to process
 	if len(Queue[PROCESSING]) == 0 {
 		round.peer.Mux.Unlock()
-		round.Root = make([]byte, hashid.Size)
-		round.Proofs = make([]proof.Proof, 1)
+		round.CosiRoot = make([]byte, hashid.Size)
+		round.CosiProofs = make([]proof.Proof, 1)
 	} else {
 		// pull out to be Merkle Tree leaves
-		round.Leaves = make([]hashid.HashId, 0)
+		round.CosiLeaves = make([]hashid.HashId, 0)
 		for _, msg := range Queue[PROCESSING] {
-			round.Leaves = append(round.Leaves, hashid.HashId(msg.Tsm.Sreq.Val))
+			round.CosiLeaves = append(round.CosiLeaves, hashid.HashId(msg.Tsm.Sreq.Val))
 		}
 		round.peer.Mux.Unlock()
 
 		// create Merkle tree for this round's messages and check corectness
-		round.Root, round.Proofs = proof.ProofTree(round.Merkle.Suite.Hash, round.Leaves)
+		round.CosiRoot, round.CosiProofs = proof.ProofTree(round.Merkle.Suite.Hash, round.CosiLeaves)
 		if dbg.DebugVisible > 2 {
-			if proof.CheckLocalProofs(round.Merkle.Suite.Hash, round.Root, round.Leaves, round.Proofs) == true {
+			if proof.CheckLocalProofs(round.Merkle.Suite.Hash, round.CosiRoot, round.CosiLeaves, round.CosiProofs) == true {
 				dbg.Lvl4("Local Proofs of", round.peer.Name(), "successful for round " + strconv.Itoa(int(round.peer.LastRound())))
 			} else {
 				panic("Local Proofs" + round.peer.Name() + " unsuccessful for round " + strconv.Itoa(int(round.peer.LastRound())))
@@ -159,7 +158,7 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 		}
 	}
 
-	round.Merkle.MerkleAddLocal(round.Root)
+	round.Merkle.MerkleAddLocal(round.CosiRoot)
 	round.Merkle.MerkleHashLog()
 	round.Merkle.ComputeCombinedMerkleRoot()
 
@@ -312,11 +311,11 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 		copy(combProof, round.Merkle.Proof)
 
 		// add my proof to get from a leaf message to my root s.Root
-		combProof = append(combProof, round.Proofs[i]...)
+		combProof = append(combProof, round.CosiProofs[i]...)
 
 		// proof that I can get from a leaf message to the big root
 		if proof.CheckProof(round.Merkle.Suite.Hash, round.Merkle.MTRoot,
-			round.Leaves[i], combProof) {
+			round.CosiLeaves[i], combProof) {
 			dbg.Lvl2("Proof is OK for msg", msg)
 		} else {
 			dbg.Lvl2("Inclusion-proof failed")

@@ -222,7 +222,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	am := sm.Am
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 	var ri Round
-	ri = sn.RoundsInterface[RoundNbr]
+	ri = sn.Rounds[RoundNbr]
 	if ri == nil {
 		if am == nil {
 			return fmt.Errorf("Got a nil announcement on a non root nde?")
@@ -236,7 +236,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 			dbg.Lvl3(sn.Name(), "Error getting new round in announcement")
 			return err
 		}
-		sn.RoundsInterface[RoundNbr] = r
+		sn.Rounds[RoundNbr] = r
 		ri = r
 
 	}
@@ -291,7 +291,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, roundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[roundNbr]
+	round := sn.MerkleStructs[roundNbr]
 	if round == nil {
 		dbg.Lvl3("Commit number was not announced of this round, should retreat")
 		return nil
@@ -319,7 +319,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		return nil
 	}
 
-	ri := sn.RoundsInterface[roundNbr]
+	ri := sn.Rounds[roundNbr]
 	if ri == nil {
 		dbg.Lvl3(sn.Name(), "No round interface for commit round number", roundNbr)
 		return fmt.Errorf("No Round Interface defined for this round number (commitment)")
@@ -367,11 +367,11 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[RoundNbr]
+	round := sn.MerkleStructs[RoundNbr]
 	if round == nil {
 		return nil
 	}
-	ri := sn.RoundsInterface[RoundNbr]
+	ri := sn.Rounds[RoundNbr]
 	if ri == nil {
 		return fmt.Errorf("No Round Interface created for this round")
 	}
@@ -416,7 +416,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	sn.roundmu.Unlock()
 	sn.PeerStatus = StatusReturnMessage{1, len(sn.Children(view))}
 
-	Round := sn.Rounds[roundNbr]
+	Round := sn.MerkleStructs[roundNbr]
 	if Round == nil || Round.Log.v == nil {
 		// If I was not announced of this round, or I failed to commit
 		dbg.Lvl3(sn.Name(), "Was non announced or did not commit for this round's response")
@@ -439,7 +439,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 		return nil
 	}
 
-	ri := sn.RoundsInterface[roundNbr]
+	ri := sn.Rounds[roundNbr]
 	if ri == nil {
 		return fmt.Errorf("No Round Interface for this round nbr :(")
 	}
@@ -531,7 +531,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 	dbg.Lvl3(sn.Name(), "received SignatureBroadcast on", view)
 	sn.PeerStatusRcvd = 0
 
-	ri := sn.RoundsInterface[RoundNbr]
+	ri := sn.Rounds[RoundNbr]
 	if ri == nil {
 		return fmt.Errorf("No round created for this round number (signature broadcast)")
 	}

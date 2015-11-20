@@ -13,7 +13,7 @@ func (sn *Node) ApplyVotes(ch chan *Vote) {
 	go func() {
 		for v := range ch {
 			if sn.RoundTypes[v.Round] == EmptyRT {
-				sn.RoundTypes[v.Round] = RoundType(v.Type)
+				sn.RoundTypes[v.Round] = MerkleType(v.Type)
 			}
 			sn.ApplyVote(v)
 		}
