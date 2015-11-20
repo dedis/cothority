@@ -310,7 +310,7 @@ func (sn *Node) Commit(view, roundNbr int, sm *SigningMessage) error {
 	commit := ri.Commitment(commits)
 
 	var err error
-	if round.IsRoot() {
+	if sn.IsRoot(view) {
 		dbg.Lvl3("Commit root : Aggregate Public Key :", round.X_hat)
 		sn.commitsDone <- roundNbr
 		err = sn.Challenge(view, roundNbr, nil)
@@ -397,7 +397,7 @@ func (sn *Node) Respond(view, roundNbr int, sm *SigningMessage) error {
 	if err != nil {
 		return err
 	}
-	isroot := Round.IsRoot()
+	isroot := sn.IsRoot(view)
 	// if error put it up if parent exists
 	if err != nil && !isroot {
 		sn.PutUpError(view, err)
