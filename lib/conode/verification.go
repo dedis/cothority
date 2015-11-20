@@ -54,7 +54,6 @@ func VerifySignature(suite abstract.Suite, reply *StampSignature, public abstrac
 // components of the challenge has been spoofed or not. It may be a different
 // timestamp .
 func VerifyChallenge(suite abstract.Suite, reply *StampSignature) error {
-
 	// marshal the V
 	pbuf, err := reply.AggCommit.MarshalBinary()
 	if err != nil {
@@ -69,7 +68,6 @@ func VerifyChallenge(suite abstract.Suite, reply *StampSignature) error {
 	cbuf := append(b.Bytes(), reply.MerkleRoot...)
 	c.Message(nil, nil, cbuf)
 	challenge := suite.Secret().Pick(c)
-	dbg.Lvlf3("challenge: %+v", challenge)
 	if challenge.Equal(reply.Challenge) {
 		return nil
 	}

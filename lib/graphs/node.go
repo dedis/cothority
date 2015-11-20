@@ -13,7 +13,7 @@ import (
 	"time"
 
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/crypto/abstract"
@@ -45,13 +45,6 @@ ex.json
 */
 
 type JSONPoint json.RawMessage
-
-type Node struct {
-	Name     string  `json:"name"`
-	PriKey   string  `json:"prikey,omitempty"`
-	PubKey   string  `json:"pubkey,omitempty"`
-	Children []*Node `json:"children,omitempty"`
-}
 
 // HostConfig stores all of the relevant information of the configuration file.
 type HostConfig struct {

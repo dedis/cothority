@@ -4,7 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 	"io/ioutil"
 	"os"
 	"time"
@@ -29,9 +29,6 @@ func main() {
 		dbg.Lvlf3("Tree is %+v", conf.Tree.String(0))
 	}
 	dbg.Lvl3(app.RunFlags.Hostname, "Starting to run")
-	if conf.Debug > 1 {
-		sign.DEBUG = true
-	}
 
 	if hostname == "" {
 		dbg.Fatal("no hostname given", hostname)

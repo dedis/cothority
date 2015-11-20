@@ -68,14 +68,14 @@ func (sn *Node) ReceivedHeartbeat(view int) {
 
 }
 
-func (sn *Node) TryRootFailure(view, Round int) bool {
+func (sn *Node) TryRootFailure(view, roundNbr int) bool {
 	if sn.IsRoot(view) && sn.FailAsRootEvery != 0 {
 		if sn.RoundsAsRoot != 0 && sn.RoundsAsRoot%sn.FailAsRootEvery == 0 {
-			log.Errorln(sn.Name() + "was imposed root failure on round" + strconv.Itoa(Round))
+			log.Errorln(sn.Name() + "was imposed root failure on round" + strconv.Itoa(roundNbr))
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "root_failure",
-				"round": Round,
+				"round": roundNbr,
 			}).Info(sn.Name() + "Root imposed failure")
 			// It doesn't make sense to try view change twice
 			// what we essentially end up doing is double setting sn.ViewChanged
@@ -88,104 +88,29 @@ func (sn *Node) TryRootFailure(view, Round int) bool {
 	return false
 }
 
-func (sn *Node) TryFailure(view, Round int) error {
-	if sn.TryRootFailure(view, Round) {
+// Simulate failure in system
+func (sn *Node) TryFailure(view, roundNbr int) error {
+	if sn.TryRootFailure(view, roundNbr) {
 		return ErrImposedFailure
 	}
 
-	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && Round%sn.FailAsFollowerEvery == 0 {
+	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && roundNbr %sn.FailAsFollowerEvery == 0 {
 		// when failure rate given fail with that probability
 		if (sn.FailureRate > 0 && sn.ShouldIFail("")) || (sn.FailureRate == 0) {
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "follower_failure",
-				"round": Round,
+				"round": roundNbr,
 			}).Info(sn.Name() + "Follower imposed failure")
-			return errors.New(sn.Name() + "was imposed follower failure on round" + strconv.Itoa(Round))
+			return errors.New(sn.Name() + "was imposed follower failure on round" + strconv.Itoa(roundNbr))
 		}
 	}
 
 	// doing this before annoucing children to avoid major drama
 	if !sn.IsRoot(view) && sn.ShouldIFail("commit") {
-		log.Warn(sn.Name(), "not announcing or commiting for round", Round)
+		log.Warn(sn.Name(), "not announcing or commiting for round", roundNbr)
 		return ErrImposedFailure
 	}
-	return nil
-}
-
-// Create round lasting secret and commit point v and V
-// Initialize log structure for the round
-func (sn *Node) initCommitCrypto(Round int) {
-	round := sn.Rounds[Round]
-	// generate secret and point commitment for this round
-	rand := sn.suite.Cipher([]byte(sn.Name()))
-	round.Log = SNLog{}
-	round.Log.v = sn.suite.Secret().Pick(rand)
-	round.Log.V = sn.suite.Point().Mul(nil, round.Log.v)
-	// initialize product of point commitments
-	round.Log.V_hat = sn.suite.Point().Null()
-	round.Log.Suite = sn.suite
-	sn.add(round.Log.V_hat, round.Log.V)
-
-	round.X_hat = sn.suite.Point().Null()
-	sn.add(round.X_hat, sn.PubKey)
-}
-
-func (sn *Node) setUpRound(view int, am *AnnouncementMessage) error {
-	// TODO: accept annoucements on old views?? linearizabiltity?
-	sn.viewmu.Lock()
-	// if (sn.ChangingView && am.Vote == nil) || (sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil) {
-	// 	dbg.Lvl4(sn.Name(), "currently chaning view")
-	// 	sn.viewmu.Unlock()
-	// 	return ChangingViewError
-	// }
-	if sn.ChangingView && am.Vote != nil && am.Vote.Vcv == nil {
-		dbg.Lvl4(sn.Name(), "currently chaning view")
-		sn.viewmu.Unlock()
-		return ChangingViewError
-	}
-	sn.viewmu.Unlock()
-
-	sn.roundmu.Lock()
-	Round := am.Round
-	if Round <= sn.LastSeenRound {
-		sn.roundmu.Unlock()
-		return ErrPastRound
-	}
-
-	// make space for round type
-	if len(sn.RoundTypes) <= Round {
-		sn.RoundTypes = append(sn.RoundTypes, make([]RoundType, max(len(sn.RoundTypes), Round+1))...)
-	}
-	if am.Vote == nil {
-		dbg.Lvl4(Round, len(sn.RoundTypes))
-		sn.RoundTypes[Round] = SigningRT
-	} else {
-		sn.RoundTypes[Round] = RoundType(am.Vote.Type)
-	}
-	sn.roundmu.Unlock()
-
-	// set up commit and response channels for the new round
-	sn.Rounds[Round] = NewRound(sn.suite)
-	sn.initCommitCrypto(Round)
-	sn.Rounds[Round].Vote = am.Vote
-
-	// update max seen round
-	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, Round)
-	sn.roundmu.Unlock()
-
-	// the root is the only node that keeps track of round # internally
-	if sn.IsRoot(view) {
-		sn.RoundsAsRoot += 1
-		// TODO: is sn.Round needed if we have LastSeenRound
-		sn.Round = Round
-
-		// Create my back link to previous round
-		sn.SetBackLink(Round)
-		// sn.SetAccountableRound(Round)
-	}
-
 	return nil
 }
 
@@ -223,7 +148,6 @@ func (sn *Node) add(a abstract.Point, b abstract.Point) {
 	if b != nil {
 		a.Add(a, b)
 	}
-
 }
 
 // accommodate nils
@@ -234,7 +158,6 @@ func (sn *Node) sub(a abstract.Point, b abstract.Point) {
 	if b != nil {
 		a.Sub(a, b)
 	}
-
 }
 
 func (sn *Node) subExceptions(a abstract.Point, keys []abstract.Point) {
@@ -247,6 +170,28 @@ func (sn *Node) updateLastSeenVote(hv int, from string) {
 	if int(atomic.LoadInt64(&sn.LastSeenVote)) < hv {
 		atomic.StoreInt64(&sn.LastSeenVote, int64(hv))
 	}
+}
+
+func (sn *Node) ChangeView(vcv *ViewChangeVote) {
+	// log.Println(sn.Name(), " in CHANGE VIEW")
+	// at this point actions have already been applied
+	// all we need to do is switch our default view
+	sn.viewmu.Lock()
+	sn.ViewNo = vcv.View
+	sn.viewmu.Unlock()
+	if sn.RootFor(vcv.View) == sn.Name() {
+		log.Println(sn.Name(), "Change view to root", "children", sn.Children(vcv.View))
+		sn.viewChangeCh <- "root"
+	} else {
+		log.Println(sn.Name(), "Change view to regular")
+		sn.viewChangeCh <- "regular"
+	}
+
+	sn.viewmu.Lock()
+	sn.ChangingView = false
+	sn.viewmu.Unlock()
+	log.Println("VIEW CHANGED")
+	// TODO: garbage collect old connections
 }
 
 func max(a int, b int) int {

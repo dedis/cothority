@@ -13,6 +13,13 @@ import (
 	"strings"
 )
 
+// struct to ease keeping track of who requires a reply after
+// tsm is processed/ aggregated by the TSServer
+type MustReplyMessage struct {
+	Tsm TimeStampMessage
+	To  string // name of reply destination
+}
+
 // Default port for the conode-setup - the stamping-request port
 // is at ```DefaultPort + 1```
 var DefaultPort int = 2000

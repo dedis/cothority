@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 )
 
 // time we wait between rounds

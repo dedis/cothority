@@ -5,11 +5,11 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-//"github.com/dedis/crypto/nist"
+	//"github.com/dedis/crypto/nist"
+	"encoding/json"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/protobuf"
-	"encoding/json"
 )
 
 // All message structures defined in this package are used in the
@@ -91,6 +91,7 @@ type SigningMessage struct {
 	From         string
 	View         int
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
+	RoundNbr     int
 }
 
 var msgSuite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
@@ -133,70 +134,73 @@ func (sm *SigningMessage) UnmarshalJSON(dataJSON []byte) error {
 
 // Broadcasted message initiated and signed by proposer
 type AnnouncementMessage struct {
-	Message []byte
-	Round   int
-				  // VoteRequest *VoteRequest
-	Vote    *Vote // Vote Request (propose)
+	Message   []byte
+	RoundType string // what kind of round this announcement is made for
+	// VoteRequest *VoteRequest
+	Vote *Vote // Vote Request (propose)
 }
 
+// Commitment of all nodes together with the data they want
+// to have signed
 type CommitmentMessage struct {
-	V             abstract.Point // commitment Point
-	V_hat         abstract.Point // product of subtree participating nodes' commitment points
-	X_hat         abstract.Point // product of subtree participating nodes' public keys
+	V     abstract.Point // commitment Point
+	V_hat abstract.Point // product of subtree participating nodes' commitment points
+	X_hat abstract.Point // product of subtree participating nodes' public keys
 
-	MTRoot        hashid.HashId  // root of Merkle (sub)Tree
+	MTRoot hashid.HashId // root of Merkle (sub)Tree
 
-								 // public keys of children servers that did not respond to
-								 // annoucement from root
+	// public keys of children servers that did not respond to
+	// annoucement from root
 	ExceptionList []abstract.Point
 
-								 // CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
-	Vote          *Vote          // Vote Response (promise)
+	// CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
+	Vote *Vote // Vote Response (promise)
 
-	Messages      int            // Actual number of messages signed
-	Round         int
+	Messages int // Actual number of messages signed
 }
 
+// The challenge calculated by the root-node
 type ChallengeMessage struct {
-	C      abstract.Secret // challenge
+	C abstract.Secret // challenge
 
-						   // Depth  byte
-	MTRoot hashid.HashId   // the very root of the big Merkle Tree
-	Proof  proof.Proof     // Merkle Path of Proofs from root to us
+	// Depth  byte
+	MTRoot hashid.HashId // the very root of the big Merkle Tree
+	Proof  proof.Proof   // Merkle Path of Proofs from root to us
 
-						   // CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
-	Vote   *Vote           // Vote Confirmerd/ Rejected (accept)
+	// CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
+	Vote *Vote // Vote Confirmerd/ Rejected (accept)
 
-	Round  int
 }
 
+// Every node replies with eventual exceptions if they
+// are not OK
 type ResponseMessage struct {
-	R_hat          abstract.Secret // response
+	R_hat abstract.Secret // response
 
-								   // public keys of children servers that did not respond to
-								   // challenge from root
-	ExceptionList  []abstract.Point
-								   // cummulative point commits of nodes that failed after commit
+	// public keys of children servers that did not respond to
+	// challenge from root
+	ExceptionList []abstract.Point
+	// cummulative point commits of nodes that failed after commit
 	ExceptionV_hat abstract.Point
-								   // cummulative public keys of nodes that failed after commit
+	// cummulative public keys of nodes that failed after commit
 	ExceptionX_hat abstract.Point
 
-	Vote           *Vote           // Vote Ack/Nack in thr log (ack/nack)
+	Vote *Vote // Vote Ack/Nack in thr log (ack/nack)
 
-	Round          int
 }
 
 // 5th message going from root to leaves to send the
 // signature
 type SignatureBroadcastMessage struct {
 	// Aggregate response of root
-	R0_hat   abstract.Secret
+	R0_hat abstract.Secret
 	// Challenge
-	C        abstract.Secret
+	C abstract.Secret
 	// Aggregate public key
-	X0_hat   abstract.Point
+	X0_hat abstract.Point
 	// Aggregate public commitment
-	V0_hat   abstract.Point
+	V0_hat abstract.Point
+
 	// Number of messages signed
 	Messages int
 }
@@ -208,19 +212,22 @@ type StatusReturnMessage struct {
 	// How many nodes sent a 'respond' message
 	Responders int
 	// How many peers contacted for a challenge
-	Peers      int
+	Peers int
 }
 
+// In case of an error, this message is sent
 type ErrorMessage struct {
 	Err string
 }
 
+// For request of a vote on tree-structure change
 type VoteRequestMessage struct {
 	Vote *Vote
 }
 
+// Whenever the group changed
 type GroupChangedMessage struct {
-	V        *Vote
+	V *Vote
 	// if vote not accepted rest of fields are nil
 	HostList []string
 }

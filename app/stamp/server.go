@@ -16,7 +16,7 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/sign"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 )
 
 type Server struct {
-	sign.Signer
+	sign.Node
 	name    string
 	Clients map[string]coconet.Conn
 
@@ -48,20 +48,20 @@ type Server struct {
 	conf     *app.ConfigColl
 }
 
-func NewServer(conf *app.ConfigColl, signer sign.Signer) *Server {
+func NewServer(conf *app.ConfigColl, node sign.Node) *Server {
 	s := &Server{}
 
 	s.Clients = make(map[string]coconet.Conn)
 	s.Queue = make([][]MustReplyMessage, 2)
 
-	s.Signer = signer
-	s.Signer.RegisterCommitFunc(s.CommitFunc())
-	s.Signer.RegisterDoneFunc(s.Done())
+	s.Node = node
+	s.Node.RegisterCommitFunc(s.CommitFunc())
+	s.Node.RegisterDoneFunc(s.Done())
 	s.rLock = sync.Mutex{}
 	s.conf = conf
 	// listen for client requests at one port higher
 	// than the signing node
-	h, p, err := net.SplitHostPort(s.Signer.Name())
+	h, p, err := net.SplitHostPort(s.Node.Name())
 	if err == nil {
 		i, err := strconv.Atoi(p)
 		if err != nil {
@@ -80,12 +80,12 @@ var clientNumber int = 0
 func (s *Server) Close() {
 	dbg.Lvl4("closing stampserver: %p", s.name)
 	s.closeChan <- true
-	s.Signer.Close()
+	s.Node.Close()
 }
 
 // listen for clients connections
 // this server needs to be running on a different port
-// than the Signer that is beneath it
+// than the Node that is beneath it
 func (s *Server) Listen() error {
 	dbg.Lvl3("Listening in server at", s.name)
 	ln, err := net.Listen("tcp4", s.name)
@@ -295,7 +295,7 @@ func (s *Server) Run(role string, nRounds int) {
 	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl3("Signer closed:", err) }()
+	go func() { err := s.Node.Listen(); closed <- true; s.Close(); dbg.Lvl3("Node closed:", err) }()
 	if role == "test_connect" {
 		role = "regular"
 		go func() {
@@ -312,10 +312,10 @@ func (s *Server) Run(role string, nRounds int) {
 				}
 				if i%2 == 0 {
 					dbg.Lvl4("removing self")
-					s.Signer.RemoveSelf()
+					s.Node.RemoveSelf()
 				} else {
 					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
-					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
+					s.Node.AddSelf(hostlist[(i/2)%len(hostlist)])
 				}
 				i++
 			}
@@ -380,8 +380,8 @@ func (s *Server) Done() sign.DoneFunc {
 			combProof = append(combProof, s.Proofs[i]...)
 
 			// proof that i can get from a leaf message to the big root
-			if sign.DEBUG == true {
-				proof.CheckProof(s.Signer.(*sign.Node).Suite().Hash, SNRoot, s.Leaves[i], combProof)
+			if dbg.DebugVisible > 2 {
+				proof.CheckProof(s.Node.Suite().Hash, SNRoot, s.Leaves[i], combProof)
 			}
 
 			respMessg := TimeStampMessage{

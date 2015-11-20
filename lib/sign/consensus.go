@@ -61,17 +61,17 @@ func (sn *Node) SetupProposal(view int, am *AnnouncementMessage, from string) er
 // A propose for a view change would come on current view + sth
 // when we receive view change  message on a future view,
 // we must be caught up, create that view  and apply actions on it
-func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
+func (sn *Node) Propose(view int, RoundNbr int, am *AnnouncementMessage, from string) error {
 	log.Println(sn.Name(), "GOT ", "Propose", am)
 	if err := sn.SetupProposal(view, am, from); err != nil {
 		return err
 	}
 
-	if err := sn.setUpRound(view, am); err != nil {
+	if err := MerkleSetup(sn, view, RoundNbr, am); err != nil {
 		return err
 	}
 	// log.Println(sn.Name(), "propose on view", view, sn.HostListOn(view))
-	sn.Rounds[am.Round].Vote = am.Vote
+	sn.RemoveMerkle[RoundNbr].Vote = am.Vote
 
 	// Inform all children of proposal
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -80,6 +80,7 @@ func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
 			Type:         Announcement,
 			View:         view,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			RoundNbr:     RoundNbr,
 			Am:           am}
 		messgs[i] = &sm
 	}
@@ -91,7 +92,7 @@ func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
 
 	if len(sn.Children(view)) == 0 {
 		log.Println(sn.Name(), "no children")
-		sn.Promise(view, am.Round, nil)
+		sn.Promise(view, RoundNbr, nil)
 	}
 	return nil
 }
@@ -103,7 +104,7 @@ func (sn *Node) Promise(view, Round int, sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[Round]
+	round := sn.RemoveMerkle[Round]
 	if round == nil {
 		// was not announced of this round, should retreat
 		return nil
@@ -131,7 +132,7 @@ func (sn *Node) Promise(view, Round int, sm *SigningMessage) error {
 }
 
 func (sn *Node) actOnPromises(view, Round int) error {
-	round := sn.Rounds[Round]
+	round := sn.RemoveMerkle[Round]
 	var err error
 	dbg.Lvl1("Act on Promise")
 	if sn.IsRoot(view) {
@@ -143,17 +144,16 @@ func (sn *Node) actOnPromises(view, Round int) error {
 			// log.Fatal("Marshal Binary failed for CountedVotes")
 			return err
 		}
-		round.c = hashElGamal(sn.suite, b, round.Log.V_hat)
-		err = sn.Accept(view, &ChallengeMessage{
-			C:     round.c,
-			Round: Round,
-			Vote:  round.Vote})
+		round.C = HashElGamal(sn.suite, b, round.Log.V_hat)
+		err = sn.Accept(view, Round, &ChallengeMessage{
+			C:    round.C,
+			Vote: round.Vote})
 
 	} else {
 		// create and putup own commit message
 		com := &CommitmentMessage{
-			Vote:  round.Vote,
-			Round: Round}
+			Vote: round.Vote,
+		}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		// log.Println(sn.Name(), "puts up promise on view", view, "to", sn.Parent(view))
@@ -162,19 +162,20 @@ func (sn *Node) actOnPromises(view, Round int) error {
 			View:         view,
 			Type:         Commitment,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			RoundNbr:     Round,
 			Com:          com})
 	}
 	return err
 }
 
-func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
+func (sn *Node) Accept(view, RoundNbr int, chm *ChallengeMessage) error {
 	log.Println(sn.Name(), "GOT ", "Accept", chm)
 	// update max seen round
 	sn.roundmu.Lock()
-	sn.LastSeenRound = max(sn.LastSeenRound, chm.Round)
+	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[chm.Round]
+	round := sn.RemoveMerkle[RoundNbr]
 	if round == nil {
 		log.Errorln("error round is nil")
 		return nil
@@ -187,12 +188,12 @@ func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
 		// potentially initiates signing node action based on vote
 		sn.actOnVotes(view, chm.Vote)
 	}
-	if err := sn.SendChildrenChallenges(view, chm); err != nil {
+	if err := round.SendChildrenChallenges(chm); err != nil {
 		return err
 	}
 
 	if len(sn.Children(view)) == 0 {
-		sn.Accepted(view, chm.Round, nil)
+		sn.Accepted(view, RoundNbr, nil)
 	}
 
 	return nil
@@ -205,7 +206,7 @@ func (sn *Node) Accepted(view, Round int, sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[Round]
+	round := sn.RemoveMerkle[Round]
 	if round == nil {
 		// TODO: if combined with cosi pubkey, check for round.Log.v existing needed
 		// If I was not announced of this round, or I failed to commit
@@ -226,14 +227,15 @@ func (sn *Node) Accepted(view, Round int, sm *SigningMessage) error {
 	} else {
 		// create and putup own response message
 		rm := &ResponseMessage{
-			Vote:  round.Vote,
-			Round: Round}
+			Vote: round.Vote,
+		}
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		ctx := context.TODO()
 		return sn.PutUp(ctx, view, &SigningMessage{
 			Type:         Response,
 			View:         view,
+			RoundNbr:     Round,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			Rm:           rm})
 	}

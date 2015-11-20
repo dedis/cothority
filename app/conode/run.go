@@ -55,5 +55,5 @@ func Run(configFile, key string) {
 		conf.Public = pub
 		address = addr
 	}
-	conode.RunServer(address, conf, conode.NewCallbacksStamper())
+	conode.RunServer(address, conf, conode.NewRoundStamper())
 }

@@ -40,3 +40,7 @@ func (snLog *SNLog) UnmarshalBinary(data []byte) error {
 	snLog.CMTRoots = data[len(rem):]
 	return err
 }
+
+func (snLog *SNLog) Getv() abstract.Secret{
+	return snLog.v
+}
