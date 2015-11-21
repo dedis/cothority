@@ -1,8 +1,6 @@
 package conode
 
 import (
-	"strconv"
-
 	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
@@ -75,66 +73,43 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 
 func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	// prepare to handle exceptions
-	merkle := round.Cosi
-	merkle.Commits = in
-	merkle.ExceptionList = make([]abstract.Point, 0)
+	cosi := round.Cosi
+	cosi.Commits = in
+	cosi.ExceptionList = make([]abstract.Point, 0)
 
 	// Create the mapping between children and their respective public key + commitment
 	// V for commitment
-	children := merkle.Children
-	merkle.ChildV_hat = make(map[string]abstract.Point, len(children))
+	children := cosi.Children
+	cosi.ChildV_hat = make(map[string]abstract.Point, len(children))
 	// X for public key
-	merkle.ChildX_hat = make(map[string]abstract.Point, len(children))
+	cosi.ChildX_hat = make(map[string]abstract.Point, len(children))
 
 	for key := range children {
-		merkle.ChildX_hat[key] = merkle.Suite.Point().Null()
-		merkle.ChildV_hat[key] = merkle.Suite.Point().Null()
+		cosi.ChildX_hat[key] = cosi.Suite.Point().Null()
+		cosi.ChildV_hat[key] = cosi.Suite.Point().Null()
 	}
 
 	// Commits from children are the first Merkle Tree leaves for the round
-	merkle.Leaves = make([]hashid.HashId, 0)
-	merkle.LeavesFrom = make([]string, 0)
-	for _, sm := range merkle.Commits {
+	cosi.Leaves = make([]hashid.HashId, 0)
+	cosi.LeavesFrom = make([]string, 0)
+	for _, sm := range cosi.Commits {
 		from := sm.From
 		// MTR ==> root of sub-merkle tree
-		merkle.Leaves = append(merkle.Leaves, sm.Com.MTRoot)
-		merkle.LeavesFrom = append(merkle.LeavesFrom, from)
-		merkle.ChildV_hat[from] = sm.Com.V_hat
-		merkle.ChildX_hat[from] = sm.Com.X_hat
-		merkle.ExceptionList = append(merkle.ExceptionList, sm.Com.ExceptionList...)
+		cosi.Leaves = append(cosi.Leaves, sm.Com.MTRoot)
+		cosi.LeavesFrom = append(cosi.LeavesFrom, from)
+		cosi.ChildV_hat[from] = sm.Com.V_hat
+		cosi.ChildX_hat[from] = sm.Com.X_hat
+		cosi.ExceptionList = append(cosi.ExceptionList, sm.Com.ExceptionList...)
 
 		// Aggregation
 		// add good child server to combined public key, and point commit
-		merkle.Add(merkle.X_hat, sm.Com.X_hat)
-		merkle.Add(merkle.Log.V_hat, sm.Com.V_hat)
+		cosi.Add(cosi.X_hat, sm.Com.X_hat)
+		cosi.Add(cosi.Log.V_hat, sm.Com.V_hat)
 		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
 	dbg.Lvl4("sign.Node.Commit using Merkle")
-	merkle.MerkleAddChildren()
-	// compute the local Merkle root
-
-	// give up if nothing to process
-	if len(round.Queue) == 0 {
-		round.StampRoot = make([]byte, hashid.Size)
-		round.StampProofs = make([]proof.Proof, 1)
-	} else {
-		// pull out to be Merkle Tree leaves
-		round.StampLeaves = make([]hashid.HashId, 0)
-		for _, msg := range round.Queue {
-			round.StampLeaves = append(round.StampLeaves, hashid.HashId(msg.Val))
-		}
-
-		// create Merkle tree for this round's messages and check corectness
-		round.StampRoot, round.StampProofs = proof.ProofTree(round.Cosi.Suite.Hash, round.StampLeaves)
-		if dbg.DebugVisible > 2 {
-			if proof.CheckLocalProofs(round.Cosi.Suite.Hash, round.StampRoot, round.StampLeaves, round.StampProofs) == true {
-				dbg.Lvl4("Local Proofs of", round.Node.Name(), "successful for round " + strconv.Itoa(int(round.Node.LastRound())))
-			} else {
-				panic("Local Proofs" + round.Node.Name() + " unsuccessful for round " + strconv.Itoa(int(round.Node.LastRound())))
-			}
-		}
-	}
+	cosi.MerkleAddChildren()
 
 	round.Cosi.MerkleAddLocal(round.StampRoot)
 	round.Cosi.MerkleHashLog()
@@ -152,20 +127,6 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 	round.Node.Messages = 0
 	return nil
 
-}
-
-func (round *RoundCosi) QueueSet(Queue [][]MustReplyMessage) {
-	// messages read will now be processed
-	Queue[READING], Queue[PROCESSING] = Queue[PROCESSING], Queue[READING]
-	Queue[READING] = Queue[READING][:0]
-	round.Queue = make([]ReplyMessage, len(Queue[PROCESSING]))
-	for i, q := range (Queue[PROCESSING]) {
-		round.Queue[i] = ReplyMessage{
-			Val: q.Tsm.Sreq.Val,
-			To: q.To,
-			ReqNo: byte(q.Tsm.ReqNo),
-		}
-	}
 }
 
 func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {

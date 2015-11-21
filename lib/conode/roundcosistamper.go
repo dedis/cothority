@@ -47,10 +47,15 @@ out []*sign.SigningMessage) error {
 func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	round.peer.Mux.Lock()
 	// get data from s once to avoid refetching from structure
-	round.RoundCosi.QueueSet(round.peer.Queue)
+	round.RoundStamper.QueueSet(round.peer.Queue)
 	round.peer.Mux.Unlock()
 
 	round.RoundStamper.Commitment(in, out)
+	// TODO: shouldn't be needed in the end
+	round.RoundCosi.Queue = round.RoundStamper.Queue
+	round.RoundCosi.StampLeaves = round.RoundStamper.StampLeaves
+	round.RoundCosi.StampProofs = round.RoundStamper.StampProofs
+	round.RoundCosi.StampRoot = round.RoundStamper.StampRoot
 	round.RoundCosi.Commitment(in, out)
 	return nil
 }
