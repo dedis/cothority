@@ -10,6 +10,10 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+/*
+Verification methods used by stamper.
+ */
+
 // Verifies that the 'message' is included in the signature and that it
 // is correct.
 // Message is your own hash, and reply contains the inclusion proof + signature

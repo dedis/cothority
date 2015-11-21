@@ -10,6 +10,11 @@ import (
 	"github.com/dedis/cothority/lib/sign"
 )
 
+/*
+This will run rounds with RoundCosiStamper while listening for
+incoming requests through StampListener.
+ */
+
 type Peer struct {
 	*sign.Node
 	*StampListener

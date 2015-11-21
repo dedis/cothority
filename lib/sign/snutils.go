@@ -91,7 +91,7 @@ func (sn *Node) TryRootFailure(view, roundNbr int) bool {
 // Simulate failure in system
 func (sn *Node) TryFailure(view, roundNbr int) error {
 	if sn.TryRootFailure(view, roundNbr) {
-		return ErrImposedFailure
+		return errors.New("failure imposed")
 	}
 
 	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && roundNbr %sn.FailAsFollowerEvery == 0 {
@@ -109,7 +109,7 @@ func (sn *Node) TryFailure(view, roundNbr int) error {
 	// doing this before annoucing children to avoid major drama
 	if !sn.IsRoot(view) && sn.ShouldIFail("commit") {
 		log.Warn(sn.Name(), "not announcing or commiting for round", roundNbr)
-		return ErrImposedFailure
+		return errors.New("failure imposed")
 	}
 	return nil
 }

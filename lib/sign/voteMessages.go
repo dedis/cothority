@@ -67,6 +67,12 @@ type VoteResponse struct {
 	Sig BasicSig
 }
 
+// A basic, verifiable signature
+type BasicSig struct {
+	C abstract.Secret // challenge
+	R abstract.Secret // response
+}
+
 // for sorting arrays of VoteResponse
 type ByVoteResponse []*VoteResponse
 

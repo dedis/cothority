@@ -6,7 +6,9 @@ import (
 )
 
 /*
-This gives some basic informations about a round.
+This structure holds basic information about a round. It
+can be included in a structure. To initialise, the
+round has to call NewRoundStruct.
  */
 
 type RoundStruct struct {

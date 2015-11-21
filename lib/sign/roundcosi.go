@@ -10,6 +10,13 @@ import (
 	"fmt"
 )
 
+/*
+RoundCosi implements the collective signature protocol using
+Schnorr signatures to collectively sign on a message. By default
+the message is only the collection of all Commits, but another
+round can add any message it wants in the Commitment-phase.
+ */
+
 // The name type of this round implementation
 const RoundCosiType = "cosi"
 
@@ -117,7 +124,7 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 	if round.IsRoot {
 		msg := cosi.Msg
 		msg = append(msg, []byte(cosi.MTRoot)...)
-		cosi.C = HashElGamal(cosi.Suite, msg, cosi.Log.V_hat)
+		cosi.C = cosi.HashElGamal(msg, cosi.Log.V_hat)
 		//proof := make([]hashid.HashId, 0)
 
 		in.Chm.C = cosi.C

@@ -1,9 +1,3 @@
-/*
- * This is a simple interface to get a string stamped by
- * a cothority. It can be used as standalone or in an
- * application that needs collective signing from an existing
- * cothority.
- */
 package conode
 
 import (
@@ -19,6 +13,13 @@ import (
 	"strconv"
 	"strings"
 )
+
+/*
+ * This is a simple interface to get a string stamped by
+ * a cothority. It can be used as standalone or in an
+ * application that needs collective signing from an existing
+ * cothority.
+ */
 
 type Stamp struct {
 	Config app.ConfigConode

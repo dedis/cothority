@@ -5,7 +5,7 @@ import (
 )
 
 /*
-Implements a test-round which uses RoundCosi and RoundStamp
+Implements a Stamper and a Cosi-round
  */
 
 const RoundCosiStamperType = "cosistamper"

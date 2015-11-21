@@ -12,6 +12,14 @@ import (
 	"golang.org/x/net/context"
 )
 
+/*
+This implements the part of the Node-structure that has to
+do with the protocol itself: Announce, Commit, Chalenge and
+Response. Two additional steps are done: SignatureBroadcast
+to send the final commit to all nodes, and StatusReturn which
+allows for collection of statistics.
+ */
+
 // Collective Signing via ElGamal
 // 1. Announcement
 // 2. Commitment
@@ -205,7 +213,7 @@ func (sn *Node) ProcessMessages() error {
 				err = sn.CloseAll(sm.ViewNbr)
 				return nil
 			case Error:
-				dbg.Lvl4("Received Error Message:", ErrUnknownMessageType, sm, sm.Err)
+				dbg.Lvl4("Received Error Message:", errors.New("received message of unknown type"), sm, sm.Err)
 			}
 		}
 	}

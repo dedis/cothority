@@ -13,6 +13,10 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+/*
+Loads the configuration and initialises the structures with
+the private and public keys.
+ */
 
 // Make connections and run server.go
 func RunServer(address string, conf *app.ConfigConode) {

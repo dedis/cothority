@@ -11,6 +11,11 @@ import (
 	"sort"
 )
 
+/*
+Functionality used in the roundcosi. Abstracted here for better
+understanding and readability of roundcosi.
+ */
+
 const FIRST_ROUND int = 1 // start counting rounds at 1
 
 type CosiStruct struct {
@@ -247,8 +252,8 @@ func (cosi *CosiStruct) VerifyResponses() error {
 		// exception list
 		msg := cosi.Msg
 		msg = append(msg, []byte(cosi.MTRoot)...)
-		cosi.C = HashElGamal(cosi.Suite, msg, cosi.Log.V_hat)
-		c2 = HashElGamal(cosi.Suite, msg, T)
+		cosi.C = cosi.HashElGamal(msg, cosi.Log.V_hat)
+		c2 = cosi.HashElGamal(msg, T)
 	}
 
 	// intermediary nodes check partial responses aginst their partial keys
@@ -261,3 +266,12 @@ func (cosi *CosiStruct) VerifyResponses() error {
 	}
 	return nil
 }
+
+// Returns a secret that depends on on a message and a point
+func (cosi *CosiStruct)HashElGamal(message []byte, p abstract.Point) abstract.Secret {
+	pb, _ := p.MarshalBinary()
+	c := cosi.Suite.Cipher(pb)
+	c.Message(nil, nil, message)
+	return cosi.Suite.Secret().Pick(c)
+}
+

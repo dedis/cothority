@@ -21,7 +21,12 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
+	"sync/atomic"
 )
+
+/*
+This implements the helper Node-methods
+ */
 
 type Type int // used by other modules as coll_sign.Type
 
@@ -416,4 +421,50 @@ func (sn *Node) Timeout() time.Duration {
 
 func (sn *Node) DefaultTimeout() time.Duration {
 	return 5000 * time.Millisecond
+}
+
+func (sn *Node) CloseAll(view int) error {
+	dbg.Lvl2(sn.Name(), "received CloseAll on", view)
+
+	// At the leaves
+	if len(sn.Children(view)) == 0 {
+		dbg.Lvl2(sn.Name(), "in CloseAll is root leaf")
+	} else {
+		dbg.Lvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
+
+		// Inform all children of announcement
+		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+		for i := range messgs {
+			sm := SigningMessage{
+				Type:         CloseAll,
+				ViewNbr:         view,
+				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			}
+			messgs[i] = &sm
+		}
+		ctx := context.TODO()
+		if err := sn.PutDown(ctx, view, messgs); err != nil {
+			return err
+		}
+	}
+
+	sn.Close()
+	dbg.Lvl3("Closing down shop", sn.Isclosed)
+	return nil
+}
+
+func (sn *Node) PutUpError(view int, err error) {
+	// dbg.Lvl4(sn.Name(), "put up response with err", err)
+	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
+	ctx := context.TODO()
+	sn.PutUp(ctx, view, &SigningMessage{
+		Type:         Error,
+		ViewNbr:         view,
+		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+		Err:          &ErrorMessage{Err: err.Error()}})
+}
+
+// Getting actual View
+func (sn *Node) GetView() int {
+	return sn.ViewNo
 }

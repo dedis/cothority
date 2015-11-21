@@ -15,6 +15,11 @@ const (
 	PROCESSING
 )
 
+/*
+The counterpart to stamp.go - it listens for incoming requests
+and passes those to the roundstamper.
+ */
+
 type StampListener struct {
 	// for aggregating messages from clients
 	Mux     sync.Mutex

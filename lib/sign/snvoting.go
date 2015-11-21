@@ -12,6 +12,11 @@ import (
 // HERE: after we change to the new view, we could send our parent
 // a notification that we are ready to use the new view
 
+// Constants we expect might be used by other packages
+var ROUND_TIME time.Duration = 1 * time.Second
+var HEARTBEAT = ROUND_TIME + ROUND_TIME/2
+var GOSSIP_TIME time.Duration = 3 * ROUND_TIME
+
 func (sn *Node) ApplyVote(v *Vote) {
 	atomic.StoreInt64(&sn.LastAppliedVote, int64(v.Index))
 	lav := atomic.LoadInt64(&sn.LastAppliedVote)

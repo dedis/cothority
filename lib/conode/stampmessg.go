@@ -13,6 +13,10 @@ import (
 	"strings"
 )
 
+/*
+All messages for stamper-related actions
+ */
+
 // struct to ease keeping track of who requires a reply after
 // tsm is processed/ aggregated by the TSServer
 type MustReplyMessage struct {

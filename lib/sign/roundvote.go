@@ -1,6 +1,11 @@
 package sign
 
 /*
+NOT WORKING - this can be implemented to have a RoundVote which
+will ask for a view-change.
+ */
+
+/*
 func (sn *Node) StartVotingRound(v *Vote) error {
 	dbg.Lvl2(sn.Name(), "start voting round")
 	sn.nRounds = sn.LastSeenRound

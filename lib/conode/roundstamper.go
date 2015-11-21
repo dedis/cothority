@@ -12,7 +12,8 @@ import (
 )
 
 /*
-Implements the basic Collective Signature using Schnorr signatures.
+Implements a merkle-tree hasher for incoming messages that
+are passed to roundcosi.
  */
 
 const RoundStamperType = "stamper"
