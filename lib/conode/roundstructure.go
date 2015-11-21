@@ -13,6 +13,7 @@ type RoundStructure struct {
 	isLeaf   bool
 	roundNbr int
 	viewNbr  int
+	parent   string
 	children map[string]coconet.Conn
 }
 
@@ -23,6 +24,7 @@ func NewRoundStructure(node *sign.Node, viewNbr, roundNbr int) *RoundStructure {
 		isLeaf: len(children) == 0,
 		roundNbr: roundNbr,
 		viewNbr: viewNbr,
+		parent: node.Parent(viewNbr),
 		children: children,
 	}
 	return cbs
