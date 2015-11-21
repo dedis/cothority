@@ -20,18 +20,18 @@ const RoundCosiType = "cosi"
 
 type RoundCosi struct {
 	*RoundStructure
-							   // Leaves, Root and Proof for a round
-	CosiLeaves []hashid.HashId // can be removed after we verify protocol
-	CosiRoot   hashid.HashId
-	CosiProofs []proof.Proof
-							   // Timestamp message for this Round
-	Timestamp  int64
+								// Leaves, Root and Proof for a round
+	StampLeaves []hashid.HashId // can be removed after we verify protocol
+	StampRoot   hashid.HashId
+	StampProofs []proof.Proof
+								// Timestamp message for this Round
+	Timestamp   int64
 
-	peer       *Peer
-	Merkle     *sign.CosiStrut
-	Node       *sign.Node
+	peer        *Peer
+	Cosi        *sign.CosiStrut
+	Node        *sign.Node
 
-	Queue      []ReplyMessage
+	Queue       []ReplyMessage
 }
 
 type ReplyMessage struct {
@@ -63,8 +63,8 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 
 	// Store the message for the round
 	//round.Merkle = round.Node.MerkleStructs[roundNbr]
-	round.Merkle = sign.NewCosi(round.Node, viewNbr, roundNbr, in.Am)
-	round.Merkle.Msg = in.Am.Message
+	round.Cosi = sign.NewCosi(round.Node, viewNbr, roundNbr, in.Am)
+	round.Cosi.Msg = in.Am.Message
 
 	// Inform all children of announcement - just copy the one that came in
 	for i := range out {
@@ -75,7 +75,7 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 
 func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	// prepare to handle exceptions
-	merkle := round.Merkle
+	merkle := round.Cosi
 	merkle.Commits = in
 	merkle.ExceptionList = make([]abstract.Point, 0)
 
@@ -116,19 +116,19 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 
 	// give up if nothing to process
 	if len(round.Queue) == 0 {
-		round.CosiRoot = make([]byte, hashid.Size)
-		round.CosiProofs = make([]proof.Proof, 1)
+		round.StampRoot = make([]byte, hashid.Size)
+		round.StampProofs = make([]proof.Proof, 1)
 	} else {
 		// pull out to be Merkle Tree leaves
-		round.CosiLeaves = make([]hashid.HashId, 0)
+		round.StampLeaves = make([]hashid.HashId, 0)
 		for _, msg := range round.Queue {
-			round.CosiLeaves = append(round.CosiLeaves, hashid.HashId(msg.Val))
+			round.StampLeaves = append(round.StampLeaves, hashid.HashId(msg.Val))
 		}
 
 		// create Merkle tree for this round's messages and check corectness
-		round.CosiRoot, round.CosiProofs = proof.ProofTree(round.Merkle.Suite.Hash, round.CosiLeaves)
+		round.StampRoot, round.StampProofs = proof.ProofTree(round.Cosi.Suite.Hash, round.StampLeaves)
 		if dbg.DebugVisible > 2 {
-			if proof.CheckLocalProofs(round.Merkle.Suite.Hash, round.CosiRoot, round.CosiLeaves, round.CosiProofs) == true {
+			if proof.CheckLocalProofs(round.Cosi.Suite.Hash, round.StampRoot, round.StampLeaves, round.StampProofs) == true {
 				dbg.Lvl4("Local Proofs of", round.Node.Name(), "successful for round " + strconv.Itoa(int(round.Node.LastRound())))
 			} else {
 				panic("Local Proofs" + round.Node.Name() + " unsuccessful for round " + strconv.Itoa(int(round.Node.LastRound())))
@@ -136,16 +136,16 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 		}
 	}
 
-	round.Merkle.MerkleAddLocal(round.CosiRoot)
-	round.Merkle.MerkleHashLog()
-	round.Merkle.ComputeCombinedMerkleRoot()
+	round.Cosi.MerkleAddLocal(round.StampRoot)
+	round.Cosi.MerkleHashLog()
+	round.Cosi.ComputeCombinedMerkleRoot()
 
-	out.Com.V = round.Merkle.Log.V
-	out.Com.V_hat = round.Merkle.Log.V_hat
-	out.Com.X_hat = round.Merkle.X_hat
-	out.Com.MTRoot = round.Merkle.MTRoot
-	out.Com.ExceptionList = round.Merkle.ExceptionList
-	out.Com.Vote = round.Merkle.Vote
+	out.Com.V = round.Cosi.Log.V
+	out.Com.V_hat = round.Cosi.Log.V_hat
+	out.Com.X_hat = round.Cosi.X_hat
+	out.Com.MTRoot = round.Cosi.MTRoot
+	out.Com.ExceptionList = round.Cosi.ExceptionList
+	out.Com.Vote = round.Cosi.Vote
 	out.Com.Messages = round.Node.Messages
 
 	// Reset message counter for statistics
@@ -170,7 +170,7 @@ func (round *RoundCosi) QueueSet(Queue [][]MustReplyMessage) {
 
 func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 
-	merkle := round.Merkle
+	merkle := round.Cosi
 	// we are root
 	if round.isRoot {
 		msg := merkle.Msg
@@ -219,12 +219,12 @@ func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMe
 // others calls
 func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMessage) error {
 	// initialize exception handling
-	exceptionV_hat := round.Merkle.Suite.Point().Null()
-	exceptionX_hat := round.Merkle.Suite.Point().Null()
-	round.Merkle.ExceptionList = make([]abstract.Point, 0)
-	nullPoint := round.Merkle.Suite.Point().Null()
+	exceptionV_hat := round.Cosi.Suite.Point().Null()
+	exceptionX_hat := round.Cosi.Suite.Point().Null()
+	round.Cosi.ExceptionList = make([]abstract.Point, 0)
+	nullPoint := round.Cosi.Suite.Point().Null()
 
-	children := round.Merkle.Children
+	children := round.Cosi.Children
 	for _, sm := range sms {
 		from := sm.From
 		switch sm.Type {
@@ -232,27 +232,27 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 			// default == no response from child
 			// dbg.Lvl4(sn.Name(), "default in respose for child", from, sm)
 			if children[from] != nil {
-				round.Merkle.ExceptionList = append(round.Merkle.ExceptionList, children[from].PubKey())
+				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
 
 				// remove public keys and point commits from subtree of failed child
-				round.Merkle.Add(exceptionX_hat, round.Merkle.ChildX_hat[from])
-				round.Merkle.Add(exceptionV_hat, round.Merkle.ChildV_hat[from])
+				round.Cosi.Add(exceptionX_hat, round.Cosi.ChildX_hat[from])
+				round.Cosi.Add(exceptionV_hat, round.Cosi.ChildV_hat[from])
 			}
 			continue
 		case sign.Response:
 			// disregard response from children who did not commit
-			_, ok := round.Merkle.ChildV_hat[from]
-			if ok == true && round.Merkle.ChildV_hat[from].Equal(nullPoint) {
+			_, ok := round.Cosi.ChildV_hat[from]
+			if ok == true && round.Cosi.ChildV_hat[from].Equal(nullPoint) {
 				continue
 			}
 
 			// dbg.Lvl4(sn.Name(), "accepts response from", from, sm.Type)
-			round.Merkle.R_hat.Add(round.Merkle.R_hat, sm.Rm.R_hat)
+			round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.Rm.R_hat)
 
-			round.Merkle.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
+			round.Cosi.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
 
-			round.Merkle.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
-			round.Merkle.ExceptionList = append(round.Merkle.ExceptionList, sm.Rm.ExceptionList...)
+			round.Cosi.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
+			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
 
 		case sign.Error:
 			if sm.Err == nil {
@@ -261,28 +261,28 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 			}
 
 			// Report up non-networking error, probably signature failure
-			dbg.Lvl2(round.Merkle.Name, "Error in respose for child", from, sm)
+			dbg.Lvl2(round.Cosi.Name, "Error in respose for child", from, sm)
 			err := errors.New(sm.Err.Err)
 			return err
 		}
 	}
 
 	// remove exceptions from subtree that failed
-	round.Merkle.Sub(round.Merkle.X_hat, exceptionX_hat)
-	round.Merkle.ExceptionV_hat = exceptionV_hat
-	round.Merkle.ExceptionX_hat = exceptionX_hat
+	round.Cosi.Sub(round.Cosi.X_hat, exceptionX_hat)
+	round.Cosi.ExceptionV_hat = exceptionV_hat
+	round.Cosi.ExceptionX_hat = exceptionX_hat
 
-	dbg.Lvl4(round.Merkle.Name, "got all responses")
-	err := round.Merkle.VerifyResponses()
+	dbg.Lvl4(round.Cosi.Name, "got all responses")
+	err := round.Cosi.VerifyResponses()
 	if err != nil {
 		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
 
-	out.Rm.R_hat = round.Merkle.R_hat
-	out.Rm.ExceptionList = round.Merkle.ExceptionList
-	out.Rm.ExceptionV_hat = round.Merkle.ExceptionV_hat
-	out.Rm.ExceptionX_hat = round.Merkle.ExceptionX_hat
+	out.Rm.R_hat = round.Cosi.R_hat
+	out.Rm.ExceptionList = round.Cosi.ExceptionList
+	out.Rm.ExceptionV_hat = round.Cosi.ExceptionV_hat
+	out.Rm.ExceptionX_hat = round.Cosi.ExceptionX_hat
 	return nil
 }
 
@@ -290,10 +290,10 @@ func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.
 	// Root is creating the sig broadcast
 	if round.isRoot {
 		dbg.Lvl2(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
-		in.SBm.R0_hat = round.Merkle.R_hat
-		in.SBm.C = round.Merkle.C
-		in.SBm.X0_hat = round.Merkle.X_hat
-		in.SBm.V0_hat = round.Merkle.Log.V_hat
+		in.SBm.R0_hat = round.Cosi.R_hat
+		in.SBm.C = round.Cosi.C
+		in.SBm.X0_hat = round.Cosi.X_hat
+		in.SBm.V0_hat = round.Cosi.Log.V_hat
 		in.SBm.Messages = round.Node.Messages
 	} else {
 		round.Node.Messages = in.SBm.Messages
@@ -305,15 +305,15 @@ func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.
 	// Send back signature to clients
 	for i, msg := range round.Queue {
 		// proof to get from s.Root to big root
-		combProof := make(proof.Proof, len(round.Merkle.Proof))
-		copy(combProof, round.Merkle.Proof)
+		combProof := make(proof.Proof, len(round.Cosi.Proof))
+		copy(combProof, round.Cosi.Proof)
 
 		// add my proof to get from a leaf message to my root s.Root
-		combProof = append(combProof, round.CosiProofs[i]...)
+		combProof = append(combProof, round.StampProofs[i]...)
 
 		// proof that I can get from a leaf message to the big root
-		if proof.CheckProof(round.Merkle.Suite.Hash, round.Merkle.MTRoot,
-			round.CosiLeaves[i], combProof) {
+		if proof.CheckProof(round.Cosi.Suite.Hash, round.Cosi.MTRoot,
+			round.StampLeaves[i], combProof) {
 			dbg.Lvl2("Proof is OK for msg", msg)
 		} else {
 			dbg.Lvl2("Inclusion-proof failed")
@@ -323,9 +323,9 @@ func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.
 			Type:  StampSignatureType,
 			ReqNo: SeqNo(msg.ReqNo),
 			Srep: &StampSignature{
-				SuiteStr:   round.Merkle.Suite.String(),
+				SuiteStr:   round.Cosi.Suite.String(),
 				Timestamp:  round.Timestamp,
-				MerkleRoot: round.Merkle.MTRoot,
+				MerkleRoot: round.Cosi.MTRoot,
 				Prf:        combProof,
 				Response:   in.SBm.R0_hat,
 				Challenge:  in.SBm.C,
