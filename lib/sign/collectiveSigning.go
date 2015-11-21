@@ -412,8 +412,6 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	sn.roundmu.Unlock()
 	sn.PeerStatus = StatusReturnMessage{1, len(sn.Children(view))}
 
-	merkle := sn.MerkleStructs[roundNbr]
-
 	responseList, ok := sn.RoundResponses[roundNbr]
 	if !ok {
 		responseList = make([]*SigningMessage, 0)
@@ -436,7 +434,6 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	}
 	// Fillinwithdefaultmessage is used to fill the exception with missing
 	// children and all
-	merkle.Responses = responseList
 	out := &SigningMessage{
 		Type:         Response,
 		ViewNbr:         view,
@@ -444,7 +441,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		Rm: &ResponseMessage{},
 	}
-	err := ri.Response(merkle.FillInWithDefaultMessages(), out)
+	err := ri.Response(responseList, out)
 	delete(sn.RoundResponses, roundNbr)
 	if err != nil {
 		return err

@@ -261,34 +261,6 @@ func (merkle *MerkleStruct) StoreLocalMerkleProof(chm *ChallengeMessage) error {
 	return nil
 }
 
-// Figure out which kids did not submit messages
-// Add default messages to messgs, one per missing child
-// as to make it easier to identify and add them to exception lists in one place
-func (merkle *MerkleStruct) FillInWithDefaultMessages() []*SigningMessage {
-	children := merkle.Children
-
-	messgs := merkle.Responses
-	allmessgs := make([]*SigningMessage, len(messgs))
-	copy(allmessgs, messgs)
-
-	for c := range children {
-		found := false
-		for _, m := range messgs {
-			if m.From == c {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			allmessgs = append(allmessgs, &SigningMessage{ViewNbr: merkle.ViewNbr,
-				Type: Default, From: c})
-		}
-	}
-
-	return allmessgs
-}
-
 // Called by every node after receiving aggregate responses from descendants
 func (merkle *MerkleStruct) VerifyResponses() error {
 
