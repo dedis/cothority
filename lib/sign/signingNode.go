@@ -62,7 +62,6 @@ type Node struct {
 	nRounds             int
 	RoundNbr            int                       // *only* used by Root( by annoucer)
 	Rounds              map[int]Round
-	RoundTypes          []MerkleType
 	roundmu             sync.Mutex
 	LastSeenRound       int                       // largest round number I have seen
 	RoundsAsRoot        int                       // latest continuous streak of rounds with sn root
@@ -126,17 +125,6 @@ func (sn *Node) Listen() error {
 	}
 	err := sn.ProcessMessages()
 	return err
-}
-
-func (sn *Node) printRoundTypes() {
-	sn.roundmu.Lock()
-	defer sn.roundmu.Unlock()
-	for i, rt := range sn.RoundTypes {
-		if i > sn.LastSeenRound {
-			break
-		}
-		dbg.Print("Round", i, "type", rt.String())
-	}
 }
 
 func (sn *Node) Close() {

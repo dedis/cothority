@@ -31,10 +31,6 @@ func (sn *Node) ProcessMessages() error {
 	sn.heartbeat = time.NewTimer(500 * time.Second)
 	sn.hbLock.Unlock() */
 
-	// as votes get approved they are streamed in ApplyVotes
-	voteChan := sn.VoteLog.Stream()
-	sn.ApplyVotes(voteChan)
-
 	// gossip to make sure we are up to date
 	sn.StartGossip()
 

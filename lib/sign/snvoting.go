@@ -9,17 +9,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (sn *Node) ApplyVotes(ch chan *Vote) {
-	go func() {
-		for v := range ch {
-			if sn.RoundTypes[v.Round] == EmptyRT {
-				sn.RoundTypes[v.Round] = MerkleType(v.Type)
-			}
-			sn.ApplyVote(v)
-		}
-	}()
-}
-
 // HERE: after we change to the new view, we could send our parent
 // a notification that we are ready to use the new view
 

@@ -71,18 +71,6 @@ type CosiStrut struct {
 	ViewNbr int
 }
 
-type MerkleType int
-
-const (
-	EmptyRT MerkleType = iota
-	ViewChangeRT
-	AddRT
-	RemoveRT
-	ShutdownRT
-	NoOpRT
-	SigningRT
-)
-
 // Sets up a round according to the needs stated in the
 // Announcementmessage.
 func NewCosi(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *CosiStrut {
@@ -103,27 +91,6 @@ func NewCosi(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *CosiStru
 	merkle.InitCommitCrypto()
 	//sn.MerkleStructs[roundNbr] = merkle
 	return merkle
-}
-
-func (rt MerkleType) String() string {
-	switch rt {
-	case EmptyRT:
-		return "empty"
-	case SigningRT:
-		return "signing"
-	case ViewChangeRT:
-		return "viewchange"
-	case AddRT:
-		return "add"
-	case RemoveRT:
-		return "remove"
-	case ShutdownRT:
-		return "shutdown"
-	case NoOpRT:
-		return "noop"
-	default:
-		return ""
-	}
 }
 
 /*
