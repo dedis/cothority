@@ -1,4 +1,4 @@
-package conode
+package sign
 
 /*
 func (sn *Node) StartVotingRound(v *Vote) error {

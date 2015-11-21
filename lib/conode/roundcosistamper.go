@@ -11,9 +11,9 @@ Implements a test-round which uses RoundCosi and RoundStamp
 const RoundCosiStamperType = "cosistamper"
 
 type RoundCosiStamper struct {
-	*RoundStruct
+	*sign.RoundCosi
+	*sign.RoundStruct
 	*RoundStamper
-	*RoundCosi
 	peer *Peer
 }
 
@@ -27,7 +27,8 @@ func RegisterRoundCosiStamper(p *Peer) {
 func NewRoundCosiStamper(peer *Peer) *RoundCosiStamper {
 	round := &RoundCosiStamper{}
 	round.RoundStamper = NewRoundStamper(peer)
-	round.RoundCosi = NewRoundCosi(peer.Node)
+	round.RoundCosi = sign.NewRoundCosi(peer.Node)
+	round.RoundStruct = sign.NewRoundStruct(peer.Node)
 	round.peer = peer
 	return round
 }

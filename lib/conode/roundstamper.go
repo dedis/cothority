@@ -18,7 +18,7 @@ Implements the basic Collective Signature using Schnorr signatures.
 const RoundStamperType = "stamper"
 
 type RoundStamper struct {
-	*RoundStruct
+	*sign.RoundStruct
 	peer        *Peer
 	Timestamp   int64
 
@@ -50,9 +50,9 @@ func NewRoundStamper(peer *Peer) *RoundStamper {
 
 func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
-	round.RoundStruct = NewRoundStruct(round.peer.Node, viewNbr, roundNbr)
+	round.RoundStruct = sign.NewRoundStruct(round.peer.Node)
 	in.Am.RoundType = RoundCosiStamperType
-	if round.isRoot {
+	if round.IsRoot {
 		// We are root !
 		// Adding timestamp
 		ts := time.Now().UTC()
@@ -88,14 +88,14 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 		}
 
 		// create Merkle tree for this round's messages and check corectness
-		round.StampRoot, round.StampProofs = proof.ProofTree(round.suite.Hash, round.StampLeaves)
+		round.StampRoot, round.StampProofs = proof.ProofTree(round.Suite.Hash, round.StampLeaves)
 		if dbg.DebugVisible > 2 {
-			if proof.CheckLocalProofs(round.suite.Hash, round.StampRoot, round.StampLeaves, round.StampProofs) == true {
-				dbg.Lvl4("Local Proofs of", round.name, "successful for round " +
-				strconv.Itoa(round.roundNbr))
+			if proof.CheckLocalProofs(round.Suite.Hash, round.StampRoot, round.StampLeaves, round.StampProofs) == true {
+				dbg.Lvl4("Local Proofs of", round.Name, "successful for round " +
+				strconv.Itoa(round.RoundNbr))
 			} else {
-				panic("Local Proofs" + round.name + " unsuccessful for round " +
-				strconv.Itoa(round.roundNbr))
+				panic("Local Proofs" + round.Name + " unsuccessful for round " +
+				strconv.Itoa(round.RoundNbr))
 			}
 		}
 	}
@@ -137,7 +137,7 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 		combProof = append(combProof, round.StampProofs[i]...)
 
 		// proof that I can get from a leaf message to the big root
-		if proof.CheckProof(round.suite.Hash, round.MTRoot,
+		if proof.CheckProof(round.Suite.Hash, round.MTRoot,
 			round.StampLeaves[i], combProof) {
 			dbg.Lvl2("Proof is OK for msg", msg)
 		} else {
@@ -148,7 +148,7 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 			Type:  StampSignatureType,
 			ReqNo: SeqNo(msg.ReqNo),
 			Srep: &StampSignature{
-				SuiteStr:   round.suite.String(),
+				SuiteStr:   round.Suite.String(),
 				Timestamp:  round.Timestamp,
 				MerkleRoot: round.MTRoot,
 				Prf:        combProof,

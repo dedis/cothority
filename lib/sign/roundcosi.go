@@ -1,4 +1,4 @@
-package conode
+package sign
 
 import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/crypto/abstract"
 	"fmt"
 )
@@ -17,33 +16,33 @@ const RoundCosiType = "cosi"
 type RoundCosi struct {
 	*RoundStruct
 
-	Cosi *sign.CosiStrut
-	Node *sign.Node
+	Cosi *CosiStrut
+	Node *Node
 }
 
 func init() {
-	sign.RegisterRoundFactory(RoundCosiType,
-		func(s *sign.Node) sign.Round {
+	RegisterRoundFactory(RoundCosiType,
+		func(s *Node) Round {
 			return NewRoundCosi(s)
 		})
 }
 
-func NewRoundCosi(node *sign.Node) *RoundCosi {
+func NewRoundCosi(node *Node) *RoundCosi {
 	round := &RoundCosi{}
 	round.Node = node
+	round.RoundStruct = NewRoundStruct(round.Node)
 	return round
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
-	round.RoundStruct = NewRoundStruct(round.Node, viewNbr, roundNbr)
+func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *SigningMessage, out []*SigningMessage) error {
 	if err := round.Node.TryFailure(round.Node.ViewNo, roundNbr); err != nil {
 		return err
 	}
 
 	// Store the message for the round
 	//round.Merkle = round.Node.MerkleStructs[roundNbr]
-	round.Cosi = sign.NewCosi(round.Node, viewNbr, roundNbr, in.Am)
+	round.Cosi = NewCosi(round.Node, viewNbr, roundNbr, in.Am)
 	round.Cosi.Msg = in.Am.Message
 
 	round.SetRoundType(RoundCosiType, out)
@@ -54,7 +53,7 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 	return nil
 }
 
-func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) error {
 	// prepare to handle exceptions
 	cosi := round.Cosi
 	cosi.Commits = in
@@ -91,7 +90,7 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
-	dbg.Lvl4("sign.Node.Commit using Merkle")
+	dbg.Lvl4("Node.Commit using Merkle")
 	cosi.MerkleAddChildren()
 
 	round.Cosi.MerkleAddLocal(out.Com.MTRoot)
@@ -111,14 +110,14 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 
 }
 
-func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) error {
 
 	cosi := round.Cosi
 	// we are root
-	if round.isRoot {
+	if round.IsRoot {
 		msg := cosi.Msg
 		msg = append(msg, []byte(cosi.MTRoot)...)
-		cosi.C = sign.HashElGamal(cosi.Suite, msg, cosi.Log.V_hat)
+		cosi.C = HashElGamal(cosi.Suite, msg, cosi.Log.V_hat)
 		//proof := make([]hashid.HashId, 0)
 
 		in.Chm.C = cosi.C
@@ -159,7 +158,7 @@ func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMe
 
 // TODO make that sms == nil in case we are a leaf to stay consistent with
 // others calls
-func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) error {
 	// initialize exception handling
 	exceptionV_hat := round.Cosi.Suite.Point().Null()
 	exceptionX_hat := round.Cosi.Suite.Point().Null()
@@ -181,7 +180,7 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 				round.Cosi.Add(exceptionV_hat, round.Cosi.ChildV_hat[from])
 			}
 			continue
-		case sign.Response:
+		case Response:
 			// disregard response from children who did not commit
 			_, ok := round.Cosi.ChildV_hat[from]
 			if ok == true && round.Cosi.ChildV_hat[from].Equal(nullPoint) {
@@ -196,7 +195,7 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 			round.Cosi.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
 			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
 
-		case sign.Error:
+		case Error:
 			if sm.Err == nil {
 				dbg.Lvl2("Error message with no error")
 				continue
@@ -228,9 +227,9 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 	return nil
 }
 
-func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundCosi) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
 	// Root is creating the sig broadcast
-	if round.isRoot {
+	if round.IsRoot {
 		dbg.Lvl2(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
 		in.SBm.R0_hat = round.Cosi.R_hat
 		in.SBm.C = round.Cosi.C
