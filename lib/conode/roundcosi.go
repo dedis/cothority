@@ -1,11 +1,9 @@
 package conode
 
 import (
-	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 
 	"errors"
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/sign"
@@ -131,27 +129,27 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 
 func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 
-	merkle := round.Cosi
+	cosi := round.Cosi
 	// we are root
 	if round.isRoot {
-		msg := merkle.Msg
-		msg = append(msg, []byte(merkle.MTRoot)...)
-		merkle.C = sign.HashElGamal(merkle.Suite, msg, merkle.Log.V_hat)
+		msg := cosi.Msg
+		msg = append(msg, []byte(cosi.MTRoot)...)
+		cosi.C = sign.HashElGamal(cosi.Suite, msg, cosi.Log.V_hat)
 		//proof := make([]hashid.HashId, 0)
 
-		in.Chm.C = merkle.C
-		in.Chm.MTRoot = merkle.MTRoot
-		in.Chm.Proof = merkle.Proof
-		in.Chm.Vote = merkle.Vote
+		in.Chm.C = cosi.C
+		in.Chm.MTRoot = cosi.MTRoot
+		in.Chm.Proof = cosi.Proof
+		in.Chm.Vote = cosi.Vote
 	} else { // we are a leaf
 		// register challenge
-		merkle.C = in.Chm.C
+		cosi.C = in.Chm.C
 	}
 	// compute response share already + localmerkle proof
-	merkle.InitResponseCrypto()
+	cosi.InitResponseCrypto()
 	// messages from clients, proofs computed
-	if merkle.Log.Getv() != nil {
-		if err := merkle.StoreLocalMerkleProof(in.Chm); err != nil {
+	if cosi.Log.Getv() != nil {
+		if err := cosi.StoreLocalMerkleProof(in.Chm); err != nil {
 			return err
 		}
 	}
@@ -160,16 +158,16 @@ func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMe
 	baseProof := make(proof.Proof, len(in.Chm.Proof))
 	copy(baseProof, in.Chm.Proof)
 
-	if len(merkle.Children) != len(out) {
+	if len(cosi.Children) != len(out) {
 		return fmt.Errorf("Children and output are of different length")
 	}
 	// for each child, create personalized part of proof
 	// embed it in SigningMessage, and send it
 	var i = 0
-	for name, _ := range merkle.Children {
+	for name, _ := range cosi.Children {
 		out[i].Chm.C = in.Chm.C
 		out[i].Chm.MTRoot = in.Chm.MTRoot
-		out[i].Chm.Proof = append(baseProof, merkle.Proofs[name]...)
+		out[i].Chm.Proof = append(baseProof, cosi.Proofs[name]...)
 		out[i].To = name
 		i++
 	}
@@ -263,51 +261,7 @@ func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.
 	for i := range out {
 		*out[i].SBm = *in.SBm
 	}
-	// Send back signature to clients
-	for i, msg := range round.Queue {
-		// proof to get from s.Root to big root
-		combProof := make(proof.Proof, len(round.Cosi.Proof))
-		copy(combProof, round.Cosi.Proof)
 
-		// add my proof to get from a leaf message to my root s.Root
-		combProof = append(combProof, round.StampProofs[i]...)
-
-		// proof that I can get from a leaf message to the big root
-		if proof.CheckProof(round.Cosi.Suite.Hash, round.Cosi.MTRoot,
-			round.StampLeaves[i], combProof) {
-			dbg.Lvl2("Proof is OK for msg", msg)
-		} else {
-			dbg.Lvl2("Inclusion-proof failed")
-		}
-
-		respMessg := &TimeStampMessage{
-			Type:  StampSignatureType,
-			ReqNo: SeqNo(msg.ReqNo),
-			Srep: &StampSignature{
-				SuiteStr:   round.Cosi.Suite.String(),
-				Timestamp:  round.Timestamp,
-				MerkleRoot: round.Cosi.MTRoot,
-				Prf:        combProof,
-				Response:   in.SBm.R0_hat,
-				Challenge:  in.SBm.C,
-				AggCommit:  in.SBm.V0_hat,
-				AggPublic:  in.SBm.X0_hat,
-			}}
-		round.PutToClient(msg.To, respMessg)
-		dbg.Lvl2("Sent signature response back to client", msg.To)
-	}
 	round.Timestamp = 0
 	return nil
-}
-
-// Send message to client given by name
-func (round *RoundCosi) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := round.peer.Clients[name].PutData(data)
-	if err == coconet.ErrClosed {
-		round.peer.Clients[name].Close()
-		return
-	}
-	if err != nil && err != coconet.ErrNotEstablished {
-		log.Warnf("%p error putting to client: %v", round, err)
-	}
 }

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/coconet"
 )
 
 /*
@@ -21,6 +22,7 @@ type RoundStamper struct {
 	peer        *Peer
 	Timestamp   int64
 
+	Cosi        *sign.CosiStrut
 	StampLeaves []hashid.HashId // can be removed after we verify protocol
 	StampRoot   hashid.HashId
 	StampProofs []proof.Proof
@@ -117,5 +119,51 @@ func (round *RoundStamper) Response(in []*sign.SigningMessage, out *sign.Signing
 }
 
 func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	// Send back signature to clients
+	for i, msg := range round.Queue {
+		// proof to get from s.Root to big root
+		combProof := make(proof.Proof, len(round.Cosi.Proof))
+		copy(combProof, round.Cosi.Proof)
+
+		// add my proof to get from a leaf message to my root s.Root
+		combProof = append(combProof, round.StampProofs[i]...)
+
+		// proof that I can get from a leaf message to the big root
+		if proof.CheckProof(round.suite.Hash, round.Cosi.MTRoot,
+			round.StampLeaves[i], combProof) {
+			dbg.Lvl2("Proof is OK for msg", msg)
+		} else {
+			dbg.Lvl2("Inclusion-proof failed")
+		}
+
+		respMessg := &TimeStampMessage{
+			Type:  StampSignatureType,
+			ReqNo: SeqNo(msg.ReqNo),
+			Srep: &StampSignature{
+				SuiteStr:   round.suite.String(),
+				Timestamp:  round.Timestamp,
+				MerkleRoot: round.Cosi.MTRoot,
+				Prf:        combProof,
+				Response:   in.SBm.R0_hat,
+				Challenge:  in.SBm.C,
+				AggCommit:  in.SBm.V0_hat,
+				AggPublic:  in.SBm.X0_hat,
+			}}
+		round.PutToClient(msg.To, respMessg)
+		dbg.Lvl2("Sent signature response back to client", msg.To)
+	}
 	return nil
+}
+
+
+// Send message to client given by name
+func (round *RoundStamper) PutToClient(name string, data coconet.BinaryMarshaler) {
+	err := round.peer.Clients[name].PutData(data)
+	if err == coconet.ErrClosed {
+		round.peer.Clients[name].Close()
+		return
+	}
+	if err != nil && err != coconet.ErrNotEstablished {
+		dbg.Lvl1("%p error putting to client: %v", round, err)
+	}
 }
