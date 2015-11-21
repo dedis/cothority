@@ -16,7 +16,7 @@ const RoundCosiType = "cosi"
 type RoundCosi struct {
 	*RoundStruct
 
-	Cosi *CosiStrut
+	Cosi *CosiStruct
 	Node *Node
 }
 
@@ -85,8 +85,8 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 
 		// Aggregation
 		// add good child server to combined public key, and point commit
-		cosi.Add(cosi.X_hat, sm.Com.X_hat)
-		cosi.Add(cosi.Log.V_hat, sm.Com.V_hat)
+		cosi.X_hat.Add(cosi.X_hat, sm.Com.X_hat)
+		cosi.Log.V_hat.Add(cosi.Log.V_hat, sm.Com.V_hat)
 		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
@@ -176,8 +176,8 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
 
 				// remove public keys and point commits from subtree of failed child
-				round.Cosi.Add(exceptionX_hat, round.Cosi.ChildX_hat[from])
-				round.Cosi.Add(exceptionV_hat, round.Cosi.ChildV_hat[from])
+				exceptionX_hat.Add(exceptionX_hat, round.Cosi.ChildX_hat[from])
+				exceptionV_hat.Add(exceptionV_hat, round.Cosi.ChildV_hat[from])
 			}
 			continue
 		case Response:
@@ -190,9 +190,9 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 			// dbg.Lvl4(sn.Name(), "accepts response from", from, sm.Type)
 			round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.Rm.R_hat)
 
-			round.Cosi.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
+			exceptionV_hat.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
 
-			round.Cosi.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
+			exceptionX_hat.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
 			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
 
 		case Error:
@@ -209,7 +209,7 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 	}
 
 	// remove exceptions from subtree that failed
-	round.Cosi.Sub(round.Cosi.X_hat, exceptionX_hat)
+	round.Cosi.X_hat.Sub(round.Cosi.X_hat, exceptionX_hat)
 	round.Cosi.ExceptionV_hat = exceptionV_hat
 	round.Cosi.ExceptionX_hat = exceptionX_hat
 

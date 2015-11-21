@@ -22,9 +22,9 @@ type RoundStamper struct {
 	peer        *Peer
 	Timestamp   int64
 
-	Proof       []hashid.HashId
+	Proof       []hashid.HashId // the inclusion-proof of the data
 	MTRoot      hashid.HashId   // mt root for subtree, passed upwards
-	StampLeaves []hashid.HashId // can be removed after we verify protocol
+	StampLeaves []hashid.HashId
 	StampRoot   hashid.HashId
 	StampProofs []proof.Proof
 	Queue       []ReplyMessage
