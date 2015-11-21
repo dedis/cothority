@@ -22,7 +22,8 @@ type RoundStamper struct {
 	peer        *Peer
 	Timestamp   int64
 
-	Cosi        *sign.CosiStrut
+	Proof       []hashid.HashId
+	MTRoot      hashid.HashId   // mt root for subtree, passed upwards
 	StampLeaves []hashid.HashId // can be removed after we verify protocol
 	StampRoot   hashid.HashId
 	StampProofs []proof.Proof
@@ -122,14 +123,14 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 	// Send back signature to clients
 	for i, msg := range round.Queue {
 		// proof to get from s.Root to big root
-		combProof := make(proof.Proof, len(round.Cosi.Proof))
-		copy(combProof, round.Cosi.Proof)
+		combProof := make(proof.Proof, len(round.Proof))
+		copy(combProof, round.Proof)
 
 		// add my proof to get from a leaf message to my root s.Root
 		combProof = append(combProof, round.StampProofs[i]...)
 
 		// proof that I can get from a leaf message to the big root
-		if proof.CheckProof(round.suite.Hash, round.Cosi.MTRoot,
+		if proof.CheckProof(round.suite.Hash, round.MTRoot,
 			round.StampLeaves[i], combProof) {
 			dbg.Lvl2("Proof is OK for msg", msg)
 		} else {
@@ -142,7 +143,7 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 			Srep: &StampSignature{
 				SuiteStr:   round.suite.String(),
 				Timestamp:  round.Timestamp,
-				MerkleRoot: round.Cosi.MTRoot,
+				MerkleRoot: round.MTRoot,
 				Prf:        combProof,
 				Response:   in.SBm.R0_hat,
 				Challenge:  in.SBm.C,

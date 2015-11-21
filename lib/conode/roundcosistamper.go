@@ -74,7 +74,8 @@ func (round *RoundCosiStamper) Response(in []*sign.SigningMessage, out *sign.Sig
 
 func (round *RoundCosiStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	round.RoundCosi.SignatureBroadcast(in, out)
-	round.RoundStamper.Cosi = round.RoundCosi.Cosi
+	round.RoundStamper.Proof = round.RoundCosi.Cosi.Proof
+	round.RoundStamper.MTRoot = round.RoundCosi.Cosi.MTRoot
 	round.RoundStamper.SignatureBroadcast(in, out)
 	return nil
 }
