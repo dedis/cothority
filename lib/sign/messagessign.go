@@ -12,10 +12,12 @@ import (
 	"github.com/dedis/protobuf"
 )
 
-// All message structures defined in this package are used in the
-// Collective Signing Protocol
-// Over the network they are sent as byte slices, so each message
-// has its own MarshalBinary and UnmarshalBinary method
+/*
+All message structures defined in this package are used in the
+Collective Signing Protocol
+Over the network they are sent as byte slices, so each message
+has its own MarshalBinary and UnmarshalBinary method
+*/
 
 type MessageType int
 
