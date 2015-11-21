@@ -1,14 +1,15 @@
 #CoNode
 
 This repository provides a first implementation of a cothority node (CoNode) for
-public usage. After setup the CoNode can be used as a public timestamp-server,
-which takes a hash and returns the signature together with the inclusion-proof.
-Moreover, a simple program is provided that can generate and verify signatures
-of given files.
+public usage. After setup, a CoNode can be used as a public timestamp-server,
+which takes a hash and computes a signature together with an inclusion-proof.
+Moreover, a simple stamping-program is provided that can generate and verify
+signatures of given files.
 
 ## Warning
-**The software provided in this repository is highly experimental and under heavy
-development. Do not use it for anything security-critical. Use at your own risk!**
+**The software provided in this repository is highly experimental and under
+heavy development. Do not use it for anything security-critical. All usage is at
+your own risk!**
 
 ## Limitations / Disclaimer
 
@@ -17,24 +18,15 @@ There are some known limitations that we would like to address as soon as possib
 * There is no exception-handling if a node is down.
 * Each time you add nodes to your tree, the collective public signature changes.
 
-
 ## Requirements
 
 * A server with a public IPv4 address and two open ports (default: `2000` and `2001`).
 * [Golang](https://golang.org/) version 1.5.1 or newer, in case you plan to compile CoNode yourself.
 
-## Setup CoNode and Participate in the EPFL-CoNode-Project
+Currently there two options to run CoNode both of which will be described further below:
 
-The following steps are necessary to setup CoNode and participate in the
-EPFL-CoNode cluster:
-
-1. Getting CoNode
-    a) Download binaries
-    b) Compile binaries
-2. Configuring CoNode
-3. Launching CoNode
-4. Using CoNode to stamp documents
-5. Updating CoNode
+* Participate in the EPFL-CoNode-Project
+* Run your own CoNode cluster
 
 ## Getting CoNode
 
@@ -73,61 +65,110 @@ go build
 ```
 
 
-## Basic Functionality of CoNode
+## Overview of CoNode
 
-The `conode` binary currently supports the following commands:
+The `conode` binary provides all the required functionality to configure and run
+a CoNode (cluster). It currently supports the following commands:
 
 * `keygen`: to generate a public-private key pair
+* `build`: to create a configuration file
+* `check`: to check if a (remote) CoNode is available
+* `validate`: to wait for a validation request from a root CoNode
 * `run`: to run the CoNode
-* `check`: to check if a new CoNode is available
-* `build`: to create a `config.toml`-file
 
+For more information on the commands please refer to the following sections.
+The script `start-conode.sh`, which can be found in the CoNode archive and
+repository, is a wrapper around `conode` and automatises certain tasks.
 
+**Note:** Since your CoNode should be permanently available, we recommend that
+you run the program inside a terminal multiplexer such as [GNU screen](https://www.gnu.org/software/screen/) or [tmux](https://tmux.github.io/).
+This ensures that your CoNode remains online even after you log out of your server.
 
 ## Configuring CoNode
 
-We recommend that you run CoNode inside a terminal multiplexer such as
-[GNU screen](https://www.gnu.org/software/screen/) or [tmux](https://tmux.github.io/) to ensure that CoNode remains available even after
-you log out of your server.
+### Key Generation
 
-After you have downloaded or built the CoNode binary, execute
+The **first step** in configuration is to generate a new key pair:
+
+```
+./conode keygen <IP address>:<port>
+```
+
+This command generates two files:
+
+* `key.pub`: contains a *public key* as well as the *IP address* and *port
+number* as specified above. If no port number is given, then the default value
+`2000` is used.
+
+* `key.priv`: contains the *private key* of your CoNode.
+
+If you are not the operator of a CoNode cluster yourself, then you need to send
+the public key `key.pub` to your CoNode administrator and ask for inclusion in
+the tree. The private key `key.priv`, however, **must remain secret** under all
+circumstances and should not be shared!
+
+### Validation Mode
+
+The **second step** is to bring your CoNode into validation mode:
+
+```
+./conode validate
+```
+
+Then wait until your CoNode operator has verified your instance and has sent you
+the configuration file `config.toml` containing information about the other nodes
+in the cluster.
+
+### Running Mode
+
+The **third step** is finally to bring your CoNode into running mode. Therefore,
+shutdown your CoNode in validation mode and call:
+
+```
+./conode run
+```
+
+
+### All-In-One Setup Solution
+
+For a combination of the above steps you can use the `start-conode.sh` script:
 
 ```
 ./start-conode.sh setup <IP address>:<port>
 ```
 
-which starts the configuration process and generates a key pair:
+This script generates the keys and starts the validation mode. After your CoNode
+has been available for a long enough time (usually more than 24 hours) under the
+specified IP address and port and has been validated by your CoNode operator, it
+will exit automatically, get the CoNode tree-information, and switch to
+running-mode.
 
-* `key.pub`: contains a *public key* as well as the *IP address* and *port
-number* as specified above. If no port number is given, then the default value
-`2000` is used. Please send `key.pub` to dev.dedis@epfl.ch in order to be
-included in the EPFL CoNode cluster.
-
-* `key.priv`: contains the secret *private key* of your CoNode which should **not be
-shared** under any circumstances.
-
-In order to finish configuration successfully, your CoNode has to be available
-under the given IP address and port for at least 24 hours. Afterwards it will
-exit automatically, get the CoNode tree-information, and switch to running-mode.
-
-**Note:** In case your CoNode is shut down for whatever reason, you can always
+**Note:** In case your CoNode is shutdown for whatever reason, you can always
 manually restart it by simply executing:
 
 ```
 ./start-conode.sh run
 ```
 
-**Note:** `start-conode.sh` is only a wrapper around the `conode` binary,
-i.e. all of the above steps can also be realised by using `conode` directly.
+The `start-conode`-script comes with an auto-updating mechanism: every time
+CoNode quits (e.g. when the root-node terminates), it checks on GitHub if a new
+version is available and if so, downloads the new archive, extracts it and
+re-launches itself.
 
-**Additional configurations:** TODO: key setup.
+We are aware that this is a security-risk and promise to not use your server
+for anything but running CoNode. This mechanism will be replaced at some point
+with a secure variant.
+
+If you want to avoid this auto-updating, use the `conode` binary directly as
+described above.
+
 
 ## Using CoNode
 
-After your CoNode has been validated and switched to running mode you can use it
-to generate stamps (i.e. multi-signatures) for documents or verify that a
-document is valid under a given signature. Both functions can be called via the
-`stamp` utility.
+Once your CoNode is properly configured and in running mode, you can use it to
+generate stamps (i.e. multi-signatures) for documents or verify that a document
+is valid under a given signature. Both functions can be called via the `stamp`
+utility.
 
 To **generate a stamp**, run
 
@@ -147,19 +188,17 @@ To **verify a stamp**, call
 If `file` is present, its hash-value is verified against the value stored
 in `file.sig`, otherwise only the information in `file.sig` is verified.
 
-## Updating CoNode
+## Participate in the EPFL CoNode Cluster
 
-The `start-conode`-script comes with an auto-updating mechanism: every time
-CoNode quits (e.g. when the root-node terminates), it checks on GitHub if a new
-version is available and if so, downloads the new archive, extracts it and
-re-launches itself.
-
-We are aware that this is a security-risk and promise to not use your server
-for anything but running CoNode. This mechanism will be replaced at some point
-with a secure variant.
-
-If you want to avoid this auto-updating, use the `conode` binary directly.
-
+In order to participate in the EPFL CoNode project follow the setup steps as
+described above using either the `start-conode.sh` script or the `conode` binary
+directly. Please send your `key.pub` file to dev.dedis@epfl.ch and wait until we
+have validated your instance. For that make sure that your CoNode is available
+for at least 24 hours under the IP address and port specified in `key.pub`.
+Once we have verified your CoNode, we will send you the configuration file
+`config.toml`. Copy that to the folder of your `conode` binary, shutdown the
+validation-mode and restart CoNode in running-mode. Now your CoNode is
+configured and you can `stamp` files through the EPFL CoNode cluster.
 
 ## Setup Your Own CoNode Cluster
 
@@ -175,8 +214,8 @@ the server specified in `key.pub` by calling
 ```
 
 After you checked the availability of all the nodes in your cluster, you can
-concatenate the `key.pub` files (don't forget your own!) to build a list of
-hosts and pass that to your CoNode-app:
+concatenate the `key.pub` files to build a list of hosts and pass that to your
+CoNode application:
 
 ```
 cat key-1.pub >> hostlist
@@ -189,15 +228,14 @@ This generates a configuration file `config.toml`, which you then have to
 distribute to all your users and ask them to restart their CoNodes with the
 updated settings.
 
-**Note:** currently there is no support to automatically trigger a restart of
-all CoNodes in case the configuration changes.
+**Note:** currently there is no way to automatically trigger a restart of all
+CoNodes in case the configuration changes.
 
 Finally, start your CoNode by calling:
 
 ```
 ./conode run
 ```
-
 
 ## Further Technical Information
 
@@ -225,16 +263,12 @@ The signature file `file.sig` of a document `file` contains:
 If you want to verify a given signature, you need aggregate public key of the
 CoNode cluster found in the configuration file `config.toml`.
 
-
-
 ## Contact Us
 
 If you are running your own CoNode cluster, we would be very happy to hear from you. Do
 not hesitate to contact us at
 
 dev.dedis@epfl.ch
-
-
 
 # Cothorities - Further Information
 
