@@ -11,6 +11,7 @@ Implements a test-round which uses RoundCosi and RoundStamp
 const RoundCosiStamperType = "cosistamper"
 
 type RoundCosiStamper struct {
+	*RoundStruct
 	*RoundStamper
 	*RoundCosi
 	peer *Peer
@@ -36,11 +37,7 @@ out []*sign.SigningMessage) error {
 	dbg.Lvl3("Starting new announcement")
 	round.RoundStamper.Announcement(viewNbr, roundNbr, in, out)
 	round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
-	// TODO: this should go away later
-	round.RoundCosi.Timestamp = round.RoundStamper.Timestamp
-	for i := range (out) {
-		out[i].Am.RoundType = RoundCosiStamperType
-	}
+	round.RoundStruct.SetRoundType(RoundCosiStamperType, out)
 	return nil
 }
 
@@ -51,11 +48,6 @@ func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.S
 	round.peer.Mux.Unlock()
 
 	round.RoundStamper.Commitment(in, out)
-	// TODO: shouldn't be needed in the end
-	round.RoundCosi.Queue = round.RoundStamper.Queue
-	round.RoundCosi.StampLeaves = round.RoundStamper.StampLeaves
-	round.RoundCosi.StampProofs = round.RoundStamper.StampProofs
-	round.RoundCosi.StampRoot = round.RoundStamper.StampRoot
 	round.RoundCosi.Commitment(in, out)
 	return nil
 }

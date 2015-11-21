@@ -15,25 +15,11 @@ import (
 const RoundCosiType = "cosi"
 
 type RoundCosi struct {
-	*RoundStructure
-								// Leaves, Root and Proof for a round
-	StampLeaves []hashid.HashId // can be removed after we verify protocol
-	StampRoot   hashid.HashId
-	StampProofs []proof.Proof
-								// Timestamp message for this Round
-	Timestamp   int64
+	*RoundStruct
 
 	peer        *Peer
 	Cosi        *sign.CosiStrut
 	Node        *sign.Node
-
-	Queue       []ReplyMessage
-}
-
-type ReplyMessage struct {
-	Val   []byte
-	To    string
-	ReqNo byte
 }
 
 func RegisterRoundCosi(p *Peer) {
@@ -52,7 +38,7 @@ func NewRoundCosi(peer *Peer) *RoundCosi {
 
 // AnnounceFunc will keep the timestamp generated for this round
 func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
-	round.RoundStructure = NewRoundStructure(round.Node, viewNbr, roundNbr)
+	round.RoundStruct = NewRoundStruct(round.Node, viewNbr, roundNbr)
 	if err := round.Node.TryFailure(round.Node.ViewNo, roundNbr); err != nil {
 		return err
 	}
@@ -62,6 +48,7 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 	round.Cosi = sign.NewCosi(round.Node, viewNbr, roundNbr, in.Am)
 	round.Cosi.Msg = in.Am.Message
 
+	round.SetRoundType(RoundCosiType, out)
 	// Inform all children of announcement - just copy the one that came in
 	for i := range out {
 		*out[i].Am = *in.Am
@@ -109,7 +96,7 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 	dbg.Lvl4("sign.Node.Commit using Merkle")
 	cosi.MerkleAddChildren()
 
-	round.Cosi.MerkleAddLocal(round.StampRoot)
+	round.Cosi.MerkleAddLocal(out.Com.MTRoot)
 	round.Cosi.MerkleHashLog()
 	round.Cosi.ComputeCombinedMerkleRoot()
 
@@ -261,7 +248,5 @@ func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.
 	for i := range out {
 		*out[i].SBm = *in.SBm
 	}
-
-	round.Timestamp = 0
 	return nil
 }

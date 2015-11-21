@@ -18,7 +18,7 @@ Implements the basic Collective Signature using Schnorr signatures.
 const RoundStamperType = "stamper"
 
 type RoundStamper struct {
-	*RoundStructure
+	*RoundStruct
 	peer        *Peer
 	Timestamp   int64
 
@@ -28,6 +28,12 @@ type RoundStamper struct {
 	StampRoot   hashid.HashId
 	StampProofs []proof.Proof
 	Queue       []ReplyMessage
+}
+
+type ReplyMessage struct {
+	Val   []byte
+	To    string
+	ReqNo byte
 }
 
 func RegisterRoundStamper(p *Peer) {
@@ -44,7 +50,7 @@ func NewRoundStamper(peer *Peer) *RoundStamper {
 
 func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
-	round.RoundStructure = NewRoundStructure(round.peer.Node, viewNbr, roundNbr)
+	round.RoundStruct = NewRoundStruct(round.peer.Node, viewNbr, roundNbr)
 	in.Am.RoundType = RoundCosiStamperType
 	if round.isRoot {
 		// We are root !
@@ -54,7 +60,6 @@ func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 		round.Timestamp = ts.Unix()
 		binary.Write(&b, binary.LittleEndian, ts.Unix())
 		in.Am.Message = b.Bytes()
-		in.Am.RoundType = RoundCosiType
 	} else {
 		// otherwise decode it
 		var t int64
@@ -64,6 +69,7 @@ func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 		round.Timestamp = t
 	}
 
+	round.SetRoundType(RoundCosiStamperType, out)
 	return nil
 }
 
@@ -93,6 +99,7 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 			}
 		}
 	}
+	out.Com.MTRoot = round.StampRoot
 
 	return nil
 }
