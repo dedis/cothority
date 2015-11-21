@@ -323,6 +323,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		Type:         Commitment,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		RoundNbr:     roundNbr,
+		Com: &CommitmentMessage{},
 	}
 	err := ri.Commitment(sn.RoundCommits[roundNbr], out)
 	// now we can delete the commits for this round
@@ -368,7 +369,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	challs := make([]*SigningMessage, sn.NChildren(view))
 	for i := range challs {
 		challs[i] = &SigningMessage{ViewNbr: view, RoundNbr: RoundNbr, Type: Challenge,
-		Chm: &ChallengeMessage{}}
+			Chm: &ChallengeMessage{}}
 	}
 
 	err := round.Challenge(sm, challs)
@@ -387,7 +388,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 		// TODO remove this hack of using the first one. Should be separate messages
 		// + SendChildrenChallengesProof should be put into roundstamper or
 		// round interface
-		for _, out := range(challs){
+		for _, out := range (challs) {
 			conn := sn.Children(view)[out.To]
 			conn.PutData(out)
 		}

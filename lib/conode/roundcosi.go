@@ -142,16 +142,16 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 	round.Merkle.MerkleHashLog()
 	round.Merkle.ComputeCombinedMerkleRoot()
 
-	com := &sign.CommitmentMessage{
-		V:             round.Merkle.Log.V,
-		V_hat:         round.Merkle.Log.V_hat,
-		X_hat:         round.Merkle.X_hat,
-		MTRoot:        round.Merkle.MTRoot,
-		ExceptionList: round.Merkle.ExceptionList,
-		Vote:          round.Merkle.Vote,
-		Messages:      round.Node.Messages}
-	round.Node.Messages = 0 // TODO : why ?
-	out.Com = com
+	out.Com.V = round.Merkle.Log.V
+	out.Com.V_hat = round.Merkle.Log.V_hat
+	out.Com.X_hat = round.Merkle.X_hat
+	out.Com.MTRoot = round.Merkle.MTRoot
+	out.Com.ExceptionList = round.Merkle.ExceptionList
+	out.Com.Vote = round.Merkle.Vote
+	out.Com.Messages = round.Node.Messages
+
+	// Reset message counter for statistics
+	round.Node.Messages = 0
 	return nil
 
 }
