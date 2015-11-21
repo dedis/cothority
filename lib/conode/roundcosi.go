@@ -28,7 +28,7 @@ type RoundCosi struct {
 	Timestamp  int64
 
 	peer       *Peer
-	Merkle     *sign.MerkleStruct
+	Merkle     *sign.CosiStrut
 	Node       *sign.Node
 
 	Queue      []ReplyMessage
@@ -63,7 +63,7 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 
 	// Store the message for the round
 	//round.Merkle = round.Node.MerkleStructs[roundNbr]
-	round.Merkle = sign.NewMerkle(round.Node, viewNbr, roundNbr, in.Am)
+	round.Merkle = sign.NewCosi(round.Node, viewNbr, roundNbr, in.Am)
 	round.Merkle.Msg = in.Am.Message
 
 	// Inform all children of announcement - just copy the one that came in
