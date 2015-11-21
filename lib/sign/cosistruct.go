@@ -63,7 +63,6 @@ type CosiStrut struct {
 	BackLink hashid.HashId
 	AccRound []byte
 
-	Vote  *Vote
 	Suite abstract.Suite
 
 	Children map[string]coconet.Conn
@@ -81,7 +80,6 @@ func NewCosi(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *CosiStru
 	merkle.ExceptionList = make([]abstract.Point, 0)
 	merkle.Suite = sn.suite
 	merkle.Log.Suite = sn.suite
-	merkle.Vote = am.Vote
 	merkle.Children = sn.Children(viewNbr)
 	merkle.Parent = sn.Parent(viewNbr)
 	merkle.ViewNbr = viewNbr

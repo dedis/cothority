@@ -17,22 +17,20 @@ const RoundCosiType = "cosi"
 type RoundCosi struct {
 	*RoundStruct
 
-	peer        *Peer
-	Cosi        *sign.CosiStrut
-	Node        *sign.Node
+	Cosi *sign.CosiStrut
+	Node *sign.Node
 }
 
-func RegisterRoundCosi(p *Peer) {
+func init() {
 	sign.RegisterRoundFactory(RoundCosiType,
 		func(s *sign.Node) sign.Round {
-			return NewRoundCosi(p)
+			return NewRoundCosi(s)
 		})
 }
 
-func NewRoundCosi(peer *Peer) *RoundCosi {
+func NewRoundCosi(node *sign.Node) *RoundCosi {
 	round := &RoundCosi{}
-	round.peer = peer
-	round.Node = peer.Node
+	round.Node = node
 	return round
 }
 
@@ -105,7 +103,6 @@ func (round *RoundCosi) Commitment(in []*sign.SigningMessage, out *sign.SigningM
 	out.Com.X_hat = round.Cosi.X_hat
 	out.Com.MTRoot = round.Cosi.MTRoot
 	out.Com.ExceptionList = round.Cosi.ExceptionList
-	out.Com.Vote = round.Cosi.Vote
 	out.Com.Messages = round.Node.Messages
 
 	// Reset message counter for statistics
@@ -127,7 +124,6 @@ func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMe
 		in.Chm.C = cosi.C
 		in.Chm.MTRoot = cosi.MTRoot
 		in.Chm.Proof = cosi.Proof
-		in.Chm.Vote = cosi.Vote
 	} else { // we are a leaf
 		// register challenge
 		cosi.C = in.Chm.C

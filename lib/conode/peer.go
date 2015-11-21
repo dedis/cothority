@@ -42,7 +42,6 @@ func (s *Peer) Run(role string) {
 	dbg.Lvl3("Stamp-server", s.Node.Name(), "starting with ", role)
 	RegisterRoundCosiStamper(s)
 	RegisterRoundStamper(s)
-	RegisterRoundCosi(s)
 
 	closed := make(chan bool, 1)
 

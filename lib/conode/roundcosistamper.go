@@ -27,7 +27,7 @@ func RegisterRoundCosiStamper(p *Peer) {
 func NewRoundCosiStamper(peer *Peer) *RoundCosiStamper {
 	round := &RoundCosiStamper{}
 	round.RoundStamper = NewRoundStamper(peer)
-	round.RoundCosi = NewRoundCosi(peer)
+	round.RoundCosi = NewRoundCosi(peer.Node)
 	round.peer = peer
 	return round
 }
