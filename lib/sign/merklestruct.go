@@ -85,7 +85,7 @@ const (
 
 // Sets up a round according to the needs stated in the
 // Announcementmessage.
-func NewMerkle(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) error {
+func NewMerkle(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *MerkleStruct {
 	// set up commit and response channels for the new round
 	merkle := &MerkleStruct{}
 	merkle.Commits = make([]*SigningMessage, 0)
@@ -101,8 +101,8 @@ func NewMerkle(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) error {
 	merkle.PrivKey = sn.PrivKey
 	merkle.Name = sn.Name()
 	merkle.InitCommitCrypto()
-	sn.MerkleStructs[roundNbr] = merkle
-	return nil
+	//sn.MerkleStructs[roundNbr] = merkle
+	return merkle
 }
 
 func (rt MerkleType) String() string {

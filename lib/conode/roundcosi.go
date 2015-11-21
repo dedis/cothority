@@ -61,11 +61,9 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 		return err
 	}
 
-	if err := sign.NewMerkle(round.Node, round.Node.ViewNo, roundNbr, in.Am); err != nil {
-		return err
-	}
 	// Store the message for the round
-	round.Merkle = round.Node.MerkleStructs[roundNbr]
+	//round.Merkle = round.Node.MerkleStructs[roundNbr]
+	round.Merkle = sign.NewMerkle(round.Node, viewNbr, roundNbr, in.Am)
 	round.Merkle.Msg = in.Am.Message
 
 	// Inform all children of announcement - just copy the one that came in
