@@ -368,7 +368,10 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	}
 	challs := make([]*SigningMessage, sn.NChildren(view))
 	for i := range challs {
-		challs[i] = &SigningMessage{ViewNbr: view, RoundNbr: RoundNbr, Type: Challenge,
+		challs[i] = &SigningMessage{
+			ViewNbr: view,
+			RoundNbr: RoundNbr,
+			Type: Challenge,
 			Chm: &ChallengeMessage{}}
 	}
 
@@ -439,6 +442,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 		ViewNbr:         view,
 		RoundNbr:     roundNbr,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+		Rm: &ResponseMessage{},
 	}
 	err := ri.Response(merkle.FillInWithDefaultMessages(), out)
 	delete(sn.RoundResponses, roundNbr)

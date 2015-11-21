@@ -280,19 +280,16 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
-	rm := &sign.ResponseMessage{
-		R_hat:          round.Merkle.R_hat,
-		ExceptionList:  round.Merkle.ExceptionList,
-		ExceptionV_hat: round.Merkle.ExceptionV_hat,
-		ExceptionX_hat: round.Merkle.ExceptionX_hat,
-	}
-	out.Rm = rm
+
+	out.Rm.R_hat = round.Merkle.R_hat
+	out.Rm.ExceptionList = round.Merkle.ExceptionList
+	out.Rm.ExceptionV_hat = round.Merkle.ExceptionV_hat
+	out.Rm.ExceptionX_hat = round.Merkle.ExceptionX_hat
 	return nil
 }
 
 func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	// Root is creating the sig broadcast
-	sb := in.SBm
 	if round.isRoot {
 		dbg.Lvl2(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
 		in.SBm.R0_hat = round.Merkle.R_hat
@@ -301,11 +298,11 @@ func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.
 		in.SBm.V0_hat = round.Merkle.Log.V_hat
 		in.SBm.Messages = round.Node.Messages
 	} else {
-		round.Node.Messages = sb.Messages
+		round.Node.Messages = in.SBm.Messages
 	}
 	// Inform all children of broadcast  - just copy the one that came in
 	for i := range out {
-		*out[i].SBm = *sb
+		*out[i].SBm = *in.SBm
 	}
 	// Send back signature to clients
 	for i, msg := range round.Queue {
@@ -332,10 +329,10 @@ func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.
 				Timestamp:  round.Timestamp,
 				MerkleRoot: round.Merkle.MTRoot,
 				Prf:        combProof,
-				Response:   sb.R0_hat,
-				Challenge:  sb.C,
-				AggCommit:  sb.V0_hat,
-				AggPublic:  sb.X0_hat,
+				Response:   in.SBm.R0_hat,
+				Challenge:  in.SBm.C,
+				AggCommit:  in.SBm.V0_hat,
+				AggPublic:  in.SBm.X0_hat,
 			}}
 		round.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client", msg.To)
