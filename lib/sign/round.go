@@ -5,11 +5,14 @@ import (
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
-// Round  holds the functions that are used to define the
-// behaviour of a Round. All different round-types use the
-// cothority-tree, but they have different behaviors.
-// This is only the interface, so actual implementation can also start new
-// rounds of same type or different at the time it want.
+/*
+Round  holds the functions that are used to define the
+behaviour of a Round. All different round-types use the
+cothority-tree, but they have different behaviors.
+This is only the interface, so actual implementation can also start new
+rounds of same type or different at the time it want.
+*/
+
 type Round interface {
 	// Announcement: root -> nodes
 	// This is called from the root-node whenever an

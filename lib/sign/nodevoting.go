@@ -9,6 +9,9 @@ import (
 	"golang.org/x/net/context"
 )
 
+/*
+DOESN'T WORK - needs to be implemented in a RoundVote
+ */
 // HERE: after we change to the new view, we could send our parent
 // a notification that we are ready to use the new view
 

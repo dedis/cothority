@@ -15,6 +15,10 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 )
 
+/*
+Some more utilities for the Node-structure.
+ */
+
 func (sn *Node) multiplexOnChildren(view int, sm *SigningMessage) {
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
 	for i := range messgs {
