@@ -70,7 +70,7 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 
 	// Inform all children of announcement - just copy the one that came in
 	for i := range out {
-		out[i].Am = in.Am
+		*out[i].Am = *in.Am
 	}
 	return nil
 }
@@ -174,17 +174,16 @@ func (round *RoundCosi) Challenge(in *sign.SigningMessage, out []*sign.SigningMe
 
 	merkle := round.Merkle
 	// we are root
-	if in.Chm == nil {
+	if round.isRoot {
 		msg := merkle.Msg
 		msg = append(msg, []byte(merkle.MTRoot)...)
 		merkle.C = sign.HashElGamal(merkle.Suite, msg, merkle.Log.V_hat)
 		//proof := make([]hashid.HashId, 0)
 
-		in.Chm = &sign.ChallengeMessage{
-			C:      merkle.C,
-			MTRoot: merkle.MTRoot,
-			Proof:  merkle.Proof,
-			Vote:   merkle.Vote}
+		in.Chm.C = merkle.C
+		in.Chm.MTRoot = merkle.MTRoot
+		in.Chm.Proof = merkle.Proof
+		in.Chm.Vote = merkle.Vote
 	} else { // we are a leaf
 		// register challenge
 		merkle.C = in.Chm.C
@@ -294,21 +293,19 @@ func (round *RoundCosi) Response(sms []*sign.SigningMessage, out *sign.SigningMe
 func (round *RoundCosi) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	// Root is creating the sig broadcast
 	sb := in.SBm
-	if sb == nil && round.Node.IsRoot(round.Merkle.ViewNbr) {
+	if round.isRoot {
 		dbg.Lvl2(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
-		sb = &sign.SignatureBroadcastMessage{
-			R0_hat:   round.Merkle.R_hat,
-			C:        round.Merkle.C,
-			X0_hat:   round.Merkle.X_hat,
-			V0_hat:   round.Merkle.Log.V_hat,
-			Messages: round.Node.Messages,
-		}
+		in.SBm.R0_hat = round.Merkle.R_hat
+		in.SBm.C = round.Merkle.C
+		in.SBm.X0_hat = round.Merkle.X_hat
+		in.SBm.V0_hat = round.Merkle.Log.V_hat
+		in.SBm.Messages = round.Node.Messages
 	} else {
 		round.Node.Messages = sb.Messages
 	}
 	// Inform all children of broadcast  - just copy the one that came in
 	for i := range out {
-		out[i].SBm = sb
+		*out[i].SBm = *sb
 	}
 	// Send back signature to clients
 	for i, msg := range round.Queue {

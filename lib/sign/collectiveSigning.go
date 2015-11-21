@@ -221,9 +221,9 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	RoundNbr := sm.RoundNbr
 	am := sm.Am
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
-	var ri Round
-	ri = sn.Rounds[RoundNbr]
-	if ri == nil {
+	var round Round
+	round = sn.Rounds[RoundNbr]
+	if round == nil {
 		if am == nil {
 			return fmt.Errorf("Got a nil announcement on a non root nde?")
 		}
@@ -237,8 +237,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 			return err
 		}
 		sn.Rounds[RoundNbr] = r
-		ri = r
-
+		round = r
 	}
 
 	nChildren := sn.NChildren(view)
@@ -252,7 +251,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 			Am: &AnnouncementMessage{},
 		}
 	}
-	err := ri.Announcement(view, RoundNbr, sm, out)
+	err := round.Announcement(view, RoundNbr, sm, out)
 	if err != nil {
 		dbg.Lvl3(sn.Name(), "Error on announcement", err)
 		return err
@@ -339,6 +338,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 			RoundNbr: roundNbr,
 			Type:     Challenge,
 			ViewNbr:     view,
+			Chm: &ChallengeMessage{},
 		})
 	} else {
 		// create and putup own commit message
@@ -482,6 +482,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 			Type:     SignatureBroadcast,
 			ViewNbr:     view,
 			RoundNbr: roundNbr,
+			SBm: &SignatureBroadcastMessage{},
 		})
 		sn.done <- roundNbr
 	}
@@ -528,6 +529,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 			Type:     SignatureBroadcast,
 			ViewNbr:     view,
 			RoundNbr: RoundNbr,
+			SBm: &SignatureBroadcastMessage{},
 		}
 	}
 
