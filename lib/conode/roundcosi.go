@@ -61,7 +61,7 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *sign.SigningMess
 		return err
 	}
 
-	if err := sign.MerkleSetup(round.Node, round.Node.ViewNo, roundNbr, in.Am); err != nil {
+	if err := sign.NewMerkle(round.Node, round.Node.ViewNo, roundNbr, in.Am); err != nil {
 		return err
 	}
 	// Store the message for the round

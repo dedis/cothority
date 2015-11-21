@@ -83,21 +83,16 @@ const (
 	SigningRT
 )
 
-func NewMerkle(suite abstract.Suite) *MerkleStruct {
+// Sets up a round according to the needs stated in the
+// Announcementmessage.
+func NewMerkle(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) error {
+	// set up commit and response channels for the new round
 	merkle := &MerkleStruct{}
 	merkle.Commits = make([]*SigningMessage, 0)
 	merkle.Responses = make([]*SigningMessage, 0)
 	merkle.ExceptionList = make([]abstract.Point, 0)
-	merkle.Suite = suite
-	merkle.Log.Suite = suite
-	return merkle
-}
-
-// Sets up a round according to the needs stated in the
-// Announcementmessage.
-func MerkleSetup(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) error {
-	// set up commit and response channels for the new round
-	merkle := NewMerkle(sn.suite)
+	merkle.Suite = sn.suite
+	merkle.Log.Suite = sn.suite
 	merkle.Vote = am.Vote
 	merkle.Children = sn.Children(viewNbr)
 	merkle.Parent = sn.Parent(viewNbr)
