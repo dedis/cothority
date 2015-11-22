@@ -7,22 +7,22 @@ The code in this repository permits the testing and running of a cothority-syste
 
 ## Deploy
 
-* DeterLab
-* Localhost
+* Available:
+    * [DeterLab](deterlab.net)
+    * Localhost
 * Planned:
     * Docker
     * LXC
 
 ## Applications
 
-* Timestamping
-* Signing
-* Shamir-secret-service:
-    * regular signing
-    * tree signing
+* Available:
+    * Timestamping
+    * Signing
+    * Shamir-secret-service: regular or tree signing
 * Planned:
-	* Randhound - decentrailzed randomness cothority
-    * Vote - doesn't run yet
+	* Randhound: decentrailzed randomness cothority
+    * Vote
 
 ## Protocols
 
@@ -30,7 +30,7 @@ The code in this repository permits the testing and running of a cothority-syste
 
 # How to Run a Cothority
 
-All applications in `app/*` are stand-alone with the correct configuration. They can be used either with the localhost- or the DeterLab-deployment.
+All applications in `app/*` are stand-alone. Currently, they can be used by deploying to either localhost or DeterLab.
 
 ## Localhost
 To run a simple signing check on localhost, execute the following commands:
@@ -44,7 +44,7 @@ $ ./deploy -deploy localhost simulation/sign_single.toml
 
 ## DeterLab
 
-If you use the `-deploy deterlab` option, then you are prompted to enter the name of the DeterLab-installation, your username, and the project- and experiment-name. To make your life as a cothority-developer simpler, there are some flags that are only to be used when deploying to DeterLab:
+If you use the `-deploy deterlab` option, then you are prompted to enter the name of the DeterLab installation, your username, and the names of project and experiment. There are some flags which make your life as a cothority developer simpler when deploying to DeterLab:
 
 * `-nobuild`: don't build any of the helpers which is useful if you're working on the main code
 * `-build "helper1,helper2"`: only build the helpers, separated by a ",", which speeds up recompiling
