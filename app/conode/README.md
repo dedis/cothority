@@ -2,7 +2,7 @@
 
 This repository provides a first implementation of a cothority node (CoNode) for public usage. After setup, a CoNode can be used as a public timestamp-server, which takes a hash and computes a signature together with an inclusion-proof.  Moreover, a simple stamping-program is provided that can generate and verify signatures of given files through the CoNode.
 
-Currently you can run CoNode either by participating in the EPFL CoNode-project or by setting up your own cluster of CoNodes. Both options are described further below.
+Currently you can run CoNode either by participating in the EPFL CoNode project or by setting up your own cluster of CoNodes. Both options are described further below.
 
 ## Warning
 **The software provided in this repository is highly experimental and under heavy development. Do not use it for anything security-critical. All usage is at your own risk!**
@@ -137,7 +137,7 @@ For a combination of the above steps you can use the `start-conode.sh` script:
 $ ./start-conode.sh setup <IP address>:<port>
 ```
 
-This script generates the keys and starts the validation mode. After your CoNode has been available for a long enough time (usually more than 24 hours) under the specified IP address and port and has been validated by your CoNode operator, it will exit automatically, get the CoNode tree-information, and switch to running-mode.
+This script generates the keys and starts the validation mode. After your CoNode has been available for a long enough time period (usually more than 24 hours) under the specified IP address and port and has been validated by your CoNode operator, it will exit automatically, get the CoNode tree-information, and switch to running-mode.
 
 **Note:** In case your CoNode is shutdown for whatever reason, you can always manually restart it by simply executing:
 
@@ -145,7 +145,7 @@ This script generates the keys and starts the validation mode. After your CoNode
 $ ./start-conode.sh run
 ```
 
-The `start-conode`-script comes with an auto-updating mechanism: every time CoNode quits (e.g. when the root-node terminates), it checks on GitHub if a new version is available and if so, downloads the new archive, extracts it and re-launches itself.
+**Warning:** The `start-conode`-script comes with an auto-updating mechanism: every time CoNode quits (e.g. when the root-node terminates), it checks on GitHub if a new version is available and if so, downloads the new archive, extracts it and re-launches itself.
 
 We are aware that this is a security-risk and promise to not use your server for anything but running CoNode. This mechanism will be replaced at some point with a secure variant.
 
@@ -154,7 +154,7 @@ If you want to avoid this auto-updating, use the `conode` binary directly as des
 
 ## Using CoNode
 
-Once your CoNode is properly configured and in running mode, you can use it to generate stamps (i.e. multi-signatures) for documents or verify that a document is valid under a given signature. Both functions can be called via the `stamp` utility.
+Once your CoNode is properly configured and in running mode, you can use it to generate stamps for documents or verify that a document is valid under a given signature. Both functions can be called via the `stamp` utility.
 
 To **generate a stamp**, run
 
@@ -174,7 +174,7 @@ If `file` is present, its hash-value is verified against the value stored in `fi
 
 ## Participate in the EPFL CoNode Cluster
 
-In order to participate in the EPFL CoNode project follow the setup steps as described above using either the `start-conode.sh` script or the `conode` binary directly. Please send your `key.pub` file to dev.dedis@epfl.ch and wait until we have validated your instance. For that make sure that your CoNode is available for at least 24 hours under the IP address and port specified in `key.pub`.  Once we have verified your CoNode, we will send you the configuration file `config.toml`. Copy that to the folder of your `conode` binary, shutdown the validation-mode and restart CoNode in running-mode. Now your CoNode is configured and you can `stamp` files through the EPFL CoNode cluster.
+In order to participate in the EPFL CoNode project, follow the setup steps as described above using either the `start-conode.sh` script or the `conode` binary directly. Please send your `key.pub` file to dev.dedis@epfl.ch and wait until we have validated your instance. For that make sure that your CoNode is available for at least 24 hours under the IP address and port specified in `key.pub`.  Once we have verified your CoNode, we will send you the configuration file `config.toml`. Copy that to the folder of your `conode` binary, shutdown the validation-mode and restart CoNode in running-mode. Now your CoNode is configured and you can `stamp` files through the EPFL CoNode cluster.
 
 ## Setup Your Own CoNode Cluster
 
@@ -231,6 +231,4 @@ If you want to verify a given signature, you need aggregate public key of the Co
 
 ## Contact Us
 
-If you are running your own CoNode cluster, we would be very happy to hear from you. Do not hesitate to contact us at
-
-dev.dedis@epfl.ch
+If you are running your own CoNode cluster, we would be very happy to hear from you. Do not hesitate to contact us at dev.dedis@epfl.ch.

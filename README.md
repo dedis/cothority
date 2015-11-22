@@ -2,6 +2,9 @@
 
 The code in this repository permits the testing and running of a cothority-system together with some applications. It is split up in deployment, application and protocols. The basic cryptographic code comes from [DeDiS/crypto](https://github.com/DeDiS/crypto).
 
+## Warning
+**The software provided in this repository is highly experimental and under heavy development. Do not use it for anything security-critical. All usage is at your own risk!**
+
 ## Deploy
 
 * DeterLab
@@ -27,7 +30,7 @@ The code in this repository permits the testing and running of a cothority-syste
 
 # How to Run a Cothority
 
-All applications in `app/*` are stand-alone with the correct configuration. They can be used either with the `localhost`- or the `deterlab`-deployment.
+All applications in `app/*` are stand-alone with the correct configuration. They can be used either with the localhost- or the DeterLab-deployment.
 
 ## Localhost
 To run a simple signing check on localhost, execute the following commands:
@@ -41,25 +44,30 @@ $ ./deploy -deploy localhost simulation/sign_single.toml
 
 ## DeterLab
 
-If you use the `-deploy deterlab` option, then you will have to enter the name of the DeterLab-installation, your username, project- and experiment-name. To make your life as a cothority-developer simpler, there are some flags that are only to be used when deploying to DeterLab:
+If you use the `-deploy deterlab` option, then you are prompted to enter the name of the DeterLab-installation, your username, and the project- and experiment-name. To make your life as a cothority-developer simpler, there are some flags that are only to be used when deploying to DeterLab:
 
 * `-nobuild`: don't build any of the helpers which is useful if you're working on the main code
 * `-build "helper1,helper2"`: only build the helpers, separated by a ",", which speeds up recompiling
 
 ### SSH-keys
-For convenience, we recommend that you upload a public ssh-key to the DeterLab site. If your ssh-key is protected through a passphrase (which should be the case for security reasons!) we further recommend that you add your private key to your ssh-agent / keychain.
+For convenience, we recommend that you upload a public SSH-key to the DeterLab site. If your SSH-key is protected through a passphrase (which should be the case for security reasons!) we further recommend that you add your private key to your SSH-agent / keychain. Afterwards you only need to unlock your SSH-agent / keychain once (per session) and can access all your stored keys without typing the passphrase each time.
 
 **OSX:**
 
+You can store your SSH-key directly in the OSX-keychain by executing:
+
 ```
-/usr/bin/ssh-add -K ~/.ssh/<your private ssh key>
+$ /usr/bin/ssh-add -K ~/.ssh/<your private ssh key>
 ```
 
-Make sure that you actually use the `ssh-add` program that comes with your OSX installation. Those installed through [homebrew](http://brew.sh/), [MacPorts](https://www.macports.org/) etc. **do not support** the `-K` flag.
+Make sure that you actually use the `ssh-add` program that comes with your OSX installation, since those installed through [homebrew](http://brew.sh/), [MacPorts](https://www.macports.org/) etc. **do not support** the `-K` flag per default.
 
 **Linux:**
+
+Make sure that the `ssh-agent` is running. Afterwards you can add your SSH-key via:
+
 ```
-TODO.
+$ ssh-add ~/.ssh/<your private ssh key>
 ```
 
 
@@ -76,7 +84,7 @@ Sets up servers that listen for client-requests, collects all requests and hands
 
 ## Signing
 
-A simple mechanism that is capable of receiving messages and returns their signatures.
+A simple mechanism that is capable of receiving messages and returning their signatures.
 
 ## RandHound
 
