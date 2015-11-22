@@ -76,7 +76,7 @@ $ ssh-add ~/.ssh/<your private ssh key>
 
 ## CoNode
 
-You can find more information about CoNode in the corresponding [README](https://github.com/dedis/cothority/app/conode/README.md).
+You can find more information about CoNode in the corresponding [README](https://github.com/DeDiS/cothority/blob/development/app/conode/README.md).
 
 ## Timestamping
 
