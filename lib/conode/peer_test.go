@@ -12,7 +12,7 @@ import (
 
 // Runs two conodes and tests if the value returned is OK
 func TestPeer(t *testing.T) {
-	peer1, _ := createPeers()
+	peer1, peer2 := createPeers()
 
 	var err error
 	var round sign.Round
@@ -25,6 +25,8 @@ func TestPeer(t *testing.T) {
 		}
 	}
 	peer1.StartAnnouncement(round)
+	peer1.Close()
+	peer2.Close()
 }
 
 func TestRoundCosi(t *testing.T) {

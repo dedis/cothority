@@ -22,12 +22,16 @@ and passes those to the roundstamper.
 
 type StampListener struct {
 	// for aggregating messages from clients
-	Mux     sync.Mutex
-	Queue   [][]MustReplyMessage
+	Mux       sync.Mutex
+	Queue     [][]MustReplyMessage
 	// All clients connected to that listener
-	Clients map[string]coconet.Conn
+	Clients   map[string]coconet.Conn
 	// The name of the listener
-	NameP   string
+	NameP     string
+	// The channel for closing the connection
+	waitClose chan string
+	// The port we're listening on
+	Port      net.Listener
 }
 
 func NewStampListener(name string) *StampListener {
@@ -45,7 +49,7 @@ func NewStampListener(name string) *StampListener {
 		if err != nil {
 			log.Fatal(err)
 		}
-		sl.NameP = net.JoinHostPort(h, strconv.Itoa(i+1))
+		sl.NameP = net.JoinHostPort(h, strconv.Itoa(i + 1))
 	} else {
 		log.Fatal("Couldn't split host into name and port:", err)
 	}
@@ -57,7 +61,8 @@ func (s *StampListener) ListenRequests() error {
 	dbg.Lvl3("Setup Peer")
 	global, _ := cliutils.GlobalBind(s.NameP)
 	dbg.LLvl3("Listening in server at", global)
-	ln, err := net.Listen("tcp4", global)
+	var err error
+	s.Port, err = net.Listen("tcp4", global)
 	if err != nil {
 		panic(err)
 	}
@@ -65,11 +70,17 @@ func (s *StampListener) ListenRequests() error {
 	go func() {
 		for {
 			dbg.Lvl2("Listening to sign-requests: %p", s)
-			conn, err := ln.Accept()
+			conn, err := s.Port.Accept()
 			if err != nil {
 				// handle error
 				dbg.Lvl3("failed to accept connection")
-				continue
+				select {
+				case w := <-s.waitClose:
+					dbg.Lvl3("Closing stamplistener:", w)
+					return
+				default:
+					continue
+				}
 			}
 
 			c := coconet.NewTCPConnFromNet(conn)
@@ -113,3 +124,8 @@ func (s *StampListener) ListenRequests() error {
 	return nil
 }
 
+// Close shuts down the connection
+func (s *StampListener) Close() {
+	s.waitClose <- "Close demanded"
+	s.Port.Close()
+}

@@ -46,7 +46,9 @@ func TestStamp(t *testing.T) {
 			t.Fatal("Not correct aggregate public key")
 		}
 	}
-	//stopConode()
+
+	peer1.Close()
+	peer2.Close()
 }
 
 func readConfig() *app.ConfigConode {

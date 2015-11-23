@@ -146,6 +146,7 @@ func (peer *Peer) Close() {
 	dbg.Lvl4("closing stampserver: %p", peer.Node.Name())
 	peer.CloseChan <- true
 	peer.Node.Close()
+	peer.StampListener.Close()
 }
 
 // This node is the root-node - still possible to change
