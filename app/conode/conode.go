@@ -42,8 +42,8 @@ func registerCommand(com cli.Command) {
 
 func main() {
 	coApp := cli.NewApp()
-	coApp.Name = "Conode"
-	coApp.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
+	coApp.Name = "CoNode"
+	coApp.Usage = "Runs a cothority node and contacts others CoNodes to form a cothority tree"
 	coApp.Version = "0.1.0"
 	coApp.Authors = []cli.Author{
 		{
@@ -51,16 +51,16 @@ func main() {
 			Email: "linus.gasser@epfl.ch",
 		},
 		{
-			Name:  "nikkolasg",
-			Email: "not provided yet",
+			Name:  "Nicolas Gailly",
+			Email: "not specified",
 		},
 	}
 	// already create the key gen command
 	keyGen := cli.Command{
 		Name:      "keygen",
 		Aliases:   []string{"k"},
-		Usage:     "Create a new key pair and binding the public part to your address. ",
-		ArgsUsage: "ADRESS[:PORT] will be the address binded to the generated public key",
+		Usage:     "Creates a new key pair and binds the public part to the specified IPv4 address and port",
+		ArgsUsage: "ADRESS[:PORT] is the address (and port) bound to the generated public key.",
 		Action: func(c *cli.Context) {
 			KeyGeneration(c.String("key"), c.Args().First())
 		},

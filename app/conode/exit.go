@@ -16,9 +16,9 @@ func init() {
 	command := cli.Command{
 		Name:        "exit",
 		Aliases:     []string{"x"},
-		Usage:       "Stop a given conode.",
-		Description: "Basically it will statically generate the tree, with the respective names and public key",
-		ArgsUsage:   "ADDRESS: the IP[:PORT] of the conode to exit",
+		Usage:       "Stops the given CoNode",
+		Description: "Basically it will statically generate the tree, with the respective names and public key.",
+		ArgsUsage:   "ADDRESS: the IPv4[:PORT] of the CoNode to exit.",
 		Action: func(c *cli.Context) {
 			if c.Args().First() == "" {
 				dbg.Fatal("You must provide an address")

@@ -20,7 +20,7 @@ func init() {
 	command := cli.Command{
 		Name:        "build",
 		Aliases:     []string{"b"},
-		Usage:       "Build a cothority configuration file needed for the conodes and clients.",
+		Usage:       "Builds a cothority configuration file required for CoNodes and clients",
 		Description: "Basically it will statically generate the tree, with the respective names and public key",
 		ArgsUsage:   "HOSTFILE : file where each line is a copy of a public key node ( <address> <pubkey in b64> )",
 		Flags: []cli.Flag{
