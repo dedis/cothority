@@ -71,7 +71,7 @@ VERSION:
    0.1.0
 
 AUTHOR(S):
-   Linus Gasser <linus.gasser@epfl.ch> Nicolas Gailly <nicolas.gailly@epfl.ch>
+   Linus Gasser <linus.gasser@epfl.ch> Nicolas Gailly <not specified>
 
 COMMANDS:
    check, c	    Checks if a given CoNode is valid in order to be incorporated into a cothority tree
