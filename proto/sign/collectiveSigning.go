@@ -59,7 +59,7 @@ func (sn *Node) getMessages() error {
 
 		// if it is a non-fatal error try again
 			if err != nil {
-				log.Errorln(sn.Name(), " error getting message (still continuing) ", err)
+				dbg.Lvl3(sn.Name(), " error getting message (still continuing) ", err)
 				continue
 			}
 		// interpret network message as Signing Message

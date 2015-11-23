@@ -1,7 +1,8 @@
 #!/bin/bash
 
 CSV_DIR=Paper_cosi
-PIC="true"
+CSV_REL=""
+#PIC="true"
 SHOW="true"
 EXT="eps"
 
@@ -13,7 +14,6 @@ main(){
 }
 
 add_dir(){
-  CSV_REL=""
   for c in $@; do
     CSV_REL="$CSV_REL $CSV_DIR/$c"
   done
@@ -26,12 +26,13 @@ plot(){
   if [ "$PIC" = "true" ]; then
     python2.7 time_plot.py $1 $CSV_REL $2.$EXT
   fi
+  CSV_REL=""
 }
 
 plot_roundtime(){
   add_dir sign_huge.csv shamir_multi_adapted.csv naive_multi_adapted.csv naive_multi_adapted_skipcheck.csv ntree_multi_adapted.csv
-  plot 0 comparison_roundtime
-  #plot 1 comparison_systime
+  #plot 0 comparison_roundtime
+  plot 1 comparison_systime
   #plot 3 comparison_check
 }
 
@@ -43,6 +44,11 @@ plot_over(){
 plot_bf(){
   add_dir sign_multi_bf.csv
   plot 5 sign_multi_bf
+
+  #for bf in 128 512 2048 8192; do
+  #  add_dir sign_multi_bf_$bf.csv
+  #done
+  #plot 7 sign_multi_bf
 }
 
 plot_stamp(){

@@ -51,6 +51,8 @@ class CSVStats:
             values_x += v.x
         return (min(values_x), max(values_x),min(values_y), max(values_y))
 
+    def add(self, stats, col1, col2):
+        sum = deepcopy(self)
 
 # Value holds the min / max / avg / dev for a single named value
 class Values:
