@@ -19,7 +19,7 @@ func init() {
 	command := cli.Command{
 		Name:        "check",
 		Aliases:     []string{"c"},
-		Usage:       "Check a host to determine if it is a valid node to get incorporated into the cothority tree.",
+		Usage:       "Checks if a given CoNode is valid in order to be incorporated into a cothority tree",
 		Description: "It checks the public key given and the availability of the server. It will be contacted multiple times a day during 24 hours",
 		ArgsUsage:   "Public-key-file : file where reside the public key of the host to check",
 		Subcommands: []cli.Command{

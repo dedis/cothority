@@ -26,14 +26,14 @@ func init() {
 	command := cli.Command{
 		Name:    "validate",
 		Aliases: []string{"v"},
-		Usage:   "conode will wait in validation mode",
-		Description: "It will be running conode a whole day, and " +
-		"the development team will run the check mode many times during the day" +
-		"to see if your server is elligible to being incorporated in the cothority tree",
+		Usage:   "Starts validation mode of the CoNode",
+		Description: "The CoNode will be running for a whole day during which" +
+		             "the development team will run repeated checks to verify " +
+		             "that your server is eligible for being incorporated in the cothority tree.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "key, k",
-				Usage: "KEY : the basename of where to find the public / private keys of this host to be verified",
+				Usage: "KEY : the basename of where to find the public / private keys of this host to be verified.",
 				Value: defaultKeyFile,
 			},
 		},
@@ -61,14 +61,14 @@ func Validation(keyFile string) {
 
 	var conn net.Conn
 	for ;; conn.Close() {
-		dbg.Lvl1("Will wait for the verifier connection ...")
+		dbg.Lvl1("Waiting for verifier connection ...")
 		// Accept the one
 		conn, err = ln.Accept()
 		if err != nil {
 			dbg.Fatal("Could not accept an input connection : ", err)
 		}
 
-		dbg.Lvl1("Verifier connected ! validation in progress...")
+		dbg.Lvl1("Verifier connected! Validation in progress...")
 		// Craft the message about our system,signs it, and then send the whole
 		msg := createSystemPacket()
 		signature := signSystemPacket(msg, kp)
@@ -93,13 +93,13 @@ func Validation(keyFile string) {
 			dbg.Lvl1("Validation received unknown ACK : type = ", ack.Type, " Code = ", ack.Code)
 			continue
 		case SYS_OK:
-			dbg.Lvl1("Validation is done and correct ! You should receive an email from development team soon.")
+			dbg.Lvl1("Validation finished successfully! You should receive an email from development team soon.")
 		case SYS_WRONG_HOST:
 			dbg.Lvl1(er + "HOSTNAME")
 		case SYS_WRONG_SOFT:
 			dbg.Lvl1(er + "SOFT limits")
 		case SYS_WRONG_SIG:
-			dbg.Lvl1(er + "signature !")
+			dbg.Lvl1(er + "signature!")
 		case SYS_EXIT:
 			dbg.Lvl1("Exiting - need to update to get config.toml")
 			os.Exit(1)

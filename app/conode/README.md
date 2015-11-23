@@ -61,9 +61,8 @@ The `conode` binary provides all the required functionality to configure and run
 
 ```
 $ ./conode --help
-
 NAME:
-   Conode - Run a cothority server and contacts others conodes to form a cothority tree
+   CoNode - Runs a cothority node and contacts others CoNodes to form a cothority tree
 
 USAGE:
    ./conode [global options] command [command options] [arguments...]
@@ -72,21 +71,22 @@ VERSION:
    0.1.0
 
 AUTHOR(S):
-   Linus Gasser <linus.gasser@epfl.ch> nikkolasg <not provided yet>
+   Linus Gasser <linus.gasser@epfl.ch> Nicolas Gailly <nicolas.gailly@epfl.ch>
 
 COMMANDS:
-   check, c     Check a host to determine if it is a valid node to get incorporated into the cothority tree.
-   build, b	    Build a cothority configuration file needed for the conodes and clients.
-   exit, x	    Stop a given conode.
-   run, r	    Run this conode inside the cothority tree.
-   validate, v	conode will wait in validation mode
-   keygen, k	Create a new key pair and binding the public part to your address.
+   check, c	    Checks if a given CoNode is valid in order to be incorporated into a cothority tree
+   build, b	    Builds a cothority configuration file required for CoNodes and clients
+   exit, x	    Stops the given CoNode
+   run, r	    Runs the CoNode and connects it to the cothority tree as specified in the config file
+   validate, v	Starts validation mode of the CoNode
+   keygen, k	Creates a new key pair and binds the public part to the specified IPv4 address and port
    help, h	    Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --debug, -d "1"  debug level from 1 (only major operations) to 5 (very noisy text)
-   --help, -h       show help
-   --version, -v    print the version
+   --debug, -d "1"	debug level from 1 (only major operations) to 5 (very noisy text)
+   --help, -h		show help
+   --version, -v	print the version
+
 ```
 
 For more information on how to use the above commands please refer to the following sections.  The script `start-conode.sh`, which can be found in the CoNode archive and repository, is a wrapper around `conode` and automatises certain tasks.
