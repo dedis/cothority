@@ -14,12 +14,19 @@ import (
 func TestStamp(t *testing.T) {
 	// conf will hold part of the configuration for each server,
 	// so we have to create a second one for the second server
+	/*
 	dbg.TestOutput(testing.Verbose(), 4)
 	conf := readConfig()
 	go runConode(conf, 1)
 
 	conf = readConfig()
 	go runConode(conf, 2)
+	time.Sleep(time.Second * 2)
+	*/
+	peer1, peer2 := createPeers()
+	peer1.SetRootPeer()
+	go peer1.LoopRounds()
+	go peer2.LoopRounds()
 	time.Sleep(time.Second * 2)
 
 	s, err := conode.NewStamp("testdata/config.toml")

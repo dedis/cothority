@@ -171,7 +171,7 @@ func (peer *Peer) runAsRoot(nRounds int) string {
 
 			var err error
 			var round sign.Round
-			if true {
+			if false {
 				round = NewRoundCosiStamper(peer)
 			} else {
 				round, err = sign.NewRoundFromType("cosistamper", peer.Node)
