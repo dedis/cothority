@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/dedis/cothority/lib/app"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/sign"
 	"io/ioutil"

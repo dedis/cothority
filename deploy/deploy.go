@@ -30,7 +30,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 )
 

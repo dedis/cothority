@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/context"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"

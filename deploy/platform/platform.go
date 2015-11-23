@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"os"
 	"strings"
 )

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/dedis/cothority/lib/coconet"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"

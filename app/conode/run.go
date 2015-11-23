@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func init() {

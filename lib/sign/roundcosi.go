@@ -1,7 +1,7 @@
 package sign
 
 import (
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 
 	"errors"
 	"github.com/dedis/cothority/lib/hashid"

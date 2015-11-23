@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"time"
 
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sign"
 
 	"github.com/dedis/cothority/lib/coconet"

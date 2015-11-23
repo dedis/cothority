@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"fmt"
 	"sync"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/conode"
 )
 

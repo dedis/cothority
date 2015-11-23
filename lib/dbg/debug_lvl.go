@@ -1,4 +1,4 @@
-package debug_lvl
+package dbg
 
 import (
 	"bytes"
@@ -78,7 +78,7 @@ func Lvl(lvl int, args ...interface{}) {
 		caller += "@" + StaticMsg
 	}
 	DebugLog.WithFields(logrus.Fields{
-		"debug_lvl": lvl,
+		"dbg": lvl,
 		"caller":    caller}).Println(args...)
 }
 
@@ -195,7 +195,7 @@ type DebugLvl struct {
 }
 
 func (f *DebugLvl) Format(entry *logrus.Entry) ([]byte, error) {
-	lvl := entry.Data["debug_lvl"].(int)
+	lvl := entry.Data["dbg"].(int)
 	caller := entry.Data["caller"].(string)
 	if lvl <= DebugVisible {
 		b := &bytes.Buffer{}

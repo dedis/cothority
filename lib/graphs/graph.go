@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net"
 	"strconv"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 var TRIM bool = false

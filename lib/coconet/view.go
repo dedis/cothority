@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 type View struct {

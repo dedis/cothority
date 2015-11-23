@@ -29,7 +29,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"os"
 	"os/exec"

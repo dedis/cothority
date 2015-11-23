@@ -2,7 +2,7 @@ package monitor
 
 import (
 	"fmt"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"testing"
 	"time"
 )

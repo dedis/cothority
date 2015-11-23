@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/sign"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"errors"
 	"strconv"
 	"net"

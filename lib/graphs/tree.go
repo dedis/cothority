@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/dedis/crypto/abstract"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // tree easy to deal with

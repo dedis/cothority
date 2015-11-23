@@ -1,7 +1,7 @@
 package coconet
 
 import (
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/protobuf"
 )
 

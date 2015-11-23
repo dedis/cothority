@@ -4,7 +4,7 @@ import (
 	"net"
 	"github.com/dedis/cothority/lib/coconet"
 	"os"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"sync"
 	"strconv"
 	"log"

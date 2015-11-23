@@ -2,7 +2,7 @@ package platform_test
 
 import (
 	"github.com/dedis/cothority/deploy/platform"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 //	"strings"
 	"testing"

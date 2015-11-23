@@ -7,7 +7,7 @@ import (
 
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"os"
 	"sync"

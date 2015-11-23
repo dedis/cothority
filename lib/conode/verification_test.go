@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/conode"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/crypto/abstract"
 	"io"

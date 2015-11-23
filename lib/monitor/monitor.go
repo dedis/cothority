@@ -3,7 +3,7 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"io"
 	"net"
 	"strings"

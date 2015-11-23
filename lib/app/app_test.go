@@ -3,7 +3,7 @@ import (
 	"testing"
 	"github.com/dedis/cothority/lib/app"
 	"io/ioutil"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 var testFileApp = `Machines = 8
