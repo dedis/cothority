@@ -10,60 +10,6 @@ import (
 	"strings"
 )
 
-// Struct that represent the configuration to apply for one "test"
-// Note: a "simulation" is a set of "tests"
-type RunConfig struct {
-	fields map[string]string
-}
-
-// One problem for now is RUnCOnfig read also the ' " ' char (34 ASCII)
-// and thus when doing Get() , also return the value enclosed by ' " '
-// One fix is to each time we Get(), aautomatically delete those chars
-var replacer *strings.Replacer = strings.NewReplacer("\"", "", "'", "")
-
-// Returns the associated value of the field in the config
-func (r *RunConfig) Get(field string) string {
-	return replacer.Replace(r.fields[strings.ToLower(field)])
-}
-
-// Insert a new field - value relationship
-func (r *RunConfig) Put(field, value string) {
-	r.fields[strings.ToLower(field)] = value
-}
-
-// Returns this config as bytes in a Toml format
-func (r *RunConfig) Toml() []byte {
-	var buf bytes.Buffer
-	for k, v := range r.fields {
-		fmt.Fprintf(&buf, "%s = %s\n", k, v)
-	}
-	return buf.Bytes()
-}
-
-// Returns this config as a Map
-func (r *RunConfig) Map() map[string]string {
-	tomap := make(map[string]string)
-	for k := range r.fields {
-		tomap[k] = r.Get(k)
-	}
-	return tomap
-}
-
-// Clone this runconfig so it has all fields-value relationship already present
-func (r *RunConfig) Clone() *RunConfig {
-	rc := NewRunConfig()
-	for k, v := range r.fields {
-		rc.fields[k] = v
-	}
-	return rc
-}
-
-func NewRunConfig() *RunConfig {
-	rc := new(RunConfig)
-	rc.fields = make(map[string]string)
-	return rc
-}
-
 // Generic interface to represent a platform where to run tests
 // or direct applications. For now only localhost + deterlab.
 // one could imagine EC2 or OpenStack or whatever you can as long as you
@@ -161,4 +107,58 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 	}
 
 	return runconfigs
+}
+
+// Struct that represent the configuration to apply for one "test"
+// Note: a "simulation" is a set of "tests"
+type RunConfig struct {
+	fields map[string]string
+}
+
+func NewRunConfig() *RunConfig {
+	rc := new(RunConfig)
+	rc.fields = make(map[string]string)
+	return rc
+}
+
+// One problem for now is RunConfig read also the ' " ' char (34 ASCII)
+// and thus when doing Get() , also return the value enclosed by ' " '
+// One fix is to each time we Get(), aautomatically delete those chars
+var replacer *strings.Replacer = strings.NewReplacer("\"", "", "'", "")
+
+// Returns the associated value of the field in the config
+func (r *RunConfig) Get(field string) string {
+	return replacer.Replace(r.fields[strings.ToLower(field)])
+}
+
+// Insert a new field - value relationship
+func (r *RunConfig) Put(field, value string) {
+	r.fields[strings.ToLower(field)] = value
+}
+
+// Returns this config as bytes in a Toml format
+func (r *RunConfig) Toml() []byte {
+	var buf bytes.Buffer
+	for k, v := range r.fields {
+		fmt.Fprintf(&buf, "%s = %s\n", k, v)
+	}
+	return buf.Bytes()
+}
+
+// Returns this config as a Map
+func (r *RunConfig) Map() map[string]string {
+	tomap := make(map[string]string)
+	for k := range r.fields {
+		tomap[k] = r.Get(k)
+	}
+	return tomap
+}
+
+// Clone this runconfig so it has all fields-value relationship already present
+func (r *RunConfig) Clone() *RunConfig {
+	rc := NewRunConfig()
+	for k, v := range r.fields {
+		rc.fields[k] = v
+	}
+	return rc
 }
