@@ -66,5 +66,6 @@ func runConode(conf *app.ConfigConode, id int) {
 		conf.Public = pub
 		address = addr
 	}
-	conode.RunServer(address, conf)
+	peer := conode.NewPeer(address, conf)
+	peer.LoopRounds()
 }
