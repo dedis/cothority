@@ -349,10 +349,10 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostname string) err
 		}
 	}
 	if err != nil {
-		dbg.Fatal(fmt.Sprintf("%s failed to connect to parent"), hostname)
+		dbg.Fatal(hostname, "failed to connect to parent")
 		//return errors.New("failed to connect")
 	} else {
-		dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", hostname))
+		dbg.Lvl3(hostname, "successfully connected to parent")
 	}
 
 	if !stamper {

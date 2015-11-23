@@ -71,6 +71,7 @@ func (sn *Node) ProcessMessages() error {
 			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
 
 		// don't act on future view if not caught up, must be done after updating vote index
+		/*
 			sn.viewmu.Lock()
 			if sm.ViewNbr > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
@@ -80,6 +81,7 @@ func (sn *Node) ProcessMessages() error {
 			}
 			sn.viewmu.Unlock()
 			sn.updateLastSeenVote(sm.LastSeenVote, sm.From)
+			*/
 
 			switch sm.Type {
 			// if it is a bad message just ignore it

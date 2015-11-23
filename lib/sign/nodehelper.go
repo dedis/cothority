@@ -204,7 +204,7 @@ func (sn *Node) logTotalTime(totalTime time.Duration) {
 	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
 }
 
-func (sn *Node) StartAnnouncement(roundNbr Round) error {
+func (sn *Node) StartAnnouncement(round Round) error {
 	sn.AnnounceLock.Lock()
 	sn.nRounds = sn.LastSeenRound
 
@@ -218,7 +218,7 @@ func (sn *Node) StartAnnouncement(roundNbr Round) error {
 	sn.viewmu.Unlock()
 
 	sn.nRounds++
-	sn.Rounds[sn.nRounds] = roundNbr
+	sn.Rounds[sn.nRounds] = round
 	am := &AnnouncementMessage{}
 
 	defer sn.AnnounceLock.Unlock()

@@ -21,6 +21,13 @@ func ExampleLevel2() {
 	// 2: (                  dbg_test.ExampleLevel2:   0) - Level2
 }
 
+func ExampleMultiParams(){
+	dbg.Lvl1("Multiple", "parameters")
+
+	// Output:
+	// 1: (             dbg_test.ExampleMultiParams:   0) - Multiple parameters
+}
+
 func thisIsAVeryLongFunctionNameThatWillOverflow(){
 	dbg.Lvl1("Overflow")
 }

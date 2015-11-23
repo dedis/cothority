@@ -17,14 +17,15 @@ type RoundCosiStamper struct {
 	peer *Peer
 }
 
-func RegisterRoundCosiStamper(p *Peer) {
+func RegisterRoundCosiStamper(peer *Peer) {
 	sign.RegisterRoundFactory(RoundCosiStamperType,
-		func(s *sign.Node) sign.Round {
-			return NewRoundCosiStamper(p)
+		func(node *sign.Node) sign.Round {
+			return NewRoundCosiStamper(peer)
 		})
 }
 
-func NewRoundCosiStamper(peer *Peer) *RoundCosiStamper {
+func NewRoundCosiStamper(peer *Peer) sign.Round {
+	dbg.Print("Making new roundcosistamper", peer)
 	round := &RoundCosiStamper{}
 	round.RoundStamper = NewRoundStamper(peer)
 	round.RoundCosi = sign.NewRoundCosi(peer.Node)

@@ -12,11 +12,12 @@ import (
 
 // Runs two conodes and tests if the value returned is OK
 func TestStamp(t *testing.T) {
+	// conf will hold part of the configuration for each server,
+	// so we have to create a second one for the second server
 	dbg.TestOutput(testing.Verbose(), 4)
 	conf := readConfig()
 	go runConode(conf, 1)
-	// conf will hold part of the configuration for each server,
-	// so we have to create a second one for the second server
+
 	conf = readConfig()
 	go runConode(conf, 2)
 	time.Sleep(time.Second * 2)

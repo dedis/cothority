@@ -66,7 +66,7 @@ func RegisterRoundFactory(roundType string, rf RoundFactory) {
 // Return the RoundFactory for this round type. Return an error if this round
 // has not been registered before.
 func NewRoundFromType(rtype string, sn *Node) (Round, error) {
-	dbg.Lvl3("Creating round-type:", rtype, "out of", RoundFactories)
+	dbg.LLvl3("Creating round-type:", rtype, "out of", RoundFactories)
 	rf, ok := RoundFactories[rtype]
 	if !ok {
 		return nil, fmt.Errorf("RoundFactory not registered for the type %s", rtype)

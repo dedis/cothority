@@ -1,7 +1,6 @@
 package dbg
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -69,13 +68,9 @@ func Lvl(lvl int, args ...interface{}) {
 	if StaticMsg != "" {
 		caller += "@" + StaticMsg
 	}
-	message := fmt.Sprint(args...)
+	message := fmt.Sprintln(args...)
 	if lvl <= DebugVisible {
-		b := &bytes.Buffer{}
-		b.WriteString(fmt.Sprintf("%d: (%s) - %s", lvl, caller, message))
-		b.WriteByte('\n')
-
-		fmt.Print(b)
+		fmt.Printf("%d: (%s) - %s", lvl, caller, message)
 	} else {
 		if len(message) > 2048 && DebugVisible > 1 {
 			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(message))

@@ -74,16 +74,23 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 	peer.Hostname = address
 	peer.App = "stamp"
 	peer.ListenRequests()
-	RegisterRoundCosiStamper(peer)
-	RegisterRoundStamper(peer)
-	
+
 	// Start the cothority-listener on port 2000
 	err = hc.Run(true, sign.MerkleTree, address)
 	if err != nil {
 		dbg.Fatal(err)
 	}
 
+	peer.SetRootPeer()
+
+	closed := make(chan bool, 1)
+	go func() { err := peer.Node.Listen(); closed <- true; peer.Close(); log.Error(err) }()
 	return peer
+}
+
+func (peer *Peer) SetRootPeer(){
+	RegisterRoundCosiStamper(peer)
+	RegisterRoundStamper(peer)
 }
 
 func (peer *Peer) LoopRounds() {
@@ -102,9 +109,7 @@ func (peer *Peer) LoopRounds() {
 // for all of the nRounds
 func (peer *Peer) Run(role string) {
 	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with ", role)
-	closed := make(chan bool, 1)
 
-	go func() { err := peer.Node.Listen(); closed <- true; peer.Close(); log.Error(err) }()
 	peer.RLock.Lock()
 
 	// TODO: remove this hack
@@ -116,10 +121,10 @@ func (peer *Peer) Run(role string) {
 		switch role {
 
 		case "root":
-			dbg.Lvl4("running as root")
+			dbg.Lvl3(peer.Name(), "running as root")
 			nextRole = peer.runAsRoot(peer.MaxRounds)
 		case "regular":
-			dbg.Lvl4("running as regular")
+			dbg.Lvl3(peer.Name(), "running as regular")
 			nextRole = peer.runAsRegular()
 		default:
 			dbg.Fatal("Unable to run as anything")
@@ -165,7 +170,16 @@ func (peer *Peer) runAsRoot(nRounds int) string {
 			dbg.Lvl4(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", nRounds)
 
 			var err error
-			err = peer.StartAnnouncement(NewRoundCosiStamper(peer))
+			var round sign.Round
+			if true {
+				round = NewRoundCosiStamper(peer)
+			} else {
+				round, err = sign.NewRoundFromType("cosistamper", peer.Node)
+				if err != nil{
+					dbg.Fatal("Couldn't create cosistamp", err)
+				}
+			}
+			err = peer.StartAnnouncement(round)
 			if err != nil {
 				dbg.Lvl3(err)
 				time.Sleep(1 * time.Second)

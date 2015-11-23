@@ -56,7 +56,7 @@ func NewStampListener(name string) *StampListener {
 func (s *StampListener) ListenRequests() error {
 	dbg.Lvl3("Setup Peer")
 	global, _ := cliutils.GlobalBind(s.NameP)
-	dbg.Lvl3("Listening in server at", global)
+	dbg.LLvl3("Listening in server at", global)
 	ln, err := net.Listen("tcp4", global)
 	if err != nil {
 		panic(err)
