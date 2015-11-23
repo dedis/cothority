@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/Sirupsen/logrus"
 	"os"
 	"regexp"
 	"runtime"
@@ -33,13 +32,6 @@ var Testing = false
 
 // If this variable is set, it will be outputted between the position and the message
 var StaticMsg = ""
-
-// Holds the logrus-structure to do our logging
-var DebugLog = &logrus.Logger{
-	Out:       os.Stdout,
-	Formatter: &DebugLvl{},
-	Hooks:     make(logrus.LevelHooks),
-	Level:     logrus.InfoLevel}
 
 var regexpPaths, _ = regexp.Compile(".*/")
 
@@ -77,9 +69,20 @@ func Lvl(lvl int, args ...interface{}) {
 	if StaticMsg != "" {
 		caller += "@" + StaticMsg
 	}
-	DebugLog.WithFields(logrus.Fields{
-		"dbg": lvl,
-		"caller":    caller}).Println(args...)
+	message := fmt.Sprint(args...)
+	if lvl <= DebugVisible {
+		b := &bytes.Buffer{}
+		b.WriteString(fmt.Sprintf("%d: (%s) - %s", lvl, caller, message))
+		b.WriteByte('\n')
+
+		fmt.Print(b)
+	} else {
+		if len(message) > 2048 && DebugVisible > 1 {
+			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(message))
+		}
+		return
+	}
+
 }
 
 func Lvlf(lvl int, f string, args ...interface{}) {
@@ -168,7 +171,7 @@ func Panicf(f string, args ...interface{}) {
 // is false, else it will set DebugVisible to 'level'
 //
 // Usage: TestOutput( test.Verbose(), 2 )
-func TestOutput(show bool, level int){
+func TestOutput(show bool, level int) {
 	if show {
 		DebugVisible = level
 	} else {
@@ -180,38 +183,13 @@ func TestOutput(show bool, level int){
 // Just add an additional "L" in front, and remove it later:
 // - easy hack to turn on other debug-messages
 // - easy removable by searching/replacing 'LLvl' with 'Lvl'
-func LLvl1(args ...interface{})            { Lvl(-1, args...) }
-func LLvl2(args ...interface{})            { Lvl(-1, args...) }
-func LLvl3(args ...interface{})            { Lvl(-1, args...) }
-func LLvl4(args ...interface{})            { Lvl(-1, args...) }
-func LLvl5(args ...interface{})            { Lvl(-1, args...) }
+func LLvl1(args ...interface{}) { Lvl(-1, args...) }
+func LLvl2(args ...interface{}) { Lvl(-1, args...) }
+func LLvl3(args ...interface{}) { Lvl(-1, args...) }
+func LLvl4(args ...interface{}) { Lvl(-1, args...) }
+func LLvl5(args ...interface{}) { Lvl(-1, args...) }
 func LLvlf1(f string, args ...interface{}) { Lvlf(-1, f, args...) }
 func LLvlf2(f string, args ...interface{}) { Lvlf(-1, f, args...) }
 func LLvlf3(f string, args ...interface{}) { Lvlf(-1, f, args...) }
 func LLvlf4(f string, args ...interface{}) { Lvlf(-1, f, args...) }
 func LLvlf5(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-
-type DebugLvl struct {
-}
-
-func (f *DebugLvl) Format(entry *logrus.Entry) ([]byte, error) {
-	lvl := entry.Data["dbg"].(int)
-	caller := entry.Data["caller"].(string)
-	if lvl <= DebugVisible {
-		b := &bytes.Buffer{}
-		b.WriteString(fmt.Sprintf("%d: (%s) - %s", lvl, caller, entry.Message))
-		b.WriteByte('\n')
-
-		if Testing {
-			fmt.Print(b)
-			return nil, nil
-		} else {
-			return b.Bytes(), nil
-		}
-	} else {
-		if len(entry.Message) > 2048 && DebugVisible > 1 {
-			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(entry.Message))
-		}
-		return nil, nil
-	}
-}
