@@ -74,8 +74,9 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 	peer.Hostname = address
 	peer.App = "stamp"
 	peer.ListenRequests()
-	dbg.Lvl3("peer:", peer)
-
+	RegisterRoundCosiStamper(peer)
+	RegisterRoundStamper(peer)
+	
 	// Start the cothority-listener on port 2000
 	err = hc.Run(true, sign.MerkleTree, address)
 	if err != nil {
@@ -85,7 +86,7 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 	return peer
 }
 
-func (peer *Peer) LoopRounds(){
+func (peer *Peer) LoopRounds() {
 	// only listen if this is the hostname specified
 	if peer.IsRoot(0) {
 		dbg.Lvl3("Root timestamper at:", peer.Host)
@@ -101,9 +102,6 @@ func (peer *Peer) LoopRounds(){
 // for all of the nRounds
 func (peer *Peer) Run(role string) {
 	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with ", role)
-	RegisterRoundCosiStamper(peer)
-	RegisterRoundStamper(peer)
-
 	closed := make(chan bool, 1)
 
 	go func() { err := peer.Node.Listen(); closed <- true; peer.Close(); log.Error(err) }()
