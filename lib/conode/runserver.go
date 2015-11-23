@@ -6,9 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/cothority/lib/dbg"
-	"errors"
-	"strconv"
-	"net"
 	"strings"
 	"github.com/dedis/crypto/abstract"
 )
@@ -46,10 +43,12 @@ func RunServer(address string, conf *app.ConfigConode) {
 	}
 
 	// Listen to stamp-requests on port 2001
-	stampers, err := RunPeer(hc, 0, address)
-	if err != nil {
-		dbg.Fatal(err)
-	}
+	node := hc.Hosts[address]
+
+	// for each client in
+	peer := NewPeer(node)
+	peer.ListenRequests()
+	dbg.Lvl3("peer:", peer)
 
 	// Start the cothority-listener on port 2000
 	err = hc.Run(true, sign.MerkleTree, address)
@@ -62,68 +61,19 @@ func RunServer(address string, conf *app.ConfigConode) {
 		sn.Close()
 	}(hc.SNodes[0])
 
-	for _, s := range stampers {
-		// only listen if this is the hostname specified
-		if s.Name() == address {
-			s.Hostname = address
-			s.App = "stamp"
-			if s.IsRoot(0) {
-				dbg.Lvl3("Root timestamper at:", address)
-				s.Run("root")
+	// only listen if this is the hostname specified
+	if peer.Name() == address {
+		peer.Hostname = address
+		peer.App = "stamp"
+		if peer.IsRoot(0) {
+			dbg.Lvl3("Root timestamper at:", address)
+			peer.Run("root")
 
-			} else {
-				dbg.Lvl3("Running regular timestamper on:", address)
-				s.Run("regular")
-			}
+		} else {
+			dbg.Lvl3("Running regular timestamper on:", address)
+			peer.Run("regular")
 		}
 	}
-}
-
-// run each host in hostnameSlice with the number of clients given
-func RunPeer(hc *graphs.HostConfig, nclients int, hostname string) ([]*Peer, error) {
-	dbg.Lvl3("RunTimestamper on", hc.Hosts)
-	hostnames := make(map[string]*sign.Node)
-	// make a list of hostnames we want to run
-	if hostname == "" {
-		hostnames = hc.Hosts
-	} else {
-		sn, ok := hc.Hosts[hostname]
-		if !ok {
-			return nil, errors.New("hostname given not in config file:" + hostname)
-		}
-		hostnames[hostname] = sn
-	}
-	// for each client in
-	peers := make([]*Peer, 0, len(hostnames))
-	for _, sn := range hc.SNodes {
-		if _, ok := hostnames[sn.Name()]; !ok {
-			dbg.Lvl1("signing node not in hostnmaes")
-			continue
-		}
-		peers = append(peers, NewPeer(sn))
-		if hc.Dir == nil {
-			dbg.Lvl3(hc.Hosts, "listening for clients")
-			peers[len(peers) - 1].ListenRequests()
-		}
-	}
-	dbg.Lvl3("peers:", peers)
-	for _, s := range peers[1:] {
-
-		_, p, err := net.SplitHostPort(s.Name())
-		if err != nil {
-			dbg.Fatal("RunTimestamper: bad Tcp host")
-		}
-		pn, err := strconv.Atoi(p)
-		if hc.Dir != nil {
-			pn = 0
-		} else if err != nil {
-			dbg.Fatal("port ", pn, "is not valid integer")
-		}
-		//dbg.Lvl4("client connecting to:", hp)
-
-	}
-
-	return peers, nil
 }
 
 // Simple ephemereal helper for comptability issues
