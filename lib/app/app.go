@@ -126,7 +126,7 @@ func getFullName(filename string, dirOpt ...string) string {
 // The various suites we can use
 var nist256 abstract.Suite = nist.NewAES128SHA256P256()
 var nist512 abstract.Suite = nist.NewAES128SHA256QR512()
-var edward abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
+var edward abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
 var nist256Str string = strings.ToLower(nist256.String())
 var nist512Str string = strings.ToLower(nist512.String())
 var edwardsStr string = strings.ToLower(edward.String())
