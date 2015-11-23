@@ -52,7 +52,7 @@ func main() {
 		},
 		{
 			Name:  "Nicolas Gailly",
-			Email: "nicolas.gailly@epfl.ch",
+			Email: "not specified",
 		},
 	}
 	// already create the key gen command
