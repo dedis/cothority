@@ -48,7 +48,7 @@ type Stats struct {
 // Return a NewStats with some fields extracted from the platform run config
 // It enforces the default set of measure to do.
 func NewStats(rc map[string]string) *Stats {
-	s := new(Stats).Init()
+	s := new(Stats).NewStats()
 	s.readRunConfig(rc)
 	return s
 }
@@ -85,7 +85,8 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 	s.filter = NewDataFilter(rc)
 }
 
-func (s *Stats) Init() *Stats {
+// Returns a new stats-structure with all necessary initialisations.
+func (s *Stats) NewStats() *Stats {
 	s.measures = make(map[string]*Measurement)
 	s.keys = make([]string, 0)
 	s.Additionals = make(map[string]int)
@@ -141,7 +142,7 @@ func AverageStats(stats []Stats) Stats {
 	if len(stats) < 1 {
 		return Stats{}
 	}
-	s := new(Stats).Init()
+	s := new(Stats).NewStats()
 	s.Machines = stats[0].Machines
 	s.PPM = stats[0].PPM
 	s.Peers = stats[0].Peers
@@ -182,6 +183,7 @@ func (s *Stats) Update(m Measure) {
 	meas.Update(m)
 }
 
+// Returns an overview of the stats - not complete data returned!
 func (s *Stats) String() string {
 	var str string
 	for _, v := range s.measures {
@@ -349,6 +351,7 @@ func AverageValue(st ...*value) *value {
 	return &t
 }
 
+// Get the minimum or the maximum of all stored values
 func (t *value) Min() float64 {
 	return t.min
 }
@@ -356,22 +359,27 @@ func (t *value) Max() float64 {
 	return t.max
 }
 
-// return the number of value added
+// NumValue returns the number of value added
 func (t *value) NumValue() int {
 	return t.n
 }
 
+// Avg returns the average (mean) of the values
 func (t *value) Avg() float64 {
 	return t.newM
 }
 
+// Dev returns the standard deviation of the values
 func (t *value) Dev() float64 {
 	return t.dev
 }
 
+// Header returns the first line of the CSV-file
 func (t *value) Header(prefix string) string {
 	return fmt.Sprintf("%s_min, %s_max, %s_avg, %s_dev", prefix, prefix, prefix, prefix)
 }
+
+// String returns the min, max, avg and dev of a value
 func (t *value) String() string {
 	return fmt.Sprintf("%f, %f, %f, %f", t.Min(), t.Max(), t.Avg(), t.Dev())
 }
@@ -420,6 +428,7 @@ func (m *Measurement) Update(measure Measure) {
 	m.System.Store(measure.CPUTimeSys)
 }
 
+// Collect will call Collect on Wall- User- and System-time
 func (m *Measurement) Collect() {
 	m.Wall.Collect(m.Name, m.Filter)
 	m.User.Collect(m.Name, m.Filter)
@@ -446,6 +455,7 @@ func AverageMeasurements(measurements []Measurement) Measurement {
 	return *m
 }
 
+// String shows one measurement
 func (m *Measurement) String() string {
 	return fmt.Sprintf("{Measurement %s : wall = %v, system = %v, user = %v}", m.Name, m.Wall, m.User, m.System)
 }
