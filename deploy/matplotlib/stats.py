@@ -58,16 +58,22 @@ class CSVStats:
 class Values:
     def __init__(self, x, column, columns):
         self.name = column
+        self.columns = columns
         self.x = x
 
         # Set min, max, avg, dev-values from csv-file
-        self.min = columns[column + "_min"]
-        self.max = columns[column + "_max"]
-        self.avg = columns[column + "_avg"]
-        self.dev = columns[column + "_dev"]
+        self.min = self.has_column(column + "_min")
+        self.max = self.has_column(column + "_max")
+        self.avg = self.has_column(column + "_avg")
+        self.dev = self.has_column(column + "_dev")
         self.ymin = min(self.min)
         self.ymax = max(self.max)
 
+    def has_column(self, column):
+        if column in self.columns:
+            return self.columns[column]
+        else:
+	    return [1]
 
 class TestStringMethods(unittest.TestCase):
     def test_load(self):

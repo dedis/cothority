@@ -33,18 +33,21 @@ def CoJVTimeArea(cothority, jvss):
 def CoJVTimeBars(cothority, jvss, naive):
     mplot.plotPrepareLogLog();
 
-    ymin = 0.005
-    bar_jvss, jvss_val = mplot.plotStackedBarsHatched(jvss, "round_system", "round_user", "JVSS", color2_light,
+    ymin = 0.05
+    bar_jvss, jvss_sys, jvss_usr = mplot.plotStackedBarsHatched(jvss, "round_system", "round_user", "JVSS", color2_light,
                                                       ymin, delta_x=-1)
 
-    bar_naive, na_val = mplot.plotStackedBarsHatched(naive, "round_system", "round_user", "Naive", color3_light,
+    bar_naive, na_sys, na_usr = mplot.plotStackedBarsHatched(naive, "round_system", "round_user", "Naive", color3_light,
                                                      ymin, limit_values=7)
 
-    bar_cothority, co_val = mplot.plotStackedBarsHatched(cothority, "round_system", "round_user", "Cothority",
-                                                         color1_light, ymin, delta_x=1, limit_values=10)
+    bar_cothority, co_sys, co_usr = mplot.plotStackedBarsHatched(cothority, "round_system", "round_user", "Cothority",
+                                                         color1_light, ymin, delta_x=1, limit_values=11)
 
-    plt.ylim(ymin, max(jvss_val.ymax, na_val.ymax, co_val.ymax))
-    plt.xlim(co_val.xmin, co_val.xmax * 1.2)
+    
+    ymax = 7
+    xmax = 3192
+    plt.ylim(ymin, ymax)
+    plt.xlim(1.5, xmax)
 
     usert = mpatches.Patch(color='white', ec='black', label='User time', hatch='//')
     syst = mpatches.Patch(color='white', ec='black', label='System time')
