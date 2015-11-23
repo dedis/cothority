@@ -191,9 +191,7 @@ $ ./conode check key.pub
 After you checked the availability of all the nodes in your cluster, you can concatenate the `key.pub` files to build a list of hosts and pass that to your CoNode application:
 
 ```
-$ cat key-1.pub >> hostlist
-  ...
-$ cat key-n.pub >> hostlist
+$ cat key*.pub >> hostlist
 $ ./conode build hostlist
 ```
 
