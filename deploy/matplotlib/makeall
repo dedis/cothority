@@ -3,7 +3,7 @@
 CSV_DIR=Paper_cosi
 CSV_REL=""
 PIC="true"
-SHOW="true"
+#SHOW="true"
 EXT="eps"
 
 main(){
