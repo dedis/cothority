@@ -95,6 +95,8 @@ For more information on how to use the above commands please refer to the follow
 
 ## Configuring CoNode
 
+We assume in the following that you want to participate with your CoNode in an existing cothority tree. For more information on running your own cothority tree, see further below of the README.
+
 ### Key Generation
 
 The **first step** in configuration is to generate a new key pair:
