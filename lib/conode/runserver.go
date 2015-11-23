@@ -32,11 +32,11 @@ func RunServer(address string, conf *app.ConfigConode) {
 	// For retro compatibility issues, convert the base64 encoded key into hex
 	// encoded keys....
 	convertTree(suite, conf.Tree)
-	// Add our private key to the tree (compatiblity issues again with graphs/
+	// Add our private key to the tree (compatibility issues again with graphs/
 	// lib)
 	addPrivateKey(suite, address, conf)
 	// load the configuration
-	//dbg.Lvl3("loading configuration")
+	dbg.Lvl3("loading configuration")
 	var hc *graphs.HostConfig
 	opts := graphs.ConfigOptions{ConnType: "tcp", Host: address, Suite: suite}
 

@@ -94,9 +94,9 @@ func writeHC(b *bytes.Buffer, hc *HostConfig, p *sign.Node) error {
 	}
 	prk, _ := p.PrivKey.MarshalBinary()
 	pbk, _ := p.PubKey.MarshalBinary()
-	fmt.Fprint(b, "{\"name\":", "\""+p.Name()+"\",")
-	fmt.Fprint(b, "\"prikey\":", "\""+string(hex.EncodeToString(prk))+"\",")
-	fmt.Fprint(b, "\"pubkey\":", "\""+string(hex.EncodeToString(pbk))+"\",")
+	fmt.Fprint(b, "{\"name\":", "\"" + p.Name() + "\",")
+	fmt.Fprint(b, "\"prikey\":", "\"" + string(hex.EncodeToString(prk)) + "\",")
+	fmt.Fprint(b, "\"pubkey\":", "\"" + string(hex.EncodeToString(pbk)) + "\",")
 
 	// recursively format children
 	fmt.Fprint(b, "\"children\":[")
@@ -140,14 +140,14 @@ func max(a, b int) int {
 // config file. ConstructTree must be called AFTER populating the HostConfig with
 // ALL the possible hosts.
 func ConstructTree(
-	node *Tree,
-	hc *HostConfig,
-	parent string,
-	suite abstract.Suite,
-	rand cipher.Stream,
-	hosts map[string]coconet.Host,
-	nameToAddr map[string]string,
-	opts ConfigOptions) (int, error) {
+node *Tree,
+hc *HostConfig,
+parent string,
+suite abstract.Suite,
+rand cipher.Stream,
+hosts map[string]coconet.Host,
+nameToAddr map[string]string,
+opts ConfigOptions) (int, error) {
 	// passes up its X_hat, and/or an error
 
 	// get the name associated with this address
@@ -218,7 +218,7 @@ func ConstructTree(
 			hc.SNodes = append(hc.SNodes, sn)
 			h.SetPubKey(sn.PubKey)
 		}
-		sn = hc.SNodes[len(hc.SNodes)-1]
+		sn = hc.SNodes[len(hc.SNodes) - 1]
 		hc.Hosts[name] = sn
 		if prikey == nil {
 			prikey = sn.PrivKey
@@ -257,7 +257,7 @@ func ConstructTree(
 		if err != nil {
 			return 0, err
 		}
-		height = max(h+1, height)
+		height = max(h + 1, height)
 		// if generating all csn will be availible
 	}
 	if generate {
@@ -316,72 +316,49 @@ type ConfigOptions struct {
 	Faulty    bool           // if true, use FaultyHost wrapper around Hosts
 	Suite     abstract.Suite // suite to use for Hosts
 	NoTree    bool           // bool flag to tell wether we want to construct
-	// the tree or not. Setting this to false will
-	// construct the tree. True will not.
+							 // the tree or not. Setting this to false will
+							 // construct the tree. True will not.
 }
 
 // run the given hostnames
-func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...string) error {
-	dbg.Lvl3(hc.Hosts, "going to connect everything for", hostnameSlice)
-	hostnames := make(map[string]*sign.Node)
-	if hostnameSlice == nil {
-		hostnames = hc.Hosts
+func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostname string) error {
+	dbg.Lvl3(hc.Hosts, "going to connect everything for", hostname)
+	node := hc.Hosts[hostname]
+
+	node.Type = signType
+	dbg.Lvl3("Listening on", node.Host)
+	node.Host.Listen()
+
+	var err error
+	// exponential backoff for attempting to connect to parent
+	startTime := time.Duration(200)
+	maxTime := time.Duration(2000)
+	for i := 0; i < 2000; i++ {
+		dbg.Lvl3(hostname, "attempting to connect to parent")
+		// the host should connect with the parent
+		err = node.Connect(0)
+		if err == nil {
+			// log.Infoln("hostconfig: connected to parent:")
+			break
+		}
+
+		time.Sleep(startTime * time.Millisecond)
+		startTime *= 2
+		if startTime > maxTime {
+			startTime = maxTime
+		}
+	}
+	if err != nil {
+		dbg.Fatal(fmt.Sprintf("%s failed to connect to parent"), hostname)
+		//return errors.New("failed to connect")
 	} else {
-		for _, h := range hostnameSlice {
-			sn, ok := hc.Hosts[h]
-			if !ok {
-				return errors.New("hostname given not in config file:" + h)
-			}
-			hostnames[h] = sn
-		}
+		dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", hostname))
 	}
-
-	// set all hosts to be listening - open the port and connect to the channel
-	for _, sn := range hostnames {
-		sn.Type = signType
-		dbg.Lvl3("Listening on", sn.Host)
-		sn.Host.Listen()
-	}
-
-	for h, sn := range hostnames {
-		var err error
-		// exponential backoff for attempting to connect to parent
-		startTime := time.Duration(200)
-		maxTime := time.Duration(2000)
-		for i := 0; i < 2000; i++ {
-			dbg.Lvl3(h, "attempting to connect to parent")
-			// the host should connect with the parent
-			err = sn.Connect(0)
-			if err == nil {
-				// log.Infoln("hostconfig: connected to parent:")
-				break
-			}
-
-			time.Sleep(startTime * time.Millisecond)
-			startTime *= 2
-			if startTime > maxTime {
-				startTime = maxTime
-			}
-		}
-		if err != nil {
-			dbg.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
-			//return errors.New("failed to connect")
-		} else {
-			dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
-		}
-	}
-
-	// need to make sure network connections are setup properly first
-	// wait for a little bit for connections to establish fully
-	// get rid of waits they hide true bugs
-	// time.Sleep(1000 * time.Millisecond)
 
 	if !stamper {
 		// This will call the dispatcher in collectiveSigning for every request
-		dbg.Lvl4("Starting to listen for incoming stamp-requests on", hostnames)
-		for _, sn := range hostnames {
-			go sn.Listen()
-		}
+		dbg.Lvl4("Starting to listen for incoming stamp-requests on", hostname)
+		node.Listen()
 	}
 
 	return nil
