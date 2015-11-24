@@ -147,6 +147,7 @@ type AnnouncementMessage struct {
 // Commitment of all nodes together with the data they want
 // to have signed
 type CommitmentMessage struct {
+	Message       []byte
 	V             abstract.Point // commitment Point
 	V_hat         abstract.Point // product of subtree participating nodes' commitment points
 	X_hat         abstract.Point // product of subtree participating nodes' public keys
@@ -165,20 +166,22 @@ type CommitmentMessage struct {
 
 // The challenge calculated by the root-node
 type ChallengeMessage struct {
-	C      abstract.Secret // challenge
+	Message []byte
+	C       abstract.Secret // challenge
 
-						   // Depth  byte
-	MTRoot hashid.HashId   // the very root of the big Merkle Tree
-	Proof  proof.Proof     // Merkle Path of Proofs from root to us
+							// Depth  byte
+	MTRoot  hashid.HashId   // the very root of the big Merkle Tree
+	Proof   proof.Proof     // Merkle Path of Proofs from root to us
 
-						   // CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
-	Vote   *Vote           // Vote Confirmerd/ Rejected (accept)
+							// CountedVotes *CountedVotes //  CountedVotes contains the whole tree's votes
+	Vote    *Vote           // Vote Confirmerd/ Rejected (accept)
 
 }
 
 // Every node replies with eventual exceptions if they
 // are not OK
 type ResponseMessage struct {
+	Message        []byte
 	R_hat          abstract.Secret // response
 
 								   // public keys of children servers that did not respond to
