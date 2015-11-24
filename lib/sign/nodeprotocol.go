@@ -45,7 +45,7 @@ func (sn *Node) ProcessMessages() error {
 	for {
 		select {
 		case <-sn.closed:
-			dbg.LLvl3("Received closed-message through channel")
+			dbg.Lvl3("Received closed-message through channel")
 			sn.StopHeartbeat()
 			return nil
 		default:
@@ -55,7 +55,7 @@ func (sn *Node) ProcessMessages() error {
 
 		// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
-				dbg.Lvl3(sn.Name(), " getting from closed host")
+				dbg.Lvl3(sn.Name(), "getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}

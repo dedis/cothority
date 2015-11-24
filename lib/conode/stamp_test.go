@@ -25,9 +25,9 @@ func TestStamp(t *testing.T) {
 
 	for _, port := range ([]int{2000, 2010}) {
 		stamper := "localhost:" + strconv.Itoa(port)
-		dbg.LLvl2("Contacting stamper", stamper)
+		dbg.Lvl2("Contacting stamper", stamper)
 		tsm, err := s.GetStamp([]byte("test"), stamper)
-		dbg.LLvl3("Evaluating results of", stamper)
+		dbg.Lvl3("Evaluating results of", stamper)
 		if err != nil {
 			t.Fatal("Couldn't get stamp from server:", err)
 		}
@@ -36,11 +36,8 @@ func TestStamp(t *testing.T) {
 			t.Fatal("Not correct aggregate public key")
 		}
 	}
-	dbg.Print("close peer1")
 	peer1.Close()
-	dbg.Print("close peer2")
 	peer2.Close()
-	dbg.Print("close finished")
 }
 
 func readConfig() *app.ConfigConode {

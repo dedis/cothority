@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 
 	"github.com/dedis/cothority/lib/sign"
@@ -27,6 +26,7 @@ type Peer struct {
 	RLock     sync.Mutex
 	MaxRounds int
 	CloseChan chan bool
+	Closed    bool
 
 	Logger    string
 	Hostname  string
@@ -80,8 +80,11 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 		dbg.Fatal(err)
 	}
 
-	closed := make(chan bool, 1)
-	go func() { err := peer.Node.Listen(); closed <- true; peer.Close(); log.Error(err) }()
+	go func() {
+		err := peer.Node.Listen()
+		dbg.Lvl2("Node.listen quits with status", err)
+		peer.CloseChan <- true
+	}()
 	return peer
 }
 
@@ -113,20 +116,20 @@ func (peer *Peer) Run(role string) {
 		switch role {
 
 		case "root":
-			dbg.LLvl3(peer.Name(), "running as root")
+			dbg.Lvl3(peer.Name(), "running as root")
 			nextRole = peer.runAsRoot(peer.MaxRounds)
 		case "regular":
-			dbg.LLvl3(peer.Name(), "running as regular")
+			dbg.Lvl3(peer.Name(), "running as regular")
 			nextRole = peer.runAsRegular()
 		case "close":
-			dbg.LLvl3(peer.Name(), "closing")
+			dbg.Lvl3(peer.Name(), "closing")
 			return
 		default:
 			dbg.Fatal(peer.Name(), "Unable to run as anything")
 			return
 		}
 
-		dbg.LLvl2(peer.Name(), "Role now:", role, "nextRole:", nextRole)
+		dbg.Lvl2(peer.Name(), "Role now:", role, "nextRole:", nextRole)
 		if nextRole == "close" {
 			peer.Close()
 			return
@@ -138,13 +141,16 @@ func (peer *Peer) Run(role string) {
 
 // Closes the channel
 func (peer *Peer) Close() {
-	dbg.LLvlf4("sending true to CloseChan: %s", peer.Node.Name())
+	if peer.Closed {
+		dbg.Lvl1("Peer", peer.Name(), "Already closed!")
+		return
+	} else {
+		peer.Closed = true
+	}
 	peer.CloseChan <- true
-	dbg.LLvlf4("closing node: %s", peer.Node.Name())
 	peer.Node.Close()
-	dbg.LLvlf4("closing stamplistener: %s", peer.Node.Name())
 	peer.StampListener.Close()
-	dbg.LLvlf4("closing peer: %s finished", peer.Node.Name())
+	dbg.Lvlf3("Closing of peer: %s finished", peer.Name())
 }
 
 // This node is the root-node - still possible to change
@@ -161,7 +167,7 @@ func (peer *Peer) runAsRoot(nRounds int) string {
 	for {
 		select {
 		case nextRole := <-peer.ViewChangeCh():
-			dbg.LLvl4(peer.Name(), "assuming next role is", nextRole)
+			dbg.Lvl4(peer.Name(), "assuming next role is", nextRole)
 			return nextRole
 		// s.reRunWith(nextRole, nRounds, true)
 		case <-ticker:
@@ -183,9 +189,12 @@ func (peer *Peer) runAsRoot(nRounds int) string {
 				dbg.Lvl2(peer.Name(), "reports exceeded the max round: terminating", peer.LastRound() + 1, ">=", nRounds)
 				return "close"
 			}
+		case <-peer.CloseChan:
+			dbg.Lvl3("Server-peer", peer.Name(), "has closed the connection")
+			return "close"
 		}
 	}
-	dbg.LLvl3("Finished runAsRoot")
+	dbg.Lvl3("Finished runAsRoot")
 	return "close"
 }
 
@@ -193,7 +202,7 @@ func (peer *Peer) runAsRoot(nRounds int) string {
 func (peer *Peer) runAsRegular() string {
 	select {
 	case <-peer.CloseChan:
-		dbg.LLvl3("server", peer.Name(), "has closed the connection")
+		dbg.Lvl3("Regular-peer", peer.Name(), "has closed the connection")
 		return "close"
 
 	case nextRole := <-peer.ViewChangeCh():
