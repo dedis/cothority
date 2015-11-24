@@ -48,15 +48,15 @@ func TestRoundCosiStamper(t *testing.T) {
 }
 
 func createPeers() (p1, p2 *conode.Peer) {
-	conf := readConfig()
-	peer1 := createPeer(conf, 1)
+	conf1 := readConfig()
+	peer1 := createPeer(conf1, 1)
 	dbg.Lvlf3("Peer 1 is %+v", peer1)
 
 	// conf will hold part of the configuration for each server,
 	// so we have to create a second one for the second server
-	conf = readConfig()
-	peer2 := createPeer(conf, 2)
-	dbg.Lvlf3("Peer 2 is %+v", peer1)
+	conf2 := readConfig()
+	peer2 := createPeer(conf2, 2)
+	dbg.Lvlf3("Peer 2 is %+v", peer2)
 
 	return peer1, peer2
 }
@@ -77,4 +77,14 @@ func createPeer(conf *app.ConfigConode, id int) *conode.Peer {
 		address = addr
 	}
 	return conode.NewPeer(address, conf)
+}
+
+func readConfig() *app.ConfigConode {
+	conf := &app.ConfigConode{}
+	if err := app.ReadTomlConfig(conf, "testdata/config.toml"); err != nil {
+		dbg.Fatal("Could not read toml config... : ", err)
+	}
+	dbg.Lvl2("Configuration file read")
+	suite = app.GetSuite(conf.Suite)
+	return conf
 }

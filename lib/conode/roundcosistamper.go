@@ -39,12 +39,7 @@ func NewRoundCosiStamper(node *sign.Node) *RoundCosiStamper {
 	return round
 }
 
-func (round *RoundCosiStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage,
-out []*sign.SigningMessage) error {
-	dbg.Lvl3("Starting new announcement")
-	round.RoundStamper.Announcement(viewNbr, roundNbr, in, out)
-	return nil
-}
+// Announcement is already defined in RoundStamper
 
 func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	round.Mux.Lock()
@@ -70,15 +65,9 @@ func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.S
 	return nil
 }
 
-func (round *RoundCosiStamper) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
-	round.RoundStamper.Challenge(in, out)
-	return nil
-}
+// Challenge is already defined in RoundStamper
 
-func (round *RoundCosiStamper) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
-	round.RoundStamper.Response(in, out)
-	return nil
-}
+// Response is already defined in RoundStamper
 
 func (round *RoundCosiStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	round.RoundStamper.SignatureBroadcast(in, out)

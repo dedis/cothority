@@ -105,11 +105,9 @@ func (round *RoundStamper) QueueSet(queue [][]byte) {
 	copy(round.StampQueue, queue)
 }
 
+// Challenge is already defined in RoundCosi
 
-func (round *RoundStamper) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
-	round.RoundCosi.Response(in, out)
-	return nil
-}
+// Response is already defined in RoundCosi
 
 func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	round.RoundCosi.SignatureBroadcast(in, out)

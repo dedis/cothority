@@ -1,8 +1,6 @@
 package conode_test
 
 import (
-	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
@@ -23,7 +21,7 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't open config-file:", err)
 	}
 
-	for _, port := range ([]int{2000, 2000}) {
+	for _, port := range ([]int{2000, 2010}) {
 		stamper := "localhost:" + strconv.Itoa(port)
 		dbg.Lvl2("Contacting stamper", stamper)
 		tsm, err := s.GetStamp([]byte("test"), stamper)
@@ -39,36 +37,4 @@ func TestStamp(t *testing.T) {
 
 	peer1.Close()
 	peer2.Close()
-}
-
-func readConfig() *app.ConfigConode {
-	conf := &app.ConfigConode{}
-	if err := app.ReadTomlConfig(conf, "testdata/config.toml"); err != nil {
-		dbg.Fatal("Could not read toml config... : ", err)
-	}
-	dbg.Lvl2("Configuration file read")
-	suite = app.GetSuite(conf.Suite)
-	return conf
-}
-
-func runConode(conf *app.ConfigConode, id int) {
-	// Read the private / public keys + binded address
-	keybase := "testdata/key" + strconv.Itoa(id)
-	address := ""
-	if sec, err := cliutils.ReadPrivKey(suite, keybase + ".priv"); err != nil {
-		dbg.Fatal("Error reading private key file  :", err)
-	} else {
-		conf.Secret = sec
-	}
-	if pub, addr, err := cliutils.ReadPubKey(suite, keybase + ".pub"); err != nil {
-		dbg.Fatal("Error reading public key file :", err)
-	} else {
-		conf.Public = pub
-		address = addr
-	}
-	peer := conode.NewPeer(address, conf)
-	if id == 1 {
-		time.Sleep(time.Second)
-	}
-	peer.LoopRounds()
 }
