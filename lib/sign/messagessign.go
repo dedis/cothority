@@ -181,7 +181,7 @@ type ChallengeMessage struct {
 // Every node replies with eventual exceptions if they
 // are not OK
 type ResponseMessage struct {
-	Message        []byte
+	Message []byte
 	R_hat          abstract.Secret // response
 
 								   // public keys of children servers that did not respond to

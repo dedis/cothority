@@ -334,7 +334,9 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		Type:         Commitment,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		RoundNbr:     roundNbr,
-		Com: &CommitmentMessage{},
+		Com: &CommitmentMessage{
+			Message: make([]byte, 0),
+		},
 	}
 	err := ri.Commitment(sn.RoundCommits[roundNbr], out)
 	// now we can delete the commits for this round
@@ -385,7 +387,9 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 			RoundNbr: RoundNbr,
 			Type: Challenge,
 			To: child,
-			Chm: &ChallengeMessage{}}
+			Chm: &ChallengeMessage{
+				Message: make([]byte, 0),
+			}}
 		i++
 	}
 
@@ -451,7 +455,9 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 		ViewNbr:         view,
 		RoundNbr:     roundNbr,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-		Rm: &ResponseMessage{},
+		Rm: &ResponseMessage{
+			Message: make([]byte, 0),
+		},
 	}
 	err := ri.Response(responseList, out)
 	delete(sn.RoundResponses, roundNbr)
