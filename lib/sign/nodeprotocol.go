@@ -45,6 +45,7 @@ func (sn *Node) ProcessMessages() error {
 	for {
 		select {
 		case <-sn.closed:
+			dbg.LLvl3("Received closed-message through channel")
 			sn.StopHeartbeat()
 			return nil
 		default:

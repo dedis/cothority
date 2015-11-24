@@ -49,6 +49,7 @@ func NewStampListener(name string) *StampListener {
 		sl.Queue[READING] = make([]MustReplyMessage, 0)
 		sl.Queue[PROCESSING] = make([]MustReplyMessage, 0)
 		sl.Clients = make(map[string]coconet.Conn)
+		sl.waitClose = make(chan string)
 
 		// listen for client requests at one port higher
 		// than the signing node
@@ -81,22 +82,23 @@ func (s *StampListener) ListenRequests() error {
 
 	go func() {
 		for {
-			dbg.Lvl2("Listening to sign-requests: %p", s)
+			dbg.LLvl2("Listening to sign-requests: %p", s)
 			conn, err := s.Port.Accept()
 			if err != nil {
 				// handle error
-				dbg.Lvl3("failed to accept connection")
+				dbg.LLvl3("failed to accept connection")
 				select {
 				case w := <-s.waitClose:
-					dbg.Lvl3("Closing stamplistener:", w)
+					dbg.LLvl3("Closing stamplistener:", w)
 					return
 				default:
 					continue
 				}
 			}
 
+			dbg.LLvl3("Waiting for connection")
 			c := coconet.NewTCPConnFromNet(conn)
-			dbg.Lvl2("Established connection with client:", c)
+			dbg.LLvl2("Established connection with client:", c)
 
 			if _, ok := s.Clients[c.Name()]; !ok {
 				s.Clients[c.Name()] = c
@@ -138,8 +140,8 @@ func (s *StampListener) ListenRequests() error {
 
 // Close shuts down the connection
 func (s *StampListener) Close() {
-	dbg.LLvl3(s.NameP, "Sending close demanded to waitClose")
-	s.waitClose <- "Close demanded"
+	dbg.LLvl3(s.NameP, "Closing wait channel")
+	close(s.waitClose)
 	dbg.LLvl3(s.NameP, "Closing stamplistener")
 	s.Port.Close()
 	dbg.LLvl3(s.NameP, "Closing stamplistener done")
