@@ -28,6 +28,19 @@ func ExampleMultiParams(){
 	// 1: (             dbg_test.ExampleMultiParams:   0) - Multiple parameters
 }
 
+func ExampleLLvl(){
+	dbg.Lvl1("Lvl output")
+	dbg.LLvl1("LLvl output")
+	dbg.Lvlf1("Lvlf output")
+	dbg.LLvlf1("LLvlf output")
+
+	// Output:
+	// 1: (                    dbg_test.ExampleLLvl:   0) - Lvl output
+	// -1: (                    dbg_test.ExampleLLvl:   0) - LLvl output
+	// 1: (                    dbg_test.ExampleLLvl:   0) - Lvlf output
+	// -1: (                    dbg_test.ExampleLLvl:   0) - LLvlf output
+}
+
 func thisIsAVeryLongFunctionNameThatWillOverflow(){
 	dbg.Lvl1("Overflow")
 }
