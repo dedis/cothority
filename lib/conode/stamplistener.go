@@ -76,9 +76,8 @@ func NewStampListener(nameP string) *StampListener {
 
 // listen for clients connections
 func (s *StampListener) ListenRequests() error {
-	dbg.Lvl3("Setup Peer")
+	dbg.Lvl3("Setup StampListener on", s.NameL)
 	global, _ := cliutils.GlobalBind(s.NameL)
-	dbg.Lvl3("Listening in server at", global)
 	var err error
 	s.Port, err = net.Listen("tcp4", global)
 	if err != nil {
@@ -103,7 +102,6 @@ func (s *StampListener) ListenRequests() error {
 
 			dbg.Lvl3("Waiting for connection")
 			c := coconet.NewTCPConnFromNet(conn)
-			dbg.Lvl2("Established connection with client:", c)
 
 			if _, ok := s.Clients[c.Name()]; !ok {
 				s.Clients[c.Name()] = c
