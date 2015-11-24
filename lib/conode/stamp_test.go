@@ -12,19 +12,8 @@ import (
 
 // Runs two conodes and tests if the value returned is OK
 func TestStamp(t *testing.T) {
-	// conf will hold part of the configuration for each server,
-	// so we have to create a second one for the second server
-	/*
 	dbg.TestOutput(testing.Verbose(), 4)
-	conf := readConfig()
-	go runConode(conf, 1)
-
-	conf = readConfig()
-	go runConode(conf, 2)
-	time.Sleep(time.Second * 2)
-	*/
 	peer1, peer2 := createPeers()
-	peer1.SetRootPeer()
 	go peer1.LoopRounds()
 	go peer2.LoopRounds()
 	time.Sleep(time.Second * 2)
@@ -36,8 +25,9 @@ func TestStamp(t *testing.T) {
 
 	for _, port := range ([]int{2000, 2010}) {
 		stamper := "localhost:" + strconv.Itoa(port)
-		dbg.Lvl2("Contacting stamper", stamper)
+		dbg.LLvl2("Contacting stamper", stamper)
 		tsm, err := s.GetStamp([]byte("test"), stamper)
+		dbg.LLvl3("Evaluating results of", stamper)
 		if err != nil {
 			t.Fatal("Couldn't get stamp from server:", err)
 		}
@@ -46,9 +36,11 @@ func TestStamp(t *testing.T) {
 			t.Fatal("Not correct aggregate public key")
 		}
 	}
-
+	dbg.Print("close peer1")
 	peer1.Close()
+	dbg.Print("close peer2")
 	peer2.Close()
+	dbg.Print("close finished")
 }
 
 func readConfig() *app.ConfigConode {
@@ -77,5 +69,8 @@ func runConode(conf *app.ConfigConode, id int) {
 		address = addr
 	}
 	peer := conode.NewPeer(address, conf)
+	if id == 1 {
+		time.Sleep(time.Second)
+	}
 	peer.LoopRounds()
 }

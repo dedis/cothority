@@ -20,7 +20,7 @@ const RoundStamperType = "stamper"
 
 type RoundStamper struct {
 	*sign.RoundStruct
-	peer        *Peer
+	*StampListener
 	Timestamp   int64
 
 	Proof       []hashid.HashId // the inclusion-proof of the data
@@ -28,7 +28,7 @@ type RoundStamper struct {
 	StampLeaves []hashid.HashId
 	StampRoot   hashid.HashId
 	StampProofs []proof.Proof
-	Queue       []ReplyMessage
+	ClientQueue []ReplyMessage
 }
 
 type ReplyMessage struct {
@@ -37,21 +37,21 @@ type ReplyMessage struct {
 	ReqNo byte
 }
 
-func RegisterRoundStamper(p *Peer) {
+func init() {
 	sign.RegisterRoundFactory(RoundStamperType,
 		func(s *sign.Node) sign.Round {
-			return NewRoundStamper(p)
+			return NewRoundStamper(s)
 		})
 }
 
-func NewRoundStamper(peer *Peer) *RoundStamper {
-	round := &RoundStamper{peer: peer}
+func NewRoundStamper(node *sign.Node) *RoundStamper {
+	round := &RoundStamper{StampListener: NewStampListener(node.Name())}
+	round.RoundStruct = sign.NewRoundStruct(node)
 	return round
 }
 
 func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
-	round.RoundStruct = sign.NewRoundStruct(round.peer.Node)
 	in.Am.RoundType = RoundCosiStamperType
 	if round.IsRoot {
 		// We are root !
@@ -78,13 +78,13 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 	// compute the local Merkle root
 
 	// give up if nothing to process
-	if len(round.Queue) == 0 {
+	if len(round.ClientQueue) == 0 {
 		round.StampRoot = make([]byte, hashid.Size)
 		round.StampProofs = make([]proof.Proof, 1)
 	} else {
 		// pull out to be Merkle Tree leaves
 		round.StampLeaves = make([]hashid.HashId, 0)
-		for _, msg := range round.Queue {
+		for _, msg := range round.ClientQueue {
 			round.StampLeaves = append(round.StampLeaves, hashid.HashId(msg.Val))
 		}
 
@@ -109,9 +109,9 @@ func (round *RoundStamper) QueueSet(Queue [][]MustReplyMessage) {
 	// messages read will now be processed
 	Queue[READING], Queue[PROCESSING] = Queue[PROCESSING], Queue[READING]
 	Queue[READING] = Queue[READING][:0]
-	round.Queue = make([]ReplyMessage, len(Queue[PROCESSING]))
+	round.ClientQueue = make([]ReplyMessage, len(Queue[PROCESSING]))
 	for i, q := range (Queue[PROCESSING]) {
-		round.Queue[i] = ReplyMessage{
+		round.ClientQueue[i] = ReplyMessage{
 			Val: q.Tsm.Sreq.Val,
 			To: q.To,
 			ReqNo: byte(q.Tsm.ReqNo),
@@ -129,7 +129,7 @@ func (round *RoundStamper) Response(in []*sign.SigningMessage, out *sign.Signing
 
 func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	// Send back signature to clients
-	for i, msg := range round.Queue {
+	for i, msg := range round.ClientQueue {
 		// proof to get from s.Root to big root
 		combProof := make(proof.Proof, len(round.Proof))
 		copy(combProof, round.Proof)
@@ -167,9 +167,9 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 
 // Send message to client given by name
 func (round *RoundStamper) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := round.peer.Clients[name].PutData(data)
+	err := round.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
-		round.peer.Clients[name].Close()
+		round.Clients[name].Close()
 		return
 	}
 	if err != nil && err != coconet.ErrNotEstablished {

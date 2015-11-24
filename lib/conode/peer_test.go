@@ -12,17 +12,12 @@ import (
 
 // Runs two conodes and tests if the value returned is OK
 func TestPeer(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
 
-	var err error
-	var round sign.Round
-	if true {
-		round = conode.NewRoundCosiStamper(peer1)
-	} else {
-		round, err = sign.NewRoundFromType("cosistamper", peer1.Node)
-		if err != nil {
-			dbg.Fatal("Couldn't create cosistamp", err)
-		}
+	round, err := sign.NewRoundFromType("cosistamper", peer1.Node)
+	if err != nil {
+		dbg.Fatal("Couldn't create cosistamp", err)
 	}
 	peer1.StartAnnouncement(round)
 	peer1.Close()
@@ -30,10 +25,10 @@ func TestPeer(t *testing.T) {
 }
 
 func TestRoundCosi(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, _ := createPeers()
-	peer1.SetRootPeer()
 
-	round1 := conode.NewRoundCosiStamper(peer1)
+	round1 := conode.NewRoundCosiStamper(peer1.Node)
 	round2, err := sign.NewRoundFromType("cosistamper", peer1.Node)
 
 	if err != nil {
@@ -50,7 +45,6 @@ func TestRoundCosi(t *testing.T) {
 }
 
 func createPeers() (p1, p2 *conode.Peer) {
-	dbg.TestOutput(testing.Verbose(), 4)
 	conf := readConfig()
 	peer1 := createPeer(conf, 1)
 	dbg.Print(peer1)

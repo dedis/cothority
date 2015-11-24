@@ -14,23 +14,21 @@ type RoundCosiStamper struct {
 	*sign.RoundCosi
 	*sign.RoundStruct
 	*RoundStamper
-	peer *Peer
 }
 
-func RegisterRoundCosiStamper(peer *Peer) {
+func init() {
 	sign.RegisterRoundFactory(RoundCosiStamperType,
 		func(node *sign.Node) sign.Round {
-			return NewRoundCosiStamper(peer)
+			return NewRoundCosiStamper(node)
 		})
 }
 
-func NewRoundCosiStamper(peer *Peer) sign.Round {
-	dbg.Print("Making new roundcosistamper", peer)
+func NewRoundCosiStamper(node *sign.Node) sign.Round {
+	dbg.Lvlf3("Making new roundcosistamper %+v", node)
 	round := &RoundCosiStamper{}
-	round.RoundStamper = NewRoundStamper(peer)
-	round.RoundCosi = sign.NewRoundCosi(peer.Node)
-	round.RoundStruct = sign.NewRoundStruct(peer.Node)
-	round.peer = peer
+	round.RoundStamper = NewRoundStamper(node)
+	round.RoundCosi = sign.NewRoundCosi(node)
+	round.RoundStruct = sign.NewRoundStruct(node)
 	return round
 }
 
@@ -44,10 +42,10 @@ out []*sign.SigningMessage) error {
 }
 
 func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
-	round.peer.Mux.Lock()
+	round.Mux.Lock()
 	// get data from s once to avoid refetching from structure
-	round.RoundStamper.QueueSet(round.peer.Queue)
-	round.peer.Mux.Unlock()
+	round.RoundStamper.QueueSet(round.Queue)
+	round.Mux.Unlock()
 
 	round.RoundStamper.Commitment(in, out)
 	round.RoundCosi.Commitment(in, out)

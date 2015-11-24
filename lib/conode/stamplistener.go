@@ -20,6 +20,12 @@ The counterpart to stamp.go - it listens for incoming requests
 and passes those to the roundstamper.
  */
 
+func init() {
+	SLList = make(map[string]*StampListener)
+}
+
+var SLList map[string]*StampListener
+
 type StampListener struct {
 	// for aggregating messages from clients
 	Mux       sync.Mutex
@@ -35,23 +41,29 @@ type StampListener struct {
 }
 
 func NewStampListener(name string) *StampListener {
-	sl := &StampListener{}
-	sl.Queue = make([][]MustReplyMessage, 2)
-	sl.Queue[READING] = make([]MustReplyMessage, 0)
-	sl.Queue[PROCESSING] = make([]MustReplyMessage, 0)
-	sl.Clients = make(map[string]coconet.Conn)
+	sl, ok := SLList[name]
+	if !ok {
+		dbg.LLvl3("Creating new StampListener for", name)
+		sl = &StampListener{}
+		sl.Queue = make([][]MustReplyMessage, 2)
+		sl.Queue[READING] = make([]MustReplyMessage, 0)
+		sl.Queue[PROCESSING] = make([]MustReplyMessage, 0)
+		sl.Clients = make(map[string]coconet.Conn)
 
-	// listen for client requests at one port higher
-	// than the signing node
-	h, p, err := net.SplitHostPort(name)
-	if err == nil {
-		i, err := strconv.Atoi(p)
-		if err != nil {
-			log.Fatal(err)
+		// listen for client requests at one port higher
+		// than the signing node
+		h, p, err := net.SplitHostPort(name)
+		if err == nil {
+			i, err := strconv.Atoi(p)
+			if err != nil {
+				log.Fatal(err)
+			}
+			sl.NameP = net.JoinHostPort(h, strconv.Itoa(i + 1))
+		} else {
+			log.Fatal("Couldn't split host into name and port:", err)
 		}
-		sl.NameP = net.JoinHostPort(h, strconv.Itoa(i + 1))
-	} else {
-		log.Fatal("Couldn't split host into name and port:", err)
+		SLList[name] = sl
+		sl.ListenRequests()
 	}
 	return sl
 }
@@ -126,6 +138,9 @@ func (s *StampListener) ListenRequests() error {
 
 // Close shuts down the connection
 func (s *StampListener) Close() {
+	dbg.LLvl3(s.NameP, "Sending close demanded to waitClose")
 	s.waitClose <- "Close demanded"
+	dbg.LLvl3(s.NameP, "Closing stamplistener")
 	s.Port.Close()
+	dbg.LLvl3(s.NameP, "Closing stamplistener done")
 }
