@@ -561,7 +561,7 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 						err = e
 						errLock.Unlock()
 					}
-					dbg.Lvl4("Informed child", c)
+					dbg.Lvl4("Informed child", c, "of", data[i])
 					return
 				}
 				dbg.Lvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)

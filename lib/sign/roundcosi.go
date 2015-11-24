@@ -22,22 +22,19 @@ const RoundCosiType = "cosi"
 
 type RoundCosi struct {
 	*RoundStruct
-
 	Cosi *CosiStruct
-	Node *Node
 }
 
 func init() {
 	RegisterRoundFactory(RoundCosiType,
-		func(s *Node) Round {
-			return NewRoundCosi(s)
+		func(node *Node) Round {
+			return NewRoundCosi(node)
 		})
 }
 
 func NewRoundCosi(node *Node) *RoundCosi {
 	round := &RoundCosi{}
-	round.Node = node
-	round.RoundStruct = NewRoundStruct(round.Node)
+	round.RoundStruct = NewRoundStruct(node, RoundCosiType)
 	return round
 }
 
@@ -51,8 +48,6 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *SigningMessage, 
 	//round.Merkle = round.Node.MerkleStructs[roundNbr]
 	round.Cosi = NewCosi(round.Node, viewNbr, roundNbr, in.Am)
 	round.Cosi.Msg = in.Am.Message
-
-	round.SetRoundType(RoundCosiType, out)
 	// Inform all children of announcement - just copy the one that came in
 	for i := range out {
 		*out[i].Am = *in.Am

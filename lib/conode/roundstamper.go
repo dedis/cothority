@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/coconet"
 )
 
 /*
@@ -19,8 +18,7 @@ are passed to roundcosi.
 const RoundStamperType = "stamper"
 
 type RoundStamper struct {
-	*sign.RoundStruct
-	*StampListener
+	*sign.RoundCosi
 	Timestamp   int64
 
 	Proof       []hashid.HashId // the inclusion-proof of the data
@@ -28,13 +26,8 @@ type RoundStamper struct {
 	StampLeaves []hashid.HashId
 	StampRoot   hashid.HashId
 	StampProofs []proof.Proof
-	ClientQueue []ReplyMessage
-}
-
-type ReplyMessage struct {
-	Val   []byte
-	To    string
-	ReqNo byte
+	StampQueue  [][]byte
+	CombProofs  []proof.Proof
 }
 
 func init() {
@@ -45,14 +38,17 @@ func init() {
 }
 
 func NewRoundStamper(node *sign.Node) *RoundStamper {
-	round := &RoundStamper{StampListener: NewStampListener(node.Name())}
-	round.RoundStruct = sign.NewRoundStruct(node)
+	dbg.Lvlf3("Making new roundcosistamper %+v", node)
+	round := &RoundStamper{}
+	round.RoundCosi = sign.NewRoundCosi(node)
+	round.Type = RoundStamperType
 	return round
 }
 
 func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
 	in.Am.RoundType = RoundCosiStamperType
+	in.Am.Message = make([]byte, 0)
 	if round.IsRoot {
 		// We are root !
 		// Adding timestamp
@@ -69,8 +65,7 @@ func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 		}
 		round.Timestamp = t
 	}
-
-	round.SetRoundType(RoundCosiStamperType, out)
+	round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
 	return nil
 }
 
@@ -78,14 +73,14 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 	// compute the local Merkle root
 
 	// give up if nothing to process
-	if len(round.ClientQueue) == 0 {
+	if len(round.StampQueue) == 0 {
 		round.StampRoot = make([]byte, hashid.Size)
 		round.StampProofs = make([]proof.Proof, 1)
 	} else {
 		// pull out to be Merkle Tree leaves
 		round.StampLeaves = make([]hashid.HashId, 0)
-		for _, msg := range round.ClientQueue {
-			round.StampLeaves = append(round.StampLeaves, hashid.HashId(msg.Val))
+		for _, msg := range round.StampQueue {
+			round.StampLeaves = append(round.StampLeaves, hashid.HashId(msg))
 		}
 
 		// create Merkle tree for this round's messages and check corectness
@@ -101,35 +96,33 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 		}
 	}
 	out.Com.MTRoot = round.StampRoot
-
+	round.RoundCosi.Commitment(in, out)
 	return nil
 }
 
-func (round *RoundStamper) QueueSet(Queue [][]MustReplyMessage) {
-	// messages read will now be processed
-	Queue[READING], Queue[PROCESSING] = Queue[PROCESSING], Queue[READING]
-	Queue[READING] = Queue[READING][:0]
-	round.ClientQueue = make([]ReplyMessage, len(Queue[PROCESSING]))
-	for i, q := range (Queue[PROCESSING]) {
-		round.ClientQueue[i] = ReplyMessage{
-			Val: q.Tsm.Sreq.Val,
-			To: q.To,
-			ReqNo: byte(q.Tsm.ReqNo),
-		}
-	}
+func (round *RoundStamper) QueueSet(queue [][]byte) {
+	round.StampQueue = make([][]byte, len(queue))
+	copy(round.StampQueue, queue)
 }
 
 func (round *RoundStamper) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	round.RoundCosi.Challenge(in, out)
 	return nil
 }
 
 func (round *RoundStamper) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+	round.RoundCosi.Response(in, out)
 	return nil
 }
 
 func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+	round.RoundCosi.SignatureBroadcast(in, out)
+	round.Proof = round.RoundCosi.Cosi.Proof
+	round.MTRoot = round.RoundCosi.Cosi.MTRoot
+
+	round.CombProofs = make([]proof.Proof, len(round.StampQueue))
 	// Send back signature to clients
-	for i, msg := range round.ClientQueue {
+	for i, msg := range round.StampQueue {
 		// proof to get from s.Root to big root
 		combProof := make(proof.Proof, len(round.Proof))
 		copy(combProof, round.Proof)
@@ -145,34 +138,8 @@ func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*si
 			dbg.Lvl2("Inclusion-proof failed")
 		}
 
-		respMessg := &TimeStampMessage{
-			Type:  StampSignatureType,
-			ReqNo: SeqNo(msg.ReqNo),
-			Srep: &StampSignature{
-				SuiteStr:   round.Suite.String(),
-				Timestamp:  round.Timestamp,
-				MerkleRoot: round.MTRoot,
-				Prf:        combProof,
-				Response:   in.SBm.R0_hat,
-				Challenge:  in.SBm.C,
-				AggCommit:  in.SBm.V0_hat,
-				AggPublic:  in.SBm.X0_hat,
-			}}
-		round.PutToClient(msg.To, respMessg)
-		dbg.Lvl2("Sent signature response back to client", msg.To)
+		round.CombProofs[i] = combProof
 	}
 	return nil
 }
 
-
-// Send message to client given by name
-func (round *RoundStamper) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := round.Clients[name].PutData(data)
-	if err == coconet.ErrClosed {
-		round.Clients[name].Close()
-		return
-	}
-	if err != nil && err != coconet.ErrNotEstablished {
-		dbg.Lvl1("%p error putting to client: %v", round, err)
-	}
-}

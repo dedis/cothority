@@ -39,8 +39,7 @@ func TestRoundCosiStamper(t *testing.T) {
 
 	dbg.Lvlf2("Round1: %+v", round1)
 	dbg.Lvlf2("Round2: %+v", round2)
-	name1, name2 := round1.(*conode.RoundCosiStamper).Name,
-	round2.(*conode.RoundCosiStamper).Name
+	name1, name2 := round1.Name, round2.(*conode.RoundCosiStamper).Name
 	if name1 != name2 {
 		t.Fatal("Hostname of first round is", name1, "and should be equal to", name2)
 	}

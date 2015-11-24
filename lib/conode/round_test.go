@@ -41,9 +41,9 @@ func TestRoundCosi(t *testing.T){
 	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
 
-	round, err := sign.NewRoundFromType("cosi", peer1.Node)
+	round, err := sign.NewRoundFromType("stamper", peer1.Node)
 	if err != nil{
-		t.Fatal("Couldn't create cosi-round")
+		t.Fatal("Couldn't create cosi-round:", err)
 	}
 
 	peer1.StartAnnouncement(round)

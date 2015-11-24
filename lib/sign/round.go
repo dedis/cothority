@@ -42,6 +42,9 @@ type Round interface {
 	// Statistics: nodes -> root
 	// This is called at the end to collect eventual statistics
 	// about the round.
+
+	// Returns the string reflecting the type
+	GetType() string
 }
 
 // RoundFactory is a function that returns a Round given a SigningNode

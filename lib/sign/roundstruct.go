@@ -13,6 +13,7 @@ round has to call NewRoundStruct.
 
 type RoundStruct struct {
 	Node     *Node
+	Type     string
 	Name     string
 	IsRoot   bool
 	IsLeaf   bool
@@ -23,12 +24,13 @@ type RoundStruct struct {
 	Suite    abstract.Suite
 }
 
-func NewRoundStruct(node *Node) *RoundStruct {
+func NewRoundStruct(node *Node, rtype string) *RoundStruct {
 	viewNbr := node.ViewNo
 	roundNbr := node.nRounds
 	children := node.Children(viewNbr)
 	cbs := &RoundStruct{
 		Node: node,
+		Type: rtype,
 		Name: node.Name(),
 		IsRoot: node.IsRoot(viewNbr),
 		IsLeaf: len(children) == 0,
@@ -41,8 +43,6 @@ func NewRoundStruct(node *Node) *RoundStruct {
 	return cbs
 }
 
-func (r *RoundStruct)SetRoundType(roundType string, out []*SigningMessage) {
-	for i := range (out) {
-		out[i].Am.RoundType = roundType
-	}
+func (r *RoundStruct)GetType() string{
+	return r.Type
 }

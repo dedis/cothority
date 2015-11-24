@@ -236,7 +236,9 @@ func (sn *Node) StartAnnouncement(round Round) error {
 				Type:     Announcement,
 				RoundNbr: sn.nRounds,
 				ViewNbr:     sn.ViewNo,
-				Am: &AnnouncementMessage{},
+				Am: &AnnouncementMessage{
+					RoundType: round.GetType(),
+				},
 			})
 		}
 

@@ -70,6 +70,7 @@ func (sn *Node) ProcessMessages() error {
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
 			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
+			dbg.Lvlf4("Message is %+v", sm)
 
 		// don't act on future view if not caught up, must be done after updating vote index
 		/*
@@ -255,7 +256,10 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 			ViewNbr:         sn.ViewNo,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			RoundNbr:     RoundNbr,
-			Am: &AnnouncementMessage{},
+			Am: &AnnouncementMessage{
+				Message: make([]byte, 0),
+				RoundType: sm.Am.RoundType,
+			},
 		}
 	}
 	err := round.Announcement(view, RoundNbr, sm, out)
@@ -280,7 +284,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 		}
 
 		// And sending to all our children-nodes
-		dbg.Lvl4(sn.Name(), "sending to all children")
+		dbg.Lvlf4("%s sending to all children %+v", sn.Name(), msgs_bm[0])
 		ctx := context.TODO()
 		if err := sn.PutDown(ctx, view, msgs_bm); err != nil {
 			return err
@@ -374,12 +378,15 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 		return fmt.Errorf("No Round Interface created for this round")
 	}
 	challs := make([]*SigningMessage, sn.NChildren(view))
-	for i := range challs {
+	i := 0
+	for child := range sn.Children(view) {
 		challs[i] = &SigningMessage{
 			ViewNbr: view,
 			RoundNbr: RoundNbr,
 			Type: Challenge,
+			To: child,
 			Chm: &ChallengeMessage{}}
+		i++
 	}
 
 	err := round.Challenge(sm, challs)
@@ -394,10 +401,8 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 			ViewNbr:     view,
 			RoundNbr: RoundNbr,
 		})
-	} else { // otherwise continue to pass down challenge
-		// TODO remove this hack of using the first one. Should be separate messages
-		// + SendChildrenChallengesProof should be put into roundstamper or
-		// round interface
+	} else {
+		// otherwise continue to pass down challenge
 		for _, out := range (challs) {
 			conn := sn.Children(view)[out.To]
 			conn.PutData(out)
