@@ -65,7 +65,6 @@ type Node struct {
 	PrivKey             abstract.Secret           // long lasting private key
 
 	nRounds             int
-	RoundNbr            int                       // *only* used by Root( by annoucer)
 	Rounds              map[int]Round
 	roundmu             sync.Mutex
 	LastSeenRound       int                       // largest round number I have seen

@@ -162,7 +162,7 @@ func (sn *Node) ProcessMessages() error {
 				sn.ReceivedHeartbeat(sm.ViewNbr)
 				err = sn.SignatureBroadcast(sm)
 			case StatusReturn:
-				sn.StatusReturn(sm.ViewNbr, sm.SRm)
+				sn.StatusReturn(sm.ViewNbr, sm)
 			case CatchUpReq:
 				v := sn.VoteLog.Get(sm.Cureq.Index)
 				ctx := context.TODO()
@@ -559,17 +559,22 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 		}
 	} else {
 		dbg.Lvl2(sn.Name(), "sending StatusReturn")
-		return sn.StatusReturn(view, &StatusReturnMessage{})
+		return sn.StatusReturn(view, &SigningMessage{
+			Type: StatusReturn,
+			ViewNbr: view,
+			RoundNbr: RoundNbr,
+			SRm: &StatusReturnMessage{},
+		})
 	}
 	return nil
 }
 
 // StatusReturn just adds up all children and sends the result to
 // the parent
-func (sn *Node) StatusReturn(view int, sr *StatusReturnMessage) error {
+func (sn *Node) StatusReturn(view int, sm *SigningMessage) error {
 	sn.PeerStatusRcvd += 1
-	sn.PeerStatus.Responders += sr.Responders
-	sn.PeerStatus.Peers += sr.Peers
+	sn.PeerStatus.Responders += sm.SRm.Responders
+	sn.PeerStatus.Peers += sm.SRm.Peers
 
 	// Wait for other children before propagating the message
 	if sn.PeerStatusRcvd < len(sn.Children(view)) {
@@ -585,11 +590,10 @@ func (sn *Node) StatusReturn(view int, sr *StatusReturnMessage) error {
 	} else {
 		dbg.Lvl4(sn.Name(), "puts up statusReturn for", sn.PeerStatus)
 		ctx := context.TODO()
-		err = sn.PutUp(ctx, view, &SigningMessage{
-			ViewNbr:         view,
-			Type:         StatusReturn,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			SRm:          &sn.PeerStatus})
+		sm.SRm = &sn.PeerStatus
+		err = sn.PutUp(ctx, view, sm)
 	}
+	dbg.Lvl3("Deleting round", sm.RoundNbr, sn.Rounds)
+	delete(sn.Rounds, sm.RoundNbr)
 	return err
 }

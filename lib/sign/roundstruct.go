@@ -12,6 +12,7 @@ round has to call NewRoundStruct.
  */
 
 type RoundStruct struct {
+	Node     *Node
 	Name     string
 	IsRoot   bool
 	IsLeaf   bool
@@ -24,9 +25,10 @@ type RoundStruct struct {
 
 func NewRoundStruct(node *Node) *RoundStruct {
 	viewNbr := node.ViewNo
-	roundNbr := node.RoundNbr
+	roundNbr := node.nRounds
 	children := node.Children(viewNbr)
 	cbs := &RoundStruct{
+		Node: node,
 		Name: node.Name(),
 		IsRoot: node.IsRoot(viewNbr),
 		IsLeaf: len(children) == 0,
