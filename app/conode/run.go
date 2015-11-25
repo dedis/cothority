@@ -55,5 +55,6 @@ func Run(configFile, key string) {
 		conf.Public = pub
 		address = addr
 	}
-	conode.RunServer(address, conf, conode.NewRoundStamper())
+	peer := conode.NewPeer(address, conf)
+	peer.LoopRounds("cosistamper", -1)
 }
