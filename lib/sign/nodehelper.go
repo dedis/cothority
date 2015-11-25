@@ -218,7 +218,6 @@ func (sn *Node) StartAnnouncement(round Round) error {
 
 	sn.nRounds++
 	sn.Rounds[sn.nRounds] = round
-	am := &AnnouncementMessage{}
 
 	defer sn.AnnounceLock.Unlock()
 
@@ -228,19 +227,16 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	var cancelederr error
 	go func() {
 		var err error
-		if am.Vote != nil {
-			err = sn.Propose(am.Vote.View, sn.nRounds, am, "")
-		} else {
-			// Launch the announcement process
-			err = sn.Announce(&SigningMessage{
-				Type:     Announcement,
-				RoundNbr: sn.nRounds,
-				ViewNbr:     sn.ViewNo,
-				Am: &AnnouncementMessage{
-					RoundType: round.GetType(),
-				},
-			})
-		}
+		// Launch the announcement process
+		err = sn.Announce(&SigningMessage{
+			Type:     Announcement,
+			RoundNbr: sn.nRounds,
+			ViewNbr:     sn.ViewNo,
+			Am: &AnnouncementMessage{
+				RoundType: round.GetType(),
+				Message: make([]byte, 0),
+			},
+		})
 
 		if err != nil {
 			dbg.Lvl1(err)

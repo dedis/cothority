@@ -8,25 +8,9 @@ import (
 	"strconv"
 	"testing"
 	"github.com/dedis/cothority/lib/sign"
-	"time"
 )
 
-// Runs two conodes and tests if the value returned is OK
-func TestPeer(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
-	peer1, peer2 := createPeers()
-
-	round, err := sign.NewRoundFromType("cosistamper", peer1.Node)
-	if err != nil {
-		dbg.Fatal("Couldn't create cosistamp", err)
-	}
-	peer1.StartAnnouncement(round)
-	time.Sleep(time.Second)
-	peer1.Close()
-	peer2.Close()
-}
-
-func TestRoundCosiStamper(t *testing.T) {
+func TestStampListener(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
 
