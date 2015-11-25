@@ -50,7 +50,7 @@ func GoLeader(conf *app.NaiveConfig) {
 	if app.RunFlags.Logger != ""{
 		monitor.ConnectSink(app.RunFlags.Logger)
 	} else {
-		monitor.Disable()
+		monitor.Enable(false)
 	}
 	msg := []byte("Hello World\n")
 	// Listen for connections

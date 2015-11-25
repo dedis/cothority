@@ -26,9 +26,18 @@ var sink string
 var encoder *json.Encoder
 var connection net.Conn
 
-// enabled notify if we want to use the monitor or not. If we call Disable(),
-// the code stay the same but every call to Measure() won't just do a thing.
-var enabled bool = true
+// Keeps track if measure is enabled (true) or not (false). Use Enable(bool) to toggle this variable.
+var enabled = true
+
+// Enable / Disable measure
+func Enable(b bool) {
+	if b {
+		dbg.Lvl3("Monitor Measure enabled")
+	} else {
+		dbg.Lvl3("Monitor Measure disabled")
+	}
+	enabled = b
+}
 
 // ConnectSink will connect to the endpoint given and initialize our json
 // encoder. It can be a proxy address or directly a monitoring process address.
@@ -59,17 +68,7 @@ func send(v interface{}) {
 	}
 }
 
-// Disable / Enable the monitoring library
-func Disable() {
-	dbg.Lvl3("Monitor Measure disabled")
-	enabled = false
-}
-func Enable() {
-	dbg.Lvl3("Monitor Measure enabled")
-	enabled = true
-}
-
-// Measure holds the different values taht can be computed for a measure
+// Measure holds the different values that can be computed for a measure
 // It is what the client sends to the monitor.
 type Measure struct {
 	Name        string
@@ -81,7 +80,7 @@ type Measure struct {
 	allowUpdate  bool
 }
 
-// Creates a new measure-struct
+// NewMeasure creates a new measure-struct
 // Automatically update the time when we call Measure
 func NewMeasure(name string) *Measure {
 	m := &Measure{Name: name}
@@ -98,7 +97,6 @@ func (m *Measure) Measure() {
 	// send the data
 	send(m)
 	m.Update()
-
 }
 
 // Whether the measurement should be updated automatically

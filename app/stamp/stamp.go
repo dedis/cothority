@@ -107,7 +107,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 			s.App = "stamp"
 			if s.IsRoot(0) {
 				if app.RunFlags.Logger == "" {
-					monitor.Disable()
+					monitor.Enable(false)
 				} else {
 					if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
 						dbg.Fatal("Root could not connect to monitor sink :", err)
