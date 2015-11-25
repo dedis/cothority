@@ -48,7 +48,6 @@ func NewRoundStamper(node *sign.Node) *RoundStamper {
 func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
 	in.Am.RoundType = RoundCosiStamperType
-	in.Am.Message = make([]byte, 0)
 	if round.IsRoot {
 		// We are root !
 		// Adding timestamp
@@ -63,6 +62,7 @@ func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 		if err := binary.Read(bytes.NewBuffer(in.Am.Message), binary.LittleEndian, &t); err != nil {
 			dbg.Lvl1("Unmashaling timestamp has failed")
 		}
+		dbg.Lvl3("Received timestamp:", t)
 		round.Timestamp = t
 	}
 	round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
