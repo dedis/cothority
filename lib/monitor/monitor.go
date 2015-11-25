@@ -29,9 +29,6 @@ import (
 var Sink = "0.0.0.0"
 var SinkPort = "10003"
 
-func init() {
-}
-
 // Monitor struct is used to collect measures and make the statistics about
 // them. It takes a stats object so it update that in a concurrent-safe manner
 // for each new measure it receives.
