@@ -100,7 +100,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 			closing = true
 		case <-ticker:
 			if peer.IsRoot(peer.ViewNo) {
-				dbg.Lvl4(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
+				dbg.Lvl2(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
 				round, err := sign.NewRoundFromType(roundType, peer.Node)
 				if err != nil {
 					dbg.Fatal("Couldn't create", roundType, err)

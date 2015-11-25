@@ -37,7 +37,7 @@ func TestDeleteRounds(t *testing.T) {
 }
 
 // Tests the cosi-round
-func TestRoundCosi(t *testing.T){
+func TestRoundStamper(t *testing.T){
 	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
 
@@ -47,6 +47,23 @@ func TestRoundCosi(t *testing.T){
 	}
 
 	peer1.StartAnnouncement(round)
+
+	peer1.Close()
+	peer2.Close()
+}
+
+// Tests the cosi-round
+func TestRoundCosi(t *testing.T){
+	dbg.TestOutput(testing.Verbose(), 4)
+	peer1, peer2 := createPeers()
+
+	round, err := sign.NewRoundFromType("cosi", peer1.Node)
+	if err != nil{
+		t.Fatal("Couldn't create cosi-round:", err)
+	}
+
+	peer1.StartAnnouncement(round)
+	time.Sleep(time.Second * 2)
 
 	peer1.Close()
 	peer2.Close()
