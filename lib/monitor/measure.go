@@ -26,15 +26,16 @@ var sink string
 var encoder *json.Encoder
 var connection net.Conn
 
-// Keeps track if measure is enabled (true) or not (false). Use Enable(bool) to toggle this variable.
+// Keeps track if measure is enabled (true) or not (false).
+// Use EnableMeasure(bool) to toggle this variable.
 var enabled = true
 
 // Enable / Disable measure
-func Enable(b bool) {
+func EnableMeasure(b bool) {
 	if b {
-		dbg.Lvl3("Monitor Measure enabled")
+        dbg.Lvl3("Monitor: Measure enabled")
 	} else {
-		dbg.Lvl3("Monitor Measure disabled")
+        dbg.Lvl3("Monitor: Measure disabled")
 	}
 	enabled = b
 }
