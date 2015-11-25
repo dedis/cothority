@@ -70,7 +70,6 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 	peer.RLock = sync.Mutex{}
 
 	peer.CloseChan = make(chan bool, 5)
-	peer.StampListener = NewStampListener(peer.Node.Name())
 	peer.Hostname = address
 	peer.App = "stamp"
 
