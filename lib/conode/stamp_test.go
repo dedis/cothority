@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
 	"testing"
+"time"
 )
 
 // Runs two conodes and tests if the value returned is OK
@@ -13,7 +14,7 @@ func TestStamp(t *testing.T) {
 	peer1, peer2 := createPeers()
 	go peer1.LoopRounds()
 	go peer2.LoopRounds()
-	//time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 
 	s, err := conode.NewStamp("testdata/config.toml")
 	if err != nil {

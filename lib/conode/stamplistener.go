@@ -148,3 +148,10 @@ func (s *StampListener) Close() {
 	delete(SLList, s.NameL)
 	dbg.Lvl3(s.NameL, "Closing stamplistener done - SLList is", SLList)
 }
+
+// StampListenersClose closes all open stamplisteners
+func StampListenersClose(){
+	for _, s := range SLList{
+		s.Close()
+	}
+}
