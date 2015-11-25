@@ -33,9 +33,9 @@ var enabled = true
 // Enable / Disable measure
 func EnableMeasure(b bool) {
 	if b {
-        dbg.Lvl3("Monitor: Measure enabled")
+		dbg.Lvl3("Monitor: Measure enabled")
 	} else {
-        dbg.Lvl3("Monitor: Measure disabled")
+		dbg.Lvl3("Monitor: Measure disabled")
 	}
 	enabled = b
 }
