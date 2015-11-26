@@ -21,7 +21,7 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't open config-file:", err)
 	}
 
-	for _, port := range ([]int{2000, 2010}) {
+	for _, port := range ([]int{7000, 7010}) {
 		stamper := "localhost:" + strconv.Itoa(port)
 		dbg.Lvl2("Contacting stamper", stamper)
 		tsm, err := s.GetStamp([]byte("test"), stamper)

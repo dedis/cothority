@@ -55,6 +55,38 @@ func TestEmptyKeys(t *testing.T) {
 	peer2.Close()
 }
 
+// Make sure closeall sends messages to everybody
+func TestCloseAll(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	peer1, peer2 := createPeers()
+
+	// Launch peers in endless loop
+	go peer1.LoopRounds("cosi", -1)
+	go peer2.LoopRounds("cosi", -1)
+
+	// Send CloseAll manually
+	peer1.SendCloseAll()
+	time.Sleep(time.Second)
+	if !peer1.Closed{
+		t.Fatal("Peer 1 should be closed now.")
+	}
+	if !peer2.Closed{
+		t.Fatal("Peer 2 should be closed now.")
+	}
+
+	// Now let's just wait for two rounds
+	peer1, peer2 = createPeers()
+	go peer1.LoopRounds("cosi", 2)
+	go peer2.LoopRounds("cosi", 2)
+	time.Sleep(time.Second * 3)
+	if !peer1.Closed{
+		t.Fatal("Peer 1 should be closed now.")
+	}
+	if !peer2.Closed{
+		t.Fatal("Peer 2 should be closed now.")
+	}
+}
+
 // What happens if client closes before server does?
 func TestClientBeforeServer(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)

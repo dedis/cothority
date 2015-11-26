@@ -10,6 +10,10 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/context"
+	"syscall"
+	"net"
+	"time"
+	"strings"
 )
 
 /*
@@ -54,7 +58,8 @@ func (sn *Node) ProcessMessages() error {
 			err := nm.Err
 
 		// TODO: graceful shutdown voting
-			if !ok || err == coconet.ErrClosed || err == io.EOF {
+			if !ok || err == coconet.ErrClosed || err == io.EOF ||
+			err == io.ErrClosedPipe {
 				dbg.Lvl3(sn.Name(), "getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
@@ -62,28 +67,18 @@ func (sn *Node) ProcessMessages() error {
 
 		// if it is a non-fatal error try again
 			if err != nil {
-				log.Errorln(sn.Name(), " error getting message (still continuing) ", err)
+				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
+				if strings.Contains(syscall.ECONNRESET.Error(), err.(*net.OpError).Err.Error()){
+					dbg.Lvl1(sn.Name(), "connection reset error")
+				}
+				dbg.Print(err.(*net.OpError).Err.Error(), syscall.ECONNRESET.Error())
+				time.Sleep(time.Minute)
 				continue
 			}
 		// interpret network message as Signing Message
-		//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
-			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
-			dbg.Lvlf4("Message is %+v", sm)
-
-		// don't act on future view if not caught up, must be done after updating vote index
-		/*
-			sn.viewmu.Lock()
-			if sm.ViewNbr > sn.ViewNo {
-				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
-					log.Warnln(sn.Name(), "not caught up for view change", sn.LastSeenVote, sn.LastAppliedVote)
-					return errors.New("not caught up for view change")
-				}
-			}
-			sn.viewmu.Unlock()
-			sn.updateLastSeenVote(sm.LastSeenVote, sm.From)
-			*/
+			dbg.Lvlf4("Message on %s is type %s and %+v", sn.Name(), sm.Type, sm)
 
 			switch sm.Type {
 			// if it is a bad message just ignore it
@@ -221,7 +216,6 @@ func (sn *Node) ProcessMessages() error {
 			}
 		}
 	}
-
 }
 
 func (sn *Node) Announce(sm *SigningMessage) error {

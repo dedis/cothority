@@ -203,7 +203,7 @@ func (d *Localhost) Start(args ...string) error {
 				dbg.Lvl3("Error running localhost ", h, " : ", err)
 			}
 			d.wg_run.Done()
-			dbg.Lvl3("host (index ", i, ") ", h, "done")
+			dbg.Lvl3("host (index", i, ")", h, "done")
 		}(index, host)
 
 	}

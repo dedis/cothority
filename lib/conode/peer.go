@@ -80,6 +80,7 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 		err := peer.Node.Listen()
 		dbg.Lvl3("Node.listen quits with status", err)
 		peer.CloseChan <- true
+		peer.Close()
 	}()
 	return peer
 }
@@ -90,17 +91,16 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 // peer.Close().
 func (peer *Peer) LoopRounds(roundType string, rounds int) {
 	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with IsRoot=", peer.IsRoot(peer.ViewNo))
-	ticker := time.Tick(sign.ROUND_TIME)
+	ticker := time.NewTicker(sign.ROUND_TIME)
 
-	var closing bool
 	for {
 		select {
 		case nextRole := <-peer.ViewChangeCh():
 			dbg.Lvl2(peer.Name(), "assuming next role is", nextRole)
 		case <-peer.CloseChan:
 			dbg.Lvl3("Server-peer", peer.Name(), "has closed the connection")
-			closing = true
-		case <-ticker:
+			return
+		case <-ticker.C:
 			if peer.IsRoot(peer.ViewNo) {
 				dbg.Lvl3(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
 				round, err := sign.NewRoundFromType(roundType, peer.Node)
@@ -121,14 +121,16 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 		if peer.LastRound() >= rounds && rounds >= 0 {
 			dbg.Lvl3(peer.Name(), "reports exceeded the max round: terminating",
 				peer.LastRound(), ">=", rounds)
-			closing = true
-		}
-
-		if closing {
-			peer.Close()
+			ticker.Stop()
+			peer.SendCloseAll()
 			return
 		}
 	}
+}
+
+// Sends the 'CloseAll' to everybody
+func (peer *Peer)SendCloseAll(){
+	peer.Node.CloseAll(peer.Node.ViewNo)
 }
 
 // Closes the channel
