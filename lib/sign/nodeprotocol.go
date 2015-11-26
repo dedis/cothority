@@ -57,9 +57,16 @@ func (sn *Node) ProcessMessages() error {
 			nm, ok := <-msgchan
 			err := nm.Err
 
-		// TODO: graceful shutdown voting
+		// One of the errors doesn't have an error-number applied, so we need
+		// to check for the string - will probably be fixed in go 1.6
 			if !ok || err == coconet.ErrClosed || err == io.EOF ||
-			err == io.ErrClosedPipe {
+			err == io.ErrClosedPipe ||
+			strings.Contains(err.Error(), syscall.ECONNRESET.Error()) {
+				if strings.Contains(err.Error(), syscall.ECONNRESET.Error()) {
+					dbg.Lvl1(sn.Name(), "connection reset error - caught this time")
+					dbg.Print(err.Error(), syscall.ECONNRESET.Error())
+					time.Sleep(time.Minute)
+				}
 				dbg.Lvl3(sn.Name(), "getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
@@ -68,10 +75,10 @@ func (sn *Node) ProcessMessages() error {
 		// if it is a non-fatal error try again
 			if err != nil {
 				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
-				if strings.Contains(syscall.ECONNRESET.Error(), err.(*net.OpError).Err.Error()){
+				if strings.Contains(err.Error(), syscall.ECONNRESET.Error()) {
 					dbg.Lvl1(sn.Name(), "connection reset error")
 				}
-				dbg.Print(err.(*net.OpError).Err.Error(), syscall.ECONNRESET.Error())
+				dbg.Print(err.Error(), syscall.ECONNRESET.Error())
 				time.Sleep(time.Minute)
 				continue
 			}
