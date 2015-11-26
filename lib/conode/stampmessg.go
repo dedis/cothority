@@ -44,7 +44,7 @@ type StampRequest struct {
 	Val []byte // Hash-size value to timestamp
 }
 
-// NOTE: In order to decoe correctly the Proof, we need to the get the suite
+// NOTE: In order to decode correctly the Proof, we need to the get the suite
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampSignature struct {
@@ -68,6 +68,7 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 }
 
 func (sr *StampSignature) MarshalJSON() ([]byte, error) {
+	type Alias StampSignature
 	var b bytes.Buffer
 	suite := app.GetSuite(sr.SuiteStr)
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic); err != nil {
@@ -76,37 +77,36 @@ func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
-		SignatureInfo []byte
-		Timestamp     int64
-		MerkleRoot    []byte
-		Prf           proof.Proof
+		BinaryBlob []byte
+		*Alias
 	}{
-		SignatureInfo: b.Bytes(),
-		Timestamp:     sr.Timestamp,
-		MerkleRoot:    sr.MerkleRoot,
-		Prf:           sr.Prf,
+		BinaryBlob: b.Bytes(),
+		Alias: (*Alias)(sr),
 	})
 }
 
 func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
+	type Alias StampSignature
+	suite := app.GetSuite(sr.SuiteStr)
 	aux := &struct {
-		SignatureInfo []byte
-		Timestamp     int64
-		MerkleRoot    []byte
-		Prf           proof.Proof
-	}{}
+		BinaryBlob []byte
+		Response abstract.Secret
+		Challenge abstract.Secret
+		AggCommit abstract.Point
+		AggPublic abstract.Point
+		*Alias
+	}{
+		Response: suite.Secret(),
+		Challenge: suite.Secret(),
+		AggCommit: suite.Point(),
+		AggPublic: suite.Point(),
+		Alias: (*Alias)(sr),
+	}
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
 		return err
 	}
-	suite := app.GetSuite(sr.SuiteStr)
-	sr.Timestamp = aux.Timestamp
-	sr.MerkleRoot = aux.MerkleRoot
-	sr.Prf = aux.Prf
-	sr.Response = suite.Secret()
-	sr.Challenge = suite.Secret()
-	sr.AggCommit = suite.Point()
-	sr.AggPublic = suite.Point()
-	if err := suite.Read(bytes.NewReader(aux.SignatureInfo), &sr.Response, &sr.Challenge, &sr.AggCommit, &sr.AggPublic); err != nil {
+	if err := suite.Read(bytes.NewReader(aux.BinaryBlob), &sr.Response,
+		&sr.Challenge, &sr.AggCommit, &sr.AggPublic); err != nil {
 		dbg.Fatal("decoding signature Response / Challenge / AggCommit: ", err)
 		return err
 	}
@@ -223,10 +223,10 @@ func (Sreq *StampSignature) UnmarshalBinary(data []byte) error {
 
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
-	// ErrorReply *ErrorReply // Generic error reply to any request
-	Type MessageType
-	Sreq *StampRequest
-	Srep *StampSignature
+				// ErrorReply *ErrorReply // Generic error reply to any request
+	Type  MessageType
+	Sreq  *StampRequest
+	Srep  *StampSignature
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
