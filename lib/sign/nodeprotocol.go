@@ -11,7 +11,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/context"
 	"syscall"
-	"net"
 	"time"
 	"strings"
 )
