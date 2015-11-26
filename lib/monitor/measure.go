@@ -46,6 +46,46 @@ func ConnectSink(addr string) error {
 	return nil
 }
 
+func StopSink(){
+	connection.Close()
+	encoder = nil
+}
+
+// Only sends a ready-string
+func Ready(addr string) error {
+	if encoder == nil {
+		dbg.Lvl3("Connecting to sink", addr)
+		err := ConnectSink(addr)
+		if err != nil {
+			return err
+		}
+	}
+	dbg.Lvl3("Sending ready-signal")
+	send(Measure{Name: "ready"})
+	return nil
+}
+
+// Returns how many peers are ready
+func GetReady(addr string) (*Stats, error) {
+	if encoder == nil {
+		dbg.Lvl3("Connecting to sink")
+		err := ConnectSink(addr)
+		if err != nil {
+			return nil, err
+		}
+	}
+	dbg.Lvl3("Getting ready_count")
+	send(Measure{Name: "ready_count"})
+	decoder := json.NewDecoder(connection)
+	var s Stats
+	err := decoder.Decode(&s)
+	if err != nil {
+		return nil, err
+	}
+	dbg.Lvlf3("Stats is %+v", s)
+	return &s, nil
+}
+
 // Send will send the given struct to the network
 func send(v interface{}) {
 	if encoder == nil {
@@ -71,10 +111,10 @@ func Enable() {
 
 // Measure holds the different values taht ca n be computed for a measure
 type Measure struct {
-	Name        string
-	WallTime    float64
-	CPUTimeUser float64
-	CPUTimeSys  float64
+	Name         string
+	WallTime     float64
+	CPUTimeUser  float64
+	CPUTimeSys   float64
 	// Since we send absolute timing values, we need to store our reference also
 	lastWallTime time.Time
 	allowUpdate  bool
@@ -124,7 +164,7 @@ func End() {
 
 // Convert microseconds to seconds
 func iiToF(sec int64, usec int64) float64 {
-	return float64(sec) + float64(usec)/1000000.0
+	return float64(sec) + float64(usec) / 1000000.0
 }
 
 // Gets the sytem and the user time so far

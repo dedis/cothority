@@ -28,7 +28,7 @@ func init() {
 }
 
 // connectServer will try to connect to the server ...
-func connectSink(redirection string) error {
+func connectToSink(redirection string) error {
 	conn, err := net.Dial("tcp", redirection)
 	if err != nil {
 		return fmt.Errorf("Proxy connection to server %s failed : %v", redirection, err)
@@ -45,7 +45,7 @@ func connectSink(redirection string) error {
 // It will panic if it can not contact the server or can not bind to the address
 func Proxy(redirection string) {
 	// Connect to the sink
-	if err := connectSink(redirection); err != nil {
+	if err := connectToSink(redirection); err != nil {
 		panic(err)
 	}
 	dbg.Lvl2("Proxy connected to sink ", redirection)

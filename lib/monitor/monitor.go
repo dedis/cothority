@@ -34,7 +34,7 @@ func init() {
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func Monitor(stats *Stats) error {
-	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
+	ln, err := net.Listen("tcp", Sink + ":" + SinkPort)
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
@@ -65,8 +65,8 @@ func Monitor(stats *Stats) error {
 	for !finished {
 		select {
 		case c := <-ch:
-			// TODO : maybe change to a more statefull approache with struct for each
-			// connections...
+		// TODO : maybe change to a more stateful approach with struct for each
+		// connection...
 			conns = append(conns, c)
 			nconn += 1
 			go handleConnection(c, stats)
@@ -99,6 +99,7 @@ func Stop() {
 // stats
 func handleConnection(conn net.Conn, stats *Stats) {
 	dec := json.NewDecoder(conn)
+	enc := json.NewEncoder(conn)
 	var m Measure
 	nerr := 0
 	for {
@@ -108,25 +109,31 @@ func handleConnection(conn net.Conn, stats *Stats) {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from ", conn.RemoteAddr().String(), " : ", err)
+			dbg.Lvl2("Error monitor decoding from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl1("Monitor : too many errors from ", conn.RemoteAddr().String(), " : Abort.")
+				dbg.Lvl1("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
 				break
 			}
 		}
 
 		// Special case where the measurement is indicating a FINISHED step
-		if strings.ToLower(m.Name) == "end" {
+		switch strings.ToLower(m.Name){
+		case "end":
+			done <- true
 			break
+		case "ready":
+			stats.Ready++
+		case "ready_count":
+			enc.Encode(stats)
+		default:
+			dbg.Lvl4("Monitor: received a Measure from", conn.RemoteAddr().String(), ":", m)
+			updateMeasures(stats, m)
+			m = Measure{}
 		}
-		dbg.Lvl4("Monitor : received a Measure from ", conn.RemoteAddr().String(), " : ", m)
-		updateMeasures(stats, m)
-		m = Measure{}
 	}
 	// finished
 	conn.Close()
-	done <- true
 }
 
 // updateMeasures will add that specific measure to the global stats

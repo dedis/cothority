@@ -265,6 +265,9 @@ type Stats struct {
 	PPM int // PeerPerMachine
 	// How many machines do we have
 	Machines int
+	// How many peers are ready
+	Ready int
+
 	// Additionals fields that may appears in the resulting CSV
 	// The additionals fields are created when creating the stats out of a
 	// running config. It will try to read some known fields such as "depth" or
