@@ -46,6 +46,9 @@ func Lvld(lvl int, args ...interface{}) {
 	Lvl(lvl, args...)
 }
 func Lvl(lvl int, args ...interface{}) {
+	if lvl > DebugVisible{
+		return
+	}
 	pc, _, line, _ := runtime.Caller(3)
 	name := regexpPaths.ReplaceAllString(runtime.FuncForPC(pc).Name(), "")
 	lineStr := fmt.Sprintf("%d", line)

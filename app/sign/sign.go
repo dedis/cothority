@@ -27,7 +27,7 @@ func main() {
 	dbg.Lvl3(hostname, "Starting to run")
 
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
-	peer.LoopRounds("cosi", conf.Rounds)
+	peer.LoopRounds(RoundMeasureType, conf.Rounds)
 	dbg.Lvlf3("Done - flags are %+v", app.RunFlags)
 	if app.RunFlags.AmRoot {
 		monitor.End()
