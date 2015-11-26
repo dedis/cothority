@@ -444,8 +444,6 @@ func (sn *Node) CloseAll(view int) error {
 			return err
 		}
 	}
-
-	sn.Close()
 	dbg.Lvl3("Closing down shop", sn.Isclosed)
 	return nil
 }

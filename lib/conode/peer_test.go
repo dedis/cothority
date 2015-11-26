@@ -78,7 +78,7 @@ func TestCloseAll(t *testing.T) {
 	peer1, peer2 = createPeers()
 	go peer1.LoopRounds("cosi", 2)
 	go peer2.LoopRounds("cosi", 2)
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 4)
 	if !peer1.Closed{
 		t.Fatal("Peer 1 should be closed now.")
 	}

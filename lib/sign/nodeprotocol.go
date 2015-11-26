@@ -11,7 +11,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/context"
 	"syscall"
-	"net"
 	"time"
 	"strings"
 )
@@ -58,7 +57,7 @@ func (sn *Node) ProcessMessages() error {
 			err := nm.Err
 			errStr := ""
 			if err != nil{
-				errStr = err.(*net.OpError).Err.Error()
+				errStr = err.Error()
 			}
 
 		// One of the errors doesn't have an error-number applied, so we need

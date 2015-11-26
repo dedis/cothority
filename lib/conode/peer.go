@@ -101,35 +101,37 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 			dbg.Lvl3("Server-peer", peer.Name(), "has closed the connection")
 			return
 		case <-ticker.C:
-			if peer.IsRoot(peer.ViewNo) {
-				dbg.Lvl3(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
-				round, err := sign.NewRoundFromType(roundType, peer.Node)
-				if err != nil {
-					dbg.Fatal("Couldn't create", roundType, err)
-				}
-				err = peer.StartAnnouncement(round)
-				if err != nil {
-					dbg.Lvl3(err)
-					time.Sleep(1 * time.Second)
-					break
+			if peer.LastRound() >= rounds && rounds >= 0 {
+				dbg.Lvl3(peer.Name(), "reports exceeded the max round: terminating",
+					peer.LastRound(), ">=", rounds)
+				ticker.Stop()
+				if peer.IsRoot(peer.ViewNo) {
+					dbg.Lvl3("As I'm root, asking everybody to terminate")
+					peer.SendCloseAll()
 				}
 			} else {
-				dbg.Lvl3(peer.Name(), "running as regular")
+				if peer.IsRoot(peer.ViewNo) {
+					dbg.Lvl3(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
+					round, err := sign.NewRoundFromType(roundType, peer.Node)
+					if err != nil {
+						dbg.Fatal("Couldn't create", roundType, err)
+					}
+					err = peer.StartAnnouncement(round)
+					if err != nil {
+						dbg.Lvl3(err)
+						time.Sleep(1 * time.Second)
+						break
+					}
+				} else {
+					dbg.Lvl3(peer.Name(), "running as regular")
+				}
 			}
-		}
-
-		if peer.LastRound() >= rounds && rounds >= 0 {
-			dbg.Lvl3(peer.Name(), "reports exceeded the max round: terminating",
-				peer.LastRound(), ">=", rounds)
-			ticker.Stop()
-			peer.SendCloseAll()
-			return
 		}
 	}
 }
 
 // Sends the 'CloseAll' to everybody
-func (peer *Peer)SendCloseAll(){
+func (peer *Peer)SendCloseAll() {
 	peer.Node.CloseAll(peer.Node.ViewNo)
 }
 
