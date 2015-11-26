@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 	"github.com/dedis/cothority/lib/sign"
-"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/graphs"
 	"time"
 )
 
@@ -49,16 +49,35 @@ func TestEmptyKeys(t *testing.T) {
 	go peer1.LoopRounds("cosi", 2)
 	go peer2.LoopRounds("cosi", 2)
 
-	time.Sleep(time.Second*2)
+	time.Sleep(time.Second * 2)
 
 	peer1.Close()
 	peer2.Close()
 }
 
-func emptyKeys(t *graphs.Tree){
+// What happens if client closes before server does?
+func TestClientBeforeServer(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	peer1, peer2 := createPeers()
+
+	peer2.Close()
+	time.Sleep(time.Second)
+
+	round, err := sign.NewRoundFromType("cosi", peer1.Node)
+	if err != nil{
+		t.Fatal("Error while creating round:", err)
+	}
+
+	peer1.StartAnnouncement(round)
+	time.Sleep(time.Second)
+
+	peer1.Close()
+}
+
+func emptyKeys(t *graphs.Tree) {
 	t.PriKey = ""
 	t.PubKey = ""
-	for _, c := range t.Children{
+	for _, c := range t.Children {
 		emptyKeys(c)
 	}
 }

@@ -226,7 +226,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
 
-	dbg.Lvl1("Writing config-files")
+	dbg.Lvl3("Writing config-files")
 
 	// Initialize the deter-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual

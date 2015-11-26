@@ -86,7 +86,7 @@ func (d *Localhost) Build(build string) error {
 	}
 	dbg.Lvl3("Localhost : Build src", src, ", dst", dst)
 	dbg.Lvl3("Localhost : Results of localhost build :", res)
-	dbg.Lvl1("Localhost : build finished in", time.Since(start))
+	dbg.Lvl2("Localhost : build finished in", time.Since(start))
 	return err
 }
 
@@ -103,7 +103,7 @@ func (d *Localhost) Cleanup() error {
 }
 
 func (d *Localhost) Deploy(rc RunConfig) error {
-	dbg.Lvl1("Localhost : Writing config-files")
+	dbg.Lvl2("Localhost : Deploying and writing config-files")
 
 	// Initialize the deter-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual
@@ -133,8 +133,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
 
-		dbg.Lvl2("Depth:", graphs.Depth(conf.Tree))
-		dbg.Lvl2("Total hosts:", len(conf.Hosts))
+		dbg.Lvl2("Total hosts / depth:", len(conf.Hosts), graphs.Depth(conf.Tree))
 		total := d.Machines * d.Ppm
 		if len(conf.Hosts) != total {
 			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
@@ -174,7 +173,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	if debug.IsValid() {
 		dbg.DebugVisible = debug.Interface().(int)
 	}
-	dbg.Lvl1("Localhost : Done deploying")
+	dbg.Lvl3("Localhost : Done deploying")
 
 	return nil
 
