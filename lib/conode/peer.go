@@ -102,7 +102,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 		case nextRole := <-peer.ViewChangeCh():
 			dbg.Lvl2(peer.Name(), "assuming next role is", nextRole)
 		case <-peer.CloseChan:
-			dbg.LLvl3("Server-peer", peer.Name(), "has closed the connection")
+			dbg.Lvl3("Server-peer", peer.Name(), "has closed the connection")
 			return
 		case <-ticker.C:
 			dbg.Lvl3("Ticker is firing in", peer.Hostname)

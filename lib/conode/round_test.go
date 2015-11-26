@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 	"github.com/dedis/cothority/lib/sign"
+	"github.com/dedis/cothority/lib/conode"
 )
 
 // Tests if the rounds are deleted when done
@@ -36,15 +37,15 @@ func TestDeleteRounds(t *testing.T) {
 	peer2.Close()
 }
 
-func TestRoundCosi(t *testing.T){
+func TestRoundCosi(t *testing.T) {
 	testRound(t, "cosi")
 }
 
-func TestRoundStamper(t *testing.T){
+func TestRoundStamper(t *testing.T) {
 	testRound(t, "stamper")
 }
 
-func TestRoundCosiStamper(t *testing.T){
+func TestRoundCosiStamper(t *testing.T) {
 	testRound(t, "cosistamper")
 }
 
@@ -58,10 +59,28 @@ func testRound(t *testing.T, roundType string) {
 
 	round, err := sign.NewRoundFromType(roundType, peer1.Node)
 	if err != nil {
-		t.Fatal("Couldn't create cosi-round:", err)
+		t.Fatal("Couldn't create", roundType, "round:", err)
 	}
 
 	peer1.StartAnnouncement(round)
+	time.Sleep(time.Second)
+
+	var cosi *sign.CosiStruct
+	switch roundType{
+	case "cosi":
+		cosi = round.(*sign.RoundCosi).Cosi
+	case "stamper":
+		cosi = round.(*conode.RoundStamper).Cosi
+	case "cosistamper":
+		cosi = round.(*conode.RoundCosiStamper).Cosi
+	}
+	if cosi.R_hat == nil {
+		t.Fatal("Didn't finish round - R_hat empty")
+	}
+	err = cosi.VerifyResponses()
+	if err != nil {
+		t.Fatal("Couldn't verify responses")
+	}
 
 	peer1.Close()
 	peer2.Close()

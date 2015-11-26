@@ -124,7 +124,10 @@ type JSONdata struct {
 }
 
 func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
-	data, _ := sm.MarshalBinary()
+	data, err := sm.MarshalBinary()
+	if err != nil{
+		return nil, err
+	}
 	return json.Marshal(JSONdata{
 		Data: data,
 	})
