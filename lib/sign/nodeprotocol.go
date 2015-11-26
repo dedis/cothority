@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/context"
 	"syscall"
+	"net"
 	"time"
 	"strings"
 )
@@ -44,7 +45,7 @@ func (sn *Node) ProcessMessages() error {
 
 	// gossip to make sure we are up to date
 	sn.StartGossip()
-
+	errReset := syscall.ECONNRESET.Error()
 	for {
 		select {
 		case <-sn.closed:
@@ -55,15 +56,19 @@ func (sn *Node) ProcessMessages() error {
 			dbg.Lvl4(sn.Name(), "waiting for message")
 			nm, ok := <-msgchan
 			err := nm.Err
+			errStr := ""
+			if err != nil{
+				errStr = err.(*net.OpError).Err.Error()
+			}
 
 		// One of the errors doesn't have an error-number applied, so we need
 		// to check for the string - will probably be fixed in go 1.6
 			if !ok || err == coconet.ErrClosed || err == io.EOF ||
 			err == io.ErrClosedPipe ||
-			strings.Contains(err.Error(), syscall.ECONNRESET.Error()) {
-				if strings.Contains(err.Error(), syscall.ECONNRESET.Error()) {
-					dbg.Lvl1(sn.Name(), "connection reset error - caught this time")
-					dbg.Print(err.Error(), syscall.ECONNRESET.Error())
+			strings.Contains(errStr, errReset) {
+				if strings.Contains(errStr, errReset) {
+					dbg.Lvl1(sn.Name(), "connection reset error")
+					dbg.Print(errStr, errReset)
 					time.Sleep(time.Minute)
 				}
 				dbg.Lvl3(sn.Name(), "getting from closed host")
@@ -74,10 +79,10 @@ func (sn *Node) ProcessMessages() error {
 		// if it is a non-fatal error try again
 			if err != nil {
 				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
-				if strings.Contains(err.Error(), syscall.ECONNRESET.Error()) {
+				if strings.Contains(errStr, errReset) {
 					dbg.Lvl1(sn.Name(), "connection reset error")
 				}
-				dbg.Print(err.Error(), syscall.ECONNRESET.Error())
+				dbg.Print(errStr, errReset)
 				time.Sleep(time.Minute)
 				continue
 			}
