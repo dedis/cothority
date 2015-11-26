@@ -35,6 +35,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"path/filepath"
 )
 
 var deterlab platform.Deterlab
@@ -163,7 +164,7 @@ func main() {
 			continue
 		}
 		totalServers += len(virts)
-		dbg.Lvl1("Launching forkexec for", len(virts), "clients on", phys)
+		dbg.Lvl2("Launching forkexec for", len(virts), "clients on", phys)
 		wg.Add(1)
 		go func(phys string) {
 			//dbg.Lvl4("running on ", phys, cmd)
@@ -172,7 +173,7 @@ func main() {
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
 			" -physaddr=" + phys + " -logger=" + deterlab.MonitorAddress + ":" + monitor.SinkPort)
 			if err != nil {
-				log.Fatal("Error starting timestamper:", err, phys)
+				dbg.Lvl1("Error starting timestamper:", err, phys)
 			}
 			dbg.Lvl4("Finished with Timestamper", phys)
 		}(phys)
@@ -190,10 +191,20 @@ func main() {
 			} else {
 				dbg.Lvl1("Stampservers started:", len(files), "/", totalServers, "after", time.Since(start_config))
 				if len(files) == totalServers {
-					os.RemoveAll(coll_stamp_dir)
+					ioutil.WriteFile(coll_stamp_dir + "/up_all", []byte("gogogo"), 0666)
+					files, err := filepath.Glob(coll_stamp_dir + "/up10*")
+					if err != nil {
+						dbg.Lvl1("Couldn't list files:", err)
+					}else {
+						if len(files) > 0 {
+							os.Remove(files[0])
+						} else {
+							dbg.Lvl1("Didn't find any files...")
+						}
+					}
 					// 1st second for everybody to see the deleted directory
 					// 2nd second for everybody to start up listening
-					time.Sleep(2 * time.Second)
+					time.Sleep(time.Second * 2)
 					break
 				}
 			}

@@ -18,6 +18,8 @@ import (
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/cothority/lib/monitor"
+	"time"
+	"os/exec"
 )
 
 type Flags struct {
@@ -109,6 +111,27 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 	}
 
 	return nil
+}
+
+// StartedUp waits for everybody to start by checking a shared directory
+func (f Flags)StartedUp() {
+	// Wait for everybody to be ready before going on
+	for {
+		ioutil.WriteFile("coll_stamp_up/up" + f.Hostname, []byte("started"), 0666)
+		_, err := os.Stat("coll_stamp_up/up_all")
+		if err != nil {
+			dbg.Lvl4(f.Hostname, "waiting for others to finish")
+			out, err := exec.Command("ls", "coll_stamp_up").Output()
+			if err != nil {
+				dbg.Lvl3("Reading directory:", err)
+			}
+			dbg.Lvl4("ls says about up_all:", string(out))
+			time.Sleep(time.Second)
+		} else {
+			break
+		}
+	}
+	dbg.Lvl3(f.Hostname, "thinks everybody's here")
 }
 
 /*

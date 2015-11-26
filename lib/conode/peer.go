@@ -92,17 +92,22 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 func (peer *Peer) LoopRounds(roundType string, rounds int) {
 	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with IsRoot=", peer.IsRoot(peer.ViewNo))
 	ticker := time.NewTicker(sign.ROUND_TIME)
+	if !peer.IsRoot(peer.ViewNo){
+		// Children don't need to tick, only the root.
+		ticker.Stop()
+	}
 
 	for {
 		select {
 		case nextRole := <-peer.ViewChangeCh():
 			dbg.Lvl2(peer.Name(), "assuming next role is", nextRole)
 		case <-peer.CloseChan:
-			dbg.Lvl3("Server-peer", peer.Name(), "has closed the connection")
+			dbg.LLvl3("Server-peer", peer.Name(), "has closed the connection")
 			return
 		case <-ticker.C:
+			dbg.Lvl3("Ticker is firing in", peer.Hostname)
 			if peer.LastRound() >= rounds && rounds >= 0 {
-				dbg.Lvl3(peer.Name(), "reports exceeded the max round: terminating",
+				dbg.LLvl3(peer.Name(), "reports exceeded the max round: terminating",
 					peer.LastRound(), ">=", rounds)
 				ticker.Stop()
 				if peer.IsRoot(peer.ViewNo) {

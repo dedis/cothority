@@ -36,7 +36,7 @@ func main() {
 			dbg.Lvl3("Starting", name, "on", app.RunFlags.PhysAddr)
 			wg.Add(1)
 			go func(nameport string) {
-				dbg.LLvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport, rootname)
+				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport, rootname)
 				defer wg.Done()
 
 				amroot := nameport == rootname

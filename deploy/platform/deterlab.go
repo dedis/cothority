@@ -346,7 +346,6 @@ func (d *Deterlab) Start(args ...string) error {
 		dbg.Fatal("ssh port forwarding exited in failure : ", err)
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
-	//time.Sleep(5 * time.Minute)
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
 		if err != nil {

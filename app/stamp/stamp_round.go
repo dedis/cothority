@@ -30,6 +30,7 @@ func NewRoundMeasure(node *sign.Node) *RoundMeasure {
 
 func (round *RoundMeasure) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	if round.IsRoot {
+		dbg.Lvl1("Starting announcement", roundNbr)
 		round.measure = monitor.NewMeasure("round")
 	}
 	return round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)

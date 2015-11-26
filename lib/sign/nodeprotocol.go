@@ -66,8 +66,7 @@ func (sn *Node) ProcessMessages() error {
 			err == io.ErrClosedPipe ||
 			strings.Contains(errStr, errReset) {
 				if strings.Contains(errStr, errReset) {
-					dbg.Lvl1(sn.Name(), "connection reset error")
-					dbg.Print(errStr, errReset)
+					dbg.Lvl1(sn.Name(), "connection reset error - caught")
 					time.Sleep(time.Minute)
 				}
 				dbg.Lvl3(sn.Name(), "getting from closed host")
@@ -79,9 +78,8 @@ func (sn *Node) ProcessMessages() error {
 			if err != nil {
 				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
 				if strings.Contains(errStr, errReset) {
-					dbg.Lvl1(sn.Name(), "connection reset error")
+					dbg.Lvl1(sn.Name(), "connection reset error - NOT caught")
 				}
-				dbg.Print(errStr, errReset)
 				time.Sleep(time.Minute)
 				continue
 			}

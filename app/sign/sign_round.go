@@ -38,6 +38,7 @@ func (round *RoundMeasure)Response(in []*sign.SigningMessage, out *sign.SigningM
 	err := round.RoundCosi.Response(in, out)
 	if round.IsRoot {
 		round.measure.Measure()
+		dbg.Lvl1("Round", round.RoundNbr, "finished - took", round.measure.WallTime)
 	}
 	return err
 }
