@@ -47,7 +47,7 @@ func NewDataFilter(config map[string]string) DataFilter {
 			df.percentiles[measure] = perc
 		}
 	}
-	dbg.Lvl2("Filtering:", df.percentiles)
+	dbg.Lvl3("Filtering:", df.percentiles)
 	return df
 }
 
@@ -77,7 +77,7 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 		return values
 	}
 	// return the values below the percentile
-	dbg.Lvl2("Filtering: filters out ", measure, " :", maxIndex, " /", len(values))
+	dbg.Lvl3("Filtering: filters out ", measure, " :", maxIndex, " /", len(values))
 	return values[:maxIndex]
 }
 

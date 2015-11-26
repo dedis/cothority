@@ -22,13 +22,14 @@ incoming requests through StampListener.
 type Peer struct {
 	*sign.Node
 
+	conf      *app.ConfigConode
+
 	RLock     sync.Mutex
 	CloseChan chan bool
 	Closed    bool
 
 	Logger    string
 	Hostname  string
-	App       string
 }
 
 // NewPeer returns a peer that can be used to set up
@@ -61,12 +62,13 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 
 	// Listen to stamp-requests on port 2001
 	node := hc.Hosts[address]
-	peer := &Peer{}
-	peer.Node = node
-	peer.RLock = sync.Mutex{}
-	peer.CloseChan = make(chan bool, 5)
-	peer.Hostname = address
-	peer.App = "stamp"
+	peer := &Peer{
+		conf: conf,
+		Node: node,
+		RLock: sync.Mutex{},
+		CloseChan: make(chan bool, 5),
+		Hostname: address,
+	}
 
 	// Start the cothority-listener on port 2000
 	err = hc.Run(true, sign.MerkleTree, address)
@@ -76,14 +78,14 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 
 	go func() {
 		err := peer.Node.Listen()
-		dbg.Lvl2("Node.listen quits with status", err)
+		dbg.Lvl3("Node.listen quits with status", err)
 		peer.CloseChan <- true
 	}()
 	return peer
 }
 
 // LoopRounds starts the system by sending a round of type
-// 'roundtype' every second for number of 'rounds'.
+// 'roundType' every second for number of 'rounds'.
 // If 'rounds' < 0, it loops forever, or until you call
 // peer.Close().
 func (peer *Peer) LoopRounds(roundType string, rounds int) {
@@ -100,7 +102,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 			closing = true
 		case <-ticker:
 			if peer.IsRoot(peer.ViewNo) {
-				dbg.Lvl2(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
+				dbg.Lvl3(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
 				round, err := sign.NewRoundFromType(roundType, peer.Node)
 				if err != nil {
 					dbg.Fatal("Couldn't create", roundType, err)
@@ -117,8 +119,8 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 		}
 
 		if peer.LastRound() >= rounds && rounds >= 0 {
-			dbg.Lvl2(peer.Name(), "reports exceeded the max round: terminating",
-				peer.LastRound() + 1, ">=", rounds)
+			dbg.Lvl3(peer.Name(), "reports exceeded the max round: terminating",
+				peer.LastRound(), ">=", rounds)
 			closing = true
 		}
 
@@ -127,7 +129,6 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 			return
 		}
 	}
-
 }
 
 // Closes the channel
@@ -144,37 +145,41 @@ func (peer *Peer) Close() {
 	dbg.Lvlf3("Closing of peer: %s finished", peer.Name())
 }
 
-// Simple ephemereal helper for comptability issues
+// Simple ephemeral helper for compatibility issues
 // From base64 => hexadecimal
 func convertTree(suite abstract.Suite, t *graphs.Tree) {
-	point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
-	if err != nil {
-		dbg.Fatal("Could not decode base64 public key")
-	}
+	if t.PubKey != "" {
+		point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
+		if err != nil {
+			dbg.Fatal("Could not decode base64 public key")
+		}
 
-	str, err := cliutils.PubHex(suite, point)
-	if err != nil {
-		dbg.Fatal("Could not encode point to hexadecimal ")
+		str, err := cliutils.PubHex(suite, point)
+		if err != nil {
+			dbg.Fatal("Could not encode point to hexadecimal ")
+		}
+		t.PubKey = str
 	}
-	t.PubKey = str
 	for _, c := range t.Children {
 		convertTree(suite, c)
 	}
 }
 
 // Add our own private key in the tree. This function exists because of
-// compatilibty issues with the graphs/ lib.
+// compatibility issues with the graphs/lib.
 func addPrivateKey(suite abstract.Suite, address string, conf *app.ConfigConode) {
 	fn := func(t *graphs.Tree) {
 		// this is our node in the tree
 		if t.Name == address {
-			// convert to hexa
-			s, err := cliutils.SecretHex(suite, conf.Secret)
-			if err != nil {
-				dbg.Fatal("Error converting our secret key to hexadecimal")
+			if conf.Secret != nil {
+				// convert to hexa
+				s, err := cliutils.SecretHex(suite, conf.Secret)
+				if err != nil {
+					dbg.Fatal("Error converting our secret key to hexadecimal")
+				}
+				// adds it
+				t.PriKey = s
 			}
-			// adds it
-			t.PriKey = s
 		}
 	}
 	conf.Tree.TraverseTree(fn)

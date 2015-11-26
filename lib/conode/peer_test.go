@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"testing"
 	"github.com/dedis/cothority/lib/sign"
+"github.com/dedis/cothority/lib/graphs"
+	"time"
 )
 
 func TestStampListener(t *testing.T) {
@@ -29,6 +31,36 @@ func TestStampListener(t *testing.T) {
 	}
 	peer1.Close()
 	peer2.Close()
+}
+
+// Can we build the Peer without a valid key?
+func TestEmptyKeys(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	conf1 := readConfig()
+	emptyKeys(conf1.Tree)
+	peer1 := createPeer(conf1, 1)
+	dbg.Lvlf3("Peer 1 is %+v", peer1)
+
+	conf2 := readConfig()
+	emptyKeys(conf2.Tree)
+	peer2 := createPeer(conf2, 1)
+	dbg.Lvlf3("Peer 1 is %+v", peer2)
+
+	go peer1.LoopRounds("cosi", 2)
+	go peer2.LoopRounds("cosi", 2)
+
+	time.Sleep(time.Second*2)
+
+	peer1.Close()
+	peer2.Close()
+}
+
+func emptyKeys(t *graphs.Tree){
+	t.PriKey = ""
+	t.PubKey = ""
+	for _, c := range t.Children{
+		emptyKeys(c)
+	}
 }
 
 func createPeers() (p1, p2 *conode.Peer) {

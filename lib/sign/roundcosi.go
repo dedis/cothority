@@ -232,7 +232,7 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 func (round *RoundCosi) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
 	// Root is creating the sig broadcast
 	if round.IsRoot {
-		dbg.Lvl2(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
+		dbg.Lvl3(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
 		in.SBm.R0_hat = round.Cosi.R_hat
 		in.SBm.C = round.Cosi.C
 		in.SBm.X0_hat = round.Cosi.X_hat

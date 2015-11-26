@@ -569,7 +569,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 			return err
 		}
 	} else {
-		dbg.Lvl2(sn.Name(), "sending StatusReturn")
+		dbg.Lvl3(sn.Name(), "sending StatusReturn")
 		return sn.StatusReturn(view, &SigningMessage{
 			Type: StatusReturn,
 			ViewNbr: view,
@@ -597,7 +597,7 @@ func (sn *Node) StatusReturn(view int, sm *SigningMessage) error {
 	if sn.IsRoot(view) {
 		// Add the root-node
 		sn.PeerStatus.Peers += 1
-		dbg.Lvl2("We got", sn.PeerStatus.Responders, "responses from", sn.PeerStatus.Peers, "peers.")
+		dbg.Lvl3("We got", sn.PeerStatus.Responders, "responses from", sn.PeerStatus.Peers, "peers.")
 	} else {
 		dbg.Lvl4(sn.Name(), "puts up statusReturn for", sn.PeerStatus)
 		ctx := context.TODO()

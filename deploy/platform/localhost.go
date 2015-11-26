@@ -188,9 +188,12 @@ func (d *Localhost) Start(args ...string) error {
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
-		defaultArgs := []string{"-hostname", host, "-mode", "server", "-logger", "localhost:" + monitor.SinkPort}
-		args = append(args, defaultArgs...)
-		cmd := exec.Command(ex, args...)
+		dbg.Lvl3("Starting", index, "=", host)
+		cmdArgs := []string{"-hostname", host, "-mode", "server", "-logger",
+			"localhost:" + monitor.SinkPort, "-amroot", strconv.FormatBool(index == 0)}
+		cmdArgs = append(args, cmdArgs...)
+		dbg.Lvl3("CmdArgs are", cmdArgs)
+		cmd := exec.Command(ex, cmdArgs...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		go func(i int, h string) {

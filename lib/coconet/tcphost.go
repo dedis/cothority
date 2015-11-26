@@ -19,30 +19,30 @@ import (
 var _ Host = &TCPHost{}
 
 type TCPHost struct {
-	name     string
-	listener net.Listener
+	name         string
+	listener     net.Listener
 
-	views *Views
+	views        *Views
 
-	PeerLock sync.RWMutex
-	peers    map[string]Conn
-	Ready    map[string]bool
+	PeerLock     sync.RWMutex
+	peers        map[string]Conn
+	Ready        map[string]bool
 
-	// Peers asking to join overall tree structure of nodes
-	// via connection to current host node
+								// Peers asking to join overall tree structure of nodes
+								// via connection to current host node
 	PendingPeers map[string]bool
 
-	pkLock sync.RWMutex
-	Pubkey abstract.Point // own public key
+	pkLock       sync.RWMutex
+	Pubkey       abstract.Point // own public key
 
-	pool  *sync.Pool
-	suite abstract.Suite
+	pool         *sync.Pool
+	suite        abstract.Suite
 
-	// channels to send on Get() and update
-	msgchan chan NetworkMessg
+								// channels to send on Get() and update
+	msgchan      chan NetworkMessg
 
-	// 1 if closed, 0 if not closed
-	closed int64
+								// 1 if closed, 0 if not closed
+	closed       int64
 }
 
 // NewTCPHost creates a new TCPHost with a given hostname.
@@ -281,10 +281,12 @@ func (h *TCPHost) NewViewFromPrev(view int, parent string) {
 
 // Close closes all the connections currently open.
 func (h *TCPHost) Close() {
-	dbg.Lvl3("tcphost: closing")
+	dbg.Lvl3("tcphost: closing", h, h.listener)
 	// stop accepting new connections
 	atomic.StoreInt64(&h.closed, 1)
-	h.listener.Close()
+	if h.listener != nil {
+		h.listener.Close()
+	}
 
 	// close peer connections
 	h.PeerLock.Lock()

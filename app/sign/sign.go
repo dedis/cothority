@@ -4,9 +4,10 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
-func main(){
+func main() {
 	conf := &app.ConfigColl{}
 	app.ReadConfig(conf)
 
@@ -26,5 +27,9 @@ func main(){
 	dbg.Lvl3(hostname, "Starting to run")
 
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
-	peer.LoopRounds("cosistamper", conf.Rounds)
+	peer.LoopRounds("cosi", conf.Rounds)
+	dbg.Lvlf3("Done - flags are %+v", app.RunFlags)
+	if app.RunFlags.AmRoot {
+		monitor.End()
+	}
 }

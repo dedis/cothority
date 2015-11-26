@@ -17,6 +17,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/nist"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 type Flags struct {
@@ -47,7 +48,8 @@ func FlagInit() {
 
 /*
  * Reads in the config for the application -
- * also parses the init-flags
+ * also parses the init-flags and connects to
+ * the monitor.
  */
 func ReadConfig(conf interface{}, dir ...string) {
 	var err error
@@ -61,6 +63,13 @@ func ReadConfig(conf interface{}, dir ...string) {
 	}
 	FlagInit()
 	flag.Parse()
+	dbg.Lvlf3("Flags are %+v", RunFlags)
+
+	if RunFlags.AmRoot {
+		if err := monitor.ConnectSink(RunFlags.Logger); err != nil {
+			dbg.Fatal("Couldn't connect to monitor", err)
+		}
+	}
 
 	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
 }

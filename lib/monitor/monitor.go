@@ -36,9 +36,9 @@ func init() {
 func Monitor(stats *Stats) error {
 	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
-		return fmt.Errorf("Error while monitor is binding address : %v", err)
+		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
-	dbg.Lvl2("Monitor listening for stats on ", Sink, ":", SinkPort)
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
 
 	ch := make(chan net.Conn)
 	var nconn int
@@ -55,7 +55,7 @@ func Monitor(stats *Stats) error {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl2("Error while monitor accept connection : ", operr)
+				dbg.Lvl2("Error while monitor accept connection:", operr)
 				continue
 			}
 			dbg.Lvl3("Monitor : new connection from ", conn.RemoteAddr().String())
@@ -79,7 +79,7 @@ func Monitor(stats *Stats) error {
 			}
 		}
 	}
-	dbg.Lvl2("Monitor finished waiting !")
+	dbg.Lvl3("Monitor finished waiting.")
 	conns = make([]net.Conn, 0)
 	return nil
 }
@@ -87,7 +87,7 @@ func Monitor(stats *Stats) error {
 // StopMonitor will close every connections it has
 // And will stop updating the stats
 func Stop() {
-	dbg.Lvl2("Monitor Stop")
+	dbg.Lvl3("Monitor Stop")
 	for _, c := range conns {
 		c.Close()
 		done <- true
