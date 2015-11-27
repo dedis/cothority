@@ -49,6 +49,29 @@ func TestRoundCosiStamper(t *testing.T) {
 	testRound(t, "cosistamper")
 }
 
+func TestRoundSetup(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	roundType := "setup"
+	dbg.Lvl2("Testing", roundType)
+	peer1, peer2 := createPeers()
+
+	round, err := sign.NewRoundFromType(roundType, peer1.Node)
+	if err != nil {
+		t.Fatal("Couldn't create", roundType, "round:", err)
+	}
+
+	peer1.StartAnnouncement(round)
+	time.Sleep(time.Second)
+
+	counted := <-round.(*sign.RoundSetup).Counted
+	if counted != 2{
+		t.Fatal("Counted", counted, "nodes, but should be 2")
+	}
+
+	peer1.Close()
+	peer2.Close()
+}
+
 // For testing the different round-types
 // Every round-type is in his own Test*-method,
 // so one can easily run just a given round-test

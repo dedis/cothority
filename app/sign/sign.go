@@ -5,6 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/sign"
+	"time"
 )
 
 func main() {
@@ -28,7 +30,22 @@ func main() {
 
 	app.RunFlags.StartedUp(len(conf.Hosts))
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
-	peer.LoopRounds(RoundMeasureType, conf.Rounds)
+
+	if app.RunFlags.AmRoot {
+		for {
+			setupRound := sign.NewRoundSetup(peer.Node)
+			peer.StartAnnouncement(setupRound)
+			counted := <-setupRound.Counted
+			dbg.Lvl1("Number of rounds counted:", counted)
+			if counted == len(conf.Hosts){
+				dbg.Lvl1("All hosts replied")
+				break
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	peer.LoopRounds(sign.RoundCosiType, conf.Rounds)
 	dbg.Lvlf3("Done - flags are %+v", app.RunFlags)
 	monitor.End()
 }

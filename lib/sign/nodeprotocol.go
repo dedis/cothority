@@ -280,7 +280,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 		}
 
 		// And sending to all our children-nodes
-		dbg.Lvlf4("%s sending to all children %+v", sn.Name(), msgs_bm[0])
+		dbg.Lvlf4("%s sending to all children", sn.Name())
 		ctx := context.TODO()
 		if err := sn.PutDown(ctx, view, msgs_bm); err != nil {
 			return err
@@ -304,13 +304,10 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		commitList = make([]*SigningMessage, 0)
 		sn.RoundCommits[roundNbr] = commitList
 	}
-	// Collect number of messages of children peers
 	// signingmessage nil <=> we are a leaf
 	if sm.Com != nil {
 		commitList = append(commitList, sm)
 		sn.RoundCommits[roundNbr] = commitList
-		dbg.Lvl3(sn.Name(), ": Found", sm.Com.Messages, "messages in com-msg")
-		sn.Messages += sm.Com.Messages
 	}
 
 	dbg.Lvl3("Got", len(sn.RoundCommits[roundNbr]), "of", len(sn.Children(view)), "commits")
@@ -352,8 +349,6 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		})
 	} else {
 		// create and putup own commit message
-		dbg.Lvl3("Number of messages in comMsg:", sn.Messages)
-
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		dbg.Lvl4(sn.Name(), "puts up commit")
 		ctx := context.TODO()
@@ -367,6 +362,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 func (sn *Node) Challenge(sm *SigningMessage) error {
 	view := sm.ViewNbr
 	RoundNbr := sm.RoundNbr
+	dbg.Lvl3("Challenge for round", RoundNbr)
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
@@ -546,7 +542,12 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 			Type:     SignatureBroadcast,
 			ViewNbr:     view,
 			RoundNbr: RoundNbr,
-			SBm: &SignatureBroadcastMessage{},
+			SBm: &SignatureBroadcastMessage{
+				R0_hat:   sn.suite.Secret().One(),
+				C:   sn.suite.Secret().One(),
+				X0_hat: sn.suite.Point().Null(),
+				V0_hat: sn.suite.Point().Null(),
+			},
 		}
 	}
 

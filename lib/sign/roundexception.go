@@ -8,70 +8,38 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"fmt"
-	"runtime/debug"
 )
 
 /*
-RoundCosi implements the collective signature protocol using
+RoundException implements the collective signature protocol using
 Schnorr signatures to collectively sign on a message. By default
 the message is only the collection of all Commits, but another
 round can add any message it wants in the Commitment-phase.
  */
 
 // The name type of this round implementation
-const RoundCosiType = "cosi"
+const RoundExceptionType = "cosiexception"
 
-type RoundCosi struct {
-	*RoundStruct
-	Cosi       *CosiStruct
-	SaveViewNo int
+type RoundException struct {
+	*RoundCosi
 }
 
 func init() {
-	RegisterRoundFactory(RoundCosiType,
+	RegisterRoundFactory(RoundExceptionType,
 		func(node *Node) Round {
-			return NewRoundCosi(node)
+			return NewRoundException(node)
 		})
 }
 
-func NewRoundCosi(node *Node) *RoundCosi {
-	round := &RoundCosi{}
-	round.RoundStruct = NewRoundStruct(node, RoundCosiType)
+func NewRoundException(node *Node) *RoundException {
+	round := &RoundException{}
+	round.RoundCosi = NewRoundCosi(node)
 	return round
 }
 
-func (round *RoundCosi)CheckChildren() {
-	c := round.Node.Children(round.Node.ViewNo)
-	if len(c) != len(round.Cosi.Children) {
-		dbg.Print("Children in cosi and node are different")
-		dbg.Printf("round.Cosi: %+v", round.Cosi)
-		dbg.Printf("Node.Children: %+v", round.Node.Children(round.Node.ViewNo))
-		dbg.Print("viewNbr:", round.SaveViewNo, "Node.ViewNo:", round.Node.ViewNo)
-		debug.PrintStack()
-	}
-}
-
 // AnnounceFunc will keep the timestamp generated for this round
-func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *SigningMessage, out []*SigningMessage) error {
-	if err := round.Node.TryFailure(round.Node.ViewNo, roundNbr); err != nil {
-		return err
-	}
 
-	// Store the message for the round
-	//round.Merkle = round.Node.MerkleStructs[roundNbr]
-	round.Cosi = NewCosi(round.Node, viewNbr, roundNbr, in.Am)
-	round.SaveViewNo = round.Node.ViewNo
-	round.CheckChildren()
-
-	round.Cosi.Msg = in.Am.Message
-	// Inform all children of announcement - just copy the one that came in
-	for i := range out {
-		*out[i].Am = *in.Am
-	}
-	return nil
-}
-
-func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundException) Commitment(in []*SigningMessage, out *SigningMessage) error {
 	// prepare to handle exceptions
 	cosi := round.Cosi
 	cosi.Commits = in
@@ -128,7 +96,7 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 
 }
 
-func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundException) Challenge(in *SigningMessage, out []*SigningMessage) error {
 
 	cosi := round.Cosi
 	// we are root
@@ -179,7 +147,7 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 
 // TODO make that sms == nil in case we are a leaf to stay consistent with
 // others calls
-func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) error {
+func (round *RoundException) Response(sms []*SigningMessage, out *SigningMessage) error {
 	// initialize exception handling
 	exceptionV_hat := round.Cosi.Suite.Point().Null()
 	exceptionX_hat := round.Cosi.Suite.Point().Null()
@@ -250,7 +218,7 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 	return nil
 }
 
-func (round *RoundCosi) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundException) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
 	// Root is creating the sig broadcast
 	if round.IsRoot {
 		dbg.Lvl3(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
