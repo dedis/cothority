@@ -19,7 +19,6 @@ import (
 	"net"
 	"strings"
 	"sync"
-	"strconv"
 )
 
 // This file handles the collection of measurements, aggregates them and
@@ -206,4 +205,3 @@ func (m *Monitor) Stats() *Stats {
 	m.mutexStats.Unlock()
 	return s
 }
-k
