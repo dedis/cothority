@@ -171,7 +171,7 @@ func (tc *TCPConn) GetData(bum BinaryUnmarshaler) error {
 			dbg.Lvl3("Couldn't decode packet at", tc.name, "error:", err)
 			dbg.Lvlf3("Packet is %+v", bum)
 		} else {
-			dbg.Lvl3("Closing connection by EOF: ", err)
+			dbg.Lvl3("Closing connection by EOF:", err)
 		}
 		tc.Close()
 		return ErrClosed
