@@ -21,7 +21,7 @@ var suite abstract.Suite
 // Set up some global variables such as the different messages used during
 // this protocol and the general suite to be used
 func init() {
-	suite = edwards.NewAES128SHA256Ed25519(true)
+	suite = edwards.NewAES128SHA256Ed25519(false)
 	net.Suite = suite
 }
 

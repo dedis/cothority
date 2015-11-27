@@ -1,81 +1,110 @@
 # Cothority
 
-The code permits the testing and running of a cothority-system together with the applications. It is split up in 
-deployment, application and protocols. The basic cryptographic code comes from DeDiS/crypto. 
+The code in this repository permits the testing and running of a cothority-system together with some applications. It is split up in deployment, application and protocols. The basic cryptographic code comes from [DeDiS/crypto](https://github.com/DeDiS/crypto).
+
+## Warning
+**The software provided in this repository is highly experimental and under heavy development. Do not use it for anything security-critical. All usage is at your own risk!**
 
 ## Deploy
 
-    * Deter
+* Available:
+    * [DeterLab](deterlab.net)
     * Localhost
-    * Future:
-        * Docker
-        * LXC
+* Planned:
+    * Docker
+    * LXC
 
 ## Applications
 
-    * timestamping
-    * signing
-    * shamir-secret-service signing
-    * shamir-secret-service with tree signing
-    * To come:
-    	* Randhound - decentrailzed randomness cothority
-	* vote - doesn't run yet.
-    
+* Available:
+    * Timestamping
+    * Signing
+    * Shamir-secret-service: regular or tree signing
+* Planned:
+	* Randhound: decentrailzed randomness cothority
+    * Vote
+
 ## Protocols
 
-    * collective signing
+* Collective signing
 
-# How to run
+# How to Run a Cothority
 
-The apps are stand-alone (with the correct configuration) in each directory app/*. They can be used with either
-the ```localhost```- or the ```deterlab```-deployment. For a simple check on localhost, you can use the following:
+All applications in `app/*` are stand-alone. Currently, they can be used by deploying to either localhost or DeterLab.
+
+## Localhost
+To run a simple signing check on localhost, execute the following commands:
 
 ```
-go get ./...
-cd deploy
-go build
-./deploy -deploy localhost simulation/sign_single.toml
+$ go get ./...
+$ cd deploy
+$ go build
+$ ./deploy -deploy localhost simulation/sign_single.toml
 ```
 
-## How to run on deterlab
+## DeterLab
 
-If you use ```-deploy deterlab```, then you will have to enter the name of the deterlab-installation, your username, project- and experiment-name. Furthermore the your public ssh-key has to be installed on the deterlab-site.
+If you use the `-deploy deterlab` option, then you are prompted to enter the name of the DeterLab installation, your username, and the names of project and experiment. There are some flags which make your life as a cothority developer simpler when deploying to DeterLab:
 
-For the sake of easy development there are some switches that are to be used only for the
-deterlab implementation:
+* `-nobuild`: don't build any of the helpers which is useful if you're working on the main code
+* `-build "helper1,helper2"`: only build the helpers, separated by a ",", which speeds up recompiling
 
-	* -nobuild - don't build any of the helpers - useful if you're working on the main code
-	* -build "helper1,helper2" - only build the helpers, separated by a "," - speeds up recompiling
+### SSH-keys
+For convenience, we recommend that you upload a public SSH-key to the DeterLab site. If your SSH-key is protected through a passphrase (which should be the case for security reasons!) we further recommend that you add your private key to your SSH-agent / keychain. Afterwards you only need to unlock your SSH-agent / keychain once (per session) and can access all your stored keys without typing the passphrase each time.
+
+**OSX:**
+
+You can store your SSH-key directly in the OSX-keychain by executing:
+
+```
+$ /usr/bin/ssh-add -K ~/.ssh/<your private ssh key>
+```
+
+Make sure that you actually use the `ssh-add` program that comes with your OSX installation, since those installed through [homebrew](http://brew.sh/), [MacPorts](https://www.macports.org/) etc. **do not support** the `-K` flag per default.
+
+**Linux:**
+
+Make sure that the `ssh-agent` is running. Afterwards you can add your SSH-key via:
+
+```
+$ ssh-add ~/.ssh/<your private ssh key>
+```
+
+
 
 # Applications
 
-## Conode
+## CoNode
 
-You will find more information about the conode in it's README:
-
-https://github.com/dedis/cothority/app/conode/README.md
+You can find more information about CoNode in the corresponding [README](https://github.com/DeDiS/cothority/blob/development/app/conode/README.md).
 
 ## Timestamping
 
-It sets up servers that listen for client-requests, collect all
-requests and handles them to a root-node.
+Sets up servers that listen for client-requests, collects all requests and hands them to a root-node for timestamping.
 
 ## Signing
 
-A simple mechanism that only receives a message, signs it, and returns it.
+A simple mechanism that is capable of receiving messages and returning their signatures.
 
-## Randhound
+## RandHound
 
-Test-implementation of a randomization-protocol based on the cothority
+Test-implementation of a randomization-protocol based on cothority.
 
 # Protocols
 
 We want to compare different protocols for signing and timestamping uses.
 
-## Collective signing
+## Collective Signing
 
 This one runs well and is described in a pre-print from Dylan Visher.
 
-## Shamir signing
+## Shamir Signing
 
 A textbook shamir signing for baseline-comparison against the collective signing protocol.
+
+
+# Further Information
+
+* Decentralizing Authorities into Scalable Strongest-Link Cothorities: [paper](http://arxiv.org/pdf/1503.08768v1.pdf), [slides](http://dedis.cs.yale.edu/dissent/pres/150610-nist-cothorities.pdf)
+* Certificate Cothority - Towards Trustworthy Collective CAs: [paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
+

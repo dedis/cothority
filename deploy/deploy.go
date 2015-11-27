@@ -167,6 +167,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		rc.Put("ppm", strconv.Itoa(ppm*mach))
 	}
 	rs := monitor.NewStats(rc.Map())
+	monitor := monitor.NewMonitor(rs)
 
 	deployP.Deploy(rc)
 	deployP.Cleanup()
@@ -180,7 +181,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	}
 
 	go func() {
-		monitor.Monitor(rs)
+		monitor.Listen()
 		deployP.Wait()
 		dbg.Lvl3("Test complete:", rs)
 		done <- struct{}{}
@@ -189,6 +190,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
+		monitor.Stop()
 		return *rs, nil
 	}
 }

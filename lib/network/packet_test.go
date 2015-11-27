@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var s abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
+var s abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
 var key1 config.KeyPair = cliutils.KeyPair(s)
 var key2 config.KeyPair = cliutils.KeyPair(s)
 

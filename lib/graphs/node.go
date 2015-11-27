@@ -451,7 +451,7 @@ func LoadConfig(appHosts []string, appTree *Tree, suite abstract.Suite, optsSlic
 		}
 	}
 
-	//suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := edwards.NewAES128SHA256Ed25519(false)
 	//suite := nist.NewAES128SHA256P256()
 	rand := suite.Cipher([]byte("example"))
 	//dbg.Lvl3("hosts", hosts)
