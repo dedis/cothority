@@ -5,7 +5,6 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
-//"github.com/dedis/crypto/nist"
 	"encoding/json"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
@@ -107,6 +106,10 @@ func NewSigningMessage() interface{} {
 
 func (sm *SigningMessage) MarshalBinary() ([]byte, error) {
 	b, e := protobuf.Encode(sm)
+	if len(b) != 0 {
+		//dbg.Print("Length of bytes is", len(b), "for", sm)
+		//debug.PrintStack()
+	}
 	return b, e
 }
 
@@ -125,7 +128,7 @@ type JSONdata struct {
 
 func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
 	data, err := sm.MarshalBinary()
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	return json.Marshal(JSONdata{
@@ -184,7 +187,7 @@ type ChallengeMessage struct {
 // Every node replies with eventual exceptions if they
 // are not OK
 type ResponseMessage struct {
-	Message []byte
+	Message        []byte
 	R_hat          abstract.Secret // response
 
 								   // public keys of children servers that did not respond to

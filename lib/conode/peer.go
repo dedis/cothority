@@ -92,7 +92,8 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 func (peer *Peer) LoopRounds(roundType string, rounds int) {
 	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with IsRoot=", peer.IsRoot(peer.ViewNo))
 	ticker := time.NewTicker(sign.ROUND_TIME)
-	if !peer.IsRoot(peer.ViewNo){
+	firstRound := peer.Node.LastRound()
+	if !peer.IsRoot(peer.ViewNo) {
 		// Children don't need to tick, only the root.
 		ticker.Stop()
 	}
@@ -106,9 +107,10 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 			return
 		case <-ticker.C:
 			dbg.Lvl3("Ticker is firing in", peer.Hostname)
-			if peer.LastRound() >= rounds && rounds >= 0 {
+			roundNbr := peer.LastRound() - firstRound
+			if roundNbr >= rounds && rounds >= 0 {
 				dbg.Lvl3(peer.Name(), "reached max round: closing",
-					peer.LastRound(), ">=", rounds)
+					roundNbr, ">=", rounds)
 				ticker.Stop()
 				if peer.IsRoot(peer.ViewNo) {
 					dbg.Lvl3("As I'm root, asking everybody to terminate")
@@ -116,7 +118,8 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 				}
 			} else {
 				if peer.IsRoot(peer.ViewNo) {
-					dbg.Lvl2(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
+					dbg.Lvl2(peer.Name(), "Stamp server in round",
+						roundNbr + 1, "of", rounds)
 					round, err := sign.NewRoundFromType(roundType, peer.Node)
 					if err != nil {
 						dbg.Fatal("Couldn't create", roundType, err)
@@ -138,6 +141,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 // Sends the 'CloseAll' to everybody
 func (peer *Peer)SendCloseAll() {
 	peer.Node.CloseAll(peer.Node.ViewNo)
+	peer.Node.Close()
 }
 
 // Closes the channel

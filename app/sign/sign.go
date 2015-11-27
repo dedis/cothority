@@ -36,7 +36,7 @@ func main() {
 			setupRound := sign.NewRoundSetup(peer.Node)
 			peer.StartAnnouncement(setupRound)
 			counted := <-setupRound.Counted
-			dbg.Lvl1("Number of rounds counted:", counted)
+			dbg.Lvl1("Number of peers counted:", counted)
 			if counted == len(conf.Hosts){
 				dbg.Lvl1("All hosts replied")
 				break
@@ -45,7 +45,8 @@ func main() {
 		}
 	}
 
-	peer.LoopRounds(sign.RoundCosiType, conf.Rounds)
+	RegisterRoundMeasure(peer.Node.LastRound())
+	peer.LoopRounds(RoundMeasureType, conf.Rounds)
 	dbg.Lvlf3("Done - flags are %+v", app.RunFlags)
 	monitor.End()
 }

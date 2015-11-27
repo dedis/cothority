@@ -104,13 +104,14 @@ func (m *Monitor) Listen() error {
 			m.update(measure)
 		// end of a peer conn
 		case peer := <-m.done:
+			dbg.Lvl3("Connections left:", len(m.conns))
 			m.mutexConn.Lock()
 			delete(m.conns, peer)
+			m.mutexConn.Unlock()
 		// end of monitoring,
 			if len(m.conns) == 0 {
 				m.listener.Close()
 				finished = true
-				m.mutexConn.Unlock()
 				break
 			}
 		}
@@ -161,7 +162,6 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 		case "end":
 			dbg.Lvl3("Finishing monitor")
 			m.done <- conn.RemoteAddr().String()
-			break
 		case "ready":
 			m.stats.Ready++
 			dbg.Lvl3("Increasing counter to", m.stats.Ready)
