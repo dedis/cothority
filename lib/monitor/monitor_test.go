@@ -62,7 +62,9 @@ func TestProxy(t *testing.T) {
 		t.Error("stats.Ready should be 1")
 	}
 
+	SinkPort = oldSink
 	End()
+	StopSink()
 	select {
 	case <-done:
 		s := monitor.Stats()
@@ -74,9 +76,6 @@ func TestProxy(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Error("Monitor not finished")
 	}
-	SinkPort = oldSink
-	Stop()
-	StopSink()
 }
 
 func TestMonitor(t *testing.T) {
@@ -87,7 +86,8 @@ func TestMonitor(t *testing.T) {
 	stat := NewStats(m)
 	fresh := stat.String()
 	// First set up monitor listening
-	go Monitor(stat)
+	mon := NewMonitor(stat)
+	go mon.Listen()
 	time.Sleep(100 * time.Millisecond)
 
 	// Then measure
@@ -108,7 +108,6 @@ func TestMonitor(t *testing.T) {
 		t.Error("Stats not updated ?")
 	}
 
-	Stop()
 	StopSink()
 }
 
@@ -123,7 +122,8 @@ func TestReady(t *testing.T) {
 		t.Fatal("Stats should start with ready==0")
 	}
 	// First set up monitor listening
-	go Monitor(stat)
+	mon := NewMonitor(stat)
+	go mon.Listen()
 	time.Sleep(100 * time.Millisecond)
 	host := "localhost:" + SinkPort
 	if stat.Ready != 0{
@@ -152,6 +152,5 @@ func TestReady(t *testing.T) {
 		t.Fatal("Stats.Ready != 1")
 	}
 
-	Stop()
 	StopSink()
 }
