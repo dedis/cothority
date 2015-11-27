@@ -368,13 +368,11 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 	sn.roundmu.Unlock()
 
-	round := sn.Rounds[RoundNbr]
-	if round == nil {
-		return fmt.Errorf("No Round Interface created for this round")
-	}
-	challs := make([]*SigningMessage, sn.NChildren(view))
+	children := sn.Children(view)
+
+	challs := make([]*SigningMessage, len(children))
 	i := 0
-	for child := range sn.Children(view) {
+	for child := range children {
 		challs[i] = &SigningMessage{
 			ViewNbr: view,
 			RoundNbr: RoundNbr,
@@ -386,13 +384,19 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 		i++
 	}
 
-	err := round.Challenge(sm, challs)
-
-	if err != nil {
-		return err
+	round := sn.Rounds[RoundNbr]
+	if round == nil {
+		dbg.Lvl3("No Round Interface created for this round. Children:",
+			len(children))
+	} else {
+		err := round.Challenge(sm, challs)
+		if err != nil {
+			return err
+		}
 	}
+
 	// if we are a leaf, send the respond up
-	if len(sn.Children(view)) == 0 {
+	if len(children) == 0 {
 		sn.Respond(&SigningMessage{
 			Type:     Response,
 			ViewNbr:     view,
@@ -401,8 +405,12 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	} else {
 		// otherwise continue to pass down challenge
 		for _, out := range (challs) {
-			conn := sn.Children(view)[out.To]
-			conn.PutData(out)
+			if out.To != "" {
+				conn := children[out.To]
+				conn.PutData(out)
+			} else {
+				dbg.Error("Out.To == nil with children", children)
+			}
 		}
 	}
 	// dbg.Lvl4(sn.Name(), "Done handling challenge message")

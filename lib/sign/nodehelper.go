@@ -30,8 +30,6 @@ This implements the helper Node-methods
 
 type Type int // used by other modules as coll_sign.Type
 
-var MAX_WILLING_TO_WAIT time.Duration = 50 * time.Second
-
 var ChangingViewError error = errors.New("In the process of changing view")
 
 const (
@@ -120,6 +118,8 @@ type Node struct {
 
 	PeerStatus          StatusReturnMessage       // Actual status of children peers
 	PeerStatusRcvd      int                       // How many peers sent status
+
+	MaxWait             time.Duration             // How long the announcement phase can take
 }
 
 // Start listening for messages coming from parent(up)
@@ -203,7 +203,7 @@ func (sn *Node) logTotalTime(totalTime time.Duration) {
 	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
 }
 
-func (sn *Node) StartAnnouncement(round Round) error {
+func (sn *Node) StartAnnouncementWithWait(round Round, wait time.Duration) error {
 	sn.AnnounceLock.Lock()
 	sn.nRounds = sn.LastSeenRound
 
@@ -223,7 +223,7 @@ func (sn *Node) StartAnnouncement(round Round) error {
 
 	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
 
-	ctx, cancel := context.WithTimeout(context.Background(), MAX_WILLING_TO_WAIT)
+	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	var cancelederr error
 	go func() {
 		var err error
@@ -273,12 +273,16 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	case <-sn.closed:
 		return errors.New("closed")
 	case <-ctx.Done():
-		dbg.Lvl1(ctx.Err())
+		dbg.Lvl2("Timeout:", ctx.Err())
 		if ctx.Err() == context.Canceled {
 			return cancelederr
 		}
 		return errors.New("Really bad. Round did not finish response phase and did not report network errors.")
 	}
+}
+
+func (sn *Node) StartAnnouncement(round Round) error {
+	return sn.StartAnnouncementWithWait(round, sn.MaxWait)
 }
 
 func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {
@@ -306,6 +310,7 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.Actions = make(map[int][]*Vote)
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
+	sn.MaxWait = 50 * time.Second
 	return sn
 }
 
@@ -335,6 +340,7 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn.Actions = make(map[int][]*Vote)
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
+	sn.MaxWait = 50 * time.Second
 	return sn
 }
 

@@ -32,6 +32,7 @@ func main() {
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
 
 	if app.RunFlags.AmRoot {
+		peer.Node.MaxWait = 5 * time.Second
 		for {
 			setupRound := sign.NewRoundSetup(peer.Node)
 			peer.StartAnnouncement(setupRound)
@@ -43,6 +44,7 @@ func main() {
 			}
 			time.Sleep(time.Second)
 		}
+		peer.Node.MaxWait = 50 * time.Second
 	}
 
 	RegisterRoundMeasure(peer.Node.LastRound())

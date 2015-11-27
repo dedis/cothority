@@ -119,7 +119,6 @@ func Lvl5(args ...interface{}) {
 
 func Error(args ...interface{}) {
 	Lvld(0, args...)
-	os.Exit(1)
 }
 
 func Fatal(args ...interface{}) {

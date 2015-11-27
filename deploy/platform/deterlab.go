@@ -369,7 +369,7 @@ func (d *Deterlab) Wait() error {
 				dbg.Lvl3("Received finished-message, not killing users")
 				return nil
 			} else {
-				dbg.Lvl1("Received out-of-line message", msg)
+				dbg.Lvl2("Received out-of-line message", msg)
 			}
 		case <-time.After(time.Second):
 			dbg.Lvl3("No message waiting")
