@@ -20,7 +20,6 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"net"
 	"strings"
 	"sync"
@@ -35,7 +34,6 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
-	"path/filepath"
 )
 
 var deterlab platform.Deterlab
@@ -145,16 +143,7 @@ func main() {
 		physToServer[p] = ss
 	}
 
-	// For coll_stamp we have to wait for everything in place which takes quite some time
-	// We set up a directory and every host writes a file once he's ready to listen
-	// When everybody is ready, the directory is deleted and the test starts
-	coll_stamp_dir := "coll_stamp_up"
-	if deterlab.App == "stamp" || deterlab.App == "sign" {
-		os.RemoveAll(coll_stamp_dir)
-		os.MkdirAll(coll_stamp_dir, 0777)
-		time.Sleep(time.Second)
-	}
-
+	monitorAddr := deterlab.MonitorAddress + ":" + monitor.SinkPort
 	servers := len(physToServer)
 	ppm := len(deterlab.Hostnames) / servers
 	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers * ppm)
@@ -169,7 +158,7 @@ func main() {
 		go func(phys string) {
 			//dbg.Lvl4("running on ", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", deterlab.MonitorAddress + ":" + monitor.SinkPort)
+			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", monitorAddr)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
 			" -physaddr=" + phys + " -logger=" + deterlab.MonitorAddress + ":" + monitor.SinkPort)
 			if err != nil {
@@ -185,23 +174,13 @@ func main() {
 		// is cleaned to flag it's OK to go on.
 		start_config := time.Now()
 		for {
-			files, err := ioutil.ReadDir(coll_stamp_dir)
+			s, err := monitor.GetReady(monitorAddr)
 			if err != nil {
-				log.Fatal("Couldn't read directory", coll_stamp_dir, err)
+				log.Fatal("Couldn't contact monitor")
 			} else {
-				dbg.Lvl1("Stampservers started:", len(files), "/", totalServers, "after", time.Since(start_config))
-				if len(files) == totalServers {
-					ioutil.WriteFile(coll_stamp_dir + "/up_all", []byte("gogogo"), 0666)
-					files, err := filepath.Glob(coll_stamp_dir + "/up10*")
-					if err != nil {
-						dbg.Lvl1("Couldn't list files:", err)
-					}else {
-						if len(files) > 0 {
-							os.Remove(files[0])
-						} else {
-							dbg.Lvl1("Didn't find any files...")
-						}
-					}
+				dbg.Lvl1("Stampservers started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
+				if s.Ready == totalServers {
+					dbg.LLvl2("Everybody ready, starting")
 					// 1st second for everybody to see the deleted directory
 					// 2nd second for everybody to start up listening
 					time.Sleep(time.Second * 2)

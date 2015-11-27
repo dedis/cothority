@@ -107,7 +107,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 		case <-ticker.C:
 			dbg.Lvl3("Ticker is firing in", peer.Hostname)
 			if peer.LastRound() >= rounds && rounds >= 0 {
-				dbg.LLvl3(peer.Name(), "reports exceeded the max round: terminating",
+				dbg.LLvl3(peer.Name(), "reached max round: closing",
 					peer.LastRound(), ">=", rounds)
 				ticker.Stop()
 				if peer.IsRoot(peer.ViewNo) {
