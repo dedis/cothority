@@ -36,7 +36,7 @@ func RunServer(conf *app.ConfigShamir) {
 
 	// monitor connect
 	if app.RunFlags.Logger == "" {
-		monitor.Disable()
+		monitor.EnableMeasure(false)
 	} else {
 		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
 			dbg.Fatal(p.String(), "could not connect to monitor :", err)

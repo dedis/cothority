@@ -29,7 +29,7 @@ func RunRoot(conf *app.NTreeConfig) {
 
 	// monitor
 	if app.RunFlags.Logger == "" {
-		monitor.Disable()
+		monitor.EnableMeasure(false)
 	} else {
 		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
 			dbg.Fatal(peer.String(), "could not connect to the monitor : ", err)
