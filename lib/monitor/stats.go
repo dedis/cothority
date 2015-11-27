@@ -271,7 +271,6 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 	return values[:maxIndex]
 }
 
-////////////////////// HELPERS FUNCTIONS / STRUCT /////////////////
 // value is used to compute the statistics
 // it reprensent the time to an action (setup, shamir round, coll round etc)
 // use it to compute streaming mean + dev
