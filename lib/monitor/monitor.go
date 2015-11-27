@@ -58,7 +58,7 @@ func Monitor(stats *Stats) error {
 				dbg.Lvl2("Error while monitor accept connection:", operr)
 				continue
 			}
-			dbg.Lvl3("Monitor : new connection from ", conn.RemoteAddr().String())
+			dbg.Lvl3("Monitor: new connection from", conn.RemoteAddr().String())
 			ch <- conn
 		}
 	}()
@@ -72,6 +72,7 @@ func Monitor(stats *Stats) error {
 			go handleConnection(c, stats)
 		case <-done:
 			nconn -= 1
+			dbg.Lvl3("Connections left:", nconn)
 			if nconn == 0 {
 				ln.Close()
 				finished = true
@@ -117,9 +118,11 @@ func handleConnection(conn net.Conn, stats *Stats) {
 			}
 		}
 
+		dbg.Lvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), m)
 		// Special case where the measurement is indicating a FINISHED step
 		switch strings.ToLower(m.Name){
 		case "end":
+			dbg.Lvl3("Finishing monitor")
 			done <- true
 			break
 		case "ready":
@@ -127,7 +130,6 @@ func handleConnection(conn net.Conn, stats *Stats) {
 		case "ready_count":
 			enc.Encode(stats)
 		default:
-			dbg.Lvl4("Monitor: received a Measure from", conn.RemoteAddr().String(), ":", m)
 			updateMeasures(stats, m)
 			m = Measure{}
 		}

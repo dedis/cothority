@@ -37,6 +37,7 @@ type Flags struct {
 var RunFlags Flags
 
 func FlagInit() {
+	dbg.Print(os.Args)
 	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
 	flag.StringVar(&RunFlags.Logger, "logger", "", "remote logger")
 	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")

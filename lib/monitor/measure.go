@@ -34,12 +34,15 @@ var enabled bool = true
 // encoder. It can be a proxy address or directly a monitoring process address.
 // Return an error if it could not connect to the endpoint
 func ConnectSink(addr string) error {
-	dbg.Lvl3("ConnectSink attempt with ", addr)
+	if encoder != nil{
+		return nil
+	}
+	dbg.Lvl3("Connecting to:", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
 	}
-	dbg.Lvl3("Connected to sink : ", addr)
+	dbg.Lvl3("Connected to sink:", addr)
 	sink = addr
 	connection = conn
 	encoder = json.NewEncoder(conn)

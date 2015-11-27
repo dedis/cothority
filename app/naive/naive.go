@@ -15,5 +15,4 @@ func main() {
 	}
 
 	RunServer(conf)
-
 }
