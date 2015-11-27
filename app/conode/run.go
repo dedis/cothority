@@ -12,7 +12,7 @@ func init() {
 	command := cli.Command{
 		Name:    "run",
 		Aliases: []string{"r"},
-		Usage:   "Run this conode inside the cothority tree.",
+		Usage:   "Runs the CoNode and connects it to the cothority tree as specified in the config file",
 		Action: func(c *cli.Context) {
 			Run(c.String("config"), c.String("key"))
 		},

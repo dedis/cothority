@@ -33,8 +33,8 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"os"
 	"os/exec"
-	"strconv"
 	"regexp"
+	"strconv"
 )
 
 var deterlab platform.Deterlab
@@ -55,12 +55,18 @@ func main() {
 	// kill old processes
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(" +")
-	hosts, _ := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	if err != nil {
+		dbg.Fatal("Deterlab experiment", deterlab.Project + "/" + deterlab.Experiment, "seems not to be swapped in. Aborting.")
+		os.Exit(-1)
+	}
 	hosts_trimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
 	hostlist := strings.Split(hosts_trimmed, " ")
 	doneHosts := make([]bool, len(hostlist))
 	dbg.Lvl2("Found the following hosts:", hostlist)
-	dbg.Lvl1("Cleaning up", len(hostlist), "hosts.")
+	if kill {
+		dbg.Lvl1("Cleaning up", len(hostlist), "hosts.")
+	}
 	for i, h := range hostlist {
 		wg.Add(1)
 		go func(i int, h string) {
@@ -113,7 +119,7 @@ func main() {
 	}
 
 	if kill {
-		dbg.Lvl1("Returning only from cleanup")
+		dbg.Lvl2("Only cleaning up - returning")
 		return
 	}
 
@@ -150,7 +156,7 @@ func main() {
 
 	servers := len(physToServer)
 	ppm := len(deterlab.Hostnames) / servers
-	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers*ppm)
+	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers * ppm)
 	totalServers := 0
 	for phys, virts := range physToServer {
 		if len(virts) == 0 {
@@ -210,9 +216,9 @@ func main() {
 			dbg.Lvl3("Starting with ss=", ss)
 			go func(p string, a bool) {
 				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
-					" -name=client@" + p +
-					" -server=" + servers +
-					" -amroot=" + strconv.FormatBool(a)
+				" -name=client@" + p +
+				" -server=" + servers +
+				" -amroot=" + strconv.FormatBool(a)
 				dbg.Lvl3("Users will launch client :", cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {

@@ -193,7 +193,8 @@ func (d *Deterlab) Cleanup() error {
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
-			dbg.Lvl3(err)
+			//dbg.Lvl3(err)
+			os.Exit(-1)
 		}
 		d.sshDeter <- "stopped"
 	}()
