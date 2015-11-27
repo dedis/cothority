@@ -1,3 +1,14 @@
+// Monitor package handle the logging, collection and computation of
+// statisticals data. Every application can send some Measure (for the moment,
+// we mostly measure the CPU time but it can be applied later for any kind of
+// measures). The Monitor receives them and update a Stats struct. This Statss
+// struct can hold many different kinds of Measurement (the measure of an
+// specific action such as "round time" or "verify time" etc). Theses
+// measurements contains Values which compute the actual min/max/dev/avg values.
+// There exists the Proxy file so we can have a Proxy relaying Measure from
+// clients to the Monitor listening. An starter feature is also the DataFilter
+// which can apply somes filtering rules to the data before making any
+// statistics about them.
 package monitor
 
 import (
@@ -19,31 +30,52 @@ import (
 var Sink = "0.0.0.0"
 var SinkPort = "10003"
 
-// mutex is used to update the global stats from many connections
-var mutex *sync.Mutex
+// Monitor struct is used to collect measures and make the statistics about
+// them. It takes a stats object so it update that in a concurrent-safe manner
+// for each new measure it receives.
+type Monitor struct {
+	listener net.Listener
 
-var done = make(chan bool)
+	// Current conections
+	conns map[string]monitorConnection
+	// and the mutex to play with it
+	mutexConn sync.Mutex
 
-// Connections currently in use
-var conns = make([]net.Conn, 0)
+	// Current stats
+	stats *Stats
+	// and the mutex to play with it
+	mutexStats sync.Mutex
 
-func init() {
-	mutex = &sync.Mutex{}
+	// channel to give new measures
+	measures chan Measure
+
+	// channel to notify the end of a connection
+	// send the name of the connection when finishd
+	done chan string
+}
+
+// NewMonitor returns a new monitor given the stats
+func NewMonitor(stats *Stats) Monitor {
+	return Monitor{
+		conns:      make(map[string]monitorConnection),
+		stats:      stats,
+		mutexStats: sync.Mutex{},
+		measures:   make(chan Measure),
+		done:       make(chan string),
+	}
 }
 
 // Monitor will start listening for incoming connections on this address
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
-func Monitor(stats *Stats) error {
-	ln, err := net.Listen("tcp", Sink + ":" + SinkPort)
+func (m *Monitor) Listen() error {
+	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address : %v", err)
 	}
+	m.listener = ln
 	dbg.Lvl2("Monitor listening for stats on ", Sink, ":", SinkPort)
-
-	ch := make(chan net.Conn)
-	var nconn int
-	var finished bool = false
+	finished := false
 	go func() {
 		for {
 			if finished {
@@ -60,52 +92,74 @@ func Monitor(stats *Stats) error {
 				continue
 			}
 			dbg.Lvl3("Monitor : new connection from ", conn.RemoteAddr().String())
-			ch <- conn
+			m.mutexConn.Lock()
+			mc := monitorConnection{
+				conn:  conn,
+				done:  m.done,
+				stats: m.measures,
+			}
+			go mc.handleConnection()
+			m.conns[conn.RemoteAddr().String()] = mc
+			m.mutexConn.Unlock()
 		}
 	}()
 	for !finished {
 		select {
-		case c := <-ch:
-		// TODO : maybe change to a more statefull approache with struct for each
-		// connections...
-			conns = append(conns, c)
-			nconn += 1
-			go handleConnection(c, stats)
-		case <-done:
-			nconn -= 1
-			if nconn == 0 {
-				ln.Close()
+		// new stats
+		case measure := <-m.measures:
+			m.update(measure)
+			// end of a peer conn
+		case peer := <-m.done:
+			m.mutexConn.Lock()
+			delete(m.conns, peer)
+			// end of monitoring,
+			if len(m.conns) == 0 {
+				m.listener.Close()
 				finished = true
+				m.mutexConn.Unlock()
 				break
 			}
 		}
 	}
 	dbg.Lvl2("Monitor finished waiting !")
-	conns = make([]net.Conn, 0)
+	m.conns = make(map[string]monitorConnection)
 	return nil
 }
 
 // StopMonitor will close every connections it has
 // And will stop updating the stats
-func Stop() {
+func (m *Monitor) Stop() {
 	dbg.Lvl2("Monitor Stop")
-	for _, c := range conns {
-		c.Close()
-		done <- true
+	m.listener.Close()
+	m.mutexConn.Lock()
+	for _, c := range m.conns {
+		c.Stop()
 	}
+	m.mutexConn.Unlock()
 
 }
 
-// Gets the proxy port which is just 1 above the monitor-port
-func GetProxyPort() string{
-	proxyPort, _ := strconv.Atoi(SinkPort)
-	return strconv.Itoa(proxyPort + 1)
+// monitorConnection represents a statefull connection from a proxy or a client
+// to the monitor
+type monitorConnection struct {
+	conn net.Conn
+	// For telling when to stop AND when the connection is closed
+	done chan string
+	// Giving the stats back to monitor
+	stats chan Measure
+}
+
+// Stop will close this connection and notify the monitor associated
+func (mc *monitorConnection) Stop() {
+	str := mc.conn.RemoteAddr().String()
+	mc.conn.Close()
+	mc.done <- str
 }
 
 // handleConnection will decode the data received and aggregates it into its
 // stats
-func handleConnection(conn net.Conn, stats *Stats) {
-	dec := json.NewDecoder(conn)
+func (mc *monitorConnection) handleConnection() {
+	dec := json.NewDecoder(mc.conn)
 	var m Measure
 	nerr := 0
 	for {
@@ -115,10 +169,10 @@ func handleConnection(conn net.Conn, stats *Stats) {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from ", conn.RemoteAddr().String(), " : ", err)
+			dbg.Lvl2("Error monitor decoding from ", mc.conn.RemoteAddr().String(), " : ", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl1("Monitor : too many errors from ", conn.RemoteAddr().String(), " : Abort.")
+				dbg.Lvl2("Monitor : too many errors from ", mc.conn.RemoteAddr().String(), " : Abort.")
 				break
 			}
 		}
@@ -127,20 +181,29 @@ func handleConnection(conn net.Conn, stats *Stats) {
 		if strings.ToLower(m.Name) == "end" {
 			break
 		}
-		dbg.Lvl4("Monitor : received a Measure from ", conn.RemoteAddr().String(), " : ", m)
-		updateMeasures(stats, m)
+		dbg.Lvl4("Monitor : received a Measure from ", mc.conn.RemoteAddr().String(), " : ", m)
+		mc.stats <- m
 		m = Measure{}
 	}
 	// finished
-	conn.Close()
-	done <- true
+	mc.Stop()
 }
 
 // updateMeasures will add that specific measure to the global stats
 // in a concurrently safe manner
-func updateMeasures(stats *Stats, m Measure) {
-	mutex.Lock()
+func (m *Monitor) update(meas Measure) {
+	m.mutexStats.Lock()
 	// updating
-	stats.Update(m)
-	mutex.Unlock()
+	m.stats.Update(meas)
+	//dbg.Print("Stats = ", m.stats)
+	m.mutexStats.Unlock()
 }
+
+// Stats returns the updated stats in a concurrent-safe manner
+func (m *Monitor) Stats() *Stats {
+	m.mutexStats.Lock()
+	s := m.stats
+	m.mutexStats.Unlock()
+	return s
+}
+k
