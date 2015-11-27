@@ -185,6 +185,7 @@ func VerifyFileSignature(file, sigFile string) bool {
 		dbg.Fatal("Couldn't read signature-file", sigFile, " : ", err)
 	}
 	hash := hashFile(file)
+	dbg.Print(base64.StdEncoding.EncodeToString(hash))
 	// Then verify the proper signature
 	return conode.VerifySignature(suite, &signature, public_X0, hash)
 }
