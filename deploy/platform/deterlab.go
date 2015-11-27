@@ -336,7 +336,7 @@ func (d *Deterlab) Start(args ...string) error {
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
-		monitor.GetProxyPort() + ":" + d.ProxyAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
+		monitor.SinkPort + ":" + d.ProxyAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
 	exCmd := exec.Command("ssh", cmd...)
 	if err := exCmd.Start(); err != nil {
 		dbg.Fatal("Failed to start the ssh port forwarding : ", err)

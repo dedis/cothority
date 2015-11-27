@@ -17,7 +17,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/nist"
-	"github.com/dedis/cothority/lib/monitor"
 )
 
 type Flags struct {
