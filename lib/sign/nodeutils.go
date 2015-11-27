@@ -28,7 +28,7 @@ func (sn *Node) multiplexOnChildren(view int, sm *SigningMessage) {
 	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	ctx := context.TODO()
 	if err := sn.PutDown(ctx, view, messgs); err != nil {
-		log.Errorln("failed to putdown messg to children")
+		dbg.Error("failed to putdown messg to children")
 	}
 }
 

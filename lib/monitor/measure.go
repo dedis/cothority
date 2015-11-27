@@ -34,7 +34,7 @@ var enabled bool = true
 // encoder. It can be a proxy address or directly a monitoring process address.
 // Return an error if it could not connect to the endpoint
 func ConnectSink(addr string) error {
-	if encoder != nil{
+	if encoder != nil {
 		return nil
 	}
 	dbg.Lvl3("Connecting to:", addr)
@@ -49,7 +49,7 @@ func ConnectSink(addr string) error {
 	return nil
 }
 
-func StopSink(){
+func StopSink() {
 	connection.Close()
 	encoder = nil
 }
@@ -71,7 +71,6 @@ func Ready(addr string) error {
 // Returns how many peers are ready
 func GetReady(addr string) (*Stats, error) {
 	if encoder == nil {
-		dbg.Lvl3("Connecting to sink")
 		err := ConnectSink(addr)
 		if err != nil {
 			return nil, err
@@ -85,7 +84,7 @@ func GetReady(addr string) (*Stats, error) {
 	if err != nil {
 		return nil, err
 	}
-	dbg.Lvlf3("Stats is %+v", s)
+	dbg.Lvlf3("Received stats with %+v", s)
 	return &s, nil
 }
 
@@ -112,12 +111,15 @@ func Enable() {
 	enabled = true
 }
 
-// Measure holds the different values taht ca n be computed for a measure
+// Measure holds the different values that can be computed for a measure
 type Measure struct {
 	Name         string
 	WallTime     float64
 	CPUTimeUser  float64
 	CPUTimeSys   float64
+	// These are used for communicating with the clients
+	Sender       string
+	Ready        int
 	// Since we send absolute timing values, we need to store our reference also
 	lastWallTime time.Time
 	allowUpdate  bool

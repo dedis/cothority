@@ -157,7 +157,6 @@ func GoLeader(conf *app.NaiveConfig) {
 	// Close down all connections
 
 	close(masterRoundChan)
-	monitor.End()
 	dbg.Lvl3(leader.String(), "has done all rounds")
 }
 
@@ -194,5 +193,4 @@ func GoSigner(conf *app.NaiveConfig) {
 	}
 	l.Close()
 	dbg.Lvl3(app.RunFlags.Hostname, "Finished")
-
 }

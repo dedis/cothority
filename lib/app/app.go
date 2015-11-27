@@ -37,7 +37,6 @@ type Flags struct {
 var RunFlags Flags
 
 func FlagInit() {
-	dbg.Print(os.Args)
 	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
 	flag.StringVar(&RunFlags.Logger, "logger", "", "remote logger")
 	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
@@ -124,7 +123,7 @@ func (f Flags)StartedUp(total int) {
 			dbg.Lvl1("Couldn't reach monitor")
 		} else {
 			if s.Ready != total {
-				dbg.LLvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
+				dbg.Lvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
 				time.Sleep(time.Second)
 			} else {
 				break

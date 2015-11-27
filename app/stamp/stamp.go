@@ -27,10 +27,8 @@ func RunServer(flags *app.Flags, conf *app.ConfigColl) {
 	dbg.Lvl3(hostname, "Starting to run")
 
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
-	flags.StartedUp()
+	flags.StartedUp(len(conf.Hosts))
 	peer.LoopRounds(RoundMeasureType, conf.Rounds)
 	dbg.Lvlf3("Done - flags are %+v", flags)
-	if flags.AmRoot {
-		monitor.End()
-	}
+	monitor.End()
 }

@@ -127,8 +127,12 @@ func handleConnection(conn net.Conn, stats *Stats) {
 			break
 		case "ready":
 			stats.Ready++
+			dbg.Lvl3("Increasing counter to", stats.Ready)
 		case "ready_count":
-			enc.Encode(stats)
+			dbg.Lvl3("Sending stats")
+			m_send := m
+			m_send.Ready = stats.Ready
+			enc.Encode(m_send)
 		default:
 			updateMeasures(stats, m)
 			m = Measure{}

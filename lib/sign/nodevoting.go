@@ -4,7 +4,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/context"
 )
@@ -36,7 +35,7 @@ func (sn *Node) ApplyVote(v *Vote) {
 	case ShutdownVT:
 		sn.Close()
 	default:
-		log.Errorln("applyvote: unkown vote type")
+		dbg.Error("applyvote: unkown vote type")
 	}
 }
 
@@ -58,7 +57,7 @@ func (sn *Node) ApplyAction(view int, v *Vote) {
 		// not closing TCP connection on remove because if view
 		// does not go through, connection essential to old/ current view closed
 	default:
-		log.Errorln("applyvote: unkown action type")
+		dbg.Error("applyvote: unkown action type")
 	}
 }
 
@@ -83,7 +82,7 @@ func (sn *Node) NotifyOfAction(view int, v *Vote) {
 			sn.PutTo(context.TODO(), v.Rv.Name, gcm)
 		}
 	default:
-		log.Errorln("notifyofaction: unkown action type")
+		dbg.Error("notifyofaction: unkown action type")
 	}
 }
 
@@ -145,7 +144,7 @@ func (sn *Node) StartGossip() {
 				c := sn.HostListOn(sn.ViewNo)
 				sn.viewmu.Unlock()
 				if len(c) == 0 {
-					log.Errorln(sn.Name(), "StartGossip: none in hostlist for view: ", sn.ViewNo, len(c))
+					dbg.Error(sn.Name(), "StartGossip: none in hostlist for view: ", sn.ViewNo, len(c))
 					continue
 				}
 				sn.randmu.Lock()

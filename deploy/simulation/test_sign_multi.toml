@@ -1,4 +1,4 @@
-Machines = 2
+Machines = 8
 App = "sign"
 Rounds = 2
 Suite = "ed25519"

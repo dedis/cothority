@@ -126,8 +126,9 @@ func main() {
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
 	// RedirectionAddress:RedirectionPort. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
+	dbg.Lvl2("Launching proxy redirecting to", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
 	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
+	time.Sleep(time.Second)
 
 	hostnames := deterlab.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
@@ -180,7 +181,7 @@ func main() {
 			} else {
 				dbg.Lvl1("Stampservers started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
 				if s.Ready == totalServers {
-					dbg.LLvl2("Everybody ready, starting")
+					dbg.Lvl2("Everybody ready, starting")
 					// 1st second for everybody to see the deleted directory
 					// 2nd second for everybody to start up listening
 					time.Sleep(time.Second * 2)

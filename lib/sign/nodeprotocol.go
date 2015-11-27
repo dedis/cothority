@@ -11,7 +11,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/context"
 	"syscall"
-	"time"
 	"strings"
 )
 
@@ -56,19 +55,14 @@ func (sn *Node) ProcessMessages() error {
 			nm, ok := <-msgchan
 			err := nm.Err
 			errStr := ""
-			if err != nil{
+			if err != nil {
 				errStr = err.Error()
 			}
 
 		// One of the errors doesn't have an error-number applied, so we need
 		// to check for the string - will probably be fixed in go 1.6
 			if !ok || err == coconet.ErrClosed || err == io.EOF ||
-			err == io.ErrClosedPipe ||
-			strings.Contains(errStr, errReset) {
-				if strings.Contains(errStr, errReset) {
-					dbg.Lvl1(sn.Name(), "connection reset error - caught")
-					time.Sleep(time.Minute)
-				}
+			err == io.ErrClosedPipe {
 				dbg.Lvl3(sn.Name(), "getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
@@ -78,11 +72,11 @@ func (sn *Node) ProcessMessages() error {
 			if err != nil {
 				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
 				if strings.Contains(errStr, errReset) {
-					dbg.Lvl1(sn.Name(), "connection reset error - NOT caught")
+					dbg.Lvl1(sn.Name(), "connection reset error")
 				}
-				time.Sleep(time.Minute)
 				continue
 			}
+
 		// interpret network message as Signing Message
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
@@ -108,7 +102,7 @@ func (sn *Node) ProcessMessages() error {
 					err = sn.Announce(sm)
 				}
 				if err != nil {
-					log.Errorln(sn.Name(), "announce error:", err)
+					dbg.Error(sn.Name(), "announce error:", err)
 				}
 
 			// if it is a commitment or response it is from the child
@@ -126,7 +120,7 @@ func (sn *Node) ProcessMessages() error {
 					err = sn.Commit(sm)
 				}
 				if err != nil {
-					log.Errorln(sn.Name(), "commit error:", err)
+					dbg.Error(sn.Name(), "commit error:", err)
 				}
 			case Challenge:
 				dbg.Lvl3(sn.Name(), "got challenge")
@@ -143,7 +137,7 @@ func (sn *Node) ProcessMessages() error {
 					err = sn.Challenge(sm)
 				}
 				if err != nil {
-					log.Errorln(sn.Name(), "challenge error:", err)
+					dbg.Error(sn.Name(), "challenge error:", err)
 				}
 			case Response:
 				dbg.Lvl3(sn.Name(), "received response from", sm.From)
@@ -159,7 +153,7 @@ func (sn *Node) ProcessMessages() error {
 					err = sn.Respond(sm)
 				}
 				if err != nil {
-					log.Errorln(sn.Name(), "response error:", err)
+					dbg.Error(sn.Name(), "response error:", err)
 				}
 			case SignatureBroadcast:
 				dbg.Lvl3(sn.Name(), "received SignatureBroadcast", sm.From)

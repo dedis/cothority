@@ -17,9 +17,10 @@ var serverConn net.Conn
 
 // to write back the measure to the server
 var serverEnc *json.Encoder
+var serverDec *json.Decoder
 
 // proxy connections opened
-var proxyConns []net.Conn
+var proxyConns map[string]*json.Encoder
 
 var proxyDone chan bool
 
@@ -27,18 +28,7 @@ func init() {
 	proxyDone = make(chan bool)
 }
 
-// connectServer will try to connect to the server ...
-func connectToSink(redirection string) error {
-	conn, err := net.Dial("tcp", redirection)
-	if err != nil {
-		return fmt.Errorf("Proxy connection to server %s failed: %v", redirection, err)
-	}
-	serverConn = conn
-	serverEnc = json.NewEncoder(conn)
-	return nil
-}
-
-// Proxy will launch a routines that waits for input connections
+// Proxy will launch a routine that waits for input connections
 // It takes a redirection address soas to where redirect incoming packets
 // Proxy will listen on Sink:SinkPort variables so that the user do not
 // differentiate between connecting to a proxy or directly to the sink
@@ -59,7 +49,9 @@ func Proxy(redirection string) {
 	var newConn = make(chan bool)
 	var closeConn = make(chan bool)
 	var finished = false
-	// Listen for every incoming connections
+	proxyConns = make(map[string]*json.Encoder)
+
+	// Listen for incoming connections
 	go func() {
 		for finished == false {
 			conn, err := ln.Accept()
@@ -74,12 +66,31 @@ func Proxy(redirection string) {
 			}
 			dbg.Lvl2("Proxy accepting incoming connection from: ", conn.RemoteAddr().String())
 			newConn <- true
+			proxyConns[conn.RemoteAddr().String()] = json.NewEncoder(conn)
 			go proxyConnection(conn, closeConn)
 		}
 	}()
 
-	// notify every new connection and every end of connections. When every
-	// conenctions are ended, send an "end" measure to the sink.
+	// Listen for replies and give them further
+	go func(){
+		for finished == false{
+			m := Measure{}
+			err := serverDec.Decode(&m)
+			if err != nil{
+				return
+			}
+			dbg.Lvlf3("Proxy received %+v", m)
+			c, ok := proxyConns[m.Sender]
+			if !ok{
+				return
+			}
+			dbg.Lvl3("Found connection")
+			c.Encode(m)
+		}
+	}()
+
+	// notify every new connection and every end of connection. When all
+	// connections are closed, send an "end" measure to the sink.
 	var nconn int
 	for finished == false {
 		select {
@@ -99,6 +110,18 @@ func Proxy(redirection string) {
 	}
 }
 
+// connectToSink starts the connection with the server
+func connectToSink(redirection string) error {
+	conn, err := net.Dial("tcp", redirection)
+	if err != nil {
+		return fmt.Errorf("Proxy connection to server %s failed: %v", redirection, err)
+	}
+	serverConn = conn
+	serverEnc = json.NewEncoder(conn)
+	serverDec = json.NewDecoder(conn)
+	return nil
+}
+
 // The core of the file: read any input from the connection and outputs it into
 // the server connection
 func proxyConnection(conn net.Conn, done chan bool) {
@@ -108,23 +131,27 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	for {
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
-			dbg.Lvl1("Error receiving data from ", conn.RemoteAddr().String(), ":", err)
+			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl1("Too many error from ", conn.RemoteAddr().String(), ": Abort connection")
+				dbg.Lvl1("Too many error from", conn.RemoteAddr().String(), ": Abort connection")
 				break
 			}
 		}
-		if m.Name == "end" {
-			// the end
-			dbg.Lvl2("Proxy detected end of measurement. Closing conn")
-			break
-		}
-		// Proxy data
+		dbg.Lvl3("Proxy received", m)
+		// Proxy data - add who is sending, as we only have one channel
+		// to the server
+		m.Sender = conn.RemoteAddr().String()
 		if err := serverEnc.Encode(m); err != nil {
 			dbg.Lvl2("Error proxying data :", err)
 			break
 		}
+		if m.Name == "end" {
+			// the end
+			dbg.Lvl2("Proxy detected end of measurement. Closing connection.")
+			break
+		}
+
 		m = Measure{}
 	}
 	conn.Close()

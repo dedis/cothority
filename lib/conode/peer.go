@@ -107,7 +107,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 		case <-ticker.C:
 			dbg.Lvl3("Ticker is firing in", peer.Hostname)
 			if peer.LastRound() >= rounds && rounds >= 0 {
-				dbg.LLvl3(peer.Name(), "reached max round: closing",
+				dbg.Lvl3(peer.Name(), "reached max round: closing",
 					peer.LastRound(), ">=", rounds)
 				ticker.Stop()
 				if peer.IsRoot(peer.ViewNo) {
@@ -116,7 +116,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 				}
 			} else {
 				if peer.IsRoot(peer.ViewNo) {
-					dbg.Lvl3(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
+					dbg.Lvl2(peer.Name(), "Stamp server in round", peer.LastRound() + 1, "of", rounds)
 					round, err := sign.NewRoundFromType(roundType, peer.Node)
 					if err != nil {
 						dbg.Fatal("Couldn't create", roundType, err)

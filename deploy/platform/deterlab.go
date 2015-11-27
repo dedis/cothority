@@ -193,10 +193,12 @@ func (d *Deterlab) Cleanup() error {
 	// SSH to the deterlab-server and end all running users-processes
 	dbg.Lvl3("Going to kill everything")
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		// Cleanup eventual residues of previous round - users and sshd
+		cliutils.SshRun(d.Login, d.Host, "killall -9 users sshd")
+		err = cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
-			//dbg.Lvl3(err)
-			os.Exit(-1)
+			dbg.Lvl1("NOT-Normal error from cleanup")
+			d.sshDeter <- "error"
 		}
 		d.sshDeter <- "stopped"
 	}()

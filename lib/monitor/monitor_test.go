@@ -8,7 +8,7 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 2)
+	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["machines"] = "1"
 	m["ppm"] = "1"
@@ -28,7 +28,8 @@ func TestProxy(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
-	err := ConnectSink("localhost:" + SinkPort)
+	proxyAddr := "localhost:" + SinkPort
+	err := ConnectSink(proxyAddr)
 	if err != nil {
 		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))
 		return
@@ -38,6 +39,23 @@ func TestProxy(t *testing.T) {
 	meas.Measure()
 	time.Sleep(200 * time.Millisecond)
 	meas.Measure()
+
+	s, err := GetReady(proxyAddr)
+	if err != nil{
+		t.Error("Couldn't get stats from proxy")
+	}
+	if s.Ready != 0{
+		t.Error("stats.Ready should be 0")
+	}
+	Ready(proxyAddr)
+	s, err = GetReady(proxyAddr)
+	if err != nil{
+		t.Error("Couldn't get stats from proxy")
+	}
+	if s.Ready != 1{
+		t.Error("stats.Ready should be 1")
+	}
+
 	End()
 	time.Sleep(100 * time.Millisecond)
 	updated := stat.String()
@@ -87,11 +105,18 @@ func TestReady(t *testing.T) {
 	m := make(map[string]string)
 	m["machines"] = "1"
 	m["ppm"] = "1"
+	m["Ready"] = "0"
 	stat := NewStats(m)
+	if stat.Ready != 0{
+		t.Fatal("Stats should start with ready==0")
+	}
 	// First set up monitor listening
 	go Monitor(stat)
 	time.Sleep(100 * time.Millisecond)
 	host := "localhost:" + SinkPort
+	if stat.Ready != 0{
+		t.Fatal("Stats should have ready==0 after start of Monitor")
+	}
 
 	s, err := GetReady(host)
 	if err != nil{
