@@ -19,6 +19,7 @@ import (
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/cothority/lib/monitor"
 	"time"
+	"runtime/debug"
 )
 
 type Flags struct {
@@ -173,6 +174,7 @@ func GetSuite(suite string) abstract.Suite {
 		return edward
 	default:
 		dbg.Lvl1("Got unknown suite", suite)
+		debug.PrintStack()
 		return edward
 	}
 }

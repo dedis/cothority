@@ -357,6 +357,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		dbg.Lvl4(sn.Name(), "puts up commit")
 		ctx := context.TODO()
+		dbg.Lvlf3("Out is %+v", out)
 		err = sn.PutUp(ctx, view, out)
 	}
 	return err

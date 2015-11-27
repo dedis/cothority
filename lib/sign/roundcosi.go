@@ -143,7 +143,9 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 	copy(baseProof, in.Chm.Proof)
 
 	if len(cosi.Children) != len(out) {
-		return fmt.Errorf("Children and output are of different length")
+		return fmt.Errorf("Children (%d) and output (%d) are of different length. Should be %d / %d",
+			len(cosi.Children), len(out), len(round.Node.Children(round.Node.ViewNo)),
+			round.Node.ViewNo)
 	}
 	// for each child, create personalized part of proof
 	// embed it in SigningMessage, and send it
@@ -211,7 +213,7 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 	}
 
 	// remove exceptions from subtree that failed
-	round.Cosi.X_hat.Sub(round.Cosi.X_hat, exceptionX_hat)
+	//round.Cosi.X_hat.Sub(round.Cosi.X_hat, exceptionX_hat)
 	round.Cosi.ExceptionV_hat = exceptionV_hat
 	round.Cosi.ExceptionX_hat = exceptionX_hat
 

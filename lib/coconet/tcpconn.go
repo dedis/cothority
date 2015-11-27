@@ -11,6 +11,7 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"io"
+	"runtime/debug"
 )
 
 var Latency = 100
@@ -170,6 +171,7 @@ func (tc *TCPConn) GetData(bum BinaryUnmarshaler) error {
 		if err != io.EOF && err.Error() != "read tcp4" {
 			dbg.Lvl3("Couldn't decode packet at", tc.name, "error:", err)
 			dbg.Lvlf3("Packet is %+v", bum)
+			debug.PrintStack()
 		} else {
 			dbg.Lvl3("Closing connection by EOF:", err)
 		}

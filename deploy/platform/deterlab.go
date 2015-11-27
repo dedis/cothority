@@ -259,7 +259,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		var depth int
 		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
 		dbg.Lvl2("Depth:", depth)
-		dbg.Lvl2("Total hosts:", len(conf.Hosts))
+		dbg.Lvl2("Total peers:", len(conf.Hosts))
 		total := deter.Machines * conf.Ppm
 		if len(conf.Hosts) != total {
 			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
