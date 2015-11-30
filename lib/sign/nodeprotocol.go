@@ -570,9 +570,9 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 		msgs := make([]coconet.BinaryMarshaler, len(out))
 		for i := range msgs {
 			msgs[i] = out[i]
+			out[i].SBm.X0_hat = sn.suite.Point().Add(out[i].SBm.X0_hat, sn.suite.Point().Null())
 		}
 		// Why oh why do we have to do this?
-		out[0].SBm.X0_hat = sn.suite.Point().Add(out[0].SBm.X0_hat, sn.suite.Point().Null())
 		if err := sn.PutDown(ctx, view, msgs); err != nil {
 			return err
 		}

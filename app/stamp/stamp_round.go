@@ -26,7 +26,7 @@ func RegisterRoundMeasure(firstRound int) {
 func NewRoundMeasure(node *sign.Node, firstRound int) *RoundMeasure {
 	dbg.Lvlf3("Making new roundmeasure %+v", node)
 	round := &RoundMeasure{}
-	round.RoundCosi = sign.NewRoundCosi(node)
+	round.RoundStamperListener = conode.NewRoundStamperListener(node)
 	round.Type = RoundMeasureType
 	round.firstRound = firstRound
 	return round

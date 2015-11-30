@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"sync/atomic"
+	"io"
 )
 
 // Implements a simple proxy
@@ -134,10 +135,13 @@ func proxyConnection(conn net.Conn, done chan bool) {
 		m := Measure{}
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
+			if err == io.EOF{
+				break
+			}
 			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl1("Too many error from", conn.RemoteAddr().String(), ": Abort connection")
+				dbg.Lvl1("Too many errors from", conn.RemoteAddr().String(), ": Abort connection")
 				break
 			}
 		}
