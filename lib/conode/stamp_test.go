@@ -12,8 +12,8 @@ import (
 func TestStamp(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
-	go peer1.LoopRounds("cosistamper", 2)
-	go peer2.LoopRounds("cosistamper", 2)
+	go peer1.LoopRounds(conode.RoundStamperListenerType, 2)
+	go peer2.LoopRounds(conode.RoundStamperListenerType, 2)
 	time.Sleep(time.Second)
 
 	s, err := conode.NewStamp("testdata/config.toml")
@@ -35,6 +35,9 @@ func TestStamp(t *testing.T) {
 		}
 	}
 
+	dbg.Lvl2("Closing peer1")
 	peer1.Close()
+	dbg.Lvl2("Closing peer2")
 	peer2.Close()
+	dbg.Lvl3("Done with test")
 }

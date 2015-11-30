@@ -16,8 +16,8 @@ func TestStampListener(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
 
-	round1 := conode.NewRoundCosiStamper(peer1.Node)
-	round2, err := sign.NewRoundFromType("cosistamper", peer1.Node)
+	round1 := conode.NewRoundStamperListener(peer1.Node)
+	round2, err := sign.NewRoundFromType(conode.RoundStamperListenerType, peer1.Node)
 
 	if err != nil {
 		dbg.Fatal("Error when creating round:", err)
@@ -25,7 +25,7 @@ func TestStampListener(t *testing.T) {
 
 	dbg.Lvlf2("Round1: %+v", round1)
 	dbg.Lvlf2("Round2: %+v", round2)
-	name1, name2 := round1.Name, round2.(*conode.RoundCosiStamper).Name
+	name1, name2 := round1.Name, round2.(*conode.RoundStamperListener).Name
 	if name1 != name2 {
 		t.Fatal("Hostname of first round is", name1, "and should be equal to", name2)
 	}
@@ -46,8 +46,8 @@ func TestEmptyKeys(t *testing.T) {
 	peer2 := createPeer(conf2, 1)
 	dbg.Lvlf3("Peer 1 is %+v", peer2)
 
-	go peer1.LoopRounds("cosi", 2)
-	go peer2.LoopRounds("cosi", 2)
+	go peer1.LoopRounds(sign.RoundCosiType, 2)
+	go peer2.LoopRounds(sign.RoundCosiType, 2)
 
 	time.Sleep(time.Second * 2)
 
@@ -61,8 +61,8 @@ func TestCloseAll(t *testing.T) {
 	peer1, peer2 := createPeers()
 
 	// Launch peers in endless loop
-	go peer1.LoopRounds("cosi", -1)
-	go peer2.LoopRounds("cosi", -1)
+	go peer1.LoopRounds(sign.RoundCosiType, -1)
+	go peer2.LoopRounds(sign.RoundCosiType, -1)
 
 	// Send CloseAll manually
 	peer1.SendCloseAll()
@@ -76,8 +76,8 @@ func TestCloseAll(t *testing.T) {
 
 	// Now let's just wait for two rounds
 	peer1, peer2 = createPeers()
-	go peer1.LoopRounds("cosi", 2)
-	go peer2.LoopRounds("cosi", 2)
+	go peer1.LoopRounds(sign.RoundCosiType, 2)
+	go peer2.LoopRounds(sign.RoundCosiType, 2)
 	time.Sleep(time.Second * 4)
 	if !peer1.Closed{
 		t.Fatal("Peer 1 should be closed now.")
@@ -95,7 +95,7 @@ func TestClientBeforeServer(t *testing.T) {
 	peer2.Close()
 	time.Sleep(time.Second)
 
-	round, err := sign.NewRoundFromType("cosi", peer1.Node)
+	round, err := sign.NewRoundFromType(sign.RoundCosiType, peer1.Node)
 	if err != nil{
 		t.Fatal("Error while creating round:", err)
 	}

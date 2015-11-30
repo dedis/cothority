@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"net"
+	"sync/atomic"
 )
 
 // Implements a simple proxy
@@ -18,6 +19,7 @@ var serverConn net.Conn
 // to write back the measure to the server
 var serverEnc *json.Encoder
 var serverDec *json.Decoder
+var readyCount int64
 
 // proxy connections opened
 var proxyConns map[string]*json.Encoder
@@ -41,15 +43,16 @@ func Proxy(redirection string) {
 	dbg.Lvl2("Proxy connected to sink ", redirection)
 	// Here it listens the same way monitor.go would
 	// usually 0.0.0.0:4000
-	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
+	ln, err := net.Listen("tcp", Sink + ":" + SinkPort)
 	if err != nil {
-		dbg.Fatalf("Error while binding proxy to addr %s: %v", Sink+":"+SinkPort, err)
+		dbg.Fatalf("Error while binding proxy to addr %s: %v", Sink + ":" + SinkPort, err)
 	}
-	dbg.Lvl2("Proxy listening on ", Sink+":"+SinkPort)
+	dbg.Lvl2("Proxy listening on ", Sink + ":" + SinkPort)
 	var newConn = make(chan bool)
 	var closeConn = make(chan bool)
 	var finished = false
 	proxyConns = make(map[string]*json.Encoder)
+	readyCount = 0
 
 	// Listen for incoming connections
 	go func() {
@@ -64,7 +67,7 @@ func Proxy(redirection string) {
 				dbg.Lvl1("Error proxy accepting connection: ", err)
 				continue
 			}
-			dbg.Lvl2("Proxy accepting incoming connection from: ", conn.RemoteAddr().String())
+			dbg.Lvl3("Proxy accepting incoming connection from: ", conn.RemoteAddr().String())
 			newConn <- true
 			proxyConns[conn.RemoteAddr().String()] = json.NewEncoder(conn)
 			go proxyConnection(conn, closeConn)
@@ -72,16 +75,16 @@ func Proxy(redirection string) {
 	}()
 
 	// Listen for replies and give them further
-	go func(){
-		for finished == false{
+	go func() {
+		for finished == false {
 			m := Measure{}
 			err := serverDec.Decode(&m)
-			if err != nil{
+			if err != nil {
 				return
 			}
 			dbg.Lvlf3("Proxy received %+v", m)
 			c, ok := proxyConns[m.Sender]
-			if !ok{
+			if !ok {
 				return
 			}
 			dbg.Lvl3("Found connection")
@@ -127,8 +130,8 @@ func connectToSink(redirection string) error {
 func proxyConnection(conn net.Conn, done chan bool) {
 	dec := json.NewDecoder(conn)
 	nerr := 0
-	m := Measure{}
 	for {
+		m := Measure{}
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
 			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
@@ -139,20 +142,33 @@ func proxyConnection(conn net.Conn, done chan bool) {
 			}
 		}
 		dbg.Lvl3("Proxy received", m)
-		// Proxy data - add who is sending, as we only have one channel
-		// to the server
-		m.Sender = conn.RemoteAddr().String()
-		if err := serverEnc.Encode(m); err != nil {
-			dbg.Lvl2("Error proxying data :", err)
-			break
-		}
-		if m.Name == "end" {
-			// the end
-			dbg.Lvl2("Proxy detected end of measurement. Closing connection.")
-			break
-		}
 
-		m = Measure{}
+		// Implement our own ready-count, so it doesn't have to go through the
+		// main monitor which might be far away.
+		switch m.Name{
+		case "ready":
+			atomic.AddInt64(&readyCount, 1)
+		case "ready_count":
+			m.Ready = int(readyCount)
+			err := json.NewEncoder(conn).Encode(m)
+			if err != nil{
+				dbg.Lvl2("Couldn't send ready-result back to client")
+				break
+			}
+		default:
+			// Proxy data - add who is sending, as we only have one channel
+			// to the server
+			m.Sender = conn.RemoteAddr().String()
+			if err := serverEnc.Encode(m); err != nil {
+				dbg.Lvl2("Error proxying data :", err)
+				break
+			}
+			if m.Name == "end" {
+				// the end
+				dbg.Lvl2("Proxy detected end of measurement. Closing connection.")
+				break
+			}
+		}
 	}
 	conn.Close()
 	done <- true

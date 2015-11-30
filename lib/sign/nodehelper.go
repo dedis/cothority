@@ -431,9 +431,9 @@ func (sn *Node) CloseAll(view int) error {
 
 	// At the leaves
 	if len(sn.Children(view)) == 0 {
-		dbg.Lvl2(sn.Name(), "in CloseAll is root leaf")
+		dbg.Lvl3(sn.Name(), "in CloseAll is root leaf")
 	} else {
-		dbg.Lvl2(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
+		dbg.Lvl3(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
 
 		// Inform all children of announcement
 		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))

@@ -9,28 +9,31 @@ import (
 const RoundMeasureType = "measure"
 
 type RoundMeasure struct {
-	measure *monitor.Measure
-	*conode.RoundCosiStamper
+	measure    *monitor.Measure
+	firstRound int
+	*conode.RoundStamperListener
 }
 
-func init() {
+// Pass firstround, as we will have some previous rounds to wait
+// for everyone to be setup
+func RegisterRoundMeasure(firstRound int) {
 	sign.RegisterRoundFactory(RoundMeasureType,
 		func(s *sign.Node) sign.Round {
-			return NewRoundMeasure(s)
+			return NewRoundMeasure(s, firstRound)
 		})
 }
 
-func NewRoundMeasure(node *sign.Node) *RoundMeasure {
+func NewRoundMeasure(node *sign.Node, firstRound int) *RoundMeasure {
 	dbg.Lvlf3("Making new roundmeasure %+v", node)
 	round := &RoundMeasure{}
-	round.RoundCosiStamper = conode.NewRoundCosiStamper(node)
+	round.RoundCosi = sign.NewRoundCosi(node)
 	round.Type = RoundMeasureType
+	round.firstRound = firstRound
 	return round
 }
 
 func (round *RoundMeasure) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	if round.IsRoot {
-		dbg.Lvl1("Starting announcement", roundNbr)
 		round.measure = monitor.NewMeasure("round")
 	}
 	return round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
@@ -40,6 +43,8 @@ func (round *RoundMeasure)Response(in []*sign.SigningMessage, out *sign.SigningM
 	err := round.RoundCosi.Response(in, out)
 	if round.IsRoot {
 		round.measure.Measure()
+		dbg.Lvl1("Round", round.RoundNbr - round.firstRound + 1,
+			"finished - took", round.measure.WallTime)
 	}
 	return err
 }

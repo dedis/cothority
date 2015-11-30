@@ -17,7 +17,7 @@ func TestDeleteRounds(t *testing.T) {
 		t.Fatal("There should be 0 rounds to start with")
 	}
 
-	round, err := sign.NewRoundFromType("cosistamper", peer1.Node)
+	round, err := sign.NewRoundFromType(conode.RoundStamperListenerType, peer1.Node)
 	if err != nil {
 		t.Fatal("Couldn't create cosi-round")
 	}
@@ -38,15 +38,15 @@ func TestDeleteRounds(t *testing.T) {
 }
 
 func TestRoundCosi(t *testing.T) {
-	testRound(t, "cosi")
+	testRound(t, sign.RoundCosiType)
 }
 
 func TestRoundStamper(t *testing.T) {
-	testRound(t, "stamper")
+	testRound(t, conode.RoundStamperType)
 }
 
 func TestRoundCosiStamper(t *testing.T) {
-	testRound(t, "cosistamper")
+	testRound(t, conode.RoundStamperListenerType)
 }
 
 func TestRoundSetup(t *testing.T) {
@@ -90,12 +90,12 @@ func testRound(t *testing.T, roundType string) {
 
 	var cosi *sign.CosiStruct
 	switch roundType{
-	case "cosi":
+	case sign.RoundCosiType:
 		cosi = round.(*sign.RoundCosi).Cosi
-	case "stamper":
+	case conode.RoundStamperType:
 		cosi = round.(*conode.RoundStamper).Cosi
-	case "cosistamper":
-		cosi = round.(*conode.RoundCosiStamper).Cosi
+	case conode.RoundStamperListenerType:
+		cosi = round.(*conode.RoundStamperListener).Cosi
 	}
 	if cosi.R_hat == nil {
 		t.Fatal("Didn't finish round - R_hat empty")

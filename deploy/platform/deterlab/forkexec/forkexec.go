@@ -66,7 +66,7 @@ func main() {
 	} else {
 		dbg.Lvl2("No apps for", app.RunFlags.PhysAddr)
 	}
-	dbg.Lvl2(app.RunFlags.PhysAddr, "apps exited")
+	dbg.Lvl2(app.RunFlags.PhysAddr, "forkexec exited")
 }
 
 func setup_deter() {

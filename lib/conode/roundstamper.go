@@ -38,7 +38,7 @@ func init() {
 }
 
 func NewRoundStamper(node *sign.Node) *RoundStamper {
-	dbg.Lvlf3("Making new roundcosistamper %+v", node)
+	dbg.Lvlf3("Making new stamperlistener %+v", node)
 	round := &RoundStamper{}
 	round.RoundCosi = sign.NewRoundCosi(node)
 	round.Type = RoundStamperType
@@ -47,7 +47,6 @@ func NewRoundStamper(node *sign.Node) *RoundStamper {
 
 func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
-	in.Am.RoundType = RoundCosiStamperType
 	if round.IsRoot {
 		// We are root !
 		// Adding timestamp

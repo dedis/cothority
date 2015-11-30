@@ -179,7 +179,7 @@ func main() {
 			if err != nil {
 				log.Fatal("Couldn't contact monitor")
 			} else {
-				dbg.Lvl1("Stampservers started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
+				dbg.Lvl1("Processes started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
 				if s.Ready == totalServers {
 					dbg.Lvl2("Everybody ready, starting")
 					// 1st second for everybody to see the deleted directory

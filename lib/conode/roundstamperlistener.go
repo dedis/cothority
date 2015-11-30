@@ -9,9 +9,9 @@ import (
 Implements a Stamper and a Cosi-round
  */
 
-const RoundCosiStamperType = "cosistamper"
+const RoundStamperListenerType = "stamperlistener"
 
-type RoundCosiStamper struct {
+type RoundStamperListener struct {
 	*StampListener
 	*RoundStamper
 	ClientQueue []ReplyMessage
@@ -24,24 +24,24 @@ type ReplyMessage struct {
 }
 
 func init() {
-	sign.RegisterRoundFactory(RoundCosiStamperType,
+	sign.RegisterRoundFactory(RoundStamperListenerType,
 		func(node *sign.Node) sign.Round {
-			return NewRoundCosiStamper(node)
+			return NewRoundStamperListener(node)
 		})
 }
 
-func NewRoundCosiStamper(node *sign.Node) *RoundCosiStamper {
-	dbg.Lvlf3("Making new roundcosistamper %+v", node)
-	round := &RoundCosiStamper{}
+func NewRoundStamperListener(node *sign.Node) *RoundStamperListener {
+	dbg.Lvlf3("Making new roundStamperListener %+v", node)
+	round := &RoundStamperListener{}
 	round.StampListener = NewStampListener(node.Name())
 	round.RoundStamper = NewRoundStamper(node)
-	round.Type = RoundCosiStamperType
+	round.Type = RoundStamperListenerType
 	return round
 }
 
 // Announcement is already defined in RoundStamper
 
-func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	round.Mux.Lock()
 	// messages read will now be processed
 	round.Queue[READING], round.Queue[PROCESSING] = round.Queue[PROCESSING], round.Queue[READING]
@@ -69,7 +69,7 @@ func (round *RoundCosiStamper) Commitment(in []*sign.SigningMessage, out *sign.S
 
 // Response is already defined in RoundStamper
 
-func (round *RoundCosiStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	round.RoundStamper.SignatureBroadcast(in, out)
 	for i, msg := range round.ClientQueue {
 		respMessg := &TimeStampMessage{
@@ -93,7 +93,7 @@ func (round *RoundCosiStamper) SignatureBroadcast(in *sign.SigningMessage, out [
 
 
 // Send message to client given by name
-func (round *RoundCosiStamper) PutToClient(name string, data coconet.BinaryMarshaler) {
+func (round *RoundStamperListener) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := round.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
 		round.Clients[name].Close()
