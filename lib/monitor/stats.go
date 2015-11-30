@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sort"
 )
 
 // Stats contains all structures that are related to the computations of stats
@@ -75,8 +76,15 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 		}
 	}
 	s.Peers = s.Machines * s.PPM
+	// Sort rc2, so the output is always the same
+	rc2_ids := make([]string, 0)
+	for k := range rc2 {
+		rc2_ids = append(rc2_ids, k)
+	}
+	sort.Sort(sort.StringSlice(rc2_ids))
 	// Add ALL extra fields
-	for k, v := range rc2 {
+	for _, k := range rc2_ids {
+		v := rc2[k]
 		if ef, err := strconv.Atoi(v); err != nil {
 			continue
 		} else {

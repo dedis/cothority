@@ -125,10 +125,10 @@ func (f Flags)StartedUp(total int) {
 		} else {
 			if s.Ready != total {
 				dbg.Lvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
-				time.Sleep(time.Second)
 			} else {
 				break
 			}
+			time.Sleep(time.Second)
 		}
 	}
 	dbg.Lvl3(f.Hostname, "thinks everybody's here")

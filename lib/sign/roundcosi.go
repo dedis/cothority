@@ -229,10 +229,7 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 	}
 
 	// remove exceptions from subtree that failed
-	//round.Cosi.X_hat.Sub(round.Cosi.X_hat, exceptionX_hat)
-	//round.Cosi.X_hat = round.Cosi.Suite.Point().Sub(round.Cosi.X_hat, exceptionX_hat)
-	//round.Cosi.X_hat = round.Cosi.Suite.Point().Sub(round.Cosi.X_hat, round.Cosi.Suite.Point().Null())
-	//round.Cosi.X_hat = round.Cosi.Suite.Point().Add(round.Cosi.X_hat, round.Cosi.Suite.Point().Null())
+	round.Cosi.X_hat.Sub(round.Cosi.X_hat, exceptionX_hat)
 	round.Cosi.ExceptionV_hat = exceptionV_hat
 	round.Cosi.ExceptionX_hat = exceptionX_hat
 

@@ -226,7 +226,7 @@ func (d *Deterlab) Cleanup() error {
 // Creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
-	dbg.Lvl1("Assembling all files and configuration options")
+	dbg.Lvlf1("Next run is %+v", rc)
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
 
@@ -302,13 +302,6 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
-	/*
-		dbg.Printf("%+v", deter)
-		debug := reflect.ValueOf(deter).Elem().FieldByName("Debug")
-		if debug.IsValid() {
-			dbg.DebugVisible = debug.Interface().(int)
-		}
-	*/
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir + "/cothority.conf", d.DeployDir).Run()
@@ -324,7 +317,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	}
 
 	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
-	// Copy everything over to deterlabs
+	// Copy everything over to Deterlabs
 	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir + "/", "remote/")
 	if err != nil {
 		dbg.Fatal(err)

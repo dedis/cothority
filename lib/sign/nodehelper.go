@@ -451,6 +451,7 @@ func (sn *Node) CloseAll(view int) error {
 		}
 	}
 	dbg.Lvl3("Closing down shop", sn.Isclosed)
+	sn.Close()
 	return nil
 }
 

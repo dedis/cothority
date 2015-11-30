@@ -70,10 +70,11 @@ func (sn *Node) ProcessMessages() error {
 
 		// if it is a non-fatal error try again
 			if err != nil {
-				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
 				if strings.Contains(errStr, errReset) {
-					dbg.Lvl1(sn.Name(), "connection reset error")
+					dbg.Lvl2(sn.Name(), "connection reset error")
+					return coconet.ErrClosed
 				}
+				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
 				continue
 			}
 
@@ -570,9 +571,9 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 		msgs := make([]coconet.BinaryMarshaler, len(out))
 		for i := range msgs {
 			msgs[i] = out[i]
+			// Why oh why do we have to do this?
 			out[i].SBm.X0_hat = sn.suite.Point().Add(out[i].SBm.X0_hat, sn.suite.Point().Null())
 		}
-		// Why oh why do we have to do this?
 		if err := sn.PutDown(ctx, view, msgs); err != nil {
 			return err
 		}

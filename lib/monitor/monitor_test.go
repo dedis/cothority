@@ -5,7 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"testing"
 	"time"
-	"os"
+	"bytes"
+"strings"
 )
 
 
@@ -49,7 +50,7 @@ func TestReadyNormal(t *testing.T) {
 	m["ppm"] = "1"
 	m["Ready"] = "0"
 	stat := NewStats(m)
-	if stat.Ready != 0{
+	if stat.Ready != 0 {
 		t.Fatal("Stats should start with ready==0")
 	}
 	// First set up monitor listening
@@ -57,15 +58,15 @@ func TestReadyNormal(t *testing.T) {
 	go mon.Listen()
 	time.Sleep(100 * time.Millisecond)
 	host := "localhost:" + SinkPort
-	if stat.Ready != 0{
+	if stat.Ready != 0 {
 		t.Fatal("Stats should have ready==0 after start of Monitor")
 	}
 
 	s, err := GetReady(host)
-	if err != nil{
+	if err != nil {
 		t.Fatal("Couldn't get number of peers:", err)
 	}
-	if s.Ready != 0{
+	if s.Ready != 0 {
 		t.Fatal("Stats.Ready != 0")
 	}
 
@@ -76,12 +77,34 @@ func TestReadyNormal(t *testing.T) {
 	}
 
 	s, err = GetReady(host)
-	if err != nil{
+	if err != nil {
 		t.Fatal("Couldn't get number of peers:", err)
 	}
-	if s.Ready != 1{
+	if s.Ready != 1 {
 		t.Fatal("Stats.Ready != 1")
 	}
 
 	StopSink()
+}
+
+func TestKeyOrder(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 3)
+	m := make(map[string]string)
+	m["machines"] = "1"
+	m["ppm"] = "1"
+	m["bf"] = "2"
+	m["rounds"] = "3"
+
+	for i := 0; i < 20; i++ {
+		// First set up monitor listening
+		stat := NewStats(m)
+		NewMonitor(stat)
+		time.Sleep(100 * time.Millisecond)
+		b := bytes.NewBuffer(make([]byte, 1024))
+		stat.WriteHeader(b)
+		dbg.Lvl2("Order:", b.String())
+		if strings.Contains(b.String(), "rounds, bf"){
+			t.Fatal("Order of fields is not correct")
+		}
+	}
 }

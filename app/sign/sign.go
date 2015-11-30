@@ -32,19 +32,17 @@ func main() {
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
 
 	if app.RunFlags.AmRoot {
-		peer.Node.MaxWait = 5 * time.Second
 		for {
+			time.Sleep(time.Second)
 			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncement(setupRound)
+			peer.StartAnnouncementWithWait(setupRound, 5 * time.Second)
 			counted := <-setupRound.Counted
 			dbg.Lvl1("Number of peers counted:", counted)
 			if counted == len(conf.Hosts){
 				dbg.Lvl1("All hosts replied")
 				break
 			}
-			time.Sleep(time.Second)
 		}
-		peer.Node.MaxWait = 50 * time.Second
 	}
 
 	RegisterRoundMeasure(peer.Node.LastRound())
