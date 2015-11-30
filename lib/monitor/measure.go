@@ -107,18 +107,24 @@ func send(v interface{}) {
 	if !enabled {
 		return
 	}
-	if err := encoder.Encode(v); err != nil {
-		panic(fmt.Errorf("Error sending to sink : %v", err))
+	for wait := 500; wait < 1000; wait += 100 {
+		if err := encoder.Encode(v); err == nil {
+			return
+		} else {
+			dbg.Lvl1("Couldn't send to monitor-sink:", err)
+			time.Sleep(time.Duration(wait) * time.Millisecond)
+		}
 	}
+	panic(fmt.Errorf("No contact to monitor-sink possible!"))
 }
 
 // Measure holds the different values that can be computed for a measure.
 // Measures are sent for further processing from the client to the monitor.
 type Measure struct {
-	Name        string
-	WallTime    float64
-	CPUTimeUser float64
-	CPUTimeSys  float64
+	Name         string
+	WallTime     float64
+	CPUTimeUser  float64
+	CPUTimeSys   float64
 	// These are used for communicating with the clients
 	Sender       string
 	Ready        int
