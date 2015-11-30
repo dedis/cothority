@@ -176,7 +176,7 @@ If `file` is present, its hash-value is verified against the value stored in `fi
 
 ## Participate in the EPFL CoNode Cluster
 
-In order to participate in the EPFL CoNode project, follow the setup steps as described above using either the `start-conode.sh` script or the `conode` binary directly. Please send your `key.pub` file to dev.dedis@epfl.ch and wait until we have validated your instance. For that make sure that your CoNode is available for at least 24 hours under the IP address and port specified in `key.pub`.  Once we have verified your CoNode, we will send you the configuration file `config.toml`. Copy that to the folder of your `conode` binary, shutdown the validation-mode and restart CoNode in running-mode. Now your CoNode is configured and you can `stamp` files through the EPFL CoNode cluster.
+In order to participate in the EPFL CoNode project, follow the setup steps as described above using either the `start-conode.sh` script or the `conode` binary directly. Please send your `key.pub` file to the google-group at https://groups.google.com/forum/#!forum/cothority and wait until we have validated your instance. For that make sure that your CoNode is available for at least 24 hours under the IP address and port specified in `key.pub`.  Once we have verified your CoNode, we will send you the configuration file `config.toml`. Copy that to the folder of your `conode` binary, shutdown the validation-mode and restart CoNode in running-mode. Now your CoNode is configured and you can `stamp` files through the EPFL CoNode cluster.
 
 ## Setup Your Own CoNode Cluster
 
@@ -231,4 +231,4 @@ If you want to verify a given signature, you need aggregate public key of the Co
 
 ## Contact Us
 
-If you are running your own CoNode cluster, we would be very happy to hear from you. Do not hesitate to contact us at dev.dedis@epfl.ch.
+If you are running your own CoNode cluster, we would be very happy to hear from you. Do not hesitate to contact us at the google-group https://groups.google.com/forum/#!forum/cothority.
