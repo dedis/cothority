@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"testing"
 	"time"
+	"os"
 )
 
 

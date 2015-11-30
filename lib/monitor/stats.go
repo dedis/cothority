@@ -151,6 +151,7 @@ func AverageStats(stats []Stats) Stats {
 	s.Peers = stats[0].Peers
 	s.Additionals = stats[0].Additionals
 	s.addKeys = stats[0].addKeys
+	s.keys = stats[0].keys
 	// Average
 	for _, k := range s.keys {
 		// Collect measurements for a given key

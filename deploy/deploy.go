@@ -87,7 +87,7 @@ func main() {
 		}
 		deployP.Configure()
 
-		if clean{
+		if clean {
 			deployP.Deploy(runconfigs[0])
 			deployP.Cleanup()
 		} else {
@@ -110,14 +110,11 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
-	// Write the header
-	firstStat := monitor.NewStats(runconfigs[0].Map())
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
+	f, err := os.OpenFile(TestFile(name), os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0660)
 	defer f.Close()
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
-	firstStat.WriteHeader(f)
 	err = f.Sync()
 	if err != nil {
 		log.Fatal("error syncing test file:", err)
@@ -145,6 +142,9 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		}
 
 		s := monitor.AverageStats(runs)
+		if i == 0{
+			s.WriteHeader(f)
+		}
 		rs[i] = s
 		rs[i].WriteValues(f)
 		err = f.Sync()
@@ -164,7 +164,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		mach, _ := strconv.Atoi(machs)
 		ppm, _ := strconv.Atoi(ppms)
 		rc.Put("machines", "1")
-		rc.Put("ppm", strconv.Itoa(ppm*mach))
+		rc.Put("ppm", strconv.Itoa(ppm * mach))
 	}
 	rs := monitor.NewStats(rc.Map())
 	monitor := monitor.NewMonitor(rs)
