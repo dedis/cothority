@@ -120,10 +120,6 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 	out.Com.X_hat = round.Cosi.X_hat
 	out.Com.MTRoot = round.Cosi.MTRoot
 	out.Com.ExceptionList = round.Cosi.ExceptionList
-	out.Com.Messages = round.Node.Messages
-
-	// Reset message counter for statistics
-	round.Node.Messages = 0
 	return nil
 
 }
@@ -250,14 +246,10 @@ func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) err
 func (round *RoundCosi) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
 	// Root is creating the sig broadcast
 	if round.IsRoot {
-		dbg.Lvl3(round.Node.Name(), ": sending number of messages:", round.Node.Messages)
 		in.SBm.R0_hat = round.Cosi.R_hat
 		in.SBm.C = round.Cosi.C
 		in.SBm.X0_hat = round.Cosi.X_hat
 		in.SBm.V0_hat = round.Cosi.Log.V_hat
-		in.SBm.Messages = round.Node.Messages
-	} else {
-		round.Node.Messages = in.SBm.Messages
 	}
 	// Inform all children of broadcast  - just copy the one that came in
 	for i := range out {

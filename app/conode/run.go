@@ -56,5 +56,5 @@ func Run(configFile, key string) {
 		address = addr
 	}
 	peer := conode.NewPeer(address, conf)
-	peer.LoopRounds(conode.RoundStamperListenerType, -1)
+	peer.LoopRounds(RoundStatsType, -1)
 }

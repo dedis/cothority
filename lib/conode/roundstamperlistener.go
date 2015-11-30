@@ -2,7 +2,7 @@ package conode
 import (
 	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/cothority/lib/dbg"
-"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/coconet"
 )
 
 /*
@@ -46,8 +46,16 @@ func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *si
 	// messages read will now be processed
 	round.Queue[READING], round.Queue[PROCESSING] = round.Queue[PROCESSING], round.Queue[READING]
 	round.Queue[READING] = round.Queue[READING][:0]
-	round.ClientQueue = make([]ReplyMessage, len(round.Queue[PROCESSING]))
+	msgs := len(round.Queue[PROCESSING])
+	out.Com.Messages = msgs
+	for _, m := range in {
+		out.Com.Messages += m.Com.Messages
+	}
+	if round.IsRoot{
+		round.Node.Messages += out.Com.Messages
+	}
 
+	round.ClientQueue = make([]ReplyMessage, msgs)
 	queue := make([][]byte, len(round.Queue[PROCESSING]))
 	for i, q := range (round.Queue[PROCESSING]) {
 		queue[i] = q.Tsm.Sreq.Val
@@ -71,6 +79,12 @@ func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *si
 
 func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	round.RoundStamper.SignatureBroadcast(in, out)
+	if round.IsRoot{
+		in.SBm.Messages = round.Node.Messages
+	}
+	for _, o := range out{
+		o.SBm.Messages = in.SBm.Messages
+	}
 	for i, msg := range round.ClientQueue {
 		respMessg := &TimeStampMessage{
 			Type:  StampSignatureType,
