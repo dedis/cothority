@@ -15,6 +15,7 @@ type RoundStamperListener struct {
 	*StampListener
 	*RoundStamper
 	ClientQueue []ReplyMessage
+	roundMessages int
 }
 
 type ReplyMessage struct {
@@ -52,6 +53,7 @@ func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *si
 		out.Com.Messages += m.Com.Messages
 	}
 	if round.IsRoot{
+		round.roundMessages = out.Com.Messages
 		round.Node.Messages += out.Com.Messages
 	}
 
@@ -80,7 +82,7 @@ func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *si
 func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	round.RoundStamper.SignatureBroadcast(in, out)
 	if round.IsRoot{
-		in.SBm.Messages = round.Node.Messages
+		in.SBm.Messages = round.roundMessages
 	}
 	for _, o := range out{
 		o.SBm.Messages = in.SBm.Messages

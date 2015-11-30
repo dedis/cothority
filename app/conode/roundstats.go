@@ -16,7 +16,6 @@ const RoundStatsType = "conodestats"
 
 type RoundStats struct {
 	*conode.RoundStamperListener
-	totalMessages int
 }
 
 func init() {
@@ -34,18 +33,14 @@ func NewRoundStats(node *sign.Node) *RoundStats {
 
 func (round *RoundStats)Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	err := round.RoundStamperListener.Commitment(in, out)
-	if round.IsRoot{
-		round.totalMessages = out.Com.Messages
-	}
 	return err
 }
 
 func (round *RoundStats)SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	err := round.RoundStamperListener.SignatureBroadcast(in, out)
-	if err == nil {
-		round.totalMessages += in.SBm.Messages
+	if err == nil && round.IsRoot{
 		dbg.Lvlf1("This is round %d with %d messages - %d since start.",
-			round.RoundNbr, round.totalMessages, in.SBm.Messages)
+			round.RoundNbr, in.SBm.Messages, round.Node.Messages)
 	}
 	return err
 }
