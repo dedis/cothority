@@ -277,7 +277,7 @@ func (cosi *CosiStruct)HashElGamal(message []byte, p abstract.Point) abstract.Se
 }
 
 // Signing Node Log for a round
-// For Marshaling and Unrmarshaling to work smoothly
+// For Marshaling and Unmarshaling to work smoothly
 // crypto fields must appear first in the structure
 type SNLog struct {
 	v     abstract.Secret // round lasting secret
