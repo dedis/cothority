@@ -1,5 +1,5 @@
 App = "sign"
-Suite = "ed25519"
+Suite = "Ed25519"
 Rounds = 20
 Machines = 32
 bf = 8

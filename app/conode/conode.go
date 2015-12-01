@@ -8,11 +8,11 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/edwards/ed25519"
 )
 
 // Which suite to use
-var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
+var suite abstract.Suite = ed25519.NewAES128SHA256Ed25519(false)
 var suiteStr string = suite.String()
 
 // where to write the key file .priv + .pub

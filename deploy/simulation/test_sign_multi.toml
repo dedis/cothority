@@ -1,7 +1,7 @@
 Machines = 8
 App = "sign"
 Rounds = 10
-Suite = "ed25519"
+Suite = "Ed25519"
 
 ppm, bf
 1, 2

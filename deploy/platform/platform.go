@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"os"
 	"strings"
+	"strconv"
 )
 
 // Generic interface to represent a platform where to run tests
@@ -140,7 +141,12 @@ func (r *RunConfig) Put(field, value string) {
 func (r *RunConfig) Toml() []byte {
 	var buf bytes.Buffer
 	for k, v := range r.fields {
-		fmt.Fprintf(&buf, "%s = %s\n", k, v)
+		// If it is a number or a string that starts with a '"', print it directly
+		if _, err := strconv.Atoi(v); err == nil || v[0] == '"'{
+			fmt.Fprintf(&buf, "%s = %s\n", k, v)
+		} else {
+			fmt.Fprintf(&buf, "%s = \"%s\"\n", k, v)
+		}
 	}
 	return buf.Bytes()
 }
