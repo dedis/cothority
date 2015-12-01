@@ -229,6 +229,7 @@ func (sn *Node) StartAnnouncementWithWait(round Round, wait time.Duration) error
 		var err error
 		// Launch the announcement process
 		err = sn.Announce(&SigningMessage{
+			Suite: sn.Suite().String(),
 			Type:     Announcement,
 			RoundNbr: sn.nRounds,
 			ViewNbr:     sn.ViewNo,
@@ -287,7 +288,6 @@ func (sn *Node) StartAnnouncement(round Round) error {
 
 func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {
 	sn := &Node{Host: hn, suite: suite}
-	msgSuite = suite
 	sn.PrivKey = suite.Secret().Pick(random)
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
 
@@ -319,7 +319,6 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn := &Node{Host: hn, suite: suite, PrivKey: PrivKey}
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
 
-	msgSuite = suite
 	sn.peerKeys = make(map[string]abstract.Point)
 
 	sn.closed = make(chan error, 20)
@@ -439,6 +438,7 @@ func (sn *Node) CloseAll(view int) error {
 		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
 		for i := range messgs {
 			sm := SigningMessage{
+				Suite: sn.Suite().String(),
 				Type:         CloseAll,
 				ViewNbr:         view,
 				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
@@ -460,6 +460,7 @@ func (sn *Node) PutUpError(view int, err error) {
 	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	ctx := context.TODO()
 	sn.PutUp(ctx, view, &SigningMessage{
+		Suite: sn.Suite().String(),
 		Type:         Error,
 		ViewNbr:         view,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),

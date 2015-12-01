@@ -64,6 +64,7 @@ func (sn *Node) ApplyAction(view int, v *Vote) {
 func (sn *Node) NotifyOfAction(view int, v *Vote) {
 	dbg.Lvl4(sn.Name(), "Notifying node to be added/removed of action")
 	gcm := &SigningMessage{
+		Suite: sn.Suite().String(),
 		Type:         GroupChanged,
 		From:         sn.Name(),
 		ViewNbr:         view,
@@ -98,6 +99,7 @@ func (sn *Node) AddSelf(parent string) error {
 		context.TODO(),
 		parent,
 		&SigningMessage{
+			Suite: sn.Suite().String(),
 			Type: GroupChange,
 			ViewNbr: -1,
 			Vrm: &VoteRequestMessage{
@@ -113,6 +115,7 @@ func (sn *Node) RemoveSelf() error {
 		context.TODO(),
 		int(sn.ViewNo),
 		&SigningMessage{
+			Suite: sn.Suite().String(),
 			Type: GroupChange,
 			ViewNbr: -1,
 			Vrm: &VoteRequestMessage{
@@ -129,6 +132,7 @@ func (sn *Node) CatchUp(vi int, from string) {
 	ctx := context.TODO()
 	sn.PutTo(ctx, from,
 		&SigningMessage{
+			Suite: sn.Suite().String(),
 			From:  sn.Name(),
 			Type:  CatchUpReq,
 			Cureq: &CatchUpRequest{Index: vi}})

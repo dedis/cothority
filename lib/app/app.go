@@ -3,7 +3,6 @@ package app
 import (
 	"flag"
 	_ "net/http/pprof"
-	"strings"
 
 	"bytes"
 	"github.com/BurntSushi/toml"
@@ -15,11 +14,9 @@ import (
 	"reflect"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
-	"github.com/dedis/crypto/nist"
 	"github.com/dedis/cothority/lib/monitor"
 	"time"
-	"runtime/debug"
+	"github.com/dedis/crypto/suites"
 )
 
 type Flags struct {
@@ -155,26 +152,12 @@ func getFullName(filename string, dirOpt ...string) string {
 	return dir + "/" + filepath.Base(filename)
 }
 
-// The various suites we can use
-var nist256 abstract.Suite = nist.NewAES128SHA256P256()
-var nist512 abstract.Suite = nist.NewAES128SHA256QR512()
-var edward abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
-var nist256Str string = strings.ToLower(nist256.String())
-var nist512Str string = strings.ToLower(nist512.String())
-var edwardsStr string = strings.ToLower(edward.String())
-
 // Helper functions that will return the suite used during the process from a string name
 func GetSuite(suite string) abstract.Suite {
-	switch strings.ToLower(suite) {
-	case nist256Str: //"nist256", "p256":
-		return nist256
-	case nist512Str: //"p512":
-		return nist512
-	case edwardsStr, "ed25519":
-		return edward
-	default:
-		dbg.Lvl1("Got unknown suite", suite)
-		debug.PrintStack()
-		return edward
+	s, ok := suites.All()[suite]
+	if !ok{
+		dbg.Lvl1("Suites available:", suites.All())
+		dbg.Fatal("Didn't find suite", suite)
 	}
+	return s
 }

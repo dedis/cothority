@@ -167,6 +167,7 @@ func (sn *Node) ProcessMessages() error {
 				ctx := context.TODO()
 				sn.PutTo(ctx, sm.From,
 					&SigningMessage{
+						Suite: sn.Suite().String(),
 						From:         sn.Name(),
 						Type:         CatchUpResp,
 						LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
@@ -249,6 +250,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	out := make([]*SigningMessage, nChildren)
 	for i := range out {
 		out[i] = &SigningMessage{
+			Suite: sn.Suite().String(),
 			Type:         Announcement,
 			ViewNbr:         sn.ViewNo,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
@@ -268,6 +270,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	if len(sn.Children(view)) == 0 {
 		// If we are a leaf, start the commit phase process
 		sn.Commit(&SigningMessage{
+			Suite: sn.Suite().String(),
 			Type:     Commitment,
 			RoundNbr: RoundNbr,
 			ViewNbr:     view,
@@ -324,6 +327,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		return fmt.Errorf("No Round Interface defined for this round number (commitment)")
 	}
 	out := &SigningMessage{
+		Suite: sn.Suite().String(),
 		ViewNbr:         view,
 		Type:         Commitment,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
@@ -343,6 +347,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	if sn.IsRoot(view) {
 		sn.commitsDone <- roundNbr
 		err = sn.Challenge(&SigningMessage{
+			Suite: sn.Suite().String(),
 			RoundNbr: roundNbr,
 			Type:     Challenge,
 			ViewNbr:     view,
@@ -375,6 +380,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	i := 0
 	for child := range children {
 		challs[i] = &SigningMessage{
+			Suite: sn.Suite().String(),
 			ViewNbr: view,
 			RoundNbr: RoundNbr,
 			Type: Challenge,
@@ -399,6 +405,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 	// if we are a leaf, send the respond up
 	if len(children) == 0 {
 		sn.Respond(&SigningMessage{
+			Suite: sn.Suite().String(),
 			Type:     Response,
 			ViewNbr:     view,
 			RoundNbr: RoundNbr,
@@ -453,6 +460,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	// Fillinwithdefaultmessage is used to fill the exception with missing
 	// children and all
 	out := &SigningMessage{
+		Suite: sn.Suite().String(),
 		Type:         Response,
 		ViewNbr:         view,
 		RoundNbr:     roundNbr,
@@ -501,6 +509,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	// Sends the final signature to every one
 	if isroot {
 		sn.SignatureBroadcast(&SigningMessage{
+			Suite: sn.Suite().String(),
 			Type:     SignatureBroadcast,
 			ViewNbr:     view,
 			RoundNbr: roundNbr,
@@ -519,6 +528,7 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
 	for i := range messgs {
 		sm := SigningMessage{
+			Suite: sn.Suite().String(),
 			Type:         StatusConnections,
 			ViewNbr:         view,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
@@ -548,6 +558,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 	out := make([]*SigningMessage, sn.NChildren(view))
 	for i := range out {
 		out[i] = &SigningMessage{
+			Suite: sn.Suite().String(),
 			Type:     SignatureBroadcast,
 			ViewNbr:     view,
 			RoundNbr: RoundNbr,
@@ -580,6 +591,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 	} else {
 		dbg.Lvl3(sn.Name(), "sending StatusReturn")
 		return sn.StatusReturn(view, &SigningMessage{
+			Suite: sn.Suite().String(),
 			Type: StatusReturn,
 			ViewNbr: view,
 			RoundNbr: RoundNbr,

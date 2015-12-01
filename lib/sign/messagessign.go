@@ -4,11 +4,12 @@ import (
 	"reflect"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"encoding/json"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/protobuf"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/suites"
 )
 
 /*
@@ -77,6 +78,7 @@ func (m MessageType) String() string {
 // Signing Messages are used for all communications between servers
 // It is important for encoding/ decoding for type to be kept as first field
 type SigningMessage struct {
+	Suite        string
 	Type         MessageType
 	Am           *AnnouncementMessage
 	Com          *CommitmentMessage
@@ -96,9 +98,15 @@ type SigningMessage struct {
 	RoundNbr     int
 }
 
-var msgSuite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
-
-//var msgSuite abstract.Suite = nist.NewAES128SHA256P256()
+// Helper functions that will return the suite used during the process from a string name
+func GetSuite(suite string) abstract.Suite {
+	s, ok := suites.All()[suite]
+	if !ok{
+		dbg.Lvl1("Suites available:", suites.All())
+		dbg.Fatal("Didn't find suite", suite)
+	}
+	return s
+}
 
 func NewSigningMessage() interface{} {
 	return &SigningMessage{}
@@ -114,15 +122,22 @@ func (sm *SigningMessage) MarshalBinary() ([]byte, error) {
 }
 
 func (sm *SigningMessage) UnmarshalBinary(data []byte) error {
+	dbg.Fatal("Shouldn't be called")
+	return nil
+}
+
+func (sm *SigningMessage) UnmarshalBinarySuite(jdata *JSONdata) error {
+	suite := GetSuite(jdata.Suite)
 	var cons = make(protobuf.Constructors)
 	var point abstract.Point
 	var secret abstract.Secret
-	cons[reflect.TypeOf(&point).Elem()] = func() interface{} { return msgSuite.Point() }
-	cons[reflect.TypeOf(&secret).Elem()] = func() interface{} { return msgSuite.Secret() }
-	return protobuf.DecodeWithConstructors(data, sm, cons)
+	cons[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
+	cons[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
+	return protobuf.DecodeWithConstructors(jdata.Data, sm, cons)
 }
 
 type JSONdata struct {
+	Suite string
 	Data []byte
 }
 
@@ -132,14 +147,15 @@ func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	return json.Marshal(JSONdata{
+		Suite: sm.Suite,
 		Data: data,
 	})
 }
 
 func (sm *SigningMessage) UnmarshalJSON(dataJSON []byte) error {
-	jdata := JSONdata{}
-	json.Unmarshal(dataJSON, &jdata)
-	return sm.UnmarshalBinary(jdata.Data)
+	jdata := &JSONdata{}
+	json.Unmarshal(dataJSON, jdata)
+	return sm.UnmarshalBinarySuite(jdata)
 }
 
 // Broadcasted message initiated and signed by proposer

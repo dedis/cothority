@@ -137,7 +137,11 @@ func (sn *Node) FillInWithDefaultMessages(view int, messgs []*SigningMessage) []
 		}
 
 		if !found {
-			allmessgs = append(allmessgs, &SigningMessage{ViewNbr: view, Type: Default, From: c})
+			allmessgs = append(allmessgs, &SigningMessage{
+				Suite: sn.Suite().String(),
+				ViewNbr: view,
+				Type: Default,
+				From: c})
 		}
 	}
 

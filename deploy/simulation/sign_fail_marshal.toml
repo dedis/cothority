@@ -2,4 +2,4 @@ Machines = 2
 App = "sign"
 
 ppm, bf, rounds, rate, suite
-4, 2, 10, 10, "ed25519"
+4, 2, 10, 10, "25519"
