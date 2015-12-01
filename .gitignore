@@ -19,3 +19,16 @@ deploy/matplotlib/imgs
 test/
 deploy/platform/deterlab/forkexec/forkexec
 deploy/platform/Deterlab/users/users
+app/conode/config.toml
+app/conode/conode
+app/conode/conode*.tar.gz
+app/conode/conode-bin/
+app/conode/hosts.list
+app/conode/key.priv
+app/conode/key.pub
+app/conode/local_keys/
+app/conode/old/
+app/conode/real/
+
+*.pyc
+*.toml

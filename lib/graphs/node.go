@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/proto/sign"
 
@@ -88,8 +87,8 @@ func (hc *HostConfig) String() string {
 	bformatted := bytes.NewBuffer([]byte{})
 	err := json.Indent(bformatted, b.Bytes(), "", "\t")
 	if err != nil {
-		fmt.Println(string(b.Bytes()))
-		fmt.Println("ERROR: ", err)
+		dbg.Lvl3(string(b.Bytes()))
+		dbg.Lvl3("ERROR: ", err)
 	}
 
 	return string(bformatted.Bytes())
@@ -161,7 +160,7 @@ func ConstructTree(
 	// get the name associated with this address
 	name, ok := nameToAddr[node.Name]
 	if !ok {
-		fmt.Println("unknown name in address book:", node.Name)
+		dbg.Lvl3("unknown name in address book:", node.Name)
 		return 0, errors.New("unknown name in address book")
 	}
 
@@ -174,7 +173,7 @@ func ConstructTree(
 	// it can be backed by a nil pointer
 	h, ok := hosts[name]
 	if !ok {
-		fmt.Println("unknown host in tree:", name)
+		dbg.Lvl3("unknown host in tree:", name)
 		return 0, errors.New("unknown host in tree")
 	}
 
@@ -187,13 +186,13 @@ func ConstructTree(
 		// dbg.Lvl4("decoding point")
 		encoded, err := hex.DecodeString(string(node.PubKey))
 		if err != nil {
-			log.Error("failed to decode hex from encoded")
+			dbg.Error("failed to decode hex from encoded")
 			return 0, err
 		}
 		pubkey = suite.Point()
 		err = pubkey.UnmarshalBinary(encoded)
 		if err != nil {
-			log.Error("failed to decode point from hex")
+			dbg.Error("failed to decode point from hex")
 			return 0, err
 		}
 	}
@@ -201,13 +200,13 @@ func ConstructTree(
 		// dbg.Lvl4("decoding point")
 		encoded, err := hex.DecodeString(string(node.PriKey))
 		if err != nil {
-			log.Error("failed to decode hex from encoded")
+			dbg.Error("failed to decode hex from encoded")
 			return 0, err
 		}
 		prikey = suite.Secret()
 		err = prikey.UnmarshalBinary(encoded)
 		if err != nil {
-			log.Error("failed to decode point from hex")
+			dbg.Error("failed to decode point from hex")
 			return 0, err
 		}
 	}
@@ -249,7 +248,7 @@ func ConstructTree(
 		// connect this node to its children
 		cname, ok := nameToAddr[c.Name]
 		if !ok {
-			fmt.Println("unknown name in address book:", node.Name)
+			dbg.Lvl3("unknown name in address book:", node.Name)
 			return 0, errors.New("unknown name in address book")
 		}
 
@@ -285,7 +284,7 @@ var ipv4host = "NONE"
 func GetAddress() (string, error) {
 	name, err := os.Hostname()
 	if err != nil {
-		log.Error("Error Resolving Hostname:", err)
+		dbg.Error("Error Resolving Hostname:", err)
 		return "", err
 	}
 
@@ -372,7 +371,7 @@ func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...str
 			}
 		}
 		if err != nil {
-			log.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
+			dbg.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
 			//return errors.New("failed to connect")
 		} else {
 			dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
@@ -482,10 +481,10 @@ func LoadConfig(appHosts []string, appTree *Tree, suite abstract.Suite, optsSlic
 		}
 	}
 
-	//suite := edwards.NewAES128SHA256Ed25519(true)
+	//suite := edwards.NewAES128SHA256Ed25519(false)
 	//suite := nist.NewAES128SHA256P256()
 	rand := suite.Cipher([]byte("example"))
-	//fmt.Println("hosts", hosts)
+	//dbg.Lvl3("hosts", hosts)
 	// default value = false
 	start := time.Now()
 	if opts.NoTree == false {

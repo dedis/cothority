@@ -18,6 +18,7 @@ package platform
 import (
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"bufio"
@@ -33,7 +34,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -195,7 +195,8 @@ func (d *Deterlab) Cleanup() error {
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
-			dbg.Lvl3(err)
+			//dbg.Lvl3(err)
+			os.Exit(-1)
 		}
 		d.sshDeter <- "stopped"
 	}()
@@ -248,6 +249,8 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	switch d.App {
 	case "sign", "stamp":
 		conf := app.ConfigColl{}
+		conf.StampsPerRound = -1
+		conf.StampRatio = 1.0
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers
@@ -327,7 +330,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	return nil
 }
 
-func (d *Deterlab) Start() error {
+func (d *Deterlab) Start(args ...string) error {
 	// setup port forwarding for viewing log server
 	d.started = true
 	// Remote tunneling : the sink port is used both for the sink and for the
@@ -342,7 +345,7 @@ func (d *Deterlab) Start() error {
 	if err := exCmd.Wait(); err != nil {
 		dbg.Fatal("ssh port forwarding exited in failure : ", err)
 	}
-	dbg.Lvl2("Setup remote port forwarding ", exCmd)
+	dbg.Lvl3("Setup remote port forwarding", cmd)
 	//time.Sleep(5 * time.Minute)
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")

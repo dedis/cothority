@@ -1,7 +1,6 @@
 package conode_test
 
 import (
-	"fmt"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
@@ -13,6 +12,7 @@ import (
 
 // Runs two conodes and tests if the value returned is OK
 func TestStamp(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 2)
 	conf := readConfig()
 	go runConode(conf, 1)
 	// conf will hold part of the configuration for each server,

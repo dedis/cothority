@@ -61,7 +61,7 @@ func TestMUChallenge(t *testing.T) {
 	nHashIds := 3
 
 	var err error
-	suite := edwards.NewAES128SHA256Ed25519(true)
+	suite := edwards.NewAES128SHA256Ed25519(false)
 	//suite := nist.NewAES128SHA256P256()
 	rand := suite.Cipher([]byte("example"))
 
@@ -94,7 +94,7 @@ func TestMUChallenge(t *testing.T) {
 // Important: when making empty HashIds len should be set to HASH_SIZE
 func TestMUCommit(t *testing.T) {
 	var err error
-	suite := edwards.NewAES128SHA256Ed25519(true)
+	suite := edwards.NewAES128SHA256Ed25519(false)
 	//suite := nist.NewAES128SHA256P256()
 	rand := suite.Cipher([]byte("exampfsdjkhujgkjsgfjgle"))
 	rand2 := suite.Cipher([]byte("examplsfhsjedgjhsge2"))

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+DBG=${2:-1}
 KEY_DIR=local_keys
 KEYS=$KEY_DIR/key
 HOSTLIST=$KEY_DIR/hostlist
@@ -18,6 +19,6 @@ cat $KEYS*.pub >> $HOSTLIST
 ./conode build $HOSTLIST
 
 for a in $( seq 2 $NUMBER ); do
-  ./conode run -key $KEYS$a &
+  ./conode -debug $DBG run -key $KEYS$a &
 done
-./conode run -key ${KEYS}1
+./conode -debug $DBG run -key ${KEYS}1

@@ -7,19 +7,21 @@ import (
 	"time"
 )
 
-func init() {
-	dbg.DebugVisible = 2
-}
-
 func TestProxy(t *testing.T) {
-
+	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
 	m["machines"] = "1"
 	m["ppm"] = "1"
+	m["filter_round"] = "100"
 	stat := NewStats(m)
 	fresh := stat.String()
 	// First set up monitor listening
-	go Monitor(stat)
+	monitor := NewMonitor(stat)
+	done := make(chan bool)
+	go func() {
+		monitor.Listen()
+		done <- true
+	}()
 	time.Sleep(100 * time.Millisecond)
 	// Then setup proxy
 	// change port so the proxy does not listen to the same
@@ -38,13 +40,20 @@ func TestProxy(t *testing.T) {
 		return
 	}
 
-	meas := NewMeasure("round")
+	meas := NewMeasure("setup")
+	meas.Measure()
 	time.Sleep(100 * time.Millisecond)
 	meas.Measure()
 	End()
-	time.Sleep(100 * time.Millisecond)
-	updated := stat.String()
-	if updated == fresh {
-		t.Error("Stats not updated ?")
+	select {
+	case <-done:
+		s := monitor.Stats()
+		s.Collect()
+		if s.String() == fresh {
+			t.Error("stats not updated?")
+		}
+		return
+	case <-time.After(2 * time.Second):
+		t.Error("Monitor not finished")
 	}
 }

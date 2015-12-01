@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"container/list"
 	"errors"
-	"fmt"
-	"log"
 	"net"
 	"strconv"
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 var TRIM bool = false
@@ -34,10 +33,10 @@ func NewGraph(names []string) *Graph {
 
 // takes in a byte array representing an edge list and loads the graph
 func (g *Graph) LoadEdgeList(edgelist []byte) {
-	log.Println(g.Names)
+	dbg.Lvl3(g.Names)
 	fields := bytes.Fields(edgelist)
 	// create name map from string to index
-	log.Println(g.Names)
+	dbg.Lvl3(g.Names)
 	names := make(map[string]int)
 	for i, n := range g.Names {
 		names[n] = i
@@ -49,18 +48,18 @@ func (g *Graph) LoadEdgeList(edgelist []byte) {
 		to := string(fields[i+1])
 		weight, err := strconv.ParseFloat(string(fields[i+2]), 64)
 		if err != nil {
-			log.Println(err)
+			dbg.Lvl3(err)
 			continue
 		}
 		fi, ok := names[from]
 		if !ok {
-			log.Println("from not ok:", from)
+			dbg.Lvl3("from not ok:", from)
 			continue
 		}
 
 		ti, ok := names[to]
 		if !ok {
-			log.Println("to not ok:", to)
+			dbg.Lvl3("to not ok:", to)
 			continue
 		}
 
@@ -78,11 +77,11 @@ func (g *Graph) MST() *Tree {
 // pi: parent index, bf: branching factor, visited: set of visited nodes, ti: tree index, tnodes: space for tree nodes
 // returns the last used index for tree nodes
 func (g *Graph) constructTree(ri int, bf int, visited []bool, tnodes []Tree) {
-	log.Println("constructing tree: ", ri, bf)
-	log.Println(g.Names)
+	dbg.Lvl3("constructing tree: ", ri, bf)
+	dbg.Lvl3(g.Names)
 	root := &tnodes[ri]
 	root.Name = g.Names[ri]
-	log.Println(root)
+	dbg.Lvl3(root)
 	visited[ri] = true
 	tni := 1
 	indmap := make([]int, len(visited))
@@ -104,12 +103,12 @@ func (g *Graph) constructTree(ri int, bf int, visited []bool, tnodes []Tree) {
 		queue.Remove(e)
 		// parent index
 		pi := e.Value.(int)
-		fmt.Println("next: ", pi)
+		dbg.Lvl3("next: ", pi)
 		parent := &tnodes[indmap[pi]]
 
 		fs := sortFloats(g.Weights[pi])
 		nc := bf
-		fmt.Println(fs)
+		dbg.Lvl3(fs)
 		// iterate through children and select the bf closest ones
 		for _, ci := range fs.I {
 			if nc == 0 {
@@ -119,7 +118,7 @@ func (g *Graph) constructTree(ri int, bf int, visited []bool, tnodes []Tree) {
 			// if this child hasn't been visited
 			// it is the closest unvisited child
 			if !visited[ci] {
-				fmt.Println("adding child:", ci, tni)
+				dbg.Lvl3("adding child:", ci, tni)
 				queue.PushFront(ci)
 				cn := &tnodes[tni]
 				indmap[ci] = tni
@@ -152,9 +151,9 @@ func (g *Graph) Tree(nlevels int) *Tree {
 		bf += 1
 	}
 	// log.Panicf("n: %d, nlevels: %d, branching factor: %d\n", n, nlevels, bf)
-	fmt.Println("Tree:", n, nlevels, bf)
+	dbg.Lvl3("Tree:", n, nlevels, bf)
 	g.constructTree(ri, bf, make([]bool, n), tnodes)
-	log.Println("tnodes:", tnodes)
+	dbg.Lvl3("tnodes:", tnodes)
 	return root
 }
 
@@ -282,7 +281,7 @@ func ColorTree(nodeNames []string, hostAddr []string, hostsPerNode int, bf int, 
 			node, _, _ := net.SplitHostPort(newHost)
 			nodesTouched = append(nodesTouched, node)
 		}
-		// fmt.Println(i, hostsCreated)
+		// dbg.Lvl3(i, hostsCreated)
 	}
 
 	if TRIM == true {
@@ -389,16 +388,16 @@ func TrimLastIncompleteLevel(root *Tree, hosts []string, depths []int, bf int) (
 
 	d := Depth(newRoot)
 	if len(badHosts) != 0 && d != treed-1 {
-		fmt.Println(d, "!=", treed-1)
+		dbg.Lvl3(d, "!=", treed-1)
 		panic("TrimTree return wrong result")
 	} else {
 		if len(badHosts) == 0 && d != treed {
-			fmt.Println(d, "!=", treed)
+			dbg.Lvl3(d, "!=", treed)
 			panic("TrimTree return wrong result")
 		}
 	}
 
-	// log.Println("			Trimmed", n-sj, "nodes")
+	// dbg.Lvl3("			Trimmed", n-sj, "nodes")
 	return newRoot, hosts[:sj]
 
 }

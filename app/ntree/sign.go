@@ -25,11 +25,11 @@ func RunRoot(conf *app.NTreeConfig) {
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, LeadRole, key.Secret, key.Public)
-	dbg.Lvl2(peer.String(), "Up and will make connections...")
+	dbg.Lvl3(peer.String(), "Up and will make connections...")
 
 	// monitor
 	if app.RunFlags.Logger == "" {
-		monitor.Disable()
+		monitor.EnableMeasure(false)
 	} else {
 		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
 			dbg.Fatal(peer.String(), "could not connect to the monitor : ", err)
@@ -46,7 +46,7 @@ func RunRoot(conf *app.NTreeConfig) {
 	masterRoundChan := make(chan chan chan *net.ListBasicSignature)
 	// Open connection for each children
 	for _, c := range conf.Tree.Children {
-		dbg.Lvl2(peer.String(), "will connect to children ", c.Name)
+		dbg.Lvl3(peer.String(), "will connect to children ", c.Name)
 
 		connPeer := peer.Open(c.Name)
 		if connPeer == nil {
@@ -101,7 +101,7 @@ func RunRoot(conf *app.NTreeConfig) {
 	// Then for each rounds tell them to start the protocol
 	round := monitor.NewMeasure("round")
 	for i := 1; i <= conf.Rounds; i++ {
-		dbg.Lvl3(peer.String(), "will start a new round ", i)
+		dbg.Lvl1(peer.String(), "will start a new round", i)
 		calc := monitor.NewMeasure("calc")
 		// the signature channel used for this round
 		lsigChan := make(chan *net.ListBasicSignature)
@@ -112,7 +112,7 @@ func RunRoot(conf *app.NTreeConfig) {
 
 		childrenSigs := make([]*net.ListBasicSignature, 0)
 		// Wait for listsignatures coming
-		dbg.Lvl2(peer.String(), "Waiting on signatures for round ", i, "...")
+		dbg.Lvl3(peer.String(), "Waiting on signatures for round ", i, "...")
 
 		for sigs := range lsigChan {
 			dbg.Lvl3(peer.String(), "will analyze one ListBasicSignature...")
@@ -122,7 +122,7 @@ func RunRoot(conf *app.NTreeConfig) {
 				close(lsigChan) // we have finished for this round
 			}
 		}
-		dbg.Lvl2(peer.String(), "Received all signatures ... ")
+		dbg.Lvl3(peer.String(), "Received all signatures ... ")
 		calc.Measure()
 
 		var verifyWg sync.WaitGroup
@@ -153,7 +153,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		// finished verifying => time it !
 		verify.Measure()
 		round.Measure()
-		dbg.Lvl2(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
+		dbg.Lvl3(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
 	}
 
 	// cLosing each channels
@@ -171,7 +171,7 @@ func RunPeer(conf *app.NTreeConfig) {
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, ServRole, key.Secret, key.Public)
-	dbg.Lvl2(peer.String(), "Up and will make connections...")
+	dbg.Lvl3(peer.String(), "Up and will make connections...")
 
 	// Chan used to communicate the message from the parent to the children
 	// Must do a Fan out to communicate this message to all children
@@ -276,7 +276,7 @@ func RunPeer(conf *app.NTreeConfig) {
 				}
 			}
 
-			dbg.Lvl2(peer.String(), "received ", len(sigs), "signatures from children")
+			dbg.Lvl3(peer.String(), "received ", len(sigs), "signatures from children")
 			// Then send to parent the signature
 			lbs := net.ListBasicSignature{}
 			lbs.Length = len(sigs)
@@ -285,20 +285,20 @@ func RunPeer(conf *app.NTreeConfig) {
 			if err != nil {
 				dbg.Fatal(peer.String(), "Could not send list of signature to parents ><", err)
 			}
-			dbg.Lvl2(peer.String(), "round ", i, " : sent the array of sigs to parent")
+			dbg.Lvl3(peer.String(), "round ", i, " : sent the array of sigs to parent")
 		}
 		close(masterRoundChan)
 		c.Close()
 		done <- true
 	}
 
-	dbg.Lvl2(peer.String(), "listen for the parent connection...")
+	dbg.Lvl3(peer.String(), "listen for the parent connection...")
 	go peer.Listen(conf.Name, proto)
 
 	// Connect to the children
 	// Relay the msg
 	// Wait for signatures
-	dbg.Lvl2(peer.String(), "will contact its siblings..")
+	dbg.Lvl3(peer.String(), "will contact its siblings..")
 	// To stop when every children has done all rounds
 	// Connect to every children
 	for i, c := range conf.Tree.Children {
@@ -341,7 +341,7 @@ func RunPeer(conf *app.NTreeConfig) {
 	}
 	// Wait for the whole thing to be done (parent connection == master)
 	<-done
-	dbg.Lvl2(peer.String(), "leaving...")
+	dbg.Lvl3(peer.String(), "leaving...")
 
 }
 
@@ -351,7 +351,7 @@ func RunServer2(conf *app.NTreeConfig) {
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, ServRole, key.Secret, key.Public)
-	dbg.Lvl2(peer.String(), "Up and will make connections...")
+	dbg.Lvl3(peer.String(), "Up and will make connections...")
 
 	nChildren := len(conf.Tree.Children)
 	dbg.Lvl3(peer.String(), "starting with ", nChildren, "children")
@@ -392,7 +392,7 @@ func RunServer2(conf *app.NTreeConfig) {
 	// protocol for the parent <-> peer connection
 	parent := func(c net.Conn) {
 		// for each round
-		dbg.Lvl2(peer.String(), "connected to parent : ", c.PeerName())
+		dbg.Lvl3(peer.String(), "connected to parent : ", c.PeerName())
 		for i := 0; i < conf.Rounds; i++ {
 			dbg.Lvl3(peer.String(), "starting new round ", i, " with parent ", c.PeerName())
 			// Receive message
@@ -440,7 +440,7 @@ func RunServer2(conf *app.NTreeConfig) {
 
 	// the protocol for the peer <-> children connection
 	children := func(c net.Conn, msgChan chan net.MessageSigning) {
-		dbg.Lvl2(peer.String(), "connected with children ", c.PeerName())
+		dbg.Lvl3(peer.String(), "connected with children ", c.PeerName())
 		for i := 0; i < conf.Rounds; i++ {
 			dbg.Lvl3(peer.String(), "(", i, ") waiting upstream message for ", c.PeerName())
 			// wait for the message
@@ -471,8 +471,8 @@ func RunServer2(conf *app.NTreeConfig) {
 	}
 
 	// wait for the end
-	dbg.Lvl2(peer.String(), "waiting the end of the rounds ...")
+	dbg.Lvl3(peer.String(), "waiting the end of the rounds ...")
 	<-done
 	close(masterMsgChan)
-	dbg.Lvl2(peer.String(), "is finished !")
+	dbg.Lvl3(peer.String(), "is finished !")
 }
