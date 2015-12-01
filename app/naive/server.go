@@ -31,6 +31,7 @@ func RunServer(conf *app.NaiveConfig) {
 	if indexPeer == 0 {
 		dbg.Lvl3("Launching a naiv_sign.: Leader", app.RunFlags.Hostname)
 		GoLeader(conf)
+		monitor.End()
 	} else {
 		dbg.Lvl3("Launching a naiv_sign: Signer", app.RunFlags.Hostname)
 		GoSigner(conf)
@@ -155,7 +156,6 @@ func GoLeader(conf *app.NaiveConfig) {
 	}
 
 	// Close down all connections
-
 	close(masterRoundChan)
 	dbg.Lvl3(leader.String(), "has done all rounds")
 }

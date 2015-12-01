@@ -34,14 +34,6 @@ func RunServer(conf *app.ConfigShamir) {
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, flags.Hostname, s, info, indexPeer == 0)
 
-	// monitor connect
-	if app.RunFlags.Logger == "" {
-		monitor.EnableMeasure(false)
-	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal(p.String(), "could not connect to monitor :", err)
-		}
-	}
 	// make it listen
 	setup := monitor.NewMeasure("setup")
 	dbg.Lvl3("Peer", flags.Hostname, "is now listening for incoming connections")
@@ -68,7 +60,7 @@ func RunServer(conf *app.ConfigShamir) {
 	}
 
 	roundm := monitor.NewMeasure("round")
-	for round := 0; round < conf.Rounds; round++ {
+	for round := 1; round <= conf.Rounds; round++ {
 		calc := monitor.NewMeasure("calc")
 		// Then issue a signature !
 		//sys, usr := app.GetRTime()

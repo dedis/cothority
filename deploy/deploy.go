@@ -233,15 +233,17 @@ func isZero(f float64) bool {
 // returns a tuple of start and stop configurations to run
 func getStartStop(rcs int) (int, int) {
 	ss_str := strings.Split(simRange, ":")
-	start, _ := strconv.Atoi(ss_str[0])
+	start, err := strconv.Atoi(ss_str[0])
 	stop := rcs
-	var err error
-	if len(ss_str) > 1 {
-		stop, err = strconv.Atoi(ss_str[1])
-		if err != nil{
-			stop = rcs
+	if err == nil {
+		stop = start
+		if len(ss_str) > 1 {
+			stop, err = strconv.Atoi(ss_str[1])
+			if err != nil {
+				stop = rcs
+			}
 		}
 	}
-	dbg.LLvl2("Range is", start, "...", stop)
+	dbg.Lvl2("Range is", start, "...", stop)
 	return start, stop
 }

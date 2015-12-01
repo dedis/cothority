@@ -13,11 +13,11 @@ import (
 func RunServer(conf *app.NTreeConfig) {
 	if conf.Root {
 		RunRoot(conf)
+		monitor.End()
 	} else {
 		RunPeer(conf)
 		//RunServer2(conf)
 	}
-	monitor.End()
 }
 
 func RunRoot(conf *app.NTreeConfig) {
@@ -161,7 +161,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		close(ch)
 	}
 
-	dbg.Lvl1(peer.String(), "Finished all rounds successfully.")
+	dbg.Lvl2(peer.String(), "Finished all rounds successfully.")
 }
 
 func RunPeer(conf *app.NTreeConfig) {
