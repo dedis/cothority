@@ -46,7 +46,7 @@ func Lvld(lvl int, args ...interface{}) {
 	Lvl(lvl, args...)
 }
 func Lvl(lvl int, args ...interface{}) {
-	if lvl > DebugVisible{
+	if lvl > DebugVisible {
 		return
 	}
 	pc, _, line, _ := runtime.Caller(3)
@@ -72,15 +72,7 @@ func Lvl(lvl int, args ...interface{}) {
 		caller += "@" + StaticMsg
 	}
 	message := fmt.Sprintln(args...)
-	if lvl <= DebugVisible {
-		fmt.Printf("%d: (%s) - %s", lvl, caller, message)
-	} else {
-		if len(message) > 2048 && DebugVisible > 1 {
-			fmt.Printf("%d: (%s) - HUGE message of %d bytes not printed\n", lvl, caller, len(message))
-		}
-		return
-	}
-
+	fmt.Printf("%d: (%s) - %s", lvl, caller, message)
 }
 
 func Lvlf(lvl int, f string, args ...interface{}) {
