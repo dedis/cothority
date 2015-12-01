@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sync"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/conode"
 )
 
 func TestBuild(t *testing.T) {
@@ -25,7 +24,7 @@ func TestMakeConfig(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
-	conode.PeerMaxRounds = 3
+	maxRounds = 3
 	go (func() {
 		Run("config.toml", "key1")
 		wg.Done()

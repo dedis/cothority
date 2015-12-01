@@ -8,6 +8,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 )
 
+var maxRounds = -1
+
 func init() {
 	command := cli.Command{
 		Name:    "run",
@@ -56,5 +58,5 @@ func Run(configFile, key string) {
 		address = addr
 	}
 	peer := conode.NewPeer(address, conf)
-	peer.LoopRounds(RoundStatsType, -1)
+	peer.LoopRounds(RoundStatsType, maxRounds)
 }
