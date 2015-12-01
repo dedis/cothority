@@ -84,6 +84,7 @@ func TestReadyNormal(t *testing.T) {
 		t.Fatal("Stats.Ready != 1")
 	}
 
+	End()
 	StopSink()
 }
 
@@ -102,7 +103,7 @@ func TestKeyOrder(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		b := bytes.NewBuffer(make([]byte, 1024))
 		stat.WriteHeader(b)
-		dbg.Lvl2("Order:", b.String())
+		dbg.Lvl2("Order:", strings.TrimSpace(b.String()))
 		if strings.Contains(b.String(), "rounds, bf"){
 			t.Fatal("Order of fields is not correct")
 		}
