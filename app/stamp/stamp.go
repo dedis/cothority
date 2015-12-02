@@ -110,7 +110,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 					monitor.EnableMeasure(false)
 				} else {
 					if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-						dbg.Fatal("Root could not connect to monitor sink :", err)
+						dbg.Fatal("Root could not connect to monitor sink:", err)
 					}
 				}
 

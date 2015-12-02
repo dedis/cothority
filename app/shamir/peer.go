@@ -30,7 +30,7 @@ type RemotePeer struct {
 }
 
 func (r *RemotePeer) String() string {
-	return fmt.Sprintf("RemotePeer : %s (id: %d)", r.Hostname, r.Id)
+	return fmt.Sprintf("RemotePeer: %s (id: %d)", r.Hostname, r.Id)
 }
 
 func (r *RemotePeer) IsRoot() bool {
@@ -80,7 +80,7 @@ type Peer struct {
 func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot bool) *Peer {
 
 	if id >= p.N {
-		log.Fatal("Error while NewPeer : gien ", id, " as id whereas polyinfo.N = ", p.N)
+		log.Fatal("Error while NewPeer: gien ", id, " as id whereas polyinfo.N = ", p.N)
 
 	}
 	// Setup of the private / public pair
@@ -88,7 +88,7 @@ func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot
 	// setup of the public list of key
 	pubKeys := make([]abstract.Point, p.N)
 	pubKeys[id] = key.Public
-	dbg.Lvl3(name, "(id", id, ") has created its private/public key : public => ", key.Public)
+	dbg.Lvl3(name, "(id", id, ") has created its private/public key: public => ", key.Public)
 
 	return &Peer{
 		Id:      id,
@@ -183,7 +183,7 @@ func (p *Peer) SendACKs() {
 	}
 	err := p.SendToAll(&a)
 	if err != nil {
-		dbg.Fatal(p.Name, "could not sent its ACKs to every one : ", err)
+		dbg.Fatal(p.Name, "could not sent its ACKs to every one:", err)
 	}
 }
 
@@ -241,7 +241,7 @@ func (p *Peer) WaitFins() {
 	//	f := <-p.finChan
 	//	rp, ok := p.remote[f.Id]
 	//	if !ok {
-	//		dbg.Lvl3(p.Name, "received invalid FIN : wrong ID ", rp.Id, " ... ")
+	//		dbg.Lvl3(p.Name, "received invalid FIN: wrong ID ", rp.Id, " ... ")
 	//	} else {
 	//		rp.Conn.Close()
 	//		dbg.Lvl3(p.Name, "received FIN from ", rp.String(), " => closed connection")
@@ -334,7 +334,7 @@ func (p *Peer) String() string {
 	} else {
 		role = "Peer: "
 	}
-	return fmt.Sprintf("%s: %s (%d) : ", role, p.Name, p.Id)
+	return fmt.Sprintf("%s: %s (%d):", role, p.Name, p.Id)
 }
 
 // ComputeSharedSecret will make the exchange of dealers between
@@ -378,7 +378,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 		// TODO: get the response back to the dealer
 		_, err := receiver.AddDeal(p.Id, d)
 		if err != nil {
-			dbg.Fatal(p.Name, "has error when adding the dealer : ", err)
+			dbg.Fatal(p.Name, "has error when adding the dealer:", err)
 		}
 		n += 1
 		// we get enough dealers to compute the shared secret
@@ -418,7 +418,7 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 	// launch the new round
 	err := p.schnorr.NewRound(random, h)
 	if err != nil {
-		dbg.Fatal(p.String(), "could not make a new round : ", err)
+		dbg.Fatal(p.String(), "could not make a new round:", err)
 	}
 
 	// compute its own share of the signature
@@ -446,7 +446,7 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 		psig := <-sigChan
 		err := p.schnorr.AddPartialSig(psig)
 		if err != nil {
-			dbg.Fatal(p.String(), "could not add the partial signature received : ", err)
+			dbg.Fatal(p.String(), "could not add the partial signature received:", err)
 		}
 		n += 1
 		if n == p.info.N-1 {
@@ -470,7 +470,7 @@ func (p *Peer) SchnorrSigPeer(msg []byte) {
 	h.Write(msg)
 	err := p.schnorr.NewRound(random, h)
 	if err != nil {
-		dbg.Fatal(p.String(), "could not make a new round : ", err)
+		dbg.Fatal(p.String(), "could not make a new round:", err)
 	}
 
 	// compute its own share of the signature

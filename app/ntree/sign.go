@@ -32,7 +32,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		monitor.EnableMeasure(false)
 	} else {
 		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal(peer.String(), "could not connect to the monitor : ", err)
+			dbg.Fatal(peer.String(), "could not connect to the monitor:", err)
 		}
 	}
 
@@ -68,16 +68,16 @@ func RunRoot(conf *app.NTreeConfig) {
 				// send msg to children
 				err := conn.Send(m)
 				if err != nil {
-					dbg.Fatal(peer.String(), "could not send message to children ", conn.PeerName(), " : ", err)
+					dbg.Fatal(peer.String(), "could not send message to children ", conn.PeerName(), ":", err)
 				}
 				dbg.Lvl3(peer.String(), "sent message to children ", conn.PeerName())
 				// Receive bundled signatures
 				sig, err := conn.Receive()
 				if err != nil {
-					dbg.Fatal(peer.String(), "could not received bundled signature from ", conn.PeerName(), " : ", err)
+					dbg.Fatal(peer.String(), "could not received bundled signature from ", conn.PeerName(), ":", err)
 				}
 				if sig.MsgType != net.ListBasicSignatureType {
-					dbg.Fatal(peer.String(), "received a wrong packet type from ", conn.PeerName(), " : ", sig.MsgType.String())
+					dbg.Fatal(peer.String(), "received a wrong packet type from ", conn.PeerName(), ":", sig.MsgType.String())
 				}
 				// Then pass them on
 				sigs := sig.Msg.(net.ListBasicSignature)
@@ -153,7 +153,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		// finished verifying => time it !
 		verify.Measure()
 		round.Measure()
-		dbg.Lvl3(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
+		dbg.Lvl3(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures:", total-faulty, "/", total, " good signatures")
 	}
 
 	// cLosing each channels
@@ -247,12 +247,12 @@ func RunPeer(conf *app.NTreeConfig) {
 				dbg.Fatal(peer.String(), "error receiving message from parent ", c.PeerName())
 			}
 			if sig.MsgType != net.MessageSigningType {
-				dbg.Fatal(peer.String(), "received wrong packet type from parent : ", sig.MsgType.String())
+				dbg.Fatal(peer.String(), "received wrong packet type from parent:", sig.MsgType.String())
 			}
 			msg := sig.Msg.(net.MessageSigning)
 			// Notify the chan so it will be broadcasted down
 			masterMsgChan <- msg
-			dbg.Lvl3(peer.String(), "round ", i, " : received message from parent", msg.Msg)
+			dbg.Lvl3(peer.String(), "round ", i, ": received message from parent", msg.Msg)
 			// issue our signature
 			bs := peer.Signature(msg.Msg)
 			// wait for children signatures
@@ -261,9 +261,9 @@ func RunPeer(conf *app.NTreeConfig) {
 
 			// for each ListBasicSignature
 			n := 0
-			dbg.Lvl3(peer.String(), "round ", i, " : waiting on signatures from children ...")
+			dbg.Lvl3(peer.String(), "round ", i, ": waiting on signatures from children ...")
 			for lsig := range sigChan {
-				dbg.Lvl3(peer.String(), "round", i, " : receievd a ListSignature !")
+				dbg.Lvl3(peer.String(), "round", i, ": receievd a ListSignature !")
 				// Add each independant signature
 				for _, sig := range lsig.Sigs {
 					sigs = append(sigs, sig)
@@ -285,7 +285,7 @@ func RunPeer(conf *app.NTreeConfig) {
 			if err != nil {
 				dbg.Fatal(peer.String(), "Could not send list of signature to parents ><", err)
 			}
-			dbg.Lvl3(peer.String(), "round ", i, " : sent the array of sigs to parent")
+			dbg.Lvl3(peer.String(), "round ", i, ": sent the array of sigs to parent")
 		}
 		close(masterRoundChan)
 		c.Close()
@@ -328,7 +328,7 @@ func RunPeer(conf *app.NTreeConfig) {
 					dbg.Fatal(peer.String(), "Could not receive the bundled children signature from", conn.PeerName())
 				}
 				if sig.MsgType != net.ListBasicSignatureType {
-					dbg.Fatal(peer.String(), "received an different package from ", conn.PeerName(), " : ", sig.MsgType.String())
+					dbg.Fatal(peer.String(), "received an different package from ", conn.PeerName(), ":", sig.MsgType.String())
 				}
 				dbg.Lvl4(peer.String(), "received signature bundle from children ", conn.PeerName())
 				lbs := sig.Msg.(net.ListBasicSignature)
@@ -392,7 +392,7 @@ func RunServer2(conf *app.NTreeConfig) {
 	// protocol for the parent <-> peer connection
 	parent := func(c net.Conn) {
 		// for each round
-		dbg.Lvl3(peer.String(), "connected to parent : ", c.PeerName())
+		dbg.Lvl3(peer.String(), "connected to parent:", c.PeerName())
 		for i := 0; i < conf.Rounds; i++ {
 			dbg.Lvl3(peer.String(), "starting new round ", i, " with parent ", c.PeerName())
 			// Receive message
@@ -447,13 +447,13 @@ func RunServer2(conf *app.NTreeConfig) {
 			msg := <-msgChan
 			// send it
 			if err := c.Send(msg); err != nil {
-				dbg.Fatal(peer.String(), "(", i, ") could not send msg down to children ", c.PeerName(), " : ", err)
+				dbg.Fatal(peer.String(), "(", i, ") could not send msg down to children ", c.PeerName(), ":", err)
 			}
 			dbg.Lvl3(peer.String(), "(", i, ") sent upstream msg to ", c.PeerName())
 
 			// wait for the response sigs
 			lbs := peer.ReceiveListBasicSignature(c)
-			dbg.Lvl3(peer.String(), "(", i, ") received ListBasicSignature from children : ", c.PeerName())
+			dbg.Lvl3(peer.String(), "(", i, ") received ListBasicSignature from children:", c.PeerName())
 			// dispatch to the parent conn
 			masterSigChan <- lbs
 		}

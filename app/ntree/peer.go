@@ -59,7 +59,7 @@ func (l *Peer) ReceiveMessage(c net.Conn) net.MessageSigning {
 
 	}
 	if app.MsgType != net.MessageSigningType {
-		dbg.Fatal(l.String(), "MS error : received ", app.MsgType.String(), " from ", c.PeerName())
+		dbg.Fatal(l.String(), "MS error: received ", app.MsgType.String(), " from ", c.PeerName())
 	}
 	return app.Msg.(net.MessageSigning)
 }
@@ -71,7 +71,7 @@ func (l *Peer) ReceiveListBasicSignature(c net.Conn) net.ListBasicSignature {
 	}
 
 	if app.MsgType != net.ListBasicSignatureType {
-		dbg.Fatal(l.String(), "LBS error : received ", app.MsgType.String(), "from ", c.PeerName())
+		dbg.Fatal(l.String(), "LBS error: received ", app.MsgType.String(), "from ", c.PeerName())
 	}
 	return app.Msg.(net.ListBasicSignature)
 

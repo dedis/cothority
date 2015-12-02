@@ -130,16 +130,16 @@ func (sr *StampSignature) Save(file string) error {
 	var bufCommit bytes.Buffer
 	var bufPublic bytes.Buffer
 	if err := cliutils.WriteSecret64(suite, &bufChall, sr.Challenge); err != nil {
-		return fmt.Errorf("Could not write secret challenge :", err)
+		return fmt.Errorf("Could not write secret challenge:", err)
 	}
 	if err := cliutils.WriteSecret64(suite, &bufResp, sr.Response); err != nil {
-		return fmt.Errorf("Could not write secret response : ", err)
+		return fmt.Errorf("Could not write secret response:", err)
 	}
 	if err := cliutils.WritePub64(suite, &bufCommit, sr.AggCommit); err != nil {
-		return fmt.Errorf("Could not write aggregated commitment : ", err)
+		return fmt.Errorf("Could not write aggregated commitment:", err)
 	}
 	if err := cliutils.WritePub64(suite, &bufPublic, sr.AggPublic); err != nil {
-		return fmt.Errorf("Could not write aggregated public key : ", err)
+		return fmt.Errorf("Could not write aggregated public key:", err)
 	}
 	// Signature file struct containing everything needed
 	sigStr := &sigFile{
@@ -182,14 +182,14 @@ func (sr *StampSignature) Open(file string) error {
 	// Read the root, the challenge and response
 	sr.MerkleRoot, err = base64.StdEncoding.DecodeString(sigStr.MerkleRoot)
 	if err != nil {
-		fmt.Errorf("Could not decode Merkle Root from sig file :", err)
+		fmt.Errorf("Could not decode Merkle Root from sig file:", err)
 	}
 	sr.Response, err = cliutils.ReadSecret64(suite, strings.NewReader(sigStr.Response))
 	if err != nil {
-		fmt.Errorf("Could not read secret challenge : ", err)
+		fmt.Errorf("Could not read secret challenge:", err)
 	}
 	if sr.Challenge, err = cliutils.ReadSecret64(suite, strings.NewReader(sigStr.Challenge)); err != nil {
-		fmt.Errorf("Could not read the aggregate commitment :", err)
+		fmt.Errorf("Could not read the aggregate commitment:", err)
 	}
 	if sr.AggCommit, err = cliutils.ReadPub64(suite, strings.NewReader(sigStr.AggCommitment)); err != nil {
 		return err

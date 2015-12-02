@@ -16,7 +16,7 @@ func main() {
 
 	// we must know who we are
 	if app.RunFlags.Hostname == "" {
-		log.Fatal("Hostname empty : Abort")
+		log.Fatal("Hostname empty: Abort")
 	}
 
 	own, depth := conf.Tree.FindByName(app.RunFlags.Hostname, 0)

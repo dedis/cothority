@@ -39,7 +39,7 @@ func RunServer(conf *app.ConfigShamir) {
 		monitor.EnableMeasure(false)
 	} else {
 		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal(p.String(), "could not connect to monitor :", err)
+			dbg.Fatal(p.String(), "could not connect to monitor:", err)
 		}
 	}
 	// make it listen
@@ -82,7 +82,7 @@ func RunServer(conf *app.ConfigShamir) {
 			verify := monitor.NewMeasure("verify")
 			err := p.VerifySchnorrSig(sig, []byte(msg))
 			if err != nil {
-				dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
+				dbg.Fatal(p.String(), "could not verify schnorr signature:/ ", err)
 			}
 			verify.Measure()
 			roundm.Measure()

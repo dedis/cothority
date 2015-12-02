@@ -17,15 +17,15 @@ import (
 func VerifySignature(suite abstract.Suite, reply *StampSignature, public abstract.Point, message []byte) bool {
 	// Check if aggregate public key is correct
 	if !public.Equal(reply.AggPublic) {
-		dbg.Lvl1("Aggregate-public-key check : FAILED (maybe you have an outdated config file of the tree)")
+		dbg.Lvl1("Aggregate-public-key check: FAILED (maybe you have an outdated config file of the tree)")
 		return false
 	}
 	// First check if the challenge is ok
 	if err := VerifyChallenge(suite, reply); err != nil {
-		dbg.Lvl1("Challenge-check : FAILED (", err, ")")
+		dbg.Lvl1("Challenge-check: FAILED (", err, ")")
 		return false
 	}
-	dbg.Lvl2("Challenge-check : OK")
+	dbg.Lvl2("Challenge-check: OK")
 
 	// Incorporate the timestamp in the message since the verification process
 	// is done by reconstructing the challenge
@@ -36,17 +36,17 @@ func VerifySignature(suite abstract.Suite, reply *StampSignature, public abstrac
 	}
 	msg := append(b.Bytes(), []byte(reply.MerkleRoot)...)
 	if err := VerifySchnorr(suite, msg, public, reply.Challenge, reply.Response); err != nil {
-		dbg.Lvl1("Signature-check : FAILED (", err, ")")
+		dbg.Lvl1("Signature-check: FAILED (", err, ")")
 		return false
 	}
-	dbg.Lvl2("Signature-check : OK")
+	dbg.Lvl2("Signature-check: OK")
 
 	// finally check the proof
 	if !proof.CheckProof(suite.Hash, reply.MerkleRoot, hashid.HashId(message), reply.Prf) {
-		dbg.Lvl2("Inclusion-check : FAILED")
+		dbg.Lvl2("Inclusion-check: FAILED")
 		return false
 	}
-	dbg.Lvl2("Inclusion-check : OK")
+	dbg.Lvl2("Inclusion-check: OK")
 	return true
 }
 

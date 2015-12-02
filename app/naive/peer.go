@@ -68,7 +68,7 @@ func (l *Peer) ReceiveBasicSignature(c net.Conn) *net.BasicSignature {
 		dbg.Fatal(l.String(), "error decoding message from ", c.PeerName())
 	}
 	if appMsg.MsgType != net.BasicSignatureType {
-		dbg.Fatal(l.String(), "Received an unknown type : ", appMsg.MsgType.String())
+		dbg.Fatal(l.String(), "Received an unknown type:", appMsg.MsgType.String())
 	}
 	bs := appMsg.Msg.(net.BasicSignature)
 	return &bs

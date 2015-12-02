@@ -17,7 +17,7 @@ func main() {
 
 	// we must know who we are
 	if app.RunFlags.Hostname == "" {
-		dbg.Fatal("Hostname empty : Abort")
+		dbg.Fatal("Hostname empty: Abort")
 	}
 
 	// Do some common setup

@@ -36,7 +36,7 @@ func TestProxy(t *testing.T) {
 	// Then measure
 	err := ConnectSink("localhost:" + SinkPort)
 	if err != nil {
-		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))
+		t.Error(fmt.Sprintf("Can not connect to proxy: %s", err))
 		return
 	}
 

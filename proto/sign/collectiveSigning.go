@@ -318,7 +318,7 @@ func (sn *Node) Commit(view, Round int, sm *SigningMessage) error {
 		// add good child server to combined public key, and point commit
 		sn.add(round.X_hat, sm.Com.X_hat)
 		sn.add(round.Log.V_hat, sm.Com.V_hat)
-		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
+		//dbg.Lvl4("Adding aggregate public key from ", from, ":", sm.Com.X_hat)
 	}
 
 	if sn.Type == PubKey {
@@ -347,7 +347,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 
 	if sn.IsRoot(view) {
 		// BUG: when removing the dbg.Lvl5, returns 'invalid elliptic curve'
-		dbg.Lvl5("Commit root : Aggregate Public Key :", round.X_hat)
+		dbg.Lvl5("Commit root: Aggregate Public Key:", round.X_hat)
 		//fmt.Println("Message is ", round.msg)
 		//if round.X_hat.Equal(sn.suite.Point().Null()) {
 		//	fmt.Println("Committt", round.X_hat)

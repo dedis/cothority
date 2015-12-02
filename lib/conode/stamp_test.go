@@ -1,13 +1,14 @@
 package conode_test
 
 import (
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"strconv"
-	"testing"
-	"time"
 )
 
 // Runs two conodes and tests if the value returned is OK
@@ -40,7 +41,7 @@ func TestStamp(t *testing.T) {
 func readConfig() *app.ConfigConode {
 	conf := &app.ConfigConode{}
 	if err := app.ReadTomlConfig(conf, "testdata/config.toml"); err != nil {
-		dbg.Fatal("Could not read toml config... : ", err)
+		dbg.Fatal("Could not read toml config: ", err)
 	}
 	dbg.Lvl2("Configuration file read")
 	suite = app.GetSuite(conf.Suite)
@@ -52,12 +53,12 @@ func runConode(conf *app.ConfigConode, id int) {
 	keybase := "testdata/key" + strconv.Itoa(id)
 	address := ""
 	if sec, err := cliutils.ReadPrivKey(suite, keybase+".priv"); err != nil {
-		dbg.Fatal("Error reading private key file  :", err)
+		dbg.Fatal("Error reading private key file:", err)
 	} else {
 		conf.Secret = sec
 	}
 	if pub, addr, err := cliutils.ReadPubKey(suite, keybase+".pub"); err != nil {
-		dbg.Fatal("Error reading public key file :", err)
+		dbg.Fatal("Error reading public key file:", err)
 	} else {
 		conf.Public = pub
 		address = addr

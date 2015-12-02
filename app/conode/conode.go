@@ -106,12 +106,12 @@ func KeyGeneration(key, address string) {
 	kp := cliutils.KeyPair(suite)
 	// Write private
 	if err := cliutils.WritePrivKey(suite, namePriv(key), kp.Secret); err != nil {
-		dbg.Fatal("Error writing private key file : ", err)
+		dbg.Fatal("Error writing private key file:", err)
 	}
 
 	// Write public
 	if err := cliutils.WritePubKey(suite, namePub(key), kp.Public, address); err != nil {
-		dbg.Fatal("Error writing public key file : ", err)
+		dbg.Fatal("Error writing public key file:", err)
 	}
 
 	dbg.Lvl1("Keypair generated and written to ", namePriv(key), " / ", namePub(key))

@@ -50,7 +50,7 @@ func ConnectSink(addr string) error {
 	if err != nil {
 		return err
 	}
-	dbg.Lvl2("Connected to sink : ", addr)
+	dbg.Lvl2("Connected to sink:", addr)
 	sink = addr
 	connection = conn
 	encoder = json.NewEncoder(conn)
@@ -66,7 +66,7 @@ func send(v interface{}) {
 		return
 	}
 	if err := encoder.Encode(v); err != nil {
-		panic(fmt.Errorf("Error sending to sink : %v", err))
+		panic(fmt.Errorf("Error sending to sink: %v", err))
 	}
 }
 

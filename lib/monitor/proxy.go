@@ -31,7 +31,7 @@ func init() {
 func connectSink(redirection string) error {
 	conn, err := net.Dial("tcp", redirection)
 	if err != nil {
-		return fmt.Errorf("Proxy connection to server %s failed : %v", redirection, err)
+		return fmt.Errorf("Proxy connection to server %s failed: %v", redirection, err)
 	}
 	serverConn = conn
 	serverEnc = json.NewEncoder(conn)
@@ -53,7 +53,7 @@ func Proxy(redirection string) {
 	// usually 0.0.0.0:4000
 	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
-		panic(fmt.Errorf("Error while binding proxy to addr %s : %v", Sink+":"+SinkPort, err))
+		panic(fmt.Errorf("Error while binding proxy to addr %s: %v", Sink+":"+SinkPort, err))
 	}
 	dbg.Lvl2("Proxy listening on ", Sink+":"+SinkPort)
 	var newConn = make(chan bool)
@@ -69,10 +69,10 @@ func Proxy(redirection string) {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl1("Error proxy accepting connection : ", err)
+				dbg.Lvl1("Error proxy accepting connection:", err)
 				continue
 			}
-			dbg.Lvl2("Proxy accepting incoming connection from : ", conn.RemoteAddr().String())
+			dbg.Lvl2("Proxy accepting incoming connection from:", conn.RemoteAddr().String())
 			newConn <- true
 			go proxyConnection(conn, closeConn)
 		}
@@ -108,10 +108,10 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	for {
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
-			dbg.Lvl1("Error receiving data from ", conn.RemoteAddr().String(), " : ", err)
+			dbg.Lvl1("Error receiving data from ", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl1("Too many error from ", conn.RemoteAddr().String(), " : Abort connection")
+				dbg.Lvl1("Too many error from ", conn.RemoteAddr().String(), ": Abort connection")
 				break
 			}
 		}
@@ -122,7 +122,7 @@ func proxyConnection(conn net.Conn, done chan bool) {
 		}
 		// Proxy data
 		if err := serverEnc.Encode(m); err != nil {
-			dbg.Lvl2("Error proxying data :", err)
+			dbg.Lvl2("Error proxying data:", err)
 			break
 		}
 		m = Measure{}
@@ -135,6 +135,6 @@ func proxyConnection(conn net.Conn, done chan bool) {
 func proxyDataServer(data []byte) {
 	_, err := serverConn.Write(data)
 	if err != nil {
-		panic(fmt.Errorf("Error proxying data to server : %v", err))
+		panic(fmt.Errorf("Error proxying data to server: %v", err))
 	}
 }

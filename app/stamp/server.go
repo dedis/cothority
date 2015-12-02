@@ -416,7 +416,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	if len(s.Queue[READING]) < upperBound || upperBound == -1 {
 		upperBound = len(s.Queue[READING])
 	}
-	dbg.Lvl4("Aggregate COMMIT :", upperBound, " TAKEN /", len(s.Queue[READING]))
+	dbg.Lvl4("Aggregate COMMIT:", upperBound, " TAKEN /", len(s.Queue[READING]))
 	// Take the maximum number of stamprequest for this round
 	s.Queue[PROCESSING] = s.Queue[READING][0:upperBound]
 	// And let the rest adjust it self
@@ -473,7 +473,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
-		dbg.Lvl3("Stamper error putting to client :", err)
+		dbg.Lvl3("Stamper error putting to client:", err)
 		s.Close()
 		return
 	}
