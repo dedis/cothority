@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
 	"testing"
-"time"
+	"time"
 )
 
 // Runs two conodes and tests if the value returned is OK
@@ -21,7 +21,7 @@ func TestStamp(t *testing.T) {
 		t.Fatal("Couldn't open config-file:", err)
 	}
 
-	for _, port := range ([]int{7000, 7010}) {
+	for _, port := range []int{7000, 7010} {
 		stamper := "localhost:" + strconv.Itoa(port)
 		dbg.Lvl2("Contacting stamper", stamper)
 		tsm, err := s.GetStamp([]byte("test"), stamper)

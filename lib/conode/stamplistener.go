@@ -1,12 +1,13 @@
 package conode
+
 import (
 	"github.com/dedis/cothority/lib/cliutils"
-	"net"
 	"github.com/dedis/cothority/lib/coconet"
-	"os"
 	"github.com/dedis/cothority/lib/dbg"
-	"sync"
+	"net"
+	"os"
 	"strconv"
+	"sync"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 /*
 The counterpart to stamp.go - it listens for incoming requests
 and passes those to the roundstamper.
- */
+*/
 
 func init() {
 	SLList = make(map[string]*StampListener)
@@ -27,16 +28,16 @@ var SLList map[string]*StampListener
 
 type StampListener struct {
 	// for aggregating messages from clients
-	Mux       sync.Mutex
-	Queue     [][]MustReplyMessage
+	Mux   sync.Mutex
+	Queue [][]MustReplyMessage
 	// All clients connected to that listener
-	Clients   map[string]coconet.Conn
+	Clients map[string]coconet.Conn
 	// The name of the listener
-	NameL     string
+	NameL string
 	// The channel for closing the connection
 	waitClose chan string
 	// The port we're listening on
-	Port      net.Listener
+	Port net.Listener
 }
 
 // Creates a new stamp listener one port above the
@@ -51,7 +52,7 @@ func NewStampListener(nameP string) *StampListener {
 		if err != nil {
 			dbg.Fatal(err)
 		}
-		nameL = net.JoinHostPort(h, strconv.Itoa(i + 1))
+		nameL = net.JoinHostPort(h, strconv.Itoa(i+1))
 	} else {
 		dbg.Fatal("Couldn't split host into name and port:", err)
 	}
@@ -150,8 +151,8 @@ func (s *StampListener) Close() {
 }
 
 // StampListenersClose closes all open stamplisteners
-func StampListenersClose(){
-	for _, s := range SLList{
+func StampListenersClose() {
+	for _, s := range SLList {
 		s.Close()
 	}
 }

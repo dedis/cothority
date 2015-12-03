@@ -1,11 +1,11 @@
 package conode_test
 
 import (
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sign"
 	"testing"
 	"time"
-	"github.com/dedis/cothority/lib/sign"
-	"github.com/dedis/cothority/lib/conode"
 )
 
 // Tests if the rounds are deleted when done
@@ -114,7 +114,7 @@ func testRound(t *testing.T, roundType string) {
 	time.Sleep(time.Second)
 
 	var cosi *sign.CosiStruct
-	switch roundType{
+	switch roundType {
 	case sign.RoundCosiType:
 		cosi = round.(*sign.RoundCosi).Cosi
 	case sign.RoundExceptionType:

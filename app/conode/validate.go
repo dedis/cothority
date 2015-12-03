@@ -28,8 +28,8 @@ func init() {
 		Aliases: []string{"v"},
 		Usage:   "Starts validation mode of the CoNode",
 		Description: "The CoNode will be running for a whole day during which" +
-		             "the development team will run repeated checks to verify " +
-		             "that your server is eligible for being incorporated in the cothority tree.",
+			"the development team will run repeated checks to verify " +
+			"that your server is eligible for being incorporated in the cothority tree.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "key, k",
@@ -60,7 +60,7 @@ func Validation(keyFile string) {
 	}
 
 	var conn net.Conn
-	for ;; conn.Close() {
+	for ; ; conn.Close() {
 		dbg.Lvl1("Waiting for verifier connection ...")
 		// Accept the one
 		conn, err = ln.Accept()
@@ -88,7 +88,7 @@ func Validation(keyFile string) {
 		var er string = "Validation is NOT correct, something is wrong about your "
 		// All went fine
 		dbg.Lvl2("Received code", ack)
-		switch ack.Code{
+		switch ack.Code {
 		default:
 			dbg.Lvl1("Validation received unknown ACK : type = ", ack.Type, " Code = ", ack.Code)
 			continue

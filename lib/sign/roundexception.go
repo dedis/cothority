@@ -10,7 +10,7 @@ RoundException implements the collective signature protocol using
 Schnorr signatures to collectively sign on a message. By default
 the message is only the collection of all Commits, but another
 round can add any message it wants in the Commitment-phase.
- */
+*/
 
 // The name type of this round implementation
 const RoundExceptionType = "cosiexception"
@@ -55,10 +55,10 @@ func (round *RoundException) Announcement(viewNbr, roundNbr int, in *SigningMess
 // Commitment adds up all exception-lists from children and calls roundcosi
 func (round *RoundException) Commitment(in []*SigningMessage, out *SigningMessage) error {
 	/*
-	if round.Name == ExceptionForceFailure {
-		dbg.LLvl3("Forcing failure in commitment")
-		return nil
-	}
+		if round.Name == ExceptionForceFailure {
+			dbg.LLvl3("Forcing failure in commitment")
+			return nil
+		}
 	*/
 
 	err := round.RoundCosi.Commitment(in, out)
@@ -90,10 +90,10 @@ func (round *RoundException) Challenge(in *SigningMessage, out []*SigningMessage
 
 func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage) error {
 	/*
-	if round.Name == ExceptionForceFailure {
-		dbg.LLvl3("Forcing failure in response")
-		return nil
-	}
+		if round.Name == ExceptionForceFailure {
+			dbg.LLvl3("Forcing failure in response")
+			return nil
+		}
 	*/
 
 	// initialize exception handling

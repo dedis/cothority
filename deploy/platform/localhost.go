@@ -27,36 +27,36 @@ var defaultConfigName = "localhost.toml"
 type Localhost struct {
 
 	// Address of the logger (can be local or not)
-	Logger   string
+	Logger string
 
 	// App to run [shamir,coll_sign..]
-	App      string
+	App string
 	// where the app is located
-	AppDir   string
+	AppDir string
 
 	// Where is the Localhost package located
 	LocalDir string
 	// Where to build the executables +
 	// where to read the config file
 	// it will be assembled like LocalDir/RunDir
-	RunDir   string
+	RunDir string
 
 	// Debug level 1 - 5
-	Debug    int
+	Debug int
 
 	// Number of machines - so we can use the same
 	// configuration-files
 	Machines int
 	// This gives the number of hosts per node (machine)
-	Ppm      int
+	Ppm int
 	// hosts used with the applications
 	// example: localhost:2000, ...:2010 , ...
-	Hosts    []string
+	Hosts []string
 
 	// Whether we started a simulation
-	running  bool
+	running bool
 	// WaitGroup for running processes
-	wg_run   sync.WaitGroup
+	wg_run sync.WaitGroup
 }
 
 // Configure various
@@ -76,7 +76,7 @@ func (d *Localhost) Configure() {
 
 // Will build the application
 func (d *Localhost) Build(build string) error {
-	src, _ := filepath.Rel(d.LocalDir, d.AppDir + "/" + d.App)
+	src, _ := filepath.Rel(d.LocalDir, d.AppDir+"/"+d.App)
 	dst := d.RunDir + "/" + d.App
 	start := time.Now()
 	// build for the local machine
@@ -242,7 +242,7 @@ func (d *Localhost) GenerateHosts() {
 	port := 2000
 	inc := 5
 	for i := 0; i < nrhosts; i++ {
-		s := "127.0.0.1:" + strconv.Itoa(port + inc * i)
+		s := "127.0.0.1:" + strconv.Itoa(port+inc*i)
 		d.Hosts[i] = s
 	}
 	dbg.Lvl4("Localhost: Generated hosts list ", d.Hosts)

@@ -17,7 +17,7 @@ import (
 
 /*
 Some more utilities for the Node-structure.
- */
+*/
 
 func (sn *Node) multiplexOnChildren(view int, sm *SigningMessage) {
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
@@ -98,7 +98,7 @@ func (sn *Node) TryFailure(view, roundNbr int) error {
 		return errors.New("failure imposed")
 	}
 
-	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && roundNbr %sn.FailAsFollowerEvery == 0 {
+	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && roundNbr%sn.FailAsFollowerEvery == 0 {
 		// when failure rate given fail with that probability
 		if (sn.FailureRate > 0 && sn.ShouldIFail("")) || (sn.FailureRate == 0) {
 			log.WithFields(log.Fields{
@@ -138,10 +138,10 @@ func (sn *Node) FillInWithDefaultMessages(view int, messgs []*SigningMessage) []
 
 		if !found {
 			allmessgs = append(allmessgs, &SigningMessage{
-				Suite: sn.Suite().String(),
+				Suite:   sn.Suite().String(),
 				ViewNbr: view,
-				Type: Default,
-				From: c})
+				Type:    Default,
+				From:    c})
 		}
 	}
 

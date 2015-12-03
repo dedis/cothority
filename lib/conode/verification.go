@@ -12,7 +12,7 @@ import (
 
 /*
 Verification methods used by stamper.
- */
+*/
 
 // Verifies that the 'message' is included in the signature and that it
 // is correct.

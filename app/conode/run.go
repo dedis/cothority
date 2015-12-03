@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
 )
 

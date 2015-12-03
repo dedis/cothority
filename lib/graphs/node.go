@@ -94,9 +94,9 @@ func writeHC(b *bytes.Buffer, hc *HostConfig, p *sign.Node) error {
 	}
 	prk, _ := p.PrivKey.MarshalBinary()
 	pbk, _ := p.PubKey.MarshalBinary()
-	fmt.Fprint(b, "{\"name\":", "\"" + p.Name() + "\",")
-	fmt.Fprint(b, "\"prikey\":", "\"" + string(hex.EncodeToString(prk)) + "\",")
-	fmt.Fprint(b, "\"pubkey\":", "\"" + string(hex.EncodeToString(pbk)) + "\",")
+	fmt.Fprint(b, "{\"name\":", "\""+p.Name()+"\",")
+	fmt.Fprint(b, "\"prikey\":", "\""+string(hex.EncodeToString(prk))+"\",")
+	fmt.Fprint(b, "\"pubkey\":", "\""+string(hex.EncodeToString(pbk))+"\",")
 
 	// recursively format children
 	fmt.Fprint(b, "\"children\":[")
@@ -140,14 +140,14 @@ func max(a, b int) int {
 // config file. ConstructTree must be called AFTER populating the HostConfig with
 // ALL the possible hosts.
 func ConstructTree(
-node *Tree,
-hc *HostConfig,
-parent string,
-suite abstract.Suite,
-rand cipher.Stream,
-hosts map[string]coconet.Host,
-nameToAddr map[string]string,
-opts ConfigOptions) (int, error) {
+	node *Tree,
+	hc *HostConfig,
+	parent string,
+	suite abstract.Suite,
+	rand cipher.Stream,
+	hosts map[string]coconet.Host,
+	nameToAddr map[string]string,
+	opts ConfigOptions) (int, error) {
 	// passes up its X_hat, and/or an error
 
 	// get the name associated with this address
@@ -218,7 +218,7 @@ opts ConfigOptions) (int, error) {
 			hc.SNodes = append(hc.SNodes, sn)
 			h.SetPubKey(sn.PubKey)
 		}
-		sn = hc.SNodes[len(hc.SNodes) - 1]
+		sn = hc.SNodes[len(hc.SNodes)-1]
 		hc.Hosts[name] = sn
 		if prikey == nil {
 			prikey = sn.PrivKey
@@ -257,7 +257,7 @@ opts ConfigOptions) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		height = max(h + 1, height)
+		height = max(h+1, height)
 		// if generating all csn will be availible
 	}
 	if generate {
@@ -316,8 +316,8 @@ type ConfigOptions struct {
 	Faulty    bool           // if true, use FaultyHost wrapper around Hosts
 	Suite     abstract.Suite // suite to use for Hosts
 	NoTree    bool           // bool flag to tell wether we want to construct
-							 // the tree or not. Setting this to false will
-							 // construct the tree. True will not.
+	// the tree or not. Setting this to false will
+	// construct the tree. True will not.
 }
 
 // run the given hostnames

@@ -5,10 +5,10 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/sign"
 	"strconv"
 	"testing"
-	"github.com/dedis/cothority/lib/sign"
-	"github.com/dedis/cothority/lib/graphs"
 	"time"
 )
 
@@ -67,10 +67,10 @@ func TestCloseAll(t *testing.T) {
 	// Send CloseAll manually
 	peer1.SendCloseAll()
 	time.Sleep(time.Second)
-	if !peer1.Closed{
+	if !peer1.Closed {
 		t.Fatal("Peer 1 should be closed now.")
 	}
-	if !peer2.Closed{
+	if !peer2.Closed {
 		t.Fatal("Peer 2 should be closed now.")
 	}
 
@@ -79,10 +79,10 @@ func TestCloseAll(t *testing.T) {
 	go peer1.LoopRounds(sign.RoundCosiType, 2)
 	go peer2.LoopRounds(sign.RoundCosiType, 2)
 	time.Sleep(time.Second * 4)
-	if !peer1.Closed{
+	if !peer1.Closed {
 		t.Fatal("Peer 1 should be closed now.")
 	}
-	if !peer2.Closed{
+	if !peer2.Closed {
 		t.Fatal("Peer 2 should be closed now.")
 	}
 }
@@ -96,7 +96,7 @@ func TestClientBeforeServer(t *testing.T) {
 	time.Sleep(time.Second)
 
 	round, err := sign.NewRoundFromType(sign.RoundCosiType, peer1.Node)
-	if err != nil{
+	if err != nil {
 		t.Fatal("Error while creating round:", err)
 	}
 
@@ -132,12 +132,12 @@ func createPeer(conf *app.ConfigConode, id int) *conode.Peer {
 	// Read the private / public keys + binded address
 	keybase := "testdata/key" + strconv.Itoa(id)
 	address := ""
-	if sec, err := cliutils.ReadPrivKey(suite, keybase + ".priv"); err != nil {
+	if sec, err := cliutils.ReadPrivKey(suite, keybase+".priv"); err != nil {
 		dbg.Fatal("Error reading private key file  :", err)
 	} else {
 		conf.Secret = sec
 	}
-	if pub, addr, err := cliutils.ReadPubKey(suite, keybase + ".pub"); err != nil {
+	if pub, addr, err := cliutils.ReadPubKey(suite, keybase+".pub"); err != nil {
 		dbg.Fatal("Error reading public key file :", err)
 	} else {
 		conf.Public = pub

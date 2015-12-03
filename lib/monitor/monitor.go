@@ -33,24 +33,24 @@ var SinkPort = "10003"
 // them. It takes a stats object so it update that in a concurrent-safe manner
 // for each new measure it receives.
 type Monitor struct {
-	listener   net.Listener
+	listener net.Listener
 
 	// Current conections
-	conns      map[string]net.Conn
+	conns map[string]net.Conn
 	// and the mutex to play with it
-	mutexConn  sync.Mutex
+	mutexConn sync.Mutex
 
 	// Current stats
-	stats      *Stats
+	stats *Stats
 	// and the mutex to play with it
 	mutexStats sync.Mutex
 
 	// channel to give new measures
-	measures   chan Measure
+	measures chan Measure
 
 	// channel to notify the end of a connection
 	// send the name of the connection when finishd
-	done       chan string
+	done chan string
 }
 
 // NewMonitor returns a new monitor given the stats
@@ -68,7 +68,7 @@ func NewMonitor(stats *Stats) Monitor {
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func (m *Monitor) Listen() error {
-	ln, err := net.Listen("tcp", Sink + ":" + SinkPort)
+	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
@@ -108,7 +108,7 @@ func (m *Monitor) Listen() error {
 			m.mutexConn.Lock()
 			delete(m.conns, peer)
 			m.mutexConn.Unlock()
-		// end of monitoring,
+			// end of monitoring,
 			if len(m.conns) == 0 {
 				m.listener.Close()
 				finished = true
@@ -158,7 +158,7 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 
 		dbg.Lvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
 		// Special case where the measurement is indicating a FINISHED step
-		switch strings.ToLower(measure.Name){
+		switch strings.ToLower(measure.Name) {
 		case "end":
 			dbg.Lvl3("Finishing monitor")
 			m.done <- conn.RemoteAddr().String()

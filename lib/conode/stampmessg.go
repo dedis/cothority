@@ -15,7 +15,7 @@ import (
 
 /*
 All messages for stamper-related actions
- */
+*/
 
 // struct to ease keeping track of who requires a reply after
 // tsm is processed/ aggregated by the TSServer
@@ -81,7 +81,7 @@ func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 		*Alias
 	}{
 		BinaryBlob: b.Bytes(),
-		Alias: (*Alias)(sr),
+		Alias:      (*Alias)(sr),
 	})
 }
 
@@ -90,17 +90,17 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	suite := app.GetSuite(sr.SuiteStr)
 	aux := &struct {
 		BinaryBlob []byte
-		Response abstract.Secret
-		Challenge abstract.Secret
-		AggCommit abstract.Point
-		AggPublic abstract.Point
+		Response   abstract.Secret
+		Challenge  abstract.Secret
+		AggCommit  abstract.Point
+		AggPublic  abstract.Point
 		*Alias
 	}{
-		Response: suite.Secret(),
+		Response:  suite.Secret(),
 		Challenge: suite.Secret(),
 		AggCommit: suite.Point(),
 		AggPublic: suite.Point(),
-		Alias: (*Alias)(sr),
+		Alias:     (*Alias)(sr),
 	}
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
 		return err
@@ -223,10 +223,10 @@ func (Sreq *StampSignature) UnmarshalBinary(data []byte) error {
 
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
-				// ErrorReply *ErrorReply // Generic error reply to any request
-	Type  MessageType
-	Sreq  *StampRequest
-	Srep  *StampSignature
+	// ErrorReply *ErrorReply // Generic error reply to any request
+	Type MessageType
+	Sreq *StampRequest
+	Srep *StampSignature
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {

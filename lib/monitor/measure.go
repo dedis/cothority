@@ -121,13 +121,13 @@ func send(v interface{}) {
 // Measure holds the different values that can be computed for a measure.
 // Measures are sent for further processing from the client to the monitor.
 type Measure struct {
-	Name         string
-	WallTime     float64
-	CPUTimeUser  float64
-	CPUTimeSys   float64
+	Name        string
+	WallTime    float64
+	CPUTimeUser float64
+	CPUTimeSys  float64
 	// These are used for communicating with the clients
-	Sender       string
-	Ready        int
+	Sender string
+	Ready  int
 	// Since we send absolute timing values, we need to store our reference too.
 	lastWallTime time.Time
 	autoReset    bool
@@ -176,7 +176,7 @@ func End() {
 
 // Converts microseconds to seconds.
 func iiToF(sec int64, usec int64) float64 {
-	return float64(sec) + float64(usec) / 1000000.0
+	return float64(sec) + float64(usec)/1000000.0
 }
 
 // Returns the sytem and the user time so far.

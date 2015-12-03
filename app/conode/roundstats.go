@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/dedis/cothority/lib/conode"
-	"github.com/dedis/cothority/lib/sign"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sign"
 )
 
 /*
 ConodeStats implements a simple module that shows some statistics about the
 actual connection.
- */
+*/
 
 // The name type of this round implementation
 const RoundStatsType = "conodestats"
@@ -31,14 +31,14 @@ func NewRoundStats(node *sign.Node) *RoundStats {
 	return round
 }
 
-func (round *RoundStats)Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundStats) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	err := round.RoundStamperListener.Commitment(in, out)
 	return err
 }
 
-func (round *RoundStats)SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundStats) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	err := round.RoundStamperListener.SignatureBroadcast(in, out)
-	if err == nil && round.IsRoot{
+	if err == nil && round.IsRoot {
 		dbg.Lvlf1("This is round %d with %d messages - %d since start.",
 			round.RoundNbr, in.SBm.Messages, round.Node.Messages)
 	}

@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
@@ -68,7 +68,7 @@ func main() {
 			cli.StringFlag{
 				Name: "key, k",
 				Usage: "Basename of the files where reside the keys. If key = 'key'," +
-				"then conode will search through 'key.pub' and 'key.priv'",
+					"then conode will search through 'key.pub' and 'key.priv'",
 				Value: defaultKeyFile,
 			},
 		},

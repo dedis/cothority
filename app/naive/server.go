@@ -48,7 +48,7 @@ func GoLeader(conf *app.NaiveConfig) {
 
 	// Setting up the connections
 	// notably to the monitoring process
-	if app.RunFlags.Logger != ""{
+	if app.RunFlags.Logger != "" {
 		monitor.ConnectSink(app.RunFlags.Logger)
 	} else {
 		monitor.EnableMeasure(false)
@@ -117,7 +117,7 @@ func GoLeader(conf *app.NaiveConfig) {
 	for round := 0; round < conf.Rounds; round++ {
 		// Measure calculation time
 		calc := monitor.NewMeasure("calc")
-		dbg.Lvl1("Server starting round", round + 1)
+		dbg.Lvl1("Server starting round", round+1)
 		n := 0
 		faulty := 0
 		// launch a new round

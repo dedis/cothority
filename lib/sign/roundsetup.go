@@ -7,7 +7,7 @@ import (
 /*
 RoundSetup merely traverses the tree and counts the number of nodes.
 This can be used to check the validity of the tree.
- */
+*/
 
 // The name type of this round implementation
 const RoundSetupType = "setup"
@@ -42,7 +42,7 @@ func (round *RoundSetup) Commitment(in []*SigningMessage, out *SigningMessage) e
 			out.Com.Messages += i.Com.Messages
 		}
 	}
-	if round.IsRoot{
+	if round.IsRoot {
 		dbg.Lvl2("Number of nodes found:", out.Com.Messages)
 		round.Counted <- out.Com.Messages
 	}

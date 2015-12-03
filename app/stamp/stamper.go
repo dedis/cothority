@@ -16,7 +16,7 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
-"github.com/dedis/cothority/lib/sign"
+	"github.com/dedis/cothority/lib/sign"
 )
 
 var muStats sync.Mutex

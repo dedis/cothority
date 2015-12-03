@@ -3,7 +3,7 @@ package sign
 /*
 NOT WORKING - this can be implemented to have a RoundVote which
 will ask for a view-change.
- */
+*/
 
 /*
 func (sn *Node) StartVotingRound(v *Vote) error {
@@ -37,4 +37,4 @@ func (sn *Node) StartVotingRound(v *Vote) error {
 	return sn.StartAnnouncement(
 		&AnnouncementMessage{Message: []byte("vote round"), RoundNbr: sn.nRounds, Vote: v})
 }
- */
+*/

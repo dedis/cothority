@@ -1,9 +1,10 @@
 package monitor
+
 import (
-	"time"
 	"fmt"
-"testing"
 	"github.com/dedis/cothority/lib/dbg"
+	"testing"
+	"time"
 )
 
 func TestProxy(t *testing.T) {
@@ -46,18 +47,18 @@ func TestProxy(t *testing.T) {
 	meas.Measure()
 
 	s, err := GetReady(proxyAddr)
-	if err != nil{
+	if err != nil {
 		t.Error("Couldn't get stats from proxy")
 	}
-	if s.Ready != 0{
+	if s.Ready != 0 {
 		t.Error("stats.Ready should be 0")
 	}
 	Ready(proxyAddr)
 	s, err = GetReady(proxyAddr)
-	if err != nil{
+	if err != nil {
 		t.Error("Couldn't get stats from proxy")
 	}
-	if s.Ready != 1{
+	if s.Ready != 1 {
 		t.Error("stats.Ready should be 1")
 	}
 
@@ -110,18 +111,18 @@ func TestReadyProxy(t *testing.T) {
 	}
 
 	s, err := GetReady(proxyAddr)
-	if err != nil{
+	if err != nil {
 		t.Error("Couldn't get stats from proxy")
 	}
-	if s.Ready != 0{
+	if s.Ready != 0 {
 		t.Error("stats.Ready should be 0")
 	}
 	Ready(proxyAddr)
 	s, err = GetReady(proxyAddr)
-	if err != nil{
+	if err != nil {
 		t.Error("Couldn't get stats from proxy")
 	}
-	if s.Ready != 1{
+	if s.Ready != 1 {
 		t.Error("stats.Ready should be 1")
 	}
 
@@ -129,4 +130,3 @@ func TestReadyProxy(t *testing.T) {
 	End()
 	StopSink()
 }
-

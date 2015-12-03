@@ -1,14 +1,13 @@
 package monitor
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
+	"strings"
 	"testing"
 	"time"
-	"bytes"
-"strings"
 )
-
 
 func TestMonitor(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 2)
@@ -104,7 +103,7 @@ func TestKeyOrder(t *testing.T) {
 		b := bytes.NewBuffer(make([]byte, 1024))
 		stat.WriteHeader(b)
 		dbg.Lvl2("Order:", strings.TrimSpace(b.String()))
-		if strings.Contains(b.String(), "rounds, bf"){
+		if strings.Contains(b.String(), "rounds, bf") {
 			t.Fatal("Order of fields is not correct")
 		}
 	}

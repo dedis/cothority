@@ -1,11 +1,12 @@
 package main
+
 import (
-	"testing"
-	"os"
-	"io/ioutil"
 	"fmt"
-	"sync"
 	"github.com/dedis/cothority/lib/dbg"
+	"io/ioutil"
+	"os"
+	"sync"
+	"testing"
 )
 
 func TestBuild(t *testing.T) {

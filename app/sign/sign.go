@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sign"
 	"time"
@@ -35,10 +35,10 @@ func main() {
 		for {
 			time.Sleep(time.Second)
 			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncementWithWait(setupRound, 5 * time.Second)
+			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
 			counted := <-setupRound.Counted
 			dbg.Lvl1("Number of peers counted:", counted)
-			if counted == len(conf.Hosts){
+			if counted == len(conf.Hosts) {
 				dbg.Lvl1("All hosts replied")
 				break
 			}

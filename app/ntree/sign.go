@@ -153,7 +153,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		// finished verifying => time it !
 		verify.Measure()
 		round.Measure()
-		dbg.Lvl3(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total - faulty, "/", total, " good signatures")
+		dbg.Lvl3(peer.String(), "Round ", i, "/", conf.Rounds, " has verified all signatures : ", total-faulty, "/", total, " good signatures")
 	}
 
 	// cLosing each channels
@@ -185,7 +185,7 @@ func RunPeer(conf *app.NTreeConfig) {
 		for msg := range masterMsgChan {
 			// broadcast to each channels
 			for i, ch := range childrenMsgChan {
-				dbg.Lvl4(peer.String(), "dispatching msg to children (", i + 1, "/", len(conf.Tree.Children), ")...")
+				dbg.Lvl4(peer.String(), "dispatching msg to children (", i+1, "/", len(conf.Tree.Children), ")...")
 				ch <- msg
 			}
 		}
@@ -217,7 +217,7 @@ func RunPeer(conf *app.NTreeConfig) {
 			} else {
 				// otherwise, dispatch to children
 				for i, _ := range childRoundChan {
-					dbg.Lvl4(peer.String(), "Dispatching signature channel to children (", i + 1, "/", len(conf.Tree.Children), ")...")
+					dbg.Lvl4(peer.String(), "Dispatching signature channel to children (", i+1, "/", len(conf.Tree.Children), ")...")
 					childRoundChan[i] <- sigChan
 				}
 			}

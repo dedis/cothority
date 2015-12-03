@@ -7,9 +7,9 @@ import (
 	"io"
 	"math"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
-	"sort"
 )
 
 // Stats contains all structures that are related to the computations of stats
@@ -22,31 +22,31 @@ var extraFields = [...]string{"bf", "rate", "stampratio"}
 
 // Stats holds the different measurements done
 type Stats struct {
-					  // How many peers do we have
-	Peers         int
-					  // How many peers per machine do we use
-	PPM           int // PeerPerMachine
-					  // How many machines do we have
-	Machines      int
-					  // How many peers are ready
-	Ready         int
+	// How many peers do we have
+	Peers int
+	// How many peers per machine do we use
+	PPM int // PeerPerMachine
+	// How many machines do we have
+	Machines int
+	// How many peers are ready
+	Ready int
 
-					  // Additionals fields that may appears in the resulting CSV
-					  // The additionals fields are created when creating the stats out of a
-					  // running config. It will try to read some known fields such as "depth" or
-					  // "bf" (branching factor) and add then to its struct
-	Additionals   map[string]int
-	addKeys       []string
-					  // The measures we have and the keys ordered
-	measures      map[string]*Measurement
-	keys          []string
+	// Additionals fields that may appears in the resulting CSV
+	// The additionals fields are created when creating the stats out of a
+	// running config. It will try to read some known fields such as "depth" or
+	// "bf" (branching factor) and add then to its struct
+	Additionals map[string]int
+	addKeys     []string
+	// The measures we have and the keys ordered
+	measures map[string]*Measurement
+	keys     []string
 
-					  // ValuesWritten  is to know wether we have already written some values or
-					  // not. If yes, we can make sure we dont write new measurements otherwise
-					  // the CSV would be garbage
+	// ValuesWritten  is to know wether we have already written some values or
+	// not. If yes, we can make sure we dont write new measurements otherwise
+	// the CSV would be garbage
 	valuesWritten bool
-					  // The filter used to filter out abberant data
-	filter        DataFilter
+	// The filter used to filter out abberant data
+	filter DataFilter
 }
 
 // Return a NewStats with some fields extracted from the platform run config
@@ -287,15 +287,15 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 // it reprensent the time to an action (setup, shamir round, coll round etc)
 // use it to compute streaming mean + dev
 type value struct {
-	min   float64
-	max   float64
+	min float64
+	max float64
 
-	n     int
-	oldM  float64
-	newM  float64
-	oldS  float64
-	newS  float64
-	dev   float64
+	n    int
+	oldM float64
+	newM float64
+	oldS float64
+	newS float64
+	dev  float64
 
 	// Store where are kept the values
 	store []float64
@@ -335,12 +335,12 @@ func (t *value) Collect(measure string, df DataFilter) {
 			t.newM = newTime
 			t.oldS = 0.0
 		} else {
-			t.newM = t.oldM + (newTime - t.oldM) / float64(t.n)
-			t.newS = t.oldS + (newTime - t.oldM) * (newTime - t.newM)
+			t.newM = t.oldM + (newTime-t.oldM)/float64(t.n)
+			t.newS = t.oldS + (newTime-t.oldM)*(newTime-t.newM)
 			t.oldM = t.newM
 			t.oldS = t.newS
 		}
-		t.dev = math.Sqrt(t.newS / float64(t.n - 1))
+		t.dev = math.Sqrt(t.newS / float64(t.n-1))
 	}
 }
 
@@ -420,8 +420,8 @@ func NewMeasurement(name string, df DataFilter) *Measurement {
 
 // WriteHeader will write the header to the specified writer
 func (m *Measurement) WriteHeader(w io.Writer) {
-	fmt.Fprintf(w, "%s, %s, %s", m.Wall.Header(m.Name + "_wall"),
-		m.User.Header(m.Name + "_user"), m.System.Header(m.Name + "_system"))
+	fmt.Fprintf(w, "%s, %s, %s", m.Wall.Header(m.Name+"_wall"),
+		m.User.Header(m.Name+"_user"), m.System.Header(m.Name+"_system"))
 }
 
 // WriteValues will write a new entry for this entry in the writer

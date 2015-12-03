@@ -179,7 +179,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		mach, _ := strconv.Atoi(machs)
 		ppm, _ := strconv.Atoi(ppms)
 		rc.Put("machines", "1")
-		rc.Put("ppm", strconv.Itoa(ppm * mach))
+		rc.Put("ppm", strconv.Itoa(ppm*mach))
 	}
 	rs := monitor.NewStats(rc.Map())
 	monitor := monitor.NewMonitor(rs)

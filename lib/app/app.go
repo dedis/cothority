@@ -13,10 +13,10 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/monitor"
-	"time"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
+	"time"
 )
 
 type Flags struct {
@@ -112,7 +112,7 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 
 // StartedUp waits for everybody to start by contacting the
 // monitor. Argument is total number of peers.
-func (f Flags)StartedUp(total int) {
+func (f Flags) StartedUp(total int) {
 	monitor.Ready(f.Logger)
 	// Wait for everybody to be ready before going on
 	for {
@@ -155,7 +155,7 @@ func getFullName(filename string, dirOpt ...string) string {
 // Helper functions that will return the suite used during the process from a string name
 func GetSuite(suite string) abstract.Suite {
 	s, ok := suites.All()[suite]
-	if !ok{
+	if !ok {
 		dbg.Lvl1("Suites available:", suites.All())
 		dbg.Fatal("Didn't find suite", suite)
 	}

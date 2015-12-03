@@ -1,14 +1,14 @@
 package sign
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
 	"errors"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 /*
 NOT WORKING - consensus code for voting - should
 be implemented as a roundType
- */
+*/
 
 func (sn *Node) TryViewChange(view int) error {
 	dbg.Lvl4(sn.Name(), "TRY VIEW CHANGE on", view, "with last view", sn.ViewNo)
@@ -29,18 +29,18 @@ func (sn *Node) TryViewChange(view int) error {
 	if sn.Name() == sn.RootFor(view) {
 		dbg.Fatal(sn.Name(), "Initiating view change for view:", view, "BTH")
 		/*
-		go func() {
-			err := sn.StartVotingRound(
-				&Vote{
-					View: view,
-					Type: ViewChangeVT,
-					Vcv: &ViewChangeVote{
+			go func() {
+				err := sn.StartVotingRound(
+					&Vote{
 						View: view,
-						Root: sn.Name()}})
-			if err != nil {
-				dbg.Lvl2(sn.Name(), "Try view change failed:", err)
-			}
-		}()
+						Type: ViewChangeVT,
+						Vcv: &ViewChangeVote{
+							View: view,
+							Root: sn.Name()}})
+				if err != nil {
+					dbg.Lvl2(sn.Name(), "Try view change failed:", err)
+				}
+			}()
 		*/
 	}
 	return nil
@@ -55,13 +55,12 @@ func (sn *Node) TimeForViewChange() bool {
 	defer sn.roundmu.Unlock()
 
 	// if this round is last one for this view
-	if sn.LastSeenRound % sn.RoundsPerView == 0 {
+	if sn.LastSeenRound%sn.RoundsPerView == 0 {
 		// dbg.Lvl4(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
 		return true
 	}
 	return false
 }
-
 
 func (sn *Node) SetupProposal(view int, am *AnnouncementMessage, from string) error {
 	dbg.Fatal("SetupProposal not implemented anymore")

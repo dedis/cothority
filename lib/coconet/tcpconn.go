@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net"
 	"sync"
-//"runtime/debug"
+	//"runtime/debug"
 
 	"github.com/dedis/cothority/lib/dbg"
 
@@ -26,10 +26,10 @@ type TCPConn struct {
 	dec     *json.Decoder
 
 	// pkLock guards the public key
-	pkLock  sync.Mutex
-	pubkey  abstract.Point
+	pkLock sync.Mutex
+	pubkey abstract.Point
 
-	closed  bool
+	closed bool
 }
 
 // NewTCPConnFromNet wraps a net.Conn creating a new TCPConn using conn as the

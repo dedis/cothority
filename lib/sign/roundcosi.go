@@ -3,10 +3,10 @@ package sign
 import (
 	"github.com/dedis/cothority/lib/dbg"
 
+	"fmt"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
-	"fmt"
 	"runtime/debug"
 )
 
@@ -15,7 +15,7 @@ RoundCosi implements the collective signature protocol using
 Schnorr signatures to collectively sign on a message. By default
 the message is only the collection of all Commits, but another
 round can add any message it wants in the Commitment-phase.
- */
+*/
 
 // The name type of this round implementation
 const RoundCosiType = "cosi"
@@ -39,7 +39,7 @@ func NewRoundCosi(node *Node) *RoundCosi {
 	return round
 }
 
-func (round *RoundCosi)CheckChildren() {
+func (round *RoundCosi) CheckChildren() {
 	c := round.Node.Children(round.Node.ViewNo)
 	if len(c) != len(round.Cosi.Children) {
 		dbg.Print("Children in cosi and node are different")

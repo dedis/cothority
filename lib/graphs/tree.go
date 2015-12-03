@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
 )
 
 // tree easy to deal with

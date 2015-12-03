@@ -86,16 +86,16 @@ type test_sig struct {
 
 func setupTestSig() {
 	var sig = test_sig{
-		Suite: "25519",
-		Name: "stamp.sig",
-		Timestamp: 1448637057,
-		Proof: []string{"fN1GPbpXUqLGh20Ls1JmiFncbWcnvai4pt2ufJnUcIo=", "ehvna7oGGqwZsCgLVP1GvEHxCbYl2Bv8fS0EgGEvmB4=", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E="},
-		Root: "vu2wvZDMc5ZlCNspMRWKZCI0ShYZ8zyLfy2cuZFf54A=",
-		Challenge: "ClSG6pa3uklYndfBztJ9yAD8aY2g/GzTq0rs8nQC12w=",
-		Response: "AJXkEEiyvWdoidjjUMUi5nryHRzJSywXoFY/fIT/8FM=",
+		Suite:      "25519",
+		Name:       "stamp.sig",
+		Timestamp:  1448637057,
+		Proof:      []string{"fN1GPbpXUqLGh20Ls1JmiFncbWcnvai4pt2ufJnUcIo=", "ehvna7oGGqwZsCgLVP1GvEHxCbYl2Bv8fS0EgGEvmB4=", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E="},
+		Root:       "vu2wvZDMc5ZlCNspMRWKZCI0ShYZ8zyLfy2cuZFf54A=",
+		Challenge:  "ClSG6pa3uklYndfBztJ9yAD8aY2g/GzTq0rs8nQC12w=",
+		Response:   "AJXkEEiyvWdoidjjUMUi5nryHRzJSywXoFY/fIT/8FM=",
 		Commitment: "LbMi53pBXpHN1IYa7pRaC953KAox+NvzQSzAOsK1CEQ=",
-		AggPubKey: "dkp32QL4viiR0EiMtnLIVYLgk6PXTcSQlNXFNwpnLiI=",
-		Hash: "RnZyRnItjXQBSMYLfY/f8WDgiYJI9Yh4lQXa6+VwWxc=",
+		AggPubKey:  "dkp32QL4viiR0EiMtnLIVYLgk6PXTcSQlNXFNwpnLiI=",
+		Hash:       "RnZyRnItjXQBSMYLfY/f8WDgiYJI9Yh4lQXa6+VwWxc=",
 	}
 
 	suite = app.GetSuite(sig.Suite)

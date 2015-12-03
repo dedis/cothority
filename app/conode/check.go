@@ -62,7 +62,7 @@ func CheckExit(pubKeyFile string) {
 	defer conn.Close()
 
 	// We only ask the node to exit if everything is OK
-	if ack.Code != SYS_OK{
+	if ack.Code != SYS_OK {
 		dbg.Fatal("Not correct key-file?")
 	} else {
 		ack.Code = SYS_EXIT
@@ -77,7 +77,7 @@ func CheckExit(pubKeyFile string) {
 
 // verifyHost will anaylze the systempacket information and verify the signature
 // It will return a ACK properly initialized with the right codes in it.
-func verifyHost(pubKeyFile string) (net.Conn, Ack ) {
+func verifyHost(pubKeyFile string) (net.Conn, Ack) {
 	//  get the right public key
 	pub, host, err := cliutils.ReadPubKey(suite, pubKeyFile)
 	if err != nil {

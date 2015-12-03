@@ -1,8 +1,9 @@
 package main
+
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sign"
-	"github.com/dedis/cothority/lib/dbg"
 )
 
 const RoundMeasureType = "measure"
@@ -38,11 +39,11 @@ func (round *RoundMeasure) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 	return round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
 }
 
-func (round *RoundMeasure)Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundMeasure) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
 	err := round.RoundCosi.Response(in, out)
 	if round.IsRoot {
 		round.measure.Measure()
-		dbg.Lvl1("Round", round.RoundNbr - round.firstRound + 1,
+		dbg.Lvl1("Round", round.RoundNbr-round.firstRound+1,
 			"finished - took", round.measure.WallTime)
 	}
 	return err

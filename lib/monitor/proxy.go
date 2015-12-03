@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
+	"io"
 	"net"
 	"sync/atomic"
-	"io"
 )
 
 // Implements a simple proxy
@@ -44,11 +44,11 @@ func Proxy(redirection string) {
 	dbg.Lvl2("Proxy connected to sink ", redirection)
 	// Here it listens the same way monitor.go would
 	// usually 0.0.0.0:4000
-	ln, err := net.Listen("tcp", Sink + ":" + SinkPort)
+	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
-		dbg.Fatalf("Error while binding proxy to addr %s: %v", Sink + ":" + SinkPort, err)
+		dbg.Fatalf("Error while binding proxy to addr %s: %v", Sink+":"+SinkPort, err)
 	}
-	dbg.Lvl2("Proxy listening on ", Sink + ":" + SinkPort)
+	dbg.Lvl2("Proxy listening on ", Sink+":"+SinkPort)
 	var newConn = make(chan bool)
 	var closeConn = make(chan bool)
 	var finished = false
@@ -135,7 +135,7 @@ func proxyConnection(conn net.Conn, done chan bool) {
 		m := Measure{}
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
-			if err == io.EOF{
+			if err == io.EOF {
 				break
 			}
 			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
@@ -149,13 +149,13 @@ func proxyConnection(conn net.Conn, done chan bool) {
 
 		// Implement our own ready-count, so it doesn't have to go through the
 		// main monitor which might be far away.
-		switch m.Name{
+		switch m.Name {
 		case "ready":
 			atomic.AddInt64(&readyCount, 1)
 		case "ready_count":
 			m.Ready = int(readyCount)
 			err := json.NewEncoder(conn).Encode(m)
-			if err != nil{
+			if err != nil {
 				dbg.Lvl2("Couldn't send ready-result back to client")
 				break
 			}

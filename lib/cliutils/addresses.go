@@ -23,7 +23,7 @@ func init() {
 func VerifyPort(address string, port int) (string, error) {
 	p := strconv.Itoa(port)
 	subs := addressRegexp.FindStringSubmatch(address)
-	switch{
+	switch {
 	case len(subs) == 0:
 		// address does not contain a port
 		return address + ":" + p, checkPort(port)
@@ -52,8 +52,8 @@ func GlobalBind(address string) (string, error) {
 
 // Gets the port-number, if none is found, returns
 // 'def'
-func GetPort(address string, def int)int{
-	if strings.Contains(address, ":"){
+func GetPort(address string, def int) int {
+	if strings.Contains(address, ":") {
 		port, err := strconv.Atoi(strings.Split(address, ":")[1])
 		if err == nil {
 			return port
@@ -63,8 +63,8 @@ func GetPort(address string, def int)int{
 }
 
 // Gets the address-part and ignores the port
-func GetAddress(address string) string{
-	if strings.Contains(address, ":"){
+func GetAddress(address string) string {
+	if strings.Contains(address, ":") {
 		return strings.Split(address, ":")[0]
 	}
 	return address

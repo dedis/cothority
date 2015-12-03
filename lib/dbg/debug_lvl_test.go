@@ -4,7 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 )
 
-func init(){
+func init() {
 	dbg.Testing = true
 }
 
@@ -21,14 +21,14 @@ func ExampleLevel2() {
 	// 2: (                  dbg_test.ExampleLevel2:   0) - Level2
 }
 
-func ExampleMultiParams(){
+func ExampleMultiParams() {
 	dbg.Lvl1("Multiple", "parameters")
 
 	// Output:
 	// 1: (             dbg_test.ExampleMultiParams:   0) - Multiple parameters
 }
 
-func ExampleLLvl(){
+func ExampleLLvl() {
 	dbg.Lvl1("Lvl output")
 	dbg.LLvl1("LLvl output")
 	dbg.Lvlf1("Lvlf output")
@@ -41,7 +41,7 @@ func ExampleLLvl(){
 	// -1: (                    dbg_test.ExampleLLvl:   0) - LLvlf output
 }
 
-func thisIsAVeryLongFunctionNameThatWillOverflow(){
+func thisIsAVeryLongFunctionNameThatWillOverflow() {
 	dbg.Lvl1("Overflow")
 }
 

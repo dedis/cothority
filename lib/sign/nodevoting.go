@@ -10,7 +10,7 @@ import (
 
 /*
 DOESN'T WORK - needs to be implemented in a RoundVote
- */
+*/
 // HERE: after we change to the new view, we could send our parent
 // a notification that we are ready to use the new view
 
@@ -64,10 +64,10 @@ func (sn *Node) ApplyAction(view int, v *Vote) {
 func (sn *Node) NotifyOfAction(view int, v *Vote) {
 	dbg.Lvl4(sn.Name(), "Notifying node to be added/removed of action")
 	gcm := &SigningMessage{
-		Suite: sn.Suite().String(),
+		Suite:        sn.Suite().String(),
 		Type:         GroupChanged,
 		From:         sn.Name(),
-		ViewNbr:         view,
+		ViewNbr:      view,
 		LastSeenVote: int(sn.LastSeenVote),
 		Gcm: &GroupChangedMessage{
 			V:        v,
@@ -99,8 +99,8 @@ func (sn *Node) AddSelf(parent string) error {
 		context.TODO(),
 		parent,
 		&SigningMessage{
-			Suite: sn.Suite().String(),
-			Type: GroupChange,
+			Suite:   sn.Suite().String(),
+			Type:    GroupChange,
 			ViewNbr: -1,
 			Vrm: &VoteRequestMessage{
 				Vote: &Vote{
@@ -115,8 +115,8 @@ func (sn *Node) RemoveSelf() error {
 		context.TODO(),
 		int(sn.ViewNo),
 		&SigningMessage{
-			Suite: sn.Suite().String(),
-			Type: GroupChange,
+			Suite:   sn.Suite().String(),
+			Type:    GroupChange,
 			ViewNbr: -1,
 			Vrm: &VoteRequestMessage{
 				Vote: &Vote{

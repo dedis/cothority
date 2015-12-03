@@ -2,6 +2,7 @@ package sign
 
 import (
 	"bytes"
+	"encoding/gob"
 	"errors"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
@@ -9,13 +10,12 @@ import (
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"sort"
-	"encoding/gob"
 )
 
 /*
 Functionality used in the roundcosi. Abstracted here for better
 understanding and readability of roundcosi.
- */
+*/
 
 const FIRST_ROUND int = 1 // start counting rounds at 1
 
@@ -73,7 +73,7 @@ type CosiStruct struct {
 
 	Children map[string]coconet.Conn
 	Parent   string
-	ViewNbr int
+	ViewNbr  int
 }
 
 // Sets up a round according to the needs stated in the
@@ -271,7 +271,7 @@ func (cosi *CosiStruct) VerifyResponses() error {
 }
 
 // Returns a secret that depends on on a message and a point
-func (cosi *CosiStruct)HashElGamal(message []byte, p abstract.Point) abstract.Secret {
+func (cosi *CosiStruct) HashElGamal(message []byte, p abstract.Point) abstract.Secret {
 	pb, _ := p.MarshalBinary()
 	c := cosi.Suite.Cipher(pb)
 	c.Message(nil, nil, message)
@@ -311,6 +311,6 @@ func (snLog *SNLog) UnmarshalBinary(data []byte) error {
 	return err
 }
 
-func (snLog *SNLog) Getv() abstract.Secret{
+func (snLog *SNLog) Getv() abstract.Secret {
 	return snLog.v
 }

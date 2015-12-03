@@ -54,9 +54,9 @@ func main() {
 	// kill old processes
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(" +")
-	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project+","+deterlab.Experiment).Output()
 	if err != nil {
-		dbg.Fatal("Deterlab experiment", deterlab.Project + "/" + deterlab.Experiment, "seems not to be swapped in. Aborting.")
+		dbg.Fatal("Deterlab experiment", deterlab.Project+"/"+deterlab.Experiment, "seems not to be swapped in. Aborting.")
 		os.Exit(-1)
 	}
 	hosts_trimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
@@ -72,9 +72,9 @@ func main() {
 			defer wg.Done()
 			if kill {
 				dbg.Lvl4("Cleaning up host", h, ".")
-				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " logserver forkexec timeclient scp 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
@@ -147,7 +147,7 @@ func main() {
 	monitorAddr := deterlab.MonitorAddress + ":" + monitor.SinkPort
 	servers := len(physToServer)
 	ppm := len(deterlab.Hostnames) / servers
-	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers * ppm)
+	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers*ppm)
 	totalServers := 0
 	for phys, virts := range physToServer {
 		if len(virts) == 0 {
@@ -160,8 +160,8 @@ func main() {
 			//dbg.Lvl4("running on ", phys, cmd)
 			defer wg.Done()
 			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", monitorAddr)
-			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
-			" -physaddr=" + phys + " -logger=" + deterlab.MonitorAddress + ":" + monitor.SinkPort)
+			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
+				" -physaddr="+phys+" -logger="+deterlab.MonitorAddress+":"+monitor.SinkPort)
 			if err != nil {
 				dbg.Lvl1("Error starting timestamper:", err, phys)
 			}
@@ -207,9 +207,9 @@ func main() {
 			dbg.Lvl3("Starting with ss=", ss)
 			go func(p string, a bool) {
 				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
-				" -name=client@" + p +
-				" -server=" + servers +
-				" -amroot=" + strconv.FormatBool(a)
+					" -name=client@" + p +
+					" -server=" + servers +
+					" -amroot=" + strconv.FormatBool(a)
 				dbg.Lvl3("Users will launch client :", cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {

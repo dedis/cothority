@@ -3,7 +3,7 @@ package sign
 /*
 RoundEmpty is a bare-bones round implementation to be copy-pasted. It
 already implements RoundStruct for your convenience.
- */
+*/
 
 // The name type of this round implementation
 const RoundEmptyType = "empty"
