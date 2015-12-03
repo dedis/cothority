@@ -103,7 +103,7 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 		Challenge:     suite.Secret(),
 		AggCommit:     suite.Point(),
 		AggPublic:     suite.Point(),
-		ExceptionList: make([]abstract.Point),
+		ExceptionList: make([]abstract.Point, 0),
 		Alias:         (*Alias)(sr),
 	}
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
