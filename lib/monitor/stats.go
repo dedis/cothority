@@ -2,13 +2,14 @@ package monitor
 
 import (
 	"fmt"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/montanaflynn/stats"
 	"io"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
+
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/montanaflynn/stats"
 )
 
 // Stats contains all structures that are related to the computations of stats
@@ -102,12 +103,12 @@ func (s *Stats) WriteHeader(w io.Writer) {
 	// write additionals fields
 	for _, k := range s.addKeys {
 		if _, ok := s.Additionals[k]; ok {
-			fmt.Fprintf(w,", %s", k)
+			fmt.Fprintf(w, ", %s", k)
 		}
 	}
 	// Write the values header
 	for _, k := range s.keys {
-		fmt.Fprintf(w,", ")
+		fmt.Fprintf(w, ", ")
 		m := s.measures[k]
 		m.WriteHeader(w)
 	}
@@ -124,12 +125,12 @@ func (s *Stats) WriteValues(w io.Writer) {
 	for _, k := range s.addKeys {
 		v, ok := s.Additionals[k]
 		if ok {
-			fmt.Fprintf(w,", %d", v)
+			fmt.Fprintf(w, ", %d", v)
 		}
 	}
 	// write the values
 	for _, k := range s.keys {
-		fmt.Fprintf(w,", ")
+		fmt.Fprintf(w, ", ")
 		m := s.measures[k]
 		m.WriteValues(w)
 	}
@@ -267,7 +268,7 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 		return values
 	}
 	// return the values below the percentile
-	dbg.Lvl2("Filtering: filters out", measure, ":", maxIndex, " /", len(values))
+	dbg.Lvl2("Filtering: filters out", measure, ":", maxIndex, "/", len(values))
 	return values[:maxIndex]
 }
 
