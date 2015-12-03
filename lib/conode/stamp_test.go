@@ -41,3 +41,5 @@ func TestStamp(t *testing.T) {
 	peer2.Close()
 	dbg.Lvl3("Done with test")
 }
+
+// Runs two peers and looks for the exception-message in the stamp

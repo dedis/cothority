@@ -99,12 +99,12 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 		ExceptionList []abstract.Point
 		*Alias
 	}{
-		Response:  suite.Secret(),
-		Challenge: suite.Secret(),
-		AggCommit: suite.Point(),
-		AggPublic: suite.Point(),
+		Response:      suite.Secret(),
+		Challenge:     suite.Secret(),
+		AggCommit:     suite.Point(),
+		AggPublic:     suite.Point(),
 		ExceptionList: make([]abstract.Point),
-		Alias:     (*Alias)(sr),
+		Alias:         (*Alias)(sr),
 	}
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
 		return err
@@ -228,10 +228,10 @@ func (Sreq *StampSignature) UnmarshalBinary(data []byte) error {
 
 type TimeStampMessage struct {
 	ReqNo SeqNo // Request sequence number
-				// ErrorReply *ErrorReply // Generic error reply to any request
-	Type  MessageType
-	Sreq  *StampRequest
-	Srep  *StampSignature
+	// ErrorReply *ErrorReply // Generic error reply to any request
+	Type MessageType
+	Sreq *StampRequest
+	Srep *StampSignature
 }
 
 func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
