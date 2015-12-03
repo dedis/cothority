@@ -14,7 +14,7 @@ func TestStamp(t *testing.T) {
 	peer1, peer2 := createPeers()
 	go peer1.LoopRounds(conode.RoundStamperListenerType, 3)
 	go peer2.LoopRounds(conode.RoundStamperListenerType, 3)
-	time.Sleep(time.Second)
+	time.Sleep(2 * time.Second)
 
 	s, err := conode.NewStamp("testdata/config.toml")
 	if err != nil {
