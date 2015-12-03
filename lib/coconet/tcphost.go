@@ -9,7 +9,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -102,9 +103,13 @@ func (s *StringMarshaler) UnmarshalBinary(b []byte) error {
 func (h *TCPHost) Listen() error {
 	var err error
 	dbg.Lvl3("Starting to listen on", h.name)
-	ln, err := net.Listen("tcp4", h.name)
+	address, err := cliutils.GlobalBind(h.name)
 	if err != nil {
-		log.Println("failed to listen:", err)
+		dbg.Fatal("Didn't get global binding for", address, err)
+	}
+	ln, err := net.Listen("tcp4", address)
+	if err != nil {
+		dbg.Lvl2("failed to listen on", address, ":", err)
 		return err
 	}
 	h.listener = ln
@@ -115,7 +120,7 @@ func (h *TCPHost) Listen() error {
 			conn, err := ln.Accept()
 			dbg.Lvl3(h.Name(), "Connection request - handling")
 			if err != nil {
-				dbg.Lvl3("failed to accept connection: ", err)
+				dbg.Lvl3("failed to accept connection:", err)
 				// if the host has been closed then stop listening
 				if atomic.LoadInt64(&h.closed) == 1 {
 					return
@@ -126,9 +131,9 @@ func (h *TCPHost) Listen() error {
 			// Read in name of client
 			tp := NewTCPConnFromNet(conn)
 			var mname StringMarshaler
-			err = tp.Get(&mname)
+			err = tp.GetData(&mname)
 			if err != nil {
-				log.Errorln("failed to establish connection: getting name: ", err)
+				log.Errorln("failed to establish connection: getting name:", err)
 				tp.Close()
 				continue
 			}
@@ -140,7 +145,7 @@ func (h *TCPHost) Listen() error {
 			// get and set public key
 			suite := h.suite
 			pubkey := suite.Point()
-			err = tp.Get(pubkey)
+			err = tp.GetData(pubkey)
 			if err != nil {
 				log.Errorln("failed to establish connection: getting pubkey:", err)
 				tp.Close()
@@ -149,7 +154,7 @@ func (h *TCPHost) Listen() error {
 			tp.SetPubKey(pubkey)
 
 			// give child the public key
-			err = tp.Put(h.Pubkey)
+			err = tp.PutData(h.Pubkey)
 			if err != nil {
 				log.Errorln("failed to send public key:", err)
 				continue
@@ -165,7 +170,7 @@ func (h *TCPHost) Listen() error {
 			go func() {
 				for {
 					data := h.pool.Get().(BinaryUnmarshaler)
-					err := tp.Get(data)
+					err := tp.GetData(data)
 
 					h.msgchan <- NetworkMessg{Data: data, From: tp.Name(), Err: err}
 				}
@@ -194,15 +199,15 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	tp := NewTCPConnFromNet(conn)
 
 	mname := StringMarshaler(h.Name())
-	err = tp.Put(&mname)
+	err = tp.PutData(&mname)
 	if err != nil {
-		log.Errorln(err)
+		log.Errorln("Putting data error:", err)
 		return err
 	}
 	tp.SetName(parent)
 
 	// give parent the public key
-	err = tp.Put(h.Pubkey)
+	err = tp.PutData(h.Pubkey)
 	if err != nil {
 		log.Errorln("failed to send public key")
 		return err
@@ -211,7 +216,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// get and set the parents public key
 	suite := h.suite
 	pubkey := suite.Point()
-	err = tp.Get(pubkey)
+	err = tp.GetData(pubkey)
 	if err != nil {
 		log.Errorln("failed to establish connection: getting pubkey:", err)
 		tp.Close()
@@ -224,12 +229,12 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	h.peers[parent] = tp
 	// h.PendingPeers[parent] = true
 	h.PeerLock.Unlock()
-	dbg.Lvl4("CONNECTED TO PARENT:", parent)
+	dbg.Lvl4("Connected to parent:", parent)
 
 	go func() {
 		for {
 			data := h.pool.Get().(BinaryUnmarshaler)
-			err := tp.Get(data)
+			err := tp.GetData(data)
 
 			h.msgchan <- NetworkMessg{Data: data, From: tp.Name(), Err: err}
 		}
@@ -276,10 +281,12 @@ func (h *TCPHost) NewViewFromPrev(view int, parent string) {
 
 // Close closes all the connections currently open.
 func (h *TCPHost) Close() {
-	dbg.Lvl3("tcphost: closing")
+	dbg.Lvl3("tcphost: closing", h, h.listener)
 	// stop accepting new connections
 	atomic.StoreInt64(&h.closed, 1)
-	h.listener.Close()
+	if h.listener != nil {
+		h.listener.Close()
+	}
 
 	// close peer connections
 	h.PeerLock.Lock()
@@ -433,7 +440,7 @@ func (h *TCPHost) AddPeers(cs ...string) {
 }
 
 // ErrClosed indicates that the connection has been closed.
-var ErrClosed = errors.New("connection closed")
+var ErrClosed = errors.New("connection closed!")
 
 func (h *TCPHost) PutTo(ctx context.Context, host string, data BinaryMarshaler) error {
 	pname := host
@@ -464,7 +471,7 @@ func (h *TCPHost) PutTo(ctx context.Context, host string, data BinaryMarshaler) 
 				return
 			}
 			// if the connection has been closed put will fail
-			done <- parent.Put(data)
+			done <- parent.PutData(data)
 			return
 		}
 	}()
@@ -505,7 +512,7 @@ func (h *TCPHost) PutUp(ctx context.Context, view int, data BinaryMarshaler) err
 				return
 			}
 			// if the connection has been closed put will fail
-			done <- parent.Put(data)
+			done <- parent.PutData(data)
 			return
 		}
 	}()
@@ -551,12 +558,12 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 				conn := h.peers[c]
 				h.PeerLock.Unlock()
 				if Ready {
-					if e := conn.Put(data[i]); e != nil {
+					if e := conn.PutData(data[i]); e != nil {
 						errLock.Lock()
 						err = e
 						errLock.Unlock()
 					}
-					dbg.Lvl4("Informed child", c)
+					dbg.Lvl4("Informed child", c, "of", data[i])
 					return
 				}
 				dbg.Lvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)
@@ -586,7 +593,7 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 //
 // TODO: each of these goroutines could be spawned when we initally connect to
 // them instead.
-func (h *TCPHost) Get() chan NetworkMessg {
+func (h *TCPHost) GetNetworkMessg() chan NetworkMessg {
 	return h.msgchan
 }
 

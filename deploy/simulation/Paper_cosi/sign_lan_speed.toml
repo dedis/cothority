@@ -1,0 +1,11 @@
+App = "sign"
+Suite = "Ed25519"
+Rounds = 20
+Machines = 16
+bf = 8
+
+ppm
+8
+32
+128
+512

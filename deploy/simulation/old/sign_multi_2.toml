@@ -1,0 +1,9 @@
+var SignTestMulti = []T{
+	{0, 1, 2, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 8, 8, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 32, 8, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 64, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 128, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
+	{0, 256, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
+}
+

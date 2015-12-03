@@ -4,10 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/random"
+	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -15,11 +12,8 @@ import (
 	"time"
 )
 
-// KeyPair will generate a keypair (private + public key) from a given suite
-func KeyPair(s abstract.Suite) config.KeyPair {
-	kp := config.KeyPair{}
-	kp.Gen(s, random.Stream)
-	return kp
+func Boldify(s string) string {
+	return "\033[1m" + s + "\033[0m"
 }
 
 func ReadLines(filename string) ([]string, error) {
@@ -61,7 +55,7 @@ func SshRun(username, host, command string) ([]byte, error) {
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
 	//log.Println(cmd)
-	cmd.Stderr = os.Stderr
+	//cmd.Stderr = os.Stderr
 	return cmd.Output()
 }
 
@@ -71,7 +65,7 @@ func SshRunStdout(username, host, command string) error {
 		addr = username + "@" + addr
 	}
 
-	dbg.Lvl4("Going to ssh to ", addr, command)
+	dbg.Lvl4("Going to ssh to", addr, command)
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
 	cmd.Stderr = os.Stderr
@@ -95,8 +89,12 @@ func Build(path, out, goarch, goos string) (string, error) {
 	var cmd *exec.Cmd
 	var b bytes.Buffer
 	build_buffer := bufio.NewWriter(&b)
+
+	wd, _ := os.Getwd()
+	dbg.Lvl4("In directory", wd)
+
 	cmd = exec.Command("go", "build", "-v", "-o", out, path)
-	dbg.Lvl4("Building", path)
+	dbg.Lvl4("Building", cmd.Args, "in", path)
 	cmd.Stdout = build_buffer
 	cmd.Stderr = build_buffer
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)

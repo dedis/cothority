@@ -1,0 +1,9 @@
+// nmachs=32, hpn=128, bf=16, rate=500, failures=20, root failures, failures
+var FailureTests = []T{
+	{0, 64, 16, 30, 50, 0, 0, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 0, 5, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 0, 10, 0, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 5, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 10, false, "coll_stamp"},
+	{0, 64, 16, 30, 50, 5, 0, 10, true, "coll_stamp"},
+}

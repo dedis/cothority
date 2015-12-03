@@ -1,0 +1,14 @@
+Machines = 16
+App = "stamp"
+Rounds = 10
+StampRatio = -1
+Suite = "Ed25519"
+ppm = 8
+bf = 8
+
+rate
+10
+100
+200
+300
+400

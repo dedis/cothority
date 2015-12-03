@@ -1,0 +1,6 @@
+Machines = 3
+App = "ntree"
+Suite = "Ed25519"
+
+Ppm,  Bf, Rounds
+2, 2, 3
