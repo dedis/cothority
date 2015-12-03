@@ -148,10 +148,10 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from", mc.conn.RemoteAddr().String(), ":", err)
+			dbg.Lvl2("Error monitor decoding from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl2("Monitor: too many errors from", mc.conn.RemoteAddr().String(), ": Abort.")
+				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
 				break
 			}
 		}
