@@ -45,12 +45,12 @@ func EnableMeasure(b bool) {
 // encoder. It can be the address of a proxy or a monitoring process.
 // Returns an error if it could not connect to the endpoint.
 func ConnectSink(addr string) error {
-	dbg.Lvl2("ConnectSink attempt with ", addr)
+	dbg.Lvl2("ConnectSink attempt with", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
 	}
-	dbg.Lvl2("Connected to sink : ", addr)
+	dbg.Lvl2("Connected to sink:", addr)
 	sink = addr
 	connection = conn
 	encoder = json.NewEncoder(conn)
@@ -66,7 +66,7 @@ func send(v interface{}) {
 		return
 	}
 	if err := encoder.Encode(v); err != nil {
-		panic(fmt.Errorf("Error sending to sink : %v", err))
+		panic(fmt.Errorf("Error sending to sink: %v", err))
 	}
 }
 

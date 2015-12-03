@@ -93,7 +93,7 @@ func (s *Stamp) connect(server string) error {
 		return fmt.Errorf("Couldn't get connection to host: %s", err)
 	}
 
-	dbg.Lvl3("Connected to ", server)
+	dbg.Lvl3("Connected to", server)
 	return nil
 }
 

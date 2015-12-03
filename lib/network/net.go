@@ -104,7 +104,7 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 	var t Type
 	err := binary.Read(b, binary.BigEndian, &t)
 	if err != nil {
-		fmt.Printf("Error reading Type : %v\n", err)
+		fmt.Printf("Error reading Type: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -128,11 +128,11 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 	// Otherwise decode it ourself
 	err = Suite.Read(b, ptr.Interface()) // v.Addr().Interface())
 	if err != nil {
-		fmt.Printf("Error decoding ProtocolMessage : %v\n", err)
+		fmt.Printf("Error decoding ProtocolMessage: %v\n", err)
 		os.Exit(1)
 	}
 	am.Msg = v.Interface()
-	//fmt.Printf("UnmarshalBinary() : Decoded type %s => %v\n", t.String(), ty)
+	//fmt.Printf("UnmarshalBinary(): Decoded type %s => %v\n", t.String(), ty)
 	return nil
 }
 
@@ -142,7 +142,7 @@ func (am *ApplicationMessage) ConstructFrom(obj ProtocolMessage) error {
 	t := reflect.TypeOf(obj)
 	ty, ok := InvTypeRegistry[t]
 	if !ok {
-		return errors.New(fmt.Sprintf("Packet to send is not known. Please register packet : %s\n", t.String()))
+		return errors.New(fmt.Sprintf("Packet to send is not known. Please register packet: %s\n", t.String()))
 	}
 	am.MsgType = ty
 	am.Msg = obj
@@ -210,7 +210,7 @@ func (c *TcpConn) Receive() (ApplicationMessage, error) {
 	var am ApplicationMessage
 	err := c.dec.Decode(&am)
 	if err != nil {
-		dbg.Fatal("Error decoding ApplicationMessage : ", err)
+		dbg.Fatal("Error decoding ApplicationMessage:", err)
 	}
 	return am, nil
 }
@@ -222,11 +222,11 @@ func (c *TcpConn) Send(obj ProtocolMessage) error {
 	am := ApplicationMessage{}
 	err := am.ConstructFrom(obj)
 	if err != nil {
-		return fmt.Errorf("Error converting packet : %v\n", err)
+		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
 	err = c.enc.Encode(&am)
 	if err != nil {
-		return fmt.Errorf("Error sending message : %v", err)
+		return fmt.Errorf("Error sending message: %v", err)
 	}
 	return err
 }
@@ -235,7 +235,7 @@ func (c *TcpConn) Send(obj ProtocolMessage) error {
 func (c *TcpConn) Close() {
 	err := c.Conn.Close()
 	if err != nil {
-		dbg.Fatal("Error while closing tcp conn : ", err)
+		dbg.Fatal("Error while closing tcp conn:", err)
 	}
 }
 
@@ -262,7 +262,7 @@ func (t *TcpHost) Open(name string) Conn {
 
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
-			dbg.Lvl3(t.Name(), "(", i, "/", maxRetry, ") Error opening connection to ", name)
+			dbg.Lvl3(t.Name(), "(", i, "/", maxRetry, ") Error opening connection to", name)
 			time.Sleep(waitRetry)
 		} else {
 			break
@@ -270,7 +270,7 @@ func (t *TcpHost) Open(name string) Conn {
 		time.Sleep(waitRetry)
 	}
 	if conn == nil {
-		dbg.Fatal(t.Name(), "could not connect to ", name, " : ABORT")
+		dbg.Fatal(t.Name(), "could not connect to", name, ": ABORT")
 	}
 	c := TcpConn{
 		Peer: name,
@@ -289,13 +289,13 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		dbg.Fatal("error listening (host ", t.Name(), ")")
+		dbg.Fatal("error listening (host", t.Name(), ")")
 	}
-	dbg.Lvl3(t.Name(), "Waiting for connections on addr ", addr, "..\n")
+	dbg.Lvl3(t.Name(), "Waiting for connections on addr", addr, "..\n")
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			dbg.Lvl2(t.Name(), "error accepting connection : ", err)
+			dbg.Lvl2(t.Name(), "error accepting connection:", err)
 			continue
 		}
 		c := TcpConn{

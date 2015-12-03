@@ -2,13 +2,14 @@ package monitor
 
 import (
 	"fmt"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/montanaflynn/stats"
 	"io"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
+
+	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/montanaflynn/stats"
 )
 
 // Stats contains all structures that are related to the computations of stats
@@ -173,7 +174,7 @@ func (s *Stats) Update(m Measure) {
 	if !ok {
 		// if we already written some values, we can not take new ones
 		if s.valuesWritten {
-			dbg.Lvl2("Stats Update received unknown type of measure : ", m.Name)
+			dbg.Lvl2("Stats Update received unknown type of measure:", m.Name)
 			return
 		}
 		meas = NewMeasurement(m.Name, s.filter)
@@ -189,7 +190,7 @@ func (s *Stats) String() string {
 	for _, v := range s.measures {
 		str += fmt.Sprintf("%v", v)
 	}
-	return fmt.Sprintf("{Stats: Peers %d, Measures : %s}", s.Peers, str)
+	return fmt.Sprintf("{Stats: Peers %d, Measures: %s}", s.Peers, str)
 }
 
 // Collect make the final computations before stringing or writing.
@@ -267,7 +268,7 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 		return values
 	}
 	// return the values below the percentile
-	dbg.Lvl2("Filtering: filters out ", measure, " :", maxIndex, " /", len(values))
+	dbg.Lvl2("Filtering: filters out", measure, ":", maxIndex, "/", len(values))
 	return values[:maxIndex]
 }
 
@@ -456,5 +457,5 @@ func AverageMeasurements(measurements []Measurement) Measurement {
 
 // String shows one measurement
 func (m *Measurement) String() string {
-	return fmt.Sprintf("{Measurement %s : wall = %v, system = %v, user = %v}", m.Name, m.Wall, m.User, m.System)
+	return fmt.Sprintf("{Measurement %s: wall = %v, system = %v, user = %v}", m.Name, m.Wall, m.User, m.System)
 }

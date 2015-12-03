@@ -26,7 +26,7 @@ func RunServer(conf *app.ConfigColl, hc *graphs.HostConfig) {
 			monitor.EnableMeasure(false)
 		} else {
 			if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-				dbg.Fatal("Signing root error connecting to monitor :", err)
+				dbg.Fatal("Signing root error connecting to monitor:", err)
 			}
 		}
 		RunClient(conf, hc)

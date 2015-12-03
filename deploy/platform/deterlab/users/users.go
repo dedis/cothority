@@ -55,7 +55,7 @@ func main() {
 	// kill old processes
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(" +")
-	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project +"," + deterlab.Experiment).Output()
 	if err != nil {
 		dbg.Fatal("Deterlab experiment", deterlab.Project + "/" + deterlab.Experiment, "seems not to be swapped in. Aborting.")
 		os.Exit(-1)
@@ -127,7 +127,7 @@ func main() {
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
 	// RedirectionAddress:RedirectionPort. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
+	dbg.Print("Launching proxy redirecting to", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
 	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
 
 	hostnames := deterlab.Hostnames
@@ -166,9 +166,9 @@ func main() {
 		dbg.Lvl1("Launching forkexec for", len(virts), "clients on", phys)
 		wg.Add(1)
 		go func(phys string) {
-			//dbg.Lvl4("running on ", phys, cmd)
+			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", deterlab.MonitorAddress + ":" + monitor.SinkPort)
+			dbg.Lvl4("Starting servers on physical machine", phys, "with logger =", deterlab.MonitorAddress + ":" + monitor.SinkPort)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
 			" -physaddr=" + phys + " -logger=" + deterlab.MonitorAddress + ":" + monitor.SinkPort)
 			if err != nil {
@@ -212,19 +212,19 @@ func main() {
 				dbg.Lvl3("ss is empty - not starting")
 				continue
 			}
-			servers := strings.Join(ss, ",")
+			servers := strings.Join(ss,",")
 			dbg.Lvl3("Starting with ss=", ss)
 			go func(p string, a bool) {
 				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
 				" -name=client@" + p +
 				" -server=" + servers +
 				" -amroot=" + strconv.FormatBool(a)
-				dbg.Lvl3("Users will launch client :", cmdstr)
+				dbg.Lvl3("Users will launch client:", cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
-					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
+					dbg.Lvl4("Deter.go: error for", deterlab.App, err)
 				}
-				dbg.Lvl4("Deter.go : Finished with", deterlab.App, p)
+				dbg.Lvl4("Deter.go: Finished with", deterlab.App, p)
 			}(p, amroot)
 			amroot = false
 		}

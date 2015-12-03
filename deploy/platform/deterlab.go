@@ -132,7 +132,7 @@ func (d *Deterlab) Build(build string) error {
 	// start building the necessary packages
 	packages := []string{"forkexec", "app", "users"}
 	if build != "" {
-		packages = strings.Split(build, ",")
+		packages = strings.Split(build,",")
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
@@ -280,9 +280,9 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, 2)
 		deter.Hostnames = conf.Hosts
-		dbg.Lvl3("Deterlab : naive applications :", conf.Hosts)
-		dbg.Lvl3("Deterlab : naive app config : ", conf)
-		dbg.Lvl3("Deterlab : naive app virt : ", deter.Virt[:])
+		dbg.Lvl3("Deterlab: naive applications:", conf.Hosts)
+		dbg.Lvl3("Deterlab: naive app config:", conf)
+		dbg.Lvl3("Deterlab: naive app virt:", deter.Virt[:])
 		deter.Hostnames = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 	case "ntree":
@@ -291,7 +291,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		var depth int
 		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
-		dbg.Lvl2("Depth : ", depth)
+		dbg.Lvl2("Depth:", depth)
 		deter.Hostnames = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 
@@ -340,10 +340,10 @@ func (d *Deterlab) Start(args ...string) error {
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R", d.ProxyRedirectionPort + ":" + d.ProxyRedirectionAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
 	exCmd := exec.Command("ssh", cmd...)
 	if err := exCmd.Start(); err != nil {
-		dbg.Fatal("Failed to start the ssh port forwarding : ", err)
+		dbg.Fatal("Failed to start the ssh port forwarding:", err)
 	}
 	if err := exCmd.Wait(); err != nil {
-		dbg.Fatal("ssh port forwarding exited in failure : ", err)
+		dbg.Fatal("ssh port forwarding exited in failure:", err)
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
 	//time.Sleep(5 * time.Minute)
@@ -464,7 +464,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string
 func readString(msg, dft string) string {
-	fmt.Printf("%s [%s]: ", msg, dft)
+	fmt.Printf("%s [%s]:", msg, dft)
 
 	reader := bufio.NewReader(os.Stdin)
 	strnl, _ := reader.ReadString('\n')

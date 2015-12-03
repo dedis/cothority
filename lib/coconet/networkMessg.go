@@ -16,6 +16,6 @@ func (nm *NetworkMessg) MarshalBinary() ([]byte, error) {
 }
 
 func (nm *NetworkMessg) UnmarshalBinary(data []byte) error {
-	dbg.Print("UnmarshalBinary : ", len(data), " bytes")
+	dbg.Print("UnmarshalBinary:", len(data), "bytes")
 	return protobuf.Decode(data, nm)
 }

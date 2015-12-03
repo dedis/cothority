@@ -117,7 +117,7 @@ func ReadPubKey(suite abstract.Suite, fileName string) (abstract.Point, string, 
 	// Some readings
 	public, err = ReadPub64(suite, key)
 	if err != nil {
-		return nil, "", errors.New(fmt.Sprintf("Error reading the public key itself : %s", err))
+		return nil, "", errors.New(fmt.Sprintf("Error reading the public key itself: %s", err))
 	}
 
 	return public, before, nil

@@ -185,9 +185,9 @@ func (s *Server) ConnectToLogger() {
 
 func (s *Server) LogReRun(nextRole string, curRole string) {
 	if nextRole == "root" {
-		var messg = s.Name() + " became root"
+		var messg = s.Name() + "became root"
 		if curRole == "root" {
-			messg = s.Name() + " remained root"
+			messg = s.Name() + "remained root"
 		}
 
 		go s.ConnectToLogger()
@@ -199,9 +199,9 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 		// dbg.Lvl4("role change: %p", s)
 
 	} else {
-		var messg = s.Name() + " remained regular"
+		var messg = s.Name() + "remained regular"
 		if curRole == "root" {
-			messg = s.Name() + " became regular"
+			messg = s.Name() + "became regular"
 		}
 
 		if curRole == "root" {
@@ -292,7 +292,7 @@ func (s *Server) runAsRegular() string {
 // Listen on client connections. If role is root also send annoucement
 // for all of the nRounds
 func (s *Server) Run(role string, nRounds int) {
-	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
+	dbg.Lvl3("Stamp-server", s.name, "starting with", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl3("Signer closed:", err) }()
@@ -314,7 +314,7 @@ func (s *Server) Run(role string, nRounds int) {
 					dbg.Lvl4("removing self")
 					s.Signer.RemoveSelf()
 				} else {
-					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
+					dbg.Lvl4("adding self:", hostlist[(i/2)%len(hostlist)])
 					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
 				}
 				i++
@@ -346,7 +346,7 @@ func (s *Server) Run(role string, nRounds int) {
 			return
 		}
 
-		// dbg.Lvl4(s.Name(), "nextRole: ", nextRole)
+		// dbg.Lvl4(s.Name(), "nextRole:", nextRole)
 		if nextRole == "close" {
 			s.Close()
 			return
@@ -416,7 +416,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	if len(s.Queue[READING]) < upperBound || upperBound == -1 {
 		upperBound = len(s.Queue[READING])
 	}
-	dbg.Lvl4("Aggregate COMMIT :", upperBound, " TAKEN /", len(s.Queue[READING]))
+	dbg.Lvl4("Aggregate COMMIT:", upperBound, "TAKEN /", len(s.Queue[READING]))
 	// Take the maximum number of stamprequest for this round
 	s.Queue[PROCESSING] = s.Queue[READING][0:upperBound]
 	// And let the rest adjust it self
@@ -459,7 +459,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 		if proof.CheckLocalProofs(s.Suite().Hash, s.Root, s.Leaves, s.Proofs) == true {
 			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
 		} else {
-			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
+			panic("Local Proofs" + s.Name() + "unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}
 	}
 
@@ -473,7 +473,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 func (s *Server) PutToClient(name string, data coconet.BinaryMarshaler) {
 	err := s.Clients[name].PutData(data)
 	if err == coconet.ErrClosed {
-		dbg.Lvl3("Stamper error putting to client :", err)
+		dbg.Lvl3("Stamper error putting to client:", err)
 		s.Close()
 		return
 	}

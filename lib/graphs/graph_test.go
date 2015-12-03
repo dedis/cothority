@@ -106,7 +106,7 @@ func TestTreeFromListColoring(t *testing.T) {
 			if !checkColoring(root) {
 				t.Fatal("failed to properly color:", nodes, hpn, bf)
 			}
-			t.Log("able to use:", len(hosts), " of: ", hpn*len(nodes))
+			t.Log("able to use:", len(hosts), "of:", hpn*len(nodes))
 
 			depth := Depth(root)
 			if depth != retDepth {

@@ -70,7 +70,7 @@ func (s *Peer) Run(role string) {
 	// 	s.Close()
 	// }()
 
-	dbg.Lvl3("Stamp-server", s.name, "starting with ", role)
+	dbg.Lvl3("Stamp-server", s.name, "starting with", role)
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Listened and error:", err) }()
@@ -90,7 +90,7 @@ func (s *Peer) Run(role string) {
 			return
 		}
 
-		// dbg.Lvl4(s.Name(), "nextRole: ", nextRole)
+		// dbg.Lvl4(s.Name(), "nextRole:", nextRole)
 		if nextRole == "close" {
 			s.Close()
 			return
@@ -194,9 +194,9 @@ func (s *Peer) ConnectToLogger() {
 
 func (s *Peer) LogReRun(nextRole string, curRole string) {
 	if nextRole == "root" {
-		var messg = s.Name() + " became root"
+		var messg = s.Name() + "became root"
 		if curRole == "root" {
-			messg = s.Name() + " remained root"
+			messg = s.Name() + "remained root"
 		}
 
 		go s.ConnectToLogger()
@@ -208,9 +208,9 @@ func (s *Peer) LogReRun(nextRole string, curRole string) {
 		// dbg.Lvl4("role change: %p", s)
 
 	} else {
-		var messg = s.Name() + " remained regular"
+		var messg = s.Name() + "remained regular"
 		if curRole == "root" {
-			messg = s.Name() + " became regular"
+			messg = s.Name() + "became regular"
 		}
 
 		if curRole == "root" {

@@ -86,7 +86,7 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		// checking if format is good
 		vals := strings.Split(text, "=")
 		if len(vals) != 2 {
-			dbg.Fatal("Simulation file : ", filename, " is not properly formatted ( key = value )")
+			dbg.Fatal("Simulation file:", filename, " is not properly formatted ( key = value )")
 		}
 		// fill in the general config
 		masterConfig.Put(strings.TrimSpace(vals[0]), strings.TrimSpace(vals[1]))
@@ -96,11 +96,11 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 	}
 
 	scanner.Scan()
-	args := strings.Split(scanner.Text(), ", ")
+	args := strings.Split(scanner.Text(),", ")
 	for scanner.Scan() {
 		rc := masterConfig.Clone()
 		// put each individual test configs
-		for i, value := range strings.Split(scanner.Text(), ", ") {
+		for i, value := range strings.Split(scanner.Text(),", ") {
 			rc.Put(strings.TrimSpace(args[i]), strings.TrimSpace(value))
 		}
 		runconfigs = append(runconfigs, *rc)

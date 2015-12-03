@@ -65,7 +65,7 @@ func SshRunStdout(username, host, command string) error {
 		addr = username + "@" + addr
 	}
 
-	dbg.Lvl4("Going to ssh to ", addr, command)
+	dbg.Lvl4("Going to ssh to", addr, command)
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
 	cmd.Stderr = os.Stderr

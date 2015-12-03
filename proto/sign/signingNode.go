@@ -239,7 +239,7 @@ func (sn *Node) StartAnnouncement(am *AnnouncementMessage) error {
 		sn.AnnounceFunc(am)
 	}
 
-	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
+	dbg.Lvl2("root", sn.Name(), "starting announcement round for round:", sn.nRounds, "on view", sn.ViewNo)
 
 	/*
 		first := time.Now()
@@ -418,7 +418,7 @@ func (sn *Node) ShouldIFail(phase string) bool {
 
 		// If we were only given a probability of failing
 		if p := sn.Rand.Int() % 100; p < sn.FailureRate {
-			// log.Println(sn.Name(), "died for "+phase, "p", p, "with prob ", sn.FailureRate)
+			// log.Println(sn.Name(), "died for "+phase, "p", p, "with prob", sn.FailureRate)
 			return true
 		}
 

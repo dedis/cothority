@@ -110,11 +110,11 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 					monitor.EnableMeasure(false)
 				} else {
 					if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-						dbg.Fatal("Root could not connect to monitor sink :", err)
+						dbg.Fatal("Root could not connect to monitor sink:", err)
 					}
 				}
 
-				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting: ", conf.RootWait)
+				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting:", conf.RootWait)
 				// wait for the other nodes to get set up
 				time.Sleep(time.Duration(conf.RootWait) * time.Second)
 
