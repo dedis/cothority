@@ -101,6 +101,7 @@ func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, o
 				Challenge:  in.SBm.C,
 				AggCommit:  in.SBm.V0_hat,
 				AggPublic:  in.SBm.X0_hat,
+				ExceptionList:in.SBm.ExceptionList,
 			}}
 		round.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client", msg.To)

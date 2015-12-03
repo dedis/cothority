@@ -112,3 +112,11 @@ func (round *RoundException) RaiseException() {
 	round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.PubKey)
 	round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.Log.V_hat)
 }
+
+func (round *RoundException) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
+	// Root is creating the sig broadcast
+	if round.IsRoot {
+		in.SBm.ExceptionList = round.Cosi.ExceptionList
+	}
+	return round.RoundCosi.SignatureBroadcast(in, out)
+}

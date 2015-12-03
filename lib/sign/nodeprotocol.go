@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/context"
 	"strings"
 	"syscall"
+	"github.com/dedis/crypto/abstract"
 )
 
 /*
@@ -59,16 +60,16 @@ func (sn *Node) ProcessMessages() error {
 				errStr = err.Error()
 			}
 
-			// One of the errors doesn't have an error-number applied, so we need
-			// to check for the string - will probably be fixed in go 1.6
+		// One of the errors doesn't have an error-number applied, so we need
+		// to check for the string - will probably be fixed in go 1.6
 			if !ok || err == coconet.ErrClosed || err == io.EOF ||
-				err == io.ErrClosedPipe {
+			err == io.ErrClosedPipe {
 				dbg.Lvl3(sn.Name(), "getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}
 
-			// if it is a non-fatal error try again
+		// if it is a non-fatal error try again
 			if err != nil {
 				if strings.Contains(errStr, errReset) {
 					dbg.Lvl2(sn.Name(), "connection reset error")
@@ -78,7 +79,7 @@ func (sn *Node) ProcessMessages() error {
 				continue
 			}
 
-			// interpret network message as Signing Message
+		// interpret network message as Signing Message
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
 			dbg.Lvlf4("Message on %s is type %s and %+v", sn.Name(), sm.Type, sm)
@@ -180,7 +181,7 @@ func (sn *Node) ProcessMessages() error {
 				// put in votelog to be streamed and applied
 				sn.VoteLog.Put(vi, sm.Curesp.Vote)
 				// continue catching up
-				sn.CatchUp(vi+1, sm.From)
+				sn.CatchUp(vi + 1, sm.From)
 			case GroupChange:
 				if sm.ViewNbr == -1 {
 					sm.ViewNbr = sn.ViewNo
@@ -570,6 +571,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 				C:      sn.suite.Secret().One(),
 				X0_hat: sn.suite.Point().Null(),
 				V0_hat: sn.suite.Point().Null(),
+				ExceptionList: make([]abstract.Point, 0),
 			},
 		}
 	}
