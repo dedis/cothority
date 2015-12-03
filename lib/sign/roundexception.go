@@ -38,29 +38,8 @@ func NewRoundException(node *Node) *RoundException {
 	return round
 }
 
-/*
-// Announcement only calls RoundCosi-Announcement, except if the round-name
-// is equal to ExceptionForceFailure
-func (round *RoundException) Announcement(viewNbr, roundNbr int, in *SigningMessage, out []*SigningMessage) error {
-	dbg.Print(round.Name)
-	if round.Name == ExceptionForceFailure {
-		dbg.LLvl3("Forcing failure in announcement")
-		return nil
-	} else {
-		return round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
-	}
-}
-*/
-
 // Commitment adds up all exception-lists from children and calls roundcosi
 func (round *RoundException) Commitment(in []*SigningMessage, out *SigningMessage) error {
-	/*
-		if round.Name == ExceptionForceFailure {
-			dbg.LLvl3("Forcing failure in commitment")
-			return nil
-		}
-	*/
-
 	err := round.RoundCosi.Commitment(in, out)
 	if err != nil {
 		return err
@@ -74,32 +53,15 @@ func (round *RoundException) Commitment(in []*SigningMessage, out *SigningMessag
 	}
 	out.Com.ExceptionList = round.Cosi.ExceptionList
 	return nil
-
 }
-
-/*
-func (round *RoundException) Challenge(in *SigningMessage, out []*SigningMessage) error {
-	if round.Name == ExceptionForceFailure {
-		dbg.LLvl3("Forcing failure in challenge")
-		return nil
-	} else {
-		return round.RoundCosi.Challenge(in, out)
-	}
-}
-*/
 
 func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage) error {
-	/*
-		if round.Name == ExceptionForceFailure {
-			dbg.LLvl3("Forcing failure in response")
-			return nil
-		}
-	*/
+	if round.Name == ExceptionForceFailure {
+		dbg.Lvl1("Forcing failure in response")
+		round.RaiseException()
+	}
 
 	// initialize exception handling
-	exceptionV_hat := round.Cosi.Suite.Point().Null()
-	exceptionX_hat := round.Cosi.Suite.Point().Null()
-	round.Cosi.ExceptionList = make([]abstract.Point, 0)
 	nullPoint := round.Cosi.Suite.Point().Null()
 
 	children := round.Cosi.Children
@@ -113,8 +75,8 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
 
 				// remove public keys and point commits from subtree of failed child
-				exceptionX_hat.Add(exceptionX_hat, round.Cosi.ChildX_hat[from])
-				exceptionV_hat.Add(exceptionV_hat, round.Cosi.ChildV_hat[from])
+				round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.ChildX_hat[from])
+				round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.ChildV_hat[from])
 			}
 			continue
 		case Response:
@@ -126,26 +88,16 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			}
 
 			dbg.Lvl4(round.Name, "accepts response from", from, sm.Type)
-			exceptionV_hat.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
-			exceptionX_hat.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
+			round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, sm.Rm.ExceptionV_hat)
+			round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, sm.Rm.ExceptionX_hat)
 			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
 		}
 	}
 
-	// remove exceptions from subtree that failed
-	round.Cosi.X_hat.Sub(round.Cosi.X_hat, exceptionX_hat)
-	round.Cosi.ExceptionV_hat = exceptionV_hat
-	round.Cosi.ExceptionX_hat = exceptionX_hat
+	round.Cosi.X_hat.Sub(round.Cosi.X_hat, round.Cosi.ExceptionX_hat)
 
 	err := round.RoundCosi.Response(in, out)
 	if err != nil {
-		return err
-	}
-
-	dbg.Lvl4(round.Cosi.Name, "got all responses")
-	err = round.Cosi.VerifyResponses()
-	if err != nil {
-		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
 
@@ -153,4 +105,10 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 	out.Rm.ExceptionV_hat = round.Cosi.ExceptionV_hat
 	out.Rm.ExceptionX_hat = round.Cosi.ExceptionX_hat
 	return nil
+}
+
+func (round *RoundException) RaiseException() {
+	round.Cosi.R_hat = round.Suite.Secret().Zero()
+	round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.PubKey)
+	round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.Log.V_hat)
 }
