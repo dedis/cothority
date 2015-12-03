@@ -12,10 +12,10 @@ import (
 func TestStamp(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
-	go peer1.LoopRounds(conode.RoundStamperListenerType, 3)
-	go peer2.LoopRounds(conode.RoundStamperListenerType, 3)
+	go peer1.LoopRounds(conode.RoundStamperListenerType, 4)
+	go peer2.LoopRounds(conode.RoundStamperListenerType, 4)
 	dbg.Print("Before wait")
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	dbg.Print("After wait")
 
 	s, err := conode.NewStamp("testdata/config.toml")
