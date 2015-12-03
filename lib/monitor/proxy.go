@@ -41,14 +41,14 @@ func Proxy(redirection string) {
 	if err := connectToSink(redirection); err != nil {
 		panic(err)
 	}
-	dbg.Lvl2("Proxy connected to sink ", redirection)
+	dbg.Lvl2("Proxy connected to sink", redirection)
 	// Here it listens the same way monitor.go would
 	// usually 0.0.0.0:4000
 	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
 		dbg.Fatalf("Error while binding proxy to addr %s: %v", Sink+":"+SinkPort, err)
 	}
-	dbg.Lvl2("Proxy listening on ", Sink+":"+SinkPort)
+	dbg.Lvl2("Proxy listening on", Sink+":"+SinkPort)
 	var newConn = make(chan bool)
 	var closeConn = make(chan bool)
 	var finished = false
@@ -65,10 +65,10 @@ func Proxy(redirection string) {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl1("Error proxy accepting connection: ", err)
+				dbg.Lvl1("Error proxy accepting connection:", err)
 				continue
 			}
-			dbg.Lvl3("Proxy accepting incoming connection from: ", conn.RemoteAddr().String())
+			dbg.Lvl3("Proxy accepting incoming connection from:", conn.RemoteAddr().String())
 			newConn <- true
 			proxyConns[conn.RemoteAddr().String()] = json.NewEncoder(conn)
 			go proxyConnection(conn, closeConn)

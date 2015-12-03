@@ -169,7 +169,7 @@ func convertTree(suite abstract.Suite, t *graphs.Tree) {
 
 		str, err := cliutils.PubHex(suite, point)
 		if err != nil {
-			dbg.Fatal("Could not encode point to hexadecimal ")
+			dbg.Fatal("Could not encode point to hexadecimal")
 		}
 		t.PubKey = str
 	}

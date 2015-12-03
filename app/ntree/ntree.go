@@ -16,7 +16,7 @@ func main() {
 
 	// we must know who we are
 	if app.RunFlags.Hostname == "" {
-		log.Fatal("Hostname empty : Abort")
+		log.Fatal("Hostname empty: Abort")
 	}
 
 	own, depth := conf.Tree.FindByName(app.RunFlags.Hostname, 0)
@@ -25,7 +25,7 @@ func main() {
 		conf.Root = true
 	}
 	if own == nil {
-		dbg.Fatal("Could not find its name in the tree ", app.RunFlags.Hostname)
+		dbg.Fatal("Could not find its name in the tree", app.RunFlags.Hostname)
 	}
 	conf.Tree = own
 	conf.Name = own.Name

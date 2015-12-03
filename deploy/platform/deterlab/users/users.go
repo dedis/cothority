@@ -157,9 +157,9 @@ func main() {
 		dbg.Lvl2("Launching forkexec for", len(virts), "clients on", phys)
 		wg.Add(1)
 		go func(phys string) {
-			//dbg.Lvl4("running on ", phys, cmd)
+			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", monitorAddr)
+			dbg.Lvl4("Starting servers on physical machine", phys, "with logger =", deterlab.MonitorAddress+":"+monitor.SinkPort)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
 				" -physaddr="+phys+" -logger="+deterlab.MonitorAddress+":"+monitor.SinkPort)
 			if err != nil {
@@ -210,12 +210,12 @@ func main() {
 					" -name=client@" + p +
 					" -server=" + servers +
 					" -amroot=" + strconv.FormatBool(a)
-				dbg.Lvl3("Users will launch client :", cmdstr)
+				dbg.Lvl3("Users will launch client:", cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
-					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
+					dbg.Lvl4("Deter.go: error for", deterlab.App, err)
 				}
-				dbg.Lvl4("Deter.go : Finished with", deterlab.App, p)
+				dbg.Lvl4("Deter.go: Finished with", deterlab.App, p)
 			}(p, amroot)
 			amroot = false
 		}

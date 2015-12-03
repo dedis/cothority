@@ -63,7 +63,7 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	// Send it
 	err := c.Send(p)
 	if err != nil {
-		t.Error("error sending from client : ", err)
+		t.Error("error sending from client:", err)
 	}
 
 	// Receive the response

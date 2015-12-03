@@ -158,7 +158,7 @@ func StampFile(file, server string) {
 	}
 
 	if err := tsm.Srep.Save(file + sigExtension); err != nil {
-		dbg.Fatal("Could not write signature file : ", err)
+		dbg.Fatal("Could not write signature file:", err)
 	}
 	dbg.Lvl1("Signature file", file+".sig", "written.")
 
@@ -182,7 +182,7 @@ func VerifyFileSignature(file, sigFile string) bool {
 		SuiteStr: suite.String(),
 	}
 	if err := signature.Open(sigFile); err != nil {
-		dbg.Fatal("Couldn't read signature-file", sigFile, " : ", err)
+		dbg.Fatal("Couldn't read signature-file", sigFile, ":", err)
 	}
 	hash := hashFile(file)
 	dbg.Print(base64.StdEncoding.EncodeToString(hash))

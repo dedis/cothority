@@ -105,7 +105,7 @@ func (v *View) RemovePeerFromHostlist(name string) {
 }
 
 func (v *View) RemovePeer(name string) bool {
-	log.Println("LOOKING FOR ", name, "in HOSTLIST", v.HostList)
+	log.Println("LOOKING FOR", name, "in HOSTLIST", v.HostList)
 	v.Lock()
 	// make sure we don't remove our parent
 	if v.Parent == name {

@@ -221,7 +221,7 @@ func (sn *Node) StartAnnouncementWithWait(round Round, wait time.Duration) error
 
 	defer sn.AnnounceLock.Unlock()
 
-	dbg.Lvl2("root", sn.Name(), "starting announcement round for round: ", sn.nRounds, "on view", sn.ViewNo)
+	dbg.Lvl2("root", sn.Name(), "starting announcement round for round:", sn.nRounds, "on view", sn.ViewNo)
 
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	var cancelederr error
@@ -354,7 +354,7 @@ func (sn *Node) ShouldIFail(phase string) bool {
 
 		// If we were only given a probability of failing
 		if p := sn.Rand.Int() % 100; p < sn.FailureRate {
-			dbg.Lvl2(sn.Name(), "died for "+phase, "p", p, "with prob ", sn.FailureRate)
+			dbg.Lvl2(sn.Name(), "died for "+phase, "p", p, "with prob", sn.FailureRate)
 			return true
 		}
 

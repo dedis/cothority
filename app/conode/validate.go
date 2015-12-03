@@ -2,6 +2,9 @@ package main
 
 import (
 	"bytes"
+	"net"
+	"os"
+
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
@@ -9,8 +12,6 @@ import (
 	"github.com/dedis/crypto/anon"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
-	"net"
-	"os"
 )
 
 // This file handles the validation process
@@ -33,7 +34,7 @@ func init() {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "key, k",
-				Usage: "KEY : the basename of where to find the public / private keys of this host to be verified.",
+				Usage: "KEY: the basename of where to find the public / private keys of this host to be verified.",
 				Value: defaultKeyFile,
 			},
 		},
@@ -56,7 +57,7 @@ func Validation(keyFile string) {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		dbg.Fatal("Could not listen for validation : ", err)
+		dbg.Fatal("Could not listen for validation:", err)
 	}
 
 	var conn net.Conn
@@ -65,7 +66,7 @@ func Validation(keyFile string) {
 		// Accept the one
 		conn, err = ln.Accept()
 		if err != nil {
-			dbg.Fatal("Could not accept an input connection : ", err)
+			dbg.Fatal("Could not accept an input connection:", err)
 		}
 
 		dbg.Lvl1("Verifier connected! Validation in progress...")
@@ -75,14 +76,14 @@ func Validation(keyFile string) {
 		// We also send the size of the signature for the receiver to know how much
 		// byte he is expecting
 		if err := suite.Write(conn, msg, len(signature), signature); err != nil {
-			dbg.Lvl1("Error when writing the system packet to the connection :", err)
+			dbg.Lvl1("Error when writing the system packet to the connection:", err)
 			continue
 		}
 
 		// Receive the response
 		var ack Ack
 		if err := suite.Read(conn, &ack); err != nil {
-			dbg.Lvl1("Error when reading the response :", err)
+			dbg.Lvl1("Error when reading the response:", err)
 		}
 
 		var er string = "Validation is NOT correct, something is wrong about your "
@@ -90,7 +91,7 @@ func Validation(keyFile string) {
 		dbg.Lvl2("Received code", ack)
 		switch ack.Code {
 		default:
-			dbg.Lvl1("Validation received unknown ACK : type = ", ack.Type, " Code = ", ack.Code)
+			dbg.Lvl1("Validation received unknown ACK: type =", ack.Type, "Code =", ack.Code)
 			continue
 		case SYS_OK:
 			dbg.Lvl1("Validation finished successfully! You should receive an email from development team soon.")
@@ -124,7 +125,7 @@ func createSystemPacket() SystemPacket {
 func signSystemPacket(sys SystemPacket, kp config.KeyPair) []byte {
 	var buf bytes.Buffer
 	if err := suite.Write(&buf, sys); err != nil {
-		dbg.Fatal("Could not sign the system packet : ", err)
+		dbg.Fatal("Could not sign the system packet:", err)
 	}
 	// setup
 	X := make([]abstract.Point, 1)
@@ -140,11 +141,11 @@ func signSystemPacket(sys SystemPacket, kp config.KeyPair) []byte {
 func readKeyFile(keyFile string) (config.KeyPair, string) {
 	sec, err := cliutils.ReadPrivKey(suite, namePriv(keyFile))
 	if err != nil {
-		dbg.Fatal("Could not read private key : ", err)
+		dbg.Fatal("Could not read private key:", err)
 	}
 	pub, addr, err := cliutils.ReadPubKey(suite, namePub(keyFile))
 	if err != nil {
-		dbg.Fatal("Could not read public key : ", err)
+		dbg.Fatal("Could not read public key:", err)
 	}
 	return config.KeyPair{
 		Suite:  suite,

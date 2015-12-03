@@ -11,7 +11,7 @@ func main() {
 	app.ReadConfig(conf)
 
 	if app.RunFlags.Hostname == "" {
-		log.Fatal("Hostname empty : Abort")
+		log.Fatal("Hostname empty: Abort")
 	}
 
 	RunServer(conf)

@@ -24,7 +24,7 @@ func TestVerifyPort(t *testing.T) {
 	if na, err := VerifyPort(bad, port); err != nil {
 		t.Error("VerifyPort should not gen any error", err)
 	} else if na != bad+":"+ports {
-		t.Error("address should generated is not correct: added port and :")
+		t.Error("address should generated is not correct: added port and:")
 	}
 }
 

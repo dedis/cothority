@@ -42,17 +42,17 @@ func Run(configFile, key string) {
 	// Read the global config
 	conf := &app.ConfigConode{}
 	if err := app.ReadTomlConfig(conf, configFile); err != nil {
-		dbg.Fatal("Could not read toml config... : ", err)
+		dbg.Fatal("Could not read toml config:", err)
 	}
 	dbg.Lvl1("Configuration file read")
 	// Read the private / public keys + binded address
 	if sec, err := cliutils.ReadPrivKey(suite, namePriv(key)); err != nil {
-		dbg.Fatal("Error reading private key file  :", err)
+		dbg.Fatal("Error reading private key file:", err)
 	} else {
 		conf.Secret = sec
 	}
 	if pub, addr, err := cliutils.ReadPubKey(suite, namePub(key)); err != nil {
-		dbg.Fatal("Error reading public key file :", err)
+		dbg.Fatal("Error reading public key file:", err)
 	} else {
 		conf.Public = pub
 		address = addr

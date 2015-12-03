@@ -41,7 +41,7 @@ func ForceExit(address string) {
 	if err != nil {
 		dbg.Fatal("Error when getting the connection to the host:", err)
 	}
-	dbg.Lvl1("Connected to ", add)
+	dbg.Lvl1("Connected to", add)
 	msg := &conode.TimeStampMessage{
 		Type: conode.StampExit,
 	}
@@ -49,6 +49,6 @@ func ForceExit(address string) {
 	dbg.Lvl1("Asking to exit")
 	err = conn.PutData(msg)
 	if err != nil {
-		dbg.Fatal("Couldn't send exit-message to server: ", err)
+		dbg.Fatal("Couldn't send exit-message to server:", err)
 	}
 }

@@ -73,7 +73,7 @@ func (m *Monitor) Listen() error {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
 	m.listener = ln
-	dbg.Lvl2("Monitor listening for stats on ", Sink, ":", SinkPort)
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
 	finished := false
 	go func() {
 		for {
@@ -90,7 +90,7 @@ func (m *Monitor) Listen() error {
 				dbg.Lvl2("Error while monitor accept connection:", operr)
 				continue
 			}
-			dbg.Lvl3("Monitor : new connection from ", conn.RemoteAddr().String())
+			dbg.Lvl3("Monitor: new connection from", conn.RemoteAddr().String())
 			m.mutexConn.Lock()
 			m.conns[conn.RemoteAddr().String()] = conn
 			go m.handleConnection(conn)
@@ -148,10 +148,10 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from ", conn.RemoteAddr().String(), " : ", err)
+			dbg.Lvl2("Error monitor decoding from", mc.conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl2("Monitor : too many errors from ", conn.RemoteAddr().String(), " : Abort.")
+				dbg.Lvl2("Monitor: too many errors from", mc.conn.RemoteAddr().String(), ": Abort.")
 				break
 			}
 		}

@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"strings"
+	"sync"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	conf "github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
-	"net"
-	"strings"
-	"sync"
-	"time"
 )
 
 // How many times a peer tries to connect to another until it works
@@ -30,7 +31,7 @@ type RemotePeer struct {
 }
 
 func (r *RemotePeer) String() string {
-	return fmt.Sprintf("RemotePeer : %s (id: %d)", r.Hostname, r.Id)
+	return fmt.Sprintf("RemotePeer: %s (id: %d)", r.Hostname, r.Id)
 }
 
 func (r *RemotePeer) IsRoot() bool {
@@ -80,7 +81,7 @@ type Peer struct {
 func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot bool) *Peer {
 
 	if id >= p.N {
-		log.Fatal("Error while NewPeer : gien ", id, " as id whereas polyinfo.N = ", p.N)
+		log.Fatal("Error while NewPeer: gien", id, "as id whereas polyinfo.N =", p.N)
 
 	}
 	// Setup of the private / public pair
@@ -88,7 +89,7 @@ func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot
 	// setup of the public list of key
 	pubKeys := make([]abstract.Point, p.N)
 	pubKeys[id] = key.Public
-	dbg.Lvl3(name, "(id", id, ") has created its private/public key : public => ", key.Public)
+	dbg.Lvl3(name, "(id", id, ") has created its private/public key: public =>", key.Public)
 
 	return &Peer{
 		Id:      id,
@@ -112,12 +113,12 @@ func (p *Peer) Listen() {
 	port := ":" + results[1]
 	ln, err := net.Listen("tcp", port)
 	if err != nil {
-		dbg.Fatal(p.Name, ": Error while listening on port ", port, "ABORT  => ", err)
+		dbg.Fatal(p.Name, ": Error while listening on port", port, "ABORT  =>", err)
 	}
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			dbg.Fatal(p.Name, ": Error while listening on port ", port, " => ", err)
+			dbg.Fatal(p.Name, ": Error while listening on port", port, "=>", err)
 		}
 		go p.synWithPeer(conn)
 	}
@@ -134,15 +135,15 @@ func (p *Peer) ConnectTo(host string) error {
 			// we have tried too many times => abort
 			if count == ConnRetry {
 				tick.Stop()
-				dbg.Fatal(p.Name, "could not connect to", host, " ", ConnRetry, "times. Abort.")
+				dbg.Fatal(p.Name, "could not connect to", host, "", ConnRetry, "times. Abort.")
 				// let's try again one more time
 			} else {
-				dbg.Lvl2(p.Name, "could not connect to", host, ". Retry in ", ConnWaitRetry.String())
+				dbg.Lvl2(p.Name, "could not connect to", host, ". Retry in", ConnWaitRetry.String())
 				count += 1
 			}
 		}
 		// handle successful connection
-		dbg.Lvl3(p.Name, "has connected with peer ", host)
+		dbg.Lvl3(p.Name, "has connected with peer", host)
 		tick.Stop()
 		// start to syn with the respective peer
 		go p.synWithPeer(conn)
@@ -163,7 +164,7 @@ func (p *Peer) ForRemotePeers(fn func(RemotePeer)) {
 func (p *Peer) WaitSYNs() {
 	for {
 		s := <-p.synChan
-		dbg.Lvl3(p.Name, " synChan received Syn id ", s.Id)
+		dbg.Lvl3(p.Name, "synChan received Syn id", s.Id)
 		_, ok := p.remote[s.Id]
 		if !ok {
 			dbg.Fatal(p.Name, "received syn'd notification of an unknown peer... ABORT")
@@ -183,7 +184,7 @@ func (p *Peer) SendACKs() {
 	}
 	err := p.SendToAll(&a)
 	if err != nil {
-		dbg.Fatal(p.Name, "could not sent its ACKs to every one : ", err)
+		dbg.Fatal(p.Name, "could not sent its ACKs to every one:", err)
 	}
 }
 
@@ -194,7 +195,7 @@ func (p *Peer) WaitACKs() {
 		a := Ack{}
 		err := p.suite.Read(rp.Conn, &a)
 		if err != nil {
-			dbg.Fatal(p.Name, "could not receive an ACK from ", rp.String(), " (err ", err, ")")
+			dbg.Fatal(p.Name, "could not receive an ACK from", rp.String(), "(err", err, ")")
 		}
 		//p.ackChan <- a
 		wg.Done()
@@ -205,17 +206,6 @@ func (p *Peer) WaitACKs() {
 	dbg.Lvl3(p.Name, "is waiting for acks ...")
 	wg.Wait()
 	dbg.Lvl3(p.String(), "received all ACKs")
-	//n := 0
-	//for {
-	//	a := <-p.ackChan
-	//	if a.Valid {
-	//		n += 1
-	//	}
-	//	if n == p.info.N-1 {
-	//		dbg.Lvl3(p.Name, "received all acks. Continue")
-	//		break
-	//	}
-	//}
 }
 
 // Wait for the end of the alo so we can close connection nicely
@@ -225,7 +215,7 @@ func (p *Peer) WaitFins() {
 		f := Finish{p.Id}
 		err := p.suite.Write(rp.Conn, &f)
 		if err != nil {
-			dbg.Fatal(p.String(), "could not send FIN to ", rp.String())
+			dbg.Fatal(p.String(), "could not send FIN to", rp.String())
 		}
 		p.wgFin.Done()
 	}
@@ -237,16 +227,6 @@ func (p *Peer) WaitFins() {
 		rp.Conn.Close()
 	}
 	dbg.Lvl3(p.String(), "close every connections")
-	//for {
-	//	f := <-p.finChan
-	//	rp, ok := p.remote[f.Id]
-	//	if !ok {
-	//		dbg.Lvl3(p.Name, "received invalid FIN : wrong ID ", rp.Id, " ... ")
-	//	} else {
-	//		rp.Conn.Close()
-	//		dbg.Lvl3(p.Name, "received FIN from ", rp.String(), " => closed connection")
-	//	}
-	//}
 }
 
 // Peer logic after it has syn'd with another peer
@@ -306,16 +286,16 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 	}
 	err := p.suite.Write(conn, &s)
 	if err != nil {
-		dbg.Fatal(p.Name, "could not send SYN to ", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "could not send SYN to", conn.RemoteAddr().String())
 	}
 	// Receive the other SYN
 	s2 := Syn{}
 	err = p.suite.Read(conn, &s2)
 	if err != nil {
-		dbg.Fatal(p.Name, "could not receive SYN from ", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "could not receive SYN from", conn.RemoteAddr().String())
 	}
 	if s2.Id < 0 || s2.Id >= p.info.N {
-		dbg.Fatal(p.Name, "received wrong SYN info from ", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "received wrong SYN info from", conn.RemoteAddr().String())
 	}
 	if p.pubKeys[s2.Id] != nil {
 		dbg.Fatal(p.Name, "already received a SYN for this index ")
@@ -323,7 +303,7 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 	p.pubKeys[s2.Id] = s2.Public
 	rp := RemotePeer{Conn: conn, Id: s2.Id, Hostname: conn.RemoteAddr().String()}
 	p.remote[s2.Id] = rp
-	dbg.Lvl3(p.String(), "has SYN'd with peer ", rp.String())
+	dbg.Lvl3(p.String(), "has SYN'd with peer", rp.String())
 	p.synChan <- s2
 }
 
@@ -334,7 +314,7 @@ func (p *Peer) String() string {
 	} else {
 		role = "Peer: "
 	}
-	return fmt.Sprintf("%s: %s (%d) : ", role, p.Name, p.Id)
+	return fmt.Sprintf("%s: %s (%d):", role, p.Name, p.Id)
 }
 
 // ComputeSharedSecret will make the exchange of dealers between
@@ -353,7 +333,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 
 	// Send the dealer struct TO every one
 	err = p.SendToAll(dealer)
-	dbg.Lvl3(p.Name, "sent its dealer to every peers. (err = ", err, ")")
+	dbg.Lvl3(p.Name, "sent its dealer to every peers. (err =", err, ")")
 	// Receive the dealer struct FROM every one
 	// wait with a chan to get ALL dealers
 	dealChan := make(chan *poly.Deal)
@@ -362,7 +342,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 			d := new(poly.Deal).UnmarshalInit(p.info.T, p.info.R, p.info.N, p.suite)
 			err := p.suite.Read(rp.Conn, d)
 			if err != nil {
-				dbg.Fatal(p.Name, " received a strange dealer from ", rp.String(), ": ", err)
+				dbg.Fatal(p.Name, "received a strange dealer from", rp.String(), ":", err)
 			}
 			dealChan <- d
 		}(rp)
@@ -374,11 +354,11 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 	for {
 		// get the dealer and add it
 		d := <-dealChan
-		dbg.Lvl3(p.Name, "collected one more dealer (count = ", n, ")")
+		dbg.Lvl3(p.Name, "collected one more dealer (count =", n, ")")
 		// TODO: get the response back to the dealer
 		_, err := receiver.AddDeal(p.Id, d)
 		if err != nil {
-			dbg.Fatal(p.Name, "has error when adding the dealer : ", err)
+			dbg.Fatal(p.Name, "has error when adding the dealer:", err)
 		}
 		n += 1
 		// we get enough dealers to compute the shared secret
@@ -390,7 +370,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 
 	sh, err := receiver.ProduceSharedSecret()
 	if err != nil {
-		dbg.Fatal(p.Name, "could not produce shared secret. Abort. (err ", err, ")")
+		dbg.Fatal(p.Name, "could not produce shared secret. Abort. (err", err, ")")
 	}
 	dbg.Lvl3(p.Name, "produced shared secret !")
 	return sh
@@ -418,7 +398,7 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 	// launch the new round
 	err := p.schnorr.NewRound(random, h)
 	if err != nil {
-		dbg.Fatal(p.String(), "could not make a new round : ", err)
+		dbg.Fatal(p.String(), "could not make a new round:", err)
 	}
 
 	// compute its own share of the signature
@@ -434,7 +414,7 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 		psig := new(poly.SchnorrPartialSig)
 		err := p.suite.Read(rp.Conn, psig)
 		if err != nil {
-			dbg.Fatal(p.String(), "could not decode PartialSig of ", rp.String())
+			dbg.Fatal(p.String(), "could not decode PartialSig of", rp.String())
 		}
 		sigChan <- psig
 	}
@@ -446,7 +426,7 @@ func (p *Peer) SchnorrSigRoot(msg []byte) *poly.SchnorrSig {
 		psig := <-sigChan
 		err := p.schnorr.AddPartialSig(psig)
 		if err != nil {
-			dbg.Fatal(p.String(), "could not add the partial signature received : ", err)
+			dbg.Fatal(p.String(), "could not add the partial signature received:", err)
 		}
 		n += 1
 		if n == p.info.N-1 {
@@ -470,7 +450,7 @@ func (p *Peer) SchnorrSigPeer(msg []byte) {
 	h.Write(msg)
 	err := p.schnorr.NewRound(random, h)
 	if err != nil {
-		dbg.Fatal(p.String(), "could not make a new round : ", err)
+		dbg.Fatal(p.String(), "could not make a new round:", err)
 	}
 
 	// compute its own share of the signature
@@ -501,7 +481,7 @@ func (p *Peer) BroadcastSignature(s *poly.SchnorrSig) []*poly.SchnorrSig {
 		sch := new(poly.SchnorrSig).Init(p.suite, p.info)
 		err := p.suite.Read(rp.Conn, sch)
 		if err != nil {
-			dbg.Fatal(p.String(), "could not decode schnorr sig from ", rp.String())
+			dbg.Fatal(p.String(), "could not decode schnorr sig from", rp.String())
 		}
 		sigChan <- sch
 	}

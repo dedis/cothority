@@ -13,10 +13,10 @@ func main() {
 
 	// we must know who we are
 	if app.RunFlags.Hostname == "" {
-		log.Fatal("Hostname empty : Abort")
+		log.Fatal("Hostname empty: Abort")
 	}
 
-	dbg.Lvl2(app.RunFlags.Hostname, "Starting to run as ", app.RunFlags.Mode)
+	dbg.Lvl2(app.RunFlags.Hostname, "Starting to run as", app.RunFlags.Mode)
 	switch app.RunFlags.Mode {
 	case "client":
 		RunClient(conf)
