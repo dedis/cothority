@@ -47,7 +47,7 @@ $ ./deploy -deploy localhost simulation/sign_single.toml
 If you use the `-deploy deterlab` option, then you are prompted to enter the name of the DeterLab installation, your username, and the names of project and experiment. There are some flags which make your life as a cothority developer simpler when deploying to DeterLab:
 
 * `-nobuild`: don't build any of the helpers which is useful if you're working on the main code
-* `-build "helper1,helper2"`: only build the helpers, separated by a",", which speeds up recompiling
+* `-build "helper1,helper2"`: only build the helpers, separated by a ",", which speeds up recompiling
 
 ### SSH-keys
 For convenience, we recommend that you upload a public SSH-key to the DeterLab site. If your SSH-key is protected through a passphrase (which should be the case for security reasons!) we further recommend that you add your private key to your SSH-agent / keychain. Afterwards you only need to unlock your SSH-agent / keychain once (per session) and can access all your stored keys without typing the passphrase each time.
@@ -107,4 +107,3 @@ A textbook shamir signing for baseline-comparison against the collective signing
 
 * Decentralizing Authorities into Scalable Strongest-Link Cothorities: [paper](http://arxiv.org/pdf/1503.08768v1.pdf), [slides](http://dedis.cs.yale.edu/dissent/pres/150610-nist-cothorities.pdf)
 * Certificate Cothority - Towards Trustworthy Collective CAs: [paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
-
