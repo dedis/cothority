@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"strings"
+	"sync"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	conf "github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
-	"net"
-	"strings"
-	"sync"
-	"time"
 )
 
 // How many times a peer tries to connect to another until it works
@@ -80,7 +81,7 @@ type Peer struct {
 func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot bool) *Peer {
 
 	if id >= p.N {
-		log.Fatal("Error while NewPeer: gien", id, " as id whereas polyinfo.N =", p.N)
+		log.Fatal("Error while NewPeer: gien", id, "as id whereas polyinfo.N =", p.N)
 
 	}
 	// Setup of the private / public pair
@@ -117,7 +118,7 @@ func (p *Peer) Listen() {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			dbg.Fatal(p.Name, ": Error while listening on port", port, " =>", err)
+			dbg.Fatal(p.Name, ": Error while listening on port", port, "=>", err)
 		}
 		go p.synWithPeer(conn)
 	}
@@ -163,7 +164,7 @@ func (p *Peer) ForRemotePeers(fn func(RemotePeer)) {
 func (p *Peer) WaitSYNs() {
 	for {
 		s := <-p.synChan
-		dbg.Lvl3(p.Name, " synChan received Syn id", s.Id)
+		dbg.Lvl3(p.Name, "synChan received Syn id", s.Id)
 		_, ok := p.remote[s.Id]
 		if !ok {
 			dbg.Fatal(p.Name, "received syn'd notification of an unknown peer... ABORT")
@@ -194,7 +195,7 @@ func (p *Peer) WaitACKs() {
 		a := Ack{}
 		err := p.suite.Read(rp.Conn, &a)
 		if err != nil {
-			dbg.Fatal(p.Name, "could not receive an ACK from", rp.String(), " (err", err, ")")
+			dbg.Fatal(p.Name, "could not receive an ACK from", rp.String(), "(err", err, ")")
 		}
 		//p.ackChan <- a
 		wg.Done()
@@ -205,17 +206,6 @@ func (p *Peer) WaitACKs() {
 	dbg.Lvl3(p.Name, "is waiting for acks ...")
 	wg.Wait()
 	dbg.Lvl3(p.String(), "received all ACKs")
-	//n := 0
-	//for {
-	//	a := <-p.ackChan
-	//	if a.Valid {
-	//		n += 1
-	//	}
-	//	if n == p.info.N-1 {
-	//		dbg.Lvl3(p.Name, "received all acks. Continue")
-	//		break
-	//	}
-	//}
 }
 
 // Wait for the end of the alo so we can close connection nicely
@@ -237,16 +227,6 @@ func (p *Peer) WaitFins() {
 		rp.Conn.Close()
 	}
 	dbg.Lvl3(p.String(), "close every connections")
-	//for {
-	//	f := <-p.finChan
-	//	rp, ok := p.remote[f.Id]
-	//	if !ok {
-	//		dbg.Lvl3(p.Name, "received invalid FIN: wrong ID", rp.Id, " ... ")
-	//	} else {
-	//		rp.Conn.Close()
-	//		dbg.Lvl3(p.Name, "received FIN from", rp.String(), " => closed connection")
-	//	}
-	//}
 }
 
 // Peer logic after it has syn'd with another peer
@@ -362,7 +342,7 @@ func (p *Peer) ComputeSharedSecret() *poly.SharedSecret {
 			d := new(poly.Deal).UnmarshalInit(p.info.T, p.info.R, p.info.N, p.suite)
 			err := p.suite.Read(rp.Conn, d)
 			if err != nil {
-				dbg.Fatal(p.Name, " received a strange dealer from", rp.String(), ":", err)
+				dbg.Fatal(p.Name, "received a strange dealer from", rp.String(), ":", err)
 			}
 			dealChan <- d
 		}(rp)

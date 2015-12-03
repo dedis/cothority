@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	net "github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -59,7 +60,7 @@ func (l *Peer) ReceiveMessage(c net.Conn) net.MessageSigning {
 
 	}
 	if app.MsgType != net.MessageSigningType {
-		dbg.Fatal(l.String(), "MS error: received", app.MsgType.String(), " from", c.PeerName())
+		dbg.Fatal(l.String(), "MS error: received", app.MsgType.String(), "from", c.PeerName())
 	}
 	return app.Msg.(net.MessageSigning)
 }

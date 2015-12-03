@@ -69,7 +69,7 @@ func (sn *Node) ViewChange(view int, parent string, vcm *ViewChangeMessage) erro
 			sn.ViewNo = vcm.ViewNo
 			sn.viewChangeCh <- "root"
 		} else {
-			log.Errorln(sn.Name(), " (ROOT) DID NOT RECEIVE quorum", votes, "of", len(sn.HostList))
+			log.Errorln(sn.Name(), "(ROOT) DID NOT RECEIVE quorum", votes, "of", len(sn.HostList))
 			return ErrViewRejected
 		}
 	} else {
@@ -99,6 +99,6 @@ func (sn *Node) ViewChanged(view int, sm *SigningMessage) {
 
 	log.Println("in view change, children for view", view, sn.Children(view))
 	sn.multiplexOnChildren(view, sm)
-	log.Println(sn.Name(), " exited view CHANGE to", view)
+	log.Println(sn.Name(), "exited view CHANGE to", view)
 }
 */

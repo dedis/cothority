@@ -194,9 +194,9 @@ func (s *Peer) ConnectToLogger() {
 
 func (s *Peer) LogReRun(nextRole string, curRole string) {
 	if nextRole == "root" {
-		var messg = s.Name() + " became root"
+		var messg = s.Name() + "became root"
 		if curRole == "root" {
-			messg = s.Name() + " remained root"
+			messg = s.Name() + "remained root"
 		}
 
 		go s.ConnectToLogger()
@@ -208,9 +208,9 @@ func (s *Peer) LogReRun(nextRole string, curRole string) {
 		// dbg.Lvl4("role change: %p", s)
 
 	} else {
-		var messg = s.Name() + " remained regular"
+		var messg = s.Name() + "remained regular"
 		if curRole == "root" {
-			messg = s.Name() + " became regular"
+			messg = s.Name() + "became regular"
 		}
 
 		if curRole == "root" {

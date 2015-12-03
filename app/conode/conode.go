@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/conode"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
@@ -68,7 +68,7 @@ func main() {
 			cli.StringFlag{
 				Name: "key, k",
 				Usage: "Basename of the files where reside the keys. If key = 'key'," +
-				"then conode will search through 'key.pub' and 'key.priv'",
+					"then conode will search through 'key.pub' and 'key.priv'",
 				Value: defaultKeyFile,
 			},
 		},
@@ -114,5 +114,5 @@ func KeyGeneration(key, address string) {
 		dbg.Fatal("Error writing public key file:", err)
 	}
 
-	dbg.Lvl1("Keypair generated and written to", namePriv(key), " /", namePub(key))
+	dbg.Lvl1("Keypair generated and written to", namePriv(key), "/", namePub(key))
 }

@@ -50,25 +50,25 @@ func (sn *Node) getMessages() error {
 			nm, ok := <-msgchan
 			err := nm.Err
 
-		// TODO: graceful shutdown voting
+			// TODO: graceful shutdown voting
 			if !ok || err == coconet.ErrClosed || err == io.EOF {
-				dbg.Lvl3(sn.Name(), " getting from closed host")
+				dbg.Lvl3(sn.Name(), "getting from closed host")
 				sn.Close()
 				return coconet.ErrClosed
 			}
 
-		// if it is a non-fatal error try again
+			// if it is a non-fatal error try again
 			if err != nil {
-				log.Errorln(sn.Name(), " error getting message (still continuing)", err)
+				log.Errorln(sn.Name(), "error getting message (still continuing)", err)
 				continue
 			}
-		// interpret network message as Signing Message
-		//log.Printf("got message: %#v with error %v\n", sm, err)
+			// interpret network message as Signing Message
+			//log.Printf("got message: %#v with error %v\n", sm, err)
 			sm := nm.Data.(*SigningMessage)
 			sm.From = nm.From
 			dbg.Lvl4(sn.Name(), "received message:", sm.Type)
 
-		// don't act on future view if not caught up, must be done after updating vote index
+			// don't act on future view if not caught up, must be done after updating vote index
 			sn.viewmu.Lock()
 			if sm.View > sn.ViewNo {
 				if atomic.LoadInt64(&sn.LastSeenVote) != atomic.LoadInt64(&sn.LastAppliedVote) {
@@ -175,7 +175,7 @@ func (sn *Node) getMessages() error {
 				// put in votelog to be streamed and applied
 				sn.VoteLog.Put(vi, sm.Curesp.Vote)
 				// continue catching up
-				sn.CatchUp(vi + 1, sm.From)
+				sn.CatchUp(vi+1, sm.From)
 			case GroupChange:
 				if sm.View == -1 {
 					sm.View = sn.ViewNo
@@ -191,13 +191,13 @@ func (sn *Node) getMessages() error {
 				sn.PutUp(context.TODO(), sm.View, sm)
 			case GroupChanged:
 				if !sm.Gcm.V.Confirmed {
-					dbg.Lvl4(sn.Name(), " received attempt to group change not confirmed")
+					dbg.Lvl4(sn.Name(), "received attempt to group change not confirmed")
 					continue
 				}
 				if sm.Gcm.V.Type == RemoveVT {
-					dbg.Lvl4(sn.Name(), " received removal notice")
+					dbg.Lvl4(sn.Name(), "received removal notice")
 				} else if sm.Gcm.V.Type == AddVT {
-					dbg.Lvl4(sn.Name(), " received addition notice")
+					dbg.Lvl4(sn.Name(), "received addition notice")
 					sn.NewView(sm.View, sm.From, nil, sm.Gcm.HostList)
 				} else {
 					log.Errorln(sn.Name(), "received GroupChanged for unacceptable action")
@@ -365,7 +365,7 @@ func (sn *Node) actOnCommits(view, Round int) error {
 			ExceptionList: round.ExceptionList,
 			Vote:          round.Vote,
 			Round:         Round,
-			Messages: sn.Messages}
+			Messages:      sn.Messages}
 		sn.Messages = 0
 
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
@@ -661,7 +661,7 @@ func (sn *Node) VerifyResponses(view, Round int) error {
 	// intermediary nodes check partial responses aginst their partial keys
 	// the root node is also able to check against the challenge it emitted
 	if !T.Equal(round.Log.V_hat) || (isroot && !round.c.Equal(c2)) {
-		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + "for round " + strconv.Itoa(Round))
+		return errors.New("Verifying ElGamal Collective Signature failed in " + sn.Name() + " for round " + strconv.Itoa(Round))
 	} else if isroot {
 		dbg.Lvl4(sn.Name(), "reports ElGamal Collective Signature succeeded for round", Round, "view", view)
 		/*
@@ -684,7 +684,7 @@ func (sn *Node) TimeForViewChange() bool {
 	defer sn.roundmu.Unlock()
 
 	// if this round is last one for this view
-	if sn.LastSeenRound % sn.RoundsPerView == 0 {
+	if sn.LastSeenRound%sn.RoundsPerView == 0 {
 		// dbg.Lvl4(sn.Name(), "TIME FOR VIEWCHANGE:", lsr, rpv)
 		return true
 	}
@@ -727,10 +727,10 @@ func (sn *Node) SignatureBroadcast(view int, sb *SignatureBroadcastMessage, roun
 		if sn.IsRoot(view) {
 			dbg.Lvl2(sn.Name(), ": sending number of messages:", sn.Messages)
 			sb = &SignatureBroadcastMessage{
-				R0_hat: r.r_hat,
-				C:      r.c,
-				X0_hat: r.X_hat,
-				V0_hat: r.Log.V_hat,
+				R0_hat:   r.r_hat,
+				C:        r.c,
+				X0_hat:   r.X_hat,
+				V0_hat:   r.Log.V_hat,
 				Messages: sn.Messages,
 			}
 		}
@@ -793,7 +793,7 @@ func (sn *Node) StatusReturn(view int, sr *StatusReturnMessage) error {
 			View:         view,
 			Type:         StatusReturn,
 			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			SRm: &sn.PeerStatus, })
+			SRm:          &sn.PeerStatus})
 	}
 	return err
 }

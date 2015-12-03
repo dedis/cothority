@@ -185,9 +185,9 @@ func (s *Server) ConnectToLogger() {
 
 func (s *Server) LogReRun(nextRole string, curRole string) {
 	if nextRole == "root" {
-		var messg = s.Name() + " became root"
+		var messg = s.Name() + "became root"
 		if curRole == "root" {
-			messg = s.Name() + " remained root"
+			messg = s.Name() + "remained root"
 		}
 
 		go s.ConnectToLogger()
@@ -199,9 +199,9 @@ func (s *Server) LogReRun(nextRole string, curRole string) {
 		// dbg.Lvl4("role change: %p", s)
 
 	} else {
-		var messg = s.Name() + " remained regular"
+		var messg = s.Name() + "remained regular"
 		if curRole == "root" {
-			messg = s.Name() + " became regular"
+			messg = s.Name() + "became regular"
 		}
 
 		if curRole == "root" {
@@ -416,7 +416,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 	if len(s.Queue[READING]) < upperBound || upperBound == -1 {
 		upperBound = len(s.Queue[READING])
 	}
-	dbg.Lvl4("Aggregate COMMIT:", upperBound, " TAKEN /", len(s.Queue[READING]))
+	dbg.Lvl4("Aggregate COMMIT:", upperBound, "TAKEN /", len(s.Queue[READING]))
 	// Take the maximum number of stamprequest for this round
 	s.Queue[PROCESSING] = s.Queue[READING][0:upperBound]
 	// And let the rest adjust it self
@@ -459,7 +459,7 @@ func (s *Server) AggregateCommits(view int) []byte {
 		if proof.CheckLocalProofs(s.Suite().Hash, s.Root, s.Leaves, s.Proofs) == true {
 			dbg.Lvl4("Local Proofs of", s.Name(), "successful for round "+strconv.Itoa(int(s.LastRound())))
 		} else {
-			panic("Local Proofs" + s.Name() + " unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
+			panic("Local Proofs" + s.Name() + "unsuccessful for round " + strconv.Itoa(int(s.LastRound())))
 		}
 	}
 

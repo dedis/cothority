@@ -49,7 +49,7 @@ func RunServer(conf *app.ConfigShamir) {
 
 	// then connect it to its successor in the list
 	for _, h := range conf.Hosts[indexPeer+1:] {
-		dbg.Lvl3("Peer", flags.Hostname, " will connect to", h)
+		dbg.Lvl3("Peer", flags.Hostname, "will connect to", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
 	}

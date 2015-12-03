@@ -255,10 +255,10 @@ func (sn *Node) actOnVotes(view int, v *Vote) {
 
 	// Act on vote Decision
 	if accepted {
-		log.Println(sn.Name(), "actOnVotes: vote", v.Index, " has been accepted")
+		log.Println(sn.Name(), "actOnVotes: vote", v.Index, "has been accepted")
 		sn.VoteLog.Put(v.Index, v)
 	} else {
-		log.Println(sn.Name(), "actOnVotes: vote", v.Index, " has been rejected")
+		log.Println(sn.Name(), "actOnVotes: vote", v.Index, "has been rejected")
 
 		// inform node trying to join/remove group of rejection
 		gcm := &SigningMessage{

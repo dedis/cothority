@@ -1,13 +1,14 @@
 package main
 
 import (
+	"sync"
+	"sync/atomic"
+
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/monitor"
 	net "github.com/dedis/cothority/lib/network"
-	"sync"
-	"sync/atomic"
 )
 
 func RunServer(conf *app.NTreeConfig) {
@@ -153,7 +154,7 @@ func RunRoot(conf *app.NTreeConfig) {
 		// finished verifying => time it !
 		verify.Measure()
 		round.Measure()
-		dbg.Lvl3(peer.String(), "Round", i, "/", conf.Rounds, " has verified all signatures:", total-faulty, "/", total, " good signatures")
+		dbg.Lvl3(peer.String(), "Round", i, "/", conf.Rounds, "has verified all signatures:", total-faulty, "/", total, "good signatures")
 	}
 
 	// cLosing each channels
@@ -394,7 +395,7 @@ func RunServer2(conf *app.NTreeConfig) {
 		// for each round
 		dbg.Lvl3(peer.String(), "connected to parent:", c.PeerName())
 		for i := 0; i < conf.Rounds; i++ {
-			dbg.Lvl3(peer.String(), "starting new round", i, " with parent", c.PeerName())
+			dbg.Lvl3(peer.String(), "starting new round", i, "with parent", c.PeerName())
 			// Receive message
 			msg := peer.ReceiveMessage(c)
 			// braodcast down
@@ -457,7 +458,7 @@ func RunServer2(conf *app.NTreeConfig) {
 			// dispatch to the parent conn
 			masterSigChan <- lbs
 		}
-		dbg.Lvl3(peer.String(), " conn with children will close.")
+		dbg.Lvl3(peer.String(), "conn with children will close.")
 		c.Close()
 	}
 

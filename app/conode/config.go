@@ -5,15 +5,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/conode"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/crypto/abstract"
-	"os"
-	"strings"
 )
 
 func init() {
@@ -130,7 +131,7 @@ func readHostFile(file string) ([]string, []string, error) {
 		hosts = append(hosts, h)
 		pubs = append(pubs, spl[1])
 	}
-	dbg.Lvl1("Read the hosts files:", ln, " entries")
+	dbg.Lvl1("Read the hosts files:", ln, "entries")
 	return hosts, pubs, nil
 }
 

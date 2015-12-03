@@ -2,6 +2,9 @@ package main
 
 import (
 	"bytes"
+	"net"
+	"os"
+
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/cliutils"
 	dbg "github.com/dedis/cothority/lib/debug_lvl"
@@ -9,8 +12,6 @@ import (
 	"github.com/dedis/crypto/anon"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
-	"net"
-	"os"
 )
 
 // This file handles the validation process
@@ -28,8 +29,8 @@ func init() {
 		Aliases: []string{"v"},
 		Usage:   "Starts validation mode of the CoNode",
 		Description: "The CoNode will be running for a whole day during which" +
-		             "the development team will run repeated checks to verify " +
-		             "that your server is eligible for being incorporated in the cothority tree.",
+			"the development team will run repeated checks to verify " +
+			"that your server is eligible for being incorporated in the cothority tree.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "key, k",
@@ -60,7 +61,7 @@ func Validation(keyFile string) {
 	}
 
 	var conn net.Conn
-	for ;; conn.Close() {
+	for ; ; conn.Close() {
 		dbg.Lvl1("Waiting for verifier connection ...")
 		// Accept the one
 		conn, err = ln.Accept()
@@ -88,9 +89,9 @@ func Validation(keyFile string) {
 		var er string = "Validation is NOT correct, something is wrong about your "
 		// All went fine
 		dbg.Lvl2("Received code", ack)
-		switch ack.Code{
+		switch ack.Code {
 		default:
-			dbg.Lvl1("Validation received unknown ACK: type =", ack.Type, " Code =", ack.Code)
+			dbg.Lvl1("Validation received unknown ACK: type =", ack.Type, "Code =", ack.Code)
 			continue
 		case SYS_OK:
 			dbg.Lvl1("Validation finished successfully! You should receive an email from development team soon.")
