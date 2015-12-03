@@ -1,5 +1,4 @@
 # build script for dedis/cothority libraries
-language: go
 go:
     - 1.5.1
 env:
