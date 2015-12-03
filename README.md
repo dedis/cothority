@@ -71,8 +71,6 @@ Make sure that the `ssh-agent` is running. Afterwards you can add your SSH-key v
 $ ssh-add ~/.ssh/<your private ssh key>
 ```
 
-
-
 # Applications
 
 ## CoNode
