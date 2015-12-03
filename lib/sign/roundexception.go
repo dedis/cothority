@@ -15,10 +15,14 @@ round can add any message it wants in the Commitment-phase.
 // The name type of this round implementation
 const RoundExceptionType = "cosiexception"
 
+// Can be used for debugging by telling which node should fail
+var ExceptionForceFailure string
+
 type RoundException struct {
 	*RoundCosi
 }
 
+// init adds RoundException to the list of available rounds
 func init() {
 	RegisterRoundFactory(RoundExceptionType,
 		func(node *Node) Round {
@@ -26,17 +30,39 @@ func init() {
 		})
 }
 
+// NewRoundException creates a new RoundException based on RoundCosi
 func NewRoundException(node *Node) *RoundException {
 	round := &RoundException{}
 	round.RoundCosi = NewRoundCosi(node)
+	round.Type = RoundExceptionType
 	return round
 }
 
-// AnnounceFunc will keep the timestamp generated for this round
+/*
+// Announcement only calls RoundCosi-Announcement, except if the round-name
+// is equal to ExceptionForceFailure
+func (round *RoundException) Announcement(viewNbr, roundNbr int, in *SigningMessage, out []*SigningMessage) error {
+	dbg.Print(round.Name)
+	if round.Name == ExceptionForceFailure {
+		dbg.LLvl3("Forcing failure in announcement")
+		return nil
+	} else {
+		return round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
+	}
+}
+*/
 
+// Commitment adds up all exception-lists from children and calls roundcosi
 func (round *RoundException) Commitment(in []*SigningMessage, out *SigningMessage) error {
+	/*
+	if round.Name == ExceptionForceFailure {
+		dbg.LLvl3("Forcing failure in commitment")
+		return nil
+	}
+	*/
+
 	err := round.RoundCosi.Commitment(in, out)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -51,7 +77,25 @@ func (round *RoundException) Commitment(in []*SigningMessage, out *SigningMessag
 
 }
 
+/*
+func (round *RoundException) Challenge(in *SigningMessage, out []*SigningMessage) error {
+	if round.Name == ExceptionForceFailure {
+		dbg.LLvl3("Forcing failure in challenge")
+		return nil
+	} else {
+		return round.RoundCosi.Challenge(in, out)
+	}
+}
+*/
+
 func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage) error {
+	/*
+	if round.Name == ExceptionForceFailure {
+		dbg.LLvl3("Forcing failure in response")
+		return nil
+	}
+	*/
+
 	// initialize exception handling
 	exceptionV_hat := round.Cosi.Suite.Point().Null()
 	exceptionX_hat := round.Cosi.Suite.Point().Null()
@@ -64,6 +108,7 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 		switch sm.Type {
 		default:
 			// default == no response from child
+			dbg.Lvl4(round.Name, "Empty response from child", from, sm.Type)
 			if children[from] != nil {
 				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
 
@@ -76,11 +121,11 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			// disregard response from children who did not commit
 			_, ok := round.Cosi.ChildV_hat[from]
 			if ok == true && round.Cosi.ChildV_hat[from].Equal(nullPoint) {
+				dbg.Lvl4(round.Name, ": no response from", from, sm.Type)
 				continue
 			}
 
 			dbg.Lvl4(round.Name, "accepts response from", from, sm.Type)
-			round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.Rm.R_hat)
 			exceptionV_hat.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
 			exceptionX_hat.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
 			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
@@ -92,15 +137,15 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 	round.Cosi.ExceptionV_hat = exceptionV_hat
 	round.Cosi.ExceptionX_hat = exceptionX_hat
 
-	dbg.Lvl4(round.Cosi.Name, "got all responses")
-	err := round.Cosi.VerifyResponses()
+	err := round.RoundCosi.Response(in, out)
 	if err != nil {
-		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
 
-	err = round.RoundCosi.Response(in, out)
-	if err != nil{
+	dbg.Lvl4(round.Cosi.Name, "got all responses")
+	err = round.Cosi.VerifyResponses()
+	if err != nil {
+		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
 

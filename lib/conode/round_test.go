@@ -37,6 +37,31 @@ func TestDeleteRounds(t *testing.T) {
 	peer2.Close()
 }
 
+func TestRoundException(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	peer1, peer2 := createPeers()
+	sign.ExceptionForceFailure = peer2.Name()
+
+	round, err := sign.NewRoundFromType(sign.RoundExceptionType, peer1.Node)
+	if err != nil {
+		t.Fatal("Couldn't create Exception round:", err)
+	}
+
+	peer1.StartAnnouncement(round)
+	time.Sleep(time.Second)
+
+	cosi := round.(*sign.RoundException).Cosi
+	if cosi.R_hat == nil {
+		t.Fatal("Didn't finish round - R_hat empty")
+	}
+	err = cosi.VerifyResponses()
+	if err != nil {
+		t.Fatal("Couldn't verify responses")
+	}
+	peer1.Close()
+	peer2.Close()
+}
+
 func TestRoundCosi(t *testing.T) {
 	testRound(t, sign.RoundCosiType)
 }
@@ -64,7 +89,7 @@ func TestRoundSetup(t *testing.T) {
 	time.Sleep(time.Second)
 
 	counted := <-round.(*sign.RoundSetup).Counted
-	if counted != 2{
+	if counted != 2 {
 		t.Fatal("Counted", counted, "nodes, but should be 2")
 	}
 
@@ -92,6 +117,8 @@ func testRound(t *testing.T, roundType string) {
 	switch roundType{
 	case sign.RoundCosiType:
 		cosi = round.(*sign.RoundCosi).Cosi
+	case sign.RoundExceptionType:
+		cosi = round.(*sign.RoundException).Cosi
 	case conode.RoundStamperType:
 		cosi = round.(*conode.RoundStamper).Cosi
 	case conode.RoundStamperListenerType:

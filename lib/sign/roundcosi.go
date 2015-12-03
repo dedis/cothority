@@ -71,7 +71,6 @@ func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *SigningMessage, 
 }
 
 func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) error {
-	// prepare to handle exceptions
 	cosi := round.Cosi
 	cosi.Commits = in
 
@@ -172,7 +171,6 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 // TODO make that in == nil in case we are a leaf to stay consistent with
 // others calls
 func (round *RoundCosi) Response(in []*SigningMessage, out *SigningMessage) error {
-	// initialize exception handling
 	dbg.Lvl4(round.Cosi.Name, "got all responses")
 	for _, sm := range in {
 		round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.Rm.R_hat)

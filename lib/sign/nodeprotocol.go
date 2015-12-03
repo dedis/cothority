@@ -237,6 +237,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 		sn.LastSeenRound = max(sn.LastSeenRound, RoundNbr)
 		rtype := am.RoundType
 		// create the new round and save it
+		dbg.Lvl3(sn.Name(), "Creating new round-type", rtype)
 		r, err := NewRoundFromType(rtype, sn)
 		if err != nil {
 			dbg.Lvl3(sn.Name(), "Error getting new round in announcement")
