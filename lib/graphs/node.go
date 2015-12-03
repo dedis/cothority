@@ -88,7 +88,7 @@ func (hc *HostConfig) String() string {
 	err := json.Indent(bformatted, b.Bytes(), "", "\t")
 	if err != nil {
 		dbg.Lvl3(string(b.Bytes()))
-		dbg.Lvl3("ERROR: ", err)
+		dbg.Lvl3("ERROR:", err)
 	}
 
 	return string(bformatted.Bytes())
@@ -232,7 +232,7 @@ func ConstructTree(
 			pubkey = sn.PubKey
 		}
 		// dbg.Lvl4("pubkey:", sn.PubKey)
-		// dbg.Lvl4("given: ", pubkey)
+		// dbg.Lvl4("given:", pubkey)
 	}
 	// if the parent of this call is empty then this must be the root node
 	if parent != "" && generate {
@@ -240,9 +240,9 @@ func ConstructTree(
 		h.AddParent(0, parent)
 	}
 
-	// dbg.Lvl4("name: ", n.Name)
-	// dbg.Lvl4("prikey: ", prikey)
-	// dbg.Lvl4("pubkey: ", pubkey)
+	// dbg.Lvl4("name:", n.Name)
+	// dbg.Lvl4("prikey:", prikey)
+	// dbg.Lvl4("pubkey:", pubkey)
 	height := 0
 	for _, c := range node.Children {
 		// connect this node to its children
@@ -271,9 +271,9 @@ func ConstructTree(
 		sn.Height = height
 	}
 
-	// dbg.Lvl4("name: ", n.Name)
-	// dbg.Lvl4("final x_hat: ", x_hat)
-	// dbg.Lvl4("final pubkey: ", pubkey)
+	// dbg.Lvl4("name:", n.Name)
+	// dbg.Lvl4("final x_hat:", x_hat)
+	// dbg.Lvl4("final pubkey:", pubkey)
 	return height, nil
 }
 
@@ -448,10 +448,10 @@ func LoadConfig(appHosts []string, appTree *Tree, suite abstract.Suite, optsSlic
 			if opts.GenHosts {
 				p := strconv.Itoa(StartConfigPort)
 				addr = localAddr + ":" + p
-				//dbg.Lvl4("created new host address: ", addr)
+				//dbg.Lvl4("created new host address:", addr)
 				StartConfigPort += 10
 			} else if opts.Port != "" {
-				dbg.Lvl4("attempting to rewrite port: ", opts.Port)
+				dbg.Lvl4("attempting to rewrite port:", opts.Port)
 				// if the port has been specified change the port
 				hostport := strings.Split(addr, ":")
 				dbg.Lvl4(hostport)

@@ -277,7 +277,7 @@ func runTimestamper(hc *graphs.HostConfig, nclients int, cb Callbacks, hostnameS
 		if hc.Dir != nil {
 			pn = 0
 		} else if err != nil {
-			dbg.Fatal("port ", pn, "is not valid integer")
+			dbg.Fatal("port", pn, "is not valid integer")
 		}
 		//dbg.Lvl4("client connecting to:", hp)
 

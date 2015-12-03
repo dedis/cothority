@@ -148,13 +148,13 @@ func (sn *Node) StartGossip() {
 				c := sn.HostListOn(sn.ViewNo)
 				sn.viewmu.Unlock()
 				if len(c) == 0 {
-					log.Errorln(sn.Name(), "StartGossip: none in hostlist for view: ", sn.ViewNo, len(c))
+					log.Errorln(sn.Name(), "StartGossip: none in hostlist for view:", sn.ViewNo, len(c))
 					continue
 				}
 				sn.randmu.Lock()
 				from := c[sn.Rand.Int()%len(c)]
 				sn.randmu.Unlock()
-				dbg.Lvl4("Gossiping with: ", from)
+				dbg.Lvl4("Gossiping with:", from)
 				sn.CatchUp(int(atomic.LoadInt64(&sn.LastAppliedVote)+1), from)
 			case <-sn.closed:
 				dbg.Lvl3("stopping gossip: closed")

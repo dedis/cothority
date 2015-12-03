@@ -62,7 +62,7 @@ func (sn *Node) SetupProposal(view int, am *AnnouncementMessage, from string) er
 // when we receive view change  message on a future view,
 // we must be caught up, create that view  and apply actions on it
 func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
-	log.Println(sn.Name(), "GOT ", "Propose", am)
+	log.Println(sn.Name(), "GOT", "Propose", am)
 	if err := sn.SetupProposal(view, am, from); err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (sn *Node) Propose(view int, am *AnnouncementMessage, from string) error {
 }
 
 func (sn *Node) Promise(view, Round int, sm *SigningMessage) error {
-	log.Println(sn.Name(), "GOT ", "Promise", sm)
+	log.Println(sn.Name(), "GOT", "Promise", sm)
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)
@@ -168,7 +168,7 @@ func (sn *Node) actOnPromises(view, Round int) error {
 }
 
 func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
-	log.Println(sn.Name(), "GOT ", "Accept", chm)
+	log.Println(sn.Name(), "GOT", "Accept", chm)
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, chm.Round)
@@ -199,7 +199,7 @@ func (sn *Node) Accept(view int, chm *ChallengeMessage) error {
 }
 
 func (sn *Node) Accepted(view, Round int, sm *SigningMessage) error {
-	log.Println(sn.Name(), "GOT ", "Accepted")
+	log.Println(sn.Name(), "GOT", "Accepted")
 	// update max seen round
 	sn.roundmu.Lock()
 	sn.LastSeenRound = max(sn.LastSeenRound, Round)

@@ -41,7 +41,7 @@ func TestStamp(t *testing.T) {
 func readConfig() *app.ConfigConode {
 	conf := &app.ConfigConode{}
 	if err := app.ReadTomlConfig(conf, "testdata/config.toml"); err != nil {
-		dbg.Fatal("Could not read toml config: ", err)
+		dbg.Fatal("Could not read toml config:", err)
 	}
 	dbg.Lvl2("Configuration file read")
 	suite = app.GetSuite(conf.Suite)

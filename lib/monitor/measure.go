@@ -45,7 +45,7 @@ func EnableMeasure(b bool) {
 // encoder. It can be the address of a proxy or a monitoring process.
 // Returns an error if it could not connect to the endpoint.
 func ConnectSink(addr string) error {
-	dbg.Lvl2("ConnectSink attempt with ", addr)
+	dbg.Lvl2("ConnectSink attempt with", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err

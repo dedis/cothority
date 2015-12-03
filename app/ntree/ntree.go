@@ -25,7 +25,7 @@ func main() {
 		conf.Root = true
 	}
 	if own == nil {
-		dbg.Fatal("Could not find its name in the tree ", app.RunFlags.Hostname)
+		dbg.Fatal("Could not find its name in the tree", app.RunFlags.Hostname)
 	}
 	conf.Tree = own
 	conf.Name = own.Name

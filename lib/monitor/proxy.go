@@ -48,14 +48,14 @@ func Proxy(redirection string) {
 	if err := connectSink(redirection); err != nil {
 		panic(err)
 	}
-	dbg.Lvl2("Proxy connected to sink ", redirection)
+	dbg.Lvl2("Proxy connected to sink", redirection)
 	// Here it listens the same way monitor.go would
 	// usually 0.0.0.0:4000
 	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
 		panic(fmt.Errorf("Error while binding proxy to addr %s: %v", Sink+":"+SinkPort, err))
 	}
-	dbg.Lvl2("Proxy listening on ", Sink+":"+SinkPort)
+	dbg.Lvl2("Proxy listening on", Sink+":"+SinkPort)
 	var newConn = make(chan bool)
 	var closeConn = make(chan bool)
 	var finished = false
@@ -108,10 +108,10 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	for {
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
-			dbg.Lvl1("Error receiving data from ", conn.RemoteAddr().String(), ":", err)
+			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl1("Too many error from ", conn.RemoteAddr().String(), ": Abort connection")
+				dbg.Lvl1("Too many error from", conn.RemoteAddr().String(), ": Abort connection")
 				break
 			}
 		}

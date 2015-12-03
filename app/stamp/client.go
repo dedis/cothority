@@ -26,7 +26,7 @@ var MAX_N_ROUNDS int = MAX_N_SECONDS / int(ROUND_TIME/time.Second)
 func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 	dbg.Lvl4("Starting to run stampclient")
 	c := NewClient(flags.Name)
-	servers := strings.Split(flags.Server, ",")
+	servers := strings.Split(flags.Server,",")
 	// take the right percentage of servers
 	servers = scaleServers(flags, conf, servers)
 	// connect to all the servers listed
@@ -143,7 +143,7 @@ retry:
 				return
 			} else if err != nil {
 				// ignore errors
-				dbg.Lvl4("Client", c.Name(), "Leaving out streamMessages. ", err)
+				dbg.Lvl4("Client", c.Name(), "Leaving out streamMessages.", err)
 				return
 			}
 

@@ -114,7 +114,7 @@ func RunServer(Flags *app.Flags, conf *app.ConfigColl) {
 					}
 				}
 
-				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting: ", conf.RootWait)
+				dbg.Lvl1("Root timestamper at:", hostname, conf.Rounds, "Waiting:", conf.RootWait)
 				// wait for the other nodes to get set up
 				time.Sleep(time.Duration(conf.RootWait) * time.Second)
 

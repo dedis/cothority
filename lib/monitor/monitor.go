@@ -73,7 +73,7 @@ func (m *Monitor) Listen() error {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
 	m.listener = ln
-	dbg.Lvl2("Monitor listening for stats on ", Sink, ":", SinkPort)
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
 	finished := false
 	go func() {
 		for {
@@ -90,7 +90,7 @@ func (m *Monitor) Listen() error {
 				dbg.Lvl2("Error while monitor accept connection:", operr)
 				continue
 			}
-			dbg.Lvl3("Monitor: new connection from ", conn.RemoteAddr().String())
+			dbg.Lvl3("Monitor: new connection from", conn.RemoteAddr().String())
 			m.mutexConn.Lock()
 			mc := monitorConnection{
 				conn:  conn,
@@ -168,10 +168,10 @@ func (mc *monitorConnection) handleConnection() {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from ", mc.conn.RemoteAddr().String(), ":", err)
+			dbg.Lvl2("Error monitor decoding from", mc.conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl2("Monitor: too many errors from ", mc.conn.RemoteAddr().String(), ": Abort.")
+				dbg.Lvl2("Monitor: too many errors from", mc.conn.RemoteAddr().String(), ": Abort.")
 				break
 			}
 		}
@@ -180,7 +180,7 @@ func (mc *monitorConnection) handleConnection() {
 		if strings.ToLower(m.Name) == "end" {
 			break
 		}
-		dbg.Lvl4("Monitor: received a Measure from ", mc.conn.RemoteAddr().String(), ":", m)
+		dbg.Lvl4("Monitor: received a Measure from", mc.conn.RemoteAddr().String(), ":", m)
 		mc.stats <- m
 		m = Measure{}
 	}
@@ -194,7 +194,7 @@ func (m *Monitor) update(meas Measure) {
 	m.mutexStats.Lock()
 	// updating
 	m.stats.Update(meas)
-	//dbg.Print("Stats = ", m.stats)
+	//dbg.Print("Stats =", m.stats)
 	m.mutexStats.Unlock()
 }
 

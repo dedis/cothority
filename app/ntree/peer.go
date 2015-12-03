@@ -55,11 +55,11 @@ func (l *Peer) Signature(msg []byte) *net.BasicSignature {
 func (l *Peer) ReceiveMessage(c net.Conn) net.MessageSigning {
 	app, err := c.Receive()
 	if err != nil {
-		dbg.Fatal(l.String(), "could not receive message from ", c.PeerName())
+		dbg.Fatal(l.String(), "could not receive message from", c.PeerName())
 
 	}
 	if app.MsgType != net.MessageSigningType {
-		dbg.Fatal(l.String(), "MS error: received ", app.MsgType.String(), " from ", c.PeerName())
+		dbg.Fatal(l.String(), "MS error: received", app.MsgType.String(), " from", c.PeerName())
 	}
 	return app.Msg.(net.MessageSigning)
 }
@@ -67,11 +67,11 @@ func (l *Peer) ReceiveMessage(c net.Conn) net.MessageSigning {
 func (l *Peer) ReceiveListBasicSignature(c net.Conn) net.ListBasicSignature {
 	app, err := c.Receive()
 	if err != nil {
-		dbg.Fatal(l.String(), "could not receive listbasicsig from ", c.PeerName())
+		dbg.Fatal(l.String(), "could not receive listbasicsig from", c.PeerName())
 	}
 
 	if app.MsgType != net.ListBasicSignatureType {
-		dbg.Fatal(l.String(), "LBS error: received ", app.MsgType.String(), "from ", c.PeerName())
+		dbg.Fatal(l.String(), "LBS error: received", app.MsgType.String(), "from", c.PeerName())
 	}
 	return app.Msg.(net.ListBasicSignature)
 

@@ -114,5 +114,5 @@ func KeyGeneration(key, address string) {
 		dbg.Fatal("Error writing public key file:", err)
 	}
 
-	dbg.Lvl1("Keypair generated and written to ", namePriv(key), " / ", namePub(key))
+	dbg.Lvl1("Keypair generated and written to", namePriv(key), " /", namePub(key))
 }

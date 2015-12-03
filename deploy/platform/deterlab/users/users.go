@@ -55,7 +55,7 @@ func main() {
 	// kill old processes
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(" +")
-	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project +"," + deterlab.Experiment).Output()
 	if err != nil {
 		dbg.Fatal("Deterlab experiment", deterlab.Project + "/" + deterlab.Experiment, "seems not to be swapped in. Aborting.")
 		os.Exit(-1)
@@ -166,9 +166,9 @@ func main() {
 		dbg.Lvl1("Launching forkexec for", len(virts), "clients on", phys)
 		wg.Add(1)
 		go func(phys string) {
-			//dbg.Lvl4("running on ", phys, cmd)
+			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", deterlab.MonitorAddress + ":" + monitor.SinkPort)
+			dbg.Lvl4("Starting servers on physical machine", phys, "with logger =", deterlab.MonitorAddress + ":" + monitor.SinkPort)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
 			" -physaddr=" + phys + " -logger=" + deterlab.MonitorAddress + ":" + monitor.SinkPort)
 			if err != nil {
@@ -212,7 +212,7 @@ func main() {
 				dbg.Lvl3("ss is empty - not starting")
 				continue
 			}
-			servers := strings.Join(ss, ",")
+			servers := strings.Join(ss,",")
 			dbg.Lvl3("Starting with ss=", ss)
 			go func(p string, a bool) {
 				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +

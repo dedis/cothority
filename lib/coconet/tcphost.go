@@ -105,11 +105,11 @@ func (h *TCPHost) Listen() error {
 	dbg.Lvl3("Starting to listen on", h.name)
 	address, err := cliutils.GlobalBind(h.name)
 	if err != nil {
-		dbg.Fatal("Didn't get global binding for ", address, err)
+		dbg.Fatal("Didn't get global binding for", address, err)
 	}
 	ln, err := net.Listen("tcp4", address)
 	if err != nil {
-		dbg.Lvl2("failed to listen on ", address, ":", err)
+		dbg.Lvl2("failed to listen on", address, ":", err)
 		return err
 	}
 	h.listener = ln
@@ -120,7 +120,7 @@ func (h *TCPHost) Listen() error {
 			conn, err := ln.Accept()
 			dbg.Lvl3(h.Name(), "Connection request - handling")
 			if err != nil {
-				dbg.Lvl3("failed to accept connection: ", err)
+				dbg.Lvl3("failed to accept connection:", err)
 				// if the host has been closed then stop listening
 				if atomic.LoadInt64(&h.closed) == 1 {
 					return
@@ -133,7 +133,7 @@ func (h *TCPHost) Listen() error {
 			var mname StringMarshaler
 			err = tp.GetData(&mname)
 			if err != nil {
-				log.Errorln("failed to establish connection: getting name: ", err)
+				log.Errorln("failed to establish connection: getting name:", err)
 				tp.Close()
 				continue
 			}

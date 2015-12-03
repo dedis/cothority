@@ -132,7 +132,7 @@ func (d *Deterlab) Build(build string) error {
 	// start building the necessary packages
 	packages := []string{"forkexec", "app", "users"}
 	if build != "" {
-		packages = strings.Split(build, ",")
+		packages = strings.Split(build,",")
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
@@ -464,7 +464,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string
 func readString(msg, dft string) string {
-	fmt.Printf("%s [%s]: ", msg, dft)
+	fmt.Printf("%s [%s]:", msg, dft)
 
 	reader := bufio.NewReader(os.Stdin)
 	strnl, _ := reader.ReadString('\n')

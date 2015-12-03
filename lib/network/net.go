@@ -262,7 +262,7 @@ func (t *TcpHost) Open(name string) Conn {
 
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
-			dbg.Lvl3(t.Name(), "(", i, "/", maxRetry, ") Error opening connection to ", name)
+			dbg.Lvl3(t.Name(), "(", i, "/", maxRetry, ") Error opening connection to", name)
 			time.Sleep(waitRetry)
 		} else {
 			break
@@ -270,7 +270,7 @@ func (t *TcpHost) Open(name string) Conn {
 		time.Sleep(waitRetry)
 	}
 	if conn == nil {
-		dbg.Fatal(t.Name(), "could not connect to ", name, ": ABORT")
+		dbg.Fatal(t.Name(), "could not connect to", name, ": ABORT")
 	}
 	c := TcpConn{
 		Peer: name,
@@ -289,9 +289,9 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		dbg.Fatal("error listening (host ", t.Name(), ")")
+		dbg.Fatal("error listening (host", t.Name(), ")")
 	}
-	dbg.Lvl3(t.Name(), "Waiting for connections on addr ", addr, "..\n")
+	dbg.Lvl3(t.Name(), "Waiting for connections on addr", addr, "..\n")
 	for {
 		conn, err := ln.Accept()
 		if err != nil {

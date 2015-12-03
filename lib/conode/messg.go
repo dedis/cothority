@@ -96,7 +96,7 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	sr.AggCommit = suite.Point()
 	sr.AggPublic = suite.Point()
 	if err := suite.Read(bytes.NewReader(aux.SignatureInfo), &sr.Response, &sr.Challenge, &sr.AggCommit, &sr.AggPublic); err != nil {
-		dbg.Fatal("decoding signature Response / Challenge / AggCommit: ", err)
+		dbg.Fatal("decoding signature Response / Challenge / AggCommit:", err)
 		return err
 	}
 	return nil

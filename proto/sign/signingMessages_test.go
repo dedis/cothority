@@ -30,7 +30,7 @@ func TestErrorMessage(t *testing.T) {
 		t.Fatal(e)
 	}
 	if !reflect.DeepEqual(sm, sm2) {
-		t.Fatal("sm != sm2: ", sm, sm2, sm.Am, sm2.Am)
+		t.Fatal("sm != sm2:", sm, sm2, sm.Am, sm2.Am)
 	}
 }
 
@@ -51,7 +51,7 @@ func TestMUAnnouncement(t *testing.T) {
 		t.Error("Unmarshaling didn't work")
 	}
 	if !reflect.DeepEqual(sm, sm2) {
-		t.Fatal("sm != sm2: ", sm, sm2, sm.Am, sm2.Am)
+		t.Fatal("sm != sm2:", sm, sm2, sm.Am, sm2.Am)
 	}
 }
 

@@ -70,7 +70,7 @@ func (s *Peer) Run(role string) {
 	// 	s.Close()
 	// }()
 
-	dbg.Lvl3("Stamp-server", s.name, "starting with ", role)
+	dbg.Lvl3("Stamp-server", s.name, "starting with", role)
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Listened and error:", err) }()
@@ -90,7 +90,7 @@ func (s *Peer) Run(role string) {
 			return
 		}
 
-		// dbg.Lvl4(s.Name(), "nextRole: ", nextRole)
+		// dbg.Lvl4(s.Name(), "nextRole:", nextRole)
 		if nextRole == "close" {
 			s.Close()
 			return

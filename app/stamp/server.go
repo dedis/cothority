@@ -292,7 +292,7 @@ func (s *Server) runAsRegular() string {
 // Listen on client connections. If role is root also send annoucement
 // for all of the nRounds
 func (s *Server) Run(role string, nRounds int) {
-	dbg.Lvl3("Stamp-server", s.name, "starting with ", role, "and rounds", nRounds)
+	dbg.Lvl3("Stamp-server", s.name, "starting with", role, "and rounds", nRounds)
 	closed := make(chan bool, 1)
 
 	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl3("Signer closed:", err) }()
@@ -314,7 +314,7 @@ func (s *Server) Run(role string, nRounds int) {
 					dbg.Lvl4("removing self")
 					s.Signer.RemoveSelf()
 				} else {
-					dbg.Lvl4("adding self: ", hostlist[(i/2)%len(hostlist)])
+					dbg.Lvl4("adding self:", hostlist[(i/2)%len(hostlist)])
 					s.Signer.AddSelf(hostlist[(i/2)%len(hostlist)])
 				}
 				i++
@@ -346,7 +346,7 @@ func (s *Server) Run(role string, nRounds int) {
 			return
 		}
 
-		// dbg.Lvl4(s.Name(), "nextRole: ", nextRole)
+		// dbg.Lvl4(s.Name(), "nextRole:", nextRole)
 		if nextRole == "close" {
 			s.Close()
 			return

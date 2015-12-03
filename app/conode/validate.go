@@ -90,7 +90,7 @@ func Validation(keyFile string) {
 		dbg.Lvl2("Received code", ack)
 		switch ack.Code{
 		default:
-			dbg.Lvl1("Validation received unknown ACK: type = ", ack.Type, " Code = ", ack.Code)
+			dbg.Lvl1("Validation received unknown ACK: type =", ack.Type, " Code =", ack.Code)
 			continue
 		case SYS_OK:
 			dbg.Lvl1("Validation finished successfully! You should receive an email from development team soon.")

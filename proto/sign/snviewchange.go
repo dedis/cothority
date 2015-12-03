@@ -28,7 +28,7 @@ func (sn *Node) ChangeView(vcv *ViewChangeVote) {
 func (sn *Node) ViewChange(view int, parent string, vcm *ViewChangeMessage) error {
 	sn.ChangingView = true
 
-	log.Println(sn.Name(), "VIEW CHANGE MESSAGE: new Round == , oldlsr == , view == ", vcm.Round, sn.LastSeenRound, view)
+	log.Println(sn.Name(), "VIEW CHANGE MESSAGE: new Round == , oldlsr == , view ==", vcm.Round, sn.LastSeenRound, view)
 	sn.LastSeenRound = max(vcm.Round, sn.LastSeenRound)
 
 	iAmNextRoot := false
@@ -42,7 +42,7 @@ func (sn *Node) ViewChange(view int, parent string, vcm *ViewChangeMessage) erro
 	if !exists {
 		log.Println("PEERS:", sn.Peers())
 		children := sn.childrenForNewView(parent)
-		log.Println("CREATING NEW VIEW with ", len(sn.HostListOn(view-1)), "hosts", "on view", view)
+		log.Println("CREATING NEW VIEW with", len(sn.HostListOn(view-1)), "hosts", "on view", view)
 		sn.NewView(vcm.ViewNo, parent, children, sn.HostListOn(view-1))
 	}
 

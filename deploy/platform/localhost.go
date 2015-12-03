@@ -82,9 +82,9 @@ func (d *Localhost) Build(build string) error {
 	// build for the local machine
 	res, err := cliutils.Build(src, dst, runtime.GOARCH, runtime.GOOS)
 	if err != nil {
-		dbg.Fatal("Error while building for localhost (src ", src, ", dst ", dst, ":", res)
+		dbg.Fatal("Error while building for localhost (src", src,", dst", dst, ":", res)
 	}
-	dbg.Lvl3("Localhost: Build src", src, ", dst", dst)
+	dbg.Lvl3("Localhost: Build src", src,", dst", dst)
 	dbg.Lvl3("Localhost: Results of localhost build:", res)
 	dbg.Lvl1("Localhost: build finished in", time.Since(start))
 	return err
@@ -149,7 +149,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		//_, conf.Hosts, _, _ = graphs.TreeFromList(d.Hosts, len(d.Hosts), 1)
 		//d.Hosts = conf.Hosts
-		dbg.Lvl4("Localhost: graphs.Tree for shamir ", conf.Hosts)
+		dbg.Lvl4("Localhost: graphs.Tree for shamir", conf.Hosts)
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 	case "naive":
@@ -182,9 +182,9 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 
 func (d *Localhost) Start(args ...string) error {
 	os.Chdir(d.RunDir)
-	dbg.Lvl4("Localhost: chdir into ", d.RunDir)
+	dbg.Lvl4("Localhost: chdir into", d.RunDir)
 	ex := d.RunDir + "/" + d.App
-	dbg.Lvl4("Localhost: in Start() => hosts ", d.Hosts)
+	dbg.Lvl4("Localhost: in Start() => hosts", d.Hosts)
 	d.running = true
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
@@ -194,14 +194,14 @@ func (d *Localhost) Start(args ...string) error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		go func(i int, h string) {
-			dbg.Lvl3("Localhost: will start host ", host)
+			dbg.Lvl3("Localhost: will start host", host)
 			d.wg_run.Add(1)
 			err := cmd.Run()
 			if err != nil {
-				dbg.Lvl3("Error running localhost ", h, ":", err)
+				dbg.Lvl3("Error running localhost", h, ":", err)
 			}
 			d.wg_run.Done()
-			dbg.Lvl3("host (index ", i, ") ", h, "done")
+			dbg.Lvl3("host (index", i, ")", h, "done")
 		}(index, host)
 
 	}
@@ -229,7 +229,7 @@ func (d *Localhost) ReadConfig(name ...string) {
 		dbg.Fatal("Couldn't read config in", who, ":", err)
 	}
 	dbg.DebugVisible = d.Debug
-	dbg.Lvl4("Localhost: read the config, Hosts ", d.Hosts)
+	dbg.Lvl4("Localhost: read the config, Hosts", d.Hosts)
 }
 
 // GenerateHosts will generate the list of hosts
@@ -243,5 +243,5 @@ func (d *Localhost) GenerateHosts() {
 		s := "127.0.0.1:" + strconv.Itoa(port+inc*i)
 		d.Hosts[i] = s
 	}
-	dbg.Lvl4("Localhost: Generated hosts list ", d.Hosts)
+	dbg.Lvl4("Localhost: Generated hosts list", d.Hosts)
 }
