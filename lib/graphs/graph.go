@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"container/list"
 	"errors"
+	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"strconv"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 var TRIM bool = false

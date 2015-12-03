@@ -15,5 +15,5 @@ func main() {
 	}
 
 	RunServer(conf)
-
+	//monitor.End()
 }

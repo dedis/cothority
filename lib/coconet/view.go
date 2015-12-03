@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 type View struct {
@@ -237,7 +237,7 @@ func (v *Views) RemovePeer(view int, child string) bool {
 func (v *Views) Children(view int) []string {
 	v.RLock()
 	defer v.RUnlock()
-	if view < len(v.Views){
+	if view < len(v.Views) {
 		return v.Views[view].Children
 	} else {
 		return nil

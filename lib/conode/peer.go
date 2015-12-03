@@ -1,226 +1,199 @@
 package conode
 
 import (
-	"net"
-	"strconv"
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 
-	"github.com/dedis/cothority/lib/logutils"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/sign"
+	"github.com/dedis/crypto/abstract"
+	"strings"
 )
 
-var ROUND_TIME time.Duration = sign.ROUND_TIME
-var PeerMaxRounds = -1
-
-// struct to ease keeping track of who requires a reply after
-// tsm is processed/ aggregated by the TSServer
-type MustReplyMessage struct {
-	Tsm TimeStampMessage
-	To  string // name of reply destination
-}
+/*
+This will run rounds with RoundCosiStamper while listening for
+incoming requests through StampListener.
+*/
 
 type Peer struct {
-	sign.Signer
-	name string
+	*sign.Node
 
-	rLock     sync.Mutex
-	maxRounds int
-	closeChan chan bool
+	conf *app.ConfigConode
+
+	RLock     sync.Mutex
+	CloseChan chan bool
+	Closed    bool
 
 	Logger   string
 	Hostname string
-	App      string
-	Cb       Callbacks
 }
 
-func NewPeer(signer sign.Signer, cb Callbacks) *Peer {
-	s := &Peer{}
+// NewPeer returns a peer that can be used to set up
+// connections.
+func NewPeer(address string, conf *app.ConfigConode) *Peer {
+	suite := app.GetSuite(conf.Suite)
 
-	s.Signer = signer
-	s.Cb = cb
-	s.Signer.RegisterAnnounceFunc(cb.AnnounceFunc(s))
-	s.Signer.RegisterCommitFunc(cb.CommitFunc(s))
-	s.Signer.RegisterDoneFunc(cb.Done(s))
-	s.rLock = sync.Mutex{}
-	s.maxRounds = PeerMaxRounds
-
-	// listen for client requests at one port higher
-	// than the signing node
-	h, p, err := net.SplitHostPort(s.Signer.Name())
-	if err == nil {
-		i, err := strconv.Atoi(p)
-		if err != nil {
-			log.Fatal(err)
-		}
-		s.name = net.JoinHostPort(h, strconv.Itoa(i+1))
+	var err error
+	// make sure address has a port or insert default one
+	address, err = cliutils.VerifyPort(address, DefaultPort)
+	if err != nil {
+		dbg.Fatal(err)
 	}
-	s.closeChan = make(chan bool, 5)
-	return s
+
+	// For retro compatibility issues, convert the base64 encoded key into hex
+	// encoded keys....
+	convertTree(suite, conf.Tree)
+	// Add our private key to the tree (compatibility issues again with graphs/
+	// lib)
+	addPrivateKey(suite, address, conf)
+	// load the configuration
+	dbg.Lvl3("loading configuration")
+	var hc *graphs.HostConfig
+	opts := graphs.ConfigOptions{ConnType: "tcp", Host: address, Suite: suite}
+
+	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, suite, opts)
+	if err != nil {
+		dbg.Fatal(err)
+	}
+
+	// Listen to stamp-requests on port 2001
+	node := hc.Hosts[address]
+	peer := &Peer{
+		conf:      conf,
+		Node:      node,
+		RLock:     sync.Mutex{},
+		CloseChan: make(chan bool, 5),
+		Hostname:  address,
+	}
+
+	// Start the cothority-listener on port 2000
+	err = hc.Run(true, sign.MerkleTree, address)
+	if err != nil {
+		dbg.Fatal(err)
+	}
+
+	go func() {
+		err := peer.Node.Listen()
+		dbg.Lvl3("Node.listen quits with status", err)
+		peer.CloseChan <- true
+		peer.Close()
+	}()
+	return peer
 }
 
-// Listen on client connections. If role is root also send annoucement
-// for all of the nRounds
-func (s *Peer) Run(role string) {
-	// defer func() {
-	// 	log.Infoln(s.Name(), "CLOSE AFTER RUN")
-	// 	s.Close()
-	// }()
-
-	dbg.Lvl3("Stamp-server", s.name, "starting with", role)
-	closed := make(chan bool, 1)
-
-	go func() { err := s.Signer.Listen(); closed <- true; s.Close(); dbg.Lvl2("Listened and error:", err) }()
-
-	var nextRole string // next role when view changes
-	for {
-		switch role {
-
-		case "root":
-			dbg.Lvl4("running as root")
-			nextRole = s.runAsRoot(s.maxRounds)
-		case "regular":
-			dbg.Lvl4("running as regular")
-			nextRole = s.runAsRegular()
-		default:
-			dbg.Fatal("Unable to run as anything")
-			return
-		}
-
-		// dbg.Lvl4(s.Name(), "nextRole:", nextRole)
-		if nextRole == "close" {
-			s.Close()
-			return
-		}
-		if nextRole == "" {
-			return
-		}
-		s.LogReRun(nextRole, role)
-		role = nextRole
+// LoopRounds starts the system by sending a round of type
+// 'roundType' every second for number of 'rounds'.
+// If 'rounds' < 0, it loops forever, or until you call
+// peer.Close().
+func (peer *Peer) LoopRounds(roundType string, rounds int) {
+	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with IsRoot=", peer.IsRoot(peer.ViewNo))
+	ticker := time.NewTicker(sign.ROUND_TIME)
+	firstRound := peer.Node.LastRound()
+	if !peer.IsRoot(peer.ViewNo) {
+		// Children don't need to tick, only the root.
+		ticker.Stop()
 	}
 
-}
-func (s *Peer) runAsRoot(nRounds int) string {
-	// every 5 seconds start a new round
-	ticker := time.Tick(ROUND_TIME)
-	if s.LastRound()+1 > nRounds && nRounds >= 0 {
-		dbg.Lvl1(s.Name(), "runAsRoot called with too large round number")
-		return "close"
-	}
-
-	dbg.Lvl3(s.Name(), "running as root", s.LastRound(), int64(nRounds))
 	for {
 		select {
-		case nextRole := <-s.ViewChangeCh():
-			dbg.Lvl4(s.Name(), "assuming next role")
-			return nextRole
-		// s.reRunWith(nextRole, nRounds, true)
-		case <-ticker:
-
-			dbg.Lvl4(s.Name(), "Stamp server in round", s.LastRound()+1, "of", nRounds)
-
-			var err error
-			if s.App == "vote" {
-				vote := &sign.Vote{
-					Type: sign.AddVT,
-					Av: &sign.AddVote{
-						Parent: s.Name(),
-						Name:   "test-add-node"}}
-				err = s.StartVotingRound(vote)
+		case nextRole := <-peer.ViewChangeCh():
+			dbg.Lvl2(peer.Name(), "assuming next role is", nextRole)
+		case <-peer.CloseChan:
+			dbg.Lvl3("Server-peer", peer.Name(), "has closed the connection")
+			return
+		case <-ticker.C:
+			dbg.Lvl3("Ticker is firing in", peer.Hostname)
+			roundNbr := peer.LastRound() - firstRound
+			if roundNbr >= rounds && rounds >= 0 {
+				dbg.Lvl3(peer.Name(), "reached max round: closing",
+					roundNbr, ">=", rounds)
+				ticker.Stop()
+				if peer.IsRoot(peer.ViewNo) {
+					dbg.Lvl3("As I'm root, asking everybody to terminate")
+					peer.SendCloseAll()
+				}
 			} else {
-				err = s.StartSigningRound()
-			}
-			if err == sign.ChangingViewError {
-				// report change in view, and continue with the select
-				log.WithFields(log.Fields{
-					"file": logutils.File(),
-					"type": "view_change",
-				}).Info("Tried to stary signing round on " + s.Name() + " but it reports view change in progress")
-				// skip # of failed round
-				time.Sleep(1 * time.Second)
-				break
-			} else if err != nil {
-				dbg.Lvl3(err)
-				time.Sleep(1 * time.Second)
-				break
-			}
-
-			if s.LastRound()+1 >= nRounds && nRounds >= 0 {
-				dbg.Lvl2(s.Name(), "reports exceeded the max round: terminating", s.LastRound()+1, ">=", nRounds)
-				return "close"
+				if peer.IsRoot(peer.ViewNo) {
+					dbg.Lvl2(peer.Name(), "Stamp server in round",
+						roundNbr+1, "of", rounds)
+					round, err := sign.NewRoundFromType(roundType, peer.Node)
+					if err != nil {
+						dbg.Fatal("Couldn't create", roundType, err)
+					}
+					err = peer.StartAnnouncement(round)
+					if err != nil {
+						dbg.Lvl3(err)
+						time.Sleep(1 * time.Second)
+						break
+					}
+				} else {
+					dbg.Lvl3(peer.Name(), "running as regular")
+				}
 			}
 		}
 	}
 }
 
-func (s *Peer) runAsRegular() string {
-	select {
-	case <-s.closeChan:
-		dbg.Lvl3("server", s.Name(), "has closed the connection")
-		return ""
-
-	case nextRole := <-s.ViewChangeCh():
-		return nextRole
-	}
+// Sends the 'CloseAll' to everybody
+func (peer *Peer) SendCloseAll() {
+	peer.Node.CloseAll(peer.Node.ViewNo)
+	peer.Node.Close()
 }
 
-func (s *Peer) Close() {
-	dbg.Lvl4("closing stampserver: %p", s.name)
-	s.closeChan <- true
-	s.Signer.Close()
-}
-
-// listen for clients connections
-// this server needs to be running on a different port
-// than the Signer that is beneath it
-func (s *Peer) Listen() error {
-	return s.Cb.Listen(s)
-}
-
-func (s *Peer) ConnectToLogger() {
-	return
-	if s.Logger == "" || s.Hostname == "" || s.App == "" {
-		dbg.Lvl4("skipping connect to logger")
+// Closes the channel
+func (peer *Peer) Close() {
+	if peer.Closed {
+		dbg.Lvl1("Peer", peer.Name(), "Already closed!")
 		return
+	} else {
+		peer.Closed = true
 	}
-	dbg.Lvl4("Connecting to Logger")
-	lh, _ := logutils.NewLoggerHook(s.Logger, s.Hostname, s.App)
-	dbg.Lvl4("Connected to Logger")
-	log.AddHook(lh)
+	peer.CloseChan <- true
+	peer.Node.Close()
+	StampListenersClose()
+	dbg.Lvlf3("Closing of peer: %s finished", peer.Name())
 }
 
-func (s *Peer) LogReRun(nextRole string, curRole string) {
-	if nextRole == "root" {
-		var messg = s.Name() + "became root"
-		if curRole == "root" {
-			messg = s.Name() + "remained root"
+// Simple ephemeral helper for compatibility issues
+// From base64 => hexadecimal
+func convertTree(suite abstract.Suite, t *graphs.Tree) {
+	if t.PubKey != "" {
+		point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
+		if err != nil {
+			dbg.Fatal("Could not decode base64 public key")
 		}
 
-		go s.ConnectToLogger()
-
-		log.WithFields(log.Fields{
-			"file": logutils.File(),
-			"type": "role_change",
-		}).Infoln(messg)
-		// dbg.Lvl4("role change: %p", s)
-
-	} else {
-		var messg = s.Name() + "remained regular"
-		if curRole == "root" {
-			messg = s.Name() + "became regular"
+		str, err := cliutils.PubHex(suite, point)
+		if err != nil {
+			dbg.Fatal("Could not encode point to hexadecimal")
 		}
-
-		if curRole == "root" {
-			log.WithFields(log.Fields{
-				"file": logutils.File(),
-				"type": "role_change",
-			}).Infoln(messg)
-			dbg.Lvl4("role change: %p", s)
-		}
-
+		t.PubKey = str
 	}
+	for _, c := range t.Children {
+		convertTree(suite, c)
+	}
+}
 
+// Add our own private key in the tree. This function exists because of
+// compatibility issues with the graphs/lib.
+func addPrivateKey(suite abstract.Suite, address string, conf *app.ConfigConode) {
+	fn := func(t *graphs.Tree) {
+		// this is our node in the tree
+		if t.Name == address {
+			if conf.Secret != nil {
+				// convert to hexa
+				s, err := cliutils.SecretHex(suite, conf.Secret)
+				if err != nil {
+					dbg.Fatal("Error converting our secret key to hexadecimal")
+				}
+				// adds it
+				t.PriKey = s
+			}
+		}
+	}
+	conf.Tree.TraverseTree(fn)
 }

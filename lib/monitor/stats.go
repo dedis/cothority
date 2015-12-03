@@ -2,14 +2,14 @@ package monitor
 
 import (
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/montanaflynn/stats"
 	"io"
 	"math"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
-
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/montanaflynn/stats"
 )
 
 // Stats contains all structures that are related to the computations of stats
@@ -28,6 +28,9 @@ type Stats struct {
 	PPM int // PeerPerMachine
 	// How many machines do we have
 	Machines int
+	// How many peers are ready
+	Ready int
+
 	// Additionals fields that may appears in the resulting CSV
 	// The additionals fields are created when creating the stats out of a
 	// running config. It will try to read some known fields such as "depth" or
@@ -73,8 +76,15 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 		}
 	}
 	s.Peers = s.Machines * s.PPM
+	// Sort rc2, so the output is always the same
+	rc2_ids := make([]string, 0)
+	for k := range rc2 {
+		rc2_ids = append(rc2_ids, k)
+	}
+	sort.Sort(sort.StringSlice(rc2_ids))
 	// Add ALL extra fields
-	for k, v := range rc2 {
+	for _, k := range rc2_ids {
+		v := rc2[k]
 		if ef, err := strconv.Atoi(v); err != nil {
 			continue
 		} else {
@@ -149,6 +159,7 @@ func AverageStats(stats []Stats) Stats {
 	s.Peers = stats[0].Peers
 	s.Additionals = stats[0].Additionals
 	s.addKeys = stats[0].addKeys
+	s.keys = stats[0].keys
 	// Average
 	for _, k := range s.keys {
 		// Collect measurements for a given key
@@ -238,7 +249,7 @@ func NewDataFilter(config map[string]string) DataFilter {
 			df.percentiles[measure] = perc
 		}
 	}
-	dbg.Lvl2("Filtering:", df.percentiles)
+	dbg.Lvl3("Filtering:", df.percentiles)
 	return df
 }
 
@@ -268,7 +279,7 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 		return values
 	}
 	// return the values below the percentile
-	dbg.Lvl2("Filtering: filters out", measure, ":", maxIndex, "/", len(values))
+	dbg.Lvl3("Filtering: filters out", measure, ":", maxIndex, "/", len(values))
 	return values[:maxIndex]
 }
 

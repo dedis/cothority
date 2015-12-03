@@ -10,7 +10,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -281,10 +281,12 @@ func (h *TCPHost) NewViewFromPrev(view int, parent string) {
 
 // Close closes all the connections currently open.
 func (h *TCPHost) Close() {
-	dbg.Lvl3("tcphost: closing")
+	dbg.Lvl3("tcphost: closing", h, h.listener)
 	// stop accepting new connections
 	atomic.StoreInt64(&h.closed, 1)
-	h.listener.Close()
+	if h.listener != nil {
+		h.listener.Close()
+	}
 
 	// close peer connections
 	h.PeerLock.Lock()
@@ -561,7 +563,7 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 						err = e
 						errLock.Unlock()
 					}
-					dbg.Lvl4("Informed child", c)
+					dbg.Lvl4("Informed child", c, "of", data[i])
 					return
 				}
 				dbg.Lvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)

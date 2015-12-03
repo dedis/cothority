@@ -1,9 +1,10 @@
 package app_test
+
 import (
-	"testing"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"testing"
 )
 
 var testFileApp = `Machines = 8

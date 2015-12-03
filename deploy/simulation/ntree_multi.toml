@@ -1,6 +1,6 @@
 Machines = 8
 App = "ntree"
-Suite = "ed25519"
+Suite = "Ed25519"
 
 Ppm, Bf, Rounds
 1, 8, 10

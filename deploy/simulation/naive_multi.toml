@@ -1,6 +1,6 @@
 Machines = 3
 App = "naive"
-Suite = "ed25519"
+Suite = "Ed25519"
 
 Ppm,  Rounds
 1, 10

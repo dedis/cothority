@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/conode"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/crypto/abstract"
 	"io"
@@ -86,16 +86,16 @@ type test_sig struct {
 
 func setupTestSig() {
 	var sig = test_sig{
-		"25519",
-		"wuFmm+eMZX/6x8cYOCvIDgecdaQBMWuvBMbhvwqLbkE=",
-		"stamp",
-		1446036562,
-		"0wJIkPa+ekv1eYwWjNEXq0qz9WAQOv9mKUWWGaKDx20=",
-		"JdcMnvf+KMQ7LtJskjShtVDgh8pdcMP07fADg352zJA=",
-		[]string{"3rPzWy+trCfx6xk7vLABGhXW1o93Y3M4Mj+j4LrVHdE=", "SFe5UjALjJTJfCfIQuI+/re4tKS+NqprmKIhKtg30Lk=", "3rPzWy+trCfx6xk7vLABGhXW1o93Y3M4Mj+j4LrVHdE="},
-		"G6XTXmSMqL5vGyd+c/1EeF+DqBuYG9vm/D/PaIFmWfc=",
-		"DDMeJSRxxYk+RfnsGtqAkNvCsw29rBhZ/iLaj145f0g=",
-		"ixyyZ3kryOm4TLJU29wUzB1tEP0v3EkXP1W7bAGf/4E=",
+		Suite:      "Ed25519",
+		Name:       "stamp.sig",
+		Timestamp:  1448637057,
+		Proof:      []string{"fN1GPbpXUqLGh20Ls1JmiFncbWcnvai4pt2ufJnUcIo=", "ehvna7oGGqwZsCgLVP1GvEHxCbYl2Bv8fS0EgGEvmB4=", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E="},
+		Root:       "vu2wvZDMc5ZlCNspMRWKZCI0ShYZ8zyLfy2cuZFf54A=",
+		Challenge:  "ClSG6pa3uklYndfBztJ9yAD8aY2g/GzTq0rs8nQC12w=",
+		Response:   "AJXkEEiyvWdoidjjUMUi5nryHRzJSywXoFY/fIT/8FM=",
+		Commitment: "LbMi53pBXpHN1IYa7pRaC953KAox+NvzQSzAOsK1CEQ=",
+		AggPubKey:  "dkp32QL4viiR0EiMtnLIVYLgk6PXTcSQlNXFNwpnLiI=",
+		Hash:       "RnZyRnItjXQBSMYLfY/f8WDgiYJI9Yh4lQXa6+VwWxc=",
 	}
 
 	suite = app.GetSuite(sig.Suite)

@@ -7,10 +7,11 @@ import (
 	"sync"
 	//"runtime/debug"
 
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 
 	"github.com/dedis/crypto/abstract"
 	"io"
+	"strings"
 )
 
 var Latency = 100
@@ -167,10 +168,13 @@ func (tc *TCPConn) GetData(bum BinaryUnmarshaler) error {
 		}
 		// if it is an irrecoverable error
 		// close the channel and return that it has been closed
-		if err != io.EOF && err.Error() != "read tcp4" {
-			dbg.Lvl3("Couldn't decode packet at", tc.name, "error:", err)
-		} else {
+		if err == io.EOF || err.Error() == "read tcp4" {
 			dbg.Lvl3("Closing connection by EOF:", err)
+		} else {
+			if !strings.Contains(err.Error(), "use of closed") {
+				dbg.Lvl1("Couldn't decode packet at", tc.name, "error:", err)
+				dbg.Lvlf1("Packet was: %+v", bum)
+			}
 		}
 		tc.Close()
 		return ErrClosed

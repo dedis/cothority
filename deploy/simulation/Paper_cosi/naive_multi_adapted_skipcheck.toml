@@ -1,5 +1,5 @@
 App = "naive"
-Suite = "ed25519"
+Suite = "Ed25519"
 Rounds = 10
 SkipChecks = true
 

@@ -1,13 +1,13 @@
-Suite = "25519"
-Hosts = ["localhost:2000", "localhost:2010"]
-AggPubKey = "EGSqgB4GeTl0ON6VU5Z2Jf54XHVaTyNCrwoTtqBaPdY="
+Suite = "Ed25519"
+Hosts = ["localhost:7000", "localhost:7010"]
+AggPubKey = "dkp32QL4viiR0EiMtnLIVYLgk6PXTcSQlNXFNwpnLiI="
 
 [Tree]
-  Name = "localhost:2000"
+  Name = "localhost:7000"
   PriKey = ""
-  PubKey = "5LSW4NPOFHXooOFjPTwmMDqJGm/m8VjYH0RkPZFsUT8="
+  PubKey = "01yZ7/w/LxWHF6XBvkr2g0w9awCzOn8WrmAVBmXGw8s="
 
   [[Tree.Children]]
-    Name = "localhost:2010"
+    Name = "localhost:7010"
     PriKey = ""
-    PubKey = "qH6hHHhzB643ifBwXVqO1xNPE4UTiZO978iVmeDrS2E="
+    PubKey = "IiEjL/BXXl/5gJP9lQ4/EZZ/T+eJCI+bKO7HX0kgCxw="

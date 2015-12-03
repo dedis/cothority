@@ -12,7 +12,7 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"syscall"
 	"time"
@@ -45,19 +45,61 @@ func EnableMeasure(b bool) {
 // encoder. It can be the address of a proxy or a monitoring process.
 // Returns an error if it could not connect to the endpoint.
 func ConnectSink(addr string) error {
-	dbg.Lvl2("ConnectSink attempt with", addr)
+	if encoder != nil {
+		return nil
+	}
+	dbg.Lvl3("Connecting to:", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
 	}
-	dbg.Lvl2("Connected to sink:", addr)
+	dbg.Lvl3("Connected to sink:", addr)
 	sink = addr
 	connection = conn
 	encoder = json.NewEncoder(conn)
 	return nil
 }
 
-// Send transmitts the given struct over the network.
+func StopSink() {
+	connection.Close()
+	encoder = nil
+}
+
+// Only sends a ready-string
+func Ready(addr string) error {
+	if encoder == nil {
+		dbg.Lvl3("Connecting to sink", addr)
+		err := ConnectSink(addr)
+		if err != nil {
+			return err
+		}
+	}
+	dbg.Lvl3("Sending ready-signal")
+	send(Measure{Name: "ready"})
+	return nil
+}
+
+// Returns how many peers are ready
+func GetReady(addr string) (*Stats, error) {
+	if encoder == nil {
+		err := ConnectSink(addr)
+		if err != nil {
+			return nil, err
+		}
+	}
+	dbg.Lvl3("Getting ready_count")
+	send(Measure{Name: "ready_count"})
+	decoder := json.NewDecoder(connection)
+	var s Stats
+	err := decoder.Decode(&s)
+	if err != nil {
+		return nil, err
+	}
+	dbg.Lvlf3("Received stats with %+v", s)
+	return &s, nil
+}
+
+// Send transmits the given struct over the network.
 func send(v interface{}) {
 	if encoder == nil {
 		panic(fmt.Errorf("Monitor's sink connection not initalized. Can not send any measures"))
@@ -65,9 +107,15 @@ func send(v interface{}) {
 	if !enabled {
 		return
 	}
-	if err := encoder.Encode(v); err != nil {
-		panic(fmt.Errorf("Error sending to sink: %v", err))
+	for wait := 500; wait < 1000; wait += 100 {
+		if err := encoder.Encode(v); err == nil {
+			return
+		} else {
+			dbg.Lvl1("Couldn't send to monitor-sink:", err)
+			time.Sleep(time.Duration(wait) * time.Millisecond)
+		}
 	}
+	panic(fmt.Errorf("No contact to monitor-sink possible!"))
 }
 
 // Measure holds the different values that can be computed for a measure.
@@ -77,6 +125,9 @@ type Measure struct {
 	WallTime    float64
 	CPUTimeUser float64
 	CPUTimeSys  float64
+	// These are used for communicating with the clients
+	Sender string
+	Ready  int
 	// Since we send absolute timing values, we need to store our reference too.
 	lastWallTime time.Time
 	autoReset    bool

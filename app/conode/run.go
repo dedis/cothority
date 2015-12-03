@@ -5,8 +5,10 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
+
+var maxRounds = -1
 
 func init() {
 	command := cli.Command{
@@ -55,5 +57,6 @@ func Run(configFile, key string) {
 		conf.Public = pub
 		address = addr
 	}
-	conode.RunServer(address, conf, conode.NewCallbacksStamper())
+	peer := conode.NewPeer(address, conf)
+	peer.LoopRounds(RoundStatsType, maxRounds)
 }

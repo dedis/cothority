@@ -1,9 +1,3 @@
-/*
- * This is a simple interface to get a string stamped by
- * a cothority. It can be used as standalone or in an
- * application that needs collective signing from an existing
- * cothority.
- */
 package conode
 
 import (
@@ -13,12 +7,19 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/coconet"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"math/rand"
 	"strconv"
 	"strings"
 )
+
+/*
+ * This is a simple interface to get a string stamped by
+ * a cothority. It can be used as standalone or in an
+ * application that needs collective signing from an existing
+ * cothority.
+ */
 
 type Stamp struct {
 	Config app.ConfigConode
@@ -50,6 +51,7 @@ func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
 	if server == "" {
 		server = s.Config.Hosts[rand.Intn(len(s.Config.Hosts))]
 	}
+	dbg.Lvl2("StampClient will stamp on server", server)
 	portstr := strconv.Itoa(cliutils.GetPort(server, DefaultPort) + 1)
 	err := s.connect(cliutils.GetAddress(server) + ":" + portstr)
 	if err != nil {

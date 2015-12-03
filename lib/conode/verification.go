@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 )
+
+/*
+Verification methods used by stamper.
+*/
 
 // Verifies that the 'message' is included in the signature and that it
 // is correct.
@@ -54,7 +58,7 @@ func VerifySignature(suite abstract.Suite, reply *StampSignature, public abstrac
 // components of the challenge has been spoofed or not. It may be a different
 // timestamp .
 func VerifyChallenge(suite abstract.Suite, reply *StampSignature) error {
-
+	dbg.Lvlf3("Reply is %+v", reply)
 	// marshal the V
 	pbuf, err := reply.AggCommit.MarshalBinary()
 	if err != nil {
@@ -69,11 +73,10 @@ func VerifyChallenge(suite abstract.Suite, reply *StampSignature) error {
 	cbuf := append(b.Bytes(), reply.MerkleRoot...)
 	c.Message(nil, nil, cbuf)
 	challenge := suite.Secret().Pick(c)
-	dbg.Lvlf3("challenge: %+v", challenge)
 	if challenge.Equal(reply.Challenge) {
 		return nil
 	}
-	return errors.New("Challenge reconstructed is not equal to the one given ><")
+	return errors.New("Challenge reconstructed is not equal to the one given")
 }
 
 // A simple verification of a Schnorr signature given the message
