@@ -3,7 +3,6 @@ package sign
 import (
 	"github.com/dedis/cothority/lib/dbg"
 
-	"errors"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
@@ -75,7 +74,6 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 	// prepare to handle exceptions
 	cosi := round.Cosi
 	cosi.Commits = in
-	cosi.ExceptionList = make([]abstract.Point, 0)
 
 	// Create the mapping between children and their respective public key + commitment
 	// V for commitment
@@ -99,7 +97,6 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 		cosi.LeavesFrom = append(cosi.LeavesFrom, from)
 		cosi.ChildV_hat[from] = sm.Com.V_hat
 		cosi.ChildX_hat[from] = sm.Com.X_hat
-		cosi.ExceptionList = append(cosi.ExceptionList, sm.Com.ExceptionList...)
 
 		// Aggregation
 		// add good child server to combined public key, and point commit
@@ -119,7 +116,6 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 	out.Com.V_hat = round.Cosi.Log.V_hat
 	out.Com.X_hat = round.Cosi.X_hat
 	out.Com.MTRoot = round.Cosi.MTRoot
-	out.Com.ExceptionList = round.Cosi.ExceptionList
 	return nil
 
 }
@@ -173,73 +169,20 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 	return nil
 }
 
-// TODO make that sms == nil in case we are a leaf to stay consistent with
+// TODO make that in == nil in case we are a leaf to stay consistent with
 // others calls
-func (round *RoundCosi) Response(sms []*SigningMessage, out *SigningMessage) error {
+func (round *RoundCosi) Response(in []*SigningMessage, out *SigningMessage) error {
 	// initialize exception handling
-	exceptionV_hat := round.Cosi.Suite.Point().Null()
-	exceptionX_hat := round.Cosi.Suite.Point().Null()
-	round.Cosi.ExceptionList = make([]abstract.Point, 0)
-	nullPoint := round.Cosi.Suite.Point().Null()
-
-	children := round.Cosi.Children
-	for _, sm := range sms {
-		from := sm.From
-		switch sm.Type {
-		default:
-			// default == no response from child
-			if children[from] != nil {
-				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
-
-				// remove public keys and point commits from subtree of failed child
-				exceptionX_hat.Add(exceptionX_hat, round.Cosi.ChildX_hat[from])
-				exceptionV_hat.Add(exceptionV_hat, round.Cosi.ChildV_hat[from])
-			}
-			continue
-		case Response:
-			// disregard response from children who did not commit
-			_, ok := round.Cosi.ChildV_hat[from]
-			if ok == true && round.Cosi.ChildV_hat[from].Equal(nullPoint) {
-				continue
-			}
-
-			// dbg.Lvl4(sn.Name(), "accepts response from", from, sm.Type)
-			round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.Rm.R_hat)
-
-			exceptionV_hat.Add(exceptionV_hat, sm.Rm.ExceptionV_hat)
-
-			exceptionX_hat.Add(exceptionX_hat, sm.Rm.ExceptionX_hat)
-			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
-
-		case Error:
-			if sm.Err == nil {
-				dbg.Lvl2("Error message with no error")
-				continue
-			}
-
-			// Report up non-networking error, probably signature failure
-			dbg.Lvl2(round.Cosi.Name, "Error in respose for child", from, sm)
-			err := errors.New(sm.Err.Err)
-			return err
-		}
-	}
-
-	// remove exceptions from subtree that failed
-	round.Cosi.X_hat.Sub(round.Cosi.X_hat, exceptionX_hat)
-	round.Cosi.ExceptionV_hat = exceptionV_hat
-	round.Cosi.ExceptionX_hat = exceptionX_hat
-
 	dbg.Lvl4(round.Cosi.Name, "got all responses")
+	for _, sm := range in {
+		round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.Rm.R_hat)
+	}
 	err := round.Cosi.VerifyResponses()
 	if err != nil {
 		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
-
 	out.Rm.R_hat = round.Cosi.R_hat
-	out.Rm.ExceptionList = round.Cosi.ExceptionList
-	out.Rm.ExceptionV_hat = round.Cosi.ExceptionV_hat
-	out.Rm.ExceptionX_hat = round.Cosi.ExceptionX_hat
 	return nil
 }
 

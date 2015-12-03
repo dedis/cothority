@@ -467,6 +467,8 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		Rm: &ResponseMessage{
 			Message: make([]byte, 0),
+			ExceptionV_hat: sn.suite.Point().Null(),
+			ExceptionX_hat: sn.suite.Point().Null(),
 		},
 	}
 	err := ri.Response(responseList, out)

@@ -92,6 +92,8 @@ func NewCosi(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *CosiStru
 	cosi.PubKey = sn.PubKey
 	cosi.PrivKey = sn.PrivKey
 	cosi.Name = sn.Name()
+	cosi.ExceptionV_hat = sn.suite.Point().Null()
+	cosi.ExceptionX_hat = sn.suite.Point().Null()
 	cosi.InitCommitCrypto()
 	return cosi
 }
