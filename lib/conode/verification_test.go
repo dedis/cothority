@@ -86,7 +86,7 @@ type test_sig struct {
 
 func setupTestSig() {
 	var sig = test_sig{
-		Suite:      "25519",
+		Suite:      "Ed25519",
 		Name:       "stamp.sig",
 		Timestamp:  1448637057,
 		Proof:      []string{"fN1GPbpXUqLGh20Ls1JmiFncbWcnvai4pt2ufJnUcIo=", "ehvna7oGGqwZsCgLVP1GvEHxCbYl2Bv8fS0EgGEvmB4=", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E=", "cFol1fkwjOXyXLNM8Bhu3Bafs1L8GnrWWswE19YDh/E="},
