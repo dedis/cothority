@@ -79,11 +79,13 @@ func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
-		BinaryBlob []byte
+		BinaryBlob      []byte
+		ExceptionLength int
 		*Alias
 	}{
-		BinaryBlob: b.Bytes(),
-		Alias:      (*Alias)(sr),
+		BinaryBlob:      b.Bytes(),
+		ExceptionLength: len(sr.ExceptionList),
+		Alias:           (*Alias)(sr),
 	})
 }
 
@@ -91,24 +93,25 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	type Alias StampSignature
 	suite := app.GetSuite(sr.SuiteStr)
 	aux := &struct {
-		BinaryBlob    []byte
-		Response      abstract.Secret
-		Challenge     abstract.Secret
-		AggCommit     abstract.Point
-		AggPublic     abstract.Point
-		ExceptionList []abstract.Point
+		BinaryBlob      []byte
+		ExceptionLength int
+		Response        abstract.Secret
+		Challenge       abstract.Secret
+		AggCommit       abstract.Point
+		AggPublic       abstract.Point
+		ExceptionList   []abstract.Point
 		*Alias
 	}{
-		Response:      suite.Secret(),
-		Challenge:     suite.Secret(),
-		AggCommit:     suite.Point(),
-		AggPublic:     suite.Point(),
-		ExceptionList: make([]abstract.Point, 0),
-		Alias:         (*Alias)(sr),
+		Response:  suite.Secret(),
+		Challenge: suite.Secret(),
+		AggCommit: suite.Point(),
+		AggPublic: suite.Point(),
+		Alias:     (*Alias)(sr),
 	}
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
 		return err
 	}
+	sr.ExceptionList = make([]abstract.Point, aux.ExceptionLength)
 	if err := suite.Read(bytes.NewReader(aux.BinaryBlob), &sr.Response,
 		&sr.Challenge, &sr.AggCommit, &sr.AggPublic,
 		&sr.ExceptionList); err != nil {
