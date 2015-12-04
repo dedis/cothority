@@ -20,6 +20,12 @@ Verification methods used by stamper.
 // on the aggregated message
 func VerifySignature(suite abstract.Suite, reply *StampSignature, public abstract.Point, message []byte) bool {
 	// Check if aggregate public key is correct
+	dbg.Lvlf4("len(ExceptionList)=%d", len(reply.ExceptionList))
+	for _, exception := range reply.ExceptionList {
+		dbg.Lvlf5("Removing %v from public", exception)
+		public = public.Sub(public, exception)
+	}
+
 	if !public.Equal(reply.AggPublic) {
 		dbg.Lvl1("Aggregate-public-key check: FAILED (maybe you have an outdated config file of the tree)")
 		return false

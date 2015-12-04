@@ -53,31 +53,15 @@ func TestStampWithExceptionRaised(t *testing.T) {
 	sign.ExceptionForceFailure = peer2.Name()
 
 	// root node:
-	go func() {
-		dbg.Lvl2(peer1.Name(), "Stamp server in round", 1, "of", 2)
-		round, err := sign.NewRoundFromType(conode.RoundStamperListenerType, peer1.Node)
-		if err != nil {
-			dbg.Fatal("Couldn't create", conode.RoundStamperListenerType, err)
-		}
-		err = peer1.StartAnnouncement(round)
-		if err != nil {
-			dbg.Lvl3(err)
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	go func() {
-		dbg.Lvl2(peer1.Name(), "Stamp server in round", 2, "of", 2)
-		round, err := sign.NewRoundFromType(conode.RoundStamperListenerType, peer1.Node)
-		if err != nil {
-			dbg.Fatal("Couldn't create", conode.RoundStamperListenerType, err)
-		}
-		err = peer1.StartAnnouncement(round)
-		if err != nil {
-			dbg.Lvl3(err)
-			time.Sleep(1 * time.Second)
-		}
-	}()
+	dbg.Lvl2(peer1.Name(), "Stamp server in round", 1, "of", 2)
+	round, err := sign.NewRoundFromType(conode.RoundStamperListenerType, peer1.Node)
+	if err != nil {
+		dbg.Fatal("Couldn't create", conode.RoundStamperListenerType, err)
+	}
+	err = peer1.StartAnnouncement(round)
+	if err != nil {
+		dbg.Lvl3(err)
+	}
 
 	stampClient, err := conode.NewStamp("testdata/config.toml")
 	if err != nil {
@@ -88,15 +72,29 @@ func TestStampWithExceptionRaised(t *testing.T) {
 		stamper := "localhost:" + strconv.Itoa(port)
 		dbg.Lvl2("Contacting stamper", stamper)
 		// FIXME this cannot work, because GetStamp knows nothing of the Exception which occurred:
-		tsm, err := stampClient.GetStamp([]byte("test"), stamper)
-		dbg.Lvl3("Evaluating results of", stamper)
-		if err != nil {
-			t.Fatal("Couldn't get stamp from server:", err)
-		}
+		wait := make(chan bool)
+		go func() {
+			tsm, err := stampClient.GetStamp([]byte("test"), stamper)
+			dbg.Lvl3("Evaluating results of", stamper)
+			wait <- true
+			if err != nil {
+				t.Fatal("Couldn't get stamp from server:", err)
+			}
+			if !tsm.Srep.AggPublic.Equal(stampClient.X0) {
+				t.Fatal("Not correct aggregate public key")
+			}
+		}()
 
-		if !tsm.Srep.AggPublic.Equal(stampClient.X0) {
-			t.Fatal("Not correct aggregate public key")
+		dbg.Lvl2(peer1.Name(), "Stamp server in round", 2, "of", 2)
+		round, err = sign.NewRoundFromType(conode.RoundStamperListenerType, peer1.Node)
+		if err != nil {
+			dbg.Fatal("Couldn't create", conode.RoundStamperListenerType, err)
 		}
+		err = peer1.StartAnnouncement(round)
+		if err != nil {
+			dbg.Lvl3(err)
+		}
+		_ = <-wait
 	}
 	peer1.SendCloseAll()
 
