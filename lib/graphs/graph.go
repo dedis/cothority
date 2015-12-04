@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"container/list"
 	"errors"
+	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"strconv"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 )
 
 var TRIM bool = false
@@ -77,7 +77,7 @@ func (g *Graph) MST() *Tree {
 // pi: parent index, bf: branching factor, visited: set of visited nodes, ti: tree index, tnodes: space for tree nodes
 // returns the last used index for tree nodes
 func (g *Graph) constructTree(ri int, bf int, visited []bool, tnodes []Tree) {
-	dbg.Lvl3("constructing tree: ", ri, bf)
+	dbg.Lvl3("constructing tree:", ri, bf)
 	dbg.Lvl3(g.Names)
 	root := &tnodes[ri]
 	root.Name = g.Names[ri]
@@ -103,7 +103,7 @@ func (g *Graph) constructTree(ri int, bf int, visited []bool, tnodes []Tree) {
 		queue.Remove(e)
 		// parent index
 		pi := e.Value.(int)
-		dbg.Lvl3("next: ", pi)
+		dbg.Lvl3("next:", pi)
 		parent := &tnodes[indmap[pi]]
 
 		fs := sortFloats(g.Weights[pi])

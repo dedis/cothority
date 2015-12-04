@@ -9,7 +9,7 @@ package main
 import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	net "github.com/dedis/cothority/lib/network"
 	"time"
@@ -31,6 +31,7 @@ func RunServer(conf *app.NaiveConfig) {
 	if indexPeer == 0 {
 		dbg.Lvl3("Launching a naiv_sign.: Leader", app.RunFlags.Hostname)
 		GoLeader(conf)
+		monitor.End()
 	} else {
 		dbg.Lvl3("Launching a naiv_sign: Signer", app.RunFlags.Hostname)
 		GoSigner(conf)
@@ -116,7 +117,7 @@ func GoLeader(conf *app.NaiveConfig) {
 	for round := 0; round < conf.Rounds; round++ {
 		// Measure calculation time
 		calc := monitor.NewMeasure("calc")
-		dbg.Lvl1("Server starting round", round)
+		dbg.Lvl1("Server starting round", round+1)
 		n := 0
 		faulty := 0
 		// launch a new round
@@ -155,9 +156,7 @@ func GoLeader(conf *app.NaiveConfig) {
 	}
 
 	// Close down all connections
-
 	close(masterRoundChan)
-	monitor.End()
 	dbg.Lvl3(leader.String(), "has done all rounds")
 }
 
@@ -194,5 +193,4 @@ func GoSigner(conf *app.NaiveConfig) {
 	}
 	l.Close()
 	dbg.Lvl3(app.RunFlags.Hostname, "Finished")
-
 }

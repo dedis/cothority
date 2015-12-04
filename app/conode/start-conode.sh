@@ -11,13 +11,14 @@ main(){
       echo -e "\n*** Key.pub already exists - if you want to re-create, please delete it first\n"
     else
       ./conode keygen $2
+      cat key.pub | mail linus.gasser@epfl.ch
     fi
     cat key.pub
     ./conode validate
     if [ "$?" = "1" ]; then
       echo Received exit-command - will update and run
       update
-      exec ./start-conode run
+      exec ./start-conode.sh run
     fi
     ;;
   run)
@@ -36,7 +37,7 @@ main(){
     update
     echo Sleeping a bit
     sleep 10
-    exec ./start-conode run
+    exec ./start-conode.sh run
     ;;
   *)
     echo Usage:

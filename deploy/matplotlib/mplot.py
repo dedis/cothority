@@ -21,7 +21,7 @@ class MPlot:
     def __init__(self):
         vers = matplotlib.__version__
         if vers != "1.4.3":
-            print "\nWrong matlib-version " + vers + ", please install 1.4.3"
+            print "\nWrong matlib-version " + vers +", please install 1.4.3"
             print "http://matplotlib.org/faq/installing_faq.html\n"
             print "Or try the following\nsudo easy_install \"matplotlib == 1.4.3\"\n"
             exit(1)

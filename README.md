@@ -48,6 +48,7 @@ If you use the `-deploy deterlab` option, then you are prompted to enter the nam
 
 * `-nobuild`: don't build any of the helpers which is useful if you're working on the main code
 * `-build "helper1,helper2"`: only build the helpers, separated by a ",", which speeds up recompiling
+* `-range start:end`: runs only the simulation-lines including `start` and `end`. Counts from 0, start and end can be omitted and represent beginning and end of lines, respectively.
 
 ### SSH-keys
 For convenience, we recommend that you upload a public SSH-key to the DeterLab site. If your SSH-key is protected through a passphrase (which should be the case for security reasons!) we further recommend that you add your private key to your SSH-agent / keychain. Afterwards you only need to unlock your SSH-agent / keychain once (per session) and can access all your stored keys without typing the passphrase each time.
@@ -69,8 +70,6 @@ Make sure that the `ssh-agent` is running. Afterwards you can add your SSH-key v
 ```
 $ ssh-add ~/.ssh/<your private ssh key>
 ```
-
-
 
 # Applications
 
@@ -107,4 +106,3 @@ A textbook shamir signing for baseline-comparison against the collective signing
 
 * Decentralizing Authorities into Scalable Strongest-Link Cothorities: [paper](http://arxiv.org/pdf/1503.08768v1.pdf), [slides](http://dedis.cs.yale.edu/dissent/pres/150610-nist-cothorities.pdf)
 * Certificate Cothority - Towards Trustworthy Collective CAs: [paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
-

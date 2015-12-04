@@ -5,15 +5,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
-	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/crypto/abstract"
 	"os"
 	"strings"
+
+	"github.com/codegangsta/cli"
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/crypto/abstract"
 )
 
 func init() {
@@ -22,7 +23,7 @@ func init() {
 		Aliases:     []string{"b"},
 		Usage:       "Builds a cothority configuration file required for CoNodes and clients",
 		Description: "Basically it will statically generate the tree, with the respective names and public key",
-		ArgsUsage:   "HOSTFILE : file where each line is a copy of a public key node ( <address> <pubkey in b64> )",
+		ArgsUsage:   "HOSTFILE: file where each line is a copy of a public key node ( <address> <pubkey in b64> )",
 		Flags: []cli.Flag{
 			cli.IntFlag{
 				Name:  "bf",
@@ -62,7 +63,7 @@ func Build(hostFile string, bf int, configFile string) {
 	// First, read the list of host and public keys
 	hosts, pubs, err := readHostFile(hostFile)
 	if err != nil {
-		dbg.Fatal("Error reading the host file : ", err)
+		dbg.Fatal("Error reading the host file:", err)
 	}
 
 	// Then construct the tree
@@ -125,12 +126,12 @@ func readHostFile(file string) ([]string, []string, error) {
 		// add it HOSTS -> PUBLIC KEY
 		h, err := cliutils.VerifyPort(spl[0], conode.DefaultPort)
 		if err != nil {
-			dbg.Fatal("Error reading address in host file :", spl[0], err)
+			dbg.Fatal("Error reading address in host file:", spl[0], err)
 		}
 		hosts = append(hosts, h)
 		pubs = append(pubs, spl[1])
 	}
-	dbg.Lvl1("Read the hosts files : ", ln, " entries")
+	dbg.Lvl1("Read the hosts files:", ln, "entries")
 	return hosts, pubs, nil
 }
 

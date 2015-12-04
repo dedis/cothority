@@ -12,8 +12,8 @@ import (
 	"regexp"
 	"time"
 
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/proto/sign"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sign"
 
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/crypto/abstract"
@@ -45,13 +45,6 @@ ex.json
 */
 
 type JSONPoint json.RawMessage
-
-type Node struct {
-	Name     string  `json:"name"`
-	PriKey   string  `json:"prikey,omitempty"`
-	PubKey   string  `json:"pubkey,omitempty"`
-	Children []*Node `json:"children,omitempty"`
-}
 
 // HostConfig stores all of the relevant information of the configuration file.
 type HostConfig struct {
@@ -88,7 +81,7 @@ func (hc *HostConfig) String() string {
 	err := json.Indent(bformatted, b.Bytes(), "", "\t")
 	if err != nil {
 		dbg.Lvl3(string(b.Bytes()))
-		dbg.Lvl3("ERROR: ", err)
+		dbg.Lvl3("ERROR:", err)
 	}
 
 	return string(bformatted.Bytes())
@@ -232,7 +225,7 @@ func ConstructTree(
 			pubkey = sn.PubKey
 		}
 		// dbg.Lvl4("pubkey:", sn.PubKey)
-		// dbg.Lvl4("given: ", pubkey)
+		// dbg.Lvl4("given:", pubkey)
 	}
 	// if the parent of this call is empty then this must be the root node
 	if parent != "" && generate {
@@ -240,9 +233,9 @@ func ConstructTree(
 		h.AddParent(0, parent)
 	}
 
-	// dbg.Lvl4("name: ", n.Name)
-	// dbg.Lvl4("prikey: ", prikey)
-	// dbg.Lvl4("pubkey: ", pubkey)
+	// dbg.Lvl4("name:", n.Name)
+	// dbg.Lvl4("prikey:", prikey)
+	// dbg.Lvl4("pubkey:", pubkey)
 	height := 0
 	for _, c := range node.Children {
 		// connect this node to its children
@@ -271,9 +264,9 @@ func ConstructTree(
 		sn.Height = height
 	}
 
-	// dbg.Lvl4("name: ", n.Name)
-	// dbg.Lvl4("final x_hat: ", x_hat)
-	// dbg.Lvl4("final pubkey: ", pubkey)
+	// dbg.Lvl4("name:", n.Name)
+	// dbg.Lvl4("final x_hat:", x_hat)
+	// dbg.Lvl4("final pubkey:", pubkey)
 	return height, nil
 }
 
@@ -328,67 +321,44 @@ type ConfigOptions struct {
 }
 
 // run the given hostnames
-func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostnameSlice ...string) error {
-	dbg.Lvl3(hc.Hosts, "going to connect everything for", hostnameSlice)
-	hostnames := make(map[string]*sign.Node)
-	if hostnameSlice == nil {
-		hostnames = hc.Hosts
+func (hc *HostConfig) Run(stamper bool, signType sign.Type, hostname string) error {
+	dbg.Lvl3(hc.Hosts, "going to connect everything for", hostname)
+	node := hc.Hosts[hostname]
+
+	node.Type = signType
+	dbg.Lvl3("Listening on", node.Host)
+	node.Host.Listen()
+
+	var err error
+	// exponential backoff for attempting to connect to parent
+	startTime := time.Duration(200)
+	maxTime := time.Duration(2000)
+	for i := 0; i < 2000; i++ {
+		dbg.Lvl3(hostname, "attempting to connect to parent")
+		// the host should connect with the parent
+		err = node.Connect(0)
+		if err == nil {
+			// log.Infoln("hostconfig: connected to parent:")
+			break
+		}
+
+		time.Sleep(startTime * time.Millisecond)
+		startTime *= 2
+		if startTime > maxTime {
+			startTime = maxTime
+		}
+	}
+	if err != nil {
+		dbg.Fatal(hostname, "failed to connect to parent")
+		//return errors.New("failed to connect")
 	} else {
-		for _, h := range hostnameSlice {
-			sn, ok := hc.Hosts[h]
-			if !ok {
-				return errors.New("hostname given not in config file:" + h)
-			}
-			hostnames[h] = sn
-		}
+		dbg.Lvl3(hostname, "successfully connected to parent")
 	}
-
-	// set all hosts to be listening - open the port and connect to the channel
-	for _, sn := range hostnames {
-		sn.Type = signType
-		dbg.Lvl3("Listening on", sn.Host)
-		sn.Host.Listen()
-	}
-
-	for h, sn := range hostnames {
-		var err error
-		// exponential backoff for attempting to connect to parent
-		startTime := time.Duration(200)
-		maxTime := time.Duration(2000)
-		for i := 0; i < 2000; i++ {
-			dbg.Lvl3(h, "attempting to connect to parent")
-			// the host should connect with the parent
-			err = sn.Connect(0)
-			if err == nil {
-				// log.Infoln("hostconfig: connected to parent:")
-				break
-			}
-
-			time.Sleep(startTime * time.Millisecond)
-			startTime *= 2
-			if startTime > maxTime {
-				startTime = maxTime
-			}
-		}
-		if err != nil {
-			dbg.Fatal(fmt.Sprintf("%s failed to connect to parent"), h)
-			//return errors.New("failed to connect")
-		} else {
-			dbg.Lvl3(fmt.Sprintf("Successfully connected to parent %s", h))
-		}
-	}
-
-	// need to make sure network connections are setup properly first
-	// wait for a little bit for connections to establish fully
-	// get rid of waits they hide true bugs
-	// time.Sleep(1000 * time.Millisecond)
 
 	if !stamper {
 		// This will call the dispatcher in collectiveSigning for every request
-		dbg.Lvl4("Starting to listen for incoming stamp-requests on", hostnames)
-		for _, sn := range hostnames {
-			go sn.Listen()
-		}
+		dbg.Lvl4("Starting to listen for incoming stamp-requests on", hostname)
+		node.Listen()
 	}
 
 	return nil
@@ -448,10 +418,10 @@ func LoadConfig(appHosts []string, appTree *Tree, suite abstract.Suite, optsSlic
 			if opts.GenHosts {
 				p := strconv.Itoa(StartConfigPort)
 				addr = localAddr + ":" + p
-				//dbg.Lvl4("created new host address: ", addr)
+				//dbg.Lvl4("created new host address:", addr)
 				StartConfigPort += 10
 			} else if opts.Port != "" {
-				dbg.Lvl4("attempting to rewrite port: ", opts.Port)
+				dbg.Lvl4("attempting to rewrite port:", opts.Port)
 				// if the port has been specified change the port
 				hostport := strings.Split(addr, ":")
 				dbg.Lvl4(hostport)

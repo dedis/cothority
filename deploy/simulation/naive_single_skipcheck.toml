@@ -1,6 +1,6 @@
 Machines = 128
 App = "naive"
-Suite = "ed25519"
+Suite = "Ed25519"
 SkipChecks = true
 
 Ppm,  Rounds

@@ -6,10 +6,10 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
 	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func init() {
@@ -31,7 +31,7 @@ func init() {
 
 // ForceExit connects to the stamp-port of the conode and asks him to exit
 func ForceExit(address string) {
-	add, err := cliutils.VerifyPort(address, conode.DefaultPort + 1)
+	add, err := cliutils.VerifyPort(address, conode.DefaultPort+1)
 	if err != nil {
 		dbg.Fatal("Couldn't convert", address, "to a IP:PORT")
 	}
@@ -41,14 +41,14 @@ func ForceExit(address string) {
 	if err != nil {
 		dbg.Fatal("Error when getting the connection to the host:", err)
 	}
-	dbg.Lvl1("Connected to ", add)
+	dbg.Lvl1("Connected to", add)
 	msg := &conode.TimeStampMessage{
-		Type:  conode.StampExit,
+		Type: conode.StampExit,
 	}
 
 	dbg.Lvl1("Asking to exit")
 	err = conn.PutData(msg)
 	if err != nil {
-		dbg.Fatal("Couldn't send exit-message to server: ", err)
+		dbg.Fatal("Couldn't send exit-message to server:", err)
 	}
 }

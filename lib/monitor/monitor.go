@@ -14,7 +14,7 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"io"
 	"net"
 	"strings"
@@ -36,7 +36,7 @@ type Monitor struct {
 	listener net.Listener
 
 	// Current conections
-	conns map[string]monitorConnection
+	conns map[string]net.Conn
 	// and the mutex to play with it
 	mutexConn sync.Mutex
 
@@ -56,7 +56,7 @@ type Monitor struct {
 // NewMonitor returns a new monitor given the stats
 func NewMonitor(stats *Stats) Monitor {
 	return Monitor{
-		conns:      make(map[string]monitorConnection),
+		conns:      make(map[string]net.Conn),
 		stats:      stats,
 		mutexStats: sync.Mutex{},
 		measures:   make(chan Measure),
@@ -70,10 +70,10 @@ func NewMonitor(stats *Stats) Monitor {
 func (m *Monitor) Listen() error {
 	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
 	if err != nil {
-		return fmt.Errorf("Error while monitor is binding address : %v", err)
+		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
 	m.listener = ln
-	dbg.Lvl2("Monitor listening for stats on ", Sink, ":", SinkPort)
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
 	finished := false
 	go func() {
 		for {
@@ -87,18 +87,13 @@ func (m *Monitor) Listen() error {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl2("Error while monitor accept connection : ", operr)
+				dbg.Lvl2("Error while monitor accept connection:", operr)
 				continue
 			}
-			dbg.Lvl3("Monitor : new connection from ", conn.RemoteAddr().String())
+			dbg.Lvl3("Monitor: new connection from", conn.RemoteAddr().String())
 			m.mutexConn.Lock()
-			mc := monitorConnection{
-				conn:  conn,
-				done:  m.done,
-				stats: m.measures,
-			}
-			go mc.handleConnection()
-			m.conns[conn.RemoteAddr().String()] = mc
+			m.conns[conn.RemoteAddr().String()] = conn
+			go m.handleConnection(conn)
 			m.mutexConn.Unlock()
 		}
 	}()
@@ -107,21 +102,22 @@ func (m *Monitor) Listen() error {
 		// new stats
 		case measure := <-m.measures:
 			m.update(measure)
-			// end of a peer conn
+		// end of a peer conn
 		case peer := <-m.done:
+			dbg.Lvl3("Connections left:", len(m.conns))
 			m.mutexConn.Lock()
 			delete(m.conns, peer)
+			m.mutexConn.Unlock()
 			// end of monitoring,
 			if len(m.conns) == 0 {
 				m.listener.Close()
 				finished = true
-				m.mutexConn.Unlock()
 				break
 			}
 		}
 	}
 	dbg.Lvl2("Monitor finished waiting !")
-	m.conns = make(map[string]monitorConnection)
+	m.conns = make(map[string]net.Conn)
 	return nil
 }
 
@@ -132,60 +128,52 @@ func (m *Monitor) Stop() {
 	m.listener.Close()
 	m.mutexConn.Lock()
 	for _, c := range m.conns {
-		c.Stop()
+		c.Close()
 	}
 	m.mutexConn.Unlock()
 
 }
 
-// monitorConnection represents a statefull connection from a proxy or a client
-// to the monitor
-type monitorConnection struct {
-	conn net.Conn
-	// For telling when to stop AND when the connection is closed
-	done chan string
-	// Giving the stats back to monitor
-	stats chan Measure
-}
-
-// Stop will close this connection and notify the monitor associated
-func (mc *monitorConnection) Stop() {
-	str := mc.conn.RemoteAddr().String()
-	mc.conn.Close()
-	mc.done <- str
-}
-
 // handleConnection will decode the data received and aggregates it into its
 // stats
-func (mc *monitorConnection) handleConnection() {
-	dec := json.NewDecoder(mc.conn)
-	var m Measure
+func (m *Monitor) handleConnection(conn net.Conn) {
+	dec := json.NewDecoder(conn)
+	enc := json.NewEncoder(conn)
 	nerr := 0
 	for {
-		if err := dec.Decode(&m); err != nil {
+		measure := Measure{}
+		if err := dec.Decode(&measure); err != nil {
 			// if end of connection
 			if err == io.EOF {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from ", mc.conn.RemoteAddr().String(), " : ", err)
+			dbg.Lvl2("Error monitor decoding from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl2("Monitor : too many errors from ", mc.conn.RemoteAddr().String(), " : Abort.")
+				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
 				break
 			}
 		}
 
+		dbg.Lvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
 		// Special case where the measurement is indicating a FINISHED step
-		if strings.ToLower(m.Name) == "end" {
-			break
+		switch strings.ToLower(measure.Name) {
+		case "end":
+			dbg.Lvl3("Finishing monitor")
+			m.done <- conn.RemoteAddr().String()
+		case "ready":
+			m.stats.Ready++
+			dbg.Lvl3("Increasing counter to", m.stats.Ready)
+		case "ready_count":
+			dbg.Lvl3("Sending stats")
+			m_send := measure
+			m_send.Ready = m.stats.Ready
+			enc.Encode(m_send)
+		default:
+			m.measures <- measure
 		}
-		dbg.Lvl4("Monitor : received a Measure from ", mc.conn.RemoteAddr().String(), " : ", m)
-		mc.stats <- m
-		m = Measure{}
 	}
-	// finished
-	mc.Stop()
 }
 
 // updateMeasures will add that specific measure to the global stats
@@ -194,7 +182,6 @@ func (m *Monitor) update(meas Measure) {
 	m.mutexStats.Lock()
 	// updating
 	m.stats.Update(meas)
-	//dbg.Print("Stats = ", m.stats)
 	m.mutexStats.Unlock()
 }
 

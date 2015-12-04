@@ -30,7 +30,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 )
 
@@ -44,6 +44,7 @@ var clean = true
 var build = ""
 var machines = 3
 var monitor_port = 10000
+var simRange = ""
 
 // SHORT TERM solution of referencing
 // the different apps.
@@ -65,6 +66,7 @@ func init() {
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitor_port, "mport", monitor_port, "Port-number for monitor")
+	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
@@ -90,7 +92,7 @@ func main() {
 		}
 		deployP.Configure()
 
-		if clean{
+		if clean {
 			deployP.Deploy(runconfigs[0])
 			deployP.Cleanup()
 		} else {
@@ -113,20 +115,30 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
-	// Write the header
-	firstStat := monitor.NewStats(runconfigs[0].Map())
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
-	defer f.Close()
+	args := os.O_CREATE | os.O_RDWR | os.O_TRUNC
+	// If a range is given, we only append
+	if simRange != "" {
+		args = os.O_CREATE | os.O_RDWR | os.O_APPEND
+	}
+	f, err := os.OpenFile(TestFile(name), args, 0660)
 	if err != nil {
 		log.Fatal("error opening test file:", err)
 	}
-	firstStat.WriteHeader(f)
+	defer f.Close()
 	err = f.Sync()
 	if err != nil {
 		log.Fatal("error syncing test file:", err)
 	}
 
+	start, stop := getStartStop(len(runconfigs))
 	for i, t := range runconfigs {
+		// Implement a simple range-argument that will skip checks not in range
+		if i < start || i > stop {
+			dbg.Lvl1("Skipping", t, "because of range")
+			continue
+		}
+		dbg.Lvl1("Doing run", t)
+
 		// run test t nTimes times
 		// take the average of all successful runs
 		runs := make([]monitor.Stats, 0, nTimes)
@@ -148,6 +160,9 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		}
 
 		s := monitor.AverageStats(runs)
+		if i == 0 {
+			s.WriteHeader(f)
+		}
 		rs[i] = s
 		rs[i].WriteValues(f)
 		err = f.Sync()
@@ -217,4 +232,22 @@ func TestFile(name string) string {
 
 func isZero(f float64) bool {
 	return math.Abs(f) < 0.0000001
+}
+
+// returns a tuple of start and stop configurations to run
+func getStartStop(rcs int) (int, int) {
+	ss_str := strings.Split(simRange, ":")
+	start, err := strconv.Atoi(ss_str[0])
+	stop := rcs
+	if err == nil {
+		stop = start
+		if len(ss_str) > 1 {
+			stop, err = strconv.Atoi(ss_str[1])
+			if err != nil {
+				stop = rcs
+			}
+		}
+	}
+	dbg.Lvl2("Range is", start, "...", stop)
+	return start, stop
 }

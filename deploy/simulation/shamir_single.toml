@@ -1,7 +1,7 @@
 Machines = 3
 Logservers = 0
 App = "shamir"
-Suite = "ed25519"
+Suite = "Ed25519"
 
 ppm,  Rounds
 1, 10

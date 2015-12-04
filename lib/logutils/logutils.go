@@ -32,7 +32,7 @@ func File() string {
 	short := file
 	for i := len(file) - 1; i > 0; i-- {
 		if file[i] == '/' {
-			short = file[i + 1:]
+			short = file[i+1:]
 			break
 		}
 	}
@@ -42,7 +42,7 @@ func File() string {
 
 func (lh *LoggerHook) Connect() {
 	hostport := lh.HostPort
-	retry:
+retry:
 	addr := "ws://" + hostport + "/_log"
 	ws, err := websocket.Dial(addr, "", "http://localhost/")
 	if err != nil {
@@ -60,7 +60,7 @@ func NewLoggerHook(hostport, host, app string) (*LoggerHook, error) {
 	log.SetFormatter(&JSONFormatter{host, app})
 
 	if hostport != "" {
-		retry:
+	retry:
 		addr := "ws://" + hostport + "/_log"
 		ws, err := websocket.Dial(addr, "", "http://localhost/")
 		if err != nil {
@@ -75,7 +75,7 @@ func NewLoggerHook(hostport, host, app string) (*LoggerHook, error) {
 
 func NewLoggerHookSimple(host, app string) {
 	lh, err := NewLoggerHook("", host, app)
-	if err != nil{
+	if err != nil {
 		log.AddHook(lh)
 	}
 }
@@ -116,7 +116,7 @@ type JSONFormatter struct {
 }
 
 func (f *JSONFormatter) Format(entry *log.Entry) ([]byte, error) {
-	data := make(log.Fields, len(entry.Data) + 5)
+	data := make(log.Fields, len(entry.Data)+5)
 	for k, v := range entry.Data {
 		data[k] = v
 	}

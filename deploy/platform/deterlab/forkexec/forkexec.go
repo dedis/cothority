@@ -7,7 +7,7 @@ import (
 
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/app"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"os"
 	"sync"
@@ -36,7 +36,7 @@ func main() {
 			dbg.Lvl3("Starting", name, "on", app.RunFlags.PhysAddr)
 			wg.Add(1)
 			go func(nameport string) {
-				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport)
+				dbg.Lvl3("Running on", app.RunFlags.PhysAddr, "starting", nameport, rootname)
 				defer wg.Done()
 
 				amroot := nameport == rootname
@@ -66,7 +66,7 @@ func main() {
 	} else {
 		dbg.Lvl2("No apps for", app.RunFlags.PhysAddr)
 	}
-	dbg.Lvl2(app.RunFlags.PhysAddr, "apps exited")
+	dbg.Lvl2(app.RunFlags.PhysAddr, "forkexec exited")
 }
 
 func setup_deter() {

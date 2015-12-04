@@ -8,38 +8,40 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 
 	"fmt"
 	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/sign"
 )
 
 type Client struct {
-	Mux         sync.Mutex              // coarse grained mutex
+	Mux sync.Mutex // coarse grained mutex
 
-	name        string
-	Servers     map[string]coconet.Conn // signing nodes I work/ communicate with
+	name    string
+	Servers map[string]coconet.Conn // signing nodes I work/ communicate with
 
-										// client history maps request numbers to replies from TSServer
-										// maybe at later phases we will want pair(reqno, TSServer) as key
-	history     map[SeqNo]TimeStampMessage
-	reqno       SeqNo                   // next request number in communications with TSServer
+	// client history maps request numbers to replies from TSServer
+	// maybe at later phases we will want pair(reqno, TSServer) as key
+	history map[conode.SeqNo]conode.TimeStampMessage
+	reqno   conode.SeqNo // next request number in communications with TSServer
 
-										// maps response request numbers to channels confirming
-										// where response confirmations are sent
-	doneChan    map[SeqNo]chan error
+	// maps response request numbers to channels confirming
+	// where response confirmations are sent
+	doneChan map[conode.SeqNo]chan error
 
-	nRounds     int                     // # of last round messages were received in, as perceived by client
-	curRoundSig []byte                  // merkle tree root of last round
-										// roundChan   chan int // round numberd are sent in as rounds change
-	Error       error
+	nRounds   int    // # of last round messages were received in, as perceived by client
+	curMerkle []byte // MerkleRoot of last round
+	// roundChan   chan int // round numberd are sent in as rounds change
+	Error error
 }
 
 func NewClient(name string) (c *Client) {
 	c = &Client{name: name}
 	c.Servers = make(map[string]coconet.Conn)
-	c.history = make(map[SeqNo]TimeStampMessage)
-	c.doneChan = make(map[SeqNo]chan error)
+	c.history = make(map[conode.SeqNo]conode.TimeStampMessage)
+	c.doneChan = make(map[conode.SeqNo]chan error)
 	// c.roundChan = make(chan int)
 	return
 }
@@ -56,7 +58,7 @@ func (c *Client) Close() {
 
 func (c *Client) handleServer(s coconet.Conn) error {
 	for {
-		tsm := &TimeStampMessage{}
+		tsm := &conode.TimeStampMessage{}
 		err := s.GetData(tsm)
 		if err != nil {
 			if err == coconet.ErrNotEstablished {
@@ -70,11 +72,11 @@ func (c *Client) handleServer(s coconet.Conn) error {
 }
 
 // Act on type of response received from srrvr
-func (c *Client) handleResponse(tsm *TimeStampMessage) {
+func (c *Client) handleResponse(tsm *conode.TimeStampMessage) {
 	switch tsm.Type {
 	default:
 		log.Println("Message of unknown type")
-	case StampSignatureType:
+	case conode.StampSignatureType:
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received
 		// we know that there is no error at this point
@@ -151,13 +153,13 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.Mux.Unlock()
 	// send request to TSServer
 	err := c.PutToServer(TSServerName,
-		&TimeStampMessage{
-			Type:  StampRequestType,
+		&conode.TimeStampMessage{
+			Type:  conode.StampRequestType,
 			ReqNo: myReqno,
-			Sreq:  &StampRequest{Val: val}})
+			Sreq:  &conode.StampRequest{Val: val}})
 	if err != nil {
 		if err != coconet.ErrNotEstablished {
-			dbg.Lvl3(c.Name(), "error timestamping to ", TSServerName, ": ", err)
+			dbg.Lvl3(c.Name(), "error timestamping to", TSServerName, ":", err)
 		}
 		// pass back up all errors from putting to server
 		return err
@@ -174,7 +176,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	case err = <-myChan:
 		//log.Println("-------------client received  response from" + TSServerName)
 		break
-	case <-time.After(10 * ROUND_TIME):
+	case <-time.After(10 * sign.ROUND_TIME):
 		dbg.Lvl3("client timeouted on waiting for response from" + TSServerName)
 		break
 		// err = ErrClientToTSTimeout
@@ -191,7 +193,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	return err
 }
 
-func (c *Client) ProcessStampSignature(tsm *TimeStampMessage) {
+func (c *Client) ProcessStampSignature(tsm *conode.TimeStampMessage) {
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm
@@ -199,8 +201,8 @@ func (c *Client) ProcessStampSignature(tsm *TimeStampMessage) {
 
 	// can keep track of rounds by looking at changes in the signature
 	// sent back in a messages
-	if bytes.Compare(tsm.Srep.Sig, c.curRoundSig) != 0 {
-		c.curRoundSig = tsm.Srep.Sig
+	if bytes.Compare(tsm.Srep.MerkleRoot, c.curMerkle) != 0 {
+		c.curMerkle = tsm.Srep.MerkleRoot
 		c.nRounds++
 
 		c.Mux.Unlock()

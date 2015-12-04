@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	net "github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
@@ -56,7 +56,7 @@ func (l *Peer) SendMessage(msg []byte, c net.Conn) {
 	ms.Msg = msg
 	err := c.Send(*ms)
 	if err != nil {
-		dbg.Fatal("Could not send message to ", c.PeerName())
+		dbg.Fatal("Could not send message to", c.PeerName())
 	}
 }
 
@@ -65,10 +65,10 @@ func (l *Peer) ReceiveBasicSignature(c net.Conn) *net.BasicSignature {
 
 	appMsg, err := c.Receive()
 	if err != nil {
-		dbg.Fatal(l.String(), "error decoding message from ", c.PeerName())
+		dbg.Fatal(l.String(), "error decoding message from", c.PeerName())
 	}
 	if appMsg.MsgType != net.BasicSignatureType {
-		dbg.Fatal(l.String(), "Received an unknown type : ", appMsg.MsgType.String())
+		dbg.Fatal(l.String(), "Received an unknown type:", appMsg.MsgType.String())
 	}
 	bs := appMsg.Msg.(net.BasicSignature)
 	return &bs

@@ -1,7 +1,7 @@
 package coconet
 
 import (
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/protobuf"
 )
 
@@ -16,6 +16,6 @@ func (nm *NetworkMessg) MarshalBinary() ([]byte, error) {
 }
 
 func (nm *NetworkMessg) UnmarshalBinary(data []byte) error {
-	dbg.Print("UnmarshalBinary : ", len(data), " bytes")
+	dbg.Lvl2("UnmarshalBinary:", len(data), "bytes")
 	return protobuf.Decode(data, nm)
 }

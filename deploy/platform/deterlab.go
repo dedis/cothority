@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/monitor"
 	"io/ioutil"
@@ -190,18 +190,22 @@ func (d *Deterlab) Cleanup() error {
 
 	// SSH to the deterlab-server and end all running users-processes
 	dbg.Lvl3("Going to kill everything")
+	var sshKill chan string
+	sshKill = make(chan string)
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		// Cleanup eventual residues of previous round - users and sshd
+		cliutils.SshRun(d.Login, d.Host, "killall -9 users sshd")
+		err = cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
-			//dbg.Lvl3(err)
-			os.Exit(-1)
+			dbg.Lvl1("NOT-Normal error from cleanup")
+			sshKill <- "error"
 		}
-		d.sshDeter <- "stopped"
+		sshKill <- "stopped"
 	}()
 
 	for {
 		select {
-		case msg := <-d.sshDeter:
+		case msg := <-sshKill:
 			if msg == "stopped" {
 				dbg.Lvl3("Users stopped")
 				return nil
@@ -220,11 +224,11 @@ func (d *Deterlab) Cleanup() error {
 // Creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
-	dbg.Lvl1("Assembling all files and configuration options")
+	dbg.Lvlf1("Next run is %+v", rc)
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
 
-	dbg.Lvl1("Writing config-files")
+	dbg.Lvl3("Writing config-files")
 
 	// Initialize the deter-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual
@@ -255,7 +259,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		var depth int
 		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
 		dbg.Lvl2("Depth:", depth)
-		dbg.Lvl2("Total hosts:", len(conf.Hosts))
+		dbg.Lvl2("Total peers:", len(conf.Hosts))
 		total := deter.Machines * conf.Ppm
 		if len(conf.Hosts) != total {
 			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
@@ -278,9 +282,9 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, 2)
 		deter.Hostnames = conf.Hosts
-		dbg.Lvl3("Deterlab : naive applications :", conf.Hosts)
-		dbg.Lvl3("Deterlab : naive app config : ", conf)
-		dbg.Lvl3("Deterlab : naive app virt : ", deter.Virt[:])
+		dbg.Lvl3("Deterlab: naive applications:", conf.Hosts)
+		dbg.Lvl3("Deterlab: naive app config:", conf)
+		dbg.Lvl3("Deterlab: naive app virt:", deter.Virt[:])
 		deter.Hostnames = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 	case "ntree":
@@ -289,20 +293,13 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		var depth int
 		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
-		dbg.Lvl2("Depth : ", depth)
+		dbg.Lvl2("Depth:", depth)
 		deter.Hostnames = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 
 	case "randhound":
 	}
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
-	/*
-		dbg.Printf("%+v", deter)
-		debug := reflect.ValueOf(deter).Elem().FieldByName("Debug")
-		if debug.IsValid() {
-			dbg.DebugVisible = debug.Interface().(int)
-		}
-	*/
 
 	// copy the webfile-directory of the logserver to the remote directory
 	err := exec.Command("cp", "-a", d.DeterDir+"/cothority.conf", d.DeployDir).Run()
@@ -318,12 +315,12 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	}
 
 	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
-	// Copy everything over to deterlabs
+	// Copy everything over to Deterlabs
 	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir+"/", "remote/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
-	dbg.Lvl1("Done copying")
+	dbg.Lvl2("Done copying")
 
 	return nil
 }
@@ -339,13 +336,12 @@ func (d *Deterlab) Start(args ...string) error {
 		monitor.SinkPort + ":" + d.ProxyAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
 	exCmd := exec.Command("ssh", cmd...)
 	if err := exCmd.Start(); err != nil {
-		dbg.Fatal("Failed to start the ssh port forwarding : ", err)
+		dbg.Fatal("Failed to start the ssh port forwarding:", err)
 	}
 	if err := exCmd.Wait(); err != nil {
-		dbg.Fatal("ssh port forwarding exited in failure : ", err)
+		dbg.Fatal("ssh port forwarding exited in failure:", err)
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
-	//time.Sleep(5 * time.Minute)
 	go func() {
 		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
 		if err != nil {
@@ -460,7 +456,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string
 func readString(msg, dft string) string {
-	fmt.Printf("%s [%s]: ", msg, dft)
+	fmt.Printf("%s [%s]:", msg, dft)
 
 	reader := bufio.NewReader(os.Stdin)
 	strnl, _ := reader.ReadString('\n')

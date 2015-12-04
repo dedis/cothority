@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"os"
 	"strings"
 )
@@ -86,7 +86,7 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		// checking if format is good
 		vals := strings.Split(text, "=")
 		if len(vals) != 2 {
-			dbg.Fatal("Simulation file : ", filename, " is not properly formatted ( key = value )")
+			dbg.Fatal("Simulation file:", filename, " is not properly formatted ( key = value )")
 		}
 		// fill in the general config
 		masterConfig.Put(strings.TrimSpace(vals[0]), strings.TrimSpace(vals[1]))

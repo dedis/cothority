@@ -4,15 +4,15 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/edwards/ed25519"
 )
 
 // Which suite to use
-var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
+var suite abstract.Suite = ed25519.NewAES128SHA256Ed25519(false)
 var suiteStr string = suite.String()
 
 // where to write the key file .priv + .pub
@@ -68,7 +68,7 @@ func main() {
 			cli.StringFlag{
 				Name: "key, k",
 				Usage: "Basename of the files where reside the keys. If key = 'key'," +
-				"then conode will search through 'key.pub' and 'key.priv'",
+					"then conode will search through 'key.pub' and 'key.priv'",
 				Value: defaultKeyFile,
 			},
 		},
@@ -106,13 +106,13 @@ func KeyGeneration(key, address string) {
 	kp := cliutils.KeyPair(suite)
 	// Write private
 	if err := cliutils.WritePrivKey(suite, namePriv(key), kp.Secret); err != nil {
-		dbg.Fatal("Error writing private key file : ", err)
+		dbg.Fatal("Error writing private key file:", err)
 	}
 
 	// Write public
 	if err := cliutils.WritePubKey(suite, namePub(key), kp.Public, address); err != nil {
-		dbg.Fatal("Error writing public key file : ", err)
+		dbg.Fatal("Error writing public key file:", err)
 	}
 
-	dbg.Lvl1("Keypair generated and written to ", namePriv(key), " / ", namePub(key))
+	dbg.Lvl1("Keypair generated and written to", namePriv(key), "/", namePub(key))
 }
