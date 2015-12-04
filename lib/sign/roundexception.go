@@ -110,6 +110,7 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 
 func (round *RoundException) RaiseException() {
 	round.Cosi.R_hat = round.Suite.Secret().Zero()
+	round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, round.Cosi.PubKey)
 	round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.PubKey)
 	round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.Log.V_hat)
 }
