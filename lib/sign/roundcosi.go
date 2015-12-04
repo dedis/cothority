@@ -34,6 +34,7 @@ func init() {
 }
 
 func NewRoundCosi(node *Node) *RoundCosi {
+	dbg.Lvlf3("Making new RoundCosi", node.Name())
 	round := &RoundCosi{}
 	round.RoundStruct = NewRoundStruct(node, RoundCosiType)
 	return round
