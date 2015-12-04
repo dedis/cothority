@@ -1,5 +1,7 @@
 package sign
 
+import "github.com/dedis/cothority/lib/dbg"
+
 /*
 RoundEmpty is a bare-bones round implementation to be copy-pasted. It
 already implements RoundStruct for your convenience.
@@ -20,6 +22,7 @@ func init() {
 }
 
 func NewRoundEmpty(node *Node) *RoundEmpty {
+	dbg.Lvlf3("Making new RoundEmpty", node.Name())
 	round := &RoundEmpty{}
 	round.RoundStruct = NewRoundStruct(node, RoundEmptyType)
 	// If you're sub-classing from another round-type, don't forget to remove
