@@ -118,15 +118,15 @@ func (f Flags) StartedUp(total int) {
 	for {
 		s, err := monitor.GetReady(f.Monitor)
 		if err != nil {
-			dbg.Lvl1("Couldn't reach monitor")
+			dbg.Lvl1("Couldn't reach monitor:", err)
 		} else {
 			if s.Ready != total {
 				dbg.Lvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
 			} else {
 				break
 			}
-			time.Sleep(time.Second)
 		}
+		time.Sleep(time.Second)
 	}
 	dbg.Lvl3(f.Hostname, "thinks everybody's here")
 }

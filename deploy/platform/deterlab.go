@@ -68,6 +68,8 @@ type Deterlab struct {
 	// It is actually the Proxy that will listen to that address and clients
 	// won't know a thing about it
 	MonitorAddress string
+	// Port number of the monitor and the proxy
+	MonitorPort int
 
 	// Which app to run
 	App string
@@ -96,6 +98,7 @@ func (d *Deterlab) Configure() {
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
 	d.AppDir = pwd + "/../app"
+	d.MonitorPort = monitor.SinkPort
 	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir)
 	dbg.Lvl3("Dirs are:", d.BuildDir, d.AppDir)
 	d.LoadAndCheckDeterlabVars()
@@ -224,7 +227,6 @@ func (d *Deterlab) Cleanup() error {
 // Creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
-	dbg.Lvlf1("Next run is %+v", rc)
 	os.RemoveAll(d.DeployDir)
 	os.Mkdir(d.DeployDir, 0777)
 
@@ -332,8 +334,9 @@ func (d *Deterlab) Start(args ...string) error {
 	// proxy => the proxy redirects packets to the same port the sink is
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
+	redirection := strconv.Itoa(monitor.SinkPort-1) + ":" + d.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort)
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
-		monitor.SinkPort + ":" + d.ProxyAddress + ":" + monitor.SinkPort, fmt.Sprintf("%s@%s", d.Login, d.Host)}
+		redirection, fmt.Sprintf("%s@%s", d.Login, d.Host)}
 	exCmd := exec.Command("ssh", cmd...)
 	if err := exCmd.Start(); err != nil {
 		dbg.Fatal("Failed to start the ssh port forwarding:", err)
@@ -386,6 +389,7 @@ func (d *Deterlab) ReadConfig(name ...string) {
 		dbg.Fatal("Couldn't read config in", who, ":", err)
 	}
 	dbg.DebugVisible = d.Debug
+	monitor.SinkPort = d.MonitorPort
 }
 
 /*
