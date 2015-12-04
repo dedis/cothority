@@ -12,4 +12,12 @@ func TestNewPeerListLocal(t *testing.T) {
 	if len(pl.Peers) != 11 {
 		t.Fatal("Did not get 11 peers")
 	}
+	for i, p := range pl.Peers {
+		if p.Name != "localhost" {
+			t.Fatal("Peer", i, "is not from localhost")
+		}
+		if p.Port != 2000+i {
+			t.Fatal("Port of peer", i, "is not correct")
+		}
+	}
 }

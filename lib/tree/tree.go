@@ -35,12 +35,14 @@ type PeerList struct {
 
 // Node is double-linked to parent and children
 type Node struct {
-	// A list of all child-nodes
+	// A list of all child-nodes - the indexes are relative to the PeerList
 	Children []*Node
 	// The parent node - or nil if this is the root
 	Parent *Node
-	// The actual Host stored in this node
+	// The actual Host stored in this node.
 	Peer *Peer
 	// The hash-id of this tree - every sub-tree has its own hash-id
 	Hash hashid.HashId
+	// The peer-list
+	PeerList *PeerList
 }
