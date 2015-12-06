@@ -49,7 +49,6 @@ func TestStampWithExceptionRaised(t *testing.T) {
 
 	peer1, peer2 := createPeers()
 	// 2nd node should fail:
-	// FIXME this does not work:
 	sign.ExceptionForceFailure = peer2.Name()
 
 	// root node:
@@ -71,7 +70,6 @@ func TestStampWithExceptionRaised(t *testing.T) {
 	for _, port := range []int{7000, 7010} { // constants from config.toml
 		stamper := "localhost:" + strconv.Itoa(port)
 		dbg.Lvl2("Contacting stamper", stamper)
-		// FIXME this cannot work, because GetStamp knows nothing of the Exception which occurred:
 		wait := make(chan bool)
 		go func() {
 			tsm, err := stampClient.GetStamp([]byte("test"), stamper)
