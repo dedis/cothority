@@ -69,7 +69,6 @@ func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
 }
 
 func (sr *StampSignature) MarshalJSON() ([]byte, error) {
-	type Alias StampSignature
 	var b bytes.Buffer
 	suite := app.GetSuite(sr.SuiteStr)
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic,
@@ -81,40 +80,38 @@ func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		BinaryBlob      []byte
 		ExceptionLength int
-		*Alias
+		Prf             proof.Proof
+		Timestamp       int64
+		MerkleRoot      []byte
 	}{
 		BinaryBlob:      b.Bytes(),
 		ExceptionLength: len(sr.ExceptionList),
-		Alias:           (*Alias)(sr),
+		Prf:             sr.Prf,
+		Timestamp:       sr.Timestamp,
+		MerkleRoot:      sr.MerkleRoot,
 	})
 }
 
 func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
-	type Alias StampSignature
 	suite := app.GetSuite(sr.SuiteStr)
 	aux := &struct {
 		BinaryBlob      []byte
 		ExceptionLength int
-		Response        abstract.Secret
-		Challenge       abstract.Secret
-		AggCommit       abstract.Point
-		AggPublic       abstract.Point
-		ExceptionList   []abstract.Point
-		*Alias
-	}{
-		Response:  suite.Secret(),
-		Challenge: suite.Secret(),
-		AggCommit: suite.Point(),
-		AggPublic: suite.Point(),
-		Alias:     (*Alias)(sr),
-	}
+		Prf             proof.Proof
+		Timestamp       int64
+		MerkleRoot      []byte
+	}{}
+
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
 		return err
 	}
 	sr.ExceptionList = make([]abstract.Point, aux.ExceptionLength)
+	sr.Response = suite.Secret()
+	sr.Challenge = suite.Secret()
+	sr.AggCommit = suite.Point()
+	sr.AggPublic = suite.Point()
 	if err := suite.Read(bytes.NewReader(aux.BinaryBlob), &sr.Response,
-		&sr.Challenge, &sr.AggCommit, &sr.AggPublic,
-		&sr.ExceptionList); err != nil {
+		&sr.Challenge, &sr.AggCommit, &sr.AggPublic, &sr.ExceptionList); err != nil {
 		dbg.Fatal("decoding signature Response / Challenge / AggCommit:", err)
 		return err
 	}
