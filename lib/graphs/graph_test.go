@@ -1,6 +1,7 @@
 package graphs
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
 	"strings"
 	"testing"
@@ -98,7 +99,7 @@ func TestTreeFromListColoring(t *testing.T) {
 	}
 	for hpn := 1; hpn < 10; hpn++ {
 		for bf := 1; bf <= hpn*len(nodes); bf++ {
-			t.Log("generating tree:", hpn, bf)
+			dbg.Lvl4("generating tree:", hpn, bf)
 			root, hosts, retDepth, err := TreeFromList(nodes, hpn, bf)
 			if err != nil {
 				panic(err)
@@ -106,13 +107,13 @@ func TestTreeFromListColoring(t *testing.T) {
 			if !checkColoring(root) {
 				t.Fatal("failed to properly color:", nodes, hpn, bf)
 			}
-			t.Log("able to use:", len(hosts), "of:", hpn*len(nodes))
+			dbg.Lvl4("able to use:", len(hosts), "of:", hpn*len(nodes))
 
 			depth := Depth(root)
 			if depth != retDepth {
 				panic("Returned tree depth != actual treedepth")
 			}
-			t.Log("depth:", depth)
+			dbg.Lvl4("depth:", depth)
 		}
 	}
 }
