@@ -185,11 +185,10 @@ func (d *Deterlab) Build(build string) error {
 // Kills all eventually remaining processes from the last Deploy-run
 func (d *Deterlab) Cleanup() error {
 	// Cleanup eventual ssh from the proxy-forwarding to the logserver
-	//err := exec.Command("kill", "-9", "$(ps x  | grep ssh | grep nNTf | cut -d' ' -f1)").Run()
-	err := exec.Command("pkill", "-9", "-f", "ssh -nNTf").Run()
-	if err != nil {
-		dbg.Lvl3("Error stopping ssh:", err)
-	}
+	//	err := exec.Command("pkill", "-9", "-f", "ssh -nNTf").Run()
+	//	if err != nil {
+	//		dbg.Lvl3("Error stopping ssh:", err)
+	//	}
 
 	// SSH to the deterlab-server and end all running users-processes
 	dbg.Lvl3("Going to kill everything")
@@ -197,8 +196,8 @@ func (d *Deterlab) Cleanup() error {
 	sshKill = make(chan string)
 	go func() {
 		// Cleanup eventual residues of previous round - users and sshd
-		cliutils.SshRun(d.Login, d.Host, "killall -9 users sshd")
-		err = cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		//cliutils.SshRun(d.Login, d.Host, "killall -9 users sshd")
+		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
 			dbg.Lvl1("NOT-Normal error from cleanup")
 			sshKill <- "error"
