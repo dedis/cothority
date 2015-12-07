@@ -567,11 +567,12 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 			ViewNbr:  view,
 			RoundNbr: RoundNbr,
 			SBm: &SignatureBroadcastMessage{
-				R0_hat:        sn.suite.Secret().One(),
-				C:             sn.suite.Secret().One(),
-				X0_hat:        sn.suite.Point().Null(),
-				V0_hat:        sn.suite.Point().Null(),
-				ExceptionList: make([]abstract.Point, 0),
+				R0_hat:              sn.suite.Secret().One(),
+				C:                   sn.suite.Secret().One(),
+				X0_hat:              sn.suite.Point().Null(),
+				V0_hat:              sn.suite.Point().Null(),
+				ExceptionPublicList: make([]abstract.Point, 0),
+				ExceptionCommitList: make([]abstract.Point, 0),
 			},
 		}
 	}
