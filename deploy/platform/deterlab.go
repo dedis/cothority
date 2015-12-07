@@ -333,7 +333,7 @@ func (d *Deterlab) Start(args ...string) error {
 	// proxy => the proxy redirects packets to the same port the sink is
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
-	redirection := strconv.Itoa(monitor.SinkPort-1) + ":" + d.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort)
+	redirection := strconv.Itoa(monitor.SinkPort+1) + ":" + d.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort)
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
 		redirection, fmt.Sprintf("%s@%s", d.Login, d.Host)}
 	exCmd := exec.Command("ssh", cmd...)
