@@ -32,7 +32,7 @@ func init() {
 
 // NewRoundException creates a new RoundException based on RoundCosi
 func NewRoundException(node *Node) *RoundException {
-	dbg.Lvlf3("Making new RoundException", node.Name())
+	dbg.Lvl3("Making new RoundException", node.Name())
 	round := &RoundException{}
 	round.RoundCosi = NewRoundCosi(node)
 	round.Type = RoundExceptionType

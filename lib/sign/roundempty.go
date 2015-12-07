@@ -22,7 +22,7 @@ func init() {
 }
 
 func NewRoundEmpty(node *Node) *RoundEmpty {
-	dbg.Lvlf3("Making new RoundEmpty", node.Name())
+	dbg.Lvl3("Making new RoundEmpty", node.Name())
 	round := &RoundEmpty{}
 	round.RoundStruct = NewRoundStruct(node, RoundEmptyType)
 	// If you're sub-classing from another round-type, don't forget to remove
