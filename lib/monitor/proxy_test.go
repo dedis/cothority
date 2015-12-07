@@ -100,7 +100,7 @@ func TestReadyProxy(t *testing.T) {
 	SinkPort = 8000
 	// proxy listen to 0.0.0.0:8000 & redirect to
 	// localhost:4000
-	go Proxy("localhost:" + oldSink)
+	go Proxy("localhost:" + strconv.Itoa(oldSink))
 
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
