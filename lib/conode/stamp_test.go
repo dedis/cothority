@@ -2,18 +2,16 @@ package conode_test
 
 import (
 	"encoding/json"
-
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 	//"github.com/dedis/cothority/lib/sign"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards"
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 )
 
 // Runs two conodes and tests if the value returned is OK
@@ -110,7 +108,6 @@ func TestStampWithExceptionRaised(t *testing.T) {
 	// dbg.Lvl3("Done with test")
 }
 
-// test JSON decoding and encoding (test (un)marshaling only)
 func TestStampSignatureJSON(t *testing.T) {
 	suite := edwards.NewAES128SHA256Ed25519(false)
 	hid := make([]hashid.HashId, 0)
