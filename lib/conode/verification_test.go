@@ -53,7 +53,8 @@ func TestVerifySchnorr(t *testing.T) {
 		dbg.Lvl1("Error marshaling the timestamp for signature verification")
 	}
 	msg := append(b.Bytes(), []byte(reply.MerkleRoot)...)
-	err := conode.VerifySchnorr(suite, msg, X0, reply.Challenge, reply.Response)
+	// test without exception raised: (suite.Point().Null())
+	err := conode.VerifySchnorr(suite, msg, X0, reply.Challenge, reply.Response, suite.Point().Null())
 	if err != nil {
 		dbg.Fatal("Schnorr verification failed")
 	} else {

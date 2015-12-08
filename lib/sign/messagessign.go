@@ -209,6 +209,9 @@ type ResponseMessage struct {
 	// public keys of children servers that did not respond to
 	// challenge from root
 	ExceptionList []abstract.Point
+	// nodes that refused to commit:
+	RejectionCommitList []abstract.Point
+
 	// cummulative point commits of nodes that failed after commit
 	ExceptionV_hat abstract.Point
 	// cummulative public keys of nodes that failed after commit
@@ -230,8 +233,8 @@ type SignatureBroadcastMessage struct {
 	// Aggregate public commitment
 	V0_hat abstract.Point
 	// challenge from root
-	ExceptionList []abstract.Point
-
+	ExceptionList       []abstract.Point
+	RejectionCommitList []abstract.Point
 	// Number of messages signed
 	Messages int
 }

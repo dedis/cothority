@@ -16,6 +16,7 @@ round can add any message it wants in the Commitment-phase.
 const RoundExceptionType = "exception"
 
 // Can be used for debugging by telling which node should fail
+// don't forget to reset it if used in a test otherwise it can interfere with other tests!
 var ExceptionForceFailure string
 
 type RoundException struct {
@@ -74,6 +75,7 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			dbg.Lvl4(round.Name, "Empty response from child", from, sm.Type)
 			if children[from] != nil {
 				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
+				round.Cosi.RejectionCommitList = append(round.Cosi.RejectionCommitList, round.Cosi.ChildV_hat[from])
 
 				// remove public keys and point commits from subtree of failed child
 				round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.ChildX_hat[from])
@@ -92,17 +94,19 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, sm.Rm.ExceptionV_hat)
 			round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, sm.Rm.ExceptionX_hat)
 			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
+			round.Cosi.RejectionCommitList = append(round.Cosi.RejectionCommitList, sm.Rm.RejectionCommitList...)
 		}
 	}
 
 	round.Cosi.X_hat.Sub(round.Cosi.X_hat, round.Cosi.ExceptionX_hat)
-
 	err := round.RoundCosi.Response(in, out)
 	if err != nil {
 		return err
 	}
 
 	out.Rm.ExceptionList = round.Cosi.ExceptionList
+	out.Rm.RejectionCommitList = round.Cosi.RejectionCommitList
+
 	out.Rm.ExceptionV_hat = round.Cosi.ExceptionV_hat
 	out.Rm.ExceptionX_hat = round.Cosi.ExceptionX_hat
 	return nil
@@ -111,6 +115,8 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 func (round *RoundException) RaiseException() {
 	round.Cosi.R_hat = round.Suite.Secret().Zero()
 	round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, round.Cosi.PubKey)
+	// remove commitment of current node because it rejected to commit:
+	round.Cosi.RejectionCommitList = append(round.Cosi.RejectionCommitList, round.Cosi.Log.V)
 	round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.PubKey)
 	round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.Log.V_hat)
 }
@@ -119,6 +125,7 @@ func (round *RoundException) SignatureBroadcast(in *SigningMessage, out []*Signi
 	// Root is creating the sig broadcast
 	if round.IsRoot {
 		in.SBm.ExceptionList = round.Cosi.ExceptionList
+		in.SBm.RejectionCommitList = round.Cosi.RejectionCommitList
 	}
 	return round.RoundCosi.SignatureBroadcast(in, out)
 }

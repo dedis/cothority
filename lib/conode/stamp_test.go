@@ -15,7 +15,7 @@ import (
 )
 
 // Runs two conodes and tests if the value returned is OK
-func TestStamp(t *testing.T) {
+func TestStampWithoutException(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	peer1, peer2 := createPeers()
 	go peer1.LoopRounds(conode.RoundStamperListenerType, 4)
@@ -77,14 +77,11 @@ func TestStampWithExceptionRaised(t *testing.T) {
 		dbg.Lvl2("Contacting stamper", stamper)
 		wait := make(chan bool)
 		go func() {
-			tsm, err := stampClient.GetStamp([]byte("test"), stamper)
+			_, err := stampClient.GetStamp([]byte("test"), stamper)
 			dbg.Lvl3("Evaluating results of", stamper)
 			wait <- true
 			if err != nil {
 				t.Fatal("Couldn't get stamp from server:", err)
-			}
-			if !tsm.Srep.AggPublic.Equal(stampClient.X0) {
-				t.Fatal("Not correct aggregate public key")
 			}
 		}()
 
@@ -106,6 +103,8 @@ func TestStampWithExceptionRaised(t *testing.T) {
 	dbg.Lvl2("Closing peer2")
 	peer2.Close()
 	dbg.Lvl3("Done with test")
+	// reset global var:
+	sign.ExceptionForceFailure = ""
 }
 
 func TestStampSignatureJSON(t *testing.T) {
