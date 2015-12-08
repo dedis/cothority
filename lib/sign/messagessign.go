@@ -230,9 +230,7 @@ type SignatureBroadcastMessage struct {
 	// Aggregate public commitment
 	V0_hat abstract.Point
 	// challenge from root
-	ExceptionPublicList []abstract.Point
-
-	ExceptionCommitList []abstract.Point
+	ExceptionList []abstract.Point
 
 	// Number of messages signed
 	Messages int

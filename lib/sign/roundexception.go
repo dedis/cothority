@@ -73,6 +73,8 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			// default == no response from child
 			dbg.Lvl4(round.Name, "Empty response from child", from, sm.Type)
 			if children[from] != nil {
+				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
+
 				// remove public keys and point commits from subtree of failed child
 				round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.ChildX_hat[from])
 				round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.ChildV_hat[from])
@@ -89,16 +91,18 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			dbg.Lvl4(round.Name, "accepts response from", from, sm.Type)
 			round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, sm.Rm.ExceptionV_hat)
 			round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, sm.Rm.ExceptionX_hat)
+			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
 		}
 	}
 
 	round.Cosi.X_hat.Sub(round.Cosi.X_hat, round.Cosi.ExceptionX_hat)
-	// XXX Do we need to take care of V_hat here, too?
+
 	err := round.RoundCosi.Response(in, out)
 	if err != nil {
 		return err
 	}
 
+	out.Rm.ExceptionList = round.Cosi.ExceptionList
 	out.Rm.ExceptionV_hat = round.Cosi.ExceptionV_hat
 	out.Rm.ExceptionX_hat = round.Cosi.ExceptionX_hat
 	return nil
@@ -106,16 +110,15 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 
 func (round *RoundException) RaiseException() {
 	round.Cosi.R_hat = round.Suite.Secret().Zero()
+	round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, round.Cosi.PubKey)
 	round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.PubKey)
-	//round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.Log.V_hat)
+	round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, round.Cosi.Log.V_hat)
 }
 
 func (round *RoundException) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
 	// Root is creating the sig broadcast
 	if round.IsRoot {
-		in.SBm.ExceptionCommitList = append(in.SBm.ExceptionCommitList, round.Cosi.ExceptionV_hat)
-		in.SBm.ExceptionPublicList = append(in.SBm.ExceptionPublicList, round.Cosi.ExceptionX_hat)
-
+		in.SBm.ExceptionList = round.Cosi.ExceptionList
 	}
 	return round.RoundCosi.SignatureBroadcast(in, out)
 }

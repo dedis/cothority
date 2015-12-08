@@ -68,7 +68,6 @@ func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
 		return nil, err
 	}
 
-	dbg.Printf("client sm.Srep %+v", tsm.Srep)
 	// Verify if what we received is correct
 	if !VerifySignature(s.Suite, tsm.Srep, s.X0, msg) {
 		return nil, fmt.Errorf("Verification of signature failed")

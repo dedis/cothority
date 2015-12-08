@@ -1,4 +1,4 @@
-Suite = "25519"
+Suite = "Ed25519"
 Hosts = ["localhost:7000", "localhost:7010"]
 AggPubKey = "dkp32QL4viiR0EiMtnLIVYLgk6PXTcSQlNXFNwpnLiI="
 

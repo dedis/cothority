@@ -240,7 +240,7 @@ func (cosi *CosiStruct) StoreLocalMerkleProof(chm *ChallengeMessage) error {
 // Called by every node after receiving aggregate responses from descendants
 func (cosi *CosiStruct) VerifyResponses() error {
 
-	// Check that: base**r_hat + X_hat**c == V_hat
+	// Check that: base**r_hat * X_hat**c == V_hat
 	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 	Aux := cosi.Suite.Point()
 	V_clean := cosi.Suite.Point()
@@ -261,7 +261,7 @@ func (cosi *CosiStruct) VerifyResponses() error {
 		c2 = cosi.HashElGamal(msg, T)
 	}
 
-	// intermediary nodes check partial responses against their partial keys
+	// intermediary nodes check partial responses aginst their partial keys
 	// the root node is also able to check against the challenge it emitted
 	if !T.Equal(cosi.Log.V_hat) || (isroot && !cosi.C.Equal(c2)) {
 		return errors.New("Verifying ElGamal Collective Signature failed in " +
