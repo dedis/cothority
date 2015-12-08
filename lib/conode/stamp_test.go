@@ -112,27 +112,33 @@ func TestStampSignatureJSON(t *testing.T) {
 	suite := edwards.NewAES128SHA256Ed25519(false)
 	hid := make([]hashid.HashId, 0)
 	ss := &conode.StampSignature{
-		SuiteStr:      suite.String(),
-		Timestamp:     time.Now().Unix(),         // The timestamp requested for the file
-		MerkleRoot:    make([]byte, 0),           // root of the merkle tree
-		Prf:           proof.Proof(hid),          // Merkle proof for the value sent to be stamped
-		Response:      suite.Secret().Zero(),     // Aggregate response
-		Challenge:     suite.Secret().Zero(),     // Aggregate challenge
-		AggCommit:     suite.Point().Base(),      // Aggregate commitment key
-		AggPublic:     suite.Point().Base(),      // Aggregate public key (use for easy troubleshooting)
-		ExceptionList: make([]abstract.Point, 0), // challenge from root
+		SuiteStr:            suite.String(),
+		Timestamp:           time.Now().Unix(),         // The timestamp requested for the file
+		MerkleRoot:          make([]byte, 0),           // root of the merkle tree
+		Prf:                 proof.Proof(hid),          // Merkle proof for the value sent to be stamped
+		Response:            suite.Secret().Zero(),     // Aggregate response
+		Challenge:           suite.Secret().Zero(),     // Aggregate challenge
+		AggCommit:           suite.Point().Base(),      // Aggregate commitment key
+		AggPublic:           suite.Point().Base(),      // Aggregate public key (use for easy troubleshooting)
+		ExceptionList:       make([]abstract.Point, 0), // challenge from root
+		RejectionCommitList: make([]abstract.Point, 0),
 	}
 	b, err := json.Marshal(ss)
 	if err != nil {
 		dbg.Fatal("Could not marshal StampSignature")
 	}
+	ssUn := conode.StampSignature{SuiteStr: suite.String()}
+
+	if err = json.Unmarshal(b, &ssUn); err != nil {
+		dbg.Fatal("Coudl not unmarshal")
+	}
+
 	ss.ExceptionList = append(ss.ExceptionList, suite.Point().Base())
+	ss.RejectionCommitList = append(ss.RejectionCommitList, suite.Point().Base())
 	b, err = json.Marshal(ss)
 	if err != nil {
 		dbg.Fatal("Could not marshal StampSignature")
 	}
-
-	ssUn := conode.StampSignature{SuiteStr: suite.String()}
 
 	if err = json.Unmarshal(b, &ssUn); err != nil {
 		dbg.Fatal("Coudl not unmarshal")

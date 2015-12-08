@@ -48,15 +48,16 @@ type StampRequest struct {
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampSignature struct {
-	SuiteStr      string
-	Timestamp     int64            // The timestamp requested for the file
-	MerkleRoot    []byte           // root of the merkle tree
-	Prf           proof.Proof      // Merkle proof for the value sent to be stamped
-	Response      abstract.Secret  // Aggregate response
-	Challenge     abstract.Secret  // Aggregate challenge
-	AggCommit     abstract.Point   // Aggregate commitment key
-	AggPublic     abstract.Point   // Aggregate public key (use for easy troubleshooting)
-	ExceptionList []abstract.Point // challenge from root
+	SuiteStr            string
+	Timestamp           int64            // The timestamp requested for the file
+	MerkleRoot          []byte           // root of the merkle tree
+	Prf                 proof.Proof      // Merkle proof for the value sent to be stamped
+	Response            abstract.Secret  // Aggregate response
+	Challenge           abstract.Secret  // Aggregate challenge
+	AggCommit           abstract.Point   // Aggregate commitment key
+	AggPublic           abstract.Point   // Aggregate public key (use for easy troubleshooting)
+	ExceptionList       []abstract.Point // challenge from root
+	RejectionCommitList []abstract.Point
 }
 
 func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
@@ -72,7 +73,7 @@ func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 	var b bytes.Buffer
 	suite := app.GetSuite(sr.SuiteStr)
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic,
-		sr.ExceptionList); err != nil {
+		sr.ExceptionList, sr.RejectionCommitList); err != nil {
 		dbg.Lvl1("encoding stampreply response/challenge/AggCommit:", err)
 		return nil, err
 	}
@@ -106,6 +107,7 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 		return err
 	}
 	sr.ExceptionList = make([]abstract.Point, aux.ExceptionLength)
+	sr.RejectionCommitList = make([]abstract.Point, aux.ExceptionLength)
 	sr.Response = suite.Secret()
 	sr.Challenge = suite.Secret()
 	sr.AggCommit = suite.Point()
@@ -114,7 +116,7 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	sr.Timestamp = aux.Timestamp
 	sr.MerkleRoot = aux.MerkleRoot
 	if err := suite.Read(bytes.NewReader(aux.BinaryBlob), &sr.Response,
-		&sr.Challenge, &sr.AggCommit, &sr.AggPublic, &sr.ExceptionList); err != nil {
+		&sr.Challenge, &sr.AggCommit, &sr.AggPublic, &sr.ExceptionList, &sr.RejectionCommitList); err != nil {
 		dbg.Fatal("decoding signature Response / Challenge / AggCommit:", err)
 		return err
 	}
