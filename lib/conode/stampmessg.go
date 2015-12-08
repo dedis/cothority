@@ -110,9 +110,6 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	sr.Challenge = suite.Secret()
 	sr.AggCommit = suite.Point()
 	sr.AggPublic = suite.Point()
-	sr.Prf = aux.Prf
-	sr.MerkleRoot = aux.MerkleRoot
-	sr.Timestamp = aux.Timestamp
 	if err := suite.Read(bytes.NewReader(aux.BinaryBlob), &sr.Response,
 		&sr.Challenge, &sr.AggCommit, &sr.AggPublic, &sr.ExceptionList); err != nil {
 		dbg.Fatal("decoding signature Response / Challenge / AggCommit:", err)
