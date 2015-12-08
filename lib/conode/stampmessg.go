@@ -56,7 +56,7 @@ type StampSignature struct {
 	Challenge           abstract.Secret  // Aggregate challenge
 	AggCommit           abstract.Point   // Aggregate commitment key
 	AggPublic           abstract.Point   // Aggregate public key (use for easy troubleshooting)
-	ExceptionList       []abstract.Point // challenge from root
+	RejectionPublicList       []abstract.Point // challenge from root
 	RejectionCommitList []abstract.Point
 }
 
@@ -73,7 +73,7 @@ func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 	var b bytes.Buffer
 	suite := app.GetSuite(sr.SuiteStr)
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic,
-		sr.ExceptionList, sr.RejectionCommitList); err != nil {
+		sr.RejectionPublicList, sr.RejectionCommitList); err != nil {
 		dbg.Lvl1("encoding stampreply response/challenge/AggCommit:", err)
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (sr *StampSignature) MarshalJSON() ([]byte, error) {
 		MerkleRoot      []byte
 	}{
 		BinaryBlob:      b.Bytes(),
-		ExceptionLength: len(sr.ExceptionList),
+		ExceptionLength: len(sr.RejectionPublicList),
 		Prf:             sr.Prf,
 		Timestamp:       sr.Timestamp,
 		MerkleRoot:      sr.MerkleRoot,
@@ -106,7 +106,7 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
 		return err
 	}
-	sr.ExceptionList = make([]abstract.Point, aux.ExceptionLength)
+	sr.RejectionPublicList = make([]abstract.Point, aux.ExceptionLength)
 	sr.RejectionCommitList = make([]abstract.Point, aux.ExceptionLength)
 	sr.Response = suite.Secret()
 	sr.Challenge = suite.Secret()
@@ -116,7 +116,7 @@ func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
 	sr.Timestamp = aux.Timestamp
 	sr.MerkleRoot = aux.MerkleRoot
 	if err := suite.Read(bytes.NewReader(aux.BinaryBlob), &sr.Response,
-		&sr.Challenge, &sr.AggCommit, &sr.AggPublic, &sr.ExceptionList, &sr.RejectionCommitList); err != nil {
+		&sr.Challenge, &sr.AggCommit, &sr.AggPublic, &sr.RejectionPublicList, &sr.RejectionCommitList); err != nil {
 		dbg.Fatal("decoding signature Response / Challenge / AggCommit:", err)
 		return err
 	}

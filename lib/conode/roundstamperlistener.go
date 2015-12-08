@@ -101,7 +101,7 @@ func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, o
 				Challenge:           in.SBm.C,
 				AggCommit:           in.SBm.V0_hat,
 				AggPublic:           in.SBm.X0_hat,
-				ExceptionList:       in.SBm.ExceptionList,
+				RejectionPublicList: in.SBm.RejectionPublicList,
 				RejectionCommitList: in.SBm.RejectionCommitList,
 			}}
 		round.PutToClient(msg.To, respMessg)

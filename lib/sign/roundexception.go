@@ -49,11 +49,11 @@ func (round *RoundException) Commitment(in []*SigningMessage, out *SigningMessag
 
 	// prepare to handle exceptions
 	cosi := round.Cosi
-	cosi.ExceptionList = make([]abstract.Point, 0)
+	cosi.RejectionPublicList = make([]abstract.Point, 0)
 	for _, sm := range cosi.Commits {
-		cosi.ExceptionList = append(cosi.ExceptionList, sm.Com.ExceptionList...)
+		cosi.RejectionPublicList = append(cosi.RejectionPublicList, sm.Com.RejectionPublicList...)
 	}
-	out.Com.ExceptionList = round.Cosi.ExceptionList
+	out.Com.RejectionPublicList = round.Cosi.RejectionPublicList
 	return nil
 }
 
@@ -74,7 +74,7 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			// default == no response from child
 			dbg.Lvl4(round.Name, "Empty response from child", from, sm.Type)
 			if children[from] != nil {
-				round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, children[from].PubKey())
+				round.Cosi.RejectionPublicList = append(round.Cosi.RejectionPublicList, children[from].PubKey())
 				round.Cosi.RejectionCommitList = append(round.Cosi.RejectionCommitList, round.Cosi.ChildV_hat[from])
 
 				// remove public keys and point commits from subtree of failed child
@@ -93,7 +93,7 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 			dbg.Lvl4(round.Name, "accepts response from", from, sm.Type)
 			round.Cosi.ExceptionV_hat.Add(round.Cosi.ExceptionV_hat, sm.Rm.ExceptionV_hat)
 			round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, sm.Rm.ExceptionX_hat)
-			round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, sm.Rm.ExceptionList...)
+			round.Cosi.RejectionPublicList = append(round.Cosi.RejectionPublicList, sm.Rm.RejectionPublicList...)
 			round.Cosi.RejectionCommitList = append(round.Cosi.RejectionCommitList, sm.Rm.RejectionCommitList...)
 		}
 	}
@@ -104,7 +104,7 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 		return err
 	}
 
-	out.Rm.ExceptionList = round.Cosi.ExceptionList
+	out.Rm.RejectionPublicList = round.Cosi.RejectionPublicList
 	out.Rm.RejectionCommitList = round.Cosi.RejectionCommitList
 
 	out.Rm.ExceptionV_hat = round.Cosi.ExceptionV_hat
@@ -114,7 +114,7 @@ func (round *RoundException) Response(in []*SigningMessage, out *SigningMessage)
 
 func (round *RoundException) RaiseException() {
 	round.Cosi.R_hat = round.Suite.Secret().Zero()
-	round.Cosi.ExceptionList = append(round.Cosi.ExceptionList, round.Cosi.PubKey)
+	round.Cosi.RejectionPublicList = append(round.Cosi.RejectionPublicList, round.Cosi.PubKey)
 	// remove commitment of current node because it rejected to commit:
 	round.Cosi.RejectionCommitList = append(round.Cosi.RejectionCommitList, round.Cosi.Log.V)
 	round.Cosi.ExceptionX_hat.Add(round.Cosi.ExceptionX_hat, round.Cosi.PubKey)
@@ -124,7 +124,7 @@ func (round *RoundException) RaiseException() {
 func (round *RoundException) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
 	// Root is creating the sig broadcast
 	if round.IsRoot {
-		in.SBm.ExceptionList = round.Cosi.ExceptionList
+		in.SBm.RejectionPublicList = round.Cosi.RejectionPublicList
 		in.SBm.RejectionCommitList = round.Cosi.RejectionCommitList
 	}
 	return round.RoundCosi.SignatureBroadcast(in, out)

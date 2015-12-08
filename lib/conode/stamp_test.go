@@ -119,7 +119,7 @@ func TestStampSignatureJSON(t *testing.T) {
 		Challenge:           suite.Secret().Zero(),     // Aggregate challenge
 		AggCommit:           suite.Point().Base(),      // Aggregate commitment key
 		AggPublic:           suite.Point().Base(),      // Aggregate public key (use for easy troubleshooting)
-		ExceptionList:       make([]abstract.Point, 0), // challenge from root
+		RejectionPublicList:       make([]abstract.Point, 0), // challenge from root
 		RejectionCommitList: make([]abstract.Point, 0),
 	}
 	b, err := json.Marshal(ss)
@@ -132,7 +132,7 @@ func TestStampSignatureJSON(t *testing.T) {
 		dbg.Fatal("Coudl not unmarshal")
 	}
 
-	ss.ExceptionList = append(ss.ExceptionList, suite.Point().Base())
+	ss.RejectionPublicList = append(ss.RejectionPublicList, suite.Point().Base())
 	ss.RejectionCommitList = append(ss.RejectionCommitList, suite.Point().Base())
 	b, err = json.Marshal(ss)
 	if err != nil {

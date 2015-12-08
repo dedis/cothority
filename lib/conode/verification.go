@@ -22,7 +22,7 @@ func VerifySignature(suite abstract.Suite, reply *StampSignature, public abstrac
 
 	subPublic := suite.Point().Add(suite.Point().Null(), public)
 	// Check if aggregate public key is correct
-	for _, exception := range reply.ExceptionList {
+	for _, exception := range reply.RejectionPublicList {
 		dbg.Lvlf4("Removing %v from public", exception)
 		subPublic = subPublic.Sub(subPublic, exception)
 	}
