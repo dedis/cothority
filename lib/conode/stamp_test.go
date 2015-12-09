@@ -119,7 +119,7 @@ func TestStampSignatureJSON(t *testing.T) {
 		Challenge:           suite.Secret().Zero(),     // Aggregate challenge
 		AggCommit:           suite.Point().Base(),      // Aggregate commitment key
 		AggPublic:           suite.Point().Base(),      // Aggregate public key (use for easy troubleshooting)
-		RejectionPublicList:       make([]abstract.Point, 0), // challenge from root
+		RejectionPublicList: make([]abstract.Point, 0), // challenge from root
 		RejectionCommitList: make([]abstract.Point, 0),
 	}
 	b, err := json.Marshal(ss)

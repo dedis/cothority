@@ -571,7 +571,7 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 				C:                   sn.suite.Secret().One(),
 				X0_hat:              sn.suite.Point().Null(),
 				V0_hat:              sn.suite.Point().Null(),
-				RejectionPublicList:       make([]abstract.Point, 0),
+				RejectionPublicList: make([]abstract.Point, 0),
 				RejectionCommitList: make([]abstract.Point, 0),
 			},
 		}

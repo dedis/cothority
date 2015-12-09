@@ -56,8 +56,8 @@ type StampSignature struct {
 	Challenge           abstract.Secret  // Aggregate challenge
 	AggCommit           abstract.Point   // Aggregate commitment key
 	AggPublic           abstract.Point   // Aggregate public key (use for easy troubleshooting)
-	RejectionPublicList       []abstract.Point // challenge from root
-	RejectionCommitList []abstract.Point
+	RejectionPublicList []abstract.Point // The list of Long term public keys for nodes that rejected signatures.
+	RejectionCommitList []abstract.Point // THe list of commitment keys for nodes that rejected signatures
 }
 
 func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
