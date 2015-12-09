@@ -5,14 +5,8 @@ go:
   - 1.5.2
   - release
   - tip
-env:
-    - REPO="dedis/cothority" HOME="/home/travis" GOPATH="$HOME" PATH="$HOME/bin:$PATH"
+
 before_install:
-    - mkdir -p $HOME/src/github.com/dedis
-    - mkdir -p $HOME/bin
-    - ls $TRAVIS_BUILD_DIR
-    - mv $TRAVIS_BUILD_DIR $HOME/src/github.com/dedis
-    - cd $HOME/src/github.com/dedis/cothority
     - go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
     - go env
 before_script:
