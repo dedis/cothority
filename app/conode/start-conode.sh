@@ -17,14 +17,13 @@ main(){
     ./conode validate
     if [ "$?" = "1" ]; then
       echo Received exit-command - will update and run
-      update
-      exec ./start-conode.sh run
+      exec ./update.sh
     fi
     ;;
   run)
     if [ ! -f config.toml ]; then
       echo "Didn't find 'config.toml' - searching in update"
-      update
+      ./update.sh update_only
       if [ ! -f config.toml ]; then
         echo "Still didn't find config.toml - please copy it first here"
         echo
@@ -34,42 +33,23 @@ main(){
     echo Running conode
     ./conode run
     echo Updating
-    update
-    echo Sleeping a bit
-    sleep 10
-    exec ./start-conode.sh run
+    exec ./update.sh
+    ;;
+  update|"")
+    exec ./update.sh
     ;;
   *)
     echo Usage:
     echo $0 setup address
-    echo or
+    echo "or to update and run it:"
+    echo $0
+    echo "or only run it (no update):"
     echo $0 run
+    echo "or if you want to manually update:"
+    echo $0 update
     echo
     ;;
   esac
-}
-
-update(){
-  RELEASE=$( wget -q -O- https://github.com/dedis/cothority/releases/latest | grep DeDiS/cothority/releases/download | sed -e "s/.*href=.\(.*\). rel.*/\1/" )
-  TGZ=$( basename $RELEASE )
-  if [ -e $TGZ ]; then
-    echo $RELEASE already here
-  else
-    echo Getting $RELEASE
-    wget -q https://github.com/$RELEASE
-    echo Untarring
-    tar xf $TGZ
-  fi
-}
-
-run_loop(){
-  pkill -f conode
-  if [ $( which screen ) ]; then
-    screen -S conode -dm ./conode $@ &
-  else
-    nohup ./conode $@ &
-    rm nohup.out
-  fi
 }
 
 search_arch(){

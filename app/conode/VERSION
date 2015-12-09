@@ -1,3 +1,0 @@
-30 October 2015 - 0.5.7
-    - added exit-command to 'conode validate' that exits the conode, updates
-     and re-runs in 'conode run'-mode
