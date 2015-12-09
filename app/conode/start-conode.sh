@@ -11,8 +11,10 @@ main(){
       echo -e "\n*** Key.pub already exists - if you want to re-create, please delete it first\n"
     else
       ./conode keygen $2
+      echo Sending public-key to linus.gasser@epfl.ch
       cat key.pub | mail linus.gasser@epfl.ch
     fi
+    echo If you want to be added, make sure the following is known by the dedis-group
     cat key.pub
     ./conode validate
     if [ "$?" = "1" ]; then
