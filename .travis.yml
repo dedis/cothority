@@ -6,10 +6,7 @@ go:
   - release
   - tip
 env:
-    - REPO="dedis/cothority"
-    - HOME="/home/travis"
-    - GOPATH="$HOME"
-    - PATH="$HOME/bin:$PATH"
+    - REPO="dedis/cothority" HOME="/home/travis" GOPATH="$HOME" PATH="$HOME/bin:$PATH"
 before_install:
     - mkdir -p $HOME/src/github.com/dedis
     - mkdir -p $HOME/bin
