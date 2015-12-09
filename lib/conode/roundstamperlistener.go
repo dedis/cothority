@@ -53,10 +53,8 @@ func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *si
 	for _, m := range in {
 		out.Com.Messages += m.Com.Messages
 	}
-	if round.IsRoot {
-		round.RoundMessages = out.Com.Messages
-		round.Node.Messages += out.Com.Messages
-	}
+	round.RoundMessages = out.Com.Messages
+	round.Node.Messages += out.Com.Messages
 
 	round.ClientQueue = make([]ReplyMessage, msgs)
 	queue := make([][]byte, len(round.Queue[PROCESSING]))

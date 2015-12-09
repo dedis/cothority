@@ -1,6 +1,10 @@
 #!/bin/bash
 
-HOSTS=$( cat config.toml | grep Hosts | sed -e "s/.*\[\"\(.*\)\"\]/\1/" | perl -pe "s/\", \"/\n/g" )
+CONFIG=config.toml
+if [ "$1" ]; then
+  CONFIG=$1/$CONFIG
+fi
+HOSTS=$( cat $CONFIG | grep Hosts | sed -e "s/.*\[\"\(.*\)\"\]/\1/" | perl -pe "s/\", \"/\n/g" )
 
 echo Going to ask all servers to exit
 for h in $HOSTS; do

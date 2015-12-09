@@ -39,7 +39,7 @@ func (round *RoundStats) Commitment(in []*sign.SigningMessage, out *sign.Signing
 
 func (round *RoundStats) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	err := round.RoundStamperListener.SignatureBroadcast(in, out)
-	dbg.Lvlf1("This is round %d with %d messages - %d since start.",
+	dbg.Lvlf1("Round %d with %d messages (including children) - %d since start.",
 		round.RoundNbr, round.RoundMessages, in.SBm.Messages)
 	return err
 }
