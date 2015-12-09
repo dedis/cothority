@@ -14,3 +14,4 @@ before_script:
     - git fetch -a production
 script:
     - go run dedis-travis-script.go
+    - go test -v ./...

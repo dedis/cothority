@@ -49,13 +49,4 @@ func main() {
 		fmt.Println("Failed: files not properly formatted: Use gofmt")
 		os.Exit(1)
 	}
-	tests := exec.Command("go", "test", "-v", "./...")
-	tests.Stderr = os.Stderr
-	tests.Stdout = os.Stdout
-	err = tests.Run()
-	if err != nil {
-		fmt.Println("Tests Failed")
-		fmt.Println(err)
-		os.Exit(1)
-	}
 }
