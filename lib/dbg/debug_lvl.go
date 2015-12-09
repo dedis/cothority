@@ -1,7 +1,7 @@
 package dbg
 
 import (
-	"flag"
+	//"flag"
 	"fmt"
 	"os"
 	"regexp"
@@ -35,7 +35,8 @@ var StaticMsg = ""
 var regexpPaths, _ = regexp.Compile(".*/")
 
 func init() {
-	flag.IntVar(&DebugVisible, "debug", DebugVisible, "How much debug you from 1 (discrete) - 5 (very noisy). Default 1")
+	/// XXX why using flag here? Is this supposed to parse the command line?
+	//flag.IntVar(&DebugVisible, "debug", DebugVisible, "How much debug you from 1 (discrete) - 5 (very noisy). Default 1")
 }
 
 // Needs two functions to keep the caller-depth the same and find who calls us
