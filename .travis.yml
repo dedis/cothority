@@ -1,14 +1,13 @@
 # build script for dedis/cothority libraries
 language: go
 go:
-  #- 1.5.1
   - 1.5.2
+  #- 1.5.1
   #- release
   #- tip
 
 before_install:
     - go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
-    - go env
 before_script:
     - git remote add production https://github.com/DeDiS/cothority.git
     - git fetch -a production
