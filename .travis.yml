@@ -3,8 +3,8 @@ language: go
 go:
   - 1.5.1
   - 1.5.2
-  - release
-  - tip
+  #- release
+  #- tip
 
 before_install:
     - go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
