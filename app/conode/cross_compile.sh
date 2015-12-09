@@ -6,8 +6,6 @@ if [ ! "$1" ]; then
 fi
 VERSION=$1
 
-echo Cross-compiling for platforms and cpus
-
 compile(){
 BINARY=$1
 echo Compiling $BINARY
@@ -23,15 +21,24 @@ done
 rm conode-bin/$BINARY-darwin-386
 }
 
-compile conode
-cd stamp
-compile stamp
-cd ..
-mv stamp/conode-bin/* conode-bin
-rmdir stamp/conode-bin
+if [ ! "$2" ]; then
+  go build
+  echo Cross-compiling for platforms and cpus
+  compile conode
+  cd stamp
+  compile stamp
+  cd ..
+  mv stamp/conode-bin/* conode-bin
+  rmdir stamp/conode-bin
+fi
 
 echo Copying scripts to the binary-directory
 cp start-conode* conode-bin
+cp update.sh conode-bin
+cd real
+cat *pub > hostlist
+../conode build hostlist
+cd ..
 cp real/config.toml conode-bin
 TAR=conode-$VERSION.tar.gz
 
