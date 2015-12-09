@@ -58,5 +58,7 @@ func Run(configFile, key string) {
 		address = addr
 	}
 	peer := conode.NewPeer(address, conf)
+	conode.NewStampListener(peer.Name())
+	dbg.Lvl1("Created stampListener at", peer.Name(), "Going to loop with Stats-round")
 	peer.LoopRounds(RoundStatsType, maxRounds)
 }

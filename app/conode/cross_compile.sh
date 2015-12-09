@@ -36,7 +36,7 @@ echo Copying scripts to the binary-directory
 cp start-conode* conode-bin
 cp update.sh conode-bin
 cd real
-cat *pub > hostlist
+cat key*pub > hostlist
 ../conode build hostlist
 cd ..
 cp real/config.toml conode-bin

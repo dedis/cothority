@@ -28,6 +28,7 @@ func init() {
 func NewRoundStats(node *sign.Node) *RoundStats {
 	round := &RoundStats{}
 	round.RoundStamperListener = conode.NewRoundStamperListener(node)
+	round.Type = RoundStatsType
 	return round
 }
 
@@ -39,6 +40,6 @@ func (round *RoundStats) Commitment(in []*sign.SigningMessage, out *sign.Signing
 func (round *RoundStats) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	err := round.RoundStamperListener.SignatureBroadcast(in, out)
 	dbg.Lvlf1("This is round %d with %d messages - %d since start.",
-		round.RoundNbr, in.SBm.Messages, round.Node.Messages)
+		round.RoundNbr, round.RoundMessages, in.SBm.Messages)
 	return err
 }
