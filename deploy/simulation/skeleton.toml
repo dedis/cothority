@@ -1,0 +1,6 @@
+Machines = 5
+App = "skeleton"
+Suite = "Ed25519"
+
+ppm, bf, rounds
+2, 3, 20
