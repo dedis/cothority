@@ -9,10 +9,15 @@ main(){
   setup)
     if [ -f key.pub ]; then
       echo -e "\n*** Key.pub already exists - if you want to re-create, please delete it first\n"
+      exit
     else
-      ./conode keygen $2
-      echo Sending public-key to linus.gasser@epfl.ch
-      cat key.pub | mail linus.gasser@epfl.ch
+      if ./conode keygen $2; then
+        echo Sending public-key to linus.gasser@epfl.ch
+        cat key.pub | mail linus.gasser@epfl.ch
+      else
+        echo Couldnt create key-pair
+        exit
+      fi
     fi
     echo If you want to be added, make sure the following is known by the dedis-group
     cat key.pub
@@ -34,7 +39,8 @@ main(){
     fi
     echo Running conode
     ./conode run
-    echo Updating
+    echo Sleeping a bit, then updating
+    sleep 10
     exec ./update.sh
     ;;
   update|"")
