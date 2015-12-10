@@ -29,7 +29,7 @@ type Round interface {
 	Challenge(*SigningMessage, []*SigningMessage) error
 	// Response: nodes -> root
 	// This is called with the signature of the challenge-message
-	// or with updated ExceptionList* in case of refusal to sign.
+	// or with updated RejectionPublicList* in case of refusal to sign.
 	Response([]*SigningMessage, *SigningMessage) error
 	// SignatureBroadcast: root -> nodes
 	// This is called whenever the turn is completed and

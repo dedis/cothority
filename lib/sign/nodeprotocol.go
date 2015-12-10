@@ -9,6 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 	"strings"
 	"syscall"
@@ -566,10 +567,12 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 			ViewNbr:  view,
 			RoundNbr: RoundNbr,
 			SBm: &SignatureBroadcastMessage{
-				R0_hat: sn.suite.Secret().One(),
-				C:      sn.suite.Secret().One(),
-				X0_hat: sn.suite.Point().Null(),
-				V0_hat: sn.suite.Point().Null(),
+				R0_hat:              sn.suite.Secret().One(),
+				C:                   sn.suite.Secret().One(),
+				X0_hat:              sn.suite.Point().Null(),
+				V0_hat:              sn.suite.Point().Null(),
+				RejectionPublicList: make([]abstract.Point, 0),
+				RejectionCommitList: make([]abstract.Point, 0),
 			},
 		}
 	}
