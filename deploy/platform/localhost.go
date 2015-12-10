@@ -204,8 +204,8 @@ func (d *Localhost) Start(args ...string) error {
 	for index, host := range d.Hosts {
 		dbg.Lvl3("Starting", index, "=", host)
 		amroot := fmt.Sprintf("-amroot=%s", strconv.FormatBool(index == 0))
-		cmdArgs := []string{"-hostname", host, "-mode", "server", "-logger",
-			"localhost:" + monitor.SinkPort, amroot}
+		cmdArgs := []string{"-hostname", host, "-mode", "server", "-monitor",
+			"localhost:" + strconv.Itoa(monitor.SinkPort), amroot}
 		cmdArgs = append(args, cmdArgs...)
 		dbg.Lvl3("CmdArgs are", cmdArgs)
 		cmd := exec.Command(ex, cmdArgs...)

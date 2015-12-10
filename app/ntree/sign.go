@@ -29,11 +29,11 @@ func RunRoot(conf *app.NTreeConfig) {
 	dbg.Lvl3(peer.String(), "Up and will make connections...")
 
 	// monitor
-	if app.RunFlags.Logger == "" {
+	if app.RunFlags.Monitor == "" {
 		monitor.EnableMeasure(false)
 	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal(peer.String(), "could not connect to the monitor:", err)
+		if err := monitor.ConnectSink(app.RunFlags.Monitor); err != nil {
+			dbg.Fatal(peer.String(), "could not connect to the monitor : ", err)
 		}
 	}
 
