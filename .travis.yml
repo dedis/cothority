@@ -5,7 +5,9 @@ go:
   #- 1.5.1
   #- release
   #- tip
-
+env:
+  global:
+    - TRAVIS_REPO_SLUG=dedis/cothority
 before_install:
     #- go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
 before_script:
