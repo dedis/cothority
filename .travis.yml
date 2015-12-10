@@ -2,10 +2,10 @@
 language: go
 go:
   - 1.5.2
-env:
-  global:
-    - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/dedis/cothority
 before_install:
+  - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/dedis
+  - cd $GOPATH/src/github.com/dedis
+  - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/dedid/cothority
 script:
     - go test -v ./...
     #- go run dedis-travis-script.go
