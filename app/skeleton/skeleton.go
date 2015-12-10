@@ -58,8 +58,8 @@ func main() {
 	// machine and accepts connections from any node, usually you only connect
 	// with the root for readability and performance reasons (don't connect to
 	// your machine from 8000 nodes .. !)
-	if app.RunFlags.Logger != "" {
-		monitor.ConnectSink(app.RunFlags.Logger)
+	if app.RunFlags.Monitor != "" {
+		monitor.ConnectSink(app.RunFlags.Monitor)
 	} else {
 		dbg.Fatal("No logger specified")
 	}
