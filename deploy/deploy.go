@@ -144,7 +144,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				dbg.Fatalln("error running test:", err)
+				dbg.Fatal("error running test:", err)
 			}
 
 			runs = append(runs, stats)
