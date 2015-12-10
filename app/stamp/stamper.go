@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 
 	"github.com/dedis/cothority/lib/app"
@@ -34,7 +33,7 @@ func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 	for _, s := range servers {
 		h, p, err := net.SplitHostPort(s)
 		if err != nil {
-			log.Fatal("improperly formatted host")
+			dbg.Fatal("improperly formatted host")
 		}
 		pn, _ := strconv.Atoi(p)
 		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn+1))))
@@ -82,7 +81,7 @@ func genRandomMessages(n int) [][]byte {
 		msgs[i] = make([]byte, hashid.Size)
 		_, err := rand.Read(msgs[i])
 		if err != nil {
-			log.Fatal("failed to generate random commit:", err)
+			dbg.Fatal("failed to generate random commit:", err)
 		}
 	}
 	return msgs

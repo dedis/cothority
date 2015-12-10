@@ -28,7 +28,6 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
@@ -122,12 +121,12 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 	f, err := os.OpenFile(TestFile(name), args, 0660)
 	if err != nil {
-		log.Fatal("error opening test file:", err)
+		dbg.Fatal("error opening test file:", err)
 	}
 	defer f.Close()
 	err = f.Sync()
 	if err != nil {
-		log.Fatal("error syncing test file:", err)
+		dbg.Fatal("error syncing test file:", err)
 	}
 
 	start, stop := getStartStop(len(runconfigs))
@@ -145,7 +144,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				log.Fatalln("error running test:", err)
+				dbg.Fatalln("error running test:", err)
 			}
 
 			runs = append(runs, stats)
@@ -167,7 +166,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		rs[i].WriteValues(f)
 		err = f.Sync()
 		if err != nil {
-			log.Fatal("error syncing data to test file:", err)
+			dbg.Fatal("error syncing data to test file:", err)
 		}
 	}
 }
@@ -194,7 +193,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	// in case of deterlab.
 	err := deployP.Start()
 	if err != nil {
-		log.Fatal(err)
+		dbg.Fatal(err)
 		return *rs, nil
 	}
 
@@ -222,7 +221,7 @@ type runFile struct {
 func MkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
-		log.Fatal("failed to make test directory")
+		dbg.Fatal("failed to make test directory")
 	}
 }
 

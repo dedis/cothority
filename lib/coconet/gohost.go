@@ -9,8 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -99,7 +98,7 @@ func (h *GoHost) ConnectTo(parent string) error {
 	// if the connection has been established skip it
 	h.PeerLock.Lock()
 	if h.Ready[parent] {
-		log.Warnln("peer is alReady Ready")
+		dbg.Warn("peer is alReady Ready")
 		h.PeerLock.Unlock()
 		return nil
 	}
@@ -112,13 +111,13 @@ func (h *GoHost) ConnectTo(parent string) error {
 	mname := StringMarshaler(h.Name())
 	err := conn.PutData(&mname)
 	if err != nil {
-		log.Fatal("failed to connect: putting name:", err)
+		dbg.Fatal("failed to connect: putting name:", err)
 	}
 
 	// give the parent the public key
 	err = conn.PutData(h.Pubkey)
 	if err != nil {
-		log.Fatal("failed to send public key:", err)
+		dbg.Fatal("failed to send public key:", err)
 	}
 
 	// get the public key of the parent
@@ -126,7 +125,7 @@ func (h *GoHost) ConnectTo(parent string) error {
 	pubkey := suite.Point()
 	err = conn.GetData(pubkey)
 	if err != nil {
-		log.Fatal("failed to establish connection: getting pubkey:", err)
+		dbg.Fatal("failed to establish connection: getting pubkey:", err)
 	}
 	conn.SetPubKey(pubkey)
 
@@ -165,7 +164,7 @@ func (h *GoHost) Listen() error {
 		go func(c string) {
 
 			if h.Ready[c] {
-				log.Fatal("listening: connection alReady established")
+				dbg.Fatal("listening: connection alReady established")
 			}
 
 			h.PeerLock.Lock()
@@ -175,7 +174,7 @@ func (h *GoHost) Listen() error {
 			var mname StringMarshaler
 			err := conn.GetData(&mname)
 			if err != nil {
-				log.Fatal("failed to establish connection: getting name:", err)
+				dbg.Fatal("failed to establish connection: getting name:", err)
 			}
 
 			suite := h.suite
@@ -183,13 +182,13 @@ func (h *GoHost) Listen() error {
 
 			e := conn.GetData(pubkey)
 			if e != nil {
-				log.Fatal("unable to get pubkey from child")
+				dbg.Fatal("unable to get pubkey from child")
 			}
 			conn.SetPubKey(pubkey)
 
 			err = conn.PutData(h.Pubkey)
 			if err != nil {
-				log.Fatal("failed to send public key:", err)
+				dbg.Fatal("failed to send public key:", err)
 			}
 
 			h.PeerLock.Lock()
@@ -261,7 +260,7 @@ func (h *GoHost) RemovePeerFromHostlist(view int, name string) {
 func (h *GoHost) AddPendingPeer(view int, name string) error {
 	h.PeerLock.Lock()
 	if _, ok := h.PendingPeers[name]; !ok {
-		log.Errorln("Attempt to add peer not present in pending Peers")
+		dbg.Error("Attempt to add peer not present in pending Peers")
 		h.PeerLock.Unlock()
 		return errors.New("attempted to add peer not present in pending peers")
 	}
@@ -285,7 +284,7 @@ func (h *GoHost) RemovePeer(view int, name string) bool {
 
 // Close closes the connections.
 func (h *GoHost) Close() {
-	log.Printf("closing gohost: %p", h)
+	dbg.Printf("closing gohost: %p", h)
 	h.dir.Close()
 
 	h.PeerLock.Lock()
@@ -480,7 +479,7 @@ func (h *GoHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler) 
 	select {
 	case <-done:
 	case <-ctx.Done():
-		log.Errorln("DEADLINE EXCEEDED")
+		dbg.Error("DEADLINE EXCEEDED")
 		err = ctx.Err()
 		atomic.StoreInt64(&canceled, 1)
 	}

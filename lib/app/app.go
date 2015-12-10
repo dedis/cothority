@@ -6,7 +6,6 @@ import (
 
 	"bytes"
 	"github.com/BurntSushi/toml"
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
@@ -54,7 +53,7 @@ func ReadConfig(conf interface{}, dir ...string) {
 	var err error
 	err = ReadTomlConfig(conf, "app.toml", dir...)
 	if err != nil {
-		log.Fatal("Couldn't load app-config-file in exec")
+		dbg.Fatal("Couldn't load app-config-file in exec")
 	}
 	debug := reflect.ValueOf(conf).Elem().FieldByName("Debug")
 	if debug.IsValid() {

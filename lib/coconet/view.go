@@ -4,7 +4,6 @@ import (
 	"sort"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 )
 
@@ -105,7 +104,7 @@ func (v *View) RemovePeerFromHostlist(name string) {
 }
 
 func (v *View) RemovePeer(name string) bool {
-	log.Println("LOOKING FOR", name, "in HOSTLIST", v.HostList)
+	dbg.Print("LOOKING FOR", name, "in HOSTLIST", v.HostList)
 	v.Lock()
 	// make sure we don't remove our parent
 	if v.Parent == name {
@@ -152,7 +151,7 @@ func (v *Views) NewView(view int, parent string, children []string, hostlist []s
 
 func (v *Views) NewViewFromPrev(view int, parent string) {
 	if _, ok := v.Views[view-1]; !ok {
-		log.Errorln("ERROR: INVALID PREVIOUS VIEW")
+		dbg.Error("ERROR: INVALID PREVIOUS VIEW")
 		return
 	}
 
