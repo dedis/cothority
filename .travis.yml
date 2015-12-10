@@ -5,7 +5,9 @@ go:
 before_install:
   # mv $GOPATH/src/github.com/DeDiS/cothority $GOPATH/src/github.com/dedis/cothority
   - mkdir -p $GOPATH/src/github.com/dedis/cothority
-  - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/dedis/cothority
+  - mkdir -p $GOPATH/bin
+  - shopt -s dotglob nullglob
+  - mv $TRAVIS_BUILD_DIR/* $GOPATH/src/github.com/dedis/cothority/
   - cd $GOPATH/src/github.com/dedis/cothority
   - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/dedis/cothority
   - go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
