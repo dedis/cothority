@@ -9,7 +9,7 @@ go:
 before_install:
     #- go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
 before_script:
-    - git remote add production https://github.com/dedis/cothority.git
+    - git remote add production https://github.com/DeDiS/cothority.git
     - git fetch -a production
 script:
     - go run dedis-travis-script.go
