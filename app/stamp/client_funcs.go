@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 
 	"fmt"
@@ -75,7 +74,7 @@ func (c *Client) handleServer(s coconet.Conn) error {
 func (c *Client) handleResponse(tsm *conode.TimeStampMessage) {
 	switch tsm.Type {
 	default:
-		log.Println("Message of unknown type")
+		dbg.Print("Message of unknown type")
 	case conode.StampSignatureType:
 		// Process reply and inform done channel associated with
 		// reply sequence number that the reply was received

@@ -1,7 +1,6 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
@@ -27,7 +26,7 @@ func RunServer(conf *app.ConfigShamir) {
 		}
 	}
 	if indexPeer == -1 {
-		log.Fatal("Peer", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
+		dbg.Fatal("Peer", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
 	dbg.Lvl3("Creating new peer", flags.Hostname, "(", flags.PhysAddr, ") ...")

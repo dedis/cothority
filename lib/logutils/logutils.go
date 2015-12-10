@@ -10,6 +10,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/websocket"
 )
 
@@ -46,7 +47,7 @@ retry:
 	addr := "ws://" + hostport + "/_log"
 	ws, err := websocket.Dial(addr, "", "http://localhost/")
 	if err != nil {
-		log.Println("failed to connect to logger:", addr)
+		dbg.Print("failed to connect to logger:", addr)
 		time.Sleep(time.Second)
 		goto retry
 	}

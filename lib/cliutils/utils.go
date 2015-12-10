@@ -54,7 +54,6 @@ func SshRun(username, host, command string) ([]byte, error) {
 
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
-	//log.Println(cmd)
 	//cmd.Stderr = os.Stderr
 	return cmd.Output()
 }
