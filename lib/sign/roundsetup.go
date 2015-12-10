@@ -25,6 +25,7 @@ func init() {
 }
 
 func NewRoundSetup(node *Node) *RoundSetup {
+	dbg.Lvl3("Making new RoundSetup", node.Name())
 	round := &RoundSetup{}
 	round.RoundStruct = NewRoundStruct(node, RoundSetupType)
 	round.Counted = make(chan int, 1)

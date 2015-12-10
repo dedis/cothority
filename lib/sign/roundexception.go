@@ -13,7 +13,7 @@ round can add any message it wants in the Commitment-phase.
 */
 
 // The name type of this round implementation
-const RoundExceptionType = "cosiexception"
+const RoundExceptionType = "exception"
 
 // Can be used for debugging by telling which node should fail
 var ExceptionForceFailure string
@@ -32,6 +32,7 @@ func init() {
 
 // NewRoundException creates a new RoundException based on RoundCosi
 func NewRoundException(node *Node) *RoundException {
+	dbg.Lvl3("Making new RoundException", node.Name())
 	round := &RoundException{}
 	round.RoundCosi = NewRoundCosi(node)
 	round.Type = RoundExceptionType

@@ -54,7 +54,6 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 	dbg.Lvl3("loading configuration")
 	var hc *graphs.HostConfig
 	opts := graphs.ConfigOptions{ConnType: "tcp", Host: address, Suite: suite}
-
 	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, suite, opts)
 	if err != nil {
 		dbg.Fatal(err)

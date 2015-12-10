@@ -33,7 +33,7 @@ func init() {
 }
 
 func NewRoundStamperListener(node *sign.Node) *RoundStamperListener {
-	dbg.Lvlf3("Making new roundStamperListener %+v", node)
+	dbg.Lvl3("Making new RoundStamperListener", node.Name())
 	round := &RoundStamperListener{}
 	round.StampListener = NewStampListener(node.Name())
 	round.RoundStamper = NewRoundStamper(node)

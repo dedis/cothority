@@ -270,6 +270,24 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		deter.Hostnames = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
+	case "skeleton":
+		conf := app.ConfigSkeleton{}
+		app.ReadTomlConfig(&conf, deterConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		// Calculates a tree that is used for the timestampers
+		var depth int
+		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
+		dbg.Lvl2("Depth:", depth)
+		dbg.Lvl2("Total peers:", len(conf.Hosts))
+		total := deter.Machines * conf.Ppm
+		if len(conf.Hosts) != total {
+			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
+				"machines or hosts per node")
+		}
+		deter.Hostnames = conf.Hosts
+		// re-write the new configuration-file
+		app.WriteTomlConfig(conf, appConfig)
+
 	case "shamir":
 		conf := app.ConfigShamir{}
 		app.ReadTomlConfig(&conf, deterConfig)

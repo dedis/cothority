@@ -39,7 +39,7 @@ func init() {
 }
 
 func NewRoundStamper(node *sign.Node) *RoundStamper {
-	dbg.Lvlf3("Making new stamperlistener %+v", node)
+	dbg.Lvl3("Making new RoundStamper", node.Name())
 	round := &RoundStamper{}
 	round.RoundCosi = sign.NewRoundCosi(node)
 	round.Type = RoundStamperType
