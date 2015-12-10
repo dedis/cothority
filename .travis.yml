@@ -12,5 +12,5 @@ before_install:
   - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/dedis/cothority
   - go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
 script:
+    - go fmt
     - go test -v ./...
-    #- go run dedis-travis-script.go
