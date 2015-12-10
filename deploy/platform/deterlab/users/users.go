@@ -25,7 +25,6 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
@@ -124,11 +123,14 @@ func main() {
 
 	// ADDITIONS : the monitoring part
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
-	// RedirectionAddress:RedirectionPort. With remote tunnel forwarding it will
+	// RedirectionAddress:SinkPort-1. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	dbg.Lvl2("Launching proxy redirecting to", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
-	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
-	time.Sleep(time.Second)
+	proxyAddress := deterlab.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort+1)
+	dbg.Lvl2("Launching proxy redirecting to", proxyAddress)
+	err = monitor.Proxy(proxyAddress)
+	if err != nil {
+		dbg.Fatal("Couldn't start proxy:", err)
+	}
 
 	hostnames := deterlab.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
@@ -144,7 +146,7 @@ func main() {
 		physToServer[p] = ss
 	}
 
-	monitorAddr := deterlab.MonitorAddress + ":" + monitor.SinkPort
+	monitorAddr := deterlab.MonitorAddress + ":" + strconv.Itoa(monitor.SinkPort)
 	servers := len(physToServer)
 	ppm := len(deterlab.Hostnames) / servers
 	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers*ppm)
@@ -159,9 +161,10 @@ func main() {
 		go func(phys string) {
 			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine", phys, "with logger =", deterlab.MonitorAddress+":"+monitor.SinkPort)
+			dbg.Lvl4("Starting servers on physical machine ", phys, "with monitor = ",
+				deterlab.MonitorAddress, ":", monitor.SinkPort)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
-				" -physaddr="+phys+" -logger="+deterlab.MonitorAddress+":"+monitor.SinkPort)
+				" -physaddr="+phys+" -monitor="+monitorAddr)
 			if err != nil {
 				dbg.Lvl1("Error starting timestamper:", err, phys)
 			}
@@ -177,7 +180,7 @@ func main() {
 		for {
 			s, err := monitor.GetReady(monitorAddr)
 			if err != nil {
-				log.Fatal("Couldn't contact monitor")
+				dbg.Fatal("Couldn't contact monitor at", monitorAddr)
 			} else {
 				dbg.Lvl1("Processes started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
 				if s.Ready == totalServers {

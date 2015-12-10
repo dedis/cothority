@@ -48,8 +48,8 @@ func GoLeader(conf *app.NaiveConfig) {
 
 	// Setting up the connections
 	// notably to the monitoring process
-	if app.RunFlags.Logger != "" {
-		monitor.ConnectSink(app.RunFlags.Logger)
+	if app.RunFlags.Monitor != "" {
+		monitor.ConnectSink(app.RunFlags.Monitor)
 	} else {
 		monitor.EnableMeasure(false)
 	}

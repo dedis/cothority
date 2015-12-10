@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"io"
 	"net"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -36,19 +37,19 @@ func init() {
 // Proxy will listen on Sink:SinkPort variables so that the user do not
 // differentiate between connecting to a proxy or directly to the sink
 // It will panic if it can not contact the server or can not bind to the address
-func Proxy(redirection string) {
+func Proxy(redirection string) error {
 	// Connect to the sink
 	if err := connectToSink(redirection); err != nil {
-		panic(err)
+		return err
 	}
 	dbg.Lvl2("Proxy connected to sink", redirection)
-	// Here it listens the same way monitor.go would
-	// usually 0.0.0.0:4000
-	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
+	// The proxy listens on the same port the monitor would listen
+	sinkAddr := Sink + ":" + strconv.Itoa(SinkPort)
+	ln, err := net.Listen("tcp", sinkAddr)
 	if err != nil {
-		dbg.Fatalf("Error while binding proxy to addr %s: %v", Sink+":"+SinkPort, err)
+		return fmt.Errorf("Error while binding proxy to addr %s: %v", sinkAddr, err)
 	}
-	dbg.Lvl2("Proxy listening on", Sink+":"+SinkPort)
+	dbg.Lvl2("Proxy listening on", sinkAddr)
 	var newConn = make(chan bool)
 	var closeConn = make(chan bool)
 	var finished = false
@@ -93,25 +94,28 @@ func Proxy(redirection string) {
 		}
 	}()
 
-	// notify every new connection and every end of connection. When all
-	// connections are closed, send an "end" measure to the sink.
-	var nconn int
-	for finished == false {
-		select {
-		case <-newConn:
-			nconn += 1
-		case <-closeConn:
-			nconn -= 1
-			if nconn == 0 {
-				// everything is finished
-				serverEnc.Encode(Measure{Name: "end"})
-				serverConn.Close()
-				ln.Close()
-				finished = true
-				break
+	go func() {
+		// notify every new connection and every end of connection. When all
+		// connections are closed, send an "end" measure to the sink.
+		var nconn int
+		for finished == false {
+			select {
+			case <-newConn:
+				nconn += 1
+			case <-closeConn:
+				nconn -= 1
+				if nconn == 0 {
+					// everything is finished
+					serverEnc.Encode(Measure{Name: "end"})
+					serverConn.Close()
+					ln.Close()
+					finished = true
+					break
+				}
 			}
 		}
-	}
+	}()
+	return nil
 }
 
 // connectToSink starts the connection with the server

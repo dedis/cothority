@@ -3,6 +3,7 @@ package monitor
 import (
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -27,14 +28,14 @@ func TestProxy(t *testing.T) {
 	// change port so the proxy does not listen to the same
 	// than the original monitor
 	oldSink := SinkPort
-	SinkPort = "8000"
+	SinkPort = 8000
 	// proxy listen to 0.0.0.0:8000 & redirect to
 	// localhost:4000
-	go Proxy("localhost:" + oldSink)
+	go Proxy("localhost:" + strconv.Itoa(oldSink))
 
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
-	proxyAddr := "localhost:" + SinkPort
+	proxyAddr := "localhost:" + strconv.Itoa(SinkPort)
 	err := ConnectSink(proxyAddr)
 	if err != nil {
 		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))
@@ -96,14 +97,14 @@ func TestReadyProxy(t *testing.T) {
 	// change port so the proxy does not listen to the same
 	// than the original monitor
 	oldSink := SinkPort
-	SinkPort = "8000"
+	SinkPort = 8000
 	// proxy listen to 0.0.0.0:8000 & redirect to
 	// localhost:4000
-	go Proxy("localhost:" + oldSink)
+	go Proxy("localhost:" + strconv.Itoa(oldSink))
 
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
-	proxyAddr := "localhost:" + SinkPort
+	proxyAddr := "localhost:" + strconv.Itoa(SinkPort)
 	err := ConnectSink(proxyAddr)
 	if err != nil {
 		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))

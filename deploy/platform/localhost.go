@@ -142,6 +142,21 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		d.Hosts = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
+	case "skeleton":
+		conf := app.ConfigSkeleton{}
+		app.ReadTomlConfig(&conf, localConfig)
+		app.ReadTomlConfig(&conf, appConfig)
+		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		conf.Hosts = d.Hosts
+		dbg.Lvl2("Total hosts / depth:", len(conf.Hosts), graphs.Depth(conf.Tree))
+		total := d.Machines * d.Ppm
+		if len(conf.Hosts) != total {
+			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
+				"machines or hosts per node")
+		}
+		d.Hosts = conf.Hosts
+		// re-write the new configuration-file
+		app.WriteTomlConfig(conf, appConfig)
 	case "shamir":
 		conf := app.ConfigShamir{}
 		app.ReadTomlConfig(&conf, localConfig)
@@ -189,8 +204,8 @@ func (d *Localhost) Start(args ...string) error {
 	for index, host := range d.Hosts {
 		dbg.Lvl3("Starting", index, "=", host)
 		amroot := fmt.Sprintf("-amroot=%s", strconv.FormatBool(index == 0))
-		cmdArgs := []string{"-hostname", host, "-mode", "server", "-logger",
-			"localhost:" + monitor.SinkPort, amroot}
+		cmdArgs := []string{"-hostname", host, "-mode", "server", "-monitor",
+			"localhost:" + strconv.Itoa(monitor.SinkPort), amroot}
 		cmdArgs = append(args, cmdArgs...)
 		dbg.Lvl3("CmdArgs are", cmdArgs)
 		cmd := exec.Command(ex, cmdArgs...)
