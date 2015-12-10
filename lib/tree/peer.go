@@ -52,11 +52,15 @@ type PeerList struct {
 
 // Computes, set, and returns the ID of this peer list
 // basically, it is the hash of the concatenation of all its peers
-func (pl *PeerList) Id(hashFunc hash.Hash) hashid.HashId {
+func (pl *PeerList) GenId(hashFunc hash.Hash) hashid.HashId {
 	for _, p := range pl.Peers {
 		hashFunc.Write(p.Bytes())
 	}
 	pl.ListId = hashid.HashId(hashFunc.Sum(nil))
+	return pl.ListId
+}
+
+func (pl *PeerList) Id() hashid.HashId {
 	return pl.ListId
 }
 
@@ -66,7 +70,7 @@ func (pl *PeerList) init(s abstract.Suite, peers []*Peer) *PeerList {
 		Peers: peers,
 		Suite: s,
 	}
-	pl.Id(s.Hash())
+	pl.GenId(s.Hash())
 	return pl
 }
 
