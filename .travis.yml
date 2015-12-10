@@ -3,9 +3,11 @@ language: go
 go:
   - 1.5.2
 before_install:
-  - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/dedis
-  - cd $GOPATH/src/github.com/dedis
-  - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/dedid/cothority
+  # mv $GOPATH/src/github.com/DeDiS/cothority $GOPATH/src/github.com/dedis/cothority
+  - mkdir $GOPATH/src/github.com/dedis/cothority
+  - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/dedis/cothority
+  - cd $GOPATH/src/github.com/dedis/cothority
+  - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/dedis/cothority
   - go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
 script:
     - go test -v ./...
