@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# start-conode.sh is the main entry point for users and handles all use-cases
+# encountered.
+# First off it has to be run as
+# ./start-conode.sh setup address:port
+# which will create a private/public key pair, tries to send it to
+# linus.gasser@epfl.ch, shows it on screen and waits for validation.
+# Once the node is validated, it will automatically update and then go into
+# 'run'-mode will connect to the other nodes.
+
 main(){
   echo Starting conode from the correct cpu and arch
   if [ ! -x conode ]; then

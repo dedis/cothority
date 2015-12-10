@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 VERSION=000600
 
-# When called with out arguments, downloads the latest version, updates and
+# When called without arguments, downloads the latest version, updates and
 # calls ./start-conode.sh
 # When called with "update_only", it will do the same, but not run conode
 # afterwards
@@ -27,15 +27,17 @@ main(){
 
 # Fetches the latest version and untars it here
 update(){
-  RELEASE=$( wget -q -O- https://github.com/dedis/cothority/releases/latest | grep DeDiS/cothority/releases/download | sed -e "s/.*href=.\(.*\). rel.*/\1/" )
-  TGZ=$( basename $RELEASE )
-  if [ -e $TGZ ]; then
-    echo $RELEASE already here
-  else
-    echo Getting $RELEASE
-    wget -q https://github.com/$RELEASE
-    echo Untarring
-    tar xf $TGZ
+  if [ ! -e NO_UPDATE ]; then
+    RELEASE=$( wget -q -O- https://github.com/dedis/cothority/releases/latest | grep DeDiS/cothority/releases/download | sed -e "s/.*href=.\(.*\). rel.*/\1/" )
+    TGZ=$( basename $RELEASE )
+    if [ -e $TGZ ]; then
+        echo $RELEASE already here
+    else
+        echo Getting $RELEASE
+        wget -q https://github.com/$RELEASE
+        echo Untarring
+        tar xf $TGZ
+    fi
   fi
 }
 
