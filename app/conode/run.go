@@ -6,6 +6,8 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sign"
+	"time"
 )
 
 var maxRounds = -1
@@ -58,7 +60,22 @@ func Run(configFile, key string) {
 		address = addr
 	}
 	peer := conode.NewPeer(address, conf)
+	// Set up the stamp listener first, so we can exit on demand
 	conode.NewStampListener(peer.Name())
-	dbg.Lvl1("Created stampListener at", peer.Name(), "Going to loop with Stats-round")
+
+	// Wait for all conodes to be up and running before starting a round.
+	if peer.IsRoot(0) {
+		for {
+			time.Sleep(time.Second)
+			setupRound := sign.NewRoundSetup(peer.Node)
+			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
+			counted := <-setupRound.Counted
+			dbg.Lvl1("Number of peers counted:", counted, "of", len(conf.Hosts))
+			if counted == len(conf.Hosts) {
+				dbg.Lvl1("All hosts replied, starting")
+				break
+			}
+		}
+	}
 	peer.LoopRounds(RoundStatsType, maxRounds)
 }
