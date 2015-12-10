@@ -60,6 +60,7 @@ func TestRoundException(t *testing.T) {
 	}
 	peer1.Close()
 	peer2.Close()
+	sign.ExceptionForceFailure = ""
 }
 
 func TestRoundCosi(t *testing.T) {

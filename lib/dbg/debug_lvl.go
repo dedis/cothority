@@ -106,6 +106,11 @@ func Error(args ...interface{}) {
 	Lvld(0, args...)
 }
 
+func Warn(args ...interface{}) {
+	args = append([]interface{}{"WARN:"}, args...)
+	Lvld(0, args...)
+}
+
 func Fatal(args ...interface{}) {
 	Lvld(0, args...)
 	os.Exit(1)
@@ -144,6 +149,10 @@ func Fatalf(f string, args ...interface{}) {
 func Errorf(f string, args ...interface{}) {
 	Lvlf(0, f, args...)
 	os.Exit(1)
+}
+
+func Warnf(f string, args ...interface{}) {
+	Lvlf(0, "WARN: "+f, args...)
 }
 
 func Panicf(f string, args ...interface{}) {

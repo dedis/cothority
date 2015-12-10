@@ -1,7 +1,6 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 )
@@ -13,7 +12,7 @@ func main() {
 
 	// we must know who we are
 	if app.RunFlags.Hostname == "" {
-		log.Fatal("Hostname empty: Abort")
+		dbg.Fatal("Hostname empty: Abort")
 	}
 
 	dbg.Lvl2(app.RunFlags.Hostname, "Starting to run as", app.RunFlags.Mode)
