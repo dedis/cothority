@@ -225,6 +225,7 @@ func (sn *Node) ProcessMessages() error {
 func (sn *Node) Announce(sm *SigningMessage) error {
 	view := sm.ViewNbr
 	RoundNbr := sm.RoundNbr
+	sn.nRounds = RoundNbr
 	am := sm.Am
 	dbg.Lvl4(sn.Name(), "received announcement on", view)
 	var round Round

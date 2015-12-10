@@ -186,6 +186,7 @@ func VerifyFileSignature(file, sigFile string) bool {
 	}
 	hash := hashFile(file)
 	dbg.Print(base64.StdEncoding.EncodeToString(hash))
+	dbg.Print("X0 is", public_X0)
 	// Then verify the proper signature
 	return conode.VerifySignature(suite, &signature, public_X0, hash)
 }
