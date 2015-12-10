@@ -9,7 +9,7 @@ import (
 // The name type of this round implementation
 const RoundSkeletonType = "empty"
 
-// RoundSkeleton is the barebone struct that will be used for a round.
+// RoundSkeleton is the bare-bone struct that will be used for a round.
 // You can inherit of some already implemented rounds such as roundcosi, or
 // roundexception etc. You should read and understand the code of the round you are embedding
 // in your structs.
@@ -41,7 +41,7 @@ func NewRoundSkeleton(node *sign.Node) *RoundSkeleton {
 }
 
 // The first phase is the announcement phase.
-// For all phases, the signature is the same, it takes sone Input message and
+// For all phases, the signature is the same, it takes some Input message and
 // Output messages and returns an error if something went wrong.
 // For announcement we just give for now the viewNbr (view = what is in the tree
 // at the instant) and the round number so we know where/when are we in the run.
