@@ -2,17 +2,9 @@
 language: go
 go:
   - 1.5.2
-  #- 1.5.1
-  #- release
-  #- tip
-env:
-  global:
-    - TRAVIS_REPO_SLUG=dedis/cothority
 before_install:
-    #- go list -f '{{join .Deps "\n"}} {{join .TestImports "\n"}}' ./... | grep -v "^github.com/dedis/cothority" | xargs go get -t -v
-before_script:
-    #- git remote add production https://github.com/DeDiS/cothority.git
-    #- git fetch -a production
+  - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/dedis
+  - cd $GOPATH/src/github.com/dedis
 script:
     - go test -v ./...
     #- go run dedis-travis-script.go
