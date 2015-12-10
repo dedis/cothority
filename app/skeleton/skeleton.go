@@ -10,10 +10,10 @@ import (
 )
 
 // This file is the first draft to a skeleton app where you have all the
-// basics to run your own cothority tree. This include the main where you handle
-// the configuration + the "running" part. It also include a basic Round
-// structure that does nothing yet (up to you). This round will be executed for
-// each round of the cothority tree.
+// basics to run your own cothority tree.This includes an exemplary main()
+// function which shows how to configure and run a cothority based application.
+// It also include a basic Round structure that does nothing yet (up to you).
+// This round will be executed for each round of the cothority tree.
 // This skeleton is for use with the deploy/ lib, that can deploy on localhost
 // or on deterlab. This is not intented to be used as a standalone app. For this
 // check the app/conode folder which contains everything to run a standalone
@@ -31,7 +31,7 @@ import (
 
 func main() {
 	// First, let's read our config
-	// YOu should create your own config in lib/app.
+	// You should create your own config in lib/app.
 	// TOML is a pretty simple and readable format
 	// Whatever information needed, supply it in the simulation/.toml file that
 	// will be parsed into your ConfigSkeleton struct.
@@ -56,7 +56,7 @@ func main() {
 
 	// Connect to the monitor process. This monitor process is run on your
 	// machine and accepts connections from any node, usually you only connect
-	// with the root for readability and performance reason (don't connect to
+	// with the root for readability and performance reasons (don't connect to
 	// your machine from 8000 nodes .. !)
 	if app.RunFlags.Logger != "" {
 		monitor.ConnectSink(app.RunFlags.Logger)
@@ -94,7 +94,7 @@ func main() {
 	// If you need more fined grained control, you must implement yourself the
 	// conode.Peer struct (it's quite easy).
 	peer.LoopRounds(RoundSkeletonType, conf.Rounds)
-	// Notify we finished to monitor so that the simulation can be stopped
+	// Notify the monitor we finished so that the simulation can be stopped
 	monitor.End()
 }
 
@@ -133,7 +133,7 @@ func NewRoundSkeleton(node *sign.Node) *RoundSkeleton {
 }
 
 // The first phase is the announcement phase.
-// For all phases, the signature is the same, it takes sone Input message and
+// For all phases, the signature is the same, it takes some Input message and
 // Output messages and returns an error if something went wrong.
 // For announcement we just give for now the viewNbr (view = what is in the tree
 // at the instant) and the round number so we know where/when are we in the run.
