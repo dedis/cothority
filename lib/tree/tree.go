@@ -2,6 +2,9 @@ package tree
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/crypto/abstract"
+	"hash"
 )
 
 /*
@@ -10,89 +13,122 @@ retrieve the hosts - either in a n-ary tree, broadcast or just
  a selection.
 */
 
-// Tree holds the structure about the current tree
-type Tree struct {
-	// The top-most peer of this tree
-	Root *TreeEntry
-	// The hash-id of this tree - same for the whole tree
-	Hash []byte
-	// The hash of the peer-list
-	HashPL []byte
-	// The branching factor
-	BF int
+type TreeId struct {
+	TreeHash hashid.HashId
 }
 
 // TreeEntry is one entry in the tree and linked to it's parent and
 // the tree-structure it's in.
-type TreeEntry struct {
-	// Pointer to the tree-structure we're in
-	Tree *Tree
+type TreeNode struct {
+	// TreeId represents the ID of the tree that is computed from the list of
+	// treenodes.
+	TreeId *TreeId
 	// A list of all child-nodes - the indexes are relative to the PeerList
-	Children []*TreeEntry
+	Children []*TreeNode
 	// The parent node - or nil if this is the root
-	Parent *TreeEntry
+	Parent *TreeNode
 	// The actual Peer stored in this node.
 	Peer *Peer
 }
 
-// AddRoot creates the root-entry for the tree
-func (t *Tree) AddRoot(peer *Peer) *TreeEntry {
-	t.Root = &TreeEntry{
-		Tree:     t,
-		Children: make([]*TreeEntry, 0),
-		Peer:     peer,
+// Init a tree node from the ID and a peer
+func (tn *TreeNode) init(p *Peer) *TreeNode {
+	tn = &TreeNode{
+		Children: make([]*TreeNode, 0),
+		Peer:     p,
 	}
-	return t.Root
+	return tn
 }
 
-// AddChild adds a Children to the TreeEntry and returns the
-// children added
-func (te *TreeEntry) AddChild(peer *Peer) *TreeEntry {
-	child := &TreeEntry{
-		Tree:     te.Tree,
-		Parent:   te,
-		Peer:     peer,
-		Children: make([]*TreeEntry, 0),
-	}
-	te.Children = append(te.Children, child)
-	return child
+// Returns a fresh new TreeNode
+func NewTreeNode(p *Peer) *TreeNode {
+	return new(TreeNode).init(p)
 }
 
-// Count returns the number of children of that Tree
-func (t *Tree) Count() int {
-	return t.Root.CountRec()
+// AddChild appends a node into the child list of this treenode. It also updates
+// the Parent pointer of the child.
+func (te *TreeNode) AddChild(tn *TreeNode) {
+	te.Children = append(te.Children, tn)
+	tn.Parent = te
+}
+
+// VisistsBFS will visits the tree BFS style calling the given function for each
+// node encountered from the root.
+func VisitsBFS(root *TreeNode, fn func(*TreeNode)) {
+	fn(root)
+	for _, child := range root.Children {
+		VisitsBFS(child, fn)
+	}
 }
 
 // CountRec counts the number of children recursively
-func (te *TreeEntry) CountRec() int {
-	dbg.Lvlf3("Children are: %+v", te.Children)
-	nbr := 1
-	for _, t := range te.Children {
-		nbr += t.CountRec()
-	}
+func (te *TreeNode) Count() int {
+	nbr := 0
+	VisitsBFS(te, func(tn *TreeNode) {
+		nbr += 1
+	})
 	return nbr
 }
 
-// NewNaryTree creates a tree with branching factor bf and attaches it
-// to the TreeEntry
-func (te *TreeEntry) NewNaryTree(peers []*Peer) {
-	bf := te.Tree.BF
-	numberLeft := len(peers)
-	dbg.Lvl3("Called with", numberLeft, "peers and bf =", bf)
-
-	start := 0
-	for b := 1; b <= bf; b++ {
-		// Remember: slice-ranges are exclusive of the end. So
-		// len(peers[0..1]) == 1!
-		end := b * numberLeft / bf
-		if end > start {
-			dbg.Lvl3(b, ": Creating children", start, ":", end, "of", numberLeft)
-			nte := te.AddChild(peers[start])
-			if end > (start + 1) {
-				nte.NewNaryTree(peers[start+1 : end])
-			}
-			start = end
-		}
+// Write simply write the peer representation into the writer. Used for hashing.
+func (tn *TreeNode) Bytes() []byte {
+	buf := tn.Peer.Bytes()
+	// if we have a parent
+	if tn.Parent != nil {
+		// we include the link from the parent to us in the hash
+		buf = append(buf, tn.Parent.Peer.Bytes()...)
 	}
-	dbg.Lvlf3("Finished node %+v", te)
+	return buf
+}
+
+// Id will hash its whole topology to produce an TreeId. It will set the treeId
+// field for each nodes in its topology
+func (tn *TreeNode) GenId(hashFunc hash.Hash) hashid.HashId {
+	tid := &TreeId{}
+	// Visits the whole tree
+	VisitsBFS(tn, func(node *TreeNode) {
+		// The node write itselfs
+		hashFunc.Write(node.Bytes())
+		// then sets the right fields
+		node.TreeId = tid
+	})
+	// Set the hashid
+	tid.TreeHash = hashid.HashId(hashFunc.Sum(nil))
+	return tid.TreeHash
+}
+
+func (tn *TreeNode) Id() hashid.HashId {
+	return tn.TreeId.TreeHash
+}
+
+// NewNaryTree creates a regular tree with a branching factor bf from the list
+// of peers "peers". It returns the root.
+func NewNaryTree(s abstract.Suite, bf int, peers []*Peer) *TreeNode {
+	if len(peers) < 1 {
+		return nil
+	}
+	dbg.Lvl3("NewNaryTree Called with", len(peers), "peers and bf =", bf)
+	root := NewTreeNode(peers[0])
+	var index int = 1
+	bfs := make([]*TreeNode, 1)
+	bfs[0] = root
+	for len(bfs) > 0 && index < len(peers) {
+		t := bfs[0]
+		t.Children = make([]*TreeNode, 0)
+		lbf := 0
+		// create space for enough children
+		// init them
+		for lbf < bf && index < len(peers) {
+			child := NewTreeNode(peers[index])
+			// append the children to the list of trees to visit
+			bfs = append(bfs, child)
+			t.Children = append(t.Children, child)
+			index += 1
+			lbf += 1
+		}
+		bfs = bfs[1:]
+	}
+	// Compute the tree id
+	root.GenId(s.Hash())
+	return root
 }
