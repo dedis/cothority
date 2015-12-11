@@ -11,7 +11,7 @@ import (
 func TestNewNaryTree(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	s := edwards.NewAES128SHA256Ed25519(false)
-	pl := tree.NewPeerList(s, []string{"localhost"}, 11, 2000)
+	pl := tree.NewPeerListLocalhost(s, 11, 2000)
 	tr := pl.NewNaryTree(3)
 	// Count all elements
 	if tr.Count() != 11 {
