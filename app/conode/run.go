@@ -64,16 +64,21 @@ func Run(configFile, key string) {
 	conode.NewStampListener(peer.Name())
 
 	// Wait for all conodes to be up and running before starting a round.
+	time.Sleep(time.Second)
 	if peer.IsRoot(0) {
 		for {
 			time.Sleep(time.Second)
 			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
-			counted := <-setupRound.Counted
-			dbg.Lvl1("Number of peers counted:", counted, "of", len(conf.Hosts))
-			if counted == len(conf.Hosts) {
-				dbg.Lvl1("All hosts replied, starting")
-				break
+			err := peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
+			if err == nil {
+				counted := <-setupRound.Counted
+				dbg.Lvl1("Number of peers counted:", counted, "of", len(conf.Hosts))
+				if counted == len(conf.Hosts) {
+					dbg.Lvl1("All hosts replied, starting")
+					break
+				}
+			} else {
+				dbg.Lvl1("Time-out on counting rounds")
 			}
 		}
 	}

@@ -19,8 +19,10 @@ compile(){
     echo Compiling $BINARY
     rm -rf conode-bin
     mkdir conode-bin
-    for GOOS in linux darwin; do
-        for GOARCH in amd64 386; do
+    #for GOOS in linux darwin; do
+    #    for GOARCH in amd64 386; do
+    for GOOS in linux; do
+        for GOARCH in amd64; do
             echo Doing $GOOS / $GOARCH
             export GOOS GOARCH
             go build -o conode-bin/$BINARY-$GOOS-$GOARCH .

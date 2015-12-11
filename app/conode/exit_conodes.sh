@@ -4,7 +4,7 @@ CONFIG=config.toml
 if [ "$1" ]; then
   CONFIG=$1/$CONFIG
 fi
-HOSTS=$( cat $CONFIG | grep Hosts | sed -e "s/.*\[\"\(.*\)\"\]/\1/" | perl -pe "s/\", \"/\n/g" )
+HOSTS=$( grep Hosts $CONFIG | sed -e "s/.*\[\"\(.*\)\"\]/\1/" | perl -pe "s/\", \"/\n/g" | tail -r )
 
 echo Going to ask all servers to exit
 for h in $HOSTS; do
