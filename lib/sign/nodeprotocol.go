@@ -83,7 +83,7 @@ func (sn *Node) ProcessMessages() error {
 			sm.From = nm.From
 			dbg.Lvlf4("Message on %s is type %s and %+v", sn.Name(), sm.Type, sm)
 
-			switch sm.Type {
+			switch {
 			// if it is a bad message just ignore it
 			default:
 				continue

@@ -14,7 +14,8 @@ retrieve the hosts - either in a n-ary tree, broadcast or just
 */
 
 type TreeId struct {
-	TreeHash hashid.HashId
+	TreeHash     hashid.HashId
+	PeerListHash hashid.HashId
 }
 
 // TreeEntry is one entry in the tree and linked to it's parent and
