@@ -57,7 +57,10 @@ type CosiStruct struct {
 
 	// round-lasting public keys of children servers that did not
 	// respond to latest commit or respond phase, in subtree
-	ExceptionList []abstract.Point
+	RejectionPublicList []abstract.Point
+	// list of nodes which refused to commit:
+	RejectionCommitList []abstract.Point
+
 	// combined point commits of children servers in subtree
 	ChildV_hat map[string]abstract.Point
 	// combined public keys of children servers in subtree
@@ -83,7 +86,8 @@ func NewCosi(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *CosiStru
 	cosi := &CosiStruct{}
 	cosi.Commits = make([]*SigningMessage, 0)
 	cosi.Responses = make([]*SigningMessage, 0)
-	cosi.ExceptionList = make([]abstract.Point, 0)
+	cosi.RejectionPublicList = make([]abstract.Point, 0)
+	cosi.RejectionCommitList = make([]abstract.Point, 0)
 	cosi.Suite = sn.suite
 	cosi.Log.Suite = sn.suite
 	cosi.Children = sn.Children(viewNbr)
@@ -95,7 +99,6 @@ func NewCosi(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *CosiStru
 	cosi.R_hat = sn.suite.Secret().Zero()
 	cosi.ExceptionV_hat = sn.suite.Point().Null()
 	cosi.ExceptionX_hat = sn.suite.Point().Null()
-	cosi.ExceptionList = make([]abstract.Point, 0)
 	cosi.InitCommitCrypto()
 	return cosi
 }

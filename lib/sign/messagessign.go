@@ -178,7 +178,7 @@ type CommitmentMessage struct {
 
 	// public keys of children servers that did not respond to
 	// annoucement from root
-	ExceptionList []abstract.Point
+	RejectionPublicList []abstract.Point
 
 	// CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
 	Vote *Vote // Vote Response (promise)
@@ -208,7 +208,10 @@ type ResponseMessage struct {
 
 	// public keys of children servers that did not respond to
 	// challenge from root
-	ExceptionList []abstract.Point
+	RejectionPublicList []abstract.Point
+	// nodes that refused to commit:
+	RejectionCommitList []abstract.Point
+
 	// cummulative point commits of nodes that failed after commit
 	ExceptionV_hat abstract.Point
 	// cummulative public keys of nodes that failed after commit
@@ -229,7 +232,9 @@ type SignatureBroadcastMessage struct {
 	X0_hat abstract.Point
 	// Aggregate public commitment
 	V0_hat abstract.Point
-
+	// challenge from root
+	RejectionPublicList []abstract.Point
+	RejectionCommitList []abstract.Point
 	// Number of messages signed
 	Messages int
 }

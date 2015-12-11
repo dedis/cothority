@@ -6,7 +6,6 @@ import (
 
 	"bytes"
 	"github.com/BurntSushi/toml"
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
@@ -21,7 +20,7 @@ import (
 
 type Flags struct {
 	Hostname    string // Hostname like server-0.cs-dissent ?
-	Logger      string // ip addr of the logger to connect to
+	Monitor     string // ip addr of the logger to connect to
 	PhysAddr    string // physical IP addr of the host
 	AmRoot      bool   // is the host root (i.e. special operations)
 	TestConnect bool   // Dylan-code to only test the connection and exit afterwards
@@ -36,7 +35,7 @@ var RunFlags Flags
 
 func FlagInit() {
 	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
-	flag.StringVar(&RunFlags.Logger, "logger", "", "remote logger")
+	flag.StringVar(&RunFlags.Monitor, "monitor", "", "remote monitor")
 	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
 	flag.BoolVar(&RunFlags.AmRoot, "amroot", false, "am I root node")
 	flag.BoolVar(&RunFlags.TestConnect, "test_connect", false, "test connecting and disconnecting")
@@ -54,7 +53,7 @@ func ReadConfig(conf interface{}, dir ...string) {
 	var err error
 	err = ReadTomlConfig(conf, "app.toml", dir...)
 	if err != nil {
-		log.Fatal("Couldn't load app-config-file in exec")
+		dbg.Fatal("Couldn't load app-config-file in exec")
 	}
 	debug := reflect.ValueOf(conf).Elem().FieldByName("Debug")
 	if debug.IsValid() {
@@ -65,12 +64,12 @@ func ReadConfig(conf interface{}, dir ...string) {
 	dbg.Lvlf3("Flags are %+v", RunFlags)
 
 	if RunFlags.AmRoot {
-		if err := monitor.ConnectSink(RunFlags.Logger); err != nil {
+		if err := monitor.ConnectSink(RunFlags.Monitor); err != nil {
 			dbg.Fatal("Couldn't connect to monitor", err)
 		}
 	}
 
-	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
+	dbg.Lvl3("Running", RunFlags.Hostname, "with monitor at", RunFlags.Monitor)
 }
 
 /*
@@ -113,20 +112,20 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 // StartedUp waits for everybody to start by contacting the
 // monitor. Argument is total number of peers.
 func (f Flags) StartedUp(total int) {
-	monitor.Ready(f.Logger)
+	monitor.Ready(f.Monitor)
 	// Wait for everybody to be ready before going on
 	for {
-		s, err := monitor.GetReady(f.Logger)
+		s, err := monitor.GetReady(f.Monitor)
 		if err != nil {
-			dbg.Lvl1("Couldn't reach monitor")
+			dbg.Lvl1("Couldn't reach monitor:", err)
 		} else {
 			if s.Ready != total {
 				dbg.Lvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
 			} else {
 				break
 			}
-			time.Sleep(time.Second)
 		}
+		time.Sleep(time.Second)
 	}
 	dbg.Lvl3(f.Hostname, "thinks everybody's here")
 }

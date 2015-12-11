@@ -28,7 +28,6 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
@@ -37,12 +36,13 @@ import (
 // Configuration-variables
 var deployP platform.Platform
 
-var platform_dst = "localhost"
+var platformDst = "localhost"
 var app = ""
 var nobuild = false
 var clean = true
 var build = ""
 var machines = 3
+var monitorPort = 10000
 var simRange = ""
 
 // SHORT TERM solution of referencing
@@ -59,22 +59,24 @@ const (
 )
 
 func init() {
-	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
+	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
+	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
-	deployP = platform.NewPlatform(platform_dst)
+	monitor.SinkPort = monitorPort
+	deployP = platform.NewPlatform(platformDst)
 	if deployP == nil {
-		dbg.Fatal("Platform not recognized.", platform_dst)
+		dbg.Fatal("Platform not recognized.", platformDst)
 	}
-	dbg.Lvl1("Deploying to", platform_dst)
+	dbg.Lvl1("Deploying to", platformDst)
 
 	simulations := flag.Args()
 	if len(simulations) == 0 {
@@ -119,12 +121,12 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 	f, err := os.OpenFile(TestFile(name), args, 0660)
 	if err != nil {
-		log.Fatal("error opening test file:", err)
+		dbg.Fatal("error opening test file:", err)
 	}
 	defer f.Close()
 	err = f.Sync()
 	if err != nil {
-		log.Fatal("error syncing test file:", err)
+		dbg.Fatal("error syncing test file:", err)
 	}
 
 	start, stop := getStartStop(len(runconfigs))
@@ -142,7 +144,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				log.Fatalln("error running test:", err)
+				dbg.Fatal("error running test:", err)
 			}
 
 			runs = append(runs, stats)
@@ -164,7 +166,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		rs[i].WriteValues(f)
 		err = f.Sync()
 		if err != nil {
-			log.Fatal("error syncing data to test file:", err)
+			dbg.Fatal("error syncing data to test file:", err)
 		}
 	}
 }
@@ -173,7 +175,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	done := make(chan struct{})
-	if platform_dst == "localhost" {
+	if platformDst == "localhost" {
 		machs := rc.Get("machines")
 		ppms := rc.Get("ppm")
 		mach, _ := strconv.Atoi(machs)
@@ -191,7 +193,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	// in case of deterlab.
 	err := deployP.Start()
 	if err != nil {
-		log.Fatal(err)
+		dbg.Fatal(err)
 		return *rs, nil
 	}
 
@@ -219,7 +221,7 @@ type runFile struct {
 func MkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
-		log.Fatal("failed to make test directory")
+		dbg.Fatal("failed to make test directory")
 	}
 }
 

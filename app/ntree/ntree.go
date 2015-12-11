@@ -1,7 +1,6 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
@@ -16,7 +15,7 @@ func main() {
 
 	// we must know who we are
 	if app.RunFlags.Hostname == "" {
-		log.Fatal("Hostname empty: Abort")
+		dbg.Fatal("Hostname empty: Abort")
 	}
 
 	own, depth := conf.Tree.FindByName(app.RunFlags.Hostname, 0)
@@ -45,7 +44,7 @@ func main() {
 
 	switch app.RunFlags.Mode {
 	case "client":
-		log.Panic("No client mode")
+		dbg.Panic("No client mode")
 	case "server":
 		RunServer(conf)
 	}

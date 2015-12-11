@@ -1,8 +1,8 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func main() {
@@ -11,7 +11,7 @@ func main() {
 	app.ReadConfig(conf)
 
 	if app.RunFlags.Hostname == "" {
-		log.Fatal("Hostname empty: Abort")
+		dbg.Fatal("Hostname empty: Abort")
 	}
 
 	RunServer(conf)

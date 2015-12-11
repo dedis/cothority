@@ -8,7 +8,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -133,7 +132,7 @@ func (h *TCPHost) Listen() error {
 			var mname StringMarshaler
 			err = tp.GetData(&mname)
 			if err != nil {
-				log.Errorln("failed to establish connection: getting name:", err)
+				dbg.Error("failed to establish connection: getting name:", err)
 				tp.Close()
 				continue
 			}
@@ -147,7 +146,7 @@ func (h *TCPHost) Listen() error {
 			pubkey := suite.Point()
 			err = tp.GetData(pubkey)
 			if err != nil {
-				log.Errorln("failed to establish connection: getting pubkey:", err)
+				dbg.Error("failed to establish connection: getting pubkey:", err)
 				tp.Close()
 				continue
 			}
@@ -156,7 +155,7 @@ func (h *TCPHost) Listen() error {
 			// give child the public key
 			err = tp.PutData(h.Pubkey)
 			if err != nil {
-				log.Errorln("failed to send public key:", err)
+				dbg.Error("failed to send public key:", err)
 				continue
 			}
 
@@ -184,7 +183,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// If we have alReady set up this connection don't do anything
 	h.PeerLock.Lock()
 	if h.Ready[parent] {
-		log.Println("ConnectTo: node already ready")
+		dbg.Print("ConnectTo: node already ready")
 		h.PeerLock.RUnlock()
 		return nil
 	}
@@ -201,7 +200,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	mname := StringMarshaler(h.Name())
 	err = tp.PutData(&mname)
 	if err != nil {
-		log.Errorln("Putting data error:", err)
+		dbg.Error("Putting data error:", err)
 		return err
 	}
 	tp.SetName(parent)
@@ -209,7 +208,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// give parent the public key
 	err = tp.PutData(h.Pubkey)
 	if err != nil {
-		log.Errorln("failed to send public key")
+		dbg.Error("failed to send public key")
 		return err
 	}
 
@@ -218,7 +217,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	pubkey := suite.Point()
 	err = tp.GetData(pubkey)
 	if err != nil {
-		log.Errorln("failed to establish connection: getting pubkey:", err)
+		dbg.Error("failed to establish connection: getting pubkey:", err)
 		tp.Close()
 		return err
 	}
@@ -251,7 +250,7 @@ func (h *TCPHost) AddPeerToPending(p string) {
 	h.PeerLock.Lock()
 	h.PendingPeers[p] = true
 	h.PeerLock.Unlock()
-	log.Println("added peer to pending:", p)
+	dbg.Print("added peer to pending:", p)
 }
 
 // Connect connects to the parent in the given view.

@@ -113,7 +113,7 @@ func (s *StampListener) ListenRequests() error {
 						err := co.GetData(&tsm)
 						dbg.Lvlf2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
 						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child: %s", s.NameL, err)
+							dbg.Lvlf1("%s Failed to get from child: %s", s.NameL, err)
 							co.Close()
 							return
 						}

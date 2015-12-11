@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -81,7 +80,7 @@ type Peer struct {
 func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot bool) *Peer {
 
 	if id >= p.N {
-		log.Fatal("Error while NewPeer: gien", id, "as id whereas polyinfo.N =", p.N)
+		dbg.Fatal("Error while NewPeer: gien", id, "as id whereas polyinfo.N =", p.N)
 
 	}
 	// Setup of the private / public pair

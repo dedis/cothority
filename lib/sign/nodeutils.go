@@ -75,7 +75,7 @@ func (sn *Node) ReceivedHeartbeat(view int) {
 func (sn *Node) TryRootFailure(view, roundNbr int) bool {
 	if sn.IsRoot(view) && sn.FailAsRootEvery != 0 {
 		if sn.RoundsAsRoot != 0 && sn.RoundsAsRoot%sn.FailAsRootEvery == 0 {
-			log.Errorln(sn.Name() + "was imposed root failure on round" + strconv.Itoa(roundNbr))
+			dbg.Error(sn.Name() + "was imposed root failure on round" + strconv.Itoa(roundNbr))
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "root_failure",
@@ -112,7 +112,7 @@ func (sn *Node) TryFailure(view, roundNbr int) error {
 
 	// doing this before annoucing children to avoid major drama
 	if !sn.IsRoot(view) && sn.ShouldIFail("commit") {
-		log.Warn(sn.Name(), "not announcing or commiting for round", roundNbr)
+		dbg.Warn(sn.Name(), "not announcing or commiting for round", roundNbr)
 		return errors.New("failure imposed")
 	}
 	return nil
@@ -188,17 +188,17 @@ func (sn *Node) ChangeView(vcv *ViewChangeVote) {
 	sn.ViewNo = vcv.View
 	sn.viewmu.Unlock()
 	if sn.RootFor(vcv.View) == sn.Name() {
-		log.Println(sn.Name(), "Change view to root", "children", sn.Children(vcv.View))
+		dbg.Print(sn.Name(), "Change view to root", "children", sn.Children(vcv.View))
 		sn.viewChangeCh <- "root"
 	} else {
-		log.Println(sn.Name(), "Change view to regular")
+		dbg.Print(sn.Name(), "Change view to regular")
 		sn.viewChangeCh <- "regular"
 	}
 
 	sn.viewmu.Lock()
 	sn.ChangingView = false
 	sn.viewmu.Unlock()
-	log.Println("VIEW CHANGED")
+	dbg.Print("VIEW CHANGED")
 	// TODO: garbage collect old connections
 }
 

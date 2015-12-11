@@ -6,9 +6,9 @@ import (
 	"io"
 	"sync/atomic"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 	"strings"
 	"syscall"
@@ -97,7 +97,7 @@ func (sn *Node) ProcessMessages() error {
 					dbg.Lvl4(sn.Name(), "done proposing")
 				} else {
 					if !sn.IsParent(sm.ViewNbr, sm.From) {
-						log.Fatalln(sn.Name(), "received announcement from non-parent on view", sm.ViewNbr)
+						dbg.Fatal(sn.Name(), "received announcement from non-parent on view", sm.ViewNbr)
 						continue
 					}
 					err = sn.Announce(sm)
@@ -110,7 +110,7 @@ func (sn *Node) ProcessMessages() error {
 			case Commitment:
 				dbg.Lvl3(sn.Name(), "got commitment")
 				if !sn.IsChild(sm.ViewNbr, sm.From) {
-					log.Fatalln(sn.Name(), "received commitment from non-child on view", sm.ViewNbr)
+					dbg.Fatal(sn.Name(), "received commitment from non-child on view", sm.ViewNbr)
 					continue
 				}
 
@@ -126,7 +126,7 @@ func (sn *Node) ProcessMessages() error {
 			case Challenge:
 				dbg.Lvl3(sn.Name(), "got challenge")
 				if !sn.IsParent(sm.ViewNbr, sm.From) {
-					log.Fatalln(sn.Name(), "received challenge from non-parent on view", sm.ViewNbr)
+					dbg.Fatal(sn.Name(), "received challenge from non-parent on view", sm.ViewNbr)
 					continue
 				}
 				sn.ReceivedHeartbeat(sm.ViewNbr)
@@ -143,7 +143,7 @@ func (sn *Node) ProcessMessages() error {
 			case Response:
 				dbg.Lvl3(sn.Name(), "received response from", sm.From)
 				if !sn.IsChild(sm.ViewNbr, sm.From) {
-					log.Fatalln(sn.Name(), "received response from non-child on view", sm.ViewNbr)
+					dbg.Fatal(sn.Name(), "received response from non-child on view", sm.ViewNbr)
 					continue
 				}
 
@@ -206,7 +206,7 @@ func (sn *Node) ProcessMessages() error {
 					dbg.Lvl4(sn.Name(), " received addition notice")
 					sn.NewView(sm.ViewNbr, sm.From, nil, sm.Gcm.HostList)
 				} else {
-					log.Errorln(sn.Name(), "received GroupChanged for unacceptable action")
+					dbg.Error(sn.Name(), "received GroupChanged for unacceptable action")
 				}
 			case StatusConnections:
 				sn.ReceivedHeartbeat(sm.ViewNbr)
@@ -567,10 +567,12 @@ func (sn *Node) SignatureBroadcast(sm *SigningMessage) error {
 			ViewNbr:  view,
 			RoundNbr: RoundNbr,
 			SBm: &SignatureBroadcastMessage{
-				R0_hat: sn.suite.Secret().One(),
-				C:      sn.suite.Secret().One(),
-				X0_hat: sn.suite.Point().Null(),
-				V0_hat: sn.suite.Point().Null(),
+				R0_hat:              sn.suite.Secret().One(),
+				C:                   sn.suite.Secret().One(),
+				X0_hat:              sn.suite.Point().Null(),
+				V0_hat:              sn.suite.Point().Null(),
+				RejectionPublicList: make([]abstract.Point, 0),
+				RejectionCommitList: make([]abstract.Point, 0),
 			},
 		}
 	}

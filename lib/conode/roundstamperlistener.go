@@ -93,14 +93,16 @@ func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, o
 			Type:  StampSignatureType,
 			ReqNo: SeqNo(msg.ReqNo),
 			Srep: &StampSignature{
-				SuiteStr:   round.Suite.String(),
-				Timestamp:  round.Timestamp,
-				MerkleRoot: round.MTRoot,
-				Prf:        round.RoundStamper.CombProofs[i],
-				Response:   in.SBm.R0_hat,
-				Challenge:  in.SBm.C,
-				AggCommit:  in.SBm.V0_hat,
-				AggPublic:  in.SBm.X0_hat,
+				SuiteStr:            round.Suite.String(),
+				Timestamp:           round.Timestamp,
+				MerkleRoot:          round.MTRoot,
+				Prf:                 round.RoundStamper.CombProofs[i],
+				Response:            in.SBm.R0_hat,
+				Challenge:           in.SBm.C,
+				AggCommit:           in.SBm.V0_hat,
+				AggPublic:           in.SBm.X0_hat,
+				RejectionPublicList: in.SBm.RejectionPublicList,
+				RejectionCommitList: in.SBm.RejectionCommitList,
 			}}
 		round.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client", msg.To)
