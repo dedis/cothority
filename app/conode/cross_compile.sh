@@ -4,8 +4,8 @@
 # Linux and MacOSX.
 
 main(){
-    go build
     echo Cross-compiling for platforms and cpus
+    go build
     compile conode
     cd stamp
     compile stamp

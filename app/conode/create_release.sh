@@ -17,9 +17,9 @@ fi
 
 echo Copying scripts to the binary-directory
 BIN=conode-bin
-cp start-conode* $BIN
-cp update.sh build_tree.sh exit_conodes.sh stamp/check_stampers.sh $BIN
+cp start-conode.sh update.sh build_tree.sh exit_conodes.sh stamp/check_stampers.sh $BIN
 cp keys/config.toml $BIN
+cp -a keys $BIN
 cp README.binary.md $BIN
 TAR=conode-$VERSION.tar.gz
 

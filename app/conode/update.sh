@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-VERSION=000600
+VERSION=000612
 
 # When called without arguments, downloads the latest version, updates and
 # calls ./start-conode.sh
@@ -37,6 +37,9 @@ update(){
         wget -q https://github.com/$RELEASE
         echo Untarring
         tar xf $TGZ
+        echo Removing and putting placebo in place
+        rm $TGZ
+        touch $TGZ
     fi
   fi
 }
@@ -62,6 +65,12 @@ update_version(){
                     echo "Didn't find any key-file, please setup new keys"
                     exit
                 fi
+                ;;
+            611)
+                rm start-conode
+                perl -pi -e "s/2000/7770/" key.pub
+                rm conode-0*tar.gz
+                touch conode-0.6.12.tar.gz
                 ;;
             esac
         done
