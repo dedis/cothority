@@ -37,23 +37,36 @@ func sigEncode(suite abstract.Suite, seckey sig.SecretKey, rand cipher.Stream,
 
 	buf := &bytes.Buffer{}
 	wr := sig.Writer(buf, seckey, rand)
-	enc := protobuf.Encoding{Constructor: suite}
-	if err = enc.Write(wr, obj); err != nil {
-		return
+
+	enc, err := protobuf.Encode(obj)
+	if err != nil {
+		return nil, err
 	}
+
+	if _, err = wr.Write(enc); err != nil {
+		return nil, err
+	}
+
 	if err = wr.Close(); err != nil {
-		return
+		return nil, err
 	}
 
 	msg = buf.Bytes()
-	return
+
+	return msg, nil
 }
 
 func sigDecode(suite abstract.Suite, pubkey sig.PublicKey,
 	msg []byte, obj interface{}) (err error) {
 
+	var n int = 0
 	rd := sig.Reader(bytes.NewReader(msg), pubkey)
-	enc := protobuf.Encoding{Constructor: suite}
-	err = enc.Read(rd, obj)
-	return
+	if n, err = rd.Read(msg); err != nil {
+		return err
+	}
+
+	// Decode message into struct
+	err = protobuf.Decode(msg[:n], obj)
+
+	return err
 }

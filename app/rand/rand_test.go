@@ -16,8 +16,8 @@ func TestRand(t *testing.T) {
 	suite := ed25519.NewAES128SHA256Ed25519(false)
 	rand := random.Stream
 
-	nservers := 10
-	ntrustees := 5
+	nservers := 10 //10
+	ntrustees := 5 // 5
 
 	// Signing keypairs for client and servers
 	clisec := sig.SchnorrScheme{Suite: suite}.SecretKey()
@@ -28,31 +28,30 @@ func TestRand(t *testing.T) {
 	srvsec := make([]sig.SchnorrSecretKey, nservers)
 	srvpub := make([]sig.SchnorrPublicKey, nservers)
 	srvhost := make([]HostInfo, nservers)
-	for i := range srvsec {
+	srv := make([]Server, nservers)
+	srvname := make([]string, nservers)
+	for i := 0; i < nservers; i++ {
 		srvsec[i].Suite = suite
 		srvsec[i].Pick(rand)
 		srvpub[i] = srvsec[i].SchnorrPublicKey
 		//log.Printf("server %d public key %v", i, srvpub[i])
 		srvpubb, _ := srvpub[i].MarshalBinary()
 		srvhost[i] = HostInfo{srvpubb, nil}
-	}
-
-	clihost := HostInfo{clipubb, nil}
-	session := &Session{clihost, "test", time.Now()}
-
-	group := &Group{Servers: srvhost,
-		F: nservers / 3,
-		L: nservers - (nservers / 3),
-		K: ntrustees, T: (ntrustees + 1) / 2}
-
-	srv := make([]Server, nservers)
-	srvname := make([]string, nservers)
-	for i := 0; i < nservers; i++ {
 		//pri := suite.Secret().Pick(rand)
 		srvname[i] = fmt.Sprintf("server%d", i)
 		host := newChanHost(net, srvname[i], srv[i].serve)
 		srv[i].init(host, suite, clipub, srvpub, srvsec[i], i)
 	}
+
+	clihost := HostInfo{clipubb, nil}
+	session := &Session{clihost, "test", time.Now()}
+
+	group := &Group{
+		Servers: srvhost,
+		F:       nservers / 3,
+		L:       nservers - (nservers / 3),
+		K:       ntrustees,
+		T:       (ntrustees + 1) / 2}
 
 	cli := Client{}
 	//cpri := suite.Secret().Pick(rand)
