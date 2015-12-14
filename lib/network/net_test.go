@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+type TestMessage struct {
+	Point  abstract.Point
+	Secret abstract.Secret
+}
+
+var TestMessageType int
+
 type PublicPacket struct {
 	Point abstract.Point
 }
@@ -26,8 +33,31 @@ func (p *PublicPacket) UnmarshalBinary(buf []byte) error {
 
 var PublicType Type
 
+var constructors protobuf.Constructors
+
 func init() {
+	// Here we are using the protobuf.Constrcutors mechanisms. So when we
+	// encounters a non basic type, we first check if we have a constructor for
+	// it, if yes, calls it to get a initialized object, otherwise just call
+	// reflect.New(type). This enfors the use of only ONE suite for example
+	// for all the connections related to one host. This behavior can maybe
+	// change in the future with the use of the Context thing currently
+	// implementing in crypto branch cipher
+	var suite = edwards.NewAES128SHA256Ed25519(false)
+	cons := make(map[reflect.Type]func() interface{})
+	var point abstract.Point
+	var secret abstract.Secret
+	cons[reflect.TypeOf(point).Elem()] = func() interface{} { return suite.Point() }
+	cons[reflect.TypeOf(secret).Elem()] = func() interface{} { return suite.Secret() }
+	constructors = protobuf.Constructors(cons)
+
+	// Here we registers the packets themself so the decoder can instantiate
+	// to the right type and then we can do event-driven stuff such as receiving
+	// new messages without knowing the type and then check on the MsgType field
+	// to cast to the right packet type (See below)
+
 	PublicType = RegisterProtocolType(PublicPacket{})
+	TestMessageType = RegisterProtocolPacket(TestMessage{})
 }
 
 type SimpleClient struct {
@@ -115,10 +145,9 @@ func (s *SimpleServer) Init(host Host, pub abstract.Point, t *testing.T) *Simple
 }
 
 func TestTcpNetwork(t *testing.T) {
-	clientHost := NewTcpHost("127.0.0.1")
-	serverHost := NewTcpHost("127.0.0.1")
+	clientHost := NewTcpHost("127.0.0.1", constructors)
+	serverHost := NewTcpHost("127.0.0.1", constructors)
 	suite := edwards.NewAES128SHA256Ed25519(false)
-	Suite = suite
 	clientPub := suite.Point().Base()
 	serverPub := suite.Point().Add(suite.Point().Base(), suite.Point().Base())
 	client := new(SimpleClient).Init(clientHost, clientPub)
