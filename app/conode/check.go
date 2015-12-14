@@ -2,13 +2,12 @@ package main
 
 import (
 	"bytes"
-	"net"
-
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/anon"
+	"net"
 )
 
 // This file handles the checking of a host who wants to join the cothority

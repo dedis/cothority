@@ -81,6 +81,8 @@ func (s *SimpleClient) Name() string {
 
 // Simplest protocol : exchange keys with the server
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	// open a connection to the peer
 	c := s.Open(name)
 	if c == nil {
@@ -91,13 +93,13 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 		Point: s.Pub,
 	}
 	// Send it
-	err := c.Send(p)
+	err := c.Send(ctx, p)
 	if err != nil {
 		t.Error("error sending from client:", err)
 	}
 
 	// Receive the response
-	am, err := c.Receive()
+	am, err := c.Receive(ctx)
 	if err != nil {
 		fmt.Printf("error receiving ..")
 	}
@@ -126,8 +128,9 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		Point: s.Pub,
 	}
 
-	c.Send(p)
-	am, err := c.Receive()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	c.Send(ctx, p)
+	am, err := c.Receive(ctx)
 	if err != nil {
 		s.t.Error("Server errored when receiving  packet ...\n")
 	}

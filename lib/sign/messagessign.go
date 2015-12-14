@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
@@ -31,6 +32,7 @@ const (
 	StatusReturn
 	CatchUpReq
 	CatchUpResp
+	VoteRequest
 	GroupChange
 	GroupChanged
 	StatusConnections
@@ -65,6 +67,8 @@ func (m MessageType) String() string {
 		return "GroupChanged"
 	case StatusConnections:
 		return "StatusConnections"
+	case VoteRequest:
+		return "VoteRequest"
 	case CloseAll:
 		return "CloseAll"
 	case Default: // for internal use
@@ -75,27 +79,32 @@ func (m MessageType) String() string {
 	return "INVALID TYPE"
 }
 
-// Signing Messages are used for all communications between servers
-// It is important for encoding/ decoding for type to be kept as first field
+func init() {
+	// Registering of all the type of packets we need
+	Announcement = RegisterProtocolType(AnnouncementMessage{})
+	Commitment = RegisterProtocolType(CommitmentMessage{})
+	ChallengeMessage = RegisterProtocolType(ChallengeMessage{})
+	ResponseMessage = RegisterProtocolType(ResponseMessage{})
+	SignatureBroadcast = RegisterProtocolType(SignatureBroadcastMessage{})
+	StatusReturn = RegisterProtocolType(StatusReturnMessage{})
+	CatchUpReq = RegisterProtocolType(CatchUpRequest{})
+	CatchUpResp = RegisterProtocolType(CatchUpResponse{})
+	GroupChanged = RegisterProtocolType(GroupChanged{})
+	VoteRequest = RegisterProtocolType(VoteRequestMessage{})
+	CloseAll = RegisterProtocolType(CloseAllMessage{})
+}
+
 type SigningMessage struct {
-	Suite        string
-	Type         MessageType
-	Am           *AnnouncementMessage
-	Com          *CommitmentMessage
-	Chm          *ChallengeMessage
-	Rm           *ResponseMessage
-	SBm          *SignatureBroadcastMessage
-	SRm          *StatusReturnMessage
-	Cureq        *CatchUpRequest
-	Curesp       *CatchUpResponse
-	Vrm          *VoteRequestMessage
-	Gcm          *GroupChangedMessage
 	Err          *ErrorMessage
-	From         string
 	To           string
 	ViewNbr      int
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
 	RoundNbr     int
+}
+
+// Empty struct just to notify to close
+type CloseAllMessage struct {
+	*SigningMessage
 }
 
 // Helper functions that will return the suite used during the process from a string name
@@ -160,6 +169,7 @@ func (sm *SigningMessage) UnmarshalJSON(dataJSON []byte) error {
 
 // Broadcasted message initiated and signed by proposer
 type AnnouncementMessage struct {
+	*SigningMessage
 	Message   []byte
 	RoundType string // what kind of round this announcement is made for
 	// VoteRequest *VoteRequest
@@ -169,6 +179,7 @@ type AnnouncementMessage struct {
 // Commitment of all nodes together with the data they want
 // to have signed
 type CommitmentMessage struct {
+	*SigningMessage
 	Message []byte
 	V       abstract.Point // commitment Point
 	V_hat   abstract.Point // product of subtree participating nodes' commitment points
@@ -188,6 +199,7 @@ type CommitmentMessage struct {
 
 // The challenge calculated by the root-node
 type ChallengeMessage struct {
+	*SigningMessage
 	Message []byte
 	C       abstract.Secret // challenge
 
@@ -203,6 +215,7 @@ type ChallengeMessage struct {
 // Every node replies with eventual exceptions if they
 // are not OK
 type ResponseMessage struct {
+	*SigningMessage
 	Message []byte
 	R_hat   abstract.Secret // response
 
@@ -224,6 +237,7 @@ type ResponseMessage struct {
 // 5th message going from root to leaves to send the
 // signature
 type SignatureBroadcastMessage struct {
+	*SigningMessage
 	// Aggregate response of root
 	R0_hat abstract.Secret
 	// Challenge
@@ -243,6 +257,7 @@ type SignatureBroadcastMessage struct {
 // SignatureBroadcastMessage has been sent to everybody.
 // Every node should just add up the stats from its children.
 type StatusReturnMessage struct {
+	*SigningMessage
 	// How many nodes sent a 'respond' message
 	Responders int
 	// How many peers contacted for a challenge
@@ -256,11 +271,13 @@ type ErrorMessage struct {
 
 // For request of a vote on tree-structure change
 type VoteRequestMessage struct {
+	*SigningMessage
 	Vote *Vote
 }
 
 // Whenever the group changed
 type GroupChangedMessage struct {
+	*SigningMessage
 	V *Vote
 	// if vote not accepted rest of fields are nil
 	HostList []string

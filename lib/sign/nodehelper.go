@@ -19,6 +19,7 @@ import (
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"sync/atomic"
@@ -43,7 +44,7 @@ const (
 )
 
 type Node struct {
-	coconet.Host
+	network.Host
 
 	// Signing Node will Fail at FailureRate probability
 	FailureRate         int
@@ -120,15 +121,46 @@ type Node struct {
 	PeerStatusRcvd int                 // How many peers sent status
 
 	MaxWait time.Duration // How long the announcement phase can take
+	// msgChans used to Fanin all the messages received by many connections
+	// peers
+	msgChans chan network.ApplicationMessage
+	// lists of name -> connections used by this node
+	Conns     map[string]network.Conn
+	connsLock sync.Mutex
 }
 
 // Start listening for messages coming from parent(up)
-func (sn *Node) Listen() error {
+func (sn *Node) Listen(addr string) error {
 	if sn.Pool() == nil {
 		sn.GenSetPool()
 	}
+	go sn.Host.Listen(addr, sn.HandleConn)
+	// XXX Should it be here ?
 	err := sn.ProcessMessages()
 	return err
+}
+
+// HandleConn receives message and pass it along the msgchannels
+func (sn *Node) HandleConn(c Conn) {
+	connsLock.Lock()
+	Conns[c.Name()] = c
+	connsLock.Unlock()
+	go func() {
+		am, err := c.Receive()
+		if err != nil {
+			dbg.Error("Error receiving messsage from", c.Name(), err)
+		} else {
+			msgChans <- am
+		}
+	}()
+}
+
+func (sn *Node) Open(name string) error {
+	c := sn.Host.Open(name)
+	if c == nil {
+		return fmt.Errorf("Could not open connection to %s", name)
+	}
+	sn.HandleConn(c)
 }
 
 func (sn *Node) Close() {
@@ -286,7 +318,7 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	return sn.StartAnnouncementWithWait(round, sn.MaxWait)
 }
 
-func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {
+func NewNode(hn network.Host, suite abstract.Suite, random cipher.Stream) *Node {
 	sn := &Node{Host: hn, suite: suite}
 	sn.PrivKey = suite.Secret().Pick(random)
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
@@ -311,6 +343,9 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
 	sn.MaxWait = 50 * time.Second
+	sn.msgChans = make(chan network.ApplicationMessage)
+	sn.Conns = make(map[string]network.Conn)
+	sn.connsLock = sync.Mutex{}
 	return sn
 }
 
@@ -340,6 +375,10 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
 	sn.MaxWait = 50 * time.Second
+	sn.msgChans = make(chan network.ApplicationMessage)
+	sn.Conns = make(map[string]network.Conn)
+	sn.connsLock = sync.Mutex{}
+
 	return sn
 }
 
@@ -364,7 +403,8 @@ func (sn *Node) ShouldIFail(phase string) bool {
 }
 
 func (sn *Node) AddPeer(conn string, PubKey abstract.Point) {
-	sn.Host.AddPeers(conn)
+	// it does not connect so what it is used for
+	//sn.Host.AddPeers(conn)
 	sn.peerKeys[conn] = PubKey
 }
 
@@ -435,9 +475,9 @@ func (sn *Node) CloseAll(view int) error {
 		dbg.Lvl3(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
 
 		// Inform all children of announcement
-		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+		messgs := make([]CloseAllMessage, sn.NChildren(view))
 		for i := range messgs {
-			sm := SigningMessage{
+			sm := CloseAllMessage{
 				Suite:        sn.Suite().String(),
 				Type:         CloseAll,
 				ViewNbr:      view,

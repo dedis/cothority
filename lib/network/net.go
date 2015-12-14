@@ -173,8 +173,8 @@ type Host interface {
 // since a TcpHost will generate only TcpConn
 type Conn interface {
 	PeerName() string
-	Send(obj ProtocolMessage) error
-	Receive() (ApplicationMessage, error)
+	Send(ctx context.Context, obj ProtocolMessage) error
+	Receive(ctx context.Context) (ApplicationMessage, error)
 	Close()
 }
 
@@ -275,7 +275,8 @@ func (t *TcpHost) Open(name string) Conn {
 		time.Sleep(waitRetry)
 	}
 	if conn == nil {
-		dbg.Fatal(t.Name(), "could not connect to", name, ": ABORT")
+		dbg.Error(t.Name(), "could not connect to", name, ": ABORT")
+		return nil
 	}
 	c := TcpConn{
 		Peer: name,
