@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/crypto/random"
 	"github.com/dedis/crypto/sig"
 	"github.com/dedis/protobuf"
+	"reflect"
 )
 
 // XXX should be config items
@@ -35,38 +36,40 @@ func pickInsurers(suite abstract.Suite, srvpub []sig.SchnorrPublicKey,
 func sigEncode(suite abstract.Suite, seckey sig.SecretKey, rand cipher.Stream,
 	obj interface{}) (msg []byte, err error) {
 
-	buf := &bytes.Buffer{}
-	wr := sig.Writer(buf, seckey, rand)
-
+	// Encode message
 	enc, err := protobuf.Encode(obj)
 	if err != nil {
 		return nil, err
 	}
 
+	// Create signature
+	buf := &bytes.Buffer{}
+	wr := sig.Writer(buf, seckey, rand)
 	if _, err = wr.Write(enc); err != nil {
 		return nil, err
 	}
-
 	if err = wr.Close(); err != nil {
 		return nil, err
 	}
 
 	msg = buf.Bytes()
-
 	return msg, nil
 }
 
 func sigDecode(suite abstract.Suite, pubkey sig.PublicKey,
 	msg []byte, obj interface{}) (err error) {
 
+	// Check signature
 	var n int = 0
 	rd := sig.Reader(bytes.NewReader(msg), pubkey)
 	if n, err = rd.Read(msg); err != nil {
 		return err
 	}
 
-	// Decode message into struct
-	err = protobuf.Decode(msg[:n], obj)
+	// Decode message
+	var cons = make(protobuf.Constructors)
+	var secret abstract.Secret
+	cons[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
+	return protobuf.DecodeWithConstructors(msg[:n], obj, cons)
 
-	return err
 }

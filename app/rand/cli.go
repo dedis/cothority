@@ -326,8 +326,7 @@ func (c *Client) processR4(i int) (err error) {
 		sel := pickInsurers(c.suite, c.srvpub, Rc, c.r2[j].Rs)
 		if sel[idx] != i {
 			return errors.New(fmt.Sprintf(
-				"server %d claimed share it wasn't dealt",
-				i))
+				"server %d claimed share it wasn't dealt", i))
 		}
 
 		// Verify the share

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
@@ -40,7 +39,6 @@ type Server struct {
 func (s *Server) init(host Host, suite abstract.Suite,
 	clipub sig.PublicKey, srvpub []sig.SchnorrPublicKey,
 	srvsec sig.SchnorrSecretKey, self int) {
-	fmt.Printf("Server %d: init\n", self)
 	s.host = host
 	s.suite = suite
 	s.rand = suite.Cipher(abstract.RandomKey)
@@ -56,7 +54,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	s.conn = conn
 
 	// Receive client's I1
-	fmt.Printf("Server %d: recv I1 \n", s.self)
 	var i1 I1
 	var msg []byte
 	if msg, err = s.recv(&i1); err != nil {
@@ -88,7 +85,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	s.rand.XORKeyStream(Rs, Rs)
 
 	// Send our R1
-	fmt.Printf("Server %d: send R1 \n", s.self)
 	r1 := R1{HI1: abstract.Sum(s.suite, msg),
 		HRs: abstract.Sum(s.suite, Rs)}
 	err = s.send(&r1)
@@ -97,7 +93,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Receive client's I2
-	fmt.Printf("Server %d: recv I1 \n", s.self)
 	var i2 I2
 	if msg, err = s.recv(&i2); err != nil {
 		return
@@ -127,7 +122,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Send our R2
-	fmt.Printf("Server %d: send R2 \n", s.self)
 	r2 := R2{HI2: abstract.Sum(s.suite, msg), Rs: Rs, Deal: dealb}
 	err = s.send(&r2)
 	if err != nil {
@@ -135,7 +129,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Receive client's I3
-	fmt.Printf("Server %d: recv I3 \n", s.self)
 	var i3 I3
 	if msg, err = s.recv(&i3); err != nil {
 		return
@@ -208,7 +201,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Send our R3
-	fmt.Printf("Server %d: send R3 \n", s.self)
 	r3 := R3{HI3: abstract.Sum(s.suite, msg), Resp: r3resps}
 	err = s.send(&r3)
 	if err != nil {
@@ -216,7 +208,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Receive client's I4
-	fmt.Printf("Server %d: recv I4 \n", s.self)
 	var i4 I4
 	if msg, err = s.recv(&i4); err != nil {
 		return
@@ -237,7 +228,6 @@ func (s *Server) serve(conn Conn) (err error) {
 	}
 
 	// Send our R4
-	fmt.Printf("Server %d: send R4 \n", s.self)
 	// XXX but only if our deal is still included?
 	r4 := R4{HI4: abstract.Sum(s.suite, msg), Shares: shares}
 	err = s.send(&r4)
