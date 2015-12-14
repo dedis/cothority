@@ -1,7 +1,6 @@
 package dbg
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"regexp"
@@ -33,10 +32,6 @@ var Testing = false
 var StaticMsg = ""
 
 var regexpPaths, _ = regexp.Compile(".*/")
-
-func init() {
-	flag.IntVar(&DebugVisible, "debug", DebugVisible, "How much debug you from 1 (discrete) - 5 (very noisy). Default 1")
-}
 
 // Needs two functions to keep the caller-depth the same and find who calls us
 // Lvlf1 -> Lvlf -> Lvl
