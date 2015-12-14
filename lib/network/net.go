@@ -20,13 +20,17 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/abstract"
 	"net"
 	"os"
 	"reflect"
 	"time"
+
+	"golang.org/x/net/context"
+
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/protobuf"
 )
 
 /// Encoding part ///
@@ -73,31 +77,9 @@ type ApplicationMessage struct {
 }
 
 // MarshalBinary the application message => to bytes
-// Implements BinaryMarshaler interface so it will be used when sending with gob
+// Implements BinaryMarshaler interface so it will be used when sending with protobuf
 func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
-	var buf = new(bytes.Buffer)
-	err := binary.Write(buf, binary.BigEndian, am.MsgType)
-	if err != nil {
-		return nil, err
-	}
-	// if underlying type implements BinaryMarshal => use that
-	if bm, ok := am.Msg.(encoding.BinaryMarshaler); ok {
-		bufMsg, err := bm.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		_, err = buf.Write(bufMsg)
-		if err != nil {
-			return nil, err
-		}
-		return buf.Bytes(), nil
-	}
-	// Otherwise, use Encoding from the Suite
-	err = Suite.Write(buf, am.Msg)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	return protobuf.Encode(am)
 }
 
 // UnmarshalBinary will decode the incoming bytes
@@ -105,7 +87,9 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 // by using its UnmarshalBinary interface
 // otherwise, use abstract.Encoding (suite) to decode
 func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
+
 	b := bytes.NewBuffer(buf)
+	protobuf.DecodeWithConstructors(b.Bytes(), &am, nil)
 	var t Type
 	err := binary.Read(b, binary.BigEndian, &t)
 	if err != nil {
@@ -185,6 +169,8 @@ type TcpHost struct {
 	name string
 	// A list of connection maintained by this host
 	peers map[string]Conn
+	// a list of constructors for en/decoding
+	constructors protobuf.Constructors
 }
 
 // TcpConn is the underlying implementation of
@@ -211,7 +197,7 @@ func (c *TcpConn) PeerName() string {
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TcpConn) Receive() (ApplicationMessage, error) {
+func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	var am ApplicationMessage
 	err := c.dec.Decode(&am)
 	if err != nil {
@@ -223,7 +209,7 @@ func (c *TcpConn) Receive() (ApplicationMessage, error) {
 // Send will convert the Protocolmessage into an ApplicationMessage
 // Then send the message through the Gob encoder
 // Returns an error if anything was wrong
-func (c *TcpConn) Send(obj ProtocolMessage) error {
+func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	am := ApplicationMessage{}
 	err := am.ConstructFrom(obj)
 	if err != nil {
@@ -245,10 +231,11 @@ func (c *TcpConn) Close() {
 }
 
 // NewTcpHost returns a Fresh TCP Host
-func NewTcpHost(name string) *TcpHost {
+func NewTcpHost(name string, constructors protobuf.Constructors) *TcpHost {
 	return &TcpHost{
-		name:  name,
-		peers: make(map[string]Conn),
+		name:         name,
+		peers:        make(map[string]Conn),
+		constructors: constructors,
 	}
 }
 

@@ -3,10 +3,16 @@ package network
 import (
 	"bytes"
 	"fmt"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
+	"reflect"
 	"testing"
 	"time"
+
+	"golang.org/x/net/context"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/protobuf"
 )
 
 type TestMessage struct {
@@ -14,7 +20,7 @@ type TestMessage struct {
 	Secret abstract.Secret
 }
 
-var TestMessageType int
+var TestMessageType Type
 
 type PublicPacket struct {
 	Point abstract.Point
@@ -44,12 +50,13 @@ func init() {
 	// change in the future with the use of the Context thing currently
 	// implementing in crypto branch cipher
 	var suite = edwards.NewAES128SHA256Ed25519(false)
-	cons := make(map[reflect.Type]func() interface{})
+	cons := make(protobuf.Constructors)
 	var point abstract.Point
 	var secret abstract.Secret
-	cons[reflect.TypeOf(point).Elem()] = func() interface{} { return suite.Point() }
-	cons[reflect.TypeOf(secret).Elem()] = func() interface{} { return suite.Secret() }
-	constructors = protobuf.Constructors(cons)
+	cons[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
+	cons[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
+	constructors = cons
+	dbg.Print("Point/Secret constructors added to global var")
 
 	// Here we registers the packets themself so the decoder can instantiate
 	// to the right type and then we can do event-driven stuff such as receiving
@@ -57,7 +64,7 @@ func init() {
 	// to cast to the right packet type (See below)
 
 	PublicType = RegisterProtocolType(PublicPacket{})
-	TestMessageType = RegisterProtocolPacket(TestMessage{})
+	TestMessageType = RegisterProtocolType(TestMessage{})
 }
 
 type SimpleClient struct {
@@ -81,13 +88,19 @@ func (s *SimpleClient) Name() string {
 
 // Simplest protocol : exchange keys with the server
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
+	dbg.Print("ExchangeWithServer started")
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer func() {
+		dbg.Print("ExchangeWithServer canceld/timed out")
+		cancel()
+	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	// open a connection to the peer
 	c := s.Open(name)
 	if c == nil {
 		t.Error("client connection is nil ><")
 	}
+	dbg.Print("client opened a connection to the peer")
 	// create pack
 	p := PublicPacket{
 		Point: s.Pub,
@@ -97,12 +110,13 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	if err != nil {
 		t.Error("error sending from client:", err)
 	}
-
+	dbg.Print("Sent Public Packet")
 	// Receive the response
 	am, err := c.Receive(ctx)
 	if err != nil {
 		fmt.Printf("error receiving ..")
 	}
+	dbg.Print("Received response")
 
 	// Cast to the right type
 	if am.MsgType != PublicType {
@@ -128,15 +142,23 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		Point: s.Pub,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer func() {
+		dbg.Print("Canceling because of timeout")
+		cancel()
+	}()
+
+	dbg.Print("Server starting Send")
 	c.Send(ctx, p)
 	am, err := c.Receive(ctx)
 	if err != nil {
-		s.t.Error("Server errored when receiving  packet ...\n")
+		s.t.Error("Server errored when receiving packet ...\n")
 	}
+	dbg.Print("Server sent Public Packet")
 	if am.MsgType != PublicType {
 		s.t.Error("Server received a non-wanted packet\n")
 	}
+	dbg.Print("Closing connection")
 	c.Close()
 }
 
