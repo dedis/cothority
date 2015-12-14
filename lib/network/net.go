@@ -63,8 +63,13 @@ type ProtocolMessage interface{}
 
 // ApplicationMessage is the container for any ProtocolMessage
 type ApplicationMessage struct {
+	// From field can be set by the receivinf connection itself, no need to
+	// acutally transmit the value
+	From string
+	// What kind of msg do we have
 	MsgType Type
-	Msg     ProtocolMessage
+	// The underlying message
+	Msg ProtocolMessage
 }
 
 // MarshalBinary the application message => to bytes
