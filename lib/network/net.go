@@ -15,8 +15,6 @@ package network
 
 import (
 	"bytes"
-	"encoding"
-	"encoding/binary"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -79,6 +77,7 @@ type ApplicationMessage struct {
 // MarshalBinary the application message => to bytes
 // Implements BinaryMarshaler interface so it will be used when sending with protobuf
 func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
+	dbg.Print("func (am *ApplicationMessage) MarshalBinary() called")
 	return protobuf.Encode(am)
 }
 
@@ -87,40 +86,13 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 // by using its UnmarshalBinary interface
 // otherwise, use abstract.Encoding (suite) to decode
 func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
-
+	dbg.Print("UnmarshalBinary called")
 	b := bytes.NewBuffer(buf)
-	protobuf.DecodeWithConstructors(b.Bytes(), &am, nil)
-	var t Type
-	err := binary.Read(b, binary.BigEndian, &t)
-	if err != nil {
-		fmt.Printf("Error reading Type: %v\n", err)
+	var err error
+	if err = protobuf.DecodeWithConstructors(b.Bytes(), &am, nil); err != nil {
+		dbg.Print("Failed to decode with protobuf.")
 		os.Exit(1)
 	}
-
-	ty, ok := TypeRegistry[t]
-	if !ok {
-		fmt.Printf("Type %d is not registered so we can not allocate this type %s\n", t, t.String())
-		os.Exit(1)
-	}
-
-	am.MsgType = t
-
-	// Look if the type supports UnmarshalBinary
-	ptr := reflect.New(ty)
-	v := ptr.Elem()
-	if bu, ok := ptr.Interface().(encoding.BinaryUnmarshaler); ok {
-		// Bytes() returns the UNREAD portion of bytes ;)
-		err := bu.UnmarshalBinary(b.Bytes())
-		am.Msg = ptr.Elem().Interface()
-		return err
-	}
-	// Otherwise decode it ourself
-	err = Suite.Read(b, ptr.Interface()) // v.Addr().Interface())
-	if err != nil {
-		fmt.Printf("Error decoding ProtocolMessage: %v\n", err)
-		os.Exit(1)
-	}
-	am.Msg = v.Interface()
 	//fmt.Printf("UnmarshalBinary(): Decoded type %s => %v\n", t.String(), ty)
 	return nil
 }
@@ -198,6 +170,7 @@ func (c *TcpConn) PeerName() string {
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
 func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
+	dbg.Print("func (c *TcpConn) Receive() called")
 	var am ApplicationMessage
 	err := c.dec.Decode(&am)
 	if err != nil {
@@ -210,6 +183,7 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 // Then send the message through the Gob encoder
 // Returns an error if anything was wrong
 func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+	dbg.Print("func (c *TcpConn) Send() called")
 	am := ApplicationMessage{}
 	err := am.ConstructFrom(obj)
 	if err != nil {
