@@ -15,11 +15,11 @@ package network
 
 import (
 	"bytes"
-	"encoding/gob"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
-	"os"
 	"reflect"
 	"time"
 
@@ -27,7 +27,6 @@ import (
 
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 )
 
@@ -35,20 +34,23 @@ import (
 
 type Type uint8
 
-var currType Type
-var Suite abstract.Suite
 var TypeRegistry = make(map[Type]reflect.Type)
 var InvTypeRegistry = make(map[reflect.Type]Type)
+
+var globalOrder = binary.LittleEndian
 
 // RegisterProtocolType register a custom "struct" / "packet" and get
 // the allocated Type
 // Pass simply an your non-initialized struct
-func RegisterProtocolType(msg ProtocolMessage) Type {
-	currType += 1
+func RegisterProtocolType(msgType Type, msg ProtocolMessage) error {
+	if _, typeRegistered := TypeRegistry[msgType]; typeRegistered {
+		return errors.New("Type was already registered")
+	}
 	t := reflect.TypeOf(msg)
-	TypeRegistry[currType] = t
-	InvTypeRegistry[t] = currType
-	return currType
+	TypeRegistry[msgType] = t
+	InvTypeRegistry[t] = msgType
+
+	return nil
 }
 
 // String returns the underlying type in human format
@@ -79,8 +81,17 @@ type ApplicationMessage struct {
 // MarshalBinary the application message => to bytes
 // Implements BinaryMarshaler interface so it will be used when sending with protobuf
 func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
-	dbg.Print("func (am *ApplicationMessage) MarshalBinary() called")
-	return protobuf.Encode(am)
+	b := new(bytes.Buffer)
+	if err := binary.Write(b, globalOrder, am.MsgType); err != nil {
+		return nil, err
+	}
+	var buf []byte
+	var err error
+	if buf, err = protobuf.Encode(&am.Msg); err != nil {
+		return nil, err
+	}
+	_, err = b.Write(buf)
+	return b.Bytes(), err
 }
 
 // UnmarshalBinary will decode the incoming bytes
@@ -90,12 +101,20 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 	dbg.Print("UnmarshalBinary called")
 	b := bytes.NewBuffer(buf)
-	var err error
-	if err = protobuf.DecodeWithConstructors(b.Bytes(), &am, am.constructors); err != nil {
-		dbg.Print("Failed to decode with protobuf.")
-		os.Exit(1)
+	if err := binary.Read(b, globalOrder, &am.MsgType); err != nil {
+		return err
 	}
-	//fmt.Printf("UnmarshalBinary(): Decoded type %s => %v\n", t.String(), ty)
+
+	if typ, ok := TypeRegistry[am.MsgType]; !ok {
+		return fmt.Errorf("Type %s not registered.", am.MsgType.String())
+	} else {
+		ptr := reflect.New(typ)
+		var err error
+		if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, am.constructors); err != nil {
+			return err
+		}
+		am.Msg = ptr.Elem().Interface()
+	}
 	return nil
 }
 
@@ -155,9 +174,7 @@ type TcpConn struct {
 
 	// The connection used
 	Conn net.Conn
-	// TcpConn uses Gob to encode / decode its messages
-	enc *gob.Encoder
-	dec *gob.Decoder
+
 	// A pointer to the associated host (just-in-case)
 	host *TcpHost
 }
@@ -175,10 +192,22 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	dbg.Print("func (c *TcpConn) Receive() called")
 	var am ApplicationMessage
 	am.constructors = c.host.constructors
-	err := c.dec.Decode(&am)
+	//b:= make(bytes[])
+	var b []byte
+	var err error
+	dbg.Print("Before readall")
+	b, err = ioutil.ReadAll(c.Conn)
+	//c.Conn.SetReadDeadline(time.Now().Add(time.Second))
 	if err != nil {
-		dbg.Fatal("Error decoding ApplicationMessage:", err)
+		dbg.Fatal("Could not read/decode from connection", err)
+		return am, err
 	}
+	err = am.UnmarshalBinary(b)
+	if err != nil {
+		dbg.Fatal("Could not read/decode from connection", err)
+		return am, err
+	}
+
 	return am, nil
 }
 
@@ -186,16 +215,23 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 // Then send the message through the Gob encoder
 // Returns an error if anything was wrong
 func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
-	dbg.Print("func (c *TcpConn) Send() called")
 	am := ApplicationMessage{}
 	err := am.ConstructFrom(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
-	err = c.enc.Encode(&am)
+	var b []byte
+	dbg.Print("Before: MarshalBinary()")
+	b, err = am.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("Error sending message: %v", err)
 	}
+	dbg.Print("After: MarshalBinary()", len(b), "bytes")
+
+	var num int
+	//c.Conn.SetWriteDeadline(time.Now().Add(time.Second))
+	num, err = c.Conn.Write(b)
+	dbg.Print("Wrote number of bytes:", num)
 	return err
 }
 
@@ -245,8 +281,6 @@ func (t *TcpHost) Open(name string) Conn {
 	c := TcpConn{
 		Peer: name,
 		Conn: conn,
-		enc:  gob.NewEncoder(conn),
-		dec:  gob.NewDecoder(conn),
 		host: t,
 	}
 	t.peers[name] = &c
@@ -271,8 +305,6 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 		c := TcpConn{
 			Peer: conn.RemoteAddr().String(),
 			Conn: conn,
-			enc:  gob.NewEncoder(conn),
-			dec:  gob.NewDecoder(conn),
 			host: t,
 		}
 		t.peers[conn.RemoteAddr().String()] = &c
