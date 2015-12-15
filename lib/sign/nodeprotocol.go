@@ -35,7 +35,7 @@ func (sn *Node) ProcessMessages() error {
 
 	sn.UpdateTimeout()
 	dbg.Lvl4("Going to get", sn.Name())
-	msgchan := sn.Host.GetNetworkMessg()
+	msgchan := sn.Host.MsgChans
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
 	sn.heartbeat = time.NewTimer(500 * time.Second)
@@ -53,40 +53,38 @@ func (sn *Node) ProcessMessages() error {
 		default:
 			dbg.Lvl4(sn.Name(), "waiting for message")
 			nm, ok := <-msgchan
-			err := nm.Err
-			errStr := ""
-			if err != nil {
-				errStr = err.Error()
-			}
+			dbg.Lvlf4("Message on %s is type %s and %+v", sn.Name(), nm.Type, nm)
 
-			// One of the errors doesn't have an error-number applied, so we need
-			// to check for the string - will probably be fixed in go 1.6
-			if !ok || err == coconet.ErrClosed || err == io.EOF ||
-				err == io.ErrClosedPipe {
-				dbg.Lvl3(sn.Name(), "getting from closed host")
-				sn.Close()
-				return coconet.ErrClosed
-			}
-
-			// if it is a non-fatal error try again
-			if err != nil {
-				if strings.Contains(errStr, errReset) {
-					dbg.Lvl2(sn.Name(), "connection reset error")
-					return coconet.ErrClosed
-				}
-				dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
-				continue
-			}
-
-			// interpret network message as Signing Message
-			sm := nm.Data.(*SigningMessage)
-			sm.From = nm.From
-			dbg.Lvlf4("Message on %s is type %s and %+v", sn.Name(), sm.Type, sm)
-
-			switch sm.Type {
+			switch nm.Type {
 			// if it is a bad message just ignore it
 			default:
 				continue
+			case Error:
+				err := nm.Err
+				errStr := ""
+				if err != nil {
+					errStr = err.Error()
+				}
+
+				// One of the errors doesn't have an error-number applied, so we need
+				// to check for the string - will probably be fixed in go 1.6
+				if !ok || err == coconet.ErrClosed || err == io.EOF ||
+					err == io.ErrClosedPipe {
+					dbg.Lvl3(sn.Name(), "getting from closed host")
+					sn.Close()
+					return coconet.ErrClosed
+				}
+
+				// if it is a non-fatal error try again
+				if err != nil {
+					if strings.Contains(errStr, errReset) {
+						dbg.Lvl2(sn.Name(), "connection reset error")
+						return coconet.ErrClosed
+					}
+					dbg.Lvl1(sn.Name(), "error getting message (still continuing)", err)
+					continue
+				}
+
 			case Announcement:
 				dbg.Lvl3(sn.Name(), "got announcement")
 				sn.ReceivedHeartbeat(sm.ViewNbr)

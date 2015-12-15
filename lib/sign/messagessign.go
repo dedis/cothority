@@ -266,6 +266,7 @@ type StatusReturnMessage struct {
 
 // In case of an error, this message is sent
 type ErrorMessage struct {
+	*SigningMessage
 	Err string
 }
 

@@ -121,12 +121,14 @@ type Node struct {
 	PeerStatusRcvd int                 // How many peers sent status
 
 	MaxWait time.Duration // How long the announcement phase can take
-	// msgChans used to Fanin all the messages received by many connections
+	// MsgChans used to Fanin all the messages received by many connections
 	// peers
-	msgChans chan network.ApplicationMessage
+	MsgChans chan network.ApplicationMessage
 	// lists of name -> connections used by this node
 	Conns     map[string]network.Conn
 	connsLock sync.Mutex
+	// Views are moved here (decoupled from network layer part)
+	Views *Views
 }
 
 // Start listening for messages coming from parent(up)
@@ -150,7 +152,7 @@ func (sn *Node) HandleConn(c Conn) {
 		if err != nil {
 			dbg.Error("Error receiving messsage from", c.Name(), err)
 		} else {
-			msgChans <- am
+			MsgChans <- am
 		}
 	}()
 }
@@ -343,9 +345,10 @@ func NewNode(hn network.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
 	sn.MaxWait = 50 * time.Second
-	sn.msgChans = make(chan network.ApplicationMessage)
+	sn.MsgChans = make(chan network.ApplicationMessage)
 	sn.Conns = make(map[string]network.Conn)
 	sn.connsLock = sync.Mutex{}
+	sn.Views = NewViews()
 	return sn
 }
 
@@ -375,10 +378,10 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
 	sn.MaxWait = 50 * time.Second
-	sn.msgChans = make(chan network.ApplicationMessage)
+	sn.MsgChans = make(chan network.ApplicationMessage)
 	sn.Conns = make(map[string]network.Conn)
 	sn.connsLock = sync.Mutex{}
-
+	sn.Views = NewViews()
 	return sn
 }
 
@@ -406,6 +409,35 @@ func (sn *Node) AddPeer(conn string, PubKey abstract.Point) {
 	// it does not connect so what it is used for
 	//sn.Host.AddPeers(conn)
 	sn.peerKeys[conn] = PubKey
+}
+
+// PutDownAll puts the msg down the tree (Sending to children)
+// TODO: Only selects the one from the current tree
+func (sn *Node) PutDownAll(ctx context.Context, msg network.ProtocolMessage) {
+	for n, c := range sn.Conns {
+		c.Send(ctx, msg)
+	}
+}
+
+// PutDown only send a message down to a child
+// TODO should make the verification that  name is really a child
+func (sn *Node) PutDown(ctx context.Context, name string, msg network.ProtocolMessage) {
+	c, ok := sn.Conns[name]
+	if !ok {
+		return fmt.Errorf("No connection to %s", name)
+	}
+}
+
+func (sn *Node) Views() *Views {
+	return sn.Views
+}
+
+func (cn *Node) ConnectParent(view int) error {
+	v := sn.Views.Views[view]
+	if v.Parent == "" {
+		return fmt.Errorf("Could not connect to parent in view %d", view)
+	}
+	return sn.Open(v.Parent)
 }
 
 func (sn *Node) Suite() abstract.Suite {
@@ -499,12 +531,12 @@ func (sn *Node) PutUpError(view int, err error) {
 	// dbg.Lvl4(sn.Name(), "put up response with err", err)
 	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	ctx := context.TODO()
-	sn.PutUp(ctx, view, &SigningMessage{
+	sn.PutUp(ctx, view, &ErrorMessage{
 		Suite:        sn.Suite().String(),
 		Type:         Error,
 		ViewNbr:      view,
 		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-		Err:          &ErrorMessage{Err: err.Error()}})
+		Err:          err.Error()})
 }
 
 // Getting actual View
