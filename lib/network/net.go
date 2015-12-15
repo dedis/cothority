@@ -72,6 +72,8 @@ type ApplicationMessage struct {
 	MsgType Type
 	// The underlying message
 	Msg ProtocolMessage
+
+	constructors protobuf.Constructors
 }
 
 // MarshalBinary the application message => to bytes
@@ -89,7 +91,7 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 	dbg.Print("UnmarshalBinary called")
 	b := bytes.NewBuffer(buf)
 	var err error
-	if err = protobuf.DecodeWithConstructors(b.Bytes(), &am, nil); err != nil {
+	if err = protobuf.DecodeWithConstructors(b.Bytes(), &am, am.constructors); err != nil {
 		dbg.Print("Failed to decode with protobuf.")
 		os.Exit(1)
 	}
@@ -172,6 +174,7 @@ func (c *TcpConn) PeerName() string {
 func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	dbg.Print("func (c *TcpConn) Receive() called")
 	var am ApplicationMessage
+	am.constructors = c.host.constructors
 	err := c.dec.Decode(&am)
 	if err != nil {
 		dbg.Fatal("Error decoding ApplicationMessage:", err)
