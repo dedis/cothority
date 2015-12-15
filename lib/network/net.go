@@ -115,6 +115,7 @@ func (am *ApplicationMessage) ConstructFrom(obj ProtocolMessage) error {
 // How many times should we try to connect
 const maxRetry = 10
 const waitRetry = 1 * time.Second
+const ErrClosed = errors.New("Connection Closed")
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
