@@ -77,10 +77,10 @@ func (s *SimpleClient) Name() string {
 // Simplest protocol : exchange keys with the server
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	dbg.Print("ExchangeWithServer started")
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
 	defer func() {
-		dbg.Print("ExchangeWithServer canceld/timed out")
-		cancel()
+		//dbg.Print("ExchangeWithServer canceld/timed out")
+		//cancel()
 	}()
 
 	// open a connection to the peer
@@ -130,10 +130,10 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		Point: s.Pub,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
 	defer func() {
-		dbg.Print("Canceling because of timeout")
-		cancel()
+		//dbg.Print("Canceling because of timeout")
+		//cancel()
 	}()
 
 	if err := c.Send(ctx, p); err != nil {
