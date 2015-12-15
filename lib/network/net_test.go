@@ -1,7 +1,6 @@
 package network
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
@@ -20,24 +19,13 @@ type TestMessage struct {
 	Secret abstract.Secret
 }
 
-var TestMessageType Type
+var TestMessageType Type = 4
 
 type PublicPacket struct {
 	Point abstract.Point
 }
 
-func (p *PublicPacket) MarshalBinary() ([]byte, error) {
-	var b bytes.Buffer
-	err := Suite.Write(&b, &p.Point)
-	return b.Bytes(), err
-}
-func (p *PublicPacket) UnmarshalBinary(buf []byte) error {
-	b := bytes.NewBuffer(buf)
-	err := Suite.Read(b, &p.Point)
-	return err
-}
-
-var PublicType Type
+var PublicType Type = 5
 
 var constructors protobuf.Constructors
 
@@ -63,8 +51,8 @@ func init() {
 	// new messages without knowing the type and then check on the MsgType field
 	// to cast to the right packet type (See below)
 
-	PublicType = RegisterProtocolType(PublicPacket{})
-	TestMessageType = RegisterProtocolType(TestMessage{})
+	RegisterProtocolType(PublicType, PublicPacket{})
+	RegisterProtocolType(TestMessageType, TestMessage{})
 }
 
 type SimpleClient struct {
@@ -89,7 +77,7 @@ func (s *SimpleClient) Name() string {
 // Simplest protocol : exchange keys with the server
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	dbg.Print("ExchangeWithServer started")
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer func() {
 		dbg.Print("ExchangeWithServer canceld/timed out")
 		cancel()
@@ -98,7 +86,7 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	// open a connection to the peer
 	c := s.Open(name)
 	if c == nil {
-		t.Error("client connection is nil ><")
+		t.Fatal("client connection is nil ><")
 	}
 	dbg.Print("client opened a connection to the peer")
 	// create pack
@@ -108,7 +96,7 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	// Send it
 	err := c.Send(ctx, p)
 	if err != nil {
-		t.Error("error sending from client:", err)
+		t.Fatal("error sending from client:", err)
 	}
 	dbg.Print("Sent Public Packet")
 	// Receive the response
@@ -120,7 +108,7 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 
 	// Cast to the right type
 	if am.MsgType != PublicType {
-		t.Error("Received a non-wanted packet.\n")
+		t.Fatal("Received a non-wanted packet.\n")
 	}
 
 	c.Close()
@@ -142,14 +130,16 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		Point: s.Pub,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer func() {
 		dbg.Print("Canceling because of timeout")
 		cancel()
 	}()
 
-	dbg.Print("Server starting Send")
-	c.Send(ctx, p)
+	if err := c.Send(ctx, p); err != nil {
+		s.t.Fatal(err)
+	}
+	dbg.Print("Server sent")
 	am, err := c.Receive(ctx)
 	if err != nil {
 		s.t.Error("Server errored when receiving packet ...\n")
