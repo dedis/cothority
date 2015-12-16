@@ -22,13 +22,12 @@ compile(){
     #for GOOS in linux darwin; do
     #    for GOARCH in amd64 386; do
     for GOOS in linux; do
-        for GOARCH in amd64; do
+        for GOARCH in amd64 386; do
             echo Doing $GOOS / $GOARCH
             export GOOS GOARCH
             go build -o conode-bin/$BINARY-$GOOS-$GOARCH .
         done
     done
-    rm conode-bin/$BINARY-darwin-386
 }
 
 main
