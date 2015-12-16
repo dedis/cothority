@@ -18,7 +18,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"reflect"
 	"time"
@@ -87,7 +86,18 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 	}
 	var buf []byte
 	var err error
-	if buf, err = protobuf.Encode(&am.Msg); err != nil {
+	val := reflect.ValueOf(am.Msg)
+
+	if !val.CanInterface() {
+		dbg.Print("Can not addr :()")
+	}
+	interf := val.Interface()
+	//dbg.Print("What is am.Msg", reflect.TypeOf(interf))
+	//dbg.Print("Waht is interf", reflect.TypeOf(val.Addr().Interface()))
+	//copy :=
+	//ptr := val.Addr().Interface()
+	if buf, err = protobuf.Encode(interf); err != nil {
+		dbg.Print("Error for protobuf encoding")
 		return nil, err
 	}
 	_, err = b.Write(buf)
@@ -104,16 +114,17 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 	if err := binary.Read(b, globalOrder, &am.MsgType); err != nil {
 		return err
 	}
-
+	fmt.Println("UnmarshalBinary Type", am.MsgType.String())
 	if typ, ok := TypeRegistry[am.MsgType]; !ok {
 		return fmt.Errorf("Type %s not registered.", am.MsgType.String())
 	} else {
-		ptr := reflect.New(typ)
+		ptrVal := reflect.New(typ)
+		ptr := ptrVal.Interface()
 		var err error
 		if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, am.constructors); err != nil {
 			return err
 		}
-		am.Msg = ptr.Elem().Interface()
+		am.Msg = ptrVal.Elem().Interface()
 	}
 	return nil
 }
@@ -197,8 +208,12 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	var b []byte
 	var err error
 	dbg.Print("Before readall")
-	b, err = ioutil.ReadAll(c.Conn)
-	//c.Conn.SetReadDeadline(time.Now().Add(time.Second))
+	c.Conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	//b, err = ioutil.ReadAll(c.Conn)
+	b = make([]byte, 36)
+	n, err := c.Conn.Read(b)
+	fmt.Println("Read", n, "bytes or", err)
+
 	if err != nil {
 		dbg.Fatal("Could not read/decode from connection", err)
 		return am, err
