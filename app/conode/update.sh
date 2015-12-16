@@ -28,7 +28,7 @@ main(){
 # Fetches the latest version and untars it here
 update(){
   if [ ! -e NO_UPDATE ]; then
-    RELEASE=$( wget -q -O- https://github.com/dedis/cothority/releases/latest | grep DeDiS/cothority/releases/download | sed -e "s/.*href=.\(.*\). rel.*/\1/" )
+    RELEASE=$( wget -q -O- https://github.com/dedis/cothority/releases/latest | grep -i dedis/cothority/releases/download | sed -e "s/.*href=.\(.*\). rel.*/\1/" )
     TGZ=$( basename $RELEASE )
     if [ -e $TGZ ]; then
         echo $RELEASE already here
