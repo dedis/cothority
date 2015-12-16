@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# start-conode.sh is the main entry point for users and handles all use-cases
+# encountered.
+# First off it has to be run as
+# ./start-conode.sh setup address:port
+# which will create a private/public key pair, tries to send it to
+# linus.gasser@epfl.ch, shows it on screen and waits for validation.
+# Once the node is validated, it will automatically update and then go into
+# 'run'-mode will connect to the other nodes.
+
 main(){
   echo Starting conode from the correct cpu and arch
   if [ ! -x conode ]; then
@@ -9,22 +18,28 @@ main(){
   setup)
     if [ -f key.pub ]; then
       echo -e "\n*** Key.pub already exists - if you want to re-create, please delete it first\n"
+      exit
     else
-      ./conode keygen $2
-      cat key.pub | mail linus.gasser@epfl.ch
+      if ./conode keygen $2; then
+        echo Sending public-key to linus.gasser@epfl.ch
+        cat key.pub | mail linus.gasser@epfl.ch
+      else
+        echo Couldnt create key-pair
+        exit
+      fi
     fi
+    echo If you want to be added, make sure the following is known by the dedis-group
     cat key.pub
     ./conode validate
     if [ "$?" = "1" ]; then
       echo Received exit-command - will update and run
-      update
-      exec ./start-conode.sh run
+      exec ./update.sh
     fi
     ;;
   run)
     if [ ! -f config.toml ]; then
       echo "Didn't find 'config.toml' - searching in update"
-      update
+      ./update.sh update_only
       if [ ! -f config.toml ]; then
         echo "Still didn't find config.toml - please copy it first here"
         echo
@@ -33,43 +48,25 @@ main(){
     fi
     echo Running conode
     ./conode run
-    echo Updating
-    update
-    echo Sleeping a bit
+    echo Sleeping a bit, then updating
     sleep 10
-    exec ./start-conode.sh run
+    exec ./update.sh
+    ;;
+  update|"")
+    exec ./update.sh
     ;;
   *)
     echo Usage:
     echo $0 setup address
-    echo or
+    echo "or to update and run it:"
+    echo $0
+    echo "or only run it (no update):"
     echo $0 run
+    echo "or if you want to manually update:"
+    echo $0 update
     echo
     ;;
   esac
-}
-
-update(){
-  RELEASE=$( wget -q -O- https://github.com/dedis/cothority/releases/latest | grep DeDiS/cothority/releases/download | sed -e "s/.*href=.\(.*\). rel.*/\1/" )
-  TGZ=$( basename $RELEASE )
-  if [ -e $TGZ ]; then
-    echo $RELEASE already here
-  else
-    echo Getting $RELEASE
-    wget -q https://github.com/$RELEASE
-    echo Untarring
-    tar xf $TGZ
-  fi
-}
-
-run_loop(){
-  pkill -f conode
-  if [ $( which screen ) ]; then
-    screen -S conode -dm ./conode $@ &
-  else
-    nohup ./conode $@ &
-    rm nohup.out
-  fi
 }
 
 search_arch(){
