@@ -87,7 +87,7 @@ func (s *StampListener) ListenRequests() error {
 
 	go func() {
 		for {
-			dbg.Lvlf2("Listening to sign-requests: %p", s)
+			dbg.Lvlf2("Listening to stamp-requests on %s", s.NameL)
 			conn, err := s.Port.Accept()
 			if err != nil {
 				// handle error

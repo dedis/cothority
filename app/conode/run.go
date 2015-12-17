@@ -59,26 +59,39 @@ func Run(configFile, key string) {
 		conf.Public = pub
 		address = addr
 	}
-	peer := conode.NewPeer(address, conf)
+
 	// Set up the stamp listener first, so we can exit on demand
-	conode.NewStampListener(peer.Name())
+	conode.NewStampListener(address)
+
+	peer := conode.NewPeer(address, conf)
 
 	// Wait for all conodes to be up and running before starting a round.
 	time.Sleep(time.Second)
 	if peer.IsRoot(0) {
-		for {
+		var everyoneUp bool = false
+		for !everyoneUp {
 			time.Sleep(time.Second)
 			setupRound := sign.NewRoundSetup(peer.Node)
-			err := peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
-			if err == nil {
-				counted := <-setupRound.Counted
+			var err error
+			done := make(chan error)
+			go func() {
+				err = peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
+				done <- err
+			}()
+			select {
+			case err := <-done:
+				if err != nil {
+					dbg.Lvl1("Time-out on counting rounds")
+				} //
+			case counted := <-setupRound.Counted:
 				dbg.Lvl1("Number of peers counted:", counted, "of", len(conf.Hosts))
+				committers := <-setupRound.Committers
+				dbg.Lvlf1("Committers counted: %v", committers)
 				if counted == len(conf.Hosts) {
 					dbg.Lvl1("All hosts replied, starting")
+					everyoneUp = true
 					break
 				}
-			} else {
-				dbg.Lvl1("Time-out on counting rounds")
 			}
 		}
 	}

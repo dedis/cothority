@@ -47,7 +47,9 @@ func ForceExit(address string) {
 	}
 
 	dbg.Lvl1("Asking to exit")
-	err = conn.PutData(msg)
+	var data coconet.BinaryMarshaler
+	data = msg
+	err = conn.PutData(data)
 	if err != nil {
 		dbg.Fatal("Couldn't send exit-message to server:", err)
 	}

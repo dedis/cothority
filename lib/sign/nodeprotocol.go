@@ -227,7 +227,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	RoundNbr := sm.RoundNbr
 	sn.nRounds = RoundNbr
 	am := sm.Am
-	dbg.Lvl4(sn.Name(), "received announcement on", view)
+	dbg.Lvl3(sn.Name(), "received announcement on", view, "Type =", am.RoundType)
 	var round Round
 	round = sn.Rounds[RoundNbr]
 	if round == nil {
@@ -270,6 +270,7 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	}
 
 	if len(sn.Children(view)) == 0 {
+		dbg.Lvl3("Leaf: Announcement done -> going Commitment")
 		// If we are a leaf, start the commit phase process
 		sn.Commit(&SigningMessage{
 			Suite:    sn.Suite().String(),
@@ -347,6 +348,7 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	}
 
 	if sn.IsRoot(view) {
+		dbg.Lvl3("Root: commitments done -> going Challenge")
 		sn.commitsDone <- roundNbr
 		err = sn.Challenge(&SigningMessage{
 			Suite:    sn.Suite().String(),
@@ -358,10 +360,14 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 	} else {
 		// create and putup own commit message
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
-		dbg.Lvl4(sn.Name(), "puts up commit")
 		ctx := context.TODO()
-		dbg.Lvlf3("Out is %+v", out)
+		dbg.Lvlf5("Out is %+v", out)
 		err = sn.PutUp(ctx, view, out)
+		isErr := "(no error)"
+		if err != nil {
+			isErr = fmt.Sprintf("(error %s)", err)
+		}
+		dbg.Lvl3(sn.Name(), "puts up commit", isErr)
 	}
 	return err
 }
@@ -406,6 +412,7 @@ func (sn *Node) Challenge(sm *SigningMessage) error {
 
 	// if we are a leaf, send the respond up
 	if len(children) == 0 {
+		dbg.Lvl3("Leaf: Challenge done -> going Response")
 		sn.Respond(&SigningMessage{
 			Suite:    sn.Suite().String(),
 			Type:     Response,
@@ -498,7 +505,7 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 		dbg.Lvl4(sn.Name(), "put up response to", sn.Parent(view))
 		err = sn.PutUp(ctx, view, out)
 	} else {
-		dbg.Lvl4("Root received response")
+		dbg.Lvl4("Root: response done")
 	}
 
 	if sn.TimeForViewChange() {

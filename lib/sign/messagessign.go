@@ -183,7 +183,8 @@ type CommitmentMessage struct {
 	// CountedVotes *CountedVotes // CountedVotes contains a subtree's votes
 	Vote *Vote // Vote Response (promise)
 
-	Messages int // Actual number of messages signed
+	Messages   int // Actual number of messages signed
+	Committers []string
 }
 
 // The challenge calculated by the root-node
