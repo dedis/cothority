@@ -38,6 +38,15 @@ var InvTypeRegistry = make(map[reflect.Type]Type)
 
 var globalOrder = binary.LittleEndian
 
+func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
+	constructors := make(protobuf.Constructors)
+	var point abstract.Point
+	var secret abstract.Secret
+	constructors[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
+	constructors[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
+	return constructors
+}
+
 // RegisterProtocolType register a custom "struct" / "packet" and get
 // the allocated Type
 // Pass simply your non-initialized struct
@@ -158,6 +167,11 @@ const maxRetry = 10
 const waitRetry = 1 * time.Second
 
 var ErrClosed = errors.New("Connection Closed")
+var ErrEOF = errors.New("EOF")
+var ErrCanceled = errors.New("Operation Canceled")
+var ErrTemp = errors.New("Temporary Error")
+var ErrTimeout = errors.New("Timeout Error")
+var ErrUnknown = errors.New("Unknown Error")
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
@@ -165,6 +179,7 @@ type Host interface {
 	Name() string
 	Open(name string) Conn
 	Listen(addr string, fn func(Conn)) // the srv processing function
+	Close() error
 }
 
 // Conn is the basic interface to represent any communication mean
@@ -176,7 +191,7 @@ type Conn interface {
 	Send(ctx context.Context, obj ProtocolMessage) error
 	// Receive any message through the connection.
 	Receive(ctx context.Context) (ApplicationMessage, error)
-	Close()
+	Close() error
 }
 
 // TcpHost is the underlying implementation of
@@ -186,6 +201,10 @@ type TcpHost struct {
 	name string
 	// A list of connection maintained by this host
 	peers map[string]Conn
+	// its listeners
+	listener net.Listener
+	// the close channel used to indicate to the listener we want to quit
+	quit chan bool
 	// a list of constructors for en/decoding
 	constructors protobuf.Constructors
 }
@@ -199,6 +218,8 @@ type TcpConn struct {
 	// The connection used
 	Conn net.Conn
 
+	// closed indicator
+	closed bool
 	// A pointer to the associated host (just-in-case)
 	host *TcpHost
 }
@@ -207,6 +228,30 @@ type TcpConn struct {
 // the conn
 func (c *TcpConn) PeerName() string {
 	return c.Peer
+}
+
+// handleError produces the higher layer error depending on the type
+// so user of the package can know what is the cause of the problem
+func handleError(err error) error {
+
+	if strings.Contains(err.Error(), "use of closed") {
+		return ErrClosed
+	} else if strings.Contains(err.Error(), "canceled") {
+		return ErrCanceled
+	} else if strings.Contains(err.Error(), "EOF") {
+		return ErrEOF
+	}
+
+	netErr, ok := err.(net.Error)
+	if !ok {
+		return ErrUnknown
+	}
+	if netErr.Temporary() {
+		return ErrTemp
+	} else if netErr.Timeout() {
+		return ErrTimeout
+	}
+	return ErrUnknown
 }
 
 // Receive waits for any input on the connection and returns
@@ -225,20 +270,18 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 		n, err := c.Conn.Read(b)
 		b = b[:n]
 		buffer.Write(b)
-		if n < bufferSize || err != nil {
+		if err != nil {
+			return handleError(err)
+		}
+		if n < bufferSize {
 			// read all data
 			break
 		}
 	}
 
-	if err != nil {
-		dbg.Fatal("Could not read/decode from connection", err)
-		return am, err
-	}
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
-		dbg.Fatal("Could not read/decode from connection", err)
-		return am, err
+		return am, fmt.Errorf("Error unmarshaling message: %s", err.Error())
 	}
 
 	return am, nil
@@ -255,19 +298,26 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
-		return fmt.Errorf("Error sending message: %v", err)
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
 
 	//c.Conn.SetWriteDeadline(time.Now().Add(time.Second))
 	_, err = c.Conn.Write(b)
-	return err
+	if err != nil {
+		return handleError(err)
+	}
+	return nil
 }
 
 // Close ... closes the connection
-func (c *TcpConn) Close() {
+func (c *TcpConn) Close() error {
+	if c.closed == true {
+		return nil
+	}
 	err := c.Conn.Close()
+	c.closed = true
 	if err != nil {
-		dbg.Fatal("Error while closing tcp conn:", err)
+		return handleError(err)
 	}
 }
 
@@ -276,6 +326,7 @@ func NewTcpHost(name string, constructors protobuf.Constructors) *TcpHost {
 	return &TcpHost{
 		name:         name,
 		peers:        make(map[string]Conn),
+		quit:         make(chan bool),
 		constructors: constructors,
 	}
 }
@@ -321,13 +372,20 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		dbg.Fatal("error listening (host", t.Name(), ")")
+		dbg.Lvl2("error listening (host", t.Name(), ")")
 	}
+	t.listener = ln
 	dbg.Lvl3(t.Name(), "Waiting for connections on addr", addr, "..\n")
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			dbg.Lvl2(t.Name(), "error accepting connection:", err)
+			select {
+			case <-t.quit:
+				dbg.Lvl3(t.Name(), "Stop listening on", addr)
+				return
+			default:
+				dbg.Lvl2(t.Name(), "error accepting connection:", err)
+			}
 			continue
 		}
 		c := TcpConn{
@@ -338,4 +396,16 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 		t.peers[conn.RemoteAddr().String()] = &c
 		go fn(&c)
 	}
+}
+
+// Close will close every connection this host has opened
+func (t *TcpHost) Close() error {
+	for n, c := range t.peers {
+		if err := c.Close(); err != nil {
+			return handleError(err)
+		}
+	}
+	close(t.quit)
+	t.listener.Close()
+	return nil
 }
