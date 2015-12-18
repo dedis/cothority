@@ -20,12 +20,14 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 )
 
@@ -37,6 +39,8 @@ var TypeRegistry = make(map[Type]reflect.Type)
 var InvTypeRegistry = make(map[reflect.Type]Type)
 
 var globalOrder = binary.LittleEndian
+var DefaultType Type = 0
+var emptyApplicationMessage = ApplicationMessage{MsgType: DefaultType}
 
 func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 	constructors := make(protobuf.Constructors)
@@ -271,7 +275,7 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 		b = b[:n]
 		buffer.Write(b)
 		if err != nil {
-			return handleError(err)
+			return emptyApplicationMessage, handleError(err)
 		}
 		if n < bufferSize {
 			// read all data
@@ -319,6 +323,7 @@ func (c *TcpConn) Close() error {
 	if err != nil {
 		return handleError(err)
 	}
+	return nil
 }
 
 // NewTcpHost returns a Fresh TCP Host
@@ -400,7 +405,7 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
-	for n, c := range t.peers {
+	for _, c := range t.peers {
 		if err := c.Close(); err != nil {
 			return handleError(err)
 		}

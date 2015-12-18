@@ -1,7 +1,5 @@
 package network
 
-import "github.com/dedis/crypto/abstract"
-
 // This file contains usual packets that are needed for different
 // protocols.
 
