@@ -128,7 +128,7 @@ type Node struct {
 	Conns     map[string]network.Conn
 	connsLock sync.Mutex
 	// Views are moved here (decoupled from network layer part)
-	Views *Views
+	*Views
 }
 
 // Start listening for messages coming from parent(up)

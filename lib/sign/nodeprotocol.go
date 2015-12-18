@@ -94,7 +94,7 @@ func (sn *Node) ProcessMessages() error {
 					err = sn.Propose(sm.ViewNbr, sm.RoundNbr, sm.Am, sm.From)
 					dbg.Lvl4(sn.Name(), "done proposing")
 				} else {
-					if !sn.IsParent(sm.ViewNbr, sm.From) {
+					if !sn.Parent(sm.ViewNbr) != sm.From {
 						dbg.Fatal(sn.Name(), "received announcement from non-parent on view", sm.ViewNbr)
 						continue
 					}
