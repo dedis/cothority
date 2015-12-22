@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sign"
-	"time"
 )
 
 // This file is the first draft to a skeleton app where you have all the
@@ -70,17 +69,11 @@ func main() {
 
 	// The root waits everyones to be up
 	if app.RunFlags.AmRoot {
-		for {
-			time.Sleep(time.Second)
-			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
-			counted := <-setupRound.Counted
-			dbg.Lvl1("Number of peers counted:", counted)
-			if counted == len(conf.Hosts) {
-				dbg.Lvl1("All hosts replied")
-				break
-			}
+		err := peer.WaitRoundSetup(len(conf.Hosts), 5, 2)
+		if err != nil {
+			dbg.Fatal(err)
 		}
+		dbg.Lvl1("Starting the rounds")
 	}
 
 	// You register by giving the type, and a function that takes a sign.Node in
@@ -89,7 +82,6 @@ func main() {
 		func(node *sign.Node) sign.Round {
 			return NewRoundSkeleton(node)
 		})
-
 	// Here it will create a new round each seconds automatically.
 	// If you need more fined grained control, you must implement yourself the
 	// conode.Peer struct (it's quite easy).
@@ -99,7 +91,7 @@ func main() {
 }
 
 // The name type of this round implementation
-const RoundSkeletonType = "empty"
+const RoundSkeletonType = "skeleton"
 
 // RoundSkeleton is the barebone struct that will be used for a round.
 // You can inherit of some already implemented rounds such as roundcosi, or
@@ -123,7 +115,7 @@ type RoundSkeleton struct {
 }
 
 // Your New Round function
-func NewRoundSkeleton(node *sign.Node) *RoundSkeleton {
+func NewRoundSkeleton(node *sign.Node) sign.Round {
 	dbg.Lvl3("Making new RoundSkeleton", node.Name())
 	round := &RoundSkeleton{}
 	// You've got to initialize the roundcosi with the node

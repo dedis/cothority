@@ -1,6 +1,7 @@
 package conode
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -155,6 +156,45 @@ func (peer *Peer) Close() {
 	peer.Node.Close()
 	StampListenersClose()
 	dbg.Lvlf3("Closing of peer: %s finished", peer.Name())
+}
+
+// WaitRoundSetup launch a RoundSetup then waits for everyone to be up.
+// timeoutSec is how much seconds you want to wait for one round setup
+// retry is how many times you want to try a RoundSetup before quitting
+// If all went well, nil otherwise an error
+func (p *Peer) WaitRoundSetup(nbHost int, timeoutSec time.Duration, retry int) error {
+	var everyoneUp bool = false
+	var try int
+	for !everyoneUp {
+		time.Sleep(time.Second)
+		setupRound := sign.NewRoundSetup(p.Node)
+		var err error
+		done := make(chan error)
+		go func() {
+			err = p.StartAnnouncementWithWait(setupRound, timeoutSec*time.Second)
+			done <- err
+		}()
+		select {
+		case err := <-done:
+			try++
+			if err != nil {
+				dbg.Lvl1("Time-out on counting rounds")
+				if try == retry {
+					return errors.New("Tried too much time for roundSetup.Abort")
+				}
+			} //
+		case counted := <-setupRound.Counted:
+			dbg.Lvl1("Number of peers counted:", counted, "of", nbHost)
+			if counted == nbHost {
+				dbg.Lvl1("All hosts replied, starting")
+				everyoneUp = true
+				<-done // so routine will eventually finish
+				break
+			}
+		}
+	}
+	return nil
+
 }
 
 // Simple ephemeral helper for compatibility issues
