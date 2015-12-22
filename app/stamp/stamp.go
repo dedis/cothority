@@ -5,8 +5,6 @@ import (
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sign"
-	"time"
 )
 
 func main() {
