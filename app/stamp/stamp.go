@@ -5,8 +5,6 @@ import (
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sign"
-	"time"
 )
 
 func main() {
@@ -32,16 +30,9 @@ func RunServer(flags *app.Flags, conf *app.ConfigColl) {
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
 
 	if app.RunFlags.AmRoot {
-		for {
-			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
-			counted := <-setupRound.Counted
-			dbg.Lvl1("Number of peers counted:", counted)
-			if counted == len(conf.Hosts) {
-				dbg.Lvl1("All hosts replied")
-				break
-			}
-			time.Sleep(time.Second)
+		err := peer.WaitRoundSetup(len(conf.Hosts), 5, 2)
+		if err != nil {
+			dbg.Fatal(err)
 		}
 	}
 

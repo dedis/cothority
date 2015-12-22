@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sign"
 	"time"
 )
 
@@ -68,31 +67,9 @@ func Run(configFile, key string) {
 	// Wait for all conodes to be up and running before starting a round.
 	time.Sleep(time.Second)
 	if peer.IsRoot(0) {
-		var everyoneUp bool = false
-		for !everyoneUp {
-			time.Sleep(time.Second)
-			setupRound := sign.NewRoundSetup(peer.Node)
-			var err error
-			done := make(chan error)
-			go func() {
-				err = peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
-				done <- err
-			}()
-			select {
-			case err := <-done:
-				if err != nil {
-					dbg.Lvl1("Time-out on counting rounds")
-				} //
-			case counted := <-setupRound.Counted:
-				dbg.Lvl1("Number of peers counted:", counted, "of", len(conf.Hosts))
-				committers := <-setupRound.Committers
-				dbg.Lvlf1("Committers counted: %v", committers)
-				if counted == len(conf.Hosts) {
-					dbg.Lvl1("All hosts replied, starting")
-					everyoneUp = true
-					break
-				}
-			}
+		err := peer.WaitRoundSetup(len(conf.Hosts), 5, 2)
+		if err != nil {
+			dbg.Fatal(err)
 		}
 	}
 	peer.LoopRounds(RoundStatsType, maxRounds)
