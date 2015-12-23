@@ -127,21 +127,10 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 	}
 	var buf []byte
 	var err error
-	/* val := reflect.ValueOf(am.Msg)*/
-
-	//if !val.CanInterface() {
-	//dbg.Print("Can not addr :()")
-	//}
-	/*interf := val.Interface()*/
-	//dbg.Print("What is am.Msg", reflect.TypeOf(interf))
-	//dbg.Print("Waht is interf", reflect.TypeOf(val.Addr().Interface()))
-	//copy :=
-	//ptr := val.Addr().Interface()
 	if buf, err = protobuf.Encode(am.Msg); err != nil {
 		dbg.Print("Error for protobuf encoding")
 		return nil, err
 	}
-	fmt.Println("MarshalBinary ", len(buf), " bytes")
 	_, err = b.Write(buf)
 	return b.Bytes(), err
 }
@@ -155,7 +144,6 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 	if err := binary.Read(b, globalOrder, &am.MsgType); err != nil {
 		return err
 	}
-	fmt.Println("UnmarshalBinary ", len(b.Bytes()), " bytes")
 	if typ, ok := TypeRegistry[am.MsgType]; !ok {
 		return fmt.Errorf("Type %s not registered.", am.MsgType.String())
 	} else {
@@ -207,7 +195,7 @@ var ErrUnknown = errors.New("Unknown Error")
 type Host interface {
 	Name() string
 	Open(name string) (Conn, error)
-	Listen(addr string, fn func(Conn)) // the srv processing function
+	Listen(addr string, fn func(Conn)) error // the srv processing function
 	Close() error
 }
 
@@ -235,6 +223,8 @@ type TcpHost struct {
 	listener net.Listener
 	// the close channel used to indicate to the listener we want to quit
 	quit chan bool
+	// indicates wether this host is closed already or not
+	closed bool
 	// a list of constructors for en/decoding
 	constructors protobuf.Constructors
 }
@@ -288,14 +278,13 @@ func handleError(err error) error {
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
 func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
-	dbg.Print("func (c *TcpConn) Receive() called")
 	var am ApplicationMessage
 	am.constructors = c.host.constructors
 	bufferSize := 256
 	b := make([]byte, bufferSize)
 	var buffer bytes.Buffer
 	var err error
-	c.Conn.SetReadDeadline(time.Now().Add(timeOut))
+	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	for {
 		n, err := c.Conn.Read(b)
 		b = b[:n]
@@ -397,21 +386,21 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
-func (t *TcpHost) Listen(addr string, fn func(Conn)) {
+func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		dbg.Lvl2("error listening (host", t.Name(), ")")
+		return fmt.Errorf("%s Error opening listener on address %s", t.Name(), addr)
 	}
 	t.listener = ln
 	dbg.Lvl3(t.Name(), "Waiting for connections on addr", addr, "..\n")
 	for {
-		conn, err := ln.Accept()
+		conn, err := t.listener.Accept()
 		if err != nil {
 			select {
 			case <-t.quit:
 				dbg.Lvl3(t.Name(), "Stop listening on", addr)
-				return
+				return nil
 			default:
 				dbg.Lvl2(t.Name(), "error accepting connection:", err)
 			}
@@ -429,12 +418,18 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
+	if t.closed == true {
+		return nil
+	}
+	t.closed = true
 	for _, c := range t.peers {
 		if err := c.Close(); err != nil {
 			return handleError(err)
 		}
 	}
 	close(t.quit)
-	t.listener.Close()
+	if t.listener != nil {
+		return t.listener.Close()
+	}
 	return nil
 }

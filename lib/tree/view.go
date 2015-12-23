@@ -1,6 +1,7 @@
 package tree
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
@@ -214,7 +215,7 @@ func convertTree(suite abstract.Suite, peers []*Peer, t *ConfigTree, host string
 		// decode private key
 		secret, err = cliutils.ReadSecret64(suite, strings.NewReader(t.PriKey))
 		if err != nil {
-			dbg.Fatal("Can not decode private key for node", t.Name)
+			panic(fmt.Sprintf("Can not decode private key for node %s", t.Name))
 		}
 
 	}
@@ -222,14 +223,14 @@ func convertTree(suite abstract.Suite, peers []*Peer, t *ConfigTree, host string
 		// decode the public and  create a Peer with theses keys
 		public, err = cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
 		if err != nil {
-			dbg.Fatal("Can not decode public key for node", t.Name)
+			panic(fmt.Sprintf("Can not decode public key for node %s", t.Name))
 		}
 	} else if t.PriKey != "" {
 		// we can generate the corresponding public key anyway
 		public = public.Mul(nil, secret)
 	} else {
 		// We don't have any public key for this host ??
-		dbg.Fatal("No public key for this host")
+		panic(fmt.Sprintf("No public key for this host %s", t.Name))
 	}
 	// Create the peer + node (tree)
 	p := NewPeer(t.Name, public, secret)

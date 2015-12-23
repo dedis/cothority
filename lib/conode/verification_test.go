@@ -28,7 +28,7 @@ func TestVerifyChallenge(t *testing.T) {
 
 	err := conode.VerifyChallenge(suite, &reply)
 	if err != nil {
-		t.Error("Verification failed")
+		t.Fatal("Verification failed")
 	} else {
 		dbg.Lvl2("Verification passed")
 	}
@@ -39,7 +39,7 @@ func TestVerifySignature(t *testing.T) {
 	setupTestSig()
 
 	if !conode.VerifySignature(suite, &reply, X0, hash) {
-		t.Error("Verification failed")
+		t.Fatal("Verification failed")
 	} else {
 		dbg.Lvl2("Verification passed")
 	}
@@ -66,7 +66,7 @@ func TestVerifySchnorr(t *testing.T) {
 func TestsetupTestSig(t *testing.T) {
 	setupTestSig()
 	if !reply.AggPublic.Equal(X0) {
-		t.Error("X0 is not equal")
+		t.Fatal("X0 is not equal")
 	} else {
 		dbg.Lvl2("X0 is OK")
 	}

@@ -91,7 +91,7 @@ func (s *StampListener) ListenRequests() error {
 				am, err := c.Receive(ctx)
 				if err != nil {
 					dbg.Lvl2(s.Name(), " error receiving client message:", err)
-					if err == network.ErrClosed || err == network.ErrUnknown {
+					if err == network.ErrClosed || err == network.ErrUnknown || err == network.ErrEOF {
 						dbg.Lvl2("Stamplistener", s.Name(), "Abort client connection")
 						return
 					}

@@ -66,8 +66,12 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 		Hostname:  address,
 	}
 
-	// Connect to the parent
-	node.ConnectParent(0)
+	// Connect to the parent if we are not root
+	if !node.Root(0) {
+		if err := node.ConnectParent(0); err != nil {
+			dbg.Fatal(address, err, "ABORT")
+		}
+	}
 	// Then listen + process messages
 	go func() {
 		err := node.Listen(address)
@@ -106,7 +110,7 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 					roundNbr, ">=", rounds)
 				ticker.Stop()
 				if peer.Root(peer.ViewNo) {
-					dbg.Lvl3("As I'm root, asking everybody to terminate")
+					dbg.Lvl3(peer.Name(), "is root, asking everybody to terminate")
 					peer.SendCloseAll()
 				}
 			} else {

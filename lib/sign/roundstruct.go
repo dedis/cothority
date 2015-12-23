@@ -29,6 +29,12 @@ func NewRoundStruct(node *Node, rtype string) *RoundStruct {
 	viewNbr := node.ViewNo
 	roundNbr := node.nRounds
 	children := node.Children(viewNbr)
+	var parent string
+	if pNode := node.Parent(viewNbr); pNode == nil {
+		parent = ""
+	} else {
+		parent = pNode.Name()
+	}
 	cbs := &RoundStruct{
 		Node:     node,
 		Type:     rtype,
@@ -37,7 +43,7 @@ func NewRoundStruct(node *Node, rtype string) *RoundStruct {
 		IsLeaf:   len(children) == 0,
 		RoundNbr: roundNbr,
 		ViewNbr:  viewNbr,
-		Parent:   node.Parent(viewNbr).Name(),
+		Parent:   parent,
 		//		Children: children,
 		Suite: node.Suite(),
 	}

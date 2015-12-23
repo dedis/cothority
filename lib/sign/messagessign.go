@@ -19,7 +19,7 @@ has its own MarshalBinary and UnmarshalBinary method
 type MessageType int
 
 const (
-	Unset network.Type = iota
+	Unset network.Type = iota + 10
 	Announcement
 	Commitment
 	Challenge
@@ -32,6 +32,7 @@ const (
 	GroupChanged
 	CloseAll
 	Default // for internal use
+	Identity
 	Error
 )
 
@@ -48,6 +49,14 @@ func init() {
 	network.RegisterProtocolType(GroupChanged, GroupChangedMessage{})
 	network.RegisterProtocolType(VoteRequest, VoteRequestMessage{})
 	network.RegisterProtocolType(CloseAll, CloseAllMessage{})
+	network.RegisterProtocolType(Identity, IdentityMessage{})
+}
+
+// identitymessage is used when we connect to a node listening, we must give to
+// him our identity which is our listeningaddress:port, the same as in the
+// tree used.
+type IdentityMessage struct {
+	PeerName string
 }
 
 type SigningMessage struct {

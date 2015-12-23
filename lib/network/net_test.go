@@ -46,7 +46,6 @@ func init() {
 	var secret abstract.Secret
 	constructors[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
 	constructors[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
-	dbg.Print("Point/Secret constructors added to global var")
 
 	// Here we registers the packets themself so the decoder can instantiate
 	// to the right type and then we can do event-driven stuff such as receiving
@@ -80,7 +79,6 @@ func (s *SimpleClient) Name() string {
 // Simplest protocol : exchange keys with the server
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	s.wg.Add(1)
-	dbg.Print("ExchangeWithServer started")
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
 	defer func() {
 		//dbg.Print("ExchangeWithServer canceld/timed out")
@@ -88,27 +86,24 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	}()
 
 	// open a connection to the peer
-	c := s.Open(name)
-	if c == nil {
+	c, err := s.Open(name)
+	if err != nil {
 		t.Fatal("client connection is nil ><")
 	}
-	dbg.Print("client opened a connection to the peer")
 	// create pack
 	p := PublicPacket{
 		Point: s.Pub,
 	}
 	// Send it
-	err := c.Send(ctx, &p)
+	err = c.Send(ctx, &p)
 	if err != nil {
 		t.Fatal("error sending from client:", err)
 	}
-	dbg.Print("Sent Public Packet")
 	// Receive the response
 	am, err := c.Receive(ctx)
 	if err != nil {
 		fmt.Printf("error receiving ..")
 	}
-	dbg.Print("Received response")
 
 	// Cast to the right type
 	if am.MsgType != PublicType {
@@ -130,6 +125,13 @@ func (s *SimpleServer) Name() string {
 	return "Server " + s.Host.Name()
 }
 
+func (s *SimpleServer) ProxySend(c Conn, msg ProtocolMessage) {
+	ctx := context.TODO()
+	if err := c.Send(ctx, msg); err != nil {
+		s.t.Fatal(err)
+	}
+}
+
 // this is the callback when a new connection is don
 func (s *SimpleServer) ExchangeWithClient(c Conn) {
 	s.wg.Add(1)
@@ -143,9 +145,7 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		//cancel()
 	}()
 
-	if err := c.Send(ctx, &p); err != nil {
-		s.t.Fatal(err)
-	}
+	s.ProxySend(c, &p)
 	dbg.Print("Server sent")
 	am, err := c.Receive(ctx)
 	if err != nil {

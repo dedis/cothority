@@ -1,14 +1,9 @@
 package conode_test
 
 import (
-	"encoding/json"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/lib/sign"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"strconv"
 	"testing"
 	"time"
@@ -36,7 +31,7 @@ func TestStampWithoutException(t *testing.T) {
 			t.Fatal("Couldn't get stamp from server:", err)
 		}
 
-		if !tsm.Srep.AggPublic.Equal(s.X0) {
+		if !tsm.AggPublic.Equal(s.X0) {
 			t.Fatal("Not correct aggregate public key")
 		}
 	}
@@ -96,6 +91,7 @@ func TestStampWithExceptionRaised(t *testing.T) {
 		}
 		_ = <-wait
 	}
+	dbg.Lvl2(" TEST will Close All")
 	peer1.SendCloseAll()
 
 	dbg.Lvl2("Closing peer1")
@@ -105,41 +101,4 @@ func TestStampWithExceptionRaised(t *testing.T) {
 	dbg.Lvl3("Done with test")
 	// reset global var:
 	sign.ExceptionForceFailure = ""
-}
-
-func TestStampSignatureJSON(t *testing.T) {
-	suite := edwards.NewAES128SHA256Ed25519(false)
-	hid := make([]hashid.HashId, 0)
-	ss := &conode.StampSignature{
-		SuiteStr:            suite.String(),
-		Timestamp:           time.Now().Unix(),         // The timestamp requested for the file
-		MerkleRoot:          make([]byte, 0),           // root of the merkle tree
-		Prf:                 proof.Proof(hid),          // Merkle proof for the value sent to be stamped
-		Response:            suite.Secret().Zero(),     // Aggregate response
-		Challenge:           suite.Secret().Zero(),     // Aggregate challenge
-		AggCommit:           suite.Point().Base(),      // Aggregate commitment key
-		AggPublic:           suite.Point().Base(),      // Aggregate public key (use for easy troubleshooting)
-		RejectionPublicList: make([]abstract.Point, 0), // challenge from root
-		RejectionCommitList: make([]abstract.Point, 0),
-	}
-	b, err := json.Marshal(ss)
-	if err != nil {
-		dbg.Fatal("Could not marshal StampSignature")
-	}
-	ssUn := conode.StampSignature{SuiteStr: suite.String()}
-
-	if err = json.Unmarshal(b, &ssUn); err != nil {
-		dbg.Fatal("Coudl not unmarshal")
-	}
-
-	ss.RejectionPublicList = append(ss.RejectionPublicList, suite.Point().Base())
-	ss.RejectionCommitList = append(ss.RejectionCommitList, suite.Point().Base())
-	b, err = json.Marshal(ss)
-	if err != nil {
-		dbg.Fatal("Could not marshal StampSignature")
-	}
-
-	if err = json.Unmarshal(b, &ssUn); err != nil {
-		dbg.Fatal("Coudl not unmarshal")
-	}
 }

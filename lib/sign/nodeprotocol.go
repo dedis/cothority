@@ -32,7 +32,6 @@ func (sn *Node) ProcessMessages() error {
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
-	dbg.Lvl4("Going to get", sn.Name())
 	msgchan := sn.MsgChans
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
@@ -40,7 +39,7 @@ func (sn *Node) ProcessMessages() error {
 	sn.hbLock.Unlock() */
 
 	// gossip to make sure we are up to date
-	sn.StartGossip()
+	//	sn.StartGossip()
 	//errReset := syscall.ECONNRESET.Error()
 	for {
 		select {
@@ -51,7 +50,7 @@ func (sn *Node) ProcessMessages() error {
 		default:
 			dbg.Lvl4(sn.Name(), "waiting for message")
 			nm, ok := <-msgchan
-			dbg.Lvlf4("Message on %s is type %s and %+v", sn.Name(), nm.MsgType, nm)
+			dbg.Lvlf4("Message on %s is type %s", sn.Name(), nm.MsgType)
 
 			// Do we have an errror ?
 			if err := nm.Error(); err != nil {
@@ -303,8 +302,11 @@ func (sn *Node) Announce(am *AnnouncementMessage) error {
 		// And sending to all our children-nodes
 		dbg.Lvlf4("%s sending to all children", sn.Name())
 		ctx := context.TODO()
-		if err := sn.PutDownAll(ctx, view, out); err != nil {
-			return err
+		for i, ch := range sn.Children(view) {
+			if err := sn.PutDown(ctx, view, ch.Name(), out[i]); err != nil {
+				dbg.Lvl2(sn.Name(), "Error putting down announcement to", ch.Name(), ":", err)
+				return err
+			}
 		}
 	}
 
@@ -326,13 +328,13 @@ func (sn *Node) Commit(com *CommitmentMessage) error {
 		sn.RoundCommits[roundNbr] = commitList
 	}
 	// signingmessage nil <=> we are a leaf
-	if com != nil {
+	if !sn.Leaf(view) {
 		commitList = append(commitList, com)
 		sn.RoundCommits[roundNbr] = commitList
 	}
 
-	dbg.Lvl3("Got", len(sn.RoundCommits[roundNbr]), "of", sn.Children(view), "commits")
-	// not enough commits yet (not all children replied)
+	dbg.Lvl3("Got", len(sn.RoundCommits[roundNbr]), "of", sn.NChildren(view), "commits")
+	// if we are not a leaf and we did not get enough commits yet (not all children replied)
 	if len(sn.RoundCommits[roundNbr]) != sn.NChildren(view) {
 		dbg.Lvl3(sn.Name(), "Not enough commits received to call the Commit of the round")
 		return nil
@@ -373,7 +375,10 @@ func (sn *Node) Commit(com *CommitmentMessage) error {
 		dbg.Lvl4(sn.Name(), "puts up commit")
 		ctx := context.TODO()
 		dbg.Lvlf3("Out is %+v", out)
-		err = sn.PutUp(ctx, view, out)
+		if err = sn.PutUp(ctx, view, out); err != nil {
+			dbg.Lvl2(sn.Name(), "Error putting up commit:", err)
+		}
+
 	}
 	return err
 }
@@ -423,10 +428,11 @@ func (sn *Node) Challenge(chm *ChallengeMessage) error {
 			}})
 	} else {
 		// otherwise continue to pass down challenge
-		for _, out := range challs {
+		for i, ch := range sn.Children(view) {
 			ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
-			if err := sn.PutDown(ctx, view, out.To, out); err != nil {
-				dbg.Error("PutDown on Challenge failed with children", out.To, err)
+			if err := sn.PutDown(ctx, view, ch.Name(), challs[i]); err != nil {
+				dbg.Error(sn.Name(), "PutDown on Challenge failed with children", ch.Name(), err)
+				return err
 			}
 		}
 	}
@@ -453,7 +459,7 @@ func (sn *Node) Respond(rm *ResponseMessage) error {
 	}
 
 	// Check if we have all replies from the children
-	if rm != nil {
+	if !sn.Leaf(view) {
 		responseList = append(responseList, rm)
 	}
 	if len(responseList) != sn.NChildren(view) {
@@ -567,12 +573,12 @@ func (sn *Node) SignatureBroadcast(sm *SignatureBroadcastMessage) error {
 	if !sn.Leaf(view) {
 		dbg.Lvl3(sn.Name(), "in SignatureBroadcast is calling", sn.NChildren(view), "children")
 		ctx := context.TODO()
-		for i := range out {
+		for i, ch := range sn.Children(view) {
 			// Why oh why do we have to do this?
 			out[i].X0_hat = sn.suite.Point().Add(out[i].X0_hat, sn.suite.Point().Null())
-		}
-		if err := sn.PutDownAll(ctx, view, out); err != nil {
-			return err
+			if err := sn.PutDown(ctx, view, ch.Name(), out[i]); err != nil {
+				return err
+			}
 		}
 	} else {
 		dbg.Lvl3(sn.Name(), "sending StatusReturn")

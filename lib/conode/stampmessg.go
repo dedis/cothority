@@ -28,7 +28,8 @@ type MustReplyMessage struct {
 // is at ```DefaultPort + 1```
 var DefaultPort int = 2000
 
-type SeqNo byte
+// byte // uint8 not supported by protobuf for the moment
+type SeqNo uint32
 
 const (
 	// Let's say that stamp packets type start at 100

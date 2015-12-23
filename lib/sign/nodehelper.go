@@ -42,7 +42,7 @@ const (
 )
 
 type Node struct {
-	network.Host
+	Host network.Host
 
 	// Signing Node will Fail at FailureRate probability
 	FailureRate         int
@@ -127,34 +127,59 @@ type Node struct {
 	*tree.Views
 }
 
+func (sn *Node) Name() string {
+	return sn.Host.Name()
+}
+
 // Start listening for messages coming from parent(up)
+// each time a connection request is made, we receive first its identity then
+// we handle the message using HandleConn
 func (sn *Node) Listen(addr string) error {
-	go sn.Host.Listen(addr, sn.HandleConn)
+	fn := func(c network.Conn) {
+		ctx := context.TODO()
+		am, err := c.Receive(ctx)
+		if err != nil || am.MsgType != Identity {
+			dbg.Lvl2(sn.Name(), "Error receiving identity from connection", c.Remote())
+		}
+		id := am.Msg.(IdentityMessage)
+		sn.connsLock.Lock()
+		sn.Conns[id.PeerName] = c
+		sn.connsLock.Unlock()
+		dbg.Lvl3(sn.Name(), "Accepted Connection from", id.PeerName)
+		sn.HandleConn(id.PeerName, c)
+	}
+	go sn.Host.Listen(addr, fn)
 	// XXX Should it be here ?
 	return sn.ProcessMessages()
 }
 
 // HandleConn receives message and pass it along the msgchannels
-func (sn *Node) HandleConn(c network.Conn) {
-	sn.connsLock.Lock()
-	sn.Conns[c.Remote()] = c
-	sn.connsLock.Unlock()
-	go func() {
+func (sn *Node) HandleConn(name string, c network.Conn) {
+	for !sn.Isclosed {
 		ctx := context.TODO()
 		am, err := c.Receive(ctx)
 		// XXX this is only a workaround. Need to find better ways to handle
 		// error than an "IF" in nodeprotocol
 		am.SetError(err)
+		am.From = name
 		sn.MsgChans <- am
-	}()
+	}
 }
 
+// Open will connect to the specified node and directly send him our identity
 func (sn *Node) Open(name string) error {
 	c, err := sn.Host.Open(name)
 	if err != nil {
 		return err
 	}
-	sn.HandleConn(c)
+	sn.connsLock.Lock()
+	sn.Conns[name] = c
+	sn.connsLock.Unlock()
+	ctx := context.TODO()
+	if err := c.Send(ctx, &IdentityMessage{sn.Name()}); err != nil {
+		return err
+	}
+	go sn.HandleConn(name, c)
 	return nil
 }
 
@@ -168,11 +193,13 @@ func (sn *Node) Close() {
 	}
 	if !sn.Isclosed {
 		close(sn.closed)
-		dbg.Lvl4("signing node: closing:", sn.Name())
-		sn.Host.Close()
+		dbg.Lvl2("signing node: closing:", sn.Name())
+		if err := sn.Host.Close(); err != nil {
+			dbg.Lvl2(sn.Name(), "Close() error:", err)
+		}
 	}
-	dbg.Lvl3("Closed connection")
 	sn.Isclosed = true
+	dbg.Lvl3(sn.Name(), "Closed connections")
 	sn.hbLock.Unlock()
 }
 
@@ -404,17 +431,20 @@ func (sn *Node) ChildOf(view int, parent string) bool {
 }
 
 // PutDownAll puts the msg down the tree (Sending to children)
-func (sn *Node) PutDownAll(ctx context.Context, view int, msg network.ProtocolMessage) error {
+func (sn *Node) PutDownAll(ctx context.Context, view int, msg ...network.ProtocolMessage) error {
 	children := sn.Children(view)
 	if children == nil {
 		return fmt.Errorf("PutDownAll : No views %d", view)
 	}
+	if len(children) != len(msg) {
+		return fmt.Errorf("PutDownAll  received different numbers of message", len(msg), " vs children", len(children))
+	}
 	// Every children of this node
-	for _, ch := range children {
+	for i, ch := range children {
 		// look if we have indeed a connection
 		if c, ok := sn.Conns[ch.Name()]; ok {
 			// then send it
-			if err := c.Send(ctx, msg); err != nil {
+			if err := c.Send(ctx, msg[i]); err != nil {
 				return err
 			}
 		}
@@ -442,9 +472,10 @@ func (sn *Node) PutDown(ctx context.Context, view int, name string, msg network.
 // PutUp send the message to the parent of this node
 func (sn *Node) PutUp(ctx context.Context, view int, msg network.ProtocolMessage) error {
 	var c network.Conn
+	var ok bool
 	if node := sn.Parent(view); node == nil {
 		return fmt.Errorf("PutUp Got no parent for this view %d", view)
-	} else if _, ok := sn.Conns[node.Name()]; !ok {
+	} else if c, ok = sn.Conns[node.Name()]; !ok {
 		return fmt.Errorf("PutUp got no connection to parent %s in view %d", node.Name(), view)
 	}
 	return c.Send(ctx, msg)
@@ -458,8 +489,14 @@ func (sn *Node) PutTo(ctx context.Context, name string, msg network.ProtocolMess
 	}
 	return c.Send(ctx, msg)
 }
+
+// ConnectParent will contact the parent in this view. If we are the root,
+// it will return an error as we are not supposed to do that.
 func (sn *Node) ConnectParent(view int) error {
 	var parent *tree.Node
+	if sn.Root(view) {
+		return fmt.Errorf("%s SHould NOT connect to parent since he is root", sn.Name())
+	}
 	if parent = sn.Parent(view); parent == nil {
 		return fmt.Errorf("Could not connect to parent in view %d", view)
 	}
