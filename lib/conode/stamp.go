@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"golang.org/x/net/context"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -25,7 +26,8 @@ type Stamp struct {
 	Config app.ConfigConode
 	X0     abstract.Point
 	Suite  abstract.Suite
-	conn   *coconet.TCPConn
+	host   network.Host
+	conn   network.Conn
 }
 
 // NewStamp initializes a new stamp-client by reading all
@@ -47,7 +49,7 @@ func NewStamp(file string) (*Stamp, error) {
 // GetStamp contacts the "server" and waits for the "msg" to
 // be signed
 // If server is empty, it will contact one randomly
-func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
+func (s *Stamp) GetStamp(msg []byte, server string) (*StampSignature, error) {
 	if server == "" {
 		server = s.Config.Hosts[rand.Intn(len(s.Config.Hosts))]
 	}
@@ -57,7 +59,6 @@ func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	tsm, err := s.stamp(msg)
 	if err != nil {
 		return nil, err
@@ -69,7 +70,7 @@ func (s *Stamp) GetStamp(msg []byte, server string) (*TimeStampMessage, error) {
 	}
 
 	// Verify if what we received is correct
-	if !VerifySignature(s.Suite, tsm.Srep, s.X0, msg) {
+	if !VerifySignature(s.Suite, tsm, s.X0, msg) {
 		return nil, fmt.Errorf("Verification of signature failed")
 	}
 
@@ -89,53 +90,50 @@ func (s *Stamp) connect(server string) error {
 		server += ":2000"
 	}
 	dbg.Lvl2("Connecting to", server)
-	s.conn = coconet.NewTCPConn(server)
-	err := s.conn.Connect()
+	// giving localhost based host since we don't care about our IP address
+	s.host = network.NewTcpHost("127.0.0.1", network.DefaultConstructors(s.Suite))
+	c, err := s.host.Open(server)
 	if err != nil {
-		return fmt.Errorf("Couldn't get connection to host: %s", err)
+		return err
 	}
-
+	s.conn = c
 	dbg.Lvl3("Connected to", server)
 	return nil
 }
 
 // This stamps the message, but the connection already needs
 // to be set up
-func (s *Stamp) stamp(msg []byte) (*TimeStampMessage, error) {
-	tsmsg := &TimeStampMessage{
-		Type:  StampRequestType,
+func (s *Stamp) stamp(msg []byte) (*StampSignature, error) {
+	tsmsg := &StampRequest{
 		ReqNo: 0,
-		Sreq:  &StampRequest{Val: msg}}
-
-	err := s.conn.PutData(tsmsg)
+		Val:   msg}
+	ctx := context.TODO()
+	err := s.conn.Send(ctx, tsmsg)
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't send hash-message to server: %s", err)
 	}
 	dbg.Lvl3("Sent signature request")
 
 	// Wait for the signed message
-	tsm := &TimeStampMessage{}
-	tsm.Srep = &StampSignature{}
-	tsm.Srep.SuiteStr = s.Suite.String()
-	err = s.conn.GetData(tsm)
-	if err != nil {
+	am, err := s.conn.Receive(ctx)
+	if err != nil || am.MsgType != StampSignatureType {
 		return nil, fmt.Errorf("Error while receiving signature: %s", err)
 	}
 	dbg.Lvl3("Got signature response")
-	return tsm, nil
+	ss := am.Msg.(StampSignature)
+	return &ss, nil
 }
 
 // Asking to close the connection
 func (s *Stamp) disconnect() error {
-	err := s.conn.PutData(&TimeStampMessage{
+	ctx := context.TODO()
+	err := s.conn.Send(ctx, &StampClose{
 		ReqNo: 1,
-		Type:  StampClose,
 	})
 	if err != nil {
 		return err
 	}
-
-	s.conn.Close()
+	s.host.Close()
 	dbg.Lvl3("Connection closed with server")
 	return nil
 }

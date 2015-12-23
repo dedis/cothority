@@ -5,7 +5,6 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/sign"
 	"strconv"
 	"testing"
@@ -106,7 +105,7 @@ func TestClientBeforeServer(t *testing.T) {
 	peer1.Close()
 }
 
-func emptyKeys(t *graphs.Tree) {
+func emptyKeys(t *tree.ConfigTree) {
 	t.PriKey = ""
 	t.PubKey = ""
 	for _, c := range t.Children {

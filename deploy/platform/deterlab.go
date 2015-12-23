@@ -27,7 +27,6 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/monitor"
 	"io/ioutil"
 	"path"
@@ -258,6 +257,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers
 		var depth int
+		//
 		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
 		dbg.Lvl2("Depth:", depth)
 		dbg.Lvl2("Total peers:", len(conf.Hosts))

@@ -1,7 +1,7 @@
 package sign
 
 import (
-	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/tree"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -20,8 +20,9 @@ type RoundStruct struct {
 	RoundNbr int
 	ViewNbr  int
 	Parent   string
-	Children map[string]coconet.Conn
-	Suite    abstract.Suite
+	Children []*tree.Node
+	//	Children map[string]coconet.Conn
+	Suite abstract.Suite
 }
 
 func NewRoundStruct(node *Node, rtype string) *RoundStruct {
@@ -32,13 +33,13 @@ func NewRoundStruct(node *Node, rtype string) *RoundStruct {
 		Node:     node,
 		Type:     rtype,
 		Name:     node.Name(),
-		IsRoot:   node.IsRoot(viewNbr),
+		IsRoot:   node.Root(viewNbr),
 		IsLeaf:   len(children) == 0,
 		RoundNbr: roundNbr,
 		ViewNbr:  viewNbr,
-		Parent:   node.Parent(viewNbr),
-		Children: children,
-		Suite:    node.Suite(),
+		Parent:   node.Parent(viewNbr).Name(),
+		//		Children: children,
+		Suite: node.Suite(),
 	}
 	return cbs
 }

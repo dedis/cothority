@@ -39,8 +39,15 @@ var TypeRegistry = make(map[Type]reflect.Type)
 var InvTypeRegistry = make(map[reflect.Type]Type)
 
 var globalOrder = binary.LittleEndian
+
+// DefaultType is reserved by the network library. When you receive a message of
+// DefaultType, it is generally because an error happenned, then you can call
+// Error() on it.
 var DefaultType Type = 0
-var emptyApplicationMessage = ApplicationMessage{MsgType: DefaultType}
+
+// This is the default empty message that is returned in case something went
+// wrong.
+var EmptyApplicationMessage = ApplicationMessage{MsgType: DefaultType}
 
 func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 	constructors := make(protobuf.Constructors)
@@ -91,7 +98,24 @@ type ApplicationMessage struct {
 	// The underlying message
 	Msg ProtocolMessage
 
+	// which constructors are used
 	constructors protobuf.Constructors
+	// possible error during unmarshaling so that upper layer can know it
+	err error
+	// Same for the origin of the message
+	From string
+}
+
+// Error returns the error that has been encountered during the unmarshaling of
+// this message.
+func (am *ApplicationMessage) Error() error {
+	return am.err
+}
+
+// workaround so we can set the error after creation of the application
+// message...
+func (am *ApplicationMessage) SetError(err error) {
+	am.err = err
 }
 
 // MarshalBinary the application message => to bytes
@@ -169,6 +193,7 @@ func NewApplicationMessage(obj ProtocolMessage) (*ApplicationMessage, error) {
 // How many times should we try to connect
 const maxRetry = 10
 const waitRetry = 1 * time.Second
+const timeOut = 5 * time.Second
 
 var ErrClosed = errors.New("Connection Closed")
 var ErrEOF = errors.New("EOF")
@@ -181,7 +206,7 @@ var ErrUnknown = errors.New("Unknown Error")
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
 type Host interface {
 	Name() string
-	Open(name string) Conn
+	Open(name string) (Conn, error)
 	Listen(addr string, fn func(Conn)) // the srv processing function
 	Close() error
 }
@@ -190,7 +215,8 @@ type Host interface {
 // between two host. It is closely related to the underlying type of Host
 // since a TcpHost will generate only TcpConn
 type Conn interface {
-	PeerName() string
+	// Gives the address of the remote endpoint
+	Remote() string
 	// Send a message through the connection. Always pass a pointer !
 	Send(ctx context.Context, obj ProtocolMessage) error
 	// Receive any message through the connection.
@@ -216,8 +242,8 @@ type TcpHost struct {
 // TcpConn is the underlying implementation of
 // Conn using Tcp
 type TcpConn struct {
-	// Peer is the name of the endpoint
-	Peer string
+	// The name of the endpoint we are connected to.
+	Endpoint string
 
 	// The connection used
 	Conn net.Conn
@@ -230,8 +256,8 @@ type TcpConn struct {
 
 // PeerName returns the name of the peer at the end point of
 // the conn
-func (c *TcpConn) PeerName() string {
-	return c.Peer
+func (c *TcpConn) Remote() string {
+	return c.Endpoint
 }
 
 // handleError produces the higher layer error depending on the type
@@ -269,13 +295,13 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	b := make([]byte, bufferSize)
 	var buffer bytes.Buffer
 	var err error
-	c.Conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	for {
 		n, err := c.Conn.Read(b)
 		b = b[:n]
 		buffer.Write(b)
 		if err != nil {
-			return emptyApplicationMessage, handleError(err)
+			return EmptyApplicationMessage, handleError(err)
 		}
 		if n < bufferSize {
 			// read all data
@@ -287,7 +313,7 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	if err != nil {
 		return am, fmt.Errorf("Error unmarshaling message: %s", err.Error())
 	}
-
+	am.From = c.Remote()
 	return am, nil
 }
 
@@ -305,7 +331,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
 
-	//c.Conn.SetWriteDeadline(time.Now().Add(time.Second))
+	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	_, err = c.Conn.Write(b)
 	if err != nil {
 		return handleError(err)
@@ -344,11 +370,10 @@ func (t *TcpHost) Name() string {
 // Open will create a new connection between this host
 // and the remote host named "name". This is a TcpConn.
 // If anything went wrong, Conn will be nil.
-func (t *TcpHost) Open(name string) Conn {
+func (t *TcpHost) Open(name string) (Conn, error) {
 	var conn net.Conn
 	var err error
 	for i := 0; i < maxRetry; i++ {
-
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
 			dbg.Lvl3(t.Name(), "(", i, "/", maxRetry, ") Error opening connection to", name)
@@ -359,16 +384,15 @@ func (t *TcpHost) Open(name string) Conn {
 		time.Sleep(waitRetry)
 	}
 	if conn == nil {
-		dbg.Error(t.Name(), "could not connect to", name, ": ABORT")
-		return nil
+		return nil, fmt.Errorf("%s could not connect to %s: ABORT", t.Name(), name)
 	}
 	c := TcpConn{
-		Peer: name,
-		Conn: conn,
-		host: t,
+		Endpoint: name,
+		Conn:     conn,
+		host:     t,
 	}
 	t.peers[name] = &c
-	return &c
+	return &c, nil
 }
 
 // Listen for any host trying to contact him.
@@ -394,9 +418,9 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) {
 			continue
 		}
 		c := TcpConn{
-			Peer: conn.RemoteAddr().String(),
-			Conn: conn,
-			host: t,
+			Endpoint: conn.RemoteAddr().String(),
+			Conn:     conn,
+			host:     t,
 		}
 		t.peers[conn.RemoteAddr().String()] = &c
 		go fn(&c)

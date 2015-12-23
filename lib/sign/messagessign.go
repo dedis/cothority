@@ -1,16 +1,12 @@
 package sign
 
 import (
-	"reflect"
-
-	"encoding/json"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
-	"github.com/dedis/protobuf"
 )
 
 /*
@@ -23,7 +19,7 @@ has its own MarshalBinary and UnmarshalBinary method
 type MessageType int
 
 const (
-	Unset MessageType = iota
+	Unset network.Type = iota
 	Announcement
 	Commitment
 	Challenge
@@ -33,81 +29,40 @@ const (
 	CatchUpReq
 	CatchUpResp
 	VoteRequest
-	GroupChange
 	GroupChanged
-	StatusConnections
 	CloseAll
 	Default // for internal use
 	Error
 )
 
-func (m MessageType) String() string {
-	switch m {
-	case Unset:
-		return "Unset"
-	case Announcement:
-		return "Announcement"
-	case Commitment:
-		return "Commitment"
-	case Challenge:
-		return "Challenge"
-	case Response:
-		return "Response"
-	case SignatureBroadcast:
-		return "SignatureBroadcast"
-	case StatusReturn:
-		return "StatusReturn"
-	case CatchUpReq:
-		return "CatchUpRequest"
-	case CatchUpResp:
-		return "CatchUpResponse"
-	case GroupChange:
-		return "GroupChange"
-	case GroupChanged:
-		return "GroupChanged"
-	case StatusConnections:
-		return "StatusConnections"
-	case VoteRequest:
-		return "VoteRequest"
-	case CloseAll:
-		return "CloseAll"
-	case Default: // for internal use
-		return "Default"
-	case Error:
-		return "Error"
-	}
-	return "INVALID TYPE"
-}
-
 func init() {
 	// Registering of all the type of packets we need
-	Announcement = RegisterProtocolType(AnnouncementMessage{})
-	Commitment = RegisterProtocolType(CommitmentMessage{})
-	ChallengeMessage = RegisterProtocolType(ChallengeMessage{})
-	ResponseMessage = RegisterProtocolType(ResponseMessage{})
-	SignatureBroadcast = RegisterProtocolType(SignatureBroadcastMessage{})
-	StatusReturn = RegisterProtocolType(StatusReturnMessage{})
-	CatchUpReq = RegisterProtocolType(CatchUpRequest{})
-	CatchUpResp = RegisterProtocolType(CatchUpResponse{})
-	GroupChanged = RegisterProtocolType(GroupChanged{})
-	VoteRequest = RegisterProtocolType(VoteRequestMessage{})
-	CloseAll = RegisterProtocolType(CloseAllMessage{})
+	network.RegisterProtocolType(Announcement, AnnouncementMessage{})
+	network.RegisterProtocolType(Commitment, CommitmentMessage{})
+	network.RegisterProtocolType(Challenge, ChallengeMessage{})
+	network.RegisterProtocolType(Response, ResponseMessage{})
+	network.RegisterProtocolType(SignatureBroadcast, SignatureBroadcastMessage{})
+	network.RegisterProtocolType(StatusReturn, StatusReturnMessage{})
+	network.RegisterProtocolType(CatchUpReq, CatchUpRequest{})
+	network.RegisterProtocolType(CatchUpResp, CatchUpResponse{})
+	network.RegisterProtocolType(GroupChanged, GroupChangedMessage{})
+	network.RegisterProtocolType(VoteRequest, VoteRequestMessage{})
+	network.RegisterProtocolType(CloseAll, CloseAllMessage{})
 }
 
 type SigningMessage struct {
-	Err          *ErrorMessage
 	To           string
 	ViewNbr      int
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
 	RoundNbr     int
+	From         string
+	Empty        bool // when the application message type  == DefaulType,
+	//this field should be set to true
 }
 
 // Empty struct just to notify to close
-type CloseAllMessage struct {
-	*SigningMessage
-}
+type CloseAllMessage SigningMessage
 
-// Helper functions that will return the suite used during the process from a string name
 func GetSuite(suite string) abstract.Suite {
 	s, ok := suites.All()[suite]
 	if !ok {
@@ -119,52 +74,6 @@ func GetSuite(suite string) abstract.Suite {
 
 func NewSigningMessage() interface{} {
 	return &SigningMessage{}
-}
-
-func (sm *SigningMessage) MarshalBinary() ([]byte, error) {
-	b, e := protobuf.Encode(sm)
-	if len(b) != 0 {
-		//dbg.Print("Length of bytes is", len(b), "for", sm)
-		//debug.PrintStack()
-	}
-	return b, e
-}
-
-func (sm *SigningMessage) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Shouldn't be called")
-	return nil
-}
-
-func (sm *SigningMessage) UnmarshalBinarySuite(jdata *JSONdata) error {
-	suite := GetSuite(jdata.Suite)
-	var cons = make(protobuf.Constructors)
-	var point abstract.Point
-	var secret abstract.Secret
-	cons[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
-	cons[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
-	return protobuf.DecodeWithConstructors(jdata.Data, sm, cons)
-}
-
-type JSONdata struct {
-	Suite string
-	Data  []byte
-}
-
-func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
-	data, err := sm.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(JSONdata{
-		Suite: sm.Suite,
-		Data:  data,
-	})
-}
-
-func (sm *SigningMessage) UnmarshalJSON(dataJSON []byte) error {
-	jdata := &JSONdata{}
-	json.Unmarshal(dataJSON, jdata)
-	return sm.UnmarshalBinarySuite(jdata)
 }
 
 // Broadcasted message initiated and signed by proposer

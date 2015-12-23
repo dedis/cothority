@@ -14,17 +14,17 @@ type Peer struct {
 	// ip-address:port
 	Name string
 	// The public-key
-	PubKey abstract.Point
+	Public abstract.Point
 	// private key
-	PrivKey abstract.Secret
+	Secret abstract.Secret
 }
 
 // init initializes the peer structure
 func (p *Peer) init(name string, public abstract.Point, secret abstract.Secret) *Peer {
 	p = &Peer{
-		Name:    name,
-		PubKey:  public,
-		PrivKey: secret}
+		Name:   name,
+		Public: public,
+		Secret: secret}
 	return p
 }
 
@@ -35,7 +35,7 @@ func NewPeer(name string, public abstract.Point, secret abstract.Secret) *Peer {
 
 // write writes an byte representation of a peer used for hashing
 func (p *Peer) Bytes() []byte {
-	pbuf, _ := p.PubKey.MarshalBinary()
+	pbuf, _ := p.Public.MarshalBinary()
 	return append(pbuf, []byte(p.Name)...)
 }
 
@@ -76,7 +76,7 @@ func (pl *PeerList) init(s abstract.Suite, peers []*Peer) *PeerList {
 
 func (pl *PeerList) Copy() PeerList {
 	pl2 := PeerList{
-		Suite:  pl.s,
+		Suite:  pl.Suite,
 		ListId: pl.ListId,
 	}
 	copy(pl2.Peers, pl.Peers)
@@ -104,7 +104,7 @@ func GenPeerList(s abstract.Suite, names []string) *PeerList {
 // NewNaryTree creates a tree of peers recursively with branching
 // factor bf. If bf = 2, it will create a binary tree.
 // It returns the root.
-func (pl *PeerList) NewNaryTree(bf int) *TreeNode {
+func (pl *PeerList) NewNaryTree(bf int) *Node {
 	root := NewNaryTree(pl.Suite, bf, pl.Peers)
 	return root
 }

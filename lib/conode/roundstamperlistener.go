@@ -1,9 +1,10 @@
 package conode
 
 import (
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sign"
+	"golang.org/x/net/context"
 )
 
 /*
@@ -35,7 +36,7 @@ func init() {
 func NewRoundStamperListener(node *sign.Node) *RoundStamperListener {
 	dbg.Lvl3("Making new RoundStamperListener", node.Name())
 	round := &RoundStamperListener{}
-	round.StampListener = NewStampListener(node.Name())
+	round.StampListener = NewStampListener(node.Name(), node.Suite())
 	round.RoundStamper = NewRoundStamper(node)
 	round.Type = RoundStamperListenerType
 	return round
@@ -43,27 +44,27 @@ func NewRoundStamperListener(node *sign.Node) *RoundStamperListener {
 
 // Announcement is already defined in RoundStamper
 
-func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundStamperListener) Commitment(in []*sign.CommitmentMessage, out *sign.CommitmentMessage) error {
 	round.Mux.Lock()
 	// messages read will now be processed
 	round.Queue[READING], round.Queue[PROCESSING] = round.Queue[PROCESSING], round.Queue[READING]
 	round.Queue[READING] = round.Queue[READING][:0]
 	msgs := len(round.Queue[PROCESSING])
-	out.Com.Messages = msgs
+	out.Messages = msgs
 	for _, m := range in {
-		out.Com.Messages += m.Com.Messages
+		out.Messages += m.Messages
 	}
 	if round.IsRoot {
-		round.roundMessages = out.Com.Messages
-		round.Node.Messages += out.Com.Messages
+		round.roundMessages = out.Messages
+		round.Node.Messages += out.Messages
 	}
 
 	round.ClientQueue = make([]ReplyMessage, msgs)
 	queue := make([][]byte, len(round.Queue[PROCESSING]))
 	for i, q := range round.Queue[PROCESSING] {
-		queue[i] = q.Tsm.Sreq.Val
+		queue[i] = q.Tsm.Val
 		round.ClientQueue[i] = ReplyMessage{
-			Val:   q.Tsm.Sreq.Val,
+			Val:   q.Tsm.Val,
 			To:    q.To,
 			ReqNo: byte(q.Tsm.ReqNo),
 		}
@@ -79,31 +80,27 @@ func (round *RoundStamperListener) Commitment(in []*sign.SigningMessage, out *si
 // Challenge is already defined in RoundStamper
 
 // Response is already defined in RoundStamper
-
-func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundStamperListener) SignatureBroadcast(in *sign.SignatureBroadcastMessage, out []*sign.SignatureBroadcastMessage) error {
 	round.RoundStamper.SignatureBroadcast(in, out)
 	if round.IsRoot {
-		in.SBm.Messages = round.roundMessages
+		in.Messages = round.roundMessages
 	}
 	for _, o := range out {
-		o.SBm.Messages = in.SBm.Messages
+		o.Messages = in.Messages
 	}
 	for i, msg := range round.ClientQueue {
-		respMessg := &TimeStampMessage{
-			Type:  StampSignatureType,
-			ReqNo: SeqNo(msg.ReqNo),
-			Srep: &StampSignature{
-				SuiteStr:            round.Suite.String(),
-				Timestamp:           round.Timestamp,
-				MerkleRoot:          round.MTRoot,
-				Prf:                 round.RoundStamper.CombProofs[i],
-				Response:            in.SBm.R0_hat,
-				Challenge:           in.SBm.C,
-				AggCommit:           in.SBm.V0_hat,
-				AggPublic:           in.SBm.X0_hat,
-				RejectionPublicList: in.SBm.RejectionPublicList,
-				RejectionCommitList: in.SBm.RejectionCommitList,
-			}}
+		respMessg := &StampSignature{
+			ReqNo:               SeqNo(msg.ReqNo),
+			Timestamp:           round.Timestamp,
+			MerkleRoot:          round.MTRoot,
+			Prf:                 round.RoundStamper.CombProofs[i],
+			Response:            in.R0_hat,
+			Challenge:           in.C,
+			AggCommit:           in.V0_hat,
+			AggPublic:           in.X0_hat,
+			RejectionPublicList: in.RejectionPublicList,
+			RejectionCommitList: in.RejectionCommitList,
+		}
 		round.PutToClient(msg.To, respMessg)
 		dbg.Lvl2("Sent signature response back to client", msg.To)
 	}
@@ -111,13 +108,14 @@ func (round *RoundStamperListener) SignatureBroadcast(in *sign.SigningMessage, o
 }
 
 // Send message to client given by name
-func (round *RoundStamperListener) PutToClient(name string, data coconet.BinaryMarshaler) {
-	err := round.Clients[name].PutData(data)
-	if err == coconet.ErrClosed {
+func (round *RoundStamperListener) PutToClient(name string, data network.ProtocolMessage) {
+	ctx := context.TODO()
+	err := round.Clients[name].Send(ctx, data)
+	if err == network.ErrClosed {
 		round.Clients[name].Close()
 		return
 	}
-	if err != nil && err != coconet.ErrNotEstablished {
+	if err != nil {
 		dbg.Lvl1("%p error putting to client: %v", round, err)
 	}
 }
