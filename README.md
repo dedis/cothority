@@ -7,7 +7,7 @@ This repository provides an implementation for the prototype of the collective a
 
 ## Further Information
 
-* Decentralizing Authorities into Scalable Strongest-Link Cothorities: [paper](http://arxiv.org/pdf/1503.08768v1.pdf), [slides](http://dedis.cs.yale.edu/dissent/pres/151009-stanford-cothorities.pdf)
+* Decentralizing Authorities into Scalable Strongest-Link Cothorities: [paper](http://arxiv.org/abs/1503.08768), [slides](http://dedis.cs.yale.edu/dissent/pres/151009-stanford-cothorities.pdf)
 * Certificate Cothority - Towards Trustworthy Collective CAs: [paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
 * For questions and discussions please refer to our [mailing list](https://groups.google.com/forum/#!forum/cothority).
 
