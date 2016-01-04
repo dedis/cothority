@@ -148,7 +148,6 @@ func Fatalf(f string, args ...interface{}) {
 
 func Errorf(f string, args ...interface{}) {
 	Lvlf(0, f, args...)
-	os.Exit(1)
 }
 
 func Warnf(f string, args ...interface{}) {
