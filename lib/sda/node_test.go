@@ -15,7 +15,7 @@ import (
 var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
 
 func init() {
-	network.RegisterProtocolType(1, SimpleMessage{})
+	network.RegisterProtocolType(2, SimpleMessage{})
 }
 
 // Test setting up of Node
@@ -46,7 +46,7 @@ func TestClose(t *testing.T) {
 	node1.Close()
 }
 
-// Test connecting of multiple Nodes
+// Test connection of multiple Nodes and sending messages back and forth
 func TestNewNodes(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	msg := &SimpleMessage{3}
@@ -58,7 +58,6 @@ func TestNewNodes(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't send from node2 -> node1:", err)
 	}
-	time.Sleep(time.Second)
 	msg_rcv := node1.TestMessageRcv().(SimpleMessage)
 	if msg_rcv.I != 3 {
 		t.Fatal("Received message from node2 -> node1 is wrong")

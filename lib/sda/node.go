@@ -19,6 +19,10 @@ import (
 	"golang.org/x/net/context"
 )
 
+func init() {
+	network.RegisterProtocolType(1, Message{})
+}
+
 // NewNode starts a new node that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewNode(address string, pkey abstract.Secret) *Node {
@@ -80,7 +84,11 @@ func (n *Node) TestSendMessage(dest *Node, msg interface{}) error {
 		}
 		n.connections[dest.address] = c
 	}
-	dbg.Lvl3("Sending message", msg)
+	msg_send := &Message{
+		Message: msg,
+	}
+	dbg.Lvl3("Sending message", msg_send)
+	// TODO: use msg_send as the message to send
 	return c.Send(context.TODO(), msg)
 }
 
