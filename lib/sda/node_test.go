@@ -1,6 +1,7 @@
 package sda_test
 
 import (
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
@@ -12,11 +13,23 @@ var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
 
 // Test setting up of Node
 func TestNewNode(t *testing.T) {
-	priv, pub := privPub(suite)
-
+	priv1, _ := privPub(suite)
+	node1 := sda.NewNode("localhost:2000", priv1)
+	if node1 == nil {
+		t.Fatal("Couldn't setup a node")
+	}
 }
 
 // Test connecting of multiple Nodes
+func TestNewNodes(t *testing.T) {
+	msg := struct{ i int }{3}
+	priv1, _ := privPub(suite)
+	node1 := sda.NewNode("localhost:2000", priv1)
+	priv2, _ := privPub(suite)
+	node2 := sda.NewNode("localhost:2001", priv2)
+	node2.TestSendMessage(node1, msg)
+	node1.TestSendMessage(node2, msg)
+}
 
 // Test parsing of incoming packets with regard to its double-included
 // data-structure

@@ -15,16 +15,20 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards"
 )
 
 // NewNode starts a new node that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewNode(address string, pkey abstract.Secret) *Node {
 	n := &Node{
-		listener: network.NewTcpHost(address),
-		private:  pkey,
+		address:     string,
+		listener:    network.NewTcpHost(address),
+		private:     pkey,
+		suite:       edwards.NewAES128SHA256Ed25519(false),
+		connections: make(map[string]network.Conn),
 	}
-	n.listener.Listen(address, n.NewConnection)
+	go n.listener.Listen(address, n.NewConnection)
 	return n
 }
 
@@ -33,12 +37,18 @@ Node is the structure responsible for holding information about the current
  state
 */
 type Node struct {
+	// Our address
+	address string
 	// The TCPListener
 	listener network.Host
 	// The open connections
-	connections []network.Conn
+	connections map[string]network.Conn
 	// Our private-key
 	private abstract.Secret
+	// The suite used for this node
+	suite abstract.Suite
+	// slice of received messages - testmode
+	msgs []interface{}
 }
 
 // SendMessage sends a message
@@ -46,11 +56,22 @@ func (n *Node) SendMessage(t *TreePeer, msg interface{}) error {
 	return nil
 }
 
+// TestSendMessage - send messages for testing
+func (n *Node) TestSendMessage(n *Node, msg interface{}) error {
+
+	return nil
+}
+
+// TestMessageRcv - waits for a message to be received
+func (n *Node) TestMessageRcv() interface{} {
+	return nil
+}
+
 // NewConnection handles a new connection-request.
 func (n *Node) NewConnection(c network.Conn) {
-	n.connections = append(n.connections, c)
 	for {
 		msg, err := c.Receive()
+		n.connections[msg] = append(n.connections, c)
 		if err != nil {
 			dbg.Error("While receiving:", err)
 		}

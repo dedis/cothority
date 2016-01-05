@@ -17,7 +17,7 @@ func TestRegistration(t *testing.T) {
 	}
 }
 
-// - instantiation
+// Test instantiation of the protocol
 func TestInstantiation(t *testing.T) {
 	sda.ProtocolRegister("test", NewProtocolTest)
 	p, err := sda.ProtocolInstantiate("test", nil, nil)
@@ -29,11 +29,14 @@ func TestInstantiation(t *testing.T) {
 	}
 }
 
+// ProtocolTest is the most simple protocol to be implemented, ignoring
+// everything it receives.
 type ProtocolTest struct {
 	*sda.Node
 	*sda.TreePeer
 }
 
+// NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *sda.Node, t *sda.TreePeer) sda.Protocol {
 	return &ProtocolTest{
 		Node:     n,
@@ -41,6 +44,8 @@ func NewProtocolTest(n *sda.Node, t *sda.TreePeer) sda.Protocol {
 	}
 }
 
+// Dispatch is used to send the messages further - here everything is
+// copied to /dev/null
 func (p ProtocolTest) Dispatch(m []*sda.Message) error {
 	return nil
 }
