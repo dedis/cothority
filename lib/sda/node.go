@@ -16,19 +16,26 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
+	"golang.org/x/net/context"
 )
 
 // NewNode starts a new node that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewNode(address string, pkey abstract.Secret) *Node {
+	suite := edwards.NewAES128SHA256Ed25519(false)
 	n := &Node{
-		address:     string,
-		listener:    network.NewTcpHost(address),
+		address:     address,
+		host:        network.NewTcpHost(address, network.DefaultConstructors(suite)),
 		private:     pkey,
 		suite:       edwards.NewAES128SHA256Ed25519(false),
 		connections: make(map[string]network.Conn),
+		msgs:        make(chan interface{}, 1),
 	}
-	go n.listener.Listen(address, n.NewConnection)
+	dbg.Print("Channel for", address, n, "is", n.msgs)
+	err := n.host.Listen(address, n.NewConnection)
+	if err != nil {
+		dbg.Error("Couldn't open", address, "for listening:", err)
+	}
 	return n
 }
 
@@ -39,8 +46,8 @@ Node is the structure responsible for holding information about the current
 type Node struct {
 	// Our address
 	address string
-	// The TCPListener
-	listener network.Host
+	// The TCPHost
+	host network.Host
 	// The open connections
 	connections map[string]network.Conn
 	// Our private-key
@@ -48,7 +55,7 @@ type Node struct {
 	// The suite used for this node
 	suite abstract.Suite
 	// slice of received messages - testmode
-	msgs []interface{}
+	msgs chan interface{}
 }
 
 // SendMessage sends a message
@@ -56,26 +63,49 @@ func (n *Node) SendMessage(t *TreePeer, msg interface{}) error {
 	return nil
 }
 
-// TestSendMessage - send messages for testing
-func (n *Node) TestSendMessage(n *Node, msg interface{}) error {
+// Close shuts down the listener
+func (n *Node) Close() error {
+	return n.host.Close()
+}
 
-	return nil
+// TestSendMessage - send messages for testing
+func (n *Node) TestSendMessage(dest *Node, msg interface{}) error {
+	c, ok := n.connections[dest.address]
+	if !ok {
+		dbg.Lvl3("Creating connection to", dest.address)
+		var err error
+		c, err = n.host.Open(dest.address)
+		if err != nil {
+			return err
+		}
+		n.connections[dest.address] = c
+	}
+	dbg.Lvl3("Sending message", msg)
+	return c.Send(context.TODO(), msg)
 }
 
 // TestMessageRcv - waits for a message to be received
 func (n *Node) TestMessageRcv() interface{} {
-	return nil
+	dbg.Print("Listening for message in", n.address)
+	dbg.Print("Rcv-Channel is", n.msgs)
+	msg := <-n.msgs
+	dbg.Print("Got message", msg)
+	return msg
 }
 
 // NewConnection handles a new connection-request.
 func (n *Node) NewConnection(c network.Conn) {
+	dbg.Lvl3("Getting new connection from", c, n)
 	for {
-		msg, err := c.Receive()
-		n.connections[msg] = append(n.connections, c)
+		msg, err := c.Receive(context.TODO())
+		dbg.Lvl3(n.address, "received message", msg, "from", msg.From)
+		n.connections[msg.From] = c
 		if err != nil {
 			dbg.Error("While receiving:", err)
 		}
-		dbg.Lvl1(msg)
+		dbg.Print("Send-Channel is", n.msgs)
+		n.msgs <- msg.Msg
+		dbg.Lvl1(msg, "in", n.address)
 	}
 }
 
