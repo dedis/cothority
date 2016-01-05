@@ -1,8 +1,9 @@
 package sda_test
 
 import (
-	"github.com/dedis/cothority/lib/sda"
 	"testing"
+
+	"github.com/dedis/cothority/lib/sda"
 )
 
 // Test simple protocol-implementation
