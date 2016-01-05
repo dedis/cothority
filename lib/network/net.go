@@ -205,7 +205,7 @@ func (c *TcpConn) PeerName() string {
 
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
-// wrong occured
+// wrong occurred
 func (c *TcpConn) Receive() (ApplicationMessage, error) {
 	var am ApplicationMessage
 	err := c.dec.Decode(&am)
