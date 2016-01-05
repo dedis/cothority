@@ -12,6 +12,7 @@ package sda
 
 import (
 	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -22,7 +23,7 @@ import (
 // messages. It will store the private-key.
 func NewNode(address string, pkey abstract.Secret) *Node {
 	n := &Node{
-		address:     string,
+		address:     "string",
 		listener:    network.NewTcpHost(address),
 		private:     pkey,
 		suite:       edwards.NewAES128SHA256Ed25519(false),
@@ -57,7 +58,7 @@ func (n *Node) SendMessage(t *TreePeer, msg interface{}) error {
 }
 
 // TestSendMessage - send messages for testing
-func (n *Node) TestSendMessage(n *Node, msg interface{}) error {
+func (n *Node) TestSendMessage(msg interface{}) error {
 
 	return nil
 }
@@ -71,7 +72,7 @@ func (n *Node) TestMessageRcv() interface{} {
 func (n *Node) NewConnection(c network.Conn) {
 	for {
 		msg, err := c.Receive()
-		n.connections[msg] = append(n.connections, c)
+		//n.connections[msg] = append(n.connections, c)
 		if err != nil {
 			dbg.Error("While receiving:", err)
 		}

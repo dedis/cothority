@@ -1,12 +1,13 @@
 package sda_test
 
 import (
+	"testing"
+
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/random"
-	"testing"
 )
 
 var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
@@ -27,8 +28,8 @@ func TestNewNodes(t *testing.T) {
 	node1 := sda.NewNode("localhost:2000", priv1)
 	priv2, _ := privPub(suite)
 	node2 := sda.NewNode("localhost:2001", priv2)
-	node2.TestSendMessage(node1, msg)
-	node1.TestSendMessage(node2, msg)
+	node2.TestSendMessage(msg)
+	node1.TestSendMessage(msg)
 }
 
 // Test parsing of incoming packets with regard to its double-included
