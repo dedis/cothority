@@ -9,12 +9,16 @@ package example
 
 import "github.com/dedis/cothority/lib/sda"
 
+func init() {
+	sda.ProtocolRegister("Example", NewProtocolExample)
+}
+
 /*
 ProtocolExample just holds a message that is passed to all children.
 */
 type ProtocolExample struct {
-	Node    *sda.Node
-	TP      *sda.TreePeer
+	sda.Node
+	sda.TreePeer
 	Message string
 }
 
@@ -37,7 +41,7 @@ NewProtocolExample initialises the structure for use in one round
 */
 func (p *ProtocolExample) NewProtocolExample(n *sda.Node, t *sda.TreePeer) {
 	p.Node = n
-	p.TP = t
+	p.TreePeer = t
 }
 
 /*
@@ -60,17 +64,17 @@ is stored in all nodes.
 func (p *ProtocolExample) HandleAnnounce(m *sda.Message) error {
 	msg := m.Message.(MessageAnnounce)
 	p.Message = msg.Message
-	if !p.TP.IsLeaf() {
+	if !p.IsLeaf() {
 		// If we have children, send the same message to all of them
-		for nil, c := range m.Children() {
-			err := p.Node.SendMessage(c, msg)
+		for nil, c := range p.Children() {
+			err := p.SendMessage(c, msg)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		// If we're the leaf, start to reply
-		return p.Node.SendMessage(m.Parent(), &MessageReply{1})
+		return p.SendMessage(p.Parent(), &MessageReply{1})
 	}
 	return nil
 }
@@ -81,6 +85,6 @@ to verify the number of nodes.
 */
 func (p *ProtocolExample) HandleReply(m *sda.Message) error {
 	msg := m.Message.(MessageReply)
-	msg.Children += len(m.Children())
-	return p.Node.SendMessage(m.Parent(), msg)
+	msg.Children += len(p.Children())
+	return p.SendMessage(p.Parent(), msg)
 }

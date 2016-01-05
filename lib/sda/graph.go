@@ -10,32 +10,43 @@ can be represented more than once in the graph, it needs to be given as
 an extra field.
 */
 type TreePeer struct {
-	ID       int
-	Parent   *TreePeer
-	Children []*TreePeer
-	Peer     *Peer
+	// The id of the Graph
+	graphID int
+	// The id of that TreePeer
+	id       int
+	parent   *TreePeer
+	children []*TreePeer
+	peer     *Peer
 }
 
-func (g *TreePeer) Parent(p *Peer) *Peer {
-	return g.Parent
+/*
+Functions to return the fields of the array in a readonly-fashion
+*/
+func (g *TreePeer) GraphID() int {
+	return g.graphID
 }
-
-func (g *TreePeer) Children(p *Peer) []*Peer {
-	return g.Children
+func (g *TreePeer) ID() int {
+	return g.id
+}
+func (g *TreePeer) Parent() *Peer {
+	return g.parent
+}
+func (g *TreePeer) Children() []*Peer {
+	return g.children
 }
 
 /*
 IsLeaf is true for the leaf of the tree
 */
 func (g *TreePeer) IsLeaf() bool {
-	return len(g.Children) == 0
+	return len(g.children) == 0
 }
 
 /*
 IsRoot is true for the leaf of the tree
 */
 func (g *TreePeer) IsRoot() bool {
-	return g.Parent == nil
+	return g.parent == nil
 }
 
 /*
