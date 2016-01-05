@@ -28,6 +28,7 @@ func init() {
 func NewRoundStats(node *sign.Node) *RoundStats {
 	round := &RoundStats{}
 	round.RoundStamperListener = conode.NewRoundStamperListener(node)
+	round.Type = RoundStatsType
 	return round
 }
 

@@ -17,7 +17,7 @@ type RoundStamperListener struct {
 	*StampListener
 	*RoundStamper
 	ClientQueue   []ReplyMessage
-	roundMessages int
+	RoundMessages int
 }
 
 type ReplyMessage struct {
@@ -84,6 +84,8 @@ func (round *RoundStamperListener) SignatureBroadcast(in *sign.SignatureBroadcas
 	round.RoundStamper.SignatureBroadcast(in, out)
 	if round.IsRoot {
 		in.Messages = round.roundMessages
+	} else {
+		round.Node.Messages = in.Messages
 	}
 	for _, o := range out {
 		o.Messages = in.Messages

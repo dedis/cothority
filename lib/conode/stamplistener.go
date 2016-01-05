@@ -107,7 +107,6 @@ func (s *StampListener) ListenRequests() error {
 				case StampCloseType:
 					dbg.Lvl2("Closing connection")
 					c.Close()
-					return
 				case StampExitType:
 					dbg.Lvl2("Exiting server upon request")
 					os.Exit(-1)
@@ -115,6 +114,7 @@ func (s *StampListener) ListenRequests() error {
 					c.Close()
 					dbg.Lvl2("Received unexpected packet from", c.Remote(), ". Abort")
 					return
+
 				}
 			}
 		}

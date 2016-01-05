@@ -14,6 +14,7 @@ const RoundSetupType = "setup"
 
 type RoundSetup struct {
 	*RoundStruct
+	node    *Node
 	Counted chan int
 }
 
@@ -29,6 +30,7 @@ func NewRoundSetup(node *Node) *RoundSetup {
 	round := &RoundSetup{}
 	round.RoundStruct = NewRoundStruct(node, RoundSetupType)
 	round.Counted = make(chan int, 1)
+	round.node = node
 	return round
 }
 

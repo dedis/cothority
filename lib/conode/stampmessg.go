@@ -24,6 +24,24 @@ type MustReplyMessage struct {
 	To  string // name of reply destination
 }
 
+type TimeStampMessage struct {
+	ReqNo SeqNo // Request sequence number
+	// ErrorReply *ErrorReply // Generic error reply to any request
+	Type MessageType
+	Sreq *StampRequest
+	Srep *StampSignature
+}
+
+func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
+	dbg.Fatal("Don't want to do that")
+	return nil, nil
+}
+
+func (sm *TimeStampMessage) UnmarshalBinary(data []byte) error {
+	dbg.Fatal("Don't want to do that")
+	return nil
+}
+
 // Default port for the conode-setup - the stamping-request port
 // is at ```DefaultPort + 1```
 var DefaultPort int = 2000

@@ -239,6 +239,7 @@ func (sn *Node) ProcessMessages() error {
 	}
 }
 
+<<<<<<< HEAD
 // If we ever need to put more metadata in the messages itself, we can do it
 // here.
 func processSigningMsg(nm network.ApplicationMessage, sm *SigningMessage) {
@@ -372,13 +373,13 @@ func (sn *Node) Commit(com *CommitmentMessage) error {
 	} else {
 		// create and putup own commit message
 		// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
-		dbg.Lvl4(sn.Name(), "puts up commit")
 		ctx := context.TODO()
 		dbg.Lvlf3("Out is %+v", out)
 		if err = sn.PutUp(ctx, view, out); err != nil {
 			dbg.Lvl2(sn.Name(), "Error putting up commit:", err)
+		} else {
+		dbg.Lvl3(sn.Name(), "puts up commit", isErr)
 		}
-
 	}
 	return err
 }
@@ -508,7 +509,7 @@ func (sn *Node) Respond(rm *ResponseMessage) error {
 		dbg.Lvl4(sn.Name(), "put up response to", sn.Parent(view))
 		err = sn.PutUp(ctx, view, out)
 	} else {
-		dbg.Lvl4("Root received response")
+		dbg.Lvl4("Root: response done")
 	}
 
 	if sn.TimeForViewChange() {

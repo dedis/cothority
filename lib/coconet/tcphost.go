@@ -228,7 +228,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	h.peers[parent] = tp
 	// h.PendingPeers[parent] = true
 	h.PeerLock.Unlock()
-	dbg.Lvl4("Connected to parent:", parent)
+	dbg.Lvl3("Connected to parent:", parent)
 
 	go func() {
 		for {

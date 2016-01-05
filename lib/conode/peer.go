@@ -164,11 +164,67 @@ func (peer *Peer) Close() {
 	dbg.Lvlf3("Closing of peer: %s finished", peer.Name())
 }
 
-// Add our own private key in the tree.  This is an old way of doing it that
-// came from using the graphs lib. TODO we should find a way to not having to
-// iterate in the tree one more time just to put the private key inside. For the
-// moment it is needed because, we convert the ConfigTree to a tree.Node so we
-// create the peers each time
+// WaitRoundSetup launch a RoundSetup then waits for everyone to be up.
+// timeoutSec is how much seconds you want to wait for one round setup
+// retry is how many times you want to try a RoundSetup before quitting
+// If all went well, nil otherwise an error
+func (p *Peer) WaitRoundSetup(nbHost int, timeoutSec time.Duration, retry int) error {
+	var everyoneUp bool = false
+	var try int
+	for !everyoneUp {
+		time.Sleep(time.Second)
+		setupRound := sign.NewRoundSetup(p.Node)
+		var err error
+		done := make(chan error)
+		go func() {
+			err = p.StartAnnouncementWithWait(setupRound, timeoutSec*time.Second)
+			done <- err
+		}()
+		select {
+		case err := <-done:
+			try++
+			if err != nil {
+				dbg.Lvl1("Time-out on counting rounds")
+				if try == retry {
+					return errors.New("Tried too much time for roundSetup.Abort")
+				}
+			} //
+		case counted := <-setupRound.Counted:
+			dbg.Lvl1("Number of peers counted:", counted, "of", nbHost)
+			if counted == nbHost {
+				dbg.Lvl1("All hosts replied, starting")
+				everyoneUp = true
+				<-done // so routine will eventually finish
+				break
+			}
+		}
+	}
+	return nil
+
+}
+
+// Simple ephemeral helper for compatibility issues
+// From base64 => hexadecimal
+func convertTree(suite abstract.Suite, t *graphs.Tree) {
+	if t.PubKey != "" {
+		point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
+		if err != nil {
+			dbg.Fatal("Could not decode base64 public key")
+		}
+
+		str, err := cliutils.PubHex(suite, point)
+		if err != nil {
+			dbg.Fatal("Could not encode point to hexadecimal")
+		}
+		t.PubKey = str
+	}
+	for _, c := range t.Children {
+		convertTree(suite, c)
+	}
+}
+
+// Add our own private key in the tree. This function exists because of
+// compatibility issues with the graphs/lib.
 func addPrivateKey(suite abstract.Suite, address string, conf *app.ConfigConode) {
 	queue := make([]*tree.ConfigTree, 0)
 	queue = append(queue, conf.Tree)
