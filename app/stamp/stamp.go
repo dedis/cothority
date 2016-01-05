@@ -30,11 +30,14 @@ func RunServer(flags *app.Flags, conf *app.ConfigColl) {
 
 	app.RunFlags.StartedUp(len(conf.Hosts))
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
+	peer.SetupConnections()
 
 	if app.RunFlags.AmRoot {
 		for {
 			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
+			if err := peer.StartAnnouncementWithWait(setupRound, 5*time.Second); err != nil {
+				continue
+			}
 			counted := <-setupRound.Counted
 			dbg.Lvl1("Number of peers counted:", counted)
 			if counted == len(conf.Hosts) {

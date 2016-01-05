@@ -65,21 +65,30 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 		CloseChan: make(chan bool, 5),
 		Hostname:  address,
 	}
-
-	// Connect to the parent if we are not root
-	if !node.Root(0) {
-		if err := node.ConnectParent(0); err != nil {
-			dbg.Fatal(address, err, "ABORT")
-		}
-	}
 	// Then listen + process messages
 	go func() {
 		err := node.Listen(address)
-		dbg.Lvl3("Node.listen quits with status", err)
+		dbg.Lvl3("Node.listen", address, " quits with status", err)
 		peer.CloseChan <- true
 		peer.Close()
 	}()
+
 	return peer
+}
+
+// Setup connections means that the node will try to contact its parent
+// And wait for all its children to have connected
+func (peer *Peer) SetupConnections() {
+	// Connect to the parent if we are not root
+	if !peer.Node.Root(0) {
+		if err := peer.Node.ConnectParent(0); err != nil {
+			dbg.Fatal(peer.Node.Name(), err, "ABORT")
+		}
+	}
+	if !peer.Node.Leaf(0) {
+		peer.Node.WaitChildrenConnections(0)
+	}
+	dbg.Lvl2(peer.Node.Name(), " has setup connections")
 }
 
 // LoopRounds starts the system by sending a round of type
@@ -146,13 +155,12 @@ func (peer *Peer) Close() {
 	if peer.Closed {
 		dbg.Lvl1("Peer", peer.Name(), "Already closed!")
 		return
-	} else {
-		peer.Closed = true
 	}
 	peer.CloseChan <- true
 	peer.Node.Close()
 	// XXX TODO This has nothing to do here
-	StampListenersClose()
+	//StampListenersClose()
+	peer.Closed = true
 	dbg.Lvlf3("Closing of peer: %s finished", peer.Name())
 }
 

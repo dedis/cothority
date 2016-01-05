@@ -40,6 +40,8 @@ func TestStampWithoutException(t *testing.T) {
 	peer1.Close()
 	dbg.Lvl2("Closing peer2")
 	peer2.Close()
+	dbg.Lvl2("Closing stamp listeners")
+	conode.StampListenersClose()
 	dbg.Lvl3("Done with test")
 }
 
@@ -98,6 +100,8 @@ func TestStampWithExceptionRaised(t *testing.T) {
 	peer1.Close()
 	dbg.Lvl2("Closing peer2")
 	peer2.Close()
+	dbg.Lvl2("Closing stamp listeners")
+	conode.StampListenersClose()
 	dbg.Lvl3("Done with test")
 	// reset global var:
 	sign.ExceptionForceFailure = ""

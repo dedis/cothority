@@ -49,6 +49,14 @@ var DefaultType Type = 0
 // wrong.
 var EmptyApplicationMessage = ApplicationMessage{MsgType: DefaultType}
 
+// When you don't need any speical constructors, you can give nil to NewTcpHost
+// and it will use this empty constructors
+var emptyConstructors protobuf.Constructors
+
+func init() {
+	emptyConstructors = make(protobuf.Constructors)
+}
+
 func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 	constructors := make(protobuf.Constructors)
 	var point abstract.Point
@@ -342,12 +350,17 @@ func (c *TcpConn) Close() error {
 }
 
 // NewTcpHost returns a Fresh TCP Host
+// If constructors == nil, it will take an empty one.
 func NewTcpHost(name string, constructors protobuf.Constructors) *TcpHost {
+	cons := emptyConstructors
+	if constructors != nil {
+		cons = constructors
+	}
 	return &TcpHost{
 		name:         name,
 		peers:        make(map[string]Conn),
 		quit:         make(chan bool),
-		constructors: constructors,
+		constructors: cons,
 	}
 }
 
@@ -381,6 +394,7 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 		host:     t,
 	}
 	t.peers[name] = &c
+	dbg.Lvl4(t.Name(), "Connected to", name)
 	return &c, nil
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	net "github.com/dedis/cothority/lib/network"
+	"golang.org/x/net/context"
 	"time"
 )
 
@@ -42,7 +43,7 @@ func RunServer(conf *app.NaiveConfig) {
 // message to be signed
 func GoLeader(conf *app.NaiveConfig) {
 
-	host := net.NewTcpHost(app.RunFlags.Hostname)
+	host := net.NewTcpHost(app.RunFlags.Hostname, net.DefaultConstructors(suite))
 	key := cliutils.KeyPair(suite)
 	leader := NewPeer(host, LeadRole, key.Secret, key.Public)
 
@@ -57,25 +58,25 @@ func GoLeader(conf *app.NaiveConfig) {
 	// Listen for connections
 	dbg.Lvl3(leader.String(), "making connections ...")
 	// each conn will create its own channel to be used to handle rounds
-	roundChans := make(chan chan chan *net.BasicSignature)
+	roundChans := make(chan chan chan *BasicSignature)
 	// Send the message to be signed
 	proto := func(c net.Conn) {
 		// make the chan that will receive a new chan
 		// for each round where to send the signature
-		roundChan := make(chan chan *net.BasicSignature)
+		roundChan := make(chan chan *BasicSignature)
 		roundChans <- roundChan
 		n := 0
 		// wait for the next round
 		for sigChan := range roundChan {
-			dbg.Lvl3(leader.String(), "Round", n, "sending message", msg, "to signer", c.PeerName())
+			dbg.Lvl3(leader.String(), "Round", n, "sending message", msg, "to signer", c.Remote())
 			leader.SendMessage(msg, c)
-			dbg.Lvl3(leader.String(), "Round", n, "receivng signature from signer", c.PeerName())
+			dbg.Lvl3(leader.String(), "Round", n, "receivng signature from signer", c.Remote())
 			sig := leader.ReceiveBasicSignature(c)
 			sigChan <- sig
 			n += 1
 		}
 		c.Close()
-		dbg.Lvl3(leader.String(), "closed connection with signer", c.PeerName())
+		dbg.Lvl3(leader.String(), "closed connection with signer", c.Remote())
 	}
 
 	// Connecting to the signer
@@ -83,8 +84,8 @@ func GoLeader(conf *app.NaiveConfig) {
 	go leader.Listen(app.RunFlags.Hostname, proto)
 	dbg.Lvl3(leader.String(), "Listening for channels creation..")
 	// listen for round chans + signatures for each round
-	masterRoundChan := make(chan chan *net.BasicSignature)
-	roundChanns := make([]chan chan *net.BasicSignature, 0)
+	masterRoundChan := make(chan chan *BasicSignature)
+	roundChanns := make([]chan chan *BasicSignature, 0)
 	numberHosts := len(conf.Hosts)
 	//  Make the "setup" of channels
 	for {
@@ -121,11 +122,11 @@ func GoLeader(conf *app.NaiveConfig) {
 		n := 0
 		faulty := 0
 		// launch a new round
-		connChan := make(chan *net.BasicSignature)
+		connChan := make(chan *BasicSignature)
 		masterRoundChan <- connChan
 
 		// Wait each signatures
-		sigs := make([]*net.BasicSignature, 0)
+		sigs := make([]*BasicSignature, 0)
 		for n < numberHosts-1 {
 			bs := <-connChan
 			sigs = append(sigs, bs)
@@ -165,30 +166,34 @@ func GoLeader(conf *app.NaiveConfig) {
 func GoSigner(conf *app.NaiveConfig) {
 	// Wait for leader to be ready
 	time.Sleep(2 * time.Second)
-	host := net.NewTcpHost(app.RunFlags.Hostname)
+	host := net.NewTcpHost(app.RunFlags.Hostname, net.DefaultConstructors(suite))
 	key := cliutils.KeyPair(suite)
 	signer := NewPeer(host, ServRole, key.Secret, key.Public)
 	dbg.Lvl3(signer.String(), "will contact leader", conf.Hosts[0])
-	l := signer.Open(conf.Hosts[0])
-	dbg.Lvl3(signer.String(), "is connected to leader", l.PeerName())
+	l, err := signer.Open(conf.Hosts[0])
+	if err != nil {
+		dbg.Fatal("Could not open connection to", conf.Hosts[0])
+	}
+	dbg.Lvl3(signer.String(), "is connected to leader", l.Remote())
 
 	// make the protocol for each round
 	for round := 0; round < conf.Rounds; round++ {
 		// Receive message
-		m, err := l.Receive()
+		ctx := context.TODO()
+		m, err := l.Receive(ctx)
 		dbg.Lvl3(signer.String(), "round", round, "received the message to be signed from the leader")
 		if err != nil {
 			dbg.Fatal(signer.String(), "round", round, "received error waiting msg")
 		}
-		if m.MsgType != net.MessageSigningType {
+		if m.MsgType != MessageSigningType {
 			dbg.Fatal(app.RunFlags.Hostname, "round", round, "wanted to receive a msg to sign but..",
 				m.MsgType.String())
 		}
-		msg := m.Msg.(net.MessageSigning).Msg
+		msg := m.Msg.(MessageSigning).Msg
 		dbg.Lvl3(signer.String(), "round", round, "received msg:", msg[:])
 		// Generate signature & send
 		s := signer.Signature(msg[:])
-		l.Send(*s)
+		l.Send(ctx, s)
 		dbg.Lvl3(signer.String(), "round", round, "sent the signature to leader")
 	}
 	l.Close()

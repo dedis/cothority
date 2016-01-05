@@ -28,6 +28,8 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/tree"
+	"github.com/dedis/crypto/suites"
 	"io/ioutil"
 	"path"
 	"path/filepath"
@@ -57,7 +59,7 @@ type Deterlab struct {
 	MasterLogger string
 	// DNS-resolvable names
 	Phys []string
-	// VLAN-IP names
+	// VLAN-IP names (physical machines)
 	Virt []string
 
 	// ProxyAddress : the proxy will redirect every traffic it
@@ -74,6 +76,8 @@ type Deterlab struct {
 	App string
 	// Number of machines
 	Machines int
+	// Processes Per Machines
+	Ppm int
 	// Number of Rounds
 	Rounds int
 	// Channel to communication stopping of experiment
@@ -248,6 +252,8 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	// then for the appConfig, sets the deterConfig as defaults and overwrites
 	// everything else with the actual appConfig (which comes from the
 	// runconfig-file)
+
+	var err error
 	switch d.App {
 	case "sign", "stamp":
 		conf := app.ConfigColl{}
@@ -256,17 +262,12 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers
-		var depth int
-		//
-		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
-		dbg.Lvl2("Depth:", depth)
-		dbg.Lvl2("Total peers:", len(conf.Hosts))
-		total := deter.Machines * conf.Ppm
-		if len(conf.Hosts) != total {
-			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
-				"machines or hosts per node")
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree, err = tree.GenColorConfigTree(suite, deter.Hostnames[:], conf.Ppm, conf.Bf)
+		if err != nil {
+			dbg.Fatal(err)
 		}
-		deter.Hostnames = conf.Hosts
+		conf.Hosts = deter.Hostnames
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 	case "skeleton":
@@ -274,16 +275,12 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers
-		var depth int
-		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
-		dbg.Lvl2("Depth:", depth)
-		dbg.Lvl2("Total peers:", len(conf.Hosts))
-		total := deter.Machines * conf.Ppm
-		if len(conf.Hosts) != total {
-			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
-				"machines or hosts per node")
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree, err = tree.GenColorConfigTree(suite, deter.Hostnames[:], conf.Ppm, conf.Bf)
+		if err != nil {
+			dbg.Fatal(err)
 		}
-		deter.Hostnames = conf.Hosts
+		conf.Hosts = deter.Hostnames
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 
@@ -291,7 +288,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		conf := app.ConfigShamir{}
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Ppm)
+		conf.Hosts = deter.Hostnames
 		deter.Hostnames = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
@@ -299,21 +296,18 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		conf := app.NaiveConfig{}
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		_, conf.Hosts, _, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, 2)
-		deter.Hostnames = conf.Hosts
-		dbg.Lvl3("Deterlab: naive applications:", conf.Hosts)
-		dbg.Lvl3("Deterlab: naive app config:", conf)
-		dbg.Lvl3("Deterlab: naive app virt:", deter.Virt[:])
-		deter.Hostnames = conf.Hosts
+
+		conf.Hosts = deter.Hostnames
 		app.WriteTomlConfig(conf, appConfig)
 	case "ntree":
 		conf := app.NTreeConfig{}
 		app.ReadTomlConfig(&conf, deterConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		var depth int
-		conf.Tree, conf.Hosts, depth, _ = graphs.TreeFromList(deter.Virt[:], conf.Ppm, conf.Bf)
-		dbg.Lvl2("Depth:", depth)
-		deter.Hostnames = conf.Hosts
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree, err = tree.GenColorConfigTree(suite, deter.Hostnames[:], conf.Ppm, conf.Bf)
+		if err != nil {
+			dbg.Fatal(err)
+		}
 		app.WriteTomlConfig(conf, appConfig)
 
 	case "randhound":
@@ -321,7 +315,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
 
 	// copy the webfile-directory of the logserver to the remote directory
-	err := exec.Command("cp", "-a", d.DeterDir+"/cothority.conf", d.DeployDir).Run()
+	err = exec.Command("cp", "-a", d.DeterDir+"/cothority.conf", d.DeployDir).Run()
 	if err != nil {
 		dbg.Fatal("error copying webfiles:", err)
 	}
@@ -415,9 +409,9 @@ func (d *Deterlab) ReadConfig(name ...string) {
  */
 func (d *Deterlab) createHosts() error {
 	num_servers := d.Machines
-	nmachs := d.Machines
 
 	// write the name of the server + \t + IP address
+	startPort := 2000
 	ip := "10.255.0."
 	name := d.Project + ".isi.deterlab.net"
 	d.Phys = make([]string, 0, num_servers)
@@ -425,11 +419,11 @@ func (d *Deterlab) createHosts() error {
 	for i := 1; i <= num_servers; i++ {
 		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i-1, d.Experiment, name))
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
+		// For each physical machines, create PPM processes
+		for j := 0; j < d.Ppm; j++ {
+			d.Hostnames = append(d.Hostnames, fmt.Sprintf("%s%d:%d", ip, i, startPort+j*10))
+		}
 	}
-
-	// only take the machines we need
-	d.Phys = d.Phys[:nmachs]
-	d.Virt = d.Virt[:nmachs]
 
 	return nil
 }

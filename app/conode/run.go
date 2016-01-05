@@ -58,5 +58,6 @@ func Run(configFile, key string) {
 		address = addr
 	}
 	peer := conode.NewPeer(address, conf)
+	peer.SetupConnections()
 	peer.LoopRounds(RoundStatsType, maxRounds)
 }

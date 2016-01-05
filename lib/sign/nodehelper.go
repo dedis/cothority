@@ -511,6 +511,38 @@ func (sn *Node) Done() chan int {
 	return sn.done
 }
 
+func (sn *Node) WaitChildrenConnections(view int) {
+	done := make(chan bool)
+	go func() {
+		for {
+			var connected int
+			sn.connsLock.Lock()
+			/*         if sn.Root(view) {*/
+			//fmt.Println(sn.Name(), "View.Children=", sn.Children(view))
+			//fmt.Println(sn.Name(), "Conns =", sn.Conns)
+			//}
+
+			for _, c := range sn.Children(view) {
+				if _, ok := sn.Conns[c.Name()]; ok {
+					connected++
+				}
+			}
+			sn.connsLock.Unlock()
+			if connected == len(sn.Children(view)) {
+				done <- true
+			} else {
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
+	}()
+	select {
+	case <-done:
+		return
+	case <-time.After(10 * time.Second):
+		dbg.Fatal(sn.Name(), "Children not connected after 30 secs")
+	}
+}
+
 func (sn *Node) LastRound() int {
 	sn.roundmu.Lock()
 	lsr := sn.LastSeenRound

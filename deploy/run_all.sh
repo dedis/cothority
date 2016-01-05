@@ -5,6 +5,6 @@ go build
 
 for simul in simulation/test*toml; do
   echo Simulating $simul
-  ./deploy $simul
+  ./deploy -debug 3 $simul
   echo -e "\n\n"
 done

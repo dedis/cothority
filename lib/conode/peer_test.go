@@ -130,6 +130,8 @@ func createPeers() (p1, p2 *conode.Peer) {
 	peer2 := createPeer(conf2, 2)
 	dbg.Lvlf3("Peer 2 is %+v", peer2)
 
+	peer2.SetupConnections()
+	peer1.SetupConnections()
 	return peer1, peer2
 }
 

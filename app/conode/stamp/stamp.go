@@ -157,7 +157,7 @@ func StampFile(file, server string) {
 		dbg.Fatal("Stamper didn't succeed:", err)
 	}
 
-	if err := tsm.Srep.Save(file + sigExtension); err != nil {
+	if err := tsm.Save(file + sigExtension); err != nil {
 		dbg.Fatal("Could not write signature file:", err)
 	}
 	dbg.Lvl1("Signature file", file+".sig", "written.")

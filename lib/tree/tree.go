@@ -2,6 +2,7 @@ package tree
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
@@ -143,38 +144,6 @@ func (tn *Node) ParentOf(child string) bool {
 	return false
 }
 
-// NewNaryTree creates a regular tree with a branching factor bf from the list
-// of peers "peers". It returns the root.
-func NewNaryTree(s abstract.Suite, bf int, peers []*Peer) *Node {
-	if len(peers) < 1 {
-		return nil
-	}
-	dbg.Lvl3("NewNaryTree Called with", len(peers), "peers and bf =", bf)
-	root := NewTreeNode(peers[0])
-	var index int = 1
-	bfs := make([]*Node, 1)
-	bfs[0] = root
-	for len(bfs) > 0 && index < len(peers) {
-		t := bfs[0]
-		t.Children = make([]*Node, 0)
-		lbf := 0
-		// create space for enough children
-		// init them
-		for lbf < bf && index < len(peers) {
-			child := NewTreeNode(peers[index])
-			// append the children to the list of trees to visit
-			bfs = append(bfs, child)
-			t.Children = append(t.Children, child)
-			index += 1
-			lbf += 1
-		}
-		bfs = bfs[1:]
-	}
-	// Compute the tree id
-	root.GenId(s.Hash())
-	return root
-}
-
 // Config Tree is used to write in and from a config file. All keys are encoded
 // as strings (in hex or b64). This is needed because of the lack of custom
 // decoding from the TOML library.
@@ -187,6 +156,59 @@ type ConfigTree struct {
 	PriKey   string
 	PubKey   string
 	Children []*ConfigTree
+}
+
+func (c *ConfigTree) Count() int {
+	var count int
+	fn := func(ct *ConfigTree) {
+		count += 1
+	}
+	c.Visit(fn)
+	return count
+}
+
+func (c *ConfigTree) Visit(fn func(*ConfigTree)) {
+	fn(c)
+	for i := range c.Children {
+		c.Children[i].Visit(fn)
+	}
+}
+
+// NewNaryTree creates a regular config tree with a branching factor bf from the list
+// of peers "peers". It returns the root.
+// Usually used for localhost testing purposes
+func NewNaryTree(s abstract.Suite, peerList *PeerList, bf int) *ConfigTree {
+	if len(peerList.Peers) < 1 {
+		return nil
+	}
+	peers := peerList.Peers
+	dbg.Lvl3("NewNaryTree Called with", len(peers), "peers and bf =", bf)
+	root := NewConfigTree(s, peers[0])
+	var index int = 1
+	bfs := make([]*ConfigTree, 1)
+	bfs[0] = root
+	for len(bfs) > 0 && index < len(peers) {
+		t := bfs[0]
+		t.Children = make([]*ConfigTree, 0)
+		lbf := 0
+		// create space for enough children
+		// init them
+		for lbf < bf && index < len(peers) {
+			child := NewConfigTree(s, peers[index])
+			// append the children to the list of trees to visit
+			bfs = append(bfs, child)
+			t.Children = append(t.Children, child)
+			index += 1
+			lbf += 1
+		}
+		bfs = bfs[1:]
+	}
+	return root
+}
+
+func GenNaryTree(s abstract.Suite, names []string, bf int) *ConfigTree {
+	pl := GenPeerList(s, names)
+	return NewNaryTree(s, pl, bf)
 }
 
 func NewConfigTree(suite abstract.Suite, p *Peer) *ConfigTree {
@@ -226,23 +248,27 @@ func NewColorConfigTree(peerList *PeerList, peerPerMachine int, bf int) (
 	// Map from nodes to their hosts
 	mp := make(map[string][]*Peer)
 
-	// Generate host names
+	// split by ip address
 	for _, peer := range peerList.Peers {
 		// look at the machine it is in
 		baseIp, _, err := net.SplitHostPort(peer.Name)
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := mp[peer.Name]; !ok {
-			mp[baseIp] = make([]*Peer, 0)
-		} else {
-			mp[baseIp] = append(mp[baseIp], peer)
-		}
+		mp[baseIp] = append(mp[baseIp], peer)
 	}
 	// which machine is supposed to be the root
 	startMIp, _, _ := net.SplitHostPort(peerList.Peers[0].Name)
-	root, err := ColorTree(peerList.Suite, peerList, peerPerMachine, bf, startMIp, mp)
-	return root, err
+	root, peers := ColorTree(peerList.Suite, peerList, peerPerMachine, bf, startMIp, mp)
+	if len(peerList.Peers) != len(peers) {
+		return nil, fmt.Errorf("Error could not create enough peers on the colored tree peerlist= %d vs Tree.Count %d vs peers returned %d", len(peerList.Peers), root.Count(), len(peers))
+	}
+	return root, nil
+}
+
+func GenColorConfigTree(suite abstract.Suite, names []string, ppm, bf int) (*ConfigTree, error) {
+	pl := GenPeerList(suite, names)
+	return NewColorConfigTree(pl, ppm, bf)
 }
 
 // ColorTree takes a peerList with already public / private key generated,
@@ -251,7 +277,7 @@ func NewColorConfigTree(peerList *PeerList, peerPerMachine int, bf int) (
 // It returns a tree if possible such that each node do not have a direct link
 // between a process on the same machine.
 func ColorTree(suite abstract.Suite, peerList *PeerList, hostsPerNode int, bf int, startM string, mp map[string][]*Peer) (
-	*ConfigTree, error) {
+	*ConfigTree, []*Peer) {
 
 	nodesTouched := make([]string, 0)
 	nodesTouched = append(nodesTouched, startM)
@@ -277,9 +303,9 @@ func ColorTree(suite abstract.Suite, peerList *PeerList, hostsPerNode int, bf in
 		for c := 0; c < bf; c++ {
 			var newHost *Peer
 			nodesTouched, newHost = GetFirstFreeNode(nodesTouched, mp, curNode)
-			// never happens ...
+			// Finished
 			if newHost == nil {
-				return rootTNode, nil
+				return rootTNode, hostsCreated
 				// break
 			}
 
@@ -296,10 +322,8 @@ func ColorTree(suite abstract.Suite, peerList *PeerList, hostsPerNode int, bf in
 			node, _, _ := net.SplitHostPort(newHost.Name)
 			nodesTouched = append(nodesTouched, node)
 		}
-		// dbg.Lvl3(i, hostsCreated)
 	}
-
-	return rootTNode, nil
+	return rootTNode, hostsCreated
 }
 
 // Go through list of nodes(machines) and choose a hostName on the first node that

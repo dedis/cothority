@@ -67,13 +67,16 @@ func main() {
 	// Here you create a "Peer",that's the struct that will create a new round
 	// each seconds and handle other subtleties for you
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
+	peer.SetupConnections()
 
 	// The root waits everyones to be up
 	if app.RunFlags.AmRoot {
 		for {
 			time.Sleep(time.Second)
 			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
+			if err := peer.StartAnnouncementWithWait(setupRound, 5*time.Second); err != nil {
+				continue
+			}
 			counted := <-setupRound.Counted
 			dbg.Lvl1("Number of peers counted:", counted)
 			if counted == len(conf.Hosts) {
@@ -137,27 +140,27 @@ func NewRoundSkeleton(node *sign.Node) *RoundSkeleton {
 // Output messages and returns an error if something went wrong.
 // For announcement we just give for now the viewNbr (view = what is in the tree
 // at the instant) and the round number so we know where/when are we in the run.
-func (round *RoundSkeleton) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundSkeleton) Announcement(viewNbr, roundNbr int, in *sign.AnnouncementMessage, out []*sign.AnnouncementMessage) error {
 	return round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
 }
 
 // Commitment phase
-func (round *RoundSkeleton) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundSkeleton) Commitment(in []*sign.CommitmentMessage, out *sign.CommitmentMessage) error {
 	return round.RoundCosi.Commitment(in, out)
 }
 
 // Challenge phase
-func (round *RoundSkeleton) Challenge(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundSkeleton) Challenge(in *sign.ChallengeMessage, out []*sign.ChallengeMessage) error {
 	return round.RoundCosi.Challenge(in, out)
 }
 
 // Challenge phase
-func (round *RoundSkeleton) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundSkeleton) Response(in []*sign.ResponseMessage, out *sign.ResponseMessage) error {
 	return round.RoundCosi.Response(in, out)
 }
 
 // SignatureBroadcast phase
 // Here you get your final signature !
-func (round *RoundSkeleton) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundSkeleton) SignatureBroadcast(in *sign.SignatureBroadcastMessage, out []*sign.SignatureBroadcastMessage) error {
 	return round.RoundCosi.SignatureBroadcast(in, out)
 }

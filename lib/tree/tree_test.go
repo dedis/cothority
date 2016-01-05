@@ -2,7 +2,6 @@ package tree_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/tree"
 	"github.com/dedis/crypto/edwards"
 	"strconv"
@@ -24,23 +23,14 @@ func TestNewNaryTree(t *testing.T) {
 	nPeers := 11
 	names := genLocalhostPeerNames(nPeers, 2000)
 	pl := tree.GenPeerList(s, names)
-	tr := pl.NewNaryTree(3)
+	tr := tree.NewNaryTree(s, pl, 3)
 	// Count all elements
 	if tr.Count() != 11 {
 		t.Fatal("Not 11 elements")
 	}
 
-	// Check same hash for same tree
-	tr2 := pl.NewNaryTree(3)
-	if hashid.ConstantTimeCompare(tr.Id(), tr2.Id()) != 1 {
-		t.Fatal("Hashes of same tree are different")
-	}
-
 	// Check different hash for different trees
-	tr3 := pl.NewNaryTree(4)
-	if hashid.ConstantTimeCompare(tr.Id(), tr3.Id()) == 1 {
-		t.Fatal("Hashes of different trees should be different")
-	}
+	tr3 := tree.NewNaryTree(s, pl, 4)
 
 	// Count for wider tree
 	if tr3.Count() != 11 {

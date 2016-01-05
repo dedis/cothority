@@ -191,20 +191,20 @@ func (v *Views) NChildren(view int) int {
 // Otherwise it justs the peer with the right public  private key pair
 // It returns a View that consists of the tree and the peer list
 func NewViewFromConfigTree(suite abstract.Suite, tree *ConfigTree, hostname string) *View {
-	peers := make([]*Peer, 0)
-	rootNode, hostNode := convertTree(suite, peers, tree, hostname)
-	pl := NewPeerList(suite, peers)
+	rootNode, hostNode, pl := convertTree(suite, tree, hostname)
 	rootNode.GenId(suite.Hash())
 	// here we create the local view !
 	return NewView(0, hostNode, pl)
 }
 
 // convertTree is a recursive function that parse the ConfigTree and returns the
-// Root node and the node corresponding to *host* in the tree.
-func convertTree(suite abstract.Suite, peers []*Peer, t *ConfigTree, host string) (*Node, *Node) {
+// Root node and the node corresponding to *host* in the tree and the peerList
+// from the configtree
+func convertTree(suite abstract.Suite, t *ConfigTree, host string) (*Node, *Node, *PeerList) {
 	if t.Name == "" {
-		return nil, nil
+		return nil, nil, nil
 	}
+	var peers []*Peer
 	var node *Node
 	var hostNode *Node // the node corresponding to *host*
 	// because we need  a local view from this host instead of the full tree.
@@ -241,9 +241,10 @@ func convertTree(suite abstract.Suite, peers []*Peer, t *ConfigTree, host string
 	}
 	for i, _ := range t.Children {
 		// create the children node
-		if child, hostN := convertTree(suite, peers, t.Children[i], host); child != nil {
+		if child, hostN, subPeers := convertTree(suite, t.Children[i], host); child != nil {
 			// add them if we are not leaf
 			node.AddChild(child)
+			peers = append(peers, subPeers.Peers...)
 			// if we still dont know where our host is, that the returned node
 			// is not null and it corresponds
 			if hostNode == nil && hostN != nil && hostN.Name() == host {
@@ -252,5 +253,5 @@ func convertTree(suite abstract.Suite, peers []*Peer, t *ConfigTree, host string
 			}
 		}
 	}
-	return node, hostNode
+	return node, hostNode, NewPeerList(suite, peers)
 }

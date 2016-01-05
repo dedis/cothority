@@ -1,6 +1,8 @@
 package tree
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -83,6 +85,16 @@ func (pl *PeerList) Copy() PeerList {
 	return pl2
 }
 
+func (pl *PeerList) String() string {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "[ ")
+	for i, p := range pl.Peers {
+		fmt.Fprintf(&buf, " (%d) %s, ", i, p.Name)
+	}
+	fmt.Fprintf(&buf, " ]")
+	return buf.String()
+}
+
 // NewPeerList init a PeerList with this list of peers
 func NewPeerList(s abstract.Suite, peers []*Peer) *PeerList {
 	return new(PeerList).init(s, peers)
@@ -99,12 +111,4 @@ func GenPeerList(s abstract.Suite, names []string) *PeerList {
 		peers[i] = NewPeer(names[i], keyPair.Public, keyPair.Secret)
 	}
 	return NewPeerList(s, peers)
-}
-
-// NewNaryTree creates a tree of peers recursively with branching
-// factor bf. If bf = 2, it will create a binary tree.
-// It returns the root.
-func (pl *PeerList) NewNaryTree(bf int) *Node {
-	root := NewNaryTree(pl.Suite, bf, pl.Peers)
-	return root
 }

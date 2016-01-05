@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	net "github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cipher"
 )
@@ -20,7 +19,7 @@ func hashSchnorr(suite abstract.Suite, message []byte, p abstract.Point) abstrac
 // The ring structure is removed and
 // The anonimity set is reduced to one public key = no anonimity
 func SchnorrSign(suite abstract.Suite, random cipher.Stream, message []byte,
-	privateKey abstract.Secret) net.BasicSignature {
+	privateKey abstract.Secret) BasicSignature {
 
 	// Create random secret v and public point commitment T
 	v := suite.Secret().Pick(random)
@@ -36,12 +35,12 @@ func SchnorrSign(suite abstract.Suite, random cipher.Stream, message []byte,
 	// Return verifiable si,gnature {c, r}
 	// Verifier will be able to compute v = r + x*c
 	// And check that hashElgamal for T and the message == c
-	sig := net.BasicSignature{Chall: c, Resp: r}
+	sig := BasicSignature{Chall: c, Resp: r}
 	return sig
 }
 
 func SchnorrVerify(suite abstract.Suite, message []byte,
-	signature net.BasicSignature) error {
+	signature BasicSignature) error {
 	publicKey := signature.Pub
 	r := signature.Resp
 	c := signature.Chall

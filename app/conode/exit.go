@@ -7,9 +7,10 @@ package main
 import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"golang.org/x/net/context"
 )
 
 func init() {
@@ -35,19 +36,17 @@ func ForceExit(address string) {
 	if err != nil {
 		dbg.Fatal("Couldn't convert", address, "to a IP:PORT")
 	}
-
-	conn := coconet.NewTCPConn(add)
-	err = conn.Connect()
+	host := network.NewTcpHost("127.0.0.1", nil)
+	conn, err := host.Open(add)
 	if err != nil {
-		dbg.Fatal("Error when getting the connection to the host:", err)
+		dbg.Fatal("Could not connect to", add)
 	}
 	dbg.Lvl1("Connected to", add)
-	msg := &conode.TimeStampMessage{
-		Type: conode.StampExit,
-	}
+	msg := &conode.StampExit{}
 
 	dbg.Lvl1("Asking to exit")
-	err = conn.PutData(msg)
+	ctx := context.TODO()
+	err = conn.Send(ctx, msg)
 	if err != nil {
 		dbg.Fatal("Couldn't send exit-message to server:", err)
 	}
