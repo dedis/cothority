@@ -20,7 +20,7 @@ uni-directional way.
 type Graph struct {
 	id         hashid.HashId
 	root       *TreePeer
-	peerListId hashid.HashId
+	PeerListId hashid.HashId
 }
 
 /*
@@ -99,12 +99,11 @@ func NewPeerList(peers map[string]*Peer) *PeerList {
 // representation of all its peers
 func (pl *PeerList) generateId() hashid.HashId {
 	hash := sha256.New()
-	plBytes := make([]byte, sha256.Size*len(pl.Peers))
 	for _, p := range pl.Peers {
-		pBytes, _ := p.public.MarshalBinary()
-		plBytes = append(plBytes, pBytes...)
+		pBytes, _ := p.Public.MarshalBinary()
+		hash.Write(pBytes)
 	}
-	pl.Id = hashid.HashId(hash.Sum(plBytes))
+	pl.Id = hashid.HashId(hash.Sum(nil))
 	return pl.Id
 }
 
@@ -127,15 +126,15 @@ address of the peer, as this is unique.
 */
 type Peer struct {
 	// The "ip:port" of that peer
-	address string
+	Address string
 	// The public-key of that peer
-	public abstract.Point
+	Public abstract.Point
 }
 
 // NewPeer returns a fresh initialized peer struct
 func NewPeer(address string, public abstract.Point) *Peer {
 	return &Peer{
-		address: address,
-		public:  public,
+		Address: address,
+		Public:  public,
 	}
 }
