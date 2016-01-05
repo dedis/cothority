@@ -10,7 +10,10 @@ Node takes care about
 
 package sda
 
-import "errors"
+import (
+	"errors"
+	"github.com/dedis/crypto/abstract"
+)
 
 /*
 NewNode starts a new node that will listen on the network for incoming
@@ -26,6 +29,8 @@ Node is the structure responsible for holding information about the current
  state
 */
 type Node struct {
+	// Our private-key
+	private abstract.Secret
 }
 
 /*

@@ -10,7 +10,7 @@ package example
 import "github.com/dedis/cothority/lib/sda"
 
 func init() {
-	sda.ProtocolRegister("Example", NewProtocolExample)
+	sda.ProtocolRegister("Example", NewProtocolInstance)
 }
 
 /*
@@ -39,9 +39,11 @@ type MessageReply struct {
 /*
 NewProtocolExample initialises the structure for use in one round
 */
-func (p *ProtocolExample) NewProtocolExample(n *sda.Node, t *sda.TreePeer) {
-	p.Node = n
-	p.TreePeer = t
+func NewProtocolInstance(n *sda.Node, t *sda.TreePeer) *ProtocolExample {
+	return &ProtocolExample{
+		Node:     n,
+		TreePeer: t,
+	}
 }
 
 /*
