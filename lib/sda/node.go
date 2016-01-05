@@ -12,16 +12,20 @@ package sda
 
 import (
 	"errors"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 )
 
-/*
-NewNode starts a new node that will listen on the network for incoming
-messages.
-*/
-
-func NewNode(listen string) *Node {
-	return nil
+// NewNode starts a new node that will listen on the network for incoming
+// messages. It will store the private-key.
+func NewNode(address string, pkey abstract.Secret) *Node {
+	n := &Node{
+		listener: network.NewTcpHost(address),
+		private:  pkey,
+	}
+	n.listener.Listen(address, n.NewConnection)
+	return n
 }
 
 /*
@@ -29,21 +33,33 @@ Node is the structure responsible for holding information about the current
  state
 */
 type Node struct {
+	// The TCPListener
+	listener network.Host
+	// The open connections
+	connections []network.Conn
 	// Our private-key
 	private abstract.Secret
 }
 
-/*
-SendMessage sends a message
-*/
-func (n *Node) SendMessage(gn *TreePeer, msg interface{}) error {
+// SendMessage sends a message
+func (n *Node) SendMessage(t *TreePeer, msg interface{}) error {
 	return nil
 }
 
-/*
-ProtocolInstanceConfig holds the configuration for one instance of the
- ProtocolInstance
-*/
+// NewConnection handles a new connection-request.
+func (n *Node) NewConnection(c network.Conn) {
+	n.connections = append(n.connections, c)
+	for {
+		msg, err := c.Receive()
+		if err != nil {
+			dbg.Error("While receiving:", err)
+		}
+		dbg.Lvl1(msg)
+	}
+}
+
+// ProtocolInstanceConfig holds the configuration for one instance of the
+// ProtocolInstance
 type ProtocolInstanceConfig struct {
 	IncomingPackets IPType
 }

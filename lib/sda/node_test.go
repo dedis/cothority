@@ -1,8 +1,20 @@
 package sda_test
 
-import "testing"
+import (
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
+	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/random"
+	"testing"
+)
+
+var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
 
 // Test setting up of Node
+func TestNewNode(t *testing.T) {
+	priv, pub := privPub(suite)
+
+}
 
 // Test connecting of multiple Nodes
 
@@ -26,3 +38,10 @@ func TestPeerListPropagation(t *testing.T) {
 // - reject if unknown ProtocolID
 // - setting up of graph and nodelist
 // - instantiating ProtocolInstance
+
+// privPub creates a private/public key pair
+func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
+	keypair := &config.KeyPair{}
+	keypair.Gen(s, random.Stream)
+	return keypair.Secret, keypair.Public
+}
