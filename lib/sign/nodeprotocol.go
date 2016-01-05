@@ -239,7 +239,6 @@ func (sn *Node) ProcessMessages() error {
 	}
 }
 
-<<<<<<< HEAD
 // If we ever need to put more metadata in the messages itself, we can do it
 // here.
 func processSigningMsg(nm network.ApplicationMessage, sm *SigningMessage) {
@@ -378,7 +377,7 @@ func (sn *Node) Commit(com *CommitmentMessage) error {
 		if err = sn.PutUp(ctx, view, out); err != nil {
 			dbg.Lvl2(sn.Name(), "Error putting up commit:", err)
 		} else {
-		dbg.Lvl3(sn.Name(), "puts up commit", isErr)
+			dbg.Lvl3(sn.Name(), "puts up commit")
 		}
 	}
 	return err

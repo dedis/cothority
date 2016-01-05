@@ -55,7 +55,7 @@ func (round *RoundStamperListener) Commitment(in []*sign.CommitmentMessage, out 
 		out.Messages += m.Messages
 	}
 	if round.IsRoot {
-		round.roundMessages = out.Messages
+		round.RoundMessages = out.Messages
 		round.Node.Messages += out.Messages
 	}
 
@@ -83,7 +83,7 @@ func (round *RoundStamperListener) Commitment(in []*sign.CommitmentMessage, out 
 func (round *RoundStamperListener) SignatureBroadcast(in *sign.SignatureBroadcastMessage, out []*sign.SignatureBroadcastMessage) error {
 	round.RoundStamper.SignatureBroadcast(in, out)
 	if round.IsRoot {
-		in.Messages = round.roundMessages
+		in.Messages = round.RoundMessages
 	} else {
 		round.Node.Messages = in.Messages
 	}

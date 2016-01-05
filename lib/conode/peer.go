@@ -2,6 +2,8 @@ package conode
 
 import (
 	"bytes"
+	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -205,7 +207,7 @@ func (p *Peer) WaitRoundSetup(nbHost int, timeoutSec time.Duration, retry int) e
 
 // Simple ephemeral helper for compatibility issues
 // From base64 => hexadecimal
-func convertTree(suite abstract.Suite, t *graphs.Tree) {
+func convertTree(suite abstract.Suite, t *tree.ConfigTree) {
 	if t.PubKey != "" {
 		point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
 		if err != nil {
