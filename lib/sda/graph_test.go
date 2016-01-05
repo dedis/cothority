@@ -1,6 +1,25 @@
 package sda_test
 
-// Test initialisation of new random peer-list
+import (
+	"testing"
+
+	"github.com/DeDiS/crypto/edwards/ed25519"
+	"github.com/dedis/cothority/lib/sda"
+)
+
+var tSuite = ed25519.NewAES128SHA256Ed25519(false)
+
+// Test initialisation of new peer-list
+func TestInitPeerList(t *testing.T) {
+	adresses := []string{"localhost:1010", "localhost:1012"}
+	pl := sda.GenPeerList(tSuite, adresses)
+	if len(pl.Peers) != 2 {
+		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.Peers))
+	}
+	if pl.Id == nil {
+		t.Fatalf("PeerList without id is not allowed")
+	}
+}
 
 // Test initialisation of new peer-list from config-file
 
