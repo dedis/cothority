@@ -542,7 +542,7 @@ func (sn *Node) WaitChildrenConnections(view int) {
 	select {
 	case <-done:
 		return
-	case <-time.After(10 * time.Second):
+	case <-time.After(30 * time.Second):
 		dbg.Fatal(sn.Name(), "Children not connected after 30 secs")
 	}
 }

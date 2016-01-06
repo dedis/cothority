@@ -53,7 +53,7 @@ func (sn *Node) ProcessMessages() error {
 			dbg.Lvlf4("Message on %s is type %s", sn.Name(), nm.MsgType)
 
 			// Do we have an errror ?
-			if err := nm.Error(); err != nil {
+			if err := nm.Error(); err != nil || nm.Msg == nil {
 				// One of the errors doesn't have an error-number applied, so we need
 				// to check for the string - will probably be fixed in go 1.6
 				if !ok || err == network.ErrClosed || err == network.ErrEOF ||
@@ -333,7 +333,7 @@ func (sn *Node) Commit(com *CommitmentMessage) error {
 		sn.RoundCommits[roundNbr] = commitList
 	}
 
-	dbg.Lvl3("Got", len(sn.RoundCommits[roundNbr]), "of", sn.NChildren(view), "commits")
+	dbg.Lvl3(sn.Name(), "Got", len(sn.RoundCommits[roundNbr]), "of", sn.NChildren(view), "commits")
 	// if we are not a leaf and we did not get enough commits yet (not all children replied)
 	if len(sn.RoundCommits[roundNbr]) != sn.NChildren(view) {
 		dbg.Lvl3(sn.Name(), "Not enough commits received to call the Commit of the round")

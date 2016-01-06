@@ -1,4 +1,4 @@
-Machines = 16
+Machines = 8
 App = "sign"
 
 ppm, bf, rounds, rate, suite

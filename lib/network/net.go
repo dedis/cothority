@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 	"time"
@@ -110,7 +111,7 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 		time.Sleep(waitRetry)
 	}
 	if conn == nil {
-		return nil, fmt.Errorf("Could not connect to %s. Abort.", name)
+		return nil, fmt.Errorf("Could not connect to %s.", name)
 	}
 	c := TcpConn{
 		Endpoint: name,
@@ -197,7 +198,7 @@ func handleError(err error) error {
 		return ErrClosed
 	} else if strings.Contains(err.Error(), "canceled") {
 		return ErrCanceled
-	} else if strings.Contains(err.Error(), "EOF") {
+	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
 		return ErrEOF
 	}
 
@@ -217,9 +218,10 @@ func handleError(err error) error {
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
 func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
+
 	var am ApplicationMessage
 	am.constructors = c.host.constructors
-	bufferSize := 256
+	bufferSize := 4096
 	b := make([]byte, bufferSize)
 	var buffer bytes.Buffer
 	var err error
@@ -229,17 +231,23 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 		b = b[:n]
 		buffer.Write(b)
 		if err != nil {
-			return EmptyApplicationMessage, handleError(err)
+			e := handleError(err)
+			return EmptyApplicationMessage, e
 		}
 		if n < bufferSize {
 			// read all data
 			break
 		}
 	}
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Printf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+		}
+	}()
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
-		return am, fmt.Errorf("Error unmarshaling message: %s", err.Error())
+		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
 	return am, nil

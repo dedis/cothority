@@ -69,6 +69,7 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 	}
 	// Then listen + process messages
 	go func() {
+		dbg.Lvl3(address, "will listen")
 		err := node.Listen(address)
 		dbg.Lvl3("Node.listen", address, " quits with status", err)
 		peer.CloseChan <- true
@@ -83,11 +84,13 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 func (peer *Peer) SetupConnections() {
 	// Connect to the parent if we are not root
 	if !peer.Node.Root(0) {
+		dbg.Lvl3(peer.Node.Name(), "Will contact parent")
 		if err := peer.Node.ConnectParent(0); err != nil {
 			dbg.Fatal(peer.Node.Name(), err, "ABORT")
 		}
 	}
 	if !peer.Node.Leaf(0) {
+		dbg.Lvl3(peer.Node.Name(), "will wait for children connections)")
 		peer.Node.WaitChildrenConnections(0)
 	}
 	dbg.Lvl2(peer.Node.Name(), " has setup connections")

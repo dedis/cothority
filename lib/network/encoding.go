@@ -107,16 +107,17 @@ func (t Type) String() string {
 	return ty.Name()
 }
 
-// MarshalBinary the application message => to bytes
-// Implements BinaryMarshaler interface so it will be used when sending with protobuf
-func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
+// MarshalregisteredType will marshal a struct with its respective type into a
+// slice of bytes. That slice of bytes can be then decoded in
+// UnmarshalRegisteredType.
+func MarshalRegisteredType(msgType Type, data ProtocolMessage) ([]byte, error) {
 	b := new(bytes.Buffer)
-	if err := binary.Write(b, globalOrder, am.MsgType); err != nil {
+	if err := binary.Write(b, globalOrder, msgType); err != nil {
 		return nil, err
 	}
 	var buf []byte
 	var err error
-	if buf, err = protobuf.Encode(am.Msg); err != nil {
+	if buf, err = protobuf.Encode(data); err != nil {
 		dbg.Print("Error for protobuf encoding")
 		return nil, err
 	}
@@ -124,27 +125,44 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 	return b.Bytes(), err
 }
 
+// UnmarshalRegisteredType returns the type, the data and an error trying to
+// decode a message from a buffer. The type must be registered to the network
+// library in order for it to be decodable.
+func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Type, ProtocolMessage, error) {
+	b := bytes.NewBuffer(buf)
+	var t Type
+	if err := binary.Read(b, globalOrder, &t); err != nil {
+		return DefaultType, nil, err
+	}
+	var typ reflect.Type
+	var ok bool
+	if typ, ok = typeRegistry[t]; !ok {
+		return DefaultType, nil, fmt.Errorf("Type %s not registered.", t.String())
+	}
+	ptrVal := reflect.New(typ)
+	ptr := ptrVal.Interface()
+	var err error
+	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
+		return DefaultType, nil, err
+	}
+	return t, ptrVal.Elem().Interface(), nil
+}
+
+// MarshalBinary the application message => to bytes
+// Implements BinaryMarshaler interface so it will be used when sending with protobuf
+func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
+	return MarshalRegisteredType(am.MsgType, am.Msg)
+}
+
 // UnmarshalBinary will decode the incoming bytes
 // It checks if the underlying packet is self-decodable
 // by using its UnmarshalBinary interface
 // otherwise, use abstract.Encoding (suite) to decode
 func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
-	b := bytes.NewBuffer(buf)
-	if err := binary.Read(b, globalOrder, &am.MsgType); err != nil {
-		return err
-	}
-	if typ, ok := typeRegistry[am.MsgType]; !ok {
-		return fmt.Errorf("Type %s not registered.", am.MsgType.String())
-	} else {
-		ptrVal := reflect.New(typ)
-		ptr := ptrVal.Interface()
-		var err error
-		if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, am.constructors); err != nil {
-			return err
-		}
-		am.Msg = ptrVal.Elem().Interface()
-	}
-	return nil
+	t, msg, err := UnmarshalRegisteredType(buf, am.constructors)
+	am.MsgType = t
+	am.Msg = msg
+	return err
 }
 
 // ConstructFrom takes a ProtocolMessage and then construct a

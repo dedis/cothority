@@ -176,23 +176,23 @@ func main() {
 		// Every stampserver that started up (mostly waiting for configuration-reading)
 		// writes its name in coll_stamp_dir - once everybody is there, the directory
 		// is cleaned to flag it's OK to go on.
-		start_config := time.Now()
-		for {
-			s, err := monitor.GetReady(monitorAddr)
-			if err != nil {
-				dbg.Fatal("Couldn't contact monitor at", monitorAddr)
-			} else {
-				dbg.Lvl1("Processes started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
-				if s.Ready == totalServers {
-					dbg.Lvl2("Everybody ready, starting")
-					// 1st second for everybody to see the deleted directory
-					// 2nd second for everybody to start up listening
-					time.Sleep(time.Second * 2)
-					break
-				}
-			}
-			time.Sleep(time.Second)
-		}
+		/*     start_config := time.Now()*/
+		//for {
+		//s, err := monitor.GetReady(monitorAddr)
+		//if err != nil {
+		//dbg.Fatal("Couldn't contact monitor at", monitorAddr)
+		//} else {
+		//dbg.Lvl1("Processes started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
+		//if s.Ready == totalServers {
+		//dbg.Lvl2("Everybody ready, starting")
+		//// 1st second for everybody to see the deleted directory
+		//// 2nd second for everybody to start up listening
+		//time.Sleep(time.Second * 2)
+		//break
+		//}
+		//}
+		//time.Sleep(time.Second)
+		/*}*/
 	}
 
 	switch deterlab.App {
