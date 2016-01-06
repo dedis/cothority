@@ -1,0 +1,166 @@
+package network
+
+import (
+	"bytes"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/protobuf"
+	"reflect"
+)
+
+/// Encoding part ///
+// Type of a packet
+type Type uint8
+
+// ProtocolMessage is a type for any message that the user wants to send
+type ProtocolMessage interface{}
+
+// RegisterProtocolType register a custom "struct" / "packet" and get
+// the allocated Type
+// Pass simply your non-initialized struct
+func RegisterProtocolType(msgType Type, msg ProtocolMessage) error {
+	if _, typeRegistered := typeRegistry[msgType]; typeRegistered {
+		return errors.New("Type was already registered")
+	}
+	val := reflect.ValueOf(msg)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	t := val.Type()
+	typeRegistry[msgType] = t
+	invTypeRegistry[t] = msgType
+
+	return nil
+}
+
+// Give a default constructors for protobuf out of this suite
+func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
+	constructors := make(protobuf.Constructors)
+	var point abstract.Point
+	var secret abstract.Secret
+	constructors[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
+	constructors[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
+	return constructors
+}
+
+// ApplicationMessage is the container for any ProtocolMessage
+type ApplicationMessage struct {
+	// From field can be set by the receivinf connection itself, no need to
+	// acutally transmit the value
+	//From string
+	// What kind of msg do we have
+	MsgType Type
+	// The underlying message
+	Msg ProtocolMessage
+
+	// which constructors are used
+	constructors protobuf.Constructors
+	// possible error during unmarshaling so that upper layer can know it
+	err error
+	// Same for the origin of the message
+	From string
+}
+
+// Error returns the error that has been encountered during the unmarshaling of
+// this message.
+func (am *ApplicationMessage) Error() error {
+	return am.err
+}
+
+// workaround so we can set the error after creation of the application
+// message...
+func (am *ApplicationMessage) SetError(err error) {
+	am.err = err
+}
+
+var typeRegistry = make(map[Type]reflect.Type)
+var invTypeRegistry = make(map[reflect.Type]Type)
+
+var globalOrder = binary.LittleEndian
+
+// DefaultType is reserved by the network library. When you receive a message of
+// DefaultType, it is generally because an error happenned, then you can call
+// Error() on it.
+var DefaultType Type = 0
+
+// This is the default empty message that is returned in case something went
+// wrong.
+var EmptyApplicationMessage = ApplicationMessage{MsgType: DefaultType}
+
+// When you don't need any speical constructors, you can give nil to NewTcpHost
+// and it will use this empty constructors
+var emptyConstructors protobuf.Constructors
+
+func init() {
+	emptyConstructors = make(protobuf.Constructors)
+}
+
+// String returns the underlying type in human format
+func (t Type) String() string {
+	ty, ok := typeRegistry[t]
+	if !ok {
+		return "unknown"
+	}
+	return ty.Name()
+}
+
+// MarshalBinary the application message => to bytes
+// Implements BinaryMarshaler interface so it will be used when sending with protobuf
+func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
+	b := new(bytes.Buffer)
+	if err := binary.Write(b, globalOrder, am.MsgType); err != nil {
+		return nil, err
+	}
+	var buf []byte
+	var err error
+	if buf, err = protobuf.Encode(am.Msg); err != nil {
+		dbg.Print("Error for protobuf encoding")
+		return nil, err
+	}
+	_, err = b.Write(buf)
+	return b.Bytes(), err
+}
+
+// UnmarshalBinary will decode the incoming bytes
+// It checks if the underlying packet is self-decodable
+// by using its UnmarshalBinary interface
+// otherwise, use abstract.Encoding (suite) to decode
+func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
+	b := bytes.NewBuffer(buf)
+	if err := binary.Read(b, globalOrder, &am.MsgType); err != nil {
+		return err
+	}
+	if typ, ok := typeRegistry[am.MsgType]; !ok {
+		return fmt.Errorf("Type %s not registered.", am.MsgType.String())
+	} else {
+		ptrVal := reflect.New(typ)
+		ptr := ptrVal.Interface()
+		var err error
+		if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, am.constructors); err != nil {
+			return err
+		}
+		am.Msg = ptrVal.Elem().Interface()
+	}
+	return nil
+}
+
+// ConstructFrom takes a ProtocolMessage and then construct a
+// ApplicationMessage from it. Error if the type is unknown
+func newApplicationMessage(obj ProtocolMessage) (*ApplicationMessage, error) {
+	val := reflect.ValueOf(obj)
+	if val.Kind() != reflect.Ptr {
+		return nil, fmt.Errorf("Send takes a POINTER to the message. Given a copy here...")
+	}
+	val = val.Elem()
+	t := val.Type()
+	ty, ok := invTypeRegistry[t]
+	if !ok {
+		return &ApplicationMessage{}, errors.New(fmt.Sprintf("Packet to send is not known. Please register packet: %s\n", t.String()))
+	}
+	return &ApplicationMessage{
+		MsgType: ty,
+		Msg:     obj}, nil
+}

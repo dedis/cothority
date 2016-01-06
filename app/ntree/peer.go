@@ -66,10 +66,11 @@ type Peer struct {
 	Conns      []net.Conn
 	Pubs       []abstract.Point
 	Signatures []BasicSignature
+	Name       string
 }
 
 func (l *Peer) String() string {
-	return fmt.Sprintf("%s (%s)", l.Host.Name(), l.role)
+	return fmt.Sprintf("%s (%s)", l.Name, l.role)
 }
 
 func (l *Peer) Signature(msg []byte) *BasicSignature {
@@ -106,12 +107,13 @@ func (l *Peer) ReceiveListBasicSignature(c net.Conn) ListBasicSignature {
 	return app.Msg.(ListBasicSignature)
 
 }
-func NewPeer(host net.Host, role string, secret abstract.Secret,
+func NewPeer(host net.Host, name, role string, secret abstract.Secret,
 	public abstract.Point) *Peer {
 	return &Peer{
 		role: role,
 		Host: host,
 		priv: secret,
 		pub:  public,
+		Name: name,
 	}
 }

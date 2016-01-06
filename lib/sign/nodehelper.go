@@ -125,10 +125,11 @@ type Node struct {
 	connsLock sync.Mutex
 	// Views are moved here (decoupled from network layer part)
 	*tree.Views
+	name string
 }
 
 func (sn *Node) Name() string {
-	return sn.Host.Name()
+	return sn.name
 }
 
 // Start listening for messages coming from parent(up)
@@ -306,7 +307,7 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	return sn.StartAnnouncementWithWait(round, sn.MaxWait)
 }
 
-func NewNode(hn network.Host, suite abstract.Suite, views *tree.Views, random cipher.Stream) *Node {
+func NewNode(suite abstract.Suite, name string, hn network.Host, views *tree.Views, random cipher.Stream) *Node {
 	sn := &Node{Host: hn, suite: suite}
 	sn.PrivKey = suite.Secret().Pick(random)
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
@@ -322,7 +323,8 @@ func NewNode(hn network.Host, suite abstract.Suite, views *tree.Views, random ci
 	sn.RoundResponses = make(map[int][]*ResponseMessage)
 	sn.FailureRate = 0
 	h := fnv.New32a()
-	h.Write([]byte(hn.Name()))
+	// TODO this is bad !
+	h.Write([]byte(name))
 	seed := h.Sum32()
 	sn.Rand = rand.New(rand.NewSource(int64(seed)))
 	sn.VoteLog = NewVoteLog()
@@ -334,11 +336,12 @@ func NewNode(hn network.Host, suite abstract.Suite, views *tree.Views, random ci
 	sn.Conns = make(map[string]network.Conn)
 	sn.connsLock = sync.Mutex{}
 	sn.Views = views
+	sn.name = name
 	return sn
 }
 
 // Create new signing node that incorporates a given private key
-func NewKeyedNode(suite abstract.Suite, hn network.Host, views *tree.Views) *Node {
+func NewKeyedNode(suite abstract.Suite, name string, hn network.Host, views *tree.Views) *Node {
 	sn := &Node{Host: hn, suite: suite}
 	sn.PrivKey = views.View(0).Secret
 	sn.PubKey = views.View(0).Public
@@ -355,7 +358,7 @@ func NewKeyedNode(suite abstract.Suite, hn network.Host, views *tree.Views) *Nod
 
 	sn.FailureRate = 0
 	h := fnv.New32a()
-	h.Write([]byte(hn.Name()))
+	h.Write([]byte(name))
 	seed := h.Sum32()
 	sn.Rand = rand.New(rand.NewSource(int64(seed)))
 	sn.VoteLog = NewVoteLog()
@@ -367,6 +370,7 @@ func NewKeyedNode(suite abstract.Suite, hn network.Host, views *tree.Views) *Nod
 	sn.Conns = make(map[string]network.Conn)
 	sn.connsLock = sync.Mutex{}
 	sn.Views = views
+	sn.name = name
 	return sn
 }
 

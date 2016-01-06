@@ -69,7 +69,7 @@ func NewStampListener(nameP string, suite abstract.Suite) *StampListener {
 		sl.Clients = make(map[string]network.Conn)
 		sl.waitClose = make(chan string)
 		sl.NameL = nameL
-		sl.Host = network.NewTcpHost(nameL, network.DefaultConstructors(suite))
+		sl.Host = network.NewTcpHost(network.DefaultConstructors(suite))
 		SLList[sl.NameL] = sl
 		sl.ListenRequests()
 	} else {
@@ -90,9 +90,9 @@ func (s *StampListener) ListenRequests() error {
 				ctx := context.TODO()
 				am, err := c.Receive(ctx)
 				if err != nil {
-					dbg.Lvl2(s.Name(), " error receiving client message:", err)
+					dbg.Lvl2(s.NameL, " error receiving client message:", err)
 					if err == network.ErrClosed || err == network.ErrUnknown || err == network.ErrEOF {
-						dbg.Lvl2("Stamplistener", s.Name(), "Abort client connection")
+						dbg.Lvl2("Stamplistener", s.NameL, "Abort client connection")
 						return
 					}
 					continue

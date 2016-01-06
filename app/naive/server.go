@@ -43,9 +43,9 @@ func RunServer(conf *app.NaiveConfig) {
 // message to be signed
 func GoLeader(conf *app.NaiveConfig) {
 
-	host := net.NewTcpHost(app.RunFlags.Hostname, net.DefaultConstructors(suite))
+	host := net.NewTcpHost(net.DefaultConstructors(suite))
 	key := cliutils.KeyPair(suite)
-	leader := NewPeer(host, LeadRole, key.Secret, key.Public)
+	leader := NewPeer(host, app.RunFlags.Hostname, LeadRole, key.Secret, key.Public)
 
 	// Setting up the connections
 	// notably to the monitoring process
@@ -166,9 +166,9 @@ func GoLeader(conf *app.NaiveConfig) {
 func GoSigner(conf *app.NaiveConfig) {
 	// Wait for leader to be ready
 	time.Sleep(2 * time.Second)
-	host := net.NewTcpHost(app.RunFlags.Hostname, net.DefaultConstructors(suite))
+	host := net.NewTcpHost(net.DefaultConstructors(suite))
 	key := cliutils.KeyPair(suite)
-	signer := NewPeer(host, ServRole, key.Secret, key.Public)
+	signer := NewPeer(host, app.RunFlags.Hostname, ServRole, key.Secret, key.Public)
 	dbg.Lvl3(signer.String(), "will contact leader", conf.Hosts[0])
 	l, err := signer.Open(conf.Hosts[0])
 	if err != nil {

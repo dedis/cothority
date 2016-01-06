@@ -23,10 +23,10 @@ func RunServer(conf *app.NTreeConfig) {
 }
 
 func RunRoot(conf *app.NTreeConfig) {
-	host := net.NewTcpHost(app.RunFlags.Hostname, net.DefaultConstructors(suite))
+	host := net.NewTcpHost(net.DefaultConstructors(suite))
 	key := cliutils.KeyPair(suite)
 
-	peer := NewPeer(host, LeadRole, key.Secret, key.Public)
+	peer := NewPeer(host, app.RunFlags.Hostname, LeadRole, key.Secret, key.Public)
 	dbg.Lvl3(peer.String(), "Up and will make connections...")
 
 	// monitor
@@ -169,10 +169,10 @@ func RunRoot(conf *app.NTreeConfig) {
 
 func RunPeer(conf *app.NTreeConfig) {
 
-	host := net.NewTcpHost(app.RunFlags.Hostname, net.DefaultConstructors(suite))
+	host := net.NewTcpHost(net.DefaultConstructors(suite))
 	key := cliutils.KeyPair(suite)
 
-	peer := NewPeer(host, ServRole, key.Secret, key.Public)
+	peer := NewPeer(host, app.RunFlags.Hostname, ServRole, key.Secret, key.Public)
 	dbg.Lvl3(peer.String(), "Up and will make connections...")
 
 	// Chan used to communicate the message from the parent to the children
