@@ -1,48 +1,57 @@
 package sda
 
-import "errors"
+import (
+	"errors"
+)
 
 /*
 NewProtocol is the function-signature needed to instantiate a new protocol
 */
-type NewProtocol func(*Node, *TreePeer) Protocol
+type NewProtocol func(*Node, Topology) ProtocolInstance
+type ProtocolID string
 
-// protocols holds a map of all available protocols
-var protocols map[string]NewProtocol
+// protocols holds a map of all available protocols and how to create an
+// instance of it
+var protocols map[ProtocolID]NewProtocol
 
 /*
 Protocol is the interface that instances have to use in order to be
 recognized as protocols
 */
-type Protocol interface {
-	Dispatch(m []*Message) error
+type ProtocolInstance interface {
+	// A protocol isntance should be able to dispatch its own message internally
+	Dispatch(m *SDAMessage) error
+	// and give a unique identifier like a GUID
+	Id() InstanceID
+}
+type InstanceID string
+
+/*
+ProtocolInstantiate creates a new instance of a protocol given by it's name
+*/
+func ProtocolInstantiate(protoID ProtocolID, n *Node, t Topology) (ProtocolInstance, error) {
+	p, ok := protocols[protoID]
+	if !ok {
+		return nil, errors.New("Protocol doesn't exist")
+	}
+	return p(n, t), nil
 }
 
 /*
-ProtocolRegister takes a protocol and registers it under a given name
+ProtocolRegister takes a protocol and registers it under a given ID
 */
-func ProtocolRegister(name string, protocol NewProtocol) {
-	if protocols == nil {
-		protocols = make(map[string]NewProtocol)
-	}
-	protocols[name] = protocol
+func ProtocolRegister(ID ProtocolID, protocol NewProtocol) {
+	protocols[ID] = protocol
 }
 
 /*
 
  */
-func ProtocolExists(name string) bool {
-	_, ok := protocols[name]
+func ProtocolExists(ID ProtocolID) bool {
+	_, ok := protocols[ID]
 	return ok
 }
 
-/*
-ProtocolInstantiate creates a new instance of a protocol given by it's name
-*/
-func ProtocolInstantiate(name string, n *Node, t *TreePeer) (Protocol, error) {
-	p, ok := protocols[name]
-	if !ok {
-		return nil, errors.New("Protocol doesn't exist")
-	}
-	return p(n, t), nil
+func init() {
+	protocols = make(map[ProtocolID]NewProtocol)
 }

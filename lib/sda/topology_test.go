@@ -1,13 +1,9 @@
 package sda
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
-	"golang.org/x/net/context"
-
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/edwards/ed25519"
 )
 
@@ -22,52 +18,27 @@ func genLocalhostPeerNames(n, p int) []string {
 	return names
 }
 
-// Mock connection
-type TestConnection struct {
-	Name string
+// TODO  test the ID generation
+func TestTopologyId(t *testing.T) {
+
 }
 
-func (c TestConnection) Close() error {
-	// for tests only
-	return nil
-}
+// Test if topology correctly handles the "virtual" connections in the topology
+func TestTopologyConnectedTo(t *testing.T) {
 
-func (c TestConnection) Send(ctx context.Context, data network.ProtocolMessage) error {
-	fmt.Println("Sent data to connection", c.Name)
-	return nil
-}
-
-func (c TestConnection) Remote() string {
-	return c.Name
-}
-
-func (c TestConnection) Receive(ctx context.Context) (network.ApplicationMessage, error) {
-	// for tests only:
-	fmt.Println("Received")
-	return network.ApplicationMessage{}, nil
-}
-
-func TestTopology(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := GenPeerList(tSuite, names)
 	// Generate two example topology
 	root, _ := ExampleGenerateTreeFromPeerList(peerList)
 	graph := ExampleGenerateGraphFromPeerList(peerList)
 	// Generate the network
-	// We are the leader / root
-	node := NewNode("localhost:1010", nil)
-	// These are like physical connections through the network
-	node.AddConnection(TestConnection{"localhost:2000"})
-	node.AddConnection(TestConnection{"localhost:2001"})
-	node.AddConnection(TestConnection{"localhost:2002"})
+	if !root.IsConnectedTo("localhost:2001") {
+		t.Fatal("Root should be connection to localhost:2001")
+	}
+	if !graph.IsConnectedTo("localhost:2002") {
+		t.Fatal("Graph root should be connected to localhost:2002")
+	}
 
-	// Let's say we use two different topology at the same time
-	node.AddTopology(graph)
-	node.AddTopology(root)
-
-	// Then send to two nodes, using one particular topology
-	node.SendTo(root.Id(), "localhost:2000", []byte("Message-for-you-node-2"))
-	node.SendTo(graph.Id(), "localhost:2001", []byte("Message-for-you-node-2"))
 }
 
 func ExampleGenerateTreeFromPeerList(pl *PeerList) (*TreeNode, []*TreeNode) {
