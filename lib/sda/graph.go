@@ -13,27 +13,25 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-/*
-A graph represents a collection of peers that are connected in a
-uni-directional way.
-*/
+// Graph represents a collection of peers that are connected in a
+// uni-directional way.
 type Graph struct {
 	id         hashid.HashId
 	root       *TreePeer
 	PeerListId hashid.HashId
 }
 
-/*
-TreePeer represents a double-linked list to parent and children. The 'peer'-
-field can point to the same peer for different 'TreePeer's.
-*/
+// TreePeer represents a double-linked list to parent and children. The 'peer'-
+// field can point to the same peer for different 'TreePeer's.
 type TreePeer struct {
 	// The Graph this TreePeer belongs to
-	graph *Graph
+	// XXX this would create a circle:
+	// graph *Graph
 	// The id of that TreePeer
-	id       hashid.HashId
-	parent   *TreePeer
-	children []*TreePeer
+	id         hashid.HashId
+	PeerListId hashid.HashId
+	parent     *TreePeer
+	children   []*TreePeer
 	// peerId sth. like ip:port
 	peerId string
 }
@@ -41,9 +39,6 @@ type TreePeer struct {
 /*
 Functions to return the fields of the array in a readonly-fashion
 */
-func (g *TreePeer) Graph() *Graph {
-	return g.graph
-}
 func (g *TreePeer) ID() hashid.HashId {
 	return g.id
 }
@@ -54,30 +49,22 @@ func (g *TreePeer) Children() []*TreePeer {
 	return g.children
 }
 
-/*
-IsLeaf is true for the leaf of the tree
-*/
+// IsLeaf is true for the leaf of the tree
 func (g *TreePeer) IsLeaf() bool {
 	return len(g.children) == 0
 }
 
-/*
-IsRoot is true for the leaf of the tree
-*/
+// IsRoot is true for the root of the tree
 func (g *TreePeer) IsRoot() bool {
 	return g.parent == nil
 }
 
-/*
-IsIntermediate is true if we're neither Root nor Leaf
-*/
+// IsIntermediate is true if we're neither root nor leaf
 func (g *TreePeer) IsIntermediate() bool {
 	return !g.IsRoot() && g.IsLeaf()
 }
 
-/*
-PeerList holds all peers under a common identity
-*/
+// PeerList holds all peers under a common identity
 type PeerList struct {
 	// id identifies the PeerList (id is used in Graph)
 	Id hashid.HashId
@@ -120,15 +107,14 @@ func GenPeerList(s abstract.Suite, adresses []string) *PeerList {
 	return NewPeerList(peers)
 }
 
-/*
-Peer represents one Conode and holds it's public-key. It's ID is the
-address of the peer, as this is unique.
-*/
+// Peer represents one Conode and holds it's public-key. It's ID is the
+// address of the peer, as this is unique.
 type Peer struct {
 	// The "ip:port" of that peer
 	Address string
 	// The public-key of that peer
 	Public abstract.Point
+	leader bool
 }
 
 // NewPeer returns a fresh initialized peer struct
@@ -137,4 +123,8 @@ func NewPeer(address string, public abstract.Point) *Peer {
 		Address: address,
 		Public:  public,
 	}
+}
+
+func (p *Peer) isLeader() bool {
+	return p.leader
 }

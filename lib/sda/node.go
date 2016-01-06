@@ -29,6 +29,7 @@ func init() {
 func NewNode(address string, pkey abstract.Secret) *Node {
 	suite := edwards.NewAES128SHA256Ed25519(false)
 	n := &Node{
+		topologies:  make(map[ID]Topology),
 		address:     address,
 		host:        network.NewTcpHost(address, network.DefaultConstructors(suite)),
 		private:     pkey,
@@ -49,6 +50,7 @@ Node is the structure responsible for holding information about the current
  state
 */
 type Node struct {
+	topologies map[ID]Topology
 	// Our address
 	address string
 	// The TCPHost
