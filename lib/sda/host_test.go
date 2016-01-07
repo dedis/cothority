@@ -1,9 +1,10 @@
 // better not get sda_test, cannot access unexported fields
-package sda
+package sda_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
@@ -18,67 +19,61 @@ func init() {
 	network.RegisterProtocolType(SimpleMessageType, SimpleMessage{})
 }
 
-// Test setting up of Node
-func TestNodeNew(t *testing.T) {
-	node1 := newNode("localhost:2000", suite)
-	if node1 == nil {
-		t.Fatal("Couldn't setup a node")
+// Test setting up of Host
+func TestHostNew(t *testing.T) {
+	Host1 := newHost("localhost:2000", suite)
+	if Host1 == nil {
+		t.Fatal("Couldn't setup a Host")
 	}
-	err := node1.Close()
+	err := Host1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close", err)
 	}
 }
 
-// Test closing and opening of Node on same address
-func TestNodeClose(t *testing.T) {
-	node1 := newNode("localhost:2000", suite)
-	err := node1.Close()
+// Test closing and opening of Host on same address
+func TestHostClose(t *testing.T) {
+	Host1 := newHost("localhost:2000", suite)
+	err := Host1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
-	node1 = newNode("localhost:2000", suite)
+	Host1 = newHost("localhost:2000", suite)
 	// Needs to wait some as the listener will try for a couple of times
 	// to make the connection
 	time.Sleep(time.Second)
-	node1.Close()
+	Host1.Close()
 }
 
-// Test connection of multiple Nodes and sending messages back and forth
-func TestNodeMessaging(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
+// Test connection of multiple Hosts and sending messages back and forth
+func TestHostMessaging(t *testing.T) {
+	Host1, Host2 := setupHosts(t)
 	msg := &SimpleMessage{3}
-	node1 := newNode("localhost:2000", suite)
-	// make the second peer as the server
-	node2 := newNode("localhost:2001", suite)
-	// make it listen
-	node2.Listen("localhost:2001")
-	_, err := node1.Connect("localhost:2001")
+	err := Host1.SendTo("localhost:2001", msg)
 	if err != nil {
-		t.Fatal(err)
-	}
-	err = node1.sendMessage("localhost:2001", msg)
-	if err != nil {
-		t.Fatal("Couldn't send from node2 -> node1:", err)
+		t.Fatal("Couldn't send from Host2 -> Host1:", err)
 	}
 	var msgDec SimpleMessage
-	select {
-	case data := <-node2.networkChan:
-		var ok bool
-		if data.MsgType != SimpleMessageType {
+	data, err := Host2.Receive()
+	if err != nil {
+		t.Fatal("Did not receive message ..")
+	} else {
+		if data.MsgType != sda.SDAMessageType {
 			t.Fatal("Did not receive the expected type")
 		}
-		if msgDec, ok = data.Msg.(SimpleMessage); !ok {
+		var ok bool
+		if msgDec, ok = data.Msg.(sda.SDAMessage).Data.(SimpleMessage); !ok {
 			t.Fatal("Can not convert the message")
 		}
-	case <-time.After(2 * time.Second):
-		t.Fatal("Did not receive message ..")
+		if msgDec.I != 3 {
+			t.Fatal("Received message from Host2 -> Host1 is wrong")
+		}
 	}
-	if msgDec.I != 3 {
-		t.Fatal("Received message from node2 -> node1 is wrong")
-	}
+	Host1.Close()
+	Host2.Close()
 }
 
+// SimpleMessage is just used to transfer one integer
 type SimpleMessage struct {
 	I int
 }
@@ -89,6 +84,24 @@ const (
 
 // Test parsing of incoming packets with regard to its double-included
 // data-structure
+func TestHostIncomingMessage(t *testing.T) {
+	h1, h2 := setupHosts(t)
+	msgSimple := &SimpleMessage{10}
+	err := h1.SendTo(h2.Address, msgSimple)
+	if err != nil {
+		t.Fatal("Couldn't send message:", err)
+	}
+	am, err := h2.Receive()
+	if err != nil {
+		t.Fatal("Couldn't receive message", err)
+	}
+	dbg.Lvl3("Message received is", am)
+	if am.Msg.(sda.SDAMessage).Data.(SimpleMessage).I != 10 {
+		t.Fatal("Couldn't pass simple message")
+	}
+	h1.Close()
+	h2.Close()
+}
 
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
@@ -107,7 +120,7 @@ func TestPeerListPropagation(t *testing.T) {
 // Test complete parsing of new incoming packet
 // - Test if it is SDAMessage
 // - reject if unknown ProtocolID
-// - setting up of graph and nodelist
+// - setting up of graph and Hostlist
 // - instantiating ProtocolInstance
 
 // privPub creates a private/public key pair
@@ -117,7 +130,21 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 	return keypair.Secret, keypair.Public
 }
 
-func newNode(address string, s abstract.Suite) *Node {
+func newHost(address string, s abstract.Suite) *sda.Host {
 	priv, _ := privPub(s)
-	return NewNode(address, s, priv, network.NewTcpHost(network.DefaultConstructors(s)))
+	return sda.NewHost(address, s, priv, network.NewTcpHost(network.DefaultConstructors(s)))
+}
+
+func setupHosts(t *testing.T) (*sda.Host, *sda.Host) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	Host1 := newHost("localhost:2000", suite)
+	// make the second peer as the server
+	Host2 := newHost("localhost:2001", suite)
+	// make it listen
+	Host2.Listen()
+	_, err := Host1.Connect(Host2.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return Host1, Host2
 }

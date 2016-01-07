@@ -18,7 +18,6 @@ and the right topologyID it relies on.
 package sda
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
@@ -26,17 +25,16 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
+	"time"
 )
 
 /*
-Node is the structure responsible for holding information about the current
+Host is the structure responsible for holding information about the current
  state
 */
-type Node struct {
-	// instances linked to their ID and their ProtocolID
-	instances map[ProtocolID]map[InstanceID]ProtocolInstance
+type Host struct {
 	// Our address
-	address string
+	Address string
 	// The TCPHost
 	host network.Host
 	// The open connections
@@ -45,34 +43,61 @@ type Node struct {
 	networkLock *sync.Mutex
 	// Our private-key
 	private abstract.Secret
-	// The suite used for this node
+	// The suite used for this Host
 	suite abstract.Suite
 	// slice of received messages - testmode
 	networkChan chan network.ApplicationMessage
+	// instances linked to their ID and their ProtocolID
+	instances map[UUID]ProtocolInstance
+	// all trees known to this Host
+	trees map[UUID]Tree
+	// all identityLists known to this Host
 }
 
-// NewNode starts a new node that will listen on the network for incoming
+// NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewNode(address string, suite abstract.Suite, pkey abstract.Secret, host network.Host) *Node {
-	n := &Node{
+func NewHost(address string, suite abstract.Suite, pkey abstract.Secret, host network.Host) *Host {
+	n := &Host{
 		networkLock: &sync.Mutex{},
 		connections: make(map[string]network.Conn),
-		address:     address,
+		Address:     address,
 		host:        host,
 		private:     pkey,
 		suite:       suite,
 		networkChan: make(chan network.ApplicationMessage, 1),
-		instances:   make(map[ProtocolID]map[InstanceID]ProtocolInstance),
+		instances:   make(map[UUID]ProtocolInstance),
 	}
 	return n
 }
 
-func (n *Node) Connect(address string) (network.Conn, error) {
+// Start listening for messages coming from parent(up)
+// each time a connection request is made, we receive first its identity then
+// we handle the message using HandleConn
+func (n *Host) Listen() {
+	fn := func(c network.Conn) {
+		ctx := context.TODO()
+		am, err := c.Receive(ctx)
+		if err != nil || am.MsgType != IdentityMessageType {
+			dbg.Lvl2(n.Address, "Error receiving identity from connection", c.Remote())
+		}
+		id := am.Msg.(IdentityMessage)
+		dbg.Lvl3(n.Address, "Accepted Connection from", id.Name)
+		n.networkLock.Lock()
+		n.connections[n.Address] = c
+		n.networkLock.Unlock()
+
+		n.handleConn(id.Name, c)
+	}
+	go n.host.Listen(n.Address, fn)
+}
+
+// Connect takes an address where the next Host is
+func (n *Host) Connect(address string) (network.Conn, error) {
 	c, err := n.host.Open(address)
 	if err != nil {
 		return nil, err
 	}
-	id := IdentityMessage{n.address}
+	id := IdentityMessage{n.Address}
 	if err := c.Send(context.TODO(), &id); err != nil {
 		return nil, err
 	}
@@ -80,34 +105,100 @@ func (n *Node) Connect(address string) (network.Conn, error) {
 	n.connections[address] = c
 	n.networkLock.Unlock()
 
-	dbg.Lvl2("Node", n.address, "connected to", address)
+	dbg.Lvl2("Host", n.Address, "connected to", address)
 	go n.handleConn(address, c)
 	return c, nil
 }
 
-// Start listening for messages coming from parent(up)
-// each time a connection request is made, we receive first its identity then
-// we handle the message using HandleConn
-func (n *Node) Listen(address string) {
-	fn := func(c network.Conn) {
-		ctx := context.TODO()
-		am, err := c.Receive(ctx)
-		if err != nil || am.MsgType != IdentityMessageType {
-			dbg.Lvl2(n.address, "Error receiving identity from connection", c.Remote())
-		}
-		id := am.Msg.(IdentityMessage)
-		dbg.Lvl3(n.address, "Accepted Connection from", id.Name)
-		n.networkLock.Lock()
-		n.connections[address] = c
-		n.networkLock.Unlock()
+// Close shuts down the listener
+func (n *Host) Close() error {
+	return n.host.Close()
+}
 
-		n.handleConn(id.Name, c)
+// SendTo takes the address of the remote peer to send a message to
+func (n *Host) SendTo(address string, msg network.ProtocolMessage) error {
+	n.networkLock.Lock()
+	if c, ok := n.connections[address]; !ok {
+		n.networkLock.Unlock()
+		return fmt.Errorf("No connection to this address!", n.connections)
+	} else {
+		n.networkLock.Unlock()
+		sdaMsg := &SDAMessage{
+			ProtoID:    "",
+			InstanceID: "",
+		}
+		am, err := network.NewApplicationMessage(msg)
+		if err != nil {
+			return fmt.Errorf("Error converting packet: %v\n", err)
+		}
+		var b []byte
+		b, err = am.MarshalBinary()
+		if err != nil {
+			return fmt.Errorf("Error marshaling  message: %s", err.Error())
+		}
+		sdaMsg.DataSlice = b
+		dbg.Lvl3("Sending data", sdaMsg, "to", address)
+		return c.Send(context.TODO(), sdaMsg)
 	}
-	go n.host.Listen(address, fn)
+	return nil
+}
+
+// Receive will return the value of the communication-channel or an error
+// if there has been nothing received during 2 seconds.
+func (n *Host) Receive() (network.ApplicationMessage, error) {
+	select {
+	case data := <-n.networkChan:
+		if data.MsgType == SDAMessageType {
+			sda := data.Msg.(SDAMessage)
+			t, msg, _ := network.UnmarshalRegisteredType(sda.DataSlice, data.Constructors)
+			sda.MsgType = t
+			sda.Data = msg
+			data.Msg = sda
+			dbg.Lvl3("SDA-Message is:", sda)
+		}
+		return data, nil
+	case <-time.After(2 * time.Second):
+		return network.ApplicationMessage{}, fmt.Errorf("Didn't receive in 2 seconds")
+	}
+}
+
+// ProcessMessage checks if it is one of the messages for us or dispatch it
+// to the corresponding instance.
+// Our messages are:
+// * SDAMessage - used to communicate between the Hosts
+// * RequestTreeID - ask the parent for a given tree
+// * SendTree - send the tree to the child
+// * RequestPeerListID - ask the parent for a given peerList
+// * SendPeerListID - send the tree to the child
+func (n *Host) ProcessMessages() {
+	for {
+		nm, err := n.Receive()
+		if err == nil {
+			dbg.Lvl3("Message Received:", nm)
+			switch nm.MsgType {
+			case SDAMessageType:
+				n.processSDAMessage(&nm)
+			case RequestTreeType:
+				tt := nm.Msg.(RequestTree).TreeID
+				n.SendTo(nm.From, tt)
+			case SendTreeType:
+			case RequestIdentityListType:
+			case SendIdentityListType:
+			default:
+				dbg.Error("Didn't recognize message", nm.MsgType)
+			}
+		}
+	}
+}
+
+// AddProtocolInstance takes a UUID and a ProtocolInstance to be added
+// to the map
+func (n *Host) AddProtocolInstance(pi ProtocolInstance) {
+	n.instances[pi.Id()] = pi
 }
 
 // Handle a connection => giving messages to the MsgChans
-func (n *Node) handleConn(address string, c network.Conn) {
+func (n *Host) handleConn(address string, c network.Conn) {
 	for {
 		ctx := context.TODO()
 		am, err := c.Receive(ctx)
@@ -118,118 +209,21 @@ func (n *Node) handleConn(address string, c network.Conn) {
 	}
 }
 
-// SendTo is the public method to send a message to someone using a given
-// topology
-func (n *Node) SendTo(name string, data network.ProtocolMessage) {
-	n.sendMessage(name, data)
-}
-
-func (n *Node) ProcessMessages() {
-	for {
-		nm := <-n.networkChan
-		fmt.Println("Message Received:", nm)
-		if nm.MsgType == SDAMessageType {
-			sda := nm.Msg.(SDAMessage)
-			n.processSDAMessage(&sda)
-		}
-	}
-}
-
-// ProtocolInfo is to be embedded in every message that is made for a
-// ProtocolInstance
-type SDAMessage struct {
-	// The ID of the protocol
-	ProtoID ProtocolID
-	// The ID of the protocol instance - the counter
-	InstanceID InstanceID
-
-	// MsgType of the underlying data
-	MsgType network.Type
-	// The actual Data
-	Data network.ProtocolMessage
-}
-
 // Dispatch SDA message looks if we have all the info to rightly dispatch the
 // packet such as the protocol id and the topology id and the protocol instance
 // id
-func (n *Node) processSDAMessage(sda *SDAMessage) error {
+func (n *Host) processSDAMessage(am *network.ApplicationMessage) error {
+	sda := am.Msg.(SDAMessage)
+	dbg.Lvl3("Processing SDA-message", sda)
 	if !ProtocolExists(sda.ProtoID) {
 		return fmt.Errorf("Protocol does not exists")
 	}
-	var instances map[InstanceID]ProtocolInstance
-	var ok bool
-	if instances, ok = n.instances[sda.ProtoID]; !ok {
-		return fmt.Errorf("Instances for this Protocol do not exist ")
-	}
-	var ip ProtocolInstance
-	if ip, ok = instances[sda.InstanceID]; !ok {
+	ip, ok := n.instances[sda.InstanceID]
+	if !ok {
 		// XXX What to do here ? create a new instance or just drop ?
 		return fmt.Errorf("Instance Protocol not existing YET")
 	}
 	// Dispatch the message to the right instance !
-	ip.Dispatch(sda)
+	ip.Dispatch(&sda)
 	return nil
 }
-
-// Add a protocolInstance to the list
-func (n *Node) AddProtocolInstance(protoID ProtocolID, pi ProtocolInstance) {
-	m, ok := n.instances[protoID]
-	if !ok {
-		m = make(map[InstanceID]ProtocolInstance)
-		n.instances[protoID] = m
-	}
-	m[pi.Id()] = pi
-}
-func (n *Node) sendMessage(address string, msg network.ProtocolMessage) error {
-	n.networkLock.Lock()
-	if c, ok := n.connections[address]; !ok {
-		n.networkLock.Unlock()
-		return fmt.Errorf("No connection to this address!", n.connections)
-	} else {
-		n.networkLock.Unlock()
-		return c.Send(context.TODO(), msg)
-	}
-	return nil
-}
-
-// Close shuts down the listener
-func (n *Node) Close() error {
-	return n.host.Close()
-}
-
-// ProtocolInstanceConfig holds the configuration for one instance of the
-// ProtocolInstance
-// ?????????
-type ProtocolInstanceConfig struct {
-	IncomingPackets IPType
-}
-
-/*
-IPType defines how incoming packets are handled
-*/
-type IPType int
-
-const (
-	WaitForAll IPType = iota
-	PassDirect
-	Timeout
-)
-
-// IdentityMessage used to notify a remote peer we want to connect to who we are
-type IdentityMessage struct {
-	Name string
-}
-
-func init() {
-	network.RegisterProtocolType(IdentityMessageType, IdentityMessage{})
-	network.RegisterProtocolType(SDAMessageType, SDAMessage{})
-}
-
-const (
-	SDAMessageType = iota + 10
-	IdentityMessageType
-)
-
-// NoSuchState indicates that the given state doesn't exist in the
-// chosen ProtocolInstance
-var NoSuchState error = errors.New("This state doesn't exist")
