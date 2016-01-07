@@ -55,6 +55,6 @@ func (p ProtocolTest) Dispatch(m *SDAMessage) error {
 	return nil
 }
 
-func (p *ProtocolTest) Id() InstanceID {
-	return InstanceID(p.ID)
+func (p *ProtocolTest) Id() UUID {
+	return UUID(p.ID)
 }

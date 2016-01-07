@@ -26,6 +26,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
+	"time"
 )
 
 /*
@@ -34,7 +35,7 @@ Node is the structure responsible for holding information about the current
 */
 type Node struct {
 	// instances linked to their ID and their ProtocolID
-	instances map[ProtocolID]map[InstanceID]ProtocolInstance
+	instances map[UUID]map[UUID]ProtocolInstance
 	// Our address
 	address string
 	// The TCPHost
@@ -62,11 +63,12 @@ func NewNode(address string, suite abstract.Suite, pkey abstract.Secret, host ne
 		private:     pkey,
 		suite:       suite,
 		networkChan: make(chan network.ApplicationMessage, 1),
-		instances:   make(map[ProtocolID]map[InstanceID]ProtocolInstance),
+		instances:   make(map[UUID]map[UUID]ProtocolInstance),
 	}
 	return n
 }
 
+// Connect takes an address where the next node is
 func (n *Node) Connect(address string) (network.Conn, error) {
 	c, err := n.host.Open(address)
 	if err != nil {
@@ -120,8 +122,18 @@ func (n *Node) handleConn(address string, c network.Conn) {
 
 // SendTo is the public method to send a message to someone using a given
 // topology
-func (n *Node) SendTo(name string, data network.ProtocolMessage) {
-	n.sendMessage(name, data)
+func (n *Node) SendTo(name string, data network.ProtocolMessage) error {
+	return n.sendMessage(name, data)
+}
+
+// Receive will return the value of the communcation-channel
+func (n *Node) Receive() (network.ApplicationMessage, error) {
+	select {
+	case data := <-n.networkChan:
+		return data, nil
+	case <-time.After(2 * time.Second):
+		return network.ApplicationMessage{}, fmt.Errorf("Didn't receive in 2 seconds")
+	}
 }
 
 func (n *Node) ProcessMessages() {
@@ -139,9 +151,9 @@ func (n *Node) ProcessMessages() {
 // ProtocolInstance
 type SDAMessage struct {
 	// The ID of the protocol
-	ProtoID ProtocolID
+	ProtoID UUID
 	// The ID of the protocol instance - the counter
-	InstanceID InstanceID
+	InstanceID UUID
 
 	// MsgType of the underlying data
 	MsgType network.Type
@@ -156,7 +168,7 @@ func (n *Node) processSDAMessage(sda *SDAMessage) error {
 	if !ProtocolExists(sda.ProtoID) {
 		return fmt.Errorf("Protocol does not exists")
 	}
-	var instances map[InstanceID]ProtocolInstance
+	var instances map[UUID]ProtocolInstance
 	var ok bool
 	if instances, ok = n.instances[sda.ProtoID]; !ok {
 		return fmt.Errorf("Instances for this Protocol do not exist ")
@@ -172,10 +184,10 @@ func (n *Node) processSDAMessage(sda *SDAMessage) error {
 }
 
 // Add a protocolInstance to the list
-func (n *Node) AddProtocolInstance(protoID ProtocolID, pi ProtocolInstance) {
+func (n *Node) AddProtocolInstance(protoID UUID, pi ProtocolInstance) {
 	m, ok := n.instances[protoID]
 	if !ok {
-		m = make(map[InstanceID]ProtocolInstance)
+		m = make(map[UUID]ProtocolInstance)
 		n.instances[protoID] = m
 	}
 	m[pi.Id()] = pi

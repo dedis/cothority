@@ -1,9 +1,10 @@
 // better not get sda_test, cannot access unexported fields
-package sda
+package sda_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
@@ -57,25 +58,25 @@ func TestNodeMessaging(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = node1.sendMessage("localhost:2001", msg)
+	err = node1.SendTo("localhost:2001", msg)
 	if err != nil {
 		t.Fatal("Couldn't send from node2 -> node1:", err)
 	}
 	var msgDec SimpleMessage
-	select {
-	case data := <-node2.networkChan:
-		var ok bool
+	data, err := node2.Receive()
+	if err != nil {
+		t.Fatal("Did not receive message ..")
+	} else {
 		if data.MsgType != SimpleMessageType {
 			t.Fatal("Did not receive the expected type")
 		}
+		var ok bool
 		if msgDec, ok = data.Msg.(SimpleMessage); !ok {
 			t.Fatal("Can not convert the message")
 		}
-	case <-time.After(2 * time.Second):
-		t.Fatal("Did not receive message ..")
-	}
-	if msgDec.I != 3 {
-		t.Fatal("Received message from node2 -> node1 is wrong")
+		if msgDec.I != 3 {
+			t.Fatal("Received message from node2 -> node1 is wrong")
+		}
 	}
 }
 
@@ -117,7 +118,7 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 	return keypair.Secret, keypair.Public
 }
 
-func newNode(address string, s abstract.Suite) *Node {
+func newNode(address string, s abstract.Suite) *sda.Node {
 	priv, _ := privPub(s)
-	return NewNode(address, s, priv, network.NewTcpHost(network.DefaultConstructors(s)))
+	return sda.NewNode(address, s, priv, network.NewTcpHost(network.DefaultConstructors(s)))
 }
