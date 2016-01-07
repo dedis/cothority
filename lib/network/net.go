@@ -15,6 +15,7 @@ package network
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -34,6 +35,12 @@ import (
 const maxRetry = 10
 const waitRetry = 1 * time.Second
 const timeOut = 5 * time.Second
+
+// size of the packet
+type Size int32
+
+// endianness used
+var globalOrder = binary.LittleEndian
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
@@ -221,22 +228,23 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 
 	var am ApplicationMessage
 	am.constructors = c.host.constructors
-	bufferSize := 4096
-	b := make([]byte, bufferSize)
-	var buffer bytes.Buffer
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
-	for {
+	// First read the size
+	var s Size
+	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
+		return EmptyApplicationMessage, handleError(err)
+	}
+	// Then make the buffer out of it
+	b := make([]byte, s)
+	var buffer bytes.Buffer
+	for Size(buffer.Len()) < s {
 		n, err := c.Conn.Read(b)
 		b = b[:n]
 		buffer.Write(b)
 		if err != nil {
 			e := handleError(err)
 			return EmptyApplicationMessage, e
-		}
-		if n < bufferSize {
-			// read all data
-			break
 		}
 	}
 	defer func() {
@@ -266,9 +274,16 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
-
+	// First write the size
+	var buffer bytes.Buffer
+	size := Size(len(b))
+	if err := binary.Write(&buffer, globalOrder, size); err != nil {
+		return err
+	}
+	// Then send everything through the connection
+	buffer.Write(b)
 	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
-	_, err = c.Conn.Write(b)
+	_, err = c.Conn.Write(buffer.Bytes())
 	if err != nil {
 		return handleError(err)
 	}

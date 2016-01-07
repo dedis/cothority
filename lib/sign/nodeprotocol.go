@@ -58,14 +58,14 @@ func (sn *Node) ProcessMessages() error {
 				// to check for the string - will probably be fixed in go 1.6
 				if !ok || err == network.ErrClosed || err == network.ErrEOF ||
 					err == io.ErrClosedPipe {
-					dbg.Lvl3(sn.Name(), "getting from closed host")
+					dbg.Lvl2(sn.Name(), "getting from closed host")
 					sn.Close()
 					return network.ErrClosed
 				}
 
 				// if it is a unknown error, abort ?
 				if err == network.ErrUnknown {
-					dbg.Lvl1(sn.Name(), "Unknown error => ABORT")
+					dbg.Lvl2(sn.Name(), "Unknown error => ABORT")
 					return err
 				}
 				if err == network.ErrTemp {
@@ -73,8 +73,8 @@ func (sn *Node) ProcessMessages() error {
 					//dbg.Lvl2(sn.Name(), "connection reset error")
 					//return coconet.ErrClosed
 					/*}*/
-					dbg.Lvl1(sn.Name(), "temporary error getting message (still continuing)")
-					continue
+					dbg.Lvl2(sn.Name(), "temporary error getting message (abort)")
+					return
 				}
 			}
 			switch nm.MsgType {

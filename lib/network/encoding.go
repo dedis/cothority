@@ -79,8 +79,6 @@ func (am *ApplicationMessage) SetError(err error) {
 var typeRegistry = make(map[Type]reflect.Type)
 var invTypeRegistry = make(map[reflect.Type]Type)
 
-var globalOrder = binary.LittleEndian
-
 // DefaultType is reserved by the network library. When you receive a message of
 // DefaultType, it is generally because an error happenned, then you can call
 // Error() on it.
