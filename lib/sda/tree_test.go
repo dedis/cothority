@@ -1,4 +1,4 @@
-package sda
+package sda_test
 
 import (
 	"strconv"
@@ -110,13 +110,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	}
 }
 
-// Test initialisation of new random graph from a peer-list
-func TestInitGraphFromPeerList(t *testing.T) {
-	// NArra
-	//adresses := genLocalhostPeerNames(3, 1010)
-	//pl := sda.GenPeerList(tSuite, adresses)
-	//sda.G
-}
+// Test initialisation of new random tree from a peer-list
 
 // Test initialisation of new graph from config-file using a peer-list
 // XXX again this test might be obsolete/does more harm then it is useful:
