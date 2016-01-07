@@ -3,8 +3,12 @@ package sda
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"hash"
+	"strings"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -21,7 +25,11 @@ func init() {
 	network.RegisterProtocolType(TreeNodeType, TreeNode{})
 }
 
+// Universal Uniquely Identifier
 type UUID string
+
+// XXX TMp solution of hashing identifier so we have a UUID
+var NewHashFunc func() hash.Hash = sha256.New
 
 // An Identity is used to represent a SERVER / PEER in the whole internet
 // its main identity is its public key, then we get some means, some address on
@@ -46,34 +54,37 @@ type Tree struct {
 }
 
 func (t *Tree) Id() UUID {
-	return UUID(UUID(t.IdList.Id()) + t.Root.Id())
+	h := NewHashFunc()
+	h.Write([]byte(t.IdList.Id()))
+	h.Write([]byte(t.Root.Id()))
+	return UUID(h.Sum(nil))
 }
 
 // A PeerList is a list of Identity we choose to run  some tree on it ( and
 // therefor some protocols)
 type IdentityList struct {
-	ID   string
+	ID   UUID
 	List []*Identity
 }
 
-func NewIdentityList(ids []*Identity) IdentityList {
-	return IdentityList{List: ids}
+func NewIdentityList(ids []*Identity) *IdentityList {
+	return &IdentityList{List: ids}
 }
 
 func (pl *IdentityList) Id() UUID {
 	if pl.ID == "" {
 		pl.generateId()
 	}
-	return UUID(pl.ID)
+	return pl.ID
 }
 
 func (pl *IdentityList) generateId() {
-	var buf bytes.Buffer
-	for _, n := range pl.List {
-		b, _ := n.Public.MarshalBinary()
-		buf.Write(b)
+	h := NewHashFunc()
+	for i := range pl.List {
+		b, _ := pl.List[i].Public.MarshalBinary()
+		h.Write(b)
 	}
-	pl.ID = buf.String()
+	pl.ID = UUID(h.Sum(nil))
 }
 
 // TreeNode is one node in the tree
@@ -91,7 +102,7 @@ type TreeNode struct {
 }
 
 func (t *TreeNode) Id() UUID {
-	var buf bytes.Buffer
+	buf := NewHashFunc()
 	if t.Parent != "" {
 		buf.Write([]byte(t.Parent))
 	}
@@ -99,7 +110,7 @@ func (t *TreeNode) Id() UUID {
 	for i := range t.Children {
 		buf.Write([]byte(t.Children[i].PeerId))
 	}
-	return UUID(buf.String())
+	return UUID(buf.Sum(nil))
 }
 
 // Check if it can communicate with parent or children
@@ -126,6 +137,81 @@ func NewTreeNode(name string, ni *Identity) *TreeNode {
 		NodeId:   ni,
 		Parent:   "",
 		Children: make([]*TreeNode, 0),
+	}
+}
+func (t *TreeNode) String() string {
+	return t.PeerId
+}
+func (t *TreeNode) Stringify() string {
+	var buf bytes.Buffer
+	var lastDepth int
+	fn := func(d int, n *TreeNode) {
+		if d > lastDepth {
+			buf.Write([]byte("\n\n"))
+		} else {
+			buf.Write([]byte(n.PeerId))
+		}
+	}
+	t.Visit(0, fn)
+	return buf.String()
+}
+
+func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
+	fn(firstDepth, t)
+	for i := range t.Children {
+		t.Children[i].Visit(firstDepth+1, fn)
+	}
+}
+
+// IdentityToml is the struct that can be marshalled into a toml file
+type IdentityToml struct {
+	Public    string
+	Addresses []string
+}
+
+// IdentityListToml is the struct can can embbed IdentityToml to be written in a
+// toml file
+type IdentityListToml struct {
+	ID   UUID
+	List []*IdentityToml
+}
+
+func (id *Identity) Toml(suite abstract.Suite) *IdentityToml {
+	var buf bytes.Buffer
+	cliutils.WritePub64(suite, &buf, id.Public)
+	return &IdentityToml{
+		Addresses: id.Addresses,
+		Public:    buf.String(),
+	}
+}
+
+func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
+	ids := make([]*IdentityToml, len(id.List))
+	for i := range id.List {
+		ids[i] = id.List[i].Toml(suite)
+	}
+	return &IdentityListToml{
+		ID:   id.ID,
+		List: ids,
+	}
+}
+
+func (id *IdentityToml) Identity(suite abstract.Suite) *Identity {
+	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
+	return &Identity{
+		Public:    pub,
+		Addresses: id.Addresses,
+	}
+}
+
+func (id *IdentityListToml) IdentityList(suite abstract.Suite) *IdentityList {
+	ids := make([]*Identity, len(id.List))
+	for i := range id.List {
+		ids[i] = id.List[i].Identity(suite)
+	}
+	return &IdentityList{
+		ID:   id.ID,
+		List: ids,
 	}
 }
 
