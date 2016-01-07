@@ -1,5 +1,6 @@
 package sda_test
 
+/*
 import (
 	"strconv"
 	"testing"
@@ -9,7 +10,6 @@ import (
 
 var tSuite = ed25519.NewAES128SHA256Ed25519(false)
 
-/*
 // genLocalhostPeerNames will generate n localhost names with port indices starting from p
 func genLocalhostPeerNames(n, p int) []string {
 	names := make([]string, n)
