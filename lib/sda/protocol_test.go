@@ -1,5 +1,6 @@
 package sda
 
+/*
 import (
 	"strconv"
 	"testing"
@@ -58,3 +59,4 @@ func (p ProtocolTest) Dispatch(m *SDAMessage) error {
 func (p *ProtocolTest) Id() InstanceID {
 	return InstanceID(p.ID)
 }
+*/
