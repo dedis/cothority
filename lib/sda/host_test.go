@@ -47,18 +47,9 @@ func TestHostClose(t *testing.T) {
 
 // Test connection of multiple Hosts and sending messages back and forth
 func TestHostMessaging(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
+	Host1, Host2 := setupHosts(t)
 	msg := &SimpleMessage{3}
-	Host1 := newHost("localhost:2000", suite)
-	// make the second peer as the server
-	Host2 := newHost("localhost:2001", suite)
-	// make it listen
-	Host2.Listen("localhost:2001")
-	_, err := Host1.Connect("localhost:2001")
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = Host1.SendTo("localhost:2001", msg)
+	err := Host1.SendTo("localhost:2001", msg)
 	if err != nil {
 		t.Fatal("Couldn't send from Host2 -> Host1:", err)
 	}
@@ -67,17 +58,19 @@ func TestHostMessaging(t *testing.T) {
 	if err != nil {
 		t.Fatal("Did not receive message ..")
 	} else {
-		if data.MsgType != SimpleMessageType {
+		if data.MsgType != sda.SDAMessageType {
 			t.Fatal("Did not receive the expected type")
 		}
 		var ok bool
-		if msgDec, ok = data.Msg.(SimpleMessage); !ok {
+		if msgDec, ok = data.Msg.(sda.SDAMessage).Data.(SimpleMessage); !ok {
 			t.Fatal("Can not convert the message")
 		}
 		if msgDec.I != 3 {
 			t.Fatal("Received message from Host2 -> Host1 is wrong")
 		}
 	}
+	Host1.Close()
+	Host2.Close()
 }
 
 // SimpleMessage is just used to transfer one integer
@@ -91,6 +84,24 @@ const (
 
 // Test parsing of incoming packets with regard to its double-included
 // data-structure
+func TestHostIncomingMessage(t *testing.T) {
+	h1, h2 := setupHosts(t)
+	msgSimple := &SimpleMessage{10}
+	err := h1.SendTo(h2.Address, msgSimple)
+	if err != nil {
+		t.Fatal("Couldn't send message:", err)
+	}
+	am, err := h2.Receive()
+	if err != nil {
+		t.Fatal("Couldn't receive message", err)
+	}
+	dbg.Lvl3("Message received is", am)
+	if am.Msg.(sda.SDAMessage).Data.(SimpleMessage).I != 10 {
+		t.Fatal("Couldn't pass simple message")
+	}
+	h1.Close()
+	h2.Close()
+}
 
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
@@ -122,4 +133,18 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 func newHost(address string, s abstract.Suite) *sda.Host {
 	priv, _ := privPub(s)
 	return sda.NewHost(address, s, priv, network.NewTcpHost(network.DefaultConstructors(s)))
+}
+
+func setupHosts(t *testing.T) (*sda.Host, *sda.Host) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	Host1 := newHost("localhost:2000", suite)
+	// make the second peer as the server
+	Host2 := newHost("localhost:2001", suite)
+	// make it listen
+	Host2.Listen()
+	_, err := Host1.Connect(Host2.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return Host1, Host2
 }

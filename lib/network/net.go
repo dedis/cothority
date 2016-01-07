@@ -220,7 +220,7 @@ func handleError(err error) error {
 func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 
 	var am ApplicationMessage
-	am.constructors = c.host.constructors
+	am.Constructors = c.host.constructors
 	bufferSize := 4096
 	b := make([]byte, bufferSize)
 	var buffer bytes.Buffer
@@ -257,7 +257,7 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 // Then send the message through the Gob encoder
 // Returns an error if anything was wrong
 func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
-	am, err := newApplicationMessage(obj)
+	am, err := NewApplicationMessage(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}

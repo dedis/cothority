@@ -13,7 +13,7 @@ import (
 
 /// Encoding part ///
 // Type of a packet
-type Type uint8
+type Type int32
 
 // ProtocolMessage is a type for any message that the user wants to send
 type ProtocolMessage interface{}
@@ -57,7 +57,7 @@ type ApplicationMessage struct {
 	Msg ProtocolMessage
 
 	// which constructors are used
-	constructors protobuf.Constructors
+	Constructors protobuf.Constructors
 	// possible error during unmarshaling so that upper layer can know it
 	err error
 	// Same for the origin of the message
@@ -118,7 +118,7 @@ func MarshalRegisteredType(msgType Type, data ProtocolMessage) ([]byte, error) {
 	var buf []byte
 	var err error
 	if buf, err = protobuf.Encode(data); err != nil {
-		dbg.Print("Error for protobuf encoding")
+		dbg.Error("Error for protobuf encoding:", err)
 		return nil, err
 	}
 	_, err = b.Write(buf)
@@ -159,7 +159,7 @@ func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
 // by using its UnmarshalBinary interface
 // otherwise, use abstract.Encoding (suite) to decode
 func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
-	t, msg, err := UnmarshalRegisteredType(buf, am.constructors)
+	t, msg, err := UnmarshalRegisteredType(buf, am.Constructors)
 	am.MsgType = t
 	am.Msg = msg
 	return err
@@ -167,10 +167,10 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 
 // ConstructFrom takes a ProtocolMessage and then construct a
 // ApplicationMessage from it. Error if the type is unknown
-func newApplicationMessage(obj ProtocolMessage) (*ApplicationMessage, error) {
+func NewApplicationMessage(obj ProtocolMessage) (*ApplicationMessage, error) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("Send takes a POINTER to the message. Given a copy here...")
+		return nil, fmt.Errorf("Send takes a pointer to the message, not a copy...")
 	}
 	val = val.Elem()
 	t := val.Type()

@@ -34,7 +34,7 @@ Host is the structure responsible for holding information about the current
 */
 type Host struct {
 	// Our address
-	address string
+	Address string
 	// The TCPHost
 	host network.Host
 	// The open connections
@@ -60,7 +60,7 @@ func NewHost(address string, suite abstract.Suite, pkey abstract.Secret, host ne
 	n := &Host{
 		networkLock: &sync.Mutex{},
 		connections: make(map[string]network.Conn),
-		address:     address,
+		Address:     address,
 		host:        host,
 		private:     pkey,
 		suite:       suite,
@@ -73,22 +73,22 @@ func NewHost(address string, suite abstract.Suite, pkey abstract.Secret, host ne
 // Start listening for messages coming from parent(up)
 // each time a connection request is made, we receive first its identity then
 // we handle the message using HandleConn
-func (n *Host) Listen(address string) {
+func (n *Host) Listen() {
 	fn := func(c network.Conn) {
 		ctx := context.TODO()
 		am, err := c.Receive(ctx)
 		if err != nil || am.MsgType != IdentityMessageType {
-			dbg.Lvl2(n.address, "Error receiving identity from connection", c.Remote())
+			dbg.Lvl2(n.Address, "Error receiving identity from connection", c.Remote())
 		}
 		id := am.Msg.(IdentityMessage)
-		dbg.Lvl3(n.address, "Accepted Connection from", id.Name)
+		dbg.Lvl3(n.Address, "Accepted Connection from", id.Name)
 		n.networkLock.Lock()
-		n.connections[address] = c
+		n.connections[n.Address] = c
 		n.networkLock.Unlock()
 
 		n.handleConn(id.Name, c)
 	}
-	go n.host.Listen(address, fn)
+	go n.host.Listen(n.Address, fn)
 }
 
 // Connect takes an address where the next Host is
@@ -97,7 +97,7 @@ func (n *Host) Connect(address string) (network.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	id := IdentityMessage{n.address}
+	id := IdentityMessage{n.Address}
 	if err := c.Send(context.TODO(), &id); err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (n *Host) Connect(address string) (network.Conn, error) {
 	n.connections[address] = c
 	n.networkLock.Unlock()
 
-	dbg.Lvl2("Host", n.address, "connected to", address)
+	dbg.Lvl2("Host", n.Address, "connected to", address)
 	go n.handleConn(address, c)
 	return c, nil
 }
@@ -123,7 +123,22 @@ func (n *Host) SendTo(address string, msg network.ProtocolMessage) error {
 		return fmt.Errorf("No connection to this address!", n.connections)
 	} else {
 		n.networkLock.Unlock()
-		return c.Send(context.TODO(), msg)
+		sdaMsg := &SDAMessage{
+			ProtoID:    "",
+			InstanceID: "",
+		}
+		am, err := network.NewApplicationMessage(msg)
+		if err != nil {
+			return fmt.Errorf("Error converting packet: %v\n", err)
+		}
+		var b []byte
+		b, err = am.MarshalBinary()
+		if err != nil {
+			return fmt.Errorf("Error marshaling  message: %s", err.Error())
+		}
+		sdaMsg.DataSlice = b
+		dbg.Lvl3("Sending data", sdaMsg, "to", address)
+		return c.Send(context.TODO(), sdaMsg)
 	}
 	return nil
 }
@@ -133,6 +148,14 @@ func (n *Host) SendTo(address string, msg network.ProtocolMessage) error {
 func (n *Host) Receive() (network.ApplicationMessage, error) {
 	select {
 	case data := <-n.networkChan:
+		if data.MsgType == SDAMessageType {
+			sda := data.Msg.(SDAMessage)
+			t, msg, _ := network.UnmarshalRegisteredType(sda.DataSlice, data.Constructors)
+			sda.MsgType = t
+			sda.Data = msg
+			data.Msg = sda
+			dbg.Lvl3("SDA-Message is:", sda)
+		}
 		return data, nil
 	case <-time.After(2 * time.Second):
 		return network.ApplicationMessage{}, fmt.Errorf("Didn't receive in 2 seconds")
@@ -149,22 +172,21 @@ func (n *Host) Receive() (network.ApplicationMessage, error) {
 // * SendPeerListID - send the tree to the child
 func (n *Host) ProcessMessages() {
 	for {
-		nm := <-n.networkChan
-		fmt.Println("Message Received:", nm)
-		switch nm.MsgType {
-		case SDAMessageType:
-			sda := nm.Msg.(SDAMessage)
-			n.processSDAMessage(&sda)
-			/*
-				case RequestTreeType:
-					tt := nm.Msg.(RequestTree).TreeID
-					n.SendTo(nm.From, tt)
-				case SendTreeType:
-				case RequestIdentityListType:
-				case SendIdentityListType:
-			*/
-		default:
-			dbg.Error("Didn't recognize message", nm.MsgType)
+		nm, err := n.Receive()
+		if err == nil {
+			dbg.Lvl3("Message Received:", nm)
+			switch nm.MsgType {
+			case SDAMessageType:
+				n.processSDAMessage(&nm)
+			case RequestTreeType:
+				tt := nm.Msg.(RequestTree).TreeID
+				n.SendTo(nm.From, tt)
+			case SendTreeType:
+			case RequestIdentityListType:
+			case SendIdentityListType:
+			default:
+				dbg.Error("Didn't recognize message", nm.MsgType)
+			}
 		}
 	}
 }
@@ -190,7 +212,9 @@ func (n *Host) handleConn(address string, c network.Conn) {
 // Dispatch SDA message looks if we have all the info to rightly dispatch the
 // packet such as the protocol id and the topology id and the protocol instance
 // id
-func (n *Host) processSDAMessage(sda *SDAMessage) error {
+func (n *Host) processSDAMessage(am *network.ApplicationMessage) error {
+	sda := am.Msg.(SDAMessage)
+	dbg.Lvl3("Processing SDA-message", sda)
 	if !ProtocolExists(sda.ProtoID) {
 		return fmt.Errorf("Protocol does not exists")
 	}
@@ -200,6 +224,6 @@ func (n *Host) processSDAMessage(sda *SDAMessage) error {
 		return fmt.Errorf("Instance Protocol not existing YET")
 	}
 	// Dispatch the message to the right instance !
-	ip.Dispatch(sda)
+	ip.Dispatch(&sda)
 	return nil
 }

@@ -35,8 +35,10 @@ type SDAMessage struct {
 
 	// MsgType of the underlying data
 	MsgType network.Type
-	// The actual Data
+	// The interface to the actual Data
 	Data network.ProtocolMessage
+	// The actual data as binary blob
+	DataSlice []byte
 }
 
 // RequestTree is used to ask the parent for a given Tree
