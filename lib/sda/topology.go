@@ -7,62 +7,83 @@ import (
 	"github.com/dedis/cothority/lib/network"
 )
 
+// In this file we define the main structures used for a running protocol
+// instance. First there is the Identity struct: it represents the Identity a
+// someone, a server over the internet, mainly tighted by its public key.
+// Then the Topology, which contains everything a
+// The tree contains the peerId which is the ID given to a an Identity / server
+// during one protocol instance. A server can have many peerId in one tree.
+// ProtocolInstance needs to know that means :
+// - which IdentityList we are using ( a selection of proper servers )
+// - which Tree we are using.
+// - The overlay network : a mapping from PeerId
+// It contains the PeerId of the parent and the sub tree of the children.
 func init() {
 	network.RegisterProtocolType(GraphType, Graph{})
 	network.RegisterProtocolType(TreeNodeType, TreeNode{})
 }
 
+// An Identity is used to represent a SERVER / PEER in the whole intenet
+// its main identity is its public key, then we get some means, some address on
+// where to contact him.
+type Identity struct {
+	Public    abstract.Point
+	Addresses []string
+}
+
+// Mapping is used to relate from an Identity to a PeerId in the protocol
+// instance
+type Mapping struct {
+	Identity
+	PeerId
+}
+
 type TopologyID string
 
-// a generic topology to be used by any network layer/host layer
-// it just determines, if we can comunicate with a given peer or not
-type Topology interface {
-	Id() TopologyID
-	IsConnectedTo(name string) bool
+// Overlay network is a serie of ampping between identities and protocol
+// instance.
+type Overlay []Mapping
+
+// a topology to be used by any network layer/host layer
+// It contains the peer list we use, and the tree we use
+type Tree struct {
+	IdList *IdentityList
+	Root   *TreeNode
 }
 
-// Graph implementation
-type GraphNode struct {
-	// name of the vertice we are on
-	Name      string
-	adjacency map[string]int
+func (t *Topology) Id() TopologyID {
+	return string(t.PeerList.Id()) + t.TreeNode.Id()
 }
 
-// sample ID function (have to take into account adjacency matrix)
-func (g *GraphNode) Id() TopologyID {
-	return TopologyID(g.Name)
+// A PeerList is a list of Identity we choose to run  some tree on it ( and
+// therefor some protocols)
+type IdentityList struct {
+	ID   string
+	List []Identity
 }
-func (g *GraphNode) IsConnectedTo(name string) bool {
-	if _, ok := g.adjacency[name]; !ok {
-		return false
+
+func (pl *IdentityList) Id() string {
+	if pl.ID == "" {
+		pl.generateId()
 	}
-	return true
+	return pl.ID
 }
 
-func (g *GraphNode) AddEdge(vertice2 string) {
-	g.adjacency[vertice2] = 1
-}
-
-func NewGraph(name string) *GraphNode {
-	adj := make(map[string]int)
-	return &GraphNode{
-		Name:      name,
-		adjacency: adj,
+func (pl *IdentityList) generateId() {
+	var buf bytes.Buffer
+	for _, n := range pl.Nodes {
+		b, _ := n.Public.MarshalBinary()
+		buf.Write(b)
 	}
-}
-
-func GenerateGraph(base string, n int) *GraphNode {
-	// let's simulate only the point of view of ONE vertice in the graph
-	g := NewGraph("vertice")
-	for i := 0; i < n; i++ {
-		g.AddEdge(fmt.Sprintf("%s-%d", base, i))
-	}
-	return g
+	pl.ID = buf.String()
 }
 
 // TREE Implementation
 type TreeNode struct {
-	Name string
+	// The peerID is the ID of a server / node, FOR THIS PROTOCOL
+	// a server can have many peerId during one protocol instance
+	PeerId string
+	nodeId Identity
 	// parent *TreeNode `protobuf:"-"`would be ideal because if you serialize
 	// this with protobuf, it makes a veryyy big message because of the
 	// recursion in the parent's parent etc. but not implemented for now in
@@ -71,7 +92,7 @@ type TreeNode struct {
 	Children []*TreeNode
 }
 
-func (t *TreeNode) Id() TopologyID {
+func (t *TreeNode) Id() string {
 	var buf bytes.Buffer
 	if t.Parent != "" {
 		buf.Write([]byte(t.Parent))
@@ -110,6 +131,6 @@ func NewTree(name string) *TreeNode {
 }
 
 const (
-	GraphType = iota + 100
+	TopologyType = iota + 10
 	TreeNodeType
 )

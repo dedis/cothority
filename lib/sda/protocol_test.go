@@ -41,10 +41,6 @@ var currInstanceID int
 
 // NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *Node, t Topology) ProtocolInstance {
-	tn, ok := t.(*TreeNode)
-	if !ok {
-		panic("Received a topology that is not a tree node")
-	}
 	currInstanceID++
 	return &ProtocolTest{
 		Node:     n,

@@ -167,8 +167,8 @@ type SDAMessage struct {
 	InstanceID InstanceID
 	// The ID of the topology we use
 	TopologyID TopologyID
-	// The ID of the peer list we use
-	PeerListID string
+	// The ID of the peer IN THE PROTOCOL
+	protoPeerID ProtocolPeerID
 
 	// MsgType of the underlying data
 	MsgType network.Type

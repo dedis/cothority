@@ -20,23 +20,27 @@ func genLocalhostPeerNames(n, p int) []string {
 
 // TODO  test the ID generation
 func TestTopologyId(t *testing.T) {
-
+	names := genLocalhostPeerNames(3, 2000)
+	peerList := GenPeerList(tSuite, names)
+	// Generate two example topology
+	root, _ := ExampleGenerateTreeFromPeerList(peerList)
+	t := Topology{PeerList: peerList, TreeNode: root}
+	genId := string(peerList.Id()) + root.Id()
+	if genId != t.Id() {
+		t.Fatal("Id generated is wrong")
+	}
 }
 
 // Test if topology correctly handles the "virtual" connections in the topology
-func TestTopologyConnectedTo(t *testing.T) {
+func TestTreeConnectedTo(t *testing.T) {
 
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := GenPeerList(tSuite, names)
 	// Generate two example topology
 	root, _ := ExampleGenerateTreeFromPeerList(peerList)
-	graph := ExampleGenerateGraphFromPeerList(peerList)
 	// Generate the network
 	if !root.IsConnectedTo("localhost:2001") {
 		t.Fatal("Root should be connection to localhost:2001")
-	}
-	if !graph.IsConnectedTo("localhost:2002") {
-		t.Fatal("Graph root should be connected to localhost:2002")
 	}
 
 }
@@ -58,14 +62,4 @@ func ExampleGenerateTreeFromPeerList(pl *PeerList) (*TreeNode, []*TreeNode) {
 		nodes[leaderId].AddChild(nodes[i])
 	}
 	return nodes[leaderId], nodes
-}
-
-func ExampleGenerateGraphFromPeerList(pl *PeerList) *GraphNode {
-	leader := NewGraph("localhost:1000")
-	for n, _ := range pl.Peers {
-		if n != "localhost:1010" {
-			leader.AddEdge(n)
-		}
-	}
-	return leader
 }
