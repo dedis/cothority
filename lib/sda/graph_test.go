@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/DeDiS/crypto/edwards/ed25519"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/edwards/ed25519"
 )
 
 var tSuite = ed25519.NewAES128SHA256Ed25519(false)
