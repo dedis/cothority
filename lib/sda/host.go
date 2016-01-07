@@ -158,16 +158,16 @@ func (n *Node) ProcessMessages() {
 	}
 }
 
-// ProtocolInfo is to be embbeded in every message that is made for a
+// ProtocolInfo is to be embedded in every message that is made for a
 // ProtocolInstance
 type SDAMessage struct {
 	// The ID of the protocol
 	ProtoID ProtocolID
-	// The ID of the protocol INSTANCE
-	InstanceID InstanceID
 	// The ID of the topology we use
 	TopologyID TopologyID
-	// The ID of the peer IN THE PROTOCOL
+	// The ID of the protocol instance - the counter
+	InstanceID InstanceID
+	// The ID of the peer in the protocol
 	protoPeerID ProtocolPeerID
 
 	// MsgType of the underlying data
