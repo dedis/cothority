@@ -38,7 +38,7 @@ type Mapping struct {
 	PeerId
 }
 
-type TopologyID string
+type TreeID string
 
 // Overlay network is a serie of ampping between identities and protocol
 // instance.
@@ -51,7 +51,7 @@ type Tree struct {
 	Root   *TreeNode
 }
 
-func (t *Topology) Id() TopologyID {
+func (t *Tree) Id() TreeID {
 	return string(t.PeerList.Id()) + t.TreeNode.Id()
 }
 
