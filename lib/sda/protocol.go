@@ -7,7 +7,7 @@ import (
 /*
 NewProtocol is the function-signature needed to instantiate a new protocol
 */
-type NewProtocol func(*Node, Topology) ProtocolInstance
+type NewProtocol func(*Node) ProtocolInstance
 type ProtocolID string
 
 // protocols holds a map of all available protocols and how to create an
@@ -29,12 +29,12 @@ type InstanceID string
 /*
 ProtocolInstantiate creates a new instance of a protocol given by it's name
 */
-func ProtocolInstantiate(protoID ProtocolID, n *Node, t Topology) (ProtocolInstance, error) {
+func ProtocolInstantiate(protoID ProtocolID, n *Node) (ProtocolInstance, error) {
 	p, ok := protocols[protoID]
 	if !ok {
 		return nil, errors.New("Protocol doesn't exist")
 	}
-	return p(n, t), nil
+	return p(n), nil
 }
 
 /*

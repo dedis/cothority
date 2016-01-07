@@ -39,7 +39,7 @@ type Tree struct {
 }
 
 func (t *Tree) Id() TreeID {
-	return string(t.IdList.Id()) + t.Root.Id()
+	return TreeID(string(t.IdList.Id()) + t.Root.Id())
 }
 
 // A PeerList is a list of Identity we choose to run  some tree on it ( and

@@ -33,8 +33,6 @@ Node is the structure responsible for holding information about the current
  state
 */
 type Node struct {
-	// The set of topologies that the protocols uses
-	topologies map[TopologyID]Topology
 	// instances linked to their ID and their ProtocolID
 	instances map[ProtocolID]map[InstanceID]ProtocolInstance
 	// Our address
@@ -59,7 +57,6 @@ func NewNode(address string, suite abstract.Suite, pkey abstract.Secret, host ne
 	n := &Node{
 		networkLock: &sync.Mutex{},
 		connections: make(map[string]network.Conn),
-		topologies:  make(map[TopologyID]Topology),
 		address:     address,
 		host:        host,
 		private:     pkey,
@@ -123,28 +120,8 @@ func (n *Node) handleConn(address string, c network.Conn) {
 
 // SendTo is the public method to send a message to someone using a given
 // topology
-func (n *Node) SendTo(topoId TopologyID, name string, data network.ProtocolMessage) {
-	// Check the topology
-	t, ok := n.topologies[topoId]
-	// If none, return
-	if !ok {
-		fmt.Println("No topology for this id")
-		return
-	}
-
-	// Check if we have the right to communicate with this peer
-	// IN THIS TOPOLOGY
-	if !t.IsConnectedTo(name) {
-		fmt.Println("Can not communicate to this name")
-		return
-	}
+func (n *Node) SendTo(name string, data network.ProtocolMessage) {
 	n.sendMessage(name, data)
-}
-
-// AddTopology is called by either the leader who created the topology
-// or the peers contacted to run a protocol on this topology
-func (n *Node) AddTopology(t Topology) {
-	n.topologies[t.Id()] = t
 }
 
 func (n *Node) ProcessMessages() {
@@ -163,12 +140,8 @@ func (n *Node) ProcessMessages() {
 type SDAMessage struct {
 	// The ID of the protocol
 	ProtoID ProtocolID
-	// The ID of the topology we use
-	TopologyID TopologyID
 	// The ID of the protocol instance - the counter
 	InstanceID InstanceID
-	// The ID of the peer in the protocol
-	protoPeerID ProtocolPeerID
 
 	// MsgType of the underlying data
 	MsgType network.Type
@@ -182,9 +155,6 @@ type SDAMessage struct {
 func (n *Node) processSDAMessage(sda *SDAMessage) error {
 	if !ProtocolExists(sda.ProtoID) {
 		return fmt.Errorf("Protocol does not exists")
-	}
-	if _, ok := n.topologies[sda.TopologyID]; !ok {
-		return fmt.Errorf("TopologyID does not exists")
 	}
 	var instances map[InstanceID]ProtocolInstance
 	var ok bool
