@@ -21,12 +21,21 @@ func init() {
 	network.RegisterProtocolType(TreeNodeType, TreeNode{})
 }
 
+type UUID string
+
 // An Identity is used to represent a SERVER / PEER in the whole internet
 // its main identity is its public key, then we get some means, some address on
 // where to contact him.
 type Identity struct {
 	Public    abstract.Point
 	Addresses []string
+}
+
+func NewIdentity(public abstract.Point, addresses ...string) {
+	return &Identity{
+		Public:    public,
+		Addresses: addresses,
+	}
 }
 
 type TreeID string
@@ -47,6 +56,10 @@ func (t *Tree) Id() TreeID {
 type IdentityList struct {
 	ID   string
 	List []*Identity
+}
+
+func NewIdentityList(ids []*Identity) IdentityList {
+	return IdentityList{List: ids}
 }
 
 func (pl *IdentityList) Id() string {
