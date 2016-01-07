@@ -33,19 +33,19 @@ func TestInstantiation(t *testing.T) {
 // everything it receives.
 type ProtocolTest struct {
 	*Node
-	*TreeNode
+	*Tree
 	ID string
 }
 
 var currInstanceID int
 
 // NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *Node, t Topology) ProtocolInstance {
+func NewProtocolTest(n *Node, t *Tree) ProtocolInstance {
 	currInstanceID++
 	return &ProtocolTest{
-		Node:     n,
-		TreeNode: tn,
-		ID:       strconv.Itoa(currInstanceID),
+		Node: n,
+		Tree: t,
+		ID:   strconv.Itoa(currInstanceID),
 	}
 }
 
