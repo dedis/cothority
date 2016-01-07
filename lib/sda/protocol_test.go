@@ -32,7 +32,7 @@ func TestInstantiation(t *testing.T) {
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
-	*Node
+	*Host
 	*Tree
 	ID string
 }
@@ -40,10 +40,10 @@ type ProtocolTest struct {
 var currInstanceID int
 
 // NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *Node, t *Tree) ProtocolInstance {
+func NewProtocolTest(n *Host, t *Tree) ProtocolInstance {
 	currInstanceID++
 	return &ProtocolTest{
-		Node: n,
+		Host: n,
 		Tree: t,
 		ID:   strconv.Itoa(currInstanceID),
 	}
