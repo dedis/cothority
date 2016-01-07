@@ -31,14 +31,12 @@ type Identity struct {
 	Addresses []string
 }
 
-func NewIdentity(public abstract.Point, addresses ...string) {
+func NewIdentity(public abstract.Point, addresses ...string) *Identity {
 	return &Identity{
 		Public:    public,
 		Addresses: addresses,
 	}
 }
-
-type TreeID string
 
 // a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
@@ -47,8 +45,8 @@ type Tree struct {
 	Root   *TreeNode
 }
 
-func (t *Tree) Id() TreeID {
-	return TreeID(string(t.IdList.Id()) + t.Root.Id())
+func (t *Tree) Id() UUID {
+	return UUID(UUID(t.IdList.Id()) + t.Root.Id())
 }
 
 // A PeerList is a list of Identity we choose to run  some tree on it ( and
@@ -62,11 +60,11 @@ func NewIdentityList(ids []*Identity) IdentityList {
 	return IdentityList{List: ids}
 }
 
-func (pl *IdentityList) Id() string {
+func (pl *IdentityList) Id() UUID {
 	if pl.ID == "" {
 		pl.generateId()
 	}
-	return pl.ID
+	return UUID(pl.ID)
 }
 
 func (pl *IdentityList) generateId() {
@@ -92,7 +90,7 @@ type TreeNode struct {
 	Children []*TreeNode
 }
 
-func (t *TreeNode) Id() string {
+func (t *TreeNode) Id() UUID {
 	var buf bytes.Buffer
 	if t.Parent != "" {
 		buf.Write([]byte(t.Parent))
@@ -101,7 +99,7 @@ func (t *TreeNode) Id() string {
 	for i := range t.Children {
 		buf.Write([]byte(t.Children[i].PeerId))
 	}
-	return buf.String()
+	return UUID(buf.String())
 }
 
 // Check if it can communicate with parent or children
