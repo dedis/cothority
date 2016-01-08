@@ -1,7 +1,6 @@
 package sda_test
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"strconv"
 	"testing"
@@ -16,34 +15,15 @@ import (
 var tSuite = ed25519.NewAES128SHA256Ed25519(false)
 var prefix = "localhost:"
 
-// genLocalhostPeerNames will generate n localhost names with port indices starting from p
-func genLocalhostPeerNames(n, p int) []string {
-	names := make([]string, n)
-	for i := range names {
-		names[i] = prefix + strconv.Itoa(p+i)
-	}
-	return names
-}
-
-// GenIdentityList generate a IdentityList out of names
-func GenIdentityList(suite abstract.Suite, names []string) *sda.IdentityList {
-	var ids []*sda.Identity
-	for _, n := range names {
-		kp := cliutils.KeyPair(suite)
-		ids = append(ids, sda.NewIdentity(kp.Public, n))
-	}
-	return sda.NewIdentityList(ids)
-}
-
 // test the ID generation
 func TestTreeId(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := GenIdentityList(tSuite, names)
 	// Generate two example topology
-	root, _ := ExampleGenerateTreeFromIdentityList(idsList)
+	root, _ := GenerateTreeFromIdentityList(idsList)
 	tree := sda.Tree{IdList: idsList, Root: root}
 	h := sda.NewHashFunc()
-	h.Write([]byte(idsList.Id()))
+	h.Write([]byte(idsList.ID))
 	h.Write([]byte(root.Id()))
 	genId := h.Sum(nil)
 	if sda.UUID(genId) != tree.Id() {
@@ -57,7 +37,7 @@ func TestTreeConnectedTo(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := GenIdentityList(tSuite, names)
 	// Generate two example topology
-	root, _ := ExampleGenerateTreeFromIdentityList(peerList)
+	root, _ := GenerateTreeFromIdentityList(peerList)
 	// Generate the network
 	if !root.IsConnectedTo("localhost:2001") {
 		t.Fatal("Root should be connection to localhost:2001")
@@ -65,7 +45,7 @@ func TestTreeConnectedTo(t *testing.T) {
 
 }
 
-func ExampleGenerateTreeFromIdentityList(pl *sda.IdentityList) (*sda.TreeNode, []*sda.TreeNode) {
+func GenerateTreeFromIdentityList(pl *sda.IdentityList) (*sda.TreeNode, []*sda.TreeNode) {
 	var nodes []*sda.TreeNode
 	var root *sda.TreeNode
 	for i, id := range pl.List {
@@ -89,11 +69,11 @@ func TestIdentityListNew(t *testing.T) {
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.Id() == "" {
+	if pl.ID == "" {
 		t.Fatal("PeerList without ID is not allowed")
 	}
-	if len(pl.Id()) != sha256.Size {
-		t.Fatal("PeerList ID does not seem to be a sha256 hash.")
+	if len(pl.ID) != 36 {
+		t.Fatal("PeerList ID does not seem to be a UUID.")
 	}
 }
 
@@ -112,11 +92,11 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in IdentityList. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.Id() == "" {
+	if decodedList.ID == "" {
 		t.Fatal("PeerList without ID is not allowed")
 	}
-	if len(decodedList.Id()) != sha256.Size {
-		t.Fatal("PeerList ID does not seem to be a sha256 hash.")
+	if len(decodedList.ID) != 36 {
+		t.Fatal("PeerList ID does not seem to be a UUID hash.")
 	}
 }
 
@@ -130,9 +110,28 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // Test initialisation of new graph when one peer is represented more than
 // once
 
-// Test access to graph:
+// Test access to tree:
 // - parent
 // - children
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph
+
+// genLocalhostPeerNames will generate n localhost names with port indices starting from p
+func genLocalhostPeerNames(n, p int) []string {
+	names := make([]string, n)
+	for i := range names {
+		names[i] = prefix + strconv.Itoa(p+i)
+	}
+	return names
+}
+
+// GenIdentityList generate a IdentityList out of names
+func GenIdentityList(suite abstract.Suite, names []string) *sda.IdentityList {
+	var ids []*sda.Identity
+	for _, n := range names {
+		kp := cliutils.KeyPair(suite)
+		ids = append(ids, sda.NewIdentity(kp.Public, n))
+	}
+	return sda.NewIdentityList(ids)
+}

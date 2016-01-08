@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"github.com/satori/go.uuid"
 	"hash"
 	"strings"
 )
@@ -82,7 +83,7 @@ type Tree struct {
 
 func (t *Tree) Id() UUID {
 	h := NewHashFunc()
-	h.Write([]byte(t.IdList.Id()))
+	h.Write([]byte(t.IdList.ID))
 	h.Write([]byte(t.Root.Id()))
 	return UUID(h.Sum(nil))
 }
@@ -95,23 +96,19 @@ type IdentityList struct {
 }
 
 func NewIdentityList(ids []*Identity) *IdentityList {
-	return &IdentityList{List: ids}
-}
-
-func (pl *IdentityList) Id() UUID {
-	if pl.ID == "" {
-		pl.generateId()
+	return &IdentityList{
+		List: ids,
+		ID:   UUID(uuid.NewV1().String()),
 	}
-	return pl.ID
 }
 
-func (pl *IdentityList) generateId() {
+func generateId(ids []*Identity) UUID {
 	h := NewHashFunc()
-	for i := range pl.List {
-		b, _ := pl.List[i].Public.MarshalBinary()
+	for _, i := range ids {
+		b, _ := i.Public.MarshalBinary()
 		h.Write(b)
 	}
-	pl.ID = UUID(h.Sum(nil))
+	return UUID(h.Sum(nil))
 }
 
 // TreeNode is one node in the tree

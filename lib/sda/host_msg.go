@@ -22,6 +22,7 @@ const (
 	SendTreeType
 	RequestIdentityListType
 	SendIdentityListType
+	IdentityListUnknownType
 	IdentityMessageType
 )
 
@@ -36,9 +37,9 @@ type SDAMessage struct {
 	// MsgType of the underlying data
 	MsgType network.Type
 	// The interface to the actual Data
-	Data network.ProtocolMessage
+	Msg network.ProtocolMessage
 	// The actual data as binary blob
-	DataSlice []byte
+	MsgSlice []byte
 }
 
 // RequestTree is used to ask the parent for a given Tree
@@ -50,6 +51,10 @@ type RequestTree struct {
 // RequestIdentityList is used to ask the parent for a given IdentityList
 type RequestIdentityList struct {
 	IdentityListID UUID
+}
+
+// In case the identity list is unknown
+type IdentityListUnknown struct {
 }
 
 // IdentityMessage is the first message we send on creation of a link

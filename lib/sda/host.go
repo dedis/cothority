@@ -46,6 +46,8 @@ type Host struct {
 	networkLock *sync.Mutex
 	// The database of identities this host knows
 	identities map[UUID]*Identity
+	// The identityLists used for building the trees
+	identityLists map[UUID]*IdentityList
 	// mapping from identity to physical addresses in connection
 	identityToAddress map[UUID]string
 	// identity mutex
@@ -75,6 +77,7 @@ func NewHost(id *Identity, pkey abstract.Secret, host network.Host) *Host {
 		identityLock:      &sync.Mutex{},
 		connections:       make(map[string]network.Conn),
 		identities:        make(map[UUID]*Identity),
+		identityLists:     make(map[UUID]*IdentityList),
 		host:              host,
 		private:           pkey,
 		suite:             network.Suite,
@@ -125,7 +128,7 @@ func (n *Host) Listen() {
 		// error while listening on this address
 		case e := <-errChan:
 			dbg.Lvl2("Unable to listen with address", addr, "=>err", e)
-			// no error, we listen it's ok !
+		// no error, we listen it's ok !
 		case <-time.After(2 * time.Second):
 			dbg.Lvl2(addr, "is listening !")
 			stop = true
@@ -166,19 +169,21 @@ func (n *Host) Close() error {
 	return err
 }
 
-// SendToIdentity sends to an Identity by trying the differents addresses tied
+// SendTo sends to an Identity by trying the different addresses tied
 // to this id
-// XXX SHould use that function in public and put SendTo in private
 func (n *Host) SendTo(id *Identity, msg network.ProtocolMessage) error {
+	if msg == nil {
+		return fmt.Errorf("Can't send nil-packet")
+	}
 	if _, ok := n.identities[id.ID()]; !ok {
-		return fmt.Errorf("SendToIdentity received an non-saved identity")
+		return fmt.Errorf("SendToIdentity received a non-saved identity")
 	}
 	var addr string
 	var ok bool
 	if addr, ok = n.identityToAddress[id.ID()]; !ok {
 		return fmt.Errorf("No connection for this identity")
 	}
-	// additionnal verification - might be skipped
+	// additional verification - might be skipped
 	n.networkLock.Lock()
 	if c, ok := n.connections[addr]; !ok {
 		n.networkLock.Unlock()
@@ -186,44 +191,44 @@ func (n *Host) SendTo(id *Identity, msg network.ProtocolMessage) error {
 	} else {
 		// we got the connection
 		n.networkLock.Unlock()
-		sdaMsg := &SDAMessage{
-			ProtoID:    "",
-			InstanceID: "",
-		}
-		b, err := network.MarshalRegisteredType(msg)
-		if err != nil {
-			return fmt.Errorf("Error marshaling  message: %s", err.Error())
-		}
-		sdaMsg.DataSlice = b
-		sdaMsg.MsgType = network.TypeFromData(msg)
-		dbg.Lvl3("Sending data", sdaMsg, "to", c.Remote())
-		return c.Send(context.TODO(), sdaMsg)
+		dbg.Lvl3("Sending data", msg, "to", c.Remote())
+		return c.Send(context.TODO(), msg)
 	}
 	return nil
 }
 
-// Receive will return the value of the communication-channel or an error
-// if there has been nothing received during 2 seconds.
-// XXX Should we do that? Consider a node that takes time to compute or to
-// aggregate information from its children, 2 secs is low. Maybe set a higher
-// timeout. And also, this is a general timeout, for every connections, do we
-// suppose that we must receive something at least from someone every 30 sec ?
-// If the Host is in stand-by mode, where it does not participate yet in any
-// protocols... ?
-// Could we merge that function with handleConn maybe ? so it timeout only on
-// opened connections.
-func (n *Host) Receive() network.ApplicationMessage {
+// SendSDATo wraps the message to send in an SDAMessage and sends it to the
+// appropriate identity
+func (n *Host) SendMsgTo(id *Identity, msg network.ProtocolMessage) error {
+	sdaMsg := &SDAMessage{
+		ProtoID:    "",
+		InstanceID: "",
+	}
+	b, err := network.MarshalRegisteredType(msg)
+	if err != nil {
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+	}
+	sdaMsg.MsgSlice = b
+	sdaMsg.MsgType = network.TypeFromData(msg)
+	return n.SendTo(id, sdaMsg)
+}
+
+// Receive will return the value of the communication-channel, unmarshalling
+// the SDAMessage
+func (n *Host) Receive() MessageInfo {
 	msgInfo := <-n.networkChan
 	var data = msgInfo.Data
 	if msgInfo.Data.MsgType == SDAMessageType {
 		sda := data.Msg.(SDAMessage)
-		t, msg, _ := network.UnmarshalRegisteredType(sda.DataSlice, data.Constructors)
+		t, msg, _ := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
 		sda.MsgType = t
-		sda.Data = msg
+		sda.Msg = msg
+		// As these are not pointers, we need to write it back
 		data.Msg = sda
+		msgInfo.Data = data
 		dbg.Lvl3("SDA-Message is:", sda)
 	}
-	return data
+	return msgInfo
 }
 
 // ProcessMessage checks if it is one of the messages for us or dispatch it
@@ -236,19 +241,35 @@ func (n *Host) Receive() network.ApplicationMessage {
 // * SendPeerListID - send the tree to the child
 func (n *Host) ProcessMessages() {
 	for {
-		msgInfo := <-n.networkChan
+		var err error
+		msgInfo := n.Receive()
 		dbg.Lvl3("Message Received:", msgInfo.Data)
 		switch msgInfo.Data.MsgType {
 		case SDAMessageType:
 			n.processSDAMessage(msgInfo.Id, &msgInfo.Data)
 		case RequestTreeType:
 			tt := msgInfo.Data.Msg.(RequestTree).TreeID
-			n.SendTo(msgInfo.Id, tt)
+			err = n.SendTo(msgInfo.Id, tt)
 		case SendTreeType:
 		case RequestIdentityListType:
+			id := msgInfo.Data.Msg.(RequestIdentityList).IdentityListID
+			il, ok := n.identityLists[id]
+			if ok {
+				err = n.SendTo(msgInfo.Id, il)
+			} else {
+				err = n.SendTo(msgInfo.Id, &IdentityList{})
+			}
 		case SendIdentityListType:
+			il := msgInfo.Data.Msg.(IdentityList)
+			if il.ID == "" {
+				dbg.Error("Received an empty IdentityList")
+			}
+			n.AddIdentityList(&il)
 		default:
 			dbg.Error("Didn't recognize message", msgInfo.Data.MsgType)
+		}
+		if err != nil {
+			dbg.Error("Sending error:", err)
 		}
 	}
 }
@@ -263,6 +284,17 @@ func (n *Host) NetworkChan() chan MessageInfo {
 // to the map
 func (n *Host) AddProtocolInstance(pi ProtocolInstance) {
 	n.instances[pi.Id()] = pi
+}
+
+// AddIdentityList stores the peer-list for further usage
+func (n *Host) AddIdentityList(il *IdentityList) {
+	n.identityLists[il.ID] = il
+}
+
+// GetIdentityList returns the IdentityList
+func (n *Host) GetIdentityList(id UUID) (*IdentityList, bool) {
+	il, ok := n.identityLists[id]
+	return il, ok
 }
 
 var timeOut = 30 * time.Second
@@ -313,13 +345,13 @@ func (n *Host) handleConn(id *Identity, address string, c network.Conn) {
 // id
 func (n *Host) processSDAMessage(id *Identity, am *network.ApplicationMessage) error {
 	sda := am.Msg.(SDAMessage)
-	t, msg, err := network.UnmarshalRegisteredType(sda.DataSlice, network.DefaultConstructors(n.Suite()))
+	t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
 		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
 	}
 	// Set the right type and msg
 	sda.MsgType = t
-	sda.Data = msg
+	sda.Msg = msg
 	dbg.Lvl3("Processing SDA-message", sda)
 	if !ProtocolExists(sda.ProtoID) {
 		return fmt.Errorf("Protocol does not exists")
