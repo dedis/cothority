@@ -60,6 +60,8 @@ type Host struct {
 	instances map[UUID]ProtocolInstance
 	// all trees known to this Host
 	trees map[UUID]Tree
+	// closed channel to notifiy the connections that we close
+	closed chan bool
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -78,6 +80,7 @@ func NewHost(id *Identity, pkey abstract.Secret, host network.Host) *Host {
 		suite:             network.Suite,
 		networkChan:       make(chan MessageInfo, 1),
 		instances:         make(map[UUID]ProtocolInstance),
+		closed:            make(chan bool),
 	}
 	return n
 }
@@ -155,7 +158,12 @@ func (n *Host) Connect(id *Identity) (network.Conn, error) {
 
 // Close shuts down the listener
 func (n *Host) Close() error {
-	return n.host.Close()
+	n.networkLock.Lock()
+	err := n.host.Close()
+	n.connections = make(map[string]network.Conn)
+	close(n.closed)
+	n.networkLock.Unlock()
+	return err
 }
 
 // SendToIdentity sends to an Identity by trying the differents addresses tied
@@ -263,26 +271,36 @@ var timeOut = 30 * time.Second
 func (n *Host) handleConn(id *Identity, address string, c network.Conn) {
 	msgChan := make(chan network.ApplicationMessage)
 	errorChan := make(chan error)
+	doneChan := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-doneChan:
+				return
+			default:
+				ctx := context.TODO()
+				am, err := c.Receive(ctx)
+				// So the receiver can know about the error
+				am.SetError(err)
+				am.From = address
+				if err != nil {
+					errorChan <- err
+				} else {
+					msgChan <- am
+				}
+			}
+		}
+	}()
 	for {
-		go func() {
-			ctx := context.TODO()
-			am, err := c.Receive(ctx)
-			// So the receiver can know about the error
-			if err != nil {
-				dbg.Lvl2("Received error:", err)
-			}
-			am.SetError(err)
-			am.From = address
-			if err != nil {
-				errorChan <- err
-			} else {
-				msgChan <- am
-			}
-		}()
 		select {
+		case <-n.closed:
+			doneChan <- true
 		case am := <-msgChan:
 			n.networkChan <- MessageInfo{Id: id, Data: am}
 		case e := <-errorChan:
+			if e == network.ErrClosed {
+				return
+			}
 			dbg.Error("Error with connection", address, "=> error", e)
 		case <-time.After(timeOut):
 			dbg.Error("Timeout with connection", address)
