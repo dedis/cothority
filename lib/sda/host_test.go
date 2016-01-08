@@ -20,11 +20,11 @@ func init() {
 
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
-	Host1 := newHost("localhost:2000", suite)
-	if Host1 == nil {
+	h1 := newHost("localhost:2000", suite)
+	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
 	}
-	err := Host1.Close()
+	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close", err)
 	}
@@ -32,41 +32,34 @@ func TestHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
-	Host1 := newHost("localhost:2000", suite)
-	err := Host1.Close()
+	h1 := newHost("localhost:2000", suite)
+	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
-	Host1 = newHost("localhost:2000", suite)
+	h1 = newHost("localhost:2000", suite)
 	// Needs to wait some as the listener will try for a couple of times
 	// to make the connection
 	time.Sleep(time.Second)
-	Host1.Close()
+	h1.Close()
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
 func TestHostMessaging(t *testing.T) {
-	Host1, Host2 := setupHosts(t)
-	simple := &SimpleMessage{3}
-	err := Host1.SendTo(Host2.Identity, simple)
+	h1, h2 := setupHosts(t)
+	msgSimple := &SimpleMessage{3}
+	err := h1.SendTo(h2.Identity, msgSimple)
 	if err != nil {
-		t.Fatal("Couldn't send from Host2 -> Host1:", err)
+		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
-	data := Host2.Receive()
-	if data.MsgType != sda.SDAMessageType {
-		t.Fatal("Did not receive the expected type")
-	}
-	sdaMsg := data.Msg.(sda.SDAMessage)
-	if sdaMsg.MsgType != SimpleMessageType {
-		t.Fatal("Received unexpected message type", sdaMsg.MsgType.String(), data, data.Error())
-	}
-	decoded := sdaMsg.Data.(SimpleMessage)
+	msg := h2.Receive()
+	decoded := testMessageSimple(t, msg)
 	if decoded.I != 3 {
-		t.Fatal("Received message from Host2 -> Host1 is wrong")
+		t.Fatal("Received message from h2 -> h1 is wrong")
 	}
 
-	Host1.Close()
-	Host2.Close()
+	h1.Close()
+	h2.Close()
 }
 
 // SimpleMessage is just used to transfer one integer
@@ -89,15 +82,8 @@ func TestHostIncomingMessage(t *testing.T) {
 	}
 
 	msg := h2.Receive()
-	if msg.MsgType != sda.SDAMessageType {
-		t.Fatal("Wrong message type received")
-	}
-	sda := msg.Msg.(sda.SDAMessage)
-	if sda.MsgType != SimpleMessageType {
-		t.Fatal("Couldn't pass simple message")
-	}
-	simple := sda.Data.(SimpleMessage)
-	if simple.I != 10 {
+	decoded := testMessageSimple(t, msg)
+	if decoded.I != 10 {
 		t.Fatal("Wrong value")
 	}
 
@@ -140,14 +126,25 @@ func newHost(address string, s abstract.Suite) *sda.Host {
 
 func setupHosts(t *testing.T) (*sda.Host, *sda.Host) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	Host1 := newHost("localhost:2000", suite)
+	h1 := newHost("localhost:2000", suite)
 	// make the second peer as the server
-	Host2 := newHost("localhost:2001", suite)
+	h2 := newHost("localhost:2001", suite)
 	// make it listen
-	Host2.Listen()
-	_, err := Host1.Connect(Host2.Identity)
+	h2.Listen()
+	_, err := h1.Connect(h2.Identity)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return Host1, Host2
+	return h1, h2
+}
+
+func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessage {
+	if msg.MsgType != sda.SDAMessageType {
+		t.Fatal("Wrong message type received")
+	}
+	sda := msg.Msg.(sda.SDAMessage)
+	if sda.MsgType != SimpleMessageType {
+		t.Fatal("Couldn't pass simple message")
+	}
+	return sda.Data.(SimpleMessage)
 }
