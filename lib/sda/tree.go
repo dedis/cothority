@@ -23,6 +23,7 @@ import (
 // It contains the PeerId of the parent and the sub tree of the children.
 func init() {
 	network.RegisterProtocolType(TreeNodeType, TreeNode{})
+	network.RegisterProtocolType(IdentityType, Identity{})
 }
 
 // Universal Uniquely Identifier
@@ -37,8 +38,34 @@ var NewHashFunc func() hash.Hash = sha256.New
 type Identity struct {
 	Public    abstract.Point
 	Addresses []string
+	iter      int
 }
 
+// First returns the first address available
+func (id *Identity) First() string {
+	if len(id.Addresses) > 0 {
+		return id.Addresses[0]
+	}
+	return ""
+}
+
+// Next returns the next address like an iterator
+func (id *Identity) Next() string {
+	if len(id.Addresses) < id.iter+1 {
+		return ""
+	}
+	addr := id.Addresses[id.iter]
+	id.iter++
+	return addr
+
+}
+
+func (id *Identity) ID() UUID {
+	h := NewHashFunc()
+	buf, _ := id.Public.MarshalBinary()
+	h.Write(buf)
+	return UUID(h.Sum(nil))
+}
 func NewIdentity(public abstract.Point, addresses ...string) *Identity {
 	return &Identity{
 		Public:    public,
@@ -218,4 +245,5 @@ func (id *IdentityListToml) IdentityList(suite abstract.Suite) *IdentityList {
 const (
 	TopologyType = iota + 10
 	TreeNodeType
+	IdentityType
 )

@@ -7,11 +7,20 @@ import (
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/protobuf"
 	"reflect"
 )
 
 /// Encoding part ///
+
+// Global Suite used by this network library.
+// For the moment, this will stay,as our focus is not on having the possibility
+// to use any suite we want (the decoding stuff is much harder then, because we
+// dont want to send the suite in the wire).
+// It will surely change in futur releases so we can permit this behavior.
+var Suite = edwards.NewAES128SHA256Ed25519(false)
+
 // Type of a packet
 type Type int32
 
@@ -34,6 +43,19 @@ func RegisterProtocolType(msgType Type, msg ProtocolMessage) error {
 	invTypeRegistry[t] = msgType
 
 	return nil
+}
+
+func TypeFromData(msg ProtocolMessage) Type {
+	val := reflect.ValueOf(msg)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	typ := val.Type()
+	intType, ok := invTypeRegistry[typ]
+	if !ok {
+		return DefaultType
+	}
+	return intType
 }
 
 // Give a default constructors for protobuf out of this suite
@@ -110,7 +132,11 @@ func (t Type) String() string {
 // MarshalregisteredType will marshal a struct with its respective type into a
 // slice of bytes. That slice of bytes can be then decoded in
 // UnmarshalRegisteredType.
-func MarshalRegisteredType(msgType Type, data ProtocolMessage) ([]byte, error) {
+func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
+	var msgType Type
+	if msgType = TypeFromData(data); msgType == DefaultType {
+		return nil, fmt.Errorf("Type %s Not registered to the network library.", msgType)
+	}
 	b := new(bytes.Buffer)
 	if err := binary.Write(b, globalOrder, msgType); err != nil {
 		return nil, err
@@ -151,7 +177,7 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Ty
 // MarshalBinary the application message => to bytes
 // Implements BinaryMarshaler interface so it will be used when sending with protobuf
 func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
-	return MarshalRegisteredType(am.MsgType, am.Msg)
+	return MarshalRegisteredType(am.Msg)
 }
 
 // UnmarshalBinary will decode the incoming bytes

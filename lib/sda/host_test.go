@@ -7,13 +7,12 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/random"
 	"testing"
 	"time"
 )
 
-var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(false)
+var suite abstract.Suite = network.Suite
 
 func init() {
 	network.RegisterProtocolType(SimpleMessageType, SimpleMessage{})
@@ -48,27 +47,24 @@ func TestHostClose(t *testing.T) {
 // Test connection of multiple Hosts and sending messages back and forth
 func TestHostMessaging(t *testing.T) {
 	Host1, Host2 := setupHosts(t)
-	msg := &SimpleMessage{3}
-	err := Host1.SendTo("localhost:2001", msg)
+	simple := &SimpleMessage{3}
+	err := Host1.SendTo(Host2.Identity, simple)
 	if err != nil {
 		t.Fatal("Couldn't send from Host2 -> Host1:", err)
 	}
-	var msgDec SimpleMessage
-	data, err := Host2.Receive()
-	if err != nil {
-		t.Fatal("Did not receive message ..")
-	} else {
-		if data.MsgType != sda.SDAMessageType {
-			t.Fatal("Did not receive the expected type")
-		}
-		var ok bool
-		if msgDec, ok = data.Msg.(sda.SDAMessage).Data.(SimpleMessage); !ok {
-			t.Fatal("Can not convert the message")
-		}
-		if msgDec.I != 3 {
-			t.Fatal("Received message from Host2 -> Host1 is wrong")
-		}
+	data := Host2.Receive()
+	if data.MsgType != sda.SDAMessageType {
+		t.Fatal("Did not receive the expected type")
 	}
+	sdaMsg := data.Msg.(sda.SDAMessage)
+	if sdaMsg.MsgType != SimpleMessageType {
+		t.Fatal("Received unexpected message type", sdaMsg.MsgType.String(), data, data.Error())
+	}
+	decoded := sdaMsg.Data.(SimpleMessage)
+	if decoded.I != 3 {
+		t.Fatal("Received message from Host2 -> Host1 is wrong")
+	}
+
 	Host1.Close()
 	Host2.Close()
 }
@@ -87,18 +83,24 @@ const (
 func TestHostIncomingMessage(t *testing.T) {
 	h1, h2 := setupHosts(t)
 	msgSimple := &SimpleMessage{10}
-	err := h1.SendTo(h2.Address, msgSimple)
+	err := h1.SendTo(h2.Identity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message:", err)
 	}
-	am, err := h2.Receive()
-	if err != nil {
-		t.Fatal("Couldn't receive message", err)
+
+	msg := h2.Receive()
+	if msg.MsgType != sda.SDAMessageType {
+		t.Fatal("Wrong message type received")
 	}
-	dbg.Lvl3("Message received is", am)
-	if am.Msg.(sda.SDAMessage).Data.(SimpleMessage).I != 10 {
+	sda := msg.Msg.(sda.SDAMessage)
+	if sda.MsgType != SimpleMessageType {
 		t.Fatal("Couldn't pass simple message")
 	}
+	simple := sda.Data.(SimpleMessage)
+	if simple.I != 10 {
+		t.Fatal("Wrong value")
+	}
+
 	h1.Close()
 	h2.Close()
 }
@@ -131,8 +133,9 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 }
 
 func newHost(address string, s abstract.Suite) *sda.Host {
-	priv, _ := privPub(s)
-	return sda.NewHost(address, s, priv, network.NewTcpHost(network.DefaultConstructors(s)))
+	priv, pub := privPub(s)
+	id := &sda.Identity{Public: pub, Addresses: []string{address}}
+	return sda.NewHost(id, priv, network.NewTcpHost(network.DefaultConstructors(s)))
 }
 
 func setupHosts(t *testing.T) (*sda.Host, *sda.Host) {
@@ -142,7 +145,7 @@ func setupHosts(t *testing.T) (*sda.Host, *sda.Host) {
 	Host2 := newHost("localhost:2001", suite)
 	// make it listen
 	Host2.Listen()
-	_, err := Host1.Connect(Host2.Address)
+	_, err := Host1.Connect(Host2.Identity)
 	if err != nil {
 		t.Fatal(err)
 	}
