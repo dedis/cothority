@@ -200,7 +200,7 @@ func (n *Host) SendTo(id *Identity, msg network.ProtocolMessage) error {
 // SendSDATo wraps the message to send in an SDAMessage and sends it to the
 // appropriate identity
 func (n *Host) SendMsgTo(id *Identity, msg network.ProtocolMessage) error {
-	sdaMsg := &SDAMessage{
+	sdaMsg := &SDAData{
 		ProtoID:    "",
 		InstanceID: "",
 	}
@@ -218,8 +218,8 @@ func (n *Host) SendMsgTo(id *Identity, msg network.ProtocolMessage) error {
 func (n *Host) Receive() MessageInfo {
 	msgInfo := <-n.networkChan
 	var data = msgInfo.Data
-	if msgInfo.Data.MsgType == SDAMessageType {
-		sda := data.Msg.(SDAMessage)
+	if msgInfo.Data.MsgType == SDADataMessage {
+		sda := data.Msg.(SDAData)
 		t, msg, _ := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
 		sda.MsgType = t
 		sda.Msg = msg
@@ -245,13 +245,13 @@ func (n *Host) ProcessMessages() {
 		msgInfo := n.Receive()
 		dbg.Lvl3("Message Received:", msgInfo.Data)
 		switch msgInfo.Data.MsgType {
-		case SDAMessageType:
+		case SDADataMessage:
 			n.processSDAMessage(msgInfo.Id, &msgInfo.Data)
-		case RequestTreeType:
+		case RequestTreeMessage:
 			tt := msgInfo.Data.Msg.(RequestTree).TreeID
 			err = n.SendTo(msgInfo.Id, tt)
-		case SendTreeType:
-		case RequestIdentityListType:
+		case SendTreeMessage:
+		case RequestIdentityListMessage:
 			id := msgInfo.Data.Msg.(RequestIdentityList).IdentityListID
 			il, ok := n.identityLists[id]
 			if ok {
@@ -259,7 +259,7 @@ func (n *Host) ProcessMessages() {
 			} else {
 				err = n.SendTo(msgInfo.Id, &IdentityList{})
 			}
-		case SendIdentityListType:
+		case SendIdentityListMessage:
 			il := msgInfo.Data.Msg.(IdentityList)
 			if il.ID == "" {
 				dbg.Error("Received an empty IdentityList")
@@ -344,7 +344,7 @@ func (n *Host) handleConn(id *Identity, address string, c network.Conn) {
 // packet such as the protocol id and the topology id and the protocol instance
 // id
 func (n *Host) processSDAMessage(id *Identity, am *network.ApplicationMessage) error {
-	sda := am.Msg.(SDAMessage)
+	sda := am.Msg.(SDAData)
 	t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
 		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)

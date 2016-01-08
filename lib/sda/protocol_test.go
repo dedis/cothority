@@ -51,7 +51,7 @@ func NewProtocolTest(n *Host, t *Tree) ProtocolInstance {
 
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
-func (p ProtocolTest) Dispatch(m *SDAMessage) error {
+func (p ProtocolTest) Dispatch(m *SDAData) error {
 	return nil
 }
 

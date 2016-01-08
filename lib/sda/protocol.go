@@ -15,7 +15,7 @@ var protocols map[UUID]NewProtocol
 // recognized as protocols
 type ProtocolInstance interface {
 	// A protocol isntance should be able to dispatch its own message internally
-	Dispatch(m *SDAMessage) error
+	Dispatch(m *SDAData) error
 	// and give a unique identifier like a GUID
 	Id() UUID
 }

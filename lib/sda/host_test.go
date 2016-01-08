@@ -126,11 +126,6 @@ func TestHostSendDuplex(t *testing.T) {
 	h2.Close()
 }
 
-// Test propagation of tree - both known and unknown
-func TestTreePropagation(t *testing.T) {
-	//root, nodes := GenerateTreeFromIdentityList(p1)
-}
-
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
@@ -142,7 +137,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive().Data
-	if msg.MsgType != sda.SendIdentityListType {
+	if msg.MsgType != sda.SendIdentityListMessage {
 		t.Fatal("h1 didn't receive IdentityList type")
 	}
 	if msg.Msg.(sda.IdentityList).ID != "" {
@@ -156,7 +151,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive().Data
-	if msg.MsgType != sda.SendIdentityListType {
+	if msg.MsgType != sda.SendIdentityListMessage {
 		t.Fatal("h1 didn't receive IdentityList type")
 	}
 	if msg.Msg.(sda.IdentityList).ID != il1.ID {
@@ -177,6 +172,61 @@ func TestPeerListPropagation(t *testing.T) {
 	if list.ID != il1.ID {
 		t.Fatal("IDs do not match")
 	}
+	h1.Close()
+	h2.Close()
+}
+
+// Test propagation of tree - both known and unknown
+func TestTreePropagation(t *testing.T) {
+	/*
+		h1, h2 := setupHosts(t, true)
+		il1 := GenIdentityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+		// Suppose both hosts have the list available
+		h1.AddIdentityList(il1)
+		h2.AddIdentityList(il1)
+			root, nodes := GenerateTreeFromIdentityList(il1)
+
+			// Check that h2 sends back an empty list if it is unknown
+			err := h1.SendTo(h2.Identity, &sda.RequestTreeType{il1.ID})
+			if err != nil {
+				t.Fatal("Couldn't send message to h2:", err)
+			}
+			msg := h1.Receive().Data
+			if msg.MsgType != sda.SendIdentityListMessage {
+				t.Fatal("h1 didn't receive IdentityList type")
+			}
+			if msg.Msg.(sda.IdentityList).ID != "" {
+				t.Fatal("List should be empty")
+			}
+
+			// Now add the list to h2 and try again
+			err = h1.SendTo(h2.Identity, &sda.RequestIdentityList{il1.ID})
+			if err != nil {
+				t.Fatal("Couldn't send message to h2:", err)
+			}
+			msg = h1.Receive().Data
+			if msg.MsgType != sda.SendIdentityListMessage {
+				t.Fatal("h1 didn't receive IdentityList type")
+			}
+			if msg.Msg.(sda.IdentityList).ID != il1.ID {
+				t.Fatal("List should be equal to original list")
+			}
+
+			// And test whether it gets stored correctly
+			go h1.ProcessMessages()
+			err = h1.SendTo(h2.Identity, &sda.RequestIdentityList{il1.ID})
+			if err != nil {
+				t.Fatal("Couldn't send message to h2:", err)
+			}
+			time.Sleep(time.Second)
+			list, ok := h1.GetIdentityList(il1.ID)
+			if !ok {
+				t.Fatal("List-id not found")
+			}
+			if list.ID != il1.ID {
+				t.Fatal("IDs do not match")
+			}
+	*/
 }
 
 // Test instantiation of ProtocolInstances
@@ -233,10 +283,10 @@ const (
 )
 
 func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessage {
-	if msg.MsgType != sda.SDAMessageType {
+	if msg.MsgType != sda.SDADataMessage {
 		t.Fatal("Wrong message type received")
 	}
-	sda := msg.Msg.(sda.SDAMessage)
+	sda := msg.Msg.(sda.SDAData)
 	if sda.MsgType != SimpleMessageType {
 		t.Fatal("Couldn't pass simple message")
 	}

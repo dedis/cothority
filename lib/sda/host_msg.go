@@ -7,28 +7,28 @@ import (
 
 // init registers all our message-types to the network-interface
 func init() {
-	network.RegisterProtocolType(SDAMessageType, SDAMessage{})
-	network.RegisterProtocolType(RequestTreeType, RequestTree{})
-	network.RegisterProtocolType(SendTreeType, TreeNode{})
-	network.RegisterProtocolType(RequestIdentityListType, RequestIdentityList{})
-	network.RegisterProtocolType(SendIdentityListType, IdentityList{})
-	network.RegisterProtocolType(IdentityMessageType, IdentityMessage{})
+	network.RegisterProtocolType(SDADataMessage, SDAData{})
+	network.RegisterProtocolType(RequestTreeMessage, RequestTree{})
+	network.RegisterProtocolType(SendTreeMessage, TreeNode{})
+	network.RegisterProtocolType(RequestIdentityListMessage, RequestIdentityList{})
+	network.RegisterProtocolType(SendIdentityListMessage, IdentityList{})
+	network.RegisterProtocolType(SendIdentityMessage, SendIdentity{})
 }
 
 // constants used for the message-types
 const (
-	SDAMessageType = iota + 10
-	RequestTreeType
-	SendTreeType
-	RequestIdentityListType
-	SendIdentityListType
-	IdentityListUnknownType
-	IdentityMessageType
+	SDADataMessage = iota + 10
+	RequestTreeMessage
+	SendTreeMessage
+	RequestIdentityListMessage
+	SendIdentityListMessage
+	IdentityListUnknownMessage
+	SendIdentityMessage
 )
 
 // ProtocolInfo is to be embedded in every message that is made for a
 // ProtocolInstance
-type SDAMessage struct {
+type SDAData struct {
 	// The ID of the protocol
 	ProtoID UUID
 	// The ID of the protocol instance - the counter
@@ -57,8 +57,8 @@ type RequestIdentityList struct {
 type IdentityListUnknown struct {
 }
 
-// IdentityMessage is the first message we send on creation of a link
-type IdentityMessage struct {
+// SendIdentity is the first message we send on creation of a link
+type SendIdentity struct {
 	Name string
 }
 
