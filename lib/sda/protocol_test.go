@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"github.com/satori/go.uuid"
 	"strconv"
 	"testing"
 )
@@ -8,19 +9,19 @@ import (
 // Test simple protocol-implementation
 // - registration
 func TestRegistration(t *testing.T) {
-	if ProtocolExists("test") {
+	if ProtocolExists(ProtocolTestUUID) {
 		t.Fatal("Test should not exist yet")
 	}
-	ProtocolRegister("test", NewProtocolTest)
-	if !ProtocolExists("test") {
+	ProtocolRegister(ProtocolTestUUID, NewProtocolTest)
+	if !ProtocolExists(ProtocolTestUUID) {
 		t.Fatal("Test should exist now")
 	}
 }
 
 // Test instantiation of the protocol
 func TestInstantiation(t *testing.T) {
-	ProtocolRegister("test", NewProtocolTest)
-	p, err := ProtocolInstantiate("test", nil, nil)
+	ProtocolRegister(ProtocolTestUUID, NewProtocolTest)
+	p, err := ProtocolInstantiate(ProtocolTestUUID, nil, nil)
 	if err != nil {
 		t.Fatal("Couldn't instantiate test-protocol")
 	}
@@ -29,12 +30,14 @@ func TestInstantiation(t *testing.T) {
 	}
 }
 
+var ProtocolTestUUID = uuid.NewV4()
+
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
 	*Host
 	*Tree
-	ID string
+	ID uuid.UUID
 }
 
 var currInstanceID int
@@ -42,10 +45,11 @@ var currInstanceID int
 // NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *Host, t *Tree) ProtocolInstance {
 	currInstanceID++
+	uid, _ := uuid.FromString(strconv.Itoa(currInstanceID))
 	return &ProtocolTest{
 		Host: n,
 		Tree: t,
-		ID:   strconv.Itoa(currInstanceID),
+		ID:   uid,
 	}
 }
 
@@ -55,6 +59,6 @@ func (p ProtocolTest) Dispatch(m *SDAMessage) error {
 	return nil
 }
 
-func (p *ProtocolTest) Id() UUID {
-	return UUID(p.ID)
+func (p *ProtocolTest) Id() uuid.UUID {
+	return p.ID
 }

@@ -3,6 +3,7 @@ package sda
 import (
 	"errors"
 	"github.com/dedis/cothority/lib/network"
+	. "github.com/satori/go.uuid"
 )
 
 // init registers all our message-types to the network-interface

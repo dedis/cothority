@@ -22,6 +22,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	. "github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"sync"
 	"time"
@@ -33,29 +34,21 @@ Host is the structure responsible for holding information about the current
 */
 type Host struct {
 	// Our identity
-	Identity *Identity
-	// the working address is set when the Host will start listen
-	// When a listening adress found in the identity works, workingAddress is
-	// set to that address
-	workingAddress string
-	// The TCPHost
-	host network.Host
-	// The open connections
-	connections map[string]network.Conn
+	Identity *network.Identity
+	// The TCPHost which uses identity
+	host network.SecureHost
 	// and the locks
 	networkLock *sync.Mutex
 	// The database of identities this host knows
-	identities map[UUID]*Identity
-	// mapping from identity to physical addresses in connection
-	identityToAddress map[UUID]string
-	// identity mutex
-	identityLock *sync.Mutex
+	identities map[UUID]*network.Identity
+	// connections maintained by this host
+	connections map[UUID]network.SecureConn
 	// Our private-key
 	private abstract.Secret
 	// The suite used for this Host
 	suite abstract.Suite
 	// slice of received messages - testmode
-	networkChan chan MessageInfo
+	networkChan chan network.ApplicationMessage
 	// instances linked to their ID and their ProtocolID
 	instances map[UUID]ProtocolInstance
 	// all trees known to this Host
@@ -66,21 +59,18 @@ type Host struct {
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(id *Identity, pkey abstract.Secret, host network.Host) *Host {
+func NewHost(id *network.Identity, pkey abstract.Secret, host network.SecureHost) *Host {
 	n := &Host{
-		Identity:          id,
-		identityToAddress: make(map[UUID]string),
-		workingAddress:    id.First(),
-		networkLock:       &sync.Mutex{},
-		identityLock:      &sync.Mutex{},
-		connections:       make(map[string]network.Conn),
-		identities:        make(map[UUID]*Identity),
-		host:              host,
-		private:           pkey,
-		suite:             network.Suite,
-		networkChan:       make(chan MessageInfo, 1),
-		instances:         make(map[UUID]ProtocolInstance),
-		closed:            make(chan bool),
+		Identity:    id,
+		networkLock: &sync.Mutex{},
+		connections: make(map[UUID]network.SecureConn),
+		identities:  make(map[UUID]*network.Identity),
+		host:        host,
+		private:     pkey,
+		suite:       network.Suite,
+		networkChan: make(chan network.ApplicationMessage, 1),
+		instances:   make(map[UUID]ProtocolInstance),
+		closed:      make(chan bool),
 	}
 	return n
 }
@@ -90,23 +80,9 @@ func NewHost(id *Identity, pkey abstract.Secret, host network.Host) *Host {
 // we handle the message using HandleConn
 // NOTE Listen will try each address in the Host identity until one works ;)
 func (n *Host) Listen() {
-	fn := func(c network.Conn) {
-		ctx := context.TODO()
-		// receive the identity of the remote peer
-		am, err := c.Receive(ctx)
-		if err != nil || am.MsgType != IdentityType {
-			dbg.Lvl2(n.workingAddress, "Error receiving identity from connection", c.Remote())
-		}
-		id := am.Msg.(Identity)
-		var addr string
-		if addr = id.First(); addr == "" {
-			dbg.Error("Received a connection with Identity with NO addresses")
-			return
-		}
-		dbg.Lvl3(n.workingAddress, "Accepted Connection from", addr)
-		// register the connection once we know it's ok
-		n.registerConnection(&id, addr, c)
-		n.handleConn(&id, addr, c)
+	fn := func(c network.SecureConn) {
+		n.registerConnection(c)
+		n.handleConn(c)
 	}
 	errChan := make(chan error)
 	var stop bool
@@ -116,7 +92,7 @@ func (n *Host) Listen() {
 			break
 		}
 		go func() {
-			err := n.host.Listen(addr, fn)
+			err := n.host.Listen(fn)
 			if err != nil {
 				errChan <- err
 			}
@@ -129,30 +105,20 @@ func (n *Host) Listen() {
 		case <-time.After(2 * time.Second):
 			dbg.Lvl2(addr, "is listening !")
 			stop = true
-			n.workingAddress = addr
 		}
 	}
 }
 
 // Connect takes an identity where the next Host is
 // It will try every addresses in the Identity
-func (n *Host) Connect(id *Identity) (network.Conn, error) {
-	var err error
-	var c network.Conn
-	for _, addr := range id.Addresses {
-		// try to open connection
-		c, err = n.host.Open(addr)
-		if err != nil {
-			continue
-		}
-		// Send our Identity so the remote host knows who we are
-		if err := c.Send(context.TODO(), n.Identity); err != nil {
-			return nil, err
-		}
-		n.registerConnection(id, addr, c)
-		dbg.Lvl2("Host", n.workingAddress, "connected to", addr)
-		go n.handleConn(id, addr, c)
+func (n *Host) Connect(id *network.Identity) (network.Conn, error) {
+	c, err := n.host.Open(*id)
+	if err != nil {
+		return nil, err
 	}
+	n.registerConnection(c)
+	dbg.Lvl2("Host", "connected to", id.First())
+	go n.handleConn(c)
 	return c, nil
 }
 
@@ -160,7 +126,7 @@ func (n *Host) Connect(id *Identity) (network.Conn, error) {
 func (n *Host) Close() error {
 	n.networkLock.Lock()
 	err := n.host.Close()
-	n.connections = make(map[string]network.Conn)
+	n.connections = make(map[UUID]network.SecureConn)
 	close(n.closed)
 	n.networkLock.Unlock()
 	return err
@@ -169,37 +135,33 @@ func (n *Host) Close() error {
 // SendToIdentity sends to an Identity by trying the differents addresses tied
 // to this id
 // XXX SHould use that function in public and put SendTo in private
-func (n *Host) SendTo(id *Identity, msg network.ProtocolMessage) error {
+func (n *Host) SendTo(id *network.Identity, msg network.ProtocolMessage) error {
 	if _, ok := n.identities[id.ID()]; !ok {
 		return fmt.Errorf("SendToIdentity received an non-saved identity")
 	}
-	var addr string
+	var c network.SecureConn
 	var ok bool
-	if addr, ok = n.identityToAddress[id.ID()]; !ok {
-		return fmt.Errorf("No connection for this identity")
-	}
 	// additionnal verification - might be skipped
 	n.networkLock.Lock()
-	if c, ok := n.connections[addr]; !ok {
+	c, ok = n.connections[id.ID()]
+	if !ok {
 		n.networkLock.Unlock()
 		return fmt.Errorf("No connection to this address!", n.connections)
-	} else {
-		// we got the connection
-		n.networkLock.Unlock()
-		sdaMsg := &SDAMessage{
-			ProtoID:    "",
-			InstanceID: "",
-		}
-		b, err := network.MarshalRegisteredType(msg)
-		if err != nil {
-			return fmt.Errorf("Error marshaling  message: %s", err.Error())
-		}
-		sdaMsg.DataSlice = b
-		sdaMsg.MsgType = network.TypeFromData(msg)
-		dbg.Lvl3("Sending data", sdaMsg, "to", c.Remote())
-		return c.Send(context.TODO(), sdaMsg)
 	}
-	return nil
+	// we got the connection
+	n.networkLock.Unlock()
+	sdaMsg := &SDAMessage{
+		ProtoID:    Nil,
+		InstanceID: Nil,
+	}
+	b, err := network.MarshalRegisteredType(msg)
+	if err != nil {
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+	}
+	sdaMsg.DataSlice = b
+	sdaMsg.MsgType = network.TypeFromData(msg)
+	dbg.Lvl3("Sending data", sdaMsg, "to", c.Remote())
+	return c.Send(context.TODO(), sdaMsg)
 }
 
 // Receive will return the value of the communication-channel or an error
@@ -213,9 +175,8 @@ func (n *Host) SendTo(id *Identity, msg network.ProtocolMessage) error {
 // Could we merge that function with handleConn maybe ? so it timeout only on
 // opened connections.
 func (n *Host) Receive() network.ApplicationMessage {
-	msgInfo := <-n.networkChan
-	var data = msgInfo.Data
-	if msgInfo.Data.MsgType == SDAMessageType {
+	data := <-n.networkChan
+	if data.MsgType == SDAMessageType {
 		sda := data.Msg.(SDAMessage)
 		t, msg, _ := network.UnmarshalRegisteredType(sda.DataSlice, data.Constructors)
 		sda.MsgType = t
@@ -236,26 +197,26 @@ func (n *Host) Receive() network.ApplicationMessage {
 // * SendPeerListID - send the tree to the child
 func (n *Host) ProcessMessages() {
 	for {
-		msgInfo := <-n.networkChan
-		dbg.Lvl3("Message Received:", msgInfo.Data)
-		switch msgInfo.Data.MsgType {
+		data := <-n.networkChan
+		dbg.Lvl3("Message Received:", data)
+		switch data.MsgType {
 		case SDAMessageType:
-			n.processSDAMessage(msgInfo.Id, &msgInfo.Data)
+			n.processSDAMessage(&data)
 		case RequestTreeType:
-			tt := msgInfo.Data.Msg.(RequestTree).TreeID
-			n.SendTo(msgInfo.Id, tt)
+			tt := data.Msg.(RequestTree).TreeID
+			n.SendTo(&data.Identity, tt)
 		case SendTreeType:
 		case RequestIdentityListType:
 		case SendIdentityListType:
 		default:
-			dbg.Error("Didn't recognize message", msgInfo.Data.MsgType)
+			dbg.Error("Didn't recognize message", data.MsgType)
 		}
 	}
 }
 
 // NetworkChan returns the channel where all messages received go. You can use
 // it for testing, or if you want to make your own processing of the messages
-func (n *Host) NetworkChan() chan MessageInfo {
+func (n *Host) NetworkChan() chan network.ApplicationMessage {
 	return n.networkChan
 }
 
@@ -268,7 +229,7 @@ func (n *Host) AddProtocolInstance(pi ProtocolInstance) {
 var timeOut = 30 * time.Second
 
 // Handle a connection => giving messages to the MsgChans
-func (n *Host) handleConn(id *Identity, address string, c network.Conn) {
+func (n *Host) handleConn(c network.SecureConn) {
 	msgChan := make(chan network.ApplicationMessage)
 	errorChan := make(chan error)
 	doneChan := make(chan bool)
@@ -282,7 +243,6 @@ func (n *Host) handleConn(id *Identity, address string, c network.Conn) {
 				am, err := c.Receive(ctx)
 				// So the receiver can know about the error
 				am.SetError(err)
-				am.From = address
 				if err != nil {
 					errorChan <- err
 				} else {
@@ -291,19 +251,20 @@ func (n *Host) handleConn(id *Identity, address string, c network.Conn) {
 			}
 		}
 	}()
+	id := c.Identity()
 	for {
 		select {
 		case <-n.closed:
 			doneChan <- true
 		case am := <-msgChan:
-			n.networkChan <- MessageInfo{Id: id, Data: am}
+			n.networkChan <- am
 		case e := <-errorChan:
 			if e == network.ErrClosed {
 				return
 			}
-			dbg.Error("Error with connection", address, "=> error", e)
+			dbg.Error("Error with connection", id.First(), "=> error", e)
 		case <-time.After(timeOut):
-			dbg.Error("Timeout with connection", address)
+			dbg.Error("Timeout with connection", id.First())
 		}
 	}
 }
@@ -311,7 +272,7 @@ func (n *Host) handleConn(id *Identity, address string, c network.Conn) {
 // Dispatch SDA message looks if we have all the info to rightly dispatch the
 // packet such as the protocol id and the topology id and the protocol instance
 // id
-func (n *Host) processSDAMessage(id *Identity, am *network.ApplicationMessage) error {
+func (n *Host) processSDAMessage(am *network.ApplicationMessage) error {
 	sda := am.Msg.(SDAMessage)
 	t, msg, err := network.UnmarshalRegisteredType(sda.DataSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
@@ -336,11 +297,11 @@ func (n *Host) processSDAMessage(id *Identity, am *network.ApplicationMessage) e
 
 // registerConnection registers a Identity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
-func (n *Host) registerConnection(id *Identity, addr string, c network.Conn) {
+func (n *Host) registerConnection(c network.SecureConn) {
 	n.networkLock.Lock()
-	n.identities[id.ID()] = id
-	n.identityToAddress[id.ID()] = addr
-	n.connections[addr] = c
+	id := c.Identity()
+	n.connections[id.ID()] = c
+	n.identities[id.ID()] = &id
 	n.networkLock.Unlock()
 }
 
@@ -349,15 +310,4 @@ func (n *Host) registerConnection(id *Identity, addr string, c network.Conn) {
 // instance.
 func (n *Host) Suite() abstract.Suite {
 	return n.suite
-}
-
-// MessageInfo is used to communicate the identity tied to a message when we
-// receive messages
-type MessageInfo struct {
-	Id   *Identity
-	Data network.ApplicationMessage
-}
-
-func init() {
-	network.RegisterProtocolType(IdentityType, Identity{})
 }

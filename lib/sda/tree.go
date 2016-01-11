@@ -3,12 +3,9 @@ package sda
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"hash"
-	"strings"
+	. "github.com/satori/go.uuid"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -23,54 +20,6 @@ import (
 // It contains the PeerId of the parent and the sub tree of the children.
 func init() {
 	network.RegisterProtocolType(TreeNodeType, TreeNode{})
-	network.RegisterProtocolType(IdentityType, Identity{})
-}
-
-// Universal Uniquely Identifier
-type UUID string
-
-// XXX TMp solution of hashing identifier so we have a UUID
-var NewHashFunc func() hash.Hash = sha256.New
-
-// An Identity is used to represent a SERVER / PEER in the whole internet
-// its main identity is its public key, then we get some means, some address on
-// where to contact him.
-type Identity struct {
-	Public    abstract.Point
-	Addresses []string
-	iter      int
-}
-
-// First returns the first address available
-func (id *Identity) First() string {
-	if len(id.Addresses) > 0 {
-		return id.Addresses[0]
-	}
-	return ""
-}
-
-// Next returns the next address like an iterator
-func (id *Identity) Next() string {
-	if len(id.Addresses) < id.iter+1 {
-		return ""
-	}
-	addr := id.Addresses[id.iter]
-	id.iter++
-	return addr
-
-}
-
-func (id *Identity) ID() UUID {
-	h := NewHashFunc()
-	buf, _ := id.Public.MarshalBinary()
-	h.Write(buf)
-	return UUID(h.Sum(nil))
-}
-func NewIdentity(public abstract.Point, addresses ...string) *Identity {
-	return &Identity{
-		Public:    public,
-		Addresses: addresses,
-	}
 }
 
 // a topology to be used by any network layer/host layer
@@ -81,37 +30,42 @@ type Tree struct {
 }
 
 func (t *Tree) Id() UUID {
-	h := NewHashFunc()
-	h.Write([]byte(t.IdList.Id()))
-	h.Write([]byte(t.Root.Id()))
-	return UUID(h.Sum(nil))
+	var h bytes.Buffer
+	h.Write(t.IdList.Id().Bytes())
+	h.Write(t.Root.Id().Bytes())
+	u := NewV5(NamespaceURL, h.String())
+	return u
 }
 
 // A PeerList is a list of Identity we choose to run  some tree on it ( and
 // therefor some protocols)
 type IdentityList struct {
 	ID   UUID
-	List []*Identity
+	List []*network.Identity
 }
 
-func NewIdentityList(ids []*Identity) *IdentityList {
+func NewIdentityList(ids []*network.Identity) *IdentityList {
 	return &IdentityList{List: ids}
 }
 
 func (pl *IdentityList) Id() UUID {
-	if pl.ID == "" {
+	if pl.ID == Nil {
 		pl.generateId()
 	}
 	return pl.ID
 }
 
 func (pl *IdentityList) generateId() {
-	h := NewHashFunc()
+	var h bytes.Buffer
 	for i := range pl.List {
 		b, _ := pl.List[i].Public.MarshalBinary()
 		h.Write(b)
 	}
-	pl.ID = UUID(h.Sum(nil))
+	u, err := FromBytes(h.Bytes()[0:16])
+	if err != nil {
+		panic(err)
+	}
+	pl.ID = u
 }
 
 // TreeNode is one node in the tree
@@ -119,7 +73,7 @@ type TreeNode struct {
 	// The peerID is the ID of a server / node, FOR THIS PROTOCOL
 	// a server can have many peerId during one protocol instance
 	PeerId string
-	NodeId *Identity
+	NodeId *network.Identity
 	// parent *TreeNode `protobuf:"-"`would be ideal because if you serialize
 	// this with protobuf, it makes a very big message because of the
 	// recursion in the parent's parent etc. but not implemented for now in
@@ -129,7 +83,7 @@ type TreeNode struct {
 }
 
 func (t *TreeNode) Id() UUID {
-	buf := NewHashFunc()
+	var buf bytes.Buffer
 	if t.Parent != "" {
 		buf.Write([]byte(t.Parent))
 	}
@@ -137,7 +91,8 @@ func (t *TreeNode) Id() UUID {
 	for i := range t.Children {
 		buf.Write([]byte(t.Children[i].PeerId))
 	}
-	return UUID(buf.Sum(nil))
+	u := NewV5(NamespaceURL, buf.String())
+	return u
 }
 
 // Check if it can communicate with parent or children
@@ -158,7 +113,7 @@ func (t *TreeNode) AddChild(c *TreeNode) {
 	t.Children = append(t.Children, c)
 }
 
-func NewTreeNode(name string, ni *Identity) *TreeNode {
+func NewTreeNode(name string, ni *network.Identity) *TreeNode {
 	return &TreeNode{
 		PeerId:   name,
 		NodeId:   ni,
@@ -190,30 +145,16 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	}
 }
 
-// IdentityToml is the struct that can be marshalled into a toml file
-type IdentityToml struct {
-	Public    string
-	Addresses []string
-}
-
 // IdentityListToml is the struct can can embbed IdentityToml to be written in a
 // toml file
 type IdentityListToml struct {
 	ID   UUID
-	List []*IdentityToml
+	List []*network.IdentityToml
 }
 
-func (id *Identity) Toml(suite abstract.Suite) *IdentityToml {
-	var buf bytes.Buffer
-	cliutils.WritePub64(suite, &buf, id.Public)
-	return &IdentityToml{
-		Addresses: id.Addresses,
-		Public:    buf.String(),
-	}
-}
-
+// Toml returns the toml-writtable version of this identityList
 func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
-	ids := make([]*IdentityToml, len(id.List))
+	ids := make([]*network.IdentityToml, len(id.List))
 	for i := range id.List {
 		ids[i] = id.List[i].Toml(suite)
 	}
@@ -223,16 +164,9 @@ func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
 	}
 }
 
-func (id *IdentityToml) Identity(suite abstract.Suite) *Identity {
-	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
-	return &Identity{
-		Public:    pub,
-		Addresses: id.Addresses,
-	}
-}
-
+// IdentityList returns the Id list from this toml read struct
 func (id *IdentityListToml) IdentityList(suite abstract.Suite) *IdentityList {
-	ids := make([]*Identity, len(id.List))
+	ids := make([]*network.Identity, len(id.List))
 	for i := range id.List {
 		ids[i] = id.List[i].Identity(suite)
 	}

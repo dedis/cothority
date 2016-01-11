@@ -9,7 +9,6 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 )
 
 // Some packet and their respective network type
@@ -26,8 +25,8 @@ type PublicPacket struct {
 
 var PublicType Type = 5
 
-// The suite we use
-var suite = edwards.NewAES128SHA256Ed25519(false)
+// The tSuite we use
+var tSuite = Suite
 
 func init() {
 	// Here we registers the packets themself so the decoder can instantiate
@@ -41,11 +40,11 @@ func init() {
 // The test function
 func TestTcpNetwork(t *testing.T) {
 	// Create one client + one server
-	clientHost := NewTcpHost(DefaultConstructors(suite))
-	serverHost := NewTcpHost(DefaultConstructors(suite))
+	clientHost := NewTcpHost()
+	serverHost := NewTcpHost()
 	// Give them keys
-	clientPub := suite.Point().Base()
-	serverPub := suite.Point().Add(suite.Point().Base(), suite.Point().Base())
+	clientPub := tSuite.Point().Base()
+	serverPub := tSuite.Point().Add(tSuite.Point().Base(), tSuite.Point().Base())
 	wg := sync.WaitGroup{}
 	client := NewSimpleClient(clientHost, clientPub, &wg)
 	server := NewSimpleServer(serverHost, serverPub, t, &wg)
@@ -168,7 +167,7 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		s.t.Error("Server received a non-wanted packet\n")
 	}
 	p = (am.Msg).(PublicPacket)
-	comp := suite.Point().Base()
+	comp := tSuite.Point().Base()
 	if !p.Point.Equal(comp) {
 		s.t.Error("point not equally reconstructed")
 	}

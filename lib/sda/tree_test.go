@@ -1,16 +1,18 @@
 package sda_test
 
 import (
-	"crypto/sha256"
+	"bytes"
 	"fmt"
 	"strconv"
 	"testing"
 
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/satori/go.uuid"
 )
 
 var tSuite = ed25519.NewAES128SHA256Ed25519(false)
@@ -27,10 +29,10 @@ func genLocalhostPeerNames(n, p int) []string {
 
 // GenIdentityList generate a IdentityList out of names
 func GenIdentityList(suite abstract.Suite, names []string) *sda.IdentityList {
-	var ids []*sda.Identity
+	var ids []*network.Identity
 	for _, n := range names {
 		kp := cliutils.KeyPair(suite)
-		ids = append(ids, sda.NewIdentity(kp.Public, n))
+		ids = append(ids, network.NewIdentity(kp.Public, []string{n}))
 	}
 	return sda.NewIdentityList(ids)
 }
@@ -42,11 +44,11 @@ func TestTreeId(t *testing.T) {
 	// Generate two example topology
 	root, _ := ExampleGenerateTreeFromIdentityList(idsList)
 	tree := sda.Tree{IdList: idsList, Root: root}
-	h := sda.NewHashFunc()
-	h.Write([]byte(idsList.Id()))
-	h.Write([]byte(root.Id()))
-	genId := h.Sum(nil)
-	if sda.UUID(genId) != tree.Id() {
+	var h bytes.Buffer
+	h.Write(idsList.Id().Bytes())
+	h.Write(root.Id().Bytes())
+	genId := uuid.NewV5(uuid.NamespaceURL, h.String())
+	if !uuid.Equal(genId, tree.Id()) {
 		t.Fatal("Id generated is wrong")
 	}
 }
@@ -89,11 +91,8 @@ func TestIdentityListNew(t *testing.T) {
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.Id() == "" {
+	if pl.Id() == uuid.Nil {
 		t.Fatal("PeerList without ID is not allowed")
-	}
-	if len(pl.Id()) != sha256.Size {
-		t.Fatal("PeerList ID does not seem to be a sha256 hash.")
 	}
 }
 
@@ -112,11 +111,8 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in IdentityList. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.Id() == "" {
+	if decodedList.Id() == uuid.Nil {
 		t.Fatal("PeerList without ID is not allowed")
-	}
-	if len(decodedList.Id()) != sha256.Size {
-		t.Fatal("PeerList ID does not seem to be a sha256 hash.")
 	}
 }
 
