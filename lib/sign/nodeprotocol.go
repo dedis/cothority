@@ -74,7 +74,7 @@ func (sn *Node) ProcessMessages() error {
 					//return coconet.ErrClosed
 					/*}*/
 					dbg.Lvl2(sn.Name(), "temporary error getting message (abort)")
-					return
+					return nil
 				}
 			}
 			switch nm.MsgType {
