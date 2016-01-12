@@ -435,6 +435,8 @@ func (sn *Node) ChildOf(view int, parent string) bool {
 }
 
 // PutDownAll puts the msg down the tree (Sending to children)
+// TODO make it work with []network.ProtocolMessage since casting does not work
+// for array/slices
 func (sn *Node) PutDownAll(ctx context.Context, view int, msg ...network.ProtocolMessage) error {
 	children := sn.Children(view)
 	if children == nil {
@@ -464,8 +466,10 @@ func (sn *Node) PutDown(ctx context.Context, view int, name string, msg network.
 	} else if !v.ParentOf(name) {
 		fmt.Errorf("PutDown %s is not a children for view %d", name, view)
 	}
+	sn.connsLock.Lock()
 	// if we have a connection ready for this child
 	c, ok := sn.Conns[name]
+	sn.connsLock.Unlock()
 	if !ok {
 		return fmt.Errorf("No connection to %s", name)
 	}
@@ -477,10 +481,16 @@ func (sn *Node) PutDown(ctx context.Context, view int, name string, msg network.
 func (sn *Node) PutUp(ctx context.Context, view int, msg network.ProtocolMessage) error {
 	var c network.Conn
 	var ok bool
+	var err error
+	sn.connsLock.Lock()
 	if node := sn.Parent(view); node == nil {
-		return fmt.Errorf("PutUp Got no parent for this view %d", view)
+		err = fmt.Errorf("PutUp Got no parent for this view %d", view)
 	} else if c, ok = sn.Conns[node.Name()]; !ok {
-		return fmt.Errorf("PutUp got no connection to parent %s in view %d", node.Name(), view)
+		err = fmt.Errorf("PutUp got no connection to parent %s in view %d", node.Name(), view)
+	}
+	sn.connsLock.Unlock()
+	if err != nil {
+		return err
 	}
 	return c.Send(ctx, msg)
 }
@@ -488,8 +498,14 @@ func (sn *Node) PutUp(ctx context.Context, view int, msg network.ProtocolMessage
 func (sn *Node) PutTo(ctx context.Context, name string, msg network.ProtocolMessage) error {
 	var c network.Conn
 	var ok bool
+	var err error
+	sn.connsLock.Unlock()
 	if c, ok = sn.Conns[name]; !ok {
-		return fmt.Errorf("PutTo given unknown peer name %s", name)
+		err = fmt.Errorf("PutTo given unknown peer name %s", name)
+	}
+	sn.connsLock.Unlock()
+	if err != nil {
+		return err
 	}
 	return c.Send(ctx, msg)
 }
