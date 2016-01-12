@@ -117,17 +117,26 @@ func NewTreeFromMarshal(buf []byte, il *IdentityList) (*Tree, error) {
 	return pm.(TreeMarshal).MakeTree(il)
 }
 
-// Marshal creates a simple binary-representation of the tree containing only
-// the ids of the elements. Use NewTreeFromMarshal to get back the original
-// tree
-func (t *Tree) Marshal() ([]byte, error) {
+// MakeTreeMarshal creates a replacement-tree that is safe to send: no
+// parent (creates loops), only sends ids (not send the identitylist again)
+func (t *Tree) MakeTreeMarshal() *TreeMarshal {
+	if t.IdList == nil {
+		return &TreeMarshal{}
+	}
 	treeM := &TreeMarshal{
 		Node:     t.Id,
 		Identity: t.IdList.Id,
 	}
 	treeM.Children = append(treeM.Children, TreeMarshalCopyTree(t.Root))
 	dbg.Lvlf4("TreeMarshal is %+v", treeM)
-	buf, err := network.MarshalRegisteredType(treeM)
+	return treeM
+}
+
+// Marshal creates a simple binary-representation of the tree containing only
+// the ids of the elements. Use NewTreeFromMarshal to get back the original
+// tree
+func (t *Tree) Marshal() ([]byte, error) {
+	buf, err := network.MarshalRegisteredType(t.MakeTreeMarshal())
 	return buf, err
 }
 

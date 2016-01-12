@@ -195,7 +195,7 @@ func TestTreePropagation(t *testing.T) {
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.Tree).Id != uuid.Nil {
+	if msg.Msg.(sda.TreeMarshal).Identity != uuid.Nil {
 		t.Fatal("List should be empty")
 	}
 
@@ -209,26 +209,24 @@ func TestTreePropagation(t *testing.T) {
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
-	if msg.Msg.(sda.Tree).Id != tree.Id {
+	if msg.Msg.(sda.TreeMarshal).Node != tree.Id {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
-	/*
-		// And test whether it gets stored correctly
-		go h1.ProcessMessages()
-		err = h1.SendTo(h2.Identity, &sda.RequestIdentityList{il1.Id})
-		if err != nil {
-			t.Fatal("Couldn't send message to h2:", err)
-		}
-		time.Sleep(time.Second)
-		list, ok := h1.GetIdentityList(il1.Id)
-		if !ok {
-			t.Fatal("List-id not found")
-		}
-		if list.Id != il1.Id {
-			t.Fatal("IDs do not match")
-		}
-	*/
+	// And test whether it gets stored correctly
+	go h1.ProcessMessages()
+	err = h1.SendTo(h2.Identity, &sda.RequestTree{tree.Id})
+	if err != nil {
+		t.Fatal("Couldn't send message to h2:", err)
+	}
+	time.Sleep(time.Second)
+	tree2, ok := h1.GetTree(tree.Id)
+	if !ok {
+		t.Fatal("List-id not found")
+	}
+	if !tree.Equal(tree2) {
+		t.Fatal("Trees do not match")
+	}
 }
 
 // Test instantiation of ProtocolInstances

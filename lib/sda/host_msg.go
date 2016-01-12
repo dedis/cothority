@@ -22,7 +22,7 @@ const (
 	SendIdentityListMessage
 	IdentityListUnknownMessage
 	SendIdentityMessage = IdentityListType
-	SendTreeMessage     = TreeType
+	SendTreeMessage     = TreeMarshalType
 )
 
 // ProtocolInfo is to be embedded in every message that is made for a

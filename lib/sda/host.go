@@ -84,7 +84,7 @@ func NewHost(id *Identity, pkey abstract.Secret, host network.Host) *Host {
 	return n
 }
 
-// Start listening for messages coming from parent(up)
+// Listen starts listening for messages coming from parent(up)
 // each time a connection request is made, we receive first its identity then
 // we handle the message using HandleConn
 // NOTE Listen will try each address in the Host identity until one works ;)
@@ -227,7 +227,7 @@ func (n *Host) Receive() MessageInfo {
 	return msgInfo
 }
 
-// ProcessMessage checks if it is one of the messages for us or dispatch it
+// ProcessMessages checks if it is one of the messages for us or dispatch it
 // to the corresponding instance.
 // Our messages are:
 // * SDAMessage - used to communicate between the Hosts
@@ -247,11 +247,27 @@ func (n *Host) ProcessMessages() {
 			tid := msgInfo.Data.Msg.(RequestTree).TreeID
 			tree, ok := n.trees[tid]
 			if ok {
-				err = n.SendTo(msgInfo.Id, tree)
+				err = n.SendTo(msgInfo.Id, tree.MakeTreeMarshal())
 			} else {
-				err = n.SendTo(msgInfo.Id, &Tree{})
+				err = n.SendTo(msgInfo.Id, (&Tree{}).MakeTreeMarshal())
 			}
 		case SendTreeMessage:
+			tm := msgInfo.Data.Msg.(TreeMarshal)
+			if tm.Node == uuid.Nil {
+				dbg.Error("Received an empty Tree")
+				continue
+			}
+			il, ok := n.GetIdentityList(tm.Identity)
+			if !ok {
+				dbg.Error("IdentityList-id doesn't exist")
+				continue
+			}
+			tree, err := tm.MakeTree(il)
+			if err != nil {
+				dbg.Error("Couldn't create tree:", err)
+				continue
+			}
+			n.AddTree(tree)
 		case RequestIdentityListMessage:
 			id := msgInfo.Data.Msg.(RequestIdentityList).IdentityListID
 			il, ok := n.identityLists[id]
@@ -295,6 +311,12 @@ func (n *Host) AddTree(t *Tree) {
 func (n *Host) GetIdentityList(id uuid.UUID) (*IdentityList, bool) {
 	il, ok := n.identityLists[id]
 	return il, ok
+}
+
+// GetTree returns the TreeList
+func (n *Host) GetTree(id uuid.UUID) (*Tree, bool) {
+	t, ok := n.trees[id]
+	return t, ok
 }
 
 var timeOut = 30 * time.Second
