@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
@@ -23,16 +24,16 @@ func TestTreeId(t *testing.T) {
 	// Generate two example topology
 	tree, _ := GenerateTreeFromIdentityList(idsList)
 	/*
-		// This re-calculates the tree-id - but in the case of UUID this is not
-		// possible, as UUID is based on time
+			TODO: re-calculate the uuid
+		root, _ := ExampleGenerateTreeFromIdentityList(idsList)
 		tree := sda.Tree{IdList: idsList, Root: root}
-		h := sda.NewHashFunc()
-		h.Write([]byte(idsList.Id))
-		h.Write([]byte(root.Id))
-		genId := h.Sum(nil)
-		if sda.UUID(genId) != tree.Id {
-			t.Fatal("Id generated is wrong")
-		}
+		var h bytes.Buffer
+		h.Write(idsList.Id().Bytes())
+		h.Write(root.Id().Bytes())
+		genId := uuid.NewV5(uuid.NamespaceURL, h.String())
+		if !uuid.Equal(genId, tree.Id()) {
+				t.Fatal("Id generated is wrong")
+			}
 	*/
 	if len(tree.Id.String()) != 36 {
 		t.Fatal("Id generated is wrong")

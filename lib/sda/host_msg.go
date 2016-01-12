@@ -25,7 +25,7 @@ const (
 	SendTreeMessage     = TreeMarshalType
 )
 
-// ProtocolInfo is to be embedded in every message that is made for a
+// SDAData is to be embedded in every message that is made for a
 // ProtocolInstance
 type SDAData struct {
 	// The ID of the protocol

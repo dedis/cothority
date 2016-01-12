@@ -70,20 +70,22 @@ func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 
 // ApplicationMessage is the container for any ProtocolMessage
 type ApplicationMessage struct {
-	// From field can be set by the receivinf connection itself, no need to
-	// acutally transmit the value
-	//From string
+	// The identity of the remote peer we are talking to.
+	// Basically, this means that when you open a new connection to someone, and
+	// / or listens to incoming connections, the network library will already
+	// make some exchange between the two communicants so each knows the
+	// identity of the others.
+	Identity Identity
+	// the origin of the message
+	From string
 	// What kind of msg do we have
 	MsgType Type
 	// The underlying message
 	Msg ProtocolMessage
-
 	// which constructors are used
 	Constructors protobuf.Constructors
 	// possible error during unmarshaling so that upper layer can know it
 	err error
-	// Same for the origin of the message
-	From string
 }
 
 // Error returns the error that has been encountered during the unmarshaling of
@@ -107,6 +109,9 @@ var globalOrder = binary.LittleEndian
 // DefaultType, it is generally because an error happenned, then you can call
 // Error() on it.
 var DefaultType Type = 0
+
+// Identity Type registered. IdentityType is second.
+const IdentityType = 1
 
 // This is the default empty message that is returned in case something went
 // wrong.
@@ -193,7 +198,7 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 
 // ConstructFrom takes a ProtocolMessage and then construct a
 // ApplicationMessage from it. Error if the type is unknown
-func NewApplicationMessage(obj ProtocolMessage) (*ApplicationMessage, error) {
+func newApplicationMessage(obj ProtocolMessage) (*ApplicationMessage, error) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() != reflect.Ptr {
 		return nil, fmt.Errorf("Send takes a pointer to the message, not a copy...")

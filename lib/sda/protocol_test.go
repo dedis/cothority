@@ -9,19 +9,19 @@ import (
 // Test simple protocol-implementation
 // - registration
 func TestRegistration(t *testing.T) {
-	if ProtocolExists("test") {
+	if ProtocolExists(ProtocolTestUUID) {
 		t.Fatal("Test should not exist yet")
 	}
-	ProtocolRegister("test", NewProtocolTest)
-	if !ProtocolExists("test") {
+	ProtocolRegister(ProtocolTestUUID, NewProtocolTest)
+	if !ProtocolExists(ProtocolTestUUID) {
 		t.Fatal("Test should exist now")
 	}
 }
 
 // Test instantiation of the protocol
 func TestInstantiation(t *testing.T) {
-	ProtocolRegister("test", NewProtocolTest)
-	p, err := ProtocolInstantiate("test", nil, nil)
+	ProtocolRegister(ProtocolTestUUID, NewProtocolTest)
+	p, err := ProtocolInstantiate(ProtocolTestUUID, nil, nil)
 	if err != nil {
 		t.Fatal("Couldn't instantiate test-protocol")
 	}
@@ -29,6 +29,8 @@ func TestInstantiation(t *testing.T) {
 		t.Fatal("Dispatch-method didn't return nil")
 	}
 }
+
+var ProtocolTestUUID = uuid.NewV4()
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.

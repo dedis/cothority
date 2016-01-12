@@ -3,17 +3,13 @@ package sda
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/satori/go.uuid"
-	"hash"
-	"strings"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -30,56 +26,7 @@ func init() {
 	network.RegisterProtocolType(TreeType, Tree{})
 	network.RegisterProtocolType(TreeMarshalType, TreeMarshal{})
 	network.RegisterProtocolType(TreeNodeType, TreeNode{})
-	network.RegisterProtocolType(IdentityType, Identity{})
-	network.RegisterProtocolType(IdentityListType, Identity{})
-}
-
-// XXX TMp solution of hashing identifier so we have a UUID
-var NewHashFunc func() hash.Hash = sha256.New
-
-// An Identity is used to represent a SERVER / PEER in the whole internet
-// its main identity is its public key, then we get some means, some address on
-// where to contact him.
-type Identity struct {
-	// This is the public key of that identity
-	Public abstract.Point
-	// The UUID corresponding to that public key
-	Id uuid.UUID
-	// A slice of addresses of where that Id might be found
-	Addresses []string
-	// used to return the next available address
-	iter int
-}
-
-// First returns the first address available
-func (id *Identity) First() string {
-	if len(id.Addresses) > 0 {
-		return id.Addresses[0]
-	}
-	return ""
-}
-
-// Next returns the next address like an iterator
-func (id *Identity) Next() string {
-	if len(id.Addresses) < id.iter+1 {
-		return ""
-	}
-	addr := id.Addresses[id.iter]
-	id.iter++
-	return addr
-
-}
-
-// NewIdentity creates a new identity based on a public key and with a slice
-// of IP-addresses where to find that identity. The Id is based on a
-// version5-UUID which can include a URL that is based on it's public key.
-func NewIdentity(public abstract.Point, addresses ...string) *Identity {
-	url := "https://dedis.epfl.ch/id/" + public.String()
-	return &Identity{
-		Public:    public,
-		Addresses: addresses,
-		Id:        uuid.NewV5(uuid.NamespaceURL, url),
-	}
+	network.RegisterProtocolType(IdentityListType, IdentityList{})
 }
 
 // Tree is a topology to be used by any network layer/host layer
@@ -212,12 +159,12 @@ type TreeMarshal struct {
 // therefor some protocols)
 type IdentityList struct {
 	Id   uuid.UUID
-	List []*Identity
+	List []*network.Identity
 }
 
 // NewIdentityList creates a new identity from a list of identities. It also
 // adds a UUID which is randomly chosen.
-func NewIdentityList(ids []*Identity) *IdentityList {
+func NewIdentityList(ids []*network.Identity) *IdentityList {
 	url := "https://dedis.epfl.ch/identitylist/"
 	for _, i := range ids {
 		url += i.Id.String()
@@ -229,7 +176,7 @@ func NewIdentityList(ids []*Identity) *IdentityList {
 }
 
 // Search looks for a corresponding UUID and returns that identity
-func (il *IdentityList) Search(uuid uuid.UUID) *Identity {
+func (il *IdentityList) Search(uuid uuid.UUID) *network.Identity {
 	for _, i := range il.List {
 		if i.Id == uuid {
 			return i
@@ -244,13 +191,13 @@ type TreeNode struct {
 	Id uuid.UUID
 	// The NodeID points to the corresponding host. One given host
 	// can be used more than once in a tree.
-	NodeId   *Identity
+	NodeId   *network.Identity
 	Parent   *TreeNode
 	Children []*TreeNode
 }
 
 // Check if it can communicate with parent or children
-func (t *TreeNode) IsConnectedTo(id *Identity) bool {
+func (t *TreeNode) IsConnectedTo(id *network.Identity) bool {
 	if t.Parent != nil && t.Parent.NodeId == id {
 		return true
 	}
@@ -301,7 +248,7 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 }
 
 // NewTreeNode creates a new TreeNode with the proper Id
-func NewTreeNode(ni *Identity) *TreeNode {
+func NewTreeNode(ni *network.Identity) *TreeNode {
 	tn := &TreeNode{
 		NodeId:   ni,
 		Parent:   nil,
@@ -340,30 +287,16 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	}
 }
 
-// IdentityToml is the struct that can be marshalled into a toml file
-type IdentityToml struct {
-	Public    string
-	Addresses []string
-}
-
 // IdentityListToml is the struct can can embbed IdentityToml to be written in a
 // toml file
 type IdentityListToml struct {
 	Id   uuid.UUID
-	List []*IdentityToml
+	List []*network.IdentityToml
 }
 
-func (id *Identity) Toml(suite abstract.Suite) *IdentityToml {
-	var buf bytes.Buffer
-	cliutils.WritePub64(suite, &buf, id.Public)
-	return &IdentityToml{
-		Addresses: id.Addresses,
-		Public:    buf.String(),
-	}
-}
-
+// Toml returns the toml-writtable version of this identityList
 func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
-	ids := make([]*IdentityToml, len(id.List))
+	ids := make([]*network.IdentityToml, len(id.List))
 	for i := range id.List {
 		ids[i] = id.List[i].Toml(suite)
 	}
@@ -373,16 +306,9 @@ func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
 	}
 }
 
-func (id *IdentityToml) Identity(suite abstract.Suite) *Identity {
-	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
-	return &Identity{
-		Public:    pub,
-		Addresses: id.Addresses,
-	}
-}
-
+// IdentityList returns the Id list from this toml read struct
 func (id *IdentityListToml) IdentityList(suite abstract.Suite) *IdentityList {
-	ids := make([]*Identity, len(id.List))
+	ids := make([]*network.Identity, len(id.List))
 	for i := range id.List {
 		ids[i] = id.List[i].Identity(suite)
 	}

@@ -25,7 +25,9 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
+	"github.com/satori/go.uuid"
 )
 
 // Network part //
@@ -82,15 +84,11 @@ type TcpHost struct {
 
 // NewTcpHost returns a Fresh TCP Host
 // If constructors == nil, it will take an empty one.
-func NewTcpHost(constructors protobuf.Constructors) *TcpHost {
-	cons := emptyConstructors
-	if constructors != nil {
-		cons = constructors
-	}
+func NewTcpHost() *TcpHost {
 	return &TcpHost{
 		peers:        make(map[string]Conn),
 		quit:         make(chan bool),
-		constructors: cons,
+		constructors: DefaultConstructors(Suite),
 	}
 }
 
@@ -98,8 +96,18 @@ func NewTcpHost(constructors protobuf.Constructors) *TcpHost {
 // and the remote host named "name". This is a TcpConn.
 // If anything went wrong, Conn will be nil.
 func (t *TcpHost) Open(name string) (Conn, error) {
-	var conn net.Conn
+	c, err := t.openTcpConn(name)
+	if err != nil {
+		return nil, err
+	}
+	t.peers[name] = c
+	return c, nil
+}
+
+// OpenTcpCOnn is private method that opens a TcpConn to the given name
+func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 	var err error
+	var conn net.Conn
 	for i := 0; i < maxRetry; i++ {
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
@@ -118,13 +126,23 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 		Conn:     conn,
 		host:     t,
 	}
-	t.peers[name] = &c
-	return &c, nil
+
+	return &c, err
 }
 
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
 func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
+	receiver := func(tc *TcpConn) {
+		go fn(tc)
+	}
+	return t.listen(addr, receiver)
+}
+
+// listen is the private function that takes a function taht takes a TcpConn.
+// That way we can control what to do of the TcpConn before returning it to the
+// function given by the user. Used by SecureTcpHost
+func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
@@ -147,8 +165,9 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 			host:     t,
 		}
 		t.peers[conn.RemoteAddr().String()] = &c
-		go fn(&c)
+		fn(&c)
 	}
+	return nil
 }
 
 // Close will close every connection this host has opened
@@ -257,7 +276,7 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 // Then send the message through the Gob encoder
 // Returns an error if anything was wrong
 func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
-	am, err := NewApplicationMessage(obj)
+	am, err := newApplicationMessage(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
@@ -286,4 +305,230 @@ func (c *TcpConn) Close() error {
 		return handleError(err)
 	}
 	return nil
+}
+
+// An Identity is used to represent a SERVER / PEER in the whole internet
+// its main identity is its public key, then we get some means, some address on
+// where to contact him.
+type Identity struct {
+	// This is the public key of that identity
+	Public abstract.Point
+	// The UUID corresponding to that public key
+	Id uuid.UUID
+	// A slice of addresses of where that Id might be found
+	Addresses []string
+	// used to return the next available address
+	iter int
+}
+
+// First returns the first address available
+func (id *Identity) First() string {
+	if len(id.Addresses) > 0 {
+		return id.Addresses[0]
+	}
+	return ""
+}
+
+// Next returns the next address like an iterator
+func (id *Identity) Next() string {
+	if len(id.Addresses) < id.iter+1 {
+		return ""
+	}
+	addr := id.Addresses[id.iter]
+	id.iter++
+	return addr
+
+}
+
+// NewIdentity creates a new identity based on a public key and with a slice
+// of IP-addresses where to find that identity. The Id is based on a
+// version5-UUID which can include a URL that is based on it's public key.
+func NewIdentity(public abstract.Point, addresses ...string) *Identity {
+	url := "https://dedis.epfl.ch/id/" + public.String()
+	return &Identity{
+		Public:    public,
+		Addresses: addresses,
+		Id:        uuid.NewV5(uuid.NamespaceURL, url),
+	}
+}
+
+// SecureHost is the analog of Host but with secure communication
+// It is tied to an identity can only open connection with identities
+type SecureHost interface {
+	Close() error
+	Listen(func(SecureConn)) error
+	Open(id Identity) (SecureConn, error)
+}
+
+// SecureConn is the analog of Conn but for secure comminucation
+type SecureConn interface {
+	Conn
+	Identity() Identity
+}
+
+// SecureTcpHost is a TcpHost but with the additional property that it handles
+// Identity. You
+type SecureTcpHost struct {
+	*TcpHost
+	// Identity of this host
+	Identity Identity
+	// Private key tied to this identity
+	private abstract.Secret
+	// mapping from the identity to the names used in TcpHost
+	// In TcpHost the names then maps to the actual connection
+	IdToAddr map[uuid.UUID]string
+	// workingaddress is a private field used mostly for testing
+	// so we know which address this host is listening on
+	workingAddress string
+}
+
+// NewSecureTcpHost returns a Secure Tcp Host
+func NewSecureTcpHost(private abstract.Secret, id Identity) *SecureTcpHost {
+	return &SecureTcpHost{
+		private:        private,
+		Identity:       id,
+		IdToAddr:       make(map[uuid.UUID]string),
+		TcpHost:        NewTcpHost(),
+		workingAddress: id.First(),
+	}
+}
+
+// Listen will try each addresses it the host identity.
+// Returns an error if it can listen on any address
+func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
+	receiver := func(c *TcpConn) {
+		stc := &SecureTcpConn{
+			TcpConn:       c,
+			SecureTcpHost: st,
+		}
+		// if negociation fails we drop the connection
+		if err := stc.negotiateListen(); err != nil {
+			fmt.Println("Negociation failed")
+			stc.Close()
+			return
+		}
+		go fn(stc)
+	}
+	var addr string
+	for _, addr = range st.Identity.Addresses {
+		st.workingAddress = addr
+		if err := st.TcpHost.listen(addr, receiver); err != nil {
+			// THe listening is over
+			if err == ErrClosed || err == ErrEOF {
+				return nil
+			}
+			// else that means this address dont work. lets try another one.
+		}
+	}
+	return fmt.Errorf("No address worked for listening on this host")
+}
+
+// Open will try any address that is in the identity and connect to the first
+// one that works. Then it exchanges the identity to verify.
+func (st *SecureTcpHost) Open(id Identity) (SecureConn, error) {
+	var secure SecureTcpConn
+	var success bool
+	// try all names
+	for _, addr := range id.Addresses {
+		// try to connect with this name
+		c, err := st.TcpHost.openTcpConn(addr)
+		if err != nil {
+			continue
+		}
+		// create the secure connection
+		secure = SecureTcpConn{
+			TcpConn:       c,
+			SecureTcpHost: st,
+			identity:      id,
+		}
+		success = true
+		break
+	}
+	if !success {
+		return nil, fmt.Errorf("Could not connect to any address tied to this identity")
+	}
+	// Exchange and verify Identities
+	return &secure, secure.negotiateOpen(id)
+}
+
+type SecureTcpConn struct {
+	*TcpConn
+	*SecureTcpHost
+	identity Identity
+}
+
+// negotitateListen is made to exchange the identity between the two parties.
+// when a connection request is made during listening
+func (sc *SecureTcpConn) negotiateListen() error {
+	// Send our identity to the remote endpoint
+	if err := sc.TcpConn.Send(context.TODO(), &sc.SecureTcpHost.Identity); err != nil {
+		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
+	}
+	// Receive the other identity
+	nm, err := sc.TcpConn.Receive(context.TODO())
+	if err != nil {
+		return fmt.Errorf("Error while receiving identity during negotiation %s", err)
+	}
+	// Check if it is correct
+	if nm.MsgType != IdentityType {
+		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
+	}
+
+	// Set this ID for this connection
+	id := nm.Msg.(Identity)
+	sc.identity = id
+	return nil
+}
+
+// negotiateOpen is called when Open a connection is called. Plus
+// negotiateListen it also verifiy the identity.
+func (sc *SecureTcpConn) negotiateOpen(id Identity) error {
+	if err := sc.negotiateListen(); err != nil {
+		return err
+	}
+
+	// verify the identity if its the same we are supposed to connect
+	if sc.identity.Id != id.Id {
+		return fmt.Errorf("Identity received during negotiation is wrong. WARNING")
+	}
+
+	return nil
+}
+
+// Receive is analog to Conn.Receive but also set the right Identity in the
+// message
+func (sc *SecureTcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
+	nm, err := sc.TcpConn.Receive(ctx)
+	nm.Identity = sc.identity
+	return nm, err
+}
+
+func (sc *SecureTcpConn) Identity() Identity {
+	return sc.identity
+}
+
+func init() {
+	RegisterProtocolType(IdentityType, Identity{})
+}
+
+// IdentityToml is the struct that can be marshalled into a toml file
+type IdentityToml struct {
+	Public    string
+	Addresses []string
+}
+
+func (id *Identity) Toml(suite abstract.Suite) *IdentityToml {
+	var buf bytes.Buffer
+	cliutils.WritePub64(suite, &buf, id.Public)
+	return &IdentityToml{
+		Addresses: id.Addresses,
+		Public:    buf.String(),
+	}
+}
+func (id *IdentityToml) Identity(suite abstract.Suite) *Identity {
+	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
+	return &Identity{
+		Public:    pub,
+		Addresses: id.Addresses,
+	}
 }
