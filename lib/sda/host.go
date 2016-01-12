@@ -28,7 +28,7 @@ Host is the structure responsible for holding information about the current
 */
 type Host struct {
 	// Our identity
-	Identity *network.Identity
+	Identity *network.CoEntity
 	// the working address is set when the Host will start listen
 	// When a listening adress found in the identity works, workingAddress is
 	// set to that address
@@ -40,7 +40,7 @@ type Host struct {
 	// and the locks
 	networkLock *sync.Mutex
 	// The database of identities this host knows
-	identities map[uuid.UUID]*network.Identity
+	identities map[uuid.UUID]*network.CoEntity
 	// The identityLists used for building the trees
 	identityLists map[uuid.UUID]*IdentityList
 	// all trees known to this Host
@@ -63,7 +63,7 @@ type Host struct {
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(id *network.Identity, pkey abstract.Secret, host network.SecureHost) *Host {
+func NewHost(id *network.CoEntity, pkey abstract.Secret, host network.SecureHost) *Host {
 	n := &Host{
 		Identity:          id,
 		identityToAddress: make(map[uuid.UUID]string),
@@ -71,7 +71,7 @@ func NewHost(id *network.Identity, pkey abstract.Secret, host network.SecureHost
 		networkLock:       &sync.Mutex{},
 		identityLock:      &sync.Mutex{},
 		connections:       make(map[string]network.SecureConn),
-		identities:        make(map[uuid.UUID]*network.Identity),
+		identities:        make(map[uuid.UUID]*network.CoEntity),
 		trees:             make(map[uuid.UUID]*Tree),
 		identityLists:     make(map[uuid.UUID]*IdentityList),
 		host:              host,
@@ -105,7 +105,7 @@ func (n *Host) Listen() {
 }
 
 // Connect takes an identity where to connect to
-func (n *Host) Connect(id *network.Identity) (network.SecureConn, error) {
+func (n *Host) Connect(id *network.CoEntity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
@@ -135,8 +135,7 @@ func (n *Host) Close() error {
 
 // SendToRaw sends to an Identity by trying the different addresses tied
 // to this id
-// TODO: make this private - but used in test
-func (n *Host) SendToRaw(id *network.Identity, msg network.ProtocolMessage) error {
+func (n *Host) SendToRaw(id *network.CoEntity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
@@ -164,7 +163,7 @@ func (n *Host) SendToRaw(id *network.Identity, msg network.ProtocolMessage) erro
 
 // SendMsgTo wraps the message to send in an SDAMessage and sends it to the
 // appropriate identity
-func (n *Host) SendMsgTo(id *network.Identity, msg network.ProtocolMessage) error {
+func (n *Host) SendMsgTo(id *network.CoEntity, msg network.ProtocolMessage) error {
 	sdaMsg := &SDAData{
 		ProtoID:    uuid.Nil,
 		InstanceID: uuid.Nil,
@@ -332,7 +331,7 @@ func (n *Host) handleConn(c network.SecureConn) {
 // Dispatch SDA message looks if we have all the info to rightly dispatch the
 // packet such as the protocol id and the topology id and the protocol instance
 // id
-func (n *Host) processSDAMessage(id *network.Identity, am *network.ApplicationMessage) error {
+func (n *Host) processSDAMessage(id *network.CoEntity, am *network.ApplicationMessage) error {
 	sda := am.Msg.(SDAData)
 	t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
@@ -379,6 +378,6 @@ func (n *Host) Suite() abstract.Suite {
 // MessageInfo is used to communicate the identity tied to a message when we
 // receive messages
 type MessageInfo struct {
-	Id   *network.Identity
+	Id   *network.CoEntity
 	Data network.ApplicationMessage
 }

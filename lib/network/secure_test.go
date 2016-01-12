@@ -62,9 +62,9 @@ func TestSecureSimple(t *testing.T) {
 	sHost2.Close()
 }
 
-func genIdentity(name string) (abstract.Secret, Identity) {
+func genIdentity(name string) (abstract.Secret, CoEntity) {
 	kp := cliutils.KeyPair(tSuite)
-	return kp.Secret, Identity{
+	return kp.Secret, CoEntity{
 		Public:    kp.Public,
 		Addresses: []string{name},
 	}

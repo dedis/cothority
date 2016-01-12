@@ -159,12 +159,12 @@ type TreeMarshal struct {
 // therefor some protocols)
 type IdentityList struct {
 	Id   uuid.UUID
-	List []*network.Identity
+	List []*network.CoEntity
 }
 
 // NewIdentityList creates a new identity from a list of identities. It also
 // adds a UUID which is randomly chosen.
-func NewIdentityList(ids []*network.Identity) *IdentityList {
+func NewIdentityList(ids []*network.CoEntity) *IdentityList {
 	url := "https://dedis.epfl.ch/identitylist/"
 	for _, i := range ids {
 		url += i.Id.String()
@@ -176,7 +176,7 @@ func NewIdentityList(ids []*network.Identity) *IdentityList {
 }
 
 // Search looks for a corresponding UUID and returns that identity
-func (il *IdentityList) Search(uuid uuid.UUID) *network.Identity {
+func (il *IdentityList) Search(uuid uuid.UUID) *network.CoEntity {
 	for _, i := range il.List {
 		if i.Id == uuid {
 			return i
@@ -191,13 +191,13 @@ type TreeNode struct {
 	Id uuid.UUID
 	// The NodeID points to the corresponding host. One given host
 	// can be used more than once in a tree.
-	NodeId   *network.Identity
+	NodeId   *network.CoEntity
 	Parent   *TreeNode
 	Children []*TreeNode
 }
 
 // Check if it can communicate with parent or children
-func (t *TreeNode) IsConnectedTo(id *network.Identity) bool {
+func (t *TreeNode) IsConnectedTo(id *network.CoEntity) bool {
 	if t.Parent != nil && t.Parent.NodeId == id {
 		return true
 	}
@@ -258,7 +258,7 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 }
 
 // NewTreeNode creates a new TreeNode with the proper Id
-func NewTreeNode(ni *network.Identity) *TreeNode {
+func NewTreeNode(ni *network.CoEntity) *TreeNode {
 	tn := &TreeNode{
 		NodeId:   ni,
 		Parent:   nil,
@@ -318,7 +318,7 @@ func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
 
 // IdentityList returns the Id list from this toml read struct
 func (id *IdentityListToml) IdentityList(suite abstract.Suite) *IdentityList {
-	ids := make([]*network.Identity, len(id.List))
+	ids := make([]*network.CoEntity, len(id.List))
 	for i := range id.List {
 		ids[i] = id.List[i].Identity(suite)
 	}

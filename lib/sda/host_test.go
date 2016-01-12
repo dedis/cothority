@@ -267,7 +267,7 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 
 func newHost(address string, s abstract.Suite) *sda.Host {
 	priv, pub := privPub(s)
-	id := &network.Identity{Public: pub, Addresses: []string{address}}
+	id := &network.CoEntity{Public: pub, Addresses: []string{address}}
 	return sda.NewHost(id, priv, network.NewSecureTcpHost(priv, *id))
 }
 

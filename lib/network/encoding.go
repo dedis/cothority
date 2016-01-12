@@ -75,7 +75,7 @@ type ApplicationMessage struct {
 	// / or listens to incoming connections, the network library will already
 	// make some exchange between the two communicants so each knows the
 	// identity of the others.
-	Identity Identity
+	Identity CoEntity
 	// the origin of the message
 	From string
 	// What kind of msg do we have

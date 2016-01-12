@@ -140,7 +140,7 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 	return t.listen(addr, receiver)
 }
 
-// listen is the private function that takes a function taht takes a TcpConn.
+// listen is the private function that takes a function that takes a TcpConn.
 // That way we can control what to do of the TcpConn before returning it to the
 // function given by the user. Used by SecureTcpHost
 func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
@@ -308,10 +308,10 @@ func (c *TcpConn) Close() error {
 	return nil
 }
 
-// An Identity is used to represent a SERVER / PEER in the whole internet
-// its main identity is its public key, then we get some means, some address on
-// where to contact him.
-type Identity struct {
+// CoEntity is used to represent a Conode in the whole internet.
+// It's identity is based on it's public key, and there can be one or more
+// addresses to contact it.
+type CoEntity struct {
 	// This is the public key of that identity
 	Public abstract.Point
 	// The UUID corresponding to that public key
@@ -323,7 +323,7 @@ type Identity struct {
 }
 
 // First returns the first address available
-func (id *Identity) First() string {
+func (id *CoEntity) First() string {
 	if len(id.Addresses) > 0 {
 		return id.Addresses[0]
 	}
@@ -332,7 +332,7 @@ func (id *Identity) First() string {
 
 // Next returns the next address like an iterator,
 // starting at the beginning if nothing worked
-func (id *Identity) Next() string {
+func (id *CoEntity) Next() string {
 	addr := id.Addresses[id.iter]
 	id.iter = (id.iter + 1) % len(id.Addresses)
 	return addr
@@ -342,9 +342,9 @@ func (id *Identity) Next() string {
 // NewIdentity creates a new identity based on a public key and with a slice
 // of IP-addresses where to find that identity. The Id is based on a
 // version5-UUID which can include a URL that is based on it's public key.
-func NewIdentity(public abstract.Point, addresses ...string) *Identity {
+func NewIdentity(public abstract.Point, addresses ...string) *CoEntity {
 	url := "https://dedis.epfl.ch/id/" + public.String()
-	return &Identity{
+	return &CoEntity{
 		Public:    public,
 		Addresses: addresses,
 		Id:        uuid.NewV5(uuid.NamespaceURL, url),
@@ -356,13 +356,13 @@ func NewIdentity(public abstract.Point, addresses ...string) *Identity {
 type SecureHost interface {
 	Close() error
 	Listen(func(SecureConn)) error
-	Open(id Identity) (SecureConn, error)
+	Open(id CoEntity) (SecureConn, error)
 }
 
 // SecureConn is the analog of Conn but for secure comminucation
 type SecureConn interface {
 	Conn
-	Identity() Identity
+	Identity() CoEntity
 }
 
 // SecureTcpHost is a TcpHost but with the additional property that it handles
@@ -370,7 +370,7 @@ type SecureConn interface {
 type SecureTcpHost struct {
 	*TcpHost
 	// Identity of this host
-	Identity Identity
+	Identity CoEntity
 	// Private key tied to this identity
 	private abstract.Secret
 	// mapping from the identity to the names used in TcpHost
@@ -382,7 +382,7 @@ type SecureTcpHost struct {
 }
 
 // NewSecureTcpHost returns a Secure Tcp Host
-func NewSecureTcpHost(private abstract.Secret, id Identity) *SecureTcpHost {
+func NewSecureTcpHost(private abstract.Secret, id CoEntity) *SecureTcpHost {
 	return &SecureTcpHost{
 		private:        private,
 		Identity:       id,
@@ -428,7 +428,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 
 // Open will try any address that is in the identity and connect to the first
 // one that works. Then it exchanges the identity to verify.
-func (st *SecureTcpHost) Open(id Identity) (SecureConn, error) {
+func (st *SecureTcpHost) Open(id CoEntity) (SecureConn, error) {
 	var secure SecureTcpConn
 	var success bool
 	// try all names
@@ -457,7 +457,7 @@ func (st *SecureTcpHost) Open(id Identity) (SecureConn, error) {
 type SecureTcpConn struct {
 	*TcpConn
 	*SecureTcpHost
-	identity Identity
+	identity CoEntity
 }
 
 // negotitateListen is made to exchange the identity between the two parties.
@@ -478,14 +478,14 @@ func (sc *SecureTcpConn) negotiateListen() error {
 	}
 
 	// Set this ID for this connection
-	id := nm.Msg.(Identity)
+	id := nm.Msg.(CoEntity)
 	sc.identity = id
 	return nil
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
 // negotiateListen it also verifiy the identity.
-func (sc *SecureTcpConn) negotiateOpen(id Identity) error {
+func (sc *SecureTcpConn) negotiateOpen(id CoEntity) error {
 	if err := sc.negotiateListen(); err != nil {
 		return err
 	}
@@ -506,12 +506,12 @@ func (sc *SecureTcpConn) Receive(ctx context.Context) (ApplicationMessage, error
 	return nm, err
 }
 
-func (sc *SecureTcpConn) Identity() Identity {
+func (sc *SecureTcpConn) Identity() CoEntity {
 	return sc.identity
 }
 
 func init() {
-	RegisterProtocolType(IdentityType, Identity{})
+	RegisterProtocolType(IdentityType, CoEntity{})
 }
 
 // IdentityToml is the struct that can be marshalled into a toml file
@@ -520,7 +520,7 @@ type IdentityToml struct {
 	Addresses []string
 }
 
-func (id *Identity) Toml(suite abstract.Suite) *IdentityToml {
+func (id *CoEntity) Toml(suite abstract.Suite) *IdentityToml {
 	var buf bytes.Buffer
 	cliutils.WritePub64(suite, &buf, id.Public)
 	return &IdentityToml{
@@ -528,9 +528,9 @@ func (id *Identity) Toml(suite abstract.Suite) *IdentityToml {
 		Public:    buf.String(),
 	}
 }
-func (id *IdentityToml) Identity(suite abstract.Suite) *Identity {
+func (id *IdentityToml) Identity(suite abstract.Suite) *CoEntity {
 	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
-	return &Identity{
+	return &CoEntity{
 		Public:    pub,
 		Addresses: id.Addresses,
 	}
