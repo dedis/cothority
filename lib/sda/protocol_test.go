@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"github.com/satori/go.uuid"
 	"strconv"
 	"testing"
 )
@@ -34,7 +35,7 @@ func TestInstantiation(t *testing.T) {
 type ProtocolTest struct {
 	*Host
 	*Tree
-	ID string
+	Id uuid.UUID
 }
 
 var currInstanceID int
@@ -42,10 +43,11 @@ var currInstanceID int
 // NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *Host, t *Tree) ProtocolInstance {
 	currInstanceID++
+	url := "http://dedis.epfl.ch/protocol/test/" + strconv.Itoa(currInstanceID)
 	return &ProtocolTest{
 		Host: n,
 		Tree: t,
-		ID:   strconv.Itoa(currInstanceID),
+		Id:   uuid.NewV5(uuid.NamespaceURL, url),
 	}
 }
 
@@ -53,8 +55,4 @@ func NewProtocolTest(n *Host, t *Tree) ProtocolInstance {
 // copied to /dev/null
 func (p ProtocolTest) Dispatch(m *SDAData) error {
 	return nil
-}
-
-func (p *ProtocolTest) Id() UUID {
-	return UUID(p.ID)
 }

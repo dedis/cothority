@@ -1,15 +1,16 @@
 package sda_test
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/satori/go.uuid"
 )
 
 var tSuite = ed25519.NewAES128SHA256Ed25519(false)
@@ -20,36 +21,41 @@ func TestTreeId(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := GenIdentityList(tSuite, names)
 	// Generate two example topology
-	root, _ := GenerateTreeFromIdentityList(idsList)
-	tree := sda.Tree{IdList: idsList, Root: root}
-	h := sda.NewHashFunc()
-	h.Write([]byte(idsList.ID))
-	h.Write([]byte(root.Id()))
-	genId := h.Sum(nil)
-	if sda.UUID(genId) != tree.Id() {
+	tree, _ := GenerateTreeFromIdentityList(idsList)
+	/*
+		// This re-calculates the tree-id - but in the case of UUID this is not
+		// possible, as UUID is based on time
+		tree := sda.Tree{IdList: idsList, Root: root}
+		h := sda.NewHashFunc()
+		h.Write([]byte(idsList.Id))
+		h.Write([]byte(root.Id))
+		genId := h.Sum(nil)
+		if sda.UUID(genId) != tree.Id {
+			t.Fatal("Id generated is wrong")
+		}
+	*/
+	if len(tree.Id.String()) != 36 {
 		t.Fatal("Id generated is wrong")
 	}
 }
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
-
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := GenIdentityList(tSuite, names)
 	// Generate two example topology
-	root, _ := GenerateTreeFromIdentityList(peerList)
+	tree, _ := GenerateTreeFromIdentityList(peerList)
 	// Generate the network
-	if !root.IsConnectedTo("localhost:2001") {
-		t.Fatal("Root should be connection to localhost:2001")
+	if !tree.Root.IsConnectedTo(peerList.List[1]) {
+		t.Fatal("Root should be connected to localhost:2001")
 	}
-
 }
 
-func GenerateTreeFromIdentityList(pl *sda.IdentityList) (*sda.TreeNode, []*sda.TreeNode) {
+func GenerateTreeFromIdentityList(pl *sda.IdentityList) (*sda.Tree, []*sda.TreeNode) {
 	var nodes []*sda.TreeNode
 	var root *sda.TreeNode
 	for i, id := range pl.List {
-		node := sda.NewTreeNode(fmt.Sprintf("%s%d", prefix, 2000+i), id)
+		node := sda.NewTreeNode(id)
 		nodes = append(nodes, node)
 		if i == 0 {
 			root = node
@@ -59,7 +65,7 @@ func GenerateTreeFromIdentityList(pl *sda.IdentityList) (*sda.TreeNode, []*sda.T
 	for i := 1; i < len(nodes); i++ {
 		root.AddChild(nodes[i])
 	}
-	return root, nodes
+	return sda.NewTree(pl, root), nodes
 }
 
 // Test initialisation of new peer-list
@@ -69,10 +75,10 @@ func TestIdentityListNew(t *testing.T) {
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.ID == "" {
+	if pl.Id == uuid.Nil {
 		t.Fatal("PeerList without ID is not allowed")
 	}
-	if len(pl.ID) != 36 {
+	if len(pl.Id.String()) != 36 {
 		t.Fatal("PeerList ID does not seem to be a UUID.")
 	}
 }
@@ -92,10 +98,10 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in IdentityList. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.ID == "" {
+	if decodedList.Id == uuid.Nil {
 		t.Fatal("PeerList without ID is not allowed")
 	}
-	if len(decodedList.ID) != 36 {
+	if len(decodedList.Id.String()) != 36 {
 		t.Fatal("PeerList ID does not seem to be a UUID hash.")
 	}
 }
@@ -112,7 +118,55 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 
 // Test access to tree:
 // - parent
+func TestTreeParent(t *testing.T) {
+	names := genLocalhostPeerNames(3, 2000)
+	peerList := GenIdentityList(tSuite, names)
+	// Generate two example topology
+	tree, _ := GenerateTreeFromIdentityList(peerList)
+	child := tree.Root.Children[0]
+	if child.Parent.Id != tree.Id {
+		t.Fatal("Parent of child of root is not the root...")
+	}
+}
+
 // - children
+func TestTreeChildren(t *testing.T) {
+	names := genLocalhostPeerNames(2, 2000)
+	peerList := GenIdentityList(tSuite, names)
+	// Generate two example topology
+	tree, nodes := GenerateTreeFromIdentityList(peerList)
+	child := tree.Root.Children[0]
+	if child.Id != nodes[1].Id {
+		t.Fatal("Parent of child of root is not the root...")
+	}
+}
+
+// Test marshal/unmarshaling of trees
+func TestUnMarshalTree(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	names := genLocalhostPeerNames(10, 2000)
+	peerList := GenIdentityList(tSuite, names)
+	// Generate two example topology
+	tree, _ := GenerateTreeFromIdentityList(peerList)
+	tree_binary, err := tree.Marshal()
+
+	if err != nil {
+		t.Fatal("Error while marshaling:", err)
+	}
+	if len(tree_binary) == 0 {
+		t.Fatal("Marshaled tree is empty")
+	}
+
+	tree2, err := sda.NewTreeFromMarshal(tree_binary, peerList)
+	if err != nil {
+		t.Fatal("Error while unmarshaling:", err)
+	}
+	if !tree.Equal(tree2) {
+		dbg.Lvl3(tree, "\n", tree2)
+		t.Fatal("Tree and Tree2 are not identical")
+	}
+}
+
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph

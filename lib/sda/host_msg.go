@@ -3,36 +3,35 @@ package sda
 import (
 	"errors"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/satori/go.uuid"
 )
 
 // init registers all our message-types to the network-interface
 func init() {
 	network.RegisterProtocolType(SDADataMessage, SDAData{})
 	network.RegisterProtocolType(RequestTreeMessage, RequestTree{})
-	network.RegisterProtocolType(SendTreeMessage, TreeNode{})
 	network.RegisterProtocolType(RequestIdentityListMessage, RequestIdentityList{})
 	network.RegisterProtocolType(SendIdentityListMessage, IdentityList{})
-	network.RegisterProtocolType(SendIdentityMessage, SendIdentity{})
 }
 
 // constants used for the message-types
 const (
 	SDADataMessage = iota + 10
 	RequestTreeMessage
-	SendTreeMessage
 	RequestIdentityListMessage
 	SendIdentityListMessage
 	IdentityListUnknownMessage
-	SendIdentityMessage
+	SendIdentityMessage = IdentityListType
+	SendTreeMessage     = TreeType
 )
 
 // ProtocolInfo is to be embedded in every message that is made for a
 // ProtocolInstance
 type SDAData struct {
 	// The ID of the protocol
-	ProtoID UUID
+	ProtoID uuid.UUID
 	// The ID of the protocol instance - the counter
-	InstanceID UUID
+	InstanceID uuid.UUID
 
 	// MsgType of the underlying data
 	MsgType network.Type
@@ -45,12 +44,12 @@ type SDAData struct {
 // RequestTree is used to ask the parent for a given Tree
 type RequestTree struct {
 	// The treeID of the tree we want
-	TreeID UUID
+	TreeID uuid.UUID
 }
 
 // RequestIdentityList is used to ask the parent for a given IdentityList
 type RequestIdentityList struct {
-	IdentityListID UUID
+	IdentityListID uuid.UUID
 }
 
 // In case the identity list is unknown

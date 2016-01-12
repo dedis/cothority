@@ -7,12 +7,6 @@ Node takes care about
 * instantiating ProtocolInstances
 * passing packets to ProtocolInstances
 
-Basically you can open connections to some addresses, and listen on some address.
-Each time a packet is received is passed through ProcessMessages()
-When it is a SDAMessage, that means it is destined to a ProtocolInstance, and that dispatching is done in processSDAMessages
-To register a new protocol instance just call AddProtocolInstance()
-For the dispatching to work, the packet sent must address the right protocolID, the right protocolInstanceID
-and the right topologyID it relies on.
 */
 
 package sda
@@ -22,6 +16,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"sync"
 	"time"
@@ -45,11 +40,13 @@ type Host struct {
 	// and the locks
 	networkLock *sync.Mutex
 	// The database of identities this host knows
-	identities map[UUID]*Identity
+	identities map[uuid.UUID]*Identity
 	// The identityLists used for building the trees
-	identityLists map[UUID]*IdentityList
+	identityLists map[uuid.UUID]*IdentityList
+	// all trees known to this Host
+	trees map[uuid.UUID]*Tree
 	// mapping from identity to physical addresses in connection
-	identityToAddress map[UUID]string
+	identityToAddress map[uuid.UUID]string
 	// identity mutex
 	identityLock *sync.Mutex
 	// Our private-key
@@ -59,9 +56,7 @@ type Host struct {
 	// slice of received messages - testmode
 	networkChan chan MessageInfo
 	// instances linked to their ID and their ProtocolID
-	instances map[UUID]ProtocolInstance
-	// all trees known to this Host
-	trees map[UUID]Tree
+	instances map[uuid.UUID]ProtocolInstance
 	// closed channel to notifiy the connections that we close
 	closed chan bool
 }
@@ -71,18 +66,19 @@ type Host struct {
 func NewHost(id *Identity, pkey abstract.Secret, host network.Host) *Host {
 	n := &Host{
 		Identity:          id,
-		identityToAddress: make(map[UUID]string),
+		identityToAddress: make(map[uuid.UUID]string),
 		workingAddress:    id.First(),
 		networkLock:       &sync.Mutex{},
 		identityLock:      &sync.Mutex{},
 		connections:       make(map[string]network.Conn),
-		identities:        make(map[UUID]*Identity),
-		identityLists:     make(map[UUID]*IdentityList),
+		identities:        make(map[uuid.UUID]*Identity),
+		trees:             make(map[uuid.UUID]*Tree),
+		identityLists:     make(map[uuid.UUID]*IdentityList),
 		host:              host,
 		private:           pkey,
 		suite:             network.Suite,
 		networkChan:       make(chan MessageInfo, 1),
-		instances:         make(map[UUID]ProtocolInstance),
+		instances:         make(map[uuid.UUID]ProtocolInstance),
 		closed:            make(chan bool),
 	}
 	return n
@@ -175,12 +171,12 @@ func (n *Host) SendTo(id *Identity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
-	if _, ok := n.identities[id.ID()]; !ok {
+	if _, ok := n.identities[id.Id]; !ok {
 		return fmt.Errorf("SendToIdentity received a non-saved identity")
 	}
 	var addr string
 	var ok bool
-	if addr, ok = n.identityToAddress[id.ID()]; !ok {
+	if addr, ok = n.identityToAddress[id.Id]; !ok {
 		return fmt.Errorf("No connection for this identity")
 	}
 	// additional verification - might be skipped
@@ -201,8 +197,8 @@ func (n *Host) SendTo(id *Identity, msg network.ProtocolMessage) error {
 // appropriate identity
 func (n *Host) SendMsgTo(id *Identity, msg network.ProtocolMessage) error {
 	sdaMsg := &SDAData{
-		ProtoID:    "",
-		InstanceID: "",
+		ProtoID:    uuid.Nil,
+		InstanceID: uuid.Nil,
 	}
 	b, err := network.MarshalRegisteredType(msg)
 	if err != nil {
@@ -248,8 +244,13 @@ func (n *Host) ProcessMessages() {
 		case SDADataMessage:
 			n.processSDAMessage(msgInfo.Id, &msgInfo.Data)
 		case RequestTreeMessage:
-			tt := msgInfo.Data.Msg.(RequestTree).TreeID
-			err = n.SendTo(msgInfo.Id, tt)
+			tid := msgInfo.Data.Msg.(RequestTree).TreeID
+			tree, ok := n.trees[tid]
+			if ok {
+				err = n.SendTo(msgInfo.Id, tree)
+			} else {
+				err = n.SendTo(msgInfo.Id, &Tree{})
+			}
 		case SendTreeMessage:
 		case RequestIdentityListMessage:
 			id := msgInfo.Data.Msg.(RequestIdentityList).IdentityListID
@@ -261,7 +262,7 @@ func (n *Host) ProcessMessages() {
 			}
 		case SendIdentityListMessage:
 			il := msgInfo.Data.Msg.(IdentityList)
-			if il.ID == "" {
+			if il.Id == uuid.Nil {
 				dbg.Error("Received an empty IdentityList")
 			}
 			n.AddIdentityList(&il)
@@ -280,19 +281,18 @@ func (n *Host) NetworkChan() chan MessageInfo {
 	return n.networkChan
 }
 
-// AddProtocolInstance takes a UUID and a ProtocolInstance to be added
-// to the map
-func (n *Host) AddProtocolInstance(pi ProtocolInstance) {
-	n.instances[pi.Id()] = pi
-}
-
 // AddIdentityList stores the peer-list for further usage
 func (n *Host) AddIdentityList(il *IdentityList) {
-	n.identityLists[il.ID] = il
+	n.identityLists[il.Id] = il
+}
+
+// AddTree stores the tree for further usage
+func (n *Host) AddTree(t *Tree) {
+	n.trees[t.Id] = t
 }
 
 // GetIdentityList returns the IdentityList
-func (n *Host) GetIdentityList(id UUID) (*IdentityList, bool) {
+func (n *Host) GetIdentityList(id uuid.UUID) (*IdentityList, bool) {
 	il, ok := n.identityLists[id]
 	return il, ok
 }
@@ -353,9 +353,12 @@ func (n *Host) processSDAMessage(id *Identity, am *network.ApplicationMessage) e
 	sda.MsgType = t
 	sda.Msg = msg
 	dbg.Lvl3("Processing SDA-message", sda)
-	if !ProtocolExists(sda.ProtoID) {
-		return fmt.Errorf("Protocol does not exists")
-	}
+	/*
+		TODO
+		if !ProtocolExists(sda.ProtoID) {
+			return fmt.Errorf("Protocol does not exists")
+		}
+	*/
 	ip, ok := n.instances[sda.InstanceID]
 	if !ok {
 		// XXX What to do here ? create a new instance or just drop ?
@@ -370,8 +373,8 @@ func (n *Host) processSDAMessage(id *Identity, am *network.ApplicationMessage) e
 // real physical address of the connection and the connection itself
 func (n *Host) registerConnection(id *Identity, addr string, c network.Conn) {
 	n.networkLock.Lock()
-	n.identities[id.ID()] = id
-	n.identityToAddress[id.ID()] = addr
+	n.identities[id.Id] = id
+	n.identityToAddress[id.Id] = addr
 	n.connections[addr] = c
 	n.networkLock.Unlock()
 }
@@ -388,8 +391,4 @@ func (n *Host) Suite() abstract.Suite {
 type MessageInfo struct {
 	Id   *Identity
 	Data network.ApplicationMessage
-}
-
-func init() {
-	network.RegisterProtocolType(IdentityType, Identity{})
 }
