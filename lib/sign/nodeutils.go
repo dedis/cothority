@@ -3,7 +3,6 @@ package sign
 import (
 	"errors"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -174,11 +173,11 @@ func (sn *Node) subExceptions(a abstract.Point, keys []abstract.Point) {
 	}
 }
 
-func (sn *Node) updateLastSeenVote(hv int, from string) {
-	if int(atomic.LoadInt64(&sn.LastSeenVote)) < hv {
-		atomic.StoreInt64(&sn.LastSeenVote, int64(hv))
-	}
-}
+/*func (sn *Node) updateLastSeenVote(hv int, from string) {*/
+//if int(atomic.LoadInt64(&sn.LastSeenVote)) < hv {
+//atomic.StoreInt64(&sn.LastSeenVote, int64(hv))
+//}
+/*}*/
 
 func (sn *Node) ChangeView(vcv *ViewChangeVote) {
 	// log.Println(sn.Name(), " in CHANGE VIEW")

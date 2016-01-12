@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/coconet"
@@ -167,11 +166,11 @@ func (sn *Node) ProcessMessages() error {
 				ctx := context.TODO()
 				sn.PutTo(ctx, sm.From,
 					&SigningMessage{
-						Suite:        sn.Suite().String(),
-						From:         sn.Name(),
-						Type:         CatchUpResp,
-						LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-						Curesp:       &CatchUpResponse{Vote: v}})
+						Suite: sn.Suite().String(),
+						From:  sn.Name(),
+						Type:  CatchUpResp,
+						//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+						Curesp: &CatchUpResponse{Vote: v}})
 			case CatchUpResp:
 				if sm.Curesp.Vote == nil || sn.VoteLog.Get(sm.Curesp.Vote.Index) != nil {
 					continue
@@ -251,11 +250,11 @@ func (sn *Node) Announce(sm *SigningMessage) error {
 	out := make([]*SigningMessage, nChildren)
 	for i := range out {
 		out[i] = &SigningMessage{
-			Suite:        sn.Suite().String(),
-			Type:         Announcement,
-			ViewNbr:      sn.ViewNo,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			RoundNbr:     RoundNbr,
+			Suite:   sn.Suite().String(),
+			Type:    Announcement,
+			ViewNbr: sn.ViewNo,
+			//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			RoundNbr: RoundNbr,
 			Am: &AnnouncementMessage{
 				Message:   make([]byte, 0),
 				RoundType: sm.Am.RoundType,
@@ -328,11 +327,11 @@ func (sn *Node) Commit(sm *SigningMessage) error {
 		return fmt.Errorf("No Round Interface defined for this round number (commitment)")
 	}
 	out := &SigningMessage{
-		Suite:        sn.Suite().String(),
-		ViewNbr:      view,
-		Type:         Commitment,
-		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-		RoundNbr:     roundNbr,
+		Suite:   sn.Suite().String(),
+		ViewNbr: view,
+		Type:    Commitment,
+		//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+		RoundNbr: roundNbr,
 		Com: &CommitmentMessage{
 			Message: make([]byte, 0),
 		},
@@ -461,11 +460,11 @@ func (sn *Node) Respond(sm *SigningMessage) error {
 	// Fillinwithdefaultmessage is used to fill the exception with missing
 	// children and all
 	out := &SigningMessage{
-		Suite:        sn.Suite().String(),
-		Type:         Response,
-		ViewNbr:      view,
-		RoundNbr:     roundNbr,
-		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+		Suite:    sn.Suite().String(),
+		Type:     Response,
+		ViewNbr:  view,
+		RoundNbr: roundNbr,
+		//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 		Rm: &ResponseMessage{
 			Message:        make([]byte, 0),
 			ExceptionV_hat: sn.suite.Point().Null(),
@@ -531,11 +530,11 @@ func (sn *Node) StatusConnections(view int, am *AnnouncementMessage) error {
 	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
 	for i := range messgs {
 		sm := SigningMessage{
-			Suite:        sn.Suite().String(),
-			Type:         StatusConnections,
-			ViewNbr:      view,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			Am:           am}
+			Suite:   sn.Suite().String(),
+			Type:    StatusConnections,
+			ViewNbr: view,
+			//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+			Am: am}
 		messgs[i] = &sm
 	}
 

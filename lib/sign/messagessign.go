@@ -78,24 +78,24 @@ func (m MessageType) String() string {
 // Signing Messages are used for all communications between servers
 // It is important for encoding/ decoding for type to be kept as first field
 type SigningMessage struct {
-	Suite        string
-	Type         MessageType
-	Am           *AnnouncementMessage
-	Com          *CommitmentMessage
-	Chm          *ChallengeMessage
-	Rm           *ResponseMessage
-	SBm          *SignatureBroadcastMessage
-	SRm          *StatusReturnMessage
-	Cureq        *CatchUpRequest
-	Curesp       *CatchUpResponse
-	Vrm          *VoteRequestMessage
-	Gcm          *GroupChangedMessage
-	Err          *ErrorMessage
-	From         string
-	To           string
-	ViewNbr      int
-	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
-	RoundNbr     int
+	Suite   string
+	Type    MessageType
+	Am      *AnnouncementMessage
+	Com     *CommitmentMessage
+	Chm     *ChallengeMessage
+	Rm      *ResponseMessage
+	SBm     *SignatureBroadcastMessage
+	SRm     *StatusReturnMessage
+	Cureq   *CatchUpRequest
+	Curesp  *CatchUpResponse
+	Vrm     *VoteRequestMessage
+	Gcm     *GroupChangedMessage
+	Err     *ErrorMessage
+	From    string
+	To      string
+	ViewNbr int
+	//LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
+	RoundNbr int
 }
 
 // Helper functions that will return the suite used during the process from a string name
