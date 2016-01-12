@@ -36,7 +36,7 @@ type Host struct {
 	// The TCPHost
 	host network.SecureHost
 	// The open connections
-	connections map[string]network.Conn
+	connections map[string]network.SecureConn
 	// and the locks
 	networkLock *sync.Mutex
 	// The database of identities this host knows
@@ -70,7 +70,7 @@ func NewHost(id *network.Identity, pkey abstract.Secret, host network.SecureHost
 		workingAddress:    id.First(),
 		networkLock:       &sync.Mutex{},
 		identityLock:      &sync.Mutex{},
-		connections:       make(map[string]network.Conn),
+		connections:       make(map[string]network.SecureConn),
 		identities:        make(map[uuid.UUID]*network.Identity),
 		trees:             make(map[uuid.UUID]*Tree),
 		identityLists:     make(map[uuid.UUID]*IdentityList),
@@ -86,93 +86,57 @@ func NewHost(id *network.Identity, pkey abstract.Secret, host network.SecureHost
 
 // Listen starts listening for messages coming from parent(up)
 // each time a connection request is made, we receive first its identity then
-// we handle the message using HandleConn
-// NOTE Listen will try each address in the Host identity until one works ;)
+// we handle the message using HandleConn.
+// It will try each address in the Host identity until one works.
 func (n *Host) Listen() {
 	fn := func(c network.SecureConn) {
-		ctx := context.TODO()
-		// receive the identity of the remote peer
-		am, err := c.Receive(ctx)
-		if err != nil || am.MsgType != IdentityType {
-			dbg.Lvl2(n.workingAddress, "Error receiving identity from connection", c.Remote())
-		}
-		if am.Msg == nil {
-			dbg.Error("Received nil-message for setup")
-			return
-		}
-		id := am.Msg.(network.Identity)
-		var addr string
-		if addr = id.First(); addr == "" {
-			dbg.Error("Received a connection with Identity with NO addresses")
-			return
-		}
-		dbg.Lvl3(n.workingAddress, "Accepted Connection from", addr)
+		dbg.Lvl3(n.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
-		n.registerConnection(&id, addr, c)
-		n.handleConn(&id, addr, c)
+		n.registerConnection(c)
+		n.handleConn(c)
 	}
-	errChan := make(chan error)
-	var stop bool
-	// Try every addresses
-	for _, addr := range n.Identity.Addresses {
-		if stop {
-			break
+	go func() {
+		dbg.Lvl3("Listening in", n.workingAddress)
+		err := n.host.Listen(fn)
+		if err != nil {
+			dbg.Fatal("Couldn't listen in", n.workingAddress, ":", err)
 		}
-		go func() {
-			err := n.host.Listen(fn)
-			if err != nil {
-				errChan <- err
-			}
-		}()
-		select {
-		// error while listening on this address
-		case e := <-errChan:
-			dbg.Lvl2("Unable to listen with address", addr, "=>err", e)
-		// no error, we listen it's ok !
-		case <-time.After(2 * time.Second):
-			dbg.Lvl2(addr, "is listening !")
-			stop = true
-			n.workingAddress = addr
-		}
-	}
+	}()
 }
 
-// Connect takes an identity where the next Host is
-// It will try every addresses in the Identity
-func (n *Host) Connect(id *network.Identity) (network.Conn, error) {
+// Connect takes an identity where to connect to
+func (n *Host) Connect(id *network.Identity) (network.SecureConn, error) {
 	var err error
-	var c network.Conn
-	for _, addr := range id.Addresses {
-		// try to open connection
-		c, err = n.host.Open(*id)
-		if err != nil {
-			continue
-		}
-		// Send our Identity so the remote host knows who we are
-		if err := c.Send(context.TODO(), n.Identity); err != nil {
-			return nil, err
-		}
-		n.registerConnection(id, addr, c)
-		dbg.Lvl2("Host", n.workingAddress, "connected to", addr)
-		go n.handleConn(id, addr, c)
+	var c network.SecureConn
+	// try to open connection
+	c, err = n.host.Open(*id)
+	if err != nil {
+		return nil, err
 	}
+	n.registerConnection(c)
+	dbg.Lvl2("Host", n.workingAddress, "connected to", c.Remote())
+	go n.handleConn(c)
 	return c, nil
 }
 
 // Close shuts down the listener
 func (n *Host) Close() error {
 	n.networkLock.Lock()
+	for _, c := range n.connections {
+		dbg.Lvl3("Closing connection", c)
+		c.Close()
+	}
 	err := n.host.Close()
-	n.connections = make(map[string]network.Conn)
+	n.connections = make(map[string]network.SecureConn)
 	close(n.closed)
 	n.networkLock.Unlock()
 	return err
 }
 
-// SendTo sends to an Identity by trying the different addresses tied
+// SendToRaw sends to an Identity by trying the different addresses tied
 // to this id
 // TODO: make this private - but used in test
-func (n *Host) SendTo(id *network.Identity, msg network.ProtocolMessage) error {
+func (n *Host) SendToRaw(id *network.Identity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
@@ -211,7 +175,7 @@ func (n *Host) SendMsgTo(id *network.Identity, msg network.ProtocolMessage) erro
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(msg)
-	return n.SendTo(id, sdaMsg)
+	return n.SendToRaw(id, sdaMsg)
 }
 
 // Receive will return the value of the communication-channel, unmarshalling
@@ -252,9 +216,9 @@ func (n *Host) ProcessMessages() {
 			tid := msgInfo.Data.Msg.(RequestTree).TreeID
 			tree, ok := n.trees[tid]
 			if ok {
-				err = n.SendTo(msgInfo.Id, tree.MakeTreeMarshal())
+				err = n.SendToRaw(msgInfo.Id, tree.MakeTreeMarshal())
 			} else {
-				err = n.SendTo(msgInfo.Id, (&Tree{}).MakeTreeMarshal())
+				err = n.SendToRaw(msgInfo.Id, (&Tree{}).MakeTreeMarshal())
 			}
 		case SendTreeMessage:
 			tm := msgInfo.Data.Msg.(TreeMarshal)
@@ -277,9 +241,9 @@ func (n *Host) ProcessMessages() {
 			id := msgInfo.Data.Msg.(RequestIdentityList).IdentityListID
 			il, ok := n.identityLists[id]
 			if ok {
-				err = n.SendTo(msgInfo.Id, il)
+				err = n.SendToRaw(msgInfo.Id, il)
 			} else {
-				err = n.SendTo(msgInfo.Id, &IdentityList{})
+				err = n.SendToRaw(msgInfo.Id, &IdentityList{})
 			}
 		case SendIdentityListMessage:
 			il := msgInfo.Data.Msg.(IdentityList)
@@ -294,12 +258,6 @@ func (n *Host) ProcessMessages() {
 			dbg.Error("Sending error:", err)
 		}
 	}
-}
-
-// NetworkChan returns the channel where all messages received go. You can use
-// it for testing, or if you want to make your own processing of the messages
-func (n *Host) NetworkChan() chan MessageInfo {
-	return n.networkChan
 }
 
 // AddIdentityList stores the peer-list for further usage
@@ -327,7 +285,9 @@ func (n *Host) GetTree(id uuid.UUID) (*Tree, bool) {
 var timeOut = 30 * time.Second
 
 // Handle a connection => giving messages to the MsgChans
-func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) {
+func (n *Host) handleConn(c network.SecureConn) {
+	id := c.Identity()
+	address := c.Remote()
 	msgChan := make(chan network.ApplicationMessage)
 	errorChan := make(chan error)
 	doneChan := make(chan bool)
@@ -335,6 +295,7 @@ func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) 
 		for {
 			select {
 			case <-doneChan:
+				dbg.Lvl3("Closing", c)
 				return
 			default:
 				ctx := context.TODO()
@@ -355,7 +316,8 @@ func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) 
 		case <-n.closed:
 			doneChan <- true
 		case am := <-msgChan:
-			n.networkChan <- MessageInfo{Id: id, Data: am}
+			dbg.Lvl3("Putting message into networkChan:", am)
+			n.networkChan <- MessageInfo{Id: &id, Data: am}
 		case e := <-errorChan:
 			if e == network.ErrClosed {
 				return
@@ -398,11 +360,12 @@ func (n *Host) processSDAMessage(id *network.Identity, am *network.ApplicationMe
 
 // registerConnection registers a Identity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
-func (n *Host) registerConnection(id *network.Identity, addr string, c network.Conn) {
+func (n *Host) registerConnection(c network.SecureConn) {
 	n.networkLock.Lock()
-	n.identities[id.Id] = id
-	n.identityToAddress[id.Id] = addr
-	n.connections[addr] = c
+	id := c.Identity()
+	n.identities[c.Identity().Id] = &id
+	n.identityToAddress[id.Id] = c.Remote()
+	n.connections[c.Remote()] = c
 	n.networkLock.Unlock()
 }
 

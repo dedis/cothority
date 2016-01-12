@@ -25,6 +25,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
@@ -329,13 +330,11 @@ func (id *Identity) First() string {
 	return ""
 }
 
-// Next returns the next address like an iterator
+// Next returns the next address like an iterator,
+// starting at the beginning if nothing worked
 func (id *Identity) Next() string {
-	if len(id.Addresses) < id.iter+1 {
-		return ""
-	}
 	addr := id.Addresses[id.iter]
-	id.iter++
+	id.iter = (id.iter + 1) % len(id.Addresses)
 	return addr
 
 }
@@ -397,6 +396,7 @@ func NewSecureTcpHost(private abstract.Secret, id Identity) *SecureTcpHost {
 // Returns an error if it can listen on any address
 func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TcpConn) {
+		dbg.Lvl3("Listening on", c.Remote())
 		stc := &SecureTcpConn{
 			TcpConn:       c,
 			SecureTcpHost: st,
@@ -410,14 +410,17 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 		go fn(stc)
 	}
 	var addr string
+	dbg.Lvl3("Addresses are", st.Identity.Addresses)
 	for _, addr = range st.Identity.Addresses {
+		dbg.Lvl3("Trying to listen on", addr)
 		st.workingAddress = addr
 		if err := st.TcpHost.listen(addr, receiver); err != nil {
-			// THe listening is over
+			// The listening is over
 			if err == ErrClosed || err == ErrEOF {
 				return nil
 			}
-			// else that means this address dont work. lets try another one.
+		} else {
+			return nil
 		}
 	}
 	return fmt.Errorf("No address worked for listening on this host")

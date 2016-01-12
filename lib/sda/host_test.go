@@ -33,15 +33,26 @@ func TestHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := newHost("localhost:2000", suite)
+	h2 := newHost("localhost:2001", suite)
+	h1.Listen()
+	h2.Connect(h1.Identity)
 	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
-	h1 = newHost("localhost:2000", suite)
-	// Needs to wait some as the listener will try for a couple of times
-	// to make the connection
-	time.Sleep(time.Second)
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	dbg.Lvl3("Finished first connection, starting 2nd")
+	h1 = newHost("localhost:2002", suite)
+	h1.Listen()
+	if err != nil {
+		t.Fatal("Couldn't re-open listener")
+	}
+	dbg.Lvl3("Closing h1")
 	h1.Close()
 }
 
@@ -109,14 +120,14 @@ func TestHostSendMsgDuplex(t *testing.T) {
 func TestHostSendDuplex(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendTo(h2.Identity, msgSimple)
+	err := h1.SendToRaw(h2.Identity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendTo(h1.Identity, msgSimple)
+	err = h2.SendToRaw(h1.Identity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -133,7 +144,7 @@ func TestPeerListPropagation(t *testing.T) {
 	il1 := GenIdentityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendTo(h2.Identity, &sda.RequestIdentityList{il1.Id})
+	err := h1.SendToRaw(h2.Identity, &sda.RequestIdentityList{il1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -147,7 +158,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddIdentityList(il1)
-	err = h1.SendTo(h2.Identity, &sda.RequestIdentityList{il1.Id})
+	err = h1.SendToRaw(h2.Identity, &sda.RequestIdentityList{il1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -161,7 +172,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendTo(h2.Identity, &sda.RequestIdentityList{il1.Id})
+	err = h1.SendToRaw(h2.Identity, &sda.RequestIdentityList{il1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -187,7 +198,7 @@ func TestTreePropagation(t *testing.T) {
 	tree, _ := GenerateTreeFromIdentityList(il1)
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendTo(h2.Identity, &sda.RequestTree{tree.Id})
+	err := h1.SendToRaw(h2.Identity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -201,7 +212,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendTo(h2.Identity, &sda.RequestTree{tree.Id})
+	err = h1.SendToRaw(h2.Identity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -215,7 +226,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendTo(h2.Identity, &sda.RequestTree{tree.Id})
+	err = h1.SendToRaw(h2.Identity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -263,7 +274,6 @@ func newHost(address string, s abstract.Suite) *sda.Host {
 // Creates two hosts on the local interfaces,
 func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	time.Sleep(time.Millisecond * 100)
 	h1 := newHost("localhost:2000", suite)
 	// make the second peer as the server
 	h2 := newHost("localhost:2001", suite)
@@ -290,7 +300,7 @@ const (
 
 func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessage {
 	if msg.MsgType != sda.SDADataMessage {
-		t.Fatal("Wrong message type received")
+		t.Fatal("Wrong message type received:", msg.MsgType)
 	}
 	sda := msg.Msg.(sda.SDAData)
 	if sda.MsgType != SimpleMessageType {
