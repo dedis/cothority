@@ -21,7 +21,6 @@ import (
 	"github.com/dedis/cothority/lib/logutils"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
-	"sync/atomic"
 )
 
 /*
@@ -103,9 +102,9 @@ type Node struct {
 	// ActionsLock sync.Mutex
 	// Actions     []*VoteRequest
 
-	VoteLog         *VoteLog // log of all confirmed votes, useful for replay
-	LastSeenVote    int64    // max of all Highest Votes we've seen, and our last commited vote
-	LastAppliedVote int64    // last vote we have committed to our log
+	VoteLog *VoteLog // log of all confirmed votes, useful for replay
+	//LastSeenVote    int64    // max of all Highest Votes we've seen, and our last commited vote
+	LastAppliedVote int64 // last vote we have committed to our log
 
 	Actions map[int][]*Vote
 
@@ -438,10 +437,10 @@ func (sn *Node) CloseAll(view int) error {
 		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
 		for i := range messgs {
 			sm := SigningMessage{
-				Suite:        sn.Suite().String(),
-				Type:         CloseAll,
-				ViewNbr:      view,
-				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+				Suite:   sn.Suite().String(),
+				Type:    CloseAll,
+				ViewNbr: view,
+				//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			}
 			messgs[i] = &sm
 		}
@@ -460,11 +459,11 @@ func (sn *Node) PutUpError(view int, err error) {
 	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	ctx := context.TODO()
 	sn.PutUp(ctx, view, &SigningMessage{
-		Suite:        sn.Suite().String(),
-		Type:         Error,
-		ViewNbr:      view,
-		LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-		Err:          &ErrorMessage{Err: err.Error()}})
+		Suite:   sn.Suite().String(),
+		Type:    Error,
+		ViewNbr: view,
+		//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
+		Err: &ErrorMessage{Err: err.Error()}})
 }
 
 // Getting actual View

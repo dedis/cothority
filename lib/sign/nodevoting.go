@@ -1,7 +1,6 @@
 package sign
 
 import (
-	"sync/atomic"
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -20,23 +19,23 @@ var HEARTBEAT = ROUND_TIME + ROUND_TIME/2
 var GOSSIP_TIME time.Duration = 3 * ROUND_TIME
 
 func (sn *Node) ApplyVote(v *Vote) {
-	atomic.StoreInt64(&sn.LastAppliedVote, int64(v.Index))
-	lav := atomic.LoadInt64(&sn.LastAppliedVote)
-	lsv := atomic.LoadInt64(&sn.LastSeenVote)
-	atomic.StoreInt64(&sn.LastSeenVote, maxint64(lav, lsv))
+	/*atomic.StoreInt64(&sn.LastAppliedVote, int64(v.Index))*/
+	//[>lav := atomic.LoadInt64(&sn.LastAppliedVote)<]
+	//[>lsv := atomic.LoadInt64(&sn.LastSeenVote)<]
+	////atomic.StoreInt64(&sn.LastSeenVote, maxint64(lav, lsv))
 
-	switch v.Type {
-	case ViewChangeVT:
-		sn.ChangeView(v.Vcv)
-	case AddVT:
-		sn.AddAction(v.Av.View, v)
-	case RemoveVT:
-		sn.AddAction(v.Rv.View, v)
-	case ShutdownVT:
-		sn.Close()
-	default:
-		dbg.Error("applyvote: unkown vote type")
-	}
+	//switch v.Type {
+	//case ViewChangeVT:
+	//sn.ChangeView(v.Vcv)
+	//case AddVT:
+	//sn.AddAction(v.Av.View, v)
+	//case RemoveVT:
+	//sn.AddAction(v.Rv.View, v)
+	//case ShutdownVT:
+	//sn.Close()
+	//default:
+	//dbg.Error("applyvote: unkown vote type")
+	/*}*/
 }
 
 func (sn *Node) AddAction(view int, v *Vote) {
@@ -64,11 +63,11 @@ func (sn *Node) ApplyAction(view int, v *Vote) {
 func (sn *Node) NotifyOfAction(view int, v *Vote) {
 	dbg.Lvl4(sn.Name(), "Notifying node to be added/removed of action")
 	gcm := &SigningMessage{
-		Suite:        sn.Suite().String(),
-		Type:         GroupChanged,
-		From:         sn.Name(),
-		ViewNbr:      view,
-		LastSeenVote: int(sn.LastSeenVote),
+		Suite:   sn.Suite().String(),
+		Type:    GroupChanged,
+		From:    sn.Name(),
+		ViewNbr: view,
+		//LastSeenVote: int(sn.LastSeenVote),
 		Gcm: &GroupChangedMessage{
 			V:        v,
 			HostList: sn.HostListOn(view)}}
@@ -155,7 +154,8 @@ func (sn *Node) StartGossip() {
 				from := c[sn.Rand.Int()%len(c)]
 				sn.randmu.Unlock()
 				dbg.Lvl4("Gossiping with:", from)
-				sn.CatchUp(int(atomic.LoadInt64(&sn.LastAppliedVote)+1), from)
+				// we dont use voting anyway
+				// sn.CatchUp(int(atomic.LoadInt64(&sn.LastAppliedVote)+1), from)
 			case <-sn.closed:
 				dbg.Lvl3("stopping gossip: closed")
 				return
