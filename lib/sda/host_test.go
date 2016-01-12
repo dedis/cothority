@@ -229,6 +229,11 @@ func TestTreePropagation(t *testing.T) {
 	}
 }
 
+// Tests both list- and tree-propagation
+func TestListTreePropagation(t *testing.T) {
+
+}
+
 // Test instantiation of ProtocolInstances
 
 // Test access of actual peer that received the message
