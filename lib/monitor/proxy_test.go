@@ -104,6 +104,7 @@ func TestReadyProxy(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
+	SinkPort = oldSink
 	proxyAddr := "localhost:" + strconv.Itoa(SinkPort)
 	err := ConnectSink(proxyAddr)
 	if err != nil {
