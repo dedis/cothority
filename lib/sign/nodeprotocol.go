@@ -3,7 +3,6 @@ package sign
 import (
 	"fmt"
 	"io"
-	"sync/atomic"
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -277,9 +276,8 @@ func (sn *Node) Announce(am *AnnouncementMessage) error {
 	for i := range out {
 		out[i] = &AnnouncementMessage{
 			SigningMessage: &SigningMessage{
-				ViewNbr:      sn.ViewNo,
-				LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-				RoundNbr:     RoundNbr},
+				ViewNbr:  sn.ViewNo,
+				RoundNbr: RoundNbr},
 			Message:   make([]byte, 0),
 			RoundType: am.RoundType,
 		}
@@ -347,9 +345,8 @@ func (sn *Node) Commit(com *CommitmentMessage) error {
 	}
 	out := &CommitmentMessage{
 		SigningMessage: &SigningMessage{
-			ViewNbr:      view,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-			RoundNbr:     roundNbr,
+			ViewNbr:  view,
+			RoundNbr: roundNbr,
 		},
 		Message: make([]byte, 0),
 	}
@@ -476,9 +473,8 @@ func (sn *Node) Respond(rm *ResponseMessage) error {
 	// children and all
 	out := &ResponseMessage{
 		SigningMessage: &SigningMessage{
-			ViewNbr:      view,
-			RoundNbr:     roundNbr,
-			LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote))},
+			ViewNbr:  view,
+			RoundNbr: roundNbr},
 		Message:        make([]byte, 0),
 		ExceptionV_hat: sn.suite.Point().Null(),
 		ExceptionX_hat: sn.suite.Point().Null(),

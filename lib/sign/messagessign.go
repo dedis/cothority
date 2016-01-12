@@ -66,7 +66,6 @@ type SigningMessage struct {
 	RoundNbr     int
 	From         string
 	Empty        bool // when the application message type  == DefaulType,
-	//this field should be set to true
 }
 
 // Empty struct just to notify to close
