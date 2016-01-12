@@ -19,10 +19,8 @@ const (
 	SDADataMessage = iota + 10
 	RequestTreeMessage
 	RequestIdentityListMessage
-	SendIdentityListMessage
-	IdentityListUnknownMessage
-	SendIdentityMessage = IdentityListType
-	SendTreeMessage     = TreeMarshalType
+	SendIdentityListMessage = IdentityListType
+	SendTreeMessage         = TreeMarshalType
 )
 
 // SDAData is to be embedded in every message that is made for a

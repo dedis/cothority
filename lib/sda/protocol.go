@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	. "github.com/satori/go.uuid"
 )
 
 // NewProtocol is the function-signature needed to instantiate a new protocol

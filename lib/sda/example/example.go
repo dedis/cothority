@@ -13,44 +13,34 @@ func init() {
 	sda.ProtocolRegister("Example", NewProtocolInstance)
 }
 
-/*
-ProtocolExample just holds a message that is passed to all children.
-*/
+// ProtocolExample just holds a message that is passed to all children.
 type ProtocolExample struct {
-	sda.Node
-	sda.TreePeer
+	sda.Host
+	sda.TreeNode
 	Message string
 }
 
-/*
-MessageAnnounce is used to pass a message to all children
-*/
+// MessageAnnounce is used to pass a message to all children
 type MessageAnnounce struct {
 	Message string
 }
 
-/*
-MessageReply returns the count of all children
-*/
+// MessageReply returns the count of all children
 type MessageReply struct {
 	Children int
 }
 
-/*
-NewProtocolExample initialises the structure for use in one round
-*/
-func NewProtocolInstance(n *sda.Node, t *sda.TreePeer) *ProtocolExample {
+// NewProtocolExample initialises the structure for use in one round
+func NewProtocolInstance(h *sda.Host, t *sda.TreeNode) *ProtocolExample {
 	return &ProtocolExample{
-		Node:     n,
-		TreePeer: t,
+		Host:     h,
+		TreeNode: t,
 	}
 }
 
-/*
-Dispatch takes the message and decides what function to call
-*/
-func (p *ProtocolExample) Dispatch(m []*sda.Message) error {
-	switch m[0].MessageType {
+// Dispatch takes the message and decides what function to call
+func (p *ProtocolExample) Dispatch(m []*sda.SDAData) error {
+	switch m[0].MsgType {
 	case 0:
 		return p.HandleAnnounce(m[0])
 	case 1:
@@ -59,34 +49,30 @@ func (p *ProtocolExample) Dispatch(m []*sda.Message) error {
 	return sda.NoSuchState
 }
 
-/*
-MessageAnnounce is the first message and is used to send an ID that
-is stored in all nodes.
-*/
-func (p *ProtocolExample) HandleAnnounce(m *sda.Message) error {
-	msg := m.Message.(MessageAnnounce)
+// HandleAnnounce is the first message and is used to send an ID that
+// is stored in all nodes.
+func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
+	msg := m.Msg.(MessageAnnounce)
 	p.Message = msg.Message
 	if !p.IsLeaf() {
 		// If we have children, send the same message to all of them
 		for nil, c := range p.Children() {
-			err := p.SendMessage(c, msg)
+			err := p.SendMsgTo(c, msg)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		// If we're the leaf, start to reply
-		return p.SendMessage(p.Parent(), &MessageReply{1})
+		return p.SendMsgTo(p.Parent(), &MessageReply{1})
 	}
 	return nil
 }
 
-/*
-MessageReply is the message going up the tree and holding a counter
-to verify the number of nodes.
-*/
-func (p *ProtocolExample) HandleReply(m *sda.Message) error {
-	msg := m.Message.(MessageReply)
+// HandleReply is the message going up the tree and holding a counter
+// to verify the number of nodes.
+func (p *ProtocolExample) HandleReply(m *sda.SDAData) error {
+	msg := m.Msg.(MessageReply)
 	msg.Children += len(p.Children())
-	return p.SendMessage(p.Parent(), msg)
+	return p.SendMsgTo(p.Parent(), msg)
 }

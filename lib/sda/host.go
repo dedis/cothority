@@ -34,7 +34,7 @@ type Host struct {
 	// set to that address
 	workingAddress string
 	// The TCPHost
-	host network.Host
+	host network.SecureHost
 	// The open connections
 	connections map[string]network.Conn
 	// and the locks
@@ -54,7 +54,7 @@ type Host struct {
 	// The suite used for this Host
 	suite abstract.Suite
 	// slice of received messages - testmode
-	networkChan chan network.ApplicationMessage
+	networkChan chan MessageInfo
 	// instances linked to their ID and their ProtocolID
 	instances map[uuid.UUID]ProtocolInstance
 	// closed channel to notifiy the connections that we close
@@ -90,8 +90,26 @@ func NewHost(id *network.Identity, pkey abstract.Secret, host network.SecureHost
 // NOTE Listen will try each address in the Host identity until one works ;)
 func (n *Host) Listen() {
 	fn := func(c network.SecureConn) {
-		n.registerConnection(c)
-		n.handleConn(c)
+		ctx := context.TODO()
+		// receive the identity of the remote peer
+		am, err := c.Receive(ctx)
+		if err != nil || am.MsgType != IdentityType {
+			dbg.Lvl2(n.workingAddress, "Error receiving identity from connection", c.Remote())
+		}
+		if am.Msg == nil {
+			dbg.Error("Received nil-message for setup")
+			return
+		}
+		id := am.Msg.(network.Identity)
+		var addr string
+		if addr = id.First(); addr == "" {
+			dbg.Error("Received a connection with Identity with NO addresses")
+			return
+		}
+		dbg.Lvl3(n.workingAddress, "Accepted Connection from", addr)
+		// register the connection once we know it's ok
+		n.registerConnection(&id, addr, c)
+		n.handleConn(&id, addr, c)
 	}
 	errChan := make(chan error)
 	var stop bool
@@ -114,6 +132,7 @@ func (n *Host) Listen() {
 		case <-time.After(2 * time.Second):
 			dbg.Lvl2(addr, "is listening !")
 			stop = true
+			n.workingAddress = addr
 		}
 	}
 }
@@ -121,13 +140,22 @@ func (n *Host) Listen() {
 // Connect takes an identity where the next Host is
 // It will try every addresses in the Identity
 func (n *Host) Connect(id *network.Identity) (network.Conn, error) {
-	c, err := n.host.Open(*id)
-	if err != nil {
-		return nil, err
+	var err error
+	var c network.Conn
+	for _, addr := range id.Addresses {
+		// try to open connection
+		c, err = n.host.Open(*id)
+		if err != nil {
+			continue
+		}
+		// Send our Identity so the remote host knows who we are
+		if err := c.Send(context.TODO(), n.Identity); err != nil {
+			return nil, err
+		}
+		n.registerConnection(id, addr, c)
+		dbg.Lvl2("Host", n.workingAddress, "connected to", addr)
+		go n.handleConn(id, addr, c)
 	}
-	n.registerConnection(c)
-	dbg.Lvl2("Host", "connected to", id.First())
-	go n.handleConn(c)
 	return c, nil
 }
 
@@ -135,7 +163,7 @@ func (n *Host) Connect(id *network.Identity) (network.Conn, error) {
 func (n *Host) Close() error {
 	n.networkLock.Lock()
 	err := n.host.Close()
-	n.connections = make(map[uuid.UUID]network.SecureConn)
+	n.connections = make(map[string]network.Conn)
 	close(n.closed)
 	n.networkLock.Unlock()
 	return err
@@ -143,6 +171,7 @@ func (n *Host) Close() error {
 
 // SendTo sends to an Identity by trying the different addresses tied
 // to this id
+// TODO: make this private - but used in test
 func (n *Host) SendTo(id *network.Identity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
@@ -150,15 +179,14 @@ func (n *Host) SendTo(id *network.Identity, msg network.ProtocolMessage) error {
 	if _, ok := n.identities[id.Id]; !ok {
 		return fmt.Errorf("SendToIdentity received a non-saved identity")
 	}
-	var c network.SecureConn
+	var addr string
 	var ok bool
-	if _, ok = n.identityToAddress[id.Id]; !ok {
+	if addr, ok = n.identityToAddress[id.Id]; !ok {
 		return fmt.Errorf("No connection for this identity")
 	}
 	// additional verification - might be skipped
 	n.networkLock.Lock()
-	c, ok = n.connections[id.Id]
-	if !ok {
+	if c, ok := n.connections[addr]; !ok {
 		n.networkLock.Unlock()
 		return fmt.Errorf("No connection to this address!", n.connections)
 	} else {
@@ -170,7 +198,7 @@ func (n *Host) SendTo(id *network.Identity, msg network.ProtocolMessage) error {
 	return nil
 }
 
-// SendSDATo wraps the message to send in an SDAMessage and sends it to the
+// SendMsgTo wraps the message to send in an SDAMessage and sends it to the
 // appropriate identity
 func (n *Host) SendMsgTo(id *network.Identity, msg network.ProtocolMessage) error {
 	sdaMsg := &SDAData{
@@ -190,13 +218,15 @@ func (n *Host) SendMsgTo(id *network.Identity, msg network.ProtocolMessage) erro
 // the SDAMessage
 func (n *Host) Receive() MessageInfo {
 	msgInfo := <-n.networkChan
-	if msgInfo.MsgType == SDADataMessage {
-		sda := msgInfo.Msg.(SDAData)
-		t, msg, _ := network.UnmarshalRegisteredType(sda.MsgSlice, msgInfo.Constructors)
+	var data = msgInfo.Data
+	if msgInfo.Data.MsgType == SDADataMessage {
+		sda := data.Msg.(SDAData)
+		t, msg, _ := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
 		sda.MsgType = t
 		sda.Msg = msg
 		// As these are not pointers, we need to write it back
-		msgInfo.Msg = sda
+		data.Msg = sda
+		msgInfo.Data = data
 		dbg.Lvl3("SDA-Message is:", sda)
 	}
 	return msgInfo
@@ -268,7 +298,7 @@ func (n *Host) ProcessMessages() {
 
 // NetworkChan returns the channel where all messages received go. You can use
 // it for testing, or if you want to make your own processing of the messages
-func (n *Host) NetworkChan() chan network.ApplicationMessage {
+func (n *Host) NetworkChan() chan MessageInfo {
 	return n.networkChan
 }
 
@@ -297,7 +327,7 @@ func (n *Host) GetTree(id uuid.UUID) (*Tree, bool) {
 var timeOut = 30 * time.Second
 
 // Handle a connection => giving messages to the MsgChans
-func (n *Host) handleConn(c network.SecureConn) {
+func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) {
 	msgChan := make(chan network.ApplicationMessage)
 	errorChan := make(chan error)
 	doneChan := make(chan bool)
@@ -311,6 +341,7 @@ func (n *Host) handleConn(c network.SecureConn) {
 				am, err := c.Receive(ctx)
 				// So the receiver can know about the error
 				am.SetError(err)
+				am.From = address
 				if err != nil {
 					errorChan <- err
 				} else {
@@ -319,20 +350,19 @@ func (n *Host) handleConn(c network.SecureConn) {
 			}
 		}
 	}()
-	id := c.Identity()
 	for {
 		select {
 		case <-n.closed:
 			doneChan <- true
 		case am := <-msgChan:
-			n.networkChan <- am
+			n.networkChan <- MessageInfo{Id: id, Data: am}
 		case e := <-errorChan:
 			if e == network.ErrClosed {
 				return
 			}
-			dbg.Error("Error with connection", id.First(), "=> error", e)
+			dbg.Error("Error with connection", address, "=> error", e)
 		case <-time.After(timeOut):
-			dbg.Error("Timeout with connection", id.First())
+			dbg.Error("Timeout with connection", address)
 		}
 	}
 }
@@ -368,12 +398,11 @@ func (n *Host) processSDAMessage(id *network.Identity, am *network.ApplicationMe
 
 // registerConnection registers a Identity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
-func (n *Host) registerConnection(c network.SecureConn) {
+func (n *Host) registerConnection(id *network.Identity, addr string, c network.Conn) {
 	n.networkLock.Lock()
-	id := c.Identity()
 	n.identities[id.Id] = id
-	n.identityToAddress[id.Id] = c.Remote()
-	n.connections[c.Remote()] = c
+	n.identityToAddress[id.Id] = addr
+	n.connections[addr] = c
 	n.networkLock.Unlock()
 }
 

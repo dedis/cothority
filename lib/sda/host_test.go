@@ -139,7 +139,7 @@ func TestPeerListPropagation(t *testing.T) {
 	}
 	msg := h1.Receive().Data
 	if msg.MsgType != sda.SendIdentityListMessage {
-		t.Fatal("h1 didn't receive IdentityList type")
+		t.Fatal("h1 didn't receive IdentityList type, but", msg.MsgType)
 	}
 	if msg.Msg.(sda.IdentityList).Id != uuid.Nil {
 		t.Fatal("List should be empty")
@@ -263,6 +263,7 @@ func newHost(address string, s abstract.Suite) *sda.Host {
 // Creates two hosts on the local interfaces,
 func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	dbg.TestOutput(testing.Verbose(), 4)
+	time.Sleep(time.Millisecond * 100)
 	h1 := newHost("localhost:2000", suite)
 	// make the second peer as the server
 	h2 := newHost("localhost:2001", suite)

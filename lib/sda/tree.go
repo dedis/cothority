@@ -210,6 +210,16 @@ func (t *TreeNode) IsConnectedTo(id *network.Identity) bool {
 	return false
 }
 
+// IsLeaf returns true for a node without children
+func (t *TreeNode) IsLeaf() bool {
+	return len(t.Children) == 0
+}
+
+// IsRoot returns true for a node without a parent
+func (t *TreeNode) IsRoot() bool {
+	return t.Parent == nil
+}
+
 // AddChild adds a child to this tree-node. Once the tree is set up, the
 // function 'UpdateIds' should be called
 func (t *TreeNode) AddChild(c *TreeNode) {

@@ -125,7 +125,7 @@ func TestTreeParent(t *testing.T) {
 	// Generate two example topology
 	tree, _ := GenerateTreeFromIdentityList(peerList)
 	child := tree.Root.Children[0]
-	if child.Parent.Id != tree.Id {
+	if child.Parent.Id != tree.Root.Id {
 		t.Fatal("Parent of child of root is not the root...")
 	}
 }
@@ -183,10 +183,10 @@ func genLocalhostPeerNames(n, p int) []string {
 
 // GenIdentityList generate a IdentityList out of names
 func GenIdentityList(suite abstract.Suite, names []string) *sda.IdentityList {
-	var ids []*sda.Identity
+	var ids []*network.Identity
 	for _, n := range names {
 		kp := cliutils.KeyPair(suite)
-		ids = append(ids, sda.NewIdentity(kp.Public, n))
+		ids = append(ids, network.NewIdentity(kp.Public, n))
 	}
 	return sda.NewIdentityList(ids)
 }
