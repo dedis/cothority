@@ -6,22 +6,24 @@ import (
 	"testing"
 )
 
+var testID = uuid.NewV5(uuid.NamespaceURL, "test")
+
 // Test simple protocol-implementation
 // - registration
-func TestRegistration(t *testing.T) {
-	if ProtocolExists("test") {
+func TestProtocolRegistration(t *testing.T) {
+	if ProtocolExists(testID) {
 		t.Fatal("Test should not exist yet")
 	}
-	ProtocolRegister("test", NewProtocolTest)
-	if !ProtocolExists("test") {
+	ProtocolRegister(testID, NewProtocolTest)
+	if !ProtocolExists(testID) {
 		t.Fatal("Test should exist now")
 	}
 }
 
 // Test instantiation of the protocol
-func TestInstantiation(t *testing.T) {
-	ProtocolRegister("test", NewProtocolTest)
-	p, err := ProtocolInstantiate("test", nil, nil)
+func TestProtocolInstantiation(t *testing.T) {
+	ProtocolRegister(testID, NewProtocolTest)
+	p, err := ProtocolInstantiate(testID, nil, nil)
 	if err != nil {
 		t.Fatal("Couldn't instantiate test-protocol")
 	}
@@ -35,7 +37,7 @@ func TestInstantiation(t *testing.T) {
 type ProtocolTest struct {
 	*Host
 	*Tree
-	Id uuid.UUID
+	id uuid.UUID
 }
 
 var currInstanceID int
@@ -47,8 +49,12 @@ func NewProtocolTest(n *Host, t *Tree) ProtocolInstance {
 	return &ProtocolTest{
 		Host: n,
 		Tree: t,
-		Id:   uuid.NewV5(uuid.NamespaceURL, url),
+		id:   uuid.NewV5(uuid.NamespaceURL, url),
 	}
+}
+
+func (p *ProtocolTest) Id() uuid.UUID {
+	return p.id
 }
 
 // Dispatch is used to send the messages further - here everything is
