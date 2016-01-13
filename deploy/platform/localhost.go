@@ -2,12 +2,6 @@ package platform
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/tree"
-	"github.com/dedis/crypto/suites"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -17,6 +11,13 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/tree"
+	"github.com/dedis/crypto/suites"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes
@@ -58,6 +59,9 @@ type Localhost struct {
 	running bool
 	// WaitGroup for running processes
 	wg_run sync.WaitGroup
+
+	// errors go here:
+	errChan chan error
 }
 
 // Configure various
@@ -68,6 +72,7 @@ func (d *Localhost) Configure() {
 	d.LocalDir = pwd
 	d.Debug = dbg.DebugVisible
 	d.running = false
+	d.errChan = make(chan error)
 	if d.App == "" {
 		dbg.Fatal("No app defined in simulation")
 	}
@@ -105,7 +110,6 @@ func (d *Localhost) Cleanup() error {
 
 func (d *Localhost) Deploy(rc RunConfig) error {
 	dbg.Lvl2("Localhost: Deploying and writing config-files")
-
 	// Initialize the deter-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual
 	// 'Machines', 'Ppm', 'Loggers' or other fields
@@ -205,7 +209,8 @@ func (d *Localhost) Start(args ...string) error {
 			d.wg_run.Add(1)
 			err := cmd.Run()
 			if err != nil {
-				dbg.Lvl3("Error running localhost", h, ":", err)
+				dbg.Error("Error running localhost", h, ":", err)
+				d.errChan <- err
 			}
 			d.wg_run.Done()
 			dbg.Lvl3("host (index", i, ")", h, "done")
@@ -216,10 +221,26 @@ func (d *Localhost) Start(args ...string) error {
 
 // Waits for all processes to finish
 func (d *Localhost) Wait() error {
-	dbg.Lvl3("Waiting for processes to finish")
-	d.wg_run.Wait()
+	dbg.LLvl3("Waiting for processes to finish")
+
+	var err error
+	go func() {
+		d.wg_run.Wait()
+		// write to error channel when done:
+		d.errChan <- nil
+	}()
+
+	// if one of the hosts fails, stop waiting and return the error:
+	select {
+	case e := <-d.errChan:
+		if e != nil {
+			d.Cleanup()
+			err = e
+		}
+	}
+
 	dbg.Lvl2("Processes finished")
-	return nil
+	return err
 }
 
 // Reads in the localhost-config and drops out if there is an error
