@@ -42,9 +42,10 @@ func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
 
 // Ix: Messages from client to server
 // Rx: Messages from server to client
+// TODO: rename client/server to leader/node or leader/follower to be consistent with the rest of the project?
 
 // Phase 1
-func (*ProtocolRandHound) HandleI1(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 1 (client): form I1 message and send it to all servers
 	} else {
@@ -53,7 +54,7 @@ func (*ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 	return nil
 }
 
-func (*ProtocolRandHound) HandleR1(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleR1(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 4 (client): receive R1 and process it
 	} else {
@@ -63,7 +64,7 @@ func (*ProtocolRandHound) HandleR1(m *sda.SDAData) error {
 }
 
 // Phase 2
-func (*ProtocolRandHound) HandleI2(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 5 (client): form I2 message and send it to all servers
 	} else {
@@ -72,7 +73,7 @@ func (*ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 	return nil
 }
 
-func (*ProtocolRandHound) HandleR2(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleR2(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 8 (client): receive R2 and process it
 	} else {
@@ -82,7 +83,7 @@ func (*ProtocolRandHound) HandleR2(m *sda.SDAData) error {
 }
 
 // Phase 3
-func (*ProtocolRandHound) HandleI3(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 9 (client): form I3 and send it to the servers
 	} else {
@@ -91,7 +92,7 @@ func (*ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 	return nil
 }
 
-func (*ProtocolRandHound) HandleR3(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleR3(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 12 (client): receive R3 and process it
 	} else {
@@ -101,7 +102,7 @@ func (*ProtocolRandHound) HandleR3(m *sda.SDAData) error {
 }
 
 // Phase 4
-func (*ProtocolRandHound) HandleI4(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 13 (client): form I4 and send it to the servers
 	} else {
@@ -110,7 +111,7 @@ func (*ProtocolRandHound) HandleI4(m *sda.SDAData) error {
 	return nil
 }
 
-func (*ProtocolRandHound) HandleR4(m *sda.SDAData) error {
+func (p *ProtocolRandHound) HandleR4(m *sda.SDAData) error {
 	if p.IsRoot() {
 		// Step 16 (client): receive R3 and reconstruct the final secret (print output value to log for debugging)
 	} else {
