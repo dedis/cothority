@@ -31,7 +31,6 @@ func (sn *Node) ProcessMessages() error {
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
-	msgchan := sn.MsgChans
 	// heartbeat for intiating viewChanges, allows intial 500s setup time
 	/* sn.hbLock.Lock()
 	sn.heartbeat = time.NewTimer(500 * time.Second)
@@ -48,7 +47,10 @@ func (sn *Node) ProcessMessages() error {
 			return nil
 		default:
 			dbg.Lvl4(sn.Name(), "waiting for message")
-			nm, ok := <-msgchan
+			nm, ok := <-sn.MsgChans
+			if !ok {
+				dbg.Lvl4(sn.Name(), "Msgchan closed. Stop processing messages")
+			}
 			dbg.Lvlf4("Message on %s is type %s", sn.Name(), nm.MsgType)
 
 			// Do we have an errror ?
