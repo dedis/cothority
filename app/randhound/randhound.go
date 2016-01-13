@@ -9,13 +9,24 @@ func init() {
 type ProtocolRandHound struct {
 	sda.Host
 	sda.TreeNode
+	c client
+	s server
 }
 
 func NewProtocolInstance(h *sda.Host, t *sda.TreeNode) *ProtocolRandHound {
 	return &ProtocolRandHound{
 		Host:     h,
 		TreeNode: t,
+		Client:   c,
+		Server:   s,
 	}
+}
+
+func (p *ProtocolRandHound) Start() error {
+
+	// start the protocol by forming the first message I1 on client-side and send it to the servers
+
+	return nil
 }
 
 func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
@@ -46,76 +57,60 @@ func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
 
 // Phase 1
 func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 1 (client): form I1 message and send it to all servers
-	} else {
-		// Step 2 (server): receive I1 and process (=validate) it
-	}
+
+	// Server: receive I1, validate+process it, form and send R1
+
 	return nil
 }
 
 func (p *ProtocolRandHound) HandleR1(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 4 (client): receive R1 and process it
-	} else {
-		// Step 3 (server): choose server's trustee-selection randomness, form R1 and send it to client
-	}
+
+	// Client: receive R1, validate+process it, form and send I2
+
 	return nil
 }
 
 // Phase 2
 func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 5 (client): form I2 message and send it to all servers
-	} else {
-		// Step 6 (server): receive I2, extract Rc, compute HRc and verify it
-	}
+
+	// Server: receive I2, validate+process it, form and send R2
+
 	return nil
 }
 
 func (p *ProtocolRandHound) HandleR2(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 8 (client): receive R2 and process it
-	} else {
-		// Step 7 (server): construct deal, form R2 and send it to the client
-	}
+
+	// Client: receive R2, validate+process it, form and send I3
+
 	return nil
 }
 
 // Phase 3
 func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 9 (client): form I3 and send it to the servers
-	} else {
-		// Step 10 (server): receive I3 and verify it
-	}
+
+	// Server: receive I3, validate+process it, form and send R3
+
 	return nil
 }
 
 func (p *ProtocolRandHound) HandleR3(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 12 (client): receive R3 and process it
-	} else {
-		// Step 11 (server): Decrypt and validate all the shares we've been dealt, form R3, and send it to the client
-	}
+
+	// Client: receive R3, validate+process it, form and send I4
+
 	return nil
 }
 
 // Phase 4
 func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 13 (client): form I4 and send it to the servers
-	} else {
-		// Step 14 (server): receive R4, verify it
-	}
+
+	// Server: receive I4, validate+process it, form and send R4
+
 	return nil
 }
 
 func (p *ProtocolRandHound) HandleR4(m *sda.SDAData) error {
-	if p.IsRoot() {
-		// Step 16 (client): receive R3 and reconstruct the final secret (print output value to log for debugging)
-	} else {
-		// Step 15 (server): form R3 and send it to client
-	}
+
+	// Client: receive R4, validate+process it, output public random value
+
 	return nil
 }

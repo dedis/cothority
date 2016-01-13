@@ -2,6 +2,9 @@ package randhound
 
 import "github.com/dedis/crypto/abstract"
 
+// TODO: figure out which of the old RandHound types (see app/rand/types.go)
+// are necessary and which ones are covered by SDA
+
 type I1 struct {
 	SID []byte // Session identifier: hash of session info block
 	GID []byte // Group identifier: hash of group parameter block
