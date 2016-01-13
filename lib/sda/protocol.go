@@ -6,7 +6,22 @@ import (
 )
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*Host, *Tree) ProtocolInstance
+type NewProtocol func(*Host, *Tree, *Token) ProtocolInstance
+
+// ProtocolMapper handles the mapping between tokens and protocol instances. It
+// also provides helpers for protocol instances such as sending a message to
+// someone only requires to give the token and the message and protocolmapper
+// will handle the rest.
+type protocolMapper struct {
+	// mapping instances with their tokens
+	instances map[uuid.UUID]ProtocolInstance
+}
+
+func newProtocolMapper() *protocolMapper {
+	return &protocolMapper{
+		instances: make(map[uuid.UUID]ProtocolInstance),
+	}
+}
 
 // protocols holds a map of all available protocols and how to create an
 // instance of it
@@ -21,12 +36,12 @@ type ProtocolInstance interface {
 }
 
 // ProtocolInstantiate creates a new instance of a protocol given by it's name
-func ProtocolInstantiate(protoID uuid.UUID, n *Host, t *Tree) (ProtocolInstance, error) {
+func ProtocolInstantiate(protoID uuid.UUID, n *Host, t *Tree, tok *Token) (ProtocolInstance, error) {
 	p, ok := protocols[protoID]
 	if !ok {
 		return nil, errors.New("Protocol doesn't exist")
 	}
-	return p(n, t), nil
+	return p(n, t, tok), nil
 }
 
 // ProtocolRegister takes a protocol and registers it under a given name.
@@ -44,4 +59,22 @@ func ProtocolRegister(protoID uuid.UUID, protocol NewProtocol) {
 func ProtocolExists(protoID uuid.UUID) bool {
 	_, ok := protocols[protoID]
 	return ok
+}
+
+// Instance returns the protocol instance associated with this token
+// nil if not registered-
+// Instance returns the protocol instance associated with this token
+// nil if not registered.
+func (pm *protocolMapper) Instance(tok *Token) ProtocolInstance {
+	pi, _ := pm.instances[tok.Id()]
+	return pi
+}
+
+// RegisterProtocolInstance simply put the proto instance mapping with the token
+func (pm *protocolMapper) RegisterProtocolInstance(proto ProtocolInstance, tok *Token) {
+	// first set the id of the protocol INSTANCE in the token ( we dont know
+	// before creating the protocol instance itself)
+	tok.InstanceID = proto.Id()
+	// then registers it.
+	pm.instances[tok.Id()] = proto
 }

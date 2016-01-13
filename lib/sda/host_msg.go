@@ -26,17 +26,32 @@ const (
 // SDAData is to be embedded in every message that is made for a
 // ProtocolInstance
 type SDAData struct {
-	// The ID of the protocol
-	ProtoID uuid.UUID
-	// The ID of the protocol instance - the counter
-	InstanceID uuid.UUID
-
+	// Token uniquely identify the protocol instance this msg is made for
+	Token
 	// MsgType of the underlying data
 	MsgType network.Type
 	// The interface to the actual Data
 	Msg network.ProtocolMessage
 	// The actual data as binary blob
 	MsgSlice []byte
+}
+
+// A Token contains all identifiers needed to Uniquely identify one protocol
+// instance. It get passed when a new protocol instance is created and get used
+// by every protocol instance when they want to send a message. That way, the
+// host knows how to create the SDAData message around the protocol's message
+// with the right fields set.
+// It's kinda "authentify" one protocol instance, hence the Token name.
+type Token struct {
+	EntityListID uuid.UUID
+	TreeID       uuid.UUID
+	ProtocolID   uuid.UUID
+	InstanceID   uuid.UUID
+}
+
+// Returns the Id of a token so we can put that in a map easily
+func (t *Token) Id() uuid.UUID {
+	return uuid.And(uuid.And(t.EntityListID, t.TreeID), uuid.And(t.ProtocolID, t.InstanceID))
 }
 
 // RequestTree is used to ask the parent for a given Tree

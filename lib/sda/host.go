@@ -33,8 +33,9 @@ type Host struct {
 	private abstract.Secret
 	// The TCPHost
 	host network.SecureHost
-	// instances linked to their ID and their ProtocolID
-	instances map[uuid.UUID]ProtocolInstance
+	// mapper is used to uniquely identify instances + helpers so protocol
+	// instances can send easily msg
+	mapper *protocolMapper
 	// The open connections
 	connections map[uuid.UUID]network.SecureConn
 	// chan of received messages - testmode
@@ -45,6 +46,7 @@ type Host struct {
 	entityLists map[uuid.UUID]*EntityList
 	// all trees known to this Host
 	trees map[uuid.UUID]*Tree
+	// Mapping from the Protocol Instance
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
@@ -82,7 +84,7 @@ func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) 
 		private:            pkey,
 		suite:              network.Suite,
 		networkChan:        make(chan network.ApplicationMessage, 1),
-		instances:          make(map[uuid.UUID]ProtocolInstance),
+		mapper:             newProtocolMapper(),
 		closed:             make(chan bool),
 		networkLock:        &sync.Mutex{},
 		entityListsLock:    &sync.Mutex{},
@@ -156,30 +158,45 @@ func (n *Host) SendToRaw(id *network.Entity, msg network.ProtocolMessage) error 
 	return nil
 }
 
-// SendMsgTo wraps the message to send in an SDAMessage and sends it to the
-// appropriate entity
-func (n *Host) SendMsgTo(id *network.Entity, msg network.ProtocolMessage) error {
-	sdaMsg := &SDAData{
-		ProtoID:    uuid.Nil,
-		InstanceID: uuid.Nil,
+// Send is the main function protocol instance must use in order to send a
+// message accross the network. A PI must first give its assigned Token, then
+// the Entity where it want to send the message then the msg. The message will
+// be trasnformed into a SDAData message automatically.
+func (n *Host) Send(tok *Token, id *network.Entity, msg network.ProtocolMessage) error {
+	if n.mapper.Instance(tok) == nil {
+		return fmt.Errorf("No protocol instance registered with this token.")
 	}
-	b, err := network.MarshalRegisteredType(msg)
+	sda := &SDAData{
+		Token: *tok,
+		Msg:   msg,
+	}
+	return n.sendSDAData(id, sda)
+}
+
+// sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
+// to the  appropriate entity
+func (n *Host) sendSDAData(id *network.Entity, sdaMsg *SDAData) error {
+	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
 	sdaMsg.MsgSlice = b
-	sdaMsg.MsgType = network.TypeFromData(msg)
+	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
+	sdaMsg.Msg = nil
 	return n.SendToRaw(id, sdaMsg)
 }
 
 // Receive will return the value of the communication-channel, unmarshalling
 // the SDAMessage. Receive is called in ProcessMessages as it takes directly
 // the message from the networkChan, and pre-process the SDAMessage
-func (n *Host) Receive() network.ApplicationMessage {
+func (n *Host) receive() network.ApplicationMessage {
 	data := <-n.networkChan
 	if data.MsgType == SDADataMessage {
 		sda := data.Msg.(SDAData)
-		t, msg, _ := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		if err != nil {
+			dbg.Error("Error while marshalling inner message of SDAData:", err)
+		}
 		// Put the msg into SDAData
 		sda.MsgType = t
 		sda.Msg = msg
@@ -375,13 +392,13 @@ func (n *Host) processSDAMessage(am *network.ApplicationMessage) error {
 			return fmt.Errorf("Protocol does not exists")
 		}
 	*/
-	ip, ok := n.instances[sda.InstanceID]
-	if !ok {
-		// XXX What to do here ? create a new instance or just drop ?
+	var pi ProtocolInstance
+	if pi = n.mapper.Instance(&sda.Token); pi == nil {
+		// TODO What to do here ? create a new instance or just drop ?
 		return fmt.Errorf("Instance Protocol not existing YET")
 	}
 	// Dispatch the message to the right instance !
-	ip.Dispatch(&sda)
+	pi.Dispatch(&sda)
 	return nil
 }
 

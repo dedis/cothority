@@ -237,14 +237,12 @@ func handleError(err error) error {
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
+func (c *TcpConn) Receive(ctx context.Context) (am ApplicationMessage, err error) {
 
-	var am ApplicationMessage
 	am.Constructors = c.host.constructors
 	bufferSize := 4096
 	b := make([]byte, bufferSize)
 	var buffer bytes.Buffer
-	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	for {
 		n, err := c.Conn.Read(b)
@@ -261,7 +259,8 @@ func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			fmt.Printf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+			am = EmptyApplicationMessage
+			err = fmt.Errorf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
 		}
 	}()
 

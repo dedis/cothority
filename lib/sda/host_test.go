@@ -60,7 +60,7 @@ func TestHostClose(t *testing.T) {
 func TestHostMessaging(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{3}
-	err := h1.SendMsgTo(h2.Entity, msgSimple)
+	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
 	if err != nil {
 		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
@@ -79,7 +79,7 @@ func TestHostMessaging(t *testing.T) {
 func TestHostIncomingMessage(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{10}
-	err := h1.SendMsgTo(h2.Entity, msgSimple)
+	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
 	if err != nil {
 		t.Fatal("Couldn't send message:", err)
 	}
@@ -94,18 +94,18 @@ func TestHostIncomingMessage(t *testing.T) {
 	h2.Close()
 }
 
-// Test sending data back and forth using the SendMsgTo
+// Test sending data back and forth using the sendSDAData
 func TestHostSendMsgDuplex(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendMsgTo(h2.Entity, msgSimple)
+	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendMsgTo(h1.Entity, msgSimple)
+	err = h2.SendSDAData(h1.Entity, &sda.SDAData{Msg: msgSimple})
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}

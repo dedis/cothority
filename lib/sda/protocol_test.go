@@ -23,7 +23,7 @@ func TestProtocolRegistration(t *testing.T) {
 // Test instantiation of the protocol
 func TestProtocolInstantiation(t *testing.T) {
 	ProtocolRegister(testID, NewProtocolTest)
-	p, err := ProtocolInstantiate(testID, nil, nil)
+	p, err := ProtocolInstantiate(testID, nil, nil, nil)
 	if err != nil {
 		t.Fatal("Couldn't instantiate test-protocol")
 	}
@@ -37,19 +37,21 @@ func TestProtocolInstantiation(t *testing.T) {
 type ProtocolTest struct {
 	*Host
 	*Tree
-	id uuid.UUID
+	id  uuid.UUID
+	tok *Token
 }
 
 var currInstanceID int
 
 // NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *Host, t *Tree) ProtocolInstance {
+func NewProtocolTest(n *Host, t *Tree, tok *Token) ProtocolInstance {
 	currInstanceID++
 	url := "http://dedis.epfl.ch/protocol/test/" + strconv.Itoa(currInstanceID)
 	return &ProtocolTest{
 		Host: n,
 		Tree: t,
 		id:   uuid.NewV5(uuid.NamespaceURL, url),
+		tok:  tok,
 	}
 }
 
