@@ -5,21 +5,20 @@ import (
 	"crypto/cipher"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"math/rand"
-	"strconv"
 	"sync"
 	"time"
 
 	"golang.org/x/net/context"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
 
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/lib/tree"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -42,7 +41,7 @@ const (
 )
 
 type Node struct {
-	coconet.Host
+	Host network.Host
 
 	// Signing Node will Fail at FailureRate probability
 	FailureRate         int
@@ -54,8 +53,6 @@ type Node struct {
 
 	Type   Type
 	Height int
-
-	HostList []string
 
 	suite   abstract.Suite
 	PubKey  abstract.Point  // long lasting public key
@@ -70,8 +67,8 @@ type Node struct {
 	// Little hack for the moment where we keep the number of responses +
 	// commits for each round so we know when to pass down the messages to the
 	// round interfaces.(it was the role of the RoundMerkle before)
-	RoundCommits   map[int][]*SigningMessage
-	RoundResponses map[int][]*SigningMessage
+	RoundCommits   map[int][]*CommitmentMessage
+	RoundResponses map[int][]*ResponseMessage
 
 	AnnounceLock sync.Mutex
 
@@ -119,15 +116,71 @@ type Node struct {
 	PeerStatusRcvd int                 // How many peers sent status
 
 	MaxWait time.Duration // How long the announcement phase can take
+	// MsgChans used to Fanin all the messages received by many connections
+	// peers
+	MsgChans chan network.ApplicationMessage
+	// lists of name -> connections used by this node
+	Conns     map[string]network.Conn
+	connsLock sync.Mutex
+	// Views are moved here (decoupled from network layer part)
+	*tree.Views
+	name string
+}
+
+func (sn *Node) Name() string {
+	return sn.name
 }
 
 // Start listening for messages coming from parent(up)
-func (sn *Node) Listen() error {
-	if sn.Pool() == nil {
-		sn.GenSetPool()
+// each time a connection request is made, we receive first its identity then
+// we handle the message using HandleConn
+func (sn *Node) Listen(addr string) error {
+	fn := func(c network.Conn) {
+		ctx := context.TODO()
+		am, err := c.Receive(ctx)
+		if err != nil || am.MsgType != Identity {
+			dbg.Lvl2(sn.Name(), "Error receiving identity from connection", c.Remote())
+		}
+		id := am.Msg.(IdentityMessage)
+		sn.connsLock.Lock()
+		sn.Conns[id.PeerName] = c
+		sn.connsLock.Unlock()
+		dbg.Lvl3(sn.Name(), "Accepted Connection from", id.PeerName)
+		sn.HandleConn(id.PeerName, c)
 	}
-	err := sn.ProcessMessages()
-	return err
+	go sn.Host.Listen(addr, fn)
+	// XXX Should it be here ?
+	return sn.ProcessMessages()
+}
+
+// HandleConn receives message and pass it along the msgchannels
+func (sn *Node) HandleConn(name string, c network.Conn) {
+	for !sn.Isclosed {
+		ctx := context.TODO()
+		am, err := c.Receive(ctx)
+		// XXX this is only a workaround. Need to find better ways to handle
+		// error than an "IF" in nodeprotocol
+		am.SetError(err)
+		am.From = name
+		sn.MsgChans <- am
+	}
+}
+
+// Open will connect to the specified node and directly send him our identity
+func (sn *Node) Open(name string) error {
+	c, err := sn.Host.Open(name)
+	if err != nil {
+		return err
+	}
+	sn.connsLock.Lock()
+	sn.Conns[name] = c
+	sn.connsLock.Unlock()
+	ctx := context.TODO()
+	if err := c.Send(ctx, &IdentityMessage{sn.Name()}); err != nil {
+		return err
+	}
+	go sn.HandleConn(name, c)
+	return nil
 }
 
 func (sn *Node) Close() {
@@ -140,11 +193,13 @@ func (sn *Node) Close() {
 	}
 	if !sn.Isclosed {
 		close(sn.closed)
-		dbg.Lvl4("signing node: closing:", sn.Name())
-		sn.Host.Close()
+		dbg.Lvl2("signing node: closing:", sn.Name())
+		if err := sn.Host.Close(); err != nil {
+			dbg.Lvl2(sn.Name(), "Close() error:", err)
+		}
 	}
-	dbg.Lvl3("Closed connection")
 	sn.Isclosed = true
+	dbg.Lvl3(sn.Name(), "Closed connections")
 	sn.hbLock.Unlock()
 }
 
@@ -152,54 +207,23 @@ func (sn *Node) ViewChangeCh() chan string {
 	return sn.viewChangeCh
 }
 
-func (sn *Node) Hostlist() []string {
-	return sn.HostList
-}
-
 // Returns name of node who should be the root for the next view
 // round robin is used on the array of host names to determine the next root
 func (sn *Node) RootFor(view int) string {
 	dbg.Lvl2(sn.Name(), "Root for view", view)
-	var hl []string
+	var hl *tree.PeerList
 	if view == 0 {
-		hl = sn.HostListOn(view)
+		hl = sn.PeerList(view)
 	} else {
 		// we might not have the host list for current view
 		// safer to use the previous view's hostlist, always
-		hl = sn.HostListOn(view - 1)
+		hl = sn.PeerList(view - 1)
 	}
-	return hl[view%len(hl)]
+	return hl.Peers[view%len(hl.Peers)].Name
 }
 
 func (sn *Node) SetFailureRate(v int) {
 	sn.FailureRate = v
-}
-
-func (sn *Node) logFirstPhase(firstRoundTime time.Duration) {
-	log.WithFields(log.Fields{
-		"file":  logutils.File(),
-		"type":  "root_announce",
-		"round": sn.nRounds,
-		"time":  firstRoundTime,
-	}).Info("done with root announce round " + strconv.Itoa(sn.nRounds))
-}
-
-func (sn *Node) logSecondPhase(secondRoundTime time.Duration) {
-	log.WithFields(log.Fields{
-		"file":  logutils.File(),
-		"type":  "root_challenge second",
-		"round": sn.nRounds,
-		"time":  secondRoundTime,
-	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
-}
-
-func (sn *Node) logTotalTime(totalTime time.Duration) {
-	log.WithFields(log.Fields{
-		"file":  logutils.File(),
-		"type":  "root_challenge total",
-		"round": sn.nRounds,
-		"time":  totalTime,
-	}).Info("done with root challenge round " + strconv.Itoa(sn.nRounds))
 }
 
 func (sn *Node) StartAnnouncementWithWait(round Round, wait time.Duration) error {
@@ -227,15 +251,12 @@ func (sn *Node) StartAnnouncementWithWait(round Round, wait time.Duration) error
 	go func() {
 		var err error
 		// Launch the announcement process
-		err = sn.Announce(&SigningMessage{
-			Suite:    sn.Suite().String(),
-			Type:     Announcement,
-			RoundNbr: sn.nRounds,
-			ViewNbr:  sn.ViewNo,
-			Am: &AnnouncementMessage{
-				RoundType: round.GetType(),
-				Message:   make([]byte, 0),
-			},
+		err = sn.Announce(&AnnouncementMessage{
+			SigningMessage: &SigningMessage{
+				RoundNbr: sn.nRounds,
+				ViewNbr:  sn.ViewNo},
+			RoundType: round.GetType(),
+			Message:   make([]byte, 0),
 		})
 
 		if err != nil {
@@ -285,7 +306,7 @@ func (sn *Node) StartAnnouncement(round Round) error {
 	return sn.StartAnnouncementWithWait(round, sn.MaxWait)
 }
 
-func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node {
+func NewNode(suite abstract.Suite, name string, hn network.Host, views *tree.Views, random cipher.Stream) *Node {
 	sn := &Node{Host: hn, suite: suite}
 	sn.PrivKey = suite.Secret().Pick(random)
 	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
@@ -297,26 +318,32 @@ func NewNode(hn coconet.Host, suite abstract.Suite, random cipher.Stream) *Node 
 	sn.commitsDone = make(chan int, 10)
 	sn.viewChangeCh = make(chan string, 0)
 
-	sn.RoundCommits = make(map[int][]*SigningMessage)
-	sn.RoundResponses = make(map[int][]*SigningMessage)
+	sn.RoundCommits = make(map[int][]*CommitmentMessage)
+	sn.RoundResponses = make(map[int][]*ResponseMessage)
 	sn.FailureRate = 0
 	h := fnv.New32a()
-	h.Write([]byte(hn.Name()))
+	// TODO this is bad !
+	h.Write([]byte(name))
 	seed := h.Sum32()
 	sn.Rand = rand.New(rand.NewSource(int64(seed)))
-	sn.Host.SetSuite(suite)
 	sn.VoteLog = NewVoteLog()
 	sn.Actions = make(map[int][]*Vote)
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
 	sn.MaxWait = 50 * time.Second
+	sn.MsgChans = make(chan network.ApplicationMessage)
+	sn.Conns = make(map[string]network.Conn)
+	sn.connsLock = sync.Mutex{}
+	sn.Views = views
+	sn.name = name
 	return sn
 }
 
 // Create new signing node that incorporates a given private key
-func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret) *Node {
-	sn := &Node{Host: hn, suite: suite, PrivKey: PrivKey}
-	sn.PubKey = suite.Point().Mul(nil, sn.PrivKey)
+func NewKeyedNode(suite abstract.Suite, name string, hn network.Host, views *tree.Views) *Node {
+	sn := &Node{Host: hn, suite: suite}
+	sn.PrivKey = views.View(0).Secret
+	sn.PubKey = views.View(0).Public
 
 	sn.peerKeys = make(map[string]abstract.Point)
 
@@ -325,46 +352,174 @@ func NewKeyedNode(hn coconet.Host, suite abstract.Suite, PrivKey abstract.Secret
 	sn.commitsDone = make(chan int, 10)
 	sn.viewChangeCh = make(chan string, 0)
 
-	sn.RoundCommits = make(map[int][]*SigningMessage)
-	sn.RoundResponses = make(map[int][]*SigningMessage)
+	sn.RoundCommits = make(map[int][]*CommitmentMessage)
+	sn.RoundResponses = make(map[int][]*ResponseMessage)
 
 	sn.FailureRate = 0
 	h := fnv.New32a()
-	h.Write([]byte(hn.Name()))
+	h.Write([]byte(name))
 	seed := h.Sum32()
 	sn.Rand = rand.New(rand.NewSource(int64(seed)))
-	sn.Host.SetSuite(suite)
 	sn.VoteLog = NewVoteLog()
 	sn.Actions = make(map[int][]*Vote)
 	sn.RoundsPerView = 0
 	sn.Rounds = make(map[int]Round)
 	sn.MaxWait = 50 * time.Second
+	sn.MsgChans = make(chan network.ApplicationMessage)
+	sn.Conns = make(map[string]network.Conn)
+	sn.connsLock = sync.Mutex{}
+	sn.Views = views
+	sn.name = name
 	return sn
 }
 
 func (sn *Node) ShouldIFail(phase string) bool {
-	if sn.FailureRate > 0 {
-		// If we were manually set to always fail
-		if sn.Host.(*coconet.FaultyHost).IsDead() ||
-			sn.Host.(*coconet.FaultyHost).IsDeadFor(phase) {
-			dbg.Lvl2(sn.Name(), "dead for "+phase)
-			return true
-		}
+	// XXX not used for the moment
+	// have to switch to network.Host
+	/* if sn.FailureRate > 0 {*/
+	//// If we were manually set to always fail
+	//if sn.Host.(*coconet.FaultyHost).IsDead() ||
+	//sn.Host.(*coconet.FaultyHost).IsDeadFor(phase) {
+	//dbg.Lvl2(sn.Name(), "dead for "+phase)
+	//return true
+	//}
 
-		// If we were only given a probability of failing
-		if p := sn.Rand.Int() % 100; p < sn.FailureRate {
-			dbg.Lvl2(sn.Name(), "died for "+phase, "p", p, "with prob", sn.FailureRate)
-			return true
-		}
+	//// If we were only given a probability of failing
+	//if p := sn.Rand.Int() % 100; p < sn.FailureRate {
+	//dbg.Lvl2(sn.Name(), "died for "+phase, "p", p, "with prob", sn.FailureRate)
+	//return true
+	//}
 
-	}
+	//}
 
 	return false
 }
 
 func (sn *Node) AddPeer(conn string, PubKey abstract.Point) {
-	sn.Host.AddPeers(conn)
+	// it does not connect so what it is used for
+	//sn.Host.AddPeers(conn)
 	sn.peerKeys[conn] = PubKey
+}
+
+// Returns true if this node is the parent of the child
+func (sn *Node) ParentOf(view int, child string) bool {
+	if v := sn.View(view); v != nil {
+		return v.ParentOf(child)
+	}
+	return false
+}
+
+// Are this node root this view ?
+func (sn *Node) Root(view int) bool {
+	if v := sn.View(view); v != nil {
+		return v.Root()
+	}
+	return false
+}
+
+// are we leaf on this view ?
+func (sn *Node) Leaf(view int) bool {
+	if v := sn.View(view); v != nil {
+		return v.Leaf()
+	}
+	return false
+}
+
+// Same as ParentOf but for children ....
+func (sn *Node) ChildOf(view int, parent string) bool {
+	if v := sn.View(view); v != nil {
+		return v.ChildOf(parent)
+	}
+	return false
+}
+
+// PutDownAll puts the msg down the tree (Sending to children)
+// TODO make it work with []network.ProtocolMessage since casting does not work
+// for array/slices
+func (sn *Node) PutDownAll(ctx context.Context, view int, msg ...network.ProtocolMessage) error {
+	children := sn.Children(view)
+	if children == nil {
+		return fmt.Errorf("PutDownAll : No views %d", view)
+	}
+	if len(children) != len(msg) {
+		return fmt.Errorf("PutDownAll  received different numbers of message", len(msg), " vs children", len(children))
+	}
+	// Every children of this node
+	for i, ch := range children {
+		// look if we have indeed a connection
+		if c, ok := sn.Conns[ch.Name()]; ok {
+			// then send it
+			if err := c.Send(ctx, msg[i]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// PutDown only send a message down to a child
+func (sn *Node) PutDown(ctx context.Context, view int, name string, msg network.ProtocolMessage) error {
+	// Verify that it is indeed a child
+	if v := sn.View(view); v == nil {
+		fmt.Errorf("PutDown no view for %d", view)
+	} else if !v.ParentOf(name) {
+		fmt.Errorf("PutDown %s is not a children for view %d", name, view)
+	}
+	sn.connsLock.Lock()
+	// if we have a connection ready for this child
+	c, ok := sn.Conns[name]
+	sn.connsLock.Unlock()
+	if !ok {
+		return fmt.Errorf("No connection to %s", name)
+	}
+	// Send the stuff !
+	return c.Send(ctx, msg)
+}
+
+// PutUp send the message to the parent of this node
+func (sn *Node) PutUp(ctx context.Context, view int, msg network.ProtocolMessage) error {
+	var c network.Conn
+	var ok bool
+	var err error
+	sn.connsLock.Lock()
+	if node := sn.Parent(view); node == nil {
+		err = fmt.Errorf("PutUp Got no parent for this view %d", view)
+	} else if c, ok = sn.Conns[node.Name()]; !ok {
+		err = fmt.Errorf("PutUp got no connection to parent %s in view %d", node.Name(), view)
+	}
+	sn.connsLock.Unlock()
+	if err != nil {
+		return err
+	}
+	return c.Send(ctx, msg)
+}
+
+func (sn *Node) PutTo(ctx context.Context, name string, msg network.ProtocolMessage) error {
+	var c network.Conn
+	var ok bool
+	var err error
+	sn.connsLock.Unlock()
+	if c, ok = sn.Conns[name]; !ok {
+		err = fmt.Errorf("PutTo given unknown peer name %s", name)
+	}
+	sn.connsLock.Unlock()
+	if err != nil {
+		return err
+	}
+	return c.Send(ctx, msg)
+}
+
+// ConnectParent will contact the parent in this view. If we are the root,
+// it will return an error as we are not supposed to do that.
+func (sn *Node) ConnectParent(view int) error {
+	var parent *tree.Node
+	if sn.Root(view) {
+		return fmt.Errorf("%s SHould NOT connect to parent since he is root", sn.Name())
+	}
+	if parent = sn.Parent(view); parent == nil {
+		return fmt.Errorf("Could not connect to parent in view %d", view)
+	}
+	return sn.Open(parent.Name())
 }
 
 func (sn *Node) Suite() abstract.Suite {
@@ -373,6 +528,41 @@ func (sn *Node) Suite() abstract.Suite {
 
 func (sn *Node) Done() chan int {
 	return sn.done
+}
+
+func (sn *Node) WaitChildrenConnections(view int) {
+	done := make(chan bool)
+	go func() {
+		for {
+			var connected int
+			sn.connsLock.Lock()
+			/*         if sn.Root(view) {*/
+			//fmt.Println(sn.Name(), "View.Children=", sn.Children(view))
+			//fmt.Println(sn.Name(), "Conns =", sn.Conns)
+			//}
+
+			for _, c := range sn.Children(view) {
+				if _, ok := sn.Conns[c.Name()]; ok {
+					connected++
+				}
+			}
+			sn.connsLock.Unlock()
+			if connected == len(sn.Children(view)) {
+				done <- true
+				return
+			} else {
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
+	}()
+	select {
+	case <-done:
+		close(done)
+		return
+	case <-time.After(30 * time.Second):
+		close(done)
+		dbg.Fatal(sn.Name(), "Children not connected after 30 secs")
+	}
 }
 
 func (sn *Node) LastRound() int {
@@ -399,12 +589,6 @@ func (sn *Node) UpdateTimeout(t ...time.Duration) {
 		tt := time.Duration(sn.Height)*sn.DefaultTimeout() + sn.DefaultTimeout()
 		sn.SetTimeout(tt)
 	}
-}
-
-func (sn *Node) GenSetPool() {
-	var p sync.Pool
-	p.New = NewSigningMessage
-	sn.SetPool(&p)
 }
 
 func (sn *Node) SetTimeout(t time.Duration) {
@@ -434,18 +618,15 @@ func (sn *Node) CloseAll(view int) error {
 		dbg.Lvl3(sn.Name(), "in CloseAll is calling", len(sn.Children(view)), "children")
 
 		// Inform all children of announcement
-		messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+		messgs := make([]*CloseAllMessage, sn.NChildren(view))
 		for i := range messgs {
-			sm := SigningMessage{
-				Suite:   sn.Suite().String(),
-				Type:    CloseAll,
+			sm := CloseAllMessage{
 				ViewNbr: view,
-				//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
 			}
 			messgs[i] = &sm
 		}
 		ctx := context.TODO()
-		if err := sn.PutDown(ctx, view, messgs); err != nil {
+		if err := sn.PutDownAll(ctx, view, messgs); err != nil {
 			return err
 		}
 	}
@@ -458,12 +639,10 @@ func (sn *Node) PutUpError(view int, err error) {
 	// dbg.Lvl4(sn.Name(), "put up response with err", err)
 	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	ctx := context.TODO()
-	sn.PutUp(ctx, view, &SigningMessage{
-		Suite:   sn.Suite().String(),
-		Type:    Error,
-		ViewNbr: view,
-		//LastSeenVote: int(atomic.LoadInt64(&sn.LastSeenVote)),
-		Err: &ErrorMessage{Err: err.Error()}})
+	sn.PutUp(ctx, view, &ErrorMessage{
+		SigningMessage: &SigningMessage{
+			ViewNbr: view},
+		Err: err.Error()})
 }
 
 // Getting actual View

@@ -13,7 +13,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/tree"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -138,21 +138,21 @@ func readHostFile(file string) ([]string, []string, error) {
 // ConstructTree takes a map of host -> public keys and a branching factor
 // so it can constructs a regular tree. THe returned tree is the root
 // it is constructed bfs style
-func constructTree(hosts, pubs []string, bf int) *graphs.Tree {
-	var root *graphs.Tree = new(graphs.Tree)
+func constructTree(hosts, pubs []string, bf int) *tree.ConfigTree {
+	var root *tree.ConfigTree = new(tree.ConfigTree)
 	root.Name = hosts[0]
 	root.PubKey = pubs[0]
 	var index int = 1
-	bfs := make([]*graphs.Tree, 1)
+	bfs := make([]*tree.ConfigTree, 1)
 	bfs[0] = root
 	for len(bfs) > 0 && index < len(hosts) {
 		t := bfs[0]
-		t.Children = make([]*graphs.Tree, 0)
+		t.Children = make([]*tree.ConfigTree, 0)
 		lbf := 0
 		// create space for enough children
 		// init them
 		for lbf < bf && index < len(hosts) {
-			child := new(graphs.Tree)
+			child := new(tree.ConfigTree)
 			child.Name = hosts[index]
 			child.PubKey = pubs[index]
 			// append the children to the list of trees to visit

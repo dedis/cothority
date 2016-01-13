@@ -5,8 +5,9 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/tree"
+	"github.com/dedis/crypto/suites"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -112,6 +113,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	localConfig := d.RunDir + "/" + defaultConfigName
 	ioutil.WriteFile(appConfig, rc.Toml(), 0666)
 	d.ReadConfig(appConfig)
+
 	d.GenerateHosts()
 
 	app.WriteTomlConfig(d, localConfig)
@@ -130,31 +132,18 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers
 		// ppm = 1
-		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree = tree.GenNaryTree(suite, d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
-
-		dbg.Lvl2("Total hosts / depth:", len(conf.Hosts), graphs.Depth(conf.Tree))
-		total := d.Machines * d.Ppm
-		if len(conf.Hosts) != total {
-			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
-				"machines or hosts per node")
-		}
-		d.Hosts = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 	case "skeleton":
 		conf := app.ConfigSkeleton{}
 		app.ReadTomlConfig(&conf, localConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree = tree.GenNaryTree(suite, d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
-		dbg.Lvl2("Total hosts / depth:", len(conf.Hosts), graphs.Depth(conf.Tree))
-		total := d.Machines * d.Ppm
-		if len(conf.Hosts) != total {
-			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
-				"machines or hosts per node")
-		}
-		d.Hosts = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 	case "shamir":
@@ -176,10 +165,10 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		conf := app.NTreeConfig{}
 		app.ReadTomlConfig(&conf, localConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree = tree.GenNaryTree(suite, d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
 		dbg.Lvl3("Localhost: naive Tree applications:", conf.Hosts)
-		d.Hosts = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
 	}
@@ -253,12 +242,13 @@ func (d *Localhost) ReadConfig(name ...string) {
 // with a new port each
 func (d *Localhost) GenerateHosts() {
 	nrhosts := d.Machines * d.Ppm
-	d.Hosts = make([]string, nrhosts)
+	names := make([]string, nrhosts)
 	port := 2000
 	inc := 5
 	for i := 0; i < nrhosts; i++ {
 		s := "127.0.0.1:" + strconv.Itoa(port+inc*i)
-		d.Hosts[i] = s
+		names[i] = s
 	}
+	d.Hosts = names
 	dbg.Lvl4("Localhost: Generated hosts list", d.Hosts)
 }

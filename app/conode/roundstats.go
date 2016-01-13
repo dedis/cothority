@@ -32,14 +32,16 @@ func NewRoundStats(node *sign.Node) *RoundStats {
 	return round
 }
 
-func (round *RoundStats) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundStats) Commitment(in []*sign.CommitmentMessage, out *sign.CommitmentMessage) error {
 	err := round.RoundStamperListener.Commitment(in, out)
 	return err
 }
 
-func (round *RoundStats) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundStats) SignatureBroadcast(in *sign.SignatureBroadcastMessage, out []*sign.SignatureBroadcastMessage) error {
 	err := round.RoundStamperListener.SignatureBroadcast(in, out)
-	dbg.Lvlf1("Round %d with %d messages (including children) - %d since start.",
-		round.RoundNbr, round.RoundMessages, in.SBm.Messages)
+	if err == nil && round.IsRoot {
+		dbg.Lvlf1("This is round %d with %d messages - %d since start.",
+			round.RoundNbr, in.Messages, round.Node.Messages)
+	}
 	return err
 }

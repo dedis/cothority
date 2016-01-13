@@ -89,10 +89,12 @@ type Count struct {
 }
 
 type CatchUpRequest struct {
+	*SigningMessage
 	Index int // index of requested vote
 }
 
 type CatchUpResponse struct {
+	*SigningMessage
 	Vote *Vote
 }
 

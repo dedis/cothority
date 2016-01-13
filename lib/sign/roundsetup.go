@@ -34,32 +34,32 @@ func NewRoundSetup(node *Node) *RoundSetup {
 	return round
 }
 
-func (round *RoundSetup) Announcement(viewNbr, roundNbr int, in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundSetup) Announcement(viewNbr, roundNbr int, in *AnnouncementMessage, out []*AnnouncementMessage) error {
 	return nil
 }
 
-func (round *RoundSetup) Commitment(in []*SigningMessage, out *SigningMessage) error {
-	out.Com.Messages = 1
+func (round *RoundSetup) Commitment(in []*CommitmentMessage, out *CommitmentMessage) error {
+	out.Messages = 1
 	if !round.IsLeaf {
 		for _, i := range in {
-			out.Com.Messages += i.Com.Messages
+			out.Messages += i.Messages
 		}
 	}
 	if round.IsRoot {
-		dbg.Lvl2("Number of nodes found:", out.Com.Messages)
-		round.Counted <- out.Com.Messages
+		dbg.Lvl2("Number of nodes found:", out.Messages)
+		round.Counted <- out.Messages
 	}
 	return nil
 }
 
-func (round *RoundSetup) Challenge(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundSetup) Challenge(in *ChallengeMessage, out []*ChallengeMessage) error {
 	return nil
 }
 
-func (round *RoundSetup) Response(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundSetup) Response(in []*ResponseMessage, out *ResponseMessage) error {
 	return nil
 }
 
-func (round *RoundSetup) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundSetup) SignatureBroadcast(in *SignatureBroadcastMessage, out []*SignatureBroadcastMessage) error {
 	return nil
 }

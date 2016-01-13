@@ -66,6 +66,7 @@ func main() {
 	// Here you create a "Peer",that's the struct that will create a new round
 	// each seconds and handle other subtleties for you
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
+	peer.SetupConnections()
 
 	// The root waits everyone's to be up
 	if app.RunFlags.AmRoot {
