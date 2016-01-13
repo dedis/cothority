@@ -29,51 +29,65 @@ Host is the structure responsible for holding information about the current
 type Host struct {
 	// Our entity (i.e. identity over the network)
 	Entity *network.Entity
-	// the working address is set when the Host will start listen
-	// When a listening adress found in the entity works, workingAddress is
-	// set to that address
-	workingAddress string
+	// Our private-key
+	private abstract.Secret
 	// The TCPHost
 	host network.SecureHost
+	// instances linked to their ID and their ProtocolID
+	instances map[uuid.UUID]ProtocolInstance
 	// The open connections
 	connections map[uuid.UUID]network.SecureConn
-	// and the lock associated to access them
-	networkLock *sync.Mutex
+	// chan of received messages - testmode
+	networkChan chan network.ApplicationMessage
 	// The database of entities this host knows
 	entities map[uuid.UUID]*network.Entity
 	// The entityLists used for building the trees
 	entityLists map[uuid.UUID]*EntityList
 	// all trees known to this Host
 	trees map[uuid.UUID]*Tree
-	// Our private-key
-	private abstract.Secret
+	// treeMarshal that needs to be converted to Tree but host does not have the
+	// entityList associated yet.
+	// map from EntityList.ID => trees that use this entity list
+	pendingTreeMarshal map[uuid.UUID][]*TreeMarshal
 	// The suite used for this Host
 	suite abstract.Suite
-	// slice of received messages - testmode
-	networkChan chan network.ApplicationMessage
-	// instances linked to their ID and their ProtocolID
-	instances map[uuid.UUID]ProtocolInstance
 	// closed channel to notifiy the connections that we close
 	closed chan bool
+	// lock associated to access network connections
+	// and to access entities also.
+	networkLock *sync.Mutex
+	// lock associated to access entityLists
+	entityListsLock *sync.Mutex
+	// lock associated to access trees
+	treesLock *sync.Mutex
+	// lock associated with pending TreeMarshal
+	pendingTreeLock *sync.Mutex
+	// working address is mostly for debugging purposes so we know what address
+	// is known as right now
+	workingAddress string
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) *Host {
 	n := &Host{
-		Entity:         id,
-		workingAddress: id.First(),
-		networkLock:    &sync.Mutex{},
-		connections:    make(map[uuid.UUID]network.SecureConn),
-		entities:       make(map[uuid.UUID]*network.Entity),
-		trees:          make(map[uuid.UUID]*Tree),
-		entityLists:    make(map[uuid.UUID]*EntityList),
-		host:           host,
-		private:        pkey,
-		suite:          network.Suite,
-		networkChan:    make(chan network.ApplicationMessage, 1),
-		instances:      make(map[uuid.UUID]ProtocolInstance),
-		closed:         make(chan bool),
+		Entity:             id,
+		workingAddress:     id.First(),
+		connections:        make(map[uuid.UUID]network.SecureConn),
+		entities:           make(map[uuid.UUID]*network.Entity),
+		trees:              make(map[uuid.UUID]*Tree),
+		entityLists:        make(map[uuid.UUID]*EntityList),
+		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
+		host:               host,
+		private:            pkey,
+		suite:              network.Suite,
+		networkChan:        make(chan network.ApplicationMessage, 1),
+		instances:          make(map[uuid.UUID]ProtocolInstance),
+		closed:             make(chan bool),
+		networkLock:        &sync.Mutex{},
+		entityListsLock:    &sync.Mutex{},
+		treesLock:          &sync.Mutex{},
+		pendingTreeLock:    &sync.Mutex{},
 	}
 	return n
 }
@@ -212,16 +226,26 @@ func (n *Host) ProcessMessages() {
 				continue
 			}
 			il, ok := n.GetEntityList(tm.Entity)
+			// The entity list does not exists, we should request for that too
 			if !ok {
-				dbg.Error("EntityList-id doesn't exist")
+				msg := &RequestEntityList{tm.Entity}
+				if err := n.SendToRaw(data.Entity, msg); err != nil {
+					dbg.Error("Requesting EntityList in SendTree failed", err)
+				}
+
+				// put the tree marshal into pending queue so when we receive the
+				// entitylist we can create the real Tree.
+				n.addPendingTreeMarshal(&tm)
 				continue
 			}
+
 			tree, err := tm.MakeTree(il)
 			if err != nil {
 				dbg.Error("Couldn't create tree:", err)
 				continue
 			}
 			n.AddTree(tree)
+
 		// Some host requested an EntityList
 		case RequestEntityListMessage:
 			id := data.Msg.(RequestEntityList).EntityListID
@@ -229,7 +253,8 @@ func (n *Host) ProcessMessages() {
 			if ok {
 				err = n.SendToRaw(data.Entity, il)
 			} else {
-				err = n.SendToRaw(data.Entity, &EntityList{})
+				dbg.Error("Requested entityList that we don't have")
+				n.SendToRaw(data.Entity, &EntityList{})
 			}
 		// Host replied to our request of entitylist
 		case SendEntityListMessage:
@@ -238,6 +263,8 @@ func (n *Host) ProcessMessages() {
 				dbg.Error("Received an empty EntityList")
 			}
 			n.AddEntityList(&il)
+			// Check if some trees can be constructed from this entitylist
+			n.checkPendingTreeMarshal(&il)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -249,29 +276,37 @@ func (n *Host) ProcessMessages() {
 
 // AddEntityList stores the peer-list for further usage
 func (n *Host) AddEntityList(il *EntityList) {
+	n.entityListsLock.Lock()
 	if _, ok := n.entityLists[il.Id]; ok {
 		dbg.Lvl2("Added EntityList with same ID")
 	}
 	n.entityLists[il.Id] = il
+	n.entityListsLock.Unlock()
 }
 
 // AddTree stores the tree for further usage
 func (n *Host) AddTree(t *Tree) {
+	n.treesLock.Lock()
 	if _, ok := n.trees[t.Id]; ok {
 		dbg.Lvl2("Added Tree with same ID")
 	}
 	n.trees[t.Id] = t
+	n.treesLock.Unlock()
 }
 
 // GetEntityList returns the EntityList
 func (n *Host) GetEntityList(id uuid.UUID) (*EntityList, bool) {
+	n.entityListsLock.Lock()
 	il, ok := n.entityLists[id]
+	n.entityListsLock.Unlock()
 	return il, ok
 }
 
 // GetTree returns the TreeList
 func (n *Host) GetTree(id uuid.UUID) (*Tree, bool) {
+	n.treesLock.Lock()
 	t, ok := n.trees[id]
+	n.treesLock.Unlock()
 	return t, ok
 }
 
@@ -311,7 +346,7 @@ func (n *Host) handleConn(c network.SecureConn) {
 			dbg.Lvl3("Putting message into networkChan:", am)
 			n.networkChan <- am
 		case e := <-errorChan:
-			if e == network.ErrClosed {
+			if e == network.ErrClosed || e == network.ErrEOF {
 				return
 			}
 			dbg.Error("Error with connection", address, "=> error", e)
@@ -365,4 +400,43 @@ func (n *Host) registerConnection(c network.SecureConn) {
 // instance.
 func (n *Host) Suite() abstract.Suite {
 	return n.suite
+}
+
+// addPendingTreeMarshal adds a treeMarshal to the list.
+// This list is checked each time we receive a new EntityList
+// so trees using this EntityList can be constructed.
+func (n *Host) addPendingTreeMarshal(tm *TreeMarshal) {
+	n.pendingTreeLock.Lock()
+	var sl []*TreeMarshal
+	var ok bool
+	// initiate the slice before adding
+	if sl, ok = n.pendingTreeMarshal[tm.Entity]; !ok {
+		sl = make([]*TreeMarshal, 0)
+	}
+	sl = append(sl, tm)
+	n.pendingTreeMarshal[tm.Entity] = sl
+	n.pendingTreeLock.Unlock()
+}
+
+// checkPendingTreeMarshal is called each time we add a new EntityList to the
+// system. It checks if some treeMarshal use this entityList so they can be
+// converted to Tree.
+func (n *Host) checkPendingTreeMarshal(el *EntityList) {
+	n.pendingTreeLock.Lock()
+	var sl []*TreeMarshal
+	var ok bool
+	if sl, ok = n.pendingTreeMarshal[el.Id]; !ok {
+		// no tree for this entitty list
+		return
+	}
+	for _, tm := range sl {
+		tree, err := tm.MakeTree(el)
+		if err != nil {
+			dbg.Error("Tree from EntityList failed")
+			continue
+		}
+		// add the tree into our "database"
+		n.AddTree(tree)
+	}
+	n.pendingTreeLock.Unlock()
 }

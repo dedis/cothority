@@ -102,6 +102,20 @@ func (t *Tree) String() string {
 		t.Id, t.IdList.Id, t.Root.Id)
 }
 
+// TreeMarshal is used to send and receive a tree-structure without having
+// to copy the whole nodelist
+type TreeMarshal struct {
+	// This is the UUID of the corresponding TreeNode, or the Tree-Id for the
+	// top-node
+	Node uuid.UUID
+	// This is the UUID of the Entity, except for the top-node, where this
+	// is the EntityList-Id
+	Entity uuid.UUID
+	// All children from this tree. The top-node only has one child, which is
+	// the root
+	Children []*TreeMarshal
+}
+
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
@@ -141,20 +155,6 @@ func (tm *TreeMarshal) MakeTreeFromList(il *EntityList) *TreeNode {
 	return tn
 }
 
-// TreeMarshal is used to send and receive a tree-structure without having
-// to copy the whole nodelist
-type TreeMarshal struct {
-	// This is the UUID of the corresponding TreeNode, or the Tree-Id for the
-	// top-node
-	Node uuid.UUID
-	// This is the UUID of the Entity, except for the top-node, where this
-	// is the EntityList-Id
-	Entity uuid.UUID
-	// All children from this tree. The top-node only has one child, which is
-	// the root
-	Children []*TreeMarshal
-}
-
 // A PeerList is a list of Entity we choose to run  some tree on it ( and
 // therefor some protocols)
 type EntityList struct {
@@ -162,6 +162,8 @@ type EntityList struct {
 	// TODO make that a set / map so search is O(1)
 	List []*network.Entity
 }
+
+var NilEntityList = EntityList{}
 
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.

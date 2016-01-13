@@ -138,11 +138,31 @@ func TestHostSendDuplex(t *testing.T) {
 	h2.Close()
 }
 
+// Test when a peer receives a New EntityList, it can create the trees that are
+// waiting on this specific entitiy list, to be constructed.
+func TestPeerPendingTreeMarshal(t *testing.T) {
+	h1, h2 := setupHosts(t, false)
+	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	tree, _ := GenerateTreeFromEntityList(el)
+
+	// Add the marshalled version of the tree
+	h1.AddPendingTreeMarshal(tree.MakeTreeMarshal())
+	if _, ok := h1.GetTree(tree.Id); ok {
+		t.Fatal("host 1 should not have the tree definition yet.")
+	}
+	// Now make it check
+	h1.CheckPendingTreeMarshal(el)
+	if _, ok := h1.GetTree(tree.Id); !ok {
+		t.Fatal("Host 1 should have the tree definition now.")
+	}
+	h1.Close()
+	h2.Close()
+}
+
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
 	il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
-
 	// Check that h2 sends back an empty list if it is unknown
 	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
 	if err != nil {
@@ -238,10 +258,55 @@ func TestTreePropagation(t *testing.T) {
 	if !tree.Equal(tree2) {
 		t.Fatal("Trees do not match")
 	}
+	h1.Close()
+	h2.Close()
 }
 
 // Tests both list- and tree-propagation
+// basically h1 ask for a tree id
+// h2 respond with the tree
+// h1 ask for the entitylist (because it dont know)
+// h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
+	h1, h2 := setupHosts(t, true)
+	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	tree, _ := GenerateTreeFromEntityList(el)
+	// h2 knows the entity list
+	h2.AddEntityList(el)
+	// and the tree
+	h2.AddTree(tree)
+	// make host1 listen, so it will process messages as host2 is sending
+	// it is supposed to automatically ask for the entitylist
+	go h1.ProcessMessages()
+	// make the communcation happen
+	if err := h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id}); err != nil {
+		t.Fatal("Could not send tree request to host2", err)
+	}
+
+	var tryTree int
+	var tryEntity int
+	var found bool
+	for tryTree < 5 || tryEntity < 5 {
+		// Sleep a bit
+		time.Sleep(100 * time.Millisecond)
+		// then look if we have both the tree and the entity list
+		if _, ok := h1.GetTree(tree.Id); !ok {
+			tryTree++
+			continue
+		}
+		// We got the tree that's already something, now do we get the entity
+		// list
+		if _, ok := h1.GetEntityList(el.Id); !ok {
+			tryEntity++
+			continue
+		}
+		// we got both ! yay
+		found = true
+		break
+	}
+	if !found {
+		t.Fatal("Did not get the tree + entityList from host2")
+	}
 
 }
 

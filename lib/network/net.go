@@ -147,7 +147,7 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		return fmt.Errorf("Error opening listener on address %s", addr)
+		return fmt.Errorf("Error opening listener on address %s:%v", addr, err)
 	}
 	t.listener = ln
 	for {
@@ -415,11 +415,12 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 		go fn(stc)
 	}
 	var addr string
+	var err error
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
 		dbg.Lvl3("Trying to listen on", addr)
 		st.workingAddress = addr
-		if err := st.TcpHost.listen(addr, receiver); err != nil {
+		if err = st.TcpHost.listen(addr, receiver); err != nil {
 			// The listening is over
 			if err == ErrClosed || err == ErrEOF {
 				return nil
@@ -428,7 +429,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("No address worked for listening on this host")
+	return fmt.Errorf("No address worked for listening on this host", err)
 }
 
 // Open will try any address that is in the Entity and connect to the first
