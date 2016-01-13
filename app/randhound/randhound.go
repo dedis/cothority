@@ -1,6 +1,10 @@
 package randhound
 
-import "github.com/dedis/cothority/lib/sda"
+import (
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/protobuf"
+)
 
 func init() {
 	sda.ProtocolRegister("RandHound", NewProtocolInstance)
@@ -9,8 +13,8 @@ func init() {
 type ProtocolRandHound struct {
 	sda.Host
 	sda.TreeNode
-	c client
-	s server
+	c Client
+	s Server
 }
 
 func NewProtocolInstance(h *sda.Host, t *sda.TreeNode) *ProtocolRandHound {
@@ -22,10 +26,37 @@ func NewProtocolInstance(h *sda.Host, t *sda.TreeNode) *ProtocolRandHound {
 	}
 }
 
+// Start initiates the RandHound protocol by forming the first message I1 on
+// client-side and sending it to the servers
 func (p *ProtocolRandHound) Start() error {
 
-	// start the protocol by forming the first message I1 on client-side and send it to the servers
+	// Choose client's trustee-selection randomness
+	Rc := make([]byte, p.c.keysize)
+	p.c.rand.XORKeyStream(Rc, Rc)
+	p.c.Rc = Rc
 
+	// Compute session identifier (SID)
+	senc, err := protobuf.Encode(p.c.session)
+	if err != nil {
+		return err
+	}
+	sid := abstract.Sum(p.sda.Host.suite, senc)
+
+	// Compute group identifier (GID)
+	genc, err := protobuf.Encode(p.c.group)
+	if err != nil {
+		return err // panic(err) ?
+	}
+	gid := abstract.Sum(p.sda.Host.suite, genc)
+
+	// Form I1 and send it to the servers
+	i1 := I1{SID: sid, GID: gid, HRc: abstract.Sum(p.sda.Host.suite, Rc), S: senc, G: genc}
+	for nil, c := range p.Children() {
+		err := p.SendMsgTo(c, i1)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

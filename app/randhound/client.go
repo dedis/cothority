@@ -1,11 +1,23 @@
 package randhound
 
-import "github.com/dedis/crypto/poly"
+import (
+	"crypto/cipher"
+
+	"github.com/dedis/crypto/poly"
+)
 
 type Client struct {
 
 	// TODO: figure out which variables from the old RandHound client (see
 	// app/rand/cli.go) are necessary and which ones are covered by SDA
+
+	keysize  int
+	hashsize int
+
+	rand cipher.Stream
+
+	session *Session // Unique session identifier tuple
+	group   *Group   // Group parameter block
 
 	t Transcript // Third-party verifiable message transcript
 
