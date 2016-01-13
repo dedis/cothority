@@ -70,12 +70,12 @@ func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 
 // ApplicationMessage is the container for any ProtocolMessage
 type ApplicationMessage struct {
-	// The identity of the remote peer we are talking to.
+	// The Entity of the remote peer we are talking to.
 	// Basically, this means that when you open a new connection to someone, and
 	// / or listens to incoming connections, the network library will already
 	// make some exchange between the two communicants so each knows the
-	// identity of the others.
-	Identity CoEntity
+	// Entity of the others.
+	Entity *Entity
 	// the origin of the message
 	From string
 	// What kind of msg do we have
@@ -110,8 +110,8 @@ var globalOrder = binary.LittleEndian
 // Error() on it.
 var DefaultType Type = 0
 
-// Identity Type registered. IdentityType is second.
-const IdentityType = 1
+// Entity Type registered. EntityType is second.
+const EntityType = 1
 
 // This is the default empty message that is returned in case something went
 // wrong.

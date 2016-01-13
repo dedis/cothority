@@ -308,11 +308,11 @@ func (c *TcpConn) Close() error {
 	return nil
 }
 
-// CoEntity is used to represent a Conode in the whole internet.
+// Entity is used to represent a Conode in the whole internet.
 // It's identity is based on it's public key, and there can be one or more
 // addresses to contact it.
-type CoEntity struct {
-	// This is the public key of that identity
+type Entity struct {
+	// This is the public key of that Entity
 	Public abstract.Point
 	// The UUID corresponding to that public key
 	Id uuid.UUID
@@ -323,7 +323,7 @@ type CoEntity struct {
 }
 
 // First returns the first address available
-func (id *CoEntity) First() string {
+func (id *Entity) First() string {
 	if len(id.Addresses) > 0 {
 		return id.Addresses[0]
 	}
@@ -332,19 +332,24 @@ func (id *CoEntity) First() string {
 
 // Next returns the next address like an iterator,
 // starting at the beginning if nothing worked
-func (id *CoEntity) Next() string {
+func (id *Entity) Next() string {
 	addr := id.Addresses[id.iter]
 	id.iter = (id.iter + 1) % len(id.Addresses)
 	return addr
 
 }
 
-// NewIdentity creates a new identity based on a public key and with a slice
-// of IP-addresses where to find that identity. The Id is based on a
+// Equal tests on same public key
+func (id *Entity) Equal(e *Entity) bool {
+	return id.Public.Equal(e.Public)
+}
+
+// NewEntity creates a new Entity based on a public key and with a slice
+// of IP-addresses where to find that entity. The Id is based on a
 // version5-UUID which can include a URL that is based on it's public key.
-func NewIdentity(public abstract.Point, addresses ...string) *CoEntity {
+func NewEntity(public abstract.Point, addresses ...string) *Entity {
 	url := "https://dedis.epfl.ch/id/" + public.String()
-	return &CoEntity{
+	return &Entity{
 		Public:    public,
 		Addresses: addresses,
 		Id:        uuid.NewV5(uuid.NamespaceURL, url),
@@ -352,47 +357,47 @@ func NewIdentity(public abstract.Point, addresses ...string) *CoEntity {
 }
 
 // SecureHost is the analog of Host but with secure communication
-// It is tied to an identity can only open connection with identities
+// It is tied to an entity can only open connection with identities
 type SecureHost interface {
 	Close() error
 	Listen(func(SecureConn)) error
-	Open(id CoEntity) (SecureConn, error)
+	Open(id *Entity) (SecureConn, error)
 }
 
 // SecureConn is the analog of Conn but for secure comminucation
 type SecureConn interface {
 	Conn
-	Identity() CoEntity
+	Entity() *Entity
 }
 
 // SecureTcpHost is a TcpHost but with the additional property that it handles
-// Identity. You
+// Entity. You
 type SecureTcpHost struct {
 	*TcpHost
-	// Identity of this host
-	Identity CoEntity
-	// Private key tied to this identity
+	// Entity of this host
+	entity *Entity
+	// Private key tied to this entity
 	private abstract.Secret
-	// mapping from the identity to the names used in TcpHost
+	// mapping from the entity to the names used in TcpHost
 	// In TcpHost the names then maps to the actual connection
-	IdToAddr map[uuid.UUID]string
+	EntityToAddr map[uuid.UUID]string
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string
 }
 
 // NewSecureTcpHost returns a Secure Tcp Host
-func NewSecureTcpHost(private abstract.Secret, id CoEntity) *SecureTcpHost {
+func NewSecureTcpHost(private abstract.Secret, id *Entity) *SecureTcpHost {
 	return &SecureTcpHost{
 		private:        private,
-		Identity:       id,
-		IdToAddr:       make(map[uuid.UUID]string),
+		entity:         id,
+		EntityToAddr:   make(map[uuid.UUID]string),
 		TcpHost:        NewTcpHost(),
 		workingAddress: id.First(),
 	}
 }
 
-// Listen will try each addresses it the host identity.
+// Listen will try each addresses it the host Entity.
 // Returns an error if it can listen on any address
 func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TcpConn) {
@@ -403,15 +408,15 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 		}
 		// if negociation fails we drop the connection
 		if err := stc.negotiateListen(); err != nil {
-			fmt.Println("Negociation failed")
+			dbg.Error("Negociation failed:", err)
 			stc.Close()
 			return
 		}
 		go fn(stc)
 	}
 	var addr string
-	dbg.Lvl3("Addresses are", st.Identity.Addresses)
-	for _, addr = range st.Identity.Addresses {
+	dbg.Lvl3("Addresses are", st.entity.Addresses)
+	for _, addr = range st.entity.Addresses {
 		dbg.Lvl3("Trying to listen on", addr)
 		st.workingAddress = addr
 		if err := st.TcpHost.listen(addr, receiver); err != nil {
@@ -426,9 +431,9 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	return fmt.Errorf("No address worked for listening on this host")
 }
 
-// Open will try any address that is in the identity and connect to the first
-// one that works. Then it exchanges the identity to verify.
-func (st *SecureTcpHost) Open(id CoEntity) (SecureConn, error) {
+// Open will try any address that is in the Entity and connect to the first
+// one that works. Then it exchanges the Entity to verify.
+func (st *SecureTcpHost) Open(id *Entity) (SecureConn, error) {
 	var secure SecureTcpConn
 	var success bool
 	// try all names
@@ -442,13 +447,13 @@ func (st *SecureTcpHost) Open(id CoEntity) (SecureConn, error) {
 		secure = SecureTcpConn{
 			TcpConn:       c,
 			SecureTcpHost: st,
-			identity:      id,
+			entity:        id,
 		}
 		success = true
 		break
 	}
 	if !success {
-		return nil, fmt.Errorf("Could not connect to any address tied to this identity")
+		return nil, fmt.Errorf("Could not connect to any address tied to this Entity")
 	}
 	// Exchange and verify Identities
 	return &secure, secure.negotiateOpen(id)
@@ -457,80 +462,80 @@ func (st *SecureTcpHost) Open(id CoEntity) (SecureConn, error) {
 type SecureTcpConn struct {
 	*TcpConn
 	*SecureTcpHost
-	identity CoEntity
+	entity *Entity
 }
 
-// negotitateListen is made to exchange the identity between the two parties.
+// negotitateListen is made to exchange the Entity between the two parties.
 // when a connection request is made during listening
 func (sc *SecureTcpConn) negotiateListen() error {
-	// Send our identity to the remote endpoint
-	if err := sc.TcpConn.Send(context.TODO(), &sc.SecureTcpHost.Identity); err != nil {
+	// Send our Entity to the remote endpoint
+	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
-	// Receive the other identity
+	// Receive the other Entity
 	nm, err := sc.TcpConn.Receive(context.TODO())
 	if err != nil {
-		return fmt.Errorf("Error while receiving identity during negotiation %s", err)
+		return fmt.Errorf("Error while receiving Entity during negotiation %s", err)
 	}
 	// Check if it is correct
-	if nm.MsgType != IdentityType {
+	if nm.MsgType != EntityType {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
 	}
 
 	// Set this ID for this connection
-	id := nm.Msg.(CoEntity)
-	sc.identity = id
+	id := nm.Msg.(Entity)
+	sc.entity = &id
 	return nil
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
-// negotiateListen it also verifiy the identity.
-func (sc *SecureTcpConn) negotiateOpen(id CoEntity) error {
+// negotiateListen it also verifiy the Entity.
+func (sc *SecureTcpConn) negotiateOpen(id *Entity) error {
 	if err := sc.negotiateListen(); err != nil {
 		return err
 	}
 
-	// verify the identity if its the same we are supposed to connect
-	if sc.identity.Id != id.Id {
-		return fmt.Errorf("Identity received during negotiation is wrong. WARNING")
+	// verify the Entity if its the same we are supposed to connect
+	if sc.Entity().Id != id.Id {
+		return fmt.Errorf("Entity received during negotiation is wrong. WARNING")
 	}
 
 	return nil
 }
 
-// Receive is analog to Conn.Receive but also set the right Identity in the
+// Receive is analog to Conn.Receive but also set the right Entity in the
 // message
 func (sc *SecureTcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
 	nm, err := sc.TcpConn.Receive(ctx)
-	nm.Identity = sc.identity
+	nm.Entity = sc.entity
 	return nm, err
 }
 
-func (sc *SecureTcpConn) Identity() CoEntity {
-	return sc.identity
+func (sc *SecureTcpConn) Entity() *Entity {
+	return sc.entity
 }
 
 func init() {
-	RegisterProtocolType(IdentityType, CoEntity{})
+	RegisterProtocolType(EntityType, Entity{})
 }
 
-// IdentityToml is the struct that can be marshalled into a toml file
-type IdentityToml struct {
+// EntityToml is the struct that can be marshalled into a toml file
+type EntityToml struct {
 	Public    string
 	Addresses []string
 }
 
-func (id *CoEntity) Toml(suite abstract.Suite) *IdentityToml {
+func (id *Entity) Toml(suite abstract.Suite) *EntityToml {
 	var buf bytes.Buffer
 	cliutils.WritePub64(suite, &buf, id.Public)
-	return &IdentityToml{
+	return &EntityToml{
 		Addresses: id.Addresses,
 		Public:    buf.String(),
 	}
 }
-func (id *IdentityToml) Identity(suite abstract.Suite) *CoEntity {
+func (id *EntityToml) Entity(suite abstract.Suite) *Entity {
 	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
-	return &CoEntity{
+	return &Entity{
 		Public:    pub,
 		Addresses: id.Addresses,
 	}

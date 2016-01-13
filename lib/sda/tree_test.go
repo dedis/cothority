@@ -183,10 +183,10 @@ func genLocalhostPeerNames(n, p int) []string {
 
 // GenIdentityList generate a IdentityList out of names
 func GenIdentityList(suite abstract.Suite, names []string) *sda.IdentityList {
-	var ids []*network.CoEntity
+	var ids []*network.Entity
 	for _, n := range names {
 		kp := cliutils.KeyPair(suite)
-		ids = append(ids, network.NewIdentity(kp.Public, n))
+		ids = append(ids, network.NewEntity(kp.Public, n))
 	}
 	return sda.NewIdentityList(ids)
 }

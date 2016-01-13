@@ -159,12 +159,12 @@ type TreeMarshal struct {
 // therefor some protocols)
 type IdentityList struct {
 	Id   uuid.UUID
-	List []*network.CoEntity
+	List []*network.Entity
 }
 
 // NewIdentityList creates a new identity from a list of identities. It also
 // adds a UUID which is randomly chosen.
-func NewIdentityList(ids []*network.CoEntity) *IdentityList {
+func NewIdentityList(ids []*network.Entity) *IdentityList {
 	url := "https://dedis.epfl.ch/identitylist/"
 	for _, i := range ids {
 		url += i.Id.String()
@@ -176,7 +176,7 @@ func NewIdentityList(ids []*network.CoEntity) *IdentityList {
 }
 
 // Search looks for a corresponding UUID and returns that identity
-func (il *IdentityList) Search(uuid uuid.UUID) *network.CoEntity {
+func (il *IdentityList) Search(uuid uuid.UUID) *network.Entity {
 	for _, i := range il.List {
 		if i.Id == uuid {
 			return i
@@ -191,13 +191,13 @@ type TreeNode struct {
 	Id uuid.UUID
 	// The NodeID points to the corresponding host. One given host
 	// can be used more than once in a tree.
-	NodeId   *network.CoEntity
+	NodeId   *network.Entity
 	Parent   *TreeNode
 	Children []*TreeNode
 }
 
 // Check if it can communicate with parent or children
-func (t *TreeNode) IsConnectedTo(id *network.CoEntity) bool {
+func (t *TreeNode) IsConnectedTo(id *network.Entity) bool {
 	if t.Parent != nil && t.Parent.NodeId == id {
 		return true
 	}
@@ -258,7 +258,7 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 }
 
 // NewTreeNode creates a new TreeNode with the proper Id
-func NewTreeNode(ni *network.CoEntity) *TreeNode {
+func NewTreeNode(ni *network.Entity) *TreeNode {
 	tn := &TreeNode{
 		NodeId:   ni,
 		Parent:   nil,
@@ -301,12 +301,12 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 // toml file
 type IdentityListToml struct {
 	Id   uuid.UUID
-	List []*network.IdentityToml
+	List []*network.EntityToml
 }
 
 // Toml returns the toml-writtable version of this identityList
 func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
-	ids := make([]*network.IdentityToml, len(id.List))
+	ids := make([]*network.EntityToml, len(id.List))
 	for i := range id.List {
 		ids[i] = id.List[i].Toml(suite)
 	}
@@ -318,9 +318,9 @@ func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
 
 // IdentityList returns the Id list from this toml read struct
 func (id *IdentityListToml) IdentityList(suite abstract.Suite) *IdentityList {
-	ids := make([]*network.CoEntity, len(id.List))
+	ids := make([]*network.Entity, len(id.List))
 	for i := range id.List {
-		ids[i] = id.List[i].Identity(suite)
+		ids[i] = id.List[i].Entity(suite)
 	}
 	return &IdentityList{
 		Id:   id.Id,

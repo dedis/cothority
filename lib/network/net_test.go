@@ -47,19 +47,29 @@ func TestMultiClose(t *testing.T) {
 	}
 	h1 := NewTcpHost()
 	h2 := NewTcpHost()
-	h1.Listen("localhost:2000", fn)
+	go h1.Listen("localhost:2000", fn)
 	h2.Open("localhost:2000")
 	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h1 = NewTcpHost()
-	err = h1.Listen("localhost:2000", fn)
+	go func() {
+		err := h1.Listen("localhost:2000", fn)
+		if err != nil {
+			t.Fatal("Couldn't re-open listener")
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	err = h1.Close()
 	if err != nil {
-		t.Fatal("Couldn't re-open listener")
+		t.Fatal("Couldn't close h1:", err)
 	}
-	h1.Close()
 }
 
 // Test closing and opening of SecureHost on same address
@@ -70,31 +80,39 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 
 	priv1, pub1 := config.NewKeyPair(Suite)
-	identity1 := NewIdentity(pub1, "localhost:2000")
+	entity1 := NewEntity(pub1, "localhost:2000")
 	priv2, pub2 := config.NewKeyPair(Suite)
-	identity2 := NewIdentity(pub2, "localhost:2001")
+	entity2 := NewEntity(pub2, "localhost:2001")
 
-	h1 := NewSecureTcpHost(priv1, identity1)
-	h2 := NewSecureTcpHost(priv2, identity2)
-	err := h1.Listen(fn)
-	if err != nil {
-		t.Fatal("Listening failed")
-	}
-	h2.Open(identity1)
-	err = h1.Close()
+	h1 := NewSecureTcpHost(priv1, entity1)
+	h2 := NewSecureTcpHost(priv2, entity2)
+	go func() {
+		err := h1.Listen(fn)
+		if err != nil {
+			t.Fatal("Listening failed for h1:", err)
+		}
+	}()
+	h2.Open(entity1)
+	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h1 = NewSecureTcpHost(priv1, identity1)
-	err = h1.Listen(fn)
+	h1 = NewSecureTcpHost(priv1, entity1)
+	go func() {
+		err = h1.Listen(fn)
+		if err != nil {
+			t.Fatal("Couldn't re-open listener")
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	err = h1.Close()
 	if err != nil {
-		t.Fatal("Couldn't re-open listener")
+		t.Fatal("Couldn't close h1:", err)
 	}
-	h1.Close()
 }
 
-// Testing exchange of identity
+// Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	fn := func(s SecureConn) {
@@ -102,19 +120,19 @@ func TestSecureTcp(t *testing.T) {
 	}
 
 	priv1, pub1 := config.NewKeyPair(Suite)
-	identity1 := NewIdentity(pub1, "localhost:2000")
+	entity1 := NewEntity(pub1, "localhost:2000")
 	priv2, pub2 := config.NewKeyPair(Suite)
-	identity2 := NewIdentity(pub2, "localhost:2001")
+	entity2 := NewEntity(pub2, "localhost:2001")
 
-	host1 := NewSecureTcpHost(priv1, identity1)
-	host2 := NewSecureTcpHost(priv2, identity2)
+	host1 := NewSecureTcpHost(priv1, entity1)
+	host2 := NewSecureTcpHost(priv2, entity2)
 
-	host1.Listen(fn)
-	conn, err := host2.Open(identity1)
+	go host1.Listen(fn)
+	conn, err := host2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if conn.Identity().Public != pub1 {
+	if !conn.Entity().Public.Equal(pub1) {
 		t.Fatal("Connection-id is not from host1")
 	}
 	host1.Close()
