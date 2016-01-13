@@ -89,10 +89,13 @@ func TestReadyProxy(t *testing.T) {
 	monitor := NewMonitor(stat)
 	done := make(chan bool)
 	go func() {
-		monitor.Listen()
+		err := monitor.Listen()
+		if err != nil {
+			t.Fatal(fmt.Printf("Error listening monitor %v", err))
+		}
 		done <- true
 	}()
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	// Then setup proxy
 	// change port so the proxy does not listen to the same
 	// than the original monitor
@@ -103,7 +106,7 @@ func TestReadyProxy(t *testing.T) {
 	go func() {
 		err := Proxy("localhost:" + strconv.Itoa(oldSink))
 		if err != nil {
-			t.Fatal(err)
+			t.Fatal(fmt.Printf("Error connecting proxy %v", err))
 		}
 	}()
 
