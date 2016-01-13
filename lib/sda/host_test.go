@@ -37,7 +37,7 @@ func TestHostClose(t *testing.T) {
 	h1 := newHost("localhost:2000", suite)
 	h2 := newHost("localhost:2001", suite)
 	h1.Listen()
-	h2.Connect(h1.Identity)
+	h2.Connect(h1.Entity)
 	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
@@ -60,11 +60,11 @@ func TestHostClose(t *testing.T) {
 func TestHostMessaging(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{3}
-	err := h1.SendMsgTo(h2.Identity, msgSimple)
+	err := h1.SendMsgTo(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
-	msg := h2.Receive().Data
+	msg := h2.Receive()
 	decoded := testMessageSimple(t, msg)
 	if decoded.I != 3 {
 		t.Fatal("Received message from h2 -> h1 is wrong")
@@ -79,12 +79,12 @@ func TestHostMessaging(t *testing.T) {
 func TestHostIncomingMessage(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{10}
-	err := h1.SendMsgTo(h2.Identity, msgSimple)
+	err := h1.SendMsgTo(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message:", err)
 	}
 
-	msg := h2.Receive().Data
+	msg := h2.Receive()
 	decoded := testMessageSimple(t, msg)
 	if decoded.I != 10 {
 		t.Fatal("Wrong value")
@@ -98,14 +98,14 @@ func TestHostIncomingMessage(t *testing.T) {
 func TestHostSendMsgDuplex(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendMsgTo(h2.Identity, msgSimple)
+	err := h1.SendMsgTo(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendMsgTo(h1.Identity, msgSimple)
+	err = h2.SendMsgTo(h1.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -120,14 +120,14 @@ func TestHostSendMsgDuplex(t *testing.T) {
 func TestHostSendDuplex(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendToRaw(h2.Identity, msgSimple)
+	err := h1.SendToRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendToRaw(h1.Identity, msgSimple)
+	err = h2.SendToRaw(h1.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -141,43 +141,43 @@ func TestHostSendDuplex(t *testing.T) {
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	il1 := GenIdentityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendToRaw(h2.Identity, &sda.RequestIdentityList{il1.Id})
+	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
-	msg := h1.Receive().Data
-	if msg.MsgType != sda.SendIdentityListMessage {
-		t.Fatal("h1 didn't receive IdentityList type, but", msg.MsgType)
+	msg := h1.Receive()
+	if msg.MsgType != sda.SendEntityListMessage {
+		t.Fatal("h1 didn't receive EntityList type, but", msg.MsgType)
 	}
-	if msg.Msg.(sda.IdentityList).Id != uuid.Nil {
+	if msg.Msg.(sda.EntityList).Id != uuid.Nil {
 		t.Fatal("List should be empty")
 	}
 
 	// Now add the list to h2 and try again
-	h2.AddIdentityList(il1)
-	err = h1.SendToRaw(h2.Identity, &sda.RequestIdentityList{il1.Id})
+	h2.AddEntityList(il1)
+	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
-	msg = h1.Receive().Data
-	if msg.MsgType != sda.SendIdentityListMessage {
-		t.Fatal("h1 didn't receive IdentityList type")
+	msg = h1.Receive()
+	if msg.MsgType != sda.SendEntityListMessage {
+		t.Fatal("h1 didn't receive EntityList type")
 	}
-	if msg.Msg.(sda.IdentityList).Id != il1.Id {
+	if msg.Msg.(sda.EntityList).Id != il1.Id {
 		t.Fatal("List should be equal to original list")
 	}
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendToRaw(h2.Identity, &sda.RequestIdentityList{il1.Id})
+	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	list, ok := h1.GetIdentityList(il1.Id)
+	list, ok := h1.GetEntityList(il1.Id)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
@@ -191,32 +191,32 @@ func TestPeerListPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	il1 := GenIdentityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	// Suppose both hosts have the list available, but not the tree
-	h1.AddIdentityList(il1)
-	h2.AddIdentityList(il1)
-	tree, _ := GenerateTreeFromIdentityList(il1)
+	h1.AddEntityList(il1)
+	h2.AddEntityList(il1)
+	tree, _ := GenerateTreeFromEntityList(il1)
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendToRaw(h2.Identity, &sda.RequestTree{tree.Id})
+	err := h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
-	msg := h1.Receive().Data
+	msg := h1.Receive()
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).Identity != uuid.Nil {
+	if msg.Msg.(sda.TreeMarshal).Entity != uuid.Nil {
 		t.Fatal("List should be empty")
 	}
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendToRaw(h2.Identity, &sda.RequestTree{tree.Id})
+	err = h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
-	msg = h1.Receive().Data
+	msg = h1.Receive()
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
@@ -226,7 +226,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendToRaw(h2.Identity, &sda.RequestTree{tree.Id})
+	err = h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -282,7 +282,7 @@ func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	if h2process {
 		go h2.ProcessMessages()
 	}
-	_, err := h1.Connect(h2.Identity)
+	_, err := h1.Connect(h2.Entity)
 	if err != nil {
 		t.Fatal(err)
 	}

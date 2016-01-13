@@ -38,12 +38,12 @@ func TestSecureSimple(t *testing.T) {
 		}
 		if !nm.Entity.Equal(id2) {
 			c.Close()
-			done <- fmt.Errorf("Not same identity")
+			done <- fmt.Errorf("Not same entity")
 		}
 		close(done)
 	})
 	time.Sleep(1 * time.Second)
-	// Open connection to identity1
+	// Open connection to entity
 	c, err := sHost2.Open(id1)
 	if err != nil {
 		t.Fatal("Error during opening connection to id1")

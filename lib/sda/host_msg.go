@@ -10,17 +10,17 @@ import (
 func init() {
 	network.RegisterProtocolType(SDADataMessage, SDAData{})
 	network.RegisterProtocolType(RequestTreeMessage, RequestTree{})
-	network.RegisterProtocolType(RequestIdentityListMessage, RequestIdentityList{})
-	network.RegisterProtocolType(SendIdentityListMessage, IdentityList{})
+	network.RegisterProtocolType(RequestEntityListMessage, RequestEntityList{})
+	network.RegisterProtocolType(SendEntityListMessage, EntityList{})
 }
 
 // constants used for the message-types
 const (
 	SDADataMessage = iota + 10
 	RequestTreeMessage
-	RequestIdentityListMessage
-	SendIdentityListMessage = IdentityListType
-	SendTreeMessage         = TreeMarshalType
+	RequestEntityListMessage
+	SendEntityListMessage = EntityListType
+	SendTreeMessage       = TreeMarshalType
 )
 
 // SDAData is to be embedded in every message that is made for a
@@ -45,17 +45,17 @@ type RequestTree struct {
 	TreeID uuid.UUID
 }
 
-// RequestIdentityList is used to ask the parent for a given IdentityList
-type RequestIdentityList struct {
-	IdentityListID uuid.UUID
+// RequestEntityList is used to ask the parent for a given EntityList
+type RequestEntityList struct {
+	EntityListID uuid.UUID
 }
 
-// In case the identity list is unknown
-type IdentityListUnknown struct {
+// In case the entity list is unknown
+type EntityListUnknown struct {
 }
 
-// SendIdentity is the first message we send on creation of a link
-type SendIdentity struct {
+// SendEntity is the first message we send on creation of a link
+type SendEntity struct {
 	Name string
 }
 

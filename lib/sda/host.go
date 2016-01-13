@@ -27,34 +27,30 @@ Host is the structure responsible for holding information about the current
  state
 */
 type Host struct {
-	// Our identity
-	Identity *network.Entity
+	// Our entity (i.e. identity over the network)
+	Entity *network.Entity
 	// the working address is set when the Host will start listen
-	// When a listening adress found in the identity works, workingAddress is
+	// When a listening adress found in the entity works, workingAddress is
 	// set to that address
 	workingAddress string
 	// The TCPHost
 	host network.SecureHost
 	// The open connections
-	connections map[string]network.SecureConn
-	// and the locks
+	connections map[uuid.UUID]network.SecureConn
+	// and the lock associated to access them
 	networkLock *sync.Mutex
-	// The database of identities this host knows
-	identities map[uuid.UUID]*network.Entity
-	// The identityLists used for building the trees
-	identityLists map[uuid.UUID]*IdentityList
+	// The database of entities this host knows
+	entities map[uuid.UUID]*network.Entity
+	// The entityLists used for building the trees
+	entityLists map[uuid.UUID]*EntityList
 	// all trees known to this Host
 	trees map[uuid.UUID]*Tree
-	// mapping from identity to physical addresses in connection
-	identityToAddress map[uuid.UUID]string
-	// identity mutex
-	identityLock *sync.Mutex
 	// Our private-key
 	private abstract.Secret
 	// The suite used for this Host
 	suite abstract.Suite
 	// slice of received messages - testmode
-	networkChan chan MessageInfo
+	networkChan chan network.ApplicationMessage
 	// instances linked to their ID and their ProtocolID
 	instances map[uuid.UUID]ProtocolInstance
 	// closed channel to notifiy the connections that we close
@@ -65,29 +61,25 @@ type Host struct {
 // messages. It will store the private-key.
 func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) *Host {
 	n := &Host{
-		Identity:          id,
-		identityToAddress: make(map[uuid.UUID]string),
-		workingAddress:    id.First(),
-		networkLock:       &sync.Mutex{},
-		identityLock:      &sync.Mutex{},
-		connections:       make(map[string]network.SecureConn),
-		identities:        make(map[uuid.UUID]*network.Entity),
-		trees:             make(map[uuid.UUID]*Tree),
-		identityLists:     make(map[uuid.UUID]*IdentityList),
-		host:              host,
-		private:           pkey,
-		suite:             network.Suite,
-		networkChan:       make(chan MessageInfo, 1),
-		instances:         make(map[uuid.UUID]ProtocolInstance),
-		closed:            make(chan bool),
+		Entity:         id,
+		workingAddress: id.First(),
+		networkLock:    &sync.Mutex{},
+		connections:    make(map[uuid.UUID]network.SecureConn),
+		entities:       make(map[uuid.UUID]*network.Entity),
+		trees:          make(map[uuid.UUID]*Tree),
+		entityLists:    make(map[uuid.UUID]*EntityList),
+		host:           host,
+		private:        pkey,
+		suite:          network.Suite,
+		networkChan:    make(chan network.ApplicationMessage, 1),
+		instances:      make(map[uuid.UUID]ProtocolInstance),
+		closed:         make(chan bool),
 	}
 	return n
 }
 
-// Listen starts listening for messages coming from parent(up)
-// each time a connection request is made, we receive first its identity then
-// we handle the message using HandleConn.
-// It will try each address in the Host identity until one works.
+// Listen starts listening for messages coming from any host that tries to
+// contact this entity / host
 func (n *Host) Listen() {
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(n.workingAddress, "Accepted Connection from", c.Remote())
@@ -104,7 +96,7 @@ func (n *Host) Listen() {
 	}()
 }
 
-// Connect takes an identity where to connect to
+// Connect takes an entity where to connect to
 func (n *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
@@ -127,42 +119,31 @@ func (n *Host) Close() error {
 		c.Close()
 	}
 	err := n.host.Close()
-	n.connections = make(map[string]network.SecureConn)
+	n.connections = make(map[uuid.UUID]network.SecureConn)
 	close(n.closed)
 	n.networkLock.Unlock()
 	return err
 }
 
-// SendToRaw sends to an Identity by trying the different addresses tied
-// to this id
+// SendToRaw sends to an Entity without wrapping the msg into a SDAMessage
 func (n *Host) SendToRaw(id *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
-	if _, ok := n.identities[id.Id]; !ok {
-		return fmt.Errorf("SendToIdentity received a non-saved identity")
+	if _, ok := n.entities[id.Id]; !ok {
+		return fmt.Errorf("SendToEntity received a non-saved entity")
 	}
-	var addr string
+	var c network.SecureConn
 	var ok bool
-	if addr, ok = n.identityToAddress[id.Id]; !ok {
-		return fmt.Errorf("No connection for this identity")
+	if c, ok = n.connections[id.Id]; !ok {
+		return fmt.Errorf("Got no connection tied to this Entity")
 	}
-	// additional verification - might be skipped
-	n.networkLock.Lock()
-	if c, ok := n.connections[addr]; !ok {
-		n.networkLock.Unlock()
-		return fmt.Errorf("No connection to this address!", n.connections)
-	} else {
-		// we got the connection
-		n.networkLock.Unlock()
-		dbg.Lvl3("Sending data", msg, "to", c.Remote())
-		return c.Send(context.TODO(), msg)
-	}
+	c.Send(context.TODO(), msg)
 	return nil
 }
 
 // SendMsgTo wraps the message to send in an SDAMessage and sends it to the
-// appropriate identity
+// appropriate entity
 func (n *Host) SendMsgTo(id *network.Entity, msg network.ProtocolMessage) error {
 	sdaMsg := &SDAData{
 		ProtoID:    uuid.Nil,
@@ -178,21 +159,21 @@ func (n *Host) SendMsgTo(id *network.Entity, msg network.ProtocolMessage) error 
 }
 
 // Receive will return the value of the communication-channel, unmarshalling
-// the SDAMessage
-func (n *Host) Receive() MessageInfo {
-	msgInfo := <-n.networkChan
-	var data = msgInfo.Data
-	if msgInfo.Data.MsgType == SDADataMessage {
+// the SDAMessage. Receive is called in ProcessMessages as it takes directly
+// the message from the networkChan, and pre-process the SDAMessage
+func (n *Host) Receive() network.ApplicationMessage {
+	data := <-n.networkChan
+	if data.MsgType == SDADataMessage {
 		sda := data.Msg.(SDAData)
 		t, msg, _ := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		// Put the msg into SDAData
 		sda.MsgType = t
 		sda.Msg = msg
-		// As these are not pointers, we need to write it back
+		// Write back the Msg in appplicationMessage
 		data.Msg = sda
-		msgInfo.Data = data
 		dbg.Lvl3("SDA-Message is:", sda)
 	}
-	return msgInfo
+	return data
 }
 
 // ProcessMessages checks if it is one of the messages for us or dispatch it
@@ -206,28 +187,33 @@ func (n *Host) Receive() MessageInfo {
 func (n *Host) ProcessMessages() {
 	for {
 		var err error
-		msgInfo := n.Receive()
-		dbg.Lvl3("Message Received:", msgInfo.Data)
-		switch msgInfo.Data.MsgType {
+		data := n.Receive()
+		dbg.Lvl3("Message Received:", data)
+		switch data.MsgType {
 		case SDADataMessage:
-			n.processSDAMessage(msgInfo.Id, &msgInfo.Data)
+			n.processSDAMessage(&data)
+		// A host has sent us a request to get a tree definition
 		case RequestTreeMessage:
-			tid := msgInfo.Data.Msg.(RequestTree).TreeID
+			tid := data.Msg.(RequestTree).TreeID
 			tree, ok := n.trees[tid]
 			if ok {
-				err = n.SendToRaw(msgInfo.Id, tree.MakeTreeMarshal())
+				err = n.SendToRaw(data.Entity, tree.MakeTreeMarshal())
 			} else {
-				err = n.SendToRaw(msgInfo.Id, (&Tree{}).MakeTreeMarshal())
+				// XXX Take care here for we must verify at the other side that
+				// the tree is Nil. Should we think of a way of sending back an
+				// "error" ?
+				err = n.SendToRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
+		// A Host has replied to our request of a tree
 		case SendTreeMessage:
-			tm := msgInfo.Data.Msg.(TreeMarshal)
+			tm := data.Msg.(TreeMarshal)
 			if tm.Node == uuid.Nil {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
-			il, ok := n.GetIdentityList(tm.Identity)
+			il, ok := n.GetEntityList(tm.Entity)
 			if !ok {
-				dbg.Error("IdentityList-id doesn't exist")
+				dbg.Error("EntityList-id doesn't exist")
 				continue
 			}
 			tree, err := tm.MakeTree(il)
@@ -236,22 +222,24 @@ func (n *Host) ProcessMessages() {
 				continue
 			}
 			n.AddTree(tree)
-		case RequestIdentityListMessage:
-			id := msgInfo.Data.Msg.(RequestIdentityList).IdentityListID
-			il, ok := n.identityLists[id]
+		// Some host requested an EntityList
+		case RequestEntityListMessage:
+			id := data.Msg.(RequestEntityList).EntityListID
+			il, ok := n.entityLists[id]
 			if ok {
-				err = n.SendToRaw(msgInfo.Id, il)
+				err = n.SendToRaw(data.Entity, il)
 			} else {
-				err = n.SendToRaw(msgInfo.Id, &IdentityList{})
+				err = n.SendToRaw(data.Entity, &EntityList{})
 			}
-		case SendIdentityListMessage:
-			il := msgInfo.Data.Msg.(IdentityList)
+		// Host replied to our request of entitylist
+		case SendEntityListMessage:
+			il := data.Msg.(EntityList)
 			if il.Id == uuid.Nil {
-				dbg.Error("Received an empty IdentityList")
+				dbg.Error("Received an empty EntityList")
 			}
-			n.AddIdentityList(&il)
+			n.AddEntityList(&il)
 		default:
-			dbg.Error("Didn't recognize message", msgInfo.Data.MsgType)
+			dbg.Error("Didn't recognize message", data.MsgType)
 		}
 		if err != nil {
 			dbg.Error("Sending error:", err)
@@ -259,19 +247,25 @@ func (n *Host) ProcessMessages() {
 	}
 }
 
-// AddIdentityList stores the peer-list for further usage
-func (n *Host) AddIdentityList(il *IdentityList) {
-	n.identityLists[il.Id] = il
+// AddEntityList stores the peer-list for further usage
+func (n *Host) AddEntityList(il *EntityList) {
+	if _, ok := n.entityLists[il.Id]; ok {
+		dbg.Lvl2("Added EntityList with same ID")
+	}
+	n.entityLists[il.Id] = il
 }
 
 // AddTree stores the tree for further usage
 func (n *Host) AddTree(t *Tree) {
+	if _, ok := n.trees[t.Id]; ok {
+		dbg.Lvl2("Added Tree with same ID")
+	}
 	n.trees[t.Id] = t
 }
 
-// GetIdentityList returns the IdentityList
-func (n *Host) GetIdentityList(id uuid.UUID) (*IdentityList, bool) {
-	il, ok := n.identityLists[id]
+// GetEntityList returns the EntityList
+func (n *Host) GetEntityList(id uuid.UUID) (*EntityList, bool) {
+	il, ok := n.entityLists[id]
 	return il, ok
 }
 
@@ -285,7 +279,6 @@ var timeOut = 30 * time.Second
 
 // Handle a connection => giving messages to the MsgChans
 func (n *Host) handleConn(c network.SecureConn) {
-	id := c.Entity()
 	address := c.Remote()
 	msgChan := make(chan network.ApplicationMessage)
 	errorChan := make(chan error)
@@ -316,7 +309,7 @@ func (n *Host) handleConn(c network.SecureConn) {
 			doneChan <- true
 		case am := <-msgChan:
 			dbg.Lvl3("Putting message into networkChan:", am)
-			n.networkChan <- MessageInfo{Id: id, Data: am}
+			n.networkChan <- am
 		case e := <-errorChan:
 			if e == network.ErrClosed {
 				return
@@ -331,7 +324,7 @@ func (n *Host) handleConn(c network.SecureConn) {
 // Dispatch SDA message looks if we have all the info to rightly dispatch the
 // packet such as the protocol id and the topology id and the protocol instance
 // id
-func (n *Host) processSDAMessage(id *network.Entity, am *network.ApplicationMessage) error {
+func (n *Host) processSDAMessage(am *network.ApplicationMessage) error {
 	sda := am.Msg.(SDAData)
 	t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
@@ -357,14 +350,13 @@ func (n *Host) processSDAMessage(id *network.Entity, am *network.ApplicationMess
 	return nil
 }
 
-// registerConnection registers a Identity for a new connection, mapped with the
+// registerConnection registers a Entity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
 func (n *Host) registerConnection(c network.SecureConn) {
 	n.networkLock.Lock()
 	id := c.Entity()
-	n.identities[c.Entity().Id] = id
-	n.identityToAddress[id.Id] = c.Remote()
-	n.connections[c.Remote()] = c
+	n.entities[c.Entity().Id] = id
+	n.connections[c.Entity().Id] = c
 	n.networkLock.Unlock()
 }
 
@@ -373,11 +365,4 @@ func (n *Host) registerConnection(c network.SecureConn) {
 // instance.
 func (n *Host) Suite() abstract.Suite {
 	return n.suite
-}
-
-// MessageInfo is used to communicate the identity tied to a message when we
-// receive messages
-type MessageInfo struct {
-	Id   *network.Entity
-	Data network.ApplicationMessage
 }

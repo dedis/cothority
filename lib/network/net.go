@@ -309,8 +309,8 @@ func (c *TcpConn) Close() error {
 }
 
 // Entity is used to represent a Conode in the whole internet.
-// It's identity is based on it's public key, and there can be one or more
-// addresses to contact it.
+// It's kinda an network identity that is based on a public key,
+// and there can be one or more addresses to contact it.
 type Entity struct {
 	// This is the public key of that Entity
 	Public abstract.Point
