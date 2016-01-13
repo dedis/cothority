@@ -18,6 +18,7 @@ func TestProxy(t *testing.T) {
 	fresh := stat.String()
 	// First set up monitor listening
 	monitor := NewMonitor(stat)
+	defer monitor.Stop()
 	done := make(chan bool)
 	go func() {
 		monitor.Listen()
@@ -87,6 +88,7 @@ func TestReadyProxy(t *testing.T) {
 	stat := NewStats(m)
 	// First set up monitor listening
 	monitor := NewMonitor(stat)
+	defer monitor.Stop()
 	done := make(chan bool)
 	go func() {
 		err := monitor.Listen()
