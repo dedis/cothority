@@ -2,10 +2,11 @@ package monitor
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func TestProxy(t *testing.T) {
@@ -89,7 +90,15 @@ func TestReadyProxy(t *testing.T) {
 	monitor := NewMonitor(stat)
 	done := make(chan bool)
 	go func() {
-		monitor.Listen()
+		if err := monitor.Listen(); err != nil {
+			dbg.Error("Could not start listener:", err)
+			dbg.Error("Retry once in 500ms ...")
+			time.Sleep(500 * time.Millisecond)
+			if err := monitor.Listen(); err != nil {
+				dbg.Fatal("Could not start listener:", err)
+			}
+		}
+
 		done <- true
 	}()
 	time.Sleep(100 * time.Millisecond)
