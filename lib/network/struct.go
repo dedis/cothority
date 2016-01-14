@@ -1,12 +1,16 @@
 package network
 
 import (
+	"bytes"
 	"errors"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
+	"io"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -90,7 +94,7 @@ type SecureConn interface {
 }
 
 // SecureTcpHost is a TcpHost but with the additional property that it handles
-// Entity. You
+// Entity.
 type SecureTcpHost struct {
 	*TcpHost
 	// Entity of this host
@@ -105,33 +109,12 @@ type SecureTcpHost struct {
 	workingAddress string
 }
 
+// SecureTcpConn is a secured tcp connection using Entity as identity
 type SecureTcpConn struct {
 	*TcpConn
 	*SecureTcpHost
 	entity *Entity
 }
-
-// EntityToml is the struct that can be marshalled into a toml file
-type EntityToml struct {
-	Public    string
-	Addresses []string
-}
-
-// Entity is used to represent a Conode in the whole internet.
-// It's based on a public key, and there can be one or more addresses to contact it.
-type Entity struct {
-	// This is the public key of that Entity
-	Public abstract.Point
-	// The UUID corresponding to that public key
-	Id uuid.UUID
-	// A slice of addresses of where that Id might be found
-	Addresses []string
-	// used to return the next available address
-	iter int
-}
-
-// EntityType can be used to recognise an Entity-message
-var EntityType = RegisterMessageType(Entity{})
 
 // ApplicationMessage is the container for any NetworkMessage
 type ApplicationMessage struct {
@@ -151,4 +134,103 @@ type ApplicationMessage struct {
 	Constructors protobuf.Constructors
 	// possible error during unmarshaling so that upper layer can know it
 	err error
+}
+
+// Entity is used to represent a Conode in the whole internet.
+// It's based on a public key, and there can be one or more addresses to contact it.
+type Entity struct {
+	// This is the public key of that Entity
+	Public abstract.Point
+	// The UUID corresponding to that public key
+	Id uuid.UUID
+	// A slice of addresses of where that Id might be found
+	Addresses []string
+	// used to return the next available address
+	iter int
+}
+
+// EntityType can be used to recognise an Entity-message
+var EntityType = RegisterMessageType(Entity{})
+
+// EntityToml is the struct that can be marshalled into a toml file
+type EntityToml struct {
+	Public    string
+	Addresses []string
+}
+
+// NewEntity creates a new Entity based on a public key and with a slice
+// of IP-addresses where to find that entity. The Id is based on a
+// version5-UUID which can include a URL that is based on it's public key.
+func NewEntity(public abstract.Point, addresses ...string) *Entity {
+	url := "https://dedis.epfl.ch/id/" + public.String()
+	return &Entity{
+		Public:    public,
+		Addresses: addresses,
+		Id:        uuid.NewV5(uuid.NamespaceURL, url),
+	}
+}
+
+// First returns the first address available
+func (e *Entity) First() string {
+	if len(e.Addresses) > 0 {
+		return e.Addresses[0]
+	}
+	return ""
+}
+
+// Next returns the next address like an iterator,
+// starting at the beginning if nothing worked
+func (e *Entity) Next() string {
+	addr := e.Addresses[e.iter]
+	e.iter = (e.iter + 1) % len(e.Addresses)
+	return addr
+
+}
+
+// Equal tests on same public key
+func (e *Entity) Equal(e2 *Entity) bool {
+	return e.Public.Equal(e2.Public)
+}
+
+// Toml converts an Entity to a Toml-structure
+func (e *Entity) Toml(suite abstract.Suite) *EntityToml {
+	var buf bytes.Buffer
+	cliutils.WritePub64(suite, &buf, e.Public)
+	return &EntityToml{
+		Addresses: e.Addresses,
+		Public:    buf.String(),
+	}
+}
+
+// Entity converts an EntityToml structure back to an Entity
+func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
+	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(e.Public))
+	return &Entity{
+		Public:    pub,
+		Addresses: e.Addresses,
+	}
+}
+
+// handleError produces the higher layer error depending on the type
+// so user of the package can know what is the cause of the problem
+func handleError(err error) error {
+
+	if strings.Contains(err.Error(), "use of closed") {
+		return ErrClosed
+	} else if strings.Contains(err.Error(), "canceled") {
+		return ErrCanceled
+	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+		return ErrEOF
+	}
+
+	netErr, ok := err.(net.Error)
+	if !ok {
+		return ErrUnknown
+	}
+	if netErr.Temporary() {
+		return ErrTemp
+	} else if netErr.Timeout() {
+		return ErrTimeout
+	}
+	return ErrUnknown
 }

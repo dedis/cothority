@@ -16,9 +16,7 @@ package network
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net"
-	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -53,32 +51,6 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 	return c, nil
 }
 
-// OpenTcpCOnn is private method that opens a TcpConn to the given name
-func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
-	var err error
-	var conn net.Conn
-	for i := 0; i < maxRetry; i++ {
-		conn, err = net.Dial("tcp", name)
-		if err != nil {
-			//dbg.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
-			time.Sleep(waitRetry)
-		} else {
-			break
-		}
-		time.Sleep(waitRetry)
-	}
-	if conn == nil {
-		return nil, fmt.Errorf("Could not connect to %s.", name)
-	}
-	c := TcpConn{
-		Endpoint: name,
-		Conn:     conn,
-		host:     t,
-	}
-
-	return &c, err
-}
-
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
 func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
@@ -86,37 +58,6 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 		go fn(tc)
 	}
 	return t.listen(addr, receiver)
-}
-
-// listen is the private function that takes a function that takes a TcpConn.
-// That way we can control what to do of the TcpConn before returning it to the
-// function given by the user. Used by SecureTcpHost
-func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
-	global, _ := cliutils.GlobalBind(addr)
-	ln, err := net.Listen("tcp", global)
-	if err != nil {
-		return fmt.Errorf("Error opening listener on address %s:%v", addr, err)
-	}
-	t.listener = ln
-	for {
-		conn, err := t.listener.Accept()
-		if err != nil {
-			select {
-			case <-t.quit:
-				return nil
-			default:
-			}
-			continue
-		}
-		c := TcpConn{
-			Endpoint: conn.RemoteAddr().String(),
-			Conn:     conn,
-			host:     t,
-		}
-		t.peers[conn.RemoteAddr().String()] = &c
-		fn(&c)
-	}
-	return nil
 }
 
 // Close will close every connection this host has opened
@@ -216,38 +157,61 @@ func (c *TcpConn) Close() error {
 	return nil
 }
 
-// First returns the first address available
-func (e *Entity) First() string {
-	if len(e.Addresses) > 0 {
-		return e.Addresses[0]
+// OpenTcpCOnn is private method that opens a TcpConn to the given name
+func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
+	var err error
+	var conn net.Conn
+	for i := 0; i < maxRetry; i++ {
+		conn, err = net.Dial("tcp", name)
+		if err != nil {
+			//dbg.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
+			time.Sleep(waitRetry)
+		} else {
+			break
+		}
+		time.Sleep(waitRetry)
 	}
-	return ""
-}
-
-// Next returns the next address like an iterator,
-// starting at the beginning if nothing worked
-func (e *Entity) Next() string {
-	addr := e.Addresses[e.iter]
-	e.iter = (e.iter + 1) % len(e.Addresses)
-	return addr
-
-}
-
-// Equal tests on same public key
-func (e *Entity) Equal(e2 *Entity) bool {
-	return e.Public.Equal(e2.Public)
-}
-
-// NewEntity creates a new Entity based on a public key and with a slice
-// of IP-addresses where to find that entity. The Id is based on a
-// version5-UUID which can include a URL that is based on it's public key.
-func NewEntity(public abstract.Point, addresses ...string) *Entity {
-	url := "https://dedis.epfl.ch/id/" + public.String()
-	return &Entity{
-		Public:    public,
-		Addresses: addresses,
-		Id:        uuid.NewV5(uuid.NamespaceURL, url),
+	if conn == nil {
+		return nil, fmt.Errorf("Could not connect to %s.", name)
 	}
+	c := TcpConn{
+		Endpoint: name,
+		Conn:     conn,
+		host:     t,
+	}
+
+	return &c, err
+}
+
+// listen is the private function that takes a function that takes a TcpConn.
+// That way we can control what to do of the TcpConn before returning it to the
+// function given by the user. Used by SecureTcpHost
+func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
+	global, _ := cliutils.GlobalBind(addr)
+	ln, err := net.Listen("tcp", global)
+	if err != nil {
+		return fmt.Errorf("Error opening listener on address %s:%v", addr, err)
+	}
+	t.listener = ln
+	for {
+		conn, err := t.listener.Accept()
+		if err != nil {
+			select {
+			case <-t.quit:
+				return nil
+			default:
+			}
+			continue
+		}
+		c := TcpConn{
+			Endpoint: conn.RemoteAddr().String(),
+			Conn:     conn,
+			host:     t,
+		}
+		t.peers[conn.RemoteAddr().String()] = &c
+		fn(&c)
+	}
+	return nil
 }
 
 // NewSecureTcpHost returns a Secure Tcp Host
@@ -324,6 +288,18 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 	return &secure, secure.negotiateOpen(e)
 }
 
+// Receive is analog to Conn.Receive but also set the right Entity in the
+// message
+func (sc *SecureTcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
+	nm, err := sc.TcpConn.Receive(ctx)
+	nm.Entity = sc.entity
+	return nm, err
+}
+
+func (sc *SecureTcpConn) Entity() *Entity {
+	return sc.entity
+}
+
 // negotitateListen is made to exchange the Entity between the two parties.
 // when a connection request is made during listening
 func (sc *SecureTcpConn) negotiateListen() error {
@@ -360,56 +336,4 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	}
 
 	return nil
-}
-
-// Receive is analog to Conn.Receive but also set the right Entity in the
-// message
-func (sc *SecureTcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
-	nm, err := sc.TcpConn.Receive(ctx)
-	nm.Entity = sc.entity
-	return nm, err
-}
-
-func (sc *SecureTcpConn) Entity() *Entity {
-	return sc.entity
-}
-
-func (e *Entity) Toml(suite abstract.Suite) *EntityToml {
-	var buf bytes.Buffer
-	cliutils.WritePub64(suite, &buf, e.Public)
-	return &EntityToml{
-		Addresses: e.Addresses,
-		Public:    buf.String(),
-	}
-}
-func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
-	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(e.Public))
-	return &Entity{
-		Public:    pub,
-		Addresses: e.Addresses,
-	}
-}
-
-// handleError produces the higher layer error depending on the type
-// so user of the package can know what is the cause of the problem
-func handleError(err error) error {
-
-	if strings.Contains(err.Error(), "use of closed") {
-		return ErrClosed
-	} else if strings.Contains(err.Error(), "canceled") {
-		return ErrCanceled
-	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-		return ErrEOF
-	}
-
-	netErr, ok := err.(net.Error)
-	if !ok {
-		return ErrUnknown
-	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
-		return ErrTimeout
-	}
-	return ErrUnknown
 }
