@@ -71,8 +71,8 @@ func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 		return &TreeMarshal{}
 	}
 	treeM := &TreeMarshal{
-		Node:   t.Id,
-		Entity: t.IdList.Id,
+		NodeId:   t.Id,
+		EntityId: t.IdList.Id,
 	}
 	treeM.Children = append(treeM.Children, TreeMarshalCopyTree(t.Root))
 	dbg.Lvlf4("TreeMarshal is %+v", treeM)
@@ -107,10 +107,10 @@ func (t *Tree) String() string {
 type TreeMarshal struct {
 	// This is the UUID of the corresponding TreeNode, or the Tree-Id for the
 	// top-node
-	Node uuid.UUID
+	NodeId uuid.UUID
 	// This is the UUID of the Entity, except for the top-node, where this
 	// is the EntityList-Id
-	Entity uuid.UUID
+	EntityId uuid.UUID
 	// All children from this tree. The top-node only has one child, which is
 	// the root
 	Children []*TreeMarshal
@@ -120,8 +120,8 @@ type TreeMarshal struct {
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	tm := &TreeMarshal{
-		Node:   tr.Id,
-		Entity: tr.Entity.Id,
+		NodeId:   tr.Id,
+		EntityId: tr.Entity.Id,
 	}
 	for _, c := range tr.Children {
 		tm.Children = append(tm.Children,
@@ -132,11 +132,11 @@ func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 
 // MakeTree creates a tree given an EntityList
 func (tm TreeMarshal) MakeTree(il *EntityList) (*Tree, error) {
-	if il.Id != tm.Entity {
+	if il.Id != tm.EntityId {
 		return nil, errors.New("Not correct EntityList-Id")
 	}
 	tree := &Tree{
-		Id:     tm.Node,
+		Id:     tm.NodeId,
 		IdList: il,
 	}
 	tree.Root = tm.Children[0].MakeTreeFromList(il)
@@ -146,8 +146,8 @@ func (tm TreeMarshal) MakeTree(il *EntityList) (*Tree, error) {
 // MakeTreeFromList creates a sub-tree given an EntityList
 func (tm *TreeMarshal) MakeTreeFromList(il *EntityList) *TreeNode {
 	tn := &TreeNode{
-		Id:     tm.Node,
-		Entity: il.Search(tm.Entity),
+		Id:     tm.NodeId,
+		Entity: il.Search(tm.EntityId),
 	}
 	for _, c := range tm.Children {
 		tn.Children = append(tn.Children, c.MakeTreeFromList(il))
@@ -192,7 +192,7 @@ func (il *EntityList) Search(uuid uuid.UUID) *network.Entity {
 type TreeNode struct {
 	// The Id represents that node of the tree
 	Id uuid.UUID
-	// The NodeID points to the corresponding host. One given host
+	// The Entity points to the corresponding host. One given host
 	// can be used more than once in a tree.
 	Entity   *network.Entity
 	Parent   *TreeNode
@@ -200,13 +200,13 @@ type TreeNode struct {
 }
 
 // Check if it can communicate with parent or children
-func (t *TreeNode) IsConnectedTo(id *network.Entity) bool {
-	if t.Parent != nil && t.Parent.Entity.Equal(id) {
+func (t *TreeNode) IsConnectedTo(e *network.Entity) bool {
+	if t.Parent != nil && t.Parent.Entity.Equal(e) {
 		return true
 	}
 
 	for i := range t.Children {
-		if t.Children[i].Entity.Equal(id) {
+		if t.Children[i].Entity.Equal(e) {
 			return true
 		}
 	}
@@ -308,25 +308,25 @@ type EntityListToml struct {
 }
 
 // Toml returns the toml-writtable version of this entityList
-func (id *EntityList) Toml(suite abstract.Suite) *EntityListToml {
-	ids := make([]*network.EntityToml, len(id.List))
-	for i := range id.List {
-		ids[i] = id.List[i].Toml(suite)
+func (el *EntityList) Toml(suite abstract.Suite) *EntityListToml {
+	ids := make([]*network.EntityToml, len(el.List))
+	for i := range el.List {
+		ids[i] = el.List[i].Toml(suite)
 	}
 	return &EntityListToml{
-		Id:   id.Id,
+		Id:   el.Id,
 		List: ids,
 	}
 }
 
 // EntityList returns the Id list from this toml read struct
-func (id *EntityListToml) EntityList(suite abstract.Suite) *EntityList {
-	ids := make([]*network.Entity, len(id.List))
-	for i := range id.List {
-		ids[i] = id.List[i].Entity(suite)
+func (elt *EntityListToml) EntityList(suite abstract.Suite) *EntityList {
+	ids := make([]*network.Entity, len(elt.List))
+	for i := range elt.List {
+		ids[i] = elt.List[i].Entity(suite)
 	}
 	return &EntityList{
-		Id:   id.Id,
+		Id:   elt.Id,
 		List: ids,
 	}
 }
