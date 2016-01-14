@@ -8,7 +8,9 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 )
 
 // Some packet and their respective network type
@@ -29,7 +31,7 @@ var PublicType Type = 5
 var tSuite = Suite
 
 func init() {
-	// Here we registers the packets themself so the decoder can instantiate
+	// Here we registers the packets, so that the decoder can instantiate
 	// to the right type and then we can do event-driven stuff such as receiving
 	// new messages without knowing the type and then check on the MsgType field
 	// to cast to the right packet type (See below)
@@ -37,7 +39,107 @@ func init() {
 	RegisterProtocolType(TestMessageType, TestMessage{})
 }
 
-// The test function
+// Test closing and opening of Host on same address
+func TestMultiClose(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	fn := func(s Conn) {
+		dbg.Lvl3("Getting connection from", s)
+	}
+	h1 := NewTcpHost()
+	h2 := NewTcpHost()
+	go h1.Listen("localhost:2000", fn)
+	h2.Open("localhost:2000")
+	err := h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	dbg.Lvl3("Finished first connection, starting 2nd")
+	h1 = NewTcpHost()
+	go func() {
+		err := h1.Listen("localhost:2000", fn)
+		if err != nil {
+			t.Fatal("Couldn't re-open listener")
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close h1:", err)
+	}
+}
+
+// Test closing and opening of SecureHost on same address
+func TestSecureMultiClose(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	fn := func(s SecureConn) {
+		dbg.Lvl3("Getting connection from", s)
+	}
+
+	priv1, pub1 := config.NewKeyPair(Suite)
+	entity1 := NewEntity(pub1, "localhost:2000")
+	priv2, pub2 := config.NewKeyPair(Suite)
+	entity2 := NewEntity(pub2, "localhost:2001")
+
+	h1 := NewSecureTcpHost(priv1, entity1)
+	h2 := NewSecureTcpHost(priv2, entity2)
+	go func() {
+		err := h1.Listen(fn)
+		if err != nil {
+			t.Fatal("Listening failed for h1:", err)
+		}
+	}()
+	h2.Open(entity1)
+	err := h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	dbg.Lvl3("Finished first connection, starting 2nd")
+	h1 = NewSecureTcpHost(priv1, entity1)
+	go func() {
+		err = h1.Listen(fn)
+		if err != nil {
+			t.Fatal("Couldn't re-open listener")
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close h1:", err)
+	}
+}
+
+// Testing exchange of entity
+func TestSecureTcp(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	fn := func(s SecureConn) {
+		dbg.Lvl3("Getting connection from", s)
+	}
+
+	priv1, pub1 := config.NewKeyPair(Suite)
+	entity1 := NewEntity(pub1, "localhost:2000")
+	priv2, pub2 := config.NewKeyPair(Suite)
+	entity2 := NewEntity(pub2, "localhost:2001")
+
+	host1 := NewSecureTcpHost(priv1, entity1)
+	host2 := NewSecureTcpHost(priv2, entity2)
+
+	go host1.Listen(fn)
+	conn, err := host2.Open(entity1)
+	if err != nil {
+		t.Fatal("Couldn't connect to host1:", err)
+	}
+	if !conn.Entity().Public.Equal(pub1) {
+		t.Fatal("Connection-id is not from host1")
+	}
+	host1.Close()
+	host2.Close()
+}
+
+// Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
 	// Create one client + one server
 	clientHost := NewTcpHost()
@@ -54,6 +156,8 @@ func TestTcpNetwork(t *testing.T) {
 	// Make the client engage with the server
 	client.ExchangeWithServer("127.0.0.1:5000", t)
 	wg.Wait()
+	clientHost.Close()
+	serverHost.Close()
 }
 
 type SimpleClient struct {

@@ -20,12 +20,12 @@ var prefix = "localhost:"
 // test the ID generation
 func TestTreeId(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	idsList := GenIdentityList(tSuite, names)
+	idsList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromIdentityList(idsList)
+	tree, _ := GenerateTreeFromEntityList(idsList)
 	/*
 			TODO: re-calculate the uuid
-		root, _ := ExampleGenerateTreeFromIdentityList(idsList)
+		root, _ := ExampleGenerateTreeFromEntityList(idsList)
 		tree := sda.Tree{IdList: idsList, Root: root}
 		var h bytes.Buffer
 		h.Write(idsList.Id().Bytes())
@@ -43,16 +43,16 @@ func TestTreeId(t *testing.T) {
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	peerList := GenIdentityList(tSuite, names)
+	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromIdentityList(peerList)
+	tree, _ := GenerateTreeFromEntityList(peerList)
 	// Generate the network
 	if !tree.Root.IsConnectedTo(peerList.List[1]) {
 		t.Fatal("Root should be connected to localhost:2001")
 	}
 }
 
-func GenerateTreeFromIdentityList(pl *sda.IdentityList) (*sda.Tree, []*sda.TreeNode) {
+func GenerateTreeFromEntityList(pl *sda.EntityList) (*sda.Tree, []*sda.TreeNode) {
 	var nodes []*sda.TreeNode
 	var root *sda.TreeNode
 	for i, id := range pl.List {
@@ -70,9 +70,9 @@ func GenerateTreeFromIdentityList(pl *sda.IdentityList) (*sda.Tree, []*sda.TreeN
 }
 
 // Test initialisation of new peer-list
-func TestIdentityListNew(t *testing.T) {
+func TestEntityListNew(t *testing.T) {
 	adresses := []string{"localhost:1010", "localhost:1012"}
-	pl := GenIdentityList(tSuite, adresses)
+	pl := GenEntityList(tSuite, adresses)
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
@@ -87,17 +87,17 @@ func TestIdentityListNew(t *testing.T) {
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	idsList := GenIdentityList(tSuite, names)
+	idsList := GenEntityList(tSuite, names)
 	// write it
 	app.WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
 	// decode it
-	var decoded sda.IdentityListToml
+	var decoded sda.EntityListToml
 	if err := app.ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
-		t.Fatal("COuld not read from file the identityList")
+		t.Fatal("COuld not read from file the entityList")
 	}
-	decodedList := decoded.IdentityList(tSuite)
+	decodedList := decoded.EntityList(tSuite)
 	if len(decodedList.List) != 3 {
-		t.Fatalf("Expected two identities in IdentityList. Instead got %d", len(decodedList.List))
+		t.Fatalf("Expected two identities in EntityList. Instead got %d", len(decodedList.List))
 	}
 	if decodedList.Id == uuid.Nil {
 		t.Fatal("PeerList without ID is not allowed")
@@ -121,9 +121,9 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // - parent
 func TestTreeParent(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	peerList := GenIdentityList(tSuite, names)
+	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromIdentityList(peerList)
+	tree, _ := GenerateTreeFromEntityList(peerList)
 	child := tree.Root.Children[0]
 	if child.Parent.Id != tree.Root.Id {
 		t.Fatal("Parent of child of root is not the root...")
@@ -133,9 +133,9 @@ func TestTreeParent(t *testing.T) {
 // - children
 func TestTreeChildren(t *testing.T) {
 	names := genLocalhostPeerNames(2, 2000)
-	peerList := GenIdentityList(tSuite, names)
+	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, nodes := GenerateTreeFromIdentityList(peerList)
+	tree, nodes := GenerateTreeFromEntityList(peerList)
 	child := tree.Root.Children[0]
 	if child.Id != nodes[1].Id {
 		t.Fatal("Parent of child of root is not the root...")
@@ -146,9 +146,9 @@ func TestTreeChildren(t *testing.T) {
 func TestUnMarshalTree(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
-	peerList := GenIdentityList(tSuite, names)
+	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromIdentityList(peerList)
+	tree, _ := GenerateTreeFromEntityList(peerList)
 	tree_binary, err := tree.Marshal()
 
 	if err != nil {
@@ -181,12 +181,12 @@ func genLocalhostPeerNames(n, p int) []string {
 	return names
 }
 
-// GenIdentityList generate a IdentityList out of names
-func GenIdentityList(suite abstract.Suite, names []string) *sda.IdentityList {
-	var ids []*network.Identity
+// GenEntityList generate a EntityList out of names
+func GenEntityList(suite abstract.Suite, names []string) *sda.EntityList {
+	var ids []*network.Entity
 	for _, n := range names {
 		kp := cliutils.KeyPair(suite)
-		ids = append(ids, network.NewIdentity(kp.Public, n))
+		ids = append(ids, network.NewEntity(kp.Public, n))
 	}
-	return sda.NewIdentityList(ids)
+	return sda.NewEntityList(ids)
 }

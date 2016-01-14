@@ -13,12 +13,12 @@ import (
 )
 
 // In this file we define the main structures used for a running protocol
-// instance. First there is the Identity struct: it represents the Identity of
+// instance. First there is the Entity struct: it represents the Entity of
 // someone, a server over the internet, mainly tied by its public key.
-// The tree contains the peerId which is the ID given to a an Identity / server
+// The tree contains the peerId which is the ID given to a an Entity / server
 // during one protocol instance. A server can have many peerId in one tree.
 // ProtocolInstance needs to know:
-// - which IdentityList we are using ( a selection of proper servers )
+// - which EntityList we are using ( a selection of proper servers )
 // - which Tree we are using.
 // - The overlay network: a mapping from PeerId
 // It contains the PeerId of the parent and the sub tree of the children.
@@ -26,20 +26,20 @@ func init() {
 	network.RegisterProtocolType(TreeType, Tree{})
 	network.RegisterProtocolType(TreeMarshalType, TreeMarshal{})
 	network.RegisterProtocolType(TreeNodeType, TreeNode{})
-	network.RegisterProtocolType(IdentityListType, IdentityList{})
+	network.RegisterProtocolType(EntityListType, EntityList{})
 }
 
 // Tree is a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
 type Tree struct {
 	Id     uuid.UUID
-	IdList *IdentityList
+	IdList *EntityList
 	Root   *TreeNode
 }
 
-// NewTree creates a new tree using the identityList and the root-node. It
+// NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
-func NewTree(il *IdentityList, r *TreeNode) *Tree {
+func NewTree(il *EntityList, r *TreeNode) *Tree {
 	r.UpdateIds()
 	url := "https://dedis.epfl.ch/tree/" + il.Id.String() + r.Id.String()
 	return &Tree{
@@ -49,9 +49,9 @@ func NewTree(il *IdentityList, r *TreeNode) *Tree {
 	}
 }
 
-// NewTreeFromMarshal takes a slice of bytes and an IdentityList to re-create
+// NewTreeFromMarshal takes a slice of bytes and an EntityList to re-create
 // the original tree
-func NewTreeFromMarshal(buf []byte, il *IdentityList) (*Tree, error) {
+func NewTreeFromMarshal(buf []byte, il *EntityList) (*Tree, error) {
 	tp, pm, err := network.UnmarshalRegisteredType(buf,
 		network.DefaultConstructors(edwards.NewAES128SHA256Ed25519(false)))
 	if err != nil {
@@ -65,14 +65,14 @@ func NewTreeFromMarshal(buf []byte, il *IdentityList) (*Tree, error) {
 }
 
 // MakeTreeMarshal creates a replacement-tree that is safe to send: no
-// parent (creates loops), only sends ids (not send the identitylist again)
+// parent (creates loops), only sends ids (not send the entityList again)
 func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 	if t.IdList == nil {
 		return &TreeMarshal{}
 	}
 	treeM := &TreeMarshal{
-		Node:     t.Id,
-		Identity: t.IdList.Id,
+		Node:   t.Id,
+		Entity: t.IdList.Id,
 	}
 	treeM.Children = append(treeM.Children, TreeMarshalCopyTree(t.Root))
 	dbg.Lvlf4("TreeMarshal is %+v", treeM)
@@ -98,16 +98,30 @@ func (t *Tree) Equal(t2 *Tree) bool {
 
 // String writes the definition of the tree
 func (t *Tree) String() string {
-	return fmt.Sprintf("TreeId:%s - IdentityListId:%s - RootId:%s",
+	return fmt.Sprintf("TreeId:%s - EntityListId:%s - RootId:%s",
 		t.Id, t.IdList.Id, t.Root.Id)
+}
+
+// TreeMarshal is used to send and receive a tree-structure without having
+// to copy the whole nodelist
+type TreeMarshal struct {
+	// This is the UUID of the corresponding TreeNode, or the Tree-Id for the
+	// top-node
+	Node uuid.UUID
+	// This is the UUID of the Entity, except for the top-node, where this
+	// is the EntityList-Id
+	Entity uuid.UUID
+	// All children from this tree. The top-node only has one child, which is
+	// the root
+	Children []*TreeMarshal
 }
 
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	tm := &TreeMarshal{
-		Node:     tr.Id,
-		Identity: tr.NodeId.Id,
+		Node:   tr.Id,
+		Entity: tr.NodeId.Id,
 	}
 	for _, c := range tr.Children {
 		tm.Children = append(tm.Children,
@@ -116,10 +130,10 @@ func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	return tm
 }
 
-// MakeTree creates a tree given an IdentityList
-func (tm TreeMarshal) MakeTree(il *IdentityList) (*Tree, error) {
-	if il.Id != tm.Identity {
-		return nil, errors.New("Not correct IdentityList-Id")
+// MakeTree creates a tree given an EntityList
+func (tm TreeMarshal) MakeTree(il *EntityList) (*Tree, error) {
+	if il.Id != tm.Entity {
+		return nil, errors.New("Not correct EntityList-Id")
 	}
 	tree := &Tree{
 		Id:     tm.Node,
@@ -129,11 +143,11 @@ func (tm TreeMarshal) MakeTree(il *IdentityList) (*Tree, error) {
 	return tree, nil
 }
 
-// MakeTreeFromList creates a sub-tree given an IdentityList
-func (tm *TreeMarshal) MakeTreeFromList(il *IdentityList) *TreeNode {
+// MakeTreeFromList creates a sub-tree given an EntityList
+func (tm *TreeMarshal) MakeTreeFromList(il *EntityList) *TreeNode {
 	tn := &TreeNode{
 		Id:     tm.Node,
-		NodeId: il.Search(tm.Identity),
+		NodeId: il.Search(tm.Entity),
 	}
 	for _, c := range tm.Children {
 		tn.Children = append(tn.Children, c.MakeTreeFromList(il))
@@ -141,42 +155,31 @@ func (tm *TreeMarshal) MakeTreeFromList(il *IdentityList) *TreeNode {
 	return tn
 }
 
-// TreeMarshal is used to send and receive a tree-structure without having
-// to copy the whole nodelist
-type TreeMarshal struct {
-	// This is the UUID of the corresponding TreeNode, or the Tree-Id for the
-	// top-node
-	Node uuid.UUID
-	// This is the UUID of the Identity, except for the top-node, where this
-	// is the IdentityList-Id
-	Identity uuid.UUID
-	// All children from this tree. The top-node only has one child, which is
-	// the root
-	Children []*TreeMarshal
-}
-
-// A PeerList is a list of Identity we choose to run  some tree on it ( and
+// A PeerList is a list of Entity we choose to run  some tree on it ( and
 // therefor some protocols)
-type IdentityList struct {
-	Id   uuid.UUID
-	List []*network.Identity
+type EntityList struct {
+	Id uuid.UUID
+	// TODO make that a set / map so search is O(1)
+	List []*network.Entity
 }
 
-// NewIdentityList creates a new identity from a list of identities. It also
+var NilEntityList = EntityList{}
+
+// NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
-func NewIdentityList(ids []*network.Identity) *IdentityList {
-	url := "https://dedis.epfl.ch/identitylist/"
+func NewEntityList(ids []*network.Entity) *EntityList {
+	url := "https://dedis.epfl.ch/entityList/"
 	for _, i := range ids {
 		url += i.Id.String()
 	}
-	return &IdentityList{
+	return &EntityList{
 		List: ids,
 		Id:   uuid.NewV5(uuid.NamespaceURL, url),
 	}
 }
 
-// Search looks for a corresponding UUID and returns that identity
-func (il *IdentityList) Search(uuid uuid.UUID) *network.Identity {
+// Search looks for a corresponding UUID and returns that entity
+func (il *EntityList) Search(uuid uuid.UUID) *network.Entity {
 	for _, i := range il.List {
 		if i.Id == uuid {
 			return i
@@ -191,13 +194,13 @@ type TreeNode struct {
 	Id uuid.UUID
 	// The NodeID points to the corresponding host. One given host
 	// can be used more than once in a tree.
-	NodeId   *network.Identity
+	NodeId   *network.Entity
 	Parent   *TreeNode
 	Children []*TreeNode
 }
 
 // Check if it can communicate with parent or children
-func (t *TreeNode) IsConnectedTo(id *network.Identity) bool {
+func (t *TreeNode) IsConnectedTo(id *network.Entity) bool {
 	if t.Parent != nil && t.Parent.NodeId == id {
 		return true
 	}
@@ -258,7 +261,7 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 }
 
 // NewTreeNode creates a new TreeNode with the proper Id
-func NewTreeNode(ni *network.Identity) *TreeNode {
+func NewTreeNode(ni *network.Entity) *TreeNode {
 	tn := &TreeNode{
 		NodeId:   ni,
 		Parent:   nil,
@@ -297,32 +300,32 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	}
 }
 
-// IdentityListToml is the struct can can embbed IdentityToml to be written in a
+// EntityListToml is the struct can can embbed EntityToml to be written in a
 // toml file
-type IdentityListToml struct {
+type EntityListToml struct {
 	Id   uuid.UUID
-	List []*network.IdentityToml
+	List []*network.EntityToml
 }
 
-// Toml returns the toml-writtable version of this identityList
-func (id *IdentityList) Toml(suite abstract.Suite) *IdentityListToml {
-	ids := make([]*network.IdentityToml, len(id.List))
+// Toml returns the toml-writtable version of this entityList
+func (id *EntityList) Toml(suite abstract.Suite) *EntityListToml {
+	ids := make([]*network.EntityToml, len(id.List))
 	for i := range id.List {
 		ids[i] = id.List[i].Toml(suite)
 	}
-	return &IdentityListToml{
+	return &EntityListToml{
 		Id:   id.Id,
 		List: ids,
 	}
 }
 
-// IdentityList returns the Id list from this toml read struct
-func (id *IdentityListToml) IdentityList(suite abstract.Suite) *IdentityList {
-	ids := make([]*network.Identity, len(id.List))
+// EntityList returns the Id list from this toml read struct
+func (id *EntityListToml) EntityList(suite abstract.Suite) *EntityList {
+	ids := make([]*network.Entity, len(id.List))
 	for i := range id.List {
-		ids[i] = id.List[i].Identity(suite)
+		ids[i] = id.List[i].Entity(suite)
 	}
-	return &IdentityList{
+	return &EntityList{
 		Id:   id.Id,
 		List: ids,
 	}
@@ -333,8 +336,8 @@ const (
 	TreeNodeType
 	TreeMarshalType
 	TreeType
-	IdentityType
-	IdentityListType
+	EntityType
+	EntityListType
 )
 
 /*
@@ -361,7 +364,7 @@ func (t *Tree) Id() UUID {
 // generateId is not used for the moment, as we decided to use UUIDs, which
 // are random. But perhaps it would be a good idea to switch back to
 // something depending on public-key hashes anyway.
-func generateId(ids []*Identity) UUID {
+func generateId(ids []*Entity) UUID {
 	h := NewHashFunc()
 	for _, i := range ids {
 		b, _ := i.Public.MarshalBinary()

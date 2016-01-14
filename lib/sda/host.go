@@ -12,6 +12,7 @@ Node takes care about
 package sda
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -27,209 +28,235 @@ Host is the structure responsible for holding information about the current
  state
 */
 type Host struct {
-	// Our identity
-	Identity *network.Identity
-	// the working address is set when the Host will start listen
-	// When a listening adress found in the identity works, workingAddress is
-	// set to that address
-	workingAddress string
-	// The TCPHost
-	host network.SecureHost
-	// The open connections
-	connections map[string]network.Conn
-	// and the locks
-	networkLock *sync.Mutex
-	// The database of identities this host knows
-	identities map[uuid.UUID]*network.Identity
-	// The identityLists used for building the trees
-	identityLists map[uuid.UUID]*IdentityList
-	// all trees known to this Host
-	trees map[uuid.UUID]*Tree
-	// mapping from identity to physical addresses in connection
-	identityToAddress map[uuid.UUID]string
-	// identity mutex
-	identityLock *sync.Mutex
+	// Our entity (i.e. identity over the network)
+	Entity *network.Entity
 	// Our private-key
 	private abstract.Secret
+	// The TCPHost
+	host network.SecureHost
+	// mapper is used to uniquely identify instances + helpers so protocol
+	// instances can send easily msg
+	mapper *protocolMapper
+	// The open connections
+	connections map[uuid.UUID]network.SecureConn
+	// chan of received messages - testmode
+	networkChan chan network.ApplicationMessage
+	// The database of entities this host knows
+	entities map[uuid.UUID]*network.Entity
+	// The entityLists used for building the trees
+	entityLists map[uuid.UUID]*EntityList
+	// all trees known to this Host
+	trees map[uuid.UUID]*Tree
+	// Mapping from the Protocol Instance
+	// treeMarshal that needs to be converted to Tree but host does not have the
+	// entityList associated yet.
+	// map from EntityList.ID => trees that use this entity list
+	pendingTreeMarshal map[uuid.UUID][]*TreeMarshal
 	// The suite used for this Host
 	suite abstract.Suite
-	// slice of received messages - testmode
-	networkChan chan MessageInfo
-	// instances linked to their ID and their ProtocolID
-	instances map[uuid.UUID]ProtocolInstance
 	// closed channel to notifiy the connections that we close
 	closed chan bool
+	// lock associated to access network connections
+	// and to access entities also.
+	networkLock *sync.Mutex
+	// lock associated to access entityLists
+	entityListsLock *sync.Mutex
+	// lock associated to access trees
+	treesLock *sync.Mutex
+	// lock associated with pending TreeMarshal
+	pendingTreeLock *sync.Mutex
+	// working address is mostly for debugging purposes so we know what address
+	// is known as right now
+	workingAddress string
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(id *network.Identity, pkey abstract.Secret, host network.SecureHost) *Host {
+func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) *Host {
 	n := &Host{
-		Identity:          id,
-		identityToAddress: make(map[uuid.UUID]string),
-		workingAddress:    id.First(),
-		networkLock:       &sync.Mutex{},
-		identityLock:      &sync.Mutex{},
-		connections:       make(map[string]network.Conn),
-		identities:        make(map[uuid.UUID]*network.Identity),
-		trees:             make(map[uuid.UUID]*Tree),
-		identityLists:     make(map[uuid.UUID]*IdentityList),
-		host:              host,
-		private:           pkey,
-		suite:             network.Suite,
-		networkChan:       make(chan MessageInfo, 1),
-		instances:         make(map[uuid.UUID]ProtocolInstance),
-		closed:            make(chan bool),
+		Entity:             id,
+		workingAddress:     id.First(),
+		connections:        make(map[uuid.UUID]network.SecureConn),
+		entities:           make(map[uuid.UUID]*network.Entity),
+		trees:              make(map[uuid.UUID]*Tree),
+		entityLists:        make(map[uuid.UUID]*EntityList),
+		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
+		host:               host,
+		private:            pkey,
+		suite:              network.Suite,
+		networkChan:        make(chan network.ApplicationMessage, 1),
+		mapper:             newProtocolMapper(),
+		closed:             make(chan bool),
+		networkLock:        &sync.Mutex{},
+		entityListsLock:    &sync.Mutex{},
+		treesLock:          &sync.Mutex{},
+		pendingTreeLock:    &sync.Mutex{},
 	}
 	return n
 }
 
-// Listen starts listening for messages coming from parent(up)
-// each time a connection request is made, we receive first its identity then
-// we handle the message using HandleConn
-// NOTE Listen will try each address in the Host identity until one works ;)
+// Listen starts listening for messages coming from any host that tries to
+// contact this entity / host
 func (n *Host) Listen() {
 	fn := func(c network.SecureConn) {
-		ctx := context.TODO()
-		// receive the identity of the remote peer
-		am, err := c.Receive(ctx)
-		if err != nil || am.MsgType != IdentityType {
-			dbg.Lvl2(n.workingAddress, "Error receiving identity from connection", c.Remote())
-		}
-		if am.Msg == nil {
-			dbg.Error("Received nil-message for setup")
-			return
-		}
-		id := am.Msg.(network.Identity)
-		var addr string
-		if addr = id.First(); addr == "" {
-			dbg.Error("Received a connection with Identity with NO addresses")
-			return
-		}
-		dbg.Lvl3(n.workingAddress, "Accepted Connection from", addr)
+		dbg.Lvl3(n.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
-		n.registerConnection(&id, addr, c)
-		n.handleConn(&id, addr, c)
+		n.registerConnection(c)
+		n.handleConn(c)
 	}
-	errChan := make(chan error)
-	var stop bool
-	// Try every addresses
-	for _, addr := range n.Identity.Addresses {
-		if stop {
-			break
+	go func() {
+		dbg.Lvl3("Listening in", n.workingAddress)
+		err := n.host.Listen(fn)
+		if err != nil {
+			dbg.Fatal("Couldn't listen in", n.workingAddress, ":", err)
 		}
-		go func() {
-			err := n.host.Listen(fn)
-			if err != nil {
-				errChan <- err
-			}
-		}()
-		select {
-		// error while listening on this address
-		case e := <-errChan:
-			dbg.Lvl2("Unable to listen with address", addr, "=>err", e)
-		// no error, we listen it's ok !
-		case <-time.After(2 * time.Second):
-			dbg.Lvl2(addr, "is listening !")
-			stop = true
-			n.workingAddress = addr
-		}
-	}
+	}()
 }
 
-// Connect takes an identity where the next Host is
-// It will try every addresses in the Identity
-func (n *Host) Connect(id *network.Identity) (network.Conn, error) {
+// Connect takes an entity where to connect to
+func (n *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
-	var c network.Conn
-	for _, addr := range id.Addresses {
-		// try to open connection
-		c, err = n.host.Open(*id)
-		if err != nil {
-			continue
-		}
-		// Send our Identity so the remote host knows who we are
-		if err := c.Send(context.TODO(), n.Identity); err != nil {
-			return nil, err
-		}
-		n.registerConnection(id, addr, c)
-		dbg.Lvl2("Host", n.workingAddress, "connected to", addr)
-		go n.handleConn(id, addr, c)
+	var c network.SecureConn
+	// try to open connection
+	c, err = n.host.Open(id)
+	if err != nil {
+		return nil, err
 	}
+	n.registerConnection(c)
+	dbg.Lvl2("Host", n.workingAddress, "connected to", c.Remote())
+	go n.handleConn(c)
 	return c, nil
 }
 
 // Close shuts down the listener
 func (n *Host) Close() error {
 	n.networkLock.Lock()
+	for _, c := range n.connections {
+		dbg.Lvl3("Closing connection", c)
+		c.Close()
+	}
 	err := n.host.Close()
-	n.connections = make(map[string]network.Conn)
+	n.connections = make(map[uuid.UUID]network.SecureConn)
 	close(n.closed)
 	n.networkLock.Unlock()
 	return err
 }
 
-// SendTo sends to an Identity by trying the different addresses tied
-// to this id
-// TODO: make this private - but used in test
-func (n *Host) SendTo(id *network.Identity, msg network.ProtocolMessage) error {
+// SendToRaw sends to an Entity without wrapping the msg into a SDAMessage
+func (n *Host) SendToRaw(id *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
-	if _, ok := n.identities[id.Id]; !ok {
-		return fmt.Errorf("SendToIdentity received a non-saved identity")
+	if _, ok := n.entities[id.Id]; !ok {
+		return fmt.Errorf("SendToEntity received a non-saved entity")
 	}
-	var addr string
+	var c network.SecureConn
 	var ok bool
-	if addr, ok = n.identityToAddress[id.Id]; !ok {
-		return fmt.Errorf("No connection for this identity")
+	if c, ok = n.connections[id.Id]; !ok {
+		return fmt.Errorf("Got no connection tied to this Entity")
 	}
-	// additional verification - might be skipped
-	n.networkLock.Lock()
-	if c, ok := n.connections[addr]; !ok {
-		n.networkLock.Unlock()
-		return fmt.Errorf("No connection to this address!", n.connections)
-	} else {
-		// we got the connection
-		n.networkLock.Unlock()
-		dbg.Lvl3("Sending data", msg, "to", c.Remote())
-		return c.Send(context.TODO(), msg)
-	}
+	c.Send(context.TODO(), msg)
 	return nil
 }
 
-// SendMsgTo wraps the message to send in an SDAMessage and sends it to the
-// appropriate identity
-func (n *Host) SendMsgTo(id *network.Identity, msg network.ProtocolMessage) error {
-	sdaMsg := &SDAData{
-		ProtoID:    uuid.Nil,
-		InstanceID: uuid.Nil,
+// Send is the main function protocol instance must use in order to send a
+// message accross the network. A PI must first give its assigned Token, then
+// the Entity where it want to send the message then the msg. The message will
+// be trasnformed into a SDAData message automatically.
+func (n *Host) Send(tok *Token, id *network.Entity, msg network.ProtocolMessage) error {
+	if n.mapper.Instance(tok) == nil {
+		return fmt.Errorf("No protocol instance registered with this token.")
 	}
-	b, err := network.MarshalRegisteredType(msg)
+	sda := &SDAData{
+		Token: *tok,
+		Msg:   msg,
+	}
+	return n.sendSDAData(id, sda)
+}
+
+// StartNewProtocol starts a new procotol by instantiating a instance of that
+// protocol and then call Start on it.
+func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) error {
+	// check everything exists
+	if !ProtocolExists(protocolID) {
+		return fmt.Errorf("Protocol does not exists")
+	}
+	var tree *Tree
+	var ok bool
+	n.treesLock.Lock()
+	if tree, ok = n.trees[treeID]; !ok {
+		return fmt.Errorf("TreeId does not exists")
+	}
+	n.treesLock.Unlock()
+
+	// instantiate
+	token := &Token{
+		ProtocolID:   protocolID,
+		EntityListID: tree.IdList.Id,
+		TreeID:       treeID,
+		// instanceID will be set by the mapper
+	}
+	// instantiate protocol instance
+	pi, err := n.protocolInstantiate(token)
+	if err != nil {
+		return err
+	}
+
+	// start it
+	pi.Start()
+	return nil
+}
+
+// ProtocolInstantiate creates a new instance of a protocol given by it's name
+func (n *Host) protocolInstantiate(tok *Token) (ProtocolInstance, error) {
+	p, ok := protocols[tok.ProtocolID]
+	if !ok {
+		return nil, errors.New("Protocol doesn't exist")
+	}
+	tree, ok := n.GetTree(tok.TreeID)
+	if !ok {
+		return nil, errors.New("Tree does not exists")
+	}
+	if _, ok := n.GetEntityList(tok.EntityListID); !ok {
+		return nil, errors.New("EntityList does not exists")
+	}
+	pi := p(n, tree, tok)
+	n.mapper.RegisterProtocolInstance(pi, tok)
+	return pi, nil
+}
+
+// sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
+// to the  appropriate entity
+func (n *Host) sendSDAData(id *network.Entity, sdaMsg *SDAData) error {
+	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
 	sdaMsg.MsgSlice = b
-	sdaMsg.MsgType = network.TypeFromData(msg)
-	return n.SendTo(id, sdaMsg)
+	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
+	sdaMsg.Msg = nil
+	return n.SendToRaw(id, sdaMsg)
 }
 
 // Receive will return the value of the communication-channel, unmarshalling
-// the SDAMessage
-func (n *Host) Receive() MessageInfo {
-	msgInfo := <-n.networkChan
-	var data = msgInfo.Data
-	if msgInfo.Data.MsgType == SDADataMessage {
+// the SDAMessage. Receive is called in ProcessMessages as it takes directly
+// the message from the networkChan, and pre-process the SDAMessage
+func (n *Host) receive() network.ApplicationMessage {
+	data := <-n.networkChan
+	if data.MsgType == SDADataMessage {
 		sda := data.Msg.(SDAData)
-		t, msg, _ := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		if err != nil {
+			dbg.Error("Error while marshalling inner message of SDAData:", err)
+		}
+		// Put the msg into SDAData
 		sda.MsgType = t
 		sda.Msg = msg
-		// As these are not pointers, we need to write it back
+		// Write back the Msg in appplicationMessage
 		data.Msg = sda
-		msgInfo.Data = data
 		dbg.Lvl3("SDA-Message is:", sda)
 	}
-	return msgInfo
+	return data
 }
 
 // ProcessMessages checks if it is one of the messages for us or dispatch it
@@ -243,52 +270,72 @@ func (n *Host) Receive() MessageInfo {
 func (n *Host) ProcessMessages() {
 	for {
 		var err error
-		msgInfo := n.Receive()
-		dbg.Lvl3("Message Received:", msgInfo.Data)
-		switch msgInfo.Data.MsgType {
+		data := n.Receive()
+		dbg.Lvl3("Message Received:", data)
+		switch data.MsgType {
 		case SDADataMessage:
-			n.processSDAMessage(msgInfo.Id, &msgInfo.Data)
+			n.processSDAMessage(&data)
+		// A host has sent us a request to get a tree definition
 		case RequestTreeMessage:
-			tid := msgInfo.Data.Msg.(RequestTree).TreeID
+			tid := data.Msg.(RequestTree).TreeID
 			tree, ok := n.trees[tid]
 			if ok {
-				err = n.SendTo(msgInfo.Id, tree.MakeTreeMarshal())
+				err = n.SendToRaw(data.Entity, tree.MakeTreeMarshal())
 			} else {
-				err = n.SendTo(msgInfo.Id, (&Tree{}).MakeTreeMarshal())
+				// XXX Take care here for we must verify at the other side that
+				// the tree is Nil. Should we think of a way of sending back an
+				// "error" ?
+				err = n.SendToRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
+		// A Host has replied to our request of a tree
 		case SendTreeMessage:
-			tm := msgInfo.Data.Msg.(TreeMarshal)
+			tm := data.Msg.(TreeMarshal)
 			if tm.Node == uuid.Nil {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
-			il, ok := n.GetIdentityList(tm.Identity)
+			il, ok := n.GetEntityList(tm.Entity)
+			// The entity list does not exists, we should request for that too
 			if !ok {
-				dbg.Error("IdentityList-id doesn't exist")
+				msg := &RequestEntityList{tm.Entity}
+				if err := n.SendToRaw(data.Entity, msg); err != nil {
+					dbg.Error("Requesting EntityList in SendTree failed", err)
+				}
+
+				// put the tree marshal into pending queue so when we receive the
+				// entitylist we can create the real Tree.
+				n.addPendingTreeMarshal(&tm)
 				continue
 			}
+
 			tree, err := tm.MakeTree(il)
 			if err != nil {
 				dbg.Error("Couldn't create tree:", err)
 				continue
 			}
 			n.AddTree(tree)
-		case RequestIdentityListMessage:
-			id := msgInfo.Data.Msg.(RequestIdentityList).IdentityListID
-			il, ok := n.identityLists[id]
+
+		// Some host requested an EntityList
+		case RequestEntityListMessage:
+			id := data.Msg.(RequestEntityList).EntityListID
+			il, ok := n.entityLists[id]
 			if ok {
-				err = n.SendTo(msgInfo.Id, il)
+				err = n.SendToRaw(data.Entity, il)
 			} else {
-				err = n.SendTo(msgInfo.Id, &IdentityList{})
+				dbg.Error("Requested entityList that we don't have")
+				n.SendToRaw(data.Entity, &EntityList{})
 			}
-		case SendIdentityListMessage:
-			il := msgInfo.Data.Msg.(IdentityList)
+		// Host replied to our request of entitylist
+		case SendEntityListMessage:
+			il := data.Msg.(EntityList)
 			if il.Id == uuid.Nil {
-				dbg.Error("Received an empty IdentityList")
+				dbg.Error("Received an empty EntityList")
 			}
-			n.AddIdentityList(&il)
+			n.AddEntityList(&il)
+			// Check if some trees can be constructed from this entitylist
+			n.checkPendingTreeMarshal(&il)
 		default:
-			dbg.Error("Didn't recognize message", msgInfo.Data.MsgType)
+			dbg.Error("Didn't recognize message", data.MsgType)
 		}
 		if err != nil {
 			dbg.Error("Sending error:", err)
@@ -296,38 +343,47 @@ func (n *Host) ProcessMessages() {
 	}
 }
 
-// NetworkChan returns the channel where all messages received go. You can use
-// it for testing, or if you want to make your own processing of the messages
-func (n *Host) NetworkChan() chan MessageInfo {
-	return n.networkChan
-}
-
-// AddIdentityList stores the peer-list for further usage
-func (n *Host) AddIdentityList(il *IdentityList) {
-	n.identityLists[il.Id] = il
+// AddEntityList stores the peer-list for further usage
+func (n *Host) AddEntityList(il *EntityList) {
+	n.entityListsLock.Lock()
+	if _, ok := n.entityLists[il.Id]; ok {
+		dbg.Lvl2("Added EntityList with same ID")
+	}
+	n.entityLists[il.Id] = il
+	n.entityListsLock.Unlock()
 }
 
 // AddTree stores the tree for further usage
 func (n *Host) AddTree(t *Tree) {
+	n.treesLock.Lock()
+	if _, ok := n.trees[t.Id]; ok {
+		dbg.Lvl2("Added Tree with same ID")
+	}
 	n.trees[t.Id] = t
+	n.treesLock.Unlock()
 }
 
-// GetIdentityList returns the IdentityList
-func (n *Host) GetIdentityList(id uuid.UUID) (*IdentityList, bool) {
-	il, ok := n.identityLists[id]
+// GetEntityList returns the EntityList
+func (n *Host) GetEntityList(id uuid.UUID) (*EntityList, bool) {
+	n.entityListsLock.Lock()
+	il, ok := n.entityLists[id]
+	n.entityListsLock.Unlock()
 	return il, ok
 }
 
 // GetTree returns the TreeList
 func (n *Host) GetTree(id uuid.UUID) (*Tree, bool) {
+	n.treesLock.Lock()
 	t, ok := n.trees[id]
+	n.treesLock.Unlock()
 	return t, ok
 }
 
 var timeOut = 30 * time.Second
 
 // Handle a connection => giving messages to the MsgChans
-func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) {
+func (n *Host) handleConn(c network.SecureConn) {
+	address := c.Remote()
 	msgChan := make(chan network.ApplicationMessage)
 	errorChan := make(chan error)
 	doneChan := make(chan bool)
@@ -335,6 +391,7 @@ func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) 
 		for {
 			select {
 			case <-doneChan:
+				dbg.Lvl3("Closing", c)
 				return
 			default:
 				ctx := context.TODO()
@@ -355,9 +412,10 @@ func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) 
 		case <-n.closed:
 			doneChan <- true
 		case am := <-msgChan:
-			n.networkChan <- MessageInfo{Id: id, Data: am}
+			dbg.Lvl3("Putting message into networkChan:", am)
+			n.networkChan <- am
 		case e := <-errorChan:
-			if e == network.ErrClosed {
+			if e == network.ErrClosed || e == network.ErrEOF {
 				return
 			}
 			dbg.Error("Error with connection", address, "=> error", e)
@@ -370,7 +428,7 @@ func (n *Host) handleConn(id *network.Identity, address string, c network.Conn) 
 // Dispatch SDA message looks if we have all the info to rightly dispatch the
 // packet such as the protocol id and the topology id and the protocol instance
 // id
-func (n *Host) processSDAMessage(id *network.Identity, am *network.ApplicationMessage) error {
+func (n *Host) processSDAMessage(am *network.ApplicationMessage) error {
 	sda := am.Msg.(SDAData)
 	t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
@@ -386,23 +444,23 @@ func (n *Host) processSDAMessage(id *network.Identity, am *network.ApplicationMe
 			return fmt.Errorf("Protocol does not exists")
 		}
 	*/
-	ip, ok := n.instances[sda.InstanceID]
-	if !ok {
-		// XXX What to do here ? create a new instance or just drop ?
+	var pi ProtocolInstance
+	if pi = n.mapper.Instance(&sda.Token); pi == nil {
+		// TODO What to do here ? create a new instance or just drop ?
 		return fmt.Errorf("Instance Protocol not existing YET")
 	}
 	// Dispatch the message to the right instance !
-	ip.Dispatch(&sda)
+	pi.Dispatch(&sda)
 	return nil
 }
 
-// registerConnection registers a Identity for a new connection, mapped with the
+// registerConnection registers a Entity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
-func (n *Host) registerConnection(id *network.Identity, addr string, c network.Conn) {
+func (n *Host) registerConnection(c network.SecureConn) {
 	n.networkLock.Lock()
-	n.identities[id.Id] = id
-	n.identityToAddress[id.Id] = addr
-	n.connections[addr] = c
+	id := c.Entity()
+	n.entities[c.Entity().Id] = id
+	n.connections[c.Entity().Id] = c
 	n.networkLock.Unlock()
 }
 
@@ -413,9 +471,41 @@ func (n *Host) Suite() abstract.Suite {
 	return n.suite
 }
 
-// MessageInfo is used to communicate the identity tied to a message when we
-// receive messages
-type MessageInfo struct {
-	Id   *network.Identity
-	Data network.ApplicationMessage
+// addPendingTreeMarshal adds a treeMarshal to the list.
+// This list is checked each time we receive a new EntityList
+// so trees using this EntityList can be constructed.
+func (n *Host) addPendingTreeMarshal(tm *TreeMarshal) {
+	n.pendingTreeLock.Lock()
+	var sl []*TreeMarshal
+	var ok bool
+	// initiate the slice before adding
+	if sl, ok = n.pendingTreeMarshal[tm.Entity]; !ok {
+		sl = make([]*TreeMarshal, 0)
+	}
+	sl = append(sl, tm)
+	n.pendingTreeMarshal[tm.Entity] = sl
+	n.pendingTreeLock.Unlock()
+}
+
+// checkPendingTreeMarshal is called each time we add a new EntityList to the
+// system. It checks if some treeMarshal use this entityList so they can be
+// converted to Tree.
+func (n *Host) checkPendingTreeMarshal(el *EntityList) {
+	n.pendingTreeLock.Lock()
+	var sl []*TreeMarshal
+	var ok bool
+	if sl, ok = n.pendingTreeMarshal[el.Id]; !ok {
+		// no tree for this entitty list
+		return
+	}
+	for _, tm := range sl {
+		tree, err := tm.MakeTree(el)
+		if err != nil {
+			dbg.Error("Tree from EntityList failed")
+			continue
+		}
+		// add the tree into our "database"
+		n.AddTree(tree)
+	}
+	n.pendingTreeLock.Unlock()
 }

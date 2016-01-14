@@ -30,7 +30,7 @@ type MessageReply struct {
 	Children int
 }
 
-// NewProtocolExample initialises the structure for use in one round
+// NewProtocolInstance initialises the structure for use in one round
 func NewProtocolInstance(h *sda.Host, t *sda.TreeNode) *ProtocolExample {
 	return &ProtocolExample{
 		Host:     h,

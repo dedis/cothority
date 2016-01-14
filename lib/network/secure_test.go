@@ -11,12 +11,12 @@ import (
 
 // Secure_test is analog to simple_test it uses the same structure to send
 // The difference lies in which host and connections it uses. here we are going
-// to use SecureTcpHost and SecureConn with Identities
-// Now you connect to someone else using Identity instead of directly addresses
+// to use SecureTcpHost and SecureConn with Entities
+// Now you connect to someone else using Entity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
-	priv1, id1 := genIdentity("localhost:2000")
-	priv2, id2 := genIdentity("localhost:2001")
+	priv1, id1 := genEntity("localhost:2000")
+	priv2, id2 := genEntity("localhost:2001")
 	sHost1 := NewSecureTcpHost(priv1, id1)
 	sHost2 := NewSecureTcpHost(priv2, id2)
 
@@ -36,14 +36,14 @@ func TestSecureSimple(t *testing.T) {
 			c.Close()
 			done <- fmt.Errorf("Not same packet received!")
 		}
-		if !nm.Identity.Equal(id2) {
+		if !nm.Entity.Equal(id2) {
 			c.Close()
-			done <- fmt.Errorf("Not same identity")
+			done <- fmt.Errorf("Not same entity")
 		}
 		close(done)
 	})
 	time.Sleep(1 * time.Second)
-	// Open connection to identity1
+	// Open connection to entity
 	c, err := sHost2.Open(id1)
 	if err != nil {
 		t.Fatal("Error during opening connection to id1")
@@ -62,9 +62,9 @@ func TestSecureSimple(t *testing.T) {
 	sHost2.Close()
 }
 
-func genIdentity(name string) (abstract.Secret, Identity) {
+func genEntity(name string) (abstract.Secret, *Entity) {
 	kp := cliutils.KeyPair(tSuite)
-	return kp.Secret, Identity{
+	return kp.Secret, &Entity{
 		Public:    kp.Public,
 		Addresses: []string{name},
 	}
