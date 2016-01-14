@@ -21,6 +21,11 @@ type Client struct {
 
 	t Transcript // Third-party verifiable message transcript
 
+	i1 I1
+	i2 I2
+	i3 I3
+	i4 I4
+
 	r1 []R1 // Decoded R1 messages
 	r2 []R2 // Decoded R2 messages
 	r3 []R3 // Decoded R3 messages

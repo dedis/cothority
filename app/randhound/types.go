@@ -1,11 +1,18 @@
 package randhound
 
-import "github.com/dedis/crypto/abstract"
+import (
+	"time"
+
+	"github.com/dedis/crypto/abstract"
+)
 
 // TODO: figure out which of the old RandHound types (see app/rand/types.go)
 // are necessary and which ones are covered by SDA
 
 type Session struct {
+	pubk    abstract.Point // Public key of the root node
+	Purpose string         // Purpose of randomness
+	Time    time.Time      // Scheduled initiation time
 }
 
 type Group struct {
