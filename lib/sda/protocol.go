@@ -4,29 +4,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*Host, *Tree, *Token) ProtocolInstance
-
-// ProtocolMapper handles the mapping between tokens and protocol instances. It
-// also provides helpers for protocol instances such as sending a message to
-// someone only requires to give the token and the message and protocolmapper
-// will handle the rest.
-type protocolMapper struct {
-	// mapping instances with their tokens
-	instances map[uuid.UUID]ProtocolInstance
-}
-
-func newProtocolMapper() *protocolMapper {
-	return &protocolMapper{
-		instances: make(map[uuid.UUID]ProtocolInstance),
-	}
-}
-
-// protocols holds a map of all available protocols and how to create an
-// instance of it
-var protocols map[uuid.UUID]NewProtocol
-
-// Protocol is the interface that instances have to use in order to be
+// ProtocolInstance is the interface that instances have to use in order to be
 // recognized as protocols
 type ProtocolInstance interface {
 	// Start is called when a leader has created its tree configuration and
@@ -38,6 +16,43 @@ type ProtocolInstance interface {
 	Dispatch(m *SDAData) error
 	Id() uuid.UUID
 }
+
+// NewProtocol is the function-signature needed to instantiate a new protocol
+type NewProtocol func(*Host, *Tree, *Token) ProtocolInstance
+
+// ProtocolMapper handles the mapping between tokens and protocol instances. It
+// also provides helpers for protocol instances such as sending a message to
+// someone only requires to give the token and the message and protocolmapper
+// will handle the rest.
+type protocolMapper struct {
+	// mapping instances with their tokens
+	instances map[uuid.UUID]ProtocolInstance
+	// aggregate messages in order to dispatch them at once in the protocol
+	// instance
+	msgQueue map[uuid.UUID][]*SDAData
+}
+
+func newProtocolMapper() *protocolMapper {
+	return &protocolMapper{
+		instances: make(map[uuid.UUID]ProtocolInstance),
+	}
+}
+
+func (pm *protocolMapper) DispatchToInstance(sda *SDAData) bool {
+	var pi ProtocolInstance
+	if pi = pm.Instance(&sda.Token); pi == nil {
+		return false
+	}
+	// TODO aggregate msg if necessary
+	//
+	// Dispatch msg
+	pi.Dispatch(sda)
+	return true
+}
+
+// protocols holds a map of all available protocols and how to create an
+// instance of it
+var protocols map[uuid.UUID]NewProtocol
 
 // ProtocolRegister takes a protocol and registers it under a given name.
 // As this might be called from an 'init'-function, we need to check the
@@ -63,6 +78,12 @@ func ProtocolExists(protoID uuid.UUID) bool {
 func (pm *protocolMapper) Instance(tok *Token) ProtocolInstance {
 	pi, _ := pm.instances[tok.Id()]
 	return pi
+}
+
+// Exists returns true if a protocol instance exists (referenced its token ID)
+func (pm *protocolMapper) Exists(tokenID uuid.UUID) bool {
+	_, ok := pm.instances[tokenID]
+	return ok
 }
 
 // RegisterProtocolInstance simply put the proto instance mapping with the token

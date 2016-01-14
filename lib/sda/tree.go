@@ -203,12 +203,12 @@ var TreeNodeType = network.RegisterMessageType(TreeNode{})
 
 // Check if it can communicate with parent or children
 func (t *TreeNode) IsConnectedTo(e *network.Entity) bool {
-	if t.Parent != nil && t.Parent.Entity == e {
+	if t.Parent != nil && t.Parent.Entity.Equal(e) {
 		return true
 	}
 
 	for i := range t.Children {
-		if t.Children[i].Entity == e {
+		if t.Children[i].Entity.Equal(e) {
 			return true
 		}
 	}

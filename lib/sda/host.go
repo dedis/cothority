@@ -47,11 +47,14 @@ type Host struct {
 	entityLists map[uuid.UUID]*EntityList
 	// all trees known to this Host
 	trees map[uuid.UUID]*Tree
-	// Mapping from the Protocol Instance
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
 	pendingTreeMarshal map[uuid.UUID][]*TreeMarshal
+	// pendingSDAData are a list of message we received that does not correspond
+	// to any local tree or/and entitylist. We first request theses so we can
+	// instantiate properly protocolinstance that will use these SDAData msg.
+	pendingSDAs []*SDAData
 	// The suite used for this Host
 	suite abstract.Suite
 	// closed channel to notifiy the connections that we close
@@ -65,6 +68,8 @@ type Host struct {
 	treesLock *sync.Mutex
 	// lock associated with pending TreeMarshal
 	pendingTreeLock *sync.Mutex
+	// lock associated with pending SDAdata
+	pendingSDAsLock *sync.Mutex
 	// working address is mostly for debugging purposes so we know what address
 	// is known as right now
 	workingAddress string
@@ -81,6 +86,7 @@ func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) 
 		trees:              make(map[uuid.UUID]*Tree),
 		entityLists:        make(map[uuid.UUID]*EntityList),
 		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
+		pendingSDAs:        make([]*SDAData, 0),
 		host:               host,
 		private:            pkey,
 		suite:              network.Suite,
@@ -91,6 +97,7 @@ func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) 
 		entityListsLock:    &sync.Mutex{},
 		treesLock:          &sync.Mutex{},
 		pendingTreeLock:    &sync.Mutex{},
+		pendingSDAsLock:    &sync.Mutex{},
 	}
 	return n
 }
@@ -176,16 +183,16 @@ func (n *Host) Send(tok *Token, id *network.Entity, msg network.NetworkMessage) 
 
 // StartNewProtocol starts a new procotol by instantiating a instance of that
 // protocol and then call Start on it.
-func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) error {
+func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (ProtocolInstance, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
-		return fmt.Errorf("Protocol does not exists")
+		return nil, fmt.Errorf("Protocol does not exists")
 	}
 	var tree *Tree
 	var ok bool
 	n.treesLock.Lock()
 	if tree, ok = n.trees[treeID]; !ok {
-		return fmt.Errorf("TreeId does not exists")
+		return nil, fmt.Errorf("TreeId does not exists")
 	}
 	n.treesLock.Unlock()
 
@@ -199,12 +206,12 @@ func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) error {
 	// instantiate protocol instance
 	pi, err := n.protocolInstantiate(token)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// start it
 	pi.Start()
-	return nil
+	return pi, nil
 }
 
 // ProtocolInstantiate creates a new instance of a protocol given by it's name
@@ -270,7 +277,7 @@ func (n *Host) receive() network.ApplicationMessage {
 func (n *Host) ProcessMessages() {
 	for {
 		var err error
-		data := n.Receive()
+		data := n.receive()
 		dbg.Lvl3("Message Received:", data)
 		switch data.MsgType {
 		case SDADataMessage:
@@ -355,6 +362,8 @@ func (n *Host) AddEntityList(il *EntityList) {
 }
 
 // AddTree stores the tree for further usage
+// IT also calls checkPendingSDA so we can now instantiate protocol instance
+// using this tree
 func (n *Host) AddTree(t *Tree) {
 	n.treesLock.Lock()
 	if _, ok := n.trees[t.Id]; ok {
@@ -362,6 +371,7 @@ func (n *Host) AddTree(t *Tree) {
 	}
 	n.trees[t.Id] = t
 	n.treesLock.Unlock()
+	n.checkPendingSDA(t)
 }
 
 // GetEntityList returns the EntityList
@@ -438,21 +448,72 @@ func (n *Host) processSDAMessage(am *network.ApplicationMessage) error {
 	// Set the right type and msg
 	sda.MsgType = t
 	sda.Msg = msg
-	dbg.Lvl3("Processing SDA-message", sda)
-	/*
-		TODO
-		if !ProtocolExists(sda.ProtoID) {
-			return fmt.Errorf("Protocol does not exists")
+	if !ProtocolExists(sda.Token.ProtocolID) {
+		return fmt.Errorf("Protocol does not exists from token")
+	}
+	// do we have the entitylist ? if not, ask for it.
+	if _, ok := n.GetEntityList(sda.Token.EntityListID); !ok {
+		dbg.Lvl2("Will ask for entityList + tree from token")
+		return n.requestTree(am.Entity, &sda)
+	}
+	if _, ok := n.GetTree(sda.Token.TreeID); !ok {
+		dbg.Lvl2("Will ask for tree from token")
+		return n.requestTree(am.Entity, &sda)
+	}
+	// If pi does not exists, then instantiate it !
+	if !n.mapper.Exists(sda.Token.Id()) {
+		_, err := n.protocolInstantiate(&sda.Token)
+		if err != nil {
+			return err
 		}
-	*/
-	var pi ProtocolInstance
-	if pi = n.mapper.Instance(&sda.Token); pi == nil {
-		// TODO What to do here ? create a new instance or just drop ?
+	}
+
+	if n.mapper.DispatchToInstance(&sda) {
 		return fmt.Errorf("Instance Protocol not existing YET")
 	}
-	// Dispatch the message to the right instance !
-	pi.Dispatch(&sda)
 	return nil
+}
+
+// requestTree will ask for the tree the sdadata is related to.
+// it will put the message inside the pending list of sda message waiting to
+// have their trees.
+func (n *Host) requestTree(e *network.Entity, sda *SDAData) error {
+	n.addPendingSda(sda)
+	treeRequest := &RequestTree{sda.Token.TreeID}
+	return n.SendToRaw(e, treeRequest)
+}
+
+// addPendingSda simply append a sda message to a queue. This queue willbe
+// checked each time we receive a new tree / entityList
+func (n *Host) addPendingSda(sda *SDAData) {
+	n.pendingSDAsLock.Lock()
+	n.pendingSDAs = append(n.pendingSDAs, sda)
+	n.pendingSDAsLock.Unlock()
+}
+
+// checkPendingSda check each time we receive a new tree that there are some SDA
+// message using this tree . If there are, we can isntantite a protocolinstance
+// and give it the message!
+// NOTE: put that as a go routine so the rest of the processing messages are not
+// slowed down, if there are many pending sda message at once (i.e. start many new
+// protocol at same time)
+func (n *Host) checkPendingSDA(t *Tree) {
+	go func() {
+		n.pendingSDAsLock.Lock()
+		for i := range n.pendingSDAs {
+			// if this message referes to this tree
+			if uuid.Equal(t.Id, n.pendingSDAs[i].Token.TreeID) {
+				// instantiate it and go !
+				_, err := n.protocolInstantiate(&n.pendingSDAs[i].Token)
+				if err != nil {
+					dbg.Error("Instantite a protocol failed (should not happen)", err)
+					continue
+				}
+				n.mapper.DispatchToInstance(n.pendingSDAs[i])
+			}
+		}
+		n.pendingSDAsLock.Unlock()
+	}()
 }
 
 // registerConnection registers a Entity for a new connection, mapped with the
@@ -463,6 +524,14 @@ func (n *Host) registerConnection(c network.SecureConn) {
 	n.entities[c.Entity().Id] = id
 	n.connections[c.Entity().Id] = c
 	n.networkLock.Unlock()
+}
+
+// HaveTree returns true if the protocolIDm the ENtityListID and the treeID is
+// right or no. If we don't have either the tree or the entitylist, we then
+// request them first amd put the message as pending message.
+func (n *Host) HaveTree(sda *SDAData) bool {
+
+	return true
 }
 
 // Suite returns the suite used by the host
