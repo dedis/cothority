@@ -1,6 +1,8 @@
-package sda
+package sda_test
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
 	"strconv"
 	"testing"
@@ -11,40 +13,54 @@ var testID = uuid.NewV5(uuid.NamespaceURL, "test")
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	if ProtocolExists(testID) {
+	if sda.ProtocolExists(testID) {
 		t.Fatal("Test should not exist yet")
 	}
-	ProtocolRegister(testID, NewProtocolTest)
-	if !ProtocolExists(testID) {
+	sda.ProtocolRegister(testID, NewProtocolTest)
+	if !sda.ProtocolExists(testID) {
 		t.Fatal("Test should exist now")
 	}
 }
 
 // Test instantiation of the protocol
 func TestProtocolInstantiation(t *testing.T) {
-	ProtocolRegister(testID, NewProtocolTest)
-	p, err := ProtocolInstantiate(testID, nil, nil, nil)
+	sda.ProtocolRegister(testID, NewProtocolTest)
+	h1, h2 := setupHosts(t, false)
+	// Add tree + entitylist
+	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	h1.AddEntityList(el)
+	tree, _ := GenerateTreeFromEntityList(el)
+	h1.AddTree(tree)
+	// Then try to instantiate
+	tok := &sda.Token{
+		ProtocolID:   testID,
+		TreeID:       tree.Id,
+		EntityListID: tree.IdList.Id,
+	}
+	p, err := h1.ProtocolInstantiate(tok)
 	if err != nil {
 		t.Fatal("Couldn't instantiate test-protocol")
 	}
 	if p.Dispatch(nil) != nil {
 		t.Fatal("Dispatch-method didn't return nil")
 	}
+	h1.Close()
+	h2.Close()
 }
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
-	*Host
-	*Tree
+	*sda.Host
+	*sda.Tree
 	id  uuid.UUID
-	tok *Token
+	tok *sda.Token
 }
 
 var currInstanceID int
 
 // NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *Host, t *Tree, tok *Token) ProtocolInstance {
+func NewProtocolTest(n *sda.Host, t *sda.Tree, tok *sda.Token) sda.ProtocolInstance {
 	currInstanceID++
 	url := "http://dedis.epfl.ch/protocol/test/" + strconv.Itoa(currInstanceID)
 	return &ProtocolTest{
@@ -61,6 +77,11 @@ func (p *ProtocolTest) Id() uuid.UUID {
 
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
-func (p ProtocolTest) Dispatch(m *SDAData) error {
+func (p *ProtocolTest) Dispatch(m *sda.SDAData) error {
+	dbg.Lvl2("PRotocolTest.Dispatch()")
 	return nil
+}
+
+func (p *ProtocolTest) Start() {
+	dbg.Lvl2("ProtocolTest.Start()")
 }

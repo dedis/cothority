@@ -307,6 +307,8 @@ func TestListTreePropagation(t *testing.T) {
 	if !found {
 		t.Fatal("Did not get the tree + entityList from host2")
 	}
+	h1.Close()
+	h2.Close()
 
 }
 

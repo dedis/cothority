@@ -1,7 +1,6 @@
 package sda
 
 import (
-	"errors"
 	"github.com/satori/go.uuid"
 )
 
@@ -30,18 +29,14 @@ var protocols map[uuid.UUID]NewProtocol
 // Protocol is the interface that instances have to use in order to be
 // recognized as protocols
 type ProtocolInstance interface {
+	// Start is called when a leader has created its tree configuration and
+	// wants to start a protocol, it calls host.StartProtocol(protocolID), that
+	// in turns instantiate a new protocol (with a fresh token) , and then call
+	// Start on it.
+	Start()
 	// Dispatch is called whenever packets are ready and should be treated
 	Dispatch(m *SDAData) error
 	Id() uuid.UUID
-}
-
-// ProtocolInstantiate creates a new instance of a protocol given by it's name
-func ProtocolInstantiate(protoID uuid.UUID, n *Host, t *Tree, tok *Token) (ProtocolInstance, error) {
-	p, ok := protocols[protoID]
-	if !ok {
-		return nil, errors.New("Protocol doesn't exist")
-	}
-	return p(n, t, tok), nil
 }
 
 // ProtocolRegister takes a protocol and registers it under a given name.

@@ -12,6 +12,7 @@ Node takes care about
 package sda
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -171,6 +172,56 @@ func (n *Host) Send(tok *Token, id *network.Entity, msg network.ProtocolMessage)
 		Msg:   msg,
 	}
 	return n.sendSDAData(id, sda)
+}
+
+// StartNewProtocol starts a new procotol by instantiating a instance of that
+// protocol and then call Start on it.
+func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) error {
+	// check everything exists
+	if !ProtocolExists(protocolID) {
+		return fmt.Errorf("Protocol does not exists")
+	}
+	var tree *Tree
+	n.treesLock.Lock()
+	if _, ok := n.trees[treeID]; !ok {
+		return fmt.Errorf("TreeId does not exists")
+	}
+	n.treesLock.Unlock()
+
+	// instantiate
+	token := &Token{
+		ProtocolID:   protocolID,
+		EntityListID: tree.IdList.Id,
+		TreeID:       treeID,
+		// instanceID will be set by the mapper
+	}
+	// instantiate protocol instance
+	pi, err := n.protocolInstantiate(token)
+	if err != nil {
+		return err
+	}
+
+	// start it
+	pi.Start()
+	return nil
+}
+
+// ProtocolInstantiate creates a new instance of a protocol given by it's name
+func (n *Host) protocolInstantiate(tok *Token) (ProtocolInstance, error) {
+	p, ok := protocols[tok.ProtocolID]
+	if !ok {
+		return nil, errors.New("Protocol doesn't exist")
+	}
+	tree, ok := n.GetTree(tok.TreeID)
+	if !ok {
+		return nil, errors.New("Tree does not exists")
+	}
+	if _, ok := n.GetEntityList(tok.EntityListID); !ok {
+		return nil, errors.New("EntityList does not exists")
+	}
+	pi := p(n, tree, tok)
+	n.mapper.RegisterProtocolInstance(pi, tok)
+	return pi, nil
 }
 
 // sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
