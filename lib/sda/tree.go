@@ -121,7 +121,7 @@ type TreeMarshal struct {
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	tm := &TreeMarshal{
 		Node:   tr.Id,
-		Entity: tr.NodeId.Id,
+		Entity: tr.Entity.Id,
 	}
 	for _, c := range tr.Children {
 		tm.Children = append(tm.Children,
@@ -147,7 +147,7 @@ func (tm TreeMarshal) MakeTree(il *EntityList) (*Tree, error) {
 func (tm *TreeMarshal) MakeTreeFromList(il *EntityList) *TreeNode {
 	tn := &TreeNode{
 		Id:     tm.Node,
-		NodeId: il.Search(tm.Entity),
+		Entity: il.Search(tm.Entity),
 	}
 	for _, c := range tm.Children {
 		tn.Children = append(tn.Children, c.MakeTreeFromList(il))
@@ -194,19 +194,19 @@ type TreeNode struct {
 	Id uuid.UUID
 	// The NodeID points to the corresponding host. One given host
 	// can be used more than once in a tree.
-	NodeId   *network.Entity
+	Entity   *network.Entity
 	Parent   *TreeNode
 	Children []*TreeNode
 }
 
 // Check if it can communicate with parent or children
 func (t *TreeNode) IsConnectedTo(id *network.Entity) bool {
-	if t.Parent != nil && t.Parent.NodeId == id {
+	if t.Parent != nil && t.Parent.Entity.Equal(id) {
 		return true
 	}
 
 	for i := range t.Children {
-		if t.Children[i].NodeId == id {
+		if t.Children[i].Entity.Equal(id) {
 			return true
 		}
 	}
@@ -233,7 +233,7 @@ func (t *TreeNode) AddChild(c *TreeNode) {
 // UpdateIds should be called on the root-node, so that it recursively
 // calculates the whole tree as a merkle-tree
 func (t *TreeNode) UpdateIds() {
-	url := "https://dedis.epfl.ch/treenode/" + t.NodeId.Id.String()
+	url := "https://dedis.epfl.ch/treenode/" + t.Entity.Id.String()
 	for _, child := range t.Children {
 		child.UpdateIds()
 		url += child.Id.String()
@@ -243,7 +243,7 @@ func (t *TreeNode) UpdateIds() {
 
 // Equal tests if that node is equal to the given node
 func (t *TreeNode) Equal(t2 *TreeNode) bool {
-	if t.Id != t2.Id || t.NodeId.Id != t2.NodeId.Id {
+	if t.Id != t2.Id || t.Entity.Id != t2.Entity.Id {
 		dbg.Lvl4("TreeNode: ids are not equal")
 		return false
 	}
@@ -263,7 +263,7 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 // NewTreeNode creates a new TreeNode with the proper Id
 func NewTreeNode(ni *network.Entity) *TreeNode {
 	tn := &TreeNode{
-		NodeId:   ni,
+		Entity:   ni,
 		Parent:   nil,
 		Children: make([]*TreeNode, 0),
 	}
