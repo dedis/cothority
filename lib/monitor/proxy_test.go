@@ -66,7 +66,7 @@ func TestProxy(t *testing.T) {
 
 	SinkPort = oldSink
 	End()
-	StopSink()
+
 	select {
 	case <-done:
 		s := monitor.Stats()
@@ -142,5 +142,4 @@ func TestReadyProxy(t *testing.T) {
 
 	SinkPort = oldSink
 	End()
-	//StopSink()
 }

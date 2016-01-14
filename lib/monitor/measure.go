@@ -64,7 +64,7 @@ func ConnectSink(addr string) error {
 func StopSink() {
 	if err := connection.Close(); err != nil {
 		// at least tell that we could not close the connection:
-		dbg.Error("Could not close connecttion:", err)
+		dbg.Error("Could not close connection:", err)
 	}
 	encoder = nil
 }
