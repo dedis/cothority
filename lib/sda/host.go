@@ -290,14 +290,14 @@ func (n *Host) ProcessMessages() {
 		// A Host has replied to our request of a tree
 		case SendTreeMessage:
 			tm := data.Msg.(TreeMarshal)
-			if tm.Node == uuid.Nil {
+			if tm.NodeId == uuid.Nil {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
-			il, ok := n.GetEntityList(tm.Entity)
+			il, ok := n.GetEntityList(tm.EntityId)
 			// The entity list does not exists, we should request for that too
 			if !ok {
-				msg := &RequestEntityList{tm.Entity}
+				msg := &RequestEntityList{tm.EntityId}
 				if err := n.SendToRaw(data.Entity, msg); err != nil {
 					dbg.Error("Requesting EntityList in SendTree failed", err)
 				}
@@ -479,11 +479,11 @@ func (n *Host) addPendingTreeMarshal(tm *TreeMarshal) {
 	var sl []*TreeMarshal
 	var ok bool
 	// initiate the slice before adding
-	if sl, ok = n.pendingTreeMarshal[tm.Entity]; !ok {
+	if sl, ok = n.pendingTreeMarshal[tm.EntityId]; !ok {
 		sl = make([]*TreeMarshal, 0)
 	}
 	sl = append(sl, tm)
-	n.pendingTreeMarshal[tm.Entity] = sl
+	n.pendingTreeMarshal[tm.EntityId] = sl
 	n.pendingTreeLock.Unlock()
 }
 

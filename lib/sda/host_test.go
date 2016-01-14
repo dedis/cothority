@@ -226,7 +226,7 @@ func TestTreePropagation(t *testing.T) {
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).Entity != uuid.Nil {
+	if msg.Msg.(sda.TreeMarshal).EntityId != uuid.Nil {
 		t.Fatal("List should be empty")
 	}
 
@@ -240,7 +240,7 @@ func TestTreePropagation(t *testing.T) {
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
-	if msg.Msg.(sda.TreeMarshal).Node != tree.Id {
+	if msg.Msg.(sda.TreeMarshal).NodeId != tree.Id {
 		t.Fatal("Tree should be equal to original tree")
 	}
 

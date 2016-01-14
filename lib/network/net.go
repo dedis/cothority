@@ -204,34 +204,10 @@ type TcpConn struct {
 	host *TcpHost
 }
 
-// PeerName returns the name of the peer at the end point of
-// the conn
+// Remote returns the name of the peer at the end point of
+// the connection
 func (c *TcpConn) Remote() string {
 	return c.Endpoint
-}
-
-// handleError produces the higher layer error depending on the type
-// so user of the package can know what is the cause of the problem
-func handleError(err error) error {
-
-	if strings.Contains(err.Error(), "use of closed") {
-		return ErrClosed
-	} else if strings.Contains(err.Error(), "canceled") {
-		return ErrCanceled
-	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-		return ErrEOF
-	}
-
-	netErr, ok := err.(net.Error)
-	if !ok {
-		return ErrUnknown
-	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
-		return ErrTimeout
-	}
-	return ErrUnknown
 }
 
 // Receive waits for any input on the connection and returns
@@ -308,8 +284,7 @@ func (c *TcpConn) Close() error {
 }
 
 // Entity is used to represent a Conode in the whole internet.
-// It's kinda an network identity that is based on a public key,
-// and there can be one or more addresses to contact it.
+// It's based on a public key, and there can be one or more addresses to contact it.
 type Entity struct {
 	// This is the public key of that Entity
 	Public abstract.Point
@@ -322,25 +297,25 @@ type Entity struct {
 }
 
 // First returns the first address available
-func (id *Entity) First() string {
-	if len(id.Addresses) > 0 {
-		return id.Addresses[0]
+func (e *Entity) First() string {
+	if len(e.Addresses) > 0 {
+		return e.Addresses[0]
 	}
 	return ""
 }
 
 // Next returns the next address like an iterator,
 // starting at the beginning if nothing worked
-func (id *Entity) Next() string {
-	addr := id.Addresses[id.iter]
-	id.iter = (id.iter + 1) % len(id.Addresses)
+func (e *Entity) Next() string {
+	addr := e.Addresses[e.iter]
+	e.iter = (e.iter + 1) % len(e.Addresses)
 	return addr
 
 }
 
 // Equal tests on same public key
-func (id *Entity) Equal(e *Entity) bool {
-	return id.Public.Equal(e.Public)
+func (e *Entity) Equal(e *Entity) bool {
+	return e.Public.Equal(e.Public)
 }
 
 // NewEntity creates a new Entity based on a public key and with a slice
@@ -356,14 +331,14 @@ func NewEntity(public abstract.Point, addresses ...string) *Entity {
 }
 
 // SecureHost is the analog of Host but with secure communication
-// It is tied to an entity can only open connection with identities
+// It is tied to an entity can only open connection with entities
 type SecureHost interface {
 	Close() error
 	Listen(func(SecureConn)) error
-	Open(id *Entity) (SecureConn, error)
+	Open(*Entity) (SecureConn, error)
 }
 
-// SecureConn is the analog of Conn but for secure comminucation
+// SecureConn is the analog of Conn but for secure communication
 type SecureConn interface {
 	Conn
 	Entity() *Entity
@@ -386,13 +361,13 @@ type SecureTcpHost struct {
 }
 
 // NewSecureTcpHost returns a Secure Tcp Host
-func NewSecureTcpHost(private abstract.Secret, id *Entity) *SecureTcpHost {
+func NewSecureTcpHost(private abstract.Secret, e *Entity) *SecureTcpHost {
 	return &SecureTcpHost{
 		private:        private,
-		entity:         id,
+		entity:         e,
 		EntityToAddr:   make(map[uuid.UUID]string),
 		TcpHost:        NewTcpHost(),
-		workingAddress: id.First(),
+		workingAddress: e.First(),
 	}
 }
 
@@ -433,11 +408,11 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 
 // Open will try any address that is in the Entity and connect to the first
 // one that works. Then it exchanges the Entity to verify.
-func (st *SecureTcpHost) Open(id *Entity) (SecureConn, error) {
+func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 	var secure SecureTcpConn
 	var success bool
 	// try all names
-	for _, addr := range id.Addresses {
+	for _, addr := range e.Addresses {
 		// try to connect with this name
 		c, err := st.TcpHost.openTcpConn(addr)
 		if err != nil {
@@ -447,7 +422,7 @@ func (st *SecureTcpHost) Open(id *Entity) (SecureConn, error) {
 		secure = SecureTcpConn{
 			TcpConn:       c,
 			SecureTcpHost: st,
-			entity:        id,
+			entity:        e,
 		}
 		success = true
 		break
@@ -455,8 +430,8 @@ func (st *SecureTcpHost) Open(id *Entity) (SecureConn, error) {
 	if !success {
 		return nil, fmt.Errorf("Could not connect to any address tied to this Entity")
 	}
-	// Exchange and verify Identities
-	return &secure, secure.negotiateOpen(id)
+	// Exchange and verify entities
+	return &secure, secure.negotiateOpen(e)
 }
 
 type SecureTcpConn struct {
@@ -482,21 +457,21 @@ func (sc *SecureTcpConn) negotiateListen() error {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
 	}
 
-	// Set this ID for this connection
-	id := nm.Msg.(Entity)
-	sc.entity = &id
+	// Set the Entity for this connection
+	e := nm.Msg.(Entity)
+	sc.entity = &e
 	return nil
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
 // negotiateListen it also verifiy the Entity.
-func (sc *SecureTcpConn) negotiateOpen(id *Entity) error {
+func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	if err := sc.negotiateListen(); err != nil {
 		return err
 	}
 
 	// verify the Entity if its the same we are supposed to connect
-	if sc.Entity().Id != id.Id {
+	if sc.Entity().Id != e.Id {
 		return fmt.Errorf("Entity received during negotiation is wrong. WARNING")
 	}
 
@@ -525,18 +500,42 @@ type EntityToml struct {
 	Addresses []string
 }
 
-func (id *Entity) Toml(suite abstract.Suite) *EntityToml {
+func (e *Entity) Toml(suite abstract.Suite) *EntityToml {
 	var buf bytes.Buffer
-	cliutils.WritePub64(suite, &buf, id.Public)
+	cliutils.WritePub64(suite, &buf, e.Public)
 	return &EntityToml{
-		Addresses: id.Addresses,
+		Addresses: e.Addresses,
 		Public:    buf.String(),
 	}
 }
-func (id *EntityToml) Entity(suite abstract.Suite) *Entity {
-	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
+func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
+	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(e.Public))
 	return &Entity{
 		Public:    pub,
-		Addresses: id.Addresses,
+		Addresses: e.Addresses,
 	}
+}
+
+// handleError produces the higher layer error depending on the type
+// so user of the package can know what is the cause of the problem
+func handleError(err error) error {
+
+	if strings.Contains(err.Error(), "use of closed") {
+		return ErrClosed
+	} else if strings.Contains(err.Error(), "canceled") {
+		return ErrCanceled
+	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+		return ErrEOF
+	}
+
+	netErr, ok := err.(net.Error)
+	if !ok {
+		return ErrUnknown
+	}
+	if netErr.Temporary() {
+		return ErrTemp
+	} else if netErr.Timeout() {
+		return ErrTimeout
+	}
+	return ErrUnknown
 }
