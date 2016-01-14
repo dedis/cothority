@@ -182,8 +182,9 @@ func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) error {
 		return fmt.Errorf("Protocol does not exists")
 	}
 	var tree *Tree
+	var ok bool
 	n.treesLock.Lock()
-	if _, ok := n.trees[treeID]; !ok {
+	if tree, ok = n.trees[treeID]; !ok {
 		return fmt.Errorf("TreeId does not exists")
 	}
 	n.treesLock.Unlock()

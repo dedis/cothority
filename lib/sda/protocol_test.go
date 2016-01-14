@@ -22,6 +22,8 @@ func TestProtocolRegistration(t *testing.T) {
 	}
 }
 
+var testString = ""
+
 // Test instantiation of the protocol
 func TestProtocolInstantiation(t *testing.T) {
 	sda.ProtocolRegister(testID, NewProtocolTest)
@@ -37,12 +39,22 @@ func TestProtocolInstantiation(t *testing.T) {
 		TreeID:       tree.Id,
 		EntityListID: tree.IdList.Id,
 	}
+
 	p, err := h1.ProtocolInstantiate(tok)
 	if err != nil {
 		t.Fatal("Couldn't instantiate test-protocol")
 	}
 	if p.Dispatch(nil) != nil {
 		t.Fatal("Dispatch-method didn't return nil")
+	}
+
+	// Try directly StartNewProtocol
+	err = h1.StartNewProtocol(testID, tree.Id)
+	if err != nil {
+		t.Fatal("Could not start new protocol")
+	}
+	if testString == "" {
+		t.Fatal("Start() not called")
 	}
 	h1.Close()
 	h2.Close()
@@ -84,4 +96,5 @@ func (p *ProtocolTest) Dispatch(m *sda.SDAData) error {
 
 func (p *ProtocolTest) Start() {
 	dbg.Lvl2("ProtocolTest.Start()")
+	testString = "ProtocolTest"
 }
