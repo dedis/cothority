@@ -22,12 +22,6 @@ import (
 // - which Tree we are using.
 // - The overlay network: a mapping from PeerId
 // It contains the PeerId of the parent and the sub tree of the children.
-func init() {
-	network.RegisterProtocolType(TreeType, Tree{})
-	network.RegisterProtocolType(TreeMarshalType, TreeMarshal{})
-	network.RegisterProtocolType(TreeNodeType, TreeNode{})
-	network.RegisterProtocolType(EntityListType, EntityList{})
-}
 
 // Tree is a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
@@ -36,6 +30,8 @@ type Tree struct {
 	IdList *EntityList
 	Root   *TreeNode
 }
+
+var TreeType = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
@@ -116,6 +112,8 @@ type TreeMarshal struct {
 	Children []*TreeMarshal
 }
 
+var TreeMarshalType = network.RegisterMessageType(TreeMarshal{})
+
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
@@ -155,13 +153,15 @@ func (tm *TreeMarshal) MakeTreeFromList(il *EntityList) *TreeNode {
 	return tn
 }
 
-// A PeerList is a list of Entity we choose to run  some tree on it ( and
+// An EntityList is a list of Entity we choose to run  some tree on it ( and
 // therefor some protocols)
 type EntityList struct {
 	Id uuid.UUID
-	// TODO make that a set / map so search is O(1)
+	// TODO make that a map so search is O(1)
 	List []*network.Entity
 }
+
+var EntityListType = network.RegisterMessageType(EntityList{})
 
 var NilEntityList = EntityList{}
 
@@ -198,6 +198,8 @@ type TreeNode struct {
 	Parent   *TreeNode
 	Children []*TreeNode
 }
+
+var TreeNodeType = network.RegisterMessageType(TreeNode{})
 
 // Check if it can communicate with parent or children
 func (t *TreeNode) IsConnectedTo(e *network.Entity) bool {
@@ -330,15 +332,6 @@ func (elt *EntityListToml) EntityList(suite abstract.Suite) *EntityList {
 		List: ids,
 	}
 }
-
-const (
-	TopologyType = iota + 200
-	TreeNodeType
-	TreeMarshalType
-	TreeType
-	EntityType
-	EntityListType
-)
 
 /*
 Id is not used for the moment, rather a static, random UUID is used.

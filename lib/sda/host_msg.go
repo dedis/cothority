@@ -8,20 +8,14 @@ import (
 
 // init registers all our message-types to the network-interface
 func init() {
-	network.RegisterProtocolType(SDADataMessage, SDAData{})
-	network.RegisterProtocolType(RequestTreeMessage, RequestTree{})
-	network.RegisterProtocolType(RequestEntityListMessage, RequestEntityList{})
-	network.RegisterProtocolType(SendEntityListMessage, EntityList{})
 }
 
-// constants used for the message-types
-const (
-	SDADataMessage = iota + 10
-	RequestTreeMessage
-	RequestEntityListMessage
-	SendEntityListMessage = EntityListType
-	SendTreeMessage       = TreeMarshalType
-)
+// Our message-types used in sda
+var SDADataMessage = network.RegisterMessageType(SDAData{})
+var RequestTreeMessage = network.RegisterMessageType(RequestTree{})
+var RequestEntityListMessage = network.RegisterMessageType(RequestEntityList{})
+var SendTreeMessage = TreeMarshalType
+var SendEntityListMessage = EntityListType
 
 // SDAData is to be embedded in every message that is made for a
 // ProtocolInstance
@@ -29,9 +23,9 @@ type SDAData struct {
 	// Token uniquely identify the protocol instance this msg is made for
 	Token
 	// MsgType of the underlying data
-	MsgType network.Type
+	MsgType uuid.UUID
 	// The interface to the actual Data
-	Msg network.ProtocolMessage
+	Msg network.NetworkMessage
 	// The actual data as binary blob
 	MsgSlice []byte
 }

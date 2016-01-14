@@ -15,10 +15,6 @@ import (
 
 var suite abstract.Suite = network.Suite
 
-func init() {
-	network.RegisterProtocolType(SimpleMessageType, SimpleMessage{})
-}
-
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
 	h1 := newHost("localhost:2000", suite)
@@ -224,6 +220,7 @@ func TestTreePropagation(t *testing.T) {
 	}
 	msg := h1.Receive()
 	if msg.MsgType != sda.SendTreeMessage {
+		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
 	if msg.Msg.(sda.TreeMarshal).EntityId != uuid.Nil {
@@ -361,9 +358,7 @@ type SimpleMessage struct {
 	I int
 }
 
-const (
-	SimpleMessageType = iota + 50
-)
+var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
 func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessage {
 	if msg.MsgType != sda.SDADataMessage {

@@ -143,7 +143,7 @@ func (n *Host) Close() error {
 }
 
 // SendToRaw sends to an Entity without wrapping the msg into a SDAMessage
-func (n *Host) SendToRaw(id *network.Entity, msg network.ProtocolMessage) error {
+func (n *Host) SendToRaw(id *network.Entity, msg network.NetworkMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
@@ -163,7 +163,7 @@ func (n *Host) SendToRaw(id *network.Entity, msg network.ProtocolMessage) error 
 // message accross the network. A PI must first give its assigned Token, then
 // the Entity where it want to send the message then the msg. The message will
 // be trasnformed into a SDAData message automatically.
-func (n *Host) Send(tok *Token, id *network.Entity, msg network.ProtocolMessage) error {
+func (n *Host) Send(tok *Token, id *network.Entity, msg network.NetworkMessage) error {
 	if n.mapper.Instance(tok) == nil {
 		return fmt.Errorf("No protocol instance registered with this token.")
 	}
@@ -322,18 +322,19 @@ func (n *Host) ProcessMessages() {
 			if ok {
 				err = n.SendToRaw(data.Entity, il)
 			} else {
-				dbg.Error("Requested entityList that we don't have")
+				dbg.Lvl2("Requested entityList that we don't have")
 				n.SendToRaw(data.Entity, &EntityList{})
 			}
 		// Host replied to our request of entitylist
 		case SendEntityListMessage:
 			il := data.Msg.(EntityList)
 			if il.Id == uuid.Nil {
-				dbg.Error("Received an empty EntityList")
+				dbg.Lvl2("Received an empty EntityList")
+			} else {
+				n.AddEntityList(&il)
+				// Check if some trees can be constructed from this entitylist
+				n.checkPendingTreeMarshal(&il)
 			}
-			n.AddEntityList(&il)
-			// Check if some trees can be constructed from this entitylist
-			n.checkPendingTreeMarshal(&il)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}

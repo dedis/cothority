@@ -2,22 +2,21 @@ package network
 
 import (
 	"fmt"
+	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"testing"
 	"time"
 )
 
+var SimplePacketType uuid.UUID
+
 func init() {
-	RegisterProtocolType(SimplePacketType, SimplePacket{})
+	SimplePacketType = RegisterMessageType(SimplePacket{})
 }
 
 type SimplePacket struct {
 	Name string
 }
-
-const (
-	SimplePacketType = iota + 70
-)
 
 func TestSimple(t *testing.T) {
 	client := NewTcpHost()
