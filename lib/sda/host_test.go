@@ -117,14 +117,14 @@ func TestHostSendMsgDuplex(t *testing.T) {
 func TestHostSendDuplex(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendToRaw(h2.Entity, msgSimple)
+	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendToRaw(h1.Entity, msgSimple)
+	err = h2.SendRaw(h1.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -163,7 +163,7 @@ func TestPeerListPropagation(t *testing.T) {
 	//il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	el1 := GenEntityListFromHost(h2, h1)
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -177,7 +177,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddEntityList(el1)
-	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -191,7 +191,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -218,7 +218,7 @@ func TestTreePropagation(t *testing.T) {
 	tree, _ := el1.GenerateBinaryTree()
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -233,7 +233,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -247,7 +247,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -281,7 +281,7 @@ func TestListTreePropagation(t *testing.T) {
 	// it is supposed to automatically ask for the entitylist
 	go h1.ProcessMessages()
 	// make the communcation happen
-	if err := h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id}); err != nil {
+	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id}); err != nil {
 		t.Fatal("Could not send tree request to host2", err)
 	}
 
@@ -312,6 +312,33 @@ func TestListTreePropagation(t *testing.T) {
 	h1.Close()
 	h2.Close()
 
+}
+
+func TestTokenId(t *testing.T) {
+	t1 := &sda.Token{
+		EntityListID: uuid.NewV1(),
+		TreeID:       uuid.NewV1(),
+		ProtocolID:   uuid.NewV1(),
+		RoundID:      uuid.NewV1(),
+	}
+	id1 := t1.Id()
+	t2 := &sda.Token{
+		EntityListID: uuid.NewV1(),
+		TreeID:       uuid.NewV1(),
+		ProtocolID:   uuid.NewV1(),
+		RoundID:      uuid.NewV1(),
+	}
+	id2 := t2.Id()
+	if uuid.Equal(id1, id2) {
+		t.Fatal("Both token are the same")
+	}
+	if !uuid.Equal(id1, t1.Id()) {
+		t.Fatal("Twice the Id of the same token should be equal")
+	}
+	t3 := t1.OtherToken(&sda.TreeNode{Id: uuid.NewV1()})
+	if uuid.Equal(t1.TreeNodeID, t3.TreeNodeID) {
+		t.Fatal("OtherToken should modify copy")
+	}
 }
 
 // Test instantiation of ProtocolInstances

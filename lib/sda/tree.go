@@ -96,6 +96,27 @@ func (t *Tree) String() string {
 		t.Id, t.EntityList.Id, t.Root.Id)
 }
 
+// GetNode searches the tree for the given TreeNodeId
+func (t *Tree) GetNode(tn uuid.UUID) (ret *TreeNode) {
+	found := func(d int, tns *TreeNode) {
+		if tns.Id == tn {
+			ret = tns
+		}
+	}
+	t.Root.Visit(0, found)
+	return ret
+}
+
+// ListNodes is used for testing
+func (t *Tree) ListNodes() (ret []*TreeNode) {
+	ret = make([]*TreeNode, 0)
+	add := func(d int, tns *TreeNode) {
+		ret = append(ret, tns)
+	}
+	t.Root.Visit(0, add)
+	return ret
+}
+
 // TreeMarshal is used to send and receive a tree-structure without having
 // to copy the whole nodelist
 type TreeMarshal struct {
@@ -228,6 +249,17 @@ type TreeNode struct {
 
 var TreeNodeType = network.RegisterMessageType(TreeNode{})
 
+// NewTreeNode creates a new TreeNode with the proper Id
+func NewTreeNode(ni *network.Entity) *TreeNode {
+	tn := &TreeNode{
+		Entity:   ni,
+		Parent:   nil,
+		Children: make([]*TreeNode, 0),
+	}
+	tn.UpdateIds()
+	return tn
+}
+
 // Check if it can communicate with parent or children
 func (t *TreeNode) IsConnectedTo(e *network.Entity) bool {
 	if t.Parent != nil && t.Parent.Entity.Equal(e) {
@@ -250,6 +282,15 @@ func (t *TreeNode) IsLeaf() bool {
 // IsRoot returns true for a node without a parent
 func (t *TreeNode) IsRoot() bool {
 	return t.Parent == nil
+}
+
+// IsInTree - verifies if the TreeNode is in the given Tree
+func (t *TreeNode) IsInTree(tree *Tree) bool {
+	root := *t
+	for root.Parent != nil {
+		root = *root.Parent
+	}
+	return tree.Root.Id == root.Id
 }
 
 // AddChild adds a child to this tree-node. Once the tree is set up, the
@@ -287,17 +328,6 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 		}
 	}
 	return true
-}
-
-// NewTreeNode creates a new TreeNode with the proper Id
-func NewTreeNode(ni *network.Entity) *TreeNode {
-	tn := &TreeNode{
-		Entity:   ni,
-		Parent:   nil,
-		Children: make([]*TreeNode, 0),
-	}
-	tn.UpdateIds()
-	return tn
 }
 
 // String returns the current treenode's Id as a string.
@@ -359,39 +389,3 @@ func (elt *EntityListToml) EntityList(suite abstract.Suite) *EntityList {
 		List: ids,
 	}
 }
-
-/*
-Id is not used for the moment, rather a static, random UUID is used.
-func (t *TreeNode) Id() UUID {
-	buf := NewHashFunc()
-	if t.Parent != "" {
-		buf.Write([]byte(t.Parent))
-	}
-	buf.Write([]byte(t.PeerId))
-	for i := range t.Children {
-		buf.Write([]byte(t.Children[i].PeerId))
-	}
-	return UUID(buf.Sum(nil))
-}
-
-func (t *Tree) Id() UUID {
-	h := NewHashFunc()
-	h.Write([]byte(t.IdList.Id))
-	h.Write([]byte(t.Root.Id()))
-	return UUID(h.Sum(nil))
-}
-
-// generateId is not used for the moment, as we decided to use UUIDs, which
-// are random. But perhaps it would be a good idea to switch back to
-// something depending on public-key hashes anyway.
-func generateId(ids []*Entity) UUID {
-	h := NewHashFunc()
-	for _, i := range ids {
-		b, _ := i.Public.MarshalBinary()
-		h.Write(b)
-	}
-	return UUID(h.Sum(nil))
-}
-
-
-*/

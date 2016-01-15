@@ -39,8 +39,8 @@ func init() {
 func RegisterMessageType(msg NetworkMessage) uuid.UUID {
 	// We add a star here because in TypeFromData we'll always have pointers,
 	// so we're directly compatible with it
-	url := "http://dedis.epfl.ch/protocolType/*" + reflect.TypeOf(msg).String()
-	msgType := uuid.NewV3(uuid.NamespaceURL, url)
+	url := "https://dedis.epfl.ch/protocolType/*" + reflect.TypeOf(msg).String()
+	msgType := uuid.NewV5(uuid.NamespaceURL, url)
 	if _, typeRegistered := typeRegistry[msgType]; typeRegistered {
 		return msgType
 	}
@@ -57,8 +57,8 @@ func RegisterMessageType(msg NetworkMessage) uuid.UUID {
 // TypeFromData returns the corresponding uuid to the structure given. It
 // returns 'DefaultType' upon error.
 func TypeFromData(msg NetworkMessage) uuid.UUID {
-	url := "http://dedis.epfl.ch/protocolType/" + reflect.TypeOf(msg).String()
-	msgType := uuid.NewV3(uuid.NamespaceURL, url)
+	url := "https://dedis.epfl.ch/protocolType/" + reflect.TypeOf(msg).String()
+	msgType := uuid.NewV5(uuid.NamespaceURL, url)
 	_, ok := typeRegistry[msgType]
 	if !ok {
 		return ErrorType
