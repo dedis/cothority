@@ -13,8 +13,10 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+var Done chan bool
+
 func init() {
-	sda.ProtocolRegisterName("Example", NewProtocolInstance)
+	sda.ProtocolRegisterName("Example", NewExample)
 }
 
 // ProtocolExample just holds a message that is passed to all children.
@@ -38,7 +40,10 @@ type MessageReply struct {
 var MessageReplyType = network.RegisterMessageType(MessageReply{})
 
 // NewProtocolInstance initialises the structure for use in one round
-func NewProtocolInstance(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
+func NewExample(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
+	if Done == nil {
+		Done = make(chan bool, 1)
+	}
 	return &ProtocolExample{
 		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
 	}
@@ -52,7 +57,7 @@ func (p *ProtocolExample) Start() error {
 
 // Dispatch takes the message and decides what function to call
 func (p *ProtocolExample) Dispatch(m []*sda.SDAData) error {
-	dbg.Lvl3("Got a message:", m)
+	dbg.Lvl3("Got a message:", m[0])
 	switch m[0].MsgType {
 	case MessageAnnounceType:
 		return p.HandleAnnounce(m[0])
@@ -87,5 +92,10 @@ func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
 func (p *ProtocolExample) HandleReply(m *sda.SDAData) error {
 	msg := m.Msg.(MessageReply)
 	msg.Children += len(p.Children)
-	return p.Send(p.Parent, msg)
+	Done <- true
+	dbg.Lvl3("We're done")
+	if p.Parent != nil {
+		return p.Send(p.Parent, msg)
+	}
+	return nil
 }

@@ -1,6 +1,8 @@
 package sda
 
 import (
+	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
@@ -56,25 +58,22 @@ func newProtocolMapper(h *Host) *protocolMapper {
 }
 
 // DispatchToInstance will dispatch this SDAData to the right instance
-// it returns true if it has successfullyy dispatched the msg or false
+// it returns true if it has successfully dispatched the msg or false
 // otherwise. It can return false because it want to aggregate some messages
 // until every children of this host has sent their messages.
-func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) bool {
+func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) (bool, error) {
 	var pi ProtocolInstance
 	if pi = pm.Instance(sdaMsg.To); pi == nil {
-		dbg.Lvl2("No instance for this token")
-		return false
+		return false, errors.New("No instance for this token")
 	}
 	//  Get the node corresponding to this host in the Tree
 	node, err := pm.Host.TreeNodeFromToken(sdaMsg.To)
 	if err != nil {
-		dbg.Error("Could not find TreeNode for this host in aggregate:", err)
-		return false
+		return false, fmt.Errorf("Could not find TreeNode for this host in aggregate: %s", err)
 	}
 	// if message comes from parent, dispatch directly
 	if !node.IsRoot() && sdaMsg.Entity.Equal(node.Parent.Entity) {
-		pi.Dispatch([]*SDAData{sdaMsg})
-		return true
+		return true, pi.Dispatch([]*SDAData{sdaMsg})
 	}
 
 	// if messages come from children we must aggregate them
@@ -82,12 +81,10 @@ func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) bool {
 	var ok bool
 	// if we still need to wait additionals message, we return
 	if msgs, ok = pm.aggregate(node, sdaMsg); !ok {
-		dbg.Lvl2("Still aggregating for this SDAData")
-		return false
+		return false, errors.New("Still aggregating for this SDAData")
 	}
 	// all is good
-	pi.Dispatch(msgs)
-	return true
+	return true, pi.Dispatch(msgs)
 }
 
 // aggregate store the message for a protocol instance such that a protocol
