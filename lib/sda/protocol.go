@@ -17,7 +17,7 @@ type ProtocolInstance interface {
 	// wants to start a protocol, it calls host.StartProtocol(protocolID), that
 	// in turns instantiate a new protocol (with a fresh token) , and then call
 	// Start on it.
-	Start()
+	Start() error
 	// Dispatch is called whenever packets are ready and should be treated
 	Dispatch(m []*SDAData) error
 }
@@ -59,22 +59,22 @@ func newProtocolMapper(h *Host) *protocolMapper {
 // it returns true if it has successfullyy dispatched the msg or false
 // otherwise. It can return false because it want to aggregate some messages
 // until every children of this host has sent their messages.
-func (pm *protocolMapper) DispatchToInstance(sda *SDAData) bool {
+func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) bool {
 	var pi ProtocolInstance
-	if pi = pm.Instance(&sda.Token); pi == nil {
+	if pi = pm.Instance(sdaMsg.To); pi == nil {
 		dbg.Lvl2("No instance for this token")
 		return false
 	}
 	//  Get the node corresponding to this host in the Tree
-	node := pm.Host.TreeNode(sda.Token.TreeID)
-	if node == nil {
-		dbg.Error("Could not find TreeNode for this host in aggregate")
+	node, err := pm.Host.TreeNodeFromToken(sdaMsg.To)
+	if err != nil {
+		dbg.Error("Could not find TreeNode for this host in aggregate:", err)
 		return false
 	}
 	dbg.Lvl2("DispatchToInstance parent =", node.Parent.Entity.String())
 	// if message comes from parent, dispatch directly
-	if !node.IsRoot() && sda.Entity.Equal(node.Parent.Entity) {
-		pi.Dispatch([]*SDAData{sda})
+	if !node.IsRoot() && sdaMsg.Entity.Equal(node.Parent.Entity) {
+		pi.Dispatch([]*SDAData{sdaMsg})
 		return true
 	}
 
@@ -82,7 +82,7 @@ func (pm *protocolMapper) DispatchToInstance(sda *SDAData) bool {
 	var msgs []*SDAData
 	var ok bool
 	// if we still need to wait additionals message, we return
-	if msgs, ok = pm.aggregate(node, sda); !ok {
+	if msgs, ok = pm.aggregate(node, sdaMsg); !ok {
 		dbg.Lvl2("Still aggregating for this SDAData")
 		return false
 	}
@@ -95,13 +95,13 @@ func (pm *protocolMapper) DispatchToInstance(sda *SDAData) bool {
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (pm *protocolMapper) aggregate(node *TreeNode, sda *SDAData) ([]*SDAData, bool) {
+func (pm *protocolMapper) aggregate(node *TreeNode, sdaMsg *SDAData) ([]*SDAData, bool) {
 	// store the msg
-	tokId := sda.Token.Id()
+	tokId := sdaMsg.To.Id()
 	if _, ok := pm.msgQueue[tokId]; !ok {
 		pm.msgQueue[tokId] = make([]*SDAData, 0)
 	}
-	msgs := append(pm.msgQueue[tokId], sda)
+	msgs := append(pm.msgQueue[tokId], sdaMsg)
 	pm.msgQueue[tokId] = msgs
 	// do we have everything yet or no
 	// get the node this host is in this tree
@@ -132,9 +132,9 @@ func (pm *protocolMapper) Exists(tokenID uuid.UUID) bool {
 }
 
 // RegisterProtocolInstance simply put the proto instance mapping with the token
-func (pm *protocolMapper) RegisterProtocolInstance(proto ProtocolInstance, tok *Token, tn *TreeNode) {
+func (pm *protocolMapper) RegisterProtocolInstance(proto ProtocolInstance, tok *Token) {
 	// And registers it
-	pm.instances[uuid.And(tok.Id(), tn.Id)] = proto
+	pm.instances[tok.Id()] = proto
 }
 
 // ProtocolStruct combines a host, treeNode and a send-function as convenience
@@ -150,8 +150,8 @@ func NewProtocolStruct(h *Host, t *TreeNode, tok *Token) *ProtocolStruct {
 }
 
 // Send adds the token
-func (ps *ProtocolStruct) Send(to *network.Entity, msg network.NetworkMessage) {
-	ps.Host.Send(ps.Token, to, msg)
+func (ps *ProtocolStruct) Send(to *TreeNode, msg network.NetworkMessage) error {
+	return ps.Host.SendSDAToTreeNode(ps.Token, to, msg)
 }
 
 // ProtocolRegister takes a protocol and registers it under a given uuid.

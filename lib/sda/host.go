@@ -150,49 +150,59 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 }
 
 // Close shuts down the listener
-func (n *Host) Close() error {
-	n.networkLock.Lock()
-	for _, c := range n.connections {
+func (h *Host) Close() error {
+	h.networkLock.Lock()
+	for _, c := range h.connections {
 		dbg.Lvl3("Closing connection", c)
 		c.Close()
 	}
-	err := n.host.Close()
-	n.connections = make(map[uuid.UUID]network.SecureConn)
-	close(n.closed)
-	n.networkLock.Unlock()
+	err := h.host.Close()
+	h.connections = make(map[uuid.UUID]network.SecureConn)
+	close(h.closed)
+	h.networkLock.Unlock()
 	return err
 }
 
-// SendToRaw sends to an Entity without wrapping the msg into a SDAMessage
-func (n *Host) SendToRaw(id *network.Entity, msg network.NetworkMessage) error {
+// SendRaw sends to an Entity without wrapping the msg into a SDAMessage
+func (h *Host) SendRaw(id *network.Entity, msg network.NetworkMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
-	if _, ok := n.entities[id.Id]; !ok {
+	if _, ok := h.entities[id.Id]; !ok {
 		return fmt.Errorf("SendToEntity received a non-saved entity")
 	}
 	var c network.SecureConn
 	var ok bool
-	if c, ok = n.connections[id.Id]; !ok {
+	if c, ok = h.connections[id.Id]; !ok {
 		return fmt.Errorf("Got no connection tied to this Entity")
 	}
 	c.Send(context.TODO(), msg)
 	return nil
 }
 
-// Send is the main function protocol instance must use in order to send a
-// message accross the network. A PI must first give its assigned Token, then
+// SendSDA is the main function protocol instance must use in order to send a
+// message across the network. A PI must first give its assigned Token, then
 // the Entity where it want to send the message then the msg. The message will
-// be trasnformed into a SDAData message automatically.
-func (n *Host) Send(tok *Token, e *network.Entity, msg network.NetworkMessage) error {
-	if n.mapper.Instance(tok) == nil {
+// be transformed into a SDAData message automatically.
+func (h *Host) SendSDA(from, to *Token, msg network.NetworkMessage) error {
+	tn, err := h.TreeNodeFromToken(to)
+	if err != nil {
+		return err
+	}
+	return h.SendSDAToTreeNode(from, tn, msg)
+}
+
+// SendSDAToTreeNode sends a message to a treeNode
+func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.NetworkMessage) error {
+	if h.mapper.Instance(from) == nil {
 		return fmt.Errorf("No protocol instance registered with this token.")
 	}
 	sda := &SDAData{
-		Token: *tok,
-		Msg:   msg,
+		Msg:  msg,
+		From: from,
+		To:   from.OtherToken(to),
 	}
-	return n.sendSDAData(e, sda)
+	return h.sendSDAData(to.Entity, sda)
 }
 
 // StartNewProtocol starts a new protocol by instantiating a instance of that
@@ -216,7 +226,7 @@ func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 		EntityListID: tree.EntityList.Id,
 		TreeID:       treeID,
 		// Host is handling the generation of protocolInstanceID
-		InstanceID: cliutils.NewRandomUUID(),
+		RoundID: cliutils.NewRandomUUID(),
 	}
 	// instantiate protocol instance
 	pi, err := h.protocolInstantiate(token, tree.Root)
@@ -225,7 +235,11 @@ func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 	}
 
 	// start it
-	pi.Start()
+	dbg.Lvl3("Starting new protocolinstance at", h.Entity.Addresses)
+	err = pi.Start()
+	if err != nil {
+		return nil, err
+	}
 	return pi, nil
 }
 
@@ -250,12 +264,12 @@ func (h *Host) ProcessMessages() {
 			tid := data.Msg.(RequestTree).TreeID
 			tree, ok := h.trees[tid]
 			if ok {
-				err = h.SendToRaw(data.Entity, tree.MakeTreeMarshal())
+				err = h.SendRaw(data.Entity, tree.MakeTreeMarshal())
 			} else {
 				// XXX Take care here for we must verify at the other side that
 				// the tree is Nil. Should we think of a way of sending back an
 				// "error" ?
-				err = h.SendToRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
+				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
 		// A Host has replied to our request of a tree
 		case SendTreeMessage:
@@ -268,7 +282,7 @@ func (h *Host) ProcessMessages() {
 			// The entity list does not exists, we should request for that too
 			if !ok {
 				msg := &RequestEntityList{tm.EntityId}
-				if err := h.SendToRaw(data.Entity, msg); err != nil {
+				if err := h.SendRaw(data.Entity, msg); err != nil {
 					dbg.Error("Requesting EntityList in SendTree failed", err)
 				}
 
@@ -290,10 +304,10 @@ func (h *Host) ProcessMessages() {
 			id := data.Msg.(RequestEntityList).EntityListID
 			il, ok := h.entityLists[id]
 			if ok {
-				err = h.SendToRaw(data.Entity, il)
+				err = h.SendRaw(data.Entity, il)
 			} else {
 				dbg.Lvl2("Requested entityList that we don't have")
-				h.SendToRaw(data.Entity, &EntityList{})
+				h.SendRaw(data.Entity, &EntityList{})
 			}
 		// Host replied to our request of entitylist
 		case SendEntityListMessage:
@@ -361,6 +375,18 @@ func (h *Host) HaveTree(sda *SDAData) bool {
 	return true
 }
 
+func (h *Host) TreeNodeFromToken(t *Token) (*TreeNode, error) {
+	tree, ok := h.trees[t.TreeID]
+	if !ok {
+		return nil, errors.New("Didn't find tree")
+	}
+	tn := tree.GetNode(t.TreeNodeID)
+	if tn == nil {
+		return nil, errors.New("Didn't find treenode")
+	}
+	return tn, nil
+}
+
 // Suite returns the suite used by the host
 // NOTE for the moment the suite is fixed for the host and any protocols
 // instance.
@@ -385,13 +411,13 @@ func (h *Host) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, 
 		return nil, errors.New("We are not represented in the tree")
 	}
 	pi := p(h, tn, tok)
-	h.mapper.RegisterProtocolInstance(pi, tok, tn)
+	h.mapper.RegisterProtocolInstance(pi, tok)
 	return pi, nil
 }
 
 // sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
 // to the  appropriate entity
-func (h *Host) sendSDAData(id *network.Entity, sdaMsg *SDAData) error {
+func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
@@ -401,7 +427,7 @@ func (h *Host) sendSDAData(id *network.Entity, sdaMsg *SDAData) error {
 	// put to nil so protobuf won't encode it and there won't be any error on the
 	// other side (because it doesn't know how to encode it)
 	sdaMsg.Msg = nil
-	return h.SendToRaw(id, sdaMsg)
+	return h.SendRaw(e, sdaMsg)
 }
 
 // Receive will return the value of the communication-channel, unmarshalling
@@ -473,37 +499,37 @@ func (h *Host) handleConn(c network.SecureConn) {
 // packet such as the protocol id and the topology id and the protocol instance
 // id
 func (h *Host) processSDAMessage(am *network.ApplicationMessage) error {
-	sda := am.Msg.(SDAData)
-	t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, network.DefaultConstructors(h.Suite()))
+	sdaMsg := am.Msg.(SDAData)
+	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(h.Suite()))
 	if err != nil {
 		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
 	}
 	// Set the right type and msg
-	sda.MsgType = t
-	sda.Msg = msg
-	sda.Entity = am.Entity
-	if !ProtocolExists(sda.Token.ProtocolID) {
+	sdaMsg.MsgType = t
+	sdaMsg.Msg = msg
+	sdaMsg.Entity = am.Entity
+	if !ProtocolExists(sdaMsg.To.ProtocolID) {
 		return fmt.Errorf("Protocol does not exists from token")
 	}
 	// do we have the entitylist ? if not, ask for it.
-	if _, ok := h.GetEntityList(sda.Token.EntityListID); !ok {
+	if _, ok := h.GetEntityList(sdaMsg.To.EntityListID); !ok {
 		dbg.Lvl2("Will ask for entityList + tree from token")
-		return h.requestTree(am.Entity, &sda)
+		return h.requestTree(am.Entity, &sdaMsg)
 	}
-	tree, ok := h.GetTree(sda.Token.TreeID)
+	tree, ok := h.GetTree(sdaMsg.To.TreeID)
 	if !ok {
 		dbg.Lvl2("Will ask for tree from token")
-		return h.requestTree(am.Entity, &sda)
+		return h.requestTree(am.Entity, &sdaMsg)
 	}
 	// If pi does not exists, then instantiate it !
-	if !h.mapper.Exists(sda.Token.Id()) {
-		_, err := h.protocolInstantiate(&sda.Token, tree.GetNode(sda.To))
+	if !h.mapper.Exists(sdaMsg.To.Id()) {
+		_, err := h.protocolInstantiate(sdaMsg.To, tree.GetNode(sdaMsg.To.TreeNodeID))
 		if err != nil {
 			return err
 		}
 	}
 
-	if h.mapper.DispatchToInstance(&sda) {
+	if h.mapper.DispatchToInstance(&sdaMsg) {
 		return fmt.Errorf("Instance Protocol not existing YET")
 	}
 	return nil
@@ -512,10 +538,10 @@ func (h *Host) processSDAMessage(am *network.ApplicationMessage) error {
 // requestTree will ask for the tree the sdadata is related to.
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
-func (h *Host) requestTree(e *network.Entity, sda *SDAData) error {
-	h.addPendingSda(sda)
-	treeRequest := &RequestTree{sda.Token.TreeID}
-	return h.SendToRaw(e, treeRequest)
+func (h *Host) requestTree(e *network.Entity, sdaMsg *SDAData) error {
+	h.addPendingSda(sdaMsg)
+	treeRequest := &RequestTree{sdaMsg.To.TreeID}
+	return h.SendRaw(e, treeRequest)
 }
 
 // addPendingSda simply append a sda message to a queue. This queue willbe
@@ -537,12 +563,17 @@ func (h *Host) checkPendingSDA(t *Tree) {
 		h.pendingSDAsLock.Lock()
 		for i := range h.pendingSDAs {
 			// if this message referes to this tree
-			if uuid.Equal(t.Id, h.pendingSDAs[i].Token.TreeID) {
+			if uuid.Equal(t.Id, h.pendingSDAs[i].To.TreeID) {
 				// instantiate it and go !
-				sda := h.pendingSDAs[i]
-				_, err := h.protocolInstantiate(&sda.Token, t.GetNode(sda.To))
+				sdaMsg := h.pendingSDAs[i]
+				node := t.GetNode(sdaMsg.To.TreeNodeID)
+				if node == nil {
+					dbg.Error("Didn't find our node in the tree")
+					continue
+				}
+				_, err := h.protocolInstantiate(sdaMsg.To, node)
 				if err != nil {
-					dbg.Error("Instantite a protocol failed (should not happen)", err)
+					dbg.Error("Instantiation of the protocol failed (should not happen)", err)
 					continue
 				}
 				if !h.mapper.DispatchToInstance(h.pendingSDAs[i]) {
@@ -601,16 +632,4 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 		h.AddTree(tree)
 	}
 	h.pendingTreeLock.Unlock()
-}
-
-// TreeNode returns the TreeNode that this hosts represents in the Tree that has
-// id treeID. Nil if none.
-func (n *Host) TreeNode(treeID uuid.UUID) *TreeNode {
-	n.treesLock.Lock()
-	tn, ok := n.treeNodes[treeID]
-	n.treesLock.Unlock()
-	if !ok {
-		return nil
-	}
-	return tn
 }

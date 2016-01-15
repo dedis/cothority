@@ -286,11 +286,11 @@ func (t *TreeNode) IsRoot() bool {
 
 // IsInTree - verifies if the TreeNode is in the given Tree
 func (t *TreeNode) IsInTree(tree *Tree) bool {
-	root := t
+	root := *t
 	for root.Parent != nil {
-		root = root.Parent
+		root = *root.Parent
 	}
-	return tree.Root.Id == t.Id
+	return tree.Root.Id == root.Id
 }
 
 // AddChild adds a child to this tree-node. Once the tree is set up, the

@@ -20,7 +20,9 @@ var SendEntityListMessage = EntityListType
 // ProtocolInstance
 type SDAData struct {
 	// Token uniquely identify the protocol instance this msg is made for
-	Token
+	From *Token
+	// The TreeNodeId Where the message goes to
+	To *Token
 	// NOTE: this is taken from network.NetworkMessage
 	Entity *network.Entity
 	// MsgType of the underlying data
@@ -29,14 +31,10 @@ type SDAData struct {
 	Msg network.NetworkMessage
 	// The actual data as binary blob
 	MsgSlice []byte
-	// The TreeNodeId where the message comes from
-	From uuid.UUID
-	// The TreeNodeId Where the message goes to
-	To uuid.UUID
 }
 
 // A Token contains all identifiers needed to Uniquely identify one protocol
-// instance. It get passed when a new protocol instance is created and get used
+// instance. It gets passed when a new protocol instance is created and get used
 // by every protocol instance when they want to send a message. That way, the
 // host knows how to create the SDAData message around the protocol's message
 // with the right fields set.
@@ -44,12 +42,27 @@ type Token struct {
 	EntityListID uuid.UUID
 	TreeID       uuid.UUID
 	ProtocolID   uuid.UUID
-	InstanceID   uuid.UUID
+	RoundID      uuid.UUID
+	TreeNodeID   uuid.UUID
+	cacheId      uuid.UUID
 }
 
 // Returns the Id of a token so we can put that in a map easily
 func (t *Token) Id() uuid.UUID {
-	return uuid.And(uuid.And(t.EntityListID, t.TreeID), uuid.And(t.ProtocolID, t.InstanceID))
+	if t.cacheId == uuid.Nil {
+		url := "https://dedis.epfl.ch/token/" + t.EntityListID.String() +
+			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String()
+		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
+	}
+	return t.cacheId
+}
+
+// Return a new Token contianing a reference to the given TreeNode
+func (t *Token) OtherToken(tn *TreeNode) *Token {
+	t_other := *t
+	t_other.TreeNodeID = tn.Id
+	t_other.cacheId = uuid.Nil
+	return &t_other
 }
 
 // RequestTree is used to ask the parent for a given Tree

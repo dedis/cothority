@@ -1,6 +1,7 @@
 package sda_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -48,44 +49,42 @@ func (p *ProtocolTest) Dispatch(m []*sda.SDAData) error {
 	return nil
 }
 
-func (p *ProtocolTest) Start() {
+func (p *ProtocolTest) Start() error {
 	dbg.Lvl2("ProtocolTest.Start()")
 	testString = p.id.String()
+	return nil
 }
 
 type SimpleProtocol struct {
-	*sda.Host
-	*sda.TreeNode
-	id  uuid.UUID
-	tok *sda.Token
+	*sda.ProtocolStruct
 	// chan to get back to testing
 	Chan chan bool
 }
 
-func (p *SimpleProtocol) Id() uuid.UUID {
-	return p.id
-}
-
 // Dispatch simply analysze the message and do nothing else
 func (p *SimpleProtocol) Dispatch(m []*sda.SDAData) error {
+	dbg.Lvl2("Dispatching", m)
 	if m[0].MsgType != SimpleMessageType {
-		return fmt.Errorf("Not the message expected")
+		return errors.New("Not the message expected")
 	}
 	msg := m[0].Msg.(SimpleMessage)
 	if msg.I != 10 {
-		return fmt.Errorf("Not the value expected")
+		return errors.New("Not the value expected")
 	}
 	p.Chan <- true
 	return nil
 }
 
 // Sends a simple message to its first children
-func (p *SimpleProtocol) Start() {
-	msg := SimpleMessage{10}
-	child := p.Children[0]
-	p.Send(p.tok, child.Entity, &msg)
+func (p *SimpleProtocol) Start() error {
+	dbg.Lvl2("Sending from", p.TreeNode.Entity.Addresses, "to",
+		p.Children[0].Entity.Addresses)
+	err := p.Send(p.Children[0], &SimpleMessage{10})
+	if err != nil {
+		return err
+	}
 	p.Chan <- true
-
+	return nil
 }
 
 // Test simple protocol-implementation
@@ -142,21 +141,18 @@ func TestProtocolInstantiation(t *testing.T) {
 // This makes h2 the leader, so it creates a tree and entity list
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
-func aTestProtocolAutomaticInstantiation(t *testing.T) {
+func TestProtocolAutomaticInstantiation(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)
-	chans := []chan bool{chanH2, chanH1}
+	chans := []chan bool{chanH1, chanH2}
 	id := 0
 	// custom creation function so we know the step due to the channels
 	fn := func(h *sda.Host, tr *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
-		uid, _ := uuid.FromString(strconv.Itoa(id))
 		ps := SimpleProtocol{
-			id:       uid,
-			Host:     h,
-			TreeNode: tr,
-			tok:      tok,
-			Chan:     chans[id],
+			ProtocolStruct: sda.NewProtocolStruct(h, tr, tok),
+			Chan:           chans[id],
 		}
 		id++
 		return &ps
@@ -164,36 +160,34 @@ func aTestProtocolAutomaticInstantiation(t *testing.T) {
 
 	sda.ProtocolRegister(testID, fn)
 	h1, h2 := setupHosts(t, true)
+	defer h1.Close()
+	defer h2.Close()
 	go h1.ProcessMessages()
 	// create small Tree
-	el := sda.NewEntityList([]*network.Entity{h2.Entity, h1.Entity})
-	h2.AddEntityList(el)
+	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
+	h1.AddEntityList(el)
 	tree, _ := el.GenerateBinaryTree()
-	h2.AddTree(tree)
-	// start a protocol
+	h1.AddTree(tree)
+	// start the protocol
 	go func() {
-
-		_, err := h2.StartNewProtocol(testID, tree.Id)
+		_, err := h1.StartNewProtocol(testID, tree.Id)
 		if err != nil {
 			t.Fatal(fmt.Sprintf("Could not start protocol %v", err))
 		}
 	}()
-	// we are supposed to receive stg from host2 from Start()
-	select {
-	case _ = <-chanH2:
-		break
-	case <-time.After(200 * time.Millisecond):
-		t.Fatal("Could not receive from channel of host 2")
-	}
-	// Then we are supposed to receive from h1 after he got the tree and the
-	// entity list from h2
+	// we are supposed to receive something from host1 from Start()
 	select {
 	case _ = <-chanH1:
 		break
-	case <-time.After(2 * time.Second):
+	case <-time.After(200 * time.Millisecond):
 		t.Fatal("Could not receive from channel of host 1")
 	}
-	// then it's all good
-	h1.Close()
-	h2.Close()
+	// Then we are supposed to receive from h2 after he got the tree and the
+	// entity list from h1
+	select {
+	case _ = <-chanH2:
+		break
+	case <-time.After(2 * time.Second):
+		t.Fatal("Could not receive from channel of host 2")
+	}
 }
