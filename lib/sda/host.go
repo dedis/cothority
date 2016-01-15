@@ -208,7 +208,7 @@ func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 	// instantiate
 	token := &Token{
 		ProtocolID:   protocolID,
-		EntityListID: tree.IdList.Id,
+		EntityListID: tree.EntityList.Id,
 		TreeID:       treeID,
 		// instanceID will be set by the mapper
 	}

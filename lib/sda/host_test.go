@@ -139,7 +139,7 @@ func TestHostSendDuplex(t *testing.T) {
 func TestPeerPendingTreeMarshal(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
-	tree, _ := GenerateTreeFromEntityList(el)
+	tree, _ := el.GenerateBinaryTree()
 
 	// Add the marshalled version of the tree
 	h1.AddPendingTreeMarshal(tree.MakeTreeMarshal())
@@ -158,9 +158,9 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
+	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -173,8 +173,8 @@ func TestPeerListPropagation(t *testing.T) {
 	}
 
 	// Now add the list to h2 and try again
-	h2.AddEntityList(il1)
-	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
+	h2.AddEntityList(el1)
+	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -182,22 +182,22 @@ func TestPeerListPropagation(t *testing.T) {
 	if msg.MsgType != sda.SendEntityListMessage {
 		t.Fatal("h1 didn't receive EntityList type")
 	}
-	if msg.Msg.(sda.EntityList).Id != il1.Id {
+	if msg.Msg.(sda.EntityList).Id != el1.Id {
 		t.Fatal("List should be equal to original list")
 	}
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
+	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	list, ok := h1.GetEntityList(il1.Id)
+	list, ok := h1.GetEntityList(el1.Id)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
-	if list.Id != il1.Id {
+	if list.Id != el1.Id {
 		t.Fatal("IDs do not match")
 	}
 	h1.Close()
@@ -207,11 +207,11 @@ func TestPeerListPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	// Suppose both hosts have the list available, but not the tree
-	h1.AddEntityList(il1)
-	h2.AddEntityList(il1)
-	tree, _ := GenerateTreeFromEntityList(il1)
+	h1.AddEntityList(el1)
+	h2.AddEntityList(el1)
+	tree, _ := el1.GenerateBinaryTree()
 
 	// Check that h2 sends back an empty tree if it is unknown
 	err := h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
@@ -267,7 +267,7 @@ func TestTreePropagation(t *testing.T) {
 func TestListTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
 	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
-	tree, _ := GenerateTreeFromEntityList(el)
+	tree, _ := el.GenerateBinaryTree()
 	// h2 knows the entity list
 	h2.AddEntityList(el)
 	// and the tree

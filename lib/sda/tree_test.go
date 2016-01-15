@@ -22,7 +22,7 @@ func TestTreeId(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(idsList)
+	tree, _ := idsList.GenerateBinaryTree()
 	/*
 			TODO: re-calculate the uuid
 		root, _ := ExampleGenerateTreeFromEntityList(idsList)
@@ -45,28 +45,11 @@ func TestTreeConnectedTo(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(peerList)
+	tree, _ := peerList.GenerateBinaryTree()
 	// Generate the network
 	if !tree.Root.IsConnectedTo(peerList.List[1]) {
 		t.Fatal("Root should be connected to localhost:2001")
 	}
-}
-
-func GenerateTreeFromEntityList(pl *sda.EntityList) (*sda.Tree, []*sda.TreeNode) {
-	var nodes []*sda.TreeNode
-	var root *sda.TreeNode
-	for i, e := range pl.List {
-		node := sda.NewTreeNode(e)
-		nodes = append(nodes, node)
-		if i == 0 {
-			root = node
-		}
-	}
-	// Very simplistic depth-2 tree
-	for i := 1; i < len(nodes); i++ {
-		root.AddChild(nodes[i])
-	}
-	return sda.NewTree(pl, root), nodes
 }
 
 // Test initialisation of new peer-list
@@ -123,7 +106,7 @@ func TestTreeParent(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(peerList)
+	tree, _ := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
 	if child.Parent.Id != tree.Root.Id {
 		t.Fatal("Parent of child of root is not the root...")
@@ -135,7 +118,7 @@ func TestTreeChildren(t *testing.T) {
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, nodes := GenerateTreeFromEntityList(peerList)
+	tree, nodes := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
 	if child.Id != nodes[1].Id {
 		t.Fatal("Parent of child of root is not the root...")
@@ -148,7 +131,7 @@ func TestUnMarshalTree(t *testing.T) {
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := GenEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(peerList)
+	tree, _ := peerList.GenerateBinaryTree()
 	tree_binary, err := tree.Marshal()
 
 	if err != nil {
