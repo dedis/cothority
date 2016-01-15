@@ -40,5 +40,5 @@ func main() {
 	RegisterRoundMeasure(peer.Node.LastRound())
 	peer.LoopRounds(RoundMeasureType, conf.Rounds)
 	dbg.Lvlf3("Done - flags are %+v", app.RunFlags)
-	monitor.End()
+	monitor.EndAndCleanup()
 }

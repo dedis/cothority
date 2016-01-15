@@ -61,14 +61,6 @@ func ConnectSink(addr string) error {
 	return nil
 }
 
-func StopSink() {
-	if err := connection.Close(); err != nil {
-		// at least tell that we could not close the connection:
-		dbg.Error("Could not close connection:", err)
-	}
-	encoder = nil
-}
-
 // Only sends a ready-string
 func Ready(addr string) error {
 	if encoder == nil {
@@ -174,10 +166,13 @@ func (m *Measure) reset() {
 }
 
 // Prints a message to end the logging.
-func End() {
+func EndAndCleanup() {
 	send(Measure{Name: "end"})
 	if err := connection.Close(); err != nil {
 		dbg.Error("Could not close connection:", err)
+	} else {
+		dbg.Lvl3("Closed connection:", connection)
+		encoder = nil
 	}
 }
 

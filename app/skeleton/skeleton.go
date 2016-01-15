@@ -88,5 +88,5 @@ func main() {
 	// conode.Peer struct (it's quite easy).
 	peer.LoopRounds(RoundSkeletonType, conf.Rounds)
 	// Notify the monitor we finished so that the simulation can be stopped
-	monitor.End()
+	monitor.EndAndCleanup()
 }

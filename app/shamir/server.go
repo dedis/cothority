@@ -90,6 +90,6 @@ func RunServer(conf *app.ConfigShamir) {
 	dbg.Lvl3(p.String(), "is leaving ...")
 
 	if p.IsRoot() {
-		monitor.End()
+		monitor.EndAndCleanup()
 	}
 }
