@@ -52,26 +52,26 @@ func (round *RoundCosi) CheckChildren() {
 }
 
 // AnnounceFunc will keep the timestamp generated for this round
-func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundCosi) Announcement(viewNbr, roundNbr int, in *AnnouncementMessage, out []*AnnouncementMessage) error {
 	if err := round.Node.TryFailure(round.Node.ViewNo, roundNbr); err != nil {
 		return err
 	}
 
 	// Store the message for the round
 	//round.Merkle = round.Node.MerkleStructs[roundNbr]
-	round.Cosi = NewCosi(round.Node, viewNbr, roundNbr, in.Am)
+	round.Cosi = NewCosi(round.Node, viewNbr, roundNbr, in)
 	round.SaveViewNo = round.Node.ViewNo
 	round.CheckChildren()
 
-	round.Cosi.Msg = in.Am.Message
+	round.Cosi.Msg = in.Message
 	// Inform all children of announcement - just copy the one that came in
 	for i := range out {
-		*out[i].Am = *in.Am
+		out[i] = in
 	}
 	return nil
 }
 
-func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundCosi) Commitment(in []*CommitmentMessage, out *CommitmentMessage) error {
 	cosi := round.Cosi
 	cosi.Commits = in
 
@@ -82,9 +82,9 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 	// X for public key
 	cosi.ChildX_hat = make(map[string]abstract.Point, len(children))
 
-	for key := range children {
-		cosi.ChildX_hat[key] = cosi.Suite.Point().Null()
-		cosi.ChildV_hat[key] = cosi.Suite.Point().Null()
+	for _, n := range children {
+		cosi.ChildX_hat[n.Name()] = cosi.Suite.Point().Null()
+		cosi.ChildV_hat[n.Name()] = cosi.Suite.Point().Null()
 	}
 
 	// Commits from children are the first Merkle Tree leaves for the round
@@ -93,34 +93,34 @@ func (round *RoundCosi) Commitment(in []*SigningMessage, out *SigningMessage) er
 	for _, sm := range cosi.Commits {
 		from := sm.From
 		// MTR ==> root of sub-merkle tree
-		cosi.Leaves = append(cosi.Leaves, sm.Com.MTRoot)
+		cosi.Leaves = append(cosi.Leaves, sm.MTRoot)
 		cosi.LeavesFrom = append(cosi.LeavesFrom, from)
-		cosi.ChildV_hat[from] = sm.Com.V_hat
-		cosi.ChildX_hat[from] = sm.Com.X_hat
+		cosi.ChildV_hat[from] = sm.V_hat
+		cosi.ChildX_hat[from] = sm.X_hat
 
 		// Aggregation
 		// add good child server to combined public key, and point commit
-		cosi.X_hat.Add(cosi.X_hat, sm.Com.X_hat)
-		cosi.Log.V_hat.Add(cosi.Log.V_hat, sm.Com.V_hat)
+		cosi.X_hat.Add(cosi.X_hat, sm.X_hat)
+		cosi.Log.V_hat.Add(cosi.Log.V_hat, sm.V_hat)
 		//dbg.Lvl4("Adding aggregate public key from ", from, " : ", sm.Com.X_hat)
 	}
 
 	dbg.Lvl4("Node.Commit using Merkle")
 	cosi.MerkleAddChildren()
 
-	round.Cosi.MerkleAddLocal(out.Com.MTRoot)
+	round.Cosi.MerkleAddLocal(out.MTRoot)
 	round.Cosi.MerkleHashLog()
 	round.Cosi.ComputeCombinedMerkleRoot()
 
-	out.Com.V = round.Cosi.Log.V
-	out.Com.V_hat = round.Cosi.Log.V_hat
-	out.Com.X_hat = round.Cosi.X_hat
-	out.Com.MTRoot = round.Cosi.MTRoot
+	out.V = round.Cosi.Log.V
+	out.V_hat = round.Cosi.Log.V_hat
+	out.X_hat = round.Cosi.X_hat
+	out.MTRoot = round.Cosi.MTRoot
 	return nil
 
 }
 
-func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundCosi) Challenge(in *ChallengeMessage, out []*ChallengeMessage) error {
 
 	cosi := round.Cosi
 	// we are root
@@ -130,25 +130,25 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 		cosi.C = cosi.HashElGamal(msg, cosi.Log.V_hat)
 		//proof := make([]hashid.HashId, 0)
 
-		in.Chm.C = cosi.C
-		in.Chm.MTRoot = cosi.MTRoot
-		in.Chm.Proof = cosi.Proof
+		in.C = cosi.C
+		in.MTRoot = cosi.MTRoot
+		in.Proof = cosi.Proof
 	} else { // we are a leaf
 		// register challenge
-		cosi.C = in.Chm.C
+		cosi.C = in.C
 	}
 	// compute response share already + localmerkle proof
 	cosi.InitResponseCrypto()
 	// messages from clients, proofs computed
 	if cosi.Log.Getv() != nil {
-		if err := cosi.StoreLocalMerkleProof(in.Chm); err != nil {
+		if err := cosi.StoreLocalMerkleProof(in); err != nil {
 			return err
 		}
 	}
 
 	// proof from big root to our root will be sent to all children
-	baseProof := make(proof.Proof, len(in.Chm.Proof))
-	copy(baseProof, in.Chm.Proof)
+	baseProof := make(proof.Proof, len(in.Proof))
+	copy(baseProof, in.Proof)
 
 	round.CheckChildren()
 	if len(cosi.Children) != len(out) {
@@ -159,11 +159,11 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 	// for each child, create personalized part of proof
 	// embed it in SigningMessage, and send it
 	var i = 0
-	for name, _ := range cosi.Children {
-		out[i].Chm.C = in.Chm.C
-		out[i].Chm.MTRoot = in.Chm.MTRoot
-		out[i].Chm.Proof = append(baseProof, cosi.Proofs[name]...)
-		out[i].To = name
+	for _, n := range cosi.Children {
+		out[i].C = in.C
+		out[i].MTRoot = in.MTRoot
+		out[i].Proof = append(baseProof, cosi.Proofs[n.Name()]...)
+		out[i].To = n.Name()
 		i++
 	}
 	return nil
@@ -171,31 +171,31 @@ func (round *RoundCosi) Challenge(in *SigningMessage, out []*SigningMessage) err
 
 // TODO make that in == nil in case we are a leaf to stay consistent with
 // others calls
-func (round *RoundCosi) Response(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundCosi) Response(in []*ResponseMessage, out *ResponseMessage) error {
 	dbg.Lvl4(round.Cosi.Name, "got all responses")
 	for _, sm := range in {
-		round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.Rm.R_hat)
+		round.Cosi.R_hat.Add(round.Cosi.R_hat, sm.R_hat)
 	}
 	err := round.Cosi.VerifyResponses()
 	if err != nil {
 		dbg.Lvl3(round.Node.Name(), "Could not verify responses..")
 		return err
 	}
-	out.Rm.R_hat = round.Cosi.R_hat
+	out.R_hat = round.Cosi.R_hat
 	return nil
 }
 
-func (round *RoundCosi) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundCosi) SignatureBroadcast(in *SignatureBroadcastMessage, out []*SignatureBroadcastMessage) error {
 	// Root is creating the sig broadcast
 	if round.IsRoot {
-		in.SBm.R0_hat = round.Cosi.R_hat
-		in.SBm.C = round.Cosi.C
-		in.SBm.X0_hat = round.Cosi.X_hat
-		in.SBm.V0_hat = round.Cosi.Log.V_hat
+		in.R0_hat = round.Cosi.R_hat
+		in.C = round.Cosi.C
+		in.X0_hat = round.Cosi.X_hat
+		in.V0_hat = round.Cosi.Log.V_hat
 	}
 	// Inform all children of broadcast  - just copy the one that came in
 	for i := range out {
-		*out[i].SBm = *in.SBm
+		out[i] = in
 	}
 	return nil
 }

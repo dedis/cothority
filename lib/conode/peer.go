@@ -1,7 +1,9 @@
 package conode
 
 import (
+	"bytes"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -9,10 +11,10 @@ import (
 
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sign"
+	"github.com/dedis/cothority/lib/tree"
 	"github.com/dedis/crypto/abstract"
-	"strings"
 )
 
 /*
@@ -45,23 +47,19 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 		dbg.Fatal(err)
 	}
 
-	// For retro compatibility issues, convert the base64 encoded key into hex
-	// encoded keys....
-	convertTree(suite, conf.Tree)
 	// Add our private key to the tree (compatibility issues again with graphs/
 	// lib)
 	addPrivateKey(suite, address, conf)
-	// load the configuration
-	dbg.Lvl3("loading configuration")
-	var hc *graphs.HostConfig
-	opts := graphs.ConfigOptions{ConnType: "tcp", Host: address, Suite: suite}
-	hc, err = graphs.LoadConfig(conf.Hosts, conf.Tree, suite, opts)
-	if err != nil {
-		dbg.Fatal(err)
-	}
+	// Create the first view for the node
+	firstView := tree.NewViewFromConfigTree(suite, conf.Tree, address)
+	// Create the global views
+	views := tree.NewViews()
+	views.AddView(0, firstView)
+	// create the TCP Host
+	net := network.NewTcpHost(network.DefaultConstructors(suite))
+	// finally create the sign.Node
+	node := sign.NewKeyedNode(suite, address, net, views)
 
-	// Listen to stamp-requests on port 2001
-	node := hc.Hosts[address]
 	peer := &Peer{
 		conf:      conf,
 		Node:      node,
@@ -69,20 +67,33 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 		CloseChan: make(chan bool, 5),
 		Hostname:  address,
 	}
-
-	// Start the cothority-listener on port 2000
-	err = hc.Run(true, sign.MerkleTree, address)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-
+	// Then listen + process messages
 	go func() {
-		err := peer.Node.Listen()
-		dbg.Lvl3("Node.listen quits with status", err)
+		dbg.Lvl3(address, "will listen")
+		err := node.Listen(address)
+		dbg.Lvl3("Node.listen", address, " quits with status", err)
 		peer.CloseChan <- true
 		peer.Close()
 	}()
+
 	return peer
+}
+
+// Setup connections means that the node will try to contact its parent
+// And wait for all its children to have connected
+func (peer *Peer) SetupConnections() {
+	// Connect to the parent if we are not root
+	if !peer.Node.Root(0) {
+		dbg.Lvl3(peer.Node.Name(), "Will contact parent")
+		if err := peer.Node.ConnectParent(0); err != nil {
+			dbg.Fatal(peer.Node.Name(), err, "ABORT")
+		}
+	}
+	if !peer.Node.Leaf(0) {
+		dbg.Lvl3(peer.Node.Name(), "will wait for children connections)")
+		peer.Node.WaitChildrenConnections(0)
+	}
+	dbg.Lvl2(peer.Node.Name(), " has setup connections")
 }
 
 // LoopRounds starts the system by sending a round of type
@@ -90,10 +101,10 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 // If 'rounds' < 0, it loops forever, or until you call
 // peer.Close().
 func (peer *Peer) LoopRounds(roundType string, rounds int) {
-	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with IsRoot=", peer.IsRoot(peer.ViewNo))
+	dbg.Lvl3("Stamp-server", peer.Node.Name(), "starting with IsRoot=", peer.Root(peer.ViewNo))
 	ticker := time.NewTicker(sign.ROUND_TIME)
 	firstRound := peer.Node.LastRound()
-	if !peer.IsRoot(peer.ViewNo) {
+	if !peer.Root(peer.ViewNo) {
 		// Children don't need to tick, only the root.
 		ticker.Stop()
 	}
@@ -112,12 +123,12 @@ func (peer *Peer) LoopRounds(roundType string, rounds int) {
 				dbg.Lvl3(peer.Name(), "reached max round: closing",
 					roundNbr, ">=", rounds)
 				ticker.Stop()
-				if peer.IsRoot(peer.ViewNo) {
-					dbg.Lvl3("As I'm root, asking everybody to terminate")
+				if peer.Root(peer.ViewNo) {
+					dbg.Lvl3(peer.Name(), "is root, asking everybody to terminate")
 					peer.SendCloseAll()
 				}
 			} else {
-				if peer.IsRoot(peer.ViewNo) {
+				if peer.Root(peer.ViewNo) {
 					dbg.Lvl2(peer.Name(), "Stamp server in round",
 						roundNbr+1, "of", rounds)
 					round, err := sign.NewRoundFromType(roundType, peer.Node)
@@ -149,12 +160,12 @@ func (peer *Peer) Close() {
 	if peer.Closed {
 		dbg.Lvl1("Peer", peer.Name(), "Already closed!")
 		return
-	} else {
-		peer.Closed = true
 	}
 	peer.CloseChan <- true
 	peer.Node.Close()
-	StampListenersClose()
+	// XXX TODO This has nothing to do here
+	//StampListenersClose()
+	peer.Closed = true
 	dbg.Lvlf3("Closing of peer: %s finished", peer.Name())
 }
 
@@ -199,7 +210,7 @@ func (p *Peer) WaitRoundSetup(nbHost int, timeoutSec time.Duration, retry int) e
 
 // Simple ephemeral helper for compatibility issues
 // From base64 => hexadecimal
-func convertTree(suite abstract.Suite, t *graphs.Tree) {
+func convertTree(suite abstract.Suite, t *tree.ConfigTree) {
 	if t.PubKey != "" {
 		point, err := cliutils.ReadPub64(suite, strings.NewReader(t.PubKey))
 		if err != nil {
@@ -220,19 +231,25 @@ func convertTree(suite abstract.Suite, t *graphs.Tree) {
 // Add our own private key in the tree. This function exists because of
 // compatibility issues with the graphs/lib.
 func addPrivateKey(suite abstract.Suite, address string, conf *app.ConfigConode) {
-	fn := func(t *graphs.Tree) {
+	queue := make([]*tree.ConfigTree, 0)
+	queue = append(queue, conf.Tree)
+	for len(queue) > 0 {
+		t := queue[0]
+		queue = queue[1:]
 		// this is our node in the tree
 		if t.Name == address {
 			if conf.Secret != nil {
 				// convert to hexa
-				s, err := cliutils.SecretHex(suite, conf.Secret)
+				var b bytes.Buffer
+				err := cliutils.WriteSecret64(suite, &b, conf.Secret)
 				if err != nil {
 					dbg.Fatal("Error converting our secret key to hexadecimal")
 				}
 				// adds it
-				t.PriKey = s
+				t.PriKey = b.String()
+				return
 			}
 		}
+		queue = append(queue, t.Children...)
 	}
-	conf.Tree.TraverseTree(fn)
 }

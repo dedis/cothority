@@ -15,11 +15,9 @@ package network
 
 import (
 	"bytes"
-	"errors"
+	"encoding/binary"
 	"fmt"
-	"io"
 	"net"
-	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -27,61 +25,10 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 )
 
 // Network part //
-
-// How many times should we try to connect
-const maxRetry = 10
-const waitRetry = 1 * time.Second
-const timeOut = 5 * time.Second
-
-// The various errors you can have
-// XXX not working as expected, often falls on errunknown
-var ErrClosed = errors.New("Connection Closed")
-var ErrEOF = errors.New("EOF")
-var ErrCanceled = errors.New("Operation Canceled")
-var ErrTemp = errors.New("Temporary Error")
-var ErrTimeout = errors.New("Timeout Error")
-var ErrUnknown = errors.New("Unknown Error")
-
-// Host is the basic interface to represent a Host of any kind
-// Host can open new Conn(ections) and Listen for any incoming Conn(...)
-type Host interface {
-	Open(name string) (Conn, error)
-	Listen(addr string, fn func(Conn)) error // the srv processing function
-	Close() error
-}
-
-// Conn is the basic interface to represent any communication mean
-// between two host. It is closely related to the underlying type of Host
-// since a TcpHost will generate only TcpConn
-type Conn interface {
-	// Gives the address of the remote endpoint
-	Remote() string
-	// Send a message through the connection. Always pass a pointer !
-	Send(ctx context.Context, obj ProtocolMessage) error
-	// Receive any message through the connection.
-	Receive(ctx context.Context) (ApplicationMessage, error)
-	Close() error
-}
-
-// TcpHost is the underlying implementation of
-// Host using Tcp as a communication channel
-type TcpHost struct {
-	// A list of connection maintained by this host
-	peers map[string]Conn
-	// its listeners
-	listener net.Listener
-	// the close channel used to indicate to the listener we want to quit
-	quit chan bool
-	// indicates wether this host is closed already or not
-	closed bool
-	// a list of constructors for en/decoding
-	constructors protobuf.Constructors
-}
 
 // NewTcpHost returns a Fresh TCP Host
 // If constructors == nil, it will take an empty one.
@@ -103,6 +50,120 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 	}
 	t.peers[name] = c
 	return c, nil
+}
+
+// Listen for any host trying to contact him.
+// Will launch in a goroutine the srv function once a connection is established
+func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
+	receiver := func(tc *TcpConn) {
+		go fn(tc)
+	}
+	return t.listen(addr, receiver)
+}
+
+// Close will close every connection this host has opened
+func (t *TcpHost) Close() error {
+	if t.closed == true {
+		return nil
+	}
+	t.closed = true
+	for _, c := range t.peers {
+		if err := c.Close(); err != nil {
+			return handleError(err)
+		}
+	}
+	close(t.quit)
+	if t.listener != nil {
+		return t.listener.Close()
+	}
+	return nil
+}
+
+// Remote returns the name of the peer at the end point of
+// the connection
+func (c *TcpConn) Remote() string {
+	return c.Endpoint
+}
+
+// Receive waits for any input on the connection and returns
+// the ApplicationMessage **decoded** and an error if something
+// wrong occured
+func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
+	var am NetworkMessage
+	am.Constructors = c.host.constructors
+	var err error
+	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
+	// First read the size
+	var s Size
+	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
+		return EmptyApplicationMessage, handleError(err)
+	}
+	// Then make the buffer out of it
+	b := make([]byte, s)
+	var buffer bytes.Buffer
+	for Size(buffer.Len()) < s {
+		n, err := c.Conn.Read(b)
+		b = b[:n]
+		buffer.Write(b)
+		if err != nil {
+			e := handleError(err)
+			return EmptyApplicationMessage, e
+		}
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Printf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+		}
+	}()
+
+	err = am.UnmarshalBinary(buffer.Bytes())
+	if err != nil {
+		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
+	}
+	am.From = c.Remote()
+	return am, nil
+}
+
+// Send will convert the NetworkMessage into an ApplicationMessage
+// and send it with the size through the network.
+// Returns an error if anything was wrong
+func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+	am, err := newNetworkMessage(obj)
+	if err != nil {
+		return fmt.Errorf("Error converting packet: %v\n", err)
+	}
+	var b []byte
+	b, err = am.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+	}
+	// First write the size
+	var buffer bytes.Buffer
+	size := Size(len(b))
+	if err := binary.Write(&buffer, globalOrder, size); err != nil {
+		return err
+	}
+	// Then send everything through the connection
+	buffer.Write(b)
+	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
+	_, err = c.Conn.Write(buffer.Bytes())
+	if err != nil {
+		return handleError(err)
+	}
+	return nil
+}
+
+// Close ... closes the connection
+func (c *TcpConn) Close() error {
+	if c.closed == true {
+		return nil
+	}
+	err := c.Conn.Close()
+	c.closed = true
+	if err != nil {
+		return handleError(err)
+	}
+	return nil
 }
 
 // OpenTcpCOnn is private method that opens a TcpConn to the given name
@@ -129,15 +190,6 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 	}
 
 	return &c, err
-}
-
-// Listen for any host trying to contact him.
-// Will launch in a goroutine the srv function once a connection is established
-func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
-	receiver := func(tc *TcpConn) {
-		go fn(tc)
-	}
-	return t.listen(addr, receiver)
 }
 
 // listen is the private function that takes a function that takes a TcpConn.
@@ -171,228 +223,14 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	return nil
 }
 
-// Close will close every connection this host has opened
-func (t *TcpHost) Close() error {
-	if t.closed == true {
-		return nil
-	}
-	t.closed = true
-	for _, c := range t.peers {
-		if err := c.Close(); err != nil {
-			return handleError(err)
-		}
-	}
-	close(t.quit)
-	if t.listener != nil {
-		return t.listener.Close()
-	}
-	return nil
-}
-
-// TcpConn is the underlying implementation of
-// Conn using Tcp
-type TcpConn struct {
-	// The name of the endpoint we are connected to.
-	Endpoint string
-
-	// The connection used
-	Conn net.Conn
-
-	// closed indicator
-	closed bool
-	// A pointer to the associated host (just-in-case)
-	host *TcpHost
-}
-
-// PeerName returns the name of the peer at the end point of
-// the conn
-func (c *TcpConn) Remote() string {
-	return c.Endpoint
-}
-
-// handleError produces the higher layer error depending on the type
-// so user of the package can know what is the cause of the problem
-func handleError(err error) error {
-
-	if strings.Contains(err.Error(), "use of closed") {
-		return ErrClosed
-	} else if strings.Contains(err.Error(), "canceled") {
-		return ErrCanceled
-	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-		return ErrEOF
-	}
-
-	netErr, ok := err.(net.Error)
-	if !ok {
-		return ErrUnknown
-	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
-		return ErrTimeout
-	}
-	return ErrUnknown
-}
-
-// Receive waits for any input on the connection and returns
-// the ApplicationMessage **decoded** and an error if something
-// wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (am ApplicationMessage, err error) {
-
-	am.Constructors = c.host.constructors
-	bufferSize := 4096
-	b := make([]byte, bufferSize)
-	var buffer bytes.Buffer
-	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
-	for {
-		n, err := c.Conn.Read(b)
-		b = b[:n]
-		buffer.Write(b)
-		if err != nil {
-			e := handleError(err)
-			return EmptyApplicationMessage, e
-		}
-		if n < bufferSize {
-			// read all data
-			break
-		}
-	}
-	defer func() {
-		if e := recover(); e != nil {
-			am = EmptyApplicationMessage
-			err = fmt.Errorf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
-		}
-	}()
-
-	err = am.UnmarshalBinary(buffer.Bytes())
-	if err != nil {
-		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
-	}
-	am.From = c.Remote()
-	return am, nil
-}
-
-// Send will convert the Protocolmessage into an ApplicationMessage
-// Then send the message through the Gob encoder
-// Returns an error if anything was wrong
-func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
-	am, err := newApplicationMessage(obj)
-	if err != nil {
-		return fmt.Errorf("Error converting packet: %v\n", err)
-	}
-	var b []byte
-	b, err = am.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("Error marshaling  message: %s", err.Error())
-	}
-
-	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
-	_, err = c.Conn.Write(b)
-	if err != nil {
-		return handleError(err)
-	}
-	return nil
-}
-
-// Close ... closes the connection
-func (c *TcpConn) Close() error {
-	if c.closed == true {
-		return nil
-	}
-	err := c.Conn.Close()
-	c.closed = true
-	if err != nil {
-		return handleError(err)
-	}
-	return nil
-}
-
-// Entity is used to represent a Conode in the whole internet.
-// It's kinda an network identity that is based on a public key,
-// and there can be one or more addresses to contact it.
-type Entity struct {
-	// This is the public key of that Entity
-	Public abstract.Point
-	// The UUID corresponding to that public key
-	Id uuid.UUID
-	// A slice of addresses of where that Id might be found
-	Addresses []string
-	// used to return the next available address
-	iter int
-}
-
-// First returns the first address available
-func (id *Entity) First() string {
-	if len(id.Addresses) > 0 {
-		return id.Addresses[0]
-	}
-	return ""
-}
-
-// Next returns the next address like an iterator,
-// starting at the beginning if nothing worked
-func (id *Entity) Next() string {
-	addr := id.Addresses[id.iter]
-	id.iter = (id.iter + 1) % len(id.Addresses)
-	return addr
-
-}
-
-// Equal tests on same public key
-func (id *Entity) Equal(e *Entity) bool {
-	return id.Public.Equal(e.Public)
-}
-
-// NewEntity creates a new Entity based on a public key and with a slice
-// of IP-addresses where to find that entity. The Id is based on a
-// version5-UUID which can include a URL that is based on it's public key.
-func NewEntity(public abstract.Point, addresses ...string) *Entity {
-	url := "https://dedis.epfl.ch/id/" + public.String()
-	return &Entity{
-		Public:    public,
-		Addresses: addresses,
-		Id:        uuid.NewV5(uuid.NamespaceURL, url),
-	}
-}
-
-// SecureHost is the analog of Host but with secure communication
-// It is tied to an entity can only open connection with identities
-type SecureHost interface {
-	Close() error
-	Listen(func(SecureConn)) error
-	Open(id *Entity) (SecureConn, error)
-}
-
-// SecureConn is the analog of Conn but for secure comminucation
-type SecureConn interface {
-	Conn
-	Entity() *Entity
-}
-
-// SecureTcpHost is a TcpHost but with the additional property that it handles
-// Entity. You
-type SecureTcpHost struct {
-	*TcpHost
-	// Entity of this host
-	entity *Entity
-	// Private key tied to this entity
-	private abstract.Secret
-	// mapping from the entity to the names used in TcpHost
-	// In TcpHost the names then maps to the actual connection
-	EntityToAddr map[uuid.UUID]string
-	// workingaddress is a private field used mostly for testing
-	// so we know which address this host is listening on
-	workingAddress string
-}
-
 // NewSecureTcpHost returns a Secure Tcp Host
-func NewSecureTcpHost(private abstract.Secret, id *Entity) *SecureTcpHost {
+func NewSecureTcpHost(private abstract.Secret, e *Entity) *SecureTcpHost {
 	return &SecureTcpHost{
 		private:        private,
-		entity:         id,
+		entity:         e,
 		EntityToAddr:   make(map[uuid.UUID]string),
 		TcpHost:        NewTcpHost(),
-		workingAddress: id.First(),
+		workingAddress: e.First(),
 	}
 }
 
@@ -433,11 +271,11 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 
 // Open will try any address that is in the Entity and connect to the first
 // one that works. Then it exchanges the Entity to verify.
-func (st *SecureTcpHost) Open(id *Entity) (SecureConn, error) {
+func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 	var secure SecureTcpConn
 	var success bool
 	// try all names
-	for _, addr := range id.Addresses {
+	for _, addr := range e.Addresses {
 		// try to connect with this name
 		c, err := st.TcpHost.openTcpConn(addr)
 		if err != nil {
@@ -447,7 +285,7 @@ func (st *SecureTcpHost) Open(id *Entity) (SecureConn, error) {
 		secure = SecureTcpConn{
 			TcpConn:       c,
 			SecureTcpHost: st,
-			entity:        id,
+			entity:        e,
 		}
 		success = true
 		break
@@ -455,14 +293,20 @@ func (st *SecureTcpHost) Open(id *Entity) (SecureConn, error) {
 	if !success {
 		return nil, fmt.Errorf("Could not connect to any address tied to this Entity")
 	}
-	// Exchange and verify Identities
-	return &secure, secure.negotiateOpen(id)
+	// Exchange and verify entities
+	return &secure, secure.negotiateOpen(e)
 }
 
-type SecureTcpConn struct {
-	*TcpConn
-	*SecureTcpHost
-	entity *Entity
+// Receive is analog to Conn.Receive but also set the right Entity in the
+// message
+func (sc *SecureTcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
+	nm, err := sc.TcpConn.Receive(ctx)
+	nm.Entity = sc.entity
+	return nm, err
+}
+
+func (sc *SecureTcpConn) Entity() *Entity {
+	return sc.entity
 }
 
 // negotitateListen is made to exchange the Entity between the two parties.
@@ -482,61 +326,23 @@ func (sc *SecureTcpConn) negotiateListen() error {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
 	}
 
-	// Set this ID for this connection
-	id := nm.Msg.(Entity)
-	sc.entity = &id
+	// Set the Entity for this connection
+	e := nm.Msg.(Entity)
+	sc.entity = &e
 	return nil
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
 // negotiateListen it also verifiy the Entity.
-func (sc *SecureTcpConn) negotiateOpen(id *Entity) error {
+func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	if err := sc.negotiateListen(); err != nil {
 		return err
 	}
 
 	// verify the Entity if its the same we are supposed to connect
-	if sc.Entity().Id != id.Id {
+	if sc.Entity().Id != e.Id {
 		return fmt.Errorf("Entity received during negotiation is wrong. WARNING")
 	}
 
 	return nil
-}
-
-// Receive is analog to Conn.Receive but also set the right Entity in the
-// message
-func (sc *SecureTcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
-	nm, err := sc.TcpConn.Receive(ctx)
-	nm.Entity = sc.entity
-	return nm, err
-}
-
-func (sc *SecureTcpConn) Entity() *Entity {
-	return sc.entity
-}
-
-func init() {
-	RegisterProtocolType(EntityType, Entity{})
-}
-
-// EntityToml is the struct that can be marshalled into a toml file
-type EntityToml struct {
-	Public    string
-	Addresses []string
-}
-
-func (id *Entity) Toml(suite abstract.Suite) *EntityToml {
-	var buf bytes.Buffer
-	cliutils.WritePub64(suite, &buf, id.Public)
-	return &EntityToml{
-		Addresses: id.Addresses,
-		Public:    buf.String(),
-	}
-}
-func (id *EntityToml) Entity(suite abstract.Suite) *Entity {
-	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(id.Public))
-	return &Entity{
-		Public:    pub,
-		Addresses: id.Addresses,
-	}
 }

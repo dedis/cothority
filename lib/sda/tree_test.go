@@ -20,9 +20,9 @@ var prefix = "localhost:"
 // test the ID generation
 func TestTreeId(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	idsList := GenEntityList(tSuite, names)
+	idsList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(idsList)
+	tree, _ := idsList.GenerateBinaryTree()
 	/*
 			TODO: re-calculate the uuid
 		root, _ := ExampleGenerateTreeFromEntityList(idsList)
@@ -43,36 +43,19 @@ func TestTreeId(t *testing.T) {
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	peerList := GenEntityList(tSuite, names)
+	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(peerList)
+	tree, _ := peerList.GenerateBinaryTree()
 	// Generate the network
 	if !tree.Root.IsConnectedTo(peerList.List[1]) {
 		t.Fatal("Root should be connected to localhost:2001")
 	}
 }
 
-func GenerateTreeFromEntityList(pl *sda.EntityList) (*sda.Tree, []*sda.TreeNode) {
-	var nodes []*sda.TreeNode
-	var root *sda.TreeNode
-	for i, id := range pl.List {
-		node := sda.NewTreeNode(id)
-		nodes = append(nodes, node)
-		if i == 0 {
-			root = node
-		}
-	}
-	// Very simplistic depth-2 tree
-	for i := 1; i < len(nodes); i++ {
-		root.AddChild(nodes[i])
-	}
-	return sda.NewTree(pl, root), nodes
-}
-
 // Test initialisation of new peer-list
 func TestEntityListNew(t *testing.T) {
 	adresses := []string{"localhost:1010", "localhost:1012"}
-	pl := GenEntityList(tSuite, adresses)
+	pl := genEntityList(tSuite, adresses)
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
@@ -87,7 +70,7 @@ func TestEntityListNew(t *testing.T) {
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	idsList := GenEntityList(tSuite, names)
+	idsList := genEntityList(tSuite, names)
 	// write it
 	app.WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
 	// decode it
@@ -121,9 +104,9 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // - parent
 func TestTreeParent(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
-	peerList := GenEntityList(tSuite, names)
+	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(peerList)
+	tree, _ := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
 	if child.Parent.Id != tree.Root.Id {
 		t.Fatal("Parent of child of root is not the root...")
@@ -133,9 +116,9 @@ func TestTreeParent(t *testing.T) {
 // - children
 func TestTreeChildren(t *testing.T) {
 	names := genLocalhostPeerNames(2, 2000)
-	peerList := GenEntityList(tSuite, names)
+	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, nodes := GenerateTreeFromEntityList(peerList)
+	tree, nodes := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
 	if child.Id != nodes[1].Id {
 		t.Fatal("Parent of child of root is not the root...")
@@ -146,9 +129,9 @@ func TestTreeChildren(t *testing.T) {
 func TestUnMarshalTree(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
-	peerList := GenEntityList(tSuite, names)
+	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := GenerateTreeFromEntityList(peerList)
+	tree, _ := peerList.GenerateBinaryTree()
 	tree_binary, err := tree.Marshal()
 
 	if err != nil {
@@ -168,6 +151,17 @@ func TestUnMarshalTree(t *testing.T) {
 	}
 }
 
+//
+func TestGetNode(t *testing.T) {
+	tree, _ := genLocalTree(10, 2000)
+	for _, tn := range tree.ListNodes() {
+		node := tree.GetNode(tn.Id)
+		if node == nil {
+			t.Fatal("Didn't find treeNode with id", tn.Id)
+		}
+	}
+}
+
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph
@@ -181,12 +175,19 @@ func genLocalhostPeerNames(n, p int) []string {
 	return names
 }
 
-// GenEntityList generate a EntityList out of names
-func GenEntityList(suite abstract.Suite, names []string) *sda.EntityList {
+// genEntityList generates a EntityList out of names
+func genEntityList(suite abstract.Suite, names []string) *sda.EntityList {
 	var ids []*network.Entity
 	for _, n := range names {
 		kp := cliutils.KeyPair(suite)
 		ids = append(ids, network.NewEntity(kp.Public, n))
 	}
 	return sda.NewEntityList(ids)
+}
+
+func genLocalTree(count, port int) (*sda.Tree, *sda.EntityList) {
+	names := genLocalhostPeerNames(count, port)
+	peerList := genEntityList(tSuite, names)
+	tree, _ := peerList.GenerateBinaryTree()
+	return tree, peerList
 }

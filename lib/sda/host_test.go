@@ -9,15 +9,12 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
+	"strconv"
 	"testing"
 	"time"
 )
 
 var suite abstract.Suite = network.Suite
-
-func init() {
-	network.RegisterProtocolType(SimpleMessageType, SimpleMessage{})
-}
 
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
@@ -120,14 +117,14 @@ func TestHostSendMsgDuplex(t *testing.T) {
 func TestHostSendDuplex(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendToRaw(h2.Entity, msgSimple)
+	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendToRaw(h1.Entity, msgSimple)
+	err = h2.SendRaw(h1.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -142,8 +139,9 @@ func TestHostSendDuplex(t *testing.T) {
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
-	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
-	tree, _ := GenerateTreeFromEntityList(el)
+	//el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := GenEntityListFromHost(h2, h1)
+	tree, _ := el.GenerateBinaryTree()
 
 	// Add the marshalled version of the tree
 	h1.AddPendingTreeMarshal(tree.MakeTreeMarshal())
@@ -162,9 +160,10 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := GenEntityListFromHost(h2, h1)
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -177,8 +176,8 @@ func TestPeerListPropagation(t *testing.T) {
 	}
 
 	// Now add the list to h2 and try again
-	h2.AddEntityList(il1)
-	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
+	h2.AddEntityList(el1)
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -186,22 +185,22 @@ func TestPeerListPropagation(t *testing.T) {
 	if msg.MsgType != sda.SendEntityListMessage {
 		t.Fatal("h1 didn't receive EntityList type")
 	}
-	if msg.Msg.(sda.EntityList).Id != il1.Id {
+	if msg.Msg.(sda.EntityList).Id != el1.Id {
 		t.Fatal("List should be equal to original list")
 	}
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendToRaw(h2.Entity, &sda.RequestEntityList{il1.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	list, ok := h1.GetEntityList(il1.Id)
+	list, ok := h1.GetEntityList(el1.Id)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
-	if list.Id != il1.Id {
+	if list.Id != el1.Id {
 		t.Fatal("IDs do not match")
 	}
 	h1.Close()
@@ -211,28 +210,30 @@ func TestPeerListPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := GenEntityListFromHost(h2, h1)
 	// Suppose both hosts have the list available, but not the tree
-	h1.AddEntityList(il1)
-	h2.AddEntityList(il1)
-	tree, _ := GenerateTreeFromEntityList(il1)
+	h1.AddEntityList(el1)
+	h2.AddEntityList(el1)
+	tree, _ := el1.GenerateBinaryTree()
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
 	if msg.MsgType != sda.SendTreeMessage {
+		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).Entity != uuid.Nil {
+	if msg.Msg.(sda.TreeMarshal).EntityId != uuid.Nil {
 		t.Fatal("List should be empty")
 	}
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -240,13 +241,13 @@ func TestTreePropagation(t *testing.T) {
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
-	if msg.Msg.(sda.TreeMarshal).Node != tree.Id {
+	if msg.Msg.(sda.TreeMarshal).NodeId != tree.Id {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
 	// And test whether it gets stored correctly
 	go h1.ProcessMessages()
-	err = h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -269,8 +270,9 @@ func TestTreePropagation(t *testing.T) {
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
-	tree, _ := GenerateTreeFromEntityList(el)
+	//el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := GenEntityListFromHost(h2, h1)
+	tree, _ := el.GenerateBinaryTree()
 	// h2 knows the entity list
 	h2.AddEntityList(el)
 	// and the tree
@@ -279,7 +281,7 @@ func TestListTreePropagation(t *testing.T) {
 	// it is supposed to automatically ask for the entitylist
 	go h1.ProcessMessages()
 	// make the communcation happen
-	if err := h1.SendToRaw(h2.Entity, &sda.RequestTree{tree.Id}); err != nil {
+	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id}); err != nil {
 		t.Fatal("Could not send tree request to host2", err)
 	}
 
@@ -312,6 +314,33 @@ func TestListTreePropagation(t *testing.T) {
 
 }
 
+func TestTokenId(t *testing.T) {
+	t1 := &sda.Token{
+		EntityListID: uuid.NewV1(),
+		TreeID:       uuid.NewV1(),
+		ProtocolID:   uuid.NewV1(),
+		RoundID:      uuid.NewV1(),
+	}
+	id1 := t1.Id()
+	t2 := &sda.Token{
+		EntityListID: uuid.NewV1(),
+		TreeID:       uuid.NewV1(),
+		ProtocolID:   uuid.NewV1(),
+		RoundID:      uuid.NewV1(),
+	}
+	id2 := t2.Id()
+	if uuid.Equal(id1, id2) {
+		t.Fatal("Both token are the same")
+	}
+	if !uuid.Equal(id1, t1.Id()) {
+		t.Fatal("Twice the Id of the same token should be equal")
+	}
+	t3 := t1.OtherToken(&sda.TreeNode{Id: uuid.NewV1()})
+	if uuid.Equal(t1.TreeNodeID, t3.TreeNodeID) {
+		t.Fatal("OtherToken should modify copy")
+	}
+}
+
 // Test instantiation of ProtocolInstances
 
 // Test access of actual peer that received the message
@@ -334,8 +363,8 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 
 func newHost(address string, s abstract.Suite) *sda.Host {
 	priv, pub := privPub(s)
-	id := &network.Entity{Public: pub, Addresses: []string{address}}
-	return sda.NewHost(id, priv, network.NewSecureTcpHost(priv, id))
+	id := network.NewEntity(pub, address)
+	return sda.NewHost(id, priv)
 }
 
 // Creates two hosts on the local interfaces,
@@ -356,16 +385,34 @@ func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	return h1, h2
 }
 
+// GenHosts will create n hosts with the first one being connected to each of
+// the other node
+func GenHosts(t *testing.T, n int) []*sda.Host {
+	var hosts []*sda.Host
+	for i := 0; i < n; i++ {
+		hosts = append(hosts, newHost("localhost:"+strconv.Itoa(2000+i*10), suite))
+	}
+	root := hosts[0]
+	root.Listen()
+	go root.ProcessMessages()
+	for i := 1; i < n; i++ {
+		hosts[i].Listen()
+		go hosts[i].ProcessMessages()
+		if _, err := hosts[i].Connect(root.Entity); err != nil {
+			t.Fatal("Could not connect hosts")
+		}
+	}
+	return hosts
+}
+
 // SimpleMessage is just used to transfer one integer
 type SimpleMessage struct {
 	I int
 }
 
-const (
-	SimpleMessageType = iota + 50
-)
+var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
-func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessage {
+func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
 	if msg.MsgType != sda.SDADataMessage {
 		t.Fatal("Wrong message type received:", msg.MsgType)
 	}
@@ -374,4 +421,12 @@ func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessa
 		t.Fatal("Couldn't pass simple message")
 	}
 	return sda.Msg.(SimpleMessage)
+}
+
+func GenEntityListFromHost(hosts ...*sda.Host) *sda.EntityList {
+	var entities []*network.Entity
+	for i := range hosts {
+		entities = append(entities, hosts[i].Entity)
+	}
+	return sda.NewEntityList(entities)
 }

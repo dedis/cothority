@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/lib/tree"
 	"github.com/dedis/crypto/abstract"
 	"sort"
 )
@@ -35,8 +35,8 @@ type CosiStruct struct {
 
 	X_hat abstract.Point // aggregate of public keys
 
-	Commits   []*SigningMessage
-	Responses []*SigningMessage
+	Commits   []*CommitmentMessage
+	Responses []*ResponseMessage
 
 	// own big merkle subtree
 	MTRoot     hashid.HashId   // mt root for subtree, passed upwards
@@ -74,7 +74,7 @@ type CosiStruct struct {
 
 	Suite abstract.Suite
 
-	Children map[string]coconet.Conn
+	Children map[string]*tree.Node
 	Parent   string
 	ViewNbr  int
 }
@@ -84,14 +84,22 @@ type CosiStruct struct {
 func NewCosi(sn *Node, viewNbr, roundNbr int, am *AnnouncementMessage) *CosiStruct {
 	// set up commit and response channels for the new round
 	cosi := &CosiStruct{}
-	cosi.Commits = make([]*SigningMessage, 0)
-	cosi.Responses = make([]*SigningMessage, 0)
+	cosi.Commits = make([]*CommitmentMessage, 0)
+	cosi.Responses = make([]*ResponseMessage, 0)
 	cosi.RejectionPublicList = make([]abstract.Point, 0)
 	cosi.RejectionCommitList = make([]abstract.Point, 0)
 	cosi.Suite = sn.suite
 	cosi.Log.Suite = sn.suite
-	cosi.Children = sn.Children(viewNbr)
-	cosi.Parent = sn.Parent(viewNbr)
+	nodeChildren := sn.Children(viewNbr)
+	cosi.Children = make(map[string]*tree.Node)
+	for _, c := range nodeChildren {
+		cosi.Children[c.Name()] = c
+	}
+	if node := sn.Parent(viewNbr); node != nil {
+		cosi.Parent = node.Name()
+	} else {
+		cosi.Parent = ""
+	}
 	cosi.ViewNbr = viewNbr
 	cosi.PubKey = sn.PubKey
 	cosi.PrivKey = sn.PrivKey
@@ -179,8 +187,8 @@ func (cosi *CosiStruct) ComputeCombinedMerkleRoot() {
 
 	// Hashed Log has to come first in the proof; len(sn.CMTRoots)+1 proofs
 	cosi.Proofs = make(map[string]proof.Proof, 0)
-	for name := range cosi.Children {
-		cosi.Proofs[name] = append(cosi.Proofs[name], right)
+	for _, n := range cosi.Children {
+		cosi.Proofs[n.Name()] = append(cosi.Proofs[n.Name()], right)
 	}
 	cosi.Proofs["local"] = append(cosi.Proofs["local"], right)
 

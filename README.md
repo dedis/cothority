@@ -1,9 +1,20 @@
 # Cothority
 
-The code in this repository permits the testing and running of a cothority-system together with some applications. It is split up in deployment, application and protocols. The basic cryptographic code comes from [DeDiS/crypto](https://github.com/DeDiS/crypto).
+This repository provides an implementation for the prototype of the collective authority (cothority) framework. The system is based on CoSi, a novel protocol for collective signing which itself builds upon Merkle trees and Schnorr multi-signatures over elliptic curves. CoSi enables authorities to have their statements collectively signed (co-signed) by a diverse, decentralized, and scalable group of (potentially thousands of) witnesses and, for example, could be employed to proactively harden critical Internet authorities. Among other things, one could imagine applications to the Certificate Transparency project, DNSSEC, software distribution, the Tor anonymity network or cryptocurrencies.
 
 ## Warning
 **The software provided in this repository is highly experimental and under heavy development. Do not use it for anything security-critical. All usage is at your own risk!**
+
+## Further Information
+
+* Decentralizing Authorities into Scalable Strongest-Link Cothorities: [paper](http://arxiv.org/abs/1503.08768), [slides](http://dedis.cs.yale.edu/dissent/pres/151009-stanford-cothorities.pdf)
+* Certificate Cothority - Towards Trustworthy Collective CAs: [paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
+* For questions and discussions please refer to our [mailing list](https://groups.google.com/forum/#!forum/cothority).
+
+## Requirements
+
+* Golang 1.5.2+
+* [DeDiS/crypto](https://github.com/DeDiS/crypto)
 
 ## Deploy
 
@@ -26,7 +37,7 @@ The code in this repository permits the testing and running of a cothority-syste
 
 ## Protocols
 
-* Collective signing
+* CoSi: collective signing
 
 # How to Run a Cothority
 
@@ -102,7 +113,4 @@ This one runs well and is described in a pre-print from Dylan Visher.
 A textbook shamir signing for baseline-comparison against the collective signing protocol.
 
 
-# Further Information
 
-* Decentralizing Authorities into Scalable Strongest-Link Cothorities: [paper](http://arxiv.org/pdf/1503.08768v1.pdf), [slides](http://dedis.cs.yale.edu/dissent/pres/150610-nist-cothorities.pdf)
-* Certificate Cothority - Towards Trustworthy Collective CAs: [paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)

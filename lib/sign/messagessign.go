@@ -1,15 +1,12 @@
 package sign
 
 import (
-	"reflect"
-
-	"encoding/json"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
-	"github.com/dedis/protobuf"
 )
 
 /*
@@ -22,7 +19,7 @@ has its own MarshalBinary and UnmarshalBinary method
 type MessageType int
 
 const (
-	Unset MessageType = iota
+	Unset network.Type = iota + 10
 	Announcement
 	Commitment
 	Challenge
@@ -31,74 +28,49 @@ const (
 	StatusReturn
 	CatchUpReq
 	CatchUpResp
-	GroupChange
+	VoteRequest
 	GroupChanged
-	StatusConnections
 	CloseAll
 	Default // for internal use
+	Identity
 	Error
 )
 
-func (m MessageType) String() string {
-	switch m {
-	case Unset:
-		return "Unset"
-	case Announcement:
-		return "Announcement"
-	case Commitment:
-		return "Commitment"
-	case Challenge:
-		return "Challenge"
-	case Response:
-		return "Response"
-	case SignatureBroadcast:
-		return "SignatureBroadcast"
-	case StatusReturn:
-		return "StatusReturn"
-	case CatchUpReq:
-		return "CatchUpRequest"
-	case CatchUpResp:
-		return "CatchUpResponse"
-	case GroupChange:
-		return "GroupChange"
-	case GroupChanged:
-		return "GroupChanged"
-	case StatusConnections:
-		return "StatusConnections"
-	case CloseAll:
-		return "CloseAll"
-	case Default: // for internal use
-		return "Default"
-	case Error:
-		return "Error"
-	}
-	return "INVALID TYPE"
+func init() {
+	// Registering of all the type of packets we need
+	network.RegisterProtocolType(Announcement, AnnouncementMessage{})
+	network.RegisterProtocolType(Commitment, CommitmentMessage{})
+	network.RegisterProtocolType(Challenge, ChallengeMessage{})
+	network.RegisterProtocolType(Response, ResponseMessage{})
+	network.RegisterProtocolType(SignatureBroadcast, SignatureBroadcastMessage{})
+	network.RegisterProtocolType(StatusReturn, StatusReturnMessage{})
+	network.RegisterProtocolType(CatchUpReq, CatchUpRequest{})
+	network.RegisterProtocolType(CatchUpResp, CatchUpResponse{})
+	network.RegisterProtocolType(GroupChanged, GroupChangedMessage{})
+	network.RegisterProtocolType(VoteRequest, VoteRequestMessage{})
+	network.RegisterProtocolType(CloseAll, CloseAllMessage{})
+	network.RegisterProtocolType(Identity, IdentityMessage{})
 }
 
-// Signing Messages are used for all communications between servers
-// It is important for encoding/ decoding for type to be kept as first field
+// identitymessage is used when we connect to a node listening, we must give to
+// him our identity which is our listeningaddress:port, the same as in the
+// tree used.
+type IdentityMessage struct {
+	PeerName string
+}
+
 type SigningMessage struct {
-	Suite        string
-	Type         MessageType
-	Am           *AnnouncementMessage
-	Com          *CommitmentMessage
-	Chm          *ChallengeMessage
-	Rm           *ResponseMessage
-	SBm          *SignatureBroadcastMessage
-	SRm          *StatusReturnMessage
-	Cureq        *CatchUpRequest
-	Curesp       *CatchUpResponse
-	Vrm          *VoteRequestMessage
-	Gcm          *GroupChangedMessage
-	Err          *ErrorMessage
-	From         string
 	To           string
 	ViewNbr      int
 	LastSeenVote int // highest vote ever seen and commited in log, used for catch-up
 	RoundNbr     int
+	From         string
+	Empty        bool // when the application message type  == DefaulType,
 }
 
-// Helper functions that will return the suite used during the process from a string name
+// Empty struct just to notify to close
+type CloseAllMessage SigningMessage
+
 func GetSuite(suite string) abstract.Suite {
 	s, ok := suites.All()[suite]
 	if !ok {
@@ -112,54 +84,9 @@ func NewSigningMessage() interface{} {
 	return &SigningMessage{}
 }
 
-func (sm *SigningMessage) MarshalBinary() ([]byte, error) {
-	b, e := protobuf.Encode(sm)
-	if len(b) != 0 {
-		//dbg.Print("Length of bytes is", len(b), "for", sm)
-		//debug.PrintStack()
-	}
-	return b, e
-}
-
-func (sm *SigningMessage) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Shouldn't be called")
-	return nil
-}
-
-func (sm *SigningMessage) UnmarshalBinarySuite(jdata *JSONdata) error {
-	suite := GetSuite(jdata.Suite)
-	var cons = make(protobuf.Constructors)
-	var point abstract.Point
-	var secret abstract.Secret
-	cons[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
-	cons[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
-	return protobuf.DecodeWithConstructors(jdata.Data, sm, cons)
-}
-
-type JSONdata struct {
-	Suite string
-	Data  []byte
-}
-
-func (sm *SigningMessage) MarshalJSON() ([]byte, error) {
-	data, err := sm.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(JSONdata{
-		Suite: sm.Suite,
-		Data:  data,
-	})
-}
-
-func (sm *SigningMessage) UnmarshalJSON(dataJSON []byte) error {
-	jdata := &JSONdata{}
-	json.Unmarshal(dataJSON, jdata)
-	return sm.UnmarshalBinarySuite(jdata)
-}
-
 // Broadcasted message initiated and signed by proposer
 type AnnouncementMessage struct {
+	*SigningMessage
 	Message   []byte
 	RoundType string // what kind of round this announcement is made for
 	// VoteRequest *VoteRequest
@@ -169,6 +96,7 @@ type AnnouncementMessage struct {
 // Commitment of all nodes together with the data they want
 // to have signed
 type CommitmentMessage struct {
+	*SigningMessage
 	Message []byte
 	V       abstract.Point // commitment Point
 	V_hat   abstract.Point // product of subtree participating nodes' commitment points
@@ -188,6 +116,7 @@ type CommitmentMessage struct {
 
 // The challenge calculated by the root-node
 type ChallengeMessage struct {
+	*SigningMessage
 	Message []byte
 	C       abstract.Secret // challenge
 
@@ -203,6 +132,7 @@ type ChallengeMessage struct {
 // Every node replies with eventual exceptions if they
 // are not OK
 type ResponseMessage struct {
+	*SigningMessage
 	Message []byte
 	R_hat   abstract.Secret // response
 
@@ -224,6 +154,7 @@ type ResponseMessage struct {
 // 5th message going from root to leaves to send the
 // signature
 type SignatureBroadcastMessage struct {
+	*SigningMessage
 	// Aggregate response of root
 	R0_hat abstract.Secret
 	// Challenge
@@ -243,6 +174,7 @@ type SignatureBroadcastMessage struct {
 // SignatureBroadcastMessage has been sent to everybody.
 // Every node should just add up the stats from its children.
 type StatusReturnMessage struct {
+	*SigningMessage
 	// How many nodes sent a 'respond' message
 	Responders int
 	// How many peers contacted for a challenge
@@ -251,16 +183,19 @@ type StatusReturnMessage struct {
 
 // In case of an error, this message is sent
 type ErrorMessage struct {
+	*SigningMessage
 	Err string
 }
 
 // For request of a vote on tree-structure change
 type VoteRequestMessage struct {
+	*SigningMessage
 	Vote *Vote
 }
 
 // Whenever the group changed
 type GroupChangedMessage struct {
+	*SigningMessage
 	V *Vote
 	// if vote not accepted rest of fields are nil
 	HostList []string

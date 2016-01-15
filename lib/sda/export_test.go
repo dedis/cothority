@@ -18,10 +18,10 @@ func (n *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
 	return n.sendSDAData(id, msg)
 }
 
-func (n *Host) Receive() network.ApplicationMessage {
+func (n *Host) Receive() network.NetworkMessage {
 	return n.receive()
 }
 
-func (n *Host) ProtocolInstantiate(tok *Token) (ProtocolInstance, error) {
-	return n.protocolInstantiate(tok)
+func (n *Host) ProtocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
+	return n.protocolInstantiate(tok, tn)
 }
