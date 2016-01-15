@@ -138,7 +138,8 @@ func TestHostSendDuplex(t *testing.T) {
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
-	el := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := GenEntityListFromHost(h2, h1)
 	tree, _ := el.GenerateBinaryTree()
 
 	// Add the marshalled version of the tree
@@ -158,7 +159,8 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	el1 := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := GenEntityListFromHost(h2, h1)
 	// Check that h2 sends back an empty list if it is unknown
 	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
@@ -207,7 +209,8 @@ func TestPeerListPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	el1 := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//il1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := GenEntityListFromHost(h2, h1)
 	// Suppose both hosts have the list available, but not the tree
 	h1.AddEntityList(el1)
 	h2.AddEntityList(el1)
@@ -266,7 +269,8 @@ func TestTreePropagation(t *testing.T) {
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	el := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := GenEntityListFromHost(h2, h1)
 	tree, _ := el.GenerateBinaryTree()
 	// h2 knows the entity list
 	h2.AddEntityList(el)
@@ -331,7 +335,7 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 
 func newHost(address string, s abstract.Suite) *sda.Host {
 	priv, pub := privPub(s)
-	id := &network.Entity{Public: pub, Addresses: []string{address}}
+	id := network.NewEntity(pub, address)
 	return sda.NewHost(id, priv)
 }
 
@@ -369,4 +373,12 @@ func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessa
 		t.Fatal("Couldn't pass simple message")
 	}
 	return sda.Msg.(SimpleMessage)
+}
+
+func GenEntityListFromHost(hosts ...*sda.Host) *sda.EntityList {
+	var entities []*network.Entity
+	for i := range hosts {
+		entities = append(entities, hosts[i].Entity)
+	}
+	return sda.NewEntityList(entities)
 }

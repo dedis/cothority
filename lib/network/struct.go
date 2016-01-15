@@ -3,6 +3,7 @@ package network
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
@@ -147,6 +148,10 @@ type Entity struct {
 	Addresses []string
 	// used to return the next available address
 	iter int
+}
+
+func (e *Entity) String() string {
+	return fmt.Sprintf("%v", e.Public)
 }
 
 // EntityType can be used to recognise an Entity-message

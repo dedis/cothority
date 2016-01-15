@@ -21,6 +21,8 @@ var SendEntityListMessage = EntityListType
 type SDAData struct {
 	// Token uniquely identify the protocol instance this msg is made for
 	Token
+	// NOTE: this is taken from network.NetworkMessage
+	Entity *network.Entity
 	// MsgType of the underlying data
 	MsgType uuid.UUID
 	// The interface to the actual Data

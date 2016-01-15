@@ -43,7 +43,7 @@ func (p *ProtocolTest) Id() uuid.UUID {
 
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
-func (p *ProtocolTest) Dispatch(m *sda.SDAData) error {
+func (p *ProtocolTest) Dispatch(m []*sda.SDAData) error {
 	dbg.Lvl2("PRotocolTest.Dispatch()")
 	return nil
 }
@@ -67,11 +67,11 @@ func (p *SimpleProtocol) Id() uuid.UUID {
 }
 
 // Dispatch simply analysze the message and do nothing else
-func (p *SimpleProtocol) Dispatch(m *sda.SDAData) error {
-	if m.MsgType != SimpleMessageType {
+func (p *SimpleProtocol) Dispatch(m []*sda.SDAData) error {
+	if m[0].MsgType != SimpleMessageType {
 		return fmt.Errorf("Not the message expected")
 	}
-	msg := m.Msg.(SimpleMessage)
+	msg := m[0].Msg.(SimpleMessage)
 	if msg.I != 10 {
 		return fmt.Errorf("Not the value expected")
 	}
@@ -107,7 +107,8 @@ func TestProtocolInstantiation(t *testing.T) {
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	h1, h2 := setupHosts(t, false)
 	// Add tree + entitylist
-	el := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//el := GenEntityListFrom(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := sda.NewEntityList([]*network.Entity{h2.Entity, h1.Entity})
 	h1.AddEntityList(el)
 	tree, _ := el.GenerateBinaryTree()
 	h1.AddTree(tree)
