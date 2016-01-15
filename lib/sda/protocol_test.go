@@ -13,6 +13,7 @@ import (
 
 var testID = uuid.NewV5(uuid.NamespaceURL, "test")
 var simpleID = uuid.NewV5(uuid.NamespaceURL, "simple")
+var aggregateID = uuid.NewV5(uuid.NamespaceURL, "aggregate")
 
 // Test simple protocol-implementation
 // - registration
@@ -122,6 +123,79 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	h2.Close()
 }
 
+// Test if protocol aggregate children well or not
+func TestProtocolAggregation(t *testing.T) {
+	ch1 := make(chan bool)
+	chroot := make(chan bool)
+	ch2 := make(chan bool)
+	chans := []chan bool{chroot, ch1, ch2}
+	id := 0
+	// custom creation function so we know the step due to the channels
+	fn := func(h *sda.Host, tr *sda.Tree, tok *sda.Token) sda.ProtocolInstance {
+		ps := AggregationProtocol{
+			Host: h,
+			Tree: tr,
+			tok:  tok,
+			Chan: chans[id],
+		}
+		id++
+		return &ps
+	}
+
+	sda.ProtocolRegister(aggregateID, fn)
+	hosts := GenHosts(t, 3)
+	root := hosts[0]
+	// create small Tree
+	el := sda.NewEntityList([]*network.Entity{root.Entity, hosts[1].Entity, hosts[2].Entity})
+	root.AddEntityList(el)
+	tree, _ := el.GenerateBinaryTree()
+	root.AddTree(tree)
+	// start a protocol
+	go func() {
+		_, err := root.StartNewProtocol(aggregateID, tree.Id)
+		if err != nil {
+			t.Fatal(fmt.Sprintf("Could not start protocol %v", err))
+		}
+	}()
+	// we are supposed to receive stg from host2 from Start()
+	select {
+	case _ = <-chroot:
+		break
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("Could not receive from channel of root ")
+	}
+	// Then we are supposed to receive from h1 after he got the tree and the
+	// entity list from h2
+	var foundh1 bool
+	var foundh2 bool
+	select {
+	case _ = <-ch1:
+		foundh1 = true
+		if foundh2 {
+			break
+		}
+	case _ = <-ch2:
+		foundh2 = true
+		if foundh1 {
+			break
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Could not receive from channel of host 1")
+	}
+	// then the root is supposed to get them all
+	select {
+	case _ = <-chroot:
+		break
+	case <-time.After(1 * time.Second):
+		t.Fatal("Could not receive message from root in the protocol")
+	}
+	// then it's all good
+	root.Close()
+	hosts[1].Close()
+	hosts[2].Close()
+
+}
+
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
@@ -184,6 +258,48 @@ func (p *SimpleProtocol) Start() {
 	msg := SimpleMessage{10}
 	child := p.Root.Children[0]
 	p.Send(p.tok, child.Entity, &msg)
+	p.Chan <- true
+
+}
+
+type AggregationProtocol struct {
+	*sda.Host
+	*sda.Tree
+	tok *sda.Token
+	// chan to get back to testing
+	Chan chan bool
+}
+
+// Dispatch simply analysze the message and do nothing else
+func (p *AggregationProtocol) Dispatch(ms []*sda.SDAData) error {
+	tn := p.TreeNode(p.Tree.Id)
+	// with one lvl tree, only root is waiting
+	if tn.IsRoot() && len(ms) != len(tn.Children) {
+		// testing will fail then
+		return fmt.Errorf("aggregation wrong number of children")
+	}
+	if tn.IsLeaf() {
+		m := ms[0].Msg.(SimpleMessage)
+		dbg.Lvl2("Aggregationprotocol children sending message up")
+		// send back to parent
+		if err := p.Send(p.tok, tn.Parent.Entity, &m); err != nil {
+			return fmt.Errorf("Sending to parent failed")
+		}
+	}
+	p.Chan <- true
+	return nil
+}
+
+// Sends a simple message to its first children
+func (p *AggregationProtocol) Start() {
+	msg := SimpleMessage{10}
+	tn := p.TreeNode(p.Tree.Id)
+	for i := range tn.Children {
+		if err := p.Send(p.tok, tn.Children[i].Entity, &msg); err != nil {
+			dbg.Error("Could not send to children")
+			return
+		}
+	}
 	p.Chan <- true
 
 }

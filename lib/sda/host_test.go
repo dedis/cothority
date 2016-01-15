@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -355,6 +356,26 @@ func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 		t.Fatal(err)
 	}
 	return h1, h2
+}
+
+// GenHosts will create n hosts with the first one being connected to each of
+// the other node
+func GenHosts(t *testing.T, n int) []*sda.Host {
+	var hosts []*sda.Host
+	for i := 0; i < n; i++ {
+		hosts = append(hosts, newHost("localhost:"+strconv.Itoa(2000+i*10), suite))
+	}
+	root := hosts[0]
+	root.Listen()
+	go root.ProcessMessages()
+	for i := 1; i < n; i++ {
+		hosts[i].Listen()
+		go hosts[i].ProcessMessages()
+		if _, err := hosts[i].Connect(root.Entity); err != nil {
+			t.Fatal("Could not connect hosts")
+		}
+	}
+	return hosts
 }
 
 // SimpleMessage is just used to transfer one integer
