@@ -243,6 +243,10 @@ func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 	return pi, nil
 }
 
+func (h *Host) StartNewProtocolName(name string, treeID uuid.UUID) (ProtocolInstance, error) {
+	return h.StartNewProtocol(ProtocolNameToUuid(name), treeID)
+}
+
 // ProcessMessages checks if it is one of the messages for us or dispatch it
 // to the corresponding instance.
 // Our messages are:

@@ -19,7 +19,7 @@ type ProtocolInstance interface {
 	// Start on it.
 	Start() error
 	// Dispatch is called whenever packets are ready and should be treated
-	Dispatch(m []*SDAData) error
+	Dispatch([]*SDAData) error
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
@@ -149,7 +149,7 @@ func NewProtocolStruct(h *Host, t *TreeNode, tok *Token) *ProtocolStruct {
 	return &ProtocolStruct{h, t, tok}
 }
 
-// Send adds the token
+// Send takes the message and sends it to the given TreeNode
 func (ps *ProtocolStruct) Send(to *TreeNode, msg network.NetworkMessage) error {
 	return ps.Host.SendSDAToTreeNode(ps.Token, to, msg)
 }
@@ -164,12 +164,15 @@ func ProtocolRegister(protoID uuid.UUID, protocol NewProtocol) {
 	protocols[protoID] = protocol
 }
 
+func ProtocolNameToUuid(name string) uuid.UUID {
+	url := "http://dedis.epfl.ch/protocolname/" + name
+	return uuid.NewV3(uuid.NamespaceURL, url)
+}
+
 // ProtocolRegisterName is a convenience function to automatically generate
 // a UUID out of the name.
 func ProtocolRegisterName(name string, protocol NewProtocol) {
-	url := "http://dedis.epfl.ch/protocolname/" + name
-	uuid := uuid.NewV3(uuid.NamespaceURL, url)
-	ProtocolRegister(uuid, protocol)
+	ProtocolRegister(ProtocolNameToUuid(name), protocol)
 }
 
 // ProtocolExists returns whether a certain protocol already has been
