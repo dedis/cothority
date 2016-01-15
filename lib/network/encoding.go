@@ -9,30 +9,40 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/protobuf"
+	"github.com/satori/go.uuid"
 	"reflect"
 )
 
 /// Encoding part ///
 
-// Global Suite used by this network library.
+// Suite used globally by this network library.
 // For the moment, this will stay,as our focus is not on having the possibility
 // to use any suite we want (the decoding stuff is much harder then, because we
 // dont want to send the suite in the wire).
 // It will surely change in futur releases so we can permit this behavior.
 var Suite = edwards.NewAES128SHA256Ed25519(false)
 
-// Type of a packet
-type Type int32
+// NetworkMessage is a type for any message that the user wants to send
+type NetworkMessage interface{}
 
-// ProtocolMessage is a type for any message that the user wants to send
-type ProtocolMessage interface{}
+// When you don't need any special constructors, you can give nil to NewTcpHost
+// and it will use this empty constructors
+var emptyConstructors protobuf.Constructors
 
-// RegisterProtocolType register a custom "struct" / "packet" and get
+func init() {
+	emptyConstructors = make(protobuf.Constructors)
+}
+
+// RegisterMessageType register a custom "struct" / "packet" and get
 // the allocated Type
 // Pass simply your non-initialized struct
-func RegisterProtocolType(msgType Type, msg ProtocolMessage) error {
+func RegisterMessageType(msg NetworkMessage) uuid.UUID {
+	// We add a star here because in TypeFromData we'll always have pointers,
+	// so we're directly compatible with it
+	url := "http://dedis.epfl.ch/protocolType/*" + reflect.TypeOf(msg).String()
+	msgType := uuid.NewV3(uuid.NamespaceURL, url)
 	if _, typeRegistered := typeRegistry[msgType]; typeRegistered {
-		return errors.New("Type was already registered")
+		return msgType
 	}
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
@@ -40,25 +50,30 @@ func RegisterProtocolType(msgType Type, msg ProtocolMessage) error {
 	}
 	t := val.Type()
 	typeRegistry[msgType] = t
-	invTypeRegistry[t] = msgType
 
-	return nil
+	return msgType
 }
 
-func TypeFromData(msg ProtocolMessage) Type {
-	val := reflect.ValueOf(msg)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
-	typ := val.Type()
-	intType, ok := invTypeRegistry[typ]
+// TypeFromData returns the corresponding uuid to the structure given. It
+// returns 'DefaultType' upon error.
+func TypeFromData(msg NetworkMessage) uuid.UUID {
+	url := "http://dedis.epfl.ch/protocolType/" + reflect.TypeOf(msg).String()
+	msgType := uuid.NewV3(uuid.NamespaceURL, url)
+	_, ok := typeRegistry[msgType]
 	if !ok {
-		return DefaultType
+		return ErrorType
 	}
-	return intType
+	return msgType
 }
 
-// Give a default constructors for protobuf out of this suite
+// DumpTypes is used for debugging - it prints out all known types
+func DumpTypes() {
+	for t, m := range typeRegistry {
+		dbg.Print("Type", t, "has message", m)
+	}
+}
+
+// DefaultConstructors gives a default constructor for protobuf out of the global suite
 func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 	constructors := make(protobuf.Constructors)
 	var point abstract.Point
@@ -66,26 +81,6 @@ func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 	constructors[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
 	constructors[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
 	return constructors
-}
-
-// ApplicationMessage is the container for any ProtocolMessage
-type ApplicationMessage struct {
-	// The Entity of the remote peer we are talking to.
-	// Basically, this means that when you open a new connection to someone, and
-	// / or listens to incoming connections, the network library will already
-	// make some exchange between the two communicants so each knows the
-	// Entity of the others.
-	Entity *Entity
-	// the origin of the message
-	From string
-	// What kind of msg do we have
-	MsgType Type
-	// The underlying message
-	Msg ProtocolMessage
-	// which constructors are used
-	Constructors protobuf.Constructors
-	// possible error during unmarshaling so that upper layer can know it
-	err error
 }
 
 // Error returns the error that has been encountered during the unmarshaling of
@@ -100,46 +95,25 @@ func (am *ApplicationMessage) SetError(err error) {
 	am.err = err
 }
 
-var typeRegistry = make(map[Type]reflect.Type)
-var invTypeRegistry = make(map[reflect.Type]Type)
+var typeRegistry = make(map[uuid.UUID]reflect.Type)
 
 var globalOrder = binary.LittleEndian
 
-// DefaultType is reserved by the network library. When you receive a message of
-// DefaultType, it is generally because an error happenned, then you can call
+// ErrorType is reserved by the network library. When you receive a message of
+// ErrorType, it is generally because an error happened, then you can call
 // Error() on it.
-var DefaultType Type = 0
-
-// Entity Type registered. EntityType is second.
-const EntityType = 1
+var ErrorType uuid.UUID = uuid.Nil
 
 // This is the default empty message that is returned in case something went
 // wrong.
-var EmptyApplicationMessage = ApplicationMessage{MsgType: DefaultType}
+var EmptyApplicationMessage = ApplicationMessage{MsgType: ErrorType}
 
-// When you don't need any speical constructors, you can give nil to NewTcpHost
-// and it will use this empty constructors
-var emptyConstructors protobuf.Constructors
-
-func init() {
-	emptyConstructors = make(protobuf.Constructors)
-}
-
-// String returns the underlying type in human format
-func (t Type) String() string {
-	ty, ok := typeRegistry[t]
-	if !ok {
-		return "unknown"
-	}
-	return ty.Name()
-}
-
-// MarshalregisteredType will marshal a struct with its respective type into a
+// MarshalRegisteredType will marshal a struct with its respective type into a
 // slice of bytes. That slice of bytes can be then decoded in
 // UnmarshalRegisteredType.
-func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
-	var msgType Type
-	if msgType = TypeFromData(data); msgType == DefaultType {
+func MarshalRegisteredType(data NetworkMessage) ([]byte, error) {
+	var msgType uuid.UUID
+	if msgType = TypeFromData(data); msgType == ErrorType {
 		return nil, fmt.Errorf("Type %s Not registered to the network library.", msgType)
 	}
 	b := new(bytes.Buffer)
@@ -159,22 +133,22 @@ func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
 // UnmarshalRegisteredType returns the type, the data and an error trying to
 // decode a message from a buffer. The type must be registered to the network
 // library in order for it to be decodable.
-func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Type, ProtocolMessage, error) {
+func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (uuid.UUID, NetworkMessage, error) {
 	b := bytes.NewBuffer(buf)
-	var t Type
+	var t uuid.UUID
 	if err := binary.Read(b, globalOrder, &t); err != nil {
-		return DefaultType, nil, err
+		return ErrorType, nil, err
 	}
 	var typ reflect.Type
 	var ok bool
 	if typ, ok = typeRegistry[t]; !ok {
-		return DefaultType, nil, fmt.Errorf("Type %s not registered.", t.String())
+		return ErrorType, nil, fmt.Errorf("Type %s not registered.", t.String())
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
 	var err error
 	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
-		return DefaultType, nil, err
+		return ErrorType, nil, err
 	}
 	return t, ptrVal.Elem().Interface(), nil
 }
@@ -196,18 +170,17 @@ func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
 	return err
 }
 
-// ConstructFrom takes a ProtocolMessage and then construct a
+// ConstructFrom takes a NetworkMessage and then construct a
 // ApplicationMessage from it. Error if the type is unknown
-func newApplicationMessage(obj ProtocolMessage) (*ApplicationMessage, error) {
+func newApplicationMessage(obj NetworkMessage) (*ApplicationMessage, error) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() != reflect.Ptr {
 		return nil, fmt.Errorf("Send takes a pointer to the message, not a copy...")
 	}
-	val = val.Elem()
-	t := val.Type()
-	ty, ok := invTypeRegistry[t]
-	if !ok {
-		return &ApplicationMessage{}, errors.New(fmt.Sprintf("Packet to send is not known. Please register packet: %s\n", t.String()))
+	ty := TypeFromData(obj)
+	if ty == ErrorType {
+		return &ApplicationMessage{}, errors.New(fmt.Sprintf("Packet to send is not known. Please register packet: %s\n",
+			reflect.TypeOf(obj).String()))
 	}
 	return &ApplicationMessage{
 		MsgType: ty,

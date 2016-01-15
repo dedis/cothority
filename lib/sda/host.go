@@ -18,6 +18,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"sync"
@@ -80,10 +81,10 @@ type Host struct {
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) *Host {
+func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	n := &Host{
-		Entity:             id,
-		workingAddress:     id.First(),
+		Entity:             e,
+		workingAddress:     e.First(),
 		connections:        make(map[uuid.UUID]network.SecureConn),
 		entities:           make(map[uuid.UUID]*network.Entity),
 		trees:              make(map[uuid.UUID]*Tree),
@@ -91,7 +92,7 @@ func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) 
 		entityLists:        make(map[uuid.UUID]*EntityList),
 		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
 		pendingSDAs:        make([]*SDAData, 0),
-		host:               host,
+		host:               network.NewSecureTcpHost(pkey, e),
 		private:            pkey,
 		suite:              network.Suite,
 		networkChan:        make(chan network.ApplicationMessage, 1),
@@ -105,6 +106,14 @@ func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) 
 
 	n.mapper = newProtocolMapper(n)
 	return n
+}
+
+// NewHostKey creates a new host only from the ip-address and port-number. This
+// is useful in testing and deployment for measurements
+func NewHostKey(address string) (*Host, abstract.Secret) {
+	priv, pub := config.NewKeyPair(network.Suite)
+	entity := network.NewEntity(pub, address)
+	return NewHost(entity, priv), priv
 }
 
 // Listen starts listening for messages coming from any host that tries to
@@ -155,7 +164,7 @@ func (n *Host) Close() error {
 }
 
 // SendToRaw sends to an Entity without wrapping the msg into a SDAMessage
-func (n *Host) SendToRaw(id *network.Entity, msg network.ProtocolMessage) error {
+func (n *Host) SendToRaw(id *network.Entity, msg network.NetworkMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
@@ -175,7 +184,7 @@ func (n *Host) SendToRaw(id *network.Entity, msg network.ProtocolMessage) error 
 // message accross the network. A PI must first give its assigned Token, then
 // the Entity where it want to send the message then the msg. The message will
 // be trasnformed into a SDAData message automatically.
-func (n *Host) Send(tok *Token, id *network.Entity, msg network.ProtocolMessage) error {
+func (n *Host) Send(tok *Token, e *network.Entity, msg network.NetworkMessage) error {
 	if n.mapper.Instance(tok) == nil {
 		return fmt.Errorf("No protocol instance registered with this token.")
 	}
@@ -183,7 +192,7 @@ func (n *Host) Send(tok *Token, id *network.Entity, msg network.ProtocolMessage)
 		Token: *tok,
 		Msg:   msg,
 	}
-	return n.sendSDAData(id, sda)
+	return n.sendSDAData(e, sda)
 }
 
 // StartNewProtocol starts a new protocol by instantiating a instance of that
@@ -204,7 +213,7 @@ func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 	// instantiate
 	token := &Token{
 		ProtocolID:   protocolID,
-		EntityListID: tree.IdList.Id,
+		EntityListID: tree.EntityList.Id,
 		TreeID:       treeID,
 		// Host is handling the generation of protocolInstanceID
 		InstanceID: cliutils.NewRandomUUID(),
@@ -337,18 +346,19 @@ func (n *Host) ProcessMessages() {
 			if ok {
 				err = n.SendToRaw(data.Entity, il)
 			} else {
-				dbg.Error("Requested entityList that we don't have")
+				dbg.Lvl2("Requested entityList that we don't have")
 				n.SendToRaw(data.Entity, &EntityList{})
 			}
 		// Host replied to our request of entitylist
 		case SendEntityListMessage:
 			il := data.Msg.(EntityList)
 			if il.Id == uuid.Nil {
-				dbg.Error("Received an empty EntityList")
+				dbg.Lvl2("Received an empty EntityList")
+			} else {
+				n.AddEntityList(&il)
+				// Check if some trees can be constructed from this entitylist
+				n.checkPendingTreeMarshal(&il)
 			}
-			n.AddEntityList(&il)
-			// Check if some trees can be constructed from this entitylist
-			n.checkPendingTreeMarshal(&il)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -410,7 +420,20 @@ func (n *Host) GetTree(id uuid.UUID) (*Tree, bool) {
 	return t, ok
 }
 
-var timeOut = 30 * time.Second
+// HaveTree returns true if the protocolIDm the ENtityListID and the treeID is
+// right or no. If we don't have either the tree or the entitylist, we then
+// request them first amd put the message as pending message.
+func (n *Host) HaveTree(sda *SDAData) bool {
+
+	return true
+}
+
+// Suite returns the suite used by the host
+// NOTE for the moment the suite is fixed for the host and any protocols
+// instance.
+func (n *Host) Suite() abstract.Suite {
+	return n.suite
+}
 
 // Handle a connection => giving messages to the MsgChans
 func (n *Host) handleConn(c network.SecureConn) {
@@ -548,13 +571,6 @@ func (n *Host) registerConnection(c network.SecureConn) {
 	n.entities[c.Entity().Id] = id
 	n.connections[c.Entity().Id] = c
 	n.networkLock.Unlock()
-}
-
-// Suite returns the suite used by the host
-// NOTE for the moment the suite is fixed for the host and any protocols
-// instance.
-func (n *Host) Suite() abstract.Suite {
-	return n.suite
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

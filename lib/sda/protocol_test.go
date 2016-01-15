@@ -36,13 +36,13 @@ func TestProtocolInstantiation(t *testing.T) {
 	//el := GenEntityListFrom(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	el := sda.NewEntityList([]*network.Entity{h2.Entity, h1.Entity})
 	h1.AddEntityList(el)
-	tree, _ := GenerateTreeFromEntityList(el)
+	tree, _ := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	// Then try to instantiate
 	tok := &sda.Token{
 		ProtocolID:   testID,
 		TreeID:       tree.Id,
-		EntityListID: tree.IdList.Id,
+		EntityListID: tree.EntityList.Id,
 	}
 
 	p, err := h1.ProtocolInstantiate(tok)
@@ -92,7 +92,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{h2.Entity, h1.Entity})
 	h2.AddEntityList(el)
-	tree, _ := GenerateTreeFromEntityList(el)
+	tree, _ := el.GenerateBinaryTree()
 	h2.AddTree(tree)
 	// start a protocol
 	go func() {

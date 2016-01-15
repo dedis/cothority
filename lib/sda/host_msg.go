@@ -4,24 +4,17 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	"time"
 )
 
-// init registers all our message-types to the network-interface
-func init() {
-	network.RegisterProtocolType(SDADataMessage, SDAData{})
-	network.RegisterProtocolType(RequestTreeMessage, RequestTree{})
-	network.RegisterProtocolType(RequestEntityListMessage, RequestEntityList{})
-	network.RegisterProtocolType(SendEntityListMessage, EntityList{})
-}
+var timeOut = 30 * time.Second
 
-// constants used for the message-types
-const (
-	SDADataMessage = iota + 10
-	RequestTreeMessage
-	RequestEntityListMessage
-	SendEntityListMessage = EntityListType
-	SendTreeMessage       = TreeMarshalType
-)
+// Our message-types used in sda
+var SDADataMessage = network.RegisterMessageType(SDAData{})
+var RequestTreeMessage = network.RegisterMessageType(RequestTree{})
+var RequestEntityListMessage = network.RegisterMessageType(RequestEntityList{})
+var SendTreeMessage = TreeMarshalType
+var SendEntityListMessage = EntityListType
 
 // SDAData is to be embedded in every message that is made for a
 // ProtocolInstance
@@ -31,9 +24,9 @@ type SDAData struct {
 	// NOTE: this is taken from network.NetworkMessage
 	Entity *network.Entity
 	// MsgType of the underlying data
-	MsgType network.Type
+	MsgType uuid.UUID
 	// The interface to the actual Data
-	Msg network.ProtocolMessage
+	Msg network.NetworkMessage
 	// The actual data as binary blob
 	MsgSlice []byte
 }

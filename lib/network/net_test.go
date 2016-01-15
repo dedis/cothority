@@ -19,25 +19,19 @@ type TestMessage struct {
 	Secret abstract.Secret
 }
 
-var TestMessageType Type = 4
-
 type PublicPacket struct {
 	Point abstract.Point
 }
 
-var PublicType Type = 5
-
 // The tSuite we use
 var tSuite = Suite
 
-func init() {
-	// Here we registers the packets, so that the decoder can instantiate
-	// to the right type and then we can do event-driven stuff such as receiving
-	// new messages without knowing the type and then check on the MsgType field
-	// to cast to the right packet type (See below)
-	RegisterProtocolType(PublicType, PublicPacket{})
-	RegisterProtocolType(TestMessageType, TestMessage{})
-}
+// Here we registers the packets, so that the decoder can instantiate
+// to the right type and then we can do event-driven stuff such as receiving
+// new messages without knowing the type and then check on the MsgType field
+// to cast to the right packet type (See below)
+var PublicType = RegisterMessageType(PublicPacket{})
+var TestMessageType = RegisterMessageType(TestMessage{})
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
@@ -242,7 +236,7 @@ func (s *SimpleServer) Name() string {
 	return "Server "
 }
 
-func (s *SimpleServer) ProxySend(c Conn, msg ProtocolMessage) {
+func (s *SimpleServer) ProxySend(c Conn, msg NetworkMessage) {
 	ctx := context.TODO()
 	if err := c.Send(ctx, msg); err != nil {
 		s.t.Fatal(err)
