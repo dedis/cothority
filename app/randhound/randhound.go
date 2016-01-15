@@ -9,37 +9,37 @@ func init() {
 type ProtocolRandHound struct {
 	sda.Host
 	sda.TreeNode
-	c Client
-	s Server
+	leader Leader
+	peer   Peer
 }
 
 func NewProtocolInstance(h *sda.Host, t *sda.TreeNode) *ProtocolRandHound {
 	return &ProtocolRandHound{
 		Host:     h,
 		TreeNode: t,
-		Client:   c,
-		Server:   s,
+		Leader:   l, // TODO: init properly
+		Peer:     p, // TODO: init properly
 	}
 }
 
-// Start initiates the RandHound protocol by forming the message I1 on
-// the side of the client and sending it to the servers
+// Start initiates the RandHound protocol. The leader forms the message I1 and
+// sends it to all of its peers.
 func (p *ProtocolRandHound) Start() error {
 
 	suite := p.sda.Host.suite
 	_ = suite
 
 	//public key of the host: p.sda.Host.Entity.Public
-	// TODO: figure out session and group marshalling
+	// TODO: figure out session and group marshalling to compute sid and gid
 
 	sid := make([]byte, 0)
 	gid := make([]byte, 0)
 	HRc := make([]byte, 0)
 	S := make([]byte, 0)
 	G := make([]byte, 0)
-	p.c.i1 = I1{SID: sid, GID: gid, HRc: HRc, S: S, G: G}
+	p.leader.i1 = I1{SID: sid, GID: gid, HRc: HRc, S: S, G: G}
 	for nil, c := range p.Children() {
-		err := p.SendMsgTo(c, p.c.i1)
+		err := p.SendMsgTo(c, p.leader.i1)
 		if err != nil {
 			return err
 		}
@@ -50,43 +50,42 @@ func (p *ProtocolRandHound) Start() error {
 func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
 	switch m[0].MsgType {
 	case 0:
-		return p.HandleI1R1(m[0]) // server
+		return p.HandleI1R1(m[0]) // peer
 	case 1:
-		return p.HandleR1I2(m) // client
+		return p.HandleR1I2(m) // leader
 	case 2:
-		return p.HandleI2R2(m[0]) // server
+		return p.HandleI2R2(m[0]) // peer
 	case 3:
-		return p.HandleR2I3(m) // client
+		return p.HandleR2I3(m) // leader
 	case 4:
-		return p.HandleI3R3(m[0]) // server
+		return p.HandleI3R3(m[0]) // peer
 	case 5:
-		return p.HandleR3I4(m) // client
+		return p.HandleR3I4(m) // leader
 	case 6:
-		return p.HandleI4R4(m[0]) // server
+		return p.HandleI4R4(m[0]) // peer
 	case 7:
-		return p.HandleR4(m) // client
+		return p.HandleR4(m) // leader
 	}
 	return sda.NoSuchState
 }
 
-// Ix: Messages from client to server
-// Rx: Messages from server to client
-// TODO: rename client/server to leader/node or leader/follower to be consistent with the rest of the project?
+// Ix: Messages from leader to peers
+// Rx: Messages from peer to leader
 // TODO: find better name for the handle functions since they basically include: receive msg, operation, send msg
 // TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
 
-// Phase 1 (server)
+// Phase 1 (peer)
 func (p *ProtocolRandHound) HandleI1R1(m *sda.SDAData) error {
 
-	//suite := p.sda.Host.suite
+	suite := p.sda.Host.suite
 	i1 := m.Msg.(I1)
-	_ = i1
+	_, _ = suite, i1
 
 	// TODO: verify i1 contents
 
-	// Choose server's trustee-selection randomness
-	Rs := make([]byte, p.s.keysize)
-	p.s.rand.XORKeyStream(Rs, Rs)
+	// Choose peer's trustee-selection randomness
+	Rs := make([]byte, p.peer.keysize)
+	p.peer.rand.XORKeyStream(Rs, Rs)
 
 	// Form R1 and send it to client
 
@@ -96,7 +95,7 @@ func (p *ProtocolRandHound) HandleI1R1(m *sda.SDAData) error {
 	return p.SendMsgTo(p.Parent(), r1)
 }
 
-// Phase 2 (client)
+// Phase 2 (leader)
 func (p *ProtocolRandHound) HandleR1I2(m []*sda.SDAData) error {
 
 	suite := p.sda.Host.suite
@@ -113,9 +112,9 @@ func (p *ProtocolRandHound) HandleR1I2(m []*sda.SDAData) error {
 
 	sid := make([]byte, 0)
 	Rc := make([]byte, 0)
-	p.c.i2 = I2{SID: sid, Rc: Rc}
+	p.leader.i2 = I2{SID: sid, Rc: Rc}
 	for nil, c := range p.Children() {
-		err := p.SendMsgTo(c, p.c.i2)
+		err := p.SendMsgTo(c, p.leader.i2)
 		if err != nil {
 			return err
 		}
@@ -123,7 +122,7 @@ func (p *ProtocolRandHound) HandleR1I2(m []*sda.SDAData) error {
 	return nil
 }
 
-// Phase 2 (server)
+// Phase 2 (peer)
 func (p *ProtocolRandHound) HandleI2R2(m *sda.SDAData) error {
 
 	suite := p.sda.Host.suite
@@ -141,7 +140,7 @@ func (p *ProtocolRandHound) HandleI2R2(m *sda.SDAData) error {
 	return p.SendMsgTo(p.Parent(), r2)
 }
 
-// Phase 3 (client)
+// Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR2I3(m []*sda.SDAData) error {
 
 	suite := p.sda.Host.suite
@@ -157,9 +156,9 @@ func (p *ProtocolRandHound) HandleR2I3(m []*sda.SDAData) error {
 
 	sid := make([]byte, 0)
 	R2s := make([][]byte, 0)
-	p.c.i3 = I3{SID: sid, R2s: R2s}
+	p.leader.i3 = I3{SID: sid, R2s: R2s}
 	for nil, c := range p.Children() {
-		err := p.SendMsgTo(c, p.c.i3)
+		err := p.SendMsgTo(c, p.leader.i3)
 		if err != nil {
 			return err
 		}
@@ -167,12 +166,12 @@ func (p *ProtocolRandHound) HandleR2I3(m []*sda.SDAData) error {
 	return nil
 }
 
-// Phase 3 (server)
+// Phase 3 (peer)
 func (p *ProtocolRandHound) HandleI3R3(m *sda.SDAData) error {
 
-	//suite := p.sda.Host.suite
+	suite := p.sda.Host.suite
 	i3 := m.Msg.(I3)
-	_ = i3
+	_, _ = suite, i3
 
 	// TODO: verify contents of i3
 
@@ -184,7 +183,7 @@ func (p *ProtocolRandHound) HandleI3R3(m *sda.SDAData) error {
 	return p.SendMsgTo(p.Parent(), r3)
 }
 
-// Phase 3 (client)
+// Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR3I4(m []*sda.SDAData) error {
 
 	suite := p.sda.Host.suite
@@ -200,9 +199,9 @@ func (p *ProtocolRandHound) HandleR3I4(m []*sda.SDAData) error {
 
 	sid := make([]byte, 0)
 	R2s := make([][]byte, 0)
-	p.c.i4 = I4{SID: sid, R2s: R2s}
+	p.leader.i4 = I4{SID: sid, R2s: R2s}
 	for nil, c := range p.Children() {
-		err := p.SendMsgTo(c, p.c.i4)
+		err := p.SendMsgTo(c, p.leader.i4)
 		if err != nil {
 			return err
 		}
@@ -210,7 +209,7 @@ func (p *ProtocolRandHound) HandleR3I4(m []*sda.SDAData) error {
 	return nil
 }
 
-// Phase 4 (server)
+// Phase 4 (peer)
 func (p *ProtocolRandHound) HandleI4R4(m *sda.SDAData) error {
 
 	suite := p.sda.Host.suite
@@ -227,7 +226,7 @@ func (p *ProtocolRandHound) HandleI4R4(m *sda.SDAData) error {
 	return p.SendMsgTo(p.Parent(), r4)
 }
 
-// Phase 4 (client)
+// Phase 4 (leader)
 func (p *ProtocolRandHound) HandleR4(m []*sda.SDAData) error {
 
 	suite := p.sda.Host.suite
