@@ -8,6 +8,7 @@ Implements a full test with
 package example
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 )
@@ -45,11 +46,13 @@ func NewProtocolInstance(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.Proto
 
 // Starts the protocol
 func (p *ProtocolExample) Start() error {
-	return nil
+	dbg.Lvl3("Starting example")
+	return p.Send(p.Children[0], &MessageAnnounce{"cothority rulez!"})
 }
 
 // Dispatch takes the message and decides what function to call
 func (p *ProtocolExample) Dispatch(m []*sda.SDAData) error {
+	dbg.Lvl3("Got a message:", m)
 	switch m[0].MsgType {
 	case MessageAnnounceType:
 		return p.HandleAnnounce(m[0])
