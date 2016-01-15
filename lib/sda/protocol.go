@@ -71,7 +71,6 @@ func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) bool {
 		dbg.Error("Could not find TreeNode for this host in aggregate:", err)
 		return false
 	}
-	dbg.Lvl2("DispatchToInstance parent =", node.Parent.Entity.String())
 	// if message comes from parent, dispatch directly
 	if !node.IsRoot() && sdaMsg.Entity.Equal(node.Parent.Entity) {
 		pi.Dispatch([]*SDAData{sdaMsg})
