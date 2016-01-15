@@ -32,7 +32,7 @@ func RunServer(conf *app.NaiveConfig) {
 	if indexPeer == 0 {
 		dbg.Lvl3("Launching a naiv_sign.: Leader", app.RunFlags.Hostname)
 		GoLeader(conf)
-		monitor.End()
+		monitor.EndAndCleanup()
 	} else {
 		dbg.Lvl3("Launching a naiv_sign: Signer", app.RunFlags.Hostname)
 		GoSigner(conf)

@@ -15,7 +15,7 @@ import (
 func RunServer(conf *app.NTreeConfig) {
 	if conf.Root {
 		RunRoot(conf)
-		monitor.End()
+		monitor.EndAndCleanup()
 	} else {
 		RunPeer(conf)
 		//RunServer2(conf)
