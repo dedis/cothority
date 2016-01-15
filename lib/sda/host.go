@@ -17,6 +17,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"sync"
@@ -77,17 +78,17 @@ type Host struct {
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) *Host {
+func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	n := &Host{
-		Entity:             id,
-		workingAddress:     id.First(),
+		Entity:             e,
+		workingAddress:     e.First(),
 		connections:        make(map[uuid.UUID]network.SecureConn),
 		entities:           make(map[uuid.UUID]*network.Entity),
 		trees:              make(map[uuid.UUID]*Tree),
 		entityLists:        make(map[uuid.UUID]*EntityList),
 		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
 		pendingSDAs:        make([]*SDAData, 0),
-		host:               host,
+		host:               network.NewSecureTcpHost(pkey, e),
 		private:            pkey,
 		suite:              network.Suite,
 		networkChan:        make(chan network.ApplicationMessage, 1),
@@ -100,6 +101,14 @@ func NewHost(id *network.Entity, pkey abstract.Secret, host network.SecureHost) 
 		pendingSDAsLock:    &sync.Mutex{},
 	}
 	return n
+}
+
+// NewHostKey creates a new host only from the ip-address and port-number. This
+// is useful in testing and deployment for measurements
+func NewHostKey(address string) (*Host, abstract.Secret) {
+	priv, pub := config.NewKeyPair(network.Suite)
+	entity := network.NewEntity(pub, address)
+	return NewHost(entity, priv), priv
 }
 
 // Listen starts listening for messages coming from any host that tries to
@@ -170,7 +179,7 @@ func (n *Host) SendToRaw(id *network.Entity, msg network.NetworkMessage) error {
 // message accross the network. A PI must first give its assigned Token, then
 // the Entity where it want to send the message then the msg. The message will
 // be trasnformed into a SDAData message automatically.
-func (n *Host) Send(tok *Token, id *network.Entity, msg network.NetworkMessage) error {
+func (n *Host) Send(tok *Token, e *network.Entity, msg network.NetworkMessage) error {
 	if n.mapper.Instance(tok) == nil {
 		return fmt.Errorf("No protocol instance registered with this token.")
 	}
@@ -178,7 +187,7 @@ func (n *Host) Send(tok *Token, id *network.Entity, msg network.NetworkMessage) 
 		Token: *tok,
 		Msg:   msg,
 	}
-	return n.sendSDAData(id, sda)
+	return n.sendSDAData(e, sda)
 }
 
 // StartNewProtocol starts a new procotol by instantiating a instance of that
@@ -212,58 +221,6 @@ func (n *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 	// start it
 	pi.Start()
 	return pi, nil
-}
-
-// ProtocolInstantiate creates a new instance of a protocol given by it's name
-func (n *Host) protocolInstantiate(tok *Token) (ProtocolInstance, error) {
-	p, ok := protocols[tok.ProtocolID]
-	if !ok {
-		return nil, errors.New("Protocol doesn't exist")
-	}
-	tree, ok := n.GetTree(tok.TreeID)
-	if !ok {
-		return nil, errors.New("Tree does not exists")
-	}
-	if _, ok := n.GetEntityList(tok.EntityListID); !ok {
-		return nil, errors.New("EntityList does not exists")
-	}
-	pi := p(n, tree, tok)
-	n.mapper.RegisterProtocolInstance(pi, tok)
-	return pi, nil
-}
-
-// sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
-// to the  appropriate entity
-func (n *Host) sendSDAData(id *network.Entity, sdaMsg *SDAData) error {
-	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
-	if err != nil {
-		return fmt.Errorf("Error marshaling  message: %s", err.Error())
-	}
-	sdaMsg.MsgSlice = b
-	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
-	sdaMsg.Msg = nil
-	return n.SendToRaw(id, sdaMsg)
-}
-
-// Receive will return the value of the communication-channel, unmarshalling
-// the SDAMessage. Receive is called in ProcessMessages as it takes directly
-// the message from the networkChan, and pre-process the SDAMessage
-func (n *Host) receive() network.ApplicationMessage {
-	data := <-n.networkChan
-	if data.MsgType == SDADataMessage {
-		sda := data.Msg.(SDAData)
-		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
-		if err != nil {
-			dbg.Error("Error while marshalling inner message of SDAData:", err)
-		}
-		// Put the msg into SDAData
-		sda.MsgType = t
-		sda.Msg = msg
-		// Write back the Msg in appplicationMessage
-		data.Msg = sda
-		dbg.Lvl3("SDA-Message is:", sda)
-	}
-	return data
 }
 
 // ProcessMessages checks if it is one of the messages for us or dispatch it
@@ -390,7 +347,72 @@ func (n *Host) GetTree(id uuid.UUID) (*Tree, bool) {
 	return t, ok
 }
 
-var timeOut = 30 * time.Second
+// HaveTree returns true if the protocolIDm the ENtityListID and the treeID is
+// right or no. If we don't have either the tree or the entitylist, we then
+// request them first amd put the message as pending message.
+func (n *Host) HaveTree(sda *SDAData) bool {
+
+	return true
+}
+
+// Suite returns the suite used by the host
+// NOTE for the moment the suite is fixed for the host and any protocols
+// instance.
+func (n *Host) Suite() abstract.Suite {
+	return n.suite
+}
+
+// ProtocolInstantiate creates a new instance of a protocol given by it's name
+func (n *Host) protocolInstantiate(tok *Token) (ProtocolInstance, error) {
+	p, ok := protocols[tok.ProtocolID]
+	if !ok {
+		return nil, errors.New("Protocol doesn't exist")
+	}
+	tree, ok := n.GetTree(tok.TreeID)
+	if !ok {
+		return nil, errors.New("Tree does not exists")
+	}
+	if _, ok := n.GetEntityList(tok.EntityListID); !ok {
+		return nil, errors.New("EntityList does not exists")
+	}
+	pi := p(n, tree, tok)
+	n.mapper.RegisterProtocolInstance(pi, tok)
+	return pi, nil
+}
+
+// sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
+// to the  appropriate entity
+func (n *Host) sendSDAData(id *network.Entity, sdaMsg *SDAData) error {
+	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
+	if err != nil {
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+	}
+	sdaMsg.MsgSlice = b
+	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
+	sdaMsg.Msg = nil
+	return n.SendToRaw(id, sdaMsg)
+}
+
+// Receive will return the value of the communication-channel, unmarshalling
+// the SDAMessage. Receive is called in ProcessMessages as it takes directly
+// the message from the networkChan, and pre-process the SDAMessage
+func (n *Host) receive() network.ApplicationMessage {
+	data := <-n.networkChan
+	if data.MsgType == SDADataMessage {
+		sda := data.Msg.(SDAData)
+		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		if err != nil {
+			dbg.Error("Error while marshalling inner message of SDAData:", err)
+		}
+		// Put the msg into SDAData
+		sda.MsgType = t
+		sda.Msg = msg
+		// Write back the Msg in appplicationMessage
+		data.Msg = sda
+		dbg.Lvl3("SDA-Message is:", sda)
+	}
+	return data
+}
 
 // Handle a connection => giving messages to the MsgChans
 func (n *Host) handleConn(c network.SecureConn) {
@@ -524,21 +546,6 @@ func (n *Host) registerConnection(c network.SecureConn) {
 	n.entities[c.Entity().Id] = id
 	n.connections[c.Entity().Id] = c
 	n.networkLock.Unlock()
-}
-
-// HaveTree returns true if the protocolIDm the ENtityListID and the treeID is
-// right or no. If we don't have either the tree or the entitylist, we then
-// request them first amd put the message as pending message.
-func (n *Host) HaveTree(sda *SDAData) bool {
-
-	return true
-}
-
-// Suite returns the suite used by the host
-// NOTE for the moment the suite is fixed for the host and any protocols
-// instance.
-func (n *Host) Suite() abstract.Suite {
-	return n.suite
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

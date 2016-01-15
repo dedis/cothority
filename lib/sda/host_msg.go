@@ -4,11 +4,10 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	"time"
 )
 
-// init registers all our message-types to the network-interface
-func init() {
-}
+var timeOut = 30 * time.Second
 
 // Our message-types used in sda
 var SDADataMessage = network.RegisterMessageType(SDAData{})

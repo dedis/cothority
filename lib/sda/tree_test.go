@@ -55,8 +55,8 @@ func TestTreeConnectedTo(t *testing.T) {
 func GenerateTreeFromEntityList(pl *sda.EntityList) (*sda.Tree, []*sda.TreeNode) {
 	var nodes []*sda.TreeNode
 	var root *sda.TreeNode
-	for i, id := range pl.List {
-		node := sda.NewTreeNode(id)
+	for i, e := range pl.List {
+		node := sda.NewTreeNode(e)
 		nodes = append(nodes, node)
 		if i == 0 {
 			root = node
