@@ -103,7 +103,9 @@ func send(v interface{}) {
 	if !enabled {
 		return
 	}
-	// XXX comment needed:
+	// For a large number of clients (˜10'000), the connection phase
+	// can take some time. This is a linear backoff to enable connection
+	// even when there are a lot of request:
 	for wait := 500; wait < 1000; wait += 100 {
 		if err := encoder.Encode(v); err == nil {
 			return
