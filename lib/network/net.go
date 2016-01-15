@@ -15,6 +15,7 @@ package network
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"net"
 	"time"
@@ -87,14 +88,20 @@ func (c *TcpConn) Remote() string {
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (am ApplicationMessage, err error) {
-
+func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
+	var am NetworkMessage
 	am.Constructors = c.host.constructors
-	bufferSize := 4096
-	b := make([]byte, bufferSize)
-	var buffer bytes.Buffer
+	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
-	for {
+	// First read the size
+	var s Size
+	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
+		return EmptyApplicationMessage, handleError(err)
+	}
+	// Then make the buffer out of it
+	b := make([]byte, s)
+	var buffer bytes.Buffer
+	for Size(buffer.Len()) < s {
 		n, err := c.Conn.Read(b)
 		b = b[:n]
 		buffer.Write(b)
@@ -102,15 +109,10 @@ func (c *TcpConn) Receive(ctx context.Context) (am ApplicationMessage, err error
 			e := handleError(err)
 			return EmptyApplicationMessage, e
 		}
-		if n < bufferSize {
-			// read all data
-			break
-		}
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			am = EmptyApplicationMessage
-			err = fmt.Errorf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+			fmt.Printf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
 		}
 	}()
 
@@ -122,11 +124,11 @@ func (c *TcpConn) Receive(ctx context.Context) (am ApplicationMessage, err error
 	return am, nil
 }
 
-// Send will convert the Protocolmessage into an ApplicationMessage
-// Then send the message through the Gob encoder
+// Send will convert the NetworkMessage into an ApplicationMessage
+// and send it with the size through the network.
 // Returns an error if anything was wrong
-func (c *TcpConn) Send(ctx context.Context, obj NetworkMessage) error {
-	am, err := newApplicationMessage(obj)
+func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+	am, err := newNetworkMessage(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
@@ -135,9 +137,16 @@ func (c *TcpConn) Send(ctx context.Context, obj NetworkMessage) error {
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
-
+	// First write the size
+	var buffer bytes.Buffer
+	size := Size(len(b))
+	if err := binary.Write(&buffer, globalOrder, size); err != nil {
+		return err
+	}
+	// Then send everything through the connection
+	buffer.Write(b)
 	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
-	_, err = c.Conn.Write(b)
+	_, err = c.Conn.Write(buffer.Bytes())
 	if err != nil {
 		return handleError(err)
 	}
@@ -290,7 +299,7 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 
 // Receive is analog to Conn.Receive but also set the right Entity in the
 // message
-func (sc *SecureTcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
+func (sc *SecureTcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	nm, err := sc.TcpConn.Receive(ctx)
 	nm.Entity = sc.entity
 	return nm, err

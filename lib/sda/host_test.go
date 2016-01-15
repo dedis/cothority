@@ -412,7 +412,7 @@ type SimpleMessage struct {
 
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
-func testMessageSimple(t *testing.T, msg network.ApplicationMessage) SimpleMessage {
+func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
 	if msg.MsgType != sda.SDADataMessage {
 		t.Fatal("Wrong message type received:", msg.MsgType)
 	}

@@ -3,11 +3,11 @@ package conode
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"strings"
@@ -20,52 +20,51 @@ All messages for stamper-related actions
 // struct to ease keeping track of who requires a reply after
 // tsm is processed/ aggregated by the TSServer
 type MustReplyMessage struct {
-	Tsm TimeStampMessage
+	Tsm StampRequest
 	To  string // name of reply destination
-}
-
-type TimeStampMessage struct {
-	ReqNo SeqNo // Request sequence number
-	// ErrorReply *ErrorReply // Generic error reply to any request
-	Type MessageType
-	Sreq *StampRequest
-	Srep *StampSignature
-}
-
-func (tsm TimeStampMessage) MarshalBinary() ([]byte, error) {
-	dbg.Fatal("Don't want to do that")
-	return nil, nil
-}
-
-func (sm *TimeStampMessage) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Don't want to do that")
-	return nil
 }
 
 // Default port for the conode-setup - the stamping-request port
 // is at ```DefaultPort + 1```
 var DefaultPort int = 2000
 
-type MessageType int
-
-type SeqNo byte
+// byte // uint8 not supported by protobuf for the moment
+type SeqNo uint32
 
 const (
-	Error MessageType = iota
-	StampRequestType
+	// Let's say that stamp packets type start at 100
+	StampRequestType network.Type = iota + 100
 	StampSignatureType
-	StampClose
-	StampExit
+	StampCloseType
+	StampExitType
 )
 
+func init() {
+	network.RegisterProtocolType(StampRequestType, StampRequest{})
+	network.RegisterProtocolType(StampSignatureType, StampSignature{})
+	network.RegisterProtocolType(StampCloseType, StampClose{})
+	network.RegisterProtocolType(StampExitType, StampExit{})
+}
+
+type StampClose struct {
+	ReqNo SeqNo
+}
+
+type StampExit struct {
+	// XXX Do we need that or can we use only empty struct ?
+	ReqNo SeqNo
+}
+
 type StampRequest struct {
-	Val []byte // Hash-size value to timestamp
+	ReqNo SeqNo  // Request sequence number
+	Val   []byte // Hash-size value to timestamp
 }
 
 // NOTE: In order to decode correctly the Proof, we need to the get the suite
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type StampSignature struct {
+	ReqNo               SeqNo
 	SuiteStr            string
 	Timestamp           int64            // The timestamp requested for the file
 	MerkleRoot          []byte           // root of the merkle tree
@@ -78,68 +77,8 @@ type StampSignature struct {
 	RejectionCommitList []abstract.Point // THe list of commitment keys for nodes that rejected signatures
 }
 
-func (Sreq StampRequest) MarshalBinary() ([]byte, error) {
-	dbg.Fatal("Don't want to do MarshalBinary on StampRequest")
-	return nil, nil
-}
-func (Sreq *StampRequest) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Don't want to do UnamrshalBinary on StampRequest")
-	return nil
-}
-
-func (sr *StampSignature) MarshalJSON() ([]byte, error) {
-	var b bytes.Buffer
-	suite := app.GetSuite(sr.SuiteStr)
-	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic,
-		sr.RejectionPublicList, sr.RejectionCommitList); err != nil {
-		dbg.Lvl1("encoding stampreply response/challenge/AggCommit:", err)
-		return nil, err
-	}
-
-	return json.Marshal(&struct {
-		BinaryBlob      []byte
-		ExceptionLength int
-		Prf             proof.Proof
-		Timestamp       int64
-		MerkleRoot      []byte
-	}{
-		BinaryBlob:      b.Bytes(),
-		ExceptionLength: len(sr.RejectionPublicList),
-		Prf:             sr.Prf,
-		Timestamp:       sr.Timestamp,
-		MerkleRoot:      sr.MerkleRoot,
-	})
-}
-
-func (sr *StampSignature) UnmarshalJSON(dataJSON []byte) error {
-	suite := app.GetSuite(sr.SuiteStr)
-	aux := &struct {
-		BinaryBlob      []byte
-		ExceptionLength int
-		Prf             proof.Proof
-		Timestamp       int64
-		MerkleRoot      []byte
-	}{}
-
-	if err := json.Unmarshal(dataJSON, &aux); err != nil {
-		return err
-	}
-	sr.RejectionPublicList = make([]abstract.Point, aux.ExceptionLength)
-	sr.RejectionCommitList = make([]abstract.Point, aux.ExceptionLength)
-	sr.Response = suite.Secret()
-	sr.Challenge = suite.Secret()
-	sr.AggCommit = suite.Point()
-	sr.AggPublic = suite.Point()
-	sr.Prf = aux.Prf
-	sr.Timestamp = aux.Timestamp
-	sr.MerkleRoot = aux.MerkleRoot
-	if err := suite.Read(bytes.NewReader(aux.BinaryBlob), &sr.Response,
-		&sr.Challenge, &sr.AggCommit, &sr.AggPublic, &sr.RejectionPublicList, &sr.RejectionCommitList); err != nil {
-		dbg.Fatal("decoding signature Response / Challenge / AggCommit:", err)
-		return err
-	}
-	return nil
-}
+// XXX should not be used anymore
+/*func (sr *StampSignature) MarshalJSON() ([]byte, error) {*/
 
 // sigFile represnets a signature to be written to a file or to be read in a
 // human readble format (TOML + base64 encoding)
@@ -237,14 +176,5 @@ func (sr *StampSignature) Open(file string) error {
 		return err
 	}
 
-	return nil
-}
-
-func (Sreq StampSignature) MarshalBinary() ([]byte, error) {
-	dbg.Fatal("Don't want to do MarshalBinary on StampReply")
-	return nil, nil
-}
-func (Sreq *StampSignature) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Don't want to do UnarmsahlBinary on StampReply")
 	return nil
 }

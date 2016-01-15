@@ -18,7 +18,7 @@ func (n *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
 	return n.sendSDAData(id, msg)
 }
 
-func (n *Host) Receive() network.ApplicationMessage {
+func (n *Host) Receive() network.NetworkMessage {
 	return n.receive()
 }
 

@@ -28,7 +28,7 @@ type SDAData struct {
 	// MsgType of the underlying data
 	MsgType uuid.UUID
 	// The interface to the actual Data
-	Msg network.NetworkMessage
+	Msg network.ProtocolMessage
 	// The actual data as binary blob
 	MsgSlice []byte
 }

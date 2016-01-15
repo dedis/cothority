@@ -46,7 +46,7 @@ func NewRoundStamper(node *sign.Node) *RoundStamper {
 	return round
 }
 
-func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.AnnouncementMessage, out []*sign.AnnouncementMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
 	if round.IsRoot {
 		// We are root !
@@ -55,11 +55,11 @@ func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 		var b bytes.Buffer
 		round.Timestamp = ts.Unix()
 		binary.Write(&b, binary.LittleEndian, ts.Unix())
-		in.Am.Message = b.Bytes()
+		in.Message = b.Bytes()
 	} else {
 		// otherwise decode it
 		var t int64
-		if err := binary.Read(bytes.NewBuffer(in.Am.Message), binary.LittleEndian, &t); err != nil {
+		if err := binary.Read(bytes.NewBuffer(in.Message), binary.LittleEndian, &t); err != nil {
 			dbg.Lvl1("Unmashaling timestamp has failed")
 		}
 		dbg.Lvl3("Received timestamp:", t)
@@ -69,7 +69,7 @@ func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 	return nil
 }
 
-func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundStamper) Commitment(in []*sign.CommitmentMessage, out *sign.CommitmentMessage) error {
 	// compute the local Merkle root
 
 	// give up if nothing to process
@@ -95,7 +95,7 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 			}
 		}
 	}
-	out.Com.MTRoot = round.StampRoot
+	out.MTRoot = round.StampRoot
 	round.RoundException.Commitment(in, out)
 	return nil
 }
@@ -109,7 +109,7 @@ func (round *RoundStamper) QueueSet(queue [][]byte) {
 
 // Response is already defined in RoundCosi
 
-func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundStamper) SignatureBroadcast(in *sign.SignatureBroadcastMessage, out []*sign.SignatureBroadcastMessage) error {
 	round.RoundException.SignatureBroadcast(in, out)
 	round.Proof = round.RoundException.Cosi.Proof
 	round.MTRoot = round.RoundException.Cosi.MTRoot

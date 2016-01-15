@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"io"
 	"math"
 	"net"
 	"strconv"
@@ -13,7 +12,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 
 	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/sign"
 )
@@ -25,7 +23,7 @@ var MAX_N_ROUNDS int = MAX_N_SECONDS / int(sign.ROUND_TIME/time.Second)
 
 func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 	dbg.Lvl4("Starting to run stampclient")
-	c := NewClient(flags.Name)
+	c := NewClient(flags.Name, conf)
 	servers := strings.Split(flags.Server, ",")
 	// take the right percentage of servers
 	servers = scaleServers(flags, conf, servers)
@@ -36,7 +34,7 @@ func RunClient(flags *app.Flags, conf *app.ConfigColl) {
 			dbg.Fatal("improperly formatted host")
 		}
 		pn, _ := strconv.Atoi(p)
-		c.AddServer(s, coconet.NewTCPConn(net.JoinHostPort(h, strconv.Itoa(pn+1))))
+		c.AddServer(s, net.JoinHostPort(h, strconv.Itoa(pn+1)))
 	}
 	// Stream time coll_stamp requests
 	// if rate specified send out one message every rate milliseconds
@@ -109,20 +107,6 @@ func streamMessgs(c *Client, servers []string, rate int) {
 
 	i := 0
 
-retry:
-	dbg.Lvl3(c.Name(), "checking if", servers[0], "is already up")
-	err := c.TimeStamp(msg, servers[0])
-	if err == io.EOF || err == coconet.ErrClosed {
-		dbg.Lvl4("Client", c.Name(), "Couldn't connect to TimeStamp")
-		return
-	} else if err == ErrClientToTSTimeout {
-		dbg.Lvl4(err.Error())
-	} else if err != nil {
-		time.Sleep(500 * time.Millisecond)
-		goto retry
-	}
-	dbg.Lvl3(c.Name(), "successfully connected to", servers[0])
-
 	// every tick send a time coll_stamp request to every server specified
 	// this will stream until we get an EOF
 	tick := 0
@@ -133,17 +117,9 @@ retry:
 			dbg.Lvl4("StampClient will try stamprequest")
 			err := c.TimeStamp(msg, s)
 
-			if err == io.EOF || err == coconet.ErrClosed {
-				if err == io.EOF {
-					dbg.Lvl4("Client", c.Name(), "terminating due to EOF", s)
-				} else {
-					dbg.Lvl4("Client", c.Name(), "terminating due to Connection Error Closed", s)
-				}
-				abort = true
-				return
-			} else if err != nil {
-				// ignore errors
+			if err != nil {
 				dbg.Lvl4("Client", c.Name(), "Leaving out streamMessages.", err)
+				abort = true
 				return
 			}
 

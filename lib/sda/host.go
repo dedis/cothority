@@ -42,7 +42,7 @@ type Host struct {
 	// The open connections
 	connections map[uuid.UUID]network.SecureConn
 	// chan of received messages - testmode
-	networkChan chan network.ApplicationMessage
+	networkChan chan network.NetworkMessage
 	// The database of entities this host knows
 	entities map[uuid.UUID]*network.Entity
 	// The entityLists used for building the trees
@@ -95,7 +95,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		host:               network.NewSecureTcpHost(pkey, e),
 		private:            pkey,
 		suite:              network.Suite,
-		networkChan:        make(chan network.ApplicationMessage, 1),
+		networkChan:        make(chan network.NetworkMessage, 1),
 		closed:             make(chan bool),
 		networkLock:        &sync.Mutex{},
 		entityListsLock:    &sync.Mutex{},
@@ -164,7 +164,7 @@ func (h *Host) Close() error {
 }
 
 // SendRaw sends to an Entity without wrapping the msg into a SDAMessage
-func (h *Host) SendRaw(id *network.Entity, msg network.NetworkMessage) error {
+func (h *Host) SendRaw(id *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return fmt.Errorf("Can't send nil-packet")
 	}
@@ -184,7 +184,7 @@ func (h *Host) SendRaw(id *network.Entity, msg network.NetworkMessage) error {
 // message across the network. A PI must first give its assigned Token, then
 // the Entity where it want to send the message then the msg. The message will
 // be transformed into a SDAData message automatically.
-func (h *Host) SendSDA(from, to *Token, msg network.NetworkMessage) error {
+func (h *Host) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
 	tn, err := h.TreeNodeFromToken(to)
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (h *Host) SendSDA(from, to *Token, msg network.NetworkMessage) error {
 }
 
 // SendSDAToTreeNode sends a message to a treeNode
-func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.NetworkMessage) error {
+func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
 	if h.mapper.Instance(from) == nil {
 		return fmt.Errorf("No protocol instance registered with this token.")
 	}
@@ -437,7 +437,7 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 // Receive will return the value of the communication-channel, unmarshalling
 // the SDAMessage. Receive is called in ProcessMessages as it takes directly
 // the message from the networkChan, and pre-process the SDAMessage
-func (h *Host) receive() network.ApplicationMessage {
+func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
 	if data.MsgType == SDADataMessage {
 		sda := data.Msg.(SDAData)
@@ -458,7 +458,7 @@ func (h *Host) receive() network.ApplicationMessage {
 // Handle a connection => giving messages to the MsgChans
 func (h *Host) handleConn(c network.SecureConn) {
 	address := c.Remote()
-	msgChan := make(chan network.ApplicationMessage)
+	msgChan := make(chan network.NetworkMessage)
 	errorChan := make(chan error)
 	doneChan := make(chan bool)
 	go func() {
@@ -502,7 +502,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // Dispatch SDA message looks if we have all the info to rightly dispatch the
 // packet such as the protocol id and the topology id and the protocol instance
 // id
-func (h *Host) processSDAMessage(am *network.ApplicationMessage) error {
+func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 	sdaMsg := am.Msg.(SDAData)
 	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(h.Suite()))
 	if err != nil {

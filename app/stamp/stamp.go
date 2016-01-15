@@ -28,6 +28,7 @@ func RunServer(flags *app.Flags, conf *app.ConfigColl) {
 
 	app.RunFlags.StartedUp(len(conf.Hosts))
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
+	peer.SetupConnections()
 
 	if app.RunFlags.AmRoot {
 		err := peer.WaitRoundSetup(len(conf.Hosts), 5, 2)

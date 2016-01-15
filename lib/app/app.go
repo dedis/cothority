@@ -15,7 +15,6 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
-	"time"
 )
 
 type Flags struct {
@@ -112,22 +111,23 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 // StartedUp waits for everybody to start by contacting the
 // monitor. Argument is total number of peers.
 func (f Flags) StartedUp(total int) {
-	monitor.Ready(f.Monitor)
-	// Wait for everybody to be ready before going on
-	for {
-		s, err := monitor.GetReady(f.Monitor)
-		if err != nil {
-			dbg.Lvl1("Couldn't reach monitor:", err)
-		} else {
-			if s.Ready != total {
-				dbg.Lvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
-			} else {
-				break
-			}
-		}
-		time.Sleep(time.Second)
-	}
-	dbg.Lvl3(f.Hostname, "thinks everybody's here")
+	monitor.ConnectSink(f.Monitor)
+	/*monitor.Ready(f.Monitor)*/
+	//// Wait for everybody to be ready before going on
+	//for {
+	//s, err := monitor.GetReady(f.Monitor)
+	//if err != nil {
+	//dbg.Lvl1("Couldn't reach monitor:", err)
+	//} else {
+	//if s.Ready != total {
+	//dbg.Lvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
+	//} else {
+	//break
+	//}
+	//}
+	//time.Sleep(time.Second)
+	//}
+	/*dbg.Lvl3(f.Hostname, "thinks everybody's here")*/
 }
 
 /*

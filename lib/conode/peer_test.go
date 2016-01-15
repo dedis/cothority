@@ -5,8 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/graphs"
 	"github.com/dedis/cothority/lib/sign"
+	"github.com/dedis/cothority/lib/tree"
 	"strconv"
 	"testing"
 	"time"
@@ -25,7 +25,7 @@ func TestStampListener(t *testing.T) {
 
 	dbg.Lvlf2("Round1: %+v", round1)
 	dbg.Lvlf2("Round2: %+v", round2)
-	name1, name2 := round1.Name, round2.(*conode.RoundStamperListener).Name
+	name1, name2 := round1.NameL, round2.(*conode.RoundStamperListener).NameL
 	if name1 != name2 {
 		t.Fatal("Hostname of first round is", name1, "and should be equal to", name2)
 	}
@@ -35,6 +35,11 @@ func TestStampListener(t *testing.T) {
 
 // Can we build the Peer without a valid key?
 func TestEmptyKeys(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("TestEMptyKeys peer creation with empty key should fail")
+		}
+	}()
 	dbg.TestOutput(testing.Verbose(), 4)
 	conf1 := readConfig()
 	emptyKeys(conf1.Tree)
@@ -78,7 +83,7 @@ func TestCloseAll(t *testing.T) {
 	peer1, peer2 = createPeers()
 	go peer1.LoopRounds(sign.RoundCosiType, 2)
 	go peer2.LoopRounds(sign.RoundCosiType, 2)
-	time.Sleep(time.Second * 4)
+	time.Sleep(time.Second * 6)
 	if !peer1.Closed {
 		t.Fatal("Peer 1 should be closed now.")
 	}
@@ -106,7 +111,7 @@ func TestClientBeforeServer(t *testing.T) {
 	peer1.Close()
 }
 
-func emptyKeys(t *graphs.Tree) {
+func emptyKeys(t *tree.ConfigTree) {
 	t.PriKey = ""
 	t.PubKey = ""
 	for _, c := range t.Children {
@@ -125,6 +130,8 @@ func createPeers() (p1, p2 *conode.Peer) {
 	peer2 := createPeer(conf2, 2)
 	dbg.Lvlf3("Peer 2 is %+v", peer2)
 
+	peer2.SetupConnections()
+	peer1.SetupConnections()
 	return peer1, peer2
 }
 

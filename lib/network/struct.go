@@ -29,6 +29,8 @@ var ErrTemp = errors.New("Temporary Error")
 var ErrTimeout = errors.New("Timeout Error")
 var ErrUnknown = errors.New("Unknown Error")
 
+type Size int32
+
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
 type Host interface {
@@ -44,9 +46,9 @@ type Conn interface {
 	// Gives the address of the remote endpoint
 	Remote() string
 	// Send a message through the connection. Always pass a pointer !
-	Send(ctx context.Context, obj NetworkMessage) error
+	Send(ctx context.Context, obj ProtocolMessage) error
 	// Receive any message through the connection.
-	Receive(ctx context.Context) (ApplicationMessage, error)
+	Receive(ctx context.Context) (NetworkMessage, error)
 	Close() error
 }
 
@@ -117,8 +119,8 @@ type SecureTcpConn struct {
 	entity *Entity
 }
 
-// ApplicationMessage is the container for any NetworkMessage
-type ApplicationMessage struct {
+// NetworkMessage is the container for any NetworkMessage
+type NetworkMessage struct {
 	// The Entity of the remote peer we are talking to.
 	// Basically, this means that when you open a new connection to someone, and
 	// / or listens to incoming connections, the network library will already
@@ -130,7 +132,7 @@ type ApplicationMessage struct {
 	// What kind of msg do we have
 	MsgType uuid.UUID
 	// The underlying message
-	Msg NetworkMessage
+	Msg ProtocolMessage
 	// which constructors are used
 	Constructors protobuf.Constructors
 	// possible error during unmarshaling so that upper layer can know it

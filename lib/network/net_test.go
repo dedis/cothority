@@ -236,7 +236,7 @@ func (s *SimpleServer) Name() string {
 	return "Server "
 }
 
-func (s *SimpleServer) ProxySend(c Conn, msg NetworkMessage) {
+func (s *SimpleServer) ProxySend(c Conn, msg ProtocolMessage) {
 	ctx := context.TODO()
 	if err := c.Send(ctx, msg); err != nil {
 		s.t.Fatal(err)

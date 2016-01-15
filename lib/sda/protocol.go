@@ -149,7 +149,7 @@ func NewProtocolStruct(h *Host, t *TreeNode, tok *Token) *ProtocolStruct {
 }
 
 // Send takes the message and sends it to the given TreeNode
-func (ps *ProtocolStruct) Send(to *TreeNode, msg network.NetworkMessage) error {
+func (ps *ProtocolStruct) Send(to *TreeNode, msg network.ProtocolMessage) error {
 	return ps.Host.SendSDAToTreeNode(ps.Token, to, msg)
 }
 

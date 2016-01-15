@@ -4,13 +4,15 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/crypto/edwards"
+	//	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/poly"
 )
 
 func RunServer(conf *app.ConfigShamir) {
 	flags := app.RunFlags
-	s := edwards.NewAES128SHA256Ed25519(false)
+	//s := edwards.NewAES128SHA256Ed25519(false)
+	s := nist.NewAES128SHA256P256()
 	n := len(conf.Hosts)
 
 	info := poly.Threshold{

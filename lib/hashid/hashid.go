@@ -2,6 +2,7 @@ package hashid
 
 import (
 	"bytes"
+	"crypto/subtle"
 	"errors"
 )
 
@@ -23,6 +24,10 @@ func AllButI(mtroots []HashId, i int) []HashId {
 
 func (id HashId) Bit(i uint) int {
 	return int(id[i>>3] >> (i & 7))
+}
+
+func ConstantTimeCompare(a, b HashId) int {
+	return subtle.ConstantTimeCompare([]byte(a), []byte(b))
 }
 
 // Find the skip-chain level of an ID

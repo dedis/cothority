@@ -66,6 +66,7 @@ func init() {
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
+	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Change debug level (0-5)")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
@@ -186,20 +187,32 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	rs := monitor.NewStats(rc.Map())
 	monitor := monitor.NewMonitor(rs)
 
-	deployP.Deploy(rc)
-	deployP.Cleanup()
-
+	if err := deployP.Deploy(rc); err != nil {
+		dbg.Error(err)
+		return *rs, err
+	}
+	if err := deployP.Cleanup(); err != nil {
+		dbg.Error(err)
+		return *rs, err
+	}
+	go func() {
+		monitor.Listen()
+	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
 	err := deployP.Start()
 	if err != nil {
-		dbg.Fatal(err)
-		return *rs, nil
+		dbg.Error(err)
+		return *rs, err
 	}
 
 	go func() {
-		monitor.Listen()
-		deployP.Wait()
+		var err error
+		if err = deployP.Wait(); err != nil {
+			dbg.Lvl3("Test failed:", err)
+			deployP.Cleanup()
+			done <- struct{}{}
+		}
 		dbg.Lvl3("Test complete:", rs)
 		done <- struct{}{}
 	}()
@@ -208,7 +221,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	select {
 	case <-done:
 		monitor.Stop()
-		return *rs, nil
+		return *rs, err
 	}
 }
 

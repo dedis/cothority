@@ -32,14 +32,14 @@ func NewRoundMeasure(node *sign.Node, firstRound int) *RoundMeasure {
 	return round
 }
 
-func (round *RoundMeasure) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundMeasure) Announcement(viewNbr, roundNbr int, in *sign.AnnouncementMessage, out []*sign.AnnouncementMessage) error {
 	if round.IsRoot {
 		round.measure = monitor.NewMeasure("round")
 	}
 	return round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
 }
 
-func (round *RoundMeasure) Response(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundMeasure) Response(in []*sign.ResponseMessage, out *sign.ResponseMessage) error {
 	err := round.RoundCosi.Response(in, out)
 	if round.IsRoot {
 		round.measure.Measure()

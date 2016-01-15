@@ -1,6 +1,7 @@
 Machines = 8
 App = "shamir"
 Rounds = 10
+Debug = 3
 
 ppm, bf
 1, 2

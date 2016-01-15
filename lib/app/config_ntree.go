@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/dedis/cothority/lib/graphs"
+	"github.com/dedis/cothority/lib/tree"
 )
 
 type NTreeConfig struct {
@@ -17,7 +17,7 @@ type NTreeConfig struct {
 
 	Hosts []string
 
-	Tree *graphs.Tree
+	Tree *tree.ConfigTree
 
 	Name string
 

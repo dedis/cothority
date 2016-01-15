@@ -60,13 +60,14 @@ func Run(configFile, key string) {
 	}
 
 	// Set up the stamp listener first, so we can exit on demand
-	conode.NewStampListener(address)
+	conode.NewStampListener(address, suite)
 
 	peer := conode.NewPeer(address, conf)
+	peer.SetupConnections()
 
 	// Wait for all conodes to be up and running before starting a round.
 	time.Sleep(time.Second)
-	if peer.IsRoot(0) {
+	if peer.Node.Root(0) {
 		err := peer.WaitRoundSetup(len(conf.Hosts), 5, 2)
 		if err != nil {
 			dbg.Fatal(err)
