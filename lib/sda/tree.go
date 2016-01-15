@@ -60,7 +60,6 @@ func NewTreeFromMarshal(buf []byte, il *EntityList) (*Tree, error) {
 	if tp != TreeMarshalType {
 		return nil, errors.New("Didn't receive TreeMarshal-struct")
 	}
-	dbg.Lvl4("TreeMarshal is", pm.(TreeMarshal))
 	return pm.(TreeMarshal).MakeTree(il)
 }
 
@@ -75,7 +74,6 @@ func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 		EntityId: t.IdList.Id,
 	}
 	treeM.Children = append(treeM.Children, TreeMarshalCopyTree(t.Root))
-	dbg.Lvlf4("TreeMarshal is %+v", treeM)
 	return treeM
 }
 
@@ -116,6 +114,15 @@ type TreeMarshal struct {
 	Children []*TreeMarshal
 }
 
+func (tm *TreeMarshal) String() string {
+	s := fmt.Sprintf("%v", tm.EntityId)
+	s += "\n"
+	for i := range tm.Children {
+		s += tm.Children[i].String()
+	}
+	return s
+}
+
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
@@ -123,9 +130,9 @@ func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 		NodeId:   tr.Id,
 		EntityId: tr.Entity.Id,
 	}
-	for _, c := range tr.Children {
+	for i := range tr.Children {
 		tm.Children = append(tm.Children,
-			TreeMarshalCopyTree(c))
+			TreeMarshalCopyTree(tr.Children[i]))
 	}
 	return tm
 }
@@ -139,18 +146,19 @@ func (tm TreeMarshal) MakeTree(il *EntityList) (*Tree, error) {
 		Id:     tm.NodeId,
 		IdList: il,
 	}
-	tree.Root = tm.Children[0].MakeTreeFromList(il)
+	tree.Root = tm.Children[0].MakeTreeFromList(nil, il)
 	return tree, nil
 }
 
 // MakeTreeFromList creates a sub-tree given an EntityList
-func (tm *TreeMarshal) MakeTreeFromList(il *EntityList) *TreeNode {
+func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, il *EntityList) *TreeNode {
 	tn := &TreeNode{
+		Parent: parent,
 		Id:     tm.NodeId,
 		Entity: il.Search(tm.EntityId),
 	}
 	for _, c := range tm.Children {
-		tn.Children = append(tn.Children, c.MakeTreeFromList(il))
+		tn.Children = append(tn.Children, c.MakeTreeFromList(tn, il))
 	}
 	return tn
 }

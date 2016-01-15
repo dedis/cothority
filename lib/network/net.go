@@ -296,6 +296,10 @@ type Entity struct {
 	iter int
 }
 
+func (e *Entity) String() string {
+	return fmt.Sprintf("%v", e.Public)
+}
+
 // First returns the first address available
 func (e *Entity) First() string {
 	if len(e.Addresses) > 0 {

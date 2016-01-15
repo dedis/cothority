@@ -33,7 +33,8 @@ func TestProtocolInstantiation(t *testing.T) {
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	h1, h2 := setupHosts(t, false)
 	// Add tree + entitylist
-	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	//el := GenEntityListFrom(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := sda.NewEntityList([]*network.Entity{h2.Entity, h1.Entity})
 	h1.AddEntityList(el)
 	tree, _ := GenerateTreeFromEntityList(el)
 	h1.AddTree(tree)
@@ -75,9 +76,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	id := 0
 	// custom creation function so we know the step due to the channels
 	fn := func(h *sda.Host, tr *sda.Tree, tok *sda.Token) sda.ProtocolInstance {
-		uid, _ := uuid.FromString(strconv.Itoa(id))
 		ps := SimpleProtocol{
-			id:   uid,
 			Host: h,
 			Tree: tr,
 			tok:  tok,
@@ -146,13 +145,9 @@ func NewProtocolTest(n *sda.Host, t *sda.Tree, tok *sda.Token) sda.ProtocolInsta
 	}
 }
 
-func (p *ProtocolTest) Id() uuid.UUID {
-	return p.id
-}
-
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
-func (p *ProtocolTest) Dispatch(m *sda.SDAData) error {
+func (p *ProtocolTest) Dispatch(m []*sda.SDAData) error {
 	dbg.Lvl2("PRotocolTest.Dispatch()")
 	return nil
 }
@@ -165,18 +160,14 @@ func (p *ProtocolTest) Start() {
 type SimpleProtocol struct {
 	*sda.Host
 	*sda.Tree
-	id  uuid.UUID
 	tok *sda.Token
 	// chan to get back to testing
 	Chan chan bool
 }
 
-func (p *SimpleProtocol) Id() uuid.UUID {
-	return p.id
-}
-
 // Dispatch simply analysze the message and do nothing else
-func (p *SimpleProtocol) Dispatch(m *sda.SDAData) error {
+func (p *SimpleProtocol) Dispatch(ms []*sda.SDAData) error {
+	m := ms[0]
 	if m.MsgType != SimpleMessageType {
 		return fmt.Errorf("Not the message expected")
 	}
