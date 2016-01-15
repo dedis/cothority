@@ -1,8 +1,13 @@
 package sda
 
 import (
+	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
+
+// protocols holds a map of all available protocols and how to create an
+// instance of it
+var protocols map[uuid.UUID]NewProtocol
 
 // ProtocolInstance is the interface that instances have to use in order to be
 // recognized as protocols
@@ -14,11 +19,10 @@ type ProtocolInstance interface {
 	Start()
 	// Dispatch is called whenever packets are ready and should be treated
 	Dispatch(m *SDAData) error
-	Id() uuid.UUID
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*Host, *Tree, *Token) ProtocolInstance
+type NewProtocol func(*Host, *TreeNode, *Token) ProtocolInstance
 
 // ProtocolMapper handles the mapping between tokens and protocol instances. It
 // also provides helpers for protocol instances such as sending a message to
@@ -26,6 +30,7 @@ type NewProtocol func(*Host, *Tree, *Token) ProtocolInstance
 // will handle the rest.
 type protocolMapper struct {
 	// mapping instances with their tokens
+	// maps token-uid|treenode-uid to ProtocolInstances
 	instances map[uuid.UUID]ProtocolInstance
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
@@ -50,27 +55,6 @@ func (pm *protocolMapper) DispatchToInstance(sda *SDAData) bool {
 	return true
 }
 
-// protocols holds a map of all available protocols and how to create an
-// instance of it
-var protocols map[uuid.UUID]NewProtocol
-
-// ProtocolRegister takes a protocol and registers it under a given name.
-// As this might be called from an 'init'-function, we need to check the
-// initialisation of protocols here and not in our own 'init'.
-func ProtocolRegister(protoID uuid.UUID, protocol NewProtocol) {
-	if protocols == nil {
-		protocols = make(map[uuid.UUID]NewProtocol)
-	}
-	protocols[protoID] = protocol
-}
-
-// ProtocolExists returns whether a certain protocol already has been
-// registered
-func ProtocolExists(protoID uuid.UUID) bool {
-	_, ok := protocols[protoID]
-	return ok
-}
-
 // Instance returns the protocol instance associated with this token
 // nil if not registered-
 // Instance returns the protocol instance associated with this token
@@ -87,10 +71,49 @@ func (pm *protocolMapper) Exists(tokenID uuid.UUID) bool {
 }
 
 // RegisterProtocolInstance simply put the proto instance mapping with the token
-func (pm *protocolMapper) RegisterProtocolInstance(proto ProtocolInstance, tok *Token) {
-	// first set the id of the protocol INSTANCE in the token ( we dont know
-	// before creating the protocol instance itself)
-	tok.InstanceID = proto.Id()
-	// then registers it.
-	pm.instances[tok.Id()] = proto
+func (pm *protocolMapper) RegisterProtocolInstance(proto ProtocolInstance, tok *Token, tn *TreeNode) {
+	// And registers it
+	pm.instances[uuid.And(tok.Id(), tn.Id)] = proto
+}
+
+// ProtocolStruct combines a host, treeNode and a send-function as convenience
+type ProtocolStruct struct {
+	*Host
+	*TreeNode
+	Token *Token
+}
+
+// NewProtocolStruct creates a new structure
+func NewProtocolStruct(h *Host, t *TreeNode, tok *Token) *ProtocolStruct {
+	return &ProtocolStruct{h, t, tok}
+}
+
+// Send adds the token
+func (ps *ProtocolStruct) Send(to *network.Entity, msg network.NetworkMessage) {
+	ps.Host.Send(ps.Token, to, msg)
+}
+
+// ProtocolRegister takes a protocol and registers it under a given uuid.
+// As this might be called from an 'init'-function, we need to check the
+// initialisation of protocols here and not in our own 'init'.
+func ProtocolRegister(protoID uuid.UUID, protocol NewProtocol) {
+	if protocols == nil {
+		protocols = make(map[uuid.UUID]NewProtocol)
+	}
+	protocols[protoID] = protocol
+}
+
+// ProtocolRegisterName is a convenience function to automatically generate
+// a UUID out of the name.
+func ProtocolRegisterName(name string, protocol NewProtocol) {
+	url := "http://dedis.epfl.ch/protocolname/" + name
+	uuid := uuid.NewV3(uuid.NamespaceURL, url)
+	ProtocolRegister(uuid, protocol)
+}
+
+// ProtocolExists returns whether a certain protocol already has been
+// registered
+func ProtocolExists(protoID uuid.UUID) bool {
+	_, ok := protocols[protoID]
+	return ok
 }

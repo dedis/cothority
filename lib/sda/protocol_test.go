@@ -14,6 +14,80 @@ import (
 var testID = uuid.NewV5(uuid.NamespaceURL, "test")
 var simpleID = uuid.NewV5(uuid.NamespaceURL, "simple")
 
+// ProtocolTest is the most simple protocol to be implemented, ignoring
+// everything it receives.
+type ProtocolTest struct {
+	*sda.Host
+	*sda.TreeNode
+	id  uuid.UUID
+	tok *sda.Token
+}
+
+var currInstanceID int
+
+// NewProtocolTest is used to create a new protocolTest-instance
+func NewProtocolTest(n *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
+	currInstanceID++
+	url := "http://dedis.epfl.ch/protocol/test/" + strconv.Itoa(currInstanceID)
+	return &ProtocolTest{
+		Host:     n,
+		TreeNode: t,
+		id:       uuid.NewV5(uuid.NamespaceURL, url),
+		tok:      tok,
+	}
+}
+
+func (p *ProtocolTest) Id() uuid.UUID {
+	return p.id
+}
+
+// Dispatch is used to send the messages further - here everything is
+// copied to /dev/null
+func (p *ProtocolTest) Dispatch(m *sda.SDAData) error {
+	dbg.Lvl2("PRotocolTest.Dispatch()")
+	return nil
+}
+
+func (p *ProtocolTest) Start() {
+	dbg.Lvl2("ProtocolTest.Start()")
+	testString = p.id.String()
+}
+
+type SimpleProtocol struct {
+	*sda.Host
+	*sda.TreeNode
+	id  uuid.UUID
+	tok *sda.Token
+	// chan to get back to testing
+	Chan chan bool
+}
+
+func (p *SimpleProtocol) Id() uuid.UUID {
+	return p.id
+}
+
+// Dispatch simply analysze the message and do nothing else
+func (p *SimpleProtocol) Dispatch(m *sda.SDAData) error {
+	if m.MsgType != SimpleMessageType {
+		return fmt.Errorf("Not the message expected")
+	}
+	msg := m.Msg.(SimpleMessage)
+	if msg.I != 10 {
+		return fmt.Errorf("Not the value expected")
+	}
+	p.Chan <- true
+	return nil
+}
+
+// Sends a simple message to its first children
+func (p *SimpleProtocol) Start() {
+	msg := SimpleMessage{10}
+	child := p.Children[0]
+	p.Send(p.tok, child.Entity, &msg)
+	p.Chan <- true
+
+}
+
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
@@ -33,7 +107,7 @@ func TestProtocolInstantiation(t *testing.T) {
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	h1, h2 := setupHosts(t, false)
 	// Add tree + entitylist
-	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	h1.AddEntityList(el)
 	tree, _ := el.GenerateBinaryTree()
 	h1.AddTree(tree)
@@ -44,7 +118,7 @@ func TestProtocolInstantiation(t *testing.T) {
 		EntityListID: tree.EntityList.Id,
 	}
 
-	p, err := h1.ProtocolInstantiate(tok)
+	p, err := h1.ProtocolInstantiate(tok, tree.Root)
 	if err != nil {
 		t.Fatal("Couldn't instantiate test-protocol")
 	}
@@ -64,24 +138,24 @@ func TestProtocolInstantiation(t *testing.T) {
 	h2.Close()
 }
 
-// This make h2 the leader, so it creates a tree and entity list
+// This makes h2 the leader, so it creates a tree and entity list
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
-func TestProtocolAutomaticInstantiation(t *testing.T) {
+func aTestProtocolAutomaticInstantiation(t *testing.T) {
 	// setup
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)
 	chans := []chan bool{chanH2, chanH1}
 	id := 0
 	// custom creation function so we know the step due to the channels
-	fn := func(h *sda.Host, tr *sda.Tree, tok *sda.Token) sda.ProtocolInstance {
+	fn := func(h *sda.Host, tr *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
 		uid, _ := uuid.FromString(strconv.Itoa(id))
 		ps := SimpleProtocol{
-			id:   uid,
-			Host: h,
-			Tree: tr,
-			tok:  tok,
-			Chan: chans[id],
+			id:       uid,
+			Host:     h,
+			TreeNode: tr,
+			tok:      tok,
+			Chan:     chans[id],
 		}
 		id++
 		return &ps
@@ -121,78 +195,4 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// then it's all good
 	h1.Close()
 	h2.Close()
-}
-
-// ProtocolTest is the most simple protocol to be implemented, ignoring
-// everything it receives.
-type ProtocolTest struct {
-	*sda.Host
-	*sda.Tree
-	id  uuid.UUID
-	tok *sda.Token
-}
-
-var currInstanceID int
-
-// NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *sda.Host, t *sda.Tree, tok *sda.Token) sda.ProtocolInstance {
-	currInstanceID++
-	url := "http://dedis.epfl.ch/protocol/test/" + strconv.Itoa(currInstanceID)
-	return &ProtocolTest{
-		Host: n,
-		Tree: t,
-		id:   uuid.NewV5(uuid.NamespaceURL, url),
-		tok:  tok,
-	}
-}
-
-func (p *ProtocolTest) Id() uuid.UUID {
-	return p.id
-}
-
-// Dispatch is used to send the messages further - here everything is
-// copied to /dev/null
-func (p *ProtocolTest) Dispatch(m *sda.SDAData) error {
-	dbg.Lvl2("PRotocolTest.Dispatch()")
-	return nil
-}
-
-func (p *ProtocolTest) Start() {
-	dbg.Lvl2("ProtocolTest.Start()")
-	testString = p.id.String()
-}
-
-type SimpleProtocol struct {
-	*sda.Host
-	*sda.Tree
-	id  uuid.UUID
-	tok *sda.Token
-	// chan to get back to testing
-	Chan chan bool
-}
-
-func (p *SimpleProtocol) Id() uuid.UUID {
-	return p.id
-}
-
-// Dispatch simply analysze the message and do nothing else
-func (p *SimpleProtocol) Dispatch(m *sda.SDAData) error {
-	if m.MsgType != SimpleMessageType {
-		return fmt.Errorf("Not the message expected")
-	}
-	msg := m.Msg.(SimpleMessage)
-	if msg.I != 10 {
-		return fmt.Errorf("Not the value expected")
-	}
-	p.Chan <- true
-	return nil
-}
-
-// Sends a simple message to its first children
-func (p *SimpleProtocol) Start() {
-	msg := SimpleMessage{10}
-	child := p.Root.Children[0]
-	p.Send(p.tok, child.Entity, &msg)
-	p.Chan <- true
-
 }

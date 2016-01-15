@@ -22,6 +22,6 @@ func (n *Host) Receive() network.ApplicationMessage {
 	return n.receive()
 }
 
-func (n *Host) ProtocolInstantiate(tok *Token) (ProtocolInstance, error) {
-	return n.protocolInstantiate(tok)
+func (n *Host) ProtocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
+	return n.protocolInstantiate(tok, tn)
 }

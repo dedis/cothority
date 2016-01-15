@@ -27,6 +27,10 @@ type SDAData struct {
 	Msg network.NetworkMessage
 	// The actual data as binary blob
 	MsgSlice []byte
+	// The TreeNodeId where the message comes from
+	From uuid.UUID
+	// The TreeNodeId Where the message goes to
+	To uuid.UUID
 }
 
 // A Token contains all identifiers needed to Uniquely identify one protocol
@@ -34,7 +38,6 @@ type SDAData struct {
 // by every protocol instance when they want to send a message. That way, the
 // host knows how to create the SDAData message around the protocol's message
 // with the right fields set.
-// It's kinda "authentify" one protocol instance, hence the Token name.
 type Token struct {
 	EntityListID uuid.UUID
 	TreeID       uuid.UUID

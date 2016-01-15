@@ -10,13 +10,12 @@ package example
 import "github.com/dedis/cothority/lib/sda"
 
 func init() {
-	sda.ProtocolRegister("Example", NewProtocolInstance)
+	sda.ProtocolRegisterName("Example", NewProtocolInstance)
 }
 
 // ProtocolExample just holds a message that is passed to all children.
 type ProtocolExample struct {
-	sda.Host
-	sda.TreeNode
+	sda.ProtocolStruct
 	Message string
 }
 
@@ -31,10 +30,9 @@ type MessageReply struct {
 }
 
 // NewProtocolInstance initialises the structure for use in one round
-func NewProtocolInstance(h *sda.Host, t *sda.TreeNode) *ProtocolExample {
+func NewProtocolInstance(h *sda.Host, t *sda.TreeNode, tok *sda.Token) *ProtocolExample {
 	return &ProtocolExample{
-		Host:     h,
-		TreeNode: t,
+		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
 	}
 }
 
@@ -57,14 +55,14 @@ func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
 	if !p.IsLeaf() {
 		// If we have children, send the same message to all of them
 		for nil, c := range p.Children() {
-			err := p.SendMsgTo(c, msg)
+			err := p.Send(c, msg)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		// If we're the leaf, start to reply
-		return p.SendMsgTo(p.Parent(), &MessageReply{1})
+		return p.Send(p.Parent(), &MessageReply{1})
 	}
 	return nil
 }
@@ -74,5 +72,5 @@ func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
 func (p *ProtocolExample) HandleReply(m *sda.SDAData) error {
 	msg := m.Msg.(MessageReply)
 	msg.Children += len(p.Children())
-	return p.SendMsgTo(p.Parent(), msg)
+	return p.Send(p.Parent(), msg)
 }

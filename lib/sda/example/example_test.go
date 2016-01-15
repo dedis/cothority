@@ -13,7 +13,11 @@ func TestNode2(t *testing.T) {
 	defer h2.Close()
 
 	list := sda.NewEntityList([]*sda.EntityList{h1, h2})
-	tree := list.
+	tree, _ := list.GenerateBinaryTree()
+	h1.AddEntityList(list)
+	h1.AddTree(tree)
+
+	h1.StartNewProtocol()
 }
 
 // Tests a 10-node system

@@ -138,7 +138,7 @@ func TestHostSendDuplex(t *testing.T) {
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
-	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	tree, _ := el.GenerateBinaryTree()
 
 	// Add the marshalled version of the tree
@@ -158,7 +158,7 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	el1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	// Check that h2 sends back an empty list if it is unknown
 	err := h1.SendToRaw(h2.Entity, &sda.RequestEntityList{el1.Id})
 	if err != nil {
@@ -207,7 +207,7 @@ func TestPeerListPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	el1 := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el1 := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	// Suppose both hosts have the list available, but not the tree
 	h1.AddEntityList(el1)
 	h2.AddEntityList(el1)
@@ -266,7 +266,7 @@ func TestTreePropagation(t *testing.T) {
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
 	h1, h2 := setupHosts(t, true)
-	el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := genEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	tree, _ := el.GenerateBinaryTree()
 	// h2 knows the entity list
 	h2.AddEntityList(el)
