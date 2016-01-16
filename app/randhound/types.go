@@ -11,6 +11,14 @@ import (
 // TODO: figure out which of the old RandHound types (see app/rand/types.go)
 // are necessary and which ones are covered by SDA
 
+type MsgAnnounce struct {
+	Message int
+}
+
+type MsgReply struct {
+	Children int
+}
+
 type Leader struct {
 
 	// TODO: figure out which variables from the old RandHound client (see
