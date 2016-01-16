@@ -36,9 +36,9 @@ type Leader struct {
 	r3 []R3 // Decoded R3 messages
 	r4 []R4 // Decoded R4 messages
 
-	Rc     []byte           // Client's trustee-selection random value
-	Rs     [][]byte         // Server's trustee-selection random values
-	deals  []poly.Promise   // Unmarshaled deals from servers
+	Rc []byte   // Client's trustee-selection random value
+	Rs [][]byte // Server's trustee-selection random values
+	//deals  []poly.Promise   // Unmarshaled deals from servers
 	shares []poly.PriShares // Revealed shares
 }
 
@@ -127,7 +127,7 @@ type IMessage struct {
 // RMessage represents any message a RandHound responder/server can send.
 // The fields of this struct should be treated as a protobuf 'oneof'.
 type RMessage struct {
-	RE *RError
+	//RE *RError
 	R1 *R1
 	R2 *R2
 	R3 *R3
