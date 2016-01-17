@@ -1,13 +1,17 @@
 package randhound
 
 import (
+	"bytes"
+	"encoding/binary"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/random"
 )
 
 var Done chan bool
-
 var TypeI1 = network.RegisterMessageType(I1{})
 var TypeR1 = network.RegisterMessageType(R1{})
 var TypeI2 = network.RegisterMessageType(I2{})
@@ -18,13 +22,14 @@ var TypeI4 = network.RegisterMessageType(I4{})
 var TypeR4 = network.RegisterMessageType(R4{})
 
 func init() {
+	dbg.Lvl1("I got called!")
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
 type ProtocolRandHound struct {
 	*sda.ProtocolStruct
-	//leader  Leader
-	//peer    Peer
+	Leader Leader
+	Peer   Peer
 }
 
 func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
@@ -62,17 +67,38 @@ func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
 // sends it to all of its peers.
 func (p *ProtocolRandHound) Start() error {
 
-	suite := p.ProtocolStruct.Host.Suite
-	_ = suite
+	//suite := p.ProtocolStruct.Host.Suite()
+	//_ = suite
 
-	// TODO: session and group marshalling to compute sid and gid
+	// TODO: this has to go into the init of the leader
+	x, _ := p.ProtocolStruct.Host.Entity.Public.MarshalBinary()
+	session := &Session{x, "RandHound test run", time.Now()}
 
-	sid := make([]byte, 0)
-	gid := make([]byte, 0)
-	HRc := make([]byte, 0)
-	S := make([]byte, 0)
-	G := make([]byte, 0)
-	i1 := I1{SID: sid, GID: gid, HRc: HRc, S: S, G: G}
+	// Compute SID (TODO: error checking)
+	y := []byte(session.Purpose)
+	z, _ := session.Time.MarshalBinary()
+	sid := p.Hash(x, y, z) // TODO: SID should probably be a field of the Leader struct
+
+	// Compute GID (TODO: marshal and include public keys of the peers, error checking)
+	group := &Group{make([][]byte, 0), 1, 2, 3, 4}
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, group.F)
+	binary.Write(buf, binary.LittleEndian, group.L)
+	binary.Write(buf, binary.LittleEndian, group.K)
+	binary.Write(buf, binary.LittleEndian, group.T)
+	gid := p.Hash(buf.Bytes()) // TODO: GID should probably be a field of the Leader struct
+
+	// Choose client's trustee-selection randomness
+	keysize := 32               // TODO: store in Leader struct
+	rc := make([]byte, keysize) // TODO: store in Leader struct
+	random.Stream.XORKeyStream(rc, rc)
+	hrc := p.Hash(rc)
+
+	//dbg.Lvl1("SID:", sid)
+	//dbg.Lvl1("GID:", gid)
+	//dbg.Lvl1("HRc:", hrc)
+
+	i1 := I1{SID: sid, GID: gid, HRc: hrc, S: make([]byte, 0), G: make([]byte, 0)}
 	for _, c := range p.Children {
 		dbg.Lvl1("Sending msg to client:", c)
 		err := p.Send(c, &i1)
@@ -91,19 +117,21 @@ func (p *ProtocolRandHound) Start() error {
 // Phase 1 (peer)
 func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	i1 := m.Msg.(I1)
 	_, _ = suite, i1
 
 	// TODO: verify i1 contents
+	//dbg.Lvl1("Received I1:", i1)
 
 	// Choose peer's trustee-selection randomness
-	//Rs := make([]byte, p.peer.keysize)
-	//p.peer.rand.XORKeyStream(Rs, Rs)
+	keysize := 32 // TODO: move to Peer struct
+	rs := make([]byte, keysize)
+	random.Stream.XORKeyStream(rs, rs)
+	hrs := p.Hash(rs)
 
-	HI1 := make([]byte, 0)
-	HRs := make([]byte, 0)
-	r1 := R1{HI1: HI1, HRs: HRs}
+	r1 := R1{HI1: p.Hash(i1.SID, i1.GID, i1.HRc, i1.S, i1.G), HRs: hrs}
+	dbg.Lvl1("R1:", r1)
 	return p.Send(p.Parent, &r1)
 }
 
@@ -111,12 +139,13 @@ func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 // Phase 2 (leader)
 func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	_ = suite
 
 	for i := range m {
 		r1 := m[i].Msg.(R1)
 		_ = r1
+		//dbg.Lvl1("Received R1:", r1)
 		// TODO: verify r1 contents
 		// TODO: store r1 in transcript
 	}
@@ -139,7 +168,7 @@ func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 // Phase 2 (peer)
 func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	i2 := m.Msg.(I2)
 	_, _ = i2, suite
 
@@ -157,7 +186,7 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 // Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	_ = suite
 
 	for i := range m {
@@ -183,7 +212,7 @@ func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 // Phase 3 (peer)
 func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	i3 := m.Msg.(I3)
 	_, _ = suite, i3
 
@@ -199,7 +228,7 @@ func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 // Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	_ = suite
 
 	for i := range m {
@@ -225,7 +254,7 @@ func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 // Phase 4 (peer)
 func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	i4 := m.Msg.(I4)
 	_, _ = i4, suite
 
@@ -241,7 +270,7 @@ func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
 // Phase 4 (leader)
 func (p *ProtocolRandHound) HandleR4(m []*sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite
+	suite := p.ProtocolStruct.Host.Suite()
 	_ = suite
 
 	for i := range m {

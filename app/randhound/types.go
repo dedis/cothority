@@ -1,11 +1,9 @@
 package randhound
 
 import (
-	"crypto/cipher"
 	"time"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/poly"
 )
 
 // TODO: figure out which of the old RandHound types (see app/rand/types.go)
@@ -16,30 +14,30 @@ type Leader struct {
 	// TODO: figure out which variables from the old RandHound client (see
 	// app/rand/cli.go) are necessary and which ones are covered by SDA
 
-	keysize  int
-	hashsize int
+	// keysize int
+	// hashsize int
 
-	rand cipher.Stream
+	//rand cipher.Stream
 
-	session *Session // Unique session identifier tuple
-	group   *Group   // Group parameter block
+	//session *Session // Unique session identifier tuple
+	//group   *Group   // Group parameter block
 
-	t Transcript // Third-party verifiable message transcript
+	//t Transcript // Third-party verifiable message transcript
 
-	i1 I1
-	i2 I2
-	i3 I3
-	i4 I4
+	//i1 I1
+	//i2 I2
+	//i3 I3
+	//i4 I4
 
-	r1 []R1 // Decoded R1 messages
-	r2 []R2 // Decoded R2 messages
-	r3 []R3 // Decoded R3 messages
-	r4 []R4 // Decoded R4 messages
+	//r1 []R1 // Decoded R1 messages
+	//r2 []R2 // Decoded R2 messages
+	//r3 []R3 // Decoded R3 messages
+	//r4 []R4 // Decoded R4 messages
 
-	Rc []byte   // Client's trustee-selection random value
-	Rs [][]byte // Server's trustee-selection random values
+	//Rc []byte   // Client's trustee-selection random value
+	//Rs [][]byte // Server's trustee-selection random values
 	//deals  []poly.Promise   // Unmarshaled deals from servers
-	shares []poly.PriShares // Revealed shares
+	//shares []poly.PriShares // Revealed shares
 }
 
 type Peer struct {
@@ -47,16 +45,21 @@ type Peer struct {
 	// TODO: figure out which variables from the old RandHound server (see
 	// app/rand/srv.go) are necessary and which ones are covered by SDA
 
-	keysize int
+	//keysize int
 }
 
 type Session struct {
-	pubk    abstract.Point // Public key of the root node
-	Purpose string         // Purpose of randomness
-	Time    time.Time      // Scheduled initiation time
+	LPubKey []byte    // Finger print of leader's public key
+	Purpose string    // Purpose of randomness
+	Time    time.Time // Scheduled initiation time
 }
 
 type Group struct {
+	PPubKey [][]byte // Finger prints of peers' public keys
+	F       uint32   // Faulty (Byzantine) hosts tolerated
+	L       uint32   // Hosts that must be live
+	K       uint32   // Trustee set size
+	T       uint32   // Trustee set threshold
 }
 
 type I1 struct {
@@ -135,12 +138,12 @@ type RMessage struct {
 }
 
 type Transcript struct {
-	I1 []byte   // I1 message signed by client
-	R1 [][]byte // R1 messages signed by resp servers
-	I2 []byte
-	R2 [][]byte
-	I3 []byte
-	R3 [][]byte
-	I4 []byte
-	R4 [][]byte
+	I1 []byte   // I1 message signed by leader
+	R1 [][]byte // R1 messages signed by resp peers
+	I2 []byte   // I2 message signed by leader
+	R2 [][]byte // R2 messages signed by resp peers
+	I3 []byte   // I3 message signed by leader
+	R3 [][]byte // R3 messages signed by resp peersr
+	I4 []byte   // I4 message signed by leader
+	R4 [][]byte // R4 messages signed by resp peers
 }
