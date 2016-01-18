@@ -164,19 +164,23 @@ func (h *Host) Close() error {
 }
 
 // SendRaw sends to an Entity without wrapping the msg into a SDAMessage
-func (h *Host) SendRaw(id *network.Entity, msg network.ProtocolMessage) error {
+func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
-		return fmt.Errorf("Can't send nil-packet")
+		return errors.New("Can't send nil-packet")
 	}
-	if _, ok := h.entities[id.Id]; !ok {
-		return fmt.Errorf("SendToEntity received a non-saved entity")
+	if _, ok := h.entities[e.Id]; !ok {
+		// Connect to that entity
+		_, err := h.Connect(e)
+		if err != nil {
+			return err
+		}
 	}
 	var c network.SecureConn
 	var ok bool
-	if c, ok = h.connections[id.Id]; !ok {
-		return fmt.Errorf("Got no connection tied to this Entity")
+	if c, ok = h.connections[e.Id]; !ok {
+		return errors.New("Got no connection tied to this Entity")
 	}
-	dbg.Lvl4("Sending to", id)
+	dbg.Lvl4("Sending to", e)
 	c.Send(context.TODO(), msg)
 	return nil
 }
@@ -196,7 +200,7 @@ func (h *Host) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
 // SendSDAToTreeNode sends a message to a treeNode
 func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
 	if h.mapper.Instance(from) == nil {
-		return fmt.Errorf("No protocol instance registered with this token.")
+		return errors.New("No protocol instance registered with this token.")
 	}
 	if from == nil {
 		return errors.New("From-token is nil")
@@ -217,13 +221,13 @@ func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.Protocol
 func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (ProtocolInstance, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
-		return nil, fmt.Errorf("Protocol does not exists")
+		return nil, errors.New("Protocol does not exists")
 	}
 	var tree *Tree
 	var ok bool
 	h.treesLock.Lock()
 	if tree, ok = h.trees[treeID]; !ok {
-		return nil, fmt.Errorf("TreeId does not exists")
+		return nil, errors.New("TreeId does not exists")
 	}
 	h.treesLock.Unlock()
 
@@ -523,7 +527,7 @@ func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 	sdaMsg.Msg = msg
 	sdaMsg.Entity = am.Entity
 	if !ProtocolExists(sdaMsg.To.ProtocolID) {
-		return fmt.Errorf("Protocol does not exists from token")
+		return errors.New("Protocol does not exists from token")
 	}
 	// do we have the entitylist ? if not, ask for it.
 	if _, ok := h.GetEntityList(sdaMsg.To.EntityListID); !ok {
