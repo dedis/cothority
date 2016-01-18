@@ -548,9 +548,7 @@ func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 	}
 
 	ok, err = h.mapper.DispatchToInstance(&sdaMsg)
-	if !ok {
-		return errors.New("Not dispatching yet.")
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 	return nil
