@@ -176,6 +176,7 @@ func (h *Host) SendRaw(id *network.Entity, msg network.ProtocolMessage) error {
 	if c, ok = h.connections[id.Id]; !ok {
 		return fmt.Errorf("Got no connection tied to this Entity")
 	}
+	dbg.Lvl4("Sending to", id)
 	c.Send(context.TODO(), msg)
 	return nil
 }
@@ -196,6 +197,12 @@ func (h *Host) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
 func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
 	if h.mapper.Instance(from) == nil {
 		return fmt.Errorf("No protocol instance registered with this token.")
+	}
+	if from == nil {
+		return errors.New("From-token is nil")
+	}
+	if to == nil {
+		return errors.New("To-token is nil")
 	}
 	sda := &SDAData{
 		Msg:  msg,
@@ -259,10 +266,13 @@ func (h *Host) ProcessMessages() {
 	for {
 		var err error
 		data := h.receive()
-		dbg.Lvl3("Message Received:", data)
+		dbg.Lvl3("Message Received from", data.From)
 		switch data.MsgType {
 		case SDADataMessage:
-			h.processSDAMessage(&data)
+			err := h.processSDAMessage(&data)
+			if err != nil {
+				dbg.Error("ProcessSDAMessage returned:", err)
+			}
 		// A host has sent us a request to get a tree definition
 		case RequestTreeMessage:
 			tid := data.Msg.(RequestTree).TreeID
@@ -450,7 +460,7 @@ func (h *Host) receive() network.NetworkMessage {
 		sda.Msg = msg
 		// Write back the Msg in appplicationMessage
 		data.Msg = sda
-		dbg.Lvl3("SDA-Message is:", sda)
+		dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)
 	}
 	return data
 }
@@ -486,7 +496,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		case <-h.closed:
 			doneChan <- true
 		case am := <-msgChan:
-			dbg.Lvl3("Putting message into networkChan:", am)
+			dbg.Lvl3("Putting message into networkChan:", am.From)
 			h.networkChan <- am
 		case e := <-errorChan:
 			if e == network.ErrClosed || e == network.ErrEOF {
@@ -533,8 +543,11 @@ func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 		}
 	}
 
-	if h.mapper.DispatchToInstance(&sdaMsg) {
-		return fmt.Errorf("Instance Protocol not existing YET")
+	ok, err = h.mapper.DispatchToInstance(&sdaMsg)
+	if !ok {
+		return errors.New("Not dispatching yet.")
+	} else if err != nil {
+		return err
 	}
 	return nil
 }
@@ -580,8 +593,11 @@ func (h *Host) checkPendingSDA(t *Tree) {
 					dbg.Error("Instantiation of the protocol failed (should not happen)", err)
 					continue
 				}
-				if !h.mapper.DispatchToInstance(h.pendingSDAs[i]) {
+				ok, err := h.mapper.DispatchToInstance(h.pendingSDAs[i])
+				if !ok {
 					dbg.Lvl2("dispatching did not work")
+				} else if err != nil {
+					dbg.Error(err)
 				}
 			}
 		}

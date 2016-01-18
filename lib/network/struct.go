@@ -153,7 +153,7 @@ type Entity struct {
 }
 
 func (e *Entity) String() string {
-	return fmt.Sprintf("%v", e.Public)
+	return fmt.Sprintf("%v", e.Addresses)
 }
 
 // EntityType can be used to recognise an Entity-message
