@@ -9,45 +9,6 @@ import (
 // TODO: figure out which of the old RandHound types (see app/rand/types.go)
 // are necessary and which ones are covered by SDA
 
-type Leader struct {
-
-	// TODO: figure out which variables from the old RandHound client (see
-	// app/rand/cli.go) are necessary and which ones are covered by SDA
-
-	// keysize int
-	// hashsize int
-
-	//rand cipher.Stream
-
-	//session *Session // Unique session identifier tuple
-	//group   *Group   // Group parameter block
-
-	//t Transcript // Third-party verifiable message transcript
-
-	//i1 I1
-	//i2 I2
-	//i3 I3
-	//i4 I4
-
-	//r1 []R1 // Decoded R1 messages
-	//r2 []R2 // Decoded R2 messages
-	//r3 []R3 // Decoded R3 messages
-	//r4 []R4 // Decoded R4 messages
-
-	//Rc []byte   // Client's trustee-selection random value
-	//Rs [][]byte // Server's trustee-selection random values
-	//deals  []poly.Promise   // Unmarshaled deals from servers
-	//shares []poly.PriShares // Revealed shares
-}
-
-type Peer struct {
-
-	// TODO: figure out which variables from the old RandHound server (see
-	// app/rand/srv.go) are necessary and which ones are covered by SDA
-
-	//keysize int
-}
-
 type Session struct {
 	LPubKey []byte    // Finger print of leader's public key
 	Purpose string    // Purpose of randomness

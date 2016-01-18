@@ -1,14 +1,9 @@
 package randhound
 
 import (
-	"bytes"
-	"encoding/binary"
-	"time"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/crypto/random"
 )
 
 var Done chan bool
@@ -22,14 +17,13 @@ var TypeI4 = network.RegisterMessageType(I4{})
 var TypeR4 = network.RegisterMessageType(R4{})
 
 func init() {
-	dbg.Lvl1("I got called!")
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
 type ProtocolRandHound struct {
 	*sda.ProtocolStruct
-	Leader Leader
-	Peer   Peer
+	Leader *Leader
+	Peer   *Peer
 }
 
 func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
@@ -38,6 +32,8 @@ func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInst
 	}
 	return &ProtocolRandHound{
 		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
+		Leader:         nil,
+		Peer:           nil,
 	}
 }
 
@@ -63,45 +59,21 @@ func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
 	return sda.NoSuchState
 }
 
-// Start initiates the RandHound protocol. The leader forms the message I1 and
-// sends it to all of its peers.
+// Start initiates the RandHound protocol. The leader initialises itself, forms
+// the message I1, and sends it to all of its peers.
 func (p *ProtocolRandHound) Start() error {
 
-	//suite := p.ProtocolStruct.Host.Suite()
-	//_ = suite
+	p.Leader = p.newLeader()
 
-	// TODO: this has to go into the init of the leader
-	x, _ := p.ProtocolStruct.Host.Entity.Public.MarshalBinary()
-	session := &Session{x, "RandHound test run", time.Now()}
+	p.Leader.i1 = I1{
+		SID: p.Leader.SID,
+		GID: p.Leader.GID,
+		HRc: p.Hash(p.Leader.Rc),
+		S:   make([]byte, 0),
+		G:   make([]byte, 0)}
 
-	// Compute SID (TODO: error checking)
-	y := []byte(session.Purpose)
-	z, _ := session.Time.MarshalBinary()
-	sid := p.Hash(x, y, z) // TODO: SID should probably be a field of the Leader struct
-
-	// Compute GID (TODO: marshal and include public keys of the peers, error checking)
-	group := &Group{make([][]byte, 0), 1, 2, 3, 4}
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, group.F)
-	binary.Write(buf, binary.LittleEndian, group.L)
-	binary.Write(buf, binary.LittleEndian, group.K)
-	binary.Write(buf, binary.LittleEndian, group.T)
-	gid := p.Hash(buf.Bytes()) // TODO: GID should probably be a field of the Leader struct
-
-	// Choose client's trustee-selection randomness
-	keysize := 32               // TODO: store in Leader struct
-	rc := make([]byte, keysize) // TODO: store in Leader struct
-	random.Stream.XORKeyStream(rc, rc)
-	hrc := p.Hash(rc)
-
-	//dbg.Lvl1("SID:", sid)
-	//dbg.Lvl1("GID:", gid)
-	//dbg.Lvl1("HRc:", hrc)
-
-	i1 := I1{SID: sid, GID: gid, HRc: hrc, S: make([]byte, 0), G: make([]byte, 0)}
 	for _, c := range p.Children {
-		dbg.Lvl1("Sending msg to client:", c)
-		err := p.Send(c, &i1)
+		err := p.Send(c, &p.Leader.i1)
 		if err != nil {
 			return err
 		}
@@ -113,34 +85,31 @@ func (p *ProtocolRandHound) Start() error {
 // Rx: Messages from peer to leader
 // TODO: find better name for the handle functions since they basically include: receive msg, operation, send msg
 // TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
+// suite := p.ProtocolStruct.Host.Suite()
 
 // Phase 1 (peer)
 func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite()
-	i1 := m.Msg.(I1)
-	_, _ = suite, i1
+	p.Peer = p.newPeer()
+	p.Peer.i1 = m.Msg.(I1)
 
 	// TODO: verify i1 contents
-	//dbg.Lvl1("Received I1:", i1)
 
-	// Choose peer's trustee-selection randomness
-	keysize := 32 // TODO: move to Peer struct
-	rs := make([]byte, keysize)
-	random.Stream.XORKeyStream(rs, rs)
-	hrs := p.Hash(rs)
+	p.Peer.r1 = R1{
+		HI1: p.Hash(
+			p.Peer.i1.SID,
+			p.Peer.i1.GID,
+			p.Peer.i1.HRc,
+			p.Peer.i1.S,
+			p.Peer.i1.G),
+		HRs: p.Hash(p.Peer.Rs)}
 
-	r1 := R1{HI1: p.Hash(i1.SID, i1.GID, i1.HRc, i1.S, i1.G), HRs: hrs}
-	dbg.Lvl1("R1:", r1)
-	return p.Send(p.Parent, &r1)
+	return p.Send(p.Parent, &p.Peer.r1)
 }
 
 //
 // Phase 2 (leader)
 func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
-
-	suite := p.ProtocolStruct.Host.Suite()
-	_ = suite
 
 	for i := range m {
 		r1 := m[i].Msg.(R1)
@@ -152,11 +121,12 @@ func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 
 	// TODO: do magic
 
-	sid := make([]byte, 0)
-	Rc := make([]byte, 0)
-	i2 := I2{SID: sid, Rc: Rc}
+	p.Leader.i2 = I2{
+		SID: p.Leader.SID,
+		Rc:  p.Leader.Rc}
+
 	for _, c := range p.Children {
-		err := p.Send(c, &i2)
+		err := p.Send(c, &p.Leader.i2)
 		if err != nil {
 			return err
 		}
@@ -168,26 +138,25 @@ func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 // Phase 2 (peer)
 func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite()
-	i2 := m.Msg.(I2)
-	_, _ = i2, suite
+	p.Peer.i2 = m.Msg.(I2)
 
 	// TODO: verify contents of i2
 
 	// TODO: Construct deal
 
-	HI2 := make([]byte, 0)
-	Rs := make([]byte, 0)
 	Deal := make([]byte, 0)
-	r2 := R2{HI2: HI2, Rs: Rs, Deal: Deal}
-	return p.Send(p.Parent, &r2)
+	p.Peer.r2 = R2{
+		HI2: p.Hash(
+			p.Peer.i2.SID,
+			p.Peer.i2.Rc),
+		Rs:   p.Peer.Rs,
+		Deal: Deal}
+
+	return p.Send(p.Parent, &p.Peer.r2)
 }
 
 // Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
-
-	suite := p.ProtocolStruct.Host.Suite()
-	_ = suite
 
 	for i := range m {
 		r2 := m[i].Msg.(R2)
@@ -197,11 +166,13 @@ func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 		// TODO: deal processing
 	}
 
-	sid := make([]byte, 0)
 	R2s := make([][]byte, 0)
-	i3 := I3{SID: sid, R2s: R2s}
+	p.Leader.i3 = I3{
+		SID: p.Leader.SID,
+		R2s: R2s}
+
 	for _, c := range p.Children {
-		err := p.Send(c, &i3)
+		err := p.Send(c, &p.Leader.i3)
 		if err != nil {
 			return err
 		}
@@ -212,24 +183,23 @@ func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 // Phase 3 (peer)
 func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite()
-	i3 := m.Msg.(I3)
-	_, _ = suite, i3
+	p.Peer.i3 = m.Msg.(I3)
 
 	// TODO: verify contents of i3
 
 	// TODO: do magic
 
-	HI3 := make([]byte, 0)
-	r3 := R3{HI3: HI3, Resp: make([]R3Resp, 0)}
-	return p.Send(p.Parent, &r3)
+	p.Peer.r3 = R3{
+		HI3: p.Hash(
+			p.Peer.i3.SID,
+			make([]byte, 0)), // TODO: unpack R2s, see I3
+		Resp: make([]R3Resp, 0)}
+
+	return p.Send(p.Parent, &p.Peer.r3)
 }
 
 // Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
-
-	suite := p.ProtocolStruct.Host.Suite()
-	_ = suite
 
 	for i := range m {
 		r3 := m[i].Msg.(R3)
@@ -239,11 +209,13 @@ func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 		// TODO: do magic
 	}
 
-	sid := make([]byte, 0)
 	R2s := make([][]byte, 0)
-	i4 := I4{SID: sid, R2s: R2s}
+	p.Leader.i4 = I4{
+		SID: p.Leader.SID,
+		R2s: R2s}
+
 	for _, c := range p.Children {
-		err := p.Send(c, &i4)
+		err := p.Send(c, &p.Leader.i4)
 		if err != nil {
 			return err
 		}
@@ -254,24 +226,23 @@ func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 // Phase 4 (peer)
 func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite()
-	i4 := m.Msg.(I4)
-	_, _ = i4, suite
+	p.Peer.i4 = m.Msg.(I4)
 
 	// TODO: verify contents of i4
 
 	// TODO: do magic
 
-	HI4 := make([]byte, 0)
-	r4 := R4{HI4: HI4, Shares: make([]R4Share, 0)}
-	return p.Send(p.Parent, &r4)
+	p.Peer.r4 = R4{
+		HI4: p.Hash(
+			p.Peer.i4.SID,
+			make([]byte, 0)), // TODO: unpack R2s, see I4
+		Shares: make([]R4Share, 0)}
+
+	return p.Send(p.Parent, &p.Peer.r4)
 }
 
 // Phase 4 (leader)
 func (p *ProtocolRandHound) HandleR4(m []*sda.SDAData) error {
-
-	suite := p.ProtocolStruct.Host.Suite()
-	_ = suite
 
 	for i := range m {
 		dbg.Lvl1("Receiving message:", m[i])
