@@ -156,7 +156,6 @@ func TestSecureTcp(t *testing.T) {
 		}
 		close(done)
 	}()
-	//time.Sleep(time.Second)
 	conn, err := host2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
