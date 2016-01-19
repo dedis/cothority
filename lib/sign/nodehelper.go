@@ -204,6 +204,9 @@ func (sn *Node) logTotalTime(totalTime time.Duration) {
 }
 
 func (sn *Node) StartAnnouncementWithWait(round Round, wait time.Duration) error {
+	dbg.Lvl1("Starting StartAnnouncementWithWait with", 100*wait)
+	wait = 100*wait
+
 	sn.AnnounceLock.Lock()
 	sn.nRounds = sn.LastSeenRound
 
