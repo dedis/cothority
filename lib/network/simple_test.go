@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"testing"
@@ -19,25 +20,33 @@ type SimplePacket struct {
 }
 
 func TestSimple(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	client := NewTcpHost()
 	clientName := "client"
 	server := NewTcpHost()
 	serverName := "server"
-	go server.Listen("127.0.0.1:2000", func(c Conn) {
-		nm, _ := c.Receive(context.TODO())
-		if nm.MsgType != SimplePacketType {
+	done := make(chan bool)
+	go func() {
+		err := server.Listen("localhost:2000", func(c Conn) {
+			nm, _ := c.Receive(context.TODO())
+			if nm.MsgType != SimplePacketType {
+				c.Close()
+				t.Fatal("Packet received not conform")
+			}
+			simplePacket := nm.Msg.(SimplePacket)
+			if simplePacket.Name != clientName {
+				t.Fatal("Not the right name")
+			}
+			c.Send(context.TODO(), &SimplePacket{serverName})
 			c.Close()
-			t.Fatal("Packet received not conform")
+		})
+		if err != nil {
+			t.Fatal("Couldn't listen:", err)
 		}
-		simplePacket := nm.Msg.(SimplePacket)
-		if simplePacket.Name != clientName {
-			t.Fatal("Not the right name")
-		}
-		c.Send(context.TODO(), &SimplePacket{serverName})
-		c.Close()
-	})
+		close(done)
+	}()
 	time.Sleep(1 * time.Second)
-	conn, err := client.Open("127.0.0.1:2000")
+	conn, err := client.Open("localhost:2000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,4 +64,5 @@ func TestSimple(t *testing.T) {
 	}
 	client.Close()
 	server.Close()
+	<-done
 }

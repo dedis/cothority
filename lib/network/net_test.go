@@ -41,8 +41,15 @@ func TestMultiClose(t *testing.T) {
 	}
 	h1 := NewTcpHost()
 	h2 := NewTcpHost()
-	go h1.Listen("localhost:2004", fn)
-	h2.Open("localhost:2004")
+	done := make(chan bool)
+	go func() {
+		err := h1.Listen("localhost:2000", fn)
+		if err != nil {
+			t.Fatal("Couldn't listen:", err)
+		}
+		close(done)
+	}()
+	h2.Open("localhost:2000")
 	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
@@ -51,19 +58,23 @@ func TestMultiClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
+	<-done
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h1 = NewTcpHost()
+	done = make(chan bool)
 	go func() {
-		err := h1.Listen("localhost:2004", fn)
+		err := h1.Listen("localhost:2000", fn)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener:", err)
 		}
+		close(done)
 	}()
 	time.Sleep(time.Millisecond * 100)
 	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)
 	}
+	<-done
 }
 
 // Test closing and opening of SecureHost on same address
@@ -74,43 +85,59 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 
 	priv1, pub1 := config.NewKeyPair(Suite)
-	entity1 := NewEntity(pub1, "localhost:2002")
+	entity1 := NewEntity(pub1, "localhost:2000")
 	priv2, pub2 := config.NewKeyPair(Suite)
-	entity2 := NewEntity(pub2, "localhost:2003")
+	entity2 := NewEntity(pub2, "localhost:2001")
 
 	h1 := NewSecureTcpHost(priv1, entity1)
 	h2 := NewSecureTcpHost(priv2, entity2)
+	done := make(chan bool)
 	go func() {
 		err := h1.Listen(fn)
 		if err != nil {
 			t.Fatal("Listening failed for h1:", err)
 		}
+		close(done)
 	}()
-	h2.Open(entity1)
-	err := h1.Close()
+	time.Sleep(time.Second)
+	_, err := h2.Open(entity1)
+	if err != nil {
+		t.Fatal("Couldn't open h2:", err)
+	}
+	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	<-done
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h1 = NewSecureTcpHost(priv1, entity1)
+	done = make(chan bool)
 	go func() {
 		err = h1.Listen(fn)
 		if err != nil {
-			t.Fatal("Couldn't re-open listener")
+			t.Fatal("Couldn't re-open listener:", err)
 		}
+		close(done)
 	}()
 	time.Sleep(time.Millisecond * 100)
 	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)
 	}
+	<-done
 }
 
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
+	opened := make(chan bool)
 	fn := func(s SecureConn) {
 		dbg.Lvl3("Getting connection from", s)
+		opened <- true
 	}
 
 	priv1, pub1 := config.NewKeyPair(Suite)
@@ -121,7 +148,15 @@ func TestSecureTcp(t *testing.T) {
 	host1 := NewSecureTcpHost(priv1, entity1)
 	host2 := NewSecureTcpHost(priv2, entity2)
 
-	go host1.Listen(fn)
+	done := make(chan bool)
+	go func() {
+		err := host1.Listen(fn)
+		if err != nil {
+			t.Fatal("Couldn't listen:", err)
+		}
+		close(done)
+	}()
+	//time.Sleep(time.Second)
 	conn, err := host2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
@@ -129,8 +164,13 @@ func TestSecureTcp(t *testing.T) {
 	if !conn.Entity().Public.Equal(pub1) {
 		t.Fatal("Connection-id is not from host1")
 	}
+	if !<-opened {
+		t.Fatal("Lazy programmers - no select")
+	}
+	dbg.Lvl3("Closing connections")
 	host1.Close()
 	host2.Close()
+	<-done
 }
 
 // Testing a full-blown server/client
@@ -144,14 +184,21 @@ func TestTcpNetwork(t *testing.T) {
 	wg := sync.WaitGroup{}
 	client := NewSimpleClient(clientHost, clientPub, &wg)
 	server := NewSimpleServer(serverHost, serverPub, t, &wg)
-	// Make the server listens
-	go server.Listen("127.0.0.1:5000", server.ExchangeWithClient)
-	time.Sleep(1 * time.Second)
+	// Make the server listen
+	done := make(chan bool)
+	go func() {
+		err := server.Listen("127.0.0.1:5000", server.ExchangeWithClient)
+		if err != nil {
+			t.Fatal("Couldn't listen:", err)
+		}
+		close(done)
+	}()
 	// Make the client engage with the server
 	client.ExchangeWithServer("127.0.0.1:5000", t)
 	wg.Wait()
 	clientHost.Close()
 	serverHost.Close()
+	<-done
 }
 
 type SimpleClient struct {
