@@ -41,8 +41,8 @@ func TestMultiClose(t *testing.T) {
 	}
 	h1 := NewTcpHost()
 	h2 := NewTcpHost()
-	go h1.Listen("localhost:2000", fn)
-	h2.Open("localhost:2000")
+	go h1.Listen("localhost:2001", fn)
+	h2.Open("localhost:2001")
 	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
@@ -54,7 +54,7 @@ func TestMultiClose(t *testing.T) {
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h1 = NewTcpHost()
 	go func() {
-		err := h1.Listen("localhost:2000", fn)
+		err := h1.Listen("localhost:2001", fn)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener")
 		}
@@ -74,9 +74,9 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 
 	priv1, pub1 := config.NewKeyPair(Suite)
-	entity1 := NewEntity(pub1, "localhost:2000")
+	entity1 := NewEntity(pub1, "localhost:2002")
 	priv2, pub2 := config.NewKeyPair(Suite)
-	entity2 := NewEntity(pub2, "localhost:2001")
+	entity2 := NewEntity(pub2, "localhost:2003")
 
 	h1 := NewSecureTcpHost(priv1, entity1)
 	h2 := NewSecureTcpHost(priv2, entity2)
