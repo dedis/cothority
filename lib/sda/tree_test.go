@@ -10,11 +10,11 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/edwards"
 	"github.com/satori/go.uuid"
 )
 
-var tSuite = ed25519.NewAES128SHA256Ed25519(false)
+var tSuite = edwards.NewAES128SHA256Ed25519(false)
 var prefix = "localhost:"
 
 // test the ID generation
