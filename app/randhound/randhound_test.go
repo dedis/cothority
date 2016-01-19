@@ -15,8 +15,10 @@ import (
 
 func TestRandHound(t *testing.T) {
 
-	// setup network configurations
+	// setup general parameters
 	var n int = 5
+	var trustees int = 4
+	var purpose string = "RandHound test run"
 	var ip string = "localhost"
 	var port int = 2000
 	configs := make([]string, n)
@@ -37,6 +39,16 @@ func TestRandHound(t *testing.T) {
 	tree, _ := list.GenerateBinaryTree()
 	h[0].AddEntityList(list)
 	h[0].AddTree(tree)
+
+	// Setup RandHound channels and send parameters (TODO: find a better solution)
+	if randhound.Purpose == nil {
+		randhound.Purpose = make(chan string, 1)
+	}
+	if randhound.Trustees == nil {
+		randhound.Trustees = make(chan int, 1)
+	}
+	randhound.Purpose <- purpose
+	randhound.Trustees <- trustees
 
 	// run RandHound protocol
 	dbg.Lvl1("RandHound: starting")

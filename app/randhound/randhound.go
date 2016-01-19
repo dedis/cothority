@@ -63,7 +63,11 @@ func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
 // the message I1, and sends it to all of its peers.
 func (p *ProtocolRandHound) Start() error {
 
-	p.Leader = p.newLeader()
+	leader, err := p.newLeader()
+	if err != nil {
+		return err
+	}
+	p.Leader = leader
 
 	p.Leader.i1 = I1{
 		SID: p.Leader.SID,
@@ -78,6 +82,7 @@ func (p *ProtocolRandHound) Start() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -131,6 +136,7 @@ func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -177,6 +183,7 @@ func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -220,6 +227,7 @@ func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -245,7 +253,7 @@ func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
 func (p *ProtocolRandHound) HandleR4(m []*sda.SDAData) error {
 
 	for i := range m {
-		dbg.Lvl1("Receiving message:", m[i])
+		//dbg.Lvl1("Receiving message:", m[i])
 		r4 := m[i].Msg.(R4)
 		_ = r4
 		// TODO: verify r4 contents
@@ -256,5 +264,6 @@ func (p *ProtocolRandHound) HandleR4(m []*sda.SDAData) error {
 	// TODO: reconstruct final secret and print the random number
 	Done <- true
 	dbg.Lvl1("The public random number is:", 0)
+
 	return nil
 }

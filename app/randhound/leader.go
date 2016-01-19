@@ -8,6 +8,9 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
+var Purpose chan string
+var Trustees chan int
+
 // TODO: figure out which variables from the old RandHound client (see
 // app/rand/cli.go) are necessary and which ones are covered by SDA
 type Leader struct {
@@ -17,8 +20,8 @@ type Leader struct {
 	SID      []byte   // Session fingerprint
 	Group    *Group   // Group parameter block
 	GID      []byte   // Group fingerprint
-	Rc       []byte   // Client's trustee-selection random value
-	Rs       [][]byte // Server's trustee-selection random values
+	Rc       []byte   // Leader's trustee-selection random value
+	Rs       [][]byte // Peers' trustee-selection random values
 	i1       I1       // I1 message
 	i2       I2       // I2 message
 	i3       I3       // I3 message
@@ -34,30 +37,27 @@ type Leader struct {
 	//t Transcript // Third-party verifiable message transcript
 }
 
-func (p *ProtocolRandHound) newLeader() *Leader {
+func (p *ProtocolRandHound) newLeader() (*Leader, error) {
 
 	keysize := 16
 	hashsize := keysize * 2
+	purpose := <-Purpose
 
 	// Choose client's trustee-selection randomness
 	rc := make([]byte, hashsize)
 	random.Stream.XORKeyStream(rc, rc)
 
 	// Setup session
-	x, _ := p.ProtocolStruct.Host.Entity.Public.MarshalBinary()
-	session := &Session{LPubKey: x, Purpose: "RandHound test run", Time: time.Now()} // TODO: make channel for purpose
-	y := []byte(session.Purpose)
-	z, _ := session.Time.MarshalBinary()
-	sid := p.Hash(x, y, z)
+	session, sid, err := p.newSession(purpose)
+	if err != nil {
+		return nil, err
+	}
 
-	// Setup group (TODO: marshal and include public keys of the peers, error checking)
-	group := &Group{make([][]byte, 0), 1, 2, 3, 4}
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, group.F)
-	binary.Write(buf, binary.LittleEndian, group.L)
-	binary.Write(buf, binary.LittleEndian, group.K)
-	binary.Write(buf, binary.LittleEndian, group.T)
-	gid := p.Hash(buf.Bytes())
+	// Setup group
+	group, gid, err := p.newGroup()
+	if err != nil {
+		return nil, err
+	}
 
 	return &Leader{
 		keysize:  keysize,
@@ -67,5 +67,65 @@ func (p *ProtocolRandHound) newLeader() *Leader {
 		Group:    group,
 		GID:      gid,
 		Rc:       rc,
+	}, nil
+}
+
+func (p *ProtocolRandHound) newSession(purpose string) (*Session, []byte, error) {
+
+	pub, err := p.ProtocolStruct.Host.Entity.Public.MarshalBinary()
+	if err != nil {
+		return nil, nil, err
 	}
+	t := time.Now()
+	tm, err := t.MarshalBinary()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &Session{
+		LPubKey: pub,
+		Purpose: purpose,
+		Time:    t}, p.Hash(pub, []byte(purpose), tm), nil
+}
+
+func (p *ProtocolRandHound) newGroup() (*Group, []byte, error) {
+
+	npeers := len(p.Children)
+	ntrustees := <-Trustees
+	buf := new(bytes.Buffer)
+	ppub := make([][]byte, npeers)
+	gp := [4]uint32{
+		uint32(npeers / 3),
+		uint32(npeers - (npeers / 3)),
+		uint32(ntrustees),
+		uint32((ntrustees + 1) / 2),
+	} // Group parameters: F, L, K, T
+
+	// Include public keys of all peers
+	for i, c := range p.Children {
+		pub, err := c.Entity.Public.MarshalBinary()
+		if err != nil {
+			return nil, nil, err
+		}
+		err = binary.Write(buf, binary.LittleEndian, pub)
+		if err != nil {
+			return nil, nil, err
+		}
+		ppub[i] = pub
+	}
+
+	// Process group parameters
+	for _, g := range gp {
+		err := binary.Write(buf, binary.LittleEndian, g)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return &Group{
+		PPubKey: ppub,
+		F:       gp[0],
+		L:       gp[1],
+		K:       gp[2],
+		T:       gp[3]}, p.Hash(buf.Bytes()), nil
 }

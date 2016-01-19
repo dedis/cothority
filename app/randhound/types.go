@@ -104,7 +104,7 @@ type Transcript struct {
 	I2 []byte   // I2 message signed by leader
 	R2 [][]byte // R2 messages signed by resp peers
 	I3 []byte   // I3 message signed by leader
-	R3 [][]byte // R3 messages signed by resp peersr
+	R3 [][]byte // R3 messages signed by resp peers
 	I4 []byte   // I4 message signed by leader
 	R4 [][]byte // R4 messages signed by resp peers
 }
