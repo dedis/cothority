@@ -31,7 +31,7 @@ func (sn *Node) ProcessMessages() error {
 	defer dbg.Lvl4(sn.Name(), "done getting")
 
 	sn.UpdateTimeout()
-	// heartbeat for intiating viewChanges, allows intial 500s setup time
+	// heartbeat for initiating viewChanges, allows initial 500s setup time
 	/* sn.hbLock.Lock()
 	sn.heartbeat = time.NewTimer(500 * time.Second)
 	sn.hbLock.Unlock() */
