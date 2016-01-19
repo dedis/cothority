@@ -16,43 +16,20 @@ Over the network they are sent as byte slices, so each message
 has its own MarshalBinary and UnmarshalBinary method
 */
 
-type MessageType int
+var Announcement = network.RegisterMessageType(AnnouncementMessage{})
+var Commitment = network.RegisterMessageType(CommitmentMessage{})
+var Challenge = network.RegisterMessageType(ChallengeMessage{})
+var Response = network.RegisterMessageType(ResponseMessage{})
+var SignatureBroadcast = network.RegisterMessageType(SignatureBroadcastMessage{})
+var StatusReturn = network.RegisterMessageType(StatusReturnMessage{})
+var CatchUpReq = network.RegisterMessageType(CatchUpRequest{})
+var CatchUpResp = network.RegisterMessageType(CatchUpResponse{})
+var GroupChanged = network.RegisterMessageType(GroupChangedMessage{})
+var VoteRequest = network.RegisterMessageType(VoteRequestMessage{})
+var CloseAll = network.RegisterMessageType(CloseAllMessage{})
+var Identity = network.RegisterMessageType(IdentityMessage{})
 
-const (
-	Unset network.Type = iota + 10
-	Announcement
-	Commitment
-	Challenge
-	Response
-	SignatureBroadcast
-	StatusReturn
-	CatchUpReq
-	CatchUpResp
-	VoteRequest
-	GroupChanged
-	CloseAll
-	Default // for internal use
-	Identity
-	Error
-)
-
-func init() {
-	// Registering of all the type of packets we need
-	network.RegisterProtocolType(Announcement, AnnouncementMessage{})
-	network.RegisterProtocolType(Commitment, CommitmentMessage{})
-	network.RegisterProtocolType(Challenge, ChallengeMessage{})
-	network.RegisterProtocolType(Response, ResponseMessage{})
-	network.RegisterProtocolType(SignatureBroadcast, SignatureBroadcastMessage{})
-	network.RegisterProtocolType(StatusReturn, StatusReturnMessage{})
-	network.RegisterProtocolType(CatchUpReq, CatchUpRequest{})
-	network.RegisterProtocolType(CatchUpResp, CatchUpResponse{})
-	network.RegisterProtocolType(GroupChanged, GroupChangedMessage{})
-	network.RegisterProtocolType(VoteRequest, VoteRequestMessage{})
-	network.RegisterProtocolType(CloseAll, CloseAllMessage{})
-	network.RegisterProtocolType(Identity, IdentityMessage{})
-}
-
-// identitymessage is used when we connect to a node listening, we must give to
+// IdentityMessage is used when we connect to a node listening, we must give to
 // him our identity which is our listeningaddress:port, the same as in the
 // tree used.
 type IdentityMessage struct {

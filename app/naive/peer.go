@@ -30,15 +30,8 @@ type MessageSigning struct {
 	Msg    []byte
 }
 
-const (
-	BasicSignatureType = iota + 222
-	MessageSigningType
-)
-
-func init() {
-	net.RegisterProtocolType(BasicSignatureType, BasicSignature{})
-	net.RegisterProtocolType(MessageSigningType, MessageSigning{})
-}
+var BasicSignatureType = net.RegisterMessageType(BasicSignature{})
+var MessageSigningType = net.RegisterMessageType(MessageSigning{})
 
 // Set up some global variables such as the different messages used during
 // this protocol and the general suite to be used

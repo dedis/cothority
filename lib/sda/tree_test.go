@@ -128,6 +128,7 @@ func TestTreeChildren(t *testing.T) {
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
+	dbg.Print(network.Suite.String())
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology

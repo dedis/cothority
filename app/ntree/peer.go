@@ -33,17 +33,9 @@ type ListBasicSignature struct {
 	Sigs   []BasicSignature
 }
 
-const (
-	BasicSignatureType = iota + 222
-	MessageSigningType
-	ListBasicSignatureType
-)
-
-func init() {
-	net.RegisterProtocolType(BasicSignatureType, BasicSignature{})
-	net.RegisterProtocolType(MessageSigningType, MessageSigning{})
-	net.RegisterProtocolType(ListBasicSignatureType, ListBasicSignature{})
-}
+var BasicSignatureType = net.RegisterMessageType(BasicSignature{})
+var MessageSigningType = net.RegisterMessageType(MessageSigning{})
+var ListBasicSignatureType = net.RegisterMessageType(ListBasicSignature{})
 
 // Set up some global variables such as the different messages used during
 // this protocol and the general suite to be used

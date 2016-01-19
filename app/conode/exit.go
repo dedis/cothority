@@ -36,7 +36,7 @@ func ForceExit(address string) {
 	if err != nil {
 		dbg.Fatal("Couldn't convert", address, "to a IP:PORT")
 	}
-	host := network.NewTcpHost(nil)
+	host := network.NewTcpHost()
 	conn, err := host.Open(add)
 	if err != nil {
 		dbg.Fatal("Could not connect to", add)

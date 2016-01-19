@@ -1,7 +1,6 @@
 package protocols
 
 import (
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -18,7 +17,7 @@ type JVSSProtocol struct {
 	// structure for the internals communication, when we set up the shares and
 	// everything. We directly send our share to everyone else directly by using
 	// this entitylist instead of broadcasting into the tree.
-	List *network.EntityList
+	List *sda.EntityList
 	// the token for this protocol instance
 	Token *sda.Token
 }
