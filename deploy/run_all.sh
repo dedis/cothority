@@ -1,10 +1,11 @@
 #!/usr/bin/env bash -e
 
-echo Building deploy-binary
+DBG=${1:-1}
+echo Building deploy-binary with debug-level: $DBG
 go build
 
 for simul in simulation/test*toml; do
   echo Simulating $simul
-  ./deploy $simul
+  ./deploy -debug $DBG $simul
   echo -e "\n\n"
 done

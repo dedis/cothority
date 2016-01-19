@@ -196,6 +196,7 @@ func (d *Localhost) Start(args ...string) error {
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
 		dbg.Lvl3("Starting", index, "=", host)
+		d.wg_run.Add(1)
 		amroot := fmt.Sprintf("-amroot=%s", strconv.FormatBool(index == 0))
 		cmdArgs := []string{"-hostname", host, "-mode", "server", "-monitor",
 			"localhost:" + strconv.Itoa(monitor.SinkPort), amroot}
@@ -206,7 +207,6 @@ func (d *Localhost) Start(args ...string) error {
 		cmd.Stderr = os.Stderr
 		go func(i int, h string) {
 			dbg.Lvl3("Localhost: will start host", host)
-			d.wg_run.Add(1)
 			err := cmd.Run()
 			if err != nil {
 				dbg.Error("Error running localhost", h, ":", err)
@@ -221,7 +221,7 @@ func (d *Localhost) Start(args ...string) error {
 
 // Waits for all processes to finish
 func (d *Localhost) Wait() error {
-	dbg.LLvl3("Waiting for processes to finish")
+	dbg.Lvl3("Waiting for processes to finish")
 
 	var err error
 	go func() {
