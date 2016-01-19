@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/lib/sda/example"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/edwards"
 	"testing"
 	"time"
 )
@@ -43,7 +42,7 @@ func TestNode10(t *testing.T) {
 }
 
 func newHost(address string) *sda.Host {
-	priv, pub := config.NewKeyPair(edwards.NewAES128SHA256Ed25519(false))
+	priv, pub := config.NewKeyPair(network.Suite)
 	id := network.NewEntity(pub, address)
 	return sda.NewHost(id, priv)
 }

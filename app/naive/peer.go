@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
-	net "github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"golang.org/x/net/context"
 )
 
@@ -30,18 +29,18 @@ type MessageSigning struct {
 	Msg    []byte
 }
 
-var BasicSignatureType = net.RegisterMessageType(BasicSignature{})
-var MessageSigningType = net.RegisterMessageType(MessageSigning{})
+var BasicSignatureType = network.RegisterMessageType(BasicSignature{})
+var MessageSigningType = network.RegisterMessageType(MessageSigning{})
 
 // Set up some global variables such as the different messages used during
 // this protocol and the general suite to be used
 func init() {
-	suite = edwards.NewAES128SHA256Ed25519(false)
+	suite = network.Suite
 }
 
 // the struct representing the role of leader
 type Peer struct {
-	net.Host
+	network.Host
 
 	// the longterm key of the peer
 	priv abstract.Secret
@@ -51,7 +50,7 @@ type Peer struct {
 	role string
 
 	// leader part
-	Conns      []net.Conn
+	Conns      []network.Conn
 	Pubs       []abstract.Point
 	Signatures []BasicSignature
 
@@ -63,7 +62,7 @@ func (l *Peer) String() string {
 }
 
 // Will send the message to be signed to everyone
-func (l *Peer) SendMessage(msg []byte, c net.Conn) {
+func (l *Peer) SendMessage(msg []byte, c network.Conn) {
 	if len(msg) > msgMaxLenght {
 		dbg.Fatal("Tried to send a too big message to sign. Abort")
 	}
@@ -78,7 +77,7 @@ func (l *Peer) SendMessage(msg []byte, c net.Conn) {
 }
 
 // Wait for the leader to receive the generated signatures from the servers
-func (l *Peer) ReceiveBasicSignature(c net.Conn) *BasicSignature {
+func (l *Peer) ReceiveBasicSignature(c network.Conn) *BasicSignature {
 	ctx := context.TODO()
 	appMsg, err := c.Receive(ctx)
 	if err != nil {
@@ -99,7 +98,7 @@ func (l *Peer) Signature(msg []byte) *BasicSignature {
 	return &sign
 }
 
-func NewPeer(host net.Host, name, role string, secret abstract.Secret,
+func NewPeer(host network.Host, name, role string, secret abstract.Secret,
 	public abstract.Point) *Peer {
 	return &Peer{
 		role: role,
