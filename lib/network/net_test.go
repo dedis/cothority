@@ -41,8 +41,8 @@ func TestMultiClose(t *testing.T) {
 	}
 	h1 := NewTcpHost()
 	h2 := NewTcpHost()
-	go h1.Listen("localhost:2001", fn)
-	h2.Open("localhost:2001")
+	go h1.Listen("localhost:2004", fn)
+	h2.Open("localhost:2004")
 	err := h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
@@ -54,9 +54,9 @@ func TestMultiClose(t *testing.T) {
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h1 = NewTcpHost()
 	go func() {
-		err := h1.Listen("localhost:2001", fn)
+		err := h1.Listen("localhost:2004", fn)
 		if err != nil {
-			t.Fatal("Couldn't re-open listener")
+			t.Fatal("Couldn't re-open listener:", err)
 		}
 	}()
 	time.Sleep(time.Millisecond * 100)
