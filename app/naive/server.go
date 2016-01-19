@@ -118,7 +118,6 @@ func GoLeader(conf *app.NaiveConfig) {
 	for round := 0; round < conf.Rounds; round++ {
 		// Measure calculation time
 		calc := monitor.NewMeasure("calc")
-		dbg.Lvl1("Server starting round", round+1)
 		n := 0
 		faulty := 0
 		// launch a new round
@@ -152,6 +151,7 @@ func GoLeader(conf *app.NaiveConfig) {
 			verify.Measure()
 		}
 		roundM.Measure()
+		dbg.Lvl1(leader.String(), "Finished round", round, "in", roundM.WallTime)
 		dbg.Lvl3(leader.String(), "Round", round, "received", len(conf.Hosts)-1, "signatures (",
 			faulty, "faulty sign)")
 	}

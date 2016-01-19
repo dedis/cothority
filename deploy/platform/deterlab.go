@@ -370,17 +370,12 @@ func (d *Deterlab) Start(args ...string) error {
 // Waiting for the process to finish
 func (d *Deterlab) Wait() error {
 	if d.started {
-		dbg.Lvl3("Simulation is started")
-		select {
-		case msg := <-d.sshDeter:
-			if msg == "finished" {
-				dbg.Lvl3("Received finished-message, not killing users")
-				return nil
-			} else {
-				dbg.Lvl1("Received out-of-line message", msg)
-			}
-		case <-time.After(time.Second):
-			dbg.Lvl3("No message waiting")
+		msg := <-d.sshDeter
+		if msg == "finished" {
+			dbg.Lvl3("Received finished-message, not killing users")
+			return nil
+		} else {
+			dbg.Lvl1("Received out-of-line message", msg)
 		}
 		d.started = false
 	}

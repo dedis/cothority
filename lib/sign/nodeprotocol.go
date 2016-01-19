@@ -39,6 +39,7 @@ func (sn *Node) ProcessMessages() error {
 	// gossip to make sure we are up to date
 	//	sn.StartGossip()
 	//errReset := syscall.ECONNRESET.Error()
+	didCommit := false
 	for {
 		select {
 		case <-sn.closed:
@@ -47,195 +48,209 @@ func (sn *Node) ProcessMessages() error {
 			return nil
 		default:
 			dbg.Lvl4(sn.Name(), "waiting for message")
-			nm, ok := <-sn.MsgChans
-			if !ok {
-				dbg.Lvl4(sn.Name(), "Msgchan closed. Stop processing messages")
-			}
-			dbg.Lvlf4("Message on %s is type %s", sn.Name(), nm.MsgType)
-
-			// Do we have an errror ?
-			if err := nm.Error(); err != nil || nm.Msg == nil {
-				// One of the errors doesn't have an error-number applied, so we need
-				// to check for the string - will probably be fixed in go 1.6
-				if !ok || err == network.ErrClosed || err == network.ErrEOF ||
-					err == io.ErrClosedPipe {
-					dbg.Lvl2(sn.Name(), "getting from closed host")
-					sn.Close()
-					return network.ErrClosed
-				}
-
-				// if it is a unknown error, abort ?
-				if err == network.ErrUnknown {
-					dbg.Lvl2(sn.Name(), "Unknown error => ABORT")
-					return err
-				}
-				if err == network.ErrTemp {
-					/*if strings.Contains(errStr, errReset) {*/
-					//dbg.Lvl2(sn.Name(), "connection reset error")
-					//return coconet.ErrClosed
-					/*}*/
-					dbg.Lvl2(sn.Name(), "temporary error getting message (abort)")
+			select {
+			case <-time.After(time.Second * 10):
+				dbg.Lvl3(sn.Name(), "still alive - return?", didCommit)
+				// Real hack - this will go away with SDA, at least we hope so...
+				if didCommit {
 					return nil
 				}
-			}
-			switch nm.MsgType {
-			// if it is a bad message just ignore it
-			default:
-				continue
-			case Announcement:
-				dbg.Lvl3(sn.Name(), "got announcement")
-				am := nm.Msg.(AnnouncementMessage)
-				processSigningMsg(nm, am.SigningMessage)
-				sn.ReceivedHeartbeat(am.ViewNbr)
+			case nm, ok := <-sn.MsgChans:
+				if !ok {
+					dbg.Lvl1(sn.Name(), "Msgchan closed. Stop processing messages")
+					return nil
+				}
+				dbg.Lvlf4("Message on %s is type %s", sn.Name(), nm.MsgType)
 
-				var err error
-				if am.Vote != nil {
-					err = sn.Propose(am.ViewNbr, am.RoundNbr, &am, nm.From)
-					dbg.Lvl4(sn.Name(), "done proposing")
-				} else {
-					if !sn.ChildOf(am.ViewNbr, nm.From) {
-						dbg.Fatal(sn.Name(), "received announcement from non-parent on view", am.ViewNbr)
+				// Do we have an errror ?
+				if err := nm.Error(); err != nil || nm.Msg == nil {
+					// One of the errors doesn't have an error-number applied, so we need
+					// to check for the string - will probably be fixed in go 1.6
+					if !ok || err == network.ErrClosed || err == network.ErrEOF ||
+						err == io.ErrClosedPipe {
+						dbg.Lvl2(sn.Name(), "getting from closed host")
+						sn.Close()
+						return network.ErrClosed
+					}
+
+					// if it is a unknown error, abort ?
+					if err == network.ErrUnknown {
+						dbg.Lvl2(sn.Name(), "Unknown error => abort")
+						return err
+					}
+					if err == network.ErrTemp {
+						dbg.Lvl2(sn.Name(), "temporary error getting message")
+						// Still close the connection
+						return nil
+					}
+				}
+				switch nm.MsgType {
+				// if it is a bad message just ignore it
+				default:
+					continue
+				case Announcement:
+					dbg.Lvl3(sn.Name(), "got announcement")
+					am := nm.Msg.(AnnouncementMessage)
+					processSigningMsg(nm, am.SigningMessage)
+					sn.ReceivedHeartbeat(am.ViewNbr)
+
+					var err error
+					if am.Vote != nil {
+						err = sn.Propose(am.ViewNbr, am.RoundNbr, &am, nm.From)
+						dbg.Lvl4(sn.Name(), "done proposing")
+					} else {
+						if !sn.ChildOf(am.ViewNbr, nm.From) {
+							dbg.Fatal(sn.Name(), "received announcement from non-parent on view", am.ViewNbr)
+							continue
+						}
+						err = sn.Announce(&am)
+					}
+					if err != nil {
+						if didCommit {
+							// The first step is to count the number of
+							// nodes which 'abuses' announcement, so if we
+							// already went through commit, it's a real error
+							// will go away with SDA.
+							dbg.Error(sn.Name(), "announce error:", err)
+						}
+					}
+
+				// if it is a commitment or response it is from the child
+				case Commitment:
+					dbg.Lvl3(sn.Name(), "got commitment")
+					didCommit = true
+					cm := nm.Msg.(CommitmentMessage)
+					processSigningMsg(nm, cm.SigningMessage)
+					if !sn.ParentOf(cm.ViewNbr, nm.From) {
+						dbg.Fatal(sn.Name(), "received commitment from non-child on view", cm.ViewNbr)
 						continue
 					}
-					err = sn.Announce(&am)
-				}
-				if err != nil {
-					dbg.Error(sn.Name(), "announce error:", err)
-				}
 
-			// if it is a commitment or response it is from the child
-			case Commitment:
-				dbg.Lvl3(sn.Name(), "got commitment")
-				cm := nm.Msg.(CommitmentMessage)
-				processSigningMsg(nm, cm.SigningMessage)
-				if !sn.ParentOf(cm.ViewNbr, nm.From) {
-					dbg.Fatal(sn.Name(), "received commitment from non-child on view", cm.ViewNbr)
-					continue
-				}
-
-				var err error
-				if cm.Vote != nil {
-					err = sn.Promise(cm.ViewNbr, cm.RoundNbr, &cm)
-				} else {
-					err = sn.Commit(&cm)
-				}
-				if err != nil {
-					dbg.Error(sn.Name(), "commit error:", err)
-				}
-			case Challenge:
-				dbg.Lvl3(sn.Name(), "got challenge")
-				chm := nm.Msg.(ChallengeMessage)
-				processSigningMsg(nm, chm.SigningMessage)
-				if !sn.ChildOf(chm.ViewNbr, nm.From) {
-					dbg.Fatal(sn.Name(), "received challenge from non-parent on view", chm.ViewNbr)
-					continue
-				}
-				sn.ReceivedHeartbeat(chm.ViewNbr)
-
-				var err error
-				if chm.Vote != nil {
-					err = sn.Accept(chm.ViewNbr, chm.RoundNbr, &chm)
-				} else {
-					err = sn.Challenge(&chm)
-				}
-				if err != nil {
-					dbg.Error(sn.Name(), "challenge error:", err)
-				}
-			case Response:
-				dbg.Lvl3(sn.Name(), "received response from", nm.From)
-				rm := nm.Msg.(ResponseMessage)
-				processSigningMsg(nm, rm.SigningMessage)
-				if !sn.ParentOf(rm.ViewNbr, nm.From) {
-					dbg.Fatal(sn.Name(), "received response from non-child on view", rm.ViewNbr)
-					continue
-				}
-
-				var err error
-				if rm.Vote != nil {
-					err = sn.Accepted(rm.ViewNbr, rm.RoundNbr, &rm)
-				} else {
-					err = sn.Respond(&rm)
-				}
-				if err != nil {
-					dbg.Error(sn.Name(), "response error:", err)
-				}
-			case SignatureBroadcast:
-				dbg.Lvl3(sn.Name(), "received SignatureBroadcast", nm.From)
-				sbm := nm.Msg.(SignatureBroadcastMessage)
-				processSigningMsg(nm, sbm.SigningMessage)
-				sn.ReceivedHeartbeat(sbm.ViewNbr)
-				err := sn.SignatureBroadcast(&sbm)
-				if err != nil {
-					dbg.Lvl2(sn.Name(), "Error with signature broadcast:", err)
-				}
-			case StatusReturn:
-				srm := nm.Msg.(StatusReturnMessage)
-				processSigningMsg(nm, srm.SigningMessage)
-				sn.StatusReturn(srm.ViewNbr, &srm)
-			case CatchUpReq:
-				cur := nm.Msg.(CatchUpRequest)
-				processSigningMsg(nm, cur.SigningMessage)
-				v := sn.VoteLog.Get(cur.Index)
-				ctx := context.TODO()
-				sn.PutTo(ctx, nm.From, &CatchUpResponse{
-					SigningMessage: &SigningMessage{
-						// ugly hack with atomic. do we really need ??
-						// Anyway, voting mechanisms has been broken since many
-						// months now, we need to start over.
-						LastSeenVote: cur.LastSeenVote},
-					Vote: v})
-			case CatchUpResp:
-				cur := nm.Msg.(CatchUpResponse)
-				processSigningMsg(nm, cur.SigningMessage)
-				if cur.Vote == nil || sn.VoteLog.Get(cur.Vote.Index) != nil {
-					continue
-				}
-				vi := cur.Vote.Index
-				// put in votelog to be streamed and applied
-				sn.VoteLog.Put(vi, cur.Vote)
-				// continue catching up
-				sn.CatchUp(vi+1, nm.From)
-			case VoteRequest:
-				vrm := nm.Msg.(VoteRequestMessage)
-				processSigningMsg(nm, vrm.SigningMessage)
-				if vrm.ViewNbr == -1 {
-					vrm.ViewNbr = sn.ViewNo
-					if vrm.Vote.Type == AddVT {
-						// XXX Voting process broken anyway.TODO
-						//sn.AddPeerToPending(nm.From)
+					var err error
+					if cm.Vote != nil {
+						err = sn.Promise(cm.ViewNbr, cm.RoundNbr, &cm)
+					} else {
+						err = sn.Commit(&cm)
 					}
-				}
-				// TODO sanity checks: check if view is == sn.ViewNo
-				if sn.Root(vrm.ViewNbr) {
-					dbg.Fatal("Group change not implementekd. BTH")
-					//go sn.StartVotingRound(sm.Vrm.Vote)
-					continue
-				}
-				sn.PutUp(context.TODO(), vrm.ViewNbr, &vrm)
-			case GroupChanged:
-				gcm := nm.Msg.(GroupChangedMessage)
-				processSigningMsg(nm, gcm.SigningMessage)
-				if !gcm.V.Confirmed {
-					dbg.Lvl4(sn.Name(), " received attempt to group change not confirmed")
-					continue
-				}
-				if gcm.V.Type == RemoveVT {
-					dbg.Lvl4(sn.Name(), " received removal notice")
-				} else if gcm.V.Type == AddVT {
-					dbg.Lvl4(sn.Name(), " received addition notice")
-					// XXX TODO Broken voting system anyway.
-					// sn.NewView(gcm.ViewNbr, nm.From, nil, gcm.HostList)
-				} else {
-					dbg.Error(sn.Name(), "received GroupChanged for unacceptable action")
-				}
+					if err != nil {
+						dbg.Error(sn.Name(), "commit error:", err)
+					}
+				case Challenge:
+					dbg.Lvl3(sn.Name(), "got challenge")
+					chm := nm.Msg.(ChallengeMessage)
+					processSigningMsg(nm, chm.SigningMessage)
+					if !sn.ChildOf(chm.ViewNbr, nm.From) {
+						dbg.Fatal(sn.Name(), "received challenge from non-parent on view", chm.ViewNbr)
+						continue
+					}
+					sn.ReceivedHeartbeat(chm.ViewNbr)
+
+					var err error
+					if chm.Vote != nil {
+						err = sn.Accept(chm.ViewNbr, chm.RoundNbr, &chm)
+					} else {
+						err = sn.Challenge(&chm)
+					}
+					if err != nil {
+						dbg.Error(sn.Name(), "challenge error:", err)
+					}
+				case Response:
+					dbg.Lvl3(sn.Name(), "received response from", nm.From)
+					rm := nm.Msg.(ResponseMessage)
+					processSigningMsg(nm, rm.SigningMessage)
+					if !sn.ParentOf(rm.ViewNbr, nm.From) {
+						dbg.Fatal(sn.Name(), "received response from non-child on view", rm.ViewNbr)
+						continue
+					}
+
+					var err error
+					if rm.Vote != nil {
+						err = sn.Accepted(rm.ViewNbr, rm.RoundNbr, &rm)
+					} else {
+						err = sn.Respond(&rm)
+					}
+					if err != nil {
+						dbg.Error(sn.Name(), "response error:", err)
+					}
+				case SignatureBroadcast:
+					dbg.Lvl3(sn.Name(), "received SignatureBroadcast", nm.From)
+					sbm := nm.Msg.(SignatureBroadcastMessage)
+					processSigningMsg(nm, sbm.SigningMessage)
+					sn.ReceivedHeartbeat(sbm.ViewNbr)
+					err := sn.SignatureBroadcast(&sbm)
+					if err != nil {
+						dbg.Lvl2(sn.Name(), "Error with signature broadcast:", err)
+					}
+				case StatusReturn:
+					srm := nm.Msg.(StatusReturnMessage)
+					processSigningMsg(nm, srm.SigningMessage)
+					sn.StatusReturn(srm.ViewNbr, &srm)
+				case CatchUpReq:
+					cur := nm.Msg.(CatchUpRequest)
+					processSigningMsg(nm, cur.SigningMessage)
+					v := sn.VoteLog.Get(cur.Index)
+					ctx := context.TODO()
+					sn.PutTo(ctx, nm.From, &CatchUpResponse{
+						SigningMessage: &SigningMessage{
+							// ugly hack with atomic. do we really need ??
+							// Anyway, voting mechanisms has been broken since many
+							// months now, we need to start over.
+							LastSeenVote: cur.LastSeenVote},
+						Vote: v})
+				case CatchUpResp:
+					cur := nm.Msg.(CatchUpResponse)
+					processSigningMsg(nm, cur.SigningMessage)
+					if cur.Vote == nil || sn.VoteLog.Get(cur.Vote.Index) != nil {
+						continue
+					}
+					vi := cur.Vote.Index
+					// put in votelog to be streamed and applied
+					sn.VoteLog.Put(vi, cur.Vote)
+					// continue catching up
+					sn.CatchUp(vi+1, nm.From)
+				case VoteRequest:
+					vrm := nm.Msg.(VoteRequestMessage)
+					processSigningMsg(nm, vrm.SigningMessage)
+					if vrm.ViewNbr == -1 {
+						vrm.ViewNbr = sn.ViewNo
+						if vrm.Vote.Type == AddVT {
+							// XXX Voting process broken anyway.TODO
+							//sn.AddPeerToPending(nm.From)
+						}
+					}
+					// TODO sanity checks: check if view is == sn.ViewNo
+					if sn.Root(vrm.ViewNbr) {
+						dbg.Fatal("Group change not implementekd. BTH")
+						//go sn.StartVotingRound(sm.Vrm.Vote)
+						continue
+					}
+					sn.PutUp(context.TODO(), vrm.ViewNbr, &vrm)
+				case GroupChanged:
+					gcm := nm.Msg.(GroupChangedMessage)
+					processSigningMsg(nm, gcm.SigningMessage)
+					if !gcm.V.Confirmed {
+						dbg.Lvl4(sn.Name(), " received attempt to group change not confirmed")
+						continue
+					}
+					if gcm.V.Type == RemoveVT {
+						dbg.Lvl4(sn.Name(), " received removal notice")
+					} else if gcm.V.Type == AddVT {
+						dbg.Lvl4(sn.Name(), " received addition notice")
+						// XXX TODO Broken voting system anyway.
+						// sn.NewView(gcm.ViewNbr, nm.From, nil, gcm.HostList)
+					} else {
+						dbg.Error(sn.Name(), "received GroupChanged for unacceptable action")
+					}
 				//	case StatusConnections:
 				// Not used anymore it seems
-			case CloseAll:
-				ca := nm.Msg.(CloseAllMessage)
-				sn.ReceivedHeartbeat(ca.ViewNbr)
-				err := sn.CloseAll(ca.ViewNbr)
-				return err
+				case CloseAll:
+					ca := nm.Msg.(CloseAllMessage)
+					sn.ReceivedHeartbeat(ca.ViewNbr)
+					err := sn.CloseAll(ca.ViewNbr)
+					return err
+				}
 			}
+
 		}
 	}
 }
