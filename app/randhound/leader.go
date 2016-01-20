@@ -5,28 +5,28 @@ import (
 	"encoding/binary"
 	"time"
 
+	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
 )
 
 // TODO: figure out which variables from the old RandHound client (see
 // app/rand/cli.go) are necessary and which ones are covered by SDA
 type Leader struct {
-	Session *Session // Session parameter block
-	SID     []byte   // Session fingerprint
-	Group   *Group   // Group parameter block
-	GID     []byte   // Group fingerprint
-	Rc      []byte   // Leader's trustee-selection random value
-	Rs      [][]byte // Peers' trustee-selection random values
-	i1      I1       // I1 message
-	i2      I2       // I2 message
-	i3      I3       // I3 message
-	i4      I4       // I4 message
-	r1      []R1     // Decoded R1 messages
-	r2      []R2     // Decoded R2 messages
-	r3      []R3     // Decoded R3 messages
-	r4      []R4     // Decoded R4 messages
-
-	//deals  []poly.Promise   // Unmarshaled deals from servers
+	Session *Session    // Session parameter block
+	SID     []byte      // Session fingerprint
+	Group   *Group      // Group parameter block
+	GID     []byte      // Group fingerprint
+	Rc      []byte      // Leader's trustee-selection random value
+	Rs      [][]byte    // Peers' trustee-selection random values
+	i1      I1          // I1 message
+	i2      I2          // I2 message
+	i3      I3          // I3 message
+	i4      I4          // I4 message
+	r1      []R1        // Decoded R1 messages
+	r2      []R2        // Decoded R2 messages
+	r3      []R3        // Decoded R3 messages
+	r4      []R4        // Decoded R4 messages
+	deals   []poly.Deal // Unmarshaled deals from peers
 	//shares []poly.PriShares // Revealed shares
 
 	//t Transcript // Third-party verifiable message transcript

@@ -4,10 +4,12 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/config"
+	"github.com/dedis/crypto/poly"
 )
 
 func init() {
-	sda.ProtocolRegisterName("RandHound", NewRandHound)
+	dbg.Lvl1("init")
 	TypeI1 = network.RegisterMessageType(I1{})
 	TypeR1 = network.RegisterMessageType(R1{})
 	TypeI2 = network.RegisterMessageType(I2{})
@@ -16,6 +18,7 @@ func init() {
 	TypeR3 = network.RegisterMessageType(R3{})
 	TypeI4 = network.RegisterMessageType(I4{})
 	TypeR4 = network.RegisterMessageType(R4{})
+	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
 type ProtocolRandHound struct {
@@ -35,6 +38,9 @@ func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInst
 		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
 		Leader:         nil,
 		Peer:           nil,
+		T:              3, // test values; TODO: make configurable
+		R:              3, // test values; TODO: make configurable
+		N:              5, // test values; TODO: make configurable
 	}
 }
 
@@ -139,21 +145,31 @@ func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 // Phase 2 (peer)
 func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 
-	suite := p.ProtocolStruct.Host.Suite()
 	p.Peer.i2 = m.Msg.(I2)
-	_ = suite
 
 	// TODO: verify contents of i2
 
-	// TODO: Construct deal
+	// Construct deal
+	longPair := config.KeyPair{
+		p.Host.Suite(),
+		p.Host.Entity.Public,
+		p.Host.Private(), // NOTE: the Private() function was introduced for RandHound only! Mabye there is a better solution...
+	}
+	secretPair := config.NewKeyPair(p.Host.Suite())
+	insurers := p.chooseInsurers(p.Peer.i2.Rc, p.Peer.Rs)
+	deal := &poly.Deal{}
+	deal.ConstructDeal(secretPair, &longPair, p.T, p.R, insurers)
+	db, err := deal.MarshalBinary()
+	if err != nil {
+		return err
+	}
 
-	Deal := make([]byte, 0)
 	p.Peer.r2 = R2{
 		HI2: p.Hash(
 			p.Peer.i2.SID,
 			p.Peer.i2.Rc),
 		Rs:   p.Peer.Rs,
-		Deal: Deal}
+		Deal: db}
 
 	return p.Send(p.Parent, &p.Peer.r2)
 }
@@ -162,11 +178,16 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 
 	p.Leader.r2 = make([]R2, len(m))
+	p.Leader.deals = make([]poly.Deal, len(m)) // TODO: we assume here that len(m) == #peers which might not be always correct
 	for i, _ := range m {
 		p.Leader.r2[i] = m[i].Msg.(R2)
 		// TODO: verify r2 contents
-		// TODO: store r2 in transcript
-		// TODO: deal processing
+
+		// Extract deals
+		p.Leader.deals[i].UnmarshalInit(p.T, p.R, p.N, p.Host.Suite())
+		if err := p.Leader.deals[i].UnmarshalBinary(p.Leader.r2[i].Deal); err != nil {
+			return err
+		}
 	}
 
 	R2s := make([][]byte, 0)

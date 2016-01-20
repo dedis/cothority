@@ -413,6 +413,10 @@ func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
+func (h *Host) Private() abstract.Secret {
+	return h.private
+}
+
 // ProtocolInstantiate creates a new instance of a protocol given by it's name
 func (h *Host) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
 	p, ok := protocols[tok.ProtocolID]
