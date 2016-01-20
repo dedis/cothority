@@ -79,9 +79,9 @@ func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) (bool, error) {
 	// if messages come from children we must aggregate them
 	var msgs []*SDAData
 	var ok bool
-	// if we still need to wait additionals message, we return
+	// if we still need to wait for additional messages, we return
 	if msgs, ok = pm.aggregate(node, sdaMsg); !ok {
-		return false, errors.New("Still aggregating for this SDAData")
+		return false, nil
 	}
 	// all is good
 	return true, pi.Dispatch(msgs)
