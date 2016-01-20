@@ -91,8 +91,9 @@ func main() {
 			}
 			//fmt.Println("name",round.Name)
 
-			round.compare = 1
-			round.bucket = 0
+			round.compare = 0
+			round.bucket = 1
+			round.numBuckets = 2
 
 			// individual keys
 			round.PrivateRoot = SecretRoot
@@ -170,7 +171,8 @@ func main() {
 		if err != nil {
 			dbg.Fatal("Couldn't create", RoundMedcoType, "round:", err)
 		}
-		peer.StartAnnouncement(round)
+		//peer.StartAnnouncement(round)
+		peer.StartAnnouncementWithWait(round, time.Minute*60)
 		peer.SendCloseAll()
 	} else {
 		peer.LoopRounds(RoundMedcoType, conf.Rounds)
