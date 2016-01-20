@@ -14,6 +14,9 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -21,8 +24,6 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"sync"
-	"time"
 )
 
 /*
@@ -111,9 +112,9 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 // NewHostKey creates a new host only from the ip-address and port-number. This
 // is useful in testing and deployment for measurements
 func NewHostKey(address string) (*Host, abstract.Secret) {
-	priv, pub := config.NewKeyPair(network.Suite)
-	entity := network.NewEntity(pub, address)
-	return NewHost(entity, priv), priv
+	keypair := config.NewKeyPair(network.Suite)
+	entity := network.NewEntity(keypair.Public, address)
+	return NewHost(entity, keypair.Secret), keypair.Secret
 }
 
 // Listen starts listening for messages coming from any host that tries to
