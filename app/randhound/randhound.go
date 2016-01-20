@@ -6,18 +6,16 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-var Done chan bool
-var TypeI1 = network.RegisterMessageType(I1{})
-var TypeR1 = network.RegisterMessageType(R1{})
-var TypeI2 = network.RegisterMessageType(I2{})
-var TypeR2 = network.RegisterMessageType(R2{})
-var TypeI3 = network.RegisterMessageType(I3{})
-var TypeR3 = network.RegisterMessageType(R3{})
-var TypeI4 = network.RegisterMessageType(I4{})
-var TypeR4 = network.RegisterMessageType(R4{})
-
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
+	TypeI1 = network.RegisterMessageType(I1{})
+	TypeR1 = network.RegisterMessageType(R1{})
+	TypeI2 = network.RegisterMessageType(I2{})
+	TypeR2 = network.RegisterMessageType(R2{})
+	TypeI3 = network.RegisterMessageType(I3{})
+	TypeR3 = network.RegisterMessageType(R3{})
+	TypeI4 = network.RegisterMessageType(I4{})
+	TypeR4 = network.RegisterMessageType(R4{})
 }
 
 type ProtocolRandHound struct {
@@ -73,8 +71,7 @@ func (p *ProtocolRandHound) Start() error {
 		SID: p.Leader.SID,
 		GID: p.Leader.GID,
 		HRc: p.Hash(p.Leader.Rc),
-		S:   make([]byte, 0),
-		G:   make([]byte, 0)}
+	}
 
 	for _, c := range p.Children {
 		err := p.Send(c, &p.Leader.i1)
@@ -105,8 +102,7 @@ func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 			p.Peer.i1.SID,
 			p.Peer.i1.GID,
 			p.Peer.i1.HRc,
-			p.Peer.i1.S,
-			p.Peer.i1.G),
+		),
 		HRs: p.Hash(p.Peer.Rs)}
 
 	return p.Send(p.Parent, &p.Peer.r1)
@@ -116,15 +112,11 @@ func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 // Phase 2 (leader)
 func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 
-	for i := range m {
-		r1 := m[i].Msg.(R1)
-		_ = r1
-		//dbg.Lvl1("Received R1:", r1)
+	p.Leader.r1 = make([]R1, len(m))
+	for i, _ := range m {
+		p.Leader.r1[i] = m[i].Msg.(R1)
 		// TODO: verify r1 contents
-		// TODO: store r1 in transcript
 	}
-
-	// TODO: do magic
 
 	p.Leader.i2 = I2{
 		SID: p.Leader.SID,
@@ -144,6 +136,7 @@ func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
 // Phase 2 (peer)
 func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 
+	suite := p.ProtocolStruct.Host.Suite()
 	p.Peer.i2 = m.Msg.(I2)
 
 	// TODO: verify contents of i2
@@ -164,9 +157,9 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 // Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 
-	for i := range m {
-		r2 := m[i].Msg.(R2)
-		_ = r2
+	p.Leader.r2 = make([]R2, len(m))
+	for i, _ := range m {
+		p.Leader.r2[i] = m[i].Msg.(R2)
 		// TODO: verify r2 contents
 		// TODO: store r2 in transcript
 		// TODO: deal processing
@@ -208,9 +201,9 @@ func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 // Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 
+	p.Leader.r3 = make([]R3, len(m))
 	for i := range m {
-		r3 := m[i].Msg.(R3)
-		_ = r3
+		p.Leader.r3[i] = m[i].Msg.(R3)
 		// TODO: verify r3 contents
 		// TODO: store r3 in transcript
 		// TODO: do magic
@@ -252,10 +245,9 @@ func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
 // Phase 4 (leader)
 func (p *ProtocolRandHound) HandleR4(m []*sda.SDAData) error {
 
+	p.Leader.r4 = make([]R4, len(m))
 	for i := range m {
-		//dbg.Lvl1("Receiving message:", m[i])
-		r4 := m[i].Msg.(R4)
-		_ = r4
+		p.Leader.r4[i] = m[i].Msg.(R4)
 		// TODO: verify r4 contents
 		// TODO: store r4 in transcript
 		// TODO: do magic

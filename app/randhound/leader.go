@@ -8,28 +8,23 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-var Purpose chan string
-var Trustees chan int
-
 // TODO: figure out which variables from the old RandHound client (see
 // app/rand/cli.go) are necessary and which ones are covered by SDA
 type Leader struct {
-	keysize  int      // Key size in bytes
-	hashsize int      // Hash size in bytes
-	Session  *Session // Session parameter block
-	SID      []byte   // Session fingerprint
-	Group    *Group   // Group parameter block
-	GID      []byte   // Group fingerprint
-	Rc       []byte   // Leader's trustee-selection random value
-	Rs       [][]byte // Peers' trustee-selection random values
-	i1       I1       // I1 message
-	i2       I2       // I2 message
-	i3       I3       // I3 message
-	i4       I4       // I4 message
-	r1       []R1     // Decoded R1 messages
-	r2       []R2     // Decoded R2 messages
-	r3       []R3     // Decoded R3 messages
-	r4       []R4     // Decoded R4 messages
+	Session *Session // Session parameter block
+	SID     []byte   // Session fingerprint
+	Group   *Group   // Group parameter block
+	GID     []byte   // Group fingerprint
+	Rc      []byte   // Leader's trustee-selection random value
+	Rs      [][]byte // Peers' trustee-selection random values
+	i1      I1       // I1 message
+	i2      I2       // I2 message
+	i3      I3       // I3 message
+	i4      I4       // I4 message
+	r1      []R1     // Decoded R1 messages
+	r2      []R2     // Decoded R2 messages
+	r3      []R3     // Decoded R3 messages
+	r4      []R4     // Decoded R4 messages
 
 	//deals  []poly.Promise   // Unmarshaled deals from servers
 	//shares []poly.PriShares // Revealed shares
@@ -39,15 +34,13 @@ type Leader struct {
 
 func (p *ProtocolRandHound) newLeader() (*Leader, error) {
 
-	keysize := 16
-	hashsize := keysize * 2
-	purpose := <-Purpose
-
 	// Choose client's trustee-selection randomness
-	rc := make([]byte, hashsize)
+	hs := p.ProtocolStruct.Host.Suite().Hash().Size()
+	rc := make([]byte, hs)
 	random.Stream.XORKeyStream(rc, rc)
 
 	// Setup session
+	purpose := <-Purpose
 	session, sid, err := p.newSession(purpose)
 	if err != nil {
 		return nil, err
@@ -60,13 +53,11 @@ func (p *ProtocolRandHound) newLeader() (*Leader, error) {
 	}
 
 	return &Leader{
-		keysize:  keysize,
-		hashsize: hashsize,
-		Session:  session,
-		SID:      sid,
-		Group:    group,
-		GID:      gid,
-		Rc:       rc,
+		Session: session,
+		SID:     sid,
+		Group:   group,
+		GID:     gid,
+		Rc:      rc,
 	}, nil
 }
 

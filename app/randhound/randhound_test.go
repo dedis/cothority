@@ -16,13 +16,13 @@ import (
 func TestRandHound(t *testing.T) {
 
 	// setup general parameters
-	var n int = 5
-	var trustees int = 4
+	var npeers int = 10
+	var trustees int = 5
 	var purpose string = "RandHound test run"
 	var ip string = "localhost"
 	var port int = 2000
-	configs := make([]string, n)
-	for i := 0; i < n; i++ {
+	configs := make([]string, npeers)
+	for i := 0; i < npeers; i++ {
 		configs[i] = ip + ":" + strconv.Itoa(i+port)
 	}
 
@@ -40,7 +40,7 @@ func TestRandHound(t *testing.T) {
 	h[0].AddEntityList(list)
 	h[0].AddTree(tree)
 
-	// Setup RandHound channels and send parameters (TODO: find a better solution)
+	// Setup RandHound channels and send parameters (TODO: this should not be done here, find a better solution)
 	if randhound.Purpose == nil {
 		randhound.Purpose = make(chan string, 1)
 	}
