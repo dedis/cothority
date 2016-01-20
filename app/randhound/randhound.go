@@ -22,6 +22,9 @@ type ProtocolRandHound struct {
 	*sda.ProtocolStruct
 	Leader *Leader
 	Peer   *Peer
+	T      int // Minimum number of shares needed to reconstruct the secret
+	R      int // Minimum number of signatures needed to certify a deal (t <= r <= n)
+	N      int // Total number of shares
 }
 
 func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
@@ -138,6 +141,7 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 
 	suite := p.ProtocolStruct.Host.Suite()
 	p.Peer.i2 = m.Msg.(I2)
+	_ = suite
 
 	// TODO: verify contents of i2
 

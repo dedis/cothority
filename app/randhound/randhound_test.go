@@ -67,9 +67,9 @@ func TestRandHound(t *testing.T) {
 }
 
 func newHost(t *testing.T, address string) *sda.Host {
-	priv, pub := config.NewKeyPair(edwards.NewAES128SHA256Ed25519(false))
-	entity := network.NewEntity(pub, address)
-	return sda.NewHost(entity, priv)
+	keypair := config.NewKeyPair(edwards.NewAES128SHA256Ed25519(false))
+	entity := network.NewEntity(keypair.Public, address)
+	return sda.NewHost(entity, keypair.Secret)
 }
 
 func setupHosts(t *testing.T, configs []string) []*sda.Host {
