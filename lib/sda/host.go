@@ -232,8 +232,8 @@ func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 		ProtocolID:   protocolID,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       treeID,
-		// Host is handling the generation of protocolInstanceID
-		RoundID: cliutils.NewRandomUUID(),
+		TreeNodeID:   tree.Root.Id,
+		RoundID:      cliutils.NewRandomUUID(),
 	}
 	// instantiate protocol instance
 	pi, err := h.protocolInstantiate(token, tree.Root)
