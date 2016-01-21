@@ -1,5 +1,6 @@
 package protocols
 
+/*
 import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -35,3 +36,4 @@ func NewJVSSProtocol(h *sda.Host, t *sda.Tree, tok *sda.Token) *JVSSProtocol {
 		Token: tok,
 	}
 }
+*/
