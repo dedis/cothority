@@ -52,7 +52,7 @@ type R1 struct {
 
 type I2 struct {
 	SID []byte // Session identifier
-	Rc  []byte // Client's trustee-selection randomness
+	Rc  []byte // Leader's trustee-selection randomness
 }
 
 type R2 struct {

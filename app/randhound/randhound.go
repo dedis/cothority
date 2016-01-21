@@ -1,6 +1,9 @@
 package randhound
 
 import (
+	"bytes"
+	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -160,7 +163,7 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 		p.Host.Private(), // NOTE: the Private() function was introduced for RandHound only! Mabye there is a better solution...
 	}
 	secretPair := config.NewKeyPair(p.Host.Suite())
-	_, insurers := p.chooseInsurers(p.Peer.i2.Rc, p.Peer.Rs)
+	_, insurers := p.chooseInsurers(p.Peer.i2.Rc, p.Peer.Rs, p.Peer.self)
 	//dbg.Lvl1("I2:", p.Peer.self, keys)
 	deal := &poly.Deal{}
 	deal.ConstructDeal(secretPair, &longPair, p.T, p.R, insurers)
@@ -217,72 +220,59 @@ func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 // Phase 3 (peer)
 func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 
-	//dbg.Lvl1("I3:", p.Peer.self)
-
 	p.Peer.i3 = m.Msg.(I3) // messages might arrive out of order
-
-	//e, _ := p.Host.GetEntityList(p.Token.EntityListID)
-	//el := e.List
 
 	longPair := config.KeyPair{
 		p.Host.Suite(),
 		p.Host.Entity.Public,
-		p.Host.Private(), // NOTE: the Private() function was introduced for RandHound only! Mabye there is a better solution...
+		p.Host.Private(),
 	}
 
 	// TODO: verify contents of i3
 
-	// TODO: do magic
-
-	var HI2s []byte
 	r3resps := []R3Resp{}
+	r4shares := []R4Share{}
 	for _, r2 := range p.Peer.i3.R2s {
 
-		HI2s = append(HI2s, r2.HI2...) // required later for HI3
+		if !bytes.Equal(r2.HI2, p.Peer.r2.HI2) {
+			return errors.New("I3: R2 contains wrong I2")
+		}
 
-		// - iterate over the messages of all peers
-		// - unmarshal and validate the deals of all peers
+		// Unmarshal Deal
 		deal := &poly.Deal{}
 		deal.UnmarshalInit(p.T, p.R, p.N, p.Host.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
 
-		// Which insurers did a peer deal its secret to?
-		keys, _ := p.chooseInsurers(p.Peer.i2.Rc, r2.Rs)
-
-		//dbg.Lvl1("I3:", p.Peer.self, keys)
-
+		// Determine other peers who chose me as an insurer
+		keys, _ := p.chooseInsurers(p.Peer.i2.Rc, r2.Rs, r2.Dealer)
 		for k := range keys {
-			if keys[k] != p.Peer.self {
-				continue // share dealt to someone else
-			}
-			//dbg.Lvl1("here!")
-			resp, err := deal.ProduceResponse(k, &longPair)
-			if err != nil {
-				return err
-			}
+			if keys[k] == p.Peer.self {
+				resp, err := deal.ProduceResponse(k, &longPair)
+				if err != nil {
+					return err
+				}
 
-			var r3resp R3Resp
-			r3resp.Dealer = r2.Dealer
-			r3resp.Index = k
-			r3resp.Resp, err = resp.MarshalBinary()
-			if err != nil {
-				return err
+				var r3resp R3Resp
+				r3resp.Dealer = r2.Dealer
+				r3resp.Index = k
+				r3resp.Resp, err = resp.MarshalBinary()
+				if err != nil {
+					return err
+				}
+				r3resps = append(r3resps, r3resp)
+
+				share := deal.RevealShare(k, &longPair)
+				r4shares = append(r4shares, R4Share{r2.Dealer, k, share}) // TODO: store for later
 			}
-			r3resps = append(r3resps, r3resp)
-
-			// TODO: store shares (where are they?)
-
-			//dbg.Lvl1(p.Peer.self, resp)
-			//_ = resp
 		}
 	}
 
 	p.Peer.r3 = R3{
 		HI3: p.Hash(
 			p.Peer.i3.SID,
-			HI2s), // TODO: is this enough?
+			p.Peer.r2.HI2), // TODO: is this enough?
 		Resp: r3resps,
 	}
 
@@ -299,10 +289,10 @@ func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 		// TODO: store r3 in transcript
 		// TODO: do magic
 
-		dbg.Lvl1(i, len(p.Leader.r3[i].Resp))
+		//dbg.Lvl1(i, len(p.Leader.r3[i].Resp))
 
 		for _, r3resp := range p.Leader.r3[i].Resp {
-			j := r3resp.Dealer
+			//j := r3resp.Dealer
 
 			resp := &poly.Response{}
 			resp.UnmarshalInit(p.Host.Suite())

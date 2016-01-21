@@ -15,7 +15,7 @@ func (p *ProtocolRandHound) Hash(bytes ...[]byte) []byte {
 	return h.Sum(nil)
 }
 
-func (p *ProtocolRandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
+func (p *ProtocolRandHound) chooseInsurers(Rc, Rs []byte, ignore int) ([]int, []abstract.Point) {
 
 	// Seed PRNG for insurers selection
 	var seed []byte
@@ -24,6 +24,7 @@ func (p *ProtocolRandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Poi
 	prng := p.Host.Suite().Cipher(seed)
 	_ = prng
 
+	// Determine number of peers
 	e, _ := p.Host.GetEntityList(p.Token.EntityListID)
 	el := e.List
 	npeers := len(el) - 1
@@ -33,13 +34,13 @@ func (p *ProtocolRandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Poi
 	var keys []int
 	for len(set) < p.N {
 		i := int(random.Uint64(prng)%uint64(npeers)) + 1 // +1: avoid the leader which has index 0
-		// Avoid choosing ourselves and add insurer only if not done so before
-		//if el[i].Id != p.Host.Entity.Id { // TODO: peers can choose themselves as an insurer
-		if _, ok := set[i]; !ok {
-			set[i] = true
-			keys = append(keys, i)
+		// Avoid choosing ourselves as insurer and add insurer only if not done so before
+		if i != ignore {
+			if _, ok := set[i]; !ok {
+				set[i] = true
+				keys = append(keys, i)
+			}
 		}
-		//}
 	}
 	sort.Ints(keys) // store the list of insurers in an ascending manner
 	//dbg.Lvl1(keys)
