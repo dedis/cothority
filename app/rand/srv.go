@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
+
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
@@ -113,6 +115,7 @@ func (s *Server) serve(conn Conn) (err error) {
 	selkeys := make([]abstract.Point, len(sel))
 	for i := range sel {
 		selkeys[i] = s.srvpub[sel[i]].Point
+		fmt.Println(sel[i], selkeys[i])
 	}
 	deal := &poly.Promise{}
 	deal.ConstructPromise(secPair, &s.keypair, thresT, thresR, selkeys)

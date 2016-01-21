@@ -47,7 +47,7 @@ type I1 struct {
 
 type R1 struct {
 	HI1 []byte // Hash of I1 message
-	HRs []byte // Server's trustee-randomness commit
+	HRs []byte // Peer's trustee-randomness commit
 }
 
 type I2 struct {
@@ -56,14 +56,15 @@ type I2 struct {
 }
 
 type R2 struct {
-	HI2  []byte // Hash of I2 message
-	Rs   []byte // Servers' trustee-selection randomness
-	Deal []byte // Server's secret-sharing to trustees
+	HI2    []byte // Hash of I2 message
+	Rs     []byte // Peers' trustee-selection randomness
+	Dealer int    // Dealer's index in the peer list
+	Deal   []byte // Peer's secret-sharing to trustees
 }
 
 type I3 struct {
-	SID []byte   // Session identifier
-	R2s [][]byte // Client's list of signed R2 messages; empty slices represent missing R2 messages
+	SID []byte // Session identifier
+	R2s []R2   // Client's list of signed R2 messages; empty slices represent missing R2 messages
 }
 
 type R3 struct {
@@ -72,7 +73,7 @@ type R3 struct {
 }
 
 type R3Resp struct {
-	Dealer int    // Server number of dealer
+	Dealer int    // Dealer's index in the peer list
 	Index  int    // Share number in deal we are validating
 	Resp   []byte // Encoded response to dealer's Deal
 }
@@ -88,7 +89,7 @@ type R4 struct {
 }
 
 type R4Share struct {
-	Dealer int             // Server number of dealer
+	Dealer int             // Dealer's index in the peer list
 	Index  int             // Share number in dealer's Deal
 	Share  abstract.Secret // Decrypted share dealt to this server
 }

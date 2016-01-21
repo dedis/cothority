@@ -101,7 +101,11 @@ func (p *ProtocolRandHound) Start() error {
 // Phase 1 (peer)
 func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
 
-	p.Peer = p.newPeer()
+	peer, err := p.newPeer()
+	if err != nil {
+		return err
+	}
+	p.Peer = peer
 	p.Peer.i1 = m.Msg.(I1)
 
 	// TODO: verify i1 contents
@@ -156,7 +160,8 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 		p.Host.Private(), // NOTE: the Private() function was introduced for RandHound only! Mabye there is a better solution...
 	}
 	secretPair := config.NewKeyPair(p.Host.Suite())
-	insurers := p.chooseInsurers(p.Peer.i2.Rc, p.Peer.Rs)
+	_, insurers := p.chooseInsurers(p.Peer.i2.Rc, p.Peer.Rs)
+	//dbg.Lvl1("I2:", p.Peer.self, keys)
 	deal := &poly.Deal{}
 	deal.ConstructDeal(secretPair, &longPair, p.T, p.R, insurers)
 	db, err := deal.MarshalBinary()
@@ -168,8 +173,10 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 		HI2: p.Hash(
 			p.Peer.i2.SID,
 			p.Peer.i2.Rc),
-		Rs:   p.Peer.Rs,
-		Deal: db}
+		Rs:     p.Peer.Rs,
+		Dealer: p.Peer.self,
+		Deal:   db,
+	}
 
 	return p.Send(p.Parent, &p.Peer.r2)
 }
@@ -177,23 +184,25 @@ func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
 // Phase 3 (leader)
 func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 
+	//dbg.Lvl1("Leader:")
+
 	p.Leader.r2 = make([]R2, len(m))
 	p.Leader.deals = make([]poly.Deal, len(m)) // TODO: we assume here that len(m) == #peers which might not be always correct
 	for i, _ := range m {
 		p.Leader.r2[i] = m[i].Msg.(R2)
 		// TODO: verify r2 contents
 
-		// Extract deals
+		// Extract and verify deals
 		p.Leader.deals[i].UnmarshalInit(p.T, p.R, p.N, p.Host.Suite())
 		if err := p.Leader.deals[i].UnmarshalBinary(p.Leader.r2[i].Deal); err != nil {
 			return err
 		}
 	}
 
-	R2s := make([][]byte, 0)
 	p.Leader.i3 = I3{
 		SID: p.Leader.SID,
-		R2s: R2s}
+		R2s: p.Leader.r2,
+	}
 
 	for _, c := range p.Children {
 		err := p.Send(c, &p.Leader.i3)
@@ -208,17 +217,74 @@ func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
 // Phase 3 (peer)
 func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 
-	p.Peer.i3 = m.Msg.(I3)
+	//dbg.Lvl1("I3:", p.Peer.self)
+
+	p.Peer.i3 = m.Msg.(I3) // messages might arrive out of order
+
+	//e, _ := p.Host.GetEntityList(p.Token.EntityListID)
+	//el := e.List
+
+	longPair := config.KeyPair{
+		p.Host.Suite(),
+		p.Host.Entity.Public,
+		p.Host.Private(), // NOTE: the Private() function was introduced for RandHound only! Mabye there is a better solution...
+	}
 
 	// TODO: verify contents of i3
 
 	// TODO: do magic
 
+	var HI2s []byte
+	r3resps := []R3Resp{}
+	for _, r2 := range p.Peer.i3.R2s {
+
+		HI2s = append(HI2s, r2.HI2...) // required later for HI3
+
+		// - iterate over the messages of all peers
+		// - unmarshal and validate the deals of all peers
+		deal := &poly.Deal{}
+		deal.UnmarshalInit(p.T, p.R, p.N, p.Host.Suite())
+		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
+			return err
+		}
+
+		// Which insurers did a peer deal its secret to?
+		keys, _ := p.chooseInsurers(p.Peer.i2.Rc, r2.Rs)
+
+		//dbg.Lvl1("I3:", p.Peer.self, keys)
+
+		for k := range keys {
+			if keys[k] != p.Peer.self {
+				continue // share dealt to someone else
+			}
+			//dbg.Lvl1("here!")
+			resp, err := deal.ProduceResponse(k, &longPair)
+			if err != nil {
+				return err
+			}
+
+			var r3resp R3Resp
+			r3resp.Dealer = r2.Dealer
+			r3resp.Index = k
+			r3resp.Resp, err = resp.MarshalBinary()
+			if err != nil {
+				return err
+			}
+			r3resps = append(r3resps, r3resp)
+
+			// TODO: store shares (where are they?)
+
+			//dbg.Lvl1(p.Peer.self, resp)
+			//_ = resp
+		}
+	}
+
 	p.Peer.r3 = R3{
 		HI3: p.Hash(
 			p.Peer.i3.SID,
-			make([]byte, 0)), // TODO: unpack R2s, see I3
-		Resp: make([]R3Resp, 0)}
+			HI2s), // TODO: is this enough?
+		Resp: r3resps,
+	}
 
 	return p.Send(p.Parent, &p.Peer.r3)
 }
@@ -232,6 +298,25 @@ func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
 		// TODO: verify r3 contents
 		// TODO: store r3 in transcript
 		// TODO: do magic
+
+		dbg.Lvl1(i, len(p.Leader.r3[i].Resp))
+
+		for _, r3resp := range p.Leader.r3[i].Resp {
+			j := r3resp.Dealer
+
+			resp := &poly.Response{}
+			resp.UnmarshalInit(p.Host.Suite())
+			if err := resp.UnmarshalBinary(r3resp.Resp); err != nil {
+				return err
+			}
+			//TODO: verify that response is good (how?)
+
+			//if !resp.Good() {
+			//	dbg.Lvl1("peer %d dealt bad promise to peer %d", j, i) // TODO: the "i" here is not correct!
+			//	p.Leader.r2[j] = nil
+			//}
+
+		}
 	}
 
 	R2s := make([][]byte, 0)
