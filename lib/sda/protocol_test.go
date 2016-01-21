@@ -6,7 +6,9 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/edwards"
 	"github.com/satori/go.uuid"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -265,6 +267,121 @@ func TestProtocolAggregation(t *testing.T) {
 	hosts[1].Close()
 	hosts[2].Close()
 
+}
+
+type MyStruct struct {
+	I int
+}
+
+var MyStructType = reflect.TypeOf([]MyStruct{})
+
+func ConvertMsgs(from interface{}) (reflect.Type, interface{}, error) {
+	s_from := reflect.ValueOf(from)
+	if s_from.Kind() != reflect.Slice {
+		return nil, nil, errors.New("Didn't get a slice")
+	}
+
+	s_to := reflect.MakeSlice(reflect.TypeOf(from), 2, 2)
+
+	for i := 0; i < s_from.Len(); i++ {
+		s_to.Index(i).Set(s_from.Index(i))
+	}
+	return reflect.TypeOf(from), s_to.Interface(), nil
+}
+
+// All known channels
+var channels map[reflect.Type]interface{}
+
+// RegisterChannel stores a channel and the message-type
+func RegisterChannel(c interface{}) error {
+	if channels == nil {
+		channels = make(map[reflect.Type]interface{})
+	}
+	cr := reflect.TypeOf(c)
+	// Also check it's a map
+	//if cr.Kind() != reflect.Chan || cr.Elem().Key().Kind() != reflect.String {
+	if cr.Kind() != reflect.Chan {
+		return errors.New("input is either not channel or doesn't have map[string]")
+	}
+	typ := cr.Elem().Elem()
+	channels[typ] = c
+	dbg.Print("Registered channel", typ)
+	return nil
+}
+
+// SendMsg takes a channel where it will send
+func SendMsg(msgMap interface{}) error {
+	msgMapRef := reflect.ValueOf(msgMap)
+	if msgMapRef.Kind() != reflect.Map {
+		return errors.New("Didn't get a map")
+	}
+
+	typ := reflect.TypeOf(msgMap).Elem()
+	dbg.Print("Type is", typ)
+	out, ok := channels[typ]
+	if !ok {
+		return errors.New("Didn't find message-type: " + msgMapRef.Elem().String())
+	}
+	reflect.ValueOf(out).Send(msgMapRef)
+	return nil
+}
+
+// SDAReceivesMsg simulates the arrival of two messages
+func SDAReceivesMsg() {
+	time.Sleep(time.Millisecond * 100)
+	msgMap := make(map[uuid.UUID]MyStruct)
+	msgMap[uuid.NewV4()] = MyStruct{3}
+	msgMap[uuid.NewV4()] = MyStruct{4}
+	err := SendMsg(msgMap)
+	if err != nil {
+		dbg.Fatal("Error while sending msg:", err)
+	}
+}
+
+func TestRewritingChan(t *testing.T) {
+	mychan := make(chan struct {
+		sda.TreeNode
+		MyStruct
+	})
+	err := RegisterChannel(mychan)
+	if err != nil {
+		t.Fatal("Couldn't register channel:", err)
+	}
+	go SDAReceivesMsg()
+	select {
+	case msgs := <-mychan:
+		dbg.Printf("%+v", msgs.MyStruct.I)
+		/*
+			for k, v := range msgs {
+				switch k {
+				default:
+					t.Fatal("There should be no key", v)
+				case "one":
+					if v.I != 3 {
+						t.Fatal("Key 'one' should give 3")
+					}
+				case "two":
+					if v.I != 4 {
+						t.Fatal("Key 'two' should give 4")
+					}
+				}
+			}
+		*/
+	}
+}
+
+func TestRewriting(t *testing.T) {
+	from := make([]MyStruct, 2)
+	from[0].I = 3
+	typ, msgs, err := ConvertMsgs(from)
+	if err != nil {
+		t.Fatal("Error while converting:", err)
+	}
+	switch typ {
+	case MyStructType:
+		to := msgs.([]MyStruct)
+		dbg.Printf("%+v - %+v", from, to)
+	}
 }
 
 type AggregationProtocol struct {
