@@ -111,9 +111,9 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 // NewHostKey creates a new host only from the ip-address and port-number. This
 // is useful in testing and deployment for measurements
 func NewHostKey(address string) (*Host, abstract.Secret) {
-	priv, pub := config.NewKeyPair(network.Suite)
-	entity := network.NewEntity(pub, address)
-	return NewHost(entity, priv), priv
+	kp := config.NewKeyPair(network.Suite)
+	entity := network.NewEntity(kp.Public, address)
+	return NewHost(entity, kp.Secret), kp.Secret
 }
 
 // Listen starts listening for messages coming from any host that tries to
@@ -408,6 +408,11 @@ func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
+// Private returns the private key used by this host, kinda the "longterm" key.
+func (h *Host) Private() abstract.Secret {
+	return h.private
+}
+
 // ProtocolInstantiate creates a new instance of a protocol given by it's name
 func (h *Host) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
 	p, ok := protocols[tok.ProtocolID]
@@ -652,4 +657,28 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 		h.AddTree(tree)
 	}
 	h.pendingTreeLock.Unlock()
+}
+
+// Testing helpers functions
+// NewHostMock returns a freshly generated host at this address with a random
+// keypair
+func NewHostMock(s abstract.Suite, address string) *Host {
+	kp := cliutils.KeyPair(s)
+	id := network.NewEntity(kp.Public, address)
+	return NewHost(id, kp.Secret)
+}
+
+// SetupHostsMock create as many hosts as we give addresses and make each one
+// listen + process messages
+func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
+	var hosts []*Host
+	for _, add := range addresses {
+		h := NewHostMock(s, add)
+		hosts = append(hosts, h)
+		go func() {
+			h.Listen()
+			h.ProcessMessages()
+		}()
+	}
+	return hosts
 }
