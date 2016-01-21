@@ -14,11 +14,9 @@ import (
 	"time"
 )
 
-var suite abstract.Suite = network.Suite
-
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
-	h1 := newHost("localhost:2000", suite)
+	h1 := newHost("localhost:2000")
 	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
 	}
@@ -31,8 +29,8 @@ func TestHostNew(t *testing.T) {
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	h1 := newHost("localhost:2000", suite)
-	h2 := newHost("localhost:2001", suite)
+	h1 := newHost("localhost:2000")
+	h2 := newHost("localhost:2001")
 	h1.Listen()
 	h2.Connect(h1.Entity)
 	err := h1.Close()
@@ -44,7 +42,7 @@ func TestHostClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h1 = newHost("localhost:2002", suite)
+	h1 = newHost("localhost:2002")
 	h1.Listen()
 	if err != nil {
 		t.Fatal("Couldn't re-open listener")
@@ -361,8 +359,8 @@ func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
 	return keypair.Secret, keypair.Public
 }
 
-func newHost(address string, s abstract.Suite) *sda.Host {
-	priv, pub := privPub(s)
+func newHost(address string) *sda.Host {
+	priv, pub := privPub(network.Suite)
 	id := network.NewEntity(pub, address)
 	return sda.NewHost(id, priv)
 }
@@ -370,9 +368,9 @@ func newHost(address string, s abstract.Suite) *sda.Host {
 // Creates two hosts on the local interfaces,
 func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	h1 := newHost("localhost:2000", suite)
+	h1 := newHost("localhost:2000")
 	// make the second peer as the server
-	h2 := newHost("localhost:2001", suite)
+	h2 := newHost("localhost:2001")
 	h2.Listen()
 	// make it process messages
 	if h2process {
@@ -390,7 +388,7 @@ func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 func GenHosts(t *testing.T, n int) []*sda.Host {
 	var hosts []*sda.Host
 	for i := 0; i < n; i++ {
-		hosts = append(hosts, newHost("localhost:"+strconv.Itoa(2000+i*10), suite))
+		hosts = append(hosts, newHost("localhost:"+strconv.Itoa(2000+i*10)))
 	}
 	root := hosts[0]
 	root.Listen()

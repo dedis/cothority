@@ -446,7 +446,7 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 
 // Receive will return the value of the communication-channel, unmarshalling
 // the SDAMessage. Receive is called in ProcessMessages as it takes directly
-// the message from the networkChan, and pre-process the SDAMessage
+// the message from the networkChan, and pre-processes the SDAMessage
 func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
 	if data.MsgType == SDADataMessage {

@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"github.com/satori/go.uuid"
 )
 
 // Some packet and their respective network type
@@ -32,6 +33,28 @@ var tSuite = Suite
 // to cast to the right packet type (See below)
 var PublicType = RegisterMessageType(PublicPacket{})
 var TestMessageType = RegisterMessageType(TestMessage{})
+
+type TestRegisterS struct {
+	I int
+}
+
+func TestRegister(t *testing.T) {
+	if TypeFromData(&TestRegisterS{}) != ErrorType {
+		t.Fatal("TestRegister should not yet be there")
+	}
+
+	trType := RegisterMessageType(&TestRegisterS{})
+	if uuid.Equal(trType, uuid.Nil) {
+		t.Fatal("Couldn't register TestRegister-struct")
+	}
+
+	if TypeFromData(&TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+	if TypeFromData(TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+}
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {

@@ -26,6 +26,7 @@ type ProtocolInstance interface {
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
 type NewProtocol func(*Host, *TreeNode, *Token) ProtocolInstance
+type MsgHandler func([]*interface{})
 
 // ProtocolMapper handles the mapping between tokens and protocol instances. It
 // also provides helpers for protocol instances such as sending a message to
@@ -35,8 +36,8 @@ type NewProtocol func(*Host, *TreeNode, *Token) ProtocolInstance
 // it there when our Host struct will grow. As it is starting to be already big,
 // we may, in the future, move many protocol instance /  tree / entitylist
 // handling methods in here, so host won't be too much .."overloaded" like our
-// old sign.Node. Host could relay everything that is realted to that in this
-// struct and handles the reste such as the connection, the callbacks, the
+// old sign.Node. Host could relay everything that is related to that in this
+// struct and handle other things such as the connection, the callbacks, the
 // errors handling etc.
 type protocolMapper struct {
 	// mapping instances with their tokens
@@ -45,6 +46,10 @@ type protocolMapper struct {
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
 	msgQueue map[uuid.UUID][]*SDAData
+	// registered channels for a protocolInstance and Message
+	channels map[uuid.UUID]map[uuid.UUID]interface{}
+	// registered handler-functions for that protocol
+	handlers map[uuid.UUID]MsgHandler
 	// Host reference
 	Host *Host
 }
@@ -77,10 +82,9 @@ func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) (bool, error) {
 	}
 
 	// if messages come from children we must aggregate them
-	var msgs []*SDAData
-	var ok bool
 	// if we still need to wait additionals message, we return
-	if msgs, ok = pm.aggregate(node, sdaMsg); !ok {
+	msgs, ok := pm.aggregate(node, sdaMsg)
+	if !ok {
 		return false, errors.New("Still aggregating for this SDAData")
 	}
 	// all is good
@@ -108,7 +112,7 @@ func (pm *protocolMapper) aggregate(node *TreeNode, sdaMsg *SDAData) ([]*SDAData
 		return msgs, true
 	}
 	// no we still have to wait!
-	dbg.Lvl2("Len(msg)=", len(msgs), " vs len(children)=", len(node.Children))
+	dbg.Lvl2("Len(msg)=", len(msgs), "vs len(children)=", len(node.Children))
 	return nil, false
 }
 
