@@ -313,6 +313,7 @@ func (sc *SecureTcpConn) Entity() *Entity {
 // when a connection request is made during listening
 func (sc *SecureTcpConn) negotiateListen() error {
 	// Send our Entity to the remote endpoint
+	dbg.Lvl4("Sending our identity")
 	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
@@ -321,6 +322,7 @@ func (sc *SecureTcpConn) negotiateListen() error {
 	if err != nil {
 		return fmt.Errorf("Error while receiving Entity during negotiation %s", err)
 	}
+	dbg.Lvl4("Received our identity")
 	// Check if it is correct
 	if nm.MsgType != EntityType {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
@@ -329,6 +331,7 @@ func (sc *SecureTcpConn) negotiateListen() error {
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
 	sc.entity = &e
+	dbg.Lvl4("Identity exchange complete")
 	return nil
 }
 

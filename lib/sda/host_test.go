@@ -339,6 +339,29 @@ func TestTokenId(t *testing.T) {
 	}
 }
 
+// Test the automatic connection upon request
+func TestAutoConnection(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	h1 := newHost("localhost:2000")
+	h2 := newHost("localhost:2001")
+	defer h1.Close()
+	defer h2.Close()
+
+	h2.Listen()
+	list := GenEntityListFromHost(h1, h2)
+	h1.AddEntityList(list)
+	err := h1.SendRaw(h2.Entity, &SimpleMessage{12})
+	if err != nil {
+		t.Fatal("Couldn't send message:", err)
+	}
+
+	// Receive the message
+	msg := h2.Receive()
+	if msg.Msg.(SimpleMessage).I != 12 {
+		t.Fatal("Simple message got distorted")
+	}
+}
+
 // Test instantiation of ProtocolInstances
 
 // Test access of actual peer that received the message
