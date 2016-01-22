@@ -194,7 +194,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	list, ok := h1.GetEntityList(el1.Id)
+	list, ok := h1.EntityList(el1.Id)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
@@ -296,7 +296,7 @@ func TestListTreePropagation(t *testing.T) {
 		}
 		// We got the tree that's already something, now do we get the entity
 		// list
-		if _, ok := h1.GetEntityList(el.Id); !ok {
+		if _, ok := h1.EntityList(el.Id); !ok {
 			tryEntity++
 			continue
 		}

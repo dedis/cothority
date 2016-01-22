@@ -181,7 +181,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 // the Entity where it want to send the message then the msg. The message will
 // be transformed into a SDAData message automatically.
 func (h *Host) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
-	tn, err := h.TreeNodeFromToken(to)
+	tn, err := h.overlay.TreeNodeFromToken(to)
 	if err != nil {
 		return err
 	}
@@ -245,9 +245,9 @@ func (h *Host) ProcessMessages() {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
-			il, ok := h.GetEntityList(tm.EntityId)
+			il := h.overlay.EntityList(tm.EntityId)
 			// The entity list does not exists, we should request for that too
-			if !ok {
+			if il == nil {
 				msg := &RequestEntityList{tm.EntityId}
 				if err := h.SendRaw(data.Entity, msg); err != nil {
 					dbg.Error("Requesting EntityList in SendTree failed", err)
@@ -293,59 +293,6 @@ func (h *Host) ProcessMessages() {
 			dbg.Error("Sending error:", err)
 		}
 	}
-}
-
-// AddEntityList stores the peer-list for further usage
-func (h *Host) AddEntityList(el *EntityList) {
-	h.entityListsLock.Lock()
-	h.overlay.RegisterEntityList(el)
-	h.entityListsLock.Unlock()
-}
-
-// AddTree stores the tree for further usage
-// IT also calls checkPendingSDA so we can now instantiate protocol instance
-// using this tree
-func (h *Host) AddTree(t *Tree) {
-	h.treesLock.Lock()
-	h.overlay.RegisterTree(t)
-	h.treesLock.Unlock()
-	h.checkPendingSDA(t)
-}
-
-// GetEntityList returns the EntityList
-func (h *Host) GetEntityList(id uuid.UUID) (*EntityList, bool) {
-	h.entityListsLock.Lock()
-	el := h.overlay.EntityList(id)
-	h.entityListsLock.Unlock()
-	return el, el != nil
-}
-
-// GetTree returns the TreeList
-func (h *Host) GetTree(id uuid.UUID) (*Tree, bool) {
-	h.treesLock.Lock()
-	t := h.overlay.Tree(id)
-	h.treesLock.Unlock()
-	return t, t != nil
-}
-
-// HaveTree returns true if the protocolIDm the ENtityListID and the treeID is
-// right or no. If we don't have either the tree or the entitylist, we then
-// request them first amd put the message as pending message.
-func (h *Host) HaveTree(sda *SDAData) bool {
-
-	return true
-}
-
-func (h *Host) TreeNodeFromToken(t *Token) (*TreeNode, error) {
-	tree := h.overlay.Tree(t.TreeID)
-	if tree == nil {
-		return nil, errors.New("Didn't find tree")
-	}
-	tn := tree.GetTreeNode(t.TreeNodeID)
-	if tn == nil {
-		return nil, errors.New("Didn't find treenode")
-	}
-	return tn, nil
 }
 
 // sendSDAData do its marshalling of the inner msg and then sends a SDAData msg

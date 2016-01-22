@@ -30,3 +30,21 @@ func (h *Host) ProtocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, 
 func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (ProtocolInstance, error) {
 	return h.overlay.StartNewProtocol(protocolID, treeID)
 }
+
+func (h *Host) AddEntityList(el *EntityList) {
+	h.overlay.RegisterEntityList(el)
+}
+
+func (h *Host) EntityList(id uuid.UUID) (*EntityList, bool) {
+	el := h.overlay.EntityList(id)
+	return el, el != nil
+}
+
+func (h *Host) AddTree(t *Tree) {
+	h.overlay.RegisterTree(t)
+}
+
+func (h *Host) GetTree(id uuid.UUID) (*Tree, bool) {
+	t := h.overlay.Tree(id)
+	return t, t != nil
+}

@@ -84,7 +84,7 @@ func (o *Overlay) DispatchToInstance(sdaMsg *SDAData) (bool, error) {
 		return false, errors.New("No instance for this token")
 	}
 	//  Get the node corresponding to this host in the Tree
-	node, err := o.host.TreeNodeFromToken(sdaMsg.To)
+	node, err := o.TreeNodeFromToken(sdaMsg.To)
 	if err != nil {
 		return false, fmt.Errorf("Could not find TreeNode for this host in aggregate: %s", err)
 	}
@@ -148,6 +148,7 @@ func (o *Overlay) SendTo(from *Token, dest *TreeNode, msg interface{}) error {
 // RegisterTree takes a tree and puts it in the map
 func (o *Overlay) RegisterTree(t *Tree) {
 	o.trees[t.Id] = t
+	o.host.checkPendingSDA(t)
 }
 
 // TreeFromToken searches for the tree corresponding to a token.
@@ -254,4 +255,17 @@ func (o *Overlay) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Prot
 
 func (o *Overlay) StartNewProtocolName(name string, treeID uuid.UUID) (ProtocolInstance, error) {
 	return o.StartNewProtocol(ProtocolNameToUuid(name), treeID)
+}
+
+// TreeNodeFromToken returns the treeNode corresponding to a token
+func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
+	tree := o.Tree(t.TreeID)
+	if tree == nil {
+		return nil, errors.New("Didn't find tree")
+	}
+	tn := tree.GetTreeNode(t.TreeNodeID)
+	if tn == nil {
+		return nil, errors.New("Didn't find treenode")
+	}
+	return tn, nil
 }

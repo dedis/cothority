@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestNodeChannel(t *testing.T) {
+func estNodeChannel(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genEntityList(tSuite, names)
