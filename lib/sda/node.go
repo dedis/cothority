@@ -92,6 +92,9 @@ func (n *Node) IsLeaf() bool {
 
 // SendTo sends to a given node
 func (n *Node) SendTo(to *TreeNode, msg interface{}) error {
+	if to == nil {
+		return errors.New("Sent to a nil TreeNode")
+	}
 	return n.overlay.SendToTreeNode(n.token, to, msg)
 }
 

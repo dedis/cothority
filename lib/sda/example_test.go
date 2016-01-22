@@ -1,17 +1,39 @@
-/*
-Implements a full test with
-- a test-protocol (two steps)
-- 4 local nodes
-- tree-graph for the nodes
-- passing of messages
-*/
-package example
+package sda_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"testing"
+	"time"
 )
+
+// Tests a 2-node system
+func TestNode2(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+
+	h1, h2 := setupHosts(t, true)
+	go h1.ProcessMessages()
+	defer h1.Close()
+	defer h2.Close()
+
+	list := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
+	tree, _ := list.GenerateBinaryTree()
+	h1.AddEntityList(list)
+	h1.AddTree(tree)
+
+	_, err := h1.StartNewNodeName("Example", tree)
+	if err != nil {
+		t.Fatal("Couldn't start protocol:", err)
+	}
+
+	select {
+	case _ = <-Done:
+		dbg.Lvl2("Instance 1 is done")
+	case <-time.After(time.Second):
+		t.Fatal("Didn't finish in time")
+	}
+}
 
 var Done chan bool
 
@@ -21,7 +43,7 @@ func init() {
 
 // ProtocolExample just holds a message that is passed to all children.
 type ProtocolExample struct {
-	*sda.ProtocolStruct
+	*sda.Node
 	Message string
 }
 
@@ -40,19 +62,19 @@ type MessageReply struct {
 var MessageReplyType = network.RegisterMessageType(MessageReply{})
 
 // NewProtocolInstance initialises the structure for use in one round
-func NewExample(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
+func NewExample(n *sda.Node) sda.ProtocolInstance {
 	if Done == nil {
 		Done = make(chan bool, 1)
 	}
 	return &ProtocolExample{
-		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
+		Node: n,
 	}
 }
 
 // Starts the protocol
 func (p *ProtocolExample) Start() error {
 	dbg.Lvl3("Starting example")
-	return p.Send(p.Children[0], &MessageAnnounce{"cothority rulez!"})
+	return p.SendTo(p.Children()[0], &MessageAnnounce{"cothority rulez!"})
 }
 
 // Dispatch takes the message and decides what function to call
@@ -74,15 +96,15 @@ func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
 	p.Message = msg.Message
 	if !p.IsLeaf() {
 		// If we have children, send the same message to all of them
-		for _, c := range p.Children {
-			err := p.Send(c, msg)
+		for _, c := range p.Children() {
+			err := p.SendTo(c, msg)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		// If we're the leaf, start to reply
-		return p.Send(p.Parent, &MessageReply{1})
+		return p.SendTo(p.Parent(), &MessageReply{1})
 	}
 	return nil
 }
@@ -91,11 +113,15 @@ func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
 // to verify the number of nodes.
 func (p *ProtocolExample) HandleReply(m *sda.SDAData) error {
 	msg := m.Msg.(MessageReply)
-	msg.Children += len(p.Children)
+	msg.Children += len(p.Children())
 	Done <- true
 	dbg.Lvl3("We're done")
-	if p.Parent != nil {
-		return p.Send(p.Parent, msg)
+	if p.Parent() != nil {
+		return p.SendTo(p.Parent(), msg)
 	}
 	return nil
+}
+
+// Tests a 10-node system
+func TestNode10(t *testing.T) {
 }
