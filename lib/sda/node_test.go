@@ -1,8 +1,12 @@
 package sda_test
 
-import ()
+import (
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
+	"testing"
+)
 
-/*
 func TestNodeChannel(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
@@ -10,28 +14,30 @@ func TestNodeChannel(t *testing.T) {
 	// Generate two example topology
 	tree, _ := peerList.GenerateBinaryTree()
 	dbg.Lvl4("Tree is", tree)
+	h := newHost("localhost:2000")
+	defer h.Close()
 
-	o := sda.NewOverlay(nil)
+	o := sda.NewOverlay(h)
 	o.RegisterTree(tree)
-	n := sda.NewNode(o, &sda.Token{TreeID: tree.Id})
+	n, err := sda.NewNode(o, &sda.Token{TreeID: tree.Id})
 	c := make(chan struct {
 		sda.TreeNode
 		NodeTestMsg
 	}, 1)
-	err := n.RegisterChannel(c)
+	err = n.RegisterChannel(c)
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel(&sda.SDAData{
+	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
 			TreeID:     tree.Id,
 			TreeNodeID: tree.Root.Id,
-		},
+		}},
 	})
 	if err != nil {
-		t.Fatal("Coulnd't dispatch to channel:", err)
+		t.Fatal("Couldn't dispatch to channel:", err)
 	}
 	msg := <-c
 	if msg.I != 3 {
@@ -39,8 +45,8 @@ func TestNodeChannel(t *testing.T) {
 	}
 }
 
-// Test instantiation of the protocol
-func TestProtocolInstantiation(t *testing.T) {
+// Test instantiation of Node
+func TestNewNode(t *testing.T) {
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	h1, h2 := setupHosts(t, false)
 	// Add tree + entitylist
@@ -49,28 +55,15 @@ func TestProtocolInstantiation(t *testing.T) {
 	h1.AddEntityList(el)
 	tree, _ := el.GenerateBinaryTree()
 	h1.AddTree(tree)
-	// Then try to instantiate
-	tok := &sda.Token{
-		ProtocolID:   testID,
-		TreeID:       tree.Id,
-		EntityListID: tree.EntityList.Id,
-	}
-
-	p, err := h1.ProtocolInstantiate(tok, tree.Root)
-	if err != nil {
-		t.Fatal("Couldn't instantiate test-protocol")
-	}
-	if p.Dispatch(nil) != nil {
-		t.Fatal("Dispatch-method didn't return nil")
-	}
 
 	// Try directly StartNewProtocol
-	_, err = h1.StartNewProtocol(testID, tree.Id)
+	node, err := h1.StartNewNode(testID, tree)
 	if err != nil {
 		t.Fatal("Could not start new protocol")
 	}
-	if testString == "" {
-		t.Fatal("Start() not called")
+	p := node.ProtocolInstance().(*ProtocolTest)
+	if p.Msg != "Start" {
+		t.Fatal("Start() not called - msg is:", p.Msg)
 	}
 	h1.Close()
 	h2.Close()
@@ -79,4 +72,3 @@ func TestProtocolInstantiation(t *testing.T) {
 type NodeTestMsg struct {
 	I int
 }
-*/

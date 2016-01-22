@@ -19,12 +19,14 @@ var aggregateID = uuid.NewV5(uuid.NamespaceURL, "aggregate")
 // everything it receives.
 type ProtocolTest struct {
 	node *sda.Node
+	Msg  string
 }
 
 // NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *sda.Node) sda.ProtocolInstance {
 	return &ProtocolTest{
 		node: n,
+		Msg:  "new",
 	}
 }
 
@@ -32,11 +34,13 @@ func NewProtocolTest(n *sda.Node) sda.ProtocolInstance {
 // copied to /dev/null
 func (p *ProtocolTest) Dispatch(m []*sda.SDAData) error {
 	dbg.Lvl2("PRotocolTest.Dispatch()")
+	p.Msg = "Dispatch"
 	return nil
 }
 
 func (p *ProtocolTest) Start() error {
 	dbg.Lvl2("ProtocolTest.Start()")
+	p.Msg = "Start"
 	return nil
 }
 
@@ -75,9 +79,6 @@ func (p *SimpleProtocol) Dispatch(m []*sda.SDAData) error {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	if sda.ProtocolExists(testID) {
-		t.Fatal("Test should not exist yet")
-	}
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	if !sda.ProtocolExists(testID) {
 		t.Fatal("Test should exist now")

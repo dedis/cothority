@@ -117,6 +117,11 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	return nil
 }
 
+// ProtocolInstance returns the instance of the running protocol
+func (n *Node) ProtocolInstance() ProtocolInstance {
+	return n.instance
+}
+
 // ProtocolInstantiate creates a new instance of a protocol given by it's name
 func (n *Node) protocolInstantiate() error {
 	p, ok := protocols[n.token.ProtocolID]
