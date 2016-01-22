@@ -3,6 +3,7 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/satori/go.uuid"
 )
@@ -214,4 +215,43 @@ func (o *Overlay) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstanc
 	pi := p(o.host, tn, tok)
 	o.RegisterProtocolInstance(pi, tok)
 	return pi, nil
+}
+
+// StartNewProtocol starts a new protocol by instantiating a instance of that
+// protocol and then call Start on it.
+func (o *Overlay) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (ProtocolInstance, error) {
+	// check everything exists
+	if !ProtocolExists(protocolID) {
+		return nil, errors.New("Protocol does not exists")
+	}
+	tree := o.Tree(treeID)
+	if tree == nil {
+		return nil, errors.New("TreeId does not exists")
+	}
+
+	// instantiate
+	token := &Token{
+		ProtocolID:   protocolID,
+		EntityListID: tree.EntityList.Id,
+		TreeID:       treeID,
+		// Host is handling the generation of protocolInstanceID
+		RoundID: cliutils.NewRandomUUID(),
+	}
+	// instantiate protocol instance
+	pi, err := o.protocolInstantiate(token, tree.Root)
+	if err != nil {
+		return nil, err
+	}
+
+	// start it
+	dbg.Lvl3("Starting new protocolinstance at", o.host.Entity.Addresses)
+	err = pi.Start()
+	if err != nil {
+		return nil, err
+	}
+	return pi, nil
+}
+
+func (o *Overlay) StartNewProtocolName(name string, treeID uuid.UUID) (ProtocolInstance, error) {
+	return o.StartNewProtocol(ProtocolNameToUuid(name), treeID)
 }

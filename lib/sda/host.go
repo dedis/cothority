@@ -17,7 +17,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -206,47 +205,6 @@ func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.Protocol
 		To:   from.OtherToken(to),
 	}
 	return h.sendSDAData(to.Entity, sda)
-}
-
-// StartNewProtocol starts a new protocol by instantiating a instance of that
-// protocol and then call Start on it.
-func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (ProtocolInstance, error) {
-	// check everything exists
-	if !ProtocolExists(protocolID) {
-		return nil, errors.New("Protocol does not exists")
-	}
-	h.treesLock.Lock()
-	tree := h.overlay.Tree(treeID)
-	if tree == nil {
-		return nil, errors.New("TreeId does not exists")
-	}
-	h.treesLock.Unlock()
-
-	// instantiate
-	token := &Token{
-		ProtocolID:   protocolID,
-		EntityListID: tree.EntityList.Id,
-		TreeID:       treeID,
-		// Host is handling the generation of protocolInstanceID
-		RoundID: cliutils.NewRandomUUID(),
-	}
-	// instantiate protocol instance
-	pi, err := h.overlay.protocolInstantiate(token, tree.Root)
-	if err != nil {
-		return nil, err
-	}
-
-	// start it
-	dbg.Lvl3("Starting new protocolinstance at", h.Entity.Addresses)
-	err = pi.Start()
-	if err != nil {
-		return nil, err
-	}
-	return pi, nil
-}
-
-func (h *Host) StartNewProtocolName(name string, treeID uuid.UUID) (ProtocolInstance, error) {
-	return h.StartNewProtocol(ProtocolNameToUuid(name), treeID)
 }
 
 // ProcessMessages checks if it is one of the messages for us or dispatch it
