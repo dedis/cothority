@@ -171,6 +171,7 @@ func TestMsgAggregation(t *testing.T) {
 	if !done {
 		t.Fatal("Now messages should pass directly")
 	}
+	time.Sleep(time.Millisecond * 100)
 }
 
 func TestFlags(t *testing.T) {

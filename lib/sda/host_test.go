@@ -444,7 +444,10 @@ func GenTree(t *testing.T, n int, connect bool, register bool) ([]*sda.Host, *sd
 // CloseAll takes a list of hosts that will be closed
 func CloseAll(hosts []*sda.Host) {
 	for _, host := range hosts {
-		host.Close()
+		err := host.Close()
+		if err != nil {
+			dbg.Error("Closing host", host, "gives error", err)
+		}
 	}
 }
 

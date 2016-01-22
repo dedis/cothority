@@ -122,6 +122,7 @@ func (h *Host) Listen() {
 		if err != nil {
 			dbg.Fatal("Couldn't listen in", h.workingAddress, ":", err)
 		}
+		h.closed <- true
 	}()
 }
 
@@ -147,7 +148,18 @@ func (h *Host) Close() error {
 		dbg.Lvl3("Closing connection", c)
 		c.Close()
 	}
-	err := h.host.Close()
+	var err error
+	stop := false
+	for !stop {
+		err = h.host.Close()
+		select {
+		case <-h.closed:
+			stop = true
+		case <-time.After(time.Millisecond * 50):
+			err = h.host.Close()
+		}
+
+	}
 	h.connections = make(map[uuid.UUID]network.SecureConn)
 	close(h.closed)
 	h.networkLock.Unlock()
