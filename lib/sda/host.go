@@ -433,7 +433,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // id
 func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 	sdaMsg := am.Msg.(SDAData)
-	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(h.Suite()))
+	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(network.Suite))
 	if err != nil {
 		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
 	}
