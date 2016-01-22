@@ -28,7 +28,7 @@ func (po *ProtocolOverlay) Release() {
 	po.Done()
 }
 
-func aTestOverlayDone(t *testing.T) {
+func TestOverlayDone(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
 	h1 := newHost("localhost:2000")
@@ -49,7 +49,7 @@ func aTestOverlayDone(t *testing.T) {
 		t.Fatal("error starting new node", err)
 	}
 	po := node.ProtocolInstance().(*ProtocolOverlay)
-	// release the ressources
+	// release the resources
 	po.Release()
 	overlay := h1.Overlay()
 	if _, ok := overlay.TokenToNode(po.Token()); ok {

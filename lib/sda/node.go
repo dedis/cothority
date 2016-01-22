@@ -26,7 +26,14 @@ type Node struct {
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
 	msgQueue map[uuid.UUID][]*SDAData
+	// Holds flags that influence the behaviour of the node
+	flags uint32
 }
+
+const (
+	NCAggregateMessages = 1 << iota
+	NCTimeout           = 1 << iota
+)
 
 // MsgHandler is called upon reception of a certain message-type
 type MsgHandler func([]*interface{})
@@ -38,6 +45,7 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 		channels: make(map[uuid.UUID]interface{}),
 		handlers: make(map[uuid.UUID]MsgHandler),
 		msgQueue: make(map[uuid.UUID][]*SDAData),
+		flags:    NCAggregateMessages,
 	}
 	return n, n.protocolInstantiate()
 }
@@ -129,6 +137,9 @@ func (n *Node) ProtocolInstance() ProtocolInstance {
 
 // ProtocolInstantiate creates a new instance of a protocol given by it's name
 func (n *Node) protocolInstantiate() error {
+	if n.token == nil {
+		return errors.New("Hope this is running in test-mode")
+	}
 	p, ok := protocols[n.token.ProtocolID]
 	if !ok {
 		return errors.New("Protocol doesn't exist")
@@ -177,12 +188,11 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// if message comes from parent, dispatch directly
 	// if messages come from children we must aggregate them
 	// if we still need to wait for additional messages, we return
-	msgs, done := n.aggregate(sdaMsg)
+	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
 		return nil
 	}
 
-	msgType := msgs[0].MsgType
 	var err error
 	switch {
 	case n.channels[msgType] != nil:
@@ -195,32 +205,48 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	return err
 }
 
+// SetFlag makes sure a given flag is set
+func (n *Node) SetFlag(f uint32) {
+	n.flags |= f
+}
+
+// ClearFlag makes sure a given flag is removed
+func (n *Node) ClearFlag(f uint32) {
+	n.flags &^= f
+}
+
+// HasFlag returns true if the given flag is set
+func (n *Node) HasFlag(f uint32) bool {
+	return n.flags&f != 0
+}
+
 // aggregate store the message for a protocol instance such that a protocol
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (n *Node) aggregate(sdaMsg *SDAData) ([]*SDAData, bool) {
-	if !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.TreeNode().Parent.Id) {
-		return []*SDAData{sdaMsg}, true
+func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
+	mt := sdaMsg.MsgType
+	fromParent := !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.TreeNode().Parent.Id)
+	if fromParent || !n.HasFlag(NCAggregateMessages) {
+		return mt, []*SDAData{sdaMsg}, true
 	}
-	// store the msg
-	tokId := sdaMsg.To.Id()
-	if _, ok := n.msgQueue[tokId]; !ok {
-		n.msgQueue[tokId] = make([]*SDAData, 0)
+	// store the msg according to its type
+	if _, ok := n.msgQueue[mt]; !ok {
+		n.msgQueue[mt] = make([]*SDAData, 0)
 	}
-	msgs := append(n.msgQueue[tokId], sdaMsg)
-	n.msgQueue[tokId] = msgs
+	msgs := append(n.msgQueue[mt], sdaMsg)
+	n.msgQueue[mt] = msgs
 	// do we have everything yet or no
 	// get the node this host is in this tree
 	// OK we have all the children messages
 	if len(msgs) == len(n.Children()) {
 		// erase
-		delete(n.msgQueue, tokId)
-		return msgs, true
+		delete(n.msgQueue, mt)
+		return mt, msgs, true
 	}
 	// no we still have to wait!
-	dbg.Lvl2("Len(msg)=", len(msgs), "vs len(children)=", len(n.Children()))
-	return nil, false
+	dbg.Lvl3("Number of msgs:", len(msgs), "number of children:", len(n.Children()))
+	return mt, nil, false
 }
 
 // Start calls the start-method on the protocol which in turn will initiate

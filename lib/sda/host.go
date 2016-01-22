@@ -71,6 +71,8 @@ type Host struct {
 	// working address is mostly for debugging purposes so we know what address
 	// is known as right now
 	workingAddress string
+	// listening is a flag to tell wether this host is listening or not
+	listening bool
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -118,10 +120,13 @@ func (h *Host) Listen() {
 	}
 	go func() {
 		dbg.Lvl3("Listening in", h.workingAddress)
+		h.listening = true
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen in", h.workingAddress, ":", err)
 		}
+		h.listening = false
+		h.closed <- true
 	}()
 }
 
@@ -147,7 +152,18 @@ func (h *Host) Close() error {
 		dbg.Lvl3("Closing connection", c)
 		c.Close()
 	}
-	err := h.host.Close()
+	var err error
+	stop := false
+	for h.listening && !stop {
+		err = h.host.Close()
+		select {
+		case <-h.closed:
+			stop = true
+		case <-time.After(time.Millisecond * 50):
+			continue
+		}
+
+	}
 	h.connections = make(map[uuid.UUID]network.SecureConn)
 	close(h.closed)
 	h.networkLock.Unlock()

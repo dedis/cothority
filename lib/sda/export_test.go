@@ -57,10 +57,15 @@ func (h *Host) Overlay() *Overlay {
 	return h.overlay
 }
 
+func (n *Node) Aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
+	return n.aggregate(sdaMsg)
+}
+
 func (o *Overlay) TokenToNode(tok *Token) (*Node, bool) {
 	v, ok := o.nodes[tok.Id()]
 	return v, ok
 }
+
 func (n *Node) Token() *Token {
 	return n.token
 }

@@ -255,7 +255,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	var err error
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
-		dbg.Lvl3("Trying to listen on", addr)
+		dbg.Lvl3("Starting to listen on", addr)
 		st.workingAddress = addr
 		if err = st.TcpHost.listen(addr, receiver); err != nil {
 			// The listening is over
