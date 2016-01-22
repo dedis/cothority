@@ -348,13 +348,6 @@ func (h *Host) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 	return tn, nil
 }
 
-// Suite returns the suite used by the host
-// NOTE for the moment the suite is fixed for the host and any protocols
-// instance.
-func (h *Host) Suite() abstract.Suite {
-	return h.suite
-}
-
 // sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
 // to the  appropriate entity
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
