@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/satori/go.uuid"
 )
@@ -32,8 +33,39 @@ func NewOverlay(h *Host) *Overlay {
 // - ask for the Tree
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
-func (o *Overlay) TransmitMsg(msg *SDAData) error {
-	dbg.Lvl4("Got message to transmit:", msg)
+func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
+	dbg.Lvl4("Got message to transmit:", sdaMsg)
+	if !ProtocolExists(sdaMsg.To.ProtocolID) {
+		return errors.New("Protocol does not exists from token")
+	}
+	// do we have the entitylist ? if not, ask for it.
+	if o.EntityList(sdaMsg.To.EntityListID) == nil {
+		dbg.Lvl2("Will ask for entityList + tree from token")
+		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
+	}
+	tree := o.Tree(sdaMsg.To.TreeID)
+	if tree == nil {
+		dbg.Lvl2("Will ask for tree from token")
+		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
+	}
+	// If pi does not exists, then instantiate it !
+	if !o.host.mapper.Exists(sdaMsg.To.Id()) {
+		_, err := o.host.protocolInstantiate(sdaMsg.To, tree.GetTreeNode(sdaMsg.To.TreeNodeID))
+		if err != nil {
+			return err
+		}
+	}
+	_, err := o.host.mapper.DispatchToInstance(sdaMsg)
+	if err != nil {
+		return err
+	}
+	return nil
+
+	//	return o.DispatchToInstance(sdaMsg)
+}
+
+func (o *Overlay) DispatchToInstance(msg *SDAData) error {
+
 	node, ok := o.nodes[*(msg.To)]
 	if !ok {
 		// Create the node

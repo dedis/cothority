@@ -515,32 +515,8 @@ func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 	sdaMsg.MsgType = t
 	sdaMsg.Msg = msg
 	sdaMsg.Entity = am.Entity
-	if !ProtocolExists(sdaMsg.To.ProtocolID) {
-		return errors.New("Protocol does not exists from token")
-	}
-	// do we have the entitylist ? if not, ask for it.
-	if _, ok := h.GetEntityList(sdaMsg.To.EntityListID); !ok {
-		dbg.Lvl2("Will ask for entityList + tree from token")
-		return h.requestTree(am.Entity, &sdaMsg)
-	}
-	tree, ok := h.GetTree(sdaMsg.To.TreeID)
-	if !ok {
-		dbg.Lvl2("Will ask for tree from token")
-		return h.requestTree(am.Entity, &sdaMsg)
-	}
-	// If pi does not exists, then instantiate it !
-	if !h.mapper.Exists(sdaMsg.To.Id()) {
-		_, err := h.protocolInstantiate(sdaMsg.To, tree.GetTreeNode(sdaMsg.To.TreeNodeID))
-		if err != nil {
-			return err
-		}
-	}
 
-	ok, err = h.mapper.DispatchToInstance(&sdaMsg)
-	if err != nil {
-		return err
-	}
-	return nil
+	return h.overlay.TransmitMsg(&sdaMsg)
 }
 
 // requestTree will ask for the tree the sdadata is related to.
