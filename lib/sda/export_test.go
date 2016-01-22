@@ -27,6 +27,10 @@ func (h *Host) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(protocolID, tree)
 }
 
+func (h *Host) StartNewNodeName(name string, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNodeName(name, tree)
+}
+
 func (h *Host) AddEntityList(el *EntityList) {
 	h.overlay.RegisterEntityList(el)
 }

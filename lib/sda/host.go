@@ -233,6 +233,7 @@ func (h *Host) ProcessMessages() {
 				dbg.Error("Couldn't create tree:", err)
 				continue
 			}
+			dbg.Lvl4("Received new tree")
 			h.AddTree(tree)
 			h.checkPendingSDA(tree)
 		// Some host requested an EntityList
@@ -255,6 +256,7 @@ func (h *Host) ProcessMessages() {
 				// Check if some trees can be constructed from this entitylist
 				h.checkPendingTreeMarshal(&il)
 			}
+			dbg.Lvl4("Received new entityList")
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -331,7 +333,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		case <-h.closed:
 			doneChan <- true
 		case am := <-msgChan:
-			dbg.Lvl3("Putting message into networkChan:", am.From)
+			dbg.Lvl3("Putting message into networkChan from", am.From)
 			h.networkChan <- am
 		case e := <-errorChan:
 			if e == network.ErrClosed || e == network.ErrEOF {

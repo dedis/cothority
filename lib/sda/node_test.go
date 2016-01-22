@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"testing"
+	"time"
 )
 
 func TestNodeChannel(t *testing.T) {
@@ -69,6 +70,66 @@ func TestNewNode(t *testing.T) {
 	h2.Close()
 }
 
+func TestProtocolChannels(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
+
+	h1, h2 := setupHosts(t, true)
+	defer h1.Close()
+	defer h2.Close()
+	// Add tree + entitylist
+	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
+	h1.AddEntityList(el)
+	tree, _ := el.GenerateBinaryTree()
+	h1.AddTree(tree)
+	go h1.ProcessMessages()
+	Incoming = make(chan struct {
+		sda.TreeNode
+		NodeTestMsg
+	}, 2)
+
+	// Try directly StartNewProtocol
+	_, err := h1.StartNewNodeName("ProtoChannels", tree)
+	if err != nil {
+		t.Fatal("Couldn't start protocol:", err)
+	}
+
+	select {
+	case msg := <-Incoming:
+		if msg.I != 12 {
+			t.Fatal("Child should receive 12")
+		}
+	case <-time.After(time.Second * 3):
+		t.Fatal("Timeout")
+	}
+}
+
 type NodeTestMsg struct {
 	I int
+}
+
+var Incoming chan struct {
+	sda.TreeNode
+	NodeTestMsg
+}
+
+type ProtocolChannels struct {
+	*sda.Node
+}
+
+func NewProtocolChannels(n *sda.Node) sda.ProtocolInstance {
+	p := &ProtocolChannels{
+		Node: n,
+	}
+	p.RegisterChannel(Incoming)
+	return p
+}
+
+func (p *ProtocolChannels) Start() error {
+	return p.SendTo(p.Children()[0], &NodeTestMsg{12})
+}
+
+func (p *ProtocolChannels) Dispatch([]*sda.SDAData) error {
+	dbg.Error("This should not be called")
+	return nil
 }
