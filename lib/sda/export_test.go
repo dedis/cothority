@@ -6,22 +6,22 @@ import (
 
 // Export some private functions of Host for testing
 
-func (n *Host) AddPendingTreeMarshal(tm *TreeMarshal) {
-	n.addPendingTreeMarshal(tm)
+func (h *Host) AddPendingTreeMarshal(tm *TreeMarshal) {
+	h.addPendingTreeMarshal(tm)
 }
 
-func (n *Host) CheckPendingTreeMarshal(el *EntityList) {
-	n.checkPendingTreeMarshal(el)
+func (h *Host) CheckPendingTreeMarshal(el *EntityList) {
+	h.checkPendingTreeMarshal(el)
 }
 
-func (n *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
-	return n.sendSDAData(id, msg)
+func (h *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
+	return h.sendSDAData(id, msg)
 }
 
-func (n *Host) Receive() network.NetworkMessage {
-	return n.receive()
+func (h *Host) Receive() network.NetworkMessage {
+	return h.receive()
 }
 
-func (n *Host) ProtocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
-	return n.protocolInstantiate(tok, tn)
+func (h *Host) ProtocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
+	return h.overlay.protocolInstantiate(tok, tn)
 }

@@ -231,7 +231,7 @@ func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 		RoundID: cliutils.NewRandomUUID(),
 	}
 	// instantiate protocol instance
-	pi, err := h.protocolInstantiate(token, tree.Root)
+	pi, err := h.overlay.protocolInstantiate(token, tree.Root)
 	if err != nil {
 		return nil, err
 	}
@@ -397,27 +397,6 @@ func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-// ProtocolInstantiate creates a new instance of a protocol given by it's name
-func (h *Host) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
-	p, ok := protocols[tok.ProtocolID]
-	if !ok {
-		return nil, errors.New("Protocol doesn't exist")
-	}
-	tree, ok := h.GetTree(tok.TreeID)
-	if !ok {
-		return nil, errors.New("Tree does not exists")
-	}
-	if _, ok := h.GetEntityList(tok.EntityListID); !ok {
-		return nil, errors.New("EntityList does not exists")
-	}
-	if !tn.IsInTree(tree) {
-		return nil, errors.New("We are not represented in the tree")
-	}
-	pi := p(h, tn, tok)
-	h.overlay.RegisterProtocolInstance(pi, tok)
-	return pi, nil
-}
-
 // sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
 // to the  appropriate entity
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
@@ -551,7 +530,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 					dbg.Error("Didn't find our node in the tree")
 					continue
 				}
-				_, err := h.protocolInstantiate(sdaMsg.To, tnode)
+				_, err := h.overlay.protocolInstantiate(sdaMsg.To, tnode)
 				if err != nil {
 					dbg.Error("Instantiation of the protocol failed (should not happen)", err)
 					continue

@@ -59,7 +59,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	}
 	// If pi does not exists, then instantiate it !
 	if !o.InstanceExists(sdaMsg.To.Id()) {
-		_, err := o.host.protocolInstantiate(sdaMsg.To, tree.GetTreeNode(sdaMsg.To.TreeNodeID))
+		_, err := o.protocolInstantiate(sdaMsg.To, tree.GetTreeNode(sdaMsg.To.TreeNodeID))
 		if err != nil {
 			return err
 		}
@@ -193,4 +193,25 @@ func (o *Overlay) InstanceExists(tokenID uuid.UUID) bool {
 func (o *Overlay) RegisterProtocolInstance(proto ProtocolInstance, tok *Token) {
 	// And registers it
 	o.instances[tok.Id()] = proto
+}
+
+// ProtocolInstantiate creates a new instance of a protocol given by it's name
+func (o *Overlay) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
+	p, ok := protocols[tok.ProtocolID]
+	if !ok {
+		return nil, errors.New("Protocol doesn't exist")
+	}
+	tree := o.Tree(tok.TreeID)
+	if tree == nil {
+		return nil, errors.New("Tree does not exists")
+	}
+	if o.EntityList(tok.EntityListID) == nil {
+		return nil, errors.New("EntityList does not exists")
+	}
+	if !tn.IsInTree(tree) {
+		return nil, errors.New("We are not represented in the tree")
+	}
+	pi := p(o.host, tn, tok)
+	o.RegisterProtocolInstance(pi, tok)
+	return pi, nil
 }
