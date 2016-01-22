@@ -44,7 +44,12 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 
 // TreeNode gets the treeNode of this node
 func (n *Node) TreeNode() *TreeNode {
-	return n.Tree().GetTreeNode(n.token.TreeNodeID)
+	tn, err := n.overlay.TreeNodeFromToken(n.token)
+	if err != nil {
+		dbg.Error("TreeNodeFromToken not found by token", err)
+		return nil
+	}
+	return tn
 }
 
 // Entity returns our entity

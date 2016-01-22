@@ -21,6 +21,8 @@ type Overlay struct {
 	trees map[uuid.UUID]*Tree
 	// mapping from EntityList.id to EntityList
 	entityLists map[uuid.UUID]*EntityList
+	// cache for relating token(~Node) to TreeNode
+	cache TreeNodeCache
 }
 
 // NewOverlay creates a new overlay-structure
@@ -30,6 +32,7 @@ func NewOverlay(h *Host) *Overlay {
 		nodes:       make(map[uuid.UUID]*Node),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
+		cache:       NewTreeNodeCache(),
 	}
 }
 
@@ -106,7 +109,10 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	if !ProtocolExists(protocolID) {
 		return nil, errors.New("Protocol does not exists")
 	}
-
+	rootEntity := tree.Root.Entity
+	if !o.host.Entity.Equal(rootEntity) {
+		return nil, errors.New("StartNewNode should be called by root, but entity of host differs from the root")
+	}
 	// instantiate
 	token := &Token{
 		ProtocolID:   protocolID,
@@ -138,6 +144,11 @@ func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
 
 // TreeNodeFromToken returns the treeNode corresponding to a token
 func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
+	// First, check the cache
+	if tn := o.cache.GetFromToken(t); tn != nil {
+		return tn, nil
+	}
+	// If cache has not, then search the tree
 	tree := o.Tree(t.TreeID)
 	if tree == nil {
 		return nil, errors.New("Didn't find tree")
@@ -146,6 +157,8 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 	if tn == nil {
 		return nil, errors.New("Didn't find treenode")
 	}
+	// Since we found treeNode, cache it so later reuse
+	o.cache.Cache(tree, tn)
 	return tn, nil
 }
 
@@ -182,4 +195,57 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 // ressources can be released
 func (o *Overlay) nodeDone(tok *Token) {
 	delete(o.nodes, tok.Id())
+}
+
+// TreeNodeCache is a cache that maps from token to treeNode. Since the mapping
+// is not 1-1 (many Token can point to one TreeNode, but one token leads to one
+// TreeNode), we have to do certain
+// lookup, but that's better than searching the tree each time.
+type TreeNodeCache map[uuid.UUID]map[uuid.UUID]*TreeNode
+
+// Returns a new TreeNodeCache
+func NewTreeNodeCache() TreeNodeCache {
+	m := make(map[uuid.UUID]map[uuid.UUID]*TreeNode)
+	return m
+}
+
+// Cache a TreeNode that relates to the Tree
+// It will also cache the parent and children of the treenode since that's most
+// likely what we are going to query.
+func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
+	var mm map[uuid.UUID]*TreeNode
+	var ok bool
+	if mm, ok = tnc[tree.Id]; !ok {
+		mm = make(map[uuid.UUID]*TreeNode)
+	}
+	// add treenode
+	mm[treeNode.Id] = treeNode
+	// add parent if not root
+	if treeNode.Parent != nil {
+		mm[treeNode.Parent.Id] = treeNode.Parent
+	}
+	// add children
+	for _, c := range treeNode.Children {
+		mm[c.Id] = c
+	}
+	// add cache
+	tnc[tree.Id] = mm
+}
+
+// GetFromToken returns the TreeNode that the token is pointing at.
+func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
+	var mm map[uuid.UUID]*TreeNode
+	var ok bool
+	if mm, ok = tnc[tok.TreeID]; !ok {
+		// no tree cached for this token :...
+		return nil
+	}
+	var tn *TreeNode
+	if tn, ok = mm[tok.TreeNodeID]; !ok {
+		// no treeNode cached for this token...
+		// XXX SHould we search the tree ? Then we need to keep reference to the
+		// tree ...
+		return nil
+	}
+	return tn
 }

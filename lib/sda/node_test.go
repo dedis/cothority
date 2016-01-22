@@ -52,7 +52,7 @@ func TestNewNode(t *testing.T) {
 	h1, h2 := setupHosts(t, false)
 	// Add tree + entitylist
 	//el := GenEntityListFrom(h1.Suite(), genLocalhostPeerNames(10, 2000))
-	el := sda.NewEntityList([]*network.Entity{h2.Entity, h1.Entity})
+	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
 	tree, _ := el.GenerateBinaryTree()
 	h1.AddTree(tree)
@@ -60,7 +60,7 @@ func TestNewNode(t *testing.T) {
 	// Try directly StartNewProtocol
 	node, err := h1.StartNewNode(testID, tree)
 	if err != nil {
-		t.Fatal("Could not start new protocol")
+		t.Fatal("Could not start new protocol", err)
 	}
 	p := node.ProtocolInstance().(*ProtocolTest)
 	if p.Msg != "Start" {
