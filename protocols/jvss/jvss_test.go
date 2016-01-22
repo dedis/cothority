@@ -30,8 +30,8 @@ func TestJVSSLongterm(t *testing.T) {
 	ch2 := make(chan *poly.SharedSecret)
 	var done1 bool
 	var done2 bool
-	fn := func(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
-		pi := jvss.NewJVSSProtocol(h, t, tok)
+	fn := func(node *sda.Node) sda.ProtocolInstance {
+		pi := jvss.NewJVSSProtocol(node)
 		pi.RegisterOnLongtermDone(func(sh *poly.SharedSecret) {
 			go func() {
 				if !done1 {
@@ -51,7 +51,7 @@ func TestJVSSLongterm(t *testing.T) {
 	h1.AddEntityList(el)
 	tree, _ := el.GenerateBinaryTree()
 	h1.AddTree(tree)
-	go h1.StartNewProtocol(CustomJVSSProtocolID, tree.Id)
+	go h1.StartNewNode(CustomJVSSProtocolID, tree)
 	// wait for the longterm secret to be generated
 	var found1 *poly.SharedSecret
 	var found2 *poly.SharedSecret
@@ -93,8 +93,8 @@ func TestJVSSSign(t *testing.T) {
 	var done1 bool
 	doneLongterm := make(chan bool)
 	var p1 *jvss.JVSSProtocol
-	fn := func(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
-		pi := jvss.NewJVSSProtocol(h, t, tok)
+	fn := func(node *sda.Node) sda.ProtocolInstance {
+		pi := jvss.NewJVSSProtocol(node)
 		if !done1 {
 			// only care about the first host
 			pi.RegisterOnLongtermDone(func(sh *poly.SharedSecret) {
@@ -114,7 +114,7 @@ func TestJVSSSign(t *testing.T) {
 	tree, _ := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	// start the protocol
-	go h1.StartNewProtocol(CustomJVSSProtocolID, tree.Id)
+	go h1.StartNewNode(CustomJVSSProtocolID, tree)
 	// wait for the longterm secret to be generated
 	select {
 	case <-doneLongterm:

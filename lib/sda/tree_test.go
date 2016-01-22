@@ -155,7 +155,7 @@ func TestUnMarshalTree(t *testing.T) {
 func TestGetNode(t *testing.T) {
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.ListNodes() {
-		node := tree.GetNode(tn.Id)
+		node := tree.GetTreeNode(tn.Id)
 		if node == nil {
 			t.Fatal("Didn't find treeNode with id", tn.Id)
 		}

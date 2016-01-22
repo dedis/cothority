@@ -17,14 +17,8 @@ import (
 // JVSS Protocol Instance structure holding the information for a longterm JVSS
 // signing mechanism
 type JVSSProtocol struct {
-	// The host we are running on
-	Host *sda.Host
-	// The tree we are using
-	Tree *sda.Tree
 	// The TreeNode denating ourself in the tree
-	Node *sda.TreeNode
-	// the token for this protocol instance
-	Token *sda.Token
+	Node *sda.Node
 	// The EntityList we are using / this is needed to "bypass" the tree
 	// structure for the internals communication, when we set up the shares and
 	// everything. We directly send our share to everyone else directly by using
@@ -80,15 +74,15 @@ type JVSSProtocol struct {
 // ```func(h,t,tok) ProtocolInstance  { return NewJVSSProtocol(h,t,tok) }```
 // For example, this function returns a JVSSProtocol with a default
 // poly.Treshold. You can give a new one after calling this function.
-func NewJVSSProtocol(h *sda.Host, t *sda.TreeNode, tok *sda.Token) *JVSSProtocol {
+func NewJVSSProtocol(n *sda.Node) *JVSSProtocol {
 	// find ourself in the entityList
 	var idx int = -1
 	// at the same time create the public list
-	tree, _ := h.GetTree(tok.TreeID)
+	tree := n.Tree()
 	pubs := make([]abstract.Point, len(tree.EntityList.List))
 	for i := range tree.EntityList.List {
 		ent := tree.EntityList.Get(i)
-		if ent.Equal(h.Entity) {
+		if ent.Equal(n.Entity()) {
 			idx = i
 		}
 		pubs[i] = ent.Public
@@ -106,14 +100,11 @@ func NewJVSSProtocol(h *sda.Host, t *sda.TreeNode, tok *sda.Token) *JVSSProtocol
 	if idx == -1 {
 		panic("JVSSProtocol could not find itself into the entitylist")
 	}
-	kp := config.KeyPair{Public: h.Entity.Public, Secret: h.Private(), Suite: h.Suite()}
+	kp := config.KeyPair{Public: n.Entity().Public, Secret: n.Private(), Suite: n.Suite()}
 	nbPeers := len(tree.EntityList.List)
 	jv := &JVSSProtocol{
-		Host:         h,
-		Tree:         tree,
-		Node:         t,
+		Node:         n,
 		List:         tree.EntityList,
-		Token:        tok,
 		index:        idx,
 		Info:         poly.Threshold{T: nbPeers, R: nbPeers, N: nbPeers},
 		publicList:   pubs,
@@ -134,8 +125,8 @@ func NewJVSSProtocol(h *sda.Host, t *sda.TreeNode, tok *sda.Token) *JVSSProtocol
 	return jv
 }
 
-func NewJVSSProtocolInstance(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
-	return NewJVSSProtocol(h, t, tok)
+func NewJVSSProtocolInstance(node *sda.Node) sda.ProtocolInstance {
+	return NewJVSSProtocol(node)
 }
 
 // Start will send the message to first compute the long term secret
@@ -180,7 +171,7 @@ func (jv *JVSSProtocol) Dispatch(msgs []*sda.SDAData) error {
 
 // Verify returns true if a signature is valid or not
 func (jv *JVSSProtocol) Verify(msg []byte, sig *poly.SchnorrSig) error {
-	h := jv.Host.Suite().Hash()
+	h := jv.Node.Suite().Hash()
 	h.Write(msg)
 	return jv.schnorr.VerifySchnorrSig(sig, h)
 }
@@ -208,7 +199,7 @@ func (jv *JVSSProtocol) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	// sends it
 	jv.otherNodes(func(tn *sda.TreeNode) {
-		jv.Host.SendSDAToTreeNode(jv.Token, tn, req)
+		jv.Node.SendTo(tn, req)
 	})
 	// wait for the signature
 	sig := <-sigChan
@@ -273,7 +264,7 @@ func (jv *JVSSProtocol) waitForRequests() {
 			continue
 		}
 		// create new round  == request
-		h := jv.Host.Suite().Hash()
+		h := jv.Node.Suite().Hash()
 		h.Write(sigRequest.Msg)
 		dbg.Lvl3("Started NewRound with secret.Pub", requestBuff.secret.Pub)
 		dbg.Lvl3("Started NewRound with longerm.Pub", jv.longterm.Pub)
@@ -288,7 +279,7 @@ func (jv *JVSSProtocol) waitForRequests() {
 			Partial:   ps,
 		}
 		// send it back to the originator
-		if err := jv.Host.SendSDA(jv.Token, sda.From, sr); err != nil {
+		if err := jv.Node.SendToToken(sda.From, sr); err != nil {
 			dbg.Lvl3("Could not send signature response back", err)
 		}
 		dbg.Lvl3("JVSS (", jv.index, ") Sent SignatureResponse back")
@@ -300,7 +291,7 @@ func (jv *JVSSProtocol) waitForRequests() {
 func (jv *JVSSProtocol) waitForLongterm() {
 	var nbDeal int
 	for lt := range jv.ltChan {
-		deal := lt.Deal(jv.Host.Suite(), jv.Info)
+		deal := lt.Deal(jv.Node.Suite(), jv.Info)
 		//	dbg.Lvl3("JVSS (", jv.index, ") AddDeal index ", jv.index, " => ", deal)
 		if _, err := jv.ltReceiver.AddDeal(jv.index, deal); err != nil {
 			dbg.Error("Error adding deal to longterm receiver", err)
@@ -317,7 +308,7 @@ func (jv *JVSSProtocol) waitForLongterm() {
 	}
 	jv.longterm = sh
 	dbg.Lvl3("JVSS (", jv.index, ") Longtern Generated!", sh)
-	jv.schnorr.Init(jv.Host.Suite(), jv.Info, jv.longterm)
+	jv.schnorr.Init(jv.Node.Suite(), jv.Info, jv.longterm)
 	// notify we have the longterm secret
 	jv.longtermDone <- true
 	// callbacks !
@@ -328,7 +319,7 @@ func (jv *JVSSProtocol) waitForLongterm() {
 
 func (jv *JVSSProtocol) setupLongtermReceiver() {
 	// init the longterm with our deal
-	receiver := poly.NewReceiver(jv.Host.Suite(), jv.Info, &jv.key)
+	receiver := poly.NewReceiver(jv.Node.Suite(), jv.Info, &jv.key)
 	jv.ltReceiver = receiver
 }
 
@@ -354,7 +345,7 @@ func (jv *JVSSProtocol) SetupDistributedSchnorr() error {
 			Bytes: buf,
 			Index: jv.nodeToIndex[tn.Id],
 		}
-		jv.Host.SendSDAToTreeNode(jv.Token, tn, &lt)
+		jv.Node.SendTo(tn, &lt)
 	})
 	// wait until we know the longterm has been created
 
@@ -400,7 +391,7 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 				Index: jv.nodeToIndex[tn.Id],
 			},
 		}
-		jv.Host.SendSDAToTreeNode(jv.Token, tn, &rand)
+		jv.Node.SendTo(tn, &rand)
 	})
 	// wait for the shared secret
 	_ = <-doneChan
@@ -411,7 +402,7 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 }
 
 func (jv *JVSSProtocol) newDeal() *poly.Deal {
-	dealKey := cliutils.KeyPair(jv.Host.Suite())
+	dealKey := cliutils.KeyPair(jv.Node.Suite())
 	deal := new(poly.Deal).ConstructDeal(&dealKey, &jv.key, jv.Info.T, jv.Info.R, jv.publicList)
 	return deal
 }
@@ -551,24 +542,24 @@ func (jv *JVSSProtocol) initRequestBuffer(rNo int) *RequestBuffer {
 	rd := &RequestBuffer{
 		requestNo:  rNo,
 		deals:      make([]*poly.Deal, 0),
-		receiver:   poly.NewReceiver(jv.Host.Suite(), jv.Info, &jv.key),
+		receiver:   poly.NewReceiver(jv.Node.Suite(), jv.Info, &jv.key),
 		schnorr:    jv.schnorr,
 		secretChan: nil,
 		sigChan:    nil,
 		partials:   make([]*poly.SchnorrPartialSig, 0),
 		info:       jv.Info,
-		suite:      jv.Host.Suite(),
+		suite:      jv.Node.Suite(),
 	}
 	jv.requests[rNo] = rd
 	return rd
 }
 
 func (jv *JVSSProtocol) otherNodes(fn func(*sda.TreeNode)) {
-	if !jv.Tree.Root.Entity.Equal(jv.Host.Entity) {
-		fn(jv.Tree.Root)
+	if !jv.Node.Root().Entity.Equal(jv.Node.Entity()) {
+		fn(jv.Node.Root())
 	}
-	for _, tn := range jv.Tree.Root.Children {
-		if !tn.Entity.Equal(jv.Host.Entity) {
+	for _, tn := range jv.Node.Root().Children {
+		if !tn.Entity.Equal(jv.Node.Entity()) {
 			fn(tn)
 		}
 	}

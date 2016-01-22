@@ -1,4 +1,3 @@
-// better not get sda_test, cannot access unexported fields
 package sda_test
 
 import (
@@ -7,22 +6,15 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
 	"strconv"
 	"testing"
 	"time"
 )
 
-var suite abstract.Suite = network.Suite
-
-func init() {
-	dbg.TestOutput(testing.Verbose(), 4)
-}
-
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
-	h1 := newHost("localhost:2000", suite)
+	h1 := newHost("localhost:2000")
 	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
 	}
@@ -35,8 +27,8 @@ func TestHostNew(t *testing.T) {
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	h1 := newHost("localhost:2000", suite)
-	h2 := newHost("localhost:2001", suite)
+	h1 := newHost("localhost:2000")
+	h2 := newHost("localhost:2001")
 	h1.Listen()
 	h2.Connect(h1.Entity)
 	err := h1.Close()
@@ -48,7 +40,7 @@ func TestHostClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h1 = newHost("localhost:2002", suite)
+	h1 = newHost("localhost:2002")
 	h1.Listen()
 	if err != nil {
 		t.Fatal("Couldn't re-open listener")
@@ -142,6 +134,7 @@ func TestHostSendDuplex(t *testing.T) {
 // Test when a peer receives a New EntityList, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	h1, h2 := setupHosts(t, false)
 	//el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	el := GenEntityListFromHost(h2, h1)
@@ -200,7 +193,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	list, ok := h1.GetEntityList(el1.Id)
+	list, ok := h1.EntityList(el1.Id)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
@@ -302,7 +295,7 @@ func TestListTreePropagation(t *testing.T) {
 		}
 		// We got the tree that's already something, now do we get the entity
 		// list
-		if _, ok := h1.GetEntityList(el.Id); !ok {
+		if _, ok := h1.EntityList(el.Id); !ok {
 			tryEntity++
 			continue
 		}
@@ -339,7 +332,7 @@ func TestTokenId(t *testing.T) {
 	if !uuid.Equal(id1, t1.Id()) {
 		t.Fatal("Twice the Id of the same token should be equal")
 	}
-	t3 := t1.OtherToken(&sda.TreeNode{Id: uuid.NewV1()})
+	t3 := t1.ChangeTreeNodeID(uuid.NewV1())
 	if uuid.Equal(t1.TreeNodeID, t3.TreeNodeID) {
 		t.Fatal("OtherToken should modify copy")
 	}
@@ -348,8 +341,8 @@ func TestTokenId(t *testing.T) {
 // Test the automatic connection upon request
 func TestAutoConnection(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	h1 := newHost("localhost:2000", suite)
-	h2 := newHost("localhost:2001", suite)
+	h1 := newHost("localhost:2000")
+	h2 := newHost("localhost:2001")
 	defer h1.Close()
 	defer h2.Close()
 
@@ -382,14 +375,13 @@ func TestAutoConnection(t *testing.T) {
 // - instantiating ProtocolInstance
 
 // privPub creates a private/public key pair
-func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
-	keypair := &config.KeyPair{}
-	keypair.Gen(s, random.Stream)
+func privPub() (abstract.Secret, abstract.Point) {
+	keypair := config.NewKeyPair(network.Suite)
 	return keypair.Secret, keypair.Public
 }
 
-func newHost(address string, s abstract.Suite) *sda.Host {
-	priv, pub := privPub(s)
+func newHost(address string) *sda.Host {
+	priv, pub := privPub()
 	id := network.NewEntity(pub, address)
 	return sda.NewHost(id, priv)
 }
@@ -397,9 +389,9 @@ func newHost(address string, s abstract.Suite) *sda.Host {
 // Creates two hosts on the local interfaces,
 func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	h1 := newHost("localhost:2000", suite)
+	h1 := newHost("localhost:2000")
 	// make the second peer as the server
-	h2 := newHost("localhost:2001", suite)
+	h2 := newHost("localhost:2001")
 	h2.Listen()
 	// make it process messages
 	if h2process {
@@ -413,11 +405,11 @@ func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 }
 
 // GenHosts will create n hosts with the first one being connected to each of
-// the other node
-func GenHosts(t *testing.T, n int) []*sda.Host {
+// the other nodes if connect is true
+func GenHosts(t *testing.T, n int, connect bool) []*sda.Host {
 	var hosts []*sda.Host
 	for i := 0; i < n; i++ {
-		hosts = append(hosts, newHost("localhost:"+strconv.Itoa(2000+i*10), suite))
+		hosts = append(hosts, newHost("localhost:"+strconv.Itoa(2000+i*10)))
 	}
 	root := hosts[0]
 	root.Listen()
@@ -425,11 +417,38 @@ func GenHosts(t *testing.T, n int) []*sda.Host {
 	for i := 1; i < n; i++ {
 		hosts[i].Listen()
 		go hosts[i].ProcessMessages()
-		if _, err := hosts[i].Connect(root.Entity); err != nil {
-			t.Fatal("Could not connect hosts")
+		if connect {
+			if _, err := hosts[i].Connect(root.Entity); err != nil {
+				t.Fatal("Could not connect hosts")
+			}
 		}
 	}
 	return hosts
+}
+
+// GenTree will create a tree of n hosts. If connect is true, they will
+// be connected to the root host. If register is true, the EntityList and Tree
+// will be registered with the overlay.
+func GenTree(t *testing.T, n int, connect bool, register bool) ([]*sda.Host, *sda.EntityList, *sda.Tree) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	hosts := GenHosts(t, n, connect)
+	list := GenEntityListFromHost(hosts...)
+	tree, _ := list.GenerateBinaryTree()
+	if register {
+		hosts[0].AddEntityList(list)
+		hosts[0].AddTree(tree)
+	}
+	return hosts, list, tree
+}
+
+// CloseAll takes a list of hosts that will be closed
+func CloseAll(hosts []*sda.Host) {
+	for _, host := range hosts {
+		err := host.Close()
+		if err != nil {
+			dbg.Error("Closing host", host, "gives error", err)
+		}
+	}
 }
 
 // SimpleMessage is just used to transfer one integer
