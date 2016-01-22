@@ -38,7 +38,7 @@ func NewProtocolStruct(h *Host, t *TreeNode, tok *Token) *ProtocolStruct {
 
 // Send takes the message and sends it to the given TreeNode
 func (ps *ProtocolStruct) Send(to *TreeNode, msg network.ProtocolMessage) error {
-	return ps.Host.SendSDAToTreeNode(ps.Token, to, msg)
+	return ps.Host.overlay.SendToTreeNode(ps.Token, to, msg)
 }
 
 // ProtocolRegister takes a protocol and registers it under a given uuid.

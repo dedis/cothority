@@ -176,37 +176,6 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	return nil
 }
 
-// SendSDA is the main function protocol instance must use in order to send a
-// message across the network. A PI must first give its assigned Token, then
-// the Entity where it want to send the message then the msg. The message will
-// be transformed into a SDAData message automatically.
-func (h *Host) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
-	tn, err := h.overlay.TreeNodeFromToken(to)
-	if err != nil {
-		return err
-	}
-	return h.SendSDAToTreeNode(from, tn, msg)
-}
-
-// SendSDAToTreeNode sends a message to a treeNode
-func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
-	if h.overlay.Instance(from) == nil {
-		return errors.New("No protocol instance registered with this token.")
-	}
-	if from == nil {
-		return errors.New("From-token is nil")
-	}
-	if to == nil {
-		return errors.New("To-token is nil")
-	}
-	sda := &SDAData{
-		Msg:  msg,
-		From: from,
-		To:   from.OtherToken(to),
-	}
-	return h.sendSDAData(to.Entity, sda)
-}
-
 // ProcessMessages checks if it is one of the messages for us or dispatch it
 // to the corresponding instance.
 // Our messages are:

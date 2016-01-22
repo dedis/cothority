@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
 
@@ -268,4 +269,35 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 		return nil, errors.New("Didn't find treenode")
 	}
 	return tn, nil
+}
+
+// SendToTreeNode sends a message to a treeNode
+func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
+	return o.SendSDA(from, from.OtherToken(to), msg)
+}
+
+// SendSDA is the main function protocol instance must use in order to send a
+// message across the network. A PI must first give its assigned Token, then
+// the Entity where it want to send the message then the msg. The message will
+// be transformed into a SDAData message automatically.
+func (o *Overlay) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
+	if o.Instance(from) == nil {
+		return errors.New("No protocol instance registered with this token.")
+	}
+	if from == nil {
+		return errors.New("From-token is nil")
+	}
+	if to == nil {
+		return errors.New("To-token is nil")
+	}
+	tn, err := o.TreeNodeFromToken(to)
+	if err != nil {
+		return errors.New("Didn't find TreeNode for token: " + err.Error())
+	}
+	sda := &SDAData{
+		Msg:  msg,
+		From: from,
+		To:   from.OtherToken(tn),
+	}
+	return o.host.sendSDAData(tn.Entity, sda)
 }

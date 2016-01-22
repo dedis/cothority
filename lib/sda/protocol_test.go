@@ -287,7 +287,7 @@ func (p *AggregationProtocol) Dispatch(ms []*sda.SDAData) error {
 		m := ms[0].Msg.(SimpleMessage)
 		dbg.Lvl2("Aggregationprotocol children sending message up")
 		// send back to parent
-		if err := p.SendSDAToTreeNode(p.tok, tn.Parent, &m); err != nil {
+		if err := p.SendToTreeNode(p.tok, tn.Parent, &m); err != nil {
 			return fmt.Errorf("Sending to parent failed")
 		}
 	}
@@ -300,7 +300,7 @@ func (p *AggregationProtocol) Start() error {
 	msg := SimpleMessage{10}
 	tn := p.TreeNode
 	for i := range tn.Children {
-		if err := p.SendSDAToTreeNode(p.tok, tn.Children[i], &msg); err != nil {
+		if err := p.SendToTreeNode(p.tok, tn.Children[i], &msg); err != nil {
 			return fmt.Errorf("Could not send to children %v", err)
 		}
 	}
