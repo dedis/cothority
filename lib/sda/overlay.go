@@ -17,6 +17,12 @@ type Overlay struct {
 	nodes       map[Token]*Node
 	trees       map[uuid.UUID]*Tree
 	entityLists map[uuid.UUID]*EntityList
+	// mapping instances with their tokens
+	// maps token-uid to ProtocolInstances
+	instances map[uuid.UUID]ProtocolInstance
+	// aggregate messages in order to dispatch them at once in the protocol
+	// instance
+	msgQueue map[uuid.UUID][]*SDAData
 }
 
 // NewOverlay creates a new overlay-structure
@@ -26,6 +32,8 @@ func NewOverlay(h *Host) *Overlay {
 		nodes:       make(map[Token]*Node),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
+		instances:   make(map[uuid.UUID]ProtocolInstance),
+		msgQueue:    make(map[uuid.UUID][]*SDAData),
 	}
 }
 
@@ -50,13 +58,13 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// If pi does not exists, then instantiate it !
-	if !o.host.mapper.Exists(sdaMsg.To.Id()) {
+	if !o.InstanceExists(sdaMsg.To.Id()) {
 		_, err := o.host.protocolInstantiate(sdaMsg.To, tree.GetTreeNode(sdaMsg.To.TreeNodeID))
 		if err != nil {
 			return err
 		}
 	}
-	_, err := o.host.mapper.DispatchToInstance(sdaMsg)
+	_, err := o.DispatchToInstance(sdaMsg)
 	if err != nil {
 		return err
 	}
@@ -65,7 +73,61 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	//	return o.DispatchToInstance(sdaMsg)
 }
 
-func (o *Overlay) DispatchToInstance(msg *SDAData) error {
+// DispatchToInstance will dispatch this SDAData to the right instance
+// it returns true if it has successfully dispatched the msg or false
+// otherwise. It can return false because it want to aggregate some messages
+// until every children of this host has sent their messages.
+func (o *Overlay) DispatchToInstance(sdaMsg *SDAData) (bool, error) {
+	var pi ProtocolInstance
+	if pi = o.Instance(sdaMsg.To); pi == nil {
+		return false, errors.New("No instance for this token")
+	}
+	//  Get the node corresponding to this host in the Tree
+	node, err := o.host.TreeNodeFromToken(sdaMsg.To)
+	if err != nil {
+		return false, fmt.Errorf("Could not find TreeNode for this host in aggregate: %s", err)
+	}
+	// if message comes from parent, dispatch directly
+	if !node.IsRoot() && sdaMsg.Entity.Equal(node.Parent.Entity) {
+		return true, pi.Dispatch([]*SDAData{sdaMsg})
+	}
+
+	// if messages come from children we must aggregate them
+	// if we still need to wait additionals message, we return
+	msgs, ok := o.aggregate(node, sdaMsg)
+	if !ok {
+		return false, nil
+	}
+	// all is good
+	return true, pi.Dispatch(msgs)
+}
+
+// aggregate store the message for a protocol instance such that a protocol
+// instances will get all its children messages at once.
+// node is the node the host is representing in this Tree, and sda is the
+// message being analyzed.
+func (o *Overlay) aggregate(node *TreeNode, sdaMsg *SDAData) ([]*SDAData, bool) {
+	// store the msg
+	tokId := sdaMsg.To.Id()
+	if _, ok := o.msgQueue[tokId]; !ok {
+		o.msgQueue[tokId] = make([]*SDAData, 0)
+	}
+	msgs := append(o.msgQueue[tokId], sdaMsg)
+	o.msgQueue[tokId] = msgs
+	// do we have everything yet or no
+	// get the node this host is in this tree
+	// OK we have all the children messages
+	if len(msgs) == len(node.Children) {
+		// erase
+		delete(o.msgQueue, tokId)
+		return msgs, true
+	}
+	// no we still have to wait!
+	dbg.Lvl2("Len(msg)=", len(msgs), "vs len(children)=", len(node.Children))
+	return nil, false
+}
+
+func (o *Overlay) DispatchToInstanceChannel(msg *SDAData) error {
 
 	node, ok := o.nodes[*(msg.To)]
 	if !ok {
@@ -112,96 +174,23 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 	return o.entityLists[elid]
 }
 
-type protocolMapper struct {
-	// mapping instances with their tokens
-	// maps token-uid to ProtocolInstances
-	instances map[uuid.UUID]ProtocolInstance
-	// aggregate messages in order to dispatch them at once in the protocol
-	// instance
-	msgQueue map[uuid.UUID][]*SDAData
-	// Host reference
-	Host *Host
-}
-
-func newProtocolMapper(h *Host) *protocolMapper {
-	return &protocolMapper{
-		instances: make(map[uuid.UUID]ProtocolInstance),
-		msgQueue:  make(map[uuid.UUID][]*SDAData),
-		Host:      h,
-	}
-}
-
-// DispatchToInstance will dispatch this SDAData to the right instance
-// it returns true if it has successfully dispatched the msg or false
-// otherwise. It can return false because it want to aggregate some messages
-// until every children of this host has sent their messages.
-func (pm *protocolMapper) DispatchToInstance(sdaMsg *SDAData) (bool, error) {
-	var pi ProtocolInstance
-	if pi = pm.Instance(sdaMsg.To); pi == nil {
-		return false, errors.New("No instance for this token")
-	}
-	//  Get the node corresponding to this host in the Tree
-	node, err := pm.Host.TreeNodeFromToken(sdaMsg.To)
-	if err != nil {
-		return false, fmt.Errorf("Could not find TreeNode for this host in aggregate: %s", err)
-	}
-	// if message comes from parent, dispatch directly
-	if !node.IsRoot() && sdaMsg.Entity.Equal(node.Parent.Entity) {
-		return true, pi.Dispatch([]*SDAData{sdaMsg})
-	}
-
-	// if messages come from children we must aggregate them
-	// if we still need to wait additionals message, we return
-	msgs, ok := pm.aggregate(node, sdaMsg)
-	if !ok {
-		return false, nil
-	}
-	// all is good
-	return true, pi.Dispatch(msgs)
-}
-
-// aggregate store the message for a protocol instance such that a protocol
-// instances will get all its children messages at once.
-// node is the node the host is representing in this Tree, and sda is the
-// message being analyzed.
-func (pm *protocolMapper) aggregate(node *TreeNode, sdaMsg *SDAData) ([]*SDAData, bool) {
-	// store the msg
-	tokId := sdaMsg.To.Id()
-	if _, ok := pm.msgQueue[tokId]; !ok {
-		pm.msgQueue[tokId] = make([]*SDAData, 0)
-	}
-	msgs := append(pm.msgQueue[tokId], sdaMsg)
-	pm.msgQueue[tokId] = msgs
-	// do we have everything yet or no
-	// get the node this host is in this tree
-	// OK we have all the children messages
-	if len(msgs) == len(node.Children) {
-		// erase
-		delete(pm.msgQueue, tokId)
-		return msgs, true
-	}
-	// no we still have to wait!
-	dbg.Lvl2("Len(msg)=", len(msgs), "vs len(children)=", len(node.Children))
-	return nil, false
-}
-
 // Instance returns the protocol instance associated with this token
 // nil if not registered-
 // Instance returns the protocol instance associated with this token
 // nil if not registered.
-func (pm *protocolMapper) Instance(tok *Token) ProtocolInstance {
-	pi, _ := pm.instances[tok.Id()]
+func (o *Overlay) Instance(tok *Token) ProtocolInstance {
+	pi, _ := o.instances[tok.Id()]
 	return pi
 }
 
-// Exists returns true if a protocol instance exists (referenced its token ID)
-func (pm *protocolMapper) Exists(tokenID uuid.UUID) bool {
-	_, ok := pm.instances[tokenID]
+// InstanceExists returns true if a protocol instance exists (referenced its token ID)
+func (o *Overlay) InstanceExists(tokenID uuid.UUID) bool {
+	_, ok := o.instances[tokenID]
 	return ok
 }
 
 // RegisterProtocolInstance simply put the proto instance mapping with the token
-func (pm *protocolMapper) RegisterProtocolInstance(proto ProtocolInstance, tok *Token) {
+func (o *Overlay) RegisterProtocolInstance(proto ProtocolInstance, tok *Token) {
 	// And registers it
-	pm.instances[tok.Id()] = proto
+	o.instances[tok.Id()] = proto
 }

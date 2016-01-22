@@ -40,9 +40,6 @@ type Host struct {
 	// Overlay handles the mapping from tree and entityList to Entity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
-	// mapper is used to uniquely identify instances + helpers so protocol
-	// instances can send easily msg
-	mapper *protocolMapper
 	// The open connections
 	connections map[uuid.UUID]network.SecureConn
 	// chan of received messages - testmode
@@ -99,7 +96,6 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		pendingSDAsLock:    &sync.Mutex{},
 	}
 
-	h.mapper = newProtocolMapper(h)
 	h.overlay = NewOverlay(h)
 	return h
 }
@@ -195,7 +191,7 @@ func (h *Host) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
 
 // SendSDAToTreeNode sends a message to a treeNode
 func (h *Host) SendSDAToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
-	if h.mapper.Instance(from) == nil {
+	if h.overlay.Instance(from) == nil {
 		return errors.New("No protocol instance registered with this token.")
 	}
 	if from == nil {
@@ -418,7 +414,7 @@ func (h *Host) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, 
 		return nil, errors.New("We are not represented in the tree")
 	}
 	pi := p(h, tn, tok)
-	h.mapper.RegisterProtocolInstance(pi, tok)
+	h.overlay.RegisterProtocolInstance(pi, tok)
 	return pi, nil
 }
 
@@ -560,7 +556,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 					dbg.Error("Instantiation of the protocol failed (should not happen)", err)
 					continue
 				}
-				ok, err := h.mapper.DispatchToInstance(h.pendingSDAs[i])
+				ok, err := h.overlay.DispatchToInstance(h.pendingSDAs[i])
 				if !ok {
 					dbg.Lvl2("dispatching did not work")
 				} else if err != nil {
