@@ -52,3 +52,11 @@ func (h *Host) GetTree(id uuid.UUID) (*Tree, bool) {
 func (h *Host) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
 	return h.overlay.SendToTreeNode(from, to, msg)
 }
+
+func (h *Host) Overlay() *Overlay {
+	return h.overlay
+}
+
+func (n *Node) Aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
+	return n.aggregate(sdaMsg)
+}

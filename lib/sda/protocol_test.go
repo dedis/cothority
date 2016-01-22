@@ -162,7 +162,7 @@ func TestProtocolAggregation(t *testing.T) {
 	}
 
 	sda.ProtocolRegister(aggregateID, fn)
-	hosts := GenHosts(t, 3)
+	hosts := GenHosts(t, 3, true)
 	root := hosts[0]
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{root.Entity, hosts[1].Entity, hosts[2].Entity})

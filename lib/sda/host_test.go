@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
 	"strconv"
 	"testing"
@@ -376,14 +375,13 @@ func TestAutoConnection(t *testing.T) {
 // - instantiating ProtocolInstance
 
 // privPub creates a private/public key pair
-func privPub(s abstract.Suite) (abstract.Secret, abstract.Point) {
-	keypair := &config.KeyPair{}
-	keypair.Gen(s, random.Stream)
+func privPub() (abstract.Secret, abstract.Point) {
+	keypair := config.NewKeyPair(network.Suite)
 	return keypair.Secret, keypair.Public
 }
 
 func newHost(address string) *sda.Host {
-	priv, pub := privPub(network.Suite)
+	priv, pub := privPub()
 	id := network.NewEntity(pub, address)
 	return sda.NewHost(id, priv)
 }
@@ -407,8 +405,8 @@ func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 }
 
 // GenHosts will create n hosts with the first one being connected to each of
-// the other node
-func GenHosts(t *testing.T, n int) []*sda.Host {
+// the other nodes if connect is true
+func GenHosts(t *testing.T, n int, connect bool) []*sda.Host {
 	var hosts []*sda.Host
 	for i := 0; i < n; i++ {
 		hosts = append(hosts, newHost("localhost:"+strconv.Itoa(2000+i*10)))
@@ -419,11 +417,35 @@ func GenHosts(t *testing.T, n int) []*sda.Host {
 	for i := 1; i < n; i++ {
 		hosts[i].Listen()
 		go hosts[i].ProcessMessages()
-		if _, err := hosts[i].Connect(root.Entity); err != nil {
-			t.Fatal("Could not connect hosts")
+		if connect {
+			if _, err := hosts[i].Connect(root.Entity); err != nil {
+				t.Fatal("Could not connect hosts")
+			}
 		}
 	}
 	return hosts
+}
+
+// GenTree will create a tree of n hosts. If connect is true, they will
+// be connected to the root host. If register is true, the EntityList and Tree
+// will be registered with the overlay.
+func GenTree(t *testing.T, n int, connect bool, register bool) ([]*sda.Host, *sda.EntityList, *sda.Tree) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	hosts := GenHosts(t, n, connect)
+	list := GenEntityListFromHost(hosts...)
+	tree, _ := list.GenerateBinaryTree()
+	if register {
+		hosts[0].AddEntityList(list)
+		hosts[0].AddTree(tree)
+	}
+	return hosts, list, tree
+}
+
+// CloseAll takes a list of hosts that will be closed
+func CloseAll(hosts []*sda.Host) {
+	for _, host := range hosts {
+		host.Close()
+	}
 }
 
 // SimpleMessage is just used to transfer one integer

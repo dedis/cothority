@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/satori/go.uuid"
 	"testing"
 	"time"
 )
@@ -101,6 +102,89 @@ func TestProtocolChannels(t *testing.T) {
 		}
 	case <-time.After(time.Second * 3):
 		t.Fatal("Timeout")
+	}
+}
+
+func TestMsgAggregation(t *testing.T) {
+	hosts, list, tree := GenTree(t, 3, false, true)
+	defer CloseAll(hosts)
+	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
+
+	tok := &sda.Token{
+		EntityListID: list.Id,
+		TreeID:       tree.Id,
+		TreeNodeID:   tree.Root.Id}
+	// Two random types
+	type1 := uuid.NewV4()
+	type2 := uuid.NewV4()
+	node, _ := sda.NewNode(hosts[0].Overlay(), tok)
+	msg := &sda.SDAData{
+		From:    tok.ChangeTreeNodeID(tree.Root.Children[0].Id),
+		MsgType: type1,
+		Msg:     nil,
+	}
+
+	msgType, _, done := node.Aggregate(msg)
+	if done {
+		t.Fatal("Should not be done for first message")
+	}
+	msg.From = tok.ChangeTreeNodeID(tree.Root.Children[1].Id)
+	msgType, msgs, done := node.Aggregate(msg)
+	if !done {
+		t.Fatal("Should be done for the second message")
+	}
+	if len(msgs) != 2 {
+		t.Fatal("Should have two messages")
+	}
+	if msgType != type1 {
+		t.Fatal("Should have message of type1")
+	}
+
+	// Test checking of messages if they are different
+	_, _, done = node.Aggregate(msg)
+	if done {
+		t.Fatal("Should not be done after first message")
+	}
+	msg.From = tok.ChangeTreeNodeID(tree.Root.Children[0].Id)
+	msg.MsgType = type2
+	_, _, done = node.Aggregate(msg)
+	if done {
+		t.Fatal("Should not be done after first message of new type")
+	}
+
+	msg.From = tok.ChangeTreeNodeID(tree.Root.Children[1].Id)
+	msg.MsgType = type2
+	_, _, done = node.Aggregate(msg)
+	if !done {
+		t.Fatal("Second message of type 2 should pass")
+	}
+	msg.From = tok.ChangeTreeNodeID(tree.Root.Children[0].Id)
+	msg.MsgType = type1
+	_, _, done = node.Aggregate(msg)
+	if !done {
+		t.Fatal("Second message of type 1 should pass")
+	}
+
+	// Test passing direct
+	node.ClearFlag(sda.NCAggregateMessages)
+	_, _, done = node.Aggregate(msg)
+	if !done {
+		t.Fatal("Now messages should pass directly")
+	}
+}
+
+func TestFlags(t *testing.T) {
+	n, _ := sda.NewNode(nil, nil)
+	if !n.HasFlag(sda.NCAggregateMessages) {
+		t.Fatal("Should have AggregateMessages-flag")
+	}
+	n.ClearFlag(sda.NCAggregateMessages)
+	if n.HasFlag(sda.NCAggregateMessages) {
+		t.Fatal("Should have AggregateMessages-flag cleared")
+	}
+	n.SetFlag(sda.NCAggregateMessages)
+	if !n.HasFlag(sda.NCAggregateMessages) {
+		t.Fatal("Should have AggregateMessages-flag")
 	}
 }
 
