@@ -1,4 +1,3 @@
-// better not get sda_test, cannot access unexported fields
 package sda_test
 
 import (
@@ -136,6 +135,7 @@ func TestHostSendDuplex(t *testing.T) {
 // Test when a peer receives a New EntityList, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	h1, h2 := setupHosts(t, false)
 	//el := GenEntityList(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	el := GenEntityListFromHost(h2, h1)

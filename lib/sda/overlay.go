@@ -33,6 +33,7 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(msg *SDAData) error {
+	dbg.Lvl4("Got message to transmit:", msg)
 	node, ok := o.nodes[*(msg.To)]
 	if !ok {
 		// Create the node
@@ -43,12 +44,6 @@ func (o *Overlay) TransmitMsg(msg *SDAData) error {
 	return nil
 }
 
-// Tree searches for the tree corresponding to a token.
-func (o *Overlay) Tree(tok *Token) *Tree {
-	dbg.Lvl4("Searching for tree:", o.trees[tok.TreeID])
-	return o.trees[tok.TreeID]
-}
-
 // SendTo takes a destination and a message to send.
 func (o *Overlay) SendTo(from *Token, dest *TreeNode, msg interface{}) error {
 	return nil
@@ -57,4 +52,29 @@ func (o *Overlay) SendTo(from *Token, dest *TreeNode, msg interface{}) error {
 // RegisterTree takes a tree and puts it in the map
 func (o *Overlay) RegisterTree(t *Tree) {
 	o.trees[t.Id] = t
+}
+
+// TreeFromToken searches for the tree corresponding to a token.
+func (o *Overlay) TreeFromToken(tok *Token) *Tree {
+	return o.trees[tok.TreeID]
+}
+
+// Tree returns the tree given by treeId or nil if not found
+func (o *Overlay) Tree(tid uuid.UUID) *Tree {
+	return o.trees[tid]
+}
+
+// RegisterEntityList puts an entityList in the map
+func (o *Overlay) RegisterEntityList(el *EntityList) {
+	o.entityLists[el.Id] = el
+}
+
+// EntityListFromToken returns the entitylist corresponding to a token
+func (o *Overlay) EntityListFromToken(tok *Token) *EntityList {
+	return o.entityLists[tok.EntityListID]
+}
+
+// EntityList returns the entityList given by EntityListID
+func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
+	return o.entityLists[elid]
 }

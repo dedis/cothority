@@ -37,6 +37,9 @@ type Host struct {
 	private abstract.Secret
 	// The TCPHost
 	host network.SecureHost
+	// Overlay handles the mapping from tree and entityList to Entity.
+	// It uses tokens to represent an unique ProtocolInstance in the system
+	overlay *Overlay
 	// mapper is used to uniquely identify instances + helpers so protocol
 	// instances can send easily msg
 	mapper *protocolMapper
@@ -46,12 +49,6 @@ type Host struct {
 	networkChan chan network.NetworkMessage
 	// The database of entities this host knows
 	entities map[uuid.UUID]*network.Entity
-	// The entityLists used for building the trees
-	entityLists map[uuid.UUID]*EntityList
-	// all trees known to this Host
-	trees map[uuid.UUID]*Tree
-	// TreeNode that this host represents mapped by their respective TreeID
-	treeNodes map[uuid.UUID]*TreeNode
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
@@ -83,14 +80,11 @@ type Host struct {
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
-	n := &Host{
+	h := &Host{
 		Entity:             e,
 		workingAddress:     e.First(),
 		connections:        make(map[uuid.UUID]network.SecureConn),
 		entities:           make(map[uuid.UUID]*network.Entity),
-		trees:              make(map[uuid.UUID]*Tree),
-		treeNodes:          make(map[uuid.UUID]*TreeNode),
-		entityLists:        make(map[uuid.UUID]*EntityList),
 		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
 		pendingSDAs:        make([]*SDAData, 0),
 		host:               network.NewSecureTcpHost(pkey, e),
@@ -105,8 +99,9 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		pendingSDAsLock:    &sync.Mutex{},
 	}
 
-	n.mapper = newProtocolMapper(n)
-	return n
+	h.mapper = newProtocolMapper(h)
+	h.overlay = NewOverlay(h)
+	return h
 }
 
 // NewHostKey creates a new host only from the ip-address and port-number. This
@@ -224,10 +219,9 @@ func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (Protoco
 	if !ProtocolExists(protocolID) {
 		return nil, errors.New("Protocol does not exists")
 	}
-	var tree *Tree
-	var ok bool
 	h.treesLock.Lock()
-	if tree, ok = h.trees[treeID]; !ok {
+	tree := h.overlay.Tree(treeID)
+	if tree == nil {
 		return nil, errors.New("TreeId does not exists")
 	}
 	h.treesLock.Unlock()
@@ -281,8 +275,8 @@ func (h *Host) ProcessMessages() {
 		// A host has sent us a request to get a tree definition
 		case RequestTreeMessage:
 			tid := data.Msg.(RequestTree).TreeID
-			tree, ok := h.trees[tid]
-			if ok {
+			tree := h.overlay.Tree(tid)
+			if tree != nil {
 				err = h.SendRaw(data.Entity, tree.MakeTreeMarshal())
 			} else {
 				// XXX Take care here for we must verify at the other side that
@@ -321,9 +315,9 @@ func (h *Host) ProcessMessages() {
 		// Some host requested an EntityList
 		case RequestEntityListMessage:
 			id := data.Msg.(RequestEntityList).EntityListID
-			il, ok := h.entityLists[id]
-			if ok {
-				err = h.SendRaw(data.Entity, il)
+			el := h.overlay.EntityList(id)
+			if el != nil {
+				err = h.SendRaw(data.Entity, el)
 			} else {
 				dbg.Lvl2("Requested entityList that we don't have")
 				h.SendRaw(data.Entity, &EntityList{})
@@ -348,12 +342,9 @@ func (h *Host) ProcessMessages() {
 }
 
 // AddEntityList stores the peer-list for further usage
-func (h *Host) AddEntityList(il *EntityList) {
+func (h *Host) AddEntityList(el *EntityList) {
 	h.entityListsLock.Lock()
-	if _, ok := h.entityLists[il.Id]; ok {
-		dbg.Lvl2("Added EntityList with same ID")
-	}
-	h.entityLists[il.Id] = il
+	h.overlay.RegisterEntityList(el)
 	h.entityListsLock.Unlock()
 }
 
@@ -362,10 +353,7 @@ func (h *Host) AddEntityList(il *EntityList) {
 // using this tree
 func (h *Host) AddTree(t *Tree) {
 	h.treesLock.Lock()
-	if _, ok := h.trees[t.Id]; ok {
-		dbg.Lvl2("Added Tree with same ID")
-	}
-	h.trees[t.Id] = t
+	h.overlay.RegisterTree(t)
 	h.treesLock.Unlock()
 	h.checkPendingSDA(t)
 }
@@ -373,17 +361,17 @@ func (h *Host) AddTree(t *Tree) {
 // GetEntityList returns the EntityList
 func (h *Host) GetEntityList(id uuid.UUID) (*EntityList, bool) {
 	h.entityListsLock.Lock()
-	il, ok := h.entityLists[id]
+	el := h.overlay.EntityList(id)
 	h.entityListsLock.Unlock()
-	return il, ok
+	return el, el != nil
 }
 
 // GetTree returns the TreeList
 func (h *Host) GetTree(id uuid.UUID) (*Tree, bool) {
 	h.treesLock.Lock()
-	t, ok := h.trees[id]
+	t := h.overlay.Tree(id)
 	h.treesLock.Unlock()
-	return t, ok
+	return t, t != nil
 }
 
 // HaveTree returns true if the protocolIDm the ENtityListID and the treeID is
@@ -395,11 +383,11 @@ func (h *Host) HaveTree(sda *SDAData) bool {
 }
 
 func (h *Host) TreeNodeFromToken(t *Token) (*TreeNode, error) {
-	tree, ok := h.trees[t.TreeID]
-	if !ok {
+	tree := h.overlay.Tree(t.TreeID)
+	if tree == nil {
 		return nil, errors.New("Didn't find tree")
 	}
-	tn := tree.GetNode(t.TreeNodeID)
+	tn := tree.GetTreeNode(t.TreeNodeID)
 	if tn == nil {
 		return nil, errors.New("Didn't find treenode")
 	}
@@ -542,7 +530,7 @@ func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 	}
 	// If pi does not exists, then instantiate it !
 	if !h.mapper.Exists(sdaMsg.To.Id()) {
-		_, err := h.protocolInstantiate(sdaMsg.To, tree.GetNode(sdaMsg.To.TreeNodeID))
+		_, err := h.protocolInstantiate(sdaMsg.To, tree.GetTreeNode(sdaMsg.To.TreeNodeID))
 		if err != nil {
 			return err
 		}
@@ -586,12 +574,12 @@ func (h *Host) checkPendingSDA(t *Tree) {
 			if uuid.Equal(t.Id, h.pendingSDAs[i].To.TreeID) {
 				// instantiate it and go !
 				sdaMsg := h.pendingSDAs[i]
-				node := t.GetNode(sdaMsg.To.TreeNodeID)
-				if node == nil {
+				tnode := t.GetTreeNode(sdaMsg.To.TreeNodeID)
+				if tnode == nil {
 					dbg.Error("Didn't find our node in the tree")
 					continue
 				}
-				_, err := h.protocolInstantiate(sdaMsg.To, node)
+				_, err := h.protocolInstantiate(sdaMsg.To, tnode)
 				if err != nil {
 					dbg.Error("Instantiation of the protocol failed (should not happen)", err)
 					continue
@@ -639,9 +627,8 @@ func (h *Host) addPendingTreeMarshal(tm *TreeMarshal) {
 // converted to Tree.
 func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 	h.pendingTreeLock.Lock()
-	var sl []*TreeMarshal
-	var ok bool
-	if sl, ok = h.pendingTreeMarshal[el.Id]; !ok {
+	sl, ok := h.pendingTreeMarshal[el.Id]
+	if !ok {
 		// no tree for this entitty list
 		return
 	}

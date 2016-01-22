@@ -96,8 +96,8 @@ func (t *Tree) String() string {
 		t.Id, t.EntityList.Id, t.Root.Id)
 }
 
-// GetNode searches the tree for the given TreeNodeId
-func (t *Tree) GetNode(tn uuid.UUID) (ret *TreeNode) {
+// GetTreeNode searches the tree for the given TreeNodeId
+func (t *Tree) GetTreeNode(tn uuid.UUID) (ret *TreeNode) {
 	found := func(d int, tns *TreeNode) {
 		if tns.Id == tn {
 			ret = tns

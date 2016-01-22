@@ -30,7 +30,7 @@ func NewNode(o *Overlay, tok *Token) *Node {
 
 // TreeNode gets the treeNode of this node
 func (n *Node) TreeNode() *TreeNode {
-	return n.Tree().GetNode(n.token.TreeNodeID)
+	return n.Tree().GetTreeNode(n.token.TreeNodeID)
 }
 
 // Parent returns the parent-TreeNode of ourselves
@@ -55,7 +55,7 @@ func (n *Node) SendTo(to *TreeNode, msg interface{}) error {
 
 // Tree returns the tree of that node
 func (n *Node) Tree() *Tree {
-	return n.overlay.Tree(n.token)
+	return n.overlay.TreeFromToken(n.token)
 }
 
 // EntityList returns the entity-list
@@ -99,7 +99,7 @@ func (n *Node) DispatchChannel(msg *SDAData) error {
 
 	dbg.Lvl3("Making new", reflect.TypeOf(out))
 	m := reflect.Indirect(reflect.New(reflect.TypeOf(out).Elem()))
-	tn := n.Tree().GetNode(msg.From.TreeNodeID)
+	tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
 	if tn == nil {
 		return errors.New("Didn't find treenode")
 	}
