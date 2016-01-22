@@ -14,9 +14,12 @@ Nodes and ProtocolInstances upon request and dispatches the messages.
 */
 
 type Overlay struct {
-	host        *Host
-	nodes       map[uuid.UUID]*Node
-	trees       map[uuid.UUID]*Tree
+	host *Host
+	// mapping from Token.Id() to Node
+	nodes map[uuid.UUID]*Node
+	// mapping from Tree.Id to Tree
+	trees map[uuid.UUID]*Tree
+	// mapping from EntityList.id to EntityList
 	entityLists map[uuid.UUID]*EntityList
 }
 
@@ -173,4 +176,10 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
 	}
 	return o.SendToTreeNode(from, tn, msg)
+}
+
+// nodeDone is called by node to signify that its work is finished and its
+// ressources can be released
+func (o *Overlay) nodeDone(tok *Token) {
+	delete(o.nodes, tok.Id())
 }

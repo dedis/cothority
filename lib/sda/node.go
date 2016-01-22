@@ -250,6 +250,12 @@ func (n *Node) Start() error {
 	return n.instance.Start()
 }
 
+// Done must be called when a protocol instance has finished its work and when
+// its resources can be released.
+func (n *Node) Done() {
+	n.overlay.nodeDone(n.token)
+}
+
 // Private returns the corresponding private key
 func (n *Node) Private() abstract.Secret {
 	return n.overlay.host.private
