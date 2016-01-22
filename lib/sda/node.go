@@ -18,13 +18,19 @@ type Node struct {
 	token   *Token
 	// channels holds all channels available for the different message-types
 	channels map[uuid.UUID]interface{}
+	// registered handler-functions for that protocol
+	handlers map[uuid.UUID]MsgHandler
 }
+
+// MsgHandler is called upon reception of a certain message-type
+type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
 func NewNode(o *Overlay, tok *Token) *Node {
 	return &Node{overlay: o,
 		token:    tok,
 		channels: make(map[uuid.UUID]interface{}),
+		handlers: make(map[uuid.UUID]MsgHandler),
 	}
 }
 
