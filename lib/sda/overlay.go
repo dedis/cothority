@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"fmt"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -16,26 +15,18 @@ Nodes and ProtocolInstances upon request and dispatches the messages.
 
 type Overlay struct {
 	host        *Host
-	nodes       map[Token]*Node
+	nodes       map[uuid.UUID]*Node
 	trees       map[uuid.UUID]*Tree
 	entityLists map[uuid.UUID]*EntityList
-	// mapping instances with their tokens
-	// maps token-uid to ProtocolInstances
-	instances map[uuid.UUID]ProtocolInstance
-	// aggregate messages in order to dispatch them at once in the protocol
-	// instance
-	msgQueue map[uuid.UUID][]*SDAData
 }
 
 // NewOverlay creates a new overlay-structure
 func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:        h,
-		nodes:       make(map[Token]*Node),
+		nodes:       make(map[uuid.UUID]*Node),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
-		instances:   make(map[uuid.UUID]ProtocolInstance),
-		msgQueue:    make(map[uuid.UUID][]*SDAData),
 	}
 }
 
@@ -46,9 +37,6 @@ func NewOverlay(h *Host) *Overlay {
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	dbg.Lvl4("Got message to transmit:", sdaMsg)
-	if !ProtocolExists(sdaMsg.To.ProtocolID) {
-		return errors.New("Protocol does not exists from token")
-	}
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
 		dbg.Lvl2("Will ask for entityList + tree from token")
@@ -59,90 +47,20 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		dbg.Lvl2("Will ask for tree from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
-	// If pi does not exists, then instantiate it !
-	if !o.InstanceExists(sdaMsg.To.Id()) {
-		_, err := o.protocolInstantiate(sdaMsg.To, tree.GetTreeNode(sdaMsg.To.TreeNodeID))
+	// If node does not exists, then create it
+	node := o.nodes[sdaMsg.To.Id()]
+	if node == nil {
+		var err error
+		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		if err != nil {
 			return err
 		}
+		node = o.nodes[sdaMsg.To.Id()]
 	}
-	_, err := o.DispatchToInstance(sdaMsg)
+	err := node.DispatchMsg(sdaMsg)
 	if err != nil {
 		return err
 	}
-	return nil
-
-	//	return o.DispatchToInstance(sdaMsg)
-}
-
-// DispatchToInstance will dispatch this SDAData to the right instance
-// it returns true if it has successfully dispatched the msg or false
-// otherwise. It can return false because it want to aggregate some messages
-// until every children of this host has sent their messages.
-func (o *Overlay) DispatchToInstance(sdaMsg *SDAData) (bool, error) {
-	var pi ProtocolInstance
-	if pi = o.Instance(sdaMsg.To); pi == nil {
-		return false, errors.New("No instance for this token")
-	}
-	//  Get the node corresponding to this host in the Tree
-	node, err := o.TreeNodeFromToken(sdaMsg.To)
-	if err != nil {
-		return false, fmt.Errorf("Could not find TreeNode for this host in aggregate: %s", err)
-	}
-	// if message comes from parent, dispatch directly
-	if !node.IsRoot() && sdaMsg.Entity.Equal(node.Parent.Entity) {
-		return true, pi.Dispatch([]*SDAData{sdaMsg})
-	}
-
-	// if messages come from children we must aggregate them
-	// if we still need to wait additionals message, we return
-	msgs, ok := o.aggregate(node, sdaMsg)
-	if !ok {
-		return false, nil
-	}
-	// all is good
-	return true, pi.Dispatch(msgs)
-}
-
-// aggregate store the message for a protocol instance such that a protocol
-// instances will get all its children messages at once.
-// node is the node the host is representing in this Tree, and sda is the
-// message being analyzed.
-func (o *Overlay) aggregate(node *TreeNode, sdaMsg *SDAData) ([]*SDAData, bool) {
-	// store the msg
-	tokId := sdaMsg.To.Id()
-	if _, ok := o.msgQueue[tokId]; !ok {
-		o.msgQueue[tokId] = make([]*SDAData, 0)
-	}
-	msgs := append(o.msgQueue[tokId], sdaMsg)
-	o.msgQueue[tokId] = msgs
-	// do we have everything yet or no
-	// get the node this host is in this tree
-	// OK we have all the children messages
-	if len(msgs) == len(node.Children) {
-		// erase
-		delete(o.msgQueue, tokId)
-		return msgs, true
-	}
-	// no we still have to wait!
-	dbg.Lvl2("Len(msg)=", len(msgs), "vs len(children)=", len(node.Children))
-	return nil, false
-}
-
-func (o *Overlay) DispatchToInstanceChannel(msg *SDAData) error {
-
-	node, ok := o.nodes[*(msg.To)]
-	if !ok {
-		// Create the node
-		o.nodes[*(msg.To)] = NewNode(o, msg.To)
-		return o.TransmitMsg(msg)
-	}
-	node.DispatchChannel(msg)
-	return nil
-}
-
-// SendTo takes a destination and a message to send.
-func (o *Overlay) SendTo(from *Token, dest *TreeNode, msg interface{}) error {
 	return nil
 }
 
@@ -177,85 +95,42 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 	return o.entityLists[elid]
 }
 
-// Instance returns the protocol instance associated with this token
-// nil if not registered-
-// Instance returns the protocol instance associated with this token
-// nil if not registered.
-func (o *Overlay) Instance(tok *Token) ProtocolInstance {
-	pi, _ := o.instances[tok.Id()]
-	return pi
-}
-
-// InstanceExists returns true if a protocol instance exists (referenced its token ID)
-func (o *Overlay) InstanceExists(tokenID uuid.UUID) bool {
-	_, ok := o.instances[tokenID]
-	return ok
-}
-
-// RegisterProtocolInstance simply put the proto instance mapping with the token
-func (o *Overlay) RegisterProtocolInstance(proto ProtocolInstance, tok *Token) {
-	// And registers it
-	o.instances[tok.Id()] = proto
-}
-
-// ProtocolInstantiate creates a new instance of a protocol given by it's name
-func (o *Overlay) protocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
-	p, ok := protocols[tok.ProtocolID]
-	if !ok {
-		return nil, errors.New("Protocol doesn't exist")
-	}
-	tree := o.Tree(tok.TreeID)
-	if tree == nil {
-		return nil, errors.New("Tree does not exists")
-	}
-	if o.EntityList(tok.EntityListID) == nil {
-		return nil, errors.New("EntityList does not exists")
-	}
-	if !tn.IsInTree(tree) {
-		return nil, errors.New("We are not represented in the tree")
-	}
-	pi := p(o.host, tn, tok)
-	o.RegisterProtocolInstance(pi, tok)
-	return pi, nil
-}
-
-// StartNewProtocol starts a new protocol by instantiating a instance of that
-// protocol and then call Start on it.
-func (o *Overlay) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (ProtocolInstance, error) {
+// StartNewNode starts a new node which will in turn instantiate the desired
+// protocol. This is called from the root-node and will start the
+// protocol
+func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
 		return nil, errors.New("Protocol does not exists")
-	}
-	tree := o.Tree(treeID)
-	if tree == nil {
-		return nil, errors.New("TreeId does not exists")
 	}
 
 	// instantiate
 	token := &Token{
 		ProtocolID:   protocolID,
 		EntityListID: tree.EntityList.Id,
-		TreeID:       treeID,
+		TreeID:       tree.Id,
+		TreeNodeID:   tree.Root.Id,
 		// Host is handling the generation of protocolInstanceID
 		RoundID: cliutils.NewRandomUUID(),
 	}
-	// instantiate protocol instance
-	pi, err := o.protocolInstantiate(token, tree.Root)
+	// instantiate node
+	var err error
+	o.nodes[token.Id()], err = NewNode(o, token)
 	if err != nil {
 		return nil, err
 	}
 
 	// start it
-	dbg.Lvl3("Starting new protocolinstance at", o.host.Entity.Addresses)
-	err = pi.Start()
+	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
+	err = o.nodes[token.Id()].Start()
 	if err != nil {
 		return nil, err
 	}
-	return pi, nil
+	return o.nodes[token.Id()], nil
 }
 
-func (o *Overlay) StartNewProtocolName(name string, treeID uuid.UUID) (ProtocolInstance, error) {
-	return o.StartNewProtocol(ProtocolNameToUuid(name), treeID)
+func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
+	return o.StartNewNode(ProtocolNameToUuid(name), tree)
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token
@@ -273,31 +148,29 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 
 // SendToTreeNode sends a message to a treeNode
 func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
-	return o.SendSDA(from, from.OtherToken(to), msg)
+	sda := &SDAData{
+		Msg:  msg,
+		From: from,
+		To:   from.ChangeTreeNodeID(to.Id),
+	}
+	return o.host.sendSDAData(to.Entity, sda)
 }
 
-// SendSDA is the main function protocol instance must use in order to send a
-// message across the network. A PI must first give its assigned Token, then
-// the Entity where it want to send the message then the msg. The message will
-// be transformed into a SDAData message automatically.
-func (o *Overlay) SendSDA(from, to *Token, msg network.ProtocolMessage) error {
-	if o.Instance(from) == nil {
-		return errors.New("No protocol instance registered with this token.")
-	}
+// SendToToken is the main function protocol instance must use in order to send a
+// message across the network.
+func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) error {
 	if from == nil {
 		return errors.New("From-token is nil")
 	}
 	if to == nil {
 		return errors.New("To-token is nil")
 	}
+	if o.nodes[from.Id()] == nil {
+		return errors.New("No protocol instance registered with this token.")
+	}
 	tn, err := o.TreeNodeFromToken(to)
 	if err != nil {
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
 	}
-	sda := &SDAData{
-		Msg:  msg,
-		From: from,
-		To:   from.OtherToken(tn),
-	}
-	return o.host.sendSDAData(tn.Entity, sda)
+	return o.SendToTreeNode(from, tn, msg)
 }

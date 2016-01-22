@@ -23,12 +23,8 @@ func (h *Host) Receive() network.NetworkMessage {
 	return h.receive()
 }
 
-func (h *Host) ProtocolInstantiate(tok *Token, tn *TreeNode) (ProtocolInstance, error) {
-	return h.overlay.protocolInstantiate(tok, tn)
-}
-
-func (h *Host) StartNewProtocol(protocolID uuid.UUID, treeID uuid.UUID) (ProtocolInstance, error) {
-	return h.overlay.StartNewProtocol(protocolID, treeID)
+func (h *Host) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNode(protocolID, tree)
 }
 
 func (h *Host) AddEntityList(el *EntityList) {

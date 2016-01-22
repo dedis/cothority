@@ -1,7 +1,6 @@
 package sda
 
 import (
-	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
 
@@ -22,24 +21,7 @@ type ProtocolInstance interface {
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*Host, *TreeNode, *Token) ProtocolInstance
-
-// ProtocolStruct combines a host, treeNode and a send-function as convenience
-type ProtocolStruct struct {
-	*Host
-	*TreeNode
-	Token *Token
-}
-
-// NewProtocolStruct creates a new structure
-func NewProtocolStruct(h *Host, t *TreeNode, tok *Token) *ProtocolStruct {
-	return &ProtocolStruct{h, t, tok}
-}
-
-// Send takes the message and sends it to the given TreeNode
-func (ps *ProtocolStruct) Send(to *TreeNode, msg network.ProtocolMessage) error {
-	return ps.Host.overlay.SendToTreeNode(ps.Token, to, msg)
-}
+type NewProtocol func(*Node) ProtocolInstance
 
 // ProtocolRegister takes a protocol and registers it under a given uuid.
 // As this might be called from an 'init'-function, we need to check the

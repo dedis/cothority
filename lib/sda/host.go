@@ -264,8 +264,8 @@ func (h *Host) ProcessMessages() {
 	}
 }
 
-// sendSDAData do its marshalling of the inner msg and then sends a SDAData msg
-// to the  appropriate entity
+// sendSDAData marshals the inner msg and then sends a SDAData msg
+// to the appropriate entity
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
@@ -274,7 +274,7 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
 	// put to nil so protobuf won't encode it and there won't be any error on the
-	// other side (because it doesn't know how to encode it)
+	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
 	return h.SendRaw(e, sdaMsg)
 }
@@ -388,25 +388,13 @@ func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
 		for i := range h.pendingSDAs {
-			// if this message referes to this tree
+			// if this message references t
 			if uuid.Equal(t.Id, h.pendingSDAs[i].To.TreeID) {
-				// instantiate it and go !
-				sdaMsg := h.pendingSDAs[i]
-				tnode := t.GetTreeNode(sdaMsg.To.TreeNodeID)
-				if tnode == nil {
-					dbg.Error("Didn't find our node in the tree")
-					continue
-				}
-				_, err := h.overlay.protocolInstantiate(sdaMsg.To, tnode)
+				// instantiate it and go
+				err := h.overlay.TransmitMsg(h.pendingSDAs[i])
 				if err != nil {
-					dbg.Error("Instantiation of the protocol failed (should not happen)", err)
+					dbg.Error("TransmitMsg failde:", err)
 					continue
-				}
-				ok, err := h.overlay.DispatchToInstance(h.pendingSDAs[i])
-				if !ok {
-					dbg.Lvl2("dispatching did not work")
-				} else if err != nil {
-					dbg.Error(err)
 				}
 			}
 		}

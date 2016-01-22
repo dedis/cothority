@@ -1,13 +1,9 @@
 package sda_test
 
-import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
-	"testing"
-)
+import ()
 
-func estNodeChannel(t *testing.T) {
+/*
+func TestNodeChannel(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genEntityList(tSuite, names)
@@ -43,6 +39,44 @@ func estNodeChannel(t *testing.T) {
 	}
 }
 
+// Test instantiation of the protocol
+func TestProtocolInstantiation(t *testing.T) {
+	sda.ProtocolRegister(testID, NewProtocolTest)
+	h1, h2 := setupHosts(t, false)
+	// Add tree + entitylist
+	//el := GenEntityListFrom(h1.Suite(), genLocalhostPeerNames(10, 2000))
+	el := sda.NewEntityList([]*network.Entity{h2.Entity, h1.Entity})
+	h1.AddEntityList(el)
+	tree, _ := el.GenerateBinaryTree()
+	h1.AddTree(tree)
+	// Then try to instantiate
+	tok := &sda.Token{
+		ProtocolID:   testID,
+		TreeID:       tree.Id,
+		EntityListID: tree.EntityList.Id,
+	}
+
+	p, err := h1.ProtocolInstantiate(tok, tree.Root)
+	if err != nil {
+		t.Fatal("Couldn't instantiate test-protocol")
+	}
+	if p.Dispatch(nil) != nil {
+		t.Fatal("Dispatch-method didn't return nil")
+	}
+
+	// Try directly StartNewProtocol
+	_, err = h1.StartNewProtocol(testID, tree.Id)
+	if err != nil {
+		t.Fatal("Could not start new protocol")
+	}
+	if testString == "" {
+		t.Fatal("Start() not called")
+	}
+	h1.Close()
+	h2.Close()
+}
+
 type NodeTestMsg struct {
 	I int
 }
+*/
