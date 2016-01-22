@@ -52,3 +52,15 @@ func (h *Host) GetTree(id uuid.UUID) (*Tree, bool) {
 func (h *Host) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
 	return h.overlay.SendToTreeNode(from, to, msg)
 }
+
+func (h *Host) Overlay() *Overlay {
+	return h.overlay
+}
+
+func (o *Overlay) TokenToNode(tok *Token) (*Node, bool) {
+	v, ok := o.nodes[tok.Id()]
+	return v, ok
+}
+func (n *Node) Token() *Token {
+	return n.token
+}
