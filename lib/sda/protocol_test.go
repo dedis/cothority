@@ -108,7 +108,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}
 
 	sda.ProtocolRegister(testID, fn)
-	h1, h2 := setupHosts(t, true)
+	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
 	go h1.ProcessMessages()
@@ -162,7 +162,7 @@ func TestProtocolAggregation(t *testing.T) {
 	}
 
 	sda.ProtocolRegister(aggregateID, fn)
-	hosts := GenHosts(t, 3, true)
+	hosts := sda.GenLocalHosts(3, true, true)
 	root := hosts[0]
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{root.Entity, hosts[1].Entity, hosts[2].Entity})

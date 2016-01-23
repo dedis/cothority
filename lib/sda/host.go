@@ -250,7 +250,7 @@ func (h *Host) ProcessMessages() {
 				continue
 			}
 			dbg.Lvl4("Received new tree")
-			h.AddTree(tree)
+			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
 		// Some host requested an EntityList
 		case RequestEntityListMessage:
@@ -268,7 +268,7 @@ func (h *Host) ProcessMessages() {
 			if il.Id == uuid.Nil {
 				dbg.Lvl2("Received an empty EntityList")
 			} else {
-				h.AddEntityList(&il)
+				h.overlay.RegisterEntityList(&il)
 				// Check if some trees can be constructed from this entitylist
 				h.checkPendingTreeMarshal(&il)
 			}
@@ -463,7 +463,7 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 			continue
 		}
 		// add the tree into our "database"
-		h.AddTree(tree)
+		h.overlay.RegisterTree(tree)
 	}
 	h.pendingTreeLock.Unlock()
 }

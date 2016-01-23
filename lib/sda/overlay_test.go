@@ -31,7 +31,7 @@ func (po *ProtocolOverlay) Release() {
 func TestOverlayDone(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
-	h1 := newHost("localhost:2000")
+	h1 := sda.NewLocalHost(2000)
 	defer h1.Close()
 	fn := func(n *sda.Node) sda.ProtocolInstance {
 		ps := ProtocolOverlay{

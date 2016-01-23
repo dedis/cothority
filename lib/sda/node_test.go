@@ -16,7 +16,7 @@ func TestNodeChannel(t *testing.T) {
 	// Generate two example topology
 	tree, _ := peerList.GenerateBinaryTree()
 	dbg.Lvl4("Tree is", tree)
-	h := newHost("localhost:2000")
+	h := sda.NewLocalHost(2000)
 	defer h.Close()
 
 	o := sda.NewOverlay(h)
@@ -50,7 +50,7 @@ func TestNodeChannel(t *testing.T) {
 // Test instantiation of Node
 func TestNewNode(t *testing.T) {
 	sda.ProtocolRegister(testID, NewProtocolTest)
-	h1, h2 := setupHosts(t, false)
+	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
 	//el := GenEntityListFrom(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
@@ -75,7 +75,7 @@ func TestProtocolChannels(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
 
-	h1, h2 := setupHosts(t, true)
+	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
 	// Add tree + entitylist
@@ -106,8 +106,9 @@ func TestProtocolChannels(t *testing.T) {
 }
 
 func TestMsgAggregation(t *testing.T) {
-	hosts, list, tree := GenTree(t, 3, false, true)
-	defer CloseAll(hosts)
+	local := sda.NewLocal()
+	hosts, list, tree := local.GenTree(3, false, true)
+	defer local.CloseAll()
 	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
 
 	tok := &sda.Token{

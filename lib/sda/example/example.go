@@ -1,50 +1,22 @@
-package sda_test
+package example
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"testing"
-	"time"
 )
-
-// Tests a 2-node system
-func TestNode2(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
-
-	h1, h2 := setupHosts(t, true)
-	go h1.ProcessMessages()
-	defer h1.Close()
-	defer h2.Close()
-
-	list := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
-	tree, _ := list.GenerateBinaryTree()
-	h1.AddEntityList(list)
-	h1.AddTree(tree)
-
-	_, err := h1.StartNewNodeName("Example", tree)
-	if err != nil {
-		t.Fatal("Couldn't start protocol:", err)
-	}
-
-	select {
-	case _ = <-Done:
-		dbg.Lvl2("Instance 1 is done")
-	case <-time.After(time.Second):
-		t.Fatal("Didn't finish in time")
-	}
-}
-
-var Done chan bool
 
 func init() {
 	sda.ProtocolRegisterName("Example", NewExample)
 }
 
-// ProtocolExample just holds a message that is passed to all children.
+// ProtocolExample just holds a message that is passed to all children. It
+// also defines a channel that will receive the number of children. Only the
+// root-node will write to the channel.
 type ProtocolExample struct {
 	*sda.Node
-	Message string
+	Message    string
+	ChildCount chan int
 }
 
 // MessageAnnounce is used to pass a message to all children
@@ -63,11 +35,9 @@ var MessageReplyType = network.RegisterMessageType(MessageReply{})
 
 // NewProtocolInstance initialises the structure for use in one round
 func NewExample(n *sda.Node) sda.ProtocolInstance {
-	if Done == nil {
-		Done = make(chan bool, 1)
-	}
 	return &ProtocolExample{
-		Node: n,
+		Node:       n,
+		ChildCount: make(chan int),
 	}
 }
 
@@ -114,14 +84,11 @@ func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
 func (p *ProtocolExample) HandleReply(m *sda.SDAData) error {
 	msg := m.Msg.(MessageReply)
 	msg.Children += len(p.Children())
-	Done <- true
 	dbg.Lvl3("We're done")
 	if p.Parent() != nil {
 		return p.SendTo(p.Parent(), msg)
+	} else {
+		p.ChildCount <- msg.Children
 	}
 	return nil
-}
-
-// Tests a 10-node system
-func TestNode10(t *testing.T) {
 }
