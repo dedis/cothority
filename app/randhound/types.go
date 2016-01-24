@@ -64,7 +64,7 @@ type R2 struct {
 
 type I3 struct {
 	SID []byte // Session identifier
-	R2s []R2   // Client's list of signed R2 messages; empty slices represent missing R2 messages
+	R2s []R2   // Leaders's list of signed R2 messages; empty slices represent missing R2 messages
 }
 
 type R3 struct {
@@ -79,8 +79,8 @@ type R3Resp struct {
 }
 
 type I4 struct {
-	SID []byte   // Session identifier
-	R2s [][]byte // Client's list of signed R2 messages; empty slices represent missing R2 messages
+	SID []byte // Session identifier
+	R2s []R2   // Leader's list of signed R2 messages; empty slices represent missing R2 messages
 }
 
 type R4 struct {

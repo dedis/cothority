@@ -27,13 +27,12 @@ func (p *ProtocolRandHound) chooseInsurers(Rc, Rs []byte, ignore int) ([]int, []
 	// Determine number of peers
 	e, _ := p.Host.GetEntityList(p.Token.EntityListID)
 	el := e.List
-	npeers := len(el) - 1
 
 	// Choose insurers uniquely
 	set := make(map[int]bool)
 	var keys []int
 	for len(set) < p.N {
-		i := int(random.Uint64(prng)%uint64(npeers)) + 1 // +1: avoid the leader which has index 0
+		i := int(random.Uint64(prng) % uint64(len(p.EID)))
 		// Avoid choosing ourselves as insurer and add insurer only if not done so before
 		if i != ignore {
 			if _, ok := set[i]; !ok {
@@ -46,7 +45,7 @@ func (p *ProtocolRandHound) chooseInsurers(Rc, Rs []byte, ignore int) ([]int, []
 	//dbg.Lvl1(keys)
 	insurers := make([]abstract.Point, p.N)
 	for i, k := range keys {
-		insurers[i] = el[k].Public
+		insurers[i] = el[k+1].Public //TODO: +1 since we did -1 during the EID setup! not very nice ...
 	}
 	return keys, insurers
 }
