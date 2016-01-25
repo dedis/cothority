@@ -27,7 +27,7 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte, ignore int) ([]int, []abstrac
 	keys := make([]int, rh.N)
 	j := 0
 	for len(set) < rh.N {
-		i := int(random.Uint64(prng) % uint64(len(rh.EID)))
+		i := int(random.Uint64(prng) % uint64(len(rh.PID)))
 		// Avoid choosing the 'ignore' index as insurer and add insurer only if not done so before
 		if _, ok := set[i]; i != ignore && !ok {
 			set[i] = true

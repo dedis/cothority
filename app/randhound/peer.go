@@ -24,7 +24,7 @@ func (rh *RandHound) newPeer() (*Peer, error) {
 	random.Stream.XORKeyStream(rs, rs)
 
 	return &Peer{
-		self: rh.EID[rh.Host.Entity.Id],
+		self: rh.PID[rh.Host.Entity.Id],
 		Rs:   rs,
 	}, nil
 }

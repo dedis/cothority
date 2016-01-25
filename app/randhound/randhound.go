@@ -30,7 +30,7 @@ type RandHound struct {
 	*sda.ProtocolStruct
 	Leader  *Leader           // Pointer to the protocol leader
 	Peer    *Peer             // Pointer to the 'current' peer
-	EID     map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
+	PID     map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
 	PKeys   []abstract.Point  // Public keys of the peers
 	T       int               // Minimum number of shares needed to reconstruct the secret
 	R       int               // Minimum number of signatures needed to certify a deal (t <= r <= n)
@@ -58,7 +58,7 @@ func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token, T int, R int, N 
 		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
 		Leader:         nil,
 		Peer:           nil,
-		EID:            eid,
+		PID:            eid,
 		PKeys:          pkeys,
 		T:              T,
 		R:              R,
@@ -164,10 +164,10 @@ func (rh *RandHound) HandleI1(msgs []*sda.SDAData) error {
 // Phase 2 (leader)
 func (rh *RandHound) HandleR1(msgs []*sda.SDAData) error {
 
-	rh.Leader.r1 = make([]R1, len(rh.EID))
+	rh.Leader.r1 = make([]R1, len(rh.PID))
 	for _, m := range msgs {
 		r1 := m.Msg.(R1)
-		i := rh.EID[m.Entity.Id]
+		i := rh.PID[m.Entity.Id]
 		rh.Leader.r1[i] = r1
 	}
 
@@ -217,11 +217,11 @@ func (rh *RandHound) HandleI2(msgs []*sda.SDAData) error {
 // Phase 3 (leader)
 func (rh *RandHound) HandleR2(msgs []*sda.SDAData) error {
 
-	rh.Leader.r2 = make([]R2, len(rh.EID))
-	rh.Leader.deals = make([]poly.Deal, len(rh.EID))
+	rh.Leader.r2 = make([]R2, len(rh.PID))
+	rh.Leader.deals = make([]poly.Deal, len(rh.PID))
 	for _, m := range msgs {
 		r2 := m.Msg.(R2)
-		i := rh.EID[m.Entity.Id]
+		i := rh.PID[m.Entity.Id]
 		rh.Leader.r2[i] = r2
 
 		// TODO: verify r2 contents
@@ -309,10 +309,10 @@ func (rh *RandHound) HandleI3(msgs []*sda.SDAData) error {
 // Phase 3 (leader)
 func (rh *RandHound) HandleR3(msgs []*sda.SDAData) error {
 
-	rh.Leader.r3 = make([]R3, len(rh.EID))
+	rh.Leader.r3 = make([]R3, len(rh.PID))
 	for _, m := range msgs {
 		r3 := m.Msg.(R3)
-		i := rh.EID[m.Entity.Id]
+		i := rh.PID[m.Entity.Id]
 		rh.Leader.r3[i] = r3
 
 		// TODO: verify r3 contents
@@ -359,8 +359,8 @@ func (rh *RandHound) HandleI4(msgs []*sda.SDAData) error {
 // Phase 4 (leader)
 func (rh *RandHound) HandleR4(msgs []*sda.SDAData) error {
 
-	rh.Leader.r4 = make([]R4, len(rh.EID))
-	rh.Leader.shares = make([]poly.PriShares, len(rh.EID))
+	rh.Leader.r4 = make([]R4, len(rh.PID))
+	rh.Leader.shares = make([]poly.PriShares, len(rh.PID))
 
 	// Initialise PriShares
 	for i, _ := range rh.Leader.shares {
@@ -369,7 +369,7 @@ func (rh *RandHound) HandleR4(msgs []*sda.SDAData) error {
 
 	for _, m := range msgs {
 		r4 := m.Msg.(R4)
-		i := rh.EID[m.Entity.Id]
+		i := rh.PID[m.Entity.Id]
 		rh.Leader.r4[i] = r4
 
 		// TODO: verify r4 contents

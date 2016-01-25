@@ -77,7 +77,7 @@ func (rh *RandHound) newSession(purpose string) (*Session, []byte, error) {
 
 func (rh *RandHound) newGroup() (*Group, []byte, error) {
 
-	npeers := len(rh.EID)
+	npeers := len(rh.PID)
 	ntrustees := rh.N
 	buf := new(bytes.Buffer)
 	ppub := make([][]byte, npeers)
