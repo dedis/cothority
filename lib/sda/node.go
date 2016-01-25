@@ -17,6 +17,8 @@ Overlay where all the tree-structures are stored.
 type Node struct {
 	overlay *Overlay
 	token   *Token
+	// cache for the TreeNode this Node is representing
+	treeNode *TreeNode
 	// channels holds all channels available for the different message-types
 	channels map[uuid.UUID]interface{}
 	// registered handler-functions for that protocol
@@ -48,34 +50,52 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 		channels: make(map[uuid.UUID]interface{}),
 		handlers: make(map[uuid.UUID]MsgHandler),
 		msgQueue: make(map[uuid.UUID][]*SDAData),
+		treeNode: nil,
 	}
 	return n, n.protocolInstantiate()
 }
 
 // TreeNode gets the treeNode of this node. If there is no TreeNode for the
 // Token of this node, the function will return nil
-func (n *Node) TreeNode() *TreeNode {
-	tn, err := n.overlay.TreeNodeFromToken(n.token)
-	if err != nil {
-		dbg.Error("TreeNodeFromToken not found by token", err)
-		return nil
+func (n *Node) TreeNode() (*TreeNode, bool) {
+	// only fetches it once
+	if n.treeNode == nil {
+		tn, err := n.overlay.TreeNodeFromToken(n.token)
+		if err != nil {
+			dbg.Error("TreeNodeFromToken not find by token", err)
+			return nil, false
+		}
+		return tn.treeNode, true
 	}
-	return tn
+	return nil
 }
 
 // Entity returns our entity
 func (n *Node) Entity() *network.Entity {
-	return n.TreeNode().Entity
+	tn, ok := n.TreeNode()
+	// if we dont find our self it's not good
+	if !ok {
+		panic("Entity() could not retrieve TreeNode: it's bad")
+	}
+	return tn.Entity
 }
 
 // Parent returns the parent-TreeNode of ourselves
 func (n *Node) Parent() *TreeNode {
-	return n.TreeNode().Parent
+	tn, ok := n.TreeNode()
+	if !ok {
+		panic("Parent() called TreeNode() and did not find ourself: it's bad")
+	}
+	return tn.Parent
 }
 
 // Children returns the children of ourselves
 func (n *Node) Children() []*TreeNode {
-	return n.TreeNode().Children
+	tn, ok := n.TreeNode()
+	if !ok {
+		panic("Children() called TreeNode() but did not find ourself: it's bad")
+	}
+	return tn.Children
 }
 
 // Root returns the root-node of that tree
@@ -85,12 +105,20 @@ func (n *Node) Root() *TreeNode {
 
 // IsRoot returns whether whether we are at the top of the tree
 func (n *Node) IsRoot() bool {
-	return n.TreeNode().Parent == nil
+	tn, ok := n.TreeNode()
+	if !ok {
+		panic("IsRoot() called TreeNode(): did not find ourself: it's bad")
+	}
+	return tn.Parent == nil
 }
 
 // IsLeaf returns whether whether we are at the bottom of the tree
 func (n *Node) IsLeaf() bool {
-	return len(n.TreeNode().Children) == 0
+	tn, ok := n.TreeNode()
+	if !ok {
+		panic("IsLeaf() called TreeNode(): did not find ourself: it's bad")
+	}
+	return len(tn.Children) == 0
 }
 
 // SendTo sends to a given node
@@ -112,7 +140,10 @@ func (n *Node) EntityList() *EntityList {
 }
 
 // RegisterChannel takes a channel with a struct that contains two
-// elements: a TreeNode and a message.
+// elements: a TreeNode and a message. It will send every message that are the
+// same type to this channel. NOTE: In legacy network library, you had to
+// register the message type to the network library. Using this function you
+// don't have to anymore, it will automatically do the registration for you.
 func (n *Node) RegisterChannel(c interface{}) error {
 	cr := reflect.TypeOf(c)
 	// Check we have the correct channel-type
@@ -129,6 +160,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	if cr.Elem().Field(0).Type != reflect.TypeOf(TreeNode{}) {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
+	// Automatic registration of the message to the network library.
 	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
 	n.channels[typ] = c
@@ -157,7 +189,8 @@ func (n *Node) protocolInstantiate() error {
 	if n.overlay.EntityList(n.token.EntityListID) == nil {
 		return errors.New("EntityList does not exists")
 	}
-	if !n.TreeNode().IsInTree(tree) {
+	_, ok = n.TreeNode()
+	if !ok {
 		return errors.New("We are not represented in the tree")
 	}
 	n.instance = p(n)
@@ -232,7 +265,7 @@ func (n *Node) HasFlag(f uint32) bool {
 // message being analyzed.
 func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	mt := sdaMsg.MsgType
-	fromParent := !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.TreeNode().Parent.Id)
+	fromParent := !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.Parent().Id)
 	if fromParent || n.HasFlag(BatchMessages) {
 		return mt, []*SDAData{sdaMsg}, true
 	}
