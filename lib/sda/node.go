@@ -60,14 +60,14 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 func (n *Node) TreeNode() (*TreeNode, bool) {
 	// only fetches it once
 	if n.treeNode == nil {
-		tn, err := n.overlay.TreeNodeFromToken(n.token)
+		var err error
+		n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
 		if err != nil {
 			dbg.Error("TreeNodeFromToken not find by token", err)
 			return nil, false
 		}
-		return tn.treeNode, true
 	}
-	return nil
+	return n.treeNode, true
 }
 
 // Entity returns our entity
