@@ -3,8 +3,9 @@ package randhound
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"log"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/config"
@@ -13,7 +14,6 @@ import (
 )
 
 func init() {
-	dbg.Lvl1("init")
 	TypeI1 = network.RegisterMessageType(I1{})
 	TypeR1 = network.RegisterMessageType(R1{})
 	TypeI2 = network.RegisterMessageType(I2{})
@@ -25,11 +25,11 @@ func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
-type ProtocolRandHound struct {
+type RandHound struct {
 	*sda.ProtocolStruct
 	Leader *Leader
 	Peer   *Peer
-	EID    map[uuid.UUID]int // Used to map entity-uuids to the corresponding index in the entity id list
+	EID    map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
 	T      int               // Minimum number of shares needed to reconstruct the secret
 	R      int               // Minimum number of signatures needed to certify a deal (t <= r <= n)
 	N      int               // Total number of shares
@@ -43,11 +43,11 @@ func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInst
 	el := e.List
 	eid := make(map[uuid.UUID]int)
 	for i, entity := range el {
-		if i != 0 { // TODO: ignore leader which has index 0
-			eid[entity.Id] = i - 1 // -1: adapt peer index!
+		if i != 0 { // ignore leader which has index 0
+			eid[entity.Id] = i - 1 // -1: adapt peer index for simpler iteration
 		}
 	}
-	return &ProtocolRandHound{
+	return &RandHound{
 		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
 		Leader:         nil,
 		Peer:           nil,
@@ -58,218 +58,222 @@ func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInst
 	}
 }
 
-func (p *ProtocolRandHound) Dispatch(m []*sda.SDAData) error {
-	switch m[0].MsgType {
+func (rh *RandHound) verifyMsgTypes(msgs []*sda.SDAData) (uuid.UUID, error) {
+	for i := 0; i < len(msgs)-1; i += 1 {
+		if msgs[i].MsgType != msgs[i+1].MsgType {
+			return uuid.Nil, errors.New("Received messages of non-matching types")
+		}
+	}
+	return msgs[0].MsgType, nil
+}
+
+func (rh *RandHound) Dispatch(msgs []*sda.SDAData) error {
+
+	msgType, err := rh.verifyMsgTypes(msgs)
+	if err != nil {
+		return err
+	}
+
+	switch msgType {
 	case TypeI1:
-		return p.HandleI1(m[0]) // peer
+		return rh.HandleI1(msgs) // peer
 	case TypeR1:
-		return p.HandleR1(m) // leader
+		return rh.HandleR1(msgs) // leader
 	case TypeI2:
-		return p.HandleI2(m[0]) // peer
+		return rh.HandleI2(msgs) // peer
 	case TypeR2:
-		return p.HandleR2(m) // leader
+		return rh.HandleR2(msgs) // leader
 	case TypeI3:
-		return p.HandleI3(m[0]) // peer
+		return rh.HandleI3(msgs) // peer
 	case TypeR3:
-		return p.HandleR3(m) // leader
+		return rh.HandleR3(msgs) // leader
 	case TypeI4:
-		return p.HandleI4(m[0]) // peer
+		return rh.HandleI4(msgs) // peer
 	case TypeR4:
-		return p.HandleR4(m) // leader
+		return rh.HandleR4(msgs) // leader
 	}
 	return sda.NoSuchState
 }
 
-// Start initiates the RandHound protocol. The leader initialises itself, forms
-// the message I1, and sends it to all of its peers.
-func (p *ProtocolRandHound) Start() error {
-
-	leader, err := p.newLeader()
-	if err != nil {
-		return err
-	}
-	p.Leader = leader
-
-	p.Leader.i1 = I1{
-		SID: p.Leader.SID,
-		GID: p.Leader.GID,
-		HRc: p.Hash(p.Leader.Rc),
-	}
-
-	for _, c := range p.Children {
-		err := p.Send(c, &p.Leader.i1)
+func (rh *RandHound) sendToPeers(msg network.ProtocolMessage) error {
+	for _, c := range rh.Children {
+		err := rh.Send(c, msg)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
-// Ix: Messages from leader to peers
-// Rx: Messages from peer to leader
-// TODO: find better name for the handle functions since they basically include: receive msg, operation, send msg
-// TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
-// suite := p.ProtocolStruct.Host.Suite()
+// Start initiates the RandHound protocol. The leader initialises itself, forms
+// the message I1, and sends it to all of its peers.
+func (rh *RandHound) Start() error {
 
-// Phase 1 (peer)
-func (p *ProtocolRandHound) HandleI1(m *sda.SDAData) error {
-
-	peer, err := p.newPeer()
+	leader, err := rh.newLeader()
 	if err != nil {
 		return err
 	}
-	p.Peer = peer
-	p.Peer.i1 = m.Msg.(I1)
+	rh.Leader = leader
+
+	rh.Leader.i1 = I1{
+		SID: rh.Leader.SID,
+		GID: rh.Leader.GID,
+		HRc: rh.Hash(rh.Leader.Rc),
+	}
+	return rh.sendToPeers(&rh.Leader.i1)
+}
+
+// TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
+
+// Phase 1 (peer)
+func (rh *RandHound) HandleI1(msgs []*sda.SDAData) error {
+
+	if len(msgs) > 1 {
+		return errors.New("Received multiple I1-messages from the leader")
+	}
+
+	peer, err := rh.newPeer()
+	if err != nil {
+		return err
+	}
+	rh.Peer = peer
+	rh.Peer.i1 = msgs[0].Msg.(I1)
 
 	// TODO: verify i1 contents
 
-	p.Peer.r1 = R1{
-		HI1: p.Hash(
-			p.Peer.i1.SID,
-			p.Peer.i1.GID,
-			p.Peer.i1.HRc,
+	rh.Peer.r1 = R1{
+		HI1: rh.Hash(
+			rh.Peer.i1.SID,
+			rh.Peer.i1.GID,
+			rh.Peer.i1.HRc,
 		),
-		HRs: p.Hash(p.Peer.Rs)}
-
-	return p.Send(p.Parent, &p.Peer.r1)
+		HRs: rh.Hash(rh.Peer.Rs),
+	}
+	return rh.Send(rh.Parent, &rh.Peer.r1)
 }
 
-//
 // Phase 2 (leader)
-func (p *ProtocolRandHound) HandleR1(m []*sda.SDAData) error {
+func (rh *RandHound) HandleR1(msgs []*sda.SDAData) error {
 
-	p.Leader.r1 = make([]R1, len(p.EID))
-	for _, x := range m {
-		r1 := x.Msg.(R1)
-		i := p.EID[x.Entity.Id] // get origin of message
-		p.Leader.r1[i] = r1     // store in the corresponding slot
+	rh.Leader.r1 = make([]R1, len(rh.EID))
+	for _, m := range msgs {
+		r1 := m.Msg.(R1)
+		i := rh.EID[m.Entity.Id]
+		rh.Leader.r1[i] = r1
 	}
 
-	p.Leader.i2 = I2{
-		SID: p.Leader.SID,
-		Rc:  p.Leader.Rc}
-
-	for _, c := range p.Children {
-		err := p.Send(c, &p.Leader.i2)
-		if err != nil {
-			return err
-		}
+	rh.Leader.i2 = I2{
+		SID: rh.Leader.SID,
+		Rc:  rh.Leader.Rc,
 	}
-
-	return nil
+	return rh.sendToPeers(&rh.Leader.i2)
 }
 
-//
 // Phase 2 (peer)
-func (p *ProtocolRandHound) HandleI2(m *sda.SDAData) error {
+func (rh *RandHound) HandleI2(msgs []*sda.SDAData) error {
 
-	p.Peer.i2 = m.Msg.(I2)
+	if len(msgs) > 1 {
+		return errors.New("Received multiple I2-messages from the leader")
+	}
+
+	rh.Peer.i2 = msgs[0].Msg.(I2)
 
 	// TODO: verify contents of i2
 
 	// Construct deal
 	longPair := config.KeyPair{
-		p.Host.Suite(),
-		p.Host.Entity.Public,
-		p.Host.Private(), // NOTE: the Private() function was introduced for RandHound only! Mabye there is a better solution...
+		rh.Host.Suite(),
+		rh.Host.Entity.Public,
+		rh.Host.Private(), // NOTE: the Private() function was introduced for RandHound only! Mabye there is a better solution...
 	}
-	secretPair := config.NewKeyPair(p.Host.Suite())
-	_, insurers := p.chooseInsurers(p.Peer.i2.Rc, p.Peer.Rs, p.Peer.self)
-	//dbg.Lvl1("I2:", p.Peer.self, keys)
+	secretPair := config.NewKeyPair(rh.Host.Suite())
+	_, insurers := rh.chooseInsurers(rh.Peer.i2.Rc, rh.Peer.Rs, rh.Peer.self)
 	deal := &poly.Deal{}
-	deal.ConstructDeal(secretPair, &longPair, p.T, p.R, insurers)
+	deal.ConstructDeal(secretPair, &longPair, rh.T, rh.R, insurers)
 	db, err := deal.MarshalBinary()
 	if err != nil {
 		return err
 	}
 
-	p.Peer.r2 = R2{
-		HI2: p.Hash(
-			p.Peer.i2.SID,
-			p.Peer.i2.Rc),
-		Rs:     p.Peer.Rs,
-		Dealer: p.Peer.self,
-		Deal:   db,
+	rh.Peer.r2 = R2{
+		HI2: rh.Hash(
+			rh.Peer.i2.SID,
+			rh.Peer.i2.Rc),
+		Rs:   rh.Peer.Rs,
+		Deal: db,
 	}
-
-	return p.Send(p.Parent, &p.Peer.r2)
+	return rh.Send(rh.Parent, &rh.Peer.r2)
 }
 
 // Phase 3 (leader)
-func (p *ProtocolRandHound) HandleR2(m []*sda.SDAData) error {
+func (rh *RandHound) HandleR2(msgs []*sda.SDAData) error {
 
-	p.Leader.r2 = make([]R2, len(p.EID))
-	p.Leader.deals = make([]poly.Deal, len(p.EID))
-	for _, x := range m {
-		r2 := x.Msg.(R2)
-		i := p.EID[x.Entity.Id] // get origin of message
-		p.Leader.r2[i] = r2     // store in the corresponding slot
+	rh.Leader.r2 = make([]R2, len(rh.EID))
+	rh.Leader.deals = make([]poly.Deal, len(rh.EID))
+	for _, m := range msgs {
+		r2 := m.Msg.(R2)
+		i := rh.EID[m.Entity.Id]
+		rh.Leader.r2[i] = r2
 
 		// TODO: verify r2 contents
 
-		// Extract and verify deals
-		p.Leader.deals[i].UnmarshalInit(p.T, p.R, p.N, p.Host.Suite())
-		if err := p.Leader.deals[i].UnmarshalBinary(r2.Deal); err != nil {
+		// Extract and verify deal of the i-th peer
+		rh.Leader.deals[i].UnmarshalInit(rh.T, rh.R, rh.N, rh.Host.Suite())
+		if err := rh.Leader.deals[i].UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
 	}
 
-	p.Leader.i3 = I3{
-		SID: p.Leader.SID,
-		R2s: p.Leader.r2,
+	rh.Leader.i3 = I3{
+		SID: rh.Leader.SID,
+		R2s: rh.Leader.r2,
 	}
-
-	for _, c := range p.Children {
-		err := p.Send(c, &p.Leader.i3)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return rh.sendToPeers(&rh.Leader.i3)
 }
 
 // Phase 3 (peer)
-func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
+func (rh *RandHound) HandleI3(msgs []*sda.SDAData) error {
 
-	p.Peer.i3 = m.Msg.(I3) // messages might arrive out of order
+	if len(msgs) > 1 {
+		return errors.New("Received multiple I3-messages from leader")
+	}
+
+	rh.Peer.i3 = msgs[0].Msg.(I3)
 
 	longPair := config.KeyPair{
-		p.Host.Suite(),
-		p.Host.Entity.Public,
-		p.Host.Private(),
+		rh.Host.Suite(),
+		rh.Host.Entity.Public,
+		rh.Host.Private(),
 	}
 
 	// TODO: verify contents of i3
 
 	r3resps := []R3Resp{}
 	r4shares := []R4Share{}
-	for _, r2 := range p.Peer.i3.R2s {
+	for i, r2 := range rh.Peer.i3.R2s { // NOTE: we assume that the order of R2 messages is correct since the leader took care of it
 
-		if !bytes.Equal(r2.HI2, p.Peer.r2.HI2) {
-			return errors.New("I3: R2 contains wrong I2")
+		if !bytes.Equal(r2.HI2, rh.Peer.r2.HI2) {
+			return errors.New("R2 contains wrong I2 hash")
 		}
 
 		// Unmarshal Deal
 		deal := &poly.Deal{}
-		deal.UnmarshalInit(p.T, p.R, p.N, p.Host.Suite())
+		deal.UnmarshalInit(rh.T, rh.R, rh.N, rh.Host.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
 
 		// Determine other peers who chose me as an insurer
-		keys, _ := p.chooseInsurers(p.Peer.i2.Rc, r2.Rs, r2.Dealer)
-		//dbg.Lvl1("I3:", r2.Dealer, keys)
-		for k := range keys {
-			if keys[k] == p.Peer.self {
+		keys, _ := rh.chooseInsurers(rh.Peer.i2.Rc, r2.Rs, i)
+		for k := range keys { // k is the share index we received from the i-th peer
+			if keys[k] == rh.Peer.self {
 				resp, err := deal.ProduceResponse(k, &longPair)
 				if err != nil {
 					return err
 				}
 
 				var r3resp R3Resp
-				r3resp.Dealer = r2.Dealer
+				r3resp.Dealer = i
 				r3resp.Index = k
 				r3resp.Resp, err = resp.MarshalBinary()
 				if err != nil {
@@ -278,153 +282,118 @@ func (p *ProtocolRandHound) HandleI3(m *sda.SDAData) error {
 				r3resps = append(r3resps, r3resp)
 
 				share := deal.RevealShare(k, &longPair)
-				r4shares = append(r4shares, R4Share{r2.Dealer, k, share})
+				r4shares = append(r4shares, R4Share{i, k, share})
 			}
 		}
 	}
+	rh.Peer.shares = r4shares // save revealed shares for later
 
-	p.Peer.shares = r4shares // store shares for later
-
-	for _, share := range p.Peer.shares {
-		dbg.Lvl1(p.Peer.self, share)
-	}
-
-	//dbg.Lvl1(p.Peer.self, "#Shares", len(r4shares))
-
-	p.Peer.r3 = R3{
-		HI3: p.Hash(
-			p.Peer.i3.SID,
-			p.Peer.r2.HI2), // TODO: is this enough?
+	rh.Peer.r3 = R3{
+		HI3: rh.Hash(
+			rh.Peer.i3.SID,
+			rh.Peer.r2.HI2), // TODO: is this enough?
 		Resp: r3resps,
 	}
-
-	return p.Send(p.Parent, &p.Peer.r3)
+	return rh.Send(rh.Parent, &rh.Peer.r3)
 }
 
 // Phase 3 (leader)
-func (p *ProtocolRandHound) HandleR3(m []*sda.SDAData) error {
+func (rh *RandHound) HandleR3(msgs []*sda.SDAData) error {
 
-	p.Leader.r3 = make([]R3, len(p.EID))
-	for _, x := range m {
-		r3 := x.Msg.(R3)
-		i := p.EID[x.Entity.Id] // get origin of message
-		p.Leader.r3[i] = r3     // store in the corresponding slot
+	rh.Leader.r3 = make([]R3, len(rh.EID))
+	for _, m := range msgs {
+		r3 := m.Msg.(R3)
+		i := rh.EID[m.Entity.Id]
+		rh.Leader.r3[i] = r3
 
-		//p.Leader.r3[i] = m[i].Msg.(R3)
 		// TODO: verify r3 contents
-		// TODO: store r3 in transcript
 
-		//dbg.Lvl1(i, len(p.Leader.r3[i].Resp))
-
-		for _, r3resp := range p.Leader.r3[i].Resp {
-			//j := r3resp.Dealer
+		for _, r3resp := range rh.Leader.r3[i].Resp {
+			j := r3resp.Dealer
+			_ = j
 
 			resp := &poly.Response{}
-			resp.UnmarshalInit(p.Host.Suite())
+			resp.UnmarshalInit(rh.Host.Suite())
 			if err := resp.UnmarshalBinary(r3resp.Resp); err != nil {
 				return err
 			}
-			//TODO: verify that response is good (how?)
-
-			//if !resp.Good() {
-			//	dbg.Lvl1("peer %d dealt bad promise to peer %d", j, i) // TODO: the "i" here is not correct!
-			//	p.Leader.r2[j] = nil
-			//}
-
+			//TODO: verify that response is securely bound to promise (how?)
 		}
 	}
 
-	p.Leader.i4 = I4{
-		SID: p.Leader.SID,
-		R2s: p.Leader.r2}
-
-	for _, c := range p.Children {
-		err := p.Send(c, &p.Leader.i4)
-		if err != nil {
-			return err
-		}
+	rh.Leader.i4 = I4{
+		SID: rh.Leader.SID,
+		R2s: rh.Leader.r2,
 	}
-
-	return nil
+	return rh.sendToPeers(&rh.Leader.i4)
 }
 
 // Phase 4 (peer)
-func (p *ProtocolRandHound) HandleI4(m *sda.SDAData) error {
+func (rh *RandHound) HandleI4(msgs []*sda.SDAData) error {
 
-	p.Peer.i4 = m.Msg.(I4)
+	if len(msgs) > 1 {
+		return errors.New("Received multiple I4-messages from leader")
+	}
+	rh.Peer.i4 = msgs[0].Msg.(I4)
 
 	// TODO: verify contents of i4
 
-	p.Peer.r4 = R4{
-		HI4: p.Hash(
-			p.Peer.i4.SID,
+	rh.Peer.r4 = R4{
+		HI4: rh.Hash(
+			rh.Peer.i4.SID,
 			make([]byte, 0)), // TODO: unpack R2s, see I4
-		Shares: p.Peer.shares}
-
-	return p.Send(p.Parent, &p.Peer.r4)
+		Shares: rh.Peer.shares,
+	}
+	return rh.Send(rh.Parent, &rh.Peer.r4)
 }
 
 // Phase 4 (leader)
-func (p *ProtocolRandHound) HandleR4(m []*sda.SDAData) error {
+func (rh *RandHound) HandleR4(msgs []*sda.SDAData) error {
 
-	p.Leader.r4 = make([]R4, len(p.EID))
-	p.Leader.shares = make([]poly.PriShares, len(p.EID))
-	dbg.Lvl1(len(p.Leader.shares))
-	for _, x := range m {
-		r4 := x.Msg.(R4)
-		i := p.EID[x.Entity.Id] // get origin of message
-		p.Leader.r4[i] = r4     // store in the corresponding slot
+	rh.Leader.r4 = make([]R4, len(rh.EID))
+	rh.Leader.shares = make([]poly.PriShares, len(rh.EID))
 
-		//p.Leader.r4[i] = m[i].Msg.(R4)
+	// Initialise PriShares
+	for i, _ := range rh.Leader.shares {
+		rh.Leader.shares[i].Empty(rh.Host.Suite(), rh.T, rh.N)
+	}
+
+	for _, m := range msgs {
+		r4 := m.Msg.(R4)
+		i := rh.EID[m.Entity.Id]
+		rh.Leader.r4[i] = r4
+
 		// TODO: verify r4 contents
-		// TODO: store r4 in transcript
 
-		p.Leader.shares[i].Empty(p.Host.Suite(), p.T, p.N)
-
-		for _, r4share := range p.Leader.r4[i].Shares {
+		// Process shares of i-th peer
+		for _, r4share := range r4.Shares {
 			j := r4share.Dealer
 			idx := r4share.Index
 			share := r4share.Share
 
-			_ = j
-			_ = idx
-			_ = share
+			keys, _ := rh.chooseInsurers(rh.Leader.Rc, rh.Leader.r2[j].Rs, j)
+			if keys[idx] != i {
+				return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
+			}
 
-			//dbg.Lvl1(i, ":", j, idx)
-			//keys, _ := p.chooseInsurers(p.Leader.Rc, p.Leader.r2[j].Rs, i)
-			//if keys[idx] != i {
-			//	return errors.New(fmt.Sprintf("server %d claimed share it wasn't dealt", i))
-			//}
+			err := rh.Leader.deals[j].VerifyRevealedShare(idx, share)
+			if err != nil {
+				return err
+			}
 
-			// TODO: This check fails:
-			//err := p.Leader.deals[j].VerifyRevealedShare(idx, share)
-			//if err != nil {
-			//	return err
-			//}
-			//p.Leader.shares[j].SetShare(idx, share)
-
+			// Store share
+			rh.Leader.shares[j].SetShare(idx, share)
 		}
-
 	}
 
-	// TODO: reconstruct final secret and print the random number
-
-	output := p.Host.Suite().Secret().Zero()
-	dbg.Lvl1("#Shares:", len(p.Leader.shares))
-
-	for i := range p.Leader.shares {
-		_ = i
-		//dbg.Lvl1(p.Leader.shares[i])
-		//log.Printf("reconstruct shares %d from %d shares\n", i, len())
-		//secret := p.Leader.shares[i].Secret()
-		//if err != nil {
-		//	return err
-		//}
-		//output.Add(output, secret)
+	output := rh.Host.Suite().Secret().Zero()
+	for i := range rh.Leader.shares {
+		secret := rh.Leader.shares[i].Secret()
+		output.Add(output, secret)
 	}
 
+	log.Printf("Output value: %v\n", output)
 	Done <- true
-	dbg.Lvl1("The public random number is:", output)
 
 	return nil
 }

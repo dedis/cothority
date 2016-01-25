@@ -56,10 +56,9 @@ type I2 struct {
 }
 
 type R2 struct {
-	HI2    []byte // Hash of I2 message
-	Rs     []byte // Peers' trustee-selection randomness
-	Dealer int    // Dealer's index in the peer list
-	Deal   []byte // Peer's secret-sharing to trustees
+	HI2  []byte // Hash of I2 message
+	Rs   []byte // Peers' trustee-selection randomness
+	Deal []byte // Peer's secret-sharing to trustees
 }
 
 type I3 struct {
@@ -75,7 +74,7 @@ type R3 struct {
 type R3Resp struct {
 	Dealer int    // Dealer's index in the peer list
 	Index  int    // Share number in deal we are validating
-	Resp   []byte // Encoded response to dealer's Deal
+	Resp   []byte // Encoded response to dealer's deal
 }
 
 type I4 struct {
@@ -90,7 +89,7 @@ type R4 struct {
 
 type R4Share struct {
 	Dealer int             // Dealer's index in the peer list
-	Index  int             // Share number in dealer's Deal
+	Index  int             // Share number in dealer's deal
 	Share  abstract.Secret // Decrypted share dealt to this server
 }
 

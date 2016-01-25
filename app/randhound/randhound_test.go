@@ -1,12 +1,12 @@
 package randhound_test
 
 import (
+	"log"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/dedis/cothority/app/randhound"
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/config"
@@ -51,7 +51,7 @@ func TestRandHound(t *testing.T) {
 	randhound.Trustees <- trustees
 
 	// run RandHound protocol
-	dbg.Lvl1("RandHound: starting")
+	log.Printf("RandHound: starting")
 	_, err := h[0].StartNewProtocolName("RandHound", tree.Id)
 	if err != nil {
 		t.Fatal("Could not start protocol:", err)
@@ -59,7 +59,7 @@ func TestRandHound(t *testing.T) {
 
 	select {
 	case _ = <-randhound.Done:
-		dbg.Lvl1("RandHound: done")
+		log.Printf("RandHound: done")
 	case <-time.After(time.Second * 10):
 		t.Fatal("RandHound did not finish in time")
 	}
