@@ -17,7 +17,7 @@ import (
 // JVSS Protocol Instance structure holding the information for a longterm JVSS
 // signing mechanism
 type JVSSProtocol struct {
-	// The TreeNode denating ourself in the tree
+	// The TreeNode denotating ourself in the tree
 	Node *sda.Node
 	// The EntityList we are using / this is needed to "bypass" the tree
 	// structure for the internals communication, when we set up the shares and
@@ -39,7 +39,7 @@ type JVSSProtocol struct {
 	longterm *poly.SharedSecret
 	// The schnorr struct used to sign / verify using the longterm key
 	schnorr *poly.Schnorr
-	// polyinfo related to how the shares are generated and reconstructed
+	// Threshold related to how the shares are generated and reconstructed
 	Info poly.Threshold
 	// requests holds all the requests that we asked
 	requests map[int]*RequestBuffer
@@ -52,19 +52,19 @@ type JVSSProtocol struct {
 	// so you need that intermediate variable.
 	// longterm-receiver of the shares
 	ltReceiver *poly.Receiver
-	// channel through we notify that we have sucessfully computed the longterm
+	// channel that indicates if we notify that we have sucessfully computed the longterm
 	// distributed secret
 	longtermDone chan bool
 	// callback to know when the longterm has been generated
 	onLongtermDone func(*poly.SharedSecret)
-	// The channel through we give the deal we receive for the longterm
+	// The channel where we give the deal we receive for the longterm
 	// generation
 	ltChan chan Longterm
 	// The channel through we give the deal we receive for the random generation
 	rdChan chan Random
-	// channel through we give the requests we receive for a signature
+	// channel where we give the requests we receive for a signature
 	reqChan chan *sda.SDAData
-	// channel through we give the responses we receive for a signature request
+	// channel where we give the responses we receive for a signature request
 	respChan chan *sda.SDAData
 }
 
@@ -98,7 +98,7 @@ func NewJVSSProtocol(n *sda.Node) *JVSSProtocol {
 		}
 	}
 	if idx == -1 {
-		panic("JVSSProtocol could not find itself into the entitylist")
+		panic("Could not find this JVSSProtocol into the EntityList")
 	}
 	kp := config.KeyPair{Public: n.Entity().Public, Secret: n.Private(), Suite: n.Suite()}
 	nbPeers := len(tree.EntityList.List)
@@ -214,9 +214,9 @@ func (jv *JVSSProtocol) waitForResponses() {
 		var requestBuff *RequestBuffer
 		var ok bool
 		if requestBuff, ok = jv.requests[sigResponse.RequestNo]; !ok {
-			// Not good, someone ask for a request we did not produce a shared
+			// Not good, someone asks for a request we did not produce a shared
 			// secret before .. ??
-			dbg.Error("Receive signature request with request number nto matching any shared secret...")
+			dbg.Error("Received signature request with request number not matching any shared secret...")
 			continue
 		}
 		requestBuff.AddSignatureResponse(sigResponse)

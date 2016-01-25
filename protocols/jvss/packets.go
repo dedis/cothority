@@ -43,6 +43,9 @@ type SignatureRequest struct {
 
 var SignatureRequestType = network.RegisterMessageType(SignatureRequest{})
 
+// SignatureResponse is used when peers respond to a signature request.
+// It contains the partial signature that must be aggregated by the requestor to
+// sign a message.
 type SignatureResponse struct {
 	RequestNo int
 	Partial   *poly.SchnorrPartialSig
