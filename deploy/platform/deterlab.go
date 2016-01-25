@@ -251,7 +251,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	// everything else with the actual appConfig (which comes from the
 	// runconfig-file)
 	switch d.App {
-	case "sign", "stamp":
+	case "sign", "stamp", "medco":
 		conf := app.ConfigColl{}
 		conf.StampsPerRound = -1
 		conf.StampRatio = 1.0

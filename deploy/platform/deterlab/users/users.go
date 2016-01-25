@@ -131,7 +131,7 @@ func main() {
 	time.Sleep(time.Second)
 
 	hostnames := deterlab.Hostnames
-	dbg.Lvl4("hostnames:", hostnames)
+	dbg.LLvl4("hostnames:", hostnames)
 
 	// mapping from physical node name to the timestamp servers that are running there
 	// essentially a reverse mapping of vpmap except ports are also used
