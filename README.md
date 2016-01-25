@@ -19,7 +19,7 @@ This repository provides an implementation for the prototype of the collective a
 ## Deploy
 
 * Available:
-    * [DeterLab](deterlab.net)
+    * [DeterLab](https://deterlab.net)
     * Localhost
 * Planned:
     * Docker
