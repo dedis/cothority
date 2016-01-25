@@ -31,10 +31,10 @@ type Session struct {
 
 type Group struct {
 	PPubKey [][]byte // Finger prints of peers' public keys
-	F       uint32   // Faulty (Byzantine) hosts tolerated
-	L       uint32   // Hosts that must be live
-	K       uint32   // Trustee set size
-	T       uint32   // Trustee set threshold
+	F       int      // Faulty (Byzantine) hosts tolerated
+	L       int      // Hosts that must be live
+	K       int      // Trustee set size
+	T       int      // Trustee set threshold
 }
 
 type I1 struct {

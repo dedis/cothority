@@ -36,8 +36,8 @@ func (rh *RandHound) newLeader() (*Leader, error) {
 	random.Stream.XORKeyStream(rc, rc)
 
 	// Setup session
-	purpose := <-Purpose
-	session, sid, err := rh.newSession(purpose)
+	//purpose := <-Purpose
+	session, sid, err := rh.newSession(rh.Purpose)
 	if err != nil {
 		return nil, err
 	}
@@ -77,15 +77,15 @@ func (rh *RandHound) newSession(purpose string) (*Session, []byte, error) {
 
 func (rh *RandHound) newGroup() (*Group, []byte, error) {
 
-	npeers := len(rh.Children)
-	ntrustees := <-Trustees
+	npeers := len(rh.EID)
+	ntrustees := rh.N
 	buf := new(bytes.Buffer)
 	ppub := make([][]byte, npeers)
-	gp := [4]uint32{
-		uint32(npeers / 3),
-		uint32(npeers - (npeers / 3)),
-		uint32(ntrustees),
-		uint32((ntrustees + 1) / 2),
+	gp := [4]int{
+		npeers / 3,
+		npeers - (npeers / 3),
+		ntrustees,
+		(ntrustees + 1) / 2,
 	} // Group parameters: F, L, K, T
 
 	// Include public keys of all peers
@@ -103,7 +103,7 @@ func (rh *RandHound) newGroup() (*Group, []byte, error) {
 
 	// Process group parameters
 	for _, g := range gp {
-		err := binary.Write(buf, binary.LittleEndian, g)
+		err := binary.Write(buf, binary.LittleEndian, uint32(g))
 		if err != nil {
 			return nil, nil, err
 		}

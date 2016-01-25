@@ -15,18 +15,20 @@ import (
 
 func TestRandHound(t *testing.T) {
 
-	// setup general parameters
-	var npeers int = 10
-	var trustees int = 5
-	var purpose string = "RandHound test run"
-	var ip string = "localhost"
-	var port int = 2000
-	configs := make([]string, npeers)
-	for i := 0; i < npeers; i++ {
-		configs[i] = ip + ":" + strconv.Itoa(i+port)
+	// Setup general parameters
+	var name string = "RandHound"       // Protocol name
+	var np int = 10                     // Number of peers
+	var T, R, N int = 3, 3, 5           // VSS parameters (T <= R <= N)
+	var p string = "RandHound test run" // Purpose
+	var ip string = "localhost"         // IP address
+	var bp int = 2000                   // Base port
+
+	configs := make([]string, np)
+	for i := 0; i < np; i++ {
+		configs[i] = ip + ":" + strconv.Itoa(i+bp)
 	}
 
-	// setup hosts
+	// Setup hosts
 	h := setupHosts(t, configs)
 	l := make([]*network.Entity, len(h))
 	go h[0].ProcessMessages() // h[0] is the leader / protocol initiator
@@ -34,36 +36,30 @@ func TestRandHound(t *testing.T) {
 		defer h[i].Close()
 		l[i] = h[i].Entity
 	}
-
 	list := sda.NewEntityList(l)
 	tree, _ := list.GenerateBinaryTree()
 	h[0].AddEntityList(list)
 	h[0].AddTree(tree)
 
-	// Setup RandHound channels and send parameters (TODO: this should not be done here, find a better solution)
-	if randhound.Purpose == nil {
-		randhound.Purpose = make(chan string, 1)
+	// Register RandHound protocol
+	fn := func(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
+		return randhound.NewRandHound(h, t, tok, T, R, N, p)
 	}
-	if randhound.Trustees == nil {
-		randhound.Trustees = make(chan int, 1)
-	}
-	randhound.Purpose <- purpose
-	randhound.Trustees <- trustees
+	sda.ProtocolRegisterName(name, fn)
 
-	// run RandHound protocol
-	log.Printf("RandHound: starting")
-	_, err := h[0].StartNewProtocolName("RandHound", tree.Id)
+	// Run RandHound protocol
+	log.Printf("RandHound - starting")
+	_, err := h[0].StartNewProtocolName(name, tree.Id)
 	if err != nil {
 		t.Fatal("Could not start protocol:", err)
 	}
 
 	select {
 	case _ = <-randhound.Done:
-		log.Printf("RandHound: done")
+		log.Printf("RandHound - done")
 	case <-time.After(time.Second * 10):
 		t.Fatal("RandHound did not finish in time")
 	}
-
 }
 
 func newHost(t *testing.T, address string) *sda.Host {

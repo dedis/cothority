@@ -8,6 +8,7 @@ import (
 
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
 	"github.com/satori/go.uuid"
@@ -22,39 +23,47 @@ func init() {
 	TypeR3 = network.RegisterMessageType(R3{})
 	TypeI4 = network.RegisterMessageType(I4{})
 	TypeR4 = network.RegisterMessageType(R4{})
-	sda.ProtocolRegisterName("RandHound", NewRandHound)
+	//sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
 type RandHound struct {
 	*sda.ProtocolStruct
-	Leader *Leader
-	Peer   *Peer
-	EID    map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
-	T      int               // Minimum number of shares needed to reconstruct the secret
-	R      int               // Minimum number of signatures needed to certify a deal (t <= r <= n)
-	N      int               // Total number of shares
+	Leader  *Leader           // Pointer to the protocol leader
+	Peer    *Peer             // Pointer to the 'current' peer
+	EID     map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
+	PKeys   []abstract.Point  // Public keys of the peers
+	T       int               // Minimum number of shares needed to reconstruct the secret
+	R       int               // Minimum number of signatures needed to certify a deal (t <= r <= n)
+	N       int               // Total number of shares
+	Purpose string            // Purpose of the protocol instance
 }
 
-func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token) sda.ProtocolInstance {
+func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token, T int, R int, N int, purpose string) sda.ProtocolInstance {
 	if Done == nil {
 		Done = make(chan bool, 1)
 	}
+
 	e, _ := h.GetEntityList(tok.EntityListID)
 	el := e.List
 	eid := make(map[uuid.UUID]int)
-	for i, entity := range el {
-		if i != 0 { // ignore leader which has index 0
-			eid[entity.Id] = i - 1 // -1: adapt peer index for simpler iteration
-		}
+	pkeys := make([]abstract.Point, len(el)-1)
+
+	// We ignore the leader at index 0
+	for i := 1; i < len(el); i += 1 {
+		j := i - 1 // adapt peer index for simpler iteration
+		eid[el[i].Id] = j
+		pkeys[j] = el[i].Public
 	}
 	return &RandHound{
 		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
 		Leader:         nil,
 		Peer:           nil,
 		EID:            eid,
-		T:              3, // test values; TODO: make configurable
-		R:              3, // test values; TODO: make configurable
-		N:              5, // test values; TODO: make configurable
+		PKeys:          pkeys,
+		T:              T,
+		R:              R,
+		N:              N,
+		Purpose:        purpose,
 	}
 }
 
@@ -392,7 +401,7 @@ func (rh *RandHound) HandleR4(msgs []*sda.SDAData) error {
 		output.Add(output, secret)
 	}
 
-	log.Printf("Output value: %v\n", output)
+	log.Printf("RandHound - random value: %v\n", output)
 	Done <- true
 
 	return nil
