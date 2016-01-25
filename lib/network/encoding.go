@@ -74,7 +74,7 @@ func TypeToUUID(msg ProtocolMessage) uuid.UUID {
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	url := "https://dedis.epfl.ch/protocolType/" + val.Type().String()
+	url := typeNamespace + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
 	dbg.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
 	return u
@@ -82,7 +82,7 @@ func TypeToUUID(msg ProtocolMessage) uuid.UUID {
 
 // RTypeToUUID converts a reflect-type to a UUID
 func RTypeToUUID(msg reflect.Type) uuid.UUID {
-	url := "https://dedis.epfl.ch/protocolType/" + msg.String()
+	url := typeNamespace + msg.String()
 	return uuid.NewV5(uuid.NamespaceURL, url)
 }
 
@@ -116,6 +116,8 @@ func (am *NetworkMessage) SetError(err error) {
 }
 
 var typeRegistry = make(map[uuid.UUID]reflect.Type)
+
+const typeNamespace = "https://dedis.epfl.ch/protocolType/"
 
 var globalOrder = binary.LittleEndian
 
