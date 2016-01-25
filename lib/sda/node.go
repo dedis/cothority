@@ -17,6 +17,8 @@ Overlay where all the tree-structures are stored.
 type Node struct {
 	overlay *Overlay
 	token   *Token
+	// cache for the TreeNode this Node is representing
+	treeNode *TreeNode
 	// channels holds all channels available for the different message-types
 	channels map[uuid.UUID]interface{}
 	// registered handler-functions for that protocol
@@ -45,6 +47,7 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 		channels: make(map[uuid.UUID]interface{}),
 		handlers: make(map[uuid.UUID]MsgHandler),
 		msgQueue: make(map[uuid.UUID][]*SDAData),
+		treeNode: nil,
 		flags:    NCAggregateMessages,
 	}
 	return n, n.protocolInstantiate()
@@ -52,12 +55,15 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 
 // TreeNode gets the treeNode of this node
 func (n *Node) TreeNode() (*TreeNode, bool) {
-	tn, err := n.overlay.TreeNodeFromToken(n.token)
-	if err != nil {
-		dbg.Error("TreeNodeFromToken not find by token", err)
-		return nil, false
+	// only fetches it once
+	if n.treeNode == nil {
+		tn, err := n.overlay.TreeNodeFromToken(n.token)
+		if err != nil {
+			dbg.Error("TreeNodeFromToken not find by token", err)
+			return nil, false
+		}
 	}
-	return tn, true
+	return tn.treeNode, true
 }
 
 // Entity returns our entity
