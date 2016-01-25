@@ -130,7 +130,10 @@ func (n *Node) EntityList() *EntityList {
 }
 
 // RegisterChannel takes a channel with a struct that contains two
-// elements: a TreeNode and a message.
+// elements: a TreeNode and a message. It will send every message that are the
+// same type to this channel. NOTE: In legacy network library, you had to
+// register the message type to the network library. Using this function you
+// don't have to anymore, it will automatically do the registration for you.
 func (n *Node) RegisterChannel(c interface{}) error {
 	cr := reflect.TypeOf(c)
 	// Check we have the correct channel-type
@@ -147,6 +150,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	if cr.Elem().Field(0).Type != reflect.TypeOf(TreeNode{}) {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
+	// Automatic registration of the message to the network library.
 	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
 	n.channels[typ] = c
