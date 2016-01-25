@@ -411,7 +411,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 				// instantiate it and go
 				err := h.overlay.TransmitMsg(h.pendingSDAs[i])
 				if err != nil {
-					dbg.Error("TransmitMsg failde:", err)
+					dbg.Error("TransmitMsg failed:", err)
 					continue
 				}
 			}

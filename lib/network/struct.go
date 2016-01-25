@@ -169,7 +169,7 @@ type EntityToml struct {
 // of IP-addresses where to find that entity. The Id is based on a
 // version5-UUID which can include a URL that is based on it's public key.
 func NewEntity(public abstract.Point, addresses ...string) *Entity {
-	url := "https://dedis.epfl.ch/id/" + public.String()
+	url := UuidURL + "id/" + public.String()
 	return &Entity{
 		Public:    public,
 		Addresses: addresses,

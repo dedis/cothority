@@ -30,9 +30,12 @@ type Node struct {
 	flags uint32
 }
 
+// Bit-values for different flags
+// If BactchMessages is set, every message from the children is sent
+// directly through the channel
+// https://golang.org/ref/spec#Iota
 const (
-	NCAggregateMessages = 1 << iota
-	NCTimeout           = 1 << iota
+	BatchMessages = 1 << iota
 )
 
 // MsgHandler is called upon reception of a certain message-type
@@ -45,12 +48,12 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 		channels: make(map[uuid.UUID]interface{}),
 		handlers: make(map[uuid.UUID]MsgHandler),
 		msgQueue: make(map[uuid.UUID][]*SDAData),
-		flags:    NCAggregateMessages,
 	}
 	return n, n.protocolInstantiate()
 }
 
-// TreeNode gets the treeNode of this node
+// TreeNode gets the treeNode of this node. If there is no TreeNode for the
+// Token of this node, the function will return nil
 func (n *Node) TreeNode() *TreeNode {
 	tn, err := n.overlay.TreeNodeFromToken(n.token)
 	if err != nil {
@@ -230,7 +233,7 @@ func (n *Node) HasFlag(f uint32) bool {
 func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.TreeNode().Parent.Id)
-	if fromParent || !n.HasFlag(NCAggregateMessages) {
+	if fromParent || n.HasFlag(BatchMessages) {
 		return mt, []*SDAData{sdaMsg}, true
 	}
 	// store the msg according to its type

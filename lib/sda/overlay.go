@@ -232,7 +232,8 @@ func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 	tnc[tree.Id] = mm
 }
 
-// GetFromToken returns the TreeNode that the token is pointing at.
+// GetFromToken returns the TreeNode that the token is pointing at, or
+// nil if there is none for this token.
 func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
 	var mm map[uuid.UUID]*TreeNode
 	var ok bool

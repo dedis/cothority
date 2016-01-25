@@ -11,7 +11,7 @@ import (
 // Tests a 2-node system
 func TestNode2(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	local := sda.NewLocal()
+	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true)
 	defer local.CloseAll()
 
@@ -35,7 +35,7 @@ func TestNode2(t *testing.T) {
 // Tests a 10-node system
 func TestNode10(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	local := sda.NewLocal()
+	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(10, false, true)
 	defer local.CloseAll()
 

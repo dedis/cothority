@@ -13,8 +13,8 @@ func TestNodeChannel(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genEntityList(tSuite, names)
-	// Generate two example topology
-	tree, _ := peerList.GenerateBinaryTree()
+	// Generate an example topology
+	tree := peerList.GenerateBinaryTree()
 	dbg.Lvl4("Tree is", tree)
 	h := sda.NewLocalHost(2000)
 	defer h.Close()
@@ -52,13 +52,12 @@ func TestNewNode(t *testing.T) {
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
-	//el := GenEntityListFrom(h1.Suite(), genLocalhostPeerNames(10, 2000))
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
-	tree, _ := el.GenerateBinaryTree()
+	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 
-	// Try directly StartNewProtocol
+	// Try directly StartNewNode
 	node, err := h1.StartNewNode(testID, tree)
 	if err != nil {
 		t.Fatal("Could not start new protocol", err)
@@ -81,7 +80,7 @@ func TestProtocolChannels(t *testing.T) {
 	// Add tree + entitylist
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
-	tree, _ := el.GenerateBinaryTree()
+	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	go h1.ProcessMessages()
 	Incoming = make(chan struct {
@@ -106,7 +105,7 @@ func TestProtocolChannels(t *testing.T) {
 }
 
 func TestMsgAggregation(t *testing.T) {
-	local := sda.NewLocal()
+	local := sda.NewLocalTest()
 	hosts, list, tree := local.GenTree(3, false, true)
 	defer local.CloseAll()
 	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
@@ -167,7 +166,7 @@ func TestMsgAggregation(t *testing.T) {
 	}
 
 	// Test passing direct
-	node.ClearFlag(sda.NCAggregateMessages)
+	node.SetFlag(sda.BatchMessages)
 	_, _, done = node.Aggregate(msg)
 	if !done {
 		t.Fatal("Now messages should pass directly")
@@ -177,16 +176,16 @@ func TestMsgAggregation(t *testing.T) {
 
 func TestFlags(t *testing.T) {
 	n, _ := sda.NewNode(nil, nil)
-	if !n.HasFlag(sda.NCAggregateMessages) {
-		t.Fatal("Should have AggregateMessages-flag")
+	if n.HasFlag(sda.BatchMessages) {
+		t.Fatal("Should NOT have batchMsgs-flag")
 	}
-	n.ClearFlag(sda.NCAggregateMessages)
-	if n.HasFlag(sda.NCAggregateMessages) {
-		t.Fatal("Should have AggregateMessages-flag cleared")
+	n.SetFlag(sda.BatchMessages)
+	if !n.HasFlag(sda.BatchMessages) {
+		t.Fatal("Should HAVE AggregateMessages-flag cleared")
 	}
-	n.SetFlag(sda.NCAggregateMessages)
-	if !n.HasFlag(sda.NCAggregateMessages) {
-		t.Fatal("Should have AggregateMessages-flag")
+	n.ClearFlag(sda.BatchMessages)
+	if n.HasFlag(sda.BatchMessages) {
+		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
 }
 

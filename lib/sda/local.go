@@ -11,18 +11,18 @@ import (
 	"testing"
 )
 
-type Local struct {
+type LocalTest struct {
 	Hosts       map[uuid.UUID]*Host
 	Overlays    map[uuid.UUID]*Overlay
 	EntityLists map[uuid.UUID]*EntityList
 	Trees       map[uuid.UUID]*Tree
 }
 
-// NewLocal creates a new Local handler that can be used to test protocols
+// NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
-func NewLocal() *Local {
+func NewLocalTest() *LocalTest {
 	dbg.TestOutput(testing.Verbose(), 4)
-	return &Local{
+	return &LocalTest{
 		Hosts:       make(map[uuid.UUID]*Host),
 		Overlays:    make(map[uuid.UUID]*Overlay),
 		EntityLists: make(map[uuid.UUID]*EntityList),
@@ -32,7 +32,7 @@ func NewLocal() *Local {
 
 // StartNewNodeName takes a name and a tree and will create a
 // new Node with the protocol 'name' running from the tree-root
-func (l *Local) StartNewNodeName(name string, t *Tree) (*Node, error) {
+func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
 		if uuid.Equal(h.Entity.Id, rootEntityId) {
@@ -45,7 +45,7 @@ func (l *Local) StartNewNodeName(name string, t *Tree) (*Node, error) {
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
-func (l *Local) GenTree(n int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
+func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
 	hosts := GenLocalHosts(n, connect, true)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.Id] = host
@@ -53,7 +53,7 @@ func (l *Local) GenTree(n int, connect bool, register bool) ([]*Host, *EntityLis
 	}
 
 	list := l.GenEntityListFromHost(hosts...)
-	tree, _ := list.GenerateBinaryTree()
+	tree := list.GenerateBinaryTree()
 	l.Trees[tree.Id] = tree
 	if register {
 		hosts[0].overlay.RegisterEntityList(list)
@@ -62,7 +62,7 @@ func (l *Local) GenTree(n int, connect bool, register bool) ([]*Host, *EntityLis
 	return hosts, list, tree
 }
 
-func (l *Local) GenEntityListFromHost(hosts ...*Host) *EntityList {
+func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
 	var entities []*network.Entity
 	for i := range hosts {
 		entities = append(entities, hosts[i].Entity)
@@ -73,7 +73,7 @@ func (l *Local) GenEntityListFromHost(hosts ...*Host) *EntityList {
 }
 
 // CloseAll takes a list of hosts that will be closed
-func (l *Local) CloseAll() {
+func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
 		err := host.Close()
 		if err != nil {
@@ -82,11 +82,11 @@ func (l *Local) CloseAll() {
 	}
 }
 
-func (l *Local) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
+func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
 	h.addPendingTreeMarshal(tm)
 }
 
-func (l *Local) CheckPendingTreeMarshal(h *Host, el *EntityList) {
+func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
 }
 

@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
 
@@ -34,7 +35,7 @@ func ProtocolRegister(protoID uuid.UUID, protocol NewProtocol) {
 }
 
 func ProtocolNameToUuid(name string) uuid.UUID {
-	url := "http://dedis.epfl.ch/protocolname/" + name
+	url := network.UuidURL + "protocolname/" + name
 	return uuid.NewV3(uuid.NamespaceURL, url)
 }
 

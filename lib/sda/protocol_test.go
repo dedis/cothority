@@ -115,7 +115,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
-	tree, _ := el.GenerateBinaryTree()
+	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	// start the protocol
 	go func() {
@@ -167,7 +167,7 @@ func TestProtocolAggregation(t *testing.T) {
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{root.Entity, hosts[1].Entity, hosts[2].Entity})
 	root.AddEntityList(el)
-	tree, _ := el.GenerateBinaryTree()
+	tree := el.GenerateBinaryTree()
 	root.AddTree(tree)
 	// start a protocol
 	go func() {

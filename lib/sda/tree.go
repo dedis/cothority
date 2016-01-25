@@ -37,7 +37,7 @@ var TreeType = network.RegisterMessageType(Tree{})
 // also generates the id.
 func NewTree(il *EntityList, r *TreeNode) *Tree {
 	r.UpdateIds()
-	url := "https://dedis.epfl.ch/tree/" + il.Id.String() + r.Id.String()
+	url := network.UuidURL + "tree/" + il.Id.String() + r.Id.String()
 	return &Tree{
 		EntityList: il,
 		Root:       r,
@@ -115,6 +115,20 @@ func (t *Tree) ListNodes() (ret []*TreeNode) {
 	}
 	t.Root.Visit(0, add)
 	return ret
+}
+
+// IsBinary returns true if every node has two or no children
+func (t *Tree) IsBinary(root *TreeNode) bool {
+	nChild := len(root.Children)
+	if nChild != 2 && nChild != 0 {
+		return false
+	}
+	for _, c := range root.Children {
+		if !t.IsBinary(c) {
+			return false
+		}
+	}
+	return true
 }
 
 // TreeMarshal is used to send and receive a tree-structure without having
@@ -197,7 +211,7 @@ var NilEntityList = EntityList{}
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
 func NewEntityList(ids []*network.Entity) *EntityList {
-	url := "https://dedis.epfl.ch/entityList/"
+	url := network.UuidURL + "entityList/"
 	for _, i := range ids {
 		url += i.Id.String()
 	}
@@ -219,21 +233,26 @@ func (il *EntityList) Search(uuid uuid.UUID) *network.Entity {
 
 // GenerateBinaryTree creates a binary tree out of the EntityList
 // out of it. The first element of the EntityList will be the root element.
-func (il *EntityList) GenerateBinaryTree() (*Tree, []*TreeNode) {
-	var nodes []*TreeNode
-	var root *TreeNode
-	for i, e := range il.List {
-		node := NewTreeNode(e)
-		nodes = append(nodes, node)
-		if i == 0 {
-			root = node
+func (il *EntityList) GenerateBinaryTree() *Tree {
+	root := il.addBinary(nil, 0, len(il.List)-1)
+	return NewTree(il, root)
+}
+
+// addBinary is a recursive function to create the binary tree
+func (il *EntityList) addBinary(parent *TreeNode, start, end int) *TreeNode {
+	if start <= end && end < len(il.List) {
+		node := NewTreeNode(il.List[start])
+		if parent != nil {
+			node.Parent = parent
+			parent.Children = append(parent.Children, node)
 		}
+		mid := (start + end) / 2
+		il.addBinary(node, start+1, mid)
+		il.addBinary(node, mid+1, end)
+		return node
+	} else {
+		return nil
 	}
-	// Very simplistic depth-2 tree
-	for i := 1; i < len(nodes); i++ {
-		root.AddChild(nodes[i])
-	}
-	return NewTree(il, root), nodes
 }
 
 // TreeNode is one node in the tree
@@ -303,7 +322,7 @@ func (t *TreeNode) AddChild(c *TreeNode) {
 // UpdateIds should be called on the root-node, so that it recursively
 // calculates the whole tree as a merkle-tree
 func (t *TreeNode) UpdateIds() {
-	url := "https://dedis.epfl.ch/treenode/" + t.Entity.Id.String()
+	url := network.UuidURL + "treenode/" + t.Entity.Id.String()
 	for _, child := range t.Children {
 		child.UpdateIds()
 		url += child.Id.String()
