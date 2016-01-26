@@ -5,9 +5,78 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
+	"reflect"
 	"testing"
 	"time"
 )
+
+func TestReflectChannel(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	var c chan bool
+	cp := &c
+
+	//ty := reflect.TypeOf(cp)
+	v := reflect.ValueOf(cp).Elem()
+	dbg.Lvl3(v.CanSet())
+	ty := v.Type()
+	dbg.Lvl3(ty)
+	v.Set(reflect.MakeChan(ty, 1))
+	c <- true
+	return
+	/*
+		dbg.Print(reflect.TypeOf(cp).Kind())
+		dbg.Print(reflect.TypeOf(c).Kind())
+		dbg.Print(reflect.TypeOf(reflect.Indirect(reflect.ValueOf(cp)).Interface()).Kind())
+		dbg.Print(reflect.ValueOf(c).IsNil())
+		dbg.Print(reflect.ValueOf(c).Cap())
+		dbg.Print(reflect.ValueOf(c).Len())
+		c = make(chan struct {
+			sda.TreeNode
+			NodeTestMsg
+		}, 1)
+		dbg.Print(reflect.ValueOf(c).IsValid())
+		dbg.Print(reflect.ValueOf(c).IsNil())
+		dbg.Print(reflect.ValueOf(c).Cap())
+		dbg.Print(reflect.ValueOf(c).Len())
+	*/
+}
+
+func TestNodeChannelCreate(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
+
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(2, false, true)
+	defer local.CloseAll()
+
+	n, err := local.NewNode(tree.Root, "ProtoChannels")
+	if err != nil {
+		t.Fatal("Couldn't create new node:", err)
+	}
+	var c chan struct {
+		sda.TreeNode
+		NodeTestMsg
+	}
+	err = n.RegisterChannel(&c)
+	if err != nil {
+		t.Fatal("Couldn't register channel:", err)
+	}
+	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
+		Msg:     NodeTestMsg{3},
+		MsgType: network.RegisterMessageType(NodeTestMsg{}),
+		From: &sda.Token{
+			TreeID:     tree.Id,
+			TreeNodeID: tree.Root.Id,
+		}},
+	})
+	if err != nil {
+		t.Fatal("Couldn't dispatch to channel:", err)
+	}
+	msg := <-c
+	if msg.I != 3 {
+		t.Fatal("Message should contain '3'")
+	}
+}
 
 func TestNodeChannel(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)

@@ -55,6 +55,18 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 	return n, n.protocolInstantiate()
 }
 
+// NewNodeEmpty creates a new node without a protocol
+func NewNodeEmpty(o *Overlay, tok *Token) *Node {
+	n := &Node{overlay: o,
+		token:    tok,
+		channels: make(map[uuid.UUID]interface{}),
+		handlers: make(map[uuid.UUID]MsgHandler),
+		msgQueue: make(map[uuid.UUID][]*SDAData),
+		treeNode: nil,
+	}
+	return n
+}
+
 // TreeNode gets the treeNode of this node. If there is no TreeNode for the
 // Token of this node, the function will return nil
 func (n *Node) TreeNode() *TreeNode {
@@ -116,6 +128,13 @@ func (n *Node) EntityList() *EntityList {
 // don't have to anymore, it will automatically do the registration for you.
 func (n *Node) RegisterChannel(c interface{}) error {
 	cr := reflect.TypeOf(c)
+	if cr.Kind() == reflect.Ptr {
+		dbg.Lvl3("Having pointer - initialising and calling again")
+		val := reflect.ValueOf(c).Elem()
+		val.Set(reflect.MakeChan(val.Type(), 1))
+		//val.Set(reflect.MakeChan(reflect.Indirect(cr), 1))
+		return n.RegisterChannel(reflect.Indirect(val).Interface())
+	}
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
 		return errors.New("Input is not channel")
@@ -180,7 +199,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 		dbg.Lvl3("Received message of type:", msg.MsgType)
 		out := n.channels[msg.MsgType]
 
-		dbg.Lvl3("Making new", reflect.TypeOf(out))
+		dbg.Lvl3("Dispatching to", reflect.TypeOf(out))
 		m := reflect.Indirect(reflect.New(reflect.TypeOf(out).Elem()))
 		tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
 		if tn == nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/satori/go.uuid"
 	"strconv"
 	"testing"
+	"time"
 )
 
 type LocalTest struct {
@@ -78,6 +79,7 @@ func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
 
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
+	time.Sleep(time.Millisecond * 200)
 	for _, host := range l.Hosts {
 		err := host.Close()
 		if err != nil {

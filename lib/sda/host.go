@@ -147,6 +147,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 
 // Close shuts down the listener
 func (h *Host) Close() error {
+	time.Sleep(time.Millisecond * 100)
 	h.networkLock.Lock()
 	for _, c := range h.connections {
 		dbg.Lvl3("Closing connection", c)
@@ -155,7 +156,6 @@ func (h *Host) Close() error {
 	var err error
 	stop := false
 	for h.listening && !stop {
-		dbg.Print("Waiting to close")
 		err = h.host.Close()
 		select {
 		case <-h.closed:
