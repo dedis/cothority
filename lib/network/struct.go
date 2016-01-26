@@ -12,6 +12,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -61,8 +62,14 @@ type TcpHost struct {
 	listener net.Listener
 	// the close channel used to indicate to the listener we want to quit
 	quit chan bool
+	// quitListener is a channel to indicate to the closing function that the
+	// listener has actually really quit
+	quitListener  chan bool
+	listeningLock *sync.Mutex
+	listening     bool
 	// indicates wether this host is closed already or not
-	closed bool
+	closed     bool
+	closedLock *sync.Mutex
 	// a list of constructors for en/decoding
 	constructors protobuf.Constructors
 }

@@ -118,15 +118,12 @@ func (h *Host) Listen() {
 		h.registerConnection(c)
 		h.handleConn(c)
 	}
-	h.listening = true
 	go func() {
 		dbg.Lvl3("Listening in", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen in", h.workingAddress, ":", err)
 		}
-		h.listening = false
-		h.closed <- true
 	}()
 }
 
@@ -148,23 +145,8 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 // Close shuts down the listener
 func (h *Host) Close() error {
 	h.networkLock.Lock()
-	for _, c := range h.connections {
-		dbg.Lvl3("Closing connection", c)
-		c.Close()
-	}
 	var err error
-	stop := false
-	for h.listening && !stop {
-		dbg.Print("Waiting to close")
-		err = h.host.Close()
-		select {
-		case <-h.closed:
-			stop = true
-		case <-time.After(time.Millisecond * 50):
-			continue
-		}
-
-	}
+	err = h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
 	close(h.closed)
 	h.networkLock.Unlock()

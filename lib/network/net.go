@@ -18,6 +18,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
@@ -34,9 +35,12 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTcpHost() *TcpHost {
 	return &TcpHost{
-		peers:        make(map[string]Conn),
-		quit:         make(chan bool),
-		constructors: DefaultConstructors(Suite),
+		peers:         make(map[string]Conn),
+		quit:          make(chan bool),
+		constructors:  DefaultConstructors(Suite),
+		quitListener:  make(chan bool),
+		listeningLock: &sync.Mutex{},
+		closedLock:    &sync.Mutex{},
 	}
 }
 
@@ -63,10 +67,6 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
-	//if t.closed == true {
-	//	return nil
-	//}
-	t.closed = true
 	for _, c := range t.peers {
 		if err := c.Close(); err != nil {
 			return handleError(err)
@@ -75,9 +75,32 @@ func (t *TcpHost) Close() error {
 	if !t.closed {
 		close(t.quit)
 	}
-	if t.listener != nil {
-		return t.listener.Close()
+	t.closedLock.Lock()
+	t.closed = true
+	t.closedLock.Unlock()
+	// lets see if we launched a listening routing
+	var listening bool
+	t.listeningLock.Lock()
+	listening = t.listening
+	t.listeningLock.Unlock()
+	// we are NOT listening
+	if !listening {
+		//	fmt.Println("tcphost.Close() without listening")
+		return nil
 	}
+	var stop bool
+	for !stop {
+		if t.listener != nil {
+			t.listener.Close()
+		}
+		select {
+		case <-t.quitListener:
+			stop = true
+		case <-time.After(time.Millisecond * 50):
+			continue
+		}
+	}
+	//fmt.Println("tcphost.Close()")
 	return nil
 }
 
@@ -198,17 +221,32 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 // That way we can control what to do of the TcpConn before returning it to the
 // function given by the user. Used by SecureTcpHost
 func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
+	t.closedLock.Lock()
+	if t.closed {
+		t.closedLock.Unlock()
+		//fmt.Println("AlreadyClosed !")
+		return nil
+	}
+	t.closedLock.Unlock()
+	t.listeningLock.Lock()
+	t.listening = true
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
 		return fmt.Errorf("Error opening listener on address %s:%v", addr, err)
 	}
 	t.listener = ln
+	var unlocked bool
 	for {
+		if !unlocked {
+			unlocked = true
+			t.listeningLock.Unlock()
+		}
 		conn, err := t.listener.Accept()
 		if err != nil {
 			select {
 			case <-t.quit:
+				t.quitListener <- true
 				return nil
 			default:
 			}
