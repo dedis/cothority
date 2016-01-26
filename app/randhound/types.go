@@ -8,8 +8,7 @@ import (
 )
 
 var Done chan bool
-var Purpose chan string
-var Trustees chan int
+var Result chan []byte
 
 var TypeI1 uuid.UUID
 var TypeR1 uuid.UUID
@@ -31,8 +30,8 @@ type Session struct {
 
 type Group struct {
 	PPubKey [][]byte // Finger prints of peers' public keys
-	F       int      // Faulty (Byzantine) hosts tolerated
-	L       int      // Hosts that must be live
+	F       int      // Faulty (Byzantine) hosts tolerated (1/3)
+	L       int      // Hosts that must be live (2/3)
 	K       int      // Trustee set size
 	T       int      // Trustee set threshold
 }

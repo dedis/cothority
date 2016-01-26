@@ -55,12 +55,15 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Could not start protocol:", err)
 	}
 
+	bytes := make([]byte, 32)
 	select {
 	case _ = <-randhound.Done:
 		log.Printf("RandHound - done")
-	case <-time.After(time.Second * 10):
+		bytes = <-randhound.Result
+	case <-time.After(time.Second * 20):
 		t.Fatal("RandHound did not finish in time")
 	}
+	log.Printf("RandHound - random bytes: %v\n", bytes)
 }
 
 func newHost(t *testing.T, address string) *sda.Host {

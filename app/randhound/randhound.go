@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -33,14 +32,17 @@ type RandHound struct {
 	PID     map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
 	PKeys   []abstract.Point  // Public keys of the peers
 	T       int               // Minimum number of shares needed to reconstruct the secret
-	R       int               // Minimum number of signatures needed to certify a deal (t <= r <= n)
-	N       int               // Total number of shares
+	R       int               // Minimum number of signatures needed to certify a deal
+	N       int               // Total number of trustees / shares (T <= R <= N)
 	Purpose string            // Purpose of the protocol instance
 }
 
 func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token, T int, R int, N int, purpose string) sda.ProtocolInstance {
 	if Done == nil {
 		Done = make(chan bool, 1)
+	}
+	if Result == nil {
+		Result = make(chan []byte)
 	}
 	// Setup simpler peer identification and ignore leader at index lidx
 	j := 0
@@ -402,8 +404,13 @@ func (rh *RandHound) HandleR4(msgs []*sda.SDAData) error {
 		output.Add(output, secret)
 	}
 
-	log.Printf("RandHound - random value: %v\n", output)
+	rb, err := output.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
 	Done <- true
+	Result <- rb
 
 	return nil
 }

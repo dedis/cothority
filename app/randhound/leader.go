@@ -77,20 +77,20 @@ func (rh *RandHound) newSession(purpose string) (*Session, []byte, error) {
 
 func (rh *RandHound) newGroup() (*Group, []byte, error) {
 
-	npeers := len(rh.PID)
-	ntrustees := rh.N
+	np := len(rh.PID) // Number of peers
+	nt := rh.N        // Number of trustees (= shares)
 	buf := new(bytes.Buffer)
-	ppub := make([][]byte, npeers)
+	ppub := make([][]byte, np)
 	gp := [4]int{
-		npeers / 3,
-		npeers - (npeers / 3),
-		ntrustees,
-		(ntrustees + 1) / 2,
-	} // Group parameters: F, L, K, T
+		np / 3,
+		np - (np / 3),
+		nt,
+		(nt + 1) / 2,
+	} // Group parameters: F, L, K, T; TODO: sync up notations with rh.T, rh.R, rh.N!
 
 	// Include public keys of all peers
-	for i, c := range rh.Children {
-		pub, err := c.Entity.Public.MarshalBinary()
+	for i, pkey := range rh.PKeys {
+		pub, err := pkey.MarshalBinary()
 		if err != nil {
 			return nil, nil, err
 		}
