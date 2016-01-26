@@ -88,12 +88,7 @@ func (l *LocalTest) CloseAll() {
 	}
 }
 
-// NewNode creates a new node on a TreeNode
-func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
-	o := l.Overlays[tn.Entity.Id]
-	if o == nil {
-		return nil, errors.New("Didn't find corresponding overlay")
-	}
+func (l *LocalTest) GetTree(tn *TreeNode) *Tree {
 	var tree *Tree
 	for _, t := range l.Trees {
 		if tn.IsInTree(t) {
@@ -101,6 +96,16 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 			break
 		}
 	}
+	return tree
+}
+
+// NewNode creates a new node on a TreeNode
+func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
+	o := l.Overlays[tn.Entity.Id]
+	if o == nil {
+		return nil, errors.New("Didn't find corresponding overlay")
+	}
+	tree := l.GetTree(tn)
 	if tree == nil {
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
@@ -116,6 +121,28 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 		RoundID:      uuid.NewV4(),
 	}
 	return NewNode(o, tok)
+}
+
+// GetNodes returns all Nodes that belong to a treeNode
+func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
+	nodes := make([]*Node, 0)
+	for _, n := range l.Overlays[tn.Entity.Id].nodes {
+		nodes = append(nodes, n)
+	}
+	return nodes
+}
+
+func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.ProtocolMessage) error {
+	if from.Tree().Id != to.Tree().Id {
+		return errors.New("Can't send from one tree to another")
+	}
+	sdaMsg := &SDAData{
+		Msg:     msg,
+		MsgType: network.TypeToUUID(msg),
+		From:    from.token,
+		To:      to.token,
+	}
+	return to.overlay.TransmitMsg(sdaMsg)
 }
 
 func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {

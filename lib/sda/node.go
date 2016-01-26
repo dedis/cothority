@@ -20,7 +20,8 @@ type Node struct {
 	// cache for the TreeNode this Node is representing
 	treeNode *TreeNode
 	// channels holds all channels available for the different message-types
-	channels map[uuid.UUID]interface{}
+	channels     map[uuid.UUID]interface{}
+	channelFlags map[uuid.UUID]uint32
 	// registered handler-functions for that protocol
 	handlers map[uuid.UUID]MsgHandler
 	// The protocolInstance belonging to that node
@@ -28,16 +29,14 @@ type Node struct {
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
 	msgQueue map[uuid.UUID][]*SDAData
-	// Holds flags that influence the behaviour of the node
-	flags uint32
 }
 
-// Bit-values for different flags
-// If BactchMessages is set, every message from the children is sent
-// directly through the channel
+// Bit-values for different channelFlags
+// If AggregateMessages is set, messages from all children are collected
+// before sent to the Node
 // https://golang.org/ref/spec#Iota
 const (
-	BatchMessages = 1 << iota
+	AggregateMessages = 1 << iota
 )
 
 // MsgHandler is called upon reception of a certain message-type
@@ -45,24 +44,19 @@ type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
 func NewNode(o *Overlay, tok *Token) (*Node, error) {
-	n := &Node{overlay: o,
-		token:    tok,
-		channels: make(map[uuid.UUID]interface{}),
-		handlers: make(map[uuid.UUID]MsgHandler),
-		msgQueue: make(map[uuid.UUID][]*SDAData),
-		treeNode: nil,
-	}
+	n := NewNodeEmpty(o, tok)
 	return n, n.protocolInstantiate()
 }
 
 // NewNodeEmpty creates a new node without a protocol
 func NewNodeEmpty(o *Overlay, tok *Token) *Node {
 	n := &Node{overlay: o,
-		token:    tok,
-		channels: make(map[uuid.UUID]interface{}),
-		handlers: make(map[uuid.UUID]MsgHandler),
-		msgQueue: make(map[uuid.UUID][]*SDAData),
-		treeNode: nil,
+		token:        tok,
+		channels:     make(map[uuid.UUID]interface{}),
+		channelFlags: make(map[uuid.UUID]uint32),
+		handlers:     make(map[uuid.UUID]MsgHandler),
+		msgQueue:     make(map[uuid.UUID][]*SDAData),
+		treeNode:     nil,
 	}
 	return n
 }
@@ -123,10 +117,13 @@ func (n *Node) EntityList() *EntityList {
 
 // RegisterChannel takes a channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
-// same type to this channel. NOTE: In legacy network library, you had to
-// register the message type to the network library. Using this function you
-// don't have to anymore, it will automatically do the registration for you.
+// same type to this channel.
+// This function handles also
+// - registration of the message-type
+// - aggregation or not of messages: if you give a channel of slices, the
+//   messages will be aggregated, else they will come one-by-one
 func (n *Node) RegisterChannel(c interface{}) error {
+	flags := uint32(0)
 	cr := reflect.TypeOf(c)
 	if cr.Kind() == reflect.Ptr {
 		dbg.Lvl3("Having pointer - initialising and calling again")
@@ -138,6 +135,11 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
 		return errors.New("Input is not channel")
+	}
+	if cr.Elem().Kind() == reflect.Slice {
+		dbg.Lvl3("Getting a channel to slices - activating aggregation")
+		flags += AggregateMessages
+		cr = cr.Elem()
 	}
 	if cr.Elem().Kind() != reflect.Struct {
 		return errors.New("Input is not channel of structure")
@@ -153,7 +155,8 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
 	n.channels[typ] = c
-	dbg.Lvl3("Registered channel", typ)
+	n.channelFlags[typ] = flags
+	dbg.Lvl3("Registered channel", typ, "with flags", flags)
 	return nil
 }
 
@@ -195,22 +198,44 @@ func (n *Node) DispatchFunction(msg []*SDAData) error {
 
 // DispatchChannel takes a message and sends it to a channel
 func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
-	for _, msg := range msgSlice {
-		dbg.Lvl3("Received message of type:", msg.MsgType)
-		out := n.channels[msg.MsgType]
+	mt := msgSlice[0].MsgType
+	to := reflect.TypeOf(n.channels[mt])
+	if n.HasFlag(mt, AggregateMessages) {
+		dbg.Lvl3("Received aggregated message of type:", mt)
+		to = to.Elem()
+		out := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
+		for i, msg := range msgSlice {
+			dbg.Lvl3("Dispatching aggregated to", to)
+			m := reflect.Indirect(reflect.New(to.Elem()))
+			tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
+			if tn == nil {
+				return errors.New("Didn't find treenode")
+			}
 
-		dbg.Lvl3("Dispatching to", reflect.TypeOf(out))
-		m := reflect.Indirect(reflect.New(reflect.TypeOf(out).Elem()))
-		tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
-		if tn == nil {
-			return errors.New("Didn't find treenode")
+			m.Field(0).Set(reflect.ValueOf(*tn))
+			m.Field(1).Set(reflect.Indirect(reflect.ValueOf(msg.Msg)))
+			dbg.Lvl3("Adding msg", m, "to", n.Entity().Addresses)
+			out.Index(i).Set(m)
 		}
+		reflect.ValueOf(n.channels[mt]).Send(out)
+	} else {
+		for _, msg := range msgSlice {
+			dbg.Lvl3("Received message of type:", mt)
+			out := n.channels[mt]
 
-		m.Field(0).Set(reflect.ValueOf(*tn))
-		m.Field(1).Set(reflect.ValueOf(msg.Msg))
-		dbg.Lvl3("Sending", m, "to", n.Entity().Addresses)
-		reflect.ValueOf(out).Send(m)
-		dbg.Lvl3("Sent")
+			dbg.Lvl3("Dispatching to", to)
+			m := reflect.Indirect(reflect.New(to.Elem()))
+			tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
+			if tn == nil {
+				return errors.New("Didn't find treenode")
+			}
+
+			m.Field(0).Set(reflect.ValueOf(*tn))
+			m.Field(1).Set(reflect.ValueOf(msg.Msg))
+			dbg.Lvl3("Sending", m, "to", n.Entity().Addresses)
+			reflect.ValueOf(out).Send(m)
+			dbg.Lvl3("Sent")
+		}
 	}
 	return nil
 }
@@ -238,18 +263,18 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 }
 
 // SetFlag makes sure a given flag is set
-func (n *Node) SetFlag(f uint32) {
-	n.flags |= f
+func (n *Node) SetFlag(mt uuid.UUID, f uint32) {
+	n.channelFlags[mt] |= f
 }
 
 // ClearFlag makes sure a given flag is removed
-func (n *Node) ClearFlag(f uint32) {
-	n.flags &^= f
+func (n *Node) ClearFlag(mt uuid.UUID, f uint32) {
+	n.channelFlags[mt] &^= f
 }
 
 // HasFlag returns true if the given flag is set
-func (n *Node) HasFlag(f uint32) bool {
-	return n.flags&f != 0
+func (n *Node) HasFlag(mt uuid.UUID, f uint32) bool {
+	return n.channelFlags[mt]&f != 0
 }
 
 // aggregate store the message for a protocol instance such that a protocol
@@ -259,7 +284,7 @@ func (n *Node) HasFlag(f uint32) bool {
 func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.Parent().Id)
-	if fromParent || n.HasFlag(BatchMessages) {
+	if fromParent || !n.HasFlag(mt, AggregateMessages) {
 		return mt, []*SDAData{sdaMsg}, true
 	}
 	// store the msg according to its type
@@ -268,6 +293,8 @@ func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
+	dbg.Lvl3("Received", len(msgs), "of", len(n.Children()), "messages")
+
 	// do we have everything yet or no
 	// get the node this host is in this tree
 	// OK we have all the children messages
@@ -277,7 +304,6 @@ func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 		return mt, msgs, true
 	}
 	// no we still have to wait!
-	dbg.Lvl3("Number of msgs:", len(msgs), "number of children:", len(n.Children()))
 	return mt, nil, false
 }
 
