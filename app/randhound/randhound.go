@@ -42,23 +42,24 @@ func NewRandHound(h *sda.Host, t *sda.TreeNode, tok *sda.Token, T int, R int, N 
 	if Done == nil {
 		Done = make(chan bool, 1)
 	}
-
+	// Setup simpler peer identification and ignore leader at index lidx
+	j := 0
 	e, _ := h.GetEntityList(tok.EntityListID)
 	el := e.List
-	eid := make(map[uuid.UUID]int)
+	pid := make(map[uuid.UUID]int)
 	pkeys := make([]abstract.Point, len(el)-1)
-
-	// We ignore the leader at index 0
-	for i := 1; i < len(el); i += 1 {
-		j := i - 1 // adapt peer index for simpler iteration
-		eid[el[i].Id] = j
-		pkeys[j] = el[i].Public
+	for i := 0; i < len(el); i += 1 {
+		if i != 0 {
+			pid[el[i].Id] = j
+			pkeys[j] = el[i].Public
+			j += 1
+		}
 	}
 	return &RandHound{
 		ProtocolStruct: sda.NewProtocolStruct(h, t, tok),
 		Leader:         nil,
 		Peer:           nil,
-		PID:            eid,
+		PID:            pid,
 		PKeys:          pkeys,
 		T:              T,
 		R:              R,
