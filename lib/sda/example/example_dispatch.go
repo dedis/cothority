@@ -23,11 +23,11 @@ var MessageAnnounceType = network.RegisterMessageType(MessageAnnounce{})
 var MessageReplyType = network.RegisterMessageType(MessageReply{})
 
 // NewExampleDispatch initialises the structure for use in one round
-func NewExampleDispatch(n *sda.Node) sda.ProtocolInstance {
+func NewExampleDispatch(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolExampleDispatch{
 		Node:       n,
 		ChildCount: make(chan int),
-	}
+	}, nil
 }
 
 // Starts the protocol
@@ -72,12 +72,12 @@ func (p *ProtocolExampleDispatch) HandleAnnounce(m *sda.SDAData) error {
 // to verify the number of nodes.
 func (p *ProtocolExampleDispatch) HandleReply(m *sda.SDAData) error {
 	msg := m.Msg.(MessageReply)
-	msg.Children += len(p.Children())
+	msg.ChildrenCount += len(p.Children())
 	dbg.Lvl3("We're done")
 	if p.Parent() != nil {
 		return p.SendTo(p.Parent(), msg)
 	} else {
-		p.ChildCount <- msg.Children
+		p.ChildCount <- msg.ChildrenCount
 	}
 	return nil
 }

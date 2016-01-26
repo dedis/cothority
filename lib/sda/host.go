@@ -118,9 +118,9 @@ func (h *Host) Listen() {
 		h.registerConnection(c)
 		h.handleConn(c)
 	}
+	h.listening = true
 	go func() {
 		dbg.Lvl3("Listening in", h.workingAddress)
-		h.listening = true
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen in", h.workingAddress, ":", err)
@@ -155,6 +155,7 @@ func (h *Host) Close() error {
 	var err error
 	stop := false
 	for h.listening && !stop {
+		dbg.Print("Waiting to close")
 		err = h.host.Close()
 		select {
 		case <-h.closed:

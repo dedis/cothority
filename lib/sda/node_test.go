@@ -204,12 +204,12 @@ type ProtocolChannels struct {
 	*sda.Node
 }
 
-func NewProtocolChannels(n *sda.Node) sda.ProtocolInstance {
+func NewProtocolChannels(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolChannels{
 		Node: n,
 	}
 	p.RegisterChannel(Incoming)
-	return p
+	return p, nil
 }
 
 func (p *ProtocolChannels) Start() error {

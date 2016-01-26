@@ -63,16 +63,18 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
-	if t.closed == true {
-		return nil
-	}
+	//if t.closed == true {
+	//	return nil
+	//}
 	t.closed = true
 	for _, c := range t.peers {
 		if err := c.Close(); err != nil {
 			return handleError(err)
 		}
 	}
-	close(t.quit)
+	if !t.closed {
+		close(t.quit)
+	}
 	if t.listener != nil {
 		return t.listener.Close()
 	}

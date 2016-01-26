@@ -165,8 +165,8 @@ func (n *Node) protocolInstantiate() error {
 	if err != nil {
 		return errors.New("We are not represented in the tree")
 	}
-	n.instance = p(n)
-	return nil
+	n.instance, err = p(n)
+	return err
 }
 
 func (n *Node) DispatchFunction(msg []*SDAData) error {

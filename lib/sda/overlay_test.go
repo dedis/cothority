@@ -33,11 +33,11 @@ func TestOverlayDone(t *testing.T) {
 	// setup
 	h1 := sda.NewLocalHost(2000)
 	defer h1.Close()
-	fn := func(n *sda.Node) sda.ProtocolInstance {
+	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
 		ps := ProtocolOverlay{
 			Node: n,
 		}
-		return &ps
+		return &ps, nil
 	}
 	el := sda.NewEntityList([]*network.Entity{h1.Entity})
 	h1.AddEntityList(el)

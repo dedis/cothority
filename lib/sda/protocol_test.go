@@ -23,11 +23,11 @@ type ProtocolTest struct {
 }
 
 // NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *sda.Node) sda.ProtocolInstance {
+func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
 		node: n,
 		Msg:  "new",
-	}
+	}, nil
 }
 
 // Dispatch is used to send the messages further - here everything is
@@ -98,13 +98,13 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	chans := []chan bool{chanH1, chanH2}
 	id := 0
 	// custom creation function so we know the step due to the channels
-	fn := func(n *sda.Node) sda.ProtocolInstance {
+	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
 		ps := SimpleProtocol{
 			node: n,
 			Chan: chans[id],
 		}
 		id++
-		return &ps
+		return &ps, nil
 	}
 
 	sda.ProtocolRegister(testID, fn)
@@ -152,13 +152,13 @@ func TestProtocolAggregation(t *testing.T) {
 	chans := []chan bool{chroot, ch1, ch2}
 	id := 0
 	// custom creation function so we know the step due to the channels
-	fn := func(n *sda.Node) sda.ProtocolInstance {
+	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
 		ps := AggregationProtocol{
 			Node: n,
 			Chan: chans[id],
 		}
 		id++
-		return &ps
+		return &ps, nil
 	}
 
 	sda.ProtocolRegister(aggregateID, fn)

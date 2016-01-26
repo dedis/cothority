@@ -22,7 +22,7 @@ type ProtocolInstance interface {
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*Node) ProtocolInstance
+type NewProtocol func(*Node) (ProtocolInstance, error)
 
 // ProtocolRegister takes a protocol and registers it under a given uuid.
 // As this might be called from an 'init'-function, we need to check the

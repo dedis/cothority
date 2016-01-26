@@ -96,6 +96,15 @@ func (t *Tree) String() string {
 		t.Id, t.EntityList.Id, t.Root.Id)
 }
 
+// Dump returns string about the tree
+func (t *Tree) Dump() string {
+	ret := "Tree " + t.Id.String() + " is:"
+	t.Root.Visit(0, func(d int, tn *TreeNode) {
+		ret += fmt.Sprintf("\n%d:%d:%s", d, len(tn.Children), tn.Id.String())
+	})
+	return ret
+}
+
 // GetTreeNode searches the tree for the given TreeNodeId
 func (t *Tree) GetTreeNode(tn uuid.UUID) (ret *TreeNode) {
 	found := func(d int, tns *TreeNode) {

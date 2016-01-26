@@ -7,5 +7,5 @@ type MessageAnnounce struct {
 
 // MessageReply returns the count of all children
 type MessageReply struct {
-	Children int
+	ChildrenCount int
 }

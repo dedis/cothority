@@ -46,6 +46,16 @@ func TestHostClose(t *testing.T) {
 	h1.Close()
 }
 
+func TestHostClose2(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(2, false, true)
+	dbg.Print(tree.Dump())
+	//time.Sleep(time.Millisecond * 100)
+	local.CloseAll()
+	dbg.Lvl3("Done")
+}
+
 // Test connection of multiple Hosts and sending messages back and forth
 func TestHostMessaging(t *testing.T) {
 	h1, h2 := SetupTwoHosts(t, false)
