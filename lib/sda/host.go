@@ -188,7 +188,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if c, ok = h.connections[e.Id]; !ok {
 		return errors.New("Got no connection tied to this Entity")
 	}
-	dbg.Lvl4("Sending to", e)
+	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
 	c.Send(context.TODO(), msg)
 	return nil
 }

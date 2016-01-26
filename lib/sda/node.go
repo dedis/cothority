@@ -293,7 +293,7 @@ func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
-	dbg.Lvl3("Received", len(msgs), "of", len(n.Children()), "messages")
+	dbg.Lvl3(n.Entity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
 
 	// do we have everything yet or no
 	// get the node this host is in this tree

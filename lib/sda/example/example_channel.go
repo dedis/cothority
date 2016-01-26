@@ -21,7 +21,7 @@ type ProtocolExampleChannel struct {
 		sda.TreeNode
 		MessageAnnounce
 	}
-	Reply chan struct {
+	Reply chan []struct {
 		sda.TreeNode
 		MessageReply
 	}
@@ -48,7 +48,7 @@ func NewExampleChannel(n *sda.Node) (sda.ProtocolInstance, error) {
 // Starts the protocol
 func (p *ProtocolExampleChannel) Start() error {
 	dbg.Lvl3("Starting example")
-	return p.SendTo(p.Children()[0], &MessageAnnounce{"cothority rulez!"})
+	return p.HandleAnnounce(MessageAnnounce{"cothority rulez!"})
 }
 
 // Dispatch takes the message and decides what function to call
@@ -62,14 +62,12 @@ func (p *ProtocolExampleChannel) DispatchChannels() {
 		select {
 		case announce := <-p.Announcement:
 			dbg.Lvl3("Got announcement", announce)
-			p.HandleAnnounce(announce.MessageAnnounce)
-		case reply := <-p.Reply:
-			dbg.Lvl3("Got reply", reply)
-			children := reply.ChildrenCount + 1
-			for len(p.Reply) > 0 {
-				children += (<-p.Reply).ChildrenCount
+			err := p.HandleAnnounce(announce.MessageAnnounce)
+			if err != nil {
+				dbg.Error("Error in announcement:", err)
 			}
-			p.HandleReply(children)
+		case reply := <-p.Reply:
+			p.HandleReply(reply)
 		}
 	}
 }
@@ -95,7 +93,14 @@ func (p *ProtocolExampleChannel) HandleAnnounce(msg MessageAnnounce) error {
 
 // HandleReply is the message going up the tree and holding a counter
 // to verify the number of nodes.
-func (p *ProtocolExampleChannel) HandleReply(children int) error {
+func (p *ProtocolExampleChannel) HandleReply(reply []struct {
+	sda.TreeNode
+	MessageReply
+}) error {
+	children := 1
+	for _, c := range reply {
+		children += c.ChildrenCount
+	}
 	dbg.Lvl3(p.Entity().Addresses, "is done with total of", children)
 	if !p.IsRoot() {
 		dbg.Lvl3("Sending to parent")

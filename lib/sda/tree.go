@@ -100,7 +100,12 @@ func (t *Tree) String() string {
 func (t *Tree) Dump() string {
 	ret := "Tree " + t.Id.String() + " is:"
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
-		ret += fmt.Sprintf("\n%d:%d:%s", d, len(tn.Children), tn.Id.String())
+		if tn.Parent != nil {
+			ret += fmt.Sprintf("\n%s has parent %s", tn.Entity.Addresses,
+				tn.Parent.Entity.Addresses)
+		} else {
+			ret += fmt.Sprintf("\n%s is root", tn.Entity.Addresses)
+		}
 	})
 	return ret
 }
