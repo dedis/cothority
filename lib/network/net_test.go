@@ -65,6 +65,7 @@ func TestMultiClose(t *testing.T) {
 	h1 := NewTcpHost()
 	h2 := NewTcpHost()
 	go h1.Listen("localhost:2000", fn)
+	fmt.Println("tcphost.Close() without listening")
 	h2.Open("localhost:2000")
 	err := h1.Close()
 	if err != nil {

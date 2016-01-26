@@ -75,9 +75,7 @@ func (t *TcpHost) Close() error {
 	if !t.closed {
 		close(t.quit)
 	}
-	t.closedLock.Lock()
 	t.closed = true
-	t.closedLock.Unlock()
 	// lets see if we launched a listening routing
 	var listening bool
 	t.listeningLock.Lock()
@@ -221,13 +219,6 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 // That way we can control what to do of the TcpConn before returning it to the
 // function given by the user. Used by SecureTcpHost
 func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
-	t.closedLock.Lock()
-	if t.closed {
-		t.closedLock.Unlock()
-		//fmt.Println("AlreadyClosed !")
-		return nil
-	}
-	t.closedLock.Unlock()
 	t.listeningLock.Lock()
 	t.listening = true
 	global, _ := cliutils.GlobalBind(addr)
