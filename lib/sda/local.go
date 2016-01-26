@@ -12,10 +12,14 @@ import (
 )
 
 type LocalTest struct {
-	Hosts       map[uuid.UUID]*Host
-	Overlays    map[uuid.UUID]*Overlay
+	// A map of Entity.Id to Hosts
+	Hosts map[uuid.UUID]*Host
+	// A map of Entity.Id to Overlays
+	Overlays map[uuid.UUID]*Overlay
+	// A map of EntityList.Id to EntityLists
 	EntityLists map[uuid.UUID]*EntityList
-	Trees       map[uuid.UUID]*Tree
+	// A map of Tree.Id to Trees
+	Trees map[uuid.UUID]*Tree
 }
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
@@ -80,6 +84,36 @@ func (l *LocalTest) CloseAll() {
 			dbg.Error("Closing host", host, "gives error", err)
 		}
 	}
+}
+
+// NewNode creates a new node on a TreeNode
+func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
+	o := l.Overlays[tn.Entity.Id]
+	if o == nil {
+		return nil, errors.New("Didn't find corresponding overlay")
+	}
+	var tree *Tree
+	for _, t := range l.Trees {
+		if tn.IsInTree(t) {
+			tree = t
+			break
+		}
+	}
+	if tree == nil {
+		return nil, errors.New("Didn't find tree corresponding to TreeNode")
+	}
+	protId := ProtocolNameToUuid(protName)
+	if !ProtocolExists(protId) {
+		return nil, errors.New("Didn't find protocol: " + protName)
+	}
+	tok := &Token{
+		ProtocolID:   protId,
+		EntityListID: tree.EntityList.Id,
+		TreeID:       tree.Id,
+		TreeNodeID:   tn.Id,
+		RoundID:      uuid.NewV4(),
+	}
+	return NewNode(o, tok)
 }
 
 func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {

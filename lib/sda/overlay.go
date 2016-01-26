@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
@@ -57,6 +56,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	node := o.nodes[sdaMsg.To.Id()]
 	if node == nil {
 		var err error
+		dbg.Lvl3("Making new node")
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		if err != nil {
 			return err
@@ -120,10 +120,11 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 		TreeID:       tree.Id,
 		TreeNodeID:   tree.Root.Id,
 		// Host is handling the generation of protocolInstanceID
-		RoundID: cliutils.NewRandomUUID(),
+		RoundID: uuid.NewV4(),
 	}
 	// instantiate node
 	var err error
+	dbg.Lvl3("Making new node")
 	o.nodes[token.Id()], err = NewNode(o, token)
 	if err != nil {
 		return nil, err

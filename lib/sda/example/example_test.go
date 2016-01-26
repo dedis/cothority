@@ -15,11 +15,11 @@ func TestNode2(t *testing.T) {
 	_, _, tree := local.GenTree(2, false, true)
 	defer local.CloseAll()
 
-	node, err := local.StartNewNodeName("Example", tree)
+	node, err := local.StartNewNodeName("ExampleChannel", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	protocol := node.ProtocolInstance().(*example.ProtocolExample)
+	protocol := node.ProtocolInstance().(*example.ProtocolExampleDispatch)
 
 	select {
 	case children := <-protocol.ChildCount:
@@ -39,11 +39,11 @@ func TestNode10(t *testing.T) {
 	_, _, tree := local.GenTree(10, false, true)
 	defer local.CloseAll()
 
-	node, err := local.StartNewNodeName("Example", tree)
+	node, err := local.StartNewNodeName("ExampleChannel", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	protocol := node.ProtocolInstance().(*example.ProtocolExample)
+	protocol := node.ProtocolInstance().(*example.ProtocolExampleChannel)
 
 	select {
 	case children := <-protocol.ChildCount:

@@ -11,17 +11,16 @@ import (
 
 func TestNodeChannel(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	names := genLocalhostPeerNames(10, 2000)
-	peerList := genEntityList(tSuite, names)
-	// Generate an example topology
-	tree := peerList.GenerateBinaryTree()
-	dbg.Lvl4("Tree is", tree)
-	h := sda.NewLocalHost(2000)
-	defer h.Close()
+	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
 
-	o := sda.NewOverlay(h)
-	o.RegisterTree(tree)
-	n, err := sda.NewNode(o, &sda.Token{TreeID: tree.Id})
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(2, false, true)
+	defer local.CloseAll()
+
+	n, err := local.NewNode(tree.Root, "ProtoChannels")
+	if err != nil {
+		t.Fatal("Couldn't create new node:", err)
+	}
 	c := make(chan struct {
 		sda.TreeNode
 		NodeTestMsg
@@ -106,9 +105,13 @@ func TestProtocolChannels(t *testing.T) {
 
 func TestMsgAggregation(t *testing.T) {
 	local := sda.NewLocalTest()
-	hosts, list, tree := local.GenTree(3, false, true)
+	_, list, tree := local.GenTree(3, false, true)
 	defer local.CloseAll()
 	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
+	node, err := local.NewNode(tree.Root, "ProtoChannels")
+	if err != nil {
+		t.Fatal("Couldn't create new node:", err)
+	}
 
 	tok := &sda.Token{
 		EntityListID: list.Id,
@@ -117,7 +120,6 @@ func TestMsgAggregation(t *testing.T) {
 	// Two random types
 	type1 := uuid.NewV4()
 	type2 := uuid.NewV4()
-	node, _ := sda.NewNode(hosts[0].Overlay(), tok)
 	msg := &sda.SDAData{
 		From:    tok.ChangeTreeNodeID(tree.Root.Children[0].Id),
 		MsgType: type1,

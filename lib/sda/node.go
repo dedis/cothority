@@ -57,45 +57,23 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 
 // TreeNode gets the treeNode of this node. If there is no TreeNode for the
 // Token of this node, the function will return nil
-func (n *Node) TreeNode() (*TreeNode, bool) {
-	// only fetches it once
-	if n.treeNode == nil {
-		var err error
-		n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
-		if err != nil {
-			dbg.Error("TreeNodeFromToken not find by token", err)
-			return nil, false
-		}
-	}
-	return n.treeNode, true
+func (n *Node) TreeNode() *TreeNode {
+	return n.treeNode
 }
 
 // Entity returns our entity
 func (n *Node) Entity() *network.Entity {
-	tn, ok := n.TreeNode()
-	// if we dont find our self it's not good
-	if !ok {
-		panic("Entity() could not retrieve TreeNode: it's bad")
-	}
-	return tn.Entity
+	return n.treeNode.Entity
 }
 
 // Parent returns the parent-TreeNode of ourselves
 func (n *Node) Parent() *TreeNode {
-	tn, ok := n.TreeNode()
-	if !ok {
-		panic("Parent() called TreeNode() and did not find ourself: it's bad")
-	}
-	return tn.Parent
+	return n.treeNode.Parent
 }
 
 // Children returns the children of ourselves
 func (n *Node) Children() []*TreeNode {
-	tn, ok := n.TreeNode()
-	if !ok {
-		panic("Children() called TreeNode() but did not find ourself: it's bad")
-	}
-	return tn.Children
+	return n.treeNode.Children
 }
 
 // Root returns the root-node of that tree
@@ -105,20 +83,12 @@ func (n *Node) Root() *TreeNode {
 
 // IsRoot returns whether whether we are at the top of the tree
 func (n *Node) IsRoot() bool {
-	tn, ok := n.TreeNode()
-	if !ok {
-		panic("IsRoot() called TreeNode(): did not find ourself: it's bad")
-	}
-	return tn.Parent == nil
+	return n.treeNode.Parent == nil
 }
 
 // IsLeaf returns whether whether we are at the bottom of the tree
 func (n *Node) IsLeaf() bool {
-	tn, ok := n.TreeNode()
-	if !ok {
-		panic("IsLeaf() called TreeNode(): did not find ourself: it's bad")
-	}
-	return len(tn.Children) == 0
+	return len(n.treeNode.Children) == 0
 }
 
 // SendTo sends to a given node
@@ -178,9 +148,10 @@ func (n *Node) protocolInstantiate() error {
 	if n.token == nil {
 		return errors.New("Hope this is running in test-mode")
 	}
-	p, ok := protocols[n.token.ProtocolID]
+	pid := n.token.ProtocolID
+	p, ok := protocols[pid]
 	if !ok {
-		return errors.New("Protocol doesn't exist")
+		return errors.New("Protocol " + pid.String() + " doesn't exist")
 	}
 	tree := n.overlay.Tree(n.token.TreeID)
 	if tree == nil {
@@ -189,8 +160,9 @@ func (n *Node) protocolInstantiate() error {
 	if n.overlay.EntityList(n.token.EntityListID) == nil {
 		return errors.New("EntityList does not exists")
 	}
-	_, ok = n.TreeNode()
-	if !ok {
+	var err error
+	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
+	if err != nil {
 		return errors.New("We are not represented in the tree")
 	}
 	n.instance = p(n)
@@ -217,7 +189,9 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 
 		m.Field(0).Set(reflect.ValueOf(*tn))
 		m.Field(1).Set(reflect.ValueOf(msg.Msg))
+		dbg.Lvl3("Sending", m, "to", n.Entity().Addresses)
 		reflect.ValueOf(out).Send(m)
+		dbg.Lvl3("Sent")
 	}
 	return nil
 }
