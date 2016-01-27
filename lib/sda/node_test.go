@@ -191,6 +191,48 @@ func TestFlags(t *testing.T) {
 	}
 }
 
+func TestNodeDone(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	sda.ProtocolRegisterName("ProtoChannels", NewProtocolChannels)
+
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(2, false, true)
+	defer local.CloseAll()
+
+	n, err := local.NewNode(tree.Root, "ProtoChannels")
+	if err != nil {
+		t.Fatal("Couldn't create new node:", err)
+	}
+
+	pc := n.ProtocolInstance().(*ProtocolChannels)
+	c1, c2 := pc.Release()
+	done := make(chan bool)
+	go func() {
+		close(c1)
+		close(c2)
+		done <- true
+	}()
+	select {
+	case <-done:
+		break
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Could not send to Done() channels")
+	}
+	// See if the nodes is still regsitered or not. It should NOT Be.
+	nodes := local.NodesFromOverlay(n.Entity().Id)
+	var found bool
+	for _, nn := range nodes {
+		if nn.Entity().Equal(n.Entity()) {
+			found = true
+			break
+		}
+	}
+	if found {
+		t.Fatal("Node should not have been found after calling Done")
+	}
+
+}
+
 type NodeTestMsg struct {
 	I int
 }
@@ -219,4 +261,12 @@ func (p *ProtocolChannels) Start() error {
 func (p *ProtocolChannels) Dispatch([]*sda.SDAData) error {
 	dbg.Error("This should not be called")
 	return nil
+}
+
+// relese ressources ==> call Done()
+func (p *ProtocolChannels) Release() (chan bool, chan bool) {
+	c1 := p.Done()
+	c2 := p.Done()
+
+	return c1, c2
 }

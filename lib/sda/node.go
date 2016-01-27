@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 	"reflect"
+	"sync"
 )
 
 /*
@@ -30,6 +31,14 @@ type Node struct {
 	msgQueue map[uuid.UUID][]*SDAData
 	// Holds flags that influence the behaviour of the node
 	flags uint32
+	// done channel
+	done chan bool
+	// done count: a protocol instance may use another protocol instance inside,
+	// that will also call Done(). We want to really erase that node when all
+	// the protocols have called Done().
+	doneCount int
+	// locks associated since we must access it from different go routines
+	doneLock *sync.Mutex
 }
 
 // Bit-values for different flags
@@ -51,7 +60,10 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 		handlers: make(map[uuid.UUID]MsgHandler),
 		msgQueue: make(map[uuid.UUID][]*SDAData),
 		treeNode: nil,
+		done:     make(chan bool),
+		doneLock: &sync.Mutex{},
 	}
+	go n.waitDone()
 	return n, n.protocolInstantiate()
 }
 
@@ -268,10 +280,41 @@ func (n *Node) Start() error {
 	return n.instance.Start()
 }
 
-// Done must be called when a protocol instance has finished its work and when
-// its resources can be released.
-func (n *Node) Done() {
-	n.overlay.nodeDone(n.token)
+// Done returns a channel that must be given a bool when a protocol instance has
+// finished its work.
+func (n *Node) Done() chan bool {
+	n.doneLock.Lock()
+	n.doneCount++
+	protoChan := make(chan bool)
+	n.doneLock.Unlock()
+	go func() {
+		// wait until the channel is closed
+		for _ = range protoChan {
+		}
+		n.done <- true
+
+	}()
+	return protoChan
+}
+
+// waitDone simply waits on the Done channel and erase itself from the overlay
+// when it has received n.doneCount values
+func (n *Node) waitDone() {
+	var count int
+	for {
+		_ = <-n.done
+		n.doneLock.Lock()
+		count++
+		doneCount := n.doneCount
+		n.doneLock.Unlock()
+		// everybody called Done() on the node
+		if count == doneCount {
+			// we erase ourself
+			n.overlay.nodeDone(n.token)
+			break
+		}
+	}
+	close(n.done)
 }
 
 // Private returns the corresponding private key

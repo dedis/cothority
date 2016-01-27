@@ -40,6 +40,8 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
 		if uuid.Equal(h.Entity.Id, rootEntityId) {
+			// XXX do we really need multiples overlays ? Can't we just use the
+			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].StartNewNodeName(name, t)
 		}
 	}
@@ -122,6 +124,10 @@ func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
 
 func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
+}
+
+func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[uuid.UUID]*Node {
+	return l.Overlays[entityId].nodes
 }
 
 // NewLocalHost creates a new host with the given address and registers it
