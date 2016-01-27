@@ -50,7 +50,7 @@ type Token struct {
 // Returns the Id of a token so we can put that in a map easily
 func (t *Token) Id() uuid.UUID {
 	if t.cacheId == uuid.Nil {
-		url := "https://dedis.epfl.ch/token/" + t.EntityListID.String() +
+		url := network.UuidURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String()
 		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
 	}

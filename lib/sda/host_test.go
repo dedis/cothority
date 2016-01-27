@@ -46,6 +46,16 @@ func TestHostClose(t *testing.T) {
 	h1.Close()
 }
 
+func TestHostClose2(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(2, false, true)
+	dbg.Lvl3(tree.Dump())
+	time.Sleep(time.Millisecond * 100)
+	local.CloseAll()
+	dbg.Lvl3("Done")
+}
+
 // Test connection of multiple Hosts and sending messages back and forth
 func TestHostMessaging(t *testing.T) {
 	h1, h2 := SetupTwoHosts(t, false)
@@ -131,7 +141,7 @@ func TestHostSendDuplex(t *testing.T) {
 // Test when a peer receives a New EntityList, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
-	local := sda.NewLocal()
+	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
@@ -151,7 +161,7 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
-	local := sda.NewLocal()
+	local := sda.NewLocalTest()
 	hosts, el, _ := local.GenTree(2, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
@@ -202,7 +212,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
-	local := sda.NewLocal()
+	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
@@ -261,7 +271,7 @@ func TestTreePropagation(t *testing.T) {
 // h1 ask for the entitylist (because it dont know)
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
-	local := sda.NewLocal()
+	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]

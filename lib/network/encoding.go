@@ -29,6 +29,10 @@ type ProtocolMessage interface{}
 // and it will use this empty constructors
 var emptyConstructors protobuf.Constructors
 
+// The basic url used for uuid
+const UuidURL = "https://dedis.epfl.ch/"
+const UuidURLProtocolType = UuidURL + "/protocolType/"
+
 func init() {
 	emptyConstructors = make(protobuf.Constructors)
 }
@@ -74,7 +78,7 @@ func TypeToUUID(msg ProtocolMessage) uuid.UUID {
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	url := "https://dedis.epfl.ch/protocolType/" + val.Type().String()
+	url := UuidURLProtocolType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
 	dbg.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
 	return u
@@ -82,7 +86,7 @@ func TypeToUUID(msg ProtocolMessage) uuid.UUID {
 
 // RTypeToUUID converts a reflect-type to a UUID
 func RTypeToUUID(msg reflect.Type) uuid.UUID {
-	url := "https://dedis.epfl.ch/protocolType/" + msg.String()
+	url := UuidURLProtocolType + msg.String()
 	return uuid.NewV5(uuid.NamespaceURL, url)
 }
 

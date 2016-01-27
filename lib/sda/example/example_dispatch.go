@@ -7,48 +7,37 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("Example", NewExample)
+	sda.ProtocolRegisterName("ExampleDispatch", NewExampleDispatch)
 }
 
-// ProtocolExample just holds a message that is passed to all children. It
+// ProtocolExampleDispatch just holds a message that is passed to all children. It
 // also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
-type ProtocolExample struct {
+type ProtocolExampleDispatch struct {
 	*sda.Node
 	Message    string
 	ChildCount chan int
 }
 
-// MessageAnnounce is used to pass a message to all children
-type MessageAnnounce struct {
-	Message string
-}
-
 var MessageAnnounceType = network.RegisterMessageType(MessageAnnounce{})
-
-// MessageReply returns the count of all children
-type MessageReply struct {
-	Children int
-}
-
 var MessageReplyType = network.RegisterMessageType(MessageReply{})
 
-// NewProtocolInstance initialises the structure for use in one round
-func NewExample(n *sda.Node) sda.ProtocolInstance {
-	return &ProtocolExample{
+// NewExampleDispatch initialises the structure for use in one round
+func NewExampleDispatch(n *sda.Node) (sda.ProtocolInstance, error) {
+	return &ProtocolExampleDispatch{
 		Node:       n,
 		ChildCount: make(chan int),
-	}
+	}, nil
 }
 
 // Starts the protocol
-func (p *ProtocolExample) Start() error {
+func (p *ProtocolExampleDispatch) Start() error {
 	dbg.Lvl3("Starting example")
 	return p.SendTo(p.Children()[0], &MessageAnnounce{"cothority rulez!"})
 }
 
 // Dispatch takes the message and decides what function to call
-func (p *ProtocolExample) Dispatch(m []*sda.SDAData) error {
+func (p *ProtocolExampleDispatch) Dispatch(m []*sda.SDAData) error {
 	dbg.Lvl3("Got a message:", m[0])
 	switch m[0].MsgType {
 	case MessageAnnounceType:
@@ -61,7 +50,7 @@ func (p *ProtocolExample) Dispatch(m []*sda.SDAData) error {
 
 // HandleAnnounce is the first message and is used to send an ID that
 // is stored in all nodes.
-func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
+func (p *ProtocolExampleDispatch) HandleAnnounce(m *sda.SDAData) error {
 	msg := m.Msg.(MessageAnnounce)
 	p.Message = msg.Message
 	if !p.IsLeaf() {
@@ -81,14 +70,14 @@ func (p *ProtocolExample) HandleAnnounce(m *sda.SDAData) error {
 
 // HandleReply is the message going up the tree and holding a counter
 // to verify the number of nodes.
-func (p *ProtocolExample) HandleReply(m *sda.SDAData) error {
+func (p *ProtocolExampleDispatch) HandleReply(m *sda.SDAData) error {
 	msg := m.Msg.(MessageReply)
-	msg.Children += len(p.Children())
+	msg.ChildrenCount += len(p.Children())
 	dbg.Lvl3("We're done")
 	if p.Parent() != nil {
 		return p.SendTo(p.Parent(), msg)
 	} else {
-		p.ChildCount <- msg.Children
+		p.ChildCount <- msg.ChildrenCount
 	}
 	return nil
 }
