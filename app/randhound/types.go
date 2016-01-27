@@ -76,6 +76,9 @@ type R3Resp struct {
 	Resp   []byte // Encoded response to dealer's deal
 }
 
+// TODO: instead of re-transmitting the full vector of R2 messages, just form a
+// bit-vector that indicates which of the previously tranmitted R2 messages are
+// good/bad
 type I4 struct {
 	SID []byte // Session identifier
 	R2s []R2   // Leader's list of signed R2 messages; empty slices represent missing R2 messages
