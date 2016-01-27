@@ -13,7 +13,7 @@ func TestNode2(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true)
-	dbg.Lvl3(tree.Dump())
+	//dbg.Lvl3(tree.Dump())
 	defer local.CloseAll()
 
 	node, err := local.StartNewNodeName("ExampleChannel", tree)

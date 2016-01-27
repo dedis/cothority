@@ -2,6 +2,7 @@ package sda
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -9,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 	"strconv"
 	"testing"
+	"time"
 )
 
 type LocalTest struct {
@@ -80,6 +82,7 @@ func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
 
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
+	time.Sleep(time.Millisecond * 200)
 	for _, host := range l.Hosts {
 		err := host.Close()
 		if err != nil {
@@ -88,12 +91,7 @@ func (l *LocalTest) CloseAll() {
 	}
 }
 
-// NewNode creates a new node on a TreeNode
-func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
-	o := l.Overlays[tn.Entity.Id]
-	if o == nil {
-		return nil, errors.New("Didn't find corresponding overlay")
-	}
+func (l *LocalTest) GetTree(tn *TreeNode) *Tree {
 	var tree *Tree
 	for _, t := range l.Trees {
 		if tn.IsInTree(t) {
@@ -101,6 +99,16 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 			break
 		}
 	}
+	return tree
+}
+
+// NewNode creates a new node on a TreeNode
+func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
+	o := l.Overlays[tn.Entity.Id]
+	if o == nil {
+		return nil, errors.New("Didn't find corresponding overlay")
+	}
+	tree := l.GetTree(tn)
 	if tree == nil {
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
@@ -118,6 +126,28 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 	return NewNode(o, tok)
 }
 
+// GetNodes returns all Nodes that belong to a treeNode
+func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
+	nodes := make([]*Node, 0)
+	for _, n := range l.Overlays[tn.Entity.Id].nodes {
+		nodes = append(nodes, n)
+	}
+	return nodes
+}
+
+func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.ProtocolMessage) error {
+	if from.Tree().Id != to.Tree().Id {
+		return errors.New("Can't send from one tree to another")
+	}
+	sdaMsg := &SDAData{
+		Msg:     msg,
+		MsgType: network.TypeToUUID(msg),
+		From:    from.token,
+		To:      to.token,
+	}
+	return to.overlay.TransmitMsg(sdaMsg)
+}
+
 func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
 	h.addPendingTreeMarshal(tm)
 }
@@ -128,6 +158,18 @@ func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 
 func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[uuid.UUID]*Node {
 	return l.Overlays[entityId].nodes
+}
+
+func (l *LocalTest) AllNodes() []*Node {
+	var nodes []*Node
+	for h := range l.Hosts {
+		overlay := l.Hosts[h].overlay
+		for i := range overlay.nodes {
+			fmt.Println("Addind nodes")
+			nodes = append(nodes, overlay.nodes[i])
+		}
+	}
+	return nodes
 }
 
 // NewLocalHost creates a new host with the given address and registers it

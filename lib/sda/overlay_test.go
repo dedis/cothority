@@ -23,7 +23,6 @@ func (po *ProtocolOverlay) Dispatch(msgs []*sda.SDAData) error {
 }
 
 func (po *ProtocolOverlay) Release() {
-	po.done = true
 	// call the Done function
 	po.Done()
 }
@@ -50,9 +49,21 @@ func TestOverlayDone(t *testing.T) {
 	}
 	po := node.ProtocolInstance().(*ProtocolOverlay)
 	// release the resources
+	var count int
+	po.OnDoneCallback(func() bool {
+		count++
+		if count >= 2 {
+			return true
+		}
+		return false
+	})
 	po.Release()
 	overlay := h1.Overlay()
+	if _, ok := overlay.TokenToNode(po.Token()); !ok {
+		t.Fatal("Node should  exists after call Done()")
+	}
+	po.Release()
 	if _, ok := overlay.TokenToNode(po.Token()); ok {
-		t.Fatal("Node should not exists after call Done()")
+		t.Fatal("Node should  NOT exists after call Done()")
 	}
 }

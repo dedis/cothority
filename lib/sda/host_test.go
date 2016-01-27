@@ -50,8 +50,8 @@ func TestHostClose2(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true)
-	dbg.Print(tree.Dump())
-	//time.Sleep(time.Millisecond * 100)
+	dbg.Lvl3(tree.Dump())
+	time.Sleep(time.Millisecond * 100)
 	local.CloseAll()
 	dbg.Lvl3("Done")
 }

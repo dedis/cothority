@@ -144,6 +144,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 
 // Close shuts down the listener
 func (h *Host) Close() error {
+	time.Sleep(time.Millisecond * 100)
 	h.networkLock.Lock()
 	var err error
 	err = h.host.Close()

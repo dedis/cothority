@@ -98,7 +98,6 @@ func (t *TcpHost) Close() error {
 			continue
 		}
 	}
-	//fmt.Println("tcphost.Close()")
 	return nil
 }
 
