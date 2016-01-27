@@ -1,5 +1,6 @@
 package jvss
 
+/*
 import (
 	"errors"
 	"github.com/dedis/cothority/lib/cliutils"
@@ -568,3 +569,4 @@ func (jv *JVSSProtocol) otherNodes(fn func(*sda.TreeNode)) {
 func (jv *JVSSProtocol) RegisterOnLongtermDone(fn func(*poly.SharedSecret)) {
 	jv.onLongtermDone = fn
 }
+*/

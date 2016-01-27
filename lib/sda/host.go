@@ -148,23 +148,10 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 
 // Close shuts down the listener
 func (h *Host) Close() error {
+	time.Sleep(time.Millisecond * 100)
 	h.networkLock.Lock()
-	for _, c := range h.connections {
-		dbg.Lvl3("Closing connection", c)
-		c.Close()
-	}
 	var err error
-	stop := false
-	for h.listening && !stop {
-		err = h.host.Close()
-		select {
-		case <-h.closed:
-			stop = true
-		case <-time.After(time.Millisecond * 50):
-			continue
-		}
-
-	}
+	err = h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
 	close(h.closed)
 	h.networkLock.Unlock()
@@ -251,7 +238,7 @@ func (h *Host) ProcessMessages() {
 				continue
 			}
 			dbg.Lvl4("Received new tree")
-			h.AddTree(tree)
+			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
 		// Some host requested an EntityList
 		case RequestEntityListMessage:
@@ -269,7 +256,7 @@ func (h *Host) ProcessMessages() {
 			if il.Id == uuid.Nil {
 				dbg.Lvl2("Received an empty EntityList")
 			} else {
-				h.AddEntityList(&il)
+				h.overlay.RegisterEntityList(&il)
 				// Check if some trees can be constructed from this entitylist
 				h.checkPendingTreeMarshal(&il)
 			}
@@ -412,7 +399,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 				// instantiate it and go
 				err := h.overlay.TransmitMsg(h.pendingSDAs[i])
 				if err != nil {
-					dbg.Error("TransmitMsg failde:", err)
+					dbg.Error("TransmitMsg failed:", err)
 					continue
 				}
 			}
@@ -464,7 +451,7 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 			continue
 		}
 		// add the tree into our "database"
-		h.AddTree(tree)
+		h.overlay.RegisterTree(tree)
 	}
 	h.pendingTreeLock.Unlock()
 }

@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -43,7 +42,7 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
-	dbg.Lvl4("Got message to transmit:", sdaMsg)
+	dbg.Lvl4(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
 		dbg.Lvl2("Will ask for entityList + tree from token")
@@ -58,6 +57,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	node := o.nodes[sdaMsg.To.Id()]
 	if node == nil {
 		var err error
+		dbg.Lvl3("Making new node")
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		if err != nil {
 			return err
@@ -121,10 +121,11 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 		TreeID:       tree.Id,
 		TreeNodeID:   tree.Root.Id,
 		// Host is handling the generation of protocolInstanceID
-		RoundID: cliutils.NewRandomUUID(),
+		RoundID: uuid.NewV4(),
 	}
 	// instantiate node
 	var err error
+	dbg.Lvl3("Making new node")
 	o.nodes[token.Id()], err = NewNode(o, token)
 	if err != nil {
 		return nil, err
@@ -240,7 +241,8 @@ func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 	tnc[tree.Id] = mm
 }
 
-// GetFromToken returns the TreeNode that the token is pointing at.
+// GetFromToken returns the TreeNode that the token is pointing at, or
+// nil if there is none for this token.
 func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
 	var mm map[uuid.UUID]*TreeNode
 	var ok bool

@@ -23,7 +23,6 @@ func (po *ProtocolOverlay) Dispatch(msgs []*sda.SDAData) error {
 }
 
 func (po *ProtocolOverlay) Release() {
-	po.done = true
 	// call the Done function
 	po.Done()
 }
@@ -31,17 +30,17 @@ func (po *ProtocolOverlay) Release() {
 func TestOverlayDone(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
-	h1 := newHost("localhost:2000")
+	h1 := sda.NewLocalHost(2000)
 	defer h1.Close()
-	fn := func(n *sda.Node) sda.ProtocolInstance {
+	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
 		ps := ProtocolOverlay{
 			Node: n,
 		}
-		return &ps
+		return &ps, nil
 	}
 	el := sda.NewEntityList([]*network.Entity{h1.Entity})
 	h1.AddEntityList(el)
-	tree, _ := el.GenerateBinaryTree()
+	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	sda.ProtocolRegisterName("ProtocolOverlay", fn)
 	node, err := h1.StartNewNodeName("ProtocolOverlay", tree)
@@ -50,9 +49,21 @@ func TestOverlayDone(t *testing.T) {
 	}
 	po := node.ProtocolInstance().(*ProtocolOverlay)
 	// release the resources
+	var count int
+	po.OnDoneCallback(func() bool {
+		count++
+		if count >= 2 {
+			return true
+		}
+		return false
+	})
 	po.Release()
 	overlay := h1.Overlay()
+	if _, ok := overlay.TokenToNode(po.Token()); !ok {
+		t.Fatal("Node should  exists after call Done()")
+	}
+	po.Release()
 	if _, ok := overlay.TokenToNode(po.Token()); ok {
-		t.Fatal("Node should not exists after call Done()")
+		t.Fatal("Node should  NOT exists after call Done()")
 	}
 }

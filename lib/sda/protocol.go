@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
 
@@ -21,7 +22,7 @@ type ProtocolInstance interface {
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*Node) ProtocolInstance
+type NewProtocol func(*Node) (ProtocolInstance, error)
 
 // ProtocolRegister takes a protocol and registers it under a given uuid.
 // As this might be called from an 'init'-function, we need to check the
@@ -34,7 +35,7 @@ func ProtocolRegister(protoID uuid.UUID, protocol NewProtocol) {
 }
 
 func ProtocolNameToUuid(name string) uuid.UUID {
-	url := "http://dedis.epfl.ch/protocolname/" + name
+	url := network.UuidURL + "protocolname/" + name
 	return uuid.NewV3(uuid.NamespaceURL, url)
 }
 
