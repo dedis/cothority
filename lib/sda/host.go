@@ -121,13 +121,10 @@ func (h *Host) Listen() {
 	}
 	go func() {
 		dbg.Lvl3("Listening in", h.workingAddress)
-		h.listening = true
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen in", h.workingAddress, ":", err)
 		}
-		h.listening = false
-		h.closed <- true
 	}()
 }
 
