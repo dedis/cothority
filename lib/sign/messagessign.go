@@ -3,7 +3,6 @@ package sign
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
@@ -18,38 +17,7 @@ has its own MarshalBinary and UnmarshalBinary method
 
 type MessageType int
 
-const (
-	Unset network.Type = iota + 10
-	Announcement
-	Commitment
-	Challenge
-	Response
-	SignatureBroadcast
-	StatusReturn
-	CatchUpReq
-	CatchUpResp
-	VoteRequest
-	GroupChanged
-	CloseAll
-	Default // for internal use
-	Identity
-	Error
-)
-
 func init() {
-	// Registering of all the type of packets we need
-	network.RegisterProtocolType(Announcement, AnnouncementMessage{})
-	network.RegisterProtocolType(Commitment, CommitmentMessage{})
-	network.RegisterProtocolType(Challenge, ChallengeMessage{})
-	network.RegisterProtocolType(Response, ResponseMessage{})
-	network.RegisterProtocolType(SignatureBroadcast, SignatureBroadcastMessage{})
-	network.RegisterProtocolType(StatusReturn, StatusReturnMessage{})
-	network.RegisterProtocolType(CatchUpReq, CatchUpRequest{})
-	network.RegisterProtocolType(CatchUpResp, CatchUpResponse{})
-	network.RegisterProtocolType(GroupChanged, GroupChangedMessage{})
-	network.RegisterProtocolType(VoteRequest, VoteRequestMessage{})
-	network.RegisterProtocolType(CloseAll, CloseAllMessage{})
-	network.RegisterProtocolType(Identity, IdentityMessage{})
 }
 
 // identitymessage is used when we connect to a node listening, we must give to
