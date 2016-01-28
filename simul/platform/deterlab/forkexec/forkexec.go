@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/dedis/cothority/deploy/platform"
+	"github.com/dedis/cothority/simul/platform"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"net"

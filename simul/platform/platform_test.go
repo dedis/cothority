@@ -1,7 +1,7 @@
 package platform_test
 
 import (
-	"github.com/dedis/cothority/deploy/platform"
+	"github.com/dedis/cothority/simul/platform"
 	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	//	"strings"

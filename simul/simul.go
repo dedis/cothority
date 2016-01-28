@@ -28,7 +28,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dedis/cothority/deploy/platform"
+	"github.com/dedis/cothority/simul/platform"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 )
