@@ -29,6 +29,10 @@ type Node struct {
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
 	msgQueue map[uuid.UUID][]*SDAData
+	// done channel
+	done chan bool
+	// done callback
+	onDoneCallback func() bool
 }
 
 // Bit-values for different channelFlags
@@ -53,10 +57,11 @@ func NewNodeEmpty(o *Overlay, tok *Token) *Node {
 	n := &Node{overlay: o,
 		token:        tok,
 		channels:     make(map[uuid.UUID]interface{}),
-		channelFlags: make(map[uuid.UUID]uint32),
 		handlers:     make(map[uuid.UUID]MsgHandler),
 		msgQueue:     make(map[uuid.UUID][]*SDAData),
+		channelFlags: make(map[uuid.UUID]uint32),
 		treeNode:     nil,
+		done:         make(chan bool),
 	}
 	return n
 }
@@ -313,10 +318,25 @@ func (n *Node) Start() error {
 	return n.instance.Start()
 }
 
-// Done must be called when a protocol instance has finished its work and when
-// its resources can be released.
+// Done returns a channel that must be given a bool when a protocol instance has
+// finished its work.
 func (n *Node) Done() {
+	if n.onDoneCallback != nil {
+		ok := n.onDoneCallback()
+		if !ok {
+			return
+		}
+	}
 	n.overlay.nodeDone(n.token)
+}
+
+// OnDoneCallback should be called if we want to control the Done() of the node.
+// It is used by protocols that uses others protocols inside and that want to
+// control when the final Done() should be called.
+// the function should return true if the real Done() has to be called otherwise
+// false.
+func (n *Node) OnDoneCallback(fn func() bool) {
+	n.onDoneCallback = fn
 }
 
 // Private returns the corresponding private key

@@ -278,3 +278,8 @@ func (p *ProtocolChannels) Dispatch([]*sda.SDAData) error {
 	dbg.Error("This should not be called")
 	return nil
 }
+
+// relese ressources ==> call Done()
+func (p *ProtocolChannels) Release() {
+	p.Done()
+}
