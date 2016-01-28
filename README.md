@@ -3,6 +3,7 @@
 This repository provides a framework for implementing secure, distributed systems. It does so by offering services to run different types of protocols which may rely on other, pre-defined protocols.
  
 Using the SDA-cothority framework, you can easily
+
 * Simulate up to 8192 nodes using Deterlab (which is based on Planetlab)
 * Run local simulations for up to 128 nodes (restricted by your computer)
 * Distribute binaries for real-world deployment
@@ -10,11 +11,12 @@ Using the SDA-cothority framework, you can easily
 The framework is round-based using message-passing between different hosts which form a tree. Every protocol defines the steps needed to accomplish the calculations, and the framework makes sure that all messages are passed between the hosts.
   
 The directory-structure is as follows:
-* /lib - holding all internally used libraries
-* /lib/sda - the basic definition of our framework
-* /protocols - one directory per protocol, holds both the definition and eventual initialisation needed for simulation
-* /simul - used for running simulations on localhost and Deterlab
-* /dist - creates distributable binaries, in .tgz or Docker-format
+
+* `lib/` - holding all internally used libraries
+* `lib/sda/` - the basic definition of our framework
+* `protocols/` - one directory per protocol, holds both the definition and eventual initialisation needed for simulation
+* `simul/` - used for running simulations on localhost and Deterlab
+* `dist/` - creates distributable binaries, in .tgz or Docker-format
 
 ## Warning
 **The software provided in this repository is highly experimental and under heavy development. Do not use it for anything security-critical. All usage is at your own risk!**
@@ -28,7 +30,8 @@ The directory-structure is as follows:
 ## Requirements
 
 * Golang 1.5.2+
-* [DeDiS/crypto](https://github.com/DeDiS/crypto)
+* [dedis/crypto](https://github.com/dedis/crypto)
+* [dedis/protobuf](https://github.com/dedis/protobuf)
 
 ## Simulation
 
@@ -41,11 +44,12 @@ The directory-structure is as follows:
     * Binary .tar.gz
     * Docker
 
-## Protocols available
+## Protocols
 The following protocols will be available shortly:
-* JVSS - Joint Verifiable Secret Sharing using Shamir's protocol
-* RandHound - Creating strong random-numbers
+
 * CoSi - Collective Signing
+* JVSS - Joint Verifiable Secret Sharing using Shamir's protocol
+* RandHound - Verifiable randomness scavenging protocol 
 
 # Simulation
 It is very easy to start a simulation of your protocol either on localhost or, if you have access, on Deterlab.
@@ -89,16 +93,19 @@ Make sure that the `ssh-agent` is running. Afterwards you can add your SSH-key v
 $ ssh-add ~/.ssh/<your private ssh key>
 ```
 
-# Protocol details
+# Protocol Details
 
 ## CoSi - Collective Signing
 
-The system is based on CoSi, a novel protocol for collective signing which itself builds upon Merkle trees and Schnorr multi-signatures over elliptic curves. CoSi enables authorities to have their statements collectively signed (co-signed) by a diverse, decentralized, and scalable group of (potentially thousands of) witnesses and, for example, could be employed to proactively harden critical Internet authorities. Among other things, one could imagine applications to the Certificate Transparency project, DNSSEC, software distribution, the Tor anonymity network or cryptocurrencies.
+CoSi is a novel protocol for collective signing which itself builds upon Merkle trees and Schnorr multi-signatures over elliptic curves. CoSi enables authorities to have their statements collectively signed (co-signed) by a diverse, decentralized, and scalable group of (potentially thousands of) witnesses and, for example, could be employed to proactively harden critical Internet authorities. Among other things, one could imagine applications to the Certificate Transparency project, DNSSEC, software distribution, the Tor anonymity network or cryptocurrencies.
 
-## JVSS - Shamir Signing
+## JVSS - Joint Verifiable Secret Sharing
 
-A textbook shamir signing for baseline-comparison against the collective signing protocol.
+A textbook Shamir signing for baseline-comparison against the collective signing protocol.
 
+## RandHound - Verifiable Randomness Scavenging Protocol 
+
+RandHound is a novel protocol for generating strong, bias-resistant, public random numbers in a distributed way and produces in parallel a proof to convince third parties that the randomness is correct and unbiased provided a threshold of servers are non-malicious.
 
 # Applications
 
