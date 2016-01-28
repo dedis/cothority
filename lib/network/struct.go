@@ -12,6 +12,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -61,8 +62,14 @@ type TcpHost struct {
 	listener net.Listener
 	// the close channel used to indicate to the listener we want to quit
 	quit chan bool
+	// quitListener is a channel to indicate to the closing function that the
+	// listener has actually really quit
+	quitListener  chan bool
+	listeningLock *sync.Mutex
+	listening     bool
 	// indicates wether this host is closed already or not
-	closed bool
+	closed     bool
+	closedLock *sync.Mutex
 	// a list of constructors for en/decoding
 	constructors protobuf.Constructors
 }
@@ -169,7 +176,7 @@ type EntityToml struct {
 // of IP-addresses where to find that entity. The Id is based on a
 // version5-UUID which can include a URL that is based on it's public key.
 func NewEntity(public abstract.Point, addresses ...string) *Entity {
-	url := "https://dedis.epfl.ch/id/" + public.String()
+	url := UuidURL + "id/" + public.String()
 	return &Entity{
 		Public:    public,
 		Addresses: addresses,

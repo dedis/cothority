@@ -2,11 +2,8 @@ package example_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/lib/sda/example"
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/edwards"
 	"testing"
 	"time"
 )
@@ -14,25 +11,23 @@ import (
 // Tests a 2-node system
 func TestNode2(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(2, false, true)
+	//dbg.Lvl3(tree.Dump())
+	defer local.CloseAll()
 
-	h1, h2 := setupHosts(t, true)
-	go h1.ProcessMessages()
-	defer h1.Close()
-	defer h2.Close()
-
-	list := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
-	tree, _ := list.GenerateBinaryTree()
-	h1.AddEntityList(list)
-	h1.AddTree(tree)
-
-	_, err := h1.StartNewProtocolName("Example", tree.Id)
+	node, err := local.StartNewNodeName("ExampleChannel", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
+	protocol := node.ProtocolInstance().(*example.ProtocolExampleChannel)
 
 	select {
-	case _ = <-example.Done:
+	case children := <-protocol.ChildCount:
 		dbg.Lvl2("Instance 1 is done")
+		if children != 2 {
+			t.Fatal("Didn't get a child-cound of 2")
+		}
 	case <-time.After(time.Second):
 		t.Fatal("Didn't finish in time")
 	}
@@ -40,28 +35,25 @@ func TestNode2(t *testing.T) {
 
 // Tests a 10-node system
 func TestNode10(t *testing.T) {
-}
-
-func newHost(address string) *sda.Host {
-	priv, pub := config.NewKeyPair(edwards.NewAES128SHA256Ed25519(false))
-	id := network.NewEntity(pub, address)
-	return sda.NewHost(id, priv)
-}
-
-// Creates two hosts on the local interfaces,
-func setupHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	h1 := newHost("localhost:2000")
-	// make the second peer as the server
-	h2 := newHost("localhost:2001")
-	h2.Listen()
-	_, err := h1.Connect(h2.Entity)
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(10, false, true)
+	dbg.Lvl3(tree.Dump())
+	defer local.CloseAll()
+
+	node, err := local.StartNewNodeName("ExampleChannel", tree)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Couldn't start protocol:", err)
 	}
-	// make it process messages
-	if h2process {
-		go h2.ProcessMessages()
+	protocol := node.ProtocolInstance().(*example.ProtocolExampleChannel)
+
+	select {
+	case children := <-protocol.ChildCount:
+		dbg.Lvl2("Instance 1 is done")
+		if children != 10 {
+			t.Fatal("Didn't get a child-cound of 10 - it is", children)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Didn't finish in time")
 	}
-	return h1, h2
 }
