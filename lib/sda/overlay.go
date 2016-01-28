@@ -42,7 +42,7 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
-	dbg.Lvl4(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
+	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
 		dbg.Lvl2("Will ask for entityList + tree from token")

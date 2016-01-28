@@ -3,6 +3,7 @@ package jvss
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
 )
@@ -61,4 +62,29 @@ func (dl *Longterm) Deal(suite abstract.Suite, info poly.Threshold) *poly.Deal {
 		return nil
 	}
 	return d
+}
+
+func NewLongtermFromDeal(index int, d *poly.Deal) Longterm {
+	buf, _ := d.MarshalBinary()
+	return Longterm{
+		Bytes: buf,
+		Index: index,
+	}
+}
+
+type LongtermChan struct {
+	sda.TreeNode
+	Longterm
+}
+type RandomChan struct {
+	sda.TreeNode
+	Random
+}
+type RequestChan struct {
+	sda.TreeNode
+	SignatureRequest
+}
+type ResponseChan struct {
+	sda.TreeNode
+	SignatureResponse
 }

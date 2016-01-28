@@ -30,8 +30,11 @@ func TestJVSSLongterm(t *testing.T) {
 	ch2 := make(chan *poly.SharedSecret)
 	var done1 bool
 	var done2 bool
-	fn := func(node *sda.Node) sda.ProtocolInstance {
-		pi := jvss.NewJVSSProtocol(node)
+	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
+		pi, err := jvss.NewJVSSProtocol(node)
+		if err != nil {
+			return nil, err
+		}
 		pi.RegisterOnLongtermDone(func(sh *poly.SharedSecret) {
 			go func() {
 				if !done1 {
@@ -43,13 +46,13 @@ func TestJVSSLongterm(t *testing.T) {
 				}
 			}()
 		})
-		return pi
+		return pi, nil
 	}
 	sda.ProtocolRegister(CustomJVSSProtocolID, fn)
 	// Create the entityList  + tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
-	tree, _ := el.GenerateBinaryTree()
+	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	go h1.StartNewNode(CustomJVSSProtocolID, tree)
 	// wait for the longterm secret to be generated
@@ -93,8 +96,11 @@ func TestJVSSSign(t *testing.T) {
 	var done1 bool
 	doneLongterm := make(chan bool)
 	var p1 *jvss.JVSSProtocol
-	fn := func(node *sda.Node) sda.ProtocolInstance {
-		pi := jvss.NewJVSSProtocol(node)
+	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
+		pi, err := jvss.NewJVSSProtocol(node)
+		if err != nil {
+			return nil, err
+		}
 		if !done1 {
 			// only care about the first host
 			pi.RegisterOnLongtermDone(func(sh *poly.SharedSecret) {
@@ -105,13 +111,13 @@ func TestJVSSSign(t *testing.T) {
 			done1 = true
 			p1 = pi
 		}
-		return pi
+		return pi, nil
 	}
 	sda.ProtocolRegister(CustomJVSSProtocolID, fn)
 	// Create the entityList  + tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
-	tree, _ := el.GenerateBinaryTree()
+	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	// start the protocol
 	go h1.StartNewNode(CustomJVSSProtocolID, tree)
@@ -137,7 +143,7 @@ func TestJVSSSign(t *testing.T) {
 	select {
 	case <-doneSig:
 		//it's fine
-	case <-time.After(time.Second * 3):
+	case <-time.After(time.Second * 5):
 		t.Fatal("Could not get the signature done before timeout")
 	}
 
