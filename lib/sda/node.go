@@ -136,6 +136,8 @@ func (n *Node) RegisterChannel(c interface{}) error {
 		val.Set(reflect.MakeChan(val.Type(), 1))
 		//val.Set(reflect.MakeChan(reflect.Indirect(cr), 1))
 		return n.RegisterChannel(reflect.Indirect(val).Interface())
+	} else if reflect.ValueOf(c).IsNil() {
+		return errors.New("Can not Register a (value) channel not initialized")
 	}
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
@@ -152,8 +154,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	if cr.Elem().NumField() != 2 {
 		return errors.New("Input is not channel of structure with 2 elements")
 	}
-	dbg.Lvl3(cr.Elem().Field(0).Type)
-	if cr.Elem().Field(0).Type != reflect.TypeOf(TreeNode{}) {
+	if cr.Elem().Field(0).Type != reflect.TypeOf(&TreeNode{}) {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
@@ -217,7 +218,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 				return errors.New("Didn't find treenode")
 			}
 
-			m.Field(0).Set(reflect.ValueOf(*tn))
+			m.Field(0).Set(reflect.ValueOf(tn))
 			m.Field(1).Set(reflect.Indirect(reflect.ValueOf(msg.Msg)))
 			dbg.Lvl3("Adding msg", m, "to", n.Entity().Addresses)
 			out.Index(i).Set(m)
@@ -235,7 +236,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 				return errors.New("Didn't find treenode")
 			}
 
-			m.Field(0).Set(reflect.ValueOf(*tn))
+			m.Field(0).Set(reflect.ValueOf(tn))
 			m.Field(1).Set(reflect.ValueOf(msg.Msg))
 			dbg.Lvl3("Sending", m, "to", n.Entity().Addresses)
 			reflect.ValueOf(out).Send(m)
