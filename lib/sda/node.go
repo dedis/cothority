@@ -120,6 +120,10 @@ func (n *Node) EntityList() *EntityList {
 	return n.Tree().EntityList
 }
 
+func (n *Node) Suite() abstract.Suite {
+	return n.overlay.Suite()
+}
+
 // RegisterChannel takes a channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
@@ -226,10 +230,8 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 		reflect.ValueOf(n.channels[mt]).Send(out)
 	} else {
 		for _, msg := range msgSlice {
-			dbg.Lvl3("Received message of type:", mt)
 			out := n.channels[mt]
 
-			dbg.Lvl3("Dispatching to", to)
 			m := reflect.Indirect(reflect.New(to.Elem()))
 			tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
 			if tn == nil {
@@ -238,9 +240,9 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 
 			m.Field(0).Set(reflect.ValueOf(tn))
 			m.Field(1).Set(reflect.ValueOf(msg.Msg))
-			dbg.Lvl3("Sending", m, "to", n.Entity().Addresses)
+
+			dbg.Lvl3("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
-			dbg.Lvl3("Sent")
 		}
 	}
 	return nil

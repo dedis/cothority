@@ -159,7 +159,6 @@ func TestNewNode(t *testing.T) {
 
 func TestProtocolChannels(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
