@@ -145,6 +145,15 @@ func (t *Tree) IsBinary(root *TreeNode) bool {
 	return true
 }
 
+// Size returns the number of all TreeNodes
+func (t *Tree) Size() int {
+	size := 0
+	t.Root.Visit(0, func(d int, tn *TreeNode) {
+		size += 1
+	})
+	return size
+}
+
 // TreeMarshal is used to send and receive a tree-structure without having
 // to copy the whole nodelist
 type TreeMarshal struct {

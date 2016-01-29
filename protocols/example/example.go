@@ -3,10 +3,13 @@ package example
 import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 )
 
 func init() {
+	network.RegisterMessageType(MessageAnnounce{})
+	network.RegisterMessageType(MessageReply{})
 	sda.ProtocolRegisterName("ExampleChannel", NewExampleChannel)
 }
 

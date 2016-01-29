@@ -131,7 +131,6 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	flags := uint32(0)
 	cr := reflect.TypeOf(c)
 	if cr.Kind() == reflect.Ptr {
-		dbg.Lvl3("Having pointer - initialising and calling again")
 		val := reflect.ValueOf(c).Elem()
 		val.Set(reflect.MakeChan(val.Type(), 1))
 		//val.Set(reflect.MakeChan(reflect.Indirect(cr), 1))
@@ -142,7 +141,6 @@ func (n *Node) RegisterChannel(c interface{}) error {
 		return errors.New("Input is not channel")
 	}
 	if cr.Elem().Kind() == reflect.Slice {
-		dbg.Lvl3("Getting a channel to slices - activating aggregation")
 		flags += AggregateMessages
 		cr = cr.Elem()
 	}
@@ -157,8 +155,9 @@ func (n *Node) RegisterChannel(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
-		cr.Elem().Field(1).Type)
+	//typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
+	//	cr.Elem().Field(1).Type)
+	typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.channels[typ] = c
 	n.channelFlags[typ] = flags
 	dbg.Lvl3("Registered channel", typ, "with flags", flags)
@@ -342,4 +341,9 @@ func (n *Node) OnDoneCallback(fn func() bool) {
 // Private returns the corresponding private key
 func (n *Node) Private() abstract.Secret {
 	return n.overlay.host.private
+}
+
+// Closes the host
+func (n *Node) Close() error {
+	return n.overlay.host.Close()
 }
