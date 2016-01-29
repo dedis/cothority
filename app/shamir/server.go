@@ -1,17 +1,18 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/crypto/edwards"
+	//	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/poly"
 )
 
 func RunServer(conf *app.ConfigShamir) {
 	flags := app.RunFlags
-	s := edwards.NewAES128SHA256Ed25519(false)
+	//s := edwards.NewAES128SHA256Ed25519(false)
+	s := nist.NewAES128SHA256P256()
 	n := len(conf.Hosts)
 
 	info := poly.Threshold{
@@ -27,21 +28,13 @@ func RunServer(conf *app.ConfigShamir) {
 		}
 	}
 	if indexPeer == -1 {
-		log.Fatal("Peer ", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
+		dbg.Fatal("Peer", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
-	dbg.Lvl3("Creating new peer ", flags.Hostname, "(", flags.PhysAddr, ") ...")
+	dbg.Lvl3("Creating new peer", flags.Hostname, "(", flags.PhysAddr, ") ...")
 	// indexPeer == 0 <==> peer is root
 	p := NewPeer(indexPeer, flags.Hostname, s, info, indexPeer == 0)
 
-	// monitor connect
-	if app.RunFlags.Logger == "" {
-		monitor.Disable()
-	} else {
-		if err := monitor.ConnectSink(app.RunFlags.Logger); err != nil {
-			dbg.Fatal(p.String(), "could not connect to monitor :", err)
-		}
-	}
 	// make it listen
 	setup := monitor.NewMeasure("setup")
 	dbg.Lvl3("Peer", flags.Hostname, "is now listening for incoming connections")
@@ -49,7 +42,7 @@ func RunServer(conf *app.ConfigShamir) {
 
 	// then connect it to its successor in the list
 	for _, h := range conf.Hosts[indexPeer+1:] {
-		dbg.Lvl3("Peer ", flags.Hostname, " will connect to ", h)
+		dbg.Lvl3("Peer", flags.Hostname, "will connect to", h)
 		// will connect and SYN with the remote peer
 		p.ConnectTo(h)
 	}
@@ -68,7 +61,7 @@ func RunServer(conf *app.ConfigShamir) {
 	}
 
 	roundm := monitor.NewMeasure("round")
-	for round := 0; round < conf.Rounds; round++ {
+	for round := 1; round <= conf.Rounds; round++ {
 		calc := monitor.NewMeasure("calc")
 		// Then issue a signature !
 		//sys, usr := app.GetRTime()
@@ -82,7 +75,7 @@ func RunServer(conf *app.ConfigShamir) {
 			verify := monitor.NewMeasure("verify")
 			err := p.VerifySchnorrSig(sig, []byte(msg))
 			if err != nil {
-				dbg.Fatal(p.String(), "could not verify schnorr signature :/ ", err)
+				dbg.Fatal(p.String(), "could not verify schnorr signature:/", err)
 			}
 			verify.Measure()
 			roundm.Measure()
@@ -97,6 +90,6 @@ func RunServer(conf *app.ConfigShamir) {
 	dbg.Lvl3(p.String(), "is leaving ...")
 
 	if p.IsRoot() {
-		monitor.End()
+		monitor.EndAndCleanup()
 	}
 }

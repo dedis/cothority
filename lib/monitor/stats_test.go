@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 )
@@ -33,5 +34,77 @@ func TestDataFilterFilter(t *testing.T) {
 		if v != shouldBe[i] {
 			t.Error(fmt.Sprintf("Element %d = %d vs %d", i, filtered[i], shouldBe[i]))
 		}
+	}
+}
+
+func TestStatsUpdate(t *testing.T) {
+	rc := make(map[string]string)
+	rc["machines"] = "2"
+	rc["ppm"] = "2"
+	stats := NewStats(rc)
+
+	m1 := Measure{
+		Name:        "round",
+		WallTime:    10,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	m2 := Measure{
+		Name:        "round",
+		WallTime:    10,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	stats.Update(m1)
+	stats.Update(m2)
+	stats.Collect()
+	meas := stats.measures["round"]
+	if meas.Wall.Avg() != 10 || meas.User.Avg() != 20 {
+		t.Error("Aggregate or Update not working")
+	}
+}
+
+func TestStatsNotWriteUnknownMeasures(t *testing.T) {
+	rc := make(map[string]string)
+	rc["machines"] = "2"
+	rc["ppm"] = "2"
+	stats := NewStats(rc)
+
+	m1 := Measure{
+		Name:        "test1",
+		WallTime:    10,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	m2 := Measure{
+		Name:        "round2",
+		WallTime:    70,
+		CPUTimeUser: 20,
+		CPUTimeSys:  30,
+	}
+	m3 := Measure{
+		Name:        "test2",
+		WallTime:    30,
+		CPUTimeUser: 30,
+		CPUTimeSys:  30,
+	}
+	stats.Update(m1)
+	stats.Update(m3)
+	var writer = new(bytes.Buffer)
+	stats.WriteHeader(writer)
+	stats.WriteValues(writer)
+	output := writer.Bytes()
+	if !bytes.Contains(output, []byte("10")) {
+		t.Error(fmt.Sprintf("Stats should write the right measures: %s", writer))
+	}
+	if !bytes.Contains(output, []byte("test2")) || !bytes.Contains(output, []byte("test1")) {
+		t.Error(fmt.Sprintf("Stats should write the right header values"))
+	}
+	stats.Update(m2)
+	stats.WriteValues(writer)
+
+	output = writer.Bytes()
+	if bytes.Contains(output, []byte("70")) {
+		t.Error("Stats should not contain any new measurements after first write")
 	}
 }

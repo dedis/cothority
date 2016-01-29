@@ -20,16 +20,14 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"net"
 	"strings"
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"os"
 	"os/exec"
@@ -55,9 +53,9 @@ func main() {
 	// kill old processes
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(" +")
-	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project + "," + deterlab.Experiment).Output()
+	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project+","+deterlab.Experiment).Output()
 	if err != nil {
-		dbg.Fatal("Deterlab experiment", deterlab.Project + "/" + deterlab.Experiment, "seems not to be swapped in. Aborting.")
+		dbg.Fatal("Deterlab experiment", deterlab.Project+"/"+deterlab.Experiment, "seems not to be swapped in. Aborting.")
 		os.Exit(-1)
 	}
 	hosts_trimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
@@ -73,9 +71,9 @@ func main() {
 			defer wg.Done()
 			if kill {
 				dbg.Lvl4("Cleaning up host", h, ".")
-				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " logserver forkexec timeclient scp 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				cliutils.SshRun("", h, "sudo killall -9 " + deterlab.App + " 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
@@ -125,10 +123,14 @@ func main() {
 
 	// ADDITIONS : the monitoring part
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
-	// RedirectionAddress:RedirectionPort. With remote tunnel forwarding it will
+	// RedirectionAddress:SinkPort-1. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	dbg.Print("Launching proxy redirecting to ", deterlab.ProxyRedirectionAddress, ":", deterlab.ProxyRedirectionPort)
-	go monitor.Proxy(deterlab.ProxyRedirectionAddress + ":" + deterlab.ProxyRedirectionPort)
+	proxyAddress := deterlab.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort+1)
+	dbg.Lvl2("Launching proxy redirecting to", proxyAddress)
+	err = monitor.Proxy(proxyAddress)
+	if err != nil {
+		dbg.Fatal("Couldn't start proxy:", err)
+	}
 
 	hostnames := deterlab.Hostnames
 	dbg.Lvl4("hostnames:", hostnames)
@@ -144,19 +146,10 @@ func main() {
 		physToServer[p] = ss
 	}
 
-	// For coll_stamp we have to wait for everything in place which takes quite some time
-	// We set up a directory and every host writes a file once he's ready to listen
-	// When everybody is ready, the directory is deleted and the test starts
-	coll_stamp_dir := "coll_stamp_up"
-	if deterlab.App == "stamp" || deterlab.App == "sign" || deterlab.App == "ntree"{
-		os.RemoveAll(coll_stamp_dir)
-		os.MkdirAll(coll_stamp_dir, 0777)
-		time.Sleep(time.Second)
-	}
-
+	monitorAddr := deterlab.MonitorAddress + ":" + strconv.Itoa(monitor.SinkPort)
 	servers := len(physToServer)
 	ppm := len(deterlab.Hostnames) / servers
-	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers * ppm)
+	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers*ppm)
 	totalServers := 0
 	for phys, virts := range physToServer {
 		if len(virts) == 0 {
@@ -166,39 +159,40 @@ func main() {
 		dbg.Lvl2("Launching forkexec for", len(virts), "clients on", phys)
 		wg.Add(1)
 		go func(phys string) {
-			//dbg.Lvl4("running on ", phys, cmd)
+			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys, "with logger = ", deterlab.MonitorAddress + ":" + monitor.SinkPort)
-			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec" +
-			" -physaddr=" + phys + " -logger=" + deterlab.MonitorAddress + ":" + monitor.SinkPort)
+			dbg.Lvl4("Starting servers on physical machine ", phys, "with monitor = ",
+				deterlab.MonitorAddress, ":", monitor.SinkPort)
+			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
+				" -physaddr="+phys+" -monitor="+monitorAddr)
 			if err != nil {
-				log.Fatal("Error starting timestamper:", err, phys)
+				dbg.Lvl1("Error starting timestamper:", err, phys)
 			}
 			dbg.Lvl4("Finished with Timestamper", phys)
 		}(phys)
 	}
 
-	if deterlab.App == "stamp" || deterlab.App == "sign" || deterlab.App == "ntree"{
+	if deterlab.App == "stamp" || deterlab.App == "sign" || deterlab.App == "ntree" {
 		// Every stampserver that started up (mostly waiting for configuration-reading)
 		// writes its name in coll_stamp_dir - once everybody is there, the directory
 		// is cleaned to flag it's OK to go on.
-		start_config := time.Now()
-		for {
-			files, err := ioutil.ReadDir(coll_stamp_dir)
-			if err != nil {
-				log.Fatal("Couldn't read directory", coll_stamp_dir, err)
-			} else {
-				dbg.Lvl1("Stampservers started:", len(files), "/", totalServers, "after", time.Since(start_config))
-				if len(files) == totalServers {
-					os.RemoveAll(coll_stamp_dir)
-					// 1st second for everybody to see the deleted directory
-					// 2nd second for everybody to start up listening
-					time.Sleep(2 * time.Second)
-					break
-				}
-			}
-			time.Sleep(time.Second)
-		}
+		/*     start_config := time.Now()*/
+		//for {
+		//s, err := monitor.GetReady(monitorAddr)
+		//if err != nil {
+		//dbg.Fatal("Couldn't contact monitor at", monitorAddr)
+		//} else {
+		//dbg.Lvl1("Processes started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
+		//if s.Ready == totalServers {
+		//dbg.Lvl2("Everybody ready, starting")
+		//// 1st second for everybody to see the deleted directory
+		//// 2nd second for everybody to start up listening
+		//time.Sleep(time.Second * 2)
+		//break
+		//}
+		//}
+		//time.Sleep(time.Second)
+		/*}*/
 	}
 
 	switch deterlab.App {
@@ -216,15 +210,15 @@ func main() {
 			dbg.Lvl3("Starting with ss=", ss)
 			go func(p string, a bool) {
 				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
-				" -name=client@" + p +
-				" -server=" + servers +
-				" -amroot=" + strconv.FormatBool(a)
-				dbg.Lvl3("Users will launch client :", cmdstr)
+					" -name=client@" + p +
+					" -server=" + servers +
+					" -amroot=" + strconv.FormatBool(a)
+				dbg.Lvl3("Users will launch client:", cmdstr)
 				err := cliutils.SshRunStdout("", p, cmdstr)
 				if err != nil {
-					dbg.Lvl4("Deter.go : error for", deterlab.App, err)
+					dbg.Lvl4("Deter.go: error for", deterlab.App, err)
 				}
-				dbg.Lvl4("Deter.go : Finished with", deterlab.App, p)
+				dbg.Lvl4("Deter.go: Finished with", deterlab.App, p)
 			}(p, amroot)
 			amroot = false
 		}

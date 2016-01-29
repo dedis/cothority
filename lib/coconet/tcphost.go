@@ -8,9 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -105,11 +104,11 @@ func (h *TCPHost) Listen() error {
 	dbg.Lvl3("Starting to listen on", h.name)
 	address, err := cliutils.GlobalBind(h.name)
 	if err != nil {
-		dbg.Fatal("Didn't get global binding for ", address, err)
+		dbg.Fatal("Didn't get global binding for", address, err)
 	}
 	ln, err := net.Listen("tcp4", address)
 	if err != nil {
-		dbg.Lvl2("failed to listen on ", address, ":", err)
+		dbg.Lvl2("failed to listen on", address, ":", err)
 		return err
 	}
 	h.listener = ln
@@ -120,7 +119,7 @@ func (h *TCPHost) Listen() error {
 			conn, err := ln.Accept()
 			dbg.Lvl3(h.Name(), "Connection request - handling")
 			if err != nil {
-				dbg.Lvl3("failed to accept connection: ", err)
+				dbg.Lvl3("failed to accept connection:", err)
 				// if the host has been closed then stop listening
 				if atomic.LoadInt64(&h.closed) == 1 {
 					return
@@ -133,7 +132,7 @@ func (h *TCPHost) Listen() error {
 			var mname StringMarshaler
 			err = tp.GetData(&mname)
 			if err != nil {
-				log.Errorln("failed to establish connection: getting name: ", err)
+				dbg.Error("failed to establish connection: getting name:", err)
 				tp.Close()
 				continue
 			}
@@ -147,7 +146,7 @@ func (h *TCPHost) Listen() error {
 			pubkey := suite.Point()
 			err = tp.GetData(pubkey)
 			if err != nil {
-				log.Errorln("failed to establish connection: getting pubkey:", err)
+				dbg.Error("failed to establish connection: getting pubkey:", err)
 				tp.Close()
 				continue
 			}
@@ -156,7 +155,7 @@ func (h *TCPHost) Listen() error {
 			// give child the public key
 			err = tp.PutData(h.Pubkey)
 			if err != nil {
-				log.Errorln("failed to send public key:", err)
+				dbg.Error("failed to send public key:", err)
 				continue
 			}
 
@@ -184,7 +183,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// If we have alReady set up this connection don't do anything
 	h.PeerLock.Lock()
 	if h.Ready[parent] {
-		log.Println("ConnectTo: node already ready")
+		dbg.Print("ConnectTo: node already ready")
 		h.PeerLock.RUnlock()
 		return nil
 	}
@@ -201,7 +200,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	mname := StringMarshaler(h.Name())
 	err = tp.PutData(&mname)
 	if err != nil {
-		log.Errorln("Putting data error:", err)
+		dbg.Error("Putting data error:", err)
 		return err
 	}
 	tp.SetName(parent)
@@ -209,7 +208,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	// give parent the public key
 	err = tp.PutData(h.Pubkey)
 	if err != nil {
-		log.Errorln("failed to send public key")
+		dbg.Error("failed to send public key")
 		return err
 	}
 
@@ -218,7 +217,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	pubkey := suite.Point()
 	err = tp.GetData(pubkey)
 	if err != nil {
-		log.Errorln("failed to establish connection: getting pubkey:", err)
+		dbg.Error("failed to establish connection: getting pubkey:", err)
 		tp.Close()
 		return err
 	}
@@ -229,7 +228,7 @@ func (h *TCPHost) ConnectTo(parent string) error {
 	h.peers[parent] = tp
 	// h.PendingPeers[parent] = true
 	h.PeerLock.Unlock()
-	dbg.Lvl4("Connected to parent:", parent)
+	dbg.Lvl3("Connected to parent:", parent)
 
 	go func() {
 		for {
@@ -251,7 +250,7 @@ func (h *TCPHost) AddPeerToPending(p string) {
 	h.PeerLock.Lock()
 	h.PendingPeers[p] = true
 	h.PeerLock.Unlock()
-	log.Println("added peer to pending:", p)
+	dbg.Print("added peer to pending:", p)
 }
 
 // Connect connects to the parent in the given view.
@@ -281,10 +280,12 @@ func (h *TCPHost) NewViewFromPrev(view int, parent string) {
 
 // Close closes all the connections currently open.
 func (h *TCPHost) Close() {
-	dbg.Lvl3("tcphost: closing")
+	dbg.Lvl3("tcphost: closing", h, h.listener)
 	// stop accepting new connections
 	atomic.StoreInt64(&h.closed, 1)
-	h.listener.Close()
+	if h.listener != nil {
+		h.listener.Close()
+	}
 
 	// close peer connections
 	h.PeerLock.Lock()
@@ -561,7 +562,7 @@ func (h *TCPHost) PutDown(ctx context.Context, view int, data []BinaryMarshaler)
 						err = e
 						errLock.Unlock()
 					}
-					dbg.Lvl4("Informed child", c)
+					dbg.Lvl4("Informed child", c, "of", data[i])
 					return
 				}
 				dbg.Lvl4("Re-trying, waiting to put down msg from", h.Name(), "to", c)

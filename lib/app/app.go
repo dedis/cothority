@@ -3,25 +3,23 @@ package app
 import (
 	"flag"
 	_ "net/http/pprof"
-	"strings"
 
 	"bytes"
 	"github.com/BurntSushi/toml"
-	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
-	"github.com/dedis/crypto/nist"
+	"github.com/dedis/crypto/suites"
 )
 
 type Flags struct {
 	Hostname    string // Hostname like server-0.cs-dissent ?
-	Logger      string // ip addr of the logger to connect to
+	Monitor     string // ip addr of the logger to connect to
 	PhysAddr    string // physical IP addr of the host
 	AmRoot      bool   // is the host root (i.e. special operations)
 	TestConnect bool   // Dylan-code to only test the connection and exit afterwards
@@ -36,7 +34,7 @@ var RunFlags Flags
 
 func FlagInit() {
 	flag.StringVar(&RunFlags.Hostname, "hostname", "", "the hostname of this node")
-	flag.StringVar(&RunFlags.Logger, "logger", "", "remote logger")
+	flag.StringVar(&RunFlags.Monitor, "monitor", "", "remote monitor")
 	flag.StringVar(&RunFlags.PhysAddr, "physaddr", "", "the physical address of the noded [for deterlab]")
 	flag.BoolVar(&RunFlags.AmRoot, "amroot", false, "am I root node")
 	flag.BoolVar(&RunFlags.TestConnect, "test_connect", false, "test connecting and disconnecting")
@@ -47,13 +45,14 @@ func FlagInit() {
 
 /*
  * Reads in the config for the application -
- * also parses the init-flags
+ * also parses the init-flags and connects to
+ * the monitor.
  */
 func ReadConfig(conf interface{}, dir ...string) {
 	var err error
 	err = ReadTomlConfig(conf, "app.toml", dir...)
 	if err != nil {
-		log.Fatal("Couldn't load app-config-file in exec")
+		dbg.Fatal("Couldn't load app-config-file in exec")
 	}
 	debug := reflect.ValueOf(conf).Elem().FieldByName("Debug")
 	if debug.IsValid() {
@@ -61,8 +60,15 @@ func ReadConfig(conf interface{}, dir ...string) {
 	}
 	FlagInit()
 	flag.Parse()
+	dbg.Lvlf3("Flags are %+v", RunFlags)
 
-	dbg.Lvl3("Running", RunFlags.Hostname, "with logger at", RunFlags.Logger)
+	if RunFlags.AmRoot {
+		if err := monitor.ConnectSink(RunFlags.Monitor); err != nil {
+			dbg.Fatal("Couldn't connect to monitor", err)
+		}
+	}
+
+	dbg.Lvl3("Running", RunFlags.Hostname, "with monitor at", RunFlags.Monitor)
 }
 
 /*
@@ -102,6 +108,28 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 	return nil
 }
 
+// StartedUp waits for everybody to start by contacting the
+// monitor. Argument is total number of peers.
+func (f Flags) StartedUp(total int) {
+	monitor.ConnectSink(f.Monitor)
+	/*monitor.Ready(f.Monitor)*/
+	//// Wait for everybody to be ready before going on
+	//for {
+	//s, err := monitor.GetReady(f.Monitor)
+	//if err != nil {
+	//dbg.Lvl1("Couldn't reach monitor:", err)
+	//} else {
+	//if s.Ready != total {
+	//dbg.Lvl4(f.Hostname, "waiting for others to finish", s.Ready, total)
+	//} else {
+	//break
+	//}
+	//}
+	//time.Sleep(time.Second)
+	//}
+	/*dbg.Lvl3(f.Hostname, "thinks everybody's here")*/
+}
+
 /*
  * Gets filename and dirname
  *
@@ -123,25 +151,12 @@ func getFullName(filename string, dirOpt ...string) string {
 	return dir + "/" + filepath.Base(filename)
 }
 
-// The various suites we can use
-var nist256 abstract.Suite = nist.NewAES128SHA256P256()
-var nist512 abstract.Suite = nist.NewAES128SHA256QR512()
-var edward abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
-var nist256Str string = strings.ToLower(nist256.String())
-var nist512Str string = strings.ToLower(nist512.String())
-var edwardsStr string = strings.ToLower(edward.String())
-
 // Helper functions that will return the suite used during the process from a string name
 func GetSuite(suite string) abstract.Suite {
-	switch strings.ToLower(suite) {
-	case nist256Str: //"nist256", "p256":
-		return nist256
-	case nist512Str: //"p512":
-		return nist512
-	case edwardsStr, "ed25519":
-		return edward
-	default:
-		dbg.Lvl1("Got unknown suite", suite)
-		return edward
+	s, ok := suites.All()[suite]
+	if !ok {
+		dbg.Lvl1("Suites available:", suites.All())
+		dbg.Fatal("Didn't find suite", suite)
 	}
+	return s
 }

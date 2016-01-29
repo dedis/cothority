@@ -15,254 +15,102 @@ package network
 
 import (
 	"bytes"
-	"encoding"
 	"encoding/binary"
-	"encoding/gob"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/crypto/abstract"
+	"io"
 	"net"
-	"os"
-	"reflect"
+	"strings"
 	"time"
+
+	"golang.org/x/net/context"
+
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/protobuf"
 )
-
-/// Encoding part ///
-
-type Type uint8
-
-var currType Type
-var Suite abstract.Suite
-var TypeRegistry = make(map[Type]reflect.Type)
-var InvTypeRegistry = make(map[reflect.Type]Type)
-
-// RegisterProtocolType register a custom "struct" / "packet" and get
-// the allocated Type
-// Pass simply an your non-initialized struct
-func RegisterProtocolType(msg ProtocolMessage) Type {
-	currType += 1
-	t := reflect.TypeOf(msg)
-	TypeRegistry[currType] = t
-	InvTypeRegistry[t] = currType
-	return currType
-}
-
-// String returns the underlying type in human format
-func (t Type) String() string {
-	ty, ok := TypeRegistry[t]
-	if !ok {
-		return "unknown"
-	}
-	return ty.Name()
-}
-
-// ProtocolMessage is a type for any message that the user wants to send
-type ProtocolMessage interface{}
-
-// ApplicationMessage is the container for any ProtocolMessage
-type ApplicationMessage struct {
-	MsgType Type
-	Msg     ProtocolMessage
-}
-
-// MarshalBinary the application message => to bytes
-// Implements BinaryMarshaler interface so it will be used when sending with gob
-func (am *ApplicationMessage) MarshalBinary() ([]byte, error) {
-	var buf = new(bytes.Buffer)
-	err := binary.Write(buf, binary.BigEndian, am.MsgType)
-	if err != nil {
-		return nil, err
-	}
-	// if underlying type implements BinaryMarshal => use that
-	if bm, ok := am.Msg.(encoding.BinaryMarshaler); ok {
-		bufMsg, err := bm.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		_, err = buf.Write(bufMsg)
-		if err != nil {
-			return nil, err
-		}
-		return buf.Bytes(), nil
-	}
-	// Otherwise, use Encoding from the Suite
-	err = Suite.Write(buf, am.Msg)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// UnmarshalBinary will decode the incoming bytes
-// It checks if the underlying packet is self-decodable
-// by using its UnmarshalBinary interface
-// otherwise, use abstract.Encoding (suite) to decode
-func (am *ApplicationMessage) UnmarshalBinary(buf []byte) error {
-	b := bytes.NewBuffer(buf)
-	var t Type
-	err := binary.Read(b, binary.BigEndian, &t)
-	if err != nil {
-		fmt.Printf("Error reading Type : %v\n", err)
-		os.Exit(1)
-	}
-
-	ty, ok := TypeRegistry[t]
-	if !ok {
-		fmt.Printf("Type %d is not registered so we can not allocate this type %s\n", t, t.String())
-		os.Exit(1)
-	}
-
-	am.MsgType = t
-
-	// Look if the type supports UnmarshalBinary
-	ptr := reflect.New(ty)
-	v := ptr.Elem()
-	if bu, ok := ptr.Interface().(encoding.BinaryUnmarshaler); ok {
-		// Bytes() returns the UNREAD portion of bytes ;)
-		err := bu.UnmarshalBinary(b.Bytes())
-		am.Msg = ptr.Elem().Interface()
-		return err
-	}
-	// Otherwise decode it ourself
-	err = Suite.Read(b, ptr.Interface()) // v.Addr().Interface())
-	if err != nil {
-		fmt.Printf("Error decoding ProtocolMessage : %v\n", err)
-		os.Exit(1)
-	}
-	am.Msg = v.Interface()
-	//fmt.Printf("UnmarshalBinary() : Decoded type %s => %v\n", t.String(), ty)
-	return nil
-}
-
-// ConstructFrom takes a ProtocolMessage and then construct a
-// ApplicationMessage from it. Error if the type is unknown
-func (am *ApplicationMessage) ConstructFrom(obj ProtocolMessage) error {
-	t := reflect.TypeOf(obj)
-	ty, ok := InvTypeRegistry[t]
-	if !ok {
-		return errors.New(fmt.Sprintf("Packet to send is not known. Please register packet : %s\n", t.String()))
-	}
-	am.MsgType = ty
-	am.Msg = obj
-	return nil
-}
 
 // Network part //
 
 // How many times should we try to connect
 const maxRetry = 10
 const waitRetry = 1 * time.Second
+const timeOut = 5 * time.Second
+
+// size of the packet
+type Size int32
+
+// endianness used
+var globalOrder = binary.LittleEndian
+
+// The various errors you can have
+// XXX not working as expected, often falls on errunknown
+var ErrClosed = errors.New("Connection Closed")
+var ErrEOF = errors.New("EOF")
+var ErrCanceled = errors.New("Operation Canceled")
+var ErrTemp = errors.New("Temporary Error")
+var ErrTimeout = errors.New("Timeout Error")
+var ErrUnknown = errors.New("Unknown Error")
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
 type Host interface {
-	Name() string
-	Open(name string) Conn
-	Listen(addr string, fn func(Conn)) // the srv processing function
+	Open(name string) (Conn, error)
+	Listen(addr string, fn func(Conn)) error // the srv processing function
+	Close() error
 }
 
 // Conn is the basic interface to represent any communication mean
 // between two host. It is closely related to the underlying type of Host
 // since a TcpHost will generate only TcpConn
 type Conn interface {
-	PeerName() string
-	Send(obj ProtocolMessage) error
-	Receive() (ApplicationMessage, error)
-	Close()
+	// Gives the address of the remote endpoint
+	Remote() string
+	// Send a message through the connection. Always pass a pointer !
+	Send(ctx context.Context, obj ProtocolMessage) error
+	// Receive any message through the connection.
+	Receive(ctx context.Context) (ApplicationMessage, error)
+	Close() error
 }
 
 // TcpHost is the underlying implementation of
 // Host using Tcp as a communication channel
 type TcpHost struct {
-	// its name (usually its IP address)
-	name string
 	// A list of connection maintained by this host
 	peers map[string]Conn
-}
-
-// TcpConn is the underlying implementation of
-// Conn using Tcp
-type TcpConn struct {
-	// Peer is the name of the endpoint
-	Peer string
-
-	// The connection used
-	Conn net.Conn
-	// TcpConn uses Gob to encode / decode its messages
-	enc *gob.Encoder
-	dec *gob.Decoder
-	// A pointer to the associated host (just-in-case)
-	host *TcpHost
-}
-
-// PeerName returns the name of the peer at the end point of
-// the conn
-func (c *TcpConn) PeerName() string {
-	return c.Peer
-}
-
-// Receive waits for any input on the connection and returns
-// the ApplicationMessage **decoded** and an error if something
-// wrong occured
-func (c *TcpConn) Receive() (ApplicationMessage, error) {
-	var am ApplicationMessage
-	err := c.dec.Decode(&am)
-	if err != nil {
-		dbg.Fatal("Error decoding ApplicationMessage : ", err)
-	}
-	return am, nil
-}
-
-// Send will convert the Protocolmessage into an ApplicationMessage
-// Then send the message through the Gob encoder
-// Returns an error if anything was wrong
-func (c *TcpConn) Send(obj ProtocolMessage) error {
-	am := ApplicationMessage{}
-	err := am.ConstructFrom(obj)
-	if err != nil {
-		return fmt.Errorf("Error converting packet : %v\n", err)
-	}
-	err = c.enc.Encode(&am)
-	if err != nil {
-		return fmt.Errorf("Error sending message : %v", err)
-	}
-	return err
-}
-
-// Close ... closes the connection
-func (c *TcpConn) Close() {
-	err := c.Conn.Close()
-	if err != nil {
-		dbg.Fatal("Error while closing tcp conn : ", err)
-	}
+	// its listeners
+	listener net.Listener
+	// the close channel used to indicate to the listener we want to quit
+	quit chan bool
+	// indicates wether this host is closed already or not
+	closed bool
+	// a list of constructors for en/decoding
+	constructors protobuf.Constructors
 }
 
 // NewTcpHost returns a Fresh TCP Host
-func NewTcpHost(name string) *TcpHost {
-	return &TcpHost{
-		name:  name,
-		peers: make(map[string]Conn),
+// If constructors == nil, it will take an empty one.
+func NewTcpHost(constructors protobuf.Constructors) *TcpHost {
+	cons := emptyConstructors
+	if constructors != nil {
+		cons = constructors
 	}
-}
-
-// Name is the name ofthis host
-func (t *TcpHost) Name() string {
-	return t.name
+	return &TcpHost{
+		peers:        make(map[string]Conn),
+		quit:         make(chan bool),
+		constructors: cons,
+	}
 }
 
 // Open will create a new connection between this host
 // and the remote host named "name". This is a TcpConn.
 // If anything went wrong, Conn will be nil.
-func (t *TcpHost) Open(name string) Conn {
+func (t *TcpHost) Open(name string) (Conn, error) {
 	var conn net.Conn
 	var err error
 	for i := 0; i < maxRetry; i++ {
-
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
-			dbg.Lvl3(t.Name(), "(", i, "/", maxRetry, ") Error opening connection to ", name)
+			//dbg.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
 			time.Sleep(waitRetry)
 		} else {
 			break
@@ -270,42 +118,187 @@ func (t *TcpHost) Open(name string) Conn {
 		time.Sleep(waitRetry)
 	}
 	if conn == nil {
-		dbg.Fatal(t.Name(), "could not connect to ", name, " : ABORT")
+		return nil, fmt.Errorf("Could not connect to %s.", name)
 	}
 	c := TcpConn{
-		Peer: name,
-		Conn: conn,
-		enc:  gob.NewEncoder(conn),
-		dec:  gob.NewDecoder(conn),
-		host: t,
+		Endpoint: name,
+		Conn:     conn,
+		host:     t,
 	}
 	t.peers[name] = &c
-	return &c
+	return &c, nil
 }
 
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
-func (t *TcpHost) Listen(addr string, fn func(Conn)) {
+func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		dbg.Fatal("error listening (host ", t.Name(), ")")
+		return fmt.Errorf("Error opening listener on address %s", addr)
 	}
-	dbg.Lvl3(t.Name(), "Waiting for connections on addr ", addr, "..\n")
+	t.listener = ln
 	for {
-		conn, err := ln.Accept()
+		conn, err := t.listener.Accept()
 		if err != nil {
-			dbg.Lvl2(t.Name(), "error accepting connection : ", err)
+			select {
+			case <-t.quit:
+				return nil
+			default:
+			}
 			continue
 		}
 		c := TcpConn{
-			Peer: conn.RemoteAddr().String(),
-			Conn: conn,
-			enc:  gob.NewEncoder(conn),
-			dec:  gob.NewDecoder(conn),
-			host: t,
+			Endpoint: conn.RemoteAddr().String(),
+			Conn:     conn,
+			host:     t,
 		}
 		t.peers[conn.RemoteAddr().String()] = &c
 		go fn(&c)
 	}
+}
+
+// Close will close every connection this host has opened
+func (t *TcpHost) Close() error {
+	if t.closed == true {
+		return nil
+	}
+	t.closed = true
+	for _, c := range t.peers {
+		if err := c.Close(); err != nil {
+			return handleError(err)
+		}
+	}
+	close(t.quit)
+	if t.listener != nil {
+		return t.listener.Close()
+	}
+	return nil
+}
+
+// TcpConn is the underlying implementation of
+// Conn using Tcp
+type TcpConn struct {
+	// The name of the endpoint we are connected to.
+	Endpoint string
+
+	// The connection used
+	Conn net.Conn
+
+	// closed indicator
+	closed bool
+	// A pointer to the associated host (just-in-case)
+	host *TcpHost
+}
+
+// PeerName returns the name of the peer at the end point of
+// the conn
+func (c *TcpConn) Remote() string {
+	return c.Endpoint
+}
+
+// handleError produces the higher layer error depending on the type
+// so user of the package can know what is the cause of the problem
+func handleError(err error) error {
+
+	if strings.Contains(err.Error(), "use of closed") {
+		return ErrClosed
+	} else if strings.Contains(err.Error(), "canceled") {
+		return ErrCanceled
+	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+		return ErrEOF
+	}
+
+	netErr, ok := err.(net.Error)
+	if !ok {
+		return ErrUnknown
+	}
+	if netErr.Temporary() {
+		return ErrTemp
+	} else if netErr.Timeout() {
+		return ErrTimeout
+	}
+	return ErrUnknown
+}
+
+// Receive waits for any input on the connection and returns
+// the ApplicationMessage **decoded** and an error if something
+// wrong occured
+func (c *TcpConn) Receive(ctx context.Context) (ApplicationMessage, error) {
+
+	var am ApplicationMessage
+	am.constructors = c.host.constructors
+	var err error
+	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
+	// First read the size
+	var s Size
+	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
+		return EmptyApplicationMessage, handleError(err)
+	}
+	// Then make the buffer out of it
+	b := make([]byte, s)
+	var buffer bytes.Buffer
+	for Size(buffer.Len()) < s {
+		n, err := c.Conn.Read(b)
+		b = b[:n]
+		buffer.Write(b)
+		if err != nil {
+			e := handleError(err)
+			return EmptyApplicationMessage, e
+		}
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Printf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+		}
+	}()
+
+	err = am.UnmarshalBinary(buffer.Bytes())
+	if err != nil {
+		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
+	}
+	am.From = c.Remote()
+	return am, nil
+}
+
+// Send will convert the Protocolmessage into an ApplicationMessage
+// Then send the message through the Gob encoder
+// Returns an error if anything was wrong
+func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+	am, err := newApplicationMessage(obj)
+	if err != nil {
+		return fmt.Errorf("Error converting packet: %v\n", err)
+	}
+	var b []byte
+	b, err = am.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+	}
+	// First write the size
+	var buffer bytes.Buffer
+	size := Size(len(b))
+	if err := binary.Write(&buffer, globalOrder, size); err != nil {
+		return err
+	}
+	// Then send everything through the connection
+	buffer.Write(b)
+	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
+	_, err = c.Conn.Write(buffer.Bytes())
+	if err != nil {
+		return handleError(err)
+	}
+	return nil
+}
+
+// Close ... closes the connection
+func (c *TcpConn) Close() error {
+	if c.closed == true {
+		return nil
+	}
+	err := c.Conn.Close()
+	c.closed = true
+	if err != nil {
+		return handleError(err)
+	}
+	return nil
 }

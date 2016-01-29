@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -169,10 +169,10 @@ retry:
 		c.dir.RUnlock()
 
 		if closed {
-			log.Println("detected closed channel: putting:", fromto, ok)
+			dbg.Print("detected closed channel: putting:", fromto, ok)
 			return ErrClosed
 		}
-		log.Println("retry")
+		dbg.Print("retry")
 		goto retry
 	}
 	return nil
@@ -209,7 +209,7 @@ retry:
 
 		// if the channel has been closed then exit
 		if closed {
-			log.Println("detected closed channl: getting:", tofrom, ok)
+			dbg.Print("detected closed channl: getting:", tofrom, ok)
 			return ErrClosed
 		}
 		goto retry

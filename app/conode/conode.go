@@ -4,15 +4,15 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/edwards/ed25519"
 )
 
 // Which suite to use
-var suite abstract.Suite = edwards.NewAES128SHA256Ed25519(true)
+var suite abstract.Suite = ed25519.NewAES128SHA256Ed25519(false)
 var suiteStr string = suite.String()
 
 // where to write the key file .priv + .pub
@@ -42,8 +42,8 @@ func registerCommand(com cli.Command) {
 
 func main() {
 	coApp := cli.NewApp()
-	coApp.Name = "Conode"
-	coApp.Usage = "Run a cothority server and contacts others conodes to form a cothority tree"
+	coApp.Name = "CoNode"
+	coApp.Usage = "Runs a cothority node and contacts others CoNodes to form a cothority tree"
 	coApp.Version = "0.1.0"
 	coApp.Authors = []cli.Author{
 		{
@@ -51,16 +51,16 @@ func main() {
 			Email: "linus.gasser@epfl.ch",
 		},
 		{
-			Name:  "nikkolasg",
-			Email: "not provided yet",
+			Name:  "Nicolas Gailly",
+			Email: "not specified",
 		},
 	}
 	// already create the key gen command
 	keyGen := cli.Command{
 		Name:      "keygen",
 		Aliases:   []string{"k"},
-		Usage:     "Create a new key pair and binding the public part to your address. ",
-		ArgsUsage: "ADRESS[:PORT] will be the address binded to the generated public key",
+		Usage:     "Creates a new key pair and binds the public part to the specified IPv4 address and port",
+		ArgsUsage: "ADRESS[:PORT] is the address (and port) bound to the generated public key.",
 		Action: func(c *cli.Context) {
 			KeyGeneration(c.String("key"), c.Args().First())
 		},
@@ -68,7 +68,7 @@ func main() {
 			cli.StringFlag{
 				Name: "key, k",
 				Usage: "Basename of the files where reside the keys. If key = 'key'," +
-				"then conode will search through 'key.pub' and 'key.priv'",
+					"then conode will search through 'key.pub' and 'key.priv'",
 				Value: defaultKeyFile,
 			},
 		},
@@ -106,13 +106,13 @@ func KeyGeneration(key, address string) {
 	kp := cliutils.KeyPair(suite)
 	// Write private
 	if err := cliutils.WritePrivKey(suite, namePriv(key), kp.Secret); err != nil {
-		dbg.Fatal("Error writing private key file : ", err)
+		dbg.Fatal("Error writing private key file:", err)
 	}
 
 	// Write public
 	if err := cliutils.WritePubKey(suite, namePub(key), kp.Public, address); err != nil {
-		dbg.Fatal("Error writing public key file : ", err)
+		dbg.Fatal("Error writing public key file:", err)
 	}
 
-	dbg.Lvl1("Keypair generated and written to ", namePriv(key), " / ", namePub(key))
+	dbg.Lvl1("Keypair generated and written to", namePriv(key), "/", namePub(key))
 }

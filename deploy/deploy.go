@@ -28,21 +28,22 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/deploy/platform"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 )
 
 // Configuration-variables
 var deployP platform.Platform
 
-var platform_dst = "localhost"
+var platformDst = "localhost"
 var app = ""
 var nobuild = false
 var clean = true
 var build = ""
 var machines = 3
+var monitorPort = 10000
+var simRange = ""
 
 // SHORT TERM solution of referencing
 // the different apps.
@@ -58,21 +59,25 @@ const (
 )
 
 func init() {
-	flag.StringVar(&platform_dst, "platform", platform_dst, "platform to deploy to [deterlab,localhost]")
+	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
+	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
+	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
+	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Change debug level (0-5)")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
-	deployP = platform.NewPlatform(platform_dst)
+	monitor.SinkPort = monitorPort
+	deployP = platform.NewPlatform(platformDst)
 	if deployP == nil {
-		dbg.Fatal("Platform not recognized.", platform_dst)
+		dbg.Fatal("Platform not recognized.", platformDst)
 	}
-	dbg.Lvl1("Deploying to", platform_dst)
+	dbg.Lvl1("Deploying to", platformDst)
 
 	simulations := flag.Args()
 	if len(simulations) == 0 {
@@ -87,7 +92,7 @@ func main() {
 		}
 		deployP.Configure()
 
-		if clean{
+		if clean {
 			deployP.Deploy(runconfigs[0])
 			deployP.Cleanup()
 		} else {
@@ -110,27 +115,37 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
-	// Write the header
-	firstStat := monitor.NewStats(runconfigs[0].Map())
-	f, err := os.OpenFile(TestFile(name), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0660)
-	defer f.Close()
-	if err != nil {
-		log.Fatal("error opening test file:", err)
+	args := os.O_CREATE | os.O_RDWR | os.O_TRUNC
+	// If a range is given, we only append
+	if simRange != "" {
+		args = os.O_CREATE | os.O_RDWR | os.O_APPEND
 	}
-	firstStat.WriteHeader(f)
+	f, err := os.OpenFile(TestFile(name), args, 0660)
+	if err != nil {
+		dbg.Fatal("error opening test file:", err)
+	}
+	defer f.Close()
 	err = f.Sync()
 	if err != nil {
-		log.Fatal("error syncing test file:", err)
+		dbg.Fatal("error syncing test file:", err)
 	}
 
+	start, stop := getStartStop(len(runconfigs))
 	for i, t := range runconfigs {
+		// Implement a simple range-argument that will skip checks not in range
+		if i < start || i > stop {
+			dbg.Lvl1("Skipping", t, "because of range")
+			continue
+		}
+		dbg.Lvl1("Doing run", t)
+
 		// run test t nTimes times
 		// take the average of all successful runs
 		runs := make([]monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				log.Fatalln("error running test:", err)
+				dbg.Fatal("error running test:", err)
 			}
 
 			runs = append(runs, stats)
@@ -145,11 +160,14 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		}
 
 		s := monitor.AverageStats(runs)
+		if i == 0 {
+			s.WriteHeader(f)
+		}
 		rs[i] = s
 		rs[i].WriteValues(f)
 		err = f.Sync()
 		if err != nil {
-			log.Fatal("error syncing data to test file:", err)
+			dbg.Fatal("error syncing data to test file:", err)
 		}
 	}
 }
@@ -158,7 +176,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	done := make(chan struct{})
-	if platform_dst == "localhost" {
+	if platformDst == "localhost" {
 		machs := rc.Get("machines")
 		ppms := rc.Get("ppm")
 		mach, _ := strconv.Atoi(machs)
@@ -167,21 +185,34 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		rc.Put("ppm", strconv.Itoa(ppm*mach))
 	}
 	rs := monitor.NewStats(rc.Map())
+	monitor := monitor.NewMonitor(rs)
 
-	deployP.Deploy(rc)
-	deployP.Cleanup()
-
+	if err := deployP.Deploy(rc); err != nil {
+		dbg.Error(err)
+		return *rs, err
+	}
+	if err := deployP.Cleanup(); err != nil {
+		dbg.Error(err)
+		return *rs, err
+	}
+	go func() {
+		monitor.Listen()
+	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
 	err := deployP.Start()
 	if err != nil {
-		log.Fatal(err)
-		return *rs, nil
+		dbg.Error(err)
+		return *rs, err
 	}
 
 	go func() {
-		monitor.Monitor(rs)
-		deployP.Wait()
+		var err error
+		if err = deployP.Wait(); err != nil {
+			dbg.Lvl3("Test failed:", err)
+			deployP.Cleanup()
+			done <- struct{}{}
+		}
 		dbg.Lvl3("Test complete:", rs)
 		done <- struct{}{}
 	}()
@@ -189,7 +220,8 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
-		return *rs, nil
+		monitor.Stop()
+		return *rs, err
 	}
 }
 
@@ -202,7 +234,7 @@ type runFile struct {
 func MkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
-		log.Fatal("failed to make test directory")
+		dbg.Fatal("failed to make test directory")
 	}
 }
 
@@ -212,4 +244,22 @@ func TestFile(name string) string {
 
 func isZero(f float64) bool {
 	return math.Abs(f) < 0.0000001
+}
+
+// returns a tuple of start and stop configurations to run
+func getStartStop(rcs int) (int, int) {
+	ss_str := strings.Split(simRange, ":")
+	start, err := strconv.Atoi(ss_str[0])
+	stop := rcs
+	if err == nil {
+		stop = start
+		if len(ss_str) > 1 {
+			stop, err = strconv.Atoi(ss_str[1])
+			if err != nil {
+				stop = rcs
+			}
+		}
+	}
+	dbg.Lvl2("Range is", start, "...", stop)
+	return start, stop
 }

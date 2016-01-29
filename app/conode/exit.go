@@ -6,19 +6,20 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/conode"
 	"github.com/dedis/cothority/lib/cliutils"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
-	"github.com/dedis/cothority/lib/coconet"
+	"github.com/dedis/cothority/lib/conode"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"golang.org/x/net/context"
 )
 
 func init() {
 	command := cli.Command{
 		Name:        "exit",
 		Aliases:     []string{"x"},
-		Usage:       "Stop a given conode.",
-		Description: "Basically it will statically generate the tree, with the respective names and public key",
-		ArgsUsage:   "ADDRESS: the IP[:PORT] of the conode to exit",
+		Usage:       "Stops the given CoNode",
+		Description: "Basically it will statically generate the tree, with the respective names and public key.",
+		ArgsUsage:   "ADDRESS: the IPv4[:PORT] of the CoNode to exit.",
 		Action: func(c *cli.Context) {
 			if c.Args().First() == "" {
 				dbg.Fatal("You must provide an address")
@@ -31,24 +32,22 @@ func init() {
 
 // ForceExit connects to the stamp-port of the conode and asks him to exit
 func ForceExit(address string) {
-	add, err := cliutils.VerifyPort(address, conode.DefaultPort + 1)
+	add, err := cliutils.VerifyPort(address, conode.DefaultPort+1)
 	if err != nil {
 		dbg.Fatal("Couldn't convert", address, "to a IP:PORT")
 	}
-
-	conn := coconet.NewTCPConn(add)
-	err = conn.Connect()
+	host := network.NewTcpHost(nil)
+	conn, err := host.Open(add)
 	if err != nil {
-		dbg.Fatal("Error when getting the connection to the host:", err)
+		dbg.Fatal("Could not connect to", add)
 	}
-	dbg.Lvl1("Connected to ", add)
-	msg := &conode.TimeStampMessage{
-		Type:  conode.StampExit,
-	}
+	dbg.Lvl1("Connected to", add)
+	msg := &conode.StampExit{}
 
 	dbg.Lvl1("Asking to exit")
-	err = conn.PutData(msg)
+	ctx := context.TODO()
+	err = conn.Send(ctx, msg)
 	if err != nil {
-		dbg.Fatal("Couldn't send exit-message to server: ", err)
+		dbg.Fatal("Couldn't send exit-message to server:", err)
 	}
 }

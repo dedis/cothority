@@ -1,16 +1,12 @@
 package app
 
-import (
-	"github.com/dedis/cothority/lib/graphs"
-)
-
 type ConfigColl struct {
+	*ConfigConode
+
 	// ppm is the replication factor of hosts per node: how many hosts do we want per node
 	Ppm int
 	// bf is the branching factor of the tree that we build
 	Bf int
-	// Coding-suite to run 	[nist256, nist512, ed25519]
-	Suite string
 
 	// How many messages to send
 	Nmsgs int
@@ -37,9 +33,4 @@ type ConfigColl struct {
 	RootWait int
 	// Just set up the connections and then quit
 	TestConnect bool
-
-	// Tree for knowing whom to connect
-	Tree *graphs.Tree
-	// All hostnames concatenated with the port-number to use
-	Hosts []string
 }

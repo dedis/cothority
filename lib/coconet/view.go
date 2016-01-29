@@ -4,8 +4,7 @@ import (
 	"sort"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 type View struct {
@@ -105,7 +104,7 @@ func (v *View) RemovePeerFromHostlist(name string) {
 }
 
 func (v *View) RemovePeer(name string) bool {
-	log.Println("LOOKING FOR ", name, "in HOSTLIST", v.HostList)
+	dbg.Print("LOOKING FOR", name, "in HOSTLIST", v.HostList)
 	v.Lock()
 	// make sure we don't remove our parent
 	if v.Parent == name {
@@ -152,7 +151,7 @@ func (v *Views) NewView(view int, parent string, children []string, hostlist []s
 
 func (v *Views) NewViewFromPrev(view int, parent string) {
 	if _, ok := v.Views[view-1]; !ok {
-		log.Errorln("ERROR: INVALID PREVIOUS VIEW")
+		dbg.Error("ERROR: INVALID PREVIOUS VIEW")
 		return
 	}
 
@@ -237,7 +236,7 @@ func (v *Views) RemovePeer(view int, child string) bool {
 func (v *Views) Children(view int) []string {
 	v.RLock()
 	defer v.RUnlock()
-	if view < len(v.Views){
+	if view < len(v.Views) {
 		return v.Views[view].Children
 	} else {
 		return nil

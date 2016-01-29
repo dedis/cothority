@@ -26,7 +26,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/conode"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"io"
 	"os"
@@ -157,8 +157,8 @@ func StampFile(file, server string) {
 		dbg.Fatal("Stamper didn't succeed:", err)
 	}
 
-	if err := tsm.Srep.Save(file + sigExtension); err != nil {
-		dbg.Fatal("Could not write signature file : ", err)
+	if err := tsm.Save(file + sigExtension); err != nil {
+		dbg.Fatal("Could not write signature file:", err)
 	}
 	dbg.Lvl1("Signature file", file+".sig", "written.")
 
@@ -182,7 +182,7 @@ func VerifyFileSignature(file, sigFile string) bool {
 		SuiteStr: suite.String(),
 	}
 	if err := signature.Open(sigFile); err != nil {
-		dbg.Fatal("Couldn't read signature-file", sigFile, " : ", err)
+		dbg.Fatal("Couldn't read signature-file", sigFile, ":", err)
 	}
 	hash := hashFile(file)
 	// Then verify the proper signature

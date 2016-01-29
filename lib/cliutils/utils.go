@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	dbg "github.com/dedis/cothority/lib/debug_lvl"
+	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -54,8 +54,7 @@ func SshRun(username, host, command string) ([]byte, error) {
 
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
-	//log.Println(cmd)
-	cmd.Stderr = os.Stderr
+	//cmd.Stderr = os.Stderr
 	return cmd.Output()
 }
 
@@ -65,7 +64,7 @@ func SshRunStdout(username, host, command string) error {
 		addr = username + "@" + addr
 	}
 
-	dbg.Lvl4("Going to ssh to ", addr, command)
+	dbg.Lvl4("Going to ssh to", addr, command)
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
 	cmd.Stderr = os.Stderr
