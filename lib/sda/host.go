@@ -12,12 +12,9 @@ Node takes care about
 package sda
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"sync"
-	"time"
-
-	"bytes"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
@@ -27,6 +24,8 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"io/ioutil"
+	"sync"
+	"time"
 )
 
 /*
@@ -508,4 +507,41 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 		h.overlay.RegisterTree(tree)
 	}
 	h.pendingTreeLock.Unlock()
+}
+
+func (h *Host) AddTree(t *Tree) {
+	h.overlay.RegisterTree(t)
+}
+
+func (h *Host) AddEntityList(el *EntityList) {
+	h.overlay.RegisterEntityList(el)
+}
+
+func (h *Host) Suite() abstract.Suite {
+	return h.suite
+}
+
+func (h *Host) Private() abstract.Secret {
+	return h.private
+}
+
+func (h *Host) StartNewNode(protoID uuid.UUID, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNode(protoID, tree)
+}
+
+func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
+	var hosts []*Host
+	for _, add := range addresses {
+		h := newHostMock(s, add)
+		h.Listen()
+		go h.ProcessMessages()
+		hosts = append(hosts, h)
+	}
+	return hosts
+}
+
+func newHostMock(s abstract.Suite, address string) *Host {
+	kp := cliutils.KeyPair(s)
+	en := network.NewEntity(kp.Public, address)
+	return NewHost(en, kp.Secret)
 }

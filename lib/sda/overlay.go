@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
 
@@ -41,7 +42,7 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
-	dbg.Lvl4(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
+	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
 		dbg.Lvl2("Will ask for entityList + tree from token")
@@ -196,6 +197,13 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 // ressources can be released
 func (o *Overlay) nodeDone(tok *Token) {
 	delete(o.nodes, tok.Id())
+}
+
+func (o *Overlay) Private() abstract.Secret {
+	return o.host.Private()
+}
+func (o *Overlay) Suite() abstract.Suite {
+	return o.host.Suite()
 }
 
 // TreeNodeCache is a cache that maps from token to treeNode. Since the mapping

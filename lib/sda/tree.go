@@ -254,6 +254,15 @@ func (il *EntityList) Search(uuid uuid.UUID) *network.Entity {
 	return nil
 }
 
+// Get simply returns the entity that is stored at that index in the entitylist
+// returns nil if index error
+func (en *EntityList) Get(idx int) *network.Entity {
+	if idx < 0 || idx > len(en.List) {
+		return nil
+	}
+	return en.List[idx]
+}
+
 // GenerateBinaryTree creates a binary tree out of the EntityList
 // out of it. The first element of the EntityList will be the root element.
 func (il *EntityList) GenerateBinaryTree() *Tree {
