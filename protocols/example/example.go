@@ -21,11 +21,11 @@ type ProtocolExampleChannel struct {
 	Message      string
 	ChildCount   chan int
 	Announcement chan struct {
-		sda.TreeNode
+		*sda.TreeNode
 		MessageAnnounce
 	}
 	Reply chan []struct {
-		sda.TreeNode
+		*sda.TreeNode
 		MessageReply
 	}
 }
@@ -38,11 +38,11 @@ func NewExampleChannel(n *sda.Node) (sda.ProtocolInstance, error) {
 	}
 	err := example.RegisterChannel(&example.Announcement)
 	if err != nil {
-		return nil, errors.New("couldn't register announcement-channel")
+		return nil, errors.New("couldn't register announcement-channel: " + err.Error())
 	}
 	err = example.RegisterChannel(&example.Reply)
 	if err != nil {
-		return nil, errors.New("couldn't register reply-channel")
+		return nil, errors.New("couldn't register reply-channel: " + err.Error())
 	}
 	go example.DispatchChannels()
 	return example, nil
@@ -97,7 +97,7 @@ func (p *ProtocolExampleChannel) HandleAnnounce(msg MessageAnnounce) error {
 // HandleReply is the message going up the tree and holding a counter
 // to verify the number of nodes.
 func (p *ProtocolExampleChannel) HandleReply(reply []struct {
-	sda.TreeNode
+	*sda.TreeNode
 	MessageReply
 }) error {
 	children := 1

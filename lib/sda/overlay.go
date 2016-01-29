@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"runtime/debug"
 )
 
 /*
@@ -108,7 +109,8 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
-		return nil, errors.New("Protocol does not exists")
+		debug.PrintStack()
+		return nil, errors.New("Protocol doesn't exists: " + protocolID.String())
 	}
 	rootEntity := tree.Root.Entity
 	if !o.host.Entity.Equal(rootEntity) {

@@ -194,7 +194,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 		return nil, err
 	}
 	h.registerConnection(c)
-	dbg.Lvl2("Host", h.workingAddress, "connected to", c.Remote())
+	dbg.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
 	go h.handleConn(c)
 	return c, nil
 }

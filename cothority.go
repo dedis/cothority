@@ -8,7 +8,7 @@ import (
 	// register the protocol
 	"github.com/dedis/cothority/lib/monitor"
 	_ "github.com/dedis/cothority/protocols"
-	"time"
+	"github.com/dedis/cothority/protocols/manage"
 )
 
 /*
@@ -77,9 +77,26 @@ func main() {
 			dbg.Fatal(err)
 		}
 		if StartProto {
+			for {
+				dbg.Lvl2("Counting children")
+				node, err := sc.Overlay.StartNewNodeName("Count", sc.Tree)
+				if err != nil {
+					dbg.Fatal(err)
+				}
+				count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count
+				if count == sc.Tree.Size() {
+					dbg.Lvl2("Found all children")
+					break
+				} else {
+					dbg.Lvl2("Found only", count, "children")
+				}
+			}
 			dbg.Lvl2("Starting new node", Simul)
-			time.Sleep(time.Second)
 			err := sim.Run(sc)
+			if err != nil {
+				dbg.Fatal(err)
+			}
+			_, err = sc.Overlay.StartNewNodeName("CloseAll", sc.Tree)
 			if err != nil {
 				dbg.Fatal(err)
 			}

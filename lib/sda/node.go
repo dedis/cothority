@@ -254,16 +254,20 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// if we still need to wait for additional messages, we return
 	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
+		dbg.Lvl3("Not done")
 		return nil
 	}
+	dbg.Lvl3("Going to dispatch")
 
 	var err error
 	switch {
 	case n.channels[msgType] != nil:
+		dbg.Lvl3("Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		err = n.DispatchFunction(msgs)
 	default:
+		dbg.Lvl3("Calling dispatch-function")
 		err = n.instance.Dispatch(msgs)
 	}
 	return err
