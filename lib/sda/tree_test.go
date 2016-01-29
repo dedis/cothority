@@ -21,7 +21,7 @@ func TestTreeId(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := idsList.GenerateBinaryTree()
+	tree := idsList.GenerateBinaryTree()
 	/*
 			TODO: re-calculate the uuid
 		root, _ := ExampleGenerateTreeFromEntityList(idsList)
@@ -44,7 +44,7 @@ func TestTreeConnectedTo(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := peerList.GenerateBinaryTree()
+	tree := peerList.GenerateBinaryTree()
 	// Generate the network
 	if !tree.Root.IsConnectedTo(peerList.List[1]) {
 		t.Fatal("Root should be connected to localhost:2001")
@@ -105,7 +105,7 @@ func TestTreeParent(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := peerList.GenerateBinaryTree()
+	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
 	if child.Parent.Id != tree.Root.Id {
 		t.Fatal("Parent of child of root is not the root...")
@@ -117,9 +117,9 @@ func TestTreeChildren(t *testing.T) {
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, nodes := peerList.GenerateBinaryTree()
+	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
-	if child.Id != nodes[1].Id {
+	if child.Entity.Id != peerList.List[1].Id {
 		t.Fatal("Parent of child of root is not the root...")
 	}
 }
@@ -127,11 +127,10 @@ func TestTreeChildren(t *testing.T) {
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	dbg.Print(network.Suite.String())
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
-	tree, _ := peerList.GenerateBinaryTree()
+	tree := peerList.GenerateBinaryTree()
 	tree_binary, err := tree.Marshal()
 
 	if err != nil {
@@ -155,10 +154,46 @@ func TestUnMarshalTree(t *testing.T) {
 func TestGetNode(t *testing.T) {
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.ListNodes() {
-		node := tree.GetNode(tn.Id)
+		node := tree.GetTreeNode(tn.Id)
 		if node == nil {
 			t.Fatal("Didn't find treeNode with id", tn.Id)
 		}
+	}
+}
+
+func TestBinaryTree(t *testing.T) {
+	tree, _ := genLocalTree(7, 2000)
+	root := tree.Root
+	if len(root.Children) != 2 {
+		t.Fatal("Not two children from root")
+	}
+	if len(root.Children[0].Children) != 2 {
+		t.Fatal("Not two children from first child")
+	}
+	if len(root.Children[1].Children) != 2 {
+		t.Fatal("Not two children from second child")
+	}
+	if !tree.IsBinary(root) {
+		t.Fatal("Tree should be binary")
+	}
+}
+
+func TestBinaryTrees(t *testing.T) {
+	tree, _ := genLocalTree(1, 2000)
+	if !tree.IsBinary(tree.Root) {
+		t.Fatal("Tree with 1 children should be binary")
+	}
+	tree, _ = genLocalTree(2, 2000)
+	if tree.IsBinary(tree.Root) {
+		t.Fatal("Tree with 2 children should NOT be binary")
+	}
+	tree, _ = genLocalTree(3, 2000)
+	if !tree.IsBinary(tree.Root) {
+		t.Fatal("Tree with 3 children should be binary")
+	}
+	tree, _ = genLocalTree(4, 2000)
+	if tree.IsBinary(tree.Root) {
+		t.Fatal("Tree with 4 children should be binary")
 	}
 }
 
@@ -188,6 +223,6 @@ func genEntityList(suite abstract.Suite, names []string) *sda.EntityList {
 func genLocalTree(count, port int) (*sda.Tree, *sda.EntityList) {
 	names := genLocalhostPeerNames(count, port)
 	peerList := genEntityList(tSuite, names)
-	tree, _ := peerList.GenerateBinaryTree()
+	tree := peerList.GenerateBinaryTree()
 	return tree, peerList
 }

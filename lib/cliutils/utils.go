@@ -3,25 +3,14 @@ package cliutils
 import (
 	"bufio"
 	"bytes"
-	"crypto/rand"
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/satori/go.uuid"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 )
-
-func NewRandomUUID() uuid.UUID {
-	b := make([]byte, 32)
-	_, err := rand.Read(b)
-	if err != nil {
-		panic(err)
-	}
-	return uuid.NewV5(uuid.NamespaceURL, string(b))
-}
 
 func Boldify(s string) string {
 	return "\033[1m" + s + "\033[0m"

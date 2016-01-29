@@ -18,6 +18,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
@@ -35,9 +36,12 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTcpHost() *TcpHost {
 	return &TcpHost{
-		peers:        make(map[string]Conn),
-		quit:         make(chan bool),
-		constructors: DefaultConstructors(Suite),
+		peers:         make(map[string]Conn),
+		quit:          make(chan bool),
+		constructors:  DefaultConstructors(Suite),
+		quitListener:  make(chan bool),
+		listeningLock: &sync.Mutex{},
+		closedLock:    &sync.Mutex{},
 	}
 }
 
@@ -64,25 +68,37 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
-	if t.closed == true {
-		dbg.Lvl3("Already closed")
-		return nil
-	}
-	close(t.quit)
-	t.closed = true
-	if t.listener != nil {
-		dbg.Lvl3("Closing listener", t.listener.Addr())
-		err := t.listener.Close()
-		if err != nil {
-			dbg.Lvl3("Error while closing listener:", err)
-			return err
-		}
-	}
 	for _, c := range t.peers {
 		dbg.Lvl3("Closing peer", c)
 		if err := c.Close(); err != nil {
 			dbg.Lvl3("Error while closing peers")
 			return handleError(err)
+		}
+	}
+	if !t.closed {
+		close(t.quit)
+	}
+	t.closed = true
+	// lets see if we launched a listening routing
+	var listening bool
+	t.listeningLock.Lock()
+	listening = t.listening
+	t.listeningLock.Unlock()
+	// we are NOT listening
+	if !listening {
+		//	fmt.Println("tcphost.Close() without listening")
+		return nil
+	}
+	var stop bool
+	for !stop {
+		if t.listener != nil {
+			t.listener.Close()
+		}
+		select {
+		case <-t.quitListener:
+			stop = true
+		case <-time.After(time.Millisecond * 50):
+			continue
 		}
 	}
 	return nil
@@ -205,17 +221,25 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 // That way we can control what to do of the TcpConn before returning it to the
 // function given by the user. Used by SecureTcpHost
 func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
+	t.listeningLock.Lock()
+	t.listening = true
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
 		return errors.New("Error opening listener: " + err.Error())
 	}
 	t.listener = ln
+	var unlocked bool
 	for {
+		if !unlocked {
+			unlocked = true
+			t.listeningLock.Unlock()
+		}
 		conn, err := t.listener.Accept()
 		if err != nil {
 			select {
 			case <-t.quit:
+				t.quitListener <- true
 				return nil
 			default:
 			}
@@ -264,7 +288,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	var err error
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
-		dbg.Lvl3("Trying to listen on", addr)
+		dbg.Lvl3("Starting to listen on", addr)
 		st.workingAddress = addr
 		if err = st.TcpHost.listen(addr, receiver); err != nil {
 			// The listening is over
@@ -324,6 +348,7 @@ func (sc *SecureTcpConn) Entity() *Entity {
 // when a connection request is made during listening
 func (sc *SecureTcpConn) negotiateListen() error {
 	// Send our Entity to the remote endpoint
+	dbg.Lvl4("Sending our identity")
 	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
@@ -332,6 +357,7 @@ func (sc *SecureTcpConn) negotiateListen() error {
 	if err != nil {
 		return fmt.Errorf("Error while receiving Entity during negotiation %s", err)
 	}
+	dbg.Lvl4("Received our identity")
 	// Check if it is correct
 	if nm.MsgType != EntityType {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
@@ -340,6 +366,7 @@ func (sc *SecureTcpConn) negotiateListen() error {
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
 	sc.entity = &e
+	dbg.Lvl4("Identity exchange complete")
 	return nil
 }
 
