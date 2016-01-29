@@ -56,7 +56,7 @@ func NewPeer(address string, conf *app.ConfigConode) *Peer {
 	views := tree.NewViews()
 	views.AddView(0, firstView)
 	// create the TCP Host
-	net := network.NewTcpHost(network.DefaultConstructors(suite))
+	net := network.NewTcpHost()
 	// finally create the sign.Node
 	node := sign.NewKeyedNode(suite, address, net, views)
 

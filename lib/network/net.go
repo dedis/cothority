@@ -23,6 +23,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"errors"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -68,7 +69,9 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
 	for _, c := range t.peers {
+		dbg.Lvl3("Closing peer", c)
 		if err := c.Close(); err != nil {
+			dbg.Lvl3("Error while closing peers")
 			return handleError(err)
 		}
 	}
@@ -223,7 +226,7 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	global, _ := cliutils.GlobalBind(addr)
 	ln, err := net.Listen("tcp", global)
 	if err != nil {
-		return fmt.Errorf("Error opening listener on address %s:%v", addr, err)
+		return errors.New("Error opening listener: " + err.Error())
 	}
 	t.listener = ln
 	var unlocked bool
@@ -307,8 +310,10 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 	// try all names
 	for _, addr := range e.Addresses {
 		// try to connect with this name
+		dbg.Lvl3("Trying address", addr)
 		c, err := st.TcpHost.openTcpConn(addr)
 		if err != nil {
+			dbg.Lvl3("Address didn't accept connection:", addr)
 			continue
 		}
 		// create the secure connection

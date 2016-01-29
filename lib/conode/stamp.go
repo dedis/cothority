@@ -91,7 +91,7 @@ func (s *Stamp) connect(server string) error {
 	}
 	dbg.Lvl2("Connecting to", server)
 	// giving localhost based host since we don't care about our IP address
-	s.host = network.NewTcpHost(network.DefaultConstructors(s.Suite))
+	s.host = network.NewTcpHost()
 	c, err := s.host.Open(server)
 	if err != nil {
 		return err

@@ -23,7 +23,7 @@ func RunServer(conf *app.NTreeConfig) {
 }
 
 func RunRoot(conf *app.NTreeConfig) {
-	host := net.NewTcpHost(net.DefaultConstructors(suite))
+	host := net.NewTcpHost()
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, app.RunFlags.Hostname, LeadRole, key.Secret, key.Public)
@@ -169,7 +169,7 @@ func RunRoot(conf *app.NTreeConfig) {
 
 func RunPeer(conf *app.NTreeConfig) {
 
-	host := net.NewTcpHost(net.DefaultConstructors(suite))
+	host := net.NewTcpHost()
 	key := cliutils.KeyPair(suite)
 
 	peer := NewPeer(host, app.RunFlags.Hostname, ServRole, key.Secret, key.Public)

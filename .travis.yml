@@ -1,7 +1,7 @@
 # build script for dedis/cothority libraries
 language: go
 go:
-  - 1.5.2
+  - 1.5.3
 script:
   - ./gofmt.sh
   - go test -v ./...

@@ -49,7 +49,7 @@ func NewClient(name string, conf *app.ConfigColl) (c *Client) {
 	c.doneChan = make(map[conode.SeqNo]chan error)
 	s, _ := suites.StringToSuite(conf.Suite)
 	c.suite = s
-	c.Host = net.NewTcpHost(net.DefaultConstructors(s))
+	c.Host = net.NewTcpHost()
 	c.name = name
 	// c.roundChan = make(chan int)
 	return
