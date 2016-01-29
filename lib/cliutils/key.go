@@ -154,7 +154,7 @@ func ReadSecret64(suite abstract.Suite, r io.Reader) (abstract.Secret, error) {
 	return sec, err
 }
 
-// COnvert a Public point to a hexadecimal reprensation
+// Convert a Public point to a hexadecimal representation
 func PubHex(suite abstract.Suite, point abstract.Point) (string, error) {
 	pbuf, err := point.MarshalBinary()
 	return hex.EncodeToString(pbuf), err

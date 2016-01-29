@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"github.com/satori/go.uuid"
 )
 
 // Some packet and their respective network type
@@ -33,6 +34,28 @@ var tSuite = Suite
 var PublicType = RegisterMessageType(PublicPacket{})
 var TestMessageType = RegisterMessageType(TestMessage{})
 
+type TestRegisterS struct {
+	I int
+}
+
+func TestRegister(t *testing.T) {
+	if TypeFromData(&TestRegisterS{}) != ErrorType {
+		t.Fatal("TestRegister should not yet be there")
+	}
+
+	trType := RegisterMessageType(&TestRegisterS{})
+	if uuid.Equal(trType, uuid.Nil) {
+		t.Fatal("Couldn't register TestRegister-struct")
+	}
+
+	if TypeFromData(&TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+	if TypeFromData(TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+}
+
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
@@ -42,6 +65,7 @@ func TestMultiClose(t *testing.T) {
 	h1 := NewTcpHost()
 	h2 := NewTcpHost()
 	go h1.Listen("localhost:2000", fn)
+	fmt.Println("tcphost.Close() without listening")
 	h2.Open("localhost:2000")
 	err := h1.Close()
 	if err != nil {
@@ -73,13 +97,13 @@ func TestSecureMultiClose(t *testing.T) {
 		dbg.Lvl3("Getting connection from", s)
 	}
 
-	priv1, pub1 := config.NewKeyPair(Suite)
-	entity1 := NewEntity(pub1, "localhost:2000")
-	priv2, pub2 := config.NewKeyPair(Suite)
-	entity2 := NewEntity(pub2, "localhost:2001")
+	kp1 := config.NewKeyPair(Suite)
+	entity1 := NewEntity(kp1.Public, "localhost:2000")
+	kp2 := config.NewKeyPair(Suite)
+	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
-	h1 := NewSecureTcpHost(priv1, entity1)
-	h2 := NewSecureTcpHost(priv2, entity2)
+	h1 := NewSecureTcpHost(kp1.Secret, entity1)
+	h2 := NewSecureTcpHost(kp2.Secret, entity2)
 	go func() {
 		err := h1.Listen(fn)
 		if err != nil {
@@ -92,7 +116,7 @@ func TestSecureMultiClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h1 = NewSecureTcpHost(priv1, entity1)
+	h1 = NewSecureTcpHost(kp1.Secret, entity1)
 	go func() {
 		err = h1.Listen(fn)
 		if err != nil {
@@ -113,20 +137,20 @@ func TestSecureTcp(t *testing.T) {
 		dbg.Lvl3("Getting connection from", s)
 	}
 
-	priv1, pub1 := config.NewKeyPair(Suite)
-	entity1 := NewEntity(pub1, "localhost:2000")
-	priv2, pub2 := config.NewKeyPair(Suite)
-	entity2 := NewEntity(pub2, "localhost:2001")
+	kp1 := config.NewKeyPair(Suite)
+	entity1 := NewEntity(kp1.Public, "localhost:2000")
+	kp2 := config.NewKeyPair(Suite)
+	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
-	host1 := NewSecureTcpHost(priv1, entity1)
-	host2 := NewSecureTcpHost(priv2, entity2)
+	host1 := NewSecureTcpHost(kp1.Secret, entity1)
+	host2 := NewSecureTcpHost(kp1.Secret, entity2)
 
 	go host1.Listen(fn)
 	conn, err := host2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if !conn.Entity().Public.Equal(pub1) {
+	if !conn.Entity().Public.Equal(kp1.Public) {
 		t.Fatal("Connection-id is not from host1")
 	}
 	host1.Close()

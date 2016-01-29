@@ -50,7 +50,7 @@ type Token struct {
 // Returns the Id of a token so we can put that in a map easily
 func (t *Token) Id() uuid.UUID {
 	if t.cacheId == uuid.Nil {
-		url := "https://dedis.epfl.ch/token/" + t.EntityListID.String() +
+		url := network.UuidURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String()
 		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
 	}
@@ -58,9 +58,9 @@ func (t *Token) Id() uuid.UUID {
 }
 
 // Return a new Token contianing a reference to the given TreeNode
-func (t *Token) OtherToken(tn *TreeNode) *Token {
+func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
 	t_other := *t
-	t_other.TreeNodeID = tn.Id
+	t_other.TreeNodeID = newid
 	t_other.cacheId = uuid.Nil
 	return &t_other
 }

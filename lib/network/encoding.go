@@ -29,41 +29,65 @@ type ProtocolMessage interface{}
 // and it will use this empty constructors
 var emptyConstructors protobuf.Constructors
 
+// The basic url used for uuid
+const UuidURL = "https://dedis.epfl.ch/"
+const UuidURLProtocolType = UuidURL + "/protocolType/"
+
 func init() {
 	emptyConstructors = make(protobuf.Constructors)
 }
 
-// RegisterMessageType register a custom "struct" / "packet" and get
+// RegisterMessageType registers a custom "struct" / "packet" and get
 // the allocated Type
 // Pass simply your non-initialized struct
 func RegisterMessageType(msg ProtocolMessage) uuid.UUID {
-	// We add a star here because in TypeFromData we'll always have pointers,
-	// so we're directly compatible with it
-	url := "https://dedis.epfl.ch/protocolType/*" + reflect.TypeOf(msg).String()
-	msgType := uuid.NewV5(uuid.NamespaceURL, url)
-	if _, typeRegistered := typeRegistry[msgType]; typeRegistered {
-		return msgType
-	}
+	msgType := TypeToUUID(msg)
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 	t := val.Type()
-	typeRegistry[msgType] = t
+	return RegisterMessageUUID(msgType, t)
+}
 
-	return msgType
+// RegisterMessageUUID can be used if the uuid and the type is already known
+func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
+	dbg.Lvl5("Registering message:", mt, rt)
+	if _, typeRegistered := typeRegistry[mt]; typeRegistered {
+		return mt
+	}
+	typeRegistry[mt] = rt
+
+	return mt
 }
 
 // TypeFromData returns the corresponding uuid to the structure given. It
 // returns 'DefaultType' upon error.
 func TypeFromData(msg ProtocolMessage) uuid.UUID {
-	url := "https://dedis.epfl.ch/protocolType/" + reflect.TypeOf(msg).String()
-	msgType := uuid.NewV5(uuid.NamespaceURL, url)
+	msgType := TypeToUUID(msg)
 	_, ok := typeRegistry[msgType]
 	if !ok {
 		return ErrorType
 	}
 	return msgType
+}
+
+// TypeToUUID Converts MsgType to uuid
+func TypeToUUID(msg ProtocolMessage) uuid.UUID {
+	val := reflect.ValueOf(msg)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	url := UuidURLProtocolType + val.Type().String()
+	u := uuid.NewV5(uuid.NamespaceURL, url)
+	dbg.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
+	return u
+}
+
+// RTypeToUUID converts a reflect-type to a UUID
+func RTypeToUUID(msg reflect.Type) uuid.UUID {
+	url := UuidURLProtocolType + msg.String()
+	return uuid.NewV5(uuid.NamespaceURL, url)
 }
 
 // DumpTypes is used for debugging - it prints out all known types

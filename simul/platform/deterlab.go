@@ -47,6 +47,8 @@ type Deterlab struct {
 	Project string
 	// Name of the Experiment - also name of hosts
 	Experiment string
+	// Name of the simulation
+	Simulation string
 	// Directory of applications
 	AppDir string
 	// Directory where everything is copied into
