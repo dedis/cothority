@@ -31,22 +31,22 @@ func NewRoundEmpty(node *Node) *RoundEmpty {
 	return round
 }
 
-func (round *RoundEmpty) Announcement(viewNbr, roundNbr int, in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundEmpty) Announcement(viewNbr, roundNbr int, in *AnnouncementMessage, out []*AnnouncementMessage) error {
 	return nil
 }
 
-func (round *RoundEmpty) Commitment(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundEmpty) Commitment(in []*CommitmentMessage, out *CommitmentMessage) error {
 	return nil
 }
 
-func (round *RoundEmpty) Challenge(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundEmpty) Challenge(in *ChallengeMessage, out []*ChallengeMessage) error {
 	return nil
 }
 
-func (round *RoundEmpty) Response(in []*SigningMessage, out *SigningMessage) error {
+func (round *RoundEmpty) Response(in []*ResponseMessage, out *ResponseMessage) error {
 	return nil
 }
 
-func (round *RoundEmpty) SignatureBroadcast(in *SigningMessage, out []*SigningMessage) error {
+func (round *RoundEmpty) SignatureBroadcast(in *SignatureBroadcastMessage, out []*SignatureBroadcastMessage) error {
 	return nil
 }

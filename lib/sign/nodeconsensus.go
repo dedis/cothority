@@ -72,7 +72,7 @@ func (sn *Node) Propose(view int, RoundNbr int, am *AnnouncementMessage, from st
 	return nil
 }
 
-func (sn *Node) Promise(view, Round int, sm *SigningMessage) error {
+func (sn *Node) Promise(view, Round int, sm *CommitmentMessage) error {
 	dbg.Fatal("Promise not implemented anymore")
 	return nil
 }
@@ -82,7 +82,7 @@ func (sn *Node) Accept(view, RoundNbr int, chm *ChallengeMessage) error {
 	return nil
 }
 
-func (sn *Node) Accepted(view, Round int, sm *SigningMessage) error {
+func (sn *Node) Accepted(view, Round int, sm *ResponseMessage) error {
 	dbg.Fatal("Accepted not implemented anymore")
 	return nil
 }

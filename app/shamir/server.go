@@ -1,17 +1,18 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/crypto/edwards"
+	//	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/poly"
 )
 
 func RunServer(conf *app.ConfigShamir) {
 	flags := app.RunFlags
-	s := edwards.NewAES128SHA256Ed25519(false)
+	//s := edwards.NewAES128SHA256Ed25519(false)
+	s := nist.NewAES128SHA256P256()
 	n := len(conf.Hosts)
 
 	info := poly.Threshold{
@@ -27,7 +28,7 @@ func RunServer(conf *app.ConfigShamir) {
 		}
 	}
 	if indexPeer == -1 {
-		log.Fatal("Peer", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
+		dbg.Fatal("Peer", flags.Hostname, "(", flags.PhysAddr, ") did not find any match for its name.Abort")
 	}
 
 	dbg.Lvl3("Creating new peer", flags.Hostname, "(", flags.PhysAddr, ") ...")
@@ -89,6 +90,6 @@ func RunServer(conf *app.ConfigShamir) {
 	dbg.Lvl3(p.String(), "is leaving ...")
 
 	if p.IsRoot() {
-		monitor.End()
+		monitor.EndAndCleanup()
 	}
 }

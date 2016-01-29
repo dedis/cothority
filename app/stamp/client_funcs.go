@@ -3,28 +3,31 @@ package main
 import (
 	"bytes"
 	"errors"
-	"io"
+	"golang.org/x/net/context"
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 
 	"fmt"
 	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/conode"
+	net "github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sign"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/suites"
 )
 
 type Client struct {
 	Mux sync.Mutex // coarse grained mutex
 
 	name    string
-	Servers map[string]coconet.Conn // signing nodes I work/ communicate with
+	Servers map[string]net.Conn // signing nodes I work/ communicate with
 
 	// client history maps request numbers to replies from TSServer
 	// maybe at later phases we will want pair(reqno, TSServer) as key
-	history map[conode.SeqNo]conode.TimeStampMessage
+	history map[conode.SeqNo]conode.StampSignature
 	reqno   conode.SeqNo // next request number in communications with TSServer
 
 	// maps response request numbers to channels confirming
@@ -35,13 +38,19 @@ type Client struct {
 	curMerkle []byte // MerkleRoot of last round
 	// roundChan   chan int // round numberd are sent in as rounds change
 	Error error
+	net.Host
+	suite abstract.Suite
 }
 
-func NewClient(name string) (c *Client) {
+func NewClient(name string, conf *app.ConfigColl) (c *Client) {
 	c = &Client{name: name}
-	c.Servers = make(map[string]coconet.Conn)
-	c.history = make(map[conode.SeqNo]conode.TimeStampMessage)
+	c.Servers = make(map[string]net.Conn)
+	c.history = make(map[conode.SeqNo]conode.StampSignature)
 	c.doneChan = make(map[conode.SeqNo]chan error)
+	s, _ := suites.StringToSuite(conf.Suite)
+	c.suite = s
+	c.Host = net.NewTcpHost(net.DefaultConstructors(s))
+	c.name = name
 	// c.roundChan = make(chan int)
 	return
 }
@@ -56,10 +65,10 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) handleServer(s coconet.Conn) error {
+func (c *Client) handleServer(s net.Conn) error {
 	for {
-		tsm := &conode.TimeStampMessage{}
-		err := s.GetData(tsm)
+		ctx := context.TODO()
+		msg, err := s.Receive(ctx)
 		if err != nil {
 			if err == coconet.ErrNotEstablished {
 				continue
@@ -67,74 +76,77 @@ func (c *Client) handleServer(s coconet.Conn) error {
 			dbg.Lvl3("error getting from connection:", err)
 			return err
 		}
-		c.handleResponse(tsm)
+		if msg.MsgType != conode.StampSignatureType {
+			dbg.Lvl3(s.Remote(), "Error received wrong message type", msg.MsgType.String())
+		}
+		tsm := msg.Msg.(conode.StampSignature)
+		c.handleResponse(&tsm)
 	}
 }
 
 // Act on type of response received from srrvr
-func (c *Client) handleResponse(tsm *conode.TimeStampMessage) {
-	switch tsm.Type {
-	default:
-		log.Println("Message of unknown type")
-	case conode.StampSignatureType:
-		// Process reply and inform done channel associated with
-		// reply sequence number that the reply was received
-		// we know that there is no error at this point
-		c.ProcessStampSignature(tsm)
-
-	}
+func (c *Client) handleResponse(tsm *conode.StampSignature) {
+	// Process reply and inform done channel associated with
+	// reply sequence number that the reply was received
+	// we know that there is no error at this point
+	c.ProcessStampSignature(tsm)
 }
 
-func (c *Client) AddServer(name string, conn coconet.Conn) {
+func (c *Client) AddServer(name, address string) {
+	conn, err := c.Host.Open(address)
+	if err != nil {
+		dbg.Lvl3("err connecting to", address)
+	}
+	c.Servers[name] = conn
+	/*go func(conn net.Conn) {*/
+	//maxwait := 30 * time.Second
+	//curWait := 100 * time.Millisecond
+	//for {
+	//err := conn.Connect()
+	//if err != nil {
+	//time.Sleep(curWait)
+	//curWait = curWait * 2
+	//if curWait > maxwait {
+	//curWait = maxwait
+	//}
+	//continue
+	//} else {
+	//c.Mux.Lock()
 	//c.Servers[name] = conn
-	go func(conn coconet.Conn) {
-		maxwait := 30 * time.Second
-		curWait := 100 * time.Millisecond
-		for {
-			err := conn.Connect()
-			if err != nil {
-				time.Sleep(curWait)
-				curWait = curWait * 2
-				if curWait > maxwait {
-					curWait = maxwait
-				}
-				continue
-			} else {
-				c.Mux.Lock()
-				c.Servers[name] = conn
-				c.Mux.Unlock()
-				dbg.Lvl3("Success: connected to server:", conn)
-				err := c.handleServer(conn)
-				// if a server encounters any terminating error
-				// terminate all pending client transactions and kill the client
-				if err != nil {
-					dbg.Lvl3("EOF detected: sending EOF to all pending TimeStamps")
-					c.Mux.Lock()
-					for _, ch := range c.doneChan {
-						dbg.Lvl3("Sending to Receiving Channel")
-						ch <- io.EOF
-					}
-					c.Error = io.EOF
-					c.Mux.Unlock()
-					return
-				} else {
-					// try reconnecting if it didn't close the channel
-					continue
-				}
-			}
-		}
-	}(conn)
+	//c.Mux.Unlock()
+	//dbg.Lvl3("Success: connected to server:", conn)
+	//err := c.handleServer(conn)
+	//// if a server encounters any terminating error
+	//// terminate all pending client transactions and kill the client
+	//if err != nil {
+	//dbg.Lvl3("EOF detected: sending EOF to all pending TimeStamps")
+	//c.Mux.Lock()
+	//for _, ch := range c.doneChan {
+	//dbg.Lvl3("Sending to Receiving Channel")
+	//ch <- io.EOF
+	//}
+	//c.Error = io.EOF
+	//c.Mux.Unlock()
+	//return
+	//} else {
+	//// try reconnecting if it didn't close the channel
+	//continue
+	//}
+	//}
+	//}
+	/*}(conn)*/
 }
 
 // Send data to server given by name (data should be a timestamp request)
-func (c *Client) PutToServer(name string, data coconet.BinaryMarshaler) error {
+func (c *Client) PutToServer(name string, data net.ProtocolMessage) error {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	conn := c.Servers[name]
 	if conn == nil {
 		return errors.New(fmt.Sprintf("Invalid server/not connected", name, c.Servers[name]))
 	}
-	return conn.PutData(data)
+	ctx := context.TODO()
+	return conn.Send(ctx, data)
 }
 
 var ErrClientToTSTimeout error = errors.New("client timeouted on waiting for response")
@@ -153,14 +165,11 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	c.Mux.Unlock()
 	// send request to TSServer
 	err := c.PutToServer(TSServerName,
-		&conode.TimeStampMessage{
-			Type:  conode.StampRequestType,
+		&conode.StampRequest{
 			ReqNo: myReqno,
-			Sreq:  &conode.StampRequest{Val: val}})
+			Val:   val})
 	if err != nil {
-		if err != coconet.ErrNotEstablished {
-			dbg.Lvl3(c.Name(), "error timestamping to", TSServerName, ":", err)
-		}
+		dbg.Lvl3(c.Name(), "error timestamping to", TSServerName, ":", err)
 		// pass back up all errors from putting to server
 		return err
 	}
@@ -193,7 +202,7 @@ func (c *Client) TimeStamp(val []byte, TSServerName string) error {
 	return err
 }
 
-func (c *Client) ProcessStampSignature(tsm *conode.TimeStampMessage) {
+func (c *Client) ProcessStampSignature(tsm *conode.StampSignature) {
 	// update client history
 	c.Mux.Lock()
 	c.history[tsm.ReqNo] = *tsm
@@ -201,8 +210,8 @@ func (c *Client) ProcessStampSignature(tsm *conode.TimeStampMessage) {
 
 	// can keep track of rounds by looking at changes in the signature
 	// sent back in a messages
-	if bytes.Compare(tsm.Srep.MerkleRoot, c.curMerkle) != 0 {
-		c.curMerkle = tsm.Srep.MerkleRoot
+	if bytes.Compare(tsm.MerkleRoot, c.curMerkle) != 0 {
+		c.curMerkle = tsm.MerkleRoot
 		c.nRounds++
 
 		c.Mux.Unlock()

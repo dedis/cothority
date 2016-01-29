@@ -22,9 +22,11 @@ func TestDeleteRounds(t *testing.T) {
 		t.Fatal("Couldn't create cosi-round")
 	}
 
-	peer1.StartAnnouncement(round)
+	if err = peer1.StartAnnouncement(round); err != nil {
+		t.Fatal("Could not start announcement")
+	}
 	if len(peer1.Rounds) != 1 {
-		t.Fatal("Created one round - should be there")
+		t.Fatal("Created one round - should be there (len=", len(peer1.Rounds), ")")
 	}
 
 	time.Sleep(time.Second)
@@ -60,6 +62,7 @@ func TestRoundException(t *testing.T) {
 	}
 	peer1.Close()
 	peer2.Close()
+	sign.ExceptionForceFailure = ""
 }
 
 func TestRoundCosi(t *testing.T) {

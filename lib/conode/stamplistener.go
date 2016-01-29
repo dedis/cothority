@@ -2,8 +2,10 @@ package conode
 
 import (
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/crypto/abstract"
+	"golang.org/x/net/context"
 	"net"
 	"os"
 	"strconv"
@@ -27,11 +29,12 @@ func init() {
 var SLList map[string]*StampListener
 
 type StampListener struct {
+	network.Host
 	// for aggregating messages from clients
 	Mux   sync.Mutex
 	Queue [][]MustReplyMessage
 	// All clients connected to that listener
-	Clients map[string]coconet.Conn
+	Clients map[string]network.Conn
 	// The name of the listener
 	NameL string
 	// The channel for closing the connection
@@ -42,7 +45,7 @@ type StampListener struct {
 
 // Creates a new stamp listener one port above the
 // address given in nameP
-func NewStampListener(nameP string) *StampListener {
+func NewStampListener(nameP string, suite abstract.Suite) *StampListener {
 	// listen for client requests at one port higher
 	// than the signing node
 	var nameL string
@@ -63,10 +66,10 @@ func NewStampListener(nameP string) *StampListener {
 		sl.Queue = make([][]MustReplyMessage, 2)
 		sl.Queue[READING] = make([]MustReplyMessage, 0)
 		sl.Queue[PROCESSING] = make([]MustReplyMessage, 0)
-		sl.Clients = make(map[string]coconet.Conn)
+		sl.Clients = make(map[string]network.Conn)
 		sl.waitClose = make(chan string)
 		sl.NameL = nameL
-
+		sl.Host = network.NewTcpHost(network.DefaultConstructors(suite))
 		SLList[sl.NameL] = sl
 		sl.ListenRequests()
 	} else {
@@ -79,73 +82,49 @@ func NewStampListener(nameP string) *StampListener {
 func (s *StampListener) ListenRequests() error {
 	dbg.Lvl3("Setup StampListener on", s.NameL)
 	global, _ := cliutils.GlobalBind(s.NameL)
-	var err error
-	s.Port, err = net.Listen("tcp4", global)
-	if err != nil {
-		panic(err)
-	}
-
-	go func() {
-		for {
-			dbg.Lvlf2("Listening to sign-requests: %p", s)
-			conn, err := s.Port.Accept()
-			if err != nil {
-				// handle error
-				dbg.Lvl3("failed to accept connection")
-				select {
-				case w := <-s.waitClose:
-					dbg.Lvl3("Closing stamplistener:", w)
-					return
-				default:
+	go s.Listen(global, func(c network.Conn) {
+		dbg.Lvlf2("StampLister new connection from %s", c.Remote())
+		if _, ok := s.Clients[c.Remote()]; !ok {
+			s.Clients[c.Remote()] = c
+			for {
+				ctx := context.TODO()
+				am, err := c.Receive(ctx)
+				if err != nil {
+					dbg.Lvl2(s.NameL, " error receiving client message:", err)
+					if err == network.ErrClosed || err == network.ErrUnknown || err == network.ErrEOF {
+						dbg.Lvl2("Stamplistener", s.NameL, "Abort client connection")
+						return
+					}
 					continue
 				}
-			}
+				switch am.MsgType {
+				case StampRequestType:
+					s.Mux.Lock()
+					stampRequest := am.Msg.(StampRequest)
+					s.Queue[READING] = append(s.Queue[READING],
+						MustReplyMessage{Tsm: stampRequest, To: c.Remote()})
+					s.Mux.Unlock()
+				case StampCloseType:
+					dbg.Lvl2("Closing connection")
+					c.Close()
+				case StampExitType:
+					dbg.Lvl2("Exiting server upon request")
+					os.Exit(-1)
+				default:
+					c.Close()
+					dbg.Lvl2("Received unexpected packet from", c.Remote(), ". Abort")
+					return
 
-			dbg.Lvl3("Waiting for connection")
-			c := coconet.NewTCPConnFromNet(conn)
-
-			if _, ok := s.Clients[c.Name()]; !ok {
-				s.Clients[c.Name()] = c
-
-				go func(co coconet.Conn) {
-					for {
-						tsm := TimeStampMessage{}
-						err := co.GetData(&tsm)
-						dbg.Lvlf2("Got data to sign %+v - %+v", tsm, tsm.Sreq)
-						if err != nil {
-							dbg.Lvlf1("%p Failed to get from child: %s", s.NameL, err)
-							co.Close()
-							return
-						}
-						switch tsm.Type {
-						default:
-							dbg.Lvlf1("Message of unknown type: %v\n", tsm.Type)
-						case StampRequestType:
-							s.Mux.Lock()
-							s.Queue[READING] = append(s.Queue[READING],
-								MustReplyMessage{Tsm: tsm, To: co.Name()})
-							s.Mux.Unlock()
-						case StampClose:
-							dbg.Lvl2("Closing connection")
-							co.Close()
-							return
-						case StampExit:
-							dbg.Lvl2("Exiting server upon request")
-							os.Exit(-1)
-						}
-					}
-				}(c)
+				}
 			}
 		}
-	}()
-
+	})
 	return nil
 }
 
 // Close shuts down the connection
 func (s *StampListener) Close() {
-	close(s.waitClose)
-	s.Port.Close()
+	s.Host.Close()
 	delete(SLList, s.NameL)
 	dbg.Lvl3(s.NameL, "Closing stamplistener done - SLList is", SLList)
 }

@@ -1,7 +1,6 @@
 package dbg
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"regexp"
@@ -33,10 +32,6 @@ var Testing = false
 var StaticMsg = ""
 
 var regexpPaths, _ = regexp.Compile(".*/")
-
-func init() {
-	flag.IntVar(&DebugVisible, "debug", DebugVisible, "How much debug you from 1 (discrete) - 5 (very noisy). Default 1")
-}
 
 // Needs two functions to keep the caller-depth the same and find who calls us
 // Lvlf1 -> Lvlf -> Lvl
@@ -111,6 +106,11 @@ func Error(args ...interface{}) {
 	Lvld(0, args...)
 }
 
+func Warn(args ...interface{}) {
+	args = append([]interface{}{"WARN:"}, args...)
+	Lvld(0, args...)
+}
+
 func Fatal(args ...interface{}) {
 	Lvld(0, args...)
 	os.Exit(1)
@@ -148,7 +148,10 @@ func Fatalf(f string, args ...interface{}) {
 
 func Errorf(f string, args ...interface{}) {
 	Lvlf(0, f, args...)
-	os.Exit(1)
+}
+
+func Warnf(f string, args ...interface{}) {
+	Lvlf(0, "WARN: "+f, args...)
 }
 
 func Panicf(f string, args ...interface{}) {

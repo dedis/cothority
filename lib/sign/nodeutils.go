@@ -7,43 +7,43 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 
-	"github.com/dedis/cothority/lib/coconet"
 	"github.com/dedis/cothority/lib/logutils"
+	"github.com/dedis/cothority/lib/network"
 )
 
 /*
 Some more utilities for the Node-structure.
 */
 
-func (sn *Node) multiplexOnChildren(view int, sm *SigningMessage) {
-	messgs := make([]coconet.BinaryMarshaler, sn.NChildren(view))
+func (sn *Node) multiplexOnChildren(view int, msg *network.ProtocolMessage) {
+	messgs := make([]network.ProtocolMessage, sn.NChildren(view))
 	for i := range messgs {
-		messgs[i] = sm
+		messgs[i] = msg
 	}
 
 	// ctx, _ := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 	ctx := context.TODO()
-	if err := sn.PutDown(ctx, view, messgs); err != nil {
+	if err := sn.PutDownAll(ctx, view, messgs); err != nil {
 		dbg.Error("failed to putdown messg to children")
 	}
 }
 
 // Returns the list of children for new view (peers - parent)
-func (sn *Node) childrenForNewView(parent string) []string {
-	peers := sn.Peers()
-	children := make([]string, 0, len(peers)-1)
-	for p := range peers {
-		if p == parent {
-			continue
-		}
-		children = append(children, p)
-	}
+// XXX not used anyway
+/*func (sn *Node) childrenForNewView(parent string) []string {*/
+//peers := sn.Peers()
+//children := make([]string, 0, len(peers)-1)
+//for p := range peers {
+//if p == parent {
+//continue
+//}
+//children = append(children, p)
+//}
 
-	return children
-}
+//return children
+/*}*/
 
 func (sn *Node) StopHeartbeat() {
 	sn.hbLock.Lock()
@@ -72,9 +72,9 @@ func (sn *Node) ReceivedHeartbeat(view int) {
 }
 
 func (sn *Node) TryRootFailure(view, roundNbr int) bool {
-	if sn.IsRoot(view) && sn.FailAsRootEvery != 0 {
+	if sn.Root(view) && sn.FailAsRootEvery != 0 {
 		if sn.RoundsAsRoot != 0 && sn.RoundsAsRoot%sn.FailAsRootEvery == 0 {
-			log.Errorln(sn.Name() + "was imposed root failure on round" + strconv.Itoa(roundNbr))
+			dbg.Error(sn.Name() + "was imposed root failure on round" + strconv.Itoa(roundNbr))
 			log.WithFields(log.Fields{
 				"file":  logutils.File(),
 				"type":  "root_failure",
@@ -97,7 +97,7 @@ func (sn *Node) TryFailure(view, roundNbr int) error {
 		return errors.New("failure imposed")
 	}
 
-	if !sn.IsRoot(view) && sn.FailAsFollowerEvery != 0 && roundNbr%sn.FailAsFollowerEvery == 0 {
+	if !sn.Root(view) && sn.FailAsFollowerEvery != 0 && roundNbr%sn.FailAsFollowerEvery == 0 {
 		// when failure rate given fail with that probability
 		if (sn.FailureRate > 0 && sn.ShouldIFail("")) || (sn.FailureRate == 0) {
 			log.WithFields(log.Fields{
@@ -110,8 +110,8 @@ func (sn *Node) TryFailure(view, roundNbr int) error {
 	}
 
 	// doing this before annoucing children to avoid major drama
-	if !sn.IsRoot(view) && sn.ShouldIFail("commit") {
-		log.Warn(sn.Name(), "not announcing or commiting for round", roundNbr)
+	if !sn.Root(view) && sn.ShouldIFail("commit") {
+		dbg.Warn(sn.Name(), "not announcing or commiting for round", roundNbr)
 		return errors.New("failure imposed")
 	}
 	return nil
@@ -120,59 +120,63 @@ func (sn *Node) TryFailure(view, roundNbr int) error {
 // Figure out which kids did not submit messages
 // Add default messages to messgs, one per missing child
 // as to make it easier to identify and add them to exception lists in one place
-func (sn *Node) FillInWithDefaultMessages(view int, messgs []*SigningMessage) []*SigningMessage {
-	children := sn.Children(view)
+// XXX not used anyway
+/*func (sn *Node) FillInWithDefaultMessages(view int, messgs []*SigningMessage) []*SigningMessage {*/
+//children := sn.Children(view)
 
-	allmessgs := make([]*SigningMessage, len(messgs))
-	copy(allmessgs, messgs)
+//allmessgs := make([]*SigningMessage, len(messgs))
+//copy(allmessgs, messgs)
 
-	for c := range children {
-		found := false
-		for _, m := range messgs {
-			if m.From == c {
-				found = true
-				break
-			}
-		}
+//for c := range children {
+//found := false
+//for _, m := range messgs {
+//if m.From == c {
+//found = true
+//break
+//}
+//}
 
-		if !found {
-			allmessgs = append(allmessgs, &SigningMessage{
-				Suite:   sn.Suite().String(),
-				ViewNbr: view,
-				Type:    Default,
-				From:    c})
-		}
-	}
+//if !found {
+//allmessgs = append(allmessgs, &SigningMessage{
+//Suite:   sn.Suite().String(),
+//ViewNbr: view,
+//Type:    Default,
+//From:    c})
+//}
+//}
 
-	return allmessgs
-}
-
-// accommodate nils
-func (sn *Node) add(a abstract.Point, b abstract.Point) {
-	if a == nil {
-		a = sn.suite.Point().Null()
-	}
-	if b != nil {
-		a.Add(a, b)
-	}
-}
+//return allmessgs
+/*}*/
 
 // accommodate nils
-func (sn *Node) sub(a abstract.Point, b abstract.Point) {
-	if a == nil {
-		a = sn.suite.Point().Null()
-	}
-	if b != nil {
-		a.Sub(a, b)
-	}
-}
+// XXX Not used anyway
+/*func (sn *Node) add(a abstract.Point, b abstract.Point) {*/
+//if a == nil {
+//a = sn.suite.Point().Null()
+//}
+//if b != nil {
+//a.Add(a, b)
+//}
+/*}*/
 
-func (sn *Node) subExceptions(a abstract.Point, keys []abstract.Point) {
-	for _, k := range keys {
-		sn.sub(a, k)
-	}
-}
+// accommodate nils
+// XXX not used anyway
+/*func (sn *Node) sub(a abstract.Point, b abstract.Point) {*/
+//if a == nil {
+//a = sn.suite.Point().Null()
+//}
+//if b != nil {
+//a.Sub(a, b)
+//}
+//}
 
+//func (sn *Node) subExceptions(a abstract.Point, keys []abstract.Point) {
+//for _, k := range keys {
+//sn.sub(a, k)
+//}
+//}
+
+/// XXX not used anyway
 /*func (sn *Node) updateLastSeenVote(hv int, from string) {*/
 //if int(atomic.LoadInt64(&sn.LastSeenVote)) < hv {
 //atomic.StoreInt64(&sn.LastSeenVote, int64(hv))
@@ -187,17 +191,17 @@ func (sn *Node) ChangeView(vcv *ViewChangeVote) {
 	sn.ViewNo = vcv.View
 	sn.viewmu.Unlock()
 	if sn.RootFor(vcv.View) == sn.Name() {
-		log.Println(sn.Name(), "Change view to root", "children", sn.Children(vcv.View))
+		dbg.Print(sn.Name(), "Change view to root", "children", sn.Children(vcv.View))
 		sn.viewChangeCh <- "root"
 	} else {
-		log.Println(sn.Name(), "Change view to regular")
+		dbg.Print(sn.Name(), "Change view to regular")
 		sn.viewChangeCh <- "regular"
 	}
 
 	sn.viewmu.Lock()
 	sn.ChangingView = false
 	sn.viewmu.Unlock()
-	log.Println("VIEW CHANGED")
+	dbg.Print("VIEW CHANGED")
 	// TODO: garbage collect old connections
 }
 

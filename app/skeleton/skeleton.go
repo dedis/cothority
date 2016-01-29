@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sign"
-	"time"
 )
 
 // This includes an exemplary main() function which shows how to configure and
@@ -58,8 +57,8 @@ func main() {
 	// machine and accepts connections from any node, usually you only connect
 	// with the root for readability and performance reasons (don't connect to
 	// your machine from 8000 nodes .. !)
-	if app.RunFlags.Logger != "" {
-		monitor.ConnectSink(app.RunFlags.Logger)
+	if app.RunFlags.Monitor != "" {
+		monitor.ConnectSink(app.RunFlags.Monitor)
 	} else {
 		dbg.Fatal("No logger specified")
 	}
@@ -67,20 +66,15 @@ func main() {
 	// Here you create a "Peer",that's the struct that will create a new round
 	// each seconds and handle other subtleties for you
 	peer := conode.NewPeer(hostname, conf.ConfigConode)
+	peer.SetupConnections()
 
 	// The root waits everyone's to be up
 	if app.RunFlags.AmRoot {
-		for {
-			time.Sleep(time.Second)
-			setupRound := sign.NewRoundSetup(peer.Node)
-			peer.StartAnnouncementWithWait(setupRound, 5*time.Second)
-			counted := <-setupRound.Counted
-			dbg.Lvl1("Number of peers counted:", counted)
-			if counted == len(conf.Hosts) {
-				dbg.Lvl1("All hosts replied")
-				break
-			}
+		err := peer.WaitRoundSetup(len(conf.Hosts), 5, 2)
+		if err != nil {
+			dbg.Fatal(err)
 		}
+		dbg.Lvl1("Starting the rounds")
 	}
 
 	// You register by giving the type, and a function that takes a sign.Node in
@@ -89,11 +83,10 @@ func main() {
 		func(node *sign.Node) sign.Round {
 			return NewRoundSkeleton(node)
 		})
-
 	// Here it will create a new round each seconds automatically.
 	// If you need more fined grained control, you must implement yourself the
 	// conode.Peer struct (it's quite easy).
 	peer.LoopRounds(RoundSkeletonType, conf.Rounds)
-	// Notify the monitor that we finished so that the simulation can be stopped
-	monitor.End()
+	// Notify the monitor we finished so that the simulation can be stopped
+	monitor.EndAndCleanup()
 }

@@ -2,11 +2,6 @@ package platform
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/graphs"
-	"github.com/dedis/cothority/lib/monitor"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -16,6 +11,13 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/tree"
+	"github.com/dedis/crypto/suites"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes
@@ -57,6 +59,9 @@ type Localhost struct {
 	running bool
 	// WaitGroup for running processes
 	wg_run sync.WaitGroup
+
+	// errors go here:
+	errChan chan error
 }
 
 // Configure various
@@ -67,6 +72,7 @@ func (d *Localhost) Configure() {
 	d.LocalDir = pwd
 	d.Debug = dbg.DebugVisible
 	d.running = false
+	d.errChan = make(chan error)
 	if d.App == "" {
 		dbg.Fatal("No app defined in simulation")
 	}
@@ -104,7 +110,6 @@ func (d *Localhost) Cleanup() error {
 
 func (d *Localhost) Deploy(rc RunConfig) error {
 	dbg.Lvl2("Localhost: Deploying and writing config-files")
-
 	// Initialize the deter-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual
 	// 'Machines', 'Ppm', 'Loggers' or other fields
@@ -112,6 +117,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	localConfig := d.RunDir + "/" + defaultConfigName
 	ioutil.WriteFile(appConfig, rc.Toml(), 0666)
 	d.ReadConfig(appConfig)
+
 	d.GenerateHosts()
 
 	app.WriteTomlConfig(d, localConfig)
@@ -130,31 +136,18 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		app.ReadTomlConfig(&conf, appConfig)
 		// Calculates a tree that is used for the timestampers
 		// ppm = 1
-		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree = tree.GenNaryTree(suite, d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
-
-		dbg.Lvl2("Total hosts / depth:", len(conf.Hosts), graphs.Depth(conf.Tree))
-		total := d.Machines * d.Ppm
-		if len(conf.Hosts) != total {
-			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
-				"machines or hosts per node")
-		}
-		d.Hosts = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 	case "skeleton":
 		conf := app.ConfigSkeleton{}
 		app.ReadTomlConfig(&conf, localConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree = tree.GenNaryTree(suite, d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
-		dbg.Lvl2("Total hosts / depth:", len(conf.Hosts), graphs.Depth(conf.Tree))
-		total := d.Machines * d.Ppm
-		if len(conf.Hosts) != total {
-			dbg.Fatal("Only calculated", len(conf.Hosts), "out of", total, "hosts - try changing number of",
-				"machines or hosts per node")
-		}
-		d.Hosts = conf.Hosts
 		// re-write the new configuration-file
 		app.WriteTomlConfig(conf, appConfig)
 	case "shamir":
@@ -176,10 +169,10 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		conf := app.NTreeConfig{}
 		app.ReadTomlConfig(&conf, localConfig)
 		app.ReadTomlConfig(&conf, appConfig)
-		conf.Tree = graphs.CreateLocalTree(d.Hosts, conf.Bf)
+		suite, _ := suites.StringToSuite(conf.Suite)
+		conf.Tree = tree.GenNaryTree(suite, d.Hosts, conf.Bf)
 		conf.Hosts = d.Hosts
 		dbg.Lvl3("Localhost: naive Tree applications:", conf.Hosts)
-		d.Hosts = conf.Hosts
 		app.WriteTomlConfig(conf, appConfig)
 	case "randhound":
 	}
@@ -203,9 +196,10 @@ func (d *Localhost) Start(args ...string) error {
 	dbg.Lvl1("Starting", len(d.Hosts), "applications of", ex)
 	for index, host := range d.Hosts {
 		dbg.Lvl3("Starting", index, "=", host)
+		d.wg_run.Add(1)
 		amroot := fmt.Sprintf("-amroot=%s", strconv.FormatBool(index == 0))
-		cmdArgs := []string{"-hostname", host, "-mode", "server", "-logger",
-			"localhost:" + monitor.SinkPort, amroot}
+		cmdArgs := []string{"-hostname", host, "-mode", "server", "-monitor",
+			"localhost:" + strconv.Itoa(monitor.SinkPort), amroot}
 		cmdArgs = append(args, cmdArgs...)
 		dbg.Lvl3("CmdArgs are", cmdArgs)
 		cmd := exec.Command(ex, cmdArgs...)
@@ -213,10 +207,10 @@ func (d *Localhost) Start(args ...string) error {
 		cmd.Stderr = os.Stderr
 		go func(i int, h string) {
 			dbg.Lvl3("Localhost: will start host", host)
-			d.wg_run.Add(1)
 			err := cmd.Run()
 			if err != nil {
-				dbg.Lvl3("Error running localhost", h, ":", err)
+				dbg.Error("Error running localhost", h, ":", err)
+				d.errChan <- err
 			}
 			d.wg_run.Done()
 			dbg.Lvl3("host (index", i, ")", h, "done")
@@ -228,9 +222,25 @@ func (d *Localhost) Start(args ...string) error {
 // Waits for all processes to finish
 func (d *Localhost) Wait() error {
 	dbg.Lvl3("Waiting for processes to finish")
-	d.wg_run.Wait()
+
+	var err error
+	go func() {
+		d.wg_run.Wait()
+		// write to error channel when done:
+		d.errChan <- nil
+	}()
+
+	// if one of the hosts fails, stop waiting and return the error:
+	select {
+	case e := <-d.errChan:
+		if e != nil {
+			d.Cleanup()
+			err = e
+		}
+	}
+
 	dbg.Lvl2("Processes finished")
-	return nil
+	return err
 }
 
 // Reads in the localhost-config and drops out if there is an error
@@ -253,12 +263,13 @@ func (d *Localhost) ReadConfig(name ...string) {
 // with a new port each
 func (d *Localhost) GenerateHosts() {
 	nrhosts := d.Machines * d.Ppm
-	d.Hosts = make([]string, nrhosts)
+	names := make([]string, nrhosts)
 	port := 2000
 	inc := 5
 	for i := 0; i < nrhosts; i++ {
 		s := "127.0.0.1:" + strconv.Itoa(port+inc*i)
-		d.Hosts[i] = s
+		names[i] = s
 	}
+	d.Hosts = names
 	dbg.Lvl4("Localhost: Generated hosts list", d.Hosts)
 }

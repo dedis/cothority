@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -48,7 +47,8 @@ type Peer struct {
 	Name string
 
 	// the slice of peers connected to it
-	remote map[int]RemotePeer
+	remote     map[int]RemotePeer
+	remoteLock *sync.Mutex
 
 	// wether it is a "passive" peer or a "root" peer (i.e. actively starting signatures etc)
 	root bool
@@ -81,7 +81,7 @@ type Peer struct {
 func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot bool) *Peer {
 
 	if id >= p.N {
-		log.Fatal("Error while NewPeer: gien", id, "as id whereas polyinfo.N =", p.N)
+		dbg.Fatal("Error while NewPeer: gien", id, "as id whereas polyinfo.N =", p.N)
 
 	}
 	// Setup of the private / public pair
@@ -92,17 +92,18 @@ func NewPeer(id int, name string, suite abstract.Suite, p poly.Threshold, isRoot
 	dbg.Lvl3(name, "(id", id, ") has created its private/public key: public =>", key.Public)
 
 	return &Peer{
-		Id:      id,
-		remote:  make(map[int]RemotePeer),
-		root:    isRoot,
-		Name:    name,
-		info:    p,
-		suite:   suite,
-		key:     key,
-		pubKeys: pubKeys,
-		schnorr: new(poly.Schnorr),
-		synChan: make(chan Syn),
-		ackChan: make(chan Ack),
+		Id:         id,
+		remote:     make(map[int]RemotePeer),
+		remoteLock: &sync.Mutex{},
+		root:       isRoot,
+		Name:       name,
+		info:       p,
+		suite:      suite,
+		key:        key,
+		pubKeys:    pubKeys,
+		schnorr:    new(poly.Schnorr),
+		synChan:    make(chan Syn),
+		ackChan:    make(chan Ack),
 	}
 }
 func (p *Peer) IsRoot() bool {
@@ -165,7 +166,9 @@ func (p *Peer) WaitSYNs() {
 	for {
 		s := <-p.synChan
 		dbg.Lvl3(p.Name, "synChan received Syn id", s.Id)
+		p.remoteLock.Lock()
 		_, ok := p.remote[s.Id]
+		p.remoteLock.Unlock()
 		if !ok {
 			dbg.Fatal(p.Name, "received syn'd notification of an unknown peer... ABORT")
 		}
@@ -286,13 +289,13 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 	}
 	err := p.suite.Write(conn, &s)
 	if err != nil {
-		dbg.Fatal(p.Name, "could not send SYN to", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "could not send SYN to", conn.RemoteAddr().String(), err)
 	}
 	// Receive the other SYN
 	s2 := Syn{}
 	err = p.suite.Read(conn, &s2)
 	if err != nil {
-		dbg.Fatal(p.Name, "could not receive SYN from", conn.RemoteAddr().String())
+		dbg.Fatal(p.Name, "could not receive SYN from", conn.RemoteAddr().String(), err)
 	}
 	if s2.Id < 0 || s2.Id >= p.info.N {
 		dbg.Fatal(p.Name, "received wrong SYN info from", conn.RemoteAddr().String())
@@ -302,7 +305,9 @@ func (p *Peer) synWithPeer(conn net.Conn) {
 	}
 	p.pubKeys[s2.Id] = s2.Public
 	rp := RemotePeer{Conn: conn, Id: s2.Id, Hostname: conn.RemoteAddr().String()}
+	p.remoteLock.Lock()
 	p.remote[s2.Id] = rp
+	p.remoteLock.Unlock()
 	dbg.Lvl3(p.String(), "has SYN'd with peer", rp.String())
 	p.synChan <- s2
 }

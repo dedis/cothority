@@ -33,18 +33,21 @@ def CoJVTimeArea(cothority, jvss):
 def CoJVTimeBars(cothority, jvss, naive):
     mplot.plotPrepareLogLog();
 
-    ymin = 0.005
-    bar_jvss, jvss_val = mplot.plotStackedBarsHatched(jvss, "round_system", "round_user", "JVSS", color2_light,
+    ymin = 0.05
+    bar_jvss, jvss_sys, jvss_usr = mplot.plotStackedBarsHatched(jvss, "round_system", "round_user", "JVSS", color2_light,
                                                       ymin, delta_x=-1)
 
-    bar_naive, na_val = mplot.plotStackedBarsHatched(naive, "round_system", "round_user", "Naive", color3_light,
+    bar_naive, na_sys, na_usr = mplot.plotStackedBarsHatched(naive, "round_system", "round_user", "Naive", color3_light,
                                                      ymin, limit_values=7)
 
-    bar_cothority, co_val = mplot.plotStackedBarsHatched(cothority, "round_system", "round_user", "Cothority",
-                                                         color1_light, ymin, delta_x=1)
+    bar_cothority, co_sys, co_usr = mplot.plotStackedBarsHatched(cothority, "round_system", "round_user", "Cothority",
+                                                         color1_light, ymin, delta_x=1, limit_values=11)
 
-    plt.ylim(ymin, max(jvss_val.ymax, na_val.ymax, co_val.ymax))
-    # plt.xlim(mplot.xmin, mplot.xmax * 1.3)
+    
+    ymax = 7
+    xmax = 3192
+    plt.ylim(ymin, ymax)
+    plt.xlim(1.5, xmax)
 
     usert = mpatches.Patch(color='white', ec='black', label='User time', hatch='//')
     syst = mpatches.Patch(color='white', ec='black', label='System time')
@@ -59,8 +62,8 @@ def CoJVTimeBars(cothority, jvss, naive):
 def plotAvgMM(co, jvss, naive, nt):
     mplot.plotPrepareLogLog()
 
-    nt = mplot.plotMMA(ntree, 'round_wall', color4_light, 0,
-                      dict(label='Ntree', linestyle='-', marker='v', color=color4_dark, zorder=3))
+    #nt = mplot.plotMMA(ntree, 'round_wall', color4_light, 0,
+    #                  dict(label='Ntree', linestyle='-', marker='v', color=color4_dark, zorder=3))
     # mplot.arrow("{:.1f} sec      ".format(mplot.avg[-2]), x[-2], 4, color3_dark)
     # mplot.arrow("      {:.0f} sec".format(mplot.avg[-1]), x[-1], 4, color3_dark)
 
@@ -68,25 +71,26 @@ def plotAvgMM(co, jvss, naive, nt):
                       dict(label='JVSS', linestyle='-', marker='^', color=color2_dark, zorder=3))
     #j_p = jvss.get_values('round_wall')
     #plt.plot(j_p.x, j_p.avg, label="JVSS", color=color2_dark, marker='^')
-    #mplot.arrow("{:.1f} sec      ".format(j_p.avg[-2]), j_p.x[-2], 4, color2_dark)
-    #mplot.arrow("      {:.0f} sec".format(j_p.avg[-1]), j_p.x[-1], 8, color2_dark)
+    #mplot.arrow("{:.1f} sec      ".format(j.avg[-2]), j.x[-2], 4, color2_dark)
+    mplot.arrow("      {:.0f} sec".format(j.avg[-1]), j.x[-1], 4, color2_dark)
 
     na = mplot.plotMMA(naive, 'round_wall', color3_light, 0,
                        dict(label='Naive', linestyle='-', marker='s', color=color3_dark, zorder=3))
-    na_p = naive.get_values('round_wall')
-    #mplot.arrow("{:.1f} sec      ".format(na_p.avg[8]), na_p.x[8], 4, color3_dark)
-    mplot.arrow("      {:.0f} sec".format(na_p.avg[9]), na_p.x[9], 8, color3_dark)
+    #na_p = naive.get_values('round_wall')
+    mplot.arrow("{:.1f} sec      ".format(na.avg[8]), na.x[8], 4, color3_dark)
+    mplot.arrow("      {:.0f} sec".format(na.avg[9]), na.x[9], 4, color3_dark)
 
     co = mplot.plotMMA(cothority, 'round_wall', color1_light, 4,
                        dict(label='Cothority', linestyle='-', marker='o', color=color1_dark, zorder=5))
 
     # Make horizontal lines and add arrows for JVSS
     xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
-    plt.ylim(ymin, 8)
+    plt.ylim(ymin, 4)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
 
     plt.legend(loc=u'lower right')
+    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     mplot.plotEnd()
 
 
@@ -140,13 +144,21 @@ def Over(over_1, over_2, over_3):
     mplot.plotEnd()
 
 
-def PlotBF(values_bf):
+def PlotMultiBF(*values_bf):
     mplot.plotPrepareLogLog(2, 0)
+    plotbf = []
+    pparams = [[color1_light, color1_dark, 'o'],
+               [color2_light, color2_dark, 's'],
+               [color3_light, color3_dark, '^'],
+               [color4_light, color4_dark, '.']]
 
-    plotbf = mplot.plotMMA(values_bf, 'round_wall', color1_light, 0,
-                           dict(label='4096 Peers', linestyle='-', marker='o', color=color2_dark, zorder=3))
+    for i, value in enumerate(values_bf):
+        label = str(int(value.columns['Peers'][0])) + " Peers"
+        c1, c2, m = pparams[i]
+        plotbf.append( mplot.plotMMA(value, 'round_wall', c1, 0,
+                           dict(label=label, linestyle='-', marker=m, color=c2, zorder=3)) )
 
-    xmin, xmax, ymin, ymax = CSVStats.get_min_max(plotbf)
+    xmin, xmax, ymin, ymax = CSVStats.get_min_max(*plotbf)
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
@@ -223,10 +235,10 @@ def plot_show(argn):
     print mplot.pngname, mplot.show_fig
 
 
-def args_to_csv(argn):
+def args_to_csv(argn, xname = "Peers"):
     stats = []
     for a in sys.argv[2:argn + 2]:
-        stats.append(CSVStats(a))
+        stats.append(CSVStats(a, xname))
     plot_show(argn)
     return stats
 
@@ -248,9 +260,11 @@ elif option == "3":
 elif option == "4":
     Over(*args_to_csv(3))
 elif option == "5":
-    plot_show(1)
-    PlotBF(CSVStats(sys.argv[2], "bf"))
+    PlotMultiBF(*args_to_csv(1, "bf"))
 elif option == "6":
     plot_show(1)
     stamp = CSVStats(sys.argv[2], "rate")
     PlotStamp(stamp)
+elif option == "7":
+    PlotMultiBF(*args_to_csv(4, "bf"))
+

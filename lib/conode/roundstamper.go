@@ -19,7 +19,7 @@ are passed to roundcosi.
 const RoundStamperType = "stamper"
 
 type RoundStamper struct {
-	*sign.RoundCosi
+	*sign.RoundException
 	Timestamp int64
 
 	Proof       []hashid.HashId // the inclusion-proof of the data
@@ -41,12 +41,12 @@ func init() {
 func NewRoundStamper(node *sign.Node) *RoundStamper {
 	dbg.Lvl3("Making new RoundStamper", node.Name())
 	round := &RoundStamper{}
-	round.RoundCosi = sign.NewRoundCosi(node)
+	round.RoundException = sign.NewRoundException(node)
 	round.Type = RoundStamperType
 	return round
 }
 
-func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
+func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.AnnouncementMessage, out []*sign.AnnouncementMessage) error {
 	dbg.Lvl3("New roundstamper announcement in round-nbr", roundNbr)
 	if round.IsRoot {
 		// We are root !
@@ -55,21 +55,21 @@ func (round *RoundStamper) Announcement(viewNbr, roundNbr int, in *sign.SigningM
 		var b bytes.Buffer
 		round.Timestamp = ts.Unix()
 		binary.Write(&b, binary.LittleEndian, ts.Unix())
-		in.Am.Message = b.Bytes()
+		in.Message = b.Bytes()
 	} else {
 		// otherwise decode it
 		var t int64
-		if err := binary.Read(bytes.NewBuffer(in.Am.Message), binary.LittleEndian, &t); err != nil {
+		if err := binary.Read(bytes.NewBuffer(in.Message), binary.LittleEndian, &t); err != nil {
 			dbg.Lvl1("Unmashaling timestamp has failed")
 		}
 		dbg.Lvl3("Received timestamp:", t)
 		round.Timestamp = t
 	}
-	round.RoundCosi.Announcement(viewNbr, roundNbr, in, out)
+	round.RoundException.Announcement(viewNbr, roundNbr, in, out)
 	return nil
 }
 
-func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
+func (round *RoundStamper) Commitment(in []*sign.CommitmentMessage, out *sign.CommitmentMessage) error {
 	// compute the local Merkle root
 
 	// give up if nothing to process
@@ -95,8 +95,8 @@ func (round *RoundStamper) Commitment(in []*sign.SigningMessage, out *sign.Signi
 			}
 		}
 	}
-	out.Com.MTRoot = round.StampRoot
-	round.RoundCosi.Commitment(in, out)
+	out.MTRoot = round.StampRoot
+	round.RoundException.Commitment(in, out)
 	return nil
 }
 
@@ -109,10 +109,10 @@ func (round *RoundStamper) QueueSet(queue [][]byte) {
 
 // Response is already defined in RoundCosi
 
-func (round *RoundStamper) SignatureBroadcast(in *sign.SigningMessage, out []*sign.SigningMessage) error {
-	round.RoundCosi.SignatureBroadcast(in, out)
-	round.Proof = round.RoundCosi.Cosi.Proof
-	round.MTRoot = round.RoundCosi.Cosi.MTRoot
+func (round *RoundStamper) SignatureBroadcast(in *sign.SignatureBroadcastMessage, out []*sign.SignatureBroadcastMessage) error {
+	round.RoundException.SignatureBroadcast(in, out)
+	round.Proof = round.RoundException.Cosi.Proof
+	round.MTRoot = round.RoundException.Cosi.MTRoot
 
 	round.CombProofs = make([]proof.Proof, len(round.StampQueue))
 	// Send back signature to clients

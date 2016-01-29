@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func TestMonitor(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Then measure
-	err := ConnectSink("localhost:" + SinkPort)
+	err := ConnectSink("localhost:" + strconv.Itoa(SinkPort))
 	if err != nil {
 		t.Error(fmt.Sprintf("Error starting monitor: %s", err))
 		return
@@ -32,14 +33,12 @@ func TestMonitor(t *testing.T) {
 	meas.Measure()
 	time.Sleep(200 * time.Millisecond)
 	meas.Measure()
-	End()
+	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
 	updated := stat.String()
 	if updated == fresh {
 		t.Error("Stats not updated ?")
 	}
-
-	StopSink()
 }
 
 func TestReadyNormal(t *testing.T) {
@@ -56,7 +55,7 @@ func TestReadyNormal(t *testing.T) {
 	mon := NewMonitor(stat)
 	go mon.Listen()
 	time.Sleep(100 * time.Millisecond)
-	host := "localhost:" + SinkPort
+	host := "localhost:" + strconv.Itoa(SinkPort)
 	if stat.Ready != 0 {
 		t.Fatal("Stats should have ready==0 after start of Monitor")
 	}
@@ -83,8 +82,7 @@ func TestReadyNormal(t *testing.T) {
 		t.Fatal("Stats.Ready != 1")
 	}
 
-	End()
-	StopSink()
+	EndAndCleanup()
 }
 
 func TestKeyOrder(t *testing.T) {
