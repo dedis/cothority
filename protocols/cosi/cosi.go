@@ -79,7 +79,19 @@ func NewProtocolCosi(round Round, node *sda.Node) (*ProtocolCosi, error) {
 	}
 	// Register the three channels we want to register and listens on
 	// By passing pointer = automatic instantiation
-	node.RegisterChannel(&pc.announce)
+	node.RegisterChannel("announce",&pc.announce)
+	// NEW IDEAAAAAAAA
+	announceChan := node.onChannel("announce")
+
+	subprotocol.preAnnounceHook( func( ) ...)
+	subprotocol.postAnnounceHook( func() bool)
+	
+	select {
+	case p := <-myOwnStructAnnounce
+		subprotocol.Announcement(p.VanillaAnnouncemenentMessage)
+	}
+	// STOP NEW IDEEEAAAAA
+
 	node.RegisterChannel(&pc.commit)
 	node.RegisterChannel(&pc.challenge)
 	node.RegisterChannel(&pc.response)
@@ -112,7 +124,6 @@ func (pc *ProtocolCosi) listen() {
 		case packet := <-pc.challenge:
 			err = pc.handleChallenge(&packet.ChallengeMessage)
 		case packet := <-pc.response:
-			// Go !
 			err = pc.handleResponse(&packet.ResponseMessage)
 		case <-pc.done:
 			return
