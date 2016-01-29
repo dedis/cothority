@@ -160,9 +160,54 @@ func (n *Node) RegisterChannel(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	//typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
-	//	cr.Elem().Field(1).Type)
-	typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
+	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
+		cr.Elem().Field(1).Type)
+	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
+	n.channels[typ] = c
+	n.channelFlags[typ] = flags
+	dbg.Lvl3("Registered channel", typ, "with flags", flags)
+	return nil
+}
+
+// RegisterChannel takes a channel with a struct that contains two
+// elements: a TreeNode and a message. It will send every message that are the
+// same type to this channel.
+// This function handles also
+// - registration of the message-type
+// - aggregation or not of messages: if you give a channel of slices, the
+//   messages will be aggregated, else they will come one-by-one
+func (n *Node) RegisterHandler(c interface{}) error {
+	flags := uint32(0)
+	cr := reflect.TypeOf(c)
+	if cr.Kind() == reflect.Ptr {
+		val := reflect.ValueOf(c).Elem()
+		val.Set(reflect.MakeChan(val.Type(), 1))
+		//val.Set(reflect.MakeChan(reflect.Indirect(cr), 1))
+		return n.RegisterChannel(reflect.Indirect(val).Interface())
+	} else if reflect.ValueOf(c).IsNil() {
+		return errors.New("Can not Register a (value) channel not initialized")
+	}
+	// Check we have the correct channel-type
+	if cr.Kind() != reflect.Chan {
+		return errors.New("Input is not channel")
+	}
+	if cr.Elem().Kind() == reflect.Slice {
+		flags += AggregateMessages
+		cr = cr.Elem()
+	}
+	if cr.Elem().Kind() != reflect.Struct {
+		return errors.New("Input is not channel of structure")
+	}
+	if cr.Elem().NumField() != 2 {
+		return errors.New("Input is not channel of structure with 2 elements")
+	}
+	if cr.Elem().Field(0).Type != reflect.TypeOf(&TreeNode{}) {
+		return errors.New("Input-channel doesn't have TreeNode as element")
+	}
+	// Automatic registration of the message to the network library.
+	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
+		cr.Elem().Field(1).Type)
+	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.channels[typ] = c
 	n.channelFlags[typ] = flags
 	dbg.Lvl3("Registered channel", typ, "with flags", flags)

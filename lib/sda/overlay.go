@@ -65,7 +65,16 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		}
 		node = o.nodes[sdaMsg.To.Id()]
 	}
-	err := node.DispatchMsg(sdaMsg)
+
+	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(network.Suite))
+	if err != nil {
+		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
+	}
+	// Set the right type and msg
+	sdaMsg.MsgType = t
+	sdaMsg.Msg = msg
+
+	err = node.DispatchMsg(sdaMsg)
 	if err != nil {
 		return err
 	}
