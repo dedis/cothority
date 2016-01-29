@@ -73,18 +73,18 @@ func NewLongtermFromDeal(index int, d *poly.Deal) Longterm {
 }
 
 type LongtermChan struct {
-	sda.TreeNode
+	*sda.TreeNode
 	Longterm
 }
 type RandomChan struct {
-	sda.TreeNode
+	*sda.TreeNode
 	Random
 }
 type RequestChan struct {
-	sda.TreeNode
+	*sda.TreeNode
 	SignatureRequest
 }
 type ResponseChan struct {
-	sda.TreeNode
+	*sda.TreeNode
 	SignatureResponse
 }

@@ -125,8 +125,8 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	}
 	// instantiate node
 	var err error
-	dbg.Lvl3("Making new node")
 	o.nodes[token.Id()], err = NewNode(o, token)
+	dbg.Lvl3("Making new node:", err)
 	if err != nil {
 		return nil, err
 	}

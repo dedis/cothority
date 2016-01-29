@@ -300,7 +300,7 @@ func (jv *JVSSProtocol) waitForRequests() {
 			Partial:   ps,
 		}
 		// send it back to the originator
-		if err := jv.Node.SendTo(&st.TreeNode, sr); err != nil {
+		if err := jv.Node.SendTo(st.TreeNode, sr); err != nil {
 			dbg.Lvl3("Could not send signature response back", err)
 		}
 		dbg.Lvl3("JVSS (", jv.index, ") Sent SignatureResponse back")
