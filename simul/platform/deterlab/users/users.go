@@ -20,7 +20,6 @@ package main
 
 import (
 	"flag"
-	"net"
 	"strings"
 	"sync"
 	"time"
@@ -35,7 +34,7 @@ import (
 	"strconv"
 )
 
-var deterlab platform.Deterlab
+var deter platform.Deterlab
 var kill = false
 
 func init() {
@@ -43,19 +42,15 @@ func init() {
 }
 
 func main() {
-	deterlab.ReadConfig()
+	deter.ReadConfig()
 	flag.Parse()
 
-	vpmap := make(map[string]string)
-	for i := range deterlab.Virt {
-		vpmap[deterlab.Virt[i]] = deterlab.Phys[i]
-	}
 	// kill old processes
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(" +")
-	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deterlab.Project+","+deterlab.Experiment).Output()
+	hosts, err := exec.Command("/usr/testbed/bin/node_list", "-e", deter.Project+","+deter.Experiment).Output()
 	if err != nil {
-		dbg.Fatal("Deterlab experiment", deterlab.Project+"/"+deterlab.Experiment, "seems not to be swapped in. Aborting.")
+		dbg.Fatal("Deterlab experiment", deter.Project+"/"+deter.Experiment, "seems not to be swapped in. Aborting.")
 		os.Exit(-1)
 	}
 	hosts_trimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
@@ -71,9 +66,9 @@ func main() {
 			defer wg.Done()
 			if kill {
 				dbg.Lvl4("Cleaning up host", h, ".")
-				cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 "+deter.Simulation+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				cliutils.SshRun("", h, "sudo killall -9 "+deterlab.App+" 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 "+deter.Simulation+" 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
@@ -125,106 +120,29 @@ func main() {
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
 	// RedirectionAddress:SinkPort-1. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	proxyAddress := deterlab.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort+1)
+	proxyAddress := deter.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort+1)
 	dbg.Lvl2("Launching proxy redirecting to", proxyAddress)
 	err = monitor.Proxy(proxyAddress)
 	if err != nil {
 		dbg.Fatal("Couldn't start proxy:", err)
 	}
 
-	hostnames := deterlab.Hostnames
-	dbg.Lvl4("hostnames:", hostnames)
-
-	// mapping from physical node name to the timestamp servers that are running there
-	// essentially a reverse mapping of vpmap except ports are also used
-	physToServer := make(map[string][]string)
-	for _, virt := range hostnames {
-		v, _, _ := net.SplitHostPort(virt)
-		p := vpmap[v]
-		ss := physToServer[p]
-		ss = append(ss, virt)
-		physToServer[p] = ss
-	}
-
-	monitorAddr := deterlab.MonitorAddress + ":" + strconv.Itoa(monitor.SinkPort)
-	servers := len(physToServer)
-	ppm := len(deterlab.Hostnames) / servers
-	dbg.Lvl1("starting", servers, "forkexecs with", ppm, "processes each =", servers*ppm)
-	totalServers := 0
-	for phys, virts := range physToServer {
-		if len(virts) == 0 {
-			continue
-		}
-		totalServers += len(virts)
-		dbg.Lvl2("Launching forkexec for", len(virts), "clients on", phys)
+	dbg.Lvl1("starting", deter.Servers, "forkexecs for a total of", deter.Hosts, "processes.")
+	for i, phys := range deter.Phys {
+		dbg.Lvl2("Launching forkexec on", phys)
 		wg.Add(1)
-		go func(phys string) {
+		go func(phys, internal string) {
 			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
-			dbg.Lvl4("Starting servers on physical machine ", phys, "with monitor = ",
-				deterlab.MonitorAddress, ":", monitor.SinkPort)
+			dbg.Lvl4("Starting servers on physical machine ", internal, "with monitor = ",
+				deter.MonitorAddress, ":", monitor.SinkPort)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
-				" -physaddr="+phys+" -monitor="+monitorAddr)
+				" -internal="+internal)
 			if err != nil {
-				dbg.Lvl1("Error starting timestamper:", err, phys)
+				dbg.Lvl1("Error starting timestamper:", err, internal)
 			}
-			dbg.Lvl4("Finished with Timestamper", phys)
-		}(phys)
-	}
-
-	if deterlab.App == "stamp" || deterlab.App == "sign" {
-		// Every stampserver that started up (mostly waiting for configuration-reading)
-		// writes its name in coll_stamp_dir - once everybody is there, the directory
-		// is cleaned to flag it's OK to go on.
-		/*     start_config := time.Now()*/
-		//for {
-		//s, err := monitor.GetReady(monitorAddr)
-		//if err != nil {
-		//dbg.Fatal("Couldn't contact monitor at", monitorAddr)
-		//} else {
-		//dbg.Lvl1("Processes started:", s.Ready, "/", totalServers, "after", time.Since(start_config))
-		//if s.Ready == totalServers {
-		//dbg.Lvl2("Everybody ready, starting")
-		//// 1st second for everybody to see the deleted directory
-		//// 2nd second for everybody to start up listening
-		//time.Sleep(time.Second * 2)
-		//break
-		//}
-		//}
-		//time.Sleep(time.Second)
-		/*}*/
-	}
-
-	switch deterlab.App {
-	case "stamp":
-		dbg.Lvl1("starting", len(physToServer), "time clients")
-		// start up one timeclient per physical machine
-		// it requests timestamps from all the servers on that machine
-		amroot := true
-		for p, ss := range physToServer {
-			if len(ss) == 0 {
-				dbg.Lvl3("ss is empty - not starting")
-				continue
-			}
-			servers := strings.Join(ss, ",")
-			dbg.Lvl3("Starting with ss=", ss)
-			go func(p string, a bool) {
-				cmdstr := "cd remote; sudo ./" + deterlab.App + " -mode=client " +
-					" -name=client@" + p +
-					" -server=" + servers +
-					" -amroot=" + strconv.FormatBool(a)
-				dbg.Lvl3("Users will launch client:", cmdstr)
-				err := cliutils.SshRunStdout("", p, cmdstr)
-				if err != nil {
-					dbg.Lvl4("Deter.go: error for", deterlab.App, err)
-				}
-				dbg.Lvl4("Deter.go: Finished with", deterlab.App, p)
-			}(p, amroot)
-			amroot = false
-		}
-	case "sign_no":
-		// TODO: for now it's only a simple startup from the server
-		dbg.Lvl1("Starting only one client")
+			dbg.Lvl4("Finished with Timestamper", internal)
+		}(phys, deter.Virt[i])
 	}
 
 	// wait for the servers to finish before stopping

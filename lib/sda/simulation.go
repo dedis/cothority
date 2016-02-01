@@ -91,6 +91,10 @@ func LoadSimulationConfig(dir, ha string) (*SimulationConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if ha == "" {
+		return sc, nil
+	}
 	for _, e := range sc.EntityList.List {
 		for _, a := range e.Addresses {
 			if a == ha {

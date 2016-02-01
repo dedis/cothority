@@ -22,13 +22,11 @@ var extraFields = [...]string{"bf", "rate", "stampratio"}
 
 // Stats holds the different measurements done
 type Stats struct {
-	// How many peers do we have
-	Peers int
-	// How many peers per machine do we use
-	PPM int // PeerPerMachine
+	// How many hosts do we have
+	Hosts int
 	// How many machines do we have
-	Machines int
-	// How many peers are ready
+	Servers int
+	// How many hosts are ready
 	Ready int
 
 	// Additionals fields that may appears in the resulting CSV
@@ -59,15 +57,14 @@ func NewStats(rc map[string]string) *Stats {
 
 // Read a config file and fills up some fields for Stats struct
 func (s *Stats) readRunConfig(rc map[string]string) {
-	if machs, err := strconv.Atoi(rc["machines"]); err != nil {
+	var err error
+	s.Servers, err = strconv.Atoi(rc["servers"])
+	if err != nil {
 		dbg.Fatal("Can not create stats from RunConfig with no machines")
-	} else {
-		s.Machines = machs
 	}
-	if ppm, err := strconv.Atoi(rc["ppm"]); err != nil {
+	s.Hosts, err = strconv.Atoi(rc["hosts"])
+	if err != nil {
 		dbg.Fatal("Can not create stats from RunConfig with no ppm")
-	} else {
-		s.PPM = ppm
 	}
 	rc2 := make(map[string]string)
 	for k, v := range rc {
@@ -75,7 +72,6 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 			rc2[k] = v
 		}
 	}
-	s.Peers = s.Machines * s.PPM
 	// Sort rc2, so the output is always the same
 	rc2_ids := make([]string, 0)
 	for k := range rc2 {
@@ -109,7 +105,7 @@ func (s *Stats) NewStats() *Stats {
 // WriteHeader will write the header to the writer
 func (s *Stats) WriteHeader(w io.Writer) {
 	// write basic info
-	fmt.Fprintf(w, "Peers, ppm, machines")
+	fmt.Fprintf(w, "hosts, servers")
 	// write additionals fields
 	for _, k := range s.addKeys {
 		if _, ok := s.Additionals[k]; ok {
@@ -130,8 +126,8 @@ func (s *Stats) WriteValues(w io.Writer) {
 	// by default
 	s.Collect()
 	// write basic info
-	fmt.Fprintf(w, "%d, %d, %d", s.Peers, s.PPM, s.Machines)
-	// write additionals fields
+	fmt.Fprintf(w, "%d, %d", s.Hosts, s.Servers)
+	// write additional fields
 	for _, k := range s.addKeys {
 		v, ok := s.Additionals[k]
 		if ok {
@@ -154,9 +150,8 @@ func AverageStats(stats []Stats) Stats {
 		return Stats{}
 	}
 	s := new(Stats).NewStats()
-	s.Machines = stats[0].Machines
-	s.PPM = stats[0].PPM
-	s.Peers = stats[0].Peers
+	s.Servers = stats[0].Servers
+	s.Hosts = stats[0].Hosts
 	s.Additionals = stats[0].Additionals
 	s.addKeys = stats[0].addKeys
 	s.keys = stats[0].keys
@@ -201,7 +196,7 @@ func (s *Stats) String() string {
 	for _, v := range s.measures {
 		str += fmt.Sprintf("%v", v)
 	}
-	return fmt.Sprintf("{Stats: Peers %d, Measures: %s}", s.Peers, str)
+	return fmt.Sprintf("{Stats: hosts %d, Measures: %s}", s.Hosts, str)
 }
 
 // Collect make the final computations before stringing or writing.

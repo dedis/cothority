@@ -93,7 +93,10 @@ func main() {
 		deployP.Configure()
 
 		if clean {
-			deployP.Deploy(runconfigs[0])
+			err := deployP.Deploy(runconfigs[0])
+			if err != nil {
+				dbg.Fatal("Couldn't deploy:", err)
+			}
 			deployP.Cleanup()
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)

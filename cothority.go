@@ -77,6 +77,7 @@ func main() {
 			dbg.Fatal(err)
 		}
 		if StartProto {
+			childrenWait := monitor.NewMeasure("ChildrenWait")
 			for {
 				dbg.Lvl2("Counting children")
 				node, err := sc.Overlay.StartNewNodeName("Count", sc.Tree)
@@ -91,6 +92,7 @@ func main() {
 					dbg.Lvl2("Found only", count, "children")
 				}
 			}
+			childrenWait.Measure()
 			dbg.Lvl2("Starting new node", Simul)
 			err := sim.Run(sc)
 			if err != nil {
