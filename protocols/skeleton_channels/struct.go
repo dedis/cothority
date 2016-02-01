@@ -1,4 +1,4 @@
-package example
+package skeleton_channels
 
 import "github.com/dedis/cothority/lib/sda"
 
