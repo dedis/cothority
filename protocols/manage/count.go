@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"time"
 )
 
 /*
@@ -52,6 +53,9 @@ func (p *ProtocolCount) DispatchChannels() {
 			p.FuncPC()
 		case c := <-p.MsgCount:
 			p.FuncC(c)
+		case <-time.After(time.Second * 10):
+			dbg.LLvl3("Timeout while waiting for children")
+			p.FuncC(nil)
 		}
 	}
 }
@@ -76,6 +80,7 @@ func (p *ProtocolCount) FuncC(c []struct {
 		count += c.MsgCount.Children
 	}
 	if !p.IsRoot() {
+		dbg.Lvl3("Sending to", p.Parent().Entity.Addresses)
 		p.SendTo(p.Parent(), &MsgCount{count})
 	} else {
 		p.Count <- count
@@ -85,6 +90,7 @@ func (p *ProtocolCount) FuncC(c []struct {
 // Starts the protocol
 func (p *ProtocolCount) Start() error {
 	// Send an empty message
+	dbg.LLvl3("Starting to count")
 	p.FuncPC()
 	return nil
 }

@@ -46,12 +46,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
-		dbg.Lvl2("Will ask for entityList + tree from token")
+		dbg.LLvl2("Will ask for entityList from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		dbg.Lvl2("Will ask for tree from token")
+		dbg.LLvl2("Will ask for tree from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// If node does not exists, then create it

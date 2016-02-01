@@ -272,7 +272,7 @@ func (h *Host) ProcessMessages() {
 				continue
 			}
 			il := h.overlay.EntityList(tm.EntityId)
-			// The entity list does not exists, we should request for that too
+			// The entity list does not exists, we should request that, too
 			if il == nil {
 				msg := &RequestEntityList{tm.EntityId}
 				if err := h.SendRaw(data.Entity, msg); err != nil {
