@@ -21,14 +21,14 @@ import (
 
 // ProtocolCosi is the main structure holding the round and the sda.Node.
 type ProtocolCosi struct {
-	// The round we are using now.
-	round Round
 	// The node that is representing us. Easier to just embed it.
 	*sda.Node
 	// TreeNodeId cached
 	treeNodeId uuid.UUID
 	// The channel waiting for Announcement message
 	announce chan chanAnnouncement
+	// announcement hook
+	announcementHook func(in *AnnouncementMessage, out []*AnnouncementMessage)
 	// the channel waiting for Commitment message
 	commit chan chanCommitment
 	// the channel waiting for Challenge message
@@ -79,19 +79,7 @@ func NewProtocolCosi(round Round, node *sda.Node) (*ProtocolCosi, error) {
 	}
 	// Register the three channels we want to register and listens on
 	// By passing pointer = automatic instantiation
-	node.RegisterChannel("announce",&pc.announce)
-	// NEW IDEAAAAAAAA
-	announceChan := node.onChannel("announce")
-
-	subprotocol.preAnnounceHook( func( ) ...)
-	subprotocol.postAnnounceHook( func() bool)
-	
-	select {
-	case p := <-myOwnStructAnnounce
-		subprotocol.Announcement(p.VanillaAnnouncemenentMessage)
-	}
-	// STOP NEW IDEEEAAAAA
-
+	node.RegisterChannel(&pc.announce)
 	node.RegisterChannel(&pc.commit)
 	node.RegisterChannel(&pc.challenge)
 	node.RegisterChannel(&pc.response)
@@ -134,6 +122,8 @@ func (pc *ProtocolCosi) listen() {
 	}
 }
 
+type AnnouncementHook func(in *AnnouncementMessage, out []*AnnouncementMessage) error
+
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
 func (pc *ProtocolCosi) handleAnnouncement(in *AnnouncementMessage) error {
@@ -150,8 +140,15 @@ func (pc *ProtocolCosi) handleAnnouncement(in *AnnouncementMessage) error {
 		out = nil
 	}
 
-	// send it to the round
-	if err := pc.round.Announcement(in, out); err != nil {
+	// THEN
+	// If we have a hook on announcement call the hook
+	// the hook is responsible to call pc.Announce(in,out)
+	if pc.announcementHook != nil {
+		return pc.announcementHook(in, out)
+	}
+
+	// Otherwise, call anouncement ourself
+	if err := pc.announcement(in, out); err != nil {
 		return err
 	}
 
@@ -167,6 +164,11 @@ func (pc *ProtocolCosi) handleAnnouncement(in *AnnouncementMessage) error {
 		err = pc.SendTo(tn, out[i])
 	}
 	return err
+}
+
+// Announcement does the Announcement part of CoSi
+func (pc *ProtocolCosi) Announcement(in *AnnouncementMessage, out []*AnnouncementMessage) error {
+
 }
 
 // handleAllCommitment takes the full set of messages from the children and pass
@@ -253,4 +255,16 @@ func (pc *ProtocolCosi) handleResponse(in *ResponseMessage) error {
 
 	// send it back to parent
 	return pc.SendTo(pc.Parent(), out)
+}
+
+func (pc *ProtocolCosi) RegisterAnnouncementHook(fn func(in *AnnouncementMessage, out []*AnnouncementMessage) error) {
+	pc.announcementHook = fn
+}
+
+func (pc *ProtocolCosi) RegisterCommitmentHook(fn func(in []*CommitmentMessage, out *CommitmentMessage) error) {
+	pc.commitmentHook = fn
+}
+
+func (pc *ProtocolCosi) RegisterChallengeHook(fn func(in *ChallengeMessage, out []*ChallengeMessage) error) {
+	pc.challengeHook = fn
 }
