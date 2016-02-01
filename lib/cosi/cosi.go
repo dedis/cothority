@@ -49,6 +49,15 @@ type Response struct {
 	ChildrenResp abstract.Secret
 }
 
+// XXX Does it make sense to have one here ?
+// Since for the vanilla cosi, only the root have the real final signature,
+// For the moment, I only made two function that is equivalent to that
+// structure: GetChallenge() and GetResponse()
+type CosiSignature struct {
+	Challenge abstract.Secret
+	Response  abstract.Secret
+}
+
 // CreateCommitment creates the commitment out of the randoms secret and returns
 // the message to pass up in the tree. This is typically called by leaves.
 func (c *Cosi) CreateCommitment() *Commitment {
@@ -132,6 +141,13 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 
 }
 
+func (c *Cosi) GetResponse() abstract.Secret {
+	return c.response
+}
+
+func (c *Cosi) GetChallenge() abstract.Secret {
+	return c.challenge
+}
 func (c *Cosi) verifyResponses(aggregatedPublic abstract.Point) error {
 	// Check that: base**r_hat * X_hat**c == V_hat
 	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal

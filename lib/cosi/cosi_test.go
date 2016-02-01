@@ -92,6 +92,29 @@ func TestCosiVerifyResponse(t *testing.T) {
 	if err := root.verifyResponses(aggregatedPublic); err != nil {
 		t.Fatal("Verification of responses / commitment has failed:", err)
 	}
+
+	// recompute the challenge and check if it is the same
+	commitment := testSuite.Point()
+	commitment = commitment.Add(commitment.Mul(nil, root.aggregateResponse), testSuite.Point().Mul(aggregatedPublic, root.challenge))
+	// T is the recreated V_hat
+	T := testSuite.Point().Null()
+	T = T.Add(T, commitment)
+
+	pb, err := T.MarshalBinary()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cipher := testSuite.Cipher(pb)
+	cipher.Message(nil, nil, msg)
+	// reconstructed challenge
+	challenge := testSuite.Secret().Pick(cipher)
+
+	if !challenge.Equal(root.challenge) {
+		t.Fatal("Root challenge != challenge recomputed")
+	}
+	if !challenge.Equal(children[0].challenge) {
+		t.Fatal("Children[0] challenge != challenge recomputed")
+	}
 }
 
 func genSecrets(nb int) []abstract.Secret {
