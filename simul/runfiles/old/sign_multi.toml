@@ -1,6 +1,7 @@
-var SignTestMulti2 = []T{
-	{0, 256, 16, 30, 20, 0, 0, 0, false, "coll_sign"},
-	{0, 512, 32, 30, 20, 0, 0, 0, false, "coll_sign"},
-	{0, 1024, 64, 30, 20, 0, 0, 0, false, "coll_sign"},
-}
+Machines = 16
+App = "sign"
+Rounds = 10
+Suite = "Ed25519"
 
+ppm, bf
+64, 7
