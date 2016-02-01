@@ -1,4 +1,4 @@
-package skeleton_channels
+package example_channels
 
 import (
 	"errors"
@@ -10,13 +10,13 @@ import (
 func init() {
 	network.RegisterMessageType(MessageAnnounce{})
 	network.RegisterMessageType(MessageReply{})
-	sda.ProtocolRegisterName("SkeletonChannels", NewSkeletonChannels)
+	sda.ProtocolRegisterName("ExampleChannels", NewExampleChannels)
 }
 
-// ProtocolSkeletonChannels just holds a message that is passed to all children. It
+// ProtocolExampleChannels just holds a message that is passed to all children. It
 // also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
-type ProtocolSkeletonChannels struct {
+type ProtocolExampleChannels struct {
 	*sda.Node
 	Message         string
 	ChildCount      chan int
@@ -24,40 +24,40 @@ type ProtocolSkeletonChannels struct {
 	ChannelReply    chan []StructReply
 }
 
-// NewSkeletonChannels initialises the structure for use in one round
-func NewSkeletonChannels(n *sda.Node) (sda.ProtocolInstance, error) {
-	SkeletonChannels := &ProtocolSkeletonChannels{
+// NewExampleChannels initialises the structure for use in one round
+func NewExampleChannels(n *sda.Node) (sda.ProtocolInstance, error) {
+	ExampleChannels := &ProtocolExampleChannels{
 		Node:       n,
 		ChildCount: make(chan int),
 	}
-	err := SkeletonChannels.RegisterChannel(&SkeletonChannels.ChannelAnnounce)
+	err := ExampleChannels.RegisterChannel(&ExampleChannels.ChannelAnnounce)
 	if err != nil {
 		return nil, errors.New("couldn't register announcement-channel: " + err.Error())
 	}
-	err = SkeletonChannels.RegisterChannel(&SkeletonChannels.ChannelReply)
+	err = ExampleChannels.RegisterChannel(&ExampleChannels.ChannelReply)
 	if err != nil {
 		return nil, errors.New("couldn't register reply-channel: " + err.Error())
 	}
-	go SkeletonChannels.DispatchChannels()
-	return SkeletonChannels, nil
+	go ExampleChannels.DispatchChannels()
+	return ExampleChannels, nil
 }
 
 // Starts the protocol
-func (p *ProtocolSkeletonChannels) Start() error {
-	dbg.Lvl3("Starting SkeletonChannels")
+func (p *ProtocolExampleChannels) Start() error {
+	dbg.Lvl3("Starting ExampleChannels")
 	for _, c := range p.Children() {
-		p.SendTo(c, &MessageAnnounce{"Skeleton is here"})
+		p.SendTo(c, &MessageAnnounce{"Example is here"})
 	}
 	return nil
 }
 
 // Dispatch takes the message and decides what function to call
-func (p *ProtocolSkeletonChannels) Dispatch(m []*sda.SDAData) error {
+func (p *ProtocolExampleChannels) Dispatch(m []*sda.SDAData) error {
 	return nil
 }
 
 // DispatchChannels is an infinite loop to handle messages from channels
-func (p *ProtocolSkeletonChannels) DispatchChannels() {
+func (p *ProtocolExampleChannels) DispatchChannels() {
 	for {
 		select {
 		case announcement := <-p.ChannelAnnounce:

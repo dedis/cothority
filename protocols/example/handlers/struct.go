@@ -1,4 +1,4 @@
-package skeleton_channels
+package example_handlers
 
 import "github.com/dedis/cothority/lib/sda"
 
