@@ -10,79 +10,55 @@ import (
 func init() {
 	network.RegisterMessageType(MessageAnnounce{})
 	network.RegisterMessageType(MessageReply{})
-	sda.ProtocolRegisterName("ExampleChannel", NewExampleChannel)
+	sda.ProtocolRegisterName("ExampleHandler", NewExampleHandler)
 }
 
-// ProtocolExampleChannel just holds a message that is passed to all children. It
+// ProtocolExampleHandler just holds a message that is passed to all children. It
 // also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
-type ProtocolExampleChannel struct {
+type ProtocolExampleHandler struct {
 	*sda.Node
-	Message      string
-	ChildCount   chan int
-	Announcement chan struct {
-		*sda.TreeNode
-		MessageAnnounce
-	}
-	Reply chan []struct {
-		*sda.TreeNode
-		MessageReply
-	}
+	Message    string
+	ChildCount chan int
 }
 
-// NewExampleChannel initialises the structure for use in one round
-func NewExampleChannel(n *sda.Node) (sda.ProtocolInstance, error) {
-	example := &ProtocolExampleChannel{
+// NewExampleHandler initialises the structure for use in one round
+func NewExampleHandler(n *sda.Node) (sda.ProtocolInstance, error) {
+	example := &ProtocolExampleHandler{
 		Node:       n,
 		ChildCount: make(chan int),
 	}
-	err := example.RegisterChannel(&example.Announcement)
+	err := example.RegisterHandler(example.HandleAnnounce)
 	if err != nil {
-		return nil, errors.New("couldn't register announcement-channel: " + err.Error())
+		return nil, errors.New("couldn't register announcement-handler: " + err.Error())
 	}
-	err = example.RegisterChannel(&example.Reply)
+	err = example.RegisterHandler(example.HandleReply)
 	if err != nil {
-		return nil, errors.New("couldn't register reply-channel: " + err.Error())
+		return nil, errors.New("couldn't register reply-handler: " + err.Error())
 	}
-	go example.DispatchChannels()
 	return example, nil
 }
 
 // Starts the protocol
-func (p *ProtocolExampleChannel) Start() error {
+func (p *ProtocolExampleHandler) Start() error {
 	dbg.Lvl3("Starting example")
-	return p.HandleAnnounce(MessageAnnounce{"cothority rulez!"})
+	return p.HandleAnnounce(StructAnnounce{p.TreeNode(),
+		MessageAnnounce{"cothority rulez!"}})
 }
 
 // Dispatch takes the message and decides what function to call
-func (p *ProtocolExampleChannel) Dispatch(m []*sda.SDAData) error {
+func (p *ProtocolExampleHandler) Dispatch(m []*sda.SDAData) error {
 	return nil
-}
-
-func (p *ProtocolExampleChannel) DispatchChannels() {
-	for {
-		dbg.Lvl3("waiting for message in", p.Entity().Addresses)
-		select {
-		case announce := <-p.Announcement:
-			dbg.Lvl3("Got announcement", announce)
-			err := p.HandleAnnounce(announce.MessageAnnounce)
-			if err != nil {
-				dbg.Error("Error in announcement:", err)
-			}
-		case reply := <-p.Reply:
-			p.HandleReply(reply)
-		}
-	}
 }
 
 // HandleAnnounce is the first message and is used to send an ID that
 // is stored in all nodes.
-func (p *ProtocolExampleChannel) HandleAnnounce(msg MessageAnnounce) error {
+func (p *ProtocolExampleHandler) HandleAnnounce(msg StructAnnounce) error {
 	p.Message = msg.Message
 	if !p.IsLeaf() {
 		// If we have children, send the same message to all of them
 		for _, c := range p.Children() {
-			err := p.SendTo(c, &msg)
+			err := p.SendTo(c, &msg.MessageAnnounce)
 			if err != nil {
 				return err
 			}
@@ -96,10 +72,7 @@ func (p *ProtocolExampleChannel) HandleAnnounce(msg MessageAnnounce) error {
 
 // HandleReply is the message going up the tree and holding a counter
 // to verify the number of nodes.
-func (p *ProtocolExampleChannel) HandleReply(reply []struct {
-	*sda.TreeNode
-	MessageReply
-}) error {
+func (p *ProtocolExampleHandler) HandleReply(reply []StructReply) error {
 	children := 1
 	for _, c := range reply {
 		children += c.ChildrenCount

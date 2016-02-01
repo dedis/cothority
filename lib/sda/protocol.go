@@ -15,7 +15,7 @@ var protocols map[uuid.UUID]NewProtocol
 type ProtocolInstance interface {
 	// Start is called when a leader has created its tree configuration and
 	// wants to start a protocol, it calls host.StartProtocol(protocolID), that
-	// in turns instantiate a new protocol (with a fresh token) , and then call
+	// in turns instantiate a new protocol (with a fresh token), and then call
 	// Start on it.
 	Start() error
 	// Dispatch is called whenever packets are ready and should be treated
