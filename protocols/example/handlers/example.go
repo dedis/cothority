@@ -1,4 +1,4 @@
-package skeleton_handlers
+package example_handlers
 
 import (
 	"errors"
@@ -10,50 +10,50 @@ import (
 func init() {
 	network.RegisterMessageType(MessageAnnounce{})
 	network.RegisterMessageType(MessageReply{})
-	sda.ProtocolRegisterName("SkeletonHandlers", NewSkeletonHandlers)
+	sda.ProtocolRegisterName("ExampleHandlers", NewExampleHandlers)
 }
 
-// ProtocolSkeletonHandlers just holds a message that is passed to all children. It
+// ProtocolExampleHandlers just holds a message that is passed to all children. It
 // also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
-type ProtocolSkeletonHandlers struct {
+type ProtocolExampleHandlers struct {
 	*sda.Node
 	Message    string
 	ChildCount chan int
 }
 
-// NewSkeletonHandlers initialises the structure for use in one round
-func NewSkeletonHandlers(n *sda.Node) (sda.ProtocolInstance, error) {
-	SkeletonHandlers := &ProtocolSkeletonHandlers{
+// NewExampleHandlers initialises the structure for use in one round
+func NewExampleHandlers(n *sda.Node) (sda.ProtocolInstance, error) {
+	ExampleHandlers := &ProtocolExampleHandlers{
 		Node:       n,
 		ChildCount: make(chan int),
 	}
-	err := SkeletonHandlers.RegisterHandler(SkeletonHandlers.HandleAnnounce)
+	err := ExampleHandlers.RegisterHandler(ExampleHandlers.HandleAnnounce)
 	if err != nil {
 		return nil, errors.New("couldn't register announcement-handler: " + err.Error())
 	}
-	err = SkeletonHandlers.RegisterHandler(SkeletonHandlers.HandleReply)
+	err = ExampleHandlers.RegisterHandler(ExampleHandlers.HandleReply)
 	if err != nil {
 		return nil, errors.New("couldn't register reply-handler: " + err.Error())
 	}
-	return SkeletonHandlers, nil
+	return ExampleHandlers, nil
 }
 
 // Starts the protocol
-func (p *ProtocolSkeletonHandlers) Start() error {
-	dbg.Lvl3("Starting SkeletonHandlers")
+func (p *ProtocolExampleHandlers) Start() error {
+	dbg.Lvl3("Starting ExampleHandlers")
 	return p.HandleAnnounce(StructAnnounce{p.TreeNode(),
 		MessageAnnounce{"cothority rulez!"}})
 }
 
 // Dispatch takes the message and decides what function to call
-func (p *ProtocolSkeletonHandlers) Dispatch(m []*sda.SDAData) error {
+func (p *ProtocolExampleHandlers) Dispatch(m []*sda.SDAData) error {
 	return nil
 }
 
 // HandleAnnounce is the first message and is used to send an ID that
 // is stored in all nodes.
-func (p *ProtocolSkeletonHandlers) HandleAnnounce(msg StructAnnounce) error {
+func (p *ProtocolExampleHandlers) HandleAnnounce(msg StructAnnounce) error {
 	p.Message = msg.Message
 	if !p.IsLeaf() {
 		// If we have children, send the same message to all of them
@@ -72,7 +72,7 @@ func (p *ProtocolSkeletonHandlers) HandleAnnounce(msg StructAnnounce) error {
 
 // HandleReply is the message going up the tree and holding a counter
 // to verify the number of nodes.
-func (p *ProtocolSkeletonHandlers) HandleReply(reply []StructReply) error {
+func (p *ProtocolExampleHandlers) HandleReply(reply []StructReply) error {
 	children := 1
 	for _, c := range reply {
 		children += c.ChildrenCount

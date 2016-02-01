@@ -1,9 +1,9 @@
-package skeleton_handlers_test
+package example_channels_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/skeleton_handlers"
+	"github.com/dedis/cothority/protocols/example/channels"
 	"testing"
 	"time"
 )
@@ -14,14 +14,13 @@ func TestNode(t *testing.T) {
 	local := sda.NewLocalTest()
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, false, true)
-	//dbg.Lvl3(tree.Dump())
 	defer local.CloseAll()
 
-	node, err := local.StartNewNodeName("SkeletonHandlers", tree)
+	node, err := local.StartNewNodeName("ExampleChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	protocol := node.ProtocolInstance().(*skeleton_handlers.ProtocolSkeletonHandlers)
+	protocol := node.ProtocolInstance().(*example_channels.ProtocolExampleChannels)
 
 	select {
 	case children := <-protocol.ChildCount:
