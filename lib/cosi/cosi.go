@@ -122,12 +122,30 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 			aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.ChildrenResp)
 		}
 	}
-	c.aggregateResponse = aggregateResponse
+	// Add our own
+	c.aggregateResponse = aggregateResponse.Add(aggregateResponse, c.response)
 
 	return &Response{
 		Response:     c.response,
 		ChildrenResp: aggregateResponse,
 	}, nil
+
+}
+
+func (c *Cosi) verifyResponses(aggregatedPublic abstract.Point) error {
+	// Check that: base**r_hat * X_hat**c == V_hat
+	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
+	commitment := c.suite.Point()
+	commitment = commitment.Add(commitment.Mul(nil, c.aggregateResponse), c.suite.Point().Mul(aggregatedPublic, c.challenge))
+	// T is the recreated V_hat
+	T := c.suite.Point().Null()
+	T = T.Add(T, commitment)
+	// TODO put that into exception mechanism later
+	// T.Add(T, cosi.ExceptionV_hat)
+	if !T.Equal(c.aggregateCommitment) {
+		return errors.New("recreated commitment is not equal to one given")
+	}
+	return nil
 
 }
 

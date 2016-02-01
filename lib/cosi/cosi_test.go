@@ -1,6 +1,7 @@
 package cosi
 
 import (
+	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
@@ -45,7 +46,52 @@ func TestCosiChallenge(t *testing.T) {
 
 // TestCosiResponse will test wether the response generation is correct or not
 func TestCosiResponse(t *testing.T) {
+	msg := []byte("Hello World Cosi")
+	// go to the challenge phase
+	root, children := genPostChallengePhaseCosi(5, msg)
+	var responses []*Response
 
+	// for verification later
+	aggResponse := testSuite.Secret().Zero()
+	for _, ch := range children {
+		// generate the response of each children
+		r, err := ch.CreateResponse()
+		if err != nil {
+			t.Fatal("Error creating response:", err)
+		}
+		responses = append(responses, r)
+		aggResponse = aggResponse.Add(aggResponse, r.Response)
+	}
+	// pass them up to the root
+	_, err := root.Response(responses)
+	if err != nil {
+		t.Fatal("Response phase failed:", err)
+	}
+
+	// verify it
+	aggResponse = aggResponse.Add(aggResponse, root.response)
+	if !aggResponse.Equal(root.aggregateResponse) {
+		t.Fatal("Responses aggregated not equal")
+	}
+}
+
+func TestCosiVerifyResponse(t *testing.T) {
+	msg := []byte("Hello World Cosi")
+	root, children, err := genFinalCosi(5, msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	aggregatedPublic := testSuite.Point().Null()
+	for _, ch := range children {
+		// add children public key
+		aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, ch.private))
+	}
+	// add root public key
+	aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, root.private))
+	// verify the responses / commitment
+	if err := root.verifyResponses(aggregatedPublic); err != nil {
+		t.Fatal("Verification of responses / commitment has failed:", err)
+	}
 }
 
 func genSecrets(nb int) []abstract.Secret {
@@ -93,4 +139,37 @@ func genPostCommitmentPhaseCosi(nb int) (*Cosi, []*Cosi) {
 	root := genCosi()
 	root.Commit(commitments)
 	return root, cosis
+}
+
+func genPostChallengePhaseCosi(nb int, msg []byte) (*Cosi, []*Cosi) {
+	r, children := genPostCommitmentPhaseCosi(nb)
+	chal, _ := r.CreateChallenge(msg)
+	for _, ch := range children {
+		ch.Challenge(chal)
+	}
+	return r, children
+}
+
+func genFinalCosi(nb int, msg []byte) (*Cosi, []*Cosi, error) {
+	// go to the challenge phase
+	root, children := genPostChallengePhaseCosi(nb, msg)
+	var responses []*Response
+
+	// for verification later
+	aggResponse := testSuite.Secret().Zero()
+	for _, ch := range children {
+		// generate the response of each children
+		r, err := ch.CreateResponse()
+		if err != nil {
+			return nil, nil, fmt.Errorf("Error creating response:%v", err)
+		}
+		responses = append(responses, r)
+		aggResponse = aggResponse.Add(aggResponse, r.Response)
+	}
+	// pass them up to the root
+	_, err := root.Response(responses)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Response phase failed:%v", err)
+	}
+	return root, children, nil
 }
