@@ -115,6 +115,9 @@ func TestCosiVerifyResponse(t *testing.T) {
 	if !challenge.Equal(children[0].challenge) {
 		t.Fatal("Children[0] challenge != challenge recomputed")
 	}
+	if err := VerifySignature(testSuite, msg, aggregatedPublic, root.challenge, root.aggregateResponse); err != nil {
+		t.Fatal("Error veriying:", err)
+	}
 }
 
 func genSecrets(nb int) []abstract.Secret {

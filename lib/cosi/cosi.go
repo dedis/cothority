@@ -163,8 +163,8 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 
 }
 
-func (c *Cosi) GetResponse() abstract.Secret {
-	return c.response
+func (c *Cosi) GetAggregateResponse() abstract.Secret {
+	return c.aggregateResponse
 }
 
 func (c *Cosi) GetChallenge() abstract.Secret {
@@ -211,4 +211,26 @@ func (c *Cosi) genResponse() error {
 	resp := c.suite.Secret().Mul(c.private, c.challenge)
 	c.response = resp.Sub(c.random, resp)
 	return nil
+}
+
+// VerifySignature verify if the challenge and the secret (response phase) are a
+// correct signature for this message using this aggregated public key.
+func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Secret) error {
+	// recompute the challenge and check if it is the same
+	commitment := suite.Point()
+	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
+
+	pb, err := commitment.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	cipher := suite.Cipher(pb)
+	cipher.Message(nil, nil, msg)
+	// reconstructed challenge
+	reconstructed := suite.Secret().Pick(cipher)
+	if !reconstructed.Equal(challenge) {
+		return errors.New("Reconstructed challenge not equal to one given")
+	}
+	return nil
+
 }
