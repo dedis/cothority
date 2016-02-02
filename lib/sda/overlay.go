@@ -115,11 +115,6 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	if err != nil {
 		return nil, err
 	}
-
-	// instantiate protocol
-	if err = node.protocolInstantiate(); err != nil {
-		return nil, err
-	}
 	o.nodes[node.token.Id()] = node
 	// start it
 	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
@@ -130,9 +125,9 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	return node, nil
 }
 
-// CreateNewNode is used when you want to first, create the node, and then
-// create the protocol instance yourself for example.THe alternative that do
-// both steps in one is  StartNewNode
+// CreateNewNode is used when you want to create the node with the protocol
+// instance but do not want to start it yet. Use case are when you are root, you
+// want to specifiy some additional configuration for example.
 func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
@@ -153,7 +148,7 @@ func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error)
 		RoundID: uuid.NewV4(),
 	}
 	// only create the node
-	return NewNodeEmpty(o, token), nil
+	return NewNode(o, token)
 }
 
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {

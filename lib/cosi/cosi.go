@@ -8,6 +8,8 @@ import (
 )
 
 // Cosi is the struct that implements the "vanilla" cosi.
+// According to the paper of Dr. Bryan Ford :
+// http://arxiv.org/pdf/1503.08768v1.pdf
 type Cosi struct {
 	// Suite used
 	suite abstract.Suite

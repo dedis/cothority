@@ -60,9 +60,7 @@ type ProtocolCosi struct {
 	DoneCallback     func(chal abstract.Secret, response abstract.Secret)
 }
 
-// NewProtocolCosi returns a ProtocolCosi with the round set and the
-// node set with the right channels.
-// If the round = nil, then we will create a default RoundCosi type instead.
+// NewProtocolCosi returns a ProtocolCosi with the node set with the right channels.
 // Use this function like this:
 // ```
 // round := NewRound****()
@@ -353,6 +351,11 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 		pc.DoneCallback(pc.Cosi.GetChallenge(), pc.Cosi.GetAggregateResponse())
 	}
 	return nil
+}
+
+// SigningMessage simply set the message to sign for this round
+func (pc *ProtocolCosi) SigningMessage(msg []byte) {
+	pc.message = msg
 }
 
 // TODO Still see if it is relevant...
