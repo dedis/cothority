@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"time"
 )
 
 /*
@@ -186,6 +187,7 @@ type SimulationBFTree struct {
 // It creates 's.Hosts' entries, starting from 'port' for each round through
 // 'addresses'
 func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []string, port int) {
+	dbg.LLvl3("Starting to create entity List at " + time.Now().String())
 	nbrAddr := len(addresses)
 	if sc.PrivateKeys == nil {
 		sc.PrivateKeys = make(map[string]abstract.Secret)
@@ -201,23 +203,28 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	}
 	entities := make([]*network.Entity, hosts)
 	dbg.Lvl3("Doing", hosts, "hosts")
+	key := config.NewKeyPair(network.Suite)
 	for c := 0; c < hosts; c++ {
-		key := config.NewKeyPair(network.Suite)
+		key.Secret.Add(key.Secret, key.Secret)
+		key.Public.Mul(nil, key.Secret)
 		address := addresses[c%nbrAddr] + ":" +
 			strconv.Itoa(port+c/nbrAddr)
 		entities[c] = network.NewEntity(key.Public, address)
 		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
 	}
 	sc.EntityList = NewEntityList(entities)
+	dbg.LLvl3("Finished creating entity List at " + time.Now().String())
 }
 
 // Creates the tree as defined in SimulationBFTree and stores the result
 // in 'sc'
 func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
+	dbg.LLvl3("Started creating tree at" + time.Now().String())
 	if sc.EntityList == nil {
 		return errors.New("Empty EntityList")
 	}
 	sc.Tree = sc.EntityList.GenerateBigNaryTree(s.BF, s.Hosts)
+	dbg.LLvl3("Finished creating tree at" + time.Now().String())
 	return nil
 }
 

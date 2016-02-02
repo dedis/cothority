@@ -9,6 +9,7 @@ import (
 )
 
 func TestSimulationBF(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)

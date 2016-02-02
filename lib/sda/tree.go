@@ -282,13 +282,15 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 	elIndex := 1 % ilLen
 	for totalNodes < nodes {
 		dbg.Lvl3("Starting at", totalNodes)
-		newLevelNodes := make([]*TreeNode, 0)
+		newLevelNodes := make([]*TreeNode, len(levelNodes)*N)
+		newLevelNodesCounter := 0
 		for i, parent := range levelNodes {
 			children := (nodes - totalNodes) * (i + 1) / len(levelNodes)
 			if children > N {
 				children = N
 			}
 			dbg.Lvl3("Adding", children, "children")
+			parent.Children = make([]*TreeNode, children)
 			for n := 0; n < children; n++ {
 				for il.List[elIndex].Id == parent.Entity.Id &&
 					ilLen > 1 {
@@ -297,12 +299,13 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 				child := NewTreeNode(il.List[elIndex])
 				elIndex = (elIndex + 1) % ilLen
 				totalNodes += 1
-				parent.Children = append(parent.Children, child)
+				parent.Children[n] = child
 				child.Parent = parent
-				newLevelNodes = append(newLevelNodes, child)
+				newLevelNodes[newLevelNodesCounter] = child
+				newLevelNodesCounter += 1
 			}
 		}
-		levelNodes = newLevelNodes
+		levelNodes = newLevelNodes[:newLevelNodesCounter]
 	}
 	return NewTree(il, root)
 }
