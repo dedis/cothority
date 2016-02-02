@@ -248,7 +248,7 @@ func (h *Host) ProcessMessages() {
 	for {
 		var err error
 		data := h.receive()
-		dbg.Lvl3("Message Received from", data.From)
+		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
 		case SDADataMessage:
 			err := h.processSDAMessage(&data)
@@ -395,7 +395,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		case <-h.Closed:
 			doneChan <- true
 		case am := <-msgChan:
-			dbg.Lvl3("Putting message into networkChan from", am.From)
+			dbg.Lvl4("Putting message into networkChan from", am.From)
 			h.networkChan <- am
 		case e := <-errorChan:
 			if !h.isClosing {
@@ -407,6 +407,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 			}
 		case <-time.After(timeOut):
 			dbg.Error("Timeout with connection", address)
+			h.Close()
 		}
 	}
 }

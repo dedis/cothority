@@ -233,6 +233,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	if err != nil {
 		return err
 	}
+	dbg.LLvl3("Creating hosts")
 	deter.createHosts()
 	d.MasterLogger = deter.MasterLogger
 	app.WriteTomlConfig(deter, deterConfig, d.DeployDir)
@@ -242,6 +243,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		return err
 	}
 	simulConfig.Config = string(rc.Toml())
+	dbg.LLvl3("Saving configuration")
 	simulConfig.Save(d.DeployDir)
 
 	// Copy limit-files for more connections

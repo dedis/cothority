@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"time"
 )
 
 /*
@@ -71,7 +72,8 @@ func (p *ProtocolCloseAll) FuncC() {
 	} else {
 		p.Done <- true
 	}
-	dbg.Lvl3("Closing host")
+	time.Sleep(time.Second)
+	dbg.Lvl3("Closing host", p.TreeNode())
 	err := p.Node.Close()
 	if err != nil {
 		dbg.Fatal("Couldn't close")

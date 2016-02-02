@@ -42,7 +42,7 @@ func init() {
 // Main starts the host and will setup the protocol.
 func main() {
 	flag.Parse()
-	dbg.LLvl3("Flags are:", HostAddress, Simul, dbg.DebugVisible, Monitor)
+	dbg.Lvl3("Flags are:", HostAddress, Simul, dbg.DebugVisible, Monitor)
 	if Simul == "" {
 		// We're in standalone mode and only start the node
 		host, err := sda.NewHostFromFile(ConfigFile)
@@ -99,6 +99,7 @@ func startSimulation() {
 	if rootSim != nil {
 		// If this cothority has the root-host, it will start the simulation
 		dbg.Lvl2("Starting protocol", Simul, "on host", rootSC.Host.Entity.Addresses)
+		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
 		childrenWait := monitor.NewMeasure("ChildrenWait")
 		wait := true
 		for wait {
@@ -110,7 +111,7 @@ func startSimulation() {
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
 				if count == rootSC.Tree.Size() {
-					dbg.Lvl2("Found all children")
+					dbg.Lvl2("Found all", count, "children")
 					wait = false
 				} else {
 					dbg.Lvl2("Found only", count, "children")
@@ -136,6 +137,7 @@ func startSimulation() {
 	// Wait for the first host to be closed
 	select {
 	case <-rootSC.Host.Closed:
-		dbg.Lvl2("First host closed - quitting")
+		dbg.Lvl2(HostAddress, ": first host closed - quitting")
+		monitor.End()
 	}
 }

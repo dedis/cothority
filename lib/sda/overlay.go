@@ -264,7 +264,7 @@ func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
 	var tn *TreeNode
 	if tn, ok = mm[tok.TreeNodeID]; !ok {
 		// no treeNode cached for this token...
-		// XXX SHould we search the tree ? Then we need to keep reference to the
+		// XXX Should we search the tree ? Then we need to keep reference to the
 		// tree ...
 		return nil
 	}

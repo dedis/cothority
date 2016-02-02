@@ -176,9 +176,10 @@ func NewSimulation(name string, conf string) (Simulation, error) {
 }
 
 type SimulationBFTree struct {
-	Rounds int
-	BF     int
-	Hosts  int
+	Rounds     int
+	BF         int
+	Hosts      int
+	SingleHost bool
 }
 
 // CreateEntityLists creates an EntityList with the host-names in 'addresses'.
@@ -189,8 +190,18 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	if sc.PrivateKeys == nil {
 		sc.PrivateKeys = make(map[string]abstract.Secret)
 	}
-	entities := make([]*network.Entity, s.Hosts)
-	for c := 0; c < s.Hosts; c++ {
+	hosts := s.Hosts
+	if s.SingleHost {
+		// If we want to work with a single host, we only make one
+		// host per server
+		hosts = nbrAddr
+	}
+	if hosts > s.Hosts {
+		hosts = s.Hosts
+	}
+	entities := make([]*network.Entity, hosts)
+	dbg.Lvl3("Doing", hosts, "hosts")
+	for c := 0; c < hosts; c++ {
 		key := config.NewKeyPair(network.Suite)
 		address := addresses[c%nbrAddr] + ":" +
 			strconv.Itoa(port+c/nbrAddr)
@@ -206,7 +217,7 @@ func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
 	if sc.EntityList == nil {
 		return errors.New("Empty EntityList")
 	}
-	sc.Tree = sc.EntityList.GenerateNaryTree(s.BF)
+	sc.Tree = sc.EntityList.GenerateBigNaryTree(s.BF, s.Hosts)
 	return nil
 }
 

@@ -33,7 +33,7 @@ func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
 func (p *ProtocolTest) Dispatch(m []*sda.SDAData) error {
-	dbg.Lvl2("PRotocolTest.Dispatch()")
+	dbg.Lvl2("ProtocolTest.Dispatch()")
 	p.Msg = "Dispatch"
 	return nil
 }

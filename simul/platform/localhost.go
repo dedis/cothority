@@ -134,7 +134,6 @@ func (d *Localhost) Start(args ...string) error {
 		cmdArgs := []string{"-address", address, "-monitor",
 			"localhost:" + strconv.Itoa(monitor.SinkPort),
 			"-simul", d.Simulation,
-			"-start=" + strconv.FormatBool(index == 0),
 			"-debug", strconv.Itoa(dbg.DebugVisible),
 		}
 		cmdArgs = append(args, cmdArgs...)

@@ -53,7 +53,9 @@ func (p *ProtocolCount) DispatchChannels() {
 	for {
 		dbg.Lvl3("waiting for message in", p.Entity().Addresses)
 		select {
-		case _ = <-p.MsgPrepareCount:
+		case pc := <-p.MsgPrepareCount:
+			dbg.Lvl3("Received from", pc.TreeNode.Entity.Addresses,
+				pc.TreeNode.Id)
 			p.FuncPC()
 		case c := <-p.MsgCount:
 			p.FuncC(c)
@@ -69,7 +71,7 @@ func (p *ProtocolCount) DispatchChannels() {
 func (p *ProtocolCount) FuncPC() {
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			dbg.Lvl3("Sending to", c.Entity.Addresses)
+			dbg.Lvl3("Sending to", c.Entity.Addresses, c.Id)
 			p.SendTo(c, &MsgPrepareCount{})
 		}
 	} else {
@@ -86,7 +88,7 @@ func (p *ProtocolCount) FuncC(c []struct {
 		count += c.MsgCount.Children
 	}
 	if !p.IsRoot() {
-		dbg.Lvl3("Sending to", p.Parent().Entity.Addresses)
+		dbg.Lvl3("Sending to", p.Parent().Id, p.Parent().Entity.Addresses)
 		p.SendTo(p.Parent(), &MsgCount{count})
 	} else {
 		p.Count <- count
@@ -98,7 +100,7 @@ func (p *ProtocolCount) FuncC(c []struct {
 // Starts the protocol
 func (p *ProtocolCount) Start() error {
 	// Send an empty message
-	dbg.LLvl3("Starting to count")
+	dbg.Lvl3("Starting to count")
 	p.FuncPC()
 	return nil
 }

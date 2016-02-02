@@ -36,7 +36,6 @@ var TreeType = network.RegisterMessageType(Tree{})
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
 func NewTree(il *EntityList, r *TreeNode) *Tree {
-	r.UpdateIds()
 	url := network.UuidURL + "tree/" + il.Id.String() + r.Id.String()
 	return &Tree{
 		EntityList: il,
@@ -101,10 +100,11 @@ func (t *Tree) Dump() string {
 	ret := "Tree " + t.Id.String() + " is:"
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
 		if tn.Parent != nil {
-			ret += fmt.Sprintf("\n%s has parent %s", tn.Entity.Addresses,
-				tn.Parent.Entity.Addresses)
+			ret += fmt.Sprintf("\n%2d - %s/%s has parent %s/%s", d,
+				tn.Id, tn.Entity.Addresses,
+				tn.Parent.Id, tn.Parent.Entity.Addresses)
 		} else {
-			ret += fmt.Sprintf("\n%s is root", tn.Entity.Addresses)
+			ret += fmt.Sprintf("\n%s/%s is root", tn.Id, tn.Entity.Addresses)
 		}
 	})
 	return ret
@@ -140,6 +140,7 @@ func (t *Tree) IsBinary(root *TreeNode) bool {
 func (t *Tree) IsNary(root *TreeNode, N int) bool {
 	nChild := len(root.Children)
 	if nChild != N && nChild != 0 {
+		dbg.Lvl3("Only", nChild, "children for", root.Id)
 		return false
 	}
 	for _, c := range root.Children {
@@ -268,6 +269,44 @@ func (en *EntityList) Get(idx int) *network.Entity {
 	return en.List[idx]
 }
 
+// GenerateBigNaryTree creates a tree where each node has N children.
+// It will make a tree with exactly 'nodes' elements, regardless of the
+// size of the EntityList. If 'nodes' is bigger than the number of elements
+// in the EntityList, it will add some or all elements in the EntityList
+// more than once.
+func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
+	ilLen := len(il.List)
+	root := NewTreeNode(il.List[0])
+	levelNodes := []*TreeNode{root}
+	totalNodes := 1
+	elIndex := 1 % ilLen
+	for totalNodes < nodes {
+		dbg.Lvl3("Starting at", totalNodes)
+		newLevelNodes := make([]*TreeNode, 0)
+		for i, parent := range levelNodes {
+			children := (nodes - totalNodes) * (i + 1) / len(levelNodes)
+			if children > N {
+				children = N
+			}
+			dbg.Lvl3("Adding", children, "children")
+			for n := 0; n < children; n++ {
+				for il.List[elIndex].Id == parent.Entity.Id &&
+					ilLen > 1 {
+					elIndex = (elIndex + 1) % ilLen
+				}
+				child := NewTreeNode(il.List[elIndex])
+				elIndex = (elIndex + 1) % ilLen
+				totalNodes += 1
+				parent.Children = append(parent.Children, child)
+				child.Parent = parent
+				newLevelNodes = append(newLevelNodes, child)
+			}
+		}
+		levelNodes = newLevelNodes
+	}
+	return NewTree(il, root)
+}
+
 // GenerateNaryTree creates a tree where each node has N children.
 // The first element of the EntityList will be the root element.
 func (il *EntityList) GenerateNaryTree(N int) *Tree {
@@ -320,8 +359,8 @@ func NewTreeNode(ni *network.Entity) *TreeNode {
 		Entity:   ni,
 		Parent:   nil,
 		Children: make([]*TreeNode, 0),
+		Id:       uuid.NewV4(),
 	}
-	tn.UpdateIds()
 	return tn
 }
 
@@ -358,22 +397,10 @@ func (t *TreeNode) IsInTree(tree *Tree) bool {
 	return tree.Root.Id == root.Id
 }
 
-// AddChild adds a child to this tree-node. Once the tree is set up, the
-// function 'UpdateIds' should be called
+// AddChild adds a child to this tree-node.
 func (t *TreeNode) AddChild(c *TreeNode) {
 	t.Children = append(t.Children, c)
 	c.Parent = t
-}
-
-// UpdateIds should be called on the root-node, so that it recursively
-// calculates the whole tree as a merkle-tree
-func (t *TreeNode) UpdateIds() {
-	url := network.UuidURL + "treenode/" + t.Entity.Id.String()
-	for _, child := range t.Children {
-		child.UpdateIds()
-		url += child.Id.String()
-	}
-	t.Id = uuid.NewV5(uuid.NamespaceURL, url)
 }
 
 // Equal tests if that node is equal to the given node
@@ -419,8 +446,8 @@ func (t *TreeNode) Stringify() string {
 // nodes
 func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	fn(firstDepth, t)
-	for i := range t.Children {
-		t.Children[i].Visit(firstDepth+1, fn)
+	for _, c := range t.Children {
+		c.Visit(firstDepth+1, fn)
 	}
 }
 
