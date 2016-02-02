@@ -65,10 +65,10 @@ func main() {
 		go func(i int, h string) {
 			defer wg.Done()
 			if kill {
-				dbg.Lvl4("Cleaning up host", h, ".")
-				cliutils.SshRun("", h, "sudo killall -9 "+deter.Simulation+" logserver forkexec timeclient scp 2>/dev/null >/dev/null")
+				dbg.Lvl3("Cleaning up host", h, ".")
+				cliutils.SshRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				cliutils.SshRun("", h, "sudo killall -9 "+deter.Simulation+" 2>/dev/null >/dev/null")
+				cliutils.SshRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
@@ -127,21 +127,27 @@ func main() {
 		dbg.Fatal("Couldn't start proxy:", err)
 	}
 
-	dbg.Lvl1("starting", deter.Servers, "forkexecs for a total of", deter.Hosts, "processes.")
+	dbg.Lvl1("starting", deter.Servers, "cothorities for a total of", deter.Hosts, "processes.")
 	for i, phys := range deter.Phys {
-		dbg.Lvl2("Launching forkexec on", phys)
+		dbg.Lvl2("Launching cothority on", phys)
 		wg.Add(1)
 		go func(phys, internal string) {
 			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
+			monitorAddr := deter.MonitorAddress + ":" + strconv.Itoa(monitor.SinkPort)
 			dbg.Lvl4("Starting servers on physical machine ", internal, "with monitor = ",
-				deter.MonitorAddress, ":", monitor.SinkPort)
-			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./forkexec"+
-				" -internal="+internal)
+				monitorAddr)
+			args := " -address=" + internal +
+				" -simul=" + deter.Simulation +
+				" -monitor=" + monitorAddr +
+				" -debug=" + strconv.Itoa(dbg.DebugVisible)
+			dbg.Lvl3("Args is", args)
+			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./cothority "+
+				args)
 			if err != nil {
-				dbg.Lvl1("Error starting timestamper:", err, internal)
+				dbg.Lvl1("Error starting cothority:", err, internal)
 			}
-			dbg.Lvl4("Finished with Timestamper", internal)
+			dbg.Lvl4("Finished with cothority on", internal)
 		}(phys, deter.Virt[i])
 	}
 

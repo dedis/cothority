@@ -253,7 +253,7 @@ func isZero(f float64) bool {
 func getStartStop(rcs int) (int, int) {
 	ss_str := strings.Split(simRange, ":")
 	start, err := strconv.Atoi(ss_str[0])
-	stop := rcs
+	stop := rcs - 1
 	if err == nil {
 		stop = start
 		if len(ss_str) > 1 {
@@ -263,6 +263,6 @@ func getStartStop(rcs int) (int, int) {
 			}
 		}
 	}
-	dbg.Lvl2("Range is", start, "...", stop)
+	dbg.Lvl2("Range is", start, ":", stop)
 	return start, stop
 }

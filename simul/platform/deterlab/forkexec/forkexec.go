@@ -23,10 +23,11 @@ func main() {
 	var ourIp string
 	flag.StringVar(&ourIp, "internal", "", "the internal IP for our host")
 	flag.Parse()
-	simulConfig, err := sda.LoadSimulationConfig(".", "")
+	simulConfigs, err := sda.LoadSimulationConfig(".", "")
 	if err != nil {
 		dbg.Fatal("Couldn't load config:", err)
 	}
+	simulConfig := simulConfigs[0]
 
 	var wg sync.WaitGroup
 	monitorAddr := deter.MonitorAddress + ":" + strconv.Itoa(monitor.SinkPort)

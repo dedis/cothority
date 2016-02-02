@@ -133,12 +133,17 @@ func (t *Tree) ListNodes() (ret []*TreeNode) {
 
 // IsBinary returns true if every node has two or no children
 func (t *Tree) IsBinary(root *TreeNode) bool {
+	return t.IsNary(root, 2)
+}
+
+// IsNary returns true if every node has two or no children
+func (t *Tree) IsNary(root *TreeNode, N int) bool {
 	nChild := len(root.Children)
-	if nChild != 2 && nChild != 0 {
+	if nChild != N && nChild != 0 {
 		return false
 	}
 	for _, c := range root.Children {
-		if !t.IsBinary(c) {
+		if !t.IsNary(c, N) {
 			return false
 		}
 	}
@@ -263,28 +268,37 @@ func (en *EntityList) Get(idx int) *network.Entity {
 	return en.List[idx]
 }
 
-// GenerateBinaryTree creates a binary tree out of the EntityList
-// out of it. The first element of the EntityList will be the root element.
-func (il *EntityList) GenerateBinaryTree() *Tree {
-	root := il.addBinary(nil, 0, len(il.List)-1)
+// GenerateNaryTree creates a tree where each node has N children.
+// The first element of the EntityList will be the root element.
+func (il *EntityList) GenerateNaryTree(N int) *Tree {
+	root := il.addNary(nil, N, 0, len(il.List)-1)
 	return NewTree(il, root)
 }
 
-// addBinary is a recursive function to create the binary tree
-func (il *EntityList) addBinary(parent *TreeNode, start, end int) *TreeNode {
+// addNary is a recursive function to create the binary tree
+func (il *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	if start <= end && end < len(il.List) {
 		node := NewTreeNode(il.List[start])
 		if parent != nil {
 			node.Parent = parent
 			parent.Children = append(parent.Children, node)
 		}
-		mid := (start + end) / 2
-		il.addBinary(node, start+1, mid)
-		il.addBinary(node, mid+1, end)
+		diff := end - start
+		for n := 0; n < N; n++ {
+			s := diff * n / N
+			e := diff * (n + 1) / N
+			il.addNary(node, N, start+s+1, start+e)
+		}
 		return node
 	} else {
 		return nil
 	}
+}
+
+// GenerateBinaryTree creates a binary tree out of the EntityList
+// out of it. The first element of the EntityList will be the root element.
+func (il *EntityList) GenerateBinaryTree() *Tree {
+	return il.GenerateNaryTree(2)
 }
 
 // TreeNode is one node in the tree

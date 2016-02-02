@@ -20,6 +20,7 @@ func init() {
 type ProtocolCount struct {
 	*sda.Node
 	Count           chan int
+	Quit            chan bool
 	MsgPrepareCount chan struct {
 		*sda.TreeNode
 		MsgPrepareCount
@@ -37,7 +38,10 @@ type MsgCount struct {
 }
 
 func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
-	p := &ProtocolCount{Node: n}
+	p := &ProtocolCount{
+		Node: n,
+		Quit: make(chan bool),
+	}
 	p.Count = make(chan int, 1)
 	p.RegisterChannel(&p.MsgPrepareCount)
 	p.RegisterChannel(&p.MsgCount)
@@ -56,6 +60,8 @@ func (p *ProtocolCount) DispatchChannels() {
 		case <-time.After(time.Second * 10):
 			dbg.LLvl3("Timeout while waiting for children")
 			p.FuncC(nil)
+		case _ = <-p.Quit:
+			return
 		}
 	}
 }
@@ -85,6 +91,8 @@ func (p *ProtocolCount) FuncC(c []struct {
 	} else {
 		p.Count <- count
 	}
+	p.Quit <- true
+	p.Done()
 }
 
 // Starts the protocol

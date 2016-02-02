@@ -17,9 +17,6 @@ import (
 // Values), Stats (collection of measurements) and DataFilter which is used to
 // apply some filtering before any statistics is done.
 
-// ExtraFields in a RunConfig argument that we may want to parse if present
-var extraFields = [...]string{"bf", "rate", "stampratio"}
-
 // Stats holds the different measurements done
 type Stats struct {
 	// How many hosts do we have

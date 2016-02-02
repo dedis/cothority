@@ -130,7 +130,7 @@ func (d *Deterlab) Build(build string) error {
 	os.Mkdir(d.BuildDir, 0777)
 
 	// start building the necessary packages
-	packages := []string{"forkexec", "simul", "users"}
+	packages := []string{"simul", "users"}
 	if build != "" {
 		packages = strings.Split(build, ",")
 	}
@@ -140,34 +140,25 @@ func (d *Deterlab) Build(build string) error {
 		basename := path.Base(p)
 		if p == "simul" {
 			src_dir = d.CothorityDir
-			basename = d.Simulation
+			basename = "cothority"
 		}
 		dst := d.BuildDir + "/" + basename
 
 		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
 		wg.Add(1)
+		processor := "amd64"
+		system := "linux"
 		if p == "users" {
-			go func(src, dest string) {
-				defer wg.Done()
-				// the users node has a 386 FreeBSD architecture
-				// go won't compile on an absolute path so we need to
-				// convert it to a relative one
-				src_rel, _ := filepath.Rel(d.DeterDir, src)
-				out, err := cliutils.Build("./"+src_rel, dest, "386", "freebsd")
-				if err != nil {
-					cliutils.KillGo()
-					dbg.Lvl1(out)
-					dbg.Fatal(err)
-				}
-			}(src_dir, dst)
-			continue
+			processor = "386"
+			system = "freebsd"
 		}
 		go func(src, dest string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
 			src_rel, _ := filepath.Rel(d.DeterDir, src)
 			dbg.Lvl3("Relative-path is", src, src_rel, d.DeterDir)
-			out, err := cliutils.Build("./"+src_rel, dest, "amd64", "linux")
+			out, err := cliutils.Build("./"+src_rel, dest,
+				processor, system)
 			if err != nil {
 				cliutils.KillGo()
 				dbg.Lvl1(out)

@@ -178,6 +178,47 @@ func TestBinaryTree(t *testing.T) {
 	}
 }
 
+func TestNaryTree(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	names := genLocalhostPeerNames(13, 2000)
+	peerList := genEntityList(tSuite, names)
+	tree := peerList.GenerateNaryTree(3)
+	root := tree.Root
+	if len(root.Children) != 3 {
+		t.Fatal("Not three children from root")
+	}
+	if len(root.Children[0].Children) != 3 {
+		t.Fatal("Not three children from first child")
+	}
+	if len(root.Children[1].Children) != 3 {
+		t.Fatal("Not three children from second child")
+	}
+	if len(root.Children[2].Children) != 3 {
+		t.Fatal("Not three children from third child")
+	}
+	if !tree.IsNary(root, 3) {
+		t.Fatal("Tree should be 3-ary")
+	}
+
+	dbg.TestOutput(testing.Verbose(), 4)
+	names = genLocalhostPeerNames(14, 2000)
+	peerList = genEntityList(tSuite, names)
+	tree = peerList.GenerateNaryTree(3)
+	root = tree.Root
+	if len(root.Children) != 3 {
+		t.Fatal("Not three children from root")
+	}
+	if len(root.Children[0].Children) != 3 {
+		t.Fatal("Not three children from first child")
+	}
+	if len(root.Children[1].Children) != 3 {
+		t.Fatal("Not three children from second child")
+	}
+	if len(root.Children[2].Children) != 3 {
+		t.Fatal("Not three children from third child")
+	}
+}
+
 func TestBinaryTrees(t *testing.T) {
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {

@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/crypto/config"
 	"io/ioutil"
 	"strconv"
+	"strings"
 )
 
 /*
@@ -70,7 +71,7 @@ type SimulationConfigFile struct {
 
 // Load gets all configuration from dir + SimulationFileName and instantiates the
 // corresponding host 'ha'.
-func LoadSimulationConfig(dir, ha string) (*SimulationConfig, error) {
+func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 	network.RegisterMessageType(SimulationConfigFile{})
 	bin, err := ioutil.ReadFile(dir + "/" + SimulationFileName)
 	if err != nil {
@@ -92,20 +93,39 @@ func LoadSimulationConfig(dir, ha string) (*SimulationConfig, error) {
 		return nil, err
 	}
 
-	if ha == "" {
-		return sc, nil
-	}
-	for _, e := range sc.EntityList.List {
-		for _, a := range e.Addresses {
-			if a == ha {
-				host := NewHost(e, scf.PrivateKeys[a])
-				sc.Host = host
-				sc.Overlay = host.overlay
-				return sc, nil
+	ret := make([]*SimulationConfig, 0)
+	if ha != "" {
+		if !strings.Contains(ha, ":") {
+			// to correctly match hosts a column is needed, else
+			// 10.255.0.1 would also match 10.255.0.10 and others
+			ha += ":"
+		}
+		for _, e := range sc.EntityList.List {
+			for _, a := range e.Addresses {
+				dbg.Lvl4("Searching for", ha, "in", a)
+				// If we are started in Deterlab- or other
+				// big-server-needs-multiple-hosts, we might
+				// want to initialise all hosts in one instance
+				// of 'cothority' so as to minimize memory
+				// footprint
+				if strings.Contains(a, ha) {
+					dbg.Lvl3("Found host", a, "to match", ha)
+					host := NewHost(e, scf.PrivateKeys[a])
+					scNew := *sc
+					scNew.Host = host
+					scNew.Overlay = host.overlay
+					ret = append(ret, &scNew)
+				}
+
 			}
 		}
+		if len(ret) == 0 {
+			return nil, errors.New("Didn't find address: " + ha)
+		}
+	} else {
+		ret = append(ret, sc)
 	}
-	return nil, errors.New("Didn't find address: " + ha)
+	return ret, nil
 }
 
 // Save takes everything in the SimulationConfig structure and saves it to
@@ -183,13 +203,10 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 // Creates the tree as defined in SimulationBFTree and stores the result
 // in 'sc'
 func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
-	if s.BF != 2 {
-		return errors.New("Don't know how to do other trees than binary")
-	}
 	if sc.EntityList == nil {
 		return errors.New("Empty EntityList")
 	}
-	sc.Tree = sc.EntityList.GenerateBinaryTree()
+	sc.Tree = sc.EntityList.GenerateNaryTree(s.BF)
 	return nil
 }
 

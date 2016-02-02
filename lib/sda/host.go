@@ -59,7 +59,8 @@ type Host struct {
 	// The suite used for this Host
 	suite abstract.Suite
 	// closed channel to notify the connections that we close
-	Closed chan bool
+	Closed    chan bool
+	isClosing bool
 	// lock associated to access network connections
 	// and to access entities also.
 	networkLock *sync.Mutex
@@ -93,6 +94,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		suite:              network.Suite,
 		networkChan:        make(chan network.NetworkMessage, 1),
 		Closed:             make(chan bool),
+		isClosing:          false,
 		networkLock:        &sync.Mutex{},
 		entityListsLock:    &sync.Mutex{},
 		treesLock:          &sync.Mutex{},
@@ -201,6 +203,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 
 // Close shuts down the listener
 func (h *Host) Close() error {
+	h.isClosing = true
 	time.Sleep(time.Millisecond * 100)
 	h.networkLock.Lock()
 	var err error
@@ -395,10 +398,13 @@ func (h *Host) handleConn(c network.SecureConn) {
 			dbg.Lvl3("Putting message into networkChan from", am.From)
 			h.networkChan <- am
 		case e := <-errorChan:
-			if e == network.ErrClosed || e == network.ErrEOF {
-				return
+			if !h.isClosing {
+				if e == network.ErrClosed || e == network.ErrEOF ||
+					e == network.ErrTemp {
+					return
+				}
+				dbg.Error("Error with connection", address, "=> error", e)
 			}
-			dbg.Error("Error with connection", address, "=> error", e)
 		case <-time.After(timeOut):
 			dbg.Error("Timeout with connection", address)
 		}

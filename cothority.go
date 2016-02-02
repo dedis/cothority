@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	_ "github.com/dedis/cothority/protocols"
 	"github.com/dedis/cothority/protocols/manage"
+	"time"
 )
 
 /*
@@ -25,9 +26,6 @@ var Monitor string
 // Simul is != "" if this node needs to start a simulation of that protocol
 var Simul string
 
-// StartProto - if true, this node will 'Start' the protocol
-var StartProto bool
-
 // ConfigFile represents the configuration for a standalone run
 var ConfigFile string
 
@@ -36,7 +34,6 @@ var ConfigFile string
 func init() {
 	flag.StringVar(&HostAddress, "address", "", "our address to use")
 	flag.StringVar(&Simul, "simul", "", "start simulating that protocol")
-	flag.BoolVar(&StartProto, "start", false, "whether to start the protocol")
 	flag.StringVar(&ConfigFile, "config", "config.toml", "which config-file to use")
 	flag.StringVar(&Monitor, "monitor", "", "remote monitor")
 	flag.IntVar(&dbg.DebugVisible, "debug", 1, "verbosity: 0-5")
@@ -45,10 +42,7 @@ func init() {
 // Main starts the host and will setup the protocol.
 func main() {
 	flag.Parse()
-	if Monitor != "" {
-		monitor.ConnectSink(Monitor)
-	}
-	dbg.Lvl3("Flags are:", HostAddress, Simul, StartProto, dbg.DebugVisible)
+	dbg.LLvl3("Flags are:", HostAddress, Simul, dbg.DebugVisible, Monitor)
 	if Simul == "" {
 		// We're in standalone mode and only start the node
 		host, err := sda.NewHostFromFile(ConfigFile)
@@ -61,13 +55,32 @@ func main() {
 		case <-host.Closed:
 		}
 	} else {
-		// There is a protocol to be initialised and perhaps started
-		sc, err := sda.LoadSimulationConfig(".", HostAddress)
-		if err != nil {
-			dbg.Fatal(err)
-		}
-		sc.Host.Listen()
-		go sc.Host.ProcessMessages()
+		startSimulation()
+	}
+}
+
+// startSimulation will start all necessary hosts and eventually start the
+// simulation.
+func startSimulation() {
+	// There is a protocol to be initialised and perhaps started
+	scs, err := sda.LoadSimulationConfig(".", HostAddress)
+	if err != nil {
+		// We probably are not needed
+		dbg.Lvl2(err)
+		return
+	}
+	if Monitor != "" {
+		monitor.ConnectSink(Monitor)
+	}
+	var sims []sda.Simulation
+	var rootSC *sda.SimulationConfig
+	var rootSim sda.Simulation
+	for _, sc := range scs {
+		// Starting all hosts for that server
+		host := sc.Host
+		dbg.Lvl3("Starting host", host.Entity.Addresses)
+		host.Listen()
+		go host.ProcessMessages()
 		sim, err := sda.NewSimulation(Simul, sc.Config)
 		if err != nil {
 			dbg.Fatal(err)
@@ -76,35 +89,53 @@ func main() {
 		if err != nil {
 			dbg.Fatal(err)
 		}
-		if StartProto {
-			childrenWait := monitor.NewMeasure("ChildrenWait")
-			for {
-				dbg.Lvl2("Counting children")
-				node, err := sc.Overlay.StartNewNodeName("Count", sc.Tree)
-				if err != nil {
-					dbg.Fatal(err)
-				}
-				count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count
-				if count == sc.Tree.Size() {
+		sims = append(sims, sim)
+		if host.Entity.Id == sc.Tree.Root.Entity.Id {
+			dbg.Lvl2("Found root-node, will start protocol")
+			rootSim = sim
+			rootSC = sc
+		}
+	}
+	if rootSim != nil {
+		// If this cothority has the root-host, it will start the simulation
+		dbg.Lvl2("Starting protocol", Simul, "on host", rootSC.Host.Entity.Addresses)
+		childrenWait := monitor.NewMeasure("ChildrenWait")
+		wait := true
+		for wait {
+			dbg.LLvl2("Counting children")
+			node, err := rootSC.Overlay.StartNewNodeName("Count", rootSC.Tree)
+			if err != nil {
+				dbg.Fatal(err)
+			}
+			select {
+			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
+				if count == rootSC.Tree.Size() {
 					dbg.Lvl2("Found all children")
-					break
+					wait = false
 				} else {
 					dbg.Lvl2("Found only", count, "children")
 				}
-			}
-			childrenWait.Measure()
-			dbg.Lvl2("Starting new node", Simul)
-			err := sim.Run(sc)
-			if err != nil {
-				dbg.Fatal(err)
-			}
-			_, err = sc.Overlay.StartNewNodeName("CloseAll", sc.Tree)
-			if err != nil {
-				dbg.Fatal(err)
+			case <-time.After(time.Second * 10):
+				dbg.Lvl1("Timed out waiting for children")
 			}
 		}
-		select {
-		case <-sc.Host.Closed:
+		childrenWait.Measure()
+		dbg.Lvl2("Starting new node", Simul)
+		err := rootSim.Run(rootSC)
+		if err != nil {
+			dbg.Fatal(err)
 		}
+		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", rootSC.Tree)
+		if err != nil {
+			dbg.Fatal(err)
+		}
+	} else {
+		rootSC = scs[0]
+	}
+
+	// Wait for the first host to be closed
+	select {
+	case <-rootSC.Host.Closed:
+		dbg.Lvl2("First host closed - quitting")
 	}
 }
