@@ -107,6 +107,33 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 // protocol. This is called from the root-node and will start the
 // protocol
 func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+
+	// instantiate node
+	var err error
+	var node *Node
+	node, err = o.CreateNewNode(protocolID, tree)
+	if err != nil {
+		return nil, err
+	}
+
+	// instantiate protocol
+	if err = node.protocolInstantiate(); err != nil {
+		return nil, err
+	}
+	o.nodes[node.token.Id()] = node
+	// start it
+	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
+	err = node.Start()
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// CreateNewNode is used when you want to first, create the node, and then
+// create the protocol instance yourself for example.THe alternative that do
+// both steps in one is  StartNewNode
+func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
 		debug.PrintStack()
@@ -125,25 +152,19 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 		// Host is handling the generation of protocolInstanceID
 		RoundID: uuid.NewV4(),
 	}
-	// instantiate node
-	var err error
-	o.nodes[token.Id()], err = NewNode(o, token)
-	dbg.Lvl3("Making new node (err=", err, ")")
-	if err != nil {
-		return nil, err
-	}
-
-	// start it
-	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
-	err = o.nodes[token.Id()].Start()
-	if err != nil {
-		return nil, err
-	}
-	return o.nodes[token.Id()], nil
+	// only create the node
+	return NewNodeEmpty(o, token), nil
 }
 
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
 	return o.StartNewNode(ProtocolNameToUuid(name), tree)
+}
+
+// CreateNewNodeName only creates the Node but do not call the instantiation of
+// the protocol directly, that way you can do your own stuff before calling
+// protocol.Start() or node.Start()
+func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
+	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token

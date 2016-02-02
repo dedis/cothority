@@ -328,7 +328,7 @@ func (h *Host) ProcessMessages() {
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
-		return fmt.Errorf("Error marshaling  message : %s", err.Error())
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
