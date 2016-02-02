@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"time"
 )
 
 // Cosi is the struct that implements the "vanilla" cosi.
@@ -12,6 +13,9 @@ type Cosi struct {
 	suite abstract.Suite
 	// the longterm private key we use durings the rounds
 	private abstract.Secret
+	// timestamp of when the announcement is done (i.e. timestamp of the four
+	// phases)
+	timestamp int64
 	// random is our own secret that we wish to commit during the commitment phase.
 	random abstract.Secret
 	// commitment is our own commitment
@@ -33,6 +37,10 @@ func NewCosi(suite abstract.Suite, private abstract.Secret) *Cosi {
 		suite:   suite,
 		private: private,
 	}
+}
+
+type Announcement struct {
+	Timestamp int64
 }
 
 type Commitment struct {
@@ -58,6 +66,20 @@ type CosiSignature struct {
 	Response  abstract.Secret
 }
 
+// CreateAnnouncement simply creates a Announcement message with the timestamp =
+// current time.
+func (c *Cosi) CreateAnnouncement() *Announcement {
+	now := time.Now().Unix()
+	c.timestamp = now
+	return &Announcement{now}
+}
+
+// Announcement simply store the timestamp and relay the message.
+func (c *Cosi) Announce(in *Announcement) *Announcement {
+	c.timestamp = in.Timestamp
+	return in
+}
+
 // CreateCommitment creates the commitment out of the randoms secret and returns
 // the message to pass up in the tree. This is typically called by leaves.
 func (c *Cosi) CreateCommitment() *Commitment {
@@ -69,7 +91,7 @@ func (c *Cosi) CreateCommitment() *Commitment {
 
 // Commit creates the commitment / secret + aggregate children commitments from
 // the children's messages.
-func (c *Cosi) Commit(comms []*Commitment) (*Commitment, error) {
+func (c *Cosi) Commit(comms []*Commitment) *Commitment {
 	// generate our own commit
 	c.genCommit()
 	// take the children commitment
@@ -88,7 +110,7 @@ func (c *Cosi) Commit(comms []*Commitment) (*Commitment, error) {
 	return &Commitment{
 		ChildrenCommit: child_v_hat,
 		Commitment:     c.commitment,
-	}, nil
+	}
 
 }
 

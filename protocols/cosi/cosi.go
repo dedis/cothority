@@ -1,6 +1,7 @@
 package cosi
 
 import (
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
@@ -25,10 +26,15 @@ type ProtocolCosi struct {
 	*sda.Node
 	// TreeNodeId cached
 	treeNodeId uuid.UUID
+	// the cosi struct we use (since it is a cosi protocol)
+	// Public because we will need it from other protocols.
+	Cosi *cosi.Cosi
+	// the message we want to sign typically given by the Root
+	message []byte
 	// The channel waiting for Announcement message
 	announce chan chanAnnouncement
 	// announcement hook
-	announcementHook func(in *AnnouncementMessage, out []*AnnouncementMessage)
+	announcementHook func(in *CosiAnnouncement)
 	// the channel waiting for Commitment message
 	commit chan chanCommitment
 	// the channel waiting for Challenge message
@@ -38,11 +44,11 @@ type ProtocolCosi struct {
 	// the channel that indicates if we are finished or not
 	done chan bool
 	// temporary buffer of commitment messages
-	tempCommitment []*CommitmentMessage
+	tempCommitment []*CosiCommitment
 	// lock associated
 	tempCommitLock *sync.Mutex
 	// temporary buffer of Response messages
-	tempResponse []*ResponseMessage
+	tempResponse []*CosiResponse
 	// lock associated
 	tempResponseLock *sync.Mutex
 }
@@ -59,19 +65,10 @@ type ProtocolCosi struct {
 // }
 // sda.RegisterNewProtocolName("cothority",fn)
 // ```
-func NewProtocolCosi(round Round, node *sda.Node) (*ProtocolCosi, error) {
+func NewProtocolCosi(node *sda.Node) (*ProtocolCosi, error) {
 	var err error
-	// if no round given
-	if round == nil {
-		// create the default RoundCosi
-		round, err = NewRoundFromType("RoundCosi", node)
-		if err != nil {
-			// Ouch something went wrong.
-			return nil, err
-		}
-	}
 	pc := &ProtocolCosi{
-		round:            round,
+		Cosi:             cosi.NewCosi(node.Suite(), node.Private()),
 		Node:             node,
 		done:             make(chan bool),
 		tempCommitLock:   new(sync.Mutex),
@@ -92,7 +89,7 @@ func NewProtocolCosi(round Round, node *sda.Node) (*ProtocolCosi, error) {
 // Start() will call the announcement function of its inner Round structure. It
 // will pass nil as *in* message.
 func (pc *ProtocolCosi) Start() error {
-	return pc.handleAnnouncement(nil)
+	return pc.StartAnnouncement()
 }
 
 // Dispatch is not used, and already panics because it's DEPRECATED.
@@ -106,13 +103,13 @@ func (pc *ProtocolCosi) listen() {
 		var err error
 		select {
 		case packet := <-pc.announce:
-			err = pc.handleAnnouncement(&packet.AnnouncementMessage)
+			err = pc.handleAnnouncement(&packet.CosiAnnouncement)
 		case packet := <-pc.commit:
-			err = pc.handleCommitment(&packet.CommitmentMessage)
+			err = pc.handleCommitment(&packet.CosiCommitment)
 		case packet := <-pc.challenge:
-			err = pc.handleChallenge(&packet.ChallengeMessage)
+			err = pc.handleChallenge(&packet.CosiChallenge)
 		case packet := <-pc.response:
-			err = pc.handleResponse(&packet.ResponseMessage)
+			err = pc.handleResponse(&packet.CosiResponse)
 		case <-pc.done:
 			return
 		}
@@ -122,53 +119,77 @@ func (pc *ProtocolCosi) listen() {
 	}
 }
 
-type AnnouncementHook func(in *AnnouncementMessage, out []*AnnouncementMessage) error
+// StartAnnouncement will start a new announcement.
+func (pc *ProtocolCosi) StartAnnouncement() error {
+	// First check the hook
+	if pc.announcementHook != nil {
+		return pc.announcementHook(out)
+	}
+	// otherwise make the announcement  yourself
+	announcement := pc.Cosi.CreateAnnouncement()
+
+	out := &CosiAnnouncement{
+		From:         pc.treeNodeId,
+		Announcement: ann,
+	}
+
+	return pc.sendAnnouncement(out)
+}
+
+type AnnouncementHook func(in *CosiAnnouncement)
 
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
-func (pc *ProtocolCosi) handleAnnouncement(in *AnnouncementMessage) error {
-	// create output buffer if we are not leaf
-	var out []*AnnouncementMessage
-	if !pc.IsLeaf() {
-		out = make([]*AnnouncementMessage, len(pc.Children()))
-		for i := range out {
-			out[i] = &AnnouncementMessage{
-				From: pc.treeNodeId,
-			}
-		}
-	} else {
-		out = nil
-	}
+func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
 
-	// THEN
 	// If we have a hook on announcement call the hook
-	// the hook is responsible to call pc.Announce(in,out)
+	// the hook is responsible to call pc.Cosi.Announce(in)
 	if pc.announcementHook != nil {
-		return pc.announcementHook(in, out)
+		return pc.announcementHook(in)
 	}
 
-	// Otherwise, call anouncement ourself
-	if err := pc.announcement(in, out); err != nil {
-		return err
-	}
+	// Otherwise, call announcement ourself
+	announcement := pc.Cosi.Announce(in.Announcement)
 
 	// If we are leaf, we should go to commitment
 	if pc.IsLeaf() {
-		return pc.handleCommitment(nil)
+		return pc.StartCommitment()
+	}
+	out := &CosiAnnouncement{
+		From:         pc.treeNodeId,
+		Announcement: ann,
 	}
 
 	// send the output to children
+	return pc.sendAnnouncement(out)
+}
+
+// sendAnnouncement simply send the announcement to every children
+func (pc *ProtocolCosi) sendAnnouncement(ann *cosi.Announcement) error {
 	var err error
-	for i, tn := range pc.Children() {
+	for _, tn := range pc.Children() {
 		// still try to send to everyone
-		err = pc.SendTo(tn, out[i])
+		err = pc.SendTo(tn, out)
 	}
 	return err
 }
 
-// Announcement does the Announcement part of CoSi
-func (pc *ProtocolCosi) Announcement(in *AnnouncementMessage, out []*AnnouncementMessage) error {
+type CommitmentHook func(in []*CosiCommitment) error
 
+// StartCommitment create a new commitment and send it up (or to the hook)
+func (pc *ProtocolCosi) StartCommitment() error {
+	// First check the hook
+	if pc.commitmentHook != nil {
+		return pc.commitmentHook(nil)
+	}
+	// otherwise make it yourself
+	commitment := pc.Cosi.CreateCommitment()
+	out := &CosiCommitment{
+		From:       pc.treeNodeId,
+		Commitment: commitment,
+	}
+
+	return pc.SendTo(pc.Parent(), out)
 }
 
 // handleAllCommitment takes the full set of messages from the children and pass
@@ -179,60 +200,98 @@ func (pc *ProtocolCosi) handleCommitment(in *CommitmentMessage) error {
 	pc.tempCommitment = append(pc.tempCommitment, in)
 	pc.tempCommitLock.Unlock()
 	// do we have enough ?
+	// TODO: exception mechanism will be put into another protocol
 	if len(pc.tempCommitment) < len(pc.Children()) {
 		return nil
 	}
 
-	// create output message
-	var out *CommitmentMessage
-	out.From = pc.treeNodeId
-	// dispatch it to the round
-	if err := pc.round.Commitment(pc.tempCommitment, out); err != nil {
-		return err
+	// pass it to the hook
+	if pc.commitmentHook != nil {
+		return pc.commitmentHook(pc.tempCommitment)
 	}
+
+	// or make continue the cosi protocol
+	commits := make([]*cosi.Commitment, len(pc.tempCommitment))
+	for i := range pc.tempCommitment {
+		commits[i] = pc.tempCommitment[i].Commitment
+	}
+	// go to Commit()
+	out := pc.Cosi.Commit(commits)
 
 	// if we are the root, we need to start the Challenge
 	if pc.IsRoot() {
-		return pc.handleChallenge(nil)
+		return pc.StartChallenge()
 	}
 
 	// otherwise send it to parent
 	return pc.SendTo(pc.Parent(), out)
+}
+
+// StartChallenge start the challenge phase. Typically called by the Root ;)
+func (pc *ProtocolCosi) StartChallenge() error {
+	// first check the hook
+	/*if pc.challengeHook != nil {*/
+	//return pc.challengeHook(nil)
+	/*}*/
+
+	if pc.message == nil {
+		return errors.New("StartChallenge() called without message (=nil)")
+	}
+	challenge, err := pc.Cosi.CreateChallenge(pc.message)
+	if err != nil {
+		return err
+	}
+	out := &CosiChallenge{
+		From:      pc.treeNodeId,
+		Challenge: challenge,
+	}
+	return pc.sendChallenge(out)
 
 }
 
 // handleChallenge dispatch the challenge to the round and then dispatch the
 // results down the tree.
 func (pc *ProtocolCosi) handleChallenge(in *ChallengeMessage) error {
-	var out []*ChallengeMessage
-	// if we are not a leaf, we  create output buffer
-	if !pc.IsLeaf() {
-		out := make([]*ChallengeMessage, len(pc.Children()))
-		for i := range out {
-			out[i] = &ChallengeMessage{
-				From: pc.treeNodeId,
-			}
-		}
-	} else {
-		out = nil
-	}
+	// TODO check hook
 
-	// dispatch it to the round
-	if err := pc.round.Challenge(in, out); err != nil {
-		return err
-	}
+	// else dispatch it to cosi
+	challenge := pc.Cosi.Challenge(in)
 
 	// if we are leaf, then go to response
 	if pc.IsLeaf() {
-		return pc.handleResponse(nil)
+		return pc.StartResponse()
 	}
 
 	// otherwise send it to children
+	out := &CosiChallenge{
+		From:      pc.treeNodeId,
+		Challenge: challenge,
+	}
+	return pc.sendChallenge(out)
+}
+
+// sendChallenge sends the challenge down the tree.
+func (pc *ProtocolCosi) sendChallenge(out *CosiChallenge) error {
 	var err error
 	for i, tn := range pc.Children() {
 		err = pc.SendTo(tn, out[i])
 	}
 	return err
+
+}
+
+func (pc *ProtocolCosi) StartResponse() error {
+	// TODO check the hook
+	// else do it yourself
+	resp, err := pc.Cosi.CreateResponse()
+	if err != nil {
+		return err
+	}
+	out := &CosiResponse{
+		From:     pc.treeNodeId,
+		Response: resp,
+	}
+	return pc.SendTo(pc.Parent(), out)
 }
 
 // handleResponse brings up the response of each node in the tree to the root.
@@ -246,17 +305,26 @@ func (pc *ProtocolCosi) handleResponse(in *ResponseMessage) error {
 		return nil
 	}
 
-	var out *ResponseMessage
-	out.From = pc.treeNodeId
-	// dispatch it
-	if err := pc.round.Response(pc.tempResponse, out); err != nil {
+	// TODO check the hook
+
+	// else do it yourself
+	responses := make([]*cosi.Response, len(pc.tempResponse))
+	for i := range pc.tempResponse {
+		responses[i] = pc.tempResponse[i]
+	}
+	outResponse, err := pc.Cosi.Response(responses)
+	if err != nil {
 		return err
 	}
-
+	out := &CosiResponse{
+		From:     pc.treeNodeId,
+		Response: outResponse,
+	}
 	// send it back to parent
 	return pc.SendTo(pc.Parent(), out)
 }
 
+// TODO Still see if it is relevant...
 func (pc *ProtocolCosi) RegisterAnnouncementHook(fn func(in *AnnouncementMessage, out []*AnnouncementMessage) error) {
 	pc.announcementHook = fn
 }
