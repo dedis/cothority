@@ -375,8 +375,7 @@ func (p *ProtocolChannels) Start() error {
 	return nil
 }
 
-func (p *ProtocolChannels) Dispatch([]*sda.SDAData) error {
-	dbg.Fatal("This should not be called")
+func (p *ProtocolChannels) Dispatch() error {
 	return nil
 }
 
@@ -425,8 +424,7 @@ func (p *ProtocolHandlers) HandleMessageAggregate(msg []struct {
 	IncomingHandlers <- p.Node
 }
 
-func (p *ProtocolHandlers) Dispatch([]*sda.SDAData) error {
-	dbg.Error("This should not be called")
+func (p *ProtocolHandlers) Dispatch() error {
 	return nil
 }
 

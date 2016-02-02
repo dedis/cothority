@@ -38,7 +38,6 @@ func NewExampleChannels(n *sda.Node) (sda.ProtocolInstance, error) {
 	if err != nil {
 		return nil, errors.New("couldn't register reply-channel: " + err.Error())
 	}
-	go ExampleChannels.DispatchChannels()
 	return ExampleChannels, nil
 }
 
@@ -51,13 +50,8 @@ func (p *ProtocolExampleChannels) Start() error {
 	return nil
 }
 
-// Dispatch takes the message and decides what function to call
-func (p *ProtocolExampleChannels) Dispatch(m []*sda.SDAData) error {
-	return nil
-}
-
-// DispatchChannels is an infinite loop to handle messages from channels
-func (p *ProtocolExampleChannels) DispatchChannels() {
+// Dispatch is an infinite loop to handle messages from channels
+func (p *ProtocolExampleChannels) Dispatch() error {
 	for {
 		select {
 		case announcement := <-p.ChannelAnnounce:
@@ -85,4 +79,5 @@ func (p *ProtocolExampleChannels) DispatchChannels() {
 			}
 		}
 	}
+	return nil
 }

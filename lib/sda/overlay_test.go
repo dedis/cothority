@@ -17,8 +17,7 @@ func (po *ProtocolOverlay) Start() error {
 	return nil
 }
 
-func (po *ProtocolOverlay) Dispatch(msgs []*sda.SDAData) error {
-	// same here
+func (po *ProtocolOverlay) Dispatch() error {
 	return nil
 }
 

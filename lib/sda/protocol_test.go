@@ -18,21 +18,21 @@ var aggregateID = uuid.NewV5(uuid.NamespaceURL, "aggregate")
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
-	node *sda.Node
-	Msg  string
+	*sda.Node
+	Msg string
 }
 
 // NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
-		node: n,
+		Node: n,
 		Msg:  "new",
 	}, nil
 }
 
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
-func (p *ProtocolTest) Dispatch(m []*sda.SDAData) error {
+func (p *ProtocolTest) Dispatch() error {
 	dbg.Lvl2("ProtocolTest.Dispatch()")
 	p.Msg = "Dispatch"
 	return nil
@@ -47,14 +47,14 @@ func (p *ProtocolTest) Start() error {
 type SimpleProtocol struct {
 	// chan to get back to testing
 	Chan chan bool
-	node *sda.Node
+	*sda.Node
 }
 
 // Sends a simple message to its first children
 func (p *SimpleProtocol) Start() error {
-	dbg.Lvl2("Sending from", p.node.Entity().First(), "to",
-		p.node.Children()[0].Entity.First())
-	err := p.node.SendTo(p.node.Children()[0], &SimpleMessage{10})
+	dbg.Lvl2("Sending from", p.Entity().First(), "to",
+		p.Children()[0].Entity.First())
+	err := p.SendTo(p.Children()[0], &SimpleMessage{10})
 	if err != nil {
 		return err
 	}
@@ -63,12 +63,11 @@ func (p *SimpleProtocol) Start() error {
 }
 
 // Dispatch analyses the message and does nothing else
-func (p *SimpleProtocol) Dispatch(m []*sda.SDAData) error {
-	dbg.Lvl2("Dispatching", m)
-	if m[0].MsgType != SimpleMessageType {
-		return errors.New("Not the message expected")
-	}
-	msg := m[0].Msg.(SimpleMessage)
+func (p *SimpleProtocol) ReceiveMessage(msg struct {
+	*sda.TreeNode
+	SimpleMessage
+}) error {
+	dbg.Lvl2("Dispatching", msg)
 	if msg.I != 10 {
 		return errors.New("Not the value expected")
 	}
@@ -100,13 +99,15 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// custom creation function so we know the step due to the channels
 	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
 		ps := SimpleProtocol{
-			node: n,
+			Node: n,
 			Chan: chans[id],
 		}
+		ps.RegisterHandler(ps.ReceiveMessage)
 		id++
 		return &ps, nil
 	}
 
+	network.RegisterMessageType(SimpleMessage{})
 	sda.ProtocolRegister(testID, fn)
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
