@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"runtime/debug"
 )
 
 /*
@@ -51,7 +50,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		dbg.Lvl2("Will ask for tree from token")
+		dbg.Lvl3("Will ask for tree from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// If node does not exists, then create it
@@ -118,7 +117,6 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
-		debug.PrintStack()
 		return nil, errors.New("Protocol doesn't exists: " + protocolID.String())
 	}
 	rootEntity := tree.Root.Entity

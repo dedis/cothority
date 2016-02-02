@@ -76,7 +76,7 @@ func (d *Localhost) Configure() {
 
 // Will build the application
 func (d *Localhost) Build(build string) error {
-	src, _ := filepath.Rel(d.LocalDir, d.LocalDir+"/..")
+	src, _ := filepath.Rel(d.LocalDir, d.LocalDir+"/cothority")
 	dst := d.RunDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine

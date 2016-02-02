@@ -82,6 +82,9 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		if text == "" {
 			break
 		}
+		if text[0] == '#' {
+			continue
+		}
 
 		// checking if format is good
 		vals := strings.Split(text, "=")
@@ -95,7 +98,12 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		dbg.Lvlf5("Platform is now %+v", p)
 	}
 
-	scanner.Scan()
+	for {
+		scanner.Scan()
+		if scanner.Text() != "" {
+			break
+		}
+	}
 	args := strings.Split(scanner.Text(), ", ")
 	for scanner.Scan() {
 		rc := masterConfig.Clone()

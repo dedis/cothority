@@ -94,7 +94,7 @@ var simulConfig *sda.SimulationConfig
 func (d *Deterlab) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.CothorityDir = pwd + "/.."
+	d.CothorityDir = pwd + "/cothority"
 	d.DeterDir = pwd + "/platform/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
@@ -233,7 +233,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	if err != nil {
 		return err
 	}
-	dbg.LLvl3("Creating hosts")
+	dbg.Lvl3("Creating hosts")
 	deter.createHosts()
 	d.MasterLogger = deter.MasterLogger
 	app.WriteTomlConfig(deter, deterConfig, d.DeployDir)
@@ -243,7 +243,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 		return err
 	}
 	simulConfig.Config = string(rc.Toml())
-	dbg.LLvl3("Saving configuration")
+	dbg.Lvl3("Saving configuration")
 	simulConfig.Save(d.DeployDir)
 
 	// Copy limit-files for more connections
@@ -310,8 +310,8 @@ func (d *Deterlab) Wait() error {
 			} else {
 				dbg.Lvl1("Received out-of-line message", msg)
 			}
-		case <-time.After(time.Minute):
-			dbg.Lvl3("No message waiting")
+		case <-time.After(time.Minute * 2):
+			dbg.Lvl1("Quitting after 2 minutes of waiting")
 		}
 		d.started = false
 	}

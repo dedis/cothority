@@ -321,7 +321,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 		dbg.Lvl4("Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
-		dbg.Lvl4("Dispatching to handler")
+		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
 		err = n.DispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")

@@ -251,7 +251,9 @@ func (h *Host) ProcessMessages() {
 		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
 		case SDADataMessage:
-			err := h.processSDAMessage(&data)
+			sdaMsg := data.Msg.(SDAData)
+			sdaMsg.Entity = data.Entity
+			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
@@ -403,22 +405,13 @@ func (h *Host) handleConn(c network.SecureConn) {
 					e == network.ErrTemp {
 					return
 				}
-				dbg.Error("Error with connection", address, "=> error", e)
+				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=> error", e)
 			}
 		case <-time.After(timeOut):
 			dbg.Error("Timeout with connection", address)
 			h.Close()
 		}
 	}
-}
-
-// Dispatch SDA message looks if we have all the info to rightly dispatch the
-// packet such as the protocol id and the topology id and the protocol instance
-// id
-func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
-	sdaMsg := am.Msg.(SDAData)
-	sdaMsg.Entity = am.Entity
-	return h.overlay.TransmitMsg(&sdaMsg)
 }
 
 // requestTree will ask for the tree the sdadata is related to.
@@ -447,17 +440,21 @@ func (h *Host) addPendingSda(sda *SDAData) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		for i := range h.pendingSDAs {
+		newPending := make([]*SDAData, 0)
+		for _, msg := range h.pendingSDAs {
 			// if this message references t
-			if uuid.Equal(t.Id, h.pendingSDAs[i].To.TreeID) {
+			if uuid.Equal(t.Id, msg.To.TreeID) {
 				// instantiate it and go
-				err := h.overlay.TransmitMsg(h.pendingSDAs[i])
+				err := h.overlay.TransmitMsg(msg)
 				if err != nil {
 					dbg.Error("TransmitMsg failed:", err)
 					continue
 				}
+			} else {
+				newPending = append(newPending, msg)
 			}
 		}
+		h.pendingSDAs = newPending
 		h.pendingSDAsLock.Unlock()
 	}()
 }
