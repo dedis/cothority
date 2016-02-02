@@ -2,7 +2,6 @@ package cosi
 
 import (
 	"fmt"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
 	"testing"
@@ -10,6 +9,7 @@ import (
 
 var testSuite = edwards.NewAES128SHA256Ed25519(false)
 
+// TestCosiCommitment test if the commitment generation is correct
 func TestCosiCommitment(t *testing.T) {
 	var length = 5
 	cosis := genCosis(length)
@@ -75,6 +75,8 @@ func TestCosiResponse(t *testing.T) {
 	}
 }
 
+// TestCosiVerifyResponse test if the response generation is correct and if we
+// can verify the final signature.
 func TestCosiVerifyResponse(t *testing.T) {
 	msg := []byte("Hello World Cosi")
 	root, children, err := genFinalCosi(5, msg)
@@ -118,14 +120,6 @@ func TestCosiVerifyResponse(t *testing.T) {
 	if err := VerifySignature(testSuite, msg, aggregatedPublic, root.challenge, root.aggregateResponse); err != nil {
 		t.Fatal("Error veriying:", err)
 	}
-}
-
-func genSecrets(nb int) []abstract.Secret {
-	panic("aie")
-}
-
-func genPoints(nb int) []abstract.Point {
-	panic("aie")
 }
 
 func genKeyPair(nb int) []*config.KeyPair {
