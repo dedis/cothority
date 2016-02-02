@@ -46,11 +46,6 @@ func (p *ProtocolExampleHandlers) Start() error {
 		MessageAnnounce{"cothority rulez!"}})
 }
 
-// Dispatch takes the message and decides what function to call
-func (p *ProtocolExampleHandlers) Dispatch(m []*sda.SDAData) error {
-	return nil
-}
-
 // HandleAnnounce is the first message and is used to send an ID that
 // is stored in all nodes.
 func (p *ProtocolExampleHandlers) HandleAnnounce(msg StructAnnounce) error {

@@ -18,8 +18,8 @@ type ProtocolInstance interface {
 	// in turns instantiate a new protocol (with a fresh token), and then call
 	// Start on it.
 	Start() error
-	// Dispatch is called whenever packets are ready and should be treated
-	Dispatch([]*SDAData) error
+	// Dispatch is called as a go-routine and can be used to handle channels
+	Dispatch() error
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol

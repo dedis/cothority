@@ -11,72 +11,56 @@ Protocol used to close all connections, starting from the leaf-nodes.
 */
 
 func init() {
-	network.RegisterMessageType(MsgPrepareCount{})
-	network.RegisterMessageType(MsgCount{})
+	network.RegisterMessageType(PrepareCount{})
+	network.RegisterMessageType(Count{})
 	sda.ProtocolRegisterName("Count", NewCount)
 }
 
 type ProtocolCount struct {
 	*sda.Node
-	Count           chan int
-	MsgPrepareCount chan struct {
-		*sda.TreeNode
-		MsgPrepareCount
-	}
-	MsgCount chan []struct {
-		*sda.TreeNode
-		MsgCount
-	}
+	Count chan int
 }
 
-type MsgPrepareCount struct{}
+type PrepareCount struct{}
+type PrepareCountMsg struct {
+	*sda.TreeNode
+	PrepareCount
+}
 
-type MsgCount struct {
+type Count struct {
 	Children int
+}
+type CountMsg struct {
+	*sda.TreeNode
+	Count
 }
 
 func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolCount{Node: n}
 	p.Count = make(chan int, 1)
-	p.RegisterChannel(&p.MsgPrepareCount)
-	p.RegisterChannel(&p.MsgCount)
-	go p.DispatchChannels()
+	p.RegisterHandler(p.FuncPC)
+	p.RegisterHandler(p.FuncC)
 	return p, nil
 }
 
-func (p *ProtocolCount) DispatchChannels() {
-	for {
-		dbg.Lvl3("waiting for message in", p.Entity().Addresses)
-		select {
-		case _ = <-p.MsgPrepareCount:
-			p.FuncPC()
-		case c := <-p.MsgCount:
-			p.FuncC(c)
-		}
-	}
-}
-
-func (p *ProtocolCount) FuncPC() {
+func (p *ProtocolCount) FuncPC(pc PrepareCountMsg) {
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			dbg.Lvl3("Sending to", c.Entity.Addresses)
-			p.SendTo(c, &MsgPrepareCount{})
+			p.SendTo(c, &PrepareCount{})
 		}
 	} else {
 		p.FuncC(nil)
 	}
 }
 
-func (p *ProtocolCount) FuncC(c []struct {
-	*sda.TreeNode
-	MsgCount
-}) {
+func (p *ProtocolCount) FuncC(c []CountMsg) {
 	count := 1
 	for _, c := range c {
-		count += c.MsgCount.Children
+		count += c.Count.Children
 	}
 	if !p.IsRoot() {
-		p.SendTo(p.Parent(), &MsgCount{count})
+		p.SendTo(p.Parent(), &Count{count})
 	} else {
 		p.Count <- count
 	}
@@ -85,11 +69,6 @@ func (p *ProtocolCount) FuncC(c []struct {
 // Starts the protocol
 func (p *ProtocolCount) Start() error {
 	// Send an empty message
-	p.FuncPC()
-	return nil
-}
-
-// Dispatch takes the message and decides what function to call
-func (p *ProtocolCount) Dispatch(m []*sda.SDAData) error {
+	p.FuncPC(PrepareCountMsg{})
 	return nil
 }

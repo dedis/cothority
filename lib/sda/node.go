@@ -236,7 +236,13 @@ func (n *Node) protocolInstantiate() error {
 		return errors.New("We are not represented in the tree")
 	}
 	n.instance, err = p(n)
+	go n.instance.Dispatch()
 	return err
+}
+
+// Dispatch - the standard dispatching function is empty
+func (n *Node) Dispatch() error {
+	return nil
 }
 
 func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
@@ -307,7 +313,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 		dbg.Lvl3("Not done")
 		return nil
 	}
-	dbg.Lvl3("Going to dispatch")
+	dbg.Lvl3("Going to dispatch", sdaMsg)
 
 	var err error
 	switch {
@@ -318,8 +324,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 		dbg.Lvl3("Dispatching to handler")
 		err = n.DispatchHandler(msgs)
 	default:
-		dbg.Lvl3("Calling dispatch-function")
-		err = n.instance.Dispatch(msgs)
+		return errors.New("This message-type is not handled by this protocol")
 	}
 	return err
 }
