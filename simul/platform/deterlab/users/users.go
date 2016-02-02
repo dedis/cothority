@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/deploy/platform"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/simul/platform"
 	"os"
 	"os/exec"
 	"regexp"

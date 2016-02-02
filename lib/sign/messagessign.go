@@ -21,6 +21,20 @@ func init() {
 }
 
 // identitymessage is used when we connect to a node listening, we must give to
+var Announcement = network.RegisterMessageType(AnnouncementMessage{})
+var Commitment = network.RegisterMessageType(CommitmentMessage{})
+var Challenge = network.RegisterMessageType(ChallengeMessage{})
+var Response = network.RegisterMessageType(ResponseMessage{})
+var SignatureBroadcast = network.RegisterMessageType(SignatureBroadcastMessage{})
+var StatusReturn = network.RegisterMessageType(StatusReturnMessage{})
+var CatchUpReq = network.RegisterMessageType(CatchUpRequest{})
+var CatchUpResp = network.RegisterMessageType(CatchUpResponse{})
+var GroupChanged = network.RegisterMessageType(GroupChangedMessage{})
+var VoteRequest = network.RegisterMessageType(VoteRequestMessage{})
+var CloseAll = network.RegisterMessageType(CloseAllMessage{})
+var Identity = network.RegisterMessageType(IdentityMessage{})
+
+// IdentityMessage is used when we connect to a node listening, we must give to
 // him our identity which is our listeningaddress:port, the same as in the
 // tree used.
 type IdentityMessage struct {

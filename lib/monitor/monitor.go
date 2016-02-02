@@ -14,12 +14,13 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"io"
 	"net"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // This file handles the collection of measurements, aggregates them and
@@ -55,8 +56,8 @@ type Monitor struct {
 }
 
 // NewMonitor returns a new monitor given the stats
-func NewMonitor(stats *Stats) Monitor {
-	return Monitor{
+func NewMonitor(stats *Stats) *Monitor {
+	return &Monitor{
 		conns:      make(map[string]net.Conn),
 		stats:      stats,
 		mutexStats: sync.Mutex{},
@@ -117,7 +118,7 @@ func (m *Monitor) Listen() error {
 			}
 		}
 	}
-	dbg.Lvl2("Monitor finished waiting !")
+	dbg.Lvl2("Monitor finished waiting")
 	m.conns = make(map[string]net.Conn)
 	return nil
 }

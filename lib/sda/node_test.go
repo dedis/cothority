@@ -14,7 +14,7 @@ func init() {
 	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	Incoming = make(chan struct {
-		sda.TreeNode
+		*sda.TreeNode
 		NodeTestMsg
 	})
 }
@@ -54,7 +54,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	n := sda.NewNodeEmpty(nil, nil)
 	var c chan []struct {
-		sda.TreeNode
+		*sda.TreeNode
 		NodeTestMsg
 	}
 	err := n.RegisterChannel(&c)
@@ -75,7 +75,7 @@ func TestNodeChannelCreate(t *testing.T) {
 		t.Fatal("Couldn't create new node:", err)
 	}
 	var c chan struct {
-		sda.TreeNode
+		*sda.TreeNode
 		NodeTestMsg
 	}
 	err = n.RegisterChannel(&c)
@@ -111,7 +111,7 @@ func TestNodeChannel(t *testing.T) {
 		t.Fatal("Couldn't create new node:", err)
 	}
 	c := make(chan struct {
-		sda.TreeNode
+		*sda.TreeNode
 		NodeTestMsg
 	}, 1)
 	err = n.RegisterChannel(c)
@@ -159,7 +159,6 @@ func TestNewNode(t *testing.T) {
 
 func TestProtocolChannels(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
@@ -239,7 +238,7 @@ type NodeTestMsg struct {
 }
 
 var Incoming chan struct {
-	sda.TreeNode
+	*sda.TreeNode
 	NodeTestMsg
 }
 
@@ -250,7 +249,7 @@ type NodeTestAggMsg struct {
 type ProtocolChannels struct {
 	*sda.Node
 	IncomingAgg chan []struct {
-		sda.TreeNode
+		*sda.TreeNode
 		NodeTestAggMsg
 	}
 }

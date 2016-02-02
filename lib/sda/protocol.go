@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
@@ -41,8 +42,11 @@ func ProtocolNameToUuid(name string) uuid.UUID {
 
 // ProtocolRegisterName is a convenience function to automatically generate
 // a UUID out of the name.
-func ProtocolRegisterName(name string, protocol NewProtocol) {
-	ProtocolRegister(ProtocolNameToUuid(name), protocol)
+func ProtocolRegisterName(name string, protocol NewProtocol) uuid.UUID {
+	u := ProtocolNameToUuid(name)
+	ProtocolRegister(u, protocol)
+	dbg.Lvl4("Registered", name, "to", u)
+	return u
 }
 
 // ProtocolExists returns whether a certain protocol already has been

@@ -120,6 +120,10 @@ func (n *Node) EntityList() *EntityList {
 	return n.Tree().EntityList
 }
 
+func (n *Node) Suite() abstract.Suite {
+	return n.overlay.Suite()
+}
+
 // RegisterChannel takes a channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
@@ -131,18 +135,18 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	flags := uint32(0)
 	cr := reflect.TypeOf(c)
 	if cr.Kind() == reflect.Ptr {
-		dbg.Lvl3("Having pointer - initialising and calling again")
 		val := reflect.ValueOf(c).Elem()
 		val.Set(reflect.MakeChan(val.Type(), 1))
 		//val.Set(reflect.MakeChan(reflect.Indirect(cr), 1))
 		return n.RegisterChannel(reflect.Indirect(val).Interface())
+	} else if reflect.ValueOf(c).IsNil() {
+		return errors.New("Can not Register a (value) channel not initialized")
 	}
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
 		return errors.New("Input is not channel")
 	}
 	if cr.Elem().Kind() == reflect.Slice {
-		dbg.Lvl3("Getting a channel to slices - activating aggregation")
 		flags += AggregateMessages
 		cr = cr.Elem()
 	}
@@ -152,13 +156,13 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	if cr.Elem().NumField() != 2 {
 		return errors.New("Input is not channel of structure with 2 elements")
 	}
-	dbg.Lvl3(cr.Elem().Field(0).Type)
-	if cr.Elem().Field(0).Type != reflect.TypeOf(TreeNode{}) {
+	if cr.Elem().Field(0).Type != reflect.TypeOf(&TreeNode{}) {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
 	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
+	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.channels[typ] = c
 	n.channelFlags[typ] = flags
 	dbg.Lvl3("Registered channel", typ, "with flags", flags)
@@ -217,7 +221,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 				return errors.New("Didn't find treenode")
 			}
 
-			m.Field(0).Set(reflect.ValueOf(*tn))
+			m.Field(0).Set(reflect.ValueOf(tn))
 			m.Field(1).Set(reflect.Indirect(reflect.ValueOf(msg.Msg)))
 			dbg.Lvl3("Adding msg", m, "to", n.Entity().Addresses)
 			out.Index(i).Set(m)
@@ -225,21 +229,19 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 		reflect.ValueOf(n.channels[mt]).Send(out)
 	} else {
 		for _, msg := range msgSlice {
-			dbg.Lvl3("Received message of type:", mt)
 			out := n.channels[mt]
 
-			dbg.Lvl3("Dispatching to", to)
 			m := reflect.Indirect(reflect.New(to.Elem()))
 			tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
 			if tn == nil {
 				return errors.New("Didn't find treenode")
 			}
 
-			m.Field(0).Set(reflect.ValueOf(*tn))
+			m.Field(0).Set(reflect.ValueOf(tn))
 			m.Field(1).Set(reflect.ValueOf(msg.Msg))
-			dbg.Lvl3("Sending", m, "to", n.Entity().Addresses)
+
+			dbg.Lvl3("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
-			dbg.Lvl3("Sent")
 		}
 	}
 	return nil
@@ -252,16 +254,20 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// if we still need to wait for additional messages, we return
 	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
+		dbg.Lvl3("Not done")
 		return nil
 	}
+	dbg.Lvl3("Going to dispatch")
 
 	var err error
 	switch {
 	case n.channels[msgType] != nil:
+		dbg.Lvl3("Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		err = n.DispatchFunction(msgs)
 	default:
+		dbg.Lvl3("Calling dispatch-function")
 		err = n.instance.Dispatch(msgs)
 	}
 	return err
@@ -298,7 +304,7 @@ func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
-	dbg.Lvl3("Received", len(msgs), "of", len(n.Children()), "messages")
+	dbg.Lvl3(n.Entity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
 
 	// do we have everything yet or no
 	// get the node this host is in this tree
@@ -342,4 +348,9 @@ func (n *Node) OnDoneCallback(fn func() bool) {
 // Private returns the corresponding private key
 func (n *Node) Private() abstract.Secret {
 	return n.overlay.host.private
+}
+
+// Closes the host
+func (n *Node) Close() error {
+	return n.overlay.host.Close()
 }

@@ -3,10 +3,10 @@ package network
 import (
 	"fmt"
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 	"testing"
-	"time"
 )
 
 // Secure_test is analog to simple_test it uses the same structure to send
@@ -15,6 +15,7 @@ import (
 // Now you connect to someone else using Entity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	priv1, id1 := genEntity("localhost:2000")
 	priv2, id2 := genEntity("localhost:2001")
 	sHost1 := NewSecureTcpHost(priv1, id1)
@@ -22,27 +23,35 @@ func TestSecureSimple(t *testing.T) {
 
 	packetToSend := SimplePacket{"HelloWorld"}
 	done := make(chan error)
-	go sHost1.Listen(func(c SecureConn) {
-		nm, err := c.Receive(context.TODO())
+	doneListen := make(chan bool)
+	go func() {
+		err := sHost1.Listen(func(c SecureConn) {
+			nm, err := c.Receive(context.TODO())
+			if err != nil {
+				c.Close()
+				done <- fmt.Errorf("Error receiving:")
+			}
+			if nm.MsgType != SimplePacketType {
+				done <- fmt.Errorf("Wrong type received")
+			}
+			sp := nm.Msg.(SimplePacket)
+			if sp.Name != packetToSend.Name {
+				c.Close()
+				done <- fmt.Errorf("Not same packet received!")
+			}
+			if !nm.Entity.Equal(id2) {
+				c.Close()
+				done <- fmt.Errorf("Not same entity")
+			}
+			dbg.Lvl3("Connection accepted")
+			close(done)
+		})
 		if err != nil {
-			c.Close()
-			done <- fmt.Errorf("Error receiving:")
+			t.Fatal("Listening-error:", err)
 		}
-		if nm.MsgType != SimplePacketType {
-			done <- fmt.Errorf("Wrong type received")
-		}
-		sp := nm.Msg.(SimplePacket)
-		if sp.Name != packetToSend.Name {
-			c.Close()
-			done <- fmt.Errorf("Not same packet received!")
-		}
-		if !nm.Entity.Equal(id2) {
-			c.Close()
-			done <- fmt.Errorf("Not same entity")
-		}
-		close(done)
-	})
-	time.Sleep(1 * time.Second)
+		doneListen <- true
+	}()
+	//time.Sleep(1 * time.Second)
 	// Open connection to entity
 	c, err := sHost2.Open(id1)
 	if err != nil {
@@ -58,8 +67,17 @@ func TestSecureSimple(t *testing.T) {
 	if more && e != nil {
 		t.Fatal(e)
 	}
-	sHost1.Close()
-	sHost2.Close()
+	err = sHost1.Close()
+	if err != nil {
+		t.Fatal("Closing sHost1:", err)
+	}
+	err = sHost2.Close()
+	if err != nil {
+		t.Fatal("Closing sHost2:", err)
+	}
+	if !<-doneListen {
+		t.Fatal("Couldn't close")
+	}
 }
 
 func genEntity(name string) (abstract.Secret, *Entity) {

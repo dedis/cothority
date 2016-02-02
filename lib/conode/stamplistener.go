@@ -69,7 +69,7 @@ func NewStampListener(nameP string, suite abstract.Suite) *StampListener {
 		sl.Clients = make(map[string]network.Conn)
 		sl.waitClose = make(chan string)
 		sl.NameL = nameL
-		sl.Host = network.NewTcpHost(network.DefaultConstructors(suite))
+		sl.Host = network.NewTcpHost()
 		SLList[sl.NameL] = sl
 		sl.ListenRequests()
 	} else {

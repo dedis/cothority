@@ -244,7 +244,7 @@ func (sn *Node) ProcessMessages() error {
 // here.
 func processSigningMsg(nm network.NetworkMessage, sm *SigningMessage) {
 	sm.From = nm.From
-	if nm.MsgType == network.DefaultType {
+	if nm.MsgType == network.ErrorType {
 		sm.Empty = true
 	}
 }

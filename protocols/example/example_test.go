@@ -3,7 +3,7 @@ package example_test
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/sda/example"
+	"github.com/dedis/cothority/protocols/example"
 	"testing"
 	"time"
 )

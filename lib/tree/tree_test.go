@@ -2,8 +2,8 @@ package tree_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/tree"
-	"github.com/dedis/crypto/edwards"
 	"strconv"
 	"testing"
 )
@@ -19,7 +19,7 @@ func genLocalhostPeerNames(n, p int) []string {
 
 func TestNewNaryTree(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	s := edwards.NewAES128SHA256Ed25519(false)
+	s := network.Suite
 	nPeers := 11
 	names := genLocalhostPeerNames(nPeers, 2000)
 	pl := tree.GenPeerList(s, names)

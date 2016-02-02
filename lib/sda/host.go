@@ -12,17 +12,21 @@ Node takes care about
 package sda
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"sync"
-	"time"
-
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
+	"io/ioutil"
+	"reflect"
+	"sync"
+	"time"
 )
 
 /*
@@ -55,8 +59,8 @@ type Host struct {
 	pendingSDAs []*SDAData
 	// The suite used for this Host
 	suite abstract.Suite
-	// closed channel to notifiy the connections that we close
-	closed chan bool
+	// closed channel to notify the connections that we close
+	Closed chan bool
 	// lock associated to access network connections
 	// and to access entities also.
 	networkLock *sync.Mutex
@@ -71,7 +75,7 @@ type Host struct {
 	// working address is mostly for debugging purposes so we know what address
 	// is known as right now
 	workingAddress string
-	// listening is a flag to tell wether this host is listening or not
+	// listening is a flag to tell whether this host is listening or not
 	listening bool
 }
 
@@ -89,7 +93,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		private:            pkey,
 		suite:              network.Suite,
 		networkChan:        make(chan network.NetworkMessage, 1),
-		closed:             make(chan bool),
+		Closed:             make(chan bool),
 		networkLock:        &sync.Mutex{},
 		entityListsLock:    &sync.Mutex{},
 		treesLock:          &sync.Mutex{},
@@ -99,6 +103,60 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 
 	h.overlay = NewOverlay(h)
 	return h
+}
+
+type HostConfig struct {
+	Public   string
+	Private  string
+	HostAddr []string
+}
+
+// NewHostFromFile reads the configuration-options from the given file
+// and initialises a Host.
+func NewHostFromFile(name string) (*Host, error) {
+	hc := &HostConfig{}
+	_, err := toml.DecodeFile(name, hc)
+	if err != nil {
+		return nil, err
+	}
+	private, err := cliutils.ReadSecretHex(network.Suite, hc.Private)
+	if err != nil {
+		return nil, err
+	}
+	public, err := cliutils.ReadPubHex(network.Suite, hc.Public)
+	if err != nil {
+		return nil, err
+	}
+	entity := network.NewEntity(public, hc.HostAddr...)
+	host := NewHost(entity, private)
+	return host, nil
+}
+
+// SaveToFile puts the private/public key and the hostname into a file
+func (h *Host) SaveToFile(name string) error {
+	public, err := cliutils.PubHex(network.Suite, h.Entity.Public)
+	if err != nil {
+		return err
+	}
+	private, err := cliutils.SecretHex(network.Suite, h.private)
+	if err != nil {
+		return err
+	}
+	hc := &HostConfig{
+		Public:   public,
+		Private:  private,
+		HostAddr: h.Entity.Addresses,
+	}
+	buf := new(bytes.Buffer)
+	err = toml.NewEncoder(buf).Encode(hc)
+	if err != nil {
+		dbg.Fatal(err)
+	}
+	err = ioutil.WriteFile(name, buf.Bytes(), 0660)
+	if err != nil {
+		dbg.Fatal(err)
+	}
+	return nil
 }
 
 // NewHostKey creates a new host only from the ip-address and port-number. This
@@ -137,7 +195,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 		return nil, err
 	}
 	h.registerConnection(c)
-	dbg.Lvl2("Host", h.workingAddress, "connected to", c.Remote())
+	dbg.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
 	go h.handleConn(c)
 	return c, nil
 }
@@ -149,7 +207,7 @@ func (h *Host) Close() error {
 	var err error
 	err = h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
-	close(h.closed)
+	close(h.Closed)
 	h.networkLock.Unlock()
 	return err
 }
@@ -171,7 +229,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if c, ok = h.connections[e.Id]; !ok {
 		return errors.New("Got no connection tied to this Entity")
 	}
-	dbg.Lvl4("Sending to", e)
+	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
 	c.Send(context.TODO(), msg)
 	return nil
 }
@@ -271,7 +329,7 @@ func (h *Host) ProcessMessages() {
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
-		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+		return fmt.Errorf("Error marshaling  message %s: %s", reflect.TypeOf(sdaMsg.Msg).String(), err.Error())
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
@@ -330,7 +388,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 	}()
 	for {
 		select {
-		case <-h.closed:
+		case <-h.Closed:
 			doneChan <- true
 		case am := <-msgChan:
 			dbg.Lvl3("Putting message into networkChan from", am.From)
@@ -450,4 +508,41 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 		h.overlay.RegisterTree(tree)
 	}
 	h.pendingTreeLock.Unlock()
+}
+
+func (h *Host) AddTree(t *Tree) {
+	h.overlay.RegisterTree(t)
+}
+
+func (h *Host) AddEntityList(el *EntityList) {
+	h.overlay.RegisterEntityList(el)
+}
+
+func (h *Host) Suite() abstract.Suite {
+	return h.suite
+}
+
+func (h *Host) Private() abstract.Secret {
+	return h.private
+}
+
+func (h *Host) StartNewNode(protoID uuid.UUID, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNode(protoID, tree)
+}
+
+func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
+	var hosts []*Host
+	for _, add := range addresses {
+		h := newHostMock(s, add)
+		h.Listen()
+		go h.ProcessMessages()
+		hosts = append(hosts, h)
+	}
+	return hosts
+}
+
+func newHostMock(s abstract.Suite, address string) *Host {
+	kp := cliutils.KeyPair(s)
+	en := network.NewEntity(kp.Public, address)
+	return NewHost(en, kp.Secret)
 }

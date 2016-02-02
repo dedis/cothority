@@ -100,7 +100,12 @@ func (t *Tree) String() string {
 func (t *Tree) Dump() string {
 	ret := "Tree " + t.Id.String() + " is:"
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
-		ret += fmt.Sprintf("\n%d:%d:%s", d, len(tn.Children), tn.Id.String())
+		if tn.Parent != nil {
+			ret += fmt.Sprintf("\n%s has parent %s", tn.Entity.Addresses,
+				tn.Parent.Entity.Addresses)
+		} else {
+			ret += fmt.Sprintf("\n%s is root", tn.Entity.Addresses)
+		}
 	})
 	return ret
 }
@@ -138,6 +143,15 @@ func (t *Tree) IsBinary(root *TreeNode) bool {
 		}
 	}
 	return true
+}
+
+// Size returns the number of all TreeNodes
+func (t *Tree) Size() int {
+	size := 0
+	t.Root.Visit(0, func(d int, tn *TreeNode) {
+		size += 1
+	})
+	return size
 }
 
 // TreeMarshal is used to send and receive a tree-structure without having
@@ -238,6 +252,15 @@ func (il *EntityList) Search(uuid uuid.UUID) *network.Entity {
 		}
 	}
 	return nil
+}
+
+// Get simply returns the entity that is stored at that index in the entitylist
+// returns nil if index error
+func (en *EntityList) Get(idx int) *network.Entity {
+	if idx < 0 || idx > len(en.List) {
+		return nil
+	}
+	return en.List[idx]
 }
 
 // GenerateBinaryTree creates a binary tree out of the EntityList

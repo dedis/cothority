@@ -31,20 +31,10 @@ var DefaultPort int = 2000
 // byte // uint8 not supported by protobuf for the moment
 type SeqNo uint32
 
-const (
-	// Let's say that stamp packets type start at 100
-	StampRequestType network.Type = iota + 100
-	StampSignatureType
-	StampCloseType
-	StampExitType
-)
-
-func init() {
-	network.RegisterProtocolType(StampRequestType, StampRequest{})
-	network.RegisterProtocolType(StampSignatureType, StampSignature{})
-	network.RegisterProtocolType(StampCloseType, StampClose{})
-	network.RegisterProtocolType(StampExitType, StampExit{})
-}
+var StampRequestType = network.RegisterMessageType(StampRequest{})
+var StampSignatureType = network.RegisterMessageType(StampSignature{})
+var StampCloseType = network.RegisterMessageType(StampClose{})
+var StampExitType = network.RegisterMessageType(StampExit{})
 
 type StampClose struct {
 	ReqNo SeqNo
