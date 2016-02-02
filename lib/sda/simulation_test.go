@@ -41,6 +41,16 @@ func TestSimulationBF(t *testing.T) {
 	}
 }
 
+func TestBigTree(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	for i := uint(12); i < 18; i++ {
+		_, _, err := createBFTree(1<<i-1, 2)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
 func TestLoadSave(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)

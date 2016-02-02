@@ -240,13 +240,9 @@ var NilEntityList = EntityList{}
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
 func NewEntityList(ids []*network.Entity) *EntityList {
-	url := network.UuidURL + "entityList/"
-	for _, i := range ids {
-		url += i.Id.String()
-	}
 	return &EntityList{
 		List: ids,
-		Id:   uuid.NewV5(uuid.NamespaceURL, url),
+		Id:   uuid.NewV4(),
 	}
 }
 
@@ -281,7 +277,6 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 	totalNodes := 1
 	elIndex := 1 % ilLen
 	for totalNodes < nodes {
-		dbg.Lvl3("Starting at", totalNodes)
 		newLevelNodes := make([]*TreeNode, len(levelNodes)*N)
 		newLevelNodesCounter := 0
 		for i, parent := range levelNodes {
@@ -289,7 +284,6 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 			if children > N {
 				children = N
 			}
-			dbg.Lvl3("Adding", children, "children")
 			parent.Children = make([]*TreeNode, children)
 			for n := 0; n < children; n++ {
 				for il.List[elIndex].Id == parent.Entity.Id &&
