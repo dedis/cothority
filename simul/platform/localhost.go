@@ -82,6 +82,7 @@ func (d *Localhost) Build(build string) error {
 	// build for the local machine
 	res, err := cliutils.Build(src, dst, runtime.GOARCH, runtime.GOOS)
 	if err != nil {
+		dbg.Print("d.Localdir=", d.LocalDir, "src=", src, "d.RunDir=", d.RunDir, "d.Simulation=", d.Simulation)
 		dbg.Fatal("Error while building for localhost (src", src, ", dst", dst, ":", res)
 	}
 	dbg.Lvl3("Localhost: Build src", src, ", dst", dst)

@@ -94,7 +94,7 @@ var simulConfig *sda.SimulationConfig
 func (d *Deterlab) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.CothorityDir = pwd + "/cothority"
+	d.CothorityDir = pwd + "/.."
 	d.DeterDir = pwd + "/platform/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
@@ -114,7 +114,7 @@ func (d *Deterlab) Configure() {
 // build is the name of the app to build
 // empty = all otherwise build specific package
 func (d *Deterlab) Build(build string) error {
-	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build)
+	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build, "cothorityDir=", d.CothorityDir)
 	start := time.Now()
 
 	var wg sync.WaitGroup
@@ -156,7 +156,7 @@ func (d *Deterlab) Build(build string) error {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
 			src_rel, _ := filepath.Rel(d.DeterDir, src)
-			dbg.Lvl3("Relative-path is", src, src_rel, d.DeterDir)
+			dbg.Lvl3("Relative-path is", src_rel, " will build into ", dest)
 			out, err := cliutils.Build("./"+src_rel, dest,
 				processor, system)
 			if err != nil {
