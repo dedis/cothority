@@ -48,31 +48,27 @@ type RandHound struct {
 }
 
 func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.ProtocolInstance, error) {
-	// Setup simpler peer identification and ignore leader at index 0
-	j := 0
-	e := node.EntityList() // TODO: use TreeNode-UUIDs instead of Entity-UUIDs
-	el := e.List
-	pid := make(map[uuid.UUID]int)
-	pkeys := make([]abstract.Point, len(el)-1)
-	for i := 0; i < len(el); i += 1 {
-		if i != 0 {
-			pid[el[i].Id] = j
-			pkeys[j] = el[i].Public
-			j += 1
-		}
-	}
 
-	// Setup basic RandHound protocol struct
+	// Setup RandHound protocol struct
 	rh := &RandHound{
 		Node:    node,
-		Leader:  nil,
-		Peer:    nil,
-		PID:     pid,
-		PKeys:   pkeys,
 		T:       T,
 		R:       R,
 		N:       N,
 		Purpose: purpose,
+	}
+
+	// Use TreeNode UUIDs to assign peers unique integer IDs (root node is ignored)
+	j := 0
+	tns := node.Tree().ListNodes()
+	rh.PID = make(map[uuid.UUID]int)
+	rh.PKeys = make([]abstract.Point, len(tns)-1)
+	for _, t := range tns {
+		if !t.IsRoot() {
+			rh.PID[t.Id] = j
+			rh.PKeys[j] = t.Entity.Public
+			j += 1
+		}
 	}
 
 	// Setup leader or peer depending on the node's location in the tree
@@ -93,18 +89,19 @@ func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.Prot
 	}
 
 	// Setup message channels
-	ifs := []interface{}{
+	channels := []interface{}{
 		&rh.ChannelI1, &rh.ChannelR1,
 		&rh.ChannelI2, &rh.ChannelR2,
 		&rh.ChannelI3, &rh.ChannelR3,
 		&rh.ChannelI4, &rh.ChannelR4}
-	for _, channel := range ifs {
-		err := rh.RegisterChannel(channel)
+	for _, c := range channels {
+		err := rh.RegisterChannel(c)
 		if err != nil {
 			return nil, errors.New("Couldn't register channel: " + err.Error())
 		}
 	}
 	go rh.DispatchChannels()
+
 	return rh, nil
 }
 

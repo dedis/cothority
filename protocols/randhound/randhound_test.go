@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/randhound"
 )
@@ -20,6 +21,8 @@ func TestRandHound(t *testing.T) {
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(np, false, true)
 	defer local.CloseAll()
+
+	dbg.TestOutput(testing.Verbose(), 1)
 
 	// Register RandHound
 	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
