@@ -1,6 +1,7 @@
 App = "sign"
-Suite = "Ed25519"
-Rounds = 2
+Suite = "ed25519"
+Rounds = 20
+filter_round = 80
 
 Machines, ppm, bf
 2, 1, 2

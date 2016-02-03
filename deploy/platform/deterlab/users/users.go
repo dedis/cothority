@@ -172,7 +172,7 @@ func main() {
 		}(phys)
 	}
 
-	if deterlab.App == "stamp" || deterlab.App == "sign" {
+	if deterlab.App == "stamp" || deterlab.App == "sign" || deterlab.App == "ntree" {
 		// Every stampserver that started up (mostly waiting for configuration-reading)
 		// writes its name in coll_stamp_dir - once everybody is there, the directory
 		// is cleaned to flag it's OK to go on.
