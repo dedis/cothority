@@ -7,9 +7,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-//var Done chan bool
-//var Result chan []byte
-
 type Session struct {
 	LPubKey []byte    // Finger print of leader's public key
 	Purpose string    // Purpose of randomness
@@ -87,42 +84,50 @@ type R4Share struct {
 	Share  abstract.Secret // Decrypted share dealt to this server
 }
 
-type StructI1 struct {
+// SDA-wrapper around I1
+type WI1 struct {
 	*sda.TreeNode
 	I1
 }
 
-type StructI2 struct {
+// SDA-wrapper around I2
+type WI2 struct {
 	*sda.TreeNode
 	I2
 }
 
-type StructI3 struct {
+// SDA-wrapper around I3
+type WI3 struct {
 	*sda.TreeNode
 	I3
 }
 
-type StructI4 struct {
+// SDA-wrapper around I4
+type WI4 struct {
 	*sda.TreeNode
 	I4
 }
 
-type StructR1 struct {
+// SDA-wrapper around R1
+type WR1 struct {
 	*sda.TreeNode
 	R1
 }
 
-type StructR2 struct {
+// SDA-wrapper around R2
+type WR2 struct {
 	*sda.TreeNode
 	R2
 }
 
-type StructR3 struct {
+// SDA-wrapper around R3
+type WR3 struct {
 	*sda.TreeNode
 	R3
 }
 
-type StructR4 struct {
+// SDA-wrapper around R4
+type WR4 struct {
 	*sda.TreeNode
 	R4
 }

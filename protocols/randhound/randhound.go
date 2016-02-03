@@ -37,20 +37,20 @@ type RandHound struct {
 	Purpose   string            // Purpose of the protocol instance
 	Done      chan bool         // For signaling that a protocol run is finished (leader only)
 	Result    chan []byte       // For returning the generated randomness (leader only)
-	ChannelI1 chan StructI1
-	ChannelR1 chan StructR1
-	ChannelI2 chan StructI2
-	ChannelR2 chan StructR2
-	ChannelI3 chan StructI3
-	ChannelR3 chan StructR3
-	ChannelI4 chan StructI4
-	ChannelR4 chan StructR4
+	ChannelI1 chan WI1          // Channel to receive I1 messages
+	ChannelR1 chan WR1          // Channel to receive R1 messages
+	ChannelI2 chan WI2          // Channel to receive I2 messages
+	ChannelR2 chan WR2          // Channel to receive R2 messages
+	ChannelI3 chan WI3          // Channel to receive I3 messages
+	ChannelR3 chan WR3          // Channel to receive R3 messages
+	ChannelI4 chan WI4          // Channel to receive I4 messages
+	ChannelR4 chan WR4          // Channel to receive R4 messages
 }
 
 func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.ProtocolInstance, error) {
 	// Setup simpler peer identification and ignore leader at index 0
 	j := 0
-	e := node.EntityList() //h.GetEntityList(tok.EntityListID)
+	e := node.EntityList() // TODO: use TreeNode-UUIDs intead of Entity-UUIDs
 	el := e.List
 	pid := make(map[uuid.UUID]int)
 	pkeys := make([]abstract.Point, len(el)-1)
@@ -62,6 +62,7 @@ func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.Prot
 		}
 	}
 
+	// Setup basic RandHound protocol struct
 	rh := &RandHound{
 		Node:    node,
 		Leader:  nil,
@@ -74,6 +75,7 @@ func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.Prot
 		Purpose: purpose,
 	}
 
+	// Setup leader or peer depending on the node's location in the tree
 	if node.IsRoot() {
 		rh.Done = make(chan bool, 1)
 		rh.Result = make(chan []byte)
@@ -90,6 +92,7 @@ func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.Prot
 		rh.Peer = peer
 	}
 
+	// Setup message channels
 	var err error
 	err = rh.RegisterChannel(&rh.ChannelI1)
 	if err != nil {
@@ -165,7 +168,7 @@ func (rh *RandHound) sendToChildren(msg interface{}) error {
 }
 
 // Start initiates the RandHound protocol. The leader forms the message I1 and
-// sends it to all of its peers.
+// sends it to  its children.
 func (rh *RandHound) Start() error {
 	rh.Leader.i1 = I1{
 		SID: rh.Leader.SID,
@@ -177,16 +180,16 @@ func (rh *RandHound) Start() error {
 
 // TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
 
-func (rh *RandHound) HandleI1(i1s StructI1) error {
+func (rh *RandHound) HandleI1(i1 WI1) error {
 
 	// If we are not a leaf, forward i1 to children
 	if !rh.Node.IsLeaf() {
-		err := rh.sendToChildren(&i1s.I1)
+		err := rh.sendToChildren(&i1.I1)
 		if err != nil {
 			return err
 		}
 	}
-	rh.Peer.i1 = i1s.I1
+	rh.Peer.i1 = i1.I1
 
 	// TODO: verify i1 contents
 
@@ -202,7 +205,7 @@ func (rh *RandHound) HandleI1(i1s StructI1) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r1)
 }
 
-func (rh *RandHound) HandleR1(r1 StructR1) error {
+func (rh *RandHound) HandleR1(r1 WR1) error {
 
 	// If we are not the root, forward r1 to parent
 	if !rh.Node.IsRoot() {
@@ -215,7 +218,7 @@ func (rh *RandHound) HandleR1(r1 StructR1) error {
 		rh.Leader.r1[r1.Src] = r1.R1 // TODO: streamline the message types
 		rh.Leader.nr1 += 1
 
-		// Once we have all messages we continue
+		// Continue, once all replies have arrived
 		if rh.Leader.nr1 == len(rh.PID) {
 			rh.Leader.i2 = I2{
 				SID: rh.Leader.SID,
@@ -230,7 +233,7 @@ func (rh *RandHound) HandleR1(r1 StructR1) error {
 	return nil
 }
 
-func (rh *RandHound) HandleI2(i2 StructI2) error {
+func (rh *RandHound) HandleI2(i2 WI2) error {
 
 	// If we are not a leaf, forward i2 to children
 	if !rh.Node.IsLeaf() {
@@ -269,7 +272,7 @@ func (rh *RandHound) HandleI2(i2 StructI2) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r2)
 }
 
-func (rh *RandHound) HandleR2(r2 StructR2) error {
+func (rh *RandHound) HandleR2(r2 WR2) error {
 
 	// If we are not the root, forward r2 to parent
 	if !rh.Node.IsRoot() {
@@ -287,7 +290,7 @@ func (rh *RandHound) HandleR2(r2 StructR2) error {
 			return err
 		}
 
-		// Once we have all messages we continue
+		// Continue, once all replies have arrived
 		if rh.Leader.nr2 == len(rh.PID) {
 			rh.Leader.i3 = I3{
 				SID: rh.Leader.SID,
@@ -299,7 +302,7 @@ func (rh *RandHound) HandleR2(r2 StructR2) error {
 	return nil
 }
 
-func (rh *RandHound) HandleI3(i3 StructI3) error {
+func (rh *RandHound) HandleI3(i3 WI3) error {
 
 	// If we are not a leaf, forward i3 to children
 	if !rh.Node.IsLeaf() {
@@ -368,7 +371,7 @@ func (rh *RandHound) HandleI3(i3 StructI3) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r3)
 }
 
-func (rh *RandHound) HandleR3(r3 StructR3) error {
+func (rh *RandHound) HandleR3(r3 WR3) error {
 
 	// If we are not the root, forward r3 to parent
 	if !rh.Node.IsRoot() {
@@ -394,7 +397,7 @@ func (rh *RandHound) HandleR3(r3 StructR3) error {
 			//TODO: verify that response is securely bound to promise (how?)
 		}
 
-		// Once we have all messages we continue
+		// Continue, once all replies have arrived
 		if rh.Leader.nr3 == len(rh.PID) {
 			rh.Leader.i4 = I4{
 				SID: rh.Leader.SID,
@@ -406,7 +409,7 @@ func (rh *RandHound) HandleR3(r3 StructR3) error {
 	return nil
 }
 
-func (rh *RandHound) HandleI4(i4 StructI4) error {
+func (rh *RandHound) HandleI4(i4 WI4) error {
 
 	// If we are not a leaf, forward i4 to children
 	if !rh.Node.IsLeaf() {
@@ -429,7 +432,7 @@ func (rh *RandHound) HandleI4(i4 StructI4) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r4)
 }
 
-func (rh *RandHound) HandleR4(r4 StructR4) error {
+func (rh *RandHound) HandleR4(r4 WR4) error {
 
 	// If we are not the root, forward r4 to parent
 	if !rh.Node.IsRoot() {
@@ -445,7 +448,7 @@ func (rh *RandHound) HandleR4(r4 StructR4) error {
 		// Initialise PriShares
 		rh.Leader.shares[r4.Src].Empty(rh.Node.Suite(), rh.T, rh.N)
 
-		// Once we have all messages we continue
+		// Continue, once all replies have arrived
 		if rh.Leader.nr4 == len(rh.PID) {
 			// Process shares of i-th peer
 			for i, _ := range rh.Leader.r4 {

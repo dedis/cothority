@@ -13,7 +13,7 @@ func TestRandHound(t *testing.T) {
 
 	// Setup parameters
 	var name string = "RandHound"       // Protocol name
-	var np int = 13                     // Number of peers (including leader)
+	var np int = 10                     // Number of peers (including leader)
 	var T, R, N int = 3, 3, 5           // VSS parameters (T <= R <= N)
 	var p string = "RandHound test run" // Purpose
 
@@ -44,5 +44,4 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("RandHound – time out")
 	}
 	log.Printf("RandHound - random bytes: %v\n", bytes)
-
 }
