@@ -281,13 +281,13 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
-		dbg.Lvl3("Received aggregated message of type:", mt)
+		dbg.Lvl4("Received aggregated message of type:", mt)
 		to = to.Elem()
 		out := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
-			dbg.Lvl3("Dispatching aggregated to", to)
+			dbg.Lvl4("Dispatching aggregated to", to)
 			m := n.ReflectCreate(to.Elem(), msg)
-			dbg.Lvl3("Adding msg", m, "to", n.Entity().Addresses)
+			dbg.Lvl4("Adding msg", m, "to", n.Entity().Addresses)
 			out.Index(i).Set(m)
 		}
 		reflect.ValueOf(n.channels[mt]).Send(out)
@@ -296,7 +296,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 			out := n.channels[mt]
 
 			m := n.ReflectCreate(to.Elem(), msg)
-			dbg.Lvl3("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
+			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
 	}
@@ -323,14 +323,14 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 		dbg.Lvl3("Not done")
 		return nil
 	}
-	dbg.Lvl3("Going to dispatch", sdaMsg)
+	dbg.Lvl4("Going to dispatch", sdaMsg)
 
 	switch {
 	case n.channels[msgType] != nil:
-		dbg.Lvl3("Dispatching to channel")
+		dbg.Lvl4("Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
-		dbg.Lvl3("Dispatching to handler")
+		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
 		err = n.DispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")
@@ -369,7 +369,7 @@ func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
-	dbg.Lvl3(n.Entity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
+	dbg.Lvl4(n.Entity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
 
 	// do we have everything yet or no
 	// get the node this host is in this tree

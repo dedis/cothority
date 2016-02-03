@@ -146,11 +146,11 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 		measure := Measure{}
 		if err := dec.Decode(&measure); err != nil {
 			// if end of connection
-			if err == io.EOF {
+			if err == io.EOF || strings.Contains(err.Error(), "closed") {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from", conn.RemoteAddr().String(), ":", err)
+			dbg.Lvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
 				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")

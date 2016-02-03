@@ -10,6 +10,8 @@ import (
 	"github.com/dedis/crypto/config"
 	"io/ioutil"
 	"strconv"
+	"strings"
+	"time"
 )
 
 /*
@@ -71,7 +73,7 @@ type SimulationConfigFile struct {
 
 // Load gets all configuration from dir + SimulationFileName and instantiates the
 // corresponding host 'ha'.
-func LoadSimulationConfig(dir, ha string) (*SimulationConfig, error) {
+func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 	network.RegisterMessageType(SimulationConfigFile{})
 	bin, err := ioutil.ReadFile(dir + "/" + SimulationFileName)
 	if err != nil {
@@ -92,17 +94,40 @@ func LoadSimulationConfig(dir, ha string) (*SimulationConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, e := range sc.EntityList.List {
-		for _, a := range e.Addresses {
-			if a == ha {
-				host := NewHost(e, scf.PrivateKeys[a])
-				sc.Host = host
-				sc.Overlay = host.overlay
-				return sc, nil
+
+	ret := make([]*SimulationConfig, 0)
+	if ha != "" {
+		if !strings.Contains(ha, ":") {
+			// to correctly match hosts a column is needed, else
+			// 10.255.0.1 would also match 10.255.0.10 and others
+			ha += ":"
+		}
+		for _, e := range sc.EntityList.List {
+			for _, a := range e.Addresses {
+				dbg.Lvl4("Searching for", ha, "in", a)
+				// If we are started in Deterlab- or other
+				// big-server-needs-multiple-hosts, we might
+				// want to initialise all hosts in one instance
+				// of 'cothority' so as to minimize memory
+				// footprint
+				if strings.Contains(a, ha) {
+					dbg.Lvl3("Found host", a, "to match", ha)
+					host := NewHost(e, scf.PrivateKeys[a])
+					scNew := *sc
+					scNew.Host = host
+					scNew.Overlay = host.overlay
+					ret = append(ret, &scNew)
+				}
+
 			}
 		}
+		if len(ret) == 0 {
+			return nil, errors.New("Didn't find address: " + ha)
+		}
+	} else {
+		ret = append(ret, sc)
 	}
-	return nil, errors.New("Didn't find address: " + ha)
+	return ret, nil
 }
 
 // Save takes everything in the SimulationConfig structure and saves it to
@@ -155,40 +180,56 @@ func NewSimulation(name string, conf string) (Simulation, error) {
 }
 
 type SimulationBFTree struct {
-	Rounds int
-	BF     int
-	Hosts  int
+	Rounds     int
+	BF         int
+	Hosts      int
+	SingleHost bool
 }
 
 // CreateEntityLists creates an EntityList with the host-names in 'addresses'.
 // It creates 's.Hosts' entries, starting from 'port' for each round through
 // 'addresses'
 func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []string, port int) {
+	start := time.Now()
 	nbrAddr := len(addresses)
 	if sc.PrivateKeys == nil {
 		sc.PrivateKeys = make(map[string]abstract.Secret)
 	}
-	entities := make([]*network.Entity, s.Hosts)
-	for c := 0; c < s.Hosts; c++ {
-		key := config.NewKeyPair(network.Suite)
+	hosts := s.Hosts
+	if s.SingleHost {
+		// If we want to work with a single host, we only make one
+		// host per server
+		hosts = nbrAddr
+	}
+	if hosts > s.Hosts {
+		hosts = s.Hosts
+	}
+	entities := make([]*network.Entity, hosts)
+	dbg.Lvl3("Doing", hosts, "hosts")
+	key := config.NewKeyPair(network.Suite)
+	for c := 0; c < hosts; c++ {
+		key.Secret.Add(key.Secret,
+			key.Suite.Secret().One())
+		key.Public.Add(key.Public,
+			key.Suite.Point().Base())
 		address := addresses[c%nbrAddr] + ":" +
 			strconv.Itoa(port+c/nbrAddr)
 		entities[c] = network.NewEntity(key.Public, address)
 		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
 	}
 	sc.EntityList = NewEntityList(entities)
+	dbg.Lvl3("Creating entity List took: " + time.Now().Sub(start).String())
 }
 
 // Creates the tree as defined in SimulationBFTree and stores the result
 // in 'sc'
 func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
-	if s.BF != 2 {
-		return errors.New("Don't know how to do other trees than binary")
-	}
+	start := time.Now()
 	if sc.EntityList == nil {
 		return errors.New("Empty EntityList")
 	}
-	sc.Tree = sc.EntityList.GenerateBinaryTree()
+	sc.Tree = sc.EntityList.GenerateBigNaryTree(s.BF, s.Hosts)
+	dbg.Lvl3("Creating tree took: " + time.Now().Sub(start).String())
 	return nil
 }
 

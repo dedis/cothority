@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"time"
 )
 
 /*
@@ -42,23 +43,25 @@ func NewCloseAll(n *sda.Node) (sda.ProtocolInstance, error) {
 }
 
 func (p *ProtocolCloseAll) FuncPC(pc PrepareCloseMsg) {
+	dbg.Lvl3(pc.Entity.Addresses, "sent PrepClose to", p.Entity().Addresses)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			dbg.Lvl3("Sending to", c.Entity.Addresses)
+			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses)
 			p.SendTo(c, &PrepareClose{})
 		}
 	} else {
-		p.FuncC(CloseMsg{})
+		p.FuncC(nil)
 	}
 }
 
-func (p *ProtocolCloseAll) FuncC(c CloseMsg) {
+func (p *ProtocolCloseAll) FuncC(c []CloseMsg) {
 	if !p.IsRoot() {
 		p.SendTo(p.Parent(), &Close{})
 	} else {
 		p.Done <- true
 	}
-	dbg.Lvl3("Closing host")
+	time.Sleep(time.Second)
+	dbg.Lvl3("Closing host", p.TreeNode().Entity.Addresses)
 	err := p.Node.Close()
 	if err != nil {
 		dbg.Fatal("Couldn't close")
@@ -68,7 +71,7 @@ func (p *ProtocolCloseAll) FuncC(c CloseMsg) {
 // Starts the protocol
 func (p *ProtocolCloseAll) Start() error {
 	// Send an empty message
-	p.FuncPC(PrepareCloseMsg{})
+	p.FuncPC(PrepareCloseMsg{TreeNode: p.TreeNode()})
 	// Wait till the end
 	<-p.Done
 	return nil

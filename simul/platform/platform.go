@@ -82,6 +82,9 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		if text == "" {
 			break
 		}
+		if text[0] == '#' {
+			continue
+		}
 
 		// checking if format is good
 		vals := strings.Split(text, "=")
@@ -92,10 +95,15 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		masterConfig.Put(strings.TrimSpace(vals[0]), strings.TrimSpace(vals[1]))
 		// also put it in platform
 		toml.Decode(text, p)
-		dbg.Lvlf3("Platform is now %+v", p)
+		dbg.Lvlf5("Platform is now %+v", p)
 	}
 
-	scanner.Scan()
+	for {
+		scanner.Scan()
+		if scanner.Text() != "" {
+			break
+		}
+	}
 	args := strings.Split(scanner.Text(), ", ")
 	for scanner.Scan() {
 		rc := masterConfig.Clone()

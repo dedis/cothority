@@ -27,7 +27,7 @@ type LocalTest struct {
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
-	dbg.TestOutput(testing.Verbose(), 4)
+	dbg.TestOutput(testing.Verbose(), 3)
 	return &LocalTest{
 		Hosts:       make(map[uuid.UUID]*Host),
 		Overlays:    make(map[uuid.UUID]*Overlay),
@@ -62,6 +62,26 @@ func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *Entit
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
+	l.Trees[tree.Id] = tree
+	if register {
+		hosts[0].overlay.RegisterEntityList(list)
+		hosts[0].overlay.RegisterTree(tree)
+	}
+	return hosts, list, tree
+}
+
+// GenBigTree will create a tree of n hosts. If connect is true, they will
+// be connected to the root host. If register is true, the EntityList and Tree
+// will be registered with the overlay.
+func (l *LocalTest) GenBigTree(n, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
+	hosts := GenLocalHosts(nbrHosts, connect, true)
+	for _, host := range hosts {
+		l.Hosts[host.Entity.Id] = host
+		l.Overlays[host.Entity.Id] = host.overlay
+	}
+
+	list := l.GenEntityListFromHost(hosts...)
+	tree := list.GenerateBigNaryTree(bf, n)
 	l.Trees[tree.Id] = tree
 	if register {
 		hosts[0].overlay.RegisterEntityList(list)

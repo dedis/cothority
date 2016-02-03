@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"runtime/debug"
 )
 
 /*
@@ -47,12 +46,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
-		dbg.Lvl2("Will ask for entityList + tree from token")
+		dbg.Lvl2("Will ask for entityList from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		dbg.Lvl2("Will ask for tree from token")
+		dbg.Lvl3("Will ask for tree from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// If node does not exists, then create it
@@ -140,7 +139,6 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
-		debug.PrintStack()
 		return nil, errors.New("Protocol doesn't exists: " + protocolID.String())
 	}
 	rootEntity := tree.Root.Entity
@@ -282,7 +280,7 @@ func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
 	var tn *TreeNode
 	if tn, ok = mm[tok.TreeNodeID]; !ok {
 		// no treeNode cached for this token...
-		// XXX SHould we search the tree ? Then we need to keep reference to the
+		// XXX Should we search the tree ? Then we need to keep reference to the
 		// tree ...
 		return nil
 	}
