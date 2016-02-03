@@ -1,4 +1,3 @@
-cothority
 .idea
 notes.txt
 test_data
@@ -12,12 +11,12 @@ simul/platform/deterlab/remote/*
 simul/platform/deterlab/deter.toml
 simul/platform/localhost/*
 simul/platform/localhost
-simul/deploy
 simul/matplotlib/*csv
 simul/matplotlib/*png
 simul/matplotlib/imgs
 simul/platform/deterlab/forkexec/forkexec
 simul/platform/Deterlab/users/users
+simul/simul
 test/
 app/conode/config.toml
 app/conode/conode
@@ -29,6 +28,4 @@ app/conode/key.pub
 app/conode/local_keys/
 app/conode/old/
 app/conode/real/
-
 *.pyc
-*.toml
