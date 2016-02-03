@@ -40,7 +40,7 @@ func TestRandHound(t *testing.T) {
 	case _ = <-rh.Done:
 		log.Printf("RandHound - done")
 		bytes = <-rh.Result
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Second * 60):
 		t.Fatal("RandHound – time out")
 	}
 	log.Printf("RandHound - random bytes: %v\n", bytes)

@@ -50,7 +50,7 @@ type RandHound struct {
 func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.ProtocolInstance, error) {
 	// Setup simpler peer identification and ignore leader at index 0
 	j := 0
-	e := node.EntityList() // TODO: use TreeNode-UUIDs intead of Entity-UUIDs
+	e := node.EntityList() // TODO: use TreeNode-UUIDs instead of Entity-UUIDs
 	el := e.List
 	pid := make(map[uuid.UUID]int)
 	pkeys := make([]abstract.Point, len(el)-1)
@@ -93,38 +93,16 @@ func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.Prot
 	}
 
 	// Setup message channels
-	var err error
-	err = rh.RegisterChannel(&rh.ChannelI1)
-	if err != nil {
-		return nil, errors.New("Couldn't register I1-channel: " + err.Error())
-	}
-	err = rh.RegisterChannel(&rh.ChannelR1)
-	if err != nil {
-		return nil, errors.New("Couldn't register R1-channel: " + err.Error())
-	}
-	err = rh.RegisterChannel(&rh.ChannelI2)
-	if err != nil {
-		return nil, errors.New("Couldn't register I2-channel: " + err.Error())
-	}
-	err = rh.RegisterChannel(&rh.ChannelR2)
-	if err != nil {
-		return nil, errors.New("Couldn't register R2-channel: " + err.Error())
-	}
-	err = rh.RegisterChannel(&rh.ChannelI3)
-	if err != nil {
-		return nil, errors.New("Couldn't register I3-channel: " + err.Error())
-	}
-	err = rh.RegisterChannel(&rh.ChannelR3)
-	if err != nil {
-		return nil, errors.New("Couldn't register R3-channel: " + err.Error())
-	}
-	err = rh.RegisterChannel(&rh.ChannelI4)
-	if err != nil {
-		return nil, errors.New("Couldn't register I4-channel: " + err.Error())
-	}
-	err = rh.RegisterChannel(&rh.ChannelR4)
-	if err != nil {
-		return nil, errors.New("Couldn't register R4-channel: " + err.Error())
+	ifs := []interface{}{
+		&rh.ChannelI1, &rh.ChannelR1,
+		&rh.ChannelI2, &rh.ChannelR2,
+		&rh.ChannelI3, &rh.ChannelR3,
+		&rh.ChannelI4, &rh.ChannelR4}
+	for _, channel := range ifs {
+		err := rh.RegisterChannel(channel)
+		if err != nil {
+			return nil, errors.New("Couldn't register channel: " + err.Error())
+		}
 	}
 	go rh.DispatchChannels()
 	return rh, nil
