@@ -29,7 +29,7 @@ type RoundMedcoCompare struct {
 func (round *RoundMedcoCompare) Announcement(viewNbr, roundNbr int, in *sign.SigningMessage, out []*sign.SigningMessage) error {
 	
 	suite := nist.NewAES128SHA256P256()
-	numMessages := 100000
+	numMessages := 10000
  
 
 	switch{
@@ -53,9 +53,8 @@ func (round *RoundMedcoCompare) Announcement(viewNbr, roundNbr int, in *sign.Sig
 
 
 		for i := 0; i < numMessages; i++ {
-			j := i 
 
-			message := []byte("code"+strconv.Itoa(j)) 
+			message := []byte("code"+strconv.Itoa(i)) 
 
 			Ephem, Cipher, _, _ := ElGamalEncrypt(suite, round.CollectivePublic, message)
 
@@ -71,6 +70,7 @@ func (round *RoundMedcoCompare) Announcement(viewNbr, roundNbr int, in *sign.Sig
 
 
 			out[0].Am.Message = val 
+			//fmt.Println("---ok root announcement",len(val))
 				
 
 	default:
@@ -79,9 +79,8 @@ func (round *RoundMedcoCompare) Announcement(viewNbr, roundNbr int, in *sign.Sig
 
 
 		for i := 0; i < numMessages; i++ {
-			j := i 
 
-			message := []byte("code"+strconv.Itoa(j)) 
+			message := []byte("code"+strconv.Itoa(i)) 
 
 			Ephem, Cipher, _, _ := ElGamalEncrypt(suite, round.CollectivePublic, message)
 
@@ -94,27 +93,28 @@ func (round *RoundMedcoCompare) Announcement(viewNbr, roundNbr int, in *sign.Sig
 			val = append(val,ephem...)
 		}
 
-			out[0].Am.Message = in.Am.Message
+			out[0].Am.Message = val //in.Am.Message
+			//fmt.Println("---ok middle announcement",len(val))
 		
 	case round.IsLeaf:
 
 		val := in.Am.Message
 
-		partialCollective := suite.Point().Sub(round.CollectivePublic,round.PublicLeaf)
+		//partialCollective := suite.Point().Sub(round.CollectivePublic,round.PublicLeaf)
 
 		for i := 0; i < numMessages; i++ {
-			j := i 
 
-			message := []byte("code"+strconv.Itoa(j)) 
+			message := []byte("code"+strconv.Itoa(i)) 
 
 			// encrypt + subtract the leaf's ElGamal contribution
-			Ephem, Cipher, _, _ := ElGamalEncrypt(suite, partialCollective, message)
+			//Ephem, Cipher, _, _ := ElGamalEncrypt(suite, partialCollective, message)
+			Ephem, Cipher, _, _ := ElGamalEncrypt(suite, round.CollectivePublic, message)
 
 			// add Pohlig-Hellman contribution
-			ModifiedCipher := suite.Point().Add(Cipher,round.FreshPublicMid)
+			//ModifiedCipher := suite.Point().Add(Cipher,round.FreshPublicMid)
 
 
-			cipher, err := ModifiedCipher.MarshalBinary()
+			cipher, err := Cipher.MarshalBinary()
 			ephem, err2    := Ephem.MarshalBinary()
 			if (err != nil || err2 != nil){
 				dbg.Fatal("Problem marshalling profile (leaf commitment)")
@@ -123,6 +123,7 @@ func (round *RoundMedcoCompare) Announcement(viewNbr, roundNbr int, in *sign.Sig
 			val = append(val,ephem...)
 		}
 		round.val = val
+		//fmt.Println("---ok leaf announcement",len(val))
 
 		
 	}
@@ -133,7 +134,7 @@ func (round *RoundMedcoCompare) Announcement(viewNbr, roundNbr int, in *sign.Sig
 func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.SigningMessage) error {
  
 	suite := nist.NewAES128SHA256P256() 
-	numMessages := 100000
+	numMessages := 10000
 	size := 65
 
 	switch{
@@ -151,7 +152,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 			dbg.Fatal("Problem unmarshalling query (middle commitment)")
 		}
 
-
+		// subtract ElGamal contribution
 		tmpM := suite.Point().Mul(EphemM, round.PrivateRoot) // key
 		PartialQueryM := suite.Point().Sub(QueryM,tmpM)
 			
@@ -161,10 +162,12 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 
 		start := 2*size
 
+		
 		for i := 0; i < 3*numMessages; i++ {
 
 			cipher := mess[start:start+size]
 			ephemeral := mess[start+size:start+2*size]
+
 
 			var Cipher = suite.Point()
 			var Ephem = suite.Point()
@@ -182,14 +185,13 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 			// add Pohlig-Hellman contribution
  			PH_C := suite.Point().Add(PartialModifiedCipher,round.FreshPublicRoot) // key 
 
-			start = start + 2*size
 
 			if PH_C.Equal(PH_Q){
 		 		round.numMatches = round.numMatches + 1
 			} else {
 	 			round.numMismatches = round.numMismatches + 1
 	 		}
-		start = start + 2*size
+	 		start = start + 2*size
 			
 		}
 
@@ -210,7 +212,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 			dbg.Fatal("Problem unmarshalling query (middle commitment)")
 		}
 
-		alreadyConverted := mess[2*size:len(mess)]
+		//alreadyConverted := mess[2*size:len(mess)]
 
 		tmpM := suite.Point().Mul(EphemM, round.PrivateMid) // key
 		PartialQueryM := suite.Point().Sub(QueryM,tmpM)
@@ -225,7 +227,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 			dbg.Fatal("Problem marshalling query (leaf commitment)")
 		}
 		val := append(ModQueryM,ephemM...)
-		val = append(val, alreadyConverted...)
+		//val = append(val, alreadyConverted...)
 
 
 		start := 2*size
@@ -254,6 +256,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 
  			ModCipher, err3 := ModifiedCipher.MarshalBinary()
  			ephem, err4 := Ephem.MarshalBinary()
+ 			//fmt.Println("mod ll",len(ephem))
 
  			if (err3 != nil || err4 != nil ){
 				dbg.Fatal("Problem marshalling profile (middle commitment)")
@@ -264,6 +267,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 			start = start + 2*size
 		}
 		out.Com.Message = val 
+		//fmt.Println("---ok middle commitment",len(val))
 		
 
 
@@ -278,7 +282,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 		if (err1 != nil || err2 != nil){
 			dbg.Fatal("Problem marshalling query (leaf commitment)")
 		}
-		alreadyConverted := round.val[2*size:len(round.val)]
+		//alreadyConverted := round.val[2*size:len(round.val)]
 
 		// remove ElGamal contribution
 		tmpM := suite.Point().Mul(EphemeralM, round.PrivateLeaf) // key
@@ -296,11 +300,11 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 			dbg.Fatal("Problem marshalling query (leaf commitment)")
 		}
 		val := append(ModQueryM,ephemM...)
-		val = append(val,alreadyConverted...)
+		//val = append(val,alreadyConverted...)
 		start := 2*size 
 
 		//leaf data already converted, only 2*numMessages left
-		for i := 0; i < 2*numMessages; i++ {
+		for i := 0; i < 3*numMessages; i++ {
 
 			message := round.val[start:start+size] 
 			ephem := round.val[start+size:start+2*size]
@@ -325,6 +329,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 				
 			ModCipher, err3 := ModifiedCipher.MarshalBinary()
 			ephem, err4    := Ephem.MarshalBinary()
+			//fmt.Println("mod l",len(ephem))
 			if (err3 != nil || err4 != nil){
 				dbg.Fatal("Problem marshalling profile (leaf commitment)")
 			}
@@ -335,6 +340,7 @@ func (round *RoundMedcoCompare) Commitment(in []*sign.SigningMessage, out *sign.
 		}
 		
 		out.Com.Message = val
+		//fmt.Println("---ok leaf commitment",len(val))
 
 	}
 

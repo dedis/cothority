@@ -54,8 +54,7 @@ func NewRoundMedco()*RoundMedco{
 	suite := nist.NewAES128SHA256P256()
 
 	SecretRoot := suite.Secret().Pick(suite.Cipher([]byte("Root")))
-	//c, _ := SecretRoot.MarshalBinary()
-	//fmt.Println("key size",len(c))
+
 	SecretLeaf := suite.Secret().Pick(suite.Cipher([]byte("Leaf")))
 	SecretMid := suite.Secret().Pick(suite.Cipher([]byte("Middle")))
 
@@ -75,7 +74,7 @@ func NewRoundMedco()*RoundMedco{
 	FreshPubLeaf := suite.Point().Mul(nil, FreshSecretLeaf)
 	FreshPubMid := suite.Point().Mul(nil, FreshSecretMid)
 
-	numMidNodes := 1
+	numMidNodes := 0
 
 	collectiveSecret := suite.Secret().Add(SecretRoot, SecretLeaf)
 	FreshCollectiveSecret := suite.Secret().Add(FreshSecretRoot, FreshSecretLeaf)
@@ -124,7 +123,7 @@ func NewRoundMedco()*RoundMedco{
 	// fresh collective keys
 	roundMedcoBase.FreshCollectivePrivate = FreshCollectiveSecret
 	roundMedcoBase.FreshCollectivePublic = suite.Point().Mul(nil, FreshCollectiveSecret)
-	
+
 	return roundMedcoBase
 }
 
@@ -153,7 +152,7 @@ func ElGamalDecrypt2(suite abstract.Suite, prikey abstract.Secret, Ephem abstrac
 	B := suite.Point().Base()
 	Bi := suite.Point().Base()
 	var MaxInt int64
-	MaxInt = 11000
+	MaxInt = 300000
 
 	if M.Equal(B) == true {
 		message = 1

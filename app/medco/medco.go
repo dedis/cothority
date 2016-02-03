@@ -15,8 +15,8 @@ func init() {
 }
 
 func main() {
-	//RoundMedcoType := RoundMedcoCompareType
-	RoundMedcoType := RoundMedcoBucketType
+	//RoundMedcoType := RoundMedcoCompareType // bf = 1, numMidNodes = 1
+	RoundMedcoType := RoundMedcoBucketType // bf = 2, numMidNodes = 0
 
 	conf := &app.ConfigColl{}
 	app.ReadConfig(conf)

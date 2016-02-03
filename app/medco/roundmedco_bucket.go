@@ -6,7 +6,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/nist"
 	"fmt"
-	//"time"
+	"time"
 )
 
 /*
@@ -40,7 +40,10 @@ func (round *RoundMedcoBucket) Announcement(viewNbr, roundNbr int, in *sign.Sign
 	case round.IsRoot:
 
 		Message := []byte("attribute X")
+		enc := time.Now()
 		EphemPublicM, CipherM, _,_ := ElGamalEncrypt(suite, round.PublicLeaf, Message)
+		elapsed := time.Since(enc)
+		fmt.Println("encryption time\n", elapsed)
 		
 		val1, err1 := CipherM.MarshalBinary() 
 		val2, err2 := EphemPublicM.MarshalBinary()
@@ -151,52 +154,17 @@ func (round *RoundMedcoBucket) Commitment(in []*sign.SigningMessage, out *sign.S
 
 		}
 
-		/*res5 := ElGamalDecrypt2(suite, round.PrivateRoot, localSumEphem_b1, localSumCipher_b1)
-		fmt.Println("----- Result root initial (should be 0)",res5)
-		res6 := ElGamalDecrypt2(suite, round.PrivateRoot, localSumEphem_b2, localSumCipher_b2)
-		fmt.Println("----- Result root initial (should be numMessage)",res6)*/
-
-
 		sumCipher_b1 := suite.Point().Null()
 		sumEphem_b1 := suite.Point().Null()
 
 		sumCipher_b2 := suite.Point().Null()
 		sumEphem_b2 := suite.Point().Null()
 
+		finalsumCipher_b1 := suite.Point().Null()
+		finalsumEphem_b1 := suite.Point().Null()
 
-		for i ,_ := range in {
-			
-			mess := in[i].Com.Message
-
-			var Result_b1 = suite.Point()
-			var Ephem_b1 = suite.Point()
-
-			var Result_b2 = suite.Point()
-			var Ephem_b2 = suite.Point()
-			
-			err1 := Result_b1.UnmarshalBinary(mess[0:size])
-			err2 := Ephem_b1.UnmarshalBinary(mess[size:2*size])
-
-			err3 := Result_b2.UnmarshalBinary(mess[2*size:3*size])
-			err4 := Ephem_b2.UnmarshalBinary(mess[3*size:4*size])
-
-			if (err1 != nil || err2 != nil || err3 != nil || err4 != nil){
-				dbg.Fatal("Problem unmarshalling result (root commitment)")
-			}
-
-			sumCipher_b1 = suite.Point().Add(sumCipher_b1,Result_b1)
-			sumEphem_b1 = suite.Point().Add(sumEphem_b1,Ephem_b1)
-
-			sumCipher_b2 = suite.Point().Add(sumCipher_b2,Result_b2)
-			sumEphem_b2 = suite.Point().Add(sumEphem_b2,Ephem_b2)
-
-		}
-
-		/*sumCipher_b1 := suite.Point().Null()
-		sumEphem_b1 := suite.Point().Null()
-
-		sumCipher_b2 := suite.Point().Null()
-		sumEphem_b2 := suite.Point().Null()
+		finalsumCipher_b2 := suite.Point().Null()
+		finalsumEphem_b2 := suite.Point().Null()
 
 
 		for i ,_ := range in {
@@ -227,16 +195,17 @@ func (round *RoundMedcoBucket) Commitment(in []*sign.SigningMessage, out *sign.S
 
 		}
 
-		sumCipher_b1 = suite.Point().Add(sumCipher_b1, localSumCipher_b1)
-		sumEphem_b1 = suite.Point().Add(sumCipher_b1, localSumEphem_b1)
+		
+		finalsumCipher_b1 = suite.Point().Add(sumCipher_b1, localSumCipher_b1)
+		finalsumEphem_b1 = suite.Point().Add(sumEphem_b1, localSumEphem_b1)
 
-		sumCipher_b2 = suite.Point().Add(sumCipher_b2, localSumCipher_b2)
-		sumEphem_b2 = suite.Point().Add(sumCipher_b2, localSumEphem_b2)*/
+		finalsumCipher_b2 = suite.Point().Add(sumCipher_b2, localSumCipher_b2)
+		finalsumEphem_b2 = suite.Point().Add(sumEphem_b2, localSumEphem_b2)
 
 
-		res_b1 := ElGamalDecrypt2(suite, round.PrivateRoot, sumEphem_b1, sumCipher_b1)
+		res_b1 := ElGamalDecrypt2(suite, round.PrivateRoot, finalsumEphem_b1, finalsumCipher_b1)
 		fmt.Println("----- Number of patients in bucket 0:",res_b1)
-		res_b2 := ElGamalDecrypt2(suite, round.PrivateRoot, sumEphem_b2, sumCipher_b2)
+		res_b2 := ElGamalDecrypt2(suite, round.PrivateRoot, finalsumEphem_b2, finalsumCipher_b2)
 		fmt.Println("----- Number of patients in bucket 1:",res_b2)
 
 
@@ -262,11 +231,6 @@ func (round *RoundMedcoBucket) Commitment(in []*sign.SigningMessage, out *sign.S
 
 		}
 
-		/*res5 := ElGamalDecrypt2(suite, round.PrivateRoot, localSumEphem_b1, localSumCipher_b1)
-		fmt.Println("----- Result middle initial (should be 0)",res5)
-		res6 := ElGamalDecrypt2(suite, round.PrivateRoot, localSumEphem_b2, localSumCipher_b2)
-		fmt.Println("----- Result middle initial (should be numMessage)",res6)*/
-
 
 		sumCipher_b1 := suite.Point().Null()
 		sumEphem_b1 := suite.Point().Null()
@@ -303,26 +267,13 @@ func (round *RoundMedcoBucket) Commitment(in []*sign.SigningMessage, out *sign.S
 
 		}
 		
-		/*res := ElGamalDecrypt2(suite, round.PrivateRoot, sumEphem_b1, sumCipher_b1)
-		fmt.Println("----- Result middle (should be 0)",res)
-		res2 := ElGamalDecrypt2(suite, round.PrivateRoot, sumEphem_b2, sumCipher_b2)
-		fmt.Println("----- Result middle (should be numMessage)",res2)*/
-
 
 		finalCipher_b1 := suite.Point().Add(sumCipher_b1, localSumCipher_b1)
-		finalEphem_b1 := suite.Point().Add(sumCipher_b1, localSumEphem_b1)
+		finalEphem_b1 := suite.Point().Add(sumEphem_b1, localSumEphem_b1)
 
-		/*fmt.Println("Base\n",suite.Point().Base())
-		fmt.Println("sumCipher_b1\n",sumCipher_b1)
-		fmt.Println("localSumCipher_b1\n",localSumCipher_b1)*/
-
+	
 		finalCipher_b2 := suite.Point().Add(sumCipher_b2, localSumCipher_b2)
-		finalEphem_b2 := suite.Point().Add(sumCipher_b2, localSumEphem_b2)
-
-		/*res8 := ElGamalDecrypt2(suite, round.PrivateRoot, finalEphem_b1, finalCipher_b1)
-		fmt.Println("----- Result middle end (should be 0)",res8)
-		res9 := ElGamalDecrypt2(suite, round.PrivateRoot, finalEphem_b2, finalCipher_b2)
-		fmt.Println("----- Result middle end (should be numMessage)",res9)*/
+		finalEphem_b2 := suite.Point().Add(sumEphem_b2, localSumEphem_b2)
 
 
 		cipher_b1, err5 := finalCipher_b1.MarshalBinary()
@@ -391,11 +342,7 @@ func (round *RoundMedcoBucket) Commitment(in []*sign.SigningMessage, out *sign.S
 		val = append(val,ephem_b2...)
 
 		out.Com.Message = val
-		/*res := ElGamalDecrypt2(suite, round.PrivateRoot, localSumEphem_b1, localSumCipher_b1)
-		fmt.Println("----- Result leaf (should be 0)",res)
-		res2 := ElGamalDecrypt2(suite, round.PrivateRoot, localSumEphem_b2, localSumCipher_b2)
-		fmt.Println("----- Result leaf (should be numMessage)",res2)*/
-	
+
 
 	}
 
