@@ -1,0 +1,6 @@
+Simulation = "CoSiSimulation"
+Hosts = 2
+Bf = 2
+
+Rounds
+10

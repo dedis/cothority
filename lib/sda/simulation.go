@@ -2,6 +2,7 @@ package sda
 
 import (
 	"errors"
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -137,6 +138,8 @@ func SimulationRegister(name string, sim SimulationCreate) {
 // simulation-structure
 func NewSimulation(name string, conf string) (Simulation, error) {
 	sim, ok := simulationRegistered[name]
+
+	fmt.Println("simulationRegistered:", simulationRegistered)
 	if !ok {
 		return nil, errors.New("Didn't find simulation " + name)
 	}

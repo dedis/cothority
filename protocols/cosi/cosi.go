@@ -1,7 +1,7 @@
 package cosi
 
 import (
-	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -106,8 +106,9 @@ func (pc *ProtocolCosi) Start() error {
 }
 
 // Dispatch is not used, and already panics because it's DEPRECATED.
-func (pc *ProtocolCosi) Dispatch(msgs []*sda.SDAData) error {
-	panic("Should not happen since ProtocolCosi uses channel registration")
+func (pc *ProtocolCosi) Dispatch() error {
+	//panic("Should not happen since ProtocolCosi uses channel registration")
+	return nil
 }
 
 // listen will listen on the four channels we use (i.e. four steps)
@@ -134,7 +135,7 @@ func (pc *ProtocolCosi) listen() {
 
 // StartAnnouncement will start a new announcement.
 func (pc *ProtocolCosi) StartAnnouncement() error {
-	dbg.Lvl3("ProtocolCosi.StartAnnouncement")
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartAnnouncement (msg=", pc.message)
 	// First check the hook
 	if pc.announcementHook != nil {
 		return pc.announcementHook(nil)
@@ -155,7 +156,7 @@ type AnnouncementHook func(in *CosiAnnouncement) error
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
 func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
-	dbg.Lvl3("ProtocolCosi.HandleAnnouncement ")
+	dbg.Lvl3("ProtocolCosi.HandleAnnouncement (msg=", pc.message)
 	// If we have a hook on announcement call the hook
 	// the hook is responsible to call pc.Cosi.Announce(in)
 	if pc.announcementHook != nil {
@@ -203,7 +204,7 @@ func (pc *ProtocolCosi) StartCommitment() error {
 		Commitment: commitment,
 	}
 
-	dbg.Lvl3("ProtocolCosi.StartCommitment()")
+	dbg.Lvl3("ProtocolCosi.StartCommitment() Send to", pc.Parent().Id)
 	return pc.SendTo(pc.Parent(), out)
 }
 
@@ -219,7 +220,7 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	if len(pc.tempCommitment) < len(pc.Children()) {
 		return nil
 	}
-	dbg.Lvl3("ProtocolCosi.HandleCommitment aggregated")
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleCommitment aggregated (msg=", pc.message)
 	// pass it to the hook
 	if pc.commitmentHook != nil {
 		return pc.commitmentHook(pc.tempCommitment)
@@ -252,7 +253,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 	/*}*/
 
 	if pc.message == nil {
-		return errors.New("StartChallenge() called without message (=nil)")
+		return fmt.Errorf("%s StartChallenge() called without message (=%v)", pc.Node.Name(), pc.message)
 	}
 	challenge, err := pc.Cosi.CreateChallenge(pc.message)
 	if err != nil {
@@ -356,6 +357,7 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 // SigningMessage simply set the message to sign for this round
 func (pc *ProtocolCosi) SigningMessage(msg []byte) {
 	pc.message = msg
+	dbg.Lvl2(pc.Node.Name(), "Root will sign message=", pc.message)
 }
 
 // TODO Still see if it is relevant...

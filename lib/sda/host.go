@@ -345,17 +345,21 @@ func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
 	dbg.Lvl5("Got message", data)
 	if data.MsgType == SDADataMessage {
-		sda := data.Msg.(SDAData)
-		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
-		if err != nil {
-			dbg.Error("Error while marshalling inner message of SDAData:", err)
-		}
-		// Put the msg into SDAData
-		sda.MsgType = t
-		sda.Msg = msg
-		// Write back the Msg in appplicationMessage
-		data.Msg = sda
-		dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)
+		/*     sda := data.Msg.(SDAData)*/
+		//t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		//if err != nil {
+		//// TODO change the test so we don't do that unmarshalling here but
+		//// rather in Node, Host should not care what's inside the SDAData
+		//// anyway.
+		////dbg.Error(h.Entity.First(), "Error while unmarshalling inner message of SDAData", data.MsgType, ":", err)
+		//return data
+		//}
+		//// Put the msg into SDAData
+		//sda.MsgType = t
+		//sda.Msg = msg
+		//// Write back the Msg in appplicationMessage
+		//data.Msg = sda
+		/*dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)*/
 	}
 	return data
 }

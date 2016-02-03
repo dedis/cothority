@@ -163,8 +163,8 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	// Automatic registration of the message to the network library.
 	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
-	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.channels[typ] = c
+	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type) n.channels[typ] = c
 	n.messageTypeFlags[typ] = flags
 	dbg.Lvl3("Registered channel", typ, "with flags", flags)
 	return nil
@@ -305,6 +305,16 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 
 // DispatchMsg will dispatch this SDAData to the right instance
 func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
+	var err error
+	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(n.Suite()))
+	if err != nil {
+		dbg.Error(n.Entity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
+	}
+	// Put the msg into SDAData
+	sdaMsg.MsgType = t
+	sdaMsg.Msg = msg
+	dbg.Lvlf3("SDA-Message is: %+v", sdaMsg.Msg)
+
 	// if message comes from parent, dispatch directly
 	// if messages come from children we must aggregate them
 	// if we still need to wait for additional messages, we return
@@ -315,7 +325,6 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	}
 	dbg.Lvl3("Going to dispatch", sdaMsg)
 
-	var err error
 	switch {
 	case n.channels[msgType] != nil:
 		dbg.Lvl3("Dispatching to channel")
@@ -409,4 +418,8 @@ func (n *Node) Private() abstract.Secret {
 // Closes the host
 func (n *Node) Close() error {
 	return n.overlay.host.Close()
+}
+
+func (n *Node) Name() string {
+	return n.Entity().First()
 }

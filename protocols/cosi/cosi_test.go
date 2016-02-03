@@ -23,14 +23,12 @@ func TestCosi(t *testing.T) {
 
 	// function that will be called when protocol is finished by the root
 	doneFunc := func(chal abstract.Secret, resp abstract.Secret) {
-		dbg.Print("DoneFunc() Called")
 		suite := hosts[0].Suite()
 		aggPublic := suite.Point().Null()
 		for _, e := range el.List {
 			aggPublic = aggPublic.Add(aggPublic, e.Public)
 		}
 		if err := cosi.VerifySignature(suite, msg, aggPublic, chal, resp); err != nil {
-			dbg.Print("Error veriying signature")
 			t.Fatal("error verifying signature:", err)
 		}
 		done <- true

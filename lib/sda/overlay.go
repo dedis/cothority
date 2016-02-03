@@ -2,6 +2,7 @@ package sda
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -57,8 +58,8 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	// If node does not exists, then create it
 	node := o.nodes[sdaMsg.To.Id()]
 	if node == nil {
+		dbg.Lvl2("Node not found for token (creating new one):", fmt.Sprintf("%+v", sdaMsg.To))
 		var err error
-		dbg.Lvl3("Making new node")
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		if err != nil {
 			return err
@@ -124,7 +125,6 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	if err != nil {
 		return nil, err
 	}
-	o.nodes[node.token.Id()] = node
 	// start it
 	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
 	err = node.Start()
@@ -157,7 +157,9 @@ func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error)
 		RoundID: uuid.NewV4(),
 	}
 	// only create the node
-	return NewNode(o, token)
+	node, err := NewNode(o, token)
+	o.nodes[node.token.Id()] = node
+	return node, err
 }
 
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
