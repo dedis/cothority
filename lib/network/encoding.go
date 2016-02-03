@@ -51,8 +51,8 @@ func RegisterMessageType(msg ProtocolMessage) uuid.UUID {
 }
 
 // RegisterMessageUUID can be used if the uuid and the type is already known
+// NOTE: be sure to only registers VALUE message and not POINTERS to message.
 func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
-	dbg.Lvl5("Registering message:", mt, rt)
 	if _, typeRegistered := typeRegistry[mt]; typeRegistered {
 		return mt
 	}
@@ -138,7 +138,7 @@ var EmptyApplicationMessage = NetworkMessage{MsgType: ErrorType}
 func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
 	var msgType uuid.UUID
 	if msgType = TypeFromData(data); msgType == ErrorType {
-		return nil, fmt.Errorf("Type %s Not registered to the network library.", msgType)
+		return nil, fmt.Errorf("Type of message %s not registered to the network library.", reflect.TypeOf(data))
 	}
 	b := new(bytes.Buffer)
 	if err := binary.Write(b, globalOrder, msgType); err != nil {

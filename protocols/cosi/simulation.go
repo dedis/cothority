@@ -2,8 +2,10 @@ package cosi
 
 import (
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 )
@@ -36,9 +38,10 @@ func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConf
 }
 
 func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
-	size := config.Tree.Size()
+	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
-	dbg.Lvl2("Size is:", size, "rounds:", cs.Rounds)
+	aggPublic := computeAggregatedPublic(config.EntityList)
+	dbg.Lvl1("Simulation starting with: SIZE=", size, ", ROUNDS=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewMeasure("round")
@@ -55,6 +58,11 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		done := make(chan bool)
 		fn := func(chal, resp abstract.Secret) {
 			round.Measure()
+			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
+				dbg.Lvl1("Round verification FAIL !!")
+			} else {
+				dbg.Lvl1("Round finished SUCESS")
+			}
 			done <- true
 			// TODO make the verification here
 		}
@@ -62,5 +70,15 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		proto.Start()
 		<-done
 	}
+	dbg.Lvl1("Simulation finished")
 	return nil
+}
+
+func computeAggregatedPublic(el *sda.EntityList) abstract.Point {
+	suite := network.Suite
+	agg := suite.Point().Null()
+	for _, e := range el.List {
+		agg = agg.Add(agg, e.Public)
+	}
+	return agg
 }

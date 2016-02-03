@@ -240,7 +240,11 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	}
 
 	// otherwise send it to parent
-	return pc.SendTo(pc.Parent(), out)
+	outMsg := &CosiCommitment{
+		From:       pc.treeNodeId,
+		Commitment: out,
+	}
+	return pc.SendTo(pc.Parent(), outMsg)
 }
 
 type ChallengeHook func(*CosiChallenge) error
@@ -351,6 +355,7 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 	if pc.DoneCallback != nil {
 		pc.DoneCallback(pc.Cosi.GetChallenge(), pc.Cosi.GetAggregateResponse())
 	}
+	pc.Node.Done()
 	return nil
 }
 

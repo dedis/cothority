@@ -305,6 +305,10 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 
 // DispatchMsg will dispatch this SDAData to the right instance
 func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
+	// Decode the inner message here. In older versions, it was decoded before,
+	// but first there is no use to do it before, and then every protocols had
+	// to manually registers their messages. Since it is done automatically by
+	// the Node, decoding should also be done by the node.
 	var err error
 	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {

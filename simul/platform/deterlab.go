@@ -94,7 +94,7 @@ var simulConfig *sda.SimulationConfig
 func (d *Deterlab) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.CothorityDir = pwd + "/.."
+	d.CothorityDir = pwd + "/cothority"
 	d.DeterDir = pwd + "/platform/deterlab"
 	d.DeployDir = d.DeterDir + "/remote"
 	d.BuildDir = d.DeterDir + "/build"
