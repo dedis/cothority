@@ -1,7 +1,0 @@
-Machines = 16
-App = "sign"
-Rounds = 10
-Suite = "Ed25519"
-
-ppm, bf
-64, 7
