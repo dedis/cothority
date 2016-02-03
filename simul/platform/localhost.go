@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"sync"
@@ -76,7 +75,7 @@ func (d *Localhost) Configure() {
 
 // Will build the application
 func (d *Localhost) Build(build string) error {
-	src, _ := filepath.Rel(d.LocalDir, d.LocalDir+"/cothority")
+	src := "./cothority"
 	dst := d.RunDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine
