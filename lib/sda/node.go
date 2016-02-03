@@ -2,11 +2,12 @@ package sda
 
 import (
 	"errors"
+	"reflect"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"reflect"
 )
 
 /*
@@ -75,6 +76,11 @@ func (n *Node) TreeNode() *TreeNode {
 // Entity returns our entity
 func (n *Node) Entity() *network.Entity {
 	return n.treeNode.Entity
+}
+
+// Public returns the public key of the entity
+func (n *Node) Public() abstract.Point {
+	return n.treeNode.Entity.Public
 }
 
 // Parent returns the parent-TreeNode of ourselves
