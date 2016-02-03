@@ -135,15 +135,21 @@ func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
 	return nodes
 }
 
+// SendTreeNode injects a message directly in the Overlay-layer, bypassing
+// Host and Network
 func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.ProtocolMessage) error {
 	if from.Tree().Id != to.Tree().Id {
 		return errors.New("Can't send from one tree to another")
 	}
+	b, err := network.MarshalRegisteredType(msg)
+	if err != nil {
+		return err
+	}
 	sdaMsg := &SDAData{
-		Msg:     msg,
-		MsgType: network.TypeToUUID(msg),
-		From:    from.token,
-		To:      to.token,
+		MsgSlice: b,
+		MsgType:  network.TypeToUUID(msg),
+		From:     from.token,
+		To:       to.token,
 	}
 	return to.overlay.TransmitMsg(sdaMsg)
 }

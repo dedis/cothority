@@ -18,7 +18,7 @@ import (
 // Suite used globally by this network library.
 // For the moment, this will stay,as our focus is not on having the possibility
 // to use any suite we want (the decoding stuff is much harder then, because we
-// dont want to send the suite in the wire).
+// don't want to send the suite in the wire).
 // It will surely change in futur releases so we can permit this behavior.
 var Suite = edwards.NewAES128SHA256Ed25519(false)
 

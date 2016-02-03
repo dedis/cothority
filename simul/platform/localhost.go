@@ -158,7 +158,7 @@ func (d *Localhost) Start(args ...string) error {
 
 // Waits for all processes to finish
 func (d *Localhost) Wait() error {
-	dbg.LLvl3("Waiting for processes to finish")
+	dbg.Lvl3("Waiting for processes to finish")
 
 	var err error
 	go func() {

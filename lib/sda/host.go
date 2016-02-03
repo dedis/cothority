@@ -343,6 +343,7 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 // the message from the networkChan, and pre-processes the SDAMessage
 func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
+	dbg.Lvl5("Got message", data)
 	if data.MsgType == SDADataMessage {
 		sda := data.Msg.(SDAData)
 		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
@@ -377,6 +378,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 				// So the receiver can know about the error
 				am.SetError(err)
 				am.From = address
+				dbg.Lvl5("Got message", am)
 				if err != nil {
 					errorChan <- err
 				} else {
@@ -408,15 +410,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // id
 func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
 	sdaMsg := am.Msg.(SDAData)
-	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(network.Suite))
-	if err != nil {
-		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
-	}
-	// Set the right type and msg
-	sdaMsg.MsgType = t
-	sdaMsg.Msg = msg
 	sdaMsg.Entity = am.Entity
-
 	return h.overlay.TransmitMsg(&sdaMsg)
 }
 
