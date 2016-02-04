@@ -14,13 +14,15 @@ func TestCosi(t *testing.T) {
 
 	local := sda.NewLocalTest()
 
-	hosts, el, tree := local.GenTree(2, true, true)
+	hosts, el, tree := local.GenBigTree(3, 3, 1, true, true)
 	defer local.CloseAll()
 
 	done := make(chan bool)
 	// create the message we want to sign for this round
 	msg := []byte("Hello World Cosi")
 
+	// Register the function generating the protocol instance
+	var root *ProtocolCosi
 	// function that will be called when protocol is finished by the root
 	doneFunc := func(chal abstract.Secret, resp abstract.Secret) {
 		suite := hosts[0].Suite()
@@ -28,13 +30,14 @@ func TestCosi(t *testing.T) {
 		for _, e := range el.List {
 			aggPublic = aggPublic.Add(aggPublic, e.Public)
 		}
+		if err := root.Cosi.VerifyResponses(aggPublic); err != nil {
+			t.Fatal("Error verifying responses", err)
+		}
 		if err := cosi.VerifySignature(suite, msg, aggPublic, chal, resp); err != nil {
 			t.Fatal("error verifying signature:", err)
 		}
 		done <- true
 	}
-	// Register the function generating the protocol instance
-	var root *ProtocolCosi
 	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
 		if root == nil {
 			var err error

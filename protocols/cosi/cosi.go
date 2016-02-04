@@ -204,7 +204,7 @@ func (pc *ProtocolCosi) StartCommitment() error {
 		Commitment: commitment,
 	}
 
-	dbg.Lvl3("ProtocolCosi.StartCommitment() Send to", pc.Parent().Id)
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartCommitment() Send to", pc.Parent().Id)
 	return pc.SendTo(pc.Parent(), out)
 }
 
@@ -220,7 +220,7 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	if len(pc.tempCommitment) < len(pc.Children()) {
 		return nil
 	}
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleCommitment aggregated (msg=", pc.message)
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleCommitment aggregated")
 	// pass it to the hook
 	if pc.commitmentHook != nil {
 		return pc.commitmentHook(pc.tempCommitment)
@@ -228,12 +228,15 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 
 	// or make continue the cosi protocol
 	commits := make([]*cosi.Commitment, len(pc.tempCommitment))
+	secretVar := pc.Node.Suite().Point().Null()
 	for i := range pc.tempCommitment {
+		secretVar.Add(secretVar, pc.tempCommitment[i].Commitment.Commitment)
 		commits[i] = pc.tempCommitment[i].Commitment
 	}
+
 	// go to Commit()
 	out := pc.Cosi.Commit(commits)
-
+	secretVar.Add(secretVar, pc.Cosi.Commitment())
 	// if we are the root, we need to start the Challenge
 	if pc.IsRoot() {
 		return pc.StartChallenge()
@@ -267,7 +270,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 		From:      pc.treeNodeId,
 		Challenge: challenge,
 	}
-	dbg.Lvl3("ProtocolCosi.StartChallenge()")
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartChallenge() chal=", fmt.Sprintf("%+v", challenge))
 	return pc.sendChallenge(out)
 
 }
@@ -277,6 +280,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 func (pc *ProtocolCosi) handleChallenge(in *CosiChallenge) error {
 	// TODO check hook
 
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleChallenge() chal=", fmt.Sprintf("%+v", in.Challenge))
 	// else dispatch it to cosi
 	challenge := pc.Cosi.Challenge(in.Challenge)
 
@@ -290,7 +294,6 @@ func (pc *ProtocolCosi) handleChallenge(in *CosiChallenge) error {
 		From:      pc.treeNodeId,
 		Challenge: challenge,
 	}
-	dbg.Lvl3("ProtocolCosi.HandleChallenge()")
 	return pc.sendChallenge(out)
 }
 
@@ -315,7 +318,7 @@ func (pc *ProtocolCosi) StartResponse() error {
 		From:     pc.treeNodeId,
 		Response: resp,
 	}
-	dbg.Lvl3("ProtocolCosi().StartResponse()")
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi().StartResponse()")
 	return pc.SendTo(pc.Parent(), out)
 }
 
@@ -330,7 +333,7 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 		return nil
 	}
 
-	dbg.Lvl3("ProtocolCosi.HandleResponse() aggregated")
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() aggregated")
 	// TODO check the hook
 
 	// else do it yourself

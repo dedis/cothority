@@ -91,7 +91,7 @@ func TestCosiVerifyResponse(t *testing.T) {
 	// add root public key
 	aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, root.private))
 	// verify the responses / commitment
-	if err := root.verifyResponses(aggregatedPublic); err != nil {
+	if err := root.VerifyResponses(aggregatedPublic); err != nil {
 		t.Fatal("Verification of responses / commitment has failed:", err)
 	}
 

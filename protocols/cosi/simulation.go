@@ -44,7 +44,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with: SIZE=", size, ", ROUNDS=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		round := monitor.NewMeasure("round")
+		roundM := monitor.NewMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
 		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
 		if err != nil {
@@ -57,11 +57,14 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		// tell us when it is done
 		done := make(chan bool)
 		fn := func(chal, resp abstract.Secret) {
-			round.Measure()
+			roundM.Measure()
+			if err := proto.Cosi.VerifyResponses(aggPublic); err != nil {
+				dbg.Lvl1("Round", round, "FAILED RESPONSES")
+			}
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
-				dbg.Lvl1("Round verification FAIL !!")
+				dbg.Lvl1("Round", round, " => FAIL")
 			} else {
-				dbg.Lvl1("Round finished SUCESS")
+				dbg.Lvl1("Round", round, " => SUCCESS")
 			}
 			done <- true
 			// TODO make the verification here

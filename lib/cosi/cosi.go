@@ -96,6 +96,7 @@ func (c *Cosi) CreateCommitment() *Commitment {
 func (c *Cosi) Commit(comms []*Commitment) *Commitment {
 	// generate our own commit
 	c.genCommit()
+
 	// take the children commitment
 	child_v_hat := c.suite.Point().Null()
 	for _, com := range comms {
@@ -108,7 +109,7 @@ func (c *Cosi) Commit(comms []*Commitment) *Commitment {
 		}
 	}
 	// add our own commitment to the global V_hat
-	c.aggregateCommitment = child_v_hat.Add(child_v_hat, c.commitment)
+	c.aggregateCommitment = c.suite.Point().Add(child_v_hat, c.commitment)
 	return &Commitment{
 		ChildrenCommit: child_v_hat,
 		Commitment:     c.commitment,
@@ -142,6 +143,7 @@ func (c *Cosi) CreateResponse() (*Response, error) {
 // Response will generate the response from the commitment,challenge and the
 // response of its children.
 func (c *Cosi) Response(responses []*Response) (*Response, error) {
+	// create your own response
 	if err := c.genResponse(); err != nil {
 		return nil, err
 	}
@@ -156,8 +158,7 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 		}
 	}
 	// Add our own
-	c.aggregateResponse = aggregateResponse.Add(aggregateResponse, c.response)
-
+	c.aggregateResponse = c.suite.Secret().Add(aggregateResponse, c.response)
 	return &Response{
 		Response:     c.response,
 		ChildrenResp: aggregateResponse,
@@ -172,7 +173,11 @@ func (c *Cosi) GetAggregateResponse() abstract.Secret {
 func (c *Cosi) GetChallenge() abstract.Secret {
 	return c.challenge
 }
-func (c *Cosi) verifyResponses(aggregatedPublic abstract.Point) error {
+
+func (c *Cosi) Commitment() abstract.Point {
+	return c.commitment
+}
+func (c *Cosi) VerifyResponses(aggregatedPublic abstract.Point) error {
 	// Check that: base**r_hat * X_hat**c == V_hat
 	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 	commitment := c.suite.Point()
