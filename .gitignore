@@ -28,4 +28,5 @@ app/conode/key.pub
 app/conode/local_keys/
 app/conode/old/
 app/conode/real/
+lib/sda/testdata
 *.pyc
