@@ -19,7 +19,7 @@ import (
 // signing mechanism
 type JVSSProtocol struct {
 	// The TreeNode denotating ourself in the tree
-	Node *sda.Node
+	*sda.Node
 	// The EntityList we are using / this is needed to "bypass" the tree
 	// structure for the internals communication, when we set up the shares and
 	// everything. We directly send our share to everyone else directly by using
@@ -182,11 +182,6 @@ func (jv *JVSSProtocol) waitLongtermSecret() {
 	if jv.onLongtermDone != nil {
 		jv.onLongtermDone(jv.longterm.secret)
 	}
-}
-
-func (jv *JVSSProtocol) Dispatch(msgs []*sda.SDAData) error {
-	panic("JVSS dont use dispatch method")
-	return nil
 }
 
 // Verify returns true if a signature is valid or not

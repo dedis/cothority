@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"sync"
@@ -26,26 +25,26 @@ var defaultConfigName = "localhost.toml"
 type Localhost struct {
 
 	// Address of the logger (can be local or not)
-	Logger string
+	logger string
 
 	// The simulation to run
 	Simulation string
 
 	// Where is the Localhost package located
-	LocalDir string
+	localDir string
 	// Where to build the executables +
 	// where to read the config file
 	// it will be assembled like LocalDir/RunDir
-	RunDir string
+	runDir string
 
 	// Debug level 1 - 5
-	Debug int
+	debug int
 
 	// The number of deployed hosts
-	Hosts int
+	hosts int
 	// Addresses used with the applications
 	// example: localhost:2000, ...:2010 , ...
-	Addresses []string
+	addresses []string
 
 	// Whether we started a simulation
 	running bool
@@ -56,28 +55,28 @@ type Localhost struct {
 	errChan chan error
 
 	// SimulationConfig holds all things necessary for the run
-	Sc *sda.SimulationConfig
+	sc *sda.SimulationConfig
 }
 
 // Configure various
 func (d *Localhost) Configure() {
 	pwd, _ := os.Getwd()
-	d.RunDir = pwd + "/platform/localhost"
-	d.LocalDir = pwd
-	d.Debug = dbg.DebugVisible
+	d.runDir = pwd + "/platform/localhost"
+	d.localDir = pwd
+	d.debug = dbg.DebugVisible
 	d.running = false
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in simulation")
 	}
-	dbg.Lvl3(fmt.Sprintf("Localhost dirs: RunDir %s", d.RunDir))
+	dbg.Lvl3(fmt.Sprintf("Localhost dirs: RunDir %s", d.runDir))
 	dbg.Lvl3("Localhost configured ...")
 }
 
 // Will build the application
 func (d *Localhost) Build(build string) error {
-	src, _ := filepath.Rel(d.LocalDir, d.LocalDir+"/..")
-	dst := d.RunDir + "/" + d.Simulation
+	src := "./cothority"
+	dst := d.runDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine
 	res, err := cliutils.Build(src, dst, runtime.GOARCH, runtime.GOOS)
@@ -92,7 +91,7 @@ func (d *Localhost) Build(build string) error {
 
 func (d *Localhost) Cleanup() error {
 	dbg.Lvl3("Cleaning up")
-	ex := d.RunDir + "/" + d.Simulation
+	ex := d.runDir + "/" + d.Simulation
 	err := exec.Command("pkill", "-f", ex).Run()
 	if err != nil {
 		dbg.Lvl3("Error stopping localhost", err)
@@ -109,32 +108,31 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	if err != nil {
 		return err
 	}
-	d.Sc, err = sim.Setup(d.RunDir, []string{"localhost"})
+	d.sc, err = sim.Setup(d.runDir, []string{"localhost"})
 	if err != nil {
 		return err
 	}
-	d.Sc.Config = string(rc.Toml())
-	d.Sc.Save(d.RunDir)
+	d.sc.Config = string(rc.Toml())
+	d.sc.Save(d.runDir)
 	dbg.Lvl2("Localhost: Done deploying")
 	return nil
 
 }
 
 func (d *Localhost) Start(args ...string) error {
-	os.Chdir(d.RunDir)
-	dbg.Lvl4("Localhost: chdir into", d.RunDir)
-	ex := d.RunDir + "/" + d.Simulation
-	dbg.Lvl4("Localhost: in Start() => hosts", d.Hosts)
+	os.Chdir(d.runDir)
+	dbg.Lvl4("Localhost: chdir into", d.runDir)
+	ex := d.runDir + "/" + d.Simulation
+	dbg.Lvl4("Localhost: in Start() => hosts", d.hosts)
 	d.running = true
-	dbg.Lvl1("Starting", len(d.Sc.EntityList.List), "applications of", ex)
-	for index, entity := range d.Sc.EntityList.List {
+	dbg.Lvl1("Starting", len(d.sc.EntityList.List), "applications of", ex)
+	for index, entity := range d.sc.EntityList.List {
 		d.wg_run.Add(1)
 		address := entity.Addresses[0]
 		dbg.Lvl3("Starting", index, "=", address)
 		cmdArgs := []string{"-address", address, "-monitor",
 			"localhost:" + strconv.Itoa(monitor.SinkPort),
 			"-simul", d.Simulation,
-			"-start=" + strconv.FormatBool(index == 0),
 			"-debug", strconv.Itoa(dbg.DebugVisible),
 		}
 		cmdArgs = append(args, cmdArgs...)
@@ -158,7 +156,7 @@ func (d *Localhost) Start(args ...string) error {
 
 // Waits for all processes to finish
 func (d *Localhost) Wait() error {
-	dbg.LLvl3("Waiting for processes to finish")
+	dbg.Lvl3("Waiting for processes to finish")
 
 	var err error
 	go func() {

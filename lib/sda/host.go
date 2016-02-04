@@ -59,7 +59,8 @@ type Host struct {
 	// The suite used for this Host
 	suite abstract.Suite
 	// closed channel to notify the connections that we close
-	Closed chan bool
+	Closed    chan bool
+	isClosing bool
 	// lock associated to access network connections
 	// and to access entities also.
 	networkLock *sync.Mutex
@@ -93,6 +94,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		suite:              network.Suite,
 		networkChan:        make(chan network.NetworkMessage, 1),
 		Closed:             make(chan bool),
+		isClosing:          false,
 		networkLock:        &sync.Mutex{},
 		entityListsLock:    &sync.Mutex{},
 		treesLock:          &sync.Mutex{},
@@ -201,6 +203,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 
 // Close shuts down the listener
 func (h *Host) Close() error {
+	h.isClosing = true
 	time.Sleep(time.Millisecond * 100)
 	h.networkLock.Lock()
 	var err error
@@ -245,10 +248,12 @@ func (h *Host) ProcessMessages() {
 	for {
 		var err error
 		data := h.receive()
-		dbg.Lvl3("Message Received from", data.From)
+		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
 		case SDADataMessage:
-			err := h.processSDAMessage(&data)
+			sdaMsg := data.Msg.(SDAData)
+			sdaMsg.Entity = data.Entity
+			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
@@ -272,7 +277,7 @@ func (h *Host) ProcessMessages() {
 				continue
 			}
 			il := h.overlay.EntityList(tm.EntityId)
-			// The entity list does not exists, we should request for that too
+			// The entity list does not exists, we should request that, too
 			if il == nil {
 				msg := &RequestEntityList{tm.EntityId}
 				if err := h.SendRaw(data.Entity, msg); err != nil {
@@ -343,6 +348,7 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 // the message from the networkChan, and pre-processes the SDAMessage
 func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
+	dbg.Lvl5("Got message", data)
 	if data.MsgType == SDADataMessage {
 		sda := data.Msg.(SDAData)
 		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
@@ -377,6 +383,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 				// So the receiver can know about the error
 				am.SetError(err)
 				am.From = address
+				dbg.Lvl5("Got message", am)
 				if err != nil {
 					errorChan <- err
 				} else {
@@ -390,34 +397,21 @@ func (h *Host) handleConn(c network.SecureConn) {
 		case <-h.Closed:
 			doneChan <- true
 		case am := <-msgChan:
-			dbg.Lvl3("Putting message into networkChan from", am.From)
+			dbg.Lvl4("Putting message into networkChan from", am.From)
 			h.networkChan <- am
 		case e := <-errorChan:
-			if e == network.ErrClosed || e == network.ErrEOF {
-				return
+			if !h.isClosing {
+				if e == network.ErrClosed || e == network.ErrEOF ||
+					e == network.ErrTemp {
+					return
+				}
+				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=> error", e)
 			}
-			dbg.Error("Error with connection", address, "=> error", e)
 		case <-time.After(timeOut):
 			dbg.Error("Timeout with connection", address)
+			h.Close()
 		}
 	}
-}
-
-// Dispatch SDA message looks if we have all the info to rightly dispatch the
-// packet such as the protocol id and the topology id and the protocol instance
-// id
-func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
-	sdaMsg := am.Msg.(SDAData)
-	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(network.Suite))
-	if err != nil {
-		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
-	}
-	// Set the right type and msg
-	sdaMsg.MsgType = t
-	sdaMsg.Msg = msg
-	sdaMsg.Entity = am.Entity
-
-	return h.overlay.TransmitMsg(&sdaMsg)
 }
 
 // requestTree will ask for the tree the sdadata is related to.
@@ -446,17 +440,21 @@ func (h *Host) addPendingSda(sda *SDAData) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		for i := range h.pendingSDAs {
+		newPending := make([]*SDAData, 0)
+		for _, msg := range h.pendingSDAs {
 			// if this message references t
-			if uuid.Equal(t.Id, h.pendingSDAs[i].To.TreeID) {
+			if uuid.Equal(t.Id, msg.To.TreeID) {
 				// instantiate it and go
-				err := h.overlay.TransmitMsg(h.pendingSDAs[i])
+				err := h.overlay.TransmitMsg(msg)
 				if err != nil {
 					dbg.Error("TransmitMsg failed:", err)
 					continue
 				}
+			} else {
+				newPending = append(newPending, msg)
 			}
 		}
+		h.pendingSDAs = newPending
 		h.pendingSDAsLock.Unlock()
 	}()
 }

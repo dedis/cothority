@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"time"
 )
 
 /*
@@ -18,60 +19,49 @@ func init() {
 
 type ProtocolCloseAll struct {
 	*sda.Node
-	Done         chan bool
-	PrepareClose chan struct {
-		*sda.TreeNode
-		PrepareClose
-	}
-	Close chan struct {
-		*sda.TreeNode
-		Close
-	}
+	Done chan bool
 }
 
 type PrepareClose struct{}
+type PrepareCloseMsg struct {
+	*sda.TreeNode
+	PrepareClose
+}
 
 type Close struct{}
+type CloseMsg struct {
+	*sda.TreeNode
+	Close
+}
 
 func NewCloseAll(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolCloseAll{Node: n}
 	p.Done = make(chan bool, 1)
-	p.RegisterChannel(&p.PrepareClose)
-	p.RegisterChannel(&p.Close)
-	go p.DispatchChannels()
+	p.RegisterHandler(p.FuncPC)
+	p.RegisterHandler(p.FuncC)
 	return p, nil
 }
 
-func (p *ProtocolCloseAll) DispatchChannels() {
-	for {
-		dbg.Lvl3("waiting for message in", p.Entity().Addresses)
-		select {
-		case _ = <-p.PrepareClose:
-			p.FuncPC()
-		case _ = <-p.Close:
-			p.FuncC()
-		}
-	}
-}
-
-func (p *ProtocolCloseAll) FuncPC() {
+func (p *ProtocolCloseAll) FuncPC(pc PrepareCloseMsg) {
+	dbg.Lvl3(pc.Entity.Addresses, "sent PrepClose to", p.Entity().Addresses)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			dbg.Lvl3("Sending to", c.Entity.Addresses)
+			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses)
 			p.SendTo(c, &PrepareClose{})
 		}
 	} else {
-		p.FuncC()
+		p.FuncC(nil)
 	}
 }
 
-func (p *ProtocolCloseAll) FuncC() {
+func (p *ProtocolCloseAll) FuncC(c []CloseMsg) {
 	if !p.IsRoot() {
 		p.SendTo(p.Parent(), &Close{})
 	} else {
 		p.Done <- true
 	}
-	dbg.Lvl3("Closing host")
+	time.Sleep(time.Second)
+	dbg.Lvl3("Closing host", p.TreeNode().Entity.Addresses)
 	err := p.Node.Close()
 	if err != nil {
 		dbg.Fatal("Couldn't close")
@@ -81,13 +71,8 @@ func (p *ProtocolCloseAll) FuncC() {
 // Starts the protocol
 func (p *ProtocolCloseAll) Start() error {
 	// Send an empty message
-	p.FuncPC()
+	p.FuncPC(PrepareCloseMsg{TreeNode: p.TreeNode()})
 	// Wait till the end
 	<-p.Done
-	return nil
-}
-
-// Dispatch takes the message and decides what function to call
-func (p *ProtocolCloseAll) Dispatch(m []*sda.SDAData) error {
 	return nil
 }

@@ -27,7 +27,7 @@ type LocalTest struct {
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
-	dbg.TestOutput(testing.Verbose(), 4)
+	dbg.TestOutput(testing.Verbose(), 3)
 	return &LocalTest{
 		Hosts:       make(map[uuid.UUID]*Host),
 		Overlays:    make(map[uuid.UUID]*Overlay),
@@ -62,6 +62,30 @@ func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *Entit
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
+	l.Trees[tree.Id] = tree
+	if register {
+		hosts[0].overlay.RegisterEntityList(list)
+		hosts[0].overlay.RegisterTree(tree)
+	}
+	return hosts, list, tree
+}
+
+// GenBigTree will create a tree of n hosts. If connect is true, they will
+// be connected to the root host. If register is true, the EntityList and Tree
+// will be registered with the overlay.
+// 'nbrHosts' is how many hosts are created
+// 'nbrTreeNodes' is how many TreeNodes are created
+// nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
+// be used more than once in the tree.
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
+	hosts := GenLocalHosts(nbrHosts, connect, true)
+	for _, host := range hosts {
+		l.Hosts[host.Entity.Id] = host
+		l.Overlays[host.Entity.Id] = host.overlay
+	}
+
+	list := l.GenEntityListFromHost(hosts...)
+	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
 	l.Trees[tree.Id] = tree
 	if register {
 		hosts[0].overlay.RegisterEntityList(list)
@@ -135,15 +159,21 @@ func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
 	return nodes
 }
 
+// SendTreeNode injects a message directly in the Overlay-layer, bypassing
+// Host and Network
 func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.ProtocolMessage) error {
 	if from.Tree().Id != to.Tree().Id {
 		return errors.New("Can't send from one tree to another")
 	}
+	b, err := network.MarshalRegisteredType(msg)
+	if err != nil {
+		return err
+	}
 	sdaMsg := &SDAData{
-		Msg:     msg,
-		MsgType: network.TypeToUUID(msg),
-		From:    from.token,
-		To:      to.token,
+		MsgSlice: b,
+		MsgType:  network.TypeToUUID(msg),
+		From:     from.token,
+		To:       to.token,
 	}
 	return to.overlay.TransmitMsg(sdaMsg)
 }

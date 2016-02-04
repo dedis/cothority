@@ -2,11 +2,14 @@ package sda_test
 
 import (
 	"errors"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
+	"strconv"
 	"testing"
 )
 
 func TestSimulationBF(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -25,16 +28,31 @@ func TestSimulationBF(t *testing.T) {
 	if !sc.Tree.IsBinary(sc.Tree.Root) {
 		t.Fatal("Created tree is not binary")
 	}
-	/*
-		sb.BF = 3
-		sb.CreateTree(sc)
-		if len(sc.Tree.Root.Children) != 3 {
-			t.Fatal("Branching-factor 3 tree has not 3 children")
+
+	sc, _, err = createBFTree(13, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sc.Tree.Root.Children) != 3 {
+		t.Fatal("Branching-factor 3 tree has not 3 children")
+	}
+	if !sc.Tree.IsNary(sc.Tree.Root, 3) {
+		t.Fatal("Created tree is not binary")
+	}
+}
+
+func TestBigTree(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	for i := uint(12); i < 15; i++ {
+		_, _, err := createBFTree(1<<i-1, 2)
+		if err != nil {
+			t.Fatal(err)
 		}
-	*/
+	}
 }
 
 func TestLoadSave(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -44,8 +62,27 @@ func TestLoadSave(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if sc2.Tree.Id != sc.Tree.Id {
+	if sc2[0].Tree.Id != sc.Tree.Id {
 		t.Fatal("Tree-id is not correct")
+	}
+}
+
+func TestMultipleInstances(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	sc, _, err := createBFTree(7, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sc.Save("/tmp")
+	sc2, err := sda.LoadSimulationConfig("/tmp", "local1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sc2) != 4 {
+		t.Fatal("We should have 4 local1-hosts but have", len(sc2))
+	}
+	if sc2[0].Host.Entity.Id == sc2[1].Host.Entity.Id {
+		t.Fatal("Hosts are not copies")
 	}
 }
 
@@ -63,8 +100,8 @@ func createBFTree(hosts, bf int) (*sda.SimulationConfig, *sda.SimulationBFTree, 
 	if err != nil {
 		return nil, nil, err
 	}
-	if !sc.Tree.IsBinary(sc.Tree.Root) {
-		return nil, nil, errors.New("Tree isn't binary")
+	if !sc.Tree.IsNary(sc.Tree.Root, bf) {
+		return nil, nil, errors.New("Tree isn't " + strconv.Itoa(bf) + "-ary")
 	}
 
 	return sc, sb, nil

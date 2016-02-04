@@ -1,0 +1,8 @@
+Servers = 3
+Simulation = "ExampleChannels"
+BF = 2
+
+Hosts,  Rounds
+3, 10
+31, 10
+127, 10

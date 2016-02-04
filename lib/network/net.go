@@ -28,6 +28,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"runtime/debug"
 )
 
 // Network part //
@@ -137,7 +138,8 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			fmt.Printf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+			debug.PrintStack()
+			dbg.Errorf("Error Unmarshalling %s: %d bytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
 		}
 	}()
 

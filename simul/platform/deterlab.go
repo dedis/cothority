@@ -24,12 +24,12 @@ import (
 	"bufio"
 	_ "errors"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/tree"
-	"github.com/dedis/crypto/suites"
+	"github.com/dedis/cothority/lib/sda"
 	"io/ioutil"
 	"path"
 	"path/filepath"
@@ -39,6 +39,7 @@ import (
 )
 
 type Deterlab struct {
+	// *** Deterlab-related configuration
 	// The login on the platform
 	Login string
 	// The outside host on the platform
@@ -47,18 +48,19 @@ type Deterlab struct {
 	Project string
 	// Name of the Experiment - also name of hosts
 	Experiment string
+	// Number of available servers
+	Servers int
+
 	// Name of the simulation
 	Simulation string
-	// Directory of applications
-	AppDir string
+	// Directory holding the cothority-go-file
+	cothorityDir string
 	// Directory where everything is copied into
-	DeployDir string
+	deployDir string
 	// Directory for building
-	BuildDir string
+	buildDir string
 	// Working directory of deterlab
-	DeterDir string
-	// Where the main logging machine resides
-	MasterLogger string
+	deterDir string
 	// DNS-resolvable names
 	Phys []string
 	// VLAN-IP names (physical machines)
@@ -74,43 +76,32 @@ type Deterlab struct {
 	// Port number of the monitor and the proxy
 	MonitorPort int
 
-	// Which app to run
-	App string
 	// Number of machines
-	Machines int
-	// Processes Per Machines
-	Ppm int
-	// Number of Rounds
-	Rounds int
+	Hosts int
 	// Channel to communication stopping of experiment
 	sshDeter chan string
 	// Whether the simulation is started
 	started bool
 	// Debugging-level: 0 is none - 5 is everything
 	Debug int
-
-	// All hostnames used concatenated with the port
-	Hostnames []string
-
-	// Testing the connection?
-	TestConnect bool
 }
+
+var simulConfig *sda.SimulationConfig
 
 func (d *Deterlab) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.DeterDir = pwd + "/platform/deterlab"
-	d.DeployDir = d.DeterDir + "/remote"
-	d.BuildDir = d.DeterDir + "/build"
-	d.AppDir = pwd + "/../app"
+	d.cothorityDir = pwd + "/cothority"
+	d.deterDir = pwd + "/platform/deterlab"
+	d.deployDir = d.deterDir + "/remote"
+	d.buildDir = d.deterDir + "/build"
 	d.MonitorPort = monitor.SinkPort
-	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir)
-	dbg.Lvl3("Dirs are:", d.BuildDir, d.AppDir)
+	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
 	d.LoadAndCheckDeterlabVars()
 
 	d.Debug = dbg.DebugVisible
-	if d.App == "" {
-		dbg.Fatal("No app defined in simulation")
+	if d.Simulation == "" {
+		dbg.Fatal("No simulation defined in runconfig")
 	}
 
 	// Setting up channel
@@ -127,53 +118,44 @@ func (d *Deterlab) Build(build string) error {
 
 	// Start with a clean build-directory
 	current, _ := os.Getwd()
-	dbg.Lvl3("Current dir is:", current, d.DeterDir)
+	dbg.Lvl3("Current dir is:", current, d.deterDir)
 	defer os.Chdir(current)
 
 	// Go into deterlab-dir and create the build-dir
-	os.Chdir(d.DeterDir)
-	os.RemoveAll(d.BuildDir)
-	os.Mkdir(d.BuildDir, 0777)
+	os.Chdir(d.deterDir)
+	os.RemoveAll(d.buildDir)
+	os.Mkdir(d.buildDir, 0777)
 
 	// start building the necessary packages
-	packages := []string{"forkexec", "app", "users"}
+	packages := []string{"simul", "users"}
 	if build != "" {
 		packages = strings.Split(build, ",")
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
-		src_dir := d.DeterDir + "/" + p
+		src_dir := d.deterDir + "/" + p
 		basename := path.Base(p)
-		if p == "app" {
-			src_dir = d.AppDir + "/" + d.App
-			basename = d.App
+		if p == "simul" {
+			src_dir = d.cothorityDir
+			basename = "cothority"
 		}
-		dst := d.BuildDir + "/" + basename
+		dst := d.buildDir + "/" + basename
 
 		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
 		wg.Add(1)
+		processor := "amd64"
+		system := "linux"
 		if p == "users" {
-			go func(src, dest string) {
-				defer wg.Done()
-				// the users node has a 386 FreeBSD architecture
-				// go won't compile on an absolute path so we need to
-				// convert it to a relative one
-				src_rel, _ := filepath.Rel(d.DeterDir, src)
-				out, err := cliutils.Build("./"+src_rel, dest, "386", "freebsd")
-				if err != nil {
-					cliutils.KillGo()
-					dbg.Lvl1(out)
-					dbg.Fatal(err)
-				}
-			}(src_dir, dst)
-			continue
+			processor = "386"
+			system = "freebsd"
 		}
 		go func(src, dest string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
-			src_rel, _ := filepath.Rel(d.DeterDir, src)
-			dbg.Lvl3("Relative-path is", src, src_rel, d.DeterDir)
-			out, err := cliutils.Build("./"+src_rel, dest, "amd64", "linux")
+			src_rel, _ := filepath.Rel(d.deterDir, src)
+			dbg.Lvl3("Relative-path is", src, src_rel, d.deterDir)
+			out, err := cliutils.Build("./"+src_rel, dest,
+				processor, system)
 			if err != nil {
 				cliutils.KillGo()
 				dbg.Lvl1(out)
@@ -231,107 +213,50 @@ func (d *Deterlab) Cleanup() error {
 // Creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
-	os.RemoveAll(d.DeployDir)
-	os.Mkdir(d.DeployDir, 0777)
+	os.RemoveAll(d.deployDir)
+	os.Mkdir(d.deployDir, 0777)
 
-	dbg.Lvl3("Writing config-files")
-
+	dbg.Lvl2("Localhost: Deploying and writing config-files")
+	sim, err := sda.NewSimulation(d.Simulation, string(rc.Toml()))
+	if err != nil {
+		return err
+	}
 	// Initialize the deter-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual
 	// 'Machines', 'ppm', '' or other fields
 	deter := *d
-	appConfig := d.DeployDir + "/app.toml"
-	deterConfig := d.DeployDir + "/deter.toml"
-	ioutil.WriteFile(appConfig, rc.Toml(), 0666)
-	deter.ReadConfig(appConfig)
-
-	deter.createHosts()
-	d.MasterLogger = deter.MasterLogger
-	app.WriteTomlConfig(deter, deterConfig)
-
-	// Prepare special configuration preparation for each application - the
-	// reading in twice of the configuration file, once for the deterConfig,
-	// then for the appConfig, sets the deterConfig as defaults and overwrites
-	// everything else with the actual appConfig (which comes from the
-	// runconfig-file)
-
-	var err error
-	switch d.App {
-	case "sign", "stamp":
-		conf := app.ConfigColl{}
-		conf.StampsPerRound = -1
-		conf.StampRatio = 1.0
-		app.ReadTomlConfig(&conf, deterConfig)
-		app.ReadTomlConfig(&conf, appConfig)
-		// Calculates a tree that is used for the timestampers
-		suite, _ := suites.StringToSuite(conf.Suite)
-		conf.Tree, err = tree.GenColorConfigTree(suite, deter.Hostnames[:], conf.Ppm, conf.Bf)
-		if err != nil {
-			dbg.Fatal(err)
-		}
-		conf.Hosts = deter.Hostnames
-		// re-write the new configuration-file
-		app.WriteTomlConfig(conf, appConfig)
-	case "skeleton":
-		conf := app.ConfigSkeleton{}
-		app.ReadTomlConfig(&conf, deterConfig)
-		app.ReadTomlConfig(&conf, appConfig)
-		// Calculates a tree that is used for the timestampers
-		suite, _ := suites.StringToSuite(conf.Suite)
-		conf.Tree, err = tree.GenColorConfigTree(suite, deter.Hostnames[:], conf.Ppm, conf.Bf)
-		if err != nil {
-			dbg.Fatal(err)
-		}
-		conf.Hosts = deter.Hostnames
-		// re-write the new configuration-file
-		app.WriteTomlConfig(conf, appConfig)
-
-	case "shamir":
-		conf := app.ConfigShamir{}
-		app.ReadTomlConfig(&conf, deterConfig)
-		app.ReadTomlConfig(&conf, appConfig)
-		conf.Hosts = deter.Hostnames
-		deter.Hostnames = conf.Hosts
-		// re-write the new configuration-file
-		app.WriteTomlConfig(conf, appConfig)
-	case "naive":
-		conf := app.NaiveConfig{}
-		app.ReadTomlConfig(&conf, deterConfig)
-		app.ReadTomlConfig(&conf, appConfig)
-
-		conf.Hosts = deter.Hostnames
-		app.WriteTomlConfig(conf, appConfig)
-	case "ntree":
-		conf := app.NTreeConfig{}
-		app.ReadTomlConfig(&conf, deterConfig)
-		app.ReadTomlConfig(&conf, appConfig)
-		suite, _ := suites.StringToSuite(conf.Suite)
-		conf.Tree, err = tree.GenColorConfigTree(suite, deter.Hostnames[:], conf.Ppm, conf.Bf)
-		if err != nil {
-			dbg.Fatal(err)
-		}
-		app.WriteTomlConfig(conf, appConfig)
-
-	case "randhound":
-	}
-	app.WriteTomlConfig(deter, "deter.toml", d.DeployDir)
-
-	// copy the webfile-directory of the logserver to the remote directory
-	err = exec.Command("cp", "-a", d.DeterDir+"/cothority.conf", d.DeployDir).Run()
+	deterConfig := d.deployDir + "/deter.toml"
+	_, err = toml.Decode(string(rc.Toml()), &deter)
 	if err != nil {
-		dbg.Fatal("error copying webfiles:", err)
+		return err
 	}
-	build, err := ioutil.ReadDir(d.BuildDir)
+	dbg.Lvl3("Creating hosts")
+	deter.createHosts()
+	app.WriteTomlConfig(deter, deterConfig, d.deployDir)
+
+	simulConfig, err = sim.Setup(d.deployDir, deter.Virt)
+	if err != nil {
+		return err
+	}
+	simulConfig.Config = string(rc.Toml())
+	dbg.Lvl3("Saving configuration")
+	simulConfig.Save(d.deployDir)
+
+	// Copy limit-files for more connections
+	err = exec.Command("cp", d.deterDir+"/cothority.conf", d.deployDir).Run()
+
+	// Copying build-files to deploy-directory
+	build, err := ioutil.ReadDir(d.buildDir)
 	for _, file := range build {
-		err = exec.Command("cp", d.BuildDir+"/"+file.Name(), d.DeployDir).Run()
+		err = exec.Command("cp", d.buildDir+"/"+file.Name(), d.deployDir).Run()
 		if err != nil {
 			dbg.Fatal("error copying build-file:", err)
 		}
 	}
 
+	// Copy everything over to Deterlab
 	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
-	// Copy everything over to Deterlabs
-	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir+"/", "remote/")
+	err = cliutils.Rsync(d.Login, d.Host, d.deployDir+"/", "remote/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -381,8 +306,8 @@ func (d *Deterlab) Wait() error {
 			} else {
 				dbg.Lvl1("Received out-of-line message", msg)
 			}
-		case <-time.After(time.Second):
-			dbg.Lvl3("No message waiting")
+		case <-time.After(time.Minute * 2):
+			dbg.Lvl1("Quitting after 2 minutes of waiting")
 		}
 		d.started = false
 	}
@@ -410,10 +335,8 @@ func (d *Deterlab) ReadConfig(name ...string) {
 * from project name and number of servers
  */
 func (d *Deterlab) createHosts() error {
-	num_servers := d.Machines
+	num_servers := d.Servers
 
-	// write the name of the server + \t + IP address
-	startPort := 2000
 	ip := "10.255.0."
 	name := d.Project + ".isi.deterlab.net"
 	d.Phys = make([]string, 0, num_servers)
@@ -421,12 +344,10 @@ func (d *Deterlab) createHosts() error {
 	for i := 1; i <= num_servers; i++ {
 		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i-1, d.Experiment, name))
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
-		// For each physical machines, create PPM processes
-		for j := 0; j < d.Ppm; j++ {
-			d.Hostnames = append(d.Hostnames, fmt.Sprintf("%s%d:%d", ip, i, startPort+j*10))
-		}
 	}
 
+	dbg.Lvl3("Physical:", d.Phys)
+	dbg.Lvl3("Internal:", d.Virt)
 	return nil
 }
 
@@ -436,7 +357,7 @@ func (d *Deterlab) createHosts() error {
 // public key for a more easy communication
 func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	deter := Deterlab{}
-	err := app.ReadTomlConfig(&deter, "deter.toml", d.DeterDir)
+	err := app.ReadTomlConfig(&deter, "deter.toml", d.deterDir)
 	d.Host, d.Login, d.Project, d.Experiment, d.ProxyAddress, d.MonitorAddress =
 		deter.Host, deter.Login, deter.Project, deter.Experiment,
 		deter.ProxyAddress, deter.MonitorAddress
@@ -468,7 +389,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 		d.ProxyAddress = readString("Please enter the proxy redirection address", "localhost")
 	}
 
-	app.WriteTomlConfig(*d, "deter.toml", d.DeterDir)
+	app.WriteTomlConfig(*d, "deter.toml", d.deterDir)
 }
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string
