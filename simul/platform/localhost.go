@@ -28,7 +28,7 @@ type Localhost struct {
 	logger string
 
 	// The simulation to run
-	simulation string
+	Simulation string
 
 	// Where is the Localhost package located
 	localDir string
@@ -66,7 +66,7 @@ func (d *Localhost) Configure() {
 	d.debug = dbg.DebugVisible
 	d.running = false
 	d.errChan = make(chan error)
-	if d.simulation == "" {
+	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in simulation")
 	}
 	dbg.Lvl3(fmt.Sprintf("Localhost dirs: RunDir %s", d.runDir))
@@ -76,7 +76,7 @@ func (d *Localhost) Configure() {
 // Will build the application
 func (d *Localhost) Build(build string) error {
 	src := "./cothority"
-	dst := d.runDir + "/" + d.simulation
+	dst := d.runDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine
 	res, err := cliutils.Build(src, dst, runtime.GOARCH, runtime.GOOS)
@@ -91,7 +91,7 @@ func (d *Localhost) Build(build string) error {
 
 func (d *Localhost) Cleanup() error {
 	dbg.Lvl3("Cleaning up")
-	ex := d.runDir + "/" + d.simulation
+	ex := d.runDir + "/" + d.Simulation
 	err := exec.Command("pkill", "-f", ex).Run()
 	if err != nil {
 		dbg.Lvl3("Error stopping localhost", err)
@@ -104,7 +104,7 @@ func (d *Localhost) Cleanup() error {
 
 func (d *Localhost) Deploy(rc RunConfig) error {
 	dbg.Lvl2("Localhost: Deploying and writing config-files")
-	sim, err := sda.NewSimulation(d.simulation, string(rc.Toml()))
+	sim, err := sda.NewSimulation(d.Simulation, string(rc.Toml()))
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 func (d *Localhost) Start(args ...string) error {
 	os.Chdir(d.runDir)
 	dbg.Lvl4("Localhost: chdir into", d.runDir)
-	ex := d.runDir + "/" + d.simulation
+	ex := d.runDir + "/" + d.Simulation
 	dbg.Lvl4("Localhost: in Start() => hosts", d.hosts)
 	d.running = true
 	dbg.Lvl1("Starting", len(d.sc.EntityList.List), "applications of", ex)
@@ -132,7 +132,7 @@ func (d *Localhost) Start(args ...string) error {
 		dbg.Lvl3("Starting", index, "=", address)
 		cmdArgs := []string{"-address", address, "-monitor",
 			"localhost:" + strconv.Itoa(monitor.SinkPort),
-			"-simul", d.simulation,
+			"-simul", d.Simulation,
 			"-debug", strconv.Itoa(dbg.DebugVisible),
 		}
 		cmdArgs = append(args, cmdArgs...)
