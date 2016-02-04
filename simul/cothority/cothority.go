@@ -18,36 +18,36 @@ Cothority is a general node that can be used for all available protocols.
 
 // The address of this host - if there is only one host in the config
 // file, it will be derived from it automatically
-var HostAddress string
+var hostAddress string
 
 // ip addr of the logger to connect to
-var Monitor string
+var monitorAddress string
 
 // Simul is != "" if this node needs to start a simulation of that protocol
-var Simul string
+var simul string
 
 // Initialize before 'init' so we can directly use the fields as parameters
 // to 'Flag'
 func init() {
-	flag.StringVar(&HostAddress, "address", "", "our address to use")
-	flag.StringVar(&Simul, "simul", "", "start simulating that protocol")
-	flag.StringVar(&Monitor, "monitor", "", "remote monitor")
+	flag.StringVar(&hostAddress, "address", "", "our address to use")
+	flag.StringVar(&simul, "simul", "", "start simulating that protocol")
+	flag.StringVar(&monitorAddress, "monitor", "", "remote monitor")
 	flag.IntVar(&dbg.DebugVisible, "debug", 1, "verbosity: 0-5")
 }
 
 // Main starts the host and will setup the protocol.
 func main() {
 	flag.Parse()
-	dbg.Lvl3("Flags are:", HostAddress, Simul, dbg.DebugVisible, Monitor)
+	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible, monitorAddress)
 
-	scs, err := sda.LoadSimulationConfig(".", HostAddress)
+	scs, err := sda.LoadSimulationConfig(".", hostAddress)
 	if err != nil {
 		// We probably are not needed
 		dbg.Lvl2(err)
 		return
 	}
-	if Monitor != "" {
-		monitor.ConnectSink(Monitor)
+	if monitorAddress != "" {
+		monitor.ConnectSink(monitorAddress)
 	}
 	var sims []sda.Simulation
 	var rootSC *sda.SimulationConfig
@@ -58,7 +58,7 @@ func main() {
 		dbg.Lvl3("Starting host", host.Entity.Addresses)
 		host.Listen()
 		go host.ProcessMessages()
-		sim, err := sda.NewSimulation(Simul, sc.Config)
+		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
 			dbg.Fatal(err)
 		}
@@ -75,7 +75,7 @@ func main() {
 	}
 	if rootSim != nil {
 		// If this cothority has the root-host, it will start the simulation
-		dbg.Lvl2("Starting protocol", Simul, "on host", rootSC.Host.Entity.Addresses)
+		dbg.Lvl2("Starting protocol", simul, "on host", rootSC.Host.Entity.Addresses)
 		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
 		childrenWait := monitor.NewMeasure("ChildrenWait")
 		wait := true
@@ -98,7 +98,7 @@ func main() {
 			}
 		}
 		childrenWait.Measure()
-		dbg.Lvl1("Starting new node", Simul)
+		dbg.Lvl1("Starting new node", simul)
 		err := rootSim.Run(rootSC)
 		if err != nil {
 			dbg.Fatal(err)
@@ -121,7 +121,7 @@ func main() {
 	// Wait for the first host to be closed
 	select {
 	case <-rootSC.Host.Closed:
-		dbg.Lvl2(HostAddress, ": first host closed - quitting")
+		dbg.Lvl2(hostAddress, ": first host closed - quitting")
 		monitor.End()
 	}
 }

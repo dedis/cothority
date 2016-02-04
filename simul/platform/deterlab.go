@@ -51,19 +51,16 @@ type Deterlab struct {
 	// Number of available servers
 	Servers int
 
-	//
 	// Name of the simulation
 	Simulation string
 	// Directory holding the cothority-go-file
-	CothorityDir string
+	cothorityDir string
 	// Directory where everything is copied into
-	DeployDir string
+	deployDir string
 	// Directory for building
-	BuildDir string
+	buildDir string
 	// Working directory of deterlab
-	DeterDir string
-	// Where the main logging machine resides
-	MasterLogger string
+	deterDir string
 	// DNS-resolvable names
 	Phys []string
 	// VLAN-IP names (physical machines)
@@ -94,12 +91,12 @@ var simulConfig *sda.SimulationConfig
 func (d *Deterlab) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.CothorityDir = pwd + "/cothority"
-	d.DeterDir = pwd + "/platform/deterlab"
-	d.DeployDir = d.DeterDir + "/remote"
-	d.BuildDir = d.DeterDir + "/build"
+	d.cothorityDir = pwd + "/cothority"
+	d.deterDir = pwd + "/platform/deterlab"
+	d.deployDir = d.deterDir + "/remote"
+	d.buildDir = d.deterDir + "/build"
 	d.MonitorPort = monitor.SinkPort
-	dbg.Lvl3("Dirs are:", d.DeterDir, d.DeployDir)
+	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
 	d.LoadAndCheckDeterlabVars()
 
 	d.Debug = dbg.DebugVisible
@@ -121,13 +118,13 @@ func (d *Deterlab) Build(build string) error {
 
 	// Start with a clean build-directory
 	current, _ := os.Getwd()
-	dbg.Lvl3("Current dir is:", current, d.DeterDir)
+	dbg.Lvl3("Current dir is:", current, d.deterDir)
 	defer os.Chdir(current)
 
 	// Go into deterlab-dir and create the build-dir
-	os.Chdir(d.DeterDir)
-	os.RemoveAll(d.BuildDir)
-	os.Mkdir(d.BuildDir, 0777)
+	os.Chdir(d.deterDir)
+	os.RemoveAll(d.buildDir)
+	os.Mkdir(d.buildDir, 0777)
 
 	// start building the necessary packages
 	packages := []string{"simul", "users"}
@@ -136,13 +133,13 @@ func (d *Deterlab) Build(build string) error {
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
-		src_dir := d.DeterDir + "/" + p
+		src_dir := d.deterDir + "/" + p
 		basename := path.Base(p)
 		if p == "simul" {
-			src_dir = d.CothorityDir
+			src_dir = d.cothorityDir
 			basename = "cothority"
 		}
-		dst := d.BuildDir + "/" + basename
+		dst := d.buildDir + "/" + basename
 
 		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
 		wg.Add(1)
@@ -155,8 +152,8 @@ func (d *Deterlab) Build(build string) error {
 		go func(src, dest string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
-			src_rel, _ := filepath.Rel(d.DeterDir, src)
-			dbg.Lvl3("Relative-path is", src, src_rel, d.DeterDir)
+			src_rel, _ := filepath.Rel(d.deterDir, src)
+			dbg.Lvl3("Relative-path is", src, src_rel, d.deterDir)
 			out, err := cliutils.Build("./"+src_rel, dest,
 				processor, system)
 			if err != nil {
@@ -216,8 +213,8 @@ func (d *Deterlab) Cleanup() error {
 // Creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
-	os.RemoveAll(d.DeployDir)
-	os.Mkdir(d.DeployDir, 0777)
+	os.RemoveAll(d.deployDir)
+	os.Mkdir(d.deployDir, 0777)
 
 	dbg.Lvl2("Localhost: Deploying and writing config-files")
 	sim, err := sda.NewSimulation(d.Simulation, string(rc.Toml()))
@@ -228,31 +225,30 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	// and such), then read in the app-configuration to overwrite eventual
 	// 'Machines', 'ppm', '' or other fields
 	deter := *d
-	deterConfig := d.DeployDir + "/deter.toml"
+	deterConfig := d.deployDir + "/deter.toml"
 	_, err = toml.Decode(string(rc.Toml()), &deter)
 	if err != nil {
 		return err
 	}
 	dbg.Lvl3("Creating hosts")
 	deter.createHosts()
-	d.MasterLogger = deter.MasterLogger
-	app.WriteTomlConfig(deter, deterConfig, d.DeployDir)
+	app.WriteTomlConfig(deter, deterConfig, d.deployDir)
 
-	simulConfig, err = sim.Setup(d.DeployDir, deter.Virt)
+	simulConfig, err = sim.Setup(d.deployDir, deter.Virt)
 	if err != nil {
 		return err
 	}
 	simulConfig.Config = string(rc.Toml())
 	dbg.Lvl3("Saving configuration")
-	simulConfig.Save(d.DeployDir)
+	simulConfig.Save(d.deployDir)
 
 	// Copy limit-files for more connections
-	err = exec.Command("cp", d.DeterDir+"/cothority.conf", d.DeployDir).Run()
+	err = exec.Command("cp", d.deterDir+"/cothority.conf", d.deployDir).Run()
 
 	// Copying build-files to deploy-directory
-	build, err := ioutil.ReadDir(d.BuildDir)
+	build, err := ioutil.ReadDir(d.buildDir)
 	for _, file := range build {
-		err = exec.Command("cp", d.BuildDir+"/"+file.Name(), d.DeployDir).Run()
+		err = exec.Command("cp", d.buildDir+"/"+file.Name(), d.deployDir).Run()
 		if err != nil {
 			dbg.Fatal("error copying build-file:", err)
 		}
@@ -260,7 +256,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 	// Copy everything over to Deterlab
 	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
-	err = cliutils.Rsync(d.Login, d.Host, d.DeployDir+"/", "remote/")
+	err = cliutils.Rsync(d.Login, d.Host, d.deployDir+"/", "remote/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -361,7 +357,7 @@ func (d *Deterlab) createHosts() error {
 // public key for a more easy communication
 func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	deter := Deterlab{}
-	err := app.ReadTomlConfig(&deter, "deter.toml", d.DeterDir)
+	err := app.ReadTomlConfig(&deter, "deter.toml", d.deterDir)
 	d.Host, d.Login, d.Project, d.Experiment, d.ProxyAddress, d.MonitorAddress =
 		deter.Host, deter.Login, deter.Project, deter.Experiment,
 		deter.ProxyAddress, deter.MonitorAddress
@@ -393,7 +389,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 		d.ProxyAddress = readString("Please enter the proxy redirection address", "localhost")
 	}
 
-	app.WriteTomlConfig(*d, "deter.toml", d.DeterDir)
+	app.WriteTomlConfig(*d, "deter.toml", d.deterDir)
 }
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string

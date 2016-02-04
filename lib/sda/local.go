@@ -73,7 +73,11 @@ func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *Entit
 // GenBigTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
-func (l *LocalTest) GenBigTree(n, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
+// 'nbrHosts' is how many hosts are created
+// 'nbrTreeNodes' is how many TreeNodes are created
+// nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
+// be used more than once in the tree.
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
 	hosts := GenLocalHosts(nbrHosts, connect, true)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.Id] = host
@@ -81,7 +85,7 @@ func (l *LocalTest) GenBigTree(n, nbrHosts, bf int, connect bool, register bool)
 	}
 
 	list := l.GenEntityListFromHost(hosts...)
-	tree := list.GenerateBigNaryTree(bf, n)
+	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
 	l.Trees[tree.Id] = tree
 	if register {
 		hosts[0].overlay.RegisterEntityList(list)
