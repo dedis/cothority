@@ -56,16 +56,18 @@ func (p *ProtocolCloseAll) FuncPC(pc PrepareCloseMsg) {
 
 func (p *ProtocolCloseAll) FuncC(c []CloseMsg) {
 	if !p.IsRoot() {
+		dbg.Lvl3("Sending closeall from", p.Entity().Addresses,
+			"to", p.Parent().Entity.Addresses)
 		p.SendTo(p.Parent(), &Close{})
 	} else {
-		dbg.LLvl2("Root received Close")
+		dbg.Lvl2("Root received Close")
 		p.Done <- true
 	}
 	time.Sleep(time.Second)
-	dbg.Lvl3("Closing host", p.TreeNode().Entity.Addresses)
+	dbg.Lvl3("Closing host", p.Entity().Addresses)
 	err := p.Node.Close()
 	if err != nil {
-		dbg.Fatal("Couldn't close")
+		dbg.Error("Couldn't close:", err)
 	}
 	p.Node.Done()
 }

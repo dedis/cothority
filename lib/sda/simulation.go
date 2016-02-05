@@ -151,6 +151,17 @@ func (sc *SimulationConfig) Save(dir string) error {
 	return nil
 }
 
+// Returns true if the 'SingleHost'-flag is set
+func (sc SimulationConfig) IsSingleHost() bool {
+	var sh struct{ SingleHost bool }
+	_, err := toml.Decode(sc.Config, &sh)
+	if err != nil {
+		dbg.Error("Couldn't decode string", sc.Config, "into toml.")
+		return false
+	}
+	return sh.SingleHost
+}
+
 func SimulationRegister(name string, sim SimulationCreate) {
 	if simulationRegistered == nil {
 		simulationRegistered = make(map[string]SimulationCreate)

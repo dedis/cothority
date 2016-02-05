@@ -9,6 +9,25 @@ import (
 	"time"
 )
 
+func TestCloseChannel(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	done := make(chan int, 10)
+	closechan := make(chan bool)
+	wait := func(n int) {
+		select {
+		case <-closechan:
+			dbg.Lvl2("Closed channel")
+		}
+		done <- n
+	}
+	go wait(1)
+	go wait(2)
+	time.Sleep(time.Second)
+	close(closechan)
+	dbg.Lvl2("Closed function", <-done)
+	dbg.Lvl2("Closed function", <-done)
+}
+
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
 	h1 := sda.NewLocalHost(2000)

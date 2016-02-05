@@ -1,15 +1,24 @@
 Servers = 16
 Simulation = "ExampleHandlers"
 BF = 2
+Rounds = 10
 #SingleHost = true
 
-Hosts,  Rounds
+Hosts
 3
 7
-
-8191, 10
-16383, 10
-32767, 10
-65535, 10
-131071, 10
-262143, 10
+15
+31
+63
+127
+255
+511
+1023
+2047
+4095
+8191
+16383
+32767
+65535
+131071
+262143

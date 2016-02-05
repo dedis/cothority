@@ -88,7 +88,7 @@ func main() {
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
 				if count == rootSC.Tree.Size() {
-					dbg.Lvl2("Found all", count, "children")
+					dbg.Lvl1("Found all", count, "children")
 					wait = false
 				} else {
 					dbg.Lvl1("Found only", count, "children, counting again")
@@ -104,24 +104,37 @@ func main() {
 			dbg.Fatal(err)
 		}
 
-		// In case of "SingleHost" we need a new tree that contains every
-		// entity only once, whereas rootSC.Tree will have the same
-		// entity at different TreeNodes, which makes it difficult to
-		// correctly close everything.
-		closeTree := rootSC.EntityList.GenerateBinaryTree()
-		rootSC.Overlay.RegisterTree(closeTree)
-		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
+		if rootSC.IsSingleHost() {
+			// In case of "SingleHost" we need a new tree that contains every
+			// entity only once, whereas rootSC.Tree will have the same
+			// entity at different TreeNodes, which makes it difficult to
+			// correctly close everything.
+			dbg.LLvl2("Making new root-tree for SingleHost config")
+			closeTree := rootSC.EntityList.GenerateBinaryTree()
+			rootSC.Overlay.RegisterTree(closeTree)
+			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
+		} else {
+			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", rootSC.Tree)
+		}
+		monitor.End()
 		if err != nil {
 			dbg.Fatal(err)
 		}
-	} else {
-		rootSC = scs[0]
 	}
 
-	// Wait for the first host to be closed
+	// Wait for all hosts to be closed
+	allClosed := make(chan bool, 1)
+	go func() {
+		for _, sc := range scs {
+			<-sc.Host.Closed
+			dbg.Lvl4("Host", sc.Host.Entity.Addresses, "closed")
+		}
+		allClosed <- true
+	}()
 	select {
-	case <-rootSC.Host.Closed:
-		dbg.Lvl2(hostAddress, ": first host closed - quitting")
-		monitor.End()
+	case <-allClosed:
+		dbg.Lvl2(hostAddress, ": all hosts closed")
+	case <-time.After(time.Minute * 2):
+		dbg.Lvl2(hostAddress, ": didn't close after 2 minutes")
 	}
 }
