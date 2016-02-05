@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	_ "github.com/dedis/cothority/protocols"
 	"github.com/dedis/cothority/protocols/manage"
+	"math"
 	"time"
 )
 
@@ -77,14 +78,21 @@ func main() {
 		// If this cothority has the root-host, it will start the simulation
 		dbg.Lvl2("Starting protocol", simul, "on host", rootSC.Host.Entity.Addresses)
 		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
+
+		// First count the number of available children
 		childrenWait := monitor.NewMeasure("ChildrenWait")
 		wait := true
+		networkDelay := 500
+		timeout := networkDelay * 2 * int(math.Log2(float64(len(rootSC.EntityList.List))))
 		for wait {
-			dbg.Lvl2("Counting children")
-			node, err := rootSC.Overlay.StartNewNodeName("Count", rootSC.Tree)
+			dbg.Lvl2("Counting children with timeout of", timeout)
+			node, err := rootSC.Overlay.CreateNewNodeName("Count", rootSC.Tree)
 			if err != nil {
 				dbg.Fatal(err)
 			}
+			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
+			node.ProtocolInstance().(*manage.ProtocolCount).NetworkDelay = networkDelay
+			node.Start()
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
 				if count == rootSC.Tree.Size() {
@@ -93,9 +101,10 @@ func main() {
 				} else {
 					dbg.Lvl1("Found only", count, "children, counting again")
 				}
-			case <-time.After(time.Second * 10):
+			case <-time.After(time.Millisecond * time.Duration(timeout) * 2):
 				dbg.Lvl1("Timed out waiting for children")
 			}
+			timeout *= 2
 		}
 		childrenWait.Measure()
 		dbg.Lvl1("Starting new node", simul)
@@ -109,7 +118,7 @@ func main() {
 			// entity only once, whereas rootSC.Tree will have the same
 			// entity at different TreeNodes, which makes it difficult to
 			// correctly close everything.
-			dbg.LLvl2("Making new root-tree for SingleHost config")
+			dbg.Lvl2("Making new root-tree for SingleHost config")
 			closeTree := rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)

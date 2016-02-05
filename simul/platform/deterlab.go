@@ -306,8 +306,8 @@ func (d *Deterlab) Wait() error {
 			} else {
 				dbg.Lvl1("Received out-of-line message", msg)
 			}
-		case <-time.After(time.Minute * 2):
-			dbg.Lvl1("Quitting after 2 minutes of waiting")
+		case <-time.After(time.Minute * 10):
+			dbg.Lvl1("Quitting after 10 minutes of waiting")
 		}
 		d.started = false
 	}

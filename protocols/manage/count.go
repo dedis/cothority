@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -22,6 +23,7 @@ type ProtocolCount struct {
 	Count            chan int
 	Quit             chan bool
 	Timeout          int
+	NetworkDelay     int
 	PrepareCountChan chan struct {
 		*sda.TreeNode
 		PrepareCount
@@ -46,6 +48,9 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 		Node:    n,
 		Quit:    make(chan bool),
 		Timeout: 1024,
+		// This also includes the time to make a connection, eventually
+		// re-try if the connection failed
+		NetworkDelay: 100,
 	}
 	p.Count = make(chan int, 1)
 	p.RegisterChannel(&p.CountChan)
@@ -53,21 +58,23 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 	return p, nil
 }
 
+func (p *ProtocolCount) Myself() string {
+	return fmt.Sprint(p.Entity().Addresses, p.Node.TokenID())
+}
+
 func (p *ProtocolCount) Dispatch() error {
 	for {
-		dbg.Lvl3("waiting for message in", p.Entity().Addresses)
+		dbg.Lvl3(p.Myself(), "waiting for message during", p.Timeout)
 		select {
 		case pc := <-p.PrepareCountChan:
-			dbg.Lvl3("Received from", pc.TreeNode.Entity.Addresses,
-				pc.TreeNode.Id)
+			dbg.Lvl3(p.Myself(), "received from", pc.TreeNode.Entity.Addresses,
+				pc.Timeout)
 			p.Timeout = pc.Timeout
-			if p.Timeout < 100 {
-				p.Timeout = 100
-			}
 			p.FuncPC()
 		case c := <-p.CountChan:
 			p.FuncC(c)
 		case <-time.After(time.Duration(p.Timeout) * time.Millisecond):
+			dbg.Lvl3(p.Myself(), "timed out while waiting for", p.Timeout)
 			p.FuncC(nil)
 		case _ = <-p.Quit:
 			return nil
@@ -78,8 +85,13 @@ func (p *ProtocolCount) Dispatch() error {
 func (p *ProtocolCount) FuncPC() {
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			dbg.Lvl3("Sending to", c.Entity.Addresses, c.Id)
-			p.SendTo(c, &PrepareCount{Timeout: p.Timeout / 2})
+			// This value depends on the network-delay.
+			newTO := p.Timeout - p.NetworkDelay*2
+			if newTO < 100 {
+				newTO = 100
+			}
+			dbg.Lvl3(p.Myself(), "sending to", c.Entity.Addresses, c.Id, newTO)
+			p.SendTo(c, &PrepareCount{Timeout: newTO})
 		}
 	} else {
 		p.FuncC(nil)
@@ -92,7 +104,7 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 		count += c.Count.Children
 	}
 	if !p.IsRoot() {
-		dbg.Lvl3("Sending to", p.Parent().Id, p.Parent().Entity.Addresses)
+		dbg.Lvl3(p.Myself(), "Sends to", p.Parent().Id, p.Parent().Entity.Addresses)
 		p.SendTo(p.Parent(), &Count{count})
 	} else {
 		p.Count <- count
