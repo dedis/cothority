@@ -3,28 +3,27 @@ package merkle
 
 import (
 	"encoding"
-
-	"github.com/dedis/crypto/abstract"
+	"hash"
 )
 
 // Merkle contains all information needed to hash the data into a commit-tree
 type Merkle struct {
-	suite abstract.Suite
+	h hash.Hash
 }
 
 // Hash is necessary to implement the BinaryMarshaler interface on []byte
 type Hash []byte
 
 // NewMerkle initializes
-func NewMerkle(s abstract.Suite) *Merkle {
-	return &Merkle{suite: s}
+func NewMerkle(h hash.Hash) *Merkle {
+	return &Merkle{h: h}
 }
 
 // HashCommits hashes an arbitrary number of slices of bytes (e.g. hashes of the
 // children) and an arbitrary number (binary) Marshalers  (like abstract.Points)
 // example H(h_child1, h_child2, V1, V2)
 func (m *Merkle) HashCommits(data ...encoding.BinaryMarshaler) (Hash, error) {
-	hash := m.suite.Hash()
+	hash := m.h
 	defer hash.Reset()
 	for _, p := range data {
 		b, err := p.MarshalBinary()

@@ -13,7 +13,7 @@ import (
 
 func TestCommitHash(t *testing.T) {
 	suite := nist.NewAES128SHA256P256()
-	m := merkle.NewMerkle(suite)
+	m := merkle.NewMerkle(suite.Hash())
 	V1 := suite.Point().Base()
 	h1, err := m.HashCommits(V1)
 	if err != nil {
@@ -44,7 +44,7 @@ var TestType = network.RegisterMessageType(TestMsg{})
 
 func TestNetworkMarshaling(t *testing.T) {
 	suite := nist.NewAES128SHA256P256()
-	m := merkle.NewMerkle(suite)
+	m := merkle.NewMerkle(suite.Hash())
 	V1 := suite.Point().Base()
 	h1, err := m.HashCommits(V1)
 	if err != nil {
