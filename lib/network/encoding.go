@@ -3,14 +3,14 @@ package network
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"reflect"
 )
 
 /// Encoding part ///
@@ -113,8 +113,8 @@ func (am *NetworkMessage) Error() error {
 	return am.err
 }
 
-// workaround so we can set the error after creation of the application
-// message...
+// SetError is workaround so we can set the error after creation of the
+// application message
 func (am *NetworkMessage) SetError(err error) {
 	am.err = err
 }
@@ -128,8 +128,8 @@ var globalOrder = binary.LittleEndian
 // Error() on it.
 var ErrorType uuid.UUID = uuid.Nil
 
-// This is the default empty message that is returned in case something went
-// wrong.
+// EmptyApplicationMessage is the default empty message that is returned in case
+// something went wrong.
 var EmptyApplicationMessage = NetworkMessage{MsgType: ErrorType}
 
 // MarshalRegisteredType will marshal a struct with its respective type into a
@@ -184,9 +184,7 @@ func (am *NetworkMessage) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary will decode the incoming bytes
-// It checks if the underlying packet is self-decodable
-// by using its UnmarshalBinary interface
-// otherwise, use abstract.Encoding (suite) to decode
+// It uses protobuf for decoding (using the constructors in the NetworkMessage).
 func (am *NetworkMessage) UnmarshalBinary(buf []byte) error {
 	t, msg, err := UnmarshalRegisteredType(buf, am.Constructors)
 	am.MsgType = t
@@ -203,8 +201,8 @@ func newNetworkMessage(obj ProtocolMessage) (*NetworkMessage, error) {
 	}
 	ty := TypeFromData(obj)
 	if ty == ErrorType {
-		return &NetworkMessage{}, errors.New(fmt.Sprintf("Packet to send is not known. Please register packet: %s\n",
-			reflect.TypeOf(obj).String()))
+		return &NetworkMessage{}, fmt.Errorf("Packet to send is not known. Please register packet: %s\n",
+			reflect.TypeOf(obj).String())
 	}
 	return &NetworkMessage{
 		MsgType: ty,
