@@ -175,7 +175,7 @@ func (h *Host) Listen() {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
 		h.registerConnection(c)
-		go h.handleConn(c)
+		h.handleConn(c)
 	}
 	go func() {
 		dbg.Lvl3("Listening in", h.workingAddress)

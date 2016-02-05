@@ -82,7 +82,13 @@ func main() {
 		// First count the number of available children
 		childrenWait := monitor.NewMeasure("ChildrenWait")
 		wait := true
+		// Sets the network-delay between nodes - this also includes the
+		// time to open the connection, which can be long in case of more
+		// than 500 hosts per machine.
 		networkDelay := 500
+		// The timeout starts at twice the networkDelay to give even more
+		// time for opening the connections - experimental value (like
+		// the speed of light)
 		timeout := networkDelay * 2 * int(math.Log2(float64(len(rootSC.EntityList.List))))
 		for wait {
 			dbg.Lvl2("Counting children with timeout of", timeout)
@@ -102,8 +108,10 @@ func main() {
 					dbg.Lvl1("Found only", count, "children, counting again")
 				}
 			case <-time.After(time.Millisecond * time.Duration(timeout) * 2):
+				// Wait longer than the root-node before aborting
 				dbg.Lvl1("Timed out waiting for children")
 			}
+			// Double the timeout and try again if not successful.
 			timeout *= 2
 		}
 		childrenWait.Measure()
@@ -113,7 +121,7 @@ func main() {
 			dbg.Fatal(err)
 		}
 
-		if rootSC.IsSingleHost() {
+		if rootSC.GetSingleHost() {
 			// In case of "SingleHost" we need a new tree that contains every
 			// entity only once, whereas rootSC.Tree will have the same
 			// entity at different TreeNodes, which makes it difficult to
@@ -143,7 +151,7 @@ func main() {
 	select {
 	case <-allClosed:
 		dbg.Lvl2(hostAddress, ": all hosts closed")
-	case <-time.After(time.Minute * 2):
+	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
 		dbg.Lvl2(hostAddress, ": didn't close after 2 minutes")
 	}
 }
