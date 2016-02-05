@@ -203,6 +203,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 
 // Close shuts down the listener
 func (h *Host) Close() error {
+	dbg.LLvl3("Closing", h.Entity.Addresses)
 	h.isClosing = true
 	time.Sleep(time.Millisecond * 100)
 	h.networkLock.Lock()
@@ -375,7 +376,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		for {
 			select {
 			case <-doneChan:
-				dbg.Lvl3("Closing", c)
+				dbg.LLvl3("Closing", c)
 				return
 			default:
 				ctx := context.TODO()
@@ -395,7 +396,9 @@ func (h *Host) handleConn(c network.SecureConn) {
 	for {
 		select {
 		case <-h.Closed:
+			dbg.LLvl3("Closed in for", c)
 			doneChan <- true
+			return
 		case am := <-msgChan:
 			dbg.Lvl4("Putting message into networkChan from", am.From)
 			h.networkChan <- am
@@ -403,6 +406,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 			if !h.isClosing {
 				if e == network.ErrClosed || e == network.ErrEOF ||
 					e == network.ErrTemp {
+					dbg.LLvl3("error-closing")
 					return
 				}
 				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=> error", e)

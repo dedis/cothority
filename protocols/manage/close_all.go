@@ -58,6 +58,7 @@ func (p *ProtocolCloseAll) FuncC(c []CloseMsg) {
 	if !p.IsRoot() {
 		p.SendTo(p.Parent(), &Close{})
 	} else {
+		dbg.LLvl2("Root received Close")
 		p.Done <- true
 	}
 	time.Sleep(time.Second)
@@ -66,6 +67,7 @@ func (p *ProtocolCloseAll) FuncC(c []CloseMsg) {
 	if err != nil {
 		dbg.Fatal("Couldn't close")
 	}
+	p.Node.Done()
 }
 
 // Starts the protocol
