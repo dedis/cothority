@@ -108,6 +108,20 @@ func (n *Node) SendTo(to *TreeNode, msg interface{}) error {
 	if to == nil {
 		return errors.New("Sent to a nil TreeNode")
 	}
+	// Check whether we know that type of message
+	mr := reflect.ValueOf(msg)
+	m := reflect.Indirect(mr).Type()
+	t := network.RTypeToUUID(m)
+	_, has_c := n.channels[t]
+	_, has_h := n.handlers[t]
+	if !has_c && !has_h {
+		dbg.Print(m, t)
+		return errors.New("Didn't find message-type in either channels or handlers")
+	}
+	dbg.Print(mr.Elem().Field(0).Type())
+	dbg.Print(mr.Elem().Field(0).CanSet())
+	mr.Elem().Field(0).Set(reflect.New(reflect.TypeOf(TreeNode{})))
+
 	return n.overlay.SendToTreeNode(n.token, to, msg)
 }
 
@@ -154,15 +168,12 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	if cr.Elem().Kind() != reflect.Struct {
 		return errors.New("Input is not channel of structure")
 	}
-	if cr.Elem().NumField() != 2 {
-		return errors.New("Input is not channel of structure with 2 elements")
-	}
 	if cr.Elem().Field(0).Type != reflect.TypeOf(&TreeNode{}) {
-		return errors.New("Input-channel doesn't have TreeNode as element")
+		return errors.New("Input-channel doesn't have *TreeNode as 1st element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
-		cr.Elem().Field(1).Type)
+	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem()),
+		cr.Elem())
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.channels[typ] = c
 	n.messageTypeFlags[typ] = flags
@@ -191,9 +202,6 @@ func (n *Node) RegisterHandler(c interface{}) error {
 	}
 	if cr.Kind() != reflect.Struct {
 		return errors.New("Input is not channel of structure")
-	}
-	if cr.NumField() != 2 {
-		return errors.New("Input is not channel of structure with 2 elements")
 	}
 	if cr.Field(0).Type != reflect.TypeOf(&TreeNode{}) {
 		return errors.New("Input-channel doesn't have TreeNode as element")
@@ -236,7 +244,9 @@ func (n *Node) protocolInstantiate() error {
 		return errors.New("We are not represented in the tree")
 	}
 	n.instance, err = p(n)
-	go n.instance.Dispatch()
+	if err == nil {
+		go n.instance.Dispatch()
+	}
 	return err
 }
 
@@ -267,11 +277,12 @@ func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
 }
 
 func (n *Node) ReflectCreate(t reflect.Type, msg *SDAData) reflect.Value {
-	m := reflect.Indirect(reflect.New(t))
+	m := reflect.ValueOf(msg.Msg)
+	dbg.Print(m.Field(0).Type())
 	tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
 	if tn != nil {
-		m.Field(0).Set(reflect.ValueOf(tn))
-		m.Field(1).Set(reflect.Indirect(reflect.ValueOf(msg.Msg)))
+		dbg.Print(m.Field(0).Elem().CanSet())
+		m.Field(0).Elem().Set(reflect.ValueOf(*tn))
 	}
 	return m
 }
@@ -292,6 +303,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 		}
 		reflect.ValueOf(n.channels[mt]).Send(out)
 	} else {
+		dbg.Lvl3("Received message of type:", mt)
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
 

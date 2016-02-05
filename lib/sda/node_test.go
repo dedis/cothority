@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/satori/go.uuid"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -15,96 +14,13 @@ func init() {
 	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
 	sda.ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
 	sda.ProtocolRegister(testID, NewProtocolTest)
-	Incoming = make(chan struct {
-		*sda.TreeNode
-		NodeTestMsg
-	})
-}
-
-func TestReflectChannel(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
-	var c chan bool
-	cp := &c
-
-	//ty := reflect.TypeOf(cp)
-	v := reflect.ValueOf(cp).Elem()
-	dbg.Lvl3(v.CanSet())
-	ty := v.Type()
-	dbg.Lvl3(ty)
-	v.Set(reflect.MakeChan(ty, 1))
-	c <- true
-	return
-	/*
-		dbg.Print(reflect.TypeOf(cp).Kind())
-		dbg.Print(reflect.TypeOf(c).Kind())
-		dbg.Print(reflect.TypeOf(reflect.Indirect(reflect.ValueOf(cp)).Interface()).Kind())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-		c = make(chan struct {
-			sda.TreeNode
-			NodeTestMsg
-		}, 1)
-		dbg.Print(reflect.ValueOf(c).IsValid())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-	*/
-}
-
-func TestReflectHandler(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
-	funcOne := func(struct {
-		*sda.TreeNode
-		NodeTestMsg
-	}) {
-	}
-	funcAgg := func([]struct {
-		*sda.TreeNode
-		NodeTestAggMsg
-	}) {
-	}
-
-	ty := reflect.TypeOf(funcOne).In(0)
-	v := reflect.ValueOf(funcOne)
-	dbg.Lvl3(ty)
-	dbg.Lvl3(v)
-
-	tyA := reflect.TypeOf(funcAgg).In(0)
-	vA := reflect.ValueOf(funcAgg)
-	dbg.Lvl3(tyA)
-	dbg.Lvl3(vA)
-	//dbg.Lvl3(v.CanSet())
-	//ty := v.Type()
-	//dbg.Lvl3(ty)
-	//v.Set(reflect.MakeChan(ty, 1))
-	//c <- true
-	//return
-	/*
-		dbg.Print(reflect.TypeOf(cp).Kind())
-		dbg.Print(reflect.TypeOf(c).Kind())
-		dbg.Print(reflect.TypeOf(reflect.Indirect(reflect.ValueOf(cp)).Interface()).Kind())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-		c = make(chan struct {
-			sda.TreeNode
-			NodeTestMsg
-		}, 1)
-		dbg.Print(reflect.ValueOf(c).IsValid())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-	*/
+	Incoming = make(chan NodeTestMsg)
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	n := sda.NewNodeEmpty(nil, nil)
-	var c chan []struct {
-		*sda.TreeNode
-		NodeTestMsg
-	}
+	var c chan NodeTestMsg
 	err := n.RegisterChannel(&c)
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
@@ -131,7 +47,7 @@ func TestNodeChannelCreate(t *testing.T) {
 		t.Fatal("Couldn't register channel:", err)
 	}
 	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
-		Msg:     NodeTestMsg{3},
+		Msg:     NodeTestMsg{I: 3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
 			TreeID:     tree.Id,
@@ -167,7 +83,7 @@ func TestNodeChannel(t *testing.T) {
 		t.Fatal("Couldn't register channel:", err)
 	}
 	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
-		Msg:     NodeTestMsg{3},
+		Msg:     NodeTestMsg{I: 3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
 			TreeID:     tree.Id,
@@ -280,14 +196,14 @@ func TestMsgAggregation(t *testing.T) {
 	child1 := local.GetNodes(tree.Root.Children[0])[0]
 	child2 := local.GetNodes(tree.Root.Children[1])[0]
 
-	err = local.SendTreeNode("ProtocolChannels", child1, root, &NodeTestAggMsg{3})
+	err = local.SendTreeNode("ProtocolChannels", child1, root, &NodeTestAggMsg{I: 3})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(proto.IncomingAgg) > 0 {
 		t.Fatal("Messages should NOT be there")
 	}
-	err = local.SendTreeNode("ProtocolChannels", child2, root, &NodeTestAggMsg{4})
+	err = local.SendTreeNode("ProtocolChannels", child2, root, &NodeTestAggMsg{I: 4})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,38 +252,40 @@ func TestSendLimitedTree(t *testing.T) {
 }
 
 type NodeTestMsg struct {
+	*sda.TreeNode
 	I int
 }
 
-var Incoming chan struct {
-	*sda.TreeNode
-	NodeTestMsg
-}
+var Incoming chan NodeTestMsg
 
 type NodeTestAggMsg struct {
+	*sda.TreeNode
 	I int
 }
 
 type ProtocolChannels struct {
 	*sda.Node
-	IncomingAgg chan []struct {
-		*sda.TreeNode
-		NodeTestAggMsg
-	}
+	IncomingAgg chan []NodeTestAggMsg
 }
 
 func NewProtocolChannels(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolChannels{
 		Node: n,
 	}
-	p.RegisterChannel(Incoming)
-	p.RegisterChannel(&p.IncomingAgg)
+	err := p.RegisterChannel(Incoming)
+	if err != nil {
+		return nil, err
+	}
+	err = p.RegisterChannel(&p.IncomingAgg)
+	if err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
 func (p *ProtocolChannels) Start() error {
 	for _, c := range p.Children() {
-		err := p.SendTo(c, &NodeTestMsg{12})
+		err := p.SendTo(c, &NodeTestMsg{I: 12})
 		if err != nil {
 			return err
 		}
@@ -379,7 +297,7 @@ func (p *ProtocolChannels) Dispatch() error {
 	return nil
 }
 
-// relese ressources ==> call Done()
+// release resources ==> call Done()
 func (p *ProtocolChannels) Release() {
 	p.Done()
 }
@@ -394,14 +312,20 @@ func NewProtocolHandlers(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolHandlers{
 		Node: n,
 	}
-	p.RegisterHandler(p.HandleMessageOne)
-	p.RegisterHandler(p.HandleMessageAggregate)
+	err := p.RegisterHandler(p.HandleMessageOne)
+	if err != nil {
+		return nil, err
+	}
+	err = p.RegisterHandler(p.HandleMessageAggregate)
+	if err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
 func (p *ProtocolHandlers) Start() error {
 	for _, c := range p.Children() {
-		err := p.SendTo(c, &NodeTestMsg{12})
+		err := p.SendTo(c, &NodeTestMsg{I: 12})
 		if err != nil {
 			return err
 		}
@@ -409,17 +333,11 @@ func (p *ProtocolHandlers) Start() error {
 	return nil
 }
 
-func (p *ProtocolHandlers) HandleMessageOne(msg struct {
-	*sda.TreeNode
-	NodeTestMsg
-}) {
+func (p *ProtocolHandlers) HandleMessageOne(msg NodeTestMsg) {
 	IncomingHandlers <- p.Node
 }
 
-func (p *ProtocolHandlers) HandleMessageAggregate(msg []struct {
-	*sda.TreeNode
-	NodeTestAggMsg
-}) {
+func (p *ProtocolHandlers) HandleMessageAggregate(msg []NodeTestAggMsg) {
 	dbg.Lvl3("Received message")
 	IncomingHandlers <- p.Node
 }
@@ -428,7 +346,7 @@ func (p *ProtocolHandlers) Dispatch() error {
 	return nil
 }
 
-// relese ressources ==> call Done()
+// release resources ==> call Done()
 func (p *ProtocolHandlers) Release() {
 	p.Done()
 }
