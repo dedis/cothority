@@ -168,7 +168,7 @@ class MPlot:
     # Draws an arrow for out-of-bound data
     def arrow(self, text, x, top, color):
         plt.annotate(text, xy=(x, top), xytext=(x, top - 2),
-                     arrowprops=dict(facecolor=color, frac=0.4, width=8, headwidth=20, edgecolor='white'),
+                     arrowprops=dict(facecolor=color, headlength=5, width=6, headwidth=10, edgecolor='white'),
                      horizontalalignment='center', )
 
     # If we want to remove a poly
