@@ -37,7 +37,6 @@ import (
 var deployP platform.Platform
 
 var platformDst = "localhost"
-var app = ""
 var nobuild = false
 var clean = true
 var build = ""

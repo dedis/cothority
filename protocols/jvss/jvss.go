@@ -13,9 +13,9 @@ import (
 	"sync"
 )
 
-// SDA-based JVSS , a port of app/shamir
+// SDA-based JVSS (a port of app/shamir)
 
-// JVSS Protocol Instance structure holding the information for a longterm JVSS
+// JVSS Protocol Instance structure holding the information for a long-term JVSS
 // signing mechanism
 type JVSSProtocol struct {
 	// The TreeNode denotating ourself in the tree
