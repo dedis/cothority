@@ -26,22 +26,20 @@ func NewJvssSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (e *JvssSimulation) Setup(dir string, hosts []string) (
+func (jv *JvssSimulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	dbg.LLvl1("Setup with dir", dir, "and hosts",hosts)
-	e.CreateEntityList(sc, hosts, 2000)
-	err := e.CreateTree(sc)
-	if err != nil {
-		return nil, err
-	}
-	return sc, nil
+	jv.CreateEntityList(sc, hosts, 2000)
+	err := jv.CreateTree(sc)
+	return sc, err
 }
 
-func (e *JvssSimulation) Run(config *sda.SimulationConfig) error {
+func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
-	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
-	for round := 0; round < e.Rounds; round++ {
+	dbg.Lvl2("Size is:", size, "rounds:", jv.Rounds)
+	// compute long-term secret:
+	// node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
+	for round := 0; round < jv.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		roundMeasure := monitor.NewMeasure("round")
 		_, err := config.Overlay.StartNewNodeName("Jvss", config.Tree)
