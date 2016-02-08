@@ -427,3 +427,7 @@ func (n *Node) Close() error {
 func (n *Node) Name() string {
 	return n.Entity().First()
 }
+
+func (n *Node) TokenID() uuid.UUID {
+	return n.token.Id()
+}

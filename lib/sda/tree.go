@@ -286,6 +286,8 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 			}
 			parent.Children = make([]*TreeNode, children)
 			for n := 0; n < children; n++ {
+				// TODO: this should check on the host-address
+				// of the Entity and not only the Id.
 				for il.List[elIndex].Id == parent.Entity.Id &&
 					ilLen > 1 {
 					elIndex = (elIndex + 1) % ilLen

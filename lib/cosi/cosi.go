@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-// Cosi is the struct that implements the "vanilla" cosi.
-// According to the paper of Dr. Bryan Ford :
+// Cosi is the struct that implements the basic cosi.
+// According to the paper of Bryan Ford :
 // http://arxiv.org/pdf/1503.08768v1.pdf
 type Cosi struct {
 	// Suite used
 	suite abstract.Suite
-	// the longterm private key we use durings the rounds
+	// the longterm private key we use during the rounds
 	private abstract.Secret
 	// timestamp of when the announcement is done (i.e. timestamp of the four
 	// phases)
@@ -26,13 +26,13 @@ type Cosi struct {
 	aggregateCommitment abstract.Point
 	// challenge holds the challenge for this round
 	challenge abstract.Secret
-	// response is our own response computed
+	// response is our own computed response
 	response abstract.Secret
 	// aggregateResponses is the aggregated response from the children + our own
 	aggregateResponse abstract.Secret
 }
 
-// NewCosi returns a new Cosi struct out of the suite + longterm secret.
+// NewCosi returns a new Cosi struct given the suite + longterm secret.
 //
 func NewCosi(suite abstract.Suite, private abstract.Secret) *Cosi {
 	return &Cosi{
@@ -60,30 +60,30 @@ type Response struct {
 }
 
 // XXX Does it make sense to have one here ?
-// Since for the vanilla cosi, only the root have the real final signature,
-// For the moment, I only made two function that is equivalent to that
+// Since in the basic cosi, only the root has the aggregated signature.
+// For the moment, I only made two functions that are equivalent to that
 // structure: GetChallenge() and GetResponse()
 type CosiSignature struct {
 	Challenge abstract.Secret
 	Response  abstract.Secret
 }
 
-// CreateAnnouncement simply creates a Announcement message with the timestamp =
-// current time.
+// CreateAnnouncement creates an Announcement message with the timestamp set
+// to the current time.
 func (c *Cosi) CreateAnnouncement() *Announcement {
 	now := time.Now().Unix()
 	c.timestamp = now
 	return &Announcement{now}
 }
 
-// Announcement simply store the timestamp and relay the message.
+// Announcement stores the timestamp and relays the message.
 func (c *Cosi) Announce(in *Announcement) *Announcement {
 	c.timestamp = in.Timestamp
 	return in
 }
 
-// CreateCommitment creates the commitment out of the randoms secret and returns
-// the message to pass up in the tree. This is typically called by leaves.
+// CreateCommitment creates the commitment out of the random secret and returns
+// the message to pass up in the tree. This is typically called by the leaves.
 func (c *Cosi) CreateCommitment() *Commitment {
 	c.genCommit()
 	return &Commitment{
@@ -100,9 +100,9 @@ func (c *Cosi) Commit(comms []*Commitment) *Commitment {
 	// take the children commitment
 	child_v_hat := c.suite.Point().Null()
 	for _, com := range comms {
-		// Add commitment of child
+		// Add commitment of one child
 		child_v_hat = child_v_hat.Add(child_v_hat, com.Commitment)
-		// add commitment of its children if there is some (i.e. if it is not a
+		// add commitment of it's children if there is one (i.e. if it is not a
 		// leaf)
 		if com.ChildrenCommit != nil {
 			child_v_hat = child_v_hat.Add(child_v_hat, com.ChildrenCommit)
@@ -117,7 +117,7 @@ func (c *Cosi) Commit(comms []*Commitment) *Commitment {
 
 }
 
-// CreateChallenge will create the challenge out of the message it has been given.
+// CreateChallenge creates the challenge out of the message it has been given.
 // This is typically called by Root.
 func (c *Cosi) CreateChallenge(msg []byte) (*Challenge, error) {
 	pb, err := c.aggregateCommitment.MarshalBinary()
@@ -129,19 +129,22 @@ func (c *Cosi) CreateChallenge(msg []byte) (*Challenge, error) {
 	}, err
 }
 
-// Challenge will simply keep in memory the Challenge from the message.
+// Challenge keeps in memory the Challenge from the message.
 func (c *Cosi) Challenge(ch *Challenge) *Challenge {
 	c.challenge = ch.Challenge
 	return ch
 }
 
+// CreateResponse is called by a leaf to create its own response from the
+// challenge + commitment + private key. It returns the response to send up to
+// the tree.
 func (c *Cosi) CreateResponse() (*Response, error) {
 	err := c.genResponse()
 	return &Response{Response: c.response}, err
 }
 
-// Response will generate the response from the commitment,challenge and the
-// response of its children.
+// Response generates the response from the commitment, challenge and the
+// responses of its children.
 func (c *Cosi) Response(responses []*Response) (*Response, error) {
 	// create your own response
 	if err := c.genResponse(); err != nil {
@@ -151,7 +154,7 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 	for _, resp := range responses {
 		// add responses of child
 		aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.Response)
-		// add responses of its children if there is some (i.e. if it is not a
+		// add responses of it's children if there is one (i.e. if it is not a
 		// leaf)
 		if resp.ChildrenResp != nil {
 			aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.ChildrenResp)
@@ -177,9 +180,13 @@ func (c *Cosi) GetChallenge() abstract.Secret {
 func (c *Cosi) Commitment() abstract.Point {
 	return c.commitment
 }
+
+// VerifyResponse verify the response this CoSi have against the aggregated
+// public key the tree is using. Call that on the root when he gets all the
+// responses.
+// Check that: base**r_hat * X_hat**c == V_hat
+// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 func (c *Cosi) VerifyResponses(aggregatedPublic abstract.Point) error {
-	// Check that: base**r_hat * X_hat**c == V_hat
-	// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 	commitment := c.suite.Point()
 	commitment = commitment.Add(commitment.Mul(nil, c.aggregateResponse), c.suite.Point().Mul(aggregatedPublic, c.challenge))
 	// T is the recreated V_hat
@@ -194,7 +201,7 @@ func (c *Cosi) VerifyResponses(aggregatedPublic abstract.Point) error {
 
 }
 
-// genCommit will generate a random secret vi and compute its indivudual commit
+// genCommit generates a random secret vi and computes it's individual commit
 // Vi = G^vi
 func (c *Cosi) genCommit() {
 	kp := config.NewKeyPair(c.suite)
@@ -202,7 +209,7 @@ func (c *Cosi) genCommit() {
 	c.commitment = kp.Public
 }
 
-// genResponse will create the response
+// genResponse creates the response
 func (c *Cosi) genResponse() error {
 	if c.private == nil {
 		return errors.New("No private key given in this cosi")
@@ -220,8 +227,8 @@ func (c *Cosi) genResponse() error {
 	return nil
 }
 
-// VerifySignature verify if the challenge and the secret (response phase) are a
-// correct signature for this message using this aggregated public key.
+// VerifySignature verifies if the challenge and the secret (from the response phase) form a
+// correct signature for this message using the aggregated public key.
 func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Secret) error {
 	// recompute the challenge and check if it is the same
 	commitment := suite.Point()

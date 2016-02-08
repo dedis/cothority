@@ -12,19 +12,16 @@ import (
 
 // This file is the implementation of a round of a Cothority-based protocol.
 // This Cosi protocol is the simplest version, the "vanilla" version with the
-// four rounds.
+// four phases:
 //  - Announcement
 //  - Commitment
 //  - Challenge
 //  - Response
-
-// Since cothority is our main focus, we will be using the Round structure
-// defined round.go. You will be able to use this protocol cothority with many
-// different rounds very easily.
+// It uses lib/cosi as the main structure for the protocol.
 
 // ProtocolCosi is the main structure holding the round and the sda.Node.
 type ProtocolCosi struct {
-	// The node that is representing us. Easier to just embed it.
+	// The node that represents us
 	*sda.Node
 	// TreeNodeId cached
 	treeNodeId uuid.UUID
