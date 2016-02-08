@@ -24,6 +24,7 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"io/ioutil"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -336,7 +337,16 @@ func (h *Host) ProcessMessages() {
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
-		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+		typ := network.TypeFromData(sdaMsg.Msg)
+		rtype := reflect.TypeOf(sdaMsg.Msg)
+		var str string
+		if typ == network.ErrorType {
+			str = " Non registered Type !"
+		} else {
+			str = typ.String()
+		}
+		str += " (reflect= " + rtype.String()
+		return fmt.Errorf("Error marshaling  message: %s  ( msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
@@ -346,25 +356,11 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	return h.SendRaw(e, sdaMsg)
 }
 
-// Receive will return the value of the communication-channel, unmarshalling
-// the SDAMessage. Receive is called in ProcessMessages as it takes directly
-// the message from the networkChan, and pre-processes the SDAMessage
+// Receive will return the value of the communication-channel.
+// Receive is called in ProcessMessages as it takes directly the message from the networkChan
 func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
 	dbg.Lvl5("Got message", data)
-	if data.MsgType == SDADataMessage {
-		sda := data.Msg.(SDAData)
-		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
-		if err != nil {
-			dbg.Error("Error while marshalling inner message of SDAData:", err)
-		}
-		// Put the msg into SDAData
-		sda.MsgType = t
-		sda.Msg = msg
-		// Write back the Msg in appplicationMessage
-		data.Msg = sda
-		dbg.Lvlf4("SDA-Message is: %+v", sda.Msg)
-	}
 	return data
 }
 

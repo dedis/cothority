@@ -2,6 +2,7 @@ package sda
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -56,7 +57,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	// If node does not exists, then create it
 	node := o.nodes[sdaMsg.To.Id()]
 	if node == nil {
-		dbg.Lvlf3("Node not found for token (creating new one): %+v", sdaMsg.To)
+		dbg.Lvl2("Node not found for token (creating new one):", fmt.Sprintf("%+v", sdaMsg.To))
 		var err error
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		if err != nil {

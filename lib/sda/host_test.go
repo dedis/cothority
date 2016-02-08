@@ -60,7 +60,7 @@ func TestHostClose2(t *testing.T) {
 func TestHostMessaging(t *testing.T) {
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{3}
-	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
+	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
@@ -79,7 +79,7 @@ func TestHostMessaging(t *testing.T) {
 func TestHostIncomingMessage(t *testing.T) {
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{10}
-	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
+	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message:", err)
 	}
@@ -98,14 +98,14 @@ func TestHostIncomingMessage(t *testing.T) {
 func TestHostSendMsgDuplex(t *testing.T) {
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
+	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendSDAData(h1.Entity, &sda.SDAData{Msg: msgSimple})
+	err = h2.SendRaw(h1.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -392,12 +392,8 @@ type SimpleMessage struct {
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
 func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
-	if msg.MsgType != sda.SDADataMessage {
-		t.Fatal("Wrong message type received:", msg.MsgType)
+	if msg.MsgType != SimpleMessageType {
+		t.Fatal("Received non SimpleMessage type")
 	}
-	sda := msg.Msg.(sda.SDAData)
-	if sda.MsgType != SimpleMessageType {
-		t.Fatal("Couldn't pass simple message")
-	}
-	return sda.Msg.(SimpleMessage)
+	return msg.Msg.(SimpleMessage)
 }

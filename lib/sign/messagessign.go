@@ -3,7 +3,6 @@ package sign
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
@@ -16,6 +15,12 @@ Over the network they are sent as byte slices, so each message
 has its own MarshalBinary and UnmarshalBinary method
 */
 
+type MessageType int
+
+func init() {
+}
+
+// identitymessage is used when we connect to a node listening, we must give to
 var Announcement = network.RegisterMessageType(AnnouncementMessage{})
 var Commitment = network.RegisterMessageType(CommitmentMessage{})
 var Challenge = network.RegisterMessageType(ChallengeMessage{})
@@ -63,7 +68,6 @@ func NewSigningMessage() interface{} {
 
 // Broadcasted message initiated and signed by proposer
 type AnnouncementMessage struct {
-	*SigningMessage
 	Message   []byte
 	RoundType string // what kind of round this announcement is made for
 	// VoteRequest *VoteRequest
@@ -73,7 +77,6 @@ type AnnouncementMessage struct {
 // Commitment of all nodes together with the data they want
 // to have signed
 type CommitmentMessage struct {
-	*SigningMessage
 	Message []byte
 	V       abstract.Point // commitment Point
 	V_hat   abstract.Point // product of subtree participating nodes' commitment points
@@ -93,7 +96,6 @@ type CommitmentMessage struct {
 
 // The challenge calculated by the root-node
 type ChallengeMessage struct {
-	*SigningMessage
 	Message []byte
 	C       abstract.Secret // challenge
 
@@ -109,7 +111,6 @@ type ChallengeMessage struct {
 // Every node replies with eventual exceptions if they
 // are not OK
 type ResponseMessage struct {
-	*SigningMessage
 	Message []byte
 	R_hat   abstract.Secret // response
 

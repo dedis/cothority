@@ -317,7 +317,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// Put the msg into SDAData
 	sdaMsg.MsgType = t
 	sdaMsg.Msg = msg
-	dbg.Lvlf3("SDA-Message is: %+v", sdaMsg.Msg)
+	dbg.Lvlf5("SDA-Message is: %+v", sdaMsg.Msg)
 
 	// if message comes from parent, dispatch directly
 	// if messages come from children we must aggregate them
