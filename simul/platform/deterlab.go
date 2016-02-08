@@ -48,11 +48,6 @@ type Deterlab struct {
 	Project string
 	// Name of the Experiment - also name of hosts
 	Experiment string
-	// Number of available servers
-	Servers int
-
-	// Name of the simulation
-	Simulation string
 	// Directory holding the cothority-go-file
 	cothorityDir string
 	// Directory where everything is copied into
@@ -65,6 +60,10 @@ type Deterlab struct {
 	Phys []string
 	// VLAN-IP names (physical machines)
 	Virt []string
+	// Channel to communication stopping of experiment
+	sshDeter chan string
+	// Whether the simulation is started
+	started bool
 
 	// ProxyAddress : the proxy will redirect every traffic it
 	// receives to this address
@@ -76,14 +75,19 @@ type Deterlab struct {
 	// Port number of the monitor and the proxy
 	MonitorPort int
 
+	// Number of available servers
+	Servers int
+	// Name of the simulation
+	Simulation string
 	// Number of machines
 	Hosts int
-	// Channel to communication stopping of experiment
-	sshDeter chan string
-	// Whether the simulation is started
-	started bool
 	// Debugging-level: 0 is none - 5 is everything
 	Debug int
+	// The number of seconds to wait for closing the connection
+	CloseWait int
+	// How long for the experiment to finish
+	ExperimentWait int
+	// How long to wait before the experiment is deemed failed
 }
 
 var simulConfig *sda.SimulationConfig
@@ -296,6 +300,10 @@ func (d *Deterlab) Start(args ...string) error {
 
 // Waiting for the process to finish
 func (d *Deterlab) Wait() error {
+	wait := d.ExperimentWait
+	if wait == 0 {
+		wait = 600
+	}
 	if d.started {
 		dbg.Lvl3("Simulation is started")
 		select {
@@ -306,8 +314,9 @@ func (d *Deterlab) Wait() error {
 			} else {
 				dbg.Lvl1("Received out-of-line message", msg)
 			}
-		case <-time.After(time.Minute * 2):
-			dbg.Lvl1("Quitting after 2 minutes of waiting")
+		case <-time.After(time.Second * time.Duration(wait)):
+			dbg.Lvl1("Quitting after ", wait/60,
+				" minutes of waiting")
 		}
 		d.started = false
 	}

@@ -56,8 +56,8 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	// If node does not exists, then create it
 	node := o.nodes[sdaMsg.To.Id()]
 	if node == nil {
+		dbg.Lvlf3("Node not found for token (creating new one): %+v", sdaMsg.To)
 		var err error
-		dbg.Lvl3("Making new node")
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		if err != nil {
 			return err
@@ -65,15 +65,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		node = o.nodes[sdaMsg.To.Id()]
 	}
 
-	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(network.Suite))
-	if err != nil {
-		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
-	}
-	// Set the right type and msg
-	sdaMsg.MsgType = t
-	sdaMsg.Msg = msg
-
-	err = node.DispatchMsg(sdaMsg)
+	err := node.DispatchMsg(sdaMsg)
 	if err != nil {
 		return err
 	}
@@ -115,6 +107,27 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 // protocol. This is called from the root-node and will start the
 // protocol
 func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+
+	// instantiate node
+	var err error
+	var node *Node
+	node, err = o.CreateNewNode(protocolID, tree)
+	if err != nil {
+		return nil, err
+	}
+	// start it
+	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
+	err = node.Start()
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// CreateNewNode is used when you want to create the node with the protocol
+// instance but do not want to start it yet. Use case are when you are root, you
+// want to specifiy some additional configuration for example.
+func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
 		return nil, errors.New("Protocol doesn't exists: " + protocolID.String())
@@ -132,25 +145,21 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 		// Host is handling the generation of protocolInstanceID
 		RoundID: uuid.NewV4(),
 	}
-	// instantiate node
-	var err error
-	o.nodes[token.Id()], err = NewNode(o, token)
-	dbg.Lvl3("Making new node:", err)
-	if err != nil {
-		return nil, err
-	}
-
-	// start it
-	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
-	err = o.nodes[token.Id()].Start()
-	if err != nil {
-		return nil, err
-	}
-	return o.nodes[token.Id()], nil
+	// only create the node
+	node, err := NewNode(o, token)
+	o.nodes[node.token.Id()] = node
+	return node, err
 }
 
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
 	return o.StartNewNode(ProtocolNameToUuid(name), tree)
+}
+
+// CreateNewNodeName only creates the Node but do not call the instantiation of
+// the protocol directly, that way you can do your own stuff before calling
+// protocol.Start() or node.Start()
+func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
+	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token

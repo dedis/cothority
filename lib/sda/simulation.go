@@ -238,3 +238,45 @@ func (s *SimulationBFTree) Node(sc *SimulationConfig) error {
 	sc.Overlay.RegisterTree(sc.Tree)
 	return nil
 }
+
+// GetSingleHost returns the 'SingleHost'-flag
+func (sc SimulationConfig) GetSingleHost() bool {
+	var sh struct{ SingleHost bool }
+	_, err := toml.Decode(sc.Config, &sh)
+	if err != nil {
+		dbg.Error("Couldn't decode string", sc.Config, "into toml.")
+		return false
+	}
+	return sh.SingleHost
+}
+
+// GetCloseWait returns the number of seconds to wait for closing everything.
+func (sc SimulationConfig) GetCloseWait() int {
+	var cw struct{ CloseWait int }
+	_, err := toml.Decode(sc.Config, &cw)
+	if err != nil {
+		dbg.Error("Couldn't decode string", sc.Config, "into toml.")
+		return 120
+	}
+	if cw.CloseWait == 0 {
+		// Default value for CloseWait
+		return 120
+	}
+	return cw.CloseWait
+}
+
+// GetExperimentWait returns the number of seconds to wait before the experiment
+// should be considered failed
+func (sc SimulationConfig) GetExperimentWait() int {
+	var cw struct{ ExperimentWait int }
+	_, err := toml.Decode(sc.Config, &cw)
+	if err != nil {
+		dbg.Error("Couldn't decode string", sc.Config, "into toml.")
+		return 600
+	}
+	if cw.ExperimentWait == 0 {
+		// Default value for ExperimentWait
+		return 600
+	}
+	return cw.ExperimentWait
+}
