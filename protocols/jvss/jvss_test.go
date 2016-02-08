@@ -121,7 +121,7 @@ func TestJVSSSign(t *testing.T) {
 	h1.AddTree(tree)
 	// start the protocol
 	go h1.StartNewNode(CustomJVSSProtocolID, tree)
-	// wait for the longterm secret to be generated
+	// wait for the long-term secret to be generated
 	select {
 	case <-doneLongterm:
 		break

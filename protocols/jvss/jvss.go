@@ -87,9 +87,9 @@ type LongtermRequest struct {
 // directly with SDA, you just need to  register this function:
 // ```func(h,t,tok) ProtocolInstance  { return NewJVSSProtocol(h,t,tok) }```
 // For example, this function returns a JVSSProtocol with a default
-// poly.Treshold. You can give a new one after calling this function.
+// poly.Threshold. You can give a new one after calling this function.
 func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
-	// find ourself in the entityList
+	// find ourselves in the entityList
 	var idx int = -1
 	// at the same time create the public list
 	tree := n.Tree()
@@ -157,7 +157,7 @@ func NewJVSSProtocolInstance(node *sda.Node) (sda.ProtocolInstance, error) {
 }
 
 // Start will send the message to first compute the long term secret
-// It's a blocking call  because we are supposed to launch that into a go
+// It's a blocking call because we are supposed to launch that into a go
 // routine anyway from sda.
 func (jv *JVSSProtocol) Start() error {
 	jv.waitLongtermSecret()
@@ -177,7 +177,7 @@ func (jv *JVSSProtocol) waitLongtermSecret() {
 
 	// and wait
 	jv.longterm.WaitDone()
-	dbg.Lvl3("JVSS (", jv.index, ") Longtern Generated!")
+	dbg.Lvl3("JVSS (", jv.index, ") Longterm Generated!")
 	// callbacks !
 	if jv.onLongtermDone != nil {
 		jv.onLongtermDone(jv.longterm.secret)
@@ -247,7 +247,7 @@ func (jv *JVSSProtocol) waitForRandom() {
 		var ok bool
 		if reqBuff, ok = jv.requests[random.RequestNo]; !ok {
 			// we didn't started this new shared secret request so we should
-			// pariticipate in.
+			// participate in.
 			reqBuff = jv.initRequestBuffer(random.RequestNo)
 			dbg.Lvl3("JVSS (", jv.index, ") Received Request for random (", random.RequestNo, ")")
 			go jv.handleRequestSecret(reqBuff)
@@ -333,7 +333,7 @@ func (jv *JVSSProtocol) setupDistributedSecret() (*RequestBuffer, error) {
 }
 
 // setupRequestSecret sets up the random distributed secret for this request
-// number. When the initiator starts a new request,peers will call this function
+// number. When the initiator starts a new request, peers will call this function
 // so they also get the random dis. secret.
 func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*RequestBuffer, error) {
 	// prepare our deal
@@ -405,7 +405,7 @@ type RequestBuffer struct {
 	suite abstract.Suite
 }
 
-// startNewSigningRequest start a new round and adds its own signature to the
+// startNewSigningRequest starts a new round and adds its own signature to the
 // schnorr struct so later it could reveal the final signature.
 func (rb *RequestBuffer) startNewSigningRequest(msg []byte) error {
 	ps := rb.onNewSigningRequest(msg)
@@ -417,7 +417,7 @@ func (rb *RequestBuffer) startNewSigningRequest(msg []byte) error {
 }
 
 // onNewSigningRequest simply starts a new round and returns the partial
-// signature this schnorr can offer to the gloabal signature. Mostly used by
+// signature this schnorr can offer to the global signature. Mostly used by
 // servers that receive the request to sign something.
 func (rb *RequestBuffer) onNewSigningRequest(msg []byte) *poly.SchnorrPartialSig {
 	h := rb.suite.Hash()
@@ -518,7 +518,7 @@ func (rb *RequestBuffer) AddSignatureResponse(partialSig SignatureResponse) {
 	rb.partialLock.Unlock()
 }
 
-// initrequestBuffer init a random buffer for this request number
+// initRequestBuffer init a random buffer for this request number
 func (jv *JVSSProtocol) initRequestBuffer(rNo int) *RequestBuffer {
 	rd := &RequestBuffer{
 		requestNo:   rNo,
