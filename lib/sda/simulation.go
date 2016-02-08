@@ -221,14 +221,11 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 // Creates the tree as defined in SimulationBFTree and stores the result
 // in 'sc'
 func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
-	dbg.LLvl1("CreateTree strarted")
+	dbg.Lvl3("CreateTree strarted")
 	start := time.Now()
-	dbg.LLvl1("CreateTree strarted at", start)
 	if sc.EntityList == nil {
-		dbg.LLvl1("Empty EntityList")
 		return errors.New("Empty EntityList")
 	}
-	dbg.LLvl1("Calling GenerateBigNaryTree ...")
 	sc.Tree = sc.EntityList.GenerateBigNaryTree(s.BF, s.Hosts)
 	dbg.Lvl3("Creating tree took: " + time.Now().Sub(start).String())
 	return nil
