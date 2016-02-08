@@ -24,6 +24,7 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"io/ioutil"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -336,7 +337,16 @@ func (h *Host) ProcessMessages() {
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
-		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+		typ := network.TypeFromData(sdaMsg.Msg)
+		rtype := reflect.TypeOf(sdaMsg.Msg)
+		var str string
+		if typ == network.ErrorType {
+			str = " Non registered Type !"
+		} else {
+			str = typ.String()
+		}
+		str += " (reflect= " + rtype.String()
+		return fmt.Errorf("Error marshaling  message: %s  ( msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
@@ -353,17 +363,21 @@ func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
 	dbg.Lvl5("Got message", data)
 	if data.MsgType == SDADataMessage {
-		sda := data.Msg.(SDAData)
-		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
-		if err != nil {
-			dbg.Error("Error while marshalling inner message of SDAData:", err)
-		}
-		// Put the msg into SDAData
-		sda.MsgType = t
-		sda.Msg = msg
-		// Write back the Msg in appplicationMessage
-		data.Msg = sda
-		dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)
+		/*     sda := data.Msg.(SDAData)*/
+		//t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
+		//if err != nil {
+		//// TODO change the test so we don't do that unmarshalling here but
+		//// rather in Node, Host should not care what's inside the SDAData
+		//// anyway.
+		////dbg.Error(h.Entity.First(), "Error while unmarshalling inner message of SDAData", data.MsgType, ":", err)
+		//return data
+		//}
+		//// Put the msg into SDAData
+		//sda.MsgType = t
+		//sda.Msg = msg
+		//// Write back the Msg in appplicationMessage
+		//data.Msg = sda
+		/*dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)*/
 	}
 	return data
 }
