@@ -10,7 +10,7 @@ import (
 func init() {
 	// FIXME Protocol doesn't exists:
 	sda.SimulationRegister("SimulationJVSS", NewJvssSimulation)
-	sda.ProtocolRegisterName("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSSProtocolInstance(node) })
+	sda.ProtocolRegisterName("ProtocolJVSS", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSSProtocolInstance(node) })
 }
 
 type JvssSimulation struct {
@@ -37,16 +37,32 @@ func (jv *JvssSimulation) Setup(dir string, hosts []string) (
 func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", jv.Rounds)
+	msg := []byte("Test message for JVSS simulation")
+
+	node, err := config.Overlay.CreateNewNodeName("ProtocolJVSS", config.Tree)
+	if err != nil { return err }
+	proto := node.ProtocolInstance().(*JVSSProtocol)
 	// compute long-term secret:
-	// node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
+	proto.Start()
+
 	for round := 0; round < jv.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
+		// we only measure the signing process
 		roundMeasure := monitor.NewMeasure("round")
-		_, err := config.Overlay.StartNewNodeName("Jvss", config.Tree)
+		sig, err := proto.Sign(msg)
 		if err != nil {
+			dbg.Error("Couldn't create signature")
 			return err
 		}
 		roundMeasure.Measure()
+
+		// see if we got a valid signature:
+		err = proto.Verify(msg, sig)
+		if err != nil {
+			dbg.Error("Got invalid signature")
+			return err
+		}
+		dbg.Lvl4("Signature is OK")
 	}
 	return nil
 }

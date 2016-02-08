@@ -363,7 +363,7 @@ func (h *Host) receive() network.NetworkMessage {
 		sda.Msg = msg
 		// Write back the Msg in appplicationMessage
 		data.Msg = sda
-		dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)
+		//dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)
 	}
 	return data
 }

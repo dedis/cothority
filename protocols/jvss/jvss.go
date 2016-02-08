@@ -11,6 +11,7 @@ import (
 	"github.com/satori/go.uuid"
 	"hash"
 	"sync"
+	"fmt"
 )
 
 // SDA-based JVSS (a port of app/shamir)
@@ -24,34 +25,34 @@ type JVSSProtocol struct {
 	// structure for the internals communication, when we set up the shares and
 	// everything. We directly send our share to everyone else directly by using
 	// this entitylist instead of broadcasting into the tree.
-	List *sda.EntityList
+	List           *sda.EntityList
 	// the index where we are in this entitylist
-	index int
-	// the mapping between TreeNode's peer id in the Tree to index in the entitylist,
-	// since JVSS mostly use the entityList
-	nodeToIndex map[uuid.UUID]int
-	// list of public keys represented in the entityList (needed by poly.Deal)
-	publicList []abstract.Point
-	// keys of the Host set as config.KeyPair
-	key config.KeyPair
+	index          int
 
-	info poly.Threshold
+	// a flat list of all TreeNodes
+	nodeList       []*sda.TreeNode
+	// list of public keys represented in the entityList (needed by poly.Deal)
+	publicList     []abstract.Point
+	// keys of the Host set as config.KeyPair
+	key            config.KeyPair
+
+	info           poly.Threshold
 	// The channel where we give the deal we receive for the longterm
 	// generation
-	ltChan chan LongtermChan
+	ltChan         chan LongtermChan
 	// The channel through we give the deal we receive for the random generation
-	rdChan chan RandomChan
+	rdChan         chan RandomChan
 	// channel where we give the requests we receive for a signature
-	reqChan chan RequestChan
+	reqChan        chan RequestChan
 	// channel where we give the responses we receive for a signature request
-	respChan chan ResponseChan
+	respChan       chan ResponseChan
 	// requests holds all the requests that we asked
-	requests map[int]*RequestBuffer
+	requests       map[int]*RequestBuffer
 	// lastrequestnumber seen or executed
-	lastRequestNo int
+	lastRequestNo  int
 
-	longterm     *LongtermRequest
-	longtermLock *sync.Mutex
+	longterm       *LongtermRequest
+	longtermLock   *sync.Mutex
 
 	// callback to know when the longterm has been generated
 	onLongtermDone func(*poly.SharedSecret)
@@ -61,21 +62,21 @@ type LongtermRequest struct {
 	// The longterm shared private public key pair used in this JVSS.
 	// The idea is that you can keep this protocol instance as a longterm JVSS
 	// using it to distributively sign anything as long as it runs.
-	secret *poly.SharedSecret
+	secret   *poly.SharedSecret
 	// The schnorr struct used to sign / verify using the longterm key
-	schnorr *poly.Schnorr
+	schnorr  *poly.Schnorr
 	// Threshold related to how the shares are generated and reconstructed
-	info poly.Threshold
+	info     poly.Threshold
 	// suite used
-	suite abstract.Suite
+	suite    abstract.Suite
 	// key from this node
-	key config.KeyPair
+	key      config.KeyPair
 	// longterm-receiver of the deals
 	receiver *poly.Receiver
 	// doneChan
 	doneChan chan bool
 	// done flag
-	done bool
+	done     bool
 	// done lock
 	doneLock *sync.Mutex
 	// how many deals are ok
@@ -93,26 +94,16 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 	var idx int = -1
 	// at the same time create the public list
 	tree := n.Tree()
-	pubs := make([]abstract.Point, len(tree.EntityList.List))
-	for i := range tree.EntityList.List {
-		ent := tree.EntityList.Get(i)
-		if ent.Equal(n.Entity()) {
+	nodes := tree.ListNodes()
+	pubs := make([]abstract.Point, len(nodes))
+	for i, tn := range nodes {
+		if uuid.Equal(tn.Id, n.TreeNode().Id) {
 			idx = i
 		}
-		pubs[i] = ent.Public
-	}
-	// map the index
-	maps := make(map[uuid.UUID]int)
-	nodes := tree.ListNodes()
-	for i := range tree.EntityList.List {
-		for _, n := range nodes {
-			if n.Entity.Equal(tree.EntityList.Get(i)) {
-				maps[n.Id] = i
-			}
-		}
+		pubs[i] = tn.Entity.Public
 	}
 	if idx == -1 {
-		panic("Could not find this JVSSProtocol into the EntityList")
+		panic(fmt.Sprintf("Could not find JVSSProtocol node %+v in the list of nodes %+v", n, nodes))
 	}
 	kp := config.KeyPair{Public: n.Entity().Public, Secret: n.Private(), Suite: n.Suite()}
 	nbPeers := len(tree.EntityList.List)
@@ -124,8 +115,8 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 		info:         info,
 		publicList:   pubs,
 		key:          kp,
+		nodeList:      nodes,
 		requests:     make(map[int]*RequestBuffer),
-		nodeToIndex:  maps,
 		ltChan:       make(chan LongtermChan),
 		rdChan:       make(chan RandomChan),
 		reqChan:      make(chan RequestChan),
@@ -165,14 +156,18 @@ func (jv *JVSSProtocol) Start() error {
 }
 
 func (jv *JVSSProtocol) waitLongtermSecret() {
+	dbg.Lvl3("Creating long-term secret")
 	// add our own deal
 	deal := jv.newDeal()
 	jv.longterm.AddDeal(jv.index, deal)
 
 	lt := NewLongtermFromDeal(jv.index, deal)
 	// send the deal to everyone
-	jv.otherNodes(func(tn *sda.TreeNode) {
-		jv.Node.SendTo(tn, &lt)
+	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
+		err := jv.Node.SendTo(tn, &lt)
+		if err != nil {
+			dbg.Error("Couldn't send to node", tn, err)
+		}
 	})
 
 	// and wait
@@ -211,7 +206,7 @@ func (jv *JVSSProtocol) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	dbg.Lvl3("JVSS (", jv.index, ") Sending Signature Request (", request.Nb(), ")")
 
 	// sends it
-	jv.otherNodes(func(tn *sda.TreeNode) {
+	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
 		jv.Node.SendTo(tn, req)
 	})
 	// wait for the signature
@@ -303,7 +298,7 @@ func (jv *JVSSProtocol) waitForRequests() {
 }
 
 // waitForLongterm waits on a channel that receive every deals to be accepted
-// for computeing the longterm distributed secret
+// for computing the longterm distributed secret
 func (jv *JVSSProtocol) waitForLongterm() {
 	for st := range jv.ltChan {
 		lt := st.Longterm
@@ -332,6 +327,7 @@ func (jv *JVSSProtocol) setupDistributedSecret() (*RequestBuffer, error) {
 
 }
 
+
 // setupRequestSecret sets up the random distributed secret for this request
 // number. When the initiator starts a new request, peers will call this function
 // so they also get the random dis. secret.
@@ -346,13 +342,12 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 	if err != nil {
 		return nil, err
 	}
-
-	jv.otherNodes(func(tn *sda.TreeNode) {
+	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
 		rand := Random{
 			RequestNo: requestBuff.Nb(),
 			Longterm: Longterm{
 				Bytes: buf,
-				Index: jv.nodeToIndex[tn.Id],
+				Index: idx,
 			},
 		}
 		jv.Node.SendTo(tn, &rand)
@@ -362,12 +357,13 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 	requestBuff.ResetSecretChan()
 
 	return requestBuff, nil
-
 }
 
 func (jv *JVSSProtocol) newDeal() *poly.Deal {
+
 	dealKey := cliutils.KeyPair(jv.Node.Suite())
 	deal := new(poly.Deal).ConstructDeal(&dealKey, &jv.key, jv.info.T, jv.info.R, jv.publicList)
+	dbg.Lvl4("Finished new deal")
 	return deal
 }
 
@@ -376,33 +372,33 @@ func (jv *JVSSProtocol) newDeal() *poly.Deal {
 // request used for signing.
 type RequestBuffer struct {
 	// for which request number this buffer is
-	requestNo int
+	requestNo    int
 	// The deals we have received so far for generating this rndom secret
-	goodDeal int
-	dealLock *sync.Mutex
+	goodDeal     int
+	dealLock     *sync.Mutex
 	// the receiver aggregating them
-	receiver *poly.Receiver
+	receiver     *poly.Receiver
 	// the generated secret if any
-	secret *poly.SharedSecret
+	secret       *poly.SharedSecret
 	// generated secret flag
-	secretGend bool
+	secretGend   bool
 	// channel to say the random secret has been generated
-	secretChan chan *poly.SharedSecret
+	secretChan   chan *poly.SharedSecret
 	// the channel to say the final signature related has been generated
-	sigChan chan *poly.SchnorrSig
+	sigChan      chan *poly.SchnorrSig
 	// generated signature flag
-	sigGend bool
+	sigGend      bool
 	// The partial signatures aggregated until now
 	goodPartials int
 	partialLock  *sync.Mutex
 	// the longterm schnorr struct used to sign
-	longterm *LongtermRequest
+	longterm     *LongtermRequest
 	// the signature itself
-	signature *poly.SchnorrSig
+	signature    *poly.SchnorrSig
 	// the info about the JVSS config
-	info poly.Threshold
+	info         poly.Threshold
 	// the suite used
-	suite abstract.Suite
+	suite        abstract.Suite
 }
 
 // startNewSigningRequest starts a new round and adds its own signature to the
@@ -499,7 +495,7 @@ func (rb *RequestBuffer) AddSignatureResponse(partialSig SignatureResponse) {
 	}
 	rb.partialLock.Lock()
 	rb.goodPartials++
-	if rb.goodPartials >= rb.info.T-1 {
+	if rb.goodPartials >= rb.info.T - 1 {
 		if !rb.sigGend {
 			sign, err := rb.longterm.schnorr.Sig()
 			if err != nil {
@@ -535,14 +531,12 @@ func (jv *JVSSProtocol) initRequestBuffer(rNo int) *RequestBuffer {
 	return rd
 }
 
-func (jv *JVSSProtocol) otherNodes(fn func(*sda.TreeNode)) {
-	if !jv.Node.Root().Entity.Equal(jv.Node.Entity()) {
-		fn(jv.Node.Root())
-	}
-	for _, tn := range jv.Node.Root().Children {
-		if !tn.Entity.Equal(jv.Node.Entity()) {
-			fn(tn)
+func (jv *JVSSProtocol) otherNodes(fn func(int, *sda.TreeNode)) {
+	for i, tn := range jv.nodeList {
+		if i == jv.index {
+			continue
 		}
+		fn(i, tn)
 	}
 }
 
@@ -572,8 +566,8 @@ func (lr *LongtermRequest) AddDeal(index int, deal *poly.Deal) {
 	lr.checkState()
 }
 
-// checkState will look if we have enough deals for the longterm, and if so,will
-// create the shared secret and signify that we are done
+// checkState will look if we have enough deals for the long-term share,
+// if it finds enough deals it will create the shared secret and signify that we are done
 func (lr *LongtermRequest) checkState() {
 	if lr.goodDeal < lr.info.T {
 		return
@@ -589,7 +583,7 @@ func (lr *LongtermRequest) checkState() {
 	}
 	lr.secret = sh
 	lr.schnorr.Init(lr.suite, lr.info, lr.secret)
-	// notify we have the longterm secret
+	// notify we have the long-term secret
 	lr.done = true
 	lr.doneLock.Unlock()
 	go func() { lr.doneChan <- true }()
