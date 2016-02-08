@@ -233,7 +233,7 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 
 	// go to Commit()
 	out := pc.Cosi.Commit(commits)
-	secretVar.Add(secretVar, pc.Cosi.Commitment())
+	secretVar.Add(secretVar, pc.Cosi.GetCommitment())
 	// if we are the root, we need to start the Challenge
 	if pc.IsRoot() {
 		return pc.StartChallenge()
