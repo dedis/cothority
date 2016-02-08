@@ -42,19 +42,22 @@ func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 	node, err := config.Overlay.CreateNewNodeName("ProtocolJVSS", config.Tree)
 	if err != nil { return err }
 	proto := node.ProtocolInstance().(*JVSSProtocol)
-	// compute long-term secret:
+	//m := monitor.NewMeasure("longterm")
+	// compute and measure long-term secret:
 	proto.Start()
+	//m.Measure()
 
 	for round := 0; round < jv.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
+
 		// we only measure the signing process
-		roundMeasure := monitor.NewMeasure("round")
+		r := monitor.NewMeasure("round")
 		sig, err := proto.Sign(msg)
 		if err != nil {
 			dbg.Error("Couldn't create signature")
 			return err
 		}
-		roundMeasure.Measure()
+		r.Measure()
 
 		// see if we got a valid signature:
 		err = proto.Verify(msg, sig)

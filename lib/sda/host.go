@@ -192,7 +192,9 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
+	h.networkLock.Lock()
 	c, err = h.host.Open(id)
+	h.networkLock.Unlock()
 	if err != nil {
 		return nil, err
 	}
@@ -208,13 +210,15 @@ func (h *Host) Close() error {
 		return errors.New("Already closing")
 	}
 	dbg.Lvl3("Closing", h.Entity.Addresses)
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+
 	h.isClosing = true
 	time.Sleep(time.Millisecond * 100)
-	h.networkLock.Lock()
 	close(h.Closed)
 	err := h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
-	h.networkLock.Unlock()
+
 	return err
 }
 
@@ -401,7 +405,9 @@ func (h *Host) handleConn(c network.SecureConn) {
 			dbg.Lvl4("Putting message into networkChan from", am.From)
 			h.networkChan <- am
 		case e := <-errorChan:
+			h.networkLock.Lock()
 			if !h.isClosing {
+				h.networkLock.Unlock()
 				if e == network.ErrClosed || e == network.ErrEOF ||
 					e == network.ErrTemp {
 					dbg.Lvl3("error-closing")

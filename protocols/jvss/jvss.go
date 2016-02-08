@@ -159,7 +159,9 @@ func (jv *JVSSProtocol) waitLongtermSecret() {
 	dbg.Lvl3("Creating long-term secret")
 	// add our own deal
 	deal := jv.newDeal()
+	jv.longtermLock.Lock()
 	jv.longterm.AddDeal(jv.index, deal)
+	jv.longtermLock.Unlock()
 
 	lt := NewLongtermFromDeal(jv.index, deal)
 	// send the deal to everyone
@@ -247,6 +249,7 @@ func (jv *JVSSProtocol) waitForRandom() {
 			dbg.Lvl3("JVSS (", jv.index, ") Received Request for random (", random.RequestNo, ")")
 			go jv.handleRequestSecret(reqBuff)
 		}
+
 		reqBuff.AddRandom(random)
 	}
 }
@@ -263,7 +266,7 @@ func (jv *JVSSProtocol) waitForRequests() {
 		if requestBuff, ok = jv.requests[sigRequest.RequestNo]; !ok {
 			// Not good, someone ask for a request we did not produce a shared
 			// secret before .. ??
-			dbg.Error("Receive signature request with request number nto matching any shared secret...")
+			dbg.Error("Receive signature request with request number not matching any shared secret...")
 			continue
 		}
 		if requestBuff.secret == nil {
@@ -313,7 +316,9 @@ func (jv *JVSSProtocol) waitForLongterm() {
 		}
 		dbg.Lvl3("JVSS (", jv.index, ") Received longterm (", lt.Index, ")")
 		deal := lt.Deal(jv.Node.Suite(), jv.info)
+		jv.longtermLock.Lock()
 		jv.longterm.AddDeal(jv.index, deal)
+		jv.longtermLock.Unlock()
 	}
 }
 
@@ -446,12 +451,13 @@ func (rb *RequestBuffer) ResetSigChan() {
 
 // AddDeal is same as AddRandom but for Deal  (struct vs []byte)
 func (rb *RequestBuffer) AddDeal(index int, deal *poly.Deal) {
+	rb.dealLock.Lock()
+	defer rb.dealLock.Unlock()
 	_, err := rb.receiver.AddDeal(index, deal)
 	if err != nil {
 		dbg.Error("Could not add deal", err)
 		return
 	}
-	rb.dealLock.Lock()
 	rb.goodDeal++
 	if rb.goodDeal >= rb.info.T {
 		// did we already generated it
@@ -470,7 +476,6 @@ func (rb *RequestBuffer) AddDeal(index int, deal *poly.Deal) {
 			go func() { rb.secretChan <- rb.secret }()
 		}
 	}
-	rb.dealLock.Unlock()
 }
 
 // AddRandom add the RandomMessage and check if we can generate the secret
