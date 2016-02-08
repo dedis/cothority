@@ -1,4 +1,5 @@
-package blkparser
+// Basically adapation from the file at https://github.com/tsileo/blkparser
+package blockchain
 
 import (
 	"bytes"

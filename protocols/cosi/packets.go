@@ -21,7 +21,6 @@ type CosiAnnouncement struct {
 // Commitment of all nodes together with the data they want
 // to have signed
 type CosiCommitment struct {
-
 	// From = TreeNodeId in the Tree
 	From uuid.UUID
 	*cosi.Commitment
