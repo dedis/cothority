@@ -194,7 +194,7 @@ func (jv *JVSSProtocol) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		return nil, err
 	}
 	sigChan := make(chan *poly.SchnorrSig)
-	request.SetSigChan(sigChan)
+	request.setSigChan(sigChan)
 	// add our own partial sig
 	if err := request.startNewSigningRequest(msg); err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func (jv *JVSSProtocol) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		RequestNo: request.requestNo,
 		Msg:       msg,
 	}
-	dbg.Lvl3("JVSS (", jv.index, ") Sending Signature Request (", request.Nb(), ")")
+	dbg.Lvl3("JVSS (", jv.index, ") Sending Signature Request (", request.requestNo, ")")
 
 	// sends it
 	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
@@ -213,7 +213,7 @@ func (jv *JVSSProtocol) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	})
 	// wait for the signature
 	sig := <-sigChan
-	request.ResetSigChan()
+	request.resetSigChan()
 	return sig, nil
 }
 
@@ -229,7 +229,7 @@ func (jv *JVSSProtocol) waitForResponses() {
 			dbg.Error("Received signature request with request number not matching any shared secret...")
 			continue
 		}
-		requestBuff.AddSignatureResponse(sigResponse)
+		requestBuff.addSignatureResponse(sigResponse)
 	}
 
 }
@@ -250,7 +250,7 @@ func (jv *JVSSProtocol) waitForRandom() {
 			go jv.handleRequestSecret(reqBuff)
 		}
 
-		reqBuff.AddRandom(random)
+		reqBuff.addRandom(random)
 	}
 }
 
@@ -272,6 +272,7 @@ func (jv *JVSSProtocol) waitForRequests() {
 		if requestBuff.secret == nil {
 			dbg.Error("JVSS (", jv.index, ") Received signature request (", sigRequest.RequestNo, ") with no secret generated :/")
 			continue
+
 		}
 		jv.longtermLock.Lock()
 		if !jv.longterm.isDone() {
@@ -339,9 +340,9 @@ func (jv *JVSSProtocol) setupDistributedSecret() (*RequestBuffer, error) {
 func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*RequestBuffer, error) {
 	// prepare our deal
 	doneChan := make(chan *poly.SharedSecret)
-	requestBuff.SetSecretChan(doneChan)
+	requestBuff.setSecretChan(doneChan)
 	deal := jv.newDeal()
-	requestBuff.AddDeal(jv.index, deal)
+	requestBuff.addDeal(jv.index, deal)
 	// send to everyone
 	buf, err := deal.MarshalBinary()
 	if err != nil {
@@ -349,7 +350,7 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 	}
 	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
 		rand := Random{
-			RequestNo: requestBuff.Nb(),
+			RequestNo: requestBuff.requestNo,
 			Longterm: Longterm{
 				Bytes: buf,
 				Index: idx,
@@ -359,7 +360,7 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 	})
 	// wait for the shared secret
 	_ = <-doneChan
-	requestBuff.ResetSecretChan()
+	requestBuff.resetSecretChan()
 
 	return requestBuff, nil
 }
@@ -424,33 +425,28 @@ func (rb *RequestBuffer) onNewSigningRequest(msg []byte) *poly.SchnorrPartialSig
 	h := rb.suite.Hash()
 	h.Write(msg)
 	dbg.Lvl3("NewSigningRequest with secret.Pub:", rb.secret.Pub)
-	ps := rb.longterm.NewSigning(rb.secret, h)
+	ps := rb.longterm.newSigning(rb.secret, h)
 	return ps
 }
 
-// Nb returns the request number associated with this request buffer
-func (rb *RequestBuffer) Nb() int {
-	return rb.requestNo
-}
-
-func (rb *RequestBuffer) SetSecretChan(ch chan *poly.SharedSecret) {
+func (rb *RequestBuffer) setSecretChan(ch chan *poly.SharedSecret) {
 	rb.secretChan = ch
 }
-func (rb *RequestBuffer) ResetSecretChan() {
+func (rb *RequestBuffer) resetSecretChan() {
 	close(rb.secretChan)
 	rb.secretChan = nil
 }
 
-func (rb *RequestBuffer) SetSigChan(ch chan *poly.SchnorrSig) {
+func (rb *RequestBuffer) setSigChan(ch chan *poly.SchnorrSig) {
 	rb.sigChan = ch
 }
-func (rb *RequestBuffer) ResetSigChan() {
+func (rb *RequestBuffer) resetSigChan() {
 	close(rb.sigChan)
 	rb.sigChan = nil
 }
 
 // AddDeal is same as AddRandom but for Deal  (struct vs []byte)
-func (rb *RequestBuffer) AddDeal(index int, deal *poly.Deal) {
+func (rb *RequestBuffer) addDeal(index int, deal *poly.Deal) {
 	rb.dealLock.Lock()
 	defer rb.dealLock.Unlock()
 	_, err := rb.receiver.AddDeal(index, deal)
@@ -473,23 +469,23 @@ func (rb *RequestBuffer) AddDeal(index int, deal *poly.Deal) {
 		}
 		// notify any interested party
 		if rb.secretChan != nil {
-			go func() { rb.secretChan <- rb.secret }()
+			 go func() { rb.secretChan <- rb.secret }()
 		}
 	}
 }
 
 // AddRandom add the RandomMessage and check if we can generate the secret
 // already
-func (rb *RequestBuffer) AddRandom(rand Random) {
+func (rb *RequestBuffer) addRandom(rand Random) {
 	if rand.RequestNo != rb.requestNo {
 		return
 	}
 	deal := rand.Deal(rb.suite, rb.info)
-	rb.AddDeal(rand.Index, deal)
+	rb.addDeal(rand.Index, deal)
 
 }
 
-func (rb *RequestBuffer) AddSignatureResponse(partialSig SignatureResponse) {
+func (rb *RequestBuffer) addSignatureResponse(partialSig SignatureResponse) {
 	if partialSig.RequestNo != rb.requestNo {
 		return
 	}
@@ -612,7 +608,7 @@ func (lr *LongtermRequest) isNew() bool {
 	return false
 }
 
-func (lr *LongtermRequest) NewSigning(random *poly.SharedSecret, msg hash.Hash) *poly.SchnorrPartialSig {
+func (lr *LongtermRequest) newSigning(random *poly.SharedSecret, msg hash.Hash) *poly.SchnorrPartialSig {
 	if err := lr.schnorr.NewRound(random, msg); err != nil {
 		dbg.Error("NewRound error:", err)
 		return nil
