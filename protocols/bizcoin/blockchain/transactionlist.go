@@ -1,4 +1,4 @@
-package BitCoSi
+package blockchain
 
 import (
 	"github.com/dedis/cothority/lib/bitcosi/blkparser"

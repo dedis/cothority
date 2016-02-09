@@ -1,4 +1,4 @@
-package BitCoSi
+package blockchain
 
 import (
 	"crypto/sha256"
@@ -23,34 +23,44 @@ type TrBlock struct {
 }
 
 type Header struct {
-	LeaderId   net.IP
-	PublicKey  string
 	MerkleRoot string
 	Parent     string
 	ParentKey  string
 }
 
-func (*TrBlock) NewTrBlock(transactions TransactionList, header Header) (tr TrBlock) {
-	trb := new(TrBlock)
-	trb.Magic = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
-	trb.HeaderHash = trb.Hash(header)
-	trb.TransactionList = transactions
-	trb.BlockSize = 0
-	trb.Header = header
-	return *trb
+func (trb *TrBlock) NewTrBlock(transactions TransactionList, header Header) *TrBlock {
+	return NewTrBlock(transactions, header)
 }
 
 func (t *TrBlock) NewHeader(transactions TransactionList, parent string, parentkey string, IP net.IP, key string) (hd Header) {
-	hdr := new(Header)
-	hdr.LeaderId = IP
-	hdr.PublicKey = key
-	hdr.Parent = parent
-	hdr.ParentKey = parentkey
-	hdr.MerkleRoot = t.Calculate_root(transactions)
-	return *hdr
+	h := NewHeader(transactions, parent, parentKey, key)
+	return *h
 }
 
 func (trb *Block) Calculate_root(transactions TransactionList) (res string) {
+	return HashRootTransactions(transactions)
+}
+
+// Porting to public method non related to Header / TrBlock whatsoever
+func NewTrBlock(transactions TransactionList, header Header) *TrBlock {
+	trb := new(TrBlock)
+	trb.Magic = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
+	trb.HeaderHash = Hash(header)
+	trb.TransactionList = transactions
+	trb.BlockSize = 0
+	trb.Header = header
+	return trb
+}
+
+func NewHeader(transactions TransactionList, parent string, parentKey string) *Header {
+	hdr := new(Header)
+	hdr.PublicKey = key
+	hdr.Parent = parent
+	hdr.ParentKey = parentkey
+	hdr.MerkleRoot = HashRootTransactions(transactions)
+	return hdr
+}
+func HashRootTransactions(transactions TransactionList) string {
 	var hashes []hashid.HashId
 
 	for _, t := range transactions.Txs {
@@ -58,19 +68,22 @@ func (trb *Block) Calculate_root(transactions TransactionList) (res string) {
 		hashes = append(hashes, temp)
 	}
 	out, _ := proof.ProofTree(sha256.New, hashes)
-	res = hex.EncodeToString(out)
-	return
+	return hex.EncodeToString(out)
 }
 
 func (trb *Block) Hash(h Header) (res string) {
 	//change it to be more portable
+	return HashHeader(h)
+
+}
+
+func HashHeader(h Header) string {
 	data := fmt.Sprintf("%v", h)
 	sha := sha256.New()
 	sha.Write([]byte(data))
 	hash := sha.Sum(nil)
 	res = hex.EncodeToString(hash)
-	return
-
+	return res
 }
 
 func (trb *TrBlock) Print() {

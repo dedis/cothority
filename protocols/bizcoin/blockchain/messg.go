@@ -1,4 +1,4 @@
-package BitCoSi
+package blockchain
 
 import (
 	"bytes"
