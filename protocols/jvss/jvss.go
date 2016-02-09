@@ -269,35 +269,47 @@ func (jv *JVSSProtocol) waitForRequests() {
 			dbg.Error("Receive signature request with request number not matching any shared secret...")
 			continue
 		}
+		requestBuff.dealLock.Lock()
+
 		if requestBuff.secret == nil {
-			dbg.Error("JVSS (", jv.index, ") Received signature request (", sigRequest.RequestNo, ") with no secret generated :/")
+			requestBuff.subReqBuf = append(requestBuff.subReqBuf, &st)
+			requestBuff.dealLock.Unlock()
+			dbg.Lvl3("JVSS (", jv.index, ") Received signature request (", sigRequest.RequestNo, ") with no secret generated")
 			continue
 
-		}
+		} else {requestBuff.dealLock.Unlock()}
 		jv.longtermLock.Lock()
 		if !jv.longterm.isDone() {
 			jv.longtermLock.Unlock()
 			dbg.Error("JVSS (", jv.index, ") Received signature request (", sigRequest.RequestNo, ") without even the longterm secret set")
 			continue
-		}
-		jv.longtermLock.Unlock()
+		} else {jv.longtermLock.Unlock()}
+
 		dbg.Lvl3("Started NewRound with secret.Pub", requestBuff.secret.Pub)
 		dbg.Lvl3("Started NewRound with longerm.Pub", jv.longterm.secret.Pub)
 		// get the partial sig
-		ps := requestBuff.onNewSigningRequest(sigRequest.Msg)
-		if ps == nil {
-			dbg.Error("Can not start new round")
-			continue
-		}
-		sr := &SignatureResponse{
-			RequestNo: sigRequest.RequestNo,
-			Partial:   ps,
-		}
+		sr := requestBuff.createSignatureResponse(sigRequest)
 		// send it back to the originator
 		if err := jv.Node.SendTo(st.TreeNode, sr); err != nil {
 			dbg.Lvl3("Could not send signature response back", err)
 		}
 		dbg.Lvl3("JVSS (", jv.index, ") Sent SignatureResponse back")
+	}
+}
+
+func (rb *RequestBuffer) createSignatureResponse(sr SignatureRequest) *SignatureResponse {
+	h := rb.suite.Hash()
+	h.Write(sr.Msg)
+	dbg.Lvl3("NewSigningRequest with secret.Pub:", rb.secret.Pub)
+	ps := rb.longterm.newSigning(rb.secret, h)
+
+	if ps == nil {
+		dbg.Error("Can not start new round")
+		return nil
+	}
+	return &SignatureResponse{
+		RequestNo: sr.RequestNo,
+		Partial:   ps,
 	}
 }
 
@@ -387,6 +399,8 @@ type RequestBuffer struct {
 	receiver     *poly.Receiver
 	// the generated secret if any
 	secret       *poly.SharedSecret
+	// temporary buffer of *SinatureRequests to wait for rand secrets to propagate
+	subReqBuf    []*RequestChan
 	// generated secret flag
 	secretGend   bool
 	// channel to say the random secret has been generated
@@ -406,12 +420,18 @@ type RequestBuffer struct {
 	info         poly.Threshold
 	// the suite used
 	suite        abstract.Suite
+	// reference to the node (needed to send random secret shares)
+	node         *sda.Node
 }
 
 // startNewSigningRequest starts a new round and adds its own signature to the
 // schnorr struct so later it could reveal the final signature.
 func (rb *RequestBuffer) startNewSigningRequest(msg []byte) error {
-	ps := rb.onNewSigningRequest(msg)
+	h := rb.suite.Hash()
+	h.Write(msg)
+	dbg.Lvl3("NewSigningRequest with secret.Pub:", rb.secret.Pub)
+	ps := rb.longterm.newSigning(rb.secret, h)
+
 	if ps == nil {
 		return errors.New("Could not generate partial signature")
 	}
@@ -419,16 +439,6 @@ func (rb *RequestBuffer) startNewSigningRequest(msg []byte) error {
 	return err
 }
 
-// onNewSigningRequest simply starts a new round and returns the partial
-// signature this schnorr can offer to the global signature. Mostly used by
-// servers that receive the request to sign something.
-func (rb *RequestBuffer) onNewSigningRequest(msg []byte) *poly.SchnorrPartialSig {
-	h := rb.suite.Hash()
-	h.Write(msg)
-	dbg.Lvl3("NewSigningRequest with secret.Pub:", rb.secret.Pub)
-	ps := rb.longterm.newSigning(rb.secret, h)
-	return ps
-}
 
 func (rb *RequestBuffer) setSecretChan(ch chan *poly.SharedSecret) {
 	rb.secretChan = ch
@@ -467,10 +477,22 @@ func (rb *RequestBuffer) addDeal(index int, deal *poly.Deal) {
 			dbg.Lvl3("JVSS (", index, ") Generated Shared Secret for request (", rb.requestNo, ")")
 			rb.secret = sh
 			rb.secretGend = true
+			// see if we still have pending requests to answer
+			for _, sr := range rb.subReqBuf {
+				sResp := rb.createSignatureResponse(sr.SignatureRequest)
+				// send it back to the originator
+				dbg.Lvl3("Sent back late signature response to author")
+				if err := rb.node.SendTo(sr.TreeNode, sResp); err != nil {
+					dbg.Lvl3("Could not send signature response back", err)
+				}
+			}
+			// reset temporary buffer
+			rb.subReqBuf = nil
 		}
 		// notify any interested party
+
 		if rb.secretChan != nil {
-			 go func() { rb.secretChan <- rb.secret }()
+			go func() { rb.secretChan <- rb.secret }()
 		}
 	}
 }
@@ -528,6 +550,7 @@ func (jv *JVSSProtocol) initRequestBuffer(rNo int) *RequestBuffer {
 		suite:       jv.Node.Suite(),
 		dealLock:    new(sync.Mutex),
 		partialLock: new(sync.Mutex),
+		node: jv.Node,
 	}
 	jv.requests[rNo] = rd
 	return rd
