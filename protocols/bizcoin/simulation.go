@@ -1,9 +1,6 @@
 package bizcoin
 
 import (
-	"errors"
-	"strconv"
-
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
