@@ -1,9 +1,9 @@
 package blockchain
 
 import (
-	"github.com/dedis/cothority/lib/bitcosi/blkparser"
 	"log"
-	"github.com/LefKok/cothority/lib/bitcosi/blkparser"
+
+	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
 )
 
 type TransactionList struct {

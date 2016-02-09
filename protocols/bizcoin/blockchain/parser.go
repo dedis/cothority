@@ -1,8 +1,8 @@
 package blockchain
 
 import (
-	"github.com/dedis/cothority/lib/bitcosi/blkparser"
 	"log"
+
 	"github.com/LefKok/cothority/lib/bitcosi/blkparser"
 )
 

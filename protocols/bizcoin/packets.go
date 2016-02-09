@@ -1,5 +1,12 @@
 package bizcoin
 
+import (
+	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"github.com/dedis/crypto/abstract"
+)
+
 type RoundType byte
 
 const (

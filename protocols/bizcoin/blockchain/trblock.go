@@ -4,10 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/proof"
 	"log"
 	"net"
+
+	"github.com/dedis/cothority/lib/hashid"
+	"github.com/dedis/cothority/lib/proof"
 )
 
 type Block struct {
@@ -26,15 +27,16 @@ type Header struct {
 	MerkleRoot string
 	Parent     string
 	ParentKey  string
+	PublicKey  string
+	LeaderId   net.IP
 }
 
 func (trb *TrBlock) NewTrBlock(transactions TransactionList, header Header) *TrBlock {
 	return NewTrBlock(transactions, header)
 }
 
-func (t *TrBlock) NewHeader(transactions TransactionList, parent string, parentkey string, IP net.IP, key string) (hd Header) {
-	h := NewHeader(transactions, parent, parentKey, key)
-	return *h
+func (t *TrBlock) NewHeader(transactions TransactionList, parent string, parentKey string, IP net.IP, key string) (*Header) {
+	return NewHeader(transactions, parent, parentKey, key)
 }
 
 func (trb *Block) Calculate_root(transactions TransactionList) (res string) {
@@ -45,18 +47,18 @@ func (trb *Block) Calculate_root(transactions TransactionList) (res string) {
 func NewTrBlock(transactions TransactionList, header Header) *TrBlock {
 	trb := new(TrBlock)
 	trb.Magic = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
-	trb.HeaderHash = Hash(header)
+	trb.HeaderHash = trb.Hash(header)
 	trb.TransactionList = transactions
 	trb.BlockSize = 0
 	trb.Header = header
 	return trb
 }
 
-func NewHeader(transactions TransactionList, parent string, parentKey string) *Header {
+func NewHeader(transactions TransactionList, parent, parentKey, key string) *Header {
 	hdr := new(Header)
 	hdr.PublicKey = key
 	hdr.Parent = parent
-	hdr.ParentKey = parentkey
+	hdr.ParentKey = parentKey
 	hdr.MerkleRoot = HashRootTransactions(transactions)
 	return hdr
 }
@@ -82,8 +84,7 @@ func HashHeader(h Header) string {
 	sha := sha256.New()
 	sha.Write([]byte(data))
 	hash := sha.Sum(nil)
-	res = hex.EncodeToString(hash)
-	return res
+	return hex.EncodeToString(hash)
 }
 
 func (trb *TrBlock) Print() {
