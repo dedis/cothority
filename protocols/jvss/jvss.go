@@ -323,7 +323,7 @@ func (jv *JVSSProtocol) waitForLongterm() {
 	}
 }
 
-// setupDistributedSecret is called by the leader or the iniator that wants to
+// setupDistributedSecret is called by the leader or the initiator that wants to
 // start a new round, a new signing request, where we must first create a random
 // distributed secret
 func (jv *JVSSProtocol) setupDistributedSecret() (*RequestBuffer, error) {
@@ -334,9 +334,9 @@ func (jv *JVSSProtocol) setupDistributedSecret() (*RequestBuffer, error) {
 }
 
 
-// setupRequestSecret sets up the random distributed secret for this request
+// handleRequestSecret sets up the random distributed secret for this request
 // number. When the initiator starts a new request, peers will call this function
-// so they also get the random dis. secret.
+// to get the random distributed secret.
 func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*RequestBuffer, error) {
 	// prepare our deal
 	doneChan := make(chan *poly.SharedSecret)
@@ -359,6 +359,7 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 		jv.Node.SendTo(tn, &rand)
 	})
 	// wait for the shared secret
+	// FIXME this doesn't seem sufficient for the secret to propagate
 	_ = <-doneChan
 	requestBuff.resetSecretChan()
 
