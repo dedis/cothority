@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/bitcosi/blkparser"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
 )
 
 // Default port for the conode-setup - the stamping-request port
