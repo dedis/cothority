@@ -3,6 +3,7 @@ package blkparser
 
 import (
 	"encoding/binary"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 )

@@ -35,7 +35,7 @@ func (trb *TrBlock) NewTrBlock(transactions TransactionList, header Header) *TrB
 	return NewTrBlock(transactions, header)
 }
 
-func (t *TrBlock) NewHeader(transactions TransactionList, parent string, parentKey string, IP net.IP, key string) (*Header) {
+func (t *TrBlock) NewHeader(transactions TransactionList, parent string, parentKey string, IP net.IP, key string) *Header {
 	return NewHeader(transactions, parent, parentKey, key)
 }
 

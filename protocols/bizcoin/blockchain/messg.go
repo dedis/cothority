@@ -3,11 +3,12 @@ package blockchain
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+	"github.com/dedis/crypto/abstract"
 )
 
 // Default port for the conode-setup - the stamping-request port

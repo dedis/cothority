@@ -1,11 +1,16 @@
 package bizcoin
 
 import (
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"encoding/json"
+	"errors"
 	"math"
 	"time"
+
+	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"github.com/dedis/crypto/abstract"
 )
 
 type BizCoin struct {

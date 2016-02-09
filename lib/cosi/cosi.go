@@ -2,9 +2,10 @@ package cosi
 
 import (
 	"errors"
+	"time"
+
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"time"
 )
 
 // Cosi is the struct that implements the basic cosi.
@@ -282,7 +283,7 @@ func VerifyCosiSignature(suite abstract.Suite, msg []byte, public abstract.Point
 // the exceptions given. An exception is the pubilc key + commitment of a peer that did not
 // sign.
 // NOTE: No exception mechanism for "before" commitment has been yet coded.
-func VerifySignatureWithException(suite abstract.Suite, public abstract.point, msg []byte, challenge, secret abstract.Secret, exceptions []Exception) error {
+func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, secret abstract.Secret, exceptions []Exception) error {
 	// first reduce the aggregate public key
 	subPublic := suite.Point().Add(suite.Point().Null(), public)
 	aggExCommit := suite.Point().Null()
@@ -300,6 +301,6 @@ func VerifySignatureWithException(suite abstract.Suite, public abstract.point, m
 	return verifyCommitment(suite, msg, commitment, challenge)
 }
 
-func VerifyCosiSignatureWithException(suite abstract.Suite, public abstract.point, msg []byte, signature *Signature, exceptions []Exception) error {
+func VerifyCosiSignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, signature *Signature, exceptions []Exception) error {
 	return VerifySignatureWithException(suite, public, msg, signature.Challenge, signature.Response, exceptions)
 }

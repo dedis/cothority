@@ -1,4 +1,4 @@
-// Basically adapation from the file at https://github.com/tsileo/blkparser
+// Package blkparser basically is an adaptation from a file at https://github.com/tsileo/blkparser
 package blkparser
 
 import (
