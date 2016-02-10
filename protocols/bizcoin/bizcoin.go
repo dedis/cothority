@@ -168,6 +168,7 @@ func (bz *BizCoin) startAnnouncementPrepare() error {
 		TYPE:         ROUND_PREPARE,
 		Announcement: ann,
 	}
+	dbg.Lvl3("BizCoin Start Announcement (PREPARE)")
 	return bz.sendAnnouncement(bza)
 }
 
@@ -179,6 +180,7 @@ func (bz *BizCoin) startAnnouncementCommit() error {
 		TYPE:         ROUND_COMMIT,
 		Announcement: ann,
 	}
+	dbg.Lvl3("BizCoin Start Announcement (COMMIT)")
 	return bz.sendAnnouncement(bza)
 }
 
@@ -202,6 +204,7 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 		if bz.IsLeaf() {
 			return bz.startCommitmentPrepare()
 		}
+		dbg.Lvl3("BizCoin Handle Announcement PREPARE")
 	case ROUND_COMMIT:
 		announcement = &BizCoinAnnounce{
 			TYPE:         ROUND_COMMIT,
@@ -210,6 +213,7 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 		if bz.IsLeaf() {
 			return bz.startCommitmentCommit()
 		}
+		dbg.Lvl3("BizCoin Handle Announcement COMMIT")
 	}
 
 	var err error
@@ -223,6 +227,7 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 // round.
 func (bz *BizCoin) startCommitmentPrepare() error {
 	cm := bz.prepare.CreateCommitment()
+	dbg.Lvl3("Start Commitment PREPARE")
 	return bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_PREPARE, Commitment: cm})
 }
 
@@ -230,6 +235,7 @@ func (bz *BizCoin) startCommitmentPrepare() error {
 // commitment round.
 func (bz *BizCoin) startCommitmentCommit() error {
 	cm := bz.commit.CreateCommitment()
+	dbg.Lvl3("BizCoin Start Commitment COMMIT")
 	return bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_COMMIT, Commitment: cm})
 }
 
@@ -251,6 +257,7 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 			TYPE:       ROUND_PREPARE,
 			Commitment: commit,
 		}
+		dbg.Lvl3("BizCoin handle Commit PREPARE")
 	case ROUND_COMMIT:
 		bz.tempCommitCommit = append(bz.tempCommitCommit, ann.Commitment)
 		if len(bz.tempCommitCommit) < len(bz.Children()) {
@@ -264,6 +271,7 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 			TYPE:       ROUND_COMMIT,
 			Commitment: commit,
 		}
+		dbg.Lvl3("BizCoin handle Commit COMMIT")
 	}
 	return bz.SendTo(bz.Parent(), commitment)
 }
@@ -290,6 +298,8 @@ func (bz *BizCoin) startChallengePrepare() error {
 		Challenge: ch,
 		TrBlock:   trblock,
 	}
+
+	dbg.Lvl3("BizCoin Start Challenge PREPARE")
 	// send to children
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, bizChal)
@@ -321,7 +331,7 @@ func (bz *BizCoin) startChallengeCommit() error {
 		Challenge: chal,
 		Signature: bz.prepare.Signature(),
 	}
-
+	dbg.Lvl3("BizCoin Start Challenge COMMIT")
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, bzc)
 	}
@@ -342,7 +352,7 @@ func (bz *BizCoin) handleChallengePrepare(ch BizCoinChallengePrepare) error {
 	if bz.IsLeaf() {
 		return bz.startResponsePrepare()
 	}
-
+	dbg.Lvl3("BizCoin handle Challenge PREPARE")
 	var err error
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, ch)
@@ -374,6 +384,7 @@ func (bz *BizCoin) handleChallengeCommit(ch BizCoinChallengeCommit) error {
 
 	// store the exceptions for later usage
 	bz.tempExceptions = ch.Exceptions
+	dbg.Lvl3("BizCoin handle Challenge COMMIT")
 	if bz.IsLeaf() {
 		return bz.startResponseCommit()
 	}
@@ -399,6 +410,7 @@ func (bz *BizCoin) startResponsePrepare() error {
 		// apend response only if OK
 		bzr.Response = resp
 	}
+	dbg.Lvl3("BizCoin Start Response PREPARE")
 	// send to parent
 	return bz.SendTo(bz.Parent(), bzr)
 }
@@ -421,6 +433,7 @@ func (bz *BizCoin) startResponseCommit() error {
 		}
 		bzr.Response = resp
 	}
+	dbg.Lvl3("BizCoin Start Response COMMIT")
 	// send to parent
 	return bz.SendTo(bz.Parent(), bzr)
 }
@@ -444,6 +457,7 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 		bzr.Response = resp
 	}
 
+	dbg.Lvl3("BizCoin handle Response COMMIT")
 	// if root we have finished
 	if bz.IsRoot() {
 		sig := bz.Signature()
@@ -475,6 +489,7 @@ func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
 		}
 		bzrReturn.Response = resp
 	}
+	dbg.Lvl3("BizCoin Handle Response PREPARE")
 	// if I'm root, we are finished, let's notify the "commit" round
 	if bz.IsRoot() {
 		go func() { bz.prepareFinishedChan <- true }()
