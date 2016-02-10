@@ -354,12 +354,13 @@ func (bz *BizCoin) handleChallengePrepare(ch BizCoinChallengePrepare) error {
 	// acknoledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
-
+	dbg.Lvl3("BizCoin handle Challenge PREPARE")
 	// go to response if leaf
 	if bz.IsLeaf() {
+		dbg.Lvl3("BizCoin IsLeaf")
 		return bz.startResponsePrepare()
 	}
-	dbg.Lvl3("BizCoin handle Challenge PREPARE")
+
 	var err error
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, ch)

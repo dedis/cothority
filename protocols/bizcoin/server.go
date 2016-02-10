@@ -61,6 +61,7 @@ func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionLock.Lock()
 	s.transactions = append(s.transactions, tr)
 	if len(s.transactions) == s.blockSize {
+		dbg.LLvl2("Enough is enough ... ................. ")
 		go func() { s.enoughBlock <- true }()
 	}
 	s.transactionLock.Unlock()
@@ -78,6 +79,7 @@ func (s *Server) ListenClientTransactions() {
 func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	<-s.enoughBlock
+	dbg.LLvl2("Enough blocks... ................ we are starting")
 	var currTransactions []blkparser.Tx
 	s.transactionLock.Lock()
 	defer s.transactionLock.Unlock()
