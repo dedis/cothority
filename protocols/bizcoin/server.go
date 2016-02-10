@@ -51,7 +51,7 @@ type Server struct {
 // NewServer returns a new fresh Server. It must be given the blockSize in order
 // to efficiently give the transactions to the BizCoin instances.
 func NewServer(blockSize int) *Server {
-	return &Server{
+	s := &Server{
 		transactionLock:    new(sync.Mutex),
 		blockSize:          blockSize,
 		instances:          make(map[uuid.UUID]*BizCoin),
@@ -60,6 +60,7 @@ func NewServer(blockSize int) *Server {
 		notEnoughBlock:     make(chan bool),
 		requestChan:        make(chan bool),
 	}
+	go s.listenEnoughBlocks()
 }
 
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
