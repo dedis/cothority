@@ -102,6 +102,7 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
 
+	go bz.Dispatch()
 	return bz, nil
 }
 
