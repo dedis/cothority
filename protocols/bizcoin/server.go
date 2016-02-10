@@ -61,10 +61,10 @@ func NewServer(blockSize int) *Server {
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionLock.Lock()
 	s.transactions = append(s.transactions, tr)
-	if len(s.transactions) >= s.blockSize {
-		dbg.LLvl2("Enough is enough ... ................. ")
-		s.enoughBlock <- true
-	}
+	/* if len(s.transactions) >= s.blockSize {*/
+	//dbg.LLvl2("Enough is enough ... ................. ")
+	//s.enoughBlock <- true
+	/*}*/
 	s.transactionLock.Unlock()
 	return nil
 }
