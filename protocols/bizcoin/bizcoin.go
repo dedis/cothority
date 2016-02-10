@@ -273,6 +273,9 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		if bz.IsRoot() {
 			// do nothing
 			//	bz.startChallengeCommit()
+			// stop the processing of the round, wait the end of the "prepare"
+			// round
+			return nil
 		}
 		commitment = &BizCoinCommitment{
 			TYPE:       ROUND_COMMIT,
