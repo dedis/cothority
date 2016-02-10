@@ -24,7 +24,7 @@ func NewClient(s *Server) *Client {
 func (c *Client) StartClientSimulation() {
 	// these are the constants from lefteris' current code
 	// (see https://github.com/LefKok/cothority/blob/BitCoSi_round/app/skeleton/client.go#L51-L52)
-	// XXX put into a config file?©
+	// XXX put into a config file?
 	c.triggerTransactions("blocks", 400, 1000)
 }
 
