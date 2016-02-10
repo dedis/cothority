@@ -132,7 +132,7 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	node, err := o.NewNodeEmpty(protocolID, tree)
 	o.nodes[node.token.Id()] = node
-	return node, err
+	return node, node.protocolInstantiate()
 }
 
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
