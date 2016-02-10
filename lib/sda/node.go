@@ -419,6 +419,11 @@ func (n *Node) Private() abstract.Secret {
 	return n.overlay.host.private
 }
 
+// Public() returns the public key.
+func (n *Node) Public() abstract.Point {
+	return n.Entity().Public
+}
+
 // Closes the host
 func (n *Node) Close() error {
 	return n.overlay.host.Close()

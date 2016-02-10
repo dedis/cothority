@@ -15,7 +15,7 @@ type Block struct {
 	Magic      [4]byte
 	BlockSize  uint32
 	HeaderHash string
-	Header
+	*Header
 	TransactionList
 }
 
@@ -31,12 +31,12 @@ type Header struct {
 	LeaderId   net.IP
 }
 
-func (trb *TrBlock) NewTrBlock(transactions TransactionList, header Header) *TrBlock {
+func (trb *TrBlock) NewTrBlock(transactions TransactionList, header *Header) *TrBlock {
 	return NewTrBlock(transactions, header)
 }
 
-func (t *TrBlock) NewHeader(transactions TransactionList, parent string, parentKey string, IP net.IP, key string) *Header {
-	return NewHeader(transactions, parent, parentKey, key)
+func (t *TrBlock) NewHeader(transactions TransactionList, parent string, parentKey string) *Header {
+	return NewHeader(transactions, parent, parentKey)
 }
 
 func (trb *Block) Calculate_root(transactions TransactionList) (res string) {
@@ -44,7 +44,7 @@ func (trb *Block) Calculate_root(transactions TransactionList) (res string) {
 }
 
 // Porting to public method non related to Header / TrBlock whatsoever
-func NewTrBlock(transactions TransactionList, header Header) *TrBlock {
+func NewTrBlock(transactions TransactionList, header *Header) *TrBlock {
 	trb := new(TrBlock)
 	trb.Magic = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 	trb.HeaderHash = trb.Hash(header)
@@ -54,9 +54,8 @@ func NewTrBlock(transactions TransactionList, header Header) *TrBlock {
 	return trb
 }
 
-func NewHeader(transactions TransactionList, parent, parentKey, key string) *Header {
+func NewHeader(transactions TransactionList, parent, parentKey string) *Header {
 	hdr := new(Header)
-	hdr.PublicKey = key
 	hdr.Parent = parent
 	hdr.ParentKey = parentKey
 	hdr.MerkleRoot = HashRootTransactions(transactions)
@@ -73,13 +72,13 @@ func HashRootTransactions(transactions TransactionList) string {
 	return hex.EncodeToString(out)
 }
 
-func (trb *Block) Hash(h Header) (res string) {
+func (trb *Block) Hash(h *Header) (res string) {
 	//change it to be more portable
 	return HashHeader(h)
 
 }
 
-func HashHeader(h Header) string {
+func HashHeader(h *Header) string {
 	data := fmt.Sprintf("%v", h)
 	sha := sha256.New()
 	sha.Write([]byte(data))

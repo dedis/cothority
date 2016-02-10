@@ -9,7 +9,7 @@ type KeyBlock struct {
 	Block
 }
 
-func (*KeyBlock) NewKeyBlock(transactions TransactionList, header Header) (tr KeyBlock) {
+func (*KeyBlock) NewKeyBlock(transactions TransactionList, header *Header) (tr KeyBlock) {
 	trb := new(KeyBlock)
 	trb.Magic = [4]byte{0xD9, 0xB4, 0xBE, 0xF9}
 	trb.HeaderHash = trb.Hash(header)
