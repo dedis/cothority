@@ -376,6 +376,7 @@ func (bz *BizCoin) handleChallengeCommit(ch BizCoinChallengeCommit) error {
 	if err != nil {
 		return err
 	}
+	ch.Challenge = bz.commit.Challenge(marshalled)
 
 	// verify if the signature is correct
 	if err := cosi.VerifyCosiSignatureWithException(bz.suite, bz.aggregatedPublic, marshalled, ch.Signature, ch.Exceptions); err != nil {
