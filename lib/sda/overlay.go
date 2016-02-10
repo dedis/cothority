@@ -131,6 +131,9 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 // want to specifiy some additional configuration for example.
 func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	node, err := o.NewNodeEmpty(protocolID, tree)
+	if err != nil {
+		return nil, err
+	}
 	o.nodes[node.token.Id()] = node
 	return node, node.protocolInstantiate()
 }
@@ -169,9 +172,9 @@ func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 		// Host is handling the generation of protocolInstanceID
 		RoundID: uuid.NewV4(),
 	}
-	node := NewNodeEmpty(o, token)
+	node, err := NewNodeEmpty(o, token)
 	o.nodes[node.token.Id()] = node
-	return node, nil
+	return node, err
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token

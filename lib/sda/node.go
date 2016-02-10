@@ -49,12 +49,15 @@ type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
 func NewNode(o *Overlay, tok *Token) (*Node, error) {
-	n := NewNodeEmpty(o, tok)
+	n, err := NewNodeEmpty(o, tok)
+	if err != nil {
+		return nil, err
+	}
 	return n, n.protocolInstantiate()
 }
 
 // NewNodeEmpty creates a new node without a protocol
-func NewNodeEmpty(o *Overlay, tok *Token) *Node {
+func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
 		token:            tok,
 		channels:         make(map[uuid.UUID]interface{}),
@@ -64,7 +67,12 @@ func NewNodeEmpty(o *Overlay, tok *Token) *Node {
 		treeNode:         nil,
 		done:             make(chan bool),
 	}
-	return n
+	var err error
+	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
+	if err != nil {
+		return nil, errors.New("We are not represented in the tree")
+	}
+	return n, nil
 }
 
 // TreeNode gets the treeNode of this node. If there is no TreeNode for the
@@ -230,11 +238,8 @@ func (n *Node) protocolInstantiate() error {
 	if n.overlay.EntityList(n.token.EntityListID) == nil {
 		return errors.New("EntityList does not exists")
 	}
+
 	var err error
-	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
-	if err != nil {
-		return errors.New("We are not represented in the tree")
-	}
 	n.instance, err = p(n)
 	go n.instance.Dispatch()
 	return err
