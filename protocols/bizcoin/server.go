@@ -69,6 +69,7 @@ func (s *Server) ListenClientTransactions() {
 func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	var currTransactions []blkparser.Tx
 	s.transactionLock.Lock()
+	defer s.transactionLock.Unlock()
 	if len(s.transactions) < s.blockSize {
 		currTransactions = s.transactions[:]
 		s.transactions = make([]blkparser.Tx, 0)
