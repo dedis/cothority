@@ -12,7 +12,17 @@ func init() {
 }
 
 type BizCoinSimulation struct {
+	// sda fields:
 	sda.SimulationBFTree
+	// your simulation specific fields:
+	SimulationConfig
+}
+
+type SimulationConfig struct {
+	// block-size in bytes:
+	Blocksize int
+	// number of transactions the client will send:
+	NumClientTxs int
 }
 
 func NewBizCoinSimulation(config string) (sda.Simulation, error) {
@@ -36,8 +46,12 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 }
 
 func (e *BizCoinSimulation) Run(config *sda.SimulationConfig) error {
-	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
+	dbg.Lvl1("Simulation starting with: Rounds=", e.Rounds)
+
+	// TODO create "server" and "client"
+
 	for round := 0; round < e.Rounds; round++ {
+
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
@@ -46,7 +60,7 @@ func (e *BizCoinSimulation) Run(config *sda.SimulationConfig) error {
 			return err
 		}
 		// the protocol itself
-		proto := node.ProtocolInstance().(*BizCoin)
+		//proto := node.ProtocolInstance().(*BizCoin)
 
 		round.Measure()
 	}
