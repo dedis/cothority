@@ -67,14 +67,13 @@ func NewServer(blockSize int) *Server {
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionLock.Lock()
 	s.transactions = append(s.transactions, tr)
+	dbg.Print("Are there tranactions?")
 	if len(s.transactions) >= s.blockSize {
-		dbg.LLvl2("Enough is enough ... ................. ")
+		//	dbg.LLvl2("Enough is enough ... ................. ")
 		s.enoughBlock <- true
 	} else {
-		dbg.LLvl2("Enough is NOT enough ... ................. ")
 		s.notEnoughBlock <- true
 	}
-	dbg.Print("Exit channel stuff ...")
 	s.transactionLock.Unlock()
 	return nil
 }
@@ -117,6 +116,7 @@ func (s *Server) onDone(blk BlockSignature) {
 }
 
 func (s *Server) waitEnoughBlocks() {
+	dbg.Print("Consuming requestChan ............")
 	<-s.requestChan
 }
 func (s *Server) listenEnoughBlocks() {
@@ -125,16 +125,19 @@ func (s *Server) listenEnoughBlocks() {
 		select {
 		case <-s.enoughBlock:
 			if !enoughRoutine {
+				dbg.Print("enoughBlock----------")
 				go s.signalEnough()
 				enoughRoutine = true
 			}
 		case <-s.notEnoughBlock:
+			dbg.Print("s.notEnoughBlock---------------")
 			enoughRoutine = false
 		}
 	}
 }
 
 func (s *Server) signalEnough() {
+	dbg.Print("signalEnough: writing to chan -----------------")
 	s.requestChan <- true
 }
 
