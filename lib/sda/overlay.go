@@ -3,6 +3,7 @@ package sda
 import (
 	"errors"
 	"fmt"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -164,9 +165,9 @@ func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 		// Host is handling the generation of protocolInstanceID
 		RoundID: uuid.NewV4(),
 	}
-	node, err := NewNodeEmpty(o, token)
+	node := NewNodeEmpty(o, token)
 	o.nodes[node.token.Id()] = node
-	return node, err
+	return node, nil
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token
