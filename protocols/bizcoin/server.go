@@ -2,6 +2,7 @@ package bizcoin
 
 import (
 	"sync"
+	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -60,9 +61,9 @@ func NewServer(blockSize int) *Server {
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionLock.Lock()
 	s.transactions = append(s.transactions, tr)
-	if len(s.transactions) == s.blockSize {
+	if len(s.transactions) >= s.blockSize {
 		dbg.LLvl2("Enough is enough ... ................. ")
-		go func() { s.enoughBlock <- true }()
+		s.enoughBlock <- true
 	}
 	s.transactionLock.Unlock()
 	return nil
@@ -78,7 +79,7 @@ func (s *Server) ListenClientTransactions() {
 // Instantiate takes blockSize transactions and create the bizcoin instances.
 func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
-	<-s.enoughBlock
+	s.waitEnoughBlocks()
 	dbg.LLvl2("Enough blocks... ................ we are starting")
 	var currTransactions []blkparser.Tx
 	s.transactionLock.Lock()
@@ -103,4 +104,16 @@ func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
 
 func (s *Server) onDone(blk BlockSignature) {
 	s.blockSignatureChan <- blk
+}
+
+func (s *Server) waitEnoughBlocks() {
+	for {
+		s.transactionLock.Lock()
+		if len(s.transactions) >= s.blockSize {
+			s.transactionLock.Unlock()
+			return
+		}
+		s.transactionLock.Unlock()
+		time.Sleep(time.Millisecond * 100)
+	}
 }
