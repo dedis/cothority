@@ -8,7 +8,7 @@ import (
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"
 // round
-type RoundType byte
+type RoundType int32
 
 const (
 	ROUND_PREPARE RoundType = iota
