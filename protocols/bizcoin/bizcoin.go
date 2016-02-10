@@ -102,6 +102,7 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
 
+	go bz.Dispatch()
 	return bz, nil
 }
 
@@ -227,7 +228,7 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 // round.
 func (bz *BizCoin) startCommitmentPrepare() error {
 	cm := bz.prepare.CreateCommitment()
-	dbg.Lvl3("Start Commitment PREPARE")
+	dbg.Lvl3("BizCoin Start Commitment PREPARE")
 	return bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_PREPARE, Commitment: cm})
 }
 
