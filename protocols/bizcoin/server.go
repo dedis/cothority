@@ -72,6 +72,7 @@ func (s *Server) AddTransaction(tr blkparser.Tx) error {
 		dbg.LLvl2("Enough is NOT enough ... ................. ")
 		s.notEnoughBlock <- true
 	}
+	dbg.Print("Exit channel stuff ...")
 	s.transactionLock.Unlock()
 	return nil
 }
