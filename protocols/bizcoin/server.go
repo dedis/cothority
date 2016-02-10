@@ -3,7 +3,10 @@ package bizcoin
 import (
 	"sync"
 
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+	"github.com/satori/go.uuid"
 )
 
 // Control is just a sample of how a Control / Server / (what would be the right
@@ -81,6 +84,9 @@ func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	pi, err := NewBizCoinRootProtocol(node, currTransactions)
 	node.SetProtocolInstance(pi)
 	pi.RegisterOnDone(s.onDone)
+
+	go pi.Start()
+
 	return pi, err
 }
 

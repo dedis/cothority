@@ -51,6 +51,7 @@ func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 	client := NewClient(server)
 	go client.StartClientSimulation(e.Blocksize, e.NumClientTxs)
 	// TODO create "server" and "client"
+	sigChan := server.BlockSignaturesChan()
 	for round := 0; round < e.Rounds; round++ {
 
 		dbg.Lvl1("Starting round", round)
@@ -61,13 +62,13 @@ func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 
 		// instantiate a bizcoin protocol
+		round := monitor.NewMeasure("round")
 		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
 		}
-
-		round := monitor.NewMeasure("round")
-
+		// wait for the signature
+		<-sigChan
 		round.Measure()
 	}
 	return nil
