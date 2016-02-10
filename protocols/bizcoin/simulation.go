@@ -37,16 +37,22 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 
 func (e *BizCoinSimulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
+	server := NewServer(e.BlockSize)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		round := monitor.NewMeasure("round")
-		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
+		// create an empty node
+		node, err := config.Overlay.CreateNodeEmpty("BizCoin", config.Tree)
 		if err != nil {
 			return err
 		}
-		// the protocol itself
-		proto := node.ProtocolInstance().(*BizCoin)
+
+		// instantiate a bizcoin protocol
+		pi, err := server.Instantiate(node)
+		if err != nil {
+			return err
+		}
+
+		round := monitor.NewMeasure("round")
 
 		round.Measure()
 	}
