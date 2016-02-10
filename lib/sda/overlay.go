@@ -131,6 +131,9 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 // want to specifiy some additional configuration for example.
 func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	node, err := o.NewNodeEmpty(protocolID, tree)
+	if err != nil {
+		return nil, err
+	}
 	o.nodes[node.token.Id()] = node
 	return node, node.protocolInstantiate()
 }
