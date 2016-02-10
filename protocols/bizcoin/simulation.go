@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("ExampleChannels", NewBizCoinSimulation)
+	sda.SimulationRegister("BizCoinSimulation", NewBizCoinSimulation)
 }
 
 type BizCoinSimulation struct {
@@ -36,10 +36,18 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 }
 
 func (e *BizCoinSimulation) Run(config *sda.SimulationConfig) error {
+	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		round := monitor.NewMeasure("round_XXX")
-		// TODO what exactly to measure?
+		round := monitor.NewMeasure("round")
+		// create the node with the protocol, but do NOT start it yet.
+		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
+		if err != nil {
+			return err
+		}
+		// the protocol itself
+		proto := node.ProtocolInstance().(*BizCoin)
+
 		round.Measure()
 	}
 	return nil

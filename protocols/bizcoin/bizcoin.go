@@ -100,8 +100,15 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	return bz, nil
 }
 
+// Start() Will start both rounds "prepare" and "commit" at same time. The
+// "commit" round will wait the end of the "prepare" round during its challenge
+// phase.
 func (bz *BizCoin) Start() error {
-	return nil
+	if err := bz.startAnnouncementPrepare(); err != nil {
+		return err
+	}
+	return bz.startAnnouncementCommit()
+
 }
 
 // Dispatch listen on the different channels
@@ -109,25 +116,24 @@ func (bz *BizCoin) Dispatch() error {
 	for {
 		var err error
 		select {
+		// Announcement
 		case msg := <-bz.announceChan:
 			err = bz.handleAnnouncement(msg.BizCoinAnnounce)
+			// Commitment
 		case msg := <-bz.commitChan:
-			switch msg.BizCoinCommitment.TYPE {
-			case ROUND_PREPARE:
-
-			case ROUND_COMMIT:
-
-			}
+			err = bz.handleCommit(msg.BizCoinCommitment)
+			// Challenge
 		case msg := <-bz.challengePrepareChan:
-			err = bz.handlePrepareChallenge(msg.BizCoinChallengePrepare)
+			err = bz.handleChallengePrepare(msg.BizCoinChallengePrepare)
 		case msg := <-bz.challengeCommitChan:
-			err = bz.handleCommitChallenge(msg.BizCoinChallengeCommit)
+			err = bz.handleChallengeCommit(msg.BizCoinChallengeCommit)
+			// Response
 		case msg := <-bz.responseChan:
 			switch msg.BizCoinResponse.TYPE {
 			case ROUND_PREPARE:
-
+				err = bz.handleResponsePrepare(msg.BizCoinResponse)
 			case ROUND_COMMIT:
-
+				err = bz.handleResponseCommit(msg.BizCoinResponse)
 			}
 		case <-bz.done:
 			dbg.Lvl3("BizCoin Instance exit.")
@@ -143,8 +149,41 @@ func (bz *BizCoin) listen() {
 
 }
 
-func (bz *BizCoin) handleNewTransaction(tr blkparser.Tx) error {
+func (bz *BizCoin) AddTransaction(tr blkparser.Tx) error {
+	bz.transactionLock.Lock()
+	bz.transaction_pool = append(bz.transaction_pool, tr)
+	bz.transactionLock.Unlock()
 	return nil
+}
+
+// startAnnouncementPrepare create its announcement for the prepare round and
+// sends it down the tree.
+func (bz *BizCoin) startAnnouncementPrepare() error {
+	ann := bz.prepare.CreateAnnouncement()
+	bza := &BizCoinAnnounce{
+		TYPE:         ROUND_PREPARE,
+		Announcement: ann,
+	}
+	return bz.sendAnnouncement(bza)
+}
+
+// startAnnouncementCommit create the announcement for the commit phase and
+// sends it down the tree.
+func (bz *BizCoin) startAnnouncementCommit() error {
+	ann := bz.commit.CreateAnnouncement()
+	bza := &BizCoinAnnounce{
+		TYPE:         ROUND_COMMIT,
+		Announcement: ann,
+	}
+	return bz.sendAnnouncement(bza)
+}
+
+func (bz *BizCoin) sendAnnouncement(bza *BizCoinAnnounce) error {
+	var err error
+	for _, tn := range bz.Children() {
+		err = bz.SendTo(tn, bza)
+	}
+	return err
 }
 
 // handleAnnouncement pass the announcement to the right CoSi struct.
@@ -157,7 +196,7 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 			Announcement: bz.prepare.Announce(ann.Announcement),
 		}
 		if bz.IsLeaf() {
-			return bz.startPrepareCommitment()
+			return bz.startCommitmentPrepare()
 		}
 	case ROUND_COMMIT:
 		announcement = &BizCoinAnnounce{
@@ -165,7 +204,7 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 			Announcement: bz.commit.Announce(ann.Announcement),
 		}
 		if bz.IsLeaf() {
-			return bz.startCommitCommitment()
+			return bz.startCommitmentCommit()
 		}
 	}
 
@@ -178,14 +217,14 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 
 // startPrepareCommitment send the first commitment up the tree for the prepare
 // round.
-func (bz *BizCoin) startPrepareCommitment() error {
+func (bz *BizCoin) startCommitmentPrepare() error {
 	cm := bz.prepare.CreateCommitment()
 	return bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_PREPARE, Commitment: cm})
 }
 
 // startCommitCommitment send the first commitment up the tree for the
 // commitment round.
-func (bz *BizCoin) startCommitCommitment() error {
+func (bz *BizCoin) startCommitmentCommit() error {
 	cm := bz.commit.CreateCommitment()
 	return bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_COMMIT, Commitment: cm})
 }
@@ -202,7 +241,7 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		}
 		commit := bz.prepare.Commit(bz.tempPrepareCommit)
 		if bz.IsRoot() {
-			return bz.startPrepareChallenge()
+			return bz.startChallengePrepare()
 		}
 		commitment = &BizCoinCommitment{
 			TYPE:       ROUND_PREPARE,
@@ -215,7 +254,7 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		}
 		commit := bz.commit.Commit(bz.tempCommitCommit)
 		if bz.IsRoot() {
-			return bz.startCommitChallenge()
+			return bz.startChallengeCommit()
 		}
 		commitment = &BizCoinCommitment{
 			TYPE:       ROUND_COMMIT,
@@ -226,7 +265,7 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 }
 
 // startPrepareChallenge create the challenge and send its down the tree
-func (bz *BizCoin) startPrepareChallenge() error {
+func (bz *BizCoin) startChallengePrepare() error {
 	// Get the block we want to sign
 	trblock, err := bz.getBlock(bz.blockSize)
 	if err != nil {
@@ -257,7 +296,7 @@ func (bz *BizCoin) startPrepareChallenge() error {
 // startCommitChallenge waits the end of the "prepare" round.
 // Then it creates the challenge and sends it along with the
 // "prepare" signature down the tree.
-func (bz *BizCoin) startCommitChallenge() error {
+func (bz *BizCoin) startChallengeCommit() error {
 	// wait the end of prepare
 	// TODO timeout ?
 	<-bz.prepareFinishedChan
@@ -287,7 +326,7 @@ func (bz *BizCoin) startCommitChallenge() error {
 
 // handlePrepareChallenge receive the challenge messages for the "prepare"
 // round.
-func (bz *BizCoin) handlePrepareChallenge(ch BizCoinChallengePrepare) error {
+func (bz *BizCoin) handleChallengePrepare(ch BizCoinChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
 	go bz.verifyBlock(bz.tempBlock)
@@ -297,7 +336,7 @@ func (bz *BizCoin) handlePrepareChallenge(ch BizCoinChallengePrepare) error {
 
 	// go to response if leaf
 	if bz.IsLeaf() {
-		return bz.startPrepareResponse()
+		return bz.startResponsePrepare()
 	}
 
 	var err error
@@ -308,8 +347,8 @@ func (bz *BizCoin) handlePrepareChallenge(ch BizCoinChallengePrepare) error {
 }
 
 // handleCommitChallenge will verify the signature + check if no more than 1/3
-// of participants refused to sign. If so, it passes up the responses.
-func (bz *BizCoin) handleCommitChallenge(ch BizCoinChallengeCommit) error {
+// of participants refused to sign.
+func (bz *BizCoin) handleChallengeCommit(ch BizCoinChallengeCommit) error {
 	// marshal the block
 	marshalled, err := json.Marshal(bz.tempBlock)
 	if err != nil {
@@ -330,7 +369,7 @@ func (bz *BizCoin) handleCommitChallenge(ch BizCoinChallengeCommit) error {
 	}
 
 	if bz.IsLeaf() {
-		return bz.startCommitResponse()
+		return bz.startResponseCommit()
 	}
 	// send it down
 	for _, tn := range bz.Children() {
@@ -341,7 +380,7 @@ func (bz *BizCoin) handleCommitChallenge(ch BizCoinChallengeCommit) error {
 
 // startPrepareResponse wait the verification of the block and then start the
 // challenge process
-func (bz *BizCoin) startPrepareResponse() error {
+func (bz *BizCoin) startResponsePrepare() error {
 	// create response
 	resp, err := bz.prepare.CreateResponse()
 	if err != nil {
@@ -360,7 +399,7 @@ func (bz *BizCoin) startPrepareResponse() error {
 // startCommitResponse will create the response for the commit phase and send it
 // up. It will not create the response if it decided the signature is wrong from
 // the prepare phase.
-func (bz *BizCoin) startCommitResponse() error {
+func (bz *BizCoin) startResponseCommit() error {
 	bzr := &BizCoinResponse{
 		TYPE: ROUND_COMMIT,
 	}
@@ -379,7 +418,7 @@ func (bz *BizCoin) startCommitResponse() error {
 	return bz.SendTo(bz.Parent(), bzr)
 }
 
-func (bz *BizCoin) handleCommitResponse(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 	// check if we have enough
 	bz.tempCommitResponse = append(bz.tempCommitResponse, bzr.Response)
 	if len(bz.tempCommitResponse) < len(bz.Children()) {
@@ -405,7 +444,7 @@ func (bz *BizCoin) handleCommitResponse(bzr BizCoinResponse) error {
 }
 
 // handlePrepapreResponse
-func (bz *BizCoin) handlePrepareResponse(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
 	// check if we have enough
 	bz.tempPrepareResponse = append(bz.tempPrepareResponse, bzr.Response)
 	if len(bz.tempPrepareResponse) < len(bz.Children()) {
