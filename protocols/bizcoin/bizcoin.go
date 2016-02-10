@@ -446,9 +446,9 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 
 	// if root we have finished
 	if bz.IsRoot() {
-		sig := bz.generateSignature()
+		sig := bz.Signature()
 		if bz.onDoneCallback != nil {
-			go bz.onDoneCallback(sig)
+			go bz.onDoneCallback(*sig)
 		}
 		return nil
 	}
@@ -528,17 +528,16 @@ func (bz *BizCoin) getBlock() (*blockchain.TrBlock, error) {
 		return nil, errors.New("no transaction available")
 	}
 
-	trlist := blockchain.NewTransactionList(bz.transactions, n)
+	trlist := blockchain.NewTransactionList(bz.transactions, len(bz.transactions))
 	header := blockchain.NewHeader(trlist, bz.lastBlock, bz.lastKeyBlock)
 	trblock := blockchain.NewTrBlock(trlist, header)
-	bz.transaction_pool = bz.transaction_pool[trblock.TransactionList.TxCnt:]
 	return trblock, nil
 }
 
 // Signature will generate the final signature, the output of the BizCoin
 // protocol.
 func (bz *BizCoin) Signature() *BlockSignature {
-	return BlockSignature{
+	return &BlockSignature{
 		Sig:        bz.commit.Signature(),
 		Block:      bz.tempBlock,
 		Exceptions: bz.tempExceptions,
