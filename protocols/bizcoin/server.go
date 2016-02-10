@@ -2,7 +2,6 @@ package bizcoin
 
 import (
 	"sync"
-	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -43,7 +42,10 @@ type Server struct {
 	// BizCoin's instances have made
 	blockSignatureChan chan BlockSignature
 	// enoughBlock signals the server we have enough
-	enoughBlock chan bool
+	// no comments..
+	enoughBlock    chan bool
+	notEnoughBlock chan bool
+	requestChan    chan bool
 }
 
 // NewServer returns a new fresh Server. It must be given the blockSize in order
@@ -55,16 +57,21 @@ func NewServer(blockSize int) *Server {
 		instances:          make(map[uuid.UUID]*BizCoin),
 		blockSignatureChan: make(chan BlockSignature),
 		enoughBlock:        make(chan bool),
+		notEnoughBlock:     make(chan bool),
+		requestChan:        make(chan bool),
 	}
 }
 
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionLock.Lock()
 	s.transactions = append(s.transactions, tr)
-	/* if len(s.transactions) >= s.blockSize {*/
-	//dbg.LLvl2("Enough is enough ... ................. ")
-	//s.enoughBlock <- true
-	/*}*/
+	if len(s.transactions) >= s.blockSize {
+		dbg.LLvl2("Enough is enough ... ................. ")
+		s.enoughBlock <- true
+	} else {
+		dbg.LLvl2("Enough is NOT enough ... ................. ")
+		s.notEnoughBlock <- true
+	}
 	s.transactionLock.Unlock()
 	return nil
 }
@@ -107,13 +114,47 @@ func (s *Server) onDone(blk BlockSignature) {
 }
 
 func (s *Server) waitEnoughBlocks() {
+	<-s.requestChan
+}
+func (s *Server) listenEnoughBlocks() {
+	var enoughRoutine bool
 	for {
-		s.transactionLock.Lock()
-		if len(s.transactions) >= s.blockSize {
-			s.transactionLock.Unlock()
-			return
+		select {
+		case <-s.enoughBlock:
+			if !enoughRoutine {
+				go s.signalEnough()
+				enoughRoutine = true
+			}
+		case <-s.notEnoughBlock:
+			enoughRoutine = false
 		}
-		s.transactionLock.Unlock()
-		time.Sleep(time.Millisecond * 100)
 	}
 }
+
+func (s *Server) signalEnough() {
+	s.requestChan <- true
+}
+
+/*func (s *Server) waitEnoughBlocks() {*/
+//s.requestLock.Lock()
+//s.requestBlocks = true
+//s.requestLock.Unlock()
+//<-s.requestChan
+//s.requestLock.Lock()
+//s.requestBlocks = false
+//s.requestLock.Unlock()
+
+//}
+
+//func (s *Server) listenEnoughBlocks() {
+//for {
+//select {
+//case <-s.enoughBlock:
+//s.requestLock.Lock()
+//if s.requestBlocks {
+//s.requestChan <- true
+//}
+//s.requestLock.Unlock()
+//}
+//}
+/*}*/
