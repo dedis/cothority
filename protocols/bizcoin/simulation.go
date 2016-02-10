@@ -9,6 +9,7 @@ import (
 
 func init() {
 	sda.SimulationRegister("BizCoinSimulation", NewBizCoinSimulation)
+	sda.ProtocolRegisterName("BizCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBizCoinProtocol(n) })
 }
 
 type BizCoinSimulation struct {

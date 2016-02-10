@@ -519,6 +519,7 @@ func (bz *BizCoin) verifyBlock(block *blockchain.TrBlock) {
 	verified = verified && block.Header.MerkleRoot == blockchain.HashRootTransactions(block.TransactionList)
 	verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
 	// notify it
+	dbg.Lvl3("Verification of the block done =", verified)
 	bz.verifyBlockChan <- verified
 }
 
