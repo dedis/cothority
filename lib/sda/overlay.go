@@ -146,6 +146,10 @@ func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
 	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
 }
 
+func (o *Overlay) NewNodeEmptyName(name string, tree *Tree) (*Node, error) {
+	return o.NewNodeEmpty(ProtocolNameToUuid(name), tree)
+}
+
 // NewNode returns a simple node without instantiating anything no protocol.
 func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
