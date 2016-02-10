@@ -3,7 +3,7 @@ package bizcoin
 import (
 	"sync"
 
-	"github.com/LefKok/cothority/lib/bitcosi/blkparser"
+	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
 )
 
 // Server is the longterm control service that listens for transactions and
@@ -17,8 +17,9 @@ type Server struct {
 	transactionLock *sync.Mutex
 }
 
-func (s *Server) AddTransaction(tr blkparser.Tx) {
+func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionLock.Lock()
 	s.transactions = append(s.transactions, tr)
 	s.transactionLock.Unlock()
+	return nil
 }
