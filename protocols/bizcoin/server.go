@@ -61,6 +61,7 @@ func NewServer(blockSize int) *Server {
 		requestChan:        make(chan bool),
 	}
 	go s.listenEnoughBlocks()
+	return s
 }
 
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
