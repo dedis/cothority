@@ -49,6 +49,6 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 		}
 		consumed--
 	}
-
+	dbg.Print("Sent transactions ", nTxs)
 	return nil
 }
