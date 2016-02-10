@@ -86,7 +86,7 @@ func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 
 // BlockSignature returns a channel that is given each new block signature as
 // soon as they are arrive (Wether correct or not).
-func (s *Server) BlockSignatures() <-chan BlockSignature {
+func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
 	return s.blockSignatureChan
 }
 
