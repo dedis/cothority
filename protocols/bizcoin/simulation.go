@@ -12,7 +12,17 @@ func init() {
 }
 
 type BizCoinSimulation struct {
+	// sda fields:
 	sda.SimulationBFTree
+	// your simulation specific fields:
+	SimulationConfig
+}
+
+type SimulationConfig struct {
+	// block-size in bytes:
+	Blocksize int
+	// number of transactions the client will send:
+	NumClientTxs int
 }
 
 func NewBizCoinSimulation(config string) (sda.Simulation, error) {
@@ -38,7 +48,9 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 func (e *BizCoinSimulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	server := NewServer(e.BlockSize)
+	// TODO create "server" and "client"
 	for round := 0; round < e.Rounds; round++ {
+
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
 		node, err := config.Overlay.CreateNodeEmpty("BizCoin", config.Tree)

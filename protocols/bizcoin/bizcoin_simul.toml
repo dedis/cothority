@@ -1,0 +1,13 @@
+Servers = 3
+Simulation = "BizCoinSimulation"
+NumClientTxs = 4000000
+Rounds = 10
+BF = 2
+BlocksDir = "blocks"
+
+Hosts, Blocksize
+3, 1024
+7, 1024
+127, 1024
+31, 2048
+127, 2048
