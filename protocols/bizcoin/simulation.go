@@ -65,14 +65,14 @@ func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 
 		// instantiate a bizcoin protocol
-		round := monitor.NewMeasure("round")
+		rPrepare := monitor.NewMeasure("round_prepare")
 		_, err = server.Instantiate(node)
 		if err != nil {
 			return err
 		}
 		// wait for the signature
 		<-sigChan
-		round.Measure()
+		rPrepare.Measure()
 	}
 	return nil
 }
