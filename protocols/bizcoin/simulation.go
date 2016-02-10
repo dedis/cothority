@@ -65,7 +65,7 @@ func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		// instantiate a bizcoin protocol
 		rPrepare := monitor.NewMeasure("round_prepare")
-		pi, err := server.Instantiate(node)
+		_, err = server.Instantiate(node)
 		if err != nil {
 			return err
 		}
