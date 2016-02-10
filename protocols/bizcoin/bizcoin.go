@@ -201,19 +201,21 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 			TYPE:         ROUND_PREPARE,
 			Announcement: bz.prepare.Announce(ann.Announcement),
 		}
+		dbg.Lvl3("BizCoin Handle Announcement PREPARE")
+
 		if bz.IsLeaf() {
 			return bz.startCommitmentPrepare()
 		}
-		dbg.Lvl3("BizCoin Handle Announcement PREPARE")
 	case ROUND_COMMIT:
 		announcement = &BizCoinAnnounce{
 			TYPE:         ROUND_COMMIT,
 			Announcement: bz.commit.Announce(ann.Announcement),
 		}
+		dbg.Lvl3("BizCoin Handle Announcement COMMIT")
+
 		if bz.IsLeaf() {
 			return bz.startCommitmentCommit()
 		}
-		dbg.Lvl3("BizCoin Handle Announcement COMMIT")
 	}
 
 	var err error
@@ -227,16 +229,19 @@ func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 // round.
 func (bz *BizCoin) startCommitmentPrepare() error {
 	cm := bz.prepare.CreateCommitment()
-	dbg.Lvl3("Start Commitment PREPARE")
-	return bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_PREPARE, Commitment: cm})
+	err := bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_PREPARE, Commitment: cm})
+	dbg.Lvl3("BizCoin Start Commitment PREPARE", err)
+	return err
 }
 
 // startCommitCommitment send the first commitment up the tree for the
 // commitment round.
 func (bz *BizCoin) startCommitmentCommit() error {
 	cm := bz.commit.CreateCommitment()
-	dbg.Lvl3("BizCoin Start Commitment COMMIT")
-	return bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_COMMIT, Commitment: cm})
+
+	err := bz.SendTo(bz.Parent(), &BizCoinCommitment{TYPE: ROUND_COMMIT, Commitment: cm})
+	dbg.Lvl3("BizCoin Start Commitment COMMIT", err)
+	return err
 }
 
 // handle the arrival of a commitment
