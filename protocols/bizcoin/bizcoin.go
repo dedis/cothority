@@ -46,8 +46,6 @@ type BizCoin struct {
 	// channel used to wait for the verification of the block
 	verifyBlockChan chan bool
 
-	// size of the block == number of transactions per blocks
-	blockSize int
 	//  block to pass up between the two rounds (prepare + commits)
 	tempBlock *blockchain.TrBlock
 	// exceptions given during the rounds that is used in the signature
@@ -273,7 +271,7 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 // startPrepareChallenge create the challenge and send its down the tree
 func (bz *BizCoin) startChallengePrepare() error {
 	// Get the block we want to sign
-	trblock, err := bz.getBlock(bz.blockSize)
+	trblock, err := bz.getBlock()
 	if err != nil {
 		return err
 	}
