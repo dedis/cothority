@@ -309,6 +309,7 @@ func (bz *BizCoin) startChallengePrepare() error {
 		TrBlock:   trblock,
 	}
 
+	go bz.verifyBlock(bz.tempBlock)
 	dbg.Lvl3("BizCoin Start Challenge PREPARE")
 	// send to children
 	for _, tn := range bz.Children() {
