@@ -6,6 +6,8 @@ import (
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
 )
 
+// RoundType is a type to know if we are in the "prepare" round or the "commit"
+// round
 type RoundType byte
 
 const (
@@ -13,6 +15,17 @@ const (
 	ROUND_COMMIT
 )
 
+type BlockSignature struct {
+	// cosi signature of the commit round.
+	Sig *cosi.Signature
+	// the block signed.
+	Block *blockchain.TrBlock
+	// List of peers that did not want to sign.
+	Exceptions []cosi.Exception
+}
+
+// BizCoinAnnounce is the struct used during the announcement phase (of both
+// rounds)
 type BizCoinAnnounce struct {
 	*cosi.Announcement
 	TYPE RoundType

@@ -48,11 +48,14 @@ type BizCoin struct {
 
 	// size of the block == number of transactions per blocks
 	blockSize int
-	// temporary block to pass up between the two rounds (prepare + commits)
+	//  block to pass up between the two rounds (prepare + commits)
 	tempBlock *blockchain.TrBlock
-	// transaction_pool is a slice of transactions that contains transctions
+	// exceptions given during the rounds that is used in the signature
+	tempExceptions []cosi.Exception
+
+	// transactions is the slice of transactions that contains transactions
 	// coming from clients
-	transaction_pool []blkparser.Tx
+	transactions []blkparser.Tx
 	// lock associated with the transaction pool for concurrent access
 	transactionLock *sync.Mutex
 	// last block computed
@@ -72,6 +75,10 @@ type BizCoin struct {
 	// Challenge of the commit phase and will be used during the response of the
 	// commit phase to put an exception or to sign.
 	signRefusal bool
+
+	// onDoneCallback is the callback that will be called at the end of the
+	// protocol (i.e. response phase of the "commit" round)
+	onDoneCallback func(BlockSignature)
 }
 
 func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
@@ -98,6 +105,12 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.responseChan)
 
 	return bz, nil
+}
+
+func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx) (*BizCoin, error) {
+	bz, err := NewBizCoinProtocol(n)
+	bz.transactions = transactions
+	return bz, err
 }
 
 // Start() Will start both rounds "prepare" and "commit" at same time. The
@@ -147,13 +160,6 @@ func (bz *BizCoin) Dispatch() error {
 
 func (bz *BizCoin) listen() {
 
-}
-
-func (bz *BizCoin) AddTransaction(tr blkparser.Tx) error {
-	bz.transactionLock.Lock()
-	bz.transaction_pool = append(bz.transaction_pool, tr)
-	bz.transactionLock.Unlock()
-	return nil
 }
 
 // startAnnouncementPrepare create its announcement for the prepare round and
@@ -368,9 +374,12 @@ func (bz *BizCoin) handleChallengeCommit(ch BizCoinChallengeCommit) error {
 		bz.signRefusal = true
 	}
 
+	// store the exceptions for later usage
+	bz.tempExceptions = ch.Exceptions
 	if bz.IsLeaf() {
 		return bz.startResponseCommit()
 	}
+
 	// send it down
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, ch)
@@ -418,6 +427,8 @@ func (bz *BizCoin) startResponseCommit() error {
 	return bz.SendTo(bz.Parent(), bzr)
 }
 
+// handleResponseCommit handles the responses for the commit round during the
+// response phase.
 func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 	// check if we have enough
 	bz.tempCommitResponse = append(bz.tempCommitResponse, bzr.Response)
@@ -437,8 +448,13 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 
 	// if root we have finished
 	if bz.IsRoot() {
+		sig := bz.generateSignature()
+		if bz.onDoneCallback != nil {
+			go bz.onDoneCallback(sig)
+		}
 		return nil
 	}
+
 	// otherwise , send the response up
 	return bz.SendTo(bz.Parent(), bzr)
 }
@@ -509,16 +525,28 @@ func (bz *BizCoin) verifyBlock(block *blockchain.TrBlock) {
 }
 
 // getblock returns the next block available from the transaction pool.
-func (bz *BizCoin) getBlock(n int) (*blockchain.TrBlock, error) {
-	bz.transactionLock.Lock()
-	defer bz.transactionLock.Unlock()
-	if len(bz.transaction_pool) < 1 {
+func (bz *BizCoin) getBlock() (*blockchain.TrBlock, error) {
+	if len(bz.transactions) < 1 {
 		return nil, errors.New("no transaction available")
 	}
 
-	trlist := blockchain.NewTransactionList(bz.transaction_pool, n)
+	trlist := blockchain.NewTransactionList(bz.transactions, n)
 	header := blockchain.NewHeader(trlist, bz.lastBlock, bz.lastKeyBlock)
 	trblock := blockchain.NewTrBlock(trlist, header)
 	bz.transaction_pool = bz.transaction_pool[trblock.TransactionList.TxCnt:]
 	return trblock, nil
+}
+
+// Signature will generate the final signature, the output of the BizCoin
+// protocol.
+func (bz *BizCoin) Signature() *BlockSignature {
+	return BlockSignature{
+		Sig:        bz.commit.Signature(),
+		Block:      bz.tempBlock,
+		Exceptions: bz.tempExceptions,
+	}
+}
+
+func (bz *BizCoin) RegisterOnDone(fn func(BlockSignature)) {
+	bz.onDoneCallback = fn
 }

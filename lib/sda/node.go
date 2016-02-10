@@ -436,3 +436,9 @@ func (n *Node) Name() string {
 func (n *Node) TokenID() uuid.UUID {
 	return n.token.Id()
 }
+
+// SetProtocolInstance is used when you first create an empty node and you want
+// to bind it to a protocol instance later.
+func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
+	n.instance = pi
+}

@@ -129,6 +129,24 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 // instance but do not want to start it yet. Use case are when you are root, you
 // want to specifiy some additional configuration for example.
 func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+	node, err := o.NewNodeEmpty(protocolID, tree)
+	o.nodes[node.token.Id()] = node
+	return node, err
+}
+
+func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
+	return o.StartNewNode(ProtocolNameToUuid(name), tree)
+}
+
+// CreateNewNodeName only creates the Node but do not call the instantiation of
+// the protocol directly, that way you can do your own stuff before calling
+// protocol.Start() or node.Start()
+func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
+	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
+}
+
+// NewNode returns a simple node without instantiating anything no protocol.
+func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
 		return nil, errors.New("Protocol doesn't exists: " + protocolID.String())
@@ -146,21 +164,9 @@ func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error)
 		// Host is handling the generation of protocolInstanceID
 		RoundID: uuid.NewV4(),
 	}
-	// only create the node
-	node, err := NewNode(o, token)
+	node, err := NewNodeEmpty(o, token)
 	o.nodes[node.token.Id()] = node
 	return node, err
-}
-
-func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
-	return o.StartNewNode(ProtocolNameToUuid(name), tree)
-}
-
-// CreateNewNodeName only creates the Node but do not call the instantiation of
-// the protocol directly, that way you can do your own stuff before calling
-// protocol.Start() or node.Start()
-func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
-	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token
