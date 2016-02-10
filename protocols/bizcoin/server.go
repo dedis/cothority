@@ -41,6 +41,8 @@ type Server struct {
 	// blockSignatureChan is the channel used to pass out the signatures that
 	// BizCoin's instances have made
 	blockSignatureChan chan BlockSignature
+	// enoughBlock signals the server we have enough
+	enoughBlock chan bool
 }
 
 // NewServer returns a new fresh Server. It must be given the blockSize in order
@@ -51,12 +53,16 @@ func NewServer(blockSize int) *Server {
 		blockSize:          blockSize,
 		instances:          make(map[uuid.UUID]*BizCoin),
 		blockSignatureChan: make(chan BlockSignature),
+		enoughBlock:        make(chan bool),
 	}
 }
 
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionLock.Lock()
 	s.transactions = append(s.transactions, tr)
+	if len(s.transactions) == s.blockSize {
+		go func() { s.enoughBlock <- true }()
+	}
 	s.transactionLock.Unlock()
 	return nil
 }
@@ -70,16 +76,13 @@ func (s *Server) ListenClientTransactions() {
 
 // Instantiate takes blockSize transactions and create the bizcoin instances.
 func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
+	// wait until we have enough blocks
+	<-s.enoughBlock
 	var currTransactions []blkparser.Tx
 	s.transactionLock.Lock()
 	defer s.transactionLock.Unlock()
-	if len(s.transactions) < s.blockSize {
-		currTransactions = s.transactions[:]
-		s.transactions = make([]blkparser.Tx, 0)
-	} else {
-		currTransactions = s.transactions[:s.blockSize]
-		s.transactions = s.transactions[s.blockSize:]
-	}
+	currTransactions = s.transactions[:s.blockSize]
+	s.transactions = s.transactions[s.blockSize:]
 	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
 	pi, err := NewBizCoinRootProtocol(node, currTransactions)
 	node.SetProtocolInstance(pi)
