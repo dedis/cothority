@@ -30,7 +30,10 @@ func (p *Parser) Parse(first_block, last_block int) []blkparser.Tx {
 		raw, err := Chain.FetchNextBlock()
 
 		if raw == nil || err != nil {
-			log.Println("End of Chain")
+			log.Println("End of Chain: (err=", err, ")")
+			if err != nil {
+				return nil
+			}
 		}
 
 		bl, err := blkparser.NewBlock(raw[:])
