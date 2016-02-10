@@ -57,6 +57,8 @@ func NewServer(blockSize int) *Server {
 		instances:          make(map[uuid.UUID]*BizCoin),
 		blockSignatureChan: make(chan BlockSignature),
 		transactionChan:    make(chan blkparser.Tx),
+		requestChan:        make(chan bool),
+		responseChan:       make(chan []blkparser.Tx),
 	}
 	go s.listenEnoughBlocks()
 	return s
@@ -102,7 +104,9 @@ func (s *Server) onDone(blk BlockSignature) {
 func (s *Server) waitEnoughBlocks() []blkparser.Tx {
 	dbg.Print("Consuming requestChan ............")
 	s.requestChan <- true
+	dbg.Print("After request Chan")
 	transactions := <-s.responseChan
+	dbg.Print("After Response Chan")
 	return transactions
 }
 
@@ -114,15 +118,19 @@ func (s *Server) listenEnoughBlocks() {
 		case tr := <-s.transactionChan:
 			transactions = append(transactions, tr)
 			if want {
+				dbg.Print("added new trnsaction => maybe we can give them  ?=====")
 				if len(transactions) >= s.blockSize {
+					dbg.Print("will return transactions")
 					s.responseChan <- transactions[:s.blockSize]
 					transactions = transactions[s.blockSize:]
 					want = false
 				}
 			}
 		case <-s.requestChan:
+			dbg.Print("Request transactions")
 			want = true
 			if len(transactions) >= s.blockSize {
+				dbg.Print("will return transactions")
 				s.responseChan <- transactions[:s.blockSize]
 				transactions = transactions[s.blockSize:]
 				want = false
