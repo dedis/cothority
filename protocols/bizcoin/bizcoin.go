@@ -271,7 +271,8 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		}
 		commit := bz.commit.Commit(bz.tempCommitCommit)
 		if bz.IsRoot() {
-			return bz.startChallengeCommit()
+			// do nothing
+			//	bz.startChallengeCommit()
 		}
 		commitment = &BizCoinCommitment{
 			TYPE:       ROUND_COMMIT,
@@ -498,7 +499,7 @@ func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
 	dbg.Lvl3("BizCoin Handle Response PREPARE")
 	// if I'm root, we are finished, let's notify the "commit" round
 	if bz.IsRoot() {
-		go func() { bz.prepareFinishedChan <- true }()
+		bz.startChallengeCommit()
 		return nil
 	}
 	// send up
