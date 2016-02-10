@@ -45,15 +45,17 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 	return sc, nil
 }
 
-func (e *BizCoinSimulation) Run(config *sda.SimulationConfig) error {
+func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	server := NewServer(e.BlockSize)
+	client := NewClient(server)
+	go client.StartClientSimulation(e.Blocksize, e.NumClientTxs)
 	// TODO create "server" and "client"
 	for round := 0; round < e.Rounds; round++ {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := config.Overlay.CreateNodeEmpty("BizCoin", config.Tree)
+		node, err := sdaConf.Overlay.CreateNodeEmpty("BizCoin", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
