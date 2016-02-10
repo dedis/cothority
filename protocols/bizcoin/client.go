@@ -27,11 +27,11 @@ func NewClient(s *Server) *Client {
 // implementation) to simulate a client. Parameters:
 // blocksDir is the directory where to find the transaction blocks (.dat files)
 // numTxs is the number of transactions the client will create
-func (c *Client) StartClientSimulation(blocksDir string, numTxs uint) error {
+func (c *Client) StartClientSimulation(blocksDir string, numTxs int) error {
 	return c.triggerTransactions(blocksDir, numTxs)
 }
 
-func (c *Client) triggerTransactions(blocksPath string, nTxs uint) error {
+func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 	if err != nil {
 		dbg.Error("Couldn't parse blocks in", blocksPath)

@@ -23,6 +23,8 @@ type SimulationConfig struct {
 	Blocksize int
 	// number of transactions the client will send:
 	NumClientTxs int
+	//blocksDir is the directory where to find the transaction blocks (.dat files)
+	BlocksDir string
 }
 
 func NewBizCoinSimulation(config string) (sda.Simulation, error) {
@@ -46,17 +48,17 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 }
 
 func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
-	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
-	server := NewServer(e.BlockSize)
+	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
+	server := NewServer(e.Blocksize)
 	client := NewClient(server)
-	go client.StartClientSimulation(e.Blocksize, e.NumClientTxs)
+	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
 	// TODO create "server" and "client"
 	sigChan := server.BlockSignaturesChan()
 	for round := 0; round < e.Rounds; round++ {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.CreateNodeEmpty("BizCoin", sdaConf.Tree)
+		node, err := sdaConf.Overlay.NewNodeEmptyName("BizCoin", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
