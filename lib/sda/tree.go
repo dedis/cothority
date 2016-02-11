@@ -8,7 +8,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"github.com/satori/go.uuid"
 )
 
@@ -48,7 +47,7 @@ func NewTree(il *EntityList, r *TreeNode) *Tree {
 // the original tree
 func NewTreeFromMarshal(buf []byte, il *EntityList) (*Tree, error) {
 	tp, pm, err := network.UnmarshalRegisteredType(buf,
-		network.DefaultConstructors(edwards.NewAES128SHA256Ed25519(false)))
+		network.DefaultConstructors(network.Suite))
 	if err != nil {
 		return nil, err
 	}

@@ -442,6 +442,14 @@ func (n *Node) TokenID() uuid.UUID {
 	return n.token.Id()
 }
 
+// Host returns the underlying Host of this node.
+// WARNING: you should not play with that feature unless you know what you are
+// doing. This feature is mean to access the low level parts of the API. For
+// example it is used to add a new tree config / new entity list to the host.
+func (n *Node) Host() *Host {
+	return n.overlay.host
+}
+
 // SetProtocolInstance is used when you first create an empty node and you want
 // to bind it to a protocol instance later.
 func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
