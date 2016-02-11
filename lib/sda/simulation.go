@@ -28,7 +28,7 @@ type Simulation interface {
 	// This has to initialise all necessary files and copy them to the
 	// 'dir'-directory. This directory will be accessible to all simulated
 	// hosts.
-	// Setup also gets a alice of all available hosts. In turn it has
+	// Setup also gets a slice of all available hosts. In turn it has
 	// to return a tree using one or more of these hosts. It can create
 	// the EntityList as desired, putting more than one Entity/Host on the same host.
 	// The 'config'-argument holds all arguments read from the runfile in
@@ -221,6 +221,7 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 // Creates the tree as defined in SimulationBFTree and stores the result
 // in 'sc'
 func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
+	dbg.Lvl3("CreateTree strarted")
 	start := time.Now()
 	if sc.EntityList == nil {
 		return errors.New("Empty EntityList")
