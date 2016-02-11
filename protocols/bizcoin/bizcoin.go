@@ -77,6 +77,13 @@ type BizCoin struct {
 	// onDoneCallback is the callback that will be called at the end of the
 	// protocol (i.e. response phase of the "commit" round)
 	onDoneCallback func(BlockSignature)
+
+	// timeout to detect root failure to produce the final verification in
+	// MILLISECONDs.
+	timeout int
+	// onTimeoutCallback is the function that will be called if a timeout
+	// occurs.
+	onTimeoutCallback func()
 }
 
 func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
@@ -190,6 +197,9 @@ func (bz *BizCoin) sendAnnouncement(bza *BizCoinAnnounce) error {
 
 // handleAnnouncement pass the announcement to the right CoSi struct.
 func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
+	// start timer to detect root failure.
+	measure = monitor.NewMeasure("measure)"
+	go bz.startTimer()
 	var announcement = new(BizCoinAnnounce)
 	switch ann.TYPE {
 	case ROUND_PREPARE:
@@ -568,4 +578,19 @@ func (bz *BizCoin) Signature() *BlockSignature {
 
 func (bz *BizCoin) RegisterOnDone(fn func(BlockSignature)) {
 	bz.onDoneCallback = fn
+}
+
+// SetTimeout sets the timeout to `millis` time and register the callback to
+// call when the timeout occurs
+func (bz *BizCoin) SetTimeout(millis int, callback func()) {
+	bz.timeout = millis
+	bz.onTimeoutCallback = callback
+}
+func (bz *BizCoin) startTimer() {
+	time.Sleep(time.Millisecond * bz.timeout)
+	if !done {
+		viewChange.Start()
+		vewCHange.waitDOne()
+		measure.Measure()
+	}
 }
