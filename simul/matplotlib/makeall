@@ -1,15 +1,15 @@
 #!/bin/bash
 
-CSV_DIR=Paper_cosi
+CSV_DIR=Paper_cosi2
 PIC="true"
 SHOW="true"
 EXT="eps"
 
 main(){
-  plot_roundtime
+  #plot_roundtime
   #plot_over
   #plot_bf
-  #plot_stamp
+  plot_stamp
 }
 
 add_dir(){

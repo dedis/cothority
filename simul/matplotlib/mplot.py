@@ -20,10 +20,10 @@ class MPlot:
 
     def __init__(self):
         vers = matplotlib.__version__
-        if vers != "1.4.3":
-            print "\nWrong matlib-version " + vers +", please install 1.4.3"
+        if vers != "1.5.1":
+            print "\nWrong matlib-version " + vers +", please install 1.5.1"
             print "http://matplotlib.org/faq/installing_faq.html\n"
-            print "Or try the following\nsudo easy_install \"matplotlib == 1.4.3\"\n"
+            print "Or try the following\nsudo easy_install \"matplotlib == 1.5.1\"\n"
             exit(1)
         self.plt = plt
         self.resetMinMax()
@@ -168,7 +168,7 @@ class MPlot:
     # Draws an arrow for out-of-bound data
     def arrow(self, text, x, top, color):
         plt.annotate(text, xy=(x, top), xytext=(x, top - 2),
-                     arrowprops=dict(facecolor=color, frac=0.4, width=8, headwidth=20, edgecolor='white'),
+                     arrowprops=dict(facecolor=color, headlength=5, width=6, headwidth=10, edgecolor='white'),
                      horizontalalignment='center', )
 
     # If we want to remove a poly
@@ -183,5 +183,3 @@ class MPlot:
             for i in range(1, 3):
                 for l in self.line[i]:
                     l.remove()
-
-
