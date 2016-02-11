@@ -142,6 +142,7 @@ func (bz *BizCoin) Dispatch() error {
 		case msg := <-bz.responseChan:
 			switch msg.BizCoinResponse.TYPE {
 			case ROUND_PREPARE:
+				// TODO measure how log this takes too:
 				err = bz.handleResponsePrepare(msg.BizCoinResponse)
 			case ROUND_COMMIT:
 				err = bz.handleResponseCommit(msg.BizCoinResponse)
@@ -500,7 +501,9 @@ func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
 	dbg.Lvl3("BizCoin Handle Response PREPARE")
 	// if I'm root, we are finished, let's notify the "commit" round
 	if bz.IsRoot() {
+		// TODO measure this too:
 		bz.startChallengeCommit()
+		// end
 		return nil
 	}
 	// send up
