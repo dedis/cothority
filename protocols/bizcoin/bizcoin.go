@@ -645,7 +645,7 @@ func (bz *BizCoin) SetTimeout(millis uint64, callback func()) {
 
 func (bz *BizCoin) startTimer() {
 	time.Sleep(time.Millisecond * time.Duration(bz.timeout))
-	if !done {
+	if !done { // FIXME
 		bz.viewChange.Start()
 		bz.viewChange.WaitDOne()
 		bz.vcMeasure.Measure()
