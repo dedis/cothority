@@ -23,16 +23,19 @@ func NewViewChange(node *sda.Node) (*ViewChange, error) {
 // needs to operate a view change. You must supply here the new entityList + new
 // Tree you wish to apply to the tree.
 func (vcp *ViewChange) Propagate(entityList *sda.EntityList, tree *sda.Tree) (*ViewChange, error) {
-	vcp := NewViewChange(node)
+	//vcp := NewViewChange(node)
 	vcp.el = entityList
 	vcp.tree = tree
+
+	return nil, nil
 }
 
 func (vcp *ViewChange) Start() error {
+	return nil
 }
 
 func (vcp *ViewChange) Dispatch() error {
-
+	return nil
 }
 
 // waitAgreement will wait until it receives 2/3 of the peers.
