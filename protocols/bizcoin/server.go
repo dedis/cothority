@@ -141,8 +141,3 @@ func (s *Server) listenEnoughBlocks() {
 		}
 	}
 }
-
-func (s *Server) signalEnough() {
-	dbg.Lvl4("signalEnough triggered")
-	s.requestChan <- true
-}
