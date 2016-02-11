@@ -231,6 +231,8 @@ type EntityList struct {
 	Id uuid.UUID
 	// TODO make that a map so search is O(1)
 	List []*network.Entity
+	// Aggregate public key
+	Aggregate abstract.Point
 }
 
 var EntityListType = network.RegisterMessageType(EntityList{})
@@ -240,9 +242,15 @@ var NilEntityList = EntityList{}
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
 func NewEntityList(ids []*network.Entity) *EntityList {
+	// compute the aggregate key already
+	agg := network.Suite.Point().Null()
+	for _, e := range ids {
+		agg = agg.Add(agg, e.Public)
+	}
 	return &EntityList{
-		List: ids,
-		Id:   uuid.NewV4(),
+		List:      ids,
+		Aggregate: agg,
+		Id:        uuid.NewV4(),
 	}
 }
 

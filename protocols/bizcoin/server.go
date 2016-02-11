@@ -41,12 +41,11 @@ type Server struct {
 	// blockSignatureChan is the channel used to pass out the signatures that
 	// BizCoin's instances have made
 	blockSignatureChan chan BlockSignature
-	// communicate an incoming transaction by this channel
+	// enoughBlock signals the server we have enough
+	// no comments..
 	transactionChan chan blkparser.Tx
-	// communicate if there is a go-routine waiting for enough transactions
-	requestChan chan bool
-	// communicate (that we have enough) transactions
-	responseChan chan []blkparser.Tx
+	requestChan     chan bool
+	responseChan    chan []blkparser.Tx
 }
 
 // NewServer returns a new fresh Server. It must be given the blockSize in order
@@ -65,8 +64,6 @@ func NewServer(blockSize int) *Server {
 	return s
 }
 
-// AddTransaction can be used to simulate the client(s) sending a single
-// transaction (without a network connection)
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionChan <- tr
 	return nil
@@ -82,8 +79,10 @@ func (s *Server) ListenClientTransactions() {
 // Instantiate takes blockSize transactions and create the bizcoin instances.
 func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
+	dbg.Print("waiting enough blocks")
 	currTransactions := s.waitEnoughBlocks()
-	dbg.Lvl3("Instantiate BizCoin Round with", len(currTransactions), " transactions")
+	dbg.LLvl2("Enough blocks... ................ we are starting")
+	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
 	pi, err := NewBizCoinRootProtocol(node, currTransactions)
 	node.SetProtocolInstance(pi)
 	pi.RegisterOnDone(s.onDoneSign)
@@ -93,9 +92,8 @@ func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	return pi, err
 }
 
-// BlockSignaturesChan returns a channel that can be used to be notified when a
-// signature on a block is done
-// Used in simulation.go
+// BlockSignature returns a channel that is given each new block signature as
+// soon as they are arrive (Wether correct or not).
 func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
 	return s.blockSignatureChan
 }
@@ -105,11 +103,9 @@ func (s *Server) onDoneSign(blk BlockSignature) {
 }
 
 func (s *Server) waitEnoughBlocks() []blkparser.Tx {
-	dbg.Lvl4("Releasing requestChan")
 	s.requestChan <- true
-	dbg.Lvl4("After requestChan released (waiting for repsonseChan)")
+	dbg.Print("Requested enough block chan")
 	transactions := <-s.responseChan
-	dbg.Lvl4("After responseChan consumed")
 	return transactions
 }
 
@@ -119,24 +115,18 @@ func (s *Server) listenEnoughBlocks() {
 	var want bool
 	for {
 		select {
-		// handle (single incoming) transactions:
 		case tr := <-s.transactionChan:
 			transactions = append(transactions, tr)
 			if want {
-				dbg.Lvl4("Added new transaction, if we have enough we respond with them")
 				if len(transactions) >= s.blockSize {
-					dbg.Lvl4("will respond with enough transactions")
 					s.responseChan <- transactions[:s.blockSize]
 					transactions = transactions[s.blockSize:]
 					want = false
 				}
 			}
-			// handle request for enough transactions (enough == blocksize)
 		case <-s.requestChan:
-			dbg.Lvl4("Requested more transactions")
 			want = true
 			if len(transactions) >= s.blockSize {
-				dbg.Lvl4("will respond with enough transactions")
 				s.responseChan <- transactions[:s.blockSize]
 				transactions = transactions[s.blockSize:]
 				want = false

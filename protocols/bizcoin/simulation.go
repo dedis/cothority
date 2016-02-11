@@ -1,10 +1,14 @@
 package bizcoin
 
 import (
+	"fmt"
+
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
 )
 
 func init() {
@@ -59,20 +63,19 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	var rChallComm *monitor.Measure
 	var rRespPrep *monitor.Measure
 	for round := 0; round < e.Rounds; round++ {
-
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
 		node, err := sdaConf.Overlay.NewNodeEmptyName("BizCoin", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
-
 		// instantiate a bizcoin protocol
 		rComplete := monitor.NewMeasure("round_prepare")
 		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
 		}
+
 		bz := pi.(*BizCoin)
 		bz.OnChallengeCommStart(func() {
 			rChallComm = monitor.NewMeasure("round_challenge_commit")
@@ -90,8 +93,24 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		})
 
 		// wait for the signature (all steps finished)
-		<-sigChan
+		dbg.Print("after instantiate")
+		// wait for the signature
+		sig := <-sigChan
+
 		rComplete.Measure()
+		if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, &sig); err != nil {
+			dbg.Lvl1("Round", round, " FAILED")
+		} else {
+			dbg.Lvl1("Round", round, " SUCCESS")
+		}
 	}
 	return nil
+}
+
+func verifyBlockSignature(suite abstract.Suite, aggregate abstract.Point, sig *BlockSignature) error {
+	marshalled, err := sig.Block.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("Marshalling of block did not work: %v", err)
+	}
+	return cosi.VerifySignatureWithException(suite, aggregate, marshalled, sig.Sig.Challenge, sig.Sig.Response, sig.Exceptions)
 }

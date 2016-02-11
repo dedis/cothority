@@ -3,6 +3,7 @@ package blockchain
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -21,6 +22,10 @@ type Block struct {
 
 type TrBlock struct {
 	Block
+}
+
+func (tr *TrBlock) MarshalBinary() ([]byte, error) {
+	return json.Marshal(tr)
 }
 
 type Header struct {
