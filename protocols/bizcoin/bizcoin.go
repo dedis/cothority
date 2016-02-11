@@ -1,6 +1,7 @@
 package bizcoin
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"math"
@@ -13,7 +14,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
-	"github.com/dedis/cothority/protocols/viewchange"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -94,10 +94,15 @@ type BizCoin struct {
 	onChallengeCommit     func()
 	onChallengeCommitDone func()
 	// view change setup and measurement
-	viewChange  *viewchange.ViewChange
+	viewchangeChan chan struct {
+		*sda.TreeNode
+		viewChange
+	}
 	vcMeasure   *monitor.Measure
 	doneSigning bool
 	doneLock    sync.Mutex
+	threshold   int
+	vcCounter   int
 }
 
 func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
@@ -110,6 +115,7 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	bz.verifyBlockChan = make(chan bool)
 
 	bz.aggregatedPublic = n.EntityList().Aggregate
+	bz.threshold = int(math.Ceil(float64(len(bz.EntityList().List)) / 3.0))
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
@@ -117,14 +123,6 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengePrepareChan)
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
-
-	//bz.timeout = timeoutMs
-	vcp, err := viewchange.NewViewChange(n)
-	if err != nil {
-		return nil, err
-	}
-	bz.viewChange = vcp
-
 	go bz.Dispatch()
 	return bz, nil
 }
@@ -171,6 +169,8 @@ func (bz *BizCoin) Dispatch() error {
 			case ROUND_COMMIT:
 				err = bz.handleResponseCommit(&msg.BizCoinResponse)
 			}
+		case msg := <-bz.viewchangeChan:
+			err = bz.handleViewChange(&msg.viewChange)
 		case <-bz.done:
 			dbg.Lvl2("BizCoin Instance exit.")
 			break
@@ -179,30 +179,6 @@ func (bz *BizCoin) Dispatch() error {
 			dbg.Error("Error handling messages:", err)
 		}
 	}
-}
-
-// OnAnnouncementPrepare registers a function which will be called when
-// ResponsePrepare round is started
-func (bz *BizCoin) OnAnnouncementPrepare(fn func()) {
-	bz.onAnnouncementPrepare = fn
-}
-
-// OnAnnouncementPrepareDone registers a function which will be called when
-// ResponsePrepare round is finished
-func (bz *BizCoin) OnAnnouncementPrepareDone(fn func()) {
-	bz.onResponsePrepareDone = fn
-}
-
-// OnChallengeCommit registers a function which will be called when
-// ChallengeCommit round is started
-func (bz *BizCoin) OnChallengeCommit(fn func()) {
-	bz.onChallengeCommit = fn
-}
-
-// OnChallengeCommitDone registers a function which will be called when
-// ChallengeCommit round is finished
-func (bz *BizCoin) OnChallengeCommitDone(fn func()) {
-	bz.onChallengeCommitDone = fn
 }
 
 func (bz *BizCoin) listen() {
@@ -220,6 +196,7 @@ func (bz *BizCoin) startAnnouncementPrepare() error {
 	bza := &BizCoinAnnounce{
 		TYPE:         ROUND_PREPARE,
 		Announcement: ann,
+		Timeout:      bz.timeout,
 	}
 	dbg.Lvl3("BizCoin Start Announcement (PREPARE)")
 	return bz.sendAnnouncement(bza)
@@ -247,15 +224,16 @@ func (bz *BizCoin) sendAnnouncement(bza *BizCoinAnnounce) error {
 
 // handleAnnouncement pass the announcement to the right CoSi struct.
 func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
-	// start timer to detect root failure.
-	bz.vcMeasure = monitor.NewMeasure("viewchange")
+	// start timer to detect root failure
 	go bz.startTimer()
 	var announcement = new(BizCoinAnnounce)
+	bz.timeout = ann.Timeout
 	switch ann.TYPE {
 	case ROUND_PREPARE:
 		announcement = &BizCoinAnnounce{
 			TYPE:         ROUND_PREPARE,
 			Announcement: bz.prepare.Announce(ann.Announcement),
+			Timeout:      ann.Timeout,
 		}
 		dbg.Lvl3("BizCoin Handle Announcement PREPARE")
 
@@ -442,8 +420,8 @@ func (bz *BizCoin) handleChallengeCommit(ch *BizCoinChallengeCommit) error {
 	}
 
 	// Verify if we have no more than 1/3 failed nodes
-	threshold := math.Ceil(float64(len(bz.EntityList().List)) / 3.0)
-	if len(ch.Exceptions) > int(threshold) {
+
+	if len(ch.Exceptions) > int(bz.threshold) {
 		dbg.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT", len(ch.Exceptions), len(bz.EntityList().List))
 		bz.signRefusal = true
 	}
@@ -520,6 +498,11 @@ func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 		if err != nil {
 			return err
 		}
+		// simulate
+		bz.doneLock.Lock()
+		bz.doneSigning = true
+		bz.doneLock.Unlock()
+
 		bzr.Response = resp
 	}
 
@@ -531,9 +514,6 @@ func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 			bz.onChallengeCommitDone()
 		}
 		if bz.onDoneCallback != nil {
-			bz.doneLock.Lock()
-			bz.doneSigning = true
-			bz.doneLock.Unlock()
 			go bz.onDoneCallback(*sig)
 		}
 		return nil
@@ -589,6 +569,7 @@ func (bz *BizCoin) waitResponseVerification() (*BizCoinResponse, bool) {
 	if !verified {
 		// append our exception
 		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{bz.Public(), bz.prepare.GetCommitment()})
+		bz.sendAndMeasureViewchange()
 		return bzr, false
 	}
 
@@ -653,12 +634,60 @@ func (bz *BizCoin) startTimer() {
 	bz.doneLock.Lock()
 	defer bz.doneLock.Unlock()
 	if !bz.doneSigning {
-
-		if err := bz.viewChange.Start(); err != nil {
-
-		}
-		bz.viewChange.WaitAgreement()
-		bz.vcMeasure.Measure()
+		bz.sendAndMeasureViewchange()
 	}
+}
 
+func (bz *BizCoin) sendAndMeasureViewchange() {
+	bz.vcMeasure = monitor.NewMeasure("viewchange")
+	vc := newViewChange()
+	for _, n := range bz.Tree().ListNodes() {
+		bz.SendTo(n, vc)
+	}
+}
+
+type viewChange struct {
+	LastBlock [sha256.Size]byte
+}
+
+func newViewChange() *viewChange {
+	res := &viewChange{}
+	for i := 0; i < sha256.Size; i++ {
+		res.LastBlock[i] = 0
+	}
+	return res
+}
+
+func (bz *BizCoin) handleViewChange(vc *viewChange) error {
+	bz.vcCounter++
+	if bz.vcCounter > bz.threshold {
+		dbg.Lvl3("Viewchange threshold reached")
+		bz.vcMeasure.Measure()
+		return nil
+	}
+	return nil
+}
+
+// OnAnnouncementPrepare registers a function which will be called when
+// ResponsePrepare round is started
+func (bz *BizCoin) OnAnnouncementPrepare(fn func()) {
+	bz.onAnnouncementPrepare = fn
+}
+
+// OnAnnouncementPrepareDone registers a function which will be called when
+// ResponsePrepare round is finished
+func (bz *BizCoin) OnAnnouncementPrepareDone(fn func()) {
+	bz.onResponsePrepareDone = fn
+}
+
+// OnChallengeCommit registers a function which will be called when
+// ChallengeCommit round is started
+func (bz *BizCoin) OnChallengeCommit(fn func()) {
+	bz.onChallengeCommit = fn
+}
+
+// OnChallengeCommitDone registers a function which will be called when
+// ChallengeCommit round is finished
+func (bz *BizCoin) OnChallengeCommitDone(fn func()) {
+	bz.onChallengeCommitDone = fn
 }
