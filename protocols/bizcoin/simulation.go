@@ -25,7 +25,7 @@ type Simulation struct {
 }
 
 type simulationConfig struct {
-	// block-size in bytes:
+	// Blocksize is the number of transactions in one block:
 	Blocksize int
 	// number of transactions the client will send:
 	NumClientTxs int
