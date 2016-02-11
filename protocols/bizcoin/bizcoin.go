@@ -9,9 +9,11 @@ import (
 
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/viewchange"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -80,7 +82,7 @@ type BizCoin struct {
 
 	// timeout to detect root failure to produce the final verification in
 	// MILLISECONDs.
-	timeout int
+	timeout uint64
 	// onTimeoutCallback is the function that will be called if a timeout
 	// occurs.
 	onTimeoutCallback func()
@@ -91,6 +93,11 @@ type BizCoin struct {
 	onResponsePrepareDone func()
 	onChallengeCommit     func()
 	onChallengeCommitDone func()
+	// view change setup and measurement
+	viewChange  *viewchange.ViewChange
+	vcMeasure   *monitor.Measure
+	doneSigning bool
+	doneLock    sync.Mutex
 }
 
 func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
@@ -111,13 +118,21 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
 
+	//bz.timeout = timeoutMs
+	vcp, err := viewchange.NewViewChange(n)
+	if err != nil {
+		return nil, err
+	}
+	bz.viewChange = vcp
+
 	go bz.Dispatch()
 	return bz, nil
 }
 
-func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx) (*BizCoin, error) {
+func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64) (*BizCoin, error) {
 	bz, err := NewBizCoinProtocol(n)
 	bz.transactions = transactions
+	bz.timeout = timeOutMs
 	return bz, err
 }
 
@@ -145,16 +160,16 @@ func (bz *BizCoin) Dispatch() error {
 			err = bz.handleCommit(msg.BizCoinCommitment)
 			// Challenge
 		case msg := <-bz.challengePrepareChan:
-			err = bz.handleChallengePrepare(msg.BizCoinChallengePrepare)
+			err = bz.handleChallengePrepare(&msg.BizCoinChallengePrepare)
 		case msg := <-bz.challengeCommitChan:
-			err = bz.handleChallengeCommit(msg.BizCoinChallengeCommit)
+			err = bz.handleChallengeCommit(&msg.BizCoinChallengeCommit)
 			// Response
 		case msg := <-bz.responseChan:
 			switch msg.BizCoinResponse.TYPE {
 			case ROUND_PREPARE:
-				err = bz.handleResponsePrepare(msg.BizCoinResponse)
+				err = bz.handleResponsePrepare(&msg.BizCoinResponse)
 			case ROUND_COMMIT:
-				err = bz.handleResponseCommit(msg.BizCoinResponse)
+				err = bz.handleResponseCommit(&msg.BizCoinResponse)
 			}
 		case <-bz.done:
 			dbg.Lvl2("BizCoin Instance exit.")
@@ -166,25 +181,25 @@ func (bz *BizCoin) Dispatch() error {
 	}
 }
 
-// OnResponsePrepareStart registers a function which will be called when
+// OnAnnouncementPrepare registers a function which will be called when
 // ResponsePrepare round is started
 func (bz *BizCoin) OnAnnouncementPrepare(fn func()) {
 	bz.onAnnouncementPrepare = fn
 }
 
-// OnResponsePrepareStart registers a function which will be called when
+// OnAnnouncementPrepareDone registers a function which will be called when
 // ResponsePrepare round is finished
 func (bz *BizCoin) OnAnnouncementPrepareDone(fn func()) {
 	bz.onResponsePrepareDone = fn
 }
 
-// OnChallengeCommStart registers a function which will be called when
+// OnChallengeCommit registers a function which will be called when
 // ChallengeCommit round is started
 func (bz *BizCoin) OnChallengeCommit(fn func()) {
 	bz.onChallengeCommit = fn
 }
 
-// OnChallengeCommFinish registers a function which will be called when
+// OnChallengeCommitDone registers a function which will be called when
 // ChallengeCommit round is finished
 func (bz *BizCoin) OnChallengeCommitDone(fn func()) {
 	bz.onChallengeCommitDone = fn
@@ -233,7 +248,7 @@ func (bz *BizCoin) sendAnnouncement(bza *BizCoinAnnounce) error {
 // handleAnnouncement pass the announcement to the right CoSi struct.
 func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 	// start timer to detect root failure.
-	measure := monitor.NewMeasure("measure")
+	bz.vcMeasure = monitor.NewMeasure("viewchange")
 	go bz.startTimer()
 	var announcement = new(BizCoinAnnounce)
 	switch ann.TYPE {
@@ -390,7 +405,7 @@ func (bz *BizCoin) startChallengeCommit() error {
 
 // handlePrepareChallenge receive the challenge messages for the "prepare"
 // round.
-func (bz *BizCoin) handleChallengePrepare(ch BizCoinChallengePrepare) error {
+func (bz *BizCoin) handleChallengePrepare(ch *BizCoinChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
 	go bz.verifyBlock(bz.tempBlock)
@@ -412,7 +427,7 @@ func (bz *BizCoin) handleChallengePrepare(ch BizCoinChallengePrepare) error {
 
 // handleCommitChallenge will verify the signature + check if no more than 1/3
 // of participants refused to sign.
-func (bz *BizCoin) handleChallengeCommit(ch BizCoinChallengeCommit) error {
+func (bz *BizCoin) handleChallengeCommit(ch *BizCoinChallengeCommit) error {
 	// marshal the block
 	marshalled, err := json.Marshal(bz.tempBlock)
 	if err != nil {
@@ -491,7 +506,7 @@ func (bz *BizCoin) startResponseCommit() error {
 
 // handleResponseCommit handles the responses for the commit round during the
 // response phase.
-func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 	// check if we have enough
 	bz.tempCommitResponse = append(bz.tempCommitResponse, bzr.Response)
 	if len(bz.tempCommitResponse) < len(bz.Children()) {
@@ -516,6 +531,9 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 			bz.onChallengeCommitDone()
 		}
 		if bz.onDoneCallback != nil {
+			bz.doneLock.Lock()
+			bz.doneSigning = true
+			bz.doneLock.Unlock()
 			go bz.onDoneCallback(*sig)
 		}
 		return nil
@@ -526,7 +544,7 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 }
 
 // handlePrepapreResponse
-func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponsePrepare(bzr *BizCoinResponse) error {
 	// check if we have enough
 	bz.tempPrepareResponse = append(bz.tempPrepareResponse, bzr.Response)
 	if len(bz.tempPrepareResponse) < len(bz.Children()) {
@@ -625,15 +643,22 @@ func (bz *BizCoin) RegisterOnDone(fn func(BlockSignature)) {
 
 // SetTimeout sets the timeout to `millis` time and register the callback to
 // call when the timeout occurs
-func (bz *BizCoin) SetTimeout(millis int, callback func()) {
+func (bz *BizCoin) SetTimeout(millis uint64, callback func()) {
 	bz.timeout = millis
 	bz.onTimeoutCallback = callback
 }
+
 func (bz *BizCoin) startTimer() {
-	time.Sleep(time.Millisecond * bz.timeout)
-	if !done {
-		viewChange.Start()
-		vewCHange.waitDOne()
-		measure.Measure()
+	time.Sleep(time.Millisecond * time.Duration(bz.timeout))
+	bz.doneLock.Lock()
+	defer bz.doneLock.Unlock()
+	if !bz.doneSigning {
+
+		if err := bz.viewChange.Start(); err != nil {
+
+		}
+		bz.viewChange.WaitAgreement()
+		bz.vcMeasure.Measure()
 	}
+
 }
