@@ -37,8 +37,8 @@ func NewBizCoinSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
+// Setup implements sda.Simulation interface
 func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
-	// TODO will the tree be re-created / broadcasted in every round? (in Run())
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
 	err := e.CreateTree(sc)
@@ -48,12 +48,12 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 	return sc, nil
 }
 
+// Run implements sda.Simulation interface
 func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewServer(e.Blocksize)
 	client := NewClient(server)
 	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
-	// TODO create "server" and "client"
 	sigChan := server.BlockSignaturesChan()
 	for round := 0; round < e.Rounds; round++ {
 
