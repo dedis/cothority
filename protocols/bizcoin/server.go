@@ -81,7 +81,6 @@ func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	dbg.Print("waiting enough blocks")
 	currTransactions := s.waitEnoughBlocks()
-	dbg.LLvl2("Enough blocks... ................ we are starting")
 	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
 	pi, err := NewBizCoinRootProtocol(node, currTransactions)
 	node.SetProtocolInstance(pi)
