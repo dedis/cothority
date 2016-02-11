@@ -8,11 +8,12 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("BizCoinSimulation", NewBizCoinSimulation)
+	sda.SimulationRegister("BizCoinSimulation", NewSimulation)
 	sda.ProtocolRegisterName("BizCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBizCoinProtocol(n) })
 }
 
-type BizCoinSimulation struct {
+// Simulation implements da.Simulation interface
+type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
@@ -28,8 +29,8 @@ type SimulationConfig struct {
 	BlocksDir string
 }
 
-func NewBizCoinSimulation(config string) (sda.Simulation, error) {
-	es := &BizCoinSimulation{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -38,7 +39,7 @@ func NewBizCoinSimulation(config string) (sda.Simulation, error) {
 }
 
 // Setup implements sda.Simulation interface
-func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
 	err := e.CreateTree(sc)
@@ -49,12 +50,14 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 }
 
 // Run implements sda.Simulation interface
-func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
+func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewServer(e.Blocksize)
 	client := NewClient(server)
 	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
 	sigChan := server.BlockSignaturesChan()
+	var rChallComm *monitor.Measure
+	var rRespPrep *monitor.Measure
 	for round := 0; round < e.Rounds; round++ {
 
 		dbg.Lvl1("Starting round", round)
@@ -65,14 +68,30 @@ func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 
 		// instantiate a bizcoin protocol
-		rPrepare := monitor.NewMeasure("round_prepare")
-		_, err = server.Instantiate(node)
+		rComplete := monitor.NewMeasure("round_prepare")
+		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
 		}
-		// wait for the signature
+		bz := pi.(*BizCoin)
+		bz.OnChallengeCommStart(func() {
+			rChallComm = monitor.NewMeasure("round_challenge_commit")
+		})
+		bz.OnChallengeCommFinish(func() {
+			rChallComm.Measure()
+			rChallComm = nil
+		})
+		bz.OnResponsePrepareStart(func() {
+			rRespPrep = monitor.NewMeasure("round_hanle_resp_prep")
+		})
+		bz.OnResponsePrepareFinish(func() {
+			rRespPrep.Measure()
+			rRespPrep = nil
+		})
+
+		// wait for the signature (all steps finished)
 		<-sigChan
-		rPrepare.Measure()
+		rComplete.Measure()
 	}
 	return nil
 }

@@ -77,6 +77,14 @@ type BizCoin struct {
 	// onDoneCallback is the callback that will be called at the end of the
 	// protocol (i.e. response phase of the "commit" round)
 	onDoneCallback func(BlockSignature)
+
+	// function to let callers of the protocol (or the server) add functionality
+	// to certain parts of the protocol; mainly used in simulation to do
+	// measurements. Hence functions will not be called in go routines
+	onResponsePrepareStarted  func()
+	onResponsePrepareFinished func()
+	onChallengeCommitStarted  func()
+	onChallengeCommitFinished func()
 }
 
 func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
@@ -116,6 +124,7 @@ func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx) (*BizCoin,
 // "commit" round will wait the end of the "prepare" round during its challenge
 // phase.
 func (bz *BizCoin) Start() error {
+
 	if err := bz.startAnnouncementPrepare(); err != nil {
 		return err
 	}
@@ -142,7 +151,6 @@ func (bz *BizCoin) Dispatch() error {
 		case msg := <-bz.responseChan:
 			switch msg.BizCoinResponse.TYPE {
 			case ROUND_PREPARE:
-				// TODO measure how log this takes too:
 				err = bz.handleResponsePrepare(msg.BizCoinResponse)
 			case ROUND_COMMIT:
 				err = bz.handleResponseCommit(msg.BizCoinResponse)
@@ -157,6 +165,30 @@ func (bz *BizCoin) Dispatch() error {
 	}
 }
 
+// OnResponsePrepareStart registers a function which will be called when
+// ResponsePrepare round is started
+func (bz *BizCoin) OnResponsePrepareStart(fn func()) {
+	bz.onResponsePrepareStarted = fn
+}
+
+// OnResponsePrepareStart registers a function which will be called when
+// ResponsePrepare round is finished
+func (bz *BizCoin) OnResponsePrepareFinish(fn func()) {
+	bz.onResponsePrepareFinished = fn
+}
+
+// OnChallengeCommStart registers a function which will be called when
+// ChallengeCommit round is started
+func (bz *BizCoin) OnChallengeCommStart(fn func()) {
+	bz.onChallengeCommitStarted = fn
+}
+
+// OnChallengeCommFinish registers a function which will be called when
+// ChallengeCommit round is finished
+func (bz *BizCoin) OnChallengeCommFinish(fn func()) {
+	bz.onChallengeCommitFinished = fn
+}
+
 func (bz *BizCoin) listen() {
 
 }
@@ -164,6 +196,10 @@ func (bz *BizCoin) listen() {
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
 func (bz *BizCoin) startAnnouncementPrepare() error {
+	if bz.onResponsePrepareStarted != nil {
+		go bz.onResponsePrepareStarted()
+	}
+
 	ann := bz.prepare.CreateAnnouncement()
 	bza := &BizCoinAnnounce{
 		TYPE:         ROUND_PREPARE,
@@ -322,7 +358,9 @@ func (bz *BizCoin) startChallengePrepare() error {
 // Then it creates the challenge and sends it along with the
 // "prepare" signature down the tree.
 func (bz *BizCoin) startChallengeCommit() error {
-
+	if bz.onChallengeCommitStarted != nil {
+		bz.onChallengeCommitStarted()
+	}
 	// create the challenge out of it
 	marshalled, err := json.Marshal(bz.tempBlock)
 	if err != nil {
@@ -470,6 +508,10 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 	// if root we have finished
 	if bz.IsRoot() {
 		sig := bz.Signature()
+		if bz.onChallengeCommitFinished != nil {
+			bz.onChallengeCommitFinished()
+		}
+		// TODO use nicolas callback
 		if bz.onDoneCallback != nil {
 			go bz.onDoneCallback(*sig)
 		}
@@ -501,9 +543,12 @@ func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
 	dbg.Lvl3("BizCoin Handle Response PREPARE")
 	// if I'm root, we are finished, let's notify the "commit" round
 	if bz.IsRoot() {
-		// TODO measure this too:
+		// notify listeners (simulation) we finished
+		if bz.onResponsePrepareFinished != nil {
+			bz.onResponsePrepareFinished()
+		}
 		bz.startChallengeCommit()
-		// end
+
 		return nil
 	}
 	// send up
