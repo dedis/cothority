@@ -32,7 +32,7 @@ type simulationConfig struct {
 	//blocksDir is the directory where to find the transaction blocks (.dat files)
 	BlocksDir string
 	// timeout the leader after TimeoutMs milliseconds
-	TimeoutMs int
+	TimeoutMs uint64
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {

@@ -94,11 +94,13 @@ type BizCoin struct {
 	onChallengeCommit     func()
 	onChallengeCommitDone func()
 	// view change setup and measurement
-	viewChange viewchange.ViewChange
-	vcMeasure  *monitor.Measure
+	viewChange  *viewchange.ViewChange
+	vcMeasure   *monitor.Measure
+	doneSigning bool
+	doneLock    sync.Mutex
 }
 
-func NewBizCoinProtocol(n *sda.Node, timeoutMs int) (*BizCoin, error) {
+func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	// create the bizcoin
 	bz := new(BizCoin)
 	bz.Node = n
@@ -116,7 +118,7 @@ func NewBizCoinProtocol(n *sda.Node, timeoutMs int) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
 
-	bz.timeout = timeoutMs
+	//bz.timeout = timeoutMs
 	vcp, err := viewchange.NewViewChange(n)
 	if err != nil {
 		return nil, err
@@ -127,7 +129,7 @@ func NewBizCoinProtocol(n *sda.Node, timeoutMs int) (*BizCoin, error) {
 	return bz, nil
 }
 
-func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs int) (*BizCoin, error) {
+func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64) (*BizCoin, error) {
 	bz, err := NewBizCoinProtocol(n)
 	bz.transactions = transactions
 	bz.timeout = timeOutMs
@@ -529,6 +531,9 @@ func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 			bz.onChallengeCommitDone()
 		}
 		if bz.onDoneCallback != nil {
+			bz.doneLock.Lock()
+			bz.doneSigning = true
+			bz.doneLock.Unlock()
 			go bz.onDoneCallback(*sig)
 		}
 		return nil
@@ -645,9 +650,15 @@ func (bz *BizCoin) SetTimeout(millis uint64, callback func()) {
 
 func (bz *BizCoin) startTimer() {
 	time.Sleep(time.Millisecond * time.Duration(bz.timeout))
-	if !done { // FIXME
-		bz.viewChange.Start()
-		bz.viewChange.WaitDOne()
+	bz.doneLock.Lock()
+	defer bz.doneLock.Unlock()
+	if !bz.doneSigning {
+
+		if err := bz.viewChange.Start(); err != nil {
+
+		}
+		bz.viewChange.WaitAgreement()
 		bz.vcMeasure.Measure()
 	}
+
 }
