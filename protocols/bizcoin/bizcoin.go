@@ -146,9 +146,9 @@ func (bz *BizCoin) Dispatch() error {
 		case msg := <-bz.responseChan:
 			switch msg.BizCoinResponse.TYPE {
 			case ROUND_PREPARE:
-				err = bz.handleResponsePrepare(msg.BizCoinResponse)
+				err = bz.handleResponsePrepare(&msg.BizCoinResponse)
 			case ROUND_COMMIT:
-				err = bz.handleResponseCommit(msg.BizCoinResponse)
+				err = bz.handleResponseCommit(&msg.BizCoinResponse)
 			}
 		case <-bz.done:
 			dbg.Lvl2("BizCoin Instance exit.")
@@ -482,7 +482,7 @@ func (bz *BizCoin) startResponseCommit() error {
 
 // handleResponseCommit handles the responses for the commit round during the
 // response phase.
-func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 	// check if we have enough
 	bz.tempCommitResponse = append(bz.tempCommitResponse, bzr.Response)
 	if len(bz.tempCommitResponse) < len(bz.Children()) {
@@ -517,7 +517,7 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 }
 
 // handlePrepapreResponse
-func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponsePrepare(bzr *BizCoinResponse) error {
 	// check if we have enough
 	bz.tempPrepareResponse = append(bz.tempPrepareResponse, bzr.Response)
 	if len(bz.tempPrepareResponse) < len(bz.Children()) {
