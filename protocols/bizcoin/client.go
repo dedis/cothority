@@ -32,6 +32,7 @@ func (c *Client) StartClientSimulation(blocksDir string, numTxs int) error {
 }
 
 func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
+	dbg.Lvl1("BizCoin Client will trigger up to", nTxs, " transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 	if err != nil {
 		dbg.Error("Couldn't parse blocks in", blocksPath)
@@ -44,6 +45,7 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 		for _, tr := range transactions {
 			// "send" transaction to server (we skip tcp connection on purpose here)
 			if err := c.srv.AddTransaction(tr); err != nil {
+				dbg.Error("Error adding transactions:", err)
 				return err
 			}
 		}

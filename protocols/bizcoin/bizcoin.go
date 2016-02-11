@@ -88,12 +88,7 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	bz.commit = cosi.NewCosi(n.Suite(), n.Private())
 	bz.verifyBlockChan = make(chan bool)
 
-	// compute the aggregate public key
-	agg := bz.suite.Point().Null()
-	for _, e := range n.EntityList().List {
-		agg = agg.Add(agg, e.Public)
-	}
-	bz.aggregatedPublic = agg
+	bz.aggregatedPublic = n.EntityList().Aggregate
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
