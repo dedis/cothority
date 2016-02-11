@@ -145,16 +145,16 @@ func (bz *BizCoin) Dispatch() error {
 			err = bz.handleCommit(msg.BizCoinCommitment)
 			// Challenge
 		case msg := <-bz.challengePrepareChan:
-			err = bz.handleChallengePrepare(msg.BizCoinChallengePrepare)
+			err = bz.handleChallengePrepare(&msg.BizCoinChallengePrepare)
 		case msg := <-bz.challengeCommitChan:
-			err = bz.handleChallengeCommit(msg.BizCoinChallengeCommit)
+			err = bz.handleChallengeCommit(&msg.BizCoinChallengeCommit)
 			// Response
 		case msg := <-bz.responseChan:
 			switch msg.BizCoinResponse.TYPE {
 			case ROUND_PREPARE:
-				err = bz.handleResponsePrepare(msg.BizCoinResponse)
+				err = bz.handleResponsePrepare(&msg.BizCoinResponse)
 			case ROUND_COMMIT:
-				err = bz.handleResponseCommit(msg.BizCoinResponse)
+				err = bz.handleResponseCommit(&msg.BizCoinResponse)
 			}
 		case <-bz.done:
 			dbg.Lvl2("BizCoin Instance exit.")
@@ -390,7 +390,7 @@ func (bz *BizCoin) startChallengeCommit() error {
 
 // handlePrepareChallenge receive the challenge messages for the "prepare"
 // round.
-func (bz *BizCoin) handleChallengePrepare(ch BizCoinChallengePrepare) error {
+func (bz *BizCoin) handleChallengePrepare(ch *BizCoinChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
 	go bz.verifyBlock(bz.tempBlock)
@@ -412,7 +412,7 @@ func (bz *BizCoin) handleChallengePrepare(ch BizCoinChallengePrepare) error {
 
 // handleCommitChallenge will verify the signature + check if no more than 1/3
 // of participants refused to sign.
-func (bz *BizCoin) handleChallengeCommit(ch BizCoinChallengeCommit) error {
+func (bz *BizCoin) handleChallengeCommit(ch *BizCoinChallengeCommit) error {
 	// marshal the block
 	marshalled, err := json.Marshal(bz.tempBlock)
 	if err != nil {
@@ -491,7 +491,7 @@ func (bz *BizCoin) startResponseCommit() error {
 
 // handleResponseCommit handles the responses for the commit round during the
 // response phase.
-func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 	// check if we have enough
 	bz.tempCommitResponse = append(bz.tempCommitResponse, bzr.Response)
 	if len(bz.tempCommitResponse) < len(bz.Children()) {
@@ -526,7 +526,7 @@ func (bz *BizCoin) handleResponseCommit(bzr BizCoinResponse) error {
 }
 
 // handlePrepapreResponse
-func (bz *BizCoin) handleResponsePrepare(bzr BizCoinResponse) error {
+func (bz *BizCoin) handleResponsePrepare(bzr *BizCoinResponse) error {
 	// check if we have enough
 	bz.tempPrepareResponse = append(bz.tempPrepareResponse, bzr.Response)
 	if len(bz.tempPrepareResponse) < len(bz.Children()) {
