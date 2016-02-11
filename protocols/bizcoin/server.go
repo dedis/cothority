@@ -94,7 +94,7 @@ func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 }
 
 // BlockSignaturesChan returns a channel that can be used to be notified when a
-// signature on a blok is ready
+// signature on a block is done
 // Used in simulation.go
 func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
 	return s.blockSignatureChan

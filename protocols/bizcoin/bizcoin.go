@@ -112,7 +112,7 @@ func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx) (*BizCoin,
 	return bz, err
 }
 
-// Start() Will start both rounds "prepare" and "commit" at same time. The
+// Start will start both rounds "prepare" and "commit" at same time. The
 // "commit" round will wait the end of the "prepare" round during its challenge
 // phase.
 func (bz *BizCoin) Start() error {
@@ -120,7 +120,6 @@ func (bz *BizCoin) Start() error {
 		return err
 	}
 	return bz.startAnnouncementCommit()
-
 }
 
 // Dispatch listen on the different channels
@@ -148,11 +147,11 @@ func (bz *BizCoin) Dispatch() error {
 				err = bz.handleResponseCommit(msg.BizCoinResponse)
 			}
 		case <-bz.done:
-			dbg.Lvl3("BizCoin Instance exit.")
+			dbg.Lvl2("BizCoin Instance exit.")
 			break
 		}
 		if err != nil {
-			dbg.Error("Error treating the messages :", err)
+			dbg.Error("Error handling messages:", err)
 		}
 	}
 }
@@ -531,7 +530,7 @@ func (bz *BizCoin) waitResponseVerification() (*BizCoinResponse, bool) {
 func (bz *BizCoin) verifyBlock(block *blockchain.TrBlock) {
 	//We measure the average block verification delays is 174ms for an average
 	//block of 500kB.
-	//To simulate the verification cost of bigger blocks we multipley 174ms
+	//To simulate the verification cost of bigger blocks we multiply 174ms
 	//times the size/500*1024
 	b, _ := json.Marshal(block)
 	s := len(b)
