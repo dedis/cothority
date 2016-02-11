@@ -18,7 +18,7 @@ import (
 
 // How many times should we try to connect
 const maxRetry = 10
-const waitRetry = 1 * time.Second
+const waitRetry = 100 * time.Millisecond
 const timeOut = 5 * time.Second
 
 // The various errors you can have

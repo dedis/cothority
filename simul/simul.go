@@ -137,7 +137,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	for i, t := range runconfigs {
 		// Implement a simple range-argument that will skip checks not in range
 		if i < start || i > stop {
-			dbg.Lvl1("Skipping", t, "because of range")
+			dbg.Lvl2("Skipping", t, "because of range")
 			continue
 		}
 		dbg.Lvl1("Doing run", t)

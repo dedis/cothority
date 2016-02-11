@@ -1,0 +1,7 @@
+Simulation = "CoSiSimulation"
+Servers = 16
+Bf = 8
+Rounds = 10
+
+Hosts
+3
