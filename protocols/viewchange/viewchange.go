@@ -1,4 +1,6 @@
-package bizcoin
+package viewchange
+
+import "github.com/dedis/cothority/lib/sda"
 
 type ViewChange struct {
 	// the node we are
@@ -20,7 +22,7 @@ func NewViewChange(node *sda.Node) (*ViewChange, error) {
 // SetupViewChange the function that a protocol can call when it
 // needs to operate a view change. You must supply here the new entityList + new
 // Tree you wish to apply to the tree.
-func Propagate(entityList *sda.EntityList, tree *sda.Tree) (*ViewChange, error) {
+func (vcp *ViewChange) Propagate(entityList *sda.EntityList, tree *sda.Tree) (*ViewChange, error) {
 	vcp := NewViewChange(node)
 	vcp.el = entityList
 	vcp.tree = tree
@@ -33,7 +35,7 @@ func (vcp *ViewChange) Dispatch() error {
 
 }
 
-// waitAgreement will wait until it receis 2/3 of the peers.
-func (vcp *ViewChange) waitAgreement() {
+// waitAgreement will wait until it receives 2/3 of the peers.
+func (vcp *ViewChange) WaitAgreement() {
 
 }

@@ -9,9 +9,11 @@ import (
 
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/viewchange"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -80,7 +82,7 @@ type BizCoin struct {
 
 	// timeout to detect root failure to produce the final verification in
 	// MILLISECONDs.
-	timeout int
+	timeout uint64
 	// onTimeoutCallback is the function that will be called if a timeout
 	// occurs.
 	onTimeoutCallback func()
@@ -91,6 +93,9 @@ type BizCoin struct {
 	onResponsePrepareDone func()
 	onChallengeCommit     func()
 	onChallengeCommitDone func()
+	// view change setup and measurement
+	viewChange viewchange.ViewChange
+	vcMeasure  *monitor.Measure
 }
 
 func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
@@ -110,6 +115,11 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengePrepareChan)
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
+	vcp, err := viewchange.NewViewChange(n)
+	if err != nil {
+		return nil, err
+	}
+	bz.viewChange = vcp
 
 	go bz.Dispatch()
 	return bz, nil
@@ -166,25 +176,25 @@ func (bz *BizCoin) Dispatch() error {
 	}
 }
 
-// OnResponsePrepareStart registers a function which will be called when
+// OnAnnouncementPrepare registers a function which will be called when
 // ResponsePrepare round is started
 func (bz *BizCoin) OnAnnouncementPrepare(fn func()) {
 	bz.onAnnouncementPrepare = fn
 }
 
-// OnResponsePrepareStart registers a function which will be called when
+// OnAnnouncementPrepareDone registers a function which will be called when
 // ResponsePrepare round is finished
 func (bz *BizCoin) OnAnnouncementPrepareDone(fn func()) {
 	bz.onResponsePrepareDone = fn
 }
 
-// OnChallengeCommStart registers a function which will be called when
+// OnChallengeCommit registers a function which will be called when
 // ChallengeCommit round is started
 func (bz *BizCoin) OnChallengeCommit(fn func()) {
 	bz.onChallengeCommit = fn
 }
 
-// OnChallengeCommFinish registers a function which will be called when
+// OnChallengeCommitDone registers a function which will be called when
 // ChallengeCommit round is finished
 func (bz *BizCoin) OnChallengeCommitDone(fn func()) {
 	bz.onChallengeCommitDone = fn
@@ -233,7 +243,7 @@ func (bz *BizCoin) sendAnnouncement(bza *BizCoinAnnounce) error {
 // handleAnnouncement pass the announcement to the right CoSi struct.
 func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 	// start timer to detect root failure.
-	measure := monitor.NewMeasure("measure")
+	bz.vcMeasure = monitor.NewMeasure("viewchange")
 	go bz.startTimer()
 	var announcement = new(BizCoinAnnounce)
 	switch ann.TYPE {
@@ -625,15 +635,16 @@ func (bz *BizCoin) RegisterOnDone(fn func(BlockSignature)) {
 
 // SetTimeout sets the timeout to `millis` time and register the callback to
 // call when the timeout occurs
-func (bz *BizCoin) SetTimeout(millis int, callback func()) {
+func (bz *BizCoin) SetTimeout(millis uint64, callback func()) {
 	bz.timeout = millis
 	bz.onTimeoutCallback = callback
 }
+
 func (bz *BizCoin) startTimer() {
-	time.Sleep(time.Millisecond * bz.timeout)
+	time.Sleep(time.Millisecond * time.Duration(bz.timeout))
 	if !done {
-		viewChange.Start()
-		vewCHange.waitDOne()
-		measure.Measure()
+		bz.viewChange.Start()
+		bz.viewChange.WaitDOne()
+		bz.vcMeasure.Measure()
 	}
 }
