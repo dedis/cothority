@@ -107,7 +107,7 @@ func (s *Server) onDone(blk BlockSignature) {
 func (s *Server) waitEnoughBlocks() []blkparser.Tx {
 	dbg.Lvl4("Releasing requestChan")
 	s.requestChan <- true
-	dbg.Lvl4("After requestChan released")
+	dbg.Lvl4("After requestChan released (waiting for repsonseChan)")
 	transactions := <-s.responseChan
 	dbg.Lvl4("After responseChan consumed")
 	return transactions
@@ -118,6 +118,7 @@ func (s *Server) listenEnoughBlocks() {
 	var want bool
 	for {
 		select {
+		// handle (single incoming) transactions:
 		case tr := <-s.transactionChan:
 			transactions = append(transactions, tr)
 			if want {
@@ -129,6 +130,7 @@ func (s *Server) listenEnoughBlocks() {
 					want = false
 				}
 			}
+			// handle request for enough transactions (enough == blocksize)
 		case <-s.requestChan:
 			dbg.Lvl4("Requested more transactions")
 			want = true
