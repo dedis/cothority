@@ -98,7 +98,7 @@ type BizCoin struct {
 	vcMeasure  *monitor.Measure
 }
 
-func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
+func NewBizCoinProtocol(n *sda.Node, timeoutMs int) (*BizCoin, error) {
 	// create the bizcoin
 	bz := new(BizCoin)
 	bz.Node = n
@@ -115,6 +115,8 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengePrepareChan)
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
+
+	bz.timeout = timeoutMs
 	vcp, err := viewchange.NewViewChange(n)
 	if err != nil {
 		return nil, err
@@ -125,9 +127,10 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	return bz, nil
 }
 
-func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx) (*BizCoin, error) {
+func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs int) (*BizCoin, error) {
 	bz, err := NewBizCoinProtocol(n)
 	bz.transactions = transactions
+	bz.timeout = timeOutMs
 	return bz, err
 }
 

@@ -31,6 +31,8 @@ type simulationConfig struct {
 	NumClientTxs int
 	//blocksDir is the directory where to find the transaction blocks (.dat files)
 	BlocksDir string
+	// timeout the leader after TimeoutMs milliseconds
+	TimeoutMs int
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
@@ -71,7 +73,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 		// instantiate a bizcoin protocol
 		rComplete := monitor.NewMeasure("round_prepare")
-		pi, err := server.Instantiate(node)
+		pi, err := server.Instantiate(node, e.TimeoutMs)
 		if err != nil {
 			return err
 		}

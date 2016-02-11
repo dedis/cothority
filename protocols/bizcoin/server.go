@@ -77,12 +77,12 @@ func (s *Server) ListenClientTransactions() {
 }
 
 // Instantiate takes blockSize transactions and create the bizcoin instances.
-func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
+func (s *Server) Instantiate(node *sda.Node, timeOutMs int) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	dbg.Print("waiting enough blocks")
 	currTransactions := s.waitEnoughBlocks()
 	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
-	pi, err := NewBizCoinRootProtocol(node, currTransactions)
+	pi, err := NewBizCoinRootProtocol(node, currTransactions, timeOutMs)
 	node.SetProtocolInstance(pi)
 	pi.RegisterOnDone(s.onDoneSign)
 
