@@ -41,11 +41,12 @@ type Server struct {
 	// blockSignatureChan is the channel used to pass out the signatures that
 	// BizCoin's instances have made
 	blockSignatureChan chan BlockSignature
-	// enoughBlock signals the server we have enough
-	// no comments..
+	// communicate an incoming transaction by this channel
 	transactionChan chan blkparser.Tx
-	requestChan     chan bool
-	responseChan    chan []blkparser.Tx
+	// communicate if there is a go-routine waiting for enough transactions
+	requestChan chan bool
+	// communicate (that we have enough) transactions
+	responseChan chan []blkparser.Tx
 }
 
 // NewServer returns a new fresh Server. It must be given the blockSize in order
@@ -64,6 +65,8 @@ func NewServer(blockSize int) *Server {
 	return s
 }
 
+// AddTransaction can be used to simulate the client(s) sending a single
+// transaction (without a network connection)
 func (s *Server) AddTransaction(tr blkparser.Tx) error {
 	s.transactionChan <- tr
 	return nil
@@ -80,8 +83,7 @@ func (s *Server) ListenClientTransactions() {
 func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	currTransactions := s.waitEnoughBlocks()
-	dbg.LLvl2("Enough blocks... ................ we are starting")
-	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
+	dbg.Lvl3("Instantiate BizCoin Round with", len(currTransactions), " transactions")
 	pi, err := NewBizCoinRootProtocol(node, currTransactions)
 	node.SetProtocolInstance(pi)
 	pi.RegisterOnDone(s.onDone)
@@ -91,8 +93,9 @@ func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	return pi, err
 }
 
-// BlockSignature returns a channel that is given each new block signature as
-// soon as they are arrive (Wether correct or not).
+// BlockSignaturesChan returns a channel that can be used to be notified when a
+// signature on a blok is ready
+// Used in simulation.go
 func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
 	return s.blockSignatureChan
 }
@@ -102,11 +105,11 @@ func (s *Server) onDone(blk BlockSignature) {
 }
 
 func (s *Server) waitEnoughBlocks() []blkparser.Tx {
-	dbg.Print("Consuming requestChan ............")
+	dbg.Lvl4("Releasing requestChan")
 	s.requestChan <- true
-	dbg.Print("After request Chan")
+	dbg.Lvl4("After requestChan released")
 	transactions := <-s.responseChan
-	dbg.Print("After Response Chan")
+	dbg.Lvl4("After responseChan consumed")
 	return transactions
 }
 
@@ -118,19 +121,19 @@ func (s *Server) listenEnoughBlocks() {
 		case tr := <-s.transactionChan:
 			transactions = append(transactions, tr)
 			if want {
-				dbg.Print("added new trnsaction => maybe we can give them  ?=====")
+				dbg.Lvl4("Added new transaction, if we have enough we respond with them")
 				if len(transactions) >= s.blockSize {
-					dbg.Print("will return transactions")
+					dbg.Lvl4("will respond with enough transactions")
 					s.responseChan <- transactions[:s.blockSize]
 					transactions = transactions[s.blockSize:]
 					want = false
 				}
 			}
 		case <-s.requestChan:
-			dbg.Print("Request transactions")
+			dbg.Lvl4("Requested more transactions")
 			want = true
 			if len(transactions) >= s.blockSize {
-				dbg.Print("will return transactions")
+				dbg.Lvl4("will respond with enough transactions")
 				s.responseChan <- transactions[:s.blockSize]
 				transactions = transactions[s.blockSize:]
 				want = false
@@ -140,30 +143,6 @@ func (s *Server) listenEnoughBlocks() {
 }
 
 func (s *Server) signalEnough() {
-	dbg.Print("signalEnough: writing to chan -----------------")
+	dbg.Lvl4("signalEnough triggered")
 	s.requestChan <- true
 }
-
-/*func (s *Server) waitEnoughBlocks() {*/
-//s.requestLock.Lock()
-//s.requestBlocks = true
-//s.requestLock.Unlock()
-//<-s.requestChan
-//s.requestLock.Lock()
-//s.requestBlocks = false
-//s.requestLock.Unlock()
-
-//}
-
-//func (s *Server) listenEnoughBlocks() {
-//for {
-//select {
-//case <-s.enoughBlock:
-//s.requestLock.Lock()
-//if s.requestBlocks {
-//s.requestChan <- true
-//}
-//s.requestLock.Unlock()
-//}
-//}
-/*}*/
