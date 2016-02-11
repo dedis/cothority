@@ -128,31 +128,3 @@ func (s *Server) listenEnoughBlocks() {
 		}
 	}
 }
-
-func (s *Server) signalEnough() {
-	s.requestChan <- true
-}
-
-/*func (s *Server) waitEnoughBlocks() {*/
-//s.requestLock.Lock()
-//s.requestBlocks = true
-//s.requestLock.Unlock()
-//<-s.requestChan
-//s.requestLock.Lock()
-//s.requestBlocks = false
-//s.requestLock.Unlock()
-
-//}
-
-//func (s *Server) listenEnoughBlocks() {
-//for {
-//select {
-//case <-s.enoughBlock:
-//s.requestLock.Lock()
-//if s.requestBlocks {
-//s.requestChan <- true
-//}
-//s.requestLock.Unlock()
-//}
-//}
-/*}*/
