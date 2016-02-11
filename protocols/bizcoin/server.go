@@ -81,11 +81,10 @@ func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	dbg.Print("waiting enough blocks")
 	currTransactions := s.waitEnoughBlocks()
-	dbg.LLvl2("Enough blocks... ................ we are starting")
 	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
 	pi, err := NewBizCoinRootProtocol(node, currTransactions)
 	node.SetProtocolInstance(pi)
-	pi.RegisterOnDone(s.onDone)
+	pi.RegisterOnDone(s.onDoneSign)
 
 	go pi.Start()
 
@@ -98,7 +97,7 @@ func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
 	return s.blockSignatureChan
 }
 
-func (s *Server) onDone(blk BlockSignature) {
+func (s *Server) onDoneSign(blk BlockSignature) {
 	s.blockSignatureChan <- blk
 }
 
@@ -110,6 +109,7 @@ func (s *Server) waitEnoughBlocks() []blkparser.Tx {
 }
 
 func (s *Server) listenEnoughBlocks() {
+	// TODO we should ignore this in the measurement
 	var transactions []blkparser.Tx
 	var want bool
 	for {

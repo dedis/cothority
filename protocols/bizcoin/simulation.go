@@ -2,6 +2,7 @@ package bizcoin
 
 import (
 	"fmt"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
@@ -11,19 +12,20 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("BizCoinSimulation", NewBizCoinSimulation)
+	sda.SimulationRegister("BizCoinSimulation", NewSimulation)
 	sda.ProtocolRegisterName("BizCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBizCoinProtocol(n) })
 }
 
-type BizCoinSimulation struct {
+// Simulation implements da.Simulation interface
+type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	SimulationConfig
+	simulationConfig
 }
 
-type SimulationConfig struct {
-	// block-size in bytes:
+type simulationConfig struct {
+	// Blocksize is the number of transactions in one block:
 	Blocksize int
 	// number of transactions the client will send:
 	NumClientTxs int
@@ -31,8 +33,8 @@ type SimulationConfig struct {
 	BlocksDir string
 }
 
-func NewBizCoinSimulation(config string) (sda.Simulation, error) {
-	es := &BizCoinSimulation{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -41,7 +43,7 @@ func NewBizCoinSimulation(config string) (sda.Simulation, error) {
 }
 
 // Setup implements sda.Simulation interface
-func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
 	err := e.CreateTree(sc)
@@ -52,12 +54,14 @@ func (e *BizCoinSimulation) Setup(dir string, hosts []string) (*sda.SimulationCo
 }
 
 // Run implements sda.Simulation interface
-func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
+func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewServer(e.Blocksize)
 	client := NewClient(server)
 	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
 	sigChan := server.BlockSignaturesChan()
+	var rChallComm *monitor.Measure
+	var rRespPrep *monitor.Measure
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
@@ -66,18 +70,34 @@ func (e *BizCoinSimulation) Run(sdaConf *sda.SimulationConfig) error {
 			return err
 		}
 		// instantiate a bizcoin protocol
-		rPrepare := monitor.NewMeasure("round_prepare")
-		_, err = server.Instantiate(node)
+		rComplete := monitor.NewMeasure("round_prepare")
+		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
 		}
+
+		bz := pi.(*BizCoin)
+		bz.OnChallengeCommit(func() {
+			rChallComm = monitor.NewMeasure("round_challenge_commit")
+		})
+		bz.OnChallengeCommitDone(func() {
+			rChallComm.Measure()
+			rChallComm = nil
+		})
+		bz.OnAnnouncementPrepare(func() {
+			rRespPrep = monitor.NewMeasure("round_hanle_resp_prep")
+		})
+		bz.OnAnnouncementPrepareDone(func() {
+			rRespPrep.Measure()
+			rRespPrep = nil
+		})
+
+		// wait for the signature (all steps finished)
 		dbg.Print("after instantiate")
 		// wait for the signature
 		sig := <-sigChan
 
-		// stop the measurement
-		rPrepare.Measure()
-		// verifies it
+		rComplete.Measure()
 		if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, &sig); err != nil {
 			dbg.Lvl1("Round", round, " FAILED")
 		} else {
