@@ -21,10 +21,10 @@ type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	SimulationConfig
+	simulationConfig
 }
 
-type SimulationConfig struct {
+type simulationConfig struct {
 	// block-size in bytes:
 	Blocksize int
 	// number of transactions the client will send:
@@ -77,17 +77,17 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 
 		bz := pi.(*BizCoin)
-		bz.OnChallengeCommStart(func() {
+		bz.OnChallengeCommit(func() {
 			rChallComm = monitor.NewMeasure("round_challenge_commit")
 		})
-		bz.OnChallengeCommFinish(func() {
+		bz.OnChallengeCommitDone(func() {
 			rChallComm.Measure()
 			rChallComm = nil
 		})
-		bz.OnResponsePrepareStart(func() {
+		bz.OnAnnouncementPrepare(func() {
 			rRespPrep = monitor.NewMeasure("round_hanle_resp_prep")
 		})
-		bz.OnResponsePrepareFinish(func() {
+		bz.OnAnnouncementPrepareDone(func() {
 			rRespPrep.Measure()
 			rRespPrep = nil
 		})
