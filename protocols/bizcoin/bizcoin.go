@@ -178,6 +178,7 @@ func (bz *BizCoin) Dispatch() error {
 			err = bz.handleViewChange(&msg.viewChange)
 		case <-bz.doneProcessing:
 			dbg.Lvl2("BizCoin Instance exit.")
+			bz.tempBlock = nil
 			return nil
 		}
 		if err != nil {

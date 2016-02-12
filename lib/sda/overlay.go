@@ -3,6 +3,7 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -18,7 +19,8 @@ Nodes and ProtocolInstances upon request and dispatches the messages.
 type Overlay struct {
 	host *Host
 	// mapping from Token.Id() to Node
-	nodes map[uuid.UUID]*Node
+	nodes    map[uuid.UUID]*Node
+	nodeLock *sync.Mutex
 	// mapping from Tree.Id to Tree
 	trees map[uuid.UUID]*Tree
 	// mapping from EntityList.id to EntityList
@@ -32,6 +34,7 @@ func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:        h,
 		nodes:       make(map[uuid.UUID]*Node),
+		nodeLock:    new(sync.Mutex),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
 		cache:       NewTreeNodeCache(),
@@ -56,17 +59,19 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// If node does not exists, then create it
+	o.nodeLock.Lock()
 	node := o.nodes[sdaMsg.To.Id()]
 	if node == nil {
 		dbg.Lvl2("Node not found for token (creating new one):", fmt.Sprintf("%+v", sdaMsg.To))
 		var err error
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		if err != nil {
+			o.nodeLock.Unlock()
 			return err
 		}
 		node = o.nodes[sdaMsg.To.Id()]
 	}
-
+	o.nodeLock.Unlock()
 	err := node.DispatchMsg(sdaMsg)
 	if err != nil {
 		return err
@@ -134,6 +139,8 @@ func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error)
 	if err != nil {
 		return nil, err
 	}
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
 	o.nodes[node.token.Id()] = node
 	return node, node.protocolInstantiate()
 }
@@ -172,6 +179,8 @@ func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 		// Host is handling the generation of protocolInstanceID
 		RoundID: uuid.NewV4(),
 	}
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
 	node, err := NewNodeEmpty(o, token)
 	o.nodes[node.token.Id()] = node
 	return node, err
@@ -216,9 +225,12 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 	if to == nil {
 		return errors.New("To-token is nil")
 	}
+	o.nodeLock.Lock()
 	if o.nodes[from.Id()] == nil {
+		o.nodeLock.Unlock()
 		return errors.New("No protocol instance registered with this token.")
 	}
+	o.nodeLock.Unlock()
 	tn, err := o.TreeNodeFromToken(to)
 	if err != nil {
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
@@ -229,6 +241,8 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 // nodeDone is called by node to signify that its work is finished and its
 // ressources can be released
 func (o *Overlay) nodeDone(tok *Token) {
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
 	delete(o.nodes, tok.Id())
 }
 

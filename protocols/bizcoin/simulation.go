@@ -66,6 +66,17 @@ type monitorMut struct {
 	sync.Mutex
 }
 
+func (m *monitorMut) NewMeasure(id string) {
+	m.Lock()
+	defer m.Unlock()
+	m.mon = monitor.NewMeasure(id)
+}
+func (m *monitorMut) MeasureAndReset() {
+	m.Lock()
+	defer m.Unlock()
+	m.mon = nil
+}
+
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
@@ -85,6 +96,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 		// instantiate a bizcoin protocol
 		rComplete := monitor.NewMeasure("round_prepare")
+		//pi, err := server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
 		pi, err := server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
 		if err != nil {
 			return err
@@ -92,28 +104,17 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		bz := pi.(*BizCoin)
 		bz.OnChallengeCommit(func() {
-			rChallComm.Lock()
-			defer rChallComm.Unlock()
-			rChallComm.mon = monitor.NewMeasure("round_challenge_commit")
+			rChallComm.NewMeasure("round_challenge_commit")
 		})
 		bz.OnChallengeCommitDone(func() {
-			rChallComm.Lock()
-			defer rChallComm.Unlock()
-			rChallComm.mon.Measure()
-			rChallComm.mon = nil
+			rChallComm.MeasureAndReset()
 		})
 		bz.OnAnnouncementPrepare(func() {
-			rRespPrep.Lock()
-			defer rRespPrep.Unlock()
-			rRespPrep.mon = monitor.NewMeasure("round_hanle_resp_prep")
+			rRespPrep.NewMeasure("round_hanle_resp_prep")
 		})
 		bz.OnAnnouncementPrepareDone(func() {
-			rRespPrep.Lock()
-			defer rRespPrep.Unlock()
-			rRespPrep.mon.Measure()
-			rRespPrep.mon = nil
+			rRespPrep.MeasureAndReset()
 		})
-
 		// wait for the signature (all steps finished)
 		dbg.Print("after instantiate")
 		// wait for the signature
