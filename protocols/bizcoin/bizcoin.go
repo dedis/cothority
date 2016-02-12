@@ -678,6 +678,7 @@ func (bz *BizCoin) handleViewChange(vc *viewChange) error {
 	if bz.vcCounter > bz.threshold {
 		dbg.Lvl3("Viewchange threshold reached")
 		bz.vcMeasure.Measure()
+		bz.Done()
 		return nil
 	}
 	return nil
