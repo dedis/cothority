@@ -131,7 +131,10 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 
 func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64) (*BizCoin, error) {
 	bz, err := NewBizCoinProtocol(n)
-	bz.transactions = transactions
+	if err != nil {
+		return nil, err
+	}
+	bz.tempBlock, err = bz.getBlock(transactions)
 	bz.timeout = timeOutMs
 	return bz, err
 }
@@ -326,16 +329,8 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 
 // startPrepareChallenge create the challenge and send its down the tree
 func (bz *BizCoin) startChallengePrepare() error {
-	// Get the block we want to sign
-	dbg.Print(bz.Name(), "Starting Challenge PREPARE GET BLOCK ----")
-	trblock, err := bz.getBlock()
-
-	dbg.Print(bz.Name(), "Starting Challenge PREPARE GET BLOCK ++++")
-	if err != nil {
-		return err
-	}
-	bz.tempBlock = trblock
 	// make the challenge out of it
+	trblock := bz.tempBlock
 	marshalled, err := json.Marshal(trblock)
 	if err != nil {
 		return err
@@ -618,12 +613,12 @@ func (bz *BizCoin) verifyBlock(block *blockchain.TrBlock) {
 }
 
 // getblock returns the next block available from the transaction pool.
-func (bz *BizCoin) getBlock() (*blockchain.TrBlock, error) {
-	if len(bz.transactions) < 1 {
+func (bz *BizCoin) getBlock(transactions []blkparser.Tx) (*blockchain.TrBlock, error) {
+	if len(transactions) < 1 {
 		return nil, errors.New("no transaction available")
 	}
 
-	trlist := blockchain.NewTransactionList(bz.transactions, len(bz.transactions))
+	trlist := blockchain.NewTransactionList(transactions, len(transactions))
 	header := blockchain.NewHeader(trlist, bz.lastBlock, bz.lastKeyBlock)
 	trblock := blockchain.NewTrBlock(trlist, header)
 	return trblock, nil
