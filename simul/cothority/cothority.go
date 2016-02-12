@@ -2,15 +2,17 @@ package main
 
 import (
 	"flag"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
+	"math"
+	"time"
+
 	"github.com/dedis/cothority/lib/monitor"
 	_ "github.com/dedis/cothority/protocols"
 	"github.com/dedis/cothority/protocols/manage"
-	"math"
-	"time"
 )
 
 /*
@@ -96,7 +98,8 @@ func main() {
 			if err != nil {
 				dbg.Fatal(err)
 			}
-			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
+			// FIXME data race Timeout write
+			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
 			node.ProtocolInstance().(*manage.ProtocolCount).NetworkDelay = networkDelay
 			node.Start()
 			select {

@@ -85,8 +85,8 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
 	sigChan := server.BlockSignaturesChan()
 
-	var rChallComm monitorMut
-	var rRespPrep monitorMut
+	//var rChallComm monitorMut
+	//var rRespPrep monitorMut
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
@@ -97,25 +97,25 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		// instantiate a bizcoin protocol
 		rComplete := monitor.NewMeasure("round_prepare")
 		//pi, err := server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
-		pi, err := server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
+		_, err = server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
 		if err != nil {
 			return err
 		}
 
-		bz := pi.(*BizCoin)
-		bz.OnChallengeCommit(func() {
-			rChallComm.NewMeasure("round_challenge_commit")
-		})
-		bz.OnChallengeCommitDone(func() {
-			rChallComm.MeasureAndReset()
-		})
-		bz.OnAnnouncementPrepare(func() {
-			rRespPrep.NewMeasure("round_hanle_resp_prep")
-		})
-		bz.OnAnnouncementPrepareDone(func() {
-			rRespPrep.MeasureAndReset()
-		})
-		// wait for the signature (all steps finished)
+		// bz := pi.(*BizCoin)
+		// bz.OnChallengeCommit(func() {
+		// 	rChallComm.NewMeasure("round_challenge_commit")
+		// })
+		// bz.OnChallengeCommitDone(func() {
+		// 	rChallComm.MeasureAndReset()
+		// })
+		// bz.OnAnnouncementPrepare(func() {
+		// 	rRespPrep.NewMeasure("round_hanle_resp_prep")
+		// })
+		// bz.OnAnnouncementPrepareDone(func() {
+		// 	rRespPrep.MeasureAndReset()
+		// })
+		// // wait for the signature (all steps finished)
 		dbg.Print("after instantiate")
 		// wait for the signature
 		sig := <-sigChan

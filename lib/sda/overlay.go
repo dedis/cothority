@@ -22,9 +22,11 @@ type Overlay struct {
 	nodes    map[uuid.UUID]*Node
 	nodeLock *sync.Mutex
 	// mapping from Tree.Id to Tree
-	trees map[uuid.UUID]*Tree
+	trees    map[uuid.UUID]*Tree
+	treesMut sync.Mutex
 	// mapping from EntityList.id to EntityList
-	entityLists map[uuid.UUID]*EntityList
+	entityLists    map[uuid.UUID]*EntityList
+	entityListLock sync.Mutex
 	// cache for relating token(~Node) to TreeNode
 	cache TreeNodeCache
 }
@@ -81,7 +83,9 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 
 // RegisterTree takes a tree and puts it in the map
 func (o *Overlay) RegisterTree(t *Tree) {
+	o.treesMut.Lock()
 	o.trees[t.Id] = t
+	o.treesMut.Unlock()
 	o.host.checkPendingSDA(t)
 }
 
@@ -92,11 +96,15 @@ func (o *Overlay) TreeFromToken(tok *Token) *Tree {
 
 // Tree returns the tree given by treeId or nil if not found
 func (o *Overlay) Tree(tid uuid.UUID) *Tree {
+	o.treesMut.Lock()
+	defer o.treesMut.Unlock()
 	return o.trees[tid]
 }
 
 // RegisterEntityList puts an entityList in the map
 func (o *Overlay) RegisterEntityList(el *EntityList) {
+	o.entityListLock.Lock()
+	defer o.entityListLock.Unlock()
 	o.entityLists[el.Id] = el
 }
 
@@ -107,6 +115,8 @@ func (o *Overlay) EntityListFromToken(tok *Token) *EntityList {
 
 // EntityList returns the entityList given by EntityListID
 func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
+	o.entityListLock.Lock()
+	defer o.entityListLock.Unlock()
 	return o.entityLists[elid]
 }
 

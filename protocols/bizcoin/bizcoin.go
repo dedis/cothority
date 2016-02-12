@@ -82,7 +82,8 @@ type BizCoin struct {
 
 	// timeout to detect root failure to produce the final verification in
 	// MILLISECONDs.
-	timeout uint64
+	timeout    uint64
+	timeoutMut sync.Mutex
 	// onTimeoutCallback is the function that will be called if a timeout
 	// occurs.
 	onTimeoutCallback func()
@@ -135,7 +136,9 @@ func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs 
 		return nil, err
 	}
 	bz.tempBlock, err = bz.getBlock(transactions)
+	bz.timeoutMut.Lock()
 	bz.timeout = timeOutMs
+	bz.timeoutMut.Unlock()
 	return bz, err
 }
 
@@ -194,6 +197,7 @@ func (bz *BizCoin) listen() {
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
 func (bz *BizCoin) startAnnouncementPrepare() error {
+	// FIXME data racce (read onAnnouncementPrepare)
 	if bz.onAnnouncementPrepare != nil {
 		go bz.onAnnouncementPrepare()
 	}
@@ -231,9 +235,14 @@ func (bz *BizCoin) sendAnnouncement(bza *BizCoinAnnounce) error {
 // handleAnnouncement pass the announcement to the right CoSi struct.
 func (bz *BizCoin) handleAnnouncement(ann BizCoinAnnounce) error {
 	// start timer to detect root failure
-	go bz.startTimer()
 	var announcement = new(BizCoinAnnounce)
+	// FIXME use channel instead otherwise we cannot know if the timeout is already
+	// set
+	bz.timeoutMut.Lock()
 	bz.timeout = ann.Timeout
+	bz.timeoutMut.Unlock()
+
+	go bz.startTimer()
 	switch ann.TYPE {
 	case ROUND_PREPARE:
 		announcement = &BizCoinAnnounce{
@@ -642,12 +651,17 @@ func (bz *BizCoin) RegisterOnDone(fn func(BlockSignature)) {
 // SetTimeout sets the timeout to `millis` time and register the callback to
 // call when the timeout occurs
 func (bz *BizCoin) SetTimeout(millis uint64, callback func()) {
+	bz.timeoutMut.Lock()
 	bz.timeout = millis
 	bz.onTimeoutCallback = callback
+	bz.timeoutMut.Unlock()
 }
 
 func (bz *BizCoin) startTimer() {
-	time.Sleep(time.Millisecond * time.Duration(bz.timeout))
+	bz.timeoutMut.Lock()
+	to := bz.timeout
+	bz.timeoutMut.Unlock()
+	time.Sleep(time.Millisecond * time.Duration(to))
 	bz.doneLock.Lock()
 	defer bz.doneLock.Unlock()
 	if !bz.doneSigning {
