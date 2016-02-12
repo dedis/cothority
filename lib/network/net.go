@@ -172,7 +172,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	}
 	// Then send everything through the connection
 	buffer.Write(b)
-	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
+	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	_, err = c.Conn.Write(buffer.Bytes())
 	if err != nil {
 		return handleError(err)
