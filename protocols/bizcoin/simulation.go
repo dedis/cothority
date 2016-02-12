@@ -2,6 +2,7 @@ package bizcoin
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cosi"
@@ -60,6 +61,11 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 	return sc, nil
 }
 
+type monitorMut struct {
+	mon *monitor.Measure
+	sync.Mutex
+}
+
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
@@ -67,8 +73,9 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	client := NewClient(server)
 	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
 	sigChan := server.BlockSignaturesChan()
-	var rChallComm *monitor.Measure
-	var rRespPrep *monitor.Measure
+
+	var rChallComm monitorMut
+	var rRespPrep monitorMut
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
@@ -85,18 +92,26 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		bz := pi.(*BizCoin)
 		bz.OnChallengeCommit(func() {
-			rChallComm = monitor.NewMeasure("round_challenge_commit")
+			rChallComm.Lock()
+			defer rChallComm.Unlock()
+			rChallComm.mon = monitor.NewMeasure("round_challenge_commit")
 		})
 		bz.OnChallengeCommitDone(func() {
-			rChallComm.Measure()
-			rChallComm = nil
+			rChallComm.Lock()
+			defer rChallComm.Unlock()
+			rChallComm.mon.Measure()
+			rChallComm.mon = nil
 		})
 		bz.OnAnnouncementPrepare(func() {
-			rRespPrep = monitor.NewMeasure("round_hanle_resp_prep")
+			rRespPrep.Lock()
+			defer rRespPrep.Unlock()
+			rRespPrep.mon = monitor.NewMeasure("round_hanle_resp_prep")
 		})
 		bz.OnAnnouncementPrepareDone(func() {
-			rRespPrep.Measure()
-			rRespPrep = nil
+			rRespPrep.Lock()
+			defer rRespPrep.Unlock()
+			rRespPrep.mon.Measure()
+			rRespPrep.mon = nil
 		})
 
 		// wait for the signature (all steps finished)
