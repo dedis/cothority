@@ -292,13 +292,14 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		}
 		commit := bz.prepare.Commit(bz.tempPrepareCommit)
 		if bz.IsRoot() {
+			dbg.Print(bz.Name(), "handle Commit PREPARE => WIll sTART Challenge !")
 			return bz.startChallengePrepare()
 		}
 		commitment = &BizCoinCommitment{
 			TYPE:       ROUND_PREPARE,
 			Commitment: commit,
 		}
-		dbg.Lvl3("BizCoin handle Commit PREPARE")
+		dbg.Lvl3(bz.Name(), "BizCoin handle Commit PREPARE")
 	case ROUND_COMMIT:
 		bz.tempCommitCommit = append(bz.tempCommitCommit, ann.Commitment)
 		if len(bz.tempCommitCommit) < len(bz.Children()) {
@@ -309,22 +310,27 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 			// do nothing
 			//	bz.startChallengeCommit()
 			// stop the processing of the round, wait the end of the "prepare"
-			// round
+			// round. startChallengeCOmmit will be called then.
 			return nil
 		}
 		commitment = &BizCoinCommitment{
 			TYPE:       ROUND_COMMIT,
 			Commitment: commit,
 		}
-		dbg.Lvl3("BizCoin handle Commit COMMIT")
+		dbg.Lvl3(bz.Name(), "BizCoin handle Commit COMMIT")
 	}
-	return bz.SendTo(bz.Parent(), commitment)
+	err := bz.SendTo(bz.Parent(), commitment)
+	dbg.Print(bz.Name(), "HandleCommit() sent to parent!")
+	return err
 }
 
 // startPrepareChallenge create the challenge and send its down the tree
 func (bz *BizCoin) startChallengePrepare() error {
 	// Get the block we want to sign
+	dbg.Print(bz.Name(), "Starting Challenge PREPARE GET BLOCK ----")
 	trblock, err := bz.getBlock()
+
+	dbg.Print(bz.Name(), "Starting Challenge PREPARE GET BLOCK ++++")
 	if err != nil {
 		return err
 	}

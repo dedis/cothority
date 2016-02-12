@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -53,6 +54,8 @@ func RegisterMessageType(msg ProtocolMessage) uuid.UUID {
 // RegisterMessageUUID can be used if the uuid and the type is already known
 // NOTE: be sure to only registers VALUE message and not POINTERS to message.
 func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
+	registryLock.Lock()
+	defer registryLock.Unlock()
 	if _, typeRegistered := typeRegistry[mt]; typeRegistered {
 		return mt
 	}
@@ -64,6 +67,8 @@ func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
 // TypeFromData returns the corresponding uuid to the structure given. It
 // returns 'DefaultType' upon error.
 func TypeFromData(msg ProtocolMessage) uuid.UUID {
+	registryLock.Lock()
+	defer registryLock.Unlock()
 	msgType := TypeToUUID(msg)
 	_, ok := typeRegistry[msgType]
 	if !ok {
@@ -120,6 +125,7 @@ func (am *NetworkMessage) SetError(err error) {
 }
 
 var typeRegistry = make(map[uuid.UUID]reflect.Type)
+var registryLock = new(sync.Mutex)
 
 var globalOrder = binary.LittleEndian
 
@@ -165,9 +171,12 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (uu
 	}
 	var typ reflect.Type
 	var ok bool
+	registryLock.Lock()
 	if typ, ok = typeRegistry[t]; !ok {
+		registryLock.Unlock()
 		return ErrorType, nil, fmt.Errorf("Type %s not registered.", t.String())
 	}
+	registryLock.Unlock()
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
 	var err error
