@@ -13,7 +13,7 @@ import (
 
 var CustomJVSSProtocolID = uuid.NewV5(uuid.NamespaceURL, "jvss_test")
 
-// Test if the setup of the longterm secret for one protocol instance is correct
+// Test if the setup of the long-term secret for one protocol instance is correct
 // or not.
 func TestJVSSLongterm(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
@@ -121,7 +121,7 @@ func TestJVSSSign(t *testing.T) {
 	h1.AddTree(tree)
 	// start the protocol
 	go h1.StartNewNode(CustomJVSSProtocolID, tree)
-	// wait for the longterm secret to be generated
+	// wait for the long-term secret to be generated
 	select {
 	case <-doneLongterm:
 		break
