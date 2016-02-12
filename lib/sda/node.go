@@ -408,6 +408,7 @@ func (n *Node) Done() {
 		}
 	}
 	n.overlay.nodeDone(n.token)
+	dbg.Lvl3(n.Name(), "has finished. Deleting its ressources")
 }
 
 // OnDoneCallback should be called if we want to control the Done() of the node.

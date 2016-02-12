@@ -28,7 +28,8 @@ type BlockSignature struct {
 // rounds)
 type BizCoinAnnounce struct {
 	*cosi.Announcement
-	TYPE RoundType
+	TYPE    RoundType
+	Timeout uint64
 }
 
 // announceChan is the type of the channel that will be used to catch

@@ -33,6 +33,11 @@ type simulationConfig struct {
 	BlocksDir string
 	// timeout the leader after TimeoutMs milliseconds
 	TimeoutMs uint64
+	// Fail:
+	// 0  do not fail
+	// 1 fail by doing nothing
+	// 2 fail by sending wrong blocks
+	Fail uint8
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
@@ -73,7 +78,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 		// instantiate a bizcoin protocol
 		rComplete := monitor.NewMeasure("round_prepare")
-		pi, err := server.Instantiate(node, e.TimeoutMs)
+		pi, err := server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
 		if err != nil {
 			return err
 		}
