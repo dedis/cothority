@@ -193,7 +193,9 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
+	h.networkLock.Lock()
 	c, err = h.host.Open(id)
+	h.networkLock.Unlock()
 	if err != nil {
 		return nil, err
 	}
@@ -209,13 +211,14 @@ func (h *Host) Close() error {
 		return errors.New("Already closing")
 	}
 	dbg.Lvl3("Closing", h.Entity.Addresses)
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
 	h.isClosing = true
 	time.Sleep(time.Millisecond * 100)
-	h.networkLock.Lock()
 	close(h.Closed)
 	err := h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
-	h.networkLock.Unlock()
+
 	return err
 }
 
@@ -224,18 +227,26 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
+	h.entityListsLock.Lock()
 	if _, ok := h.entities[e.Id]; !ok {
+		h.entityListsLock.Unlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
 		if err != nil {
 			return err
 		}
+	} else {
+		h.entityListsLock.Unlock()
 	}
 	var c network.SecureConn
 	var ok bool
+	h.networkLock.Lock()
 	if c, ok = h.connections[e.Id]; !ok {
+		h.networkLock.Unlock()
 		return errors.New("Got no connection tied to this Entity")
 	}
+	h.networkLock.Unlock()
+
 	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
 	c.Send(context.TODO(), msg)
 	return nil
@@ -357,29 +368,11 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	return h.SendRaw(e, sdaMsg)
 }
 
-// Receive will return the value of the communication-channel, unmarshalling
-// the SDAMessage. Receive is called in ProcessMessages as it takes directly
-// the message from the networkChan, and pre-processes the SDAMessage
+// Receive will return the value of the communication-channel.
+// Receive is called in ProcessMessages as it takes directly the message from the networkChan
 func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
 	dbg.Lvl5("Got message", data)
-	if data.MsgType == SDADataMessage {
-		/*     sda := data.Msg.(SDAData)*/
-		//t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
-		//if err != nil {
-		//// TODO change the test so we don't do that unmarshalling here but
-		//// rather in Node, Host should not care what's inside the SDAData
-		//// anyway.
-		////dbg.Error(h.Entity.First(), "Error while unmarshalling inner message of SDAData", data.MsgType, ":", err)
-		//return data
-		//}
-		//// Put the msg into SDAData
-		//sda.MsgType = t
-		//sda.Msg = msg
-		//// Write back the Msg in appplicationMessage
-		//data.Msg = sda
-		/*dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)*/
-	}
 	return data
 }
 
@@ -420,9 +413,10 @@ func (h *Host) handleConn(c network.SecureConn) {
 			dbg.Lvl4("Putting message into networkChan from", am.From)
 			h.networkChan <- am
 		case e := <-errorChan:
+			h.networkLock.Lock()
 			if !h.isClosing {
-				if e == network.ErrClosed || e == network.ErrEOF ||
-					e == network.ErrTemp {
+				h.networkLock.Unlock()
+				if e == network.ErrClosed || e == network.ErrEOF || e == network.ErrTemp {
 					dbg.Lvl3("error-closing")
 					return
 				}
@@ -486,12 +480,15 @@ func (h *Host) checkPendingSDA(t *Tree) {
 
 // registerConnection registers a Entity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
+// it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
 	h.networkLock.Lock()
+	h.entityListsLock.Lock()
+	defer h.networkLock.Unlock()
+	defer h.entityListsLock.Unlock()
 	id := c.Entity()
 	h.entities[c.Entity().Id] = id
 	h.connections[c.Entity().Id] = c
-	h.networkLock.Unlock()
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

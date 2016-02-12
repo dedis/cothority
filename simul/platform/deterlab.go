@@ -236,6 +236,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	}
 	dbg.Lvl3("Creating hosts")
 	deter.createHosts()
+	dbg.Lvl3("Writing the config file :", deter)
 	app.WriteTomlConfig(deter, deterConfig, d.deployDir)
 
 	simulConfig, err = sim.Setup(d.deployDir, deter.Virt)
