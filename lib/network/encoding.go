@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
