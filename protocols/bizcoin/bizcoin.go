@@ -13,7 +13,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
-	"github.com/dedis/cothority/protocols/viewchange"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -94,10 +93,10 @@ type BizCoin struct {
 	onChallengeCommit     func()
 	onChallengeCommitDone func()
 	// view change setup and measurement
-	viewChange  *viewchange.ViewChange
-	vcMeasure   *monitor.Measure
-	doneSigning bool
-	doneLock    sync.Mutex
+	vcMeasure      *monitor.Measure
+	doneSigning    bool
+	doneLock       sync.Mutex
+	doneProcessing chan bool
 }
 
 func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
@@ -108,6 +107,7 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	bz.prepare = cosi.NewCosi(n.Suite(), n.Private())
 	bz.commit = cosi.NewCosi(n.Suite(), n.Private())
 	bz.verifyBlockChan = make(chan bool)
+	bz.doneProcessing = make(chan bool, 1)
 
 	bz.aggregatedPublic = n.EntityList().Aggregate
 
@@ -171,9 +171,9 @@ func (bz *BizCoin) Dispatch() error {
 			case ROUND_COMMIT:
 				err = bz.handleResponseCommit(&msg.BizCoinResponse)
 			}
-		case <-bz.done:
+		case <-bz.doneProcessing:
 			dbg.Lvl2("BizCoin Instance exit.")
-			break
+			return
 		}
 		if err != nil {
 			dbg.Error("Error handling messages:", err)
@@ -501,7 +501,9 @@ func (bz *BizCoin) startResponseCommit() error {
 	}
 	dbg.Lvl3("BizCoin Start Response COMMIT")
 	// send to parent
-	return bz.SendTo(bz.Parent(), bzr)
+	err := bz.SendTo(bz.Parent(), bzr)
+	bz.Done()
+	return err
 }
 
 // handleResponseCommit handles the responses for the commit round during the
@@ -531,16 +533,24 @@ func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 			bz.onChallengeCommitDone()
 		}
 		if bz.onDoneCallback != nil {
-			bz.doneLock.Lock()
-			bz.doneSigning = true
-			bz.doneLock.Unlock()
 			go bz.onDoneCallback(*sig)
+			bz.Done()
 		}
 		return nil
 	}
 
 	// otherwise , send the response up
-	return bz.SendTo(bz.Parent(), bzr)
+	err := bz.SendTo(bz.Parent(), bzr)
+	bz.Done()
+	return err
+}
+
+func (bz *BizCoin) Done() {
+	bz.doneLock.Lock()
+	bz.doneSigning = true
+	bz.doneLock.Unlock()
+	bz.done <- true
+	bz.Node.Done()
 }
 
 // handlePrepapreResponse
