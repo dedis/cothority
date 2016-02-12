@@ -315,7 +315,7 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 		dbg.Lvl3("Trying address", addr)
 		c, err := st.TcpHost.openTcpConn(addr)
 		if err != nil {
-			dbg.Lvl3("Address didn't accept connection:", addr)
+			dbg.Lvl3("Address didn't accept connection:", addr, "=>", err)
 			continue
 		}
 		// create the secure connection
