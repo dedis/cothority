@@ -2,9 +2,10 @@ package sda
 
 import (
 	"errors"
+	"time"
+
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
-	"time"
 )
 
 var timeOut = 30 * time.Second

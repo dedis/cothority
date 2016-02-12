@@ -15,6 +15,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
@@ -23,10 +28,6 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"io/ioutil"
-	"reflect"
-	"sync"
-	"time"
 )
 
 /*
@@ -428,6 +429,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=> error", e)
 			}
 		case <-time.After(timeOut):
+			// FIXME make this configurable
 			dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)
 			// Only close our connection - if it is needed again,
 			// it will be recreated
