@@ -64,12 +64,16 @@ type BizCoin struct {
 	lastKeyBlock string
 	// temporary buffer of "prepare" commitments
 	tempPrepareCommit []*cosi.Commitment
+	tpcMut            sync.Mutex
 	// temporary buffer of "commit" commitments
 	tempCommitCommit []*cosi.Commitment
+	tccMut           sync.Mutex
 	// temporary buffer of "prepare" responses
 	tempPrepareResponse []*cosi.Response
+	tprMut              sync.Mutex
 	// temporary buffer of "commit" responses
 	tempCommitResponse []*cosi.Response
+	tcrMut             sync.Mutex
 
 	// refusal to sign for the commit phase or not. This flag is set during the
 	// Challenge of the commit phase and will be used during the response of the
@@ -299,11 +303,14 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 	// store it and check if we have enough commitments
 	switch ann.TYPE {
 	case ROUND_PREPARE:
+		bz.tpcMut.Lock()
 		bz.tempPrepareCommit = append(bz.tempPrepareCommit, ann.Commitment)
 		if len(bz.tempPrepareCommit) < len(bz.Children()) {
+			bz.tpcMut.Unlock()
 			return nil
 		}
 		commit := bz.prepare.Commit(bz.tempPrepareCommit)
+		bz.tpcMut.Unlock()
 		if bz.IsRoot() {
 			dbg.Print(bz.Name(), "handle Commit PREPARE => WIll sTART Challenge !")
 			return bz.startChallengePrepare()
@@ -314,11 +321,15 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		}
 		dbg.Lvl3(bz.Name(), "BizCoin handle Commit PREPARE")
 	case ROUND_COMMIT:
+		// FIXME possible data race
+		bz.tccMut.Lock()
 		bz.tempCommitCommit = append(bz.tempCommitCommit, ann.Commitment)
 		if len(bz.tempCommitCommit) < len(bz.Children()) {
+			bz.tccMut.Unlock()
 			return nil
 		}
 		commit := bz.commit.Commit(bz.tempCommitCommit)
+		bz.tccMut.Unlock()
 		if bz.IsRoot() {
 			// do nothing
 			//	bz.startChallengeCommit()
@@ -501,15 +512,21 @@ func (bz *BizCoin) startResponseCommit() error {
 // response phase.
 func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 	// check if we have enough
+	// FIXME possible data race
+	bz.tcrMut.Lock()
 	bz.tempCommitResponse = append(bz.tempCommitResponse, bzr.Response)
+
 	if len(bz.tempCommitResponse) < len(bz.Children()) {
+		bz.tcrMut.Unlock()
 		return nil
 	}
 
 	if bz.signRefusal {
 		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{bz.Public(), bz.commit.GetCommitment()})
+		bz.tcrMut.Unlock()
 	} else {
 		resp, err := bz.commit.Response(bz.tempCommitResponse)
+		bz.tcrMut.Unlock()
 		if err != nil {
 			return err
 		}
@@ -552,8 +569,11 @@ func (bz *BizCoin) Done() {
 // handlePrepapreResponse
 func (bz *BizCoin) handleResponsePrepare(bzr *BizCoinResponse) error {
 	// check if we have enough
+	// FIXME possible data race
+	bz.tprMut.Lock()
 	bz.tempPrepareResponse = append(bz.tempPrepareResponse, bzr.Response)
 	if len(bz.tempPrepareResponse) < len(bz.Children()) {
+		bz.tprMut.Unlock()
 		return nil
 	}
 
@@ -562,11 +582,15 @@ func (bz *BizCoin) handleResponsePrepare(bzr *BizCoinResponse) error {
 	if ok {
 		// append response
 		resp, err := bz.prepare.Response(bz.tempPrepareResponse)
+		bz.tprMut.Unlock()
 		if err != nil {
 			return err
 		}
 		bzrReturn.Response = resp
+	} else {
+		bz.tprMut.Unlock()
 	}
+
 	dbg.Lvl3("BizCoin Handle Response PREPARE")
 	// if I'm root, we are finished, let's notify the "commit" round
 	if bz.IsRoot() {
