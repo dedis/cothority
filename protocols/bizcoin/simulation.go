@@ -62,32 +62,33 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 }
 
 type monitorMut struct {
-	mon *monitor.Measure
+	*monitor.Measure
 	sync.Mutex
 }
 
 func (m *monitorMut) NewMeasure(id string) {
 	m.Lock()
 	defer m.Unlock()
-	m.mon = monitor.NewMeasure(id)
+	m.Measure = monitor.NewMeasure(id)
 }
 func (m *monitorMut) MeasureAndReset() {
 	m.Lock()
 	defer m.Unlock()
-	m.mon = nil
+	m.Measure = nil
 }
 
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewServer(e.Blocksize)
-	client := NewClient(server)
-	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
 	sigChan := server.BlockSignaturesChan()
 
 	//var rChallComm monitorMut
 	//var rRespPrep monitorMut
 	for round := 0; round < e.Rounds; round++ {
+		client := NewClient(server)
+		client.StartClientSimulation(e.BlocksDir, e.Blocksize)
+
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
 		node, err := sdaConf.Overlay.NewNodeEmptyName("BizCoin", sdaConf.Tree)
