@@ -206,7 +206,7 @@ func (bz *BizCoin) Dispatch() error {
 				}
 			}
 		case msg := <-bz.viewchangeChan:
-			dbg.Print("Recvd viewchange")
+			dbg.Lvl4("Recvd viewchange", bz.Name())
 			err = bz.handleViewChange(&msg.viewChange)
 		case <-bz.doneProcessing:
 			dbg.Lvl2("BizCoin Instance exit.")
@@ -716,14 +716,14 @@ func (bz *BizCoin) startTimer() {
 }
 
 func (bz *BizCoin) sendAndMeasureViewchange() {
-	dbg.Print(bz.Name(), "Created viewchange measure")
+	dbg.Lvl4(bz.Name(), "Created viewchange measure")
 	bz.vcMeasure = monitor.NewMeasure("viewchange")
 	vc := newViewChange()
 	var err error
 	for _, n := range bz.Tree().ListNodes() {
 		err = bz.SendTo(n, vc)
 		if err != nil {
-			dbg.Print(bz.Name(), "Error sending view change", err)
+			dbg.Error(bz.Name(), "Error sending view change", err)
 		}
 	}
 }
@@ -742,10 +742,16 @@ func newViewChange() *viewChange {
 
 func (bz *BizCoin) handleViewChange(vc *viewChange) error {
 	bz.vcCounter++
-	if bz.vcCounter > bz.threshold {
-		dbg.Lvl3("Viewchange threshold reached")
-		bz.vcMeasure.Measure()
+	//dbg.Print(bz.Name(), "bz.vcCounter=", bz.vcCounter, "cur threshold", bz.threshold)
+	if bz.vcCounter > 2*bz.threshold {
+		dbg.Lvl4("Viewchange threshold reached (2/3) of all nodes")
+		if bz.vcMeasure != nil {
+			bz.vcMeasure.Measure()
+		}
 		bz.Done()
+		if bz.IsRoot() {
+			bz.onDoneCallback(BlockSignature{})
+		}
 		return nil
 	}
 	return nil
