@@ -19,7 +19,7 @@ import (
 // How many times should we try to connect
 const maxRetry = 10
 const waitRetry = 100 * time.Millisecond
-const timeOut = 300 * time.Second
+const timeOut = 3000 * time.Second
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown

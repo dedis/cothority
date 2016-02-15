@@ -134,7 +134,7 @@ func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs 
 	if err != nil {
 		return nil, err
 	}
-	bz.tempBlock, err = bz.getBlock(transactions)
+	bz.tempBlock, err = bz.getBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
 	bz.timeout = timeOutMs
 	return bz, err
 }
@@ -346,7 +346,7 @@ func (bz *BizCoin) startChallengePrepare() error {
 		TrBlock:   trblock,
 	}
 
-	go bz.verifyBlock(bz.tempBlock)
+	go verifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
 	dbg.Lvl3("BizCoin Start Challenge PREPARE")
 	// send to children
 	for _, tn := range bz.Children() {
@@ -363,7 +363,7 @@ func (bz *BizCoin) startChallengeCommit() error {
 		bz.onChallengeCommit()
 	}
 	// create the challenge out of it
-	marshalled, err := json.Marshal(bz.tempBlock)
+	marshalled, err := json.Marshal(bz.tempBlock.Header)
 	if err != nil {
 		return err
 	}
@@ -390,7 +390,7 @@ func (bz *BizCoin) startChallengeCommit() error {
 func (bz *BizCoin) handleChallengePrepare(ch *BizCoinChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
-	go bz.verifyBlock(bz.tempBlock)
+	go bz.verifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
 	// acknoledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
@@ -594,7 +594,7 @@ func (bz *BizCoin) waitResponseVerification() (*BizCoinResponse, bool) {
 }
 
 // verifyBlock is a simulation of a real verification block algorithm
-func (bz *BizCoin) verifyBlock(block *blockchain.TrBlock) {
+func verifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done chan bool) {
 	//We measure the average block verification delays is 174ms for an average
 	//block of 500kB.
 	//To simulate the verification cost of bigger blocks we multiply 174ms
@@ -605,22 +605,22 @@ func (bz *BizCoin) verifyBlock(block *blockchain.TrBlock) {
 	n = time.Duration(s / (500 * 1024))
 	time.Sleep(150 * time.Millisecond * n) //verification of 174ms per 500KB simulated
 	// verification of the header
-	verified := block.Header.Parent == bz.lastBlock && block.Header.ParentKey == bz.lastKeyBlock
+	verified := block.Header.Parent == lastBlock && block.Header.ParentKey == lastKeyBlock
 	verified = verified && block.Header.MerkleRoot == blockchain.HashRootTransactions(block.TransactionList)
 	verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
 	// notify it
 	dbg.Lvl3("Verification of the block done =", verified)
-	bz.verifyBlockChan <- verified
+	done <- verified
 }
 
 // getblock returns the next block available from the transaction pool.
-func (bz *BizCoin) getBlock(transactions []blkparser.Tx) (*blockchain.TrBlock, error) {
+func getBlock(transactions []blkparser.Tx, lastBlock, lastKeyBlock string) (*blockchain.TrBlock, error) {
 	if len(transactions) < 1 {
 		return nil, errors.New("no transaction available")
 	}
 
 	trlist := blockchain.NewTransactionList(transactions, len(transactions))
-	header := blockchain.NewHeader(trlist, bz.lastBlock, bz.lastKeyBlock)
+	header := blockchain.NewHeader(trlist, lastBlock, lastKeyBlock)
 	trblock := blockchain.NewTrBlock(trlist, header)
 	return trblock, nil
 }
