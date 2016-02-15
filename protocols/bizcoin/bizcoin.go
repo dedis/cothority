@@ -17,6 +17,12 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+const (
+	NotFail int = iota
+	FailCompletely
+	FailWrongBlocks
+)
+
 type BizCoin struct {
 	// the node we are represented-in
 	*sda.Node
@@ -94,6 +100,9 @@ type BizCoin struct {
 	// function to let callers of the protocol (or the server) add functionality
 	// to certain parts of the protocol; mainly used in simulation to do
 	// measurements. Hence functions will not be called in go routines
+
+	// root fails:
+	rootFailMode          uint
 	onAnnouncementPrepare func()
 	onResponsePrepareDone func()
 	onChallengeCommit     func()
@@ -130,15 +139,19 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	n.RegisterChannel(&bz.challengePrepareChan)
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
+	n.RegisterChannel(&bz.viewchangeChan)
+
 	go bz.Dispatch()
 	return bz, nil
 }
 
-func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64) (*BizCoin, error) {
+func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64, failMode uint) (*BizCoin, error) {
 	bz, err := NewBizCoinProtocol(n)
 	if err != nil {
 		return nil, err
 	}
+
+	bz.rootFailMode = failMode
 	bz.tempBlock, err = bz.getBlock(transactions)
 	bz.timeoutMut.Lock()
 	bz.timeout = timeOutMs
@@ -159,6 +172,9 @@ func (bz *BizCoin) Start() error {
 
 // Dispatch listen on the different channels
 func (bz *BizCoin) Dispatch() error {
+	// FIXME handle different failure modes
+	fail := (bz.rootFailMode != 0) && bz.IsRoot()
+	//dbg.Print(bz.Name(), " is failing ? =", fail)
 	for {
 		var err error
 		select {
@@ -167,21 +183,30 @@ func (bz *BizCoin) Dispatch() error {
 			err = bz.handleAnnouncement(msg.BizCoinAnnounce)
 			// Commitment
 		case msg := <-bz.commitChan:
-			err = bz.handleCommit(msg.BizCoinCommitment)
+			if !fail {
+				err = bz.handleCommit(msg.BizCoinCommitment)
+			}
 			// Challenge
 		case msg := <-bz.challengePrepareChan:
-			err = bz.handleChallengePrepare(&msg.BizCoinChallengePrepare)
+			if !fail {
+				err = bz.handleChallengePrepare(&msg.BizCoinChallengePrepare)
+			}
 		case msg := <-bz.challengeCommitChan:
-			err = bz.handleChallengeCommit(&msg.BizCoinChallengeCommit)
+			if !fail {
+				err = bz.handleChallengeCommit(&msg.BizCoinChallengeCommit)
+			}
 			// Response
 		case msg := <-bz.responseChan:
-			switch msg.BizCoinResponse.TYPE {
-			case ROUND_PREPARE:
-				err = bz.handleResponsePrepare(&msg.BizCoinResponse)
-			case ROUND_COMMIT:
-				err = bz.handleResponseCommit(&msg.BizCoinResponse)
+			if !fail {
+				switch msg.BizCoinResponse.TYPE {
+				case ROUND_PREPARE:
+					err = bz.handleResponsePrepare(&msg.BizCoinResponse)
+				case ROUND_COMMIT:
+					err = bz.handleResponseCommit(&msg.BizCoinResponse)
+				}
 			}
 		case msg := <-bz.viewchangeChan:
+			dbg.Print("Recvd viewchange")
 			err = bz.handleViewChange(&msg.viewChange)
 		case <-bz.doneProcessing:
 			dbg.Lvl2("BizCoin Instance exit.")
@@ -201,7 +226,6 @@ func (bz *BizCoin) listen() {
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
 func (bz *BizCoin) startAnnouncementPrepare() error {
-	// FIXME data racce (read onAnnouncementPrepare)
 	if bz.onAnnouncementPrepare != nil {
 		go bz.onAnnouncementPrepare()
 	}
@@ -321,7 +345,6 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		}
 		dbg.Lvl3(bz.Name(), "BizCoin handle Commit PREPARE")
 	case ROUND_COMMIT:
-		// FIXME possible data race
 		bz.tccMut.Lock()
 		bz.tempCommitCommit = append(bz.tempCommitCommit, ann.Commitment)
 		if len(bz.tempCommitCommit) < len(bz.Children()) {
@@ -566,10 +589,8 @@ func (bz *BizCoin) Done() {
 	bz.Node.Done()
 }
 
-// handlePrepapreResponse
 func (bz *BizCoin) handleResponsePrepare(bzr *BizCoinResponse) error {
 	// check if we have enough
-	// FIXME possible data race
 	bz.tprMut.Lock()
 	bz.tempPrepareResponse = append(bz.tempPrepareResponse, bzr.Response)
 	if len(bz.tempPrepareResponse) < len(bz.Children()) {
@@ -682,6 +703,7 @@ func (bz *BizCoin) SetTimeout(millis uint64, callback func()) {
 }
 
 func (bz *BizCoin) startTimer() {
+	dbg.Lvl3(bz.Name(), "Started timer...")
 	bz.timeoutMut.Lock()
 	to := bz.timeout
 	bz.timeoutMut.Unlock()
@@ -694,10 +716,15 @@ func (bz *BizCoin) startTimer() {
 }
 
 func (bz *BizCoin) sendAndMeasureViewchange() {
+	dbg.Print(bz.Name(), "Created viewchange measure")
 	bz.vcMeasure = monitor.NewMeasure("viewchange")
 	vc := newViewChange()
+	var err error
 	for _, n := range bz.Tree().ListNodes() {
-		bz.SendTo(n, vc)
+		err = bz.SendTo(n, vc)
+		if err != nil {
+			dbg.Print(bz.Name(), "Error sending view change", err)
+		}
 	}
 }
 
