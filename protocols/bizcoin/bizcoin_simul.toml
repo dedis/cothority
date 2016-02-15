@@ -1,9 +1,9 @@
 Servers = 2
 Simulation = "BizCoinSimulation"
-NumClientTxs = 4000000
+NumClientTxs = 999999999999
 Rounds = 10
 BF = 10
 BlocksDir = "/Users/khoffi/go/src/github.com/dedis/cothority/protocols/bizcoin/blocks"
 
 Hosts, Blocksize, TimeoutMs, Fail
-2, 1024, 120000, 0
+16, 17000, 1200000, 0
