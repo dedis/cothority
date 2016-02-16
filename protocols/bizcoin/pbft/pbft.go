@@ -66,7 +66,10 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	}
 	pbft.index = idx
 	// 2/3 * #participants == threshold
-	pbft.threshold = 2 * int(math.Ceil(float64(len(pbft.nodeList))/3.0))
+	pbft.threshold = int(math.Ceil(float64(len(pbft.nodeList)) * 2.0 / 3.0))
+	pbft.prepMsgCount = 1
+	pbft.commitMsgCount = 1
+
 	n.RegisterChannel(&pbft.prePrepareChan)
 	n.RegisterChannel(&pbft.prepareChan)
 	n.RegisterChannel(&pbft.commitChan)
@@ -86,6 +89,7 @@ func NewRootProtocol(n *sda.Node, trBlock *blockchain.TrBlock, onDoneCb func()) 
 // Start will start pre-prepare and TODO ???
 func (p *Protocol) Start() error {
 	// DO nothing?
+	dbg.Print("Start is called ---")
 	return nil
 }
 
@@ -116,21 +120,29 @@ func (p *Protocol) PrePrepare() error {
 			err = tempErr
 		}
 	})
+	dbg.Print(p.Node.Name(), "Broadcast PrePrepare DONE")
+	p.handlePrePrepare(&PrePrepare{p.trBlock})
 	return err
 }
 
 func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	// prepare: verify the structure of the block and broadcast
 	// prepare msg (with header hash of the block)
+	dbg.Print(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msg")
 	var err error
 	if verifyBlock(prePre.TrBlock, "", "") {
 		p.broadcast(func(tn *sda.TreeNode) {
+
 			prep := Prepare{prePre.TrBlock.HeaderHash}
+			dbg.Print(p.Node.Name(), "Sending to", tn.Name(), "msg", prep)
 			tempErr := p.Node.SendTo(tn, &prep)
 			if tempErr != nil {
 				err = tempErr
 			}
 		})
+		dbg.Print(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msg DONE")
+	} else {
+		dbg.Print("Block couldn't be verified")
 	}
 	if err != nil {
 		dbg.Error("Error while broadcasting Prepare msg", err)
@@ -139,13 +151,13 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 
 func (p *Protocol) handlePrepare(pre *Prepare) {
 	p.prepMsgCount++
-	dbg.Lvl4(p.Node.Name(), "We got", p.prepMsgCount, "Prepare msgs and threshold is", p.threshold)
+	dbg.LLvl4(p.Node.Name(), "We got", p.prepMsgCount, "Prepare msgs and threshold is", p.threshold)
 	if p.prepMsgCount >= p.threshold {
 		dbg.Lvl3(p.Node.Name(), "Threshold reached: broadcast Commit")
 		var err error
 		p.broadcast(func(tn *sda.TreeNode) {
-			prep := Commit{pre.HeaderHash}
-			tempErr := p.Node.SendTo(tn, &prep)
+			com := Commit{pre.HeaderHash}
+			tempErr := p.Node.SendTo(tn, &com)
 			if tempErr != nil {
 				err = tempErr
 			}
@@ -159,6 +171,9 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 func (p *Protocol) handleCommit(com *Commit) {
 	// finish after threshold of Commit msgs
 	p.commitMsgCount++
+	if p.IsRoot() {
+		dbg.Print("Leader got ", p.commitMsgCount)
+	}
 	if p.commitMsgCount >= p.threshold {
 		dbg.Lvl3(p.Node.Name(), "Threshold reached: We are done... CONSENSUS")
 		if p.IsRoot() && p.onDoneCB != nil {
@@ -175,6 +190,7 @@ func (p *Protocol) handleCommit(com *Commit) {
 func (p *Protocol) broadcast(sendCb func(*sda.TreeNode)) {
 	for i, tn := range p.nodeList {
 		if i == p.index {
+			dbg.Print(p.Node.Name(), "index", p.index)
 			continue
 		}
 		sendCb(tn)
