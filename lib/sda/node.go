@@ -2,11 +2,12 @@ package sda
 
 import (
 	"errors"
+	"reflect"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"reflect"
 )
 
 /*
@@ -409,7 +410,7 @@ func (n *Node) Done() {
 		}
 	}
 	n.overlay.nodeDone(n.token)
-	dbg.Lvl3(n.Name(), "has finished. Deleting its ressources")
+	dbg.Lvl3(n.Name(), "has finished. Deleting its resources")
 }
 
 // OnDoneCallback should be called if we want to control the Done() of the node.
