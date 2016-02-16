@@ -14,7 +14,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
-	"github.com/dedis/cothority/protocols/end"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
@@ -131,8 +130,6 @@ type BizCoin struct {
 	vcCounter           int
 	doneProcessing      chan bool
 
-	endProto *end.EndProtocol
-
 	finalSignature *BlockSignature
 }
 
@@ -148,7 +145,7 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	bz.doneSigning = make(chan bool, 1)
 	bz.timeoutChan = make(chan uint64, 1)
 
-	bz.endProto, _ = end.NewEndProtocol(n)
+	//bz.endProto, _ = end.NewEndProtocol(n)
 	bz.aggregatedPublic = n.EntityList().Aggregate
 	bz.threshold = int(math.Ceil(float64(len(bz.Tree().ListNodes())) / 3.0))
 	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().ListNodes())) * 2.0 / 3.0))
