@@ -134,7 +134,7 @@ func NewBizCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs 
 	if err != nil {
 		return nil, err
 	}
-	bz.tempBlock, err = bz.getBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
+	bz.tempBlock, err = getBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
 	bz.timeout = timeOutMs
 	return bz, err
 }
@@ -390,7 +390,7 @@ func (bz *BizCoin) startChallengeCommit() error {
 func (bz *BizCoin) handleChallengePrepare(ch *BizCoinChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
-	go bz.verifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
+	go verifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
 	// acknoledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
