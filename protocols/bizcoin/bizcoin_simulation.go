@@ -79,6 +79,8 @@ func (m *monitorMut) MeasureAndReset() {
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
+	dbg.Print("Simulation Tree =")
+	dbg.Print(sdaConf.Tree.Dump())
 	server := NewServer(e.Blocksize)
 	/*var rChallComm monitorMut*/
 	/*var rRespPrep monitorMut*/

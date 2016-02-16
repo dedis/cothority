@@ -120,12 +120,16 @@ type BizCoin struct {
 		*sda.TreeNode
 		viewChange
 	}
-	vcMeasure      *monitor.Measure
-	doneSigning    chan bool
-	doneLock       sync.Mutex
-	threshold      int
-	vcCounter      int
-	doneProcessing chan bool
+	vcMeasure   *monitor.Measure
+	doneSigning chan bool
+	doneLock    sync.Mutex
+	// threshold for how much exception
+	threshold int
+	// threshold for how much view change acceptance we need
+	// basically n - threshold
+	viewChangeThreshold int
+	vcCounter           int
+	doneProcessing      chan bool
 
 	endProto *end.EndProtocol
 
@@ -145,9 +149,9 @@ func NewBizCoinProtocol(n *sda.Node) (*BizCoin, error) {
 	bz.timeoutChan = make(chan uint64, 1)
 
 	bz.endProto, _ = end.NewEndProtocol(n)
-	bz.endProto.RegisterEndCallback(bz.onEndCallback)
 	bz.aggregatedPublic = n.EntityList().Aggregate
-	bz.threshold = int(math.Ceil(float64(len(bz.EntityList().List)) / 3.0))
+	bz.threshold = int(math.Ceil(float64(len(bz.Tree().ListNodes())) / 3.0))
+	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().ListNodes())) * 2.0 / 3.0))
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
@@ -746,15 +750,16 @@ func newViewChange() *viewChange {
 
 func (bz *BizCoin) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
 	bz.vcCounter++
-	dbg.Print(bz.Name(), "Received ViewChange (", bz.vcCounter, "/", 2*bz.threshold, ") from", tn.Name())
+	dbg.Print(bz.Name(), "Received ViewChange (", bz.vcCounter, "/", bz.viewChangeThreshold, ") from", tn.Name())
 	// only do it once
-	if bz.vcCounter == 2*bz.threshold {
-		dbg.Lvl3(bz.Name(), "Viewchange threshold reached (2/3) of all nodes")
+	if bz.vcCounter == bz.viewChangeThreshold {
 		if bz.vcMeasure != nil {
 			bz.vcMeasure.Measure()
 		}
 		if bz.IsRoot() {
-			bz.endProto.Start()
+			dbg.Lvl3(bz.Name(), "Viewchange threshold reached (2/3) of all nodes")
+			go bz.Done()
+			//	bz.endProto.Start()
 		}
 		return nil
 	}
@@ -788,13 +793,11 @@ func (bz *BizCoin) OnChallengeCommitDone(fn func()) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bz *BizCoin) nodeDone() bool {
+	dbg.Lvl3(bz.Name(), "nodeDone()      ----- ")
 	bz.doneProcessing <- true
+	dbg.Lvl3(bz.Name(), "nodeDone()      +++++  ", bz.onDoneCallback)
 	if bz.onDoneCallback != nil {
 		bz.onDoneCallback()
 	}
 	return true
-}
-
-func (bz *BizCoin) onEndCallback() {
-	bz.doneProcessing <- true
 }

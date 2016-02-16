@@ -403,6 +403,7 @@ func (n *Node) Start() error {
 func (n *Node) Done() {
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()
+		dbg.Print("Node.Callback() out=", ok)
 		if !ok {
 			return
 		}
@@ -441,6 +442,10 @@ func (n *Node) Name() string {
 
 func (n *Node) TokenID() uuid.UUID {
 	return n.token.Id()
+}
+
+func (n *Node) Token() *Token {
+	return n.token
 }
 
 // Host returns the underlying Host of this node.
