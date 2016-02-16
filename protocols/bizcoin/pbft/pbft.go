@@ -63,9 +63,9 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	}
 	if idx == NotFound {
 		panic(fmt.Sprintf("Could not find ourselves %+v in the list of nodes %+v", n, pbft.nodeList))
-	}
+	} 
 	pbft.index = idx
-	// 2/3 * #participants == threshold
+	// 2/3 * #participants == threshold FIXME the threshold is actually XXX
 	pbft.threshold = int(math.Ceil(float64(len(pbft.nodeList)) * 2.0 / 3.0))
 	pbft.prepMsgCount = 1
 	pbft.commitMsgCount = 1
@@ -86,24 +86,30 @@ func NewRootProtocol(n *sda.Node, trBlock *blockchain.TrBlock, onDoneCb func()) 
 	return pbft, nil
 }
 
-// Start will start pre-prepare and TODO ???
-func (p *Protocol) Start() error {
-	// DO nothing?
-	dbg.Print("Start is called ---")
-	return nil
-}
-
 // Dispatch listen on the different channels
 func (p *Protocol) Dispatch() error {
-	for {
-		//var err error
-		select {
-		case msg := <-p.prePrepareChan:
-			p.handlePrePrepare(&msg.PrePrepare)
-		case msg := <-p.prepareChan:
-			p.handlePrepare(&msg.Prepare)
-		case msg := <-p.commitChan:
-			p.handleCommit(&msg.Commit)
+	if p.IsRoot() {
+		dbg.Print("Dispatch for root node")
+		for {
+			//var err error
+			select {
+			case msg := <-p.prepareChan:
+				p.handlePrepare(&msg.Prepare)
+			case msg := <-p.commitChan:
+				p.handleCommit(&msg.Commit)
+			}
+		}
+	} else {
+		for {
+			//var err error
+			select {
+			case msg := <-p.prePrepareChan:
+				p.handlePrePrepare(&msg.PrePrepare)
+			case msg := <-p.prepareChan:
+				p.handlePrepare(&msg.Prepare)
+			case msg := <-p.commitChan:
+				p.handleCommit(&msg.Commit)
+			}
 		}
 	}
 }
@@ -121,7 +127,7 @@ func (p *Protocol) PrePrepare() error {
 		}
 	})
 	dbg.Print(p.Node.Name(), "Broadcast PrePrepare DONE")
-	p.handlePrePrepare(&PrePrepare{p.trBlock})
+	//p.handlePrePrepare(&PrePrepare{p.trBlock})
 	return err
 }
 
@@ -132,15 +138,14 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	var err error
 	if verifyBlock(prePre.TrBlock, "", "") {
 		p.broadcast(func(tn *sda.TreeNode) {
-
 			prep := Prepare{prePre.TrBlock.HeaderHash}
-			dbg.Print(p.Node.Name(), "Sending to", tn.Name(), "msg", prep)
+			dbg.Print(p.Node.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
 			tempErr := p.Node.SendTo(tn, &prep)
 			if tempErr != nil {
 				err = tempErr
 			}
 		})
-		dbg.Print(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msg DONE")
+		dbg.Lvl3(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msgs DONE")
 	} else {
 		dbg.Print("Block couldn't be verified")
 	}
@@ -151,14 +156,18 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 
 func (p *Protocol) handlePrepare(pre *Prepare) {
 	p.prepMsgCount++
-	dbg.LLvl4(p.Node.Name(), "We got", p.prepMsgCount, "Prepare msgs and threshold is", p.threshold)
+	dbg.Lvl4(p.Node.Name(), "We got", p.prepMsgCount,
+		"Prepare msgs and threshold is", p.threshold)
 	if p.prepMsgCount >= p.threshold {
 		dbg.Lvl3(p.Node.Name(), "Threshold reached: broadcast Commit")
+		// reset counter
+		p.prepMsgCount = 1
 		var err error
 		p.broadcast(func(tn *sda.TreeNode) {
 			com := Commit{pre.HeaderHash}
 			tempErr := p.Node.SendTo(tn, &com)
 			if tempErr != nil {
+				dbg.Error("Error while broadcasting Commit msg", tempErr)
 				err = tempErr
 			}
 		})
@@ -171,16 +180,22 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 func (p *Protocol) handleCommit(com *Commit) {
 	// finish after threshold of Commit msgs
 	p.commitMsgCount++
+	dbg.Lvl4(p.Node.Name(), "----------------\nWe got", p.commitMsgCount,
+		"COMMIT msgs and threshold is", p.threshold)
 	if p.IsRoot() {
-		dbg.Print("Leader got ", p.commitMsgCount)
+		dbg.Lvl4("Leader got ", p.commitMsgCount)
 	}
 	if p.commitMsgCount >= p.threshold {
+		// reset counter
+		p.commitMsgCount = 1
 		dbg.Lvl3(p.Node.Name(), "Threshold reached: We are done... CONSENSUS")
 		if p.IsRoot() && p.onDoneCB != nil {
-			dbg.Lvl3(p.Node.Name(), "Even better! We are root and threshold reached: We are really done and return to the simulation.")
+			dbg.Lvl3(p.Node.Name(), "We are root and threshold reached: return to the simulation.")
 			p.onDoneCB()
 		}
-		p.Done()
+		//p.Done()
+		return
+
 	}
 }
 

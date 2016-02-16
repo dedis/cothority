@@ -67,7 +67,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	header := blockchain.NewHeader(trlist, "", "")
 	trblock := blockchain.NewTrBlock(trlist, header)
 
-	proto, err := NewRootProtocol(node, trblock, doneCB)
+	//proto, err := NewRootProtocol(node, trblock, doneCB)
+	proto := node.ProtocolInstance().(*Protocol)
+	proto.trBlock = trblock
+	proto.onDoneCB = doneCB
+
 	if err != nil {
 		return err
 	}
@@ -84,8 +88,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		// wait for finishing pbft:
 		<-doneChan
 		r.Measure()
+
 		dbg.Lvl1("Finished round", round)
 	}
+	proto.Done()
+	proto = nil
 	return nil
 }
 
