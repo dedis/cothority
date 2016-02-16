@@ -174,7 +174,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	n.channels[typ] = c
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type) n.channels[typ] = c
 	n.messageTypeFlags[typ] = flags
-	dbg.Lvl3("Registered channel", typ, "with flags", flags)
+	dbg.Lvl4("Registered channel", typ, "with flags", flags)
 	return nil
 }
 
@@ -329,7 +329,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// if we still need to wait for additional messages, we return
 	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
-		dbg.Lvl3("Not done")
+		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
 	dbg.Lvl4("Going to dispatch", sdaMsg)

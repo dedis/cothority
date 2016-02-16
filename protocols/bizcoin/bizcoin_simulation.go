@@ -80,10 +80,8 @@ func (m *monitorMut) MeasureAndReset() {
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewServer(e.Blocksize)
-	sigChan := server.BlockSignaturesChan()
-
-	var rChallComm monitorMut
-	var rRespPrep monitorMut
+	/*var rChallComm monitorMut*/
+	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
 		client.StartClientSimulation(e.BlocksDir, e.Blocksize)
@@ -95,42 +93,51 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			return err
 		}
 		// instantiate a bizcoin protocol
-		rComplete := monitor.NewMeasure("round_prepare")
+		rComplete := monitor.NewMeasure("round")
 		pi, err := server.Instantiate(node, e.TimeoutMs, e.Fail)
 		if err != nil {
 			return err
 		}
 
 		bz := pi.(*BizCoin)
-		bz.OnChallengeCommit(func() {
-			rChallComm.NewMeasure("round_challenge_commit")
+		// Register callback for the generation of the signature !
+		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
+			rComplete.Measure()
+			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
+				dbg.Lvl1("Round", round, " FAILED:", err)
+			} else {
+				dbg.Lvl1("Round", round, " SUCCESS")
+			}
 		})
-		bz.OnChallengeCommitDone(func() {
-			rChallComm.MeasureAndReset()
+
+		// Register when the protocol is finished (all the nodes have finished)
+		done := make(chan bool)
+		bz.RegisterOnDone(func() {
+			dbg.Print("SIMULATION ON DONE CALLED")
+			done <- true
 		})
-		bz.OnAnnouncementPrepare(func() {
-			rRespPrep.NewMeasure("round_hanle_resp_prep")
-		})
-		bz.OnAnnouncementPrepareDone(func() {
-			rRespPrep.MeasureAndReset()
-		})
+		//bz.OnChallengeCommit(func() {
+		//rChallComm.NewMeasure("round_challenge_commit")
+		//})
+		//bz.OnChallengeCommitDone(func() {
+		//rChallComm.MeasureAndReset()
+		//})
+		//bz.OnAnnouncementPrepare(func() {
+		//rRespPrep.NewMeasure("round_hanle_resp_prep")
+		//})
+		//bz.OnAnnouncementPrepareDone(func() {
+		//rRespPrep.MeasureAndReset()
+		/*})*/
 		if e.Fail > 0 {
 			go bz.startAnnouncementPrepare()
 			// do not run bz.startAnnouncementCommit()
 		} else {
-			go pi.Start()
+			go bz.Start()
 		}
-		// // wait for the signature (all steps finished)
-		dbg.Print("after instantiate")
-		// wait for the signature
-		sig := <-sigChan
+		// wait for the end
+		<-done
+		dbg.Lvl3("Round", round, "finished")
 
-		rComplete.Measure()
-		if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, &sig); err != nil {
-			dbg.Lvl1("Round", round, " FAILED:", err)
-		} else {
-			dbg.Lvl1("Round", round, " SUCCESS")
-		}
 	}
 	return nil
 }
