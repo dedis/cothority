@@ -175,7 +175,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	n.channels[typ] = c
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type) n.channels[typ] = c
 	n.messageTypeFlags[typ] = flags
-	dbg.Lvl3("Registered channel", typ, "with flags", flags)
+	dbg.Lvl4("Registered channel", typ, "with flags", flags)
 	return nil
 }
 
@@ -330,7 +330,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// if we still need to wait for additional messages, we return
 	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
-		dbg.Lvl3("Not done")
+		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
 	dbg.Lvl4("Going to dispatch", sdaMsg)
@@ -404,6 +404,7 @@ func (n *Node) Start() error {
 func (n *Node) Done() {
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()
+		dbg.Print("Node.Callback() out=", ok)
 		if !ok {
 			return
 		}
@@ -442,6 +443,10 @@ func (n *Node) Name() string {
 
 func (n *Node) TokenID() uuid.UUID {
 	return n.token.Id()
+}
+
+func (n *Node) Token() *Token {
+	return n.token
 }
 
 // Host returns the underlying Host of this node.

@@ -406,7 +406,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 	for {
 		select {
 		case <-h.Closed:
-			dbg.Lvl3("Closed in 'for-loop'", h.Entity.Addresses, c)
+			dbg.Lvl3(h.Entity.First(), " closed during 'for-loop'", h.Entity.Addresses, c)
 			doneChan <- true
 			return
 		case am := <-msgChan:
@@ -422,7 +422,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 				}
 				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=> error", e)
 			}
-		case <-time.After(timeOut):
+		case <-time.After(10 * timeOut):
 			// FIXME make this configurable
 			dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)
 			// Only close our connection - if it is needed again,

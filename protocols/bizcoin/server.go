@@ -84,7 +84,6 @@ func (s *Server) Instantiate(node *sda.Node, timeOutMs uint64, fail uint) (sda.P
 	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
 	pi, err := NewBizCoinRootProtocol(node, currTransactions, timeOutMs, uint(fail))
 	node.SetProtocolInstance(pi)
-	pi.RegisterOnDone(s.onDoneSign)
 
 	return pi, err
 }
