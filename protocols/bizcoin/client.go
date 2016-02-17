@@ -16,10 +16,10 @@ const ReadFirstNBlocks = 400
 // network connection
 type Client struct {
 	// holds the sever as a struct
-	srv *Server
+	srv BlockServer
 }
 
-func NewClient(s *Server) *Client {
+func NewClient(s BlockServer) *Client {
 	return &Client{srv: s}
 }
 
@@ -44,10 +44,7 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 	for consumed > 0 {
 		for _, tr := range transactions {
 			// "send" transaction to server (we skip tcp connection on purpose here)
-			if err := c.srv.AddTransaction(tr); err != nil {
-				dbg.Error("Error adding transactions:", err)
-				return err
-			}
+			c.srv.AddTransaction(tr)
 		}
 		consumed--
 	}

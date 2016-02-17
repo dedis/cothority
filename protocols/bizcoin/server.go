@@ -9,32 +9,24 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// Control is just a sample of how a Control / Server / (what would be the right
-// name !!??) would look like if we were to go forward with the idea in the
-// issue https://github.com/dedis/cothority/issues/211
-type Control interface {
-	Instantiate(*sda.Node) (sda.ProtocolInstance, error)
+type BlockServer interface {
+	AddTransaction(blkparser.Tx)
+	Instantiate(n *sda.Node) (sda.ProtocolInstance, error)
 }
 
-// something like this should happens just after.i.e. the Setup() part
-// sda.RegisterControl("BizCoin",NewServer)
-//
-// Via the CLI, we could issue ```sda start BizCoin```and it would look if there
-// is a reference for this Control at the name and initialize it.
-
-// Here is the real (non-fictional) stuff ;)
-
-// Server is the longterm control service that listens for transactions and
+// BizCoinServer is the longterm control service that listens for transactions and
 // dispatch them to a new BizCoin for each new signing that we want to do.
 // It creates the BizCoin protocols and run them. only used by the root since
 // only the root pariticipates to the creation of the block.
-type Server struct {
+type BizCoinServer struct {
 	// transactions pool where all the incoming transactions are stored
 	transactions []blkparser.Tx
 	// lock associated
 	transactionLock *sync.Mutex
 	// how many transactions should we give to an instance
 	blockSize int
+	timeOutMs uint64
+	fail      uint
 	// all the protocols bizcoin he generated.Map from RoundID <-> BizCoin
 	// protocol instance.
 	instances map[uuid.UUID]*BizCoin
@@ -48,12 +40,14 @@ type Server struct {
 	responseChan    chan []blkparser.Tx
 }
 
-// NewServer returns a new fresh Server. It must be given the blockSize in order
+// NewBizCoinServer returns a new fresh BizCoinServer. It must be given the blockSize in order
 // to efficiently give the transactions to the BizCoin instances.
-func NewServer(blockSize int) *Server {
-	s := &Server{
+func NewBizCoinServer(blockSize int, timeOutMs uint64, fail uint) *BizCoinServer {
+	s := &BizCoinServer{
 		transactionLock:    new(sync.Mutex),
 		blockSize:          blockSize,
+		timeOutMs:          timeOutMs,
+		fail:               fail,
 		instances:          make(map[uuid.UUID]*BizCoin),
 		blockSignatureChan: make(chan BlockSignature),
 		transactionChan:    make(chan blkparser.Tx),
@@ -64,25 +58,24 @@ func NewServer(blockSize int) *Server {
 	return s
 }
 
-func (s *Server) AddTransaction(tr blkparser.Tx) error {
+func (s *BizCoinServer) AddTransaction(tr blkparser.Tx) {
 	s.transactionChan <- tr
-	return nil
 }
 
 // ListenClientTransactions will bind to a port a listen for incoming connection
 // from clients. These client will be able to pass the transactions to the
 // server.
-func (s *Server) ListenClientTransactions() {
+func (s *BizCoinServer) ListenClientTransactions() {
 	panic("not implemented yet")
 }
 
 // Instantiate takes blockSize transactions and create the bizcoin instances.
-func (s *Server) Instantiate(node *sda.Node, timeOutMs uint64, fail uint) (sda.ProtocolInstance, error) {
+func (s *BizCoinServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	dbg.Print("waiting for enough transactions")
 	currTransactions := s.waitEnoughBlocks()
 	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
-	pi, err := NewBizCoinRootProtocol(node, currTransactions, timeOutMs, uint(fail))
+	pi, err := NewBizCoinRootProtocol(node, currTransactions, s.timeOutMs, s.fail)
 	node.SetProtocolInstance(pi)
 
 	return pi, err
@@ -90,22 +83,22 @@ func (s *Server) Instantiate(node *sda.Node, timeOutMs uint64, fail uint) (sda.P
 
 // BlockSignature returns a channel that is given each new block signature as
 // soon as they are arrive (Wether correct or not).
-func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
+func (s *BizCoinServer) BlockSignaturesChan() <-chan BlockSignature {
 	return s.blockSignatureChan
 }
 
-func (s *Server) onDoneSign(blk BlockSignature) {
+func (s *BizCoinServer) onDoneSign(blk BlockSignature) {
 	s.blockSignatureChan <- blk
 }
 
-func (s *Server) waitEnoughBlocks() []blkparser.Tx {
+func (s *BizCoinServer) waitEnoughBlocks() []blkparser.Tx {
 	s.requestChan <- true
 	dbg.Print("Requested enough transactions chan")
 	transactions := <-s.responseChan
 	return transactions
 }
 
-func (s *Server) listenEnoughBlocks() {
+func (s *BizCoinServer) listenEnoughBlocks() {
 	// TODO the server should have a transaction pool instead:
 	var transactions []blkparser.Tx
 	var want bool
@@ -135,4 +128,24 @@ func (s *Server) listenEnoughBlocks() {
 			}
 		}
 	}
+}
+
+type NtreeServer struct {
+	*BizCoinServer
+}
+
+func NewNtreeServer(blockSize int) *NtreeServer {
+	ns := new(NtreeServer)
+	// we dont care about timeout + fail in Naive comparison
+	ns.BizCoinServer = NewBizCoinServer(blockSize, 0, 0)
+	return ns
+}
+
+func (nt *NtreeServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
+	dbg.Lvl2("NtreeServer waiting enough transactions...")
+	currTransactions := nt.waitEnoughBlocks()
+	pi, err := NewNTreeRootProtocol(node, currTransactions)
+	node.SetProtocolInstance(pi)
+	dbg.Lvl1("NtreeServer instantiated Ntree Root Protocol with", len(currTransactions), " transactions")
+	return pi, err
 }

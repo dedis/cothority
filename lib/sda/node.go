@@ -404,7 +404,6 @@ func (n *Node) Start() error {
 func (n *Node) Done() {
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()
-		dbg.Print("Node.Callback() out=", ok)
 		if !ok {
 			return
 		}

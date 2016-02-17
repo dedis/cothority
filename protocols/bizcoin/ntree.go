@@ -29,7 +29,7 @@ type Ntree struct {
 	tempBlockSigReceived int
 
 	// the temps signature you receive in the second phase
-	tempSignatureResponse         RoundSignatureResponse
+	tempSignatureResponse         *RoundSignatureResponse
 	tempSignatureResponseReceived int
 
 	announceChan chan struct {
@@ -52,7 +52,7 @@ type Ntree struct {
 		RoundSignatureResponse
 	}
 
-	onDoneCallback func()
+	onDoneCallback func(*NtreeSignature)
 }
 
 func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
@@ -60,6 +60,8 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 		Node:                       node,
 		verifyBlockChan:            make(chan bool),
 		verifySignatureRequestChan: make(chan bool),
+		tempBlockSig:               new(NaiveBlockSignature),
+		tempSignatureResponse:      &RoundSignatureResponse{new(NaiveBlockSignature)},
 	}
 	node.RegisterChannel(&nt.announceChan)
 	node.RegisterChannel(&nt.blockSignatureChan)
@@ -79,6 +81,7 @@ func NewNTreeRootProtocol(node *sda.Node, transactions []blkparser.Tx) (*Ntree, 
 
 // Announce the new block to sign
 func (nt *Ntree) Start() error {
+	dbg.Lvl3(nt.Name(), "Start()")
 	go verifyBlock(nt.block, "", "", nt.verifyBlockChan)
 	for _, tn := range nt.Children() {
 		nt.SendTo(tn, &BlockAnnounce{nt.block})
@@ -96,6 +99,7 @@ func (nt *Ntree) listen() {
 		select {
 		// Dispatch the block through the whole tree
 		case msg := <-nt.announceChan:
+			dbg.Lvl3(nt.Name(), "Received Block announcement")
 			nt.block = msg.BlockAnnounce.Block
 			// verify the block
 			go verifyBlock(nt.block, "", "", nt.verifyBlockChan)
@@ -113,12 +117,14 @@ func (nt *Ntree) listen() {
 			// Dispatch the signature + expcetion made before through the whole
 			// tree
 		case msg := <-nt.roundSignatureRequestChan:
+			dbg.Lvl3(nt.Name(), " Signature Request Received")
 			go nt.verifySignatureRequest(&msg.RoundSignatureRequest)
 
 			if nt.IsLeaf() {
 				nt.startSignatureResponse()
 				continue
 			}
+
 			for _, tn := range nt.Children() {
 				nt.SendTo(tn, &msg.RoundSignatureRequest)
 			}
@@ -130,10 +136,12 @@ func (nt *Ntree) listen() {
 }
 
 func (nt *Ntree) startBlockSignature() {
+	dbg.Lvl3(nt.Name(), "Starting Block Signature Phase")
 	nt.computeBlockSignature()
-	for _, tn := range nt.Children() {
-		nt.SendTo(tn, &nt.tempBlockSig)
+	if err := nt.SendTo(nt.Parent(), nt.tempBlockSig); err != nil {
+		dbg.Error(err)
 	}
+
 }
 
 func (nt *Ntree) computeBlockSignature() {
@@ -153,6 +161,7 @@ func (nt *Ntree) computeBlockSignature() {
 		schnorr, _ := crypto.SignSchnorr(nt.Suite(), nt.Private(), marshalled)
 		nt.tempBlockSig.Sigs = append(nt.tempBlockSig.Sigs, schnorr)
 	}
+	dbg.Lvl3(nt.Name(), "Block Signature Computed")
 }
 
 // handleBlockSignature will look if the block is valid. If it is, we sign it.
@@ -162,6 +171,7 @@ func (nt *Ntree) handleBlockSignature(msg *NaiveBlockSignature) {
 	nt.tempBlockSig.Exceptions = append(nt.tempBlockSig.Exceptions, msg.Exceptions...)
 	nt.tempBlockSigReceived++
 	// not enough signatures for the moment
+	dbg.Lvl3(nt.Name(), "Handle Block Signature(", nt.tempBlockSigReceived, "/", len(nt.Children()), ")")
 	if nt.tempBlockSigReceived < len(nt.Children()) {
 		return
 	}
@@ -172,15 +182,21 @@ func (nt *Ntree) handleBlockSignature(msg *NaiveBlockSignature) {
 		return
 	}
 	// send msg up the tree
-	nt.SendTo(nt.Parent(), &nt.tempBlockSig)
+	if err := nt.SendTo(nt.Parent(), nt.tempBlockSig); err != nil {
+		dbg.Error(err)
+	}
+
+	dbg.Print(nt.Name(), "Handle Block Signature => Sent UP")
 }
 
 // startSignatureRequest is the root starting the new phase. It will broadcast
 // the signature of everyone amongt the tree.
 func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
 	dbg.Lvl3(nt.Name(), "Start Signature Request")
+	sigRequest := &RoundSignatureRequest{msg}
+	go nt.verifySignatureRequest(sigRequest)
 	for _, tn := range nt.Children() {
-		nt.SendTo(tn, nt.tempBlockSig)
+		nt.SendTo(tn, sigRequest)
 	}
 }
 
@@ -202,6 +218,7 @@ func (nt *Ntree) verifySignatureRequest(msg *RoundSignatureRequest) {
 		}
 	}
 
+	dbg.Lvl3(nt.Name(), "Verification of signatures =>", goodSig, "/", len(msg.Sigs), ")")
 	// enough good signatures ?
 	if goodSig <= 2*threshold {
 		nt.verifySignatureRequestChan <- false
@@ -210,10 +227,12 @@ func (nt *Ntree) verifySignatureRequest(msg *RoundSignatureRequest) {
 	nt.verifySignatureRequestChan <- true
 }
 
+// Start the last phase : send up the final signature
 func (nt *Ntree) startSignatureResponse() {
+	dbg.Lvl3(nt.Name(), "Start Signature Response phase")
 	nt.computeSignatureResponse()
-	for _, tn := range nt.Children() {
-		nt.SendTo(tn, &nt.tempSignatureResponse)
+	if err := nt.SendTo(nt.Parent(), nt.tempSignatureResponse); err != nil {
+		dbg.Error(err)
 	}
 }
 
@@ -246,7 +265,7 @@ func (nt *Ntree) handleRoundSignatureResponse(msg *RoundSignatureResponse) {
 	nt.tempSignatureResponse.Sigs = append(nt.tempSignatureResponse.Sigs, msg.Sigs...)
 	nt.tempSignatureResponse.Exceptions = append(nt.tempSignatureResponse.Exceptions, msg.Exceptions...)
 	nt.tempSignatureResponseReceived++
-
+	dbg.Lvl3(nt.Name(), "Handle Round Signature Response(", nt.tempSignatureResponseReceived, "/", len(nt.Children()))
 	if nt.tempSignatureResponseReceived < len(nt.Children()) {
 		return
 	}
@@ -256,14 +275,14 @@ func (nt *Ntree) handleRoundSignatureResponse(msg *RoundSignatureResponse) {
 	// if i'm root I'm finished
 	if nt.IsRoot() {
 		if nt.onDoneCallback != nil {
-			nt.onDoneCallback()
+			nt.onDoneCallback(&NtreeSignature{nt.block, nt.tempSignatureResponse})
 		}
 		return
 	}
 	nt.SendTo(nt.Parent(), msg)
 }
 
-func (nt *Ntree) RegisterOnDone(fn func()) {
+func (nt *Ntree) RegisterOnDone(fn func(*NtreeSignature)) {
 	nt.onDoneCallback = fn
 }
 
@@ -288,10 +307,16 @@ type Exception struct {
 // RoundSignatureRequest basically is the the block sisgnature broadcasting
 // downt he tree
 type RoundSignatureRequest struct {
-	NaiveBlockSignature
+	*NaiveBlockSignature
 }
 
 // The final signatures
 type RoundSignatureResponse struct {
-	NaiveBlockSignature
+	*NaiveBlockSignature
+}
+
+// Signature that we give back to the simulation or control
+type NtreeSignature struct {
+	Block *blockchain.TrBlock
+	*RoundSignatureResponse
 }
