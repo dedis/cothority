@@ -706,12 +706,14 @@ func (bz *BizCoin) RegisterOnSignatureDone(fn func(*BlockSignature)) {
 }
 
 func (bz *BizCoin) startTimer(millis uint64) {
-	dbg.Lvl3(bz.Name(), "Started timer (", millis, ")...")
-	select {
-	case <-bz.doneSigning:
-		return
-	case <-time.After(time.Millisecond * time.Duration(millis)):
-		bz.sendAndMeasureViewchange()
+	if bz.rootFailMode != 0 {
+		dbg.Lvl3(bz.Name(), "Started timer (", millis, ")...")
+		select {
+		case <-bz.doneSigning:
+			return
+		case <-time.After(time.Millisecond * time.Duration(millis)):
+			bz.sendAndMeasureViewchange()
+		}
 	}
 }
 
