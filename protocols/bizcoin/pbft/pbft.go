@@ -48,10 +48,23 @@ type Protocol struct {
 	commitChan     chan commitChan
 
 	onDoneCB func()
+
+	state int
+
+	tempPrepareMsg []*Prepare
+	tempCommitMsg  []*Commit
 }
+
+const (
+	STATE_PREPREPARE = iota
+	STATE_PREPARE
+	STATE_COMMIT
+	STATE_FINISHED
+)
 
 func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft := new(Protocol)
+	pbft.state = STATE_PREPREPARE
 	tree := n.Tree()
 	pbft.Node = n
 	pbft.nodeList = tree.ListNodes()
@@ -67,8 +80,8 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft.index = idx
 	// 2/3 * #participants == threshold FIXME the threshold is actually XXX
 	pbft.threshold = int(math.Ceil(float64(len(pbft.nodeList)) * 2.0 / 3.0))
-	pbft.prepMsgCount = 1
-	pbft.commitMsgCount = 1
+	pbft.prepMsgCount = 0
+	pbft.commitMsgCount = 0
 
 	n.RegisterChannel(&pbft.prePrepareChan)
 	n.RegisterChannel(&pbft.prepareChan)
@@ -88,28 +101,14 @@ func NewRootProtocol(n *sda.Node, trBlock *blockchain.TrBlock, onDoneCb func()) 
 
 // Dispatch listen on the different channels
 func (p *Protocol) Dispatch() error {
-	if p.IsRoot() {
-		dbg.Print("Dispatch for root node")
-		for {
-			//var err error
-			select {
-			case msg := <-p.prepareChan:
-				p.handlePrepare(&msg.Prepare)
-			case msg := <-p.commitChan:
-				p.handleCommit(&msg.Commit)
-			}
-		}
-	} else {
-		for {
-			//var err error
-			select {
-			case msg := <-p.prePrepareChan:
-				p.handlePrePrepare(&msg.PrePrepare)
-			case msg := <-p.prepareChan:
-				p.handlePrepare(&msg.Prepare)
-			case msg := <-p.commitChan:
-				p.handleCommit(&msg.Commit)
-			}
+	for {
+		select {
+		case msg := <-p.prePrepareChan:
+			p.handlePrePrepare(&msg.PrePrepare)
+		case msg := <-p.prepareChan:
+			p.handlePrepare(&msg.Prepare)
+		case msg := <-p.commitChan:
+			p.handleCommit(&msg.Commit)
 		}
 	}
 }
@@ -125,26 +124,39 @@ func (p *Protocol) PrePrepare() error {
 		if tempErr != nil {
 			err = tempErr
 		}
+		p.state = STATE_PREPARE
 	})
 	dbg.Print(p.Node.Name(), "Broadcast PrePrepare DONE")
-	//p.handlePrePrepare(&PrePrepare{p.trBlock})
 	return err
 }
 
 func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
+	if p.state != STATE_PREPREPARE {
+		dbg.Lvl3(p.Name(), "DROP preprepare packet : Already broadcasted prepare")
+		return
+	}
 	// prepare: verify the structure of the block and broadcast
 	// prepare msg (with header hash of the block)
-	dbg.Print(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msg")
+	dbg.Print(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msg")
 	var err error
 	if verifyBlock(prePre.TrBlock, "", "") {
+		// STATE TRANSITION PREPREPARE => PREPARE
+		p.state = STATE_PREPARE
+		prep := Prepare{prePre.TrBlock.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
-			prep := Prepare{prePre.TrBlock.HeaderHash}
 			dbg.Print(p.Node.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
 			tempErr := p.Node.SendTo(tn, &prep)
 			if tempErr != nil {
 				err = tempErr
 			}
 		})
+		// Already insert the previously received messages !
+		go func() {
+			for _, msg := range p.tempPrepareMsg {
+				p.prepareChan <- prepareChan{nil, *msg}
+			}
+			p.tempPrepareMsg = nil
+		}()
 		dbg.Lvl3(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msgs DONE")
 	} else {
 		dbg.Print("Block couldn't be verified")
@@ -155,13 +167,26 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 }
 
 func (p *Protocol) handlePrepare(pre *Prepare) {
+	if p.state != STATE_PREPARE {
+		dbg.Lvl3(p.Name(), "STORE prepare packet: wrong state")
+		p.tempPrepareMsg = append(p.tempPrepareMsg, pre)
+		return
+	}
 	p.prepMsgCount++
-	dbg.Lvl4(p.Node.Name(), "We got", p.prepMsgCount,
-		"Prepare msgs and threshold is", p.threshold)
-	if p.prepMsgCount >= p.threshold {
-		dbg.Lvl3(p.Node.Name(), "Threshold reached: broadcast Commit")
+	dbg.Lvl3(p.Name(), "Handle Prepare", p.prepMsgCount,
+		"msgs and threshold is", p.threshold)
+	var localThreshold = p.threshold
+	// we dont have a "client", the root DONT send any prepare message
+	// so for the rest of the nodes the threshold is less one.
+	if !p.IsRoot() {
+		localThreshold--
+	}
+	if p.prepMsgCount >= localThreshold {
+		// TRANSITION PREPARE => COMMIT
+		dbg.Lvl3(p.Node.Name(), "Threshold (", localThreshold, ") reached: broadcast Commit")
+		p.state = STATE_COMMIT
 		// reset counter
-		p.prepMsgCount = 1
+		p.prepMsgCount = 0
 		var err error
 		p.broadcast(func(tn *sda.TreeNode) {
 			com := Commit{pre.HeaderHash}
@@ -171,6 +196,14 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 				err = tempErr
 			}
 		})
+		// Dispatch already the message we received earlier !
+		go func() {
+			for _, msg := range p.tempCommitMsg {
+				p.commitChan <- commitChan{nil, *msg}
+			}
+			p.tempCommitMsg = nil
+		}()
+		// sends to the channel the already commited messages
 		if err != nil {
 			dbg.Error("Error while broadcasting Commit msg", err)
 		}
@@ -178,6 +211,11 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 }
 
 func (p *Protocol) handleCommit(com *Commit) {
+	if p.state != STATE_COMMIT {
+		dbg.Lvl3(p.Name(), "STORE handle commit packet")
+		p.tempCommitMsg = append(p.tempCommitMsg, com)
+		return
+	}
 	// finish after threshold of Commit msgs
 	p.commitMsgCount++
 	dbg.Lvl4(p.Node.Name(), "----------------\nWe got", p.commitMsgCount,
@@ -186,8 +224,9 @@ func (p *Protocol) handleCommit(com *Commit) {
 		dbg.Lvl4("Leader got ", p.commitMsgCount)
 	}
 	if p.commitMsgCount >= p.threshold {
+		p.state = STATE_FINISHED
 		// reset counter
-		p.commitMsgCount = 1
+		p.commitMsgCount = 0
 		dbg.Lvl3(p.Node.Name(), "Threshold reached: We are done... CONSENSUS")
 		if p.IsRoot() && p.onDoneCB != nil {
 			dbg.Lvl3(p.Node.Name(), "We are root and threshold reached: return to the simulation.")
@@ -204,7 +243,6 @@ func (p *Protocol) handleCommit(com *Commit) {
 func (p *Protocol) broadcast(sendCb func(*sda.TreeNode)) {
 	for i, tn := range p.nodeList {
 		if i == p.index {
-			dbg.Print(p.Node.Name(), "index", p.index)
 			continue
 		}
 		sendCb(tn)
