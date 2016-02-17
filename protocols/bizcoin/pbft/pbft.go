@@ -193,9 +193,8 @@ func (p *Protocol) handleCommit(com *Commit) {
 			dbg.Lvl3(p.Node.Name(), "We are root and threshold reached: return to the simulation.")
 			p.onDoneCB()
 		}
-		//	p.Done()
+		p.Done()
 		return
-
 	}
 }
 

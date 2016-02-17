@@ -50,7 +50,10 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	// TODO
 	doneChan := make(chan bool)
-	doneCB := func() { doneChan <- true }
+	doneCB := func() {
+		dbg.Print("DONE CALLBACK ---------------")
+		doneChan <- true
+	}
 	// FIXME use client instead
 	parser, err := blockchain.NewParser(e.BlocksDir, magicNum)
 	if err != nil {
@@ -58,28 +61,27 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		return err
 	}
 	transactions := parser.Parse(0, e.Blocksize)
-	node, err := sdaConf.Overlay.CreateNewNodeName("PBFT", sdaConf.Tree)
-	if err != nil {
-		return err
-	}
+
 	// FIXME c&p from bizcoin.go
 	trlist := blockchain.NewTransactionList(transactions, len(transactions))
 	header := blockchain.NewHeader(trlist, "", "")
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	//proto, err := NewRootProtocol(node, trblock, doneCB)
-	proto := node.ProtocolInstance().(*Protocol)
-	proto.trBlock = trblock
-	proto.onDoneCB = doneCB
-
-	if err != nil {
-		return err
-	}
 
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
+		node, err := sdaConf.Overlay.CreateNewNodeName("PBFT", sdaConf.Tree)
+		if err != nil {
+			return err
+		}
+		proto := node.ProtocolInstance().(*Protocol)
+
+		proto.trBlock = trblock
+		proto.onDoneCB = doneCB
+
 		r := monitor.NewMeasure("round_pbft")
-		err := proto.PrePrepare()
+		err = proto.PrePrepare()
 		if err != nil {
 			dbg.Error("Couldn't start PrePrepare")
 			return err
@@ -91,8 +93,6 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Finished round", round)
 	}
-	proto.Done()
-	proto = nil
 	return nil
 }
 
