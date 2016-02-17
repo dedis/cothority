@@ -1,0 +1,8 @@
+Servers = 36
+Simulation = "PbftSimulation"
+Rounds = 5
+BF = 5
+BlocksDir = "/users/nikkolas/remote"
+
+Hosts 
+50

@@ -1,0 +1,9 @@
+Servers = 1
+Simulation = "PbftSimulation"
+Rounds = 3
+BF = 4
+BlocksDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/simul/runfiles/blocks"
+
+Hosts, Blocksize
+3, 17000
+30, 17000
