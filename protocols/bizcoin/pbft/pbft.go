@@ -63,7 +63,7 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	}
 	if idx == NotFound {
 		panic(fmt.Sprintf("Could not find ourselves %+v in the list of nodes %+v", n, pbft.nodeList))
-	} 
+	}
 	pbft.index = idx
 	// 2/3 * #participants == threshold FIXME the threshold is actually XXX
 	pbft.threshold = int(math.Ceil(float64(len(pbft.nodeList)) * 2.0 / 3.0))
@@ -193,7 +193,7 @@ func (p *Protocol) handleCommit(com *Commit) {
 			dbg.Lvl3(p.Node.Name(), "We are root and threshold reached: return to the simulation.")
 			p.onDoneCB()
 		}
-		//p.Done()
+		p.Done()
 		return
 
 	}
