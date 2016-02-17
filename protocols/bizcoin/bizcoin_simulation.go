@@ -79,9 +79,7 @@ func (m *monitorMut) MeasureAndReset() {
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
-	dbg.Print("Simulation Tree =")
-	dbg.Print(sdaConf.Tree.Dump())
-	server := NewServer(e.Blocksize)
+	server := NewBizCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 	/*var rChallComm monitorMut*/
 	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
@@ -96,7 +94,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		}
 		// instantiate a bizcoin protocol
 		rComplete := monitor.NewMeasure("round")
-		pi, err := server.Instantiate(node, e.TimeoutMs, e.Fail)
+		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
 		}
