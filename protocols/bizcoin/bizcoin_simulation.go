@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/broadcast"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -81,6 +82,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewBizCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
+	node, _ := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
 	proto, _ := broadcast.NewBroadcastRootProtocol(node)
 	node.SetProtocolInstance(proto)
 	// channel to notify we are done
