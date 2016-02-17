@@ -80,8 +80,6 @@ func (m *monitorMut) MeasureAndReset() {
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewBizCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
-	/*var rChallComm monitorMut*/
-	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
 		client.StartClientSimulation(e.BlocksDir, e.Blocksize)
