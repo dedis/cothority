@@ -2,15 +2,16 @@ package sda
 
 import (
 	"errors"
+	"io/ioutil"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"io/ioutil"
-	"strconv"
-	"strings"
-	"time"
 )
 
 /*

@@ -77,16 +77,13 @@ func (s *Server) ListenClientTransactions() {
 }
 
 // Instantiate takes blockSize transactions and create the bizcoin instances.
-func (s *Server) Instantiate(node *sda.Node, timeOutMs uint64) (sda.ProtocolInstance, error) {
+func (s *Server) Instantiate(node *sda.Node, timeOutMs uint64, fail uint) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
-	dbg.Print("waiting enough blocks")
+	dbg.Print("waiting for enough transactions")
 	currTransactions := s.waitEnoughBlocks()
 	dbg.Lvl1("Instantiate BizCoin Round with", len(currTransactions), " transactions")
-	pi, err := NewBizCoinRootProtocol(node, currTransactions, timeOutMs)
+	pi, err := NewBizCoinRootProtocol(node, currTransactions, timeOutMs, uint(fail))
 	node.SetProtocolInstance(pi)
-	pi.RegisterOnDone(s.onDoneSign)
-
-	go pi.Start()
 
 	return pi, err
 }
@@ -103,20 +100,25 @@ func (s *Server) onDoneSign(blk BlockSignature) {
 
 func (s *Server) waitEnoughBlocks() []blkparser.Tx {
 	s.requestChan <- true
-	dbg.Print("Requested enough block chan")
+	dbg.Print("Requested enough transactions chan")
 	transactions := <-s.responseChan
 	return transactions
 }
 
 func (s *Server) listenEnoughBlocks() {
-	// TODO we should ignore this in the measurement
+	// TODO the server should have a transaction pool instead:
 	var transactions []blkparser.Tx
 	var want bool
 	for {
 		select {
 		case tr := <-s.transactionChan:
-			transactions = append(transactions, tr)
+			// FIXME this will lead to a very large slice if the client sends many
+			if len(transactions) < s.blockSize {
+				transactions = append(transactions, tr)
+			}
+			//dbg.Print("len(transactions)=", len(transactions))
 			if want {
+				//dbg.Print("There is demand for transactions and we got enough")
 				if len(transactions) >= s.blockSize {
 					s.responseChan <- transactions[:s.blockSize]
 					transactions = transactions[s.blockSize:]
@@ -126,6 +128,7 @@ func (s *Server) listenEnoughBlocks() {
 		case <-s.requestChan:
 			want = true
 			if len(transactions) >= s.blockSize {
+				//dbg.Print("Transactions requested and we already have enough")
 				s.responseChan <- transactions[:s.blockSize]
 				transactions = transactions[s.blockSize:]
 				want = false

@@ -357,6 +357,10 @@ type TreeNode struct {
 	Children []*TreeNode
 }
 
+func (t *TreeNode) Name() string {
+	return t.Entity.First()
+}
+
 var TreeNodeType = network.RegisterMessageType(TreeNode{})
 
 // NewTreeNode creates a new TreeNode with the proper Id

@@ -1,7 +1,9 @@
 package bizcoin
 
 import (
+	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cosi"
@@ -27,8 +29,6 @@ type Simulation struct {
 type simulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
-	// number of transactions the client will send:
-	NumClientTxs int
 	//blocksDir is the directory where to find the transaction blocks (.dat files)
 	BlocksDir string
 	// timeout the leader after TimeoutMs milliseconds
@@ -37,7 +37,7 @@ type simulationConfig struct {
 	// 0  do not fail
 	// 1 fail by doing nothing
 	// 2 fail by sending wrong blocks
-	Fail uint8
+	Fail uint
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
@@ -60,16 +60,34 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 	return sc, nil
 }
 
+type monitorMut struct {
+	*monitor.Measure
+	sync.Mutex
+}
+
+func (m *monitorMut) NewMeasure(id string) {
+	m.Lock()
+	defer m.Unlock()
+	m.Measure = monitor.NewMeasure(id)
+}
+func (m *monitorMut) MeasureAndReset() {
+	m.Lock()
+	defer m.Unlock()
+	m.Measure = nil
+}
+
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
+	dbg.Print("Simulation Tree =")
+	dbg.Print(sdaConf.Tree.Dump())
 	server := NewServer(e.Blocksize)
-	client := NewClient(server)
-	go client.StartClientSimulation(e.BlocksDir, e.NumClientTxs)
-	sigChan := server.BlockSignaturesChan()
-	/*var rChallComm *monitor.Measure*/
-	/*var rRespPrep *monitor.Measure*/
+	/*var rChallComm monitorMut*/
+	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
+		client := NewClient(server)
+		client.StartClientSimulation(e.BlocksDir, e.Blocksize)
+
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
 		node, err := sdaConf.Overlay.NewNodeEmptyName("BizCoin", sdaConf.Tree)
@@ -77,45 +95,59 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			return err
 		}
 		// instantiate a bizcoin protocol
-		rComplete := monitor.NewMeasure("round_prepare")
-		//pi, err := server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
-		_, err = server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
+		rComplete := monitor.NewMeasure("round")
+		pi, err := server.Instantiate(node, e.TimeoutMs, e.Fail)
 		if err != nil {
 			return err
 		}
 
-		/*     bz := pi.(*BizCoin)*/
+		bz := pi.(*BizCoin)
+		// Register callback for the generation of the signature !
+		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
+			rComplete.Measure()
+			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
+				dbg.Lvl1("Round", round, " FAILED:", err)
+			} else {
+				dbg.Lvl1("Round", round, " SUCCESS")
+			}
+		})
+
+		// Register when the protocol is finished (all the nodes have finished)
+		done := make(chan bool)
+		bz.RegisterOnDone(func() {
+			dbg.Print("SIMULATION ON DONE CALLED")
+			done <- true
+		})
 		//bz.OnChallengeCommit(func() {
-		//rChallComm = monitor.NewMeasure("round_challenge_commit")
+		//rChallComm.NewMeasure("round_challenge_commit")
 		//})
 		//bz.OnChallengeCommitDone(func() {
-		//rChallComm.Measure()
-		//rChallComm = nil
+		//rChallComm.MeasureAndReset()
 		//})
 		//bz.OnAnnouncementPrepare(func() {
-		//rRespPrep = monitor.NewMeasure("round_hanle_resp_prep")
+		//rRespPrep.NewMeasure("round_hanle_resp_prep")
 		//})
 		//bz.OnAnnouncementPrepareDone(func() {
-		//rRespPrep.Measure()
-		//rRespPrep = nil
-		//})
-
-		// wait for the signature (all steps finished)
-		dbg.Print("after instantiate")
-		// wait for the signature
-		sig := <-sigChan
-
-		rComplete.Measure()
-		if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, &sig); err != nil {
-			dbg.Lvl1("Round", round, " FAILED")
+		//rRespPrep.MeasureAndReset()
+		/*})*/
+		if e.Fail > 0 {
+			go bz.startAnnouncementPrepare()
+			// do not run bz.startAnnouncementCommit()
 		} else {
-			dbg.Lvl1("Round", round, " SUCCESS")
+			go bz.Start()
 		}
+		// wait for the end
+		<-done
+		dbg.Lvl3("Round", round, "finished")
+
 	}
 	return nil
 }
 
 func verifyBlockSignature(suite abstract.Suite, aggregate abstract.Point, sig *BlockSignature) error {
+	if sig == nil || sig.Sig == nil || sig.Block == nil {
+		return errors.New("Empty block signature")
+	}
 	marshalled, err := sig.Block.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("Marshalling of block did not work: %v", err)
