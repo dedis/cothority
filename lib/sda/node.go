@@ -146,7 +146,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	cr := reflect.TypeOf(c)
 	if cr.Kind() == reflect.Ptr {
 		val := reflect.ValueOf(c).Elem()
-		val.Set(reflect.MakeChan(val.Type(), 1))
+		val.Set(reflect.MakeChan(val.Type(), 100))
 		//val.Set(reflect.MakeChan(reflect.Indirect(cr), 1))
 		return n.RegisterChannel(reflect.Indirect(val).Interface())
 	} else if reflect.ValueOf(c).IsNil() {

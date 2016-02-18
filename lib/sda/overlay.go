@@ -70,7 +70,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	isDone := o.nodeInfo[sdaMsg.To.Id()]
 	// If we never have seen this token before, then we create it
 	if node == nil && !isDone {
-		dbg.Lvl2("Node not found for token (creating new one):", fmt.Sprintf("%+v", sdaMsg.To))
+		dbg.Lvl2("Node not found for token (creating new one) :", fmt.Sprintf("%+v", sdaMsg.To))
 		var err error
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		o.nodeInfo[sdaMsg.To.Id()] = false
@@ -147,10 +147,7 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	}
 	// start it
 	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
-	err = node.Start()
-	if err != nil {
-		return nil, err
-	}
+	go node.Start()
 	return node, nil
 }
 
