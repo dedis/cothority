@@ -19,7 +19,10 @@ Nodes and ProtocolInstances upon request and dispatches the messages.
 type Overlay struct {
 	host *Host
 	// mapping from Token.Id() to Node
-	nodes    map[uuid.UUID]*Node
+	nodes map[uuid.UUID]*Node
+	// false = NOT DONE
+	// true = DONE
+	nodeInfo map[uuid.UUID]bool
 	nodeLock *sync.Mutex
 	// mapping from Tree.Id to Tree
 	trees    map[uuid.UUID]*Tree
@@ -36,6 +39,7 @@ func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:        h,
 		nodes:       make(map[uuid.UUID]*Node),
+		nodeInfo:    make(map[uuid.UUID]bool),
 		nodeLock:    new(sync.Mutex),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
@@ -63,15 +67,24 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	// If node does not exists, then create it
 	o.nodeLock.Lock()
 	node := o.nodes[sdaMsg.To.Id()]
-	if node == nil {
+	isDone := o.nodeInfo[sdaMsg.To.Id()]
+	// If we never have seen this token before, then we create it
+	if node == nil && !isDone {
 		dbg.Lvl2("Node not found for token (creating new one):", fmt.Sprintf("%+v", sdaMsg.To))
 		var err error
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
+		o.nodeInfo[sdaMsg.To.Id()] = false
 		if err != nil {
 			o.nodeLock.Unlock()
 			return err
 		}
 		node = o.nodes[sdaMsg.To.Id()]
+	}
+	// If node is ALREADY DONE => drop packet
+	if isDone {
+		dbg.Lvl2("Message given to DONE Node => DROP")
+		o.nodeLock.Unlock()
+		return nil
 	}
 	o.nodeLock.Unlock()
 	err := node.DispatchMsg(sdaMsg)
@@ -152,6 +165,7 @@ func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error)
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
 	o.nodes[node.token.Id()] = node
+	o.nodeInfo[node.token.Id()] = false
 	return node, node.protocolInstantiate()
 }
 
@@ -193,6 +207,7 @@ func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	defer o.nodeLock.Unlock()
 	node, err := NewNodeEmpty(o, token)
 	o.nodes[node.token.Id()] = node
+	o.nodeInfo[node.token.Id()] = false
 	return node, err
 }
 
@@ -254,6 +269,8 @@ func (o *Overlay) nodeDone(tok *Token) {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
 	delete(o.nodes, tok.Id())
+	// mark it done !
+	o.nodeInfo[tok.Id()] = true
 }
 
 func (o *Overlay) Private() abstract.Secret {
