@@ -1,9 +1,9 @@
 Servers = 1
 Simulation = "PbftSimulation"
-Rounds = 3
-BF = 4
+Rounds = 5
+BF = 5
 BlocksDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/simul/runfiles/blocks"
+CloseWait = 240
 
 Hosts, Blocksize
-3, 17000
-30, 17000
+8, 1000

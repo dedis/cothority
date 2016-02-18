@@ -53,6 +53,8 @@ type Protocol struct {
 
 	tempPrepareMsg []*Prepare
 	tempCommitMsg  []*Commit
+
+	finishChan chan finishChan
 }
 
 const (
@@ -86,6 +88,7 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	n.RegisterChannel(&pbft.prePrepareChan)
 	n.RegisterChannel(&pbft.prepareChan)
 	n.RegisterChannel(&pbft.commitChan)
+	n.RegisterChannel(&pbft.finishChan)
 	return pbft, nil
 }
 
@@ -109,6 +112,10 @@ func (p *Protocol) Dispatch() error {
 			p.handlePrepare(&msg.Prepare)
 		case msg := <-p.commitChan:
 			p.handleCommit(&msg.Commit)
+		case <-p.finishChan:
+			dbg.Lvl3(p.Name(), "Got Done Message ! FINISH")
+			p.Done()
+			return nil
 		}
 	}
 }
@@ -144,7 +151,7 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 		p.state = STATE_PREPARE
 		prep := Prepare{prePre.TrBlock.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
-			dbg.Print(p.Node.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
+			//dbg.Print(p.Node.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
 			tempErr := p.Node.SendTo(tn, &prep)
 			if tempErr != nil {
 				err = tempErr
@@ -231,10 +238,18 @@ func (p *Protocol) handleCommit(com *Commit) {
 		if p.IsRoot() && p.onDoneCB != nil {
 			dbg.Lvl3(p.Node.Name(), "We are root and threshold reached: return to the simulation.")
 			p.onDoneCB()
+			p.finish()
 		}
-		p.Done()
 		return
 	}
+}
+
+// finish is called by the root to tell everyone the root is done
+func (p *Protocol) finish() {
+	p.broadcast(func(tn *sda.TreeNode) {
+		p.SendTo(tn, &Finish{})
+	})
+	go func() { p.finishChan <- finishChan{nil, Finish{}} }()
 }
 
 // sendCb should contain the real sendTo call and the msg to broadcast
@@ -245,7 +260,7 @@ func (p *Protocol) broadcast(sendCb func(*sda.TreeNode)) {
 		if i == p.index {
 			continue
 		}
-		sendCb(tn)
+		go sendCb(tn)
 	}
 }
 

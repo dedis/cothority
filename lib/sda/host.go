@@ -420,15 +420,15 @@ func (h *Host) handleConn(c network.SecureConn) {
 					dbg.Lvl3("error-closing")
 					return
 				}
-				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=> error", e)
+				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", e)
 			}
-		case <-time.After(10 * timeOut):
-			// FIXME make this configurable
-			dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)
-			// Only close our connection - if it is needed again,
-			// it will be recreated
-			doneChan <- true
-			return
+			/*     case <-time.After(10 * timeOut):*/
+			//// FIXME make this configurable
+			//dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)
+			//// Only close our connection - if it is needed again,
+			//// it will be recreated
+			//doneChan <- true
+			/*return*/
 		}
 	}
 }

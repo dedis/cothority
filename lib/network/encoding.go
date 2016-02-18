@@ -181,7 +181,7 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (uu
 	ptr := ptrVal.Interface()
 	var err error
 	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
-		return ErrorType, nil, err
+		return t, ptrVal.Elem().Interface(), err
 	}
 	return t, ptrVal.Elem().Interface(), nil
 }

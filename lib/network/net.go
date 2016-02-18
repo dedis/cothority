@@ -159,6 +159,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
+	dbg.Lvl5("Message SEND =>", fmt.Sprintf("%+v", am))
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {

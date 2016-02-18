@@ -4,5 +4,5 @@ Rounds = 5
 BF = 5
 BlocksDir = "/users/nikkolas/remote"
 
-Hosts 
-50
+Hosts, BlockSize
+100, 1000

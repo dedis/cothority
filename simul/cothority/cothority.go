@@ -155,6 +155,6 @@ func main() {
 	case <-allClosed:
 		dbg.Lvl2(hostAddress, ": all hosts closed")
 	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
-		dbg.Lvl2(hostAddress, ": didn't close after 2 minutes")
+		dbg.Lvl2(hostAddress, ": didn't close after", scs[0].GetCloseWait(), " seconds")
 	}
 }
