@@ -30,7 +30,7 @@ var ErrTemp = errors.New("Temporary Error")
 var ErrTimeout = errors.New("Timeout Error")
 var ErrUnknown = errors.New("Unknown Error")
 
-type Size int32
+type Size uint32
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)

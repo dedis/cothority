@@ -127,7 +127,7 @@ func (am *NetworkMessage) SetError(err error) {
 var typeRegistry = make(map[uuid.UUID]reflect.Type)
 var registryLock = new(sync.Mutex)
 
-var globalOrder = binary.LittleEndian
+var globalOrder = binary.BigEndian
 
 // ErrorType is reserved by the network library. When you receive a message of
 // ErrorType, it is generally because an error happened, then you can call

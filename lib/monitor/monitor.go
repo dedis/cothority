@@ -53,6 +53,8 @@ type Monitor struct {
 	// channel to notify the end of a connection
 	// send the name of the connection when finishd
 	done chan string
+
+	listenerLock sync.Mutex
 }
 
 // NewMonitor returns a new monitor given the stats
@@ -74,7 +76,9 @@ func (m *Monitor) Listen() error {
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
+	m.listenerLock.Lock()
 	m.listener = ln
+	m.listenerLock.Unlock()
 	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
 	finished := false
 	go func() {
@@ -127,7 +131,11 @@ func (m *Monitor) Listen() error {
 // And will stop updating the stats
 func (m *Monitor) Stop() {
 	dbg.Lvl2("Monitor Stop")
-	m.listener.Close()
+	m.listenerLock.Lock()
+	if m.listener != nil {
+		m.listener.Close()
+	}
+	m.listenerLock.Unlock()
 	m.mutexConn.Lock()
 	for _, c := range m.conns {
 		c.Close()

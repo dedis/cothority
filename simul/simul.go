@@ -198,7 +198,9 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		return *rs, err
 	}
 	go func() {
-		monitor.Listen()
+		if err := monitor.Listen(); err != nil {
+			dbg.Fatal("Could not monitor.Listen():", err)
+		}
 	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.

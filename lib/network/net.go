@@ -121,10 +121,15 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
 	var s Size
+	defer func() {
+		if e := recover(); e != nil {
+			dbg.Print("ERROR SIZE:", s, " => ", e)
+			panic(e)
+		}
+	}()
 	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
-	// Then make the buffer out of it
 	b := make([]byte, s)
 	var buffer bytes.Buffer
 	for Size(buffer.Len()) < s {
@@ -178,6 +183,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	if err != nil {
 		return handleError(err)
 	}
+
 	return nil
 }
 

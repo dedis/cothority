@@ -417,7 +417,6 @@ func (h *Host) handleConn(c network.SecureConn) {
 			if !h.isClosing {
 				h.networkLock.Unlock()
 				if e == network.ErrClosed || e == network.ErrEOF || e == network.ErrTemp {
-					dbg.Lvl3("error-closing")
 					return
 				}
 				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", e)
