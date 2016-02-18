@@ -147,7 +147,7 @@ func main() {
 	go func() {
 		for _, sc := range scs {
 			<-sc.Host.Closed
-			dbg.Lvl4("Host", sc.Host.Entity.Addresses, "closed")
+			dbg.Lvl3("SIMULATION CLOSED Host", sc.Host.Entity.Addresses, "closed")
 		}
 		allClosed <- true
 	}()

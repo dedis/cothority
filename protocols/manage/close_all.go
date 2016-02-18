@@ -53,8 +53,8 @@ func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
 	dbg.Lvl3(pc.Entity.Addresses, "sent PrepClose to", p.Entity().Addresses)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses)
-			p.SendTo(c, &PrepareClose{})
+			err := p.SendTo(c, &PrepareClose{})
+			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses, "(err=", err, ")")
 		}
 	} else {
 		p.FuncClose(nil)

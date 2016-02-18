@@ -20,11 +20,19 @@ type Broadcast struct {
 		ACK
 	}
 
+	okChan chan struct {
+		*sda.TreeNode
+		OK
+	}
+
 	// map for all the nodes => state
 	listNode map[uuid.UUID]*sda.TreeNode
+	// how many peers are connected with me
 	ackdNode int
 	done     chan bool
 	onDoneCb func()
+	// how many peers are connected with everyone
+	okdNode int
 }
 
 func NewBroadcastProtocol(n *sda.Node) (*Broadcast, error) {
@@ -38,6 +46,7 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 
 	b.RegisterChannel(&b.ackChan)
 	b.RegisterChannel(&b.announceChan)
+	b.RegisterChannel(&b.okChan)
 
 	lists := b.Tree().ListNodes()
 	b.listNode = make(map[uuid.UUID]*sda.TreeNode)
@@ -65,6 +74,8 @@ func (b *Broadcast) listen() {
 			b.handleAnnounce(msg.TreeNode)
 		case msg := <-b.ackChan:
 			b.handleACK(msg.TreeNode)
+		case msg := <-b.okChan:
+			b.handleOk(msg.TreeNode)
 		case <-b.done:
 			return
 		}
@@ -95,13 +106,29 @@ func (b *Broadcast) handleACK(tn *sda.TreeNode) {
 
 	b.ackdNode++
 	if b.ackdNode == len(b.listNode) {
-		dbg.Lvl3(b.Name(), "Received ALL ACK")
+		if !b.IsRoot() {
+			b.SendTo(b.Tree().Root, &OK{})
+			dbg.Lvl3(b.Name(), "Received ALL ACK (notified the root)")
+		}
+	}
+}
+
+func (b *Broadcast) handleOk(tn *sda.TreeNode) {
+	if _, ok := b.listNode[tn.Id]; !ok {
+		dbg.Error(b.Name(), "Broadcast Received ACK from unknown treenode")
+	}
+
+	b.okdNode++
+	dbg.Print(b.Name(), "Received OK with ackNode=", b.ackdNode, " and okdNode=", b.okdNode)
+	if b.ackdNode == len(b.listNode) && b.okdNode == len(b.listNode) {
 		// Yahooo we are done
+		dbg.Lvl3(b.Name(), " Knows EVERYONE is connected to EVERYONE")
 		b.done <- true
 		if b.onDoneCb != nil {
 			b.onDoneCb()
 		}
 	}
+
 }
 
 func (b *Broadcast) RegisterOnDone(fn func()) {
@@ -112,4 +139,8 @@ type Announce struct {
 }
 
 type ACK struct {
+}
+
+// OK means I am connected with everyone and I tell you this.
+type OK struct {
 }

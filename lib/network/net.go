@@ -70,9 +70,9 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
 	for _, c := range t.peers {
-		dbg.Lvl3("Closing peer", c)
+		dbg.Lvl4("Closing peer", c)
 		if err := c.Close(); err != nil {
-			dbg.Lvl3("Error while closing peers")
+			dbg.Error("Error while closing peers")
 			return handleError(err)
 		}
 	}

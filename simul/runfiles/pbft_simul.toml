@@ -6,4 +6,4 @@ BlocksDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/simul/run
 CloseWait = 6000
 
 Hosts, Blocksize
-8, 100000
+8, 20000
