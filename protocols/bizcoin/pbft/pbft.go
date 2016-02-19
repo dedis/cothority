@@ -125,11 +125,12 @@ func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block
 	var err error
 	dbg.Print(p.Node.Name(), "Broadcast PrePrepare")
+	prep := &PrePrepare{p.trBlock}
 	p.broadcast(func(tn *sda.TreeNode) {
-		prep := PrePrepare{p.trBlock}
-		tempErr := p.Node.SendTo(tn, &prep)
+		tempErr := p.Node.SendTo(tn, prep)
 		if tempErr != nil {
 			err = tempErr
+			dbg.Print(p.Name(), "Error broadcasting PrePrepare =>", err)
 		}
 		p.state = STATE_PREPARE
 	})
@@ -149,12 +150,13 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	if verifyBlock(prePre.TrBlock, "", "") {
 		// STATE TRANSITION PREPREPARE => PREPARE
 		p.state = STATE_PREPARE
-		prep := Prepare{prePre.TrBlock.HeaderHash}
+		prep := &Prepare{prePre.TrBlock.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
 			//dbg.Print(p.Node.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
-			tempErr := p.Node.SendTo(tn, &prep)
+			tempErr := p.Node.SendTo(tn, prep)
 			if tempErr != nil {
 				err = tempErr
+				dbg.Print(p.Name(), "Error broadcasting PREPARE =>", err)
 			}
 		})
 		// Already insert the previously received messages !
@@ -195,11 +197,11 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 		// reset counter
 		p.prepMsgCount = 0
 		var err error
+		com := &Commit{pre.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
-			com := Commit{pre.HeaderHash}
-			tempErr := p.Node.SendTo(tn, &com)
+			tempErr := p.Node.SendTo(tn, com)
 			if tempErr != nil {
-				dbg.Error("Error while broadcasting Commit msg", tempErr)
+				dbg.Error(p.Name(), "Error while broadcasting Commit =>", tempErr)
 				err = tempErr
 			}
 		})
@@ -247,8 +249,9 @@ func (p *Protocol) handleCommit(com *Commit) {
 // finish is called by the root to tell everyone the root is done
 func (p *Protocol) finish() {
 	p.broadcast(func(tn *sda.TreeNode) {
-		p.SendTo(tn, &Finish{})
+		p.SendTo(tn, &Finish{"Finish"})
 	})
+	// notify ourself
 	go func() { p.finishChan <- finishChan{nil, Finish{}} }()
 }
 

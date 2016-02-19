@@ -174,7 +174,7 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (uu
 	registryLock.Lock()
 	if typ, ok = typeRegistry[t]; !ok {
 		registryLock.Unlock()
-		return ErrorType, nil, fmt.Errorf("Type %s not registered.", t.String())
+		return ErrorType, nil, fmt.Errorf("Type %s not registered.", typ.Name())
 	}
 	registryLock.Unlock()
 	ptrVal := reflect.New(typ)
