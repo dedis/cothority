@@ -143,7 +143,7 @@ func main() {
 	}
 
 	// Wait for all hosts to be closed
-	allClosed := make(chan bool, 1)
+	allClosed := make(chan bool)
 	go func() {
 		for _, sc := range scs {
 			<-sc.Host.Closed

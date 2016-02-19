@@ -16,6 +16,7 @@ package network
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"sync"
@@ -131,20 +132,29 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 		return EmptyApplicationMessage, handleError(err)
 	}
 	b := make([]byte, s)
+	var read Size
 	var buffer bytes.Buffer
 	for Size(buffer.Len()) < s {
+		// read the size of the next packet
 		n, err := c.Conn.Read(b)
-		b = b[:n]
-		buffer.Write(b)
+		// if error then quit
 		if err != nil {
 			e := handleError(err)
 			return EmptyApplicationMessage, e
+		}
+		// put it in the longterm buffer
+		buffer.Write(b[:n])
+		// if we could not read everything yet
+		if Size(buffer.Len()) < s {
+			// make b size = bytes that we still need to read (no more no less)
+			b = b[:s-read]
 		}
 	}
 	defer func() {
 		if e := recover(); e != nil {
 			debug.PrintStack()
 			dbg.Errorf("Error Unmarshalling %s: %d bytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+			dbg.Error(hex.Dump(buffer.Bytes()))
 		}
 	}()
 
@@ -155,6 +165,9 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	am.From = c.Remote()
 	return am, nil
 }
+
+// how many bytes do we write at once on the socket
+var maxChunkSize Size = 4096
 
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with the size through the network.
@@ -170,18 +183,39 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
+	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
-	var buffer bytes.Buffer
-	size := Size(len(b))
-	if err := binary.Write(&buffer, globalOrder, size); err != nil {
+	packetSize := Size(len(b))
+	if err := binary.Write(c.Conn, globalOrder, packetSize); err != nil {
 		return err
 	}
 	// Then send everything through the connection
-	buffer.Write(b)
-	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
-	_, err = c.Conn.Write(buffer.Bytes())
-	if err != nil {
-		return handleError(err)
+	// Send chunk by chunk
+	var sent Size
+	for sent < packetSize {
+		var offset Size
+		// if we have yet more than "chunk" byte to write
+		if packetSize-sent > maxChunkSize {
+			offset = maxChunkSize
+		} else {
+			// take only the rest
+			offset = packetSize - sent
+		}
+
+		// if one write went wrong or stg
+		if offset < Size(len(b)) {
+			offset = Size(len(b))
+		}
+
+		// chunk to send
+		chunk := b[:offset]
+		// bytes left to send
+		b = b[:offset]
+		n, err := c.Conn.Write(chunk)
+		if err != nil {
+			return handleError(err)
+		}
+		sent += Size(n)
 	}
 
 	return nil

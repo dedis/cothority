@@ -229,7 +229,7 @@ func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
 // so user of the package can know what is the cause of the problem
 func handleError(err error) error {
 
-	if strings.Contains(err.Error(), "use of closed") {
+	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
 		return ErrClosed
 	} else if strings.Contains(err.Error(), "canceled") {
 		return ErrCanceled

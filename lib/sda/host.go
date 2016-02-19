@@ -94,7 +94,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		host:               network.NewSecureTcpHost(pkey, e),
 		private:            pkey,
 		suite:              network.Suite,
-		networkChan:        make(chan network.NetworkMessage, 1),
+		networkChan:        make(chan network.NetworkMessage, 10),
 		Closed:             make(chan bool),
 		isClosing:          false,
 		networkLock:        &sync.Mutex{},
@@ -248,7 +248,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	h.networkLock.Unlock()
 
 	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
-	c.Send(context.TODO(), msg)
+	if err := c.Send(context.TODO(), msg); err != nil && err != network.ErrClosed {
+		dbg.Error("ERROR Sending to connection:", err)
+	}
 	return nil
 }
 
@@ -406,7 +408,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 	for {
 		select {
 		case <-h.Closed:
-			dbg.Lvl3(h.Entity.First(), " closed during 'for-loop'", h.Entity.Addresses, c)
+			dbg.Lvl3(h.Entity.First(), " closed during 'for-loop'", c.Entity().First())
 			doneChan <- true
 			return
 		case am := <-msgChan:
