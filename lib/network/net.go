@@ -117,15 +117,13 @@ func (c *TcpConn) Remote() string {
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
 func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
+	fmt.Println("Receiving")
 	var am NetworkMessage
 	am.Constructors = c.host.constructors
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
 
-	// FIXME Read the size as an UvarInt
-	c.conMut.Lock()
-	defer c.conMut.Unlock()
 	s, err := binary.ReadUvarint(bufio.NewReader(c.Conn))
 	dbg.Print(c.Conn.LocalAddr(), "Receiving s =====================================", s)
 	if err != nil {
@@ -142,7 +140,6 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 		// read the size of the next packet
 
 		n, err := c.Conn.Read(b)
-
 		if err != nil {
 			fmt.Println("Error while reading parts of the buffer", err)
 		}
@@ -154,7 +151,7 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 		}
 		// put it in the longterm buffer
 		m, err := buffer.Write(b[:n])
-		if err != nil || m != n{
+		if err != nil || m != n {
 			fmt.Println("Err", err)
 		}
 		fmt.Println("Iter Buffer len == ", buffer.Len())
@@ -205,8 +202,6 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	// FIXME Write the size as an UvarInt
 	var sb = make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(sb[:], packetSize)
-	c.conMut.Lock()
-	defer c.conMut.Unlock()
 	if _, err := c.Conn.Write(sb[:n]); err != nil {
 
 		return err

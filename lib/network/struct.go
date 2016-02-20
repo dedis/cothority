@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/protobuf"
-	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 	"io"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/protobuf"
+	"github.com/satori/go.uuid"
+	"golang.org/x/net/context"
 )
 
 // How many times should we try to connect
@@ -29,7 +30,6 @@ var ErrCanceled = errors.New("Operation Canceled")
 var ErrTemp = errors.New("Temporary Error")
 var ErrTimeout = errors.New("Timeout Error")
 var ErrUnknown = errors.New("Unknown Error")
-
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
@@ -82,8 +82,6 @@ type TcpConn struct {
 
 	// The connection used
 	Conn net.Conn
-	conMut sync.Mutex
-
 	// closed indicator
 	closed bool
 	// A pointer to the associated host (just-in-case)
