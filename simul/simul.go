@@ -41,7 +41,7 @@ var nobuild = false
 var clean = true
 var build = ""
 var machines = 3
-var monitorPort = 6789
+var monitorPort = 10003
 var simRange = ""
 
 // SHORT TERM solution of referencing

@@ -247,9 +247,9 @@ func (p *Protocol) handleCommit(com *Commit) {
 // finish is called by the root to tell everyone the root is done
 func (p *Protocol) finish() {
 	p.broadcast(func(tn *sda.TreeNode) {
-		p.SendTo(tn, &Finish{})
+		p.SendTo(tn, &Finish{"Done: true"})
 	})
-	go func() { p.finishChan <- finishChan{nil, Finish{}} }()
+	go func() { p.finishChan <- finishChan{nil, Finish{"Done: true"}} }()
 }
 
 // sendCb should contain the real sendTo call and the msg to broadcast

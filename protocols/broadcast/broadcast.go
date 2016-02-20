@@ -85,7 +85,7 @@ func (b *Broadcast) listen() {
 // Start will contact everyone and makes the connections
 func (b *Broadcast) Start() error {
 	for _, tn := range b.listNode {
-		b.SendTo(tn, &Announce{})
+		b.SendTo(tn, &Announce{"ANN"})
 	}
 	dbg.Lvl3(b.Name(), "Sent Announce to everyone")
 	return nil
@@ -94,7 +94,7 @@ func (b *Broadcast) Start() error {
 // handleAnnounce receive the announcement from another node
 // it reply with an ACK.
 func (b *Broadcast) handleAnnounce(tn *sda.TreeNode) {
-	b.SendTo(tn, &ACK{})
+	b.SendTo(tn, &ACK{"ACK"})
 }
 
 // It checks if we have sent an Announce to this treenode (hopefully yes^^)
@@ -107,7 +107,7 @@ func (b *Broadcast) handleACK(tn *sda.TreeNode) {
 	b.ackdNode++
 	if b.ackdNode == len(b.listNode) {
 		if !b.IsRoot() {
-			b.SendTo(b.Tree().Root, &OK{})
+			b.SendTo(b.Tree().Root, &OK{"OK"})
 			dbg.Lvl3(b.Name(), "Received ALL ACK (notified the root)")
 		}
 	}
@@ -136,11 +136,14 @@ func (b *Broadcast) RegisterOnDone(fn func()) {
 }
 
 type Announce struct {
+	NonEmpty string
 }
 
 type ACK struct {
+	NonEmpty string
 }
 
 // OK means I am connected with everyone and I tell you this.
 type OK struct {
+	NonEmpty string
 }

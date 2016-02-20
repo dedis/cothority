@@ -210,7 +210,7 @@ func (h *Host) Close() error {
 	if h.isClosing {
 		return errors.New("Already closing")
 	}
-	dbg.Lvl3("Closing", h.Entity.Addresses)
+	fmt.Println("Closing", h.Entity.Addresses)
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	h.isClosing = true
@@ -376,6 +376,10 @@ func (h *Host) receive() network.NetworkMessage {
 	data := <-h.networkChan
 	dbg.Lvl5("Got message", data)
 	return data
+}
+
+func (h *Host) Receive() network.NetworkMessage {
+	return h.receive()
 }
 
 // Handle a connection => giving messages to the MsgChans

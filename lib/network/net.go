@@ -14,6 +14,7 @@
 package network
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
@@ -25,11 +26,11 @@ import (
 	"golang.org/x/net/context"
 
 	"errors"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"runtime/debug"
 )
 
 // Network part //
@@ -121,38 +122,51 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
-	var s Size
-	defer func() {
-		if e := recover(); e != nil {
-			dbg.Print("ERROR SIZE:", s, " => ", e)
-			panic(e)
-		}
-	}()
-	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
+
+	// FIXME Read the size as an UvarInt
+	c.conMut.Lock()
+	defer c.conMut.Unlock()
+	s, err := binary.ReadUvarint(bufio.NewReader(c.Conn))
+	dbg.Print(c.Conn.LocalAddr(), "Receiving s =====================================", s)
+	if err != nil {
+		dbg.Print("Couldn't decode size", err.Error())
 		return EmptyApplicationMessage, handleError(err)
 	}
 	b := make([]byte, s)
-	var read Size
+	var read uint64
+
 	var buffer bytes.Buffer
-	for Size(buffer.Len()) < s {
+	fmt.Println("Buffer len == ", buffer.Len())
+	for uint64(buffer.Len()) < s {
+		fmt.Println("Iter	")
 		// read the size of the next packet
+
 		n, err := c.Conn.Read(b)
+
+		if err != nil {
+			fmt.Println("Error while reading parts of the buffer", err)
+		}
+		fmt.Println("Read some bytes", n)
 		// if error then quit
 		if err != nil {
 			e := handleError(err)
 			return EmptyApplicationMessage, e
 		}
 		// put it in the longterm buffer
-		buffer.Write(b[:n])
+		m, err := buffer.Write(b[:n])
+		if err != nil || m != n{
+			fmt.Println("Err", err)
+		}
+		fmt.Println("Iter Buffer len == ", buffer.Len())
 		// if we could not read everything yet
-		if Size(buffer.Len()) < s {
+		if uint64(buffer.Len()) < s {
 			// make b size = bytes that we still need to read (no more no less)
 			b = b[:s-read]
 		}
 	}
+	fmt.Println("Done reading buffer of size", s)
 	defer func() {
 		if e := recover(); e != nil {
-			debug.PrintStack()
 			dbg.Errorf("Error Unmarshalling %s: %d bytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
 			dbg.Error(hex.Dump(buffer.Bytes()))
 		}
@@ -163,11 +177,12 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
+	fmt.Println("Done reading msg of size", s, am)
 	return am, nil
 }
 
 // how many bytes do we write at once on the socket
-var maxChunkSize Size = 4096
+var maxChunkSize uint64 = 4096
 
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with the size through the network.
@@ -185,15 +200,24 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	}
 	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
-	packetSize := Size(len(b))
-	if err := binary.Write(c.Conn, globalOrder, packetSize); err != nil {
+	packetSize := uint64(len(b))
+
+	// FIXME Write the size as an UvarInt
+	var sb = make([]byte, binary.MaxVarintLen64)
+	n := binary.PutUvarint(sb[:], packetSize)
+	c.conMut.Lock()
+	defer c.conMut.Unlock()
+	if _, err := c.Conn.Write(sb[:n]); err != nil {
+
 		return err
 	}
+
 	// Then send everything through the connection
+	fmt.Println("Sending ........................", packetSize)
 	// Send chunk by chunk
-	var sent Size
+	var sent uint64
 	for sent < packetSize {
-		var offset Size
+		var offset uint64
 		// if we have yet more than "chunk" byte to write
 		if packetSize-sent > maxChunkSize {
 			offset = maxChunkSize
@@ -203,8 +227,8 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		}
 
 		// if one write went wrong or stg
-		if offset < Size(len(b)) {
-			offset = Size(len(b))
+		if offset < uint64(len(b)) {
+			offset = uint64(len(b))
 		}
 
 		// chunk to send
@@ -215,8 +239,9 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		if err != nil {
 			return handleError(err)
 		}
-		sent += Size(n)
+		sent += uint64(n)
 	}
+	fmt.Println("Done sending msg of size", packetSize)
 
 	return nil
 }

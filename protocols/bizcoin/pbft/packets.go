@@ -36,7 +36,9 @@ type commitChan struct {
 	Commit
 }
 
-type Finish struct{}
+type Finish struct {
+	Done string
+}
 
 type finishChan struct {
 	*sda.TreeNode

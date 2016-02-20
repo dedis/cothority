@@ -1,9 +1,9 @@
-Servers = 2
+Servers = 36
 Simulation = "PbftSimulation"
 Rounds = 5
 BF = 5
-BlocksDir = "/Users/khoffi/go/src/github.com/dedis/cothority/protocols/bizcoin/blocks"
+BlocksDir = "/users/nikkolas/remote"
+CLoseWait = 6000
 
 Hosts, Blocksize
-4, 1000
-32, 17000
+70, 2200

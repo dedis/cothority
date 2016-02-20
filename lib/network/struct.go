@@ -30,7 +30,6 @@ var ErrTemp = errors.New("Temporary Error")
 var ErrTimeout = errors.New("Timeout Error")
 var ErrUnknown = errors.New("Unknown Error")
 
-type Size uint32
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
@@ -77,11 +76,13 @@ type TcpHost struct {
 // TcpConn is the underlying implementation of
 // Conn using Tcp
 type TcpConn struct {
+
 	// The name of the endpoint we are connected to.
 	Endpoint string
 
 	// The connection used
 	Conn net.Conn
+	conMut sync.Mutex
 
 	// closed indicator
 	closed bool

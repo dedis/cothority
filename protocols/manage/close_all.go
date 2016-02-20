@@ -1,10 +1,11 @@
 package manage
 
 import (
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"time"
 )
 
 /*
@@ -27,13 +28,17 @@ type ProtocolCloseAll struct {
 	Done chan bool
 }
 
-type PrepareClose struct{}
+type PrepareClose struct {
+	NonEmpty string
+}
 type PrepareCloseMsg struct {
 	*sda.TreeNode
 	PrepareClose
 }
 
-type Close struct{}
+type Close struct {
+	NonEmpty string
+}
 type CloseMsg struct {
 	*sda.TreeNode
 	Close
@@ -53,7 +58,7 @@ func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
 	dbg.Lvl3(pc.Entity.Addresses, "sent PrepClose to", p.Entity().Addresses)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			err := p.SendTo(c, &PrepareClose{})
+			err := p.SendTo(c, &PrepareClose{"PrepClose"})
 			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses, "(err=", err, ")")
 		}
 	} else {
@@ -68,7 +73,7 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	if !p.IsRoot() {
 		dbg.Lvl3("Sending closeall from", p.Entity().Addresses,
 			"to", p.Parent().Entity.Addresses)
-		p.SendTo(p.Parent(), &Close{})
+		p.SendTo(p.Parent(), &Close{"Close"})
 	} else {
 		dbg.Lvl2("Root received Close")
 		p.Done <- true

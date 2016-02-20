@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/hashid"
 	"github.com/dedis/cothority/lib/proof"
 )
@@ -53,6 +54,7 @@ func NewTrBlock(transactions TransactionList, header *Header) *TrBlock {
 	trb := new(TrBlock)
 	trb.Magic = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 	trb.HeaderHash = trb.Hash(header)
+	dbg.Print("HEADER HASH", trb.HeaderHash)
 	trb.TransactionList = transactions
 	trb.BlockSize = 0
 	trb.Header = header
