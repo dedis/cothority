@@ -3,6 +3,7 @@ package pbft
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -41,7 +42,7 @@ func TestDoneEncDecWithSDA(t *testing.T) {
 	if msgDec.Done != "Done: true" {
 		t.Fatal("Received message from h2 -> h1 is wrong")
 	}
-
+	time.Sleep(2 * time.Second)
 	h1.Close()
 	h2.Close()
 }

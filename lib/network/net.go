@@ -14,12 +14,12 @@
 package network
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -118,18 +118,25 @@ func (c *TcpConn) Remote() string {
 // wrong occured
 func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	fmt.Println("Receiving")
+	debug.PrintStack()
 	var am NetworkMessage
 	am.Constructors = c.host.constructors
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
 
-	s, err := binary.ReadUvarint(bufio.NewReader(c.Conn))
-	dbg.Print(c.Conn.LocalAddr(), "Receiving s =====================================", s)
-	if err != nil {
+	var s uint64
+	defer func() {
+		if e := recover(); e != nil {
+			dbg.Error("ERROR SIZE:", s, " => ", e)
+			//panic(e)
+		}
+	}()
+	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
 		dbg.Print("Couldn't decode size", err.Error())
 		return EmptyApplicationMessage, handleError(err)
 	}
+	dbg.Print(c.Conn.LocalAddr(), "Receiving s =====================================", s)
 	b := make([]byte, s)
 	var read uint64
 
@@ -198,12 +205,8 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
 	packetSize := uint64(len(b))
-
-	// FIXME Write the size as an UvarInt
-	var sb = make([]byte, binary.MaxVarintLen64)
-	n := binary.PutUvarint(sb[:], packetSize)
-	if _, err := c.Conn.Write(sb[:n]); err != nil {
-
+	if err := binary.Write(c.Conn, globalOrder, packetSize); err != nil {
+		fmt.Println("Err writing size", err)
 		return err
 	}
 
