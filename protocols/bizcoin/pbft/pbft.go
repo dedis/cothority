@@ -64,6 +64,7 @@ const (
 	STATE_FINISHED
 )
 
+// NewProtocol returns a new pbft protocol
 func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft := new(Protocol)
 	pbft.state = STATE_PREPREPARE
@@ -92,6 +93,8 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	return pbft, nil
 }
 
+// NewRootProtocol returns a new PBFT Protocol with the block it needs to sign
+// off.
 func NewRootProtocol(n *sda.Node, trBlock *blockchain.TrBlock, onDoneCb func()) (*Protocol, error) {
 	pbft, err := NewProtocol(n)
 	if err != nil {
@@ -138,6 +141,8 @@ func (p *Protocol) PrePrepare() error {
 	return err
 }
 
+// handlePrePrepare receive preprepare messages and go to Prepare if it received
+// enough.
 func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	if p.state != STATE_PREPREPARE {
 		//dbg.Lvl3(p.Name(), "DROP preprepare packet : Already broadcasted prepare")
@@ -219,6 +224,8 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 	}
 }
 
+// handleCommit receives commit messages and signal the end if it received
+// enough of it.
 func (p *Protocol) handleCommit(com *Commit) {
 	if p.state != STATE_COMMIT {
 		//	dbg.Lvl3(p.Name(), "STORE handle commit packet")

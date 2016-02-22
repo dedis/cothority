@@ -55,6 +55,7 @@ type Ntree struct {
 	onDoneCallback func(*NtreeSignature)
 }
 
+// NewNtreeProtocol returns the NtreeProtocol  initialized
 func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 	nt := &Ntree{
 		Node:                       node,
@@ -72,6 +73,8 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 	return nt, nil
 }
 
+// NewNTreeRootProtocol returns a NtreeProtocol with a set of transactions to
+// sign for this round.
 func NewNTreeRootProtocol(node *sda.Node, transactions []blkparser.Tx) (*Ntree, error) {
 	nt, _ := NewNtreeProtocol(node)
 	var err error
@@ -94,6 +97,7 @@ func (nt *Ntree) Dispatch() error {
 	return nil
 }
 
+// listen will select on the differents channels
 func (nt *Ntree) listen() {
 	for {
 		select {
@@ -135,6 +139,7 @@ func (nt *Ntree) listen() {
 	}
 }
 
+// startBlockSignature will  send the first signature up the tree.
 func (nt *Ntree) startBlockSignature() {
 	dbg.Lvl3(nt.Name(), "Starting Block Signature Phase")
 	nt.computeBlockSignature()
@@ -144,6 +149,7 @@ func (nt *Ntree) startBlockSignature() {
 
 }
 
+// computeBlockSignature compute the signature out of the block.
 func (nt *Ntree) computeBlockSignature() {
 	// wait the end of verification of the block
 	ok := <-nt.verifyBlockChan
@@ -236,6 +242,8 @@ func (nt *Ntree) startSignatureResponse() {
 	}
 }
 
+// computeSignatureResponse will compute the response out of the signature
+// request. It's the final signature.
 func (nt *Ntree) computeSignatureResponse() {
 	// wait for the verification to be done
 	ok := <-nt.verifySignatureRequestChan
@@ -282,6 +290,8 @@ func (nt *Ntree) handleRoundSignatureResponse(msg *RoundSignatureResponse) {
 	nt.SendTo(nt.Parent(), msg)
 }
 
+// RegisterOnDone is the callback that will be executed when the final signature
+// is done.
 func (nt *Ntree) RegisterOnDone(fn func(*NtreeSignature)) {
 	nt.onDoneCallback = fn
 }
