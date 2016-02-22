@@ -109,27 +109,36 @@ type BizCoin struct {
 	// measurements. Hence functions will not be called in go routines
 
 	// root fails:
-	rootFailMode          uint
+	rootFailMode uint
+	// Call back when we start the announcement of the prepare phase
 	onAnnouncementPrepare func()
+	// callback when we finished the response of the prepare phase
 	onResponsePrepareDone func()
-	onChallengeCommit     func()
-	onChallengeCommitDone func()
+	// callback when we finished the challenge of the commit phase
+	onChallengeCommit func()
+
+	onResponseCommitDone func()
 	// view change setup and measurement
 	viewchangeChan chan struct {
 		*sda.TreeNode
 		viewChange
 	}
-	vcMeasure   *monitor.Measure
+	vcMeasure *monitor.Measure
+	// bool set to true when the final signature is produced
 	doneSigning chan bool
-	doneLock    sync.Mutex
+	// lock associated
+	doneLock sync.Mutex
 	// threshold for how much exception
 	threshold int
 	// threshold for how much view change acceptance we need
 	// basically n - threshold
 	viewChangeThreshold int
-	vcCounter           int
-	doneProcessing      chan bool
+	// how many view change request have we received
+	vcCounter int
+	// done processing is used to stop the processing of the channels
+	doneProcessing chan bool
 
+	// finale signature that this BizCoin round has produced
 	finalSignature *BlockSignature
 }
 
@@ -581,8 +590,8 @@ func (bz *BizCoin) handleResponseCommit(bzr *BizCoinResponse) error {
 	// if root we have finished
 	if bz.IsRoot() {
 		sig := bz.Signature()
-		if bz.onChallengeCommitDone != nil {
-			bz.onChallengeCommitDone()
+		if bz.onResponseCommitDone != nil {
+			bz.onResponseCommitDone()
 		}
 		if bz.onSignatureDone != nil {
 			bz.onSignatureDone(sig)
@@ -705,6 +714,9 @@ func (bz *BizCoin) RegisterOnSignatureDone(fn func(*BlockSignature)) {
 	bz.onSignatureDone = fn
 }
 
+// startTimer starts the timer to decide whether we should request a view change
+// after a certain timeout or not. If the signature is done, we don't. otherwise
+// we start the view change protocol.
 func (bz *BizCoin) startTimer(millis uint64) {
 	if bz.rootFailMode != 0 {
 		dbg.Lvl3(bz.Name(), "Started timer (", millis, ")...")
@@ -717,6 +729,8 @@ func (bz *BizCoin) startTimer(millis uint64) {
 	}
 }
 
+// sendAndMeasureViewChange is a method that creates the viewchange request,
+// broadcast it and measures the time it takes to accept it.
 func (bz *BizCoin) sendAndMeasureViewchange() {
 	dbg.Lvl3(bz.Name(), "Created viewchange measure")
 	bz.vcMeasure = monitor.NewMeasure("viewchange")
@@ -734,10 +748,12 @@ func (bz *BizCoin) sendAndMeasureViewchange() {
 	}
 }
 
+// viewChange is simply the last hash / id of the previous leader.
 type viewChange struct {
 	LastBlock [sha256.Size]byte
 }
 
+// newViewChange creates a new view change.
 func newViewChange() *viewChange {
 	res := &viewChange{}
 	for i := 0; i < sha256.Size; i++ {
@@ -746,6 +762,8 @@ func newViewChange() *viewChange {
 	return res
 }
 
+// handleViewChange receives a view change request and if received more than
+// 2/3, accept the view change.
 func (bz *BizCoin) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
 	bz.vcCounter++
 	dbg.Print(bz.Name(), "Received ViewChange (", bz.vcCounter, "/", bz.viewChangeThreshold, ") from", tn.Name())
@@ -782,10 +800,10 @@ func (bz *BizCoin) OnChallengeCommit(fn func()) {
 	bz.onChallengeCommit = fn
 }
 
-// OnChallengeCommitDone registers a function which will be called when
-// ChallengeCommit round is finished
-func (bz *BizCoin) OnChallengeCommitDone(fn func()) {
-	bz.onChallengeCommitDone = fn
+// onResponseCommitDone registers a function which will be called when
+// onResponseCommit round is finished
+func (bz *BizCoin) OnResponseCommitDone(fn func()) {
+	bz.onResponseCommitDone = fn
 }
 
 // nodeDone is either called by the end of EndProtocol or by the end of the
