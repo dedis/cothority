@@ -125,7 +125,6 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	defer func() {
 		if e := recover(); e != nil {
 			dbg.Print("ERROR SIZE:", s, " => ", e)
-			panic(e)
 		}
 	}()
 	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
@@ -153,7 +152,7 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	defer func() {
 		if e := recover(); e != nil {
 			debug.PrintStack()
-			dbg.Errorf("Error Unmarshalling %s: %d bytes : %v\n", typeRegistry[am.MsgType].Name(), len(buffer.Bytes()), e)
+			dbg.Errorf("Error Unmarshalling %s: %d bytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
 			//dbg.Error(hex.Dump(buffer.Bytes()))
 		}
 	}()

@@ -140,7 +140,7 @@ func (p *Protocol) PrePrepare() error {
 
 func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	if p.state != STATE_PREPREPARE {
-		dbg.Lvl3(p.Name(), "DROP preprepare packet : Already broadcasted prepare")
+		//dbg.Lvl3(p.Name(), "DROP preprepare packet : Already broadcasted prepare")
 		return
 	}
 	// prepare: verify the structure of the block and broadcast
@@ -177,13 +177,13 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 
 func (p *Protocol) handlePrepare(pre *Prepare) {
 	if p.state != STATE_PREPARE {
-		dbg.Lvl3(p.Name(), "STORE prepare packet: wrong state")
+		//dbg.Lvl3(p.Name(), "STORE prepare packet: wrong state")
 		p.tempPrepareMsg = append(p.tempPrepareMsg, pre)
 		return
 	}
 	p.prepMsgCount++
-	dbg.Lvl3(p.Name(), "Handle Prepare", p.prepMsgCount,
-		"msgs and threshold is", p.threshold)
+	//dbg.Lvl3(p.Name(), "Handle Prepare", p.prepMsgCount,
+	//	"msgs and threshold is", p.threshold)
 	var localThreshold = p.threshold
 	// we dont have a "client", the root DONT send any prepare message
 	// so for the rest of the nodes the threshold is less one.
@@ -221,7 +221,7 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 
 func (p *Protocol) handleCommit(com *Commit) {
 	if p.state != STATE_COMMIT {
-		dbg.Lvl3(p.Name(), "STORE handle commit packet")
+		//	dbg.Lvl3(p.Name(), "STORE handle commit packet")
 		p.tempCommitMsg = append(p.tempCommitMsg, com)
 		return
 	}
