@@ -1,10 +1,6 @@
 package blockchain
 
-import (
-	"log"
-
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
-)
+import "github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
 
 type Parser struct {
 	Path      string
@@ -20,7 +16,7 @@ func NewParser(path string, magic [4]byte) (parser *Parser, err error) {
 	return
 }
 
-func (p *Parser) Parse(first_block, last_block int) []blkparser.Tx {
+func (p *Parser) Parse(first_block, last_block int) ([]blkparser.Tx, error) {
 
 	Chain, _ := blkparser.NewBlockchain(p.Path, p.Magic)
 
@@ -30,17 +26,14 @@ func (p *Parser) Parse(first_block, last_block int) []blkparser.Tx {
 		raw, err := Chain.FetchNextBlock()
 
 		if raw == nil || err != nil {
-			log.Println("End of Chain: (err=", err, ")")
 			if err != nil {
-				return nil
+				return transactions, err
 			}
 		}
 
 		bl, err := blkparser.NewBlock(raw[:])
-
 		if err != nil {
-			println("Block inconsistent:", err.Error())
-			break
+			return transactions, err
 		}
 
 		// Read block till we reach start_block
@@ -53,5 +46,5 @@ func (p *Parser) Parse(first_block, last_block int) []blkparser.Tx {
 		}
 
 	}
-	return transactions
+	return transactions, nil
 }

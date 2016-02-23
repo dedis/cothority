@@ -1,6 +1,8 @@
 package bizcoin
 
 import (
+	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
 )
@@ -39,7 +41,16 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 		return err
 	}
 
-	transactions := parser.Parse(0, ReadFirstNBlocks)
+	transactions, err := parser.Parse(0, ReadFirstNBlocks)
+	if err != nil {
+		dbg.Print("Error while parsing transactions", err)
+	}
+	if len(transactions) == 0 {
+		return errors.New("Couldn't read any transactions.")
+	}
+	if len(transactions) != nTxs {
+		dbg.Error("Read only", len(transactions), "but caller wanted", nTxs)
+	}
 	consumed := nTxs
 	for consumed > 0 {
 		for _, tr := range transactions {
