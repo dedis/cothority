@@ -1,6 +1,8 @@
 package pbft
 
 import (
+	"errors"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
@@ -22,7 +24,6 @@ type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// pbft simulation specific fields:
-	// TODO
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
 	//blocksDir is the directory where to find the transaction blocks (.dat files)
@@ -50,7 +51,6 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 }
 
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
-	// TODO
 	doneChan := make(chan bool)
 	doneCB := func() {
 		dbg.Print("DONE CALLBACK ---------------")
@@ -62,7 +62,16 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		dbg.Error("Couldn't parse blocks in", e.BlocksDir)
 		return err
 	}
-	transactions := parser.Parse(0, e.Blocksize)
+	transactions, err := parser.Parse(0, e.Blocksize)
+	if err != nil {
+		dbg.Print("Error while parsing transactions", err)
+	}
+	if len(transactions) == 0 {
+		return errors.New("Couldn't read any transactions.")
+	}
+	if len(transactions) != e.Blocksize {
+		dbg.Error("Read only", len(transactions), "but caller wanted", e.Blocksize)
+	}
 
 	// FIXME c&p from bizcoin.go
 	trlist := blockchain.NewTransactionList(transactions, len(transactions))
@@ -111,6 +120,3 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	}
 	return nil
 }
-
-// helper functions:
-// FIXME refactor, use the same mechanisms as in buîzcoin.go's simulation
