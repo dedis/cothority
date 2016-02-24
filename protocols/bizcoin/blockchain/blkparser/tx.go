@@ -32,6 +32,7 @@ type TxOut struct {
 	Pkscript []byte
 }
 
+// ParseTxs parses bitcoin transactions (to form a Block use `NewBlock`)
 func ParseTxs(txsraw []byte) (txs []*Tx, err error) {
 	offset := int(0)
 	txcnt, txcnt_size := DecodeVariableLengthInteger(txsraw[offset:])
