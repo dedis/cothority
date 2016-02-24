@@ -56,7 +56,9 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	// FIXME use client instead
 	parser, err := blockchain.NewParser(e.BlocksDir, magicNum)
 	if err != nil {
-		dbg.Error("Couldn't parse blocks in", e.BlocksDir)
+		dbg.Error("Couldn't parse blocks in", e.BlocksDir,
+			`please download bitcoin blocks as .dat files first. Either run a bitcoin
+				node (recommended) or using a torrent.`)
 		return err
 	}
 	transactions, err := parser.Parse(0, e.Blocksize)

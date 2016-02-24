@@ -38,7 +38,9 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 	dbg.Lvl1("ByzCoin Client will trigger up to", nTxs, " transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 	if err != nil {
-		dbg.Error("Couldn't parse blocks in", blocksPath)
+		dbg.Error("Couldn't parse blocks in", blocksPath,
+			`please download bitcoin blocks as .dat files first. Either run a bitcoin
+				node (recommended) or using a torrent.`)
 		return err
 	}
 
