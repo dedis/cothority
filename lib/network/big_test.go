@@ -24,9 +24,9 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // messages all around.
 func TestHugeConnections(t *testing.T) {
 	// How many hosts are run
-	nbrHosts := 10
+	nbrHosts := 20
 	// 16MB of message size
-	msgSize := 1024 * 1024 * 256
+	msgSize := 1024 * 1024 * 1
 	big := bigMessage{
 		Msize: msgSize,
 		Msg:   make([]byte, msgSize),
@@ -51,8 +51,7 @@ func TestHugeConnections(t *testing.T) {
 		dbg.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
 			err := hosts[h].Listen(func(c SecureConn) {
-				dbg.Lvl5(2000+i, "got a connection")
-				defer wg.Done()
+				dbg.LLvl5(2000+h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
 					t.Fatal("Couldn't receive msg:", err)
@@ -67,7 +66,17 @@ func TestHugeConnections(t *testing.T) {
 				if big_copy.Pcrc != 25 {
 					t.Fatal("CRC is wrong")
 				}
-				dbg.Lvl3(h, "done receiving message")
+				// And send it back
+				dbg.Lvl3(h, "sends it back")
+
+				go func(h int) {
+					dbg.Lvl3(h, "Sending back")
+					err := c.Send(context.TODO(), &big)
+					if err != nil {
+						t.Fatal(h, "couldn't send message:", err)
+					}
+				}(h)
+				dbg.Lvl3(h, "done sending messages")
 			})
 			if err != nil {
 				t.Fatal(err)
@@ -82,22 +91,36 @@ func TestHugeConnections(t *testing.T) {
 			if err != nil {
 				t.Fatal("Couldn't open:", err)
 			}
+			// Populate also the lower left for easy sending to
+			// everybody
+			conns[j][i] = conns[i][j]
 		}
 	}
 
 	// Start sending messages back and forth
 	for i := 0; i < nbrHosts; i++ {
-		for j := 0; j < nbrHosts; j++ {
+		for j := 0; j < i; j++ {
 			c := conns[i][j]
-			if c != nil {
-				go func(conn SecureConn, i, j int) {
-					dbg.Lvl3("Sending from", i, "to", j, ":")
-					ctx := context.TODO()
-					if err := conn.Send(ctx, &big); err != nil {
-						t.Fatal(i, j, "Couldn't send:", err)
-					}
-				}(c, i, j)
-			}
+			go func(conn SecureConn, i, j int) {
+				defer wg.Done()
+				dbg.Lvl3("Sending from", i, "to", j, ":")
+				ctx := context.TODO()
+				if err := conn.Send(ctx, &big); err != nil {
+					t.Fatal(i, j, "Couldn't send:", err)
+				}
+				nm, err := conn.Receive(context.TODO())
+				if err != nil {
+					t.Fatal(i, j, "Couldn't receive:", err)
+				}
+				bc := nm.Msg.(bigMessage)
+				if bc.Msize != msgSize {
+					t.Fatal(i, j, "Message-size is wrong")
+				}
+				if bc.Pcrc != 25 {
+					t.Fatal(i, j, "CRC is wrong")
+				}
+				dbg.Lvl3(i, j, "Done")
+			}(c, i, j)
 		}
 	}
 	wg.Wait()
