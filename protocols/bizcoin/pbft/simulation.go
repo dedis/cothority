@@ -53,7 +53,6 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	doneChan := make(chan bool)
 	doneCB := func() {
-		dbg.Print("DONE CALLBACK ---------------")
 		doneChan <- true
 	}
 	// FIXME use client instead
@@ -65,12 +64,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	transactions, err := parser.Parse(0, e.Blocksize)
 	if err != nil {
 		dbg.Print("Error while parsing transactions", err)
-	}
-	if len(transactions) == 0 {
-		return errors.New("Couldn't read any transactions.")
-	}
-	if len(transactions) != e.Blocksize {
-		dbg.Error("Read only", len(transactions), "but caller wanted", e.Blocksize)
+		return err
 	}
 
 	// FIXME c&p from bizcoin.go

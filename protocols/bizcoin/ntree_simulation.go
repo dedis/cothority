@@ -43,7 +43,6 @@ func (e *NtreeSimulation) Setup(dir string, hosts []string) (*sda.SimulationConf
 // Run implements sda.Simulation interface
 func (e *NtreeSimulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Naive Tree Simulation starting with:  Rounds=", e.Rounds)
-	dbg.Print(sdaConf.Tree.Dump())
 	server := NewNtreeServer(e.Blocksize)
 	/*var rChallComm monitorMut*/
 	/*var rRespPrep monitorMut*/

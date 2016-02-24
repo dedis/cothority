@@ -62,7 +62,6 @@ type BitCoSiMessage struct {
 func (sr *BlockReply) MarshalJSON() ([]byte, error) {
 	type Alias BlockReply
 	var b bytes.Buffer
-	//dbg.Print("Starting marshalling")
 	suite := app.GetSuite(sr.SuiteStr)
 	//dbg.Print("Preparing abstracts")
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic); err != nil {
@@ -100,15 +99,12 @@ func (sr *BlockReply) UnmarshalJSON(dataJSON []byte) error {
 	}
 	//dbg.Print("Doing JSON unmarshal")
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
-		dbg.Print("Error in unmarshal:", err)
 		return err
 	}
-	//dbg.Print("Preparing suites")
 	if err := suite.Read(bytes.NewReader(aux.SignatureInfo), &sr.Response, &sr.Challenge, &sr.AggCommit, &sr.AggPublic); err != nil {
 		dbg.Fatal("decoding signature Response / Challenge / AggCommit: ", err)
 		return err
 	}
-	//dbg.Print("Finished")
 	return nil
 }
 

@@ -133,11 +133,10 @@ func (p *Protocol) PrePrepare() error {
 		tempErr := p.Node.SendTo(tn, prep)
 		if tempErr != nil {
 			err = tempErr
-			dbg.Print(p.Name(), "Error broadcasting PrePrepare =>", err)
 		}
 		p.state = STATE_PREPARE
 	})
-	dbg.Print(p.Node.Name(), "Broadcast PrePrepare DONE")
+	dbg.Lvl3(p.Node.Name(), "Broadcast PrePrepare DONE")
 	return err
 }
 
@@ -150,7 +149,7 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	}
 	// prepare: verify the structure of the block and broadcast
 	// prepare msg (with header hash of the block)
-	dbg.Print(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msg")
+	dbg.Lvl3(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msg")
 	var err error
 	if verifyBlock(prePre.TrBlock, "", "") {
 		// STATE TRANSITION PREPREPARE => PREPARE
@@ -173,7 +172,7 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 		}()
 		dbg.Lvl3(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msgs DONE")
 	} else {
-		dbg.Print("Block couldn't be verified")
+		dbg.Lvl3(p.Name(), "Block couldn't be verified")
 	}
 	if err != nil {
 		dbg.Error("Error while broadcasting Prepare msg", err)
