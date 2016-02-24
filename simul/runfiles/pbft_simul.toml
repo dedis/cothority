@@ -5,5 +5,4 @@ BF = 5
 BlocksDir = "/Users/khoffi/go/src/github.com/dedis/cothority/protocols/bizcoin/blocks"
 
 Hosts, Blocksize
-4, 1000
-32, 17000
+70, 5000
