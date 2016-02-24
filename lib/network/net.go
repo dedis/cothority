@@ -15,7 +15,6 @@ package network
 
 import (
 	"bytes"
-	"encoding/binary"
 	//"encoding/hex"
 	"fmt"
 	"net"
@@ -120,21 +119,34 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
 	var s Size
-	defer func() {
-		if err := recover(); e != nil {
-			nm = EmptyApplicationMessage
-			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
-		}
-	}()
-	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
-		return EmptyApplicationMessage, handleError(err)
+	/*
+		defer func() {
+			if err := recover(); e != nil {
+				nm = EmptyApplicationMessage
+				e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
+			}
+		}()
+	*/
+
+	slice_size := make([]byte, 4)
+	n, err := c.Conn.Read(slice_size)
+	if err != nil {
+		return EmptyApplicationMessage, err
 	}
+	if n < 4 {
+		return EmptyApplicationMessage,
+			fmt.Errorf("Did only get %d out of %d bytes for size", n, 4)
+	}
+	//time.Sleep(time.Millisecond * 100)
+	s = Size(globalOrder.Uint32(slice_size))
+
 	b := make([]byte, s)
 	var read Size
 	var buffer bytes.Buffer
 	for Size(buffer.Len()) < s {
 		// read the size of the next packet
 		n, err := c.Conn.Read(b)
+		dbg.Print("Read", b)
 		// if error then quit
 		if err != nil {
 			e := handleError(err)
@@ -148,6 +160,7 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 			b = b[:s-read]
 		}
 	}
+	dbg.Print("Read", s, "bytes")
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
@@ -179,9 +192,16 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
 	packetSize := Size(len(b))
-	if err := binary.Write(c.Conn, globalOrder, packetSize); err != nil {
+	buffer := make([]byte, 4)
+	globalOrder.PutUint32(buffer, uint32(packetSize))
+	n, err := c.Conn.Write(buffer)
+	if err != nil {
 		return err
 	}
+	if n != 4 {
+		return errors.New("Didn't send 4 bytes")
+	}
+	dbg.Print("Sending", packetSize, "bytes")
 	// Then send everything through the connection
 	// Send chunk by chunk
 	var sent Size
@@ -204,6 +224,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		chunk := b[:offset]
 		// bytes left to send
 		b = b[:offset]
+		dbg.Print("Writing", chunk)
 		n, err := c.Conn.Write(chunk)
 		if err != nil {
 			return handleError(err)
@@ -322,6 +343,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	}
 	var addr string
 	var err error
+	dbg.Lvl3("Addresses are", st.entity)
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
 		dbg.Lvl3("Starting to listen on", addr)
