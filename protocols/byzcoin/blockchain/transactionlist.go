@@ -3,7 +3,7 @@ package blockchain
 import (
 	"log"
 
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 )
 
 type TransactionList struct {

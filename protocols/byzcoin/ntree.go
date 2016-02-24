@@ -1,12 +1,12 @@
-package bizcoin
+package byzcoin
 
 import (
 	"encoding/json"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/satori/go.uuid"
 	"math"
 )

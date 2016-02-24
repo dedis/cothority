@@ -1,9 +1,9 @@
-package bizcoin
+package byzcoin
 
 import (
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"
@@ -24,9 +24,9 @@ type BlockSignature struct {
 	Exceptions []cosi.Exception
 }
 
-// BizCoinAnnounce is the struct used during the announcement phase (of both
+// ByzCoinAnnounce is the struct used during the announcement phase (of both
 // rounds)
-type BizCoinAnnounce struct {
+type ByzCoinAnnounce struct {
 	*cosi.Announcement
 	TYPE    RoundType
 	Timeout uint64
@@ -36,10 +36,10 @@ type BizCoinAnnounce struct {
 // announcement messges.
 type announceChan struct {
 	*sda.TreeNode
-	BizCoinAnnounce
+	ByzCoinAnnounce
 }
 
-type BizCoinCommitment struct {
+type ByzCoinCommitment struct {
 	TYPE RoundType
 	*cosi.Commitment
 }
@@ -48,18 +48,18 @@ type BizCoinCommitment struct {
 // messages.
 type commitChan struct {
 	*sda.TreeNode
-	BizCoinCommitment
+	ByzCoinCommitment
 }
 
-// BizCoinChallengePrepare is the challenge used by BizCoin during the "prepare" phase. It contains the basic
+// ByzCoinChallengePrepare is the challenge used by ByzCoin during the "prepare" phase. It contains the basic
 // challenge plus the transactions from where the challenge has been generated.
-type BizCoinChallengePrepare struct {
+type ByzCoinChallengePrepare struct {
 	TYPE RoundType
 	*cosi.Challenge
 	*blockchain.TrBlock
 }
 
-// BizCoinChallengeCommit  is the challenge used by BizCoin during the "commit"
+// ByzCoinChallengeCommit  is the challenge used by ByzCoin during the "commit"
 // phase. It contains the basic challenge (out of the block we want to sign) +
 // the signature of the "prepare" round. It also contains the exception list
 // coming from the "prepare" phase. This exception list has been collected by
@@ -67,7 +67,7 @@ type BizCoinChallengePrepare struct {
 // the challenge of the "commit". These are needed in order to verify the
 // signature and to see how many peers did not sign. It's not spoofable because
 // otherwise the signature verification will be wrong.
-type BizCoinChallengeCommit struct {
+type ByzCoinChallengeCommit struct {
 	TYPE RoundType
 	*cosi.Challenge
 	// Signature is the basic signature Challenge / response
@@ -82,17 +82,17 @@ type BizCoinChallengeCommit struct {
 // challenge messages.
 type challengePrepareChan struct {
 	*sda.TreeNode
-	BizCoinChallengePrepare
+	ByzCoinChallengePrepare
 }
 
 type challengeCommitChan struct {
 	*sda.TreeNode
-	BizCoinChallengeCommit
+	ByzCoinChallengeCommit
 }
 
-// BizCoinResponse is the struct used by BizCoin during the response. It
+// ByzCoinResponse is the struct used by ByzCoin during the response. It
 // contains the response + the basic exception list.
-type BizCoinResponse struct {
+type ByzCoinResponse struct {
 	*cosi.Response
 	Exceptions []cosi.Exception
 	TYPE       RoundType
@@ -101,5 +101,5 @@ type BizCoinResponse struct {
 // responseChan is the type of the channel used to catch the response messages.
 type responseChan struct {
 	*sda.TreeNode
-	BizCoinResponse
+	ByzCoinResponse
 }

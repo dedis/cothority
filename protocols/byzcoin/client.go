@@ -1,11 +1,11 @@
-package bizcoin
+package byzcoin
 
 import (
 	"errors"
 	"fmt"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
@@ -35,7 +35,7 @@ func (c *Client) StartClientSimulation(blocksDir string, numTxs int) error {
 }
 
 func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
-	dbg.Lvl1("BizCoin Client will trigger up to", nTxs, " transactions")
+	dbg.Lvl1("ByzCoin Client will trigger up to", nTxs, " transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 	if err != nil {
 		dbg.Error("Couldn't parse blocks in", blocksPath)

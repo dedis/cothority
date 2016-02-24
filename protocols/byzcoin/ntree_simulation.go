@@ -1,4 +1,4 @@
-package bizcoin
+package byzcoin
 
 import (
 	"github.com/BurntSushi/toml"
@@ -56,7 +56,7 @@ func (e *NtreeSimulation) Run(sdaConf *sda.SimulationConfig) error {
 		if err != nil {
 			return err
 		}
-		// instantiate a bizcoin protocol
+		// instantiate a byzcoin protocol
 		rComplete := monitor.NewMeasure("round")
 		pi, err := server.Instantiate(node)
 		if err != nil {

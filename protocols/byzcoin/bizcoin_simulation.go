@@ -1,4 +1,4 @@
-package bizcoin
+package byzcoin
 
 import (
 	"errors"
@@ -15,8 +15,8 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("BizCoinSimulation", NewSimulation)
-	sda.ProtocolRegisterName("BizCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBizCoinProtocol(n) })
+	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
+	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewByzCoinProtocol(n) })
 }
 
 // Simulation implements da.Simulation interface
@@ -80,7 +80,7 @@ func (m *monitorMut) MeasureAndReset() {
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
-	server := NewBizCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
+	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
 	node, _ := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
 	proto, _ := broadcast.NewBroadcastRootProtocol(node)
@@ -100,18 +100,18 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmptyName("BizCoin", sdaConf.Tree)
+		node, err := sdaConf.Overlay.NewNodeEmptyName("ByzCoin", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
-		// instantiate a bizcoin protocol
+		// instantiate a byzcoin protocol
 		rComplete := monitor.NewMeasure("round")
 		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
 		}
 
-		bz := pi.(*BizCoin)
+		bz := pi.(*ByzCoin)
 		// Register callback for the generation of the signature !
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Measure()

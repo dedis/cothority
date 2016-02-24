@@ -8,7 +8,7 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
@@ -274,7 +274,7 @@ func (p *Protocol) broadcast(sendCb func(*sda.TreeNode)) {
 }
 
 // verifyBlock is a simulation of a real block verification algorithm
-// FIXME merge with Nicolas' code (public method in bizcoin)
+// FIXME merge with Nicolas' code (public method in byzcoin)
 func verifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string) bool {
 	//We measure the average block verification delays is 174ms for an average
 	//block of 500kB.

@@ -7,7 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/broadcast"
 )
 
@@ -67,7 +67,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		return err
 	}
 
-	// FIXME c&p from bizcoin.go
+	// FIXME c&p from byzcoin.go
 	trlist := blockchain.NewTransactionList(transactions, len(transactions))
 	header := blockchain.NewHeader(trlist, "", "")
 	trblock := blockchain.NewTrBlock(trlist, header)

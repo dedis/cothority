@@ -1,6 +1,6 @@
 package blockchain
 
-import "github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+import "github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 
 type Parser struct {
 	Path      string

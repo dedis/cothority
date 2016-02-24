@@ -2,11 +2,11 @@ package pbft
 
 import (
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
 // Messages which will be sent around by the most naive PBFT simulation in
-// "bizcoin"
+// "byzcoin"
 
 // PrePrepare message
 type PrePrepare struct {

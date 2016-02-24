@@ -7,7 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/proof"
-	"github.com/dedis/cothority/protocols/bizcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
 )
 
