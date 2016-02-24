@@ -125,21 +125,8 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		// Register when the protocol is finished (all the nodes have finished)
 		done := make(chan bool)
 		bz.RegisterOnDone(func() {
-			dbg.Print("SIMULATION ON DONE CALLED")
 			done <- true
 		})
-		//bz.OnChallengeCommit(func() {
-		//rChallComm.NewMeasure("round_challenge_commit")
-		//})
-		//bz.OnChallengeCommitDone(func() {
-		//rChallComm.MeasureAndReset()
-		//})
-		//bz.OnAnnouncementPrepare(func() {
-		//rRespPrep.NewMeasure("round_hanle_resp_prep")
-		//})
-		//bz.OnAnnouncementPrepareDone(func() {
-		//rRespPrep.MeasureAndReset()
-		/*})*/
 		if e.Fail > 0 {
 			go bz.startAnnouncementPrepare()
 			// do not run bz.startAnnouncementCommit()
