@@ -1,5 +1,5 @@
 Servers = 2
-Simulation = "BizCoinSimulation"
+Simulation = "ByzCoinSimulation"
 Rounds = 5
 BF = 5
 BlocksDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/simul/runfiles/blocks"

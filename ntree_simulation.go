@@ -1,4 +1,4 @@
-package bizcoin
+package byzcoin
 
 import (
 	"fmt"
@@ -12,8 +12,8 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("BizCoinNaiveSimulation", NewNaiveSimulation)
-	sda.ProtocolRegisterName("NaiveBizCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
+	sda.SimulationRegister("ByzCoinNaiveSimulation", NewNaiveSimulation)
+	sda.ProtocolRegisterName("NaiveByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
 }
 
 // Simulation implements da.Simulation interface
@@ -72,11 +72,11 @@ func (e *NaiveSimulation) Run(sdaConf *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmptyName("BizCoin", sdaConf.Tree)
+		node, err := sdaConf.Overlay.NewNodeEmptyName("ByzCoin", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
-		// instantiate a bizcoin protocol
+		// instantiate a byzcoin protocol
 		rComplete := monitor.NewMeasure("round_prepare")
 		//pi, err := server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
 		_, err = server.Instantiate(node, e.TimeoutMs /*, e.Fail*/)
