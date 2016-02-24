@@ -30,10 +30,10 @@ const (
 )
 
 type TransactionAnnouncment struct {
-	Val blkparser.Tx // Trasaction to be included in a block
+	Val blkparser.Tx // Transaction to be included in a block
 }
 
-// NOT: In order to decoe correctly the Proof, we need to the get the suite
+// NOTE: In order to decode correctly the Proof, we need to the get the suite
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type BlockReply struct {
