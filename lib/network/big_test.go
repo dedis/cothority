@@ -24,13 +24,13 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // messages all around.
 func TestHugeConnections(t *testing.T) {
 	// How many hosts are run
-	nbrHosts := 2
+	nbrHosts := 10
 	// 16MB of message size
-	msgSize := 1024
+	msgSize := 1024 * 1024 * 256
 	big := bigMessage{
-		size: msgSize,
-		//msg:  make([]byte, msgSize),
-		crc: 25,
+		Msize: msgSize,
+		Msg:   make([]byte, msgSize),
+		Pcrc:  25,
 	}
 	bigMessageType := RegisterMessageType(big)
 
@@ -51,36 +51,36 @@ func TestHugeConnections(t *testing.T) {
 		dbg.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
 			err := hosts[h].Listen(func(c SecureConn) {
-				dbg.LLvl5(2000+i, "got a connection")
+				dbg.Lvl5(2000+i, "got a connection")
 				defer wg.Done()
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
-					dbg.Fatal("Couldn't receive msg:", err)
+					t.Fatal("Couldn't receive msg:", err)
 				}
 				if nm.MsgType != bigMessageType {
-					dbg.Fatal("Received message type is wrong")
+					t.Fatal("Received message type is wrong")
 				}
 				big_copy := nm.Msg.(bigMessage)
-				if big_copy.size != msgSize {
-					t.Fatal(h, "Message-size is wrong:", big_copy.size, big_copy)
+				if big_copy.Msize != msgSize {
+					t.Fatal(h, "Message-size is wrong:", big_copy.Msize, big_copy, big)
 				}
-				if big_copy.crc != 25 {
+				if big_copy.Pcrc != 25 {
 					t.Fatal("CRC is wrong")
 				}
 				dbg.Lvl3(h, "done receiving message")
 			})
 			if err != nil {
-				dbg.Fatal(err)
+				t.Fatal(err)
 			}
 		}(i)
 		conns[i] = make([]SecureConn, nbrHosts)
 		for j := 0; j < i; j++ {
 			wg.Add(1)
 			var err error
-			dbg.LLvl5("Connecting", ids[i], "with", ids[j])
+			dbg.Lvl5("Connecting", ids[i], "with", ids[j])
 			conns[i][j], err = hosts[i].Open(ids[j])
 			if err != nil {
-				dbg.Fatal("Couldn't open:", err)
+				t.Fatal("Couldn't open:", err)
 			}
 		}
 	}
@@ -90,11 +90,13 @@ func TestHugeConnections(t *testing.T) {
 		for j := 0; j < nbrHosts; j++ {
 			c := conns[i][j]
 			if c != nil {
-				dbg.Lvl3("Sending from", i, "to", j, ":", big)
-				ctx := context.TODO()
-				if err := c.Send(ctx, &big); err != nil {
-					dbg.Fatal("Couldn't send:", err)
-				}
+				go func(conn SecureConn, i, j int) {
+					dbg.Lvl3("Sending from", i, "to", j, ":")
+					ctx := context.TODO()
+					if err := conn.Send(ctx, &big); err != nil {
+						t.Fatal(i, j, "Couldn't send:", err)
+					}
+				}(c, i, j)
 			}
 		}
 	}
@@ -106,7 +108,7 @@ func TestHugeConnections(t *testing.T) {
 			if conns[i][j] != nil {
 				err := conns[i][j].Close()
 				if err != nil {
-					dbg.Fatal("Couldn't close:", err)
+					t.Fatal("Couldn't close:", err)
 				}
 			}
 		}
@@ -114,7 +116,7 @@ func TestHugeConnections(t *testing.T) {
 }
 
 type bigMessage struct {
-	size int
-	msg  []byte
-	crc  int
+	Msize int
+	Msg   []byte
+	Pcrc  int
 }
