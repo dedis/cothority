@@ -207,16 +207,16 @@ func (bz *BizCoin) listen() {
 	for {
 		var err error
 		select {
-		// Announcement
 		case msg := <-bz.announceChan:
+			// Announcement
 			err = bz.handleAnnouncement(msg.BizCoinAnnounce)
-			// Commitment
 		case msg := <-bz.commitChan:
+			// Commitment
 			if !fail {
 				err = bz.handleCommit(msg.BizCoinCommitment)
 			}
-			// Challenge
 		case msg := <-bz.challengePrepareChan:
+			// Challenge
 			if !fail {
 				err = bz.handleChallengePrepare(&msg.BizCoinChallengePrepare)
 			}
@@ -224,8 +224,8 @@ func (bz *BizCoin) listen() {
 			if !fail {
 				err = bz.handleChallengeCommit(&msg.BizCoinChallengeCommit)
 			}
-			// Response
 		case msg := <-bz.responseChan:
+			// Response
 			if !fail {
 				switch msg.BizCoinResponse.TYPE {
 				case ROUND_PREPARE:
@@ -234,17 +234,18 @@ func (bz *BizCoin) listen() {
 					err = bz.handleResponseCommit(&msg.BizCoinResponse)
 				}
 			}
-			// start the timer
 		case timeout := <-bz.timeoutChan:
+			// start the timer
 			if timeoutStarted {
 				continue
 			}
 			timeoutStarted = true
 			go bz.startTimer(timeout)
-			// receive view change
 		case msg := <-bz.viewchangeChan:
+			// receive view change
 			err = bz.handleViewChange(msg.TreeNode, &msg.viewChange)
 		case <-bz.doneProcessing:
+			// we are done
 			dbg.Lvl2(bz.Name(), "BizCoin Dispatches stop.")
 			bz.tempBlock = nil
 			return
@@ -780,30 +781,6 @@ func (bz *BizCoin) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
 		return nil
 	}
 	return nil
-}
-
-// OnAnnouncementPrepare registers a function which will be called when
-// ResponsePrepare round is started
-func (bz *BizCoin) OnAnnouncementPrepare(fn func()) {
-	bz.onAnnouncementPrepare = fn
-}
-
-// OnAnnouncementPrepareDone registers a function which will be called when
-// ResponsePrepare round is finished
-func (bz *BizCoin) OnAnnouncementPrepareDone(fn func()) {
-	bz.onResponsePrepareDone = fn
-}
-
-// OnChallengeCommit registers a function which will be called when
-// ChallengeCommit round is started
-func (bz *BizCoin) OnChallengeCommit(fn func()) {
-	bz.onChallengeCommit = fn
-}
-
-// onResponseCommitDone registers a function which will be called when
-// onResponseCommit round is finished
-func (bz *BizCoin) OnResponseCommitDone(fn func()) {
-	bz.onResponseCommitDone = fn
 }
 
 // nodeDone is either called by the end of EndProtocol or by the end of the

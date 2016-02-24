@@ -94,7 +94,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		host:               network.NewSecureTcpHost(pkey, e),
 		private:            pkey,
 		suite:              network.Suite,
-		networkChan:        make(chan network.NetworkMessage, 10),
+		networkChan:        make(chan network.NetworkMessage, 1),
 		Closed:             make(chan bool),
 		isClosing:          false,
 		networkLock:        &sync.Mutex{},
@@ -249,7 +249,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 
 	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
 	if err := c.Send(context.TODO(), msg); err != nil && err != network.ErrClosed {
-		dbg.Error("ERROR Sending to connection:", err)
+		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
 	}
 	return nil
 }

@@ -29,7 +29,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"runtime/debug"
 )
 
 // Network part //
@@ -73,7 +72,6 @@ func (t *TcpHost) Close() error {
 	for _, c := range t.peers {
 		dbg.Lvl4("Closing peer", c)
 		if err := c.Close(); err != nil {
-			dbg.Error("Error while closing peers")
 			return handleError(err)
 		}
 	}
@@ -115,7 +113,7 @@ func (c *TcpConn) Remote() string {
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
+func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	var am NetworkMessage
 	am.Constructors = c.host.constructors
 	var err error
@@ -123,8 +121,9 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	// First read the size
 	var s Size
 	defer func() {
-		if e := recover(); e != nil {
-			dbg.Print("ERROR SIZE:", s, " => ", e)
+		if err := recover(); e != nil {
+			nm = EmptyApplicationMessage
+			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
 		}
 	}()
 	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
@@ -149,13 +148,6 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 			b = b[:s-read]
 		}
 	}
-	defer func() {
-		if e := recover(); e != nil {
-			debug.PrintStack()
-			dbg.Errorf("Error Unmarshalling %s: %d bytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
-			//dbg.Error(hex.Dump(buffer.Bytes()))
-		}
-	}()
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
@@ -166,7 +158,9 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 }
 
 // how many bytes do we write at once on the socket
-var maxChunkSize Size = 4096
+// 1400 seems a safe choice regarding the size of a ethernet packet.
+// https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection
+const maxChunkSize Size = 1400
 
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with the size through the network.

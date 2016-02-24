@@ -1,9 +1,9 @@
-Servers = 1
+Servers = 2
 Simulation = "PbftSimulation"
 Rounds = 5
 BF = 5
-BlocksDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/simul/runfiles/blocks"
-CloseWait = 6000
+BlocksDir = "/Users/khoffi/go/src/github.com/dedis/cothority/protocols/bizcoin/blocks"
 
 Hosts, Blocksize
-30, 1000
+4, 1000
+32, 17000

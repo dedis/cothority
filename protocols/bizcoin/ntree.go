@@ -196,7 +196,7 @@ func (nt *Ntree) handleBlockSignature(msg *NaiveBlockSignature) {
 }
 
 // startSignatureRequest is the root starting the new phase. It will broadcast
-// the signature of everyone amongt the tree.
+// the signature of everyone amongst the tree.
 func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
 	dbg.Lvl3(nt.Name(), "Start Signature Request")
 	sigRequest := &RoundSignatureRequest{msg}
