@@ -202,7 +202,6 @@ func (bz *BizCoin) Dispatch() error {
 func (bz *BizCoin) listen() {
 	// FIXME handle different failure modes
 	fail := (bz.rootFailMode != 0) && bz.IsRoot()
-	dbg.Print(bz.Name(), " is failing ? =", fail)
 	var timeoutStarted bool
 	for {
 		var err error
@@ -365,7 +364,6 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		commit := bz.prepare.Commit(bz.tempPrepareCommit)
 		bz.tpcMut.Unlock()
 		if bz.IsRoot() {
-			dbg.Print(bz.Name(), "handle Commit PREPARE => WIll sTART Challenge !")
 			return bz.startChallengePrepare()
 		}
 		commitment = &BizCoinCommitment{
@@ -396,7 +394,6 @@ func (bz *BizCoin) handleCommit(ann BizCoinCommitment) error {
 		dbg.Lvl3(bz.Name(), "BizCoin handle Commit COMMIT")
 	}
 	err := bz.SendTo(bz.Parent(), commitment)
-	dbg.Print(bz.Name(), "HandleCommit() sent to parent!")
 	return err
 }
 
@@ -767,7 +764,6 @@ func newViewChange() *viewChange {
 // 2/3, accept the view change.
 func (bz *BizCoin) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
 	bz.vcCounter++
-	dbg.Print(bz.Name(), "Received ViewChange (", bz.vcCounter, "/", bz.viewChangeThreshold, ") from", tn.Name())
 	// only do it once
 	if bz.vcCounter == bz.viewChangeThreshold {
 		if bz.vcMeasure != nil {

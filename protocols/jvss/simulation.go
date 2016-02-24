@@ -40,7 +40,9 @@ func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte("Test message for JVSS simulation")
 
 	node, err := config.Overlay.CreateNewNodeName("ProtocolJVSS", config.Tree)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	proto := node.ProtocolInstance().(*JVSSProtocol)
 	//m := monitor.NewMeasure("longterm")
 	// compute and measure long-term secret:

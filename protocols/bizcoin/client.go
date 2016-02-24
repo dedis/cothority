@@ -2,6 +2,7 @@ package bizcoin
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/protocols/bizcoin/blockchain"
@@ -43,13 +44,13 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 
 	transactions, err := parser.Parse(0, ReadFirstNBlocks)
 	if err != nil {
-		dbg.Print("Error while parsing transactions", err)
+		return fmt.Errorf("Error while parsing transactions %v", err)
 	}
 	if len(transactions) == 0 {
 		return errors.New("Couldn't read any transactions.")
 	}
 	if len(transactions) != nTxs {
-		dbg.Error("Read only", len(transactions), "but caller wanted", nTxs)
+		return fmt.Errorf("Read only %v but caller wanted %v", len(transactions), nTxs)
 	}
 	consumed := nTxs
 	for consumed > 0 {
@@ -59,6 +60,5 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 		}
 		consumed--
 	}
-	dbg.Print("Sent transactions ", nTxs)
 	return nil
 }
