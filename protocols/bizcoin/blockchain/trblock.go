@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/dedis/cothority/lib/hashid"
@@ -89,18 +88,4 @@ func HashHeader(h *Header) string {
 	sha.Write([]byte(data))
 	hash := sha.Sum(nil)
 	return hex.EncodeToString(hash)
-}
-
-func (trb *TrBlock) Print() {
-	log.Println("Header:")
-	log.Printf("Leader %v", trb.LeaderId)
-	//log.Printf("Pkey %v", trb.PublicKey)
-	log.Printf("Parent %v", trb.Parent)
-	log.Printf("ParentKey %v", trb.ParentKey)
-	log.Printf("Merkle %v", trb.MerkleRoot)
-	//trb.TransactionList.Print()
-	//log.Println("Rest:")
-	log.Printf("Hash %v", trb.HeaderHash)
-
-	return
 }
