@@ -127,7 +127,7 @@ func (p *Protocol) Dispatch() error {
 func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block
 	var err error
-	dbg.Print(p.Node.Name(), "Broadcast PrePrepare")
+	dbg.Lvl2(p.Node.Name(), "Broadcast PrePrepare")
 	prep := &PrePrepare{p.trBlock}
 	p.broadcast(func(tn *sda.TreeNode) {
 		tempErr := p.Node.SendTo(tn, prep)
@@ -160,7 +160,7 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 			tempErr := p.Node.SendTo(tn, prep)
 			if tempErr != nil {
 				err = tempErr
-				dbg.Print(p.Name(), "Error broadcasting PREPARE =>", err)
+				dbg.Error(p.Name(), "Error broadcasting PREPARE =>", err)
 			}
 		})
 		// Already insert the previously received messages !

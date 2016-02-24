@@ -1,14 +1,12 @@
 package pbft
 
 import (
-	"errors"
-
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/broadcast"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
@@ -63,7 +61,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	}
 	transactions, err := parser.Parse(0, e.Blocksize)
 	if err != nil {
-		dbg.Print("Error while parsing transactions", err)
+		dbg.Error("Error while parsing transactions", err)
 		return err
 	}
 

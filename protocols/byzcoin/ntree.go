@@ -2,13 +2,14 @@ package byzcoin
 
 import (
 	"encoding/json"
+	"math"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/satori/go.uuid"
-	"math"
 )
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
@@ -192,7 +193,7 @@ func (nt *Ntree) handleBlockSignature(msg *NaiveBlockSignature) {
 		dbg.Error(err)
 	}
 
-	dbg.Print(nt.Name(), "Handle Block Signature => Sent UP")
+	dbg.Lvl3(nt.Name(), "Handle Block Signature => Sent UP")
 }
 
 // startSignatureRequest is the root starting the new phase. It will broadcast
