@@ -198,7 +198,7 @@ func TestTreePropagation(t *testing.T) {
 	hosts, el, tree := local.GenTree(2, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
-	h2 := hosts[0]
+	h2 := hosts[1]
 	// Suppose both hosts have the list available, but not the tree
 	h1.AddEntityList(el)
 	h2.AddEntityList(el)
@@ -232,7 +232,6 @@ func TestTreePropagation(t *testing.T) {
 	}
 
 	// And test whether it gets stored correctly
-	go h1.ProcessMessages()
 	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
@@ -330,6 +329,7 @@ func TestAutoConnection(t *testing.T) {
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h2.Listen()
+
 	defer h1.Close()
 	defer h2.Close()
 
