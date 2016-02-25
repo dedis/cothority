@@ -2,14 +2,15 @@ package monitor
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/montanaflynn/stats"
 	"io"
 	"math"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/montanaflynn/stats"
 )
 
 // Stats contains all structures that are related to the computations of stats
@@ -21,7 +22,7 @@ import (
 type Stats struct {
 	// How many hosts do we have
 	Hosts int
-	// How many machines do we have
+	// How many servers do we have
 	Servers int
 	// How many hosts are ready
 	Ready int
@@ -57,7 +58,7 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 	var err error
 	s.Servers, err = strconv.Atoi(rc["servers"])
 	if err != nil {
-		dbg.Fatal("Can not create stats from RunConfig with no machines")
+		dbg.Fatal("Can not create stats from RunConfig with no servers")
 	}
 	s.Hosts, err = strconv.Atoi(rc["hosts"])
 	if err != nil {
@@ -65,7 +66,7 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 	}
 	rc2 := make(map[string]string)
 	for k, v := range rc {
-		if k != "machines" && k != "ppm" {
+		if k != "servers" {
 			rc2[k] = v
 		}
 	}

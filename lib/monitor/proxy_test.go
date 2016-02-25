@@ -11,8 +11,8 @@ import (
 func TestProxy(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	m["filter_round"] = "100"
 	stat := NewStats(m)
 	fresh := stat.String()
@@ -82,8 +82,8 @@ func TestProxy(t *testing.T) {
 func TestReadyProxy(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	stat := NewStats(m)
 	// First set up monitor listening
 	monitor := NewMonitor(stat)

@@ -3,18 +3,19 @@ package monitor
 import (
 	"bytes"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func TestMonitor(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	stat := NewStats(m)
 	fresh := stat.String()
 	// First set up monitor listening
@@ -44,8 +45,8 @@ func TestMonitor(t *testing.T) {
 func TestReadyNormal(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	m["Ready"] = "0"
 	stat := NewStats(m)
 	if stat.Ready != 0 {
@@ -88,8 +89,8 @@ func TestReadyNormal(t *testing.T) {
 func TestKeyOrder(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	m["bf"] = "2"
 	m["rounds"] = "3"
 

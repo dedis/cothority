@@ -1,14 +1,14 @@
 package sda_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/satori/go.uuid"
-	"reflect"
-	"testing"
-	"time"
 )
 
 func init() {
@@ -21,91 +21,22 @@ func init() {
 	})
 }
 
-func TestReflectChannel(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
-	var c chan bool
-	cp := &c
-
-	//ty := reflect.TypeOf(cp)
-	v := reflect.ValueOf(cp).Elem()
-	dbg.Lvl3(v.CanSet())
-	ty := v.Type()
-	dbg.Lvl3(ty)
-	v.Set(reflect.MakeChan(ty, 1))
-	c <- true
-	return
-	/*
-		dbg.Print(reflect.TypeOf(cp).Kind())
-		dbg.Print(reflect.TypeOf(c).Kind())
-		dbg.Print(reflect.TypeOf(reflect.Indirect(reflect.ValueOf(cp)).Interface()).Kind())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-		c = make(chan struct {
-			sda.TreeNode
-			NodeTestMsg
-		}, 1)
-		dbg.Print(reflect.ValueOf(c).IsValid())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-	*/
-}
-
-func TestReflectHandler(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
-	funcOne := func(struct {
-		*sda.TreeNode
-		NodeTestMsg
-	}) {
-	}
-	funcAgg := func([]struct {
-		*sda.TreeNode
-		NodeTestAggMsg
-	}) {
-	}
-
-	ty := reflect.TypeOf(funcOne).In(0)
-	v := reflect.ValueOf(funcOne)
-	dbg.Lvl3(ty)
-	dbg.Lvl3(v)
-
-	tyA := reflect.TypeOf(funcAgg).In(0)
-	vA := reflect.ValueOf(funcAgg)
-	dbg.Lvl3(tyA)
-	dbg.Lvl3(vA)
-	//dbg.Lvl3(v.CanSet())
-	//ty := v.Type()
-	//dbg.Lvl3(ty)
-	//v.Set(reflect.MakeChan(ty, 1))
-	//c <- true
-	//return
-	/*
-		dbg.Print(reflect.TypeOf(cp).Kind())
-		dbg.Print(reflect.TypeOf(c).Kind())
-		dbg.Print(reflect.TypeOf(reflect.Indirect(reflect.ValueOf(cp)).Interface()).Kind())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-		c = make(chan struct {
-			sda.TreeNode
-			NodeTestMsg
-		}, 1)
-		dbg.Print(reflect.ValueOf(c).IsValid())
-		dbg.Print(reflect.ValueOf(c).IsNil())
-		dbg.Print(reflect.ValueOf(c).Cap())
-		dbg.Print(reflect.ValueOf(c).Len())
-	*/
-}
-
 func TestNodeChannelCreateSlice(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	n, _ := sda.NewNodeEmpty(nil, nil)
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(2, false, true)
+	defer local.CloseAll()
+
+	n, err := local.NewNode(tree.Root, "ProtocolChannels")
+	if err != nil {
+		t.Fatal("Couldn't create new node:", err)
+	}
+
 	var c chan []struct {
 		*sda.TreeNode
 		NodeTestMsg
 	}
-	err := n.RegisterChannel(&c)
+	err = n.RegisterChannel(&c)
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
@@ -198,8 +129,13 @@ func TestNewNode(t *testing.T) {
 		t.Fatal("Could not start new protocol", err)
 	}
 	p := node.ProtocolInstance().(*ProtocolTest)
-	if p.Msg != "Start" {
-		t.Fatal("Start() not called - msg is:", p.Msg)
+	m := <-p.DispMsg
+	if m != "Dispatch" {
+		t.Fatal("Dispatch() not called - msg is:", m)
+	}
+	m = <-p.StartMsg
+	if m != "Start" {
+		t.Fatal("Start() not called - msg is:", m)
 	}
 	h1.Close()
 	h2.Close()

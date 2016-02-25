@@ -3,12 +3,13 @@ package sda_test
 import (
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
-	"testing"
-	"time"
 )
 
 var testID = uuid.NewV5(uuid.NamespaceURL, "test")
@@ -19,14 +20,16 @@ var aggregateID = uuid.NewV5(uuid.NamespaceURL, "aggregate")
 // everything it receives.
 type ProtocolTest struct {
 	*sda.Node
-	Msg string
+	StartMsg chan string
+	DispMsg  chan string
 }
 
 // NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
-		Node: n,
-		Msg:  "new",
+		Node:     n,
+		StartMsg: make(chan string),
+		DispMsg:  make(chan string),
 	}, nil
 }
 
@@ -34,13 +37,13 @@ func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 // copied to /dev/null
 func (p *ProtocolTest) Dispatch() error {
 	dbg.Lvl2("ProtocolTest.Dispatch()")
-	p.Msg = "Dispatch"
+	p.DispMsg <- "Dispatch"
 	return nil
 }
 
 func (p *ProtocolTest) Start() error {
 	dbg.Lvl2("ProtocolTest.Start()")
-	p.Msg = "Start"
+	p.StartMsg <- "Start"
 	return nil
 }
 

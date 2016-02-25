@@ -45,7 +45,3 @@ func (o *Overlay) TokenToNode(tok *Token) (*Node, bool) {
 	v, ok := o.nodes[tok.Id()]
 	return v, ok
 }
-
-func (n *Node) Token() *Token {
-	return n.token
-}

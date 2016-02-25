@@ -210,6 +210,9 @@ func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 
 // TreeNodeFromToken returns the treeNode corresponding to a token
 func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
+	if t == nil {
+		return nil, errors.New("Didn't find tree-node: No token given.")
+	}
 	// First, check the cache
 	if tn := o.cache.GetFromToken(t); tn != nil {
 		return tn, nil
@@ -317,6 +320,9 @@ func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
 	var mm map[uuid.UUID]*TreeNode
 	var ok bool
+	if tok == nil {
+		return nil
+	}
 	if mm, ok = tnc[tok.TreeID]; !ok {
 		// no tree cached for this token :...
 		return nil
