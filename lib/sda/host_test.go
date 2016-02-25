@@ -1,12 +1,13 @@
 package sda_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
-	"testing"
-	"time"
 )
 
 // Test setting up of Host
@@ -42,6 +43,9 @@ func TestHostClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't re-open listener")
 	}
+	if _, err := h2.Connect(h1.Entity); err != nil {
+		t.Fatal("Couldn Connect() to", h1)
+	}
 	dbg.Lvl3("Closing h1")
 	h1.Close()
 }
@@ -68,26 +72,6 @@ func TestHostMessaging(t *testing.T) {
 	decoded := testMessageSimple(t, msg)
 	if decoded.I != 3 {
 		t.Fatal("Received message from h2 -> h1 is wrong")
-	}
-
-	h1.Close()
-	h2.Close()
-}
-
-// Test parsing of incoming packets with regard to its double-included
-// data-structure
-func TestHostIncomingMessage(t *testing.T) {
-	h1, h2 := SetupTwoHosts(t, false)
-	msgSimple := &SimpleMessage{10}
-	err := h1.SendRaw(h2.Entity, msgSimple)
-	if err != nil {
-		t.Fatal("Couldn't send message:", err)
-	}
-
-	msg := h2.Receive()
-	decoded := testMessageSimple(t, msg)
-	if decoded.I != 10 {
-		t.Fatal("Wrong value")
 	}
 
 	h1.Close()
@@ -156,7 +140,6 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 	if _, ok := h1.GetTree(tree.Id); !ok {
 		t.Fatal("Host 1 should have the tree definition now.")
 	}
-	time.Sleep(time.Millisecond * 100)
 }
 
 // Test propagation of peer-lists - both known and unknown
@@ -165,7 +148,7 @@ func TestPeerListPropagation(t *testing.T) {
 	hosts, el, _ := local.GenTree(2, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
-	h2 := hosts[0]
+	h2 := hosts[1]
 
 	// Check that h2 sends back an empty list if it is unknown
 	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
@@ -195,7 +178,6 @@ func TestPeerListPropagation(t *testing.T) {
 	}
 
 	// And test whether it gets stored correctly
-	go h1.ProcessMessages()
 	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)

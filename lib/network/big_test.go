@@ -1,12 +1,13 @@
 package network
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/abstract"
-	"golang.org/x/net/context"
 	"strconv"
 	"sync"
 	"testing"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
+	"golang.org/x/net/context"
 )
 
 /*
@@ -126,14 +127,9 @@ func TestHugeConnections(t *testing.T) {
 	wg.Wait()
 
 	// Close all
-	for i := 0; i < nbrHosts; i++ {
-		for j := 0; j < nbrHosts; j++ {
-			if conns[i][j] != nil {
-				err := conns[i][j].Close()
-				if err != nil {
-					t.Fatal("Couldn't close:", err)
-				}
-			}
+	for _, h := range hosts {
+		if err := h.Close(); err != nil {
+			t.Fatal("Couldn't close:", err)
 		}
 	}
 }

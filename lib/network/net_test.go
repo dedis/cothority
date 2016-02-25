@@ -24,9 +24,6 @@ type PublicPacket struct {
 	Point abstract.Point
 }
 
-// The tSuite we use
-var tSuite = Suite
-
 // Here we registers the packets, so that the decoder can instantiate
 // to the right type and then we can do event-driven stuff such as receiving
 // new messages without knowing the type and then check on the MsgType field
@@ -82,7 +79,6 @@ func TestMultiClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	<-done
-	dbg.Lvl3("Finished first connection, starting 2nd")
 	h1 = NewTcpHost()
 	done = make(chan bool)
 	go func() {
@@ -92,7 +88,7 @@ func TestMultiClose(t *testing.T) {
 		}
 		close(done)
 	}()
-	time.Sleep(time.Millisecond * 100)
+	h2.Open("localhost:2000")
 	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)
@@ -120,7 +116,7 @@ func TestSecureMultiClose(t *testing.T) {
 		if err != nil {
 			t.Fatal("Listening failed for h1:", err)
 		}
-		close(done)
+		done <- true
 	}()
 	time.Sleep(time.Second)
 	_, err := h2.Open(entity1)
@@ -137,17 +133,20 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 	<-done
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	done = make(chan bool)
-	h1 = NewSecureTcpHost(kp1.Secret, entity1)
+
+	h3 := NewSecureTcpHost(kp1.Secret, entity1)
 	go func() {
-		err = h1.Listen(fn)
+		err = h3.Listen(fn)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener:", err)
 		}
-		close(done)
+		done <- true
 	}()
+	if _, err := h2.Open(entity1); err != nil {
+		t.Fatal(err)
+	}
 	time.Sleep(time.Millisecond * 100)
-	err = h1.Close()
+	err = h3.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)
 	}
@@ -177,7 +176,7 @@ func TestSecureTcp(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't listen:", err)
 		}
-		close(done)
+		done <- true
 	}()
 	conn, err := host2.Open(entity1)
 	if err != nil {
@@ -190,8 +189,12 @@ func TestSecureTcp(t *testing.T) {
 		t.Fatal("Lazy programmers - no select")
 	}
 	dbg.Lvl3("Closing connections")
-	host1.Close()
-	host2.Close()
+	if err := host1.Close(); err != nil {
+		t.Fatal("Couldn't close host", host1)
+	}
+	if err := host2.Close(); err != nil {
+		t.Fatal("Couldn't close host", host2)
+	}
 	<-done
 }
 
@@ -201,8 +204,8 @@ func TestTcpNetwork(t *testing.T) {
 	clientHost := NewTcpHost()
 	serverHost := NewTcpHost()
 	// Give them keys
-	clientPub := tSuite.Point().Base()
-	serverPub := tSuite.Point().Add(tSuite.Point().Base(), tSuite.Point().Base())
+	clientPub := Suite.Point().Base()
+	serverPub := Suite.Point().Add(Suite.Point().Base(), Suite.Point().Base())
 	wg := sync.WaitGroup{}
 	client := NewSimpleClient(clientHost, clientPub, &wg)
 	server := NewSimpleServer(serverHost, serverPub, t, &wg)
@@ -334,7 +337,7 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		s.t.Error("Server received a non-wanted packet\n")
 	}
 	p = (am.Msg).(PublicPacket)
-	comp := tSuite.Point().Base()
+	comp := Suite.Point().Base()
 	if !p.Point.Equal(comp) {
 		s.t.Error("point not equally reconstructed")
 	}

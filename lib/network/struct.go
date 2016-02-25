@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/protobuf"
-	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 	"io"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/protobuf"
+	"github.com/satori/go.uuid"
+	"golang.org/x/net/context"
 )
 
 // How many times should we try to connect
@@ -93,6 +94,7 @@ type TcpConn struct {
 // SecureHost is the analog of Host but with secure communication
 // It is tied to an entity can only open connection with entities
 type SecureHost interface {
+	// Close terminates the `Listen()` function and closes all connections.
 	Close() error
 	Listen(func(SecureConn)) error
 	Open(*Entity) (SecureConn, error)

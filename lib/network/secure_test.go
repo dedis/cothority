@@ -2,11 +2,12 @@ package network
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
-	"testing"
 )
 
 // Secure_test is analog to simple_test it uses the same structure to send
@@ -81,7 +82,7 @@ func TestSecureSimple(t *testing.T) {
 }
 
 func genEntity(name string) (abstract.Secret, *Entity) {
-	kp := cliutils.KeyPair(tSuite)
+	kp := cliutils.KeyPair(Suite)
 	return kp.Secret, &Entity{
 		Public:    kp.Public,
 		Addresses: []string{name},

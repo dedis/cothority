@@ -183,7 +183,7 @@ func (h *Host) Listen() {
 		dbg.Lvl3("Listening in", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
-			dbg.Fatal("Couldn't listen in", h.workingAddress, ":", err)
+			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
 		}
 	}()
 }

@@ -25,6 +25,7 @@ import (
 	"golang.org/x/net/context"
 
 	"errors"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -92,7 +93,9 @@ func (t *TcpHost) Close() error {
 	var stop bool
 	for !stop {
 		if t.listener != nil {
-			t.listener.Close()
+			if err := t.listener.Close(); err != nil {
+				return err
+			}
 		}
 		select {
 		case <-t.quitListener:
