@@ -4,4 +4,4 @@ go:
   - 1.5.3
 script:
   - ./gofmt.sh
-  - go test -v ./...
+  - go test -v lib/network/big_test.go lib/network/net.go lib/network/encoding.go lib/network/struct.go lib/network/secure_test.go lib/network/simple_test.go  lib/network/net_test.go -run "TestHugeConnections"
