@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"net"
 )
 
 var tSuite = network.Suite
@@ -221,7 +222,7 @@ func TestNaryTree(t *testing.T) {
 
 func TestBigNaryTree(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	names := genLocalhostPeerNames(3, 2000)
+	names := genLocalDiffPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
 	root := tree.Root
@@ -247,7 +248,13 @@ func TestTreeIsColored(t *testing.T) {
 	peerList := genEntityList(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
 	root := tree.Root
-
+	rootHost, _, _ := net.SplitHostPort(root.Entity.Addresses[0])
+	for _, child := range root.Children {
+		childHost, _, _ := net.SplitHostPort(child.Entity.Addresses[0])
+		if rootHost == childHost {
+			t.Fatal("Child", childHost, "is the same as root", rootHost)
+		}
+	}
 }
 
 func TestBinaryTrees(t *testing.T) {
@@ -278,6 +285,15 @@ func genLocalhostPeerNames(n, p int) []string {
 	names := make([]string, n)
 	for i := range names {
 		names[i] = prefix + strconv.Itoa(p+i)
+	}
+	return names
+}
+
+// genLocalDiffPeerNames will generate n local0..n-1 names with port indices starting from p
+func genLocalDiffPeerNames(n, p int) []string {
+	names := make([]string, n)
+	for i := range names {
+		names[i] = "local" + strconv.Itoa(i) + ":2000"
 	}
 	return names
 }

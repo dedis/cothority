@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/satori/go.uuid"
+	"net"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -285,12 +286,19 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 				children = N
 			}
 			parent.Children = make([]*TreeNode, children)
+			parentHost, _, _ := net.SplitHostPort(parent.Entity.Addresses[0])
 			for n := 0; n < children; n++ {
 				// TODO: this should check on the host-address
 				// of the Entity and not only the Id.
-				for il.List[elIndex].Id == parent.Entity.Id &&
+				childHost, _, _ := net.SplitHostPort(il.List[elIndex].Addresses[0])
+				elIndexFirst := elIndex
+				for childHost == parentHost &&
 					ilLen > 1 {
 					elIndex = (elIndex + 1) % ilLen
+					if elIndex == elIndexFirst {
+						break
+					}
+					childHost, _, _ = net.SplitHostPort(il.List[elIndex].Addresses[0])
 				}
 				child := NewTreeNode(il.List[elIndex])
 				elIndex = (elIndex + 1) % ilLen
