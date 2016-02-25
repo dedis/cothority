@@ -240,7 +240,13 @@ func TestMsgAggregation(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
-	n, _ := sda.NewNode(nil, nil)
+	local := sda.NewLocalTest()
+	_, _, tree := local.GenTree(3, false, true)
+	defer local.CloseAll()
+	n, err := local.NewNode(tree.Root, "ProtocolChannels")
+	if err != nil {
+		t.Fatal("Couldn't create node.")
+	}
 	if n.HasFlag(uuid.Nil, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
