@@ -47,10 +47,10 @@ func TestTreeConnectedTo(t *testing.T) {
 	tree := peerList.GenerateBinaryTree()
 	// Generate the network
 	if !tree.Root.IsConnectedTo(peerList.List[1]) {
-		t.Fatal("Root should be connected to localhost:2001")
+		t.Fatal("Root should be connected to child (localhost:2001)")
 	}
 	if !tree.Root.IsConnectedTo(peerList.List[2]) {
-		t.Fatal("Root should be connected to 2nd child")
+		t.Fatal("Root should be connected to child (localhost:2002)")
 	}
 }
 
