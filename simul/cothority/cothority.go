@@ -136,7 +136,7 @@ func main() {
 		} else {
 			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", rootSC.Tree)
 		}
-		monitor.End()
+		monitor.EndAndCleanup()
 		if err != nil {
 			dbg.Fatal(err)
 		}
