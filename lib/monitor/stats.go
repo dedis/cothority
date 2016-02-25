@@ -61,7 +61,7 @@ func (s *Stats) readRunConfig(rc map[string]string) {
 	}
 	s.Hosts, err = strconv.Atoi(rc["hosts"])
 	if err != nil {
-		dbg.Fatal("Can not create stats from RunConfig with no ppm")
+		dbg.Fatal("Can not create stats from RunConfig with no hosts")
 	}
 	rc2 := make(map[string]string)
 	for k, v := range rc {

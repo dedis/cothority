@@ -1,0 +1,11 @@
+Servers = 36
+Simulation = "ByzCoinSimulation"
+NumClientTxs = 100000
+Rounds = 5
+BF = 3
+MonitorPort = 6789
+BlocksDir = "/users/nikkolas/remote"
+CloseWait = 300
+
+Hosts, Blocksize, TimeoutMs, Fail
+144, 2200, 120000, 0

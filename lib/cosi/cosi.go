@@ -2,9 +2,10 @@ package cosi
 
 import (
 	"errors"
+	"time"
+
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"time"
 )
 
 // Cosi is the struct that implements the basic cosi.
@@ -62,9 +63,16 @@ type Response struct {
 // Since in the basic cosi, only the root has the aggregated signature.
 // For the moment, I only made two functions that are equivalent to that
 // structure: GetChallenge() and GetResponse()
-type CosiSignature struct {
+type Signature struct {
 	Challenge abstract.Secret
 	Response  abstract.Secret
+}
+
+// Exception is what a node that does not want to sign should include when
+// passing up a response
+type Exception struct {
+	Public     abstract.Point
+	Commitment abstract.Point
 }
 
 // CreateAnnouncement creates an Announcement message with the timestamp set
@@ -184,6 +192,16 @@ func (c *Cosi) GetCommitment() abstract.Point {
 	return c.commitment
 }
 
+// Signature returns a cosi Signature <=> a Schnorr signature. CAREFUL: you must
+// call that when you are sure you have all the aggregated respones (i.e. the
+// root of the tree if you use a tree).
+func (c *Cosi) Signature() *Signature {
+	return &Signature{
+		c.challenge,
+		c.aggregateResponse,
+	}
+}
+
 // VerifyResponse verify the response this CoSi have against the aggregated
 // public key the tree is using. Call that on the root when he gets all the
 // responses.
@@ -237,6 +255,11 @@ func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, ch
 	commitment := suite.Point()
 	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
 
+	return verifyCommitment(suite, msg, commitment, challenge)
+
+}
+
+func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Point, challenge abstract.Secret) error {
 	pb, err := commitment.MarshalBinary()
 	if err != nil {
 		return err
@@ -249,5 +272,35 @@ func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, ch
 		return errors.New("Reconstructed challenge not equal to one given")
 	}
 	return nil
+}
 
+// A wrapper that uses the Signature struct
+func VerifyCosiSignature(suite abstract.Suite, msg []byte, public abstract.Point, sig *Signature) error {
+	return VerifySignature(suite, msg, public, sig.Challenge, sig.Response)
+}
+
+// VerifySignatureWithException will verify the signature taking into account
+// the exceptions given. An exception is the pubilc key + commitment of a peer that did not
+// sign.
+// NOTE: No exception mechanism for "before" commitment has been yet coded.
+func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, secret abstract.Secret, exceptions []Exception) error {
+	// first reduce the aggregate public key
+	subPublic := suite.Point().Add(suite.Point().Null(), public)
+	aggExCommit := suite.Point().Null()
+	for _, ex := range exceptions {
+		subPublic = subPublic.Sub(subPublic, ex.Public)
+		aggExCommit = aggExCommit.Add(aggExCommit, ex.Commitment)
+	}
+
+	// recompute the challenge and check if it is the same
+	commitment := suite.Point()
+	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
+	// ADD the exceptions commitment here
+	commitment = commitment.Add(commitment, aggExCommit)
+	// check if it is ok
+	return verifyCommitment(suite, msg, commitment, challenge)
+}
+
+func VerifyCosiSignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, signature *Signature, exceptions []Exception) error {
+	return VerifySignatureWithException(suite, public, msg, signature.Challenge, signature.Response, exceptions)
 }

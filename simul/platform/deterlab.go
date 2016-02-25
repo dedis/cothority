@@ -85,9 +85,6 @@ type Deterlab struct {
 	Debug int
 	// The number of seconds to wait for closing the connection
 	CloseWait int
-	// How long for the experiment to finish
-	ExperimentWait int
-	// How long to wait before the experiment is deemed failed
 }
 
 var simulConfig *sda.SimulationConfig
@@ -236,6 +233,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	}
 	dbg.Lvl3("Creating hosts")
 	deter.createHosts()
+	dbg.Lvl3("Writing the config file :", deter)
 	app.WriteTomlConfig(deter, deterConfig, d.deployDir)
 
 	simulConfig, err = sim.Setup(d.deployDir, deter.Virt)
@@ -300,7 +298,7 @@ func (d *Deterlab) Start(args ...string) error {
 
 // Waiting for the process to finish
 func (d *Deterlab) Wait() error {
-	wait := d.ExperimentWait
+	wait := d.CloseWait
 	if wait == 0 {
 		wait = 600
 	}
@@ -317,6 +315,7 @@ func (d *Deterlab) Wait() error {
 		case <-time.After(time.Second * time.Duration(wait)):
 			dbg.Lvl1("Quitting after ", wait/60,
 				" minutes of waiting")
+			d.started = false
 		}
 		d.started = false
 	}

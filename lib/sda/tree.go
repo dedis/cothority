@@ -8,7 +8,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"github.com/satori/go.uuid"
 )
 
@@ -48,7 +47,7 @@ func NewTree(il *EntityList, r *TreeNode) *Tree {
 // the original tree
 func NewTreeFromMarshal(buf []byte, il *EntityList) (*Tree, error) {
 	tp, pm, err := network.UnmarshalRegisteredType(buf,
-		network.DefaultConstructors(edwards.NewAES128SHA256Ed25519(false)))
+		network.DefaultConstructors(network.Suite))
 	if err != nil {
 		return nil, err
 	}
@@ -231,6 +230,8 @@ type EntityList struct {
 	Id uuid.UUID
 	// TODO make that a map so search is O(1)
 	List []*network.Entity
+	// Aggregate public key
+	Aggregate abstract.Point
 }
 
 var EntityListType = network.RegisterMessageType(EntityList{})
@@ -240,9 +241,15 @@ var NilEntityList = EntityList{}
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
 func NewEntityList(ids []*network.Entity) *EntityList {
+	// compute the aggregate key already
+	agg := network.Suite.Point().Null()
+	for _, e := range ids {
+		agg = agg.Add(agg, e.Public)
+	}
 	return &EntityList{
-		List: ids,
-		Id:   uuid.NewV4(),
+		List:      ids,
+		Aggregate: agg,
+		Id:        uuid.NewV4(),
 	}
 }
 
@@ -348,6 +355,10 @@ type TreeNode struct {
 	Entity   *network.Entity
 	Parent   *TreeNode
 	Children []*TreeNode
+}
+
+func (t *TreeNode) Name() string {
+	return t.Entity.First()
 }
 
 var TreeNodeType = network.RegisterMessageType(TreeNode{})

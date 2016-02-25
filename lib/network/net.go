@@ -16,6 +16,7 @@ package network
 import (
 	"bytes"
 	"encoding/binary"
+	//"encoding/hex"
 	"fmt"
 	"net"
 	"sync"
@@ -28,7 +29,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"runtime/debug"
 )
 
 // Network part //
@@ -70,9 +70,8 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
 	for _, c := range t.peers {
-		dbg.Lvl3("Closing peer", c)
+		dbg.Lvl4("Closing peer", c)
 		if err := c.Close(); err != nil {
-			dbg.Lvl3("Error while closing peers")
 			return handleError(err)
 		}
 	}
@@ -114,34 +113,41 @@ func (c *TcpConn) Remote() string {
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
+func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	var am NetworkMessage
 	am.Constructors = c.host.constructors
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
 	var s Size
+	defer func() {
+		if err := recover(); e != nil {
+			nm = EmptyApplicationMessage
+			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
+		}
+	}()
 	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
-	// Then make the buffer out of it
 	b := make([]byte, s)
+	var read Size
 	var buffer bytes.Buffer
 	for Size(buffer.Len()) < s {
+		// read the size of the next packet
 		n, err := c.Conn.Read(b)
-		b = b[:n]
-		buffer.Write(b)
+		// if error then quit
 		if err != nil {
 			e := handleError(err)
 			return EmptyApplicationMessage, e
 		}
-	}
-	defer func() {
-		if e := recover(); e != nil {
-			debug.PrintStack()
-			dbg.Errorf("Error Unmarshalling %s: %d bytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+		// put it in the longterm buffer
+		buffer.Write(b[:n])
+		// if we could not read everything yet
+		if Size(buffer.Len()) < s {
+			// make b size = bytes that we still need to read (no more no less)
+			b = b[:s-read]
 		}
-	}()
+	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
@@ -151,6 +157,11 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	return am, nil
 }
 
+// how many bytes do we write at once on the socket
+// 1400 seems a safe choice regarding the size of a ethernet packet.
+// https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection
+const maxChunkSize Size = 1400
+
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with the size through the network.
 // Returns an error if anything was wrong
@@ -159,24 +170,47 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
+	dbg.Lvl5("Message SEND =>", fmt.Sprintf("%+v", am))
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
+	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
-	var buffer bytes.Buffer
-	size := Size(len(b))
-	if err := binary.Write(&buffer, globalOrder, size); err != nil {
+	packetSize := Size(len(b))
+	if err := binary.Write(c.Conn, globalOrder, packetSize); err != nil {
 		return err
 	}
 	// Then send everything through the connection
-	buffer.Write(b)
-	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
-	_, err = c.Conn.Write(buffer.Bytes())
-	if err != nil {
-		return handleError(err)
+	// Send chunk by chunk
+	var sent Size
+	for sent < packetSize {
+		var offset Size
+		// if we have yet more than "chunk" byte to write
+		if packetSize-sent > maxChunkSize {
+			offset = maxChunkSize
+		} else {
+			// take only the rest
+			offset = packetSize - sent
+		}
+
+		// if one write went wrong or stg
+		if offset < Size(len(b)) {
+			offset = Size(len(b))
+		}
+
+		// chunk to send
+		chunk := b[:offset]
+		// bytes left to send
+		b = b[:offset]
+		n, err := c.Conn.Write(chunk)
+		if err != nil {
+			return handleError(err)
+		}
+		sent += Size(n)
 	}
+
 	return nil
 }
 
@@ -315,7 +349,7 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 		dbg.Lvl3("Trying address", addr)
 		c, err := st.TcpHost.openTcpConn(addr)
 		if err != nil {
-			dbg.Lvl3("Address didn't accept connection:", addr)
+			dbg.Lvl3("Address didn't accept connection:", addr, "=>", err)
 			continue
 		}
 		// create the secure connection

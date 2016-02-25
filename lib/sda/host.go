@@ -248,7 +248,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	h.networkLock.Unlock()
 
 	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
-	c.Send(context.TODO(), msg)
+	if err := c.Send(context.TODO(), msg); err != nil && err != network.ErrClosed {
+		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
+	}
 	return nil
 }
 
@@ -406,7 +408,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 	for {
 		select {
 		case <-h.Closed:
-			dbg.Lvl3("Closed in 'for-loop'", h.Entity.Addresses, c)
+			dbg.Lvl3(h.Entity.First(), " closed during 'for-loop'", c.Entity().First())
 			doneChan <- true
 			return
 		case am := <-msgChan:
@@ -417,17 +419,17 @@ func (h *Host) handleConn(c network.SecureConn) {
 			if !h.isClosing {
 				h.networkLock.Unlock()
 				if e == network.ErrClosed || e == network.ErrEOF || e == network.ErrTemp {
-					dbg.Lvl3("error-closing")
 					return
 				}
-				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=> error", e)
+				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", e)
 			}
-		case <-time.After(timeOut):
-			dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)
-			// Only close our connection - if it is needed again,
-			// it will be recreated
-			doneChan <- true
-			return
+			/*     case <-time.After(10 * timeOut):*/
+			//// FIXME make this configurable
+			//dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)
+			//// Only close our connection - if it is needed again,
+			//// it will be recreated
+			//doneChan <- true
+			/*return*/
 		}
 	}
 }

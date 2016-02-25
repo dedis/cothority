@@ -100,7 +100,7 @@ func TestReflectHandler(t *testing.T) {
 
 func TestNodeChannelCreateSlice(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
-	n := sda.NewNodeEmpty(nil, nil)
+	n, _ := sda.NewNodeEmpty(nil, nil)
 	var c chan []struct {
 		*sda.TreeNode
 		NodeTestMsg

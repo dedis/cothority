@@ -50,6 +50,18 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
+func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
+	rootEntityId := t.Root.Entity.Id
+	for _, h := range l.Hosts {
+		if uuid.Equal(h.Entity.Id, rootEntityId) {
+			// XXX do we really need multiples overlays ? Can't we just use the
+			// Node, since it is already dispatched as like a TreeNode ?
+			return l.Overlays[h.Entity.Id].NewNodeEmptyName(name, t)
+		}
+	}
+	return nil, errors.New("Didn't find host for tree-root")
+}
+
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.

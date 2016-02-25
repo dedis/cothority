@@ -2,15 +2,17 @@ package main
 
 import (
 	"flag"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
+	"math"
+	"time"
+
 	"github.com/dedis/cothority/lib/monitor"
 	_ "github.com/dedis/cothority/protocols"
 	"github.com/dedis/cothority/protocols/manage"
-	"math"
-	"time"
 )
 
 /*
@@ -96,7 +98,8 @@ func main() {
 			if err != nil {
 				dbg.Fatal(err)
 			}
-			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
+			// FIXME data race Timeout write
+			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
 			node.ProtocolInstance().(*manage.ProtocolCount).NetworkDelay = networkDelay
 			node.Start()
 			select {
@@ -140,11 +143,11 @@ func main() {
 	}
 
 	// Wait for all hosts to be closed
-	allClosed := make(chan bool, 1)
+	allClosed := make(chan bool)
 	go func() {
 		for _, sc := range scs {
 			<-sc.Host.Closed
-			dbg.Lvl4("Host", sc.Host.Entity.Addresses, "closed")
+			dbg.Lvl3("SIMULATION CLOSED Host", sc.Host.Entity.Addresses, "closed")
 		}
 		allClosed <- true
 	}()
@@ -152,6 +155,6 @@ func main() {
 	case <-allClosed:
 		dbg.Lvl2(hostAddress, ": all hosts closed")
 	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
-		dbg.Lvl2(hostAddress, ": didn't close after 2 minutes")
+		dbg.Lvl2(hostAddress, ": didn't close after", scs[0].GetCloseWait(), " seconds")
 	}
 }

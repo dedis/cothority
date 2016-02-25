@@ -3,6 +3,8 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"sync"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -18,10 +20,16 @@ type Overlay struct {
 	host *Host
 	// mapping from Token.Id() to Node
 	nodes map[uuid.UUID]*Node
+	// false = NOT DONE
+	// true = DONE
+	nodeInfo map[uuid.UUID]bool
+	nodeLock *sync.Mutex
 	// mapping from Tree.Id to Tree
-	trees map[uuid.UUID]*Tree
+	trees    map[uuid.UUID]*Tree
+	treesMut sync.Mutex
 	// mapping from EntityList.id to EntityList
-	entityLists map[uuid.UUID]*EntityList
+	entityLists    map[uuid.UUID]*EntityList
+	entityListLock sync.Mutex
 	// cache for relating token(~Node) to TreeNode
 	cache TreeNodeCache
 }
@@ -31,6 +39,8 @@ func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:        h,
 		nodes:       make(map[uuid.UUID]*Node),
+		nodeInfo:    make(map[uuid.UUID]bool),
+		nodeLock:    new(sync.Mutex),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
 		cache:       NewTreeNodeCache(),
@@ -55,17 +65,28 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// If node does not exists, then create it
+	o.nodeLock.Lock()
 	node := o.nodes[sdaMsg.To.Id()]
-	if node == nil {
-		dbg.Lvl2("Node not found for token (creating new one):", fmt.Sprintf("%+v", sdaMsg.To))
+	isDone := o.nodeInfo[sdaMsg.To.Id()]
+	// If we never have seen this token before, then we create it
+	if node == nil && !isDone {
+		dbg.Lvl2("Node not found for token (creating new one) :", fmt.Sprintf("%+v", sdaMsg.To))
 		var err error
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
+		o.nodeInfo[sdaMsg.To.Id()] = false
 		if err != nil {
+			o.nodeLock.Unlock()
 			return err
 		}
 		node = o.nodes[sdaMsg.To.Id()]
 	}
-
+	// If node is ALREADY DONE => drop packet
+	if isDone {
+		dbg.Lvl2("Message given to DONE Node => DROP")
+		o.nodeLock.Unlock()
+		return nil
+	}
+	o.nodeLock.Unlock()
 	err := node.DispatchMsg(sdaMsg)
 	if err != nil {
 		return err
@@ -75,7 +96,9 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 
 // RegisterTree takes a tree and puts it in the map
 func (o *Overlay) RegisterTree(t *Tree) {
+	o.treesMut.Lock()
 	o.trees[t.Id] = t
+	o.treesMut.Unlock()
 	o.host.checkPendingSDA(t)
 }
 
@@ -86,11 +109,15 @@ func (o *Overlay) TreeFromToken(tok *Token) *Tree {
 
 // Tree returns the tree given by treeId or nil if not found
 func (o *Overlay) Tree(tid uuid.UUID) *Tree {
+	o.treesMut.Lock()
+	defer o.treesMut.Unlock()
 	return o.trees[tid]
 }
 
 // RegisterEntityList puts an entityList in the map
 func (o *Overlay) RegisterEntityList(el *EntityList) {
+	o.entityListLock.Lock()
+	defer o.entityListLock.Unlock()
 	o.entityLists[el.Id] = el
 }
 
@@ -101,6 +128,8 @@ func (o *Overlay) EntityListFromToken(tok *Token) *EntityList {
 
 // EntityList returns the entityList given by EntityListID
 func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
+	o.entityListLock.Lock()
+	defer o.entityListLock.Unlock()
 	return o.entityLists[elid]
 }
 
@@ -118,10 +147,7 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	}
 	// start it
 	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
-	err = node.Start()
-	if err != nil {
-		return nil, err
-	}
+	go node.Start()
 	return node, nil
 }
 
@@ -129,6 +155,34 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 // instance but do not want to start it yet. Use case are when you are root, you
 // want to specifiy some additional configuration for example.
 func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+	node, err := o.NewNodeEmpty(protocolID, tree)
+	if err != nil {
+		return nil, err
+	}
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
+	o.nodes[node.token.Id()] = node
+	o.nodeInfo[node.token.Id()] = false
+	return node, node.protocolInstantiate()
+}
+
+func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
+	return o.StartNewNode(ProtocolNameToUuid(name), tree)
+}
+
+// CreateNewNodeName only creates the Node but do not call the instantiation of
+// the protocol directly, that way you can do your own stuff before calling
+// protocol.Start() or node.Start()
+func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
+	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
+}
+
+func (o *Overlay) NewNodeEmptyName(name string, tree *Tree) (*Node, error) {
+	return o.NewNodeEmpty(ProtocolNameToUuid(name), tree)
+}
+
+// NewNode returns a simple node without instantiating anything no protocol.
+func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
 		return nil, errors.New("Protocol doesn't exists: " + protocolID.String())
@@ -146,21 +200,12 @@ func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error)
 		// Host is handling the generation of protocolInstanceID
 		RoundID: uuid.NewV4(),
 	}
-	// only create the node
-	node, err := NewNode(o, token)
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
+	node, err := NewNodeEmpty(o, token)
 	o.nodes[node.token.Id()] = node
+	o.nodeInfo[node.token.Id()] = false
 	return node, err
-}
-
-func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
-	return o.StartNewNode(ProtocolNameToUuid(name), tree)
-}
-
-// CreateNewNodeName only creates the Node but do not call the instantiation of
-// the protocol directly, that way you can do your own stuff before calling
-// protocol.Start() or node.Start()
-func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
-	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token
@@ -202,9 +247,12 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 	if to == nil {
 		return errors.New("To-token is nil")
 	}
+	o.nodeLock.Lock()
 	if o.nodes[from.Id()] == nil {
+		o.nodeLock.Unlock()
 		return errors.New("No protocol instance registered with this token.")
 	}
+	o.nodeLock.Unlock()
 	tn, err := o.TreeNodeFromToken(to)
 	if err != nil {
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
@@ -215,7 +263,11 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 // nodeDone is called by node to signify that its work is finished and its
 // ressources can be released
 func (o *Overlay) nodeDone(tok *Token) {
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
 	delete(o.nodes, tok.Id())
+	// mark it done !
+	o.nodeInfo[tok.Id()] = true
 }
 
 func (o *Overlay) Private() abstract.Secret {

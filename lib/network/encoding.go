@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -53,10 +54,10 @@ func RegisterMessageType(msg ProtocolMessage) uuid.UUID {
 // RegisterMessageUUID can be used if the uuid and the type is already known
 // NOTE: be sure to only registers VALUE message and not POINTERS to message.
 func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
-	if _, typeRegistered := typeRegistry[mt]; typeRegistered {
+	if _, typeRegistered := registry.Get(mt); typeRegistered {
 		return mt
 	}
-	typeRegistry[mt] = rt
+	registry.Put(mt, rt)
 
 	return mt
 }
@@ -65,7 +66,7 @@ func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
 // returns 'DefaultType' upon error.
 func TypeFromData(msg ProtocolMessage) uuid.UUID {
 	msgType := TypeToUUID(msg)
-	_, ok := typeRegistry[msgType]
+	_, ok := registry.Get(msgType)
 	if !ok {
 		return ErrorType
 	}
@@ -92,7 +93,7 @@ func RTypeToUUID(msg reflect.Type) uuid.UUID {
 
 // DumpTypes is used for debugging - it prints out all known types
 func DumpTypes() {
-	for t, m := range typeRegistry {
+	for t, m := range registry.types {
 		dbg.Print("Type", t, "has message", m)
 	}
 }
@@ -119,9 +120,34 @@ func (am *NetworkMessage) SetError(err error) {
 	am.err = err
 }
 
-var typeRegistry = make(map[uuid.UUID]reflect.Type)
+type typeRegistry struct {
+	types map[uuid.UUID]reflect.Type
+	lock  sync.Mutex
+}
 
-var globalOrder = binary.LittleEndian
+func newTypeRegistry() *typeRegistry {
+	return &typeRegistry{
+		types: make(map[uuid.UUID]reflect.Type),
+		lock:  sync.Mutex{},
+	}
+}
+
+func (tr *typeRegistry) Get(id uuid.UUID) (reflect.Type, bool) {
+	tr.lock.Lock()
+	defer tr.lock.Unlock()
+	t, ok := tr.types[id]
+	return t, ok
+}
+
+func (tr *typeRegistry) Put(id uuid.UUID, typ reflect.Type) {
+	tr.lock.Lock()
+	defer tr.lock.Unlock()
+	tr.types[id] = typ
+}
+
+var registry = newTypeRegistry()
+
+var globalOrder = binary.BigEndian
 
 // ErrorType is reserved by the network library. When you receive a message of
 // ErrorType, it is generally because an error happened, then you can call
@@ -165,14 +191,14 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (uu
 	}
 	var typ reflect.Type
 	var ok bool
-	if typ, ok = typeRegistry[t]; !ok {
-		return ErrorType, nil, fmt.Errorf("Type %s not registered.", t.String())
+	if typ, ok = registry.Get(t); !ok {
+		return ErrorType, nil, fmt.Errorf("Type %s not registered.", typ.Name())
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
 	var err error
 	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
-		return ErrorType, nil, err
+		return t, ptrVal.Elem().Interface(), err
 	}
 	return t, ptrVal.Elem().Interface(), nil
 }

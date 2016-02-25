@@ -2,11 +2,12 @@ package sda
 
 import (
 	"errors"
+	"reflect"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"reflect"
 )
 
 /*
@@ -49,12 +50,15 @@ type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
 func NewNode(o *Overlay, tok *Token) (*Node, error) {
-	n := NewNodeEmpty(o, tok)
+	n, err := NewNodeEmpty(o, tok)
+	if err != nil {
+		return nil, err
+	}
 	return n, n.protocolInstantiate()
 }
 
 // NewNodeEmpty creates a new node without a protocol
-func NewNodeEmpty(o *Overlay, tok *Token) *Node {
+func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
 		token:            tok,
 		channels:         make(map[uuid.UUID]interface{}),
@@ -64,7 +68,12 @@ func NewNodeEmpty(o *Overlay, tok *Token) *Node {
 		treeNode:         nil,
 		done:             make(chan bool),
 	}
-	return n
+	var err error
+	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
+	if err != nil {
+		return nil, errors.New("We are not represented in the tree")
+	}
+	return n, nil
 }
 
 // TreeNode gets the treeNode of this node. If there is no TreeNode for the
@@ -137,7 +146,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	cr := reflect.TypeOf(c)
 	if cr.Kind() == reflect.Ptr {
 		val := reflect.ValueOf(c).Elem()
-		val.Set(reflect.MakeChan(val.Type(), 1))
+		val.Set(reflect.MakeChan(val.Type(), 100))
 		//val.Set(reflect.MakeChan(reflect.Indirect(cr), 1))
 		return n.RegisterChannel(reflect.Indirect(val).Interface())
 	} else if reflect.ValueOf(c).IsNil() {
@@ -166,7 +175,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	n.channels[typ] = c
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type) n.channels[typ] = c
 	n.messageTypeFlags[typ] = flags
-	dbg.Lvl3("Registered channel", typ, "with flags", flags)
+	dbg.Lvl4("Registered channel", typ, "with flags", flags)
 	return nil
 }
 
@@ -230,11 +239,8 @@ func (n *Node) protocolInstantiate() error {
 	if n.overlay.EntityList(n.token.EntityListID) == nil {
 		return errors.New("EntityList does not exists")
 	}
+
 	var err error
-	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
-	if err != nil {
-		return errors.New("We are not represented in the tree")
-	}
 	n.instance, err = p(n)
 	go n.instance.Dispatch()
 	return err
@@ -324,7 +330,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// if we still need to wait for additional messages, we return
 	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
-		dbg.Lvl3("Not done")
+		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
 	dbg.Lvl4("Going to dispatch", sdaMsg)
@@ -403,6 +409,7 @@ func (n *Node) Done() {
 		}
 	}
 	n.overlay.nodeDone(n.token)
+	dbg.Lvl3(n.Name(), "has finished. Deleting its resources")
 }
 
 // OnDoneCallback should be called if we want to control the Done() of the node.
@@ -419,6 +426,11 @@ func (n *Node) Private() abstract.Secret {
 	return n.overlay.host.private
 }
 
+// Public() returns the public key.
+func (n *Node) Public() abstract.Point {
+	return n.Entity().Public
+}
+
 // Closes the host
 func (n *Node) Close() error {
 	return n.overlay.host.Close()
@@ -430,4 +442,22 @@ func (n *Node) Name() string {
 
 func (n *Node) TokenID() uuid.UUID {
 	return n.token.Id()
+}
+
+func (n *Node) Token() *Token {
+	return n.token
+}
+
+// Host returns the underlying Host of this node.
+// WARNING: you should not play with that feature unless you know what you are
+// doing. This feature is mean to access the low level parts of the API. For
+// example it is used to add a new tree config / new entity list to the host.
+func (n *Node) Host() *Host {
+	return n.overlay.host
+}
+
+// SetProtocolInstance is used when you first create an empty node and you want
+// to bind it to a protocol instance later.
+func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
+	n.instance = pi
 }

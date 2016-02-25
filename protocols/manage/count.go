@@ -2,10 +2,12 @@ package manage
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"time"
 )
 
 /*
@@ -23,6 +25,7 @@ type ProtocolCount struct {
 	Count            chan int
 	Quit             chan bool
 	Timeout          int
+	timeoutLock      sync.Mutex
 	NetworkDelay     int
 	PrepareCountChan chan struct {
 		*sda.TreeNode
@@ -63,6 +66,10 @@ func (p *ProtocolCount) Myself() string {
 }
 
 func (p *ProtocolCount) Dispatch() error {
+	// Timeout has to be set already ...
+	p.timeoutLock.Lock()
+	to := p.Timeout
+	p.timeoutLock.Unlock()
 	for {
 		dbg.Lvl3(p.Myself(), "waiting for message during", p.Timeout)
 		select {
@@ -73,7 +80,8 @@ func (p *ProtocolCount) Dispatch() error {
 			p.FuncPC()
 		case c := <-p.CountChan:
 			p.FuncC(c)
-		case <-time.After(time.Duration(p.Timeout) * time.Millisecond):
+			// FIXME data race read p.Timeout
+		case <-time.After(time.Duration(to) * time.Millisecond):
 			dbg.Lvl3(p.Myself(), "timed out while waiting for", p.Timeout)
 			p.FuncC(nil)
 		case _ = <-p.Quit:
@@ -119,4 +127,11 @@ func (p *ProtocolCount) Start() error {
 	dbg.Lvl3("Starting to count")
 	p.FuncPC()
 	return nil
+}
+
+// SetTimeOut sets the ProtocolCount timeout in go-rountine-safe way
+func (p *ProtocolCount) SetTimeout(timeout int) {
+	p.timeoutLock.Lock()
+	defer p.timeoutLock.Unlock()
+	p.Timeout = timeout
 }

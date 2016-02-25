@@ -18,8 +18,9 @@ import (
 
 // How many times should we try to connect
 const maxRetry = 10
+
+// how much time should we wait before trying again
 const waitRetry = 100 * time.Millisecond
-const timeOut = 5 * time.Second
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
@@ -30,7 +31,7 @@ var ErrTemp = errors.New("Temporary Error")
 var ErrTimeout = errors.New("Timeout Error")
 var ErrUnknown = errors.New("Unknown Error")
 
-type Size int32
+type Size uint32
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
@@ -229,7 +230,7 @@ func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
 // so user of the package can know what is the cause of the problem
 func handleError(err error) error {
 
-	if strings.Contains(err.Error(), "use of closed") {
+	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
 		return ErrClosed
 	} else if strings.Contains(err.Error(), "canceled") {
 		return ErrCanceled

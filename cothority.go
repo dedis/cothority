@@ -2,14 +2,13 @@ package main
 
 import (
 	"flag"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
-	"github.com/dedis/cothority/lib/monitor"
+
 	_ "github.com/dedis/cothority/protocols"
-	"github.com/dedis/cothority/protocols/manage"
-	"time"
 )
 
 /*
