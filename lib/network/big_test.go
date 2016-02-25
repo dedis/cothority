@@ -24,7 +24,7 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // messages all around.
 func TestHugeConnections(t *testing.T) {
 	// How many hosts are run
-	nbrHosts := 20
+	nbrHosts := 10
 	// 16MB of message size
 	msgSize := 1024 * 1024 * 1
 	big := bigMessage{
