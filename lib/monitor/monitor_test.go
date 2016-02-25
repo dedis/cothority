@@ -33,14 +33,12 @@ func TestMonitor(t *testing.T) {
 	meas.Measure()
 	time.Sleep(200 * time.Millisecond)
 	meas.Measure()
-	End()
+	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
 	updated := stat.String()
 	if updated == fresh {
 		t.Error("Stats not updated ?")
 	}
-
-	StopSink()
 }
 
 func TestReadyNormal(t *testing.T) {
@@ -84,8 +82,7 @@ func TestReadyNormal(t *testing.T) {
 		t.Fatal("Stats.Ready != 1")
 	}
 
-	End()
-	StopSink()
+	EndAndCleanup()
 }
 
 func TestKeyOrder(t *testing.T) {

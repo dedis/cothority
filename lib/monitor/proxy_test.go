@@ -1,7 +1,6 @@
 package monitor
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -39,7 +38,7 @@ func TestProxy(t *testing.T) {
 	proxyAddr := "localhost:" + strconv.Itoa(SinkPort)
 	err := ConnectSink(proxyAddr)
 	if err != nil {
-		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))
+		t.Errorf("Can not connect to proxy : %s", err)
 		return
 	}
 
@@ -65,8 +64,8 @@ func TestProxy(t *testing.T) {
 	}
 
 	SinkPort = oldSink
-	End()
-	StopSink()
+	EndAndCleanup()
+
 	select {
 	case <-done:
 		s := monitor.Stats()
@@ -114,10 +113,15 @@ func TestReadyProxy(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
 	proxyAddr := "localhost:" + strconv.Itoa(SinkPort)
-	err := ConnectSink(proxyAddr)
-	if err != nil {
-		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))
-		return
+
+	if err := ConnectSink(proxyAddr); err != nil {
+		dbg.Error("Could not connect to proxy:", err)
+		dbg.Error("Retry once in 500ms ...")
+		time.Sleep(500 * time.Millisecond)
+		if err := ConnectSink(proxyAddr); err != nil {
+			t.Errorf("Can not connect to proxy : %s", err)
+			return
+		}
 	}
 
 	s, err := GetReady(proxyAddr)
@@ -137,6 +141,5 @@ func TestReadyProxy(t *testing.T) {
 	}
 
 	SinkPort = oldSink
-	End()
-	StopSink()
+	EndAndCleanup()
 }

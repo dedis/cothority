@@ -78,10 +78,13 @@ class MPlot:
 
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
-    def plotStacked(self, stats, col1, col2, label1, label2, color1, color2, ymin=None):
+    def plotStacked(self, stats, col1, col2, label1, label2, color1, color2, ymin=None, values=0):
         stats.reset_min_max()
         y1 = stats.update_values(col1)
         y2 = stats.update_values(col2)
+	if values > 0:
+	    y1 = y1[0:values-1]
+	    y2 = y2[0:values-1]
         if ymin == None:
             ymin = min(min(y1), min(y2))
         ymins = [ymin] * len(x)
@@ -93,13 +96,17 @@ class MPlot:
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
     def plotStackedBars(self, stats, values1, values2, label1, label2, color1, color2, ymin=None,
-                    delta_x=0):
+                    delta_x=0, values = 0):
         val1 = stats.get_values(values1)
         val2 = stats.get_values(values2)
         x = val1.x
         y1 = val1.avg
         y2 = val2.avg
-        width = [(t * 0.125 + delta_x * t * 0.018) for t in x]
+       	if values > 0:
+	    y1 = y1[0:values-1]
+	    y2 = y2[0:values-1]
+	    x = x[0:values-1]
+	width = [(t * 0.125 + delta_x * t * 0.018) for t in x]
 
         zero = [min(y1) for t in y1]
         xd = [t[0] + delta_x * t[1] for t in zip(stats.x, width)]
@@ -126,7 +133,7 @@ class MPlot:
         xd = [t[0] + ( delta_x - 0.5 ) * t[1] for t in zip(x, width)]
         y12 = [sum(t) for t in zip(y1, y2)]
         plt.bar(xd, y12, width, color=color, bottom=y1, zorder=3, hatch='//')
-        return plt.bar(xd, y1, width, color=color, bottom=ymin, zorder=3, label=label), val1
+        return plt.bar(xd, y1, width, color=color, bottom=ymin, zorder=3, label=label), val1, val2
 
 
     # Puts the most used arguments for starting a plot with

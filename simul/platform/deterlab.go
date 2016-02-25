@@ -24,18 +24,19 @@ import (
 	"bufio"
 	_ "errors"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/app"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
 	"io/ioutil"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/app"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/sda"
 )
 
 type Deterlab struct {
