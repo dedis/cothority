@@ -214,6 +214,7 @@ func (h *Host) Close() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	h.isClosing = true
+	// XXX why wait 100 ms?
 	time.Sleep(time.Millisecond * 100)
 	close(h.Closed)
 	err := h.host.Close()

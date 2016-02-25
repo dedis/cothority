@@ -49,6 +49,9 @@ func TestTreeConnectedTo(t *testing.T) {
 	if !tree.Root.IsConnectedTo(peerList.List[1]) {
 		t.Fatal("Root should be connected to localhost:2001")
 	}
+	if !tree.Root.IsConnectedTo(peerList.List[2]) {
+		t.Fatal("Root should be connected to 2nd child")
+	}
 }
 
 // Test initialisation of new peer-list
@@ -150,7 +153,6 @@ func TestUnMarshalTree(t *testing.T) {
 	}
 }
 
-//
 func TestGetNode(t *testing.T) {
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.ListNodes() {
