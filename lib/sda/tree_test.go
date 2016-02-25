@@ -241,6 +241,15 @@ func TestBigNaryTree(t *testing.T) {
 	}
 }
 
+func TestTreeIsColored(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
+	peerList := genEntityList(tSuite, names)
+	tree := peerList.GenerateBigNaryTree(3, 13)
+	root := tree.Root
+
+}
+
 func TestBinaryTrees(t *testing.T) {
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
