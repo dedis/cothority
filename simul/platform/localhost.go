@@ -116,12 +116,13 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		}
 		hosts, _ := strconv.Atoi(rc.Get("hosts"))
 		if filesNbr < hosts*2 {
+			maxfiles := 10000 + hosts*2
 			dbg.Fatalf("Maximum open files is too small. Please run the following command:\n"+
-				"sudo sysctl -w kern.maxfiles=12288\n"+
-				"sudo sysctl -w kern.maxfilesperproc=10240\n"+
-				"ulimit -n 10240\n"+
+				"sudo sysctl -w kern.maxfiles=%d\n"+
+				"sudo sysctl -w kern.maxfilesperproc=%d\n"+
+				"ulimit -n %d\n"+
 				"sudo sysctl -w kern.ipc.somaxconn=2048\n",
-				hosts*2)
+				maxfiles, maxfiles, maxfiles)
 		}
 	}
 
