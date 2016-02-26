@@ -11,12 +11,15 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/broadcast"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
 )
 
 func init() {
 	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
-	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewByzCoinProtocol(n) })
+	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
+		return NewByzCoinProtocol(n)
+	})
 }
 
 // Simulation implements da.Simulation interface
@@ -24,14 +27,12 @@ type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	simulationConfig
+	SimulationConfig
 }
 
-type simulationConfig struct {
+type SimulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
-	//blocksDir is the directory where to find the transaction blocks (.dat files)
-	BlocksDir string
 	// timeout the leader after TimeoutMs milliseconds
 	TimeoutMs uint64
 	// Fail:
@@ -50,11 +51,17 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-// Setup implements sda.Simulation interface
+// Setup implements sda.Simulation interface. It checks on the availability
+// of the block-file and downloads it if missing. Then the block-file will be
+// copied to the simulation-directory
 func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+	err := blockchain.EnsureBlockIsAvailable(dir)
+	if err != nil {
+		dbg.Fatal("Couldn't get block:", err)
+	}
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
-	err := e.CreateTree(sc)
+	err = e.CreateTree(sc)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +103,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
-		client.StartClientSimulation(e.BlocksDir, e.Blocksize)
+		client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
@@ -116,9 +123,9 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Measure()
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
-				dbg.Lvl1("Round", round, " FAILED:", err)
+				dbg.Lvl1("Round", round, "failed:", err)
 			} else {
-				dbg.Lvl1("Round", round, " SUCCESS")
+				dbg.Lvl1("Round", round, "success")
 			}
 		})
 

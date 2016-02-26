@@ -67,7 +67,7 @@ func TestMultiClose(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't listen:", err)
 		}
-		close(done)
+		done <- true
 	}()
 	h2.Open("localhost:2000")
 	err := h1.Close()
@@ -79,19 +79,19 @@ func TestMultiClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	<-done
-	h1 = NewTcpHost()
-	done = make(chan bool)
+
+	h3 := NewTcpHost()
 	go func() {
-		err := h1.Listen("localhost:2000", fn)
+		err := h3.Listen("localhost:2000", fn)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener:", err)
 		}
-		close(done)
+		done <- true
 	}()
 	h2.Open("localhost:2000")
-	err = h1.Close()
+	err = h3.Close()
 	if err != nil {
-		t.Fatal("Couldn't close h1:", err)
+		t.Fatal("Couldn't close h3:", err)
 	}
 	<-done
 }
@@ -216,7 +216,7 @@ func TestTcpNetwork(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't listen:", err)
 		}
-		close(done)
+		done <- true
 	}()
 	// Make the client engage with the server
 	client.ExchangeWithServer("127.0.0.1:5000", t)
@@ -270,10 +270,6 @@ func (s *SimpleClient) Name() string {
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	s.wg.Add(1)
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-	defer func() {
-		//dbg.Print("ExchangeWithServer canceld/timed out")
-		//cancel()
-	}()
 
 	// open a connection to the peer
 	c, err := s.Open(name)
@@ -323,10 +319,6 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 	}
 
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-	defer func() {
-		//dbg.Print("Canceling because of timeout")
-		//cancel()
-	}()
 
 	s.ProxySend(c, &p)
 	am, err := c.Receive(ctx)
