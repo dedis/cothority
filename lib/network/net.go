@@ -338,7 +338,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("No address worked for listening on this host", err)
+	return fmt.Errorf("No address worked for listening on this host %+s.", err.Error())
 }
 
 // Open will try any address that is in the Entity and connect to the first
