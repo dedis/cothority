@@ -1,5 +1,5 @@
 Servers = 16
-Simulation = "Counter"
+Simulation = "Count"
 BF = 2
 Rounds = 4
 #SingleHost = true
