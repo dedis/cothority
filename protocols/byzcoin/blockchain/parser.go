@@ -1,6 +1,13 @@
 package blockchain
 
-import "github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+import (
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+)
 
 type Parser struct {
 	Path      string
@@ -47,4 +54,78 @@ func (p *Parser) Parse(first_block, last_block int) ([]blkparser.Tx, error) {
 
 	}
 	return transactions, nil
+}
+
+// SimulDirToBlockDir creates a path to the 'protocols/byzcoin/block'-dir by
+// using 'dir' which comes from 'cothority/simul'
+// If that directory doesn't exist, it will be created.
+func SimulDirToBlockDir(dir string) string {
+	reg, _ := regexp.Compile("simul/.*")
+	blockDir := string(reg.ReplaceAll([]byte(dir), []byte("protocols/byzcoin/block")))
+	if _, err := os.Stat(blockDir); os.IsNotExist(err) {
+		os.Mkdir(blockDir, 0777)
+	}
+	return blockDir
+}
+
+// CheckBlockAvailable looks if the directory with the block exists or not.
+// It takes 'dir' as the base-directory, generated from 'cothority/simul'.
+func GetBlockName(dir string) string {
+	blockDir := SimulDirToBlockDir(dir)
+	m, _ := filepath.Glob(blockDir + "/*.dat")
+	if m != nil {
+		return m[0]
+	} else {
+		return ""
+	}
+}
+
+// Gets the block-directory starting from the current directory - this will
+// hold up when running it with 'simul'
+func GetBlockDir() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		dbg.Fatal("Couldn't get working dir:", err)
+	}
+	return dir + "/blocks"
+}
+
+// DownloadBlock takes 'dir' as the directory where to download the block.
+// It returns the downloaded file
+func DownloadBlock(dir string) (string, error) {
+	blockDir := SimulDirToBlockDir(dir)
+	cmd := exec.Command("wget", "--no-check-certificate", "-O",
+		blockDir+"/blk00000.dat", "-c",
+		"https://icsil1-box.epfl.ch:5001/fbsharing/IzTFdOxf")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	dbg.Lvl1("Cmd is", cmd)
+	if err := cmd.Start(); err != nil {
+		return "", err
+	}
+	if err := cmd.Wait(); err != nil {
+		return "", err
+	}
+	return GetBlockName(dir), nil
+}
+
+// EnsureBlockIsAvailable tests if the block is already downloaded, else it will
+// download it. Finally the block will be copied to the 'simul'-provided
+// directory for simulation.
+func EnsureBlockIsAvailable(dir string) error {
+	block := GetBlockName(dir)
+	if block == "" {
+		var err error
+		block, err = DownloadBlock(dir)
+		if err != nil || block == "" {
+			return err
+		}
+	}
+	destDir := dir + "/blocks"
+	os.Mkdir(destDir, 0777)
+	cmd := exec.Command("cp", block, destDir)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	return nil
 }

@@ -24,8 +24,6 @@ type Simulation struct {
 	// pbft simulation specific fields:
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
-	//blocksDir is the directory where to find the transaction blocks (.dat files)
-	BlocksDir string
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
@@ -39,9 +37,14 @@ func NewSimulation(config string) (sda.Simulation, error) {
 
 // Setup implements sda.Simulation interface
 func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+	err := blockchain.EnsureBlockIsAvailable(dir)
+	if err != nil {
+		dbg.Fatal("Couldn't get block:", err)
+	}
+
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
-	err := e.CreateTree(sc)
+	err = e.CreateTree(sc)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +57,10 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		doneChan <- true
 	}
 	// FIXME use client instead
-	parser, err := blockchain.NewParser(e.BlocksDir, magicNum)
+	dir := blockchain.GetBlockDir()
+	parser, err := blockchain.NewParser(dir, magicNum)
 	if err != nil {
-		dbg.Error("Error: Couldn't parse blocks in", e.BlocksDir,
-			".\nPlease download bitcoin blocks as .dat files first and place them in",
-			e.BlocksDir, "Either run a bitcoin node (recommended) or using a torrent.")
+		dbg.Error("Error: Couldn't parse blocks in", dir)
 		return err
 	}
 	transactions, err := parser.Parse(0, e.Blocksize)

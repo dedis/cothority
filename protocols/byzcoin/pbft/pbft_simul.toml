@@ -1,8 +1,0 @@
-Servers = 2
-Simulation = "PbftSimulation"
-Rounds = 5
-BF = 5
-BlocksDir = "/users/nikkolas/remote"
-
-Hosts, Blocksize
-144, 2200
