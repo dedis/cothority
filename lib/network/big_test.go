@@ -52,7 +52,7 @@ func TestHugeConnections(t *testing.T) {
 		dbg.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
 			err := hosts[h].Listen(func(c SecureConn) {
-				dbg.LLvl5(2000+h, "got a connection")
+				dbg.Lvl5(2000+h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
 					t.Fatal("Couldn't receive msg:", err)

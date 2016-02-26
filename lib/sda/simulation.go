@@ -12,6 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"net"
 )
 
 /*
@@ -127,6 +128,13 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 	} else {
 		ret = append(ret, sc)
 	}
+	if strings.Contains(sc.EntityList.List[0].Addresses[0], "localhost") {
+		// Now strip all superfluous numbers of localhost
+		for i := range sc.EntityList.List {
+			_, port, _ := net.SplitHostPort(sc.EntityList.List[i].Addresses[0])
+			sc.EntityList.List[i].Addresses[0] = "localhost:" + port
+		}
+	}
 	return ret, nil
 }
 
@@ -202,6 +210,11 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	if hosts > s.Hosts {
 		hosts = s.Hosts
 	}
+	localhosts := false
+	listeners := make([]net.Listener, hosts)
+	if strings.Contains(addresses[0], "localhost") {
+		localhosts = true
+	}
 	entities := make([]*network.Entity, hosts)
 	dbg.Lvl3("Doing", hosts, "hosts")
 	key := config.NewKeyPair(network.Suite)
@@ -210,11 +223,30 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 			key.Suite.Secret().One())
 		key.Public.Add(key.Public,
 			key.Suite.Point().Base())
-		address := addresses[c%nbrAddr] + ":" +
-			strconv.Itoa(port+c/nbrAddr)
+		address := addresses[c%nbrAddr] + ":"
+		if localhosts {
+			// If we have localhosts, we have to search for an empty port
+			var err error
+			listeners[c], err = net.Listen("tcp", ":0")
+			if err != nil {
+				dbg.Fatal("Couldn't search for empty port:", err)
+			}
+			_, p, _ := net.SplitHostPort(listeners[c].Addr().String())
+			address += p
+			dbg.Lvl4("Found free port", address)
+		} else {
+			address += strconv.Itoa(port + c/nbrAddr)
+		}
 		entities[c] = network.NewEntity(key.Public, address)
 		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
 	}
+	// And close all our listeners
+	if localhosts {
+		for _, l := range listeners {
+			l.Close()
+		}
+	}
+
 	sc.EntityList = NewEntityList(entities)
 	dbg.Lvl3("Creating entity List took: " + time.Now().Sub(start).String())
 }
