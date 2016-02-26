@@ -58,7 +58,6 @@ type Conn interface {
 // TcpHost is the underlying implementation of
 // Host using Tcp as a communication channel
 type TcpHost struct {
-	// TODO: replace pointers to Mutexes with values
 	// A list of connection maintained by this host
 	peers map[string]Conn
 	// its listeners
@@ -68,11 +67,11 @@ type TcpHost struct {
 	// quitListener is a channel to indicate to the closing function that the
 	// listener has actually really quit
 	quitListener  chan bool
-	listeningLock *sync.Mutex
+	listeningLock sync.Mutex
 	listening     bool
 	// indicates wether this host is closed already or not
 	closed     bool
-	closedLock *sync.Mutex
+	closedLock sync.Mutex
 	// a list of constructors for en/decoding
 	constructors protobuf.Constructors
 }
