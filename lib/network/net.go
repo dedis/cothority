@@ -132,6 +132,8 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
+	c.receiveMutex.Lock()
+	defer c.receiveMutex.Unlock()
 	b := make([]byte, s)
 	var read Size
 	var buffer bytes.Buffer
@@ -145,6 +147,7 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 		}
 		// put it in the longterm buffer
 		buffer.Write(b[:n])
+		read += Size(n)
 		// if we could not read everything yet
 		if Size(buffer.Len()) < s {
 			// make b size = bytes that we still need to read (no more no less)
@@ -169,6 +172,8 @@ const maxChunkSize Size = 1400
 // and send it with the size through the network.
 // Returns an error if anything was wrong
 func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+	c.sendMutex.Lock()
+	defer c.sendMutex.Unlock()
 	am, err := newNetworkMessage(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
@@ -183,35 +188,28 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	// First write the size
 	packetSize := Size(len(b))
 	if err := binary.Write(c.Conn, globalOrder, packetSize); err != nil {
+		dbg.Error("Couldn't write number of bytes")
 		return err
 	}
 	// Then send everything through the connection
 	// Send chunk by chunk
 	var sent Size
 	for sent < packetSize {
-		var offset Size
-		// if we have yet more than "chunk" byte to write
-		if packetSize-sent > maxChunkSize {
-			offset = maxChunkSize
-		} else {
-			// take only the rest
-			offset = packetSize - sent
+		length := packetSize - sent
+		if length > maxChunkSize {
+			length = maxChunkSize
 		}
 
-		// if one write went wrong or stg
-		if offset < Size(len(b)) {
-			offset = Size(len(b))
-		}
-
-		// chunk to send
-		chunk := b[:offset]
-		// bytes left to send
-		b = b[:offset]
-		n, err := c.Conn.Write(chunk)
+		// Sending 'length' bytes
+		n, err := c.Conn.Write(b[:length])
 		if err != nil {
+			dbg.Error("Couldn't write chunk")
 			return handleError(err)
 		}
 		sent += Size(n)
+
+		// bytes left to send
+		b = b[n:]
 	}
 
 	return nil
