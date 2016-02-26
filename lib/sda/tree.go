@@ -292,8 +292,7 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 				// on the same host as the parent.
 				childHost, _, _ := net.SplitHostPort(il.List[elIndex].Addresses[0])
 				elIndexFirst := elIndex
-				for childHost == parentHost &&
-					ilLen > 1 {
+				for childHost == parentHost && ilLen > 1 {
 					elIndex = (elIndex + 1) % ilLen
 					// If we tried all hosts, it means we're using
 					// just one hostname, as we didn't find any
