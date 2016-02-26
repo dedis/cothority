@@ -61,6 +61,7 @@ type Conn interface {
 type TcpHost struct {
 	// A list of connection maintained by this host
 	peers         map[string]Conn
+	peersMut      sync.Mutex
 	// its listeners
 	listener      net.Listener
 	lnFile        *os.File
@@ -89,6 +90,7 @@ type TcpConn struct {
 
 	// closed indicator
 	closed       bool
+	closedMut    sync.Mutex
 	// A pointer to the associated host (just-in-case)
 	host         *TcpHost
 	// So we only handle one receiving packet at a time

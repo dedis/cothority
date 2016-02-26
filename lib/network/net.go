@@ -51,6 +51,8 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.peersMut.Lock()
+	defer t.peersMut.Unlock()
 	t.peers[name] = c
 	return c, nil
 }
@@ -66,6 +68,8 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
+	t.peersMut.Lock()
+	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
 		dbg.Lvl4("Closing peer", c)
 		if err := c.Close(); err != nil {
@@ -218,6 +222,8 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 
 // Close ... closes the connection
 func (c *TcpConn) Close() error {
+	c.closedMut.Lock()
+	defer c.closedMut.Unlock()
 	if c.closed == true {
 		return nil
 	}
@@ -292,7 +298,9 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 			Conn:     conn,
 			host:     t,
 		}
+		t.peersMut.Lock()
 		t.peers[conn.RemoteAddr().String()] = &c
+		t.peersMut.Unlock()
 		fn(&c)
 	}
 	return nil
