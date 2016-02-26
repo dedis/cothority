@@ -12,11 +12,17 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/broadcast"
 	"github.com/dedis/crypto/abstract"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
 )
 
 func init() {
 	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
-	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewByzCoinProtocol(n) })
+	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
+		return NewByzCoinProtocol(n)
+	})
 }
 
 // Simulation implements da.Simulation interface
@@ -52,9 +58,40 @@ func NewSimulation(config string) (sda.Simulation, error) {
 
 // Setup implements sda.Simulation interface
 func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+	reg, _ := regexp.Compile("simul/.*")
+	blockDir := string(reg.ReplaceAll([]byte(dir), []byte("protocols/byzcoin/block")))
+	if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
+		os.Mkdir(blockDir, 0777)
+	}
+	m, err := filepath.Glob(blockDir + "/*.dat")
+	if m == nil {
+		dbg.Lvl1("Didn't find .dat-files in", blockDir, "- downloading")
+		cmd := exec.Command("wget", "--no-check-certificate", "-O",
+			blockDir+"/blk00000.dat", "-c",
+			"https://icsil1-box.epfl.ch:5001/fbsharing/IzTFdOxf")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		dbg.Lvl1("Cmd is", cmd)
+		if err := cmd.Start(); err != nil {
+			dbg.Fatal("Failed to download file:", err)
+		}
+		if err := cmd.Wait(); err != nil {
+			dbg.Fatal("Downloading file failed:", err)
+		}
+		m, err = filepath.Glob(blockDir + "/*.dat")
+	}
+	if m == nil {
+		dbg.Fatal(".dat-file is not available.")
+	}
+	destDir := dir + "/blocks"
+	os.Mkdir(destDir, 0777)
+	cmd := exec.Command("cp", m[0], destDir)
+	if err := cmd.Start(); err != nil {
+		dbg.Fatal("Couldn't copy file")
+	}
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
-	err := e.CreateTree(sc)
+	err = e.CreateTree(sc)
 	if err != nil {
 		return nil, err
 	}
@@ -94,9 +131,14 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	// wait
 	<-broadDone
 
+	dir, err := os.Getwd()
+	if err != nil {
+		dbg.Fatal("Couldn't get working dir:", err)
+	}
+	dir += "/blocks"
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
-		client.StartClientSimulation(e.BlocksDir, e.Blocksize)
+		client.StartClientSimulation(dir, e.Blocksize)
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
@@ -116,9 +158,9 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Measure()
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
-				dbg.Lvl1("Round", round, " FAILED:", err)
+				dbg.Lvl1("Round", round, "failed:", err)
 			} else {
-				dbg.Lvl1("Round", round, " SUCCESS")
+				dbg.Lvl1("Round", round, "success")
 			}
 		})
 

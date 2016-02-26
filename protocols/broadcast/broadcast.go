@@ -119,7 +119,7 @@ func (b *Broadcast) handleOk(tn *sda.TreeNode) {
 	}
 
 	b.okdNode++
-	dbg.Print(b.Name(), "Received OK with ackNode=", b.ackdNode, " and okdNode=", b.okdNode)
+	dbg.Lvl2(b.Name(), "Received OK with ackNode=", b.ackdNode, " and okdNode=", b.okdNode)
 	if b.ackdNode == len(b.listNode) && b.okdNode == len(b.listNode) {
 		// Yahooo we are done
 		dbg.Lvl3(b.Name(), " Knows EVERYONE is connected to EVERYONE")
