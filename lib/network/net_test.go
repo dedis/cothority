@@ -304,8 +304,11 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	}
 
 	err = c.Close()
-	if err != nil {
+	if err != nil && err != ErrClosed {
 		t.Fatal("Couldn't close:", err)
+	}
+	if err == ErrClosed {
+		dbg.Error("Called Close() on alredy closed connetion.")
 	}
 	s.wg.Done()
 }
