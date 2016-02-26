@@ -238,6 +238,7 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Protocol
 		From: from,
 		To:   from.ChangeTreeNodeID(to.Id),
 	}
+	dbg.Lvl4("Sending to entity", to.Entity.Addresses)
 	return o.host.sendSDAData(to.Entity, sda)
 }
 

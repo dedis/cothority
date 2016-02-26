@@ -89,6 +89,10 @@ type TcpConn struct {
 	closed bool
 	// A pointer to the associated host (just-in-case)
 	host *TcpHost
+	// So we only handle one receiving packet at a time
+	receiveMutex sync.Mutex
+	// So we only handle one sending packet at a time
+	sendMutex sync.Mutex
 }
 
 // SecureHost is the analog of Host but with secure communication

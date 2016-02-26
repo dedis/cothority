@@ -57,7 +57,7 @@ func main() {
 	for _, sc := range scs {
 		// Starting all hosts for that server
 		host := sc.Host
-		dbg.Lvl3("Starting host", host.Entity.Addresses)
+		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
 		host.Listen()
 		go host.ProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
@@ -94,6 +94,7 @@ func main() {
 			}
 			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
 			node.Start()
+			dbg.Lvl1("Started counting")
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
 				if count == rootSC.Tree.Size() {

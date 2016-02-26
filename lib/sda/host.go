@@ -230,6 +230,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	}
 	h.entityListsLock.Lock()
 	if _, ok := h.entities[e.Id]; !ok {
+		dbg.Lvl4("Connecting to", e.Addresses)
 		h.entityListsLock.Unlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
@@ -368,6 +369,7 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	// put to nil so protobuf won't encode it and there won't be any error on the
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
+	dbg.Lvl4("Sending to", e.Addresses)
 	return h.SendRaw(e, sdaMsg)
 }
 
