@@ -11,11 +11,8 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/broadcast"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"regexp"
 )
 
 func init() {
@@ -36,8 +33,6 @@ type Simulation struct {
 type simulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
-	//blocksDir is the directory where to find the transaction blocks (.dat files)
-	BlocksDir string
 	// timeout the leader after TimeoutMs milliseconds
 	TimeoutMs uint64
 	// Fail:
@@ -56,38 +51,13 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-// Setup implements sda.Simulation interface
+// Setup implements sda.Simulation interface. It checks on the availability
+// of the block-file and downloads it if missing. Then the block-file will be
+// copied to the simulation-directory
 func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
-	reg, _ := regexp.Compile("simul/.*")
-	blockDir := string(reg.ReplaceAll([]byte(dir), []byte("protocols/byzcoin/block")))
-	if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
-		os.Mkdir(blockDir, 0777)
-	}
-	m, err := filepath.Glob(blockDir + "/*.dat")
-	if m == nil {
-		dbg.Lvl1("Didn't find .dat-files in", blockDir, "- downloading")
-		cmd := exec.Command("wget", "--no-check-certificate", "-O",
-			blockDir+"/blk00000.dat", "-c",
-			"https://icsil1-box.epfl.ch:5001/fbsharing/IzTFdOxf")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		dbg.Lvl1("Cmd is", cmd)
-		if err := cmd.Start(); err != nil {
-			dbg.Fatal("Failed to download file:", err)
-		}
-		if err := cmd.Wait(); err != nil {
-			dbg.Fatal("Downloading file failed:", err)
-		}
-		m, err = filepath.Glob(blockDir + "/*.dat")
-	}
-	if m == nil {
-		dbg.Fatal(".dat-file is not available.")
-	}
-	destDir := dir + "/blocks"
-	os.Mkdir(destDir, 0777)
-	cmd := exec.Command("cp", m[0], destDir)
-	if err := cmd.Start(); err != nil {
-		dbg.Fatal("Couldn't copy file")
+	err := blockchain.EnsureBlockIsAvailable(dir)
+	if err != nil {
+		dbg.Fatal("Couldn't get block:", err)
 	}
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
@@ -131,14 +101,9 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	// wait
 	<-broadDone
 
-	dir, err := os.Getwd()
-	if err != nil {
-		dbg.Fatal("Couldn't get working dir:", err)
-	}
-	dir += "/blocks"
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
-		client.StartClientSimulation(dir, e.Blocksize)
+		client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node

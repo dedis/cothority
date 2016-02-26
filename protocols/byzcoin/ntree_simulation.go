@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
 func init() {
@@ -31,9 +32,14 @@ func NewNtreeSimulation(config string) (sda.Simulation, error) {
 
 // Setup implements sda.Simulation interface
 func (e *NtreeSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+	err := blockchain.EnsureBlockIsAvailable(dir)
+	if err != nil {
+		dbg.Fatal("Couldn't get block:", err)
+	}
+
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
-	err := e.CreateTree(sc)
+	err = e.CreateTree(sc)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +54,7 @@ func (e *NtreeSimulation) Run(sdaConf *sda.SimulationConfig) error {
 	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
-		client.StartClientSimulation(e.BlocksDir, e.Blocksize)
+		client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
