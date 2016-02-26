@@ -202,6 +202,10 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	if hosts > s.Hosts {
 		hosts = s.Hosts
 	}
+	localhosts := false
+	if strings.Contains(addresses[0], "127.0.0.") {
+		localhosts = true
+	}
 	entities := make([]*network.Entity, hosts)
 	dbg.Lvl3("Doing", hosts, "hosts")
 	key := config.NewKeyPair(network.Suite)
@@ -210,8 +214,13 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 			key.Suite.Secret().One())
 		key.Public.Add(key.Public,
 			key.Suite.Point().Base())
-		address := addresses[c%nbrAddr] + ":" +
-			strconv.Itoa(port+c/nbrAddr)
+		address := addresses[c%nbrAddr] + ":"
+		if localhosts {
+			// If we have localhosts, we can't repeat port-numbers
+			address += strconv.Itoa(port + c)
+		} else {
+			address += strconv.Itoa(port + c/nbrAddr)
+		}
 		entities[c] = network.NewEntity(key.Public, address)
 		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
 	}

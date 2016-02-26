@@ -153,7 +153,7 @@ func main() {
 					dbg.Fatal("Couldn't killall ssh:", err)
 				}
 			}
-			dbg.LLvl4("Finished with cothority on", internal)
+			dbg.Lvl4("Finished with cothority on", internal)
 		}(phys, deter.Virt[i])
 	}
 
