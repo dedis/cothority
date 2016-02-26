@@ -16,7 +16,6 @@ package network
 import (
 	"bytes"
 	"encoding/binary"
-	//"encoding/hex"
 	"fmt"
 	"net"
 	"time"
@@ -153,7 +152,7 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 		// if we could not read everything yet
 		if Size(buffer.Len()) < s {
 			// make b size = bytes that we still need to read (no more no less)
-			b = b[:s-read]
+			b = b[:s - read]
 		}
 	}
 
@@ -270,7 +269,7 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	t.listener = ln
 	t.lnFile, err = ln.(*net.TCPListener).File()
 	if err != nil {
-		dbg.Fatal(err)
+		dbg.Error("Couldn't store OS filehandler of listener", err)
 	}
 	var unlocked bool
 	for {

@@ -15,7 +15,7 @@ import (
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-"os"
+	"os"
 )
 
 // How many times should we try to connect
@@ -60,41 +60,41 @@ type Conn interface {
 // Host using Tcp as a communication channel
 type TcpHost struct {
 	// A list of connection maintained by this host
-	peers map[string]Conn
+	peers         map[string]Conn
 	// its listeners
-	listener net.Listener
-	lnFile   *os.File
+	listener      net.Listener
+	lnFile        *os.File
 	// the close channel used to indicate to the listener we want to quit
-	quit chan bool
+	quit          chan bool
 	// quitListener is a channel to indicate to the closing function that the
 	// listener has actually really quit
 	quitListener  chan bool
 	listeningLock sync.Mutex
 	listening     bool
 	// indicates wether this host is closed already or not
-	closed     bool
-	closedLock sync.Mutex
+	closed        bool
+	closedLock    sync.Mutex
 	// a list of constructors for en/decoding
-	constructors protobuf.Constructors
+	constructors  protobuf.Constructors
 }
 
 // TcpConn is the underlying implementation of
 // Conn using Tcp
 type TcpConn struct {
 	// The name of the endpoint we are connected to.
-	Endpoint string
+	Endpoint     string
 
 	// The connection used
-	Conn net.Conn
+	Conn         net.Conn
 
 	// closed indicator
-	closed bool
+	closed       bool
 	// A pointer to the associated host (just-in-case)
-	host *TcpHost
+	host         *TcpHost
 	// So we only handle one receiving packet at a time
 	receiveMutex sync.Mutex
 	// So we only handle one sending packet at a time
-	sendMutex sync.Mutex
+	sendMutex    sync.Mutex
 }
 
 // SecureHost is the analog of Host but with secure communication
@@ -117,12 +117,12 @@ type SecureConn interface {
 type SecureTcpHost struct {
 	*TcpHost
 	// Entity of this host
-	entity *Entity
+	entity         *Entity
 	// Private key tied to this entity
-	private abstract.Secret
+	private        abstract.Secret
 	// mapping from the entity to the names used in TcpHost
 	// In TcpHost the names then maps to the actual connection
-	EntityToAddr map[uuid.UUID]string
+	EntityToAddr   map[uuid.UUID]string
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string
@@ -142,30 +142,30 @@ type NetworkMessage struct {
 	// / or listens to incoming connections, the network library will already
 	// make some exchange between the two communicants so each knows the
 	// Entity of the others.
-	Entity *Entity
+	Entity       *Entity
 	// the origin of the message
-	From string
+	From         string
 	// What kind of msg do we have
-	MsgType uuid.UUID
+	MsgType      uuid.UUID
 	// The underlying message
-	Msg ProtocolMessage
+	Msg          ProtocolMessage
 	// which constructors are used
 	Constructors protobuf.Constructors
 	// possible error during unmarshaling so that upper layer can know it
-	err error
+	err          error
 }
 
 // Entity is used to represent a Conode in the whole internet.
 // It's based on a public key, and there can be one or more addresses to contact it.
 type Entity struct {
 	// This is the public key of that Entity
-	Public abstract.Point
+	Public    abstract.Point
 	// The UUID corresponding to that public key
-	Id uuid.UUID
+	Id        uuid.UUID
 	// A slice of addresses of where that Id might be found
 	Addresses []string
 	// used to return the next available address
-	iter int
+	iter      int
 }
 
 func (e *Entity) String() string {
