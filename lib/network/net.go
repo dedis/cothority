@@ -19,7 +19,6 @@ import (
 	//"encoding/hex"
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
 	"golang.org/x/net/context"
