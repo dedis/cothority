@@ -221,8 +221,12 @@ func TestTcpNetwork(t *testing.T) {
 	// Make the client engage with the server
 	client.ExchangeWithServer("127.0.0.1:5000", t)
 	wg.Wait()
-	clientHost.Close()
-	serverHost.Close()
+	if err := clientHost.Close(); err != nil {
+		t.Fatal("could not close client", err)
+	}
+	if err := serverHost.Close(); err != nil {
+		t.Fatal("could not close server", err)
+	}
 	<-done
 }
 
@@ -270,7 +274,6 @@ func (s *SimpleClient) Name() string {
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	s.wg.Add(1)
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-
 	// open a connection to the peer
 	c, err := s.Open(name)
 	if err != nil {
@@ -295,8 +298,11 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	if am.MsgType != PublicType {
 		t.Fatal("Received a non-wanted packet.\n")
 	}
+	err = c.Close()
+	if err != nil {
+		t.Fatal("error closing connection", err)
+	}
 
-	c.Close()
 	s.wg.Done()
 }
 
@@ -319,7 +325,6 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 	}
 
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-
 	s.ProxySend(c, &p)
 	am, err := c.Receive(ctx)
 	if err != nil {
@@ -333,6 +338,10 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 	if !p.Point.Equal(comp) {
 		s.t.Error("point not equally reconstructed")
 	}
-	c.Close()
+	err = c.Close()
+	if err != nil {
+		s.t.Fatal("error closing connection", err)
+	}
+
 	s.wg.Done()
 }
