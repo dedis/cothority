@@ -62,7 +62,11 @@ func TestSimple(t *testing.T) {
 	if sp.Name != serverName {
 		t.Fatal("Name no right")
 	}
-	client.Close()
-	server.Close()
+	if err := client.Close(); err != nil {
+		t.Fatal("Couldn't close client connection")
+	}
+	if err := server.Close(); err != nil {
+		t.Fatal("Couldn't close server connection")
+	}
 	<-done
 }

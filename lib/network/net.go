@@ -93,6 +93,11 @@ func (t *TcpHost) Close() error {
 			if err := t.listener.Close(); err != nil {
 				return err
 			}
+			//if err := t.lnFile.Close(); err != nil {
+			//	dbg.Error(err)
+			//	// XXX should we care about this as an real error?
+			//	return err
+			//}
 		}
 		select {
 		case <-t.quitListener:
@@ -263,6 +268,10 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 		return errors.New("Error opening listener: " + err.Error())
 	}
 	t.listener = ln
+	t.lnFile, err = ln.(*net.TCPListener).File()
+	if err != nil {
+		dbg.Fatal(err)
+	}
 	var unlocked bool
 	for {
 		if !unlocked {

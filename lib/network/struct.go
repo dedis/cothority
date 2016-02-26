@@ -15,6 +15,7 @@ import (
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
+"os"
 )
 
 // How many times should we try to connect
@@ -62,6 +63,7 @@ type TcpHost struct {
 	peers map[string]Conn
 	// its listeners
 	listener net.Listener
+	lnFile   *os.File
 	// the close channel used to indicate to the listener we want to quit
 	quit chan bool
 	// quitListener is a channel to indicate to the closing function that the
