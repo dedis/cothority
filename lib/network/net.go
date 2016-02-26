@@ -42,8 +42,6 @@ func NewTcpHost() *TcpHost {
 		quit:          make(chan bool),
 		constructors:  DefaultConstructors(Suite),
 		quitListener:  make(chan bool),
-		listeningLock: &sync.Mutex{},
-		closedLock:    &sync.Mutex{},
 	}
 }
 
