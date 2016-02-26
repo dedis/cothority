@@ -5,14 +5,13 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	// Empty imports to have the init-functions called which should
-	// register the protocol
-	"math"
 	"time"
 
 	"github.com/dedis/cothority/lib/monitor"
-	_ "github.com/dedis/cothority/protocols"
 	"github.com/dedis/cothority/protocols/manage"
+	// Empty imports to have the init-functions called which should
+	// register the protocol
+	_ "github.com/dedis/cothority/protocols"
 )
 
 /*
@@ -84,14 +83,9 @@ func main() {
 		// First count the number of available children
 		childrenWait := monitor.NewMeasure("ChildrenWait")
 		wait := true
-		// Sets the network-delay between nodes - this also includes the
-		// time to open the connection, which can be long in case of more
-		// than 500 hosts per machine.
-		networkDelay := 500
-		// The timeout starts at twice the networkDelay to give even more
-		// time for opening the connections - experimental value (like
-		// the speed of light)
-		timeout := networkDelay * 2 * int(math.Log2(float64(len(rootSC.EntityList.List))))
+		// The timeout starts with 1 second, which is the time of response between
+		// each level of the tree.
+		timeout := 1000
 		for wait {
 			dbg.Lvl2("Counting children with timeout of", timeout)
 			node, err := rootSC.Overlay.CreateNewNodeName("Count", rootSC.Tree)
@@ -99,7 +93,6 @@ func main() {
 				dbg.Fatal(err)
 			}
 			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
-			//node.ProtocolInstance().(*manage.ProtocolCount).NetworkDelay = networkDelay
 			node.Start()
 			dbg.Lvl1("Started counting")
 			select {

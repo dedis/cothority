@@ -2,7 +2,6 @@ package manage
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -27,8 +26,6 @@ type ProtocolCount struct {
 	Count            chan int
 	Quit             chan bool
 	Timeout          int
-	timeoutLock      sync.Mutex
-	NetworkDelay     int
 	PrepareCountChan chan struct {
 		*sda.TreeNode
 		PrepareCount
@@ -59,9 +56,6 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 		Node:    n,
 		Quit:    make(chan bool),
 		Timeout: 1024,
-		// This also includes the time to make a connection, eventually
-		// re-try if the connection failed
-		NetworkDelay: 100,
 	}
 	p.Count = make(chan int, 1)
 	p.RegisterChannel(&p.CountChan)
