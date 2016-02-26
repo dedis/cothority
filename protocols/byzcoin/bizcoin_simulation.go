@@ -27,10 +27,10 @@ type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	simulationConfig
+	SimulationConfig
 }
 
-type simulationConfig struct {
+type SimulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
 	// timeout the leader after TimeoutMs milliseconds
@@ -45,6 +45,8 @@ type simulationConfig struct {
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)
+	dbg.Print("Decoded .......................", config)
+	dbg.Print(es)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +105,9 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
+		dbg.Print("Directory", blockchain.GetBlockDir())
+		dbg.Print("Blocksize", e.Blocksize)
+		dbg.Print("TimeoutMs", e.TimeoutMs)
 		client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 
 		dbg.Lvl1("Starting round", round)
