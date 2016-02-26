@@ -267,7 +267,7 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 		return errors.New("Error opening listener: " + err.Error())
 	}
 	t.listener = ln
-	t.lnFile, err = ln.(*net.TCPListener).File()
+	//t.lnFile, err = ln.(*net.TCPListener).File()
 	if err != nil {
 		dbg.Error("Couldn't store OS filehandler of listener", err)
 	}
