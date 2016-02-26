@@ -124,7 +124,7 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	// First read the size
 	var s Size
 	defer func() {
-		if err := recover(); e != nil {
+		if err := recover(); err != nil {
 			nm = EmptyApplicationMessage
 			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
 		}

@@ -128,6 +128,7 @@ func main() {
 	}
 
 	dbg.Lvl1("starting", deter.Servers, "cothorities for a total of", deter.Hosts, "processes.")
+	killing := false
 	for i, phys := range deter.Phys {
 		dbg.Lvl2("Launching cothority on", phys)
 		wg.Add(1)
@@ -144,10 +145,15 @@ func main() {
 			dbg.Lvl3("Args is", args)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./cothority "+
 				args)
-			if err != nil {
-				dbg.Lvl1("Error starting cothority:", err, internal)
+			if err != nil && !killing {
+				dbg.Lvl1("Error starting cothority - will kill all others:", err, internal)
+				killing = true
+				err := exec.Command("killall", "ssh").Run()
+				if err != nil {
+					dbg.Fatal("Couldn't killall ssh:", err)
+				}
 			}
-			dbg.Lvl4("Finished with cothority on", internal)
+			dbg.LLvl4("Finished with cothority on", internal)
 		}(phys, deter.Virt[i])
 	}
 

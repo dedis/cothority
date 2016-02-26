@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	_ "github.com/dedis/cothority/protocols"
+	"strings"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes
@@ -126,6 +127,21 @@ func (d *Localhost) Start(args ...string) error {
 	dbg.Lvl4("Localhost: in Start() => hosts", d.hosts)
 	d.running = true
 	dbg.Lvl1("Starting", len(d.sc.EntityList.List), "applications of", ex)
+	hosts := len(d.sc.EntityList.List)
+	if hosts > 200 && runtime.GOOS == "darwin" {
+		files, err := exec.Command("ulimit", "-n").Output()
+		if err != nil {
+			dbg.Fatal("Couldn't check for file-limit:", err)
+		}
+		filesNbr, err := strconv.Atoi(strings.TrimSpace(string(files)))
+		if err != nil {
+			dbg.Fatal("Couldn't convert", files, "to a number:", err)
+		}
+		if filesNbr < hosts {
+			dbg.Fatalf("Maximum open files is too small. Please run the following command:\n"+
+				"ulimit -n %d\n", hosts*2)
+		}
+	}
 	for index, entity := range d.sc.EntityList.List {
 		d.wg_run.Add(1)
 		address := entity.Addresses[0]

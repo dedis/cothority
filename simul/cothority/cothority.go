@@ -98,9 +98,8 @@ func main() {
 			if err != nil {
 				dbg.Fatal(err)
 			}
-			// FIXME data race Timeout write
-			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
-			node.ProtocolInstance().(*manage.ProtocolCount).NetworkDelay = networkDelay
+			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
+			//node.ProtocolInstance().(*manage.ProtocolCount).NetworkDelay = networkDelay
 			node.Start()
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
