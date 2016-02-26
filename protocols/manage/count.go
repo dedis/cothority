@@ -145,6 +145,6 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 func (p *ProtocolCount) Start() error {
 	// Send an empty message
 	dbg.Lvl3("Starting to count")
-	go p.FuncPC()
+	p.FuncPC()
 	return nil
 }

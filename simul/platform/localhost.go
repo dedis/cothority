@@ -43,8 +43,9 @@ type Localhost struct {
 
 	// The number of servers
 	servers int
-	// Addresses used with the applications
-	// 127.0.0.1, 127.0.0.2, ...
+	// All addresses - we use 'localhost1'..'localhostn' to
+	// identify the different cothorities, but when opening the
+	// ports they will be converted to normal 'localhost'
 	addresses []string
 
 	// Whether we started a simulation
@@ -104,39 +105,32 @@ func (d *Localhost) Cleanup() error {
 }
 
 func (d *Localhost) Deploy(rc RunConfig) error {
-	dbg.Lvl2("Localhost: Deploying and writing config-files")
+	if runtime.GOOS == "darwin" {
+		files, err := exec.Command("ulimit", "-n").Output()
+		if err != nil {
+			dbg.Fatal("Couldn't check for file-limit:", err)
+		}
+		filesNbr, err := strconv.Atoi(strings.TrimSpace(string(files)))
+		if err != nil {
+			dbg.Fatal("Couldn't convert", files, "to a number:", err)
+		}
+		hosts, _ := strconv.Atoi(rc.Get("hosts"))
+		if filesNbr < hosts*2 {
+			dbg.Fatalf("Maximum open files is too small. Please run the following command:\n"+
+				"ulimit -n %d\n", hosts*2)
+		}
+	}
+
+	d.servers, _ = strconv.Atoi(rc.Get("servers"))
+	dbg.Lvl2("Localhost: Deploying and writing config-files for", d.servers, "servers")
 	sim, err := sda.NewSimulation(d.Simulation, string(rc.Toml()))
 	if err != nil {
 		return err
 	}
-	// Creating a bunch of localhosts so that the simulation is more
-	// similar to deterlab where only 'servers' number of cothorities
-	// are launched.
-	d.addresses = []string{"127.0.0.1"}
-	d.servers, err = strconv.Atoi(rc.Get("servers"))
-	if err == nil {
-		ifc, err := exec.Command("ifconfig", "lo0").Output()
-		if err != nil {
-			dbg.Fatal("Couldn't check for lo0-interfaces")
-		}
-		d.addresses = make([]string, d.servers)
-		for i := 1; i <= d.servers; i++ {
-			addr := "127.0.0." + strconv.Itoa(i)
-			if !strings.Contains(string(ifc), " "+addr+" ") {
-				cmd := exec.Command("sudo", "ifconfig", "lo0", "alias", addr)
-				dbg.LLvl2("Adding", addr, "to lo0, needing password for", cmd)
-				err := cmd.Run()
-				if err != nil {
-					dbg.Error("Couldn't add", addr, "to lo0")
-					addr = ""
-				}
-			}
-			if addr != "" {
-				d.addresses[i-1] = addr
-			}
-		}
+	d.addresses = make([]string, d.servers)
+	for i := range d.addresses {
+		d.addresses[i] = "localhost" + strconv.Itoa(i)
 	}
-	dbg.Lvl1("Addresses are", d.addresses)
 	d.sc, err = sim.Setup(d.runDir, d.addresses)
 	if err != nil {
 		return err
@@ -152,27 +146,13 @@ func (d *Localhost) Start(args ...string) error {
 	os.Chdir(d.runDir)
 	dbg.Lvl4("Localhost: chdir into", d.runDir)
 	ex := d.runDir + "/" + d.Simulation
-	//dbg.LLvl4("Localhost: in Start() => hosts", d.hosts)
 	d.running = true
-	dbg.Lvl1("Starting", len(d.sc.EntityList.List), "applications of", ex)
-	if d.servers > 200 && runtime.GOOS == "darwin" {
-		files, err := exec.Command("ulimit", "-n").Output()
-		if err != nil {
-			dbg.Fatal("Couldn't check for file-limit:", err)
-		}
-		filesNbr, err := strconv.Atoi(strings.TrimSpace(string(files)))
-		if err != nil {
-			dbg.Fatal("Couldn't convert", files, "to a number:", err)
-		}
-		if filesNbr < d.servers {
-			dbg.Fatalf("Maximum open files is too small. Please run the following command:\n"+
-				"ulimit -n %d\n", d.servers*2)
-		}
-	}
-	for index, address := range d.addresses {
+	dbg.Lvl1("Starting", d.servers, "applications of", ex)
+	for index := 0; index < d.servers; index++ {
 		d.wg_run.Add(1)
-		dbg.Lvl3("Starting", index, "=", address)
-		cmdArgs := []string{"-address", address, "-monitor",
+		dbg.Lvl3("Starting", index)
+		host := "localhost" + strconv.Itoa(index)
+		cmdArgs := []string{"-address", host, "-monitor",
 			"localhost:" + strconv.Itoa(monitor.SinkPort),
 			"-simul", d.Simulation,
 			"-debug", strconv.Itoa(dbg.DebugVisible),
@@ -191,7 +171,7 @@ func (d *Localhost) Start(args ...string) error {
 			}
 			d.wg_run.Done()
 			dbg.Lvl3("host (index", i, ")", h, "done")
-		}(index, address)
+		}(index, host)
 	}
 	return nil
 }

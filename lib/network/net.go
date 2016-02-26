@@ -203,7 +203,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		// Sending 'length' bytes
 		n, err := c.Conn.Write(b[:length])
 		if err != nil {
-			dbg.Error("Couldn't write chunk")
+			dbg.Error("Couldn't write chunk starting at", sent, "size", length)
 			return handleError(err)
 		}
 		sent += Size(n)
