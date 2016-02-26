@@ -145,10 +145,11 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	local := sda.NewLocalTest()
-	hosts, el, _ := local.GenTree(2, true, false)
+	hosts, el, _ := local.GenTree(2, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
+	go h2.ProcessMessages()
 
 	// Check that h2 sends back an empty list if it is unknown
 	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
@@ -177,6 +178,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("List should be equal to original list")
 	}
 
+	go h1.ProcessMessages()
 	// And test whether it gets stored correctly
 	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
 	if err != nil {

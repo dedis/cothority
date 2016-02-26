@@ -66,7 +66,7 @@ func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
 func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := GenLocalHosts(n, connect, true)
+	hosts := GenLocalHosts(n, connect, connect)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.Id] = host
 		l.Overlays[host.Entity.Id] = host.overlay

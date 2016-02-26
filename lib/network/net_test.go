@@ -296,7 +296,10 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 		t.Fatal("Received a non-wanted packet.\n")
 	}
 
-	c.Close()
+	err = c.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
 	s.wg.Done()
 }
 

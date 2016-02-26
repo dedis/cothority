@@ -267,6 +267,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 func (h *Host) ProcessMessages() {
 	for {
 		var err error
+		dbg.Lvl3("Waiting for message")
 		data := h.receive()
 		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {

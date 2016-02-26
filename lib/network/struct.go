@@ -58,6 +58,7 @@ type Conn interface {
 // TcpHost is the underlying implementation of
 // Host using Tcp as a communication channel
 type TcpHost struct {
+	// TODO: replace pointers to Mutexes with values
 	// A list of connection maintained by this host
 	peers map[string]Conn
 	// its listeners
