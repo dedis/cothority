@@ -118,6 +118,7 @@ func TestSecureMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
+	// XXX use channels instead of `time.Sleep`
 	time.Sleep(time.Second)
 	_, err := h2.Open(entity1)
 	if err != nil {

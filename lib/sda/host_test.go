@@ -39,7 +39,7 @@ func TestHostClose(t *testing.T) {
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h1 = sda.NewLocalHost(2002)
-	h1.Listen()
+	err = h1.Listen()
 	if err != nil {
 		t.Fatal("Couldn't re-open listener")
 	}

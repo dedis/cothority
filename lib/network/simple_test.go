@@ -45,6 +45,7 @@ func TestSimple(t *testing.T) {
 		}
 		close(done)
 	}()
+	// XXX use channels instead of `time.Sleep`
 	time.Sleep(1 * time.Second)
 	conn, err := client.Open("localhost:2000")
 	if err != nil {
