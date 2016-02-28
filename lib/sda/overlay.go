@@ -23,7 +23,7 @@ type Overlay struct {
 	// false = NOT DONE
 	// true = DONE
 	nodeInfo map[uuid.UUID]bool
-	nodeLock *sync.Mutex
+	nodeLock sync.Mutex
 	// mapping from Tree.Id to Tree
 	trees    map[uuid.UUID]*Tree
 	treesMut sync.Mutex
@@ -40,7 +40,6 @@ func NewOverlay(h *Host) *Overlay {
 		host:        h,
 		nodes:       make(map[uuid.UUID]*Node),
 		nodeInfo:    make(map[uuid.UUID]bool),
-		nodeLock:    new(sync.Mutex),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
 		cache:       NewTreeNodeCache(),

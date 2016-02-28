@@ -63,8 +63,6 @@ type ByzCoin struct {
 	// transactions is the slice of transactions that contains transactions
 	// coming from clients
 	transactions []blkparser.Tx
-	// lock associated with the transaction pool for concurrent access
-	transactionLock *sync.Mutex
 	// last block computed
 	lastBlock string
 	// last key block computed

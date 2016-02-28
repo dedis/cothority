@@ -22,7 +22,7 @@ type ByzCoinServer struct {
 	// transactions pool where all the incoming transactions are stored
 	transactions []blkparser.Tx
 	// lock associated
-	transactionLock *sync.Mutex
+	transactionLock sync.Mutex
 	// how many transactions should we give to an instance
 	blockSize int
 	timeOutMs uint64
@@ -44,7 +44,6 @@ type ByzCoinServer struct {
 // to efficiently give the transactions to the ByzCoin instances.
 func NewByzCoinServer(blockSize int, timeOutMs uint64, fail uint) *ByzCoinServer {
 	s := &ByzCoinServer{
-		transactionLock:    new(sync.Mutex),
 		blockSize:          blockSize,
 		timeOutMs:          timeOutMs,
 		fail:               fail,

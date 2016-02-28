@@ -65,15 +65,15 @@ type Host struct {
 	isClosing bool
 	// lock associated to access network connections
 	// and to access entities also.
-	networkLock *sync.Mutex
+	networkLock sync.Mutex
 	// lock associated to access entityLists
-	entityListsLock *sync.Mutex
+	entityListsLock sync.Mutex
 	// lock associated to access trees
-	treesLock *sync.Mutex
+	treesLock sync.Mutex
 	// lock associated with pending TreeMarshal
-	pendingTreeLock *sync.Mutex
+	pendingTreeLock sync.Mutex
 	// lock associated with pending SDAdata
-	pendingSDAsLock *sync.Mutex
+	pendingSDAsLock sync.Mutex
 	// working address is mostly for debugging purposes so we know what address
 	// is known as right now
 	workingAddress string
@@ -97,11 +97,6 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		networkChan:        make(chan network.NetworkMessage, 1),
 		Closed:             make(chan bool),
 		isClosing:          false,
-		networkLock:        &sync.Mutex{},
-		entityListsLock:    &sync.Mutex{},
-		treesLock:          &sync.Mutex{},
-		pendingTreeLock:    &sync.Mutex{},
-		pendingSDAsLock:    &sync.Mutex{},
 	}
 
 	h.overlay = NewOverlay(h)

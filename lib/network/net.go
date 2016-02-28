@@ -36,10 +36,10 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTcpHost() *TcpHost {
 	return &TcpHost{
-		peers:         make(map[string]Conn),
-		quit:          make(chan bool),
-		constructors:  DefaultConstructors(Suite),
-		quitListener:  make(chan bool),
+		peers:        make(map[string]Conn),
+		quit:         make(chan bool),
+		constructors: DefaultConstructors(Suite),
+		quitListener: make(chan bool),
 	}
 }
 
@@ -156,7 +156,7 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 		// if we could not read everything yet
 		if Size(buffer.Len()) < s {
 			// make b size = bytes that we still need to read (no more no less)
-			b = b[:s - read]
+			b = b[:s-read]
 		}
 	}
 
