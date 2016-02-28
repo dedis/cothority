@@ -15,7 +15,6 @@ import (
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"os"
 )
 
 // How many times should we try to connect
