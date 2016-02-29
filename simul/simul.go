@@ -43,25 +43,8 @@ var build = ""
 var machines = 3
 var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
-
-<<<<<<< HEAD
-=======
-// SHORT TERM solution of referencing
-// the different apps.
-// TODO: make the lib/app/*COnfig.go have their own reference
-// so they can issue Stats, read their own config depending on platform,
-// etc etc
-const (
-	ShamirSign string = "shamir"
-	CollSign   string = "sign"
-	CollStamp  string = "stamp"
-	Naive      string = "naive"
-	NTree      string = "ntree"
-)
-
 var debugVisible int
 
->>>>>>> 58a7d24807c97f83ff0e04a4571789886ba07231
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
