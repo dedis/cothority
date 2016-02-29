@@ -55,7 +55,6 @@ func TestRegister(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
-	// TODO make this race condition free:
 	dbg.TestOutput(testing.Verbose(), 4)
 	gotConnect := make(chan bool)
 	fn := func(s Conn) {
