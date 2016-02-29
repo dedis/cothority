@@ -43,8 +43,8 @@ func Lvld(lvl int, args ...interface{}) {
 	Lvl(lvl, args...)
 }
 func Lvl(lvl int, args ...interface{}) {
-	debugMut.RLock()
-	defer debugMut.RUnlock()
+	debugMut.Lock()
+	defer debugMut.Unlock()
 
 	if lvl > debugVisible {
 		return
