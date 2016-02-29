@@ -96,11 +96,6 @@ func (t *TcpHost) Close() error {
 			if err := t.listener.Close(); err != nil {
 				return err
 			}
-			//if err := t.lnFile.Close(); err != nil {
-			//	dbg.Error(err)
-			//	// XXX should we care about this as an real error?
-			//	return err
-			//}
 		}
 		select {
 		case <-t.quitListener:
@@ -281,10 +276,6 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 		dbg.Print("Retrying to listen on", global)
 	}
 
-	//t.lnFile, err = ln.(*net.TCPListener).File()
-	//if err != nil {
-	//	dbg.Error("Couldn't store OS filehandler of listener", err)
-	//}
 	t.listeningLock.Unlock()
 	for {
 		conn, err := t.listener.Accept()

@@ -63,7 +63,6 @@ type TcpHost struct {
 	peersMut sync.Mutex
 	// its listeners
 	listener net.Listener
-	//lnFile   *os.File
 	// the close channel used to indicate to the listener we want to quit
 	quit chan bool
 	// quitListener is a channel to indicate to the closing function that the
