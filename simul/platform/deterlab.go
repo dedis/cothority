@@ -32,7 +32,6 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
@@ -235,7 +234,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	dbg.Lvl3("Creating hosts")
 	deter.createHosts()
 	dbg.Lvl3("Writing the config file :", deter)
-	app.WriteTomlConfig(deter, deterConfig, d.deployDir)
+	sda.WriteTomlConfig(deter, deterConfig, d.deployDir)
 
 	simulConfig, err = sim.Setup(d.deployDir, deter.Virt)
 	if err != nil {
@@ -329,7 +328,7 @@ func (d *Deterlab) ReadConfig(name ...string) {
 	if len(name) > 0 {
 		configName = name[0]
 	}
-	err := app.ReadTomlConfig(d, configName)
+	err := sda.ReadTomlConfig(d, configName)
 	_, caller, line, _ := runtime.Caller(1)
 	who := caller + ":" + strconv.Itoa(line)
 	if err != nil {
@@ -366,7 +365,7 @@ func (d *Deterlab) createHosts() error {
 // public key for a more easy communication
 func (d *Deterlab) LoadAndCheckDeterlabVars() {
 	deter := Deterlab{}
-	err := app.ReadTomlConfig(&deter, "deter.toml", d.deterDir)
+	err := sda.ReadTomlConfig(&deter, "deter.toml", d.deterDir)
 	d.Host, d.Login, d.Project, d.Experiment, d.ProxyAddress, d.MonitorAddress =
 		deter.Host, deter.Login, deter.Project, deter.Experiment,
 		deter.ProxyAddress, deter.MonitorAddress
@@ -398,7 +397,7 @@ func (d *Deterlab) LoadAndCheckDeterlabVars() {
 		d.ProxyAddress = readString("Please enter the proxy redirection address", "localhost")
 	}
 
-	app.WriteTomlConfig(*d, "deter.toml", d.deterDir)
+	sda.WriteTomlConfig(*d, "deter.toml", d.deterDir)
 }
 
 // Shows a messages and reads in a string, eventually returning a default (dft) string

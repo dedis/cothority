@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/suites"
 )
 
 // Default port for the conode-setup - the stamping-request port
@@ -62,7 +62,10 @@ type BitCoSiMessage struct {
 func (sr *BlockReply) MarshalJSON() ([]byte, error) {
 	type Alias BlockReply
 	var b bytes.Buffer
-	suite := app.GetSuite(sr.SuiteStr)
+	suite, err := suites.StringToSuite(sr.SuiteStr)
+	if err != nil {
+		return nil, err
+	}
 	//dbg.Print("Preparing abstracts")
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic); err != nil {
 		dbg.Lvl1("encoding stampreply response/challenge/AggCommit:", err)
@@ -82,7 +85,10 @@ func (sr *BlockReply) MarshalJSON() ([]byte, error) {
 func (sr *BlockReply) UnmarshalJSON(dataJSON []byte) error {
 	type Alias BlockReply
 	//dbg.Print("Starting unmarshal")
-	suite := app.GetSuite(sr.SuiteStr)
+	suite, err := suites.StringToSuite(sr.SuiteStr)
+	if err != nil {
+		return err
+	}
 	aux := &struct {
 		SignatureInfo []byte
 		Response      abstract.Secret

@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/dedis/cothority/lib/app"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -75,10 +74,10 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
 	// write it
-	app.WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
+	WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
 	// decode it
 	var decoded sda.EntityListToml
-	if err := app.ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
+	if err := ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
 		t.Fatal("COuld not read from file the entityList")
 	}
 	decodedList := decoded.EntityList(tSuite)
