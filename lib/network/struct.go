@@ -84,7 +84,7 @@ type TcpConn struct {
 	Endpoint string
 
 	// The connection used
-	Conn net.Conn
+	conn net.Conn
 
 	// closed indicator
 	closed    bool
