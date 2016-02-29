@@ -268,21 +268,25 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
 	global, _ := cliutils.GlobalBind(addr)
-	ln, err := net.Listen("tcp", global)
-	if err != nil {
-		return errors.New("Error opening listener: " + err.Error())
-	}
-	t.listener = ln
-	//t.lnFile, err = ln.(*net.TCPListener).File()
-	if err != nil {
-		dbg.Error("Couldn't store OS filehandler of listener", err)
-	}
-	var unlocked bool
-	for {
-		if !unlocked {
-			unlocked = true
+	for i := 0; i < maxRetry; i++ {
+		ln, err := net.Listen("tcp", global)
+		if err == nil {
+			t.listener = ln
+			break
+		} else if i == maxRetry-1 {
 			t.listeningLock.Unlock()
+			return errors.New("Error opening listener: " + err.Error())
 		}
+		time.Sleep(waitRetry)
+		dbg.Print("Retrying to listen on", global)
+	}
+
+	//t.lnFile, err = ln.(*net.TCPListener).File()
+	//if err != nil {
+	//	dbg.Error("Couldn't store OS filehandler of listener", err)
+	//}
+	t.listeningLock.Unlock()
+	for {
 		conn, err := t.listener.Accept()
 		if err != nil {
 			select {
@@ -429,7 +433,7 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().Id != e.Id {
-		return fmt.Errorf("Entity received during negotiation is wrong. WARNING")
+		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}
 
 	return nil

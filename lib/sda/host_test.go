@@ -24,12 +24,16 @@ func TestHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
+	time.Sleep(time.Second)
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h1.Listen()
-	h2.Connect(h1.Entity)
-	err := h1.Close()
+	_, err := h2.Connect(h1.Entity)
+	if err != nil {
+		t.Fatal("Couldn't Connect()", err)
+	}
+	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
@@ -54,12 +58,14 @@ func TestHostClose(t *testing.T) {
 }
 
 func TestHostClose2(t *testing.T) {
+	time.Sleep(time.Second)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
+	defer local.CloseAll()
+
 	_, _, tree := local.GenTree(2, false, true)
 	dbg.Lvl3(tree.Dump())
 	time.Sleep(time.Millisecond * 100)
-	local.CloseAll()
 	dbg.Lvl3("Done")
 }
 

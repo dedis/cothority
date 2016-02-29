@@ -64,7 +64,6 @@ type Host struct {
 	Closed    chan bool
 	isClosing bool
 	// lock associated to access network connections
-	// and to access entities also.
 	networkLock sync.Mutex
 	// lock associated to access entityLists
 	entityListsLock sync.Mutex
@@ -175,7 +174,7 @@ func (h *Host) Listen() {
 		h.handleConn(c)
 	}
 	go func() {
-		dbg.Lvl3("Listening in", h.workingAddress)
+		dbg.Lvl3("Try listenting on:", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
@@ -191,6 +190,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	h.networkLock.Lock()
 	c, err = h.host.Open(id)
 	h.networkLock.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -422,6 +422,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 				}
 				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", e)
 			}
+			h.networkLock.Unlock()
 			/*     case <-time.After(10 * timeOut):*/
 			//// FIXME make this configurable
 			//dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)

@@ -34,7 +34,6 @@ import (
 	"strconv"
 )
 
-var deter platform.Deterlab
 var kill = false
 
 func init() {
@@ -42,7 +41,8 @@ func init() {
 }
 
 func main() {
-	deter.ReadConfig()
+	// init with deter.toml
+	deter := platform.DeterFromConfig()
 	flag.Parse()
 
 	// kill old processes
@@ -74,7 +74,7 @@ func main() {
 				// locally started processes
 				cliutils.SshRun("", h, "sudo pkill -9 -f '\\./'")
 				time.Sleep(1 * time.Second)
-				if dbg.DebugVisible > 3 {
+				if dbg.DebugVisible() > 3 {
 					dbg.Lvl4("Cleaning report:")
 					cliutils.SshRunStdout("", h, "ps aux")
 				}
@@ -120,7 +120,7 @@ func main() {
 	// Proxy will listen on Sink:SinkPort and redirect every packet to
 	// RedirectionAddress:SinkPort-1. With remote tunnel forwarding it will
 	// be forwarded to the real sink
-	proxyAddress := deter.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort+1)
+	proxyAddress := deter.ProxyAddress + ":" + strconv.Itoa(deter.MonitorPort+1)
 	dbg.Lvl2("Launching proxy redirecting to", proxyAddress)
 	err = monitor.Proxy(proxyAddress)
 	if err != nil {
@@ -135,13 +135,13 @@ func main() {
 		go func(phys, internal string) {
 			//dbg.Lvl4("running on", phys, cmd)
 			defer wg.Done()
-			monitorAddr := deter.MonitorAddress + ":" + strconv.Itoa(monitor.SinkPort)
+			monitorAddr := deter.MonitorAddress + ":" + strconv.Itoa(deter.MonitorPort)
 			dbg.Lvl4("Starting servers on physical machine ", internal, "with monitor = ",
 				monitorAddr)
 			args := " -address=" + internal +
 				" -simul=" + deter.Simulation +
 				" -monitor=" + monitorAddr +
-				" -debug=" + strconv.Itoa(dbg.DebugVisible)
+				" -debug=" + strconv.Itoa(dbg.DebugVisible())
 			dbg.Lvl3("Args is", args)
 			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./cothority "+
 				args)

@@ -69,14 +69,18 @@ func TestMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	h2.Open("localhost:2000")
-	err := h1.Close()
+	dbg.Lvl3("Open connection to", h2)
+	_, err := h2.Open("localhost:2000")
 	if err != nil {
-		t.Fatal("Couldn't close:", err)
+		t.Fatal(h2, "couldn't Open() connection to", h1, err)
+	}
+	err = h1.Close()
+	if err != nil {
+		t.Fatal(h1, "couldn't Close():", err)
 	}
 	err = h2.Close()
 	if err != nil {
-		t.Fatal("Couldn't close:", err)
+		t.Fatal("Couldn't Close()", err)
 	}
 	<-done
 
@@ -88,7 +92,11 @@ func TestMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	h2.Open("localhost:2000")
+	_, err = h2.Open("localhost:2000")
+	if err != nil {
+		t.Fatal(h2, "couldn't Open() connection to", h3, err)
+	}
+	time.Sleep(time.Millisecond * 500)
 	err = h3.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h3:", err)
@@ -147,6 +155,7 @@ func TestSecureMultiClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Millisecond * 100)
+	// FIXME race condition ...
 	err = h3.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)

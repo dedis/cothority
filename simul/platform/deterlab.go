@@ -96,11 +96,11 @@ func (d *Deterlab) Configure() {
 	d.deterDir = pwd + "/platform/deterlab"
 	d.deployDir = d.deterDir + "/remote"
 	d.buildDir = d.deterDir + "/build"
-	d.MonitorPort = monitor.SinkPort
+	d.MonitorPort = monitor.DefaultSinkPort
 	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
 	d.LoadAndCheckDeterlabVars()
 
-	d.Debug = dbg.DebugVisible
+	d.Debug = dbg.DebugVisible()
 	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in runconfig")
 	}
@@ -274,7 +274,7 @@ func (d *Deterlab) Start(args ...string) error {
 	// proxy => the proxy redirects packets to the same port the sink is
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
-	redirection := strconv.Itoa(monitor.SinkPort+1) + ":" + d.ProxyAddress + ":" + strconv.Itoa(monitor.SinkPort)
+	redirection := strconv.Itoa(d.MonitorPort+1) + ":" + d.ProxyAddress + ":" + strconv.Itoa(d.MonitorPort)
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
 		redirection, fmt.Sprintf("%s@%s", d.Login, d.Host)}
 	exCmd := exec.Command("ssh", cmd...)
@@ -323,7 +323,8 @@ func (d *Deterlab) Wait() error {
 }
 
 // Reads in the deterlab-config and drops out if there is an error
-func (d *Deterlab) ReadConfig(name ...string) {
+func DeterFromConfig(name ...string) *Deterlab {
+	d := &Deterlab{}
 	configName := "deter.toml"
 	if len(name) > 0 {
 		configName = name[0]
@@ -334,8 +335,8 @@ func (d *Deterlab) ReadConfig(name ...string) {
 	if err != nil {
 		dbg.Fatal("Couldn't read config in", who, ":", err)
 	}
-	dbg.DebugVisible = d.Debug
-	monitor.SinkPort = d.MonitorPort
+	dbg.SetDebugVisible(d.Debug)
+	return d
 }
 
 /*
