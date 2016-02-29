@@ -9,7 +9,7 @@ func init() {
 }
 
 func ExampleLevel2() {
-	dbg.DebugVisible = 2
+	dbg.SetDebugVisible(2)
 	dbg.Lvl1("Level1")
 	dbg.Lvl2("Level2")
 	dbg.Lvl3("Level3")

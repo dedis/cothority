@@ -14,7 +14,7 @@ var testFileDeter = `Machines = 5`
 func TestReadConfig(t *testing.T) {
 	conf := app.ConfigColl{}
 
-	dbg.DebugVisible = 5
+	dbg.SetDebugVisible(5)
 
 	writeFile("/tmp/app.toml", testFileApp)
 	writeFile("/tmp/deter.toml", testFileDeter)

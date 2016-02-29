@@ -65,7 +65,7 @@ func (d *Localhost) Configure() {
 	pwd, _ := os.Getwd()
 	d.runDir = pwd + "/platform/localhost"
 	d.localDir = pwd
-	d.debug = dbg.DebugVisible
+	d.debug = dbg.DebugVisible()
 	d.running = false
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
@@ -158,9 +158,9 @@ func (d *Localhost) Start(args ...string) error {
 		dbg.Lvl3("Starting", index)
 		host := "localhost" + strconv.Itoa(index)
 		cmdArgs := []string{"-address", host, "-monitor",
-			"localhost:" + strconv.Itoa(monitor.SinkPort),
+			"localhost:" + strconv.Itoa(monitor.DefaultSinkPort),
 			"-simul", d.Simulation,
-			"-debug", strconv.Itoa(dbg.DebugVisible),
+			"-debug", strconv.Itoa(dbg.DebugVisible()),
 		}
 		cmdArgs = append(args, cmdArgs...)
 		dbg.Lvl3("CmdArgs are", cmdArgs)

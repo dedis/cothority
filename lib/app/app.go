@@ -56,7 +56,7 @@ func ReadConfig(conf interface{}, dir ...string) {
 	}
 	debug := reflect.ValueOf(conf).Elem().FieldByName("Debug")
 	if debug.IsValid() {
-		dbg.DebugVisible = debug.Interface().(int)
+		dbg.SetDebugVisible(debug.Interface().(int))
 	}
 	FlagInit()
 	flag.Parse()

@@ -158,10 +158,15 @@ var ErrorType uuid.UUID = uuid.Nil
 // something went wrong.
 var EmptyApplicationMessage = NetworkMessage{MsgType: ErrorType}
 
+// global mutex for MarshalRegisteredType
+var marshalLock sync.Mutex
+
 // MarshalRegisteredType will marshal a struct with its respective type into a
 // slice of bytes. That slice of bytes can be then decoded in
 // UnmarshalRegisteredType.
 func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
+	marshalLock.Lock()
+	defer marshalLock.Unlock()
 	var msgType uuid.UUID
 	if msgType = TypeFromData(data); msgType == ErrorType {
 		return nil, fmt.Errorf("Type of message %s not registered to the network library.", reflect.TypeOf(data))

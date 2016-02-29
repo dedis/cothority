@@ -28,14 +28,17 @@ import (
 
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
-var Sink = "0.0.0.0"
-var SinkPort = 10000
+const Sink = "0.0.0.0"
+const DefaultSinkPort = 10000
 
 // Monitor struct is used to collect measures and make the statistics about
 // them. It takes a stats object so it update that in a concurrent-safe manner
 // for each new measure it receives.
 type Monitor struct {
 	listener net.Listener
+
+	// XXX
+	SinkPort int
 
 	// Current conections
 	conns map[string]net.Conn
@@ -60,11 +63,11 @@ type Monitor struct {
 // NewMonitor returns a new monitor given the stats
 func NewMonitor(stats *Stats) *Monitor {
 	return &Monitor{
-		conns:      make(map[string]net.Conn),
-		stats:      stats,
-		mutexStats: sync.Mutex{},
-		measures:   make(chan Measure),
-		done:       make(chan string),
+		conns:    make(map[string]net.Conn),
+		stats:    stats,
+		SinkPort: DefaultSinkPort,
+		measures: make(chan Measure),
+		done:     make(chan string),
 	}
 }
 
@@ -72,14 +75,14 @@ func NewMonitor(stats *Stats) *Monitor {
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func (m *Monitor) Listen() error {
-	ln, err := net.Listen("tcp", Sink+":"+strconv.Itoa(SinkPort))
+	ln, err := net.Listen("tcp", Sink+":"+strconv.Itoa(m.SinkPort))
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
 	m.listenerLock.Lock()
 	m.listener = ln
 	m.listenerLock.Unlock()
-	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
 	finished := false
 	go func() {
 		for {

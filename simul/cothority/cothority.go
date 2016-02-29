@@ -28,18 +28,21 @@ var monitorAddress string
 // Simul is != "" if this node needs to start a simulation of that protocol
 var simul string
 
+var debugVisible int
+
 // Initialize before 'init' so we can directly use the fields as parameters
 // to 'Flag'
 func init() {
 	flag.StringVar(&hostAddress, "address", "", "our address to use")
 	flag.StringVar(&simul, "simul", "", "start simulating that protocol")
 	flag.StringVar(&monitorAddress, "monitor", "", "remote monitor")
-	flag.IntVar(&dbg.DebugVisible, "debug", 1, "verbosity: 0-5")
+	flag.IntVar(&debugVisible, "debug", 1, "verbosity: 0-5")
 }
 
 // Main starts the host and will setup the protocol.
 func main() {
 	flag.Parse()
+	dbg.SetDebugVisible(debugVisible)
 	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible, monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", hostAddress)
