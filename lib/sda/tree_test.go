@@ -74,10 +74,10 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
 	// write it
-	WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
+	sda.WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
 	// decode it
 	var decoded sda.EntityListToml
-	if err := ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
+	if err := sda.ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
 		t.Fatal("COuld not read from file the entityList")
 	}
 	decodedList := decoded.EntityList(tSuite)
