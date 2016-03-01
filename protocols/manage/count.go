@@ -72,7 +72,8 @@ func (p *ProtocolCount) Myself() string {
 // Dispatch listens for all channels and waits for a timeout in case nothing
 // happens for a certain duration
 func (p *ProtocolCount) Dispatch() error {
-	for {
+	running := true
+	for running {
 		dbg.Lvl3(p.Myself(), "waiting for message during", p.Timeout)
 		select {
 		case pc := <-p.PrepareCountChan:
@@ -82,6 +83,7 @@ func (p *ProtocolCount) Dispatch() error {
 			p.FuncPC()
 		case c := <-p.CountChan:
 			p.FuncC(c)
+			running = false
 		case _ = <-p.NodeIsUpChan:
 			if p.Parent() != nil {
 				p.SendTo(p.Parent(), &NodeIsUp{})
@@ -93,13 +95,12 @@ func (p *ProtocolCount) Dispatch() error {
 			if p.IsRoot() {
 				dbg.Lvl2("Didn't get all children in time:", p.Replies)
 				p.Count <- p.Replies
-				p.Done()
-				return nil
+				running = false
 			}
-		case _ = <-p.Quit:
-			return nil
 		}
 	}
+	p.Done()
+	return nil
 }
 
 // FuncPC handles PrepareCount messages. These messages go down the tree and
@@ -114,7 +115,7 @@ func (p *ProtocolCount) FuncPC() {
 			p.SendTo(c, &PrepareCount{Timeout: p.Timeout})
 		}
 	} else {
-		p.FuncC(nil)
+		p.CountChan <- nil
 	}
 }
 
@@ -131,7 +132,7 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 	} else {
 		p.Count <- count
 	}
-	p.Quit <- true
+	dbg.Lvl3(p.Node.Entity().First(), "Done")
 	p.Done()
 }
 
