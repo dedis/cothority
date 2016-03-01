@@ -243,7 +243,10 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	// And close all our listeners
 	if localhosts {
 		for _, l := range listeners {
-			l.Close()
+			err := l.Close()
+			if err != nil {
+				dbg.Fatal("Couldn't close port:", l, err)
+			}
 		}
 	}
 
