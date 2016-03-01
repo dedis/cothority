@@ -9,9 +9,12 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 )
 
 func TestMonitor(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
 	m["servers"] = "1"
@@ -43,6 +46,8 @@ func TestMonitor(t *testing.T) {
 }
 
 func TestReadyNormal(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
@@ -87,6 +92,8 @@ func TestReadyNormal(t *testing.T) {
 }
 
 func TestKeyOrder(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
