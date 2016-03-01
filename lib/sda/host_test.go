@@ -46,18 +46,18 @@ func TestHostClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h1 = sda.NewLocalHost(2002)
-	h1.Listen()
-	c, err := h2.Connect(h1.Entity)
+	h3 := sda.NewLocalHost(2002)
+	h3.Listen()
+	c, err := h2.Connect(h3.Entity)
 	if err != nil {
-		t.Fatal(h2, "Couldn Connect() to", h1)
+		t.Fatal(h2, "Couldn Connect() to", h3)
 	}
-	dbg.Lvl3("Closing h1")
-	err = h1.Close()
+	dbg.Lvl3("Closing h3")
+	err = h3.Close()
 	if err != nil {
 		// try closing the underlying connection manually and fail
 		c.Close()
-		t.Fatal("Couldn't Close()", h1)
+		t.Fatal("Couldn't Close()", h3)
 	}
 }
 

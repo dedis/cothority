@@ -212,6 +212,13 @@ func (h *Host) Close() error {
 	// XXX why wait 100 ms?
 	time.Sleep(time.Millisecond * 100)
 	close(h.Closed)
+	for _, c := range h.connections {
+		dbg.Lvl3("Closing connection", c)
+		err := c.Close()
+		if err != nil {
+			return err
+		}
+	}
 	err := h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
 
@@ -263,7 +270,12 @@ func (h *Host) ProcessMessages() {
 	for {
 		var err error
 		dbg.Lvl3("Waiting for message")
-		data := h.receive()
+		var data network.NetworkMessage
+		select {
+		case data = <-h.networkChan:
+		case <-h.Closed:
+			return
+		}
 		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
 		case SDADataMessage:
@@ -385,21 +397,28 @@ func (h *Host) handleConn(c network.SecureConn) {
 	doneChan := make(chan bool)
 	go func() {
 		for {
+			dbg.Lvl3(h.Entity.First(), "Starting to select for", c)
 			select {
 			case <-doneChan:
-				dbg.Lvl3("Closing", h.Entity.Addresses, c)
+				// Not really useful here, as it will block at the
+				// c.Receive-line below anyway
+				dbg.Lvl3("Closing handleConn at", h.Entity.First(), c)
 				return
 			default:
 				ctx := context.TODO()
 				am, err := c.Receive(ctx)
-				// So the receiver can know about the error
-				am.SetError(err)
-				am.From = address
-				dbg.Lvl5("Got message", am)
-				if err != nil {
-					errorChan <- err
-				} else {
-					msgChan <- am
+				if !h.isClosing {
+					// So the receiver can know about the error
+					am.SetError(err)
+					am.From = address
+					dbg.Lvl5("Got message", am)
+					if err != nil {
+						dbg.Lvl3(h.Entity.First(), "Sending error", h.isClosing, err)
+						errorChan <- err
+						dbg.Lvl3(h.Entity.First(), "Error sent")
+					} else {
+						msgChan <- am
+					}
 				}
 			}
 		}
@@ -407,8 +426,9 @@ func (h *Host) handleConn(c network.SecureConn) {
 	for {
 		select {
 		case <-h.Closed:
-			dbg.Lvl3(h.Entity.First(), " closed during 'for-loop'", c.Entity().First())
-			doneChan <- true
+			dbg.Lvl3(h.Entity.First(), "closed during 'for-loop'", c.Entity().First())
+			close(doneChan)
+			dbg.Lvl3(h.Entity.First(), "sent message", c.Entity().First())
 			return
 		case am := <-msgChan:
 			dbg.Lvl4("Putting message into networkChan from", am.From)
@@ -418,6 +438,12 @@ func (h *Host) handleConn(c network.SecureConn) {
 			if !h.isClosing {
 				h.networkLock.Unlock()
 				if e == network.ErrClosed || e == network.ErrEOF || e == network.ErrTemp {
+					dbg.Lvl3(h.Entity.First(), "quitting for")
+					close(doneChan)
+					for len(errorChan) > 0 {
+						dbg.Lvl3(h.Entity.First(), "getting more errors", <-errorChan)
+					}
+					close(errorChan)
 					return
 				}
 				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", e)
