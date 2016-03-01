@@ -238,9 +238,9 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 		if processMessages {
 			go host.ProcessMessages()
 		}
-		if connect {
+		if connect && root != host {
 			if _, err := host.Connect(root.Entity); err != nil {
-				dbg.Fatal("Could not connect hosts")
+				dbg.Fatal(host.Entity.Addresses, "Could not connect hosts", root.Entity.Addresses)
 			}
 		}
 	}

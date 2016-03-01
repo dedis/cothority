@@ -55,9 +55,12 @@ func TestRegister(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
+	// TODO make this race condition free:
 	dbg.TestOutput(testing.Verbose(), 4)
+	gotConnect := make(chan bool)
 	fn := func(s Conn) {
 		dbg.Lvl3("Getting connection from", s)
+		gotConnect <- true
 	}
 	h1 := NewTcpHost()
 	h2 := NewTcpHost()
@@ -69,14 +72,17 @@ func TestMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	dbg.Lvl3("Open connection to", h2)
+	time.Sleep(time.Second)
+	dbg.Lvl3("Open connection to h2")
 	_, err := h2.Open("localhost:2000")
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h1, err)
 	}
+	// wait for the listener, then close h1 & h2:
+	<-gotConnect
 	err = h1.Close()
 	if err != nil {
-		t.Fatal(h1, "couldn't Close():", err)
+		t.Fatal("Couldn't Close():", err)
 	}
 	err = h2.Close()
 	if err != nil {
@@ -96,10 +102,15 @@ func TestMultiClose(t *testing.T) {
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h3, err)
 	}
-	time.Sleep(time.Millisecond * 500)
+	// wait for the listener and close h3 & h2
+	<-gotConnect
 	err = h3.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h3:", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close h2:", err)
 	}
 	<-done
 }
@@ -126,8 +137,7 @@ func TestSecureMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	// XXX use channels instead of `time.Sleep`
-	time.Sleep(time.Second)
+	// FIXME make sure the Listen() function was actually started
 	_, err := h2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't open h2:", err)
@@ -154,7 +164,6 @@ func TestSecureMultiClose(t *testing.T) {
 	if _, err := h2.Open(entity1); err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(time.Millisecond * 100)
 	// FIXME race condition ...
 	err = h3.Close()
 	if err != nil {

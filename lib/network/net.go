@@ -76,10 +76,14 @@ func (t *TcpHost) Close() error {
 			return handleError(err)
 		}
 	}
+
+	t.closedLock.Lock()
 	if !t.closed {
 		close(t.quit)
 	}
 	t.closed = true
+	t.closedLock.Unlock()
+
 	// lets see if we launched a listening routing
 	var listening bool
 	t.listeningLock.Lock()
@@ -96,11 +100,6 @@ func (t *TcpHost) Close() error {
 			if err := t.listener.Close(); err != nil {
 				return err
 			}
-			//if err := t.lnFile.Close(); err != nil {
-			//	dbg.Error(err)
-			//	// XXX should we care about this as an real error?
-			//	return err
-			//}
 		}
 		select {
 		case <-t.quitListener:
@@ -134,7 +133,7 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
 		}
 	}()
-	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
+	if err = binary.Read(c.conn, globalOrder, &s); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
 	c.receiveMutex.Lock()
@@ -144,7 +143,7 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	var buffer bytes.Buffer
 	for Size(buffer.Len()) < s {
 		// read the size of the next packet
-		n, err := c.Conn.Read(b)
+		n, err := c.conn.Read(b)
 		// if error then quit
 		if err != nil {
 			e := handleError(err)
@@ -192,7 +191,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
 	packetSize := Size(len(b))
-	if err := binary.Write(c.Conn, globalOrder, packetSize); err != nil {
+	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
 		dbg.Error("Couldn't write number of bytes")
 		return err
 	}
@@ -206,7 +205,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		}
 
 		// Sending 'length' bytes
-		n, err := c.Conn.Write(b[:length])
+		n, err := c.conn.Write(b[:length])
 		if err != nil {
 			dbg.Error("Couldn't write chunk starting at", sent, "size", length)
 			return handleError(err)
@@ -227,7 +226,7 @@ func (c *TcpConn) Close() error {
 	if c.closed == true {
 		return nil
 	}
-	err := c.Conn.Close()
+	err := c.conn.Close()
 	c.closed = true
 	if err != nil {
 		return handleError(err)
@@ -254,7 +253,7 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 	}
 	c := TcpConn{
 		Endpoint: name,
-		Conn:     conn,
+		conn:     conn,
 		host:     t,
 	}
 
@@ -281,10 +280,6 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 		dbg.Print("Retrying to listen on", global)
 	}
 
-	//t.lnFile, err = ln.(*net.TCPListener).File()
-	//if err != nil {
-	//	dbg.Error("Couldn't store OS filehandler of listener", err)
-	//}
 	t.listeningLock.Unlock()
 	for {
 		conn, err := t.listener.Accept()
@@ -299,7 +294,7 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 		}
 		c := TcpConn{
 			Endpoint: conn.RemoteAddr().String(),
-			Conn:     conn,
+			conn:     conn,
 			host:     t,
 		}
 		t.peersMut.Lock()
@@ -307,7 +302,6 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 		t.peersMut.Unlock()
 		fn(&c)
 	}
-	return nil
 }
 
 // NewSecureTcpHost returns a Secure Tcp Host
