@@ -9,16 +9,11 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 )
-
-// Some packet and their respective network type
-type TestMessage struct {
-	Point  abstract.Point
-	Secret abstract.Secret
-}
 
 type PublicPacket struct {
 	Point abstract.Point
@@ -29,13 +24,13 @@ type PublicPacket struct {
 // new messages without knowing the type and then check on the MsgType field
 // to cast to the right packet type (See below)
 var PublicType = RegisterMessageType(PublicPacket{})
-var TestMessageType = RegisterMessageType(TestMessage{})
 
 type TestRegisterS struct {
 	I int
 }
 
 func TestRegister(t *testing.T) {
+	defer testutil.AfterTest(t)
 	if TypeFromData(&TestRegisterS{}) != ErrorType {
 		t.Fatal("TestRegister should not yet be there")
 	}
@@ -55,6 +50,8 @@ func TestRegister(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	gotConnect := make(chan bool)
 	fn := func(s Conn) {
@@ -116,9 +113,13 @@ func TestMultiClose(t *testing.T) {
 
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
+	receiverStarted := make(chan bool)
 	fn := func(s SecureConn) {
-		dbg.Lvl3("Getting connection from", s)
+		dbg.Lvl3("Getting connection from", s.Entity().First())
+		receiverStarted <- true
 	}
 
 	kp1 := config.NewKeyPair(Suite)
@@ -136,11 +137,12 @@ func TestSecureMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	// FIXME make sure the Listen() function was actually started
+
 	_, err := h2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't open h2:", err)
 	}
+	<-receiverStarted
 	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
@@ -151,7 +153,6 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 	<-done
 	dbg.Lvl3("Finished first connection, starting 2nd")
-
 	h3 := NewSecureTcpHost(kp1.Secret, entity1)
 	go func() {
 		err = h3.Listen(fn)
@@ -160,10 +161,16 @@ func TestSecureMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	if _, err := h2.Open(entity1); err != nil {
+	sc, err := h2.Open(entity1)
+	if err != nil {
 		t.Fatal(err)
 	}
-	// FIXME race condition ...
+	err = sc.Close()
+	if err != nil {
+		t.Fatal("Couldn't close connection to entity1:", err)
+	}
+
+	<-receiverStarted
 	err = h3.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)
@@ -173,6 +180,8 @@ func TestSecureMultiClose(t *testing.T) {
 
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	opened := make(chan bool)
 	fn := func(s SecureConn) {
@@ -218,6 +227,8 @@ func TestSecureTcp(t *testing.T) {
 
 // Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	// Create one client + one server
 	clientHost := NewTcpHost()
 	serverHost := NewTcpHost()

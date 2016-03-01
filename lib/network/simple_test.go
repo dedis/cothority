@@ -2,11 +2,13 @@ package network
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 	"sync"
 	"testing"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
+	"github.com/satori/go.uuid"
+	"golang.org/x/net/context"
 )
 
 var SimplePacketType uuid.UUID
@@ -20,6 +22,8 @@ type SimplePacket struct {
 }
 
 func TestSimple(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	client := NewTcpHost()
 	clientName := "client"

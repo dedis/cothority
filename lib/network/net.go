@@ -324,9 +324,9 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 			TcpConn:       c,
 			SecureTcpHost: st,
 		}
-		// if negociation fails we drop the connection
+		// if negotiation fails we drop the connection
 		if err := stc.negotiateListen(); err != nil {
-			dbg.Error("Negociation failed:", err)
+			dbg.Error("Negotiation failed:", err)
 			stc.Close()
 			return
 		}
@@ -419,7 +419,7 @@ func (sc *SecureTcpConn) negotiateListen() error {
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
-// negotiateListen it also verifiy the Entity.
+// negotiateListen it also verify the Entity.
 func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	if err := sc.negotiateListen(); err != nil {
 		return err

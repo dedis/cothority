@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -24,6 +25,7 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // It generates one connection between each host and then starts sending
 // messages all around.
 func TestHugeConnections(t *testing.T) {
+	defer testutil.AfterTest(t)
 	// How many hosts are run
 	nbrHosts := 10
 	// 16MB of message size
