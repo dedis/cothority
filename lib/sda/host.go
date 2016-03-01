@@ -400,7 +400,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		am.From = address
 		dbg.Lvl5("Got message", am)
 		if err != nil {
-			dbg.Lvl3(h.Entity.First(), "Sending error", h.isClosing, err)
+			dbg.Lvl4(h.Entity.First(), "Sending error", h.isClosing, err)
 			h.networkLock.Lock()
 			if !h.isClosing {
 				h.networkLock.Unlock()
@@ -411,7 +411,6 @@ func (h *Host) handleConn(c network.SecureConn) {
 				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
 			}
 			h.networkLock.Unlock()
-			dbg.Lvl3(h.Entity.First(), "Error sent")
 		} else {
 			h.networkChan <- am
 		}
