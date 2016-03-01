@@ -392,70 +392,28 @@ func (h *Host) receive() network.NetworkMessage {
 // Handle a connection => giving messages to the MsgChans
 func (h *Host) handleConn(c network.SecureConn) {
 	address := c.Remote()
-	msgChan := make(chan network.NetworkMessage)
-	errorChan := make(chan error)
-	doneChan := make(chan bool)
-	go func() {
-		for {
-			dbg.Lvl3(h.Entity.First(), "Starting to select for", c)
-			select {
-			case <-doneChan:
-				// Not really useful here, as it will block at the
-				// c.Receive-line below anyway
-				dbg.Lvl3("Closing handleConn at", h.Entity.First(), c)
-				return
-			default:
-				ctx := context.TODO()
-				am, err := c.Receive(ctx)
-				if !h.isClosing {
-					// So the receiver can know about the error
-					am.SetError(err)
-					am.From = address
-					dbg.Lvl5("Got message", am)
-					if err != nil {
-						dbg.Lvl3(h.Entity.First(), "Sending error", h.isClosing, err)
-						errorChan <- err
-						dbg.Lvl3(h.Entity.First(), "Error sent")
-					} else {
-						msgChan <- am
-					}
-				}
-			}
-		}
-	}()
-	for {
-		select {
-		case <-h.Closed:
-			dbg.Lvl3(h.Entity.First(), "closed during 'for-loop'", c.Entity().First())
-			close(doneChan)
-			dbg.Lvl3(h.Entity.First(), "sent message", c.Entity().First())
-			return
-		case am := <-msgChan:
-			dbg.Lvl4("Putting message into networkChan from", am.From)
-			h.networkChan <- am
-		case e := <-errorChan:
+	for !h.isClosing {
+		ctx := context.TODO()
+		am, err := c.Receive(ctx)
+		// So the receiver can know about the error
+		am.SetError(err)
+		am.From = address
+		dbg.Lvl5("Got message", am)
+		if err != nil {
+			dbg.Lvl3(h.Entity.First(), "Sending error", h.isClosing, err)
 			h.networkLock.Lock()
 			if !h.isClosing {
 				h.networkLock.Unlock()
-				if e == network.ErrClosed || e == network.ErrEOF || e == network.ErrTemp {
+				if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
 					dbg.Lvl3(h.Entity.First(), "quitting for")
-					close(doneChan)
-					for len(errorChan) > 0 {
-						dbg.Lvl3(h.Entity.First(), "getting more errors", <-errorChan)
-					}
-					close(errorChan)
 					return
 				}
-				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", e)
+				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
 			}
 			h.networkLock.Unlock()
-			/*     case <-time.After(10 * timeOut):*/
-			//// FIXME make this configurable
-			//dbg.Lvl3("Timeout with connection", address, "on host", h.Entity.Addresses)
-			//// Only close our connection - if it is needed again,
-			//// it will be recreated
-			//doneChan <- true
-			/*return*/
+			dbg.Lvl3(h.Entity.First(), "Error sent")
+		} else {
+			h.networkChan <- am
 		}
 	}
 }
