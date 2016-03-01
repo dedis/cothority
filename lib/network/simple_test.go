@@ -5,8 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
+	"sync"
 	"testing"
-	"time"
 )
 
 var SimplePacketType uuid.UUID
@@ -25,9 +25,18 @@ func TestSimple(t *testing.T) {
 	clientName := "client"
 	server := NewTcpHost()
 	serverName := "server"
+
 	done := make(chan bool)
+	listenCB := make(chan bool)
+
+	srvConMu := sync.Mutex{}
+	cConMu := sync.Mutex{}
+
 	go func() {
 		err := server.Listen("localhost:2000", func(c Conn) {
+			listenCB <- true
+			srvConMu.Lock()
+			defer srvConMu.Unlock()
 			nm, _ := c.Receive(context.TODO())
 			if nm.MsgType != SimplePacketType {
 				c.Close()
@@ -38,21 +47,24 @@ func TestSimple(t *testing.T) {
 				t.Fatal("Not the right name")
 			}
 			c.Send(context.TODO(), &SimplePacket{serverName})
-			c.Close()
+			//c.Close()
 		})
 		if err != nil {
 			t.Fatal("Couldn't listen:", err)
 		}
 		close(done)
 	}()
-	// XXX use channels instead of `time.Sleep`
-	time.Sleep(1 * time.Second)
+	cConMu.Lock()
 	conn, err := client.Open("localhost:2000")
 	if err != nil {
 		t.Fatal(err)
 	}
+	// wait for the listen callback to be called at least once:
+	<-listenCB
+
 	conn.Send(context.TODO(), &SimplePacket{clientName})
 	nm, err := conn.Receive(context.TODO())
+	cConMu.Unlock()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,9 +75,14 @@ func TestSimple(t *testing.T) {
 	if sp.Name != serverName {
 		t.Fatal("Name no right")
 	}
+	cConMu.Lock()
 	if err := client.Close(); err != nil {
 		t.Fatal("Couldn't close client connection")
 	}
+	cConMu.Unlock()
+
+	srvConMu.Lock()
+	defer srvConMu.Unlock()
 	if err := server.Close(); err != nil {
 		t.Fatal("Couldn't close server connection")
 	}
