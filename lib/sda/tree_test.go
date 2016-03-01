@@ -288,19 +288,19 @@ func TestBinaryTrees(t *testing.T) {
 
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
-		t.Fatal("Tree with 1 children should be binary")
+		t.Fatal("Tree with 1 node should be binary")
 	}
 	tree, _ = genLocalTree(2, 2000)
 	if tree.IsBinary(tree.Root) {
-		t.Fatal("Tree with 2 children should NOT be binary")
+		t.Fatal("Tree with 2 nodes should NOT be binary")
 	}
 	tree, _ = genLocalTree(3, 2000)
 	if !tree.IsBinary(tree.Root) {
-		t.Fatal("Tree with 3 children should be binary")
+		t.Fatal("Tree with 3 nodes should be binary")
 	}
 	tree, _ = genLocalTree(4, 2000)
 	if tree.IsBinary(tree.Root) {
-		t.Fatal("Tree with 4 children should be binary")
+		t.Fatal("Tree with 4 nodes should NOT be binary")
 	}
 }
 
