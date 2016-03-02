@@ -121,7 +121,6 @@ func TestMultiClose(t *testing.T) {
 
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
-	t.Skip("Fixme data race in test (underlying API seems fine)")
 	defer testutil.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
@@ -133,7 +132,7 @@ func TestSecureMultiClose(t *testing.T) {
 
 	kp1 := config.NewKeyPair(Suite)
 	entity1 := NewEntity(kp1.Public, "localhost:2000")
-	entity3 := NewEntity(kp1.Public, "localhost:2000")
+	//entity3 := NewEntity(kp1.Public, "localhost:2000")
 	kp2 := config.NewKeyPair(Suite)
 	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
@@ -148,7 +147,7 @@ func TestSecureMultiClose(t *testing.T) {
 		done <- true
 	}()
 
-	s, err := h2.Open(entity1)
+	_, err := h2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't open h2:", err)
 	}
@@ -161,41 +160,33 @@ func TestSecureMultiClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
-	s.Close()
 	<-done
 
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h3 := NewSecureTcpHost(kp1.Secret, entity3)
 	receiverStarted2 := make(chan bool)
 	fn2 := func(s SecureConn) {
 		dbg.Lvl3("Getting connection from", s.Entity().First())
 		receiverStarted2 <- true
-		dbg.Lvl3("Got connection from", s.Entity().First())
-
 	}
 	done2 := make(chan bool)
 	go func() {
-		err = h3.Listen(fn2)
+		err := h1.Listen(fn2)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener:", err)
 		}
 		done2 <- true
 	}()
-	sc, err := h2.Open(entity3)
+	_, err = h2.Open(h1.entity)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = sc.Close()
+
+	<-receiverStarted2
+	err = h1.Close()
 	if err != nil {
-		t.Fatal("Couldn't close connection to entity1:", err)
+		t.Fatal("Couldn't close h1:", err)
 	}
 
-	if r := <-receiverStarted2; r == true {
-		err = h3.Close()
-		if err != nil {
-			t.Fatal("Couldn't close h3:", err)
-		}
-	}
 	<-done2
 }
 
