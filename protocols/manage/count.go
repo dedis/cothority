@@ -1,7 +1,6 @@
 package manage
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -62,11 +61,6 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 	p.RegisterChannel(&p.PrepareCountChan)
 	p.RegisterChannel(&p.NodeIsUpChan)
 	return p, nil
-}
-
-// Myself nicely displays who we are
-func (p *ProtocolCount) Myself() string {
-	return fmt.Sprint(p.Entity().Addresses, p.Node.TokenID())
 }
 
 // Dispatch listens for all channels and waits for a timeout in case nothing

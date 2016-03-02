@@ -4,6 +4,8 @@ import (
 	"errors"
 	"reflect"
 
+	"fmt"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -37,9 +39,8 @@ type Node struct {
 	onDoneCallback func() bool
 }
 
-// Bit-values for different messageTypeFlags
-// If AggregateMessages is set, messages from all children are collected
-// before sent to the Node
+// AggregateMessages (if set) tells to aggregate messages from all children
+// before sending to the (parent) Node
 // https://golang.org/ref/spec#Iota
 const (
 	AggregateMessages = 1 << iota
@@ -446,6 +447,11 @@ func (n *Node) TokenID() uuid.UUID {
 
 func (n *Node) Token() *Token {
 	return n.token
+}
+
+// Myself nicely displays who we are
+func (n *Node) Myself() string {
+	return fmt.Sprint(n.Entity().Addresses, n.TokenID())
 }
 
 // Host returns the underlying Host of this node.
