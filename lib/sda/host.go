@@ -413,8 +413,10 @@ func (h *Host) handleConn(c network.SecureConn) {
 		am.From = address
 		dbg.Lvl5("Got message", am)
 		if err != nil {
+			h.closingMut.Lock()
 			dbg.Lvl4(fmt.Sprintf("%+v got error (%+s) while receiving message (isClosing=%+v)",
 				h.Entity.First(), err, h.isClosing))
+			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
 				dbg.Lvl3(h.Entity.First(), "quitting handleConn for-loop", err)
 				return
