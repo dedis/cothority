@@ -18,12 +18,6 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-const (
-	NotFail int = iota
-	FailCompletely
-	FailWrongBlocks
-)
-
 type ByzCoin struct {
 	// the node we are represented-in
 	*sda.Node
@@ -539,7 +533,10 @@ func (bz *ByzCoin) startResponseCommit() error {
 	}
 	// if i dont want to sign
 	if bz.signRefusal {
-		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{bz.Public(), bz.commit.GetCommitment()})
+		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{
+			Public:     bz.Public(),
+			Commitment: bz.commit.GetCommitment(),
+		})
 	} else {
 		// otherwise i create the response
 		resp, err := bz.commit.CreateResponse()
@@ -569,7 +566,10 @@ func (bz *ByzCoin) handleResponseCommit(bzr *ByzCoinResponse) error {
 	}
 
 	if bz.signRefusal {
-		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{bz.Public(), bz.commit.GetCommitment()})
+		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{
+			Public:     bz.Public(),
+			Commitment: bz.commit.GetCommitment(),
+		})
 		bz.tcrMut.Unlock()
 	} else {
 		resp, err := bz.commit.Response(bz.tempCommitResponse)
@@ -652,7 +652,10 @@ func (bz *ByzCoin) waitResponseVerification() (*ByzCoinResponse, bool) {
 	verified := <-bz.verifyBlockChan
 	if !verified {
 		// append our exception
-		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{bz.Public(), bz.prepare.GetCommitment()})
+		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{
+			Public:     bz.Public(),
+			Commitment: bz.prepare.GetCommitment(),
+		})
 		bz.sendAndMeasureViewchange()
 		return bzr, false
 	}

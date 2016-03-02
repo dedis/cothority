@@ -173,7 +173,8 @@ func TestPeerListPropagation(t *testing.T) {
 	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{
+		EntityListID: el.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -187,7 +188,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddEntityList(el)
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -201,7 +202,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// And test whether it gets stored correctly
 	h1.StartProcessMessages()
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -229,7 +230,7 @@ func TestTreePropagation(t *testing.T) {
 	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -244,7 +245,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -258,7 +259,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// And test whether it gets stored correctly
 	h1.StartProcessMessages()
-	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -290,7 +291,7 @@ func TestListTreePropagation(t *testing.T) {
 	// and the tree
 	h2.AddTree(tree)
 	// make the communcation happen
-	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id}); err != nil {
+	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id}); err != nil {
 		t.Fatal("Could not send tree request to host2", err)
 	}
 
