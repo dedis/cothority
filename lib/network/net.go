@@ -28,6 +28,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"runtime/debug"
 )
 
 // Network part //
@@ -325,7 +326,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 			SecureTcpHost: st,
 		}
 		// if negotiation fails we drop the connection
-		if err := stc.negotiateListen(); err != nil {
+		if err := stc.exchangeEntity(); err != nil {
 			dbg.Error("Negotiation failed:", err)
 			stc.Close()
 			return
@@ -392,11 +393,12 @@ func (sc *SecureTcpConn) Entity() *Entity {
 	return sc.entity
 }
 
-// negotitateListen is made to exchange the Entity between the two parties.
+// exchangeEntity is made to exchange the Entity between the two parties.
 // when a connection request is made during listening
-func (sc *SecureTcpConn) negotiateListen() error {
+func (sc *SecureTcpConn) exchangeEntity() error {
 	// Send our Entity to the remote endpoint
-	dbg.Lvl4("Sending our identity")
+	dbg.LLvl4("Sending our identity", sc.SecureTcpHost.entity.Id, "to",
+		sc.TcpConn.conn.RemoteAddr().String())
 	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
@@ -405,7 +407,6 @@ func (sc *SecureTcpConn) negotiateListen() error {
 	if err != nil {
 		return fmt.Errorf("Error while receiving Entity during negotiation %s", err)
 	}
-	dbg.Lvl4("Received our identity")
 	// Check if it is correct
 	if nm.MsgType != EntityType {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
@@ -413,6 +414,8 @@ func (sc *SecureTcpConn) negotiateListen() error {
 
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
+	dbg.LLvl4(sc.SecureTcpHost.entity.Id, "Received identity", e.Id)
+
 	sc.entity = &e
 	dbg.Lvl4("Identity exchange complete")
 	return nil
@@ -421,12 +424,14 @@ func (sc *SecureTcpConn) negotiateListen() error {
 // negotiateOpen is called when Open a connection is called. Plus
 // negotiateListen it also verify the Entity.
 func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
-	if err := sc.negotiateListen(); err != nil {
+	if err := sc.exchangeEntity(); err != nil {
 		return err
 	}
 
 	// verify the Entity if its the same we are supposed to connect
+	dbg.LLvl4("Wanted to connect to", e, e.Id, "-", sc.Entity(), sc.Entity().Id)
 	if sc.Entity().Id != e.Id {
+		dbg.LLvl3("IDs not the same", string(debug.Stack()))
 		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}
 

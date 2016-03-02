@@ -194,8 +194,8 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	h.registerConnection(c)
 	dbg.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
+	h.registerConnection(c)
 	go h.handleConn(c)
 	return c, nil
 }
@@ -232,7 +232,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	}
 	h.entityListsLock.Lock()
 	if _, ok := h.entities[e.Id]; !ok {
-		dbg.Lvl4("Connecting to", e.Addresses)
+		dbg.LLvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.Unlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
@@ -400,17 +400,12 @@ func (h *Host) handleConn(c network.SecureConn) {
 		am.From = address
 		dbg.Lvl5("Got message", am)
 		if err != nil {
-			dbg.Lvl4(h.Entity.First(), "Sending error", h.isClosing, err)
-			h.networkLock.Lock()
-			if !h.isClosing {
-				h.networkLock.Unlock()
-				if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-					dbg.Lvl3(h.Entity.First(), "quitting for")
-					return
-				}
-				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
+			dbg.LLvl4(h.Entity.First(), "Sending error", h.isClosing, err)
+			if h.isClosing || err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
+				dbg.Lvl3(h.Entity.First(), "quitting for")
+				return
 			}
-			h.networkLock.Unlock()
+			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
 		} else {
 			h.networkChan <- am
 		}
@@ -466,6 +461,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
+	dbg.Lvl3(h.Entity.First(), "registers", c.Entity().First())
 	h.networkLock.Lock()
 	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()

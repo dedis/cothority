@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/jvss"
 	"github.com/dedis/crypto/poly"
 	"github.com/satori/go.uuid"
@@ -16,6 +17,7 @@ var CustomJVSSProtocolID = uuid.NewV5(uuid.NamespaceURL, "jvss_test")
 // Test if the setup of the long-term secret for one protocol instance is correct
 // or not.
 func TestJVSSLongterm(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup two hosts
 	hosts := sda.SetupHostsMock(network.Suite, "127.0.0.1:2000", "127.0.0.1:4000")
