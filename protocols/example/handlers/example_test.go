@@ -13,7 +13,7 @@ func TestNode(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	nbrNodes := 2
-	_, _, tree := local.GenTree(nbrNodes, false, true)
+	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 	//dbg.Lvl3(tree.Dump())
 	defer local.CloseAll()
 

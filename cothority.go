@@ -36,7 +36,7 @@ func main() {
 		dbg.Fatal("Couldn't get host:", err)
 	}
 	host.Listen()
-	go host.ProcessMessages()
+	host.StartProcessMessages()
 	select {
 	case <-host.Closed:
 	}

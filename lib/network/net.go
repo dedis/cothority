@@ -26,9 +26,9 @@ import (
 
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"runtime/debug"
 )
 
 // Network part //
@@ -278,7 +278,6 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 			return errors.New("Error opening listener: " + err.Error())
 		}
 		time.Sleep(waitRetry)
-		dbg.Print("Retrying to listen on", global)
 	}
 
 	t.listeningLock.Unlock()
@@ -320,7 +319,7 @@ func NewSecureTcpHost(private abstract.Secret, e *Entity) *SecureTcpHost {
 // Returns an error if it can listen on any address
 func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TcpConn) {
-		dbg.Lvl3("Listening on", c.Remote())
+		dbg.Lvl3(st.workingAddress, "connected with", c.Remote())
 		stc := &SecureTcpConn{
 			TcpConn:       c,
 			SecureTcpHost: st,
@@ -381,6 +380,11 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 	return &secure, secure.negotiateOpen(e)
 }
 
+// String returns a string identifying that host
+func (st *SecureTcpHost) String() string {
+	return st.workingAddress
+}
+
 // Receive is analog to Conn.Receive but also set the right Entity in the
 // message
 func (sc *SecureTcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
@@ -397,8 +401,8 @@ func (sc *SecureTcpConn) Entity() *Entity {
 // when a connection request is made during listening
 func (sc *SecureTcpConn) exchangeEntity() error {
 	// Send our Entity to the remote endpoint
-	dbg.LLvl4("Sending our identity", sc.SecureTcpHost.entity.Id, "to",
-		sc.TcpConn.conn.RemoteAddr().String())
+	dbg.Lvl4("Sending our identity", sc.SecureTcpHost.entity.Id, "to",
+		sc.TcpConn.conn.RemoteAddr().String(), testutil.Stack())
 	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
@@ -414,7 +418,7 @@ func (sc *SecureTcpConn) exchangeEntity() error {
 
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
-	dbg.LLvl4(sc.SecureTcpHost.entity.Id, "Received identity", e.Id)
+	dbg.Lvl4(sc.SecureTcpHost.entity.Id, "Received identity", e.Id)
 
 	sc.entity = &e
 	dbg.Lvl4("Identity exchange complete")
@@ -429,9 +433,9 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	}
 
 	// verify the Entity if its the same we are supposed to connect
-	dbg.LLvl4("Wanted to connect to", e, e.Id, "-", sc.Entity(), sc.Entity().Id)
 	if sc.Entity().Id != e.Id {
-		dbg.LLvl3("IDs not the same", string(debug.Stack()))
+		dbg.Lvl3("Wanted to connect to", e, e.Id, "but got", sc.Entity(), sc.Entity().Id)
+		dbg.Lvl4("IDs not the same", testutil.Stack())
 		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}
 

@@ -23,8 +23,6 @@ type LocalTest struct {
 	EntityLists map[uuid.UUID]*EntityList
 	// A map of Tree.Id to Trees
 	Trees map[uuid.UUID]*Tree
-	// whether to call ProcessMessages
-	CallPM bool
 }
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
@@ -36,7 +34,6 @@ func NewLocalTest() *LocalTest {
 		Overlays:    make(map[uuid.UUID]*Overlay),
 		EntityLists: make(map[uuid.UUID]*EntityList),
 		Trees:       make(map[uuid.UUID]*Tree),
-		CallPM:      true,
 	}
 }
 
@@ -69,8 +66,8 @@ func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
-func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := GenLocalHosts(n, connect, l.CallPM)
+func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
+	hosts := GenLocalHosts(n, connect, processMsg)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.Id] = host
 		l.Overlays[host.Entity.Id] = host.overlay
@@ -238,7 +235,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.Id)
 		host.Listen()
 		if processMessages {
-			go host.ProcessMessages()
+			host.StartProcessMessages()
 		}
 		if connect && root != host {
 			dbg.Lvl4("Connecting", host.Entity.First(), host.Entity.Id, "to",

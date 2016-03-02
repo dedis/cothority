@@ -104,6 +104,7 @@ type SecureHost interface {
 	Close() error
 	Listen(func(SecureConn)) error
 	Open(*Entity) (SecureConn, error)
+	String() string
 }
 
 // SecureConn is the analog of Conn but for secure communication

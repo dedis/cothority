@@ -62,7 +62,7 @@ func main() {
 		host := sc.Host
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
 		host.Listen()
-		go host.ProcessMessages()
+		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
 			dbg.Fatal(err)

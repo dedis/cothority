@@ -32,7 +32,6 @@ type TestRegisterS struct {
 
 func TestMain(m *testing.M) {
 	code := m.Run()
-	dbg.Print("test")
 	testutil.AfterTest(nil)
 	os.Exit(code)
 }

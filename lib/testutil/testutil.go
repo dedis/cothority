@@ -3,6 +3,7 @@ package testutil
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"testing"
@@ -69,4 +70,9 @@ func AfterTest(t *testing.T) {
 			dbg.Fatal("Test leaks %d gorountines.", len(stackCount))
 		}
 	}
+}
+
+// Stack converts []byte to string
+func Stack() string {
+	return string(debug.Stack())
 }
