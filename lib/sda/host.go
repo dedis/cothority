@@ -26,6 +26,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
+	"time"
 )
 
 /*
@@ -160,7 +161,6 @@ func (h *Host) SaveToFile(name string) error {
 // Listen starts listening for messages coming from any host that tries to
 // contact this entity / host
 func (h *Host) Listen() {
-	h.networkLock.Lock()
 	dbg.Lvl3(h.Entity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
@@ -169,18 +169,21 @@ func (h *Host) Listen() {
 		h.handleConn(c)
 	}
 	go func() {
-		quit := h.isClosing
-		h.networkLock.Unlock()
-		if quit {
-			dbg.Lvl3(h.Entity.First(), "quit before listening")
-			return
-		}
 		dbg.Lvl3("Host listens on:", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
 		}
 	}()
+	for {
+		dbg.Lvl3(h.Entity.First(), "checking if listener is up")
+		_, err := h.Connect(h.Entity)
+		if err == nil {
+			dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
+			break
+		}
+		time.Sleep(network.WaitRetry)
+	}
 }
 
 // Connect takes an entity where to connect to
@@ -409,7 +412,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 			dbg.Lvl4(fmt.Sprintf("%+v got error (%+s) while receiving message (isClosing=%+v)",
 				h.Entity.First(), err, h.isClosing))
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-				dbg.Lvl3(h.Entity.First(), "quitting handleConn for-loop")
+				dbg.Lvl3(h.Entity.First(), "quitting handleConn for-loop", err)
 				return
 			}
 			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
