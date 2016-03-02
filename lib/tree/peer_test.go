@@ -1,13 +1,16 @@
 package tree_test
 
 import (
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/tree"
 	"strconv"
 	"testing"
+
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/testutil"
+	"github.com/dedis/cothority/lib/tree"
 )
 
 func TestNewPeerListLocal(t *testing.T) {
+	defer testutil.AfterTest(t)
 	s := network.Suite
 	nPeers := 11
 	names := genLocalhostPeerNames(nPeers, 2000)

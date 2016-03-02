@@ -18,10 +18,10 @@ import (
 )
 
 // How many times should we try to connect
-const maxRetry = 10
+const MaxRetry = 10
 
 // how much time should we wait before trying again
-const waitRetry = 100 * time.Millisecond
+const WaitRetry = 100 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
@@ -104,6 +104,7 @@ type SecureHost interface {
 	Close() error
 	Listen(func(SecureConn)) error
 	Open(*Entity) (SecureConn, error)
+	String() string
 }
 
 // SecureConn is the analog of Conn but for secure communication

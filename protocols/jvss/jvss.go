@@ -127,19 +127,20 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 	if err := jv.Node.RegisterChannel(jv.ltChan); err != nil {
 		return nil, err
 	}
-	go jv.waitForLongterm()
 	if err := jv.Node.RegisterChannel(jv.rdChan); err != nil {
 		return nil, err
 	}
-	go jv.waitForRandom()
 	if err := jv.Node.RegisterChannel(jv.reqChan); err != nil {
 		return nil, err
 	}
-	go jv.waitForRequests()
 	if err := jv.Node.RegisterChannel(jv.respChan); err != nil {
 		return nil, err
 	}
+	// FIXME leaky go rountines in tests (only?)
+	go jv.waitForRandom()
 	go jv.waitForResponses()
+	go jv.waitForRequests()
+	go jv.waitForLongterm()
 	return jv, nil
 }
 
@@ -152,6 +153,14 @@ func NewJVSSProtocolInstance(node *sda.Node) (sda.ProtocolInstance, error) {
 // routine anyway from sda.
 func (jv *JVSSProtocol) Start() error {
 	jv.waitLongtermSecret()
+	return nil
+}
+
+func (jv *JVSSProtocol) Shutdown() error {
+	close(jv.reqChan)
+	close(jv.respChan)
+	close(jv.ltChan)
+	close(jv.rdChan)
 	return nil
 }
 

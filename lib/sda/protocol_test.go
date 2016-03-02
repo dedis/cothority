@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/satori/go.uuid"
 )
 
@@ -93,6 +94,8 @@ var testString = ""
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
 	chanH1 := make(chan bool)
@@ -115,7 +118,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
-	go h1.ProcessMessages()
+	h1.StartProcessMessages()
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)

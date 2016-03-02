@@ -4,13 +4,15 @@ import (
 	"strconv"
 	"testing"
 
+	"net"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"net"
 )
 
 var tSuite = network.Suite
@@ -18,6 +20,8 @@ var prefix = "localhost:"
 
 // test the ID generation
 func TestTreeId(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
 	// Generate two example topology
@@ -41,6 +45,8 @@ func TestTreeId(t *testing.T) {
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
@@ -56,6 +62,8 @@ func TestTreeConnectedTo(t *testing.T) {
 
 // Test initialisation of new peer-list
 func TestEntityListNew(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	adresses := []string{"localhost:1010", "localhost:1012"}
 	pl := genEntityList(tSuite, adresses)
 	if len(pl.List) != 2 {
@@ -71,6 +79,8 @@ func TestEntityListNew(t *testing.T) {
 
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
 	// write it
@@ -105,6 +115,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // Test access to tree:
 // - parent
 func TestTreeParent(t *testing.T) {
+	defer testutil.AfterTest(t)
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
@@ -117,6 +128,8 @@ func TestTreeParent(t *testing.T) {
 
 // - children
 func TestTreeChildren(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
@@ -129,6 +142,8 @@ func TestTreeChildren(t *testing.T) {
 
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genEntityList(tSuite, names)
@@ -154,6 +169,8 @@ func TestUnMarshalTree(t *testing.T) {
 }
 
 func TestGetNode(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.ListNodes() {
 		node := tree.GetTreeNode(tn.Id)
@@ -164,6 +181,8 @@ func TestGetNode(t *testing.T) {
 }
 
 func TestBinaryTree(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	tree, _ := genLocalTree(7, 2000)
 	root := tree.Root
 	if len(root.Children) != 2 {
@@ -181,6 +200,8 @@ func TestBinaryTree(t *testing.T) {
 }
 
 func TestNaryTree(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
 	peerList := genEntityList(tSuite, names)
@@ -222,6 +243,8 @@ func TestNaryTree(t *testing.T) {
 }
 
 func TestBigNaryTree(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalDiffPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
@@ -244,6 +267,8 @@ func TestBigNaryTree(t *testing.T) {
 }
 
 func TestTreeIsColored(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
 	peerList := genEntityList(tSuite, names)
@@ -259,6 +284,8 @@ func TestTreeIsColored(t *testing.T) {
 }
 
 func TestBinaryTrees(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
 		t.Fatal("Tree with 1 node should be binary")

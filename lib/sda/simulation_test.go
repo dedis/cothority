@@ -2,13 +2,16 @@ package sda_test
 
 import (
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
 	"strconv"
 	"testing"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 )
 
 func TestSimulationBF(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
@@ -42,6 +45,7 @@ func TestSimulationBF(t *testing.T) {
 }
 
 func TestBigTree(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	for i := uint(12); i < 15; i++ {
 		_, _, err := createBFTree(1<<i-1, 2)
@@ -52,6 +56,7 @@ func TestBigTree(t *testing.T) {
 }
 
 func TestLoadSave(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
@@ -68,6 +73,8 @@ func TestLoadSave(t *testing.T) {
 }
 
 func TestMultipleInstances(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {

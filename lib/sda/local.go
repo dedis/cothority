@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"time"
 )
 
 type LocalTest struct {
@@ -22,8 +23,6 @@ type LocalTest struct {
 	EntityLists map[uuid.UUID]*EntityList
 	// A map of Tree.Id to Trees
 	Trees map[uuid.UUID]*Tree
-	// whether to call ProcessMessages
-	CallPM bool
 }
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
@@ -35,7 +34,6 @@ func NewLocalTest() *LocalTest {
 		Overlays:    make(map[uuid.UUID]*Overlay),
 		EntityLists: make(map[uuid.UUID]*EntityList),
 		Trees:       make(map[uuid.UUID]*Tree),
-		CallPM:      true,
 	}
 }
 
@@ -68,8 +66,8 @@ func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
-func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := GenLocalHosts(n, connect, l.CallPM)
+func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
+	hosts := GenLocalHosts(n, connect, processMsg)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.Id] = host
 		l.Overlays[host.Entity.Id] = host.overlay
@@ -227,21 +225,36 @@ func NewLocalHost(port int) *Host {
 // GenLocalHosts will create n hosts with the first one being connected to each of
 // the other nodes if connect is true
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
-	var hosts []*Host
+	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
 		host := NewLocalHost(2000 + i*10)
-		hosts = append(hosts, host)
+		hosts[i] = host
 	}
 	root := hosts[0]
 	for _, host := range hosts {
 		host.Listen()
+		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.Id)
 		if processMessages {
-			go host.ProcessMessages()
+			host.StartProcessMessages()
 		}
 		if connect && root != host {
+			dbg.Lvl4("Connecting", host.Entity.First(), host.Entity.Id, "to",
+				root.Entity.First(), root.Entity.Id)
 			if _, err := host.Connect(root.Entity); err != nil {
-				dbg.Fatal(host.Entity.Addresses, "Could not connect hosts", root.Entity.Addresses)
+				dbg.Fatal(host.Entity.Addresses, "Could not connect hosts", root.Entity.Addresses, err)
 			}
+			// Wait for connection accepted in root
+			connected := false
+			for !connected {
+				time.Sleep(time.Millisecond * 10)
+				for id, _ := range root.entities {
+					if uuid.Equal(id, host.Entity.Id) {
+						connected = true
+						break
+					}
+				}
+			}
+			dbg.Lvl4(host.Entity.First(), "is connected to root")
 		}
 	}
 	return hosts

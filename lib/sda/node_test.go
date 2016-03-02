@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/satori/go.uuid"
 )
@@ -22,9 +23,10 @@ func init() {
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
@@ -43,10 +45,12 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 }
 
 func TestNodeChannelCreate(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
@@ -79,10 +83,12 @@ func TestNodeChannelCreate(t *testing.T) {
 }
 
 func TestNodeChannel(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
@@ -116,6 +122,8 @@ func TestNodeChannel(t *testing.T) {
 
 // Test instantiation of Node
 func TestNewNode(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
@@ -142,6 +150,8 @@ func TestNewNode(t *testing.T) {
 }
 
 func TestProtocolChannels(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
@@ -151,7 +161,7 @@ func TestProtocolChannels(t *testing.T) {
 	h1.AddEntityList(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
-	go h1.ProcessMessages()
+	h1.StartProcessMessages()
 
 	// Try directly StartNewProtocol
 	_, err := h1.StartNewNodeName("ProtocolChannels", tree)
@@ -170,8 +180,10 @@ func TestProtocolChannels(t *testing.T) {
 }
 
 func TestProtocolHandlers(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true)
+	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
 	dbg.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *sda.Node, 2)
@@ -201,8 +213,10 @@ func TestProtocolHandlers(t *testing.T) {
 }
 
 func TestMsgAggregation(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true)
+	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
 	root, err := local.StartNewNodeName("ProtocolChannels", tree)
 	if err != nil {
@@ -240,8 +254,10 @@ func TestMsgAggregation(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true)
+	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
 	if err != nil {
@@ -261,8 +277,10 @@ func TestFlags(t *testing.T) {
 }
 
 func TestSendLimitedTree(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenBigTree(7, 1, 2, false, true)
+	_, _, tree := local.GenBigTree(7, 1, 2, true, true)
 	defer local.CloseAll()
 
 	dbg.Lvl3(tree.Dump())
@@ -271,9 +289,10 @@ func TestSendLimitedTree(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
-	count := root.ProtocolInstance().(*manage.ProtocolCount)
-	if <-count.Count != 7 {
-		t.Fatal("Didn't get a count of 7")
+	protoCount := root.ProtocolInstance().(*manage.ProtocolCount)
+	count := <-protoCount.Count
+	if count != 7 {
+		t.Fatal("Didn't get a count of 7:", count)
 	}
 }
 

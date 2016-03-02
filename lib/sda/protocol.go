@@ -20,6 +20,8 @@ type ProtocolInstance interface {
 	Start() error
 	// Dispatch is called as a go-routine and can be used to handle channels
 	Dispatch() error
+	// Shutdown cleans up the resources used by this protocol instance
+	Shutdown() error
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol

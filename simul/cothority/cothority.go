@@ -62,7 +62,7 @@ func main() {
 		host := sc.Host
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
 		host.Listen()
-		go host.ProcessMessages()
+		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
 			dbg.Fatal(err)
@@ -142,8 +142,8 @@ func main() {
 	allClosed := make(chan bool)
 	go func() {
 		for _, sc := range scs {
-			<-sc.Host.Closed
-			dbg.Lvl3("SIMULATION CLOSED Host", sc.Host.Entity.Addresses, "closed")
+			sc.Host.WaitForClose()
+			dbg.Lvl3("Simulation closed host", sc.Host.Entity.Addresses, "closed")
 		}
 		allClosed <- true
 	}()

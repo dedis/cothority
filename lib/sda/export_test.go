@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
@@ -12,7 +13,9 @@ func (h *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
 }
 
 func (h *Host) Receive() network.NetworkMessage {
-	return h.receive()
+	data := <-h.networkChan
+	dbg.Lvl5("Got message", data)
+	return data
 }
 
 func (h *Host) StartNewNodeName(name string, tree *Tree) (*Node, error) {
