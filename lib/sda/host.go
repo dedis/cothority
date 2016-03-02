@@ -49,6 +49,8 @@ type Host struct {
 	networkChan chan network.NetworkMessage
 	// The database of entities this host knows
 	entities map[uuid.UUID]*network.Entity
+	// lock associated to access entityLists
+	entityListsLock sync.RWMutex
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
@@ -60,11 +62,10 @@ type Host struct {
 	// The suite used for this Host
 	suite abstract.Suite
 	// We're about to close
-	isClosing bool
+	isClosing  bool
+	closingMut sync.Mutex
 	// lock associated to access network connections
 	networkLock sync.Mutex
-	// lock associated to access entityLists
-	entityListsLock sync.Mutex
 	// lock associated to access trees
 	treesLock sync.Mutex
 	// lock associated with pending TreeMarshal
@@ -209,11 +210,14 @@ func (h *Host) Close() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 
+	h.closingMut.Lock()
 	if h.isClosing {
+		h.closingMut.Unlock()
 		return errors.New("Already closing")
 	}
 	dbg.Lvl3(h.Entity.First(), "Starts closing")
 	h.isClosing = true
+	h.closingMut.Unlock()
 	if h.processMessagesStarted {
 		// Tell ProcessMessages to quit
 		close(h.ProcessMessagesQuit)
@@ -238,17 +242,17 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
-	h.entityListsLock.Lock()
+	h.entityListsLock.RLock()
 	if _, ok := h.entities[e.Id]; !ok {
 		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
-		h.entityListsLock.Unlock()
+		h.entityListsLock.RUnlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
 		if err != nil {
 			return err
 		}
 	} else {
-		h.entityListsLock.Unlock()
+		h.entityListsLock.RUnlock()
 	}
 	var c network.SecureConn
 	var ok bool
