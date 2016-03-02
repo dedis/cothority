@@ -169,7 +169,8 @@ func TestSecureMultiClose(t *testing.T) {
 	receiverStarted2 := make(chan bool)
 	fn2 := func(s SecureConn) {
 		dbg.Lvl3("Getting connection from", s.Entity().First())
-		close(receiverStarted2)
+		receiverStarted2 <- true
+		dbg.Lvl3("Got connection from", s.Entity().First())
 
 	}
 	done2 := make(chan bool)
@@ -189,10 +190,11 @@ func TestSecureMultiClose(t *testing.T) {
 		t.Fatal("Couldn't close connection to entity1:", err)
 	}
 
-	<-receiverStarted2
-	err = h3.Close()
-	if err != nil {
-		t.Fatal("Couldn't close h1:", err)
+	if r := <-receiverStarted2; r == true {
+		err = h3.Close()
+		if err != nil {
+			t.Fatal("Couldn't close h3:", err)
+		}
 	}
 	<-done2
 }
