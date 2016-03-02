@@ -402,7 +402,7 @@ func (sc *SecureTcpConn) Entity() *Entity {
 func (sc *SecureTcpConn) exchangeEntity() error {
 	// Send our Entity to the remote endpoint
 	dbg.Lvl4("Sending our identity", sc.SecureTcpHost.entity.Id, "to",
-		sc.TcpConn.conn.RemoteAddr().String(), testutil.Stack())
+		sc.TcpConn.conn.RemoteAddr().String())
 	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}

@@ -37,7 +37,5 @@ func main() {
 	}
 	host.Listen()
 	host.StartProcessMessages()
-	select {
-	case <-host.Closed:
-	}
+	host.WaitForClose()
 }

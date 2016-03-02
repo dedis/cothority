@@ -59,8 +59,7 @@ type Host struct {
 	pendingSDAs []*SDAData
 	// The suite used for this Host
 	suite abstract.Suite
-	// closed channel to notify the connections that we close
-	Closed    chan bool
+	// We're about to close
 	isClosing bool
 	// lock associated to access network connections
 	networkLock sync.Mutex
@@ -80,7 +79,7 @@ type Host struct {
 	// whether processMessages has started
 	processMessagesStarted bool
 	// tell processMessages to quit
-	processMessagesQuit chan bool
+	ProcessMessagesQuit chan bool
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -97,9 +96,8 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		private:             pkey,
 		suite:               network.Suite,
 		networkChan:         make(chan network.NetworkMessage, 1),
-		Closed:              make(chan bool),
 		isClosing:           false,
-		processMessagesQuit: make(chan bool),
+		ProcessMessagesQuit: make(chan bool),
 	}
 
 	h.overlay = NewOverlay(h)
@@ -224,7 +222,7 @@ func (h *Host) Close() error {
 	h.isClosing = true
 	if h.processMessagesStarted {
 		// Tell ProcessMessages to quit
-		close(h.processMessagesQuit)
+		close(h.ProcessMessagesQuit)
 	}
 	for _, c := range h.connections {
 		dbg.Lvl3(h.Entity.First(), "Closing connection", c)
@@ -298,7 +296,7 @@ func (h *Host) processMessages() {
 		var data network.NetworkMessage
 		select {
 		case data = <-h.networkChan:
-		case <-h.processMessagesQuit:
+		case <-h.ProcessMessagesQuit:
 			return
 		}
 		dbg.Lvl4("Message Received from", data.From)
@@ -409,7 +407,7 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 // Handle a connection => giving messages to the MsgChans
 func (h *Host) handleConn(c network.SecureConn) {
 	address := c.Remote()
-	for !h.isClosing {
+	for {
 		ctx := context.TODO()
 		am, err := c.Receive(ctx)
 		// So the receiver can know about the error
@@ -418,7 +416,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		dbg.Lvl5("Got message", am)
 		if err != nil {
 			dbg.Lvl4(h.Entity.First(), "got error", h.isClosing, err)
-			if h.isClosing || err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
+			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
 				dbg.Lvl3(h.Entity.First(), "quitting for")
 				return
 			}
@@ -561,4 +559,11 @@ func newHostMock(s abstract.Suite, address string) *Host {
 	kp := cliutils.KeyPair(s)
 	en := network.NewEntity(kp.Public, address)
 	return NewHost(en, kp.Secret)
+}
+
+// WaitForClose returns only once all connections have been closed
+func (h *Host) WaitForClose() {
+	select {
+	case <-h.ProcessMessagesQuit:
+	}
 }
