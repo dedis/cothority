@@ -1,7 +1,9 @@
 package testutil
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"testing"
@@ -55,9 +57,22 @@ func AfterTest(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	for stack, count := range stackCount {
-		t.Logf("%d instances of:\n%s\n", count, stack)
+		if t != nil {
+			t.Logf("%d instances of:\n%s\n", count, stack)
+		} else {
+			dbg.Print("%d instances of:\n%s\n", count, stack)
+		}
 	}
 	if len(stackCount) > 0 {
-		t.Fatalf("Test leaks %d gorountines.", len(stackCount))
+		if t != nil {
+			t.Fatalf("Test leaks %d gorountines.", len(stackCount))
+		} else {
+			dbg.Fatal("Test leaks %d gorountines.", len(stackCount))
+		}
 	}
+}
+
+// Stack converts []byte to string
+func Stack() string {
+	return string(debug.Stack())
 }

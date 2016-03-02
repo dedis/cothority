@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"os"
 )
 
 type PublicPacket struct {
@@ -27,6 +28,12 @@ var PublicType = RegisterMessageType(PublicPacket{})
 
 type TestRegisterS struct {
 	I int
+}
+
+func TestMain(m *testing.M) {
+	code := m.Run()
+	testutil.AfterTest(nil)
+	os.Exit(code)
 }
 
 func TestRegister(t *testing.T) {

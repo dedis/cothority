@@ -63,6 +63,7 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			} else {
 				// If we're the leaf, start to reply
 				p.SendTo(p.Parent(), &MessageReply{1})
+				return nil
 			}
 		case reply := <-p.ChannelReply:
 			children := 1
@@ -77,6 +78,7 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 				dbg.Lvl3("Root-node is done - nbr of children found:", children)
 				p.ChildCount <- children
 			}
+			return nil
 		}
 	}
 }

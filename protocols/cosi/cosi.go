@@ -83,8 +83,6 @@ func NewProtocolCosi(node *sda.Node) (*ProtocolCosi, error) {
 	node.RegisterChannel(&pc.challenge)
 	node.RegisterChannel(&pc.response)
 
-	// start the routine that listens on these channels
-	go pc.listen()
 	return pc, err
 }
 
@@ -102,14 +100,8 @@ func (pc *ProtocolCosi) Start() error {
 	return pc.StartAnnouncement()
 }
 
-// Dispatch is not used, and already panics because it's DEPRECATED.
+// Dispatch will listen on the four channels we use (i.e. four steps)
 func (pc *ProtocolCosi) Dispatch() error {
-	//panic("Should not happen since ProtocolCosi uses channel registration")
-	return nil
-}
-
-// listen will listen on the four channels we use (i.e. four steps)
-func (pc *ProtocolCosi) listen() {
 	for {
 		var err error
 		select {
@@ -122,7 +114,7 @@ func (pc *ProtocolCosi) listen() {
 		case packet := <-pc.response:
 			err = pc.handleResponse(&packet.CosiResponse)
 		case <-pc.done:
-			return
+			return nil
 		}
 		if err != nil {
 			dbg.Error("ProtocolCosi -> err treating incoming:", err)
@@ -316,11 +308,15 @@ func (pc *ProtocolCosi) StartResponse() error {
 		Response: resp,
 	}
 	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi().StartResponse()")
-	return pc.SendTo(pc.Parent(), out)
+	err = pc.SendTo(pc.Parent(), out)
+	pc.Cleanup()
+	return err
 }
 
 // handleResponse brings up the response of each node in the tree to the root.
 func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
+	defer pc.Cleanup()
+
 	// add to temporary
 	pc.tempResponseLock.Lock()
 	pc.tempResponse = append(pc.tempResponse, in)
@@ -350,13 +346,19 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 	if !pc.IsRoot() {
 		return pc.SendTo(pc.Parent(), out)
 	}
+	return nil
+}
 
+// Closes the protocol
+func (pc *ProtocolCosi) Cleanup() {
+	dbg.Lvl3(pc.Entity().First(), "Cleaning up")
 	// if callback when finished
 	if pc.DoneCallback != nil {
 		pc.DoneCallback(pc.Cosi.GetChallenge(), pc.Cosi.GetAggregateResponse())
 	}
+	close(pc.done)
 	pc.Node.Done()
-	return nil
+
 }
 
 // SigningMessage simply set the message to sign for this round

@@ -26,7 +26,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
@@ -50,7 +50,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
@@ -88,7 +88,7 @@ func TestNodeChannel(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
@@ -161,7 +161,7 @@ func TestProtocolChannels(t *testing.T) {
 	h1.AddEntityList(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
-	go h1.ProcessMessages()
+	h1.StartProcessMessages()
 
 	// Try directly StartNewProtocol
 	_, err := h1.StartNewNodeName("ProtocolChannels", tree)
@@ -183,7 +183,7 @@ func TestProtocolHandlers(t *testing.T) {
 	defer testutil.AfterTest(t)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true)
+	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
 	dbg.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *sda.Node, 2)
@@ -216,7 +216,7 @@ func TestMsgAggregation(t *testing.T) {
 	defer testutil.AfterTest(t)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true)
+	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
 	root, err := local.StartNewNodeName("ProtocolChannels", tree)
 	if err != nil {
@@ -257,7 +257,7 @@ func TestFlags(t *testing.T) {
 	defer testutil.AfterTest(t)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true)
+	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
 	n, err := local.NewNode(tree.Root, "ProtocolChannels")
 	if err != nil {

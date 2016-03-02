@@ -6,9 +6,12 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 )
 
 func TestProxy(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
@@ -79,6 +82,8 @@ func TestProxy(t *testing.T) {
 }
 
 func TestReadyProxy(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
@@ -142,4 +147,11 @@ func TestReadyProxy(t *testing.T) {
 	}
 
 	EndAndCleanup()
+
+	select {
+	case <-done:
+		return
+	case <-time.After(2 * time.Second):
+		t.Error("Monitor not finished")
+	}
 }

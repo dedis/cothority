@@ -18,7 +18,6 @@ import (
 	"io/ioutil"
 	"reflect"
 	"sync"
-	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
@@ -60,8 +59,7 @@ type Host struct {
 	pendingSDAs []*SDAData
 	// The suite used for this Host
 	suite abstract.Suite
-	// closed channel to notify the connections that we close
-	Closed    chan bool
+	// We're about to close
 	isClosing bool
 	// lock associated to access network connections
 	networkLock sync.Mutex
@@ -78,24 +76,28 @@ type Host struct {
 	workingAddress string
 	// listening is a flag to tell whether this host is listening or not
 	listening bool
+	// whether processMessages has started
+	processMessagesStarted bool
+	// tell processMessages to quit
+	ProcessMessagesQuit chan bool
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	h := &Host{
-		Entity:             e,
-		workingAddress:     e.First(),
-		connections:        make(map[uuid.UUID]network.SecureConn),
-		entities:           make(map[uuid.UUID]*network.Entity),
-		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
-		pendingSDAs:        make([]*SDAData, 0),
-		host:               network.NewSecureTcpHost(pkey, e),
-		private:            pkey,
-		suite:              network.Suite,
-		networkChan:        make(chan network.NetworkMessage, 1),
-		Closed:             make(chan bool),
-		isClosing:          false,
+		Entity:              e,
+		workingAddress:      e.First(),
+		connections:         make(map[uuid.UUID]network.SecureConn),
+		entities:            make(map[uuid.UUID]*network.Entity),
+		pendingTreeMarshal:  make(map[uuid.UUID][]*TreeMarshal),
+		pendingSDAs:         make([]*SDAData, 0),
+		host:                network.NewSecureTcpHost(pkey, e),
+		private:             pkey,
+		suite:               network.Suite,
+		networkChan:         make(chan network.NetworkMessage, 1),
+		isClosing:           false,
+		ProcessMessagesQuit: make(chan bool),
 	}
 
 	h.overlay = NewOverlay(h)
@@ -167,6 +169,8 @@ func NewHostKey(address string) (*Host, abstract.Secret) {
 // Listen starts listening for messages coming from any host that tries to
 // contact this entity / host
 func (h *Host) Listen() {
+	h.networkLock.Lock()
+	dbg.Lvl3(h.Entity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
@@ -174,7 +178,13 @@ func (h *Host) Listen() {
 		h.handleConn(c)
 	}
 	go func() {
-		dbg.Lvl3("Try listenting on:", h.workingAddress)
+		quit := h.isClosing
+		h.networkLock.Unlock()
+		if quit {
+			dbg.Lvl3(h.Entity.First(), "quit before listening")
+			return
+		}
+		dbg.Lvl3("Host listens on:", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
@@ -194,31 +204,35 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	h.registerConnection(c)
 	dbg.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
+	h.registerConnection(c)
 	go h.handleConn(c)
 	return c, nil
 }
 
 // Close shuts down the listener
 func (h *Host) Close() error {
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+
 	if h.isClosing {
 		return errors.New("Already closing")
 	}
-	dbg.Lvl3("Closing", h.Entity.Addresses)
-	h.networkLock.Lock()
-	defer h.networkLock.Unlock()
+	dbg.Lvl3(h.Entity.First(), "Starts closing")
 	h.isClosing = true
-	// XXX why wait 100 ms?
-	time.Sleep(time.Millisecond * 100)
-	close(h.Closed)
+	if h.processMessagesStarted {
+		// Tell ProcessMessages to quit
+		close(h.ProcessMessagesQuit)
+	}
 	for _, c := range h.connections {
-		dbg.Lvl3("Closing connection", c)
+		dbg.Lvl3(h.Entity.First(), "Closing connection", c)
 		err := c.Close()
 		if err != nil {
+			dbg.Error(h.Entity.First(), "Couldn't close connection", c)
 			return err
 		}
 	}
+	dbg.Lvl3(h.Entity.First(), "Closing tcpHost")
 	err := h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
 
@@ -232,7 +246,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	}
 	h.entityListsLock.Lock()
 	if _, ok := h.entities[e.Id]; !ok {
-		dbg.Lvl4("Connecting to", e.Addresses)
+		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.Unlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
@@ -258,6 +272,14 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	return nil
 }
 
+func (h *Host) StartProcessMessages() {
+	// The networkLock.Unlock is in the processMessages-method to make
+	// sure the goroutine started
+	h.networkLock.Lock()
+	h.processMessagesStarted = true
+	go h.processMessages()
+}
+
 // ProcessMessages checks if it is one of the messages for us or dispatch it
 // to the corresponding instance.
 // Our messages are:
@@ -266,14 +288,15 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 // * SendTree - send the tree to the child
 // * RequestPeerListID - ask the parent for a given peerList
 // * SendPeerListID - send the tree to the child
-func (h *Host) ProcessMessages() {
+func (h *Host) processMessages() {
+	h.networkLock.Unlock()
 	for {
 		var err error
 		dbg.Lvl3("Waiting for message")
 		var data network.NetworkMessage
 		select {
 		case data = <-h.networkChan:
-		case <-h.Closed:
+		case <-h.ProcessMessagesQuit:
 			return
 		}
 		dbg.Lvl4("Message Received from", data.From)
@@ -381,18 +404,10 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	return h.SendRaw(e, sdaMsg)
 }
 
-// Receive will return the value of the communication-channel.
-// Receive is called in ProcessMessages as it takes directly the message from the networkChan
-func (h *Host) receive() network.NetworkMessage {
-	data := <-h.networkChan
-	dbg.Lvl5("Got message", data)
-	return data
-}
-
 // Handle a connection => giving messages to the MsgChans
 func (h *Host) handleConn(c network.SecureConn) {
 	address := c.Remote()
-	for !h.isClosing {
+	for {
 		ctx := context.TODO()
 		am, err := c.Receive(ctx)
 		// So the receiver can know about the error
@@ -400,17 +415,12 @@ func (h *Host) handleConn(c network.SecureConn) {
 		am.From = address
 		dbg.Lvl5("Got message", am)
 		if err != nil {
-			dbg.Lvl4(h.Entity.First(), "Sending error", h.isClosing, err)
-			h.networkLock.Lock()
-			if !h.isClosing {
-				h.networkLock.Unlock()
-				if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-					dbg.Lvl3(h.Entity.First(), "quitting for")
-					return
-				}
-				dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
+			dbg.Lvl4(h.Entity.First(), "got error", h.isClosing, err)
+			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
+				dbg.Lvl3(h.Entity.First(), "quitting for")
+				return
 			}
-			h.networkLock.Unlock()
+			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
 		} else {
 			h.networkChan <- am
 		}
@@ -466,6 +476,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
+	dbg.Lvl3(h.Entity.First(), "registers", c.Entity().First())
 	h.networkLock.Lock()
 	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()
@@ -538,7 +549,7 @@ func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	for _, add := range addresses {
 		h := newHostMock(s, add)
 		h.Listen()
-		go h.ProcessMessages()
+		h.StartProcessMessages()
 		hosts = append(hosts, h)
 	}
 	return hosts
@@ -548,4 +559,11 @@ func newHostMock(s abstract.Suite, address string) *Host {
 	kp := cliutils.KeyPair(s)
 	en := network.NewEntity(kp.Public, address)
 	return NewHost(en, kp.Secret)
+}
+
+// WaitForClose returns only once all connections have been closed
+func (h *Host) WaitForClose() {
+	select {
+	case <-h.ProcessMessagesQuit:
+	}
 }

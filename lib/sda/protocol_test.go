@@ -118,7 +118,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
-	go h1.ProcessMessages()
+	h1.StartProcessMessages()
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
