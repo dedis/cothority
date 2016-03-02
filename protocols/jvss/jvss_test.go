@@ -17,7 +17,6 @@ var CustomJVSSProtocolID = uuid.NewV5(uuid.NamespaceURL, "jvss_test")
 // Test if the setup of the long-term secret for one protocol instance is correct
 // or not.
 func TestJVSSLongterm(t *testing.T) {
-	t.Skip("For Nicolas to debug")
 	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup two hosts
@@ -33,6 +32,7 @@ func TestJVSSLongterm(t *testing.T) {
 	ch2 := make(chan *poly.SharedSecret)
 	var done1 bool
 	var done2 bool
+	var p1 *jvss.JVSSProtocol
 	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
 		pi, err := jvss.NewJVSSProtocol(node)
 		if err != nil {
@@ -49,6 +49,7 @@ func TestJVSSLongterm(t *testing.T) {
 				}
 			}()
 		})
+		p1 = pi
 		return pi, nil
 	}
 	sda.ProtocolRegister(CustomJVSSProtocolID, fn)
@@ -88,6 +89,7 @@ func TestJVSSLongterm(t *testing.T) {
 // Test if the setup of the longterm secret for one protocol instance is correct
 // or not.
 func TestJVSSSign(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup two hosts
 	hosts := sda.SetupHostsMock(network.Suite, "127.0.0.1:2000", "127.0.0.1:4000")
@@ -145,7 +147,7 @@ func TestJVSSSign(t *testing.T) {
 	// wait for the signing or timeout
 	select {
 	case <-doneSig:
-		//it's fine
+	//it's fine
 	case <-time.After(time.Second * 5):
 		t.Fatal("Could not get the signature done before timeout")
 	}
