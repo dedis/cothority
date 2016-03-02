@@ -64,7 +64,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// If node does not exists, then create it
-	o.nodeLock.RLock()
+	o.nodeLock.Lock()
 	node := o.nodes[sdaMsg.To.Id()]
 	isDone := o.nodeInfo[sdaMsg.To.Id()]
 	// If we never have seen this token before, then we create it
