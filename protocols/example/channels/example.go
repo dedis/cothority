@@ -79,5 +79,4 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			}
 		}
 	}
-	return nil
 }

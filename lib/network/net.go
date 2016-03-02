@@ -238,15 +238,15 @@ func (c *TcpConn) Close() error {
 func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 	var err error
 	var conn net.Conn
-	for i := 0; i < maxRetry; i++ {
+	for i := 0; i < MaxRetry; i++ {
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
 			//dbg.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
-			time.Sleep(waitRetry)
+			time.Sleep(WaitRetry)
 		} else {
 			break
 		}
-		time.Sleep(waitRetry)
+		time.Sleep(WaitRetry)
 	}
 	if conn == nil {
 		return nil, fmt.Errorf("Could not connect to %s.", name)
@@ -267,16 +267,16 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
 	global, _ := cliutils.GlobalBind(addr)
-	for i := 0; i < maxRetry; i++ {
+	for i := 0; i < MaxRetry; i++ {
 		ln, err := net.Listen("tcp", global)
 		if err == nil {
 			t.listener = ln
 			break
-		} else if i == maxRetry-1 {
+		} else if i == MaxRetry-1 {
 			t.listeningLock.Unlock()
 			return errors.New("Error opening listener: " + err.Error())
 		}
-		time.Sleep(waitRetry)
+		time.Sleep(WaitRetry)
 		dbg.Print("Retrying to listen on", global)
 	}
 
