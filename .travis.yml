@@ -4,4 +4,5 @@ go:
   - 1.5.3
 script:
   - ./gofmt.sh
-  - go test -v -p=1 -cpu=1 ./...
+  # do not run any test binary in parallel (see go help build for more info on the -p flag)
+  - go test -v -p=1 ./...
