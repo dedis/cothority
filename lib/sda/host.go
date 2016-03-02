@@ -24,7 +24,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 )
@@ -158,14 +157,6 @@ func (h *Host) SaveToFile(name string) error {
 	return nil
 }
 
-// NewHostKey creates a new host only from the ip-address and port-number. This
-// is useful in testing and deployment for measurements
-func NewHostKey(address string) (*Host, abstract.Secret) {
-	keypair := config.NewKeyPair(network.Suite)
-	entity := network.NewEntity(keypair.Public, address)
-	return NewHost(entity, keypair.Secret), keypair.Secret
-}
-
 // Listen starts listening for messages coming from any host that tries to
 // contact this entity / host
 func (h *Host) Listen() {
@@ -235,7 +226,7 @@ func (h *Host) Close() error {
 	dbg.Lvl3(h.Entity.First(), "Closing tcpHost")
 	err := h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
-
+	h.overlay.Close()
 	return err
 }
 

@@ -33,8 +33,6 @@ type Node struct {
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
 	msgQueue map[uuid.UUID][]*SDAData
-	// done channel
-	done chan bool
 	// done callback
 	onDoneCallback func() bool
 }
@@ -67,7 +65,6 @@ func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 		msgQueue:         make(map[uuid.UUID][]*SDAData),
 		messageTypeFlags: make(map[uuid.UUID]uint32),
 		treeNode:         nil,
-		done:             make(chan bool),
 	}
 	var err error
 	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
@@ -252,6 +249,12 @@ func (n *Node) Dispatch() error {
 	return nil
 }
 
+// Shutdown - standard Shutdown implementation. Define your own
+// in your protocol (if necessary)
+func (n *Node) Shutdown() error {
+	return nil
+}
+
 func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
@@ -432,9 +435,10 @@ func (n *Node) Public() abstract.Point {
 	return n.Entity().Public
 }
 
-// Closes the host
-func (n *Node) Close() error {
-	return n.overlay.host.Close()
+// CloseHost closes the underlying sda.Host (which closes the overlay
+// and sends Shutdown to all protocol instances)
+func (n *Node) CloseHost() error {
+	return n.Host().Close()
 }
 
 func (n *Node) Name() string {

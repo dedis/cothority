@@ -75,7 +75,7 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	}
 	time.Sleep(time.Second)
 	dbg.Lvl3("Closing host", p.Entity().Addresses)
-	err := p.Node.Close()
+	err := p.Node.CloseHost()
 	if err != nil {
 		dbg.Error("Couldn't close:", err)
 	}

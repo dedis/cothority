@@ -156,13 +156,12 @@ func (jv *JVSSProtocol) Start() error {
 	return nil
 }
 
-func (jv *JVSSProtocol) CloseAllChans() {
-	// close long-term channel, so that waitForLongterm() will finish
-	close(jv.ltChan)
-	// do the same for all the other channels:
-	close(jv.rdChan)
-	close(jv.respChan)
+func (jv *JVSSProtocol) Shutdown() error {
 	close(jv.reqChan)
+	close(jv.respChan)
+	close(jv.ltChan)
+	close(jv.rdChan)
+	return nil
 }
 
 func (jv *JVSSProtocol) waitLongtermSecret() {

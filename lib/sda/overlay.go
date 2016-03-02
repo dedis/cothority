@@ -280,6 +280,14 @@ func (o *Overlay) Suite() abstract.Suite {
 	return o.host.Suite()
 }
 
+func (o *Overlay) Close() {
+	for _, n := range o.nodes {
+		if err := n.ProtocolInstance().Shutdown(); err != nil {
+			dbg.Error("Error shutting down protocol", err)
+		}
+	}
+}
+
 // TreeNodeCache is a cache that maps from token to treeNode. Since the mapping
 // is not 1-1 (many Token can point to one TreeNode, but one token leads to one
 // TreeNode), we have to do certain
