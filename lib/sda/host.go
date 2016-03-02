@@ -27,6 +27,7 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
+	"time"
 )
 
 /*
@@ -178,18 +179,23 @@ func (h *Host) Listen() {
 		h.handleConn(c)
 	}
 	go func() {
-		quit := h.isClosing
-		h.networkLock.Unlock()
-		if quit {
-			dbg.Lvl3(h.Entity.First(), "quit before listening")
-			return
-		}
 		dbg.Lvl3("Host listens on:", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
 		}
 	}()
+	for {
+		dbg.Lvl3(h.Entity.First(), "checking if listener is up")
+		c, err := h.host.Open(h.Entity)
+		if err == nil {
+			c.Close()
+			dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
+			break
+		}
+		time.Sleep(network.WaitRetry)
+	}
+	h.networkLock.Unlock()
 }
 
 // Connect takes an entity where to connect to

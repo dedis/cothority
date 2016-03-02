@@ -24,7 +24,7 @@ func TestNode(t *testing.T) {
 		t.Fatal("Couldn't start protocol:", err)
 	}
 	protocol := node.ProtocolInstance().(*example_channels.ProtocolExampleChannels)
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry * nbrNodes * 2) * time.Millisecond
+	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:
 		dbg.Lvl2("Instance 1 is done")
