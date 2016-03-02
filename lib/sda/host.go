@@ -170,7 +170,6 @@ func NewHostKey(address string) (*Host, abstract.Secret) {
 // Listen starts listening for messages coming from any host that tries to
 // contact this entity / host
 func (h *Host) Listen() {
-	h.networkLock.Lock()
 	dbg.Lvl3(h.Entity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
@@ -187,15 +186,13 @@ func (h *Host) Listen() {
 	}()
 	for {
 		dbg.Lvl3(h.Entity.First(), "checking if listener is up")
-		c, err := h.host.Open(h.Entity)
+		_, err := h.Connect(h.Entity)
 		if err == nil {
-			c.Close()
 			dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
 			break
 		}
 		time.Sleep(network.WaitRetry)
 	}
-	h.networkLock.Unlock()
 }
 
 // Connect takes an entity where to connect to
@@ -423,7 +420,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		if err != nil {
 			dbg.Lvl4(h.Entity.First(), "got error", h.isClosing, err)
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-				dbg.Lvl3(h.Entity.First(), "quitting for")
+				dbg.Lvl3(h.Entity.First(), "quitting for:", err)
 				return
 			}
 			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)

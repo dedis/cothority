@@ -280,7 +280,7 @@ func TestSendLimitedTree(t *testing.T) {
 	defer testutil.AfterTest(t)
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenBigTree(7, 1, 2, false, true)
+	_, _, tree := local.GenBigTree(7, 1, 2, true, true)
 	defer local.CloseAll()
 
 	dbg.Lvl3(tree.Dump())
@@ -289,9 +289,10 @@ func TestSendLimitedTree(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
-	count := root.ProtocolInstance().(*manage.ProtocolCount)
-	if <-count.Count != 7 {
-		t.Fatal("Didn't get a count of 7")
+	protoCount := root.ProtocolInstance().(*manage.ProtocolCount)
+	count := <-protoCount.Count
+	if count != 7 {
+		t.Fatal("Didn't get a count of 7:", count)
 	}
 }
 
