@@ -70,7 +70,7 @@ type TcpHost struct {
 	quitListener  chan bool
 	listeningLock sync.Mutex
 	listening     bool
-	// indicates wether this host is closed already or not
+	// indicates whether this host is closed already or not
 	closed     bool
 	closedLock sync.Mutex
 	// a list of constructors for en/decoding
