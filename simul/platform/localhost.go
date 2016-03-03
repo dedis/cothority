@@ -20,8 +20,6 @@ import (
 // Localhost is responsible for launching the app with the specified number of nodes
 // directly on your machine, for local testing.
 
-var defaultConfigName = "localhost.toml"
-
 // Localhost is the platform for launching thee apps locally
 type Localhost struct {
 

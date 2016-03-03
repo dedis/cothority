@@ -1,14 +1,9 @@
 package sda
 
 import (
-	"errors"
-	"time"
-
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
-
-var timeOut = 30 * time.Second
 
 // Our message-types used in sda
 var SDADataMessage = network.RegisterMessageType(SDAData{})
@@ -86,16 +81,3 @@ type EntityListUnknown struct {
 type SendEntity struct {
 	Name string
 }
-
-// IPType defines how incoming packets are handled
-type IPType int
-
-const (
-	WaitForAll IPType = iota
-	PassDirect
-	Timeout
-)
-
-// NoSuchState indicates that the given state doesn't exist in the
-// chosen ProtocolInstance
-var NoSuchState error = errors.New("This state doesn't exist")

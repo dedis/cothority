@@ -26,12 +26,6 @@ var readyCount int64
 // proxy connections opened
 var proxyConns map[string]*json.Encoder
 
-var proxyDone chan bool
-
-func init() {
-	proxyDone = make(chan bool)
-}
-
 // Proxy will launch a routine that waits for input connections
 // It takes a redirection address soas to where redirect incoming packets
 // Proxy will listen on Sink:SinkPort variables so that the user do not
@@ -180,12 +174,4 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	}
 	conn.Close()
 	done <- true
-}
-
-// proxyDataServer send the data to the server...
-func proxyDataServer(data []byte) {
-	_, err := serverConn.Write(data)
-	if err != nil {
-		panic(fmt.Errorf("Error proxying data to server: %v", err))
-	}
 }

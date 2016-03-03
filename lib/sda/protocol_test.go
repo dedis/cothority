@@ -14,8 +14,6 @@ import (
 )
 
 var testID = uuid.NewV5(uuid.NamespaceURL, "test")
-var simpleID = uuid.NewV5(uuid.NamespaceURL, "simple")
-var aggregateID = uuid.NewV5(uuid.NamespaceURL, "aggregate")
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
@@ -88,8 +86,6 @@ func TestProtocolRegistration(t *testing.T) {
 	}
 }
 
-var testString = ""
-
 // This makes h2 the leader, so it creates a tree and entity list
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
@@ -147,5 +143,4 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("Could not receive from channel of host 1")
 	}
-	// then it's all good
 }

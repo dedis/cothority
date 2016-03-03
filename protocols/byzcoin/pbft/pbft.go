@@ -93,19 +93,7 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	return pbft, nil
 }
 
-// NewRootProtocol returns a new PBFT Protocol with the block it needs to sign
-// off.
-func NewRootProtocol(n *sda.Node, trBlock *blockchain.TrBlock, onDoneCb func()) (*Protocol, error) {
-	pbft, err := NewProtocol(n)
-	if err != nil {
-		return nil, err
-	}
-	pbft.trBlock = trBlock
-	pbft.onDoneCB = onDoneCb
-	return pbft, nil
-}
-
-// Dispatch listen on the different channels
+// Dispatch implements sda.Protocol (and listens on all message channels)
 func (p *Protocol) Dispatch() error {
 	for {
 		select {
