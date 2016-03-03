@@ -120,6 +120,12 @@ func main() {
 			dbg.Fatal(err)
 		}
 
+		// Test if all Entities are used in the tree, else we'll run into
+		// troubles with CloseAll
+		if !rootSC.Tree.UsesList() {
+			dbg.Error("The tree doesn't use all Entities from the list!\n" +
+				"This means that the CloseAll will fail and the experiment never ends!")
+		}
 		if rootSC.GetSingleHost() {
 			// In case of "SingleHost" we need a new tree that contains every
 			// entity only once, whereas rootSC.Tree will have the same
@@ -143,10 +149,11 @@ func main() {
 	go func() {
 		for _, sc := range scs {
 			sc.Host.WaitForClose()
-			dbg.Lvl3("Simulation closed host", sc.Host.Entity.Addresses, "closed")
+			dbg.Lvl3(hostAddress, "Simulation closed host", sc.Host.Entity.Addresses, "closed")
 		}
 		allClosed <- true
 	}()
+	dbg.Lvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
 	select {
 	case <-allClosed:
 		dbg.Lvl2(hostAddress, ": all hosts closed")

@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -69,7 +68,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	isDone := o.nodeInfo[sdaMsg.To.Id()]
 	// If we never have seen this token before, then we create it
 	if node == nil && !isDone {
-		dbg.Lvl2("Node not found for token (creating new one) :", fmt.Sprintf("%+v", sdaMsg.To))
+		dbg.Lvl3(o.host.Entity.First(), "creating new node for token:", sdaMsg.To.Id())
 		var err error
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		o.nodeInfo[sdaMsg.To.Id()] = false

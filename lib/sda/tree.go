@@ -160,6 +160,25 @@ func (t *Tree) Size() int {
 	return size
 }
 
+// UsesList returns true if all Entities of the list are used at least once
+// in the tree
+func (t *Tree) UsesList() bool {
+	nodes := t.ListNodes()
+	for _, p := range t.EntityList.List {
+		found := false
+		for _, n := range nodes {
+			if n.Entity.Id == p.Id {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 // TreeMarshal is used to send and receive a tree-structure without having
 // to copy the whole nodelist
 type TreeMarshal struct {
@@ -278,9 +297,19 @@ func (en *EntityList) Get(idx int) *network.Entity {
 // size of the EntityList. If 'nodes' is bigger than the number of elements
 // in the EntityList, it will add some or all elements in the EntityList
 // more than once.
+// If the length of the EntityList is equal to 'nodes', it is guaranteed that
+// all Entities from the EntityList will be used in the tree.
+// However, for some configurations it is impossible to use all Entities from
+// the EntityList and still avoid having a parent and a child from the same
+// host. In this case use-all has preference over not-the-same-host.
 func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
+	// list of which hosts are already used
+	used := make([]bool, len(il.List))
 	ilLen := len(il.List)
+	// only use all Entities if we have the same number of nodes and hosts
+	useAll := ilLen == nodes
 	root := NewTreeNode(il.List[0])
+	used[0] = true
 	levelNodes := []*TreeNode{root}
 	totalNodes := 1
 	elIndex := 1 % ilLen
@@ -299,8 +328,19 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 				// on the same host as the parent.
 				childHost, _, _ := net.SplitHostPort(il.List[elIndex].Addresses[0])
 				elIndexFirst := elIndex
-				for childHost == parentHost && ilLen > 1 {
+				notSameHost := true
+				for (notSameHost && childHost == parentHost && ilLen > 1) ||
+					(useAll && used[elIndex]) {
 					elIndex = (elIndex + 1) % ilLen
+					if useAll && used[elIndex] {
+						// In case we searched all Entities,
+						// give up on finding another host, but
+						// keep using all Entities
+						if elIndex == elIndexFirst {
+							notSameHost = false
+						}
+						continue
+					}
 					// If we tried all hosts, it means we're using
 					// just one hostname, as we didn't find any
 					// other name
@@ -310,6 +350,7 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 					childHost, _, _ = net.SplitHostPort(il.List[elIndex].Addresses[0])
 				}
 				child := NewTreeNode(il.List[elIndex])
+				used[elIndex] = true
 				elIndex = (elIndex + 1) % ilLen
 				totalNodes += 1
 				parent.Children[n] = child
