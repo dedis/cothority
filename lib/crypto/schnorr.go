@@ -1,7 +1,8 @@
 package crypto
 
 import (
-	"errors"
+	"fmt"
+
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
@@ -46,7 +47,7 @@ func SignSchnorr(suite abstract.Suite, private abstract.Secret, msg []byte) (Sch
 	}, nil
 }
 
-// VerifySchnorr verifies if a SchnorrSig is correct or not.
+// VerifySchnorr verifies a given SchnorrSig
 func VerifySchnorr(suite abstract.Suite, public abstract.Point, msg []byte, sig SchnorrSig) error {
 	// compute rv = g^s * g^e
 	gs := suite.Point().Mul(nil, sig.Response)
@@ -63,7 +64,7 @@ func VerifySchnorr(suite abstract.Suite, public abstract.Point, msg []byte, sig 
 	e := suite.Secret().Pick(cipher)
 
 	if !e.Equal(sig.Challenge) {
-		return errors.New("Challenge reconstructed is not equal to one given in signature")
+		return fmt.Errorf("Challenge reconstructed %v is not equal to one given in signature %v", e, sig.Challenge)
 	}
 	//  everything OK
 	return nil
