@@ -197,8 +197,8 @@ func (pc *ProtocolCosi) StartCommitment() error {
 	return pc.SendTo(pc.Parent(), out)
 }
 
-// handleAllCommitment takes the full set of messages from the children and pass
-// it along the round.
+// handleAllCommitment takes the full set of messages from the children and passes
+// it to the parent
 func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	// add to temporary
 	pc.tempCommitLock.Lock()
