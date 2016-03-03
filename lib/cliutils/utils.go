@@ -95,7 +95,7 @@ func Build(path, out, goarch, goos string) (string, error) {
 	wd, _ := os.Getwd()
 	dbg.Lvl4("In directory", wd)
 
-	cmd = exec.Command("go", "build", "-race", "-v", "-o", out, path)
+	cmd = exec.Command("go", "build", "-v", "-o", out, path)
 	dbg.Lvl4("Building", cmd.Args, "in", path)
 	cmd.Stdout = build_buffer
 	cmd.Stderr = build_buffer

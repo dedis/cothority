@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
@@ -210,7 +209,6 @@ func (c *Cosi) Signature() *Signature {
 // Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 func (c *Cosi) VerifyResponses(aggregatedPublic abstract.Point) error {
 	commitment := c.suite.Point()
-	dbg.Print(c.aggregateResponse, c.challenge)
 	commitment = commitment.Add(commitment.Mul(nil, c.aggregateResponse), c.suite.Point().Mul(aggregatedPublic, c.challenge))
 	// T is the recreated V_hat
 	T := c.suite.Point().Null()
