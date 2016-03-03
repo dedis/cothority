@@ -22,7 +22,6 @@ package main
 
 import (
 	"flag"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -232,10 +231,6 @@ func MkTestDir() {
 
 func TestFile(name string) string {
 	return "test_data/" + name + ".csv"
-}
-
-func isZero(f float64) bool {
-	return math.Abs(f) < 0.0000001
 }
 
 // returns a tuple of start and stop configurations to run

@@ -19,28 +19,9 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 )
 
-// Sink is the server address where all measures are transmitted to for
-// further analysis.
-var sink string
-
 // Structs are encoded through a json encoder.
 var encoder *json.Encoder
 var connection net.Conn
-
-// Keeps track if a measure is enabled (true) or not (false). If disabled,
-// measures are not sent to the monitor. Use EnableMeasure(bool) to toggle
-// this variable.
-var enabled = true
-
-// Enables / Disables a measure.
-func EnableMeasure(b bool) {
-	if b {
-		dbg.Lvl3("Monitor: Measure enabled")
-	} else {
-		dbg.Lvl3("Monitor: Measure disabled")
-	}
-	enabled = b
-}
 
 // ConnectSink connects to the given endpoint and initialises a json
 // encoder. It can be the address of a proxy or a monitoring process.
@@ -55,7 +36,6 @@ func ConnectSink(addr string) error {
 		return err
 	}
 	dbg.Lvl3("Connected to sink:", addr)
-	sink = addr
 	connection = conn
 	encoder = json.NewEncoder(conn)
 	return nil
@@ -99,9 +79,6 @@ func GetReady(addr string) (*Stats, error) {
 func send(v interface{}) {
 	if encoder == nil {
 		panic(fmt.Errorf("Monitor's sink connection not initalized. Can not send any measures"))
-	}
-	if !enabled {
-		return
 	}
 
 	// For a large number of clients (˜10'000), the connection phase

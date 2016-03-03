@@ -274,11 +274,6 @@ func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Poin
 	return nil
 }
 
-// A wrapper that uses the Signature struct
-func VerifyCosiSignature(suite abstract.Suite, msg []byte, public abstract.Point, sig *Signature) error {
-	return VerifySignature(suite, msg, public, sig.Challenge, sig.Response)
-}
-
 // VerifySignatureWithException will verify the signature taking into account
 // the exceptions given. An exception is the pubilc key + commitment of a peer that did not
 // sign.

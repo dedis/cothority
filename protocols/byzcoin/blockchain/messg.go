@@ -11,23 +11,9 @@ import (
 	"github.com/dedis/crypto/suites"
 )
 
-// Default port for the conode-setup - the stamping-request port
-// is at ```DefaultPort + 1```
-var DefaultPort int = 2000
-
 type MessageType int
 
 type SeqNo byte
-
-const (
-	Error MessageType = iota
-	TransactionAnnouncmentType
-	BlockReplyType
-	BlockRequestType
-	KeyBlockRequestType
-	BitCoSiClose
-	BitCoSiExit
-)
 
 type TransactionAnnouncment struct {
 	Val blkparser.Tx // Trasaction to be included in a block

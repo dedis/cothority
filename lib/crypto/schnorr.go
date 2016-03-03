@@ -20,7 +20,7 @@ func (ss *SchnorrSig) MarshalBinary() ([]byte, error) {
 	return append(cbuf, rbuf...), err
 }
 
-// SignSchnorr create a SchnorrSig from a msg and a private key (named from wikipedia page)
+// SignSchnorr creates a SchnorrSig from a msg and a private key
 func SignSchnorr(suite abstract.Suite, private abstract.Secret, msg []byte) (SchnorrSig, error) {
 	k := suite.Secret().Pick(random.Stream)
 	r := suite.Point().Mul(nil, k)
@@ -46,7 +46,7 @@ func SignSchnorr(suite abstract.Suite, private abstract.Secret, msg []byte) (Sch
 	}, nil
 }
 
-// VerifySchnorr verify if a SchnorrSig is correct or not.
+// VerifySchnorr verifies if a SchnorrSig is correct or not.
 func VerifySchnorr(suite abstract.Suite, public abstract.Point, msg []byte, sig SchnorrSig) error {
 	// compute rv = g^s * g^e
 	gs := suite.Point().Mul(nil, sig.Response)
