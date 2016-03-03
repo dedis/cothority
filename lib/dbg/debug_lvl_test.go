@@ -17,15 +17,15 @@ func ExampleLevel2() {
 	dbg.Lvl5("Level5")
 
 	// Output:
-	// 1 : (                  dbg_test.ExampleLevel2:   0) - Level1
-	// 2 : (                  dbg_test.ExampleLevel2:   0) - Level2
+	// 1: (                  dbg_test.ExampleLevel2:   0) - Level1
+	// 2: (                  dbg_test.ExampleLevel2:   0) - Level2
 }
 
 func ExampleMultiParams() {
 	dbg.Lvl1("Multiple", "parameters")
 
 	// Output:
-	// 1 : (             dbg_test.ExampleMultiParams:   0) - Multiple parameters
+	// 1: (             dbg_test.ExampleMultiParams:   0) - Multiple parameters
 }
 
 func ExampleLLvl() {
@@ -35,10 +35,10 @@ func ExampleLLvl() {
 	dbg.LLvlf1("LLvlf output")
 
 	// Output:
-	// 1 : (                    dbg_test.ExampleLLvl:   0) - Lvl output
-	// 1!: (                    dbg_test.ExampleLLvl:   0) - LLvl output
-	// 1 : (                    dbg_test.ExampleLLvl:   0) - Lvlf output
-	// 1!: (                    dbg_test.ExampleLLvl:   0) - LLvlf output
+	// 1: (                    dbg_test.ExampleLLvl:   0) - Lvl output
+	// -1: (                    dbg_test.ExampleLLvl:   0) - LLvl output
+	// 1: (                    dbg_test.ExampleLLvl:   0) - Lvlf output
+	// -1: (                    dbg_test.ExampleLLvl:   0) - LLvlf output
 }
 
 func thisIsAVeryLongFunctionNameThatWillOverflow() {
@@ -51,9 +51,9 @@ func ExampleLongFunctions() {
 	dbg.Lvl1("After")
 
 	// Output:
-	// 1 : (           dbg_test.ExampleLongFunctions:   0) - Before
-	// 1 : (dbg_test.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
-	// 1 : (                       dbg_test.ExampleLongFunctions:   0) - After
+	// 1: (           dbg_test.ExampleLongFunctions:   0) - Before
+	// 1: (dbg_test.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
+	// 1: (                       dbg_test.ExampleLongFunctions:   0) - After
 }
 
 func ExampleLongFunctionsLimit() {
@@ -63,7 +63,7 @@ func ExampleLongFunctionsLimit() {
 	dbg.Lvl1("After")
 
 	// Output:
-	// 1 : (dbg_test.ExampleLongFunctionsLimit:   0) - Before
-	// 1 : (dbg_test.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
-	// 1 : (dbg_test.ExampleLongFunctionsLimit:   0) - After
+	// 1: (dbg_test.ExampleLongFunctionsLimit:   0) - Before
+	// 1: (dbg_test.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
+	// 1: (dbg_test.ExampleLongFunctionsLimit:   0) - After
 }
