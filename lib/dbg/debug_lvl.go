@@ -2,9 +2,11 @@ package dbg
 
 import (
 	"fmt"
+	"github.com/daviddengcn/go-colortext"
 	"os"
 	"regexp"
 	"runtime"
+	"strconv"
 	"sync"
 )
 
@@ -34,6 +36,14 @@ var Testing = false
 var StaticMsg = ""
 
 var regexpPaths, _ = regexp.Compile(".*/")
+
+const (
+	LvlPrint = iota - 10
+	LvlWarning
+	LvlError
+	LvlFatal
+	LvlPanic
+)
 
 // Needs two functions to keep the caller-depth the same and find who calls us
 // Lvlf1 -> Lvlf -> Lvl
@@ -72,7 +82,49 @@ func Lvl(lvl int, args ...interface{}) {
 		caller += "@" + StaticMsg
 	}
 	message := fmt.Sprintln(args...)
-	fmt.Printf("%d: (%s) - %s", lvl, caller, message)
+	bright := lvl < 0
+	lvlAbs := lvl
+	if bright {
+		lvlAbs *= -1
+	}
+	lvlStr := strconv.Itoa(lvlAbs)
+	if lvl < 0 {
+		lvlStr += "!"
+	}
+	switch lvl {
+	case LvlPrint:
+		fg(ct.White, true)
+		lvlStr = "I"
+	case LvlWarning:
+		fg(ct.Green, true)
+		lvlStr = "W"
+	case LvlError:
+		fg(ct.Red, false)
+		lvlStr = "E"
+	case LvlFatal:
+		fg(ct.Red, true)
+		lvlStr = "F"
+	case LvlPanic:
+		fg(ct.Red, true)
+		lvlStr = "P"
+	default:
+		if lvl != 0 {
+			if lvlAbs <= 5 {
+				colors := []ct.Color{ct.Yellow, ct.Cyan, ct.Blue, ct.Green, ct.Cyan}
+				fg(colors[lvlAbs-1], bright)
+			}
+		}
+	}
+	fmt.Printf("%-2s: (%s) - %s", lvlStr, caller, message)
+	if !Testing {
+		ct.ResetColor()
+	}
+}
+
+func fg(c ct.Color, bright bool) {
+	if !Testing {
+		ct.Foreground(c, bright)
+	}
 }
 
 func Lvlf(lvl int, f string, args ...interface{}) {
@@ -80,11 +132,11 @@ func Lvlf(lvl int, f string, args ...interface{}) {
 }
 
 func Print(args ...interface{}) {
-	Lvld(-1, args...)
+	Lvld(LvlPrint, args...)
 }
 
 func Printf(f string, args ...interface{}) {
-	Lvlf(-1, f, args...)
+	Lvlf(LvlPrint, f, args...)
 }
 
 func Lvl1(args ...interface{}) {
@@ -108,21 +160,21 @@ func Lvl5(args ...interface{}) {
 }
 
 func Error(args ...interface{}) {
-	Lvld(0, args...)
+	Lvld(LvlError, args...)
 }
 
 func Warn(args ...interface{}) {
 	args = append([]interface{}{"WARN:"}, args...)
-	Lvld(0, args...)
+	Lvld(LvlWarning, args...)
 }
 
 func Fatal(args ...interface{}) {
-	Lvld(0, args...)
+	Lvld(LvlFatal, args...)
 	os.Exit(1)
 }
 
 func Panic(args ...interface{}) {
-	Lvld(0, args...)
+	Lvld(LvlPanic, args...)
 	panic(args)
 }
 
@@ -147,20 +199,20 @@ func Lvlf5(f string, args ...interface{}) {
 }
 
 func Fatalf(f string, args ...interface{}) {
-	Lvlf(0, f, args...)
+	Lvlf(LvlFatal, f, args...)
 	os.Exit(1)
 }
 
 func Errorf(f string, args ...interface{}) {
-	Lvlf(0, f, args...)
+	Lvlf(LvlError, f, args...)
 }
 
 func Warnf(f string, args ...interface{}) {
-	Lvlf(0, "WARN: "+f, args...)
+	Lvlf(LvlWarning, "WARN: "+f, args...)
 }
 
 func Panicf(f string, args ...interface{}) {
-	Lvlf(0, f, args...)
+	Lvlf(LvlPanic, f, args...)
 	panic(args)
 }
 
