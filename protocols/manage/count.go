@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"sync"
 )
 
 /*
@@ -24,7 +25,8 @@ type ProtocolCount struct {
 	Replies          int
 	Count            chan int
 	Quit             chan bool
-	Timeout          int
+	timeout          int
+	timeoutMu        sync.Mutex
 	PrepareCountChan chan struct {
 		*sda.TreeNode
 		PrepareCount
@@ -54,7 +56,7 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolCount{
 		Node:    n,
 		Quit:    make(chan bool),
-		Timeout: 1024,
+		timeout: 1024,
 	}
 	p.Count = make(chan int, 1)
 	p.RegisterChannel(&p.CountChan)
@@ -68,12 +70,12 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 func (p *ProtocolCount) Dispatch() error {
 	running := true
 	for running {
-		dbg.Lvl3(p.Myself(), "waiting for message during", p.Timeout)
+		dbg.Lvl3(p.Myself(), "waiting for message during", p.Timeout())
 		select {
 		case pc := <-p.PrepareCountChan:
 			dbg.Lvl3(p.Myself(), "received from", pc.TreeNode.Entity.Addresses,
 				pc.Timeout)
-			p.Timeout = pc.Timeout
+			p.SetTimeout(pc.Timeout)
 			p.FuncPC()
 		case c := <-p.CountChan:
 			p.FuncC(c)
@@ -84,8 +86,8 @@ func (p *ProtocolCount) Dispatch() error {
 			} else {
 				p.Replies++
 			}
-		case <-time.After(time.Duration(p.Timeout) * time.Millisecond):
-			dbg.Lvl3(p.Myself(), "timed out while waiting for", p.Timeout)
+		case <-time.After(time.Duration(p.Timeout()) * time.Millisecond):
+			dbg.Lvl3(p.Myself(), "timed out while waiting for", p.Timeout())
 			if p.IsRoot() {
 				dbg.Lvl2("Didn't get all children in time:", p.Replies)
 				p.Count <- p.Replies
@@ -105,8 +107,8 @@ func (p *ProtocolCount) FuncPC() {
 	}
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			dbg.Lvl3(p.Myself(), "sending to", c.Entity.Addresses, c.Id, p.Timeout)
-			p.SendTo(c, &PrepareCount{Timeout: p.Timeout})
+			dbg.Lvl3(p.Myself(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
+			p.SendTo(c, &PrepareCount{Timeout: p.timeout})
 		}
 	} else {
 		p.CountChan <- nil
@@ -136,4 +138,17 @@ func (p *ProtocolCount) Start() error {
 	dbg.Lvl3("Starting to count")
 	p.FuncPC()
 	return nil
+}
+
+// Sets the timeout
+func (p *ProtocolCount) SetTimeout(t int) {
+	p.timeoutMu.Lock()
+	p.timeout = t
+	p.timeoutMu.Unlock()
+}
+
+func (p *ProtocolCount) Timeout() int {
+	p.timeoutMu.Lock()
+	defer p.timeoutMu.Unlock()
+	return p.timeout
 }
