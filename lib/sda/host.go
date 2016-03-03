@@ -564,7 +564,9 @@ func newHostMock(s abstract.Suite, address string) *Host {
 
 // WaitForClose returns only once all connections have been closed
 func (h *Host) WaitForClose() {
-	select {
-	case <-h.ProcessMessagesQuit:
+	if h.processMessagesStarted {
+		select {
+		case <-h.ProcessMessagesQuit:
+		}
 	}
 }
