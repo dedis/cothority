@@ -54,14 +54,14 @@ func main() {
 	if monitorAddress != "" {
 		monitor.ConnectSink(monitorAddress)
 	}
-	var sims []sda.Simulation
+	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig
 	var rootSim sda.Simulation
-	for _, sc := range scs {
+	for i, sc := range scs {
 		// Starting all hosts for that server
 		host := sc.Host
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
-		host.Listen()
+		host.ListenNoblock()
 		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
@@ -71,9 +71,9 @@ func main() {
 		if err != nil {
 			dbg.Fatal(err)
 		}
-		sims = append(sims, sim)
+		sims[i] = sim
 		if host.Entity.Id == sc.Tree.Root.Entity.Id {
-			dbg.Lvl2("Found root-node, will start protocol")
+			dbg.Lvl2(hostAddress, "is root-node, will start protocol")
 			rootSim = sim
 			rootSC = sc
 		}
@@ -90,14 +90,13 @@ func main() {
 		// each level of the tree.
 		timeout := 1000
 		for wait {
-			dbg.Lvl2("Counting children with timeout of", timeout)
 			node, err := rootSC.Overlay.CreateNewNodeName("Count", rootSC.Tree)
 			if err != nil {
 				dbg.Fatal(err)
 			}
 			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
 			node.Start()
-			dbg.Lvl1("Started counting")
+			dbg.Lvl1("Started counting children with timeout of", timeout)
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
 				if count == rootSC.Tree.Size() {
@@ -106,9 +105,9 @@ func main() {
 				} else {
 					dbg.Lvl1("Found only", count, "children, counting again")
 				}
-			case <-time.After(time.Millisecond * time.Duration(timeout) * 2):
-				// Wait longer than the root-node before aborting
-				dbg.Lvl1("Timed out waiting for children")
+				//case <-time.After(time.Millisecond * time.Duration(timeout) * 2):
+				//	// Wait longer than the root-node before aborting
+				//	dbg.Lvl1("Timed out waiting for children")
 			}
 			// Double the timeout and try again if not successful.
 			timeout *= 2

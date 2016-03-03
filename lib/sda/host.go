@@ -159,9 +159,10 @@ func (h *Host) SaveToFile(name string) error {
 	return nil
 }
 
-// Listen starts listening for messages coming from any host that tries to
-// contact this entity / host
-func (h *Host) Listen() {
+// listen starts listening for messages coming from any host that tries to
+// contact this host. If 'wait' is true, it will try to connect to itself before
+// returning.
+func (h *Host) listen(wait bool) {
 	dbg.Lvl3(h.Entity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
@@ -176,15 +177,28 @@ func (h *Host) Listen() {
 			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
 		}
 	}()
-	for {
-		dbg.Lvl3(h.Entity.First(), "checking if listener is up")
-		_, err := h.Connect(h.Entity)
-		if err == nil {
-			dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
-			break
+	if wait {
+		for {
+			dbg.Lvl3(h.Entity.First(), "checking if listener is up")
+			_, err := h.Connect(h.Entity)
+			if err == nil {
+				dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
+				break
+			}
+			time.Sleep(network.WaitRetry)
 		}
-		time.Sleep(network.WaitRetry)
 	}
+}
+
+// Listen starts listening and returns once it could connect to itself
+func (h *Host) Listen() {
+	h.listen(true)
+}
+
+// ListenNoblock only starts listening and returns without waiting for the
+// listening to be active
+func (h *Host) ListenNoblock() {
+	h.listen(false)
 }
 
 // Connect takes an entity where to connect to

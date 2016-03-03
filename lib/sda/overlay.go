@@ -80,7 +80,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	}
 	// If node is ALREADY DONE => drop packet
 	if isDone {
-		dbg.Lvl2("Message given to DONE Node => DROP")
+		dbg.Lvl2("Dropped message given to node that is done.")
 		o.nodeLock.Unlock()
 		return nil
 	}
