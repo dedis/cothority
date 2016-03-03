@@ -82,40 +82,49 @@ func Lvl(lvl int, args ...interface{}) {
 		caller += "@" + StaticMsg
 	}
 	message := fmt.Sprintln(args...)
-	var lvlStr string
-	if lvl > 0 {
-		lvlStr = strconv.Itoa(lvl)
-	} else {
-		lvlStr = "!" + strconv.Itoa(-lvl)
+	bright := lvl < 0
+	lvlAbs := lvl
+	if bright {
+		lvlAbs *= -1
+	}
+	lvlStr := strconv.Itoa(lvlAbs)
+	if lvl < 0 {
+		lvlStr += "!"
 	}
 	switch lvl {
 	case LvlPrint:
-		ct.Foreground(ct.White, true)
+		fg(ct.White, true)
 		lvlStr = "I"
 	case LvlWarning:
-		ct.Foreground(ct.Green, true)
+		fg(ct.Green, true)
 		lvlStr = "W"
 	case LvlError:
-		ct.Foreground(ct.Red, false)
+		fg(ct.Red, false)
 		lvlStr = "E"
 	case LvlFatal:
-		ct.Foreground(ct.Red, true)
+		fg(ct.Red, true)
 		lvlStr = "F"
 	case LvlPanic:
-		ct.Foreground(ct.Red, true)
+		fg(ct.Red, true)
 		lvlStr = "P"
 	default:
 		if lvl != 0 {
-			bright := lvl < 0
-			lvlAbs := lvl * (lvl / lvl)
 			if lvlAbs <= 5 {
 				colors := []ct.Color{ct.Yellow, ct.Cyan, ct.Blue, ct.Green, ct.Cyan}
-				ct.Foreground(colors[lvlAbs-1], bright)
+				fg(colors[lvlAbs-1], bright)
 			}
 		}
 	}
 	fmt.Printf("%-2s: (%s) - %s", lvlStr, caller, message)
-	ct.ResetColor()
+	if !Testing {
+		ct.ResetColor()
+	}
+}
+
+func fg(c ct.Color, bright bool) {
+	if !Testing {
+		ct.Foreground(c, bright)
+	}
 }
 
 func Lvlf(lvl int, f string, args ...interface{}) {
