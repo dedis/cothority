@@ -207,8 +207,6 @@ func (d *Deterlab) Cleanup() error {
 			return nil
 		}
 	}
-
-	return nil
 }
 
 // Creates the appropriate configuration-files and copies everything to the

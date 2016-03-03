@@ -225,6 +225,7 @@ func NewLocalHost(port int) *Host {
 // GenLocalHosts will create n hosts with the first one being connected to each of
 // the other nodes if connect is true
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
+
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
 		host := NewLocalHost(2000 + i*10)
@@ -247,12 +248,14 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 			connected := false
 			for !connected {
 				time.Sleep(time.Millisecond * 10)
+				root.entityListsLock.RLock()
 				for id, _ := range root.entities {
 					if uuid.Equal(id, host.Entity.Id) {
 						connected = true
 						break
 					}
 				}
+				root.entityListsLock.RUnlock()
 			}
 			dbg.Lvl4(host.Entity.First(), "is connected to root")
 		}

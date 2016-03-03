@@ -32,7 +32,7 @@ func TestDataFilterFilter(t *testing.T) {
 	}
 	for i, v := range filtered {
 		if v != shouldBe[i] {
-			t.Error(fmt.Sprintf("Element %d = %d vs %d", i, filtered[i], shouldBe[i]))
+			t.Error(fmt.Sprintf("Element %d = %f vs %f", i, filtered[i], shouldBe[i]))
 		}
 	}
 }

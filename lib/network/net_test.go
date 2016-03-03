@@ -8,12 +8,13 @@ import (
 
 	"golang.org/x/net/context"
 
+	"os"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"os"
 )
 
 type PublicPacket struct {
@@ -126,11 +127,12 @@ func TestSecureMultiClose(t *testing.T) {
 	receiverStarted := make(chan bool)
 	fn := func(s SecureConn) {
 		dbg.Lvl3("Getting connection from", s.Entity().First())
-		receiverStarted <- true
+		close(receiverStarted)
 	}
 
 	kp1 := config.NewKeyPair(Suite)
 	entity1 := NewEntity(kp1.Public, "localhost:2000")
+	//entity3 := NewEntity(kp1.Public, "localhost:2000")
 	kp2 := config.NewKeyPair(Suite)
 	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
@@ -159,30 +161,33 @@ func TestSecureMultiClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	<-done
+
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h3 := NewSecureTcpHost(kp1.Secret, entity1)
+	receiverStarted2 := make(chan bool)
+	fn2 := func(s SecureConn) {
+		dbg.Lvl3("Getting connection from", s.Entity().First())
+		receiverStarted2 <- true
+	}
+	done2 := make(chan bool)
 	go func() {
-		err = h3.Listen(fn)
+		err := h1.Listen(fn2)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener:", err)
 		}
-		done <- true
+		done2 <- true
 	}()
-	sc, err := h2.Open(entity1)
+	_, err = h2.Open(h1.entity)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = sc.Close()
-	if err != nil {
-		t.Fatal("Couldn't close connection to entity1:", err)
-	}
 
-	<-receiverStarted
-	err = h3.Close()
+	<-receiverStarted2
+	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)
 	}
-	<-done
+
+	<-done2
 }
 
 // Testing exchange of entity

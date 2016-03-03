@@ -22,7 +22,7 @@ type Overlay struct {
 	// false = NOT DONE
 	// true = DONE
 	nodeInfo map[uuid.UUID]bool
-	nodeLock sync.Mutex
+	nodeLock sync.RWMutex
 	// mapping from Tree.Id to Tree
 	trees    map[uuid.UUID]*Tree
 	treesMut sync.Mutex
@@ -249,12 +249,12 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 	if to == nil {
 		return errors.New("To-token is nil")
 	}
-	o.nodeLock.Lock()
+	o.nodeLock.RLock()
 	if o.nodes[from.Id()] == nil {
-		o.nodeLock.Unlock()
+		o.nodeLock.RUnlock()
 		return errors.New("No protocol instance registered with this token.")
 	}
-	o.nodeLock.Unlock()
+	o.nodeLock.RUnlock()
 	tn, err := o.TreeNodeFromToken(to)
 	if err != nil {
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
@@ -280,6 +280,8 @@ func (o *Overlay) Suite() abstract.Suite {
 }
 
 func (o *Overlay) Close() {
+	o.nodeLock.RLock()
+	defer o.nodeLock.RUnlock()
 	for _, n := range o.nodes {
 		if err := n.ProtocolInstance().Shutdown(); err != nil {
 			dbg.Error("Error shutting down protocol", err)
