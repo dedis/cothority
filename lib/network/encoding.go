@@ -26,17 +26,9 @@ var Suite = edwards.NewAES128SHA256Ed25519(false)
 // ProtocolMessage is a type for any message that the user wants to send
 type ProtocolMessage interface{}
 
-// When you don't need any special constructors, you can give nil to NewTcpHost
-// and it will use this empty constructors
-var emptyConstructors protobuf.Constructors
-
 // The basic url used for uuid
 const UuidURL = "https://dedis.epfl.ch/"
 const UuidURLProtocolType = UuidURL + "/protocolType/"
-
-func init() {
-	emptyConstructors = make(protobuf.Constructors)
-}
 
 // RegisterMessageType registers a custom "struct" / "packet" and get
 // the allocated Type

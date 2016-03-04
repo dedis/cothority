@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -23,7 +22,7 @@ type Overlay struct {
 	// false = NOT DONE
 	// true = DONE
 	nodeInfo map[uuid.UUID]bool
-	nodeLock sync.Mutex
+	nodeLock sync.RWMutex
 	// mapping from Tree.Id to Tree
 	trees    map[uuid.UUID]*Tree
 	treesMut sync.Mutex
@@ -69,7 +68,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	isDone := o.nodeInfo[sdaMsg.To.Id()]
 	// If we never have seen this token before, then we create it
 	if node == nil && !isDone {
-		dbg.Lvl2("Node not found for token (creating new one) :", fmt.Sprintf("%+v", sdaMsg.To))
+		dbg.Lvl3(o.host.Entity.First(), "creating new node for token:", sdaMsg.To.Id())
 		var err error
 		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
 		o.nodeInfo[sdaMsg.To.Id()] = false
@@ -81,7 +80,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 	}
 	// If node is ALREADY DONE => drop packet
 	if isDone {
-		dbg.Lvl2("Message given to DONE Node => DROP")
+		dbg.Lvl2("Dropped message given to node that is done.")
 		o.nodeLock.Unlock()
 		return nil
 	}
@@ -250,12 +249,12 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 	if to == nil {
 		return errors.New("To-token is nil")
 	}
-	o.nodeLock.Lock()
+	o.nodeLock.RLock()
 	if o.nodes[from.Id()] == nil {
-		o.nodeLock.Unlock()
+		o.nodeLock.RUnlock()
 		return errors.New("No protocol instance registered with this token.")
 	}
-	o.nodeLock.Unlock()
+	o.nodeLock.RUnlock()
 	tn, err := o.TreeNodeFromToken(to)
 	if err != nil {
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
@@ -281,6 +280,8 @@ func (o *Overlay) Suite() abstract.Suite {
 }
 
 func (o *Overlay) Close() {
+	o.nodeLock.RLock()
+	defer o.nodeLock.RUnlock()
 	for _, n := range o.nodes {
 		if err := n.ProtocolInstance().Shutdown(); err != nil {
 			dbg.Error("Error shutting down protocol", err)

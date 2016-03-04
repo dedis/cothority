@@ -304,6 +304,26 @@ func TestBinaryTrees(t *testing.T) {
 	}
 }
 
+func TestEntityListIsUsed(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	port := 2000
+	for hostExp := uint(2); hostExp < 8; hostExp++ {
+		hosts := (1 << hostExp) - 1
+		dbg.Lvl2("Trying tree with", hosts, "hosts")
+		names := make([]string, hosts)
+		for i := 0; i < hosts; i++ {
+			names[i] = "localhost" + strconv.Itoa(i/2) + ":" +
+				strconv.Itoa(port+i)
+
+		}
+		peerList := genEntityList(tSuite, names)
+		tree := peerList.GenerateBigNaryTree(2, hosts)
+		if !tree.UsesList() {
+			t.Fatal("Didn't find all Entities in tree", tree.Dump())
+		}
+	}
+}
+
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph

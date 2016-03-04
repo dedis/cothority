@@ -11,6 +11,10 @@ import (
 	"github.com/dedis/crypto/nist"
 )
 
+func init() {
+	_ = network.RegisterMessageType(TestMsg{})
+}
+
 func TestCommitHash(t *testing.T) {
 	suite := nist.NewAES128SHA256P256()
 	m := merkle.NewMerkle(suite.Hash())
@@ -39,8 +43,6 @@ type TestMsg struct {
 	Point abstract.Point
 	H     merkle.Hash
 }
-
-var TestType = network.RegisterMessageType(TestMsg{})
 
 func TestNetworkMarshaling(t *testing.T) {
 	suite := nist.NewAES128SHA256P256()

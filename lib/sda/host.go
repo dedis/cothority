@@ -49,6 +49,8 @@ type Host struct {
 	networkChan chan network.NetworkMessage
 	// The database of entities this host knows
 	entities map[uuid.UUID]*network.Entity
+	// lock associated to access entityLists
+	entityListsLock sync.RWMutex
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
@@ -60,11 +62,10 @@ type Host struct {
 	// The suite used for this Host
 	suite abstract.Suite
 	// We're about to close
-	isClosing bool
+	isClosing  bool
+	closingMut sync.Mutex
 	// lock associated to access network connections
 	networkLock sync.Mutex
-	// lock associated to access entityLists
-	entityListsLock sync.Mutex
 	// lock associated to access trees
 	treesLock sync.Mutex
 	// lock associated with pending TreeMarshal
@@ -158,9 +159,10 @@ func (h *Host) SaveToFile(name string) error {
 	return nil
 }
 
-// Listen starts listening for messages coming from any host that tries to
-// contact this entity / host
-func (h *Host) Listen() {
+// listen starts listening for messages coming from any host that tries to
+// contact this host. If 'wait' is true, it will try to connect to itself before
+// returning.
+func (h *Host) listen(wait bool) {
 	dbg.Lvl3(h.Entity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
@@ -175,15 +177,28 @@ func (h *Host) Listen() {
 			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
 		}
 	}()
-	for {
-		dbg.Lvl3(h.Entity.First(), "checking if listener is up")
-		_, err := h.Connect(h.Entity)
-		if err == nil {
-			dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
-			break
+	if wait {
+		for {
+			dbg.Lvl3(h.Entity.First(), "checking if listener is up")
+			_, err := h.Connect(h.Entity)
+			if err == nil {
+				dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
+				break
+			}
+			time.Sleep(network.WaitRetry)
 		}
-		time.Sleep(network.WaitRetry)
 	}
+}
+
+// Listen starts listening and returns once it could connect to itself
+func (h *Host) Listen() {
+	h.listen(true)
+}
+
+// ListenNoblock only starts listening and returns without waiting for the
+// listening to be active
+func (h *Host) ListenNoblock() {
+	h.listen(false)
 }
 
 // Connect takes an entity where to connect to
@@ -209,11 +224,14 @@ func (h *Host) Close() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 
+	h.closingMut.Lock()
 	if h.isClosing {
+		h.closingMut.Unlock()
 		return errors.New("Already closing")
 	}
 	dbg.Lvl3(h.Entity.First(), "Starts closing")
 	h.isClosing = true
+	h.closingMut.Unlock()
 	if h.processMessagesStarted {
 		// Tell ProcessMessages to quit
 		close(h.ProcessMessagesQuit)
@@ -238,17 +256,17 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
-	h.entityListsLock.Lock()
+	h.entityListsLock.RLock()
 	if _, ok := h.entities[e.Id]; !ok {
 		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
-		h.entityListsLock.Unlock()
+		h.entityListsLock.RUnlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
 		if err != nil {
 			return err
 		}
 	} else {
-		h.entityListsLock.Unlock()
+		h.entityListsLock.RUnlock()
 	}
 	var c network.SecureConn
 	var ok bool
@@ -409,8 +427,10 @@ func (h *Host) handleConn(c network.SecureConn) {
 		am.From = address
 		dbg.Lvl5("Got message", am)
 		if err != nil {
+			h.closingMut.Lock()
 			dbg.Lvl4(fmt.Sprintf("%+v got error (%+s) while receiving message (isClosing=%+v)",
 				h.Entity.First(), err, h.isClosing))
+			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
 				dbg.Lvl3(h.Entity.First(), "quitting handleConn for-loop", err)
 				return
@@ -558,7 +578,9 @@ func newHostMock(s abstract.Suite, address string) *Host {
 
 // WaitForClose returns only once all connections have been closed
 func (h *Host) WaitForClose() {
-	select {
-	case <-h.ProcessMessagesQuit:
+	if h.processMessagesStarted {
+		select {
+		case <-h.ProcessMessagesQuit:
+		}
 	}
 }

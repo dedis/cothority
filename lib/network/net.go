@@ -72,7 +72,7 @@ func (t *TcpHost) Close() error {
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
-		dbg.Lvl4("Closing peer", c)
+		// dbg.Lvl4("Closing peer", c)
 		if err := c.Close(); err != nil {
 			return handleError(err)
 		}
