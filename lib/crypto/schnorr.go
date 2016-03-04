@@ -68,8 +68,8 @@ func hash(r abstract.Point, msg []byte) (abstract.Secret, error) {
 		return nil, err
 	}
 	suite := network.Suite
-	cipher := suite.Cipher(msg)
-	cipher.Message(nil, nil, rBuf)
+	cipher := suite.Cipher(rBuf)
+	cipher.Message(nil, nil, msg)
 	// (re)compute challenge (e)
 	e := suite.Secret().Pick(cipher)
 
