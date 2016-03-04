@@ -103,7 +103,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
-		client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
+		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
+		if err != nil {
+			dbg.Error("Error in ClientSimulation:", err)
+			return err
+		}
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
@@ -123,7 +127,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Measure()
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
-				dbg.Lvl1("Round", round, "failed:", err)
+				dbg.Error("Round", round, "failed:", err)
 			} else {
 				dbg.Lvl1("Round", round, "success")
 			}

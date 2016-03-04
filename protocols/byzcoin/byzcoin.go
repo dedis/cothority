@@ -180,7 +180,6 @@ func NewByzCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs 
 // "commit" round will wait the end of the "prepare" round during its challenge
 // phase.
 func (bz *ByzCoin) Start() error {
-
 	if err := bz.startAnnouncementPrepare(); err != nil {
 		return err
 	}
