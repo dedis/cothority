@@ -46,8 +46,8 @@ func SignSchnorr(suite abstract.Suite, private abstract.Secret, msg []byte) (Sch
 func VerifySchnorr(suite abstract.Suite, public abstract.Point, msg []byte, sig SchnorrSig) error {
 	// compute rv = g^s * y^e (where y = g^x)
 	gs := suite.Point().Mul(nil, sig.Response)
-	ge := suite.Point().Mul(public, sig.Challenge)
-	rv := suite.Point().Add(gs, ge)
+	ye := suite.Point().Mul(public, sig.Challenge)
+	rv := suite.Point().Add(gs, ye)
 
 	// recompute challenge (e) from rv
 	e, err := hash(rv, msg)
