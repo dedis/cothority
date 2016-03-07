@@ -30,6 +30,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
+	"math"
 )
 
 // Configuration-variables
@@ -165,14 +166,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	done := make(chan struct{})
-	if platformDst == "localhost" {
-		machs := rc.Get("machines")
-		ppms := rc.Get("ppm")
-		mach, _ := strconv.Atoi(machs)
-		ppm, _ := strconv.Atoi(ppms)
-		rc.Put("machines", "1")
-		rc.Put("ppm", strconv.Itoa(ppm*mach))
-	}
+	CheckHosts(rc)
 	rs := monitor.NewStats(rc.Map())
 	monitor := monitor.NewMonitor(rs)
 
@@ -213,6 +207,22 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	case <-done:
 		monitor.Stop()
 		return *rs, err
+	}
+}
+
+// CheckHosts verifies that there is either a 'Hosts' or a 'Depth/BF'
+// -parameter in the Runconfig
+func CheckHosts(rc platform.RunConfig) {
+	hosts, err := rc.GetInt("hosts")
+	if hosts == 0 || err != nil {
+		depth, err1 := rc.GetInt("depth")
+		bf, err2 := rc.GetInt("bf")
+		if depth == 0 || bf == 0 || err1 != nil || err2 != nil {
+			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
+		}
+		hosts = int((1 - math.Pow(float64(bf), float64(depth+1))) /
+			float64(1-bf))
+		rc.Put("hosts", strconv.Itoa(hosts))
 	}
 }
 

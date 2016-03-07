@@ -3,10 +3,12 @@ package platform
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -137,6 +139,16 @@ var replacer *strings.Replacer = strings.NewReplacer("\"", "", "'", "")
 // Returns the associated value of the field in the config
 func (r *RunConfig) Get(field string) string {
 	return replacer.Replace(r.fields[strings.ToLower(field)])
+}
+
+// GetInt returns the integer of the field, or error if not defined
+func (r *RunConfig) GetInt(field string) (int, error) {
+	val := r.Get(field)
+	if val == "" {
+		return 0, errors.New("Didn't find " + field)
+	}
+	ret, err := strconv.Atoi(val)
+	return ret, err
 }
 
 // Insert a new field - value relationship
