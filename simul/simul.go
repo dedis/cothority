@@ -220,6 +220,12 @@ func CheckHosts(rc platform.RunConfig) {
 		if depth == 0 || bf == 0 || err1 != nil || err2 != nil {
 			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
 		}
+		// Geometric series
+		// Root-node: 1
+		// 1st level: bf (branching-factor)*/
+		// 2nd level: bf^2 (each child has bf children)
+		// 3rd level: bf^3
+		// So total: sum(level=0..depth)(bf^level)
 		hosts = int((1 - math.Pow(float64(bf), float64(depth+1))) /
 			float64(1-bf))
 		rc.Put("hosts", strconv.Itoa(hosts))
