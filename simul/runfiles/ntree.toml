@@ -2,7 +2,6 @@ Servers = 5
 Simulation = "NtreeSimulation"
 Rounds = 2
 BF = 2
-BlocksDir = "/Users/gailly/Documents/go/src/github.com/dedis/cothority/simul/runfiles/blocks"
 
 Hosts, Blocksize, TimeoutMs, Fail
 30, 1024, 3000, 0

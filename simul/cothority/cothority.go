@@ -94,7 +94,7 @@ func main() {
 			if err != nil {
 				dbg.Fatal(err)
 			}
-			node.ProtocolInstance().(*manage.ProtocolCount).Timeout = timeout
+			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
 			node.Start()
 			dbg.Lvl1("Started counting children with timeout of", timeout)
 			select {

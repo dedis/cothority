@@ -196,8 +196,8 @@ func (pc *ProtocolCosi) StartCommitment() error {
 	return pc.SendTo(pc.Parent(), out)
 }
 
-// handleAllCommitment takes the full set of messages from the children and pass
-// it along the round.
+// handleAllCommitment takes the full set of messages from the children and passes
+// it to the parent
 func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	// add to temporary
 	pc.tempCommitLock.Lock()
@@ -310,16 +310,16 @@ func (pc *ProtocolCosi) StartResponse() error {
 
 // handleResponse brings up the response of each node in the tree to the root.
 func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
-	defer pc.Cleanup()
-
 	// add to temporary
 	pc.tempResponseLock.Lock()
 	pc.tempResponse = append(pc.tempResponse, in)
 	pc.tempResponseLock.Unlock()
 	// do we have enough ?
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() has", len(pc.tempResponse), "responses")
 	if len(pc.tempResponse) < len(pc.Children()) {
 		return nil
 	}
+	defer pc.Cleanup()
 
 	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() aggregated")
 	// TODO check the hook

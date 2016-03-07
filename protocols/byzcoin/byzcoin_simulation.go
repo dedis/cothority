@@ -2,7 +2,6 @@ package byzcoin
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -103,7 +102,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
-		client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
+		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
+		if err != nil {
+			dbg.Error("Error in ClientSimulation:", err)
+			return err
+		}
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
@@ -123,7 +126,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Measure()
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
-				dbg.Lvl1("Round", round, "failed:", err)
+				dbg.Error("Round", round, "failed:", err)
 			} else {
 				dbg.Lvl1("Round", round, "success")
 			}
@@ -152,9 +155,6 @@ func verifyBlockSignature(suite abstract.Suite, aggregate abstract.Point, sig *B
 	if sig == nil || sig.Sig == nil || sig.Block == nil {
 		return errors.New("Empty block signature")
 	}
-	marshalled, err := sig.Block.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("Marshalling of block did not work: %v", err)
-	}
+	marshalled := sig.Block.HashSum()
 	return cosi.VerifySignatureWithException(suite, aggregate, marshalled, sig.Sig.Challenge, sig.Sig.Response, sig.Exceptions)
 }

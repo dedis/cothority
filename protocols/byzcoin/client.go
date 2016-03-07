@@ -51,7 +51,7 @@ func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
 	if len(transactions) == 0 {
 		return errors.New("Couldn't read any transactions.")
 	}
-	if len(transactions) != nTxs {
+	if len(transactions) < nTxs {
 		return fmt.Errorf("Read only %v but caller wanted %v", len(transactions), nTxs)
 	}
 	consumed := nTxs

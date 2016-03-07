@@ -304,7 +304,6 @@ func (h *Host) processMessages() {
 	h.networkLock.Unlock()
 	for {
 		var err error
-		dbg.Lvl3("Waiting for message")
 		var data network.NetworkMessage
 		select {
 		case data = <-h.networkChan:
