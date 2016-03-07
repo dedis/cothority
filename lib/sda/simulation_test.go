@@ -93,29 +93,6 @@ func TestMultipleInstances(t *testing.T) {
 	}
 }
 
-func TestDepth(t *testing.T) {
-	testStruct := []struct{ BF, depth, hosts int }{
-		{2, 1, 3},
-		{3, 1, 4},
-		{3, 2, 13},
-		{4, 1, 5},
-		{4, 2, 21},
-		{5, 1, 6},
-		{5, 2, 31},
-		{5, 3, 156},
-	}
-	for _, s := range testStruct {
-		simul := sda.SimulationBFTree{
-			BF:    s.BF,
-			Depth: s.depth,
-		}
-		simul.CreateEntityList(&sda.SimulationConfig{}, []string{"localhost"}, 2000)
-		if simul.Hosts != s.hosts {
-			t.Fatal(s, "gave", simul.Hosts)
-		}
-	}
-}
-
 func createBFTree(hosts, bf int) (*sda.SimulationConfig, *sda.SimulationBFTree, error) {
 	sc := &sda.SimulationConfig{}
 	sb := &sda.SimulationBFTree{
