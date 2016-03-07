@@ -220,7 +220,7 @@ func CheckHosts(rc platform.RunConfig) {
 		if depth == 0 || bf == 0 || err1 != nil || err2 != nil {
 			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
 		}
-		// Geometric series
+		// Geometric sum to count the total number of nodes:
 		// Root-node: 1
 		// 1st level: bf (branching-factor)*/
 		// 2nd level: bf^2 (each child has bf children)
