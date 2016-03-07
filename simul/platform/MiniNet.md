@@ -6,7 +6,7 @@
 1. Ask for the machines at icsil1-sysadmins
 	between 10 and 100 machines
 2. Connect to icsil1-conodes as mininet
-	iscisl1-conodes-exp - already on the simulated network
+	icsil1-conodes-exp - already on the simulated network
 3. update which servers are up
     ./icsil1_search_server.py icsil1.servers.json
 3. cd conodes; python dispatched.py

@@ -249,12 +249,12 @@ func TestOutput(show bool, level int) {
 // - easy hack to turn on other debug-messages
 // - easy removable by searching/replacing 'LLvl' with 'Lvl'
 func LLvl1(args ...interface{})            { Lvld(-1, args...) }
-func LLvl2(args ...interface{})            { Lvld(-1, args...) }
-func LLvl3(args ...interface{})            { Lvld(-1, args...) }
-func LLvl4(args ...interface{})            { Lvld(-1, args...) }
-func LLvl5(args ...interface{})            { Lvld(-1, args...) }
+func LLvl2(args ...interface{})            { Lvld(-2, args...) }
+func LLvl3(args ...interface{})            { Lvld(-3, args...) }
+func LLvl4(args ...interface{})            { Lvld(-4, args...) }
+func LLvl5(args ...interface{})            { Lvld(-5, args...) }
 func LLvlf1(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf2(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf3(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf4(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf5(f string, args ...interface{}) { Lvlf(-1, f, args...) }
+func LLvlf2(f string, args ...interface{}) { Lvlf(-2, f, args...) }
+func LLvlf3(f string, args ...interface{}) { Lvlf(-3, f, args...) }
+func LLvlf4(f string, args ...interface{}) { Lvlf(-4, f, args...) }
+func LLvlf5(f string, args ...interface{}) { Lvlf(-5, f, args...) }
