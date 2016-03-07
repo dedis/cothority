@@ -2,7 +2,6 @@ package byzcoin
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/BurntSushi/toml"
