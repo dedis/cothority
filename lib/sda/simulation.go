@@ -12,6 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"math"
 	"net"
 )
 
@@ -190,6 +191,7 @@ type SimulationBFTree struct {
 	BF         int
 	Hosts      int
 	SingleHost bool
+	Depth      int
 }
 
 // CreateEntityLists creates an EntityList with the host-names in 'addresses'.
@@ -201,14 +203,23 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	if sc.PrivateKeys == nil {
 		sc.PrivateKeys = make(map[string]abstract.Secret)
 	}
-	hosts := s.Hosts
+	var hosts int
+	if s.Hosts == 0 {
+		if s.Depth == 0 || s.BF == 0 {
+			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
+		}
+		s.Hosts = int((1 - math.Pow(float64(s.BF), float64(s.Depth+1))) /
+			float64(1-s.BF))
+	}
+	hosts = s.Hosts
 	if s.SingleHost {
 		// If we want to work with a single host, we only make one
 		// host per server
+		dbg.Fatal("Not supported yet")
 		hosts = nbrAddr
-	}
-	if hosts > s.Hosts {
-		hosts = s.Hosts
+		if hosts > s.Hosts {
+			hosts = s.Hosts
+		}
 	}
 	localhosts := false
 	listeners := make([]net.Listener, hosts)
