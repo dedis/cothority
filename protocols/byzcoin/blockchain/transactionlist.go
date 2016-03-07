@@ -1,6 +1,8 @@
 package blockchain
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"log"
 
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
@@ -10,6 +12,16 @@ type TransactionList struct {
 	Txs   []blkparser.Tx `json:"tx,omitempty"`
 	TxCnt uint32         `json:"n_tx"`
 	Fees  float64        `json:"-"`
+}
+
+func (tl *TransactionList) HashSum() []byte {
+	h := sha256.New()
+	for _, tx := range tl.Txs {
+		h.Write([]byte(tx.Hash))
+	}
+	binary.Write(h, binary.LittleEndian, tl.TxCnt)
+	binary.Write(h, binary.LittleEndian, tl.Fees)
+	return h.Sum(nil)
 }
 
 func NewTransactionList(transactions []blkparser.Tx, n int) (tr TransactionList) {
