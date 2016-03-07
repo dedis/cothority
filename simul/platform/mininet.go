@@ -1,23 +1,17 @@
 // Mininet is the platform-implementation that uses the MiniNet-framework
-// set in place by Marc-Andre Luthi from EPFL. It is based on Deterlab,
+// set in place by Marc-Andre Luthi from EPFL. It is based on MiniNet,
 // as it uses a lot of similar routines
 
 package platform
 
 import (
-	"os"
-	"os/exec"
-	"strings"
-	"sync"
-
-	"bufio"
 	_ "errors"
 	"fmt"
-	"io/ioutil"
-	"path"
+	"os"
+	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -35,31 +29,23 @@ type MiniNet struct {
 	Host string
 	// Directory holding the cothority-go-file
 	cothorityDir string
-	// Directory where everything is copied into
-	deployDir string
-	// Directory for building
-	buildDir string
 	// Working directory of mininet
 	mininetDir string
-	// DNS-resolvable names
-	Phys []string
-	// VLAN-IP names (physical machines)
-	Virt []string
+	// IPs of all hosts
+	HostIPs []string
 	// Channel to communicate stopping of experiment
-	sshDeter chan string
+	sshMininet chan string
 	// Whether the simulation is started
 	started bool
 
 	// ProxyAddress : the proxy will redirect every traffic it
 	// receives to this address
 	ProxyAddress string
-	// MonitorAddress is the address given to clients to connect to the monitor
-	// It is actually the Proxy that will listen to that address and clients
-	// won't know a thing about it
-	MonitorAddress string
 	// Port number of the monitor and the proxy
 	MonitorPort int
 
+	// Simulation to be run
+	Simulation string
 	// Number of servers to be used
 	Servers int
 	// Number of machines
@@ -70,178 +56,112 @@ type MiniNet struct {
 	CloseWait int
 }
 
-var simulConfig *sda.SimulationConfig
-
-func (d *Deterlab) Configure() {
+func (m *MiniNet) Configure() {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
-	d.cothorityDir = pwd + "/cothority"
-	d.deterDir = pwd + "/platform/deterlab"
-	d.deployDir = d.deterDir + "/remote"
-	d.buildDir = d.deterDir + "/build"
-	d.MonitorPort = monitor.DefaultSinkPort
-	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
-	d.LoadAndCheckDeterlabVars()
+	m.cothorityDir = pwd + "/cothority"
+	m.mininetDir = pwd + "/platform/mininet"
+	m.MonitorPort = monitor.DefaultSinkPort
+	m.Login = "mininet"
+	m.Host = "icsil1-conodes.epfl.ch"
+	m.ProxyAddress = "localhost"
 
-	d.Debug = dbg.DebugVisible()
-	if d.Simulation == "" {
+	// Clean the MiniNet-dir, create it and change into it
+	os.RemoveAll(m.mininetDir)
+	os.Mkdir(m.mininetDir, 0777)
+	os.Chdir(m.mininetDir)
+	sda.WriteTomlConfig(*m, "mininet.toml", m.mininetDir)
+
+	m.Debug = dbg.DebugVisible()
+	if m.Simulation == "" {
 		dbg.Fatal("No simulation defined in runconfig")
 	}
 
 	// Setting up channel
-	d.sshDeter = make(chan string)
+	m.sshMininet = make(chan string)
 }
 
 // build is the name of the app to build
 // empty = all otherwise build specific package
-func (d *Deterlab) Build(build string) error {
-	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build, "cothorityDir=", d.cothorityDir)
+func (m *MiniNet) Build(build string) error {
+	dbg.Lvl1("Building for", m.Login, m.Host, build, "cothorityDir=", m.cothorityDir)
 	start := time.Now()
-
-	var wg sync.WaitGroup
 
 	// Start with a clean build-directory
 	current, _ := os.Getwd()
-	dbg.Lvl3("Current dir is:", current, d.deterDir)
+	dbg.Lvl3("Current dir is:", current, m.mininetDir)
 	defer os.Chdir(current)
 
-	// Go into deterlab-dir and create the build-dir
-	os.Chdir(d.deterDir)
-	os.RemoveAll(d.buildDir)
-	os.Mkdir(d.buildDir, 0777)
-
-	// start building the necessary packages
-	packages := []string{"simul", "users"}
-	if build != "" {
-		packages = strings.Split(build, ",")
+	src_dir := m.cothorityDir
+	dst := m.mininetDir + "/cothority"
+	processor := "amd64"
+	system := "linux"
+	src_rel, _ := filepath.Rel(m.mininetDir, src_dir)
+	dbg.Lvl3("Relative-path is", src_rel, " will build into ", dst)
+	out, err := cliutils.Build("./"+src_rel, dst,
+		processor, system)
+	if err != nil {
+		cliutils.KillGo()
+		dbg.Lvl1(out)
+		dbg.Fatal(err)
 	}
-	dbg.Lvl3("Starting to build all executables", packages)
-	for _, p := range packages {
-		src_dir := d.deterDir + "/" + p
-		basename := path.Base(p)
-		if p == "simul" {
-			src_dir = d.cothorityDir
-			basename = "cothority"
-		}
-		dst := d.buildDir + "/" + basename
 
-		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
-		wg.Add(1)
-		processor := "amd64"
-		system := "linux"
-		if p == "users" {
-			processor = "386"
-			system = "freebsd"
-		}
-		go func(src, dest string) {
-			defer wg.Done()
-			// deter has an amd64, linux architecture
-			src_rel, _ := filepath.Rel(d.deterDir, src)
-			dbg.Lvl3("Relative-path is", src_rel, " will build into ", dest)
-			out, err := cliutils.Build("./"+src_rel, dest,
-				processor, system)
-			if err != nil {
-				cliutils.KillGo()
-				dbg.Lvl1(out)
-				dbg.Fatal(err)
-			}
-		}(src_dir, dst)
-	}
-	// wait for the build to finish
-	wg.Wait()
 	dbg.Lvl1("Build is finished after", time.Since(start))
 	return nil
 }
 
 // Kills all eventually remaining processes from the last Deploy-run
-func (d *Deterlab) Cleanup() error {
+func (m *MiniNet) Cleanup() error {
 	// Cleanup eventual ssh from the proxy-forwarding to the logserver
 	err := exec.Command("pkill", "-9", "-f", "ssh -nNTf").Run()
 	if err != nil {
 		dbg.Lvl3("Error stopping ssh:", err)
 	}
 
-	// SSH to the deterlab-server and end all running users-processes
-	dbg.Lvl3("Going to kill everything")
-	var sshKill chan string
-	sshKill = make(chan string)
-	go func() {
-		// Cleanup eventual residues of previous round - users and sshd
-		cliutils.SshRun(d.Login, d.Host, "killall -9 users sshd")
-		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
-		if err != nil {
-			dbg.Lvl1("NOT-Normal error from cleanup")
-			sshKill <- "error"
-		}
-		sshKill <- "stopped"
-	}()
-
-	for {
-		select {
-		case msg := <-sshKill:
-			if msg == "stopped" {
-				dbg.Lvl3("Users stopped")
-				return nil
-			} else {
-				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
-			}
-		case <-time.After(time.Second * 20):
-			dbg.Lvl3("Timeout error when waiting for end of ssh")
-			return nil
-		}
+	// SSH to the MiniNet-server and end all running users-processes
+	dbg.Lvl3("Going to stop everything")
+	startcli := "echo -e \"stop\\nquit\\n\" | python cli.py"
+	err = cliutils.SshRunStdout(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
+	if err != nil {
+		dbg.Lvl3(err)
 	}
-
 	return nil
 }
 
 // Creates the appropriate configuration-files and copies everything to the
-// deterlab-installation.
-func (d *Deterlab) Deploy(rc RunConfig) error {
-	os.RemoveAll(d.deployDir)
-	os.Mkdir(d.deployDir, 0777)
-
+// MiniNet-installation.
+func (m *MiniNet) Deploy(rc RunConfig) error {
 	dbg.Lvl2("Localhost: Deploying and writing config-files")
-	sim, err := sda.NewSimulation(d.Simulation, string(rc.Toml()))
+	sim, err := sda.NewSimulation(m.Simulation, string(rc.Toml()))
 	if err != nil {
 		return err
 	}
-	// Initialize the deter-struct with our current structure (for debug-levels
+
+	// Initialize the mininet-struct with our current structure (for debug-levels
 	// and such), then read in the app-configuration to overwrite eventual
-	// 'Machines', 'ppm', '' or other fields
-	deter := *d
-	deterConfig := d.deployDir + "/deter.toml"
-	_, err = toml.Decode(string(rc.Toml()), &deter)
+	// 'Servers', 'Hosts', '' or other fields
+	mininet := *m
+	mininetConfig := m.mininetDir + "/mininet.toml"
+	_, err = toml.Decode(string(rc.Toml()), &mininet)
 	if err != nil {
 		return err
 	}
 	dbg.Lvl3("Creating hosts")
-	deter.createHosts()
-	dbg.Lvl3("Writing the config file :", deter)
-	sda.WriteTomlConfig(deter, deterConfig, d.deployDir)
+	mininet.readHosts()
+	dbg.Lvl3("Writing the config file :", mininet)
+	sda.WriteTomlConfig(mininet, mininetConfig, m.mininetDir)
 
-	simulConfig, err = sim.Setup(d.deployDir, deter.Virt)
+	simulConfig, err := sim.Setup(m.mininetDir, mininet.HostIPs)
 	if err != nil {
 		return err
 	}
 	simulConfig.Config = string(rc.Toml())
 	dbg.Lvl3("Saving configuration")
-	simulConfig.Save(d.deployDir)
+	simulConfig.Save(m.mininetDir)
 
-	// Copy limit-files for more connections
-	err = exec.Command("cp", d.deterDir+"/cothority.conf", d.deployDir).Run()
-
-	// Copying build-files to deploy-directory
-	build, err := ioutil.ReadDir(d.buildDir)
-	for _, file := range build {
-		err = exec.Command("cp", d.buildDir+"/"+file.Name(), d.deployDir).Run()
-		if err != nil {
-			dbg.Fatal("error copying build-file:", err)
-		}
-	}
-
-	// Copy everything over to Deterlab
-	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
-	err = cliutils.Rsync(d.Login, d.Host, d.deployDir+"/", "remote/")
+	// Copy everything over to MiniNet
+	dbg.Lvl1("Copying over to", m.Login, "@", m.Host)
+	err = cliutils.Rsync(m.Login, m.Host, m.mininetDir+"/", "mininet_run/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -250,16 +170,16 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	return nil
 }
 
-func (d *Deterlab) Start(args ...string) error {
+func (m *MiniNet) Start(args ...string) error {
 	// setup port forwarding for viewing log server
-	d.started = true
+	m.started = true
 	// Remote tunneling : the sink port is used both for the sink and for the
 	// proxy => the proxy redirects packets to the same port the sink is
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
-	redirection := strconv.Itoa(d.MonitorPort+1) + ":" + d.ProxyAddress + ":" + strconv.Itoa(d.MonitorPort)
+	redirection := strconv.Itoa(m.MonitorPort+1) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
-		redirection, fmt.Sprintf("%s@%s", d.Login, d.Host)}
+		redirection, fmt.Sprintf("%s@%s", m.Login, m.Host)}
 	exCmd := exec.Command("ssh", cmd...)
 	if err := exCmd.Start(); err != nil {
 		dbg.Fatal("Failed to start the ssh port forwarding:", err)
@@ -269,26 +189,28 @@ func (d *Deterlab) Start(args ...string) error {
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		startcli := "echo -e \"sync\\nstart\\n\\nquit\\n\" | python cli.py"
+		_, err := cliutils.SshRun(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
 		if err != nil {
 			dbg.Lvl3(err)
 		}
-		d.sshDeter <- "finished"
+		time.Sleep(time.Second * 10)
+		m.sshMininet <- "finished"
 	}()
 
 	return nil
 }
 
 // Waiting for the process to finish
-func (d *Deterlab) Wait() error {
-	wait := d.CloseWait
+func (m *MiniNet) Wait() error {
+	wait := m.CloseWait
 	if wait == 0 {
 		wait = 600
 	}
-	if d.started {
+	if m.started {
 		dbg.Lvl3("Simulation is started")
 		select {
-		case msg := <-d.sshDeter:
+		case msg := <-m.sshMininet:
 			if msg == "finished" {
 				dbg.Lvl3("Received finished-message, not killing users")
 				return nil
@@ -298,101 +220,34 @@ func (d *Deterlab) Wait() error {
 		case <-time.After(time.Second * time.Duration(wait)):
 			dbg.Lvl1("Quitting after ", wait/60,
 				" minutes of waiting")
-			d.started = false
+			m.started = false
 		}
-		d.started = false
+		m.started = false
 	}
 	return nil
-}
-
-// Reads in the deterlab-config and drops out if there is an error
-func DeterFromConfig(name ...string) *Deterlab {
-	d := &Deterlab{}
-	configName := "deter.toml"
-	if len(name) > 0 {
-		configName = name[0]
-	}
-	err := sda.ReadTomlConfig(d, configName)
-	_, caller, line, _ := runtime.Caller(1)
-	who := caller + ":" + strconv.Itoa(line)
-	if err != nil {
-		dbg.Fatal("Couldn't read config in", who, ":", err)
-	}
-	dbg.SetDebugVisible(d.Debug)
-	return d
 }
 
 /*
 * Write the hosts.txt file automatically
 * from project name and number of servers
  */
-func (d *Deterlab) createHosts() error {
-	num_servers := d.Servers
-
-	ip := "10.255.0."
-	name := d.Project + ".isi.deterlab.net"
-	d.Phys = make([]string, 0, num_servers)
-	d.Virt = make([]string, 0, num_servers)
-	for i := 1; i <= num_servers; i++ {
-		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i-1, d.Experiment, name))
-		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
-	}
-
-	dbg.Lvl3("Physical:", d.Phys)
-	dbg.Lvl3("Internal:", d.Virt)
-	return nil
-}
-
-// Checks whether host, login and project are defined. If any of them are missing, it will
-// ask on the command-line.
-// For the login-variable, it will try to set up a connection to d.Host and copy over the
-// public key for a more easy communication
-func (d *Deterlab) LoadAndCheckDeterlabVars() {
-	deter := Deterlab{}
-	err := sda.ReadTomlConfig(&deter, "deter.toml", d.deterDir)
-	d.Host, d.Login, d.Project, d.Experiment, d.ProxyAddress, d.MonitorAddress =
-		deter.Host, deter.Login, deter.Project, deter.Experiment,
-		deter.ProxyAddress, deter.MonitorAddress
-
+func (m *MiniNet) readHosts() error {
+	// Updating the available servers
+	_, err := cliutils.SshRun(m.Login, m.Host, "cd mininet; ./icsil1_search_server.py icsil1.servers.json")
 	if err != nil {
-		dbg.Lvl1("Couldn't read config-file - asking for default values")
+		return err
 	}
-
-	if d.Host == "" {
-		d.Host = readString("Please enter the hostname of deterlab", "users.deterlab.net")
+	nodesSlice, err := cliutils.SshRun(m.Login, m.Host, "cd mininet/conodes && ./dispatched.py "+
+		strconv.Itoa(m.Debug)+" "+m.Simulation+" && "+
+		"cat sites/icsil1/nodes.txt")
+	if err != nil {
+		return err
 	}
+	nodes := strings.Split(string(nodesSlice), "\n")
+	num_servers := len(nodes) - 2
 
-	if d.Login == "" {
-		d.Login = readString("Please enter the login-name on "+d.Host, "")
-	}
-
-	if d.Project == "" {
-		d.Project = readString("Please enter the project on deterlab", "SAFER")
-	}
-
-	if d.Experiment == "" {
-		d.Experiment = readString("Please enter the Experiment on "+d.Project, "Dissent-CS")
-	}
-
-	if d.MonitorAddress == "" {
-		d.MonitorAddress = readString("Please enter the Monitor address (where clients will connect)", "users.isi.deterlab.net")
-	}
-	if d.ProxyAddress == "" {
-		d.ProxyAddress = readString("Please enter the proxy redirection address", "localhost")
-	}
-
-	sda.WriteTomlConfig(*d, "deter.toml", d.deterDir)
-}
-
-// Shows a messages and reads in a string, eventually returning a default (dft) string
-func readString(msg, dft string) string {
-	fmt.Printf("%s [%s]:", msg, dft)
-
-	reader := bufio.NewReader(os.Stdin)
-	strnl, _ := reader.ReadString('\n')
-	str := strings.TrimSpace(strnl)
-	if str == "" {
-		return dft
-	}
-	return str
+	m.HostIPs = make([]string, num_servers)
+	copy(m.HostIPs, nodes[2:])
+	dbg.LLvl4("Nodes are:", m.HostIPs)
+	return nil
 }
