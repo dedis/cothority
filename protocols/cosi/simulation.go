@@ -11,18 +11,18 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("CoSiSimulation", NewCoSiSimulation)
+	sda.SimulationRegister("SimulationCoSi", NewSimulationCoSi)
 	// default protocol initialization. See Run() for override this one for the
 	// root.
 	sda.ProtocolRegisterName("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
 }
 
-type CoSiSimulation struct {
+type SimulationCoSi struct {
 	sda.SimulationBFTree
 }
 
-func NewCoSiSimulation(config string) (sda.Simulation, error) {
-	cs := new(CoSiSimulation)
+func NewSimulationCoSi(config string) (sda.Simulation, error) {
+	cs := new(SimulationCoSi)
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
@@ -30,14 +30,14 @@ func NewCoSiSimulation(config string) (sda.Simulation, error) {
 	return cs, nil
 }
 
-func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (cs *SimulationCoSi) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	cs.CreateEntityList(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
 	return sim, err
 }
 
-func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
+func (cs *SimulationCoSi) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)

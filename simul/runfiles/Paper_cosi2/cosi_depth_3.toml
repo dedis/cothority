@@ -1,0 +1,21 @@
+Simulation = "SimulationCoSi"
+Suite = "ed25519"
+Rounds = 5
+filter_round = 80
+Servers = 16
+Depth = 3
+
+bf
+2
+3
+4
+6
+8
+10
+12
+14
+16
+20
+24
+28
+32

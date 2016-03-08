@@ -1,17 +1,16 @@
 #!/bin/bash
 
-CSV_DIR=Paper_cosi
-#CSV_DIR=Paper_cosi2
+CSV_DIR=.
 CSV_REL=""
 PIC="true"
 #SHOW="true"
-EXT="eps"
+EXT="png"
 
 main(){
   plot_roundtime
-  plot_over
-  plot_bf
-  #plot_stamp
+#  plot_over
+#  plot_bf
+#  plot_stamp
 }
 
 add_dir(){
@@ -22,10 +21,10 @@ add_dir(){
 
 plot(){
   if [ "$SHOW" = "true" ]; then
-    python2.7 time_plot.py $1 $CSV_REL
+    python2.7 plotit.py $1 $CSV_REL
   fi
   if [ "$PIC" = "true" ]; then
-    python2.7 time_plot.py $1 $CSV_REL $2.$EXT
+    python2.7 plotit.py $1 $CSV_REL $2.$EXT
   fi
   if [ "$3" != "noclear" ]; then
     CSV_REL=""
@@ -33,9 +32,9 @@ plot(){
 }
 
 plot_roundtime(){
-  add_dir sign_huge.csv shamir_multi_adapted.csv naive_multi_adapted.csv naive_multi_adapted_skipcheck.csv ntree_multi_adapted.csv
+  add_dir cosi.csv cosi_old.csv
   plot 0 comparison_roundtime noclear
-  plot 1 comparison_systime noclear
+  #plot 1 comparison_systime noclear
   #plot 3 comparison_check noclear
   CSV_REL=""
 }
