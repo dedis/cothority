@@ -1,5 +1,5 @@
 Servers = 5
-Simulation = "NtreeSimulation"
+Simulation = "SimulationNtree"
 Rounds = 2
 BF = 2
 

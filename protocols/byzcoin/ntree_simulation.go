@@ -9,20 +9,20 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("NtreeSimulation", NewNtreeSimulation)
+	sda.SimulationRegister("SimulationNtree", NewSimulationNtree)
 	sda.ProtocolRegisterName("Ntree", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
 }
 
 // Simulation implements da.Simulation interface
-type NtreeSimulation struct {
+type SimulationNtree struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
 	SimulationConfig
 }
 
-func NewNtreeSimulation(config string) (sda.Simulation, error) {
-	es := &NtreeSimulation{}
+func NewSimulationNtree(config string) (sda.Simulation, error) {
+	es := &SimulationNtree{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func NewNtreeSimulation(config string) (sda.Simulation, error) {
 }
 
 // Setup implements sda.Simulation interface
-func (e *NtreeSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (e *SimulationNtree) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
 		dbg.Fatal("Couldn't get block:", err)
@@ -47,7 +47,7 @@ func (e *NtreeSimulation) Setup(dir string, hosts []string) (*sda.SimulationConf
 }
 
 // Run implements sda.Simulation interface
-func (e *NtreeSimulation) Run(sdaConf *sda.SimulationConfig) error {
+func (e *SimulationNtree) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Naive Tree Simulation starting with:  Rounds=", e.Rounds)
 	server := NewNtreeServer(e.Blocksize)
 	/*var rChallComm monitorMut*/
