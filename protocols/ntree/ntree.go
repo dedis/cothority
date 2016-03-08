@@ -42,15 +42,6 @@ func NewProtocol(node *sda.Node) (*Protocol, error) {
 	return p, nil
 }
 
-func NewRootProtocol(msg []byte, node *sda.Node) (*Protocol, error) {
-	p, err := NewProtocol(node)
-	if err != nil {
-		return nil, err
-	}
-	p.message = msg
-	return p, err
-}
-
 func (p *Protocol) Start() error {
 	if p.IsRoot() {
 		dbg.Lvl3("Starting ntree/naive")
@@ -62,6 +53,7 @@ func (p *Protocol) Start() error {
 
 func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	var err error
+	p.message = msg.Msg
 	p.signature, err = crypto.SignSchnorr(network.Suite, p.Private(), p.message)
 	if err != nil {
 		return err
@@ -74,7 +66,9 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 			}
 		}
 	} else {
-		return p.SendTo(p.Parent(), &SignatureReply{Signatures: []crypto.SchnorrSig{p.signature}})
+		err := p.SendTo(p.Parent(), &SignatureReply{Signatures: []crypto.SchnorrSig{p.signature}})
+		p.Done()
+		return err
 	}
 	return nil
 }
@@ -87,17 +81,30 @@ func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 			count += len(s.Signatures)
 		}
 		aggSignatures := make([]crypto.SchnorrSig, count+1)
-		for i, sigs := range reply {
-			for j, sig := range sigs.Signatures {
-				aggSignatures[i+j] = sig
+		aggSignatures[0] = p.signature
+		countReplies := 1
+		for _, sigs := range reply {
+			childPub := sigs.Entity.Public
+			childSig := sigs.Signatures[0]
+			if err := crypto.VerifySchnorr(network.Suite, childPub, p.message, childSig); err != nil {
+				dbg.Error(err)
+			}
+			for _, sig := range sigs.Signatures {
+				aggSignatures[countReplies] = sig
+				countReplies++
 			}
 		}
-		aggSignatures[count] = p.signature
+
 		return p.SendTo(p.Parent(), &SignatureReply{Signatures: aggSignatures})
 	} else {
 		dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
 	}
+	p.Done()
 	return nil
+}
+
+func (p *Protocol) SetMessage(msg []byte) {
+	p.message = msg
 }
 
 // ----- network messages that will be sent around ------- //

@@ -42,25 +42,26 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
-		dbg.Lvl1("Starting round", round, "with message", msg)
+		dbg.Lvl1("Starting round", round, "with message", string(msg))
 		round := monitor.NewMeasure("round")
 
-		node, err := config.Overlay.NewNodeEmptyName("CoSiNtree", config.Tree)
+		node, err := config.Overlay.CreateNewNodeName("CoSiNtree", config.Tree)
 		if err != nil {
-			dbg.Error("Quitting the simuation....", err)
+			dbg.Error("Quitting the simulation....", err)
 			return err
 		}
-		proto, err := NewRootProtocol(msg, node)
+		node.ProtocolInstance().(*Protocol).SetMessage(msg)
+		done := make(chan bool)
+		node.OnDoneCallback(func() bool {
+			done <- true
+			return true
+		})
+		err = node.Start()
 		if err != nil {
-			dbg.Error("Quitting the simuation....", err)
+			dbg.Error("Quitting the simulation....", err)
 			return err
 		}
-		node.SetProtocolInstance(proto)
-		err = proto.Start()
-		if err != nil {
-			dbg.Error("Quitting the simuation....", err)
-			return err
-		}
+		<-done
 		round.Measure()
 	}
 	return nil
