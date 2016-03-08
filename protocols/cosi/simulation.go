@@ -44,7 +44,6 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		roundM := monitor.NewMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
 		node, err := config.Overlay.CreateNewNodeName("Cosi", config.Tree)
 		if err != nil {
@@ -56,6 +55,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 		proto.SigningMessage(msg)
 		// tell us when it is done
 		done := make(chan bool)
+		roundM := monitor.NewMeasure("round")
 		fn := func(chal, resp abstract.Secret) {
 			roundM.Measure()
 			if err := proto.Cosi.VerifyResponses(aggPublic); err != nil {

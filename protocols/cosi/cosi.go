@@ -193,7 +193,7 @@ func (pc *ProtocolCosi) StartCommitment() error {
 		Commitment: commitment,
 	}
 
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartCommitment() Send to", pc.Parent().Id)
+	dbg.Lvl3(pc.Node.Name(), "Send to", pc.Parent().Id)
 	return pc.SendTo(pc.Parent(), out)
 }
 
@@ -259,7 +259,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 		From:      pc.treeNodeId,
 		Challenge: challenge,
 	}
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartChallenge() chal=", fmt.Sprintf("%+v", challenge))
+	dbg.Lvl3(pc.Node.Name(), "chal=", fmt.Sprintf("%+v", challenge))
 	return pc.sendChallenge(out)
 
 }

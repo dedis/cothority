@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"time"
 )
 
 // These are information-debugging levels that can be turned on or off.
@@ -115,7 +116,7 @@ func Lvl(lvl int, args ...interface{}) {
 			}
 		}
 	}
-	fmt.Printf("%-2s: (%s) - %s", lvlStr, caller, message)
+	fmt.Printf("%-2s/%-40s: (%s) - %s", lvlStr, time.Now().String(), caller, message)
 	if !Testing {
 		ct.ResetColor()
 	}
