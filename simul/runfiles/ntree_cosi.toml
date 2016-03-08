@@ -1,0 +1,8 @@
+Servers = 5
+Simulation = "NaiveTreeSimulation"
+Rounds = 2
+BF = 2
+
+Hosts
+2
+4
