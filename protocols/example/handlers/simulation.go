@@ -16,15 +16,15 @@ This is a simple ExampleHandlers-protocol with two steps:
 */
 
 func init() {
-	sda.SimulationRegister("SimulationExHandlers", NewSimulationExHandlers)
+	sda.SimulationRegister("ExampleHandlers", NewSimulation)
 }
 
-type SimulationExHandlers struct {
+type Simulation struct {
 	sda.SimulationBFTree
 }
 
-func NewSimulationExHandlers(config string) (sda.Simulation, error) {
-	es := &SimulationExHandlers{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func NewSimulationExHandlers(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (e *SimulationExHandlers) Setup(dir string, hosts []string) (
+func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
@@ -43,7 +43,7 @@ func (e *SimulationExHandlers) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-func (e *SimulationExHandlers) Run(config *sda.SimulationConfig) error {
+func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {

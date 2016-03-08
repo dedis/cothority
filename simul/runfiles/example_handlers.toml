@@ -1,5 +1,5 @@
 Servers = 16
-Simulation = "SimulationExHandlers"
+Simulation = "ExampleHandlers"
 BF = 2
 Rounds = 10
 #SingleHost = true

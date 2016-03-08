@@ -9,16 +9,16 @@ import (
 
 func init() {
 	// FIXME Protocol doesn't exists:
-	sda.SimulationRegister("SimulationJVSS", NewJvssSimulation)
-	sda.ProtocolRegisterName("ProtocolJVSS", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSSProtocolInstance(node) })
+	sda.SimulationRegister("JVSS", NewSimulation)
+	sda.ProtocolRegisterName("JVSS", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSSProtocolInstance(node) })
 }
 
-type JvssSimulation struct {
+type Simulation struct {
 	sda.SimulationBFTree
 }
 
-func NewJvssSimulation(config string) (sda.Simulation, error) {
-	es := &JvssSimulation{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func NewJvssSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (jv *JvssSimulation) Setup(dir string, hosts []string) (
+func (jv *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	jv.CreateEntityList(sc, hosts, 2000)
@@ -34,12 +34,12 @@ func (jv *JvssSimulation) Setup(dir string, hosts []string) (
 	return sc, err
 }
 
-func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
+func (jv *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", jv.Rounds)
 	msg := []byte("Test message for JVSS simulation")
 
-	node, err := config.Overlay.CreateNewNodeName("ProtocolJVSS", config.Tree)
+	node, err := config.Overlay.CreateNewNodeName("JVSS", config.Tree)
 	if err != nil {
 		return err
 	}

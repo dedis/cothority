@@ -124,7 +124,7 @@ func (pc *ProtocolCosi) Dispatch() error {
 
 // StartAnnouncement will start a new announcement.
 func (pc *ProtocolCosi) StartAnnouncement() error {
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartAnnouncement (msg=", pc.message)
+	dbg.Lvl3(pc.Node.Name(), "(msg=", pc.message)
 	// First check the hook
 	if pc.announcementHook != nil {
 		return pc.announcementHook(nil)
@@ -145,7 +145,7 @@ type AnnouncementHook func(in *CosiAnnouncement) error
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
 func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
-	dbg.Lvl3("ProtocolCosi.HandleAnnouncement (msg=", pc.message)
+	dbg.Lvl3("(msg=", pc.message)
 	// If we have a hook on announcement call the hook
 	// the hook is responsible to call pc.Cosi.Announce(in)
 	if pc.announcementHook != nil {
@@ -209,7 +209,7 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	if len(pc.tempCommitment) < len(pc.Children()) {
 		return nil
 	}
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleCommitment aggregated")
+	dbg.Lvl3(pc.Node.Name(), "aggregated")
 	// pass it to the hook
 	if pc.commitmentHook != nil {
 		return pc.commitmentHook(pc.tempCommitment)
@@ -269,7 +269,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 func (pc *ProtocolCosi) handleChallenge(in *CosiChallenge) error {
 	// TODO check hook
 
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleChallenge() chal=", fmt.Sprintf("%+v", in.Challenge))
+	dbg.Lvl3(pc.Node.Name(), "chal=", fmt.Sprintf("%+v", in.Challenge))
 	// else dispatch it to cosi
 	challenge := pc.Cosi.Challenge(in.Challenge)
 
@@ -320,13 +320,13 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 	pc.tempResponse = append(pc.tempResponse, in)
 	pc.tempResponseLock.Unlock()
 	// do we have enough ?
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() has", len(pc.tempResponse), "responses")
+	dbg.Lvl3(pc.Node.Name(), "has", len(pc.tempResponse), "responses")
 	if len(pc.tempResponse) < len(pc.Children()) {
 		return nil
 	}
 	defer pc.Cleanup()
 
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() aggregated")
+	dbg.Lvl3(pc.Node.Name(), "aggregated")
 	// TODO check the hook
 
 	// else do it yourself

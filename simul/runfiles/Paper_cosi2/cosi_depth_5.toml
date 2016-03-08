@@ -1,4 +1,4 @@
-Simulation = "SimulationCoSi"
+Simulation = "CoSi"
 Suite = "ed25519"
 Rounds = 10
 filter_round = 80

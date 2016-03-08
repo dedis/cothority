@@ -16,15 +16,15 @@ This is a simple ExampleChannels-protocol with two steps:
 */
 
 func init() {
-	sda.SimulationRegister("SimulationExChannels", NewSimulationExChannels)
+	sda.SimulationRegister("ExampleChannels", NewSimulation)
 }
 
-type SimulationExChannels struct {
+type Simulation struct {
 	sda.SimulationBFTree
 }
 
-func NewSimulationExChannels(config string) (sda.Simulation, error) {
-	es := &SimulationExChannels{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func NewSimulationExChannels(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (e *SimulationExChannels) Setup(dir string, hosts []string) (
+func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
@@ -43,7 +43,7 @@ func (e *SimulationExChannels) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-func (e *SimulationExChannels) Run(config *sda.SimulationConfig) error {
+func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {

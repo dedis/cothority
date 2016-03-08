@@ -50,9 +50,9 @@ func TestCosi(t *testing.T) {
 		return NewProtocolCosi(node)
 	}
 
-	sda.ProtocolRegisterName("ProtocolCosi", fn)
+	sda.ProtocolRegisterName("CosiTest", fn)
 	// Start the protocol
-	_, err := local.StartNewNodeName("ProtocolCosi", tree)
+	_, err := local.StartNewNodeName("CosiTest", tree)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -16,21 +16,21 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("SimulationByzCoin", NewSimulationByzCoin)
+	sda.SimulationRegister("ByzCoin", NewSimulation)
 	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
 }
 
 // Simulation implements da.Simulation interface
-type SimulationByzCoin struct {
+type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	SimulationByzCoinConfig
+	SimulationConfig
 }
 
-type SimulationByzCoinConfig struct {
+type SimulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
 	// timeout the leader after TimeoutMs milliseconds
@@ -42,8 +42,8 @@ type SimulationByzCoinConfig struct {
 	Fail uint
 }
 
-func NewSimulationByzCoin(config string) (sda.Simulation, error) {
-	es := &SimulationByzCoin{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func NewSimulationByzCoin(config string) (sda.Simulation, error) {
 // Setup implements sda.Simulation interface. It checks on the availability
 // of the block-file and downloads it if missing. Then the block-file will be
 // copied to the simulation-directory
-func (e *SimulationByzCoin) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
 		dbg.Fatal("Couldn't get block:", err)
@@ -85,7 +85,7 @@ func (m *monitorMut) MeasureAndReset() {
 }
 
 // Run implements sda.Simulation interface
-func (e *SimulationByzCoin) Run(sdaConf *sda.SimulationConfig) error {
+func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 

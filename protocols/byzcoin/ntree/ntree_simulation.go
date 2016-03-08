@@ -1,28 +1,29 @@
-package byzcoin
+package byzcoin_ntree
 
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
 func init() {
-	sda.SimulationRegister("SimulationNtree", NewSimulationNtree)
-	sda.ProtocolRegisterName("Ntree", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
+	sda.SimulationRegister("ByzCoinNtree", NewSimulation)
+	sda.ProtocolRegisterName("ByzCoinNtree", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
 }
 
 // Simulation implements da.Simulation interface
-type SimulationNtree struct {
+type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	SimulationByzCoinConfig
+	byzcoin.SimulationConfig
 }
 
-func NewSimulationNtree(config string) (sda.Simulation, error) {
-	es := &SimulationNtree{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,7 @@ func NewSimulationNtree(config string) (sda.Simulation, error) {
 }
 
 // Setup implements sda.Simulation interface
-func (e *SimulationNtree) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
 		dbg.Fatal("Couldn't get block:", err)
@@ -47,13 +48,13 @@ func (e *SimulationNtree) Setup(dir string, hosts []string) (*sda.SimulationConf
 }
 
 // Run implements sda.Simulation interface
-func (e *SimulationNtree) Run(sdaConf *sda.SimulationConfig) error {
+func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Naive Tree Simulation starting with:  Rounds=", e.Rounds)
 	server := NewNtreeServer(e.Blocksize)
 	/*var rChallComm monitorMut*/
 	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
-		client := NewClient(server)
+		client := byzcoin.NewClient(server)
 		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 		if err != nil {
 			dbg.Error("ClientSimulation:", err)
@@ -61,7 +62,7 @@ func (e *SimulationNtree) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmptyName("Ntree", sdaConf.Tree)
+		node, err := sdaConf.Overlay.NewNodeEmptyName("ByzCoinNtree", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
@@ -77,7 +78,7 @@ func (e *SimulationNtree) Run(sdaConf *sda.SimulationConfig) error {
 		done := make(chan bool)
 		nt.RegisterOnDone(func(sig *NtreeSignature) {
 			rComplete.Measure()
-			dbg.Lvl3("NtreeProtocol DONE")
+			dbg.Lvl3("Ntree done")
 			done <- true
 			// TODO verification of signatures
 			/*for {*/

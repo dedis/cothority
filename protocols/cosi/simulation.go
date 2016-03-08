@@ -11,18 +11,18 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("SimulationCoSi", NewSimulationCoSi)
+	sda.SimulationRegister("CoSi", NewSimulation)
 	// default protocol initialization. See Run() for override this one for the
 	// root.
-	sda.ProtocolRegisterName("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
+	sda.ProtocolRegisterName("Cosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
 }
 
-type SimulationCoSi struct {
+type Simulation struct {
 	sda.SimulationBFTree
 }
 
-func NewSimulationCoSi(config string) (sda.Simulation, error) {
-	cs := new(SimulationCoSi)
+func NewSimulation(config string) (sda.Simulation, error) {
+	cs := new(Simulation)
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
@@ -30,14 +30,14 @@ func NewSimulationCoSi(config string) (sda.Simulation, error) {
 	return cs, nil
 }
 
-func (cs *SimulationCoSi) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	cs.CreateEntityList(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
 	return sim, err
 }
 
-func (cs *SimulationCoSi) Run(config *sda.SimulationConfig) error {
+func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)
@@ -46,7 +46,7 @@ func (cs *SimulationCoSi) Run(config *sda.SimulationConfig) error {
 		dbg.Lvl1("Starting round", round)
 		roundM := monitor.NewMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
+		node, err := config.Overlay.CreateNewNodeName("Cosi", config.Tree)
 		if err != nil {
 			return err
 		}

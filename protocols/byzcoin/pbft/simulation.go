@@ -12,13 +12,12 @@ import (
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
 func init() {
-	sda.SimulationRegister("SimulationPBFT", NewSimulationPBFT)
-	sda.ProtocolRegisterName("PBFT", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(n) })
-	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return broadcast.NewBroadcastProtocol(n) })
+	sda.SimulationRegister("ByzCoinPBFT", NewSimulation)
+	sda.ProtocolRegisterName("ByzCoinPBFT", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(n) })
 }
 
 // Simulation implements sda.Simulation interface
-type SimulationPBFT struct {
+type Simulation struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// pbft simulation specific fields:
@@ -26,8 +25,8 @@ type SimulationPBFT struct {
 	Blocksize int
 }
 
-func NewSimulationPBFT(config string) (sda.Simulation, error) {
-	sim := &SimulationPBFT{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	sim := &Simulation{}
 	_, err := toml.Decode(config, sim)
 	if err != nil {
 		return nil, err
@@ -36,7 +35,7 @@ func NewSimulationPBFT(config string) (sda.Simulation, error) {
 }
 
 // Setup implements sda.Simulation interface
-func (e *SimulationPBFT) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
 		dbg.Fatal("Couldn't get block:", err)
@@ -51,7 +50,7 @@ func (e *SimulationPBFT) Setup(dir string, hosts []string) (*sda.SimulationConfi
 	return sc, nil
 }
 
-func (e *SimulationPBFT) Run(sdaConf *sda.SimulationConfig) error {
+func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	doneChan := make(chan bool)
 	doneCB := func() {
 		doneChan <- true
@@ -92,7 +91,7 @@ func (e *SimulationPBFT) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl3("Simulation can start!")
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		node, err := sdaConf.Overlay.CreateNewNodeName("PBFT", sdaConf.Tree)
+		node, err := sdaConf.Overlay.CreateNewNodeName("ByzCoinPBFT", sdaConf.Tree)
 		if err != nil {
 			return err
 		}

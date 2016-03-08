@@ -14,15 +14,15 @@ Defines the simulation for the count-protocol
 */
 
 func init() {
-	sda.SimulationRegister("SimulationCount", NewCountSimulation)
+	sda.SimulationRegister("Count", NewSimulation)
 }
 
-type CountSimulation struct {
+type Simulation struct {
 	sda.SimulationBFTree
 }
 
-func NewCountSimulation(config string) (sda.Simulation, error) {
-	es := &CountSimulation{}
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func NewCountSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (e *CountSimulation) Setup(dir string, hosts []string) (
+func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
@@ -41,7 +41,7 @@ func (e *CountSimulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-func (e *CountSimulation) Run(config *sda.SimulationConfig) error {
+func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {

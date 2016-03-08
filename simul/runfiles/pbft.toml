@@ -1,5 +1,5 @@
 Servers = 2
-Simulation = "SimulationPBFT"
+Simulation = "PBFT"
 Rounds = 5
 BF = 5
 
