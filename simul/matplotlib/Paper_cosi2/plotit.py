@@ -101,16 +101,20 @@ def plotAvgMM(cosi1, jvss = None, naive = None, nt = None):
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
 # the last two values from JVSS are off-grid and writes them with arrows
 # directly on the plot
-def plotCoSiOld(cosi, cosi_old):
+def plotCoSiOld(cosi_old, cosi_3, cosi_4, cosi_5):
     mplot.plotPrepareLogLog()
 
-    co = mplot.plotMMA(cosi, 'round_wall', color1_light, 4,
-                       dict(label='CoSi', linestyle='-', marker='o', color=color1_dark, zorder=5))
-    co_depth = cosi.columns['depth']
-    plt.plot(cosi.x, co_depth, linestyle='-', marker='v', color=color1_dark, label='CoSi depth')
+    co_5 = mplot.plotMMA(cosi_5, 'round_wall', color3_light, 4,
+                       dict(label='CoSi - depth 5', linestyle='-', marker='o', color=color3_dark, zorder=5))
 
-    co_old = mplot.plotMMA(cosi_old, 'round_wall', color2_light, 4,
-                       dict(label='CoSi old', linestyle='-', marker='s', color=color2_dark, zorder=5))
+    co_4 = mplot.plotMMA(cosi_4, 'round_wall', color2_light, 4,
+                       dict(label='CoSi - depth 4', linestyle='-', marker='o', color=color2_dark, zorder=5))
+
+    co_3 = mplot.plotMMA(cosi_3, 'round_wall', color1_light, 4,
+                       dict(label='CoSi - depth 3', linestyle='-', marker='o', color=color1_dark, zorder=5))
+
+    co_old = mplot.plotMMA(cosi_old, 'round_wall', color4_light, 4,
+                       dict(label='CoSi old', linestyle='-', marker='s', color=color4_dark, zorder=5))
     co_old_hosts = cosi_old.columns['hosts']
     co_old_bf = cosi_old.columns['bf']
     co_old_depth = []
@@ -126,12 +130,12 @@ def plotCoSiOld(cosi, cosi_old):
     print co_old_hosts
     print co_old_bf
     print co_old_depth
-    plt.plot(cosi_old.x, co_old_depth, linestyle='-', marker='v', color=color2_dark, label='CoSi old depth')
+    plt.plot(cosi_old.x, co_old_depth, linestyle='-', marker='v', color=color4_dark, label='CoSi old depth')
 
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
-    xmin, xmax, ymin, ymax = CSVStats.get_min_max(co, co_old)
-    plt.ylim(ymin, 8)
+    xmin, xmax, ymin, ymax = CSVStats.get_min_max(co_3, co_4, co_5, co_old)
+    plt.ylim(ymin, 16)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
 
@@ -292,8 +296,8 @@ def args_to_csv(argn, xname = "hosts"):
 option = sys.argv[1]
 
 if option == "0":
-    cosi, cosi_old = args_to_csv(2)
-    plotCoSiOld(cosi, cosi_old)
+    cosi_old, cosi_3, cosi_4, cosi_5 = args_to_csv(4)
+    plotCoSiOld(cosi_old, cosi_3, cosi_4, cosi_5)
 elif option == "1":
     cothority, jvss, naive, naive_sc, ntree = args_to_csv(5)
     CoJVTimeBars(cothority, jvss, naive)

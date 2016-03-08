@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
 CSV_DIR=.
 CSV_REL=""
 PIC="true"
@@ -32,7 +34,7 @@ plot(){
 }
 
 plot_roundtime(){
-  add_dir cosi.csv cosi_old.csv
+  add_dir cosi_old.csv cosi_depth_3.csv cosi_depth_4.csv cosi_depth_5.csv
   plot 0 comparison_roundtime noclear
   #plot 1 comparison_systime noclear
   #plot 3 comparison_check noclear
