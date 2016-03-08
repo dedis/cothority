@@ -19,7 +19,7 @@ func TestRandHound(t *testing.T) {
 	var p string = "RandHound test run" // Purpose
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(np, true, true, true)
+	_, _, tree := local.GenTree(np, false, true, true)
 	defer local.CloseAll()
 
 	dbg.TestOutput(testing.Verbose(), 1)

@@ -27,24 +27,16 @@ func init() {
 
 type RandHound struct {
 	*sda.Node
-	Leader    *Leader           // Pointer to the protocol leader
-	Peer      *Peer             // Pointer to the 'current' peer
-	PID       map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
-	PKeys     []abstract.Point  // Public keys of the peers
-	T         int               // Minimum number of shares needed to reconstruct the secret
-	R         int               // Minimum number of signatures needed to certify a deal
-	N         int               // Total number of trustees / shares (T <= R <= N)
-	Purpose   string            // Purpose of the protocol instance
-	Done      chan bool         // For signaling that a protocol run is finished (leader only)
-	Result    chan []byte       // For returning the generated randomness (leader only)
-	ChannelI1 chan WI1          // Channel to receive I1 messages
-	ChannelR1 chan WR1          // Channel to receive R1 messages
-	ChannelI2 chan WI2          // Channel to receive I2 messages
-	ChannelR2 chan WR2          // Channel to receive R2 messages
-	ChannelI3 chan WI3          // Channel to receive I3 messages
-	ChannelR3 chan WR3          // Channel to receive R3 messages
-	ChannelI4 chan WI4          // Channel to receive I4 messages
-	ChannelR4 chan WR4          // Channel to receive R4 messages
+	Leader  *Leader           // Pointer to the protocol leader
+	Peer    *Peer             // Pointer to the 'current' peer
+	PID     map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
+	PKeys   []abstract.Point  // Public keys of the peers
+	T       int               // Minimum number of shares needed to reconstruct the secret
+	R       int               // Minimum number of signatures needed to certify a deal
+	N       int               // Total number of trustees / shares (T <= R <= N)
+	Purpose string            // Purpose of the protocol instance
+	Done    chan bool         // For signaling that a protocol run is finished (leader only)
+	Result  chan []byte       // For returning the generated randomness (leader only)
 }
 
 func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.ProtocolInstance, error) {
@@ -88,48 +80,21 @@ func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.Prot
 		rh.Peer = peer
 	}
 
-	// Setup message channels
-	channels := []interface{}{
-		&rh.ChannelI1, &rh.ChannelR1,
-		&rh.ChannelI2, &rh.ChannelR2,
-		&rh.ChannelI3, &rh.ChannelR3,
-		&rh.ChannelI4, &rh.ChannelR4}
-	for _, c := range channels {
-		err := rh.RegisterChannel(c)
+	// Setup message handlers
+	handlers := []interface{}{
+		rh.HandleI1, rh.HandleR1,
+		rh.HandleI2, rh.HandleR2,
+		rh.HandleI3, rh.HandleR3,
+		rh.HandleI4, rh.HandleR4,
+	}
+	for _, h := range handlers {
+		err := rh.RegisterHandler(h)
 		if err != nil {
-			return nil, errors.New("Couldn't register channel: " + err.Error())
+			return nil, errors.New("Couldn't register handler: " + err.Error())
 		}
 	}
-	go rh.DispatchChannels()
 
 	return rh, nil
-}
-
-func (rh *RandHound) Dispatch() error {
-	return nil
-}
-
-func (rh *RandHound) DispatchChannels() {
-	for {
-		select {
-		case i1 := <-rh.ChannelI1:
-			rh.HandleI1(i1)
-		case r1 := <-rh.ChannelR1:
-			rh.HandleR1(r1)
-		case i2 := <-rh.ChannelI2:
-			rh.HandleI2(i2)
-		case r2 := <-rh.ChannelR2:
-			rh.HandleR2(r2)
-		case i3 := <-rh.ChannelI3:
-			rh.HandleI3(i3)
-		case r3 := <-rh.ChannelR3:
-			rh.HandleR3(r3)
-		case i4 := <-rh.ChannelI4:
-			rh.HandleI4(i4)
-		case r4 := <-rh.ChannelR4:
-			rh.HandleR4(r4)
-		}
-	}
 }
 
 func (rh *RandHound) sendToChildren(msg interface{}) error {
