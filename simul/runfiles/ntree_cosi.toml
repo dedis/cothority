@@ -2,8 +2,8 @@ Servers = 5
 Simulation = "NaiveTreeSimulation"
 Message = "Hello Ntree & Naive"
 Rounds = 2
-BF = 2
+BF = 5
 
 Hosts
-2
-4
+3
+7

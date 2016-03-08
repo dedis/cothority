@@ -82,11 +82,17 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 	if !p.IsRoot() {
 		dbg.Lvl3("Appending our signature to the collected ones and send to parent")
-		aggSignatures := make([]crypto.SchnorrSig, len(p.Children())+1)
+		count := 0
 		for _, s := range reply {
-			aggSignatures = append(aggSignatures, s.Signatures...)
+			count += len(s.Signatures)
 		}
-		aggSignatures = append(aggSignatures, p.signature)
+		aggSignatures := make([]crypto.SchnorrSig, count+1)
+		for i, sigs := range reply {
+			for j, sig := range sigs.Signatures {
+				aggSignatures[i+j] = sig
+			}
+		}
+		aggSignatures[count] = p.signature
 		return p.SendTo(p.Parent(), &SignatureReply{Signatures: aggSignatures})
 	} else {
 		dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
@@ -94,18 +100,21 @@ func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 	return nil
 }
 
-// ----- network messages that will be send around ------- //
+// ----- network messages that will be sent around ------- //
+
+// Message contains the actual message (as a slice of bytes) that will be individually signed
 type Message struct {
 	Msg []byte
+}
+
+// SignatureReply contains the signatures for the message (signature of the current node + those of its children)
+type SignatureReply struct {
+	Signatures []crypto.SchnorrSig
 }
 
 type structMessage struct {
 	*sda.TreeNode
 	Message
-}
-
-type SignatureReply struct {
-	Signatures []crypto.SchnorrSig
 }
 
 type structSignatureReply struct {
