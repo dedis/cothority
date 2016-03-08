@@ -1,5 +1,5 @@
 Servers = 16
-Simulation = "ExampleChannels"
+Simulation = "SimulationExChannels"
 BF = 2
 Rounds = 10
 #SingleHost = true

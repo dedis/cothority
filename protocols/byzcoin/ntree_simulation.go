@@ -18,7 +18,7 @@ type SimulationNtree struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	SimulationConfig
+	SimulationByzCoinConfig
 }
 
 func NewSimulationNtree(config string) (sda.Simulation, error) {

@@ -14,7 +14,7 @@ Defines the simulation for the count-protocol
 */
 
 func init() {
-	sda.SimulationRegister("Count", NewCountSimulation)
+	sda.SimulationRegister("SimulationCount", NewCountSimulation)
 }
 
 type CountSimulation struct {
