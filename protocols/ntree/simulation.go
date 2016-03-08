@@ -14,6 +14,7 @@ func init() {
 
 type Simulation struct {
 	sda.SimulationBFTree
+	Message string
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
@@ -37,11 +38,11 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 }
 
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
-	msg := []byte("Helle Ntree")
+	msg := []byte(e.Message)
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
+		dbg.Lvl1("Starting round", round, "with message", msg)
 		round := monitor.NewMeasure("round")
 
 		node, err := config.Overlay.NewNodeEmptyName("CosiNtree", config.Tree)
@@ -61,8 +62,6 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 			return err
 		}
 		round.Measure()
-		//proto.Signatures()
-		//proto.EntityList()
 	}
 	return nil
 }

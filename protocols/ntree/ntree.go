@@ -25,7 +25,6 @@ type Protocol struct {
 	message []byte
 	// signature of this particular participant:
 	signature crypto.SchnorrSig
-	// FIXME: does this need a lock?
 }
 
 func NewProtocol(node *sda.Node) (*Protocol, error) {
@@ -44,15 +43,10 @@ func NewProtocol(node *sda.Node) (*Protocol, error) {
 }
 
 func NewRootProtocol(msg []byte, node *sda.Node) (*Protocol, error) {
-	dbg.Print(msg)
-	dbg.Print(node)
-
 	p, err := NewProtocol(node)
 	if err != nil {
 		return nil, err
 	}
-	dbg.Print(p)
-	//p.message = make([]byte, len(msg))
 	p.message = msg
 	return p, err
 }
@@ -66,11 +60,6 @@ func (p *Protocol) Start() error {
 	}
 }
 
-// Shutdown cleans up the resources used by this protocol instance
-func (p *Protocol) Shutdown() error {
-	return nil
-}
-
 func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	var err error
 	p.signature, err = crypto.SignSchnorr(network.Suite, p.Private(), p.message)
@@ -78,7 +67,6 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 		return err
 	}
 	if !p.IsLeaf() {
-		// If we have children, send the same message to all of them
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &msg.Message)
 			if err != nil {
@@ -86,13 +74,12 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 			}
 		}
 	} else {
-		// If we're the leaf, start to reply
 		return p.SendTo(p.Parent(), &SignatureReply{Signatures: []crypto.SchnorrSig{p.signature}})
 	}
 	return nil
 }
 
-func (p *Protocol) HandleSignReply(reply []StructSignatureReply) error {
+func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 	if !p.IsRoot() {
 		dbg.Lvl3("Appending our signature to the collected ones and send to parent")
 		aggSignatures := make([]crypto.SchnorrSig, len(p.Children())+1)
@@ -102,8 +89,7 @@ func (p *Protocol) HandleSignReply(reply []StructSignatureReply) error {
 		aggSignatures = append(aggSignatures, p.signature)
 		return p.SendTo(p.Parent(), &SignatureReply{Signatures: aggSignatures})
 	} else {
-		//
-		dbg.Lvl1("Leader got", len(reply), "signatures. Children:", len(p.Children()))
+		dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
 	}
 	return nil
 }
@@ -122,7 +108,7 @@ type SignatureReply struct {
 	Signatures []crypto.SchnorrSig
 }
 
-type StructSignatureReply struct {
+type structSignatureReply struct {
 	*sda.TreeNode
 	SignatureReply
 }
