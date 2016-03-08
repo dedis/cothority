@@ -1,4 +1,4 @@
-package byzcoin
+package byzcoin_ntree
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/satori/go.uuid"
@@ -79,14 +80,14 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 func NewNTreeRootProtocol(node *sda.Node, transactions []blkparser.Tx) (*Ntree, error) {
 	nt, _ := NewNtreeProtocol(node)
 	var err error
-	nt.block, err = getBlock(transactions, "", "")
+	nt.block, err = byzcoin.GetBlock(transactions, "", "")
 	return nt, err
 }
 
 // Announce the new block to sign
 func (nt *Ntree) Start() error {
 	dbg.Lvl3(nt.Name(), "Start()")
-	go verifyBlock(nt.block, "", "", nt.verifyBlockChan)
+	go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
 	for _, tn := range nt.Children() {
 		nt.SendTo(tn, &BlockAnnounce{nt.block})
 	}
@@ -107,7 +108,7 @@ func (nt *Ntree) listen() {
 			dbg.Lvl3(nt.Name(), "Received Block announcement")
 			nt.block = msg.BlockAnnounce.Block
 			// verify the block
-			go verifyBlock(nt.block, "", "", nt.verifyBlockChan)
+			go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
 			if nt.IsLeaf() {
 				nt.startBlockSignature()
 				continue

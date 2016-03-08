@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
+	sda.SimulationRegister("ByzCoin", NewSimulation)
 	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
