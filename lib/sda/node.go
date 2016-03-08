@@ -425,12 +425,12 @@ func (n *Node) OnDoneCallback(fn func() bool) {
 	n.onDoneCallback = fn
 }
 
-// Private returns the corresponding private key
+// Private returns the private key of the entity
 func (n *Node) Private() abstract.Secret {
-	return n.overlay.host.private
+	return n.Host().private
 }
 
-// Public() returns the public key.
+// Public returns the public key of the entity
 func (n *Node) Public() abstract.Point {
 	return n.Entity().Public
 }
