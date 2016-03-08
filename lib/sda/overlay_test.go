@@ -1,10 +1,12 @@
 package sda_test
 
 import (
+	"testing"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"testing"
+	"github.com/dedis/cothority/lib/testutil"
 )
 
 type ProtocolOverlay struct {
@@ -17,8 +19,7 @@ func (po *ProtocolOverlay) Start() error {
 	return nil
 }
 
-func (po *ProtocolOverlay) Dispatch(msgs []*sda.SDAData) error {
-	// same here
+func (po *ProtocolOverlay) Dispatch() error {
 	return nil
 }
 
@@ -28,6 +29,8 @@ func (po *ProtocolOverlay) Release() {
 }
 
 func TestOverlayDone(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
 	h1 := sda.NewLocalHost(2000)

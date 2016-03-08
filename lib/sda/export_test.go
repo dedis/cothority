@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
 )
@@ -12,7 +13,9 @@ func (h *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
 }
 
 func (h *Host) Receive() network.NetworkMessage {
-	return h.receive()
+	data := <-h.networkChan
+	dbg.Lvl5("Got message", data)
+	return data
 }
 
 func (h *Host) StartNewNodeName(name string, tree *Tree) (*Node, error) {
@@ -44,8 +47,4 @@ func (n *Node) Aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 func (o *Overlay) TokenToNode(tok *Token) (*Node, bool) {
 	v, ok := o.nodes[tok.Id()]
 	return v, ok
-}
-
-func (n *Node) Token() *Token {
-	return n.token
 }

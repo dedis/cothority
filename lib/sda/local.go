@@ -3,13 +3,14 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"testing"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"strconv"
-	"testing"
 	"time"
 )
 
@@ -27,7 +28,7 @@ type LocalTest struct {
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
-	dbg.TestOutput(testing.Verbose(), 4)
+	dbg.TestOutput(testing.Verbose(), 3)
 	return &LocalTest{
 		Hosts:       make(map[uuid.UUID]*Host),
 		Overlays:    make(map[uuid.UUID]*Overlay),
@@ -50,11 +51,23 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
+func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
+	rootEntityId := t.Root.Entity.Id
+	for _, h := range l.Hosts {
+		if uuid.Equal(h.Entity.Id, rootEntityId) {
+			// XXX do we really need multiples overlays ? Can't we just use the
+			// Node, since it is already dispatched as like a TreeNode ?
+			return l.Overlays[h.Entity.Id].NewNodeEmptyName(name, t)
+		}
+	}
+	return nil, errors.New("Didn't find host for tree-root")
+}
+
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
-func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := GenLocalHosts(n, connect, true)
+func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
+	hosts := GenLocalHosts(n, connect, processMsg)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.Id] = host
 		l.Overlays[host.Entity.Id] = host.overlay
@@ -62,6 +75,30 @@ func (l *LocalTest) GenTree(n int, connect bool, register bool) ([]*Host, *Entit
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
+	l.Trees[tree.Id] = tree
+	if register {
+		hosts[0].overlay.RegisterEntityList(list)
+		hosts[0].overlay.RegisterTree(tree)
+	}
+	return hosts, list, tree
+}
+
+// GenBigTree will create a tree of n hosts. If connect is true, they will
+// be connected to the root host. If register is true, the EntityList and Tree
+// will be registered with the overlay.
+// 'nbrHosts' is how many hosts are created
+// 'nbrTreeNodes' is how many TreeNodes are created
+// nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
+// be used more than once in the tree.
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
+	hosts := GenLocalHosts(nbrHosts, connect, true)
+	for _, host := range hosts {
+		l.Hosts[host.Entity.Id] = host
+		l.Overlays[host.Entity.Id] = host.overlay
+	}
+
+	list := l.GenEntityListFromHost(hosts...)
+	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
 	l.Trees[tree.Id] = tree
 	if register {
 		hosts[0].overlay.RegisterEntityList(list)
@@ -82,7 +119,6 @@ func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
 
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
-	time.Sleep(time.Millisecond * 200)
 	for _, host := range l.Hosts {
 		err := host.Close()
 		if err != nil {
@@ -135,15 +171,21 @@ func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
 	return nodes
 }
 
+// SendTreeNode injects a message directly in the Overlay-layer, bypassing
+// Host and Network
 func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.ProtocolMessage) error {
 	if from.Tree().Id != to.Tree().Id {
 		return errors.New("Can't send from one tree to another")
 	}
+	b, err := network.MarshalRegisteredType(msg)
+	if err != nil {
+		return err
+	}
 	sdaMsg := &SDAData{
-		Msg:     msg,
-		MsgType: network.TypeToUUID(msg),
-		From:    from.token,
-		To:      to.token,
+		MsgSlice: b,
+		MsgType:  network.TypeToUUID(msg),
+		From:     from.token,
+		To:       to.token,
 	}
 	return to.overlay.TransmitMsg(sdaMsg)
 }
@@ -183,21 +225,39 @@ func NewLocalHost(port int) *Host {
 // GenLocalHosts will create n hosts with the first one being connected to each of
 // the other nodes if connect is true
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
-	var hosts []*Host
+
+	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
 		host := NewLocalHost(2000 + i*10)
-		hosts = append(hosts, host)
+		hosts[i] = host
 	}
 	root := hosts[0]
 	for _, host := range hosts {
 		host.Listen()
+		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.Id)
 		if processMessages {
-			go host.ProcessMessages()
+			host.StartProcessMessages()
 		}
-		if connect {
+		if connect && root != host {
+			dbg.Lvl4("Connecting", host.Entity.First(), host.Entity.Id, "to",
+				root.Entity.First(), root.Entity.Id)
 			if _, err := host.Connect(root.Entity); err != nil {
-				dbg.Fatal("Could not connect hosts")
+				dbg.Fatal(host.Entity.Addresses, "Could not connect hosts", root.Entity.Addresses, err)
 			}
+			// Wait for connection accepted in root
+			connected := false
+			for !connected {
+				time.Sleep(time.Millisecond * 10)
+				root.entityListsLock.RLock()
+				for id, _ := range root.entities {
+					if uuid.Equal(id, host.Entity.Id) {
+						connected = true
+						break
+					}
+				}
+				root.entityListsLock.RUnlock()
+			}
+			dbg.Lvl4(host.Entity.First(), "is connected to root")
 		}
 	}
 	return hosts

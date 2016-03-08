@@ -1,13 +1,9 @@
 package sda
 
 import (
-	"errors"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
-	"time"
 )
-
-var timeOut = 30 * time.Second
 
 // Our message-types used in sda
 var SDADataMessage = network.RegisterMessageType(SDAData{})
@@ -51,7 +47,8 @@ type Token struct {
 func (t *Token) Id() uuid.UUID {
 	if t.cacheId == uuid.Nil {
 		url := network.UuidURL + "token/" + t.EntityListID.String() +
-			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String()
+			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String() +
+			t.TreeNodeID.String()
 		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
 	}
 	return t.cacheId
@@ -84,16 +81,3 @@ type EntityListUnknown struct {
 type SendEntity struct {
 	Name string
 }
-
-// IPType defines how incoming packets are handled
-type IPType int
-
-const (
-	WaitForAll IPType = iota
-	PassDirect
-	Timeout
-)
-
-// NoSuchState indicates that the given state doesn't exist in the
-// chosen ProtocolInstance
-var NoSuchState error = errors.New("This state doesn't exist")

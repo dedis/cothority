@@ -1,16 +1,19 @@
 package sda_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/satori/go.uuid"
-	"testing"
-	"time"
 )
 
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
+	defer testutil.AfterTest(t)
 	h1 := sda.NewLocalHost(2000)
 	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
@@ -23,12 +26,18 @@ func TestHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
+	defer testutil.AfterTest(t)
+
+	time.Sleep(time.Second)
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h1.Listen()
-	h2.Connect(h1.Entity)
-	err := h1.Close()
+	_, err := h2.Connect(h1.Entity)
+	if err != nil {
+		t.Fatal("Couldn't Connect()", err)
+	}
+	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
@@ -37,30 +46,42 @@ func TestHostClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h1 = sda.NewLocalHost(2002)
-	h1.Listen()
+	h3 := sda.NewLocalHost(2002)
+	h3.Listen()
+	c, err := h2.Connect(h3.Entity)
 	if err != nil {
-		t.Fatal("Couldn't re-open listener")
+		t.Fatal(h2, "Couldn Connect() to", h3)
 	}
-	dbg.Lvl3("Closing h1")
-	h1.Close()
+	dbg.Lvl3("Closing h3")
+	err = h3.Close()
+	if err != nil {
+		// try closing the underlying connection manually and fail
+		c.Close()
+		t.Fatal("Couldn't Close()", h3)
+	}
 }
 
 func TestHostClose2(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true)
+	defer local.CloseAll()
+
+	_, _, tree := local.GenTree(2, false, true, true)
 	dbg.Lvl3(tree.Dump())
 	time.Sleep(time.Millisecond * 100)
-	local.CloseAll()
 	dbg.Lvl3("Done")
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
 func TestHostMessaging(t *testing.T) {
+	defer testutil.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{3}
-	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
+	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
@@ -74,38 +95,19 @@ func TestHostMessaging(t *testing.T) {
 	h2.Close()
 }
 
-// Test parsing of incoming packets with regard to its double-included
-// data-structure
-func TestHostIncomingMessage(t *testing.T) {
-	h1, h2 := SetupTwoHosts(t, false)
-	msgSimple := &SimpleMessage{10}
-	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
-	if err != nil {
-		t.Fatal("Couldn't send message:", err)
-	}
-
-	msg := h2.Receive()
-	decoded := testMessageSimple(t, msg)
-	if decoded.I != 10 {
-		t.Fatal("Wrong value")
-	}
-
-	h1.Close()
-	h2.Close()
-}
-
 // Test sending data back and forth using the sendSDAData
 func TestHostSendMsgDuplex(t *testing.T) {
+	defer testutil.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendSDAData(h2.Entity, &sda.SDAData{Msg: msgSimple})
+	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
 	dbg.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendSDAData(h1.Entity, &sda.SDAData{Msg: msgSimple})
+	err = h2.SendRaw(h1.Entity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -118,6 +120,7 @@ func TestHostSendMsgDuplex(t *testing.T) {
 
 // Test sending data back and forth using the SendTo
 func TestHostSendDuplex(t *testing.T) {
+	defer testutil.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{5}
 	err := h1.SendRaw(h2.Entity, msgSimple)
@@ -141,8 +144,9 @@ func TestHostSendDuplex(t *testing.T) {
 // Test when a peer receives a New EntityList, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
+	defer testutil.AfterTest(t)
 	local := sda.NewLocalTest()
-	hosts, el, tree := local.GenTree(2, false, false)
+	hosts, el, tree := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 
@@ -156,19 +160,21 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 	if _, ok := h1.GetTree(tree.Id); !ok {
 		t.Fatal("Host 1 should have the tree definition now.")
 	}
-	time.Sleep(time.Millisecond * 100)
 }
 
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
+	defer testutil.AfterTest(t)
 	local := sda.NewLocalTest()
-	hosts, el, _ := local.GenTree(2, true, false)
+	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
-	h2 := hosts[0]
+	h2 := hosts[1]
+	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{
+		EntityListID: el.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -182,7 +188,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddEntityList(el)
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -195,8 +201,8 @@ func TestPeerListPropagation(t *testing.T) {
 	}
 
 	// And test whether it gets stored correctly
-	go h1.ProcessMessages()
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{el.Id})
+	h1.StartProcessMessages()
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -212,17 +218,19 @@ func TestPeerListPropagation(t *testing.T) {
 
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
+	defer testutil.AfterTest(t)
 	local := sda.NewLocalTest()
-	hosts, el, tree := local.GenTree(2, true, false)
+	hosts, el, tree := local.GenTree(2, true, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
-	h2 := hosts[0]
+	h2 := hosts[1]
 	// Suppose both hosts have the list available, but not the tree
 	h1.AddEntityList(el)
 	h2.AddEntityList(el)
+	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -237,7 +245,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -250,8 +258,8 @@ func TestTreePropagation(t *testing.T) {
 	}
 
 	// And test whether it gets stored correctly
-	go h1.ProcessMessages()
-	err = h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id})
+	h1.StartProcessMessages()
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -271,8 +279,9 @@ func TestTreePropagation(t *testing.T) {
 // h1 ask for the entitylist (because it dont know)
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
+	defer testutil.AfterTest(t)
 	local := sda.NewLocalTest()
-	hosts, el, tree := local.GenTree(2, true, false)
+	hosts, el, tree := local.GenTree(2, true, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
@@ -281,11 +290,8 @@ func TestListTreePropagation(t *testing.T) {
 	h2.AddEntityList(el)
 	// and the tree
 	h2.AddTree(tree)
-	// make host1 listen, so it will process messages as host2 is sending
-	// it is supposed to automatically ask for the entitylist
-	go h1.ProcessMessages()
 	// make the communcation happen
-	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{tree.Id}); err != nil {
+	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id}); err != nil {
 		t.Fatal("Could not send tree request to host2", err)
 	}
 
@@ -344,10 +350,12 @@ func TestTokenId(t *testing.T) {
 
 // Test the automatic connection upon request
 func TestAutoConnection(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h2.Listen()
+
 	defer h1.Close()
 	defer h2.Close()
 
@@ -366,7 +374,7 @@ func TestAutoConnection(t *testing.T) {
 func SetupTwoHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	hosts := sda.GenLocalHosts(2, true, false)
 	if h2process {
-		go hosts[1].ProcessMessages()
+		hosts[1].StartProcessMessages()
 	}
 	return hosts[0], hosts[1]
 }
@@ -392,12 +400,8 @@ type SimpleMessage struct {
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
 func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
-	if msg.MsgType != sda.SDADataMessage {
-		t.Fatal("Wrong message type received:", msg.MsgType)
+	if msg.MsgType != SimpleMessageType {
+		t.Fatal("Received non SimpleMessage type")
 	}
-	sda := msg.Msg.(sda.SDAData)
-	if sda.MsgType != SimpleMessageType {
-		t.Fatal("Couldn't pass simple message")
-	}
-	return sda.Msg.(SimpleMessage)
+	return msg.Msg.(SimpleMessage)
 }

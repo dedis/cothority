@@ -3,58 +3,60 @@ package sda_test
 import (
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/satori/go.uuid"
-	"testing"
-	"time"
 )
 
 var testID = uuid.NewV5(uuid.NamespaceURL, "test")
-var simpleID = uuid.NewV5(uuid.NamespaceURL, "simple")
-var aggregateID = uuid.NewV5(uuid.NamespaceURL, "aggregate")
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
-	node *sda.Node
-	Msg  string
+	*sda.Node
+	StartMsg chan string
+	DispMsg  chan string
 }
 
 // NewProtocolTest is used to create a new protocolTest-instance
 func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
-		node: n,
-		Msg:  "new",
+		Node:     n,
+		StartMsg: make(chan string),
+		DispMsg:  make(chan string),
 	}, nil
 }
 
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
-func (p *ProtocolTest) Dispatch(m []*sda.SDAData) error {
-	dbg.Lvl2("PRotocolTest.Dispatch()")
-	p.Msg = "Dispatch"
+func (p *ProtocolTest) Dispatch() error {
+	dbg.Lvl2("ProtocolTest.Dispatch()")
+	p.DispMsg <- "Dispatch"
 	return nil
 }
 
 func (p *ProtocolTest) Start() error {
 	dbg.Lvl2("ProtocolTest.Start()")
-	p.Msg = "Start"
+	p.StartMsg <- "Start"
 	return nil
 }
 
 type SimpleProtocol struct {
 	// chan to get back to testing
 	Chan chan bool
-	node *sda.Node
+	*sda.Node
 }
 
 // Sends a simple message to its first children
 func (p *SimpleProtocol) Start() error {
-	dbg.Lvl2("Sending from", p.node.Entity().First(), "to",
-		p.node.Children()[0].Entity.First())
-	err := p.node.SendTo(p.node.Children()[0], &SimpleMessage{10})
+	dbg.Lvl2("Sending from", p.Entity().First(), "to",
+		p.Children()[0].Entity.First())
+	err := p.SendTo(p.Children()[0], &SimpleMessage{10})
 	if err != nil {
 		return err
 	}
@@ -63,12 +65,11 @@ func (p *SimpleProtocol) Start() error {
 }
 
 // Dispatch analyses the message and does nothing else
-func (p *SimpleProtocol) Dispatch(m []*sda.SDAData) error {
-	dbg.Lvl2("Dispatching", m)
-	if m[0].MsgType != SimpleMessageType {
-		return errors.New("Not the message expected")
-	}
-	msg := m[0].Msg.(SimpleMessage)
+func (p *SimpleProtocol) ReceiveMessage(msg struct {
+	*sda.TreeNode
+	SimpleMessage
+}) error {
+	dbg.Lvl2("Dispatching", msg)
 	if msg.I != 10 {
 		return errors.New("Not the value expected")
 	}
@@ -85,12 +86,12 @@ func TestProtocolRegistration(t *testing.T) {
 	}
 }
 
-var testString = ""
-
 // This makes h2 the leader, so it creates a tree and entity list
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
 	chanH1 := make(chan bool)
@@ -100,18 +101,20 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// custom creation function so we know the step due to the channels
 	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
 		ps := SimpleProtocol{
-			node: n,
+			Node: n,
 			Chan: chans[id],
 		}
+		ps.RegisterHandler(ps.ReceiveMessage)
 		id++
 		return &ps, nil
 	}
 
+	network.RegisterMessageType(SimpleMessage{})
 	sda.ProtocolRegister(testID, fn)
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
-	go h1.ProcessMessages()
+	h1.StartProcessMessages()
 	// create small Tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
@@ -140,5 +143,4 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("Could not receive from channel of host 1")
 	}
-	// then it's all good
 }

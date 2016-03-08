@@ -1,7 +1,8 @@
 # build script for dedis/cothority libraries
 language: go
 go:
-  - 1.5.3
+  - 1.6
 script:
   - ./gofmt.sh
-  - go test -v ./...
+  # do not run any test binary in parallel (see go help build for more info on the -p flag)
+  - go test -v -race -p=1 ./...

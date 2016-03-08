@@ -4,22 +4,24 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/protobuf"
-	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 	"io"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/protobuf"
+	"github.com/satori/go.uuid"
+	"golang.org/x/net/context"
 )
 
 // How many times should we try to connect
-const maxRetry = 10
-const waitRetry = 1 * time.Second
-const timeOut = 5 * time.Second
+const MaxRetry = 10
+
+// how much time should we wait before trying again
+const WaitRetry = 100 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
@@ -30,7 +32,7 @@ var ErrTemp = errors.New("Temporary Error")
 var ErrTimeout = errors.New("Timeout Error")
 var ErrUnknown = errors.New("Unknown Error")
 
-type Size int32
+type Size uint32
 
 // Host is the basic interface to represent a Host of any kind
 // Host can open new Conn(ections) and Listen for any incoming Conn(...)
@@ -57,7 +59,8 @@ type Conn interface {
 // Host using Tcp as a communication channel
 type TcpHost struct {
 	// A list of connection maintained by this host
-	peers map[string]Conn
+	peers    map[string]Conn
+	peersMut sync.Mutex
 	// its listeners
 	listener net.Listener
 	// the close channel used to indicate to the listener we want to quit
@@ -65,11 +68,11 @@ type TcpHost struct {
 	// quitListener is a channel to indicate to the closing function that the
 	// listener has actually really quit
 	quitListener  chan bool
-	listeningLock *sync.Mutex
+	listeningLock sync.Mutex
 	listening     bool
-	// indicates wether this host is closed already or not
+	// indicates whether this host is closed already or not
 	closed     bool
-	closedLock *sync.Mutex
+	closedLock sync.Mutex
 	// a list of constructors for en/decoding
 	constructors protobuf.Constructors
 }
@@ -81,20 +84,27 @@ type TcpConn struct {
 	Endpoint string
 
 	// The connection used
-	Conn net.Conn
+	conn net.Conn
 
 	// closed indicator
-	closed bool
+	closed    bool
+	closedMut sync.Mutex
 	// A pointer to the associated host (just-in-case)
 	host *TcpHost
+	// So we only handle one receiving packet at a time
+	receiveMutex sync.Mutex
+	// So we only handle one sending packet at a time
+	sendMutex sync.Mutex
 }
 
 // SecureHost is the analog of Host but with secure communication
 // It is tied to an entity can only open connection with entities
 type SecureHost interface {
+	// Close terminates the `Listen()` function and closes all connections.
 	Close() error
 	Listen(func(SecureConn)) error
 	Open(*Entity) (SecureConn, error)
+	String() string
 }
 
 // SecureConn is the analog of Conn but for secure communication
@@ -229,7 +239,7 @@ func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
 // so user of the package can know what is the cause of the problem
 func handleError(err error) error {
 
-	if strings.Contains(err.Error(), "use of closed") {
+	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
 		return ErrClosed
 	} else if strings.Contains(err.Error(), "canceled") {
 		return ErrCanceled

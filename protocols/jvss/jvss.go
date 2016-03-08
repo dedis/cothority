@@ -2,6 +2,7 @@ package jvss
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -13,13 +14,13 @@ import (
 	"sync"
 )
 
-// SDA-based JVSS , a port of app/shamir
+// SDA-based JVSS (a port of app/shamir)
 
-// JVSS Protocol Instance structure holding the information for a longterm JVSS
+// JVSS Protocol Instance structure holding the information for a long-term JVSS
 // signing mechanism
 type JVSSProtocol struct {
 	// The TreeNode denotating ourself in the tree
-	Node *sda.Node
+	*sda.Node
 	// The EntityList we are using / this is needed to "bypass" the tree
 	// structure for the internals communication, when we set up the shares and
 	// everything. We directly send our share to everyone else directly by using
@@ -27,9 +28,9 @@ type JVSSProtocol struct {
 	List *sda.EntityList
 	// the index where we are in this entitylist
 	index int
-	// the mapping between TreeNode's peer id in the Tree to index in the entitylist,
-	// since JVSS mostly use the entityList
-	nodeToIndex map[uuid.UUID]int
+
+	// a flat list of all TreeNodes
+	nodeList []*sda.TreeNode
 	// list of public keys represented in the entityList (needed by poly.Deal)
 	publicList []abstract.Point
 	// keys of the Host set as config.KeyPair
@@ -87,32 +88,22 @@ type LongtermRequest struct {
 // directly with SDA, you just need to  register this function:
 // ```func(h,t,tok) ProtocolInstance  { return NewJVSSProtocol(h,t,tok) }```
 // For example, this function returns a JVSSProtocol with a default
-// poly.Treshold. You can give a new one after calling this function.
+// poly.Threshold. You can give a new one after calling this function.
 func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
-	// find ourself in the entityList
+	// find ourselves in the entityList
 	var idx int = -1
 	// at the same time create the public list
 	tree := n.Tree()
-	pubs := make([]abstract.Point, len(tree.EntityList.List))
-	for i := range tree.EntityList.List {
-		ent := tree.EntityList.Get(i)
-		if ent.Equal(n.Entity()) {
+	nodes := tree.ListNodes()
+	pubs := make([]abstract.Point, len(nodes))
+	for i, tn := range nodes {
+		if uuid.Equal(tn.Id, n.TreeNode().Id) {
 			idx = i
 		}
-		pubs[i] = ent.Public
-	}
-	// map the index
-	maps := make(map[uuid.UUID]int)
-	nodes := tree.ListNodes()
-	for i := range tree.EntityList.List {
-		for _, n := range nodes {
-			if n.Entity.Equal(tree.EntityList.Get(i)) {
-				maps[n.Id] = i
-			}
-		}
+		pubs[i] = tn.Entity.Public
 	}
 	if idx == -1 {
-		panic("Could not find this JVSSProtocol into the EntityList")
+		panic(fmt.Sprintf("Could not find JVSSProtocol node %+v in the list of nodes %+v", n, nodes))
 	}
 	kp := config.KeyPair{Public: n.Entity().Public, Secret: n.Private(), Suite: n.Suite()}
 	nbPeers := len(tree.EntityList.List)
@@ -124,8 +115,8 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 		info:         info,
 		publicList:   pubs,
 		key:          kp,
+		nodeList:     nodes,
 		requests:     make(map[int]*RequestBuffer),
-		nodeToIndex:  maps,
 		ltChan:       make(chan LongtermChan),
 		rdChan:       make(chan RandomChan),
 		reqChan:      make(chan RequestChan),
@@ -136,19 +127,20 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 	if err := jv.Node.RegisterChannel(jv.ltChan); err != nil {
 		return nil, err
 	}
-	go jv.waitForLongterm()
 	if err := jv.Node.RegisterChannel(jv.rdChan); err != nil {
 		return nil, err
 	}
-	go jv.waitForRandom()
 	if err := jv.Node.RegisterChannel(jv.reqChan); err != nil {
 		return nil, err
 	}
-	go jv.waitForRequests()
 	if err := jv.Node.RegisterChannel(jv.respChan); err != nil {
 		return nil, err
 	}
+	// FIXME leaky go rountines in tests (only?)
+	go jv.waitForRandom()
 	go jv.waitForResponses()
+	go jv.waitForRequests()
+	go jv.waitForLongterm()
 	return jv, nil
 }
 
@@ -157,36 +149,45 @@ func NewJVSSProtocolInstance(node *sda.Node) (sda.ProtocolInstance, error) {
 }
 
 // Start will send the message to first compute the long term secret
-// It's a blocking call  because we are supposed to launch that into a go
+// It's a blocking call because we are supposed to launch that into a go
 // routine anyway from sda.
 func (jv *JVSSProtocol) Start() error {
 	jv.waitLongtermSecret()
 	return nil
 }
 
+func (jv *JVSSProtocol) Shutdown() error {
+	close(jv.reqChan)
+	close(jv.respChan)
+	close(jv.ltChan)
+	close(jv.rdChan)
+	return nil
+}
+
 func (jv *JVSSProtocol) waitLongtermSecret() {
+	dbg.Lvl3("Creating long-term secret")
 	// add our own deal
 	deal := jv.newDeal()
+	jv.longtermLock.Lock()
 	jv.longterm.AddDeal(jv.index, deal)
+	jv.longtermLock.Unlock()
 
 	lt := NewLongtermFromDeal(jv.index, deal)
 	// send the deal to everyone
-	jv.otherNodes(func(tn *sda.TreeNode) {
-		jv.Node.SendTo(tn, &lt)
+	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
+		err := jv.Node.SendTo(tn, &lt)
+		if err != nil {
+			dbg.Error("Couldn't send to node", tn, err)
+		}
 	})
 
 	// and wait
 	jv.longterm.WaitDone()
-	dbg.Lvl3("JVSS (", jv.index, ") Longtern Generated!")
+	dbg.Lvl3("JVSS (", jv.index, ") Longterm Generated!")
 	// callbacks !
 	if jv.onLongtermDone != nil {
 		jv.onLongtermDone(jv.longterm.secret)
 	}
-}
-
-func (jv *JVSSProtocol) Dispatch(msgs []*sda.SDAData) error {
-	panic("JVSS dont use dispatch method")
-	return nil
 }
 
 // Verify returns true if a signature is valid or not
@@ -202,7 +203,7 @@ func (jv *JVSSProtocol) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		return nil, err
 	}
 	sigChan := make(chan *poly.SchnorrSig)
-	request.SetSigChan(sigChan)
+	request.setSigChan(sigChan)
 	// add our own partial sig
 	if err := request.startNewSigningRequest(msg); err != nil {
 		return nil, err
@@ -213,15 +214,15 @@ func (jv *JVSSProtocol) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		RequestNo: request.requestNo,
 		Msg:       msg,
 	}
-	dbg.Lvl3("JVSS (", jv.index, ") Sending Signature Request (", request.Nb(), ")")
+	dbg.Lvl3("JVSS (", jv.index, ") Sending Signature Request (", request.requestNo, ")")
 
 	// sends it
-	jv.otherNodes(func(tn *sda.TreeNode) {
+	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
 		jv.Node.SendTo(tn, req)
 	})
 	// wait for the signature
 	sig := <-sigChan
-	request.ResetSigChan()
+	request.resetSigChan()
 	return sig, nil
 }
 
@@ -237,7 +238,7 @@ func (jv *JVSSProtocol) waitForResponses() {
 			dbg.Error("Received signature request with request number not matching any shared secret...")
 			continue
 		}
-		requestBuff.AddSignatureResponse(sigResponse)
+		requestBuff.addSignatureResponse(sigResponse)
 	}
 
 }
@@ -252,12 +253,13 @@ func (jv *JVSSProtocol) waitForRandom() {
 		var ok bool
 		if reqBuff, ok = jv.requests[random.RequestNo]; !ok {
 			// we didn't started this new shared secret request so we should
-			// pariticipate in.
+			// participate in.
 			reqBuff = jv.initRequestBuffer(random.RequestNo)
 			dbg.Lvl3("JVSS (", jv.index, ") Received Request for random (", random.RequestNo, ")")
 			go jv.handleRequestSecret(reqBuff)
 		}
-		reqBuff.AddRandom(random)
+
+		reqBuff.addRandom(random)
 	}
 }
 
@@ -273,32 +275,33 @@ func (jv *JVSSProtocol) waitForRequests() {
 		if requestBuff, ok = jv.requests[sigRequest.RequestNo]; !ok {
 			// Not good, someone ask for a request we did not produce a shared
 			// secret before .. ??
-			dbg.Error("Receive signature request with request number nto matching any shared secret...")
+			dbg.Error("Receive signature request with request number not matching any shared secret...")
 			continue
 		}
+		requestBuff.dealLock.Lock()
+
 		if requestBuff.secret == nil {
-			dbg.Error("JVSS (", jv.index, ") Received signature request (", sigRequest.RequestNo, ") with no secret generated :/")
+			requestBuff.subReqBuf = append(requestBuff.subReqBuf, &st)
+			requestBuff.dealLock.Unlock()
+			dbg.Lvl3("JVSS (", jv.index, ") Received signature request (", sigRequest.RequestNo, ") with no secret generated")
 			continue
+
+		} else {
+			requestBuff.dealLock.Unlock()
 		}
 		jv.longtermLock.Lock()
 		if !jv.longterm.isDone() {
 			jv.longtermLock.Unlock()
 			dbg.Error("JVSS (", jv.index, ") Received signature request (", sigRequest.RequestNo, ") without even the longterm secret set")
 			continue
+		} else {
+			jv.longtermLock.Unlock()
 		}
-		jv.longtermLock.Unlock()
+
 		dbg.Lvl3("Started NewRound with secret.Pub", requestBuff.secret.Pub)
 		dbg.Lvl3("Started NewRound with longerm.Pub", jv.longterm.secret.Pub)
 		// get the partial sig
-		ps := requestBuff.onNewSigningRequest(sigRequest.Msg)
-		if ps == nil {
-			dbg.Error("Can not start new round")
-			continue
-		}
-		sr := &SignatureResponse{
-			RequestNo: sigRequest.RequestNo,
-			Partial:   ps,
-		}
+		sr := requestBuff.createSignatureResponse(sigRequest)
 		// send it back to the originator
 		if err := jv.Node.SendTo(st.TreeNode, sr); err != nil {
 			dbg.Lvl3("Could not send signature response back", err)
@@ -307,8 +310,24 @@ func (jv *JVSSProtocol) waitForRequests() {
 	}
 }
 
+func (rb *RequestBuffer) createSignatureResponse(sr SignatureRequest) *SignatureResponse {
+	h := rb.suite.Hash()
+	h.Write(sr.Msg)
+	dbg.Lvl3("NewSigningRequest with secret.Pub:", rb.secret.Pub)
+	ps := rb.longterm.newSigning(rb.secret, h)
+
+	if ps == nil {
+		dbg.Error("Can not start new round")
+		return nil
+	}
+	return &SignatureResponse{
+		RequestNo: sr.RequestNo,
+		Partial:   ps,
+	}
+}
+
 // waitForLongterm waits on a channel that receive every deals to be accepted
-// for computeing the longterm distributed secret
+// for computing the longterm distributed secret
 func (jv *JVSSProtocol) waitForLongterm() {
 	for st := range jv.ltChan {
 		lt := st.Longterm
@@ -323,11 +342,13 @@ func (jv *JVSSProtocol) waitForLongterm() {
 		}
 		dbg.Lvl3("JVSS (", jv.index, ") Received longterm (", lt.Index, ")")
 		deal := lt.Deal(jv.Node.Suite(), jv.info)
+		jv.longtermLock.Lock()
 		jv.longterm.AddDeal(jv.index, deal)
+		jv.longtermLock.Unlock()
 	}
 }
 
-// setupDistributedSecret is called by the leader or the iniator that wants to
+// setupDistributedSecret is called by the leader or the initiator that wants to
 // start a new round, a new signing request, where we must first create a random
 // distributed secret
 func (jv *JVSSProtocol) setupDistributedSecret() (*RequestBuffer, error) {
@@ -337,42 +358,43 @@ func (jv *JVSSProtocol) setupDistributedSecret() (*RequestBuffer, error) {
 
 }
 
-// setupRequestSecret sets up the random distributed secret for this request
-// number. When the initiator starts a new request,peers will call this function
-// so they also get the random dis. secret.
+// handleRequestSecret sets up the random distributed secret for this request
+// number. When the initiator starts a new request, peers will call this function
+// to get the random distributed secret.
 func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*RequestBuffer, error) {
 	// prepare our deal
 	doneChan := make(chan *poly.SharedSecret)
-	requestBuff.SetSecretChan(doneChan)
+	requestBuff.setSecretChan(doneChan)
 	deal := jv.newDeal()
-	requestBuff.AddDeal(jv.index, deal)
+	requestBuff.addDeal(jv.index, deal)
 	// send to everyone
 	buf, err := deal.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
-
-	jv.otherNodes(func(tn *sda.TreeNode) {
+	jv.otherNodes(func(idx int, tn *sda.TreeNode) {
 		rand := Random{
-			RequestNo: requestBuff.Nb(),
+			RequestNo: requestBuff.requestNo,
 			Longterm: Longterm{
 				Bytes: buf,
-				Index: jv.nodeToIndex[tn.Id],
+				Index: idx,
 			},
 		}
 		jv.Node.SendTo(tn, &rand)
 	})
 	// wait for the shared secret
+	// FIXME this doesn't seem sufficient for the secret to propagate
 	_ = <-doneChan
-	requestBuff.ResetSecretChan()
+	requestBuff.resetSecretChan()
 
 	return requestBuff, nil
-
 }
 
 func (jv *JVSSProtocol) newDeal() *poly.Deal {
+
 	dealKey := cliutils.KeyPair(jv.Node.Suite())
 	deal := new(poly.Deal).ConstructDeal(&dealKey, &jv.key, jv.info.T, jv.info.R, jv.publicList)
+	dbg.Lvl4("Finished new deal")
 	return deal
 }
 
@@ -389,6 +411,8 @@ type RequestBuffer struct {
 	receiver *poly.Receiver
 	// the generated secret if any
 	secret *poly.SharedSecret
+	// temporary buffer of *SinatureRequests to wait for rand secrets to propagate
+	subReqBuf []*RequestChan
 	// generated secret flag
 	secretGend bool
 	// channel to say the random secret has been generated
@@ -408,12 +432,18 @@ type RequestBuffer struct {
 	info poly.Threshold
 	// the suite used
 	suite abstract.Suite
+	// reference to the node (needed to send random secret shares)
+	node *sda.Node
 }
 
-// startNewSigningRequest start a new round and adds its own signature to the
+// startNewSigningRequest starts a new round and adds its own signature to the
 // schnorr struct so later it could reveal the final signature.
 func (rb *RequestBuffer) startNewSigningRequest(msg []byte) error {
-	ps := rb.onNewSigningRequest(msg)
+	h := rb.suite.Hash()
+	h.Write(msg)
+	dbg.Lvl3("NewSigningRequest with secret.Pub:", rb.secret.Pub)
+	ps := rb.longterm.newSigning(rb.secret, h)
+
 	if ps == nil {
 		return errors.New("Could not generate partial signature")
 	}
@@ -421,46 +451,31 @@ func (rb *RequestBuffer) startNewSigningRequest(msg []byte) error {
 	return err
 }
 
-// onNewSigningRequest simply starts a new round and returns the partial
-// signature this schnorr can offer to the gloabal signature. Mostly used by
-// servers that receive the request to sign something.
-func (rb *RequestBuffer) onNewSigningRequest(msg []byte) *poly.SchnorrPartialSig {
-	h := rb.suite.Hash()
-	h.Write(msg)
-	dbg.Lvl3("NewSigningRequest with secret.Pub:", rb.secret.Pub)
-	ps := rb.longterm.NewSigning(rb.secret, h)
-	return ps
-}
-
-// Nb returns the request number associated with this request buffer
-func (rb *RequestBuffer) Nb() int {
-	return rb.requestNo
-}
-
-func (rb *RequestBuffer) SetSecretChan(ch chan *poly.SharedSecret) {
+func (rb *RequestBuffer) setSecretChan(ch chan *poly.SharedSecret) {
 	rb.secretChan = ch
 }
-func (rb *RequestBuffer) ResetSecretChan() {
+func (rb *RequestBuffer) resetSecretChan() {
 	close(rb.secretChan)
 	rb.secretChan = nil
 }
 
-func (rb *RequestBuffer) SetSigChan(ch chan *poly.SchnorrSig) {
+func (rb *RequestBuffer) setSigChan(ch chan *poly.SchnorrSig) {
 	rb.sigChan = ch
 }
-func (rb *RequestBuffer) ResetSigChan() {
+func (rb *RequestBuffer) resetSigChan() {
 	close(rb.sigChan)
 	rb.sigChan = nil
 }
 
 // AddDeal is same as AddRandom but for Deal  (struct vs []byte)
-func (rb *RequestBuffer) AddDeal(index int, deal *poly.Deal) {
+func (rb *RequestBuffer) addDeal(index int, deal *poly.Deal) {
+	rb.dealLock.Lock()
+	defer rb.dealLock.Unlock()
 	_, err := rb.receiver.AddDeal(index, deal)
 	if err != nil {
 		dbg.Error("Could not add deal", err)
 		return
 	}
-	rb.dealLock.Lock()
 	rb.goodDeal++
 	if rb.goodDeal >= rb.info.T {
 		// did we already generated it
@@ -473,27 +488,38 @@ func (rb *RequestBuffer) AddDeal(index int, deal *poly.Deal) {
 			dbg.Lvl3("JVSS (", index, ") Generated Shared Secret for request (", rb.requestNo, ")")
 			rb.secret = sh
 			rb.secretGend = true
+			// see if we still have pending requests to answer
+			for _, sr := range rb.subReqBuf {
+				sResp := rb.createSignatureResponse(sr.SignatureRequest)
+				// send it back to the originator
+				dbg.Lvl3("Sent back late signature response to author")
+				if err := rb.node.SendTo(sr.TreeNode, sResp); err != nil {
+					dbg.Lvl3("Could not send signature response back", err)
+				}
+			}
+			// reset temporary buffer
+			rb.subReqBuf = nil
 		}
 		// notify any interested party
+
 		if rb.secretChan != nil {
 			go func() { rb.secretChan <- rb.secret }()
 		}
 	}
-	rb.dealLock.Unlock()
 }
 
 // AddRandom add the RandomMessage and check if we can generate the secret
 // already
-func (rb *RequestBuffer) AddRandom(rand Random) {
+func (rb *RequestBuffer) addRandom(rand Random) {
 	if rand.RequestNo != rb.requestNo {
 		return
 	}
 	deal := rand.Deal(rb.suite, rb.info)
-	rb.AddDeal(rand.Index, deal)
+	rb.addDeal(rand.Index, deal)
 
 }
 
-func (rb *RequestBuffer) AddSignatureResponse(partialSig SignatureResponse) {
+func (rb *RequestBuffer) addSignatureResponse(partialSig SignatureResponse) {
 	if partialSig.RequestNo != rb.requestNo {
 		return
 	}
@@ -523,7 +549,7 @@ func (rb *RequestBuffer) AddSignatureResponse(partialSig SignatureResponse) {
 	rb.partialLock.Unlock()
 }
 
-// initrequestBuffer init a random buffer for this request number
+// initRequestBuffer init a random buffer for this request number
 func (jv *JVSSProtocol) initRequestBuffer(rNo int) *RequestBuffer {
 	rd := &RequestBuffer{
 		requestNo:   rNo,
@@ -535,19 +561,18 @@ func (jv *JVSSProtocol) initRequestBuffer(rNo int) *RequestBuffer {
 		suite:       jv.Node.Suite(),
 		dealLock:    new(sync.Mutex),
 		partialLock: new(sync.Mutex),
+		node:        jv.Node,
 	}
 	jv.requests[rNo] = rd
 	return rd
 }
 
-func (jv *JVSSProtocol) otherNodes(fn func(*sda.TreeNode)) {
-	if !jv.Node.Root().Entity.Equal(jv.Node.Entity()) {
-		fn(jv.Node.Root())
-	}
-	for _, tn := range jv.Node.Root().Children {
-		if !tn.Entity.Equal(jv.Node.Entity()) {
-			fn(tn)
+func (jv *JVSSProtocol) otherNodes(fn func(int, *sda.TreeNode)) {
+	for i, tn := range jv.nodeList {
+		if i == jv.index {
+			continue
 		}
+		fn(i, tn)
 	}
 }
 
@@ -577,8 +602,8 @@ func (lr *LongtermRequest) AddDeal(index int, deal *poly.Deal) {
 	lr.checkState()
 }
 
-// checkState will look if we have enough deals for the longterm, and if so,will
-// create the shared secret and signify that we are done
+// checkState will look if we have enough deals for the long-term share,
+// if it finds enough deals it will create the shared secret and signify that we are done
 func (lr *LongtermRequest) checkState() {
 	if lr.goodDeal < lr.info.T {
 		return
@@ -594,7 +619,7 @@ func (lr *LongtermRequest) checkState() {
 	}
 	lr.secret = sh
 	lr.schnorr.Init(lr.suite, lr.info, lr.secret)
-	// notify we have the longterm secret
+	// notify we have the long-term secret
 	lr.done = true
 	lr.doneLock.Unlock()
 	go func() { lr.doneChan <- true }()
@@ -618,7 +643,7 @@ func (lr *LongtermRequest) isNew() bool {
 	return false
 }
 
-func (lr *LongtermRequest) NewSigning(random *poly.SharedSecret, msg hash.Hash) *poly.SchnorrPartialSig {
+func (lr *LongtermRequest) newSigning(random *poly.SharedSecret, msg hash.Hash) *poly.SchnorrPartialSig {
 	if err := lr.schnorr.NewRound(random, msg); err != nil {
 		dbg.Error("NewRound error:", err)
 		return nil

@@ -3,14 +3,15 @@ package network
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
+	"reflect"
+	"sync"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"reflect"
 )
 
 /// Encoding part ///
@@ -18,24 +19,16 @@ import (
 // Suite used globally by this network library.
 // For the moment, this will stay,as our focus is not on having the possibility
 // to use any suite we want (the decoding stuff is much harder then, because we
-// dont want to send the suite in the wire).
+// don't want to send the suite in the wire).
 // It will surely change in futur releases so we can permit this behavior.
 var Suite = edwards.NewAES128SHA256Ed25519(false)
 
 // ProtocolMessage is a type for any message that the user wants to send
 type ProtocolMessage interface{}
 
-// When you don't need any special constructors, you can give nil to NewTcpHost
-// and it will use this empty constructors
-var emptyConstructors protobuf.Constructors
-
 // The basic url used for uuid
 const UuidURL = "https://dedis.epfl.ch/"
 const UuidURLProtocolType = UuidURL + "/protocolType/"
-
-func init() {
-	emptyConstructors = make(protobuf.Constructors)
-}
 
 // RegisterMessageType registers a custom "struct" / "packet" and get
 // the allocated Type
@@ -51,12 +44,12 @@ func RegisterMessageType(msg ProtocolMessage) uuid.UUID {
 }
 
 // RegisterMessageUUID can be used if the uuid and the type is already known
+// NOTE: be sure to only registers VALUE message and not POINTERS to message.
 func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
-	dbg.Lvl5("Registering message:", mt, rt)
-	if _, typeRegistered := typeRegistry[mt]; typeRegistered {
+	if _, typeRegistered := registry.Get(mt); typeRegistered {
 		return mt
 	}
-	typeRegistry[mt] = rt
+	registry.Put(mt, rt)
 
 	return mt
 }
@@ -65,7 +58,7 @@ func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
 // returns 'DefaultType' upon error.
 func TypeFromData(msg ProtocolMessage) uuid.UUID {
 	msgType := TypeToUUID(msg)
-	_, ok := typeRegistry[msgType]
+	_, ok := registry.Get(msgType)
 	if !ok {
 		return ErrorType
 	}
@@ -92,7 +85,7 @@ func RTypeToUUID(msg reflect.Type) uuid.UUID {
 
 // DumpTypes is used for debugging - it prints out all known types
 func DumpTypes() {
-	for t, m := range typeRegistry {
+	for t, m := range registry.types {
 		dbg.Print("Type", t, "has message", m)
 	}
 }
@@ -113,32 +106,62 @@ func (am *NetworkMessage) Error() error {
 	return am.err
 }
 
-// workaround so we can set the error after creation of the application
-// message...
+// SetError is workaround so we can set the error after creation of the
+// application message
 func (am *NetworkMessage) SetError(err error) {
 	am.err = err
 }
 
-var typeRegistry = make(map[uuid.UUID]reflect.Type)
+type typeRegistry struct {
+	types map[uuid.UUID]reflect.Type
+	lock  sync.Mutex
+}
 
-var globalOrder = binary.LittleEndian
+func newTypeRegistry() *typeRegistry {
+	return &typeRegistry{
+		types: make(map[uuid.UUID]reflect.Type),
+		lock:  sync.Mutex{},
+	}
+}
+
+func (tr *typeRegistry) Get(id uuid.UUID) (reflect.Type, bool) {
+	tr.lock.Lock()
+	defer tr.lock.Unlock()
+	t, ok := tr.types[id]
+	return t, ok
+}
+
+func (tr *typeRegistry) Put(id uuid.UUID, typ reflect.Type) {
+	tr.lock.Lock()
+	defer tr.lock.Unlock()
+	tr.types[id] = typ
+}
+
+var registry = newTypeRegistry()
+
+var globalOrder = binary.BigEndian
 
 // ErrorType is reserved by the network library. When you receive a message of
 // ErrorType, it is generally because an error happened, then you can call
 // Error() on it.
 var ErrorType uuid.UUID = uuid.Nil
 
-// This is the default empty message that is returned in case something went
-// wrong.
+// EmptyApplicationMessage is the default empty message that is returned in case
+// something went wrong.
 var EmptyApplicationMessage = NetworkMessage{MsgType: ErrorType}
+
+// global mutex for MarshalRegisteredType
+var marshalLock sync.Mutex
 
 // MarshalRegisteredType will marshal a struct with its respective type into a
 // slice of bytes. That slice of bytes can be then decoded in
 // UnmarshalRegisteredType.
 func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
+	marshalLock.Lock()
+	defer marshalLock.Unlock()
 	var msgType uuid.UUID
 	if msgType = TypeFromData(data); msgType == ErrorType {
-		return nil, fmt.Errorf("Type %s Not registered to the network library.", msgType)
+		return nil, fmt.Errorf("Type of message %s not registered to the network library.", reflect.TypeOf(data))
 	}
 	b := new(bytes.Buffer)
 	if err := binary.Write(b, globalOrder, msgType); err != nil {
@@ -165,14 +188,14 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (uu
 	}
 	var typ reflect.Type
 	var ok bool
-	if typ, ok = typeRegistry[t]; !ok {
-		return ErrorType, nil, fmt.Errorf("Type %s not registered.", t.String())
+	if typ, ok = registry.Get(t); !ok {
+		return ErrorType, nil, fmt.Errorf("Type %s not registered.", typ.Name())
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
 	var err error
 	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
-		return ErrorType, nil, err
+		return t, ptrVal.Elem().Interface(), err
 	}
 	return t, ptrVal.Elem().Interface(), nil
 }
@@ -184,9 +207,7 @@ func (am *NetworkMessage) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary will decode the incoming bytes
-// It checks if the underlying packet is self-decodable
-// by using its UnmarshalBinary interface
-// otherwise, use abstract.Encoding (suite) to decode
+// It uses protobuf for decoding (using the constructors in the NetworkMessage).
 func (am *NetworkMessage) UnmarshalBinary(buf []byte) error {
 	t, msg, err := UnmarshalRegisteredType(buf, am.Constructors)
 	am.MsgType = t
@@ -203,8 +224,8 @@ func newNetworkMessage(obj ProtocolMessage) (*NetworkMessage, error) {
 	}
 	ty := TypeFromData(obj)
 	if ty == ErrorType {
-		return &NetworkMessage{}, errors.New(fmt.Sprintf("Packet to send is not known. Please register packet: %s\n",
-			reflect.TypeOf(obj).String()))
+		return &NetworkMessage{}, fmt.Errorf("Packet to send is not known. Please register packet: %s\n",
+			reflect.TypeOf(obj).String())
 	}
 	return &NetworkMessage{
 		MsgType: ty,

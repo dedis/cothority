@@ -22,7 +22,6 @@ package main
 
 import (
 	"flag"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -37,26 +36,13 @@ import (
 var deployP platform.Platform
 
 var platformDst = "localhost"
-var app = ""
 var nobuild = false
 var clean = true
 var build = ""
 var machines = 3
-var monitorPort = 10000
+var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
-
-// SHORT TERM solution of referencing
-// the different apps.
-// TODO: make the lib/app/*COnfig.go have their own reference
-// so they can issue Stats, read their own config depending on platform,
-// etc etc
-const (
-	ShamirSign string = "shamir"
-	CollSign   string = "sign"
-	CollStamp  string = "stamp"
-	Naive      string = "naive"
-	NTree      string = "ntree"
-)
+var debugVisible int
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
@@ -66,13 +52,13 @@ func init() {
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
-	flag.IntVar(&dbg.DebugVisible, "debug", dbg.DebugVisible, "Change debug level (0-5)")
+	flag.IntVar(&debugVisible, "debug", dbg.DebugVisible(), "Change debug level (0-5)")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
-	monitor.SinkPort = monitorPort
+	dbg.SetDebugVisible(debugVisible)
 	deployP = platform.NewPlatform(platformDst)
 	if deployP == nil {
 		dbg.Fatal("Platform not recognized.", platformDst)
@@ -93,7 +79,10 @@ func main() {
 		deployP.Configure()
 
 		if clean {
-			deployP.Deploy(runconfigs[0])
+			err := deployP.Deploy(runconfigs[0])
+			if err != nil {
+				dbg.Fatal("Couldn't deploy:", err)
+			}
 			deployP.Cleanup()
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
@@ -134,7 +123,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	for i, t := range runconfigs {
 		// Implement a simple range-argument that will skip checks not in range
 		if i < start || i > stop {
-			dbg.Lvl1("Skipping", t, "because of range")
+			dbg.Lvl2("Skipping", t, "because of range")
 			continue
 		}
 		dbg.Lvl1("Doing run", t)
@@ -196,7 +185,9 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		return *rs, err
 	}
 	go func() {
-		monitor.Listen()
+		if err := monitor.Listen(); err != nil {
+			dbg.Fatal("Could not monitor.Listen():", err)
+		}
 	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
@@ -242,15 +233,11 @@ func TestFile(name string) string {
 	return "test_data/" + name + ".csv"
 }
 
-func isZero(f float64) bool {
-	return math.Abs(f) < 0.0000001
-}
-
 // returns a tuple of start and stop configurations to run
 func getStartStop(rcs int) (int, int) {
 	ss_str := strings.Split(simRange, ":")
 	start, err := strconv.Atoi(ss_str[0])
-	stop := rcs
+	stop := rcs - 1
 	if err == nil {
 		stop = start
 		if len(ss_str) > 1 {
@@ -260,6 +247,6 @@ func getStartStop(rcs int) (int, int) {
 			}
 		}
 	}
-	dbg.Lvl2("Range is", start, "...", stop)
+	dbg.Lvl2("Range is", start, ":", stop)
 	return start, stop
 }

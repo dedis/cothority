@@ -1,21 +1,24 @@
 package jvss_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/jvss"
 	"github.com/dedis/crypto/poly"
 	"github.com/satori/go.uuid"
-	"testing"
-	"time"
 )
 
 var CustomJVSSProtocolID = uuid.NewV5(uuid.NamespaceURL, "jvss_test")
 
-// Test if the setup of the longterm secret for one protocol instance is correct
+// Test if the setup of the long-term secret for one protocol instance is correct
 // or not.
 func TestJVSSLongterm(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup two hosts
 	hosts := sda.SetupHostsMock(network.Suite, "127.0.0.1:2000", "127.0.0.1:4000")
@@ -26,10 +29,8 @@ func TestJVSSLongterm(t *testing.T) {
 	defer h2.Close()
 	// register the protocol with our custom channels so we know at which steps
 	// are both of the hosts
-	ch1 := make(chan *poly.SharedSecret)
-	ch2 := make(chan *poly.SharedSecret)
-	var done1 bool
-	var done2 bool
+	ch := make(chan *poly.SharedSecret, 2)
+	var p1 *jvss.JVSSProtocol
 	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
 		pi, err := jvss.NewJVSSProtocol(node)
 		if err != nil {
@@ -37,15 +38,10 @@ func TestJVSSLongterm(t *testing.T) {
 		}
 		pi.RegisterOnLongtermDone(func(sh *poly.SharedSecret) {
 			go func() {
-				if !done1 {
-					done1 = true
-					ch1 <- sh
-				} else {
-					done2 = true
-					ch2 <- sh
-				}
+				ch <- sh
 			}()
 		})
+		p1 = pi
 		return pi, nil
 	}
 	sda.ProtocolRegister(CustomJVSSProtocolID, fn)
@@ -55,28 +51,20 @@ func TestJVSSLongterm(t *testing.T) {
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	go h1.StartNewNode(CustomJVSSProtocolID, tree)
-	// wait for the longterm secret to be generated
-	var found1 *poly.SharedSecret
-	var found2 *poly.SharedSecret
-	var found bool
-	for !found {
+
+	// wait for the longterm secret to be generated:
+	res := make([]*poly.SharedSecret, 2)
+	for count := 0; count != 2; {
 		select {
-		case found1 = <-ch1:
-			if found2 != nil {
-				found = true
-				break
-			}
-		case found2 = <-ch2:
-			if found1 != nil {
-				found = true
-				break
-			}
+		case poly := <-ch:
+			res[count] = poly
+			count++
 		case <-time.After(time.Second * 5):
 			t.Fatal("Timeout on the longterm distributed secret generation")
 		}
 	}
 
-	if !found1.Pub.Equal(found2.Pub) {
+	if !res[0].Pub.Equal(res[1].Pub) {
 		t.Fatal("longterm generated are not equal")
 	}
 
@@ -85,6 +73,7 @@ func TestJVSSLongterm(t *testing.T) {
 // Test if the setup of the longterm secret for one protocol instance is correct
 // or not.
 func TestJVSSSign(t *testing.T) {
+	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup two hosts
 	hosts := sda.SetupHostsMock(network.Suite, "127.0.0.1:2000", "127.0.0.1:4000")
@@ -121,7 +110,7 @@ func TestJVSSSign(t *testing.T) {
 	h1.AddTree(tree)
 	// start the protocol
 	go h1.StartNewNode(CustomJVSSProtocolID, tree)
-	// wait for the longterm secret to be generated
+	// wait for the long-term secret to be generated
 	select {
 	case <-doneLongterm:
 		break
@@ -142,7 +131,7 @@ func TestJVSSSign(t *testing.T) {
 	// wait for the signing or timeout
 	select {
 	case <-doneSig:
-		//it's fine
+	//it's fine
 	case <-time.After(time.Second * 5):
 		t.Fatal("Could not get the signature done before timeout")
 	}

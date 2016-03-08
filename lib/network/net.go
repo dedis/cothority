@@ -18,14 +18,15 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
 	"golang.org/x/net/context"
 
 	"errors"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
@@ -36,12 +37,10 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTcpHost() *TcpHost {
 	return &TcpHost{
-		peers:         make(map[string]Conn),
-		quit:          make(chan bool),
-		constructors:  DefaultConstructors(Suite),
-		quitListener:  make(chan bool),
-		listeningLock: &sync.Mutex{},
-		closedLock:    &sync.Mutex{},
+		peers:        make(map[string]Conn),
+		quit:         make(chan bool),
+		constructors: DefaultConstructors(Suite),
+		quitListener: make(chan bool),
 	}
 }
 
@@ -53,6 +52,8 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.peersMut.Lock()
+	defer t.peersMut.Unlock()
 	t.peers[name] = c
 	return c, nil
 }
@@ -68,17 +69,22 @@ func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
 
 // Close will close every connection this host has opened
 func (t *TcpHost) Close() error {
+	t.peersMut.Lock()
+	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
-		dbg.Lvl3("Closing peer", c)
+		// dbg.Lvl4("Closing peer", c)
 		if err := c.Close(); err != nil {
-			dbg.Lvl3("Error while closing peers")
 			return handleError(err)
 		}
 	}
+
+	t.closedLock.Lock()
 	if !t.closed {
 		close(t.quit)
 	}
 	t.closed = true
+	t.closedLock.Unlock()
+
 	// lets see if we launched a listening routing
 	var listening bool
 	t.listeningLock.Lock()
@@ -92,7 +98,9 @@ func (t *TcpHost) Close() error {
 	var stop bool
 	for !stop {
 		if t.listener != nil {
-			t.listener.Close()
+			if err := t.listener.Close(); err != nil {
+				return err
+			}
 		}
 		select {
 		case <-t.quitListener:
@@ -113,33 +121,44 @@ func (c *TcpConn) Remote() string {
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
+func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	var am NetworkMessage
 	am.Constructors = c.host.constructors
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
 	var s Size
-	if err = binary.Read(c.Conn, globalOrder, &s); err != nil {
+	defer func() {
+		if err := recover(); err != nil {
+			nm = EmptyApplicationMessage
+			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
+		}
+	}()
+	if err = binary.Read(c.conn, globalOrder, &s); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
-	// Then make the buffer out of it
+	c.receiveMutex.Lock()
+	defer c.receiveMutex.Unlock()
 	b := make([]byte, s)
+	var read Size
 	var buffer bytes.Buffer
 	for Size(buffer.Len()) < s {
-		n, err := c.Conn.Read(b)
-		b = b[:n]
-		buffer.Write(b)
+		// read the size of the next packet
+		n, err := c.conn.Read(b)
+		// if error then quit
 		if err != nil {
 			e := handleError(err)
 			return EmptyApplicationMessage, e
 		}
-	}
-	defer func() {
-		if e := recover(); e != nil {
-			fmt.Printf("Error Unmarshalling %s: %dbytes : %v\n", am.MsgType, len(buffer.Bytes()), e)
+		// put it in the longterm buffer
+		buffer.Write(b[:n])
+		read += Size(n)
+		// if we could not read everything yet
+		if Size(buffer.Len()) < s {
+			// make b size = bytes that we still need to read (no more no less)
+			b = b[:s-read]
 		}
-	}()
+	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
@@ -149,41 +168,66 @@ func (c *TcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
 	return am, nil
 }
 
+// how many bytes do we write at once on the socket
+// 1400 seems a safe choice regarding the size of a ethernet packet.
+// https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection
+const maxChunkSize Size = 1400
+
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with the size through the network.
 // Returns an error if anything was wrong
 func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+	c.sendMutex.Lock()
+	defer c.sendMutex.Unlock()
 	am, err := newNetworkMessage(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
+	dbg.Lvl5("Message SEND =>", fmt.Sprintf("%+v", am))
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
+	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
-	var buffer bytes.Buffer
-	size := Size(len(b))
-	if err := binary.Write(&buffer, globalOrder, size); err != nil {
+	packetSize := Size(len(b))
+	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
+		dbg.Error("Couldn't write number of bytes")
 		return err
 	}
 	// Then send everything through the connection
-	buffer.Write(b)
-	c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
-	_, err = c.Conn.Write(buffer.Bytes())
-	if err != nil {
-		return handleError(err)
+	// Send chunk by chunk
+	var sent Size
+	for sent < packetSize {
+		length := packetSize - sent
+		if length > maxChunkSize {
+			length = maxChunkSize
+		}
+
+		// Sending 'length' bytes
+		n, err := c.conn.Write(b[:length])
+		if err != nil {
+			dbg.Error("Couldn't write chunk starting at", sent, "size", length, err)
+			return handleError(err)
+		}
+		sent += Size(n)
+
+		// bytes left to send
+		b = b[n:]
 	}
+
 	return nil
 }
 
 // Close ... closes the connection
 func (c *TcpConn) Close() error {
+	c.closedMut.Lock()
+	defer c.closedMut.Unlock()
 	if c.closed == true {
 		return nil
 	}
-	err := c.Conn.Close()
+	err := c.conn.Close()
 	c.closed = true
 	if err != nil {
 		return handleError(err)
@@ -195,22 +239,22 @@ func (c *TcpConn) Close() error {
 func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 	var err error
 	var conn net.Conn
-	for i := 0; i < maxRetry; i++ {
+	for i := 0; i < MaxRetry; i++ {
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
 			//dbg.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
-			time.Sleep(waitRetry)
+			time.Sleep(WaitRetry)
 		} else {
 			break
 		}
-		time.Sleep(waitRetry)
+		time.Sleep(WaitRetry)
 	}
 	if conn == nil {
 		return nil, fmt.Errorf("Could not connect to %s.", name)
 	}
 	c := TcpConn{
 		Endpoint: name,
-		Conn:     conn,
+		conn:     conn,
 		host:     t,
 	}
 
@@ -224,17 +268,20 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
 	global, _ := cliutils.GlobalBind(addr)
-	ln, err := net.Listen("tcp", global)
-	if err != nil {
-		return errors.New("Error opening listener: " + err.Error())
-	}
-	t.listener = ln
-	var unlocked bool
-	for {
-		if !unlocked {
-			unlocked = true
+	for i := 0; i < MaxRetry; i++ {
+		ln, err := net.Listen("tcp", global)
+		if err == nil {
+			t.listener = ln
+			break
+		} else if i == MaxRetry-1 {
 			t.listeningLock.Unlock()
+			return errors.New("Error opening listener: " + err.Error())
 		}
+		time.Sleep(WaitRetry)
+	}
+
+	t.listeningLock.Unlock()
+	for {
 		conn, err := t.listener.Accept()
 		if err != nil {
 			select {
@@ -247,13 +294,14 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 		}
 		c := TcpConn{
 			Endpoint: conn.RemoteAddr().String(),
-			Conn:     conn,
+			conn:     conn,
 			host:     t,
 		}
+		t.peersMut.Lock()
 		t.peers[conn.RemoteAddr().String()] = &c
+		t.peersMut.Unlock()
 		fn(&c)
 	}
-	return nil
 }
 
 // NewSecureTcpHost returns a Secure Tcp Host
@@ -271,14 +319,14 @@ func NewSecureTcpHost(private abstract.Secret, e *Entity) *SecureTcpHost {
 // Returns an error if it can listen on any address
 func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TcpConn) {
-		dbg.Lvl3("Listening on", c.Remote())
+		dbg.Lvl3(st.workingAddress, "connected with", c.Remote())
 		stc := &SecureTcpConn{
 			TcpConn:       c,
 			SecureTcpHost: st,
 		}
-		// if negociation fails we drop the connection
-		if err := stc.negotiateListen(); err != nil {
-			dbg.Error("Negociation failed:", err)
+		// if negotiation fails we drop the connection
+		if err := stc.exchangeEntity(); err != nil {
+			dbg.Error("Negotiation failed:", err)
 			stc.Close()
 			return
 		}
@@ -299,7 +347,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("No address worked for listening on this host", err)
+	return fmt.Errorf("No address worked for listening on this host %+s.", err.Error())
 }
 
 // Open will try any address that is in the Entity and connect to the first
@@ -313,7 +361,7 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 		dbg.Lvl3("Trying address", addr)
 		c, err := st.TcpHost.openTcpConn(addr)
 		if err != nil {
-			dbg.Lvl3("Address didn't accept connection:", addr)
+			dbg.Lvl3("Address didn't accept connection:", addr, "=>", err)
 			continue
 		}
 		// create the secure connection
@@ -332,6 +380,11 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 	return &secure, secure.negotiateOpen(e)
 }
 
+// String returns a string identifying that host
+func (st *SecureTcpHost) String() string {
+	return st.workingAddress
+}
+
 // Receive is analog to Conn.Receive but also set the right Entity in the
 // message
 func (sc *SecureTcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
@@ -344,11 +397,12 @@ func (sc *SecureTcpConn) Entity() *Entity {
 	return sc.entity
 }
 
-// negotitateListen is made to exchange the Entity between the two parties.
+// exchangeEntity is made to exchange the Entity between the two parties.
 // when a connection request is made during listening
-func (sc *SecureTcpConn) negotiateListen() error {
+func (sc *SecureTcpConn) exchangeEntity() error {
 	// Send our Entity to the remote endpoint
-	dbg.Lvl4("Sending our identity")
+	dbg.Lvl4("Sending our identity", sc.SecureTcpHost.entity.Id, "to",
+		sc.TcpConn.conn.RemoteAddr().String())
 	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
@@ -357,7 +411,6 @@ func (sc *SecureTcpConn) negotiateListen() error {
 	if err != nil {
 		return fmt.Errorf("Error while receiving Entity during negotiation %s", err)
 	}
-	dbg.Lvl4("Received our identity")
 	// Check if it is correct
 	if nm.MsgType != EntityType {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
@@ -365,21 +418,25 @@ func (sc *SecureTcpConn) negotiateListen() error {
 
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
+	dbg.Lvl4(sc.SecureTcpHost.entity.Id, "Received identity", e.Id)
+
 	sc.entity = &e
 	dbg.Lvl4("Identity exchange complete")
 	return nil
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
-// negotiateListen it also verifiy the Entity.
+// negotiateListen it also verify the Entity.
 func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
-	if err := sc.negotiateListen(); err != nil {
+	if err := sc.exchangeEntity(); err != nil {
 		return err
 	}
 
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().Id != e.Id {
-		return fmt.Errorf("Entity received during negotiation is wrong. WARNING")
+		dbg.Lvl3("Wanted to connect to", e, e.Id, "but got", sc.Entity(), sc.Entity().Id)
+		dbg.Lvl4("IDs not the same", testutil.Stack())
+		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}
 
 	return nil

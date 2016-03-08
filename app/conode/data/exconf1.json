@@ -1,9 +1,0 @@
-{
-    "hosts": ["host0", "host1", "host2"],
-    "tree": {"name": "host0",
-             "children": [
-                 {"name": "host1",
-                  "children": []},
-                 {"name": "host2",
-                  "children": []}]}
-}

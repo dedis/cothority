@@ -4,10 +4,16 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"time"
 )
 
 /*
 Protocol used to close all connections, starting from the leaf-nodes.
+It first sends down a message `PrepareClose` through the tree, then
+from the leaf-nodes a `Close`-message up to the root. Every node receiving
+the `Close`-message will shut down all network communications.
+
+The protocol waits for the `Close`-message to arrive at the root.
 */
 
 func init() {
@@ -18,76 +24,70 @@ func init() {
 
 type ProtocolCloseAll struct {
 	*sda.Node
-	Done         chan bool
-	PrepareClose chan struct {
-		*sda.TreeNode
-		PrepareClose
-	}
-	Close chan struct {
-		*sda.TreeNode
-		Close
-	}
+	Done chan bool
 }
 
 type PrepareClose struct{}
+type PrepareCloseMsg struct {
+	*sda.TreeNode
+	PrepareClose
+}
 
 type Close struct{}
+type CloseMsg struct {
+	*sda.TreeNode
+	Close
+}
 
+// NewCloseAll will create a new protocol
 func NewCloseAll(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolCloseAll{Node: n}
 	p.Done = make(chan bool, 1)
-	p.RegisterChannel(&p.PrepareClose)
-	p.RegisterChannel(&p.Close)
-	go p.DispatchChannels()
+	p.RegisterHandler(p.FuncPrepareClose)
+	p.RegisterHandler(p.FuncClose)
 	return p, nil
 }
 
-func (p *ProtocolCloseAll) DispatchChannels() {
-	for {
-		dbg.Lvl3("waiting for message in", p.Entity().Addresses)
-		select {
-		case _ = <-p.PrepareClose:
-			p.FuncPC()
-		case _ = <-p.Close:
-			p.FuncC()
-		}
-	}
-}
-
-func (p *ProtocolCloseAll) FuncPC() {
+// FuncPrepareClose sends a `PrepareClose`-message down the tree.
+func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
+	dbg.Lvl3(pc.Entity.Addresses, "sent PrepClose to", p.Entity().Addresses)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
-			dbg.Lvl3("Sending to", c.Entity.Addresses)
-			p.SendTo(c, &PrepareClose{})
+			err := p.SendTo(c, &PrepareClose{})
+			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses, "(err=", err, ")")
 		}
 	} else {
-		p.FuncC()
+		p.FuncClose(nil)
 	}
 }
 
-func (p *ProtocolCloseAll) FuncC() {
+// FuncClose is called from the leafs to the parents and up the tree. Everybody
+// receiving all `Close`-messages from all children will close down all
+// network communication.
+func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	if !p.IsRoot() {
+		dbg.Lvl3("Sending closeall from", p.Entity().Addresses,
+			"to", p.Parent().Entity.Addresses)
 		p.SendTo(p.Parent(), &Close{})
 	} else {
+		dbg.Lvl2("Root received Close")
 		p.Done <- true
 	}
-	dbg.Lvl3("Closing host")
-	err := p.Node.Close()
+	time.Sleep(time.Second)
+	dbg.Lvl3("Closing host", p.Entity().Addresses)
+	err := p.Node.CloseHost()
 	if err != nil {
-		dbg.Fatal("Couldn't close")
+		dbg.Error("Couldn't close:", err)
 	}
+	p.Node.Done()
 }
 
-// Starts the protocol
+// Starts the protocol and waits for the `Close`-message to arrive back at
+// the root-node.
 func (p *ProtocolCloseAll) Start() error {
 	// Send an empty message
-	p.FuncPC()
+	p.FuncPrepareClose(PrepareCloseMsg{TreeNode: p.TreeNode()})
 	// Wait till the end
 	<-p.Done
-	return nil
-}
-
-// Dispatch takes the message and decides what function to call
-func (p *ProtocolCloseAll) Dispatch(m []*sda.SDAData) error {
 	return nil
 }

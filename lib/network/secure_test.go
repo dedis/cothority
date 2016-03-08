@@ -2,11 +2,13 @@ package network
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
-	"testing"
 )
 
 // Secure_test is analog to simple_test it uses the same structure to send
@@ -15,6 +17,8 @@ import (
 // Now you connect to someone else using Entity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 4)
 	priv1, id1 := genEntity("localhost:2000")
 	priv2, id2 := genEntity("localhost:2001")
@@ -81,7 +85,7 @@ func TestSecureSimple(t *testing.T) {
 }
 
 func genEntity(name string) (abstract.Secret, *Entity) {
-	kp := cliutils.KeyPair(tSuite)
+	kp := cliutils.KeyPair(Suite)
 	return kp.Secret, &Entity{
 		Public:    kp.Public,
 		Addresses: []string{name},

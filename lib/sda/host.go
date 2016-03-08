@@ -15,16 +15,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"reflect"
+	"sync"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"io/ioutil"
-	"sync"
 	"time"
 )
 
@@ -48,6 +49,8 @@ type Host struct {
 	networkChan chan network.NetworkMessage
 	// The database of entities this host knows
 	entities map[uuid.UUID]*network.Entity
+	// lock associated to access entityLists
+	entityListsLock sync.RWMutex
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
@@ -58,46 +61,44 @@ type Host struct {
 	pendingSDAs []*SDAData
 	// The suite used for this Host
 	suite abstract.Suite
-	// closed channel to notify the connections that we close
-	Closed chan bool
+	// We're about to close
+	isClosing  bool
+	closingMut sync.Mutex
 	// lock associated to access network connections
-	// and to access entities also.
-	networkLock *sync.Mutex
-	// lock associated to access entityLists
-	entityListsLock *sync.Mutex
+	networkLock sync.Mutex
 	// lock associated to access trees
-	treesLock *sync.Mutex
+	treesLock sync.Mutex
 	// lock associated with pending TreeMarshal
-	pendingTreeLock *sync.Mutex
+	pendingTreeLock sync.Mutex
 	// lock associated with pending SDAdata
-	pendingSDAsLock *sync.Mutex
+	pendingSDAsLock sync.Mutex
 	// working address is mostly for debugging purposes so we know what address
 	// is known as right now
 	workingAddress string
 	// listening is a flag to tell whether this host is listening or not
 	listening bool
+	// whether processMessages has started
+	processMessagesStarted bool
+	// tell processMessages to quit
+	ProcessMessagesQuit chan bool
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	h := &Host{
-		Entity:             e,
-		workingAddress:     e.First(),
-		connections:        make(map[uuid.UUID]network.SecureConn),
-		entities:           make(map[uuid.UUID]*network.Entity),
-		pendingTreeMarshal: make(map[uuid.UUID][]*TreeMarshal),
-		pendingSDAs:        make([]*SDAData, 0),
-		host:               network.NewSecureTcpHost(pkey, e),
-		private:            pkey,
-		suite:              network.Suite,
-		networkChan:        make(chan network.NetworkMessage, 1),
-		Closed:             make(chan bool),
-		networkLock:        &sync.Mutex{},
-		entityListsLock:    &sync.Mutex{},
-		treesLock:          &sync.Mutex{},
-		pendingTreeLock:    &sync.Mutex{},
-		pendingSDAsLock:    &sync.Mutex{},
+		Entity:              e,
+		workingAddress:      e.First(),
+		connections:         make(map[uuid.UUID]network.SecureConn),
+		entities:            make(map[uuid.UUID]*network.Entity),
+		pendingTreeMarshal:  make(map[uuid.UUID][]*TreeMarshal),
+		pendingSDAs:         make([]*SDAData, 0),
+		host:                network.NewSecureTcpHost(pkey, e),
+		private:             pkey,
+		suite:               network.Suite,
+		networkChan:         make(chan network.NetworkMessage, 1),
+		isClosing:           false,
+		ProcessMessagesQuit: make(chan bool),
 	}
 
 	h.overlay = NewOverlay(h)
@@ -158,17 +159,11 @@ func (h *Host) SaveToFile(name string) error {
 	return nil
 }
 
-// NewHostKey creates a new host only from the ip-address and port-number. This
-// is useful in testing and deployment for measurements
-func NewHostKey(address string) (*Host, abstract.Secret) {
-	keypair := config.NewKeyPair(network.Suite)
-	entity := network.NewEntity(keypair.Public, address)
-	return NewHost(entity, keypair.Secret), keypair.Secret
-}
-
-// Listen starts listening for messages coming from any host that tries to
-// contact this entity / host
-func (h *Host) Listen() {
+// listen starts listening for messages coming from any host that tries to
+// contact this host. If 'wait' is true, it will try to connect to itself before
+// returning.
+func (h *Host) listen(wait bool) {
+	dbg.Lvl3(h.Entity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
@@ -176,12 +171,34 @@ func (h *Host) Listen() {
 		h.handleConn(c)
 	}
 	go func() {
-		dbg.Lvl3("Listening in", h.workingAddress)
+		dbg.Lvl3("Host listens on:", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
-			dbg.Fatal("Couldn't listen in", h.workingAddress, ":", err)
+			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
 		}
 	}()
+	if wait {
+		for {
+			dbg.Lvl3(h.Entity.First(), "checking if listener is up")
+			_, err := h.Connect(h.Entity)
+			if err == nil {
+				dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
+				break
+			}
+			time.Sleep(network.WaitRetry)
+		}
+	}
+}
+
+// Listen starts listening and returns once it could connect to itself
+func (h *Host) Listen() {
+	h.listen(true)
+}
+
+// ListenNoblock only starts listening and returns without waiting for the
+// listening to be active
+func (h *Host) ListenNoblock() {
+	h.listen(false)
 }
 
 // Connect takes an entity where to connect to
@@ -189,25 +206,48 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
+	h.networkLock.Lock()
 	c, err = h.host.Open(id)
+	h.networkLock.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
-	h.registerConnection(c)
 	dbg.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
+	h.registerConnection(c)
 	go h.handleConn(c)
 	return c, nil
 }
 
 // Close shuts down the listener
 func (h *Host) Close() error {
-	time.Sleep(time.Millisecond * 100)
 	h.networkLock.Lock()
-	var err error
-	err = h.host.Close()
+	defer h.networkLock.Unlock()
+
+	h.closingMut.Lock()
+	if h.isClosing {
+		h.closingMut.Unlock()
+		return errors.New("Already closing")
+	}
+	dbg.Lvl3(h.Entity.First(), "Starts closing")
+	h.isClosing = true
+	h.closingMut.Unlock()
+	if h.processMessagesStarted {
+		// Tell ProcessMessages to quit
+		close(h.ProcessMessagesQuit)
+	}
+	for _, c := range h.connections {
+		dbg.Lvl3(h.Entity.First(), "Closing connection", c)
+		err := c.Close()
+		if err != nil {
+			dbg.Error(h.Entity.First(), "Couldn't close connection", c)
+			return err
+		}
+	}
+	dbg.Lvl3(h.Entity.First(), "Closing tcpHost")
+	err := h.host.Close()
 	h.connections = make(map[uuid.UUID]network.SecureConn)
-	close(h.Closed)
-	h.networkLock.Unlock()
+	h.overlay.Close()
 	return err
 }
 
@@ -216,21 +256,40 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
+	h.entityListsLock.RLock()
 	if _, ok := h.entities[e.Id]; !ok {
+		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
+		h.entityListsLock.RUnlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
 		if err != nil {
 			return err
 		}
+	} else {
+		h.entityListsLock.RUnlock()
 	}
 	var c network.SecureConn
 	var ok bool
+	h.networkLock.Lock()
 	if c, ok = h.connections[e.Id]; !ok {
+		h.networkLock.Unlock()
 		return errors.New("Got no connection tied to this Entity")
 	}
+	h.networkLock.Unlock()
+
 	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
-	c.Send(context.TODO(), msg)
+	if err := c.Send(context.TODO(), msg); err != nil && err != network.ErrClosed {
+		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
+	}
 	return nil
+}
+
+func (h *Host) StartProcessMessages() {
+	// The networkLock.Unlock is in the processMessages-method to make
+	// sure the goroutine started
+	h.networkLock.Lock()
+	h.processMessagesStarted = true
+	go h.processMessages()
 }
 
 // ProcessMessages checks if it is one of the messages for us or dispatch it
@@ -241,14 +300,22 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 // * SendTree - send the tree to the child
 // * RequestPeerListID - ask the parent for a given peerList
 // * SendPeerListID - send the tree to the child
-func (h *Host) ProcessMessages() {
+func (h *Host) processMessages() {
+	h.networkLock.Unlock()
 	for {
 		var err error
-		data := h.receive()
-		dbg.Lvl3("Message Received from", data.From)
+		var data network.NetworkMessage
+		select {
+		case data = <-h.networkChan:
+		case <-h.ProcessMessagesQuit:
+			return
+		}
+		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
 		case SDADataMessage:
-			err := h.processSDAMessage(&data)
+			sdaMsg := data.Msg.(SDAData)
+			sdaMsg.Entity = data.Entity
+			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
@@ -272,7 +339,7 @@ func (h *Host) ProcessMessages() {
 				continue
 			}
 			il := h.overlay.EntityList(tm.EntityId)
-			// The entity list does not exists, we should request for that too
+			// The entity list does not exists, we should request that, too
 			if il == nil {
 				msg := &RequestEntityList{tm.EntityId}
 				if err := h.SendRaw(data.Entity, msg); err != nil {
@@ -328,96 +395,50 @@ func (h *Host) ProcessMessages() {
 func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
-		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+		typ := network.TypeFromData(sdaMsg.Msg)
+		rtype := reflect.TypeOf(sdaMsg.Msg)
+		var str string
+		if typ == network.ErrorType {
+			str = " Non registered Type !"
+		} else {
+			str = typ.String()
+		}
+		str += " (reflect= " + rtype.String()
+		return fmt.Errorf("Error marshaling  message: %s  ( msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
 	// put to nil so protobuf won't encode it and there won't be any error on the
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
+	dbg.Lvl4("Sending to", e.Addresses)
 	return h.SendRaw(e, sdaMsg)
-}
-
-// Receive will return the value of the communication-channel, unmarshalling
-// the SDAMessage. Receive is called in ProcessMessages as it takes directly
-// the message from the networkChan, and pre-processes the SDAMessage
-func (h *Host) receive() network.NetworkMessage {
-	data := <-h.networkChan
-	if data.MsgType == SDADataMessage {
-		sda := data.Msg.(SDAData)
-		t, msg, err := network.UnmarshalRegisteredType(sda.MsgSlice, data.Constructors)
-		if err != nil {
-			dbg.Error("Error while marshalling inner message of SDAData:", err)
-		}
-		// Put the msg into SDAData
-		sda.MsgType = t
-		sda.Msg = msg
-		// Write back the Msg in appplicationMessage
-		data.Msg = sda
-		dbg.Lvlf3("SDA-Message is: %+v", sda.Msg)
-	}
-	return data
 }
 
 // Handle a connection => giving messages to the MsgChans
 func (h *Host) handleConn(c network.SecureConn) {
 	address := c.Remote()
-	msgChan := make(chan network.NetworkMessage)
-	errorChan := make(chan error)
-	doneChan := make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-doneChan:
-				dbg.Lvl3("Closing", c)
-				return
-			default:
-				ctx := context.TODO()
-				am, err := c.Receive(ctx)
-				// So the receiver can know about the error
-				am.SetError(err)
-				am.From = address
-				if err != nil {
-					errorChan <- err
-				} else {
-					msgChan <- am
-				}
-			}
-		}
-	}()
 	for {
-		select {
-		case <-h.Closed:
-			doneChan <- true
-		case am := <-msgChan:
-			dbg.Lvl3("Putting message into networkChan from", am.From)
-			h.networkChan <- am
-		case e := <-errorChan:
-			if e == network.ErrClosed || e == network.ErrEOF {
+		ctx := context.TODO()
+		am, err := c.Receive(ctx)
+		// So the receiver can know about the error
+		am.SetError(err)
+		am.From = address
+		dbg.Lvl5("Got message", am)
+		if err != nil {
+			h.closingMut.Lock()
+			dbg.Lvl4(fmt.Sprintf("%+v got error (%+s) while receiving message (isClosing=%+v)",
+				h.Entity.First(), err, h.isClosing))
+			h.closingMut.Unlock()
+			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
+				dbg.Lvl3(h.Entity.First(), "quitting handleConn for-loop", err)
 				return
 			}
-			dbg.Error("Error with connection", address, "=> error", e)
-		case <-time.After(timeOut):
-			dbg.Error("Timeout with connection", address)
+			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
+		} else {
+			h.networkChan <- am
 		}
 	}
-}
-
-// Dispatch SDA message looks if we have all the info to rightly dispatch the
-// packet such as the protocol id and the topology id and the protocol instance
-// id
-func (h *Host) processSDAMessage(am *network.NetworkMessage) error {
-	sdaMsg := am.Msg.(SDAData)
-	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(network.Suite))
-	if err != nil {
-		dbg.Error("Error unmarshaling embedded msg in SDAMessage", err)
-	}
-	// Set the right type and msg
-	sdaMsg.MsgType = t
-	sdaMsg.Msg = msg
-	sdaMsg.Entity = am.Entity
-
-	return h.overlay.TransmitMsg(&sdaMsg)
 }
 
 // requestTree will ask for the tree the sdadata is related to.
@@ -446,29 +467,37 @@ func (h *Host) addPendingSda(sda *SDAData) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		for i := range h.pendingSDAs {
+		newPending := make([]*SDAData, 0)
+		for _, msg := range h.pendingSDAs {
 			// if this message references t
-			if uuid.Equal(t.Id, h.pendingSDAs[i].To.TreeID) {
+			if uuid.Equal(t.Id, msg.To.TreeID) {
 				// instantiate it and go
-				err := h.overlay.TransmitMsg(h.pendingSDAs[i])
+				err := h.overlay.TransmitMsg(msg)
 				if err != nil {
 					dbg.Error("TransmitMsg failed:", err)
 					continue
 				}
+			} else {
+				newPending = append(newPending, msg)
 			}
 		}
+		h.pendingSDAs = newPending
 		h.pendingSDAsLock.Unlock()
 	}()
 }
 
 // registerConnection registers a Entity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
+// it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
+	dbg.Lvl3(h.Entity.First(), "registers", c.Entity().First())
 	h.networkLock.Lock()
+	h.entityListsLock.Lock()
+	defer h.networkLock.Unlock()
+	defer h.entityListsLock.Unlock()
 	id := c.Entity()
 	h.entities[c.Entity().Id] = id
 	h.connections[c.Entity().Id] = c
-	h.networkLock.Unlock()
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -534,7 +563,7 @@ func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	for _, add := range addresses {
 		h := newHostMock(s, add)
 		h.Listen()
-		go h.ProcessMessages()
+		h.StartProcessMessages()
 		hosts = append(hosts, h)
 	}
 	return hosts
@@ -544,4 +573,13 @@ func newHostMock(s abstract.Suite, address string) *Host {
 	kp := cliutils.KeyPair(s)
 	en := network.NewEntity(kp.Public, address)
 	return NewHost(en, kp.Secret)
+}
+
+// WaitForClose returns only once all connections have been closed
+func (h *Host) WaitForClose() {
+	if h.processMessagesStarted {
+		select {
+		case <-h.ProcessMessagesQuit:
+		}
+	}
 }

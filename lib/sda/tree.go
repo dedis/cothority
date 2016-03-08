@@ -8,8 +8,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"github.com/satori/go.uuid"
+	"net"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -36,7 +36,6 @@ var TreeType = network.RegisterMessageType(Tree{})
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
 func NewTree(il *EntityList, r *TreeNode) *Tree {
-	r.UpdateIds()
 	url := network.UuidURL + "tree/" + il.Id.String() + r.Id.String()
 	return &Tree{
 		EntityList: il,
@@ -49,7 +48,7 @@ func NewTree(il *EntityList, r *TreeNode) *Tree {
 // the original tree
 func NewTreeFromMarshal(buf []byte, il *EntityList) (*Tree, error) {
 	tp, pm, err := network.UnmarshalRegisteredType(buf,
-		network.DefaultConstructors(edwards.NewAES128SHA256Ed25519(false)))
+		network.DefaultConstructors(network.Suite))
 	if err != nil {
 		return nil, err
 	}
@@ -101,10 +100,11 @@ func (t *Tree) Dump() string {
 	ret := "Tree " + t.Id.String() + " is:"
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
 		if tn.Parent != nil {
-			ret += fmt.Sprintf("\n%s has parent %s", tn.Entity.Addresses,
-				tn.Parent.Entity.Addresses)
+			ret += fmt.Sprintf("\n%2d - %s/%s has parent %s/%s", d,
+				tn.Id, tn.Entity.Addresses,
+				tn.Parent.Id, tn.Parent.Entity.Addresses)
 		} else {
-			ret += fmt.Sprintf("\n%s is root", tn.Entity.Addresses)
+			ret += fmt.Sprintf("\n%s/%s is root", tn.Id, tn.Entity.Addresses)
 		}
 	})
 	return ret
@@ -133,12 +133,18 @@ func (t *Tree) ListNodes() (ret []*TreeNode) {
 
 // IsBinary returns true if every node has two or no children
 func (t *Tree) IsBinary(root *TreeNode) bool {
+	return t.IsNary(root, 2)
+}
+
+// IsNary returns true if every node has two or no children
+func (t *Tree) IsNary(root *TreeNode, N int) bool {
 	nChild := len(root.Children)
-	if nChild != 2 && nChild != 0 {
+	if nChild != N && nChild != 0 {
+		dbg.Lvl3("Only", nChild, "children for", root.Id)
 		return false
 	}
 	for _, c := range root.Children {
-		if !t.IsBinary(c) {
+		if !t.IsNary(c, N) {
 			return false
 		}
 	}
@@ -152,6 +158,25 @@ func (t *Tree) Size() int {
 		size += 1
 	})
 	return size
+}
+
+// UsesList returns true if all Entities of the list are used at least once
+// in the tree
+func (t *Tree) UsesList() bool {
+	nodes := t.ListNodes()
+	for _, p := range t.EntityList.List {
+		found := false
+		for _, n := range nodes {
+			if n.Entity.Id == p.Id {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 // TreeMarshal is used to send and receive a tree-structure without having
@@ -225,6 +250,8 @@ type EntityList struct {
 	Id uuid.UUID
 	// TODO make that a map so search is O(1)
 	List []*network.Entity
+	// Aggregate public key
+	Aggregate abstract.Point
 }
 
 var EntityListType = network.RegisterMessageType(EntityList{})
@@ -234,13 +261,15 @@ var NilEntityList = EntityList{}
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
 func NewEntityList(ids []*network.Entity) *EntityList {
-	url := network.UuidURL + "entityList/"
-	for _, i := range ids {
-		url += i.Id.String()
+	// compute the aggregate key already
+	agg := network.Suite.Point().Null()
+	for _, e := range ids {
+		agg = agg.Add(agg, e.Public)
 	}
 	return &EntityList{
-		List: ids,
-		Id:   uuid.NewV5(uuid.NamespaceURL, url),
+		List:      ids,
+		Aggregate: agg,
+		Id:        uuid.NewV4(),
 	}
 }
 
@@ -263,28 +292,109 @@ func (en *EntityList) Get(idx int) *network.Entity {
 	return en.List[idx]
 }
 
-// GenerateBinaryTree creates a binary tree out of the EntityList
-// out of it. The first element of the EntityList will be the root element.
-func (il *EntityList) GenerateBinaryTree() *Tree {
-	root := il.addBinary(nil, 0, len(il.List)-1)
+// GenerateBigNaryTree creates a tree where each node has N children.
+// It will make a tree with exactly 'nodes' elements, regardless of the
+// size of the EntityList. If 'nodes' is bigger than the number of elements
+// in the EntityList, it will add some or all elements in the EntityList
+// more than once.
+// If the length of the EntityList is equal to 'nodes', it is guaranteed that
+// all Entities from the EntityList will be used in the tree.
+// However, for some configurations it is impossible to use all Entities from
+// the EntityList and still avoid having a parent and a child from the same
+// host. In this case use-all has preference over not-the-same-host.
+func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
+	// list of which hosts are already used
+	used := make([]bool, len(il.List))
+	ilLen := len(il.List)
+	// only use all Entities if we have the same number of nodes and hosts
+	useAll := ilLen == nodes
+	root := NewTreeNode(il.List[0])
+	used[0] = true
+	levelNodes := []*TreeNode{root}
+	totalNodes := 1
+	elIndex := 1 % ilLen
+	for totalNodes < nodes {
+		newLevelNodes := make([]*TreeNode, len(levelNodes)*N)
+		newLevelNodesCounter := 0
+		for i, parent := range levelNodes {
+			children := (nodes - totalNodes) * (i + 1) / len(levelNodes)
+			if children > N {
+				children = N
+			}
+			parent.Children = make([]*TreeNode, children)
+			parentHost, _, _ := net.SplitHostPort(parent.Entity.Addresses[0])
+			for n := 0; n < children; n++ {
+				// Check on host-address, so that no child is
+				// on the same host as the parent.
+				childHost, _, _ := net.SplitHostPort(il.List[elIndex].Addresses[0])
+				elIndexFirst := elIndex
+				notSameHost := true
+				for (notSameHost && childHost == parentHost && ilLen > 1) ||
+					(useAll && used[elIndex]) {
+					elIndex = (elIndex + 1) % ilLen
+					if useAll && used[elIndex] {
+						// In case we searched all Entities,
+						// give up on finding another host, but
+						// keep using all Entities
+						if elIndex == elIndexFirst {
+							notSameHost = false
+						}
+						continue
+					}
+					// If we tried all hosts, it means we're using
+					// just one hostname, as we didn't find any
+					// other name
+					if elIndex == elIndexFirst {
+						break
+					}
+					childHost, _, _ = net.SplitHostPort(il.List[elIndex].Addresses[0])
+				}
+				child := NewTreeNode(il.List[elIndex])
+				used[elIndex] = true
+				elIndex = (elIndex + 1) % ilLen
+				totalNodes += 1
+				parent.Children[n] = child
+				child.Parent = parent
+				newLevelNodes[newLevelNodesCounter] = child
+				newLevelNodesCounter += 1
+			}
+		}
+		levelNodes = newLevelNodes[:newLevelNodesCounter]
+	}
 	return NewTree(il, root)
 }
 
-// addBinary is a recursive function to create the binary tree
-func (il *EntityList) addBinary(parent *TreeNode, start, end int) *TreeNode {
+// GenerateNaryTree creates a tree where each node has N children.
+// The first element of the EntityList will be the root element.
+func (il *EntityList) GenerateNaryTree(N int) *Tree {
+	root := il.addNary(nil, N, 0, len(il.List)-1)
+	return NewTree(il, root)
+}
+
+// addNary is a recursive function to create the binary tree
+func (il *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	if start <= end && end < len(il.List) {
 		node := NewTreeNode(il.List[start])
 		if parent != nil {
 			node.Parent = parent
 			parent.Children = append(parent.Children, node)
 		}
-		mid := (start + end) / 2
-		il.addBinary(node, start+1, mid)
-		il.addBinary(node, mid+1, end)
+		diff := end - start
+		for n := 0; n < N; n++ {
+			s := diff * n / N
+			e := diff * (n + 1) / N
+			il.addNary(node, N, start+s+1, start+e)
+		}
 		return node
 	} else {
 		return nil
 	}
+}
+
+// GenerateBinaryTree creates a binary tree out of the EntityList
+// out of it. The first element of the EntityList will be the root element.
+func (il *EntityList) GenerateBinaryTree() *Tree {
+	return il.GenerateNaryTree(2)
 }
 
 // TreeNode is one node in the tree
@@ -298,6 +408,10 @@ type TreeNode struct {
 	Children []*TreeNode
 }
 
+func (t *TreeNode) Name() string {
+	return t.Entity.First()
+}
+
 var TreeNodeType = network.RegisterMessageType(TreeNode{})
 
 // NewTreeNode creates a new TreeNode with the proper Id
@@ -306,8 +420,8 @@ func NewTreeNode(ni *network.Entity) *TreeNode {
 		Entity:   ni,
 		Parent:   nil,
 		Children: make([]*TreeNode, 0),
+		Id:       uuid.NewV4(),
 	}
-	tn.UpdateIds()
 	return tn
 }
 
@@ -344,22 +458,10 @@ func (t *TreeNode) IsInTree(tree *Tree) bool {
 	return tree.Root.Id == root.Id
 }
 
-// AddChild adds a child to this tree-node. Once the tree is set up, the
-// function 'UpdateIds' should be called
+// AddChild adds a child to this tree-node.
 func (t *TreeNode) AddChild(c *TreeNode) {
 	t.Children = append(t.Children, c)
 	c.Parent = t
-}
-
-// UpdateIds should be called on the root-node, so that it recursively
-// calculates the whole tree as a merkle-tree
-func (t *TreeNode) UpdateIds() {
-	url := network.UuidURL + "treenode/" + t.Entity.Id.String()
-	for _, child := range t.Children {
-		child.UpdateIds()
-		url += child.Id.String()
-	}
-	t.Id = uuid.NewV5(uuid.NamespaceURL, url)
 }
 
 // Equal tests if that node is equal to the given node
@@ -405,8 +507,8 @@ func (t *TreeNode) Stringify() string {
 // nodes
 func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	fn(firstDepth, t)
-	for i := range t.Children {
-		t.Children[i].Visit(firstDepth+1, fn)
+	for _, c := range t.Children {
+		c.Visit(firstDepth+1, fn)
 	}
 }
 
