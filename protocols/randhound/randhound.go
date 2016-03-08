@@ -105,7 +105,7 @@ func NewRandHound(node *sda.Node, T int, R int, N int, purpose string) (sda.Prot
 	return rh, nil
 }
 
-func (rh *RandHound) Dispatch(msgs []*sda.SDAData) error {
+func (rh *RandHound) Dispatch() error {
 	return nil
 }
 
