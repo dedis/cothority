@@ -27,7 +27,7 @@ type SimulationByzCoin struct {
 	// sda fields:
 	sda.SimulationBFTree
 	// your simulation specific fields:
-	SimulationConfig
+	SimulationByzCoinConfig
 }
 
 type SimulationByzCoinConfig struct {
