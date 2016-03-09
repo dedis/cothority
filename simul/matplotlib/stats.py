@@ -58,7 +58,7 @@ class CSVStats:
         old_hosts = self.columns['hosts']
         old_bf = self.columns['bf']
         old_depth = []
-        for x in range(0, len(hosts)):
+        for x in range(0, len(old_hosts)):
             bf = old_bf[x]
             hosts = old_hosts[x]
             old_depth.append(0)

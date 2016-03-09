@@ -20,8 +20,12 @@ import matplotlib.patches as mpatches
 # directly on the plot
 def plotCoSiOld():
     mplot.plotPrepareLogLog()
-    cosi_old, cosi_3, cosi_4, cosi_5 = read_csvs('hosts', 'cosi_old', 'cosi_depth_3', 'cosi_depth_4', 'cosi_depth_5')
+    cosi_old, cosi_3, cosi_4, cosi_5, naive_cosi = read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_4', 'cosi_depth_5',
+                                                 'naive_cosi')
     plot_show('comparison_roundtime')
+
+    na_co = mplot.plotMMA(naive_cosi, 'round_wall', color4_light, 4,
+                       dict(label='Naive', linestyle='-', marker='o', color=color4_dark, zorder=5))
 
     co_5 = mplot.plotMMA(cosi_5, 'round_wall', color3_light, 4,
                        dict(label='CoSi - depth 5', linestyle='-', marker='o', color=color3_dark, zorder=5))
@@ -32,10 +36,10 @@ def plotCoSiOld():
     co_3 = mplot.plotMMA(cosi_3, 'round_wall', color1_light, 4,
                        dict(label='CoSi - depth 3', linestyle='-', marker='o', color=color1_dark, zorder=5))
 
-    co_old = mplot.plotMMA(cosi_old, 'round_wall', color4_light, 4,
-                       dict(label='CoSi old', linestyle='-', marker='s', color=color4_dark, zorder=5))
+    co_old = mplot.plotMMA(cosi_old, 'round_wall', color5_light, 4,
+                       dict(label='CoSi old', linestyle='-', marker='s', color=color5_dark, zorder=5))
     co_old_depth = cosi_old.get_old_depth()
-    plt.plot(cosi_old.x, co_old_depth, linestyle='-', marker='v', color=color4_dark, label='CoSi old depth')
+    plt.plot(cosi_old.x, co_old_depth, linestyle='-', marker='v', color=color5_dark, label='CoSi old depth')
 
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
@@ -58,6 +62,8 @@ color3_light = 'yellow'
 color3_dark = 'brown'
 color4_light = 'pink'
 color4_dark = 'red'
+color5_light = 'pink'
+color5_dark = 'red'
 mplot = MPlot()
 write_file = True
 file_extension = 'png'
@@ -74,12 +80,15 @@ def plot_show(file):
         mplot.pngname = file + '.' + file_extension
         mplot.show_fig = False
 
-def read_csvs(xname = "hosts", *values):
+def read_csvs_xname(xname, *values):
     stats = []
     for a in values:
         print "Reading " + a
         stats.append(CSVStats(a + '.csv', xname))
     return stats
+
+def read_csvs(*values):
+    return read_csvs_xname("hosts", *values)
 
 # Call all plot-functions
 plotCoSiOld()

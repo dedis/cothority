@@ -74,6 +74,15 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 }
 
 func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
+	// Start with verifying all direct children
+	for _, sigs := range reply {
+		childPub := sigs.Entity.Public
+		childSig := sigs.Signatures[0]
+		if err := crypto.VerifySchnorr(network.Suite, childPub, p.message, childSig); err != nil {
+			dbg.Error(err)
+		}
+	}
+
 	if !p.IsRoot() {
 		dbg.Lvl3("Appending our signature to the collected ones and send to parent")
 		count := 0
@@ -84,11 +93,6 @@ func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 		aggSignatures[0] = p.signature
 		countReplies := 1
 		for _, sigs := range reply {
-			childPub := sigs.Entity.Public
-			childSig := sigs.Signatures[0]
-			if err := crypto.VerifySchnorr(network.Suite, childPub, p.message, childSig); err != nil {
-				dbg.Error(err)
-			}
 			for _, sig := range sigs.Signatures {
 				aggSignatures[countReplies] = sig
 				countReplies++
