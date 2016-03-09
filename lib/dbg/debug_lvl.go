@@ -110,7 +110,7 @@ func Lvl(lvl int, args ...interface{}) {
 	default:
 		if lvl != 0 {
 			if lvlAbs <= 5 {
-				colors := []ct.Color{ct.Yellow, ct.Cyan, ct.Blue, ct.Green, ct.Cyan}
+				colors := []ct.Color{ct.Yellow, ct.Cyan, ct.Green, ct.Blue, ct.Cyan}
 				fg(colors[lvlAbs-1], bright)
 			}
 		}

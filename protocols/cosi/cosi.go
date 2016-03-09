@@ -189,7 +189,6 @@ func (pc *ProtocolCosi) StartCommitment() error {
 	// otherwise make it yourself
 	commitment := pc.Cosi.CreateCommitment()
 	out := &CosiCommitment{
-		From:       pc.treeNodeId,
 		Commitment: commitment,
 	}
 
@@ -197,8 +196,8 @@ func (pc *ProtocolCosi) StartCommitment() error {
 	return pc.SendTo(pc.Parent(), out)
 }
 
-// handleAllCommitment takes the full set of messages from the children and pass
-// it along the round.
+// handleAllCommitment takes the full set of messages from the children and passes
+// it to the parent
 func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	// add to temporary
 	pc.tempCommitLock.Lock()
@@ -233,7 +232,6 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 
 	// otherwise send it to parent
 	outMsg := &CosiCommitment{
-		From:       pc.treeNodeId,
 		Commitment: out,
 	}
 	return pc.SendTo(pc.Parent(), outMsg)
@@ -256,7 +254,6 @@ func (pc *ProtocolCosi) StartChallenge() error {
 		return err
 	}
 	out := &CosiChallenge{
-		From:      pc.treeNodeId,
 		Challenge: challenge,
 	}
 	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartChallenge() chal=", fmt.Sprintf("%+v", challenge))
@@ -280,7 +277,6 @@ func (pc *ProtocolCosi) handleChallenge(in *CosiChallenge) error {
 
 	// otherwise send it to children
 	out := &CosiChallenge{
-		From:      pc.treeNodeId,
 		Challenge: challenge,
 	}
 	return pc.sendChallenge(out)
@@ -304,7 +300,6 @@ func (pc *ProtocolCosi) StartResponse() error {
 		return err
 	}
 	out := &CosiResponse{
-		From:     pc.treeNodeId,
 		Response: resp,
 	}
 	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi().StartResponse()")
@@ -315,16 +310,16 @@ func (pc *ProtocolCosi) StartResponse() error {
 
 // handleResponse brings up the response of each node in the tree to the root.
 func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
-	defer pc.Cleanup()
-
 	// add to temporary
 	pc.tempResponseLock.Lock()
 	pc.tempResponse = append(pc.tempResponse, in)
 	pc.tempResponseLock.Unlock()
 	// do we have enough ?
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() has", len(pc.tempResponse), "responses")
 	if len(pc.tempResponse) < len(pc.Children()) {
 		return nil
 	}
+	defer pc.Cleanup()
 
 	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() aggregated")
 	// TODO check the hook
@@ -339,7 +334,6 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 		return err
 	}
 	out := &CosiResponse{
-		From:     pc.treeNodeId,
 		Response: outResponse,
 	}
 	// send it back to parent

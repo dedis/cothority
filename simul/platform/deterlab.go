@@ -34,7 +34,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -87,18 +86,18 @@ type Deterlab struct {
 	CloseWait int
 }
 
-func (d *Deterlab) Configure() {
+func (d *Deterlab) Configure(pc *PlatformConfig) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.cothorityDir = pwd + "/cothority"
 	d.deterDir = pwd + "/platform/deterlab"
 	d.deployDir = d.deterDir + "/remote"
 	d.buildDir = d.deterDir + "/build"
-	d.MonitorPort = monitor.DefaultSinkPort
+	d.MonitorPort = pc.MonitorPort
 	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
 	d.LoadAndCheckDeterlabVars()
 
-	d.Debug = dbg.DebugVisible()
+	d.Debug = pc.Debug
 	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in runconfig")
 	}

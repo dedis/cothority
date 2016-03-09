@@ -44,10 +44,10 @@ type TPlat struct {
 	Machines int
 }
 
-func (t *TPlat) Configure()                         {}
-func (t *TPlat) Build(s string) error               { return nil }
-func (t *TPlat) Deploy(rc platform.RunConfig) error { return nil }
-func (t *TPlat) Start(...string) error              { return nil }
-func (t *TPlat) Stop() error                        { return nil }
-func (t *TPlat) Cleanup() error                     { return nil }
-func (t *TPlat) Wait() error                        { return nil }
+func (t *TPlat) Configure(pc *platform.PlatformConfig) {}
+func (t *TPlat) Build(s string) error                  { return nil }
+func (t *TPlat) Deploy(rc platform.RunConfig) error    { return nil }
+func (t *TPlat) Start(...string) error                 { return nil }
+func (t *TPlat) Stop() error                           { return nil }
+func (t *TPlat) Cleanup() error                        { return nil }
+func (t *TPlat) Wait() error                           { return nil }

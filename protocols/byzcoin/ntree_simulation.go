@@ -54,7 +54,10 @@ func (e *NtreeSimulation) Run(sdaConf *sda.SimulationConfig) error {
 	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
 		client := NewClient(server)
-		client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
+		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
+		if err != nil {
+			dbg.Error("ClientSimulation:", err)
+		}
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node

@@ -180,7 +180,6 @@ func NewByzCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs 
 // "commit" round will wait the end of the "prepare" round during its challenge
 // phase.
 func (bz *ByzCoin) Start() error {
-
 	if err := bz.startAnnouncementPrepare(); err != nil {
 		return err
 	}
@@ -424,10 +423,7 @@ func (bz *ByzCoin) startChallengeCommit() error {
 		bz.onChallengeCommit()
 	}
 	// create the challenge out of it
-	marshalled, err := json.Marshal(bz.tempBlock.Header)
-	if err != nil {
-		return err
-	}
+	marshalled := bz.tempBlock.HashSum()
 	chal, err := bz.commit.CreateChallenge(marshalled)
 	if err != nil {
 		return err
