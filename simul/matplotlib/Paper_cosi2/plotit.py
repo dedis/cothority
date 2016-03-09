@@ -20,30 +20,33 @@ import matplotlib.patches as mpatches
 # directly on the plot
 def plotCoSiOld():
     mplot.plotPrepareLogLog()
-    cosi_old, cosi_3, cosi_4, cosi_5, naive_cosi = read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_4', 'cosi_depth_5',
-                                                 'naive_cosi')
+    cosi_old, cosi_3, cosi_4, cosi_5, jvss, naive_cosi = \
+        read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_4', 'cosi_depth_5', 'jvss', 'naive_cosi')
     plot_show('comparison_roundtime')
 
-    na_co = mplot.plotMMA(naive_cosi, 'round_wall', color4_light, 4,
-                       dict(label='Naive', linestyle='-', marker='o', color=color4_dark, zorder=5))
+    jv = mplot.plotMMA(jvss, 'round_wall', color2_light, 4,
+                       dict(label='JVSS', linestyle='-', marker='o', color=color2_dark, zorder=5))
 
-    co_5 = mplot.plotMMA(cosi_5, 'round_wall', color3_light, 4,
-                       dict(label='CoSi - depth 5', linestyle='-', marker='o', color=color3_dark, zorder=5))
+    na_co = mplot.plotMMA(naive_cosi, 'round_wall', color3_light, 4,
+                       dict(label='Naive', linestyle='-', marker='o', color=color3_dark, zorder=5))
 
-    co_4 = mplot.plotMMA(cosi_4, 'round_wall', color2_light, 4,
-                       dict(label='CoSi - depth 4', linestyle='-', marker='o', color=color2_dark, zorder=5))
+    co_5 = mplot.plotMMA(cosi_5, 'round_wall', color1_light, 4,
+                       dict(label='CoSi - depth 5', linestyle='-', marker='^', color=color1_dark, zorder=5))
+
+    co_4 = mplot.plotMMA(cosi_4, 'round_wall', color1_light, 4,
+                       dict(label='CoSi - depth 4', linestyle='-', marker='v', color=color1_dark, zorder=5))
 
     co_3 = mplot.plotMMA(cosi_3, 'round_wall', color1_light, 4,
                        dict(label='CoSi - depth 3', linestyle='-', marker='o', color=color1_dark, zorder=5))
 
-    co_old = mplot.plotMMA(cosi_old, 'round_wall', color5_light, 4,
-                       dict(label='CoSi old', linestyle='-', marker='s', color=color5_dark, zorder=5))
-    co_old_depth = cosi_old.get_old_depth()
-    plt.plot(cosi_old.x, co_old_depth, linestyle='-', marker='v', color=color5_dark, label='CoSi old depth')
+    #co_old = mplot.plotMMA(cosi_old, 'round_wall', color5_light, 4,
+    #                   dict(label='CoSi old', linestyle='-', marker='s', color=color5_dark, zorder=5))
+    #co_old_depth = cosi_old.get_old_depth()
+    #plt.plot(cosi_old.x, co_old_depth, linestyle='-', marker='v', color=color5_dark, label='CoSi old depth')
 
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
-    xmin, xmax, ymin, ymax = CSVStats.get_min_max(co_3, co_4, co_5, co_old)
+    xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, jv, co_3, co_4, co_5)
     plt.ylim(ymin, 16)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
