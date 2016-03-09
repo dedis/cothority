@@ -73,7 +73,7 @@ func (p *ProtocolCount) Dispatch() error {
 		dbg.Lvl3(p.Myself(), "waiting for message during", p.Timeout())
 		select {
 		case pc := <-p.PrepareCountChan:
-			dbg.LLvl3(p.Myself(), "received from", pc.TreeNode.Entity.Addresses,
+			dbg.Lvl3(p.Myself(), "received from", pc.TreeNode.Entity.Addresses,
 				pc.Timeout)
 			p.SetTimeout(pc.Timeout)
 			p.FuncPC()
@@ -110,7 +110,6 @@ func (p *ProtocolCount) FuncPC() {
 			go func(c *sda.TreeNode) {
 				dbg.Lvl3(p.Myself(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
 				p.SendTo(c, &PrepareCount{Timeout: p.timeout})
-				dbg.Lvl3(p.Myself(), "sent to", c.Entity.Addresses, c.Id, p.timeout)
 			}(child)
 		}
 	} else {
