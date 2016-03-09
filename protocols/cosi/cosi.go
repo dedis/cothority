@@ -189,7 +189,6 @@ func (pc *ProtocolCosi) StartCommitment() error {
 	// otherwise make it yourself
 	commitment := pc.Cosi.CreateCommitment()
 	out := &CosiCommitment{
-		From:       pc.treeNodeId,
 		Commitment: commitment,
 	}
 
@@ -233,7 +232,6 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 
 	// otherwise send it to parent
 	outMsg := &CosiCommitment{
-		From:       pc.treeNodeId,
 		Commitment: out,
 	}
 	return pc.SendTo(pc.Parent(), outMsg)
@@ -256,7 +254,6 @@ func (pc *ProtocolCosi) StartChallenge() error {
 		return err
 	}
 	out := &CosiChallenge{
-		From:      pc.treeNodeId,
 		Challenge: challenge,
 	}
 	dbg.Lvl3(pc.Node.Name(), "chal=", fmt.Sprintf("%+v", challenge))
@@ -280,7 +277,6 @@ func (pc *ProtocolCosi) handleChallenge(in *CosiChallenge) error {
 
 	// otherwise send it to children
 	out := &CosiChallenge{
-		From:      pc.treeNodeId,
 		Challenge: challenge,
 	}
 	return pc.sendChallenge(out)
@@ -304,7 +300,6 @@ func (pc *ProtocolCosi) StartResponse() error {
 		return err
 	}
 	out := &CosiResponse{
-		From:     pc.treeNodeId,
 		Response: resp,
 	}
 	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi().StartResponse()")
@@ -339,7 +334,6 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 		return err
 	}
 	out := &CosiResponse{
-		From:     pc.treeNodeId,
 		Response: outResponse,
 	}
 	// send it back to parent

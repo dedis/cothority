@@ -21,8 +21,6 @@ type CosiAnnouncement struct {
 // Commitment of all nodes together with the data they want
 // to have signed
 type CosiCommitment struct {
-	// From = TreeNodeId in the Tree
-	From uuid.UUID
 	*cosi.Commitment
 }
 
@@ -42,8 +40,6 @@ type CosiCommitment struct {
 
 // The challenge calculated by the root-node
 type CosiChallenge struct {
-	// From = TreeNodeId in the Tree
-	From uuid.UUID
 	*cosi.Challenge
 }
 
@@ -58,8 +54,6 @@ type CosiChallenge struct {
 // Every node replies with eventual exceptions if they
 // are not OK
 type CosiResponse struct {
-	// From = TreeNodeId in the Tree
-	From uuid.UUID
 	*cosi.Response
 }
 

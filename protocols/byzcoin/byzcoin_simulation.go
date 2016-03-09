@@ -2,7 +2,6 @@ package byzcoin
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -156,9 +155,6 @@ func verifyBlockSignature(suite abstract.Suite, aggregate abstract.Point, sig *B
 	if sig == nil || sig.Sig == nil || sig.Block == nil {
 		return errors.New("Empty block signature")
 	}
-	marshalled, err := sig.Block.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("Marshalling of block did not work: %v", err)
-	}
+	marshalled := sig.Block.HashSum()
 	return cosi.VerifySignatureWithException(suite, aggregate, marshalled, sig.Sig.Challenge, sig.Sig.Response, sig.Exceptions)
 }

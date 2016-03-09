@@ -242,7 +242,12 @@ func CheckHosts(rc platform.RunConfig) {
 	}
 }
 
-// calculates the number of hosts given a BF and a depth
+// Geometric sum to count the total number of nodes:
+// Root-node: 1
+// 1st level: bf (branching-factor)*/
+// 2nd level: bf^2 (each child has bf children)
+// 3rd level: bf^3
+// So total: sum(level=0..depth)(bf^level)
 func calcHosts(bf, depth int) int {
 	return int((1 - math.Pow(float64(bf), float64(depth+1))) /
 		float64(1-bf))

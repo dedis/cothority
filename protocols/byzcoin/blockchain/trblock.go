@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -27,12 +28,33 @@ func (tr *TrBlock) MarshalBinary() ([]byte, error) {
 	return json.Marshal(tr)
 }
 
+// Hash returns a hash representation of the block
+func (tr *TrBlock) HashSum() []byte {
+	h := sha256.New()
+	h.Write(tr.Magic[:])
+	binary.Write(h, binary.LittleEndian, tr.BlockSize)
+	h.Write([]byte(tr.HeaderHash))
+	h.Write(tr.Header.HashSum())
+	h.Write(tr.TransactionList.HashSum())
+	return h.Sum(nil)
+}
+
 type Header struct {
 	MerkleRoot string
 	Parent     string
 	ParentKey  string
 	PublicKey  string
 	LeaderId   net.IP
+}
+
+// Hash returns a hash representation of the header
+func (h *Header) HashSum() []byte {
+	ha := sha256.New()
+	ha.Write([]byte(h.MerkleRoot))
+	ha.Write([]byte(h.Parent))
+	ha.Write([]byte(h.ParentKey))
+	ha.Write([]byte(h.PublicKey))
+	return ha.Sum(nil)
 }
 
 func (trb *TrBlock) NewTrBlock(transactions TransactionList, header *Header) *TrBlock {

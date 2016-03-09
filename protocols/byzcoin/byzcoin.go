@@ -423,10 +423,7 @@ func (bz *ByzCoin) startChallengeCommit() error {
 		bz.onChallengeCommit()
 	}
 	// create the challenge out of it
-	marshalled, err := json.Marshal(bz.tempBlock.Header)
-	if err != nil {
-		return err
-	}
+	marshalled := bz.tempBlock.HashSum()
 	chal, err := bz.commit.CreateChallenge(marshalled)
 	if err != nil {
 		return err

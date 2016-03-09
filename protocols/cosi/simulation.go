@@ -67,7 +67,6 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 				dbg.Lvl1("Round", round, " => success")
 			}
 			done <- true
-			// TODO make the verification here
 		}
 		proto.RegisterDoneCallback(fn)
 		proto.Start()
