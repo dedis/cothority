@@ -17,6 +17,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -82,7 +83,7 @@ func (m *MiniNet) Configure(pc *PlatformConfig) {
 
 // build is the name of the app to build
 // empty = all otherwise build specific package
-func (m *MiniNet) Build(build string) error {
+func (m *MiniNet) Build(build string, arg ...string) error {
 	dbg.Lvl1("Building for", m.Login, m.Host, build, "cothorityDir=", m.cothorityDir)
 	start := time.Now()
 
@@ -98,7 +99,7 @@ func (m *MiniNet) Build(build string) error {
 	src_rel, _ := filepath.Rel(m.mininetDir, src_dir)
 	dbg.Lvl3("Relative-path is", src_rel, " will build into ", dst)
 	out, err := cliutils.Build("./"+src_rel, dst,
-		processor, system)
+		processor, system, arg...)
 	if err != nil {
 		cliutils.KillGo()
 		dbg.Lvl1(out)
@@ -176,7 +177,7 @@ func (m *MiniNet) Start(args ...string) error {
 	// proxy => the proxy redirects packets to the same port the sink is
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
-	redirection := strconv.Itoa(m.MonitorPort+1) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
+	redirection := strconv.Itoa(m.MonitorPort) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
 	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
 		redirection, fmt.Sprintf("%s@%s", m.Login, m.Host)}
 	exCmd := exec.Command("ssh", cmd...)
@@ -236,7 +237,7 @@ func (m *MiniNet) readHosts() error {
 		return err
 	}
 	cmd := fmt.Sprintf("cd mininet/conodes && ./dispatched.py %d %s %d && "+
-		"cat sites/icsil1/nodes.txt", m.Debug, m.Simulation, m.MonitorPort)
+		"cat sites/icsil1/nodes.txt", m.Debug, m.Simulation, monitor.DefaultSinkPort)
 	nodesSlice, err := cliutils.SshRun(m.Login, m.Host, cmd)
 	if err != nil {
 		return err

@@ -178,6 +178,8 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	CheckHosts(rc)
 	rs := monitor.NewStats(rc.Map())
 	monitor := monitor.NewMonitor(rs)
+	var err error
+	monitor.SinkPort = monitorPort
 
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
@@ -194,7 +196,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
-	err := deployP.Start()
+	err = deployP.Start()
 	if err != nil {
 		dbg.Error(err)
 		return *rs, err
