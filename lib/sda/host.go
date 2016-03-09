@@ -206,9 +206,9 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
-	h.networkLock.Lock()
+	//h.networkLock.Lock()
 	c, err = h.host.Open(id)
-	h.networkLock.Unlock()
+	//h.networkLock.Unlock()
 
 	if err != nil {
 		return nil, err
