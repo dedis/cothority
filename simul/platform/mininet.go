@@ -17,7 +17,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -56,15 +55,16 @@ type MiniNet struct {
 	CloseWait int
 }
 
-func (m *MiniNet) Configure() {
+func (m *MiniNet) Configure(pc *PlatformConfig) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	m.cothorityDir = pwd + "/cothority"
 	m.mininetDir = pwd + "/platform/mininet"
-	m.MonitorPort = monitor.DefaultSinkPort
 	m.Login = "mininet"
 	m.Host = "icsil1-conodes.epfl.ch"
 	m.ProxyAddress = "localhost"
+	m.MonitorPort = pc.MonitorPort
+	m.Debug = pc.Debug
 
 	// Clean the MiniNet-dir, create it and change into it
 	os.RemoveAll(m.mininetDir)
@@ -72,7 +72,6 @@ func (m *MiniNet) Configure() {
 	os.Chdir(m.mininetDir)
 	sda.WriteTomlConfig(*m, "mininet.toml", m.mininetDir)
 
-	m.Debug = dbg.DebugVisible()
 	if m.Simulation == "" {
 		dbg.Fatal("No simulation defined in runconfig")
 	}
@@ -228,8 +227,7 @@ func (m *MiniNet) Wait() error {
 }
 
 /*
-* Write the hosts.txt file automatically
-* from project name and number of servers
+* connect to the MiniNet server and check how many servers we got attributed
  */
 func (m *MiniNet) readHosts() error {
 	// Updating the available servers
@@ -237,9 +235,9 @@ func (m *MiniNet) readHosts() error {
 	if err != nil {
 		return err
 	}
-	nodesSlice, err := cliutils.SshRun(m.Login, m.Host, "cd mininet/conodes && ./dispatched.py "+
-		strconv.Itoa(m.Debug)+" "+m.Simulation+" && "+
-		"cat sites/icsil1/nodes.txt")
+	cmd := fmt.Sprintf("cd mininet/conodes && ./dispatched.py %d %s %d && "+
+		"cat sites/icsil1/nodes.txt", m.Debug, m.Simulation, m.MonitorPort)
+	nodesSlice, err := cliutils.SshRun(m.Login, m.Host, cmd)
 	if err != nil {
 		return err
 	}
