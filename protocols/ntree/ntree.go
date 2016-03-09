@@ -89,14 +89,10 @@ func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 		for _, s := range reply {
 			count += len(s.Signatures)
 		}
-		aggSignatures := make([]crypto.SchnorrSig, count+1)
+		aggSignatures := make([]crypto.SchnorrSig, 0, count+1)
 		aggSignatures[0] = p.signature
-		countReplies := 1
 		for _, sigs := range reply {
-			for _, sig := range sigs.Signatures {
-				aggSignatures[countReplies] = sig
-				countReplies++
-			}
+			aggSignatures = append(aggSignatures, sigs.Signatures...)
 		}
 
 		return p.SendTo(p.Parent(), &SignatureReply{Signatures: aggSignatures})
