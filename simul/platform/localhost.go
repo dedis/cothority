@@ -59,11 +59,11 @@ type Localhost struct {
 }
 
 // Configure various
-func (d *Localhost) Configure() {
+func (d *Localhost) Configure(pc *PlatformConfig) {
 	pwd, _ := os.Getwd()
 	d.runDir = pwd + "/platform/localhost"
 	d.localDir = pwd
-	d.debug = dbg.DebugVisible()
+	d.debug = pc.Debug
 	d.running = false
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
