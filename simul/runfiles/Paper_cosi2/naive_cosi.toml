@@ -1,7 +1,7 @@
 Servers = 16
 Simulation = "NaiveTreeSimulation"
 Message = "Hello Naive Simulation"
-Rounds = 10
+Rounds = 5
 Depth = 1
 
 Hosts

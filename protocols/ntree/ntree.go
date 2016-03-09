@@ -89,7 +89,7 @@ func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 		for _, s := range reply {
 			count += len(s.Signatures)
 		}
-		aggSignatures := make([]crypto.SchnorrSig, 0, count+1)
+		aggSignatures := make([]crypto.SchnorrSig, 1, count+1)
 		aggSignatures[0] = p.signature
 		for _, sigs := range reply {
 			aggSignatures = append(aggSignatures, sigs.Signatures...)
