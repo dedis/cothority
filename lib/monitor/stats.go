@@ -37,11 +37,11 @@ type Stats struct {
 	measures map[string]*Measurement
 	keys     []string
 
-	// ValuesWritten  is to know wether we have already written some values or
-	// not. If yes, we can make sure we dont write new measurements otherwise
+	// ValuesWritten  is to know whether we have already written some values or
+	// not. If yes, we can make sure we don't write new measurements otherwise
 	// the CSV would be garbage
 	valuesWritten bool
-	// The filter used to filter out abberant data
+	// The filter used to filter out aberrant data
 	filter DataFilter
 }
 
