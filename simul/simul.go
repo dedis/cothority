@@ -30,6 +30,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
+	"math"
 )
 
 // Configuration-variables
@@ -43,12 +44,14 @@ var machines = 3
 var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
 var debugVisible int
+var race = false
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
+	flag.BoolVar(&race, "race", false, "Build with go's race detection enabled (doesn't work on all platforms)")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
@@ -99,7 +102,11 @@ func main() {
 func RunTests(name string, runconfigs []platform.RunConfig) {
 
 	if nobuild == false {
-		deployP.Build(build)
+		if race {
+			deployP.Build(build, "-race")
+		} else {
+			deployP.Build(build)
+		}
 	}
 
 	MkTestDir()
@@ -168,14 +175,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	done := make(chan struct{})
-	if platformDst == "localhost" {
-		machs := rc.Get("machines")
-		ppms := rc.Get("ppm")
-		mach, _ := strconv.Atoi(machs)
-		ppm, _ := strconv.Atoi(ppms)
-		rc.Put("machines", "1")
-		rc.Put("ppm", strconv.Itoa(ppm*mach))
-	}
+	CheckHosts(rc)
 	rs := monitor.NewStats(rc.Map())
 	monitor := monitor.NewMonitor(rs)
 
@@ -216,6 +216,28 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	case <-done:
 		monitor.Stop()
 		return *rs, err
+	}
+}
+
+// CheckHosts verifies that there is either a 'Hosts' or a 'Depth/BF'
+// -parameter in the Runconfig
+func CheckHosts(rc platform.RunConfig) {
+	hosts, err := rc.GetInt("hosts")
+	if hosts == 0 || err != nil {
+		depth, err1 := rc.GetInt("depth")
+		bf, err2 := rc.GetInt("bf")
+		if depth == 0 || bf == 0 || err1 != nil || err2 != nil {
+			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
+		}
+		// Geometric sum to count the total number of nodes:
+		// Root-node: 1
+		// 1st level: bf (branching-factor)*/
+		// 2nd level: bf^2 (each child has bf children)
+		// 3rd level: bf^3
+		// So total: sum(level=0..depth)(bf^level)
+		hosts = int((1 - math.Pow(float64(bf), float64(depth+1))) /
+			float64(1-bf))
+		rc.Put("hosts", strconv.Itoa(hosts))
 	}
 }
 
