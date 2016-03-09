@@ -87,15 +87,22 @@ func SshRunBackground(username, host, command string) error {
 
 }
 
-func Build(path, out, goarch, goos string) (string, error) {
+// Build builds the the golang packages in `path` and stores the result in `out`. Besides specifying the environment
+// variables GOOS and GOARCH you can pass any additional argument using the buildArgs
+// argument. The command which will be executed is of the following form:
+// $ go build -v buildArgs... -o out path
+func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) {
 	var cmd *exec.Cmd
 	var b bytes.Buffer
 	build_buffer := bufio.NewWriter(&b)
 
 	wd, _ := os.Getwd()
 	dbg.Lvl4("In directory", wd)
-
-	cmd = exec.Command("go", "build", "-v", "-o", out, path)
+	var args []string
+	args = append(args, "build", "-v")
+	args = append(args, buildArgs...)
+	args = append(args, "-o", out, path)
+	cmd = exec.Command("go", args...)
 	dbg.Lvl4("Building", cmd.Args, "in", path)
 	cmd.Stdout = build_buffer
 	cmd.Stderr = build_buffer
