@@ -44,12 +44,14 @@ var machines = 3
 var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
 var debugVisible int
+var race = false
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
+	flag.BoolVar(&race, "race", false, "Build with go's race detection enabled (doesn't work on all platforms)")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
@@ -97,7 +99,11 @@ func main() {
 func RunTests(name string, runconfigs []platform.RunConfig) {
 
 	if nobuild == false {
-		deployP.Build(build)
+		if race {
+			deployP.Build(build, "-race")
+		} else {
+			deployP.Build(build)
+		}
 	}
 
 	MkTestDir()

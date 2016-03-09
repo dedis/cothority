@@ -19,8 +19,8 @@ import (
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
 	Configure()
-	// Builds all necessary binaries
-	Build(string) error
+	// Build builds all necessary binaries
+	Build(build string, arg ...string) error
 	// Makes sure that there is no part of the application still running
 	Cleanup() error
 	// Copies the binaries to the appropriate directory/machines, together with
