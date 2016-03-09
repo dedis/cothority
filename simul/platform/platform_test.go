@@ -1,11 +1,11 @@
 package platform_test
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/simul/platform"
-	"io/ioutil"
-	//	"strings"
-	"testing"
 )
 
 var testfile = `Machines = 8
@@ -44,10 +44,10 @@ type TPlat struct {
 	Machines int
 }
 
-func (t *TPlat) Configure()                         {}
-func (t *TPlat) Build(s string) error               { return nil }
-func (t *TPlat) Deploy(rc platform.RunConfig) error { return nil }
-func (t *TPlat) Start(...string) error              { return nil }
-func (t *TPlat) Stop() error                        { return nil }
-func (t *TPlat) Cleanup() error                     { return nil }
-func (t *TPlat) Wait() error                        { return nil }
+func (t *TPlat) Configure()                          {}
+func (t *TPlat) Build(s string, arg ...string) error { return nil }
+func (t *TPlat) Deploy(rc platform.RunConfig) error  { return nil }
+func (t *TPlat) Start(...string) error               { return nil }
+func (t *TPlat) Stop() error                         { return nil }
+func (t *TPlat) Cleanup() error                      { return nil }
+func (t *TPlat) Wait() error                         { return nil }
