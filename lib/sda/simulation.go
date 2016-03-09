@@ -190,6 +190,7 @@ type SimulationBFTree struct {
 	BF         int
 	Hosts      int
 	SingleHost bool
+	Depth      int
 }
 
 // CreateEntityLists creates an EntityList with the host-names in 'addresses'.
@@ -205,10 +206,11 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	if s.SingleHost {
 		// If we want to work with a single host, we only make one
 		// host per server
+		dbg.Fatal("Not supported yet")
 		hosts = nbrAddr
-	}
-	if hosts > s.Hosts {
-		hosts = s.Hosts
+		if hosts > s.Hosts {
+			hosts = s.Hosts
+		}
 	}
 	localhosts := false
 	listeners := make([]net.Listener, hosts)

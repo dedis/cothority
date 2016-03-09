@@ -3,10 +3,12 @@ package platform
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -17,8 +19,8 @@ import (
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
 	Configure(*PlatformConfig)
-	// Builds all necessary binaries
-	Build(string) error
+	// Build builds all necessary binaries
+	Build(build string, arg ...string) error
 	// Makes sure that there is no part of the application still running
 	Cleanup() error
 	// Copies the binaries to the appropriate directory/machines, together with
@@ -146,6 +148,16 @@ var replacer *strings.Replacer = strings.NewReplacer("\"", "", "'", "")
 // Returns the associated value of the field in the config
 func (r *RunConfig) Get(field string) string {
 	return replacer.Replace(r.fields[strings.ToLower(field)])
+}
+
+// GetInt returns the integer of the field, or error if not defined
+func (r *RunConfig) GetInt(field string) (int, error) {
+	val := r.Get(field)
+	if val == "" {
+		return 0, errors.New("Didn't find " + field)
+	}
+	ret, err := strconv.Atoi(val)
+	return ret, err
 }
 
 // Insert a new field - value relationship

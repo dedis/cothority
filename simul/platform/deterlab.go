@@ -108,7 +108,7 @@ func (d *Deterlab) Configure(pc *PlatformConfig) {
 
 // build is the name of the app to build
 // empty = all otherwise build specific package
-func (d *Deterlab) Build(build string) error {
+func (d *Deterlab) Build(build string, arg ...string) error {
 	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build, "cothorityDir=", d.cothorityDir)
 	start := time.Now()
 
@@ -153,7 +153,7 @@ func (d *Deterlab) Build(build string) error {
 			src_rel, _ := filepath.Rel(d.deterDir, src)
 			dbg.Lvl3("Relative-path is", src_rel, " will build into ", dest)
 			out, err := cliutils.Build("./"+src_rel, dest,
-				processor, system)
+				processor, system, arg...)
 			if err != nil {
 				cliutils.KillGo()
 				dbg.Lvl1(out)
