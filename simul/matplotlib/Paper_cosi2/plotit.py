@@ -20,8 +20,8 @@ import matplotlib.patches as mpatches
 # directly on the plot
 def plotCoSiOld():
     mplot.plotPrepareLogLog()
-    cosi_old, cosi_3, cosi_4, cosi_5, jvss, naive_cosi = \
-        read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_4', 'cosi_depth_5', 'jvss', 'naive_cosi')
+    cosi_old, cosi_3, cosi_4, cosi_5, jvss, naive_cosi, ntree_cosi = \
+        read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_4', 'cosi_depth_5', 'jvss', 'naive_cosi', 'ntree_cosi')
     plot_show('comparison_roundtime')
 
     jv = mplot.plotMMA(jvss, 'round_wall', color2_light, 4,
@@ -29,6 +29,9 @@ def plotCoSiOld():
 
     na_co = mplot.plotMMA(naive_cosi, 'round_wall', color3_light, 4,
                        dict(label='Naive', linestyle='-', marker='o', color=color3_dark, zorder=5))
+
+    nt_co = mplot.plotMMA(ntree_cosi, 'round_wall', color4_light, 4,
+                       dict(label='NTree', linestyle='-', marker='o', color=color4_dark, zorder=5))
 
     co_5 = mplot.plotMMA(cosi_5, 'round_wall', color1_light, 4,
                        dict(label='CoSi - depth 5', linestyle='-', marker='^', color=color1_dark, zorder=5))
@@ -46,7 +49,7 @@ def plotCoSiOld():
 
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
-    xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, jv, co_3, co_4, co_5)
+    xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, nt_co, jv, co_3, co_4, co_5)
     plt.ylim(ymin, 16)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
