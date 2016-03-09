@@ -50,8 +50,8 @@ def plotCoSiOld():
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
     xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, nt_co, jv, co_3, co_4, co_5)
-    plt.ylim(ymin, 16)
-    plt.xlim(xmin, xmax * 1.2)
+    plt.ylim(0.5, 8)
+    plt.xlim(16, xmax * 1.2)
     plt.ylabel('Seconds per round')
 
     plt.legend(loc=u'lower right')

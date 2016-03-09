@@ -31,11 +31,11 @@ func NewProtocol(node *sda.Node) (*Protocol, error) {
 	p := &Protocol{
 		Node: node,
 	}
-	err := p.RegisterHandler(p.HandleSignRequest)
+	err := p.RegisterHandler(p.handleSignRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't register handler %v", err)
 	}
-	err = p.RegisterHandler(p.HandleSignReply)
+	err = p.RegisterHandler(p.handleSignReply)
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't register handler %v", err)
 	}
@@ -45,13 +45,13 @@ func NewProtocol(node *sda.Node) (*Protocol, error) {
 func (p *Protocol) Start() error {
 	if p.IsRoot() {
 		dbg.Lvl3("Starting ntree/naive")
-		return p.HandleSignRequest(structMessage{p.TreeNode(), Message{p.message}})
+		return p.handleSignRequest(structMessage{p.TreeNode(), Message{p.message}})
 	} else {
 		return fmt.Errorf("Called Start() on non-root ProtocolInstance")
 	}
 }
 
-func (p *Protocol) HandleSignRequest(msg structMessage) error {
+func (p *Protocol) handleSignRequest(msg structMessage) error {
 	var err error
 	p.message = msg.Msg
 	p.signature, err = crypto.SignSchnorr(network.Suite, p.Private(), p.message)
@@ -73,7 +73,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	return nil
 }
 
-func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
+func (p *Protocol) handleSignReply(reply []structSignatureReply) error {
 	// Start with verifying all direct children
 	for _, sigs := range reply {
 		childPub := sigs.Entity.Public
@@ -84,12 +84,12 @@ func (p *Protocol) HandleSignReply(reply []structSignatureReply) error {
 	}
 
 	if !p.IsRoot() {
-		dbg.Lvl3("Appending our signature to the collected ones and send to parent")
+		dbg.LLvl3(p.Myself(), "Appending our signature to the collected ones and send to parent")
 		count := 0
 		for _, s := range reply {
 			count += len(s.Signatures)
 		}
-		aggSignatures := make([]crypto.SchnorrSig, 0, count+1)
+		aggSignatures := make([]crypto.SchnorrSig, 1, count+1)
 		aggSignatures[0] = p.signature
 		for _, sigs := range reply {
 			aggSignatures = append(aggSignatures, sigs.Signatures...)
