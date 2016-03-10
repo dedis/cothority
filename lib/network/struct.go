@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
@@ -40,6 +41,7 @@ type Host interface {
 	Open(name string) (Conn, error)
 	Listen(addr string, fn func(Conn)) error // the srv processing function
 	Close() error
+	monitor.CounterIO
 }
 
 // Conn is the basic interface to represent any communication mean
@@ -53,8 +55,7 @@ type Conn interface {
 	// Receive any message through the connection.
 	Receive(ctx context.Context) (NetworkMessage, error)
 	Close() error
-	// returns the number of bytes read from / written  to this connection
-	BytesIO() (uint64, uint64)
+	monitor.CounterIO
 }
 
 // TcpHost is the underlying implementation of
@@ -98,9 +99,11 @@ type TcpConn struct {
 	// So we only handle one sending packet at a time
 	sendMutex sync.Mutex
 	// bReceived is the number of bytes received on this connection
-	bReceived uint64
-	// bSent in the number of bytes sent on this connection
-	bSent uint64
+	bRead     uint64
+	bReadLock sync.Mutex
+	// bWritten in the number of bytes sent on this connection
+	bWritten     uint64
+	bWrittenLock sync.Mutex
 }
 
 // SecureHost is the analog of Host but with secure communication
@@ -111,6 +114,7 @@ type SecureHost interface {
 	Listen(func(SecureConn)) error
 	Open(*Entity) (SecureConn, error)
 	String() string
+	monitor.CounterIO
 }
 
 // SecureConn is the analog of Conn but for secure communication
