@@ -2,11 +2,8 @@ package hashid
 
 import (
 	"bytes"
-	"crypto/subtle"
 	"errors"
 )
-
-const Size int = 32 // TODO: change the way this is known
 
 type HashId []byte // Cryptographic hash content-IDs
 
@@ -17,17 +14,8 @@ func (h ByHashId) Len() int           { return len(h) }
 func (h ByHashId) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 func (h ByHashId) Less(i, j int) bool { return bytes.Compare(h[i], h[j]) < 0 }
 
-// takes in slice of hashIds and returns all of them but the ith
-func AllButI(mtroots []HashId, i int) []HashId {
-	return append(mtroots[:i], mtroots[i+1:]...)
-}
-
 func (id HashId) Bit(i uint) int {
 	return int(id[i>>3] >> (i & 7))
-}
-
-func ConstantTimeCompare(a, b HashId) int {
-	return subtle.ConstantTimeCompare([]byte(a), []byte(b))
 }
 
 // Find the skip-chain level of an ID

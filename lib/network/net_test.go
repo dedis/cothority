@@ -8,53 +8,267 @@ import (
 
 	"golang.org/x/net/context"
 
+	"os"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/config"
+	"github.com/satori/go.uuid"
 )
-
-// Some packet and their respective network type
-type TestMessage struct {
-	Point  abstract.Point
-	Secret abstract.Secret
-}
-
-var TestMessageType Type = 4
 
 type PublicPacket struct {
 	Point abstract.Point
 }
 
-var PublicType Type = 5
+// Here we registers the packets, so that the decoder can instantiate
+// to the right type and then we can do event-driven stuff such as receiving
+// new messages without knowing the type and then check on the MsgType field
+// to cast to the right packet type (See below)
+var PublicType = RegisterMessageType(PublicPacket{})
 
-// The suite we use
-var suite = edwards.NewAES128SHA256Ed25519(false)
-
-func init() {
-	// Here we registers the packets themself so the decoder can instantiate
-	// to the right type and then we can do event-driven stuff such as receiving
-	// new messages without knowing the type and then check on the MsgType field
-	// to cast to the right packet type (See below)
-	RegisterProtocolType(PublicType, PublicPacket{})
-	RegisterProtocolType(TestMessageType, TestMessage{})
+type TestRegisterS struct {
+	I int
 }
 
-// The test function
+func TestMain(m *testing.M) {
+	code := m.Run()
+	testutil.AfterTest(nil)
+	os.Exit(code)
+}
+
+func TestRegister(t *testing.T) {
+	defer testutil.AfterTest(t)
+	if TypeFromData(&TestRegisterS{}) != ErrorType {
+		t.Fatal("TestRegister should not yet be there")
+	}
+
+	trType := RegisterMessageType(&TestRegisterS{})
+	if uuid.Equal(trType, uuid.Nil) {
+		t.Fatal("Couldn't register TestRegister-struct")
+	}
+
+	if TypeFromData(&TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+	if TypeFromData(TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+}
+
+// Test closing and opening of Host on same address
+func TestMultiClose(t *testing.T) {
+	defer testutil.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 4)
+	gotConnect := make(chan bool)
+	fn := func(s Conn) {
+		dbg.Lvl3("Getting connection from", s)
+		gotConnect <- true
+	}
+	h1 := NewTcpHost()
+	h2 := NewTcpHost()
+	done := make(chan bool)
+	go func() {
+		err := h1.Listen("localhost:2000", fn)
+		if err != nil {
+			t.Fatal("Couldn't listen:", err)
+		}
+		done <- true
+	}()
+	time.Sleep(time.Second)
+	dbg.Lvl3("Open connection to h2")
+	_, err := h2.Open("localhost:2000")
+	if err != nil {
+		t.Fatal(h2, "couldn't Open() connection to", h1, err)
+	}
+	// wait for the listener, then close h1 & h2:
+	<-gotConnect
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't Close():", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't Close()", err)
+	}
+	<-done
+
+	h3 := NewTcpHost()
+	go func() {
+		err := h3.Listen("localhost:2000", fn)
+		if err != nil {
+			t.Fatal("Couldn't re-open listener:", err)
+		}
+		done <- true
+	}()
+	_, err = h2.Open("localhost:2000")
+	if err != nil {
+		t.Fatal(h2, "couldn't Open() connection to", h3, err)
+	}
+	// wait for the listener and close h3 & h2
+	<-gotConnect
+	err = h3.Close()
+	if err != nil {
+		t.Fatal("Couldn't close h3:", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close h2:", err)
+	}
+	<-done
+}
+
+// Test closing and opening of SecureHost on same address
+func TestSecureMultiClose(t *testing.T) {
+	defer testutil.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 4)
+	receiverStarted := make(chan bool)
+	fn := func(s SecureConn) {
+		dbg.Lvl3("Getting connection from", s.Entity().First())
+		close(receiverStarted)
+	}
+
+	kp1 := config.NewKeyPair(Suite)
+	entity1 := NewEntity(kp1.Public, "localhost:2000")
+	//entity3 := NewEntity(kp1.Public, "localhost:2000")
+	kp2 := config.NewKeyPair(Suite)
+	entity2 := NewEntity(kp2.Public, "localhost:2001")
+
+	h1 := NewSecureTcpHost(kp1.Secret, entity1)
+	h2 := NewSecureTcpHost(kp2.Secret, entity2)
+	done := make(chan bool)
+	go func() {
+		err := h1.Listen(fn)
+		if err != nil {
+			t.Fatal("Listening failed for h1:", err)
+		}
+		done <- true
+	}()
+
+	_, err := h2.Open(entity1)
+	if err != nil {
+		t.Fatal("Couldn't open h2:", err)
+	}
+	<-receiverStarted
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	<-done
+
+	dbg.Lvl3("Finished first connection, starting 2nd")
+	receiverStarted2 := make(chan bool)
+	fn2 := func(s SecureConn) {
+		dbg.Lvl3("Getting connection from", s.Entity().First())
+		receiverStarted2 <- true
+	}
+	done2 := make(chan bool)
+	go func() {
+		err := h1.Listen(fn2)
+		if err != nil {
+			t.Fatal("Couldn't re-open listener:", err)
+		}
+		done2 <- true
+	}()
+	_, err = h2.Open(h1.entity)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	<-receiverStarted2
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close h1:", err)
+	}
+
+	<-done2
+}
+
+// Testing exchange of entity
+func TestSecureTcp(t *testing.T) {
+	defer testutil.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 4)
+	opened := make(chan bool)
+	fn := func(s SecureConn) {
+		dbg.Lvl3("Getting connection from", s)
+		opened <- true
+	}
+
+	kp1 := config.NewKeyPair(Suite)
+	entity1 := NewEntity(kp1.Public, "localhost:2000")
+	kp2 := config.NewKeyPair(Suite)
+	entity2 := NewEntity(kp2.Public, "localhost:2001")
+
+	host1 := NewSecureTcpHost(kp1.Secret, entity1)
+	host2 := NewSecureTcpHost(kp1.Secret, entity2)
+
+	done := make(chan bool)
+	go func() {
+		err := host1.Listen(fn)
+		if err != nil {
+			t.Fatal("Couldn't listen:", err)
+		}
+		done <- true
+	}()
+	conn, err := host2.Open(entity1)
+	if err != nil {
+		t.Fatal("Couldn't connect to host1:", err)
+	}
+	if !conn.Entity().Public.Equal(kp1.Public) {
+		t.Fatal("Connection-id is not from host1")
+	}
+	if !<-opened {
+		t.Fatal("Lazy programmers - no select")
+	}
+	dbg.Lvl3("Closing connections")
+	if err := host1.Close(); err != nil {
+		t.Fatal("Couldn't close host", host1)
+	}
+	if err := host2.Close(); err != nil {
+		t.Fatal("Couldn't close host", host2)
+	}
+	<-done
+}
+
+// Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
+	defer testutil.AfterTest(t)
+
 	// Create one client + one server
-	clientHost := NewTcpHost(DefaultConstructors(suite))
-	serverHost := NewTcpHost(DefaultConstructors(suite))
+	clientHost := NewTcpHost()
+	serverHost := NewTcpHost()
 	// Give them keys
-	clientPub := suite.Point().Base()
-	serverPub := suite.Point().Add(suite.Point().Base(), suite.Point().Base())
+	clientPub := Suite.Point().Base()
+	serverPub := Suite.Point().Add(Suite.Point().Base(), Suite.Point().Base())
 	wg := sync.WaitGroup{}
 	client := NewSimpleClient(clientHost, clientPub, &wg)
 	server := NewSimpleServer(serverHost, serverPub, t, &wg)
-	// Make the server listens
-	go server.Listen("127.0.0.1:5000", server.ExchangeWithClient)
-	time.Sleep(1 * time.Second)
+	// Make the server listen
+	done := make(chan bool)
+	go func() {
+		err := server.Listen("127.0.0.1:5000", server.ExchangeWithClient)
+		if err != nil {
+			t.Fatal("Couldn't listen:", err)
+		}
+		done <- true
+	}()
 	// Make the client engage with the server
 	client.ExchangeWithServer("127.0.0.1:5000", t)
 	wg.Wait()
+	if err := clientHost.Close(); err != nil {
+		t.Fatal("could not close client", err)
+	}
+	if err := serverHost.Close(); err != nil {
+		t.Fatal("could not close server", err)
+	}
+	<-done
 }
 
 type SimpleClient struct {
@@ -101,11 +315,6 @@ func (s *SimpleClient) Name() string {
 func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	s.wg.Add(1)
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-	defer func() {
-		//dbg.Print("ExchangeWithServer canceld/timed out")
-		//cancel()
-	}()
-
 	// open a connection to the peer
 	c, err := s.Open(name)
 	if err != nil {
@@ -130,8 +339,18 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 	if am.MsgType != PublicType {
 		t.Fatal("Received a non-wanted packet.\n")
 	}
+	err = c.Close()
+	if err != nil {
+		t.Fatal("error closing connection", err)
+	}
 
-	c.Close()
+	err = c.Close()
+	if err != nil && err != ErrClosed {
+		t.Fatal("Couldn't close:", err)
+	}
+	if err == ErrClosed {
+		dbg.Error("Called Close() on alredy closed connetion.")
+	}
 	s.wg.Done()
 }
 
@@ -154,11 +373,6 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 	}
 
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-	defer func() {
-		//dbg.Print("Canceling because of timeout")
-		//cancel()
-	}()
-
 	s.ProxySend(c, &p)
 	am, err := c.Receive(ctx)
 	if err != nil {
@@ -168,10 +382,14 @@ func (s *SimpleServer) ExchangeWithClient(c Conn) {
 		s.t.Error("Server received a non-wanted packet\n")
 	}
 	p = (am.Msg).(PublicPacket)
-	comp := suite.Point().Base()
+	comp := Suite.Point().Base()
 	if !p.Point.Equal(comp) {
 		s.t.Error("point not equally reconstructed")
 	}
-	c.Close()
+	err = c.Close()
+	if err != nil {
+		s.t.Fatal("error closing connection", err)
+	}
+
 	s.wg.Done()
 }

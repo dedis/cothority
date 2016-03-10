@@ -1,6 +1,0 @@
-Machines = 3
-App = "skeleton"
-Suite = "Ed25519"
-
-ppm, bf, rounds
-1, 3, 3

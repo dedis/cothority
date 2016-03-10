@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func Boldify(s string) string {
@@ -41,8 +42,10 @@ func Rsync(username, host, file, dest string) error {
 		addr = username + "@" + addr
 	}
 	cmd := exec.Command("rsync", "-Pauz", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
-	//cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	if dbg.DebugVisible() > 1 {
+		cmd.Stdout = os.Stdout
+	}
 	return cmd.Run()
 }
 
@@ -84,15 +87,22 @@ func SshRunBackground(username, host, command string) error {
 
 }
 
-func Build(path, out, goarch, goos string) (string, error) {
+// Build builds the the golang packages in `path` and stores the result in `out`. Besides specifying the environment
+// variables GOOS and GOARCH you can pass any additional argument using the buildArgs
+// argument. The command which will be executed is of the following form:
+// $ go build -v buildArgs... -o out path
+func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) {
 	var cmd *exec.Cmd
 	var b bytes.Buffer
 	build_buffer := bufio.NewWriter(&b)
 
 	wd, _ := os.Getwd()
 	dbg.Lvl4("In directory", wd)
-
-	cmd = exec.Command("go", "build", "-v", "-o", out, path)
+	var args []string
+	args = append(args, "build", "-v")
+	args = append(args, buildArgs...)
+	args = append(args, "-o", out, path)
+	cmd = exec.Command("go", args...)
 	dbg.Lvl4("Building", cmd.Args, "in", path)
 	cmd.Stdout = build_buffer
 	cmd.Stderr = build_buffer

@@ -26,12 +26,6 @@ var readyCount int64
 // proxy connections opened
 var proxyConns map[string]*json.Encoder
 
-var proxyDone chan bool
-
-func init() {
-	proxyDone = make(chan bool)
-}
-
 // Proxy will launch a routine that waits for input connections
 // It takes a redirection address soas to where redirect incoming packets
 // Proxy will listen on Sink:SinkPort variables so that the user do not
@@ -43,16 +37,24 @@ func Proxy(redirection string) error {
 		return err
 	}
 	dbg.Lvl2("Proxy connected to sink", redirection)
-	// The proxy listens on the same port the monitor would listen
-	sinkAddr := Sink + ":" + strconv.Itoa(SinkPort)
+	// The proxy listens on the port one lower than itself
+	_, port, err := net.SplitHostPort(redirection)
+	if err != nil {
+		dbg.Fatal("Couldn't get port-numbre from", redirection)
+	}
+	portNbr, err := strconv.Atoi(port)
+	if err != nil {
+		dbg.Fatal("Couldn't convert", port, "to a number")
+	}
+	sinkAddr := Sink + ":" + strconv.Itoa(portNbr-1)
 	ln, err := net.Listen("tcp", sinkAddr)
 	if err != nil {
 		return fmt.Errorf("Error while binding proxy to addr %s: %v", sinkAddr, err)
 	}
 	dbg.Lvl2("Proxy listening on", sinkAddr)
-	var newConn = make(chan bool)
-	var closeConn = make(chan bool)
-	var finished = false
+	newConn := make(chan bool)
+	closeConn := make(chan bool)
+	finished := false
 	proxyConns = make(map[string]*json.Encoder)
 	readyCount = 0
 
@@ -180,12 +182,4 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	}
 	conn.Close()
 	done <- true
-}
-
-// proxyDataServer send the data to the server...
-func proxyDataServer(data []byte) {
-	_, err := serverConn.Write(data)
-	if err != nil {
-		panic(fmt.Errorf("Error proxying data to server: %v", err))
-	}
 }

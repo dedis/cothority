@@ -1,14 +1,17 @@
 package tree_test
 
 import (
-	"github.com/dedis/cothority/lib/tree"
-	"github.com/dedis/crypto/edwards"
 	"strconv"
 	"testing"
+
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/testutil"
+	"github.com/dedis/cothority/lib/tree"
 )
 
 func TestNewPeerListLocal(t *testing.T) {
-	s := edwards.NewAES128SHA256Ed25519(false)
+	defer testutil.AfterTest(t)
+	s := network.Suite
 	nPeers := 11
 	names := genLocalhostPeerNames(nPeers, 2000)
 	pl := tree.GenPeerList(s, names)

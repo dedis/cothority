@@ -32,15 +32,15 @@ func TestDataFilterFilter(t *testing.T) {
 	}
 	for i, v := range filtered {
 		if v != shouldBe[i] {
-			t.Error(fmt.Sprintf("Element %d = %d vs %d", i, filtered[i], shouldBe[i]))
+			t.Error(fmt.Sprintf("Element %d = %f vs %f", i, filtered[i], shouldBe[i]))
 		}
 	}
 }
 
 func TestStatsUpdate(t *testing.T) {
 	rc := make(map[string]string)
-	rc["machines"] = "2"
-	rc["ppm"] = "2"
+	rc["servers"] = "2"
+	rc["hosts"] = "2"
 	stats := NewStats(rc)
 
 	m1 := Measure{
@@ -66,8 +66,8 @@ func TestStatsUpdate(t *testing.T) {
 
 func TestStatsNotWriteUnknownMeasures(t *testing.T) {
 	rc := make(map[string]string)
-	rc["machines"] = "2"
-	rc["ppm"] = "2"
+	rc["servers"] = "2"
+	rc["hosts"] = "2"
 	stats := NewStats(rc)
 
 	m1 := Measure{
