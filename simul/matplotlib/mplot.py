@@ -59,6 +59,7 @@ class MPlot:
 
     # Plots the Minimum, Maximum, Average on the same plot.
     def plotMMA(self, stats, values, plot_color, plot_z, args):
+        print stats
         val = stats.get_values(values)
         plt.plot(val.x, val.avg, **args)
         self.plotFilledLegend(val, "min-max", plot_color, z=plot_z)
@@ -144,8 +145,10 @@ class MPlot:
         plt.ylabel('Total seconds over all rounds')
         plt.xlabel('Number of co-signing hosts')
         if logx > 0:
+            print 'logx'
             plt.xscale(u'log', basex=logx)
         if logy > 0:
+            print 'logy'
             plt.yscale(u'log', basey=logy)
 
         ax = plt.axes()
@@ -165,7 +168,7 @@ class MPlot:
     # show_fig is True, it will show the window instead.
     def plotEnd(self):
         ax = plt.axes()
-        ax.set_xticks([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
+        #ax.set_xticks([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
         if self.show_fig:
             print "Showing plot"
             plt.show()

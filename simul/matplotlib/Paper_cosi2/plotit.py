@@ -18,7 +18,7 @@ import matplotlib.patches as mpatches
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
 # the last two values from JVSS are off-grid and writes them with arrows
 # directly on the plot
-def plotCoSiOld():
+def plotCoSi():
     mplot.plotPrepareLogLog()
     cosi_old, cosi_3, cosi_3_check, jvss, naive_cosi, ntree_cosi = \
         read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_3_check', 'jvss', 'naive_cosi', 'ntree_cosi')
@@ -49,6 +49,30 @@ def plotCoSiOld():
     xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, nt_co, jv, co_3, co_3_c)
     plt.ylim(0.5, 8)
     plt.xlim(16, xmax * 1.2)
+    plt.ylabel('Seconds per round')
+
+    plt.legend(loc=u'lower right')
+    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    mplot.plotEnd()
+
+
+# Plots the branching factor
+def plotBF():
+    mplot.plotPrepareLogLog(0, 0)
+    cosi_bf = read_csvs_xname('bf', 'cosi_bf')[0]
+    plot_show('cosi_bf')
+
+    print cosi_bf
+    cbf = mplot.plotMMA(cosi_bf, 'round_wall', color1_light, 4,
+                       dict(label='Cosi 8192', linestyle='-', marker='o', color=color1_dark, zorder=5))
+    print cbf
+
+    # Make horizontal lines and add arrows for JVSS
+    # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
+    xmin, xmax, ymin, ymax = CSVStats.get_min_max(cbf)
+    print xmin, xmax
+    plt.ylim(ymin, ymax)
+    plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
 
     plt.legend(loc=u'lower right')
@@ -94,4 +118,5 @@ def read_csvs(*values):
     return read_csvs_xname("hosts", *values)
 
 # Call all plot-functions
-plotCoSiOld()
+#plotCoSi()
+plotBF()
