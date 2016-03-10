@@ -65,7 +65,10 @@ def plotBF():
     plot_show('cosi_bf')
 
     cbf = mplot.plotMMA(cosi_bf, 'round_wall', color1_light, 4,
-                       dict(label='Cosi 8192', linestyle='-', marker='o', color=color1_dark, zorder=5))
+                       dict(label='CoSi 2048', linestyle='-', marker='o', color=color1_dark, zorder=5))
+    print cosi_bf.columns['depth']
+    plt.plot(cosi_bf.x, cosi_bf.columns['depth'], linestyle='-', marker='v', color=color2_dark,
+                     label='CoSi depth')
 
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
@@ -73,6 +76,7 @@ def plotBF():
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
+    plt.xlabel('Branching factor')
 
     plt.legend(loc=u'lower right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
@@ -146,5 +150,5 @@ def read_csvs(*values):
 
 # Call all plot-functions
 #plotCoSi()
-#plotBF()
-plotOver()
+plotBF()
+#plotOver()
