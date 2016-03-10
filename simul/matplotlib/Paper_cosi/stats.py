@@ -54,20 +54,6 @@ class CSVStats:
     def add(self, stats, col1, col2):
         sum = deepcopy(self)
 
-    def get_old_depth(self):
-        old_hosts = self.columns['hosts']
-        old_bf = self.columns['bf']
-        old_depth = []
-        for x in range(0, len(old_hosts)):
-            bf = old_bf[x]
-            hosts = old_hosts[x]
-            old_depth.append(0)
-            for depth in range(0, 10):
-                h = (1 - (bf ** depth)) / (1 - bf)
-                if h <= hosts:
-                    old_depth[x] = depth
-        return old_depth
-
 # Value holds the min / max / avg / dev for a single named value
 class Values:
     def __init__(self, x, column, columns):

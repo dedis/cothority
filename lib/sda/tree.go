@@ -37,11 +37,15 @@ var TreeType = network.RegisterMessageType(Tree{})
 // also generates the id.
 func NewTree(il *EntityList, r *TreeNode) *Tree {
 	url := network.UuidURL + "tree/" + il.Id.String() + r.Id.String()
-	return &Tree{
+	t := &Tree{
 		EntityList: il,
 		Root:       r,
 		Id:         uuid.NewV5(uuid.NamespaceURL, url),
 	}
+	// network.Suite used for the moment => explicit mark that something is
+	// wrong and that needs to be changed !
+	t.computeSubtreeAggregate(network.Suite, r)
+	return t
 }
 
 // NewTreeFromMarshal takes a slice of bytes and an EntityList to re-create
@@ -55,7 +59,9 @@ func NewTreeFromMarshal(buf []byte, il *EntityList) (*Tree, error) {
 	if tp != TreeMarshalType {
 		return nil, errors.New("Didn't receive TreeMarshal-struct")
 	}
-	return pm.(TreeMarshal).MakeTree(il)
+	t, err := pm.(TreeMarshal).MakeTree(il)
+	t.computeSubtreeAggregate(network.Suite, t.Root)
+	return t, err
 }
 
 // MakeTreeMarshal creates a replacement-tree that is safe to send: no
@@ -179,6 +185,24 @@ func (t *Tree) UsesList() bool {
 	return true
 }
 
+// computeSubtreeAggregate will compute the aggregate subtree public key for
+// each node of the tree.
+// root is the root of the subtree we want to compute the aggregate for
+// recursive function so it will go down to the leaves then go up to the root
+// Return the aggregate sub tree public key for this root (and compute each sub
+// aggregate public key for each of the children).
+func (t *Tree) computeSubtreeAggregate(suite abstract.Suite, root *TreeNode) abstract.Point {
+	aggregate := suite.Point().Add(suite.Point().Null(), root.Entity.Public)
+	// DFS search
+	for _, ch := range root.Children {
+		aggregate = aggregate.Add(aggregate, t.computeSubtreeAggregate(suite, ch))
+	}
+
+	// sets the field
+	root.PublicAggregateSubTree = aggregate
+	return aggregate
+}
+
 // TreeMarshal is used to send and receive a tree-structure without having
 // to copy the whole nodelist
 type TreeMarshal struct {
@@ -228,6 +252,7 @@ func (tm TreeMarshal) MakeTree(il *EntityList) (*Tree, error) {
 		EntityList: il,
 	}
 	tree.Root = tm.Children[0].MakeTreeFromList(nil, il)
+	tree.computeSubtreeAggregate(network.Suite, tree.Root)
 	return tree, nil
 }
 
@@ -403,9 +428,14 @@ type TreeNode struct {
 	Id uuid.UUID
 	// The Entity points to the corresponding host. One given host
 	// can be used more than once in a tree.
-	Entity   *network.Entity
-	Parent   *TreeNode
+	Entity *network.Entity
+	// Parent link
+	Parent *TreeNode
+	// Children links
 	Children []*TreeNode
+	// Aggregate public key for *this* subtree,i.e. this node's public key + the
+	// aggregate of all its children's aggregate public key
+	PublicAggregateSubTree abstract.Point
 }
 
 func (t *TreeNode) Name() string {

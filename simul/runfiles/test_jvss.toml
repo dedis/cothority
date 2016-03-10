@@ -1,10 +1,10 @@
-Simulation = "CoSi"
+Simulation = "JVSS"
 Servers = 16
-Bf = 4
-Rounds = 10
+Bf = 2
+Rounds = 5
 CloseWait = 6000
 
 Depth
-1
 2
 3
+4

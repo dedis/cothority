@@ -7,7 +7,6 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import csv
-import numpy as np
 
 # Our CSVs have a space after the comma, so we need a new 'dialect', here
 # called 'deploy'
@@ -160,12 +159,9 @@ class MPlot:
         ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%2.2f'))
 
 
-
     # Ends the plot and takes an extension for saving the png. If
     # show_fig is True, it will show the window instead.
     def plotEnd(self):
-        ax = plt.axes()
-        ax.set_xticks([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
         if self.show_fig:
             print "Showing plot"
             plt.show()

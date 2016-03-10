@@ -71,7 +71,7 @@ func (s *ByzCoinServer) ListenClientTransactions() {
 // Instantiate takes blockSize transactions and create the byzcoin instances.
 func (s *ByzCoinServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
-	currTransactions := s.waitEnoughBlocks()
+	currTransactions := s.WaitEnoughBlocks()
 	dbg.Lvl1("Instantiate ByzCoin Round with", len(currTransactions), " transactions")
 	pi, err := NewByzCoinRootProtocol(node, currTransactions, s.timeOutMs, s.fail)
 	node.SetProtocolInstance(pi)
@@ -89,7 +89,7 @@ func (s *ByzCoinServer) onDoneSign(blk BlockSignature) {
 	s.blockSignatureChan <- blk
 }
 
-func (s *ByzCoinServer) waitEnoughBlocks() []blkparser.Tx {
+func (s *ByzCoinServer) WaitEnoughBlocks() []blkparser.Tx {
 	s.requestChan <- true
 	transactions := <-s.responseChan
 	return transactions
@@ -122,24 +122,4 @@ func (s *ByzCoinServer) listenEnoughBlocks() {
 			}
 		}
 	}
-}
-
-type NtreeServer struct {
-	*ByzCoinServer
-}
-
-func NewNtreeServer(blockSize int) *NtreeServer {
-	ns := new(NtreeServer)
-	// we dont care about timeout + fail in Naive comparison
-	ns.ByzCoinServer = NewByzCoinServer(blockSize, 0, 0)
-	return ns
-}
-
-func (nt *NtreeServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
-	dbg.Lvl2("NtreeServer waiting enough transactions...")
-	currTransactions := nt.waitEnoughBlocks()
-	pi, err := NewNTreeRootProtocol(node, currTransactions)
-	node.SetProtocolInstance(pi)
-	dbg.Lvl1("NtreeServer instantiated Ntree Root Protocol with", len(currTransactions), " transactions")
-	return pi, err
 }

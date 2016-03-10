@@ -219,23 +219,44 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 // CheckHosts verifies that there is either a 'Hosts' or a 'Depth/BF'
 // -parameter in the Runconfig
 func CheckHosts(rc platform.RunConfig) {
-	hosts, err := rc.GetInt("hosts")
-	if hosts == 0 || err != nil {
-		depth, err1 := rc.GetInt("depth")
-		bf, err2 := rc.GetInt("bf")
-		if depth == 0 || bf == 0 || err1 != nil || err2 != nil {
+	hosts, _ := rc.GetInt("hosts")
+	bf, _ := rc.GetInt("bf")
+	depth, _ := rc.GetInt("depth")
+	if hosts == 0 {
+		if depth == 0 || bf == 0 {
 			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
 		}
-		// Geometric sum to count the total number of nodes:
-		// Root-node: 1
-		// 1st level: bf (branching-factor)*/
-		// 2nd level: bf^2 (each child has bf children)
-		// 3rd level: bf^3
-		// So total: sum(level=0..depth)(bf^level)
-		hosts = int((1 - math.Pow(float64(bf), float64(depth+1))) /
-			float64(1-bf))
+		hosts = calcHosts(bf, depth)
 		rc.Put("hosts", strconv.Itoa(hosts))
 	}
+	if bf == 0 {
+		if depth == 0 || hosts == 0 {
+			dbg.Fatal("No BF and no Depth or hosts given - stopping")
+		}
+		bf = 2
+		for calcHosts(bf, depth) < hosts {
+			bf += 1
+		}
+		rc.Put("bf", strconv.Itoa(bf))
+	}
+	if depth == 0 {
+		depth = 1
+		for calcHosts(bf, depth) < hosts {
+			depth += 1
+		}
+		rc.Put("depth", strconv.Itoa(depth))
+	}
+}
+
+// Geometric sum to count the total number of nodes:
+// Root-node: 1
+// 1st level: bf (branching-factor)*/
+// 2nd level: bf^2 (each child has bf children)
+// 3rd level: bf^3
+// So total: sum(level=0..depth)(bf^level)
+func calcHosts(bf, depth int) int {
+	return int((1 - math.Pow(float64(bf), float64(depth+1))) /
+		float64(1-bf))
 }
 
 type runFile struct {

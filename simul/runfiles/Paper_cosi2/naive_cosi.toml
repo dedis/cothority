@@ -1,0 +1,17 @@
+Servers = 16
+Simulation = "NaiveTreeSimulation"
+Message = "Hello Naive Simulation"
+Rounds = 5
+Depth = 1
+
+Hosts
+2
+4
+8
+16
+32
+64
+128
+256
+512
+1024

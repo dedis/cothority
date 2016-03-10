@@ -1,4 +1,4 @@
-Simulation = "CoSiSimulation"
+Simulation = "CoSi"
 Servers = 32
 Bf = 8
 Rounds = 10
