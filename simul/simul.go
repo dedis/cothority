@@ -79,7 +79,10 @@ func main() {
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		deployP.Configure()
+		deployP.Configure(&platform.PlatformConfig{
+			MonitorPort: monitorPort,
+			Debug:       debugVisible,
+		})
 
 		if clean {
 			err := deployP.Deploy(runconfigs[0])
