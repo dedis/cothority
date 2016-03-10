@@ -53,6 +53,8 @@ def plotCoSi():
 
     plt.legend(loc=u'lower right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    ax = plt.axes()
+    ax.set_xticks([16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
     mplot.plotEnd()
 
 
@@ -62,15 +64,40 @@ def plotBF():
     cosi_bf = read_csvs_xname('bf', 'cosi_bf')[0]
     plot_show('cosi_bf')
 
-    print cosi_bf
     cbf = mplot.plotMMA(cosi_bf, 'round_wall', color1_light, 4,
                        dict(label='Cosi 8192', linestyle='-', marker='o', color=color1_dark, zorder=5))
-    print cbf
 
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
     xmin, xmax, ymin, ymax = CSVStats.get_min_max(cbf)
-    print xmin, xmax
+    plt.ylim(ymin, ymax)
+    plt.xlim(xmin, xmax * 1.2)
+    plt.ylabel('Seconds per round')
+
+    plt.legend(loc=u'lower right')
+    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    mplot.plotEnd()
+
+
+# Plots the oversubscription
+def plotOver():
+    mplot.plotPrepareLogLog()
+    cosi_over_1, cosi_over_2, cosi_over_3 = \
+        read_csvs('cosi_over_1', 'cosi_over_2', 'cosi_over_3')
+    plot_show('cosi_over')
+
+    co1 = mplot.plotMMA(cosi_over_1, 'round_wall', color1_light, 4,
+                       dict(label='Cosi 8 servers', linestyle='-', marker='o', color=color1_dark, zorder=5))
+
+    co2 = mplot.plotMMA(cosi_over_2, 'round_wall', color2_light, 4,
+                       dict(label='Cosi 16 servers', linestyle='-', marker='o', color=color2_dark, zorder=5))
+
+    co3 = mplot.plotMMA(cosi_over_3, 'round_wall', color3_light, 4,
+                       dict(label='Cosi 4 servers', linestyle='-', marker='o', color=color3_dark, zorder=5))
+
+    # Make horizontal lines and add arrows for JVSS
+    # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
+    xmin, xmax, ymin, ymax = CSVStats.get_min_max(co1, co2, co3)
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax * 1.2)
     plt.ylabel('Seconds per round')
@@ -110,8 +137,8 @@ def plot_show(file):
 def read_csvs_xname(xname, *values):
     stats = []
     for a in values:
-        print "Reading " + a
-        stats.append(CSVStats(a + '.csv', xname))
+        file = a + '.csv'
+        stats.append(CSVStats(file, xname))
     return stats
 
 def read_csvs(*values):
@@ -119,4 +146,5 @@ def read_csvs(*values):
 
 # Call all plot-functions
 #plotCoSi()
-plotBF()
+#plotBF()
+plotOver()
