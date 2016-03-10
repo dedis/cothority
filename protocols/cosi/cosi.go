@@ -333,6 +333,13 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 	if err != nil {
 		return err
 	}
+
+	// verify the responses at each level with the aggregate public key of this
+	// subtree.
+	if err := pc.Cosi.VerifyResponses(pc.TreeNode().PublicAggregateSubTree); err != nil {
+		return fmt.Errorf("%s Verifcation of responses failed:%s", pc.Name(), err)
+	}
+
 	out := &CosiResponse{
 		Response: outResponse,
 	}

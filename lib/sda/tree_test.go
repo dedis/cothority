@@ -324,6 +324,41 @@ func TestEntityListIsUsed(t *testing.T) {
 	}
 }
 
+// Test whether the computation of the subtree aggregate public key is correct .
+func TestTreeComputeSubtreeAggregate(t *testing.T) {
+	names := genLocalDiffPeerNames(7, 2000)
+	entities := genEntityList(tSuite, names)
+
+	// create tree
+	tree := entities.GenerateBinaryTree()
+
+	// manual check for 2nd level of tree (left part)
+	lchild := tree.Root.Children[0]
+	n2, n4, n5 := lchild.Entity, lchild.Children[0].Entity, lchild.Children[1].Entity
+	agg_left := tSuite.Point().Add(n2.Public, n4.Public)
+	agg_left = agg_left.Add(agg_left, n5.Public)
+	if !tree.Root.Children[0].PublicAggregateSubTree.Equal(agg_left) {
+		t.Fatal("Aggregate is not correct for the left part")
+	}
+
+	// right part
+	rchild := tree.Root.Children[1]
+	n3, n4, n5 := rchild.Entity, rchild.Children[0].Entity, rchild.Children[1].Entity
+	agg_right := tSuite.Point().Add(n3.Public, n4.Public)
+	agg_right = agg_right.Add(agg_right, n5.Public)
+	if !tree.Root.Children[1].PublicAggregateSubTree.Equal(agg_right) {
+		t.Fatal("Aggregate is not correct for the right part")
+	}
+
+	// root part
+	agg := tSuite.Point().Add(agg_right, agg_left)
+	agg = agg.Add(agg, tree.Root.Entity.Public)
+	if !tree.Root.PublicAggregateSubTree.Equal(agg) {
+		t.Fatal("Aggregate not correct for root")
+	}
+
+}
+
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph
