@@ -1,3 +1,4 @@
+// Holds a message that is passed to all children, using channels.
 package example_channels
 
 import (

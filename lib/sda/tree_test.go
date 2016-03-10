@@ -1,18 +1,15 @@
 package sda_test
 
 import (
-	"strconv"
-	"testing"
-
-	"net"
-
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"net"
+	"strconv"
+	"testing"
 )
 
 var tSuite = network.Suite
@@ -20,7 +17,7 @@ var prefix = "localhost:"
 
 // test the ID generation
 func TestTreeId(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
@@ -45,7 +42,7 @@ func TestTreeId(t *testing.T) {
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
@@ -62,7 +59,7 @@ func TestTreeConnectedTo(t *testing.T) {
 
 // Test initialisation of new peer-list
 func TestEntityListNew(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	adresses := []string{"localhost:1010", "localhost:1012"}
 	pl := genEntityList(tSuite, adresses)
@@ -79,7 +76,7 @@ func TestEntityListNew(t *testing.T) {
 
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
@@ -115,7 +112,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // Test access to tree:
 // - parent
 func TestTreeParent(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
@@ -128,7 +125,7 @@ func TestTreeParent(t *testing.T) {
 
 // - children
 func TestTreeChildren(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := genEntityList(tSuite, names)
@@ -142,7 +139,7 @@ func TestTreeChildren(t *testing.T) {
 
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
@@ -169,7 +166,7 @@ func TestUnMarshalTree(t *testing.T) {
 }
 
 func TestGetNode(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.ListNodes() {
@@ -181,7 +178,7 @@ func TestGetNode(t *testing.T) {
 }
 
 func TestBinaryTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(7, 2000)
 	root := tree.Root
@@ -200,7 +197,7 @@ func TestBinaryTree(t *testing.T) {
 }
 
 func TestNaryTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
@@ -243,7 +240,7 @@ func TestNaryTree(t *testing.T) {
 }
 
 func TestBigNaryTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalDiffPeerNames(3, 2000)
@@ -267,7 +264,7 @@ func TestBigNaryTree(t *testing.T) {
 }
 
 func TestTreeIsColored(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
@@ -284,7 +281,7 @@ func TestTreeIsColored(t *testing.T) {
 }
 
 func TestBinaryTrees(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
@@ -385,7 +382,7 @@ func genLocalDiffPeerNames(n, p int) []string {
 func genEntityList(suite abstract.Suite, names []string) *sda.EntityList {
 	var ids []*network.Entity
 	for _, n := range names {
-		kp := cliutils.KeyPair(suite)
+		kp := config.NewKeyPair(suite)
 		ids = append(ids, network.NewEntity(kp.Public, n))
 	}
 	return sda.NewEntityList(ids)

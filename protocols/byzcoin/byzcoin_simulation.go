@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/broadcast"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
 )
@@ -89,7 +88,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
 	node, _ := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
-	proto, _ := broadcast.NewBroadcastRootProtocol(node)
+	proto, _ := manage.NewBroadcastRootProtocol(node)
 	node.SetProtocolInstance(proto)
 	// channel to notify we are done
 	broadDone := make(chan bool)

@@ -1,4 +1,4 @@
-// This package is a networking library. You have Hosts which can
+// This is a networking library used in the SDA. You have Hosts which can
 // issue connections to others hosts, and Conn which are the connections itself.
 // Hosts and Conns are interfaces and can be of type Tcp, or Chans, or Udp or
 // whatever protocols you think might implement this interface.
@@ -10,7 +10,6 @@
 // it accordingly. You can provide your own decode / encode methods if for
 // example, you have a variable length packet structure. For this, just
 // implements MarshalBinary or UnmarshalBinary.
-
 package network
 
 import (
@@ -26,7 +25,6 @@ import (
 
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
@@ -435,7 +433,7 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().Id != e.Id {
 		dbg.Lvl3("Wanted to connect to", e, e.Id, "but got", sc.Entity(), sc.Entity().Id)
-		dbg.Lvl4("IDs not the same", testutil.Stack())
+		dbg.Lvl4("IDs not the same", dbg.Stack())
 		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}
 

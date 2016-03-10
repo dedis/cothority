@@ -11,7 +11,6 @@ import (
 	"os"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
@@ -33,12 +32,12 @@ type TestRegisterS struct {
 
 func TestMain(m *testing.M) {
 	code := m.Run()
-	testutil.AfterTest(nil)
+	dbg.AfterTest(nil)
 	os.Exit(code)
 }
 
 func TestRegister(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	if TypeFromData(&TestRegisterS{}) != ErrorType {
 		t.Fatal("TestRegister should not yet be there")
 	}
@@ -58,7 +57,7 @@ func TestRegister(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	gotConnect := make(chan bool)
@@ -121,7 +120,7 @@ func TestMultiClose(t *testing.T) {
 
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
@@ -192,7 +191,7 @@ func TestSecureMultiClose(t *testing.T) {
 
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	opened := make(chan bool)
@@ -239,7 +238,7 @@ func TestSecureTcp(t *testing.T) {
 
 // Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	// Create one client + one server
 	clientHost := NewTcpHost()

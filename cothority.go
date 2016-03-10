@@ -1,3 +1,5 @@
+// Cothority-SDA is a framework that allows testing, simulating and
+// deploying crypto-related protocols.
 package main
 
 import (

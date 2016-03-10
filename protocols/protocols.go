@@ -1,3 +1,4 @@
+// Each new protocol has to be registered in protocols.go.
 package protocols
 
 /*

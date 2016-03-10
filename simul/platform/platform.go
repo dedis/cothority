@@ -1,3 +1,4 @@
+// Generic interface to represent a platform where tests can be run.
 package platform
 
 import (
@@ -12,10 +13,8 @@ import (
 	"strings"
 )
 
-// Generic interface to represent a platform where to run tests
-// or direct applications. For now only localhost + deterlab.
-// one could imagine EC2 or OpenStack or whatever you can as long as you
-// implement this interface !
+// Platform interface that has to be implemented to add another simulation-
+// platform.
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
 	Configure(*PlatformConfig)

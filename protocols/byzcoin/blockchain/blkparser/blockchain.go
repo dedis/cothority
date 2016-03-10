@@ -1,4 +1,4 @@
-// Basically adaptation from the file at https://github.com/tsileo/blkparser
+// Copy/paste from the file at https://github.com/tsileo/blkparser
 package blkparser
 
 import (
