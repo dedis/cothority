@@ -29,7 +29,7 @@ import (
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
 var Sink = "0.0.0.0"
-var SinkPort = 10000
+var DefaultSinkPort = 10000
 
 // Monitor struct is used to collect measures and make the statistics about
 // them. It takes a stats object so it update that in a concurrent-safe manner
@@ -72,12 +72,12 @@ func NewMonitor(stats *Stats) *Monitor {
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func (m *Monitor) Listen() error {
-	ln, err := net.Listen("tcp", Sink+":"+strconv.Itoa(SinkPort))
+	ln, err := net.Listen("tcp", Sink+":"+strconv.Itoa(DefaultSinkPort))
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
 	m.listener = ln
-	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", DefaultSinkPort)
 	finished := false
 	go func() {
 		for {

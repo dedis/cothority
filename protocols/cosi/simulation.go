@@ -19,6 +19,7 @@ func init() {
 
 type CoSiSimulation struct {
 	sda.SimulationBFTree
+	*sda.SimulationConfig
 }
 
 func NewCoSiSimulation(config string) (sda.Simulation, error) {
@@ -34,6 +35,7 @@ func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConf
 	sim := new(sda.SimulationConfig)
 	cs.CreateEntityList(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
+	cs.SimulationConfig = sim
 	return sim, err
 }
 
@@ -42,9 +44,10 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
+	bandwidth := monitor.NewCounterIOMeasure("bandwidth", cs.Host)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		roundM := monitor.NewMeasure("round")
+		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
 		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
 		if err != nil {
@@ -57,7 +60,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		// tell us when it is done
 		done := make(chan bool)
 		fn := func(chal, resp abstract.Secret) {
-			roundM.Measure()
+			roundM.Record()
 			//  No need to verify it twice here. It already happens in
 			//  handleResponse() even for the root.
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
@@ -70,6 +73,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		proto.RegisterDoneCallback(fn)
 		proto.Start()
 		<-done
+		bandwidth.Record()
 	}
 	dbg.Lvl1("Simulation finished")
 	return nil

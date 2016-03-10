@@ -197,12 +197,10 @@ func TestTcpCounterIO(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
 	fn := func(s Conn) {
-		dbg.Lvl3("NewConnection from ", s.Remote())
 		err := s.Send(context.TODO(), &TestRegisterS{10})
 		if err != nil {
 			t.Fatal("Error while sending message:", err)
 		}
-		dbg.Lvl3("Sent Message")
 		close(receiverStarted)
 	}
 
@@ -222,9 +220,7 @@ func TestTcpCounterIO(t *testing.T) {
 		t.Fatal("Couldn't open h2:", err)
 	}
 	<-receiverStarted
-	dbg.Lvl3("Waiting message")
 	c2.Receive(context.TODO())
-	dbg.Lvl3("Message received")
 	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)

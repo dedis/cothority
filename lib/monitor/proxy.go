@@ -43,7 +43,7 @@ func Proxy(redirection string) error {
 	}
 	dbg.Lvl2("Proxy connected to sink", redirection)
 	// The proxy listens on the same port the monitor would listen
-	sinkAddr := Sink + ":" + strconv.Itoa(SinkPort)
+	sinkAddr := Sink + ":" + strconv.Itoa(DefaultSinkPort)
 	ln, err := net.Listen("tcp", sinkAddr)
 	if err != nil {
 		return fmt.Errorf("Error while binding proxy to addr %s: %v", sinkAddr, err)

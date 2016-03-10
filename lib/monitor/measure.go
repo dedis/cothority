@@ -2,7 +2,7 @@
  * measures functions.
  *
  * Usage:
- * ```measure := monitor.NewMeasure("bandwidth")```
+ * ```measure := monitor.SingleMeasure("bandwidth")```
  * or
  * ```measure := monitor.NewTimeMeasure("round")
  * ```measure.Record()```

@@ -84,7 +84,7 @@ func main() {
 		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
-		childrenWait := monitor.NewMeasure("ChildrenWait")
+		childrenWait := monitor.NewTimeMeasure("ChildrenWait")
 		wait := true
 		// The timeout starts with 1 second, which is the time of response between
 		// each level of the tree.
@@ -112,7 +112,7 @@ func main() {
 			// Double the timeout and try again if not successful.
 			timeout *= 2
 		}
-		childrenWait.Measure()
+		childrenWait.Record()
 		dbg.Lvl1("Starting new node", simul)
 		err := rootSim.Run(rootSC)
 		if err != nil {

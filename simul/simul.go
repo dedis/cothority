@@ -110,7 +110,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 
 	MkTestDir()
-	rs := make([]monitor.Stats, len(runconfigs))
+	rs := make([]*monitor.Stats, len(runconfigs))
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
@@ -140,7 +140,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]monitor.Stats, 0, nTimes)
+		runs := make([]*monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
@@ -173,7 +173,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
+func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
 	CheckHosts(rc)
 	rs := monitor.NewStats(rc.Map())
@@ -181,11 +181,11 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 	if err := deployP.Cleanup(); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 	go func() {
 		if err := monitor.Listen(); err != nil {
@@ -197,7 +197,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	err := deployP.Start()
 	if err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 
 	go func() {
@@ -215,7 +215,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	select {
 	case <-done:
 		monitor.Stop()
-		return *rs, err
+		return rs, err
 	}
 }
 
