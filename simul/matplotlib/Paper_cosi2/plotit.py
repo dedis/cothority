@@ -20,8 +20,8 @@ import matplotlib.patches as mpatches
 # directly on the plot
 def plotCoSiOld():
     mplot.plotPrepareLogLog()
-    cosi_old, cosi_3, cosi_4, cosi_5, jvss, naive_cosi, ntree_cosi = \
-        read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_4', 'cosi_depth_5', 'jvss', 'naive_cosi', 'ntree_cosi')
+    cosi_old, cosi_3, cosi_3_check, jvss, naive_cosi, ntree_cosi = \
+        read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_3_check', 'jvss', 'naive_cosi', 'ntree_cosi')
     plot_show('comparison_roundtime')
 
     jv = mplot.plotMMA(jvss, 'round_wall', color2_light, 4,
@@ -33,11 +33,8 @@ def plotCoSiOld():
     nt_co = mplot.plotMMA(ntree_cosi, 'round_wall', color4_light, 4,
                        dict(label='NTree', linestyle='-', marker='o', color=color4_dark, zorder=5))
 
-    co_5 = mplot.plotMMA(cosi_5, 'round_wall', color1_light, 4,
-                       dict(label='CoSi - depth 5', linestyle='-', marker='^', color=color1_dark, zorder=5))
-
-    co_4 = mplot.plotMMA(cosi_4, 'round_wall', color1_light, 4,
-                       dict(label='CoSi - depth 4', linestyle='-', marker='v', color=color1_dark, zorder=5))
+    co_3_c = mplot.plotMMA(cosi_3_check, 'round_wall', color1_light, 4,
+                       dict(label='CoSi check - depth 3', linestyle='-', marker='v', color=color1_dark, zorder=5))
 
     co_3 = mplot.plotMMA(cosi_3, 'round_wall', color1_light, 4,
                        dict(label='CoSi - depth 3', linestyle='-', marker='o', color=color1_dark, zorder=5))
@@ -49,7 +46,7 @@ def plotCoSiOld():
 
     # Make horizontal lines and add arrows for JVSS
     # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
-    xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, nt_co, jv, co_3, co_4, co_5)
+    xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, nt_co, jv, co_3, co_3_c)
     plt.ylim(0.5, 8)
     plt.xlim(16, xmax * 1.2)
     plt.ylabel('Seconds per round')

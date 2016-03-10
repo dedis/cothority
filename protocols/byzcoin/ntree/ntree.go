@@ -14,8 +14,8 @@ import (
 )
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
-// and each verifiers will have independant signatures. The messages are then
-// bigger and the verification time is also bigger.
+// and each verifiers will have independent signatures. The messages are then
+// bigger and the verification time is also longer.
 type Ntree struct {
 	*sda.Node
 	// the block to sign
