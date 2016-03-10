@@ -3,6 +3,7 @@ package monitor
 import (
 	"bytes"
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
 	"testing"
 )
 
@@ -32,79 +33,136 @@ func TestDataFilterFilter(t *testing.T) {
 	}
 	for i, v := range filtered {
 		if v != shouldBe[i] {
-			t.Error(fmt.Sprintf("Element %d = %f vs %f", i, filtered[i], shouldBe[i]))
+			t.Error(fmt.Sprintf("Element %d = %d vs %d", i, filtered[i], shouldBe[i]))
 		}
 	}
 }
 
 func TestStatsUpdate(t *testing.T) {
 	rc := make(map[string]string)
-	rc["servers"] = "2"
+	rc["machines"] = "2"
 	rc["hosts"] = "2"
 	stats := NewStats(rc)
 
-	m1 := Measure{
-		Name:        "round",
-		WallTime:    10,
-		CPUTimeUser: 20,
-		CPUTimeSys:  30,
-	}
-	m2 := Measure{
-		Name:        "round",
-		WallTime:    10,
-		CPUTimeUser: 20,
-		CPUTimeSys:  30,
-	}
+	m1 := NewSingleMeasure("round_wall", 10)
+	m2 := NewSingleMeasure("round_wall", 30)
 	stats.Update(m1)
 	stats.Update(m2)
 	stats.Collect()
-	meas := stats.measures["round"]
-	if meas.Wall.Avg() != 10 || meas.User.Avg() != 20 {
+	val := stats.values["round_wall"]
+	if val.Avg() != 20 {
 		t.Error("Aggregate or Update not working")
 	}
 }
+func TestStatsOrder(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 3)
+	m := make(map[string]string)
+	m["machines"] = "1"
+	m["hosts"] = "1"
+	m["bf"] = "2"
+	// create stats
+	stat := NewStats(m)
+	m1 := NewSingleMeasure("round", 10)
+	m2 := NewSingleMeasure("setup", 5)
+	stat.Update(m1)
+	stat.Update(m2)
+	str := new(bytes.Buffer)
+	stat.WriteHeader(str)
+	stat.WriteValues(str)
 
-func TestStatsNotWriteUnknownMeasures(t *testing.T) {
-	rc := make(map[string]string)
-	rc["servers"] = "2"
-	rc["hosts"] = "2"
-	stats := NewStats(rc)
+	stat2 := NewStats(m)
+	stat2.Update(m1)
+	stat2.Update(m2)
 
-	m1 := Measure{
-		Name:        "test1",
-		WallTime:    10,
-		CPUTimeUser: 20,
-		CPUTimeSys:  30,
+	str2 := new(bytes.Buffer)
+	stat2.WriteHeader(str2)
+	stat2.WriteValues(str2)
+	if !bytes.Equal(str.Bytes(), str2.Bytes()) {
+		t.Fatal("KeyOrder / output not the same for same stats")
 	}
-	m2 := Measure{
-		Name:        "round2",
-		WallTime:    70,
-		CPUTimeUser: 20,
-		CPUTimeSys:  30,
-	}
-	m3 := Measure{
-		Name:        "test2",
-		WallTime:    30,
-		CPUTimeUser: 30,
-		CPUTimeSys:  30,
-	}
-	stats.Update(m1)
-	stats.Update(m3)
-	var writer = new(bytes.Buffer)
-	stats.WriteHeader(writer)
-	stats.WriteValues(writer)
-	output := writer.Bytes()
-	if !bytes.Contains(output, []byte("10")) {
-		t.Error(fmt.Sprintf("Stats should write the right measures: %s", writer))
-	}
-	if !bytes.Contains(output, []byte("test2")) || !bytes.Contains(output, []byte("test1")) {
-		t.Error(fmt.Sprintf("Stats should write the right header values"))
-	}
-	stats.Update(m2)
-	stats.WriteValues(writer)
+}
+func TestStatsAverage(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 3)
+	m := make(map[string]string)
+	m["machines"] = "1"
+	m["hosts"] = "1"
+	m["bf"] = "2"
+	// create stats
+	stat1 := NewStats(m)
+	stat2 := NewStats(m)
+	m1 := NewSingleMeasure("round", 10)
+	m2 := NewSingleMeasure("setup", 5)
+	stat1.Update(m1)
+	stat2.Update(m2)
 
-	output = writer.Bytes()
-	if bytes.Contains(output, []byte("70")) {
-		t.Error("Stats should not contain any new measurements after first write")
+	str := new(bytes.Buffer)
+	avgStat := AverageStats([]*Stats{stat1, stat2})
+	avgStat.WriteHeader(str)
+	avgStat.WriteValues(str)
+
+	stat3 := NewStats(m)
+	stat4 := NewStats(m)
+	stat3.Update(m1)
+	stat4.Update(m2)
+
+	str2 := new(bytes.Buffer)
+	avgStat2 := AverageStats([]*Stats{stat3, stat4})
+	avgStat2.WriteHeader(str2)
+	avgStat2.WriteValues(str2)
+
+	if !bytes.Equal(str.Bytes(), str2.Bytes()) {
+		t.Fatal("Average are not the same !")
 	}
+}
+
+func TestStatsAverageFiltered(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 3)
+	m := make(map[string]string)
+	m["machines"] = "1"
+	m["hosts"] = "1"
+	m["bf"] = "2"
+	// create the filter entry
+	m["filter_round"] = "50"
+	// create stats
+	stat1 := NewStats(m)
+	stat2 := NewStats(m)
+	m1 := NewSingleMeasure("round", 10)
+	m2 := NewSingleMeasure("round", 20)
+	m3 := NewSingleMeasure("round", 150)
+	stat1.Update(m1)
+	stat1.Update(m2)
+	stat1.Update(m3)
+	stat2.Update(m1)
+	stat2.Update(m2)
+	stat2.Update(m3)
+
+	/* stat2.Collect()*/
+	//val := stat2.Value("round")
+	//if val.Avg() != (10+20)/2 {
+	//t.Fatal("Average with filter does not work?")
+	//}
+
+	str := new(bytes.Buffer)
+	avgStat := AverageStats([]*Stats{stat1, stat2})
+	avgStat.WriteHeader(str)
+	avgStat.WriteValues(str)
+
+	stat3 := NewStats(m)
+	stat4 := NewStats(m)
+	stat3.Update(m1)
+	stat3.Update(m2)
+	stat3.Update(m3)
+	stat4.Update(m1)
+	stat4.Update(m2)
+	stat4.Update(m3)
+
+	str2 := new(bytes.Buffer)
+	avgStat2 := AverageStats([]*Stats{stat3, stat4})
+	avgStat2.WriteHeader(str2)
+	avgStat2.WriteValues(str2)
+
+	if !bytes.Equal(str.Bytes(), str2.Bytes()) {
+		t.Fatal("Average are not the same !")
+	}
+
 }

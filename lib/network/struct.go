@@ -53,6 +53,8 @@ type Conn interface {
 	// Receive any message through the connection.
 	Receive(ctx context.Context) (NetworkMessage, error)
 	Close() error
+	// returns the number of bytes read from / written  to this connection
+	BytesIO() (uint64, uint64)
 }
 
 // TcpHost is the underlying implementation of
@@ -95,6 +97,10 @@ type TcpConn struct {
 	receiveMutex sync.Mutex
 	// So we only handle one sending packet at a time
 	sendMutex sync.Mutex
+	// bReceived is the number of bytes received on this connection
+	bReceived uint64
+	// bSent in the number of bytes sent on this connection
+	bSent uint64
 }
 
 // SecureHost is the analog of Host but with secure communication

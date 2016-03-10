@@ -122,6 +122,8 @@ func (c *TcpConn) Remote() string {
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
 func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
+	c.receiveMutex.Lock()
+	defer c.receiveMutex.Unlock()
 	var am NetworkMessage
 	am.Constructors = c.host.constructors
 	var err error
@@ -137,8 +139,6 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 	if err = binary.Read(c.conn, globalOrder, &s); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
-	c.receiveMutex.Lock()
-	defer c.receiveMutex.Unlock()
 	b := make([]byte, s)
 	var read Size
 	var buffer bytes.Buffer
@@ -165,6 +165,8 @@ func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
 		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
+	// set the size
+	c.bReceived += uint64(s)
 	return am, nil
 }
 
@@ -216,7 +218,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		// bytes left to send
 		b = b[n:]
 	}
-
+	c.bSent += uint64(packetSize)
 	return nil
 }
 

@@ -58,9 +58,8 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		done := make(chan bool)
 		fn := func(chal, resp abstract.Secret) {
 			roundM.Measure()
-			if err := proto.Cosi.VerifyResponses(aggPublic); err != nil {
-				dbg.Lvl1("Round", round, " has failed responses")
-			}
+			//  No need to verify it twice here. It already happens in
+			//  handleResponse() even for the root.
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
 				dbg.Lvl1("Round", round, " => fail verification")
 			} else {
