@@ -98,7 +98,7 @@ type TcpConn struct {
 	receiveMutex sync.Mutex
 	// So we only handle one sending packet at a time
 	sendMutex sync.Mutex
-	// bReceived is the number of bytes received on this connection
+	// bRead is the number of bytes received on this connection
 	bRead     uint64
 	bReadLock sync.Mutex
 	// bWritten in the number of bytes sent on this connection
