@@ -136,7 +136,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			dbg.Lvl2("Skipping", t, "because of range")
 			continue
 		}
-		dbg.Lvl1("Doing run", t)
+		dbg.Lvl1("Doing run", t.String())
 
 		// run test t nTimes times
 		// take the average of all successful runs
