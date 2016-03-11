@@ -165,6 +165,8 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 		dbg.Error(err)
 		return rs, err
 	}
+
+	monitor.SinkPort = monitorPort
 	if err := deployP.Cleanup(); err != nil {
 		dbg.Error(err)
 		return rs, err
