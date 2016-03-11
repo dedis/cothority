@@ -1,0 +1,17 @@
+Important changes in latest versions
+
+protocol/
+
+160202:
+    - Simulation.Dispatch is now called as a go-routine to help handling
+      channels more easily. If you simply include sda.SimulationBFTree in
+      your protocol-struct, a do-nothing Dispatch is defined per default.
+
+simul/
+
+160202:
+    - added a 'SingleHost'-flag for the `runlevel/*toml`-files. When set to
+      true, only one host per server is initialised:
+       + faster running, uses less resources
+       - not real conditions with regard to propagation of new trees.
+       - doesn't run on more than 4095 nodes yet

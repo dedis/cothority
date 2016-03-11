@@ -1,4 +1,0 @@
-var HostsTestSingle = []T{
-	{0, 2, 8, 30, 20, 0, 0, 0, false, "coll_stamp"},
-}
-

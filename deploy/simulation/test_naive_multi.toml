@@ -1,8 +1,0 @@
-Machines = 2
-App = "naive"
-Suite = "Ed25519"
-
-Ppm,  Rounds
-1, 10
-2, 10
-4, 10

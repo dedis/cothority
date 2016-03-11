@@ -1,5 +1,0 @@
-var StampTestSingle = []T{
-	{0, 1, 2,
-		30, 20, 0,
-		0, 0, false, "coll_stamp"},
-}

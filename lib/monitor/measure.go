@@ -12,34 +12,16 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"syscall"
 	"time"
-)
 
-// Sink is the server address where all measures are transmitted to for
-// further analysis.
-var sink string
+	"github.com/dedis/cothority/lib/dbg"
+)
 
 // Structs are encoded through a json encoder.
 var encoder *json.Encoder
 var connection net.Conn
-
-// Keeps track if a measure is enabled (true) or not (false). If disabled,
-// measures are not sent to the monitor. Use EnableMeasure(bool) to toggle
-// this variable.
-var enabled = true
-
-// Enables / Disables a measure.
-func EnableMeasure(b bool) {
-	if b {
-		dbg.Lvl3("Monitor: Measure enabled")
-	} else {
-		dbg.Lvl3("Monitor: Measure disabled")
-	}
-	enabled = b
-}
 
 // ConnectSink connects to the given endpoint and initialises a json
 // encoder. It can be the address of a proxy or a monitoring process.
@@ -54,15 +36,9 @@ func ConnectSink(addr string) error {
 		return err
 	}
 	dbg.Lvl3("Connected to sink:", addr)
-	sink = addr
 	connection = conn
 	encoder = json.NewEncoder(conn)
 	return nil
-}
-
-func StopSink() {
-	connection.Close()
-	encoder = nil
 }
 
 // Only sends a ready-string
@@ -104,9 +80,10 @@ func send(v interface{}) {
 	if encoder == nil {
 		panic(fmt.Errorf("Monitor's sink connection not initalized. Can not send any measures"))
 	}
-	if !enabled {
-		return
-	}
+
+	// For a large number of clients (˜10'000), the connection phase
+	// can take some time. This is a linear backoff to enable connection
+	// even when there are a lot of request:
 	for wait := 500; wait < 1000; wait += 100 {
 		if err := encoder.Encode(v); err == nil {
 			return
@@ -169,9 +146,14 @@ func (m *Measure) reset() {
 }
 
 // Prints a message to end the logging.
-func End() {
+func EndAndCleanup() {
 	send(Measure{Name: "end"})
-	connection.Close()
+	if err := connection.Close(); err != nil {
+		dbg.Error("Could not close connection:", err)
+	} else {
+		dbg.Lvl3("Closed connection:", connection)
+		encoder = nil
+	}
 }
 
 // Converts microseconds to seconds.

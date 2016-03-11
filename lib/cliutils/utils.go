@@ -1,15 +1,17 @@
+// Used for shell-commands and converting public/secrets to/from Base64
 package cliutils
 
 import (
 	"bufio"
 	"bytes"
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func Boldify(s string) string {
@@ -41,8 +43,10 @@ func Rsync(username, host, file, dest string) error {
 		addr = username + "@" + addr
 	}
 	cmd := exec.Command("rsync", "-Pauz", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
-	//cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	if dbg.DebugVisible() > 1 {
+		cmd.Stdout = os.Stdout
+	}
 	return cmd.Run()
 }
 
@@ -54,7 +58,6 @@ func SshRun(username, host, command string) ([]byte, error) {
 
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
-	//log.Println(cmd)
 	//cmd.Stderr = os.Stderr
 	return cmd.Output()
 }
@@ -85,15 +88,22 @@ func SshRunBackground(username, host, command string) error {
 
 }
 
-func Build(path, out, goarch, goos string) (string, error) {
+// Build builds the the golang packages in `path` and stores the result in `out`. Besides specifying the environment
+// variables GOOS and GOARCH you can pass any additional argument using the buildArgs
+// argument. The command which will be executed is of the following form:
+// $ go build -v buildArgs... -o out path
+func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) {
 	var cmd *exec.Cmd
 	var b bytes.Buffer
 	build_buffer := bufio.NewWriter(&b)
 
 	wd, _ := os.Getwd()
 	dbg.Lvl4("In directory", wd)
-
-	cmd = exec.Command("go", "build", "-v", "-o", out, path)
+	var args []string
+	args = append(args, "build", "-v")
+	args = append(args, buildArgs...)
+	args = append(args, "-o", out, path)
+	cmd = exec.Command("go", args...)
 	dbg.Lvl4("Building", cmd.Args, "in", path)
 	cmd.Stdout = build_buffer
 	cmd.Stderr = build_buffer
@@ -123,4 +133,13 @@ func TimeoutRun(d time.Duration, f func() error) error {
 		e = errors.New("function timed out")
 	}
 	return e
+}
+
+// Returns the global-binding address
+func GlobalBind(address string) (string, error) {
+	addr := strings.Split(address, ":")
+	if len(addr) != 2 {
+		return "", errors.New("Not a host:port address")
+	}
+	return "0.0.0.0:" + addr[1], nil
 }

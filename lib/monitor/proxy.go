@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"io"
 	"net"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -25,33 +26,35 @@ var readyCount int64
 // proxy connections opened
 var proxyConns map[string]*json.Encoder
 
-var proxyDone chan bool
-
-func init() {
-	proxyDone = make(chan bool)
-}
-
 // Proxy will launch a routine that waits for input connections
 // It takes a redirection address soas to where redirect incoming packets
 // Proxy will listen on Sink:SinkPort variables so that the user do not
 // differentiate between connecting to a proxy or directly to the sink
 // It will panic if it can not contact the server or can not bind to the address
-func Proxy(redirection string) {
+func Proxy(redirection string) error {
 	// Connect to the sink
 	if err := connectToSink(redirection); err != nil {
-		panic(err)
+		return err
 	}
 	dbg.Lvl2("Proxy connected to sink", redirection)
-	// Here it listens the same way monitor.go would
-	// usually 0.0.0.0:4000
-	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
+	// The proxy listens on the port one lower than itself
+	_, port, err := net.SplitHostPort(redirection)
 	if err != nil {
-		dbg.Fatalf("Error while binding proxy to addr %s: %v", Sink+":"+SinkPort, err)
+		dbg.Fatal("Couldn't get port-numbre from", redirection)
 	}
-	dbg.Lvl2("Proxy listening on", Sink+":"+SinkPort)
-	var newConn = make(chan bool)
-	var closeConn = make(chan bool)
-	var finished = false
+	portNbr, err := strconv.Atoi(port)
+	if err != nil {
+		dbg.Fatal("Couldn't convert", port, "to a number")
+	}
+	sinkAddr := Sink + ":" + strconv.Itoa(portNbr-1)
+	ln, err := net.Listen("tcp", sinkAddr)
+	if err != nil {
+		return fmt.Errorf("Error while binding proxy to addr %s: %v", sinkAddr, err)
+	}
+	dbg.Lvl2("Proxy listening on", sinkAddr)
+	newConn := make(chan bool)
+	closeConn := make(chan bool)
+	finished := false
 	proxyConns = make(map[string]*json.Encoder)
 	readyCount = 0
 
@@ -93,25 +96,28 @@ func Proxy(redirection string) {
 		}
 	}()
 
-	// notify every new connection and every end of connection. When all
-	// connections are closed, send an "end" measure to the sink.
-	var nconn int
-	for finished == false {
-		select {
-		case <-newConn:
-			nconn += 1
-		case <-closeConn:
-			nconn -= 1
-			if nconn == 0 {
-				// everything is finished
-				serverEnc.Encode(Measure{Name: "end"})
-				serverConn.Close()
-				ln.Close()
-				finished = true
-				break
+	go func() {
+		// notify every new connection and every end of connection. When all
+		// connections are closed, send an "end" measure to the sink.
+		var nconn int
+		for finished == false {
+			select {
+			case <-newConn:
+				nconn += 1
+			case <-closeConn:
+				nconn -= 1
+				if nconn == 0 {
+					// everything is finished
+					serverEnc.Encode(Measure{Name: "end"})
+					serverConn.Close()
+					ln.Close()
+					finished = true
+					break
+				}
 			}
 		}
-	}
+	}()
+	return nil
 }
 
 // connectToSink starts the connection with the server
@@ -176,12 +182,4 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	}
 	conn.Close()
 	done <- true
-}
-
-// proxyDataServer send the data to the server...
-func proxyDataServer(data []byte) {
-	_, err := serverConn.Write(data)
-	if err != nil {
-		panic(fmt.Errorf("Error proxying data to server: %v", err))
-	}
 }

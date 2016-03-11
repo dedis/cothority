@@ -3,17 +3,21 @@ package monitor
 import (
 	"bytes"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func TestMonitor(t *testing.T) {
+	defer dbg.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	stat := NewStats(m)
 	fresh := stat.String()
 	// First set up monitor listening
@@ -22,7 +26,7 @@ func TestMonitor(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Then measure
-	err := ConnectSink("localhost:" + SinkPort)
+	err := ConnectSink("localhost:" + strconv.Itoa(DefaultSinkPort))
 	if err != nil {
 		t.Error(fmt.Sprintf("Error starting monitor: %s", err))
 		return
@@ -32,21 +36,21 @@ func TestMonitor(t *testing.T) {
 	meas.Measure()
 	time.Sleep(200 * time.Millisecond)
 	meas.Measure()
-	End()
+	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
 	updated := stat.String()
 	if updated == fresh {
 		t.Error("Stats not updated ?")
 	}
-
-	StopSink()
 }
 
 func TestReadyNormal(t *testing.T) {
+	defer dbg.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	m["Ready"] = "0"
 	stat := NewStats(m)
 	if stat.Ready != 0 {
@@ -56,7 +60,7 @@ func TestReadyNormal(t *testing.T) {
 	mon := NewMonitor(stat)
 	go mon.Listen()
 	time.Sleep(100 * time.Millisecond)
-	host := "localhost:" + SinkPort
+	host := "localhost:" + strconv.Itoa(DefaultSinkPort)
 	if stat.Ready != 0 {
 		t.Fatal("Stats should have ready==0 after start of Monitor")
 	}
@@ -83,15 +87,16 @@ func TestReadyNormal(t *testing.T) {
 		t.Fatal("Stats.Ready != 1")
 	}
 
-	End()
-	StopSink()
+	EndAndCleanup()
 }
 
 func TestKeyOrder(t *testing.T) {
+	defer dbg.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
+	m["hosts"] = "1"
 	m["bf"] = "2"
 	m["rounds"] = "3"
 
