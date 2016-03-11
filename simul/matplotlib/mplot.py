@@ -2,7 +2,14 @@
 # It takes the CSV-file as argument and shows the plot
 # of the times used for each round
 
-import matplotlib
+import sys
+try:
+    import matplotlib
+except ImportError:
+    print "Please install Matplotlib:"
+    print "\nsudo easy_install \"matplotlib == 1.5.1\"\n"
+    sys.exit(1)
+
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker

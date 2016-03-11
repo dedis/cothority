@@ -84,7 +84,7 @@ func (p *Protocol) handleSignReply(reply []structSignatureReply) error {
 	}
 
 	if !p.IsRoot() {
-		dbg.LLvl3(p.Myself(), "Appending our signature to the collected ones and send to parent")
+		dbg.Lvl3(p.Myself(), "Appending our signature to the collected ones and send to parent")
 		count := 0
 		for _, s := range reply {
 			count += len(s.Signatures)
