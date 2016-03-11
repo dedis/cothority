@@ -71,8 +71,8 @@ func TestStatsOrder(t *testing.T) {
 	stat.WriteValues(str)
 
 	stat2 := NewStats(m)
-	stat2.Update(m1)
 	stat2.Update(m2)
+	stat2.Update(m1)
 
 	str2 := new(bytes.Buffer)
 	stat2.WriteHeader(str2)
@@ -80,6 +80,7 @@ func TestStatsOrder(t *testing.T) {
 	if !bytes.Equal(str.Bytes(), str2.Bytes()) {
 		t.Fatal("KeyOrder / output not the same for same stats")
 	}
+
 }
 func TestStatsAverage(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)

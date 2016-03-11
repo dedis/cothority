@@ -58,6 +58,7 @@ func (s *Stats) Update(m *SingleMeasure) {
 		value = NewValue(m.Name)
 		s.values[m.Name] = value
 		s.keys = append(s.keys, m.Name)
+		sort.Strings(s.keys)
 	}
 	value.Store(m.Value)
 }
