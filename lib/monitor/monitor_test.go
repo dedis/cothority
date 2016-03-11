@@ -14,8 +14,7 @@ import (
 func setupMonitor(t *testing.T) (*Monitor, *Stats) {
 	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
 	stat := NewStats(m)
 	// First set up monitor listening
 	mon := NewMonitor(stat)
@@ -35,8 +34,7 @@ func TestReadyNormal(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
-	m["ppm"] = "1"
+	m["servers"] = "1"
 	stat := NewStats(m)
 	fresh := stat.String()
 	// First set up monitor listening
@@ -57,7 +55,7 @@ func TestReadyNormal(t *testing.T) {
 	NewSingleMeasure("round", 20)
 	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
-	updated := stat.String()
+	updated := mon.Stats().String()
 	if updated == fresh {
 		t.Fatal("Stats not updated ?")
 	}
@@ -69,7 +67,7 @@ func TestKeyOrder(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
+	m["servers"] = "1"
 	m["hosts"] = "1"
 	m["bf"] = "2"
 	// create stats

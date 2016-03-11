@@ -1,7 +1,6 @@
 package monitor
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -10,17 +9,18 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	//	defer dbg.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
+	m["servers"] = "1"
 	m["hosts"] = "1"
 	m["filter_round"] = "100"
 	stat := NewStats(m)
 	fresh := stat.String()
 	// First set up monitor listening
 	monitor := NewMonitor(stat)
+	monitor.SinkPort = 8000
 	done := make(chan bool)
 	go func() {
 		monitor.Listen()
@@ -30,28 +30,27 @@ func TestProxy(t *testing.T) {
 	// Then setup proxy
 	// change port so the proxy does not listen to the same
 	// than the original monitor
-	oldSink := DefaultSinkPort
-	DefaultSinkPort = 8000
-	// proxy listen to 0.0.0.0:8000 & redirect to
-	// localhost:4000
-	go Proxy("localhost:" + strconv.Itoa(oldSink))
+
+	// proxy listens to 0.0.0.0:8000 & redirects to
+	// localhost:10000 (DefaultSinkPort)
+	go Proxy("localhost:" + strconv.Itoa(DefaultSinkPort))
 
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
-	proxyAddr := "localhost:" + strconv.Itoa(DefaultSinkPort)
+	proxyAddr := "localhost:" + strconv.Itoa(monitor.SinkPort)
 	err := ConnectSink(proxyAddr)
 	if err != nil {
-		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))
+		t.Errorf("Can not connect to proxy : %s", err)
 		return
 	}
 
-	meas := NewSingleMeasure("setup", 10)
+	meas := NewTimeMeasure("setup")
 	meas.Record()
 	time.Sleep(100 * time.Millisecond)
-	meas = NewSingleMeasure("setup", 20)
 	meas.Record()
-	DefaultSinkPort = oldSink
+
 	EndAndCleanup()
+
 	select {
 	case <-done:
 		s := monitor.Stats()

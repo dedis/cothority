@@ -1,12 +1,3 @@
-/*
- * measures functions.
- *
- * Usage:
- * ```measure := monitor.SingleMeasure("bandwidth")```
- * or
- * ```measure := monitor.NewTimeMeasure("round")
- * ```measure.Record()```
- */
 package monitor
 
 import (
@@ -33,6 +24,12 @@ var connection net.Conn
 var enabled = true
 
 // Generic interface for measurements
+// Usage:
+// ```measure := monitor.SingleMeasure("bandwidth")```
+// or
+// ```measure := monitor.NewTimeMeasure("round")
+// ```measure.Record()```
+//
 type Measure interface {
 	// Record must be called when you want to send the value
 	// over the monitor listening.
@@ -196,7 +193,9 @@ func send(v interface{}) error {
 	if !enabled {
 		return nil
 	}
-	// XXX comment needed:
+	// For a large number of clients (˜10'000), the connection phase
+	// can take some time. This is a linear backoff to enable connection
+	// even when there are a lot of request:
 	for wait := 500; wait < 1000; wait += 100 {
 		if err := encoder.Encode(v); err == nil {
 			return nil

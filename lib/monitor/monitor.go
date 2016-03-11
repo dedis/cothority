@@ -29,8 +29,8 @@ import (
 
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
-var Sink = "0.0.0.0"
-var DefaultSinkPort = 10000
+const Sink = "0.0.0.0"
+const DefaultSinkPort = 10000
 
 // Monitor struct is used to collect measures and make the statistics about
 // them. It takes a stats object so it update that in a concurrent-safe manner
@@ -80,7 +80,9 @@ func (m *Monitor) Listen() error {
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
+	m.listenerLock.Lock()
 	m.listener = ln
+	m.listenerLock.Unlock()
 	dbg.Lvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
 	finished := false
 	go func() {
