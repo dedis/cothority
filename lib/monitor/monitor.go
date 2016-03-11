@@ -55,6 +55,8 @@ type Monitor struct {
 	// channel to notify the end of a connection
 	// send the name of the connection when finishd
 	done chan string
+
+	SinkPort int
 }
 
 // NewMonitor returns a new monitor given the stats
@@ -63,6 +65,7 @@ func NewMonitor(stats *Stats) *Monitor {
 		conns:        make(map[string]net.Conn),
 		stats:        stats,
 		mutexStats:   sync.Mutex{},
+		SinkPort:     DefaultSinkPort,
 		measures:     make(chan *SingleMeasure),
 		done:         make(chan string),
 		listenerLock: new(sync.Mutex),
@@ -73,12 +76,12 @@ func NewMonitor(stats *Stats) *Monitor {
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func (m *Monitor) Listen() error {
-	ln, err := net.Listen("tcp", Sink+":"+strconv.Itoa(DefaultSinkPort))
+	ln, err := net.Listen("tcp", Sink+":"+strconv.Itoa(m.SinkPort))
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
 	m.listener = ln
-	dbg.Lvl2("Monitor listening for stats on", Sink, ":", DefaultSinkPort)
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
 	finished := false
 	go func() {
 		for {
