@@ -82,7 +82,7 @@ def length_bitmap(total, ex_list):
     return 32 + math.ceil(total / 8.0)
 
 def length_bloom(total, ex_list):
-    bf = pybloomfilter.BloomFilter(total, 0.01, '/tmp/sda.bloom')
+    bf = pybloomfilter.BloomFilter(total, 0.5, '/tmp/sda.bloom')
     ex_len = shortest_listlen(total, ex_list)
     for ex in range(0, ex_len):
         bf.add(ex)
@@ -114,7 +114,6 @@ def plot_comparison(tree_size):
     plt.legend(loc=u'upper right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     ax = plt.axes()
-    #ax.set_xticks([16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
     mplot.pngname = "comparison_exception_" +str(tree_size)+".png"
     mplot.plotEnd()
 
