@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"testing"
+	"time"
 )
 
 type DummyCounterIO struct {
@@ -20,7 +21,7 @@ func (dm *DummyCounterIO) Written() uint64 {
 }
 
 func TestCounterIOMeasureRecord(t *testing.T) {
-	mon, _ := setupMonitor(t)
+	setupMonitor(t)
 	dm := &DummyCounterIO{0, 0}
 	// create the counter measure
 	cm := NewCounterIOMeasure("dummy", dm)
@@ -51,6 +52,6 @@ func TestCounterIOMeasureRecord(t *testing.T) {
 	//if re == nil || re.Avg() != 10 {
 	//t.Fatal("Stats don't have the right value (read)")
 	/*}*/
-	End()
-	mon.Stop()
+	EndAndCleanup()
+	time.Sleep(100 * time.Millisecond)
 }

@@ -10,6 +10,8 @@ import (
 )
 
 func TestProxy(t *testing.T) {
+	//	defer dbg.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["machines"] = "1"
@@ -28,15 +30,15 @@ func TestProxy(t *testing.T) {
 	// Then setup proxy
 	// change port so the proxy does not listen to the same
 	// than the original monitor
-	oldSink := SinkPort
-	SinkPort = 8000
+	oldSink := DefaultSinkPort
+	DefaultSinkPort = 8000
 	// proxy listen to 0.0.0.0:8000 & redirect to
 	// localhost:4000
 	go Proxy("localhost:" + strconv.Itoa(oldSink))
 
 	time.Sleep(100 * time.Millisecond)
 	// Then measure
-	proxyAddr := "localhost:" + strconv.Itoa(SinkPort)
+	proxyAddr := "localhost:" + strconv.Itoa(DefaultSinkPort)
 	err := ConnectSink(proxyAddr)
 	if err != nil {
 		t.Error(fmt.Sprintf("Can not connect to proxy : %s", err))
@@ -48,8 +50,8 @@ func TestProxy(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	meas = NewSingleMeasure("setup", 20)
 	meas.Record()
-	SinkPort = oldSink
-	End()
+	DefaultSinkPort = oldSink
+	EndAndCleanup()
 	select {
 	case <-done:
 		s := monitor.Stats()

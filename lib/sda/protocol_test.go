@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/satori/go.uuid"
 )
 
@@ -90,7 +89,7 @@ func TestProtocolRegistration(t *testing.T) {
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup

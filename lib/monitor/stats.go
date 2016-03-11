@@ -273,7 +273,6 @@ func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
 	// append them to the defaults one
 	s.staticKeys = append(s.staticKeys, statics...)
 
-	dbg.Print("Stats.static =>", s.static)
 	// let the filter figure out itself what it is supposed to be doing
 	s.filter = NewDataFilter(rc)
 }

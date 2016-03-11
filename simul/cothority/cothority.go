@@ -1,3 +1,7 @@
+// The simulation cothority used for all protocols.
+// This should not be used stand-alone and is only for
+// the simulations. It loads the simulation-file, initialises all
+// necessary hosts and starts the simulation on the root-node.
 package main
 
 import (
@@ -13,10 +17,6 @@ import (
 	// register the protocol
 	_ "github.com/dedis/cothority/protocols"
 )
-
-/*
-Cothority is a general node that can be used for all available protocols.
-*/
 
 // The address of this host - if there is only one host in the config
 // file, it will be derived from it automatically

@@ -23,15 +23,17 @@ func setupMonitor(t *testing.T) (*Monitor, *Stats) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Then measure
-	err := ConnectSink("localhost:" + strconv.Itoa(SinkPort))
+	err := ConnectSink("localhost:" + strconv.Itoa(DefaultSinkPort))
 	if err != nil {
 		t.Fatal(fmt.Sprintf("Error starting monitor: %s", err))
 	}
 	return mon, stat
 }
 
-func TestMonitor(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 2)
+func TestReadyNormal(t *testing.T) {
+	//defer dbg.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["machines"] = "1"
 	m["ppm"] = "1"
@@ -43,9 +45,9 @@ func TestMonitor(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Then measure
-	err := ConnectSink("localhost:" + strconv.Itoa(SinkPort))
+	err := ConnectSink("localhost:" + strconv.Itoa(DefaultSinkPort))
 	if err != nil {
-		t.Error(fmt.Sprintf("Error starting monitor: %s", err))
+		t.Fatal(fmt.Sprintf("Error starting monitor: %s", err))
 		return
 	}
 
@@ -53,16 +55,18 @@ func TestMonitor(t *testing.T) {
 	meas.Record()
 	time.Sleep(200 * time.Millisecond)
 	NewSingleMeasure("round", 20)
-	End()
+	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
 	updated := stat.String()
 	if updated == fresh {
-		t.Error("Stats not updated ?")
+		t.Fatal("Stats not updated ?")
 	}
 
 }
 
 func TestKeyOrder(t *testing.T) {
+	defer dbg.AfterTest(t)
+
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["machines"] = "1"

@@ -1,13 +1,14 @@
 // Monitor package handle the logging, collection and computation of
-// statisticals data. Every application can send some Measure (for the moment,
+// statistical data. Every application can send some Measure (for the moment,
 // we mostly measure the CPU time but it can be applied later for any kind of
-// measures). The Monitor receives them and update a Stats struct. This Statss
-// struct can hold many different kinds of Measurement (the measure of an
-// specific action such as "round time" or "verify time" etc). Theses
-// measurements contains Values which compute the actual min/max/dev/avg values.
-// There exists the Proxy file so we can have a Proxy relaying Measure from
-// clients to the Monitor listening. An starter feature is also the DataFilter
-// which can apply somes filtering rules to the data before making any
+// measures). The Monitor receives them and updates a Stats struct. This Stats
+// struct can hold many different kinds of Measurements (the measure of a
+// specific action such as "round time" or "verify time" etc). These
+// measurements contain Values which compute the actual min/max/dev/avg values.
+//
+// The Proxy allows to relay Measure from
+// clients to the listening Monitor. A starter feature is also the DataFilter
+// which can apply some filtering rules to the data before making any
 // statistics about them.
 package monitor
 

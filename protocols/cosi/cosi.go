@@ -1,3 +1,4 @@
+// Implementation of a round of a Collective Signing protocol.
 package cosi
 
 import (
@@ -10,7 +11,6 @@ import (
 	"sync"
 )
 
-// This file is the implementation of a round of a Cothority-based protocol.
 // This Cosi protocol is the simplest version, the "vanilla" version with the
 // four phases:
 //  - Announcement

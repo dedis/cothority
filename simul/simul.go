@@ -1,23 +1,4 @@
-// Outputting data: output to csv files (for loading into excel)
-//   make a datastructure per test output file
-//   all output should be in the test_data subdirectory
-//
-// connect with logging server (receive json until "EOF" seen or "terminating")
-//   connect to websocket ws://localhost:8080/log
-//   receive each message as bytes
-//		 if bytes contains "EOF" or contains "terminating"
-//       wrap up the round, output to test_data directory, kill deploy2deter
-//
-// for memstats check localhost:8080/d/server-0-0/debug/vars
-//   parse out the memstats zones that we are concerned with
-//
-// different graphs needed rounds:
-//   load on the x-axis: increase messages per round holding everything else constant
-//			hpn=40 bf=10, bf=50
-//
-// latency on y-axis, timestamp servers on x-axis push timestampers as higher as possible
-//
-//
+// The main file for running simulations on localhost or remote platforms.
 package main
 
 import (

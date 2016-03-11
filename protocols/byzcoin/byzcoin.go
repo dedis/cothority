@@ -1,3 +1,5 @@
+// A novel way of implementing the Bitcoin protocol using CoSi for signing
+// sidechains.
 package byzcoin
 
 import (
