@@ -59,11 +59,10 @@ func Proxy(redirection string) error {
 		return fmt.Errorf("Error while binding proxy to addr %s: %v", sinkAddr, err)
 	}
 	dbg.Lvl2("Proxy listening on", sinkAddr)
-	newConn = make(chan bool)
-	closeConn = make(chan bool)
-	finished = false
-	proxyConns = make(map[string]*json.Encoder)
-	readyCount = 0
+	newConn := make(chan bool)
+	closeConn := make(chan bool)
+	finished := false
+	proxyConns := make(map[string]*json.Encoder)
 
 	// Listen for incoming connections
 	go func() {
