@@ -46,6 +46,10 @@ func main() {
 	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible, monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", hostAddress)
+	measures := make([]*monitor.CounterIOMeasure, len(scs))
+	for i := range measures {
+		measures[i] = monitor.NewCounterIOMeasure("bandwidth", scs[i].Host)
+	}
 	if err != nil {
 		// We probably are not needed
 		dbg.Lvl2(err)
@@ -137,7 +141,6 @@ func main() {
 		} else {
 			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", rootSC.Tree)
 		}
-		monitor.EndAndCleanup()
 		if err != nil {
 			dbg.Fatal(err)
 		}
@@ -146,8 +149,10 @@ func main() {
 	// Wait for all hosts to be closed
 	allClosed := make(chan bool)
 	go func() {
-		for _, sc := range scs {
+		for i, sc := range scs {
 			sc.Host.WaitForClose()
+			// record the bandwidth
+			measures[i].Record()
 			dbg.Lvl3(hostAddress, "Simulation closed host", sc.Host.Entity.Addresses, "closed")
 		}
 		allClosed <- true
@@ -159,4 +164,5 @@ func main() {
 	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
 		dbg.Lvl2(hostAddress, ": didn't close after", scs[0].GetCloseWait(), " seconds")
 	}
+	monitor.EndAndCleanup()
 }

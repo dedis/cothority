@@ -42,7 +42,6 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
-	bandwidth := monitor.NewCounterIOMeasure("bandwidth", config.Host)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
@@ -71,7 +70,6 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		proto.RegisterDoneCallback(fn)
 		proto.Start()
 		<-done
-		bandwidth.Record()
 	}
 	dbg.Lvl1("Simulation finished")
 	return nil
