@@ -196,7 +196,7 @@ func (r *RunConfig) String() string {
 	for _, f := range fields {
 		v := r.Get(f)
 		if v != "" {
-			ret = fmt.Sprintf("%s %s:%s", ret, f, v)
+			ret = fmt.Sprintf("%s%s:%s ", ret, f, v)
 		}
 	}
 	return ret

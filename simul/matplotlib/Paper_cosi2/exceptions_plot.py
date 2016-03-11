@@ -25,39 +25,6 @@ except ImportError:
     print "\nsudo pip install pybloomfiltermmap\n"
     sys.exit(1)
 
-# Plots a Cothority and a JVSS run with regard to their averages. Supposes that
-# the last two values from JVSS are off-grid and writes them with arrows
-# directly on the plot
-def plotCoSi():
-    cosi_old, cosi_3, cosi_3_check, jvss, naive_cosi, ntree_cosi = \
-        read_csvs('cosi_old', 'cosi_depth_3', 'cosi_depth_3_check', 'jvss', 'naive_cosi', 'ntree_cosi')
-    plot_show('comparison_roundtime')
-
-    jv = mplot.plotMMA(jvss, 'round_wall', color2_light, 4,
-                       dict(label='JVSS', linestyle='-', marker='o', color=color2_dark, zorder=5))
-
-    na_co = mplot.plotMMA(naive_cosi, 'round_wall', color3_light, 4,
-                       dict(label='Naive', linestyle='-', marker='o', color=color3_dark, zorder=5))
-
-    nt_co = mplot.plotMMA(ntree_cosi, 'round_wall', color4_light, 4,
-                       dict(label='NTree', linestyle='-', marker='o', color=color4_dark, zorder=5))
-
-    co_3_c = mplot.plotMMA(cosi_3_check, 'round_wall', color1_light, 4,
-                       dict(label='CoSi check - depth 3', linestyle='-', marker='v', color=color1_dark, zorder=5))
-
-    co_3 = mplot.plotMMA(cosi_3, 'round_wall', color1_light, 4,
-                       dict(label='CoSi - depth 3', linestyle='-', marker='o', color=color1_dark, zorder=5))
-
-    #co_old = mplot.plotMMA(cosi_old, 'round_wall', color5_light, 4,
-    #                   dict(label='CoSi old', linestyle='-', marker='s', color=color5_dark, zorder=5))
-    #co_old_depth = cosi_old.get_old_depth()
-
-    # Make horizontal lines and add arrows for JVSS
-    # xmin, xmax, ymin, ymax = CSVStats.get_min_max(na, co)
-    xmin, xmax, ymin, ymax = CSVStats.get_min_max(na_co, nt_co, jv, co_3, co_3_c)
-    plt.ylim(0.5, 8)
-    plt.xlim(16, xmax * 1.2)
-
 def varint_len(i):
     if i == 0:
         return 1.0
@@ -82,24 +49,44 @@ def length_bitmap(total, ex_list):
     return 32 + math.ceil(total / 8.0)
 
 def length_bloom(total, ex_list):
-    bf = pybloomfilter.BloomFilter(total, 0.5, '/tmp/sda.bloom')
     ex_len = shortest_listlen(total, ex_list)
-    for ex in range(0, ex_len):
-        bf.add(ex)
-    return 32 + math.ceil(len(bf.to_base64()) * 6 / 8.0)
+    false_positives = True
+    creation = 0
+    p = 0.5 / math.pow(ex_len + 1, 0.65)
+    #p = 0.5
+    while false_positives:
+        creation += 1
+        #pnew = p - float(creation) / total
+        #print pnew
+        bf = pybloomfilter.BloomFilter(total / 2, p, '/tmp/sda.bloom')
+        for ex in ex_list[0:ex_len]:
+            bf.add(ex)
+        false_positives = False
+        for ex in range(0, total):
+            if (ex in bf) and not (ex in ex_list):
+                false_positives = True
+
+        if false_positives:
+            print total, ex_len, creation
+
+    return 32 + math.ceil(len(bf.to_base64()) * 6 / 8.0), creation, p
 
 def calculate_exceptions(hosts):
     host_list = []
     for h in range(0, hosts):
         host_list.append(h)
 
-    lengths = [[], [], [], []]
+    lengths = [[], [], [], [], [], []]
     for ex in range(0, hosts + 1, int(math.ceil(hosts / 64))):
         ex_list = random.sample(set(host_list), ex)
         lengths[0].append(ex)
         lengths[1].append(length_list(hosts, ex_list))
         lengths[2].append(length_bitmap(hosts, ex_list))
-        lengths[3].append(length_bloom(hosts, ex_list))
+        length, creation, p = length_bloom(hosts, ex_list)
+        #print ex, length, creation, p
+        lengths[3].append(length)
+        lengths[4].append(creation)
+        lengths[5].append(p)
     return lengths
 
 def plot_comparison(tree_size):
@@ -109,12 +96,24 @@ def plot_comparison(tree_size):
     plt.plot(lengths[0], lengths[2], linestyle='-', marker='v', color=color2_dark, label='Bitmap')
     plt.plot(lengths[0], lengths[3], linestyle='-', marker='v', color=color3_dark, label='Bloom filter')
     plt.ylabel('Final message size')
+    plt.xlabel('Elements sending exception')
     plt.title('Comparison with ' + str(tree_size) + ' elements')
 
     plt.legend(loc=u'upper right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
-    ax = plt.axes()
     mplot.pngname = "comparison_exception_" +str(tree_size)+".png"
+    mplot.plotEnd()
+
+    mplot.plotPrepareLogLog(0,2)
+    plt.plot(lengths[0], lengths[4], linestyle='-', marker='v', color=color1_dark, label='Recalculations')
+    plt.plot(lengths[0], lengths[5], linestyle='-', marker='v', color=color2_dark, label='P')
+    plt.ylabel('')
+    plt.xlabel('Elements sending exception')
+    plt.title('Comparison with ' + str(tree_size) + ' elements')
+
+    plt.legend(loc=u'upper right')
+    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    mplot.pngname = "comparison_exception_recalc_" +str(tree_size)+".png"
     mplot.plotEnd()
 
 
@@ -133,5 +132,7 @@ mplot = MPlot()
 write_file = True
 mplot.show_fig = False
 
-for size in [128, 16384, 131072]:
+#for size in [128, 2048, 16384]:
+for size in [128, 2048, 4096]:
+#for size in [128]:
     plot_comparison(size)
