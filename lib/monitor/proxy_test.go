@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 )
 
 func TestProxy(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
@@ -82,7 +81,7 @@ func TestProxy(t *testing.T) {
 }
 
 func TestReadyProxy(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)

@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/satori/go.uuid"
 )
@@ -23,7 +22,7 @@ func init() {
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
@@ -45,7 +44,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 }
 
 func TestNodeChannelCreate(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 
@@ -83,7 +82,7 @@ func TestNodeChannelCreate(t *testing.T) {
 }
 
 func TestNodeChannel(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 
@@ -122,7 +121,7 @@ func TestNodeChannel(t *testing.T) {
 
 // Test instantiation of Node
 func TestNewNode(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
@@ -150,7 +149,7 @@ func TestNewNode(t *testing.T) {
 }
 
 func TestProtocolChannels(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1, h2 := SetupTwoHosts(t, true)
@@ -180,7 +179,7 @@ func TestProtocolChannels(t *testing.T) {
 }
 
 func TestProtocolHandlers(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
@@ -213,7 +212,7 @@ func TestProtocolHandlers(t *testing.T) {
 }
 
 func TestMsgAggregation(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
@@ -254,7 +253,7 @@ func TestMsgAggregation(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
@@ -277,7 +276,7 @@ func TestFlags(t *testing.T) {
 }
 
 func TestSendLimitedTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenBigTree(7, 1, 2, true, true)

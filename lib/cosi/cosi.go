@@ -1,3 +1,6 @@
+// CoSi is the Collective Signing implementation according to the paper of
+// Bryan Ford:
+// http://arxiv.org/pdf/1503.08768v1.pdf
 package cosi
 
 import (
@@ -9,8 +12,6 @@ import (
 )
 
 // Cosi is the struct that implements the basic cosi.
-// According to the paper of Bryan Ford :
-// http://arxiv.org/pdf/1503.08768v1.pdf
 type Cosi struct {
 	// Suite used
 	suite abstract.Suite

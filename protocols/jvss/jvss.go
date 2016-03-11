@@ -1,9 +1,10 @@
+// Joint Verification Secret Sharing, based on the Shamir Secret Sharing
+// algorithm.
 package jvss
 
 import (
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
@@ -13,8 +14,6 @@ import (
 	"hash"
 	"sync"
 )
-
-// SDA-based JVSS (a port of app/shamir)
 
 // JVSS Protocol Instance structure holding the information for a long-term JVSS
 // signing mechanism
@@ -392,8 +391,8 @@ func (jv *JVSSProtocol) handleRequestSecret(requestBuff *RequestBuffer) (*Reques
 
 func (jv *JVSSProtocol) newDeal() *poly.Deal {
 
-	dealKey := cliutils.KeyPair(jv.Node.Suite())
-	deal := new(poly.Deal).ConstructDeal(&dealKey, &jv.key, jv.info.T, jv.info.R, jv.publicList)
+	dealKey := config.NewKeyPair(jv.Node.Suite())
+	deal := new(poly.Deal).ConstructDeal(dealKey, &jv.key, jv.info.T, jv.info.R, jv.publicList)
 	dbg.Lvl4("Finished new deal")
 	return deal
 }

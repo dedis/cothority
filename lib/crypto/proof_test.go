@@ -1,10 +1,9 @@
-package proof
+package crypto_test
 
 import (
 	"crypto/sha256"
+	"github.com/dedis/cothority/lib/crypto"
 	"testing"
-
-	"github.com/dedis/cothority/lib/hashid"
 )
 
 func TestPath(t *testing.T) {
@@ -13,7 +12,7 @@ func TestPath(t *testing.T) {
 	hash := newHash()
 	n := 13
 
-	leaves := make([]hashid.HashId, n)
+	leaves := make([]crypto.HashId, n)
 	for i := range leaves {
 		leaves[i] = make([]byte, hash.Size())
 		for j := range leaves[i] {
@@ -23,7 +22,7 @@ func TestPath(t *testing.T) {
 		// fmt.Println("leaf", i, ":", leaves[i])
 	}
 
-	root, proofs := ProofTree(newHash, leaves)
+	root, proofs := crypto.ProofTree(newHash, leaves)
 	for i := range proofs {
 		if proofs[i].Check(newHash, root, leaves[i]) == false {
 			t.Error("check failed at leaf", i)
@@ -40,7 +39,7 @@ func TestPathLong(t *testing.T) {
 	hash := newHash()
 	n := 100 // takes 6 secons
 	for k := 0; k < n; k++ {
-		leaves := make([]hashid.HashId, k)
+		leaves := make([]crypto.HashId, k)
 		for i := range leaves {
 			leaves[i] = make([]byte, hash.Size())
 			for j := range leaves[i] {
@@ -48,7 +47,7 @@ func TestPathLong(t *testing.T) {
 			}
 		}
 
-		root, proofs := ProofTree(newHash, leaves)
+		root, proofs := crypto.ProofTree(newHash, leaves)
 		for i := range proofs {
 			if proofs[i].Check(newHash, root, leaves[i]) == false {
 				t.Error("check failed at leaf", i)

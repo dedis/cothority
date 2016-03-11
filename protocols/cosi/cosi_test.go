@@ -4,14 +4,13 @@ import (
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"testing"
 	"time"
 )
 
 func TestCosi(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	local := sda.NewLocalTest()

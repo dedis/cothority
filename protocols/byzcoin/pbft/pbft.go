@@ -1,3 +1,4 @@
+// Practical Byzantine Fault Tolerance with some simplifications.
 package pbft
 
 import (

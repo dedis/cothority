@@ -5,8 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/broadcast"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/protocols/manage"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
@@ -78,7 +78,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	if err != nil {
 		dbg.Error(err)
 	}
-	proto, _ := broadcast.NewBroadcastRootProtocol(node)
+	proto, _ := manage.NewBroadcastRootProtocol(node)
 	node.SetProtocolInstance(proto)
 	// channel to notify we are done
 	broadDone := make(chan bool)

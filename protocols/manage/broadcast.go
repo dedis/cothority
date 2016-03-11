@@ -1,4 +1,5 @@
-package broadcast
+// Sends a message to all nodes so that the connections are set up
+package manage
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
