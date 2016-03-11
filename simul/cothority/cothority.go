@@ -1,4 +1,7 @@
 // The simulation cothority used for all protocols.
+// This should not be used stand-alone and is only for
+// the simulations. It loads the simulation-file, initialises all
+// necessary hosts and starts the simulation on the root-node.
 package main
 
 import (
