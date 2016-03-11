@@ -47,9 +47,6 @@ func main() {
 
 	scs, err := sda.LoadSimulationConfig(".", hostAddress)
 	measures := make([]*monitor.CounterIOMeasure, len(scs))
-	for i := range measures {
-		measures[i] = monitor.NewCounterIOMeasure("bandwidth", scs[i].Host)
-	}
 	if err != nil {
 		// We probably are not needed
 		dbg.Lvl2(err)
@@ -64,6 +61,7 @@ func main() {
 	for i, sc := range scs {
 		// Starting all hosts for that server
 		host := sc.Host
+		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
 		host.ListenNoblock()
 		host.StartProcessMessages()
