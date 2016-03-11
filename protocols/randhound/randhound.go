@@ -189,8 +189,8 @@ func (rh *RandHound) HandleI2(i2 WI2) error {
 	// Construct deal
 	longPair := config.KeyPair{
 		rh.Node.Suite(),
-		rh.Node.Public(),  // TODO: Node should have a Public() and a Private()
-		rh.Node.Private(), // TODO: the Private() function was introduced for RandHound only! Mabye there is a better solution...
+		rh.Node.Public(),
+		rh.Node.Private(),
 	}
 	secretPair := config.NewKeyPair(rh.Node.Suite())
 	_, insurers := rh.chooseInsurers(rh.Peer.i2.Rc, rh.Peer.Rs, rh.Peer.self)

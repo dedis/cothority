@@ -65,7 +65,7 @@ type R3Resp struct {
 }
 
 // TODO: instead of re-transmitting the full vector of R2 messages, just form a
-// bit-vector that indicates which of the previously tranmitted R2 messages are
+// bit-vector that indicates which of the previously transmitted R2 messages are
 // good/bad
 type I4 struct {
 	SID []byte // Session identifier
