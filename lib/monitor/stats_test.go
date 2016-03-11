@@ -40,7 +40,7 @@ func TestDataFilterFilter(t *testing.T) {
 
 func TestStatsUpdate(t *testing.T) {
 	rc := make(map[string]string)
-	rc["machines"] = "2"
+	rc["servers"] = "2"
 	rc["hosts"] = "2"
 	stats := NewStats(rc)
 
@@ -57,7 +57,7 @@ func TestStatsUpdate(t *testing.T) {
 func TestStatsOrder(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
+	m["servers"] = "1"
 	m["hosts"] = "1"
 	m["bf"] = "2"
 	// create stats
@@ -85,7 +85,7 @@ func TestStatsOrder(t *testing.T) {
 func TestStatsAverage(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
+	m["servers"] = "1"
 	m["hosts"] = "1"
 	m["bf"] = "2"
 	// create stats
@@ -119,7 +119,7 @@ func TestStatsAverage(t *testing.T) {
 func TestStatsAverageFiltered(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
-	m["machines"] = "1"
+	m["servers"] = "1"
 	m["hosts"] = "1"
 	m["bf"] = "2"
 	// create the filter entry
