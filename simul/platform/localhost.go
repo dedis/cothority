@@ -59,11 +59,11 @@ type Localhost struct {
 }
 
 // Configure various
-func (d *Localhost) Configure() {
+func (d *Localhost) Configure(pc *PlatformConfig) {
 	pwd, _ := os.Getwd()
 	d.runDir = pwd + "/platform/localhost"
 	d.localDir = pwd
-	d.debug = dbg.DebugVisible()
+	d.debug = pc.Debug
 	d.running = false
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
@@ -74,12 +74,14 @@ func (d *Localhost) Configure() {
 }
 
 // Will build the application
-func (d *Localhost) Build(build string) error {
+func (d *Localhost) Build(build string, arg ...string) error {
 	src := "./cothority"
 	dst := d.runDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine
-	res, err := cliutils.Build(src, dst, runtime.GOARCH, runtime.GOOS)
+	res, err := cliutils.Build(src, dst,
+		runtime.GOARCH, runtime.GOOS,
+		arg...)
 	if err != nil {
 		dbg.Fatal("Error while building for localhost (src", src, ", dst", dst, ":", res)
 	}

@@ -1,5 +1,5 @@
 Simulation = "CoSi"
-Servers = 32
+Servers = 16
 Bf = 8
 Rounds = 10
 CloseWait = 6000
