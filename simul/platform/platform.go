@@ -188,3 +188,16 @@ func (r *RunConfig) Clone() *RunConfig {
 	}
 	return rc
 }
+
+// Prints out a nice string
+func (r *RunConfig) String() string {
+	fields := []string{"simulation", "servers", "hosts", "bf", "depth", "rounds"}
+	var ret string
+	for _, f := range fields {
+		v := r.Get(f)
+		if v != "" {
+			ret = fmt.Sprintf("%s %s:%s", ret, f, v)
+		}
+	}
+	return ret
+}
