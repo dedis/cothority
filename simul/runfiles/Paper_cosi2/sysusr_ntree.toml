@@ -1,0 +1,16 @@
+Servers = 5
+Simulation = "NaiveTreeSimulation"
+Message = "Hello Ntree & Naive"
+Rounds = 10
+Depth = 3
+
+BF
+8
+16
+32
+64
+128
+256
+512
+1024
+2048

@@ -58,6 +58,43 @@ def plotCoSi():
     mplot.plotEnd()
 
 
+# Plots a Cothority and a JVSS run with regard to their averages. Supposes that
+# the last two values from JVSS are off-grid and writes them with arrows
+# directly on the plot
+def plotCoSiSysUser():
+    mplot.plotPrepareLogLog()
+    cosi_old, cosi_3, jvss, naive_cosi, ntree_cosi = \
+        read_csvs('cosi_old', 'sysusr_cosi', 'jvss', 'naive_cosi', 'sysusr_ntree')
+    plot_show('comparison_sysusr')
+
+    ymin = 0.05
+    bar_jvss, jvss_sys, jvss_usr = mplot.plotStackedBarsHatched(jvss, "round_system", "round_user", "JVSS", color2_light,
+                                                      ymin, delta_x=-2)
+
+    bar_naive, na_sys, na_usr = mplot.plotStackedBarsHatched(naive_cosi, "round_system", "round_user", "Naive", color3_light,
+                                                     ymin, delta_x=-1, limit_values=7)
+
+    bar_ntree, nt_sys, nt_usr = mplot.plotStackedBarsHatched(ntree_cosi, "round_system", "round_user", "Ntree", color4_light,
+                                                     ymin, delta_x=0, limit_values=7)
+
+    bar_cothority, co_sys, co_usr = mplot.plotStackedBarsHatched(cosi_3, "round_system", "round_user", "Cothority",
+                                                         color1_light, ymin, delta_x=1, limit_values=11)
+
+
+    ymax = 7
+    xmax = 3192
+    plt.ylim(ymin, ymax)
+    plt.xlim(1.5, xmax)
+
+    usert = mpatches.Patch(color='white', ec='black', label='User time', hatch='//')
+    syst = mpatches.Patch(color='white', ec='black', label='System time')
+
+    plt.legend(handles=[bar_jvss, bar_naive, bar_ntree, bar_cothority, usert, syst], loc=u'upper left')
+    ax = plt.axes()
+    #ax.set_xticks([16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
+    mplot.plotEnd()
+
+
 # Plots the branching factor
 def plotBF():
     mplot.plotPrepareLogLog(0, 0)
@@ -66,7 +103,6 @@ def plotBF():
 
     cbf = mplot.plotMMA(cosi_bf, 'round_wall', color1_light, 4,
                        dict(label='CoSi 2048', linestyle='-', marker='o', color=color1_dark, zorder=5))
-    print cosi_bf.columns['depth']
     plt.plot(cosi_bf.x, cosi_bf.columns['depth'], linestyle='-', marker='v', color=color2_dark,
                      label='CoSi depth')
 
@@ -149,6 +185,7 @@ def read_csvs(*values):
     return read_csvs_xname("hosts", *values)
 
 # Call all plot-functions
-#plotCoSi()
+plotCoSi()
+plotCoSiSysUser()
 plotBF()
-#plotOver()
+plotOver()
