@@ -16,7 +16,7 @@ To have a simple plot of the round-time, you need to have matplotlib installed
 in version 1.5.1.
 	matplotlib/plot.py test_data/test_cosi.csv
 If plot.py complains about missing matplotlib-library, you can install it using
-	sudo easy_install \"matplotlib == 1.5.1\"
+	sudo easy_install "matplotlib == 1.5.1"
 at least on a Mac.
 
 # Writing your own protocol
