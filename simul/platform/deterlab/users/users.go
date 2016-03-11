@@ -1,21 +1,5 @@
-// deter is the deterlab process that should run on the boss node
-//
-// It spawns multiple timestampers and clients, while constructing
-// the topology defined on tree.json. It assumes that hosts.txt has
-// the entire list of hosts to run timestampers on and that the final
-// host is the designated logging server.
-//
-// The overall topology that is created is defined by tree.json.
-// The port layout for each node, however, is specified here.
-// tree.json will assign each node a port p. This is the port
-// that each singing node is listening on. The timestamp server
-// to which clients connect is listneing on port p+1. And the
-// pprof server for each node is listening on port p+2. This
-// means that in order to debug each client, you can forward
-// the p+2 port of each node to your localhost.
-//
-// In the future the loggingserver will be connecting to the
-// servers on the pprof port in order to gather extra data.
+// This is run on the users.deterlab.net server and will clean up the
+// servers and then run 'cothority' on every server.
 package main
 
 import (

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/proof"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
@@ -19,7 +19,7 @@ type TransactionAnnouncment struct {
 	Val blkparser.Tx // Trasaction to be included in a block
 }
 
-// NOT: In order to decoe correctly the Proof, we need to the get the suite
+// NOTE: In order to decode correctly the proof, we need to the get the suite
 // somehow. We could just simply add it as a field and not (un)marhsal it
 // We'd just make sure that the suite is setup before unmarshaling.
 type BlockReply struct {
@@ -29,7 +29,7 @@ type BlockReply struct {
 	Block         Block           // The Block including a number of transactions
 	MerkleRoot    []byte          // root of the merkle tree
 	PrfLen        int             // Length of proof
-	Prf           proof.Proof     // Merkle proof of value
+	Prf           crypto.Proof    // Merkle proof of value
 	Response      abstract.Secret // Aggregate response
 	Challenge     abstract.Secret // Aggregate challenge
 	AggCommit     abstract.Point  // Aggregate commitment key

@@ -1,3 +1,8 @@
+// Provides some crypto-shortcuts: Schnorr signature and a Hash-function.
+// See https://en.wikipedia.org/wiki/Schnorr_signature
+//
+// It provides a way to sign a message using a private key and to verify the
+// signature using the public counter part.
 package crypto
 
 import (
@@ -7,11 +12,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
-
-// This file provides some utilities to use Schnorr signature scheme
-// https://en.wikipedia.org/wiki/Schnorr_signature
-// It provides a way to sign a message using a private key and to verify the
-// signature using the public counter part.
 
 // SchnorrSig is a signature created using the Schnorr Signature scheme.
 type SchnorrSig struct {

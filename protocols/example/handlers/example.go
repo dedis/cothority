@@ -1,3 +1,4 @@
+// Holds a message that is passed to all children, using handlers.
 package example_handlers
 
 import (
