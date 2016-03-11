@@ -231,7 +231,7 @@ func TestTcpCounterIO(t *testing.T) {
 	}
 	<-done
 	// verify the amount of bytes read / written
-	if h1.Written() != h2.Read() || h2.Read() != c2.Read() {
+	if h1.Written() == 0 || h1.Written() != h2.Read() || h2.Read() == 0 || h2.Read() != c2.Read() {
 		t.Fatal("stg is wrong with CounterIO implementation of TcpConn / TcpHost")
 	}
 

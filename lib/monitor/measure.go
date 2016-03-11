@@ -209,7 +209,7 @@ func send(v interface{}) error {
 }
 
 // Prints a message to end the logging.
-func End() {
+func EndAndCleanup() {
 	send(NewSingleMeasure("end", 0))
 	StopSink()
 }

@@ -249,14 +249,19 @@ func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
 	statics := make([]string, 0)
 	for k, v := range rc {
 		// pass the ones we already registered
+		var alreadyRegistered bool
 		for _, def := range defaults {
 			if k == def {
-				continue
+				alreadyRegistered = true
+				break
 			}
+		}
+		if alreadyRegistered {
+			continue
 		}
 		// store it
 		if i, err := strconv.Atoi(v); err != nil {
-			dbg.Error("Could not parse the value", k, "from runconfig")
+			dbg.Error("Could not parse the value", k, "from runconfig (v=", v, ")")
 			continue
 		} else {
 			s.static[k] = i
@@ -268,6 +273,7 @@ func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
 	// append them to the defaults one
 	s.staticKeys = append(s.staticKeys, statics...)
 
+	dbg.Print("Stats.static =>", s.static)
 	// let the filter figure out itself what it is supposed to be doing
 	s.filter = NewDataFilter(rc)
 }

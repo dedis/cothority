@@ -137,6 +137,9 @@ type SecureTcpHost struct {
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string
+	// list of all connections this host has opened
+	conns     []*SecureTcpConn
+	connMutex sync.Mutex
 }
 
 // SecureTcpConn is a secured tcp connection using Entity as identity

@@ -52,6 +52,7 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	// XXX Are we sure we need this mutex here ?
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	t.peers[name] = c
@@ -92,7 +93,6 @@ func (t *TcpHost) Close() error {
 	t.listeningLock.Unlock()
 	// we are NOT listening
 	if !listening {
-		//	fmt.Println("tcphost.Close() without listening")
 		return nil
 	}
 	var stop bool
@@ -227,6 +227,9 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 			stc.Close()
 			return
 		}
+		st.connMutex.Lock()
+		st.conns = append(st.conns, stc)
+		st.connMutex.Unlock()
 		go fn(stc)
 	}
 	var addr string
@@ -274,12 +277,40 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 		return nil, fmt.Errorf("Could not connect to any address tied to this Entity")
 	}
 	// Exchange and verify entities
-	return &secure, secure.negotiateOpen(e)
+	err := secure.negotiateOpen(e)
+	if err == nil {
+		st.connMutex.Lock()
+		st.conns = append(st.conns, &secure)
+		st.connMutex.Unlock()
+	}
+	return &secure, err
 }
 
 // String returns a string identifying that host
 func (st *SecureTcpHost) String() string {
 	return st.workingAddress
+}
+
+// Written implements the CounterIO interface
+func (st *SecureTcpHost) Written() uint64 {
+	st.connMutex.Lock()
+	defer st.connMutex.Unlock()
+	var b uint64
+	for _, c := range st.conns {
+		b += c.Written()
+	}
+	return b
+}
+
+// Read implements the CounterIO interface
+func (st *SecureTcpHost) Read() uint64 {
+	st.connMutex.Lock()
+	defer st.connMutex.Unlock()
+	var b uint64
+	for _, c := range st.conns {
+		b += c.Read()
+	}
+	return b
 }
 
 // Remote returns the name of the peer at the end point of
@@ -484,7 +515,6 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	if err := sc.exchangeEntity(); err != nil {
 		return err
 	}
-
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().Id != e.Id {
 		dbg.Lvl3("Wanted to connect to", e, e.Id, "but got", sc.Entity(), sc.Entity().Id)
@@ -493,4 +523,14 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	}
 
 	return nil
+}
+
+// Read() implements the CounterIO interface
+func (sc *SecureTcpConn) Read() uint64 {
+	return sc.TcpConn.Read()
+}
+
+// Written() implements the CounterIO interface
+func (sc *SecureTcpConn) Written() uint64 {
+	return sc.TcpConn.Written()
 }

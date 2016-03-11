@@ -176,7 +176,8 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
 	CheckHosts(rc)
-	rs := monitor.NewStats(rc.Map())
+	rc.Delete("simulation")
+	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
 
 	if err := deployP.Deploy(rc); err != nil {

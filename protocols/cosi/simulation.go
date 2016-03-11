@@ -19,7 +19,6 @@ func init() {
 
 type CoSiSimulation struct {
 	sda.SimulationBFTree
-	*sda.SimulationConfig
 }
 
 func NewCoSiSimulation(config string) (sda.Simulation, error) {
@@ -35,7 +34,6 @@ func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConf
 	sim := new(sda.SimulationConfig)
 	cs.CreateEntityList(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
-	cs.SimulationConfig = sim
 	return sim, err
 }
 
@@ -44,7 +42,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
-	bandwidth := monitor.NewCounterIOMeasure("bandwidth", cs.Host)
+	bandwidth := monitor.NewCounterIOMeasure("bandwidth", config.Host)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")

@@ -75,11 +75,14 @@ func TestHostClose2(t *testing.T) {
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
+// also tests for the counterIO interface that it works well
 func TestHostMessaging(t *testing.T) {
-	defer testutil.AfterTest(t)
+	//	defer testutil.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	h1, h2 := SetupTwoHosts(t, false)
+	bw1 := h1.Written()
+	br2 := h2.Read()
 	msgSimple := &SimpleMessage{3}
 	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
@@ -89,6 +92,15 @@ func TestHostMessaging(t *testing.T) {
 	decoded := testMessageSimple(t, msg)
 	if decoded.I != 3 {
 		t.Fatal("Received message from h2 -> h1 is wrong")
+	}
+
+	written := h1.Written() - bw1
+	read := h2.Read() - br2
+	if written == 0 || read == 0 || written != read {
+		t.Logf("Before => bw1 = %d vs br2 = %d", bw1, br2)
+		t.Logf("Written = %d, Read = %d", written, read)
+		t.Logf("h1.Written() %d vs h2.Read() %d", h1.Written(), h2.Read())
+		t.Fatal("Something is wrong with Host.CounterIO")
 	}
 
 	h1.Close()
