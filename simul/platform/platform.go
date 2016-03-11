@@ -18,9 +18,9 @@ import (
 // implement this interface !
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
-	Configure()
-	// Builds all necessary binaries
-	Build(string) error
+	Configure(*PlatformConfig)
+	// Build builds all necessary binaries
+	Build(build string, arg ...string) error
 	// Makes sure that there is no part of the application still running
 	Cleanup() error
 	// Copies the binaries to the appropriate directory/machines, together with
@@ -31,6 +31,13 @@ type Platform interface {
 	Start(args ...string) error
 	// Waits for the application to quit
 	Wait() error
+}
+
+// PlatformConfig is passed to Platform.Config and prepares the platform for
+// specific system-wide configurations
+type PlatformConfig struct {
+	MonitorPort int
+	Debug       int
 }
 
 var deterlab string = "deterlab"
