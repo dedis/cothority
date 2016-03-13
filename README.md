@@ -106,22 +106,3 @@ A textbook Shamir signing for baseline-comparison against the collective signing
 ## RandHound - Verifiable Randomness Scavenging Protocol 
 
 RandHound is a novel protocol for generating strong, bias-resistant, public random numbers in a distributed way and produces in parallel a proof to convince third parties that the randomness is correct and unbiased provided a threshold of servers are non-malicious.
-
-# Applications
-
-## CoNode
-
-You can find more information about CoNode in the corresponding [README](https://github.com/DeDiS/cothority/blob/development/app/conode/README.md).
-
-## Timestamping
-
-Sets up servers that listen for client-requests, collects all requests and hands them to a root-node for timestamping.
-
-## Signing
-
-A simple mechanism that is capable of receiving messages and returning their signatures.
-
-## RandHound
-
-Test-implementation of a randomization-protocol based on cothority.
-
