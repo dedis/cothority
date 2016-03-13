@@ -61,7 +61,7 @@ To run a simple signing check on localhost, execute the following commands:
 $ go get ./...
 $ cd simul
 $ go build
-$ ./simul runfiles/sign_single.toml
+$ ./simul runfiles/test_cosi.toml
 ```
 
 ## DeterLab
