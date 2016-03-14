@@ -19,6 +19,9 @@ func init() {
 
 type CoSiSimulation struct {
 	sda.SimulationBFTree
+
+	// See https://github.com/dedis/cothority/issues/260
+	CheckResponse int
 }
 
 func NewCoSiSimulation(config string) (sda.Simulation, error) {
@@ -52,6 +55,8 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		}
 		// the protocol itself
 		proto := node.ProtocolInstance().(*ProtocolCosi)
+		// verification check
+		proto.verifyResponse = cs.CheckResponse
 		// give the message to sign
 		proto.SigningMessage(msg)
 		// tell us when it is done
