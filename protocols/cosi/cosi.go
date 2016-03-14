@@ -29,7 +29,7 @@ type ProtocolCosi struct {
 	// Public because we will need it from other protocols.
 	Cosi *cosi.Cosi
 	// the message we want to sign typically given by the Root
-	message []byte
+	Message []byte
 	// The channel waiting for Announcement message
 	announce chan chanAnnouncement
 	// the channel waiting for Commitment message
@@ -90,7 +90,7 @@ func NewProtocolCosi(node *sda.Node) (*ProtocolCosi, error) {
 // (vanilla version of the protocol where no contributions are done)
 func NewRootProtocolCosi(msg []byte, node *sda.Node) (*ProtocolCosi, error) {
 	pc, err := NewProtocolCosi(node)
-	pc.message = msg
+	pc.Message = msg
 	return pc, err
 }
 
@@ -124,7 +124,7 @@ func (pc *ProtocolCosi) Dispatch() error {
 
 // StartAnnouncement will start a new announcement.
 func (pc *ProtocolCosi) StartAnnouncement() error {
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartAnnouncement (msg=", pc.message)
+	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartAnnouncement (msg=", pc.Message)
 	// First check the hook
 	if pc.announcementHook != nil {
 		return pc.announcementHook(nil)
@@ -145,7 +145,7 @@ type AnnouncementHook func(in *CosiAnnouncement) error
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
 func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
-	dbg.Lvl3("ProtocolCosi.HandleAnnouncement (msg=", pc.message)
+	dbg.Lvl3("ProtocolCosi.HandleAnnouncement (msg=", pc.Message)
 	// If we have a hook on announcement call the hook
 	// the hook is responsible to call pc.Cosi.Announce(in)
 	if pc.announcementHook != nil {
@@ -246,10 +246,10 @@ func (pc *ProtocolCosi) StartChallenge() error {
 	//return pc.challengeHook(nil)
 	/*}*/
 
-	if pc.message == nil {
-		return fmt.Errorf("%s StartChallenge() called without message (=%v)", pc.Node.Name(), pc.message)
+	if pc.Message == nil {
+		return fmt.Errorf("%s StartChallenge() called without message (=%v)", pc.Node.Name(), pc.Message)
 	}
-	challenge, err := pc.Cosi.CreateChallenge(pc.message)
+	challenge, err := pc.Cosi.CreateChallenge(pc.Message)
 	if err != nil {
 		return err
 	}
@@ -364,8 +364,8 @@ func (pc *ProtocolCosi) Cleanup() {
 
 // SigningMessage simply set the message to sign for this round
 func (pc *ProtocolCosi) SigningMessage(msg []byte) {
-	pc.message = msg
-	dbg.Lvl2(pc.Node.Name(), "Root will sign message=", pc.message)
+	pc.Message = msg
+	dbg.Lvl2(pc.Node.Name(), "Root will sign message=", pc.Message)
 }
 
 // TODO Still see if it is relevant...

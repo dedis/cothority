@@ -39,19 +39,13 @@ func TestCosi(t *testing.T) {
 		}
 		done <- true
 	}
-	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
-		if root == nil {
-			var err error
-			root, err = NewRootProtocolCosi(msg, node)
-			root.RegisterDoneCallback(doneFunc)
-			return root, err
-		}
-		return NewProtocolCosi(node)
-	}
 
-	sda.ProtocolRegisterName("ProtocolCosi", fn)
 	// Start the protocol
-	_, err := local.StartNewNodeName("ProtocolCosi", tree)
+	node, err := local.CreateNewNodeName("CoSi", tree)
+	root = &node.ProtocolInstance().(ProtocolCosi)
+	root.Message = msg
+	root.RegisterDoneCallback(doneFunc)
+	node.Start()
 	if err != nil {
 		t.Fatal(err)
 	}
