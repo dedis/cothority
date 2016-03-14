@@ -106,9 +106,13 @@ func (rh *RandHound) sendToChildren(msg interface{}) error {
 // sends it to  its children.
 func (rh *RandHound) Start() error {
 	rh.Leader.i1 = I1{
-		SID: rh.Leader.SID,
-		GID: rh.Leader.GID,
-		HRc: rh.Hash(rh.Leader.Rc),
+		SID:     rh.Leader.SID,
+		GID:     rh.Leader.GID,
+		HRc:     rh.Hash(rh.Leader.Rc),
+		T:       rh.T,
+		R:       rh.R,
+		N:       rh.N,
+		Purpose: rh.Purpose,
 	}
 	return rh.sendToChildren(&rh.Leader.i1)
 }
@@ -125,6 +129,10 @@ func (rh *RandHound) HandleI1(i1 WI1) error {
 		}
 	}
 	rh.Peer.i1 = i1.I1
+	rh.T = i1.I1.T
+	rh.R = i1.I1.R
+	rh.N = i1.I1.N
+	rh.Purpose = i1.I1.Purpose
 
 	// TODO: verify i1 contents
 

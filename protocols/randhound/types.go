@@ -22,9 +22,13 @@ type Group struct {
 }
 
 type I1 struct {
-	SID []byte // Session identifier: hash of session info block
-	GID []byte // Group identifier: hash of group parameter block
-	HRc []byte // Client's trustee-randomness commit
+	SID     []byte // Session identifier: hash of session info block
+	GID     []byte // Group identifier: hash of group parameter block
+	HRc     []byte // Client's trustee-randomness commit
+	T       int
+	R       int
+	N       int
+	Purpose string
 	//S   []byte // Full session info block (optional)
 	//G   []byte // Full group parameter block (optional)
 }

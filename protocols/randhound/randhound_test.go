@@ -36,6 +36,8 @@ func TestRandHound(t *testing.T) {
 	rh.N = N
 	rh.Purpose = p
 
+	node.Start()
+
 	bytes := make([]byte, 32)
 	select {
 	case _ = <-rh.Done:
