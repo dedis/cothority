@@ -37,9 +37,9 @@ See Golang's documentation on how-to
 setting up a GOPATH environment variable). 
     
 # Simulation
-It is very easy to start a simulation of the provided (or your own) 
-protocols either on localhost or, if you have access, on 
-[DeterLab](https://www.isi.deterlab.net).
+Starting a simulation of one the provided protocols (or your own) either 
+on localhost or, if you have access, on [DeterLab](https://www.isi.deterlab.net) 
+is straight forward and described in the following sub-sections.
 
 ## Localhost
 To run a simple signing check on localhost, execute the following 
@@ -54,8 +54,8 @@ $ ./simul runfiles/test_cosi.toml
 
 ## DeterLab
 
-For large scale simulations you can run simulations on DeterLab. Find 
-more information on how to use [DeterLab](Deterlab.md)
+For more realistic, large scale simulations you can use DeterLab. 
+Find more information on how to use [DeterLab here](Deterlab.md).
 
 # Protocols
 
@@ -118,4 +118,5 @@ The directory-structure is as follows:
 * [`lib/sda/`](lib/sda/): basic definition of our framework
 * [`protocols/`](protocols/): one directory per protocol, holds both the 
 definition and eventual initialisation necessary for a simulation
-* [`simul/`](simul/): used for running simulations on localhost and DeterLab
+* [`simul/`](simul/): used for running simulations on localhost and 
+DeterLab
