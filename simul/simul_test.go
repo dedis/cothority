@@ -1,12 +1,9 @@
 package main
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
 	"strconv"
 	"testing"
-	"time"
 )
 
 func TestBuild(t *testing.T) {
