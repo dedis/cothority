@@ -87,11 +87,11 @@ The JVSS protocol implements Schnorr signing using joint
 ## Naive and NTree
 
 Similar to JVSS these two protocols are included to compare their 
-performance with CoSi's. 
+scalability with CoSi's. 
 In the naive approach a leader simply collects standard individual 
 signatures of all participants. 
-NTree is the same protocol but using a tree topology for aggregating 
-the individual signatures.
+NTree is the same protocol but using a tree (n-ary) topology for 
+aggregating the individual signatures.
 
 # SDA framework
 
