@@ -34,15 +34,7 @@ In order to build (and run) the simulations you need to install
 [Golang](https://golang.org/dl/).
 See Golang's documentation on how-to 
 [install and configure](https://golang.org/doc/install) Go (including 
-setting up a GOPATH environment variable).
-
-### Main Dependencies 
-
-* [dedis/crypto](https://github.com/dedis/crypto)
-* [dedis/protobuf](https://github.com/dedis/protobuf)
-
-* If you are interested in a full for a full list of dependencies
-`go list -f '{{ join .Deps  "\n"}}' .` in the top-level project directory
+setting up a GOPATH environment variable). 
     
 # Simulation
 It is very easy to start a simulation of the provided (or your own) 
@@ -63,7 +55,7 @@ $ ./simul runfiles/test_cosi.toml
 ## DeterLab
 
 For large scale simulations you can run simulations on DeterLab. Find 
-more information [here](Deterlab.md)
+more information on how to use [DeterLab](Deterlab.md)
 
 # Protocols
 
@@ -78,25 +70,30 @@ verification cost comparable to an individual signature, but compactly
 attests that both the leader and perhaps many witnesses observed and 
 agreed to sign the statement.
 
-## JVSS - Joint Verifiable Secret Sharing
-
-A textbook Shamir signing for baseline-comparison against the collective 
-signing protocol.
-
 ## RandHound - Verifiable Randomness Scavenging Protocol 
 
 RandHound is a novel protocol for generating strong, bias-resistant, 
 public random numbers in a distributed way and produces in parallel a 
 proof to convince third parties that the randomness is correct and 
-unbiased provided a threshold of servers are non-malicious.
+unbiased, provided a threshold of servers are non-malicious.
+
+## JVSS - Joint Verifiable Secret Sharing
+
+The JVSS protocol implements Schnorr signing using joint 
+[verifiable](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=4568297&tag=1) 
+[secret sharing](http://link.springer.com/chapter/10.1007%2F3-540-68339-9_17).
 
 
-## Distribution
-* Planned:
-    * Binary standalone application
-    * Docker image
+## Naive and NTree
 
-## SDA framework
+Similar to JVSS these two protocols are included to compare their 
+performance with CoSi's. 
+In the naive approach a leader simply collects standard individual 
+signatures of all participants. 
+NTree is the same protocol but using a tree topology for aggregating 
+the individual signatures.
+
+# SDA framework
 
 Core of this repository is a framework for implementing secure, 
 distributed systems. 
