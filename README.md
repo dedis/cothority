@@ -116,9 +116,9 @@ messages are passed between the hosts.
   
 The directory-structure is as follows:
 
-* [`lib/`](lib/) - holding all internally used libraries
-* `lib/sda/` - the basic definition of our framework
-* `protocols/` - one directory per protocol, holds both the definition 
-and eventual initialisation needed for simulation
-* `simul/` - used for running simulations on localhost and DeterLab
-* `dist/` - creates distributable binaries, in .tgz or Docker-format
+* [`lib/`](lib/): contains all internally used libraries
+* [`lib/sda/`](lib/sda/): basic definition of our framework
+* [`protocols/`](protocols/): one directory per protocol, holds both the 
+definition and eventual initialisation necessary for a simulation
+* [`simul/`](simul/): used for running simulations on localhost and DeterLab
+* [`dist/`](dist/): creates distributable binaries, in .tgz or Docker-format
