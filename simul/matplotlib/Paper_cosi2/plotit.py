@@ -89,7 +89,7 @@ def plotBF():
     plt.ylabel('Seconds per round')
     plt.xlabel('Branching factor')
 
-    plt.legend(loc=u'lower right')
+    plt.legend(loc=u'upper right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     mplot.plotEnd()
 
