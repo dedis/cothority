@@ -11,6 +11,7 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/montanaflynn/stats"
+	"sync"
 )
 
 // Stats contains all structures that are related to the computations of stats
@@ -43,6 +44,8 @@ type Stats struct {
 	valuesWritten bool
 	// The filter used to filter out aberrant data
 	filter DataFilter
+	// Mutex for the measurements
+	measureMutex sync.Mutex
 }
 
 // Return a NewStats with some fields extracted from the platform run config
@@ -174,6 +177,8 @@ func AverageStats(stats []Stats) Stats {
 // Update will update the Stats with this given measure
 func (s *Stats) Update(m Measure) {
 	var meas *Measurement
+	s.measureMutex.Lock()
+	defer s.measureMutex.Unlock()
 	meas, ok := s.measures[m.Name]
 	if !ok {
 		// if we already written some values, we can not take new ones
@@ -191,9 +196,11 @@ func (s *Stats) Update(m Measure) {
 // Returns an overview of the stats - not complete data returned!
 func (s *Stats) String() string {
 	var str string
+	s.measureMutex.Lock()
 	for _, v := range s.measures {
 		str += fmt.Sprintf("%v", v)
 	}
+	s.measureMutex.Unlock()
 	return fmt.Sprintf("{Stats: hosts %d, Measures: %s}", s.Hosts, str)
 }
 
