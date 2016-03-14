@@ -1,6 +1,8 @@
 package monitor
 
 import (
+	"bytes"
+	"github.com/dedis/cothority/lib/dbg"
 	"testing"
 	"time"
 )
@@ -21,7 +23,8 @@ func (dm *DummyCounterIO) Tx() uint64 {
 }
 
 func TestCounterIOMeasureRecord(t *testing.T) {
-	setupMonitor(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	mon, _ := setupMonitor(t)
 	dm := &DummyCounterIO{0, 0}
 	// create the counter measure
 	cm := NewCounterIOMeasure("dummy", dm)
@@ -36,22 +39,22 @@ func TestCounterIOMeasureRecord(t *testing.T) {
 		t.Fatal("Record() not working for CounterIOMeasure")
 	}
 
-	// TODO do a normal test with single measure passing by the Monitor to the
-	// Stats and verify if the stats correctly handles it. With CounterIO it
-	// does not even appears... ??
-	/*str := new(bytes.Buffer)*/
-	//stat.WriteHeader(str)
-	//stat.WriteValues(str)
-	//t.Logf("Stats => %s", str)
-	//wr, re := stat.Value("dummy_written"), stat.Value("dummy_read")
-	//if wr == nil || wr.Avg() != 10 {
-	//t.Logf("stats => %v", stat.values)
-	////t.Logf("wr.Avg() = %f", wr.Avg())
-	//t.Fatal("Stats don't have the right value (write)")
-	//}
-	//if re == nil || re.Avg() != 10 {
-	//t.Fatal("Stats don't have the right value (read)")
-	/*}*/
+	// Important otherwise data don't get written down to the monitor yet.
+	time.Sleep(100 * time.Millisecond)
+	str := new(bytes.Buffer)
+	stat := mon.Stats()
+	stat.Collect()
+	stat.WriteHeader(str)
+	stat.WriteValues(str)
+	wr, re := stat.Value("dummy_tx"), stat.Value("dummy_rx")
+	if wr == nil || wr.Avg() != 10 {
+		t.Logf("stats => %v", stat.values)
+		t.Logf("wr.Avg() = %f", wr.Avg())
+		t.Fatal("Stats don't have the right value (write)")
+	}
+	if re == nil || re.Avg() != 10 {
+		t.Fatal("Stats don't have the right value (read)")
+	}
 	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
 }
