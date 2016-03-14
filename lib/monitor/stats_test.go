@@ -3,7 +3,10 @@ package monitor
 import (
 	"bytes"
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestNewDataFilter(t *testing.T) {
@@ -107,4 +110,27 @@ func TestStatsNotWriteUnknownMeasures(t *testing.T) {
 	if bytes.Contains(output, []byte("70")) {
 		t.Error("Stats should not contain any new measurements after first write")
 	}
+}
+
+func TestStatsString(t *testing.T) {
+	rc := map[string]string{"servers": "10", "hosts": "10"}
+	rs := NewStats(rc)
+	m := NewMonitor(rs)
+
+	go func() {
+		if err := m.Listen(); err != nil {
+			dbg.Fatal("Could not Listen():", err)
+		}
+	}()
+
+	ConnectSink("localhost:10000")
+	measure := NewMeasure("test")
+	time.Sleep(time.Millisecond * 100)
+	measure.Measure()
+	time.Sleep(time.Millisecond * 100)
+
+	if strings.Contains(rs.String(), "0.000000") {
+		t.Fatal("The measurement shouldn't contain 0.000000:", rs.String())
+	}
+	m.Stop()
 }

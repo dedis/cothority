@@ -337,24 +337,6 @@ func (t *value) Collect(measure string, df DataFilter) {
 	}
 }
 
-// Average will set the current Value to the average of all Value
-func AverageValue(st ...*value) *value {
-	var t value
-	for _, s := range st {
-		t.min += s.min
-		t.max += s.max
-		t.newM += s.newM
-		t.dev += s.dev
-	}
-	l := float64(len(st))
-	t.min /= l
-	t.max /= l
-	t.newM /= l
-	t.dev /= l
-	t.n = len(st)
-	return &t
-}
-
 // Get the minimum or the maximum of all stored values
 func (t *value) Min() float64 {
 	return t.min
@@ -385,7 +367,25 @@ func (t *value) Header(prefix string) string {
 
 // String returns the min, max, avg and dev of a value
 func (t *value) String() string {
-	return fmt.Sprintf("%f, %f, %f, %f", t.Min(), t.Max(), t.Avg(), t.Dev())
+	return fmt.Sprintf("%v", t.store)
+}
+
+// Average will set the current Value to the average of all Value
+func AverageValue(st ...*value) *value {
+	var t value
+	for _, s := range st {
+		t.min += s.min
+		t.max += s.max
+		t.newM += s.newM
+		t.dev += s.dev
+	}
+	l := float64(len(st))
+	t.min /= l
+	t.max /= l
+	t.newM /= l
+	t.dev /= l
+	t.n = len(st)
+	return &t
 }
 
 // Measurement represents the precise measurement of a specific thing to measure
