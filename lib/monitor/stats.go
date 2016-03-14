@@ -31,8 +31,8 @@ type Stats struct {
 
 	// The filter used to filter out abberant data
 	filter DataFilter
-	// Mutex for the measurements
-	measureMutex sync.Mutex
+	// Mutex for the values
+	valuesMutex sync.Mutex
 }
 
 // NewStrictStats return a NewStats with some fields extracted from the platform run config
@@ -56,6 +56,8 @@ func (s *Stats) init() *Stats {
 func (s *Stats) Update(m *SingleMeasure) {
 	var value *Value
 	var ok bool
+	s.valuesMutex.Lock()
+	defer s.valuesMutex.Unlock()
 	value, ok = s.values[m.Name]
 	if !ok {
 		value = NewValue(m.Name)
@@ -68,6 +70,8 @@ func (s *Stats) Update(m *SingleMeasure) {
 
 // WriteHeader will write the header to the writer
 func (s *Stats) WriteHeader(w io.Writer) {
+	s.valuesMutex.Lock()
+	defer s.valuesMutex.Unlock()
 	// write static  fields
 	var fields []string
 	for _, k := range s.staticKeys {
@@ -87,6 +91,8 @@ func (s *Stats) WriteHeader(w io.Writer) {
 
 // WriteValues will write the values to the specified writer
 func (s *Stats) WriteValues(w io.Writer) {
+	s.valuesMutex.Lock()
+	defer s.valuesMutex.Unlock()
 	// by default
 	s.Collect()
 	// write static fields
@@ -111,6 +117,8 @@ func AverageStats(stats []*Stats) *Stats {
 		return new(Stats)
 	}
 	s := new(Stats).init()
+	s.valuesMutex.Lock()
+	defer s.valuesMutex.Unlock()
 	s.filter = stats[0].filter
 	s.static = stats[0].static
 	s.staticKeys = stats[0].staticKeys
@@ -223,6 +231,8 @@ func (s *Stats) Value(name string) *Value {
 
 // Returns an overview of the stats - not complete data returned!
 func (s *Stats) String() string {
+	s.valuesMutex.Lock()
+	defer s.valuesMutex.Unlock()
 	var str string
 	for _, k := range s.staticKeys {
 		str += fmt.Sprintf("%s = %d", k, s.static[k])
