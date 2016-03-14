@@ -5,20 +5,16 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-const protocolName string = "ProtocolRandHound"
-
 func init() {
-	sda.SimulationRegister("RHSimulation", NewRHSimulation)
-	var T, R, N int = 3, 3, 5           // TODO: extract those values from the .toml file
-	var p string = "RandHound test run" // TODO: extract those values from the .toml file
-	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
-		return NewRandHound(node, T, R, N, p)
-	}
-	sda.ProtocolRegisterName(protocolName, fn)
+	sda.SimulationRegister("RandHound", NewRHSimulation)
 }
 
 type RHSimulation struct {
 	sda.SimulationBFTree
+	T       int
+	R       int
+	N       int
+	Purpose string
 }
 
 func NewRHSimulation(config string) (sda.Simulation, error) {
@@ -40,7 +36,7 @@ func (rh *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig
 func (rh *RHSimulation) Run(config *sda.SimulationConfig) error {
 	//size := config.Tree.Size()
 	//msg := []byte("Test message for RandHound simulation")
-	node, err := config.Overlay.CreateNewNodeName(protocolName, config.Tree)
+	node, err := config.Overlay.CreateNewNodeName("RandHound", config.Tree)
 	if err != nil {
 		return err
 	}

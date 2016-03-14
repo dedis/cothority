@@ -24,19 +24,17 @@ func TestRandHound(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 1)
 
-	// Register RandHound
-	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
-		return randhound.NewRandHound(node, T, R, N, p)
-	}
-	sda.ProtocolRegisterName(name, fn)
-
 	// Start RandHound
 	log.Printf("RandHound - starting")
-	node, err := local.StartNewNodeName(name, tree)
+	node, err := local.CreateNewNodeName(name, tree)
 	if err != nil {
 		t.Fatal("Couldn't start RandHound protocol:", err)
 	}
 	rh := node.ProtocolInstance().(*randhound.RandHound)
+	rh.T = T
+	rh.R = R
+	rh.N = N
+	rh.Purpose = p
 
 	bytes := make([]byte, 32)
 	select {
