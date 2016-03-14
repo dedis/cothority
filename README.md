@@ -116,7 +116,7 @@ messages are passed between the hosts.
   
 The directory-structure is as follows:
 
-* `lib/` - holding all internally used libraries
+* [`lib/`](lib/) - holding all internally used libraries
 * `lib/sda/` - the basic definition of our framework
 * `protocols/` - one directory per protocol, holds both the definition 
 and eventual initialisation needed for simulation
