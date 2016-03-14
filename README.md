@@ -30,8 +30,8 @@ All usage is at your own risk!**
 
 ## Requirements
 
-In order to build (and run) the simulations you need to install 
-[Golang](https://golang.org/dl/).
+In order to build (and run) the simulations you need to install a recent 
+[Golang](https://golang.org/dl/) version (1.5.2+).
 See Golang's documentation on how-to 
 [install and configure](https://golang.org/doc/install) Go (including 
 setting up a GOPATH environment variable). 
@@ -119,4 +119,3 @@ The directory-structure is as follows:
 * [`protocols/`](protocols/): one directory per protocol, holds both the 
 definition and eventual initialisation necessary for a simulation
 * [`simul/`](simul/): used for running simulations on localhost and DeterLab
-* [`dist/`](dist/): creates distributable binaries, in .tgz or Docker-format
