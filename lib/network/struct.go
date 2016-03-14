@@ -127,6 +127,8 @@ type SecureTcpHost struct {
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string
+	// Lock for accessing this structure
+	lockAddress sync.Mutex
 }
 
 // SecureTcpConn is a secured tcp connection using Entity as identity
