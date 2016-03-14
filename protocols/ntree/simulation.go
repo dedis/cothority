@@ -43,7 +43,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round, "with message", string(msg))
-		round := monitor.NewMeasure("round")
+		round := monitor.NewTimeMeasure("round")
 
 		node, err := config.Overlay.CreateNewNodeName("CoSiNtree", config.Tree)
 		if err != nil {
@@ -62,7 +62,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 			return err
 		}
 		<-done
-		round.Measure()
+		round.Record()
 	}
 	return nil
 }

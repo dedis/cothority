@@ -2,123 +2,86 @@ package monitor
 
 import (
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/montanaflynn/stats"
 	"io"
 	"math"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/montanaflynn/stats"
 	"sync"
 )
 
 // Stats contains all structures that are related to the computations of stats
-// such as Values (compute the mean/min/max/...), Measurements ( aggregation of
-// Values), Stats (collection of measurements) and DataFilter which is used to
+// such as Value (compute the mean/min/max/...), Measurements ( aggregation of
+// Value), Stats (collection of measurements) and DataFilter which is used to
 // apply some filtering before any statistics is done.
 
 // Stats holds the different measurements done
 type Stats struct {
-	// How many hosts do we have
-	Hosts int
-	// How many servers do we have
-	Servers int
-	// How many hosts are ready
-	Ready int
+	// The static fields are created when creating the stats out of a
+	// running config.
+	static     map[string]int
+	staticKeys []string
 
-	// Additionals fields that may appears in the resulting CSV
-	// The additionals fields are created when creating the stats out of a
-	// running config. It will try to read some known fields such as "depth" or
-	// "bf" (branching factor) and add then to its struct
-	Additionals map[string]int
-	addKeys     []string
-	// The measures we have and the keys ordered
-	measures map[string]*Measurement
-	keys     []string
+	// The received measures we have and the keys ordered
+	values map[string]*Value
+	keys   []string
 
-	// ValuesWritten  is to know whether we have already written some values or
-	// not. If yes, we can make sure we don't write new measurements otherwise
-	// the CSV would be garbage
-	valuesWritten bool
-	// The filter used to filter out aberrant data
+	// The filter used to filter out abberant data
 	filter DataFilter
 	// Mutex for the measurements
 	measureMutex sync.Mutex
 }
 
-// Return a NewStats with some fields extracted from the platform run config
-// It enforces the default set of measure to do.
-func NewStats(rc map[string]string) *Stats {
-	s := new(Stats).NewStats()
-	s.readRunConfig(rc)
+// NewStrictStats return a NewStats with some fields extracted from the platform run config
+// It  can enforces the default set of measure to have if you pass that as
+// defaults.
+func NewStats(rc map[string]string, defaults ...string) *Stats {
+	s := new(Stats).init()
+	s.readRunConfig(rc, defaults...)
 	return s
 }
 
-// Read a config file and fills up some fields for Stats struct
-func (s *Stats) readRunConfig(rc map[string]string) {
-	var err error
-	s.Servers, err = strconv.Atoi(rc["servers"])
-	if err != nil {
-		dbg.Fatal("Can not create stats from RunConfig with no servers")
-	}
-	s.Hosts, err = strconv.Atoi(rc["hosts"])
-	if err != nil {
-		dbg.Fatal("Can not create stats from RunConfig with no hosts")
-	}
-	rc2 := make(map[string]string)
-	for k, v := range rc {
-		if k != "servers" {
-			rc2[k] = v
-		}
-	}
-	// Sort rc2, so the output is always the same
-	rc2_ids := make([]string, 0)
-	for k := range rc2 {
-		rc2_ids = append(rc2_ids, k)
-	}
-	sort.Sort(sort.StringSlice(rc2_ids))
-	// Add ALL extra fields
-	for _, k := range rc2_ids {
-		v := rc2[k]
-		if ef, err := strconv.Atoi(v); err != nil {
-			continue
-		} else {
-			s.Additionals[k] = ef
-			s.addKeys = append(s.addKeys, k)
-		}
-	}
-	// let the filter figure out itself what it is supposed to be doing
-	s.filter = NewDataFilter(rc)
-}
-
-// Returns a new stats-structure with all necessary initialisations.
-func (s *Stats) NewStats() *Stats {
-	s.measures = make(map[string]*Measurement)
+func (s *Stats) init() *Stats {
+	s.values = make(map[string]*Value)
 	s.keys = make([]string, 0)
-	s.Additionals = make(map[string]int)
-	s.addKeys = make([]string, 0)
-	s.valuesWritten = false
+	s.static = make(map[string]int)
+	s.staticKeys = make([]string, 0)
 	return s
+}
+
+// Update will update the Stats with this given measure
+func (s *Stats) Update(m *SingleMeasure) {
+	var value *Value
+	var ok bool
+	value, ok = s.values[m.Name]
+	if !ok {
+		value = NewValue(m.Name)
+		s.values[m.Name] = value
+		s.keys = append(s.keys, m.Name)
+		sort.Strings(s.keys)
+	}
+	value.Store(m.Value)
 }
 
 // WriteHeader will write the header to the writer
 func (s *Stats) WriteHeader(w io.Writer) {
-	// write basic info
-	fmt.Fprintf(w, "hosts, servers")
-	// write additionals fields
-	for _, k := range s.addKeys {
-		if _, ok := s.Additionals[k]; ok {
-			fmt.Fprintf(w, ", %s", k)
+	// write static  fields
+	var fields []string
+	for _, k := range s.staticKeys {
+		// verify if we wellhave a value for it
+		if _, ok := s.static[k]; ok {
+			fields = append(fields, k)
 		}
 	}
 	// Write the values header
 	for _, k := range s.keys {
-		fmt.Fprintf(w, ", ")
-		m := s.measures[k]
-		m.WriteHeader(w)
+		v := s.values[k]
+		fields = append(fields, v.HeaderFields()...)
 	}
+	fmt.Fprintf(w, "%s", strings.Join(fields, ","))
 	fmt.Fprintf(w, "\n")
 }
 
@@ -126,90 +89,49 @@ func (s *Stats) WriteHeader(w io.Writer) {
 func (s *Stats) WriteValues(w io.Writer) {
 	// by default
 	s.Collect()
-	// write basic info
-	fmt.Fprintf(w, "%d, %d", s.Hosts, s.Servers)
-	// write additional fields
-	for _, k := range s.addKeys {
-		v, ok := s.Additionals[k]
-		if ok {
-			fmt.Fprintf(w, ", %d", v)
+	// write static fields
+	var values []string
+	for _, k := range s.staticKeys {
+		if v, ok := s.static[k]; ok {
+			values = append(values, fmt.Sprintf("%d", v))
 		}
 	}
 	// write the values
 	for _, k := range s.keys {
-		fmt.Fprintf(w, ", ")
-		m := s.measures[k]
-		m.WriteValues(w)
+		v := s.values[k]
+		values = append(values, v.Values()...)
 	}
+	fmt.Fprintf(w, "%s", strings.Join(values, ","))
 	fmt.Fprintf(w, "\n")
-	s.valuesWritten = true
 }
 
 // AverageStats will make an average of the given stats
-func AverageStats(stats []Stats) Stats {
+func AverageStats(stats []*Stats) *Stats {
 	if len(stats) < 1 {
-		return Stats{}
+		return new(Stats)
 	}
-	s := new(Stats).NewStats()
-	s.Servers = stats[0].Servers
-	s.Hosts = stats[0].Hosts
-	s.Additionals = stats[0].Additionals
-	s.addKeys = stats[0].addKeys
+	s := new(Stats).init()
+	s.filter = stats[0].filter
+	s.static = stats[0].static
+	s.staticKeys = stats[0].staticKeys
 	s.keys = stats[0].keys
 	// Average
 	for _, k := range s.keys {
-		// Collect measurements for a given key
-		measurements := make([]Measurement, len(stats))
-		for i, stat := range stats {
-			sub, ok := stat.measures[k]
+		var values []*Value
+		for _, stat := range stats {
+			value, ok := stat.values[k]
 			if !ok {
 				continue
 			}
-			measurements[i] = *sub
+			values = append(values, value)
 		}
 		// make the average
-		avg := AverageMeasurements(measurements)
-		s.measures[k] = &avg
+		avg := AverageValue(values...)
+		// dont have to necessary collect or filters here. Collect() must be called only
+		// when we want the final results (writing or by calling Value(name)
+		s.values[k] = avg
 	}
-	return *s
-}
-
-// Update will update the Stats with this given measure
-func (s *Stats) Update(m Measure) {
-	var meas *Measurement
-	s.measureMutex.Lock()
-	defer s.measureMutex.Unlock()
-	meas, ok := s.measures[m.Name]
-	if !ok {
-		// if we already written some values, we can not take new ones
-		if s.valuesWritten {
-			dbg.Lvl2("Stats Update received unknown type of measure:", m.Name)
-			return
-		}
-		meas = NewMeasurement(m.Name, s.filter)
-		s.measures[m.Name] = meas
-		s.keys = append(s.keys, m.Name)
-	}
-	meas.Update(m)
-}
-
-// Returns an overview of the stats - not complete data returned!
-func (s *Stats) String() string {
-	var str string
-	s.measureMutex.Lock()
-	for _, v := range s.measures {
-		str += fmt.Sprintf("%v", v)
-	}
-	s.measureMutex.Unlock()
-	return fmt.Sprintf("{Stats: hosts %d, Measures: %s}", s.Hosts, str)
-}
-
-// Collect make the final computations before stringing or writing.
-// Autmatically done in other methods anyway.
-func (s *Stats) Collect() {
-	for _, v := range s.measures {
-		v.Collect()
-	}
+	return s
 }
 
 // DataFilter is used to process data before making any statistics about them
@@ -262,7 +184,7 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 	// Compute the percentile value
 	max, err := stats.PercentileNearestRank(values, df.percentiles[measure])
 	if err != nil {
-		dbg.Lvl2("Monitor: Error filtering data:", err)
+		dbg.Lvl2("Monitor: Error filtering data(", values, "):", err)
 		return values
 	}
 
@@ -283,12 +205,89 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 	return values[:maxIndex]
 }
 
-// value is used to compute the statistics
+// Collect make the final computations before stringing or writing.
+// Autmatically done in other methods anyway.
+func (s *Stats) Collect() {
+	for _, v := range s.values {
+		v.Filter(s.filter)
+		v.Collect()
+	}
+}
+
+func (s *Stats) Value(name string) *Value {
+	if val, ok := s.values[name]; ok {
+		return val
+	}
+	return nil
+}
+
+// Returns an overview of the stats - not complete data returned!
+func (s *Stats) String() string {
+	var str string
+	for _, k := range s.staticKeys {
+		str += fmt.Sprintf("%s = %d", k, s.static[k])
+	}
+	for _, v := range s.values {
+		str += fmt.Sprintf("%v", v.Values())
+	}
+	return fmt.Sprintf("{Stats: %s}", str)
+}
+
+// Read a config file and fills up some fields for Stats struct
+func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
+	// First find the defaults keys
+	for _, def := range defaults {
+		valStr, ok := rc[def]
+		if !ok {
+			dbg.Fatal("Could not find the default value", def, "in the RunConfig")
+		}
+		if i, err := strconv.Atoi(valStr); err != nil {
+			dbg.Fatal("Could not parse to integer value", def)
+		} else {
+			// registers the static value
+			s.static[def] = i
+			s.staticKeys = append(s.staticKeys, def)
+		}
+	}
+	// Then parse the others keys
+	statics := make([]string, 0)
+	for k, v := range rc {
+		// pass the ones we already registered
+		var alreadyRegistered bool
+		for _, def := range defaults {
+			if k == def {
+				alreadyRegistered = true
+				break
+			}
+		}
+		if alreadyRegistered {
+			continue
+		}
+		// store it
+		if i, err := strconv.Atoi(v); err != nil {
+			dbg.Error("Could not parse the value", k, "from runconfig (v=", v, ")")
+			continue
+		} else {
+			s.static[k] = i
+			statics = append(statics, k)
+		}
+	}
+	// sort them so it's always the same order
+	sort.Strings(statics)
+	// append them to the defaults one
+	s.staticKeys = append(s.staticKeys, statics...)
+
+	// let the filter figure out itself what it is supposed to be doing
+	s.filter = NewDataFilter(rc)
+}
+
+// Value is used to compute the statistics
 // it reprensent the time to an action (setup, shamir round, coll round etc)
 // use it to compute streaming mean + dev
-type value struct {
-	min float64
-	max float64
+type Value struct {
+	name string
+	min  float64
+	max  float64
 
 	n    int
 	oldM float64
@@ -301,25 +300,24 @@ type value struct {
 	store []float64
 }
 
-func newValue() *value {
-	return &value{store: make([]float64, 0)}
+func NewValue(name string) *Value {
+	return &Value{name: name, store: make([]float64, 0)}
 }
 
 // Store takes this new time and stores it for later analysis
-// Since we might want to do percentile sorting, we need to have all the values
-// For the moment, we do a simple store of the value, but note that some
+// Since we might want to do percentile sorting, we need to have all the Values
+// For the moment, we do a simple store of the Value, but note that some
 // streaming percentile algorithm exists in case the number of messages is
 // growing to big.
-func (t *value) Store(newTime float64) {
+func (t *Value) Store(newTime float64) {
 	t.store = append(t.store, newTime)
 }
 
-// Collect will Collect all values stored in the store's Value.
+// Collect will Collect all Values stored in the store's Value.
 // It is kept as a streaming average / dev processus fr the moment (not the most
 // optimized).
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
-func (t *value) Collect(measure string, df DataFilter) {
-	t.store = df.Filter(measure, t.store)
+func (t *Value) Collect() {
 	for _, newTime := range t.store {
 		// nothings takes 0 ms to complete, so we know it's the first time
 		if t.min > newTime || t.n == 0 {
@@ -344,129 +342,58 @@ func (t *value) Collect(measure string, df DataFilter) {
 	}
 }
 
-// Get the minimum or the maximum of all stored values
-func (t *value) Min() float64 {
+// Filter outs its Values
+func (t *Value) Filter(filt DataFilter) {
+	t.store = filt.Filter(t.name, t.store)
+}
+
+// Average will set the current Value to the average of all Value
+func AverageValue(st ...*Value) *Value {
+	if len(st) < 1 {
+		return new(Value)
+	}
+	var t Value
+	name := st[0].name
+	for _, s := range st {
+		if s.name != name {
+			dbg.Error("Averaging not the sames Values ...?")
+			return new(Value)
+		}
+		t.store = append(t.store, s.store...)
+	}
+	t.name = name
+	return &t
+}
+
+// Get the minimum or the maximum of all stored Values
+func (t *Value) Min() float64 {
 	return t.min
 }
-func (t *value) Max() float64 {
+func (t *Value) Max() float64 {
 	return t.max
 }
 
-// NumValue returns the number of value added
-func (t *value) NumValue() int {
+// NumValue returns the number of Value added
+func (t *Value) NumValue() int {
 	return t.n
 }
 
-// Avg returns the average (mean) of the values
-func (t *value) Avg() float64 {
+// Avg returns the average (mean) of the Values
+func (t *Value) Avg() float64 {
 	return t.newM
 }
 
-// Dev returns the standard deviation of the values
-func (t *value) Dev() float64 {
+// Dev returns the standard deviation of the Values
+func (t *Value) Dev() float64 {
 	return t.dev
 }
 
 // Header returns the first line of the CSV-file
-func (t *value) Header(prefix string) string {
-	return fmt.Sprintf("%s_min, %s_max, %s_avg, %s_dev", prefix, prefix, prefix, prefix)
+func (t *Value) HeaderFields() []string {
+	return []string{t.name + "_min", t.name + "_max", t.name + "_avg", t.name + "_dev"}
 }
 
-// String returns the min, max, avg and dev of a value
-func (t *value) String() string {
-	return fmt.Sprintf("%v", t.store)
-}
-
-// Average will set the current Value to the average of all Value
-func AverageValue(st ...*value) *value {
-	var t value
-	for _, s := range st {
-		t.min += s.min
-		t.max += s.max
-		t.newM += s.newM
-		t.dev += s.dev
-	}
-	l := float64(len(st))
-	t.min /= l
-	t.max /= l
-	t.newM /= l
-	t.dev /= l
-	t.n = len(st)
-	return &t
-}
-
-// Measurement represents the precise measurement of a specific thing to measure
-// example: I want to measure the time it takes to verify a signature, the
-// measurement "verify" will hold a wallclock Value, cpu_user Value, cpu_system
-// Value. A measurement is frequently updated with Measure given by the client.
-type Measurement struct {
-	Name   string
-	Wall   *value
-	User   *value
-	System *value
-	Filter DataFilter
-}
-
-// NewMeasurement returns a new measurements with this name
-func NewMeasurement(name string, df DataFilter) *Measurement {
-	return &Measurement{
-		Name:   name,
-		Wall:   newValue(),
-		User:   newValue(),
-		System: newValue(),
-		Filter: df,
-	}
-}
-
-// WriteHeader will write the header to the specified writer
-func (m *Measurement) WriteHeader(w io.Writer) {
-	fmt.Fprintf(w, "%s, %s, %s", m.Wall.Header(m.Name+"_wall"),
-		m.User.Header(m.Name+"_user"), m.System.Header(m.Name+"_system"))
-}
-
-// WriteValues will write a new entry for this entry in the writer
-// First compute the values then write to writer
-func (m *Measurement) WriteValues(w io.Writer) {
-	fmt.Fprintf(w, "%s, %s, %s", m.Wall.String(), m.User.String(), m.System.String())
-}
-
-// Update takes a measure received from the network and update the wall system
-// and user values
-func (m *Measurement) Update(measure Measure) {
-	dbg.Lvl2("Got measurement for", m.Name, measure.WallTime, measure.CPUTimeUser, measure.CPUTimeSys)
-	m.Wall.Store(measure.WallTime)
-	m.User.Store(measure.CPUTimeUser)
-	m.System.Store(measure.CPUTimeSys)
-}
-
-// Collect will call Collect on Wall- User- and System-time
-func (m *Measurement) Collect() {
-	m.Wall.Collect(m.Name, m.Filter)
-	m.User.Collect(m.Name, m.Filter)
-	m.System.Collect(m.Name, m.Filter)
-}
-
-// AverageMeasurements takes an slice of measurements and make the average
-// between them. i.e. it takes the average of the Wall value from each
-// measurements, etc.
-func AverageMeasurements(measurements []Measurement) Measurement {
-	m := NewMeasurement(measurements[0].Name, measurements[0].Filter)
-	walls := make([]*value, len(measurements))
-	users := make([]*value, len(measurements))
-	systems := make([]*value, len(measurements))
-	for i, m2 := range measurements {
-		m2.Collect()
-		walls[i] = m2.Wall
-		users[i] = m2.User
-		systems[i] = m2.System
-	}
-	m.Wall = AverageValue(walls...)
-	m.User = AverageValue(users...)
-	m.System = AverageValue(systems...)
-	return *m
-}
-
-// String shows one measurement
-func (m *Measurement) String() string {
-	return fmt.Sprintf("{Measurement %s: wall = %v, system = %v, user = %v}", m.Name, m.Wall, m.User, m.System)
+// String returns the min, max, avg and dev of a Value
+func (t *Value) Values() []string {
+	return []string{fmt.Sprintf("%f", t.store)}
 }

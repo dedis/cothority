@@ -573,3 +573,13 @@ func (h *Host) WaitForClose() {
 		}
 	}
 }
+
+// Written() to implement monitor/CounterIO
+func (h *Host) Written() uint64 {
+	return h.host.Written()
+}
+
+// Read() to implement monitor/CounterIO
+func (h *Host) Read() uint64 {
+	return h.host.Read()
+}
