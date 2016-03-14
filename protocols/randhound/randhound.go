@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -13,17 +12,17 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func init() {
-	network.RegisterMessageType(I1{})
-	network.RegisterMessageType(I2{})
-	network.RegisterMessageType(I3{})
-	network.RegisterMessageType(I4{})
-	network.RegisterMessageType(R1{})
-	network.RegisterMessageType(R2{})
-	network.RegisterMessageType(R3{})
-	network.RegisterMessageType(R4{})
-	//sda.ProtocolRegisterName("RandHound", NewRandHound)
-}
+//func init() {
+//network.RegisterMessageType(I1{})
+//network.RegisterMessageType(I2{})
+//network.RegisterMessageType(I3{})
+//network.RegisterMessageType(I4{})
+//network.RegisterMessageType(R1{})
+//network.RegisterMessageType(R2{})
+//network.RegisterMessageType(R3{})
+//network.RegisterMessageType(R4{})
+////sda.ProtocolRegisterName("RandHound", NewRandHound)
+//}
 
 type RandHound struct {
 	*sda.Node
