@@ -10,12 +10,12 @@ type DummyCounterIO struct {
 	wvalue uint64
 }
 
-func (dm *DummyCounterIO) Read() uint64 {
+func (dm *DummyCounterIO) Rx() uint64 {
 	dm.rvalue += 10
 	return dm.rvalue
 }
 
-func (dm *DummyCounterIO) Written() uint64 {
+func (dm *DummyCounterIO) Tx() uint64 {
 	dm.wvalue += 10
 	return dm.wvalue
 }
@@ -25,14 +25,14 @@ func TestCounterIOMeasureRecord(t *testing.T) {
 	dm := &DummyCounterIO{0, 0}
 	// create the counter measure
 	cm := NewCounterIOMeasure("dummy", dm)
-	if cm.baseRead != dm.rvalue || cm.baseWritten != dm.wvalue {
-		t.Logf("baseRead = %d vs rvalue = %d || baseWritten = %d vs wvalue = %d", cm.baseRead, dm.rvalue, cm.baseWritten, dm.wvalue)
-		t.Fatal("Written() / Read() not working ?")
+	if cm.baseRx != dm.rvalue || cm.baseTx != dm.wvalue {
+		t.Logf("baseRx = %d vs rvalue = %d || baseTx = %d vs wvalue = %d", cm.baseRx, dm.rvalue, cm.baseTx, dm.wvalue)
+		t.Fatal("Tx() / Rx() not working ?")
 	}
-	//bread, bwritten := cm.baseRead, cm.baseWritten
+	//bread, bwritten := cm.baseRx, cm.baseTx
 	cm.Record()
 	// check the values again
-	if cm.baseRead != dm.rvalue || cm.baseWritten != dm.wvalue {
+	if cm.baseRx != dm.rvalue || cm.baseTx != dm.wvalue {
 		t.Fatal("Record() not working for CounterIOMeasure")
 	}
 

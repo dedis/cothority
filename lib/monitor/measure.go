@@ -139,28 +139,28 @@ func (tm *TimeMeasure) reset() {
 // implemented by cothority/network/ Conn  + Host to know how many bytes a
 // connection / Host has written /read
 type CounterIO interface {
-	Read() uint64
-	Written() uint64
+	Rx() uint64
+	Tx() uint64
 }
 
 // CounterIOMeasure is a struct that takes a CounterIO and can send the
 // measurements to the monitor. Each time Record() is called, the measurements
 // are put back to 0 (while the CounterIO still sends increased bytes number).
 type CounterIOMeasure struct {
-	name        string
-	counter     CounterIO
-	baseWritten uint64
-	baseRead    uint64
+	name    string
+	counter CounterIO
+	baseTx  uint64
+	baseRx  uint64
 }
 
 // NewCounterIOMeasure returns an CounterIOMeasure fresh. The base value are set
-// to the current value of counter.Read() and counter.Written()
+// to the current value of counter.Rx() and counter.Tx()
 func NewCounterIOMeasure(name string, counter CounterIO) *CounterIOMeasure {
 	return &CounterIOMeasure{
-		name:        name,
-		counter:     counter,
-		baseWritten: counter.Written(),
-		baseRead:    counter.Read(),
+		name:    name,
+		counter: counter,
+		baseTx:  counter.Tx(),
+		baseRx:  counter.Rx(),
 	}
 }
 
@@ -168,21 +168,21 @@ func NewCounterIOMeasure(name string, counter CounterIO) *CounterIOMeasure {
 // **name**_read) and reset the counters.
 func (cm *CounterIOMeasure) Record() {
 	// creates the read measure
-	bRead := cm.counter.Read()
+	bRx := cm.counter.Rx()
 	// TODO Later on, we might want to do a check on the conversion between
 	// uint64 -> float64, as the MAX values are not the same.
-	read := NewSingleMeasure(cm.name+"_read", float64(bRead-cm.baseRead))
+	read := NewSingleMeasure(cm.name+"_rx", float64(bRx-cm.baseRx))
 	// creates the  written measure
-	bWritten := cm.counter.Written()
-	written := NewSingleMeasure(cm.name+"_written", float64(bWritten-cm.baseWritten))
+	bTx := cm.counter.Tx()
+	written := NewSingleMeasure(cm.name+"_tx", float64(bTx-cm.baseTx))
 
 	// send them both
 	read.Record()
 	written.Record()
 
 	// reset counters
-	cm.baseRead = bRead
-	cm.baseWritten = bWritten
+	cm.baseRx = bRx
+	cm.baseTx = bTx
 }
 
 // Send transmits the given struct over the network.
