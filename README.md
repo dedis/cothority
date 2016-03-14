@@ -102,9 +102,10 @@ kind of protocols which may rely on other, pre-defined protocols.
  
 Using the SDA-cothority framework, you can:
 
-* Simulate up to 8192 nodes using Deterlab (which is based on Planetlab)
-* Run local simulations for up to 128 nodes (restricted by your computer)
-* Distribute binaries for real-world deployment (work in progress).
+* simulate up to 8192 nodes using Deterlab (which is based on 
+[PlanetLab](https://www.planet-lab.org/))
+* run local simulations for up to as many nodes as your local machines
+allows
 
 The framework is round-based using message-passing between different 
 hosts which form a tree. Every protocol defines the steps needed to 
