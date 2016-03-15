@@ -50,26 +50,29 @@ def length_bitmap(total, ex_list):
 
 def length_bloom(total, ex_list):
     ex_len = shortest_listlen(total, ex_list)
-    false_positives = True
+    ex_len_list = ex_list[0:ex_len]
     creation = 0
     p = 0.5 / math.pow(ex_len + 1, 0.65)
     #p = 0.5
-    while false_positives:
+    while True:
         creation += 1
         #pnew = p - float(creation) / total
         #print pnew
         bf = pybloomfilter.BloomFilter(total / 2, p, '/tmp/sda.bloom')
-        for ex in ex_list[0:ex_len]:
+        for ex in ex_len_list:
             bf.add(ex)
-        false_positives = False
-        for ex in range(0, total):
-            if (ex in bf) and not (ex in ex_list):
-                false_positives = True
-
-        if false_positives:
+        if false_positives(total, bf, ex_len_list):
             print total, ex_len, creation
+        else:
+            break
 
     return 32 + math.ceil(len(bf.to_base64()) * 6 / 8.0), creation, p
+
+def false_positives(total, bf, ex_len_list):
+        for ex in range(0, total):
+            if (ex in bf) and not (ex in ex_len_list):
+                return True
+        return False
 
 def calculate_exceptions(hosts):
     host_list = []
