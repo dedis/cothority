@@ -45,11 +45,11 @@ is straight forward and described in the following sub-sections.
 To run a simple signing check on localhost, execute the following 
 commands:
 
-```
-$ go get -d github.com/dedis/cothority # download project and its dependencies
-$ cd $GOPATH/src/github.com/dedis/cothority/simul
-$ go build
-$ ./simul runfiles/test_cosi.toml
+``` ShellSession
+go get -d github.com/dedis/cothority # download project and its dependencies
+cd $GOPATH/src/github.com/dedis/cothority/simul
+go build
+./simul runfiles/test_cosi.toml
 ```
 
 ## DeterLab
