@@ -42,7 +42,10 @@ func TestCosi(t *testing.T) {
 
 	// Start the protocol
 	node, err := local.CreateNewNodeName("CoSi", tree)
-	root = &node.ProtocolInstance().(ProtocolCosi)
+	if err != nil {
+		t.Fatal("Couldn't create new node:", err)
+	}
+	root = node.ProtocolInstance().(*ProtocolCosi)
 	root.Message = msg
 	root.RegisterDoneCallback(doneFunc)
 	node.Start()

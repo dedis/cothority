@@ -11,6 +11,10 @@ import (
 	"sync"
 )
 
+func init() {
+	sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
+}
+
 // This Cosi protocol is the simplest version, the "vanilla" version with the
 // four phases:
 //  - Announcement
@@ -67,7 +71,7 @@ type ProtocolCosi struct {
 // }
 // sda.RegisterNewProtocolName("cothority",fn)
 // ```
-func NewProtocolCosi(node *sda.Node) (*ProtocolCosi, error) {
+func NewProtocolCosi(node *sda.Node) (sda.ProtocolInstance, error) {
 	var err error
 	pc := &ProtocolCosi{
 		Cosi:             cosi.NewCosi(node.Suite(), node.Private()),
@@ -83,14 +87,6 @@ func NewProtocolCosi(node *sda.Node) (*ProtocolCosi, error) {
 	node.RegisterChannel(&pc.challenge)
 	node.RegisterChannel(&pc.response)
 
-	return pc, err
-}
-
-// NewRootProtocolCosi is used by the root to collectively sign this message
-// (vanilla version of the protocol where no contributions are done)
-func NewRootProtocolCosi(msg []byte, node *sda.Node) (*ProtocolCosi, error) {
-	pc, err := NewProtocolCosi(node)
-	pc.Message = msg
 	return pc, err
 }
 
