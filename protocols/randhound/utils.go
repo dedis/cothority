@@ -13,7 +13,7 @@ func (rh *RandHound) Hash(bytes ...[]byte) []byte {
 	return h.Sum(nil)
 }
 
-func (rh *RandHound) chooseInsurers(Rc, Rs []byte, ignore int) ([]int, []abstract.Point) {
+func (rh *RandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
 
 	// Seed PRNG for insurers selection
 	var seed []byte
@@ -28,8 +28,8 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte, ignore int) ([]int, []abstrac
 	j := 0
 	for len(set) < rh.N {
 		i := int(random.Uint64(prng) % uint64(len(rh.PID)))
-		// Avoid choosing the 'ignore' index as insurer and add insurer only if not done so before
-		if _, ok := set[i]; i != ignore && !ok {
+		// Add insurer only if not doen so before; choosing yourself as an insurer is fine
+		if _, ok := set[i]; !ok {
 			set[i] = true
 			keys[j] = i
 			insurers[j] = rh.PKeys[i]

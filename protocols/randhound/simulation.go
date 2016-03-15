@@ -1,6 +1,9 @@
 package randhound
 
 import (
+	"log"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/sda"
 )
@@ -41,7 +44,22 @@ func (rh *RHSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	proto := node.ProtocolInstance().(*RandHound)
+	proto.T = rh.T
+	proto.R = rh.R
+	proto.N = rh.N
+	proto.Purpose = rh.Purpose
 	proto.Start()
+
+	bytes := make([]byte, 32)
+	select {
+	case _ = <-proto.Done:
+		log.Printf("RandHound - done")
+		bytes = <-proto.Result
+	case <-time.After(time.Second * 60):
+		log.Printf("RandHound - time out")
+	}
+	log.Printf("RandHound - random bytes: %v\n", bytes)
+
 	return nil
 
 }

@@ -13,14 +13,6 @@ import (
 )
 
 func init() {
-	//network.RegisterMessageType(I1{})
-	//network.RegisterMessageType(I2{})
-	//network.RegisterMessageType(I3{})
-	//network.RegisterMessageType(I4{})
-	//network.RegisterMessageType(R1{})
-	//network.RegisterMessageType(R2{})
-	//network.RegisterMessageType(R3{})
-	//network.RegisterMessageType(R4{})
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
@@ -145,6 +137,7 @@ func (rh *RandHound) HandleI1(i1 WI1) error {
 		),
 		HRs: rh.Hash(rh.Peer.Rs),
 	}
+
 	return rh.SendTo(rh.Parent(), &rh.Peer.r1)
 }
 
@@ -196,7 +189,7 @@ func (rh *RandHound) HandleI2(i2 WI2) error {
 		rh.Node.Private(),
 	}
 	secretPair := config.NewKeyPair(rh.Node.Suite())
-	_, insurers := rh.chooseInsurers(rh.Peer.i2.Rc, rh.Peer.Rs, rh.Peer.self)
+	_, insurers := rh.chooseInsurers(rh.Peer.i2.Rc, rh.Peer.Rs)
 	deal := &poly.Deal{}
 	deal.ConstructDeal(secretPair, &longPair, rh.T, rh.R, insurers)
 	db, err := deal.MarshalBinary()
@@ -280,7 +273,7 @@ func (rh *RandHound) HandleI3(i3 WI3) error {
 		}
 
 		// Determine other peers who chose me as an insurer
-		keys, _ := rh.chooseInsurers(rh.Peer.i2.Rc, r2.Rs, i)
+		keys, _ := rh.chooseInsurers(rh.Peer.i2.Rc, r2.Rs)
 		for k := range keys { // k is the share index we received from the i-th peer
 			if keys[k] == rh.Peer.self {
 				resp, err := deal.ProduceResponse(k, &longPair)
@@ -400,7 +393,7 @@ func (rh *RandHound) HandleR4(r4 WR4) error {
 					idx := r4share.Index
 					share := r4share.Share
 
-					keys, _ := rh.chooseInsurers(rh.Leader.Rc, rh.Leader.r2[j].Rs, j)
+					keys, _ := rh.chooseInsurers(rh.Leader.Rc, rh.Leader.r2[j].Rs)
 					if keys[idx] != i {
 						return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
 					}
