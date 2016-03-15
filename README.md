@@ -45,10 +45,13 @@ is straight forward and described in the following sub-sections.
 To run a simple signing check on localhost, execute the following 
 commands:
 
-``` ShellSession
-go get -d github.com/dedis/cothority # download project and its dependencies
+```bash
+# download project and its dependencies
+go get -d github.com/dedis/cothority 
+# build the simulation binary
 cd $GOPATH/src/github.com/dedis/cothority/simul
 go build
+# run the simulation
 ./simul runfiles/test_cosi.toml
 ```
 
