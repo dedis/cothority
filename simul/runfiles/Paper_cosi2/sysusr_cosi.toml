@@ -2,7 +2,7 @@ Simulation = "CoSi"
 Suite = "ed25519"
 Rounds = 10
 filter_round = 80
-Servers = 16
+Servers = 32
 Depth = 3
 
 hosts, Rounds
