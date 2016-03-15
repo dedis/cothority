@@ -3,7 +3,7 @@ Suite = "ed25519"
 Rounds = 10
 filter_round = 80
 Servers = 32
-Hosts = 2048
+Hosts = 4096
 
 bf
 2
