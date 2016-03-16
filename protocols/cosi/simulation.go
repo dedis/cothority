@@ -20,6 +20,8 @@ func init() {
 type CoSiSimulation struct {
 	sda.SimulationBFTree
 
+	// Do we want to check signature at each level, only the root or nothing at
+	// alll ?
 	// See https://github.com/dedis/cothority/issues/260
 	Checking int
 }
