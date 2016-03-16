@@ -28,7 +28,7 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
 	j := 0
 	for len(set) < rh.N {
 		i := int(random.Uint64(prng) % uint64(len(rh.PID)))
-		// Add insurer only if not doen so before; choosing yourself as an insurer is fine
+		// Add insurer only if not done so before; choosing yourself as an insurer is fine
 		if _, ok := set[i]; !ok {
 			set[i] = true
 			keys[j] = i

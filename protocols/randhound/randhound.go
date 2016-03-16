@@ -69,10 +69,10 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 
 	// Setup message handlers
 	handlers := []interface{}{
-		rh.HandleI1, rh.HandleR1,
-		rh.HandleI2, rh.HandleR2,
-		rh.HandleI3, rh.HandleR3,
-		rh.HandleI4, rh.HandleR4,
+		rh.handleI1, rh.handleR1,
+		rh.handleI2, rh.handleR2,
+		rh.handleI3, rh.handleR3,
+		rh.handleI4, rh.handleR4,
 	}
 	for _, h := range handlers {
 		err := rh.RegisterHandler(h)
@@ -111,7 +111,7 @@ func (rh *RandHound) Start() error {
 
 // TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
 
-func (rh *RandHound) HandleI1(i1 WI1) error {
+func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// If we are not a leaf, forward i1 to children
 	if !rh.Node.IsLeaf() {
@@ -126,8 +126,6 @@ func (rh *RandHound) HandleI1(i1 WI1) error {
 	rh.N = i1.I1.N
 	rh.Purpose = i1.I1.Purpose
 
-	// TODO: verify i1 contents
-
 	rh.Peer.r1 = R1{
 		Src: rh.Peer.self,
 		HI1: rh.Hash(
@@ -141,7 +139,7 @@ func (rh *RandHound) HandleI1(i1 WI1) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r1)
 }
 
-func (rh *RandHound) HandleR1(r1 WR1) error {
+func (rh *RandHound) handleR1(r1 WR1) error {
 
 	// If we are not the root, forward r1 to parent
 	if !rh.Node.IsRoot() {
@@ -150,8 +148,14 @@ func (rh *RandHound) HandleR1(r1 WR1) error {
 			return err
 		}
 	} else {
+
+		// Verify reply
+		if !bytes.Equal(r1.R1.HI1, rh.Hash(rh.Leader.i1.SID, rh.Leader.i1.GID, rh.Leader.i1.HRc)) {
+			return errors.New(fmt.Sprintf("R1: peer %d replied to wrong I1 message", r1.Src))
+		}
+
 		// Collect replies
-		rh.Leader.r1[r1.Src] = r1.R1 // TODO: streamline the message types
+		rh.Leader.r1[r1.Src] = r1.R1
 		rh.Leader.nr1 += 1
 
 		// Continue, once all replies have arrived
@@ -169,7 +173,7 @@ func (rh *RandHound) HandleR1(r1 WR1) error {
 	return nil
 }
 
-func (rh *RandHound) HandleI2(i2 WI2) error {
+func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// If we are not a leaf, forward i2 to children
 	if !rh.Node.IsLeaf() {
@@ -178,9 +182,13 @@ func (rh *RandHound) HandleI2(i2 WI2) error {
 			return err
 		}
 	}
-	rh.Peer.i2 = i2.I2
 
-	// TODO: verify contents of i2
+	// Verify session ID
+	if !bytes.Equal(rh.Peer.i1.SID, i2.I2.SID) {
+		return errors.New(fmt.Sprintf("I2: peer %d received message with incorrect session ID", rh.Peer.self))
+	}
+
+	rh.Peer.i2 = i2.I2
 
 	// Construct deal
 	longPair := config.KeyPair{
@@ -208,7 +216,7 @@ func (rh *RandHound) HandleI2(i2 WI2) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r2)
 }
 
-func (rh *RandHound) HandleR2(r2 WR2) error {
+func (rh *RandHound) handleR2(r2 WR2) error {
 
 	// If we are not the root, forward r2 to parent
 	if !rh.Node.IsRoot() {
@@ -217,6 +225,12 @@ func (rh *RandHound) HandleR2(r2 WR2) error {
 			return err
 		}
 	} else {
+
+		// Verify reply
+		if !bytes.Equal(r2.R2.HI2, rh.Hash(rh.Leader.i2.SID, rh.Leader.i2.Rc)) {
+			return errors.New(fmt.Sprintf("R2: peer %d replied to wrong I2 message", r2.Src))
+		}
+
 		// Collect replies
 		rh.Leader.r2[r2.Src] = r2.R2
 		rh.Leader.nr2 += 1
@@ -238,7 +252,7 @@ func (rh *RandHound) HandleR2(r2 WR2) error {
 	return nil
 }
 
-func (rh *RandHound) HandleI3(i3 WI3) error {
+func (rh *RandHound) handleI3(i3 WI3) error {
 
 	// If we are not a leaf, forward i3 to children
 	if !rh.Node.IsLeaf() {
@@ -247,6 +261,12 @@ func (rh *RandHound) HandleI3(i3 WI3) error {
 			return err
 		}
 	}
+
+	// Verify session ID
+	if !bytes.Equal(rh.Peer.i2.SID, i3.I3.SID) {
+		return errors.New(fmt.Sprintf("I3: peer %d received message with incorrect session ID", rh.Peer.self))
+	}
+
 	rh.Peer.i3 = i3.I3
 
 	longPair := config.KeyPair{
@@ -255,14 +275,12 @@ func (rh *RandHound) HandleI3(i3 WI3) error {
 		rh.Node.Private(),
 	}
 
-	// TODO: verify contents of i3
-
 	r3resps := []R3Resp{}
 	r4shares := []R4Share{}
 	for i, r2 := range rh.Peer.i3.R2s { // NOTE: we assume that the order of R2 messages is correct since the leader took care of it
 
 		if !bytes.Equal(r2.HI2, rh.Peer.r2.HI2) {
-			return errors.New("R2 contains wrong I2 hash")
+			return errors.New("I3: R2 contains wrong I2 hash")
 		}
 
 		// Unmarshal Deal
@@ -307,7 +325,7 @@ func (rh *RandHound) HandleI3(i3 WI3) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r3)
 }
 
-func (rh *RandHound) HandleR3(r3 WR3) error {
+func (rh *RandHound) handleR3(r3 WR3) error {
 
 	// If we are not the root, forward r3 to parent
 	if !rh.Node.IsRoot() {
@@ -316,11 +334,16 @@ func (rh *RandHound) HandleR3(r3 WR3) error {
 			return err
 		}
 	} else {
+
+		// Verify reply
+		if !bytes.Equal(r3.R3.HI3, rh.Hash(rh.Leader.i3.SID, rh.Hash(rh.Leader.i2.SID, rh.Leader.i2.Rc))) {
+			return errors.New(fmt.Sprintf("R3: peer %d replied to wrong I3 message", r3.Src))
+		}
+
 		// Collect replies
 		rh.Leader.r3[r3.Src] = r3.R3
 		rh.Leader.nr3 += 1
 
-		// TODO: verify r3 contents
 		for _, r3resp := range rh.Leader.r3[r3.Src].Resp {
 			j := r3resp.Dealer
 			_ = j
@@ -345,7 +368,7 @@ func (rh *RandHound) HandleR3(r3 WR3) error {
 	return nil
 }
 
-func (rh *RandHound) HandleI4(i4 WI4) error {
+func (rh *RandHound) handleI4(i4 WI4) error {
 
 	// If we are not a leaf, forward i4 to children
 	if !rh.Node.IsLeaf() {
@@ -354,9 +377,13 @@ func (rh *RandHound) HandleI4(i4 WI4) error {
 			return err
 		}
 	}
-	rh.Peer.i4 = i4.I4
 
-	// TODO: verify contents of i4
+	// Verify session ID
+	if !bytes.Equal(rh.Peer.i3.SID, i4.I4.SID) {
+		return errors.New(fmt.Sprintf("I4: peer %d received message with incorrect session ID", rh.Peer.self))
+	}
+
+	rh.Peer.i4 = i4.I4
 
 	rh.Peer.r4 = R4{
 		Src: rh.Peer.self,
@@ -368,7 +395,7 @@ func (rh *RandHound) HandleI4(i4 WI4) error {
 	return rh.SendTo(rh.Parent(), &rh.Peer.r4)
 }
 
-func (rh *RandHound) HandleR4(r4 WR4) error {
+func (rh *RandHound) handleR4(r4 WR4) error {
 
 	// If we are not the root, forward r4 to parent
 	if !rh.Node.IsRoot() {
@@ -377,6 +404,12 @@ func (rh *RandHound) HandleR4(r4 WR4) error {
 			return err
 		}
 	} else {
+
+		// Verify reply
+		if !bytes.Equal(r4.R4.HI4, rh.Hash(rh.Leader.i4.SID, make([]byte, 0))) {
+			return errors.New(fmt.Sprintf("R4: peer %d replied to wrong I4 message", r4.Src))
+		}
+
 		// Collect replies
 		rh.Leader.r4[r4.Src] = r4.R4
 		rh.Leader.nr4 += 1

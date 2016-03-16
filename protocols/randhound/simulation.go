@@ -37,8 +37,6 @@ func (rh *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig
 }
 
 func (rh *RHSimulation) Run(config *sda.SimulationConfig) error {
-	//size := config.Tree.Size()
-	//msg := []byte("Test message for RandHound simulation")
 	node, err := config.Overlay.CreateNewNodeName("RandHound", config.Tree)
 	if err != nil {
 		return err
