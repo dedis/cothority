@@ -2,7 +2,12 @@
 language: go
 go:
   - 1.6
+install:
+  - go get -u github.com/golang/lint/golint
 script:
+  # formatting:
   - ./gofmt.sh
+  # linter:
+  - ./lint.sh
   # do not run any test binary in parallel (see go help build for more info on the -p flag)
   - go test -v -race -p=1 ./...
