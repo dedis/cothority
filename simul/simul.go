@@ -28,7 +28,8 @@ var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
 var debugVisible int
 var race = false
-var simulTimeout = 180
+var runWait = 180
+var experimentWait = 0
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
@@ -40,7 +41,8 @@ func init() {
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
 	flag.IntVar(&debugVisible, "debug", dbg.DebugVisible(), "Change debug level (0-5)")
-	flag.IntVar(&simulTimeout, "timeout", simulTimeout, "How long to wait for each simulation to finish")
+	flag.IntVar(&runWait, "runwait", runWait, "How long to wait for each simulation to finish - overwrites .toml-value")
+	flag.IntVar(&experimentWait, "experimentwait", experimentWait, "How long to wait for the whole experiment to finish")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
@@ -77,7 +79,18 @@ func main() {
 			deployP.Cleanup()
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
-			RunTests(logname, runconfigs)
+			testsDone := make(chan bool)
+			go func() {
+				RunTests(logname, runconfigs)
+				testsDone <- true
+			}()
+			timeout := getExperimentWait(runconfigs)
+			select {
+			case <-testsDone:
+				dbg.Lvl3("Done with test", simulation)
+			case <-time.After(time.Second * time.Duration(timeout)):
+				dbg.Fatal("Test failed to finish in", timeout, "seconds")
+			}
 		}
 	}
 }
@@ -201,10 +214,7 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 		done <- struct{}{}
 	}()
 
-	timeOut, err := rc.GetInt("simultimeout")
-	if err != nil {
-		timeOut = simulTimeout
-	}
+	timeOut := getRunWait(rc)
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
@@ -292,4 +302,33 @@ func getStartStop(rcs int) (int, int) {
 	}
 	dbg.Lvl2("Range is", start, ":", stop)
 	return start, stop
+}
+
+// getRunWait returns either the command-line value or the value from the runconfig
+// file
+func getRunWait(rc platform.RunConfig) int {
+	rcWait, err := rc.GetInt("runwait")
+	if err == nil {
+		return rcWait
+	}
+	return runWait
+}
+
+// getExperimentWait returns
+// 1. the command-line value
+// 2. the value from runconfig
+// 3. #runconfigs * runWait
+func getExperimentWait(rcs []platform.RunConfig) int {
+	if experimentWait > 0 {
+		return experimentWait
+	}
+	rcExp, err := rcs[0].GetInt("experimentwait")
+	if err == nil {
+		return rcExp
+	}
+	wait := 0
+	for _, rc := range rcs {
+		wait += getRunWait(rc)
+	}
+	return wait
 }
