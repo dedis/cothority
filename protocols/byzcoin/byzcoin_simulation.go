@@ -68,19 +68,20 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 }
 
 type monitorMut struct {
-	*monitor.Measure
+	*monitor.TimeMeasure
 	sync.Mutex
 }
 
 func (m *monitorMut) NewMeasure(id string) {
 	m.Lock()
 	defer m.Unlock()
-	m.Measure = monitor.NewMeasure(id)
+	m.TimeMeasure = monitor.NewTimeMeasure(id)
 }
-func (m *monitorMut) MeasureAndReset() {
+func (m *monitorMut) Record() {
 	m.Lock()
 	defer m.Unlock()
-	m.Measure = nil
+	m.TimeMeasure.Record()
+	m.TimeMeasure = nil
 }
 
 // Run implements sda.Simulation interface
@@ -115,7 +116,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			return err
 		}
 		// instantiate a byzcoin protocol
-		rComplete := monitor.NewMeasure("round")
+		rComplete := monitor.NewTimeMeasure("round")
 		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
@@ -124,7 +125,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		bz := pi.(*ByzCoin)
 		// Register callback for the generation of the signature !
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
-			rComplete.Measure()
+			rComplete.Record()
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
 				dbg.Error("Round", round, "failed:", err)
 			} else {

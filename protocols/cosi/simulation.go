@@ -44,7 +44,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		roundM := monitor.NewMeasure("round")
+		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
 		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
 		if err != nil {
@@ -57,10 +57,9 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		// tell us when it is done
 		done := make(chan bool)
 		fn := func(chal, resp abstract.Secret) {
-			roundM.Measure()
-			if err := proto.Cosi.VerifyResponses(aggPublic); err != nil {
-				dbg.Lvl1("Round", round, " has failed responses")
-			}
+			roundM.Record()
+			//  No need to verify it twice here. It already happens in
+			//  handleResponse() even for the root.
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
 				dbg.Lvl1("Round", round, " => fail verification")
 			} else {

@@ -11,7 +11,6 @@ import (
 
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	_ "github.com/dedis/cothority/protocols"
 	"strings"
@@ -54,6 +53,9 @@ type Localhost struct {
 	// errors go here:
 	errChan chan error
 
+	// Listening monitor port
+	monitorPort int
+
 	// SimulationConfig holds all things necessary for the run
 	sc *sda.SimulationConfig
 }
@@ -65,6 +67,7 @@ func (d *Localhost) Configure(pc *PlatformConfig) {
 	d.localDir = pwd
 	d.debug = pc.Debug
 	d.running = false
+	d.monitorPort = pc.MonitorPort
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in simulation")
@@ -158,7 +161,7 @@ func (d *Localhost) Start(args ...string) error {
 		dbg.Lvl3("Starting", index)
 		host := "localhost" + strconv.Itoa(index)
 		cmdArgs := []string{"-address", host, "-monitor",
-			"localhost:" + strconv.Itoa(monitor.DefaultSinkPort),
+			"localhost:" + strconv.Itoa(d.monitorPort),
 			"-simul", d.Simulation,
 			"-debug", strconv.Itoa(dbg.DebugVisible()),
 		}
