@@ -9,7 +9,6 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"time"
 
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/protocols/manage"
@@ -154,12 +153,7 @@ func main() {
 		allClosed <- true
 	}()
 	dbg.LLvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
-	select {
-	case <-allClosed:
-		dbg.Lvl2(hostAddress, ": all hosts closed")
-	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
-		dbg.Lvl1(hostAddress, ": didn't close after", scs[0].GetCloseWait(), " seconds")
-	}
-	dbg.LLvl3(hostAddress, "is done")
+	<-allClosed
+	dbg.LLvl2(hostAddress, ": all hosts closed")
 	monitor.EndAndCleanup()
 }
