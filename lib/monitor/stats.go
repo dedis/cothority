@@ -32,7 +32,7 @@ type Stats struct {
 	filter DataFilter
 }
 
-// NewStrictStats return a NewStats with some fields extracted from the platform run config
+// NewStats return a NewStats with some fields extracted from the platform run config
 // It  can enforces the default set of measure to have if you pass that as
 // defaults.
 func NewStats(rc map[string]string, defaults ...string) *Stats {
