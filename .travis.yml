@@ -2,7 +2,7 @@
 language: go
 go:
   - 1.6
-install:
+before_install:
   - go get -u github.com/golang/lint/golint
 script:
   # formatting:
