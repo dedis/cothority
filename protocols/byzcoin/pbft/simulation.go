@@ -100,7 +100,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		proto.trBlock = trblock
 		proto.onDoneCB = doneCB
 
-		r := monitor.NewMeasure("round_pbft")
+		r := monitor.NewTimeMeasure("round_pbft")
 		err = proto.PrePrepare()
 		if err != nil {
 			dbg.Error("Couldn't start PrePrepare")
@@ -109,7 +109,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		// wait for finishing pbft:
 		<-doneChan
-		r.Measure()
+		r.Record()
 
 		dbg.Lvl1("Finished round", round)
 	}

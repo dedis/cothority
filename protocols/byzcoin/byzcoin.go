@@ -117,7 +117,7 @@ type ByzCoin struct {
 		*sda.TreeNode
 		viewChange
 	}
-	vcMeasure *monitor.Measure
+	vcMeasure *monitor.TimeMeasure
 	// bool set to true when the final signature is produced
 	doneSigning chan bool
 	// lock associated
@@ -730,7 +730,7 @@ func (bz *ByzCoin) startTimer(millis uint64) {
 // broadcast it and measures the time it takes to accept it.
 func (bz *ByzCoin) sendAndMeasureViewchange() {
 	dbg.Lvl3(bz.Name(), "Created viewchange measure")
-	bz.vcMeasure = monitor.NewMeasure("viewchange")
+	bz.vcMeasure = monitor.NewTimeMeasure("viewchange")
 	vc := newViewChange()
 	var err error
 	for _, n := range bz.Tree().ListNodes() {
@@ -766,7 +766,7 @@ func (bz *ByzCoin) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
 	// only do it once
 	if bz.vcCounter == bz.viewChangeThreshold {
 		if bz.vcMeasure != nil {
-			bz.vcMeasure.Measure()
+			bz.vcMeasure.Record()
 		}
 		if bz.IsRoot() {
 			dbg.Lvl3(bz.Name(), "Viewchange threshold reached (2/3) of all nodes")

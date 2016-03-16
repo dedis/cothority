@@ -67,7 +67,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			return err
 		}
 		// instantiate a byzcoin protocol
-		rComplete := monitor.NewMeasure("round")
+		rComplete := monitor.NewTimeMeasure("round")
 		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
@@ -77,8 +77,8 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		// Register when the protocol is finished (all the nodes have finished)
 		done := make(chan bool)
 		nt.RegisterOnDone(func(sig *NtreeSignature) {
-			rComplete.Measure()
-			dbg.Lvl3("Ntree done")
+			rComplete.Record()
+			dbg.Lvl3("Done")
 			done <- true
 			// TODO verification of signatures
 			/*for {*/

@@ -95,7 +95,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 
 	MkTestDir()
-	rs := make([]monitor.Stats, len(runconfigs))
+	rs := make([]*monitor.Stats, len(runconfigs))
 	// Try 10 times to run the test
 	nTimes := 10
 	stopOnSuccess := true
@@ -126,7 +126,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]monitor.Stats, 0, nTimes)
+		runs := make([]*monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
@@ -160,19 +160,22 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
+func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
 	CheckHosts(rc)
-	rs := monitor.NewStats(rc.Map())
+	rc.Delete("simulation")
+	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
 
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
+
+	monitor.SinkPort = monitorPort
 	if err := deployP.Cleanup(); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 	go func() {
 		if err := monitor.Listen(); err != nil {
@@ -184,7 +187,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	err := deployP.Start()
 	if err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 
 	go func() {
@@ -206,10 +209,10 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	select {
 	case <-done:
 		monitor.Stop()
-		return *rs, nil
+		return rs, nil
 	case <-time.After(time.Second * time.Duration(timeOut)):
 		monitor.Stop()
-		return *rs, errors.New("Simulation timeout")
+		return rs, errors.New("Simulation timeout")
 	}
 }
 

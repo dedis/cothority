@@ -189,6 +189,53 @@ func TestSecureMultiClose(t *testing.T) {
 	<-done2
 }
 
+func TestTcpCounterIO(t *testing.T) {
+	defer dbg.AfterTest(t)
+
+	RegisterMessageType(&TestRegisterS{})
+	dbg.TestOutput(testing.Verbose(), 4)
+	receiverStarted := make(chan bool)
+	fn := func(s Conn) {
+		err := s.Send(context.TODO(), &TestRegisterS{10})
+		if err != nil {
+			t.Fatal("Error while sending message:", err)
+		}
+		close(receiverStarted)
+	}
+
+	h1 := NewTcpHost()
+	h2 := NewTcpHost()
+	done := make(chan bool)
+	go func() {
+		err := h1.Listen("localhost:3000", fn)
+		if err != nil {
+			t.Fatal("Listening failed for h1:", err)
+		}
+		done <- true
+	}()
+
+	c2, err := h2.Open("localhost:3000")
+	if err != nil {
+		t.Fatal("Couldn't open h2:", err)
+	}
+	<-receiverStarted
+	c2.Receive(context.TODO())
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	<-done
+	// verify the amount of bytes read / written
+	if h1.Written() == 0 || h1.Written() != h2.Read() || h2.Read() == 0 || h2.Read() != c2.Read() {
+		t.Fatal("stg is wrong with CounterIO implementation of TcpConn / TcpHost")
+	}
+
+}
+
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
 	defer dbg.AfterTest(t)

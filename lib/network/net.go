@@ -50,6 +50,7 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	// XXX Are we sure we need this mutex here ?
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	t.peers[name] = c
@@ -90,7 +91,6 @@ func (t *TcpHost) Close() error {
 	t.listeningLock.Unlock()
 	// we are NOT listening
 	if !listening {
-		//	fmt.Println("tcphost.Close() without listening")
 		return nil
 	}
 	var stop bool
@@ -110,130 +110,27 @@ func (t *TcpHost) Close() error {
 	return nil
 }
 
-// Remote returns the name of the peer at the end point of
-// the connection
-func (c *TcpConn) Remote() string {
-	return c.Endpoint
+// Read() returns the number of bytes read by all its connections
+// Needed so TcpHost implements the CounterIO interface from lib/monitor
+func (t *TcpHost) Read() uint64 {
+	var size uint64
+	for _, c := range t.peers {
+		size += c.Read()
+	}
+	return size
 }
 
-// Receive waits for any input on the connection and returns
-// the ApplicationMessage **decoded** and an error if something
-// wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
-	var am NetworkMessage
-	am.Constructors = c.host.constructors
-	var err error
-	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
-	// First read the size
-	var s Size
-	defer func() {
-		if err := recover(); err != nil {
-			nm = EmptyApplicationMessage
-			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
-		}
-	}()
-	if err = binary.Read(c.conn, globalOrder, &s); err != nil {
-		return EmptyApplicationMessage, handleError(err)
+// Written() returns the number of bytes written by all its connection
+// Needed so TcpHost implements the CounterIO interface from lib/monitor
+func (t *TcpHost) Written() uint64 {
+	var size uint64
+	for _, c := range t.peers {
+		size += c.Written()
 	}
-	c.receiveMutex.Lock()
-	defer c.receiveMutex.Unlock()
-	b := make([]byte, s)
-	var read Size
-	var buffer bytes.Buffer
-	for Size(buffer.Len()) < s {
-		// read the size of the next packet
-		n, err := c.conn.Read(b)
-		// if error then quit
-		if err != nil {
-			e := handleError(err)
-			return EmptyApplicationMessage, e
-		}
-		// put it in the longterm buffer
-		buffer.Write(b[:n])
-		read += Size(n)
-		// if we could not read everything yet
-		if Size(buffer.Len()) < s {
-			// make b size = bytes that we still need to read (no more no less)
-			b = b[:s-read]
-		}
-	}
-
-	err = am.UnmarshalBinary(buffer.Bytes())
-	if err != nil {
-		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
-	}
-	am.From = c.Remote()
-	return am, nil
+	return size
 }
 
-// how many bytes do we write at once on the socket
-// 1400 seems a safe choice regarding the size of a ethernet packet.
-// https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection
-const maxChunkSize Size = 1400
-
-// Send will convert the NetworkMessage into an ApplicationMessage
-// and send it with the size through the network.
-// Returns an error if anything was wrong
-func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
-	c.sendMutex.Lock()
-	defer c.sendMutex.Unlock()
-	am, err := newNetworkMessage(obj)
-	if err != nil {
-		return fmt.Errorf("Error converting packet: %v\n", err)
-	}
-	dbg.Lvl5("Message SEND =>", fmt.Sprintf("%+v", am))
-	var b []byte
-	b, err = am.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("Error marshaling  message: %s", err.Error())
-	}
-	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
-	// First write the size
-	packetSize := Size(len(b))
-	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
-		dbg.Error("Couldn't write number of bytes")
-		return err
-	}
-	// Then send everything through the connection
-	// Send chunk by chunk
-	var sent Size
-	for sent < packetSize {
-		length := packetSize - sent
-		if length > maxChunkSize {
-			length = maxChunkSize
-		}
-
-		// Sending 'length' bytes
-		n, err := c.conn.Write(b[:length])
-		if err != nil {
-			dbg.Error("Couldn't write chunk starting at", sent, "size", length, err)
-			return handleError(err)
-		}
-		sent += Size(n)
-
-		// bytes left to send
-		b = b[n:]
-	}
-
-	return nil
-}
-
-// Close ... closes the connection
-func (c *TcpConn) Close() error {
-	c.closedMut.Lock()
-	defer c.closedMut.Unlock()
-	if c.closed == true {
-		return nil
-	}
-	err := c.conn.Close()
-	c.closed = true
-	if err != nil {
-		return handleError(err)
-	}
-	return nil
-}
-
-// OpenTcpCOnn is private method that opens a TcpConn to the given name
+// OpenTcpConn is private method that opens a TcpConn to the given name
 func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 	var err error
 	var conn net.Conn
@@ -328,6 +225,9 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 			stc.Close()
 			return
 		}
+		st.connMutex.Lock()
+		st.conns = append(st.conns, stc)
+		st.connMutex.Unlock()
 		go fn(stc)
 	}
 	var addr string
@@ -375,12 +275,196 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 		return nil, fmt.Errorf("Could not connect to any address tied to this Entity")
 	}
 	// Exchange and verify entities
-	return &secure, secure.negotiateOpen(e)
+	err := secure.negotiateOpen(e)
+	if err == nil {
+		st.connMutex.Lock()
+		st.conns = append(st.conns, &secure)
+		st.connMutex.Unlock()
+	}
+	return &secure, err
 }
 
 // String returns a string identifying that host
 func (st *SecureTcpHost) String() string {
 	return st.workingAddress
+}
+
+// Written implements the CounterIO interface
+func (st *SecureTcpHost) Written() uint64 {
+	st.connMutex.Lock()
+	defer st.connMutex.Unlock()
+	var b uint64
+	for _, c := range st.conns {
+		b += c.Written()
+	}
+	return b
+}
+
+// Read implements the CounterIO interface
+func (st *SecureTcpHost) Read() uint64 {
+	st.connMutex.Lock()
+	defer st.connMutex.Unlock()
+	var b uint64
+	for _, c := range st.conns {
+		b += c.Read()
+	}
+	return b
+}
+
+// Remote returns the name of the peer at the end point of
+// the connection
+func (c *TcpConn) Remote() string {
+	return c.Endpoint
+}
+
+// Receive waits for any input on the connection and returns
+// the ApplicationMessage **decoded** and an error if something
+// wrong occured
+func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
+	c.receiveMutex.Lock()
+	defer c.receiveMutex.Unlock()
+	var am NetworkMessage
+	am.Constructors = c.host.constructors
+	var err error
+	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
+	// First read the size
+	var s Size
+	defer func() {
+		if err := recover(); err != nil {
+			nm = EmptyApplicationMessage
+			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
+		}
+	}()
+	if err = binary.Read(c.conn, globalOrder, &s); err != nil {
+		return EmptyApplicationMessage, handleError(err)
+	}
+	b := make([]byte, s)
+	var read Size
+	var buffer bytes.Buffer
+	for Size(buffer.Len()) < s {
+		// read the size of the next packet
+		n, err := c.conn.Read(b)
+		// if error then quit
+		if err != nil {
+			e := handleError(err)
+			return EmptyApplicationMessage, e
+		}
+		// put it in the longterm buffer
+		buffer.Write(b[:n])
+		read += Size(n)
+		// if we could not read everything yet
+		if Size(buffer.Len()) < s {
+			// make b size = bytes that we still need to read (no more no less)
+			b = b[:s-read]
+		}
+	}
+
+	err = am.UnmarshalBinary(buffer.Bytes())
+	if err != nil {
+		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
+	}
+	am.From = c.Remote()
+	// set the size read
+	c.addReadBytes(uint64(s))
+	return am, nil
+}
+
+// how many bytes do we write at once on the socket
+// 1400 seems a safe choice regarding the size of a ethernet packet.
+// https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection
+const maxChunkSize Size = 1400
+
+// Send will convert the NetworkMessage into an ApplicationMessage
+// and send it with the size through the network.
+// Returns an error if anything was wrong
+func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+	c.sendMutex.Lock()
+	defer c.sendMutex.Unlock()
+	am, err := newNetworkMessage(obj)
+	if err != nil {
+		return fmt.Errorf("Error converting packet: %v\n", err)
+	}
+	dbg.Lvl5("Message SEND =>", fmt.Sprintf("%+v", am))
+	var b []byte
+	b, err = am.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("Error marshaling  message: %s", err.Error())
+	}
+	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
+	// First write the size
+	packetSize := Size(len(b))
+	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
+		dbg.Error("Couldn't write number of bytes")
+		return err
+	}
+	// Then send everything through the connection
+	// Send chunk by chunk
+	var sent Size
+	for sent < packetSize {
+		length := packetSize - sent
+		if length > maxChunkSize {
+			length = maxChunkSize
+		}
+
+		// Sending 'length' bytes
+		n, err := c.conn.Write(b[:length])
+		if err != nil {
+			dbg.Error("Couldn't write chunk starting at", sent, "size", length, err)
+			return handleError(err)
+		}
+		sent += Size(n)
+
+		// bytes left to send
+		b = b[n:]
+	}
+	// update stats on the conn
+	c.addWrittenBytes(uint64(packetSize))
+	return nil
+}
+
+// Close ... closes the connection
+func (c *TcpConn) Close() error {
+	c.closedMut.Lock()
+	defer c.closedMut.Unlock()
+	if c.closed == true {
+		return nil
+	}
+	err := c.conn.Close()
+	c.closed = true
+	if err != nil {
+		return handleError(err)
+	}
+	return nil
+}
+
+// Read() returns the number of bytes read by this connection
+// Needed so TcpConn implements the CounterIO interface from lib/monitor
+func (t *TcpConn) Read() uint64 {
+	t.bReadLock.Lock()
+	defer t.bReadLock.Unlock()
+	return t.bRead
+}
+
+// addReadBytes add b bytes to the total number of bytes read
+func (t *TcpConn) addReadBytes(b uint64) {
+	t.bReadLock.Lock()
+	defer t.bReadLock.Unlock()
+	t.bRead += b
+}
+
+// Written() returns the number of bytes written by this connection
+// Needed so TcpConn implements the CounterIO interface from lib/monitor
+func (t *TcpConn) Written() uint64 {
+	t.bWrittenLock.Lock()
+	defer t.bWrittenLock.Unlock()
+	return t.bWritten
+}
+
+// addWrittenBytes add b bytes to the total number of bytes written
+func (t *TcpConn) addWrittenBytes(b uint64) {
+	t.bWrittenLock.Lock()
+	defer t.bWrittenLock.Unlock()
+	t.bWritten += b
 }
 
 // Receive is analog to Conn.Receive but also set the right Entity in the
@@ -429,7 +513,6 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	if err := sc.exchangeEntity(); err != nil {
 		return err
 	}
-
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().Id != e.Id {
 		dbg.Lvl3("Wanted to connect to", e, e.Id, "but got", sc.Entity(), sc.Entity().Id)
@@ -438,4 +521,14 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	}
 
 	return nil
+}
+
+// Read() implements the CounterIO interface
+func (sc *SecureTcpConn) Read() uint64 {
+	return sc.TcpConn.Read()
+}
+
+// Written() implements the CounterIO interface
+func (sc *SecureTcpConn) Written() uint64 {
+	return sc.TcpConn.Written()
 }
