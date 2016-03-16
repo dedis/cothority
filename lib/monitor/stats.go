@@ -262,7 +262,7 @@ func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
 		}
 		// store it
 		if i, err := strconv.Atoi(v); err != nil {
-			dbg.Error("Could not parse the value", k, "from runconfig (v=", v, ")")
+			dbg.Lvl2("Value", k, "from runconfig (v=", v, ") is not an integer and will not be included in statistics")
 			continue
 		} else {
 			s.static[k] = i
