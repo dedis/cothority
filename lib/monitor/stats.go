@@ -285,7 +285,7 @@ type Value struct {
 	name string
 	min  float64
 	max  float64
-
+	sum  float64
 	n    int
 	oldM float64
 	newM float64
@@ -315,6 +315,7 @@ func (t *Value) Store(newTime float64) {
 // optimized).
 // streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
 func (t *Value) Collect() {
+	t.sum = 0
 	for _, newTime := range t.store {
 		// nothings takes 0 ms to complete, so we know it's the first time
 		if t.min > newTime || t.n == 0 {
@@ -336,6 +337,7 @@ func (t *Value) Collect() {
 			t.oldS = t.newS
 		}
 		t.dev = math.Sqrt(t.newS / float64(t.n-1))
+		t.sum += newTime
 	}
 }
 
@@ -370,6 +372,10 @@ func (t *Value) Max() float64 {
 	return t.max
 }
 
+func (t *Value) Sum() float64 {
+	return t.sum
+}
+
 // NumValue returns the number of Value added
 func (t *Value) NumValue() int {
 	return t.n
@@ -387,10 +393,10 @@ func (t *Value) Dev() float64 {
 
 // Header returns the first line of the CSV-file
 func (t *Value) HeaderFields() []string {
-	return []string{t.name + "_min", t.name + "_max", t.name + "_avg", t.name + "_dev"}
+	return []string{t.name + "_min", t.name + "_max", t.name + "_avg", t.name + "_sum", t.name + "_dev"}
 }
 
 // String returns the min, max, avg and dev of a Value
 func (t *Value) Values() []string {
-	return []string{fmt.Sprintf("%f", t.Min()), fmt.Sprintf("%f", t.Max()), fmt.Sprintf("%f", t.Avg()), fmt.Sprintf("%f", t.Dev())}
+	return []string{fmt.Sprintf("%f", t.Min()), fmt.Sprintf("%f", t.Max()), fmt.Sprintf("%f", t.Avg()), fmt.Sprintf("%f", t.Sum()), fmt.Sprintf("%f", t.Dev())}
 }

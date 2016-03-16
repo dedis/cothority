@@ -571,12 +571,12 @@ func (h *Host) WaitForClose() {
 	}
 }
 
-// Written() to implement monitor/CounterIO
-func (h *Host) Written() uint64 {
-	return h.host.Written()
+// Tx() to implement monitor/CounterIO
+func (h *Host) Tx() uint64 {
+	return h.host.Tx()
 }
 
-// Read() to implement monitor/CounterIO
-func (h *Host) Read() uint64 {
-	return h.host.Read()
+// Rx() to implement monitor/CounterIO
+func (h *Host) Rx() uint64 {
+	return h.host.Rx()
 }

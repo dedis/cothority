@@ -139,8 +139,8 @@ func (tm *TimeMeasure) reset() {
 // implemented by cothority/network/ Conn  + Host to know how many bytes a
 // connection / Host has written /read
 type CounterIO interface {
-	Read() uint64
-	Written() uint64
+	Rx() uint64
+	Tx() uint64
 }
 
 // CounterIOMeasure is a struct that takes a CounterIO and can send the
@@ -154,13 +154,13 @@ type CounterIOMeasure struct {
 }
 
 // NewCounterIOMeasure returns an CounterIOMeasure fresh. The base value are set
-// to the current value of counter.Read() and counter.Written()
+// to the current value of counter.Rx() and counter.Tx()
 func NewCounterIOMeasure(name string, counter CounterIO) *CounterIOMeasure {
 	return &CounterIOMeasure{
 		name:    name,
 		counter: counter,
-		baseTx:  counter.Written(),
-		baseRx:  counter.Read(),
+		baseTx:  counter.Tx(),
+		baseRx:  counter.Rx(),
 	}
 }
 
@@ -168,21 +168,21 @@ func NewCounterIOMeasure(name string, counter CounterIO) *CounterIOMeasure {
 // **name**_read) and reset the counters.
 func (cm *CounterIOMeasure) Record() {
 	// creates the read measure
-	bRead := cm.counter.Read()
+	bRx := cm.counter.Rx()
 	// TODO Later on, we might want to do a check on the conversion between
 	// uint64 -> float64, as the MAX values are not the same.
-	read := NewSingleMeasure(cm.name+"_rx", float64(bRead-cm.baseRx))
+	read := NewSingleMeasure(cm.name+"_rx", float64(bRx-cm.baseRx))
 	// creates the  written measure
-	bWritten := cm.counter.Written()
-	written := NewSingleMeasure(cm.name+"_tx", float64(bWritten-cm.baseTx))
+	bTx := cm.counter.Tx()
+	written := NewSingleMeasure(cm.name+"_tx", float64(bTx-cm.baseTx))
 
 	// send them both
 	read.Record()
 	written.Record()
 
 	// reset counters
-	cm.baseRx = bRead
-	cm.baseTx = bWritten
+	cm.baseRx = bRx
+	cm.baseTx = bTx
 }
 
 // Send transmits the given struct over the network.

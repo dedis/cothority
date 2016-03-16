@@ -110,22 +110,22 @@ func (t *TcpHost) Close() error {
 	return nil
 }
 
-// Read() returns the number of bytes read by all its connections
+// Tx() returns the number of bytes read by all its connections
 // Needed so TcpHost implements the CounterIO interface from lib/monitor
-func (t *TcpHost) Read() uint64 {
+func (t *TcpHost) Rx() uint64 {
 	var size uint64
 	for _, c := range t.peers {
-		size += c.Read()
+		size += c.Rx()
 	}
 	return size
 }
 
-// Written() returns the number of bytes written by all its connection
+// Tx() returns the number of bytes written by all its connection
 // Needed so TcpHost implements the CounterIO interface from lib/monitor
-func (t *TcpHost) Written() uint64 {
+func (t *TcpHost) Tx() uint64 {
 	var size uint64
 	for _, c := range t.peers {
-		size += c.Written()
+		size += c.Tx()
 	}
 	return size
 }
@@ -289,24 +289,24 @@ func (st *SecureTcpHost) String() string {
 	return st.workingAddress
 }
 
-// Written implements the CounterIO interface
-func (st *SecureTcpHost) Written() uint64 {
+// Tx implements the CounterIO interface
+func (st *SecureTcpHost) Tx() uint64 {
 	st.connMutex.Lock()
 	defer st.connMutex.Unlock()
 	var b uint64
 	for _, c := range st.conns {
-		b += c.Written()
+		b += c.Tx()
 	}
 	return b
 }
 
-// Read implements the CounterIO interface
-func (st *SecureTcpHost) Read() uint64 {
+// Rx implements the CounterIO interface
+func (st *SecureTcpHost) Rx() uint64 {
 	st.connMutex.Lock()
 	defer st.connMutex.Unlock()
 	var b uint64
 	for _, c := range st.conns {
-		b += c.Read()
+		b += c.Rx()
 	}
 	return b
 }
@@ -437,34 +437,34 @@ func (c *TcpConn) Close() error {
 	return nil
 }
 
-// Read() returns the number of bytes read by this connection
+// Rx() returns the number of bytes read by this connection
 // Needed so TcpConn implements the CounterIO interface from lib/monitor
-func (t *TcpConn) Read() uint64 {
-	t.bReadLock.Lock()
-	defer t.bReadLock.Unlock()
-	return t.bRead
+func (t *TcpConn) Rx() uint64 {
+	t.bRxLock.Lock()
+	defer t.bRxLock.Unlock()
+	return t.bRx
 }
 
 // addReadBytes add b bytes to the total number of bytes read
 func (t *TcpConn) addReadBytes(b uint64) {
-	t.bReadLock.Lock()
-	defer t.bReadLock.Unlock()
-	t.bRead += b
+	t.bRxLock.Lock()
+	defer t.bRxLock.Unlock()
+	t.bRx += b
 }
 
-// Written() returns the number of bytes written by this connection
+// Tx() returns the number of bytes written by this connection
 // Needed so TcpConn implements the CounterIO interface from lib/monitor
-func (t *TcpConn) Written() uint64 {
-	t.bWrittenLock.Lock()
-	defer t.bWrittenLock.Unlock()
-	return t.bWritten
+func (t *TcpConn) Tx() uint64 {
+	t.bTxLock.Lock()
+	defer t.bTxLock.Unlock()
+	return t.bTx
 }
 
 // addWrittenBytes add b bytes to the total number of bytes written
 func (t *TcpConn) addWrittenBytes(b uint64) {
-	t.bWrittenLock.Lock()
-	defer t.bWrittenLock.Unlock()
-	t.bWritten += b
+	t.bTxLock.Lock()
+	defer t.bTxLock.Unlock()
+	t.bTx += b
 }
 
 // Receive is analog to Conn.Receive but also set the right Entity in the
@@ -523,12 +523,12 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	return nil
 }
 
-// Read() implements the CounterIO interface
-func (sc *SecureTcpConn) Read() uint64 {
-	return sc.TcpConn.Read()
+// Rx() implements the CounterIO interface
+func (sc *SecureTcpConn) Rx() uint64 {
+	return sc.TcpConn.Rx()
 }
 
-// Written() implements the CounterIO interface
-func (sc *SecureTcpConn) Written() uint64 {
-	return sc.TcpConn.Written()
+// Tx() implements the CounterIO interface
+func (sc *SecureTcpConn) Tx() uint64 {
+	return sc.TcpConn.Tx()
 }

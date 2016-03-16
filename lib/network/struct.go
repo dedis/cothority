@@ -98,12 +98,12 @@ type TcpConn struct {
 	receiveMutex sync.Mutex
 	// So we only handle one sending packet at a time
 	sendMutex sync.Mutex
-	// bRead is the number of bytes received on this connection
-	bRead     uint64
-	bReadLock sync.Mutex
-	// bWritten in the number of bytes sent on this connection
-	bWritten     uint64
-	bWrittenLock sync.Mutex
+	// bRx is the number of bytes received on this connection
+	bRx     uint64
+	bRxLock sync.Mutex
+	// bTx in the number of bytes sent on this connection
+	bTx     uint64
+	bTxLock sync.Mutex
 }
 
 // SecureHost is the analog of Host but with secure communication
