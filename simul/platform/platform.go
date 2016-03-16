@@ -147,6 +147,12 @@ func (r *RunConfig) Get(field string) string {
 	return replacer.Replace(r.fields[strings.ToLower(field)])
 }
 
+// Delete a field from the runconfig (delete for example Simulation which we
+// dont care in the final csv)
+func (r *RunConfig) Delete(field string) {
+	delete(r.fields, field)
+}
+
 // GetInt returns the integer of the field, or error if not defined
 func (r *RunConfig) GetInt(field string) (int, error) {
 	val := r.Get(field)
