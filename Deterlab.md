@@ -31,7 +31,9 @@ passphrase each time.
 You can store your SSH-key directly in the OSX-keychain by executing:
 
 ```bash
-/usr/bin/ssh-add -K ~/.ssh/<your private ssh key>
+# Change <your private ssh key> to your private's key filename (default
+# is id_rsa
+ssh-add -K ~/.ssh/<your private ssh key>
 ```
 
 Make sure that you actually use the `ssh-add` program that comes with 
@@ -45,6 +47,8 @@ Make sure that the `ssh-agent` is running. Afterwards you can add your
 SSH-key via:
 
 ```bash
+# Change <your private ssh key> to your private's key filename (default
+# is id_rsa
 ssh-add ~/.ssh/<your private ssh key>
 ```
 
