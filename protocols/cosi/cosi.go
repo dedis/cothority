@@ -48,13 +48,14 @@ type ProtocolCosi struct {
 	tempResponse []*CosiResponse
 	// lock associated
 	tempResponseLock *sync.Mutex
+	DoneCallback     func(chal abstract.Secret, response abstract.Secret)
+
 	// hooks related to the various phase of the protocol.
 	// XXX NOT DEPLOYED YET / NOT IN USE.
 	// announcement hook
 	announcementHook AnnouncementHook
 	commitmentHook   CommitmentHook
 	challengeHook    ChallengeHook
-	DoneCallback     func(chal abstract.Secret, response abstract.Secret)
 }
 
 // NewProtocolCosi returns a ProtocolCosi with the node set with the right channels.
@@ -334,10 +335,16 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 		return err
 	}
 
-	// verify the responses at each level with the aggregate public key of this
-	// subtree.
-	if err := pc.Cosi.VerifyResponses(pc.TreeNode().PublicAggregateSubTree); err != nil {
-		return fmt.Errorf("%s Verifcation of responses failed:%s", pc.Name(), err)
+	// Simulation feature => time the verification process.
+	if (VerifyResponse == 1 && pc.IsRoot()) || VerifyResponse == 2 {
+		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Doing Response verification", VerifyResponse)
+		// verify the responses at each level with the aggregate public key of this
+		// subtree.
+		if err := pc.Cosi.VerifyResponses(pc.TreeNode().PublicAggregateSubTree); err != nil {
+			return fmt.Errorf("%s Verifcation of responses failed:%s", pc.Name(), err)
+		}
+	} else {
+		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Skipping Response verification", VerifyResponse)
 	}
 
 	out := &CosiResponse{
