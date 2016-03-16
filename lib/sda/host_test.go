@@ -80,8 +80,8 @@ func TestHostMessaging(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	h1, h2 := SetupTwoHosts(t, false)
-	bw1 := h1.Written()
-	br2 := h2.Read()
+	bw1 := h1.Tx()
+	br2 := h2.Rx()
 	msgSimple := &SimpleMessage{3}
 	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
@@ -93,12 +93,12 @@ func TestHostMessaging(t *testing.T) {
 		t.Fatal("Received message from h2 -> h1 is wrong")
 	}
 
-	written := h1.Written() - bw1
-	read := h2.Read() - br2
+	written := h1.Tx() - bw1
+	read := h2.Rx() - br2
 	if written == 0 || read == 0 || written != read {
 		t.Logf("Before => bw1 = %d vs br2 = %d", bw1, br2)
-		t.Logf("Written = %d, Read = %d", written, read)
-		t.Logf("h1.Written() %d vs h2.Read() %d", h1.Written(), h2.Read())
+		t.Logf("Tx = %d, Rx = %d", written, read)
+		t.Logf("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
 		t.Fatal("Something is wrong with Host.CounterIO")
 	}
 

@@ -22,7 +22,8 @@ func setupMonitor(t *testing.T) (*Monitor, *Stats) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Then measure
-	err := ConnectSink("localhost:" + strconv.Itoa(DefaultSinkPort))
+	err := ConnectSink("localhost:" + strconv.Itoa(mon.SinkPort))
+	EnableMeasure(true)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("Error starting monitor: %s", err))
 	}
@@ -30,7 +31,7 @@ func setupMonitor(t *testing.T) (*Monitor, *Stats) {
 }
 
 func TestReadyNormal(t *testing.T) {
-	//defer dbg.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)

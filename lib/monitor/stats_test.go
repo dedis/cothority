@@ -82,8 +82,20 @@ func TestStatsOrder(t *testing.T) {
 	if !bytes.Equal(str.Bytes(), str2.Bytes()) {
 		t.Fatal("KeyOrder / output not the same for same stats")
 	}
-
 }
+
+func TestValues(t *testing.T) {
+	v1 := NewValue("test")
+	v1.Store(5.0)
+	v1.Store(10.0)
+	v1.Store(15.0)
+
+	v1.Collect()
+	if v1.Avg() != 10.0 || v1.Min() != 5.0 || v1.Max() != 15.0 || v1.Sum() != 30.0 || v1.Dev() != 5.0 {
+		t.Fatal("Wrong value calculation")
+	}
+}
+
 func TestStatsAverage(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
