@@ -113,10 +113,12 @@ func main() {
 		}
 		childrenWait.Record()
 		dbg.Lvl1("Starting new node", simul)
+		measureNet := monitor.NewCounterIOMeasure("bandwith_root", rootSC.Host)
 		err := rootSim.Run(rootSC)
 		if err != nil {
 			dbg.Fatal(err)
 		}
+		measureNet.Record()
 
 		// Test if all Entities are used in the tree, else we'll run into
 		// troubles with CloseAll
@@ -134,6 +136,7 @@ func main() {
 			closeTree = rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
+		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
 		if err != nil {
 			dbg.Fatal(err)
 		}
