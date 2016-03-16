@@ -70,7 +70,7 @@ func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 			}
 			dbg.Lvl3("Signature is OK")
 		}
-		r.Measure()
+		r.Record()
 	}
 	return nil
 }
