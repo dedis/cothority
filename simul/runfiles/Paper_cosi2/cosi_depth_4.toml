@@ -3,6 +3,7 @@ Suite = "ed25519"
 filter_round = 80
 Servers = 32
 Depth = 4
+Rounds = 10
 
 bf
 2
