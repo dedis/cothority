@@ -3,6 +3,8 @@ Simulation = "NaiveTreeSimulation"
 Message = "Hello Ntree & Naive"
 Rounds = 10
 Depth = 3
+Checking = 2
+RunWait = 300
 
 Hosts
 8
@@ -13,4 +15,3 @@ Hosts
 256
 512
 1024
-2048
