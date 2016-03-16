@@ -28,7 +28,7 @@ var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
 var debugVisible int
 var race = false
-var simulTimeout = 120
+var simulTimeout = 180
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
@@ -198,12 +198,16 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 		done <- struct{}{}
 	}()
 
+	timeOut, err := rc.GetInt("simultimeout")
+	if err != nil {
+		timeOut = simulTimeout
+	}
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
 		monitor.Stop()
 		return *rs, nil
-	case <-time.After(time.Second * time.Duration(simulTimeout)):
+	case <-time.After(time.Second * time.Duration(timeOut)):
 		monitor.Stop()
 		return *rs, errors.New("Simulation timeout")
 	}

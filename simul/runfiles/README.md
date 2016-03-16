@@ -20,6 +20,7 @@ experiment, where each experiment makes up one line.
 If you use the `sda.SimulationBFTree`, the following variables are also available:
 
 - BF - branching factor: how many children each node has
+- Depth - the depth of the tree in levels below the root-node
 - Rounds - for how many rounds the simulation should run
 
 ## Timeouts
