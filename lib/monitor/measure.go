@@ -81,14 +81,6 @@ func ConnectSink(addr string) error {
 	return nil
 }
 
-func StopSink() {
-	if err := connection.Close(); err != nil {
-		// at least tell that we could not close the connection:
-		dbg.Error("Could not close connecttion:", err)
-	}
-	encoder = nil
-}
-
 // NewSingleMeasure returns a new measure freshly generated
 func NewSingleMeasure(name string, value float64) *SingleMeasure {
 	return &SingleMeasure{
@@ -112,6 +104,10 @@ func NewTimeMeasure(name string) *TimeMeasure {
 	return tm
 }
 
+// Send measurements to the monitor:
+// - wall time: *name*_wall
+// - system time: *name*_system
+// - user time: *name*_user
 func (tm *TimeMeasure) Record() {
 	// Wall time measurement
 	tm.Wall = NewSingleMeasure(tm.name+"_wall", float64(time.Since(tm.lastWallTime))/1.0e9)
@@ -210,7 +206,12 @@ func send(v interface{}) error {
 // Prints a message to end the logging.
 func EndAndCleanup() {
 	send(NewSingleMeasure("end", 0))
-	StopSink()
+	if err := connection.Close(); err != nil {
+		// at least tell that we could not close the connection:
+		dbg.Error("Could not close connecttion:", err)
+	}
+	encoder = nil
+
 }
 
 // Converts microseconds to seconds.
