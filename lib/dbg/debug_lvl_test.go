@@ -31,12 +31,14 @@ func ExampleMultiParams() {
 func ExampleLLvl() {
 	dbg.Lvl1("Lvl output")
 	dbg.LLvl1("LLvl output")
+	dbg.LLvl2("LLvl2 output")
 	dbg.Lvlf1("Lvlf output")
 	dbg.LLvlf1("LLvlf output")
 
 	// Output:
 	// 1 : (                    dbg_test.ExampleLLvl:   0) - Lvl output
 	// 1!: (                    dbg_test.ExampleLLvl:   0) - LLvl output
+	// 2!: (                    dbg_test.ExampleLLvl:   0) - LLvl2 output
 	// 1 : (                    dbg_test.ExampleLLvl:   0) - Lvlf output
 	// 1!: (                    dbg_test.ExampleLLvl:   0) - LLvlf output
 }

@@ -43,7 +43,7 @@ func init() {
 func main() {
 	flag.Parse()
 	dbg.SetDebugVisible(debugVisible)
-	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible, monitorAddress)
+	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible(), monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", hostAddress)
 	if err != nil {
@@ -112,6 +112,7 @@ func main() {
 			// Double the timeout and try again if not successful.
 			timeout *= 2
 		}
+		dbg.Print("Measuring")
 		childrenWait.Measure()
 		dbg.Lvl1("Starting new node", simul)
 		err := rootSim.Run(rootSC)
