@@ -12,8 +12,9 @@ working on the main code
 ",", which speeds up recompiling
 * `-range start:end`: runs only the simulation-lines including `start` 
 and `end`. 
-Counts from 0, start and end can be omitted and represent beginning and 
-end of lines, respectively.
+Counts starts from 0 and can be omitted (then `start` and `end` default 
+to the first and last line of the simulation's `.toml` file, 
+respectively. 
 
 ### SSH-keys
 For convenience, we recommend that you upload a public SSH-key to the 
@@ -29,8 +30,8 @@ passphrase each time.
 
 You can store your SSH-key directly in the OSX-keychain by executing:
 
-```
-$ /usr/bin/ssh-add -K ~/.ssh/<your private ssh key>
+```bash
+/usr/bin/ssh-add -K ~/.ssh/<your private ssh key>
 ```
 
 Make sure that you actually use the `ssh-add` program that comes with 
@@ -43,7 +44,7 @@ your OSX installation, since those installed through
 Make sure that the `ssh-agent` is running. Afterwards you can add your 
 SSH-key via:
 
-```
-$ ssh-add ~/.ssh/<your private ssh key>
+```bash
+ssh-add ~/.ssh/<your private ssh key>
 ```
 
