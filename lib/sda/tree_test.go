@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"math/rand"
 	"net"
 	"strconv"
 	"testing"
@@ -194,6 +195,33 @@ func TestBinaryTree(t *testing.T) {
 	if !tree.IsBinary(root) {
 		t.Fatal("Tree should be binary")
 	}
+}
+
+func TestTreeNodeEntityIndex(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	names := genLocalhostPeerNames(13, 2000)
+	peerList := genEntityList(tSuite, names)
+	tree := peerList.GenerateNaryTree(3)
+
+	ln := tree.ListNodes()
+	randomNode := ln[rand.Intn(len(ln))]
+	var idx int
+	for i, e := range peerList.List {
+		if e.Equal(randomNode.Entity) {
+			idx = i
+			break
+		}
+	}
+
+	if idx == 0 {
+		t.Fatal("Could not find the entity in the node")
+	}
+
+	if randomNode.EntityIdx != idx {
+		t.Fatal("Index of entity do not correlate")
+	}
+
 }
 
 func TestNaryTree(t *testing.T) {

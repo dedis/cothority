@@ -14,7 +14,8 @@ func init() {
 
 type Simulation struct {
 	sda.SimulationBFTree
-	Message string
+	Message  string
+	Checking int
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
@@ -50,7 +51,10 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 			dbg.Error("Quitting the simulation....", err)
 			return err
 		}
-		node.ProtocolInstance().(*Protocol).SetMessage(msg)
+		pi := node.ProtocolInstance().(*Protocol)
+		pi.SetMessage(msg)
+		pi.verifySignature = e.Checking
+
 		done := make(chan bool)
 		node.OnDoneCallback(func() bool {
 			done <- true
