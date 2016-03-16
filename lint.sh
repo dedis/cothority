@@ -9,7 +9,8 @@ lintOut=`golint ./... | grep "$failOn"`
 if [ -z "$lintOut" ]; then
   exit 0;
 else
-  echo "---------------------------\nLint failed:";
+  echo "--------------------------------------------------------"
+  echo "Lint failed:";
   echo "$lintOut";
   exit 1;
 fi
