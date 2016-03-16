@@ -13,4 +13,5 @@ import (
 	_ "github.com/dedis/cothority/protocols/example/handlers"
 	_ "github.com/dedis/cothority/protocols/jvss"
 	_ "github.com/dedis/cothority/protocols/manage"
+	_ "github.com/dedis/cothority/protocols/medco"
 )

@@ -1,0 +1,186 @@
+package medco
+
+import (
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/dbg"
+	"math/rand"
+	"github.com/dedis/cothority/lib/network"
+	"errors"
+	"github.com/dedis/crypto/abstract"
+	"time"
+)
+
+type PrivateCountProtocol struct {
+	*sda.Node
+	ElGamalQueryChannel chan ElGamalQueryStruct
+	PHQueryChannel      chan PHQueryStruct
+	ElGamalDataChannel  chan ElGamalDataStruct
+	ResultChannel       chan []ResultStruct
+	FeedbackChannel     chan CipherText
+
+	shortTermSecret     abstract.Secret
+
+	ClientPublicKey     *abstract.Point
+	ClientQuery	    *CipherText
+	EncryptedData       *[]CipherText
+}
+
+func init() {
+	network.RegisterMessageType(ElGamalQueryMessage{})
+	network.RegisterMessageType(ElGamalQueryStruct{})
+	network.RegisterMessageType(ElGamalDataMessage{})
+	network.RegisterMessageType(ElGamalDataStruct{})
+	network.RegisterMessageType(PHQueryMessage{})
+	network.RegisterMessageType(PHQueryStruct{})
+	network.RegisterMessageType(ResultMessage{})
+	network.RegisterMessageType(ResultStruct{})
+	sda.ProtocolRegisterName("PrivateCount", NewPrivateCountProtocol)
+}
+
+
+func NewPrivateCountProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
+	newInstance := &PrivateCountProtocol{
+		Node: n,
+		FeedbackChannel: make(chan CipherText),
+		shortTermSecret: n.Suite().Secret().Pick(n.Suite().Cipher([]byte("Cothosecrets" + n.Name()))),
+	}
+
+	errs := make([]error, 0)
+	errs = append(errs, newInstance.RegisterChannel(&newInstance.ElGamalQueryChannel))
+	errs = append(errs, newInstance.RegisterChannel(&newInstance.PHQueryChannel))
+	errs = append(errs, newInstance.RegisterChannel(&newInstance.ElGamalDataChannel))
+	errs = append(errs, newInstance.RegisterChannel(&newInstance.ResultChannel))
+
+	for _, err := range errs {
+		if err != nil {
+			return nil, errors.New("Could not register channel :\n" + err.Error())
+		}
+	}
+
+	return newInstance, nil
+}
+
+func (p *PrivateCountProtocol) Start() error {
+	dbg.Lvl1("Started visitor protocol as node", p.Node.Name())
+
+	if (p.ClientPublicKey == nil) {
+		return errors.New("No public key was provided by the client.")
+	}
+
+	if (p.ClientQuery == nil) {
+		return errors.New("No query was provided by the client.")
+	}
+
+	queryMessage := &ElGamalQueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.ClientPublicKey}
+	queryMessage.Query.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
+	queryMessage.SetVisited(p.Node.TreeNode(), p.Node.Tree())
+
+	p.sendToNext(queryMessage)
+	return nil
+}
+
+func (p *PrivateCountProtocol) Dispatch() error {
+
+
+	deterministicQuery, _ := p.queryReplacementPhase()
+	dbg.Lvl1(p.Node.Name(), "Finished query replacement phase.")
+
+	if p.EncryptedData != nil {
+		dbg.Lvl1(p.Node.Name(), "Injecting its data.")
+		go func() {
+			for _, cipherText := range *p.EncryptedData {
+				p.sendToNext(&ElGamalDataMessage{&VisitorMessage{0}, cipherText})
+			}
+			dbg.Lvl1(p.Node.Name(), "Finished injecting its data.")
+		}()
+	}
+
+	matchCount, _ := p.dataReplacementAndCountingPhase(deterministicQuery)
+	dbg.Lvl1(p.Node.Name(), "Finished data replacement phase.")
+
+	encryptedMatchCount := EncryptInt(p.Suite(), *p.ClientPublicKey, int64(matchCount))
+
+	dbg.Lvl1("Reporting its count")
+	p.matchCountReportingPhase(encryptedMatchCount)
+
+	return nil
+}
+
+func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText,error) {
+	for {
+		select {
+		case encQuery := <-p.ElGamalQueryChannel:
+			encQuery.Query.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
+			encQuery.SetVisited(p.TreeNode(), p.Tree())
+			p.ClientPublicKey = &encQuery.Public
+			if !p.sendToNext(&encQuery.ElGamalQueryMessage) {
+				deterministicQuery := DeterministCipherText{encQuery.Query.C}
+				msg := &PHQueryMessage{deterministicQuery, encQuery.Public}
+				p.broadcast(msg)
+				return &msg.Query, nil
+			}
+		case deterministicQuery := <-p.PHQueryChannel:
+			p.ClientPublicKey = &deterministicQuery.Public
+			return &deterministicQuery.Query, nil
+		}
+	}
+}
+
+func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *DeterministCipherText) (int, error) {
+	var matchCount int
+	for {
+		select {
+		case encDataMessage := <-p.ElGamalDataChannel:
+			encDataMessage.Data.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
+			encDataMessage.SetVisited(p.TreeNode(), p.Tree())
+			if !p.sendToNext(&encDataMessage.ElGamalDataMessage) {
+				if query.Equals(&DeterministCipherText{encDataMessage.Data.C}) {
+					matchCount += 1
+				}
+			}
+		case <-time.After(time.Second * 3):
+			return matchCount, nil
+		}
+	}
+}
+
+func (p *PrivateCountProtocol) matchCountReportingPhase(encryptedMatchCount *CipherText) {
+
+	if !p.IsLeaf() {
+		results := <-p.ResultChannel
+		for _, result := range results {
+			encryptedMatchCount.Add(*encryptedMatchCount, result.Result)
+		}
+	}
+	if p.IsRoot() {
+		p.FeedbackChannel <- *encryptedMatchCount
+	} else {
+		p.SendTo(p.Parent(), &ResultMessage{*encryptedMatchCount})
+	}
+
+}
+
+func (p *PrivateCountProtocol) sendToNext(msg VisitorMessageI) bool {
+	candidates := make([]*sda.TreeNode, 0)
+	for _, node := range p.Tree().ListNodes() {
+		if !msg.AlreadyVisited(node, p.Node.Tree()) {
+			candidates = append(candidates, node)
+		}
+	}
+	if len(candidates) > 0 {
+		err := p.SendTo(candidates[rand.Intn(len(candidates))], msg)
+		if err != nil {
+			dbg.Lvl1("Had an error sending a message: ", err)
+		}
+		return true;
+	}
+	return false
+}
+
+func (p *PrivateCountProtocol) broadcast(msg interface{}) {
+	for _, node := range p.Tree().ListNodes() {
+		if !node.Equal(p.TreeNode()) {
+			p.SendTo(node, msg)
+		}
+	}
+}
