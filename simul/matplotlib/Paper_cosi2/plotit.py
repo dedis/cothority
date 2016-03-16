@@ -128,7 +128,8 @@ def plotOver():
     plotData([['cosi_over_1', 'cosi_over_2', 'cosi_over_3'],
               ['8 servers', '16 servers', '32 servers']], 'cosi_over',
              ylabel="Seconds per round",
-             title="Effect of oversubscription at depth = 3")
+             title="Effect of oversubscription at depth = 3",
+             legend_pos = "upper left")
 
 
 def plotNetwork():
