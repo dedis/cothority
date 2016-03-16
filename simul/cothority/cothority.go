@@ -112,7 +112,7 @@ func main() {
 		}
 		childrenWait.Record()
 		dbg.Lvl1("Starting new node", simul)
-		measureNet := monitor.NewCounterIOMeasure("bandwith_root", rootSC.Host)
+		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Host)
 		err := rootSim.Run(rootSC)
 		if err != nil {
 			dbg.Fatal(err)
