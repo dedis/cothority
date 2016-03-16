@@ -8,10 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
 	"math"
+	"time"
 )
 
 // Configuration-variables
@@ -26,6 +28,7 @@ var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
 var debugVisible int
 var race = false
+var simulTimeout = 120
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
@@ -37,6 +40,7 @@ func init() {
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
 	flag.IntVar(&debugVisible, "debug", dbg.DebugVisible(), "Change debug level (0-5)")
+	flag.IntVar(&simulTimeout, "timeout", simulTimeout, "How long to wait for each simulation to finish")
 }
 
 // Reads in the platform that we want to use and prepares for the tests
@@ -92,7 +96,8 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 	MkTestDir()
 	rs := make([]monitor.Stats, len(runconfigs))
-	nTimes := 1
+	// Try 10 times to run the test
+	nTimes := 10
 	stopOnSuccess := true
 	var f *os.File
 	args := os.O_CREATE | os.O_RDWR | os.O_TRUNC
@@ -125,7 +130,8 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				dbg.Fatal("error running test:", err)
+				dbg.Error("Error running test, trying again:", err)
+				continue
 			}
 
 			runs = append(runs, stats)
@@ -196,7 +202,10 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	select {
 	case <-done:
 		monitor.Stop()
-		return *rs, err
+		return *rs, nil
+	case <-time.After(time.Second * time.Duration(simulTimeout)):
+		monitor.Stop()
+		return *rs, errors.New("Simulation timeout")
 	}
 }
 
