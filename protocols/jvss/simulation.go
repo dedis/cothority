@@ -54,7 +54,7 @@ func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 		dbg.Lvl1("Starting round", round)
 
 		// we only measure the signing process
-		r := monitor.NewMeasure("round")
+		r := monitor.NewTimeMeasure("round")
 		sig, err := proto.Sign(msg)
 		if err != nil {
 			dbg.Error("Couldn't create signature")

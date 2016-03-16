@@ -573,3 +573,13 @@ func (h *Host) WaitForClose() {
 		}
 	}
 }
+
+// Tx() to implement monitor/CounterIO
+func (h *Host) Tx() uint64 {
+	return h.host.Tx()
+}
+
+// Rx() to implement monitor/CounterIO
+func (h *Host) Rx() uint64 {
+	return h.host.Rx()
+}

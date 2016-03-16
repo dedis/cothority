@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
@@ -40,6 +41,7 @@ type Host interface {
 	Open(name string) (Conn, error)
 	Listen(addr string, fn func(Conn)) error // the srv processing function
 	Close() error
+	monitor.CounterIO
 }
 
 // Conn is the basic interface to represent any communication mean
@@ -53,6 +55,7 @@ type Conn interface {
 	// Receive any message through the connection.
 	Receive(ctx context.Context) (NetworkMessage, error)
 	Close() error
+	monitor.CounterIO
 }
 
 // TcpHost is the underlying implementation of
@@ -95,6 +98,12 @@ type TcpConn struct {
 	receiveMutex sync.Mutex
 	// So we only handle one sending packet at a time
 	sendMutex sync.Mutex
+	// bRx is the number of bytes received on this connection
+	bRx     uint64
+	bRxLock sync.Mutex
+	// bTx in the number of bytes sent on this connection
+	bTx     uint64
+	bTxLock sync.Mutex
 }
 
 // SecureHost is the analog of Host but with secure communication
@@ -105,6 +114,7 @@ type SecureHost interface {
 	Listen(func(SecureConn)) error
 	Open(*Entity) (SecureConn, error)
 	String() string
+	monitor.CounterIO
 }
 
 // SecureConn is the analog of Conn but for secure communication
@@ -127,6 +137,9 @@ type SecureTcpHost struct {
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string
+	// list of all connections this host has opened
+	conns     []*SecureTcpConn
+	connMutex sync.Mutex
 }
 
 // SecureTcpConn is a secured tcp connection using Entity as identity
