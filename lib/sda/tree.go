@@ -258,10 +258,12 @@ func (tm TreeMarshal) MakeTree(il *EntityList) (*Tree, error) {
 
 // MakeTreeFromList creates a sub-tree given an EntityList
 func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, il *EntityList) *TreeNode {
+	idx, ent := il.Search(tm.EntityId)
 	tn := &TreeNode{
-		Parent: parent,
-		Id:     tm.NodeId,
-		Entity: il.Search(tm.EntityId),
+		Parent:    parent,
+		Id:        tm.NodeId,
+		Entity:    ent,
+		EntityIdx: idx,
 	}
 	for _, c := range tm.Children {
 		tn.Children = append(tn.Children, c.MakeTreeFromList(tn, il))
@@ -299,13 +301,13 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 }
 
 // Search looks for a corresponding UUID and returns that entity
-func (il *EntityList) Search(uuid uuid.UUID) *network.Entity {
-	for _, i := range il.List {
-		if i.Id == uuid {
-			return i
+func (il *EntityList) Search(uuid uuid.UUID) (int, *network.Entity) {
+	for i, e := range il.List {
+		if e.Id == uuid {
+			return i, e
 		}
 	}
-	return nil
+	return 0, nil
 }
 
 // Get simply returns the entity that is stored at that index in the entitylist
@@ -333,7 +335,7 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 	ilLen := len(il.List)
 	// only use all Entities if we have the same number of nodes and hosts
 	useAll := ilLen == nodes
-	root := NewTreeNode(il.List[0])
+	root := NewTreeNode(0, il.List[0])
 	used[0] = true
 	levelNodes := []*TreeNode{root}
 	totalNodes := 1
@@ -374,7 +376,7 @@ func (il *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 					}
 					childHost, _, _ = net.SplitHostPort(il.List[elIndex].Addresses[0])
 				}
-				child := NewTreeNode(il.List[elIndex])
+				child := NewTreeNode(elIndex, il.List[elIndex])
 				used[elIndex] = true
 				elIndex = (elIndex + 1) % ilLen
 				totalNodes += 1
@@ -399,7 +401,7 @@ func (il *EntityList) GenerateNaryTree(N int) *Tree {
 // addNary is a recursive function to create the binary tree
 func (il *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	if start <= end && end < len(il.List) {
-		node := NewTreeNode(il.List[start])
+		node := NewTreeNode(start, il.List[start])
 		if parent != nil {
 			node.Parent = parent
 			parent.Children = append(parent.Children, node)
@@ -429,6 +431,8 @@ type TreeNode struct {
 	// The Entity points to the corresponding host. One given host
 	// can be used more than once in a tree.
 	Entity *network.Entity
+	// EntityIdx is the index in the EntityList where the `Entity` is located
+	EntityIdx int
 	// Parent link
 	Parent *TreeNode
 	// Children links
@@ -445,12 +449,13 @@ func (t *TreeNode) Name() string {
 var TreeNodeType = network.RegisterMessageType(TreeNode{})
 
 // NewTreeNode creates a new TreeNode with the proper Id
-func NewTreeNode(ni *network.Entity) *TreeNode {
+func NewTreeNode(entityIdx int, ni *network.Entity) *TreeNode {
 	tn := &TreeNode{
-		Entity:   ni,
-		Parent:   nil,
-		Children: make([]*TreeNode, 0),
-		Id:       uuid.NewV4(),
+		Entity:    ni,
+		EntityIdx: entityIdx,
+		Parent:    nil,
+		Children:  make([]*TreeNode, 0),
+		Id:        uuid.NewV4(),
 	}
 	return tn
 }

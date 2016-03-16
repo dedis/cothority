@@ -101,7 +101,7 @@ def plotOver():
     plot_show('cosi_over')
 
     ranges = []
-    for index, label in enumerate(['8', '16', '4']):
+    for index, label in enumerate(['8', '16', '32']):
         ranges.append(mplot.plotMMA(plots[index], 'round_wall', colors[index][0], 4,
                        dict(label='Cosi ' + label + ' servers', linestyle='-', marker='o',
                             color=colors[index][1], zorder=5)))
@@ -116,6 +116,29 @@ def plotOver():
     mplot.plotEnd()
 
 def plotNetwork():
+    mplot.plotPrepareLogLog()
+    plots = read_csvs('jvss', 'naive_cosi', 'ntree_cosi', 'cosi_depth_3')
+    plot_show('comparison_network')
+
+    for index, label in enumerate(['JVSS', 'Naive', 'NTree', 'CoSi']):
+        bandwidth = []
+        data = plots[index]
+        bw_tx = data.columns['bandwidth_root_tx_sum']
+        bw_rx = data.columns['bandwidth_root_rx_sum']
+        for p in range(0, len(bw_tx)):
+            bandwidth.append(bw_tx[p] + bw_rx[p])
+        plt.plot(data.x, bandwidth, label=label, linestyle='-', marker='o', color=colors[index][1])
+
+    # Make horizontal lines and add arrows for JVSS
+    # plt.ylim(0.5, 8)
+    # plt.xlim(16, xmax * 1.2)
+    plt.ylabel('Total network-traffic')
+
+    plt.legend(loc=u'lower right')
+    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    #ax = plt.axes()
+    #ax.set_xticks([16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
+    mplot.plotEnd()
     return
 
 def plotChecking():
@@ -155,5 +178,5 @@ plotCoSi()
 plotCoSiSysUser()
 plotBF()
 plotOver()
-#plotNetwork()
+plotNetwork()
 #plotChecking()

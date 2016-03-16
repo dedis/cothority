@@ -190,6 +190,7 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 		dbg.Error(err)
 		return rs, err
 	}
+	monitor.SinkPort = monitorPort
 	go func() {
 		if err := monitor.Listen(); err != nil {
 			dbg.Fatal("Could not monitor.Listen():", err)

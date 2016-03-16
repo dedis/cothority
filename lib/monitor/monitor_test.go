@@ -31,7 +31,7 @@ func setupMonitor(t *testing.T) (*Monitor, *Stats) {
 }
 
 func TestReadyNormal(t *testing.T) {
-	//defer dbg.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)

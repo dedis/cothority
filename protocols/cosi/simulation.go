@@ -19,6 +19,9 @@ func init() {
 
 type Simulation struct {
 	sda.SimulationBFTree
+
+	// See https://github.com/dedis/cothority/issues/260
+	Checking int
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
@@ -35,6 +38,15 @@ func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, 
 	cs.CreateEntityList(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
 	return sim, err
+}
+
+func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
+	err := cs.SimulationBFTree.Node(sc)
+	if err != nil {
+		return err
+	}
+	VerifyResponse = cs.Checking
+	return nil
 }
 
 func (cs *Simulation) Run(config *sda.SimulationConfig) error {
