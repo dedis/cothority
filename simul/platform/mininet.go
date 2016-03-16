@@ -125,6 +125,7 @@ func (m *MiniNet) Cleanup() error {
 	if err != nil {
 		dbg.Lvl3(err)
 	}
+	dbg.LLvl3("Done with cli.py")
 	return nil
 }
 
@@ -189,12 +190,13 @@ func (m *MiniNet) Start(args ...string) error {
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
 	go func() {
+		dbg.LLvl3("Starting simulation over mininet")
 		startcli := "echo -e \"sync\\nstart\\n\\nquit\\n\" | python cli.py"
 		_, err := cliutils.SshRun(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
 		if err != nil {
 			dbg.Lvl3(err)
 		}
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 60)
 		m.sshMininet <- "finished"
 	}()
 
@@ -247,6 +249,6 @@ func (m *MiniNet) readHosts() error {
 
 	m.HostIPs = make([]string, num_servers)
 	copy(m.HostIPs, nodes[2:])
-	dbg.LLvl4("Nodes are:", m.HostIPs)
+	dbg.Lvl4("Nodes are:", m.HostIPs)
 	return nil
 }
