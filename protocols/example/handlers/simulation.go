@@ -48,13 +48,13 @@ func (e *ExampleHandlersSimulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		round := monitor.NewMeasure("round")
+		round := monitor.NewTimeMeasure("round")
 		n, err := config.Overlay.StartNewNodeName("ExampleHandlers", config.Tree)
 		if err != nil {
 			return err
 		}
 		children := <-n.ProtocolInstance().(*ProtocolExampleHandlers).ChildCount
-		round.Measure()
+		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +
 				" children")
