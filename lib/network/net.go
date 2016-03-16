@@ -235,7 +235,9 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
 		dbg.Lvl3("Starting to listen on", addr)
+		st.lockAddress.Lock()
 		st.workingAddress = addr
+		st.lockAddress.Unlock()
 		if err = st.TcpHost.listen(addr, receiver); err != nil {
 			// The listening is over
 			if err == ErrClosed || err == ErrEOF {
@@ -286,6 +288,8 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 
 // String returns a string identifying that host
 func (st *SecureTcpHost) String() string {
+	st.lockAddress.Lock()
+	defer st.lockAddress.Unlock()
 	return st.workingAddress
 }
 
