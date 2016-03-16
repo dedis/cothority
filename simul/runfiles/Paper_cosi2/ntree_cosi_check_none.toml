@@ -3,6 +3,7 @@ Simulation = "NaiveTreeSimulation"
 Message = "Hello Ntree & Naive"
 Rounds = 10
 Depth = 3
+Checking = 0
 
 BF
 2
@@ -12,3 +13,7 @@ BF
 6
 7
 8
+10
+12
+14
+16
