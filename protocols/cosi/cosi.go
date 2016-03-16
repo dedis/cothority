@@ -50,8 +50,6 @@ type ProtocolCosi struct {
 	tempResponseLock *sync.Mutex
 	DoneCallback     func(chal abstract.Secret, response abstract.Secret)
 
-	// SIMULATION PURPOSE - do we need to verify the response or not
-	verifyResponse int
 	// hooks related to the various phase of the protocol.
 	// XXX NOT DEPLOYED YET / NOT IN USE.
 	// announcement hook
@@ -136,9 +134,8 @@ func (pc *ProtocolCosi) StartAnnouncement() error {
 	announcement := pc.Cosi.CreateAnnouncement()
 
 	out := &CosiAnnouncement{
-		From:           pc.treeNodeId,
-		VerifyResponse: pc.verifyResponse,
-		Announcement:   announcement,
+		From:         pc.treeNodeId,
+		Announcement: announcement,
 	}
 
 	return pc.sendAnnouncement(out)
@@ -167,10 +164,6 @@ func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
 		From:         pc.treeNodeId,
 		Announcement: announcement,
 	}
-
-	// SIMULATION PURPOSE
-	pc.verifyResponse = in.VerifyResponse
-	out.VerifyResponse = in.VerifyResponse
 
 	// send the output to children
 	return pc.sendAnnouncement(out)
@@ -343,15 +336,15 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 	}
 
 	// Simulation feature => time the verification process.
-	if (pc.verifyResponse == 1 && pc.IsRoot()) || pc.verifyResponse == 2 {
-		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Doing Response verification", pc.verifyResponse)
+	if (VerifyResponse == 1 && pc.IsRoot()) || VerifyResponse == 2 {
+		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Doing Response verification", VerifyResponse)
 		// verify the responses at each level with the aggregate public key of this
 		// subtree.
 		if err := pc.Cosi.VerifyResponses(pc.TreeNode().PublicAggregateSubTree); err != nil {
 			return fmt.Errorf("%s Verifcation of responses failed:%s", pc.Name(), err)
 		}
 	} else {
-		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Skipping Response verification", pc.verifyResponse)
+		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Skipping Response verification", VerifyResponse)
 	}
 
 	out := &CosiResponse{

@@ -11,21 +11,16 @@ import (
 
 // The main messages used by CoSi
 
+// see https://github.com/dedis/cothority/issues/260
+// 0 - no check at all
+// 1 - check only at root
+// 2 - check at each level of the tree
+var VerifyResponse = 1
+
 // Broadcasted message initiated and signed by proposer
 type CosiAnnouncement struct {
 	// From = TreeNodeId in the Tree
 	From uuid.UUID
-	// Tells to the node whether they should make the verification or not
-	// XXX XXX UGLY HACK XXX XXX
-	// Is to be removed during the next versions of SDA. Need that for the
-	// moment because no way to have external configuration for the intermediate
-	// and leaf nodes.
-	// see https://github.com/dedis/cothority/issues/260
-	// 0 - no check at all
-	// 1 - check only at root
-	// 2 - check at each level of the tree
-	VerifyResponse int
-
 	*cosi.Announcement
 }
 

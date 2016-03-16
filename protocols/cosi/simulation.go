@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("CoSiSimulation", NewCoSiSimulation)
+	sda.SimulationRegister("CoSi", NewCoSiSimulation)
 	// default protocol initialization. See Run() for override this one for the
 	// root.
 	sda.ProtocolRegisterName("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
@@ -40,6 +40,15 @@ func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConf
 	return sim, err
 }
 
+func (cs *CoSiSimulation) Node(sc *sda.SimulationConfig) error {
+	err := cs.SimulationBFTree.Node(sc)
+	if err != nil {
+		return err
+	}
+	VerifyResponse = cs.Checking
+	return nil
+}
+
 func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
@@ -55,8 +64,6 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		}
 		// the protocol itself
 		proto := node.ProtocolInstance().(*ProtocolCosi)
-		// verification check
-		proto.verifyResponse = cs.Checking
 		// give the message to sign
 		proto.SigningMessage(msg)
 		// tell us when it is done
