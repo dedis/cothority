@@ -135,7 +135,9 @@ func (tm *TimeMeasure) reset() {
 // implemented by cothority/network/ Conn  + Host to know how many bytes a
 // connection / Host has written /read
 type CounterIO interface {
+	// Rx returns the number of bytes read by this interface
 	Rx() uint64
+	// Tx returns the number of bytes transmitted / written by this interface
 	Tx() uint64
 }
 
