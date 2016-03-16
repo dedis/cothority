@@ -112,7 +112,7 @@ func main() {
 		}
 		childrenWait.Record()
 		dbg.Lvl1("Starting new node", simul)
-		measureNet := monitor.NewCounterIOMeasure("bandwith_root", rootSC.Host)
+		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Host)
 		err := rootSim.Run(rootSC)
 		if err != nil {
 			dbg.Fatal(err)
@@ -152,8 +152,8 @@ func main() {
 		}
 		allClosed <- true
 	}()
-	dbg.LLvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
+	dbg.Lvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
 	<-allClosed
-	dbg.LLvl2(hostAddress, ": all hosts closed")
+	dbg.Lvl2(hostAddress, "has all hosts closed")
 	monitor.EndAndCleanup()
 }

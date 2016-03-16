@@ -164,7 +164,8 @@ class MPlot:
         sf.set_scientific(False)
         # ax.yaxis.set_major_formatter(sf)
         # ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%2.2e'))
-        ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%2.2f'))
+        if logy == 2:
+            ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%2.2f'))
 
 
 

@@ -116,7 +116,7 @@ def plotOver():
     mplot.plotEnd()
 
 def plotNetwork():
-    mplot.plotPrepareLogLog()
+    mplot.plotPrepareLogLog(2, 10)
     plots = read_csvs('jvss', 'naive_cosi', 'ntree_cosi', 'cosi_depth_3')
     plot_show('comparison_network')
 
@@ -132,7 +132,7 @@ def plotNetwork():
     # Make horizontal lines and add arrows for JVSS
     # plt.ylim(0.5, 8)
     # plt.xlim(16, xmax * 1.2)
-    plt.ylabel('Total network-traffic')
+    plt.ylabel('Total network-traffic [bytes]')
 
     plt.legend(loc=u'lower right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)

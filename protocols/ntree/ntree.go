@@ -114,7 +114,7 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 		// add both the children signature + the sub tree signatures
 		sig.SubSigs = append(sig.SubSigs, sigs.OwnSig)
 		sig.SubSigs = append(sig.SubSigs, sigs.SubSigs...)
-	}
+	}§§§
 
 	if !p.IsRoot() {
 		return p.SendTo(p.Parent(), &sig)
