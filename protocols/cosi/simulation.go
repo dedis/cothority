@@ -26,10 +26,12 @@ type CoSiSimulation struct {
 
 func NewCoSiSimulation(config string) (sda.Simulation, error) {
 	cs := new(CoSiSimulation)
+	cs.Checking = 2
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
 	}
+
 	return cs, nil
 }
 
