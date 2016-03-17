@@ -24,7 +24,12 @@ NOBUILD=""
 go build
 
 for simul in $DIR/*toml; do
-    echo "Simulating file $(basename $simul)"
-    ./simul -platform $PLATFORM $NOBUILD $FLAGS $simul | egrep "$GREP"
-    NOBUILD="-nobuild"
+    simul_base=$( basename $simul .toml )
+    if [ -f test_data/$simul_base.csv ]; then
+        echo "Skipping $simul_base as csv exists"
+    else
+        echo "Starting runfile $simul_base""
+        ./simul -platform $PLATFORM $NOBUILD $FLAGS $simul | egrep "$GREP"
+        NOBUILD="-nobuild"
+    fi
 done
