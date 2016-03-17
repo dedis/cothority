@@ -8,8 +8,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("NaiveTreeSimulation", NewSimulation)
-	sda.ProtocolRegisterName("CoSiNtree", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(node) })
+	sda.SimulationRegister("NaiveTree", NewSimulation)
 }
 
 type Simulation struct {
@@ -49,7 +48,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 		dbg.Lvl1("Starting round", round, "with message", string(msg))
 		round := monitor.NewTimeMeasure("round")
 
-		node, err := config.Overlay.CreateNewNodeName("CoSiNtree", config.Tree)
+		node, err := config.Overlay.CreateNewNodeName("CoSi", config.Tree)
 		if err != nil {
 			dbg.Error("Quitting the simulation....", err)
 			return err
