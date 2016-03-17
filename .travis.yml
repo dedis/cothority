@@ -3,6 +3,10 @@ language: go
 go:
   - 1.6
 script:
+  # formatting:
   - ./gofmt.sh
+  # linter:
+  # - go get -u github.com/golang/lint/golint
+  # - ./lint.sh
   # do not run any test binary in parallel (see go help build for more info on the -p flag)
   - go test -v -race -p=1 ./...
