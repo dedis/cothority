@@ -425,7 +425,6 @@ func TestProtocolBlocking(t *testing.T) {
 	go func() {
 		var done1 bool
 		var done2 bool
-
 		for {
 			select {
 			case <-bp1.doneChan:
@@ -435,8 +434,6 @@ func TestProtocolBlocking(t *testing.T) {
 				if !done2 {
 					t.Fatal("Node 1 should not have finished already")
 				} else {
-					n1.Done()
-					n2.Done()
 					done <- true
 					return
 				}

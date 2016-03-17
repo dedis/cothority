@@ -618,6 +618,9 @@ func (w *worker) run() {
 	var stop bool
 	for !stop {
 		w.readyChan <- true
+		if stop {
+			break
+		}
 		select {
 		case msg := <-w.msgChan:
 			// this is the blocking function
