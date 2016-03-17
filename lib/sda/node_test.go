@@ -415,23 +415,23 @@ func TestBlocking(t *testing.T) {
 	p1 := n1.ProtocolInstance().(*BlockingProtocol)
 	p2 := n2.ProtocolInstance().(*BlockingProtocol)
 	go func() {
-		dbg.Lvl2("Before")
+		// Send two messages to n1, which blocks the old interface
 		err := l.SendTreeNode("", n2, n1, &NodeTestMsg{})
 		if err != nil {
 			t.Fatal("Couldn't send message:", err)
 		}
-		dbg.Lvl2("During1")
 		err = l.SendTreeNode("", n2, n1, &NodeTestMsg{})
 		if err != nil {
 			t.Fatal("Couldn't send message:", err)
 		}
-		dbg.Lvl2("During2")
+		// Now send a message to n2, but in the old interface this
+		// blocks.
 		err = l.SendTreeNode("", n1, n2, &NodeTestMsg{})
 		if err != nil {
 			t.Fatal("Couldn't send message:", err)
 		}
-		dbg.Lvl2("After")
 	}()
+	// Release p2
 	p2.stopBlockChan <- true
 	select {
 	case <-p2.doneChan:
