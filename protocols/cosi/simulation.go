@@ -17,9 +17,9 @@ func init() {
 type Simulation struct {
 	sda.SimulationBFTree
 
-	// Do we want to check signature at each level, only the root or nothing at
-	// all ?
-	// See https://github.com/dedis/cothority/issues/260
+	// 0 - don't check any signatures
+	// 1 - only the root-node checks the aggregate signature
+	// 2 - every node checks the aggregate signature
 	Checking int
 }
 

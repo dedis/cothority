@@ -15,6 +15,8 @@ func init() {
 
 type Simulation struct {
 	sda.SimulationBFTree
+	// 0 - no check
+	// 1 - check signatures at the end
 	Checking int
 }
 

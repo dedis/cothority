@@ -14,7 +14,10 @@ func init() {
 
 type Simulation struct {
 	sda.SimulationBFTree
-	Message  string
+	Message string
+	// 0 - no check
+	// 1 - check only direct children's signature
+	// 2 - check the whole subtree
 	Checking int
 }
 
