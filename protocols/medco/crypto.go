@@ -9,8 +9,8 @@ import (
 )
 
 
-const MAX_HOMOMORPHIC_INT int64 = 3000
-var pointToInt map[abstract.Point]int64 = make(map[abstract.Point]int64)
+const MAX_HOMOMORPHIC_INT int64 = 300
+var PointToInt map[string]int64 = make(map[string]int64, MAX_HOMOMORPHIC_INT)
 var currentGreatestM abstract.Point
 var currentGreatestInt int64 = 0
 
@@ -21,6 +21,8 @@ type CipherText struct {
 type DeterministCipherText struct {
 	C abstract.Point
 }
+
+type CipherVector []CipherText
 
 func (c *CipherText) ReplaceContribution(suite abstract.Suite, prikey abstract.Secret, shortTermPriKey abstract.Secret) {
 	egContrib := suite.Point().Mul(c.K, prikey)
@@ -38,6 +40,33 @@ func (c *CipherText) Add(c1, c2 CipherText) *CipherText {
 
 func (dc *DeterministCipherText) Equals(dc2 *DeterministCipherText) bool {
 	return dc2.C.Equal(dc.C)
+}
+
+func (cv *CipherVector) Add(cv1, cv2 CipherVector) error{
+	if len(cv1) != len(cv2) {
+		return errors.New("Cannot add CipherVectors of different lenght.")
+	}
+	var i int
+	for i, _ = range cv1 {
+		(*cv)[i].Add(cv1[i], cv2[i])
+	}
+	return  nil
+}
+
+func InitCipherVector(suite abstract.Suite, dim int) *CipherVector {
+	cv := make(CipherVector, dim)
+	for i := 0; i < dim; i++ {
+		cv[i] = CipherText{suite.Point().Null(), suite.Point().Null()}
+	}
+	return &cv
+}
+
+func NullCipherVector(suite abstract.Suite, dim int, pubkey abstract.Point) CipherVector {
+	nv := make(CipherVector, dim)
+	for i := 0 ; i<dim ; i++ {
+		nv[i] = *EncryptInt(suite, pubkey, 0)
+	}
+	return nv
 }
 
 func EncryptBytes(suite abstract.Suite, pubkey abstract.Point, message []byte) (*CipherText, error) {
@@ -83,7 +112,7 @@ func DecryptInt(suite abstract.Suite, prikey abstract.Secret, cipher CipherText)
 	var m int64
 	var ok bool
 
-	if m, ok = pointToInt[M]; ok {
+	if m, ok = PointToInt[M.String()]; ok {
 		return m
 	}
 
@@ -92,10 +121,19 @@ func DecryptInt(suite abstract.Suite, prikey abstract.Secret, cipher CipherText)
 	}
 
 	for Bi, m = currentGreatestM, currentGreatestInt; !Bi.Equal(M) && m < MAX_HOMOMORPHIC_INT; Bi, m = Bi.Add(Bi, B), m+1 {
-		pointToInt[Bi] = m
+		PointToInt[Bi.String()] = m
 	}
 	currentGreatestM = Bi
-	pointToInt[Bi] = m
+	PointToInt[Bi.String()] = m
 	currentGreatestInt = m
 	return m
+}
+
+func DecryptIntVector(suite abstract.Suite, prikey abstract.Secret, cipherVector CipherVector) []int64 {
+
+	result := make([]int64, len(cipherVector))
+	for i, c := range cipherVector {
+		result[i] = DecryptInt(suite, prikey, c)
+	}
+	return result
 }

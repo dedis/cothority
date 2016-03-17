@@ -11,12 +11,17 @@ import (
 	"github.com/dedis/cothority/protocols/medco"
 	"strconv"
 	"github.com/dedis/crypto/random"
+	"reflect"
 )
 
-const NUM_MESS = 100
-const needle = "code9"
+const NUM_MESS = 10
+const NUM_BUCKET = 3
+const needle = "code0"
 func codeGen(i int) string {
-	return "code" + strconv.Itoa(i%10)
+	return "code" + strconv.Itoa(i%1)
+}
+func bucketGen(i int) int {
+	return i % NUM_BUCKET
 }
 
 func Test5Nodes(t *testing.T) {
@@ -32,25 +37,29 @@ func Test5Nodes(t *testing.T) {
 	suite := host[0].Suite()
 	aggregateKey := entityList.Aggregate
 
-	dbg.Lvl1("Encrypting dummy data...")
-	var targetCount int64
-	var code string
-	EncryptedData := make([]medco.CipherText, NUM_MESS, NUM_MESS)
-	for i := 0; i < NUM_MESS; i++ {
-		if code = codeGen(i); code  == needle {
-			targetCount += 1
-		}
-		c, _ := medco.EncryptBytes(suite, aggregateKey, []byte(code))
-		EncryptedData[i] = *c
-	}
-
 	clientSecret  := suite.Secret().Pick(random.Stream)
 	clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
 	clientQuery,_ := medco.EncryptBytes(suite, aggregateKey, []byte(needle))
 
+	dbg.Lvl1("Encrypting dummy data...")
+	targetCounts := make([]int64, 3)
+	var code string
+	EncryptedData := make([]medco.ElGamalData, NUM_MESS, NUM_MESS)
+	for i := 0; i < NUM_MESS; i++ {
+		if code = codeGen(i); code  == needle {
+			targetCounts[bucketGen(i)] += 1
+		}
+		c, _ := medco.EncryptBytes(suite, aggregateKey, []byte(code))
+		buckets := medco.NullCipherVector(suite, NUM_BUCKET, clientPublic)
+		buckets[bucketGen(i)] = *medco.EncryptInt(suite, clientPublic, 1)
+		EncryptedData[i] = medco.ElGamalData{buckets, *c}
+	}
+	dbg.Lvl1("... Done")
+
 	root.ProtocolInstance().(*medco.PrivateCountProtocol).EncryptedData = &EncryptedData
 	root.ProtocolInstance().(*medco.PrivateCountProtocol).ClientPublicKey = &clientPublic
 	root.ProtocolInstance().(*medco.PrivateCountProtocol).ClientQuery = clientQuery
+	root.ProtocolInstance().(*medco.PrivateCountProtocol).Buckets = &[]string{"1","2","3"}
 
 	feedback := root.ProtocolInstance().(*medco.PrivateCountProtocol).FeedbackChannel
 
@@ -60,10 +69,10 @@ func Test5Nodes(t *testing.T) {
 
 	select {
 	case encryptedResult := <- feedback:
-		result := medco.DecryptInt(suite, clientSecret, encryptedResult)
+		result := medco.DecryptIntVector(suite, clientSecret, encryptedResult)
 		dbg.Lvl1("RESULT:")
-		dbg.Lvl1("Done with result =",result, "(target", targetCount,")" )
-		if targetCount != result {
+		dbg.Lvl1("Done with result =",result, "(target", targetCounts,")" )
+		if !reflect.DeepEqual(targetCounts, result) {
 			t.Fatal("Bad result.")
 		}
 	case <-time.After(timeout):

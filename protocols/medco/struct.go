@@ -17,6 +17,7 @@ type VisitorMessage struct {
 type ElGamalQueryMessage struct {
 	*VisitorMessage
 	Query CipherText
+	Buckets []string
 	Public abstract.Point
 }
 
@@ -27,6 +28,7 @@ type ElGamalQueryStruct struct {
 
 type PHQueryMessage struct {
 	Query DeterministCipherText
+	Buckets []string
 	Public abstract.Point
 }
 
@@ -35,9 +37,14 @@ type PHQueryStruct struct {
 	PHQueryMessage
 }
 
+type ElGamalData struct {
+	Buckets CipherVector
+	Code CipherText
+}
+
 type ElGamalDataMessage struct {
 	*VisitorMessage
-	Data CipherText
+	ElGamalData
 }
 
 type ElGamalDataStruct struct {
@@ -46,7 +53,7 @@ type ElGamalDataStruct struct {
 }
 
 type ResultMessage struct {
-	Result CipherText
+	Result CipherVector
 }
 
 type ResultStruct struct {

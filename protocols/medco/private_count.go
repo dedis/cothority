@@ -16,13 +16,14 @@ type PrivateCountProtocol struct {
 	PHQueryChannel      chan PHQueryStruct
 	ElGamalDataChannel  chan ElGamalDataStruct
 	ResultChannel       chan []ResultStruct
-	FeedbackChannel     chan CipherText
+	FeedbackChannel     chan CipherVector
 
 	shortTermSecret     abstract.Secret
 
 	ClientPublicKey     *abstract.Point
 	ClientQuery	    *CipherText
-	EncryptedData       *[]CipherText
+	Buckets		    *[]string
+	EncryptedData       *[]ElGamalData
 }
 
 func init() {
@@ -41,7 +42,7 @@ func init() {
 func NewPrivateCountProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 	newInstance := &PrivateCountProtocol{
 		Node: n,
-		FeedbackChannel: make(chan CipherText),
+		FeedbackChannel: make(chan CipherVector),
 		shortTermSecret: n.Suite().Secret().Pick(n.Suite().Cipher([]byte("Cothosecrets" + n.Name()))),
 	}
 
@@ -71,7 +72,7 @@ func (p *PrivateCountProtocol) Start() error {
 		return errors.New("No query was provided by the client.")
 	}
 
-	queryMessage := &ElGamalQueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.ClientPublicKey}
+	queryMessage := &ElGamalQueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.Buckets ,*p.ClientPublicKey}
 	queryMessage.Query.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 	queryMessage.SetVisited(p.Node.TreeNode(), p.Node.Tree())
 
@@ -81,8 +82,8 @@ func (p *PrivateCountProtocol) Start() error {
 
 func (p *PrivateCountProtocol) Dispatch() error {
 
-
-	deterministicQuery, _ := p.queryReplacementPhase()
+	dbg.Lvl1("Began running protocol", p.Node.Name())
+	deterministicQuery, buckets, _ := p.queryReplacementPhase()
 	dbg.Lvl1(p.Node.Name(), "Finished query replacement phase.")
 
 	if p.EncryptedData != nil {
@@ -95,18 +96,17 @@ func (p *PrivateCountProtocol) Dispatch() error {
 		}()
 	}
 
-	matchCount, _ := p.dataReplacementAndCountingPhase(deterministicQuery)
+	encryptedBuckets, _ := p.dataReplacementAndCountingPhase(deterministicQuery, buckets)
 	dbg.Lvl1(p.Node.Name(), "Finished data replacement phase.")
 
-	encryptedMatchCount := EncryptInt(p.Suite(), *p.ClientPublicKey, int64(matchCount))
 
 	dbg.Lvl1("Reporting its count")
-	p.matchCountReportingPhase(encryptedMatchCount)
+	p.matchCountReportingPhase(&encryptedBuckets)
 
 	return nil
 }
 
-func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText,error) {
+func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText, []string,error) {
 	for {
 		select {
 		case encQuery := <-p.ElGamalQueryChannel:
@@ -115,47 +115,47 @@ func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText,e
 			p.ClientPublicKey = &encQuery.Public
 			if !p.sendToNext(&encQuery.ElGamalQueryMessage) {
 				deterministicQuery := DeterministCipherText{encQuery.Query.C}
-				msg := &PHQueryMessage{deterministicQuery, encQuery.Public}
+				msg := &PHQueryMessage{deterministicQuery, encQuery.Buckets,encQuery.Public}
 				p.broadcast(msg)
-				return &msg.Query, nil
+				return &msg.Query, encQuery.Buckets ,nil
 			}
 		case deterministicQuery := <-p.PHQueryChannel:
 			p.ClientPublicKey = &deterministicQuery.Public
-			return &deterministicQuery.Query, nil
+			return &deterministicQuery.Query, deterministicQuery.Buckets ,nil
 		}
 	}
 }
 
-func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *DeterministCipherText) (int, error) {
-	var matchCount int
+func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *DeterministCipherText, buckets []string) (CipherVector, error) {
+	encryptedBuckets := NullCipherVector(p.Suite(), len(buckets), *p.ClientPublicKey)
 	for {
 		select {
 		case encDataMessage := <-p.ElGamalDataChannel:
-			encDataMessage.Data.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
+			encDataMessage.Code.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 			encDataMessage.SetVisited(p.TreeNode(), p.Tree())
 			if !p.sendToNext(&encDataMessage.ElGamalDataMessage) {
-				if query.Equals(&DeterministCipherText{encDataMessage.Data.C}) {
-					matchCount += 1
+				if query.Equals(&DeterministCipherText{encDataMessage.Code.C}) {
+					encryptedBuckets.Add(encryptedBuckets, encDataMessage.Buckets)
 				}
 			}
 		case <-time.After(time.Second * 3):
-			return matchCount, nil
+			return encryptedBuckets, nil
 		}
 	}
 }
 
-func (p *PrivateCountProtocol) matchCountReportingPhase(encryptedMatchCount *CipherText) {
-
+func (p *PrivateCountProtocol) matchCountReportingPhase(encryptedBuckets *CipherVector) {
+	reportedBuckets := *encryptedBuckets
 	if !p.IsLeaf() {
 		results := <-p.ResultChannel
 		for _, result := range results {
-			encryptedMatchCount.Add(*encryptedMatchCount, result.Result)
+			reportedBuckets.Add(reportedBuckets, result.Result)
 		}
 	}
 	if p.IsRoot() {
-		p.FeedbackChannel <- *encryptedMatchCount
+		p.FeedbackChannel <- *encryptedBuckets
 	} else {
-		p.SendTo(p.Parent(), &ResultMessage{*encryptedMatchCount})
+		p.SendTo(p.Parent(), &ResultMessage{*encryptedBuckets})
 	}
 
 }
