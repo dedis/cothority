@@ -395,6 +395,10 @@ func (p *ProtocolHandlers) Release() {
 }
 
 func TestBlocking(t *testing.T) {
+	defer dbg.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 4)
+
 	l := sda.NewLocalTest()
 	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()
@@ -408,21 +412,32 @@ func TestBlocking(t *testing.T) {
 		t.Fatal("Couldn't start protocol")
 	}
 
-	//p1 := n1.ProtocolInstance().(*BlockingProtocol)
+	p1 := n1.ProtocolInstance().(*BlockingProtocol)
 	p2 := n2.ProtocolInstance().(*BlockingProtocol)
 	go func() {
-		dbg.Print("Before")
-		l.SendTreeNode("", n2, n1, &NodeTestMsg{})
-		dbg.Print("During1")
-		l.SendTreeNode("", n2, n1, &NodeTestMsg{})
-		dbg.Print("During2")
-		l.SendTreeNode("", n1, n2, &NodeTestMsg{})
-		dbg.Print("After")
+		dbg.Lvl2("Before")
+		err := l.SendTreeNode("", n2, n1, &NodeTestMsg{})
+		if err != nil {
+			t.Fatal("Couldn't send message:", err)
+		}
+		dbg.Lvl2("During1")
+		err = l.SendTreeNode("", n2, n1, &NodeTestMsg{})
+		if err != nil {
+			t.Fatal("Couldn't send message:", err)
+		}
+		dbg.Lvl2("During2")
+		err = l.SendTreeNode("", n1, n2, &NodeTestMsg{})
+		if err != nil {
+			t.Fatal("Couldn't send message:", err)
+		}
+		dbg.Lvl2("After")
 	}()
 	p2.stopBlockChan <- true
 	select {
 	case <-p2.doneChan:
-		dbg.Print("Node 2 done")
+		dbg.Lvl2("Node 2 done")
+		p1.stopBlockChan <- true
+		<-p1.doneChan
 	case <-time.After(time.Second):
 		t.Fatal("Node 2 didn't receive")
 	}
@@ -451,7 +466,7 @@ func NewProtocolBlocking(node *sda.Node) (sda.ProtocolInstance, error) {
 		stopBlockChan: make(chan bool),
 	}
 
-	node.RegisterChannel(bp.Incoming)
+	node.RegisterChannel(&bp.Incoming)
 	return bp, nil
 }
 
@@ -462,10 +477,10 @@ func (bp *BlockingProtocol) Start() error {
 func (bp *BlockingProtocol) Dispatch() error {
 	// first wait on stopBlockChan
 	<-bp.stopBlockChan
-	dbg.Print("BlockingProtocol: will continue")
+	dbg.Lvl2("BlockingProtocol: will continue")
 	// Then wait on the actual message
-	<-Incoming
-	dbg.Print("BlockingProtocol: received message => signal Done")
+	<-bp.Incoming
+	dbg.Lvl2("BlockingProtocol: received message => signal Done")
 	// then signal that you are done
 	bp.doneChan <- true
 	return nil

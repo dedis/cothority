@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"sync"
 )
 
 /*
@@ -35,6 +36,14 @@ type Node struct {
 	msgQueue map[uuid.UUID][]*SDAData
 	// done callback
 	onDoneCallback func() bool
+	// queue holding msgs
+	msgDispatchQueue []*SDAData
+	// locking for msgqueue
+	msgDispatchQueueMutex sync.Mutex
+	// kicking off new message
+	msgDispatchQueueWait chan bool
+	// finish dispatching
+	msgDispatchClose chan bool
 }
 
 // AggregateMessages (if set) tells to aggregate messages from all children
@@ -59,18 +68,22 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 // NewNodeEmpty creates a new node without a protocol
 func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
-		token:            tok,
-		channels:         make(map[uuid.UUID]interface{}),
-		handlers:         make(map[uuid.UUID]interface{}),
-		msgQueue:         make(map[uuid.UUID][]*SDAData),
-		messageTypeFlags: make(map[uuid.UUID]uint32),
-		treeNode:         nil,
+		token:                tok,
+		channels:             make(map[uuid.UUID]interface{}),
+		handlers:             make(map[uuid.UUID]interface{}),
+		msgQueue:             make(map[uuid.UUID][]*SDAData),
+		messageTypeFlags:     make(map[uuid.UUID]uint32),
+		treeNode:             nil,
+		msgDispatchQueue:     make([]*SDAData, 0, 1),
+		msgDispatchQueueWait: make(chan bool),
+		msgDispatchClose:     make(chan bool),
 	}
 	var err error
 	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
 	if err != nil {
 		return nil, errors.New("We are not represented in the tree")
 	}
+	go n.dispatchMsgReader()
 	return n, nil
 }
 
@@ -252,6 +265,8 @@ func (n *Node) Dispatch() error {
 // Shutdown - standard Shutdown implementation. Define your own
 // in your protocol (if necessary)
 func (n *Node) Shutdown() error {
+	dbg.Lvl3("Closing node")
+	close(n.msgDispatchClose)
 	return nil
 }
 
@@ -313,8 +328,42 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	return nil
 }
 
-// DispatchMsg will dispatch this SDAData to the right instance
-func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
+// DispatchMsg takes a message and puts it into a queue for later processing.
+// This allows a protocol to have a backlog of messages.
+func (n *Node) DispatchMsg(msg *SDAData) {
+	dbg.Lvl3("Received message")
+	n.msgDispatchQueueMutex.Lock()
+	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
+	dbg.Lvl3("DispatchQueue-length is", len(n.msgDispatchQueue))
+	if len(n.msgDispatchQueue) == 1 {
+		n.msgDispatchQueueWait <- true
+	}
+	n.msgDispatchQueueMutex.Unlock()
+}
+
+func (n *Node) dispatchMsgReader() {
+	for {
+		n.msgDispatchQueueMutex.Lock()
+		if len(n.msgDispatchQueue) > 0 {
+			dbg.Lvl3("Read message and dispatching it")
+			msg := n.msgDispatchQueue[0]
+			n.msgDispatchQueue = n.msgDispatchQueue[1:]
+			n.msgDispatchQueueMutex.Unlock()
+			n.dispatchMsgToProtocol(msg)
+		} else {
+			n.msgDispatchQueueMutex.Unlock()
+			select {
+			case <-n.msgDispatchQueueWait:
+			case <-n.msgDispatchClose:
+				dbg.Lvl3("Closing reader")
+				return
+			}
+		}
+	}
+}
+
+// dispatchMsgToProtocol will dispatch this SDAData to the right instance
+func (n *Node) dispatchMsgToProtocol(sdaMsg *SDAData) error {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
 	// to manually registers their messages. Since it is done automatically by
@@ -341,7 +390,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 
 	switch {
 	case n.channels[msgType] != nil:
-		dbg.Lvl4("Dispatching to channel")
+		dbg.Lvl4(n.Myself(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
