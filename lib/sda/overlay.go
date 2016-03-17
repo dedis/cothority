@@ -85,10 +85,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		return nil
 	}
 	o.nodeLock.Unlock()
-	err := node.DispatchMsg(sdaMsg)
-	if err != nil {
-		return err
-	}
+	node.DispatchMsg(sdaMsg)
 	return nil
 }
 

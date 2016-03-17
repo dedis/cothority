@@ -35,6 +35,9 @@ type Node struct {
 	msgQueue map[uuid.UUID][]*SDAData
 	// done callback
 	onDoneCallback func() bool
+	// dispatcher of the messages so overlay can give message to node without
+	// blocking even if the overlaying protocol is still blocking.
+	dispatcher *dispatcher
 }
 
 // AggregateMessages (if set) tells to aggregate messages from all children
@@ -66,6 +69,9 @@ func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 		messageTypeFlags: make(map[uuid.UUID]uint32),
 		treeNode:         nil,
 	}
+	// creates and runs the dispatcher
+	n.dispatcher = newDispatcher(n.dispatchMsgToProtocol)
+	go n.dispatcher.run()
 	var err error
 	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
 	if err != nil {
@@ -313,8 +319,14 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	return nil
 }
 
+// Dispatchmsg is the public version used by Overlay to dispatch a message to
+// the protocol instance using the dispatcher.It is a non blocking operation.
+func (n *Node) DispatchMsg(sdaMsg *SDAData) {
+	n.dispatcher.input <- sdaMsg
+}
+
 // DispatchMsg will dispatch this SDAData to the protocol instance.
-func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
+func (n *Node) dispatchMsgToProtocol(sdaMsg *SDAData) {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
 	// to manually registers their messages. Since it is done automatically by
@@ -335,7 +347,7 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
 		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
-		return nil
+		return
 	}
 	dbg.Lvl4("Going to dispatch", sdaMsg)
 
@@ -347,9 +359,15 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
 		err = n.DispatchHandler(msgs)
 	default:
-		return errors.New("This message-type is not handled by this protocol")
+		err = errors.New("This message-type is not handled by this protocol")
 	}
-	return err
+	// XXX Should at some point define a central way / point to handle errors
+	// ... ?
+	// Before the error was just going up to the sda.Host and nothing else was
+	// taken into account.
+	if err != nil {
+		dbg.Error(err)
+	}
 }
 
 // SetFlag makes sure a given flag is set
@@ -413,6 +431,7 @@ func (n *Node) Done() {
 		}
 	}
 	n.overlay.nodeDone(n.token)
+	n.dispatcher.stop()
 	dbg.Lvl3(n.Name(), "has finished. Deleting its resources")
 }
 
@@ -470,4 +489,152 @@ func (n *Node) Host() *Host {
 // to bind it to a protocol instance later.
 func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
 	n.instance = pi
+}
+
+// a type to represent a channel of sdadata messages
+type sdaDataChan chan *SDAData
+
+// a type to represent the method to use to really dispatch the method
+type dispatchMethod func(msg *SDAData)
+
+// dispatcher is the struct responsible to dispatch the message to the protocol
+// instance in a non blocking way for SDA /host/ so multiple messages can still
+// arrive even if the protocol is *blocked*.
+type dispatcher struct {
+	// input channel  - the message to dispatch
+	input sdaDataChan
+	// quit channel signal
+	// signalQuitChan for signaling we want to stop
+	// getQuitChan to wait on until the dispatcher really stoped
+	signalQuitChan chan bool
+	getQuitChan    chan bool
+	// the set of workers this dispatcher has. Basically for node it supposed to
+	// only have one.
+	worker *worker
+	// channel of the worker to signify if it is ready or not
+	// once the dispatcher receive stg on this channel it can sends some
+	// ready-to-be-dispatched message on the worker channel
+	// simplification of a generalization where you can have N workers, in this
+	// case you would use `chan sdaDataChan`
+	readyChan chan bool
+}
+
+// newDispatcher returns a new dispatcher out of the input channel and the
+// actual method that makes the dispatching (passing to the p.i.)
+func newDispatcher(dispatch dispatchMethod) *dispatcher {
+	d := &dispatcher{
+		input:          make(sdaDataChan),
+		readyChan:      make(chan bool, 1),
+		signalQuitChan: make(chan bool),
+		getQuitChan:    make(chan bool),
+	}
+	d.worker = newWorker(d.readyChan, dispatch)
+	return d
+}
+
+// worker is the struct that sends the message to the protocol instance. If the
+// protocol instance is blocked, then the worker is also blocked. Once the
+// message has been given to the p.i., it signal itself again to the dispatcher.
+type worker struct {
+	// the general channel used by this worker to signify that it is
+	// ready ==> readyChan from the dispatcher
+	readyChan chan bool
+	// msgChan is the channel used by the dispatcher to give the message to the
+	// worker
+	msgChan sdaDataChan
+	// the actual method to call to dispatch the msg
+	dispatch dispatchMethod
+	// quitChan is used to stop the worker
+	quitChan chan bool
+}
+
+// newWorker returns a new worker out of
+// * readyChan so the worker signal the dispatcher that it is ready
+// * msgChan so the worker know where to listen for msgs
+// * and the dispatch method.
+func newWorker(readyChan chan bool, dispatch dispatchMethod) *worker {
+	return &worker{
+		dispatch:  dispatch,
+		msgChan:   make(sdaDataChan),
+		readyChan: readyChan,
+		quitChan:  make(chan bool),
+	}
+}
+
+func (d *dispatcher) stop() {
+	d.signalQuitChan <- true
+	<-d.getQuitChan
+}
+
+// run waits for the input messages and make the dispatching happens
+func (d *dispatcher) run() {
+	// run the worker first
+	go d.worker.run()
+	// the buffer that holds the message while we wait for worker to be ready
+	// A capacity of 10 messages first seems reasonable. If more than 10 msgs are blocked then
+	// append() will grow one by one and it may be slower but at some point if
+	// it continues to block something is wrong, and a unlimited memory machine
+	// does not exists yet ;)
+	buff := make([]*SDAData, 0, 10)
+	var workerReady bool
+	for {
+		select {
+		case msg := <-d.input:
+			// XXX Put a limit on the buffer regarding the maximum memory we
+			// have and the available memory ... or just a high enough constant.
+			// And what to do with the message ?
+			// we get a new message to dispatch
+			buff = append(buff, msg)
+			if len(buff) == 1 && workerReady {
+				d.worker.msg(buff[0])
+				buff = buff[1:]
+				workerReady = false
+			}
+		case <-d.readyChan:
+			// the worker is ready
+			if len(buff) > 0 {
+				d.worker.msg(buff[0])
+				buff = buff[1:]
+			} else {
+				// put the worker into *ready* state
+				workerReady = true
+			}
+		case <-d.signalQuitChan:
+			// we are closing down so we can tell the worker to finish
+			// graceful shutdown
+			d.worker.stop()
+			close(d.signalQuitChan)
+			close(d.input)
+			close(d.readyChan)
+			d.getQuitChan <- true
+			return
+		}
+	}
+}
+
+// run launches the goroutine for the worker so it gets all messages that the
+// dispatcher is willing to send to it.
+func (w *worker) run() {
+	var stop bool
+	for !stop {
+		w.readyChan <- true
+		select {
+		case msg := <-w.msgChan:
+			// this is the blocking function
+			w.dispatch(msg)
+		case <-w.quitChan:
+			stop = true
+		}
+	}
+	close(w.quitChan)
+}
+
+// msg will give the message to the worker
+func (w *worker) msg(msg *SDAData) {
+	w.msgChan <- msg
+}
+
+// stop will tell the worker to stop
+func (w *worker) stop() {
+	w.quitChan <- true
 }

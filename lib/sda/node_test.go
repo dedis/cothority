@@ -423,25 +423,33 @@ func TestProtocolBlocking(t *testing.T) {
 	// checking function
 	var done = make(chan bool)
 	go func() {
+		var done1 bool
+		var done2 bool
+
 		for {
-			var done1 bool
-			var done2 bool
 			select {
 			case <-bp1.doneChan:
+				dbg.Print("DONE from BP1")
+				dbg.Print("Done1=", done1, " vs Done2=", done2)
 				done1 = true
 				if !done2 {
 					t.Fatal("Node 1 should not have finished already")
 				} else {
+					n1.Done()
+					n2.Done()
 					done <- true
 					return
 				}
 			case <-bp2.doneChan:
+				dbg.Print("DONE from BP2")
 				done2 = true
 				if done1 {
 					t.Fatal("Node 2 should finish before node 1")
 				}
 				// release the blocking of node1
 				bp1.stopBlockChan <- true
+				dbg.Print("Received SIGNAL from BP2 => Releasing BP1")
+				dbg.Print("Done1=", done1, " vs Done2=", done2)
 			}
 		}
 	}()
@@ -452,36 +460,32 @@ func TestProtocolBlocking(t *testing.T) {
 	// Send one message to n1
 	// bp1 should still block
 	network.RegisterMessageType(NodeTestMsg{})
-	slice, err := network.MarshalRegisteredType(&NodeTestMsg{3})
+	slice1, err := network.MarshalRegisteredType(&NodeTestMsg{3})
+	slice2, err := network.MarshalRegisteredType(&NodeTestMsg{6})
 	if err != nil {
 		t.Fatal("error for creating slice")
 	}
 
-	err = n1.DispatchMsg(&sda.SDAData{
-		MsgSlice: slice,
+	n1.DispatchMsg(&sda.SDAData{
+		MsgSlice: slice1,
 		From: &sda.Token{
 			TreeID:     tree.Id,
 			TreeNodeID: tree.Root.Id,
 		}})
-	if err != nil {
-		t.Fatal("Could not send message to bp1")
-	}
 	// send one message to n2
 	// bp2 is already non blocking so it should go straight to bp2
-	err = n1.DispatchMsg(&sda.SDAData{
-		MsgSlice: slice,
+	n2.DispatchMsg(&sda.SDAData{
+		MsgSlice: slice2,
 		From: &sda.Token{
 			TreeID:     tree.Id,
 			TreeNodeID: tree.Root.Id,
 		}})
-	if err != nil {
-		t.Fatal("Could not send message to bp2")
-	}
 	// wait the confirmation
+	dbg.Print("Wait for confirmation of both blocking protocols")
 	select {
 	case <-done:
 		return
-	case <-time.After(200 * time.Millisecond):
+	case <-time.After(1000 * time.Millisecond):
 		t.Fatal("Could not get protocols blocking working ..")
 	}
 }
@@ -519,8 +523,10 @@ func (bp *BlockingProtocol) Start() error {
 func (bp *BlockingProtocol) Dispatch() error {
 	// first wait on stopBlockChan
 	<-bp.stopBlockChan
+	dbg.Print("BlockingProtocol: will continue")
 	// Then wait on the actual message
 	<-Incoming
+	dbg.Print("BlockingProtocol: received message => signal Done")
 	// then signal that you are done
 	bp.doneChan <- true
 	return nil

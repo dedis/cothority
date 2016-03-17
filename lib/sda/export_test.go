@@ -48,3 +48,11 @@ func (o *Overlay) TokenToNode(tok *Token) (*Node, bool) {
 	v, ok := o.nodes[tok.Id()]
 	return v, ok
 }
+
+func NewDispatcher(dispatch dispatchMethod) *dispatcher {
+	return newDispatcher(dispatch)
+}
+
+func (d *dispatcher) Run() {
+	d.run()
+}
