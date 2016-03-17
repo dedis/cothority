@@ -148,6 +148,7 @@ class MPlot:
     # LogLog by default.
     def plotPrepareLogLog(self, logx=2, logy=2):
         plt.clf()
+        plt.Figure()
         plt.ylabel('Total seconds over all rounds')
         plt.xlabel('Number of witnesses')
         if logx > 0:
@@ -177,7 +178,7 @@ class MPlot:
             plt.show()
         else:
             print "Saving to", self.pngname
-            plt.savefig(self.pngname)
+            plt.savefig(self.pngname, bbox_inches='tight')
 
         self.resetMinMax()
 
