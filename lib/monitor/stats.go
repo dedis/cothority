@@ -233,6 +233,7 @@ func (s *Stats) Value(name string) *Value {
 func (s *Stats) String() string {
 	s.valuesMutex.Lock()
 	defer s.valuesMutex.Unlock()
+	s.Collect()
 	var str string
 	for _, k := range s.staticKeys {
 		str += fmt.Sprintf("%s = %d", k, s.static[k])
