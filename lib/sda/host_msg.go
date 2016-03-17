@@ -62,10 +62,11 @@ func (t *Token) Id() uuid.UUID {
 // Return a new Token contianing a reference to the given TreeNode
 func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
 	t.cacheMutex.Lock()
+	defer t.cacheMutex.Unlock()
 	t_other := *t
+	defer t_other.cacheMutex.Unlock()
 	t_other.TreeNodeID = newid
 	t_other.cacheId = uuid.Nil
-	t.cacheMutex.Unlock()
 	return &t_other
 }
 

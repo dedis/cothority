@@ -311,11 +311,11 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
-		dbg.LLvl4("Received aggregated message of type:", mt)
+		dbg.Lvl4("Received aggregated message of type:", mt)
 		to = to.Elem()
 		out := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
-			dbg.LLvl4("Dispatching aggregated to", to)
+			dbg.Lvl4("Dispatching aggregated to", to)
 			m := n.ReflectCreate(to.Elem(), msg)
 			dbg.Lvl4("Adding msg", m, "to", n.Entity().Addresses)
 			out.Index(i).Set(m)
