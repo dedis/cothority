@@ -265,7 +265,10 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 func (o *Overlay) nodeDone(tok *Token) {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
-	o.nodes[tok.Id()].Close()
+	err := o.nodes[tok.Id()].Close()
+	if err != nil {
+		dbg.Error("Error while closing node:", err)
+	}
 	delete(o.nodes, tok.Id())
 	// mark it done !
 	o.nodeInfo[tok.Id()] = true

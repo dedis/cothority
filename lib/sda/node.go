@@ -270,7 +270,7 @@ func (n *Node) Shutdown() error {
 
 // Close shuts down the go-routine and calls the protocolInstance-shutdown
 func (n *Node) Close() error {
-	dbg.Lvl3("Closing node")
+	dbg.Lvl3("Closing node", n.Myself())
 	close(n.msgDispatchClose)
 	return n.ProtocolInstance().Shutdown()
 }
@@ -311,11 +311,11 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
-		dbg.Lvl4("Received aggregated message of type:", mt)
+		dbg.LLvl4("Received aggregated message of type:", mt)
 		to = to.Elem()
 		out := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
-			dbg.Lvl4("Dispatching aggregated to", to)
+			dbg.LLvl4("Dispatching aggregated to", to)
 			m := n.ReflectCreate(to.Elem(), msg)
 			dbg.Lvl4("Adding msg", m, "to", n.Entity().Addresses)
 			out.Index(i).Set(m)
@@ -350,7 +350,8 @@ func (n *Node) dispatchMsgReader() {
 	for {
 		n.msgDispatchQueueMutex.Lock()
 		if len(n.msgDispatchQueue) > 0 {
-			dbg.Lvl3(n.Myself(), "Read message and dispatching it")
+			dbg.Lvl3(n.Myself(), "Read message and dispatching it",
+				len(n.msgDispatchQueue))
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
 			n.msgDispatchQueueMutex.Unlock()
@@ -392,7 +393,7 @@ func (n *Node) dispatchMsgToProtocol(sdaMsg *SDAData) error {
 		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	dbg.Lvl4("Going to dispatch", sdaMsg)
+	dbg.Lvl4("Going to dispatch", sdaMsg, t)
 
 	switch {
 	case n.channels[msgType] != nil:
@@ -467,8 +468,8 @@ func (n *Node) Done() {
 			return
 		}
 	}
+	dbg.Lvl3(n.Myself(), "has finished. Deleting its resources")
 	n.overlay.nodeDone(n.token)
-	dbg.Lvl3(n.Name(), "has finished. Deleting its resources")
 }
 
 // OnDoneCallback should be called if we want to control the Done() of the node.

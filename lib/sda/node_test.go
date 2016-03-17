@@ -42,7 +42,6 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	n.Close()
 }
 
 func TestNodeChannelCreate(t *testing.T) {
@@ -81,7 +80,6 @@ func TestNodeChannelCreate(t *testing.T) {
 	if msg.I != 3 {
 		t.Fatal("Message should contain '3'")
 	}
-	n.Close()
 }
 
 func TestNodeChannel(t *testing.T) {
@@ -244,15 +242,16 @@ func TestMsgAggregation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(proto.IncomingAgg) == 0 {
+	select {
+	case msgs := <-proto.IncomingAgg:
+		if msgs[0].I != 3 {
+			t.Fatal("First message should be 3")
+		}
+		if msgs[1].I != 4 {
+			t.Fatal("Second message should be 4")
+		}
+	case <-time.After(time.Second):
 		t.Fatal("Messages should BE there")
-	}
-	msgs := <-proto.IncomingAgg
-	if msgs[0].I != 3 {
-		t.Fatal("First message should be 3")
-	}
-	if msgs[1].I != 4 {
-		t.Fatal("Second message should be 4")
 	}
 }
 
@@ -339,12 +338,9 @@ func (p *ProtocolChannels) Start() error {
 	return nil
 }
 
-func (p *ProtocolChannels) Dispatch() error {
-	return nil
-}
-
-// relese ressources ==> call Done()
+// release resources ==> call Done()
 func (p *ProtocolChannels) Release() {
+	dbg.Print("Releasing")
 	p.Done()
 }
 

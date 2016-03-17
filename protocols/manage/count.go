@@ -129,7 +129,6 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 		p.Count <- count
 	}
 	dbg.Lvl3(p.Node.Entity().First(), "Done")
-	p.Done()
 }
 
 // Starts the protocol

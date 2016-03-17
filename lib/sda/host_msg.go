@@ -3,6 +3,7 @@ package sda
 import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	"sync"
 )
 
 // Our message-types used in sda
@@ -41,24 +42,30 @@ type Token struct {
 	RoundID      uuid.UUID
 	TreeNodeID   uuid.UUID
 	cacheId      uuid.UUID
+	cacheMutex   sync.Mutex
 }
 
 // Returns the Id of a token so we can put that in a map easily
 func (t *Token) Id() uuid.UUID {
+	t.cacheMutex.Lock()
 	if t.cacheId == uuid.Nil {
 		url := network.UuidURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
 	}
-	return t.cacheId
+	id := t.cacheId
+	t.cacheMutex.Unlock()
+	return id
 }
 
 // Return a new Token contianing a reference to the given TreeNode
 func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
+	t.cacheMutex.Lock()
 	t_other := *t
 	t_other.TreeNodeID = newid
 	t_other.cacheId = uuid.Nil
+	t.cacheMutex.Unlock()
 	return &t_other
 }
 
