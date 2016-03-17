@@ -28,7 +28,7 @@ for simul in $DIR/*toml; do
     if [ -f test_data/$simul_base.csv ]; then
         echo "Skipping $simul_base as csv exists"
     else
-        echo "Starting runfile $simul_base""
+        echo "Starting runfile $simul_base"
         ./simul -platform $PLATFORM $NOBUILD $FLAGS $simul | egrep "$GREP"
         NOBUILD="-nobuild"
     fi
