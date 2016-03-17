@@ -74,6 +74,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		o.nodeInfo[sdaMsg.To.Id()] = false
 		if err != nil {
 			o.nodeLock.Unlock()
+			dbg.Error(err)
 			return err
 		}
 		node = o.nodes[sdaMsg.To.Id()]
@@ -264,6 +265,7 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 func (o *Overlay) nodeDone(tok *Token) {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
+	o.nodes[tok.Id()].Close()
 	delete(o.nodes, tok.Id())
 	// mark it done !
 	o.nodeInfo[tok.Id()] = true

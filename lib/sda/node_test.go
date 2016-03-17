@@ -42,6 +42,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
+	n.Close()
 }
 
 func TestNodeChannelCreate(t *testing.T) {
@@ -80,6 +81,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	if msg.I != 3 {
 		t.Fatal("Message should contain '3'")
 	}
+	n.Close()
 }
 
 func TestNodeChannel(t *testing.T) {
@@ -145,6 +147,7 @@ func TestNewNode(t *testing.T) {
 	if m != "Start" {
 		t.Fatal("Start() not called - msg is:", m)
 	}
+	//node.Close()
 	h1.Close()
 	h2.Close()
 }

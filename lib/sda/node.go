@@ -75,7 +75,7 @@ func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 		messageTypeFlags:     make(map[uuid.UUID]uint32),
 		treeNode:             nil,
 		msgDispatchQueue:     make([]*SDAData, 0, 1),
-		msgDispatchQueueWait: make(chan bool),
+		msgDispatchQueueWait: make(chan bool, 1),
 		msgDispatchClose:     make(chan bool),
 	}
 	var err error
@@ -269,10 +269,10 @@ func (n *Node) Shutdown() error {
 }
 
 // Close shuts down the go-routine and calls the protocolInstance-shutdown
-func (n *Node) Close() {
+func (n *Node) Close() error {
 	dbg.Lvl3("Closing node")
 	close(n.msgDispatchClose)
-	n.ProtocolInstance().Shutdown()
+	return n.ProtocolInstance().Shutdown()
 }
 
 func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
@@ -336,10 +336,10 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 // DispatchMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
 func (n *Node) DispatchMsg(msg *SDAData) {
-	dbg.Lvl3("Received message")
+	dbg.Lvl3(n.Myself(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
-	dbg.Lvl3("DispatchQueue-length is", len(n.msgDispatchQueue))
+	dbg.Lvl3(n.Myself(), "DispatchQueue-length is", len(n.msgDispatchQueue))
 	if len(n.msgDispatchQueue) == 1 {
 		n.msgDispatchQueueWait <- true
 	}
@@ -350,13 +350,14 @@ func (n *Node) dispatchMsgReader() {
 	for {
 		n.msgDispatchQueueMutex.Lock()
 		if len(n.msgDispatchQueue) > 0 {
-			dbg.Lvl3("Read message and dispatching it")
+			dbg.Lvl3(n.Myself(), "Read message and dispatching it")
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
 			n.msgDispatchQueueMutex.Unlock()
 			n.dispatchMsgToProtocol(msg)
 		} else {
 			n.msgDispatchQueueMutex.Unlock()
+			dbg.Lvl3(n.Myself(), "Waiting for message")
 			select {
 			case <-n.msgDispatchQueueWait:
 			case <-n.msgDispatchClose:
