@@ -2,10 +2,10 @@ Simulation = "CoSi"
 Suite = "ed25519"
 Rounds = 10
 Filter_round = 80
-Depths = 3
-Servers = 8
+Depth = 3
+Servers = 32
 
-bf
+BF
 2
 3
 4
@@ -15,7 +15,3 @@ bf
 12
 14
 16
-20
-24
-28
-32
