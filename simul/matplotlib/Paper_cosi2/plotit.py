@@ -18,7 +18,7 @@ import matplotlib.patches as mpatches
 
 
 def plotData(data, name,
-             xlabel="Number of hosts", ylabel="Seconds per round",
+             xlabel="Number of witnesses", ylabel="Seconds per round",
              xticks=[], loglog=[2, 2], xname="hosts",
              legend_pos="lower right",
              yminu=0, ymaxu=0,
@@ -118,11 +118,22 @@ def plotBF():
                      color=colors[index][1],
                      label='CoSi ' + label + ' depth')
 
-
+    arrow(6, 3, "d=5")
+    arrow(10, 2.5, "d=4")
+    arrow(6, 2.53, "d=5", 0.7, 0.5)
+    arrow(8, 2.2, "d=4", 0.6, 0.6)
+    arrow(16, 1.7, "d=3")
+    arrow(5.2, 2.4, "d=5", -3., -1.)
+    arrow(7.2, 1.95, "d=4", -3., -0.8)
+    arrow(13, 1.55, "d=3", 0.6, 0.6)
 
     plt.legend(loc='upper right')
+    plt.xlim(2, 18)
     mplot.plotEnd()
 
+def arrow(x,y,label, dx = 1., dy = 1.):
+    plt.annotate(label, xy=(x + dx / 10, y + dy / 10), xytext=(x + dx / 2, y + dy / 2),
+            arrowprops=dict(facecolor='black', headlength=5, width=0.1, headwidth=8))
 
 # Plots the oversubscription
 def plotOver():
