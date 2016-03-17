@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/cosi"
 )
 
 func init() {
@@ -53,9 +54,9 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 			dbg.Error("Quitting the simulation....", err)
 			return err
 		}
-		pi := node.ProtocolInstance().(*Protocol)
-		pi.SetMessage(msg)
-		pi.verifySignature = e.Checking
+		pi := node.ProtocolInstance().(*cosi.ProtocolCosi)
+		pi.Message = msg
+		cosi.VerifyResponse = e.Checking
 
 		done := make(chan bool)
 		node.OnDoneCallback(func() bool {

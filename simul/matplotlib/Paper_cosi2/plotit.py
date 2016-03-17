@@ -197,7 +197,7 @@ def read_csvs(*values):
 # Write to file
 write_file = True
 # What file extension - .png, .eps
-file_extension = 'png'
+file_extension = 'eps'
 # Show figure
 mplot.show_fig = False
 
