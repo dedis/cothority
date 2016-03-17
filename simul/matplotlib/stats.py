@@ -6,7 +6,8 @@ import unittest
 
 # Our CSVs have a space after the comma, so we need a new 'dialect', here
 # called 'deploy'
-csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='', lineterminator='\n', escapechar='',
+csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='',
+                     lineterminator='\n', escapechar='',
                      quoting=csv.QUOTE_NONE, skipinitialspace=True)
 
 
@@ -20,6 +21,7 @@ class CSVStats:
     def __init__(self, file, x_id=0):
         self.x = []
         self.columns = {}
+        self.file = file
         # Read in all lines of the CSV and store in the arrays
         with open(file) as csvfile:
             reader = csv.DictReader(csvfile, dialect='deploy')
@@ -27,10 +29,17 @@ class CSVStats:
                 for column, value in row.iteritems():
                     if not column in self.columns:
                         self.columns[column] = []
-                    self.columns[column] += [float(value)]
+                    if value == None or type(value) is list:
+                        print "Invalid value in file " + file + ":" + str(
+                            type(value))
+                    else:
+                        self.columns[column] += [float(value)]
 
         if type(x_id) == str:
-            self.x = self.columns[x_id]
+            if x_id in self.columns.keys():
+                self.x = self.columns[x_id]
+            else:
+                print "Didn't find key " + x_id + " in file " + self.file
         else:
             col = sorted(self.columns.keys())[x_id]
             self.x = self.columns[col]
@@ -41,7 +50,6 @@ class CSVStats:
         values = Values(self.x, column, self.columns)
         return values
 
-
     @staticmethod
     def get_min_max(*vals):
         values_y = []
@@ -49,7 +57,7 @@ class CSVStats:
         for v in vals:
             values_y += [v.ymin, v.ymax]
             values_x += v.x
-        return (min(values_x), max(values_x),min(values_y), max(values_y))
+        return (min(values_x), max(values_x), min(values_y), max(values_y))
 
     def add(self, stats, col1, col2):
         sum = deepcopy(self)
@@ -67,6 +75,7 @@ class CSVStats:
                 if h <= hosts:
                     old_depth[x] = depth
         return old_depth
+
 
 # Value holds the min / max / avg / dev for a single named value
 class Values:
@@ -87,7 +96,8 @@ class Values:
         if column in self.columns:
             return self.columns[column]
         else:
-	    return [1]
+            return [1]
+
 
 class TestStringMethods(unittest.TestCase):
     def test_load(self):
@@ -103,10 +113,14 @@ class TestStringMethods(unittest.TestCase):
     def test_min(self):
         stats = CSVStats("test.csv")
         stats.update_values('round')
-        self.assertEqual(stats.min, [2, 3, 4, 5], "minimum of round not correct")
-        self.assertEqual(stats.max, [6, 7, 8, 9], "maximum of round not correct")
-        self.assertEqual(stats.avg, [3, 4, 5, 6], "average of round not correct")
-        self.assertEqual(stats.dev, [1, 1, 1, 1], "deviation of round not correct")
+        self.assertEqual(stats.min, [2, 3, 4, 5],
+                         "minimum of round not correct")
+        self.assertEqual(stats.max, [6, 7, 8, 9],
+                         "maximum of round not correct")
+        self.assertEqual(stats.avg, [3, 4, 5, 6],
+                         "average of round not correct")
+        self.assertEqual(stats.dev, [1, 1, 1, 1],
+                         "deviation of round not correct")
         self.assertEqual(stats.xmin, 1)
         self.assertEqual(stats.xmax, 8)
         self.assertEqual(stats.ymin, 2)

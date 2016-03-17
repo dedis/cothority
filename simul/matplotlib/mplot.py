@@ -149,7 +149,7 @@ class MPlot:
     def plotPrepareLogLog(self, logx=2, logy=2):
         plt.clf()
         plt.ylabel('Total seconds over all rounds')
-        plt.xlabel('Number of co-signing hosts')
+        plt.xlabel('Number of witnesses')
         if logx > 0:
             plt.xscale(u'log', basex=logx)
         if logy > 0:

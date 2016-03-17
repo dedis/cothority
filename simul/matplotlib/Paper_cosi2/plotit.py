@@ -65,8 +65,7 @@ def plotRoundtime():
     plotData([['jvss', 'naive_cosi', 'ntree_cosi', 'cosi_depth_3'],
               ['JVSS', 'Naive', 'NTree', 'CoSi']], 'comparison_roundtime',
              xticks=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536],
-             yminu=0.5, ymaxu=8,
-             title = "Comparing time for one collective signature")
+             yminu=0.5, ymaxu=8)
 
 
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
@@ -99,7 +98,6 @@ def plotSysUser():
     plt.legend(handles=[bars[0], bars[1], bars[2], bars[3], usert, syst],
                loc=u'upper left')
     plt.ylabel("Average seconds per round")
-    plt.title("System and user time usage")
     mplot.plotEnd()
 
 
@@ -111,13 +109,16 @@ def plotBF():
                           xname='bf',
                           xlabel="Branching factor",
                           loglog=[0, 0],
-                          legend_pos="upper right",
-                          title="Comparing branching factors for constant number of hosts")
-    for index, data_label in enumerate(data_label):
-        data, label = data_label
-        plt.plot(data.x, data.columns['depth'], linestyle=':', marker='v',
-                 color=colors[index][1],
-                 label='CoSi ' + label + ' depth')
+                          legend_pos="upper right")
+
+    if False:
+        for index, data_label in enumerate(data_label):
+            data, label = data_label
+            plt.plot(data.x, data.columns['depth'], linestyle=':', marker='v',
+                     color=colors[index][1],
+                     label='CoSi ' + label + ' depth')
+
+
 
     plt.legend(loc='upper right')
     mplot.plotEnd()
@@ -128,7 +129,6 @@ def plotOver():
     plotData([['cosi_over_1', 'cosi_over_2', 'cosi_over_3'],
               ['8 servers', '16 servers', '32 servers']], 'cosi_over',
              ylabel="Seconds per round",
-             title="Effect of oversubscription at depth = 3",
              legend_pos = "upper left")
 
 
@@ -152,7 +152,6 @@ def plotNetwork():
     plt.ylabel('Total network-traffic [kBytes]')
 
     plt.legend(loc=u'lower right')
-    plt.title("Network traffic at the root node")
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     mplot.plotEnd()
     return
@@ -164,8 +163,7 @@ def plotCheckingNtree():
          ['NTree check all', 'NTree check children', 'NTree check none']],
         'comparison_ntree',
         ylabel="Seconds per round",
-        legend_pos="upper left",
-        title="Comparison of checking signatures of a depth 3 NTree")
+        legend_pos="upper left")
 
 
 # Colors for the Cothority
