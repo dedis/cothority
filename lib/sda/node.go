@@ -265,9 +265,14 @@ func (n *Node) Dispatch() error {
 // Shutdown - standard Shutdown implementation. Define your own
 // in your protocol (if necessary)
 func (n *Node) Shutdown() error {
+	return nil
+}
+
+// Close shuts down the go-routine and calls the protocolInstance-shutdown
+func (n *Node) Close() {
 	dbg.Lvl3("Closing node")
 	close(n.msgDispatchClose)
-	return nil
+	n.ProtocolInstance().Shutdown()
 }
 
 func (n *Node) DispatchHandler(msgSlice []*SDAData) error {

@@ -280,7 +280,7 @@ func (o *Overlay) Close() {
 	o.nodeLock.RLock()
 	defer o.nodeLock.RUnlock()
 	for _, n := range o.nodes {
-		if err := n.ProtocolInstance().Shutdown(); err != nil {
+		if err := n.Close(); err != nil {
 			dbg.Error("Error shutting down protocol", err)
 		}
 	}
