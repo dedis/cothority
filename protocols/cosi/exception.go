@@ -15,7 +15,7 @@ func NewProtocolException(node *sda.Node) (*ProtocolException, error) {
 		Node: node,
 	}
 	cosi, err := NewProtocolCosi(node)
-	pe.cosi = cosi
+	pe.cosi = cosi.(*ProtocolCosi)
 	return pe, err
 }
 
