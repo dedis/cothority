@@ -313,7 +313,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	return nil
 }
 
-// DispatchMsg will dispatch this SDAData to the right instance
+// DispatchMsg will dispatch this SDAData to the protocol instance.
 func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
