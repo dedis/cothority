@@ -340,7 +340,7 @@ func (n *Node) DispatchMsg(msg *SDAData) {
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
 	dbg.Lvl3(n.Myself(), "DispatchQueue-length is", len(n.msgDispatchQueue))
-	if len(n.msgDispatchQueue) == 1 {
+	if len(n.msgDispatchQueue) == 1 && len(n.msgDispatchQueueWait) == 0 {
 		n.msgDispatchQueueWait <- true
 	}
 	n.msgDispatchQueueMutex.Unlock()
@@ -459,8 +459,8 @@ func (n *Node) Start() error {
 	return n.instance.Start()
 }
 
-// Done returns a channel that must be given a bool when a protocol instance has
-// finished its work.
+// Done calls onDoneCallback if available and only finishes when the return-
+// value is true.
 func (n *Node) Done() {
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()

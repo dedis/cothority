@@ -22,7 +22,7 @@ type Overlay struct {
 	// false = NOT DONE
 	// true = DONE
 	nodeInfo map[uuid.UUID]bool
-	nodeLock sync.RWMutex
+	nodeLock sync.Mutex
 	// mapping from Tree.Id to Tree
 	trees    map[uuid.UUID]*Tree
 	treesMut sync.Mutex
@@ -247,12 +247,12 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 	if to == nil {
 		return errors.New("To-token is nil")
 	}
-	o.nodeLock.RLock()
+	o.nodeLock.Lock()
 	if o.nodes[from.Id()] == nil {
-		o.nodeLock.RUnlock()
+		o.nodeLock.Unlock()
 		return errors.New("No protocol instance registered with this token.")
 	}
-	o.nodeLock.RUnlock()
+	o.nodeLock.Unlock()
 	tn, err := o.TreeNodeFromToken(to)
 	if err != nil {
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
@@ -265,7 +265,13 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 func (o *Overlay) nodeDone(tok *Token) {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
-	err := o.nodes[tok.Id()].Close()
+	node, ok := o.nodes[tok.Id()]
+	if !ok {
+		dbg.Lvl2("Node", tok.Id(), "already gone")
+		return
+	}
+	dbg.Lvl4("Closing node", tok.Id())
+	err := node.Close()
 	if err != nil {
 		dbg.Error("Error while closing node:", err)
 	}
@@ -282,12 +288,11 @@ func (o *Overlay) Suite() abstract.Suite {
 }
 
 func (o *Overlay) Close() {
-	o.nodeLock.RLock()
-	defer o.nodeLock.RUnlock()
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
 	for _, n := range o.nodes {
-		if err := n.Close(); err != nil {
-			dbg.Error("Error shutting down protocol", err)
-		}
+		dbg.Lvl4("Closing node", n.TokenID())
+		o.nodeDone(n.Token())
 	}
 }
 
