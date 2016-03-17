@@ -24,8 +24,7 @@ type Simulation struct {
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
-	cs := new(Simulation)
-	cs.Checking = 2
+	cs := &Simulation{Checking: 2}
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
