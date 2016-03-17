@@ -75,7 +75,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 			}
 		}
 	} else {
-		err := p.SendTo(p.Parent(), &SignatureBundle{OwnSig: p.signature})
+		err := p.SendTo(p.Parent(), &SignatureBundle{ChildSig: p.signature})
 		p.Done()
 		return err
 	}
@@ -85,7 +85,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	dbg.Lvl3("Appending our signature to the collected ones and send to parent")
 	var sig SignatureBundle
-	sig.OwnSig = p.signature
+	sig.ChildSig = p.signature
 	// at least n signature from direct children
 	count := len(reply)
 	for _, s := range reply {
@@ -97,7 +97,7 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 		// Check only direct children
 		// see https://github.com/dedis/cothority/issues/260
 		if p.verifySignature == 1 || p.verifySignature == 2 {
-			s := p.verifySignatureReply(sigs.OwnSig)
+			s := p.verifySignatureReply(sigs.ChildSig)
 			dbg.Lvl3(p.Name(), "direct children verification:", s)
 		}
 		// Verify also the whole subtree
@@ -112,7 +112,7 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 			dbg.Lvl3(p.Name(), "Skipping signature verification..")
 		}
 		// add both the children signature + the sub tree signatures
-		sig.SubSigs = append(sig.SubSigs, sigs.OwnSig)
+		sig.SubSigs = append(sig.SubSigs, sigs.ChildSig)
 		sig.SubSigs = append(sig.SubSigs, sigs.SubSigs...)
 	}
 
@@ -155,7 +155,7 @@ type Message struct {
 }
 
 // SignatureReply contains a signature for the message
-//   * SchnorrSig (signature of the current node + those of its children)
+//   * SchnorrSig (signature of the current node)
 //   * Index of the public key in the entitylist in order to verify the
 //   signature
 type SignatureReply struct {
@@ -165,10 +165,12 @@ type SignatureReply struct {
 
 // SignatureBundle represent the signature that one children will pass up to its
 // parent. It contains:
-//  * The signature reply of this children (sig + index)
-//  * The whole set of signature reply of its sub tree
+//  * The signature reply of a direct child (sig + index)
+//  * The whole set of signature reply of the child sub tree
 type SignatureBundle struct {
-	OwnSig  *SignatureReply
+	// Child signature
+	ChildSig *SignatureReply
+	// Child subtree signatures
 	SubSigs []*SignatureReply
 }
 

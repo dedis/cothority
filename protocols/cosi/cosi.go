@@ -11,6 +11,10 @@ import (
 	"sync"
 )
 
+func init() {
+	sda.ProtocolRegisterName("Cosi", NewProtocolCosi)
+}
+
 // This Cosi protocol is the simplest version, the "vanilla" version with the
 // four phases:
 //  - Announcement

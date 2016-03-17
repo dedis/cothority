@@ -12,24 +12,25 @@ import (
 
 func init() {
 	sda.SimulationRegister("CoSi", NewSimulation)
-	// default protocol initialization. See Run() for override this one for the
-	// root.
-	sda.ProtocolRegisterName("Cosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
 }
 
 type Simulation struct {
 	sda.SimulationBFTree
 
+	// Do we want to check signature at each level, only the root or nothing at
+	// all ?
 	// See https://github.com/dedis/cothority/issues/260
 	Checking int
 }
 
 func NewSimulation(config string) (sda.Simulation, error) {
 	cs := new(Simulation)
+	cs.Checking = 2
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
 	}
+
 	return cs, nil
 }
 
