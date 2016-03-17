@@ -18,6 +18,7 @@ func init() {
 	// register network messages and protocol
 	network.RegisterMessageType(Message{})
 	network.RegisterMessageType(SignatureReply{})
+	sda.ProtocolRegisterName("NaiveTree", NewProtocol)
 }
 
 // Protocol implements the sda.ProtocolInstance interface
