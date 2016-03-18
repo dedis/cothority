@@ -44,6 +44,8 @@ type Token struct {
 	cacheId      uuid.UUID
 }
 
+// Global mutex when we're working on Tokens. Needed because we
+// copy Tokens in ChangeTreeNodeID.
 var tokenMutex sync.Mutex
 
 // Returns the Id of a token so we can put that in a map easily
@@ -56,8 +58,7 @@ func (t *Token) Id() uuid.UUID {
 			t.TreeNodeID.String()
 		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
 	}
-	id := t.cacheId
-	return id
+	return t.cacheId
 }
 
 // Return a new Token contianing a reference to the given TreeNode
