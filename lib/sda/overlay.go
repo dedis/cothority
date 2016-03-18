@@ -74,7 +74,6 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		o.nodeInfo[sdaMsg.To.Id()] = false
 		if err != nil {
 			o.nodeLock.Unlock()
-			dbg.Error(err)
 			return err
 		}
 		node = o.nodes[sdaMsg.To.Id()]
@@ -268,6 +267,8 @@ func (o *Overlay) nodeDone(tok *Token) {
 	o.nodeDelete(tok)
 }
 
+// nodeDelete needs to be separated from nodeDone, as it is also called from
+// Close, but due to locking-issues here we don't lock.
 func (o *Overlay) nodeDelete(tok *Token) {
 	node, ok := o.nodes[tok.Id()]
 	if !ok {

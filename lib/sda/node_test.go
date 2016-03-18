@@ -145,7 +145,6 @@ func TestNewNode(t *testing.T) {
 	if m != "Start" {
 		t.Fatal("Start() not called - msg is:", m)
 	}
-	//node.Close()
 	h1.Close()
 	h2.Close()
 }
