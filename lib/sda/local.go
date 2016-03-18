@@ -173,7 +173,12 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 		TreeNodeID:   tn.Id,
 		RoundID:      uuid.NewV4(),
 	}
-	return NewNode(o, tok)
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
+	n, err := NewNode(o, tok)
+	o.nodes[n.token.Id()] = n
+	o.nodeInfo[n.token.Id()] = false
+	return n, err
 }
 
 // GetNodes returns all Nodes that belong to a treeNode

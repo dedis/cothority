@@ -1,19 +1,19 @@
 package sda_test
 
 import (
-	"testing"
-	"time"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/satori/go.uuid"
+	"testing"
+	"time"
 )
 
 func init() {
 	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
 	sda.ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
+	sda.ProtocolRegisterName("ProtocolBlocking", NewProtocolBlocking)
 	sda.ProtocolRegister(testID, NewProtocolTest)
 	Incoming = make(chan struct {
 		*sda.TreeNode
@@ -240,6 +240,7 @@ func TestMsgAggregation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	time.Sleep(100 * time.Millisecond)
 	if len(proto.IncomingAgg) == 0 {
 		t.Fatal("Messages should BE there")
 	}
@@ -391,4 +392,132 @@ func (p *ProtocolHandlers) Dispatch() error {
 // relese ressources ==> call Done()
 func (p *ProtocolHandlers) Release() {
 	p.Done()
+}
+
+func TestProtocolBlocking(t *testing.T) {
+	defer dbg.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 4)
+	h1, h2 := SetupTwoHosts(t, true)
+	defer h1.Close()
+	defer h2.Close()
+	// Add tree + entitylist
+	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
+	h1.AddEntityList(el)
+	tree := el.GenerateBinaryTree()
+	h1.AddTree(tree)
+	h1.StartProcessMessages()
+
+	// Try directly StartNewProtocol
+	n1, err := h1.StartNewNodeName("ProtocolBlocking", tree)
+	if err != nil {
+		t.Fatal("Couldn't start protocol:", err)
+	}
+	n2, err := h1.StartNewNodeName("ProtocolBlocking", tree)
+	if err != nil {
+		t.Fatal("Couldn't start protocol:", err)
+	}
+
+	bp1 := n1.ProtocolInstance().(*BlockingProtocol)
+	bp2 := n2.ProtocolInstance().(*BlockingProtocol)
+
+	// checking function
+	var done = make(chan bool)
+	go func() {
+		var done1 bool
+		var done2 bool
+		for {
+			select {
+			case <-bp1.doneChan:
+				done1 = true
+				if !done2 {
+					t.Fatal("Node 1 should not have finished already")
+				} else {
+					done <- true
+					return
+				}
+			case <-bp2.doneChan:
+				done2 = true
+				if done1 {
+					t.Fatal("Node 2 should finish before node 1")
+				}
+				// release the blocking of node1
+				bp1.stopBlockChan <- true
+			}
+		}
+	}()
+
+	// say bp2 does not block
+	bp2.stopBlockChan <- true
+
+	// Send one message to n1
+	// bp1 should still block
+	network.RegisterMessageType(NodeTestMsg{})
+	slice1, err := network.MarshalRegisteredType(&NodeTestMsg{3})
+	slice2, err := network.MarshalRegisteredType(&NodeTestMsg{6})
+	if err != nil {
+		t.Fatal("error for creating slice")
+	}
+
+	n1.DispatchMsg(&sda.SDAData{
+		MsgSlice: slice1,
+		From: &sda.Token{
+			TreeID:     tree.Id,
+			TreeNodeID: tree.Root.Id,
+		}})
+	// send one message to n2
+	// bp2 is already non blocking so it should go straight to bp2
+	n2.DispatchMsg(&sda.SDAData{
+		MsgSlice: slice2,
+		From: &sda.Token{
+			TreeID:     tree.Id,
+			TreeNodeID: tree.Root.Id,
+		}})
+	// wait the confirmation
+	select {
+	case <-done:
+		return
+	case <-time.After(1000 * time.Millisecond):
+		t.Fatal("Could not get protocols blocking working ..")
+	}
+}
+
+// BlockingProtocol is a protocol that will block until it receives a "continue"
+// signal on the continue channel. It is used for testing the asynchronous
+// & non blocking handling of the messages in sda.
+type BlockingProtocol struct {
+	*sda.Node
+	// the protocol will signal on this channel that it is done
+	doneChan chan bool
+	// stopBLockChan is used to signal the protocol to stop blocking the
+	// incoming messages on the Incoming chan
+	stopBlockChan chan bool
+}
+
+// this channel is used to tell to all the blocking protocols to finish
+var continueChan = make(chan bool)
+
+func NewProtocolBlocking(node *sda.Node) (sda.ProtocolInstance, error) {
+	bp := &BlockingProtocol{
+		Node:          node,
+		doneChan:      make(chan bool),
+		stopBlockChan: make(chan bool),
+	}
+
+	node.RegisterChannel(Incoming)
+	return bp, nil
+}
+
+func (bp *BlockingProtocol) Start() error {
+	return nil
+}
+
+func (bp *BlockingProtocol) Dispatch() error {
+	// first wait on stopBlockChan
+	<-bp.stopBlockChan
+	// Then wait on the actual message
+	<-Incoming
+	// then signal that you are done
+	bp.doneChan <- true
+	return nil
 }
