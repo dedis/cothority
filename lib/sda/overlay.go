@@ -265,6 +265,10 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 func (o *Overlay) nodeDone(tok *Token) {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
+	o.nodeDelete(tok)
+}
+
+func (o *Overlay) nodeDelete(tok *Token) {
 	node, ok := o.nodes[tok.Id()]
 	if !ok {
 		dbg.Lvl2("Node", tok.Id(), "already gone")
@@ -287,12 +291,13 @@ func (o *Overlay) Suite() abstract.Suite {
 	return o.host.Suite()
 }
 
+// Close calls all nodes, deletes them from the list and closes them
 func (o *Overlay) Close() {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
 	for _, n := range o.nodes {
 		dbg.Lvl4("Closing node", n.TokenID())
-		o.nodeDone(n.Token())
+		o.nodeDelete(n.Token())
 	}
 }
 

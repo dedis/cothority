@@ -45,9 +45,12 @@ type Token struct {
 	cacheMutex   sync.Mutex
 }
 
+var tokenMutex sync.Mutex
+
 // Returns the Id of a token so we can put that in a map easily
 func (t *Token) Id() uuid.UUID {
-	t.cacheMutex.Lock()
+	tokenMutex.Lock()
+	defer tokenMutex.Unlock()
 	if t.cacheId == uuid.Nil {
 		url := network.UuidURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String() +
@@ -55,16 +58,14 @@ func (t *Token) Id() uuid.UUID {
 		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
 	}
 	id := t.cacheId
-	t.cacheMutex.Unlock()
 	return id
 }
 
 // Return a new Token contianing a reference to the given TreeNode
 func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
-	t.cacheMutex.Lock()
-	defer t.cacheMutex.Unlock()
+	tokenMutex.Lock()
+	defer tokenMutex.Unlock()
 	t_other := *t
-	defer t_other.cacheMutex.Unlock()
 	t_other.TreeNodeID = newid
 	t_other.cacheId = uuid.Nil
 	return &t_other

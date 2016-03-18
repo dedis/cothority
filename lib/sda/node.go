@@ -355,7 +355,10 @@ func (n *Node) dispatchMsgReader() {
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
 			n.msgDispatchQueueMutex.Unlock()
-			n.dispatchMsgToProtocol(msg)
+			err := n.dispatchMsgToProtocol(msg)
+			if err != nil {
+				dbg.Error("Error while dispatching message:", err)
+			}
 		} else {
 			n.msgDispatchQueueMutex.Unlock()
 			dbg.Lvl3(n.Myself(), "Waiting for message")
