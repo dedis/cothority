@@ -339,7 +339,6 @@ func (p *ProtocolChannels) Start() error {
 
 // release resources ==> call Done()
 func (p *ProtocolChannels) Release() {
-	dbg.Print("Releasing")
 	p.Done()
 }
 
