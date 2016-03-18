@@ -22,6 +22,7 @@ def plotData(data, name,
              xticks=[], loglog=[2, 2], xname="hosts",
              legend_pos="lower right",
              yminu=0, ymaxu=0,
+             xminu=0, xmaxu=0,
              title=""):
     mplot.plotPrepareLogLog(loglog[0], loglog[1])
     plots = read_csvs_xname(xname, *data[0])
@@ -42,8 +43,12 @@ def plotData(data, name,
         ymin = yminu
     if ymaxu != 0:
         ymax = ymaxu
+    if xminu != 0:
+        xmin = xminu
+    if xmaxu != 0:
+        xmax = xmaxu
     plt.ylim(ymin, ymax)
-    # plt.xlim(16, xmax * 1.2)
+    plt.xlim(xmin, xmax)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
 
@@ -51,7 +56,7 @@ def plotData(data, name,
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     if len(xticks) > 0:
         ax = plt.axes()
-        ax.set_xticks([16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536])
+        ax.set_xticks(xticks)
     if title != "":
         plt.title(title)
     mplot.plotEnd()
@@ -65,7 +70,7 @@ def plotRoundtime():
     plotData([['jvss', 'naive_cosi', 'ntree_cosi', 'cosi_depth_3'],
               ['JVSS', 'Naive', 'NTree', 'CoSi']], 'comparison_roundtime',
              xticks=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536],
-             yminu=0.5, ymaxu=8)
+             yminu=0.5, ymaxu=8, xminu=4)
 
 
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
