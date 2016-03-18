@@ -240,6 +240,7 @@ func TestMsgAggregation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	time.Sleep(100 * time.Millisecond)
 	if len(proto.IncomingAgg) == 0 {
 		t.Fatal("Messages should BE there")
 	}
@@ -428,8 +429,6 @@ func TestProtocolBlocking(t *testing.T) {
 		for {
 			select {
 			case <-bp1.doneChan:
-				dbg.Print("DONE from BP1")
-				dbg.Print("Done1=", done1, " vs Done2=", done2)
 				done1 = true
 				if !done2 {
 					t.Fatal("Node 1 should not have finished already")
@@ -438,15 +437,12 @@ func TestProtocolBlocking(t *testing.T) {
 					return
 				}
 			case <-bp2.doneChan:
-				dbg.Print("DONE from BP2")
 				done2 = true
 				if done1 {
 					t.Fatal("Node 2 should finish before node 1")
 				}
 				// release the blocking of node1
 				bp1.stopBlockChan <- true
-				dbg.Print("Received SIGNAL from BP2 => Releasing BP1")
-				dbg.Print("Done1=", done1, " vs Done2=", done2)
 			}
 		}
 	}()
@@ -478,7 +474,6 @@ func TestProtocolBlocking(t *testing.T) {
 			TreeNodeID: tree.Root.Id,
 		}})
 	// wait the confirmation
-	dbg.Print("Wait for confirmation of both blocking protocols")
 	select {
 	case <-done:
 		return
@@ -520,10 +515,8 @@ func (bp *BlockingProtocol) Start() error {
 func (bp *BlockingProtocol) Dispatch() error {
 	// first wait on stopBlockChan
 	<-bp.stopBlockChan
-	dbg.Print("BlockingProtocol: will continue")
 	// Then wait on the actual message
 	<-Incoming
-	dbg.Print("BlockingProtocol: received message => signal Done")
 	// then signal that you are done
 	bp.doneChan <- true
 	return nil

@@ -277,13 +277,18 @@ func (o *Overlay) Suite() abstract.Suite {
 }
 
 func (o *Overlay) Close() {
+	// have to use intermediate storage since node.Done() needs the lock also
+	nodes := make([]*Node, 0, len(o.nodes))
 	o.nodeLock.RLock()
-	defer o.nodeLock.RUnlock()
 	for _, n := range o.nodes {
-		n.Done()
+		nodes = append(nodes, n)
 		if err := n.ProtocolInstance().Shutdown(); err != nil {
 			dbg.Error("Error shutting down protocol", err)
 		}
+	}
+	o.nodeLock.RUnlock()
+	for _, n := range nodes {
+		n.Done()
 	}
 }
 

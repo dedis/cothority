@@ -38,6 +38,8 @@ type Node struct {
 	// dispatcher of the messages so overlay can give message to node without
 	// blocking even if the overlaying protocol is still blocking.
 	dispatcher *dispatcher
+	// done boolen flag to know if this node has already been closed or not
+	done bool
 }
 
 // AggregateMessages (if set) tells to aggregate messages from all children
@@ -424,6 +426,9 @@ func (n *Node) Start() error {
 // Done returns a channel that must be given a bool when a protocol instance has
 // finished its work.
 func (n *Node) Done() {
+	if n.done {
+		return
+	}
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()
 		if !ok {
@@ -433,6 +438,7 @@ func (n *Node) Done() {
 	n.overlay.nodeDone(n.token)
 	n.dispatcher.stop()
 	dbg.Lvl3(n.Name(), "has finished. Deleting its resources")
+	n.done = true
 }
 
 // OnDoneCallback should be called if we want to control the Done() of the node.
