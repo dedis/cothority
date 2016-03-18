@@ -42,7 +42,6 @@ type Token struct {
 	RoundID      uuid.UUID
 	TreeNodeID   uuid.UUID
 	cacheId      uuid.UUID
-	cacheMutex   sync.Mutex
 }
 
 var tokenMutex sync.Mutex
