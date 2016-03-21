@@ -85,7 +85,7 @@ func (rh *RandHound) Start() error {
 	rh.Leader.i1 = I1{
 		SID:     rh.Leader.SID,
 		GID:     rh.Leader.GID,
-		HRc:     rh.Hash(rh.Leader.Rc),
+		HRc:     rh.hash(rh.Leader.Rc),
 		T:       rh.T,
 		R:       rh.R,
 		N:       rh.N,
@@ -113,12 +113,12 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	rh.Peer.r1 = R1{
 		Src: rh.Peer.self,
-		HI1: rh.Hash(
+		HI1: rh.hash(
 			rh.Peer.i1.SID,
 			rh.Peer.i1.GID,
 			rh.Peer.i1.HRc,
 		),
-		HRs: rh.Hash(rh.Peer.Rs),
+		HRs: rh.hash(rh.Peer.Rs),
 	}
 
 	return rh.SendTo(rh.Parent(), &rh.Peer.r1)
@@ -135,7 +135,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r1.R1.HI1, rh.Hash(rh.Leader.i1.SID, rh.Leader.i1.GID, rh.Leader.i1.HRc)) {
+		if !bytes.Equal(r1.R1.HI1, rh.hash(rh.Leader.i1.SID, rh.Leader.i1.GID, rh.Leader.i1.HRc)) {
 			return errors.New(fmt.Sprintf("R1: peer %d replied to wrong I1 message", r1.Src))
 		}
 
@@ -192,7 +192,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	rh.Peer.r2 = R2{
 		Src: rh.Peer.self,
-		HI2: rh.Hash(
+		HI2: rh.hash(
 			rh.Peer.i2.SID,
 			rh.Peer.i2.Rc),
 		Rs:   rh.Peer.Rs,
@@ -212,7 +212,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r2.R2.HI2, rh.Hash(rh.Leader.i2.SID, rh.Leader.i2.Rc)) {
+		if !bytes.Equal(r2.R2.HI2, rh.hash(rh.Leader.i2.SID, rh.Leader.i2.Rc)) {
 			return errors.New(fmt.Sprintf("R2: peer %d replied to wrong I2 message", r2.Src))
 		}
 
@@ -302,7 +302,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	rh.Peer.r3 = R3{
 		Src: rh.Peer.self,
-		HI3: rh.Hash(
+		HI3: rh.hash(
 			rh.Peer.i3.SID,
 			rh.Peer.r2.HI2), // TODO: is this enough?
 		Resp: r3resps,
@@ -321,7 +321,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r3.R3.HI3, rh.Hash(rh.Leader.i3.SID, rh.Hash(rh.Leader.i2.SID, rh.Leader.i2.Rc))) {
+		if !bytes.Equal(r3.R3.HI3, rh.hash(rh.Leader.i3.SID, rh.hash(rh.Leader.i2.SID, rh.Leader.i2.Rc))) {
 			return errors.New(fmt.Sprintf("R3: peer %d replied to wrong I3 message", r3.Src))
 		}
 
@@ -372,7 +372,7 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	rh.Peer.r4 = R4{
 		Src: rh.Peer.self,
-		HI4: rh.Hash(
+		HI4: rh.hash(
 			rh.Peer.i4.SID,
 			make([]byte, 0)), // TODO: unpack R2s, see I4
 		Shares: rh.Peer.shares,
@@ -391,7 +391,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r4.R4.HI4, rh.Hash(rh.Leader.i4.SID, make([]byte, 0))) {
+		if !bytes.Equal(r4.R4.HI4, rh.hash(rh.Leader.i4.SID, make([]byte, 0))) {
 			return errors.New(fmt.Sprintf("R4: peer %d replied to wrong I4 message", r4.Src))
 		}
 

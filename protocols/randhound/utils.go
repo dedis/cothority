@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-func (rh *RandHound) Hash(bytes ...[]byte) []byte {
+func (rh *RandHound) hash(bytes ...[]byte) []byte {
 	return abstract.Sum(rh.Node.Suite(), bytes...)
 }
 

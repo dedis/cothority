@@ -81,7 +81,7 @@ func (rh *RandHound) newSession(purpose string) (*Session, []byte, error) {
 	return &Session{
 		LPubKey: pub,
 		Purpose: purpose,
-		Time:    t}, rh.Hash(pub, []byte(purpose), tm), nil
+		Time:    t}, rh.hash(pub, []byte(purpose), tm), nil
 }
 
 func (rh *RandHound) newGroup() (*Group, []byte, error) {
@@ -120,5 +120,5 @@ func (rh *RandHound) newGroup() (*Group, []byte, error) {
 		F: gp[0],
 		L: gp[1],
 		K: gp[2],
-		T: gp[3]}, rh.Hash(buf.Bytes()), nil
+		T: gp[3]}, rh.hash(buf.Bytes()), nil
 }
