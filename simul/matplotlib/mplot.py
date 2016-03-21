@@ -21,6 +21,7 @@ import numpy as np
 csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='', lineterminator='\n', escapechar='',
                      quoting=csv.QUOTE_NONE, skipinitialspace=True)
 
+# Holds different methods to plot on a given graph
 class MPlot:
     show_fig = True
     pngname = ""
@@ -36,9 +37,7 @@ class MPlot:
         self.plt = plt
         self.resetMinMax()
 
-    def readCSV(self, name):
-        print 'Reading ' + name
-
+    # Will put (x|y)(min|max) to default values
     def resetMinMax(self):
         self.ymin = -1
         self.ymax = 0

@@ -1,4 +1,4 @@
-# Reads the stats of a given run and returns easy-to-use data
+# Reads the stats of a given run and returns easy-to-use data with mplot
 
 import csv
 import unittest
@@ -11,6 +11,7 @@ csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='',
                      quoting=csv.QUOTE_NONE, skipinitialspace=True)
 
 
+# CSVStats holds all data from one run
 class CSVStats:
     x = []
 
@@ -50,6 +51,8 @@ class CSVStats:
         values = Values(self.x, column, self.columns)
         return values
 
+    # get_min_max runs over all values and returns minimum and maximum values
+    # for both x- and y-coordinates
     @staticmethod
     def get_min_max(*vals):
         values_y = []
@@ -59,9 +62,7 @@ class CSVStats:
             values_x += v.x
         return (min(values_x), max(values_x), min(values_y), max(values_y))
 
-    def add(self, stats, col1, col2):
-        sum = deepcopy(self)
-
+    # for old data, that don't have yet a 'depth'-field in the csv.
     def get_old_depth(self):
         old_hosts = self.columns['hosts']
         old_bf = self.columns['bf']
@@ -92,6 +93,7 @@ class Values:
         self.ymin = min(self.min)
         self.ymax = max(self.max)
 
+    # Returns the column if it exists, else a single [1]
     def has_column(self, column):
         if column in self.columns:
             return self.columns[column]
@@ -99,6 +101,7 @@ class Values:
             return [1]
 
 
+# At least some tests for this module
 class TestStringMethods(unittest.TestCase):
     def test_load(self):
         stats = CSVStats("test.csv")
@@ -127,5 +130,6 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(stats.ymax, 9)
 
 
+# Run the tests if we're run directly
 if __name__ == '__main__':
     unittest.main()
