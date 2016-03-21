@@ -42,8 +42,8 @@ type Node struct {
 	msgDispatchQueueMutex sync.Mutex
 	// kicking off new message
 	msgDispatchQueueWait chan bool
-	// finish dispatching
-	msgDispatchClose chan bool
+	// whether this node is closing
+	closing bool
 }
 
 // AggregateMessages (if set) tells to aggregate messages from all children
@@ -76,7 +76,6 @@ func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 		treeNode:             nil,
 		msgDispatchQueue:     make([]*SDAData, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
-		msgDispatchClose:     make(chan bool),
 	}
 	var err error
 	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
@@ -271,7 +270,12 @@ func (n *Node) Shutdown() error {
 // Close shuts down the go-routine and calls the protocolInstance-shutdown
 func (n *Node) Close() error {
 	dbg.Lvl3("Closing node", n.Info())
-	close(n.msgDispatchClose)
+	n.msgDispatchQueueMutex.Lock()
+	n.closing = true
+	if len(n.msgDispatchQueueWait) == 0 {
+		n.msgDispatchQueueWait <- true
+	}
+	n.msgDispatchQueueMutex.Unlock()
 	return n.ProtocolInstance().Shutdown()
 }
 
@@ -349,6 +353,11 @@ func (n *Node) DispatchMsg(msg *SDAData) {
 func (n *Node) dispatchMsgReader() {
 	for {
 		n.msgDispatchQueueMutex.Lock()
+		if n.closing == true {
+			dbg.Lvl3("Closing reader")
+			n.msgDispatchQueueMutex.Unlock()
+			return
+		}
 		if len(n.msgDispatchQueue) > 0 {
 			dbg.Lvl3(n.Info(), "Read message and dispatching it",
 				len(n.msgDispatchQueue))
@@ -362,12 +371,7 @@ func (n *Node) dispatchMsgReader() {
 		} else {
 			n.msgDispatchQueueMutex.Unlock()
 			dbg.Lvl3(n.Info(), "Waiting for message")
-			select {
-			case <-n.msgDispatchQueueWait:
-			case <-n.msgDispatchClose:
-				dbg.Lvl3("Closing reader")
-				return
-			}
+			<-n.msgDispatchQueueWait
 		}
 	}
 }
