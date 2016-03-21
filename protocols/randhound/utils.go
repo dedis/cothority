@@ -6,11 +6,7 @@ import (
 )
 
 func (rh *RandHound) Hash(bytes ...[]byte) []byte {
-	h := rh.Node.Suite().Hash()
-	for _, b := range bytes {
-		h.Write(b)
-	}
-	return h.Sum(nil)
+	return abstract.Sum(rh.Node.Suite(), bytes...)
 }
 
 func (rh *RandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
@@ -25,11 +21,11 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
 	set := make(map[int]bool)
 	insurers := make([]abstract.Point, rh.N)
 	keys := make([]int, rh.N)
-	j := 0
 	tns := rh.Tree().ListNodes()
+	j := 0
 	for len(set) < rh.N {
-		i := int(random.Uint64(prng) % uint64(rh.NumPeers))
-		// Add insurer only if not done so before; choosing yourself as an insurer is fine; ignore leader
+		i := int(random.Uint64(prng) % uint64(len(tns)))
+		// Add insurer only if not done so before; choosing yourself as an insurer is fine; ignore leader at index 0
 		if _, ok := set[i]; !ok && !tns[i].IsRoot() {
 			set[i] = true
 			keys[j] = i - 1
