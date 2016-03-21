@@ -5,10 +5,6 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-func (rh *RandHound) hash(bytes ...[]byte) []byte {
-	return abstract.Sum(rh.Node.Suite(), bytes...)
-}
-
 func (rh *RandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
 
 	// Seed PRNG for insurers selection
@@ -34,4 +30,18 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
 		}
 	}
 	return keys, insurers
+}
+
+func (rh *RandHound) hash(bytes ...[]byte) []byte {
+	return abstract.Sum(rh.Node.Suite(), bytes...)
+}
+
+func (rh *RandHound) sendToChildren(msg interface{}) error {
+	for _, c := range rh.Children() {
+		err := rh.SendTo(c, msg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
