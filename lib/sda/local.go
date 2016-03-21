@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"testing"
 
