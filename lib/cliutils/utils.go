@@ -5,11 +5,9 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 )
