@@ -26,13 +26,14 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte) ([]int, []abstract.Point) {
 	insurers := make([]abstract.Point, rh.N)
 	keys := make([]int, rh.N)
 	j := 0
+	tns := rh.Tree().ListNodes()
 	for len(set) < rh.N {
-		i := int(random.Uint64(prng) % uint64(len(rh.PID)))
-		// Add insurer only if not done so before; choosing yourself as an insurer is fine
-		if _, ok := set[i]; !ok {
+		i := int(random.Uint64(prng) % uint64(rh.NumPeers))
+		// Add insurer only if not done so before; choosing yourself as an insurer is fine; ignore leader
+		if _, ok := set[i]; !ok && !tns[i].IsRoot() {
 			set[i] = true
-			keys[j] = i
-			insurers[j] = rh.PKeys[i]
+			keys[j] = i - 1
+			insurers[j] = tns[i].Entity.Public
 			j += 1
 		}
 	}

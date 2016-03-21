@@ -40,7 +40,6 @@ func (rh *RandHound) newLeader() (*Leader, error) {
 	random.Stream.XORKeyStream(rc, rc)
 
 	// Setup session
-	//purpose := <-Purpose
 	session, sid, err := rh.newSession(rh.Purpose)
 	if err != nil {
 		return nil, err
@@ -58,12 +57,12 @@ func (rh *RandHound) newLeader() (*Leader, error) {
 		Group:   group,
 		GID:     gid,
 		Rc:      rc,
-		r1:      make([]R1, len(rh.PID)),
-		r2:      make([]R2, len(rh.PID)),
-		r3:      make([]R3, len(rh.PID)),
-		r4:      make([]R4, len(rh.PID)),
-		deals:   make([]poly.Deal, len(rh.PID)),
-		shares:  make([]poly.PriShares, len(rh.PID)),
+		r1:      make([]R1, rh.NumPeers),
+		r2:      make([]R2, rh.NumPeers),
+		r3:      make([]R3, rh.NumPeers),
+		r4:      make([]R4, rh.NumPeers),
+		deals:   make([]poly.Deal, rh.NumPeers),
+		shares:  make([]poly.PriShares, rh.NumPeers),
 	}, nil
 }
 
@@ -87,10 +86,9 @@ func (rh *RandHound) newSession(purpose string) (*Session, []byte, error) {
 
 func (rh *RandHound) newGroup() (*Group, []byte, error) {
 
-	np := len(rh.PID) // Number of peers
+	np := rh.NumPeers // Number of peers without leader
 	nt := rh.N        // Number of trustees (= shares)
 	buf := new(bytes.Buffer)
-	ppub := make([][]byte, np)
 	gp := [4]int{
 		np / 3,
 		np - (np / 3),
@@ -98,9 +96,9 @@ func (rh *RandHound) newGroup() (*Group, []byte, error) {
 		(nt + 1) / 2,
 	} // Group parameters: F, L, K, T; TODO: sync up notations with rh.T, rh.R, rh.N!
 
-	// Include public keys of all peers
-	for i, pkey := range rh.PKeys {
-		pub, err := pkey.MarshalBinary()
+	// Include public keys of all peers into group ID
+	for _, t := range rh.Tree().ListNodes() {
+		pub, err := t.Entity.Public.MarshalBinary()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -108,7 +106,6 @@ func (rh *RandHound) newGroup() (*Group, []byte, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		ppub[i] = pub
 	}
 
 	// Process group parameters
@@ -120,9 +117,8 @@ func (rh *RandHound) newGroup() (*Group, []byte, error) {
 	}
 
 	return &Group{
-		PPubKey: ppub,
-		F:       gp[0],
-		L:       gp[1],
-		K:       gp[2],
-		T:       gp[3]}, rh.Hash(buf.Bytes()), nil
+		F: gp[0],
+		L: gp[1],
+		K: gp[2],
+		T: gp[3]}, rh.Hash(buf.Bytes()), nil
 }

@@ -23,8 +23,17 @@ func (rh *RandHound) newPeer() (*Peer, error) {
 	rs := make([]byte, hs)
 	random.Stream.XORKeyStream(rs, rs)
 
+	selfi := -1 // because everybody does it
+	TID := rh.Node.TreeNode().Id
+	for i, t := range rh.Tree().ListNodes() {
+		if t.Id == TID {
+			selfi = i - 1 // we ignore the leader
+			break
+		}
+	}
+
 	return &Peer{
-		self: rh.PID[rh.Node.TreeNode().Id],
+		self: selfi,
 		Rs:   rs,
 	}, nil
 }

@@ -6,10 +6,8 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
-	"github.com/satori/go.uuid"
 )
 
 func init() {
@@ -18,36 +16,23 @@ func init() {
 
 type RandHound struct {
 	*sda.Node
-	Leader  *Leader           // Pointer to the protocol leader
-	Peer    *Peer             // Pointer to the 'current' peer
-	PID     map[uuid.UUID]int // Assigns entity-uuids of peers to unique integer ids
-	PKeys   []abstract.Point  // Public keys of the peers
-	T       int               // Minimum number of shares needed to reconstruct the secret
-	R       int               // Minimum number of signatures needed to certify a deal
-	N       int               // Total number of trustees / shares (T <= R <= N)
-	Purpose string            // Purpose of the protocol instance
-	Done    chan bool         // For signaling that a protocol run is finished (leader only)
-	Result  chan []byte       // For returning the generated randomness (leader only)
+	Leader   *Leader     // Pointer to the protocol leader
+	Peer     *Peer       // Pointer to the 'current' peer
+	NumPeers int         // Number of peers without the leader
+	T        int         // Minimum number of shares needed to reconstruct the secret
+	R        int         // Minimum number of signatures needed to certify a deal
+	N        int         // Total number of trustees / shares (T <= R <= N)
+	Purpose  string      // Purpose of the protocol instance
+	Done     chan bool   // For signaling that a protocol run is finished (leader only)
+	Result   chan []byte // For returning the generated randomness (leader only)
 }
 
 func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 
 	// Setup RandHound protocol struct
 	rh := &RandHound{
-		Node: node,
-	}
-
-	// Use TreeNode UUIDs to assign peers unique integer IDs (root node is ignored)
-	j := 0
-	tns := node.Tree().ListNodes()
-	rh.PID = make(map[uuid.UUID]int)
-	rh.PKeys = make([]abstract.Point, len(tns)-1)
-	for _, t := range tns {
-		if !t.IsRoot() {
-			rh.PID[t.Id] = j
-			rh.PKeys[j] = t.Entity.Public
-			j += 1
-		}
+		Node:     node,
+		NumPeers: len(node.Tree().ListNodes()) - 1,
 	}
 
 	// Setup leader or peer depending on the node's location in the tree
@@ -159,7 +144,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		rh.Leader.nr1 += 1
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr1 == len(rh.PID) {
+		if rh.Leader.nr1 == rh.NumPeers {
 			rh.Leader.i2 = I2{
 				SID: rh.Leader.SID,
 				Rc:  rh.Leader.Rc,
@@ -241,7 +226,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		}
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr2 == len(rh.PID) {
+		if rh.Leader.nr2 == rh.NumPeers {
 			rh.Leader.i3 = I3{
 				SID: rh.Leader.SID,
 				R2s: rh.Leader.r2,
@@ -357,7 +342,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		}
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr3 == len(rh.PID) {
+		if rh.Leader.nr3 == rh.NumPeers {
 			rh.Leader.i4 = I4{
 				SID: rh.Leader.SID,
 				R2s: rh.Leader.r2,
@@ -418,7 +403,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 		rh.Leader.shares[r4.Src].Empty(rh.Node.Suite(), rh.T, rh.N)
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr4 == len(rh.PID) {
+		if rh.Leader.nr4 == rh.NumPeers {
 			// Process shares of i-th peer
 			for i, _ := range rh.Leader.r4 {
 				for _, r4share := range rh.Leader.r4[i].Shares {
