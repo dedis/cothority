@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestNewDataFilter(t *testing.T) {
@@ -178,4 +180,27 @@ func TestStatsAverageFiltered(t *testing.T) {
 		t.Fatal("Average are not the same !")
 	}
 
+}
+
+func TestStatsString(t *testing.T) {
+	rc := map[string]string{"servers": "10", "hosts": "10"}
+	rs := NewStats(rc)
+	m := NewMonitor(rs)
+
+	go func() {
+		if err := m.Listen(); err != nil {
+			dbg.Fatal("Could not Listen():", err)
+		}
+	}()
+
+	ConnectSink("localhost:10000")
+	measure := NewTimeMeasure("test")
+	time.Sleep(time.Millisecond * 100)
+	measure.Record()
+	time.Sleep(time.Millisecond * 100)
+
+	if strings.Contains(rs.String(), "0.000000") {
+		t.Fatal("The measurement shouldn't contain 0.000000:", rs.String())
+	}
+	m.Stop()
 }
