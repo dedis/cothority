@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// LocalTest represents all that is needed for a local test-run
 type LocalTest struct {
 	// A map of Entity.Id to Hosts
 	Hosts map[uuid.UUID]*Host
@@ -65,6 +66,7 @@ func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
+// NewNodeEmptyName create an empty node - use at your own risk!
 func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
@@ -121,6 +123,8 @@ func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, reg
 	return hosts, list, tree
 }
 
+// GenEntityListFromHosts takes a number of hosts as arguments and creates
+// an EntityList.
 func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
 	var entities []*network.Entity
 	for i := range hosts {
@@ -141,6 +145,7 @@ func (l *LocalTest) CloseAll() {
 	}
 }
 
+// GetTree returns the tree of the given TreeNode
 func (l *LocalTest) GetTree(tn *TreeNode) *Tree {
 	var tree *Tree
 	for _, t := range l.Trees {
@@ -204,14 +209,20 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.Proto
 	return to.overlay.TransmitMsg(sdaMsg)
 }
 
+// AddPendingTreeMarshal takes a treeMarshal and adds it to the list of the
+// known trees, also triggering dispatching of SDA-messages waiting for that
+// tree
 func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
 	h.addPendingTreeMarshal(tm)
 }
 
+// CheckPendingTreeMarshal looks whether there are any treeMarshals to be
+// called
 func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
 }
 
+// NodesFromOverlay returns all nodes from a given overlay.
 func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[uuid.UUID]*Node {
 	return l.Overlays[entityId].nodes
 }
@@ -228,7 +239,7 @@ func (l *LocalTest) AllNodes() []*Node {
 	return nodes
 }
 
-// NewLocalHost creates a new host with the given address and registers it
+// NewLocalHost creates a new host with the given address and registers it.
 func NewLocalHost(port int) *Host {
 	address := "localhost:" + strconv.Itoa(port)
 	priv, pub := PrivPub()
@@ -237,7 +248,7 @@ func NewLocalHost(port int) *Host {
 }
 
 // GenLocalHosts will create n hosts with the first one being connected to each of
-// the other nodes if connect is true
+// the other nodes if connect is true.
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 
 	hosts := make([]*Host, n)
@@ -277,7 +288,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	return hosts
 }
 
-// PrivPub creates a private/public key pair
+// PrivPub creates a private/public key pair.
 func PrivPub() (abstract.Secret, abstract.Point) {
 	keypair := config.NewKeyPair(network.Suite)
 	return keypair.Secret, keypair.Public

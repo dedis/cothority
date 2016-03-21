@@ -150,11 +150,11 @@ func fg(c ct.Color, bright bool) {
 // Lvlf1 -> Lvlf -> lvl
 // or
 // Lvl1 -> lvld -> lvl
-func lvlf(lvl int, f string, args ...interface{}) {
-	lvl(lvl, fmt.Sprintf(f, args...))
+func lvlf(l int, f string, args ...interface{}) {
+	lvl(l, fmt.Sprintf(f, args...))
 }
-func lvld(lvl int, args ...interface{}) {
-	lvl(lvl, args...)
+func lvld(l int, args ...interface{}) {
+	lvl(l, args...)
 }
 
 // Print directly sends the arguments to the stdout
