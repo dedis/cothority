@@ -1,7 +1,9 @@
 package sda
 
 import (
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
 
@@ -80,4 +82,27 @@ type EntityListUnknown struct {
 // SendEntity is the first message we send on creation of a link
 type SendEntity struct {
 	Name string
+}
+
+// CLI Part of SDA
+
+// The Request to CoSi: it is used by the client to send something to sda that
+// will in turn give that to the CoSi system. It contains the message the client
+// wants to sign.
+type CosiRequest struct {
+	// the actual message to sign by CoSi.
+	Message []byte
+}
+
+// CoSiResponse contains the signature out of the CoSi system.
+// It can be verified using the lib/cosi package.
+// NOTE: the `suite` field is absent here because this struct is a temporary
+// hack and we only supports one suite for the moment,i.e. ed25519.
+type CosiResponse struct {
+	// The Challenge out a of the Multi Schnorr signature
+	Challenge abstract.Secret
+	// the Response out of the Multi Schnorr Signature
+	Response abstract.Secret
+	// All the exceptions
+	Exceptions []cosi.Exception
 }
