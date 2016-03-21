@@ -270,7 +270,7 @@ func (n *Node) Shutdown() error {
 
 // Close shuts down the go-routine and calls the protocolInstance-shutdown
 func (n *Node) Close() error {
-	dbg.Lvl3("Closing node", n.Myself())
+	dbg.Lvl3("Closing node", n.Info())
 	close(n.msgDispatchClose)
 	return n.ProtocolInstance().Shutdown()
 }
@@ -336,10 +336,10 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 // DispatchMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
 func (n *Node) DispatchMsg(msg *SDAData) {
-	dbg.Lvl3(n.Myself(), "Received message")
+	dbg.Lvl3(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
-	dbg.Lvl3(n.Myself(), "DispatchQueue-length is", len(n.msgDispatchQueue))
+	dbg.Lvl3(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
 	if len(n.msgDispatchQueue) == 1 && len(n.msgDispatchQueueWait) == 0 {
 		n.msgDispatchQueueWait <- true
 	}
@@ -350,7 +350,7 @@ func (n *Node) dispatchMsgReader() {
 	for {
 		n.msgDispatchQueueMutex.Lock()
 		if len(n.msgDispatchQueue) > 0 {
-			dbg.Lvl3(n.Myself(), "Read message and dispatching it",
+			dbg.Lvl3(n.Info(), "Read message and dispatching it",
 				len(n.msgDispatchQueue))
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
@@ -361,7 +361,7 @@ func (n *Node) dispatchMsgReader() {
 			}
 		} else {
 			n.msgDispatchQueueMutex.Unlock()
-			dbg.Lvl3(n.Myself(), "Waiting for message")
+			dbg.Lvl3(n.Info(), "Waiting for message")
 			select {
 			case <-n.msgDispatchQueueWait:
 			case <-n.msgDispatchClose:
@@ -400,7 +400,7 @@ func (n *Node) dispatchMsgToProtocol(sdaMsg *SDAData) error {
 
 	switch {
 	case n.channels[msgType] != nil:
-		dbg.Lvl4(n.Myself(), "Dispatching to channel")
+		dbg.Lvl4(n.Info(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
@@ -471,7 +471,7 @@ func (n *Node) Done() {
 			return
 		}
 	}
-	dbg.Lvl3(n.Myself(), "has finished. Deleting its resources")
+	dbg.Lvl3(n.Info(), "has finished. Deleting its resources")
 	n.overlay.nodeDone(n.token)
 }
 
@@ -513,7 +513,7 @@ func (n *Node) Token() *Token {
 }
 
 // Myself nicely displays who we are
-func (n *Node) Myself() string {
+func (n *Node) Info() string {
 	return fmt.Sprint(n.Entity().Addresses, n.TokenID())
 }
 
