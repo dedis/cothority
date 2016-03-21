@@ -67,14 +67,7 @@ const (
 	LvlPanic
 )
 
-// Needs two functions to keep the caller-depth the same and find who calls us
-// Lvlf1 -> Lvlf -> Lvl
-// or
-// Lvl1 -> Lvld -> Lvl
-func Lvld(lvl int, args ...interface{}) {
-	Lvl(lvl, args...)
-}
-func Lvl(lvl int, args ...interface{}) {
+func lvl(lvl int, args ...interface{}) {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 
@@ -153,92 +146,120 @@ func fg(c ct.Color, bright bool) {
 	}
 }
 
-func Lvlf(lvl int, f string, args ...interface{}) {
-	Lvl(lvl, fmt.Sprintf(f, args...))
+// Needs two functions to keep the caller-depth the same and find who calls us
+// Lvlf1 -> Lvlf -> lvl
+// or
+// Lvl1 -> lvld -> lvl
+func lvlf(lvl int, f string, args ...interface{}) {
+	lvl(lvl, fmt.Sprintf(f, args...))
+}
+func lvld(lvl int, args ...interface{}) {
+	lvl(lvl, args...)
 }
 
+// Print directly sends the arguments to the stdout
 func Print(args ...interface{}) {
-	Lvld(LvlPrint, args...)
+	lvld(LvlPrint, args...)
 }
 
+// Printf is like Print but takes a formatting-argument first
 func Printf(f string, args ...interface{}) {
-	Lvlf(LvlPrint, f, args...)
+	lvlf(LvlPrint, f, args...)
 }
 
+// Lvl1 debug output is informational and always displayed
 func Lvl1(args ...interface{}) {
-	Lvld(1, args...)
+	lvld(1, args...)
 }
 
+// Lvl2 is more verbose but doesn't spam the stdout in case
+// there is a big simulation
 func Lvl2(args ...interface{}) {
-	Lvld(2, args...)
+	lvld(2, args...)
 }
 
+// Lvl3 gives debug-output that can make it difficult to read
+// for big simulations with more than 100 hosts
 func Lvl3(args ...interface{}) {
-	Lvld(3, args...)
+	lvld(3, args...)
 }
 
+// Lvl4 is only good for test-runs with very limited output
 func Lvl4(args ...interface{}) {
-	Lvld(4, args...)
+	lvld(4, args...)
 }
 
+// Lvl5 is for big data
 func Lvl5(args ...interface{}) {
-	Lvld(5, args...)
+	lvld(5, args...)
 }
 
+// Error prints the error in a nice red color
 func Error(args ...interface{}) {
-	Lvld(LvlError, args...)
+	lvld(LvlError, args...)
 }
 
+// Warn prints out the warning
 func Warn(args ...interface{}) {
-	args = append([]interface{}{"WARN:"}, args...)
-	Lvld(LvlWarning, args...)
+	lvld(LvlWarning, args...)
 }
 
+// Fatal prints out the fatal message and quits
 func Fatal(args ...interface{}) {
-	Lvld(LvlFatal, args...)
+	lvld(LvlFatal, args...)
 	os.Exit(1)
 }
 
+// Panic prints out the panic message and panics
 func Panic(args ...interface{}) {
-	Lvld(LvlPanic, args...)
+	lvld(LvlPanic, args...)
 	panic(args)
 }
 
+// Lvlf1 is like Lvl1 but with a format-string
 func Lvlf1(f string, args ...interface{}) {
-	Lvlf(1, f, args...)
+	lvlf(1, f, args...)
 }
 
+// Lvlf2 is like Lvl2 but with a format-string
 func Lvlf2(f string, args ...interface{}) {
-	Lvlf(2, f, args...)
+	lvlf(2, f, args...)
 }
 
+// Lvlf3 is like Lvl3 but with a format-string
 func Lvlf3(f string, args ...interface{}) {
-	Lvlf(3, f, args...)
+	lvlf(3, f, args...)
 }
 
+// Lvlf4 is like Lvl4 but with a format-string
 func Lvlf4(f string, args ...interface{}) {
-	Lvlf(4, f, args...)
+	lvlf(4, f, args...)
 }
 
+// Lvlf5 is like Lvl5 but with a format-string
 func Lvlf5(f string, args ...interface{}) {
-	Lvlf(5, f, args...)
+	lvlf(5, f, args...)
 }
 
+// Fatalf is like Fatal but with a format-string
 func Fatalf(f string, args ...interface{}) {
-	Lvlf(LvlFatal, f, args...)
+	lvlf(LvlFatal, f, args...)
 	os.Exit(1)
 }
 
+// Errorf is like Error but with a format-string
 func Errorf(f string, args ...interface{}) {
-	Lvlf(LvlError, f, args...)
+	lvlf(LvlError, f, args...)
 }
 
+// Warnf is like Warn but with a format-string
 func Warnf(f string, args ...interface{}) {
-	Lvlf(LvlWarning, "WARN: "+f, args...)
+	lvlf(LvlWarning, f, args...)
 }
 
+// Panicf is like Panic but with a format-string
 func Panicf(f string, args ...interface{}) {
-	Lvlf(LvlPanic, f, args...)
+	lvlf(LvlPanic, f, args...)
 	panic(args)
 }
 
@@ -261,16 +282,35 @@ func TestOutput(show bool, level int) {
 // Just add an additional "L" in front, and remove it later:
 // - easy hack to turn on other debug-messages
 // - easy removable by searching/replacing 'LLvl' with 'Lvl'
-func LLvl1(args ...interface{})            { Lvld(-1, args...) }
-func LLvl2(args ...interface{})            { Lvld(-1, args...) }
-func LLvl3(args ...interface{})            { Lvld(-1, args...) }
-func LLvl4(args ...interface{})            { Lvld(-1, args...) }
-func LLvl5(args ...interface{})            { Lvld(-1, args...) }
-func LLvlf1(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf2(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf3(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf4(f string, args ...interface{}) { Lvlf(-1, f, args...) }
-func LLvlf5(f string, args ...interface{}) { Lvlf(-1, f, args...) }
+// LLvl1 *always* prints
+func LLvl1(args ...interface{}) { lvld(-1, args...) }
+
+// LLvl2 *always* prints
+func LLvl2(args ...interface{}) { lvld(-2, args...) }
+
+// LLvl3 *always* prints
+func LLvl3(args ...interface{}) { lvld(-3, args...) }
+
+// LLvl4 *always* prints
+func LLvl4(args ...interface{}) { lvld(-4, args...) }
+
+// LLvl5 *always* prints
+func LLvl5(args ...interface{}) { lvld(-5, args...) }
+
+// LLvlf1 *always* prints
+func LLvlf1(f string, args ...interface{}) { lvlf(-1, f, args...) }
+
+// LLvlf2 *always* prints
+func LLvlf2(f string, args ...interface{}) { lvlf(-2, f, args...) }
+
+// LLvlf3 *always* prints
+func LLvlf3(f string, args ...interface{}) { lvlf(-3, f, args...) }
+
+// LLvlf4 *always* prints
+func LLvlf4(f string, args ...interface{}) { lvlf(-4, f, args...) }
+
+// LLvlf5 *always* prints
+func LLvlf5(f string, args ...interface{}) { lvlf(-5, f, args...) }
 
 // SetDebugVisible set the global debug output level in a go-rountine-safe way
 func SetDebugVisible(lvl int) {
@@ -279,30 +319,37 @@ func SetDebugVisible(lvl int) {
 	debugVisible = lvl
 }
 
+// DebugVisible returns the actual visible debug-level
 func DebugVisible() int {
 	debugMut.RLock()
 	defer debugMut.RUnlock()
 	return debugVisible
 }
 
+// SetShowTime allows for turning on the flag that adds the current
+// time to the debug-output
 func SetShowTime(show bool) {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 	showTime = show
 }
 
-func DebugTime() bool {
+// ShowTime returns the current setting for showing the time in the debug
+// output
+func ShowTime() bool {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 	return showTime
 }
 
+// SetUseColors can turn off or turn on the use of colors in the debug-output
 func SetUseColors(show bool) {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 	useColors = show
 }
 
+// UseColors returns the actual setting of the color-usage in dbg
 func UseColors() bool {
 	debugMut.Lock()
 	defer debugMut.Unlock()
