@@ -227,12 +227,12 @@ func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[uuid.UUID]*Node {
 	return l.Overlays[entityId].nodes
 }
 
+// AllNodes returns all nodes from all hosts in that LocalTest
 func (l *LocalTest) AllNodes() []*Node {
 	var nodes []*Node
 	for h := range l.Hosts {
 		overlay := l.Hosts[h].overlay
 		for i := range overlay.nodes {
-			fmt.Println("Addind nodes")
 			nodes = append(nodes, overlay.nodes[i])
 		}
 	}
