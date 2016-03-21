@@ -140,13 +140,10 @@ func (h *Host) SaveToFile(name string) error {
 	buf := new(bytes.Buffer)
 	err = toml.NewEncoder(buf).Encode(hc)
 	if err != nil {
-		dbg.Fatal(err)
+		return err
 	}
 	err = ioutil.WriteFile(name, buf.Bytes(), 0660)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-	return nil
+	return err
 }
 
 // listen starts listening for messages coming from any host that tries to
