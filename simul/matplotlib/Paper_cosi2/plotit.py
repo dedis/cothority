@@ -71,6 +71,8 @@ def plotRoundtime():
               ['JVSS', 'Naive', 'NTree', 'CoSi']], 'comparison_roundtime',
              xticks=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536],
              yminu=0.5, ymaxu=8, xminu=4)
+    arrow(8000, 2, "oversubscription", -0.8, -0.8)
+    mplot.plotEnd()
 
 
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
@@ -136,16 +138,20 @@ def plotBF():
     plt.xlim(2, 18)
     mplot.plotEnd()
 
-def arrow(x,y,label, dx = 1., dy = 1.):
-    plt.annotate(label, xy=(x + dx / 10, y + dy / 10), xytext=(x + dx / 2, y + dy / 2),
-            arrowprops=dict(facecolor='black', headlength=5, width=0.1, headwidth=8))
+
+def arrow(x, y, label, dx=1., dy=1.):
+    plt.annotate(label, xy=(x + dx / 10, y + dy / 10),
+                 xytext=(x + dx / 2, y + dy / 2),
+                 arrowprops=dict(facecolor='black', headlength=5, width=0.1,
+                                 headwidth=8))
+
 
 # Plots the oversubscription
 def plotOver():
     plotData([['cosi_over_1', 'cosi_over_2', 'cosi_over_3'],
               ['8 servers', '16 servers', '32 servers']], 'cosi_over',
              ylabel="Seconds per round",
-             legend_pos = "upper left")
+             legend_pos="upper left")
 
 
 def plotNetwork():
@@ -211,14 +217,14 @@ def read_csvs(*values):
 # Write to file
 write_file = True
 # What file extension - .png, .eps
-file_extension = 'eps'
+file_extension = 'png'
 # Show figure
 mplot.show_fig = False
 
 # Call all plot-functions
 plotRoundtime()
-plotSysUser()
-plotBF()
-plotOver()
-plotNetwork()
-plotCheckingNtree()
+# plotSysUser()
+# plotBF()
+# plotOver()
+# plotNetwork()
+# plotCheckingNtree()
