@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -20,19 +21,22 @@ func TestCreateEntityList(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to read group toml.", err)
 	}
+	if el == nil {
+		t.Fatal("Didn't parse entity list")
+	}
 	want := 2
 	got := len(el.List)
 	if got != want {
-		t.Fatal("Wanted " + want + " number of entities," +
-			"but got " + got)
+		t.Fatal(fmt.Sprintf("Wanted %s number of entities, but got %s",
+			want, got))
 	}
 	if el.List[0].Id == el.List[1].Id {
 		t.Fatal("To different entities have the same ID")
 	}
-	want = "5ThA/lW6WgZNtb+WY1HnoxHWgZlR4dFy/AFNJ5jgmU4="
-	got = el.List[0].Public.String()
-	if want != got {
-		t.Fatal("First entity's public key" + got +
-			"doesn't match with the one from the input file" + want)
+	wantKey := "5ThA/lW6WgZNtb+WY1HnoxHWgZlR4dFy/AFNJ5jgmU4="
+	gotKey := el.List[0].Public.String()
+	if wantKey != gotKey {
+		t.Fatal(fmt.Sprintf("First entity's public key %s  doesn't "+
+			"match with input: %s", gotKey, wantKey))
 	}
 }
