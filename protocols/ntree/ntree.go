@@ -32,7 +32,7 @@ type Protocol struct {
 	verifySignature int
 }
 
-func NewProtocol(node *sda.Node) (*Protocol, error) {
+func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 	p := &Protocol{
 		Node: node,
 	}

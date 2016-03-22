@@ -35,7 +35,7 @@ func (c *Client) StartClientSimulation(blocksDir string, numTxs int) error {
 }
 
 func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
-	dbg.Lvl1("ByzCoin Client will trigger up to", nTxs, " transactions")
+	dbg.Lvl1("ByzCoin Client will trigger up to", nTxs, "transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 	if err != nil {
 		dbg.Error("Error: Couldn't parse blocks in", blocksPath,
