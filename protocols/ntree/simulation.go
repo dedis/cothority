@@ -5,13 +5,13 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/cosi"
 )
 
 func init() {
 	sda.SimulationRegister("NaiveTree", NewSimulation)
 }
 
+// Simulation holds everything necessary for one NTree-round
 type Simulation struct {
 	sda.SimulationBFTree
 	Message string
@@ -21,6 +21,7 @@ type Simulation struct {
 	Checking int
 }
 
+// NewSimulation creates a new NTree-simulation
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{Checking: 2}
 	_, err := toml.Decode(config, es)
@@ -30,6 +31,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
+// Setup prepares the simulation on the local end
 func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
@@ -41,6 +43,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
+// Run starts the simulation on the simulation-side
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte(e.Message)
 	size := config.Tree.Size()
@@ -54,9 +57,9 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 			dbg.Error("Quitting the simulation....", err)
 			return err
 		}
-		pi := node.ProtocolInstance().(*cosi.ProtocolCosi)
-		pi.Message = msg
-		cosi.VerifyResponse = e.Checking
+		pi := node.ProtocolInstance().(*Protocol)
+		pi.message = msg
+		pi.verifySignature = e.Checking
 
 		done := make(chan bool)
 		node.OnDoneCallback(func() bool {

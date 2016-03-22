@@ -111,7 +111,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		<-doneChan
 		r.Record()
 
-		dbg.Lvl1("Finished round", round)
+		dbg.Lvl2("Finished round", round)
 	}
 	return nil
 }

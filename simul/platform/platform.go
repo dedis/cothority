@@ -17,7 +17,7 @@ import (
 // platform.
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
-	Configure(*PlatformConfig)
+	Configure(*Config)
 	// Build builds all necessary binaries
 	Build(build string, arg ...string) error
 	// Makes sure that there is no part of the application still running
@@ -32,9 +32,9 @@ type Platform interface {
 	Wait() error
 }
 
-// PlatformConfig is passed to Platform.Config and prepares the platform for
+// Config is passed to Platform.Config and prepares the platform for
 // specific system-wide configurations
-type PlatformConfig struct {
+type Config struct {
 	MonitorPort int
 	Debug       int
 }
@@ -71,7 +71,7 @@ func NewPlatform(t string) Platform {
  */
 func ReadRunFile(p Platform, filename string) []RunConfig {
 	var runconfigs []RunConfig
-	masterConfig := NewRunConfig()
+	masterConfig := newRunConfig()
 	dbg.Lvl3("Reading file", filename)
 
 	file, err := os.Open(filename)
@@ -131,7 +131,7 @@ type RunConfig struct {
 	fields map[string]string
 }
 
-func NewRunConfig() *RunConfig {
+func newRunConfig() *RunConfig {
 	rc := new(RunConfig)
 	rc.fields = make(map[string]string)
 	return rc
@@ -188,7 +188,7 @@ func (r *RunConfig) Map() map[string]string {
 
 // Clone this runconfig so it has all fields-value relationship already present
 func (r *RunConfig) Clone() *RunConfig {
-	rc := NewRunConfig()
+	rc := newRunConfig()
 	for k, v := range r.fields {
 		rc.fields[k] = v
 	}

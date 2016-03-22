@@ -53,7 +53,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)
-	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
+	dbg.Lvl2("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
@@ -75,7 +75,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
 				dbg.Lvl1("Round", round, " => fail verification")
 			} else {
-				dbg.Lvl1("Round", round, " => success")
+				dbg.Lvl2("Round", round, " => success")
 			}
 			done <- true
 		}

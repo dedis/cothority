@@ -49,10 +49,8 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
-	dbg.Lvl1("Naive Tree Simulation starting with:  Rounds=", e.Rounds)
+	dbg.Lvl2("Naive Tree Simulation starting with: Rounds=", e.Rounds)
 	server := NewNtreeServer(e.Blocksize)
-	/*var rChallComm monitorMut*/
-	/*var rRespPrep monitorMut*/
 	for round := 0; round < e.Rounds; round++ {
 		client := byzcoin.NewClient(server)
 		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
@@ -80,14 +78,6 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			rComplete.Record()
 			dbg.Lvl3("Done")
 			done <- true
-			// TODO verification of signatures
-			/*for {*/
-			//if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
-			//dbg.Lvl1("Round", round, " FAILED:", err)
-			//} else {
-			//dbg.Lvl1("Round", round, " SUCCESS")
-			//}
-			/*}*/
 		})
 
 		go nt.Start()

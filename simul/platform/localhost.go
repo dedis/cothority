@@ -60,8 +60,8 @@ type Localhost struct {
 	sc *sda.SimulationConfig
 }
 
-// Configure various
-func (d *Localhost) Configure(pc *PlatformConfig) {
+// Configure various internal variables
+func (d *Localhost) Configure(pc *Config) {
 	pwd, _ := os.Getwd()
 	d.runDir = pwd + "/platform/localhost"
 	d.localDir = pwd
@@ -76,7 +76,7 @@ func (d *Localhost) Configure(pc *PlatformConfig) {
 	dbg.Lvl3("Localhost configured ...")
 }
 
-// Will build the application
+// Build makes sure that the binary is available for our local platform
 func (d *Localhost) Build(build string, arg ...string) error {
 	src := "./cothority"
 	dst := d.runDir + "/" + d.Simulation
@@ -94,6 +94,7 @@ func (d *Localhost) Build(build string, arg ...string) error {
 	return err
 }
 
+// Cleanup kills all running cothority-binaryes
 func (d *Localhost) Cleanup() error {
 	dbg.Lvl3("Cleaning up")
 	ex := d.runDir + "/" + d.Simulation
@@ -107,6 +108,7 @@ func (d *Localhost) Cleanup() error {
 	return nil
 }
 
+// Deploy copies all files to the run-directory
 func (d *Localhost) Deploy(rc RunConfig) error {
 	if runtime.GOOS == "darwin" {
 		files, err := exec.Command("ulimit", "-n").Output()
@@ -150,6 +152,8 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 
 }
 
+// Start will execute one cothority-binary for each server
+// configured
 func (d *Localhost) Start(args ...string) error {
 	os.Chdir(d.runDir)
 	dbg.Lvl4("Localhost: chdir into", d.runDir)
@@ -184,7 +188,7 @@ func (d *Localhost) Start(args ...string) error {
 	return nil
 }
 
-// Waits for all processes to finish
+// Wait for all processes to finish
 func (d *Localhost) Wait() error {
 	dbg.Lvl3("Waiting for processes to finish")
 

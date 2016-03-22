@@ -66,7 +66,7 @@ func main() {
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		deployP.Configure(&platform.PlatformConfig{
+		deployP.Configure(&platform.Config{
 			MonitorPort: monitorPort,
 			Debug:       debugVisible,
 		})
@@ -107,7 +107,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		}
 	}
 
-	MkTestDir()
+	mkTestDir()
 	rs := make([]*monitor.Stats, len(runconfigs))
 	// Try 10 times to run the test
 	nTimes := 10
@@ -118,7 +118,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	if simRange != "" {
 		args = os.O_CREATE | os.O_RDWR | os.O_APPEND
 	}
-	f, err := os.OpenFile(TestFile(name), args, 0660)
+	f, err := os.OpenFile(testFile(name), args, 0660)
 	if err != nil {
 		dbg.Fatal("error opening test file:", err)
 	}
@@ -276,14 +276,14 @@ type runFile struct {
 	Runs     string
 }
 
-func MkTestDir() {
+func mkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
 		dbg.Fatal("failed to make test directory")
 	}
 }
 
-func TestFile(name string) string {
+func testFile(name string) string {
 	return "test_data/" + name + ".csv"
 }
 

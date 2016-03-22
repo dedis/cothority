@@ -72,7 +72,7 @@ func (s *ByzCoinServer) ListenClientTransactions() {
 func (s *ByzCoinServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	currTransactions := s.WaitEnoughBlocks()
-	dbg.Lvl1("Instantiate ByzCoin Round with", len(currTransactions), " transactions")
+	dbg.Lvl2("Instantiate ByzCoin Round with", len(currTransactions), "transactions")
 	pi, err := NewByzCoinRootProtocol(node, currTransactions, s.timeOutMs, s.fail)
 	node.SetProtocolInstance(pi)
 
