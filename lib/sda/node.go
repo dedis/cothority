@@ -471,3 +471,12 @@ func (n *Node) Host() *Host {
 func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
 	n.instance = pi
 }
+
+// HACKY / TEMPORARY way for accessing Cosi functionality
+func (n *Node) SigningMessage(msg []byte) {
+	return
+}
+
+func (n *Node) RegisterDoneCallback(func(chal, resp abstract.Secret)) {
+	return
+}

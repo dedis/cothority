@@ -1,7 +1,6 @@
 package sda
 
 import (
-	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
@@ -13,6 +12,9 @@ var RequestTreeMessage = network.RegisterMessageType(RequestTree{})
 var RequestEntityListMessage = network.RegisterMessageType(RequestEntityList{})
 var SendTreeMessage = TreeMarshalType
 var SendEntityListMessage = EntityListType
+
+var CosiRequestMessage = network.RegisterMessageType(CosiRequest{})
+var CosiResponseMessage = network.RegisterMessageType(CosiResponse{})
 
 // SDAData is to be embedded in every message that is made for a
 // ProtocolInstance
@@ -90,7 +92,9 @@ type SendEntity struct {
 // will in turn give that to the CoSi system. It contains the message the client
 // wants to sign.
 type CosiRequest struct {
-	// the actual message to sign by CoSi.
+	// The entity list to use for creating the cosi tree
+	EntityList *EntityList
+	// the actual messag to sign by CoSi.
 	Message []byte
 }
 
@@ -103,6 +107,4 @@ type CosiResponse struct {
 	Challenge abstract.Secret
 	// the Response out of the Multi Schnorr Signature
 	Response abstract.Secret
-	// All the exceptions
-	Exceptions []cosi.Exception
 }

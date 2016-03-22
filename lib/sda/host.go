@@ -368,6 +368,11 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
+			// Standalone CoSi hack!
+			// A client wants to sign something
+		case CosiRequestMessage:
+			cr := data.Msg.(CosiRequest)
+			h.handleCosiRequest(data.Entity, &cr)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -375,6 +380,54 @@ func (h *Host) processMessages() {
 			dbg.Error("Sending error:", err)
 		}
 	}
+}
+
+// handleCosiRequest will
+// * register the entitylist
+// * create a flat tree out of it with him being at the root
+// * launch a CoSi protocol
+// * wait for it to finish and send back the response to the client
+func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
+	dbg.Lvl2(h.workingAddress, "Received client CosiRequest from", client.First())
+	idx, e := cr.EntityList.Search(h.Entity.Id)
+	if e == nil {
+		dbg.Error("Received CoSiRequest without being included in the Entitylist")
+		return
+	}
+	if idx != 0 {
+		// replace the first entity by this host's entity
+		tmp := cr.EntityList.List[0]
+		cr.EntityList.List[0] = e
+		cr.EntityList.List[idx] = tmp
+	}
+	// register & create the tree
+	h.overlay.RegisterEntityList(cr.EntityList)
+	// for the moment let's just stick to a very simple binary tree
+	tree := cr.EntityList.GenerateBinaryTree()
+	h.overlay.RegisterTree(tree)
+
+	// run the CoSi protocol
+	node, err := h.overlay.CreateNewNodeName("ProtocolCosi", tree)
+	if err != nil {
+		dbg.Error("Error creating tree upon client request:", err)
+		return
+	}
+	node.SigningMessage(cr.Message)
+	// Register the handler when the signature is finished
+	fn := func(chal, resp abstract.Secret) {
+		response := &CosiResponse{
+			Challenge: chal,
+			Response:  resp,
+		}
+		dbg.Lvl2(h.workingAddress, "Getting CoSi signature back => sending to client")
+		// send back to client
+		if err := h.SendRaw(client, response); err != nil {
+			dbg.Error(h.workingAddress, "Error sending back Cosi signature back to client", err)
+		}
+	}
+	node.RegisterDoneCallback(fn)
+	dbg.Lvl2(h.workingAddress, "Starting CoSi protocol...")
+	go node.Start()
 }
 
 // sendSDAData marshals the inner msg and then sends a SDAData msg
