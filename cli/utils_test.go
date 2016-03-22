@@ -7,13 +7,15 @@ import (
 )
 
 // sample toml with two participants in toml:
-var testToml = `title = "test-toml.toml"
+var testToml = `Description = "test only toml"
 [[servers]]
   Address = "192.168.210.8:7770"
   PubKey = "5ThA/lW6WgZNtb+WY1HnoxHWgZlR4dFy/AFNJ5jgmU4="
+  Description = "EPFL's test server #1"
 [[servers]]
   Adress = "192.168.210.9:7771"
   PubKey = "ECpQAgvJhn/mN9QWCG2WLMBd9OEKIp0FtNvZyh++NQ4="
+  Description = "EPFL's test server #2"
 `
 
 func TestCreateEntityList(t *testing.T) {
