@@ -1,7 +1,9 @@
 package cli
 
 import (
-	"fmt"
+	"bytes"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/network"
 	"strings"
 	"testing"
 )
@@ -9,12 +11,12 @@ import (
 // sample toml with two participants in toml:
 var testToml = `Description = "test only toml"
 [[servers]]
-  Address = "192.168.210.8:7770"
-  PubKey = "5ThA/lW6WgZNtb+WY1HnoxHWgZlR4dFy/AFNJ5jgmU4="
+  Addresses = ["192.168.210.8:7770"]
+  Public = "5ThA/lW6WgZNtb+WY1HnoxHWgZlR4dFy/AFNJ5jgmU4="
   Description = "EPFL's test server #1"
 [[servers]]
-  Adress = "192.168.210.9:7771"
-  PubKey = "ECpQAgvJhn/mN9QWCG2WLMBd9OEKIp0FtNvZyh++NQ4="
+  Addresses = ["192.168.210.9:7771"]
+  Public = "ECpQAgvJhn/mN9QWCG2WLMBd9OEKIp0FtNvZyh++NQ4="
   Description = "EPFL's test server #2"
 `
 
@@ -29,16 +31,20 @@ func TestCreateEntityList(t *testing.T) {
 	want := 2
 	got := len(el.List)
 	if got != want {
-		t.Fatal(fmt.Sprintf("Wanted %s number of entities, but got %s",
-			want, got))
+		t.Fatalf("Wanted %s number of entities, but got %s",
+			want, got)
 	}
 	if el.List[0].Id == el.List[1].Id {
 		t.Fatal("To different entities have the same ID")
 	}
 	wantKey := "5ThA/lW6WgZNtb+WY1HnoxHWgZlR4dFy/AFNJ5jgmU4="
-	gotKey := el.List[0].Public.String()
+	var buff bytes.Buffer
+	if err := cliutils.WritePub64(network.Suite, &buff, el.List[0].Public); err != nil {
+		t.Fatal("Could not convert key to base64", err)
+	}
+	gotKey := buff.String()
 	if wantKey != gotKey {
-		t.Fatal(fmt.Sprintf("First entity's public key %s  doesn't "+
-			"match with input: %s", gotKey, wantKey))
+		t.Fatalf("First entity's public key %s  doesn't "+
+			"match with input: %s", gotKey, wantKey)
 	}
 }
