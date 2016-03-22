@@ -474,9 +474,11 @@ func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
 
 // HACKY / TEMPORARY way for accessing Cosi functionality
 func (n *Node) SigningMessage(msg []byte) {
+	dbg.Lvl1("Node.SigningMessage() called")
 	return
 }
 
 func (n *Node) RegisterDoneCallback(func(chal, resp abstract.Secret)) {
+	dbg.Lvl1("Node.RegisterDoneCallback() called")
 	return
 }

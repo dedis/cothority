@@ -412,7 +412,7 @@ func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
 		dbg.Error("Error creating tree upon client request:", err)
 		return
 	}
-	node.SigningMessage(cr.Message)
+	node.ProtocolInstance().SigningMessage(cr.Message)
 	// Register the handler when the signature is finished
 	fn := func(chal, resp abstract.Secret) {
 		response := &CosiResponse{
@@ -425,7 +425,7 @@ func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
 			dbg.Error(h.workingAddress, "Error sending back Cosi signature back to client", err)
 		}
 	}
-	node.RegisterDoneCallback(fn)
+	node.ProtocolInstance().RegisterDoneCallback(fn)
 	dbg.Lvl2(h.workingAddress, "Starting CoSi protocol...")
 	go node.Start()
 }
