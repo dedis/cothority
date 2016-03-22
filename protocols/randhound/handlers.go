@@ -192,25 +192,27 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Determine other peers who chose me as an insurer
 		keys, _ := rh.chooseInsurers(rh.Peer.i2.Rc, r2.Rs)
-		for k := range keys { // k is the share index we received from the i-th peer
-			if keys[k] == rh.Peer.self {
-				resp, err := deal.ProduceResponse(k, &longPair)
-				if err != nil {
-					return err
-				}
-
-				var r3resp R3Resp
-				r3resp.Dealer = i
-				r3resp.Index = k
-				r3resp.Resp, err = resp.MarshalBinary()
-				if err != nil {
-					return err
-				}
-				r3resps = append(r3resps, r3resp)
-
-				share := deal.RevealShare(k, &longPair)
-				r4shares = append(r4shares, R4Share{i, k, share})
+		if k, ok := keys[rh.Peer.self]; ok { // k is the share index we received from the i-th peer
+			//for k := range keys {
+			//if keys[k] == rh.Peer.self {
+			resp, err := deal.ProduceResponse(k, &longPair)
+			if err != nil {
+				return err
 			}
+
+			var r3resp R3Resp
+			r3resp.Dealer = i
+			r3resp.Index = k
+			r3resp.Resp, err = resp.MarshalBinary()
+			if err != nil {
+				return err
+			}
+			r3resps = append(r3resps, r3resp)
+
+			share := deal.RevealShare(k, &longPair)
+			r4shares = append(r4shares, R4Share{i, k, share})
+			//}
+			//}
 		}
 	}
 	rh.Peer.shares = r4shares // save revealed shares for later
@@ -327,7 +329,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 					share := r4share.Share
 
 					keys, _ := rh.chooseInsurers(rh.Leader.Rc, rh.Leader.r2[j].Rs)
-					if keys[idx] != i {
+					if idx != keys[i] {
 						return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
 					}
 
