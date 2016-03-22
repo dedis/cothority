@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// sample toml with two participants in toml:
+// sample toml with two nodes:
 var testToml = `Description = "test only toml"
 [[servers]]
   Address = "192.168.210.8:7770"
@@ -41,4 +41,10 @@ func TestCreateEntityList(t *testing.T) {
 		t.Fatal(fmt.Sprintf("First entity's public key %s  doesn't "+
 			"match with input: %s", gotKey, wantKey))
 	}
+}
+
+func TestSignStatement(t *testing.T) {
+	// See TestHackyCosi in sda_test
+	// the *only* difference here would be that the entity list is created
+	// from a toml file instead (this part is tested above)
 }
