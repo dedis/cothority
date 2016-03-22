@@ -33,6 +33,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"net"
@@ -88,11 +89,12 @@ func main() {
 	dbg.Lvl1("Starting Host ...")
 	dbg.Lvl1("	... Addresses:", host.Entity.Addresses)
 	// print public key in hex
-	public, err := cliutils.PubHex(network.Suite, host.Entity.Public)
+	var buff bytes.Buffer
+	err = cliutils.WritePub64(network.Suite, &buff, host.Entity.Public)
 	if err != nil {
 		dbg.Fatal("Unknown error:", err)
 	}
-	dbg.Lvl1("	... Public key:", public)
+	dbg.Lvl1("	... Public key:", buff.String())
 
 	host.Listen()
 	host.StartProcessMessages()
