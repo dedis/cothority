@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/andres-erbsen/protobuf/io"
 	"github.com/dedis/cothority/cli"
 	"github.com/dedis/crypto/abstract"
+	"io"
 	"os"
 	"strings"
 )
@@ -16,19 +16,14 @@ func printUsageAndExit(msg string) {
 	}
 
 	// XXX print some very clear instructions:
-	fmt.Fprintf(os.Stderr, "usage:"+
-		"cosi -m “<Message to be signed>” my-cosi-group.toml"+
-		"cosi -f <file-to-be-signed> my-cosi-group.toml",
-
-		os.Args[0])
-
+	fmt.Fprintf(os.Stderr, `usage:
+	cosi -m “<Message to be signed>” my-cosi-group.toml
+	cosi -f <file-to-be-signed> my-cosi-group.toml`)
 	os.Exit(1)
 }
 
-var strOrFilename string
-var groupToml string
-var f flag.FlagSet
-var m flag.FlagSet
+var f *flag.FlagSet
+var m *flag.FlagSet
 
 func init() {
 	// XXX use flagsets as we soon might add different flags for each case
@@ -38,29 +33,34 @@ func init() {
 }
 
 func main() {
-	if !(os.Args == 3) {
+	if !(len(os.Args) == 3) {
 		printUsageAndExit("")
 	}
 	switch os.Args[1] {
 	case "-f":
-		strOrFilename = f.String("f", "", "Filename of the file to be signed.")
-		groupToml = f.String("f", "", "Toml file containing the list of CoSi nodes.")
+		strOrFilename := f.String("f", "",
+			"Filename of the file to be signed.")
+		groupToml := f.String("f", "",
+			"Toml file containing the list of CoSi nodes.")
+
 		if err := f.Parse(os.Args[1:]); err != nil {
 			printUsageAndExit("Unable to start signing file. " +
-				"Couldn't parse arguments:" + err)
+				"Couldn't parse arguments:" + err.Error())
 		}
-		sig, err := signFile(strOrFilename, groupToml)
+		sig, err := signFile(*strOrFilename, *groupToml)
 		handleErrorAndExit(err)
+		fmt.Println("Signature:" + sig.String())
 
 	case "-m":
-		strOrFilename = m.String("m", "", "Message to be signed.")
-		groupToml = m.String("m", "", "Toml file containing the list of CoSi nodes.")
+		strOrFilename := m.String("m", "", "Message to be signed.")
+		groupToml := m.String("m", "", "Toml file containing the list of CoSi nodes.")
 		if err := m.Parse(os.Args[1:]); err != nil {
 			printUsageAndExit("Unable to start signing message" +
-				"Couldn't parse arguments:" + err)
+				"Couldn't parse arguments:" + err.Error())
 		}
-		sig, err := signString(strOrFilename, groupToml)
+		sig, err := signString(*strOrFilename, *groupToml)
 		handleErrorAndExit(err)
+		fmt.Println("Signature:" + sig.String())
 	default:
 		printUsageAndExit("")
 	}
@@ -82,22 +82,22 @@ func signString(statement, groupToml string) (abstract.Secret, error) {
 func sign(r io.Reader, tomlFileName string) (abstract.Secret, error) {
 	f, err := os.Open(tomlFileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	el, err := cli.ReadGroupToml(f)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	res, err := cli.SignStatement(r, el, true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return res.Response, nil
 }
 
 func handleErrorAndExit(e error) {
 	if e != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't create signature"+e)
+		fmt.Fprintf(os.Stderr, "Couldn't create signature"+e.Error())
 	}
 	os.Exit(1)
 }
