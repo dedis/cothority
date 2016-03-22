@@ -193,8 +193,6 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 		// Determine other peers who chose me as an insurer
 		keys, _ := rh.chooseInsurers(rh.Peer.i2.Rc, r2.Rs)
 		if k, ok := keys[rh.Peer.self]; ok { // k is the share index we received from the i-th peer
-			//for k := range keys {
-			//if keys[k] == rh.Peer.self {
 			resp, err := deal.ProduceResponse(k, &longPair)
 			if err != nil {
 				return err
@@ -211,8 +209,6 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 			share := deal.RevealShare(k, &longPair)
 			r4shares = append(r4shares, R4Share{i, k, share})
-			//}
-			//}
 		}
 	}
 	rh.Peer.shares = r4shares // save revealed shares for later

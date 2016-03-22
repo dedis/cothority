@@ -14,19 +14,15 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte) (map[int]int, []abstract.Poin
 	prng := rh.Node.Suite().Cipher(seed)
 
 	// Choose insurers uniquely
-	set := make(map[int]bool)
-	insurers := make([]abstract.Point, rh.N)
-	//keys := make([]int, rh.N) // old
 	keys := make(map[int]int)
+	insurers := make([]abstract.Point, rh.N)
 	tns := rh.Tree().ListNodes()
 	j := 0
-	for len(set) < rh.N {
+	for len(keys) < rh.N {
 		i := int(random.Uint64(prng) % uint64(len(tns)))
 		// Add insurer only if not done so before; choosing yourself as an insurer is fine; ignore leader at index 0
-		if _, ok := set[i]; !ok && !tns[i].IsRoot() {
-			set[i] = true
-			//keys[j] = i - 1 // old
-			keys[i-1] = j
+		if _, ok := keys[i-1]; !ok && !tns[i].IsRoot() {
+			keys[i-1] = j // j is the share index;
 			insurers[j] = tns[i].Entity.Public
 			j += 1
 		}
