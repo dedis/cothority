@@ -26,8 +26,8 @@ func (rh *RandHound) newPeer() (*Peer, error) {
 	selfi := -1 // because everybody does it
 	TID := rh.Node.TreeNode().Id
 	for i, t := range rh.Tree().ListNodes() {
-		if t.Id == TID {
-			selfi = i - 1 // we ignore the leader
+		if t.Id == TID && !t.IsRoot() {
+			selfi = i // we ignore the leader
 			break
 		}
 	}

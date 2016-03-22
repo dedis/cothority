@@ -55,11 +55,10 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		}
 
 		// Collect replies
-		rh.Leader.r1[r1.Src] = r1.R1
-		rh.Leader.nr1 += 1
+		rh.Leader.r1[r1.Src] = &r1.R1
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr1 == rh.NumPeers {
+		if len(rh.Leader.r1) == rh.NumPeers {
 			rh.Leader.i2 = I2{
 				SID: rh.Leader.SID,
 				Rc:  rh.Leader.Rc,
@@ -132,16 +131,17 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		}
 
 		// Collect replies
-		rh.Leader.r2[r2.Src] = r2.R2
-		rh.Leader.nr2 += 1
+		rh.Leader.r2[r2.Src] = &r2.R2
 
-		rh.Leader.deals[r2.Src].UnmarshalInit(rh.T, rh.R, rh.N, rh.Node.Suite())
-		if err := rh.Leader.deals[r2.Src].UnmarshalBinary(r2.Deal); err != nil {
+		deal := &poly.Deal{}
+		deal.UnmarshalInit(rh.T, rh.R, rh.N, rh.Node.Suite())
+		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
+		rh.Leader.deals[r2.Src] = deal
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr2 == rh.NumPeers {
+		if len(rh.Leader.r2) == rh.NumPeers {
 			rh.Leader.i3 = I3{
 				SID: rh.Leader.SID,
 				R2s: rh.Leader.r2,
@@ -198,14 +198,11 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 				return err
 			}
 
-			var r3resp R3Resp
-			r3resp.Dealer = i
-			r3resp.Index = k
-			r3resp.Resp, err = resp.MarshalBinary()
+			rb, err := resp.MarshalBinary()
 			if err != nil {
 				return err
 			}
-			r3resps = append(r3resps, r3resp)
+			r3resps = append(r3resps, R3Resp{i, k, rb})
 
 			share := deal.RevealShare(k, &longPair)
 			r4shares = append(r4shares, R4Share{i, k, share})
@@ -239,8 +236,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		}
 
 		// Collect replies
-		rh.Leader.r3[r3.Src] = r3.R3
-		rh.Leader.nr3 += 1
+		rh.Leader.r3[r3.Src] = &r3.R3
 
 		for _, r3resp := range rh.Leader.r3[r3.Src].Resp {
 			j := r3resp.Dealer
@@ -255,7 +251,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		}
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr3 == rh.NumPeers {
+		if len(rh.Leader.r3) == rh.NumPeers {
 			rh.Leader.i4 = I4{
 				SID: rh.Leader.SID,
 				R2s: rh.Leader.r2,
@@ -309,14 +305,15 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 		}
 
 		// Collect replies
-		rh.Leader.r4[r4.Src] = r4.R4
-		rh.Leader.nr4 += 1
+		rh.Leader.r4[r4.Src] = &r4.R4
 
 		// Initialise PriShares
-		rh.Leader.shares[r4.Src].Empty(rh.Node.Suite(), rh.T, rh.N)
+		ps := &poly.PriShares{}
+		ps.Empty(rh.Node.Suite(), rh.T, rh.N)
+		rh.Leader.shares[r4.Src] = ps
 
 		// Continue, once all replies have arrived
-		if rh.Leader.nr4 == rh.NumPeers {
+		if len(rh.Leader.r4) == rh.NumPeers {
 			// Process shares of i-th peer
 			for i, _ := range rh.Leader.r4 {
 				for _, r4share := range rh.Leader.r4[i].Shares {
@@ -342,8 +339,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 			// Generate the output
 			output := rh.Node.Suite().Secret().Zero()
 			for i := range rh.Leader.shares {
-				secret := rh.Leader.shares[i].Secret()
-				output.Add(output, secret)
+				output.Add(output, rh.Leader.shares[i].Secret())
 			}
 
 			rb, err := output.MarshalBinary()
