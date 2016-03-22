@@ -3,25 +3,69 @@ package cli
 import (
 	"io"
 	"io/ioutil"
+	"strings"
 
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/lib/cosi"
-	"github.com/syndtr/goleveldb/leveldb/errors"
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 )
 
-func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
-	return nil, nil
+// groupToml represents the structure of the group.toml file given to the cli.
+type groupToml struct {
+	Description string
+	Servers     []server `toml:"servers"`
 }
+
+// server is one entry in the group.toml file describing one server to use for
+// the cothority system.
+type server struct {
+	Addresses   []string
+	Public      string
+	Description string
+}
+
+// ReadGroupToml reads a group.toml file and returns the list of Entity
+// described in the file.
+func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+	group := &groupToml{}
+	_, err := toml.DecodeReader(f, group)
+	if err != nil {
+		return nil, err
+	}
+	// convert from servers to entities
+	var entities = make([]*network.Entity, 0, len(group.Servers))
+	for _, s := range group.Servers {
+		en, err := s.toEntity()
+		if err != nil {
+			return nil, err
+		}
+		entities = append(entities, en)
+	}
+	el := sda.NewEntityList(entities)
+	return el, nil
+}
+
+// toEntity will convert this server struct to a network entity.
+func (s *server) toEntity() (*network.Entity, error) {
+	public, err := cliutils.ReadPub64(network.Suite, strings.NewReader(s.Public))
+	if err != nil {
+		return nil, err
+	}
+	return network.NewEntity(public, s.Addresses...), nil
+}
+
 
 // SignStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
 func SignStatement(r io.Reader,
-	el *sda.EntityList,
-	verify bool) (*sda.CosiResponse, error) {
+el *sda.EntityList,
+verify bool) (*sda.CosiResponse, error) {
 
 	msgB, err := ioutil.ReadAll(r)
 	if err != nil {
