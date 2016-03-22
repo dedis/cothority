@@ -23,9 +23,13 @@ def plotData(data, name,
              legend_pos="lower right",
              yminu=0, ymaxu=0,
              xminu=0, xmaxu=0,
-             title=""):
+             title="", read_plots=True):
     mplot.plotPrepareLogLog(loglog[0], loglog[1])
-    plots = read_csvs_xname(xname, *data[0])
+    if read_plots:
+        plots = read_csvs_xname(xname, *data[0])
+    else:
+        plots = data[0]
+
     ranges = []
     data_label = []
     plot_show(name)
@@ -69,9 +73,9 @@ def plotData(data, name,
 def plotRoundtime():
     plotData([['jvss', 'naive_cosi', 'ntree_cosi', 'cosi_depth_3'],
               ['JVSS', 'Naive', 'NTree', 'CoSi']], 'comparison_roundtime',
-             xticks=[4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 65536],
+             xticks=[2, 8, 32, 128, 512, 2048, 8192, 32768],
              yminu=0.5, ymaxu=8, xminu=4)
-    arrow(8000, 2, "oversubscription", -0.8, -0.8)
+    arrow(8000, 2.1, "oversubscription", -6000, 0.9, 'right')
     mplot.plotEnd()
 
 
@@ -139,19 +143,37 @@ def plotBF():
     mplot.plotEnd()
 
 
-def arrow(x, y, label, dx=1., dy=1.):
+def arrow(x, y, label, dx=1., dy=1., text_align='left'):
     plt.annotate(label, xy=(x + dx / 10, y + dy / 10),
                  xytext=(x + dx / 2, y + dy / 2),
+                 horizontalalignment=text_align,
                  arrowprops=dict(facecolor='black', headlength=5, width=0.1,
                                  headwidth=8))
 
 
 # Plots the oversubscription
 def plotOver():
-    plotData([['cosi_over_1', 'cosi_over_2', 'cosi_over_3'],
+    plotData([['cosi_over_1', 'cosi_over_2', 'cosi_depth_3'],
               ['8 servers', '16 servers', '32 servers']], 'cosi_over',
              ylabel="Seconds per round",
+             xlabel="Total number of witnesses",
              legend_pos="upper left")
+
+
+# Plots the oversubscription with shifted graphs
+def plotOver2():
+    plots = read_csvs('cosi_over_1', 'cosi_over_2', 'cosi_over_3')
+
+    for index in range( 0, len(plots[0].x )):
+        plots[0].x[index] /= 8
+        plots[1].x[index] /= 16
+        plots[2].x[index] /= 32
+    plotData([plots,
+              ['8 servers', '16 servers', '32 servers']], 'cosi_over_2',
+             ylabel="Seconds per round",
+             xlabel="Number of witnesses per server",
+             legend_pos="upper left",
+             read_plots=False)
 
 
 def plotNetwork():
@@ -222,9 +244,10 @@ file_extension = 'png'
 mplot.show_fig = False
 
 # Call all plot-functions
-plotRoundtime()
-# plotSysUser()
-# plotBF()
-# plotOver()
-# plotNetwork()
-# plotCheckingNtree()
+#plotRoundtime()
+#plotSysUser()
+#plotBF()
+#plotOver()
+plotOver2()
+#plotNetwork()
+#plotCheckingNtree()
