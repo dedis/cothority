@@ -1,33 +1,30 @@
 package app
 
 import (
-	"errors"
+	"bytes"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/crypto/config"
-	"golang.org/x/net/context"
+	"github.com/dedis/crypto/abstract"
 )
 
 // ReadGroupToml reads a group.toml file and returns the list of Entity
 // described in the file.
 func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
-	group := &groupToml{}
+	group := &GroupToml{}
 	_, err := toml.DecodeReader(f, group)
 	if err != nil {
 		return nil, err
 	}
-	// convert from servers to entities
+	// convert from ServerTomls to entities
 	var entities = make([]*network.Entity, 0, len(group.Servers))
 	for _, s := range group.Servers {
-		en, err := s.toEntity()
+		en, err := s.toEntity(network.Suite)
 		if err != nil {
 			return nil, err
 		}
@@ -37,83 +34,37 @@ func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
 	return el, nil
 }
 
-// toEntity will convert this server struct to a network entity.
-func (s *server) toEntity() (*network.Entity, error) {
+// toEntity will convert this ServerToml struct to a network entity.
+func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
 	pubR := strings.NewReader(s.Public)
-	public, err := cliutils.ReadPub64(network.Suite, pubR)
+	public, err := cliutils.ReadPub64(suite, pubR)
 	if err != nil {
 		return nil, err
 	}
 	return network.NewEntity(public, s.Addresses...), nil
 }
 
-// SignStatement can be used to sign the contents passed in the io.Reader
-// (pass an io.File or use an strings.NewReader for strings)
-func SignStatement(r io.Reader,
-	el *sda.EntityList,
-	verify bool) (*sda.CosiResponse, error) {
-
-	msgB, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
+func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
+	var buff bytes.Buffer
+	if err := cliutils.WritePub64(suite, &buff, public); err != nil {
+		dbg.Error("Error writing public key")
+		return nil
 	}
-	// create a throw-away key pair:
-	kp := config.NewKeyPair(network.Suite)
-
-	// create a throw-away entity with an empty  address:
-	e := network.NewEntity(kp.Public, "")
-	client := network.NewSecureTcpHost(kp.Secret, e)
-	req := &sda.CosiRequest{
-		EntityList: el,
-		Message:    msgB,
+	return &ServerToml{
+		Addresses: addresses,
+		Public:    buff.String(),
 	}
-
-	// Connect to the root
-	host := el.List[0]
-	dbg.Lvl3("Opening connection")
-	con, err := client.Open(host)
-	defer client.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	dbg.Lvl3("Sending sign request")
-	// send the request
-	if err := con.Send(context.TODO(), req); err != nil {
-		return nil, err
-	}
-	dbg.Lvl3("Waiting for the response")
-	// wait for the response
-	packet, err := con.Receive(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-	dbg.Lvl3("Recieved response")
-	response, ok := packet.Msg.(sda.CosiResponse)
-	if !ok {
-		return nil, errors.New("Invalid repsonse: Could not cast the " +
-			"received response to the right type")
-	}
-
-	if verify { // verify signature
-		err := cosi.VerifySignature(network.Suite, msgB, el.Aggregate,
-			response.Challenge, response.Response)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return &response, nil
 }
 
-// groupToml represents the structure of the group.toml file given to the cli.
-type groupToml struct {
+// GroupToml represents the structure of the group.toml file given to the cli.
+type GroupToml struct {
 	Description string
-	Servers     []server `toml:"servers"`
+	Servers     []ServerToml `toml:"servers"`
 }
 
-// server is one entry in the group.toml file describing one server to use for
+// ServerToml is one entry in the group.toml file describing one server to use for
 // the cothority system.
-type server struct {
+type ServerToml struct {
 	Addresses   []string
 	Public      string
 	Description string
