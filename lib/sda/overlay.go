@@ -22,7 +22,7 @@ type Overlay struct {
 	// false = NOT DONE
 	// true = DONE
 	nodeInfo map[uuid.UUID]bool
-	nodeLock sync.RWMutex
+	nodeLock sync.Mutex
 	// mapping from Tree.Id to Tree
 	trees    map[uuid.UUID]*Tree
 	treesMut sync.Mutex
@@ -85,10 +85,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
 		return nil
 	}
 	o.nodeLock.Unlock()
-	err := node.DispatchMsg(sdaMsg)
-	if err != nil {
-		return err
-	}
+	node.DispatchMsg(sdaMsg)
 	return nil
 }
 
@@ -249,12 +246,12 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 	if to == nil {
 		return errors.New("To-token is nil")
 	}
-	o.nodeLock.RLock()
+	o.nodeLock.Lock()
 	if o.nodes[from.Id()] == nil {
-		o.nodeLock.RUnlock()
+		o.nodeLock.Unlock()
 		return errors.New("No protocol instance registered with this token.")
 	}
-	o.nodeLock.RUnlock()
+	o.nodeLock.Unlock()
 	tn, err := o.TreeNodeFromToken(to)
 	if err != nil {
 		return errors.New("Didn't find TreeNode for token: " + err.Error())
@@ -267,6 +264,22 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 func (o *Overlay) nodeDone(tok *Token) {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
+	o.nodeDelete(tok)
+}
+
+// nodeDelete needs to be separated from nodeDone, as it is also called from
+// Close, but due to locking-issues here we don't lock.
+func (o *Overlay) nodeDelete(tok *Token) {
+	node, ok := o.nodes[tok.Id()]
+	if !ok {
+		dbg.Lvl2("Node", tok.Id(), "already gone")
+		return
+	}
+	dbg.Lvl4("Closing node", tok.Id())
+	err := node.Close()
+	if err != nil {
+		dbg.Error("Error while closing node:", err)
+	}
 	delete(o.nodes, tok.Id())
 	// mark it done !
 	o.nodeInfo[tok.Id()] = true
@@ -279,13 +292,13 @@ func (o *Overlay) Suite() abstract.Suite {
 	return o.host.Suite()
 }
 
+// Close calls all nodes, deletes them from the list and closes them
 func (o *Overlay) Close() {
-	o.nodeLock.RLock()
-	defer o.nodeLock.RUnlock()
+	o.nodeLock.Lock()
+	defer o.nodeLock.Unlock()
 	for _, n := range o.nodes {
-		if err := n.ProtocolInstance().Shutdown(); err != nil {
-			dbg.Error("Error shutting down protocol", err)
-		}
+		dbg.Lvl4("Closing node", n.TokenID())
+		o.nodeDelete(n.Token())
 	}
 }
 
