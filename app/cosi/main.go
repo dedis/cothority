@@ -53,7 +53,8 @@ func main() {
 		printSigAsJSON(sig)
 	case "-m":
 		strOrFilename := m.String("m", "", "Message to be signed.")
-		groupToml := m.String("c", "", "Toml file containing the list of CoSi nodes.")
+		groupToml := m.String("c", "", "Toml file containing the list "+
+			"of CoSi nodes.")
 		if err := m.Parse(os.Args[1:]); err != nil {
 			printUsageAndExit("Unable to start signing message" +
 				"Couldn't parse arguments:" + err.Error())
@@ -69,7 +70,8 @@ func main() {
 func signFile(fileName, groupToml string) (*sda.CosiResponse, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't read file to be signed: %s", err)
+		fmt.Fprintf(os.Stderr, "Couldn't read file to be signed: %s",
+			err)
 	}
 	return sign(file, groupToml)
 }
@@ -107,5 +109,6 @@ func printSigAsJSON(res *sda.CosiResponse) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
+	fmt.Println("JSON encoded signature:")
 	os.Stdout.Write(b)
 }
