@@ -368,9 +368,9 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
+		case CosiRequestMessage:
 			// Standalone CoSi hack!
 			// A client wants to sign something
-		case CosiRequestMessage:
 			cr := data.Msg.(CosiRequest)
 			h.handleCosiRequest(data.Entity, &cr)
 		default:
