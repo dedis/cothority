@@ -71,7 +71,7 @@ func NewPlatform(t string) Platform {
  */
 func ReadRunFile(p Platform, filename string) []RunConfig {
 	var runconfigs []RunConfig
-	masterConfig := newRunConfig()
+	masterConfig := NewRunConfig()
 	dbg.Lvl3("Reading file", filename)
 
 	file, err := os.Open(filename)
@@ -131,7 +131,9 @@ type RunConfig struct {
 	fields map[string]string
 }
 
-func newRunConfig() *RunConfig {
+// NewRunconfig returns an initialised config to be used for reading
+// in runconfig-files
+func NewRunConfig() *RunConfig {
 	rc := new(RunConfig)
 	rc.fields = make(map[string]string)
 	return rc
@@ -188,7 +190,7 @@ func (r *RunConfig) Map() map[string]string {
 
 // Clone this runconfig so it has all fields-value relationship already present
 func (r *RunConfig) Clone() *RunConfig {
-	rc := newRunConfig()
+	rc := NewRunConfig()
 	for k, v := range r.fields {
 		rc.fields[k] = v
 	}
