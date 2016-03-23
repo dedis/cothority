@@ -106,9 +106,11 @@ func (p *ProtocolCount) FuncPC() {
 		p.SendTo(p.Parent(), &NodeIsUp{})
 	}
 	if !p.IsLeaf() {
-		for _, c := range p.Children() {
-			dbg.Lvl3(p.Myself(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
-			p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+		for _, child := range p.Children() {
+			go func(c *sda.TreeNode) {
+				dbg.Lvl3(p.Myself(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
+				p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+			}(child)
 		}
 	} else {
 		p.CountChan <- nil

@@ -102,7 +102,7 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 		pubs[i] = tn.Entity.Public
 	}
 	if idx == -1 {
-		panic(fmt.Sprintf("Could not find JVSSProtocol node %+v in the list of nodes %+v", n, nodes))
+		panic(fmt.Sprintf("Could not find JVSS node %+v in the list of nodes %+v", n, nodes))
 	}
 	kp := config.KeyPair{Public: n.Entity().Public, Secret: n.Private(), Suite: n.Suite()}
 	nbPeers := len(tree.EntityList.List)
