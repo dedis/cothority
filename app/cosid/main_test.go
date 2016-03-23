@@ -10,6 +10,35 @@ import (
 	"testing"
 )
 
+func TestCompileAndRun(t *testing.T) {
+	build := exec.Command("go", "build")
+	err := build.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		os.Remove("./cothority")
+	}()
+	if err = runCommand("./cothority", makeReader("129u.898.9090e:21-2")); err == nil {
+		t.Fatal("There should be an error:", err)
+	}
+
+	// Test with valid IP + config name
+	configName := "config.toml.test"
+	if err = verifyCorrectOutput("./cothority", makeReader("127.0.0.1:2000", configName), "Addresses"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test without giving anything => use the already existing config name
+	if err = verifyCorrectOutput("./cothority", nil, "Addresses", "-config", configName); err != nil {
+		t.Fatal("There should NOT be an error", err)
+	}
+
+	if err = os.Remove(configName); err != nil {
+		t.Fatal("Error deleting the config file?", err)
+	}
+}
+
 func runCommand(cmd string, input io.Reader, args ...string) error {
 	cmdExec := exec.Command(cmd, args...)
 
@@ -57,34 +86,4 @@ func verifyCorrectOutput(cmdStr string, input io.Reader, output string, args ...
 		return errors.New("No Correct Output")
 	}
 	return nil
-}
-
-func TestCompileAndRun(t *testing.T) {
-	build := exec.Command("go", "build")
-	err := build.Run()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		os.Remove("./cothority")
-	}()
-
-	if err = runCommand("./cothority", makeReader("129u.898.9090e:21-2")); err == nil {
-		t.Fatal("There should be an error:", err)
-	}
-
-	// Test with valid IP + config name
-	configName := "config.toml.test"
-	if err = verifyCorrectOutput("./cothority", makeReader("127.0.0.1:2000", configName), "Addresses"); err != nil {
-		t.Fatal(err)
-	}
-
-	// Test without giving anything => use the already existing config name
-	if err = verifyCorrectOutput("./cothority", nil, "Addresses", "-config", configName); err != nil {
-		t.Fatal("There should NOT be an error", err)
-	}
-
-	if err = os.Remove(configName); err != nil {
-		t.Fatal("Error deleting the config file?", err)
-	}
 }
