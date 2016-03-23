@@ -43,8 +43,6 @@ var f *flag.FlagSet
 var m *flag.FlagSet
 
 func init() {
-	// XXX use flagsets as we soon might add different flags for each case
-	// might be obsolete
 	f = flag.NewFlagSet("f", flag.ContinueOnError)
 	m = flag.NewFlagSet("m", flag.ContinueOnError)
 }

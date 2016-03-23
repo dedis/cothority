@@ -8,12 +8,12 @@ import (
 
 	"bytes"
 
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	_ "github.com/dedis/cothority/protocols"
-	"github.com/dedis/cothority2/lib/cliutils"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 )
