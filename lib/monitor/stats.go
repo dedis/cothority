@@ -236,10 +236,10 @@ func (s *Stats) String() string {
 	s.Collect()
 	var str string
 	for _, k := range s.staticKeys {
-		str += fmt.Sprintf("%s = %d", k, s.static[k])
+		str += fmt.Sprintf("%s = %d ", k, s.static[k])
 	}
 	for _, v := range s.values {
-		str += fmt.Sprintf("%v", v.Values())
+		str += fmt.Sprintf("%v ", v.Values())
 	}
 	return fmt.Sprintf("{Stats: %s}", str)
 }
