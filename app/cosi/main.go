@@ -117,7 +117,6 @@ func printSigAsJSON(res *sda.CosiResponse) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Println("JSON encoded signature:")
 	os.Stdout.Write(b)
 }
 

@@ -11,26 +11,28 @@ import (
 )
 
 func TestCompileAndRun(t *testing.T) {
+	// binary named after the package:
+	bin := "./cosid"
 	build := exec.Command("go", "build")
 	err := build.Run()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		os.Remove("./cothority")
+		os.Remove(bin)
 	}()
-	if err = runCommand("./cothority", makeReader("129u.898.9090e:21-2")); err == nil {
+	if err = runCommand(bin, makeReader("129u.898.9090e:21-2")); err == nil {
 		t.Fatal("There should be an error:", err)
 	}
 
 	// Test with valid IP + config name
 	configName := "config.toml.test"
-	if err = verifyCorrectOutput("./cothority", makeReader("127.0.0.1:2000", configName), "Addresses"); err != nil {
+	if err = verifyCorrectOutput(bin, makeReader("127.0.0.1:2000", configName), "Addresses"); err != nil {
 		t.Fatal(err)
 	}
 
 	// Test without giving anything => use the already existing config name
-	if err = verifyCorrectOutput("./cothority", nil, "Addresses", "-config", configName); err != nil {
+	if err = verifyCorrectOutput(bin, nil, "Addresses", "-config", configName); err != nil {
 		t.Fatal("There should NOT be an error", err)
 	}
 
