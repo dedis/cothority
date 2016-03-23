@@ -1,7 +1,9 @@
 package sda
 
 import (
+	"bytes"
 	"encoding/json"
+	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
@@ -111,9 +113,13 @@ type CosiResponse struct {
 }
 
 func (s *CosiResponse) MarshalJSON() ([]byte, error) {
+	cw := new(bytes.Buffer)
+	rw := new(bytes.Buffer)
+	cliutils.WriteSecret64(network.Suite, cw, s.Challenge)
+	cliutils.WriteSecret64(network.Suite, rw, s.Response)
 	return json.Marshal(struct {
 		Challenge string
 		Response  string
-	}{Challenge: s.Challenge.String(),
-		Response: s.Response.String()})
+	}{Challenge: cw.String(),
+		Response: rw.String()})
 }
