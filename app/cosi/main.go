@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/dedis/cothority/lib/sda"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/dedis/cothority/app"
+	"github.com/dedis/cothority/lib/sda"
 )
 
 func printUsageAndExit(msg string) {
