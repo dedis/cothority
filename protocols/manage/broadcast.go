@@ -7,6 +7,10 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+func init() {
+	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBroadcastProtocol(n) })
+}
+
 // Broadcast will just simply broadcast
 type Broadcast struct {
 	*sda.Node

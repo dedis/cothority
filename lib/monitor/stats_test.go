@@ -196,11 +196,16 @@ func TestStatsString(t *testing.T) {
 	ConnectSink("localhost:10000")
 	measure := NewTimeMeasure("test")
 	time.Sleep(time.Millisecond * 100)
+	res := 1
+	for i := 1; i < 100; i++ {
+		res *= i
+	}
+	dbg.Lvl3("Result is", res)
 	measure.Record()
 	time.Sleep(time.Millisecond * 100)
 
-	if strings.Contains(rs.String(), "0.000000") {
-		t.Fatal("The measurement shouldn't contain 0.000000:", rs.String())
+	if !strings.Contains(rs.String(), "0.1") {
+		t.Fatal("The measurement should contain 0.1:", rs.String())
 	}
 	m.Stop()
 }

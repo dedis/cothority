@@ -27,7 +27,6 @@ import (
 	"io/ioutil"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -37,6 +36,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+// Deterlab holds all fields necessary for a Deterlab-run
 type Deterlab struct {
 	// *** Deterlab-related configuration
 	// The login on the platform
@@ -88,7 +88,9 @@ type Deterlab struct {
 
 var simulConfig *sda.SimulationConfig
 
-func (d *Deterlab) Configure(pc *PlatformConfig) {
+// Configure initialises the directories and loads the saved config
+// for Deterlab
+func (d *Deterlab) Configure(pc *Config) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.cothorityDir = pwd + "/cothority"
@@ -97,7 +99,7 @@ func (d *Deterlab) Configure(pc *PlatformConfig) {
 	d.buildDir = d.deterDir + "/build"
 	d.MonitorPort = pc.MonitorPort
 	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
-	d.LoadAndCheckDeterlabVars()
+	d.loadAndCheckDeterlabVars()
 
 	d.Debug = pc.Debug
 	if d.Simulation == "" {
@@ -108,8 +110,9 @@ func (d *Deterlab) Configure(pc *PlatformConfig) {
 	d.sshDeter = make(chan string)
 }
 
-// build is the name of the app to build
-// empty = all otherwise build specific package
+// Build prepares all binaries for the Deterlab-simulation.
+// If 'build' is empty, all binaries are created, else only
+// the ones indicated. Either "simul" or "users"
 func (d *Deterlab) Build(build string, arg ...string) error {
 	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build, "cothorityDir=", d.cothorityDir)
 	start := time.Now()
@@ -169,7 +172,7 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 	return nil
 }
 
-// Kills all eventually remaining processes from the last Deploy-run
+// Cleanup kills all eventually remaining processes from the last Deploy-run
 func (d *Deterlab) Cleanup() error {
 	// Cleanup eventual ssh from the proxy-forwarding to the logserver
 	err := exec.Command("pkill", "-9", "-f", "ssh -nNTf").Run()
@@ -208,7 +211,7 @@ func (d *Deterlab) Cleanup() error {
 	}
 }
 
-// Creates the appropriate configuration-files and copies everything to the
+// Deploy creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
 	os.RemoveAll(d.deployDir)
@@ -264,6 +267,8 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	return nil
 }
 
+// Start creates a tunnel for the monitor-output and contacts the Deterlab-
+// server to run the simulation
 func (d *Deterlab) Start(args ...string) error {
 	// setup port forwarding for viewing log server
 	d.started = true
@@ -293,7 +298,7 @@ func (d *Deterlab) Start(args ...string) error {
 	return nil
 }
 
-// Waiting for the process to finish
+// Wait for the process to finish
 func (d *Deterlab) Wait() error {
 	wait := d.CloseWait
 	if wait == 0 {
@@ -319,27 +324,8 @@ func (d *Deterlab) Wait() error {
 	return nil
 }
 
-// Reads in the deterlab-config and drops out if there is an error
-func DeterFromConfig(name ...string) *Deterlab {
-	d := &Deterlab{}
-	configName := "deter.toml"
-	if len(name) > 0 {
-		configName = name[0]
-	}
-	err := sda.ReadTomlConfig(d, configName)
-	_, caller, line, _ := runtime.Caller(1)
-	who := caller + ":" + strconv.Itoa(line)
-	if err != nil {
-		dbg.Fatal("Couldn't read config in", who, ":", err)
-	}
-	dbg.SetDebugVisible(d.Debug)
-	return d
-}
-
-/*
-* Write the hosts.txt file automatically
-* from project name and number of servers
- */
+// Write the hosts.txt file automatically
+// from project name and number of servers
 func (d *Deterlab) createHosts() error {
 	num_servers := d.Servers
 
@@ -361,7 +347,7 @@ func (d *Deterlab) createHosts() error {
 // ask on the command-line.
 // For the login-variable, it will try to set up a connection to d.Host and copy over the
 // public key for a more easy communication
-func (d *Deterlab) LoadAndCheckDeterlabVars() {
+func (d *Deterlab) loadAndCheckDeterlabVars() {
 	deter := Deterlab{}
 	err := sda.ReadTomlConfig(&deter, "deter.toml", d.deterDir)
 	d.Host, d.Login, d.Project, d.Experiment, d.ProxyAddress, d.MonitorAddress =

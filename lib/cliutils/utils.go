@@ -5,27 +5,14 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 )
 
-func Boldify(s string) string {
-	return "\033[1m" + s + "\033[0m"
-}
-
-func ReadLines(filename string) ([]string, error) {
-	b, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	return strings.Fields(string(b)), nil
-}
-
+// Scp copies the given files to the remote host
 func Scp(username, host, file, dest string) error {
 	addr := host + ":" + dest
 	if username != "" {
@@ -37,6 +24,8 @@ func Scp(username, host, file, dest string) error {
 	return cmd.Run()
 }
 
+// Rsync copies files or directories to the remote host. If the DebugVisible
+// is > 1, the rsync-operation is displayed on screen.
 func Rsync(username, host, file, dest string) error {
 	addr := host + ":" + dest
 	if username != "" {
@@ -50,6 +39,7 @@ func Rsync(username, host, file, dest string) error {
 	return cmd.Run()
 }
 
+// SshRun runs a command on the remote host
 func SshRun(username, host, command string) ([]byte, error) {
 	addr := host
 	if username != "" {
@@ -58,10 +48,11 @@ func SshRun(username, host, command string) ([]byte, error) {
 
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
-	//cmd.Stderr = os.Stderr
 	return cmd.Output()
 }
 
+// SshRunStdout runs a command on the remote host but redirects stdout and
+// stderr of the Ssh-command to the os.Stderr and os.Stdout
 func SshRunStdout(username, host, command string) error {
 	addr := host
 	if username != "" {
@@ -74,18 +65,6 @@ func SshRunStdout(username, host, command string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
-}
-
-func SshRunBackground(username, host, command string) error {
-	addr := host
-	if username != "" {
-		addr = username + "@" + addr
-	}
-
-	cmd := exec.Command("ssh", "-v", "-o", "StrictHostKeyChecking=no", addr,
-		"eval '"+command+" > /dev/null 2>/dev/null < /dev/null &' > /dev/null 2>/dev/null < /dev/null &")
-	return cmd.Run()
-
 }
 
 // Build builds the the golang packages in `path` and stores the result in `out`. Besides specifying the environment
@@ -116,26 +95,13 @@ func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) 
 	return b.String(), err
 }
 
+// KillGo kills all go-instances
 func KillGo() {
 	cmd := exec.Command("killall", "go")
 	cmd.Run()
 }
 
-func TimeoutRun(d time.Duration, f func() error) error {
-	echan := make(chan error)
-	go func() {
-		echan <- f()
-	}()
-	var e error
-	select {
-	case e = <-echan:
-	case <-time.After(d):
-		e = errors.New("function timed out")
-	}
-	return e
-}
-
-// Returns the global-binding address
+// GlobalBind returns the global-binding address
 func GlobalBind(address string) (string, error) {
 	addr := strings.Split(address, ":")
 	if len(addr) != 2 {

@@ -1,5 +1,5 @@
 Servers = 5
-Simulation = "NtreeSimulation"
+Simulation = "ByzCoinNtree"
 Rounds = 2
 BF = 2
 
