@@ -196,6 +196,11 @@ func TestStatsString(t *testing.T) {
 	ConnectSink("localhost:10000")
 	measure := NewTimeMeasure("test")
 	time.Sleep(time.Millisecond * 100)
+	res := 1
+	for i := 1; i < 100; i++ {
+		res *= i
+	}
+	dbg.Lvl3("Result is", res)
 	measure.Record()
 	time.Sleep(time.Millisecond * 100)
 

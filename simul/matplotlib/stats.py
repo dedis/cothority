@@ -77,6 +77,24 @@ class CSVStats:
                     old_depth[x] = depth
         return old_depth
 
+    # adjust that column-avg,min,max with that value
+    def column_add(self, column, dx):
+        for i in range(0, len(self.x)):
+            for t in ['avg', 'min', 'max']:
+                self.columns[column + "_" +t][i] += dx
+
+    # adjust that column-avg,min,max by multiplying with that value
+    def column_mul(self, column, dx):
+        for i in range(0, len(self.x)):
+            for t in ['avg', 'min', 'max']:
+                self.columns[column + "_" +t][i] *= dx
+
+    # Cut that index out of all columns
+    def delete_index(self, i):
+        for c in self.columns.keys():
+            if len(self.x) == len(self.columns[c]):
+                del self.columns[c][i]
+
 
 # Value holds the min / max / avg / dev for a single named value
 class Values:

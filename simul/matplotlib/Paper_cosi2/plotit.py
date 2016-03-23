@@ -18,7 +18,7 @@ import matplotlib.patches as mpatches
 
 
 def plotData(data, name,
-             xlabel="Number of witnesses", ylabel="Seconds per round",
+             xlabel="Number of witnesses", ylabel="Signing round latency in seconds",
              xticks=[], loglog=[2, 2], xname="hosts",
              legend_pos="lower right",
              yminu=0, ymaxu=0,
@@ -80,16 +80,22 @@ def plotRoundtime():
 
 
 # Plots a Cothority and a JVSS run with regard to their averages. Supposes that
-# the last two values from JVSS are off-grid and writes them with arrows
+# the last two values from JVSS are off-grid and writes them with arrows7
 # directly on the plot
 def plotSysUser():
     mplot.plotPrepareLogLog()
     plots = read_csvs('jvss', 'naive_cosi', 'sysusr_ntree', 'sysusr_cosi')
     plot_show('comparison_sysusr')
 
+    if False:
+        for index in range(1, len(plots[3].x)):
+            for p in range(0, len(plots)):
+                if index < len(plots[p].x):
+                    plots[p].delete_index(index)
+
     ymin = 0.05
     bars = []
-    deltax = -2
+    deltax = -1.5
     for index, label in enumerate(['JVSS', 'Naive', 'NTree', 'CoSi']):
         bars.append(mplot.plotStackedBarsHatched(plots[index], "round_system",
                                                  "round_user", label,
@@ -97,25 +103,27 @@ def plotSysUser():
                                                  ymin, delta_x=deltax + index)[
                         0])
 
-    ymax = 64
-    xmax = 3192
+    ymax = 32
+    xmax = 50000
     plt.ylim(ymin, ymax)
-    plt.xlim(1.5, xmax)
+    plt.xlim(1, xmax)
 
-    usert = mpatches.Patch(color='white', ec='black', label='User time',
+    usert = mpatches.Patch(color='white', ec='black', label='User',
                            hatch='//')
-    syst = mpatches.Patch(color='white', ec='black', label='System time')
+    syst = mpatches.Patch(color='white', ec='black', label='System')
 
     plt.legend(handles=[bars[0], bars[1], bars[2], bars[3], usert, syst],
                loc=u'upper left')
-    plt.ylabel("Average seconds per round")
+    plt.ylabel("Average CPU seconds per round")
+    ax = plt.axes()
+    ax.set_xticks([2,8,32,128,512,2048,8192, 32768])
     mplot.plotEnd()
 
 
 # Plots the branching factor
 def plotBF():
     data_label = plotData([['cosi_bf_2048', 'cosi_bf_4096', 'cosi_bf_8192'],
-                           ['2048 Hosts', '4096 Hosts', '8192 Hosts']],
+                           ['2048 Witnesses', '4096 Witnesses', '8192 Witnesses']],
                           'cosi_bf',
                           xname='bf',
                           xlabel="Branching factor",
@@ -129,14 +137,14 @@ def plotBF():
                      color=colors[index][1],
                      label='CoSi ' + label + ' depth')
 
-    arrow(6, 3, "d=5")
-    arrow(10, 2.5, "d=4")
-    arrow(6, 2.53, "d=5", 0.7, 0.5)
-    arrow(8, 2.2, "d=4", 0.6, 0.6)
-    arrow(16, 1.7, "d=3")
-    arrow(5.2, 2.4, "d=5", -3., -1.)
-    arrow(7.2, 1.95, "d=4", -3., -0.8)
-    arrow(13, 1.55, "d=3", 0.6, 0.6)
+    arrow(6, 3, "depth=5")
+    arrow(10, 2.5, "depth=4")
+    arrow(6, 2.53, "depth=5", 0.7, 0.5, "center")
+    arrow(8, 2.2, "depth=4", 0.6, 0.6, "center")
+    arrow(16, 1.7, "depth=3", text_align="center")
+    arrow(5.2, 2.4, "depth=5", -3., -1.)
+    arrow(7.2, 1.95, "depth=4", -3., -0.8)
+    arrow(13, 1.55, "depth=3", 0.6, 0.6, "center")
 
     plt.legend(loc='upper right')
     plt.xlim(2, 18)
@@ -153,11 +161,19 @@ def arrow(x, y, label, dx=1., dy=1., text_align='left'):
 
 # Plots the oversubscription
 def plotOver():
-    plotData([['cosi_over_1', 'cosi_over_2', 'cosi_depth_3'],
-              ['8 servers', '16 servers', '32 servers']], 'cosi_over',
-             ylabel="Seconds per round",
+    plots = read_csvs('cosi_over_1', 'cosi_over_2', 'cosi_depth_3')
+
+    for p in [0, 1]:
+        plots[p].column_add('round_wall', 0.05)
+
+    plotData([plots,
+              ['Witnesses split over 8 physical machines',
+               'Witnesses split over 16 physical machines',
+               'Witnesses split over 32 physical machines']],
+             'cosi_over',
              xlabel="Total number of witnesses",
-             legend_pos="upper left")
+             legend_pos="upper left",
+             read_plots=False)
 
 
 # Plots the oversubscription with shifted graphs
@@ -170,7 +186,6 @@ def plotOver2():
         plots[2].x[index] /= 32
     plotData([plots,
               ['8 servers', '16 servers', '32 servers']], 'cosi_over_2',
-             ylabel="Seconds per round",
              xlabel="Number of witnesses per server",
              legend_pos="upper left",
              read_plots=False)
@@ -193,7 +208,7 @@ def plotNetwork():
                  color=colors[index][1])
 
     # Make horizontal lines and add arrows for JVSS
-    plt.ylabel('Total network-traffic [kBytes]')
+    plt.ylabel('Total network traffic (kBytes)')
 
     plt.legend(loc=u'lower right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
@@ -206,7 +221,6 @@ def plotCheckingNtree():
         [['ntree_cosi', 'ntree_cosi_check_simple', 'ntree_cosi_check_none'],
          ['NTree check all', 'NTree check children', 'NTree check none']],
         'comparison_ntree',
-        ylabel="Seconds per round",
         legend_pos="upper left")
 
 
@@ -240,14 +254,15 @@ def read_csvs(*values):
 write_file = True
 # What file extension - .png, .eps
 file_extension = 'png'
+file_extension = 'eps'
 # Show figure
 mplot.show_fig = False
 
 # Call all plot-functions
-#plotRoundtime()
-#plotSysUser()
-#plotBF()
-#plotOver()
+plotRoundtime()
+plotSysUser()
+plotBF()
+plotOver()
 plotOver2()
-#plotNetwork()
-#plotCheckingNtree()
+plotNetwork()
+plotCheckingNtree()

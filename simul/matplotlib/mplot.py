@@ -3,6 +3,7 @@
 # of the times used for each round
 
 import sys
+
 try:
     import matplotlib
 except ImportError:
@@ -14,12 +15,15 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import csv
+import math
 import numpy as np
 
 # Our CSVs have a space after the comma, so we need a new 'dialect', here
 # called 'deploy'
-csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='', lineterminator='\n', escapechar='',
+csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='',
+                     lineterminator='\n', escapechar='',
                      quoting=csv.QUOTE_NONE, skipinitialspace=True)
+
 
 # Holds different methods to plot on a given graph
 class MPlot:
@@ -30,7 +34,7 @@ class MPlot:
     def __init__(self):
         vers = matplotlib.__version__
         if vers != "1.5.1":
-            print "\nWrong matlib-version " + vers +", please install 1.5.1"
+            print "\nWrong matlib-version " + vers + ", please install 1.5.1"
             print "http://matplotlib.org/faq/installing_faq.html\n"
             print "Or try the following\nsudo easy_install \"matplotlib == 1.5.1\"\n"
             exit(1)
@@ -43,7 +47,6 @@ class MPlot:
         self.ymax = 0
         self.xmin = -1
         self.xmax = 0
-
 
     # Updates the xmin and xmax with the given values on the x-axis
     def updateX(self, *values):
@@ -75,9 +78,11 @@ class MPlot:
     def plotFilledLegend(self, stats, label, color, z=None):
         x, y1, y2 = stats.x, stats.min, stats.max
         if z:
-            fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white', zorder=z)
+            fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white',
+                                  zorder=z)
         else:
-            fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white', zorder=3)
+            fb = plt.fill_between(x, y1, y2, facecolor=color, edgecolor='white',
+                                  zorder=3)
 
         self.updateX(x)
         self.updateY(y1, y2)
@@ -85,13 +90,14 @@ class MPlot:
 
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
-    def plotStacked(self, stats, col1, col2, label1, label2, color1, color2, ymin=None, values=0):
+    def plotStacked(self, stats, col1, col2, label1, label2, color1, color2,
+                    ymin=None, values=0):
         stats.reset_min_max()
         y1 = stats.update_values(col1)
         y2 = stats.update_values(col2)
-	if values > 0:
-	    y1 = y1[0:values-1]
-	    y2 = y2[0:values-1]
+        if values > 0:
+            y1 = y1[0:values - 1]
+            y2 = y2[0:values - 1]
         if ymin == None:
             ymin = min(min(y1), min(y2))
         ymins = [ymin] * len(x)
@@ -99,49 +105,52 @@ class MPlot:
         self.plotFilledLegend(stats.x, y1, ysum, label2, color2)
         self.plotFilledLegend(stats.x, ymins, y1, label1, color1)
 
-
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
-    def plotStackedBars(self, stats, values1, values2, label1, label2, color1, color2, ymin=None,
-                    delta_x=0, values = 0):
+    def plotStackedBars(self, stats, values1, values2, label1, label2, color1,
+                        color2, ymin=None,
+                        delta_x=0, values=0):
         val1 = stats.get_values(values1)
         val2 = stats.get_values(values2)
         x = val1.x
         y1 = val1.avg
         y2 = val2.avg
-       	if values > 0:
-	    y1 = y1[0:values-1]
-	    y2 = y2[0:values-1]
-	    x = x[0:values-1]
-	width = [(t * 0.125 + delta_x * t * 0.018) for t in x]
+        if values > 0:
+            y1 = y1[0:values - 1]
+            y2 = y2[0:values - 1]
+            x = x[0:values - 1]
+        width = [(t * 0.125 + delta_x * t * 0.018) for t in x]
 
         zero = [min(y1) for t in y1]
         xd = [t[0] + delta_x * t[1] for t in zip(stats.x, width)]
         y12 = [sum(t) for t in zip(y1, y2)]
         plt.bar(xd, y12, width, color=color1, bottom=y1, zorder=3, label=label1)
-        plt.bar(xd, y1, width, color=color2, bottom=zero, zorder=3, label=label2)
+        plt.bar(xd, y1, width, color=color2, bottom=zero, zorder=3,
+                label=label2)
 
     # Takes one x and y1, y2 to stack y2 on top of y1. Does all the
     # calculation necessary to sum up everything
-    def plotStackedBarsHatched(self, stats, values1, values2, label, color, ymin=None,
-                           limit_values=None, delta_x=0):
+    def plotStackedBarsHatched(self, stats, values1, values2, label, color,
+                               ymin=None,
+                               limit_values=None, delta_x=0):
         val1 = stats.get_values(values1)
         val2 = stats.get_values(values2)
-        x = val1.x
-        y1 = val1.avg
-        y2 = val2.avg
+        x = val1.x[::2]
+        y1 = val1.avg[::2]
+        y2 = val2.avg[::2]
         if limit_values != None:
             x = x[0:limit_values]
             y1 = y1[0:limit_values]
             y2 = y2[0:limit_values]
-        width = [(t * 0.18 + delta_x * t * 0.018) for t in x]
+        w = 1. / 2.5
+        l = 2
 
-        zero = [min(y1) for t in y1]
-        xd = [t[0] + ( delta_x - 0.5 ) * t[1] for t in zip(x, width)]
+        xd = [t * math.pow(l, delta_x * w) for t in x]
+        width = [t * ( math.pow(l, w) - 1) for t in xd]
         y12 = [sum(t) for t in zip(y1, y2)]
         plt.bar(xd, y12, width, color=color, bottom=y1, zorder=3, hatch='//')
-        return plt.bar(xd, y1, width, color=color, bottom=ymin, zorder=3, label=label), val1, val2
-
+        return plt.bar(xd, y1, width, color=color, bottom=ymin, zorder=3,
+                       label=label), val1, val2
 
     # Puts the most used arguments for starting a plot with
     # LogLog by default.
@@ -157,7 +166,8 @@ class MPlot:
 
         ax = plt.axes()
         ax.yaxis.grid(color='gray', linestyle='dashed', zorder=0)
-        ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter(useOffset=False))
+        ax.xaxis.set_major_formatter(
+            matplotlib.ticker.ScalarFormatter(useOffset=False))
         ax.xaxis.set_zorder(5)
         sf = matplotlib.ticker.ScalarFormatter()
         sf.set_powerlimits((-10, 10))
@@ -165,9 +175,8 @@ class MPlot:
         # ax.yaxis.set_major_formatter(sf)
         # ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%2.2e'))
         if logy == 2:
-            ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%2.2f'))
-
-
+            ax.yaxis.set_major_formatter(
+                matplotlib.ticker.FormatStrFormatter('%2.2f'))
 
     # Ends the plot and takes an extension for saving the png. If
     # show_fig is True, it will show the window instead.
@@ -181,17 +190,16 @@ class MPlot:
 
         self.resetMinMax()
 
-
     # Draws an arrow for out-of-bound data
     def arrow(self, text, x, top, dist, color):
         plt.annotate(text, xy=(x, top), xytext=(x, top - dist),
-                     arrowprops=dict(facecolor=color, headlength=5, width=6, headwidth=10, edgecolor='white'),
+                     arrowprops=dict(facecolor=color, headlength=5, width=6,
+                                     headwidth=10, edgecolor='white'),
                      horizontalalignment='center', )
 
     # If we want to remove a poly
     def delete_poly(self, poly):
         self.poly.remove()
-
 
     # For removing a line
     def delete_line(self, line):
