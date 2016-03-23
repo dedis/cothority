@@ -27,7 +27,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	rh.Purpose = i1.I1.Purpose
 
 	rh.Peer.r1 = R1{
-		Src: rh.Peer.self,
+		Src: rh.Node.TreeNode().EntityIdx,
 		HI1: rh.hash(
 			rh.Peer.i1.SID,
 			rh.Peer.i1.GID,
@@ -84,7 +84,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.Peer.i1.SID, i2.I2.SID) {
-		return errors.New(fmt.Sprintf("I2: peer %d received message with incorrect session ID", rh.Peer.self))
+		return errors.New(fmt.Sprintf("I2: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
 	}
 
 	rh.Peer.i2 = i2.I2
@@ -105,7 +105,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	rh.Peer.r2 = R2{
-		Src: rh.Peer.self,
+		Src: rh.Node.TreeNode().EntityIdx,
 		HI2: rh.hash(
 			rh.Peer.i2.SID,
 			rh.Peer.i2.Rc),
@@ -164,7 +164,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.Peer.i2.SID, i3.I3.SID) {
-		return errors.New(fmt.Sprintf("I3: peer %d received message with incorrect session ID", rh.Peer.self))
+		return errors.New(fmt.Sprintf("I3: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
 	}
 
 	rh.Peer.i3 = i3.I3
@@ -192,7 +192,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Determine other peers who chose me as an insurer
 		keys, _ := rh.chooseInsurers(rh.Peer.i2.Rc, r2.Rs)
-		if k, ok := keys[rh.Peer.self]; ok { // k is the share index we received from the i-th peer
+		if k, ok := keys[rh.Node.TreeNode().EntityIdx]; ok { // k is the share index we received from the i-th peer
 			resp, err := deal.ProduceResponse(k, &longPair)
 			if err != nil {
 				return err
@@ -211,7 +211,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	rh.Peer.shares = r4shares // save revealed shares for later
 
 	rh.Peer.r3 = R3{
-		Src: rh.Peer.self,
+		Src: rh.Node.TreeNode().EntityIdx,
 		HI3: rh.hash(
 			rh.Peer.i3.SID,
 			rh.Peer.r2.HI2), // TODO: is this enough?
@@ -274,13 +274,13 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.Peer.i3.SID, i4.I4.SID) {
-		return errors.New(fmt.Sprintf("I4: peer %d received message with incorrect session ID", rh.Peer.self))
+		return errors.New(fmt.Sprintf("I4: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
 	}
 
 	rh.Peer.i4 = i4.I4
 
 	rh.Peer.r4 = R4{
-		Src: rh.Peer.self,
+		Src: rh.Node.TreeNode().EntityIdx,
 		HI4: rh.hash(
 			rh.Peer.i4.SID,
 			make([]byte, 0)), // TODO: unpack R2s, see I4

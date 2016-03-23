@@ -3,7 +3,6 @@ package randhound
 import "github.com/dedis/crypto/random"
 
 type Peer struct {
-	self   int       // Peer's index in the entity list
 	Rs     []byte    // Peer's trustee-selection random value
 	shares []R4Share // Peer's shares
 	i1     I1        // I1 message we received from the leader
@@ -23,17 +22,7 @@ func (rh *RandHound) newPeer() (*Peer, error) {
 	rs := make([]byte, hs)
 	random.Stream.XORKeyStream(rs, rs)
 
-	selfi := -1 // because everybody does it
-	TID := rh.Node.TreeNode().Id
-	for i, t := range rh.Tree().ListNodes() {
-		if t.Id == TID && !t.IsRoot() {
-			selfi = i // we ignore the leader
-			break
-		}
-	}
-
 	return &Peer{
-		self: selfi,
-		Rs:   rs,
+		Rs: rs,
 	}, nil
 }
