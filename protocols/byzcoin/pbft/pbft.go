@@ -71,7 +71,7 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft.state = STATE_PREPREPARE
 	tree := n.Tree()
 	pbft.Node = n
-	pbft.nodeList = tree.ListNodes()
+	pbft.nodeList = tree.ListTreeNodes()
 	idx := NotFound
 	for i, tn := range pbft.nodeList {
 		if uuid.Equal(tn.Id, n.TreeNode().Id) {

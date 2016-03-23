@@ -5,14 +5,15 @@ package jvss
 import (
 	"errors"
 	"fmt"
+	"hash"
+	"sync"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
 	"github.com/satori/go.uuid"
-	"hash"
-	"sync"
 )
 
 // JVSS Protocol Instance structure holding the information for a long-term JVSS
@@ -93,7 +94,7 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 	var idx int = -1
 	// at the same time create the public list
 	tree := n.Tree()
-	nodes := tree.ListNodes()
+	nodes := tree.ListTreeNodes()
 	pubs := make([]abstract.Point, len(nodes))
 	for i, tn := range nodes {
 		if uuid.Equal(tn.Id, n.TreeNode().Id) {
