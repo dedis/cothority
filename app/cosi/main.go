@@ -24,10 +24,18 @@ func printUsageAndExit(msg string) {
 		fmt.Fprintf(os.Stderr, "%s", msg)
 	}
 
-	// XXX print some very clear instructions:
 	fmt.Fprintf(os.Stderr, `Usage:
-	cosi -m “<Message to be signed>” -c my-cosi-group.toml
-	cosi -f <file-to-be-signed> -c my-cosi-group.toml`)
+First make sure that you have a valid group toml file. Either create a
+local one by running several instances of cosid (follow the instructions when
+running cosid the first time) or use a group toml of an existing CoSi group.
+
+To collectively sign a text message run:
+	cosi -m “<Message to be signed>” -c <cosi-group.toml>
+If you would instead like to sign a message contained in a file you specify run the following command:
+	cosi -f <file-to-be-signed> -c <cosi-group.toml>
+
+Example usuage (create a file my-local-group.toml using cosid first):
+cosi -m "Hello CoSi" -c my-local-group.toml`)
 	os.Exit(1)
 }
 
