@@ -33,14 +33,13 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -86,15 +85,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbg.Lvl1("Starting Host ...")
-	dbg.Lvl1("	... Addresses:", host.Entity.Addresses)
-	// print public key in hex
-	var buff bytes.Buffer
-	err = cliutils.WritePub64(network.Suite, &buff, host.Entity.Public)
-	if err != nil {
-		dbg.Fatal("Unknown error:", err)
-	}
-	dbg.Lvl1("	... Public key:", buff.String())
+	dbg.Lvl1("Starting Host: You can copy the following lines in a group.toml file to use by app/cosi client:")
+	serverToml := app.NewServerToml(network.Suite, host.Entity.Public, host.Entity.Addresses...)
+	groupToml := app.NewGroupToml(serverToml)
+	fmt.Println(groupToml.String())
 
 	host.Listen()
 	host.StartProcessMessages()
@@ -114,10 +108,10 @@ func createHost() *sda.Host {
 	// IP:PORT
 	fmt.Println("[*] Type the IP:PORT (ipv4) address of this host (accessible from Internet):")
 	str, err = reader.ReadString('\n')
-	str1 := strings.TrimSpace(str)
-	_, _, errStr := net.SplitHostPort(str1)
+	str = strings.TrimSpace(str)
+	_, _, errStr := net.SplitHostPort(str)
 	if err != nil || errStr != nil {
-		fmt.Println("[-] Error reading IP:PORT (", str1, ") ", errStr, " => Abort")
+		fmt.Println("[-] Error reading IP:PORT (", str, ") ", errStr, " => Abort")
 		os.Exit(1)
 	}
 

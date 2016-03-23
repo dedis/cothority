@@ -34,6 +34,30 @@ func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
 	return el, nil
 }
 
+func NewGroupToml(servers ...*ServerToml) *GroupToml {
+	return &GroupToml{
+		Servers: servers,
+	}
+}
+
+// Returns the TOML representation of this GroupToml
+func (gt *GroupToml) String() string {
+	var buff bytes.Buffer
+	if gt.Description == "" {
+		gt.Description = "## Put your description of the cothority system for more convenience ##"
+	}
+	for _, s := range gt.Servers {
+		if s.Description == "" {
+			s.Description = "## Put your description here for convenience ##"
+		}
+	}
+	enc := toml.NewEncoder(&buff)
+	if err := enc.Encode(gt); err != nil {
+		return "Error encoding grouptoml" + err.Error()
+	}
+	return buff.String()
+}
+
 // toEntity will convert this ServerToml struct to a network entity.
 func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
 	pubR := strings.NewReader(s.Public)
@@ -44,6 +68,8 @@ func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
 	return network.NewEntity(public, s.Addresses...), nil
 }
 
+// Returns a ServerToml out of a public key and some addresses => to be printed
+// or written to a file
 func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
 	var buff bytes.Buffer
 	if err := cliutils.WritePub64(suite, &buff, public); err != nil {
@@ -56,10 +82,23 @@ func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...str
 	}
 }
 
+// Returns its TOML representation
+func (s *ServerToml) String() string {
+	var buff bytes.Buffer
+	if s.Description == "" {
+		s.Description = "## Put your description here for convenience ##"
+	}
+	enc := toml.NewEncoder(&buff)
+	if err := enc.Encode(s); err != nil {
+		return "## Error encoding server informations ##" + err.Error()
+	}
+	return buff.String()
+}
+
 // GroupToml represents the structure of the group.toml file given to the cli.
 type GroupToml struct {
 	Description string
-	Servers     []ServerToml `toml:"servers"`
+	Servers     []*ServerToml `toml:"servers"`
 }
 
 // ServerToml is one entry in the group.toml file describing one server to use for
