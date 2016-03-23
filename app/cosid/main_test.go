@@ -59,7 +59,7 @@ func verifyCorrectOutput(cmdStr string, input io.Reader, output string, args ...
 	return nil
 }
 
-func TestMain(t *testing.T) {
+func TestCompileAndRun(t *testing.T) {
 	build := exec.Command("go", "build")
 	err := build.Run()
 	if err != nil {

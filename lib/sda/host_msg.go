@@ -104,7 +104,7 @@ type CosiRequest struct {
 // hack and we only supports one suite for the moment,i.e. ed25519.
 type CosiResponse struct {
 	// The Challenge out a of the Multi Schnorr signature
-	Challenge abstract.Secret
+	Challenge abstract.Secret `json:",string"`
 	// the Response out of the Multi Schnorr Signature
-	Response abstract.Secret
+	Response abstract.Secret `json:",string"`
 }

@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/dedis/cothority/cli"
-	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/sda"
 	"io"
 	"os"
 	"strings"
@@ -49,8 +49,7 @@ func main() {
 		}
 		sig, err := signFile(*strOrFilename, *groupToml)
 		handleErrorAndExit(err)
-		fmt.Println("Signature:" + sig.String())
-
+		printSigAsJSON(sig)
 	case "-m":
 		strOrFilename := m.String("m", "", "Message to be signed.")
 		groupToml := m.String("m", "", "Toml file containing the list of CoSi nodes.")
@@ -60,13 +59,13 @@ func main() {
 		}
 		sig, err := signString(*strOrFilename, *groupToml)
 		handleErrorAndExit(err)
-		fmt.Println("Signature:" + sig.String())
+		printSigAsJSON(sig)
 	default:
 		printUsageAndExit("")
 	}
 }
 
-func signFile(fileName, groupToml string) (abstract.Secret, error) {
+func signFile(fileName, groupToml string) (*sda.CosiResponse, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Couldn't read file to be signed: %s", err)
@@ -74,21 +73,21 @@ func signFile(fileName, groupToml string) (abstract.Secret, error) {
 	return sign(file, groupToml)
 }
 
-func signString(statement, groupToml string) (abstract.Secret, error) {
+func signString(statement, groupToml string) (*sda.CosiResponse, error) {
 	msgR := strings.NewReader(statement)
 	return sign(msgR, groupToml)
 }
 
-func sign(r io.Reader, tomlFileName string) (abstract.Secret, error) {
+func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return nil, err
 	}
-	el, err := cli.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f)
 	if err != nil {
 		return nil, err
 	}
-	res, err := cli.SignStatement(r, el, true)
+	res, err := app.SignStatement(r, el, true)
 	if err != nil {
 		return nil, err
 	}
@@ -100,4 +99,12 @@ func handleErrorAndExit(e error) {
 		fmt.Fprintf(os.Stderr, "Couldn't create signature"+e.Error())
 	}
 	os.Exit(1)
+}
+
+func printSigAsJSON(res *sda.CosiResponse) {
+	b, err := json.Marshal(res)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	os.Stdout.Write(b)
 }
