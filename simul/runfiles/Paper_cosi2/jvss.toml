@@ -1,10 +1,12 @@
 Simulation = "JVSS"
-Servers = 16
+Servers = 32
 Bf = 2
 Rounds = 5
-CloseWait = 6000
 
-Depth
-1
+Hosts
 2
-3
+4
+8
+16
+33
+64

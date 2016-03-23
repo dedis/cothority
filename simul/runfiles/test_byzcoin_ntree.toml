@@ -4,4 +4,4 @@ Rounds = 2
 BF = 2
 
 Hosts, Blocksize, TimeoutMs, Fail
-30, 1024, 3000, 0
+30, 128, 3000, 0
