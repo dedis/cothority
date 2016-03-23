@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("CoSiSimulation", NewCoSiSimulation)
+	sda.SimulationRegister("CoSi", NewCoSiSimulation)
 	// default protocol initialization. See Run() for override this one for the
 	// root.
 	sda.ProtocolRegisterName("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
@@ -19,14 +19,21 @@ func init() {
 
 type CoSiSimulation struct {
 	sda.SimulationBFTree
+
+	// Do we want to check signature at each level, only the root or nothing at
+	// all ?
+	// See https://github.com/dedis/cothority/issues/260
+	Checking int
 }
 
 func NewCoSiSimulation(config string) (sda.Simulation, error) {
 	cs := new(CoSiSimulation)
+	cs.Checking = 2
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
 	}
+
 	return cs, nil
 }
 
@@ -37,6 +44,15 @@ func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConf
 	return sim, err
 }
 
+func (cs *CoSiSimulation) Node(sc *sda.SimulationConfig) error {
+	err := cs.SimulationBFTree.Node(sc)
+	if err != nil {
+		return err
+	}
+	VerifyResponse = cs.Checking
+	return nil
+}
+
 func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
@@ -44,7 +60,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		roundM := monitor.NewMeasure("round")
+		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
 		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
 		if err != nil {
@@ -57,17 +73,15 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		// tell us when it is done
 		done := make(chan bool)
 		fn := func(chal, resp abstract.Secret) {
-			roundM.Measure()
-			if err := proto.Cosi.VerifyResponses(aggPublic); err != nil {
-				dbg.Lvl1("Round", round, " has failed responses")
-			}
+			roundM.Record()
+			//  No need to verify it twice here. It already happens in
+			//  handleResponse() even for the root.
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
 				dbg.Lvl1("Round", round, " => fail verification")
 			} else {
 				dbg.Lvl1("Round", round, " => success")
 			}
 			done <- true
-			// TODO make the verification here
 		}
 		proto.RegisterDoneCallback(fn)
 		proto.Start()

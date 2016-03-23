@@ -1,23 +1,4 @@
-// Outputting data: output to csv files (for loading into excel)
-//   make a datastructure per test output file
-//   all output should be in the test_data subdirectory
-//
-// connect with logging server (receive json until "EOF" seen or "terminating")
-//   connect to websocket ws://localhost:8080/log
-//   receive each message as bytes
-//		 if bytes contains "EOF" or contains "terminating"
-//       wrap up the round, output to test_data directory, kill deploy2deter
-//
-// for memstats check localhost:8080/d/server-0-0/debug/vars
-//   parse out the memstats zones that we are concerned with
-//
-// different graphs needed rounds:
-//   load on the x-axis: increase messages per round holding everything else constant
-//			hpn=40 bf=10, bf=50
-//
-// latency on y-axis, timestamp servers on x-axis push timestampers as higher as possible
-//
-//
+// The main file for running simulations on localhost or remote platforms.
 package main
 
 import (
@@ -30,6 +11,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
+	"math"
 )
 
 // Configuration-variables
@@ -43,12 +25,14 @@ var machines = 3
 var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
 var debugVisible int
+var race = false
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
+	flag.BoolVar(&race, "race", false, "Build with go's race detection enabled (doesn't work on all platforms)")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
@@ -76,7 +60,10 @@ func main() {
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		deployP.Configure()
+		deployP.Configure(&platform.PlatformConfig{
+			MonitorPort: monitorPort,
+			Debug:       debugVisible,
+		})
 
 		if clean {
 			err := deployP.Deploy(runconfigs[0])
@@ -96,11 +83,15 @@ func main() {
 func RunTests(name string, runconfigs []platform.RunConfig) {
 
 	if nobuild == false {
-		deployP.Build(build)
+		if race {
+			deployP.Build(build, "-race")
+		} else {
+			deployP.Build(build)
+		}
 	}
 
 	MkTestDir()
-	rs := make([]monitor.Stats, len(runconfigs))
+	rs := make([]*monitor.Stats, len(runconfigs))
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
@@ -130,7 +121,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]monitor.Stats, 0, nTimes)
+		runs := make([]*monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
@@ -163,27 +154,24 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
+func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
-	if platformDst == "localhost" {
-		machs := rc.Get("machines")
-		ppms := rc.Get("ppm")
-		mach, _ := strconv.Atoi(machs)
-		ppm, _ := strconv.Atoi(ppms)
-		rc.Put("machines", "1")
-		rc.Put("ppm", strconv.Itoa(ppm*mach))
-	}
-	rs := monitor.NewStats(rc.Map())
+	CheckHosts(rc)
+	rc.Delete("simulation")
+	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
 
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
+
+	monitor.SinkPort = monitorPort
 	if err := deployP.Cleanup(); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
+	monitor.SinkPort = monitorPort
 	go func() {
 		if err := monitor.Listen(); err != nil {
 			dbg.Fatal("Could not monitor.Listen():", err)
@@ -194,7 +182,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	err := deployP.Start()
 	if err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 
 	go func() {
@@ -212,7 +200,29 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	select {
 	case <-done:
 		monitor.Stop()
-		return *rs, err
+		return rs, err
+	}
+}
+
+// CheckHosts verifies that there is either a 'Hosts' or a 'Depth/BF'
+// -parameter in the Runconfig
+func CheckHosts(rc platform.RunConfig) {
+	hosts, err := rc.GetInt("hosts")
+	if hosts == 0 || err != nil {
+		depth, err1 := rc.GetInt("depth")
+		bf, err2 := rc.GetInt("bf")
+		if depth == 0 || bf == 0 || err1 != nil || err2 != nil {
+			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
+		}
+		// Geometric sum to count the total number of nodes:
+		// Root-node: 1
+		// 1st level: bf (branching-factor)*/
+		// 2nd level: bf^2 (each child has bf children)
+		// 3rd level: bf^3
+		// So total: sum(level=0..depth)(bf^level)
+		hosts = int((1 - math.Pow(float64(bf), float64(depth+1))) /
+			float64(1-bf))
+		rc.Put("hosts", strconv.Itoa(hosts))
 	}
 }
 

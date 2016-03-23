@@ -1,24 +1,25 @@
+// Generic interface to represent a platform where tests can be run.
 package platform
 
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"os"
+	"strconv"
 	"strings"
 )
 
-// Generic interface to represent a platform where to run tests
-// or direct applications. For now only localhost + deterlab.
-// one could imagine EC2 or OpenStack or whatever you can as long as you
-// implement this interface !
+// Platform interface that has to be implemented to add another simulation-
+// platform.
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
-	Configure()
-	// Builds all necessary binaries
-	Build(string) error
+	Configure(*PlatformConfig)
+	// Build builds all necessary binaries
+	Build(build string, arg ...string) error
 	// Makes sure that there is no part of the application still running
 	Cleanup() error
 	// Copies the binaries to the appropriate directory/machines, together with
@@ -29,6 +30,13 @@ type Platform interface {
 	Start(args ...string) error
 	// Waits for the application to quit
 	Wait() error
+}
+
+// PlatformConfig is passed to Platform.Config and prepares the platform for
+// specific system-wide configurations
+type PlatformConfig struct {
+	MonitorPort int
+	Debug       int
 }
 
 var deterlab string = "deterlab"
@@ -137,6 +145,22 @@ var replacer *strings.Replacer = strings.NewReplacer("\"", "", "'", "")
 // Returns the associated value of the field in the config
 func (r *RunConfig) Get(field string) string {
 	return replacer.Replace(r.fields[strings.ToLower(field)])
+}
+
+// Delete a field from the runconfig (delete for example Simulation which we
+// dont care in the final csv)
+func (r *RunConfig) Delete(field string) {
+	delete(r.fields, field)
+}
+
+// GetInt returns the integer of the field, or error if not defined
+func (r *RunConfig) GetInt(field string) (int, error) {
+	val := r.Get(field)
+	if val == "" {
+		return 0, errors.New("Didn't find " + field)
+	}
+	ret, err := strconv.Atoi(val)
+	return ret, err
 }
 
 // Insert a new field - value relationship

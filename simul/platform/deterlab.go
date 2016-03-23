@@ -34,7 +34,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -89,18 +88,18 @@ type Deterlab struct {
 
 var simulConfig *sda.SimulationConfig
 
-func (d *Deterlab) Configure() {
+func (d *Deterlab) Configure(pc *PlatformConfig) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.cothorityDir = pwd + "/cothority"
 	d.deterDir = pwd + "/platform/deterlab"
 	d.deployDir = d.deterDir + "/remote"
 	d.buildDir = d.deterDir + "/build"
-	d.MonitorPort = monitor.DefaultSinkPort
+	d.MonitorPort = pc.MonitorPort
 	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
 	d.LoadAndCheckDeterlabVars()
 
-	d.Debug = dbg.DebugVisible()
+	d.Debug = pc.Debug
 	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in runconfig")
 	}
@@ -111,7 +110,7 @@ func (d *Deterlab) Configure() {
 
 // build is the name of the app to build
 // empty = all otherwise build specific package
-func (d *Deterlab) Build(build string) error {
+func (d *Deterlab) Build(build string, arg ...string) error {
 	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build, "cothorityDir=", d.cothorityDir)
 	start := time.Now()
 
@@ -156,7 +155,7 @@ func (d *Deterlab) Build(build string) error {
 			src_rel, _ := filepath.Rel(d.deterDir, src)
 			dbg.Lvl3("Relative-path is", src_rel, " will build into ", dest)
 			out, err := cliutils.Build("./"+src_rel, dest,
-				processor, system)
+				processor, system, arg...)
 			if err != nil {
 				cliutils.KillGo()
 				dbg.Lvl1(out)

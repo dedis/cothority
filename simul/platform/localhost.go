@@ -11,7 +11,6 @@ import (
 
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	_ "github.com/dedis/cothority/protocols"
 	"strings"
@@ -54,17 +53,21 @@ type Localhost struct {
 	// errors go here:
 	errChan chan error
 
+	// Listening monitor port
+	monitorPort int
+
 	// SimulationConfig holds all things necessary for the run
 	sc *sda.SimulationConfig
 }
 
 // Configure various
-func (d *Localhost) Configure() {
+func (d *Localhost) Configure(pc *PlatformConfig) {
 	pwd, _ := os.Getwd()
 	d.runDir = pwd + "/platform/localhost"
 	d.localDir = pwd
-	d.debug = dbg.DebugVisible()
+	d.debug = pc.Debug
 	d.running = false
+	d.monitorPort = pc.MonitorPort
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in simulation")
@@ -74,12 +77,14 @@ func (d *Localhost) Configure() {
 }
 
 // Will build the application
-func (d *Localhost) Build(build string) error {
+func (d *Localhost) Build(build string, arg ...string) error {
 	src := "./cothority"
 	dst := d.runDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine
-	res, err := cliutils.Build(src, dst, runtime.GOARCH, runtime.GOOS)
+	res, err := cliutils.Build(src, dst,
+		runtime.GOARCH, runtime.GOOS,
+		arg...)
 	if err != nil {
 		dbg.Fatal("Error while building for localhost (src", src, ", dst", dst, ":", res)
 	}
@@ -156,7 +161,7 @@ func (d *Localhost) Start(args ...string) error {
 		dbg.Lvl3("Starting", index)
 		host := "localhost" + strconv.Itoa(index)
 		cmdArgs := []string{"-address", host, "-monitor",
-			"localhost:" + strconv.Itoa(monitor.DefaultSinkPort),
+			"localhost:" + strconv.Itoa(d.monitorPort),
 			"-simul", d.Simulation,
 			"-debug", strconv.Itoa(dbg.DebugVisible()),
 		}

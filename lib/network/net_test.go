@@ -11,7 +11,6 @@ import (
 	"os"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
@@ -33,12 +32,12 @@ type TestRegisterS struct {
 
 func TestMain(m *testing.M) {
 	code := m.Run()
-	testutil.AfterTest(nil)
+	dbg.AfterTest(nil)
 	os.Exit(code)
 }
 
 func TestRegister(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	if TypeFromData(&TestRegisterS{}) != ErrorType {
 		t.Fatal("TestRegister should not yet be there")
 	}
@@ -58,7 +57,7 @@ func TestRegister(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	gotConnect := make(chan bool)
@@ -121,7 +120,7 @@ func TestMultiClose(t *testing.T) {
 
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
@@ -190,9 +189,56 @@ func TestSecureMultiClose(t *testing.T) {
 	<-done2
 }
 
+func TestTcpCounterIO(t *testing.T) {
+	defer dbg.AfterTest(t)
+
+	RegisterMessageType(&TestRegisterS{})
+	dbg.TestOutput(testing.Verbose(), 4)
+	receiverStarted := make(chan bool)
+	fn := func(s Conn) {
+		err := s.Send(context.TODO(), &TestRegisterS{10})
+		if err != nil {
+			t.Fatal("Error while sending message:", err)
+		}
+		close(receiverStarted)
+	}
+
+	h1 := NewTcpHost()
+	h2 := NewTcpHost()
+	done := make(chan bool)
+	go func() {
+		err := h1.Listen("localhost:3000", fn)
+		if err != nil {
+			t.Fatal("Listening failed for h1:", err)
+		}
+		done <- true
+	}()
+
+	c2, err := h2.Open("localhost:3000")
+	if err != nil {
+		t.Fatal("Couldn't open h2:", err)
+	}
+	<-receiverStarted
+	c2.Receive(context.TODO())
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	<-done
+	// verify the amount of bytes read / written
+	if h1.Tx() == 0 || h1.Tx() != h2.Rx() || h2.Rx() == 0 || h2.Rx() != c2.Rx() {
+		t.Fatal("stg is wrong with CounterIO implementation of TcpConn / TcpHost")
+	}
+
+}
+
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	opened := make(chan bool)
@@ -239,7 +285,7 @@ func TestSecureTcp(t *testing.T) {
 
 // Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	// Create one client + one server
 	clientHost := NewTcpHost()
