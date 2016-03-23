@@ -22,7 +22,7 @@ func (rh *RandHound) chooseInsurers(Rc, Rs []byte) (map[int]int, []abstract.Poin
 		i := int(random.Uint64(prng) % uint64(len(tns)))
 		// Add insurer only if not done so before; choosing yourself as an insurer is fine; ignore leader at index 0
 		if _, ok := keys[i]; !ok && !tns[i].IsRoot() {
-			keys[i] = j // j is the share index;
+			keys[i] = j // j is the share index
 			insurers[j] = tns[i].Entity.Public
 			j += 1
 		}
