@@ -58,7 +58,7 @@ func (t *Token) Id() uuid.UUID {
 	return t.cacheId
 }
 
-// Return a new Token contianing a reference to the given TreeNode
+// Return a new Token containing a reference to the given TreeNode
 func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
 	t_other := *t
 	t_other.TreeNodeID = newid
@@ -94,7 +94,7 @@ type SendEntity struct {
 type CosiRequest struct {
 	// The entity list to use for creating the cosi tree
 	EntityList *EntityList
-	// the actual messag to sign by CoSi.
+	// the actual message to sign by CoSi.
 	Message []byte
 }
 

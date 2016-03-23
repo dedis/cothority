@@ -92,7 +92,7 @@ func sign(r io.Reader, tomlFileName string) (abstract.Secret, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.Response, nil
+	return res, nil
 }
 
 func handleErrorAndExit(e error) {
