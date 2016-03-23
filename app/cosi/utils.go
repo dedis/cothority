@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"errors"
@@ -49,6 +49,8 @@ func (s *server) toEntity() (*network.Entity, error) {
 
 // SignStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
+// it will open a connection to the first entity in the provided EntityList
+// and send it the statement from io.Reader to be signed
 func SignStatement(r io.Reader,
 	el *sda.EntityList,
 	verify bool) (*sda.CosiResponse, error) {

@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dedis/cothority/app"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -85,11 +84,11 @@ func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f)
+	el, err := ReadGroupToml(f)
 	if err != nil {
 		return nil, err
 	}
-	res, err := app.SignStatement(r, el, true)
+	res, err := SignStatement(r, el, true)
 	if err != nil {
 		return nil, err
 	}
