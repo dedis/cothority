@@ -22,7 +22,7 @@ func TestHackyCosi(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	// make up the hosts and the entity list
 	h1 := sda.NewLocalHost(2000)
-	h1.ListenNoblock()
+	h1.Listen()
 	h1.StartProcessMessages()
 	defer h1.Close()
 	h2 := sda.NewLocalHost(2010)
