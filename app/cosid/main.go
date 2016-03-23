@@ -121,7 +121,7 @@ func createHost() *sda.Host {
 		os.Exit(1)
 	}
 
-	ip := str
+	ip := str1
 
 	// File output
 	fmt.Println("[*] Name of the file to output the configuration of this host:")
