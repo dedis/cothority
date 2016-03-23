@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"encoding/json"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
@@ -107,4 +108,12 @@ type CosiResponse struct {
 	Challenge abstract.Secret `json:",string"`
 	// the Response out of the Multi Schnorr Signature
 	Response abstract.Secret `json:",string"`
+}
+
+func (s *CosiResponse) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Challenge string
+		Response  string
+	}{Challenge: s.Challenge.String(),
+		Response: s.Response.String()})
 }

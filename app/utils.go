@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/config"
@@ -69,22 +70,25 @@ func SignStatement(r io.Reader,
 
 	// Connect to the root
 	host := el.List[0]
+	dbg.Lvl3("Opening connection")
 	con, err := client.Open(host)
 	defer client.Close()
 	if err != nil {
 		return nil, err
 	}
 
+	dbg.Lvl3("Sending sign request")
 	// send the request
 	if err := con.Send(context.TODO(), req); err != nil {
 		return nil, err
 	}
+	dbg.Lvl3("Waiting for the response")
 	// wait for the response
 	packet, err := con.Receive(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-
+	dbg.Lvl3("Recieved response")
 	response, ok := packet.Msg.(sda.CosiResponse)
 	if !ok {
 		return nil, errors.New("Invalid repsonse: Could not cast the " +

@@ -18,9 +18,9 @@ func printUsageAndExit(msg string) {
 	}
 
 	// XXX print some very clear instructions:
-	fmt.Fprintf(os.Stderr, `usage:
-	cosi -m “<Message to be signed>” my-cosi-group.toml
-	cosi -f <file-to-be-signed> my-cosi-group.toml`)
+	fmt.Fprintf(os.Stderr, `Usage:
+	cosi -m “<Message to be signed>” -c my-cosi-group.toml
+	cosi -f <file-to-be-signed> -c my-cosi-group.toml`)
 	os.Exit(1)
 }
 
@@ -35,14 +35,14 @@ func init() {
 }
 
 func main() {
-	if !(len(os.Args) == 3) {
-		printUsageAndExit("")
+	if !(len(os.Args) == 5) {
+		printUsageAndExit("Not enough arguments provided.\n")
 	}
 	switch os.Args[1] {
 	case "-f":
 		strOrFilename := f.String("f", "",
 			"Filename of the file to be signed.")
-		groupToml := f.String("f", "",
+		groupToml := f.String("c", "",
 			"Toml file containing the list of CoSi nodes.")
 
 		if err := f.Parse(os.Args[1:]); err != nil {
@@ -54,7 +54,7 @@ func main() {
 		printSigAsJSON(sig)
 	case "-m":
 		strOrFilename := m.String("m", "", "Message to be signed.")
-		groupToml := m.String("m", "", "Toml file containing the list of CoSi nodes.")
+		groupToml := m.String("c", "", "Toml file containing the list of CoSi nodes.")
 		if err := m.Parse(os.Args[1:]); err != nil {
 			printUsageAndExit("Unable to start signing message" +
 				"Couldn't parse arguments:" + err.Error())
@@ -99,8 +99,8 @@ func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
 func handleErrorAndExit(e error) {
 	if e != nil {
 		fmt.Fprintf(os.Stderr, "Couldn't create signature"+e.Error())
+		os.Exit(1)
 	}
-	os.Exit(1)
 }
 
 func printSigAsJSON(res *sda.CosiResponse) {

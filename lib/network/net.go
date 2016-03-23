@@ -145,7 +145,7 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 		time.Sleep(WaitRetry)
 	}
 	if conn == nil {
-		return nil, fmt.Errorf("Could not connect to %s.", name)
+		return nil, fmt.Errorf("Could not connect to %s: %s", name, err)
 	}
 	c := TcpConn{
 		Endpoint: name,
