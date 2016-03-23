@@ -301,7 +301,7 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 	}
 }
 
-// SearchEntity searches in the EntityList for the Entity corresponding to the given UUID and returns it
+// SearchEntity searches the EntityList for the Entity corresponding to the given UUID and returns it
 func (il *EntityList) SearchEntity(uuid uuid.UUID) (int, *network.Entity) {
 	for i, e := range il.List {
 		if e.Id == uuid {
