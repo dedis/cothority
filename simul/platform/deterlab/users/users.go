@@ -11,10 +11,12 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/simul/platform"
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 )
 
@@ -26,7 +28,7 @@ func init() {
 
 func main() {
 	// init with deter.toml
-	deter := platform.DeterFromConfig()
+	deter := deterFromConfig()
 	flag.Parse()
 
 	// kill old processes
@@ -143,4 +145,21 @@ func main() {
 
 	// wait for the servers to finish before stopping
 	wg.Wait()
+}
+
+// Reads in the deterlab-config and drops out if there is an error
+func deterFromConfig(name ...string) *platform.Deterlab {
+	d := &platform.Deterlab{}
+	configName := "deter.toml"
+	if len(name) > 0 {
+		configName = name[0]
+	}
+	err := sda.ReadTomlConfig(d, configName)
+	_, caller, line, _ := runtime.Caller(1)
+	who := caller + ":" + strconv.Itoa(line)
+	if err != nil {
+		dbg.Fatal("Couldn't read config in", who, ":", err)
+	}
+	dbg.SetDebugVisible(d.Debug)
+	return d
 }

@@ -17,7 +17,7 @@ import (
 // platform.
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
-	Configure(*PlatformConfig)
+	Configure(*Config)
 	// Build builds all necessary binaries
 	Build(build string, arg ...string) error
 	// Makes sure that there is no part of the application still running
@@ -32,9 +32,9 @@ type Platform interface {
 	Wait() error
 }
 
-// PlatformConfig is passed to Platform.Config and prepares the platform for
+// Config is passed to Platform.Config and prepares the platform for
 // specific system-wide configurations
-type PlatformConfig struct {
+type Config struct {
 	MonitorPort int
 	Debug       int
 }
@@ -131,6 +131,8 @@ type RunConfig struct {
 	fields map[string]string
 }
 
+// NewRunconfig returns an initialised config to be used for reading
+// in runconfig-files
 func NewRunConfig() *RunConfig {
 	rc := new(RunConfig)
 	rc.fields = make(map[string]string)
@@ -193,4 +195,17 @@ func (r *RunConfig) Clone() *RunConfig {
 		rc.fields[k] = v
 	}
 	return rc
+}
+
+// Prints out a nice string
+func (r *RunConfig) String() string {
+	fields := []string{"simulation", "servers", "hosts", "bf", "depth", "rounds"}
+	var ret string
+	for _, f := range fields {
+		v := r.Get(f)
+		if v != "" {
+			ret = fmt.Sprintf("%s%s:%s ", ret, f, v)
+		}
+	}
+	return ret
 }
