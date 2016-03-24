@@ -150,8 +150,8 @@ func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
 
 	//bz.endProto, _ = end.NewEndProtocol(n)
 	bz.aggregatedPublic = n.EntityList().Aggregate
-	bz.threshold = int(math.Ceil(float64(len(bz.Tree().ListTreeNodes())) / 3.0))
-	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().ListTreeNodes())) * 2.0 / 3.0))
+	bz.threshold = int(math.Ceil(float64(len(bz.Tree().List())) / 3.0))
+	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().List())) * 2.0 / 3.0))
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
@@ -733,7 +733,7 @@ func (bz *ByzCoin) sendAndMeasureViewchange() {
 	bz.vcMeasure = monitor.NewTimeMeasure("viewchange")
 	vc := newViewChange()
 	var err error
-	for _, n := range bz.Tree().ListTreeNodes() {
+	for _, n := range bz.Tree().List() {
 		// don't send to ourself
 		if uuid.Equal(n.Id, bz.TreeNode().Id) {
 			continue

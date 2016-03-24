@@ -49,7 +49,7 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	b.RegisterChannel(&b.announceChan)
 	b.RegisterChannel(&b.okChan)
 
-	lists := b.Tree().ListTreeNodes()
+	lists := b.Tree().List()
 	b.listNode = make(map[uuid.UUID]*sda.TreeNode)
 	b.ackdNode = 0
 	b.done = make(chan bool, 1)

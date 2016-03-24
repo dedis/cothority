@@ -278,7 +278,7 @@ func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
 
 func (n *Node) ReflectCreate(t reflect.Type, msg *SDAData) reflect.Value {
 	m := reflect.Indirect(reflect.New(t))
-	tn := n.Tree().SearchTreeNode(msg.From.TreeNodeID)
+	tn := n.Tree().Search(msg.From.TreeNodeID)
 	if tn != nil {
 		m.Field(0).Set(reflect.ValueOf(tn))
 		m.Field(1).Set(reflect.Indirect(reflect.ValueOf(msg.Msg)))

@@ -171,8 +171,8 @@ func TestGetNode(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(10, 2000)
-	for _, tn := range tree.ListTreeNodes() {
-		node := tree.SearchTreeNode(tn.Id)
+	for _, tn := range tree.List() {
+		node := tree.Search(tn.Id)
 		if node == nil {
 			t.Fatal("Didn't find treeNode with id", tn.Id)
 		}
@@ -205,7 +205,7 @@ func TestTreeNodeEntityIndex(t *testing.T) {
 	peerList := genEntityList(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
 
-	ln := tree.ListTreeNodes()
+	ln := tree.List()
 	randomNode := ln[rand.Intn(len(ln))]
 	var idx int
 	for i, e := range peerList.List {
