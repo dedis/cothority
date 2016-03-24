@@ -112,6 +112,7 @@ func (p *Protocol) Dispatch() error {
 	}
 }
 
+// Start() implements the ProtocolInstance interface of sda.
 func (p *Protocol) Start() error {
 	return p.PrePrepare()
 }
