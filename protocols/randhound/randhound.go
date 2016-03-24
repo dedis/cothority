@@ -16,14 +16,12 @@ func init() {
 
 type RandHound struct {
 	*sda.Node
-	GID     []byte      // Group ID
-	Group   *Group      // Group parameters
-	SID     []byte      // Session ID
-	Session *Session    // Session parameters
-	Leader  *Leader     // Protocol leader
-	Peer    *Peer       // Current peer
-	Done    chan bool   // For signaling that a protocol run is finished (leader only)
-	Result  chan []byte // For returning the generated randomness (leader only)
+	GID     []byte   // Group ID
+	Group   *Group   // Group parameters
+	SID     []byte   // Session ID
+	Session *Session // Session parameters
+	Leader  *Leader  // Protocol leader
+	Peer    *Peer    // Current peer
 }
 
 func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
@@ -35,8 +33,6 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 
 	// Setup leader or peer depending on the node's location in the tree
 	if node.IsRoot() {
-		rh.Done = make(chan bool, 1)
-		rh.Result = make(chan []byte)
 		leader, err := rh.newLeader()
 		if err != nil {
 			return nil, err

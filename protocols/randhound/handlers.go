@@ -65,7 +65,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			return errors.New(fmt.Sprintf("R1: peer %d replied to wrong I1 message", r1.Src))
 		}
 
-		// Collect replies
+		// Collect replies of the peers
 		rh.Leader.r1[r1.Src] = &r1.R1
 
 		// Continue, once all replies have arrived
@@ -141,7 +141,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 			return errors.New(fmt.Sprintf("R2: peer %d replied to wrong I2 message", r2.Src))
 		}
 
-		// Collect replies
+		// Collect replies of the peers
 		rh.Leader.r2[r2.Src] = &r2.R2
 
 		deal := &poly.Deal{}
@@ -246,7 +246,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 			return errors.New(fmt.Sprintf("R3: peer %d replied to wrong I3 message", r3.Src))
 		}
 
-		// Collect replies
+		// Collect replies of the peers
 		rh.Leader.r3[r3.Src] = &r3.R3
 
 		for _, r3resp := range rh.Leader.r3[r3.Src].Resp {
@@ -315,7 +315,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 			return errors.New(fmt.Sprintf("R4: peer %d replied to wrong I4 message", r4.Src))
 		}
 
-		// Collect replies
+		// Collect replies of the peers
 		rh.Leader.r4[r4.Src] = &r4.R4
 
 		// Initialise PriShares
@@ -358,8 +358,8 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 				return err
 			}
 
-			rh.Done <- true
-			rh.Result <- rb
+			rh.Leader.Done <- true
+			rh.Leader.Result <- rb
 		}
 	}
 	return nil

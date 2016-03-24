@@ -41,9 +41,9 @@ func TestRandHound(t *testing.T) {
 
 	bytes := make([]byte, 32)
 	select {
-	case _ = <-rh.Done:
+	case _ = <-rh.Leader.Done:
 		log.Printf("RandHound - done")
-		bytes = <-rh.Result
+		bytes = <-rh.Leader.Result
 	case <-time.After(time.Second * 60):
 		t.Fatal("RandHound – time out")
 	}
