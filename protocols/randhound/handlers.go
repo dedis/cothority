@@ -7,6 +7,7 @@ import (
 
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
+	"github.com/dedis/crypto/random"
 )
 
 // TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
@@ -21,10 +22,21 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		}
 	}
 	rh.Peer.i1 = i1.I1
-	rh.T = i1.I1.T
-	rh.R = i1.I1.R
-	rh.N = i1.I1.N
-	rh.Purpose = i1.I1.Purpose
+
+	// Setup Group (TODO: for consistency all group parameters should probably be transmitted)
+	n := i1.I1.N
+	k := i1.I1.K
+	rh.Group = &Group{n, n / 3, n - (n / 3), k, (k + 1) / 2, (k + 1) / 2}
+
+	// TODO: verify GID
+	// TODO: setup session
+	// TODO: verify SID
+
+	// Choose peer's trustee-selsection randomness
+	hs := rh.Node.Suite().Hash().Size()
+	rs := make([]byte, hs)
+	random.Stream.XORKeyStream(rs, rs)
+	rh.Peer.Rs = rs
 
 	rh.Peer.r1 = R1{
 		Src: rh.Node.TreeNode().EntityIdx,
@@ -58,9 +70,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		rh.Leader.r1[r1.Src] = &r1.R1
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r1) == rh.NumPeers {
+		if len(rh.Leader.r1) == rh.Group.N-1 {
 			rh.Leader.i2 = I2{
-				SID: rh.Leader.SID,
+				SID: rh.SID,
 				Rc:  rh.Leader.Rc,
 			}
 			err := rh.sendToChildren(&rh.Leader.i2)
@@ -98,7 +110,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	secretPair := config.NewKeyPair(rh.Node.Suite())
 	_, insurers := rh.chooseInsurers(rh.Peer.i2.Rc, rh.Peer.Rs)
 	deal := &poly.Deal{}
-	deal.ConstructDeal(secretPair, &longPair, rh.T, rh.R, insurers)
+	deal.ConstructDeal(secretPair, &longPair, rh.Group.T, rh.Group.R, insurers)
 	db, err := deal.MarshalBinary()
 	if err != nil {
 		return err
@@ -134,16 +146,16 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		rh.Leader.r2[r2.Src] = &r2.R2
 
 		deal := &poly.Deal{}
-		deal.UnmarshalInit(rh.T, rh.R, rh.N, rh.Node.Suite())
+		deal.UnmarshalInit(rh.Group.T, rh.Group.R, rh.Group.K, rh.Node.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
 		rh.Leader.deals[r2.Src] = deal
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r2) == rh.NumPeers {
+		if len(rh.Leader.r2) == rh.Group.N-1 {
 			rh.Leader.i3 = I3{
-				SID: rh.Leader.SID,
+				SID: rh.SID,
 				R2s: rh.Leader.r2,
 			}
 			return rh.sendToChildren(&rh.Leader.i3)
@@ -185,7 +197,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Unmarshal Deal
 		deal := &poly.Deal{}
-		deal.UnmarshalInit(rh.T, rh.R, rh.N, rh.Node.Suite())
+		deal.UnmarshalInit(rh.Group.T, rh.Group.R, rh.Group.K, rh.Node.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
@@ -251,9 +263,9 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		}
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r3) == rh.NumPeers {
+		if len(rh.Leader.r3) == rh.Group.N-1 {
 			rh.Leader.i4 = I4{
-				SID: rh.Leader.SID,
+				SID: rh.SID,
 				R2s: rh.Leader.r2,
 			}
 			return rh.sendToChildren(&rh.Leader.i4)
@@ -309,11 +321,11 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 
 		// Initialise PriShares
 		ps := &poly.PriShares{}
-		ps.Empty(rh.Node.Suite(), rh.T, rh.N)
+		ps.Empty(rh.Node.Suite(), rh.Group.T, rh.Group.K)
 		rh.Leader.shares[r4.Src] = ps
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r4) == rh.NumPeers {
+		if len(rh.Leader.r4) == rh.Group.N-1 {
 			// Process shares of i-th peer
 			for i, _ := range rh.Leader.r4 {
 				for _, r4share := range rh.Leader.r4[i].Shares {

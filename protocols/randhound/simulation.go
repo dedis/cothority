@@ -14,9 +14,8 @@ func init() {
 
 type RHSimulation struct {
 	sda.SimulationBFTree
-	T       int
-	R       int
 	N       int
+	K       int
 	Purpose string
 }
 
@@ -42,10 +41,7 @@ func (rh *RHSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	proto := node.ProtocolInstance().(*RandHound)
-	proto.T = rh.T
-	proto.R = rh.R
-	proto.N = rh.N
-	proto.Purpose = rh.Purpose
+	proto.Setup(rh.Purpose, rh.N, rh.K)
 	proto.Start()
 
 	bytes := make([]byte, 32)

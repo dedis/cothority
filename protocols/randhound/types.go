@@ -14,22 +14,21 @@ type Session struct {
 }
 
 type Group struct {
-	F int // Faulty (Byzantine) hosts tolerated (1/3)
-	L int // Hosts that must be live (2/3)
-	K int // Trustee set size
-	T int // Trustee set threshold
+	N int // Total number of nodes (peers + leader)
+	F int // Maximum number of Byzantine nodes tolerated (1/3)
+	L int // Minimum number of non-Byzantine nodes required (2/3)
+	K int // Total number of trustees (= shares)
+	R int // Minimum number of signatures needed to certify a deal
+	T int // Minimum number of shares needed to reconstruct a secret
 }
 
 type I1 struct {
 	SID     []byte // Session identifier: hash of session info block
 	GID     []byte // Group identifier: hash of group parameter block
 	HRc     []byte // Client's trustee-randomness commit
-	T       int
-	R       int
-	N       int
-	Purpose string
-	//S   []byte // Full session info block (optional)
-	//G   []byte // Full group parameter block (optional)
+	N       int    // Number of nodes (peers + leader)
+	K       int    // Number of trustees
+	Purpose string // Purpose of randomness
 }
 
 type R1 struct {

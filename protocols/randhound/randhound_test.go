@@ -10,33 +10,34 @@ import (
 	"github.com/dedis/cothority/protocols/randhound"
 )
 
+//var T, R, N int = 3, 3, 5                 // VSS parameters (T <= R <= N)
+
 func TestRandHound(t *testing.T) {
 
 	// Setup parameters
-	var name string = "RandHound"       // Protocol name
-	var np int = 10                     // Number of peers (including leader)
-	var T, R, N int = 3, 3, 5           // VSS parameters (T <= R <= N)
-	var p string = "RandHound test run" // Purpose
+	var name string = "RandHound"             // Protocol name
+	var nodes int = 10                        // Number of nodes (peers + leader)
+	var trustees int = 5                      // Number of trustees
+	var purpose string = "RandHound test run" // Purpose
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(np, false, true, true)
+	_, _, tree := local.GenTree(nodes, false, true, true)
 	defer local.CloseAll()
 
 	dbg.TestOutput(testing.Verbose(), 1)
 
-	// Start RandHound
+	// Setup and Start RandHound
 	log.Printf("RandHound - starting")
-	node, err := local.CreateNewNodeName(name, tree)
+	leader, err := local.CreateNewNodeName(name, tree)
 	if err != nil {
-		t.Fatal("Couldn't start RandHound protocol:", err)
+		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
-	rh := node.ProtocolInstance().(*randhound.RandHound)
-	rh.T = T
-	rh.R = R
-	rh.N = N
-	rh.Purpose = p
-
-	node.Start()
+	rh := leader.ProtocolInstance().(*randhound.RandHound)
+	err = rh.Setup(purpose, nodes, trustees)
+	if err != nil {
+		t.Fatal("Couldn't initialise RandHound protocol:", err)
+	}
+	leader.Start()
 
 	bytes := make([]byte, 32)
 	select {

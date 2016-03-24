@@ -1,7 +1,5 @@
 package randhound
 
-import "github.com/dedis/crypto/random"
-
 type Peer struct {
 	Rs     []byte    // Peer's trustee-selection random value
 	shares []R4Share // Peer's shares
@@ -16,13 +14,5 @@ type Peer struct {
 }
 
 func (rh *RandHound) newPeer() (*Peer, error) {
-
-	// Choose peer's trustee-selsection randomness
-	hs := rh.Node.Suite().Hash().Size()
-	rs := make([]byte, hs)
-	random.Stream.XORKeyStream(rs, rs)
-
-	return &Peer{
-		Rs: rs,
-	}, nil
+	return &Peer{}, nil
 }
