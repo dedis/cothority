@@ -2,11 +2,13 @@ package sda
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"strings"
 )
 
 // Our message-types used in sda
@@ -106,20 +108,61 @@ type CosiRequest struct {
 // NOTE: the `suite` field is absent here because this struct is a temporary
 // hack and we only supports one suite for the moment,i.e. ed25519.
 type CosiResponse struct {
+	// The hash of the signed statement
+	Sum []byte
 	// The Challenge out a of the Multi Schnorr signature
-	Challenge abstract.Secret `json:",string"`
+	Challenge abstract.Secret
 	// the Response out of the Multi Schnorr Signature
-	Response abstract.Secret `json:",string"`
+	Response abstract.Secret
 }
 
+// Implements golang's JSON marshal interface:
+// XXX might be moved to another package soon
 func (s *CosiResponse) MarshalJSON() ([]byte, error) {
 	cw := new(bytes.Buffer)
 	rw := new(bytes.Buffer)
-	cliutils.WriteSecret64(network.Suite, cw, s.Challenge)
-	cliutils.WriteSecret64(network.Suite, rw, s.Response)
+
+	err := cliutils.WriteSecret64(network.Suite, cw, s.Challenge)
+	if err != nil {
+		return nil, err
+	}
+	err = cliutils.WriteSecret64(network.Suite, rw, s.Response)
+	if err != nil {
+		return nil, err
+	}
 	return json.Marshal(struct {
+		Sum       string
 		Challenge string
 		Response  string
-	}{Challenge: cw.String(),
-		Response: rw.String()})
+	}{
+		Sum:       base64.StdEncoding.EncodeToString(s.Sum),
+		Challenge: cw.String(),
+		Response:  rw.String(),
+	})
+}
+
+func (s *CosiResponse) UnmarshalJSON(data []byte) error {
+	type Aux struct {
+		Sum       string
+		Challenge string
+		Response  string
+	}
+	aux := &Aux{}
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	var err error
+	if s.Sum, err = base64.StdEncoding.DecodeString(aux.Sum); err != nil {
+		return err
+	}
+	suite := network.Suite
+	cr := strings.NewReader(aux.Challenge)
+	if s.Challenge, err = cliutils.ReadSecret64(suite, cr); err != nil {
+		return err
+	}
+	rr := strings.NewReader(aux.Response)
+	if s.Response, err = cliutils.ReadSecret64(suite, rr); err != nil {
+		return err
+	}
+	return nil
 }

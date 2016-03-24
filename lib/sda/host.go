@@ -427,9 +427,15 @@ func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
 		return
 	}
 	node.ProtocolInstance().SigningMessage(cr.Message)
+	hash := h.Suite().Hash()
+	if _, err := hash.Write(cr.Message); err != nil {
+		dbg.Error("Couldn't hash message:", err)
+	}
+	sum := hash.Sum(nil)
 	// Register the handler when the signature is finished
 	fn := func(chal, resp abstract.Secret) {
 		response := &CosiResponse{
+			Sum:       sum,
 			Challenge: chal,
 			Response:  resp,
 		}
