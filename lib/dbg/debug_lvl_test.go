@@ -2,10 +2,31 @@ package dbg_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
+	"strings"
+	"testing"
 )
 
 func init() {
-	dbg.Testing = true
+	dbg.Testing = 1
+	dbg.SetUseColors(false)
+}
+
+func TestTime(t *testing.T) {
+	dbg.Testing = 2
+	dbg.Lvl1("No time")
+	if !strings.Contains(dbg.TestStr, "1 : (") {
+		t.Fatal("Didn't get correct string: ", dbg.TestStr)
+	}
+	dbg.SetShowTime(true)
+	dbg.Lvl1("With time")
+	if strings.Contains(dbg.TestStr, "1 : (") {
+		t.Fatal("Didn't get correct string: ", dbg.TestStr)
+	}
+	if !strings.Contains(dbg.TestStr, "With time") {
+		t.Fatal("Didn't get correct string: ", dbg.TestStr)
+	}
+	dbg.Testing = 1
+	dbg.SetShowTime(false)
 }
 
 func ExampleLevel2() {

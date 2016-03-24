@@ -49,10 +49,13 @@ var NamePadding = 40
 // NamePadding
 var LinePadding = 3
 
-// Testing output has to be on fmt, it doesn't take into account log-outputs
-// So for testing, set Testing = true, and instead of sending to log, it will
-// output to fmt
-var Testing = false
+// Testing variable can have multiple values
+// 0 - no testing
+// 1 - put all line-numbers to 0
+// 2 - like 1, but also write to TestString instead of stdout
+var Testing = 0
+
+var TestStr = ""
 
 // If this variable is set, it will be outputted between the position and the message
 var StaticMsg = ""
@@ -81,7 +84,7 @@ func lvl(lvl int, args ...interface{}) {
 	// For the testing-framework, we check the resulting string. So as not to
 	// have the tests fail every time somebody moves the functions, we put
 	// the line-# to 0
-	if Testing {
+	if Testing > 0 {
 		line = 0
 	}
 
@@ -131,17 +134,20 @@ func lvl(lvl int, args ...interface{}) {
 		}
 	}
 	str := fmt.Sprintf(": (%s) - %s", caller, message)
-	if !Testing && showTime {
-		str = fmt.Sprintf("%-40s", time.Now().String())
+	if showTime {
+		str = fmt.Sprintf("%-40s%s", time.Now().String(), str)
 	}
-	fmt.Printf("%-2s%s", lvlStr, str)
-	if !Testing && useColors {
+	TestStr = fmt.Sprintf("%-2s%s", lvlStr, str)
+	if Testing != 2 {
+		fmt.Print(TestStr)
+	}
+	if useColors {
 		ct.ResetColor()
 	}
 }
 
 func fg(c ct.Color, bright bool) {
-	if !Testing && useColors {
+	if useColors {
 		ct.Foreground(c, bright)
 	}
 }
