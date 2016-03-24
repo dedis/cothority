@@ -29,8 +29,6 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	rh.SID = i1.I1.SID
 	rh.Session = i1.I1.Session
 
-	// TODO: verify GID and SID (?)
-
 	// Choose peer's trustee-selsection randomness
 	hs := rh.Node.Suite().Hash().Size()
 	rs := make([]byte, hs)

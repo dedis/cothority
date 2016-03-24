@@ -136,7 +136,7 @@ func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
 		}
 	}
 
-	// Process group parameters
+	// Include group parameters into group ID
 	for _, g := range gp {
 		err := binary.Write(buf, binary.LittleEndian, uint32(g))
 		if err != nil {

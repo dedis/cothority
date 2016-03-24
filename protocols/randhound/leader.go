@@ -20,7 +20,6 @@ type Leader struct {
 }
 
 func (rh *RandHound) newLeader() (*Leader, error) {
-
 	return &Leader{
 		r1:     make(map[int]*R1),
 		r2:     make(map[int]*R2),
