@@ -5,8 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/broadcast"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/protocols/manage"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
@@ -14,7 +14,7 @@ var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 func init() {
 	sda.SimulationRegister("PbftSimulation", NewSimulation)
 	sda.ProtocolRegisterName("PBFT", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(n) })
-	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return broadcast.NewBroadcastProtocol(n) })
+	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return manage.NewBroadcastProtocol(n) })
 }
 
 // Simulation implements sda.Simulation interface
@@ -79,7 +79,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	if err != nil {
 		dbg.Error(err)
 	}
-	proto, _ := broadcast.NewBroadcastRootProtocol(node)
+	proto, _ := manage.NewBroadcastRootProtocol(node)
 	node.SetProtocolInstance(proto)
 	// channel to notify we are done
 	broadDone := make(chan bool)
@@ -101,7 +101,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		proto.trBlock = trblock
 		proto.onDoneCB = doneCB
 
-		r := monitor.NewMeasure("round_pbft")
+		r := monitor.NewTimeMeasure("round_pbft")
 		err = proto.PrePrepare()
 		if err != nil {
 			dbg.Error("Couldn't start PrePrepare")
@@ -110,7 +110,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		// wait for finishing pbft:
 		<-doneChan
-		r.Measure()
+		r.Record()
 
 		dbg.Lvl1("Finished round", round)
 	}

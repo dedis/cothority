@@ -1,3 +1,7 @@
+// The simulation cothority used for all protocols.
+// This should not be used stand-alone and is only for
+// the simulations. It loads the simulation-file, initialises all
+// necessary hosts and starts the simulation on the root-node.
 package main
 
 import (
@@ -13,10 +17,6 @@ import (
 	// register the protocol
 	_ "github.com/dedis/cothority/protocols"
 )
-
-/*
-Cothority is a general node that can be used for all available protocols.
-*/
 
 // The address of this host - if there is only one host in the config
 // file, it will be derived from it automatically
@@ -46,6 +46,7 @@ func main() {
 	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible(), monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", hostAddress)
+	measures := make([]*monitor.CounterIOMeasure, len(scs))
 	if err != nil {
 		// We probably are not needed
 		dbg.Lvl2(err)
@@ -60,6 +61,7 @@ func main() {
 	for i, sc := range scs {
 		// Starting all hosts for that server
 		host := sc.Host
+		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
 		host.ListenNoblock()
 		host.StartProcessMessages()
@@ -84,7 +86,7 @@ func main() {
 		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
-		childrenWait := monitor.NewMeasure("ChildrenWait")
+		childrenWait := monitor.NewTimeMeasure("ChildrenWait")
 		wait := true
 		// The timeout starts with 1 second, which is the time of response between
 		// each level of the tree.
@@ -112,8 +114,7 @@ func main() {
 			// Double the timeout and try again if not successful.
 			timeout *= 2
 		}
-		dbg.Print("Measuring")
-		childrenWait.Measure()
+		childrenWait.Record()
 		dbg.Lvl1("Starting new node", simul)
 		err := rootSim.Run(rootSC)
 		if err != nil {
@@ -138,7 +139,6 @@ func main() {
 		} else {
 			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", rootSC.Tree)
 		}
-		monitor.EndAndCleanup()
 		if err != nil {
 			dbg.Fatal(err)
 		}
@@ -147,8 +147,10 @@ func main() {
 	// Wait for all hosts to be closed
 	allClosed := make(chan bool)
 	go func() {
-		for _, sc := range scs {
+		for i, sc := range scs {
 			sc.Host.WaitForClose()
+			// record the bandwidth
+			measures[i].Record()
 			dbg.Lvl3(hostAddress, "Simulation closed host", sc.Host.Entity.Addresses, "closed")
 		}
 		allClosed <- true
@@ -160,4 +162,5 @@ func main() {
 	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
 		dbg.Lvl2(hostAddress, ": didn't close after", scs[0].GetCloseWait(), " seconds")
 	}
+	monitor.EndAndCleanup()
 }

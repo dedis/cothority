@@ -1,3 +1,4 @@
+// Bitcoin-blockchain specific functions.
 package blockchain
 
 import (
@@ -8,8 +9,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/lib/crypto"
 )
 
 type Block struct {
@@ -88,13 +88,13 @@ func NewHeader(transactions TransactionList, parent, parentKey string) *Header {
 	return hdr
 }
 func HashRootTransactions(transactions TransactionList) string {
-	var hashes []hashid.HashId
+	var hashes []crypto.HashId
 
 	for _, t := range transactions.Txs {
 		temp, _ := hex.DecodeString(t.Hash)
 		hashes = append(hashes, temp)
 	}
-	out, _ := proof.ProofTree(sha256.New, hashes)
+	out, _ := crypto.ProofTree(sha256.New, hashes)
 	return hex.EncodeToString(out)
 }
 

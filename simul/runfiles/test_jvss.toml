@@ -1,0 +1,8 @@
+Simulation = "SimulationJVSS"
+Servers = 8
+Bf = 1
+Rounds = 10
+CloseWait = 6000
+
+Hosts, Checking
+3, 0

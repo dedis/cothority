@@ -23,6 +23,8 @@ type LocalTest struct {
 	EntityLists map[uuid.UUID]*EntityList
 	// A map of Tree.Id to Trees
 	Trees map[uuid.UUID]*Tree
+	// All single nodes
+	Nodes []*Node
 }
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
@@ -34,6 +36,7 @@ func NewLocalTest() *LocalTest {
 		Overlays:    make(map[uuid.UUID]*Overlay),
 		EntityLists: make(map[uuid.UUID]*EntityList),
 		Trees:       make(map[uuid.UUID]*Tree),
+		Nodes:       make([]*Node, 0, 1),
 	}
 }
 
@@ -46,6 +49,20 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].StartNewNodeName(name, t)
+		}
+	}
+	return nil, errors.New("Didn't find host for tree-root")
+}
+
+// CreateNewNodeName takes a name and a tree and will create a
+// new Node with the protocol 'name' without running it
+func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
+	rootEntityId := t.Root.Entity.Id
+	for _, h := range l.Hosts {
+		if uuid.Equal(h.Entity.Id, rootEntityId) {
+			// XXX do we really need multiples overlays ? Can't we just use the
+			// Node, since it is already dispatched as like a TreeNode ?
+			return l.Overlays[h.Entity.Id].CreateNewNodeName(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -125,6 +142,9 @@ func (l *LocalTest) CloseAll() {
 			dbg.Error("Closing host", host, "gives error", err)
 		}
 	}
+	for _, node := range l.Nodes {
+		node.Close()
+	}
 }
 
 func (l *LocalTest) GetTree(tn *TreeNode) *Tree {
@@ -159,7 +179,11 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 		TreeNodeID:   tn.Id,
 		RoundID:      uuid.NewV4(),
 	}
-	return NewNode(o, tok)
+	node, err := NewNode(o, tok)
+	if err == nil {
+		l.Nodes = append(l.Nodes, node)
+	}
+	return node, err
 }
 
 // GetNodes returns all Nodes that belong to a treeNode

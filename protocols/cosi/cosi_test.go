@@ -4,14 +4,13 @@ import (
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"testing"
 	"time"
 )
 
 func TestCosi(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	local := sda.NewLocalTest()
@@ -40,19 +39,16 @@ func TestCosi(t *testing.T) {
 		}
 		done <- true
 	}
-	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
-		if root == nil {
-			var err error
-			root, err = NewRootProtocolCosi(msg, node)
-			root.RegisterDoneCallback(doneFunc)
-			return root, err
-		}
-		return NewProtocolCosi(node)
-	}
 
-	sda.ProtocolRegisterName("ProtocolCosi", fn)
 	// Start the protocol
-	_, err := local.StartNewNodeName("ProtocolCosi", tree)
+	node, err := local.CreateNewNodeName("CoSi", tree)
+	if err != nil {
+		t.Fatal("Couldn't create new node:", err)
+	}
+	root = node.ProtocolInstance().(*ProtocolCosi)
+	root.Message = msg
+	root.RegisterDoneCallback(doneFunc)
+	node.Start()
 	if err != nil {
 		t.Fatal(err)
 	}

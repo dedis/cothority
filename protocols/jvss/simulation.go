@@ -15,6 +15,7 @@ func init() {
 
 type JvssSimulation struct {
 	sda.SimulationBFTree
+	Checking int
 }
 
 func NewJvssSimulation(config string) (sda.Simulation, error) {
@@ -53,21 +54,23 @@ func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 		dbg.Lvl1("Starting round", round)
 
 		// we only measure the signing process
-		r := monitor.NewMeasure("round")
+		r := monitor.NewTimeMeasure("round")
 		sig, err := proto.Sign(msg)
 		if err != nil {
 			dbg.Error("Couldn't create signature")
 			return err
 		}
-		r.Measure()
 
 		// see if we got a valid signature:
-		err = proto.Verify(msg, sig)
-		if err != nil {
-			dbg.Error("Got invalid signature")
-			return err
+		if jv.Checking == 1 {
+			err = proto.Verify(msg, sig)
+			if err != nil {
+				dbg.Error("Got invalid signature")
+				return err
+			}
+			dbg.Lvl3("Signature is OK")
 		}
-		dbg.Lvl4("Signature is OK")
+		r.Record()
 	}
 	return nil
 }

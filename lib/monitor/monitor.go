@@ -1,13 +1,14 @@
 // Monitor package handle the logging, collection and computation of
-// statisticals data. Every application can send some Measure (for the moment,
+// statistical data. Every application can send some Measure (for the moment,
 // we mostly measure the CPU time but it can be applied later for any kind of
-// measures). The Monitor receives them and update a Stats struct. This Statss
-// struct can hold many different kinds of Measurement (the measure of an
-// specific action such as "round time" or "verify time" etc). Theses
-// measurements contains Values which compute the actual min/max/dev/avg values.
-// There exists the Proxy file so we can have a Proxy relaying Measure from
-// clients to the Monitor listening. An starter feature is also the DataFilter
-// which can apply somes filtering rules to the data before making any
+// measures). The Monitor receives them and updates a Stats struct. This Stats
+// struct can hold many different kinds of Measurements (the measure of a
+// specific action such as "round time" or "verify time" etc). These
+// measurements contain Values which compute the actual min/max/dev/avg values.
+//
+// The Proxy allows to relay Measure from
+// clients to the listening Monitor. A starter feature is also the DataFilter
+// which can apply some filtering rules to the data before making any
 // statistics about them.
 package monitor
 
@@ -35,10 +36,8 @@ const DefaultSinkPort = 10000
 // them. It takes a stats object so it update that in a concurrent-safe manner
 // for each new measure it receives.
 type Monitor struct {
-	listener net.Listener
-
-	// XXX
-	SinkPort int
+	listener     net.Listener
+	listenerLock *sync.Mutex
 
 	// Current conections
 	conns map[string]net.Conn
@@ -51,23 +50,25 @@ type Monitor struct {
 	mutexStats sync.Mutex
 
 	// channel to give new measures
-	measures chan Measure
+	measures chan *SingleMeasure
 
 	// channel to notify the end of a connection
 	// send the name of the connection when finishd
 	done chan string
 
-	listenerLock sync.Mutex
+	SinkPort int
 }
 
 // NewMonitor returns a new monitor given the stats
 func NewMonitor(stats *Stats) *Monitor {
 	return &Monitor{
-		conns:    make(map[string]net.Conn),
-		stats:    stats,
-		SinkPort: DefaultSinkPort,
-		measures: make(chan Measure),
-		done:     make(chan string),
+		conns:        make(map[string]net.Conn),
+		stats:        stats,
+		mutexStats:   sync.Mutex{},
+		SinkPort:     DefaultSinkPort,
+		measures:     make(chan *SingleMeasure),
+		done:         make(chan string),
+		listenerLock: new(sync.Mutex),
 	}
 }
 
@@ -119,8 +120,11 @@ func (m *Monitor) Listen() error {
 			m.mutexConn.Unlock()
 			// end of monitoring,
 			if len(m.conns) == 0 {
+				m.listenerLock.Lock()
 				m.listener.Close()
+				m.listener = nil
 				finished = true
+				m.listenerLock.Unlock()
 				break
 			}
 		}
@@ -151,11 +155,10 @@ func (m *Monitor) Stop() {
 // stats
 func (m *Monitor) handleConnection(conn net.Conn) {
 	dec := json.NewDecoder(conn)
-	enc := json.NewEncoder(conn)
 	nerr := 0
 	for {
-		measure := Measure{}
-		if err := dec.Decode(&measure); err != nil {
+		measure := &SingleMeasure{}
+		if err := dec.Decode(measure); err != nil {
 			// if end of connection
 			if err == io.EOF || strings.Contains(err.Error(), "closed") {
 				break
@@ -175,14 +178,6 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 		case "end":
 			dbg.Lvl3("Finishing monitor")
 			m.done <- conn.RemoteAddr().String()
-		case "ready":
-			m.stats.Ready++
-			dbg.Lvl3("Increasing counter to", m.stats.Ready)
-		case "ready_count":
-			dbg.Lvl3("Sending stats")
-			m_send := measure
-			m_send.Ready = m.stats.Ready
-			enc.Encode(m_send)
 		default:
 			m.measures <- measure
 		}
@@ -191,7 +186,7 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 
 // updateMeasures will add that specific measure to the global stats
 // in a concurrently safe manner
-func (m *Monitor) update(meas Measure) {
+func (m *Monitor) update(meas *SingleMeasure) {
 	m.mutexStats.Lock()
 	// updating
 	m.stats.Update(meas)

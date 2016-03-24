@@ -36,7 +36,7 @@ The directory-structure is as follows:
 ## Simulation
 
 * Available:
-    * [DeterLab](http://deterlab.net)
+    * [DeterLab](https://deterlab.net)
     * Localhost
 
 ## Distribution

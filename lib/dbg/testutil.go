@@ -1,4 +1,4 @@
-package testutil
+package dbg
 
 import (
 	"fmt"
@@ -8,8 +8,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/dedis/cothority/lib/dbg"
 )
 
 func interestingGoroutines() (gs []string) {
@@ -62,14 +60,14 @@ func AfterTest(t *testing.T) {
 		if t != nil {
 			t.Logf("%d instances of:\n%s\n", count, stack)
 		} else {
-			dbg.Fatal(fmt.Sprintf("%d instances of:\n%s\n", count, stack))
+			Fatal(fmt.Sprintf("%d instances of:\n%s\n", count, stack))
 		}
 	}
 	if len(stackCount) > 0 {
 		if t != nil {
 			t.Fatalf("Test leaks %d gorountines.", len(stackCount))
 		} else {
-			dbg.Fatal(fmt.Sprintf("Test leaks %d gorountines.", len(stackCount)))
+			Fatal(fmt.Sprintf("Test leaks %d gorountines.", len(stackCount)))
 		}
 	}
 }

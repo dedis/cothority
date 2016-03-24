@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"strconv"
-	"sync/atomic"
 )
 
 // Implements a simple proxy
@@ -26,6 +25,12 @@ var readyCount int64
 // proxy connections opened
 var proxyConns map[string]*json.Encoder
 
+var proxyDone chan bool
+
+func init() {
+	proxyDone = make(chan bool)
+}
+
 // Proxy will launch a routine that waits for input connections
 // It takes a redirection address soas to where redirect incoming packets
 // Proxy will listen on Sink:SinkPort variables so that the user do not
@@ -33,10 +38,12 @@ var proxyConns map[string]*json.Encoder
 // It will panic if it can not contact the server or can not bind to the address
 func Proxy(redirection string) error {
 	// Connect to the sink
+
 	if err := connectToSink(redirection); err != nil {
 		return err
 	}
 	dbg.Lvl2("Proxy connected to sink", redirection)
+
 	// The proxy listens on the port one lower than itself
 	_, port, err := net.SplitHostPort(redirection)
 	if err != nil {
@@ -55,8 +62,7 @@ func Proxy(redirection string) error {
 	newConn := make(chan bool)
 	closeConn := make(chan bool)
 	finished := false
-	proxyConns = make(map[string]*json.Encoder)
-	readyCount = 0
+	proxyConns := make(map[string]*json.Encoder)
 
 	// Listen for incoming connections
 	go func() {
@@ -78,24 +84,6 @@ func Proxy(redirection string) error {
 		}
 	}()
 
-	// Listen for replies and give them further
-	go func() {
-		for finished == false {
-			m := Measure{}
-			err := serverDec.Decode(&m)
-			if err != nil {
-				return
-			}
-			dbg.Lvlf3("Proxy received %+v", m)
-			c, ok := proxyConns[m.Sender]
-			if !ok {
-				return
-			}
-			dbg.Lvl3("Found connection")
-			c.Encode(m)
-		}
-	}()
-
 	go func() {
 		// notify every new connection and every end of connection. When all
 		// connections are closed, send an "end" measure to the sink.
@@ -108,7 +96,7 @@ func Proxy(redirection string) error {
 				nconn -= 1
 				if nconn == 0 {
 					// everything is finished
-					serverEnc.Encode(Measure{Name: "end"})
+					serverEnc.Encode(NewSingleMeasure("end", 0))
 					serverConn.Close()
 					ln.Close()
 					finished = true
@@ -138,7 +126,7 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	dec := json.NewDecoder(conn)
 	nerr := 0
 	for {
-		m := Measure{}
+		m := SingleMeasure{}
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
 			if err == io.EOF {
@@ -153,33 +141,25 @@ func proxyConnection(conn net.Conn, done chan bool) {
 		}
 		dbg.Lvl3("Proxy received", m)
 
-		// Implement our own ready-count, so it doesn't have to go through the
-		// main monitor which might be far away.
-		switch m.Name {
-		case "ready":
-			atomic.AddInt64(&readyCount, 1)
-		case "ready_count":
-			m.Ready = int(readyCount)
-			err := json.NewEncoder(conn).Encode(m)
-			if err != nil {
-				dbg.Lvl2("Couldn't send ready-result back to client")
-				break
-			}
-		default:
-			// Proxy data - add who is sending, as we only have one channel
-			// to the server
-			m.Sender = conn.RemoteAddr().String()
-			if err := serverEnc.Encode(m); err != nil {
-				dbg.Lvl2("Error proxying data :", err)
-				break
-			}
-			if m.Name == "end" {
-				// the end
-				dbg.Lvl2("Proxy detected end of measurement. Closing connection.")
-				break
-			}
+		// Proxy data back to monitor
+		if err := serverEnc.Encode(m); err != nil {
+			dbg.Lvl2("Error proxying data :", err)
+			break
+		}
+		if m.Name == "end" {
+			// the end
+			dbg.Lvl2("Proxy detected end of measurement. Closing connection.")
+			break
 		}
 	}
 	conn.Close()
 	done <- true
+}
+
+// proxyDataServer send the data to the server...
+func proxyDataServer(data []byte) {
+	_, err := serverConn.Write(data)
+	if err != nil {
+		panic(fmt.Errorf("Error proxying data to server: %v", err))
+	}
 }

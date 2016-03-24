@@ -1,23 +1,4 @@
-// Outputting data: output to csv files (for loading into excel)
-//   make a datastructure per test output file
-//   all output should be in the test_data subdirectory
-//
-// connect with logging server (receive json until "EOF" seen or "terminating")
-//   connect to websocket ws://localhost:8080/log
-//   receive each message as bytes
-//		 if bytes contains "EOF" or contains "terminating"
-//       wrap up the round, output to test_data directory, kill deploy2deter
-//
-// for memstats check localhost:8080/d/server-0-0/debug/vars
-//   parse out the memstats zones that we are concerned with
-//
-// different graphs needed rounds:
-//   load on the x-axis: increase messages per round holding everything else constant
-//			hpn=40 bf=10, bf=50
-//
-// latency on y-axis, timestamp servers on x-axis push timestampers as higher as possible
-//
-//
+// The main file for running simulations on localhost or remote platforms.
 package main
 
 import (
@@ -110,7 +91,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 
 	MkTestDir()
-	rs := make([]monitor.Stats, len(runconfigs))
+	rs := make([]*monitor.Stats, len(runconfigs))
 	nTimes := 1
 	stopOnSuccess := true
 	var f *os.File
@@ -140,7 +121,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]monitor.Stats, 0, nTimes)
+		runs := make([]*monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
@@ -173,22 +154,26 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 // Runs a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
+func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
 	CheckHosts(rc)
-	rs := monitor.NewStats(rc.Map())
+	rc.Delete("simulation")
+	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
 	var err error
 	monitor.SinkPort = monitorPort
 
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
+
+	monitor.SinkPort = monitorPort
 	if err := deployP.Cleanup(); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
+	monitor.SinkPort = monitorPort
 	go func() {
 		if err := monitor.Listen(); err != nil {
 			dbg.Fatal("Could not monitor.Listen():", err)
@@ -199,7 +184,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	err = deployP.Start()
 	if err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 
 	go func() {
@@ -217,7 +202,7 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	select {
 	case <-done:
 		monitor.Stop()
-		return *rs, err
+		return rs, err
 	}
 }
 

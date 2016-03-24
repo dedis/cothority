@@ -1,3 +1,6 @@
+// CoSi is the Collective Signing implementation according to the paper of
+// Bryan Ford:
+// http://arxiv.org/pdf/1503.08768v1.pdf
 package cosi
 
 import (
@@ -9,8 +12,6 @@ import (
 )
 
 // Cosi is the struct that implements the basic cosi.
-// According to the paper of Bryan Ford :
-// http://arxiv.org/pdf/1503.08768v1.pdf
 type Cosi struct {
 	// Suite used
 	suite abstract.Suite
@@ -203,10 +204,8 @@ func (c *Cosi) Signature() *Signature {
 }
 
 // VerifyResponse verify the response this CoSi have against the aggregated
-// public key the tree is using. Call that on the root when he gets all the
-// responses.
+// public key the tree is using.
 // Check that: base**r_hat * X_hat**c == V_hat
-// Equivalent to base**(r+xc) == base**(v) == T in vanillaElGamal
 func (c *Cosi) VerifyResponses(aggregatedPublic abstract.Point) error {
 	commitment := c.suite.Point()
 	commitment = commitment.Add(commitment.Mul(nil, c.aggregateResponse), c.suite.Point().Mul(aggregatedPublic, c.challenge))
@@ -245,6 +244,8 @@ func (c *Cosi) genResponse() error {
 	// i.e. ri = vi - c * xi
 	resp := c.suite.Secret().Mul(c.private, c.challenge)
 	c.response = resp.Sub(c.random, resp)
+	// no aggregation here
+	c.aggregateResponse = c.response
 	return nil
 }
 

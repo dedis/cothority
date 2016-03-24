@@ -1,3 +1,4 @@
+// Generic interface to represent a platform where tests can be run.
 package platform
 
 import (
@@ -12,10 +13,8 @@ import (
 	"strings"
 )
 
-// Generic interface to represent a platform where to run tests
-// or direct applications. For now only localhost + deterlab.
-// one could imagine EC2 or OpenStack or whatever you can as long as you
-// implement this interface !
+// Platform interface that has to be implemented to add another simulation-
+// platform.
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
 	Configure(*PlatformConfig)
@@ -148,6 +147,12 @@ var replacer *strings.Replacer = strings.NewReplacer("\"", "", "'", "")
 // Returns the associated value of the field in the config
 func (r *RunConfig) Get(field string) string {
 	return replacer.Replace(r.fields[strings.ToLower(field)])
+}
+
+// Delete a field from the runconfig (delete for example Simulation which we
+// dont care in the final csv)
+func (r *RunConfig) Delete(field string) {
+	delete(r.fields, field)
 }
 
 // GetInt returns the integer of the field, or error if not defined

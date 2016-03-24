@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"sync"
 )
 
 /*
@@ -35,6 +36,14 @@ type Node struct {
 	msgQueue map[uuid.UUID][]*SDAData
 	// done callback
 	onDoneCallback func() bool
+	// queue holding msgs
+	msgDispatchQueue []*SDAData
+	// locking for msgqueue
+	msgDispatchQueueMutex sync.Mutex
+	// kicking off new message
+	msgDispatchQueueWait chan bool
+	// whether this node is closing
+	closing bool
 }
 
 // AggregateMessages (if set) tells to aggregate messages from all children
@@ -59,18 +68,21 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 // NewNodeEmpty creates a new node without a protocol
 func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
-		token:            tok,
-		channels:         make(map[uuid.UUID]interface{}),
-		handlers:         make(map[uuid.UUID]interface{}),
-		msgQueue:         make(map[uuid.UUID][]*SDAData),
-		messageTypeFlags: make(map[uuid.UUID]uint32),
-		treeNode:         nil,
+		token:                tok,
+		channels:             make(map[uuid.UUID]interface{}),
+		handlers:             make(map[uuid.UUID]interface{}),
+		msgQueue:             make(map[uuid.UUID][]*SDAData),
+		messageTypeFlags:     make(map[uuid.UUID]uint32),
+		treeNode:             nil,
+		msgDispatchQueue:     make([]*SDAData, 0, 1),
+		msgDispatchQueueWait: make(chan bool, 1),
 	}
 	var err error
 	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
 	if err != nil {
 		return nil, errors.New("We are not represented in the tree")
 	}
+	go n.dispatchMsgReader()
 	return n, nil
 }
 
@@ -255,6 +267,18 @@ func (n *Node) Shutdown() error {
 	return nil
 }
 
+// Close shuts down the go-routine and calls the protocolInstance-shutdown
+func (n *Node) Close() error {
+	dbg.Lvl3("Closing node", n.Info())
+	n.msgDispatchQueueMutex.Lock()
+	n.closing = true
+	if len(n.msgDispatchQueueWait) == 0 {
+		n.msgDispatchQueueWait <- true
+	}
+	n.msgDispatchQueueMutex.Unlock()
+	return n.ProtocolInstance().Shutdown()
+}
+
 func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
@@ -313,8 +337,47 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	return nil
 }
 
-// DispatchMsg will dispatch this SDAData to the right instance
-func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
+// DispatchMsg takes a message and puts it into a queue for later processing.
+// This allows a protocol to have a backlog of messages.
+func (n *Node) DispatchMsg(msg *SDAData) {
+	dbg.Lvl3(n.Info(), "Received message")
+	n.msgDispatchQueueMutex.Lock()
+	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
+	dbg.Lvl3(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
+	if len(n.msgDispatchQueue) == 1 && len(n.msgDispatchQueueWait) == 0 {
+		n.msgDispatchQueueWait <- true
+	}
+	n.msgDispatchQueueMutex.Unlock()
+}
+
+func (n *Node) dispatchMsgReader() {
+	for {
+		n.msgDispatchQueueMutex.Lock()
+		if n.closing == true {
+			dbg.Lvl3("Closing reader")
+			n.msgDispatchQueueMutex.Unlock()
+			return
+		}
+		if len(n.msgDispatchQueue) > 0 {
+			dbg.Lvl3(n.Info(), "Read message and dispatching it",
+				len(n.msgDispatchQueue))
+			msg := n.msgDispatchQueue[0]
+			n.msgDispatchQueue = n.msgDispatchQueue[1:]
+			n.msgDispatchQueueMutex.Unlock()
+			err := n.dispatchMsgToProtocol(msg)
+			if err != nil {
+				dbg.Error("Error while dispatching message:", err)
+			}
+		} else {
+			n.msgDispatchQueueMutex.Unlock()
+			dbg.Lvl3(n.Info(), "Waiting for message")
+			<-n.msgDispatchQueueWait
+		}
+	}
+}
+
+// dispatchMsgToProtocol will dispatch this SDAData to the right instance
+func (n *Node) dispatchMsgToProtocol(sdaMsg *SDAData) error {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
 	// to manually registers their messages. Since it is done automatically by
@@ -337,11 +400,11 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	dbg.Lvl4("Going to dispatch", sdaMsg)
+	dbg.Lvl4("Going to dispatch", sdaMsg, t)
 
 	switch {
 	case n.channels[msgType] != nil:
-		dbg.Lvl4("Dispatching to channel")
+		dbg.Lvl4(n.Info(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
@@ -403,8 +466,8 @@ func (n *Node) Start() error {
 	return n.instance.Start()
 }
 
-// Done returns a channel that must be given a bool when a protocol instance has
-// finished its work.
+// Done calls onDoneCallback if available and only finishes when the return-
+// value is true.
 func (n *Node) Done() {
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()
@@ -412,8 +475,8 @@ func (n *Node) Done() {
 			return
 		}
 	}
+	dbg.Lvl3(n.Info(), "has finished. Deleting its resources")
 	n.overlay.nodeDone(n.token)
-	dbg.Lvl3(n.Name(), "has finished. Deleting its resources")
 }
 
 // OnDoneCallback should be called if we want to control the Done() of the node.
@@ -454,7 +517,7 @@ func (n *Node) Token() *Token {
 }
 
 // Myself nicely displays who we are
-func (n *Node) Myself() string {
+func (n *Node) Info() string {
 	return fmt.Sprint(n.Entity().Addresses, n.TokenID())
 }
 

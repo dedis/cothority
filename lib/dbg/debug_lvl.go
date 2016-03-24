@@ -1,3 +1,17 @@
+// Debugging using different debug-levels for more or less verbose output.
+// You can use
+//	dbg.Lvl1("Important information")
+//	dbg.Lvl2("Less important information")
+//	dbg.Lvl3("Eventually flooding information")
+//	dbg.Lvl4("Definitvely flooding information")
+//	dbg.Lvl5("I hope you never need this")
+// in your program, then according to the debug-level one or more levels of
+// output will be shown. To set the debug-level, use
+//	dbg.SetDebugVisible(3)
+// which will show all `Lvl1`, `Lvl2`, and `Lvl3`. If you want to turn
+// on just one output, you can use
+//	dbg.LLvl2("Less important information")
+// By adding a single 'L' to the method, it *always* gets printed.
 package dbg
 
 import (

@@ -1,14 +1,3 @@
-/*
-Implementation of the Secure Distributed API - main module
-
-Node takes care about
-* the network
-* pre-parsing incoming packets
-* instantiating ProtocolInstances
-* passing packets to ProtocolInstances
-
-*/
-
 package sda
 
 import (
@@ -24,6 +13,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"time"
@@ -570,7 +560,7 @@ func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 }
 
 func newHostMock(s abstract.Suite, address string) *Host {
-	kp := cliutils.KeyPair(s)
+	kp := config.NewKeyPair(s)
 	en := network.NewEntity(kp.Public, address)
 	return NewHost(en, kp.Secret)
 }
@@ -582,4 +572,14 @@ func (h *Host) WaitForClose() {
 		case <-h.ProcessMessagesQuit:
 		}
 	}
+}
+
+// Tx() to implement monitor/CounterIO
+func (h *Host) Tx() uint64 {
+	return h.host.Tx()
+}
+
+// Rx() to implement monitor/CounterIO
+func (h *Host) Rx() uint64 {
+	return h.host.Rx()
 }
