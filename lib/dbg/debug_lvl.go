@@ -135,7 +135,8 @@ func lvl(lvl int, args ...interface{}) {
 	}
 	str := fmt.Sprintf(": (%s) - %s", caller, message)
 	if showTime {
-		str = fmt.Sprintf("%-40s%s", time.Now().String(), str)
+		ti := time.Now()
+		str = fmt.Sprintf("%s.%09d%s", ti.Format("06/02/01 15:04:05"), ti.Nanosecond(), str)
 	}
 	TestStr = fmt.Sprintf("%-2s%s", lvlStr, str)
 	if Testing != 2 {

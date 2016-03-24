@@ -13,20 +13,23 @@ func init() {
 
 func TestTime(t *testing.T) {
 	dbg.Testing = 2
+	defer func() { dbg.Testing = 1 }()
 	dbg.Lvl1("No time")
 	if !strings.Contains(dbg.TestStr, "1 : (") {
 		t.Fatal("Didn't get correct string: ", dbg.TestStr)
 	}
 	dbg.SetShowTime(true)
+	defer func() { dbg.SetShowTime(false) }()
 	dbg.Lvl1("With time")
 	if strings.Contains(dbg.TestStr, "1 : (") {
+		t.Fatal("Didn't get correct string: ", dbg.TestStr)
+	}
+	if strings.Contains(dbg.TestStr, " +") {
 		t.Fatal("Didn't get correct string: ", dbg.TestStr)
 	}
 	if !strings.Contains(dbg.TestStr, "With time") {
 		t.Fatal("Didn't get correct string: ", dbg.TestStr)
 	}
-	dbg.Testing = 1
-	dbg.SetShowTime(false)
 }
 
 func ExampleLevel2() {
