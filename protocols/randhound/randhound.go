@@ -16,12 +16,12 @@ func init() {
 
 type RandHound struct {
 	*sda.Node
+	GID     []byte      // Group ID
+	Group   *Group      // Group parameters
+	SID     []byte      // Session ID
+	Session *Session    // Session parameters
 	Leader  *Leader     // Protocol leader
 	Peer    *Peer       // Current peer
-	Group   *Group      // Group parameter block
-	GID     []byte      // Group fingerprint
-	Session *Session    // Session parameter block
-	SID     []byte      // Session fingerprint
 	Done    chan bool   // For signaling that a protocol run is finished (leader only)
 	Result  chan []byte // For returning the generated randomness (leader only)
 }
@@ -67,28 +67,25 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 	return rh, nil
 }
 
-// Setup initialises group and session parameters on the leader's side. Needs
-// to be called before Start
-func (rh *RandHound) Setup(purpose string, nodes int, trustees int) error {
-
-	// NOTE: Group and session setup might be decoupled later on to allow the
-	// same group for multiple sessions
+// Setup stores basic parameters of the RandHound protocol. Needs to be called
+// before Start
+func (rh *RandHound) Setup(nodes int, trustees int, purpose string) error {
 
 	// Setup group
 	group, gid, err := rh.newGroup(nodes, trustees)
 	if err != nil {
 		return err
 	}
-	rh.Group = group
 	rh.GID = gid
+	rh.Group = group
 
 	// Setup session
 	session, sid, err := rh.newSession(purpose)
 	if err != nil {
 		return err
 	}
-	rh.Session = session
 	rh.SID = sid
+	rh.Session = session
 
 	return nil
 }
@@ -106,11 +103,10 @@ func (rh *RandHound) Start() error {
 
 	rh.Leader.i1 = I1{
 		SID:     rh.SID,
+		Session: rh.Session,
 		GID:     rh.GID,
+		Group:   rh.Group,
 		HRc:     rh.hash(rh.Leader.Rc),
-		N:       rh.Group.N,
-		K:       rh.Group.K,
-		Purpose: rh.Session.Purpose, // TODO: send time stamp (?)
 	}
 	return rh.sendToChildren(&rh.Leader.i1)
 }

@@ -33,7 +33,7 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	rh := leader.ProtocolInstance().(*randhound.RandHound)
-	err = rh.Setup(purpose, nodes, trustees)
+	err = rh.Setup(nodes, trustees, purpose)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}

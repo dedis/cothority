@@ -10,8 +10,6 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-// TODO: messages are currently *NOT* signed/encrypted, will be handled later automaticall by the SDA framework
-
 func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// If we are not a leaf, forward i1 to children
@@ -23,14 +21,15 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	}
 	rh.Peer.i1 = i1.I1
 
-	// Setup Group (TODO: for consistency all group parameters should probably be transmitted)
-	n := i1.I1.N
-	k := i1.I1.K
-	rh.Group = &Group{n, n / 3, n - (n / 3), k, (k + 1) / 2, (k + 1) / 2}
+	// Store group parameters
+	rh.GID = i1.I1.GID
+	rh.Group = i1.I1.Group
 
-	// TODO: verify GID
-	// TODO: setup session
-	// TODO: verify SID
+	// Store session parameters
+	rh.SID = i1.I1.SID
+	rh.Session = i1.I1.Session
+
+	// TODO: verify GID and SID (?)
 
 	// Choose peer's trustee-selsection randomness
 	hs := rh.Node.Suite().Hash().Size()
@@ -41,8 +40,8 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	rh.Peer.r1 = R1{
 		Src: rh.Node.TreeNode().EntityIdx,
 		HI1: rh.hash(
-			rh.Peer.i1.SID,
-			rh.Peer.i1.GID,
+			rh.SID,
+			rh.GID,
 			rh.Peer.i1.HRc,
 		),
 		HRs: rh.hash(rh.Peer.Rs),
@@ -62,7 +61,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r1.R1.HI1, rh.hash(rh.Leader.i1.SID, rh.Leader.i1.GID, rh.Leader.i1.HRc)) {
+		if !bytes.Equal(r1.R1.HI1, rh.hash(rh.SID, rh.GID, rh.Leader.i1.HRc)) {
 			return errors.New(fmt.Sprintf("R1: peer %d replied to wrong I1 message", r1.Src))
 		}
 
@@ -95,7 +94,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	// Verify session ID
-	if !bytes.Equal(rh.Peer.i1.SID, i2.I2.SID) {
+	if !bytes.Equal(rh.SID, i2.I2.SID) {
 		return errors.New(fmt.Sprintf("I2: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
 	}
 
@@ -119,7 +118,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	rh.Peer.r2 = R2{
 		Src: rh.Node.TreeNode().EntityIdx,
 		HI2: rh.hash(
-			rh.Peer.i2.SID,
+			rh.SID,
 			rh.Peer.i2.Rc),
 		Rs:   rh.Peer.Rs,
 		Deal: db,
@@ -138,7 +137,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r2.R2.HI2, rh.hash(rh.Leader.i2.SID, rh.Leader.i2.Rc)) {
+		if !bytes.Equal(r2.R2.HI2, rh.hash(rh.SID, rh.Leader.i2.Rc)) {
 			return errors.New(fmt.Sprintf("R2: peer %d replied to wrong I2 message", r2.Src))
 		}
 
@@ -175,7 +174,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	}
 
 	// Verify session ID
-	if !bytes.Equal(rh.Peer.i2.SID, i3.I3.SID) {
+	if !bytes.Equal(rh.SID, i3.I3.SID) {
 		return errors.New(fmt.Sprintf("I3: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
 	}
 
@@ -189,7 +188,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	r3resps := []R3Resp{}
 	r4shares := []R4Share{}
-	for i, r2 := range rh.Peer.i3.R2s { // NOTE: we assume that the order of R2 messages is correct since the leader took care of it
+	for i, r2 := range rh.Peer.i3.R2s {
 
 		if !bytes.Equal(r2.HI2, rh.Peer.r2.HI2) {
 			return errors.New("I3: R2 contains wrong I2 hash")
@@ -225,7 +224,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	rh.Peer.r3 = R3{
 		Src: rh.Node.TreeNode().EntityIdx,
 		HI3: rh.hash(
-			rh.Peer.i3.SID,
+			rh.SID,
 			rh.Peer.r2.HI2), // TODO: is this enough?
 		Resp: r3resps,
 	}
@@ -243,7 +242,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r3.R3.HI3, rh.hash(rh.Leader.i3.SID, rh.hash(rh.Leader.i2.SID, rh.Leader.i2.Rc))) {
+		if !bytes.Equal(r3.R3.HI3, rh.hash(rh.SID, rh.hash(rh.SID, rh.Leader.i2.Rc))) {
 			return errors.New(fmt.Sprintf("R3: peer %d replied to wrong I3 message", r3.Src))
 		}
 
@@ -285,7 +284,7 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 	}
 
 	// Verify session ID
-	if !bytes.Equal(rh.Peer.i3.SID, i4.I4.SID) {
+	if !bytes.Equal(rh.SID, i4.I4.SID) {
 		return errors.New(fmt.Sprintf("I4: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
 	}
 
@@ -294,7 +293,7 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 	rh.Peer.r4 = R4{
 		Src: rh.Node.TreeNode().EntityIdx,
 		HI4: rh.hash(
-			rh.Peer.i4.SID,
+			rh.SID,
 			make([]byte, 0)), // TODO: unpack R2s, see I4
 		Shares: rh.Peer.shares,
 	}
@@ -312,7 +311,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r4.R4.HI4, rh.hash(rh.Leader.i4.SID, make([]byte, 0))) {
+		if !bytes.Equal(r4.R4.HI4, rh.hash(rh.SID, make([]byte, 0))) {
 			return errors.New(fmt.Sprintf("R4: peer %d replied to wrong I4 message", r4.Src))
 		}
 

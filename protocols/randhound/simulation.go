@@ -41,7 +41,7 @@ func (rh *RHSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	proto := node.ProtocolInstance().(*RandHound)
-	proto.Setup(rh.Purpose, rh.Hosts, rh.K)
+	proto.Setup(rh.Hosts, rh.K, rh.Purpose)
 	proto.Start()
 
 	bytes := make([]byte, 32)
