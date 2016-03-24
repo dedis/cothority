@@ -66,7 +66,7 @@ func main() {
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		deployP.Configure(&platform.Config{
+		deployP.Configure(&platform.PlatformConfig{
 			MonitorPort: monitorPort,
 			Debug:       debugVisible,
 		})
@@ -135,7 +135,8 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			dbg.Lvl2("Skipping", t, "because of range")
 			continue
 		}
-		dbg.Lvl1("Starting run with parameters -", t.String())
+		// Waiting for the document-branch to be merged, then uncomment this
+		//dbg.Lvl1("Starting run with parameters -", t.String())
 
 		// run test t nTimes times
 		// take the average of all successful runs
