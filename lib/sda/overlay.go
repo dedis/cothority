@@ -142,7 +142,7 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	}
 	// start it
 	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
-	go node.Start()
+	go node.StartProtocol()
 	return node, nil
 }
 
