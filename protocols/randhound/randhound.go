@@ -120,7 +120,7 @@ func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
 		n,           // N: total number of nodes (peers + leader)
 		n / 3,       // F: maximum number of Byzantine nodes tolerated
 		n - (n / 3), // L: minimum number of non-Byzantine nodes required
-		k,           // K: total number of trustees (= shares)
+		k,           // K: total number of trustees (= shares generated per peer)
 		(k + 1) / 2, // R: minimum number of signatures needed to certify a deal
 		(k + 1) / 2, // T: minimum number of shares needed to reconstruct a secret
 	}

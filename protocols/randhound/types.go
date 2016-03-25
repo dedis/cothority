@@ -17,7 +17,7 @@ type Group struct {
 	N int // Total number of nodes (peers + leader)
 	F int // Maximum number of Byzantine nodes tolerated (1/3)
 	L int // Minimum number of non-Byzantine nodes required (2/3)
-	K int // Total number of trustees (= shares)
+	K int // Total number of trustees (= shares generated per peer)
 	R int // Minimum number of signatures needed to certify a deal
 	T int // Minimum number of shares needed to reconstruct a secret
 }

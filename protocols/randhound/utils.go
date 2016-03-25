@@ -5,29 +5,29 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-func (rh *RandHound) chooseInsurers(Rc, Rs []byte) (map[int]int, []abstract.Point) {
+func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[int]int, []abstract.Point) {
 
-	// Seed PRNG for insurers selection
+	// Seed PRNG for selection of trustees
 	var seed []byte
 	seed = append(seed, Rc...)
 	seed = append(seed, Rs...)
 	prng := rh.Node.Suite().Cipher(seed)
 
-	// Choose insurers uniquely
-	keys := make(map[int]int)
-	insurers := make([]abstract.Point, rh.Group.K)
+	// Choose trustees uniquely
+	shareIdx := make(map[int]int)
+	trustees := make([]abstract.Point, rh.Group.K)
 	tns := rh.Tree().ListNodes()
 	j := 0
-	for len(keys) < rh.Group.K {
+	for len(shareIdx) < rh.Group.K {
 		i := int(random.Uint64(prng) % uint64(len(tns)))
-		// Add insurer only if not done so before; choosing yourself as an insurer is fine; ignore leader at index 0
-		if _, ok := keys[i]; !ok && !tns[i].IsRoot() {
-			keys[i] = j // j is the share index
-			insurers[j] = tns[i].Entity.Public
+		// Add trustee only if not done so before; choosing yourself as an trustee is fine; ignore leader at index 0
+		if _, ok := shareIdx[i]; !ok && !tns[i].IsRoot() {
+			shareIdx[i] = j // j is the share index
+			trustees[j] = tns[i].Entity.Public
 			j += 1
 		}
 	}
-	return keys, insurers
+	return shareIdx, trustees
 }
 
 func (rh *RandHound) hash(bytes ...[]byte) []byte {

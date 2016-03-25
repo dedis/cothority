@@ -44,7 +44,6 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		),
 		HRs: rh.hash(rh.Peer.Rs),
 	}
-
 	return rh.SendTo(rh.Parent(), &rh.Peer.r1)
 }
 
@@ -105,9 +104,9 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		rh.Node.Private(),
 	}
 	secretPair := config.NewKeyPair(rh.Node.Suite())
-	_, insurers := rh.chooseInsurers(rh.Peer.i2.Rc, rh.Peer.Rs)
+	_, trustees := rh.chooseTrustees(rh.Peer.i2.Rc, rh.Peer.Rs)
 	deal := &poly.Deal{}
-	deal.ConstructDeal(secretPair, &longPair, rh.Group.T, rh.Group.R, insurers)
+	deal.ConstructDeal(secretPair, &longPair, rh.Group.T, rh.Group.R, trustees)
 	db, err := deal.MarshalBinary()
 	if err != nil {
 		return err
@@ -200,8 +199,8 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 		}
 
 		// Determine other peers who chose me as an insurer
-		keys, _ := rh.chooseInsurers(rh.Peer.i2.Rc, r2.Rs)
-		if k, ok := keys[rh.Node.TreeNode().EntityIdx]; ok { // k is the share index we received from the i-th peer
+		shareIdx, _ := rh.chooseTrustees(rh.Peer.i2.Rc, r2.Rs)
+		if k, ok := shareIdx[rh.Node.TreeNode().EntityIdx]; ok { // k is the share index we received from the i-th peer
 			resp, err := deal.ProduceResponse(k, &longPair)
 			if err != nil {
 				return err
@@ -330,8 +329,8 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 					idx := r4share.Index
 					share := r4share.Share
 
-					keys, _ := rh.chooseInsurers(rh.Leader.Rc, rh.Leader.r2[j].Rs)
-					if idx != keys[i] {
+					shareIdx, _ := rh.chooseTrustees(rh.Leader.Rc, rh.Leader.r2[j].Rs)
+					if idx != shareIdx[i] {
 						return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
 					}
 
