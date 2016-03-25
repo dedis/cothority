@@ -156,9 +156,8 @@ func SignStatement(r io.Reader,
 }
 
 func verifyFileSig(fileName, groupToml string) error {
-	// See if the file hash matches the one in the signature
+	// if the file hash matches the one in the signature
 	// iff yes -> return nil; else error
-
 	suite := network.Suite
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -166,7 +165,7 @@ func verifyFileSig(fileName, groupToml string) error {
 	}
 	b, err := ioutil.ReadAll(f)
 	fHash := suite.Hash().Sum(b)
-	// Read the JSON file
+	// Read the JSON signature file
 	sf, err := os.Open(fileName + ".sig")
 	if err != nil {
 		return err
