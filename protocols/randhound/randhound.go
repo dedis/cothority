@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
 
@@ -63,8 +64,8 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 	return rh, nil
 }
 
-// Setup stores basic parameters of the RandHound protocol. Needs to be called
-// before Start
+// Setup creates the group and session parameters of the RandHound protocol.
+// Needs to be called before Start.
 func (rh *RandHound) Setup(nodes int, trustees int, purpose string) error {
 
 	// Setup group
@@ -76,7 +77,7 @@ func (rh *RandHound) Setup(nodes int, trustees int, purpose string) error {
 	rh.Group = group
 
 	// Setup session
-	session, sid, err := rh.newSession(purpose)
+	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now())
 	if err != nil {
 		return err
 	}
@@ -91,7 +92,6 @@ func (rh *RandHound) Setup(nodes int, trustees int, purpose string) error {
 // children.
 func (rh *RandHound) Start() error {
 
-	// Choose trustee-selection randomness
 	hs := rh.Node.Suite().Hash().Size()
 	rc := make([]byte, hs)
 	random.Stream.XORKeyStream(rc, rc)
@@ -104,6 +104,7 @@ func (rh *RandHound) Start() error {
 		Group:   rh.Group,
 		HRc:     rh.hash(rh.Leader.Rc),
 	}
+
 	return rh.sendToChildren(&rh.Leader.i1)
 }
 
@@ -153,20 +154,20 @@ func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
 		T: gp[5]}, rh.hash(buf.Bytes()), nil
 }
 
-func (rh *RandHound) newSession(purpose string) (*Session, []byte, error) {
+func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time) (*Session, []byte, error) {
 
-	pub, err := rh.Node.Entity().Public.MarshalBinary()
+	pub, err := public.MarshalBinary()
 	if err != nil {
 		return nil, nil, err
 	}
-	t := time.Now()
-	tm, err := t.MarshalBinary()
+
+	tm, err := time.MarshalBinary()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return &Session{
-		LPubKey: pub,
-		Purpose: purpose,
-		Time:    t}, rh.hash(pub, []byte(purpose), tm), nil
+		Fingerprint: pub,
+		Purpose:     purpose,
+		Time:        time}, rh.hash(pub, []byte(purpose), tm), nil
 }

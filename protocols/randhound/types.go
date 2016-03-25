@@ -8,9 +8,9 @@ import (
 )
 
 type Session struct {
-	LPubKey []byte    // Finger print of leader's public key
-	Purpose string    // Purpose of randomness
-	Time    time.Time // Scheduled initiation time
+	Fingerprint []byte    // Fingerprint of a public key (usually of the leader)
+	Purpose     string    // Purpose of randomness
+	Time        time.Time // Scheduled initiation time
 }
 
 type Group struct {
