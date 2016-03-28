@@ -14,7 +14,7 @@ type Leader struct {
 	r3      map[int]*R3         // R3 - " -
 	r4      map[int]*R4         // R4 - " -
 	states  map[int]*poly.State // States for deals and responses from peers
-	invalid map[int]*[]int      // Foo
+	invalid map[int]*[]int      // Map to mark invalid shares
 	Done    chan bool           // For signaling that a protocol run is finished
 	Result  chan []byte         // For returning the generated randomness
 }
