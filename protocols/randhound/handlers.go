@@ -183,7 +183,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	}
 
 	responses := []R3Resp{}
-	for src, r2 := range rh.Peer.i3.R2s {
+	for i, r2 := range rh.Peer.i3.R2s {
 
 		if !bytes.Equal(r2.HI2, rh.Peer.r2.HI2) {
 			return errors.New("I3: R2 contains wrong I2 hash")
@@ -198,8 +198,8 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Determine other peers who chose the current peer as a trustee
 		shareIdx, _ := rh.chooseTrustees(rh.Peer.i2.Rc, r2.Rs)
-		if k, ok := shareIdx[rh.nodeIdx()]; ok { // k is the share index we received from the peer 'src'
-			resp, err := deal.ProduceResponse(k, longPair)
+		if j, ok := shareIdx[rh.nodeIdx()]; ok { // j is the share index we received from the ith peer
+			resp, err := deal.ProduceResponse(j, longPair)
 			if err != nil {
 				return err
 			}
@@ -208,11 +208,12 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 			if err != nil {
 				return err
 			}
-			responses = append(responses, R3Resp{src, k, rb})
 
-			share := deal.RevealShare(k, longPair)
-			rh.Peer.shares = append(rh.Peer.shares, R4Share{src, k, share})
-			//rh.Peer.shares[src] = R4Share{src, k, share}
+			responses = append(responses, R3Resp{DealerIdx: i, ShareIdx: j, Resp: rb})
+
+			share := deal.RevealShare(j, longPair)
+			rh.Peer.shares = append(rh.Peer.shares, R4Share{DealerIdx: i, ShareIdx: j, Share: share})
+			//rh.Peer.shares[i] = R4Share{i, j, share}
 		}
 	}
 
