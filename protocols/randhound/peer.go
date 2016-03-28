@@ -14,5 +14,5 @@ type Peer struct {
 }
 
 func (rh *RandHound) newPeer() (*Peer, error) {
-	return &Peer{}, nil
+	return &Peer{shares: []R4Share{}}, nil
 }

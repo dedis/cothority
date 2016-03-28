@@ -60,9 +60,9 @@ type R3 struct {
 }
 
 type R3Resp struct {
-	Dealer   int    // Dealer's index in the peer list
-	ShareIdx int    // Share index in deal we are validating
-	Resp     []byte // Encoded response to dealer's deal
+	DealerIdx int    // Dealer's index in the peer list
+	ShareIdx  int    // Share's index in deal we are validating
+	Resp      []byte // Encoded response to dealer's deal
 }
 
 // TODO: instead of re-transmitting the full vector of R2 messages, just form a
@@ -71,18 +71,20 @@ type R3Resp struct {
 type I4 struct {
 	SID []byte      // Session identifier
 	R2s map[int]*R2 // Leader's list of signed R2 messages; empty slices represent missing R2 messages
+	//Invalid map[int]*[]int // Map to mark invalid shares
 }
 
 type R4 struct {
 	Src    int       // Source of the message
 	HI4    []byte    // Hash of I4 message
-	Shares []R4Share // Revealed secret-shares
+	Shares []R4Share // Revealed secret shares
+	//Shares map[int]R4Share // Revealed secret-shares
 }
 
 type R4Share struct {
-	Dealer int             // Dealer's index in the peer list
-	Idx    int             // Share index in dealer's deal
-	Share  abstract.Secret // Decrypted share dealt to this server
+	DealerIdx int             // Dealer's index in the peer list
+	ShareIdx  int             // Share's index in dealer's deal
+	Share     abstract.Secret // Decrypted share dealt to this server
 }
 
 // SDA-wrapper around I1

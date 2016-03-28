@@ -182,8 +182,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 		rh.Node.Private(),
 	}
 
-	r3resps := []R3Resp{}
-	r4shares := []R4Share{}
+	responses := []R3Resp{}
 	for src, r2 := range rh.Peer.i3.R2s {
 
 		if !bytes.Equal(r2.HI2, rh.Peer.r2.HI2) {
@@ -209,20 +208,20 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 			if err != nil {
 				return err
 			}
-			r3resps = append(r3resps, R3Resp{src, k, rb})
+			responses = append(responses, R3Resp{src, k, rb})
 
 			share := deal.RevealShare(k, longPair)
-			r4shares = append(r4shares, R4Share{src, k, share})
+			rh.Peer.shares = append(rh.Peer.shares, R4Share{src, k, share})
+			//rh.Peer.shares[src] = R4Share{src, k, share}
 		}
 	}
-	rh.Peer.shares = r4shares // save revealed shares for later
 
 	rh.Peer.r3 = &R3{
 		Src: rh.nodeIdx(),
 		HI3: rh.hash(
 			rh.SID,
 			rh.Peer.r2.HI2), // TODO: is this enough?
-		Responses: r3resps,
+		Responses: responses,
 	}
 	return rh.SendTo(rh.Parent(), rh.Peer.r3)
 }
@@ -244,6 +243,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		// Collect replies of the peers
 		rh.Leader.r3[r3.Src] = &r3.R3
 
+		//invalid := []int{} // TODO: collect information on invalid shares
 		for _, r3resp := range rh.Leader.r3[r3.Src].Responses {
 
 			resp := &poly.Response{}
@@ -252,9 +252,9 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 				return err
 			}
 
-			// Verify that response is securely bound to promise
-			if err := rh.Leader.states[r3resp.Dealer].AddResponse(r3resp.ShareIdx, resp); err != nil {
-				return err
+			// Verify that response is securely bound to promise and mark invalid ones
+			if err := rh.Leader.states[r3resp.DealerIdx].AddResponse(r3resp.ShareIdx, resp); err != nil {
+				//invalid = append(invalid, r3resp.DealerIdx) // TODO: collect information on invalid shares
 			}
 		}
 
@@ -263,6 +263,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 			rh.Leader.i4 = &I4{
 				SID: rh.SID,
 				R2s: rh.Leader.r2,
+				//Invalid: rh.Leader.invalid,
 			}
 			return rh.sendToChildren(rh.Leader.i4)
 		}
@@ -285,6 +286,8 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 	}
 
 	rh.Peer.i4 = &i4.I4
+
+	// TODO: remove all invalid shares from rh.Peer.shares
 
 	rh.Peer.r4 = &R4{
 		Src: rh.nodeIdx(),
@@ -318,22 +321,22 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 			// Process shares of i-th peer
 			for i, _ := range rh.Leader.r4 {
 				for _, r4share := range rh.Leader.r4[i].Shares {
-					j := r4share.Dealer
-					idx := r4share.Idx
+					dIdx := r4share.DealerIdx
+					sIdx := r4share.ShareIdx
 					share := r4share.Share
 
-					shareIdx, _ := rh.chooseTrustees(rh.Leader.Rc, rh.Leader.r2[j].Rs)
-					if idx != shareIdx[i] {
+					shareIdx, _ := rh.chooseTrustees(rh.Leader.Rc, rh.Leader.r2[dIdx].Rs)
+					if sIdx != shareIdx[i] {
 						return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
 					}
 
 					// Verify share
-					if err := rh.Leader.states[j].Deal.VerifyRevealedShare(idx, share); err != nil {
+					if err := rh.Leader.states[dIdx].Deal.VerifyRevealedShare(sIdx, share); err != nil {
 						return err
 					}
 
 					// Store share
-					rh.Leader.states[j].PriShares.SetShare(idx, share)
+					rh.Leader.states[dIdx].PriShares.SetShare(sIdx, share)
 				}
 			}
 
