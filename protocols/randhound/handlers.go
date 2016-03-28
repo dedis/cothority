@@ -243,7 +243,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		// Collect replies of the peers
 		rh.Leader.r3[r3.Src] = &r3.R3
 
-		//invalid := []int{} // TODO: collect information on invalid shares
+		invalid := []int{} // TODO: collect information on invalid responses
 		for _, r3resp := range rh.Leader.r3[r3.Src].Responses {
 
 			resp := &poly.Response{}
@@ -254,9 +254,11 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 
 			// Verify that response is securely bound to promise and mark invalid ones
 			if err := rh.Leader.states[r3resp.DealerIdx].AddResponse(r3resp.ShareIdx, resp); err != nil {
-				//invalid = append(invalid, r3resp.DealerIdx) // TODO: collect information on invalid shares
+				invalid = append(invalid, r3resp.DealerIdx) // TODO: collect information on invalid shares
 			}
 		}
+
+		rh.Leader.invalid[r3.Src] = &invalid
 
 		// Continue, once all replies have arrived
 		if len(rh.Leader.r3) == rh.Group.N-1 {
