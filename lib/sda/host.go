@@ -147,19 +147,6 @@ func (h *Host) SaveToFile(name string) error {
 	return err
 }
 
-func (h *Host) GroupConfSnippet() (string, error) {
-	pubW := new(bytes.Buffer)
-	err := cliutils.WritePub64(network.Suite, pubW, h.Entity.Public)
-	if err != nil {
-		return "", err
-	}
-	res := "[[servers]]\n" +
-		"  Addresses = [\"" + h.Entity.Addresses[0] + "\"]\n" +
-		"  Public = \"" + pubW.String() + "\"\n" +
-		"  Description = \"\""
-	return res, nil
-}
-
 // listen starts listening for messages coming from any host that tries to
 // contact this host. If 'wait' is true, it will try to connect to itself before
 // returning.

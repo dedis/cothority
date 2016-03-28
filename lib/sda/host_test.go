@@ -6,9 +6,6 @@ import (
 
 	"golang.org/x/net/context"
 
-	"bytes"
-
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -453,27 +450,6 @@ func SetupTwoHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 		hosts[1].StartProcessMessages()
 	}
 	return hosts[0], hosts[1]
-}
-
-func TestGetGroupSnippet(t *testing.T) {
-	host := sda.NewLocalHost(2000)
-	pub := host.Entity.Public
-	addr := host.Entity.Addresses[0]
-	got, err := host.GroupConfSnippet()
-	if err != nil {
-		t.Fatal("Couldn't generate config snippet: " + err.Error())
-	}
-	pubW := new(bytes.Buffer)
-	if err := cliutils.WritePub64(tSuite, pubW, pub); err != nil {
-		t.Fatal("Coudln't get base64 encoded public key: " + err.Error())
-	}
-	want := "[[servers]]\n" +
-		"  Addresses = [\"" + addr + "\"]\n" +
-		"  Public = \"" + pubW.String() + "\"\n" +
-		"  Description = \"\""
-	if want != got {
-		t.Fatalf("Got wrong config:\n%s \n expected: \n %s", got, want)
-	}
 }
 
 // Test instantiation of ProtocolInstances

@@ -34,14 +34,14 @@ To collectively sign a text message run:
 	cosi -m “<Message to be signed>” -c <cosi-group.toml>
 If you would instead like to sign a message contained in a file you can the following command:
 	cosi -f <file-to-be-signed> -c <cosi-group.toml>
-If will create a file file-to-be-signed.sig containing the hash of the file and the signature.
+It will create a file file-to-be-signed.sig containing the hash of the file and the signature.
 
 To verify the signature on a file add the verify flag (-v):
 	cosi -f <file-to-be-signed> -c <cosi-group.toml> -v
 This command opens the corresnponding .sig file and validates the contained signature.
 
 Example usuage (create a file my-local-group.toml using cosid first):
-cosi -m "Hello CoSi" -c my-local-group.toml`)
+cosi -f my-file.txt -c my-local-group.toml`)
 	os.Exit(1)
 }
 
@@ -51,7 +51,7 @@ var m *flag.FlagSet
 func init() {
 	f = flag.NewFlagSet("f", flag.ContinueOnError)
 	m = flag.NewFlagSet("m", flag.ContinueOnError)
-	dbg.SetDebugVisible(3)
+	//dbg.SetDebugVisible(3)
 }
 
 func main() {
