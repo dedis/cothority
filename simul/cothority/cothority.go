@@ -97,7 +97,7 @@ func main() {
 				dbg.Fatal(err)
 			}
 			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
-			node.Start()
+			node.StartProtocol()
 			dbg.Lvl1("Started counting children with timeout of", timeout)
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:

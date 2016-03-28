@@ -102,7 +102,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		proto.onDoneCB = doneCB
 
 		r := monitor.NewTimeMeasure("round_pbft")
-		err = proto.PrePrepare()
+		err = proto.Start()
 		if err != nil {
 			dbg.Error("Couldn't start PrePrepare")
 			return err
