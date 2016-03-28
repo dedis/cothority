@@ -111,7 +111,7 @@ func (rh *RandHound) Start() error {
 func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
 
 	n := nodes    // Number of nodes (peers + leader)
-	k := trustees // Number of trustees (= shares)
+	k := trustees // Number of trustees (= shares generaetd per peer)
 	buf := new(bytes.Buffer)
 
 	// Setup group parameters: note that T <= R <= K must hold;

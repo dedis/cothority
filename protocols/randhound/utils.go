@@ -43,3 +43,7 @@ func (rh *RandHound) sendToChildren(msg interface{}) error {
 	}
 	return nil
 }
+
+func (rh *RandHound) nodeIdx() int {
+	return rh.Node.TreeNode().EntityIdx
+}

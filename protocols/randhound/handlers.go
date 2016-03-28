@@ -36,7 +36,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	rh.Peer.Rs = rs
 
 	rh.Peer.r1 = R1{
-		Src: rh.Node.TreeNode().EntityIdx,
+		Src: rh.nodeIdx(),
 		HI1: rh.hash(
 			rh.SID,
 			rh.GID,
@@ -92,7 +92,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i2.I2.SID) {
-		return errors.New(fmt.Sprintf("I2: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
+		return errors.New(fmt.Sprintf("I2: peer %d received message with incorrect session ID", rh.nodeIdx()))
 	}
 
 	rh.Peer.i2 = i2.I2
@@ -113,7 +113,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	rh.Peer.r2 = R2{
-		Src: rh.Node.TreeNode().EntityIdx,
+		Src: rh.nodeIdx(),
 		HI2: rh.hash(
 			rh.SID,
 			rh.Peer.i2.Rc),
@@ -172,7 +172,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i3.I3.SID) {
-		return errors.New(fmt.Sprintf("I3: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
+		return errors.New(fmt.Sprintf("I3: peer %d received message with incorrect session ID", rh.nodeIdx()))
 	}
 
 	rh.Peer.i3 = i3.I3
@@ -200,7 +200,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Determine other peers who chose me as an insurer
 		shareIdx, _ := rh.chooseTrustees(rh.Peer.i2.Rc, r2.Rs)
-		if k, ok := shareIdx[rh.Node.TreeNode().EntityIdx]; ok { // k is the share index we received from the i-th peer
+		if k, ok := shareIdx[rh.nodeIdx()]; ok { // k is the share index we received from the i-th peer
 			resp, err := deal.ProduceResponse(k, &longPair)
 			if err != nil {
 				return err
@@ -219,7 +219,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	rh.Peer.shares = r4shares // save revealed shares for later
 
 	rh.Peer.r3 = R3{
-		Src: rh.Node.TreeNode().EntityIdx,
+		Src: rh.nodeIdx(),
 		HI3: rh.hash(
 			rh.SID,
 			rh.Peer.r2.HI2), // TODO: is this enough?
@@ -282,13 +282,13 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i4.I4.SID) {
-		return errors.New(fmt.Sprintf("I4: peer %d received message with incorrect session ID", rh.Node.TreeNode().EntityIdx))
+		return errors.New(fmt.Sprintf("I4: peer %d received message with incorrect session ID", rh.nodeIdx()))
 	}
 
 	rh.Peer.i4 = i4.I4
 
 	rh.Peer.r4 = R4{
-		Src: rh.Node.TreeNode().EntityIdx,
+		Src: rh.nodeIdx(),
 		HI4: rh.hash(
 			rh.SID,
 			make([]byte, 0)), // TODO: unpack R2s, see I4
