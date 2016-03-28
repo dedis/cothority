@@ -418,7 +418,7 @@ func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
 	h.overlay.RegisterTree(tree)
 
 	// run the CoSi protocol
-	node, err := h.overlay.CreateNewNodeName("ProtocolCosi", tree)
+	node, err := h.overlay.CreateNewNodeName("CoSi", tree)
 	if err != nil {
 		dbg.Error("Error creating tree upon client request:", err)
 		return
