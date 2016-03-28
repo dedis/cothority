@@ -444,7 +444,7 @@ func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
 	}
 	node.ProtocolInstance().RegisterDoneCallback(fn)
 	dbg.Lvl2(h.workingAddress, "Starting CoSi protocol...")
-	go node.Start()
+	go node.StartProtocol()
 }
 
 // sendSDAData marshals the inner msg and then sends a SDAData msg
