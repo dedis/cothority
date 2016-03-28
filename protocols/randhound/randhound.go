@@ -93,7 +93,7 @@ func (rh *RandHound) Start() error {
 	random.Stream.XORKeyStream(rc, rc)
 	rh.Leader.Rc = rc
 
-	rh.Leader.i1 = I1{
+	rh.Leader.i1 = &I1{
 		SID:     rh.SID,
 		Session: rh.Session,
 		GID:     rh.GID,
@@ -101,5 +101,5 @@ func (rh *RandHound) Start() error {
 		HRc:     rh.hash(rh.Leader.Rc),
 	}
 
-	return rh.sendToChildren(&rh.Leader.i1)
+	return rh.sendToChildren(rh.Leader.i1)
 }

@@ -81,7 +81,7 @@ type R4 struct {
 
 type R4Share struct {
 	Dealer int             // Dealer's index in the peer list
-	Index  int             // Share number in dealer's deal
+	Idx    int             // Share index in dealer's deal
 	Share  abstract.Secret // Decrypted share dealt to this server
 }
 
