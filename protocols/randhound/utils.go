@@ -61,16 +61,14 @@ func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		err = binary.Write(buf, binary.LittleEndian, pub)
-		if err != nil {
+		if err = binary.Write(buf, binary.LittleEndian, pub); err != nil {
 			return nil, nil, err
 		}
 	}
 
 	// Include group parameters into group ID
 	for _, g := range gp {
-		err := binary.Write(buf, binary.LittleEndian, uint32(g))
-		if err != nil {
+		if err := binary.Write(buf, binary.LittleEndian, uint32(g)); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -108,8 +106,7 @@ func (rh *RandHound) nodeIdx() int {
 
 func (rh *RandHound) sendToChildren(msg interface{}) error {
 	for _, c := range rh.Children() {
-		err := rh.SendTo(c, msg)
-		if err != nil {
+		if err := rh.SendTo(c, msg); err != nil {
 			return err
 		}
 	}

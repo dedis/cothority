@@ -14,8 +14,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// If we are not a leaf, forward i1 to children
 	if !rh.Node.IsLeaf() {
-		err := rh.sendToChildren(&i1.I1)
-		if err != nil {
+		if err := rh.sendToChildren(&i1.I1); err != nil {
 			return err
 		}
 	}
@@ -51,8 +50,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 	// If we are not the root, forward r1 to parent
 	if !rh.Node.IsRoot() {
-		err := rh.SendTo(rh.Parent(), &r1.R1)
-		if err != nil {
+		if err := rh.SendTo(rh.Parent(), &r1.R1); err != nil {
 			return err
 		}
 	} else {
@@ -71,8 +69,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				SID: rh.SID,
 				Rc:  rh.Leader.Rc,
 			}
-			err := rh.sendToChildren(&rh.Leader.i2)
-			if err != nil {
+			if err := rh.sendToChildren(&rh.Leader.i2); err != nil {
 				return err
 			}
 		}
@@ -84,8 +81,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// If we are not a leaf, forward i2 to children
 	if !rh.Node.IsLeaf() {
-		err := rh.sendToChildren(&i2.I2)
-		if err != nil {
+		if err := rh.sendToChildren(&i2.I2); err != nil {
 			return err
 		}
 	}
@@ -127,8 +123,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	// If we are not the root, forward r2 to parent
 	if !rh.Node.IsRoot() {
-		err := rh.SendTo(rh.Parent(), &r2.R2)
-		if err != nil {
+		if err := rh.SendTo(rh.Parent(), &r2.R2); err != nil {
 			return err
 		}
 	} else {
@@ -148,6 +143,11 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		}
 		rh.Leader.deals[r2.Src] = deal
 
+		// Initialise state with deal
+		state := poly.State{}
+		ps := state.Init(*deal)
+		rh.Leader.states[r2.Src] = ps
+
 		// Continue, once all replies have arrived
 		if len(rh.Leader.r2) == rh.Group.N-1 {
 			rh.Leader.i3 = I3{
@@ -164,8 +164,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	// If we are not a leaf, forward i3 to children
 	if !rh.Node.IsLeaf() {
-		err := rh.sendToChildren(&i3.I3)
-		if err != nil {
+		if err := rh.sendToChildren(&i3.I3); err != nil {
 			return err
 		}
 	}
@@ -185,7 +184,8 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	r3resps := []R3Resp{}
 	r4shares := []R4Share{}
-	for i, r2 := range rh.Peer.i3.R2s {
+	for src, r2 := range rh.Peer.i3.R2s {
+		_ = src
 
 		if !bytes.Equal(r2.HI2, rh.Peer.r2.HI2) {
 			return errors.New("I3: R2 contains wrong I2 hash")
@@ -200,7 +200,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Determine other peers who chose me as an insurer
 		shareIdx, _ := rh.chooseTrustees(rh.Peer.i2.Rc, r2.Rs)
-		if k, ok := shareIdx[rh.nodeIdx()]; ok { // k is the share index we received from the i-th peer
+		if k, ok := shareIdx[rh.nodeIdx()]; ok { // k is the share index we received from the peer 'src'
 			resp, err := deal.ProduceResponse(k, &longPair)
 			if err != nil {
 				return err
@@ -210,10 +210,10 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 			if err != nil {
 				return err
 			}
-			r3resps = append(r3resps, R3Resp{i, k, rb})
+			r3resps = append(r3resps, R3Resp{src, k, rb})
 
 			share := deal.RevealShare(k, &longPair)
-			r4shares = append(r4shares, R4Share{i, k, share})
+			r4shares = append(r4shares, R4Share{src, k, share})
 		}
 	}
 	rh.Peer.shares = r4shares // save revealed shares for later
@@ -223,7 +223,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 		HI3: rh.hash(
 			rh.SID,
 			rh.Peer.r2.HI2), // TODO: is this enough?
-		Resp: r3resps,
+		Responses: r3resps,
 	}
 	return rh.SendTo(rh.Parent(), &rh.Peer.r3)
 }
@@ -232,8 +232,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 
 	// If we are not the root, forward r3 to parent
 	if !rh.Node.IsRoot() {
-		err := rh.SendTo(rh.Parent(), &r3.R3)
-		if err != nil {
+		if err := rh.SendTo(rh.Parent(), &r3.R3); err != nil {
 			return err
 		}
 	} else {
@@ -246,16 +245,18 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		// Collect replies of the peers
 		rh.Leader.r3[r3.Src] = &r3.R3
 
-		for _, r3resp := range rh.Leader.r3[r3.Src].Resp {
-			j := r3resp.Dealer
-			_ = j
+		for _, r3resp := range rh.Leader.r3[r3.Src].Responses {
 
 			resp := &poly.Response{}
 			resp.UnmarshalInit(rh.Node.Suite())
 			if err := resp.UnmarshalBinary(r3resp.Resp); err != nil {
 				return err
 			}
-			//TODO: verify that response is securely bound to promise (how?)
+
+			// Verify that response is securely bound to promise
+			if err := rh.Leader.states[r3resp.Dealer].AddResponse(r3resp.ShareIdx, resp); err != nil {
+				return err
+			}
 		}
 
 		// Continue, once all replies have arrived
@@ -274,8 +275,7 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	// If we are not a leaf, forward i4 to children
 	if !rh.Node.IsLeaf() {
-		err := rh.sendToChildren(&i4.I4)
-		if err != nil {
+		if err := rh.sendToChildren(&i4.I4); err != nil {
 			return err
 		}
 	}
@@ -301,8 +301,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 
 	// If we are not the root, forward r4 to parent
 	if !rh.Node.IsRoot() {
-		err := rh.SendTo(rh.Parent(), &r4.R4)
-		if err != nil {
+		if err := rh.SendTo(rh.Parent(), &r4.R4); err != nil {
 			return err
 		}
 	} else {
@@ -334,8 +333,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 						return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
 					}
 
-					err := rh.Leader.deals[j].VerifyRevealedShare(idx, share)
-					if err != nil {
+					if err := rh.Leader.deals[j].VerifyRevealedShare(idx, share); err != nil {
 						return err
 					}
 

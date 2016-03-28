@@ -13,6 +13,7 @@ type Leader struct {
 	r2     map[int]*R2             // R2 - " -
 	r3     map[int]*R3             // R3 - " -
 	r4     map[int]*R4             // R4 - " -
+	states map[int]*poly.State     // States for deals and responses from peers
 	deals  map[int]*poly.Deal      // Unmarshaled deals from peers
 	shares map[int]*poly.PriShares // Revealed shares
 	Done   chan bool               // For signaling that a protocol run is finished
@@ -25,6 +26,7 @@ func (rh *RandHound) newLeader() (*Leader, error) {
 		r2:     make(map[int]*R2),
 		r3:     make(map[int]*R3),
 		r4:     make(map[int]*R4),
+		states: make(map[int]*poly.State),
 		deals:  make(map[int]*poly.Deal),
 		shares: make(map[int]*poly.PriShares),
 		Done:   make(chan bool, 1),

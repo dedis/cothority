@@ -52,8 +52,7 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 		rh.handleI4, rh.handleR4,
 	}
 	for _, h := range handlers {
-		err := rh.RegisterHandler(h)
-		if err != nil {
+		if err := rh.RegisterHandler(h); err != nil {
 			return nil, errors.New("Couldn't register handler: " + err.Error())
 		}
 	}

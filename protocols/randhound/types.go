@@ -54,15 +54,15 @@ type I3 struct {
 }
 
 type R3 struct {
-	Src  int      // Source of the message
-	HI3  []byte   // Hash of I3 message
-	Resp []R3Resp // Responses to dealt secret-shares
+	Src       int      // Source of the message
+	HI3       []byte   // Hash of I3 message
+	Responses []R3Resp // Responses to dealt secret-shares
 }
 
 type R3Resp struct {
-	Dealer int    // Dealer's index in the peer list
-	Index  int    // Share number in deal we are validating
-	Resp   []byte // Encoded response to dealer's deal
+	Dealer   int    // Dealer's index in the peer list
+	ShareIdx int    // Share index in deal we are validating
+	Resp     []byte // Encoded response to dealer's deal
 }
 
 // TODO: instead of re-transmitting the full vector of R2 messages, just form a
