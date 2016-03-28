@@ -51,7 +51,7 @@ var m *flag.FlagSet
 func init() {
 	f = flag.NewFlagSet("f", flag.ContinueOnError)
 	m = flag.NewFlagSet("m", flag.ContinueOnError)
-	//dbg.SetDebugVisible(3)
+	dbg.SetDebugVisible(3)
 }
 
 func main() {
@@ -144,7 +144,7 @@ func SignStatement(r io.Reader,
 		return nil, errors.New("Invalid repsonse: Could not cast the " +
 			"received response to the right type")
 	}
-	dbg.Lvl3("Response:", response)
+	dbg.Lvl5("Response:", response)
 	if verify && false { // verify signature
 		err := cosi.VerifySignature(network.Suite, msgB, el.Aggregate,
 			response.Challenge, response.Response)
@@ -164,7 +164,11 @@ func verifyFileSig(fileName, groupToml string) error {
 		return err
 	}
 	b, err := ioutil.ReadAll(f)
-	fHash := suite.Hash().Sum(b)
+	hash := suite.Hash()
+	if n, err := hash.Write(b); n != len(b) || err != nil {
+		return errors.New("Couldn't hash file")
+	}
+	fHash := hash.Sum(nil)
 	// Read the JSON signature file
 	sf, err := os.Open(fileName + ".sig")
 	if err != nil {
