@@ -212,8 +212,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 			responses = append(responses, R3Resp{DealerIdx: i, ShareIdx: j, Resp: rb})
 
 			share := deal.RevealShare(j, longPair)
-			rh.Peer.shares = append(rh.Peer.shares, R4Share{DealerIdx: i, ShareIdx: j, Share: share})
-			//rh.Peer.shares[i] = R4Share{i, j, share}
+			rh.Peer.shares[i] = &R4Share{DealerIdx: i, ShareIdx: j, Share: share}
 		}
 	}
 

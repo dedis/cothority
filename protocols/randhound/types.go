@@ -75,10 +75,9 @@ type I4 struct {
 }
 
 type R4 struct {
-	Src    int       // Source of the message
-	HI4    []byte    // Hash of I4 message
-	Shares []R4Share // Revealed secret shares
-	//Shares map[int]R4Share // Revealed secret-shares
+	Src    int              // Source of the message
+	HI4    []byte           // Hash of I4 message
+	Shares map[int]*R4Share // Revealed secret-shares
 }
 
 type R4Share struct {
