@@ -1,8 +1,10 @@
-Simulation = "SimulationJVSS"
-Servers = 8
-Bf = 1
-Rounds = 10
+Simulation = "JVSS"
+Servers = 16
+Bf = 2
+Rounds = 5
 CloseWait = 6000
 
-Hosts, Checking
-3, 0
+Depth
+1
+2
+3

@@ -460,9 +460,9 @@ func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	return mt, nil, false
 }
 
-// Start calls the start-method on the protocol which in turn will initiate
-// the first message to its children
-func (n *Node) Start() error {
+// StartProtocol calls the Start() on the underlying protocol which in turn will
+// initiate the first message to its children
+func (n *Node) StartProtocol() error {
 	return n.instance.Start()
 }
 
