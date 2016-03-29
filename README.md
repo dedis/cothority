@@ -35,6 +35,40 @@ In order to build (and run) the simulations you need to install a recent
 See Golang's documentation on how-to 
 [install and configure](https://golang.org/doc/install) Go (including 
 setting up a GOPATH environment variable). 
+You can either run various simulations or standalone applications: 
+
+# Commandline Interface
+
+
+
+## Running your own CoSi server
+
+First you need to create a configuration file for the server including a 
+public/private key pair for the server. 
+You can create a default server configuration with a fresh 
+public/private key pair as follows:
+
+``` bash
+
+```
+
+### Creating a Collective Signing Group
+
+## Initiating the Collective Signing Protocol
+
+We have provided a simple manually-driven collective signing application, 
+‘cosi’, which you can use to request the collective signing group you 
+defined to witness and cosign any message you propose. In this case the 
+witnesses are not validating or checking the messages you’re proposing 
+in any way; they are merely attesting the fact that they have observed 
+your request to sign the message.
+
+You can collectively sign a text message specified on the command line 
+as follows:
+
+``` bash
+
+```
     
 # Simulation
 Starting a simulation of one the provided protocols (or your own) either 
