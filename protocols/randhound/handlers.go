@@ -2,6 +2,7 @@ package randhound
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 
@@ -243,7 +244,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		// Collect replies of the peers
 		rh.Leader.r3[r3.Src] = &r3.R3
 
-		invalid := []uint32{} // TODO: collect information on invalid responses
+		invalid := []uint32{}
 		for _, r3resp := range rh.Leader.r3[r3.Src].Responses {
 
 			resp := &poly.Response{}
@@ -254,10 +255,10 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 
 			// Verify that response is securely bound to promise and mark invalid ones
 			if err := rh.Leader.states[r3resp.DealerIdx].AddResponse(int(r3resp.ShareIdx), resp); err != nil {
-				invalid = append(invalid, uint32(r3resp.DealerIdx)) // TODO: collect information on invalid responses
+				invalid = append(invalid, r3resp.DealerIdx)
 			}
 		}
-		rh.Leader.invalid[uint32(r3.Src)] = &invalid
+		rh.Leader.invalid[r3.Src] = &invalid
 
 		// Continue, once all replies have arrived
 		if uint32(len(rh.Leader.r3)) == rh.Group.N-1 {
@@ -287,17 +288,21 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	rh.Peer.i4 = &i4.I4
 
-	// Remove all invalid shares
+	// Remove all invalid shares and prepare hash buffer
+	buf := new(bytes.Buffer)
 	invalid := rh.Peer.i4.Invalid[rh.nodeIdx()]
 	for _, dealerIdx := range *invalid {
 		delete(rh.Peer.shares, dealerIdx)
+		if err := binary.Write(buf, binary.LittleEndian, dealerIdx); err != nil {
+			return err
+		}
 	}
 
 	rh.Peer.r4 = &R4{
 		Src: rh.nodeIdx(),
 		HI4: rh.hash(
 			rh.SID,
-			make([]byte, 0)), // TODO: unpack R2s, see I4
+			buf.Bytes()),
 		Shares: rh.Peer.shares,
 	}
 	return rh.SendTo(rh.Parent(), rh.Peer.r4)
@@ -313,7 +318,14 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 	} else {
 
 		// Verify reply
-		if !bytes.Equal(r4.R4.HI4, rh.hash(rh.SID, make([]byte, 0))) {
+		buf := new(bytes.Buffer)
+		invalid := rh.Leader.i4.Invalid[r4.Src]
+		for _, dealerIdx := range *invalid {
+			if err := binary.Write(buf, binary.LittleEndian, dealerIdx); err != nil {
+				return err
+			}
+		}
+		if !bytes.Equal(r4.R4.HI4, rh.hash(rh.SID, buf.Bytes())) {
 			return errors.New(fmt.Sprintf("R4: peer %d replied to wrong I4 message", r4.Src))
 		}
 
