@@ -8,11 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
 	"math"
-	"testing"
+	"time"
 )
 
 // Configuration-variables
@@ -26,6 +27,8 @@ var machines = 3
 var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
 var race = false
+var runWait = 180
+var experimentWait = 0
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
@@ -36,6 +39,8 @@ func init() {
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
+	flag.IntVar(&runWait, "runwait", runWait, "How long to wait for each simulation to finish - overwrites .toml-value")
+	flag.IntVar(&experimentWait, "experimentwait", experimentWait, "How long to wait for the whole experiment to finish")
 	dbg.AddFlags()
 }
 
@@ -72,7 +77,18 @@ func main() {
 			deployP.Cleanup()
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
-			RunTests(logname, runconfigs)
+			testsDone := make(chan bool)
+			go func() {
+				RunTests(logname, runconfigs)
+				testsDone <- true
+			}()
+			timeout := getExperimentWait(runconfigs)
+			select {
+			case <-testsDone:
+				dbg.Lvl3("Done with test", simulation)
+			case <-time.After(time.Second * time.Duration(timeout)):
+				dbg.Fatal("Test failed to finish in", timeout, "seconds")
+			}
 		}
 	}
 }
@@ -89,9 +105,10 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		}
 	}
 
-	MkTestDir()
+	mkTestDir()
 	rs := make([]*monitor.Stats, len(runconfigs))
-	nTimes := 1
+	// Try 10 times to run the test
+	nTimes := 10
 	stopOnSuccess := true
 	var f *os.File
 	args := os.O_CREATE | os.O_RDWR | os.O_TRUNC
@@ -99,7 +116,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	if simRange != "" {
 		args = os.O_CREATE | os.O_RDWR | os.O_APPEND
 	}
-	f, err := os.OpenFile(TestFile(name), args, 0660)
+	f, err := os.OpenFile(testFile(name), args, 0660)
 	if err != nil {
 		dbg.Fatal("error opening test file:", err)
 	}
@@ -116,7 +133,8 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			dbg.Lvl2("Skipping", t, "because of range")
 			continue
 		}
-		dbg.Lvl1("Doing run", t)
+		// Waiting for the document-branch to be merged, then uncomment this
+		//dbg.Lvl1("Starting run with parameters -", t.String())
 
 		// run test t nTimes times
 		// take the average of all successful runs
@@ -124,7 +142,8 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				dbg.Fatal("error running test:", err)
+				dbg.Error("Error running test, trying again:", err)
+				continue
 			}
 
 			runs = append(runs, stats)
@@ -195,34 +214,59 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 		done <- struct{}{}
 	}()
 
+	timeOut := getRunWait(rc)
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
 		monitor.Stop()
-		return rs, err
+		return rs, nil
+	case <-time.After(time.Second * time.Duration(timeOut)):
+		monitor.Stop()
+		return rs, errors.New("Simulation timeout")
 	}
 }
 
 // CheckHosts verifies that there is either a 'Hosts' or a 'Depth/BF'
 // -parameter in the Runconfig
 func CheckHosts(rc platform.RunConfig) {
-	hosts, err := rc.GetInt("hosts")
-	if hosts == 0 || err != nil {
-		depth, err1 := rc.GetInt("depth")
-		bf, err2 := rc.GetInt("bf")
-		if depth == 0 || bf == 0 || err1 != nil || err2 != nil {
+	hosts, _ := rc.GetInt("hosts")
+	bf, _ := rc.GetInt("bf")
+	depth, _ := rc.GetInt("depth")
+	if hosts == 0 {
+		if depth == 0 || bf == 0 {
 			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
 		}
-		// Geometric sum to count the total number of nodes:
-		// Root-node: 1
-		// 1st level: bf (branching-factor)*/
-		// 2nd level: bf^2 (each child has bf children)
-		// 3rd level: bf^3
-		// So total: sum(level=0..depth)(bf^level)
-		hosts = int((1 - math.Pow(float64(bf), float64(depth+1))) /
-			float64(1-bf))
+		hosts = calcHosts(bf, depth)
 		rc.Put("hosts", strconv.Itoa(hosts))
 	}
+	if bf == 0 {
+		if depth == 0 || hosts == 0 {
+			dbg.Fatal("No BF and no Depth or hosts given - stopping")
+		}
+		bf = 2
+		for calcHosts(bf, depth) < hosts {
+			bf += 1
+		}
+		rc.Put("bf", strconv.Itoa(bf))
+	}
+	if depth == 0 {
+		depth = 1
+		for calcHosts(bf, depth) < hosts {
+			depth += 1
+		}
+		rc.Put("depth", strconv.Itoa(depth))
+	}
+}
+
+// Geometric sum to count the total number of nodes:
+// Root-node: 1
+// 1st level: bf (branching-factor)*/
+// 2nd level: bf^2 (each child has bf children)
+// 3rd level: bf^3
+// So total: sum(level=0..depth)(bf^level)
+func calcHosts(bf, depth int) int {
+	return int((1 - math.Pow(float64(bf), float64(depth+1))) /
+		float64(1-bf))
 }
 
 type runFile struct {
@@ -231,14 +275,14 @@ type runFile struct {
 	Runs     string
 }
 
-func MkTestDir() {
+func mkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
 		dbg.Fatal("failed to make test directory")
 	}
 }
 
-func TestFile(name string) string {
+func testFile(name string) string {
 	return "test_data/" + name + ".csv"
 }
 
@@ -258,4 +302,33 @@ func getStartStop(rcs int) (int, int) {
 	}
 	dbg.Lvl2("Range is", start, ":", stop)
 	return start, stop
+}
+
+// getRunWait returns either the command-line value or the value from the runconfig
+// file
+func getRunWait(rc platform.RunConfig) int {
+	rcWait, err := rc.GetInt("runwait")
+	if err == nil {
+		return rcWait
+	}
+	return runWait
+}
+
+// getExperimentWait returns
+// 1. the command-line value
+// 2. the value from runconfig
+// 3. #runconfigs * runWait
+func getExperimentWait(rcs []platform.RunConfig) int {
+	if experimentWait > 0 {
+		return experimentWait
+	}
+	rcExp, err := rcs[0].GetInt("experimentwait")
+	if err == nil {
+		return rcExp
+	}
+	wait := 0
+	for _, rc := range rcs {
+		wait += getRunWait(rc)
+	}
+	return wait
 }
