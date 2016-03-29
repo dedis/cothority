@@ -15,6 +15,7 @@
 package dbg
 
 import (
+	"flag"
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
 	"os"
@@ -361,4 +362,44 @@ func UseColors() bool {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 	return useColors
+}
+
+// ParseEnv looks at the following environment-variables:
+// - DEBUG_LVL - for the actual debug-lvl - default is 1
+// - DEBUG_TIME - whether to show the timestamp - default is false
+// - DEBUG_COLOR - whether to color the output - default is true
+func ParseEnv() {
+	var err error
+	dv := os.Getenv("DEBUG_LVL")
+	if dv != "" {
+		debugVisible, err = strconv.Atoi(dv)
+		Lvl3("Setting level to", dv, debugVisible, err)
+		if err != nil {
+			Error("Couldn't convert", dv, "to debug-level")
+		}
+	}
+	dt := os.Getenv("DEBUG_TIME")
+	if dt != "" {
+		showTime, err = strconv.ParseBool(dt)
+		Lvl3("Setting showTime to", dt, showTime, err)
+		if err != nil {
+			Error("Couldn't convert", dt, "to boolean")
+		}
+	}
+	dc := os.Getenv("DEBUG_COLOR")
+	if dc != "" {
+		useColors, err = strconv.ParseBool(dc)
+		Lvl3("Setting useColor to", dc, showTime, err)
+		if err != nil {
+			Error("Couldn't convert", dc, "to boolean")
+		}
+	}
+}
+
+// AddFlags adds the flags and the variables for the debug-control
+func AddFlags() {
+	ParseEnv()
+	flag.IntVar(&debugVisible, "debug", DebugVisible(), "Change debug level (0-5)")
+	flag.BoolVar(&showTime, "debug-time", ShowTime(), "Shows the time of each message")
+	flag.BoolVar(&useColors, "debug-color", UseColors(), "Colors each message")
 }
