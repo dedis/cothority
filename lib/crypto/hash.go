@@ -1,3 +1,7 @@
+// hash.go provides some utilities regarding the hashing of bytes, files or
+// stream. The most common way to use it is to call:
+// `HashStream(sha256.New(),stream)`. It will stream the input into the hash
+// function by chunks and output the final hash.
 package crypto
 
 import (
