@@ -86,8 +86,6 @@ type Deterlab struct {
 	CloseWait int
 }
 
-var simulConfig *sda.SimulationConfig
-
 func (d *Deterlab) Configure(pc *PlatformConfig) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
@@ -233,7 +231,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	dbg.Lvl3("Writing the config file :", deter)
 	sda.WriteTomlConfig(deter, deterConfig, d.deployDir)
 
-	simulConfig, err = sim.Setup(d.deployDir, deter.Virt)
+	simulConfig, err := sim.Setup(d.deployDir, deter.Virt)
 	if err != nil {
 		return err
 	}

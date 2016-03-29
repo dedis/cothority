@@ -32,7 +32,7 @@ var runWait = 180
 var experimentWait = 0
 
 func init() {
-	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
+	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost,mininet]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
@@ -180,6 +180,8 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	rc.Delete("simulation")
 	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
+	var err error
+	monitor.SinkPort = monitorPort
 
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
@@ -199,7 +201,7 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
-	err := deployP.Start()
+	err = deployP.Start()
 	if err != nil {
 		dbg.Error(err)
 		return rs, err

@@ -42,7 +42,7 @@ func init() {
 func main() {
 	flag.Parse()
 	dbg.SetDebugVisible(debugVisible)
-	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible, monitorAddress)
+	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible(), monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", hostAddress)
 	measures := make([]*monitor.CounterIOMeasure, len(scs))

@@ -41,18 +41,20 @@ type PlatformConfig struct {
 
 var deterlab string = "deterlab"
 var localhost string = "localhost"
+var mininet string = "mininet"
 
 // Return the appropriate platform
-// [deterlab,localhost]
+// [deterlab,localhost,mininet]
 func NewPlatform(t string) Platform {
-	var p Platform
 	switch t {
 	case deterlab:
-		p = &Deterlab{}
+		return &Deterlab{}
 	case localhost:
-		p = &Localhost{}
+		return &Localhost{}
+	case mininet:
+		return &MiniNet{}
 	}
-	return p
+	return nil
 }
 
 /* Reads in a configuration-file for a run. The configuration-file has the
