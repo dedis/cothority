@@ -62,10 +62,10 @@ func TestOverlayDone(t *testing.T) {
 	po.Release()
 	overlay := h1.Overlay()
 	if _, ok := overlay.TokenToNode(po.Token()); !ok {
-		t.Fatal("Node should  exists after call Done()")
+		t.Fatal("Node should exists after call Done()")
 	}
 	po.Release()
 	if _, ok := overlay.TokenToNode(po.Token()); ok {
-		t.Fatal("Node should  NOT exists after call Done()")
+		t.Fatal("Node should NOT exists after call Done()")
 	}
 }

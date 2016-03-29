@@ -147,19 +147,6 @@ func (h *Host) SaveToFile(name string) error {
 	return err
 }
 
-func (h *Host) GroupConfSnippet() (string, error) {
-	pubW := new(bytes.Buffer)
-	err := cliutils.WritePub64(network.Suite, pubW, h.Entity.Public)
-	if err != nil {
-		return "", err
-	}
-	res := "[[servers]]\n" +
-		"  Addresses = [\"" + h.Entity.Addresses[0] + "\"]\n" +
-		"  Public = \"" + pubW.String() + "\"\n" +
-		"  Description = \"\""
-	return res, nil
-}
-
 // listen starts listening for messages coming from any host that tries to
 // contact this host. If 'wait' is true, it will try to connect to itself before
 // returning.
@@ -207,10 +194,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
-	h.networkLock.Lock()
 	c, err = h.host.Open(id)
-	h.networkLock.Unlock()
-
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +405,7 @@ func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
 	h.overlay.RegisterTree(tree)
 
 	// run the CoSi protocol
-	node, err := h.overlay.CreateNewNodeName("ProtocolCosi", tree)
+	node, err := h.overlay.CreateNewNodeName("CoSi", tree)
 	if err != nil {
 		dbg.Error("Error creating tree upon client request:", err)
 		return
@@ -447,7 +431,7 @@ func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
 	}
 	node.ProtocolInstance().RegisterDoneCallback(fn)
 	dbg.Lvl2(h.workingAddress, "Starting CoSi protocol...")
-	go node.Start()
+	go node.StartProtocol()
 }
 
 // sendSDAData marshals the inner msg and then sends a SDAData msg

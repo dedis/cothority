@@ -18,6 +18,7 @@ func init() {
 	// register network messages and protocol
 	network.RegisterMessageType(Message{})
 	network.RegisterMessageType(SignatureReply{})
+	sda.ProtocolRegisterName("NaiveTree", NewProtocol)
 }
 
 // Protocol implements the sda.ProtocolInstance interface
@@ -31,7 +32,7 @@ type Protocol struct {
 	verifySignature int
 }
 
-func NewProtocol(node *sda.Node) (*Protocol, error) {
+func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 	p := &Protocol{
 		Node: node,
 	}

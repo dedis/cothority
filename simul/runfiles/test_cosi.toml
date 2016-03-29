@@ -4,7 +4,7 @@ Bf = 4
 Rounds = 10
 CloseWait = 6000
 
-Hosts
-5
-21
-85
+Depth
+1
+2
+3

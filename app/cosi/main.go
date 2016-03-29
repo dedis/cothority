@@ -34,14 +34,14 @@ To collectively sign a text message run:
 	cosi -m “<Message to be signed>” -c <cosi-group.toml>
 If you would instead like to sign a message contained in a file you can the following command:
 	cosi -f <file-to-be-signed> -c <cosi-group.toml>
-If will create a file file-to-be-signed.sig containing the hash of the file and the signature.
+It will create a file file-to-be-signed.sig containing the hash of the file and the signature.
 
 To verify the signature on a file add the verify flag (-v):
 	cosi -f <file-to-be-signed> -c <cosi-group.toml> -v
 This command opens the corresnponding .sig file and validates the contained signature.
 
 Example usuage (create a file my-local-group.toml using cosid first):
-cosi -m "Hello CoSi" -c my-local-group.toml`)
+cosi -f my-file.txt -c my-local-group.toml`)
 	os.Exit(1)
 }
 
@@ -144,7 +144,7 @@ func SignStatement(r io.Reader,
 		return nil, errors.New("Invalid repsonse: Could not cast the " +
 			"received response to the right type")
 	}
-	dbg.Lvl3("Response:", response)
+	dbg.Lvl5("Response:", response)
 	if verify && false { // verify signature
 		err := cosi.VerifySignature(network.Suite, msgB, el.Aggregate,
 			response.Challenge, response.Response)
@@ -156,17 +156,20 @@ func SignStatement(r io.Reader,
 }
 
 func verifyFileSig(fileName, groupToml string) error {
-	// See if the file hash matches the one in the signature
+	// if the file hash matches the one in the signature
 	// iff yes -> return nil; else error
-
 	suite := network.Suite
 	f, err := os.Open(fileName)
 	if err != nil {
 		return err
 	}
 	b, err := ioutil.ReadAll(f)
-	fHash := suite.Hash().Sum(b)
-	// Read the JSON file
+	hash := suite.Hash()
+	if n, err := hash.Write(b); n != len(b) || err != nil {
+		return errors.New("Couldn't hash file")
+	}
+	fHash := hash.Sum(nil)
+	// Read the JSON signature file
 	sf, err := os.Open(fileName + ".sig")
 	if err != nil {
 		return err

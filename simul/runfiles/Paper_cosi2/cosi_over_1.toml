@@ -1,0 +1,20 @@
+Simulation = "CoSi"
+Rounds = 10
+Filter_round = 80
+Depth = 3
+Servers = 8
+
+BF
+2
+3
+4
+6
+8
+10
+12
+14
+16
+20
+24
+28
+32
