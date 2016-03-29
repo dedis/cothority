@@ -535,12 +535,15 @@ func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
 	n.instance = pi
 }
 
-// HACKY / TEMPORARY way for accessing Cosi functionality
+// SigningMessage implements the sda.ProtocolInstance interface
+// XXX will go away soon
 func (n *Node) SigningMessage(msg []byte) {
 	dbg.Lvl1("Node.SigningMessage() called")
 	return
 }
 
+// RegisterDoneCallback implements the sda.ProtocolInstance interface
+// XXX will go away soon
 func (n *Node) RegisterDoneCallback(func(chal, resp abstract.Secret)) {
 	dbg.Lvl1("Node.RegisterDoneCallback() called")
 	return

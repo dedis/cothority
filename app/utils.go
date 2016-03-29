@@ -34,13 +34,16 @@ func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
 	return el, nil
 }
 
+// NewGroupToml creates a new GroupToml struct from the given ServerTomls.
+// Currently used together with calling String() on the GroupToml to output
+// a snippet which is needed to define the CoSi group
 func NewGroupToml(servers ...*ServerToml) *GroupToml {
 	return &GroupToml{
 		Servers: servers,
 	}
 }
 
-// Returns the TOML representation of this GroupToml
+// String returns the TOML representation of this GroupToml
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
