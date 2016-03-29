@@ -191,7 +191,7 @@ func (m *MiniNet) Start(args ...string) error {
 	}
 	// And forward that port to the mininet-cluster, which does not have any
 	// access to the outside world
-	exCmd = exec.Command("ssh", "-f", login, "'ssh -nNTf -R "+redirection+" icsil1-conodes-exp.epfl.ch'")
+	exCmd = exec.Command("ssh", "-f", login, "'ssh -nNTf -R :"+redirection+" icsil1-conodes-exp.epfl.ch'")
 	dbg.Print(exCmd)
 	if err := exCmd.Start(); err != nil {
 		dbg.Fatal("Failed to start the 2nd ssh port forwarding:", err)
