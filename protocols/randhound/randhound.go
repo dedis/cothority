@@ -34,7 +34,7 @@ type RandHound struct {
 	Peer    *Peer    // Current peer
 }
 
-// Session encapsulates some metadata on a RandHound protocol run.
+// Session encapsulates some metadata of a RandHound protocol run.
 type Session struct {
 	Fingerprint []byte    // Fingerprint of a public key (usually of the leader)
 	Purpose     string    // Purpose of randomness
@@ -51,11 +51,11 @@ type Group struct {
 	T uint32 // Minimum number of shares needed to reconstruct a secret
 }
 
-// Leader (= client) refers to the node which initiates the RandHound protocol, moves it
-// forward, and ultimately outputs the generated public randomness.
+// Leader (=client) refers to the node which initiates the RandHound protocol,
+// moves it forward, and ultimately outputs the generated public randomness.
 type Leader struct {
-	Rc      []byte                 // Leader's trustee-selection random value
-	Rs      [][]byte               // Peers' trustee-selection random values
+	rc      []byte                 // Leader's trustee-selection random value
+	rs      [][]byte               // Peers' trustee-selection random values
 	i1      *I1                    // I1 message sent to the peers
 	i2      *I2                    // I2 - " -
 	i3      *I3                    // I3 - " -
@@ -70,10 +70,10 @@ type Leader struct {
 	Result  chan []byte            // For returning the generated randomness
 }
 
-// Peer (= server) refers to a node which contributes to the generation of the
+// Peer (=server) refers to a node which contributes to the generation of the
 // public randomness.
 type Peer struct {
-	Rs     []byte              // A peer's trustee-selection random value
+	rs     []byte              // A peer's trustee-selection random value
 	shares map[uint32]*R4Share // A peer's shares
 	i1     *I1                 // I1 message we received from the leader
 	i2     *I2                 // I2 - " -
@@ -155,14 +155,14 @@ func (rh *RandHound) Start() error {
 	hs := rh.Node.Suite().Hash().Size()
 	rc := make([]byte, hs)
 	random.Stream.XORKeyStream(rc, rc)
-	rh.Leader.Rc = rc
+	rh.Leader.rc = rc
 
 	rh.Leader.i1 = &I1{
 		SID:     rh.SID,
 		Session: rh.Session,
 		GID:     rh.GID,
 		Group:   rh.Group,
-		HRc:     rh.hash(rh.Leader.Rc),
+		HRc:     rh.hash(rh.Leader.rc),
 	}
 
 	return rh.sendToChildren(rh.Leader.i1)

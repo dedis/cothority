@@ -155,7 +155,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	hs := rh.Node.Suite().Hash().Size()
 	rs := make([]byte, hs)
 	random.Stream.XORKeyStream(rs, rs)
-	rh.Peer.Rs = rs
+	rh.Peer.rs = rs
 
 	rh.Peer.r1 = &R1{
 		Src: rh.nodeIdx(),
@@ -164,7 +164,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 			rh.GID,
 			rh.Peer.i1.HRc,
 		),
-		HRs: rh.hash(rh.Peer.Rs),
+		HRs: rh.hash(rh.Peer.rs),
 	}
 	return rh.SendTo(rh.Parent(), rh.Peer.r1)
 }
@@ -191,7 +191,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 			rh.Leader.i2 = &I2{
 				SID: rh.SID,
-				Rc:  rh.Leader.Rc,
+				Rc:  rh.Leader.rc,
 			}
 			if err := rh.sendToChildren(rh.Leader.i2); err != nil {
 				return err
@@ -224,7 +224,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		rh.Node.Private(),
 	}
 	secretPair := config.NewKeyPair(rh.Node.Suite())
-	_, trustees := rh.chooseTrustees(rh.Peer.i2.Rc, rh.Peer.Rs)
+	_, trustees := rh.chooseTrustees(rh.Peer.i2.Rc, rh.Peer.rs)
 	deal := &poly.Deal{}
 	deal.ConstructDeal(secretPair, longPair, int(rh.Group.T), int(rh.Group.R), trustees)
 	db, err := deal.MarshalBinary()
@@ -237,7 +237,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		HI2: rh.hash(
 			rh.SID,
 			rh.Peer.i2.Rc),
-		Rs:   rh.Peer.Rs,
+		Rs:   rh.Peer.rs,
 		Deal: db,
 	}
 	return rh.SendTo(rh.Parent(), rh.Peer.r2)
@@ -467,7 +467,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 					sIdx := r4share.ShareIdx
 					share := r4share.Share
 
-					shareIdx, _ := rh.chooseTrustees(rh.Leader.Rc, rh.Leader.r2[dIdx].Rs)
+					shareIdx, _ := rh.chooseTrustees(rh.Leader.rc, rh.Leader.r2[dIdx].Rs)
 					if sIdx != shareIdx[i] {
 						return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
 					}
