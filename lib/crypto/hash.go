@@ -15,7 +15,7 @@ func Hash(hash h.Hash, buff []byte) ([]byte, error) {
 	return hash.Sum(nil), err
 }
 
-// Size of the chunk  used to read a stream
+// DefaultChunkSize is the size of the chunk  used to read a stream
 const DefaultChunkSize = 1024
 
 // hashStream hashes a stream reading from it by chunks of DefaultChunkSize size.
