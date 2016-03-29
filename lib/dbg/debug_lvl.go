@@ -3,7 +3,7 @@
 //	dbg.Lvl1("Important information")
 //	dbg.Lvl2("Less important information")
 //	dbg.Lvl3("Eventually flooding information")
-//	dbg.Lvl4("Definitvely flooding information")
+//	dbg.Lvl4("Definitively flooding information")
 //	dbg.Lvl5("I hope you never need this")
 // in your program, then according to the debug-level one or more levels of
 // output will be shown. To set the debug-level, use
