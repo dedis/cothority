@@ -48,7 +48,7 @@ func TestCosi(t *testing.T) {
 	root = node.ProtocolInstance().(*ProtocolCosi)
 	root.Message = msg
 	root.RegisterDoneCallback(doneFunc)
-	node.Start()
+	node.StartProtocol()
 	if err != nil {
 		t.Fatal(err)
 	}

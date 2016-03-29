@@ -199,8 +199,8 @@ func TestStatsString(t *testing.T) {
 	measure.Record()
 	time.Sleep(time.Millisecond * 100)
 
-	if strings.Contains(rs.String(), "0.000000") {
-		t.Fatal("The measurement shouldn't contain 0.000000:", rs.String())
+	if !strings.Contains(rs.String(), "0.1") {
+		t.Fatal("The measurement should contain 0.1:", rs.String())
 	}
 	m.Stop()
 }

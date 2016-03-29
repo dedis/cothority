@@ -64,21 +64,21 @@ def plotAvgMM(co, jvss, naive, nt):
 
     #nt = mplot.plotMMA(ntree, 'round_wall', color4_light, 0,
     #                  dict(label='Ntree', linestyle='-', marker='v', color=color4_dark, zorder=3))
-    # mplot.arrow("{:.1f} sec      ".format(mplot.avg[-2]), x[-2], 4, color3_dark)
-    # mplot.arrow("      {:.0f} sec".format(mplot.avg[-1]), x[-1], 4, color3_dark)
+    # mplot.arrow("{:.1f} sec      ".format(mplot.avg[-2]), x[-2], 4, 1, color3_dark)
+    # mplot.arrow("      {:.0f} sec".format(mplot.avg[-1]), x[-1], 4, 1, color3_dark)
 
     j = mplot.plotMMA(jvss, 'round_wall', color2_light, 0,
                       dict(label='JVSS', linestyle='-', marker='^', color=color2_dark, zorder=3))
     #j_p = jvss.get_values('round_wall')
     #plt.plot(j_p.x, j_p.avg, label="JVSS", color=color2_dark, marker='^')
-    #mplot.arrow("{:.1f} sec      ".format(j.avg[-2]), j.x[-2], 4, color2_dark)
-    mplot.arrow("      {:.0f} sec".format(j.avg[-1]), j.x[-1], 4, color2_dark)
+    #mplot.arrow("{:.1f} sec      ".format(j.avg[-2]), j.x[-2], 4, 1, color2_dark)
+    mplot.arrow("      {:.0f} sec".format(j.avg[-1]), j.x[-1], 4, 1, color2_dark)
 
     na = mplot.plotMMA(naive, 'round_wall', color3_light, 0,
                        dict(label='Naive', linestyle='-', marker='s', color=color3_dark, zorder=3))
     #na_p = naive.get_values('round_wall')
-    mplot.arrow("{:.1f} sec      ".format(na.avg[8]), na.x[8], 4, color3_dark)
-    mplot.arrow("      {:.0f} sec".format(na.avg[9]), na.x[9], 4, color3_dark)
+    mplot.arrow("{:.1f} sec      ".format(na.avg[8]), na.x[8], 4, 1, color3_dark)
+    mplot.arrow("      {:.0f} sec".format(na.avg[9]), na.x[9], 4, 1, color3_dark)
 
     co = mplot.plotMMA(cothority, 'round_wall', color1_light, 4,
                        dict(label='Cothority', linestyle='-', marker='o', color=color1_dark, zorder=5))
@@ -105,7 +105,7 @@ def plotAvg(co, jvss, naive, nt):
 
     na_p = naive.get_values('round_wall')
     plt.plot(na_p.x, na_p.avg, label="Naive", color=color3_dark, marker='s')
-    #mplot.arrow("      {:.0f} sec".format(na_p.avg[9]), na_p.x[9], 8, color3_dark)
+    #mplot.arrow("      {:.0f} sec".format(na_p.avg[9]), na_p.x[9], 8, 1, color3_dark)
 
     nt_p = nt.get_values('round_wall')
     plt.plot(nt_p.x, nt_p.avg, label="Ntree", color=color4_dark, marker='v')

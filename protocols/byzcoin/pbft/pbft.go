@@ -112,6 +112,11 @@ func (p *Protocol) Dispatch() error {
 	}
 }
 
+// Start() implements the ProtocolInstance interface of sda.
+func (p *Protocol) Start() error {
+	return p.PrePrepare()
+}
+
 // PrePrepare intializes a full run of the protocol
 func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block

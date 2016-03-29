@@ -23,6 +23,8 @@ type LocalTest struct {
 	EntityLists map[uuid.UUID]*EntityList
 	// A map of Tree.Id to Trees
 	Trees map[uuid.UUID]*Tree
+	// All single nodes
+	Nodes []*Node
 }
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
@@ -34,6 +36,7 @@ func NewLocalTest() *LocalTest {
 		Overlays:    make(map[uuid.UUID]*Overlay),
 		EntityLists: make(map[uuid.UUID]*EntityList),
 		Trees:       make(map[uuid.UUID]*Tree),
+		Nodes:       make([]*Node, 0, 1),
 	}
 }
 
@@ -142,6 +145,9 @@ func (l *LocalTest) CloseAll() {
 			dbg.Error("Closing host", host, "gives error", err)
 		}
 	}
+	for _, node := range l.Nodes {
+		node.Close()
+	}
 }
 
 // GetTree returns the tree of the given TreeNode
@@ -177,7 +183,11 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 		TreeNodeID:   tn.Id,
 		RoundID:      uuid.NewV4(),
 	}
-	return NewNode(o, tok)
+	node, err := NewNode(o, tok)
+	if err == nil {
+		l.Nodes = append(l.Nodes, node)
+	}
+	return node, err
 }
 
 // GetNodes returns all Nodes that belong to a treeNode
