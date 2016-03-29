@@ -17,6 +17,7 @@ func TestRandHound(t *testing.T) {
 	var nodes int = 10                        // Number of nodes (peers + leader)
 	var trustees int = 5                      // Number of trustees
 	var purpose string = "RandHound test run" // Purpose
+	var shard bool = false                    // Use randomness to shard nodes into groups?
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(nodes, false, true, true)
@@ -31,7 +32,7 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	rh := leader.ProtocolInstance().(*randhound.RandHound)
-	err = rh.Setup(nodes, trustees, purpose)
+	err = rh.Setup(nodes, trustees, purpose, shard)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}

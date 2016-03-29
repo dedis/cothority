@@ -16,6 +16,7 @@ type RHSimulation struct {
 	sda.SimulationBFTree
 	Trustees int
 	Purpose  string
+	Shard    bool
 }
 
 func NewRHSimulation(config string) (sda.Simulation, error) {
@@ -44,7 +45,7 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	rh := leader.ProtocolInstance().(*RandHound)
-	err = rh.Setup(rhs.Hosts, rhs.Trustees, rhs.Purpose)
+	err = rh.Setup(rhs.Hosts, rhs.Trustees, rhs.Purpose, rhs.Shard)
 	if err != nil {
 		return err
 	}

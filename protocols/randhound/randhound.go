@@ -39,6 +39,7 @@ type Session struct {
 	Fingerprint []byte    // Fingerprint of a public key (usually of the leader)
 	Purpose     string    // Purpose of randomness
 	Time        time.Time // Scheduled initiation time
+	Shard       bool      // Indicate whether randomness should be used to shard peers into groups
 }
 
 // Group encapsulates all the configuration parameters of a list of RandHound nodes.
@@ -126,7 +127,7 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 
 // Setup configures a RandHound instance by creating group and session
 // parameters of the protocol. Needs to be called before Start.
-func (rh *RandHound) Setup(nodes int, trustees int, purpose string) error {
+func (rh *RandHound) Setup(nodes int, trustees int, purpose string, shard bool) error {
 
 	// Setup group
 	group, gid, err := rh.newGroup(nodes, trustees)
@@ -137,7 +138,7 @@ func (rh *RandHound) Setup(nodes int, trustees int, purpose string) error {
 	rh.Group = group
 
 	// Setup session
-	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now())
+	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now(), shard)
 	if err != nil {
 		return err
 	}
@@ -168,7 +169,7 @@ func (rh *RandHound) Start() error {
 	return rh.sendToChildren(rh.Leader.i1)
 }
 
-func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time) (*Session, []byte, error) {
+func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time, shard bool) (*Session, []byte, error) {
 
 	pub, err := public.MarshalBinary()
 	if err != nil {
@@ -180,10 +181,16 @@ func (rh *RandHound) newSession(public abstract.Point, purpose string, time time
 		return nil, nil, err
 	}
 
+	s := []byte{0}
+	if shard {
+		s[0] = 1
+	}
+
 	return &Session{
 		Fingerprint: pub,
 		Purpose:     purpose,
-		Time:        time}, rh.hash(pub, []byte(purpose), tm), nil
+		Time:        time,
+		Shard:       shard}, rh.hash(pub, []byte(purpose), tm, s), nil
 }
 
 func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
