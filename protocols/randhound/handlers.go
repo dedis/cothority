@@ -15,7 +15,7 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-// I1 is the message sent from the leader to all the peers in phase 1.
+// I1 is the message sent by the leader to the peers in phase 1.
 type I1 struct {
 	SID     []byte   // Session identifier: hash of session info block
 	Session *Session // Session parameters
@@ -24,20 +24,20 @@ type I1 struct {
 	HRc     []byte   // Client's trustee-randomness commit
 }
 
-// R1 is the reply sent from all the peers to the leader in phase 1.
+// R1 is the reply sent by the peers to the leader in phase 1.
 type R1 struct {
 	Src uint32 // Source of the message
 	HI1 []byte // Hash of I1 message
 	HRs []byte // Peer's trustee-randomness commit
 }
 
-// I2 is the message sent from the leader to all the peers in phase 2.
+// I2 is the message sent by the leader to the peers in phase 2.
 type I2 struct {
 	SID []byte // Session identifier
 	Rc  []byte // Leader's trustee-selection randomnes
 }
 
-// R2 is the reply sent from all the peers to the leader in phase 2.
+// R2 is the reply sent by the peers to the leader in phase 2.
 type R2 struct {
 	Src  uint32 // Source of the message
 	HI2  []byte // Hash of I2 message
@@ -45,33 +45,33 @@ type R2 struct {
 	Deal []byte // Peer's secret-sharing to trustees
 }
 
-// I3 is the message sent from the leader to all the peers in phase 3.
+// I3 is the message sent by the leader to the peers in phase 3.
 type I3 struct {
 	SID []byte         // Session identifier
 	R2s map[uint32]*R2 // Leaders's list of signed R2 messages; empty slices represent missing R2 messages
 }
 
-// R3 is the reply sent from all the peers to the leader in phase 3.
+// R3 is the reply sent by the peers to the leader in phase 3.
 type R3 struct {
 	Src       uint32   // Source of the message
 	HI3       []byte   // Hash of I3 message
 	Responses []R3Resp // Responses to dealt secret-shares
 }
 
-// R3Resp encapsulates a peer's reply together with some metadata.
+// R3Resp encapsulates a peer's response together with some metadata.
 type R3Resp struct {
 	DealerIdx uint32 // Dealer's index in the peer list
 	ShareIdx  uint32 // Share's index in deal we are validating
 	Resp      []byte // Encoded response to dealer's deal
 }
 
-// I4 is the message sent from the leader to all the peers in phase 4.
+// I4 is the message sent by the leader to the peers in phase 4.
 type I4 struct {
 	SID     []byte               // Session identifier
 	Invalid map[uint32]*[]uint32 // Map to mark invalid responses
 }
 
-// R4 is the reply sent from all the peers to the leader in phase 4.
+// R4 is the reply sent by the peers to the leader in phase 4.
 type R4 struct {
 	Src    uint32              // Source of the message
 	HI4    []byte              // Hash of I4 message
