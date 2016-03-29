@@ -1,13 +1,18 @@
 // RandHound is a client/server protocol that allows a list of nodes to produce
-// a public random string in a verifiable, unbiased way.
+// a public random string in an unbiasable and verifiable way given that a
+// threshold of nodes is honest.
 
 package randhound
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"time"
 
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
 )
 
@@ -25,6 +30,57 @@ type RandHound struct {
 	Session *Session // Session parameters
 	Leader  *Leader  // Protocol leader
 	Peer    *Peer    // Current peer
+}
+
+// Session encapsulates some metadata on a RandHound protocol run.
+type Session struct {
+	Fingerprint []byte    // Fingerprint of a public key (usually of the leader)
+	Purpose     string    // Purpose of randomness
+	Time        time.Time // Scheduled initiation time
+}
+
+// Group encapsulates all the configuration parameters of a list of RandHound nodes.
+type Group struct {
+	N uint32 // Total number of nodes (peers + leader)
+	F uint32 // Maximum number of Byzantine nodes tolerated (1/3)
+	L uint32 // Minimum number of non-Byzantine nodes required (2/3)
+	K uint32 // Total number of trustees (= shares generated per peer)
+	R uint32 // Minimum number of signatures needed to certify a deal
+	T uint32 // Minimum number of shares needed to reconstruct a secret
+}
+
+// Leader (= client) refers to the node which initiates the RandHound protocol, moves it
+// forward, and ultimately outputs the generated public randomness.
+type Leader struct {
+	Rc      []byte                 // Leader's trustee-selection random value
+	Rs      [][]byte               // Peers' trustee-selection random values
+	i1      *I1                    // I1 message sent to the peers
+	i2      *I2                    // I2 - " -
+	i3      *I3                    // I3 - " -
+	i4      *I4                    // I4 - " -
+	r1      map[uint32]*R1         // R1 messages received from the peers
+	r2      map[uint32]*R2         // R2 - " -
+	r3      map[uint32]*R3         // R3 - " -
+	r4      map[uint32]*R4         // R4 - " -
+	states  map[uint32]*poly.State // States for deals and responses from peers
+	invalid map[uint32]*[]uint32   // Map to mark invalid shares
+	Done    chan bool              // For signaling that a protocol run is finished
+	Result  chan []byte            // For returning the generated randomness
+}
+
+// Peer (= server) refers to a node which contributes to the generation of the
+// public randomness.
+type Peer struct {
+	Rs     []byte              // A peer's trustee-selection random value
+	shares map[uint32]*R4Share // A peer's shares
+	i1     *I1                 // I1 message we received from the leader
+	i2     *I2                 // I2 - " -
+	i3     *I3                 // I3 - " -
+	i4     *I4                 // I4 - " -
+	r1     *R1                 // R1 message we sent to the leader
+	r2     *R2                 // R2 - " -
+	r3     *R3                 // R3 - " -
+	r4     *R4                 // R4 - " -
 }
 
 // NewRandHound generates a new RandHound instance.
@@ -108,4 +164,83 @@ func (rh *RandHound) Start() error {
 	}
 
 	return rh.sendToChildren(rh.Leader.i1)
+}
+
+func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time) (*Session, []byte, error) {
+
+	pub, err := public.MarshalBinary()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tm, err := time.MarshalBinary()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &Session{
+		Fingerprint: pub,
+		Purpose:     purpose,
+		Time:        time}, rh.hash(pub, []byte(purpose), tm), nil
+}
+
+func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
+
+	n := uint32(nodes)    // Number of nodes (peers + leader)
+	k := uint32(trustees) // Number of trustees (= shares generaetd per peer)
+	buf := new(bytes.Buffer)
+
+	// Setup group parameters: note that T <= R <= K must hold;
+	// T = R for simplicity, might change later
+	gp := [6]uint32{
+		n,           // N: total number of nodes (peers + leader)
+		n / 3,       // F: maximum number of Byzantine nodes tolerated
+		n - (n / 3), // L: minimum number of non-Byzantine nodes required
+		k,           // K: total number of trustees (= shares generated per peer)
+		(k + 1) / 2, // R: minimum number of signatures needed to certify a deal
+		(k + 1) / 2, // T: minimum number of shares needed to reconstruct a secret
+	}
+
+	// Include public keys of all nodes into group ID
+	for _, x := range rh.Tree().ListNodes() {
+		pub, err := x.Entity.Public.MarshalBinary()
+		if err != nil {
+			return nil, nil, err
+		}
+		if err = binary.Write(buf, binary.LittleEndian, pub); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// Include group parameters into group ID
+	for _, g := range gp {
+		if err := binary.Write(buf, binary.LittleEndian, g); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return &Group{
+		N: gp[0],
+		F: gp[1],
+		L: gp[2],
+		K: gp[3],
+		R: gp[4],
+		T: gp[5]}, rh.hash(buf.Bytes()), nil
+}
+
+func (rh *RandHound) newLeader() (*Leader, error) {
+	return &Leader{
+		r1:      make(map[uint32]*R1),
+		r2:      make(map[uint32]*R2),
+		r3:      make(map[uint32]*R3),
+		r4:      make(map[uint32]*R4),
+		states:  make(map[uint32]*poly.State),
+		invalid: make(map[uint32]*[]uint32),
+		Done:    make(chan bool, 1),
+		Result:  make(chan []byte),
+	}, nil
+}
+
+func (rh *RandHound) newPeer() (*Peer, error) {
+	return &Peer{shares: make(map[uint32]*R4Share)}, nil
 }
