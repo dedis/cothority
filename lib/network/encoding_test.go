@@ -11,7 +11,7 @@ func TestSliceInt(t *testing.T) {
 	}
 
 	mt := RegisterMessageType(SliceInt{})
-	b, err := MarshalRegisteredType(a)
+	b, err := MarshalRegisteredType(&a)
 	if err != nil {
 		t.Fatal("Couldn't marshal SliceInt:", err)
 	}
