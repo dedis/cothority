@@ -39,7 +39,19 @@ You can either run various simulations or standalone applications:
 
 # Commandline Interface
 
+We have provided a simple manually-driven collective signing application, 
+‘cosi’, which you can use to request the collective signing group you 
+defined to witness and cosign any message you propose. In this case the 
+witnesses are not validating or checking the messages you’re proposing 
+in any way; they are merely attesting the fact that they have observed 
+your request to sign the message.
 
+To install the commandline interface do:
+```bash
+go get github.com/dedis/cothority 
+```
+and make sure that `$GOPATH/bin` is in your [`$PATH`](https://golang.org/doc/code.html#GOPATH).
+Two binaries (`cosi` and `cosid` will be added to `$GOPATH/bin`).  
 
 ## Running your own CoSi server
 
@@ -48,28 +60,78 @@ public/private key pair for the server.
 You can create a default server configuration with a fresh 
 public/private key pair as follows:
 
-``` bash
-
+```bash
+cosid
 ```
 
-### Creating a Collective Signing Group
+Following the instructions on the screen (`cosid` will ask you for
+a an server address and port, and where you want to store the server 
+configuration) you will see an output similar to this:
+```
+Description = "## Put your description of the cothority system for more convenience ##"
+
+[[servers]]
+  Addresses = ["127.0.0.1:2010"]
+  Public = "Z6gGb/tQorNsDtx1v1BpFqjsEI/kmZauzojyPmCF70I="
+  Description = "## Put your description here for convenience ##"
+```  
+
+You can copy and paste it into a file `my-cosi-group.toml`. 
+The server configuration will get stored in the filename you provided.
+Next time you can run the server with 
+
+```bash 
+cosid -config myconfig.toml
+```
+instead (assuming that you chose `myconfig.toml` in the above step). 
+
 
 ## Initiating the Collective Signing Protocol
-
-We have provided a simple manually-driven collective signing application, 
-‘cosi’, which you can use to request the collective signing group you 
-defined to witness and cosign any message you propose. In this case the 
-witnesses are not validating or checking the messages you’re proposing 
-in any way; they are merely attesting the fact that they have observed 
-your request to sign the message.
 
 You can collectively sign a text message specified on the command line 
 as follows:
 
-``` bash
+```bash
+cosi -m “Hello CoSi” -c cosi-group.toml
+```
 
+If you would instead like to sign a message contained in a file you 
+specify (which may be either text or arbitrary binary data), you can do 
+this as follows:
+
+```bash
+cosi -f file-to-be-signed -c my-cosi-group.toml
+```
+
+It will create a file `file-to-be-signed.sig` containing the sha256 hash
+of the the file and the signature.
+To verify the signature of a file you can do so using the `-v` flag:
+  
+```bash
+cosi -f file-to-be-signed -c my-cosi-group.toml -v
 ```
     
+### Creating a Collective Signing Group
+By running several `cosid` instances (and copying the appropriate lines 
+of their output) you can create a `my-cosi-group.toml` that looks like 
+this:
+
+```
+[[servers]]
+  Addresses = ["127.0.0.1:2000"]
+  Public = "VXYcL0GPVo1/u9lOiPbbLnMMiaF920GwYeYWQYB0QQQ="
+  Description = "## Put your description here for convenience ##"
+
+[[servers]]
+  Addresses = ["127.0.0.1:2001"]
+  Public = "0Dt6zDpK7v0Ff1VpSGxSNUKSGBV/OTuSJZDF9Wd2dGU="
+  Description = "## Put your description here for convenience ##"
+```
+
+The template above lists two CoSi servers run on your local machine
+just as an example, but you can change this list to refer to any set of 
+CoSi servers you like including your own (see above).
+
 # Simulation
 Starting a simulation of one the provided protocols (or your own) either 
 on localhost or, if you have access, on [DeterLab](https://www.isi.deterlab.net) 
