@@ -70,7 +70,7 @@ func HashFileChunk(hash h.Hash, file string, chunkSize int) ([]byte, error) {
 	return HashStreamChunk(hash, f, chunkSize)
 }
 
-// HashStreamSuite will hash the stream wusing the hashing function of the suite
+// HashStreamSuite will hash the stream using the hashing function of the suite
 func HashStreamSuite(suite abstract.Suite, stream io.Reader) ([]byte, error) {
 	return HashStream(suite.Hash(), stream)
 }
