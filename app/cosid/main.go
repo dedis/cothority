@@ -27,6 +27,10 @@ Cothority is a general node that can be used for all available protocols.
 var ConfigFile string
 var debugVisible int
 
+// DefaultConfName is the default configuration file-name for cosid (stores the
+// generated private/public key and the host's address)
+const DefaultConfName = "config.toml"
+
 // Initialize before 'init' so we can directly use the fields as parameters
 // to 'Flag'
 func init() {
@@ -87,9 +91,12 @@ func createHost() *sda.Host {
 	ip := str
 
 	// File output
-	fmt.Println("[*] Name of the file to output the configuration of this host:")
+	fmt.Println("[*] Name of the file to output the configuration of this host (or default: [config.toml]):")
 	str, err = reader.ReadString('\n')
 	str = strings.TrimSpace(str)
+	if str == "" {
+		str = DefaultConfName
+	}
 
 	// create the public / private keys
 	kp := config.NewKeyPair(network.Suite)
