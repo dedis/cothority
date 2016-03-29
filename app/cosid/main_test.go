@@ -12,8 +12,8 @@ import (
 
 func TestCompileAndRun(t *testing.T) {
 	// FIXME test compiles and runs cosid, but it doesn't cleanup afterwards
-	t.Skip("Needs to be fixed: process created by calling command ./cosid" +
-		" is still running after the test finishes")
+	/*t.Skip("Needs to be fixed: process created by calling command ./cosid" +*/
+	/*" is still running after the test finishes")*/
 	// binary named after the package:
 	bin := "./cosid"
 	build := exec.Command("go", "build")
@@ -23,6 +23,7 @@ func TestCompileAndRun(t *testing.T) {
 	}
 	defer func() {
 		os.Remove(bin)
+		build.Process.Kill()
 	}()
 	if err = runCommand(bin, makeReader("129u.898.9090e:21-2")); err == nil {
 		t.Fatal("There should be an error:", err)
