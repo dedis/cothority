@@ -1,6 +1,8 @@
 // RandHound is a client/server protocol that allows a list of nodes to produce
 // a public random string in an unbiasable and verifiable way given that a
-// threshold of nodes is honest.
+// threshold of nodes is honest. The protocol is driven by a leader (= client)
+// which scavenges the public randomness from its peers (= servers) over the
+// course of four round-trips (= phases).
 
 package randhound
 
