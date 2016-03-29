@@ -36,7 +36,7 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	leader.Start()
+	leader.StartProtocol()
 
 	bytes := make([]byte, 32)
 	select {

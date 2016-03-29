@@ -48,7 +48,7 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	rh.Start()
+	rh.StartProtocol()
 
 	bytes := make([]byte, 32)
 	select {
