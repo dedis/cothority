@@ -4,24 +4,23 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
+	h "hash"
 	"io"
 	"os"
 )
 
 // Hash simply returns the Hash of the slice of bytes given
-func Hash(suite abstract.Suite, buff []byte) ([]byte, error) {
-	h := suite.Hash()
-	_, err := h.Write(buff)
-	return h.Sum(nil), err
+func Hash(hash h.Hash, buff []byte) ([]byte, error) {
+	_, err := hash.Write(buff)
+	return hash.Sum(nil), err
 }
 
 // Size of the chunk  used to read a stream
 const DefaultChunkSize = 1024
 
-// Hash a stream reading from it by chunks of DefaultChunkSize size.
-func hashStream(suite abstract.Suite, stream io.Reader, size int) ([]byte, error) {
+// hashStream hashes a stream reading from it by chunks of DefaultChunkSize size.
+func hashStream(hash h.Hash, stream io.Reader, size int) ([]byte, error) {
 	b := make([]byte, size)
-	hash := suite.Hash()
 	for {
 		n, errRead := stream.Read(b)
 		dbg.Lvl4("Read", n, "bytes of", size)
@@ -38,35 +37,46 @@ func hashStream(suite abstract.Suite, stream io.Reader, size int) ([]byte, error
 
 // HashStream returns the hash of the stream reading from it chunk by chunk of
 // size DefaultChunkSize
-func HashStream(suite abstract.Suite, stream io.Reader) ([]byte, error) {
-	return hashStream(suite, stream, DefaultChunkSize)
+func HashStream(hash h.Hash, stream io.Reader) ([]byte, error) {
+	return hashStream(hash, stream, DefaultChunkSize)
 }
 
-// Hash a stream using chunks of size
-func HashStreamChunk(suite abstract.Suite, stream io.Reader, chunkSize int) ([]byte, error) {
+// HashStreamChunk will hash the stream using chunks of size chunkSize
+func HashStreamChunk(hash h.Hash, stream io.Reader, chunkSize int) ([]byte, error) {
 	if chunkSize < 1 {
-		return nil, errors.New("Wront chunksize value")
+		return nil, errors.New("Wrong chunksize value")
 	}
-	return hashStream(suite, stream, chunkSize)
+	return hashStream(hash, stream, chunkSize)
 }
 
 // HashFile will hash the file using the streaming approach with
 // DefaultChunkSize size of chunks
-func HashFile(suite abstract.Suite, file string) ([]byte, error) {
+func HashFile(hash h.Hash, file string) ([]byte, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
-	return HashStream(suite, f)
+	return HashStream(hash, f)
 
 }
 
 // HashFileChunk is similar to HashFile but using a chunkSize size of chunks for
 // reading.
-func HashFileChunk(suite abstract.Suite, file string, chunkSize int) ([]byte, error) {
+func HashFileChunk(hash h.Hash, file string, chunkSize int) ([]byte, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
-	return HashStreamChunk(suite, f, chunkSize)
+	return HashStreamChunk(hash, f, chunkSize)
+}
+
+// HashStreamSuite will hash the stream wusing the hashing function of the suite
+func HashStreamSuite(suite abstract.Suite, stream io.Reader) ([]byte, error) {
+	return HashStream(suite.Hash(), stream)
+}
+
+// HashFileSuite returns the hash of a file using the hashing function of the
+// suite given.
+func HashFileSuite(suite abstract.Suite, file string) ([]byte, error) {
+	return HashFile(suite.Hash(), file)
 }
