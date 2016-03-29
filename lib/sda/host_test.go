@@ -17,6 +17,7 @@ import (
 
 // Test hacky way of launching CoSi protocol externally
 func TestHackyCosi(t *testing.T) {
+	t.Skip("Trying to find the leaky test")
 	// TODO: github.com/btcsuite leaks 2 go routine and is imported by byzcoin
 	// in blkparser.
 	//	defer dbg.AfterTest(t)
