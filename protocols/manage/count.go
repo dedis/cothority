@@ -70,10 +70,10 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 func (p *ProtocolCount) Dispatch() error {
 	running := true
 	for running {
-		dbg.Lvl3(p.Myself(), "waiting for message during", p.Timeout())
+		dbg.Lvl3(p.Info(), "waiting for message during", p.Timeout())
 		select {
 		case pc := <-p.PrepareCountChan:
-			dbg.Lvl3(p.Myself(), "received from", pc.TreeNode.Entity.Addresses,
+			dbg.Lvl3(p.Info(), "received from", pc.TreeNode.Entity.Addresses,
 				pc.Timeout)
 			p.SetTimeout(pc.Timeout)
 			p.FuncPC()
@@ -87,7 +87,7 @@ func (p *ProtocolCount) Dispatch() error {
 				p.Replies++
 			}
 		case <-time.After(time.Duration(p.Timeout()) * time.Millisecond):
-			dbg.Lvl3(p.Myself(), "timed out while waiting for", p.Timeout())
+			dbg.Lvl3(p.Info(), "timed out while waiting for", p.Timeout())
 			if p.IsRoot() {
 				dbg.Lvl2("Didn't get all children in time:", p.Replies)
 				p.Count <- p.Replies
@@ -106,9 +106,11 @@ func (p *ProtocolCount) FuncPC() {
 		p.SendTo(p.Parent(), &NodeIsUp{})
 	}
 	if !p.IsLeaf() {
-		for _, c := range p.Children() {
-			dbg.Lvl3(p.Myself(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
-			p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+		for _, child := range p.Children() {
+			go func(c *sda.TreeNode) {
+				dbg.Lvl3(p.Info(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
+				p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+			}(child)
 		}
 	} else {
 		p.CountChan <- nil
@@ -123,13 +125,12 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 		count += c.Count.Children
 	}
 	if !p.IsRoot() {
-		dbg.Lvl3(p.Myself(), "Sends to", p.Parent().Id, p.Parent().Entity.Addresses)
+		dbg.Lvl3(p.Info(), "Sends to", p.Parent().Id, p.Parent().Entity.Addresses)
 		p.SendTo(p.Parent(), &Count{count})
 	} else {
 		p.Count <- count
 	}
 	dbg.Lvl3(p.Node.Entity().First(), "Done")
-	p.Done()
 }
 
 // Starts the protocol

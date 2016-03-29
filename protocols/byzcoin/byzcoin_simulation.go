@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
+	sda.SimulationRegister("ByzCoin", NewSimulation)
 	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
@@ -86,7 +86,7 @@ func (m *monitorMut) Record() {
 
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
-	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
+	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
 	node, _ := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
@@ -129,7 +129,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
 				dbg.Error("Round", round, "failed:", err)
 			} else {
-				dbg.Lvl1("Round", round, "success")
+				dbg.Lvl2("Round", round, "success")
 			}
 		})
 
