@@ -185,9 +185,9 @@ func verifyFileSig(fileName, groupToml string) error {
 	if bytes.Equal(sig.Sum, fHash) {
 
 	} else {
-		return fmt.Errorf("You are trying to verify a signature " +
+		return errors.New("You are trying to verify a signature " +
 			"belongig to another file. (The hash provided by the signature " +
-			"doesn't match with with the hash of the file.")
+			"doesn't match with the hash of the file.)")
 	}
 
 	return nil
