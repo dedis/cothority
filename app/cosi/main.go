@@ -98,9 +98,9 @@ func main() {
 	}
 }
 
-// SignStatement can be used to sign the contents passed in the io.Reader
+// signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func SignStatement(r io.Reader,
+func signStatement(r io.Reader,
 	el *sda.EntityList,
 	verify bool) (*sda.CosiResponse, error) {
 
@@ -226,7 +226,7 @@ func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := SignStatement(r, el, true)
+	res, err := signStatement(r, el, true)
 	if err != nil {
 		return nil, err
 	}
