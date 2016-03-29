@@ -1,3 +1,5 @@
+// Implementation of the four RandHound phases.
+
 package randhound
 
 import (
@@ -64,8 +66,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		// Collect replies of the peers
 		rh.Leader.r1[r1.Src] = &r1.R1
 
-		// Continue, once all replies have arrived
 		if uint32(len(rh.Leader.r1)) == rh.Group.N-1 {
+			// Continue, once all replies have arrived
+
 			rh.Leader.i2 = &I2{
 				SID: rh.SID,
 				Rc:  rh.Leader.Rc,
@@ -149,8 +152,9 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		ps := state.Init(*deal)
 		rh.Leader.states[r2.Src] = ps
 
-		// Continue, once all replies have arrived
 		if uint32(len(rh.Leader.r2)) == rh.Group.N-1 {
+			// Continue, once all replies have arrived
+
 			rh.Leader.i3 = &I3{
 				SID: rh.SID,
 				R2s: rh.Leader.r2,
@@ -260,8 +264,9 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		}
 		rh.Leader.invalid[r3.Src] = &invalid
 
-		// Continue, once all replies have arrived
 		if uint32(len(rh.Leader.r3)) == rh.Group.N-1 {
+			// Continue, once all replies have arrived
+
 			rh.Leader.i4 = &I4{
 				SID:     rh.SID,
 				Invalid: rh.Leader.invalid,
@@ -332,8 +337,9 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 		// Collect replies of the peers
 		rh.Leader.r4[r4.Src] = &r4.R4
 
-		// Continue, once all replies have arrived
 		if uint32(len(rh.Leader.r4)) == rh.Group.N-1 {
+			// Continue, once all replies have arrived
+
 			// Process shares of i-th peer
 			for i, _ := range rh.Leader.r4 {
 				for _, r4share := range rh.Leader.r4[i].Shares {

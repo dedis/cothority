@@ -1,8 +1,10 @@
 package randhound
 
+// Peer refers to a node which contributes to the generation of the public
+// randomness.
 type Peer struct {
-	Rs     []byte              // Peer's trustee-selection random value
-	shares map[uint32]*R4Share // Peer's shares
+	Rs     []byte              // A peer's trustee-selection random value
+	shares map[uint32]*R4Share // A peer's shares
 	i1     *I1                 // I1 message we received from the leader
 	i2     *I2                 // I2 - " -
 	i3     *I3                 // I3 - " -

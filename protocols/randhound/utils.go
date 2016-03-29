@@ -1,3 +1,4 @@
+// Collection of some utility functions used in the RandHound protocol.
 package randhound
 
 import (

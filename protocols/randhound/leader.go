@@ -2,6 +2,8 @@ package randhound
 
 import "github.com/dedis/crypto/poly"
 
+// Leader refers to the node which initiates the RandHound protocol and ultimately
+// outputs the generated public randomness.
 type Leader struct {
 	Rc      []byte                 // Leader's trustee-selection random value
 	Rs      [][]byte               // Peers' trustee-selection random values

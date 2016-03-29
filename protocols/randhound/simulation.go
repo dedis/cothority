@@ -52,7 +52,7 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 
 	bytes := make([]byte, 32)
 	select {
-	case _ = <-rh.Leader.Done:
+	case <-rh.Leader.Done:
 		log.Printf("RandHound - done")
 		bytes = <-rh.Leader.Result
 	case <-time.After(time.Second * 60):

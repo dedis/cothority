@@ -1,3 +1,6 @@
+// RandHound is a client/server protocol that allows a list of nodes to produce
+// a public random string in a verifiable, unbiased way.
+
 package randhound
 
 import (
@@ -12,6 +15,8 @@ func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
+// RandHound is the main protocol struct and implements the
+// sda.ProtocolInstance interface.
 type RandHound struct {
 	*sda.Node
 	GID     []byte   // Group ID
@@ -22,6 +27,7 @@ type RandHound struct {
 	Peer    *Peer    // Current peer
 }
 
+// NewRandHound generates a new RandHound instance.
 func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 
 	// Setup RandHound protocol struct
@@ -60,8 +66,8 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 	return rh, nil
 }
 
-// Setup creates the group and session parameters of the RandHound protocol.
-// Needs to be called before Start.
+// Setup configures a RandHound instance by creating group and session
+// parameters of the protocol. Needs to be called before Start.
 func (rh *RandHound) Setup(nodes int, trustees int, purpose string) error {
 
 	// Setup group
