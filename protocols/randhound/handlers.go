@@ -64,7 +64,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		rh.Leader.r1[r1.Src] = &r1.R1
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r1) == rh.Group.N-1 {
+		if uint32(len(rh.Leader.r1)) == rh.Group.N-1 {
 			rh.Leader.i2 = &I2{
 				SID: rh.SID,
 				Rc:  rh.Leader.Rc,
@@ -102,7 +102,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	secretPair := config.NewKeyPair(rh.Node.Suite())
 	_, trustees := rh.chooseTrustees(rh.Peer.i2.Rc, rh.Peer.Rs)
 	deal := &poly.Deal{}
-	deal.ConstructDeal(secretPair, longPair, rh.Group.T, rh.Group.R, trustees)
+	deal.ConstructDeal(secretPair, longPair, int(rh.Group.T), int(rh.Group.R), trustees)
 	db, err := deal.MarshalBinary()
 	if err != nil {
 		return err
@@ -138,7 +138,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 		// Initialise deal
 		deal := &poly.Deal{}
-		deal.UnmarshalInit(rh.Group.T, rh.Group.R, rh.Group.K, rh.Node.Suite())
+		deal.UnmarshalInit(int(rh.Group.T), int(rh.Group.R), int(rh.Group.K), rh.Node.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
@@ -149,7 +149,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		rh.Leader.states[r2.Src] = ps
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r2) == rh.Group.N-1 {
+		if uint32(len(rh.Leader.r2)) == rh.Group.N-1 {
 			rh.Leader.i3 = &I3{
 				SID: rh.SID,
 				R2s: rh.Leader.r2,
@@ -191,7 +191,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Unmarshal Deal
 		deal := &poly.Deal{}
-		deal.UnmarshalInit(rh.Group.T, rh.Group.R, rh.Group.K, rh.Node.Suite())
+		deal.UnmarshalInit(int(rh.Group.T), int(rh.Group.R), int(rh.Group.K), rh.Node.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
@@ -199,7 +199,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 		// Determine other peers who chose the current peer as a trustee
 		shareIdx, _ := rh.chooseTrustees(rh.Peer.i2.Rc, r2.Rs)
 		if j, ok := shareIdx[rh.nodeIdx()]; ok { // j is the share index we received from the ith peer
-			resp, err := deal.ProduceResponse(j, longPair)
+			resp, err := deal.ProduceResponse(int(j), longPair)
 			if err != nil {
 				return err
 			}
@@ -211,7 +211,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 			responses = append(responses, R3Resp{DealerIdx: i, ShareIdx: j, Resp: rb})
 
-			share := deal.RevealShare(j, longPair)
+			share := deal.RevealShare(int(j), longPair)
 			rh.Peer.shares[i] = &R4Share{DealerIdx: i, ShareIdx: j, Share: share}
 		}
 	}
@@ -243,7 +243,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		// Collect replies of the peers
 		rh.Leader.r3[r3.Src] = &r3.R3
 
-		invalid := []int{} // TODO: collect information on invalid responses
+		invalid := []uint32{} // TODO: collect information on invalid responses
 		for _, r3resp := range rh.Leader.r3[r3.Src].Responses {
 
 			resp := &poly.Response{}
@@ -253,18 +253,16 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 			}
 
 			// Verify that response is securely bound to promise and mark invalid ones
-			if err := rh.Leader.states[r3resp.DealerIdx].AddResponse(r3resp.ShareIdx, resp); err != nil {
-				invalid = append(invalid, r3resp.DealerIdx) // TODO: collect information on invalid responses
+			if err := rh.Leader.states[r3resp.DealerIdx].AddResponse(int(r3resp.ShareIdx), resp); err != nil {
+				invalid = append(invalid, uint32(r3resp.DealerIdx)) // TODO: collect information on invalid responses
 			}
 		}
-
-		rh.Leader.invalid[r3.Src] = &invalid
+		rh.Leader.invalid[uint32(r3.Src)] = &invalid
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r3) == rh.Group.N-1 {
+		if uint32(len(rh.Leader.r3)) == rh.Group.N-1 {
 			rh.Leader.i4 = &I4{
 				SID:     rh.SID,
-				R2s:     rh.Leader.r2,
 				Invalid: rh.Leader.invalid,
 			}
 			return rh.sendToChildren(rh.Leader.i4)
@@ -289,9 +287,11 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	rh.Peer.i4 = &i4.I4
 
-	// TODO: remove all invalid shares from rh.Peer.shares
+	// Remove all invalid shares
 	invalid := rh.Peer.i4.Invalid[rh.nodeIdx()]
-	_ = invalid
+	for _, dealerIdx := range *invalid {
+		delete(rh.Peer.shares, dealerIdx)
+	}
 
 	rh.Peer.r4 = &R4{
 		Src: rh.nodeIdx(),
@@ -321,7 +321,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 		rh.Leader.r4[r4.Src] = &r4.R4
 
 		// Continue, once all replies have arrived
-		if len(rh.Leader.r4) == rh.Group.N-1 {
+		if uint32(len(rh.Leader.r4)) == rh.Group.N-1 {
 			// Process shares of i-th peer
 			for i, _ := range rh.Leader.r4 {
 				for _, r4share := range rh.Leader.r4[i].Shares {
@@ -335,12 +335,12 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 					}
 
 					// Verify share
-					if err := rh.Leader.states[dIdx].Deal.VerifyRevealedShare(sIdx, share); err != nil {
+					if err := rh.Leader.states[dIdx].Deal.VerifyRevealedShare(int(sIdx), share); err != nil {
 						return err
 					}
 
 					// Store share
-					rh.Leader.states[dIdx].PriShares.SetShare(sIdx, share)
+					rh.Leader.states[dIdx].PriShares.SetShare(int(sIdx), share)
 				}
 			}
 

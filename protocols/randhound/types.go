@@ -14,12 +14,12 @@ type Session struct {
 }
 
 type Group struct {
-	N int // Total number of nodes (peers + leader)
-	F int // Maximum number of Byzantine nodes tolerated (1/3)
-	L int // Minimum number of non-Byzantine nodes required (2/3)
-	K int // Total number of trustees (= shares generated per peer)
-	R int // Minimum number of signatures needed to certify a deal
-	T int // Minimum number of shares needed to reconstruct a secret
+	N uint32 // Total number of nodes (peers + leader)
+	F uint32 // Maximum number of Byzantine nodes tolerated (1/3)
+	L uint32 // Minimum number of non-Byzantine nodes required (2/3)
+	K uint32 // Total number of trustees (= shares generated per peer)
+	R uint32 // Minimum number of signatures needed to certify a deal
+	T uint32 // Minimum number of shares needed to reconstruct a secret
 }
 
 type I1 struct {
@@ -31,7 +31,7 @@ type I1 struct {
 }
 
 type R1 struct {
-	Src int    // Source of the message
+	Src uint32 // Source of the message
 	HI1 []byte // Hash of I1 message
 	HRs []byte // Peer's trustee-randomness commit
 }
@@ -42,47 +42,43 @@ type I2 struct {
 }
 
 type R2 struct {
-	Src  int    // Source of the message
+	Src  uint32 // Source of the message
 	HI2  []byte // Hash of I2 message
 	Rs   []byte // Peers' trustee-selection randomness
 	Deal []byte // Peer's secret-sharing to trustees
 }
 
 type I3 struct {
-	SID []byte      // Session identifier
-	R2s map[int]*R2 // Leaders's list of signed R2 messages; empty slices represent missing R2 messages
+	SID []byte         // Session identifier
+	R2s map[uint32]*R2 // Leaders's list of signed R2 messages; empty slices represent missing R2 messages
 }
 
 type R3 struct {
-	Src       int      // Source of the message
+	Src       uint32   // Source of the message
 	HI3       []byte   // Hash of I3 message
 	Responses []R3Resp // Responses to dealt secret-shares
 }
 
 type R3Resp struct {
-	DealerIdx int    // Dealer's index in the peer list
-	ShareIdx  int    // Share's index in deal we are validating
+	DealerIdx uint32 // Dealer's index in the peer list
+	ShareIdx  uint32 // Share's index in deal we are validating
 	Resp      []byte // Encoded response to dealer's deal
 }
 
-// TODO: instead of re-transmitting the full vector of R2 messages, just form a
-// bit-vector that indicates which of the previously transmitted R2 messages are
-// good/bad
 type I4 struct {
-	SID     []byte         // Session identifier
-	R2s     map[int]*R2    // Leader's list of signed R2 messages; empty slices represent missing R2 messages
-	Invalid map[int]*[]int // Map to mark invalid responses
+	SID     []byte               // Session identifier
+	Invalid map[uint32]*[]uint32 // Map to mark invalid responses
 }
 
 type R4 struct {
-	Src    int              // Source of the message
-	HI4    []byte           // Hash of I4 message
-	Shares map[int]*R4Share // Revealed secret-shares
+	Src    uint32              // Source of the message
+	HI4    []byte              // Hash of I4 message
+	Shares map[uint32]*R4Share // Revealed secret-shares
 }
 
 type R4Share struct {
-	DealerIdx int             // Dealer's index in the peer list
-	ShareIdx  int             // Share's index in dealer's deal
+	DealerIdx uint32          // Dealer's index in the peer list
+	ShareIdx  uint32          // Share's index in dealer's deal
 	Share     abstract.Secret // Decrypted share dealt to this server
 }
 
