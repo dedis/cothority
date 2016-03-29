@@ -47,3 +47,6 @@ func (rh *RandHound) sendToChildren(msg interface{}) error {
 	}
 	return nil
 }
+
+func (rh *RandHound) generateTranscript() {} // TODO
+func (rh *RandHound) verifyTranscript()   {} // TODO

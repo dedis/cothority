@@ -1,7 +1,6 @@
 Servers = 10
 Simulation = "RandHound"
 BF = 2
-Rounds = 1
 Trustees = 5
 Purpose = "RandHound Test"
 
