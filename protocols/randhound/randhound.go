@@ -12,7 +12,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
@@ -40,7 +39,6 @@ type Session struct {
 	Fingerprint []byte    // Fingerprint of a public key (usually of the leader)
 	Purpose     string    // Purpose of randomness
 	Time        time.Time // Scheduled initiation time
-	Shards      uint32    // Number of shards created from the RandHound randomness
 }
 
 // Group encapsulates all the configuration parameters of a list of RandHound nodes.
@@ -69,7 +67,7 @@ type Leader struct {
 	states  map[uint32]*poly.State // States for deals and responses from peers
 	invalid map[uint32]*[]uint32   // Map to mark invalid shares
 	Done    chan bool              // For signaling that a protocol run is finished
-	Result  chan Result            // For returning the generated randomness & sharding
+	Result  chan []byte            // For returning the generated randomness & sharding
 }
 
 // Peer (=server) refers to a node which contributes to the generation of the
@@ -85,12 +83,6 @@ type Peer struct {
 	r2     *R2                 // R2 - " -
 	r3     *R3                 // R3 - " -
 	r4     *R4                 // R4 - " -
-}
-
-// Result of a RandHound run
-type Result struct {
-	Rnd    []byte              // The produced random string
-	Shards [][]*network.Entity // Sharding of the network entities
 }
 
 // NewRandHound generates a new RandHound instance.
@@ -134,7 +126,7 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 
 // Setup configures a RandHound instance by creating group and session
 // parameters of the protocol. Needs to be called before Start.
-func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string, shards uint32) error {
+func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string) error {
 
 	// Setup group
 	group, gid, err := rh.newGroup(nodes, trustees)
@@ -145,7 +137,7 @@ func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string, shards
 	rh.Group = group
 
 	// Setup session
-	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now(), shards)
+	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now())
 	if err != nil {
 		return err
 	}
@@ -176,7 +168,7 @@ func (rh *RandHound) Start() error {
 	return rh.sendToChildren(rh.Leader.i1)
 }
 
-func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time, shards uint32) (*Session, []byte, error) {
+func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time) (*Session, []byte, error) {
 
 	buf := new(bytes.Buffer)
 
@@ -198,15 +190,10 @@ func (rh *RandHound) newSession(public abstract.Point, purpose string, time time
 		return nil, nil, err
 	}
 
-	if err = binary.Write(buf, binary.LittleEndian, shards); err != nil {
-		return nil, nil, err
-	}
-
 	return &Session{
 		Fingerprint: pub,
 		Purpose:     purpose,
-		Time:        time,
-		Shards:      shards}, rh.hash(buf.Bytes()), nil
+		Time:        time}, rh.hash(buf.Bytes()), nil
 }
 
 func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, error) {
@@ -263,7 +250,7 @@ func (rh *RandHound) newLeader() (*Leader, error) {
 		states:  make(map[uint32]*poly.State),
 		invalid: make(map[uint32]*[]uint32),
 		Done:    make(chan bool, 1),
-		Result:  make(chan Result, 1),
+		Result:  make(chan []byte),
 	}, nil
 }
 

@@ -493,12 +493,8 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 				return err
 			}
 
-			res := Result{}
-			res.Rnd = rb
-			res.Shards = rh.createShards(rb)
-
 			rh.Leader.Done <- true
-			rh.Leader.Result <- res
+			rh.Leader.Result <- rb
 		}
 	}
 	return nil

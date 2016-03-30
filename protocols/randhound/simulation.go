@@ -45,22 +45,28 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	rh := leader.ProtocolInstance().(*RandHound)
-	err = rh.Setup(uint32(rhs.Hosts), rhs.Trustees, rhs.Purpose, rhs.Shards)
+	err = rh.Setup(uint32(rhs.Hosts), rhs.Trustees, rhs.Purpose)
 	if err != nil {
 		return err
 	}
+	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
+	log.Printf("RandHound - shards: %d\n", rhs.Shards)
 	rh.StartProtocol()
 
-	result := Result{}
+	rnd := make([]byte, 32)
 	select {
 	case <-rh.Leader.Done:
 		log.Printf("RandHound - done")
-		result = <-rh.Leader.Result
+		rnd = <-rh.Leader.Result
+		sharding, err := rh.CreateSharding(rnd, rhs.Shards)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("RandHound - random bytes: %v\n", rnd)
+		log.Printf("RandHound - sharding: %v\n", sharding)
 	case <-time.After(time.Second * 60):
 		log.Printf("RandHound - time out")
 	}
-	log.Printf("RandHound - random bytes: %v\n", result.Rnd)
-	log.Printf("RandHound - shards: %v\n", result.Shards)
 
 	return nil
 

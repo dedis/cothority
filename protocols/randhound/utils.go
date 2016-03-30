@@ -2,10 +2,45 @@
 package randhound
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
+
+// CreateShards produces a pseudorandom sharding of the network entity list
+// based on a seed and a number of requested shards.
+func (rh *RandHound) CreateSharding(seed []byte, shards uint32) ([][]*network.Entity, error) {
+
+	if rh.Group.N < shards {
+		return nil, errors.New(fmt.Sprintf("Number of requested shards larger than available number of nodes"))
+	}
+
+	// Compute a permutation of [0,n-1]
+	prng := rh.Node.Suite().Cipher(seed)
+	m := make([]uint32, rh.Group.N)
+	for i := range m {
+		j := int(random.Uint64(prng) % uint64(i+1))
+		m[i] = m[j]
+		m[j] = uint32(i)
+	}
+
+	// Create sharding of the current EntityList according to the above permutation
+	el := rh.Node.EntityList().List
+	n := int(rh.Group.N / shards)
+	sharding := [][]*network.Entity{}
+	shard := []*network.Entity{}
+	for i, j := range m {
+		shard = append(shard, el[j])
+		if (i%n == n-1) || (i == len(m)-1) {
+			sharding = append(sharding, shard)
+			shard = make([]*network.Entity, 0)
+		}
+	}
+	return sharding, nil
+}
 
 func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstract.Point) {
 
@@ -30,32 +65,6 @@ func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstrac
 		}
 	}
 	return shareIdx, trustees
-}
-
-func (rh *RandHound) createShards(seed []byte) [][]*network.Entity {
-
-	// Compute a permutation of [0,n-1]
-	prng := rh.Node.Suite().Cipher(seed)
-	m := make([]uint32, rh.Group.N)
-	for i := range m {
-		j := int(random.Uint64(prng) % uint64(i+1))
-		m[i] = m[j]
-		m[j] = uint32(i)
-	}
-
-	// Create shards of the current EntityList according to the above permutation
-	el := rh.Node.EntityList().List
-	n := int(rh.Group.N / rh.Session.Shards)
-	shards := [][]*network.Entity{}
-	shard := []*network.Entity{}
-	for i, j := range m {
-		shard = append(shard, el[j])
-		if (i%n == n-1) || (i == len(m)-1) {
-			shards = append(shards, shard)
-			shard = make([]*network.Entity, 0)
-		}
-	}
-	return shards
 }
 
 func (rh *RandHound) hash(bytes ...[]byte) []byte {

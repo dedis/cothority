@@ -32,22 +32,26 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	rh := leader.ProtocolInstance().(*randhound.RandHound)
-	err = rh.Setup(nodes, trustees, purpose, shards)
+	err = rh.Setup(nodes, trustees, purpose)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	log.Printf("RandHound - shards: %d\n", rh.Session.Shards)
+	log.Printf("RandHound - shards: %d\n", shards)
 	leader.StartProtocol()
 
-	result := randhound.Result{}
+	rnd := make([]byte, 32)
 	select {
 	case <-rh.Leader.Done:
 		log.Printf("RandHound - done")
-		result = <-rh.Leader.Result
+		rnd = <-rh.Leader.Result
+		sharding, err := rh.CreateSharding(rnd, shards)
+		if err != nil {
+			t.Fatal(err)
+		}
+		log.Printf("RandHound - random bytes: %v\n", rnd)
+		log.Printf("RandHound - sharding: %v\n", sharding)
 	case <-time.After(time.Second * 60):
 		t.Fatal("RandHound – time out")
 	}
-	log.Printf("RandHound - random bytes: %v\n", result.Rnd)
-	log.Printf("RandHound - shards: %v\n", result.Shards)
 }
