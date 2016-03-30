@@ -237,7 +237,7 @@ func (n *Node) protocolInstantiate() error {
 	if n.token == nil {
 		return errors.New("Hope this is running in test-mode")
 	}
-	pid := n.token.ProtocolID
+	pid := n.token.ProtoID
 	p, ok := protocols[pid]
 	if !ok {
 		return errors.New("Protocol " + pid.String() + " doesn't exist")

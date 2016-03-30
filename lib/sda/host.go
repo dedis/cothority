@@ -541,7 +541,7 @@ func (h *Host) Private() abstract.Secret {
 	return h.private
 }
 
-func (h *Host) StartNewNode(protoID uuid.UUID, tree *Tree) (*Node, error) {
+func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(protoID, tree)
 }
 

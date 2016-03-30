@@ -131,7 +131,7 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 // StartNewNode starts a new node which will in turn instantiate the desired
 // protocol. This is called from the root-node and will start the
 // protocol
-func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+func (o *Overlay) StartNewNode(protocolID ProtocolID, tree *Tree) (*Node, error) {
 
 	// instantiate node
 	var err error
@@ -149,7 +149,7 @@ func (o *Overlay) StartNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 // CreateNewNode is used when you want to create the node with the protocol
 // instance but do not want to start it yet. Use case are when you are root, you
 // want to specifiy some additional configuration for example.
-func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+func (o *Overlay) CreateNewNode(protocolID ProtocolID, tree *Tree) (*Node, error) {
 	node, err := o.NewNodeEmpty(protocolID, tree)
 	if err != nil {
 		return nil, err
@@ -162,22 +162,22 @@ func (o *Overlay) CreateNewNode(protocolID uuid.UUID, tree *Tree) (*Node, error)
 }
 
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
-	return o.StartNewNode(ProtocolNameToUuid(name), tree)
+	return o.StartNewNode(ProtocolNameToID(name), tree)
 }
 
 // CreateNewNodeName only creates the Node but do not call the instantiation of
 // the protocol directly, that way you can do your own stuff before calling
 // protocol.Start() or node.Start()
 func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
-	return o.CreateNewNode(ProtocolNameToUuid(name), tree)
+	return o.CreateNewNode(ProtocolNameToID(name), tree)
 }
 
 func (o *Overlay) NewNodeEmptyName(name string, tree *Tree) (*Node, error) {
-	return o.NewNodeEmpty(ProtocolNameToUuid(name), tree)
+	return o.NewNodeEmpty(ProtocolNameToID(name), tree)
 }
 
 // NewNode returns a simple node without instantiating anything no protocol.
-func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) {
+func (o *Overlay) NewNodeEmpty(protocolID ProtocolID, tree *Tree) (*Node, error) {
 	// check everything exists
 	if !ProtocolExists(protocolID) {
 		return nil, errors.New("Protocol doesn't exists: " + protocolID.String())
@@ -188,7 +188,7 @@ func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	}
 	// instantiate
 	token := &Token{
-		ProtocolID:   protocolID,
+		ProtoID:      protocolID,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tree.Root.Id,

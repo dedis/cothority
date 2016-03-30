@@ -15,7 +15,7 @@ func init() {
 	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
 	sda.ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
 	sda.ProtocolRegisterName("ProtocolBlocking", NewProtocolBlocking)
-	sda.ProtocolRegister(testID, NewProtocolTest)
+	sda.ProtocolRegister(testProtoID, NewProtocolTest)
 	Incoming = make(chan struct {
 		*sda.TreeNode
 		NodeTestMsg
@@ -132,7 +132,7 @@ func TestNewNode(t *testing.T) {
 	h1.AddTree(tree)
 
 	// Try directly StartNewNode
-	node, err := h1.StartNewNode(testID, tree)
+	node, err := h1.StartNewNode(testProtoID, tree)
 	if err != nil {
 		t.Fatal("Could not start new protocol", err)
 	}

@@ -168,12 +168,12 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 	if tree == nil {
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
-	protId := ProtocolNameToUuid(protName)
+	protId := ProtocolNameToID(protName)
 	if !ProtocolExists(protId) {
 		return nil, errors.New("Didn't find protocol: " + protName)
 	}
 	tok := &Token{
-		ProtocolID:   protId,
+		ProtoID:      protId,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tn.Id,
