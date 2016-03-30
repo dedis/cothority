@@ -131,9 +131,6 @@ type SecureTcpHost struct {
 	entity *Entity
 	// Private key tied to this entity
 	private abstract.Secret
-	// mapping from the entity to the names used in TcpHost
-	// In TcpHost the names then maps to the actual connection
-	EntityToAddr map[uuid.UUID]string
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string
