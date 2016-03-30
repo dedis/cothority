@@ -451,7 +451,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 			}
 		}
 		if !bytes.Equal(r4.R4.HI4, rh.hash(rh.SID, buf.Bytes())) {
-			return fmt.Errof("R4: peer %d replied to wrong I4 message", r4.Src)
+			return fmt.Errorf("R4: peer %d replied to wrong I4 message", r4.Src)
 		}
 
 		// Collect replies of the peers

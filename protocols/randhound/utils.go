@@ -13,7 +13,7 @@ import (
 func (rh *RandHound) CreateSharding(seed []byte, shards uint32) ([][]*network.Entity, error) {
 
 	if rh.Group.N < shards {
-		return nil, fmt.Errorsf("Number of requested shards larger than available number of nodes")
+		return nil, fmt.Errorf("Number of requested shards larger than available number of nodes")
 	}
 
 	// Compute a permutation of [0,n-1]
