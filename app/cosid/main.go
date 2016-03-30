@@ -63,7 +63,7 @@ func main() {
 	groupToml := app.NewGroupToml(serverToml)
 	fmt.Println(groupToml.String())
 
-	host.Listen()
+	host.ListenNoblock()
 	host.StartProcessMessages()
 	host.WaitForClose()
 }
