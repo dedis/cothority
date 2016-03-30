@@ -24,11 +24,12 @@ type ProtocolInstance interface {
 	// Shutdown cleans up the resources used by this protocol instance
 	Shutdown() error
 
-	// HACKY / TEMPORARY way: need to access protocols/cosi from sda (without
-	// cycle import). It will be solved in the next release.
-	// give the message to sign to the protocol instance
+	// SigningMessage is temporary hack:
+	// need to access protocols/cosi from sda (without cycle import).
+	// It takes the message to sign as an argument to the protocol instance
+	// XXX it will be removed in the next release.
 	SigningMessage(msg []byte)
-	// callback to register when the signature is done
+	// RegisterDoneCallback callback to register when the signature is done
 	RegisterDoneCallback(func(chal, secret abstract.Secret))
 }
 

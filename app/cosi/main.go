@@ -51,7 +51,6 @@ var m *flag.FlagSet
 func init() {
 	f = flag.NewFlagSet("f", flag.ContinueOnError)
 	m = flag.NewFlagSet("m", flag.ContinueOnError)
-	//dbg.SetDebugVisible(3)
 }
 
 func main() {

@@ -103,9 +103,9 @@ type SendEntity struct {
 
 // CLI Part of SDA
 
-// The Request to CoSi: it is used by the client to send something to sda that
-// will in turn give that to the CoSi system. It contains the message the client
-// wants to sign.
+// CosiRequest is used by the client to send something to sda that
+// will in turn give that to the CoSi system.
+// It contains the message the client wants to sign.
 type CosiRequest struct {
 	// The entity list to use for creating the cosi tree
 	EntityList *EntityList
@@ -126,7 +126,7 @@ type CosiResponse struct {
 	Response abstract.Secret
 }
 
-// Implements golang's JSON marshal interface:
+// MarshalJSON implements golang's JSON marshal interface
 // XXX might be moved to another package soon
 func (s *CosiResponse) MarshalJSON() ([]byte, error) {
 	cw := new(bytes.Buffer)
@@ -151,6 +151,7 @@ func (s *CosiResponse) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON implements golang's JSON unmarshal interface
 func (s *CosiResponse) UnmarshalJSON(data []byte) error {
 	type Aux struct {
 		Sum       string
