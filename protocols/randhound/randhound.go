@@ -67,7 +67,6 @@ type Leader struct {
 	states  map[uint32]*poly.State // States for deals and responses from peers
 	invalid map[uint32]*[]uint32   // Map to mark invalid shares
 	Done    chan bool              // For signaling that a protocol run is finished
-	Result  chan []byte            // For returning the generated randomness & sharding
 }
 
 // Peer (=server) refers to a node which contributes to the generation of the
@@ -250,7 +249,6 @@ func (rh *RandHound) newLeader() (*Leader, error) {
 		states:  make(map[uint32]*poly.State),
 		invalid: make(map[uint32]*[]uint32),
 		Done:    make(chan bool, 1),
-		Result:  make(chan []byte),
 	}, nil
 }
 
