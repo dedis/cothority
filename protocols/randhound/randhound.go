@@ -12,6 +12,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
@@ -39,7 +40,7 @@ type Session struct {
 	Fingerprint []byte    // Fingerprint of a public key (usually of the leader)
 	Purpose     string    // Purpose of randomness
 	Time        time.Time // Scheduled initiation time
-	Shard       bool      // Indicate whether randomness should be used to shard peers into groups
+	Shards      uint32    // Number of shards created from the RandHound randomness
 }
 
 // Group encapsulates all the configuration parameters of a list of RandHound nodes.
@@ -68,7 +69,7 @@ type Leader struct {
 	states  map[uint32]*poly.State // States for deals and responses from peers
 	invalid map[uint32]*[]uint32   // Map to mark invalid shares
 	Done    chan bool              // For signaling that a protocol run is finished
-	Result  chan []byte            // For returning the generated randomness
+	Result  chan Result            // For returning the generated randomness & sharding
 }
 
 // Peer (=server) refers to a node which contributes to the generation of the
@@ -84,6 +85,12 @@ type Peer struct {
 	r2     *R2                 // R2 - " -
 	r3     *R3                 // R3 - " -
 	r4     *R4                 // R4 - " -
+}
+
+// Result of a RandHound run
+type Result struct {
+	Rnd    []byte              // The produced random string
+	Shards [][]*network.Entity // Sharding of the network entities
 }
 
 // NewRandHound generates a new RandHound instance.
@@ -127,7 +134,7 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 
 // Setup configures a RandHound instance by creating group and session
 // parameters of the protocol. Needs to be called before Start.
-func (rh *RandHound) Setup(nodes int, trustees int, purpose string, shard bool) error {
+func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string, shards uint32) error {
 
 	// Setup group
 	group, gid, err := rh.newGroup(nodes, trustees)
@@ -138,7 +145,7 @@ func (rh *RandHound) Setup(nodes int, trustees int, purpose string, shard bool) 
 	rh.Group = group
 
 	// Setup session
-	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now(), shard)
+	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now(), shards)
 	if err != nil {
 		return err
 	}
@@ -169,35 +176,45 @@ func (rh *RandHound) Start() error {
 	return rh.sendToChildren(rh.Leader.i1)
 }
 
-func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time, shard bool) (*Session, []byte, error) {
+func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time, shards uint32) (*Session, []byte, error) {
+
+	buf := new(bytes.Buffer)
 
 	pub, err := public.MarshalBinary()
 	if err != nil {
 		return nil, nil, err
 	}
-
+	if err = binary.Write(buf, binary.LittleEndian, pub); err != nil {
+		return nil, nil, err
+	}
 	tm, err := time.MarshalBinary()
 	if err != nil {
 		return nil, nil, err
 	}
+	if err = binary.Write(buf, binary.LittleEndian, tm); err != nil {
+		return nil, nil, err
+	}
+	if err = binary.Write(buf, binary.LittleEndian, []byte(purpose)); err != nil {
+		return nil, nil, err
+	}
 
-	s := []byte{0}
-	if shard {
-		s[0] = 1
+	if err = binary.Write(buf, binary.LittleEndian, shards); err != nil {
+		return nil, nil, err
 	}
 
 	return &Session{
 		Fingerprint: pub,
 		Purpose:     purpose,
 		Time:        time,
-		Shard:       shard}, rh.hash(pub, []byte(purpose), tm, s), nil
+		Shards:      shards}, rh.hash(buf.Bytes()), nil
 }
 
-func (rh *RandHound) newGroup(nodes int, trustees int) (*Group, []byte, error) {
+func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, error) {
 
-	n := uint32(nodes)    // Number of nodes (peers + leader)
-	k := uint32(trustees) // Number of trustees (= shares generaetd per peer)
 	buf := new(bytes.Buffer)
+
+	n := nodes    // Number of nodes (peers + leader)
+	k := trustees // Number of trustees (= shares generaetd per peer)
 
 	// Setup group parameters: note that T <= R <= K must hold;
 	// T = R for simplicity, might change later
@@ -246,7 +263,7 @@ func (rh *RandHound) newLeader() (*Leader, error) {
 		states:  make(map[uint32]*poly.State),
 		invalid: make(map[uint32]*[]uint32),
 		Done:    make(chan bool, 1),
-		Result:  make(chan []byte),
+		Result:  make(chan Result, 1),
 	}, nil
 }
 

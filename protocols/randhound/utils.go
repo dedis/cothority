@@ -1,7 +1,8 @@
-// Collection of some utility functions used in the RandHound protocol.
+// Utility functions used in the RandHound protocol.
 package randhound
 
 import (
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
@@ -29,6 +30,32 @@ func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstrac
 		}
 	}
 	return shareIdx, trustees
+}
+
+func (rh *RandHound) createShards(seed []byte) [][]*network.Entity {
+
+	// Compute a permutation of [0,n-1]
+	prng := rh.Node.Suite().Cipher(seed)
+	m := make([]uint32, rh.Group.N)
+	for i := range m {
+		j := int(random.Uint64(prng) % uint64(i+1))
+		m[i] = m[j]
+		m[j] = uint32(i)
+	}
+
+	// Create shards of the current EntityList according to the above permutation
+	el := rh.Node.EntityList().List
+	n := int(rh.Group.N / rh.Session.Shards)
+	shards := [][]*network.Entity{}
+	shard := []*network.Entity{}
+	for i, j := range m {
+		shard = append(shard, el[j])
+		if (i%n == n-1) || (i == len(m)-1) {
+			shards = append(shards, shard)
+			shard = make([]*network.Entity, 0)
+		}
+	}
+	return shards
 }
 
 func (rh *RandHound) hash(bytes ...[]byte) []byte {

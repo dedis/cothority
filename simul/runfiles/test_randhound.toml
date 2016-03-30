@@ -3,6 +3,7 @@ Simulation = "RandHound"
 BF = 2
 Trustees = 5
 Purpose = "RandHound Test"
+Shards = 2
 
 Hosts
 10

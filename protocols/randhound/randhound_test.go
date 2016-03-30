@@ -14,13 +14,13 @@ func TestRandHound(t *testing.T) {
 
 	// Setup parameters
 	var name string = "RandHound"             // Protocol name
-	var nodes int = 10                        // Number of nodes (peers + leader)
-	var trustees int = 5                      // Number of trustees
+	var nodes uint32 = 10                     // Number of nodes (peers + leader)
+	var trustees uint32 = 5                   // Number of trustees
 	var purpose string = "RandHound test run" // Purpose
-	var shard bool = false                    // Use randomness to shard nodes into groups?
+	var shards uint32 = 2                     // Number of shards created from the randomness
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(nodes, false, true, true)
+	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
 	dbg.TestOutput(testing.Verbose(), 1)
@@ -32,20 +32,22 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	rh := leader.ProtocolInstance().(*randhound.RandHound)
-	err = rh.Setup(nodes, trustees, purpose, shard)
+	err = rh.Setup(nodes, trustees, purpose, shards)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
+	log.Printf("RandHound - shards: %d\n", rh.Session.Shards)
 	leader.StartProtocol()
 
-	bytes := make([]byte, 32)
+	result := randhound.Result{}
 	select {
 	case <-rh.Leader.Done:
 		log.Printf("RandHound - done")
-		bytes = <-rh.Leader.Result
+		result = <-rh.Leader.Result
 	case <-time.After(time.Second * 60):
 		t.Fatal("RandHound – time out")
 	}
-	log.Printf("RandHound - random bytes: %v\n", bytes)
+	log.Printf("RandHound - random bytes: %v\n", result.Rnd)
+	log.Printf("RandHound - shards: %v\n", result.Shards)
 }

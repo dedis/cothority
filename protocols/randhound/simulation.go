@@ -14,9 +14,9 @@ func init() {
 
 type RHSimulation struct {
 	sda.SimulationBFTree
-	Trustees int
+	Trustees uint32
 	Purpose  string
-	Shard    bool
+	Shards   uint32
 }
 
 func NewRHSimulation(config string) (sda.Simulation, error) {
@@ -45,21 +45,22 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	rh := leader.ProtocolInstance().(*RandHound)
-	err = rh.Setup(rhs.Hosts, rhs.Trustees, rhs.Purpose, rhs.Shard)
+	err = rh.Setup(uint32(rhs.Hosts), rhs.Trustees, rhs.Purpose, rhs.Shards)
 	if err != nil {
 		return err
 	}
 	rh.StartProtocol()
 
-	bytes := make([]byte, 32)
+	result := Result{}
 	select {
 	case <-rh.Leader.Done:
 		log.Printf("RandHound - done")
-		bytes = <-rh.Leader.Result
+		result = <-rh.Leader.Result
 	case <-time.After(time.Second * 60):
 		log.Printf("RandHound - time out")
 	}
-	log.Printf("RandHound - random bytes: %v\n", bytes)
+	log.Printf("RandHound - random bytes: %v\n", result.Rnd)
+	log.Printf("RandHound - shards: %v\n", result.Shards)
 
 	return nil
 
