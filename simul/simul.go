@@ -26,7 +26,6 @@ var build = ""
 var machines = 3
 var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
-var debugVisible int
 var race = false
 var runWait = 180
 var experimentWait = 0
@@ -40,15 +39,14 @@ func init() {
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
-	flag.IntVar(&debugVisible, "debug", dbg.DebugVisible(), "Change debug level (0-5)")
 	flag.IntVar(&runWait, "runwait", runWait, "How long to wait for each simulation to finish - overwrites .toml-value")
 	flag.IntVar(&experimentWait, "experimentwait", experimentWait, "How long to wait for the whole experiment to finish")
+	dbg.AddFlags()
 }
 
 // Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
-	dbg.SetDebugVisible(debugVisible)
 	deployP = platform.NewPlatform(platformDst)
 	if deployP == nil {
 		dbg.Fatal("Platform not recognized.", platformDst)
@@ -68,7 +66,7 @@ func main() {
 		}
 		deployP.Configure(&platform.PlatformConfig{
 			MonitorPort: monitorPort,
-			Debug:       debugVisible,
+			Debug:       dbg.DebugVisible(),
 		})
 
 		if clean {
