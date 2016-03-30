@@ -461,8 +461,8 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 			// Continue, once all replies have arrived
 
 			// Process shares of i-th peer
-			for i := range rh.Leader.r4 {
-				for _, r4share := range rh.Leader.r4[i].Shares {
+			for i, r4 := range rh.Leader.r4 {
+				for _, r4share := range r4.Shares {
 					dIdx := r4share.DealerIdx
 					sIdx := r4share.ShareIdx
 					share := r4share.Share
