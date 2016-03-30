@@ -177,7 +177,7 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tn.Id,
-		RoundID:      uuid.NewV4(),
+		RoundID:      RoundID(uuid.NewV4()),
 	}
 	node, err := NewNode(o, tok)
 	if err == nil {

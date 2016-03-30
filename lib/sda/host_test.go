@@ -337,14 +337,14 @@ func TestTokenId(t *testing.T) {
 		EntityListID: sda.EntityListID(uuid.NewV1()),
 		TreeID:       sda.TreeID(uuid.NewV1()),
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
-		RoundID:      uuid.NewV1(),
+		RoundID:      sda.RoundID(uuid.NewV1()),
 	}
 	id1 := t1.Id()
 	t2 := &sda.Token{
 		EntityListID: sda.EntityListID(uuid.NewV1()),
 		TreeID:       sda.TreeID(uuid.NewV1()),
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
-		RoundID:      uuid.NewV1(),
+		RoundID:      sda.RoundID(uuid.NewV1()),
 	}
 	id2 := t2.Id()
 	if uuid.Equal(uuid.UUID(id1), uuid.UUID(id2)) {

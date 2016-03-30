@@ -30,6 +30,15 @@ type SDAData struct {
 	MsgSlice []byte
 }
 
+// RoundID uniquely identifies a round of a protocol run
+type RoundID uuid.UUID
+
+// String returns the canonical representation of the rounds ID (wrapper around
+// uuid.UUID.String())
+func (rId RoundID) String() string {
+	return uuid.UUID(rId).String()
+}
+
 // TokenID uniquely identifies the start and end-point of a message by an ID
 // (see Token struct)
 type TokenID uuid.UUID
@@ -43,7 +52,7 @@ type Token struct {
 	EntityListID EntityListID
 	TreeID       TreeID
 	ProtoID      ProtocolID
-	RoundID      uuid.UUID
+	RoundID      RoundID
 	TreeNodeID   TreeNodeID
 	cacheId      TokenID
 }

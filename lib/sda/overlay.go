@@ -190,7 +190,7 @@ func (o *Overlay) NewNodeEmpty(protocolID ProtocolID, tree *Tree) (*Node, error)
 		TreeID:       tree.Id,
 		TreeNodeID:   tree.Root.Id,
 		// Host is handling the generation of protocolInstanceID
-		RoundID: uuid.NewV4(),
+		RoundID: RoundID(uuid.NewV4()),
 	}
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
