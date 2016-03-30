@@ -7,6 +7,7 @@
 package ntree
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -49,9 +50,13 @@ func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 
 func (p *Protocol) Start() error {
 	if p.IsRoot() {
-		dbg.Lvl3("Starting ntree/naive")
-		return p.HandleSignRequest(structMessage{p.TreeNode(),
-			Message{p.message, p.verifySignature}})
+		if len(p.Children()) > 0 {
+			dbg.Lvl3("Starting ntree/naive")
+			return p.HandleSignRequest(structMessage{p.TreeNode(),
+				Message{p.message, p.verifySignature}})
+		} else {
+			return errors.New("No children for root")
+		}
 	} else {
 		return fmt.Errorf("Called Start() on non-root ProtocolInstance")
 	}
