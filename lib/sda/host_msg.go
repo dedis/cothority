@@ -30,6 +30,10 @@ type SDAData struct {
 	MsgSlice []byte
 }
 
+// TokenID uniquely identifies the start and end-point of a message by an ID
+// (see Token struct)
+type TokenID uuid.UUID
+
 // A Token contains all identifiers needed to uniquely identify one protocol
 // instance. It gets passed when a new protocol instance is created and get used
 // by every protocol instance when they want to send a message. That way, the

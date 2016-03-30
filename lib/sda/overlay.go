@@ -10,9 +10,6 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// TokenID uniquely identifies the start and end-point of a message
-type TokenID uuid.UUID
-
 // Overlay keeps all trees and entity-lists for a given host. It creates
 // Nodes and ProtocolInstances upon request and dispatches the messages.
 type Overlay struct {
