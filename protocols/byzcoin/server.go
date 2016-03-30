@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
-	"github.com/satori/go.uuid"
 )
 
 type BlockServer interface {
@@ -27,9 +26,6 @@ type ByzCoinServer struct {
 	blockSize int
 	timeOutMs uint64
 	fail      uint
-	// all the protocols byzcoin he generated.Map from RoundID <-> ByzCoin
-	// protocol instance.
-	instances map[uuid.UUID]*ByzCoin
 	// blockSignatureChan is the channel used to pass out the signatures that
 	// ByzCoin's instances have made
 	blockSignatureChan chan BlockSignature
@@ -47,7 +43,6 @@ func NewByzCoinServer(blockSize int, timeOutMs uint64, fail uint) *ByzCoinServer
 		blockSize:          blockSize,
 		timeOutMs:          timeOutMs,
 		fail:               fail,
-		instances:          make(map[uuid.UUID]*ByzCoin),
 		blockSignatureChan: make(chan BlockSignature),
 		transactionChan:    make(chan blkparser.Tx),
 		requestChan:        make(chan bool),

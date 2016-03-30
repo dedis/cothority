@@ -173,7 +173,7 @@ type NetworkMessage struct {
 type Entity struct {
 	// This is the public key of that Entity
 	Public abstract.Point
-	// The UUID corresponding to that public key
+	// The EntityID corresponding to that public key
 	Id EntityID
 	// A slice of addresses of where that Id might be found
 	Addresses []string
