@@ -177,11 +177,18 @@ type Entity struct {
 	// This is the public key of that Entity
 	Public abstract.Point
 	// The UUID corresponding to that public key
-	Id uuid.UUID
+	Id EntityID
 	// A slice of addresses of where that Id might be found
 	Addresses []string
 	// used to return the next available address
 	iter int
+}
+
+// EntityID uniquely identifies an Entity struct
+type EntityID uuid.UUID
+
+func (eid EntityID) Equals(other EntityID) bool {
+	return uuid.Equal(uuid.UUID(eid), uuid.UUID(other))
 }
 
 func (e *Entity) String() string {
@@ -205,7 +212,7 @@ func NewEntity(public abstract.Point, addresses ...string) *Entity {
 	return &Entity{
 		Public:    public,
 		Addresses: addresses,
-		Id:        uuid.NewV5(uuid.NamespaceURL, url),
+		Id:        EntityID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
 }
 

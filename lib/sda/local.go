@@ -16,11 +16,11 @@ import (
 
 type LocalTest struct {
 	// A map of Entity.Id to Hosts
-	Hosts map[uuid.UUID]*Host
+	Hosts map[network.EntityID]*Host
 	// A map of Entity.Id to Overlays
-	Overlays map[uuid.UUID]*Overlay
+	Overlays map[network.EntityID]*Overlay
 	// A map of EntityList.Id to EntityLists
-	EntityLists map[uuid.UUID]*EntityList
+	EntityLists map[EntityListID]*EntityList
 	// A map of Tree.Id to Trees
 	Trees map[uuid.UUID]*Tree
 	// All single nodes
@@ -32,9 +32,9 @@ type LocalTest struct {
 func NewLocalTest() *LocalTest {
 	dbg.TestOutput(testing.Verbose(), 3)
 	return &LocalTest{
-		Hosts:       make(map[uuid.UUID]*Host),
-		Overlays:    make(map[uuid.UUID]*Overlay),
-		EntityLists: make(map[uuid.UUID]*EntityList),
+		Hosts:       make(map[network.EntityID]*Host),
+		Overlays:    make(map[network.EntityID]*Overlay),
+		EntityLists: make(map[EntityListID]*EntityList),
 		Trees:       make(map[uuid.UUID]*Tree),
 		Nodes:       make([]*Node, 0, 1),
 	}
@@ -45,7 +45,7 @@ func NewLocalTest() *LocalTest {
 func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
-		if uuid.Equal(h.Entity.Id, rootEntityId) {
+		if h.Entity.Id.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].StartNewNodeName(name, t)
@@ -59,7 +59,7 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
-		if uuid.Equal(h.Entity.Id, rootEntityId) {
+		if h.Entity.Id.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].CreateNewNodeName(name, t)
@@ -71,7 +71,7 @@ func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
-		if uuid.Equal(h.Entity.Id, rootEntityId) {
+		if h.Entity.Id.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].NewNodeEmptyName(name, t)
@@ -223,7 +223,7 @@ func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 }
 
 // NodesFromOverlay creates a TokenID to Node map from an EntityID
-func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[TokenID]*Node {
+func (l *LocalTest) NodesFromOverlay(entityId network.EntityID) map[TokenID]*Node {
 	return l.Overlays[entityId].nodes
 }
 
@@ -275,7 +275,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 				time.Sleep(time.Millisecond * 10)
 				root.entityListsLock.RLock()
 				for id, _ := range root.entities {
-					if uuid.Equal(id, host.Entity.Id) {
+					if id.Equals(host.Entity.Id) {
 						connected = true
 						break
 					}

@@ -40,7 +40,7 @@ type TokenID uuid.UUID
 // host knows how to create the SDAData message around the protocol's message
 // with the right fields set.
 type Token struct {
-	EntityListID uuid.UUID
+	EntityListID EntityListID
 	TreeID       uuid.UUID
 	ProtoID      ProtocolID
 	RoundID      uuid.UUID
@@ -84,7 +84,7 @@ type RequestTree struct {
 
 // RequestEntityList is used to ask the parent for a given EntityList
 type RequestEntityList struct {
-	EntityListID uuid.UUID
+	EntityListID EntityListID
 }
 
 // EntityListUnknown is used in case the entity list is unknown

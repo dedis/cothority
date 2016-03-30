@@ -250,7 +250,7 @@ func TestTreePropagation(t *testing.T) {
 		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).EntityId != uuid.Nil {
+	if msg.Msg.(sda.TreeMarshal).EntityListID != uuid.Nil {
 		t.Fatal("List should be empty")
 	}
 

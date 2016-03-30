@@ -24,7 +24,7 @@ type Overlay struct {
 	trees    map[uuid.UUID]*Tree
 	treesMut sync.Mutex
 	// mapping from EntityList.id to EntityList
-	entityLists    map[uuid.UUID]*EntityList
+	entityLists    map[EntityListID]*EntityList
 	entityListLock sync.Mutex
 	// cache for relating token(~Node) to TreeNode
 	cache TreeNodeCache
@@ -37,7 +37,7 @@ func NewOverlay(h *Host) *Overlay {
 		nodes:       make(map[TokenID]*Node),
 		nodeInfo:    make(map[TokenID]bool),
 		trees:       make(map[uuid.UUID]*Tree),
-		entityLists: make(map[uuid.UUID]*EntityList),
+		entityLists: make(map[EntityListID]*EntityList),
 		cache:       NewTreeNodeCache(),
 	}
 }
@@ -119,7 +119,7 @@ func (o *Overlay) EntityListFromToken(tok *Token) *EntityList {
 }
 
 // EntityList returns the entityList given by EntityListID
-func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
+func (o *Overlay) EntityList(elid EntityListID) *EntityList {
 	o.entityListLock.Lock()
 	defer o.entityListLock.Unlock()
 	return o.entityLists[elid]
