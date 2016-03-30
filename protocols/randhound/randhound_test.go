@@ -40,11 +40,13 @@ func TestRandHound(t *testing.T) {
 	log.Printf("RandHound - shards: %d\n", shards)
 	leader.StartProtocol()
 
-	rnd := make([]byte, 32)
 	select {
 	case <-rh.Leader.Done:
 		log.Printf("RandHound - done")
-		rnd = <-rh.Leader.Result
+		rnd, err := rh.Random()
+		if err != nil {
+			t.Fatal(err)
+		}
 		sharding, err := rh.CreateSharding(rnd, shards)
 		if err != nil {
 			t.Fatal(err)

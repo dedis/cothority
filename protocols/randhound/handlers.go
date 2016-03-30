@@ -482,19 +482,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 				}
 			}
 
-			// Generate the output
-			output := rh.Node.Suite().Secret().Zero()
-			for _, state := range rh.Leader.states {
-				output.Add(output, state.PriShares.Secret())
-			}
-
-			rb, err := output.MarshalBinary()
-			if err != nil {
-				return err
-			}
-
 			rh.Leader.Done <- true
-			rh.Leader.Result <- rb
 		}
 	}
 	return nil

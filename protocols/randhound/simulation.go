@@ -57,11 +57,13 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	log.Printf("RandHound - shards: %d\n", rhs.Shards)
 	rh.StartProtocol()
 
-	rnd := make([]byte, 32)
 	select {
 	case <-rh.Leader.Done:
 		log.Printf("RandHound - done")
-		rnd = <-rh.Leader.Result
+		rnd, err := rh.Random()
+		if err != nil {
+			panic(err)
+		}
 		sharding, err := rh.CreateSharding(rnd, rhs.Shards)
 		if err != nil {
 			panic(err)

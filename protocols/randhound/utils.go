@@ -40,6 +40,27 @@ func (rh *RandHound) CreateSharding(seed []byte, shards uint32) ([][]*network.En
 	return sharding, nil
 }
 
+// Random returns the public random string produced by RandHound
+func (rh *RandHound) Random() ([]byte, error) {
+
+	if !rh.Node.IsRoot() {
+		return nil, fmt.Errorf("Random function can only be called from the leader node")
+	}
+
+	output := rh.Node.Suite().Secret().Zero()
+	for _, state := range rh.Leader.states {
+		output.Add(output, state.PriShares.Secret())
+	}
+
+	rb, err := output.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	return rb, nil
+
+}
+
 func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstract.Point) {
 
 	// Seed PRNG for selection of trustees
