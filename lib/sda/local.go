@@ -22,7 +22,7 @@ type LocalTest struct {
 	// A map of EntityList.Id to EntityLists
 	EntityLists map[EntityListID]*EntityList
 	// A map of Tree.Id to Trees
-	Trees map[uuid.UUID]*Tree
+	Trees map[TreeID]*Tree
 	// All single nodes
 	Nodes []*Node
 }
@@ -35,7 +35,7 @@ func NewLocalTest() *LocalTest {
 		Hosts:       make(map[network.EntityID]*Host),
 		Overlays:    make(map[network.EntityID]*Overlay),
 		EntityLists: make(map[EntityListID]*EntityList),
-		Trees:       make(map[uuid.UUID]*Tree),
+		Trees:       make(map[TreeID]*Tree),
 		Nodes:       make([]*Node, 0, 1),
 	}
 }

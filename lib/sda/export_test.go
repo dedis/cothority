@@ -22,12 +22,12 @@ func (h *Host) StartNewNodeName(name string, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNodeName(name, tree)
 }
 
-func (h *Host) EntityList(id uuid.UUID) (*EntityList, bool) {
+func (h *Host) EntityList(id EntityListID) (*EntityList, bool) {
 	el := h.overlay.EntityList(id)
 	return el, el != nil
 }
 
-func (h *Host) GetTree(id uuid.UUID) (*Tree, bool) {
+func (h *Host) GetTree(id TreeID) (*Tree, bool) {
 	t := h.overlay.Tree(id)
 	return t, t != nil
 }

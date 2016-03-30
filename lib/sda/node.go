@@ -436,7 +436,7 @@ func (n *Node) HasFlag(mt uuid.UUID, f uint32) bool {
 // message being analyzed.
 func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	mt := sdaMsg.MsgType
-	fromParent := !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.Parent().Id)
+	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equals(n.Parent().Id)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
 		return mt, []*SDAData{sdaMsg}, true
 	}

@@ -321,7 +321,7 @@ func (h *Host) processMessages() {
 		// A Host has replied to our request of a tree
 		case SendTreeMessage:
 			tm := data.Msg.(TreeMarshal)
-			if tm.NodeId == uuid.Nil {
+			if tm.TreeId == TreeID(uuid.Nil) {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
@@ -457,7 +457,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 		newPending := make([]*SDAData, 0)
 		for _, msg := range h.pendingSDAs {
 			// if this message references t
-			if uuid.Equal(t.Id, msg.To.TreeID) {
+			if t.Id.Equals(msg.To.TreeID) {
 				// instantiate it and go
 				err := h.overlay.TransmitMsg(msg)
 				if err != nil {

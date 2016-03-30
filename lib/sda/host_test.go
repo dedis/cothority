@@ -193,7 +193,7 @@ func TestPeerListPropagation(t *testing.T) {
 	if msg.MsgType != sda.SendEntityListMessage {
 		t.Fatal("h1 didn't receive EntityList type, but", msg.MsgType)
 	}
-	if msg.Msg.(sda.EntityList).Id != uuid.Nil {
+	if msg.Msg.(sda.EntityList).Id != sda.EntityListID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
@@ -250,7 +250,7 @@ func TestTreePropagation(t *testing.T) {
 		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).EntityListID != uuid.Nil {
+	if msg.Msg.(sda.TreeMarshal).EntityListID != sda.EntityListID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
@@ -264,7 +264,7 @@ func TestTreePropagation(t *testing.T) {
 	if msg.MsgType != sda.SendTreeMessage {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
-	if msg.Msg.(sda.TreeMarshal).NodeId != tree.Id {
+	if msg.Msg.(sda.TreeMarshal).TreeId != tree.Id {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
@@ -334,8 +334,8 @@ func TestListTreePropagation(t *testing.T) {
 
 func TestTokenId(t *testing.T) {
 	t1 := &sda.Token{
-		EntityListID: uuid.NewV1(),
-		TreeID:       uuid.NewV1(),
+		EntityListID: sda.EntityListID(uuid.NewV1()),
+		TreeID:       sda.TreeID(uuid.NewV1()),
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
 		RoundID:      uuid.NewV1(),
 	}

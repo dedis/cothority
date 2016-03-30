@@ -21,7 +21,7 @@ type Overlay struct {
 	nodeInfo map[TokenID]bool
 	nodeLock sync.Mutex
 	// mapping from Tree.Id to Tree
-	trees    map[uuid.UUID]*Tree
+	trees    map[TreeID]*Tree
 	treesMut sync.Mutex
 	// mapping from EntityList.id to EntityList
 	entityLists    map[EntityListID]*EntityList
@@ -36,7 +36,7 @@ func NewOverlay(h *Host) *Overlay {
 		host:        h,
 		nodes:       make(map[TokenID]*Node),
 		nodeInfo:    make(map[TokenID]bool),
-		trees:       make(map[uuid.UUID]*Tree),
+		trees:       make(map[TreeID]*Tree),
 		entityLists: make(map[EntityListID]*EntityList),
 		cache:       NewTreeNodeCache(),
 	}
@@ -100,7 +100,7 @@ func (o *Overlay) TreeFromToken(tok *Token) *Tree {
 }
 
 // Tree returns the tree given by treeId or nil if not found
-func (o *Overlay) Tree(tid uuid.UUID) *Tree {
+func (o *Overlay) Tree(tid TreeID) *Tree {
 	o.treesMut.Lock()
 	defer o.treesMut.Unlock()
 	return o.trees[tid]
@@ -303,11 +303,11 @@ func (o *Overlay) Close() {
 // is not 1-1 (many Token can point to one TreeNode, but one token leads to one
 // TreeNode), we have to do certain
 // lookup, but that's better than searching the tree each time.
-type TreeNodeCache map[uuid.UUID]map[uuid.UUID]*TreeNode
+type TreeNodeCache map[TreeID]map[TreeNodeID]*TreeNode
 
 // Returns a new TreeNodeCache
 func NewTreeNodeCache() TreeNodeCache {
-	m := make(map[uuid.UUID]map[uuid.UUID]*TreeNode)
+	m := make(map[TreeID]map[TreeNodeID]*TreeNode)
 	return m
 }
 
@@ -315,10 +315,10 @@ func NewTreeNodeCache() TreeNodeCache {
 // It will also cache the parent and children of the treenode since that's most
 // likely what we are going to query.
 func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
-	var mm map[uuid.UUID]*TreeNode
+	var mm map[TreeNodeID]*TreeNode
 	var ok bool
 	if mm, ok = tnc[tree.Id]; !ok {
-		mm = make(map[uuid.UUID]*TreeNode)
+		mm = make(map[TreeNodeID]*TreeNode)
 	}
 	// add treenode
 	mm[treeNode.Id] = treeNode
@@ -337,7 +337,7 @@ func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 // GetFromToken returns the TreeNode that the token is pointing at, or
 // nil if there is none for this token.
 func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
-	var mm map[uuid.UUID]*TreeNode
+	var mm map[TreeNodeID]*TreeNode
 	var ok bool
 	if tok == nil {
 		return nil

@@ -41,10 +41,10 @@ type TokenID uuid.UUID
 // with the right fields set.
 type Token struct {
 	EntityListID EntityListID
-	TreeID       uuid.UUID
+	TreeID       TreeID
 	ProtoID      ProtocolID
 	RoundID      uuid.UUID
-	TreeNodeID   uuid.UUID
+	TreeNodeID   TreeNodeID
 	cacheId      TokenID
 }
 
@@ -67,7 +67,7 @@ func (t *Token) Id() TokenID {
 
 // ChangeTreeNodeID return a new Token containing a reference to the given
 // TreeNode
-func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
+func (t *Token) ChangeTreeNodeID(newid TreeNodeID) *Token {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
 	t_other := *t
@@ -79,7 +79,7 @@ func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
 // RequestTree is used to ask the parent for a given Tree
 type RequestTree struct {
 	// The treeID of the tree we want
-	TreeID uuid.UUID
+	TreeID TreeID
 }
 
 // RequestEntityList is used to ask the parent for a given EntityList
