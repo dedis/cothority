@@ -30,7 +30,7 @@ type SDAData struct {
 	MsgSlice []byte
 }
 
-// A Token contains all identifiers needed to Uniquely identify one protocol
+// A Token contains all identifiers needed to uniquely identify one protocol
 // instance. It gets passed when a new protocol instance is created and get used
 // by every protocol instance when they want to send a message. That way, the
 // host knows how to create the SDAData message around the protocol's message
