@@ -64,7 +64,7 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		if err != nil {
 			panic(err)
 		}
-		sharding, err := rh.CreateSharding(rnd, rhs.Shards)
+		sharding, err := rh.Shard(rnd, rhs.Shards)
 		if err != nil {
 			panic(err)
 		}

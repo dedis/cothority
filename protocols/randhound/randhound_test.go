@@ -47,7 +47,7 @@ func TestRandHound(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		sharding, err := rh.CreateSharding(rnd, shards)
+		sharding, err := rh.Shard(rnd, shards)
 		if err != nil {
 			t.Fatal(err)
 		}

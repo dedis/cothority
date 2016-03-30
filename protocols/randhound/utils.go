@@ -8,9 +8,9 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-// CreateSharding produces a pseudorandom sharding of the network entity list
+// Shard produces a pseudorandom sharding of the network entity list
 // based on a seed and a number of requested shards.
-func (rh *RandHound) CreateSharding(seed []byte, shards uint32) ([][]*network.Entity, error) {
+func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.Entity, error) {
 
 	if shards == 0 || rh.Group.N < shards {
 		return nil, fmt.Errorf("Number of requested shards not supported")
