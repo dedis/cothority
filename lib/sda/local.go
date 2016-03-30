@@ -207,7 +207,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.Proto
 	}
 	sdaMsg := &SDAData{
 		MsgSlice: b,
-		MsgType:  network.TypeToUUID(msg),
+		MsgType:  network.TypeToMessageTypeID(msg),
 		From:     from.token,
 		To:       to.token,
 	}

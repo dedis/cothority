@@ -159,12 +159,12 @@ type NetworkMessage struct {
 	// the origin of the message
 	From string
 	// What kind of msg do we have
-	MsgType uuid.UUID
+	MsgType MessageTypeID
 	// The underlying message
 	Msg ProtocolMessage
 	// which constructors are used
 	Constructors protobuf.Constructors
-	// possible error during unmarshaling so that upper layer can know it
+	// possible error during unmarshalling so that upper layer can know it
 	err error
 }
 

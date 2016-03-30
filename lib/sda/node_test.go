@@ -257,6 +257,7 @@ func TestMsgAggregation(t *testing.T) {
 func TestFlags(t *testing.T) {
 	defer dbg.AfterTest(t)
 
+	testType := network.MessageTypeID(uuid.Nil)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
@@ -264,15 +265,15 @@ func TestFlags(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't create node.")
 	}
-	if n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	if n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
-	n.SetFlag(uuid.Nil, sda.AggregateMessages)
-	if !n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	n.SetFlag(testType, sda.AggregateMessages)
+	if !n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should HAVE AggregateMessages-flag cleared")
 	}
-	n.ClearFlag(uuid.Nil, sda.AggregateMessages)
-	if n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	n.ClearFlag(testType, sda.AggregateMessages)
+	if n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
 }

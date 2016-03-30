@@ -23,7 +23,7 @@ type SDAData struct {
 	// NOTE: this is taken from network.NetworkMessage
 	Entity *network.Entity
 	// MsgType of the underlying data
-	MsgType uuid.UUID
+	MsgType network.MessageTypeID
 	// The interface to the actual Data
 	Msg network.ProtocolMessage
 	// The actual data as binary blob

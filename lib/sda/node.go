@@ -2,38 +2,33 @@ package sda
 
 import (
 	"errors"
-	"reflect"
-
 	"fmt"
+	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
-	"sync"
 )
 
-/*
-Node represents a protocol-instance in a given TreeNode. It is linked to
-Overlay where all the tree-structures are stored.
-*/
-
+// Node represents a protocol-instance in a given TreeNode. It embeds an
+// Overlay where all the tree-structures are stored.
 type Node struct {
 	overlay *Overlay
 	token   *Token
 	// cache for the TreeNode this Node is representing
 	treeNode *TreeNode
 	// channels holds all channels available for the different message-types
-	channels map[uuid.UUID]interface{}
+	channels map[network.MessageTypeID]interface{}
 	// registered handler-functions for that protocol
-	handlers map[uuid.UUID]interface{}
+	handlers map[network.MessageTypeID]interface{}
 	// flags for messages - only one channel/handler possible
-	messageTypeFlags map[uuid.UUID]uint32
+	messageTypeFlags map[network.MessageTypeID]uint32
 	// The protocolInstance belonging to that node
 	instance ProtocolInstance
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
-	msgQueue map[uuid.UUID][]*SDAData
+	msgQueue map[network.MessageTypeID][]*SDAData
 	// done callback
 	onDoneCallback func() bool
 	// queue holding msgs
@@ -69,10 +64,10 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
 		token:                tok,
-		channels:             make(map[uuid.UUID]interface{}),
-		handlers:             make(map[uuid.UUID]interface{}),
-		msgQueue:             make(map[uuid.UUID][]*SDAData),
-		messageTypeFlags:     make(map[uuid.UUID]uint32),
+		channels:             make(map[network.MessageTypeID]interface{}),
+		handlers:             make(map[network.MessageTypeID]interface{}),
+		messageTypeFlags:     make(map[network.MessageTypeID]uint32),
+		msgQueue:             make(map[network.MessageTypeID][]*SDAData),
 		treeNode:             nil,
 		msgDispatchQueue:     make([]*SDAData, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
@@ -180,7 +175,8 @@ func (n *Node) RegisterChannel(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
+	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+		cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
 	n.channels[typ] = c
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type) n.channels[typ] = c
@@ -218,7 +214,8 @@ func (n *Node) RegisterHandler(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Field(1).Type),
+	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+		cr.Field(1).Type),
 		cr.Field(1).Type)
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.handlers[typ] = c
@@ -416,17 +413,17 @@ func (n *Node) dispatchMsgToProtocol(sdaMsg *SDAData) error {
 }
 
 // SetFlag makes sure a given flag is set
-func (n *Node) SetFlag(mt uuid.UUID, f uint32) {
+func (n *Node) SetFlag(mt network.MessageTypeID, f uint32) {
 	n.messageTypeFlags[mt] |= f
 }
 
 // ClearFlag makes sure a given flag is removed
-func (n *Node) ClearFlag(mt uuid.UUID, f uint32) {
+func (n *Node) ClearFlag(mt network.MessageTypeID, f uint32) {
 	n.messageTypeFlags[mt] &^= f
 }
 
 // HasFlag returns true if the given flag is set
-func (n *Node) HasFlag(mt uuid.UUID, f uint32) bool {
+func (n *Node) HasFlag(mt network.MessageTypeID, f uint32) bool {
 	return n.messageTypeFlags[mt]&f != 0
 }
 
@@ -434,7 +431,7 @@ func (n *Node) HasFlag(mt uuid.UUID, f uint32) bool {
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
+func (n *Node) aggregate(sdaMsg *SDAData) (network.MessageTypeID, []*SDAData, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equals(n.Parent().Id)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
