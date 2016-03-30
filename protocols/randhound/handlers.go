@@ -180,7 +180,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 		// Verify reply
 		if !bytes.Equal(r1.R1.HI1, rh.hash(rh.SID, rh.GID, rh.Leader.i1.HRc)) {
-			return errors.New(fmt.Sprintf("R1: peer %d replied to wrong I1 message", r1.Src))
+			return fmt.Errorf("R1: peer %d replied to wrong I1 message", r1.Src)
 		}
 
 		// Collect replies of the peers
@@ -212,7 +212,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i2.I2.SID) {
-		return errors.New(fmt.Sprintf("I2: peer %d received message with incorrect session ID", rh.nodeIdx()))
+		return fmt.Errorf("I2: peer %d received message with incorrect session ID", rh.nodeIdx())
 	}
 
 	rh.Peer.i2 = &i2.I2
@@ -254,7 +254,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 		// Verify reply
 		if !bytes.Equal(r2.R2.HI2, rh.hash(rh.SID, rh.Leader.i2.Rc)) {
-			return errors.New(fmt.Sprintf("R2: peer %d replied to wrong I2 message", r2.Src))
+			return fmt.Errorf("R2: peer %d replied to wrong I2 message", r2.Src)
 		}
 
 		// Collect replies of the peers
@@ -296,7 +296,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i3.I3.SID) {
-		return errors.New(fmt.Sprintf("I3: peer %d received message with incorrect session ID", rh.nodeIdx()))
+		return fmt.Errorf("I3: peer %d received message with incorrect session ID", rh.nodeIdx())
 	}
 
 	rh.Peer.i3 = &i3.I3
@@ -362,7 +362,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 
 		// Verify reply
 		if !bytes.Equal(r3.R3.HI3, rh.hash(rh.SID, rh.hash(rh.SID, rh.Leader.i2.Rc))) {
-			return errors.New(fmt.Sprintf("R3: peer %d replied to wrong I3 message", r3.Src))
+			return fmt.Errorf("R3: peer %d replied to wrong I3 message", r3.Src)
 		}
 
 		// Collect replies of the peers
@@ -408,7 +408,7 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i4.I4.SID) {
-		return errors.New(fmt.Sprintf("I4: peer %d received message with incorrect session ID", rh.nodeIdx()))
+		return fmt.Errorf("I4: peer %d received message with incorrect session ID", rh.nodeIdx())
 	}
 
 	rh.Peer.i4 = &i4.I4
@@ -451,7 +451,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 			}
 		}
 		if !bytes.Equal(r4.R4.HI4, rh.hash(rh.SID, buf.Bytes())) {
-			return errors.New(fmt.Sprintf("R4: peer %d replied to wrong I4 message", r4.Src))
+			return fmt.Errof("R4: peer %d replied to wrong I4 message", r4.Src)
 		}
 
 		// Collect replies of the peers
@@ -461,7 +461,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 			// Continue, once all replies have arrived
 
 			// Process shares of i-th peer
-			for i, _ := range rh.Leader.r4 {
+			for i := range rh.Leader.r4 {
 				for _, r4share := range rh.Leader.r4[i].Shares {
 					dIdx := r4share.DealerIdx
 					sIdx := r4share.ShareIdx
@@ -469,7 +469,7 @@ func (rh *RandHound) handleR4(r4 WR4) error {
 
 					shareIdx, _ := rh.chooseTrustees(rh.Leader.rc, rh.Leader.r2[dIdx].Rs)
 					if sIdx != shareIdx[i] {
-						return errors.New(fmt.Sprintf("R4: server %d claimed share it wasn't dealt", i))
+						return fmt.Errorf("R4: server %d claimed share it wasn't dealt", i)
 					}
 
 					// Verify share

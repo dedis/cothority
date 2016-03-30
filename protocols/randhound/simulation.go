@@ -12,6 +12,7 @@ func init() {
 	sda.SimulationRegister("RandHound", NewRHSimulation)
 }
 
+// RHSimulation implements a RandHound simulation
 type RHSimulation struct {
 	sda.SimulationBFTree
 	Trustees uint32
@@ -19,6 +20,7 @@ type RHSimulation struct {
 	Shards   uint32
 }
 
+// NewRHSimulation creates a new RandHound simulation
 func NewRHSimulation(config string) (sda.Simulation, error) {
 	rhs := new(RHSimulation)
 	_, err := toml.Decode(config, rhs)
@@ -28,6 +30,7 @@ func NewRHSimulation(config string) (sda.Simulation, error) {
 	return rhs, nil
 }
 
+// Setup configures a RandHound simulation with certain parameters
 func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	rhs.Hosts = len(hosts)
@@ -39,6 +42,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 	return sim, nil
 }
 
+// Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	leader, err := config.Overlay.CreateNewNodeName("RandHound", config.Tree)
 	if err != nil {

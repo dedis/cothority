@@ -1,8 +1,6 @@
-// Utility functions used in the RandHound protocol.
 package randhound
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/dedis/cothority/lib/network"
@@ -10,12 +8,12 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
-// CreateShards produces a pseudorandom sharding of the network entity list
+// CreateSharding produces a pseudorandom sharding of the network entity list
 // based on a seed and a number of requested shards.
 func (rh *RandHound) CreateSharding(seed []byte, shards uint32) ([][]*network.Entity, error) {
 
 	if rh.Group.N < shards {
-		return nil, errors.New(fmt.Sprintf("Number of requested shards larger than available number of nodes"))
+		return nil, fmt.Errorsf("Number of requested shards larger than available number of nodes")
 	}
 
 	// Compute a permutation of [0,n-1]
@@ -61,7 +59,7 @@ func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstrac
 		if _, ok := shareIdx[i]; !ok && !tns[i].IsRoot() {
 			shareIdx[i] = j // j is the share index
 			trustees[j] = tns[i].Entity.Public
-			j += 1
+			j++
 		}
 	}
 	return shareIdx, trustees
