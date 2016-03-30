@@ -341,8 +341,8 @@ func TestTokenId(t *testing.T) {
 	}
 	id1 := t1.Id()
 	t2 := &sda.Token{
-		EntityListID: uuid.NewV1(),
-		TreeID:       uuid.NewV1(),
+		EntityListID: sda.EntityListID(uuid.NewV1()),
+		TreeID:       sda.TreeID(uuid.NewV1()),
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
 		RoundID:      uuid.NewV1(),
 	}
@@ -353,8 +353,8 @@ func TestTokenId(t *testing.T) {
 	if !uuid.Equal(uuid.UUID(id1), uuid.UUID(t1.Id())) {
 		t.Fatal("Twice the Id of the same token should be equal")
 	}
-	t3 := t1.ChangeTreeNodeID(uuid.NewV1())
-	if uuid.Equal(t1.TreeNodeID, t3.TreeNodeID) {
+	t3 := t1.ChangeTreeNodeID(sda.TreeNodeID(uuid.NewV1()))
+	if t1.TreeNodeID.Equals(t3.TreeNodeID) {
 		t.Fatal("OtherToken should modify copy")
 	}
 }
