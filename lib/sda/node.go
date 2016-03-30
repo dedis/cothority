@@ -508,7 +508,8 @@ func (n *Node) Name() string {
 	return n.Entity().First()
 }
 
-func (n *Node) TokenID() uuid.UUID {
+// TokenID returns the TokenID of the given node (to uniquely identify it)
+func (n *Node) TokenID() TokenID {
 	return n.token.Id()
 }
 

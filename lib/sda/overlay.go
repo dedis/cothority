@@ -10,18 +10,18 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-/*
-Overlay keeps all trees and entity-lists for a given host. It creates
-Nodes and ProtocolInstances upon request and dispatches the messages.
-*/
+// TokenID uniquely identifies the start and end-point of a message
+type TokenID uuid.UUID
 
+// Overlay keeps all trees and entity-lists for a given host. It creates
+// Nodes and ProtocolInstances upon request and dispatches the messages.
 type Overlay struct {
 	host *Host
 	// mapping from Token.Id() to Node
-	nodes map[uuid.UUID]*Node
+	nodes map[TokenID]*Node
 	// false = NOT DONE
 	// true = DONE
-	nodeInfo map[uuid.UUID]bool
+	nodeInfo map[TokenID]bool
 	nodeLock sync.Mutex
 	// mapping from Tree.Id to Tree
 	trees    map[uuid.UUID]*Tree
@@ -37,8 +37,8 @@ type Overlay struct {
 func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:        h,
-		nodes:       make(map[uuid.UUID]*Node),
-		nodeInfo:    make(map[uuid.UUID]bool),
+		nodes:       make(map[TokenID]*Node),
+		nodeInfo:    make(map[TokenID]bool),
 		trees:       make(map[uuid.UUID]*Tree),
 		entityLists: make(map[uuid.UUID]*EntityList),
 		cache:       NewTreeNodeCache(),

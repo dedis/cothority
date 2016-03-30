@@ -41,33 +41,34 @@ type Token struct {
 	ProtocolID   uuid.UUID
 	RoundID      uuid.UUID
 	TreeNodeID   uuid.UUID
-	cacheId      uuid.UUID
+	cacheId      TokenID
 }
 
 // Global mutex when we're working on Tokens. Needed because we
 // copy Tokens in ChangeTreeNodeID.
 var tokenMutex sync.Mutex
 
-// Returns the Id of a token so we can put that in a map easily
-func (t *Token) Id() uuid.UUID {
+// Id returns the TokenID which can be used to identify by token in map
+func (t *Token) Id() TokenID {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
-	if t.cacheId == uuid.Nil {
+	if t.cacheId == TokenID(uuid.Nil) {
 		url := network.UuidURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
-		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
+		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
 	}
 	return t.cacheId
 }
 
-// Return a new Token contianing a reference to the given TreeNode
+// ChangeTreeNodeID return a new Token containing a reference to the given
+// TreeNode
 func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
 	t_other := *t
 	t_other.TreeNodeID = newid
-	t_other.cacheId = uuid.Nil
+	t_other.cacheId = TokenID(uuid.Nil)
 	return &t_other
 }
 
@@ -82,7 +83,7 @@ type RequestEntityList struct {
 	EntityListID uuid.UUID
 }
 
-// In case the entity list is unknown
+// EntityListUnknown is used in case the entity list is unknown
 type EntityListUnknown struct {
 }
 

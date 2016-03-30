@@ -222,7 +222,8 @@ func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
 }
 
-func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[uuid.UUID]*Node {
+// NodesFromOverlay creates a TokenID to Node map from an EntityID
+func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[TokenID]*Node {
 	return l.Overlays[entityId].nodes
 }
 
