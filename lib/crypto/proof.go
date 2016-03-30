@@ -66,14 +66,6 @@ func (p Proof) Check(newHash HashFunc, root, leaf []byte) bool {
 	return subtle.ConstantTimeCompare(chk, root) != 0
 }
 
-func CheckProof(newHash HashFunc, root HashId, leaf HashId, proof Proof) bool {
-	// log.Println("Root", len(root), root)
-	// log.Println("Leaf", len(leaf), leaf)
-	// log.Println("Proof", proof)
-	// log.Println("\n")
-	return proof.Check(newHash, root, leaf)
-}
-
 func CheckLocalProofs(newHash HashFunc, root HashId, leaves []HashId, proofs []Proof) bool {
 	// fmt.Println("Created mtRoot:", mtRoot)
 
