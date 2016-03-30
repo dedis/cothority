@@ -41,7 +41,8 @@ To verify the signature on a file add the verify flag (-v):
 This command opens the corresnponding .sig file and validates the contained signature.
 
 Example usuage (create a file my-local-group.toml using cosid first):
-cosi -f my-file.txt -c my-local-group.toml`)
+cosi -f my-file.txt -c my-local-group.toml
+`)
 	os.Exit(1)
 }
 
@@ -100,8 +101,7 @@ func main() {
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
 func signStatement(r io.Reader,
-	el *sda.EntityList,
-	verify bool) (*sda.CosiResponse, error) {
+	el *sda.EntityList) (*sda.CosiResponse, error) {
 
 	msgB, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -144,12 +144,10 @@ func signStatement(r io.Reader,
 			"received response to the right type")
 	}
 	dbg.Lvl5("Response:", response)
-	if verify && false { // verify signature
-		err := cosi.VerifySignature(network.Suite, msgB, el.Aggregate,
-			response.Challenge, response.Response)
-		if err != nil {
-			return nil, err
-		}
+	err = cosi.VerifySignature(network.Suite, msgB, el.Aggregate,
+		response.Challenge, response.Response)
+	if err != nil {
+		return nil, err
 	}
 	return &response, nil
 }
@@ -181,14 +179,22 @@ func verifyFileSig(fileName, groupToml string) error {
 	if err := json.Unmarshal(sb, sig); err != nil {
 		return err
 	}
-	if bytes.Equal(sig.Sum, fHash) {
-
-	} else {
+	if !bytes.Equal(sig.Sum, fHash) {
 		return errors.New("You are trying to verify a signature " +
 			"belongig to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-
+	fGroup, err := os.Open(groupToml)
+	if err != nil {
+		return err
+	}
+	el, err := app.ReadGroupToml(fGroup)
+	if err != nil {
+		return err
+	}
+	if err := cosi.VerifySignature(network.Suite, b, el.Aggregate, sig.Challenge, sig.Response); err != nil {
+		return errors.New("Invalid sig:" + err.Error())
+	}
 	return nil
 }
 
@@ -225,7 +231,7 @@ func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := signStatement(r, el, true)
+	res, err := signStatement(r, el)
 	if err != nil {
 		return nil, err
 	}
