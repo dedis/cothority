@@ -13,10 +13,10 @@ type BlockServer interface {
 	Instantiate(n *sda.Node) (sda.ProtocolInstance, error)
 }
 
-// ByzCoinServer is the longterm control service that listens for transactions and
+// ByzCoinServer is the long-term control service that listens for transactions and
 // dispatch them to a new ByzCoin for each new signing that we want to do.
 // It creates the ByzCoin protocols and run them. only used by the root since
-// only the root pariticipates to the creation of the block.
+// only the root participates to the creation of the block.
 type ByzCoinServer struct {
 	// transactions pool where all the incoming transactions are stored
 	transactions []blkparser.Tx
