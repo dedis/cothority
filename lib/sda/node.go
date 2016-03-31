@@ -534,3 +534,9 @@ func (n *Node) Host() *Host {
 func (n *Node) SetProtocolInstance(pi ProtocolInstance) {
 	n.instance = pi
 }
+
+// CreateNewNodeName creates a new protocol from the overlay of that
+// Node using the default tree
+func (n *Node) CreateNewNodeName(name string) (*Node, error) {
+	return n.overlay.CreateNewNodeName(name, n.Tree())
+}

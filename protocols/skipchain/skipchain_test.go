@@ -1,19 +1,18 @@
 package skipchain
 
 import (
-	"testing"
-	"time"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"testing"
+	"time"
 )
 
 // Tests a 2-node system
 func TestNode(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	nbrNodes := 2
+	nbrNodes := 5
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 	//dbg.Lvl3(tree.Dump())
 	defer local.CloseAll()
@@ -25,12 +24,10 @@ func TestNode(t *testing.T) {
 	protocol := node.ProtocolInstance().(*ProtocolSkipchain)
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
-	case children := <-protocol.ChildCount:
-		dbg.Lvl2("Instance 1 is done")
-		if children != nbrNodes {
-			t.Fatal("Didn't get a child-cound of", nbrNodes)
-		}
+	case <-protocol.SetupDone:
+		dbg.Lvl2("Setup is done")
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}
+	time.Sleep(time.Second)
 }

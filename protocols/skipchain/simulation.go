@@ -1,12 +1,11 @@
 package skipchain
 
 import (
-	"errors"
+	//"errors"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"strconv"
 )
 
 /*
@@ -53,12 +52,8 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 		if err != nil {
 			return err
 		}
-		children := <-n.ProtocolInstance().(*ProtocolSkipchain).ChildCount
+		<-n.ProtocolInstance().(*ProtocolSkipchain).SetupDone
 		round.Record()
-		if children != size {
-			return errors.New("Didn't get " + strconv.Itoa(size) +
-				" children")
-		}
 	}
 	return nil
 }
