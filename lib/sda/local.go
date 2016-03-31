@@ -173,7 +173,7 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 		return nil, errors.New("Didn't find protocol: " + protName)
 	}
 	tok := &Token{
-		ProtocolID:   protId,
+		ServiceID:    protId,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tn.Id,

@@ -188,7 +188,7 @@ func (o *Overlay) NewNodeEmpty(protocolID uuid.UUID, tree *Tree) (*Node, error) 
 	}
 	// instantiate
 	token := &Token{
-		ProtocolID:   protocolID,
+		ServiceID:    protocolID,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tree.Root.Id,

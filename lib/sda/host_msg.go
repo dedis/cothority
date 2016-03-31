@@ -38,7 +38,7 @@ type SDAData struct {
 type Token struct {
 	EntityListID uuid.UUID
 	TreeID       uuid.UUID
-	ProtocolID   uuid.UUID
+	ServiceID    uuid.UUID
 	RoundID      uuid.UUID
 	TreeNodeID   uuid.UUID
 	cacheId      uuid.UUID
@@ -54,7 +54,7 @@ func (t *Token) Id() uuid.UUID {
 	defer tokenMutex.Unlock()
 	if t.cacheId == uuid.Nil {
 		url := network.UuidURL + "token/" + t.EntityListID.String() +
-			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String() +
+			t.RoundID.String() + t.ServiceID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
 	}
