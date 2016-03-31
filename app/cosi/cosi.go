@@ -114,6 +114,25 @@ func signString(c *cli.Context) {
 	writeSigAsJSON(sig, os.Stdout)
 }
 
+// sign takes a stream and a toml file defining the servers
+func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
+	dbg.Lvl3("Starting signature")
+	f, err := os.Open(tomlFileName)
+	if err != nil {
+		return nil, err
+	}
+	el, err := app.ReadGroupToml(f)
+	if err != nil {
+		return nil, err
+	}
+	dbg.Lvl2("Sending signature to", el)
+	res, err := signStatement(r, el)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func verifyFile(c *cli.Context) {
 	verify(c.Args().First(), c.GlobalString("servers"))
 }
@@ -248,25 +267,6 @@ func verifyPrintResult(err error) {
 	} else {
 		dbg.Print("Invalid: Signature verification failed:", err)
 	}
-}
-
-// sign takes a stream and a toml file defining the servers
-func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
-	dbg.Lvl3("Starting signature")
-	f, err := os.Open(tomlFileName)
-	if err != nil {
-		return nil, err
-	}
-	el, err := app.ReadGroupToml(f)
-	if err != nil {
-		return nil, err
-	}
-	dbg.Lvl2("Sending signature to", el)
-	res, err := signStatement(r, el)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
 }
 
 // handleErrorAndExit is a shortcut for all those pesky err-checks
