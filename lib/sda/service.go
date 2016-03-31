@@ -148,3 +148,6 @@ type Request struct {
 	// Data containing all the information in the request
 	Data *json.RawMessage
 }
+
+// RequestType is the type that registered by the network library
+var RequestType = network.RegisterMessageType(Request{})

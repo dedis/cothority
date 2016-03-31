@@ -376,6 +376,11 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
+
+		case RequestType:
+			// we received a Request to dispatch to a Service
+			dbg.Lvl4(h.workingAddress, " Received Request msg")
+			h.dispatchRequest(&data)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -383,6 +388,24 @@ func (h *Host) processMessages() {
 			dbg.Error("Sending error:", err)
 		}
 	}
+}
+
+// dispatchRequest finds the service and dispatch the message to it
+func (h *Host) dispatchRequest(nm *network.NetworkMessage) {
+	// cast
+	request, ok := nm.Msg.(Request)
+	if !ok {
+		dbg.Error("Could not cast the Request message")
+		return
+	}
+	// check if we have the target service
+	var service Service
+	if service, ok = h.services[request.Service]; !ok {
+		dbg.Error("No service registered for this ServiceID", request.Service, "(", ServiceFactory.Name(request.Service), ")")
+		return
+	}
+	// dispatch
+	service.ProcessRequest(nm.Entity, &request)
 }
 
 // sendSDAData marshals the inner msg and then sends a SDAData msg
