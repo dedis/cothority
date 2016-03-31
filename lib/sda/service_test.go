@@ -1,13 +1,15 @@
-package sda
+package sda_test
 
 import (
+	"fmt"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 	"testing"
 	"time"
 )
 
 type DummyProtocol struct {
-	*Node
+	*sda.Node
 	start chan bool
 }
 
@@ -17,41 +19,37 @@ func (dp *DummyProtocol) Start() error {
 }
 
 type DummyService struct {
-	*Host
+	*sda.Host
 	start chan bool
 }
 
-func (ds *DummyService) InstantiateProtocol(n *Node) (ProtocolInstance, error) {
+func (ds *DummyService) InstantiateProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &DummyProtocol{
 		Node:  n,
 		start: ds.start,
 	}, nil
 }
 
-func (ds *DummyService) ProcessRequest(n *network.Entity, r *Request) {
-	return
+func (ds *DummyService) ProcessRequest(n *network.Entity, req *sda.Request) {
+	fmt.Println("Requests !")
 }
 
-func TestServiceS(t *testing.T) {
+func TestServiceFactory(t *testing.T) {
 	ds := &DummyService{
 		start: make(chan bool),
 	}
-	ServiceFactory.RegisterByName("dummy", func(h *Host) Service {
+	sda.ServiceFactory.RegisterByName("dummy", func(h *sda.Host, path string) sda.Service {
 		ds.Host = h
-		h.SubscribeToRequest("dummy", ds)
 		ds.start <- true
 		return ds
 	})
 
-	done := make(chan bool)
-
-	var host *Host
-	go func() { host = NewLocalHost(2000) }()
+	var host *sda.Host
+	go func() { host = sda.NewLocalHost(2000) }()
 	select {
 	case <-ds.start:
 		break
 	case <-time.After(time.Millisecond * 100):
 		t.Fatal("Could not create dummy service")
 	}
-
 }

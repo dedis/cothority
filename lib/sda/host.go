@@ -71,6 +71,9 @@ type Host struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
+
+	// Services handled by this host (dispatcher)
+	services map[ServiceID]Service
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -92,6 +95,8 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	}
 
 	h.overlay = NewOverlay(h)
+
+	h.setupServices()
 	return h
 }
 
@@ -582,4 +587,18 @@ func (h *Host) Tx() uint64 {
 // Rx() to implement monitor/CounterIO
 func (h *Host) Rx() uint64 {
 	return h.host.Rx()
+}
+
+// setupServices is responsible for creating all the services registered
+func (h *Host) setupServices() {
+	h.services = make(map[ServiceID]Service)
+	ids := ServiceFactory.RegisteredServices()
+	for _, id := range ids {
+		s, err := ServiceFactory.Start(id, h, "mockingpath")
+		if err != nil {
+			dbg.Error("Trying to instantiate service:", err)
+		}
+		h.services[id] = s
+		dbg.Lvl2("Started Service", ServiceFactory.Name(id))
+	}
 }
