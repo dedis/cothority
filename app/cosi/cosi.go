@@ -85,7 +85,7 @@ func main() {
 }
 
 func checkConfig(c *cli.Context) {
-	groupToml := c.GlobalString("servers")
+	_ := c.GlobalString("servers")
 }
 
 func signFile(c *cli.Context) {
