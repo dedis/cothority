@@ -34,17 +34,17 @@ type Host struct {
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
 	// The open connections
-	connections map[uuid.UUID]network.SecureConn
+	connections map[network.EntityID]network.SecureConn
 	// chan of received messages - testmode
 	networkChan chan network.NetworkMessage
 	// The database of entities this host knows
-	entities map[uuid.UUID]*network.Entity
+	entities map[network.EntityID]*network.Entity
 	// lock associated to access entityLists
 	entityListsLock sync.RWMutex
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
-	pendingTreeMarshal map[uuid.UUID][]*TreeMarshal
+	pendingTreeMarshal map[EntityListID][]*TreeMarshal
 	// pendingSDAData are a list of message we received that does not correspond
 	// to any local tree or/and entitylist. We first request theses so we can
 	// instantiate properly protocolinstance that will use these SDAData msg.
@@ -79,9 +79,9 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	h := &Host{
 		Entity:              e,
 		workingAddress:      e.First(),
-		connections:         make(map[uuid.UUID]network.SecureConn),
-		entities:            make(map[uuid.UUID]*network.Entity),
-		pendingTreeMarshal:  make(map[uuid.UUID][]*TreeMarshal),
+		connections:         make(map[network.EntityID]network.SecureConn),
+		entities:            make(map[network.EntityID]*network.Entity),
+		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
 		pendingSDAs:         make([]*SDAData, 0),
 		host:                network.NewSecureTcpHost(pkey, e),
 		private:             pkey,
@@ -233,7 +233,7 @@ func (h *Host) Close() error {
 	}
 	dbg.Lvl3(h.Entity.First(), "Closing tcpHost")
 	err := h.host.Close()
-	h.connections = make(map[uuid.UUID]network.SecureConn)
+	h.connections = make(map[network.EntityID]network.SecureConn)
 	h.overlay.Close()
 	return err
 }
@@ -321,14 +321,14 @@ func (h *Host) processMessages() {
 		// A Host has replied to our request of a tree
 		case SendTreeMessage:
 			tm := data.Msg.(TreeMarshal)
-			if tm.NodeId == uuid.Nil {
+			if tm.TreeId == TreeID(uuid.Nil) {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
-			il := h.overlay.EntityList(tm.EntityId)
+			il := h.overlay.EntityList(tm.EntityListID)
 			// The entity list does not exists, we should request that, too
 			if il == nil {
-				msg := &RequestEntityList{tm.EntityId}
+				msg := &RequestEntityList{tm.EntityListID}
 				if err := h.SendRaw(data.Entity, msg); err != nil {
 					dbg.Error("Requesting EntityList in SendTree failed", err)
 				}
@@ -360,7 +360,7 @@ func (h *Host) processMessages() {
 		// Host replied to our request of entitylist
 		case SendEntityListMessage:
 			il := data.Msg.(EntityList)
-			if il.Id == uuid.Nil {
+			if il.Id == EntityListID(uuid.Nil) {
 				dbg.Lvl2("Received an empty EntityList")
 			} else {
 				h.overlay.RegisterEntityList(&il)
@@ -457,7 +457,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 		newPending := make([]*SDAData, 0)
 		for _, msg := range h.pendingSDAs {
 			// if this message references t
-			if uuid.Equal(t.Id, msg.To.TreeID) {
+			if t.Id.Equals(msg.To.TreeID) {
 				// instantiate it and go
 				err := h.overlay.TransmitMsg(msg)
 				if err != nil {
@@ -495,11 +495,11 @@ func (h *Host) addPendingTreeMarshal(tm *TreeMarshal) {
 	var sl []*TreeMarshal
 	var ok bool
 	// initiate the slice before adding
-	if sl, ok = h.pendingTreeMarshal[tm.EntityId]; !ok {
+	if sl, ok = h.pendingTreeMarshal[tm.EntityListID]; !ok {
 		sl = make([]*TreeMarshal, 0)
 	}
 	sl = append(sl, tm)
-	h.pendingTreeMarshal[tm.EntityId] = sl
+	h.pendingTreeMarshal[tm.EntityListID] = sl
 	h.pendingTreeLock.Unlock()
 }
 
@@ -541,7 +541,7 @@ func (h *Host) Private() abstract.Secret {
 	return h.private
 }
 
-func (h *Host) StartNewNode(protoID uuid.UUID, tree *Tree) (*Node, error) {
+func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(protoID, tree)
 }
 

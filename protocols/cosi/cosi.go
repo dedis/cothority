@@ -3,12 +3,12 @@ package cosi
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
-	"sync"
 )
 
 func init() {
@@ -28,7 +28,7 @@ type ProtocolCosi struct {
 	// The node that represents us
 	*sda.Node
 	// TreeNodeId cached
-	treeNodeID uuid.UUID
+	treeNodeID sda.TreeNodeID
 	// the cosi struct we use (since it is a cosi protocol)
 	// Public because we will need it from other protocols.
 	Cosi *cosi.Cosi

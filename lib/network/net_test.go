@@ -43,7 +43,7 @@ func TestRegister(t *testing.T) {
 	}
 
 	trType := RegisterMessageType(&TestRegisterS{})
-	if uuid.Equal(trType, uuid.Nil) {
+	if uuid.Equal(uuid.UUID(trType), uuid.Nil) {
 		t.Fatal("Couldn't register TestRegister-struct")
 	}
 

@@ -3,7 +3,6 @@ package cosi
 import (
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/satori/go.uuid"
 )
 
 // This files defines the structure we use for registering to the channels by
@@ -20,7 +19,7 @@ var VerifyResponse = 1
 // Broadcasted message initiated and signed by proposer
 type CosiAnnouncement struct {
 	// From = TreeNodeId in the Tree
-	From uuid.UUID
+	From sda.TreeNodeID
 	*cosi.Announcement
 }
 
