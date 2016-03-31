@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"golang.org/x/net/context"
 	"io"
@@ -85,7 +84,7 @@ func main() {
 }
 
 func checkConfig(c *cli.Context) {
-	_ := c.GlobalString("servers")
+	_ = c.GlobalString("servers")
 }
 
 func signFile(c *cli.Context) {
