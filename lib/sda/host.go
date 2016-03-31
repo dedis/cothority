@@ -180,14 +180,16 @@ func (h *Host) listen(wait bool) {
 	}
 }
 
-// Listen starts listening and returns once it could connect to itself
-func (h *Host) Listen() {
+// ListenAndBind starts listening and returns once it could connect to itself.
+// This can fail in the case of running inside a container or virtual machine
+// using port-forwarding to an internal IP.
+func (h *Host) ListenAndBind() {
 	h.listen(true)
 }
 
-// ListenNoblock only starts listening and returns without waiting for the
-// listening to be active
-func (h *Host) ListenNoblock() {
+// Listen only starts listening and returns without waiting for the
+// listening to be active.
+func (h *Host) Listen() {
 	h.listen(false)
 }
 
@@ -549,7 +551,7 @@ func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	var hosts []*Host
 	for _, add := range addresses {
 		h := newHostMock(s, add)
-		h.Listen()
+		h.ListenAndBind()
 		h.StartProcessMessages()
 		hosts = append(hosts, h)
 	}
