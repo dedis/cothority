@@ -58,7 +58,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbg.Lvl1("Starting Host: You can copy the following lines in a group.toml file to use by app/cosi client:")
+	dbg.Lvl1("Starting Host: You can copy the following lines in a servers.toml file to use by app/cosi client:")
 	serverToml := app.NewServerToml(host.Suite(), host.Entity.Public, host.Entity.Addresses...)
 	groupToml := app.NewGroupToml(serverToml)
 	fmt.Println(groupToml.String())

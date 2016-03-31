@@ -47,11 +47,11 @@ func NewGroupToml(servers ...*ServerToml) *GroupToml {
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
-		gt.Description = "## Put your description of the cothority system for more convenience ##"
+		gt.Description = "Description of the system"
 	}
 	for _, s := range gt.Servers {
 		if s.Description == "" {
-			s.Description = "## Put your description here for convenience ##"
+			s.Description = "Description of the server"
 		}
 	}
 	enc := toml.NewEncoder(&buff)

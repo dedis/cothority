@@ -76,15 +76,10 @@ Description = "## Put your description of the cothority system for more convenie
   Description = "## Put your description here for convenience ##"
 ```  
 
-You can copy and paste it into a file `my-cosi-group.toml`. 
+You can copy and paste it into a file `servers.toml`. 
 The server configuration will get stored in the filename you provided.
-Next time you can run the server with 
-
-```bash 
-cosid -config myconfig.toml
-```
-instead (assuming that you chose `myconfig.toml` in the above step). 
-
+Next time you run the server it will directly read that file and start up.
+If you chose another filename, you can use `-config file.toml`. 
 
 ## Initiating the Collective Signing Protocol
 
@@ -92,7 +87,15 @@ You can collectively sign a text message specified on the command line
 as follows:
 
 ```bash
-cosi -m “Hello CoSi” -c cosi-group.toml
+cosi sign msg "Hello CoSi"
+```
+
+cosi will contact the servers and print the signature to the STDOUT. If you
+copy that signature to a file called `msg.sig`, you can verify your message
+with
+
+```bash
+cosi verify msg "Hello CoSi" -sig msg.sig
 ```
 
 If you would instead like to sign a message contained in a file you 
@@ -100,20 +103,27 @@ specify (which may be either text or arbitrary binary data), you can do
 this as follows:
 
 ```bash
-cosi -f file-to-be-signed -c my-cosi-group.toml
+cosi sign file file-to-be-signed
 ```
 
 It will create a file `file-to-be-signed.sig` containing the sha256 hash
 of the the file and the signature.
-To verify the signature of a file you can do so using the `-v` flag:
+To verify the signature of a file you write:
   
 ```bash
-cosi -f file-to-be-signed -c my-cosi-group.toml -v
+cosi verify file file-to-be-signed
 ```
     
+For all commands, if you chose another filename for the servers than `servers.toml`, you can
+give that on the command-line, so for example to sign a message:
+
+```bash
+cosi sign msg "Hello CoSi" -servers my_servers.toml
+```
+
 ### Creating a Collective Signing Group
 By running several `cosid` instances (and copying the appropriate lines 
-of their output) you can create a `my-cosi-group.toml` that looks like 
+of their output) you can create a `servers.toml` that looks like 
 this:
 
 ```
