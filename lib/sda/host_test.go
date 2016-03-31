@@ -31,7 +31,7 @@ func TestHostClose(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
-	h1.ListenAndWait()
+	h1.ListenAndBind()
 	_, err := h2.Connect(h1.Entity)
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
@@ -46,7 +46,7 @@ func TestHostClose(t *testing.T) {
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h3 := sda.NewLocalHost(2002)
-	h3.ListenAndWait()
+	h3.ListenAndBind()
 	c, err := h2.Connect(h3.Entity)
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
@@ -365,7 +365,7 @@ func TestAutoConnection(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
-	h2.ListenAndWait()
+	h2.ListenAndBind()
 
 	defer h1.Close()
 	defer h2.Close()

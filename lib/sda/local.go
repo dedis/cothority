@@ -257,7 +257,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	}
 	root := hosts[0]
 	for _, host := range hosts {
-		host.ListenAndWait()
+		host.ListenAndBind()
 		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.Id)
 		if processMessages {
 			host.StartProcessMessages()

@@ -66,7 +66,7 @@ func main() {
 	if err != nil {
 		dbg.Fatal("Couldn't get host:", err)
 	}
-	host.ListenAndWait()
+	host.ListenAndBind()
 	host.StartProcessMessages()
 	host.WaitForClose()
 }
