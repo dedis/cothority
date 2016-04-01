@@ -29,7 +29,6 @@ func TestJVSSLongterm(t *testing.T) {
 	// register the protocol with our custom channels so we know at which steps
 	// are both of the hosts
 	ch := make(chan *poly.SharedSecret, 2)
-	var p1 *jvss.JVSSProtocol
 	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
 		pi, err := jvss.NewJVSSProtocol(node)
 		if err != nil {
@@ -40,7 +39,6 @@ func TestJVSSLongterm(t *testing.T) {
 				ch <- sh
 			}()
 		})
-		p1 = pi
 		return pi, nil
 	}
 	sda.ProtocolRegister(CustomJVSSProtocolID, fn)

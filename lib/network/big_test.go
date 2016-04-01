@@ -49,7 +49,7 @@ func TestHugeConnections(t *testing.T) {
 	// Create all hosts and open the connections
 	for i := 0; i < nbrHosts; i++ {
 		privkeys[i], ids[i] = genEntity("localhost:" + strconv.Itoa(2000+i))
-		hosts[i] = NewSecureTcpHost(privkeys[i], ids[i])
+		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
 		dbg.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
 			err := hosts[h].Listen(func(c SecureConn) {

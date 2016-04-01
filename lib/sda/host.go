@@ -19,10 +19,8 @@ import (
 	"time"
 )
 
-/*
-Host is the structure responsible for holding information about the current
- state
-*/
+// Host is the structure responsible for holding information about the current
+// state
 type Host struct {
 	// Our entity (i.e. identity over the network)
 	Entity *network.Entity
@@ -36,7 +34,7 @@ type Host struct {
 	// The open connections
 	connections map[network.EntityID]network.SecureConn
 	// chan of received messages - testmode
-	networkChan chan network.NetworkMessage
+	networkChan chan network.Message
 	// The database of entities this host knows
 	entities map[network.EntityID]*network.Entity
 	// lock associated to access entityLists
@@ -83,10 +81,10 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		entities:            make(map[network.EntityID]*network.Entity),
 		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
 		pendingSDAs:         make([]*SDAData, 0),
-		host:                network.NewSecureTcpHost(pkey, e),
+		host:                network.NewSecureTCPHost(pkey, e),
 		private:             pkey,
 		suite:               network.Suite,
-		networkChan:         make(chan network.NetworkMessage, 1),
+		networkChan:         make(chan network.Message, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
 	}
@@ -95,6 +93,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	return h
 }
 
+// HostConfig holds all necessary data to create a Host.
 type HostConfig struct {
 	Public   string
 	Private  string
@@ -246,7 +245,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		return errors.New("Can't send nil-packet")
 	}
 	h.entityListsLock.RLock()
-	if _, ok := h.entities[e.Id]; !ok {
+	if _, ok := h.entities[e.ID]; !ok {
 		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.RUnlock()
 		// Connect to that entity
@@ -260,7 +259,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	var c network.SecureConn
 	var ok bool
 	h.networkLock.Lock()
-	if c, ok = h.connections[e.Id]; !ok {
+	if c, ok = h.connections[e.ID]; !ok {
 		h.networkLock.Unlock()
 		return errors.New("Got no connection tied to this Entity")
 	}
@@ -273,6 +272,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	return nil
 }
 
+// StartProcessMessages start the processing of incoming messages.
+// Mostly it used internally (by the cothority's simulation for instance).
+// Protocol/simulation developers usually won't need it.
 func (h *Host) StartProcessMessages() {
 	// The networkLock.Unlock is in the processMessages-method to make
 	// sure the goroutine started
@@ -293,7 +295,7 @@ func (h *Host) processMessages() {
 	h.networkLock.Unlock()
 	for {
 		var err error
-		var data network.NetworkMessage
+		var data network.Message
 		select {
 		case data = <-h.networkChan:
 		case <-h.ProcessMessagesQuit:
@@ -485,8 +487,8 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	defer h.networkLock.Unlock()
 	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[c.Entity().Id] = id
-	h.connections[c.Entity().Id] = c
+	h.entities[c.Entity().ID] = id
+	h.connections[c.Entity().ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -527,26 +529,34 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 	h.pendingTreeLock.Unlock()
 }
 
+// AddTree registers the given Tree struct in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddTree(t *Tree) {
 	h.overlay.RegisterTree(t)
 }
 
+// AddEntityList registers the given EntityList in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddEntityList(el *EntityList) {
 	h.overlay.RegisterEntityList(el)
 }
 
+// Suite can (and should) be used to get the underlying abstract.Suite.
+// Currently the suite is hardcoded into the network library.
+// Don't use network.Suite but Host's Suite function instead if possible.
 func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-func (h *Host) Private() abstract.Secret {
-	return h.private
-}
-
+// StartNewNode starts the underlying Node which will instantiate the underlying
+// protocol.
 func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(protoID, tree)
 }
 
+// SetupHostsMock can be used to create a Host mock for testing.
 func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	var hosts []*Host
 	for _, add := range addresses {

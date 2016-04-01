@@ -11,7 +11,7 @@ func (h *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
 	return h.sendSDAData(id, msg)
 }
 
-func (h *Host) Receive() network.NetworkMessage {
+func (h *Host) Receive() network.Message {
 	data := <-h.networkChan
 	dbg.Lvl5("Got message", data)
 	return data

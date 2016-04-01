@@ -42,7 +42,7 @@ func ProtocolRegister(protoID ProtocolID, protocol NewProtocol) {
 
 // ProtocolNameToID returns the ProtocolID corresponding to the given name
 func ProtocolNameToID(name string) ProtocolID {
-	url := network.UuidURL + "protocolname/" + name
+	url := network.NamespaceURL + "protocolname/" + name
 	return ProtocolID(uuid.NewV3(uuid.NamespaceURL, url))
 }
 
