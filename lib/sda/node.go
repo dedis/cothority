@@ -28,11 +28,11 @@ type Node struct {
 	instance ProtocolInstance
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
-	msgQueue map[network.MessageTypeID][]*SDAData
+	msgQueue map[network.MessageTypeID][]*Data
 	// done callback
 	onDoneCallback func() bool
 	// queue holding msgs
-	msgDispatchQueue []*SDAData
+	msgDispatchQueue []*Data
 	// locking for msgqueue
 	msgDispatchQueueMutex sync.Mutex
 	// kicking off new message
@@ -67,9 +67,9 @@ func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 		channels:             make(map[network.MessageTypeID]interface{}),
 		handlers:             make(map[network.MessageTypeID]interface{}),
 		messageTypeFlags:     make(map[network.MessageTypeID]uint32),
-		msgQueue:             make(map[network.MessageTypeID][]*SDAData),
+		msgQueue:             make(map[network.MessageTypeID][]*Data),
 		treeNode:             nil,
-		msgDispatchQueue:     make([]*SDAData, 0, 1),
+		msgDispatchQueue:     make([]*Data, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
 	}
 	var err error
@@ -276,7 +276,7 @@ func (n *Node) Close() error {
 	return n.ProtocolInstance().Shutdown()
 }
 
-func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
+func (n *Node) DispatchHandler(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
 	f := reflect.ValueOf(n.handlers[mt])
@@ -297,7 +297,7 @@ func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
 	return nil
 }
 
-func (n *Node) ReflectCreate(t reflect.Type, msg *SDAData) reflect.Value {
+func (n *Node) ReflectCreate(t reflect.Type, msg *Data) reflect.Value {
 	m := reflect.Indirect(reflect.New(t))
 	tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
 	if tn != nil {
@@ -308,7 +308,7 @@ func (n *Node) ReflectCreate(t reflect.Type, msg *SDAData) reflect.Value {
 }
 
 // DispatchChannel takes a message and sends it to a channel
-func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
+func (n *Node) DispatchChannel(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
@@ -336,7 +336,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 
 // DispatchMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
-func (n *Node) DispatchMsg(msg *SDAData) {
+func (n *Node) DispatchMsg(msg *Data) {
 	dbg.Lvl3(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
@@ -373,8 +373,8 @@ func (n *Node) dispatchMsgReader() {
 	}
 }
 
-// dispatchMsgToProtocol will dispatch this SDAData to the right instance
-func (n *Node) dispatchMsgToProtocol(sdaMsg *SDAData) error {
+// dispatchMsgToProtocol will dispatch this sda.Data to the right instance
+func (n *Node) dispatchMsgToProtocol(sdaMsg *Data) error {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
 	// to manually registers their messages. Since it is done automatically by
@@ -431,15 +431,15 @@ func (n *Node) HasFlag(mt network.MessageTypeID, f uint32) bool {
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (n *Node) aggregate(sdaMsg *SDAData) (network.MessageTypeID, []*SDAData, bool) {
+func (n *Node) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equals(n.Parent().Id)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
-		return mt, []*SDAData{sdaMsg}, true
+		return mt, []*Data{sdaMsg}, true
 	}
 	// store the msg according to its type
 	if _, ok := n.msgQueue[mt]; !ok {
-		n.msgQueue[mt] = make([]*SDAData, 0)
+		n.msgQueue[mt] = make([]*Data, 0)
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
