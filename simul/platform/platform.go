@@ -198,7 +198,7 @@ func (r *RunConfig) Clone() *RunConfig {
 	return rc
 }
 
-// Prints out a nice string
+// String prints out the current status-line
 func (r *RunConfig) String() string {
 	fields := []string{"simulation", "servers", "hosts", "bf", "depth", "rounds"}
 	var ret string
