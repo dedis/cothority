@@ -1,6 +1,27 @@
-// CoSi is the Collective Signing implementation according to the paper of
-// Bryan Ford:
-// http://arxiv.org/pdf/1503.08768v1.pdf
+// Package cosi is the Collective Signing implementation according to the paper of
+// Bryan Ford: http://arxiv.org/pdf/1503.08768v1.pdf
+//
+// The CoSi-protocol has 4 stages:
+// 1) Announcement: The leader multicasts an announcement
+// of the start of this round down through the spanning tree,
+// optionally including the statement S to be signed.
+// 2) Commitment: Each node i picks a random secret vi and
+// computes its individual commit Vi = Gvi . In a bottom-up
+// process, each node i waits for an aggregate commit Vˆj from
+// each immediate child j, if any. Node i then computes its
+// own aggregate commit Vˆi = Vi \prod{j ∈ Cj}{Vˆj}, where Ci is the
+// set of i’s immediate children. Finally, i passes Vi up to its
+// parent, unless i is the leader (node 0).
+// 3) Challenge: The leader computes a collective challenge c =
+// H(Vˆ0 ∥ S), then multicasts c down through the tree, along
+// with the statement S to be signed if it was not already
+// announced in phase 1.
+// 4) Response: In a final bottom-up phase, each node i waits
+// to receive a partial aggregate response rˆj from each of
+// its immediate children j ∈ Ci. Node i now computes its
+// individual response ri = vi − cxi, and its partial aggregate
+// response rˆi = ri + \sum{j ∈ Cj}{rˆj} . Node i finally passes rˆi
+// up to its parent, unless i is the root.
 package cosi
 
 import (
@@ -42,28 +63,34 @@ func NewCosi(suite abstract.Suite, private abstract.Secret) *Cosi {
 	}
 }
 
+// Announcement holds only the timestamp for that round
 type Announcement struct {
 	Timestamp int64
 }
 
+// Commitment sends it's own commit Vi and the aggregate children's
+// commit V^i
 type Commitment struct {
 	Commitment     abstract.Point
 	ChildrenCommit abstract.Point
 }
 
+// Challenge is the Hash of V^0 || S, where S is the Timestamp
+// and the message
 type Challenge struct {
 	Challenge abstract.Secret
 }
 
+// Response holds the actual node's response ri and the
+// aggregate response r^i
 type Response struct {
 	Response     abstract.Secret
 	ChildrenResp abstract.Secret
 }
 
-// XXX Does it make sense to have one here ?
-// Since in the basic cosi, only the root has the aggregated signature.
-// For the moment, I only made two functions that are equivalent to that
-// structure: GetChallenge() and GetResponse()
+// Signature is the final message out of the Cosi-protocol. It can
+// be used together with the message and the aggregate public key
+// to verify that it's valid.
 type Signature struct {
 	Challenge abstract.Secret
 	Response  abstract.Secret
@@ -84,7 +111,7 @@ func (c *Cosi) CreateAnnouncement() *Announcement {
 	return &Announcement{now}
 }
 
-// Announcement stores the timestamp and relays the message.
+// Announce stores the timestamp and relays the message.
 func (c *Cosi) Announce(in *Announcement) *Announcement {
 	c.timestamp = in.Timestamp
 	return in
@@ -106,20 +133,20 @@ func (c *Cosi) Commit(comms []*Commitment) *Commitment {
 	c.genCommit()
 
 	// take the children commitment
-	child_v_hat := c.suite.Point().Null()
+	childVHat := c.suite.Point().Null()
 	for _, com := range comms {
 		// Add commitment of one child
-		child_v_hat = child_v_hat.Add(child_v_hat, com.Commitment)
+		childVHat = childVHat.Add(childVHat, com.Commitment)
 		// add commitment of it's children if there is one (i.e. if it is not a
 		// leaf)
 		if com.ChildrenCommit != nil {
-			child_v_hat = child_v_hat.Add(child_v_hat, com.ChildrenCommit)
+			childVHat = childVHat.Add(childVHat, com.ChildrenCommit)
 		}
 	}
 	// add our own commitment to the global V_hat
-	c.aggregateCommitment = c.suite.Point().Add(child_v_hat, c.commitment)
+	c.aggregateCommitment = c.suite.Point().Add(childVHat, c.commitment)
 	return &Commitment{
-		ChildrenCommit: child_v_hat,
+		ChildrenCommit: childVHat,
 		Commitment:     c.commitment,
 	}
 
@@ -203,7 +230,7 @@ func (c *Cosi) Signature() *Signature {
 	}
 }
 
-// VerifyResponse verify the response this CoSi have against the aggregated
+// VerifyResponses verifies the response this CoSi has against the aggregated
 // public key the tree is using.
 // Check that: base**r_hat * X_hat**c == V_hat
 func (c *Cosi) VerifyResponses(aggregatedPublic abstract.Point) error {
@@ -297,6 +324,8 @@ func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, m
 	return verifyCommitment(suite, msg, commitment, challenge)
 }
 
+// VerifyCosiSignatureWithException is a wrapper around VerifySignatureWithException
+// but it takes a Signature instead of the Challenge/Response
 func VerifyCosiSignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, signature *Signature, exceptions []Exception) error {
 	return VerifySignatureWithException(suite, public, msg, signature.Challenge, signature.Response, exceptions)
 }
