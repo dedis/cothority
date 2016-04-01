@@ -249,7 +249,8 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 }
 
 // Open will try any address that is in the Entity and connect to the first
-// one that works. Then it exchanges the Entity to verify.
+// one that works. Then it exchanges the Entity to verify it is talking with the
+// right host.
 func (st *SecureTCPHost) Open(e *Entity) (SecureConn, error) {
 	var secure SecureTCPConn
 	var success bool
