@@ -99,21 +99,40 @@ func checkConfig(c *cli.Context) {
 	handleErrorAndExit("Couldn't open server-file", err)
 	el, err := app.ReadGroupToml(f)
 	handleErrorAndExit("Error while reading server-file", err)
+	// First check all servers individually
 	for i := range el.List {
-		list := sda.NewEntityList(el.List[i : i+1])
-		serverStr := list.List[0].Addresses[0]
-		dbg.Print("Sending signature to", serverStr)
-		msg := "verification"
-		sig, err := signStatement(strings.NewReader(msg), list)
-		if err != nil {
-			dbg.Error("When contacting server:", err)
-		} else {
-			err := verifySignature([]byte(msg), sig, list)
-			if err != nil {
-				dbg.Error("Signature was invalid:", err)
+		checkList(sda.NewEntityList(el.List[i : i+1]))
+	}
+	if len(el.List) > 1 {
+		// Then check pairs of servers
+		for i, first := range el.List {
+			for _, second := range el.List[i+1:] {
+				es := []*network.Entity{first, second}
+				checkList(sda.NewEntityList(es))
+				es[0], es[1] = es[1], es[0]
+				checkList(sda.NewEntityList(es))
 			}
-			dbg.Print("Received message from", serverStr, "successfully")
 		}
+	}
+}
+
+// checkList sends a message to the list and waits for the reply
+func checkList(list *sda.EntityList) {
+	serverStr := ""
+	for _, s := range list.List {
+		serverStr += s.Addresses[0] + " "
+	}
+	dbg.Print("Sending message to", serverStr)
+	msg := "verification"
+	sig, err := signStatement(strings.NewReader(msg), list)
+	if err != nil {
+		dbg.Error("When contacting servers", serverStr, err)
+	} else {
+		err := verifySignature([]byte(msg), sig, list)
+		if err != nil {
+			dbg.Error("Signature was invalid:", err)
+		}
+		dbg.Print("Received signature successfully")
 	}
 }
 
