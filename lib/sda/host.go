@@ -36,7 +36,7 @@ type Host struct {
 	// The open connections
 	connections map[network.EntityID]network.SecureConn
 	// chan of received messages - testmode
-	networkChan chan network.NetworkMessage
+	networkChan chan network.Message
 	// The database of entities this host knows
 	entities map[network.EntityID]*network.Entity
 	// lock associated to access entityLists
@@ -83,10 +83,10 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		entities:            make(map[network.EntityID]*network.Entity),
 		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
 		pendingSDAs:         make([]*SDAData, 0),
-		host:                network.NewSecureTcpHost(pkey, e),
+		host:                network.NewSecureTCPHost(pkey, e),
 		private:             pkey,
 		suite:               network.Suite,
-		networkChan:         make(chan network.NetworkMessage, 1),
+		networkChan:         make(chan network.Message, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
 	}
@@ -246,7 +246,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		return errors.New("Can't send nil-packet")
 	}
 	h.entityListsLock.RLock()
-	if _, ok := h.entities[e.Id]; !ok {
+	if _, ok := h.entities[e.ID]; !ok {
 		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.RUnlock()
 		// Connect to that entity
@@ -260,7 +260,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	var c network.SecureConn
 	var ok bool
 	h.networkLock.Lock()
-	if c, ok = h.connections[e.Id]; !ok {
+	if c, ok = h.connections[e.ID]; !ok {
 		h.networkLock.Unlock()
 		return errors.New("Got no connection tied to this Entity")
 	}
@@ -293,7 +293,7 @@ func (h *Host) processMessages() {
 	h.networkLock.Unlock()
 	for {
 		var err error
-		var data network.NetworkMessage
+		var data network.Message
 		select {
 		case data = <-h.networkChan:
 		case <-h.ProcessMessagesQuit:
@@ -485,8 +485,8 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	defer h.networkLock.Unlock()
 	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[c.Entity().Id] = id
-	h.connections[c.Entity().Id] = c
+	h.entities[c.Entity().ID] = id
+	h.connections[c.Entity().ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

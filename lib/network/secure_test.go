@@ -21,8 +21,8 @@ func TestSecureSimple(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	priv1, id1 := genEntity("localhost:2000")
 	priv2, id2 := genEntity("localhost:2001")
-	sHost1 := NewSecureTcpHost(priv1, id1)
-	sHost2 := NewSecureTcpHost(priv2, id2)
+	sHost1 := NewSecureTCPHost(priv1, id1)
+	sHost2 := NewSecureTCPHost(priv2, id2)
 
 	packetToSend := SimplePacket{"HelloWorld"}
 	done := make(chan error)
