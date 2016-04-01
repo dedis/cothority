@@ -26,8 +26,7 @@ var Suite = edwards.NewAES128SHA256Ed25519(false)
 // ProtocolMessage is a type for any message that the user wants to send
 type ProtocolMessage interface{}
 
-// MessageTypeID is the ID used to differentiate between differents messages
-// registered
+// MessageTypeID is the ID used to uniquely identify different registered messages
 type MessageTypeID uuid.UUID
 
 // String returns the canonical string representation of the MessageTypeID

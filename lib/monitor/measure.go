@@ -214,7 +214,7 @@ func send(v interface{}) error {
 	return nil
 }
 
-// EndAndCleanup sends a message to end the logging and close the connection
+// EndAndCleanup sends a message to end the logging and closes the connection
 func EndAndCleanup() {
 	send(NewSingleMeasure("end", 0))
 	if err := connection.Close(); err != nil {
