@@ -285,7 +285,7 @@ func (o *Overlay) nodeDelete(tok *Token) {
 func (o *Overlay) Private() abstract.Secret {
 	return o.host.private
 }
-func (o *Overlay) Suite() abstract.Suite {
+func (o *Overlay) suite() abstract.Suite {
 	return o.host.Suite()
 }
 
