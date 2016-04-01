@@ -62,7 +62,7 @@ func main() {
 		host := sc.Host
 		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
-		host.ListenNoblock()
+		host.Listen()
 		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {

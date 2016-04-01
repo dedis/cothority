@@ -12,7 +12,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-var testID = uuid.NewV5(uuid.NamespaceURL, "test")
+var testProtoID = sda.ProtocolID(uuid.NewV5(uuid.NamespaceURL, "test"))
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
@@ -79,8 +79,8 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	sda.ProtocolRegister(testID, NewProtocolTest)
-	if !sda.ProtocolExists(testID) {
+	sda.ProtocolRegister(testProtoID, NewProtocolTest)
+	if !sda.ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
 	}
 }
@@ -109,7 +109,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}
 
 	network.RegisterMessageType(SimpleMessage{})
-	sda.ProtocolRegister(testID, fn)
+	sda.ProtocolRegister(testProtoID, fn)
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
@@ -121,7 +121,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	h1.AddTree(tree)
 	// start the protocol
 	go func() {
-		_, err := h1.StartNewNode(testID, tree)
+		_, err := h1.StartNewNode(testProtoID, tree)
 		if err != nil {
 			t.Fatal(fmt.Sprintf("Could not start protocol %v", err))
 		}

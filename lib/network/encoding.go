@@ -26,15 +26,22 @@ var Suite = edwards.NewAES128SHA256Ed25519(false)
 // ProtocolMessage is a type for any message that the user wants to send
 type ProtocolMessage interface{}
 
+type MessageTypeID uuid.UUID
+
+// String returns the canonical string representation of the MessageTypeID
+func (mId MessageTypeID) String() string {
+	return uuid.UUID(mId).String()
+}
+
 // The basic url used for uuid
 const UuidURL = "https://dedis.epfl.ch/"
 const UuidURLProtocolType = UuidURL + "/protocolType/"
 
-// RegisterMessageType registers a custom "struct" / "packet" and get
-// the allocated Type
-// Pass simply your non-initialized struct
-func RegisterMessageType(msg ProtocolMessage) uuid.UUID {
-	msgType := TypeToUUID(msg)
+// RegisterMessageType registers a custom "struct" / "packet" and returns the
+// corresponding MessageTypeID.
+// Simply pass your non-initialized struct.
+func RegisterMessageType(msg ProtocolMessage) MessageTypeID {
+	msgType := TypeToMessageTypeID(msg)
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
@@ -45,28 +52,28 @@ func RegisterMessageType(msg ProtocolMessage) uuid.UUID {
 
 // RegisterMessageUUID can be used if the uuid and the type is already known
 // NOTE: be sure to only registers VALUE message and not POINTERS to message.
-func RegisterMessageUUID(mt uuid.UUID, rt reflect.Type) uuid.UUID {
-	if _, typeRegistered := registry.Get(mt); typeRegistered {
+func RegisterMessageUUID(mt MessageTypeID, rt reflect.Type) MessageTypeID {
+	if _, typeRegistered := registry.get(mt); typeRegistered {
 		return mt
 	}
-	registry.Put(mt, rt)
+	registry.put(mt, rt)
 
 	return mt
 }
 
-// TypeFromData returns the corresponding uuid to the structure given. It
-// returns 'DefaultType' upon error.
-func TypeFromData(msg ProtocolMessage) uuid.UUID {
-	msgType := TypeToUUID(msg)
-	_, ok := registry.Get(msgType)
+// TypeFromData returns the MessageTypeID corresponding to the given structure.
+// It returns 'ErrorType' if the type wasn't found or an error occurred.
+func TypeFromData(msg ProtocolMessage) MessageTypeID {
+	msgType := TypeToMessageTypeID(msg)
+	_, ok := registry.get(msgType)
 	if !ok {
 		return ErrorType
 	}
 	return msgType
 }
 
-// TypeToUUID Converts MsgType to uuid
-func TypeToUUID(msg ProtocolMessage) uuid.UUID {
+// TypeToMessageTypeID converts a ProtocolMessage to a MessageTypeID
+func TypeToMessageTypeID(msg ProtocolMessage) MessageTypeID {
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
@@ -74,13 +81,13 @@ func TypeToUUID(msg ProtocolMessage) uuid.UUID {
 	url := UuidURLProtocolType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
 	dbg.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
-	return u
+	return MessageTypeID(u)
 }
 
-// RTypeToUUID converts a reflect-type to a UUID
-func RTypeToUUID(msg reflect.Type) uuid.UUID {
+// RTypeToUUID converts a reflect.Type to a MessageTypeID
+func RTypeToMessageTypeID(msg reflect.Type) MessageTypeID {
 	url := UuidURLProtocolType + msg.String()
-	return uuid.NewV5(uuid.NamespaceURL, url)
+	return MessageTypeID(uuid.NewV5(uuid.NamespaceURL, url))
 }
 
 // DumpTypes is used for debugging - it prints out all known types
@@ -113,25 +120,28 @@ func (am *NetworkMessage) SetError(err error) {
 }
 
 type typeRegistry struct {
-	types map[uuid.UUID]reflect.Type
+	types map[MessageTypeID]reflect.Type
 	lock  sync.Mutex
 }
 
 func newTypeRegistry() *typeRegistry {
 	return &typeRegistry{
-		types: make(map[uuid.UUID]reflect.Type),
+		types: make(map[MessageTypeID]reflect.Type),
 		lock:  sync.Mutex{},
 	}
 }
 
-func (tr *typeRegistry) Get(id uuid.UUID) (reflect.Type, bool) {
+// get returns the reflect.Type corresponding to the registered MessageTypeID
+// an a boolean indicating if the type is actually registered or not.
+func (tr *typeRegistry) get(id MessageTypeID) (reflect.Type, bool) {
 	tr.lock.Lock()
 	defer tr.lock.Unlock()
 	t, ok := tr.types[id]
 	return t, ok
 }
 
-func (tr *typeRegistry) Put(id uuid.UUID, typ reflect.Type) {
+// put stores the given type in the typeRegistry.
+func (tr *typeRegistry) put(id MessageTypeID, typ reflect.Type) {
 	tr.lock.Lock()
 	defer tr.lock.Unlock()
 	tr.types[id] = typ
@@ -144,11 +154,17 @@ var globalOrder = binary.BigEndian
 // ErrorType is reserved by the network library. When you receive a message of
 // ErrorType, it is generally because an error happened, then you can call
 // Error() on it.
-var ErrorType uuid.UUID = uuid.Nil
+var ErrorType = MessageTypeID(uuid.Nil)
 
 // EmptyApplicationMessage is the default empty message that is returned in case
 // something went wrong.
-var EmptyApplicationMessage = NetworkMessage{MsgType: ErrorType}
+//
+// FIXME currently there seems no way with go1.6 for this to compile without repeating
+// the definition of ErrorType above as MessageTypeID(uuid.Nil).
+// Somehow it still gets inlined (maybe through the indirection).
+// should be fixed properly in go1.7:
+// https://github.com/golang/go/commit/feb2a5d6103dad76b6374c5f346e33d55612cb2a
+var EmptyApplicationMessage = NetworkMessage{MsgType: MessageTypeID(uuid.Nil)}
 
 // global mutex for MarshalRegisteredType
 var marshalLock sync.Mutex
@@ -159,7 +175,7 @@ var marshalLock sync.Mutex
 func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
 	marshalLock.Lock()
 	defer marshalLock.Unlock()
-	var msgType uuid.UUID
+	var msgType MessageTypeID
 	if msgType = TypeFromData(data); msgType == ErrorType {
 		return nil, fmt.Errorf("Type of message %s not registered to the network library.", reflect.TypeOf(data))
 	}
@@ -178,26 +194,27 @@ func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
 }
 
 // UnmarshalRegisteredType returns the type, the data and an error trying to
-// decode a message from a buffer. The type must be registered to the network
-// library in order for it to be decodable.
-func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (uuid.UUID, ProtocolMessage, error) {
+// decode a message from a buffer.
+// The type must be registered to the network library in order to be decodable.
+func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (MessageTypeID, ProtocolMessage, error) {
 	b := bytes.NewBuffer(buf)
-	var t uuid.UUID
-	if err := binary.Read(b, globalOrder, &t); err != nil {
+	var tId MessageTypeID
+	if err := binary.Read(b, globalOrder, &tId); err != nil {
 		return ErrorType, nil, err
 	}
 	var typ reflect.Type
 	var ok bool
-	if typ, ok = registry.Get(t); !ok {
-		return ErrorType, nil, fmt.Errorf("Type %s not registered.", typ.Name())
+	if typ, ok = registry.get(tId); !ok {
+		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
+			typ.Name())
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
 	var err error
 	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
-		return t, ptrVal.Elem().Interface(), err
+		return tId, ptrVal.Elem().Interface(), err
 	}
-	return t, ptrVal.Elem().Interface(), nil
+	return tId, ptrVal.Elem().Interface(), nil
 }
 
 // MarshalBinary the application message => to bytes

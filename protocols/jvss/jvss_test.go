@@ -12,7 +12,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-var CustomJVSSProtocolID = uuid.NewV5(uuid.NamespaceURL, "jvss_test")
+var CustomJVSSProtocolID = sda.ProtocolID(uuid.NewV5(uuid.NamespaceURL, "jvss_test"))
 
 // Test if the setup of the long-term secret for one protocol instance is correct
 // or not.

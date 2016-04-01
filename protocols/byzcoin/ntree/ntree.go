@@ -10,7 +10,6 @@ import (
 	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
-	"github.com/satori/go.uuid"
 )
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
@@ -311,13 +310,13 @@ type NaiveBlockSignature struct {
 
 // Exception is  just representing the notion that a peers does not accept to
 // sign something. It justs passes its TreeNodeId inside. No need for public key
-// or whatever because each signatures is independant.
+// or whatever because each signatures is independent.
 type Exception struct {
-	Id uuid.UUID
+	Id sda.TreeNodeID
 }
 
-// RoundSignatureRequest basically is the the block sisgnature broadcasting
-// downt he tree
+// RoundSignatureRequest basically is the the block signature broadcasting
+// down the tree.
 type RoundSignatureRequest struct {
 	*NaiveBlockSignature
 }

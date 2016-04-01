@@ -131,9 +131,6 @@ type SecureTcpHost struct {
 	entity *Entity
 	// Private key tied to this entity
 	private abstract.Secret
-	// mapping from the entity to the names used in TcpHost
-	// In TcpHost the names then maps to the actual connection
-	EntityToAddr map[uuid.UUID]string
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string
@@ -162,12 +159,12 @@ type NetworkMessage struct {
 	// the origin of the message
 	From string
 	// What kind of msg do we have
-	MsgType uuid.UUID
+	MsgType MessageTypeID
 	// The underlying message
 	Msg ProtocolMessage
 	// which constructors are used
 	Constructors protobuf.Constructors
-	// possible error during unmarshaling so that upper layer can know it
+	// possible error during unmarshalling so that upper layer can know it
 	err error
 }
 
@@ -176,12 +173,19 @@ type NetworkMessage struct {
 type Entity struct {
 	// This is the public key of that Entity
 	Public abstract.Point
-	// The UUID corresponding to that public key
-	Id uuid.UUID
+	// The EntityID corresponding to that public key
+	Id EntityID
 	// A slice of addresses of where that Id might be found
 	Addresses []string
 	// used to return the next available address
 	iter int
+}
+
+// EntityID uniquely identifies an Entity struct
+type EntityID uuid.UUID
+
+func (eid EntityID) Equals(other EntityID) bool {
+	return uuid.Equal(uuid.UUID(eid), uuid.UUID(other))
 }
 
 func (e *Entity) String() string {
@@ -205,7 +209,7 @@ func NewEntity(public abstract.Point, addresses ...string) *Entity {
 	return &Entity{
 		Public:    public,
 		Addresses: addresses,
-		Id:        uuid.NewV5(uuid.NamespaceURL, url),
+		Id:        EntityID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
 }
 

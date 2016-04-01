@@ -3,7 +3,7 @@
 
 # list of lints we want to ensure:
 failOn="should have comment or be unexported\| by other packages, and that stutters; consider calling this"
-lintOut=`golint ./... | grep "$failOn"`
+lintOut=`$GOPATH/bin/golint ./... | grep "$failOn"`
 
 # if the output isn't empty exit with an error
 if [ -z "$lintOut" ]; then

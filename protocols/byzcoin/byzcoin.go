@@ -17,7 +17,6 @@ import (
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
 )
 
 type ByzCoin struct {
@@ -735,7 +734,7 @@ func (bz *ByzCoin) sendAndMeasureViewchange() {
 	var err error
 	for _, n := range bz.Tree().ListNodes() {
 		// don't send to ourself
-		if uuid.Equal(n.Id, bz.TreeNode().Id) {
+		if n.Id.Equals(bz.TreeNode().Id) {
 			continue
 		}
 		err = bz.SendTo(n, vc)

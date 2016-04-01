@@ -26,7 +26,6 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
 )
 
 // Network part //
@@ -204,7 +203,6 @@ func NewSecureTcpHost(private abstract.Secret, e *Entity) *SecureTcpHost {
 	return &SecureTcpHost{
 		private:        private,
 		entity:         e,
-		EntityToAddr:   make(map[uuid.UUID]string),
 		TcpHost:        NewTcpHost(),
 		workingAddress: e.First(),
 	}
