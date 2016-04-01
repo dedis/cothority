@@ -26,11 +26,10 @@ var enabled = true
 
 // Measure is an interface for measurements
 // Usage:
-// ```measure := monitor.SingleMeasure("bandwidth")```
+// 		measure := monitor.SingleMeasure("bandwidth")
 // or
-// ```measure := monitor.NewTimeMeasure("round")
-// ```measure.Record()```
-//
+//		 measure := monitor.NewTimeMeasure("round")
+// 		 measure.Record()
 type Measure interface {
 	// Record must be called when you want to send the value
 	// over the monitor listening.
@@ -106,8 +105,11 @@ func NewTimeMeasure(name string) *TimeMeasure {
 }
 
 // Record sends the measurements to the monitor:
+//
 // - wall time: *name*_wall
+//
 // - system time: *name*_system
+//
 // - user time: *name*_user
 func (tm *TimeMeasure) Record() {
 	// Wall time measurement
