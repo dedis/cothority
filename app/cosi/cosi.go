@@ -16,14 +16,16 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app"
 	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/config"
+	"time"
 )
 
 func main() {
-	dbg.SetDebugVisible(1)
+	dbg.SetDebugVisible(4)
 	app := cli.NewApp()
 	app.Name = "Cosi signer and verifier"
 	app.Usage = "Collectively sign a file or a message and verify it"
@@ -46,8 +48,8 @@ func main() {
 		},
 		{
 			Name:    "verify",
-			Aliases: []string{"s"},
-			Usage:   "collectively sign",
+			Aliases: []string{"v"},
+			Usage:   "verify collective signature",
 			Subcommands: []cli.Command{
 				{
 					Name:   "file",
@@ -79,18 +81,47 @@ func main() {
 			Value: "servers.toml",
 			Usage: "server-list for collective signature",
 		},
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 1,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
 	}
 	app.Run(os.Args)
 }
 
+// checkConfig contacts all servers and verifies if it receives a valid
+// signature from each.
 func checkConfig(c *cli.Context) {
-	_ = c.GlobalString("servers")
+	dbg.SetDebugVisible(c.GlobalInt("debug"))
+	tomlFileName := c.GlobalString("servers")
+	f, err := os.Open(tomlFileName)
+	handleErrorAndExit("Couldn't open server-file", err)
+	el, err := app.ReadGroupToml(f)
+	handleErrorAndExit("Error while reading server-file", err)
+	for i := range el.List {
+		list := sda.NewEntityList(el.List[i : i+1])
+		serverStr := list.List[0].Addresses[0]
+		dbg.Print("Sending signature to", serverStr)
+		msg := "verification"
+		sig, err := signStatement(strings.NewReader(msg), list)
+		if err != nil {
+			dbg.Error("When contacting server:", err)
+		} else {
+			err := verifySignature([]byte(msg), sig, list)
+			if err != nil {
+				dbg.Error("Signature was invalid:", err)
+			}
+			dbg.Print("Received message from", serverStr, "successfully")
+		}
+	}
 }
 
+// signFile will search for the file and sign it
 func signFile(c *cli.Context) {
+	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	fileName := c.Args().First()
 	groupToml := c.GlobalString("servers")
-	dbg.Lvl1(fileName, groupToml)
 	file, err := os.Open(fileName)
 	if err != nil {
 		dbg.Error("Couldn't read file to be signed:", err)
@@ -106,6 +137,7 @@ func signFile(c *cli.Context) {
 }
 
 func signString(c *cli.Context) {
+	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	msg := strings.NewReader(c.Args().First())
 	groupToml := c.GlobalString("servers")
 	sig, err := sign(msg, groupToml)
@@ -134,10 +166,12 @@ func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
 }
 
 func verifyFile(c *cli.Context) {
+	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	verify(c.Args().First(), c.GlobalString("servers"))
 }
 
 func verifyString(c *cli.Context) {
+	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	f, err := ioutil.TempFile("", "cosi")
 	handleErrorAndExit("Couldn't create temp file", err)
 	f.Write([]byte(c.Args().First()))
@@ -154,22 +188,18 @@ func verifyString(c *cli.Context) {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func signStatement(r io.Reader,
-	el *sda.EntityList) (*sda.CosiResponse, error) {
+func signStatement(r io.Reader, el *sda.EntityList) (*sda.CosiResponse, error) {
 
-	msgB, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
 	// create a throw-away key pair:
 	kp := config.NewKeyPair(network.Suite)
 
 	// create a throw-away entity with an empty  address:
 	e := network.NewEntity(kp.Public, "")
 	client := network.NewSecureTcpHost(kp.Secret, e)
+	msg, _ := crypto.HashStream(network.Suite.Hash(), r)
 	req := &sda.CosiRequest{
 		EntityList: el,
-		Message:    msgB,
+		Message:    msg,
 	}
 
 	// Connect to the root
@@ -182,69 +212,56 @@ func signStatement(r io.Reader,
 	}
 
 	dbg.Lvl3("Sending sign request")
-	// send the request
-	if err := con.Send(context.TODO(), req); err != nil {
-		return nil, err
+	pchan := make(chan sda.CosiResponse)
+	go func() {
+		// send the request
+		if err := con.Send(context.TODO(), req); err != nil {
+			close(pchan)
+			return
+		}
+		dbg.Lvl3("Waiting for the response")
+		// wait for the response
+		packet, err := con.Receive(context.TODO())
+		if err != nil {
+			close(pchan)
+			return
+		}
+		pchan <- packet.Msg.(sda.CosiResponse)
+	}()
+	select {
+	case response, ok := <-pchan:
+		dbg.Lvl5("Response:", ok, response)
+		if !ok {
+			return nil, errors.New("Invalid repsonse: Could not cast the " +
+				"received response to the right type")
+		}
+		err = cosi.VerifySignature(network.Suite, msg, el.Aggregate,
+			response.Challenge, response.Response)
+		if err != nil {
+			return nil, err
+		}
+		return &response, nil
+	case <-time.After(time.Second * 10):
+		return nil, errors.New("Timeout on signing")
 	}
-	dbg.Lvl3("Waiting for the response")
-	// wait for the response
-	packet, err := con.Receive(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-	response, ok := packet.Msg.(sda.CosiResponse)
-	dbg.Lvl5("Response:", ok, response)
-	if !ok {
-		return nil, errors.New("Invalid repsonse: Could not cast the " +
-			"received response to the right type")
-	}
-	err = cosi.VerifySignature(network.Suite, msgB, el.Aggregate,
-		response.Challenge, response.Response)
-	if err != nil {
-		return nil, err
-	}
-	return &response, nil
 }
 
 // verify takes a file and a group-definition, calls the signature
 // verification and prints the result
 func verify(fileName, groupToml string) error {
-	err := verifySignature(fileName, groupToml)
-	verifyPrintResult(err)
-	return err
-}
-
-// verifySignature checks whether the signature is valid
-func verifySignature(fileName, groupToml string) error {
 	// if the file hash matches the one in the signature
-	suite := network.Suite
-	f, err := os.Open(fileName)
+	b, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
-	b, err := ioutil.ReadAll(f)
-	hash := suite.Hash()
-	if n, err := hash.Write(b); n != len(b) || err != nil {
-		return errors.New("Couldn't hash file")
-	}
-	fHash := hash.Sum(nil)
 	// Read the JSON signature file
-	sf, err := os.Open(fileName + ".sig")
-	if err != nil {
-		return err
-	}
-	sb, err := ioutil.ReadAll(sf)
+	sb, err := ioutil.ReadFile(fileName + ".sig")
 	if err != nil {
 		return err
 	}
 	sig := &sda.CosiResponse{}
 	if err := json.Unmarshal(sb, sig); err != nil {
 		return err
-	}
-	if !bytes.Equal(sig.Sum, fHash) {
-		return errors.New("You are trying to verify a signature " +
-			"belongig to another file. (The hash provided by the signature " +
-			"doesn't match with the hash of the file.)")
 	}
 	fGroup, err := os.Open(groupToml)
 	if err != nil {
@@ -254,10 +271,26 @@ func verifySignature(fileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	if err := cosi.VerifySignature(network.Suite, b, el.Aggregate, sig.Challenge, sig.Response); err != nil {
+	err = verifySignature(b, sig, el)
+	verifyPrintResult(err)
+	return err
+}
+
+// verifySignature checks whether the signature is valid
+func verifySignature(b []byte, sig *sda.CosiResponse, el *sda.EntityList) error {
+	// We have to hash twice, as the hash in the signature is the hash of the
+	// message sent to be signed
+	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
+	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
+	if !bytes.Equal(hashHash, sig.Sum) {
+		return errors.New("You are trying to verify a signature " +
+			"belongig to another file. (The hash provided by the signature " +
+			"doesn't match with the hash of the file.)")
+	}
+	if err := cosi.VerifySignature(network.Suite, fHash, el.Aggregate, sig.Challenge, sig.Response); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
-	return err
+	return nil
 }
 
 // verifyPrintResult prints out OK or what failed.

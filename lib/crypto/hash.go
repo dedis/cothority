@@ -5,6 +5,7 @@
 package crypto
 
 import (
+	"bytes"
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
@@ -32,7 +33,7 @@ func hashStream(hash h.Hash, stream io.Reader, size int) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		if errRead == io.EOF {
+		if errRead == io.EOF || n < size {
 			break
 		}
 	}
@@ -43,6 +44,11 @@ func hashStream(hash h.Hash, stream io.Reader, size int) ([]byte, error) {
 // size DefaultChunkSize
 func HashStream(hash h.Hash, stream io.Reader) ([]byte, error) {
 	return hashStream(hash, stream, DefaultChunkSize)
+}
+
+// HashBytes returns the hash of the bytes
+func HashBytes(hash h.Hash, b []byte) ([]byte, error) {
+	return HashStream(hash, bytes.NewReader(b))
 }
 
 // HashStreamChunk will hash the stream using chunks of size chunkSize
