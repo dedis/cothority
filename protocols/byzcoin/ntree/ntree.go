@@ -211,7 +211,7 @@ func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
 // parrallele
 func (nt *Ntree) verifySignatureRequest(msg *RoundSignatureRequest) {
 	// verification if we have too much exceptions
-	threshold := int(math.Ceil(float64(len(nt.Tree().ListNodes())) / 3.0))
+	threshold := int(math.Ceil(float64(len(nt.Tree().List())) / 3.0))
 	if len(msg.Exceptions) > threshold {
 		nt.verifySignatureRequestChan <- false
 	}
