@@ -35,7 +35,195 @@ In order to build (and run) the simulations you need to install a recent
 See Golang's documentation on how-to 
 [install and configure](https://golang.org/doc/install) Go (including 
 setting up a GOPATH environment variable). 
+You can either run various simulations or standalone applications: 
+
+# Commandline Interface
+
+We have provided a simple manually-driven collective signing application, 
+`cosi`, which you can use to request the collective signing group you 
+defined to witness and cosign any message you propose. In this case the 
+witnesses are not validating or checking the messages you’re proposing 
+in any way; they are merely attesting the fact that they have observed 
+your request to sign the message.
+
+## Installation
+
+We provide a binaries for the `cosi` and `cosid` program. They are pre-compiled
+for MacOSX and Linux and don't need any go-installation. But of course you can also
+compile from source.
+
+### Installing from .tar.gz
+
+Download the latest package from 
+
+https://github.com/dedis/cothority/releases/latest
+
+and untar into a directory that is in your `$PATH`:
+
+```bash
+tar xf conode-*tar.gz -C ~/bin
+```
+
+### Installing from source
+
+To install the commandline interface from source, make sure that go is installed
+and that `$GOPATH` and `$GOBIN` are set 
+(https://golang.org/doc/code.html#GOPATH). The apps are only in a special branch,
+`cosi_cli`, so you have to change to that branch:
+
+```bash
+go get github.com/dedis/cothority
+cd $GOPATH/src/github.com/dedis/cothority
+git checkout cosi_cli
+cd app
+go install cosi/cosi.go
+go install cosid/cosid.go
+```
+
+The two binaries `cosi` and `cosid` will be added to `$GOBIN`. If you already
+have an old version of cothority, be sure to update `github.com/dedis/crypto` and
+`github.com/dedis/protobuf`.
+
+## Running your own CoSi server
+
+First you need to create a configuration file for the server including a 
+public/private key pair for the server. 
+You can create a default server configuration with a fresh 
+public/private key pair as follows:
+
+```bash
+cosid
+```
+
+Follow the instructions on the screen. `cosid` will ask you for
+a server address and port, and where you want to store the server 
+configuration. Then you will see an output similar to this:
+
+```
+Description = "Description of the system"
+
+[[servers]]
+  Addresses = ["127.0.0.1:2000"]
+  Public = "6T7FwlCuVixvu7XMI9gRPmyCuqxKk/WUaGbwVvhA+kc="
+  Description = "Description of the server"
+```  
+
+You can copy and paste it into a file `servers.toml`. 
+
+The server configuration itself will get stored in the filename you provided, or
+in `config.toml` by default.
+Next time you run the server it will directly read that file and start up.
+If you chose another filename than `config.toml`, you can use `-config file.toml`. 
+
+### Creating a Collective Signing Group
+By running several `cosid` instances (and copying the appropriate lines 
+of their output) you can create a `servers.toml` that looks like 
+this:
+
+```
+Description = "My Test group"
+
+[[servers]]
+  Addresses = ["127.0.0.1:2000"]
+  Public = "6T7FwlCuVixvu7XMI9gRPmyCuqxKk/WUaGbwVvhA+kc="
+  Description = "Local Server 1"
+
+[[servers]]
+  Addresses = ["127.0.0.1:2001"]
+  Public = "Aq0mVAeAvBZBxQPC9EbI8w6he2FHlz83D+Pz+zZTmJI="
+  Description = "Description of the server"
+```
+
+Your list will look different, as the public keys will not be the same. But
+it is important that you run the servers on different ports. Here the ports
+are 2000 and 2001.
+ 
+### Checking server-list
+
+The `cosi`-binary has a command to verify the availability for all
+servers in a `servers.toml`-file:
+
+```bash
+cosi check
+```
+
+This will first contact each server individually, then make a small cothority-
+group of all possible pairs of servers. If there is a problem with regard to
+some firewalls or bad connections, you will see a "Timeout on signing" error
+message and you can fix the problem.
+
+### Publicly available DeDiS-CoSi-servers
+
+For the moment there are four publicly available signing-servers, without
+any guarantee that they'll be running. But you can try the following:
+
+```bash
+cat > servers.toml <<EOF
+
+[[servers]]
+  Addresses = ["78.46.227.60:2000"]
+  Public = "2juBRFikJLTgZLVp5UV4LBJ2GSQAm8PtBcNZ6ivYZnA="
+  Description = "Profeda CoSi server"
+
+[[servers]]
+ Addresses = ["5.135.161.91:2000"]
+ Public = "jJq4W8KaIFbDu4snOm1TrtrtG79sZK0VCgshkUohycA="
+ Description = "Nikkolasg's server"
+
+[[servers]]
+  Addresses = ["185.26.156.40:61117"]
+  Public = "XEe5N57Ar3gd6uzvZR9ol2XopBlAQl6rKCbPefnWYdI="
+  Description = "Ismail's server"
+
+[[servers]]
+  Addresses = ["95.143.172.241:62306"]
+  Public = "ag5YGeVtw3m7bIGF57X+n1X3qrHxOnpbaWBpEBT4COc="
+  Description = "Daeinar's server"
+EOF
+```
+
+And use the created servers.toml for signing your messages and files.
+
+## Initiating the Collective Signing Protocol
+
+If you have a valid `servers.toml`-file, you can collectively 
+sign a text message specified on the command line as follows:
+
+```bash
+cosi sign msg "Hello CoSi"
+```
+
+cosi will contact the servers and print the signature to the STDOUT. If you
+copy that signature to a file called `msg.sig`, you can verify your message
+with
+
+```bash
+cosi verify msg "Hello CoSi" -sig msg.sig
+```
+
+If you would instead like to sign a message contained in a file you 
+specify (which may be either text or arbitrary binary data), you can do 
+this as follows:
+
+```bash
+cosi sign file file-to-be-signed
+```
+
+It will create a file `file-to-be-signed.sig` containing the sha256 hash
+of the the file and the signature.
+To verify the signature of a file you write:
+  
+```bash
+cosi verify file file-to-be-signed
+```
     
+For all commands, if you chose another filename for the servers than `servers.toml`, you can
+give that on the command-line, so for example to sign a message:
+
+```bash
+cosi sign msg "Hello CoSi" -servers my_servers.toml
+```
+
 # Simulation
 Starting a simulation of one the provided protocols (or your own) either 
 on localhost or, if you have access, on [DeterLab](https://www.isi.deterlab.net) 
