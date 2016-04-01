@@ -19,10 +19,8 @@ import (
 	"time"
 )
 
-/*
-Host is the structure responsible for holding information about the current
- state
-*/
+// Host is the structure responsible for holding information about the current
+// state
 type Host struct {
 	// Our entity (i.e. identity over the network)
 	Entity *network.Entity
@@ -95,6 +93,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	return h
 }
 
+// HostConfig holds all necessary data to create a Host.
 type HostConfig struct {
 	Public   string
 	Private  string
@@ -273,6 +272,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	return nil
 }
 
+// StartProcessMessages start the processing of incoming messages.
+// Mostly it used internally (by the cothority's simulation for instance).
+// Protocol/simulation developers usually won't need it.
 func (h *Host) StartProcessMessages() {
 	// The networkLock.Unlock is in the processMessages-method to make
 	// sure the goroutine started
@@ -527,26 +529,34 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 	h.pendingTreeLock.Unlock()
 }
 
+// AddTree registers the given Tree struct in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddTree(t *Tree) {
 	h.overlay.RegisterTree(t)
 }
 
+// AddEntityList registers the given EntityList in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddEntityList(el *EntityList) {
 	h.overlay.RegisterEntityList(el)
 }
 
+// Suite can (and should) be used to get the underlying abstract.Suite.
+// Currently the suite is hardcoded into the network library.
+// Don't use network.Suite but Host's Suite function instead if possible.
 func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-func (h *Host) Private() abstract.Secret {
-	return h.private
-}
-
+// StartNewNode starts the underlying Node which will instantiate the underlying
+// protocol.
 func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(protoID, tree)
 }
 
+// SetupHostsMock can be used to create a Host mock for testing.
 func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	var hosts []*Host
 	for _, add := range addresses {

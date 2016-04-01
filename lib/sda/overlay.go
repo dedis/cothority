@@ -127,7 +127,7 @@ func (o *Overlay) EntityList(elid EntityListID) *EntityList {
 
 // StartNewNode starts a new node which will in turn instantiate the desired
 // protocol. This is called from the root-node and will start the
-// protocol
+// protocol.
 func (o *Overlay) StartNewNode(protocolID ProtocolID, tree *Tree) (*Node, error) {
 
 	// instantiate node
@@ -283,7 +283,7 @@ func (o *Overlay) nodeDelete(tok *Token) {
 }
 
 func (o *Overlay) Private() abstract.Secret {
-	return o.host.Private()
+	return o.host.private
 }
 func (o *Overlay) Suite() abstract.Suite {
 	return o.host.Suite()
