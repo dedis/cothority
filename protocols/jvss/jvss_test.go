@@ -9,10 +9,9 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/jvss"
 	"github.com/dedis/crypto/poly"
-	"github.com/satori/go.uuid"
 )
 
-var CustomJVSSProtocolID = uuid.NewV5(uuid.NamespaceURL, "jvss_test")
+var CustomJVSSProtocolID = "customJVSS"
 
 // Test if the setup of the long-term secret for one protocol instance is correct
 // or not.
@@ -41,7 +40,7 @@ func TestJVSSLongterm(t *testing.T) {
 		})
 		return pi, nil
 	}
-	sda.ProtocolRegister(CustomJVSSProtocolID, fn)
+	sda.RegisterNewProtocol(CustomJVSSProtocolID, fn)
 	// Create the entityList  + tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
@@ -99,7 +98,7 @@ func TestJVSSSign(t *testing.T) {
 		}
 		return pi, nil
 	}
-	sda.ProtocolRegister(CustomJVSSProtocolID, fn)
+	sda.RegisterNewProtocol(CustomJVSSProtocolID, fn)
 	// Create the entityList  + tree
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)

@@ -16,7 +16,7 @@ import (
 
 func init() {
 	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
-	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegister("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
 }
@@ -89,7 +89,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	node, _ := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
+	node, _ := sdaConf.Overlay.NewNodeEmpty("Broadcast", sdaConf.Tree)
 	proto, _ := manage.NewBroadcastRootProtocol(node)
 	node.SetProtocolInstance(proto)
 	// channel to notify we are done
@@ -111,7 +111,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmptyName("ByzCoin", sdaConf.Tree)
+		node, err := sdaConf.Overlay.NewNodeEmpty("ByzCoin", sdaConf.Tree)
 		if err != nil {
 			return err
 		}

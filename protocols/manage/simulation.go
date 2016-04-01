@@ -47,7 +47,7 @@ func (e *CountSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		n, err := config.Overlay.StartNewNodeName("Count", config.Tree)
+		n, err := config.Overlay.StartNewNode("Count", config.Tree)
 		if err != nil {
 			return err
 		}

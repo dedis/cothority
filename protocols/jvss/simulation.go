@@ -10,7 +10,7 @@ import (
 func init() {
 	// FIXME Protocol doesn't exists:
 	sda.SimulationRegister("SimulationJVSS", NewJvssSimulation)
-	sda.ProtocolRegisterName("ProtocolJVSS", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSSProtocolInstance(node) })
+	sda.RegisterNewProtocol("ProtocolJVSS", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSSProtocolInstance(node) })
 }
 
 type JvssSimulation struct {
@@ -40,7 +40,7 @@ func (jv *JvssSimulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl2("Size is:", size, "rounds:", jv.Rounds)
 	msg := []byte("Test message for JVSS simulation")
 
-	node, err := config.Overlay.CreateNewNodeName("ProtocolJVSS", config.Tree)
+	node, err := config.Overlay.CreateNewNode("ProtocolJVSS", config.Tree)
 	if err != nil {
 		return err
 	}

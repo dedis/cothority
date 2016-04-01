@@ -19,7 +19,7 @@ The protocol waits for the `Close`-message to arrive at the root.
 func init() {
 	network.RegisterMessageType(PrepareClose{})
 	network.RegisterMessageType(Close{})
-	sda.ProtocolRegisterName("CloseAll", NewCloseAll)
+	sda.RegisterNewProtocol("CloseAll", NewCloseAll)
 }
 
 type ProtocolCloseAll struct {

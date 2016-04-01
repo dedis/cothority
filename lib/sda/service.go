@@ -1,3 +1,15 @@
+// Package sda has the service.go file which contains the code that glues the innerpart of SDA with the external
+// part. Basically, you have the definition of a Protocol which anybody can
+// implement, this is what sda is for: to run protocols.
+//
+// A Protocol in sda is supposed to be a short term struct that runs its
+// algorithm and then finishes. SDA handles the rounds and the dispatching.
+// Multiple protocols can run in parallel with the same Tree / EntityList etc.
+// You  can registers Protocol at init time using `sda.ProtocolRegister`.
+// If you need a long term object to store longterm information that Protocol
+// can use (for example, the hash of the last signature a given protocol has
+// issued to create a blockchain), you should implement the Service interface.
+//
 // A service is a longterm running platform that performs two main functions:
 // * First, it creates the ProtocolInstances out of a Node. SDA will request the
 // right service each time it needs to create a new one. The service has to
@@ -9,22 +21,149 @@
 // protocol.
 // The service can reply to requests coming also from others services or others
 // nodes; the Request is only a wrapper around JSON object.
+// All services are registered at init time and directly startup in the main
+// function.
 package sda
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	"os"
+	"path"
 )
+
+// ProtocolInstance is the interface that instances have to use in order to be
+// recognized as protocols
+type ProtocolInstance interface {
+	// Start is called when a leader has created its tree configuration and
+	// wants to start a protocol, it calls host.StartProtocol(protocolID), that
+	// in turns instantiate a new protocol (with a fresh token), and then call
+	// Start on it.
+	Start() error
+	// Dispatch is called as a go-routine and can be used to handle channels
+	Dispatch() error
+	// Shutdown cleans up the resources used by this protocol instance
+	Shutdown() error
+}
+
+// NewProtocol is a convenience to represent the cosntructor function of a
+// ProtocolInstance
+type NewProtocol func(*Node) (ProtocolInstance, error)
+
+// ProtocolConstructor is an interface that can instantiate a given protocol
+type ProtocolConstructor interface {
+	NewProtocol(*Node) (ProtocolInstance, error)
+}
+
+// protocolFactory stores all the ProtocolConstructor together. It can
+// instantiate any registered protocol by name.
+type protocolFactory struct {
+	constructors map[uuid.UUID]ProtocolConstructor
+	// translations between ProtocolID and the name
+	translations map[string]uuid.UUID
+	// the reverse translation for easy debugging
+	reverse map[uuid.UUID]string
+}
+
+// The global factory that can be used to instantiate any protocol
+var ProtocolFactory = &protocolFactory{
+	constructors: make(map[uuid.UUID]ProtocolConstructor),
+	translations: make(map[string]uuid.UUID),
+	reverse:      make(map[uuid.UUID]string)}
+
+// RegisterNewProtocol takes the name of the protocol and a NewProtocol function
+// that will be stored.
+func (pf *protocolFactory) RegisterNewProtocol(name string, new NewProtocol) {
+	// creates a default constructor out of the NewProtocol func
+	dc := &defaultConstructor{new}
+	pf.register(name, dc)
+	dbg.Lvl1("RegisterNewProtocol:", name)
+}
+
+// RegisterProtocolConstructor take the name of the protocol and the
+// ProtocolConstructor used to instantiate it.
+func (pf *protocolFactory) RegisterProtocolConstructor(name string, cons ProtocolConstructor) {
+	dbg.Lvl1("RegisterNewProtocolConstructor:", name)
+	pf.register(name, cons)
+}
+
+// RegisterNewProtocol is a wrapper around protocolFactory.RegisterNewProtocol
+func RegisterNewProtocol(name string, new NewProtocol) {
+	dbg.Lvl3("Register new protocol:", name)
+	ProtocolFactory.RegisterNewProtocol(name, new)
+}
+
+// RegisterProtocolConstructor is w wrapper around
+// protocolFactory.RegisterProtocolConstructor
+func RegisterProtocolConstructor(name string, cons ProtocolConstructor) {
+	ProtocolFactory.RegisterProtocolConstructor(name, cons)
+}
+
+// Instantiate takes the name of the protocol and returns a fresh instance out
+// of it.
+func (pf *protocolFactory) Instantiate(name string, node *Node) (ProtocolInstance, error) {
+	id, ok := pf.translations[name]
+	if !ok {
+		return nil, errors.New("Instantiate() No registered constructor at this name <" + name + ">")
+	}
+	return pf.InstantiateByID(id, node)
+}
+
+// InstantiateByID is equivalent of Instantiate using the id instead.
+func (pf *protocolFactory) InstantiateByID(id uuid.UUID, node *Node) (ProtocolInstance, error) {
+	cons, ok := pf.constructors[id]
+	if !ok {
+		dbg.Lvl1("ProtocolFactory:", pf.translations)
+		return nil, errors.New("Instantiate() No registered constructor at this id <" + pf.Name(id) + ">" + id.String())
+	}
+	return cons.NewProtocol(node)
+}
+
+// ProtocolID returns the ProtocolID out of the name
+func (pf *protocolFactory) ProtocolID(name string) uuid.UUID {
+	id, ok := pf.translations[name]
+	if !ok {
+		return uuid.Nil
+	}
+	return id
+}
+
+func (pf *protocolFactory) Name(id uuid.UUID) string {
+	name := pf.reverse[id]
+	return name
+}
+
+func (pf *protocolFactory) register(name string, cons ProtocolConstructor) {
+	id := uuid.NewV5(uuid.NamespaceURL, name)
+	if _, ok := pf.constructors[id]; ok {
+		dbg.Error("Already have a protocol registered at the same name" + name)
+	}
+	pf.constructors[id] = cons
+	pf.translations[name] = id
+	pf.reverse[id] = name
+}
+
+// a defaultFactory is a factory that takes a NewProtocol and instantiates it
+// anytime it is requested without any additional control.
+type defaultConstructor struct {
+	constructor NewProtocol
+}
+
+// implements the ProtocolConstructor  interface
+func (df *defaultConstructor) NewProtocol(n *Node) (ProtocolInstance, error) {
+	return df.constructor(n)
+}
 
 // Service is a generic interface to define any type of services.
 type Service interface {
-	// InstantiateProtocol is called by sda when it receives a packet for an
+	// ProtocolConstructor.NewProtocol is called by sda when it receives a packet for an
 	// non-existing Node (first contact). The service should provide the
-	// ProtocolInstance with every information it might need.
-	InstantiateProtocol(*Node) (ProtocolInstance, error)
+	// ProtocolInstance with every (external) information it might need.
+	ProtocolConstructor
 
 	// ProcessRequest is the function that will be called when a external client
 	// using the CLI will contact this service with a request packet.
@@ -34,61 +173,75 @@ type Service interface {
 	ProcessRequest(*network.Entity, *Request)
 }
 
-// ID of a service (goes into the direction of having separate ID for each kind
-// of object SDA use)
 type ServiceID uuid.UUID
 
+// String returns the string version of this ID
+func (s *ServiceID) String() string {
+	return uuid.UUID(*s).String()
+}
+
+// Equal returns true if both IDs are equal
+func (s *ServiceID) Equal(s2 ServiceID) bool {
+	return uuid.Equal(uuid.UUID(*s), uuid.UUID(s2))
+}
+
+// NilServiceID is the empty ID
 var NilServiceID = ServiceID(uuid.Nil)
 
-// namespace for uuid generation
-const namespace = "sda://serviceid/"
-
 // Type of a function that is used to instantiate a given Service
-// A service is initialized with a Host and a path where it can finds / write
-// everything it needs
-type NewServiceFunc func(h *Host, path string) Service
+// A service is initialized with a Host (to send messages to someone), the
+// overlay (to register a Tree + EntityList + start new node), and a path where
+// it can finds / write everything it needs
+type NewServiceFunc func(h *Host, o *Overlay, path string) Service
 
-// A serviceFactory is responsible for creating all the services that registered
-// to it.
-type serviceFactory map[ServiceID]NewServiceFunc
+// A serviceFactory is used to register a NewServiceFunc
+type serviceFactory struct {
+	cons map[ServiceID]NewServiceFunc
+	// translations between name of a Service and its ServiceID. Used to register a
+	// Service using a name.
+	translations map[string]ServiceID
+	// Inverse mapping of ServiceId => string
+	inverseTr map[ServiceID]string
+}
 
 // the global service factory
-var ServiceFactory serviceFactory = make(serviceFactory)
-
-// translations between name of a Service and its ServiceID. Used to register a
-// Service using a name.
-var translations map[string]ServiceID = make(map[string]ServiceID)
-
-// Inverse mapping of ServiceId => string
-var inverseTr map[ServiceID]string = make(map[ServiceID]string)
-
-// Register takes an ID and a NewServiceFunc and store that service
-func (s *serviceFactory) Register(id ServiceID, fn NewServiceFunc) {
-	(*s)[id] = fn
+var ServiceFactory = serviceFactory{
+	cons:         make(map[ServiceID]NewServiceFunc),
+	translations: make(map[string]ServiceID),
+	inverseTr:    make(map[ServiceID]string),
 }
 
 // RegisterByName takes an name, creates a ServiceID out of it and store the
 // mapping and the creation function.
-func (s *serviceFactory) RegisterByName(name string, fn NewServiceFunc) {
-	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, namespace+name))
-	s.Register(id, fn)
-	translations[name] = id
-	inverseTr[id] = name
+func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
+	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
+	if _, ok := s.cons[id]; ok {
+		// called at init time so better panic than to continue
+		dbg.Error("RegisterService():", name)
+	}
+	s.cons[id] = fn
+	s.translations[name] = id
+	s.inverseTr[id] = name
+}
+
+// RegisterNewService is a wrapper around service factory
+func RegisterNewService(name string, fn NewServiceFunc) {
+	ServiceFactory.Register(name, fn)
 }
 
 // RegisteredServices returns all the services registered
-func (s *serviceFactory) RegisteredServices() []ServiceID {
-	var ids = make([]ServiceID, 0, len(*s))
-	for id := range *s {
+func (s *serviceFactory) registeredServicesID() []ServiceID {
+	var ids = make([]ServiceID, 0, len(s.cons))
+	for id := range s.cons {
 		ids = append(ids, id)
 	}
 	return ids
 }
 
 // RegisteredServicesByName returns all the names of the services registered
-func (s *serviceFactory) RegisteredServicesByName() []string {
-	var names = make([]string, 0, len(translations))
-	for n := range translations {
+func (s *serviceFactory) RegisteredServicesName() []string {
+	var names = make([]string, 0, len(s.translations))
+	for n := range s.translations {
 		names = append(names, n)
 	}
 	return names
@@ -98,7 +251,7 @@ func (s *serviceFactory) RegisteredServicesByName() []string {
 func (s *serviceFactory) ServiceID(name string) ServiceID {
 	var id ServiceID
 	var ok bool
-	if id, ok = translations[name]; !ok {
+	if id, ok = s.translations[name]; !ok {
 		return NilServiceID
 	}
 	return id
@@ -108,31 +261,94 @@ func (s *serviceFactory) ServiceID(name string) ServiceID {
 func (s *serviceFactory) Name(id ServiceID) string {
 	var name string
 	var ok bool
-	if name, ok = inverseTr[id]; !ok {
+	if name, ok = s.inverseTr[id]; !ok {
 		return ""
 	}
 	return name
 }
 
-// Start looks if the service is registered and instantiate the service
-// Returns an error if the service is not registered
-func (s *serviceFactory) Start(id ServiceID, host *Host, path string) (Service, error) {
-	var ok bool
-	var fn NewServiceFunc
-	if fn, ok = (*s)[id]; !ok {
-		return nil, errors.New("No Service for this id:" + fmt.Sprintf("%v", id))
-	}
-	return fn(host, path), nil
-}
-
-// StartByName is equivalent of Start but works with the name.
-func (s *serviceFactory) StartByName(name string, host *Host, path string) (Service, error) {
+// start launches a new service
+func (s *serviceFactory) start(name string, host *Host, o *Overlay, path string) (Service, error) {
 	var id ServiceID
 	var ok bool
-	if id, ok = translations[name]; !ok {
+	if id, ok = s.translations[name]; !ok {
 		return nil, errors.New("No Service for this name: " + name)
 	}
-	return s.Start(id, host, path)
+	var fn NewServiceFunc
+	if fn, ok = s.cons[id]; !ok {
+		return nil, errors.New("No Service for this id:" + fmt.Sprintf("%v", id))
+	}
+	return fn(host, o, path), nil
+}
+
+// serviceStore is the place where all instantiated services are stored
+// It gives access to :  all the currently running services and is handling the
+// configuration path for them
+type serviceStore struct {
+	// the actual services
+	services map[ServiceID]Service
+	// the config paths
+	paths map[ServiceID]string
+}
+
+const configFolder = "config"
+
+// newServiceStore will create a serviceStore out of all the registered Service
+// it creates the path for the config folder of each service. basically
+// ```configFolder / *nameOfService*```
+func newServiceStore(h *Host, o *Overlay) *serviceStore {
+	// check if we have a config folder
+	if err := os.Mkdir(configFolder, 0666); err != nil {
+		_, ok := err.(*os.PathError)
+		if !ok {
+			// we cannot continue from here
+			panic(err)
+		}
+	}
+	services := make(map[ServiceID]Service)
+	configs := make(map[ServiceID]string)
+	ids := ServiceFactory.registeredServicesID()
+	for _, id := range ids {
+		name := ServiceFactory.Name(id)
+		configName := path.Join(configFolder, name)
+		if err := os.MkdirAll(configName, 0666); err != nil {
+			dbg.Error("Service", name, "Might not work properly: error setting up its config directory:", err)
+		}
+		s, err := ServiceFactory.start(name, h, o, configName)
+		if err != nil {
+			dbg.Error("Trying to instantiate service:", err)
+		}
+		dbg.Lvl2("Started Service", name, " (config in", configName, ")")
+		services[id] = s
+		configs[id] = configName
+		// also register to the ProtocolFactory
+		ProtocolFactory.RegisterProtocolConstructor(name, s)
+	}
+	return &serviceStore{services, configs}
+}
+
+// TODO
+func (s *serviceStore) AvailableServices() []string {
+	panic("not implemented")
+}
+
+// TODO
+func (s *serviceStore) Service(name string) Service {
+	return s.serviceByString(name)
+}
+
+// TODO
+func (s *serviceStore) serviceByString(name string) Service {
+	panic("Not implemented")
+}
+
+func (s *serviceStore) serviceByID(id ServiceID) Service {
+	var serv Service
+	var ok bool
+	if serv, ok = s.services[id]; !ok {
+		return nil
+	}
+	return serv
 }
 
 // A Request is a generic packet to represent any kind of request a Service is

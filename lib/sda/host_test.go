@@ -336,14 +336,14 @@ func TestTokenId(t *testing.T) {
 	t1 := &sda.Token{
 		EntityListID: uuid.NewV1(),
 		TreeID:       uuid.NewV1(),
-		ServiceID:    uuid.NewV1(),
+		ProtocolID:   uuid.NewV1(),
 		RoundID:      uuid.NewV1(),
 	}
 	id1 := t1.Id()
 	t2 := &sda.Token{
 		EntityListID: uuid.NewV1(),
 		TreeID:       uuid.NewV1(),
-		ServiceID:    uuid.NewV1(),
+		ProtocolID:   uuid.NewV1(),
 		RoundID:      uuid.NewV1(),
 	}
 	id2 := t2.Id()

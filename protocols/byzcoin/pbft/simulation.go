@@ -13,8 +13,8 @@ var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
 func init() {
 	sda.SimulationRegister("PbftSimulation", NewSimulation)
-	sda.ProtocolRegisterName("PBFT", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(n) })
-	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return manage.NewBroadcastProtocol(n) })
+	sda.RegisterNewProtocol("PBFT", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(n) })
+	sda.RegisterNewProtocol("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return manage.NewBroadcastProtocol(n) })
 }
 
 // Simulation implements sda.Simulation interface
@@ -75,12 +75,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	// Here we first setup the N^2 connections with a broadcast protocol
-	node, err := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
+	node, err := sdaConf.Overlay.CreateNewNode("Broadcast", sdaConf.Tree)
 	if err != nil {
 		dbg.Error(err)
 	}
-	proto, _ := manage.NewBroadcastRootProtocol(node)
-	node.SetProtocolInstance(proto)
+	proto, _ := node.ProtocolInstance().(*Broadcast)
 	// channel to notify we are done
 	broadDone := make(chan bool)
 	proto.RegisterOnDone(func() {
@@ -92,7 +91,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl3("Simulation can start !")
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		node, err := sdaConf.Overlay.CreateNewNodeName("PBFT", sdaConf.Tree)
+		node, err := sdaConf.Overlay.CreateNewNode("PBFT", sdaConf.Tree)
 		if err != nil {
 			return err
 		}

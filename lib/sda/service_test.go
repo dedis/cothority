@@ -23,7 +23,7 @@ type DummyService struct {
 	start chan bool
 }
 
-func (ds *DummyService) InstantiateProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
+func (ds *DummyService) NewProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 	ds.start <- true
 	return &DummyProtocol{
 		Node:  n,
@@ -41,7 +41,7 @@ func TestServiceFactory(t *testing.T) {
 	ds := &DummyService{
 		start: make(chan bool),
 	}
-	sda.ServiceFactory.RegisterByName("dummy", func(h *sda.Host, path string) sda.Service {
+	sda.ServiceFactory.Register("dummy", func(h *sda.Host, o *sda.Overlay, path string) sda.Service {
 		ds.Host = h
 		ds.start <- true
 		return ds
@@ -62,7 +62,7 @@ func TestServiceDispatch(t *testing.T) {
 	ds := &DummyService{
 		start: make(chan bool),
 	}
-	sda.ServiceFactory.RegisterByName("dummy", func(h *sda.Host, path string) sda.Service {
+	sda.RegisterNewService("dummy", func(h *sda.Host, o *sda.Overlay, path string) sda.Service {
 		ds.Host = h
 		return ds
 	})
@@ -100,7 +100,7 @@ func TestServiceInstantiateProtocol(t *testing.T) {
 	ds := &DummyService{
 		start: make(chan bool),
 	}
-	sda.ServiceFactory.RegisterByName("dummy", func(h *sda.Host, path string) sda.Service {
+	sda.RegisterNewService("dummy", func(h *sda.Host, o *sda.Overlay, path string) sda.Service {
 		ds.Host = h
 		return ds
 	})
@@ -113,7 +113,7 @@ func TestServiceInstantiateProtocol(t *testing.T) {
 	h1.AddTree(tree)
 	done := make(chan bool)
 	go func() {
-		_, err := h1.StartNewNodeName("dummy", tree)
+		_, err := h1.StartNewNode("dummy", tree)
 		if err != nil {
 			t.Fatal("error starting new node", err)
 		}

@@ -14,7 +14,7 @@ func init() {
 	sda.SimulationRegister("CoSi", NewCoSiSimulation)
 	// default protocol initialization. See Run() for override this one for the
 	// root.
-	sda.ProtocolRegisterName("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
+	sda.RegisterNewProtocol("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
 }
 
 type CoSiSimulation struct {
@@ -62,7 +62,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		dbg.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
+		node, err := config.Overlay.CreateNewNode("ProtocolCosi", config.Tree)
 		if err != nil {
 			return err
 		}

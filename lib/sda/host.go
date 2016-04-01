@@ -72,8 +72,7 @@ type Host struct {
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
 
-	// Services handled by this host (dispatcher)
-	services map[ServiceID]Service
+	services *serviceStore
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -95,8 +94,8 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	}
 
 	h.overlay = NewOverlay(h)
+	h.services = newServiceStore(h, h.overlay)
 
-	h.setupServices()
 	return h
 }
 
@@ -398,14 +397,13 @@ func (h *Host) dispatchRequest(nm *network.NetworkMessage) {
 		dbg.Error("Could not cast the Request message")
 		return
 	}
-	// check if we have the target service
-	var service Service
-	if service, ok = h.services[request.Service]; !ok {
-		dbg.Error("No service registered for this ServiceID", request.Service, "(", ServiceFactory.Name(request.Service), ")")
+	var serv Service
+	if serv = h.services.serviceByID(request.Service); serv == nil {
+		dbg.Error("No services started using this id", ServiceFactory.Name(request.Service))
 		return
 	}
 	// dispatch
-	service.ProcessRequest(nm.Entity, &request)
+	serv.ProcessRequest(nm.Entity, &request)
 }
 
 // sendSDAData marshals the inner msg and then sends a SDAData msg
@@ -572,8 +570,14 @@ func (h *Host) Private() abstract.Secret {
 	return h.private
 }
 
-func (h *Host) StartNewNode(protoID uuid.UUID, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNode(protoID, tree)
+// XXX Should not be here but only in overlay
+func (h *Host) StartNewNodeID(protoID uuid.UUID, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNodeID(protoID, tree)
+}
+
+// XXX Same should be only in overlay
+func (h *Host) StartNewNode(name string, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNode(name, tree)
 }
 
 func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
@@ -610,18 +614,4 @@ func (h *Host) Tx() uint64 {
 // Rx() to implement monitor/CounterIO
 func (h *Host) Rx() uint64 {
 	return h.host.Rx()
-}
-
-// setupServices is responsible for creating all the services registered
-func (h *Host) setupServices() {
-	h.services = make(map[ServiceID]Service)
-	ids := ServiceFactory.RegisteredServices()
-	for _, id := range ids {
-		s, err := ServiceFactory.Start(id, h, "mockingpath")
-		if err != nil {
-			dbg.Error("Trying to instantiate service:", err)
-		}
-		h.services[id] = s
-		dbg.Lvl2("Started Service", ServiceFactory.Name(id))
-	}
 }

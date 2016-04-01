@@ -58,15 +58,6 @@ type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
 func NewNode(o *Overlay, tok *Token) (*Node, error) {
-	n, err := NewNodeEmpty(o, tok)
-	if err != nil {
-		return nil, err
-	}
-	return n, n.protocolInstantiate()
-}
-
-// NewNodeEmpty creates a new node without a protocol
-func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
 		token:                tok,
 		channels:             make(map[uuid.UUID]interface{}),
@@ -83,7 +74,7 @@ func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 		return nil, errors.New("We are not represented in the tree")
 	}
 	go n.dispatchMsgReader()
-	return n, nil
+	return n, n.protocolInstantiate()
 }
 
 // TreeNode gets the treeNode of this node. If there is no TreeNode for the
@@ -237,23 +228,16 @@ func (n *Node) protocolInstantiate() error {
 	if n.token == nil {
 		return errors.New("Hope this is running in test-mode")
 	}
-	pid := n.token.ServiceID
-	p, ok := protocols[pid]
-	if !ok {
-		return errors.New("Protocol " + pid.String() + " doesn't exist")
-	}
-	tree := n.overlay.Tree(n.token.TreeID)
-	if tree == nil {
-		return errors.New("Tree does not exists")
-	}
-	if n.overlay.EntityList(n.token.EntityListID) == nil {
-		return errors.New("EntityList does not exists")
-	}
-
+	pid := n.token.ProtocolID
+	var pi ProtocolInstance
 	var err error
-	n.instance, err = p(n)
+	if pi, err = ProtocolFactory.InstantiateByID(pid, n); err != nil {
+		return err
+	}
+	// link the two
+	n.instance = pi
 	go n.instance.Dispatch()
-	return err
+	return nil
 }
 
 // Dispatch - the standard dispatching function is empty
@@ -276,7 +260,10 @@ func (n *Node) Close() error {
 		n.msgDispatchQueueWait <- true
 	}
 	n.msgDispatchQueueMutex.Unlock()
-	return n.ProtocolInstance().Shutdown()
+	if pi := n.ProtocolInstance(); pi != nil {
+		pi.Shutdown()
+	}
+	return nil
 }
 
 func (n *Node) DispatchHandler(msgSlice []*SDAData) error {

@@ -17,7 +17,7 @@ func init() {
 	network.RegisterMessageType(PrepareCount{})
 	network.RegisterMessageType(Count{})
 	network.RegisterMessageType(NodeIsUp{})
-	sda.ProtocolRegisterName("Count", NewCount)
+	sda.RegisterNewProtocol("Count", NewCount)
 }
 
 type ProtocolCount struct {

@@ -3,14 +3,13 @@ package sda
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"testing"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"strconv"
+	"testing"
 	"time"
 )
 
@@ -48,7 +47,7 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 		if uuid.Equal(h.Entity.Id, rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.Id].StartNewNodeName(name, t)
+			return l.Overlays[h.Entity.Id].StartNewNode(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -62,23 +61,23 @@ func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 		if uuid.Equal(h.Entity.Id, rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.Id].CreateNewNodeName(name, t)
+			return l.Overlays[h.Entity.Id].CreateNewNode(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
-func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
-	rootEntityId := t.Root.Entity.Id
-	for _, h := range l.Hosts {
-		if uuid.Equal(h.Entity.Id, rootEntityId) {
-			// XXX do we really need multiples overlays ? Can't we just use the
-			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.Id].NewNodeEmptyName(name, t)
-		}
-	}
-	return nil, errors.New("Didn't find host for tree-root")
-}
+//func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
+//rootEntityId := t.Root.Entity.Id
+//for _, h := range l.Hosts {
+//if uuid.Equal(h.Entity.Id, rootEntityId) {
+//// XXX do we really need multiples overlays ? Can't we just use the
+//// Node, since it is already dispatched as like a TreeNode ?
+//return l.Overlays[h.Entity.Id].NewNodeEmptyName(name, t)
+//}
+//}
+//return nil, errors.New("Didn't find host for tree-root")
+/*}*/
 
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
@@ -168,12 +167,9 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 	if tree == nil {
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
-	protId := ProtocolNameToUuid(protName)
-	if !ProtocolExists(protId) {
-		return nil, errors.New("Didn't find protocol: " + protName)
-	}
+	protoID := ProtocolFactory.ProtocolID(protName)
 	tok := &Token{
-		ServiceID:    protId,
+		ProtocolID:   protoID,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tn.Id,

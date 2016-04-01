@@ -12,10 +12,10 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
-	sda.ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
-	sda.ProtocolRegisterName("ProtocolBlocking", NewProtocolBlocking)
-	sda.ProtocolRegister(testID, NewProtocolTest)
+	sda.RegisterNewProtocol("ProtocolChannels", NewProtocolChannels)
+	sda.RegisterNewProtocol("ProtocolHandlers", NewProtocolHandlers)
+	sda.RegisterNewProtocol("ProtocolBlocking", NewProtocolBlocking)
+	sda.RegisterNewProtocol("ProtocolTest", NewProtocolTest)
 	Incoming = make(chan struct {
 		*sda.TreeNode
 		NodeTestMsg
@@ -164,7 +164,7 @@ func TestProtocolChannels(t *testing.T) {
 	h1.StartProcessMessages()
 
 	// Try directly StartNewProtocol
-	_, err := h1.StartNewNodeName("ProtocolChannels", tree)
+	_, err := h1.StartNewNode("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}

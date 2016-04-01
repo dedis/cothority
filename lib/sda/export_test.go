@@ -18,10 +18,6 @@ func (h *Host) Receive() network.NetworkMessage {
 	return data
 }
 
-func (h *Host) StartNewNodeName(name string, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNodeName(name, tree)
-}
-
 func (h *Host) EntityList(id uuid.UUID) (*EntityList, bool) {
 	el := h.overlay.EntityList(id)
 	return el, el != nil

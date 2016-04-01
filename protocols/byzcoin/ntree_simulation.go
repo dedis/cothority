@@ -10,7 +10,7 @@ import (
 
 func init() {
 	sda.SimulationRegister("NtreeSimulation", NewNtreeSimulation)
-	sda.ProtocolRegisterName("Ntree", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
+	sda.RegisterNewProtocol("Ntree", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
 }
 
 // Simulation implements da.Simulation interface
@@ -61,7 +61,7 @@ func (e *NtreeSimulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmptyName("Ntree", sdaConf.Tree)
+		node, err := sdaConf.Overlay.NewNodeEmpty("Ntree", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
