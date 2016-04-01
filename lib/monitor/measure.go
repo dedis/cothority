@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"syscall"
@@ -23,7 +24,7 @@ var connection net.Conn
 // this variable.
 var enabled = true
 
-// Generic interface for measurements
+// Measure is an interface for measurements
 // Usage:
 // ```measure := monitor.SingleMeasure("bandwidth")```
 // or
@@ -53,7 +54,7 @@ type SingleMeasure struct {
 // time, the cpu time + the user time.
 type TimeMeasure struct {
 	Wall *SingleMeasure
-	Cpu  *SingleMeasure
+	CPU  *SingleMeasure
 	User *SingleMeasure
 	// non exported fields
 	// name of the time measure (basename)
@@ -104,7 +105,7 @@ func NewTimeMeasure(name string) *TimeMeasure {
 	return tm
 }
 
-// Send measurements to the monitor:
+// Record sends the measurements to the monitor:
 // - wall time: *name*_wall
 // - system time: *name*_system
 // - user time: *name*_user
@@ -112,10 +113,10 @@ func (tm *TimeMeasure) Record() {
 	// Wall time measurement
 	tm.Wall = NewSingleMeasure(tm.name+"_wall", float64(time.Since(tm.lastWallTime))/1.0e9)
 	// CPU time measurement
-	tm.Cpu.Value, tm.User.Value = getDiffRTime(tm.Cpu.Value, tm.User.Value)
+	tm.CPU.Value, tm.User.Value = getDiffRTime(tm.CPU.Value, tm.User.Value)
 	// send data
 	tm.Wall.Record()
-	tm.Cpu.Record()
+	tm.CPU.Record()
 	tm.User.Record()
 	// reset timers
 	tm.reset()
@@ -125,7 +126,7 @@ func (tm *TimeMeasure) Record() {
 // reset reset the time fields of this time measure
 func (tm *TimeMeasure) reset() {
 	cpuTimeSys, cpuTimeUser := getRTime()
-	tm.Cpu = NewSingleMeasure(tm.name+"_system", cpuTimeSys)
+	tm.CPU = NewSingleMeasure(tm.name+"_system", cpuTimeSys)
 	tm.User = NewSingleMeasure(tm.name+"_user", cpuTimeUser)
 	tm.lastWallTime = time.Now()
 }
@@ -194,18 +195,24 @@ func send(v interface{}) error {
 	// For a large number of clients (˜10'000), the connection phase
 	// can take some time. This is a linear backoff to enable connection
 	// even when there are a lot of request:
+	var ok bool
+	var err error
 	for wait := 500; wait < 1000; wait += 100 {
-		if err := encoder.Encode(v); err == nil {
-			return nil
-		} else {
-			dbg.Lvl1("Couldn't send to monitor-sink:", err)
-			time.Sleep(time.Duration(wait) * time.Millisecond)
+		if err = encoder.Encode(v); err == nil {
+			ok = true
+			break
 		}
+		dbg.Lvl1("Couldn't send to monitor-sink:", err)
+		time.Sleep(time.Duration(wait) * time.Millisecond)
+		continue
 	}
-	return fmt.Errorf("No contact to monitor-sink possible!")
+	if !ok {
+		return errors.New("Could not send any measures")
+	}
+	return nil
 }
 
-// Prints a message to end the logging.
+// EndAndCleanup sends a message to end the logging and close the connection
 func EndAndCleanup() {
 	send(NewSingleMeasure("end", 0))
 	if err := connection.Close(); err != nil {
@@ -213,7 +220,6 @@ func EndAndCleanup() {
 		dbg.Error("Could not close connecttion:", err)
 	}
 	encoder = nil
-
 }
 
 // Converts microseconds to seconds.
@@ -235,7 +241,8 @@ func getDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
 	return nowSys - tSys, nowUsr - tUsr
 }
 
-// Enables / Disables a measure.
+// EnableMeasure will actually allow the sending of the measures if given true.
+// Otherwise all measures won't be sent at all.
 func EnableMeasure(b bool) {
 	if b {
 		dbg.Lvl3("Monitor: Measure enabled")

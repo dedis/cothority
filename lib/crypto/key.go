@@ -1,4 +1,4 @@
-package cliutils
+package crypto
 
 import (
 	"encoding/base64"
