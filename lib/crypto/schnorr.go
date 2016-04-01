@@ -1,8 +1,3 @@
-// Provides some crypto-shortcuts: Schnorr signature and a Hash-function.
-// See https://en.wikipedia.org/wiki/Schnorr_signature
-//
-// It provides a way to sign a message using a private key and to verify the
-// signature using the public counter part.
 package crypto
 
 import (
@@ -19,6 +14,7 @@ type SchnorrSig struct {
 	Response  abstract.Secret
 }
 
+// MarshalBinary is used for example in hashing
 func (ss *SchnorrSig) MarshalBinary() ([]byte, error) {
 	cbuf, err := ss.Challenge.MarshalBinary()
 	if err != nil {

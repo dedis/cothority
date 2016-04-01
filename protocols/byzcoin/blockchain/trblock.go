@@ -88,7 +88,7 @@ func NewHeader(transactions TransactionList, parent, parentKey string) *Header {
 	return hdr
 }
 func HashRootTransactions(transactions TransactionList) string {
-	var hashes []crypto.HashId
+	var hashes []crypto.HashID
 
 	for _, t := range transactions.Txs {
 		temp, _ := hex.DecodeString(t.Hash)
