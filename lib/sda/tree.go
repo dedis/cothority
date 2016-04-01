@@ -52,7 +52,7 @@ var _ = network.RegisterMessageType(Tree{})
 func NewTree(il *EntityList, r *TreeNode) *Tree {
 	url := network.NamespaceURL + "tree/" + il.Id.String() + r.Id.String()
 	t := &Tree{
-		EntityList: el,
+		EntityList: il,
 		Root:       r,
 		Id:         TreeID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
@@ -329,7 +329,7 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 // corresponding Entity.
 func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 	for i, e := range el.List {
-		if e.Id == eId {
+		if e.ID == eId {
 			return i, e
 		}
 	}
