@@ -9,6 +9,7 @@ import (
 
 // MessageGenesis is used for the first round
 type MessageGenesis struct {
+	Block *SkipBlock
 }
 
 type StructGenesis struct {

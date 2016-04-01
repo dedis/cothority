@@ -27,12 +27,10 @@ type ProtocolSkipchain struct {
 // NewSkipchain initialises the structures and create the genesis block
 func NewSkipchain(n *sda.Node) (sda.ProtocolInstance, error) {
 
-	CurrentBlock := &SkipBlock{Index: 0} //TODO fill the fields
 	Skipchain := &ProtocolSkipchain{
 		Node:      n,
 		SetupDone: make(chan bool),
 		SkipChain: make(map[string]*SkipBlock),
-		LastBlock: CurrentBlock.Hash(),
 	}
 	err := Skipchain.RegisterHandler(Skipchain.HandleGenesis)
 	if err != nil {
@@ -48,14 +46,16 @@ func NewSkipchain(n *sda.Node) (sda.ProtocolInstance, error) {
 // Starts the protocol
 func (p *ProtocolSkipchain) Start() error {
 	dbg.Lvl3("Starting Skipchain")
+	block := &SkipBlock{Index: 0} //TODO fill the fields
+	p.LastBlock = block.Hash()
 	return p.HandleGenesis(StructGenesis{p.TreeNode(),
-		MessageGenesis{}})
+		MessageGenesis{Block: block}})
 }
 
 // HandleGenesis is used to sign the Genesis blocks it maybe renamed to HandleNewBlock
 func (p *ProtocolSkipchain) HandleGenesis(msg StructGenesis) error {
 
-	err := p.StartSignature(p.CurrentBlock)
+	err := p.StartSignature(*msg.Block)
 	if err != nil {
 		return err
 	}
@@ -95,5 +95,17 @@ func (p *ProtocolSkipchain) HandlePropagate(prop StructPropagate) error {
 		}
 	}
 
+	return nil
+}
+
+// HandleGenesis is used to sign the Genesis blocks it maybe renamed to HandleNewBlock
+func (p *ProtocolSkipchain) HandleNewBlock() /* gets a new list of public keys*/ error {
+	//create aggregate key and add it
+	block := &SkipBlock{Index: p.SkipChain[string(p.LastBlock)].Index + 1} //TODO fill the fields
+	block.BackLink = append(block.BackLink, p.LastBlock)
+	err := p.StartSignature(*block)
+	if err != nil {
+		return err
+	}
 	return nil
 }
