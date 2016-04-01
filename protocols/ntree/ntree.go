@@ -1,9 +1,3 @@
-// Simple protocol where each node signs a message and the parent node verifies
-// it.
-// Implements a scheme where a leader (the root node) collects N standard individual signatures
-// from the N witnesses using a tree. As the "naive" scheme where the leader directly sends the message to be signed
-// directly to its children is a special case if ntree (a 1-level tree) this can also be used to measure how the naive
-// approach compares to ntree and CoSi.
 package ntree
 
 import (
