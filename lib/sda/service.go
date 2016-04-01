@@ -81,13 +81,13 @@ func (pf *protocolFactory) RegisterNewProtocol(name string, new NewProtocol) {
 	// creates a default constructor out of the NewProtocol func
 	dc := &defaultConstructor{new}
 	pf.register(name, dc)
-	dbg.Lvl1("RegisterNewProtocol:", name)
+	dbg.Lvl2("RegisterNewProtocol:", name)
 }
 
 // RegisterProtocolConstructor take the name of the protocol and the
 // ProtocolConstructor used to instantiate it.
 func (pf *protocolFactory) RegisterProtocolConstructor(name string, cons ProtocolConstructor) {
-	dbg.Lvl1("RegisterNewProtocolConstructor:", name)
+	dbg.Lvl2("RegisterNewProtocolConstructor:", name)
 	pf.register(name, cons)
 }
 
@@ -140,7 +140,7 @@ func (pf *protocolFactory) Name(id uuid.UUID) string {
 func (pf *protocolFactory) register(name string, cons ProtocolConstructor) {
 	id := uuid.NewV5(uuid.NamespaceURL, name)
 	if _, ok := pf.constructors[id]; ok {
-		dbg.Error("Already have a protocol registered at the same name" + name)
+		dbg.Lvl2("Already have a protocol registered at the same name" + name)
 	}
 	pf.constructors[id] = cons
 	pf.translations[name] = id
@@ -217,7 +217,7 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
 	if _, ok := s.cons[id]; ok {
 		// called at init time so better panic than to continue
-		dbg.Error("RegisterService():", name)
+		dbg.Lvl1("RegisterService():", name)
 	}
 	s.cons[id] = fn
 	s.translations[name] = id
@@ -298,7 +298,7 @@ const configFolder = "config"
 // ```configFolder / *nameOfService*```
 func newServiceStore(h *Host, o *Overlay) *serviceStore {
 	// check if we have a config folder
-	if err := os.Mkdir(configFolder, 0666); err != nil {
+	if err := os.MkdirAll(configFolder, 0777); err != nil {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
@@ -310,9 +310,13 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 	ids := ServiceFactory.registeredServicesID()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
-		configName := path.Join(configFolder, name)
+		pwd, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+		configName := path.Join(pwd, configFolder, name)
 		if err := os.MkdirAll(configName, 0666); err != nil {
-			dbg.Error("Service", name, "Might not work properly: error setting up its config directory:", err)
+			dbg.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
 		s, err := ServiceFactory.start(name, h, o, configName)
 		if err != nil {
