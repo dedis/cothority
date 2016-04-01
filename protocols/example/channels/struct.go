@@ -2,22 +2,26 @@ package example_channels
 
 import "github.com/dedis/cothority/lib/sda"
 
-// MessageAnnounce is used to pass a message to all children
-type MessageAnnounce struct {
+// Announce is used to pass a message to all children
+type Announce struct {
 	Message string
 }
 
+// StructAnnounce contains Announce and the data necessary to identify the
+// message in the sda framework.
 type StructAnnounce struct {
 	*sda.TreeNode
-	MessageAnnounce
+	Announce
 }
 
-// MessageReply returns the count of all children
-type MessageReply struct {
+// Reply returns the count of all children.
+type Reply struct {
 	ChildrenCount int
 }
 
+// StructReply contains Reply and the data necessary to identify the
+// message in the sda framework.
 type StructReply struct {
 	*sda.TreeNode
-	MessageReply
+	Reply
 }
