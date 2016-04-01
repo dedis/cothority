@@ -1,27 +1,35 @@
-// Package cosi is the Collective Signing implementation according to the paper of
-// Bryan Ford: http://arxiv.org/pdf/1503.08768v1.pdf
-//
-// The CoSi-protocol has 4 stages:
-// 1) Announcement: The leader multicasts an announcement
-// of the start of this round down through the spanning tree,
-// optionally including the statement S to be signed.
-// 2) Commitment: Each node i picks a random secret vi and
-// computes its individual commit Vi = Gvi . In a bottom-up
-// process, each node i waits for an aggregate commit Vˆj from
-// each immediate child j, if any. Node i then computes its
-// own aggregate commit Vˆi = Vi \prod{j ∈ Cj}{Vˆj}, where Ci is the
-// set of i’s immediate children. Finally, i passes Vi up to its
-// parent, unless i is the leader (node 0).
-// 3) Challenge: The leader computes a collective challenge c =
-// H(Vˆ0 ∥ S), then multicasts c down through the tree, along
-// with the statement S to be signed if it was not already
-// announced in phase 1.
-// 4) Response: In a final bottom-up phase, each node i waits
-// to receive a partial aggregate response rˆj from each of
-// its immediate children j ∈ Ci. Node i now computes its
-// individual response ri = vi − cxi, and its partial aggregate
-// response rˆi = ri + \sum{j ∈ Cj}{rˆj} . Node i finally passes rˆi
-// up to its parent, unless i is the root.
+/*
+Package cosi is the Collective Signing implementation according to the paper of
+Bryan Ford: http://arxiv.org/pdf/1503.08768v1.pdf .
+
+Stages of CoSi
+
+The CoSi-protocol has 4 stages:
+
+1. Announcement: The leader multicasts an announcement
+of the start of this round down through the spanning tree,
+optionally including the statement S to be signed.
+
+2. Commitment: Each node i picks a random secret vi and
+computes its individual commit Vi = Gvi . In a bottom-up
+process, each node i waits for an aggregate commit Vˆj from
+each immediate child j, if any. Node i then computes its
+own aggregate commit Vˆi = Vi \prod{j ∈ Cj}{Vˆj}, where Ci is the
+set of i’s immediate children. Finally, i passes Vi up to its
+parent, unless i is the leader (node 0).
+
+3. Challenge: The leader computes a collective challenge c =
+H(Vˆ0 ∥ S), then multicasts c down through the tree, along
+with the statement S to be signed if it was not already
+announced in phase 1.
+
+4. Response: In a final bottom-up phase, each node i waits
+to receive a partial aggregate response rˆj from each of
+its immediate children j ∈ Ci. Node i now computes its
+individual response ri = vi − cxi, and its partial aggregate
+response rˆi = ri + \sum{j ∈ Cj}{rˆj} . Node i finally passes rˆi
+up to its parent, unless i is the root.
+*/
 package cosi
 
 import (
