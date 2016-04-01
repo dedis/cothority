@@ -326,11 +326,12 @@ func (t *Value) Store(newTime float64) {
 	t.store = append(t.store, newTime)
 }
 
-// Collect will Collect all Values stored in the store's Value.
-// It is kept as a streaming average / dev processus fr the moment (not the most
-// optimized).
-// streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
+// Collect will collect all float64 stored in the store's Value and will compute
+// the basic statistics about them such as min, max, dev and avg.
 func (t *Value) Collect() {
+	// It is kept as a streaming average / dev processus for the moment (not the most
+	// optimized).
+	// streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
 	t.sum = 0
 	for _, newTime := range t.store {
 		// nothings takes 0 ms to complete, so we know it's the first time

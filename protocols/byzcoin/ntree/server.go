@@ -7,13 +7,13 @@ import (
 )
 
 type NtreeServer struct {
-	*byzcoin.ByzCoinServer
+	*byzcoin.Server
 }
 
 func NewNtreeServer(blockSize int) *NtreeServer {
 	ns := new(NtreeServer)
 	// we don't care about timeout + fail in Naive comparison
-	ns.ByzCoinServer = byzcoin.NewByzCoinServer(blockSize, 0, 0)
+	ns.Server = byzcoin.NewByzCoinServer(blockSize, 0, 0)
 	return ns
 }
 
