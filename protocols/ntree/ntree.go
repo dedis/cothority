@@ -32,6 +32,7 @@ type Protocol struct {
 	verifySignature int
 }
 
+// NewProtocol is used internally to register the protocol.
 func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 	p := &Protocol{
 		Node: node,
@@ -47,7 +48,7 @@ func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 	return p, nil
 }
 
-func (p *Protocol) Start() error {
+func (p *Protocol) start() error {
 	if p.IsRoot() {
 		dbg.Lvl3("Starting ntree/naive")
 		return p.HandleSignRequest(structMessage{p.TreeNode(),
@@ -57,6 +58,8 @@ func (p *Protocol) Start() error {
 	}
 }
 
+// HandleSignRequest is a handler for incoming sign-requests. It's registered as
+// a handler in the sda.Node.
 func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	p.message = msg.Msg
 	p.verifySignature = msg.VerifySignature
@@ -83,6 +86,9 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	return nil
 }
 
+// HandleSignBundle is a handler responsible for adding the node's signature
+// and verifying the children's signatures (verification level can be controlled
+// by the VerifySignature flag).
 func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	dbg.Lvl3("Appending our signature to the collected ones and send to parent")
 	var sig SignatureBundle
@@ -124,10 +130,6 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
 	p.Done()
 	return nil
-}
-
-func (p *Protocol) SetMessage(msg []byte) {
-	p.message = msg
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
