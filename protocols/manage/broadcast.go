@@ -5,7 +5,6 @@ package manage
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/satori/go.uuid"
 )
 
 func init() {
@@ -55,7 +54,7 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	b.RegisterChannel(&b.okChan)
 
 	lists := b.Tree().List()
-	b.listNode = make(map[uuid.UUID]*sda.TreeNode)
+	b.listNode = make(map[sda.TreeNodeID]*sda.TreeNode)
 	b.ackdNode = 0
 	b.done = make(chan bool, 1)
 	for _, tn := range lists {

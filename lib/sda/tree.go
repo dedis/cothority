@@ -127,7 +127,7 @@ func (t *Tree) Dump() string {
 }
 
 // Search searches the Tree for the TreeNode corresponding to the given UUID and returns it
-func (t *Tree) Search(tn uuid.UUID) (ret *TreeNode) {
+func (t *Tree) Search(tn TreeNodeID) (ret *TreeNode) {
 	found := func(d int, tns *TreeNode) {
 		if tns.Id == tn {
 			ret = tns
@@ -256,11 +256,11 @@ func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 
 // MakeTree creates a tree given an EntityList
 func (tm TreeMarshal) MakeTree(el *EntityList) (*Tree, error) {
-	if el.Id != tm.EntityId {
+	if el.Id != tm.EntityListID {
 		return nil, errors.New("Not correct EntityList-Id")
 	}
 	tree := &Tree{
-		Id:         tm.NodeId,
+		Id:         tm.TreeId,
 		EntityList: el,
 	}
 	tree.Root = tm.Children[0].MakeTreeFromList(nil, el)
