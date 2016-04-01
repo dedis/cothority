@@ -29,7 +29,7 @@ type Commitment struct {
 	*cosi.Commitment
 }
 
-// XXX
+// XXX add the exception mechanism:
 /* Message []byte*/
 //V       abstract.Point // commitment Point
 //V_hat   abstract.Point // product of subtree participating nodes' commitment points
