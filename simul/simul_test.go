@@ -25,12 +25,21 @@ func TestDepth(t *testing.T) {
 		rc.Put("bf", strconv.Itoa(s.BF))
 		rc.Put("depth", strconv.Itoa(s.depth))
 		CheckHosts(rc)
-		hosts, err := rc.GetInt("hosts")
-		if err != nil {
-			t.Fatal("Couldn't get hosts:", err)
-		}
+		hosts, _ := rc.GetInt("hosts")
 		if hosts != s.hosts {
-			t.Fatal(s, "gave", hosts)
+			t.Fatal(s, "gave hosts:", hosts)
+		}
+		rc.Put("bf", "0")
+		CheckHosts(rc)
+		bf, _ := rc.GetInt("bf")
+		if bf != s.BF {
+			t.Fatal(s, "gave BF:", bf)
+		}
+		rc.Put("depth", "0")
+		CheckHosts(rc)
+		depth, _ := rc.GetInt("depth")
+		if depth != s.depth {
+			t.Fatal(s, "gave depth:", bf)
 		}
 	}
 }

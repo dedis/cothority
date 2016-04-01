@@ -27,9 +27,18 @@ import (
 // Tree is a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
 type Tree struct {
-	Id         uuid.UUID
+	Id         TreeID
 	EntityList *EntityList
 	Root       *TreeNode
+}
+
+type TreeID uuid.UUID
+
+func (tId TreeID) Equals(tId2 TreeID) bool {
+	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
+}
+func (tId TreeID) String() string {
+	return uuid.UUID(tId).String()
 }
 
 var TreeType = network.RegisterMessageType(Tree{})
@@ -41,7 +50,7 @@ func NewTree(el *EntityList, r *TreeNode) *Tree {
 	t := &Tree{
 		EntityList: el,
 		Root:       r,
-		Id:         uuid.NewV5(uuid.NamespaceURL, url),
+		Id:         TreeID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
 	// network.Suite used for the moment => explicit mark that something is
 	// wrong and that needs to be changed !
@@ -72,8 +81,8 @@ func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 		return &TreeMarshal{}
 	}
 	treeM := &TreeMarshal{
-		NodeId:   t.Id,
-		EntityId: t.EntityList.Id,
+		TreeId:       t.Id,
+		EntityListID: t.EntityList.Id,
 	}
 	treeM.Children = append(treeM.Children, TreeMarshalCopyTree(t.Root))
 	return treeM
@@ -207,12 +216,14 @@ func (t *Tree) computeSubtreeAggregate(suite abstract.Suite, root *TreeNode) abs
 // TreeMarshal is used to send and receive a tree-structure without having
 // to copy the whole nodelist
 type TreeMarshal struct {
-	// This is the UUID of the corresponding TreeNode, or the Tree-Id for the
-	// top-node
-	NodeId uuid.UUID
-	// This is the UUID of the Entity, except for the top-node, where this
-	// is the EntityList-Id
-	EntityId uuid.UUID
+	// This is the UUID of the corresponding TreeNode
+	TreeNodeId TreeNodeID
+	// TreeId identifies the Tree for the top-node
+	TreeId TreeID
+	// This is the UUID of the Entity, except
+	EntityId network.EntityID
+	// for the top-node this contains the EntityList's ID
+	EntityListID EntityListID
 	// All children from this tree. The top-node only has one child, which is
 	// the root
 	Children []*TreeMarshal
@@ -233,8 +244,8 @@ var TreeMarshalType = network.RegisterMessageType(TreeMarshal{})
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	tm := &TreeMarshal{
-		NodeId:   tr.Id,
-		EntityId: tr.Entity.Id,
+		TreeNodeId: tr.Id,
+		EntityId:   tr.Entity.Id,
 	}
 	for i := range tr.Children {
 		tm.Children = append(tm.Children,
@@ -262,7 +273,7 @@ func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeN
 	idx, ent := el.Search(tm.EntityId)
 	tn := &TreeNode{
 		Parent:    parent,
-		Id:        tm.NodeId,
+		Id:        tm.TreeNodeId,
 		Entity:    ent,
 		EntityIdx: idx,
 	}
@@ -275,16 +286,23 @@ func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeN
 // An EntityList is a list of Entity we choose to run  some tree on it ( and
 // therefor some protocols)
 type EntityList struct {
-	Id uuid.UUID
+	Id EntityListID
 	// TODO make that a map so search is O(1)
 	List []*network.Entity
 	// Aggregate public key
 	Aggregate abstract.Point
 }
 
-var EntityListType = network.RegisterMessageType(EntityList{})
+// EntityListID uniquely identifies an EntityList
+type EntityListID uuid.UUID
 
-var NilEntityList = EntityList{}
+// String returns the default representation of the ID (wrapper around
+// uuid.UUID.String()
+func (elId EntityListID) String() string {
+	return uuid.UUID(elId).String()
+}
+
+var EntityListType = network.RegisterMessageType(EntityList{})
 
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
@@ -297,14 +315,14 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 	return &EntityList{
 		List:      ids,
 		Aggregate: agg,
-		Id:        uuid.NewV4(),
+		Id:        EntityListID(uuid.NewV4()),
 	}
 }
 
 // Search searches the EntityList for the Entity corresponding to the given UUID and returns it
-func (el *EntityList) Search(uuid uuid.UUID) (int, *network.Entity) {
+func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 	for i, e := range el.List {
-		if e.Id == uuid {
+		if e.Id == eId {
 			return i, e
 		}
 	}
@@ -428,7 +446,7 @@ func (el *EntityList) GenerateBinaryTree() *Tree {
 // TreeNode is one node in the tree
 type TreeNode struct {
 	// The Id represents that node of the tree
-	Id uuid.UUID
+	Id TreeNodeID
 	// The Entity points to the corresponding host. One given host
 	// can be used more than once in a tree.
 	Entity *network.Entity
@@ -441,6 +459,16 @@ type TreeNode struct {
 	// Aggregate public key for *this* subtree,i.e. this node's public key + the
 	// aggregate of all its children's aggregate public key
 	PublicAggregateSubTree abstract.Point
+}
+
+type TreeNodeID uuid.UUID
+
+func (tId TreeNodeID) String() string {
+	return uuid.UUID(tId).String()
+}
+
+func (tId TreeNodeID) Equals(tId2 TreeNodeID) bool {
+	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
 
 func (t *TreeNode) Name() string {
@@ -456,7 +484,7 @@ func NewTreeNode(entityIdx int, ni *network.Entity) *TreeNode {
 		EntityIdx: entityIdx,
 		Parent:    nil,
 		Children:  make([]*TreeNode, 0),
-		Id:        uuid.NewV4(),
+		Id:        TreeNodeID(uuid.NewV4()),
 	}
 	return tn
 }
@@ -551,7 +579,7 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 // EntityListToml is the struct can can embedded EntityToml to be written in a
 // toml file
 type EntityListToml struct {
-	Id   uuid.UUID
+	Id   EntityListID
 	List []*network.EntityToml
 }
 

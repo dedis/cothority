@@ -6,11 +6,10 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 )
 
-var SimplePacketType uuid.UUID
+var SimplePacketType MessageTypeID
 
 func init() {
 	SimplePacketType = RegisterMessageType(SimplePacket{})

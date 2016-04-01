@@ -1,5 +1,5 @@
 Servers = 5
-Simulation = "NaiveTreeSimulation"
+Simulation = "NaiveTree"
 Message = "Hello Naive Simulation"
 Rounds = 2
 

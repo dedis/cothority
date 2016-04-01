@@ -9,7 +9,6 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"time"
 
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/protocols/manage"
@@ -63,7 +62,7 @@ func main() {
 		host := sc.Host
 		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
-		host.ListenNoblock()
+		host.Listen()
 		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
@@ -97,7 +96,7 @@ func main() {
 				dbg.Fatal(err)
 			}
 			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
-			node.Start()
+			node.StartProtocol()
 			dbg.Lvl1("Started counting children with timeout of", timeout)
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
@@ -107,19 +106,18 @@ func main() {
 				} else {
 					dbg.Lvl1("Found only", count, "children, counting again")
 				}
-				//case <-time.After(time.Millisecond * time.Duration(timeout) * 2):
-				//	// Wait longer than the root-node before aborting
-				//	dbg.Lvl1("Timed out waiting for children")
 			}
 			// Double the timeout and try again if not successful.
 			timeout *= 2
 		}
 		childrenWait.Record()
 		dbg.Lvl1("Starting new node", simul)
+		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Host)
 		err := rootSim.Run(rootSC)
 		if err != nil {
 			dbg.Fatal(err)
 		}
+		measureNet.Record()
 
 		// Test if all Entities are used in the tree, else we'll run into
 		// troubles with CloseAll
@@ -127,18 +125,17 @@ func main() {
 			dbg.Error("The tree doesn't use all Entities from the list!\n" +
 				"This means that the CloseAll will fail and the experiment never ends!")
 		}
+		closeTree := rootSC.Tree
 		if rootSC.GetSingleHost() {
 			// In case of "SingleHost" we need a new tree that contains every
 			// entity only once, whereas rootSC.Tree will have the same
 			// entity at different TreeNodes, which makes it difficult to
 			// correctly close everything.
 			dbg.Lvl2("Making new root-tree for SingleHost config")
-			closeTree := rootSC.EntityList.GenerateBinaryTree()
+			closeTree = rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
-			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
-		} else {
-			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", rootSC.Tree)
 		}
+		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
 		if err != nil {
 			dbg.Fatal(err)
 		}
@@ -156,11 +153,7 @@ func main() {
 		allClosed <- true
 	}()
 	dbg.Lvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
-	select {
-	case <-allClosed:
-		dbg.Lvl2(hostAddress, ": all hosts closed")
-	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
-		dbg.Lvl2(hostAddress, ": didn't close after", scs[0].GetCloseWait(), " seconds")
-	}
+	<-allClosed
+	dbg.Lvl2(hostAddress, "has all hosts closed")
 	monitor.EndAndCleanup()
 }

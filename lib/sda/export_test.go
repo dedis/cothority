@@ -3,7 +3,6 @@ package sda
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/satori/go.uuid"
 )
 
 // Export some private functions of Host for testing
@@ -22,12 +21,12 @@ func (h *Host) StartNewNodeName(name string, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNodeName(name, tree)
 }
 
-func (h *Host) EntityList(id uuid.UUID) (*EntityList, bool) {
+func (h *Host) EntityList(id EntityListID) (*EntityList, bool) {
 	el := h.overlay.EntityList(id)
 	return el, el != nil
 }
 
-func (h *Host) GetTree(id uuid.UUID) (*Tree, bool) {
+func (h *Host) GetTree(id TreeID) (*Tree, bool) {
 	t := h.overlay.Tree(id)
 	return t, t != nil
 }
@@ -38,10 +37,6 @@ func (h *Host) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMes
 
 func (h *Host) Overlay() *Overlay {
 	return h.overlay
-}
-
-func (n *Node) Aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
-	return n.aggregate(sdaMsg)
 }
 
 func (o *Overlay) TokenToNode(tok *Token) (*Node, bool) {

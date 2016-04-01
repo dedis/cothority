@@ -17,7 +17,6 @@ import (
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
 )
 
 type ByzCoin struct {
@@ -172,7 +171,7 @@ func NewByzCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs 
 	if err != nil {
 		return nil, err
 	}
-	bz.tempBlock, err = getBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
+	bz.tempBlock, err = GetBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
 	bz.rootFailMode = failMode
 	bz.rootTimeout = timeOutMs
 	return bz, err
@@ -408,7 +407,7 @@ func (bz *ByzCoin) startChallengePrepare() error {
 		TrBlock:   trblock,
 	}
 
-	go verifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
+	go VerifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
 	dbg.Lvl3(bz.Name(), "ByzCoin Start Challenge PREPARE")
 	// send to children
 	for _, tn := range bz.Children() {
@@ -449,7 +448,7 @@ func (bz *ByzCoin) startChallengeCommit() error {
 func (bz *ByzCoin) handleChallengePrepare(ch *ByzCoinChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
-	go verifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
+	go VerifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
 	// acknoledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
@@ -662,7 +661,7 @@ func (bz *ByzCoin) waitResponseVerification() (*ByzCoinResponse, bool) {
 }
 
 // verifyBlock is a simulation of a real verification block algorithm
-func verifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done chan bool) {
+func VerifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done chan bool) {
 	//We measure the average block verification delays is 174ms for an average
 	//block of 500kB.
 	//To simulate the verification cost of bigger blocks we multiply 174ms
@@ -682,7 +681,7 @@ func verifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done
 }
 
 // getblock returns the next block available from the transaction pool.
-func getBlock(transactions []blkparser.Tx, lastBlock, lastKeyBlock string) (*blockchain.TrBlock, error) {
+func GetBlock(transactions []blkparser.Tx, lastBlock, lastKeyBlock string) (*blockchain.TrBlock, error) {
 	if len(transactions) < 1 {
 		return nil, errors.New("no transaction available")
 	}
@@ -735,7 +734,7 @@ func (bz *ByzCoin) sendAndMeasureViewchange() {
 	var err error
 	for _, n := range bz.Tree().List() {
 		// don't send to ourself
-		if uuid.Equal(n.Id, bz.TreeNode().Id) {
+		if n.Id.Equals(bz.TreeNode().Id) {
 			continue
 		}
 		err = bz.SendTo(n, vc)

@@ -1,4 +1,4 @@
-package byzcoin
+package byzcoin_ntree
 
 import (
 	"encoding/json"
@@ -7,14 +7,14 @@ import (
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
-	"github.com/satori/go.uuid"
 )
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
-// and each verifiers will have independant signatures. The messages are then
-// bigger and the verification time is also bigger.
+// and each verifiers will have independent signatures. The messages are then
+// bigger and the verification time is also longer.
 type Ntree struct {
 	*sda.Node
 	// the block to sign
@@ -79,14 +79,14 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 func NewNTreeRootProtocol(node *sda.Node, transactions []blkparser.Tx) (*Ntree, error) {
 	nt, _ := NewNtreeProtocol(node)
 	var err error
-	nt.block, err = getBlock(transactions, "", "")
+	nt.block, err = byzcoin.GetBlock(transactions, "", "")
 	return nt, err
 }
 
 // Announce the new block to sign
 func (nt *Ntree) Start() error {
 	dbg.Lvl3(nt.Name(), "Start()")
-	go verifyBlock(nt.block, "", "", nt.verifyBlockChan)
+	go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
 	for _, tn := range nt.Children() {
 		nt.SendTo(tn, &BlockAnnounce{nt.block})
 	}
@@ -107,7 +107,7 @@ func (nt *Ntree) listen() {
 			dbg.Lvl3(nt.Name(), "Received Block announcement")
 			nt.block = msg.BlockAnnounce.Block
 			// verify the block
-			go verifyBlock(nt.block, "", "", nt.verifyBlockChan)
+			go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
 			if nt.IsLeaf() {
 				nt.startBlockSignature()
 				continue
@@ -310,13 +310,13 @@ type NaiveBlockSignature struct {
 
 // Exception is  just representing the notion that a peers does not accept to
 // sign something. It justs passes its TreeNodeId inside. No need for public key
-// or whatever because each signatures is independant.
+// or whatever because each signatures is independent.
 type Exception struct {
-	Id uuid.UUID
+	Id sda.TreeNodeID
 }
 
-// RoundSignatureRequest basically is the the block sisgnature broadcasting
-// downt he tree
+// RoundSignatureRequest basically is the the block signature broadcasting
+// down the tree.
 type RoundSignatureRequest struct {
 	*NaiveBlockSignature
 }

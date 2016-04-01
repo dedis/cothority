@@ -13,7 +13,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
-	"github.com/satori/go.uuid"
 )
 
 // JVSS Protocol Instance structure holding the information for a long-term JVSS
@@ -97,13 +96,13 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 	nodes := tree.List()
 	pubs := make([]abstract.Point, len(nodes))
 	for i, tn := range nodes {
-		if uuid.Equal(tn.Id, n.TreeNode().Id) {
+		if tn.Id.Equals(n.TreeNode().Id) {
 			idx = i
 		}
 		pubs[i] = tn.Entity.Public
 	}
 	if idx == -1 {
-		panic(fmt.Sprintf("Could not find JVSSProtocol node %+v in the list of nodes %+v", n, nodes))
+		panic(fmt.Sprintf("Could not find JVSS node %+v in the list of nodes %+v", n, nodes))
 	}
 	kp := config.KeyPair{Public: n.Entity().Public, Secret: n.Private(), Suite: n.Suite()}
 	nbPeers := len(tree.EntityList.List)

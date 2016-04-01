@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
-	"github.com/satori/go.uuid"
 )
 
 type BlockServer interface {
@@ -14,10 +13,10 @@ type BlockServer interface {
 	Instantiate(n *sda.Node) (sda.ProtocolInstance, error)
 }
 
-// ByzCoinServer is the longterm control service that listens for transactions and
+// ByzCoinServer is the long-term control service that listens for transactions and
 // dispatch them to a new ByzCoin for each new signing that we want to do.
 // It creates the ByzCoin protocols and run them. only used by the root since
-// only the root pariticipates to the creation of the block.
+// only the root participates to the creation of the block.
 type ByzCoinServer struct {
 	// transactions pool where all the incoming transactions are stored
 	transactions []blkparser.Tx
@@ -27,9 +26,6 @@ type ByzCoinServer struct {
 	blockSize int
 	timeOutMs uint64
 	fail      uint
-	// all the protocols byzcoin he generated.Map from RoundID <-> ByzCoin
-	// protocol instance.
-	instances map[uuid.UUID]*ByzCoin
 	// blockSignatureChan is the channel used to pass out the signatures that
 	// ByzCoin's instances have made
 	blockSignatureChan chan BlockSignature
@@ -47,7 +43,6 @@ func NewByzCoinServer(blockSize int, timeOutMs uint64, fail uint) *ByzCoinServer
 		blockSize:          blockSize,
 		timeOutMs:          timeOutMs,
 		fail:               fail,
-		instances:          make(map[uuid.UUID]*ByzCoin),
 		blockSignatureChan: make(chan BlockSignature),
 		transactionChan:    make(chan blkparser.Tx),
 		requestChan:        make(chan bool),
@@ -71,8 +66,8 @@ func (s *ByzCoinServer) ListenClientTransactions() {
 // Instantiate takes blockSize transactions and create the byzcoin instances.
 func (s *ByzCoinServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
-	currTransactions := s.waitEnoughBlocks()
-	dbg.Lvl1("Instantiate ByzCoin Round with", len(currTransactions), " transactions")
+	currTransactions := s.WaitEnoughBlocks()
+	dbg.Lvl2("Instantiate ByzCoin Round with", len(currTransactions), "transactions")
 	pi, err := NewByzCoinRootProtocol(node, currTransactions, s.timeOutMs, s.fail)
 	node.SetProtocolInstance(pi)
 
@@ -89,7 +84,7 @@ func (s *ByzCoinServer) onDoneSign(blk BlockSignature) {
 	s.blockSignatureChan <- blk
 }
 
-func (s *ByzCoinServer) waitEnoughBlocks() []blkparser.Tx {
+func (s *ByzCoinServer) WaitEnoughBlocks() []blkparser.Tx {
 	s.requestChan <- true
 	transactions := <-s.responseChan
 	return transactions
@@ -122,24 +117,4 @@ func (s *ByzCoinServer) listenEnoughBlocks() {
 			}
 		}
 	}
-}
-
-type NtreeServer struct {
-	*ByzCoinServer
-}
-
-func NewNtreeServer(blockSize int) *NtreeServer {
-	ns := new(NtreeServer)
-	// we dont care about timeout + fail in Naive comparison
-	ns.ByzCoinServer = NewByzCoinServer(blockSize, 0, 0)
-	return ns
-}
-
-func (nt *NtreeServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
-	dbg.Lvl2("NtreeServer waiting enough transactions...")
-	currTransactions := nt.waitEnoughBlocks()
-	pi, err := NewNTreeRootProtocol(node, currTransactions)
-	node.SetProtocolInstance(pi)
-	dbg.Lvl1("NtreeServer instantiated Ntree Root Protocol with", len(currTransactions), " transactions")
-	return pi, err
 }

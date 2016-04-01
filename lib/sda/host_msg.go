@@ -3,6 +3,7 @@ package sda
 import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	"sync"
 )
 
 // Our message-types used in sda
@@ -22,58 +23,80 @@ type SDAData struct {
 	// NOTE: this is taken from network.NetworkMessage
 	Entity *network.Entity
 	// MsgType of the underlying data
-	MsgType uuid.UUID
+	MsgType network.MessageTypeID
 	// The interface to the actual Data
 	Msg network.ProtocolMessage
 	// The actual data as binary blob
 	MsgSlice []byte
 }
 
-// A Token contains all identifiers needed to Uniquely identify one protocol
+// RoundID uniquely identifies a round of a protocol run
+type RoundID uuid.UUID
+
+// String returns the canonical representation of the rounds ID (wrapper around
+// uuid.UUID.String())
+func (rId RoundID) String() string {
+	return uuid.UUID(rId).String()
+}
+
+// TokenID uniquely identifies the start and end-point of a message by an ID
+// (see Token struct)
+type TokenID uuid.UUID
+
+// A Token contains all identifiers needed to uniquely identify one protocol
 // instance. It gets passed when a new protocol instance is created and get used
 // by every protocol instance when they want to send a message. That way, the
 // host knows how to create the SDAData message around the protocol's message
 // with the right fields set.
 type Token struct {
-	EntityListID uuid.UUID
-	TreeID       uuid.UUID
-	ProtocolID   uuid.UUID
-	RoundID      uuid.UUID
-	TreeNodeID   uuid.UUID
-	cacheId      uuid.UUID
+	EntityListID EntityListID
+	TreeID       TreeID
+	ProtoID      ProtocolID
+	RoundID      RoundID
+	TreeNodeID   TreeNodeID
+	cacheId      TokenID
 }
 
-// Returns the Id of a token so we can put that in a map easily
-func (t *Token) Id() uuid.UUID {
-	if t.cacheId == uuid.Nil {
+// Global mutex when we're working on Tokens. Needed because we
+// copy Tokens in ChangeTreeNodeID.
+var tokenMutex sync.Mutex
+
+// Id returns the TokenID which can be used to identify by token in map
+func (t *Token) Id() TokenID {
+	tokenMutex.Lock()
+	defer tokenMutex.Unlock()
+	if t.cacheId == TokenID(uuid.Nil) {
 		url := network.UuidURL + "token/" + t.EntityListID.String() +
-			t.RoundID.String() + t.ProtocolID.String() + t.TreeID.String() +
+			t.RoundID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
-		t.cacheId = uuid.NewV5(uuid.NamespaceURL, url)
+		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
 	}
 	return t.cacheId
 }
 
-// Return a new Token contianing a reference to the given TreeNode
-func (t *Token) ChangeTreeNodeID(newid uuid.UUID) *Token {
+// ChangeTreeNodeID return a new Token containing a reference to the given
+// TreeNode
+func (t *Token) ChangeTreeNodeID(newid TreeNodeID) *Token {
+	tokenMutex.Lock()
+	defer tokenMutex.Unlock()
 	t_other := *t
 	t_other.TreeNodeID = newid
-	t_other.cacheId = uuid.Nil
+	t_other.cacheId = TokenID(uuid.Nil)
 	return &t_other
 }
 
 // RequestTree is used to ask the parent for a given Tree
 type RequestTree struct {
 	// The treeID of the tree we want
-	TreeID uuid.UUID
+	TreeID TreeID
 }
 
 // RequestEntityList is used to ask the parent for a given EntityList
 type RequestEntityList struct {
-	EntityListID uuid.UUID
+	EntityListID EntityListID
 }
 
-// In case the entity list is unknown
+// EntityListUnknown is used in case the entity list is unknown
 type EntityListUnknown struct {
 }
 

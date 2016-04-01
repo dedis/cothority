@@ -1,4 +1,5 @@
-// Sends a message to all nodes so that the connections are set up
+// Package manage implements a protocol which sends a message to all nodes so
+// that the connections are set up
 package manage
 
 import (
@@ -6,6 +7,10 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
 )
+
+func init() {
+	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBroadcastProtocol(n) })
+}
 
 // Broadcast will just simply broadcast
 type Broadcast struct {
@@ -27,7 +32,7 @@ type Broadcast struct {
 	}
 
 	// map for all the nodes => state
-	listNode map[uuid.UUID]*sda.TreeNode
+	listNode map[sda.TreeNodeID]*sda.TreeNode
 	// how many peers are connected with me
 	ackdNode int
 	done     chan bool
@@ -54,7 +59,7 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	b.ackdNode = 0
 	b.done = make(chan bool, 1)
 	for _, tn := range lists {
-		if uuid.Equal(tn.Id, n.TreeNode().Id) {
+		if tn.Id.Equals(n.TreeNode().Id) {
 			continue
 		}
 		b.listNode[tn.Id] = tn
