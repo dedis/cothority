@@ -46,12 +46,38 @@ witnesses are not validating or checking the messages you’re proposing
 in any way; they are merely attesting the fact that they have observed 
 your request to sign the message.
 
-To install the commandline interface do:
+## Installation
+
+We do provide a binary for the `cosi` and `cosid` program. They are pre-compiled
+for MacOSX and Linux and don't need any go-installation. But of course you can also
+compile from source.
+
+### Installing from .tar.gz
+
+Download the latest package from 
+
+[[https://github.com/dedis/cothority/releases/latest]]
+
+and untar into a directory that is in your `$PATH`:
+
 ```bash
-go get github.com/dedis/cothority 
+tar xf conode-*tar.gz -C ~/bin
 ```
-and make sure that `$GOPATH/bin` is in your [`$PATH`](https://golang.org/doc/code.html#GOPATH).
-Two binaries (`cosi` and `cosid` will be added to `$GOPATH/bin`).  
+
+### Installing from source
+
+To install the commandline interface from source, make sure that go is installed
+and that `$GOPATH` and `$GOBIN` are set 
+(https://golang.org/doc/code.html#GOPATH), then you can do:
+
+```bash
+go get github.com/dedis/cothority
+cd $GOPATH/src/github.com/dedis/cothority/app
+go install cosi
+go install cosid
+```
+
+The two binaries `cosi` and `cosid` will be added to `$GOBIN`.  
 
 ## Running your own CoSi server
 
@@ -64,27 +90,99 @@ public/private key pair as follows:
 cosid
 ```
 
-Following the instructions on the screen (`cosid` will ask you for
+Follow the instructions on the screen. `cosid` will ask you for
 a an server address and port, and where you want to store the server 
-configuration) you will see an output similar to this:
+configuration. Then you will see an output similar to this:
+
 ```
-Description = "## Put your description of the cothority system for more convenience ##"
+Description = "Description of the system"
 
 [[servers]]
-  Addresses = ["127.0.0.1:2010"]
-  Public = "Z6gGb/tQorNsDtx1v1BpFqjsEI/kmZauzojyPmCF70I="
-  Description = "## Put your description here for convenience ##"
+  Addresses = ["127.0.0.1:2000"]
+  Public = "6T7FwlCuVixvu7XMI9gRPmyCuqxKk/WUaGbwVvhA+kc="
+  Description = "Description of the server"
 ```  
 
 You can copy and paste it into a file `servers.toml`. 
-The server configuration will get stored in the filename you provided.
+
+The server configuration itself will get stored in the filename you provided, or
+in `config.toml` by default.
 Next time you run the server it will directly read that file and start up.
-If you chose another filename, you can use `-config file.toml`. 
+If you chose another filename than `config.toml`, you can use `-config file.toml`. 
+
+### Creating a Collective Signing Group
+By running several `cosid` instances (and copying the appropriate lines 
+of their output) you can create a `servers.toml` that looks like 
+this:
+
+```
+Description = "My Test group"
+
+[[servers]]
+  Addresses = ["127.0.0.1:2000"]
+  Public = "6T7FwlCuVixvu7XMI9gRPmyCuqxKk/WUaGbwVvhA+kc="
+  Description = "Local Server 1"
+
+[[servers]]
+  Addresses = ["127.0.0.1:2001"]
+  Public = "Aq0mVAeAvBZBxQPC9EbI8w6he2FHlz83D+Pz+zZTmJI="
+  Description = "Description of the server"
+```
+
+The template above lists four publicly available CoSi servers that you can
+use for your experiments. Of course you can add your own. The servers
+have to be available from the public internet.
+ 
+### Checking server-list
+
+The `cosi`-binary has a command to verify the availability for all
+servers in a `servers.toml`-file:
+
+```bash
+cosi check
+```
+
+This will first contact each server individually, then make a small cothority-
+group of all possible pairs of servers. If there is a problem with regard to
+some firewalls or bad connections, you will see a "Timeout on signing" error
+message and you can fix the problem.
+
+### Publicly available DeDiS-CoSi-servers
+
+For the moment there are four publicly available signing-servers, without
+any guarantee that they'll be running. But you can try the following:
+
+```bash
+cat > servers.toml <<EOF
+
+[[servers]]
+  Addresses = ["78.46.227.60:2000"]
+  Public = "2juBRFikJLTgZLVp5UV4LBJ2GSQAm8PtBcNZ6ivYZnA="
+  Description = "Profeda CoSi server"
+
+[[servers]]
+ Addresses = ["5.135.161.91:2000"]
+ Public = "jJq4W8KaIFbDu4snOm1TrtrtG79sZK0VCgshkUohycA="
+ Description = "Nikkolasg's server"
+
+[[servers]]
+  Addresses = ["185.26.156.40:61117"]
+  Public = "XEe5N57Ar3gd6uzvZR9ol2XopBlAQl6rKCbPefnWYdI="
+  Description = "Ismail's server"
+
+[[servers]]
+  Addresses = ["95.143.172.241:62306"]
+  Public = "ag5YGeVtw3m7bIGF57X+n1X3qrHxOnpbaWBpEBT4COc="
+  Description = "Daeinar's server"
+EOF
+```
+
+And use the created servers.toml for signing your messages and files.
 
 ## Initiating the Collective Signing Protocol
 
-You can collectively sign a text message specified on the command line 
-as follows:
+If you have a valid `servers.toml`-file, you can collectively 
+sign a text message specified on the command line as follows:
 
 ```bash
 cosi sign msg "Hello CoSi"
@@ -120,27 +218,6 @@ give that on the command-line, so for example to sign a message:
 ```bash
 cosi sign msg "Hello CoSi" -servers my_servers.toml
 ```
-
-### Creating a Collective Signing Group
-By running several `cosid` instances (and copying the appropriate lines 
-of their output) you can create a `servers.toml` that looks like 
-this:
-
-```
-[[servers]]
-  Addresses = ["127.0.0.1:2000"]
-  Public = "VXYcL0GPVo1/u9lOiPbbLnMMiaF920GwYeYWQYB0QQQ="
-  Description = "## Put your description here for convenience ##"
-
-[[servers]]
-  Addresses = ["127.0.0.1:2001"]
-  Public = "0Dt6zDpK7v0Ff1VpSGxSNUKSGBV/OTuSJZDF9Wd2dGU="
-  Description = "## Put your description here for convenience ##"
-```
-
-The template above lists two CoSi servers run on your local machine
-just as an example, but you can change this list to refer to any set of 
-CoSi servers you like including your own (see above).
 
 # Simulation
 Starting a simulation of one the provided protocols (or your own) either 
