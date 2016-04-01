@@ -9,7 +9,7 @@ import (
 type HashID []byte
 
 // Bit returns if the given bit is set or not
-func (id *HashID) Bit(i uint) int {
+func (id HashID) Bit(i uint) int {
 	return int(id[i>>3] >> (i & 7))
 }
 
@@ -24,7 +24,7 @@ func (id *HashID) Level() int {
 
 // String converts the HashID to a string, convenience for
 // map[string] because map[HashID] is not possible.
-func (id *HashID) String() string {
+func (id HashID) String() string {
 	return string(id)
 }
 

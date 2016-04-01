@@ -22,18 +22,26 @@ func init() {
 	sda.ProtocolRegisterName("CloseAll", NewCloseAll)
 }
 
+// ProtocolCloseAll is the structure used to hold the Done-channel
 type ProtocolCloseAll struct {
 	*sda.Node
+	// Done receives a 'true' once the protocol is done.
 	Done chan bool
 }
 
+// PrepareClose is sent down the tree until the nodes
 type PrepareClose struct{}
+
+// PrepareCloseMsg is the wrapper for the PrepareClose message
 type PrepareCloseMsg struct {
 	*sda.TreeNode
 	PrepareClose
 }
 
+// Close is sent to the parent just before the node shuts down
 type Close struct{}
+
+// CloseMsg is the wrapper for the Close message
 type CloseMsg struct {
 	*sda.TreeNode
 	Close
@@ -46,6 +54,16 @@ func NewCloseAll(n *sda.Node) (sda.ProtocolInstance, error) {
 	p.RegisterHandler(p.FuncPrepareClose)
 	p.RegisterHandler(p.FuncClose)
 	return p, nil
+}
+
+// Start the protocol and waits for the `Close`-message to arrive back at
+// the root-node.
+func (p *ProtocolCloseAll) Start() error {
+	// Send an empty message
+	p.FuncPrepareClose(PrepareCloseMsg{TreeNode: p.TreeNode()})
+	// Wait till the end
+	<-p.Done
+	return nil
 }
 
 // FuncPrepareClose sends a `PrepareClose`-message down the tree.
@@ -80,14 +98,4 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 		dbg.Error("Couldn't close:", err)
 	}
 	p.Node.Done()
-}
-
-// Starts the protocol and waits for the `Close`-message to arrive back at
-// the root-node.
-func (p *ProtocolCloseAll) Start() error {
-	// Send an empty message
-	p.FuncPrepareClose(PrepareCloseMsg{TreeNode: p.TreeNode()})
-	// Wait till the end
-	<-p.Done
-	return nil
 }
