@@ -40,7 +40,7 @@ You can either run various simulations or standalone applications:
 # Commandline Interface
 
 We have provided a simple manually-driven collective signing application, 
-‘cosi’, which you can use to request the collective signing group you 
+`cosi`, which you can use to request the collective signing group you 
 defined to witness and cosign any message you propose. In this case the 
 witnesses are not validating or checking the messages you’re proposing 
 in any way; they are merely attesting the fact that they have observed 
@@ -48,7 +48,7 @@ your request to sign the message.
 
 ## Installation
 
-We do provide a binary for the `cosi` and `cosid` program. They are pre-compiled
+We provide a binaries for the `cosi` and `cosid` program. They are pre-compiled
 for MacOSX and Linux and don't need any go-installation. But of course you can also
 compile from source.
 
@@ -56,7 +56,7 @@ compile from source.
 
 Download the latest package from 
 
-[[https://github.com/dedis/cothority/releases/latest]]
+https://github.com/dedis/cothority/releases/latest
 
 and untar into a directory that is in your `$PATH`:
 
@@ -68,16 +68,21 @@ tar xf conode-*tar.gz -C ~/bin
 
 To install the commandline interface from source, make sure that go is installed
 and that `$GOPATH` and `$GOBIN` are set 
-(https://golang.org/doc/code.html#GOPATH), then you can do:
+(https://golang.org/doc/code.html#GOPATH). The apps are only in a special branch,
+`cosi_cli`, so you have to change to that branch:
 
 ```bash
 go get github.com/dedis/cothority
-cd $GOPATH/src/github.com/dedis/cothority/app
+cd $GOPATH/src/github.com/dedis/cothority
+git checkout cosi_cli
+cd app
 go install cosi
 go install cosid
 ```
 
-The two binaries `cosi` and `cosid` will be added to `$GOBIN`.  
+The two binaries `cosi` and `cosid` will be added to `$GOBIN`. If you already
+have an old version of cothority, be sure to update `github.com/dedis/crypto` and
+`github.com/dedis/protobuf`.
 
 ## Running your own CoSi server
 
@@ -91,7 +96,7 @@ cosid
 ```
 
 Follow the instructions on the screen. `cosid` will ask you for
-a an server address and port, and where you want to store the server 
+a server address and port, and where you want to store the server 
 configuration. Then you will see an output similar to this:
 
 ```
@@ -129,9 +134,9 @@ Description = "My Test group"
   Description = "Description of the server"
 ```
 
-The template above lists four publicly available CoSi servers that you can
-use for your experiments. Of course you can add your own. The servers
-have to be available from the public internet.
+Your list will look different, as the public keys will not be the same. But
+it is important that you run the servers on different ports. Here the ports
+are 2000 and 2001.
  
 ### Checking server-list
 

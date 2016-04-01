@@ -39,6 +39,7 @@ fi
 for a in $APPS; do
     cp -v chose_version.sh $BUILD/$a
 done
+cp dedis-servers.toml $BUILD
 TAR=conode-$VERSION.tar.gz
 
 echo "Creating $TAR"
