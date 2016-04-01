@@ -42,7 +42,8 @@ func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 	return p, nil
 }
 
-func (p *Protocol) start() error {
+// Start implements sda.ProtocolInstance.
+func (p *Protocol) Start() error {
 	if p.IsRoot() {
 		dbg.Lvl3("Starting ntree/naive")
 		return p.HandleSignRequest(structMessage{p.TreeNode(),

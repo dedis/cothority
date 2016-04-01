@@ -66,7 +66,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 			done <- true
 			return true
 		})
-		err = pi.start()
+		err = pi.Start()
 		if err != nil {
 			dbg.Error("Quitting the simulation....", err)
 			return err
