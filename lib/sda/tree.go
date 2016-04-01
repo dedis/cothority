@@ -52,7 +52,7 @@ var _ = network.RegisterMessageType(Tree{})
 func NewTree(el *EntityList, r *TreeNode) *Tree {
 	url := network.NamespaceURL + "tree/" + el.Id.String() + r.Id.String()
 	t := &Tree{
-		EntityList: il,
+		EntityList: el,
 		Root:       r,
 		Id:         TreeID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
