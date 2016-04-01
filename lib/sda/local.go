@@ -16,13 +16,13 @@ import (
 // LocalTest represents all that is needed for a local test-run
 type LocalTest struct {
 	// A map of Entity.Id to Hosts
-	Hosts map[uuid.UUID]*Host
+	Hosts map[network.EntityID]*Host
 	// A map of Entity.Id to Overlays
-	Overlays map[uuid.UUID]*Overlay
+	Overlays map[network.EntityID]*Overlay
 	// A map of EntityList.Id to EntityLists
-	EntityLists map[uuid.UUID]*EntityList
+	EntityLists map[EntityListID]*EntityList
 	// A map of Tree.Id to Trees
-	Trees map[uuid.UUID]*Tree
+	Trees map[TreeID]*Tree
 	// All single nodes
 	Nodes []*Node
 }
@@ -32,10 +32,10 @@ type LocalTest struct {
 func NewLocalTest() *LocalTest {
 	dbg.TestOutput(testing.Verbose(), 3)
 	return &LocalTest{
-		Hosts:       make(map[uuid.UUID]*Host),
-		Overlays:    make(map[uuid.UUID]*Overlay),
-		EntityLists: make(map[uuid.UUID]*EntityList),
-		Trees:       make(map[uuid.UUID]*Tree),
+		Hosts:       make(map[network.EntityID]*Host),
+		Overlays:    make(map[network.EntityID]*Overlay),
+		EntityLists: make(map[EntityListID]*EntityList),
+		Trees:       make(map[TreeID]*Tree),
 		Nodes:       make([]*Node, 0, 1),
 	}
 }
@@ -45,7 +45,7 @@ func NewLocalTest() *LocalTest {
 func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
-		if uuid.Equal(h.Entity.Id, rootEntityId) {
+		if h.Entity.Id.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].StartNewNodeName(name, t)
@@ -59,7 +59,7 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
-		if uuid.Equal(h.Entity.Id, rootEntityId) {
+		if h.Entity.Id.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].CreateNewNodeName(name, t)
@@ -72,7 +72,7 @@ func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
-		if uuid.Equal(h.Entity.Id, rootEntityId) {
+		if h.Entity.Id.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.Id].NewNodeEmptyName(name, t)
@@ -172,16 +172,16 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 	if tree == nil {
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
-	protId := ProtocolNameToUuid(protName)
+	protId := ProtocolNameToID(protName)
 	if !ProtocolExists(protId) {
 		return nil, errors.New("Didn't find protocol: " + protName)
 	}
 	tok := &Token{
-		ProtocolID:   protId,
+		ProtoID:      protId,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tn.Id,
-		RoundID:      uuid.NewV4(),
+		RoundID:      RoundID(uuid.NewV4()),
 	}
 	node, err := NewNode(o, tok)
 	if err == nil {
@@ -211,7 +211,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.Proto
 	}
 	sdaMsg := &SDAData{
 		MsgSlice: b,
-		MsgType:  network.TypeToUUID(msg),
+		MsgType:  network.TypeToMessageTypeID(msg),
 		From:     from.token,
 		To:       to.token,
 	}
@@ -231,8 +231,8 @@ func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
 }
 
-// NodesFromOverlay returns all nodes from a given overlay.
-func (l *LocalTest) NodesFromOverlay(entityId uuid.UUID) map[uuid.UUID]*Node {
+// NodesFromOverlay creates a TokenID to Node map from an EntityID
+func (l *LocalTest) NodesFromOverlay(entityId network.EntityID) map[TokenID]*Node {
 	return l.Overlays[entityId].nodes
 }
 
@@ -267,7 +267,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	}
 	root := hosts[0]
 	for _, host := range hosts {
-		host.Listen()
+		host.ListenAndBind()
 		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.Id)
 		if processMessages {
 			host.StartProcessMessages()
@@ -284,7 +284,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 				time.Sleep(time.Millisecond * 10)
 				root.entityListsLock.RLock()
 				for id, _ := range root.entities {
-					if uuid.Equal(id, host.Entity.Id) {
+					if id.Equals(host.Entity.Id) {
 						connected = true
 						break
 					}
