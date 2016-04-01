@@ -134,9 +134,9 @@ Description = "My Test group"
   Description = "Description of the server"
 ```
 
-The template above lists four publicly available CoSi servers that you can
-use for your experiments. Of course you can add your own. The servers
-have to be available from the public internet.
+Your list will look different, as the public keys will not be the same. But
+it is important that you run the servers on different ports. Here the ports
+are 2000 and 2001.
  
 ### Checking server-list
 
