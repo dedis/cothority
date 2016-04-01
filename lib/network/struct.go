@@ -157,7 +157,7 @@ type SecureTCPHost struct {
 	connMutex sync.Mutex
 }
 
-// SecureTCPConn is a secured tcp connection using Entity as identity
+// SecureTCPConn is a secured tcp connection using Entity as an identity.
 type SecureTCPConn struct {
 	*TCPConn
 	*SecureTCPHost
