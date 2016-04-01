@@ -1,2 +1,3 @@
-// Examples of protocols that can be used as base for your experiments.
+// Package example contains simple examples of protocols and simulations that
+// can be used as base for your experiments.
 package example

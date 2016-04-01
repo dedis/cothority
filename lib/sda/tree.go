@@ -32,21 +32,25 @@ type Tree struct {
 	Root       *TreeNode
 }
 
+// TreeID uniquely identifies a Tree struct in the sda framework.
 type TreeID uuid.UUID
 
+// Equals returns true if and only if the given TreeID equals the current one.
 func (tId TreeID) Equals(tId2 TreeID) bool {
 	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
+
+// String returns a canonical representation of the TreeID.
 func (tId TreeID) String() string {
 	return uuid.UUID(tId).String()
 }
 
-var TreeType = network.RegisterMessageType(Tree{})
+var _ = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
 func NewTree(el *EntityList, r *TreeNode) *Tree {
-	url := network.UuidURL + "tree/" + el.Id.String() + r.Id.String()
+	url := network.NamespaceURL + "tree/" + el.Id.String() + r.Id.String()
 	t := &Tree{
 		EntityList: el,
 		Root:       r,
@@ -66,7 +70,7 @@ func NewTreeFromMarshal(buf []byte, el *EntityList) (*Tree, error) {
 	if err != nil {
 		return nil, err
 	}
-	if tp != TreeMarshalType {
+	if tp != TreeMarshalTypeID {
 		return nil, errors.New("Didn't receive TreeMarshal-struct")
 	}
 	t, err := pm.(TreeMarshal).MakeTree(el)
@@ -183,7 +187,7 @@ func (t *Tree) UsesList() bool {
 	for _, p := range t.EntityList.List {
 		found := false
 		for _, n := range nodes {
-			if n.Entity.Id == p.Id {
+			if n.Entity.ID == p.ID {
 				found = true
 				break
 			}
@@ -238,14 +242,15 @@ func (tm *TreeMarshal) String() string {
 	return s
 }
 
-var TreeMarshalType = network.RegisterMessageType(TreeMarshal{})
+// ID of TreeMarshal message as registered in network
+var TreeMarshalTypeID = network.RegisterMessageType(TreeMarshal{})
 
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	tm := &TreeMarshal{
 		TreeNodeId: tr.Id,
-		EntityId:   tr.Entity.Id,
+		EntityId:   tr.Entity.ID,
 	}
 	for i := range tr.Children {
 		tm.Children = append(tm.Children,
@@ -302,7 +307,8 @@ func (elId EntityListID) String() string {
 	return uuid.UUID(elId).String()
 }
 
-var EntityListType = network.RegisterMessageType(EntityList{})
+// ID of EntityList message as registered in network
+var EntityListTypeID = network.RegisterMessageType(EntityList{})
 
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
@@ -319,10 +325,11 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 	}
 }
 
-// Search searches the EntityList for the given EntityID and returns the corresponding Entity
+// Search searches the EntityList for the given EntityID and returns the
+// corresponding Entity.
 func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 	for i, e := range el.List {
-		if e.Id == eId {
+		if e.ID == eId {
 			return i, e
 		}
 	}
@@ -461,21 +468,26 @@ type TreeNode struct {
 	PublicAggregateSubTree abstract.Point
 }
 
+// TreeNodeID identifies a given TreeNode struct in the sda framework.
 type TreeNodeID uuid.UUID
 
+// String returns a canonical representation of the TreeNodeID.
 func (tId TreeNodeID) String() string {
 	return uuid.UUID(tId).String()
 }
 
+// Equals returns true if and only if the given TreeNodeID equals the current
+// one.
 func (tId TreeNodeID) Equals(tId2 TreeNodeID) bool {
 	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
 
+// Name returns a human readable representation of the TreeNode (IP address).
 func (t *TreeNode) Name() string {
 	return t.Entity.First()
 }
 
-var TreeNodeType = network.RegisterMessageType(TreeNode{})
+var _ = network.RegisterMessageType(TreeNode{})
 
 // NewTreeNode creates a new TreeNode with the proper Id
 func NewTreeNode(entityIdx int, ni *network.Entity) *TreeNode {
@@ -489,7 +501,8 @@ func NewTreeNode(entityIdx int, ni *network.Entity) *TreeNode {
 	return tn
 }
 
-// Check if it can communicate with parent or children
+// IsConnectedTo checks if the TreeNode can communicate with its parent or
+// children.
 func (t *TreeNode) IsConnectedTo(e *network.Entity) bool {
 	if t.Parent != nil && t.Parent.Entity.Equal(e) {
 		return true
@@ -530,7 +543,7 @@ func (t *TreeNode) AddChild(c *TreeNode) {
 
 // Equal tests if that node is equal to the given node
 func (t *TreeNode) Equal(t2 *TreeNode) bool {
-	if t.Id != t2.Id || t.Entity.Id != t2.Entity.Id {
+	if t.Id != t2.Id || t.Entity.ID != t2.Entity.ID {
 		dbg.Lvl4("TreeNode: ids are not equal")
 		return false
 	}

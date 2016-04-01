@@ -10,7 +10,7 @@ import (
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
-// ReadFirstNBlocks: only read the first ReadFirstNBlocks in the the BlocksDir
+// ReadFirstNBlocks specifcy how many blocks in the the BlocksDir it must read
 // (so you only have to copy the first blocks to deterLab)
 const ReadFirstNBlocks = 400
 
@@ -22,6 +22,7 @@ type Client struct {
 	srv BlockServer
 }
 
+// NewClient returns a fresh new client out of a blockserver
 func NewClient(s BlockServer) *Client {
 	return &Client{srv: s}
 }

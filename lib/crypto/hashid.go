@@ -8,18 +8,6 @@ import (
 // HashID is the Cryptographic hash content-IDs
 type HashID []byte
 
-// ByHashID is for sorting arrays of HashIds
-type ByHashID []HashID
-
-// Len returns the length of the byhashid
-func (h ByHashID) Len() int { return len(h) }
-
-// Swap takes two hashes and inverts them
-func (h ByHashID) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
-
-// Less checks if the first is less than the second
-func (h ByHashID) Less(i, j int) bool { return bytes.Compare(h[i], h[j]) < 0 }
-
 // Bit returns if the given bit is set or not
 func (id HashID) Bit(i uint) int {
 	return int(id[i>>3] >> (i & 7))
@@ -33,6 +21,24 @@ func (id *HashID) Level() int {
 	}
 	return int(level)
 }
+
+// String converts the HashID to a string, convenience for
+// map[string] because map[HashID] is not possible.
+func (id HashID) String() string {
+	return string(id)
+}
+
+// ByHashID is for sorting arrays of HashIds
+type ByHashID []HashID
+
+// Len returns the length of the byhashid
+func (h ByHashID) Len() int { return len(h) }
+
+// Swap takes two hashes and inverts them
+func (h ByHashID) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
+
+// Less checks if the first is less than the second
+func (h ByHashID) Less(i, j int) bool { return bytes.Compare(h[i], h[j]) < 0 }
 
 // HashGet is the context for looking up content blobs by self-certifying HashId.
 // Implementations can be either local (same-node) or remote (cross-node).

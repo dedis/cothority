@@ -47,7 +47,7 @@ func NewOverlay(h *Host) *Overlay {
 // - ask for the Tree
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
-func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
+func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
@@ -127,7 +127,7 @@ func (o *Overlay) EntityList(elid EntityListID) *EntityList {
 
 // StartNewNode starts a new node which will in turn instantiate the desired
 // protocol. This is called from the root-node and will start the
-// protocol
+// protocol.
 func (o *Overlay) StartNewNode(protocolID ProtocolID, tree *Tree) (*Node, error) {
 
 	// instantiate node
@@ -158,6 +158,8 @@ func (o *Overlay) CreateNewNode(protocolID ProtocolID, tree *Tree) (*Node, error
 	return node, node.protocolInstantiate()
 }
 
+// StartNewNodeName starts a node from the given protocol name. Can be useful
+// in simulations. See for instance the protocol "CloseAll".
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
 	return o.StartNewNode(ProtocolNameToID(name), tree)
 }
@@ -169,6 +171,8 @@ func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
 	return o.CreateNewNode(ProtocolNameToID(name), tree)
 }
 
+// NewNodeEmptyName returns a simple node from the protocol name but without
+// instantiating the protocol.
 func (o *Overlay) NewNodeEmptyName(name string, tree *Tree) (*Node, error) {
 	return o.NewNodeEmpty(ProtocolNameToID(name), tree)
 }
@@ -225,7 +229,7 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 
 // SendToTreeNode sends a message to a treeNode
 func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
-	sda := &SDAData{
+	sda := &Data{
 		Msg:  msg,
 		From: from,
 		To:   from.ChangeTreeNodeID(to.Id),
@@ -282,10 +286,7 @@ func (o *Overlay) nodeDelete(tok *Token) {
 	o.nodeInfo[tok.Id()] = true
 }
 
-func (o *Overlay) Private() abstract.Secret {
-	return o.host.Private()
-}
-func (o *Overlay) Suite() abstract.Suite {
+func (o *Overlay) suite() abstract.Suite {
 	return o.host.Suite()
 }
 

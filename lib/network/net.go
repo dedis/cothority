@@ -1,15 +1,16 @@
-// This is a networking library used in the SDA. You have Hosts which can
+// Package network is a networking library used in the SDA. You have Hosts which can
 // issue connections to others hosts, and Conn which are the connections itself.
 // Hosts and Conns are interfaces and can be of type Tcp, or Chans, or Udp or
 // whatever protocols you think might implement this interface.
 // In this library we also provide a way to encode / decode any kind of packet /
 // structs. When you want to send a struct to a conn, you first register
 // (one-time operation) this packet to the library, and then directly pass the
-// struct itself to the conn that will recognize its type. When decoding,
+// pointer to the struct itself to the conn that will recognize its type. When decoding,
 // it will automatically detect the underlying type of struct given, and decode
 // it accordingly. You can provide your own decode / encode methods if for
-// example, you have a variable length packet structure. For this, just
-// implements MarshalBinary or UnmarshalBinary.
+// example, you have a variable length packet structure. Since this library uses
+// github.com/dedis/protobuf library for encoding, you just have to
+// implement MarshalBinary or UnmarshalBinary.
 package network
 
 import (
@@ -23,17 +24,16 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 )
 
 // Network part //
 
-// NewTcpHost returns a Fresh TCP Host
+// NewTCPHost returns a Fresh TCP Host
 // If constructors == nil, it will take an empty one.
-func NewTcpHost() *TcpHost {
-	return &TcpHost{
+func NewTCPHost() *TCPHost {
+	return &TCPHost{
 		peers:        make(map[string]Conn),
 		quit:         make(chan bool),
 		constructors: DefaultConstructors(Suite),
@@ -44,8 +44,8 @@ func NewTcpHost() *TcpHost {
 // Open will create a new connection between this host
 // and the remote host named "name". This is a TcpConn.
 // If anything went wrong, Conn will be nil.
-func (t *TcpHost) Open(name string) (Conn, error) {
-	c, err := t.openTcpConn(name)
+func (t *TCPHost) Open(name string) (Conn, error) {
+	c, err := t.openTCPConn(name)
 	if err != nil {
 		return nil, err
 	}
@@ -58,15 +58,15 @@ func (t *TcpHost) Open(name string) (Conn, error) {
 
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
-func (t *TcpHost) Listen(addr string, fn func(Conn)) error {
-	receiver := func(tc *TcpConn) {
+func (t *TCPHost) Listen(addr string, fn func(Conn)) error {
+	receiver := func(tc *TCPConn) {
 		go fn(tc)
 	}
 	return t.listen(addr, receiver)
 }
 
 // Close will close every connection this host has opened
-func (t *TcpHost) Close() error {
+func (t *TCPHost) Close() error {
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
@@ -109,9 +109,9 @@ func (t *TcpHost) Close() error {
 	return nil
 }
 
-// Tx() returns the number of bytes read by all its connections
+// Rx returns the number of bytes read by all its connections
 // Needed so TcpHost implements the CounterIO interface from lib/monitor
-func (t *TcpHost) Rx() uint64 {
+func (t *TCPHost) Rx() uint64 {
 	var size uint64
 	for _, c := range t.peers {
 		size += c.Rx()
@@ -119,9 +119,9 @@ func (t *TcpHost) Rx() uint64 {
 	return size
 }
 
-// Tx() returns the number of bytes written by all its connection
+// Tx returns the number of bytes written by all its connection
 // Needed so TcpHost implements the CounterIO interface from lib/monitor
-func (t *TcpHost) Tx() uint64 {
+func (t *TCPHost) Tx() uint64 {
 	var size uint64
 	for _, c := range t.peers {
 		size += c.Tx()
@@ -130,7 +130,7 @@ func (t *TcpHost) Tx() uint64 {
 }
 
 // OpenTcpConn is private method that opens a TcpConn to the given name
-func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
+func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
 	for i := 0; i < MaxRetry; i++ {
@@ -146,7 +146,7 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 	if conn == nil {
 		return nil, fmt.Errorf("Could not connect to %s.", name)
 	}
-	c := TcpConn{
+	c := TCPConn{
 		Endpoint: name,
 		conn:     conn,
 		host:     t,
@@ -158,10 +158,10 @@ func (t *TcpHost) openTcpConn(name string) (*TcpConn, error) {
 // listen is the private function that takes a function that takes a TcpConn.
 // That way we can control what to do of the TcpConn before returning it to the
 // function given by the user. Used by SecureTcpHost
-func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
+func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
-	global, _ := cliutils.GlobalBind(addr)
+	global, _ := GlobalBind(addr)
 	for i := 0; i < MaxRetry; i++ {
 		ln, err := net.Listen("tcp", global)
 		if err == nil {
@@ -186,7 +186,7 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 			}
 			continue
 		}
-		c := TcpConn{
+		c := TCPConn{
 			Endpoint: conn.RemoteAddr().String(),
 			conn:     conn,
 			host:     t,
@@ -198,24 +198,24 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 	}
 }
 
-// NewSecureTcpHost returns a Secure Tcp Host
-func NewSecureTcpHost(private abstract.Secret, e *Entity) *SecureTcpHost {
-	return &SecureTcpHost{
+// NewSecureTCPHost returns a Secure Tcp Host
+func NewSecureTCPHost(private abstract.Secret, e *Entity) *SecureTCPHost {
+	return &SecureTCPHost{
 		private:        private,
 		entity:         e,
-		TcpHost:        NewTcpHost(),
+		TCPHost:        NewTCPHost(),
 		workingAddress: e.First(),
 	}
 }
 
 // Listen will try each addresses it the host Entity.
 // Returns an error if it can listen on any address
-func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
-	receiver := func(c *TcpConn) {
+func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
+	receiver := func(c *TCPConn) {
 		dbg.Lvl3(st.workingAddress, "connected with", c.Remote())
-		stc := &SecureTcpConn{
-			TcpConn:       c,
-			SecureTcpHost: st,
+		stc := &SecureTCPConn{
+			TCPConn:       c,
+			SecureTCPHost: st,
 		}
 		// if negotiation fails we drop the connection
 		if err := stc.exchangeEntity(); err != nil {
@@ -236,7 +236,7 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 		st.lockAddress.Lock()
 		st.workingAddress = addr
 		st.lockAddress.Unlock()
-		if err = st.TcpHost.listen(addr, receiver); err != nil {
+		if err = st.TCPHost.listen(addr, receiver); err != nil {
 			// The listening is over
 			if err == ErrClosed || err == ErrEOF {
 				return nil
@@ -249,23 +249,24 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 }
 
 // Open will try any address that is in the Entity and connect to the first
-// one that works. Then it exchanges the Entity to verify.
-func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
-	var secure SecureTcpConn
+// one that works. Then it exchanges the Entity to verify it is talking with the
+// right host.
+func (st *SecureTCPHost) Open(e *Entity) (SecureConn, error) {
+	var secure SecureTCPConn
 	var success bool
 	// try all names
 	for _, addr := range e.Addresses {
 		// try to connect with this name
 		dbg.Lvl3("Trying address", addr)
-		c, err := st.TcpHost.openTcpConn(addr)
+		c, err := st.TCPHost.openTCPConn(addr)
 		if err != nil {
 			dbg.Lvl3("Address didn't accept connection:", addr, "=>", err)
 			continue
 		}
 		// create the secure connection
-		secure = SecureTcpConn{
-			TcpConn:       c,
-			SecureTcpHost: st,
+		secure = SecureTCPConn{
+			TCPConn:       c,
+			SecureTCPHost: st,
 			entity:        e,
 		}
 		success = true
@@ -285,14 +286,14 @@ func (st *SecureTcpHost) Open(e *Entity) (SecureConn, error) {
 }
 
 // String returns a string identifying that host
-func (st *SecureTcpHost) String() string {
+func (st *SecureTCPHost) String() string {
 	st.lockAddress.Lock()
 	defer st.lockAddress.Unlock()
 	return st.workingAddress
 }
 
 // Tx implements the CounterIO interface
-func (st *SecureTcpHost) Tx() uint64 {
+func (st *SecureTCPHost) Tx() uint64 {
 	st.connMutex.Lock()
 	defer st.connMutex.Unlock()
 	var b uint64
@@ -303,7 +304,7 @@ func (st *SecureTcpHost) Tx() uint64 {
 }
 
 // Rx implements the CounterIO interface
-func (st *SecureTcpHost) Rx() uint64 {
+func (st *SecureTCPHost) Rx() uint64 {
 	st.connMutex.Lock()
 	defer st.connMutex.Unlock()
 	var b uint64
@@ -315,17 +316,17 @@ func (st *SecureTcpHost) Rx() uint64 {
 
 // Remote returns the name of the peer at the end point of
 // the connection
-func (c *TcpConn) Remote() string {
+func (c *TCPConn) Remote() string {
 	return c.Endpoint
 }
 
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TcpConn) Receive(ctx context.Context) (nm NetworkMessage, e error) {
+func (c *TCPConn) Receive(ctx context.Context) (nm Message, e error) {
 	c.receiveMutex.Lock()
 	defer c.receiveMutex.Unlock()
-	var am NetworkMessage
+	var am Message
 	am.Constructors = c.host.constructors
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
@@ -379,7 +380,7 @@ const maxChunkSize Size = 1400
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with the size through the network.
 // Returns an error if anything was wrong
-func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
+func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
 	am, err := newNetworkMessage(obj)
@@ -425,7 +426,7 @@ func (c *TcpConn) Send(ctx context.Context, obj ProtocolMessage) error {
 }
 
 // Close ... closes the connection
-func (c *TcpConn) Close() error {
+func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
 	defer c.closedMut.Unlock()
 	if c.closed == true {
@@ -439,59 +440,60 @@ func (c *TcpConn) Close() error {
 	return nil
 }
 
-// Rx() returns the number of bytes read by this connection
+// Rx returns the number of bytes read by this connection
 // Needed so TcpConn implements the CounterIO interface from lib/monitor
-func (t *TcpConn) Rx() uint64 {
-	t.bRxLock.Lock()
-	defer t.bRxLock.Unlock()
-	return t.bRx
+func (c *TCPConn) Rx() uint64 {
+	c.bRxLock.Lock()
+	defer c.bRxLock.Unlock()
+	return c.bRx
 }
 
 // addReadBytes add b bytes to the total number of bytes read
-func (t *TcpConn) addReadBytes(b uint64) {
-	t.bRxLock.Lock()
-	defer t.bRxLock.Unlock()
-	t.bRx += b
+func (c *TCPConn) addReadBytes(b uint64) {
+	c.bRxLock.Lock()
+	defer c.bRxLock.Unlock()
+	c.bRx += b
 }
 
-// Tx() returns the number of bytes written by this connection
+// Tx returns the number of bytes written by this connection
 // Needed so TcpConn implements the CounterIO interface from lib/monitor
-func (t *TcpConn) Tx() uint64 {
-	t.bTxLock.Lock()
-	defer t.bTxLock.Unlock()
-	return t.bTx
+func (c *TCPConn) Tx() uint64 {
+	c.bTxLock.Lock()
+	defer c.bTxLock.Unlock()
+	return c.bTx
 }
 
 // addWrittenBytes add b bytes to the total number of bytes written
-func (t *TcpConn) addWrittenBytes(b uint64) {
-	t.bTxLock.Lock()
-	defer t.bTxLock.Unlock()
-	t.bTx += b
+func (c *TCPConn) addWrittenBytes(b uint64) {
+	c.bTxLock.Lock()
+	defer c.bTxLock.Unlock()
+	c.bTx += b
 }
 
 // Receive is analog to Conn.Receive but also set the right Entity in the
 // message
-func (sc *SecureTcpConn) Receive(ctx context.Context) (NetworkMessage, error) {
-	nm, err := sc.TcpConn.Receive(ctx)
+func (sc *SecureTCPConn) Receive(ctx context.Context) (Message, error) {
+	nm, err := sc.TCPConn.Receive(ctx)
 	nm.Entity = sc.entity
 	return nm, err
 }
 
-func (sc *SecureTcpConn) Entity() *Entity {
+// Entity returns the underlying entity tied to this connection
+func (sc *SecureTCPConn) Entity() *Entity {
 	return sc.entity
 }
 
 // exchangeEntity is made to exchange the Entity between the two parties.
 // when a connection request is made during listening
-func (sc *SecureTcpConn) exchangeEntity() error {
+func (sc *SecureTCPConn) exchangeEntity() error {
 	// Send our Entity to the remote endpoint
-	dbg.Lvl4("Sending our identity", sc.SecureTcpHost.entity.Id, "to",
-		sc.TcpConn.conn.RemoteAddr().String())
-	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
+	dbg.Lvl4("Sending our identity", sc.SecureTCPHost.entity.ID, "to",
+		sc.TCPConn.conn.RemoteAddr().String())
+	if err := sc.TCPConn.Send(context.TODO(), sc.SecureTCPHost.entity); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
 	// Receive the other Entity
-	nm, err := sc.TcpConn.Receive(context.TODO())
+	nm, err := sc.TCPConn.Receive(context.TODO())
 	if err != nil {
 		return fmt.Errorf("Error while receiving Entity during negotiation %s", err)
 	}
@@ -502,7 +504,7 @@ func (sc *SecureTcpConn) exchangeEntity() error {
 
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
-	dbg.Lvl4(sc.SecureTcpHost.entity.Id, "Received identity", e.Id)
+	dbg.Lvl4(sc.SecureTCPHost.entity.ID, "Received identity", e.ID)
 
 	sc.entity = &e
 	dbg.Lvl4("Identity exchange complete")
@@ -511,13 +513,13 @@ func (sc *SecureTcpConn) exchangeEntity() error {
 
 // negotiateOpen is called when Open a connection is called. Plus
 // negotiateListen it also verify the Entity.
-func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
+func (sc *SecureTCPConn) negotiateOpen(e *Entity) error {
 	if err := sc.exchangeEntity(); err != nil {
 		return err
 	}
 	// verify the Entity if its the same we are supposed to connect
-	if sc.Entity().Id != e.Id {
-		dbg.Lvl3("Wanted to connect to", e, e.Id, "but got", sc.Entity(), sc.Entity().Id)
+	if sc.Entity().ID != e.ID {
+		dbg.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.Entity(), sc.Entity().ID)
 		dbg.Lvl4("IDs not the same", dbg.Stack())
 		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}
@@ -525,12 +527,12 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	return nil
 }
 
-// Rx() implements the CounterIO interface
-func (sc *SecureTcpConn) Rx() uint64 {
-	return sc.TcpConn.Rx()
+// Rx implements the CounterIO interface
+func (sc *SecureTCPConn) Rx() uint64 {
+	return sc.TCPConn.Rx()
 }
 
-// Tx() implements the CounterIO interface
-func (sc *SecureTcpConn) Tx() uint64 {
-	return sc.TcpConn.Tx()
+// Tx implements the CounterIO interface
+func (sc *SecureTCPConn) Tx() uint64 {
+	return sc.TCPConn.Tx()
 }

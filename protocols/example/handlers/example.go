@@ -1,4 +1,3 @@
-// Holds a message that is passed to all children, using handlers.
 package example_handlers
 
 import (
@@ -9,8 +8,8 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(MessageAnnounce{})
-	network.RegisterMessageType(MessageReply{})
+	network.RegisterMessageType(Announce{})
+	network.RegisterMessageType(Reply{})
 	sda.ProtocolRegisterName("ExampleHandlers", NewExampleHandlers)
 }
 
@@ -44,7 +43,7 @@ func NewExampleHandlers(n *sda.Node) (sda.ProtocolInstance, error) {
 func (p *ProtocolExampleHandlers) Start() error {
 	dbg.Lvl3("Starting ExampleHandlers")
 	return p.HandleAnnounce(StructAnnounce{p.TreeNode(),
-		MessageAnnounce{"cothority rulez!"}})
+		Announce{"cothority rulez!"}})
 }
 
 // HandleAnnounce is the first message and is used to send an ID that
@@ -54,14 +53,14 @@ func (p *ProtocolExampleHandlers) HandleAnnounce(msg StructAnnounce) error {
 	if !p.IsLeaf() {
 		// If we have children, send the same message to all of them
 		for _, c := range p.Children() {
-			err := p.SendTo(c, &msg.MessageAnnounce)
+			err := p.SendTo(c, &msg.Announce)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		// If we're the leaf, start to reply
-		return p.SendTo(p.Parent(), &MessageReply{1})
+		return p.SendTo(p.Parent(), &Reply{1})
 	}
 	return nil
 }
@@ -76,7 +75,7 @@ func (p *ProtocolExampleHandlers) HandleReply(reply []StructReply) error {
 	dbg.Lvl3(p.Entity().Addresses, "is done with total of", children)
 	if !p.IsRoot() {
 		dbg.Lvl3("Sending to parent")
-		return p.SendTo(p.Parent(), &MessageReply{children})
+		return p.SendTo(p.Parent(), &Reply{children})
 	} else {
 		dbg.Lvl3("Root-node is done - nbr of children found:", children)
 		p.ChildCount <- children
