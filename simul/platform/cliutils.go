@@ -38,8 +38,8 @@ func Rsync(username, host, file, dest string) error {
 	return cmd.Run()
 }
 
-// SshRun runs a command on the remote host
-func SshRun(username, host, command string) ([]byte, error) {
+// SSHRun runs a command on the remote host
+func SSHRun(username, host, command string) ([]byte, error) {
 	addr := host
 	if username != "" {
 		addr = username + "@" + addr
@@ -50,9 +50,9 @@ func SshRun(username, host, command string) ([]byte, error) {
 	return cmd.Output()
 }
 
-// SshRunStdout runs a command on the remote host but redirects stdout and
+// SSHRunStdout runs a command on the remote host but redirects stdout and
 // stderr of the Ssh-command to the os.Stderr and os.Stdout
-func SshRunStdout(username, host, command string) error {
+func SSHRunStdout(username, host, command string) error {
 	addr := host
 	if username != "" {
 		addr = username + "@" + addr
@@ -73,7 +73,7 @@ func SshRunStdout(username, host, command string) error {
 func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) {
 	var cmd *exec.Cmd
 	var b bytes.Buffer
-	build_buffer := bufio.NewWriter(&b)
+	buildBuffer := bufio.NewWriter(&b)
 
 	wd, _ := os.Getwd()
 	dbg.Lvl4("In directory", wd)
@@ -83,8 +83,8 @@ func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) 
 	args = append(args, "-o", out, path)
 	cmd = exec.Command("go", args...)
 	dbg.Lvl4("Building", cmd.Args, "in", path)
-	cmd.Stdout = build_buffer
-	cmd.Stderr = build_buffer
+	cmd.Stdout = buildBuffer
+	cmd.Stderr = buildBuffer
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
 	wd, err := os.Getwd()
 	dbg.Lvl4(wd)

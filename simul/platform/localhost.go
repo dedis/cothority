@@ -11,6 +11,7 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
+	// Import protocols so every protocols is registered to the sda
 	_ "github.com/dedis/cothority/protocols"
 	"strings"
 )
@@ -47,7 +48,7 @@ type Localhost struct {
 	// Whether we started a simulation
 	running bool
 	// WaitGroup for running processes
-	wg_run sync.WaitGroup
+	wgRun sync.WaitGroup
 
 	// errors go here:
 	errChan chan error
@@ -160,7 +161,7 @@ func (d *Localhost) Start(args ...string) error {
 	d.running = true
 	dbg.Lvl1("Starting", d.servers, "applications of", ex)
 	for index := 0; index < d.servers; index++ {
-		d.wg_run.Add(1)
+		d.wgRun.Add(1)
 		dbg.Lvl3("Starting", index)
 		host := "localhost" + strconv.Itoa(index)
 		cmdArgs := []string{"-address", host, "-monitor",
@@ -180,7 +181,7 @@ func (d *Localhost) Start(args ...string) error {
 				dbg.Error("Error running localhost", h, ":", err)
 				d.errChan <- err
 			}
-			d.wg_run.Done()
+			d.wgRun.Done()
 			dbg.Lvl3("host (index", i, ")", h, "done")
 		}(index, host)
 	}
@@ -193,7 +194,7 @@ func (d *Localhost) Wait() error {
 
 	var err error
 	go func() {
-		d.wg_run.Wait()
+		d.wgRun.Wait()
 		dbg.Lvl3("WaitGroup is 0")
 		// write to error channel when done:
 		d.errChan <- nil

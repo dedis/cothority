@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"bufio"
-	_ "errors"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -135,15 +134,15 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
-		src_dir := d.deterDir + "/" + p
+		srcDir := d.deterDir + "/" + p
 		basename := path.Base(p)
 		if p == "simul" {
-			src_dir = d.cothorityDir
+			srcDir = d.cothorityDir
 			basename = "cothority"
 		}
 		dst := d.buildDir + "/" + basename
 
-		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
+		dbg.Lvl3("Building", p, "from", srcDir, "into", basename)
 		wg.Add(1)
 		processor := "amd64"
 		system := "linux"
@@ -154,16 +153,16 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 		go func(src, dest string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
-			src_rel, _ := filepath.Rel(d.deterDir, src)
-			dbg.Lvl3("Relative-path is", src_rel, " will build into ", dest)
-			out, err := Build("./"+src_rel, dest,
+			srcRel, _ := filepath.Rel(d.deterDir, src)
+			dbg.Lvl3("Relative-path is", srcRel, " will build into ", dest)
+			out, err := Build("./"+srcRel, dest,
 				processor, system, arg...)
 			if err != nil {
 				KillGo()
 				dbg.Lvl1(out)
 				dbg.Fatal(err)
 			}
-		}(src_dir, dst)
+		}(srcDir, dst)
 	}
 	// wait for the build to finish
 	wg.Wait()
@@ -185,8 +184,8 @@ func (d *Deterlab) Cleanup() error {
 	sshKill = make(chan string)
 	go func() {
 		// Cleanup eventual residues of previous round - users and sshd
-		SshRun(d.Login, d.Host, "killall -9 users sshd")
-		err := SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		SSHRun(d.Login, d.Host, "killall -9 users sshd")
+		err := SSHRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
 			dbg.Lvl1("NOT-Normal error from cleanup")
 			sshKill <- "error"
@@ -200,9 +199,8 @@ func (d *Deterlab) Cleanup() error {
 			if msg == "stopped" {
 				dbg.Lvl3("Users stopped")
 				return nil
-			} else {
-				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
 			}
+			dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
 		case <-time.After(time.Second * 20):
 			dbg.Lvl3("Timeout error when waiting for end of ssh")
 			return nil
@@ -287,7 +285,7 @@ func (d *Deterlab) Start(args ...string) error {
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
 	go func() {
-		err := SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		err := SSHRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
 		if err != nil {
 			dbg.Lvl3(err)
 		}
@@ -310,9 +308,8 @@ func (d *Deterlab) Wait() error {
 			if msg == "finished" {
 				dbg.Lvl3("Received finished-message, not killing users")
 				return nil
-			} else {
-				dbg.Lvl1("Received out-of-line message", msg)
 			}
+			dbg.Lvl1("Received out-of-line message", msg)
 		case <-time.After(time.Second * time.Duration(wait)):
 			dbg.Lvl1("Quitting after ", wait/60,
 				" minutes of waiting")
@@ -326,13 +323,13 @@ func (d *Deterlab) Wait() error {
 // Write the hosts.txt file automatically
 // from project name and number of servers
 func (d *Deterlab) createHosts() error {
-	num_servers := d.Servers
+	numServers := d.Servers
 
 	ip := "10.255.0."
 	name := d.Project + ".isi.deterlab.net"
-	d.Phys = make([]string, 0, num_servers)
-	d.Virt = make([]string, 0, num_servers)
-	for i := 1; i <= num_servers; i++ {
+	d.Phys = make([]string, 0, numServers)
+	d.Virt = make([]string, 0, numServers)
+	for i := 1; i <= numServers; i++ {
 		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i-1, d.Experiment, name))
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
