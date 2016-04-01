@@ -24,7 +24,6 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 )
@@ -162,7 +161,7 @@ func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
-	global, _ := cliutils.GlobalBind(addr)
+	global, _ := GlobalBind(addr)
 	for i := 0; i < MaxRetry; i++ {
 		ln, err := net.Listen("tcp", global)
 		if err == nil {

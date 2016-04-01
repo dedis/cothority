@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
@@ -157,10 +156,10 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 			// deter has an amd64, linux architecture
 			src_rel, _ := filepath.Rel(d.deterDir, src)
 			dbg.Lvl3("Relative-path is", src_rel, " will build into ", dest)
-			out, err := cliutils.Build("./"+src_rel, dest,
+			out, err := Build("./"+src_rel, dest,
 				processor, system, arg...)
 			if err != nil {
-				cliutils.KillGo()
+				KillGo()
 				dbg.Lvl1(out)
 				dbg.Fatal(err)
 			}
@@ -186,8 +185,8 @@ func (d *Deterlab) Cleanup() error {
 	sshKill = make(chan string)
 	go func() {
 		// Cleanup eventual residues of previous round - users and sshd
-		cliutils.SshRun(d.Login, d.Host, "killall -9 users sshd")
-		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		SshRun(d.Login, d.Host, "killall -9 users sshd")
+		err := SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
 			dbg.Lvl1("NOT-Normal error from cleanup")
 			sshKill <- "error"
@@ -258,7 +257,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 	// Copy everything over to Deterlab
 	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
-	err = cliutils.Rsync(d.Login, d.Host, d.deployDir+"/", "remote/")
+	err = Rsync(d.Login, d.Host, d.deployDir+"/", "remote/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -288,7 +287,7 @@ func (d *Deterlab) Start(args ...string) error {
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		err := SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
 		if err != nil {
 			dbg.Lvl3(err)
 		}

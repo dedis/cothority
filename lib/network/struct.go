@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
@@ -255,7 +255,7 @@ func (e *Entity) Equal(e2 *Entity) bool {
 // Toml converts an Entity to a Toml-structure
 func (e *Entity) Toml(suite abstract.Suite) *EntityToml {
 	var buf bytes.Buffer
-	cliutils.WritePub64(suite, &buf, e.Public)
+	crypto.WritePub64(suite, &buf, e.Public)
 	return &EntityToml{
 		Addresses: e.Addresses,
 		Public:    buf.String(),
@@ -264,11 +264,20 @@ func (e *Entity) Toml(suite abstract.Suite) *EntityToml {
 
 // Entity converts an EntityToml structure back to an Entity
 func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
-	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(e.Public))
+	pub, _ := crypto.ReadPub64(suite, strings.NewReader(e.Public))
 	return &Entity{
 		Public:    pub,
 		Addresses: e.Addresses,
 	}
+}
+
+// GlobalBind returns the global-binding address
+func GlobalBind(address string) (string, error) {
+	addr := strings.Split(address, ":")
+	if len(addr) != 2 {
+		return "", errors.New("Not a host:port address")
+	}
+	return "0.0.0.0:" + addr[1], nil
 }
 
 // handleError produces the higher layer error depending on the type

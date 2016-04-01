@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -108,11 +108,11 @@ func NewHostFromFile(name string) (*Host, error) {
 	if err != nil {
 		return nil, err
 	}
-	private, err := cliutils.ReadSecretHex(network.Suite, hc.Private)
+	private, err := crypto.ReadSecretHex(network.Suite, hc.Private)
 	if err != nil {
 		return nil, err
 	}
-	public, err := cliutils.ReadPubHex(network.Suite, hc.Public)
+	public, err := crypto.ReadPubHex(network.Suite, hc.Public)
 	if err != nil {
 		return nil, err
 	}
@@ -123,11 +123,11 @@ func NewHostFromFile(name string) (*Host, error) {
 
 // SaveToFile puts the private/public key and the hostname into a file
 func (h *Host) SaveToFile(name string) error {
-	public, err := cliutils.PubHex(network.Suite, h.Entity.Public)
+	public, err := crypto.PubHex(network.Suite, h.Entity.Public)
 	if err != nil {
 		return err
 	}
-	private, err := cliutils.SecretHex(network.Suite, h.private)
+	private, err := crypto.SecretHex(network.Suite, h.private)
 	if err != nil {
 		return err
 	}

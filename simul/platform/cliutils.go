@@ -1,13 +1,12 @@
-// Used for shell-commands and converting public/secrets to/from Base64
-package cliutils
+package platform
+
+// Used for shell-commands
 
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/dedis/cothority/lib/dbg"
 )
@@ -99,13 +98,4 @@ func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) 
 func KillGo() {
 	cmd := exec.Command("killall", "go")
 	cmd.Run()
-}
-
-// GlobalBind returns the global-binding address
-func GlobalBind(address string) (string, error) {
-	addr := strings.Split(address, ":")
-	if len(addr) != 2 {
-		return "", errors.New("Not a host:port address")
-	}
-	return "0.0.0.0:" + addr[1], nil
 }

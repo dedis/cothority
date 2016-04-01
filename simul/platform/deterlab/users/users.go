@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
@@ -52,23 +51,23 @@ func main() {
 			defer wg.Done()
 			if kill {
 				dbg.Lvl3("Cleaning up host", h, ".")
-				cliutils.SshRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null")
+				platform.SshRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				cliutils.SshRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null")
+				platform.SshRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
-				cliutils.SshRun("", h, "sudo pkill -9 -f '\\./'")
+				platform.SshRun("", h, "sudo pkill -9 -f '\\./'")
 				time.Sleep(1 * time.Second)
 				if dbg.DebugVisible() > 3 {
 					dbg.Lvl4("Cleaning report:")
-					cliutils.SshRunStdout("", h, "ps aux")
+					platform.SshRunStdout("", h, "ps aux")
 				}
 			} else {
 				dbg.Lvl3("Setting the file-limit higher on", h)
 
 				// Copy configuration file to make higher file-limits
-				err := cliutils.SshRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
+				err := platform.SshRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
 				if err != nil {
 					dbg.Fatal("Couldn't copy limit-file:", err)
 				}
@@ -129,7 +128,7 @@ func main() {
 				" -monitor=" + monitorAddr +
 				" -debug=" + strconv.Itoa(dbg.DebugVisible())
 			dbg.Lvl3("Args is", args)
-			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./cothority "+
+			err := platform.SshRunStdout("", phys, "cd remote; sudo ./cothority "+
 				args)
 			if err != nil && !killing {
 				dbg.Lvl1("Error starting cothority - will kill all others:", err, internal)

@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	_ "github.com/dedis/cothority/protocols"
@@ -82,7 +81,7 @@ func (d *Localhost) Build(build string, arg ...string) error {
 	dst := d.runDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine
-	res, err := cliutils.Build(src, dst,
+	res, err := Build(src, dst,
 		runtime.GOARCH, runtime.GOOS,
 		arg...)
 	if err != nil {
