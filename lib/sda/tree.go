@@ -31,16 +31,20 @@ type Tree struct {
 	Root       *TreeNode
 }
 
+// TreeID uniquely identifies a Tree struct in the sda framework.
 type TreeID uuid.UUID
 
+// Equals returns true if and only if the given TreeID equals the current one.
 func (tId TreeID) Equals(tId2 TreeID) bool {
 	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
+
+// String returns a canonical representation of the TreeID.
 func (tId TreeID) String() string {
 	return uuid.UUID(tId).String()
 }
 
-var TreeType = network.RegisterMessageType(Tree{})
+var _ = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
@@ -462,21 +466,26 @@ type TreeNode struct {
 	PublicAggregateSubTree abstract.Point
 }
 
+// TreeNodeID identifies a given TreeNode struct in the sda framework.
 type TreeNodeID uuid.UUID
 
+// String returns a canonical representation of the TreeNodeID.
 func (tId TreeNodeID) String() string {
 	return uuid.UUID(tId).String()
 }
 
+// Equals returns true if and only if the given TreeNodeID equals the current
+// one.
 func (tId TreeNodeID) Equals(tId2 TreeNodeID) bool {
 	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
 
+// Name returns a human readable representation of the TreeNode (IP address).
 func (t *TreeNode) Name() string {
 	return t.Entity.First()
 }
 
-var TreeNodeType = network.RegisterMessageType(TreeNode{})
+var _ = network.RegisterMessageType(TreeNode{})
 
 // NewTreeNode creates a new TreeNode with the proper Id
 func NewTreeNode(entityIdx int, ni *network.Entity) *TreeNode {
@@ -490,7 +499,8 @@ func NewTreeNode(entityIdx int, ni *network.Entity) *TreeNode {
 	return tn
 }
 
-// Check if it can communicate with parent or children
+// IsConnectedTo checks if the TreeNode can communicate with its parent or
+// children.
 func (t *TreeNode) IsConnectedTo(e *network.Entity) bool {
 	if t.Parent != nil && t.Parent.Entity.Equal(e) {
 		return true
