@@ -126,7 +126,7 @@ func (t *Tree) Dump() string {
 	return ret
 }
 
-// Search searches the Tree for the TreeNode corresponding to the given UUID and returns it
+// Search searches the Tree for the given TreeNodeID and returns the corresponding TreeNode
 func (t *Tree) Search(tn TreeNodeID) (ret *TreeNode) {
 	found := func(d int, tns *TreeNode) {
 		if tns.Id == tn {
@@ -319,7 +319,7 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 	}
 }
 
-// Search searches the EntityList for the Entity corresponding to the given UUID and returns it
+// Search searches the EntityList for the given EntityID and returns the corresponding Entity
 func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 	for i, e := range el.List {
 		if e.Id == eId {
