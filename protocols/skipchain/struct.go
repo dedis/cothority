@@ -7,22 +7,13 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-// MessageCreate is used to notify the setup
-type MessageCreate struct {
+// MessageGenesis is used for the first round
+type MessageGenesis struct {
 }
 
-type StructCreate struct {
+type StructGenesis struct {
 	*sda.TreeNode
-	MessageCreate
-}
-
-// MessageReply returns the count of all children
-type MessageReply struct {
-}
-
-type StructReply struct {
-	*sda.TreeNode
-	MessageReply
+	MessageGenesis
 }
 
 // MessagePropagate returns the new skipchain block signed by the Cothority
