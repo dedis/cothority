@@ -49,8 +49,8 @@ var _ = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
-func NewTree(il *EntityList, r *TreeNode) *Tree {
-	url := network.NamespaceURL + "tree/" + il.Id.String() + r.Id.String()
+func NewTree(el *EntityList, r *TreeNode) *Tree {
+	url := network.NamespaceURL + "tree/" + el.Id.String() + r.Id.String()
 	t := &Tree{
 		EntityList: el,
 		Root:       r,
@@ -329,7 +329,7 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 // corresponding Entity.
 func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 	for i, e := range el.List {
-		if e.Id == eId {
+		if e.ID == eId {
 			return i, e
 		}
 	}
