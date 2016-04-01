@@ -40,7 +40,7 @@ You can either run various simulations or standalone applications:
 # Commandline Interface
 
 We have provided a simple manually-driven collective signing application, 
-‘cosi’, which you can use to request the collective signing group you 
+`cosi`, which you can use to request the collective signing group you 
 defined to witness and cosign any message you propose. In this case the 
 witnesses are not validating or checking the messages you’re proposing 
 in any way; they are merely attesting the fact that they have observed 
@@ -48,7 +48,7 @@ your request to sign the message.
 
 ## Installation
 
-We do provide a binary for the `cosi` and `cosid` program. They are pre-compiled
+We provide a binaries for the `cosi` and `cosid` program. They are pre-compiled
 for MacOSX and Linux and don't need any go-installation. But of course you can also
 compile from source.
 
@@ -56,7 +56,7 @@ compile from source.
 
 Download the latest package from 
 
-[[https://github.com/dedis/cothority/releases/latest]]
+https://github.com/dedis/cothority/releases/latest
 
 and untar into a directory that is in your `$PATH`:
 
@@ -96,7 +96,7 @@ cosid
 ```
 
 Follow the instructions on the screen. `cosid` will ask you for
-a an server address and port, and where you want to store the server 
+a server address and port, and where you want to store the server 
 configuration. Then you will see an output similar to this:
 
 ```
