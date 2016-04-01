@@ -42,7 +42,7 @@ type Broadcast struct {
 
 func NewBroadcastProtocol(n *sda.Node) (*Broadcast, error) {
 	b := new(Broadcast).init(n)
-	go b.Start()
+	//go b.Start()
 	return b, nil
 }
 
@@ -65,11 +65,6 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	}
 	go b.listen()
 	return b
-}
-func NewBroadcastRootProtocol(n *sda.Node) (*Broadcast, error) {
-	b := new(Broadcast).init(n)
-	// it does not start yet.
-	return b, nil
 }
 
 func (b *Broadcast) listen() {

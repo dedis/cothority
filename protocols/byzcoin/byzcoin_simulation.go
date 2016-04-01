@@ -89,9 +89,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	node, _ := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
-	proto, _ := manage.NewBroadcastRootProtocol(node)
-	node.SetProtocolInstance(proto)
+	node, err := sdaConf.Overlay.CreateNewNodeName("Broadcast", sdaConf.Tree)
+	if err != nil {
+		return err
+	}
+	proto := node.ProtocolInstance().(*manage.Broadcast)
 	// channel to notify we are done
 	broadDone := make(chan bool)
 	proto.RegisterOnDone(func() {
