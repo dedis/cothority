@@ -11,7 +11,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
 )
 
 const (
@@ -74,7 +73,7 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft.nodeList = tree.ListNodes()
 	idx := NotFound
 	for i, tn := range pbft.nodeList {
-		if uuid.Equal(tn.Id, n.TreeNode().Id) {
+		if tn.Id.Equals(n.TreeNode().Id) {
 			idx = i
 		}
 	}

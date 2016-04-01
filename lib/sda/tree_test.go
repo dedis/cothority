@@ -67,7 +67,7 @@ func TestEntityListNew(t *testing.T) {
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.Id == uuid.Nil {
+	if pl.Id == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(pl.Id.String()) != 36 {
@@ -92,7 +92,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in EntityList. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.Id == uuid.Nil {
+	if decodedList.Id == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(decodedList.Id.String()) != 36 {

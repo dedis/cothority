@@ -37,4 +37,5 @@ import (
 	_ "github.com/dedis/cothority/protocols/jvss"
 	_ "github.com/dedis/cothority/protocols/manage"
 	_ "github.com/dedis/cothority/protocols/ntree"
+	_ "github.com/dedis/cothority/protocols/randhound"
 )
