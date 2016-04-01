@@ -158,6 +158,8 @@ func (o *Overlay) CreateNewNode(protocolID ProtocolID, tree *Tree) (*Node, error
 	return node, node.protocolInstantiate()
 }
 
+// StartNewNodeName starts a node from the given protocol name. Can be useful
+// in simulations. See for instance the protocol "CloseAll".
 func (o *Overlay) StartNewNodeName(name string, tree *Tree) (*Node, error) {
 	return o.StartNewNode(ProtocolNameToID(name), tree)
 }
@@ -169,6 +171,8 @@ func (o *Overlay) CreateNewNodeName(name string, tree *Tree) (*Node, error) {
 	return o.CreateNewNode(ProtocolNameToID(name), tree)
 }
 
+// NewNodeEmptyName returns a simple node from the protocol name but without
+// instantiating the protocol.
 func (o *Overlay) NewNodeEmptyName(name string, tree *Tree) (*Node, error) {
 	return o.NewNodeEmpty(ProtocolNameToID(name), tree)
 }
@@ -282,9 +286,6 @@ func (o *Overlay) nodeDelete(tok *Token) {
 	o.nodeInfo[tok.Id()] = true
 }
 
-func (o *Overlay) Private() abstract.Secret {
-	return o.host.private
-}
 func (o *Overlay) suite() abstract.Suite {
 	return o.host.Suite()
 }
