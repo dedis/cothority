@@ -6,7 +6,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// ProtoId uniquely identifies a protocol
+// ProtoID uniquely identifies a protocol
 type ProtocolID uuid.UUID
 
 // protocols holds a map of all available protocols and how to create an
