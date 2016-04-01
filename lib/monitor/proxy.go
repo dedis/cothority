@@ -91,9 +91,9 @@ func Proxy(redirection string) error {
 		for finished == false {
 			select {
 			case <-newConn:
-				nconn += 1
+				nconn++
 			case <-closeConn:
-				nconn -= 1
+				nconn--
 				if nconn == 0 {
 					// everything is finished
 					serverEnc.Encode(NewSingleMeasure("end", 0))
@@ -133,7 +133,7 @@ func proxyConnection(conn net.Conn, done chan bool) {
 				break
 			}
 			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
-			nerr += 1
+			nerr++
 			if nerr > 1 {
 				dbg.Lvl1("Too many errors from", conn.RemoteAddr().String(), ": Abort connection")
 				break

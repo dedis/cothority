@@ -209,7 +209,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.Proto
 	if err != nil {
 		return err
 	}
-	sdaMsg := &SDAData{
+	sdaMsg := &Data{
 		MsgSlice: b,
 		MsgType:  network.TypeToMessageTypeID(msg),
 		From:     from.token,

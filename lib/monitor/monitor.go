@@ -1,4 +1,4 @@
-// Monitor package handle the logging, collection and computation of
+// Package monitor package handle the logging, collection and computation of
 // statistical data. Every application can send some Measure (for the moment,
 // we mostly measure the CPU time but it can be applied later for any kind of
 // measures). The Monitor receives them and updates a Stats struct. This Stats
@@ -27,9 +27,12 @@ import (
 // This file handles the collection of measurements, aggregates them and
 // write CSV file reports
 
-// listen is the address where to listen for the monitor. The endpoint can be a
+// Sink is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
 const Sink = "0.0.0.0"
+
+// DefaultSinkPort is the default port where a monitor will listen and a proxy
+// will contact the monitor.
 const DefaultSinkPort = 10000
 
 // Monitor struct is used to collect measures and make the statistics about
@@ -72,7 +75,7 @@ func NewMonitor(stats *Stats) *Monitor {
 	}
 }
 
-// Monitor will start listening for incoming connections on this address
+// Listen will start listening for incoming connections on this address
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func (m *Monitor) Listen() error {
@@ -134,7 +137,7 @@ func (m *Monitor) Listen() error {
 	return nil
 }
 
-// StopMonitor will close every connections it has
+// Stop will close every connections it has
 // And will stop updating the stats
 func (m *Monitor) Stop() {
 	dbg.Lvl2("Monitor Stop")
@@ -165,7 +168,7 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 			}
 			// otherwise log it
 			dbg.Lvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
-			nerr += 1
+			nerr++
 			if nerr > 1 {
 				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
 				break
