@@ -130,9 +130,8 @@ func TestNewNode(t *testing.T) {
 	h1.AddEntityList(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
-
 	// Try directly StartNewNode
-	node, err := h1.StartNewNode(testID, tree)
+	node, err := h1.StartNewNode("ProtocolTest", tree)
 	if err != nil {
 		t.Fatal("Could not start new protocol", err)
 	}
