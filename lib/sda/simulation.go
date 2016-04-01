@@ -16,17 +16,16 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-/*
-Simulation is an interface needed by every protocol that wants to be available
-to be used in a simulation.
-*/
+type simulationCreate func(string) (Simulation, error)
 
-var simulationRegistered map[string]SimulationCreate
+var simulationRegistered map[string]simulationCreate
 
+// SimulationFileName is the name of the (binary encoded) file containing the
+// simulation config.
 const SimulationFileName = "simulation.bin"
 
-type SimulationCreate func(string) (Simulation, error)
-
+// Simulation is an interface needed by every protocol that wants to be available
+// to be used in a simulation.
 type Simulation interface {
 	// This has to initialise all necessary files and copy them to the
 	// 'dir'-directory. This directory will be accessible to all simulated
@@ -66,6 +65,8 @@ type SimulationConfig struct {
 	Config string
 }
 
+// SimulationConfigFile stores the state of the simulation's config.
+// Only used internally.
 type SimulationConfigFile struct {
 	TreeMarshal *TreeMarshal
 	EntityList  *EntityList
@@ -161,9 +162,12 @@ func (sc *SimulationConfig) Save(dir string) error {
 	return nil
 }
 
-func SimulationRegister(name string, sim SimulationCreate) {
+// SimulationRegister is must to be called to register a simulation.
+// Protocol or simulation developers must not forget to call this function
+// with the protocol's name.
+func SimulationRegister(name string, sim simulationCreate) {
 	if simulationRegistered == nil {
-		simulationRegistered = make(map[string]SimulationCreate)
+		simulationRegistered = make(map[string]simulationCreate)
 	}
 	simulationRegistered[name] = sim
 }
@@ -186,6 +190,8 @@ func NewSimulation(name string, conf string) (Simulation, error) {
 	return simInst, nil
 }
 
+// SimulationBFTree is the main struct storing the data for all the simulations
+// which use a tree with a certain branching factor or depth.
 type SimulationBFTree struct {
 	Rounds     int
 	BF         int
