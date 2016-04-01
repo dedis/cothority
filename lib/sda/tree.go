@@ -49,8 +49,8 @@ var _ = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
-func NewTree(il *EntityList, r *TreeNode) *Tree {
-	url := network.NamespaceURL + "tree/" + il.Id.String() + r.Id.String()
+func NewTree(el *EntityList, r *TreeNode) *Tree {
+	url := network.NamespaceURL + "tree/" + el.Id.String() + r.Id.String()
 	t := &Tree{
 		EntityList: il,
 		Root:       r,
