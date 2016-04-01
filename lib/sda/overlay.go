@@ -47,7 +47,7 @@ func NewOverlay(h *Host) *Overlay {
 // - ask for the Tree
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
-func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
+func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
@@ -225,7 +225,7 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 
 // SendToTreeNode sends a message to a treeNode
 func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
-	sda := &SDAData{
+	sda := &Data{
 		Msg:  msg,
 		From: from,
 		To:   from.ChangeTreeNodeID(to.Id),

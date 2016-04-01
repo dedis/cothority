@@ -44,9 +44,9 @@ type Host struct {
 	// map from EntityList.ID => trees that use this entity list
 	pendingTreeMarshal map[EntityListID][]*TreeMarshal
 	// pendingSDAData are a list of message we received that does not correspond
-	// to any local tree or/and entitylist. We first request theses so we can
-	// instantiate properly protocolinstance that will use these SDAData msg.
-	pendingSDAs []*SDAData
+	// to any local Tree or/and EntityList. We first request theses so we can
+	// instantiate properly protocolInstance that will use these SDAData msg.
+	pendingSDAs []*Data
 	// The suite used for this Host
 	suite abstract.Suite
 	// We're about to close
@@ -80,7 +80,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		connections:         make(map[network.EntityID]network.SecureConn),
 		entities:            make(map[network.EntityID]*network.Entity),
 		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
-		pendingSDAs:         make([]*SDAData, 0),
+		pendingSDAs:         make([]*Data, 0),
 		host:                network.NewSecureTcpHost(pkey, e),
 		private:             pkey,
 		suite:               network.Suite,
@@ -303,15 +303,15 @@ func (h *Host) processMessages() {
 		}
 		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
-		case SDADataMessage:
-			sdaMsg := data.Msg.(SDAData)
+		case SDADataMessageID:
+			sdaMsg := data.Msg.(Data)
 			sdaMsg.Entity = data.Entity
 			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
 		// A host has sent us a request to get a tree definition
-		case RequestTreeMessage:
+		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
 			tree := h.overlay.Tree(tid)
 			if tree != nil {
@@ -323,7 +323,7 @@ func (h *Host) processMessages() {
 				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
 		// A Host has replied to our request of a tree
-		case SendTreeMessage:
+		case SendTreeMessageID:
 			tm := data.Msg.(TreeMarshal)
 			if tm.TreeId == TreeID(uuid.Nil) {
 				dbg.Error("Received an empty Tree")
@@ -352,7 +352,7 @@ func (h *Host) processMessages() {
 			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
 		// Some host requested an EntityList
-		case RequestEntityListMessage:
+		case RequestEntityListMessageID:
 			id := data.Msg.(RequestEntityList).EntityListID
 			el := h.overlay.EntityList(id)
 			if el != nil {
@@ -362,7 +362,7 @@ func (h *Host) processMessages() {
 				h.SendRaw(data.Entity, &EntityList{})
 			}
 		// Host replied to our request of entitylist
-		case SendEntityListMessage:
+		case SendEntityListMessageID:
 			il := data.Msg.(EntityList)
 			if il.Id == EntityListID(uuid.Nil) {
 				dbg.Lvl2("Received an empty EntityList")
@@ -381,9 +381,9 @@ func (h *Host) processMessages() {
 	}
 }
 
-// sendSDAData marshals the inner msg and then sends a SDAData msg
+// sendSDAData marshals the inner msg and then sends a Data msg
 // to the appropriate entity
-func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
+func (h *Host) sendSDAData(e *network.Entity, sdaMsg *Data) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		typ := network.TypeFromData(sdaMsg.Msg)
@@ -435,7 +435,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // requestTree will ask for the tree the sdadata is related to.
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
-func (h *Host) requestTree(e *network.Entity, sdaMsg *SDAData) error {
+func (h *Host) requestTree(e *network.Entity, sdaMsg *Data) error {
 	h.addPendingSda(sdaMsg)
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
 	return h.SendRaw(e, treeRequest)
@@ -443,7 +443,7 @@ func (h *Host) requestTree(e *network.Entity, sdaMsg *SDAData) error {
 
 // addPendingSda simply append a sda message to a queue. This queue willbe
 // checked each time we receive a new tree / entityList
-func (h *Host) addPendingSda(sda *SDAData) {
+func (h *Host) addPendingSda(sda *Data) {
 	h.pendingSDAsLock.Lock()
 	h.pendingSDAs = append(h.pendingSDAs, sda)
 	h.pendingSDAsLock.Unlock()
@@ -458,7 +458,7 @@ func (h *Host) addPendingSda(sda *SDAData) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		newPending := make([]*SDAData, 0)
+		newPending := make([]*Data, 0)
 		for _, msg := range h.pendingSDAs {
 			// if this message references t
 			if t.Id.Equals(msg.To.TreeID) {

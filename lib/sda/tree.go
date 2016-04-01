@@ -65,7 +65,7 @@ func NewTreeFromMarshal(buf []byte, il *EntityList) (*Tree, error) {
 	if err != nil {
 		return nil, err
 	}
-	if tp != TreeMarshalType {
+	if tp != TreeMarshalTypeID {
 		return nil, errors.New("Didn't receive TreeMarshal-struct")
 	}
 	t, err := pm.(TreeMarshal).MakeTree(il)
@@ -237,7 +237,8 @@ func (tm *TreeMarshal) String() string {
 	return s
 }
 
-var TreeMarshalType = network.RegisterMessageType(TreeMarshal{})
+// ID of TreeMarshal message as registered in network
+var TreeMarshalTypeID = network.RegisterMessageType(TreeMarshal{})
 
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
@@ -301,7 +302,8 @@ func (elId EntityListID) String() string {
 	return uuid.UUID(elId).String()
 }
 
-var EntityListType = network.RegisterMessageType(EntityList{})
+// ID of EntityList message as registered in network
+var EntityListTypeID = network.RegisterMessageType(EntityList{})
 
 // NewEntityList creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.

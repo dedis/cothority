@@ -7,7 +7,7 @@ import (
 
 // Export some private functions of Host for testing
 
-func (h *Host) SendSDAData(id *network.Entity, msg *SDAData) error {
+func (h *Host) SendSDAData(id *network.Entity, msg *Data) error {
 	return h.sendSDAData(id, msg)
 }
 
