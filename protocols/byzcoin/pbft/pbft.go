@@ -70,7 +70,7 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft.state = statePrePrepare
 	tree := n.Tree()
 	pbft.Node = n
-	pbft.nodeList = tree.ListNodes()
+	pbft.nodeList = tree.List()
 	idx := notFound
 	for i, tn := range pbft.nodeList {
 		if tn.Id.Equals(n.TreeNode().Id) {
@@ -116,7 +116,7 @@ func (p *Protocol) Start() error {
 	return p.PrePrepare()
 }
 
-// PrePrepare intializes a full run of the protocol
+// PrePrepare intializes a full run of the protocol.
 func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block
 	var err error

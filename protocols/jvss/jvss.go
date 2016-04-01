@@ -93,7 +93,7 @@ func NewJVSSProtocol(n *sda.Node) (*JVSSProtocol, error) {
 	var idx int = -1
 	// at the same time create the public list
 	tree := n.Tree()
-	nodes := tree.ListNodes()
+	nodes := tree.List()
 	pubs := make([]abstract.Point, len(nodes))
 	for i, tn := range nodes {
 		if tn.Id.Equals(n.TreeNode().Id) {

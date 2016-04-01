@@ -218,7 +218,7 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 	if tree == nil {
 		return nil, errors.New("Didn't find tree")
 	}
-	tn := tree.GetTreeNode(t.TreeNodeID)
+	tn := tree.Search(t.TreeNodeID)
 	if tn == nil {
 		return nil, errors.New("Didn't find treenode")
 	}
