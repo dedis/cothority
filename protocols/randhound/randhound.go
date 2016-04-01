@@ -214,7 +214,7 @@ func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, er
 	}
 
 	// Include public keys of all nodes into group ID
-	for _, x := range rh.Tree().ListNodes() {
+	for _, x := range rh.Tree().List() {
 		pub, err := x.Entity.Public.MarshalBinary()
 		if err != nil {
 			return nil, nil, err
