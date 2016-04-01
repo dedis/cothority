@@ -1,4 +1,4 @@
-package jvss
+package jvss_old
 
 import (
 	"github.com/dedis/cothority/lib/dbg"

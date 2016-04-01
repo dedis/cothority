@@ -1,6 +1,6 @@
 // Joint Verification Secret Sharing, based on the Shamir Secret Sharing
 // algorithm.
-package jvss
+package jvss_old
 
 import (
 	"errors"

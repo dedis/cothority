@@ -1,4 +1,4 @@
-package jvss_test
+package jvss_old_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/jvss"
+	"github.com/dedis/cothority/protocols/jvss_old"
 	"github.com/dedis/crypto/poly"
 	"github.com/satori/go.uuid"
 )
@@ -29,9 +29,9 @@ func TestJVSSLongterm(t *testing.T) {
 	// register the protocol with our custom channels so we know at which steps
 	// are both of the hosts
 	ch := make(chan *poly.SharedSecret, 2)
-	var p1 *jvss.JVSSProtocol
+	var p1 *jvss_old.JVSSProtocol
 	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
-		pi, err := jvss.NewJVSSProtocol(node)
+		pi, err := jvss_old.NewJVSSProtocol(node)
 		if err != nil {
 			return nil, err
 		}
@@ -83,9 +83,9 @@ func TestJVSSSign(t *testing.T) {
 	defer h2.Close()
 	var done1 bool
 	doneLongterm := make(chan bool)
-	var p1 *jvss.JVSSProtocol
+	var p1 *jvss_old.JVSSProtocol
 	fn := func(node *sda.Node) (sda.ProtocolInstance, error) {
-		pi, err := jvss.NewJVSSProtocol(node)
+		pi, err := jvss_old.NewJVSSProtocol(node)
 		if err != nil {
 			return nil, err
 		}
