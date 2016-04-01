@@ -8,83 +8,25 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBroadcastProtocol(n) })
+	sda.ProtocolRegisterName("Broadcast", NewBroadcastProtocol)
 }
 
 // Broadcast will just simply broadcast
 type Broadcast struct {
 	*sda.Node
-
-	announceChan chan struct {
-		*sda.TreeNode
-		Announce
-	}
-
-	ackChan chan struct {
-		*sda.TreeNode
-		ACK
-	}
-
-	okChan chan struct {
-		*sda.TreeNode
-		OK
-	}
-
-	// map for all the nodes => state
-	listNode map[sda.TreeNodeID]*sda.TreeNode
-	// how many peers are connected with me
-	ackdNode int
-	done     chan bool
 	onDoneCb func()
-	// how many peers are connected with everyone
-	okdNode int
 }
 
-func NewBroadcastProtocol(n *sda.Node) (*Broadcast, error) {
-	b := new(Broadcast).init(n)
-	//go b.Start()
-	return b, nil
-}
+// NewBroadcastProtocol returns a new Broadcast protocol
+func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
+	b := &Broadcast{n}
 
-func (b *Broadcast) init(n *sda.Node) *Broadcast {
-	b.Node = n
-
-	b.RegisterChannel(&b.ackChan)
-	b.RegisterChannel(&b.announceChan)
-	b.RegisterChannel(&b.okChan)
-
-	lists := b.Tree().ListNodes()
-	b.listNode = make(map[sda.TreeNodeID]*sda.TreeNode)
-	b.ackdNode = 0
-	b.done = make(chan bool, 1)
-	for _, tn := range lists {
-		if tn.Id.Equals(n.TreeNode().Id) {
-			continue
-		}
-		b.listNode[tn.Id] = tn
-	}
-	go b.listen()
 	return b
-}
-
-func (b *Broadcast) listen() {
-	for {
-		select {
-		case msg := <-b.announceChan:
-			b.handleAnnounce(msg.TreeNode)
-		case msg := <-b.ackChan:
-			b.handleACK(msg.TreeNode)
-		case msg := <-b.okChan:
-			b.handleOk(msg.TreeNode)
-		case <-b.done:
-			return
-		}
-	}
 }
 
 // Start will contact everyone and makes the connections
 func (b *Broadcast) Start() error {
-	for _, tn := range b.listNode {
+	for _, tn := range b.Tree().ListNodes() {
 		b.SendTo(tn, &Announce{})
 	}
 	dbg.Lvl3(b.Name(), "Sent Announce to everyone")
