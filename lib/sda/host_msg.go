@@ -76,7 +76,7 @@ func (t *Token) Id() TokenID {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
 	if t.cacheId == TokenID(uuid.Nil) {
-		url := network.UuidURL + "token/" + t.EntityListID.String() +
+		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))

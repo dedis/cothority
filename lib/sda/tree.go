@@ -45,7 +45,7 @@ var TreeType = network.RegisterMessageType(Tree{})
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
 func NewTree(il *EntityList, r *TreeNode) *Tree {
-	url := network.UuidURL + "tree/" + il.Id.String() + r.Id.String()
+	url := network.NamespaceURL + "tree/" + il.Id.String() + r.Id.String()
 	t := &Tree{
 		EntityList: il,
 		Root:       r,
@@ -182,7 +182,7 @@ func (t *Tree) UsesList() bool {
 	for _, p := range t.EntityList.List {
 		found := false
 		for _, n := range nodes {
-			if n.Entity.Id == p.Id {
+			if n.Entity.ID == p.ID {
 				found = true
 				break
 			}
@@ -245,7 +245,7 @@ var TreeMarshalTypeID = network.RegisterMessageType(TreeMarshal{})
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	tm := &TreeMarshal{
 		TreeNodeId: tr.Id,
-		EntityId:   tr.Entity.Id,
+		EntityId:   tr.Entity.ID,
 	}
 	for i := range tr.Children {
 		tm.Children = append(tm.Children,
@@ -323,7 +323,7 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 // Search looks for a corresponding UUID and returns that entity
 func (il *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 	for i, e := range il.List {
-		if e.Id == eId {
+		if e.ID == eId {
 			return i, e
 		}
 	}
@@ -531,7 +531,7 @@ func (t *TreeNode) AddChild(c *TreeNode) {
 
 // Equal tests if that node is equal to the given node
 func (t *TreeNode) Equal(t2 *TreeNode) bool {
-	if t.Id != t2.Id || t.Entity.Id != t2.Entity.Id {
+	if t.Id != t2.Id || t.Entity.ID != t2.Entity.ID {
 		dbg.Lvl4("TreeNode: ids are not equal")
 		return false
 	}

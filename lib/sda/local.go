@@ -43,12 +43,12 @@ func NewLocalTest() *LocalTest {
 // StartNewNodeName takes a name and a tree and will create a
 // new Node with the protocol 'name' running from the tree-root
 func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
-	rootEntityId := t.Root.Entity.Id
+	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.Id.Equals(rootEntityId) {
+		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.Id].StartNewNodeName(name, t)
+			return l.Overlays[h.Entity.ID].StartNewNodeName(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -57,12 +57,12 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 // CreateNewNodeName takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
 func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
-	rootEntityId := t.Root.Entity.Id
+	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.Id.Equals(rootEntityId) {
+		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.Id].CreateNewNodeName(name, t)
+			return l.Overlays[h.Entity.ID].CreateNewNodeName(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -70,12 +70,12 @@ func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 
 // NewNodeEmptyName create an empty node - use at your own risk!
 func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
-	rootEntityId := t.Root.Entity.Id
+	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.Id.Equals(rootEntityId) {
+		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.Id].NewNodeEmptyName(name, t)
+			return l.Overlays[h.Entity.ID].NewNodeEmptyName(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -87,8 +87,8 @@ func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
 	hosts := GenLocalHosts(n, connect, processMsg)
 	for _, host := range hosts {
-		l.Hosts[host.Entity.Id] = host
-		l.Overlays[host.Entity.Id] = host.overlay
+		l.Hosts[host.Entity.ID] = host
+		l.Overlays[host.Entity.ID] = host.overlay
 	}
 
 	list := l.GenEntityListFromHost(hosts...)
@@ -111,8 +111,8 @@ func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host,
 func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
 	hosts := GenLocalHosts(nbrHosts, connect, true)
 	for _, host := range hosts {
-		l.Hosts[host.Entity.Id] = host
-		l.Overlays[host.Entity.Id] = host.overlay
+		l.Hosts[host.Entity.ID] = host
+		l.Overlays[host.Entity.ID] = host.overlay
 	}
 
 	list := l.GenEntityListFromHost(hosts...)
@@ -164,7 +164,7 @@ func (l *LocalTest) GetTree(tn *TreeNode) *Tree {
 
 // NewNode creates a new node on a TreeNode
 func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
-	o := l.Overlays[tn.Entity.Id]
+	o := l.Overlays[tn.Entity.ID]
 	if o == nil {
 		return nil, errors.New("Didn't find corresponding overlay")
 	}
@@ -193,7 +193,7 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 // GetNodes returns all Nodes that belong to a treeNode
 func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
 	nodes := make([]*Node, 0)
-	for _, n := range l.Overlays[tn.Entity.Id].nodes {
+	for _, n := range l.Overlays[tn.Entity.ID].nodes {
 		nodes = append(nodes, n)
 	}
 	return nodes
@@ -268,13 +268,13 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	root := hosts[0]
 	for _, host := range hosts {
 		host.ListenAndBind()
-		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.Id)
+		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.ID)
 		if processMessages {
 			host.StartProcessMessages()
 		}
 		if connect && root != host {
-			dbg.Lvl4("Connecting", host.Entity.First(), host.Entity.Id, "to",
-				root.Entity.First(), root.Entity.Id)
+			dbg.Lvl4("Connecting", host.Entity.First(), host.Entity.ID, "to",
+				root.Entity.First(), root.Entity.ID)
 			if _, err := host.Connect(root.Entity); err != nil {
 				dbg.Fatal(host.Entity.Addresses, "Could not connect hosts", root.Entity.Addresses, err)
 			}
@@ -284,7 +284,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 				time.Sleep(time.Millisecond * 10)
 				root.entityListsLock.RLock()
 				for id, _ := range root.entities {
-					if id.Equals(host.Entity.Id) {
+					if id.Equals(host.Entity.ID) {
 						connected = true
 						break
 					}

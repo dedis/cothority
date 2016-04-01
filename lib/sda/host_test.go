@@ -410,7 +410,7 @@ type SimpleMessage struct {
 
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
-func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
+func testMessageSimple(t *testing.T, msg network.Message) SimpleMessage {
 	if msg.MsgType != SimpleMessageType {
 		t.Fatal("Received non SimpleMessage type")
 	}

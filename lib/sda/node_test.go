@@ -195,7 +195,7 @@ func TestProtocolHandlers(t *testing.T) {
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers
 
-	if child1.Entity().Id == child2.Entity().Id {
+	if child1.Entity().ID == child2.Entity().ID {
 		t.Fatal("Both entities should be different")
 	}
 
@@ -207,7 +207,7 @@ func TestProtocolHandlers(t *testing.T) {
 	}
 	child2.SendTo(node.TreeNode(), &NodeTestAggMsg{})
 	final := <-IncomingHandlers
-	if final.Entity().Id != node.Entity().Id {
+	if final.Entity().ID != node.Entity().ID {
 		t.Fatal("This should be the same ID")
 	}
 }

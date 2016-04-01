@@ -23,9 +23,9 @@ func TestSimple(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
-	client := NewTcpHost()
+	client := NewTCPHost()
 	clientName := "client"
-	server := NewTcpHost()
+	server := NewTCPHost()
 	serverName := "server"
 
 	done := make(chan bool)
