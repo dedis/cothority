@@ -25,11 +25,11 @@ type JVSS struct {
 	nodeList   []*sda.TreeNode    // List of TreeNodes in the JVSS group
 	pubKeys    []abstract.Point   // List of public keys of the above TreeNodes
 	info       *poly.Threshold    // Information on the JVSS thresholds
-	secret     *poly.SharedSecret //
-	schnorr    *poly.Schnorr      //
-	receiver   *poly.Receiver     //
+	secret     *poly.SharedSecret // The long-term shared secret
+	schnorr    *poly.Schnorr      // Contains info required to compute a distributed Schnorr signature
+	receiver   *poly.Receiver     // Contains info on received deals
 	dealMtx    *sync.Mutex        //
-	numDeals   int                // number of good deals already received
+	numDeals   int                // Number of good deals already received
 	dealInit   bool               // Indicate whether the deal has been initialised and broadcasted or not
 	secretInit bool               // Indicate whether the shared secret has been initialised or not
 	Done       chan bool          // Channel to indicate when JVSS is done
@@ -81,6 +81,7 @@ func (jv *JVSS) Start() error {
 	jv.setupDeal()
 	time.Sleep(1 * time.Second) // replace this by a mutex
 	jv.setupSharedSecret()
+	dbg.Lvl1(len(jv.receiver.deals))
 
 	jv.Done <- true
 	return nil
