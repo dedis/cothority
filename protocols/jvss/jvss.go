@@ -28,8 +28,8 @@ type JVSS struct {
 	secret     *poly.SharedSecret // The long-term shared secret
 	schnorr    *poly.Schnorr      // Contains info required to compute a distributed Schnorr signature
 	receiver   *poly.Receiver     // Contains info on received deals
-	dealMtx    *sync.Mutex        //
 	numDeals   int                // Number of good deals already received
+	dealMtx    *sync.Mutex        //
 	dealInit   bool               // Indicate whether the deal has been initialised and broadcasted or not
 	secretInit bool               // Indicate whether the shared secret has been initialised or not
 	Done       chan bool          // Channel to indicate when JVSS is done
@@ -55,8 +55,8 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 		info:       info,
 		schnorr:    new(poly.Schnorr),
 		receiver:   poly.NewReceiver(node.Suite(), *info, kp),
-		dealMtx:    new(sync.Mutex),
 		numDeals:   0,
+		dealMtx:    new(sync.Mutex),
 		dealInit:   false,
 		secretInit: false,
 		Done:       make(chan bool, 1),
@@ -81,7 +81,6 @@ func (jv *JVSS) Start() error {
 	jv.setupDeal()
 	time.Sleep(1 * time.Second) // replace this by a mutex
 	jv.setupSharedSecret()
-	dbg.Lvl1(len(jv.receiver.deals))
 
 	jv.Done <- true
 	return nil
