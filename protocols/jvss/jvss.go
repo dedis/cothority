@@ -174,10 +174,9 @@ func (jv *JVSS) finaliseSecret(sid string) {
 			dbg.Errorf("Error node %d could not create shared secret %s: %v", jv.nodeIdx(), sid, err)
 		}
 		secret.secret = sec
-
 		dbg.Lvl1(fmt.Sprintf("Node %d: shared secret %s created", jv.nodeIdx(), sid))
 
-		// Initialise long-term shared secret if not done so before
+		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if !jv.ltssInit && sid == jv.ltss {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
