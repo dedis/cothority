@@ -29,7 +29,8 @@ type JVSS struct {
 	secrets      map[string]*JVSSSecret // Shared secrets (long- and short-term ones)
 	ltSecretInit bool                   // Indicator whether shared secret has been initialised or not
 	dealMtx      *sync.Mutex            // Some Mutex
-	Done         chan bool              // Channel to indicate when JVSS is done
+	Done         chan bool              // Channel to indicate when JVSS setup is done
+	sigChan      chan *poly.SchnorrSig  // Channel for JVSS signature
 }
 
 // JVSSSecret contains all information for long- and short-term (i.e. random)
@@ -37,8 +38,9 @@ type JVSS struct {
 type JVSSSecret struct {
 	secret   *poly.SharedSecret // Shared secret
 	receiver *poly.Receiver     // Receiver to aggregate deals
-	numDeals int                // Number of good deals stored in the receiver
+	numDeals int                // Number of collected deals in the receiver
 	dealInit bool               // Indicator whether own deal has been initialised and broadcasted or not
+	numPSigs int                // Number of collected partial signatures
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -64,12 +66,14 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 		ltSecretInit: false,
 		dealMtx:      new(sync.Mutex),
 		Done:         make(chan bool, 1),
+		sigChan:      make(chan *poly.SchnorrSig),
 	}
 
 	// Setup message handlers
 	handlers := []interface{}{
 		jv.handleSetup,
 		jv.handleSigReq,
+		jv.handleSigResp,
 	}
 	for _, h := range handlers {
 		if err := jv.RegisterHandler(h); err != nil {
@@ -100,13 +104,6 @@ func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 // Sign
 func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
-	// 1. setup a new random distributed secret for this signing request
-	//		- see handleRequestSecret
-	//		- setup a deal and broadcast
-	//		- wait for deals from the others
-	//		- setup rnd shared secret
-	// 2. sign the message
-
 	// initialise short-term shared secret only used for this signing request
 	stype := "sts"
 	jv.initSecret(stype)
@@ -116,6 +113,8 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	if err := jv.schnorr.AddPartialSig(ps); err != nil {
 		return nil, err
 	}
+	sts := jv.secrets[stype]
+	sts.numPSigs++
 
 	// broadcast signing request (see line 212)
 	req := &SigReqMsg{
@@ -126,16 +125,12 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	jv.broadcast(req)
 
 	time.Sleep(1 * time.Second) // TODO: another workaround, replace by a channel or so
-	dbg.Lvl1("here")
 
-	// on the receivers side:
-	// do the same as above and send the response back
+	sig := <-jv.sigChan
 
-	// on the initiators side:
-	// collect all responses via AddPartialSig
-	// then call schnorr.Sig()
+	// TODO: clean up short term secret
 
-	return nil, nil
+	return sig, nil
 }
 
 func (jv *JVSS) initSecret(stype string) {
@@ -147,6 +142,7 @@ func (jv *JVSS) initSecret(stype string) {
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			numDeals: 0,
 			dealInit: false,
+			numPSigs: 0,
 		}
 		jv.secrets[stype] = sec
 	}

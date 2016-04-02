@@ -35,6 +35,12 @@ func TestJVSS(t *testing.T) {
 	}
 
 	msg := []byte("Hello World\n")
-	jv.Sign(msg)
+	sig, _ := jv.Sign(msg)
+
+	err = jv.Verify(msg, sig)
+	if err != nil {
+		t.Fatal("Error signature verification failed", err)
+	}
+	log.Printf("JVSS - signature verification succeded")
 
 }

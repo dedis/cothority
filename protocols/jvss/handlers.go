@@ -3,7 +3,6 @@ package jvss
 import (
 	"fmt"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/poly"
 )
@@ -20,6 +19,12 @@ type SigReqMsg struct {
 	Msg  []byte
 }
 
+type SigRespMsg struct {
+	Src  int
+	Type string
+	PSig *poly.SchnorrPartialSig
+}
+
 // WSetupMsg is a SDA-wrapper around SetupMsg
 type WSetupMsg struct {
 	*sda.TreeNode
@@ -30,6 +35,12 @@ type WSetupMsg struct {
 type WSigReqMsg struct {
 	*sda.TreeNode
 	SigReqMsg
+}
+
+// WSigRespMsg is a SDA-wrapper around SigRespMsg
+type WSigRespMsg struct {
+	*sda.TreeNode
+	SigRespMsg
 }
 
 func (jv *JVSS) handleSetup(m WSetupMsg) error {
@@ -54,12 +65,39 @@ func (jv *JVSS) handleSetup(m WSetupMsg) error {
 func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 	msg := m.SigReqMsg
 
-	ps := jv.sigPartial(msg.Type, msg.Msg)
-	_ = ps
+	// send reply with partial signature back
+	resp := &SigRespMsg{
+		Src:  jv.nodeIdx(),
+		Type: msg.Type,
+		PSig: jv.sigPartial(msg.Type, msg.Msg),
+	}
 
-	dbg.Lvl1(fmt.Sprintf("Node %d: received signing request", jv.nodeIdx()))
+	node := jv.nodeList[msg.Src]
+	if err := jv.SendTo(node, resp); err != nil {
+		return fmt.Errorf("Error sending msg to node %d: %v", msg.Src, err)
+	}
 
-	// send back
+	// TODO: cleanup short term secret
+
+	return nil
+}
+
+func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
+	msg := m.SigRespMsg
+
+	if err := jv.schnorr.AddPartialSig(msg.PSig); err != nil {
+		return err
+	}
+	sts := jv.secrets[msg.Type]
+	sts.numPSigs++
+
+	if jv.info.T <= sts.numPSigs {
+		sig, err := jv.schnorr.Sig()
+		if err != nil {
+			return fmt.Errorf("Error creating Schnorr signature: %v", err)
+		}
+		jv.sigChan <- sig
+	}
 
 	return nil
 }
