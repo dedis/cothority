@@ -30,8 +30,8 @@ type JVSS struct {
 	receiver   *poly.Receiver     //
 	dealMtx    *sync.Mutex        //
 	numDeals   int                // number of good deals already received
-	setupDone  bool               // Indicate whether the dea has been initialised and broadcasted or not
-	secretDone bool               // Indicate whether the shared secret has been initialised or not
+	dealInit   bool               // Indicate whether the deal has been initialised and broadcasted or not
+	secretInit bool               // Indicate whether the shared secret has been initialised or not
 	Done       chan bool          // Channel to indicate when JVSS is done
 }
 
@@ -57,8 +57,8 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 		receiver:   poly.NewReceiver(node.Suite(), *info, kp),
 		dealMtx:    new(sync.Mutex),
 		numDeals:   0,
-		setupDone:  false,
-		secretDone: false,
+		dealInit:   false,
+		secretInit: false,
 		Done:       make(chan bool, 1),
 	}
 
@@ -72,8 +72,6 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 		}
 	}
 
-	//go jv.waitForSetup()
-
 	return jv, nil
 }
 
@@ -81,7 +79,7 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
 	jv.setupDeal()
-	time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second) // replace this by a mutex
 	jv.setupSharedSecret()
 
 	jv.Done <- true
@@ -101,8 +99,8 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 }
 
 func (jv *JVSS) setupDeal() {
-	if !jv.setupDone {
-		jv.setupDone = true
+	if !jv.dealInit {
+		jv.dealInit = true
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
 		jv.addDeal(jv.nodeIdx(), deal)
@@ -120,14 +118,14 @@ func (jv *JVSS) addDeal(idx int, deal *poly.Deal) {
 }
 
 func (jv *JVSS) setupSharedSecret() {
-	if jv.numDeals == jv.info.T {
+	if jv.numDeals == jv.info.T && !jv.secretInit {
 		ss, err := jv.receiver.ProduceSharedSecret()
 		if err != nil {
 			dbg.Errorf("Error node %d could not produce shared secret: %v", jv.nodeIdx(), err)
 		}
 		jv.secret = ss
 		jv.schnorr.Init(jv.keyPair.Suite, *jv.info, jv.secret)
-		jv.secretDone = true
+		jv.secretInit = true
 		dbg.Lvl1(fmt.Sprintf("Node %d: shared secret created", jv.nodeIdx()))
 	}
 }

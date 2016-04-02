@@ -21,7 +21,7 @@ type WSetupMsg struct {
 func (jv *JVSS) handleSetup(m WSetupMsg) error {
 	msg := m.SetupMsg
 
-	// Create a shared secret by initialising our own deal, if not done so before, and broadcasting it
+	// Create and broadcast our own deal if not done so before
 	jv.setupDeal()
 
 	// Unmarshal received deal and store it
