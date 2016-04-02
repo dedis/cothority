@@ -29,13 +29,15 @@ func TestJVSS(t *testing.T) {
 	jv := leader.ProtocolInstance().(*jvss.JVSS)
 	leader.StartProtocol()
 
-	select {
-	case <-jv.Done:
-		log.Printf("JVSS - setup done")
-	}
+	//select {
+	<-jv.SetupDone
+	log.Printf("JVSS - setup done")
+	//}
 
+	log.Printf("JVSS - requesting signature")
 	msg := []byte("Hello World\n")
 	sig, _ := jv.Sign(msg)
+	log.Printf("JVSS - signature received")
 
 	err = jv.Verify(msg, sig)
 	if err != nil {
