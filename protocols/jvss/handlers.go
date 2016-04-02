@@ -20,9 +20,8 @@ type WSetupMsg struct {
 
 func (jv *JVSS) handleSetup(m WSetupMsg) error {
 	msg := m.SetupMsg
-	//dbg.Lvl1(fmt.Sprintf("Node %d: received setup msg from %d", jv.nodeIdx(), msg.Src))
 
-	// Create and send our own deal if not done so before
+	// Create a shared secret by initialising our own deal, if not done so before, and broadcasting it
 	jv.setupDeal()
 
 	// Unmarshal received deal and store it
@@ -31,6 +30,9 @@ func (jv *JVSS) handleSetup(m WSetupMsg) error {
 		return fmt.Errorf("Node %d could not unmarshal deal received from %d: %v", jv.nodeIdx(), msg.Src, err)
 	}
 	jv.addDeal(jv.nodeIdx(), d) // TODO: why give jv.nodeIdx()?
+
+	// Try to setup the shared secret
+	jv.setupSharedSecret()
 
 	return nil
 }

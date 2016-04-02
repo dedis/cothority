@@ -20,18 +20,19 @@ func init() {
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
-	*sda.Node                    // The SDA TreeNode
-	keyPair   *config.KeyPair    // KeyPair of the host
-	nodeList  []*sda.TreeNode    // List of TreeNodes in the JVSS group
-	pubKeys   []abstract.Point   // List of public keys of the above TreeNodes
-	info      poly.Threshold     // Information on the thresholds of JVSS
-	secret    *poly.SharedSecret //
-	schnorr   *poly.Schnorr      //
-	receiver  *poly.Receiver     //
-	dealMtx   *sync.Mutex        //
-	numDeals  int                // number of good deals already received
-	setupDone bool               // Indicate whether the shared secret has been initialised or not
-	Done      chan bool          // Channel to indicate when JVSS is done
+	*sda.Node                     // The SDA TreeNode
+	keyPair    *config.KeyPair    // KeyPair of the host
+	nodeList   []*sda.TreeNode    // List of TreeNodes in the JVSS group
+	pubKeys    []abstract.Point   // List of public keys of the above TreeNodes
+	info       *poly.Threshold    // Information on the JVSS thresholds
+	secret     *poly.SharedSecret //
+	schnorr    *poly.Schnorr      //
+	receiver   *poly.Receiver     //
+	dealMtx    *sync.Mutex        //
+	numDeals   int                // number of good deals already received
+	setupDone  bool               // Indicate whether the dea has been initialised and broadcasted or not
+	secretDone bool               // Indicate whether the shared secret has been initialised or not
+	Done       chan bool          // Channel to indicate when JVSS is done
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -43,20 +44,22 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 	for i, tn := range nodes {
 		pk[i] = tn.Entity.Public
 	}
-	info := poly.Threshold{T: len(nodes), R: len(nodes), N: len(nodes)}
+	// Note: T <= R <= N (for simplicity we use T = R = N; might change later)
+	info := &poly.Threshold{T: len(nodes), R: len(nodes), N: len(nodes)}
 
 	jv := &JVSS{
-		Node:      node,
-		keyPair:   kp,
-		nodeList:  nodes,
-		pubKeys:   pk,
-		info:      info,
-		schnorr:   new(poly.Schnorr),
-		receiver:  poly.NewReceiver(node.Suite(), info, kp),
-		dealMtx:   new(sync.Mutex),
-		numDeals:  0,
-		setupDone: false,
-		Done:      make(chan bool, 1),
+		Node:       node,
+		keyPair:    kp,
+		nodeList:   nodes,
+		pubKeys:    pk,
+		info:       info,
+		schnorr:    new(poly.Schnorr),
+		receiver:   poly.NewReceiver(node.Suite(), *info, kp),
+		dealMtx:    new(sync.Mutex),
+		numDeals:   0,
+		setupDone:  false,
+		secretDone: false,
+		Done:       make(chan bool, 1),
 	}
 
 	// Setup message handlers
@@ -74,16 +77,14 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 	return jv, nil
 }
 
-// Start initiates the JVSS protocol.
+// Start initiates the JVSS protocol by setting up a long-term shared secret
+// which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
-
-	// Initiate the long-term shared key pair which can be used later on by the
-	// JVSS group to sign messages. After setup, broadcast deal.
 	jv.setupDeal()
-
 	time.Sleep(1 * time.Second)
-	jv.Done <- true
+	jv.setupSharedSecret()
 
+	jv.Done <- true
 	return nil
 }
 
@@ -102,16 +103,12 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 func (jv *JVSS) setupDeal() {
 	if !jv.setupDone {
 		jv.setupDone = true
-		deal := jv.newDeal()
+		kp := config.NewKeyPair(jv.keyPair.Suite)
+		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
 		jv.addDeal(jv.nodeIdx(), deal)
 		db, _ := deal.MarshalBinary()
 		jv.broadcast(&SetupMsg{Src: jv.nodeIdx(), Deal: db})
 	}
-}
-
-func (jv *JVSS) newDeal() *poly.Deal {
-	kp := config.NewKeyPair(jv.keyPair.Suite)
-	return new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
 }
 
 func (jv *JVSS) addDeal(idx int, deal *poly.Deal) {
@@ -119,7 +116,20 @@ func (jv *JVSS) addDeal(idx int, deal *poly.Deal) {
 		dbg.Errorf("Error adding deal to receiver %d: %v", idx, err)
 	}
 	jv.numDeals += 1
-	dbg.Lvl1(fmt.Sprintf("Node %d, #deals: %d/%d", jv.nodeIdx(), jv.numDeals, len(jv.nodeList)))
+	dbg.Lvl1(fmt.Sprintf("Node %d: deals %d/%d", jv.nodeIdx(), jv.numDeals, len(jv.nodeList)))
+}
+
+func (jv *JVSS) setupSharedSecret() {
+	if jv.numDeals == jv.info.T {
+		ss, err := jv.receiver.ProduceSharedSecret()
+		if err != nil {
+			dbg.Errorf("Error node %d could not produce shared secret: %v", jv.nodeIdx(), err)
+		}
+		jv.secret = ss
+		jv.schnorr.Init(jv.keyPair.Suite, *jv.info, jv.secret)
+		jv.secretDone = true
+		dbg.Lvl1(fmt.Sprintf("Node %d: shared secret created", jv.nodeIdx()))
+	}
 }
 
 func (jv *JVSS) nodeIdx() int {
