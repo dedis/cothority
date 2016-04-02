@@ -2,7 +2,9 @@ package jvss
 
 import (
 	"errors"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -28,7 +30,7 @@ type JVSS struct {
 	receiver  *poly.Receiver     //
 	dealMtx   *sync.Mutex        //
 	numDeals  int                // number of good deals already received
-	setupDone chan bool          // Channel to indicate whether the shared secret has been initialised or not
+	setupDone bool               // Indicate whether the shared secret has been initialised or not
 	Done      chan bool          // Channel to indicate when JVSS is done
 }
 
@@ -44,16 +46,17 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 	info := poly.Threshold{T: len(nodes), R: len(nodes), N: len(nodes)}
 
 	jv := &JVSS{
-		Node:     node,
-		keyPair:  kp,
-		nodeList: nodes,
-		pubKeys:  pk,
-		info:     info,
-		schnorr:  new(poly.Schnorr),
-		receiver: poly.NewReceiver(node.Suite(), info, kp),
-		dealMtx:  new(sync.Mutex),
-		numDeals: 0,
-		Done:     make(chan bool, 1),
+		Node:      node,
+		keyPair:   kp,
+		nodeList:  nodes,
+		pubKeys:   pk,
+		info:      info,
+		schnorr:   new(poly.Schnorr),
+		receiver:  poly.NewReceiver(node.Suite(), info, kp),
+		dealMtx:   new(sync.Mutex),
+		numDeals:  0,
+		setupDone: false,
+		Done:      make(chan bool, 1),
 	}
 
 	// Setup message handlers
@@ -75,35 +78,25 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 func (jv *JVSS) Start() error {
 
 	// Initiate the long-term shared key pair which can be used later on by the
-	// JVSS group to sign messages.
-	deal := jv.newDeal()
-	jv.addDeal(jv.nodeIdx(), deal)
-	db, _ := deal.MarshalBinary()
+	// JVSS group to sign messages. After setup, broadcast deal.
+	jv.setupDeal()
 
-	// broadcast our deal and wait for the deals from the others
-	msg := &MsgSetup{
-		Src:  jv.nodeIdx(),
-		Deal: db,
-	}
-	jv.broadcast(msg)
-
+	time.Sleep(1 * time.Second)
 	jv.Done <- true
 
 	return nil
 }
 
+// Verify
 func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 	h := jv.keyPair.Suite.Hash()
 	h.Write(msg)
 	return jv.schnorr.VerifySchnorrSig(sig, h)
 }
 
+// Sign
 func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	return nil, nil
-}
-
-func (jv *JVSS) waitForSetup() {
-
 }
 
 func (jv *JVSS) newDeal() *poly.Deal {
@@ -113,9 +106,10 @@ func (jv *JVSS) newDeal() *poly.Deal {
 
 func (jv *JVSS) addDeal(idx int, deal *poly.Deal) {
 	if _, err := jv.receiver.AddDeal(idx, deal); err != nil {
-		dbg.Error("Error adding deal to receiver %d: %v", idx, err)
+		dbg.Errorf("Error adding deal to receiver %d: %v", idx, err)
 	}
 	jv.numDeals += 1
+	dbg.Lvl1(fmt.Sprintf("Node %d, #deals: %d/%d", jv.nodeIdx(), jv.numDeals, len(jv.nodeList)))
 }
 
 func (jv *JVSS) nodeIdx() int {
