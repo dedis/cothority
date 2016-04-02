@@ -31,7 +31,10 @@ func TestJVSS(t *testing.T) {
 
 	select {
 	case <-jv.Done:
-		log.Printf("JVSS - done")
+		log.Printf("JVSS - setup done")
 	}
+
+	msg := []byte("Hello World\n")
+	jv.Sign(msg)
 
 }
