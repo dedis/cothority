@@ -99,6 +99,16 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	return nil, nil
 }
 
+func (jv *JVSS) setupDeal() {
+	if !jv.setupDone {
+		jv.setupDone = true
+		deal := jv.newDeal()
+		jv.addDeal(jv.nodeIdx(), deal)
+		db, _ := deal.MarshalBinary()
+		jv.broadcast(&SetupMsg{Src: jv.nodeIdx(), Deal: db})
+	}
+}
+
 func (jv *JVSS) newDeal() *poly.Deal {
 	kp := config.NewKeyPair(jv.keyPair.Suite)
 	return new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
