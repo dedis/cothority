@@ -3,7 +3,6 @@ package jvss
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -19,17 +18,18 @@ func init() {
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
-	*sda.Node                           // The SDA TreeNode
-	keyPair      *config.KeyPair        // KeyPair of the host
-	nodeList     []*sda.TreeNode        // List of TreeNodes in the JVSS group
-	pubKeys      []abstract.Point       // List of public keys of the above TreeNodes
-	info         poly.Threshold         // JVSS thresholds
-	schnorr      *poly.Schnorr          // Long-term Schnorr struct to compute distributed signatures
-	lts          string                 // ID of the long-term shared secret
-	secrets      map[string]*JVSSSecret // Shared secrets (long- and short-term ones)
-	ltSecretInit bool                   // Indicator whether shared secret has been initialised or not
-	SetupDone    chan bool              // Channel to indicate when JVSS setup is done
-	sigChan      chan *poly.SchnorrSig  // Channel for JVSS signature
+	*sda.Node                        // The SDA TreeNode
+	keyPair   *config.KeyPair        // KeyPair of the host
+	nodeList  []*sda.TreeNode        // List of TreeNodes in the JVSS group
+	pubKeys   []abstract.Point       // List of public keys of the above TreeNodes
+	info      poly.Threshold         // JVSS thresholds
+	schnorr   *poly.Schnorr          // Long-term Schnorr struct to compute distributed signatures
+	ltss      string                 // ID of the long-term shared secret
+	secrets   map[string]*JVSSSecret // Shared secrets (long- and short-term ones)
+	ltssInit  bool                   // Indicator whether shared secret has been already initialised or not
+	LTSSDone  chan bool              // Channel to indicate when long-term shared secret is ready
+	SSDone    chan bool              // Channel to indicate when a shared secret is ready
+	sigChan   chan *poly.SchnorrSig  // Channel for JVSS signature
 }
 
 // JVSSSecret contains all information for long- and short-term (i.e. random)
@@ -55,17 +55,18 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 	info := poly.Threshold{T: len(nodes), R: len(nodes), N: len(nodes)}
 
 	jv := &JVSS{
-		Node:         node,
-		keyPair:      kp,
-		nodeList:     nodes,
-		pubKeys:      pk,
-		info:         info,
-		schnorr:      new(poly.Schnorr),
-		lts:          "LTSS",
-		secrets:      make(map[string]*JVSSSecret),
-		ltSecretInit: false,
-		SetupDone:    make(chan bool, 1),
-		sigChan:      make(chan *poly.SchnorrSig),
+		Node:     node,
+		keyPair:  kp,
+		nodeList: nodes,
+		pubKeys:  pk,
+		info:     info,
+		schnorr:  new(poly.Schnorr),
+		ltss:     "LTSS",
+		secrets:  make(map[string]*JVSSSecret),
+		ltssInit: false,
+		LTSSDone: make(chan bool, 1),
+		SSDone:   make(chan bool, 1),
+		sigChan:  make(chan *poly.SchnorrSig),
 	}
 
 	// Setup message handlers
@@ -86,10 +87,7 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 // Start initiates the JVSS protocol by setting up a long-term shared secret
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
-	jv.initSecret(jv.lts)
-	time.Sleep(1 * time.Second) // TODO: workaround
-
-	jv.SetupDone <- true
+	jv.initSecret(jv.ltss)
 	return nil
 }
 
@@ -103,10 +101,10 @@ func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 // Sign
 func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
-	// initialise short-term shared secret only used for this signing request
+	// Initialise short-term shared secret only used for this signing request
 	sid := fmt.Sprintf("STSS%d", jv.nodeIdx())
 	jv.initSecret(sid)
-	time.Sleep(1 * time.Second) // TODO: another workaround, replace by a channel or so
+	<-jv.SSDone
 
 	ps := jv.sigPartial(sid, msg)
 	if err := jv.schnorr.AddPartialSig(ps); err != nil {
@@ -115,7 +113,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	sts := jv.secrets[sid]
 	sts.numPSigs++
 
-	// broadcast signing request (see line 212)
+	// Broadcast signing request
 	req := &SigReqMsg{
 		Src: jv.nodeIdx(),
 		SID: sid,
@@ -123,7 +121,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 	jv.broadcast(req)
 
-	// wait for signature
+	// Wait for signature
 	sig := <-jv.sigChan
 
 	return sig, nil
@@ -180,10 +178,17 @@ func (jv *JVSS) finaliseSecret(sid string) {
 		dbg.Lvl1(fmt.Sprintf("Node %d: shared secret %s created", jv.nodeIdx(), sid))
 
 		// Initialise long-term shared secret if not done so before
-		if !jv.ltSecretInit && sid == jv.lts {
-			jv.ltSecretInit = true
+		if !jv.ltssInit && sid == jv.ltss {
+			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
 			dbg.Lvl1(fmt.Sprintf("Node %d: Schnorr struct for shared secret %s initialised", jv.nodeIdx(), sid))
+			jv.LTSSDone <- true
+		}
+
+		// FIXME: This construction is extremely ugly (required to avoid racing condition in Sign())
+		jv.SSDone <- true
+		if sid != fmt.Sprintf("STSS%d", jv.nodeIdx()) {
+			<-jv.SSDone
 		}
 	}
 }

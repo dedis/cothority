@@ -7,18 +7,21 @@ import (
 	"github.com/dedis/crypto/poly"
 )
 
+// SetupMsg
 type SetupMsg struct {
 	Src  int
 	SID  string
 	Deal []byte
 }
 
+// SigReqMsg
 type SigReqMsg struct {
 	Src int
 	SID string
 	Msg []byte
 }
 
+// SigRespMsg
 type SigRespMsg struct {
 	Src  int
 	SID  string
@@ -65,7 +68,7 @@ func (jv *JVSS) handleSetup(m WSetupMsg) error {
 func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 	msg := m.SigReqMsg
 
-	// create and send reply with partial signature back
+	// Create and send reply with partial signature back
 	resp := &SigRespMsg{
 		Src:  jv.nodeIdx(),
 		SID:  msg.SID,
@@ -77,7 +80,7 @@ func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 		return fmt.Errorf("Error sending msg to node %d: %v", msg.Src, err)
 	}
 
-	// cleanup short-term shared secret
+	// Cleanup short-term shared secret
 	delete(jv.secrets, msg.SID)
 
 	return nil
@@ -86,14 +89,14 @@ func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	msg := m.SigRespMsg
 
-	// collect partial signatures
+	// Collect partial signatures
 	if err := jv.schnorr.AddPartialSig(msg.PSig); err != nil {
 		return err
 	}
 	sts := jv.secrets[msg.SID]
 	sts.numPSigs++
 
-	// create Schnorr signature once we received enough replies
+	// Create Schnorr signature once we received enough replies
 	if jv.info.T <= sts.numPSigs {
 		sig, err := jv.schnorr.Sig()
 		if err != nil {
@@ -101,11 +104,9 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 		}
 		jv.sigChan <- sig
 
-		// cleanup short-term shared secret
+		// Cleanup short-term shared secret
 		delete(jv.secrets, msg.SID)
 	}
 
 	return nil
 }
-
-func (jv *JVSS) handleVerReq() error { return nil }

@@ -29,16 +29,13 @@ func TestJVSS(t *testing.T) {
 	jv := leader.ProtocolInstance().(*jvss.JVSS)
 	leader.StartProtocol()
 
-	//select {
-	<-jv.SetupDone
+	<-jv.LTSSDone
 	log.Printf("JVSS - setup done")
-	//}
 
 	log.Printf("JVSS - requesting signature")
 	msg := []byte("Hello World\n")
 	sig, _ := jv.Sign(msg)
 	log.Printf("JVSS - signature received")
-
 	err = jv.Verify(msg, sig)
 	if err != nil {
 		t.Fatal("Error signature verification failed", err)
