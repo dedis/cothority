@@ -1,7 +1,6 @@
 package jvss_test
 
 import (
-	"log"
 	"testing"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -21,7 +20,7 @@ func TestJVSS(t *testing.T) {
 
 	dbg.TestOutput(true, 1)
 
-	log.Printf("JVSS - starting")
+	dbg.Lvl1("JVSS - starting")
 	leader, err := local.CreateNewNodeName(name, tree)
 	if err != nil {
 		t.Fatal("Couldn't initialise protocol tree:", err)
@@ -30,16 +29,16 @@ func TestJVSS(t *testing.T) {
 	leader.StartProtocol()
 
 	<-jv.LTSSDone
-	log.Printf("JVSS - setup done")
+	dbg.Lvl1("JVSS - setup done")
 
-	log.Printf("JVSS - requesting signature")
+	dbg.Lvl1("JVSS - requesting signature")
 	msg := []byte("Hello World\n")
 	sig, _ := jv.Sign(msg)
-	log.Printf("JVSS - signature received")
+	dbg.Lvl1("JVSS - signature received")
 	err = jv.Verify(msg, sig)
 	if err != nil {
 		t.Fatal("Error signature verification failed", err)
 	}
-	log.Printf("JVSS - signature verification succeded")
+	dbg.Lvl1("JVSS - signature verification succeded")
 
 }

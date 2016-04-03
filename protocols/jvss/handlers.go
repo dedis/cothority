@@ -50,17 +50,25 @@ func (jv *JVSS) handleSetup(m WSetupMsg) error {
 	msg := m.SetupMsg
 
 	// Initialise shared secret
-	jv.initSecret(msg.SID)
+	if err := jv.initSecret(msg.SID); err != nil {
+		return err
+	}
 
 	// Unmarshal received deal and store it in the shared secret
 	d := new(poly.Deal).UnmarshalInit(jv.info.T, jv.info.R, jv.info.N, jv.keyPair.Suite)
 	if err := d.UnmarshalBinary(msg.Deal); err != nil {
 		return fmt.Errorf("Node %d could not unmarshal deal received from %d: %v", jv.nodeIdx(), msg.Src, err)
 	}
-	jv.addDeal(msg.SID, d)
+
+	// Save received deal
+	if err := jv.addDeal(msg.SID, d); err != nil {
+		return err
+	}
 
 	// Finalise shared secret
-	jv.finaliseSecret(msg.SID)
+	if err := jv.finaliseSecret(msg.SID); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -68,11 +76,17 @@ func (jv *JVSS) handleSetup(m WSetupMsg) error {
 func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 	msg := m.SigReqMsg
 
-	// Create and send reply with partial signature back
+	// Create partial signature
+	ps, err := jv.sigPartial(msg.SID, msg.Msg)
+	if err != nil {
+		return err
+	}
+
+	// Send it back to initiator
 	resp := &SigRespMsg{
 		Src:  jv.nodeIdx(),
 		SID:  msg.SID,
-		PSig: jv.sigPartial(msg.SID, msg.Msg),
+		PSig: ps,
 	}
 
 	node := jv.nodeList[msg.Src]
