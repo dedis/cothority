@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -39,12 +38,12 @@ type JVSS struct {
 
 // Secret contains all information for long- and short-term shared secrets.
 type Secret struct {
-	secret   *poly.SharedSecret // Shared secret
-	receiver *poly.Receiver     // Receiver to aggregate deals
-	numDeals int                // Number of collected deals in the receiver
-	numConfs int                // Number of collected confirmations that shared secrets are ready
-	numSigs  int                // Number of collected partial signatures
-	mtx      *sync.Mutex        // Mutex to sync access to numConfs
+	secret   *poly.SharedSecret              // Shared secret
+	receiver *poly.Receiver                  // Receiver to aggregate deals
+	deals    map[int]*poly.Deal              // Buffer for deals
+	sigs     map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
+	numConfs int                             // Number of collected confirmations that shared secrets are ready
+	mtx      *sync.Mutex                     // Mutex to sync access to numConfs
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -117,9 +116,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	jv.initSecret(sid)
 
 	// Wait for setup of shared secret to finish
-	dbg.Lvl1("Waiting for shared secret to finish")
+	//dbg.Lvl1("Waiting for shared secret to finish")
 	<-jv.SecretDone
-	dbg.Lvl1("Shared secret done")
+	//dbg.Lvl1("Shared secret done")
 
 	// Create partial signature ...
 	ps, err := jv.sigPartial(sid, msg)
@@ -127,12 +126,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		return nil, err
 	}
 
-	// ... and save it
-	if err := jv.schnorr.AddPartialSig(ps); err != nil {
-		return nil, err
-	}
+	// ... and buffer it
 	secret := jv.secrets[sid]
-	secret.numSigs++
+	secret.sigs[jv.nodeIdx()] = ps
 
 	// Broadcast signing request
 	req := &SigReqMsg{
@@ -144,10 +140,10 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		return nil, err
 	}
 
-	dbg.Lvl1("Waiting for signature to finish")
+	//dbg.Lvl1("Waiting for signature to finish")
 	// Wait for complete signature
 	sig := <-jv.sigChan
-	dbg.Lvl1("Signature done")
+	//dbg.Lvl1("Signature done")
 
 	return sig, nil
 }
@@ -156,12 +152,12 @@ func (jv *JVSS) initSecret(sid string) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
-		dbg.Lvl1("Initialising shared secret", sid)
+		//dbg.Lvl1(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.nodeIdx(), sid))
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
-			numDeals: 0,
+			deals:    make(map[int]*poly.Deal),
+			sigs:     make(map[int]*poly.SchnorrPartialSig),
 			numConfs: 0,
-			numSigs:  0,
 			mtx:      new(sync.Mutex),
 		}
 		jv.secrets[sid] = sec
@@ -170,12 +166,11 @@ func (jv *JVSS) initSecret(sid string) error {
 	secret := jv.secrets[sid]
 
 	// Initialise and broadcast our deal if necessary
-	if secret.numDeals == 0 {
+	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
-		if err := jv.addDeal(sid, deal); err != nil {
-			return err
-		}
+		//dbg.Lvl1(fmt.Sprintf("Node %d: Initialising %s deal", jv.nodeIdx(), sid))
+		secret.deals[jv.nodeIdx()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
 			Src:  jv.nodeIdx(),
@@ -189,37 +184,38 @@ func (jv *JVSS) initSecret(sid string) error {
 	return nil
 }
 
-func (jv *JVSS) addDeal(sid string, deal *poly.Deal) error {
+func (jv *JVSS) finaliseSecret(sid string) error {
 	secret, ok := jv.secrets[sid]
 	if !ok {
 		return fmt.Errorf("Error shared secret does not exist")
 	}
-	if _, err := secret.receiver.AddDeal(jv.nodeIdx(), deal); err != nil {
-		return fmt.Errorf("Error adding deal to receiver %d: %v", jv.nodeIdx(), err)
-	}
-	secret.numDeals++
-	dbg.Lvl1(fmt.Sprintf("Node %d: deals %d/%d", jv.nodeIdx(), secret.numDeals, len(jv.nodeList)))
-	return nil
-}
 
-func (jv *JVSS) finaliseSecret(sid string) error {
-	secret := jv.secrets[sid]
-	if secret.numDeals == jv.info.T {
+	//dbg.Lvl1(fmt.Sprintf("Node %d: %s deals %d/%d", jv.nodeIdx(), sid, len(secret.deals), len(jv.nodeList)))
+
+	if len(secret.deals) == jv.info.T {
+
+		for i := 0; i < len(secret.deals); i++ {
+			if _, err := secret.receiver.AddDeal(jv.nodeIdx(), secret.deals[i]); err != nil {
+				return fmt.Errorf("Error adding deal to receiver %d: %v", jv.nodeIdx(), err)
+			}
+		}
+
 		sec, err := secret.receiver.ProduceSharedSecret()
 		if err != nil {
+			//dbg.Lvl1(err)
 			return fmt.Errorf("Error node %d could not create shared secret %s: %v", jv.nodeIdx(), sid, err)
 		}
 		secret.secret = sec
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		dbg.Lvl1(fmt.Sprintf("Node %d: shared secret %s created", jv.nodeIdx(), sid))
+		//dbg.Lvl1(fmt.Sprintf("Node %d: shared secret %s created: %v", jv.nodeIdx(), sid, sec))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			dbg.Lvl1(fmt.Sprintf("Node %d: Schnorr struct for %s initialised", jv.nodeIdx(), sid))
+			//dbg.Lvl1(fmt.Sprintf("Node %d: Schnorr struct for %s initialised", jv.nodeIdx(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret
@@ -244,7 +240,11 @@ func (jv *JVSS) checkConfirmations(rcv int, want int, sid string) {
 }
 
 func (jv *JVSS) sigPartial(sid string, msg []byte) (*poly.SchnorrPartialSig, error) {
-	secret := jv.secrets[sid]
+	secret, ok := jv.secrets[sid]
+	if !ok {
+		return nil, fmt.Errorf("Error shared secret does not exist")
+	}
+
 	hash := jv.keyPair.Suite.Hash()
 	hash.Write(msg)
 	if err := jv.schnorr.NewRound(secret.secret, hash); err != nil {
@@ -263,7 +263,7 @@ func (jv *JVSS) nodeIdx() int {
 
 func (jv *JVSS) broadcast(msg interface{}) error {
 	for idx, node := range jv.nodeList {
-		if idx != jv.nodeIdx() {
+		if node != jv.TreeNode() {
 			if err := jv.SendTo(node, msg); err != nil {
 				return fmt.Errorf("Error sending msg to node %d: %v", idx, err)
 			}

@@ -3,7 +3,6 @@ package jvss
 import (
 	"fmt"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/poly"
 )
@@ -70,15 +69,19 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	}
 
 	// Unmarshal received deal
-	d := new(poly.Deal).UnmarshalInit(jv.info.T, jv.info.R, jv.info.N, jv.keyPair.Suite)
-	if err := d.UnmarshalBinary(msg.Deal); err != nil {
+	deal := new(poly.Deal).UnmarshalInit(jv.info.T, jv.info.R, jv.info.N, jv.keyPair.Suite)
+	if err := deal.UnmarshalBinary(msg.Deal); err != nil {
 		return fmt.Errorf("Node %d could not unmarshal deal received from %d: %v", jv.nodeIdx(), msg.Src, err)
 	}
 
-	// Save received deal in the corresponding shared secret
-	if err := jv.addDeal(msg.SID, d); err != nil {
-		return err
+	// Buffer received deal for later
+	secret, ok := jv.secrets[msg.SID]
+	if !ok {
+		return fmt.Errorf("Error shared secret does not exist")
 	}
+	secret.deals[msg.Src] = deal
+
+	//dbg.Lvl1(fmt.Sprintf("Node %d: received %s deal %d/%d from %d", jv.nodeIdx(), msg.SID, len(secret.deals), len(jv.nodeList), msg.Src))
 
 	// Finalise shared secret
 	if err := jv.finaliseSecret(msg.SID); err != nil {
@@ -91,14 +94,18 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	msg := m.SecConfMsg
 
-	secret := jv.secrets[msg.SID]
+	secret, ok := jv.secrets[msg.SID]
+	if !ok {
+		return fmt.Errorf("Error shared secret does not exist")
+	}
+
 	secret.mtx.Lock()
 	secret.numConfs++
 	secret.mtx.Unlock()
 
 	// Check if we have enough confirmations to proceed
 	jv.checkConfirmations(secret.numConfs, len(jv.nodeList), msg.SID)
-	dbg.Lvl1(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
+	//dbg.Lvl1(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
 
 	return nil
 }
@@ -119,12 +126,12 @@ func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 		Sig: ps,
 	}
 
-	dbg.Lvl1(fmt.Sprintf("Node %d: sending partial signature ...", jv.nodeIdx()))
+	//dbg.Lvl1(fmt.Sprintf("Node %d: sending partial signature ...", jv.nodeIdx()))
 	node := jv.nodeList[msg.Src]
 	if err := jv.SendTo(node, resp); err != nil {
 		return fmt.Errorf("Error sending msg to node %d: %v", msg.Src, err)
 	}
-	dbg.Lvl1(fmt.Sprintf("Node %d: ... done", jv.nodeIdx()))
+	//dbg.Lvl1(fmt.Sprintf("Node %d: ... done", jv.nodeIdx()))
 
 	// Cleanup short-term shared secret
 	delete(jv.secrets, msg.SID)
@@ -136,17 +143,25 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	msg := m.SigRespMsg
 
 	// Collect partial signatures
-	if err := jv.schnorr.AddPartialSig(msg.Sig); err != nil {
-		dbg.Lvl1(fmt.Sprintf("Error Node %d: %s signatures (from %d)", jv.nodeIdx(), msg.SID, msg.Src))
-		dbg.Lvl1(err)
-		return err
+	secret, ok := jv.secrets[msg.SID]
+	if !ok {
+		return fmt.Errorf("Error shared secret does not exist")
 	}
-	secret := jv.secrets[msg.SID]
-	secret.numSigs++
-	dbg.Lvl1(fmt.Sprintf("Node %d: %s signatures %d/%d (from %d)", jv.nodeIdx(), msg.SID, secret.numSigs, len(jv.nodeList), msg.Src))
+	secret.sigs[msg.Src] = msg.Sig
+
+	//dbg.Lvl1(fmt.Sprintf("Node %d: %s signatures %d/%d (from %d)", jv.nodeIdx(), msg.SID, secret.numSigs, len(jv.nodeList), msg.Src))
 
 	// Create Schnorr signature once we received enough replies
-	if jv.info.T <= secret.numSigs {
+	if jv.info.T == len(secret.sigs) {
+
+		for i := 0; i < len(secret.sigs); i++ {
+			if err := jv.schnorr.AddPartialSig(secret.sigs[i]); err != nil {
+				//dbg.Lvl1(fmt.Sprintf("Error Node %d: %s signatures (from %d)", jv.nodeIdx(), msg.SID, msg.Src))
+				//dbg.Lvl1(err)
+				return err
+			}
+		}
+
 		sig, err := jv.schnorr.Sig()
 		if err != nil {
 			return fmt.Errorf("Error creating Schnorr signature: %v", err)
