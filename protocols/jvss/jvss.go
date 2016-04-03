@@ -50,7 +50,7 @@ type Secret struct {
 func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 
 	kp := &config.KeyPair{Suite: node.Suite(), Public: node.Public(), Secret: node.Private()}
-	nodes := node.Tree().ListNodes()
+	nodes := node.Tree().List()
 	pk := make([]abstract.Point, len(nodes))
 	for i, tn := range nodes {
 		pk[i] = tn.Entity.Public
