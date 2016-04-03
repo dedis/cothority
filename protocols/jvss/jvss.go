@@ -3,6 +3,7 @@ package jvss
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -21,17 +22,16 @@ const LTSS = "LTSS"
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
-	*sda.Node                       // The SDA TreeNode
-	keyPair   *config.KeyPair       // KeyPair of the host
-	nodeList  []*sda.TreeNode       // List of TreeNodes in the JVSS group
-	pubKeys   []abstract.Point      // List of public keys of the above TreeNodes
-	info      poly.Threshold        // JVSS thresholds
-	schnorr   *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
-	secrets   map[string]*Secret    // Shared secrets (long- and short-term ones)
-	ltssInit  bool                  // Indicator whether shared secret has been already initialised or not
-	LTSSDone  chan bool             // Channel to indicate when long-term shared secret is ready
-	STSSDone  chan bool             // Channel to indicate when a short-term shared secret is ready
-	sigChan   chan *poly.SchnorrSig // Channel for JVSS signature
+	*sda.Node                        // The SDA TreeNode
+	keyPair    *config.KeyPair       // KeyPair of the host
+	nodeList   []*sda.TreeNode       // List of TreeNodes in the JVSS group
+	pubKeys    []abstract.Point      // List of public keys of the above TreeNodes
+	info       poly.Threshold        // JVSS thresholds
+	schnorr    *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
+	secrets    map[string]*Secret    // Shared secrets (long- and short-term ones)
+	ltssInit   bool                  // Indicator whether shared secret has been already initialised or not
+	SecretDone chan bool             // Channel to indicate when a shared secret is ready
+	sigChan    chan *poly.SchnorrSig // Channel for JVSS signature
 }
 
 // Secret contains all information for long- and short-term shared secrets.
@@ -39,8 +39,9 @@ type Secret struct {
 	secret   *poly.SharedSecret // Shared secret
 	receiver *poly.Receiver     // Receiver to aggregate deals
 	numDeals int                // Number of collected deals in the receiver
-	dealInit bool               // Indicator whether own deal has been initialised and broadcasted or not
-	numPSigs int                // Number of collected partial signatures
+	numConfs int                // Number of collected confirmations that shared secrets are ready
+	numSigs  int                // Number of collected partial signatures
+	mtx      *sync.Mutex        // Required to sync access to numConfs
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -56,22 +57,22 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 	info := poly.Threshold{T: len(nodes), R: len(nodes), N: len(nodes)}
 
 	jv := &JVSS{
-		Node:     node,
-		keyPair:  kp,
-		nodeList: nodes,
-		pubKeys:  pk,
-		info:     info,
-		schnorr:  new(poly.Schnorr),
-		secrets:  make(map[string]*Secret),
-		ltssInit: false,
-		LTSSDone: make(chan bool, 1),
-		STSSDone: make(chan bool, 1),
-		sigChan:  make(chan *poly.SchnorrSig),
+		Node:       node,
+		keyPair:    kp,
+		nodeList:   nodes,
+		pubKeys:    pk,
+		info:       info,
+		schnorr:    new(poly.Schnorr),
+		secrets:    make(map[string]*Secret),
+		ltssInit:   false,
+		SecretDone: make(chan bool, 1),
+		sigChan:    make(chan *poly.SchnorrSig),
 	}
 
 	// Setup message handlers
 	handlers := []interface{}{
-		jv.handleSetup,
+		jv.handleSecIni,
+		jv.handleSecFin,
 		jv.handleSigReq,
 		jv.handleSigResp,
 	}
@@ -88,7 +89,7 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
 	jv.initSecret(LTSS)
-	<-jv.LTSSDone
+	<-jv.SecretDone
 	return nil
 }
 
@@ -112,8 +113,8 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	sid := fmt.Sprintf("STSS%d", jv.nodeIdx())
 	jv.initSecret(sid)
 
-	// Wait for setup to finish
-	<-jv.STSSDone
+	// Wait for setup of shared secret to finish
+	<-jv.SecretDone
 
 	// Create partial signature ...
 	ps, err := jv.sigPartial(sid, msg)
@@ -126,7 +127,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		return nil, err
 	}
 	sts := jv.secrets[sid]
-	sts.numPSigs++
+	sts.numSigs++
 
 	// Broadcast signing request
 	req := &SigReqMsg{
@@ -152,8 +153,9 @@ func (jv *JVSS) initSecret(sid string) error {
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			numDeals: 0,
-			dealInit: false,
-			numPSigs: 0,
+			numConfs: 0,
+			numSigs:  0,
+			mtx:      new(sync.Mutex),
 		}
 		jv.secrets[sid] = sec
 	}
@@ -161,15 +163,14 @@ func (jv *JVSS) initSecret(sid string) error {
 	secret := jv.secrets[sid]
 
 	// Initialise and broadcast our deal if necessary
-	if !secret.dealInit {
-		secret.dealInit = true
+	if secret.numDeals == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
 		if err := jv.addDeal(sid, deal); err != nil {
 			return err
 		}
 		db, _ := deal.MarshalBinary()
-		msg := &SetupMsg{
+		msg := &SecIniMsg{
 			Src:  jv.nodeIdx(),
 			SID:  sid,
 			Deal: db,
@@ -202,19 +203,25 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 			return fmt.Errorf("Error node %d could not create shared secret %s: %v", jv.nodeIdx(), sid, err)
 		}
 		secret.secret = sec
+		secret.mtx.Lock()
+		secret.numConfs++
+		secret.mtx.Unlock()
 		dbg.Lvl2(fmt.Sprintf("Node %d: shared secret %s created", jv.nodeIdx(), sid))
-
-		// Notify signing initiator that the short-term secret is ready
-		if sid == fmt.Sprintf("STSS%d", jv.nodeIdx()) {
-			jv.STSSDone <- true
-		}
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			jv.LTSSDone <- true
 			dbg.Lvl2(fmt.Sprintf("Node %d: Schnorr struct for shared secret %s initialised", jv.nodeIdx(), sid))
+		}
+
+		// Broadcast that we have finished setting up our shared secret
+		msg := &SecFinMsg{
+			Src: jv.nodeIdx(),
+			SID: sid,
+		}
+		if err := jv.broadcast(msg); err != nil {
+			return err
 		}
 	}
 	return nil

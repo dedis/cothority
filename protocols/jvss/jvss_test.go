@@ -12,7 +12,7 @@ func TestJVSS(t *testing.T) {
 
 	// Setup parameters
 	var name string = "JVSS" // Protocol name
-	var nodes uint32 = 5     // Number of nodes
+	var nodes uint32 = 10    // Number of nodes
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), false, true, true)

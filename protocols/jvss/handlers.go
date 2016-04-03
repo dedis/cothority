@@ -3,51 +3,66 @@ package jvss
 import (
 	"fmt"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/poly"
 )
 
-// SetupMsg are used for setting up new (long- and short-term) shared secrets
-type SetupMsg struct {
+// SecIniMsg are used to initialise new shared secrets both long- and
+// short-term.
+type SecIniMsg struct {
 	Src  int
 	SID  string
 	Deal []byte
 }
 
-// SigReqMsg are used to send signing requests
+// SecFinMsg are used for telling the other peers that we have finished setting
+// up the shared secret.
+type SecFinMsg struct {
+	Src int
+	SID string
+}
+
+// SigReqMsg are used to send signing requests.
 type SigReqMsg struct {
 	Src int
 	SID string
 	Msg []byte
 }
 
-// SigRespMsg are used to reply to signing requests
+// SigRespMsg are used to reply to signing requests.
 type SigRespMsg struct {
 	Src  int
 	SID  string
 	PSig *poly.SchnorrPartialSig
 }
 
-// WSetupMsg is a SDA-wrapper around SetupMsg
-type WSetupMsg struct {
+// WSecIniMsg is a SDA-wrapper around SecIniMsg.
+type WSecIniMsg struct {
 	*sda.TreeNode
-	SetupMsg
+	SecIniMsg
 }
 
-// WSigReqMsg is a SDA-wrapper around SigReqMsg
+// WSecFinMsg is a SDA-wrapper around SecFinMsg.
+type WSecFinMsg struct {
+	*sda.TreeNode
+	SecFinMsg
+}
+
+// WSigReqMsg is a SDA-wrapper around SigReqMsg.
 type WSigReqMsg struct {
 	*sda.TreeNode
 	SigReqMsg
 }
 
-// WSigRespMsg is a SDA-wrapper around SigRespMsg
+// WSigRespMsg is a SDA-wrapper around SigRespMsg.
 type WSigRespMsg struct {
 	*sda.TreeNode
 	SigRespMsg
 }
 
-func (jv *JVSS) handleSetup(m WSetupMsg) error {
-	msg := m.SetupMsg
+func (jv *JVSS) handleSecIni(m WSecIniMsg) error {
+	msg := m.SecIniMsg
 
 	// Initialise shared secret
 	if err := jv.initSecret(msg.SID); err != nil {
@@ -69,6 +84,26 @@ func (jv *JVSS) handleSetup(m WSetupMsg) error {
 	if err := jv.finaliseSecret(msg.SID); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (jv *JVSS) handleSecFin(m WSecFinMsg) error {
+	msg := m.SecFinMsg
+
+	secret := jv.secrets[msg.SID]
+	secret.mtx.Lock()
+	secret.numConfs++
+	secret.mtx.Unlock()
+
+	// We received all confirmations and can continue
+	if secret.numConfs == len(jv.nodeList) {
+		// Notify the initiator (TODO: is there a better way then over SIDs?)
+		if msg.SID == fmt.Sprintf("STSS%d", jv.nodeIdx()) || msg.SID == LTSS {
+			jv.SecretDone <- true
+		}
+	}
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
 
 	return nil
 }
@@ -108,10 +143,10 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 		return err
 	}
 	sts := jv.secrets[msg.SID]
-	sts.numPSigs++
+	sts.numSigs++
 
 	// Create Schnorr signature once we received enough replies
-	if jv.info.T <= sts.numPSigs {
+	if jv.info.T <= sts.numSigs {
 		sig, err := jv.schnorr.Sig()
 		if err != nil {
 			return fmt.Errorf("Error creating Schnorr signature: %v", err)
