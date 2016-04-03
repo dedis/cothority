@@ -15,27 +15,27 @@ func init() {
 	sda.ProtocolRegisterName("JVSS", NewJVSS)
 }
 
-// LTSS is the identifier of the long-term shared secret.
+// LTSS is the fixed identifier of the long-term shared secret.
 const LTSS = "LTSS"
 
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
-	*sda.Node                        // The SDA TreeNode
-	keyPair   *config.KeyPair        // KeyPair of the host
-	nodeList  []*sda.TreeNode        // List of TreeNodes in the JVSS group
-	pubKeys   []abstract.Point       // List of public keys of the above TreeNodes
-	info      poly.Threshold         // JVSS thresholds
-	schnorr   *poly.Schnorr          // Long-term Schnorr struct to compute distributed signatures
-	secrets   map[string]*JVSSSecret // Shared secrets (long- and short-term ones)
-	ltssInit  bool                   // Indicator whether shared secret has been already initialised or not
-	LTSSDone  chan bool              // Channel to indicate when long-term shared secret is ready
-	STSSDone  chan bool              // Channel to indicate when a short-term shared secret is ready
-	sigChan   chan *poly.SchnorrSig  // Channel for JVSS signature
+	*sda.Node                       // The SDA TreeNode
+	keyPair   *config.KeyPair       // KeyPair of the host
+	nodeList  []*sda.TreeNode       // List of TreeNodes in the JVSS group
+	pubKeys   []abstract.Point      // List of public keys of the above TreeNodes
+	info      poly.Threshold        // JVSS thresholds
+	schnorr   *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
+	secrets   map[string]*Secret    // Shared secrets (long- and short-term ones)
+	ltssInit  bool                  // Indicator whether shared secret has been already initialised or not
+	LTSSDone  chan bool             // Channel to indicate when long-term shared secret is ready
+	STSSDone  chan bool             // Channel to indicate when a short-term shared secret is ready
+	sigChan   chan *poly.SchnorrSig // Channel for JVSS signature
 }
 
-// JVSSSecret contains all information for long- and short-term shared secrets.
-type JVSSSecret struct {
+// Secret contains all information for long- and short-term shared secrets.
+type Secret struct {
 	secret   *poly.SharedSecret // Shared secret
 	receiver *poly.Receiver     // Receiver to aggregate deals
 	numDeals int                // Number of collected deals in the receiver
@@ -62,7 +62,7 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 		pubKeys:  pk,
 		info:     info,
 		schnorr:  new(poly.Schnorr),
-		secrets:  make(map[string]*JVSSSecret),
+		secrets:  make(map[string]*Secret),
 		ltssInit: false,
 		LTSSDone: make(chan bool, 1),
 		STSSDone: make(chan bool, 1),
@@ -91,14 +91,16 @@ func (jv *JVSS) Start() error {
 	return nil
 }
 
-// Verify
+// Verify verifies the given message against the given Schnorr signature.
+// Returns nil if the signature is valid and an error otherwise.
 func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 	h := jv.keyPair.Suite.Hash()
 	h.Write(msg)
 	return jv.schnorr.VerifySchnorrSig(sig, h)
 }
 
-// Sign
+// Sign starts a new signing request amongst the JVSS group and returns a
+// Schnorr signature on success.
 func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	if !jv.ltssInit {
@@ -146,7 +148,7 @@ func (jv *JVSS) initSecret(sid string) error {
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
 		dbg.Lvl2("Initialising shared secret", sid)
-		sec := &JVSSSecret{
+		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			numDeals: 0,
 			dealInit: false,
@@ -186,7 +188,7 @@ func (jv *JVSS) addDeal(sid string, deal *poly.Deal) error {
 	if _, err := secret.receiver.AddDeal(jv.nodeIdx(), deal); err != nil {
 		return fmt.Errorf("Error adding deal to receiver %d: %v", jv.nodeIdx(), err)
 	}
-	secret.numDeals += 1
+	secret.numDeals++
 	dbg.Lvl2(fmt.Sprintf("Node %d: deals %d/%d", jv.nodeIdx(), secret.numDeals, len(jv.nodeList)))
 	return nil
 }

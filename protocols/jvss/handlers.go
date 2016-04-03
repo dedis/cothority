@@ -7,21 +7,21 @@ import (
 	"github.com/dedis/crypto/poly"
 )
 
-// SetupMsg
+// SetupMsg are used for setting up new (long- and short-term) shared secrets
 type SetupMsg struct {
 	Src  int
 	SID  string
 	Deal []byte
 }
 
-// SigReqMsg
+// SigReqMsg are used to send signing requests
 type SigReqMsg struct {
 	Src int
 	SID string
 	Msg []byte
 }
 
-// SigRespMsg
+// SigRespMsg are used to reply to signing requests
 type SigRespMsg struct {
 	Src  int
 	SID  string
