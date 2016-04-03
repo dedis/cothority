@@ -71,13 +71,13 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	// Unmarshal received deal
 	deal := new(poly.Deal).UnmarshalInit(jv.info.T, jv.info.R, jv.info.N, jv.keyPair.Suite)
 	if err := deal.UnmarshalBinary(msg.Deal); err != nil {
-		return fmt.Errorf("Node %d could not unmarshal deal received from %d: %v", jv.nodeIdx(), msg.Src, err)
+		return err
 	}
 
 	// Buffer received deal for later
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error shared secret does not exist")
+		return fmt.Errorf("Error, shared secret does not exist")
 	}
 	secret.deals[msg.Src] = deal
 
@@ -96,16 +96,19 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error shared secret does not exist")
+		return fmt.Errorf("Error, shared secret does not exist")
 	}
 
 	secret.mtx.Lock()
 	secret.numConfs++
 	secret.mtx.Unlock()
 
-	// Check if we have enough confirmations to proceed
-	jv.checkConfirmations(secret.numConfs, len(jv.nodeList), msg.SID)
 	//dbg.Lvl1(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
+
+	// Check if we have enough confirmations to proceed
+	if (secret.numConfs == len(jv.nodeList)) && (msg.SID == LTSS || msg.SID == fmt.Sprintf("%s%d", STSS, jv.nodeIdx())) {
+		jv.secretsDone <- true
+	}
 
 	return nil
 }
@@ -126,12 +129,9 @@ func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 		Sig: ps,
 	}
 
-	//dbg.Lvl1(fmt.Sprintf("Node %d: sending partial signature ...", jv.nodeIdx()))
-	node := jv.nodeList[msg.Src]
-	if err := jv.SendTo(node, resp); err != nil {
-		return fmt.Errorf("Error sending msg to node %d: %v", msg.Src, err)
+	if err := jv.SendTo(jv.nodeList[msg.Src], resp); err != nil {
+		return err
 	}
-	//dbg.Lvl1(fmt.Sprintf("Node %d: ... done", jv.nodeIdx()))
 
 	// Cleanup short-term shared secret
 	delete(jv.secrets, msg.SID)
@@ -145,7 +145,7 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	// Collect partial signatures
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error shared secret does not exist")
+		return fmt.Errorf("Error, shared secret does not exist")
 	}
 	secret.sigs[msg.Src] = msg.Sig
 
@@ -156,15 +156,13 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 
 		for i := 0; i < len(secret.sigs); i++ {
 			if err := jv.schnorr.AddPartialSig(secret.sigs[i]); err != nil {
-				//dbg.Lvl1(fmt.Sprintf("Error Node %d: %s signatures (from %d)", jv.nodeIdx(), msg.SID, msg.Src))
-				//dbg.Lvl1(err)
 				return err
 			}
 		}
 
 		sig, err := jv.schnorr.Sig()
 		if err != nil {
-			return fmt.Errorf("Error creating Schnorr signature: %v", err)
+			return err
 		}
 		jv.sigChan <- sig
 

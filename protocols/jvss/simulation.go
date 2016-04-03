@@ -11,13 +11,13 @@ func init() {
 	sda.SimulationRegister("JVSS", NewSimulation)
 }
 
-// JVSSSimulation implements a JVSS simulation
+// Simulation implements a JVSS simulation
 type Simulation struct {
 	sda.SimulationBFTree
 	Verify bool
 }
 
-// NewJVSSSimulation creates a JVSS simulation
+// NewSimulation creates a JVSS simulation
 func NewSimulation(config string) (sda.Simulation, error) {
 	jvs := &Simulation{Verify: true}
 	_, err := toml.Decode(config, jvs)
@@ -48,8 +48,9 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	proto := node.ProtocolInstance().(*JVSS)
-	node.StartProtocol()
 
+	dbg.Lvl1("JVSS - starting")
+	node.StartProtocol()
 	dbg.Lvl1("JVSS - setup done")
 
 	for round := 0; round < jvs.Rounds; round++ {
@@ -62,7 +63,7 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 			return err
 		}
 		if jvs.Verify {
-			dbg.Lvl2("JVSS - signature received")
+			dbg.Lvl1("JVSS - signature received")
 			if err := proto.Verify(msg, sig); err != nil {
 				dbg.Error("JVSS - invalid signature")
 				return err
