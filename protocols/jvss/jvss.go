@@ -71,8 +71,8 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 
 	// Setup message handlers
 	handlers := []interface{}{
-		jv.handleSecIni,
-		jv.handleSecFin,
+		jv.handleSecInit,
+		jv.handleSecConf,
 		jv.handleSigReq,
 		jv.handleSigResp,
 	}
@@ -170,7 +170,7 @@ func (jv *JVSS) initSecret(sid string) error {
 			return err
 		}
 		db, _ := deal.MarshalBinary()
-		msg := &SecIniMsg{
+		msg := &SecInitMsg{
 			Src:  jv.nodeIdx(),
 			SID:  sid,
 			Deal: db,
@@ -216,7 +216,7 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 		}
 
 		// Broadcast that we have finished setting up our shared secret
-		msg := &SecFinMsg{
+		msg := &SecConfMsg{
 			Src: jv.nodeIdx(),
 			SID: sid,
 		}

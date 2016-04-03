@@ -8,17 +8,17 @@ import (
 	"github.com/dedis/crypto/poly"
 )
 
-// SecIniMsg are used to initialise new shared secrets both long- and
+// SecInitMsg are used to initialise new shared secrets both long- and
 // short-term.
-type SecIniMsg struct {
+type SecInitMsg struct {
 	Src  int
 	SID  string
 	Deal []byte
 }
 
-// SecFinMsg are used for telling the other peers that we have finished setting
+// SecConfMsg are used for telling the other peers that we have finished setting
 // up the shared secret.
-type SecFinMsg struct {
+type SecConfMsg struct {
 	Src int
 	SID string
 }
@@ -37,16 +37,16 @@ type SigRespMsg struct {
 	PSig *poly.SchnorrPartialSig
 }
 
-// WSecIniMsg is a SDA-wrapper around SecIniMsg.
-type WSecIniMsg struct {
+// WSecInitMsg is a SDA-wrapper around SecInitMsg.
+type WSecInitMsg struct {
 	*sda.TreeNode
-	SecIniMsg
+	SecInitMsg
 }
 
-// WSecFinMsg is a SDA-wrapper around SecFinMsg.
-type WSecFinMsg struct {
+// WSecConfMsg is a SDA-wrapper around SecConfMsg.
+type WSecConfMsg struct {
 	*sda.TreeNode
-	SecFinMsg
+	SecConfMsg
 }
 
 // WSigReqMsg is a SDA-wrapper around SigReqMsg.
@@ -61,8 +61,8 @@ type WSigRespMsg struct {
 	SigRespMsg
 }
 
-func (jv *JVSS) handleSecIni(m WSecIniMsg) error {
-	msg := m.SecIniMsg
+func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
+	msg := m.SecInitMsg
 
 	// Initialise shared secret
 	if err := jv.initSecret(msg.SID); err != nil {
@@ -88,8 +88,8 @@ func (jv *JVSS) handleSecIni(m WSecIniMsg) error {
 	return nil
 }
 
-func (jv *JVSS) handleSecFin(m WSecFinMsg) error {
-	msg := m.SecFinMsg
+func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
+	msg := m.SecConfMsg
 
 	secret := jv.secrets[msg.SID]
 	secret.mtx.Lock()
