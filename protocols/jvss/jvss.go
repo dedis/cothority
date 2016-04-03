@@ -101,6 +101,10 @@ func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 // Sign
 func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
+	if !jv.ltssInit {
+		return nil, fmt.Errorf("Error long-term shared secret has not been initialised yet")
+	}
+
 	// Initialise short-term shared secret only used for this signing request
 	sid := fmt.Sprintf("STSS%d", jv.nodeIdx())
 	jv.initSecret(sid)
