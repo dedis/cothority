@@ -1,16 +1,17 @@
 package sda_test
 
 import (
+	"math/rand"
+	"net"
+	"strconv"
+	"testing"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"math/rand"
-	"net"
-	"strconv"
-	"testing"
 )
 
 var tSuite = network.Suite
@@ -133,7 +134,7 @@ func TestTreeChildren(t *testing.T) {
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
-	if child.Entity.Id != peerList.List[1].Id {
+	if child.Entity.ID != peerList.List[1].ID {
 		t.Fatal("Parent of child of root is not the root...")
 	}
 }
@@ -170,8 +171,8 @@ func TestGetNode(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(10, 2000)
-	for _, tn := range tree.ListNodes() {
-		node := tree.GetTreeNode(tn.Id)
+	for _, tn := range tree.List() {
+		node := tree.Search(tn.Id)
 		if node == nil {
 			t.Fatal("Didn't find treeNode with id", tn.Id)
 		}
@@ -204,7 +205,7 @@ func TestTreeNodeEntityIndex(t *testing.T) {
 	peerList := genEntityList(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
 
-	ln := tree.ListNodes()
+	ln := tree.List()
 	randomNode := ln[rand.Intn(len(ln))]
 	var idx int
 	for i, e := range peerList.List {
@@ -280,11 +281,11 @@ func TestBigNaryTree(t *testing.T) {
 		t.Fatal("Tree should be 3-ary")
 	}
 	for _, child := range root.Children {
-		if child.Entity.Id == root.Entity.Id {
+		if child.Entity.ID == root.Entity.ID {
 			t.Fatal("Child should not have same identity as parent")
 		}
 		for _, c := range child.Children {
-			if c.Entity.Id == child.Entity.Id {
+			if c.Entity.ID == child.Entity.ID {
 				t.Fatal("Child should not have same identity as parent")
 			}
 		}

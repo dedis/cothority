@@ -65,7 +65,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
+	err = n.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -103,7 +103,7 @@ func TestNodeChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
+	err = n.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -195,7 +195,7 @@ func TestProtocolHandlers(t *testing.T) {
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers
 
-	if child1.Entity().Id == child2.Entity().Id {
+	if child1.Entity().ID == child2.Entity().ID {
 		t.Fatal("Both entities should be different")
 	}
 
@@ -207,7 +207,7 @@ func TestProtocolHandlers(t *testing.T) {
 	}
 	child2.SendTo(node.TreeNode(), &NodeTestAggMsg{})
 	final := <-IncomingHandlers
-	if final.Entity().Id != node.Entity().Id {
+	if final.Entity().ID != node.Entity().ID {
 		t.Fatal("This should be the same ID")
 	}
 }

@@ -25,6 +25,7 @@ type Simulation struct {
 	Blocksize int
 }
 
+// NewSimulation returns a pbft simulation
 func NewSimulation(config string) (sda.Simulation, error) {
 	sim := &Simulation{}
 	_, err := toml.Decode(config, sim)
@@ -50,6 +51,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 	return sc, nil
 }
 
+// Run runs the simulation
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	doneChan := make(chan bool)
 	doneCB := func() {

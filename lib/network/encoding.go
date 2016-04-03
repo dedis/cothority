@@ -26,6 +26,7 @@ var Suite = edwards.NewAES128SHA256Ed25519(false)
 // ProtocolMessage is a type for any message that the user wants to send
 type ProtocolMessage interface{}
 
+// MessageTypeID is the ID used to uniquely identify different registered messages
 type MessageTypeID uuid.UUID
 
 // String returns the canonical string representation of the MessageTypeID
@@ -33,9 +34,13 @@ func (mId MessageTypeID) String() string {
 	return uuid.UUID(mId).String()
 }
 
-// The basic url used for uuid
-const UuidURL = "https://dedis.epfl.ch/"
-const UuidURLProtocolType = UuidURL + "/protocolType/"
+// NamespaceURL is the basic namespace used for uuid
+// XXX should move that to external of the library as not every
+// cothority/packages should be expected to use that.
+const NamespaceURL = "https://dedis.epfl.ch/"
+
+// NamespaceProtocolMessageType is the namespace used for MessageTypeID
+const NamespaceProtocolMessageType = NamespaceURL + "/protocolType/"
 
 // RegisterMessageType registers a custom "struct" / "packet" and returns the
 // corresponding MessageTypeID.
@@ -78,15 +83,15 @@ func TypeToMessageTypeID(msg ProtocolMessage) MessageTypeID {
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	url := UuidURLProtocolType + val.Type().String()
+	url := NamespaceProtocolMessageType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
 	dbg.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
 	return MessageTypeID(u)
 }
 
-// RTypeToUUID converts a reflect.Type to a MessageTypeID
+// RTypeToMessageTypeID converts a reflect.Type to a MessageTypeID
 func RTypeToMessageTypeID(msg reflect.Type) MessageTypeID {
-	url := UuidURLProtocolType + msg.String()
+	url := NamespaceProtocolMessageType + msg.String()
 	return MessageTypeID(uuid.NewV5(uuid.NamespaceURL, url))
 }
 
@@ -109,13 +114,13 @@ func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 
 // Error returns the error that has been encountered during the unmarshaling of
 // this message.
-func (am *NetworkMessage) Error() error {
+func (am *Message) Error() error {
 	return am.err
 }
 
 // SetError is workaround so we can set the error after creation of the
 // application message
-func (am *NetworkMessage) SetError(err error) {
+func (am *Message) SetError(err error) {
 	am.err = err
 }
 
@@ -164,7 +169,7 @@ var ErrorType = MessageTypeID(uuid.Nil)
 // Somehow it still gets inlined (maybe through the indirection).
 // should be fixed properly in go1.7:
 // https://github.com/golang/go/commit/feb2a5d6103dad76b6374c5f346e33d55612cb2a
-var EmptyApplicationMessage = NetworkMessage{MsgType: MessageTypeID(uuid.Nil)}
+var EmptyApplicationMessage = Message{MsgType: MessageTypeID(uuid.Nil)}
 
 // global mutex for MarshalRegisteredType
 var marshalLock sync.Mutex
@@ -198,13 +203,13 @@ func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
 // The type must be registered to the network library in order to be decodable.
 func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (MessageTypeID, ProtocolMessage, error) {
 	b := bytes.NewBuffer(buf)
-	var tId MessageTypeID
-	if err := binary.Read(b, globalOrder, &tId); err != nil {
+	var tID MessageTypeID
+	if err := binary.Read(b, globalOrder, &tID); err != nil {
 		return ErrorType, nil, err
 	}
 	var typ reflect.Type
 	var ok bool
-	if typ, ok = registry.get(tId); !ok {
+	if typ, ok = registry.get(tID); !ok {
 		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
 			typ.Name())
 	}
@@ -212,20 +217,20 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Me
 	ptr := ptrVal.Interface()
 	var err error
 	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
-		return tId, ptrVal.Elem().Interface(), err
+		return tID, ptrVal.Elem().Interface(), err
 	}
-	return tId, ptrVal.Elem().Interface(), nil
+	return tID, ptrVal.Elem().Interface(), nil
 }
 
 // MarshalBinary the application message => to bytes
 // Implements BinaryMarshaler interface so it will be used when sending with protobuf
-func (am *NetworkMessage) MarshalBinary() ([]byte, error) {
+func (am *Message) MarshalBinary() ([]byte, error) {
 	return MarshalRegisteredType(am.Msg)
 }
 
 // UnmarshalBinary will decode the incoming bytes
 // It uses protobuf for decoding (using the constructors in the NetworkMessage).
-func (am *NetworkMessage) UnmarshalBinary(buf []byte) error {
+func (am *Message) UnmarshalBinary(buf []byte) error {
 	t, msg, err := UnmarshalRegisteredType(buf, am.Constructors)
 	am.MsgType = t
 	am.Msg = msg
@@ -234,17 +239,17 @@ func (am *NetworkMessage) UnmarshalBinary(buf []byte) error {
 
 // ConstructFrom takes a NetworkMessage and then constructs a
 // NetworkMessage from it. Error if the type is unknown
-func newNetworkMessage(obj ProtocolMessage) (*NetworkMessage, error) {
+func newNetworkMessage(obj ProtocolMessage) (*Message, error) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() != reflect.Ptr {
 		return nil, fmt.Errorf("Send takes a pointer to the message, not a copy...")
 	}
 	ty := TypeFromData(obj)
 	if ty == ErrorType {
-		return &NetworkMessage{}, fmt.Errorf("Packet to send is not known. Please register packet: %s\n",
+		return &Message{}, fmt.Errorf("Packet to send is not known. Please register packet: %s\n",
 			reflect.TypeOf(obj).String())
 	}
-	return &NetworkMessage{
+	return &Message{
 		MsgType: ty,
 		Msg:     obj}, nil
 }

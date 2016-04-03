@@ -12,7 +12,7 @@ func TestPath(t *testing.T) {
 	hash := newHash()
 	n := 13
 
-	leaves := make([]crypto.HashId, n)
+	leaves := make([]crypto.HashID, n)
 	for i := range leaves {
 		leaves[i] = make([]byte, hash.Size())
 		for j := range leaves[i] {
@@ -39,7 +39,7 @@ func TestPathLong(t *testing.T) {
 	hash := newHash()
 	n := 100 // takes 6 secons
 	for k := 0; k < n; k++ {
-		leaves := make([]crypto.HashId, k)
+		leaves := make([]crypto.HashID, k)
 		for i := range leaves {
 			leaves[i] = make([]byte, hash.Size())
 			for j := range leaves[i] {

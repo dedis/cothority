@@ -1,5 +1,3 @@
-// Package manage implements a protocol which sends a message to all nodes so
-// that the connections are set up
 package manage
 
 import (
@@ -8,10 +6,12 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewBroadcastProtocol(n) })
+	sda.ProtocolRegisterName("Broadcast", NewBroadcastProtocol)
 }
 
-// Broadcast will just simply broadcast
+// Broadcast ensures that all nodes are connected to each other. If you need
+// a confirmation once everything is set up, you can register a callback-function
+// using RegisterOnDone()
 type Broadcast struct {
 	*sda.Node
 
@@ -40,7 +40,8 @@ type Broadcast struct {
 	okdNode int
 }
 
-func NewBroadcastProtocol(n *sda.Node) (*Broadcast, error) {
+// NewBroadcastProtocol returns an initialised protocol for broadcast
+func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 	b := new(Broadcast).init(n)
 	go b.Start()
 	return b, nil
@@ -53,7 +54,7 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	b.RegisterChannel(&b.announceChan)
 	b.RegisterChannel(&b.okChan)
 
-	lists := b.Tree().ListNodes()
+	lists := b.Tree().List()
 	b.listNode = make(map[sda.TreeNodeID]*sda.TreeNode)
 	b.ackdNode = 0
 	b.done = make(chan bool, 1)
@@ -66,6 +67,9 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	go b.listen()
 	return b
 }
+
+// NewBroadcastRootProtocol is an abomination that should not exist - will
+// be killed with https://github.com/dedis/cothority/pull/325
 func NewBroadcastRootProtocol(n *sda.Node) (*Broadcast, error) {
 	b := new(Broadcast).init(n)
 	// it does not start yet.
@@ -136,16 +140,20 @@ func (b *Broadcast) handleOk(tn *sda.TreeNode) {
 
 }
 
+// RegisterOnDone takes a function that will be called once all connections
+// are set up.
 func (b *Broadcast) RegisterOnDone(fn func()) {
 	b.onDoneCb = fn
 }
 
+// Announce is the first message sent to all nodes.
 type Announce struct {
 }
 
+// ACK is the second message that goes back to the sender.
 type ACK struct {
 }
 
-// OK means I am connected with everyone and I tell you this.
+// OK is sent from all nodes back to the root.
 type OK struct {
 }

@@ -1,9 +1,9 @@
-// Debugging using different debug-levels for more or less verbose output.
+// Package dbg shows more or less output using different debug-levels.
 // You can use
 //	dbg.Lvl1("Important information")
 //	dbg.Lvl2("Less important information")
 //	dbg.Lvl3("Eventually flooding information")
-//	dbg.Lvl4("Definitvely flooding information")
+//	dbg.Lvl4("Definitively flooding information")
 //	dbg.Lvl5("I hope you never need this")
 // in your program, then according to the debug-level one or more levels of
 // output will be shown. To set the debug-level, use
@@ -12,6 +12,21 @@
 // on just one output, you can use
 //	dbg.LLvl2("Less important information")
 // By adding a single 'L' to the method, it *always* gets printed.
+//
+// You can also add a 'f' to the name and use it like fmt.Printf:
+//	dbg.Lvlf1("Level: %d/%d", now, max)
+//
+// Additional to that you also have
+//	dbg.Warn("Only a warning")
+//	dbg.Error("This is an error, but continues")
+//	dbg.Panic("Something really went bad - calls panic")
+//	dbg.Fatal("No way to continue - calls os.Exit")
+//
+// The dbg-package also takes into account the following environment-variables:
+//	DEBUG_LVL // will act like SetDebugVisible
+//	DEBUG_TIME // if 'true' it will print the date and time
+//	DEBUG_COLOR // if 'false' it will not use colors
+// But for this the function ParseEnv() or AddFlags() has to be called.
 package dbg
 
 import (
@@ -40,35 +55,37 @@ var useColors = true
 
 var debugMut sync.RWMutex
 
-// The padding of functions to make a nice debug-output - this is automatically updated
+// NamePadding - the padding of functions to make a nice debug-output - this is automatically updated
 // whenever there are longer functions and kept at that new maximum. If you prefer
 // to have a fixed output and don't remember oversized names, put a negative value
 // in here
 var NamePadding = 40
 
-// Padding of line-numbers for a nice debug-output - used in the same way as
+// LinePadding of line-numbers for a nice debug-output - used in the same way as
 // NamePadding
 var LinePadding = 3
 
 // Testing variable can have multiple values
 // 0 - no testing
 // 1 - put all line-numbers to 0
-// 2 - like 1, but also write to TestString instead of stdout
+// 2 - like 1, but write to TestString instead of stdout
 var Testing = 0
 
+// TestStr is only used in testing to redirect output to this string
 var TestStr = ""
 
-// If this variable is set, it will be outputted between the position and the message
+// StaticMsg - if this variable is set, it will be outputted between the
+// position and the message
 var StaticMsg = ""
 
 var regexpPaths, _ = regexp.Compile(".*/")
 
 const (
-	LvlPrint = iota - 10
-	LvlWarning
-	LvlError
-	LvlFatal
-	LvlPanic
+	lvlPrint = iota - 10
+	lvlWarning
+	lvlError
+	lvlFatal
+	lvlPanic
 )
 
 func lvl(lvl int, args ...interface{}) {
@@ -111,19 +128,19 @@ func lvl(lvl int, args ...interface{}) {
 		lvlStr += "!"
 	}
 	switch lvl {
-	case LvlPrint:
+	case lvlPrint:
 		fg(ct.White, true)
 		lvlStr = "I"
-	case LvlWarning:
+	case lvlWarning:
 		fg(ct.Green, true)
 		lvlStr = "W"
-	case LvlError:
+	case lvlError:
 		fg(ct.Red, false)
 		lvlStr = "E"
-	case LvlFatal:
+	case lvlFatal:
 		fg(ct.Red, true)
 		lvlStr = "F"
-	case LvlPanic:
+	case lvlPanic:
 		fg(ct.Red, true)
 		lvlStr = "P"
 	default:
@@ -167,12 +184,12 @@ func lvld(l int, args ...interface{}) {
 
 // Print directly sends the arguments to the stdout
 func Print(args ...interface{}) {
-	lvld(LvlPrint, args...)
+	lvld(lvlPrint, args...)
 }
 
 // Printf is like Print but takes a formatting-argument first
 func Printf(f string, args ...interface{}) {
-	lvlf(LvlPrint, f, args...)
+	lvlf(lvlPrint, f, args...)
 }
 
 // Lvl1 debug output is informational and always displayed
@@ -202,28 +219,6 @@ func Lvl5(args ...interface{}) {
 	lvld(5, args...)
 }
 
-// Error prints the error in a nice red color
-func Error(args ...interface{}) {
-	lvld(LvlError, args...)
-}
-
-// Warn prints out the warning
-func Warn(args ...interface{}) {
-	lvld(LvlWarning, args...)
-}
-
-// Fatal prints out the fatal message and quits
-func Fatal(args ...interface{}) {
-	lvld(LvlFatal, args...)
-	os.Exit(1)
-}
-
-// Panic prints out the panic message and panics
-func Panic(args ...interface{}) {
-	lvld(LvlPanic, args...)
-	panic(args)
-}
-
 // Lvlf1 is like Lvl1 but with a format-string
 func Lvlf1(f string, args ...interface{}) {
 	lvlf(1, f, args...)
@@ -249,47 +244,6 @@ func Lvlf5(f string, args ...interface{}) {
 	lvlf(5, f, args...)
 }
 
-// Fatalf is like Fatal but with a format-string
-func Fatalf(f string, args ...interface{}) {
-	lvlf(LvlFatal, f, args...)
-	os.Exit(1)
-}
-
-// Errorf is like Error but with a format-string
-func Errorf(f string, args ...interface{}) {
-	lvlf(LvlError, f, args...)
-}
-
-// Warnf is like Warn but with a format-string
-func Warnf(f string, args ...interface{}) {
-	lvlf(LvlWarning, f, args...)
-}
-
-// Panicf is like Panic but with a format-string
-func Panicf(f string, args ...interface{}) {
-	lvlf(LvlPanic, f, args...)
-	panic(args)
-}
-
-// TestOutput sets the DebugVisible to 0 if 'show'
-// is false, else it will set DebugVisible to 'level'
-//
-// Usage: TestOutput( test.Verbose(), 2 )
-func TestOutput(show bool, level int) {
-	debugMut.Lock()
-	defer debugMut.Unlock()
-
-	if show {
-		debugVisible = level
-	} else {
-		debugVisible = 0
-	}
-}
-
-// To easy print a debug-message anyway without discarding the level
-// Just add an additional "L" in front, and remove it later:
-// - easy hack to turn on other debug-messages
-// - easy removable by searching/replacing 'LLvl' with 'Lvl'
 // LLvl1 *always* prints
 func LLvl1(args ...interface{}) { lvld(-1, args...) }
 
@@ -319,6 +273,65 @@ func LLvlf4(f string, args ...interface{}) { lvlf(-4, f, args...) }
 
 // LLvlf5 *always* prints
 func LLvlf5(f string, args ...interface{}) { lvlf(-5, f, args...) }
+
+// Warn prints out the warning
+func Warn(args ...interface{}) {
+	lvld(lvlWarning, args...)
+}
+
+// Error prints the error in a nice red color
+func Error(args ...interface{}) {
+	lvld(lvlError, args...)
+}
+
+// Panic prints out the panic message and panics
+func Panic(args ...interface{}) {
+	lvld(lvlPanic, args...)
+	panic(args)
+}
+
+// Fatal prints out the fatal message and quits
+func Fatal(args ...interface{}) {
+	lvld(lvlFatal, args...)
+	os.Exit(1)
+}
+
+// Warnf is like Warn but with a format-string
+func Warnf(f string, args ...interface{}) {
+	lvlf(lvlWarning, f, args...)
+}
+
+// Errorf is like Error but with a format-string
+func Errorf(f string, args ...interface{}) {
+	lvlf(lvlError, f, args...)
+}
+
+// Panicf is like Panic but with a format-string
+func Panicf(f string, args ...interface{}) {
+	lvlf(lvlPanic, f, args...)
+	panic(args)
+}
+
+// Fatalf is like Fatal but with a format-string
+func Fatalf(f string, args ...interface{}) {
+	lvlf(lvlFatal, f, args...)
+	os.Exit(1)
+}
+
+// TestOutput sets the DebugVisible to 0 if 'show'
+// is false, else it will set DebugVisible to 'level'
+//
+// Usage: TestOutput( test.Verbose(), 2 )
+func TestOutput(show bool, level int) {
+	debugMut.Lock()
+	defer debugMut.Unlock()
+
+	if show {
+		debugVisible = level
+	} else {
+		debugVisible = 0
+	}
+}
 
 // SetDebugVisible set the global debug output level in a go-rountine-safe way
 func SetDebugVisible(lvl int) {
