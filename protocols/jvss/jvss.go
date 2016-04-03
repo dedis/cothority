@@ -117,7 +117,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	jv.initSecret(sid)
 
 	// Wait for setup of shared secret to finish
+	dbg.Lvl1("Waiting for shared secret to finish")
 	<-jv.SecretDone
+	dbg.Lvl1("Shared secret done")
 
 	// Create partial signature ...
 	ps, err := jv.sigPartial(sid, msg)
@@ -129,8 +131,8 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	if err := jv.schnorr.AddPartialSig(ps); err != nil {
 		return nil, err
 	}
-	sts := jv.secrets[sid]
-	sts.numSigs++
+	secret := jv.secrets[sid]
+	secret.numSigs++
 
 	// Broadcast signing request
 	req := &SigReqMsg{
@@ -142,8 +144,10 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		return nil, err
 	}
 
+	dbg.Lvl1("Waiting for signature to finish")
 	// Wait for complete signature
 	sig := <-jv.sigChan
+	dbg.Lvl1("Signature done")
 
 	return sig, nil
 }
@@ -152,7 +156,7 @@ func (jv *JVSS) initSecret(sid string) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
-		dbg.Lvl2("Initialising shared secret", sid)
+		dbg.Lvl1("Initialising shared secret", sid)
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			numDeals: 0,
@@ -194,7 +198,7 @@ func (jv *JVSS) addDeal(sid string, deal *poly.Deal) error {
 		return fmt.Errorf("Error adding deal to receiver %d: %v", jv.nodeIdx(), err)
 	}
 	secret.numDeals++
-	dbg.Lvl2(fmt.Sprintf("Node %d: deals %d/%d", jv.nodeIdx(), secret.numDeals, len(jv.nodeList)))
+	dbg.Lvl1(fmt.Sprintf("Node %d: deals %d/%d", jv.nodeIdx(), secret.numDeals, len(jv.nodeList)))
 	return nil
 }
 
@@ -209,13 +213,13 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		dbg.Lvl2(fmt.Sprintf("Node %d: shared secret %s created", jv.nodeIdx(), sid))
+		dbg.Lvl1(fmt.Sprintf("Node %d: shared secret %s created", jv.nodeIdx(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			dbg.Lvl2(fmt.Sprintf("Node %d: Schnorr struct for shared secret %s initialised", jv.nodeIdx(), sid))
+			dbg.Lvl1(fmt.Sprintf("Node %d: Schnorr struct for %s initialised", jv.nodeIdx(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret
@@ -226,8 +230,17 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 		if err := jv.broadcast(msg); err != nil {
 			return err
 		}
+
+		// Check if we have already enough confirmations to proceed
+		jv.checkConfirmations(secret.numConfs, len(jv.nodeList), sid)
 	}
 	return nil
+}
+
+func (jv *JVSS) checkConfirmations(rcv int, want int, sid string) {
+	if (rcv == want) && (sid == LTSS || sid == fmt.Sprintf("%s%d", STSS, jv.nodeIdx())) {
+		jv.SecretDone <- true
+	}
 }
 
 func (jv *JVSS) sigPartial(sid string, msg []byte) (*poly.SchnorrPartialSig, error) {

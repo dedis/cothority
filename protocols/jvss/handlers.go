@@ -32,9 +32,9 @@ type SigReqMsg struct {
 
 // SigRespMsg are used to reply to signing requests.
 type SigRespMsg struct {
-	Src  int
-	SID  string
-	PSig *poly.SchnorrPartialSig
+	Src int
+	SID string
+	Sig *poly.SchnorrPartialSig
 }
 
 // WSecInitMsg is a SDA-wrapper around SecInitMsg.
@@ -96,14 +96,9 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	secret.numConfs++
 	secret.mtx.Unlock()
 
-	// We received all confirmations and can continue
-	if secret.numConfs == len(jv.nodeList) {
-		// Notify the initiator (TODO: is there a better way then via SIDs?)
-		if msg.SID == fmt.Sprintf("%s%d", STSS, jv.nodeIdx()) || msg.SID == LTSS {
-			jv.SecretDone <- true
-		}
-	}
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
+	// Check if we have enough confirmations to proceed
+	jv.checkConfirmations(secret.numConfs, len(jv.nodeList), msg.SID)
+	dbg.Lvl1(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
 
 	return nil
 }
@@ -119,15 +114,17 @@ func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 
 	// Send it back to initiator
 	resp := &SigRespMsg{
-		Src:  jv.nodeIdx(),
-		SID:  msg.SID,
-		PSig: ps,
+		Src: jv.nodeIdx(),
+		SID: msg.SID,
+		Sig: ps,
 	}
 
+	dbg.Lvl1(fmt.Sprintf("Node %d: sending partial signature ...", jv.nodeIdx()))
 	node := jv.nodeList[msg.Src]
 	if err := jv.SendTo(node, resp); err != nil {
 		return fmt.Errorf("Error sending msg to node %d: %v", msg.Src, err)
 	}
+	dbg.Lvl1(fmt.Sprintf("Node %d: ... done", jv.nodeIdx()))
 
 	// Cleanup short-term shared secret
 	delete(jv.secrets, msg.SID)
@@ -139,14 +136,17 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	msg := m.SigRespMsg
 
 	// Collect partial signatures
-	if err := jv.schnorr.AddPartialSig(msg.PSig); err != nil {
+	if err := jv.schnorr.AddPartialSig(msg.Sig); err != nil {
+		dbg.Lvl1(fmt.Sprintf("Error Node %d: %s signatures (from %d)", jv.nodeIdx(), msg.SID, msg.Src))
+		dbg.Lvl1(err)
 		return err
 	}
-	sts := jv.secrets[msg.SID]
-	sts.numSigs++
+	secret := jv.secrets[msg.SID]
+	secret.numSigs++
+	dbg.Lvl1(fmt.Sprintf("Node %d: %s signatures %d/%d (from %d)", jv.nodeIdx(), msg.SID, secret.numSigs, len(jv.nodeList), msg.Src))
 
 	// Create Schnorr signature once we received enough replies
-	if jv.info.T <= sts.numSigs {
+	if jv.info.T <= secret.numSigs {
 		sig, err := jv.schnorr.Sig()
 		if err != nil {
 			return fmt.Errorf("Error creating Schnorr signature: %v", err)

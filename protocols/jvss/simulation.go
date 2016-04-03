@@ -19,7 +19,7 @@ type Simulation struct {
 
 // NewJVSSSimulation creates a JVSS simulation
 func NewSimulation(config string) (sda.Simulation, error) {
-	jvs := &Simulation{Verify: false}
+	jvs := &Simulation{Verify: true}
 	_, err := toml.Decode(config, jvs)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	msg := []byte("Test message for JVSS simulation")
 
-	dbg.Lvl2("Size:", size, "rounds: ", jvs.Rounds)
+	dbg.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
 	node, err := config.Overlay.CreateNewNodeName("JVSS", config.Tree)
 	if err != nil {
@@ -55,7 +55,7 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < jvs.Rounds; round++ {
 		dbg.Lvl1("JVSS - starting round", round)
 		r := monitor.NewTimeMeasure("round")
-		dbg.Lvl2("JVSS - requesting signature")
+		dbg.Lvl1("JVSS - requesting signature")
 		sig, err := proto.Sign(msg)
 		if err != nil {
 			dbg.Error("JVSS - could not create signature")
@@ -67,7 +67,7 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 				dbg.Error("JVSS - invalid signature")
 				return err
 			}
-			dbg.Lvl2("JVSS - signature verification succeded")
+			dbg.Lvl1("JVSS - signature verification succeded")
 		}
 		r.Record()
 	}
