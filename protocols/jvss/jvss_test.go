@@ -18,7 +18,7 @@ func TestJVSS(t *testing.T) {
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
-	dbg.TestOutput(true, 1)
+	dbg.TestOutput(true, 2)
 
 	dbg.Lvl1("JVSS - starting")
 	leader, err := local.CreateNewNodeName(name, tree)
@@ -28,9 +28,7 @@ func TestJVSS(t *testing.T) {
 	jv := leader.ProtocolInstance().(*jvss.JVSS)
 	leader.StartProtocol()
 
-	<-jv.LTSSDone
 	dbg.Lvl1("JVSS - setup done")
-
 	dbg.Lvl1("JVSS - requesting signature")
 	msg := []byte("Hello World!")
 	sig, _ := jv.Sign(msg)

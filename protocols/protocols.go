@@ -34,7 +34,7 @@ import (
 	_ "github.com/dedis/cothority/protocols/cosi"
 	_ "github.com/dedis/cothority/protocols/example/channels"
 	_ "github.com/dedis/cothority/protocols/example/handlers"
-	_ "github.com/dedis/cothority/protocols/jvss_old"
+	_ "github.com/dedis/cothority/protocols/jvss"
 	_ "github.com/dedis/cothority/protocols/manage"
 	_ "github.com/dedis/cothority/protocols/ntree"
 	_ "github.com/dedis/cothority/protocols/randhound"

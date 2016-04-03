@@ -54,13 +54,13 @@ func (jv *JVSS) handleSetup(m WSetupMsg) error {
 		return err
 	}
 
-	// Unmarshal received deal and store it in the shared secret
+	// Unmarshal received deal
 	d := new(poly.Deal).UnmarshalInit(jv.info.T, jv.info.R, jv.info.N, jv.keyPair.Suite)
 	if err := d.UnmarshalBinary(msg.Deal); err != nil {
 		return fmt.Errorf("Node %d could not unmarshal deal received from %d: %v", jv.nodeIdx(), msg.Src, err)
 	}
 
-	// Save received deal
+	// Save received deal in the corresponding shared secret
 	if err := jv.addDeal(msg.SID, d); err != nil {
 		return err
 	}

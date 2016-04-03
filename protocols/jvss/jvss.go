@@ -88,6 +88,7 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
 	jv.initSecret(LTSS)
+	<-jv.LTSSDone
 	return nil
 }
 
