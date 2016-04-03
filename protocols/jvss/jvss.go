@@ -16,8 +16,11 @@ func init() {
 	sda.ProtocolRegisterName("JVSS", NewJVSS)
 }
 
-// LTSS is the fixed identifier of the long-term shared secret.
-const LTSS = "LTSS"
+// Identifiers for long- and short-term shared secrets.
+const (
+	LTSS = "LTSS"
+	STSS = "STSS"
+)
 
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
@@ -41,7 +44,7 @@ type Secret struct {
 	numDeals int                // Number of collected deals in the receiver
 	numConfs int                // Number of collected confirmations that shared secrets are ready
 	numSigs  int                // Number of collected partial signatures
-	mtx      *sync.Mutex        // Required to sync access to numConfs
+	mtx      *sync.Mutex        // Mutex to sync access to numConfs
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -110,7 +113,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 
 	// Initialise short-term shared secret only used for this signing request
-	sid := fmt.Sprintf("STSS%d", jv.nodeIdx())
+	sid := fmt.Sprintf("%s%d", STSS, jv.nodeIdx())
 	jv.initSecret(sid)
 
 	// Wait for setup of shared secret to finish

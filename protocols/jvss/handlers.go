@@ -16,7 +16,7 @@ type SecInitMsg struct {
 	Deal []byte
 }
 
-// SecConfMsg are used for telling the other peers that we have finished setting
+// SecConfMsg are used to confirm to other peers that we have finished setting
 // up the shared secret.
 type SecConfMsg struct {
 	Src int
@@ -98,8 +98,8 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 
 	// We received all confirmations and can continue
 	if secret.numConfs == len(jv.nodeList) {
-		// Notify the initiator (TODO: is there a better way then over SIDs?)
-		if msg.SID == fmt.Sprintf("STSS%d", jv.nodeIdx()) || msg.SID == LTSS {
+		// Notify the initiator (TODO: is there a better way then via SIDs?)
+		if msg.SID == fmt.Sprintf("%s%d", STSS, jv.nodeIdx()) || msg.SID == LTSS {
 			jv.SecretDone <- true
 		}
 	}
