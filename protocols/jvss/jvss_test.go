@@ -32,7 +32,7 @@ func TestJVSS(t *testing.T) {
 	dbg.Lvl1("JVSS - setup done")
 
 	dbg.Lvl1("JVSS - requesting signature")
-	msg := []byte("Hello World\n")
+	msg := []byte("Hello World!")
 	sig, _ := jv.Sign(msg)
 	dbg.Lvl1("JVSS - signature received")
 	err = jv.Verify(msg, sig)

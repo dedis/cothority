@@ -162,7 +162,12 @@ func (jv *JVSS) initSecret(sid string) error {
 			return err
 		}
 		db, _ := deal.MarshalBinary()
-		if err := jv.broadcast(&SetupMsg{Src: jv.nodeIdx(), SID: sid, Deal: db}); err != nil {
+		msg := &SetupMsg{
+			Src:  jv.nodeIdx(),
+			SID:  sid,
+			Deal: db,
+		}
+		if err := jv.broadcast(msg); err != nil {
 			return err
 		}
 	}
