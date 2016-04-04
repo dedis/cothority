@@ -90,12 +90,12 @@ func (m *monitorMut) Record() {
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
+	sda.RegisterProtocolConstructor("ByzCoinServer", server)
 
-	node, _ := sdaConf.Overlay.NewNodeEmpty("Broadcast", sdaConf.Tree)
-	proto, _ := manage.NewBroadcastRootProtocol(node)
-	node.SetProtocolInstance(proto)
+	node, _ := sdaConf.Overlay.CreateNewNode("Broadcast", sdaConf.Tree)
 	// channel to notify we are done
 	broadDone := make(chan bool)
+	proto := node.ProtocolInstance().(*manage.Broadcast)
 	proto.RegisterOnDone(func() {
 		broadDone <- true
 	})
@@ -113,18 +113,14 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmpty("ByzCoin", sdaConf.Tree)
+		node, err := sdaConf.Overlay.CreateNewNode("ByzCoinServer", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
 		// instantiate a byzcoin protocol
 		rComplete := monitor.NewTimeMeasure("round")
-		pi, err := server.Instantiate(node)
-		if err != nil {
-			return err
-		}
 
-		bz := pi.(*ByzCoin)
+		bz := node.ProtocolInstance().(*ByzCoin)
 		// Register callback for the generation of the signature !
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Record()

@@ -21,7 +21,7 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("JVSS", NewJVSS)
+	sda.RegisterNewProtocol("JVSS", NewJVSS)
 }
 
 // Type of shared secret identifiers

@@ -80,7 +80,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	if err != nil {
 		dbg.Error(err)
 	}
-	proto, _ := node.ProtocolInstance().(*Broadcast)
+	proto, _ := node.ProtocolInstance().(*manage.Broadcast)
 	// channel to notify we are done
 	broadDone := make(chan bool)
 	proto.RegisterOnDone(func() {

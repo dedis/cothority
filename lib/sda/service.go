@@ -339,7 +339,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		dbg.Lvl2("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
-		// also register to the ProtocolFactory
+		// !! register to the ProtocolFactory !!
 		ProtocolFactory.RegisterProtocolConstructor(name, s)
 	}
 	return &serviceStore{services, configs}

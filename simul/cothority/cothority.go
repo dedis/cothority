@@ -14,6 +14,7 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 	_ "github.com/dedis/cothority/protocols"
+	"github.com/dedis/cothority/protocols/manage"
 )
 
 // The address of this host - if there is only one host in the config
@@ -134,7 +135,7 @@ func main() {
 			closeTree = rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
-		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
+		_, err = rootSC.Overlay.StartNewNode("CloseAll", closeTree)
 		if err != nil {
 			dbg.Fatal(err)
 		}

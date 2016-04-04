@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("CoSi", NewCoSiSimulation)
+	sda.SimulationRegister("CoSi", NewSimulation)
 	// default protocol initialization. See Run() for override this one for the
 	// root.
 	sda.RegisterNewProtocol("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })

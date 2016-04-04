@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("RandHound", NewRandHound)
+	sda.RegisterNewProtocol("RandHound", NewRandHound)
 }
 
 // RandHound is the main protocol struct and implements the
