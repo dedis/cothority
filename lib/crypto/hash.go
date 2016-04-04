@@ -1,12 +1,10 @@
-// hash.go provides some utilities regarding the hashing of bytes, files or
-// stream. The most common way to use it is to call:
-// `HashStream(sha256.New(),stream)`. It will stream the input into the hash
-// function by chunks and output the final hash.
 package crypto
 
 import (
 	"bytes"
+	"encoding"
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	h "hash"
@@ -89,4 +87,31 @@ func HashStreamSuite(suite abstract.Suite, stream io.Reader) ([]byte, error) {
 // suite given.
 func HashFileSuite(suite abstract.Suite, file string) ([]byte, error) {
 	return HashFile(suite.Hash(), file)
+}
+
+// HashArgs takes all args and returns the hash. Every arg has to implement
+// BinaryMarshaler or will be added using fmt.Sprint
+func HashArgs(hash h.Hash, args ...interface{}) ([]byte, error) {
+	var res, buf []byte
+	var err error
+	for _, a := range args {
+		if _, ok := a.(encoding.BinaryMarshaler); ok {
+			buf, err = a.(encoding.BinaryMarshaler).MarshalBinary()
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			buf = []byte(fmt.Sprint(a))
+		}
+		res, err = HashBytes(hash, buf)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+// HashArgsSuite makes a new hash from the suite and calls HashArgs
+func HashArgsSuite(suite abstract.Suite, args ...interface{}) ([]byte, error) {
+	return HashArgs(suite.Hash(), args...)
 }

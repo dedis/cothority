@@ -46,9 +46,7 @@ func main() {
 	dbg.SetDebugVisible(debugVisible)
 	dbg.Lvl1("Starting cothority daemon", releaseVersion)
 	// We're in standalone mode and only start the node
-	var host *sda.Host
-	var err error
-	host, err = sda.NewHostFromFile(ConfigFile)
+	host, err := sda.NewHostFromFile(ConfigFile)
 	// if the file does not exists
 	if os.IsNotExist(err) {
 		// then ask informations to create one
