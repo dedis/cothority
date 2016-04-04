@@ -37,11 +37,14 @@ func TestCreateServerConfig(t *testing.T) {
 
 	servers_copy := make([]*ServerConfig, nbr)
 	for i, s := range servers {
-		servers_copy[i] = ReadServerConfig(s.DirSSH + "/server.conf")
+		servers_copy[i], err = ReadServerConfig(s.DirSSH + "/server.conf")
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
-func TestStartServer(t *testing.T) {
+func TestStartStopServer(t *testing.T) {
 	servers, err := createServers(2, t)
 	if err != nil {
 		t.Fatal("Server-creation:", err)
@@ -50,6 +53,12 @@ func TestStartServer(t *testing.T) {
 		err := server.Start()
 		if err != nil {
 			t.Fatal("Couldn't start server")
+		}
+	}
+	for _, server := range servers {
+		err := server.Stop()
+		if err != nil {
+			t.Fatal("Couldn't stop server")
 		}
 	}
 }

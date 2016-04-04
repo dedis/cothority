@@ -9,7 +9,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/ssh-ks"
 	"github.com/dedis/crypto/config"
 	"os"
 )
@@ -21,6 +21,8 @@ type ServerConfig struct {
 	DirSSHD string
 	// DirSSH for the ssh directory
 	DirSSH string
+	// Server holds a list of servers and clients
+	Server *ssh_ks.Server
 }
 
 func main() {
@@ -71,8 +73,7 @@ func CreateServerConfig(ip string) *ServerConfig {
 	}
 	pair := config.NewKeyPair(network.Suite)
 	return &ServerConfig{
-		Entity:  network.NewEntity(pair.Public, ip),
-		Private: pair.Secret,
+		Server:  ssh_ks.NewServer(pair, ip),
 		DirSSHD: "/etc/sshd",
 		DirSSH:  "/root/.ssh",
 	}
@@ -84,11 +85,11 @@ func (sc *ServerConfig) ReadSSH() error {
 }
 
 func (sc *ServerConfig) Start() error {
-	return nil
+	return sc.Server.Start()
 }
 
 func (sc *ServerConfig) Stop() error {
-	return nil
+	return sc.Server.Stop()
 }
 
 func (sc *ServerConfig) WriteConfig(file string) error {
