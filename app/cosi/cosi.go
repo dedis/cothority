@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
@@ -25,7 +24,6 @@ import (
 )
 
 func main() {
-	dbg.SetDebugVisible(4)
 	app := cli.NewApp()
 	app.Name = "Cosi signer and verifier"
 	app.Usage = "Collectively sign a file or a message and verify it"
@@ -87,13 +85,16 @@ func main() {
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 	}
+	app.Before = func(c *cli.Context) error {
+		dbg.SetDebugVisible(c.GlobalInt("debug"))
+		return nil
+	}
 	app.Run(os.Args)
 }
 
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func checkConfig(c *cli.Context) {
-	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	tomlFileName := c.GlobalString("servers")
 	f, err := os.Open(tomlFileName)
 	handleErrorAndExit("Couldn't open server-file", err)
@@ -138,7 +139,6 @@ func checkList(list *sda.EntityList) {
 
 // signFile will search for the file and sign it
 func signFile(c *cli.Context) {
-	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	fileName := c.Args().First()
 	groupToml := c.GlobalString("servers")
 	file, err := os.Open(fileName)
@@ -156,12 +156,10 @@ func signFile(c *cli.Context) {
 }
 
 func signString(c *cli.Context) {
-	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	msg := strings.NewReader(c.Args().First())
 	groupToml := c.GlobalString("servers")
 	sig, err := sign(msg, groupToml)
 	handleErrorAndExit("Couldn't create signature", err)
-	dbg.Lvl1(sig)
 	writeSigAsJSON(sig, os.Stdout)
 }
 
@@ -185,12 +183,10 @@ func sign(r io.Reader, tomlFileName string) (*sda.CosiResponse, error) {
 }
 
 func verifyFile(c *cli.Context) {
-	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	verify(c.Args().First(), c.GlobalString("servers"))
 }
 
 func verifyString(c *cli.Context) {
-	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	f, err := ioutil.TempFile("", "cosi")
 	handleErrorAndExit("Couldn't create temp file", err)
 	f.Write([]byte(c.Args().First()))
@@ -332,7 +328,7 @@ func handleErrorAndExit(msg string, e error) {
 func writeSigAsJSON(res *sda.CosiResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		fmt.Println("error:", err)
+		dbg.Error("error:", err)
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
