@@ -3,6 +3,7 @@ package jvss
 import (
 	"fmt"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/poly"
 )
@@ -81,8 +82,6 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	}
 	secret.deals[msg.Src] = deal
 
-	//dbg.Lvl1(fmt.Sprintf("Node %d: received %s deal %d/%d from %d", jv.nodeIdx(), msg.SID, len(secret.deals), len(jv.nodeList), msg.Src))
-
 	// Finalise shared secret
 	if err := jv.finaliseSecret(msg.SID); err != nil {
 		return err
@@ -103,7 +102,7 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	secret.numConfs++
 	secret.mtx.Unlock()
 
-	//dbg.Lvl1(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
 
 	// Check if we have enough confirmations to proceed
 	if (secret.numConfs == len(jv.nodeList)) && (msg.SID == LTSS || msg.SID == fmt.Sprintf("%s%d", STSS, jv.nodeIdx())) {
@@ -149,9 +148,9 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	}
 	secret.sigs[msg.Src] = msg.Sig
 
-	//dbg.Lvl1(fmt.Sprintf("Node %d: %s signatures %d/%d (from %d)", jv.nodeIdx(), msg.SID, secret.numSigs, len(jv.nodeList), msg.Src))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s signatures %d/%d", jv.nodeIdx(), msg.SID, len(secret.sigs), len(jv.nodeList)))
 
-	// Create Schnorr signature once we received enough replies
+	// Create Schnorr signature once we received enough partial signatures
 	if jv.info.T == len(secret.sigs) {
 
 		for i := 0; i < len(secret.sigs); i++ {

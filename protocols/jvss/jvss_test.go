@@ -12,7 +12,7 @@ func TestJVSS(t *testing.T) {
 
 	// Setup parameters
 	var name string = "JVSS"      // Protocol name
-	var nodes uint32 = 8          // Number of nodes; FIXME: Starting from 14 nodes the test begins to fail
+	var nodes uint32 = 8          // Number of nodes;
 	var rounds int = 1            // Number of rounds
 	msg := []byte("Hello World!") // Message to-be-signed
 

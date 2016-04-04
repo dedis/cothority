@@ -49,26 +49,26 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 	}
 	proto := node.ProtocolInstance().(*JVSS)
 
-	dbg.Lvl1("JVSS - starting")
+	dbg.Lvl1("Starting setup")
 	node.StartProtocol()
-	dbg.Lvl1("JVSS - setup done")
+	dbg.Lvl1("Setup done")
 
 	for round := 0; round < jvs.Rounds; round++ {
-		dbg.Lvl1("JVSS - starting round", round)
+		dbg.Lvl1("Starting signing round", round)
 		r := monitor.NewTimeMeasure("round")
-		dbg.Lvl1("JVSS - requesting signature")
+		dbg.Lvl2("Requesting signature")
 		sig, err := proto.Sign(msg)
 		if err != nil {
-			dbg.Error("JVSS - could not create signature")
+			dbg.Error("Could not create signature")
 			return err
 		}
 		if jvs.Verify {
-			dbg.Lvl1("JVSS - signature received")
+			dbg.Lvl2("Signature received")
 			if err := proto.Verify(msg, sig); err != nil {
-				dbg.Error("JVSS - invalid signature")
+				dbg.Error("Signature invalid")
 				return err
 			}
-			dbg.Lvl1("JVSS - signature verification succeded")
+			dbg.Lvl2("Signature valid")
 		}
 		r.Record()
 	}

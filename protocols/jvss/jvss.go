@@ -1,9 +1,20 @@
+// JVSS provides a threshold signing scheme based on Shamir's joint verifiable
+// secret sharing algorithm and Schnorr signatures. The protocl runs in two
+// phases. During the protocol setup a long-term shared secret is establised
+// between all participants. Afterwards, any of the members can request a
+// signature, which triggers the creation of another, short-term shared secret.
+// Each member then sends its partial signature to the requester which finally
+// puts everything together to get the final Schnorr signature. To verify a
+// given Schnorr signature a member still has to be able to access the
+// long-term shared secret from which that particular signature was created.
+
 package jvss
 
 import (
 	"fmt"
 	"sync"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -147,7 +158,7 @@ func (jv *JVSS) initSecret(sid string) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
-		//dbg.Lvl1(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.nodeIdx(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.nodeIdx(), sid))
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			deals:    make(map[int]*poly.Deal),
@@ -164,7 +175,7 @@ func (jv *JVSS) initSecret(sid string) error {
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
-		//dbg.Lvl1(fmt.Sprintf("Node %d: Initialising %s deal", jv.nodeIdx(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s deal", jv.nodeIdx(), sid))
 		secret.deals[jv.nodeIdx()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
@@ -185,7 +196,7 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 		return fmt.Errorf("Error, shared secret does not exist")
 	}
 
-	//dbg.Lvl1(fmt.Sprintf("Node %d: %s deals %d/%d", jv.nodeIdx(), sid, len(secret.deals), len(jv.nodeList)))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.nodeIdx(), sid, len(secret.deals), len(jv.nodeList)))
 
 	if len(secret.deals) == jv.info.T {
 
@@ -203,13 +214,13 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		//dbg.Lvl1(fmt.Sprintf("Node %d: shared secret %s created", jv.nodeIdx(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: %s created", jv.nodeIdx(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			//dbg.Lvl1(fmt.Sprintf("Node %d: %s Schnorr struct initialised", jv.nodeIdx(), sid))
+			dbg.Lvl2(fmt.Sprintf("Node %d: %s Schnorr struct initialised", jv.nodeIdx(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret
