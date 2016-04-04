@@ -110,6 +110,11 @@ func (jv *JVSS) Start() error {
 // Verify verifies the given message against the given Schnorr signature.
 // Returns nil if the signature is valid and an error otherwise.
 func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
+
+	if !jv.ltssInit {
+		return fmt.Errorf("Error, long-term shared secret has not been initialised")
+	}
+
 	h := jv.keyPair.Suite.Hash()
 	h.Write(msg)
 	return jv.schnorr.VerifySchnorrSig(sig, h)
