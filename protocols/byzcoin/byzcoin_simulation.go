@@ -15,8 +15,8 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
-	sda.ProtocolRegister("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
+	sda.SimulationRegister("ByzCoin", NewSimulation)
+	sda.RegisterNewProtocol("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
 }
@@ -29,6 +29,7 @@ type Simulation struct {
 	SimulationConfig
 }
 
+// SimulationConfig is the config used by the simulation for byzcoin
 type SimulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
@@ -41,6 +42,7 @@ type SimulationConfig struct {
 	Fail uint
 }
 
+// NewSimulation returns a fresh byzcoin simulation out of the toml config
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)
@@ -86,7 +88,7 @@ func (m *monitorMut) Record() {
 
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
-	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
+	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
 	node, _ := sdaConf.Overlay.NewNodeEmpty("Broadcast", sdaConf.Tree)
@@ -129,7 +131,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
 				dbg.Error("Round", round, "failed:", err)
 			} else {
-				dbg.Lvl1("Round", round, "success")
+				dbg.Lvl2("Round", round, "success")
 			}
 		})
 

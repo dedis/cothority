@@ -43,7 +43,7 @@ func TestRegister(t *testing.T) {
 	}
 
 	trType := RegisterMessageType(&TestRegisterS{})
-	if uuid.Equal(trType, uuid.Nil) {
+	if uuid.Equal(uuid.UUID(trType), uuid.Nil) {
 		t.Fatal("Couldn't register TestRegister-struct")
 	}
 
@@ -65,8 +65,8 @@ func TestMultiClose(t *testing.T) {
 		dbg.Lvl3("Getting connection from", s)
 		gotConnect <- true
 	}
-	h1 := NewTcpHost()
-	h2 := NewTcpHost()
+	h1 := NewTCPHost()
+	h2 := NewTCPHost()
 	done := make(chan bool)
 	go func() {
 		err := h1.Listen("localhost:2000", fn)
@@ -93,7 +93,7 @@ func TestMultiClose(t *testing.T) {
 	}
 	<-done
 
-	h3 := NewTcpHost()
+	h3 := NewTCPHost()
 	go func() {
 		err := h3.Listen("localhost:2000", fn)
 		if err != nil {
@@ -135,8 +135,8 @@ func TestSecureMultiClose(t *testing.T) {
 	kp2 := config.NewKeyPair(Suite)
 	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
-	h1 := NewSecureTcpHost(kp1.Secret, entity1)
-	h2 := NewSecureTcpHost(kp2.Secret, entity2)
+	h1 := NewSecureTCPHost(kp1.Secret, entity1)
+	h2 := NewSecureTCPHost(kp2.Secret, entity2)
 	done := make(chan bool)
 	go func() {
 		err := h1.Listen(fn)
@@ -203,8 +203,8 @@ func TestTcpCounterIO(t *testing.T) {
 		close(receiverStarted)
 	}
 
-	h1 := NewTcpHost()
-	h2 := NewTcpHost()
+	h1 := NewTCPHost()
+	h2 := NewTCPHost()
 	done := make(chan bool)
 	go func() {
 		err := h1.Listen("localhost:3000", fn)
@@ -252,8 +252,8 @@ func TestSecureTcp(t *testing.T) {
 	kp2 := config.NewKeyPair(Suite)
 	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
-	host1 := NewSecureTcpHost(kp1.Secret, entity1)
-	host2 := NewSecureTcpHost(kp1.Secret, entity2)
+	host1 := NewSecureTCPHost(kp1.Secret, entity1)
+	host2 := NewSecureTCPHost(kp1.Secret, entity2)
 
 	done := make(chan bool)
 	go func() {
@@ -288,8 +288,8 @@ func TestTcpNetwork(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	// Create one client + one server
-	clientHost := NewTcpHost()
-	serverHost := NewTcpHost()
+	clientHost := NewTCPHost()
+	serverHost := NewTCPHost()
 	// Give them keys
 	clientPub := Suite.Point().Base()
 	serverPub := Suite.Point().Add(Suite.Point().Base(), Suite.Point().Base())

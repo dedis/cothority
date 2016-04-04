@@ -1,4 +1,3 @@
-// Holds a message that is passed to all children, using channels.
 package example_channels
 
 import (
@@ -9,13 +8,13 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(MessageAnnounce{})
-	network.RegisterMessageType(MessageReply{})
 	sda.RegisterNewProtocol("ExampleChannels", NewExampleChannels)
+	network.RegisterMessageType(Announce{})
+	network.RegisterMessageType(Reply{})
 }
 
-// ProtocolExampleChannels just holds a message that is passed to all children. It
-// also defines a channel that will receive the number of children. Only the
+// ProtocolExampleChannels just holds a message that is passed to all children.
+// It also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
 type ProtocolExampleChannels struct {
 	*sda.Node
@@ -46,7 +45,7 @@ func NewExampleChannels(n *sda.Node) (sda.ProtocolInstance, error) {
 func (p *ProtocolExampleChannels) Start() error {
 	dbg.Lvl3("Starting ExampleChannels")
 	for _, c := range p.Children() {
-		p.SendTo(c, &MessageAnnounce{"Example is here"})
+		p.SendTo(c, &Announce{"Example is here"})
 	}
 	return nil
 }
@@ -59,11 +58,11 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			if !p.IsLeaf() {
 				// If we have children, send the same message to all of them
 				for _, c := range p.Children() {
-					p.SendTo(c, &announcement.MessageAnnounce)
+					p.SendTo(c, &announcement.Announce)
 				}
 			} else {
 				// If we're the leaf, start to reply
-				p.SendTo(p.Parent(), &MessageReply{1})
+				p.SendTo(p.Parent(), &Reply{1})
 				return nil
 			}
 		case reply := <-p.ChannelReply:
@@ -74,7 +73,7 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			dbg.Lvl3(p.Entity().Addresses, "is done with total of", children)
 			if !p.IsRoot() {
 				dbg.Lvl3("Sending to parent")
-				p.SendTo(p.Parent(), &MessageReply{children})
+				p.SendTo(p.Parent(), &Reply{children})
 			} else {
 				dbg.Lvl3("Root-node is done - nbr of children found:", children)
 				p.ChildCount <- children

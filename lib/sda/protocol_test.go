@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/satori/go.uuid"
 )
 
 var testID = "testProtocol"
@@ -26,7 +25,7 @@ type ProtocolTest struct {
 func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
 		Node:     n,
-		StartMsg: make(chan string),
+		StartMsg: make(chan string, 1),
 		DispMsg:  make(chan string),
 	}, nil
 }
@@ -81,7 +80,7 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 func TestProtocolRegistration(t *testing.T) {
 	var name = "testProtocol"
 	sda.RegisterNewProtocol("testProtocol", NewProtocolTest)
-	if uuid.Equal(sda.ProtocolFactory.ProtocolID(name), uuid.Nil) {
+	if sda.ProtocolFactory.ProtocolID(name) == sda.EmptyProtocolID {
 		t.Fatal("Test should exist now")
 	}
 }

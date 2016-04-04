@@ -3,13 +3,13 @@ package crypto
 import (
 	"testing"
 
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/config"
+	"github.com/dedis/crypto/edwards/ed25519"
 )
 
 func TestSchnorrSignature(t *testing.T) {
 	msg := []byte("Hello Schnorr")
-	suite := network.Suite
+	suite := ed25519.NewAES128SHA256Ed25519(false)
 	kp := config.NewKeyPair(suite)
 
 	s, err := SignSchnorr(suite, kp.Secret, msg)

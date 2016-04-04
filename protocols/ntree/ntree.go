@@ -1,9 +1,3 @@
-// Simple protocol where each node signs a message and the parent node verifies
-// it.
-// Implements a scheme where a leader (the root node) collects N standard individual signatures
-// from the N witnesses using a tree. As the "naive" scheme where the leader directly sends the message to be signed
-// directly to its children is a special case if ntree (a 1-level tree) this can also be used to measure how the naive
-// approach compares to ntree and CoSi.
 package ntree
 
 import (
@@ -18,6 +12,7 @@ func init() {
 	// register network messages and protocol
 	network.RegisterMessageType(Message{})
 	network.RegisterMessageType(SignatureReply{})
+	sda.ProtocolRegisterName("NaiveTree", NewProtocol)
 }
 
 // Protocol implements the sda.ProtocolInstance interface
@@ -31,7 +26,8 @@ type Protocol struct {
 	verifySignature int
 }
 
-func NewProtocol(node *sda.Node) (*Protocol, error) {
+// NewProtocol is used internally to register the protocol.
+func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 	p := &Protocol{
 		Node: node,
 	}
@@ -46,6 +42,7 @@ func NewProtocol(node *sda.Node) (*Protocol, error) {
 	return p, nil
 }
 
+// Start implements sda.ProtocolInstance.
 func (p *Protocol) Start() error {
 	if p.IsRoot() {
 		dbg.Lvl3("Starting ntree/naive")
@@ -56,6 +53,8 @@ func (p *Protocol) Start() error {
 	}
 }
 
+// HandleSignRequest is a handler for incoming sign-requests. It's registered as
+// a handler in the sda.Node.
 func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	p.message = msg.Msg
 	p.verifySignature = msg.VerifySignature
@@ -82,6 +81,9 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	return nil
 }
 
+// HandleSignBundle is a handler responsible for adding the node's signature
+// and verifying the children's signatures (verification level can be controlled
+// by the VerifySignature flag).
 func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	dbg.Lvl3("Appending our signature to the collected ones and send to parent")
 	var sig SignatureBundle
@@ -123,10 +125,6 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
 	p.Done()
 	return nil
-}
-
-func (p *Protocol) SetMessage(msg []byte) {
-	p.message = msg
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {

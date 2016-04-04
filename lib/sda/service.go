@@ -74,21 +74,33 @@ type Service interface {
 	ProcessRequest(*network.Entity, *Request)
 }
 
+// ProtocolID is an identifier for the different protocols.
+type ProtocolID uuid.UUID
+
+// String returns a string representation of this ProtocolID
+func (p *ProtocolID) String() string {
+	return uuid.UUID(*p).String()
+}
+
+// EmptyProtocolID is a nil - empty ProtocolID which should not correspond to
+// any particular protocol
+var EmptyProtocolID = ProtocolID(uuid.Nil)
+
 // protocolFactory stores all the ProtocolConstructor together. It can
 // instantiate any registered protocol by name.
 type protocolFactory struct {
-	constructors map[uuid.UUID]ProtocolConstructor
+	constructors map[ProtocolID]ProtocolConstructor
 	// translations between ProtocolID and the name
-	translations map[string]uuid.UUID
+	translations map[string]ProtocolID
 	// the reverse translation for easy debugging
-	reverse map[uuid.UUID]string
+	reverse map[ProtocolID]string
 }
 
 // The global factory that can be used to instantiate any protocol
 var ProtocolFactory = &protocolFactory{
-	constructors: make(map[uuid.UUID]ProtocolConstructor),
-	translations: make(map[string]uuid.UUID),
-	reverse:      make(map[uuid.UUID]string)}
+	constructors: make(map[ProtocolID]ProtocolConstructor),
+	translations: make(map[string]ProtocolID),
+	reverse:      make(map[ProtocolID]string)}
 
 // RegisterNewProtocol takes the name of the protocol and a NewProtocol function
 // that will be stored.
@@ -129,7 +141,7 @@ func (pf *protocolFactory) Instantiate(name string, node *Node) (ProtocolInstanc
 }
 
 // InstantiateByID is equivalent of Instantiate using the id instead.
-func (pf *protocolFactory) InstantiateByID(id uuid.UUID, node *Node) (ProtocolInstance, error) {
+func (pf *protocolFactory) InstantiateByID(id ProtocolID, node *Node) (ProtocolInstance, error) {
 	cons, ok := pf.constructors[id]
 	if !ok {
 		dbg.Lvl1("ProtocolFactory:", pf.translations)
@@ -139,21 +151,21 @@ func (pf *protocolFactory) InstantiateByID(id uuid.UUID, node *Node) (ProtocolIn
 }
 
 // ProtocolID returns the ProtocolID out of the name
-func (pf *protocolFactory) ProtocolID(name string) uuid.UUID {
+func (pf *protocolFactory) ProtocolID(name string) ProtocolID {
 	id, ok := pf.translations[name]
 	if !ok {
-		return uuid.Nil
+		return EmptyProtocolID
 	}
 	return id
 }
 
-func (pf *protocolFactory) Name(id uuid.UUID) string {
+func (pf *protocolFactory) Name(id ProtocolID) string {
 	name := pf.reverse[id]
 	return name
 }
 
 func (pf *protocolFactory) register(name string, cons ProtocolConstructor) {
-	id := uuid.NewV5(uuid.NamespaceURL, name)
+	id := ProtocolID(uuid.NewV5(uuid.NamespaceURL, name))
 	if _, ok := pf.constructors[id]; ok {
 		dbg.Lvl2("Already have a protocol registered at the same name" + name)
 	}
@@ -173,6 +185,8 @@ func (df *defaultConstructor) NewProtocol(n *Node) (ProtocolInstance, error) {
 	return df.constructor(n)
 }
 
+// ServiceID is an identifier for Service. Use a ServiceID to communicate to a
+// service through its external API.
 type ServiceID uuid.UUID
 
 // String returns the string version of this ID
@@ -362,11 +376,11 @@ func (s *serviceStore) serviceByID(id ServiceID) Service {
 // * Data: contains all the information of the request
 type Request struct {
 	// Name of the service to direct this request to
-	Service ServiceID
+	Service ServiceID `json:"service_id"`
 	// Type is the type of the underlying request
-	Type string
+	Type string `json:"type"`
 	// Data containing all the information in the request
-	Data *json.RawMessage
+	Data *json.RawMessage `json:"data"`
 }
 
 // RequestType is the type that registered by the network library

@@ -18,6 +18,7 @@ type prePrepareChan struct {
 	PrePrepare
 }
 
+// Prepare is the prepare packet
 type Prepare struct {
 	HeaderHash string
 }
@@ -27,6 +28,7 @@ type prepareChan struct {
 	Prepare
 }
 
+// Commit is the commit packet in the protocol
 type Commit struct {
 	HeaderHash string
 }
@@ -36,6 +38,7 @@ type commitChan struct {
 	Commit
 }
 
+// Finish is just to tell the others node that the protocol is finished
 type Finish struct {
 	Done string
 }

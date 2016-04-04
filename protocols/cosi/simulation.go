@@ -17,18 +17,20 @@ func init() {
 	sda.RegisterNewProtocol("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
 }
 
-type CoSiSimulation struct {
+// Simulation implements the sda.Simulation of the CoSi protocol.
+type Simulation struct {
 	sda.SimulationBFTree
 
-	// Do we want to check signature at each level, only the root or nothing at
-	// all ?
-	// See https://github.com/dedis/cothority/issues/260
+	// 0 - don't check any signatures
+	// 1 - only the root-node checks the aggregate signature
+	// 2 - every node checks the aggregate signature
 	Checking int
 }
 
-func NewCoSiSimulation(config string) (sda.Simulation, error) {
-	cs := new(CoSiSimulation)
-	cs.Checking = 2
+// NewSimulation returns an sda.Simulation or an error if sth. is wrong.
+// Used to register the CoSi protocol.
+func NewSimulation(config string) (sda.Simulation, error) {
+	cs := &Simulation{Checking: 2}
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
@@ -37,14 +39,16 @@ func NewCoSiSimulation(config string) (sda.Simulation, error) {
 	return cs, nil
 }
 
-func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+// Setup implements sda.Simulation.
+func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	cs.CreateEntityList(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
 	return sim, err
 }
 
-func (cs *CoSiSimulation) Node(sc *sda.SimulationConfig) error {
+// Node implements sda.Simulation.
+func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
 	err := cs.SimulationBFTree.Node(sc)
 	if err != nil {
 		return err
@@ -53,16 +57,17 @@ func (cs *CoSiSimulation) Node(sc *sda.SimulationConfig) error {
 	return nil
 }
 
-func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
+// Run implements sda.Simulation.
+func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)
-	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
+	dbg.Lvl2("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateNewNode("ProtocolCosi", config.Tree)
+		node, err := config.Overlay.CreateNewNode("CoSi", config.Tree)
 		if err != nil {
 			return err
 		}
@@ -79,7 +84,7 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
 				dbg.Lvl1("Round", round, " => fail verification")
 			} else {
-				dbg.Lvl1("Round", round, " => success")
+				dbg.Lvl2("Round", round, " => success")
 			}
 			done <- true
 		}

@@ -10,7 +10,7 @@ import (
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
-// ReadFirstNBlocks: only read the first ReadFirstNBlocks in the the BlocksDir
+// ReadFirstNBlocks specifcy how many blocks in the the BlocksDir it must read
 // (so you only have to copy the first blocks to deterLab)
 const ReadFirstNBlocks = 400
 
@@ -22,6 +22,7 @@ type Client struct {
 	srv BlockServer
 }
 
+// NewClient returns a fresh new client out of a blockserver
 func NewClient(s BlockServer) *Client {
 	return &Client{srv: s}
 }
@@ -35,7 +36,7 @@ func (c *Client) StartClientSimulation(blocksDir string, numTxs int) error {
 }
 
 func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
-	dbg.Lvl1("ByzCoin Client will trigger up to", nTxs, " transactions")
+	dbg.Lvl2("ByzCoin Client will trigger up to", nTxs, "transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 	if err != nil {
 		dbg.Error("Error: Couldn't parse blocks in", blocksPath,

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-CSV_DIR=Paper_cosi
-#CSV_DIR=Paper_cosi2
+CSV_DIR=.
 CSV_REL=""
 PIC="true"
 #SHOW="true"
@@ -11,7 +10,7 @@ main(){
   plot_roundtime
   plot_over
   plot_bf
-  #plot_stamp
+  plot_stamp
 }
 
 add_dir(){
@@ -36,7 +35,7 @@ plot_roundtime(){
   add_dir sign_huge.csv shamir_multi_adapted.csv naive_multi_adapted.csv naive_multi_adapted_skipcheck.csv ntree_multi_adapted.csv
   plot 0 comparison_roundtime noclear
   plot 1 comparison_systime noclear
-  #plot 3 comparison_check noclear
+  plot 3 comparison_check noclear
   CSV_REL=""
 }
 

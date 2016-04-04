@@ -12,9 +12,8 @@ import (
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
 func init() {
-	sda.SimulationRegister("PbftSimulation", NewSimulation)
-	sda.RegisterNewProtocol("PBFT", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(n) })
-	sda.RegisterNewProtocol("Broadcast", func(n *sda.Node) (sda.ProtocolInstance, error) { return manage.NewBroadcastProtocol(n) })
+	sda.SimulationRegister("ByzCoinPBFT", NewSimulation)
+	sda.RegisterNewProtocol("ByzCoinPBFT", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(n) })
 }
 
 // Simulation implements sda.Simulation interface
@@ -26,6 +25,7 @@ type Simulation struct {
 	Blocksize int
 }
 
+// NewSimulation returns a pbft simulation
 func NewSimulation(config string) (sda.Simulation, error) {
 	sim := &Simulation{}
 	_, err := toml.Decode(config, sim)
@@ -51,6 +51,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 	return sc, nil
 }
 
+// Run runs the simulation
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	doneChan := make(chan bool)
 	doneCB := func() {
@@ -88,10 +89,10 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	proto.Start()
 	// wait
 	<-broadDone
-	dbg.Lvl3("Simulation can start !")
+	dbg.Lvl3("Simulation can start!")
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		node, err := sdaConf.Overlay.CreateNewNode("PBFT", sdaConf.Tree)
+		node, err := sdaConf.Overlay.CreateNewNode("ByzCoinPBFT", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
@@ -101,7 +102,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		proto.onDoneCB = doneCB
 
 		r := monitor.NewTimeMeasure("round_pbft")
-		err = proto.PrePrepare()
+		err = proto.Start()
 		if err != nil {
 			dbg.Error("Couldn't start PrePrepare")
 			return err
@@ -111,7 +112,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		<-doneChan
 		r.Record()
 
-		dbg.Lvl1("Finished round", round)
+		dbg.Lvl2("Finished round", round)
 	}
 	return nil
 }

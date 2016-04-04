@@ -222,6 +222,7 @@ func (s *Stats) Collect() {
 	}
 }
 
+// Value returns the value object corresponding to this name in this Stats
 func (s *Stats) Value(name string) *Value {
 	if val, ok := s.values[name]; ok {
 		return val
@@ -261,7 +262,7 @@ func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
 		}
 	}
 	// Then parse the others keys
-	statics := make([]string, 0)
+	var statics []string
 	for k, v := range rc {
 		// pass the ones we already registered
 		var alreadyRegistered bool
@@ -311,6 +312,7 @@ type Value struct {
 	store []float64
 }
 
+// NewValue returns a new value object with this name
 func NewValue(name string) *Value {
 	return &Value{name: name, store: make([]float64, 0)}
 }
@@ -324,11 +326,12 @@ func (t *Value) Store(newTime float64) {
 	t.store = append(t.store, newTime)
 }
 
-// Collect will Collect all Values stored in the store's Value.
-// It is kept as a streaming average / dev processus fr the moment (not the most
-// optimized).
-// streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
+// Collect will collect all float64 stored in the store's Value and will compute
+// the basic statistics about them such as min, max, dev and avg.
 func (t *Value) Collect() {
+	// It is kept as a streaming average / dev processus for the moment (not the most
+	// optimized).
+	// streaming dev algo taken from http://www.johndcook.com/blog/standard_deviation/
 	t.sum = 0
 	for _, newTime := range t.store {
 		// nothings takes 0 ms to complete, so we know it's the first time
@@ -339,7 +342,7 @@ func (t *Value) Collect() {
 			t.max = newTime
 		}
 
-		t.n += 1
+		t.n++
 		if t.n == 1 {
 			t.oldM = newTime
 			t.newM = newTime
@@ -360,7 +363,7 @@ func (t *Value) Filter(filt DataFilter) {
 	t.store = filt.Filter(t.name, t.store)
 }
 
-// Average will set the current Value to the average of all Value
+// AverageValue will create a Value averaging all Values given
 func AverageValue(st ...*Value) *Value {
 	if len(st) < 1 {
 		return new(Value)
@@ -378,14 +381,17 @@ func AverageValue(st ...*Value) *Value {
 	return &t
 }
 
-// Get the minimum or the maximum of all stored Values
+// Min returns the minimum of all stored float64
 func (t *Value) Min() float64 {
 	return t.min
 }
+
+// Max returns the maximum of all stored float64
 func (t *Value) Max() float64 {
 	return t.max
 }
 
+// Sum returns the sum of all stored float64
 func (t *Value) Sum() float64 {
 	return t.sum
 }
@@ -405,12 +411,12 @@ func (t *Value) Dev() float64 {
 	return t.dev
 }
 
-// Header returns the first line of the CSV-file
+// HeaderFields returns the first line of the CSV-file
 func (t *Value) HeaderFields() []string {
 	return []string{t.name + "_min", t.name + "_max", t.name + "_avg", t.name + "_sum", t.name + "_dev"}
 }
 
-// Value returns the string representation of a Value
+// Values returns the string representation of a Value
 func (t *Value) Values() []string {
 	return []string{fmt.Sprintf("%f", t.Min()), fmt.Sprintf("%f", t.Max()), fmt.Sprintf("%f", t.Avg()), fmt.Sprintf("%f", t.Sum()), fmt.Sprintf("%f", t.Dev())}
 }

@@ -65,7 +65,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
+	err = n.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -103,7 +103,7 @@ func TestNodeChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
+	err = n.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -194,7 +194,7 @@ func TestProtocolHandlers(t *testing.T) {
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers
 
-	if child1.Entity().Id == child2.Entity().Id {
+	if child1.Entity().ID == child2.Entity().ID {
 		t.Fatal("Both entities should be different")
 	}
 
@@ -206,7 +206,7 @@ func TestProtocolHandlers(t *testing.T) {
 	}
 	child2.SendTo(node.TreeNode(), &NodeTestAggMsg{})
 	final := <-IncomingHandlers
-	if final.Entity().Id != node.Entity().Id {
+	if final.Entity().ID != node.Entity().ID {
 		t.Fatal("This should be the same ID")
 	}
 }
@@ -256,6 +256,7 @@ func TestMsgAggregation(t *testing.T) {
 func TestFlags(t *testing.T) {
 	defer dbg.AfterTest(t)
 
+	testType := network.MessageTypeID(uuid.Nil)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
@@ -263,15 +264,15 @@ func TestFlags(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't create node.")
 	}
-	if n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	if n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
-	n.SetFlag(uuid.Nil, sda.AggregateMessages)
-	if !n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	n.SetFlag(testType, sda.AggregateMessages)
+	if !n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should HAVE AggregateMessages-flag cleared")
 	}
-	n.ClearFlag(uuid.Nil, sda.AggregateMessages)
-	if n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	n.ClearFlag(testType, sda.AggregateMessages)
+	if n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
 }

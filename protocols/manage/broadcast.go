@@ -1,13 +1,17 @@
-// Sends a message to all nodes so that the connections are set up
 package manage
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/satori/go.uuid"
 )
 
-// Broadcast will just simply broadcast
+func init() {
+	sda.RegisterNewProtocol("Broadcast", NewBroadcastProtocol)
+}
+
+// Broadcast ensures that all nodes are connected to each other. If you need
+// a confirmation once everything is set up, you can register a callback-function
+// using RegisterOnDone()
 type Broadcast struct {
 	*sda.Node
 
@@ -27,7 +31,7 @@ type Broadcast struct {
 	}
 
 	// map for all the nodes => state
-	listNode map[uuid.UUID]*sda.TreeNode
+	listNode map[sda.TreeNodeID]*sda.TreeNode
 	// how many peers are connected with me
 	ackdNode int
 	done     chan bool
@@ -36,7 +40,8 @@ type Broadcast struct {
 	okdNode int
 }
 
-func NewBroadcastProtocol(n *sda.Node) (*Broadcast, error) {
+// NewBroadcastProtocol returns an initialised protocol for broadcast
+func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 	b := new(Broadcast).init(n)
 	go b.Start()
 	return b, nil
@@ -49,12 +54,12 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	b.RegisterChannel(&b.announceChan)
 	b.RegisterChannel(&b.okChan)
 
-	lists := b.Tree().ListNodes()
-	b.listNode = make(map[uuid.UUID]*sda.TreeNode)
+	lists := b.Tree().List()
+	b.listNode = make(map[sda.TreeNodeID]*sda.TreeNode)
 	b.ackdNode = 0
 	b.done = make(chan bool, 1)
 	for _, tn := range lists {
-		if uuid.Equal(tn.Id, n.TreeNode().Id) {
+		if tn.Id.Equals(n.TreeNode().Id) {
 			continue
 		}
 		b.listNode[tn.Id] = tn
@@ -62,6 +67,9 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	go b.listen()
 	return b
 }
+
+// NewBroadcastRootProtocol is an abomination that should not exist - will
+// be killed with https://github.com/dedis/cothority/pull/325
 func NewBroadcastRootProtocol(n *sda.Node) (*Broadcast, error) {
 	b := new(Broadcast).init(n)
 	// it does not start yet.
@@ -132,16 +140,20 @@ func (b *Broadcast) handleOk(tn *sda.TreeNode) {
 
 }
 
+// RegisterOnDone takes a function that will be called once all connections
+// are set up.
 func (b *Broadcast) RegisterOnDone(fn func()) {
 	b.onDoneCb = fn
 }
 
+// Announce is the first message sent to all nodes.
 type Announce struct {
 }
 
+// ACK is the second message that goes back to the sender.
 type ACK struct {
 }
 
-// OK means I am connected with everyone and I tell you this.
+// OK is sent from all nodes back to the root.
 type OK struct {
 }

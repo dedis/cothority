@@ -10,24 +10,21 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-/*
-Overlay keeps all trees and entity-lists for a given host. It creates
-Nodes and ProtocolInstances upon request and dispatches the messages.
-*/
-
+// Overlay keeps all trees and entity-lists for a given host. It creates
+// Nodes and ProtocolInstances upon request and dispatches the messages.
 type Overlay struct {
 	host *Host
 	// mapping from Token.Id() to Node
-	nodes map[uuid.UUID]*Node
+	nodes map[TokenID]*Node
 	// false = NOT DONE
 	// true = DONE
-	nodeInfo map[uuid.UUID]bool
+	nodeInfo map[TokenID]bool
 	nodeLock sync.Mutex
 	// mapping from Tree.Id to Tree
-	trees    map[uuid.UUID]*Tree
+	trees    map[TreeID]*Tree
 	treesMut sync.Mutex
 	// mapping from EntityList.id to EntityList
-	entityLists    map[uuid.UUID]*EntityList
+	entityLists    map[EntityListID]*EntityList
 	entityListLock sync.Mutex
 	// cache for relating token(~Node) to TreeNode
 	cache TreeNodeCache
@@ -37,10 +34,10 @@ type Overlay struct {
 func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:        h,
-		nodes:       make(map[uuid.UUID]*Node),
-		nodeInfo:    make(map[uuid.UUID]bool),
-		trees:       make(map[uuid.UUID]*Tree),
-		entityLists: make(map[uuid.UUID]*EntityList),
+		nodes:       make(map[TokenID]*Node),
+		nodeInfo:    make(map[TokenID]bool),
+		trees:       make(map[TreeID]*Tree),
+		entityLists: make(map[EntityListID]*EntityList),
 		cache:       NewTreeNodeCache(),
 	}
 }
@@ -50,7 +47,7 @@ func NewOverlay(h *Host) *Overlay {
 // - ask for the Tree
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
-func (o *Overlay) TransmitMsg(sdaMsg *SDAData) error {
+func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
@@ -105,7 +102,7 @@ func (o *Overlay) TreeFromToken(tok *Token) *Tree {
 }
 
 // Tree returns the tree given by treeId or nil if not found
-func (o *Overlay) Tree(tid uuid.UUID) *Tree {
+func (o *Overlay) Tree(tid TreeID) *Tree {
 	o.treesMut.Lock()
 	defer o.treesMut.Unlock()
 	return o.trees[tid]
@@ -124,7 +121,7 @@ func (o *Overlay) EntityListFromToken(tok *Token) *EntityList {
 }
 
 // EntityList returns the entityList given by EntityListID
-func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
+func (o *Overlay) EntityList(elid EntityListID) *EntityList {
 	o.entityListLock.Lock()
 	defer o.entityListLock.Unlock()
 	return o.entityLists[elid]
@@ -133,49 +130,44 @@ func (o *Overlay) EntityList(elid uuid.UUID) *EntityList {
 // StartNewNode is to be called by the root to start a new node with the given
 // protocol over the given tree.
 func (o *Overlay) StartNewNode(name string, tree *Tree) (*Node, error) {
+	return o.startNewNodeID(ProtocolFactory.ProtocolID(name), tree)
+}
+
+// StartNewNodeID is similar to StartNewNode but directly takes the ID of the
+// protocol to run.
+func (o *Overlay) startNewNodeID(protocol ProtocolID, tree *Tree) (*Node, error) {
 	// check everything exists
 	rootEntity := tree.Root.Entity
 	if !o.host.Entity.Equal(rootEntity) {
 		return nil, errors.New("StartNewNode should be called by root, but entity of host differs from the root")
 	}
 
-	n, err := o.newNodeID(ProtocolFactory.ProtocolID(name), tree)
+	n, err := o.createNewNodeID(protocol, tree)
 	if err != nil {
 		return nil, err
 	}
-	go n.Start()
+	go n.StartProtocol()
 	return n, nil
 }
 
 // CreateNewNode is kept as legacy reason in case you want to create a node
 // without the protocol starting yet.
 func (o *Overlay) CreateNewNode(name string, tree *Tree) (*Node, error) {
-	n, err := o.newNodeID(ProtocolFactory.ProtocolID(name), tree)
+	n, err := o.createNewNodeID(ProtocolFactory.ProtocolID(name), tree)
 	return n, err
-}
-
-// StartNewNodeID is similar to StartNewNode but directly takes the ID of the
-// protocol to run.
-func (o *Overlay) StartNewNodeID(protocol uuid.UUID, tree *Tree) (*Node, error) {
-	n, err := o.newNodeID(protocol, tree)
-	if err != nil {
-		return nil, err
-	}
-	go n.Start()
-	return n, nil
 }
 
 // newNodeID is used to create the node. It is called each time the overlay
 // creates a node.
-func (o *Overlay) newNodeID(protocol uuid.UUID, tree *Tree) (*Node, error) {
+func (o *Overlay) createNewNodeID(protocol ProtocolID, tree *Tree) (*Node, error) {
 	// instantiate
 	token := &Token{
-		ProtocolID:   protocol,
+		ProtoID:      protocol,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tree.Root.Id,
 		// Host is handling the generation of protocolInstanceID
-		RoundID: uuid.NewV4(),
+		RoundID: RoundID(uuid.NewV4()),
 	}
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
@@ -200,7 +192,7 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 	if tree == nil {
 		return nil, errors.New("Didn't find tree")
 	}
-	tn := tree.GetTreeNode(t.TreeNodeID)
+	tn := tree.Search(t.TreeNodeID)
 	if tn == nil {
 		return nil, errors.New("Didn't find treenode")
 	}
@@ -211,7 +203,7 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 
 // SendToTreeNode sends a message to a treeNode
 func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
-	sda := &SDAData{
+	sda := &Data{
 		Msg:  msg,
 		From: from,
 		To:   from.ChangeTreeNodeID(to.Id),
@@ -268,10 +260,7 @@ func (o *Overlay) nodeDelete(tok *Token) {
 	o.nodeInfo[tok.Id()] = true
 }
 
-func (o *Overlay) Private() abstract.Secret {
-	return o.host.Private()
-}
-func (o *Overlay) Suite() abstract.Suite {
+func (o *Overlay) suite() abstract.Suite {
 	return o.host.Suite()
 }
 
@@ -289,11 +278,11 @@ func (o *Overlay) Close() {
 // is not 1-1 (many Token can point to one TreeNode, but one token leads to one
 // TreeNode), we have to do certain
 // lookup, but that's better than searching the tree each time.
-type TreeNodeCache map[uuid.UUID]map[uuid.UUID]*TreeNode
+type TreeNodeCache map[TreeID]map[TreeNodeID]*TreeNode
 
 // Returns a new TreeNodeCache
 func NewTreeNodeCache() TreeNodeCache {
-	m := make(map[uuid.UUID]map[uuid.UUID]*TreeNode)
+	m := make(map[TreeID]map[TreeNodeID]*TreeNode)
 	return m
 }
 
@@ -301,10 +290,10 @@ func NewTreeNodeCache() TreeNodeCache {
 // It will also cache the parent and children of the treenode since that's most
 // likely what we are going to query.
 func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
-	var mm map[uuid.UUID]*TreeNode
+	var mm map[TreeNodeID]*TreeNode
 	var ok bool
 	if mm, ok = tnc[tree.Id]; !ok {
-		mm = make(map[uuid.UUID]*TreeNode)
+		mm = make(map[TreeNodeID]*TreeNode)
 	}
 	// add treenode
 	mm[treeNode.Id] = treeNode
@@ -323,7 +312,7 @@ func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 // GetFromToken returns the TreeNode that the token is pointing at, or
 // nil if there is none for this token.
 func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
-	var mm map[uuid.UUID]*TreeNode
+	var mm map[TreeNodeID]*TreeNode
 	var ok bool
 	if tok == nil {
 		return nil

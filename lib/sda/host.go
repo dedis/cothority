@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -19,10 +19,8 @@ import (
 	"time"
 )
 
-/*
-Host is the structure responsible for holding information about the current
- state
-*/
+// Host is the structure responsible for holding information about the current
+// state
 type Host struct {
 	// Our entity (i.e. identity over the network)
 	Entity *network.Entity
@@ -34,21 +32,21 @@ type Host struct {
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
 	// The open connections
-	connections map[uuid.UUID]network.SecureConn
+	connections map[network.EntityID]network.SecureConn
 	// chan of received messages - testmode
-	networkChan chan network.NetworkMessage
+	networkChan chan network.Message
 	// The database of entities this host knows
-	entities map[uuid.UUID]*network.Entity
+	entities map[network.EntityID]*network.Entity
 	// lock associated to access entityLists
 	entityListsLock sync.RWMutex
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
-	pendingTreeMarshal map[uuid.UUID][]*TreeMarshal
+	pendingTreeMarshal map[EntityListID][]*TreeMarshal
 	// pendingSDAData are a list of message we received that does not correspond
-	// to any local tree or/and entitylist. We first request theses so we can
-	// instantiate properly protocolinstance that will use these SDAData msg.
-	pendingSDAs []*SDAData
+	// to any local Tree or/and EntityList. We first request theses so we can
+	// instantiate properly protocolInstance that will use these SDAData msg.
+	pendingSDAs []*Data
 	// The suite used for this Host
 	suite abstract.Suite
 	// We're about to close
@@ -81,14 +79,14 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	h := &Host{
 		Entity:              e,
 		workingAddress:      e.First(),
-		connections:         make(map[uuid.UUID]network.SecureConn),
-		entities:            make(map[uuid.UUID]*network.Entity),
-		pendingTreeMarshal:  make(map[uuid.UUID][]*TreeMarshal),
-		pendingSDAs:         make([]*SDAData, 0),
-		host:                network.NewSecureTcpHost(pkey, e),
+		connections:         make(map[network.EntityID]network.SecureConn),
+		entities:            make(map[network.EntityID]*network.Entity),
+		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
+		pendingSDAs:         make([]*Data, 0),
+		host:                network.NewSecureTCPHost(pkey, e),
 		private:             pkey,
 		suite:               network.Suite,
-		networkChan:         make(chan network.NetworkMessage, 1),
+		networkChan:         make(chan network.Message, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
 	}
@@ -99,6 +97,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	return h
 }
 
+// HostConfig holds all necessary data to create a Host.
 type HostConfig struct {
 	Public   string
 	Private  string
@@ -113,11 +112,11 @@ func NewHostFromFile(name string) (*Host, error) {
 	if err != nil {
 		return nil, err
 	}
-	private, err := cliutils.ReadSecretHex(network.Suite, hc.Private)
+	private, err := crypto.ReadSecretHex(network.Suite, hc.Private)
 	if err != nil {
 		return nil, err
 	}
-	public, err := cliutils.ReadPubHex(network.Suite, hc.Public)
+	public, err := crypto.ReadPubHex(network.Suite, hc.Public)
 	if err != nil {
 		return nil, err
 	}
@@ -128,11 +127,11 @@ func NewHostFromFile(name string) (*Host, error) {
 
 // SaveToFile puts the private/public key and the hostname into a file
 func (h *Host) SaveToFile(name string) error {
-	public, err := cliutils.PubHex(network.Suite, h.Entity.Public)
+	public, err := crypto.PubHex(network.Suite, h.Entity.Public)
 	if err != nil {
 		return err
 	}
-	private, err := cliutils.SecretHex(network.Suite, h.private)
+	private, err := crypto.SecretHex(network.Suite, h.private)
 	if err != nil {
 		return err
 	}
@@ -184,14 +183,16 @@ func (h *Host) listen(wait bool) {
 	}
 }
 
-// Listen starts listening and returns once it could connect to itself
-func (h *Host) Listen() {
+// ListenAndBind starts listening and returns once it could connect to itself.
+// This can fail in the case of running inside a container or virtual machine
+// using port-forwarding to an internal IP.
+func (h *Host) ListenAndBind() {
 	h.listen(true)
 }
 
-// ListenNoblock only starts listening and returns without waiting for the
-// listening to be active
-func (h *Host) ListenNoblock() {
+// Listen only starts listening and returns without waiting for the
+// listening to be active.
+func (h *Host) Listen() {
 	h.listen(false)
 }
 
@@ -200,10 +201,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
-	h.networkLock.Lock()
 	c, err = h.host.Open(id)
-	h.networkLock.Unlock()
-
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +238,7 @@ func (h *Host) Close() error {
 	}
 	dbg.Lvl3(h.Entity.First(), "Closing tcpHost")
 	err := h.host.Close()
-	h.connections = make(map[uuid.UUID]network.SecureConn)
+	h.connections = make(map[network.EntityID]network.SecureConn)
 	h.overlay.Close()
 	return err
 }
@@ -251,7 +249,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		return errors.New("Can't send nil-packet")
 	}
 	h.entityListsLock.RLock()
-	if _, ok := h.entities[e.Id]; !ok {
+	if _, ok := h.entities[e.ID]; !ok {
 		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.RUnlock()
 		// Connect to that entity
@@ -265,7 +263,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	var c network.SecureConn
 	var ok bool
 	h.networkLock.Lock()
-	if c, ok = h.connections[e.Id]; !ok {
+	if c, ok = h.connections[e.ID]; !ok {
 		h.networkLock.Unlock()
 		return errors.New("Got no connection tied to this Entity")
 	}
@@ -278,6 +276,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	return nil
 }
 
+// StartProcessMessages start the processing of incoming messages.
+// Mostly it used internally (by the cothority's simulation for instance).
+// Protocol/simulation developers usually won't need it.
 func (h *Host) StartProcessMessages() {
 	// The networkLock.Unlock is in the processMessages-method to make
 	// sure the goroutine started
@@ -298,7 +299,7 @@ func (h *Host) processMessages() {
 	h.networkLock.Unlock()
 	for {
 		var err error
-		var data network.NetworkMessage
+		var data network.Message
 		select {
 		case data = <-h.networkChan:
 		case <-h.ProcessMessagesQuit:
@@ -306,15 +307,15 @@ func (h *Host) processMessages() {
 		}
 		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
-		case SDADataMessage:
-			sdaMsg := data.Msg.(SDAData)
+		case SDADataMessageID:
+			sdaMsg := data.Msg.(Data)
 			sdaMsg.Entity = data.Entity
 			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
 		// A host has sent us a request to get a tree definition
-		case RequestTreeMessage:
+		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
 			tree := h.overlay.Tree(tid)
 			if tree != nil {
@@ -326,16 +327,16 @@ func (h *Host) processMessages() {
 				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
 		// A Host has replied to our request of a tree
-		case SendTreeMessage:
+		case SendTreeMessageID:
 			tm := data.Msg.(TreeMarshal)
-			if tm.NodeId == uuid.Nil {
+			if tm.TreeId == TreeID(uuid.Nil) {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
-			il := h.overlay.EntityList(tm.EntityId)
+			il := h.overlay.EntityList(tm.EntityListID)
 			// The entity list does not exists, we should request that, too
 			if il == nil {
-				msg := &RequestEntityList{tm.EntityId}
+				msg := &RequestEntityList{tm.EntityListID}
 				if err := h.SendRaw(data.Entity, msg); err != nil {
 					dbg.Error("Requesting EntityList in SendTree failed", err)
 				}
@@ -355,7 +356,7 @@ func (h *Host) processMessages() {
 			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
 		// Some host requested an EntityList
-		case RequestEntityListMessage:
+		case RequestEntityListMessageID:
 			id := data.Msg.(RequestEntityList).EntityListID
 			el := h.overlay.EntityList(id)
 			if el != nil {
@@ -365,9 +366,9 @@ func (h *Host) processMessages() {
 				h.SendRaw(data.Entity, &EntityList{})
 			}
 		// Host replied to our request of entitylist
-		case SendEntityListMessage:
+		case SendEntityListMessageID:
 			il := data.Msg.(EntityList)
-			if il.Id == uuid.Nil {
+			if il.Id == EntityListID(uuid.Nil) {
 				dbg.Lvl2("Received an empty EntityList")
 			} else {
 				h.overlay.RegisterEntityList(&il)
@@ -390,7 +391,7 @@ func (h *Host) processMessages() {
 }
 
 // dispatchRequest finds the service and dispatch the message to it
-func (h *Host) dispatchRequest(nm *network.NetworkMessage) {
+func (h *Host) dispatchRequest(nm *network.Message) {
 	// cast
 	request, ok := nm.Msg.(Request)
 	if !ok {
@@ -406,9 +407,9 @@ func (h *Host) dispatchRequest(nm *network.NetworkMessage) {
 	serv.ProcessRequest(nm.Entity, &request)
 }
 
-// sendSDAData marshals the inner msg and then sends a SDAData msg
+// sendSDAData marshals the inner msg and then sends a Data msg
 // to the appropriate entity
-func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
+func (h *Host) sendSDAData(e *network.Entity, sdaMsg *Data) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		typ := network.TypeFromData(sdaMsg.Msg)
@@ -460,7 +461,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // requestTree will ask for the tree the sdadata is related to.
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
-func (h *Host) requestTree(e *network.Entity, sdaMsg *SDAData) error {
+func (h *Host) requestTree(e *network.Entity, sdaMsg *Data) error {
 	h.addPendingSda(sdaMsg)
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
 	return h.SendRaw(e, treeRequest)
@@ -468,7 +469,7 @@ func (h *Host) requestTree(e *network.Entity, sdaMsg *SDAData) error {
 
 // addPendingSda simply append a sda message to a queue. This queue willbe
 // checked each time we receive a new tree / entityList
-func (h *Host) addPendingSda(sda *SDAData) {
+func (h *Host) addPendingSda(sda *Data) {
 	h.pendingSDAsLock.Lock()
 	h.pendingSDAs = append(h.pendingSDAs, sda)
 	h.pendingSDAsLock.Unlock()
@@ -483,10 +484,10 @@ func (h *Host) addPendingSda(sda *SDAData) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		newPending := make([]*SDAData, 0)
+		newPending := make([]*Data, 0)
 		for _, msg := range h.pendingSDAs {
 			// if this message references t
-			if uuid.Equal(t.Id, msg.To.TreeID) {
+			if t.Id.Equals(msg.To.TreeID) {
 				// instantiate it and go
 				err := h.overlay.TransmitMsg(msg)
 				if err != nil {
@@ -512,8 +513,8 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	defer h.networkLock.Unlock()
 	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[c.Entity().Id] = id
-	h.connections[c.Entity().Id] = c
+	h.entities[c.Entity().ID] = id
+	h.connections[c.Entity().ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -524,11 +525,11 @@ func (h *Host) addPendingTreeMarshal(tm *TreeMarshal) {
 	var sl []*TreeMarshal
 	var ok bool
 	// initiate the slice before adding
-	if sl, ok = h.pendingTreeMarshal[tm.EntityId]; !ok {
+	if sl, ok = h.pendingTreeMarshal[tm.EntityListID]; !ok {
 		sl = make([]*TreeMarshal, 0)
 	}
 	sl = append(sl, tm)
-	h.pendingTreeMarshal[tm.EntityId] = sl
+	h.pendingTreeMarshal[tm.EntityListID] = sl
 	h.pendingTreeLock.Unlock()
 }
 
@@ -554,37 +555,38 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 	h.pendingTreeLock.Unlock()
 }
 
+// AddTree registers the given Tree struct in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddTree(t *Tree) {
 	h.overlay.RegisterTree(t)
 }
 
+// AddEntityList registers the given EntityList in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddEntityList(el *EntityList) {
 	h.overlay.RegisterEntityList(el)
 }
 
+// Suite can (and should) be used to get the underlying abstract.Suite.
+// Currently the suite is hardcoded into the network library.
+// Don't use network.Suite but Host's Suite function instead if possible.
 func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-func (h *Host) Private() abstract.Secret {
-	return h.private
-}
-
-// XXX Should not be here but only in overlay
-func (h *Host) StartNewNodeID(protoID uuid.UUID, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNodeID(protoID, tree)
-}
-
-// XXX Same should be only in overlay
+// XXX Should be only in overlay
 func (h *Host) StartNewNode(name string, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(name, tree)
 }
 
+// SetupHostsMock can be used to create a Host mock for testing.
 func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	var hosts []*Host
 	for _, add := range addresses {
 		h := newHostMock(s, add)
-		h.Listen()
+		h.ListenAndBind()
 		h.StartProcessMessages()
 		hosts = append(hosts, h)
 	}

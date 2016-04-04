@@ -3,7 +3,6 @@ package cosi
 import (
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/satori/go.uuid"
 )
 
 // This files defines the structure we use for registering to the channels by
@@ -17,19 +16,20 @@ import (
 // 2 - check at each level of the tree
 var VerifyResponse = 1
 
-// Broadcasted message initiated and signed by proposer
-type CosiAnnouncement struct {
+// Announcement is broadcasted message initiated and signed by proposer.
+type Announcement struct {
 	// From = TreeNodeId in the Tree
-	From uuid.UUID
+	From sda.TreeNodeID
 	*cosi.Announcement
 }
 
 // Commitment of all nodes together with the data they want
 // to have signed
-type CosiCommitment struct {
+type Commitment struct {
 	*cosi.Commitment
 }
 
+// XXX add the exception mechanism:
 /* Message []byte*/
 //V       abstract.Point // commitment Point
 //V_hat   abstract.Point // product of subtree participating nodes' commitment points
@@ -44,8 +44,8 @@ type CosiCommitment struct {
 //Messages int // Actual number of messages signed
 //}
 
-// The challenge calculated by the root-node
-type CosiChallenge struct {
+// Challenge is the challenge computed by the root-node.
+type Challenge struct {
 	*cosi.Challenge
 }
 
@@ -57,9 +57,9 @@ type CosiChallenge struct {
 //Proof  proof.Proof   // Merkle Path of Proofs from root to us
 //}
 
-// Every node replies with eventual exceptions if they
-// are not OK
-type CosiResponse struct {
+// Response with which every node replies with.
+// XXX currently without exceptions (even if they occur)
+type Response struct {
 	*cosi.Response
 }
 
@@ -81,20 +81,20 @@ type CosiResponse struct {
 //Theses are pairs of TreeNode + the actual message we want to listen on.
 type chanAnnouncement struct {
 	*sda.TreeNode
-	CosiAnnouncement
+	Announcement
 }
 
 type chanCommitment struct {
 	*sda.TreeNode
-	CosiCommitment
+	Commitment
 }
 
 type chanChallenge struct {
 	*sda.TreeNode
-	CosiChallenge
+	Challenge
 }
 
 type chanResponse struct {
 	*sda.TreeNode
-	CosiResponse
+	Response
 }
