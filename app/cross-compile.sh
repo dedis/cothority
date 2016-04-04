@@ -46,3 +46,5 @@ TAR=conode-$VERSION.tar.gz
 echo "Creating $TAR"
 tar cf $TAR -C $BUILD .
 
+git tag $VERSION
+git push origin $VERSION
