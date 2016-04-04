@@ -11,8 +11,13 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/ssh-ks"
 	"github.com/dedis/crypto/config"
+	"io/ioutil"
 	"os"
 )
+
+func init() {
+	network.RegisterMessageType(ServerConfig{})
+}
 
 // ServerConfig represents one server that communicates with other servers
 // and clients
@@ -59,12 +64,20 @@ func ReadServerConfig(file string) (*ServerConfig, error) {
 	if file == "" {
 		return nil, errors.New("Need a name for the configuration-file")
 	}
-	sc := &ServerConfig{}
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
 		fmt.Print("Please enter an IP:port where this server has to be reached [localhost:2000] ")
 	}
-	return sc, nil
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	if err != nil {
+		return nil, err
+	}
+	conf := msg.(ServerConfig)
+	return &conf, err
 }
 
 func CreateServerConfig(ip string) *ServerConfig {
@@ -93,5 +106,10 @@ func (sc *ServerConfig) Stop() error {
 }
 
 func (sc *ServerConfig) WriteConfig(file string) error {
+	b, err := network.MarshalRegisteredType(sc)
+	if err != nil {
+		return err
+	}
+	ioutil.WriteFile(file, b, 0660)
 	return nil
 }

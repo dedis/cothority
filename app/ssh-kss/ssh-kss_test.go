@@ -35,13 +35,22 @@ func TestCreateServerConfig(t *testing.T) {
 		}
 	}
 
-	servers_copy := make([]*ServerConfig, nbr)
-	for i, s := range servers {
-		servers_copy[i], err = ReadServerConfig(s.DirSSH + "/server.conf")
+	for _, s := range servers {
+		sc, err := ReadServerConfig(s.DirSSH + "/server.conf")
 		if err != nil {
 			t.Fatal(err)
 		}
+		if sc.DirSSH != s.DirSSH {
+			t.Fatal("Directories should be the same")
+		}
+		if !sc.Server.Entity.Equal(s.Server.Entity) {
+			t.Fatal("Entities are not the same")
+		}
+		if !sc.Server.Private.Equal(s.Server.Private) {
+			t.Fatal("Entities are not the same")
+		}
 	}
+
 }
 
 func TestStartStopServer(t *testing.T) {
