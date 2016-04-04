@@ -12,7 +12,7 @@ import (
 // short-term.
 type SecInitMsg struct {
 	Src  int
-	SID  string
+	SID  SID
 	Deal []byte
 }
 
@@ -20,20 +20,20 @@ type SecInitMsg struct {
 // up the shared secret.
 type SecConfMsg struct {
 	Src int
-	SID string
+	SID SID
 }
 
 // SigReqMsg are used to send signing requests.
 type SigReqMsg struct {
 	Src int
-	SID string
+	SID SID
 	Msg []byte
 }
 
 // SigRespMsg are used to reply to signing requests.
 type SigRespMsg struct {
 	Src int
-	SID string
+	SID SID
 	Sig *poly.SchnorrPartialSig
 }
 
@@ -105,7 +105,7 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.nodeIdx(), msg.SID, secret.numConfs, len(jv.nodeList)))
 
 	// Check if we have enough confirmations to proceed
-	if (secret.numConfs == len(jv.nodeList)) && (msg.SID == LTSS || msg.SID == fmt.Sprintf("%s%d", STSS, jv.nodeIdx())) {
+	if (secret.numConfs == len(jv.nodeList)) && (msg.SID == LTSS || msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.nodeIdx()))) {
 		jv.secretsDone <- true
 	}
 
@@ -153,8 +153,8 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	// Create Schnorr signature once we received enough partial signatures
 	if jv.info.T == len(secret.sigs) {
 
-		for i := 0; i < len(secret.sigs); i++ {
-			if err := jv.schnorr.AddPartialSig(secret.sigs[i]); err != nil {
+		for _, sig := range secret.sigs {
+			if err := jv.schnorr.AddPartialSig(sig); err != nil {
 				return err
 			}
 		}

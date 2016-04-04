@@ -7,7 +7,6 @@
 // puts everything together to get the final Schnorr signature. To verify a
 // given Schnorr signature a member still has to be able to access the
 // long-term shared secret from which that particular signature was created.
-
 package jvss
 
 import (
@@ -25,10 +24,13 @@ func init() {
 	sda.ProtocolRegisterName("JVSS", NewJVSS)
 }
 
+// Type of shared secret identifiers
+type SID string
+
 // Identifiers for long- and short-term shared secrets.
 const (
-	LTSS = "LTSS"
-	STSS = "STSS"
+	LTSS SID = "LTSS"
+	STSS SID = "STSS"
 )
 
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
@@ -40,7 +42,7 @@ type JVSS struct {
 	pubKeys     []abstract.Point      // List of public keys of the above TreeNodes
 	info        poly.Threshold        // JVSS thresholds
 	schnorr     *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
-	secrets     map[string]*Secret    // Shared secrets (long- and short-term ones)
+	secrets     map[SID]*Secret       // Shared secrets (long- and short-term ones)
 	ltssInit    bool                  // Indicator whether shared secret has been already initialised or not
 	secretsDone chan bool             // Channel to indicate when shared secrets of all peers are ready
 	sigChan     chan *poly.SchnorrSig // Channel for JVSS signature
@@ -53,7 +55,7 @@ type Secret struct {
 	deals    map[int]*poly.Deal              // Buffer for deals
 	sigs     map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
 	numConfs int                             // Number of collected confirmations that shared secrets are ready
-	mtx      *sync.Mutex                     // Mutex to sync access to numConfs
+	mtx      sync.Mutex                      // Mutex to sync access to numConfs
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -75,7 +77,7 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 		pubKeys:     pk,
 		info:        info,
 		schnorr:     new(poly.Schnorr),
-		secrets:     make(map[string]*Secret),
+		secrets:     make(map[SID]*Secret),
 		ltssInit:    false,
 		secretsDone: make(chan bool, 1),
 		sigChan:     make(chan *poly.SchnorrSig),
@@ -122,7 +124,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 
 	// Initialise short-term shared secret only used for this signing request
-	sid := fmt.Sprintf("%s%d", STSS, jv.nodeIdx())
+	sid := SID(fmt.Sprintf("%s%d", STSS, jv.nodeIdx()))
 	jv.initSecret(sid)
 
 	// Wait for setup of shared secrets to finish
@@ -154,7 +156,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	return sig, nil
 }
 
-func (jv *JVSS) initSecret(sid string) error {
+func (jv *JVSS) initSecret(sid SID) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
@@ -164,7 +166,6 @@ func (jv *JVSS) initSecret(sid string) error {
 			deals:    make(map[int]*poly.Deal),
 			sigs:     make(map[int]*poly.SchnorrPartialSig),
 			numConfs: 0,
-			mtx:      new(sync.Mutex),
 		}
 		jv.secrets[sid] = sec
 	}
@@ -175,7 +176,7 @@ func (jv *JVSS) initSecret(sid string) error {
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s deal", jv.nodeIdx(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.nodeIdx(), sid))
 		secret.deals[jv.nodeIdx()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
@@ -190,7 +191,7 @@ func (jv *JVSS) initSecret(sid string) error {
 	return nil
 }
 
-func (jv *JVSS) finaliseSecret(sid string) error {
+func (jv *JVSS) finaliseSecret(sid SID) error {
 	secret, ok := jv.secrets[sid]
 	if !ok {
 		return fmt.Errorf("Error, shared secret does not exist")
@@ -200,8 +201,8 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 
 	if len(secret.deals) == jv.info.T {
 
-		for i := 0; i < len(secret.deals); i++ {
-			if _, err := secret.receiver.AddDeal(jv.nodeIdx(), secret.deals[i]); err != nil {
+		for _, deal := range secret.deals {
+			if _, err := secret.receiver.AddDeal(jv.nodeIdx(), deal); err != nil {
 				return err
 			}
 		}
@@ -214,13 +215,13 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		dbg.Lvl2(fmt.Sprintf("Node %d: %s created", jv.nodeIdx(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", jv.nodeIdx(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			dbg.Lvl2(fmt.Sprintf("Node %d: %s Schnorr struct initialised", jv.nodeIdx(), sid))
+			dbg.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.nodeIdx(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret
@@ -235,7 +236,7 @@ func (jv *JVSS) finaliseSecret(sid string) error {
 	return nil
 }
 
-func (jv *JVSS) sigPartial(sid string, msg []byte) (*poly.SchnorrPartialSig, error) {
+func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error) {
 	secret, ok := jv.secrets[sid]
 	if !ok {
 		return nil, fmt.Errorf("Error, shared secret does not exist")
