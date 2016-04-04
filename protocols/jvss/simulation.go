@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	sda.RegisterNewProtocol("ProtocolJVSS", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSS(node) })
+	sda.RegisterNewProtocol("ProtocolJVSS", NewJVSS)
 	sda.SimulationRegister("JVSS", NewSimulation)
 }
 

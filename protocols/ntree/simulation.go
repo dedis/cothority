@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	sda.RegisterNewProtocol("CoSiNtree", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(node) })
+	sda.RegisterNewProtocol("CoSiNtree", NewProtocol)
 	sda.SimulationRegister("NaiveTree", NewSimulation)
 }
 
