@@ -59,6 +59,21 @@ type ProtocolConstructor interface {
 	NewProtocol(*Node) (ProtocolInstance, error)
 }
 
+// Service is a generic interface to define any type of services.
+type Service interface {
+	// ProtocolConstructor.NewProtocol is called by sda when it receives a packet for an
+	// non-existing Node (first contact). The service should provide the
+	// ProtocolInstance with every (external) information it might need.
+	ProtocolConstructor
+
+	// ProcessRequest is the function that will be called when a external client
+	// using the CLI will contact this service with a request packet.
+	// Each request has a field ServiceID, so each time the Host (dispatcher)
+	// receives a request, it looks whether it knows the Service it is for and
+	// then dispatch it through ProcessRequest.
+	ProcessRequest(*network.Entity, *Request)
+}
+
 // protocolFactory stores all the ProtocolConstructor together. It can
 // instantiate any registered protocol by name.
 type protocolFactory struct {
@@ -156,21 +171,6 @@ type defaultConstructor struct {
 // implements the ProtocolConstructor  interface
 func (df *defaultConstructor) NewProtocol(n *Node) (ProtocolInstance, error) {
 	return df.constructor(n)
-}
-
-// Service is a generic interface to define any type of services.
-type Service interface {
-	// ProtocolConstructor.NewProtocol is called by sda when it receives a packet for an
-	// non-existing Node (first contact). The service should provide the
-	// ProtocolInstance with every (external) information it might need.
-	ProtocolConstructor
-
-	// ProcessRequest is the function that will be called when a external client
-	// using the CLI will contact this service with a request packet.
-	// Each request has a field ServiceID, so each time the Host (dispatcher)
-	// receives a request, it looks whether it knows the Service it is for and
-	// then dispatch it through ProcessRequest.
-	ProcessRequest(*network.Entity, *Request)
 }
 
 type ServiceID uuid.UUID

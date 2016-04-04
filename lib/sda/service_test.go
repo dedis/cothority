@@ -128,6 +128,45 @@ func TestServiceInstantiateProtocol(t *testing.T) {
 	waitOrFatal(done, t)
 }
 
+// we should be able to register a protocol and a service using this protoocol
+// and uses both independently
+func TestServiceProtocolRegistration(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	// setup
+	ds := &DummyService{
+		start: make(chan bool),
+	}
+	protoChan := make(chan bool)
+	sda.RegisterNewService("dummyService", func(h *sda.Host, o *sda.Overlay, path string) sda.Service {
+		ds.Host = h
+		return ds
+	})
+	sda.RegisterNewProtocol("dummyProtocol", func(n *sda.Node) (sda.ProtocolInstance, error) {
+		return &DummyProtocol{
+			Node:  n,
+			start: protoChan,
+		}, nil
+	})
+	h1 := sda.NewLocalHost(2000)
+	defer h1.Close()
+	el := sda.NewEntityList([]*network.Entity{h1.Entity})
+	h1.AddEntityList(el)
+	tree := el.GenerateBinaryTree()
+	h1.AddTree(tree)
+
+	go h1.StartNewNode("dummyService", tree)
+	// once for the service
+	waitOrFatal(ds.start, t)
+	// once for the protocol
+	waitOrFatal(ds.start, t)
+
+	go h1.StartNewNode("dummyProtocol", tree)
+	// protocol.Start()
+	waitOrFatal(protoChan, t)
+
+}
+
 func waitOrFatal(ch chan bool, t *testing.T) {
 	select {
 	case <-ch:
