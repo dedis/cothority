@@ -84,7 +84,7 @@ func TestMultiClose(t *testing.T) {
 	// wait for the listener, then close h1 & h2:
 	<-gotConnect
 	err = h1.Close()
-	if err != nil {
+	if err != nil && err != ErrClosed {
 		t.Fatal("Couldn't Close():", err)
 	}
 	err = h2.Close()
@@ -126,7 +126,7 @@ func TestSecureMultiClose(t *testing.T) {
 	receiverStarted := make(chan bool)
 	fn := func(s SecureConn) {
 		dbg.Lvl3("Getting connection from", s.Entity().First())
-		close(receiverStarted)
+		receiverStarted <- true
 	}
 
 	kp1 := config.NewKeyPair(Suite)
