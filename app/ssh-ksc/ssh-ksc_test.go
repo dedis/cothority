@@ -1,7 +1,17 @@
-package main_test
+package main
 
-import "testing"
+import (
+	"flag"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/ssh-ks"
+	"os"
+	"testing"
+)
 
-func TestReadSSH(t *testing.T) {
-
+func TestMain(m *testing.M) {
+	flag.Parse()
+	dbg.TestOutput(testing.Verbose(), 4)
+	code := m.Run()
+	dbg.AfterTest(nil)
+	os.Exit(code)
 }

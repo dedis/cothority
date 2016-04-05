@@ -26,6 +26,7 @@ import (
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 )
 
 // Network part //
@@ -200,11 +201,15 @@ func (t *TcpHost) listen(addr string, fn func(*TcpConn)) error {
 
 // NewSecureTcpHost returns a Secure Tcp Host
 func NewSecureTcpHost(private abstract.Secret, e *Entity) *SecureTcpHost {
+	addr := ""
+	if e != nil {
+		addr = e.First()
+	}
 	return &SecureTcpHost{
 		private:        private,
 		entity:         e,
 		TcpHost:        NewTcpHost(),
-		workingAddress: e.First(),
+		workingAddress: addr,
 	}
 }
 
@@ -230,6 +235,9 @@ func (st *SecureTcpHost) Listen(fn func(SecureConn)) error {
 	}
 	var addr string
 	var err error
+	if st.entity == nil {
+		return errors.New("Can't listen without Entity")
+	}
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
 		dbg.Lvl3("Starting to listen on", addr)
@@ -484,10 +492,14 @@ func (sc *SecureTcpConn) Entity() *Entity {
 // exchangeEntity is made to exchange the Entity between the two parties.
 // when a connection request is made during listening
 func (sc *SecureTcpConn) exchangeEntity() error {
+	ourEnt := sc.SecureTcpHost.entity
+	if ourEnt == nil {
+		ourEnt = NewEntity(config.NewKeyPair(Suite).Public, "")
+	}
 	// Send our Entity to the remote endpoint
-	dbg.Lvl4("Sending our identity", sc.SecureTcpHost.entity.Id, "to",
+	dbg.Lvl4("Sending our identity", ourEnt.Id, "to",
 		sc.TcpConn.conn.RemoteAddr().String())
-	if err := sc.TcpConn.Send(context.TODO(), sc.SecureTcpHost.entity); err != nil {
+	if err := sc.TcpConn.Send(context.TODO(), ourEnt); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
 	// Receive the other Entity
@@ -502,7 +514,7 @@ func (sc *SecureTcpConn) exchangeEntity() error {
 
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
-	dbg.Lvl4(sc.SecureTcpHost.entity.Id, "Received identity", e.Id)
+	dbg.Lvl4(ourEnt.Id, "Received identity", e.Id)
 
 	sc.entity = &e
 	dbg.Lvl4("Identity exchange complete")
@@ -514,6 +526,9 @@ func (sc *SecureTcpConn) exchangeEntity() error {
 func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	if err := sc.exchangeEntity(); err != nil {
 		return err
+	}
+	if sc.SecureTcpHost.entity == nil {
+		return nil
 	}
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().Id != e.Id {

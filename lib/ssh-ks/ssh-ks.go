@@ -14,13 +14,23 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"strings"
 )
 
-type Server struct {
-	// Entity is our identity - IP and public key
-	Entity *network.Entity
-	// Private key of that server
+func init() {
+	network.RegisterMessageType(CoNode{})
+	network.RegisterMessageType(Config{})
+	network.RegisterMessageType(Server{})
+	network.RegisterMessageType(Client{})
+}
+
+// CoNode is the representation of this Node of the Cothority
+type CoNode struct {
+	// Ourselves is the identity of this node
+	Ourselves *Server
+	// Private key of ourselves
 	Private abstract.Secret
 	// Config is the configuration that is known actually to the server
 	Config *Config
@@ -28,56 +38,58 @@ type Server struct {
 	host *sda.Host
 }
 
-func NewServer(key *config.KeyPair, addr string) *Server {
-	e := network.NewEntity(key.Public, addr)
-	s := &Server{
-		Entity:  e,
-		Private: key.Secret,
-		Config:  NewConfig(0),
+// NewCoNode creates a new node of the cothority and initializes the
+// Config-structures. It doesn't start the node
+func NewCoNode(key *config.KeyPair, addr, sshdPub string) *CoNode {
+	srv := NewServer(key, addr, sshdPub)
+	c := &CoNode{
+		Ourselves: srv,
+		Private:   key.Secret,
+		Config:    NewConfig(0),
 	}
-	s.AddServer(s)
-	return s
+	c.AddServer(srv)
+	return c
 }
 
 // AddServer inserts a server in the configuration-list
-func (s *Server) AddServer(s2 *Server) error {
-	s.Config.Servers[s2.Entity.Addresses[0]] = s2.Entity
-	s.Config.Signature = nil
+func (c *CoNode) AddServer(s *Server) error {
+	c.Config.AddServer(s)
 	return nil
 }
 
 // DelServer removes a server from the configuration-list
-func (s *Server) DelServer(s2 *Server) error {
-	delete(s.Config.Servers, s2.Entity.Addresses[0])
-	s.Config.Signature = nil
+func (c *CoNode) DelServer(s *Server) error {
+	c.Config.DelServer(s)
 	return nil
 }
 
 // Start opens the port indicated for listening
-func (s *Server) Start() error {
-	s.host = sda.NewHost(s.Entity, s.Private)
-	s.host.Listen()
-	s.host.StartProcessMessages()
+func (c *CoNode) Start() error {
+	c.host = sda.NewHost(c.Ourselves.Entity, c.Private)
+	c.host.RegisterMessage(GetEntity{}, c.FuncGetEntity)
+	c.host.RegisterMessage(AddServer{}, c.FuncAddServer)
+	c.host.Listen()
+	c.host.StartProcessMessages()
 	return nil
 }
 
 // Stop closes the connection
-func (s *Server) Stop() error {
-	if s.host != nil {
-		err := s.host.Close()
+func (c *CoNode) Stop() error {
+	if c.host != nil {
+		err := c.host.Close()
 		if err != nil {
 			return err
 		}
-		s.host.WaitForClose()
-		s.host = nil
+		c.host.WaitForClose()
+		c.host = nil
 	}
 	return nil
 }
 
-// Check searches for all servers and tries to connect
-func (s *Server) Check() error {
-	for _, s := range s.Config.Servers {
-		list := sda.NewEntityList([]*network.Entity{s})
+// Check searches for all CoNodes and tries to connect
+func (c *CoNode) Check() error {
+	for _, s := range c.Config.Servers {
+		list := sda.NewEntityList([]*network.Entity{s.Entity})
 		msg := "ssh-ks test"
 		sig, err := cosi.SignStatement(strings.NewReader(msg), list)
 		if err != nil {
@@ -93,30 +105,54 @@ func (s *Server) Check() error {
 	return nil
 }
 
-func (s *Server) Sign() error {
-	s.Config.Version += 1
-	s.Config.Signature = nil
-	msg := s.Config.Hash()
+// Sign sends updates the configuration-structure by increasing the
+// version and asks the cothority to sign the new structure.
+func (c *CoNode) Sign() error {
+	c.Config.Version += 1
+	c.Config.Signature = nil
+	msg := c.Config.Hash()
 	var err error
-	s.Config.Signature, err = cosi.SignStatement(bytes.NewReader(msg),
-		s.Config.EntityList(s.Entity))
+	c.Config.Signature, err = cosi.SignStatement(bytes.NewReader(msg),
+		c.Config.EntityList(c.Ourselves.Entity))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// Server represents one server of the cothority
+type Server struct {
+	// Entity is the address-public key of that server
+	Entity *network.Entity
+	// SSHDpub is the public key of that ssh-daemon
+	SSHDpub string
+}
+
+// NewServer creates a pointer to a new server
+func NewServer(key *config.KeyPair, addr, sshdPub string) *Server {
+	return &Server{
+		Entity:  network.NewEntity(key.Public, addr),
+		SSHDpub: sshdPub,
+	}
+}
+
+// Client represents one client that can access the cothority
+type Client struct {
+	// Public key of the client
+	Public abstract.Point
+	// SSHpub is the public key of its ssh-identity
+	SSHpub string
+}
+
+// Config holds everything that needs to be signed by the cothority
+// and transferred to the clients
 type Config struct {
 	// Version holds an incremental number of that version
 	Version int
-	// Servers is a map of IP:Port pointing to the network-entities
-	Servers map[string]*network.Entity
-	// PublicServers holds the public ssh-keys of all servers, mapped by their IP:Port
-	PublicServers map[string]string
-	// Clients is a map of IP:Port pointing to the network-entities
-	Clients map[string]*network.Entity
-	// PublicClients holds the public ssh-keys of all clients, mapped by their name
-	PublicClients map[string]string
+	// Servers is a map of IP:Port pointing to Servers
+	Servers map[string]*Server
+	// Clients is a map of IP:Port pointing to Clients
+	Clients map[string]*Client
 	// Signature by CoSi
 	Signature *sda.CosiResponse
 }
@@ -124,18 +160,57 @@ type Config struct {
 // NewConfig returns a new initialized config for the configuration-chain
 func NewConfig(v int) *Config {
 	return &Config{
-		Version:       v,
-		Servers:       make(map[string]*network.Entity),
-		PublicServers: make(map[string]string),
-		PublicClients: make(map[string]string),
+		Version: v,
+		Servers: make(map[string]*Server),
+		Clients: make(map[string]*Client),
 	}
 }
 
-// VerifySignature takes an aggregate public key and checks it against the
-// signature
-func (c *Config) VerifySignature(agg abstract.Point) error {
-	sig := c.Signature
-	fHash, _ := crypto.HashBytes(network.Suite.Hash(), c.Hash())
+// ReadConfig searches for the config-file and creates a new one if it
+// doesn't exist
+func ReadConfig(file string) (*Config, error) {
+	conf := &Config{}
+	_, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		return conf, nil
+	}
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	} else {
+		_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+		if err != nil {
+			return nil, err
+		}
+		c := msg.(Config)
+		conf = &c
+	}
+	return conf, nil
+}
+
+// WriteConfig takes a file and writes the configuration to that file
+func (conf *Config) WriteConfig(file string) error {
+	b, err := network.MarshalRegisteredType(conf)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(file, b, 0660)
+	return err
+}
+
+// VerifySignature calculates the aggregate public signature from all
+// servers and verifies the signature against it.
+func (conf *Config) VerifySignature() error {
+	// Calculate aggregate public key
+	agg := network.Suite.Point().Null()
+	for _, srv := range conf.Servers {
+		agg.Add(agg, srv.Entity.Public)
+	}
+	sig := conf.Signature
+
+	// Double-hash the Config.Hash(), as this is what the signature
+	// does
+	fHash, _ := crypto.HashBytes(network.Suite.Hash(), conf.Hash())
 	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
 	if !bytes.Equal(hashHash, sig.Sum) {
 		return errors.New("Hash is different")
@@ -147,32 +222,67 @@ func (c *Config) VerifySignature(agg abstract.Point) error {
 }
 
 // EntityList makes a list of all servers with ourselves as the root
-func (c *Config) EntityList(root *network.Entity) *sda.EntityList {
+func (conf *Config) EntityList(root *network.Entity) *sda.EntityList {
 	// The list is of length 1 with a capacity for all servers
-	list := make([]*network.Entity, 1, len(c.Servers))
-	for _, ent := range c.Servers {
-		if ent == root {
-			list[0] = ent
+	list := make([]*network.Entity, 1, len(conf.Servers))
+	for _, srv := range conf.Servers {
+		if srv.Entity == root {
+			list[0] = srv.Entity
 		} else {
-			list = append(list, ent)
+			list = append(list, srv.Entity)
 		}
 	}
 	return sda.NewEntityList(list)
 }
 
 // Hash returns the hash of everything but the signature
-func (c *Config) Hash() []byte {
-	cop := *c
+func (conf *Config) Hash() []byte {
+	cop := *conf
 	cop.Signature = nil
 	hash, _ := crypto.HashArgs(network.Suite.Hash(), cop)
 	return hash
 }
 
-// setupTmpHosts sets up a temporary .tmp-directory for testing
+// AddServer inserts a server in the configuration-list
+func (conf *Config) AddServer(s *Server) error {
+	conf.Servers[s.Entity.Addresses[0]] = s
+	conf.Signature = nil
+	return nil
+}
+
+// DelServer removes a server from the configuration-list
+func (conf *Config) DelServer(s *Server) error {
+	delete(conf.Servers, s.Entity.Addresses[0])
+	conf.Signature = nil
+	return nil
+}
+
+// SetupTmpHosts sets up a temporary .tmp-directory for testing
 func SetupTmpHosts() (string, error) {
 	tmp, err := ioutil.TempDir("", "testHost")
 	if err != nil {
 		return "", errors.New("Coulnd't create tmp-dir: " + err.Error())
 	}
+	err = createBogusSSH(tmp, "id_rsa")
+	if err != nil {
+		return "", err
+	}
+	err = createBogusSSH(tmp, "ssh_host_rsa_key")
+	if err != nil {
+		return "", err
+	}
+
 	return tmp, nil
+}
+
+// createBogusSSH creates a private/public key
+func createBogusSSH(dir, file string) error {
+	dbg.Lvl2("Directory is:", dir)
+	out, err := exec.Command("ssh-keygen", "-t", "rsa", "-b", "4096", "-N", "", "-f",
+		dir+"/"+file).CombinedOutput()
+	dbg.Lvl5(string(out))
+	if err != nil {
+		return err
+	}
+	return nil
 }

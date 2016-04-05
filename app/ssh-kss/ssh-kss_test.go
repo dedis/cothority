@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"flag"
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/ssh-ks"
 	"os"
-	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -25,28 +28,24 @@ func TestCreateServerConfig(t *testing.T) {
 		t.Fatal("Server-creation:", err)
 	}
 	for _, server := range servers {
-		err = server.ReadSSH()
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = server.WriteConfig(server.DirSSH + "/server.conf")
+		err = server.WriteConfig(server.DirSSHD + "/server.conf")
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	for _, s := range servers {
-		sc, err := ReadServerConfig(s.DirSSH + "/server.conf")
+		sc, err := ReadServerConfig(s.DirSSHD + "/server.conf")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if sc.DirSSH != s.DirSSH {
+		if sc.DirSSHD != s.DirSSHD {
 			t.Fatal("Directories should be the same")
 		}
-		if !sc.Server.Entity.Equal(s.Server.Entity) {
+		if !sc.CoNode.Ourselves.Entity.Equal(s.CoNode.Ourselves.Entity) {
 			t.Fatal("Entities are not the same")
 		}
-		if !sc.Server.Private.Equal(s.Server.Private) {
+		if !sc.CoNode.Private.Equal(s.CoNode.Private) {
 			t.Fatal("Entities are not the same")
 		}
 	}
@@ -78,25 +77,41 @@ func TestCreateSSHDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, server := range servers {
-		dbg.Print(server)
+		dbg.Lvl2(server)
+	}
+}
+
+func TestAskServerConfig(t *testing.T) {
+	tmp, err := ssh_ks.SetupTmpHosts()
+	if err != nil {
+		t.Fatal("Couldn't setup temp host:", err)
+	}
+	sc, err := AskServerConfig(strings.NewReader("\n"+tmp+"\n"+tmp+"\n"), bytes.NewBufferString(""))
+	if err != nil {
+		t.Fatal("Couldn't create new config: ", err)
+	}
+	err = checkServerConfig(sc, "localhost:2000", tmp)
+	if err != nil {
+		t.Fatal("Didn't get correct config:", err)
+	}
+	sc, err = AskServerConfig(strings.NewReader("localhost:2001\n"+tmp+"\n"+tmp+"\n"), bytes.NewBufferString(""))
+	if err != nil {
+		t.Fatal("Couldn't create new config: ", err)
+	}
+	err = checkServerConfig(sc, "localhost:2001", tmp)
+	if err != nil {
+		t.Fatal("Didn't get correct config:", err)
 	}
 }
 
 func createServers(nbr int, t *testing.T) ([]*ServerConfig, error) {
 	ret := make([]*ServerConfig, nbr)
 	for i := range ret {
-		ret[i] = CreateServerConfig("localhost:" + strconv.Itoa(2000+i))
 		tmp, err := ssh_ks.SetupTmpHosts()
 		if err != nil {
 			t.Fatal("Couldn't setup tmp:", err)
 		}
-		ret[i].DirSSH = tmp
-		ret[i].DirSSHD = tmp
-		err = createBogusSSH(tmp, "id_rsa")
-		if err != nil {
-			return nil, err
-		}
-		err = createBogusSSH(tmp, "ssh_host_rsa_key")
+		ret[i], err = CreateServerConfig("localhost:"+strconv.Itoa(2000+i), tmp, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -104,13 +119,14 @@ func createServers(nbr int, t *testing.T) ([]*ServerConfig, error) {
 	return ret, nil
 }
 
-func createBogusSSH(dir, file string) error {
-	dbg.Lvl2("Directory is:", dir)
-	out, err := exec.Command("ssh-keygen", "-t", "rsa", "-b", "4096", "-N", "", "-f",
-		dir+file).CombinedOutput()
-	dbg.Lvl5(string(out))
-	if err != nil {
-		return err
+func checkServerConfig(sc *ServerConfig, ip, sshd string) error {
+	if sc.DirSSHD != sshd {
+		return errors.New(fmt.Sprintf("SSHD-dir is wrong: %s instead of %s",
+			sc.DirSSHD, sshd))
+	}
+	if sc.CoNode.Ourselves.Entity.Addresses[0] != ip {
+		return errors.New(fmt.Sprintf("IP is wrong: %s instead of %s",
+			sc.CoNode.Ourselves.Entity.Addresses[0], ip))
 	}
 	return nil
 }

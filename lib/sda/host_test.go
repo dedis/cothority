@@ -445,6 +445,40 @@ func TestAutoConnection(t *testing.T) {
 	}
 }
 
+func TestRegisterMsg(t *testing.T) {
+	type Msg1 struct {
+		I int
+	}
+	type Msg2 struct {
+		J string
+	}
+	got1 := make(chan int, 1)
+	got2 := make(chan string, 1)
+	host := sda.NewLocalHost(2000)
+	mt1 := host.RegisterMessage(Msg1{}, func(m *network.NetworkMessage) network.ProtocolMessage {
+		got1 <- m.Msg.(Msg1).I
+		return nil
+	})
+	mt2 := host.RegisterMessage(Msg2{}, func(m *network.NetworkMessage) network.ProtocolMessage {
+		got2 <- m.Msg.(Msg2).J
+		return nil
+	})
+	host.ProcessUnknownMessage(&network.NetworkMessage{
+		MsgType: mt1,
+		Msg:     Msg1{2},
+	})
+	if <-got1 != 2 {
+		t.Fatal("Message should be 2")
+	}
+	host.ProcessUnknownMessage(&network.NetworkMessage{
+		MsgType: mt2,
+		Msg:     Msg2{"networkmsg"},
+	})
+	if <-got2 != "networkmsg" {
+		t.Fatal("Message should be networkmsg")
+	}
+}
+
 func SetupTwoHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	hosts := sda.GenLocalHosts(2, true, false)
 	if h2process {

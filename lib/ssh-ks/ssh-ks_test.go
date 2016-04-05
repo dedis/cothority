@@ -21,88 +21,78 @@ func TestMain(m *testing.M) {
 }
 
 func TestServerCreation(t *testing.T) {
-	servers := createServers(2)
-	for i, s := range servers {
-		if s.Entity.Addresses[0] != "localhost:"+strconv.Itoa(2000+i) {
+	conodes := createCoNodes(2)
+	for i, s := range conodes {
+		if s.Ourselves.Entity.Addresses[0] != "localhost:"+strconv.Itoa(2000+i) {
 			t.Fatal("Couldn't verify server", i, s)
 		}
 	}
 }
 
 func TestServerAdd(t *testing.T) {
-	servers := createServers(2)
-	servers[0].AddServer(servers[1])
-	_, ok := servers[0].Config.Servers[servers[1].Entity.Addresses[0]]
+	conodes := createCoNodes(2)
+	conodes[0].AddServer(conodes[1].Ourselves)
+	addr1 := conodes[1].Ourselves.Entity.Addresses[0]
+	_, ok := conodes[0].Config.Servers[addr1]
 	if !ok {
 		t.Fatal("Didn't find server 1 in server 0")
 	}
-	servers[0].DelServer(servers[1])
-	_, ok = servers[0].Config.Servers[servers[1].Entity.Addresses[0]]
+	conodes[0].DelServer(conodes[1].Ourselves)
+	_, ok = conodes[0].Config.Servers[addr1]
 	if ok {
 		t.Fatal("Shouldn't find server 1 in server 0")
 	}
 }
 
 func TestServerStart(t *testing.T) {
-	servers := createServers(2)
-	servers[0].AddServer(servers[1])
-	err := servers[0].Start()
-	if err != nil {
-		t.Fatal("Couldn't start server:", err)
-	}
-	defer servers[0].Stop()
-	err = servers[1].Start()
-	if err != nil {
-		t.Fatal("Couldn't start server:", err)
-	}
-	defer servers[1].Stop()
+	conodes := createCoNodes(2)
+	conodes[0].AddServer(conodes[1].Ourselves)
+	err := conodes[0].Start()
+	dbg.TestFatal(t, err, "Couldn't start server:")
+	defer conodes[0].Stop()
+	err = conodes[1].Start()
+	dbg.TestFatal(t, err, "Couldn't start server:")
+	defer conodes[1].Stop()
 
-	err = servers[0].Check()
-	if err != nil {
-		t.Fatal("Couldn't check servers:", err)
-	}
+	err = conodes[0].Check()
+	dbg.TestFatal(t, err, "Couldn't check servers:")
 }
 
 func TestConfigEntityList(t *testing.T) {
-	servers := createServers(2)
-	s := servers[0]
-	s.AddServer(servers[1])
-	el := s.Config.EntityList(s.Entity)
+	conodes := createCoNodes(2)
+	c := conodes[0]
+	c.AddServer(conodes[1].Ourselves)
+	el := c.Config.EntityList(c.Ourselves.Entity)
 	if len(el.List) == 0 {
 		t.Fatal("List shouldn't be of length 0")
 	}
-	if el.List[0] != s.Entity {
+	if el.List[0] != c.Ourselves.Entity {
 		t.Fatal("First element should be server 0")
 	}
-	el = s.Config.EntityList(servers[1].Entity)
-	if el.List[0] != servers[1].Entity {
+	el = c.Config.EntityList(conodes[1].Ourselves.Entity)
+	if el.List[0] != conodes[1].Ourselves.Entity {
 		t.Fatal("First element should be server 1")
 	}
 }
 
 func TestServerSign(t *testing.T) {
-	servers := startServers(2)
-	defer closeServers(t, servers)
-	s := servers[0]
-	err := s.Sign()
-	if err != nil {
-		t.Fatal("Couldn't sign config")
-	}
-	if s.Config.Version != 1 {
+	conodes := startServers(2)
+	defer closeServers(t, conodes)
+	c := conodes[0]
+	err := c.Sign()
+	dbg.TestFatal(t, err, "Couldn't sign config")
+	if c.Config.Version != 1 {
 		t.Fatal("Version should now be 1")
 	}
-	if s.Config.Signature == nil {
+	if c.Config.Signature == nil {
 		t.Fatal("Signature should not be nil")
 	}
-	agg := s.Entity.Public.Add(s.Entity.Public, servers[1].Entity.Public)
-	err = s.Config.VerifySignature(agg)
-	if err != nil {
-		t.Fatal("Signature verification failed:", err)
-	}
+	err = c.Config.VerifySignature()
+	dbg.TestFatal(t, err, "Signature verification failed:")
 
 	// Change the version and look if it fails
-	s.Config.Version += 1
-	err = s.Config.VerifySignature(agg)
+	c.Config.Version += 1
+	err = c.Config.VerifySignature()
 	if err == nil {
 		t.Fatal("Signature verification should fail now")
 	} else {
@@ -110,10 +100,10 @@ func TestServerSign(t *testing.T) {
 	}
 
 	// Change the response and look if it fails
-	s.Config.Version -= 1
+	c.Config.Version -= 1
 	su := network.Suite
-	s.Config.Signature.Response.Add(s.Config.Signature.Response, su.Secret().One())
-	err = s.Config.VerifySignature(agg)
+	c.Config.Signature.Response.Add(c.Config.Signature.Response, su.Secret().One())
+	err = c.Config.VerifySignature()
 	if err == nil {
 		t.Fatal("Signature verification should fail now")
 	} else {
@@ -127,18 +117,19 @@ func TestAbstract(t *testing.T) {
 	b := s.Secret().Set(a)
 	c := a
 	dbg.Print(a, b, c)
-	d := s.Secret().Add(a, b)
+	//d := s.Secret().Add(a, b)
+	d := a.Add(a, b)
 	dbg.Print(a, b, c, d)
 }
 
 func TestConfigHash(t *testing.T) {
-	servers := createServers(2)
-	s := servers[0]
-	s.AddServer(servers[1])
-	h1 := s.Config.Hash()
-	h2 := s.Config.Hash()
-	s.DelServer(servers[1])
-	h3 := s.Config.Hash()
+	conodes := createCoNodes(2)
+	c := conodes[0]
+	c.AddServer(conodes[1].Ourselves)
+	h1 := c.Config.Hash()
+	h2 := c.Config.Hash()
+	c.DelServer(conodes[1].Ourselves)
+	h3 := c.Config.Hash()
 	if bytes.Compare(h1, h2) != 0 {
 		t.Fatal("1st and 2nd hash should be the same")
 	}
@@ -147,12 +138,51 @@ func TestConfigHash(t *testing.T) {
 	}
 }
 
-func newServerLocal(port int) *ssh_ks.Server {
-	key := config.NewKeyPair(network.Suite)
-	return ssh_ks.NewServer(key, "localhost:"+strconv.Itoa(port))
+func TestReadConfig(t *testing.T) {
+	tmp, err := ssh_ks.SetupTmpHosts()
+	dbg.TestFatal(t, err)
+	conf, err := ssh_ks.ReadConfig(tmp + "/config.bin")
+	dbg.TestFatal(t, err)
+	// Take a non-existent directory
+	conf, err = ssh_ks.ReadConfig(tmp + "1")
+	dbg.TestFatal(t, err)
+	if len(conf.Clients) > 0 {
+		t.Fatal("This should be empty")
+	}
 }
 
-func closeServers(t *testing.T, servers []*ssh_ks.Server) error {
+func TestWriteConfig(t *testing.T) {
+	tmp, _ := ssh_ks.SetupTmpHosts()
+	file := tmp + "/config.bin"
+	conf1 := ssh_ks.NewConfig(10)
+	err := conf1.WriteConfig(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	conf2, err := ssh_ks.ReadConfig(file)
+	dbg.TestFatal(t, err)
+	if conf1.Version != conf2.Version {
+		t.Fatal("Didn't find same version")
+	}
+}
+
+func TestNetworkGetEntity(t *testing.T) {
+	conode := startServers(1)[0]
+	defer conode.Stop()
+	ret, err := ssh_ks.NetworkGetEntity(conode.Ourselves.Entity.Addresses[0])
+	dbg.TestFatal(t, err)
+	if !ret.Equal(conode.Ourselves.Entity) {
+		t.Fatal("Didn't get the same Entity")
+	}
+}
+
+func newServerLocal(port int) *ssh_ks.CoNode {
+	key := config.NewKeyPair(network.Suite)
+	return ssh_ks.NewCoNode(key, "localhost:"+strconv.Itoa(port), "Phony SSH public key")
+}
+
+func closeServers(t *testing.T, servers []*ssh_ks.CoNode) error {
 	for _, s := range servers {
 		err := s.Stop()
 		if err != nil {
@@ -162,7 +192,7 @@ func closeServers(t *testing.T, servers []*ssh_ks.Server) error {
 	return nil
 }
 
-func startServers(nbr int) []*ssh_ks.Server {
+func startServers(nbr int) []*ssh_ks.CoNode {
 	servers := addServers(nbr)
 	for _, s := range servers {
 		s.Start()
@@ -170,18 +200,18 @@ func startServers(nbr int) []*ssh_ks.Server {
 	return servers
 }
 
-func addServers(nbr int) []*ssh_ks.Server {
-	servers := createServers(nbr)
-	for _, s1 := range servers {
-		for _, s2 := range servers {
-			s1.AddServer(s2)
+func addServers(nbr int) []*ssh_ks.CoNode {
+	conodes := createCoNodes(nbr)
+	for _, c1 := range conodes {
+		for _, c2 := range conodes {
+			c1.AddServer(c2.Ourselves)
 		}
 	}
-	return servers
+	return conodes
 }
 
-func createServers(nbr int) []*ssh_ks.Server {
-	ret := make([]*ssh_ks.Server, nbr)
+func createCoNodes(nbr int) []*ssh_ks.CoNode {
+	ret := make([]*ssh_ks.CoNode, nbr)
 	for i := range ret {
 		ret[i] = newServerLocal(2000 + i)
 	}

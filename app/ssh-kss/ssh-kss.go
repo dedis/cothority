@@ -4,6 +4,7 @@ package main
 
 import ()
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"github.com/codegangsta/cli"
@@ -11,8 +12,10 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/ssh-ks"
 	"github.com/dedis/crypto/config"
+	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func init() {
@@ -24,10 +27,11 @@ func init() {
 type ServerConfig struct {
 	// DirSSHD holds the directory for the SSHD-files
 	DirSSHD string
-	// DirSSH for the ssh directory
+	// DirSSH holds the ssh-directory for storing the authorized_keys
 	DirSSH string
-	// Server holds a list of servers and clients
-	Server *ssh_ks.Server
+	// CoNode represents one conode plus the configuration for the whole
+	// Cothority
+	CoNode *ssh_ks.CoNode
 }
 
 func main() {
@@ -48,9 +52,17 @@ func main() {
 	}
 	app.Action = func(c *cli.Context) {
 		dbg.SetDebugVisible(c.Int("debug"))
-		config, err := ReadServerConfig(c.String("config"))
+		file := c.String("config")
+		config, err := ReadServerConfig(file)
 		if err != nil {
-			dbg.Fatal("Couldn't get config:", err)
+			config, err = AskServerConfig(os.Stdin, os.Stdout)
+			if err != nil {
+				dbg.Fatal("While creating new config:", err)
+			}
+			err = config.WriteConfig(file)
+			if err != nil {
+				dbg.Fatal("Couldn't write config:", err)
+			}
 		}
 		err = config.Start()
 		if err != nil {
@@ -66,7 +78,7 @@ func ReadServerConfig(file string) (*ServerConfig, error) {
 	}
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
-		fmt.Print("Please enter an IP:port where this server has to be reached [localhost:2000] ")
+		return nil, errors.New("Didn't find file " + file)
 	}
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -80,29 +92,38 @@ func ReadServerConfig(file string) (*ServerConfig, error) {
 	return &conf, err
 }
 
-func CreateServerConfig(ip string) *ServerConfig {
+func AskServerConfig(in io.Reader, out io.Writer) (*ServerConfig, error) {
+	inb := bufio.NewReader(in)
+	ip := getArg(inb, out, "Please enter an IP:port where this server has to be reached",
+		"localhost:2000")
+	ssh := getArg(inb, out, "Where should the authorized_keys be stored",
+		"/root/.ssh")
+	sshd := getArg(inb, out, "Where is the system-ssh-directory located",
+		"/etc/sshd")
+	return CreateServerConfig(ip, ssh, sshd)
+}
+
+func CreateServerConfig(ip, dirSSH, dirSSHD string) (*ServerConfig, error) {
 	if ip == "" {
 		ip = "localhost:2000"
 	}
 	pair := config.NewKeyPair(network.Suite)
-	return &ServerConfig{
-		Server:  ssh_ks.NewServer(pair, ip),
-		DirSSHD: "/etc/sshd",
-		DirSSH:  "/root/.ssh",
+	sshPub, err := ioutil.ReadFile(dirSSHD + "/ssh_host_rsa_key.pub")
+	if err != nil {
+		return nil, errors.New("While reading public key: " + err.Error())
 	}
-}
-
-func (sc *ServerConfig) ReadSSH() error {
-
-	return nil
+	return &ServerConfig{
+		CoNode:  ssh_ks.NewCoNode(pair, ip, string(sshPub)),
+		DirSSHD: dirSSHD,
+	}, nil
 }
 
 func (sc *ServerConfig) Start() error {
-	return sc.Server.Start()
+	return sc.CoNode.Start()
 }
 
 func (sc *ServerConfig) Stop() error {
-	return sc.Server.Stop()
+	return sc.CoNode.Stop()
 }
 
 func (sc *ServerConfig) WriteConfig(file string) error {
@@ -112,4 +133,15 @@ func (sc *ServerConfig) WriteConfig(file string) error {
 	}
 	ioutil.WriteFile(file, b, 0660)
 	return nil
+}
+
+func getArg(in *bufio.Reader, out io.Writer, question, def string) string {
+	fmt.Fprintf(out, "%s [%s]: ", question, def)
+	b, _ := in.ReadString('\n')
+	str := strings.TrimSpace(string(b))
+	if str == "" {
+		return def
+	} else {
+		return str
+	}
 }

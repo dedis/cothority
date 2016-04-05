@@ -22,7 +22,9 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
+	"testing"
 	"time"
 )
 
@@ -362,6 +364,13 @@ func UseColors() bool {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 	return useColors
+}
+
+// TestFatal calls t.Fatal in the case err != nil
+func TestFatal(t *testing.T, err error, msg ...string) {
+	if err != nil {
+		t.Fatal(strings.Join(msg, " "), err)
+	}
 }
 
 // ParseEnv looks at the following environment-variables:

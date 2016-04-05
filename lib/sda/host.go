@@ -20,6 +20,8 @@ import (
 	"golang.org/x/net/context"
 )
 
+type ExternalAPI func(*network.NetworkMessage) network.ProtocolMessage
+
 /*
 Host is the structure responsible for holding information about the current
  state
@@ -72,6 +74,8 @@ type Host struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
+	// to dispatch unknown messages
+	unknownMsgs map[network.MessageTypeID]ExternalAPI
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -90,6 +94,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		networkChan:         make(chan network.NetworkMessage, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
+		unknownMsgs:         make(map[network.MessageTypeID]ExternalAPI),
 	}
 
 	h.overlay = NewOverlay(h)
@@ -374,12 +379,37 @@ func (h *Host) processMessages() {
 			cr := data.Msg.(CosiRequest)
 			h.handleCosiRequest(data.Entity, &cr)
 		default:
-			dbg.Error("Didn't recognize message", data.MsgType)
+			msgRet := h.ProcessUnknownMessage(&data)
+			if msgRet == nil {
+				dbg.Error("Didn't recognize message", data.MsgType)
+			} else {
+				err := h.SendRaw(data.Entity, msgRet)
+				if err != nil {
+					dbg.Error("Couldn't send back message:", err)
+				}
+			}
 		}
 		if err != nil {
 			dbg.Error("Sending error:", err)
 		}
 	}
+}
+
+// RegisterMessage takes a message-type and registers a function
+func (h *Host) RegisterMessage(mt network.ProtocolMessage, f ExternalAPI) network.MessageTypeID {
+	mtID := network.RegisterMessageType(mt)
+	h.unknownMsgs[mtID] = f
+	return mtID
+}
+
+// ProcessUnknownMessage takes a message and looks it up in
+// the unknown messages
+func (h *Host) ProcessUnknownMessage(m *network.NetworkMessage) network.ProtocolMessage {
+	f, ok := h.unknownMsgs[m.MsgType]
+	if !ok {
+		return nil
+	}
+	return f(m)
 }
 
 // handleCosiRequest will

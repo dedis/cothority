@@ -5,8 +5,16 @@ package main
 import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/ssh-ks"
 	"os"
 )
+
+func init() {
+	network.RegisterMessageType(ssh_ks.Config{})
+}
+
+var config *ssh_ks.Config
 
 func main() {
 	app := cli.NewApp()
@@ -72,21 +80,21 @@ func main() {
 			Value: "~/.ssh",
 			Usage: "The configuration-directory of the ssh-directory",
 		},
-		cli.StringFlag{
-			Name:  "config-sshd, csd",
-			Value: "/etc/ssh/ssh_host_rsa_key.pub",
-			Usage: "SSH-daemon public key",
-		},
 	}
 	app.Before = func(c *cli.Context) error {
 		dbg.Print(c.Int("debug"))
 		dbg.SetDebugVisible(c.Int("debug"))
+		ssh_ks.ReadConfig(c.String("config") + "/config.bin")
 		return nil
 	}
 	app.Run(os.Args)
 }
 
-func serverAdd(c *cli.Context)   {}
+func serverAdd(c *cli.Context) {
+
+	// Check server
+	config.AddServer()
+}
 func serverDel(c *cli.Context)   {}
 func serverCheck(c *cli.Context) {}
 func clientAdd(c *cli.Context)   {}
