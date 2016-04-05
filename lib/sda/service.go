@@ -96,7 +96,7 @@ type protocolFactory struct {
 	reverse map[ProtocolID]string
 }
 
-// The global factory that can be used to instantiate any protocol
+// ProtocolFactory is the global factory that can be used to instantiate any protocol
 var ProtocolFactory = &protocolFactory{
 	constructors: make(map[ProtocolID]ProtocolConstructor),
 	translations: make(map[string]ProtocolID),
@@ -202,7 +202,7 @@ func (s *ServiceID) Equal(s2 ServiceID) bool {
 // NilServiceID is the empty ID
 var NilServiceID = ServiceID(uuid.Nil)
 
-// Type of a function that is used to instantiate a given Service
+// NewServiceFunc is the type of a function that is used to instantiate a given Service
 // A service is initialized with a Host (to send messages to someone), the
 // overlay (to register a Tree + EntityList + start new node), and a path where
 // it can finds / write everything it needs
@@ -218,7 +218,7 @@ type serviceFactory struct {
 	inverseTr map[ServiceID]string
 }
 
-// the global service factory
+// ServiceFactory is the global service factory to instantiate Services
 var ServiceFactory = serviceFactory{
 	cons:         make(map[ServiceID]NewServiceFunc),
 	translations: make(map[string]ServiceID),
