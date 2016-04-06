@@ -13,7 +13,7 @@ import (
 
 // Service is a generic interface to define any type of services.
 type Service interface {
-	NewProtocol(TreeNodeInstance, GenericConfig) (ProtocolInstance, error)
+	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
 	// ProcessRequest is the function that will be called when a external client
 	// using the CLI will contact this service with a request packet.
 	// Each request has a field ServiceID, so each time the Host (dispatcher)
