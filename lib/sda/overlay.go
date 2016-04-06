@@ -303,7 +303,7 @@ func (o *Overlay) Close() {
 // lookup, but that's better than searching the tree each time.
 type TreeNodeCache map[TreeID]map[TreeNodeID]*TreeNode
 
-// NewTreeNodeCache returns a new TreeNodeCache
+// NewTreeNodeCache  returns a new TreeNodeCache
 func NewTreeNodeCache() TreeNodeCache {
 	m := make(map[TreeID]map[TreeNodeID]*TreeNode)
 	return m
