@@ -20,7 +20,7 @@ func TestJVSS(t *testing.T) {
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
-	dbg.TestOutput(true, 1)
+	dbg.TestOutput(testing.Verbose(), 1)
 
 	dbg.Lvl1("JVSS - starting")
 	leader, err := local.CreateNewNodeName(name, tree)

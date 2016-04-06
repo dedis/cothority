@@ -163,7 +163,7 @@ func (rh *RandHound) Start() error {
 		HRc:     rh.hash(rh.Leader.rc),
 	}
 
-	return rh.sendToChildren(rh.Leader.i1)
+	return rh.SendToChildren(rh.Leader.i1)
 }
 
 func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time) (*Session, []byte, error) {
@@ -213,7 +213,7 @@ func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, er
 	}
 
 	// Include public keys of all nodes into group ID
-	for _, x := range rh.Tree().List() {
+	for _, x := range rh.List() {
 		pub, err := x.Entity.Public.MarshalBinary()
 		if err != nil {
 			return nil, nil, err
