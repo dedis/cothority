@@ -42,7 +42,7 @@ func TestCreateServerConfig(t *testing.T) {
 		if sc.DirSSHD != s.DirSSHD {
 			t.Fatal("Directories should be the same")
 		}
-		if !sc.CoNode.Ourselves.Entity.Equal(s.CoNode.Ourselves.Entity) {
+		if !sc.CoNode.This.Entity.Equal(s.CoNode.This.Entity) {
 			t.Fatal("Entities are not the same")
 		}
 		if !sc.CoNode.Private.Equal(s.CoNode.Private) {
@@ -124,9 +124,9 @@ func checkServerConfig(sc *ServerConfig, ip, sshd string) error {
 		return errors.New(fmt.Sprintf("SSHD-dir is wrong: %s instead of %s",
 			sc.DirSSHD, sshd))
 	}
-	if sc.CoNode.Ourselves.Entity.Addresses[0] != ip {
+	if sc.CoNode.This.Entity.Addresses[0] != ip {
 		return errors.New(fmt.Sprintf("IP is wrong: %s instead of %s",
-			sc.CoNode.Ourselves.Entity.Addresses[0], ip))
+			sc.CoNode.This.Entity.Addresses[0], ip))
 	}
 	return nil
 }

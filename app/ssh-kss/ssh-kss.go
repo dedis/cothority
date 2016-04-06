@@ -31,7 +31,7 @@ type ServerConfig struct {
 	DirSSH string
 	// CoNode represents one conode plus the configuration for the whole
 	// Cothority
-	CoNode *ssh_ks.CoNode
+	CoNode *ssh_ks.ServerApp
 }
 
 func main() {

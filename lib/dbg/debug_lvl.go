@@ -369,7 +369,8 @@ func UseColors() bool {
 // TestFatal calls t.Fatal in the case err != nil
 func TestFatal(t *testing.T, err error, msg ...string) {
 	if err != nil {
-		t.Fatal(strings.Join(msg, " "), err)
+		lvld(LvlFatal, strings.Join(msg, " "), err)
+		os.Exit(1)
 	}
 }
 

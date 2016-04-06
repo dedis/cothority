@@ -20,16 +20,16 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(CoNode{})
+	network.RegisterMessageType(ServerApp{})
 	network.RegisterMessageType(Config{})
 	network.RegisterMessageType(Server{})
 	network.RegisterMessageType(Client{})
 }
 
 // CoNode is the representation of this Node of the Cothority
-type CoNode struct {
+type ServerApp struct {
 	// Ourselves is the identity of this node
-	Ourselves *Server
+	This *Server
 	// Private key of ourselves
 	Private abstract.Secret
 	// Config is the configuration that is known actually to the server
@@ -40,33 +40,34 @@ type CoNode struct {
 
 // NewCoNode creates a new node of the cothority and initializes the
 // Config-structures. It doesn't start the node
-func NewCoNode(key *config.KeyPair, addr, sshdPub string) *CoNode {
-	srv := NewServer(key, addr, sshdPub)
-	c := &CoNode{
-		Ourselves: srv,
-		Private:   key.Secret,
-		Config:    NewConfig(0),
+func NewCoNode(key *config.KeyPair, addr, sshdPub string) *ServerApp {
+	srv := NewServer(key.Public, addr, sshdPub)
+	c := &ServerApp{
+		This:    srv,
+		Private: key.Secret,
+		Config:  NewConfig(0),
 	}
 	c.AddServer(srv)
 	return c
 }
 
 // AddServer inserts a server in the configuration-list
-func (c *CoNode) AddServer(s *Server) error {
+func (c *ServerApp) AddServer(s *Server) error {
 	c.Config.AddServer(s)
 	return nil
 }
 
 // DelServer removes a server from the configuration-list
-func (c *CoNode) DelServer(s *Server) error {
+func (c *ServerApp) DelServer(s *Server) error {
 	c.Config.DelServer(s)
 	return nil
 }
 
 // Start opens the port indicated for listening
-func (c *CoNode) Start() error {
-	c.host = sda.NewHost(c.Ourselves.Entity, c.Private)
-	c.host.RegisterMessage(GetEntity{}, c.FuncGetEntity)
+func (c *ServerApp) Start() error {
+	c.host = sda.NewHost(c.This.Entity, c.Private)
+	c.host.RegisterMessage(GetServer{}, c.FuncGetServer)
+	c.host.RegisterMessage(GetConfig{}, c.FuncGetConfig)
 	c.host.RegisterMessage(AddServer{}, c.FuncAddServer)
 	c.host.Listen()
 	c.host.StartProcessMessages()
@@ -74,7 +75,7 @@ func (c *CoNode) Start() error {
 }
 
 // Stop closes the connection
-func (c *CoNode) Stop() error {
+func (c *ServerApp) Stop() error {
 	if c.host != nil {
 		err := c.host.Close()
 		if err != nil {
@@ -87,7 +88,7 @@ func (c *CoNode) Stop() error {
 }
 
 // Check searches for all CoNodes and tries to connect
-func (c *CoNode) Check() error {
+func (c *ServerApp) Check() error {
 	for _, s := range c.Config.Servers {
 		list := sda.NewEntityList([]*network.Entity{s.Entity})
 		msg := "ssh-ks test"
@@ -107,17 +108,34 @@ func (c *CoNode) Check() error {
 
 // Sign sends updates the configuration-structure by increasing the
 // version and asks the cothority to sign the new structure.
-func (c *CoNode) Sign() error {
+func (c *ServerApp) Sign() error {
 	c.Config.Version += 1
 	c.Config.Signature = nil
 	msg := c.Config.Hash()
 	var err error
 	c.Config.Signature, err = cosi.SignStatement(bytes.NewReader(msg),
-		c.Config.EntityList(c.Ourselves.Entity))
+		c.Config.EntityList(c.This.Entity))
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// ClientApp represents one client and holds all necessary structures
+type ClientApp struct {
+	// This points to the client holding this structure
+	This *Client
+	// Config holds all servers and clients
+	Config *Config
+	// Private is our private key
+	Private abstract.Secret
+}
+
+// NewClientApp creates a new private/public key pair and returns
+// a ClientApp with an empty Config. It takes a public ssh-key.
+func NewClientApp(sshPub string) *ClientApp {
+	pair := config.NewKeyPair(network.Suite)
+	return &ClientApp{NewClient(pair.Public, sshPub), nil, pair.Secret}
 }
 
 // Server represents one server of the cothority
@@ -129,9 +147,9 @@ type Server struct {
 }
 
 // NewServer creates a pointer to a new server
-func NewServer(key *config.KeyPair, addr, sshdPub string) *Server {
+func NewServer(pub abstract.Point, addr, sshdPub string) *Server {
 	return &Server{
-		Entity:  network.NewEntity(key.Public, addr),
+		Entity:  network.NewEntity(pub, addr),
 		SSHDpub: sshdPub,
 	}
 }
@@ -142,6 +160,12 @@ type Client struct {
 	Public abstract.Point
 	// SSHpub is the public key of its ssh-identity
 	SSHpub string
+}
+
+// NewClient creates a new client given a public key and a public
+// ssh-key
+func NewClient(public abstract.Point, sshPub string) *Client {
+	return &Client{public, sshPub}
 }
 
 // Config holds everything that needs to be signed by the cothority

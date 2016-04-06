@@ -15,16 +15,28 @@ func init() {
 	FuncRegister()
 }
 
-// GetEntity returns the Entity of that host
-type GetEntity struct{}
+// GetServer returns the Server of that host
+type GetServer struct{}
 
-type GetEntityRet struct {
-	Entity *network.Entity
+// GetServerRet returns the server
+type GetServerRet struct {
+	Server *Server
 }
 
+// GetConfig returns the latest config-structure of the server
+type GetConfig struct{}
+
+// GetConfigRet returns the config
+type GetConfigRet struct {
+	Config *Config
+}
+
+// AddServer asks for that server to be added to the config
 type AddServer struct {
+	Server *Server
 }
 
+// AddServerRet returns the success or failure
 type AddServerRet struct {
 	OK bool
 }
@@ -33,31 +45,100 @@ type AddServerRet struct {
 // really necessary for the outgoing messages, but useful for
 // external users
 func FuncRegister() {
-	network.RegisterMessageType(GetEntity{})
-	network.RegisterMessageType(GetEntityRet{})
+	network.RegisterMessageType(GetServer{})
+	network.RegisterMessageType(GetServerRet{})
+	network.RegisterMessageType(GetConfig{})
+	network.RegisterMessageType(GetConfigRet{})
 	network.RegisterMessageType(AddServer{})
 	network.RegisterMessageType(AddServerRet{})
 }
 
-func NetworkGetEntity(addr string) (*network.Entity, error) {
-	// create a throw-away key pair:
-	kp := config.NewKeyPair(network.Suite)
+// FuncGetServer returns our Server
+func (c *ServerApp) FuncGetServer(*network.NetworkMessage) network.ProtocolMessage {
+	return &GetServerRet{c.This}
+}
 
-	// create a throw-away entity with an empty  address:
-	client := network.NewSecureTcpHost(kp.Secret, nil)
-	req := &GetEntity{}
+// FuncGetConfig returns our Config
+func (c *ServerApp) FuncGetConfig(*network.NetworkMessage) network.ProtocolMessage {
+	return &GetConfigRet{c.Config}
+}
 
-	// Connect to the root
-	host := network.NewEntity(kp.Public, addr)
-	dbg.Lvl3("Opening connection")
-	con, err := client.Open(host)
-	defer client.Close()
+// FuncAddServer adds a given server to the configuration
+func (c *ServerApp) FuncAddServer(data *network.NetworkMessage) network.ProtocolMessage {
+	req, ok := data.Msg.(AddServer)
+	if !ok {
+		return &AddServerRet{false}
+	}
+	c.AddServer(req.Server)
+	return &AddServerRet{true}
+}
+
+// NetworkAddServer adds a new server to the Config
+func (ca *ClientApp) NetworkAddServer(s *Server) error {
+	if ca.Config == nil {
+
+	} else {
+		for _, srv := range ca.Config.Servers {
+			dbg.Print("Asking for adding")
+			resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
+				&AddServer{s})
+			if err != nil {
+				return err
+			}
+			if !resp.Msg.(AddServerRet).OK {
+				return errors.New("Remote replied not OK")
+			}
+		}
+	}
+	return nil
+}
+
+// NetworkGetConfig asks the server for its configuration
+func (ca *ClientApp) NetworkGetConfig(s *Server) (*Config, error) {
+	resp, err := networkSend(ca, s.Entity, &GetConfig{})
 	if err != nil {
 		return nil, err
 	}
+	gcr, ok := resp.Msg.(GetConfigRet)
+	if !ok {
+		return nil, errors.New("Didn't receive config")
+	}
+	return gcr.Config, nil
+}
+
+// NetworkGetServer asks for the Server at a given address
+func NetworkGetServer(addr string) (*Server, error) {
+	resp, err := networkSendAnonymous(addr, &GetServer{})
+	if err != nil {
+		return nil, err
+	}
+	conf, ok := resp.Msg.(GetServerRet)
+	if !ok {
+		return nil, errors.New("Didn't get Config back")
+	}
+	return conf.Server, nil
+}
+
+func networkSendAnonymous(addr string, req network.ProtocolMessage) (*network.NetworkMessage, error) {
+	// create a throw-away key pair:
+	kp := config.NewKeyPair(network.Suite)
+	dst := network.NewEntity(kp.Public, addr)
+	return networkSend(NewClientApp(""), dst, req)
+}
+
+func networkSend(src *ClientApp, dst *network.Entity, req network.ProtocolMessage) (*network.NetworkMessage, error) {
+	client := network.NewSecureTcpHost(src.Private, nil)
+
+	// Connect to the root
+	dbg.Lvl3("Opening connection")
+	con, err := client.Open(dst)
+	defer client.Close()
+	if err != nil {
+		return &network.NetworkMessage{}, err
+	}
 
 	dbg.Lvl3("Sending sign request")
-	pchan := make(chan GetEntityRet)
+	pchan := make(chan network.NetworkMessage)
 	go func() {
 		// send the request
 		if err := con.Send(context.TODO(), req); err != nil {
@@ -71,28 +152,13 @@ func NetworkGetEntity(addr string) (*network.Entity, error) {
 			close(pchan)
 			return
 		}
-		pchan <- packet.Msg.(GetEntityRet)
+		pchan <- packet
 	}()
 	select {
-	case response, ok := <-pchan:
-		dbg.Lvl5("Response:", ok, response)
-		if !ok {
-			return nil, errors.New("Invalid repsonse: Could not cast the " +
-				"received response to the right type")
-		}
-		return response.Entity, nil
+	case response := <-pchan:
+		dbg.Lvl5("Response:", response)
+		return &response, nil
 	case <-time.After(time.Second * 10):
-		return nil, errors.New("Timeout on signing")
+		return &network.NetworkMessage{}, errors.New("Timeout on signing")
 	}
-
-}
-
-// FuncGetEntity returns our Entity
-func (c *CoNode) FuncGetEntity(*network.NetworkMessage) network.ProtocolMessage {
-	return &GetEntityRet{c.Ourselves.Entity}
-}
-
-// FuncAddServer adds a given server to the configuration
-func (c *CoNode) FuncAddServer(*network.NetworkMessage) network.ProtocolMessage {
-	return &GetEntityRet{c.Ourselves.Entity}
 }
