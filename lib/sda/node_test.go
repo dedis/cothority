@@ -125,13 +125,15 @@ func TestNewNode(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	h1, h2 := SetupTwoHosts(t, false)
+	defer h1.Close()
+	defer h2.Close()
 	// Add tree + entitylist
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
 	h1.AddEntityList(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
-	// Try directly StartNewNode
-	node, err := h1.StartNewNode("ProtocolTest", tree)
+	// Try directly StartNewNodeStatic
+	node, err := h1.StartNewNodeStatic("ProtocolTest", tree)
 	if err != nil {
 		t.Fatal("Could not start new protocol", err)
 	}
@@ -144,8 +146,6 @@ func TestNewNode(t *testing.T) {
 	if m != "Start" {
 		t.Fatal("Start() not called - msg is:", m)
 	}
-	h1.Close()
-	h2.Close()
 }
 
 func TestProtocolChannels(t *testing.T) {
@@ -163,7 +163,7 @@ func TestProtocolChannels(t *testing.T) {
 	h1.StartProcessMessages()
 
 	// Try directly StartNewProtocol
-	_, err := h1.StartNewNode("ProtocolChannels", tree)
+	_, err := h1.StartNewNodeStatic("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
@@ -186,7 +186,7 @@ func TestProtocolHandlers(t *testing.T) {
 	defer local.CloseAll()
 	dbg.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *sda.Node, 2)
-	node, err := local.StartNewNodeName("ProtocolHandlers", tree)
+	node, err := local.StartNewNodeStatic("ProtocolHandlers", tree)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,7 +217,7 @@ func TestMsgAggregation(t *testing.T) {
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
-	root, err := local.StartNewNodeName("ProtocolChannels", tree)
+	root, err := local.StartNewNodeStatic("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -286,7 +286,7 @@ func TestSendLimitedTree(t *testing.T) {
 
 	dbg.Lvl3(tree.Dump())
 
-	root, err := local.StartNewNodeName("Count", tree)
+	root, err := local.StartNewNodeStatic("Count", tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -400,11 +400,11 @@ func TestBlocking(t *testing.T) {
 	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()
 
-	n1, err := l.StartNewNodeName("ProtocolBlocking", tree)
+	n1, err := l.StartNewNodeStatic("ProtocolBlocking", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol")
 	}
-	n2, err := l.StartNewNodeName("ProtocolBlocking", tree)
+	n2, err := l.StartNewNodeStatic("ProtocolBlocking", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol")
 	}

@@ -1,28 +1,3 @@
-// Package sda has the service.go file which contains the code that glues the innerpart of SDA with the external
-// part. Basically, you have the definition of a Protocol which anybody can
-// implement, this is what sda is for: to run protocols.
-//
-// A Protocol in sda is supposed to be a short term struct that runs its
-// algorithm and then finishes. SDA handles the rounds and the dispatching.
-// Multiple protocols can run in parallel with the same Tree / EntityList etc.
-// You  can registers Protocol at init time using `sda.ProtocolRegister`.
-// If you need a long term object to store longterm information that Protocol
-// can use (for example, the hash of the last signature a given protocol has
-// issued to create a blockchain), you should implement the Service interface.
-//
-// A service is a longterm running platform that performs two main functions:
-// * First, it creates the ProtocolInstances out of a Node. SDA will request the
-// right service each time it needs to create a new one. The service has to
-// provide any external additional information to the protocol so it can work
-// knowing everything it needs to know.
-// * Secondly, a Service responds to requests made by clients through a CLI
-// using the API. The service will be responsible to create a ProtocolInstance
-// out of the client's request with the right Tree + EntityList and starts the
-// protocol.
-// The service can reply to requests coming also from others services or others
-// nodes; the Request is only a wrapper around JSON object.
-// All services are registered at init time and directly startup in the main
-// function.
 package sda
 
 import (
@@ -50,22 +25,23 @@ type ProtocolInstance interface {
 	Shutdown() error
 }
 
+// ProtocolID is the type representing a Protocol
+type ProtocolID uuid.UUID
+
+// NilProtocolID represents an empty ProtocolID
+var NilProtocolID = ProtocolID(uuid.Nil)
+
+func (p *ProtocolID) String() string {
+	return uuid.UUID(*p).String()
+}
+
 // NewProtocol is a convenience to represent the cosntructor function of a
 // ProtocolInstance
 type NewProtocol func(*Node) (ProtocolInstance, error)
 
-// ProtocolConstructor is an interface that can instantiate a given protocol
-type ProtocolConstructor interface {
-	NewProtocol(*Node) (ProtocolInstance, error)
-}
-
 // Service is a generic interface to define any type of services.
 type Service interface {
-	// ProtocolConstructor.NewProtocol is called by sda when it receives a packet for an
-	// non-existing Node (first contact). The service should provide the
-	// ProtocolInstance with every (external) information it might need.
-	ProtocolConstructor
-
+	NewProtocol(n *Node) (ProtocolInstance, error)
 	// ProcessRequest is the function that will be called when a external client
 	// using the CLI will contact this service with a request packet.
 	// Each request has a field ServiceID, so each time the Host (dispatcher)
@@ -74,119 +50,71 @@ type Service interface {
 	ProcessRequest(*network.Entity, *Request)
 }
 
-// ProtocolID is an identifier for the different protocols.
-type ProtocolID uuid.UUID
-
-// String returns a string representation of this ProtocolID
-func (p *ProtocolID) String() string {
-	return uuid.UUID(*p).String()
+type protocolFactory interface {
+	Instantiate(n *Node) (ProtocolInstance, error)
 }
 
-// EmptyProtocolID is a nil - empty ProtocolID which should not correspond to
-// any particular protocol
-var EmptyProtocolID = ProtocolID(uuid.Nil)
-
-// protocolFactory stores all the ProtocolConstructor together. It can
-// instantiate any registered protocol by name.
-type protocolFactory struct {
-	constructors map[ProtocolID]ProtocolConstructor
-	// translations between ProtocolID and the name
-	translations map[string]ProtocolID
-	// the reverse translation for easy debugging
-	reverse map[ProtocolID]string
-}
-
-// ProtocolFactory is the global factory that can be used to instantiate any protocol
-var ProtocolFactory = &protocolFactory{
-	constructors: make(map[ProtocolID]ProtocolConstructor),
+// ProtocolFactory is the global var that can instantiate any ProtocolInstance
+var ProtocolFactory = globalProtocolFactory{
+	// services that will be called to instantiate a node
+	services: make(map[ServiceID]NewProtocol),
+	// static functions that will be called to instantiate a node
+	statics:      make(map[ProtocolID]NewProtocol),
 	translations: make(map[string]ProtocolID),
-	reverse:      make(map[ProtocolID]string)}
-
-// RegisterNewProtocol takes the name of the protocol and a NewProtocol function
-// that will be stored.
-func (pf *protocolFactory) RegisterNewProtocol(name string, new NewProtocol) {
-	// creates a default constructor out of the NewProtocol func
-	dc := &defaultConstructor{new}
-	pf.register(name, dc)
-	dbg.Lvl2("RegisterNewProtocol:", name)
+	reverse:      make(map[ProtocolID]string),
 }
 
-// RegisterProtocolConstructor take the name of the protocol and the
-// ProtocolConstructor used to instantiate it.
-func (pf *protocolFactory) RegisterProtocolConstructor(name string, cons ProtocolConstructor) {
-	dbg.Lvl2("RegisterNewProtocolConstructor:", name)
-	pf.register(name, cons)
+type globalProtocolFactory struct {
+	// services that will be called to instantiate a node
+	services map[ServiceID]NewProtocol
+	// static functions that will be called to instantiate a node
+	statics      map[ProtocolID]NewProtocol
+	translations map[string]ProtocolID
+	reverse      map[ProtocolID]string
 }
 
-// RegisterNewProtocol is a wrapper around protocolFactory.RegisterNewProtocol
-func RegisterNewProtocol(name string, new NewProtocol) {
-	dbg.Lvl3("Register new protocol:", name)
-	ProtocolFactory.RegisterNewProtocol(name, new)
-}
-
-// RegisterProtocolConstructor is w wrapper around
-// protocolFactory.RegisterProtocolConstructor
-func RegisterProtocolConstructor(name string, cons ProtocolConstructor) {
-	ProtocolFactory.RegisterProtocolConstructor(name, cons)
-}
-
-// Instantiate takes the name of the protocol and returns a fresh instance out
-// of it.
-func (pf *protocolFactory) Instantiate(name string, node *Node) (ProtocolInstance, error) {
-	id, ok := pf.translations[name]
-	if !ok {
-		return nil, errors.New("Instantiate() No registered constructor at this name <" + name + ">")
+func (gpf *globalProtocolFactory) Instantiate(n *Node) (ProtocolInstance, error) {
+	var t = n.Token()
+	var np NewProtocol
+	var ok bool
+	// the protocols statics functions
+	if t.ServiceID == NilServiceID {
+		if np, ok = gpf.statics[n.Token().ProtoID]; !ok {
+			return nil, errors.New("No static functions can instantiate that")
+		}
+		// the services functions
+	} else if np, ok = gpf.services[n.Token().ServiceID]; !ok {
+		return nil, errors.New("No services can instantiate that protocol")
 	}
-	return pf.InstantiateByID(id, node)
+	return np(n)
 }
 
-// InstantiateByID is equivalent of Instantiate using the id instead.
-func (pf *protocolFactory) InstantiateByID(id ProtocolID, node *Node) (ProtocolInstance, error) {
-	cons, ok := pf.constructors[id]
-	if !ok {
-		dbg.Lvl1("ProtocolFactory:", pf.translations)
-		return nil, errors.New("Instantiate() No registered constructor at this id <" + pf.Name(id) + ">" + id.String())
-	}
-	return cons.NewProtocol(node)
-}
-
-// ProtocolID returns the ProtocolID out of the name
-func (pf *protocolFactory) ProtocolID(name string) ProtocolID {
-	id, ok := pf.translations[name]
-	if !ok {
-		return EmptyProtocolID
-	}
-	return id
-}
-
-func (pf *protocolFactory) Name(id ProtocolID) string {
-	name := pf.reverse[id]
-	return name
-}
-
-func (pf *protocolFactory) register(name string, cons ProtocolConstructor) {
+func (gpf *globalProtocolFactory) RegisterNewProtocol(name string, np NewProtocol) {
 	id := ProtocolID(uuid.NewV5(uuid.NamespaceURL, name))
-	if _, ok := pf.constructors[id]; ok {
-		dbg.Lvl2("Already have a protocol registered at the same name" + name)
-	}
-	pf.constructors[id] = cons
-	pf.translations[name] = id
-	pf.reverse[id] = name
+	gpf.statics[id] = np
+	gpf.translations[name] = id
+	gpf.reverse[id] = name
 }
 
-// a defaultFactory is a factory that takes a NewProtocol and instantiates it
-// anytime it is requested without any additional control.
-type defaultConstructor struct {
-	constructor NewProtocol
+// RegisterNewProtocol takes the name of the protocol and registers its static
+// function here.
+func RegisterNewProtocol(name string, np NewProtocol) {
+	ProtocolFactory.RegisterNewProtocol(name, np)
 }
 
-// implements the ProtocolConstructor  interface
-func (df *defaultConstructor) NewProtocol(n *Node) (ProtocolInstance, error) {
-	return df.constructor(n)
+func (gpf *globalProtocolFactory) registerService(servID ServiceID, np NewProtocol) {
+	gpf.services[servID] = np
 }
 
-// ServiceID is an identifier for Service. Use a ServiceID to communicate to a
-// service through its external API.
+func (gpf *globalProtocolFactory) ProtocolID(name string) ProtocolID {
+	return gpf.translations[name]
+}
+
+func (gpf *globalProtocolFactory) Name(protoID ProtocolID) string {
+	return gpf.reverse[protoID]
+}
+
+// ServiceID is the type representing the ID of a Service running
 type ServiceID uuid.UUID
 
 // String returns the string version of this ID
@@ -340,7 +268,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		services[id] = s
 		configs[id] = configName
 		// !! register to the ProtocolFactory !!
-		ProtocolFactory.RegisterProtocolConstructor(name, s)
+		ProtocolFactory.registerService(id, s.NewProtocol)
 	}
 	return &serviceStore{services, configs}
 }

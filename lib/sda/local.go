@@ -42,13 +42,13 @@ func NewLocalTest() *LocalTest {
 
 // StartNewNodeName takes a name and a tree and will create a
 // new Node with the protocol 'name' running from the tree-root
-func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
+func (l *LocalTest) StartNewNodeStatic(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
 		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].StartNewNode(name, t)
+			return l.Overlays[h.Entity.ID].StartNewNodeStatic(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -62,7 +62,7 @@ func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].CreateNewNode(name, t)
+			return l.Overlays[h.Entity.ID].CreateNewNodeStatic(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")

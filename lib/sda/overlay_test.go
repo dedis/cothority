@@ -45,7 +45,7 @@ func TestOverlayDone(t *testing.T) {
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	sda.RegisterNewProtocol("ProtocolOverlay", fn)
-	node, err := h1.StartNewNode("ProtocolOverlay", tree)
+	node, err := h1.StartNewNodeStatic("ProtocolOverlay", tree)
 	if err != nil {
 		t.Fatal("error starting new node", err)
 	}

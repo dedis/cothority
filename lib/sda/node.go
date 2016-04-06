@@ -179,7 +179,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	return nil
 }
 
-// RegisterChannel takes a channel with a struct that contains two
+// RegisterHandler  channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
 // This function handles also
@@ -228,7 +228,6 @@ func (n *Node) protocolInstantiate() error {
 	if n.token == nil {
 		return errors.New("Hope this is running in test-mode")
 	}
-	pid := n.token.ProtoID
 	tree := n.overlay.Tree(n.token.TreeID)
 	if tree == nil {
 		return errors.New("Tree does not exists")
@@ -239,7 +238,7 @@ func (n *Node) protocolInstantiate() error {
 
 	var pi ProtocolInstance
 	var err error
-	if pi, err = ProtocolFactory.InstantiateByID(pid, n); err != nil {
+	if pi, err = ProtocolFactory.Instantiate(n); err != nil {
 		return err
 	}
 	// link the two
@@ -519,6 +518,16 @@ func (n *Node) TokenID() TokenID {
 // Useful for unit testing.
 func (n *Node) Token() *Token {
 	return n.token
+}
+
+// ProtocolID returns the ProtocolID of the underlying protocolID
+func (n *Node) ProtocolID() ProtocolID {
+	return n.token.ProtoID
+}
+
+// ProtocolName returns the name out of the protocolID
+func (n *Node) ProtocolName() string {
+	return ProtocolFactory.Name(n.token.ProtoID)
 }
 
 // Host returns the underlying Host of this node.

@@ -80,7 +80,7 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 func TestProtocolRegistration(t *testing.T) {
 	var name = "testProtocol"
 	sda.RegisterNewProtocol("testProtocol", NewProtocolTest)
-	if sda.ProtocolFactory.ProtocolID(name) == sda.EmptyProtocolID {
+	if sda.ProtocolFactory.ProtocolID(name) == sda.NilProtocolID {
 		t.Fatal("Test should exist now")
 	}
 }
@@ -121,7 +121,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	h1.AddTree(tree)
 	// start the protocol
 	go func() {
-		_, err := h1.StartNewNode(testID, tree)
+		_, err := h1.StartNewNodeStatic(testID, tree)
 		if err != nil {
 			t.Fatal(fmt.Sprintf("Could not start protocol %v", err))
 		}

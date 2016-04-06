@@ -127,55 +127,78 @@ func (o *Overlay) EntityList(elid EntityListID) *EntityList {
 	return o.entityLists[elid]
 }
 
-// StartNewNode is to be called by the root to start a new node with the given
+// StartNewNodeStatic is to be called by the root to start a new node with the given
 // protocol over the given tree.
-func (o *Overlay) StartNewNode(name string, tree *Tree) (*Node, error) {
-	return o.startNewNodeID(ProtocolFactory.ProtocolID(name), tree)
-}
-
-// StartNewNodeID is similar to StartNewNode but directly takes the ID of the
-// protocol to run.
-func (o *Overlay) startNewNodeID(protocol ProtocolID, tree *Tree) (*Node, error) {
-	// check everything exists
+func (o *Overlay) StartNewNodeStatic(name string, tree *Tree) (*Node, error) {
 	rootEntity := tree.Root.Entity
 	if !o.host.Entity.Equal(rootEntity) {
 		return nil, errors.New("StartNewNode should be called by root, but entity of host differs from the root")
 	}
 
-	n, err := o.createNewNodeID(protocol, tree)
+	n, err := o.CreateNewNodeStatic(name, tree)
 	if err != nil {
 		return nil, err
 	}
-	go n.StartProtocol()
+	n.StartProtocol()
 	return n, nil
 }
 
-// CreateNewNode is kept as legacy reason in case you want to create a node
-// without the protocol starting yet.
-func (o *Overlay) CreateNewNode(name string, tree *Tree) (*Node, error) {
-	n, err := o.createNewNodeID(ProtocolFactory.ProtocolID(name), tree)
-	return n, err
+// StartNewNodeService start a new node using the Service as the constructor of
+// the protocol instance.
+func (o *Overlay) StartNewNodeService(service, protocol string, tree *Tree) (*Node, error) {
+	n, err := o.CreateNewNodeService(service, protocol, tree)
+	if err != nil {
+		return nil, err
+	}
+	n.StartProtocol()
+	return n, nil
 }
 
-// newNodeID is used to create the node. It is called each time the overlay
-// creates a node.
-func (o *Overlay) createNewNodeID(protocol ProtocolID, tree *Tree) (*Node, error) {
+// CreateNewNodeStatic will create a new node with the respective ProtocolInstance without
+// the protocol starting yet. It uses the static functions to instantiate the
+// protocol.
+func (o *Overlay) CreateNewNodeStatic(name string, tree *Tree) (*Node, error) {
+	protoID := ProtocolFactory.ProtocolID(name)
 	// instantiate
 	token := &Token{
-		ProtoID:      protocol,
+		ProtoID: protoID,
+		// no ServiceID
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tree.Root.Id,
 		// Host is handling the generation of protocolInstanceID
 		RoundID: RoundID(uuid.NewV4()),
 	}
+	return o.instantiateNodeFromToken(token)
+}
+
+// CreateNewNodeService is using a service name
+func (o *Overlay) CreateNewNodeService(service, protocol string, tree *Tree) (*Node, error) {
+	protoID := ProtocolFactory.ProtocolID(protocol)
+	servID := ServiceFactory.ServiceID(service)
+	// instantiate
+	token := &Token{
+		ProtoID:      protoID,
+		ServiceID:    servID,
+		EntityListID: tree.EntityList.Id,
+		TreeID:       tree.Id,
+		TreeNodeID:   tree.Root.Id,
+		// Host is handling the generation of protocolInstanceID
+		RoundID: RoundID(uuid.NewV4()),
+	}
+	return o.instantiateNodeFromToken(token)
+}
+
+// instantiateNodeFromToken is used when we receive a message with a destination
+// Token unknown, i.e. the Node does not exists yet.
+func (o *Overlay) instantiateNodeFromToken(t *Token) (*Node, error) {
 	o.nodeLock.Lock()
 	defer o.nodeLock.Unlock()
-	node, err := NewNode(o, token)
+	node, err := NewNode(o, t)
 	o.nodes[node.token.Id()] = node
 	o.nodeInfo[node.token.Id()] = false
-	return node, err
 
+	return node, err
 }
 
 // TreeNodeFromToken returns the treeNode corresponding to a token
@@ -280,7 +303,7 @@ func (o *Overlay) Close() {
 // lookup, but that's better than searching the tree each time.
 type TreeNodeCache map[TreeID]map[TreeNodeID]*TreeNode
 
-// Returns a new TreeNodeCache
+// NewTreeNodeCache returns a new TreeNodeCache
 func NewTreeNodeCache() TreeNodeCache {
 	m := make(map[TreeID]map[TreeNodeID]*TreeNode)
 	return m

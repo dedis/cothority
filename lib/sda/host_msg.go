@@ -61,6 +61,7 @@ type TokenID uuid.UUID
 type Token struct {
 	EntityListID EntityListID
 	TreeID       TreeID
+	ServiceID    ServiceID
 	ProtoID      ProtocolID
 	RoundID      RoundID
 	TreeNodeID   TreeNodeID
@@ -77,7 +78,7 @@ func (t *Token) Id() TokenID {
 	defer tokenMutex.Unlock()
 	if t.cacheId == TokenID(uuid.Nil) {
 		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
-			t.RoundID.String() + t.ProtoID.String() + t.TreeID.String() +
+			t.RoundID.String() + t.ProtoID.String() + t.ServiceID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
 	}

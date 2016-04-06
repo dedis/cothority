@@ -577,8 +577,12 @@ func (h *Host) Suite() abstract.Suite {
 }
 
 // XXX Should be only in overlay
-func (h *Host) StartNewNode(name string, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNode(name, tree)
+func (h *Host) StartNewNodeStatic(name string, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNodeStatic(name, tree)
+}
+
+func (h *Host) StartNewNodeService(service, protocol string, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNodeService(service, protocol, tree)
 }
 
 // SetupHostsMock can be used to create a Host mock for testing.
