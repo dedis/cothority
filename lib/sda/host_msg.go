@@ -61,10 +61,13 @@ type TokenID uuid.UUID
 type Token struct {
 	EntityListID EntityListID
 	TreeID       TreeID
-	ProtoID      ProtocolID
-	RoundID      RoundID
-	TreeNodeID   TreeNodeID
-	cacheId      TokenID
+	// TO BE REMOVED
+	ProtoID   ProtocolID
+	ServiceID ServiceID
+	RoundID   RoundID
+	// TreeNodeID is defined by the
+	TreeNodeID TreeNodeID
+	cacheId    TokenID
 }
 
 // Global mutex when we're working on Tokens. Needed because we
@@ -77,7 +80,7 @@ func (t *Token) Id() TokenID {
 	defer tokenMutex.Unlock()
 	if t.cacheId == TokenID(uuid.Nil) {
 		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
-			t.RoundID.String() + t.ProtoID.String() + t.TreeID.String() +
+			t.RoundID.String() + t.ServiceID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
 	}
