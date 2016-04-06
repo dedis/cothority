@@ -143,14 +143,14 @@ func signFile(c *cli.Context) {
 	groupToml := c.GlobalString("servers")
 	file, err := os.Open(fileName)
 	if err != nil {
-		dbg.Error("Couldn't read file to be signed:", err)
+		handleErrorAndExit("Couldn't read file to be signed: ", err)
 	}
 	sig, err := sign(file, groupToml)
-	handleErrorAndExit("Couldn't create signature", err)
+	handleErrorAndExit("Couldn't create signature: ", err)
 	dbg.Lvl1(sig)
 	sigFileName := fileName + ".sig"
 	outFile, err := os.Create(sigFileName)
-	handleErrorAndExit("Couldn't create signature file", err)
+	handleErrorAndExit("Couldn't create signature file: ", err)
 	writeSigAsJSON(sig, outFile)
 	dbg.Lvl1("Signature written to: " + sigFileName)
 }
@@ -159,7 +159,7 @@ func signString(c *cli.Context) {
 	msg := strings.NewReader(c.Args().First())
 	groupToml := c.GlobalString("servers")
 	sig, err := sign(msg, groupToml)
-	handleErrorAndExit("Couldn't create signature", err)
+	handleErrorAndExit("Couldn't create signature: ", err)
 	writeSigAsJSON(sig, os.Stdout)
 }
 
@@ -193,9 +193,9 @@ func verifyString(c *cli.Context) {
 	f.Close()
 	sigfile := f.Name() + ".sig"
 	sig, err := ioutil.ReadFile(c.String("signature"))
-	handleErrorAndExit("Couldn't read signature", err)
+	handleErrorAndExit("Couldn't read signature: ", err)
 	err = ioutil.WriteFile(sigfile, sig, 0444)
-	handleErrorAndExit("Couldn't write tmp-signature", err)
+	handleErrorAndExit("Couldn't write tmp-signature: ", err)
 	verify(f.Name(), c.GlobalString("servers"))
 	os.Remove(f.Name())
 	os.Remove(sigfile)
@@ -328,7 +328,7 @@ func handleErrorAndExit(msg string, e error) {
 func writeSigAsJSON(res *sda.CosiResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		dbg.Error("error:", err)
+		handleErrorAndExit("Couldn't encode signature: ", err)
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
