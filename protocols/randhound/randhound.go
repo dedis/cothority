@@ -112,7 +112,7 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 		rh.handleI3, rh.handleR3,
 		rh.handleI4, rh.handleR4,
 	}
-	err := rh.RegisterHandlers(h)
+	err := rh.RegisterHandlers(h...)
 
 	return rh, err
 }

@@ -88,7 +88,7 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 		jv.handleSigReq,
 		jv.handleSigResp,
 	}
-	err := jv.RegisterHandlers(h)
+	err := jv.RegisterHandlers(h...)
 
 	return jv, err
 }

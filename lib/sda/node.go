@@ -20,6 +20,8 @@ type Node struct {
 	treeNode *TreeNode
 	// cached list of all TreeNodes
 	treeNodeList []*TreeNode
+	// mutex to synchronise creation of treeNodeList
+	mtx sync.Mutex
 	// channels holds all channels available for the different message-types
 	channels map[network.MessageTypeID]interface{}
 	// registered handler-functions for that protocol
@@ -129,21 +131,20 @@ func (n *Node) SendTo(to *TreeNode, msg interface{}) error {
 
 // SendToParent sends a given message to the parent of the calling node (unless it is the root)
 func (n *Node) SendToParent(msg interface{}) error {
-	if !n.IsRoot() {
-		if err := n.SendTo(n.Parent(), msg); err != nil {
-			return err
-		}
+	if n.IsRoot() {
+		return nil
 	}
-	return nil
+	return n.SendTo(n.Parent(), msg)
 }
 
 // SendToChildren sends a given message to all children of the calling node (unless it is a leaf)
 func (n *Node) SendToChildren(msg interface{}) error {
-	if !n.IsLeaf() {
-		for _, node := range n.Children() {
-			if err := n.SendTo(node, msg); err != nil {
-				return err
-			}
+	if n.IsLeaf() {
+		return nil
+	}
+	for _, node := range n.Children() {
+		if err := n.SendTo(node, msg); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -151,12 +152,10 @@ func (n *Node) SendToChildren(msg interface{}) error {
 
 // SendToRoot sends a given message to the root node of the tree (unless the calling node is the root itself)
 func (n *Node) SendToRoot(msg interface{}) error {
-	if !n.IsRoot() {
-		if err := n.SendTo(n.Tree().Root, msg); err != nil {
-			return err
-		}
+	if n.IsRoot() {
+		return nil
 	}
-	return nil
+	return n.SendTo(n.Tree().Root, msg)
 }
 
 // Broadcast sends a given message from the calling node directly to all other TreeNodes
@@ -183,9 +182,11 @@ func (n *Node) EntityList() *EntityList {
 
 // List returns the list of TreeNodes cached in the node (creating it if necessary)
 func (n *Node) List() []*TreeNode {
+	n.mtx.Lock()
 	if n.treeNodeList == nil {
 		n.treeNodeList = n.Tree().List()
 	}
+	n.mtx.Unlock()
 	return n.treeNodeList
 }
 
@@ -287,10 +288,10 @@ func (n *Node) RegisterHandler(c interface{}) error {
 }
 
 // RegisterHandlers registers a list of given handlers by calling RegisterHandler above
-func (n *Node) RegisterHandlers(handlers []interface{}) error {
+func (n *Node) RegisterHandlers(handlers ...interface{}) error {
 	for _, h := range handlers {
 		if err := n.RegisterHandler(h); err != nil {
-			return fmt.Errorf("Error, could not register handler: " + err.Error())
+			return errors.New("Error, could not register handler: " + err.Error())
 		}
 	}
 	return nil
