@@ -4,8 +4,8 @@ package skipchain
 import (
 	"errors"
 	libcosi "github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/crypto/abstract"
@@ -20,7 +20,7 @@ type ProtocolSkipchain struct {
 	*sda.Node
 	SetupDone    chan bool
 	SkipChain    map[string]*SkipBlock
-	LastBlock    crypto.HashId
+	LastBlock    []byte
 	CurrentBlock SkipBlock
 }
 
@@ -46,15 +46,14 @@ func NewSkipchain(n *sda.Node) (sda.ProtocolInstance, error) {
 // Starts the protocol
 func (p *ProtocolSkipchain) Start() error {
 	dbg.Lvl3("Starting Skipchain")
-	block := &SkipBlock{Index: 0} //TODO fill the fields
+	block := &SkipBlock{Index: 0, X_0: p.TreeNode().PublicAggregateSubTree, Nodes: p.Tree().List()}
 	p.LastBlock = block.Hash()
 	return p.HandleGenesis(StructGenesis{p.TreeNode(),
 		MessageGenesis{Block: block}})
 }
 
-// HandleGenesis is used to sign the Genesis blocks it maybe renamed to HandleNewBlock
+// HandleGenesis is used to sign the Genesis blocks
 func (p *ProtocolSkipchain) HandleGenesis(msg StructGenesis) error {
-
 	err := p.StartSignature(*msg.Block)
 	if err != nil {
 		return err
@@ -69,11 +68,12 @@ func (p *ProtocolSkipchain) StartSignature(block SkipBlock) error {
 		return err
 	}
 	pcosi := proto.ProtocolInstance().(*cosi.ProtocolCosi)
-	//TODO verify the proposal and wait for a positive answer from the cosi challenge phase
+	//TODO verify the proposal and wait for a positive answer from the cosi challenge phase??? register cosi functions for that???
 	pcosi.SigningMessage(block.Hash())
 	pcosi.RegisterDoneCallback(func(chal, resp abstract.Secret) {
 		dbg.Lvl3("Cosi is Done")
 		block.Signature = &libcosi.Signature{chal, resp}
+		block.Nodes = nil
 		p.HandlePropagate(StructPropagate{MessagePropagate: MessagePropagate{Block: &block}})
 		p.SetupDone <- true
 	})
@@ -83,6 +83,7 @@ func (p *ProtocolSkipchain) StartSignature(block SkipBlock) error {
 
 // HandlePropagate sends the signed block to the nodes who add it in their SkipList
 func (p *ProtocolSkipchain) HandlePropagate(prop StructPropagate) error {
+	//TODO if the block is propagated before now propagate only the signature on recieve nodes set block.Nodes to nil
 	p.LastBlock = prop.Block.Hash()
 	p.SkipChain[string(p.LastBlock)] = prop.Block
 	if !p.IsLeaf() {
@@ -98,9 +99,15 @@ func (p *ProtocolSkipchain) HandlePropagate(prop StructPropagate) error {
 	return nil
 }
 
-// HandleGenesis is used to sign the Genesis blocks it maybe renamed to HandleNewBlock
-func (p *ProtocolSkipchain) HandleNewBlock() /* gets a new list of public keys*/ error {
+// HandleNewBlock is used to sign new blocks, it is called by the application when something changes
+func (p *ProtocolSkipchain) SignNewBlock(nodes []*sda.TreeNode) error {
 	//create aggregate key and add it
+	suite := network.Suite
+	aggregatekey := suite.Point().Null()
+
+	for i := 0; i < len(nodes); i++ {
+		aggregatekey = suite.Point().Add(aggregatekey, nodes[i].Entity.Public)
+	}
 	block := &SkipBlock{Index: p.SkipChain[string(p.LastBlock)].Index + 1} //TODO fill the fields
 	block.BackLink = append(block.BackLink, p.LastBlock)
 	err := p.StartSignature(*block)

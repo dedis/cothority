@@ -8,13 +8,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/simul/platform"
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 )
 
@@ -26,7 +27,7 @@ func init() {
 
 func main() {
 	// init with deter.toml
-	deter := platform.DeterFromConfig()
+	deter := deterFromConfig()
 	flag.Parse()
 
 	// kill old processes
@@ -37,8 +38,8 @@ func main() {
 		dbg.Fatal("Deterlab experiment", deter.Project+"/"+deter.Experiment, "seems not to be swapped in. Aborting.")
 		os.Exit(-1)
 	}
-	hosts_trimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
-	hostlist := strings.Split(hosts_trimmed, " ")
+	hostsTrimmed := strings.TrimSpace(re.ReplaceAllString(string(hosts), " "))
+	hostlist := strings.Split(hostsTrimmed, " ")
 	doneHosts := make([]bool, len(hostlist))
 	dbg.Lvl2("Found the following hosts:", hostlist)
 	if kill {
@@ -50,23 +51,23 @@ func main() {
 			defer wg.Done()
 			if kill {
 				dbg.Lvl3("Cleaning up host", h, ".")
-				cliutils.SshRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null")
+				platform.SSHRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				cliutils.SshRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null")
+				platform.SSHRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
-				cliutils.SshRun("", h, "sudo pkill -9 -f '\\./'")
+				platform.SSHRun("", h, "sudo pkill -9 -f '\\./'")
 				time.Sleep(1 * time.Second)
 				if dbg.DebugVisible() > 3 {
 					dbg.Lvl4("Cleaning report:")
-					cliutils.SshRunStdout("", h, "ps aux")
+					platform.SSHRunStdout("", h, "ps aux")
 				}
 			} else {
 				dbg.Lvl3("Setting the file-limit higher on", h)
 
 				// Copy configuration file to make higher file-limits
-				err := cliutils.SshRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
+				err := platform.SSHRunStdout("", h, "sudo cp remote/cothority.conf /etc/security/limits.d")
 				if err != nil {
 					dbg.Fatal("Couldn't copy limit-file:", err)
 				}
@@ -127,7 +128,7 @@ func main() {
 				" -monitor=" + monitorAddr +
 				" -debug=" + strconv.Itoa(dbg.DebugVisible())
 			dbg.Lvl3("Args is", args)
-			err := cliutils.SshRunStdout("", phys, "cd remote; sudo ./cothority "+
+			err := platform.SSHRunStdout("", phys, "cd remote; sudo ./cothority "+
 				args)
 			if err != nil && !killing {
 				dbg.Lvl1("Error starting cothority - will kill all others:", err, internal)
@@ -143,4 +144,21 @@ func main() {
 
 	// wait for the servers to finish before stopping
 	wg.Wait()
+}
+
+// Reads in the deterlab-config and drops out if there is an error
+func deterFromConfig(name ...string) *platform.Deterlab {
+	d := &platform.Deterlab{}
+	configName := "deter.toml"
+	if len(name) > 0 {
+		configName = name[0]
+	}
+	err := sda.ReadTomlConfig(d, configName)
+	_, caller, line, _ := runtime.Caller(1)
+	who := caller + ":" + strconv.Itoa(line)
+	if err != nil {
+		dbg.Fatal("Couldn't read config in", who, ":", err)
+	}
+	dbg.SetDebugVisible(d.Debug)
+	return d
 }

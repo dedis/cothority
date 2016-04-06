@@ -64,7 +64,7 @@ func main() {
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		deployP.Configure(&platform.PlatformConfig{
+		deployP.Configure(&platform.Config{
 			MonitorPort: monitorPort,
 			Debug:       dbg.DebugVisible(),
 		})
@@ -93,7 +93,7 @@ func main() {
 	}
 }
 
-// Runs the given tests and puts the output into the
+// RunTests the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, runconfigs []platform.RunConfig) {
 
@@ -170,7 +170,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 }
 
-// Runs a single test - takes a test-file as a string that will be copied
+// RunTest a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
@@ -245,14 +245,14 @@ func CheckHosts(rc platform.RunConfig) {
 		}
 		bf = 2
 		for calcHosts(bf, depth) < hosts {
-			bf += 1
+			bf++
 		}
 		rc.Put("bf", strconv.Itoa(bf))
 	}
 	if depth == 0 {
 		depth = 1
 		for calcHosts(bf, depth) < hosts {
-			depth += 1
+			depth++
 		}
 		rc.Put("depth", strconv.Itoa(depth))
 	}
@@ -288,13 +288,13 @@ func testFile(name string) string {
 
 // returns a tuple of start and stop configurations to run
 func getStartStop(rcs int) (int, int) {
-	ss_str := strings.Split(simRange, ":")
-	start, err := strconv.Atoi(ss_str[0])
+	ssStr := strings.Split(simRange, ":")
+	start, err := strconv.Atoi(ssStr[0])
 	stop := rcs - 1
 	if err == nil {
 		stop = start
-		if len(ss_str) > 1 {
-			stop, err = strconv.Atoi(ss_str[1])
+		if len(ssStr) > 1 {
+			stop, err = strconv.Atoi(ssStr[1])
 			if err != nil {
 				stop = rcs
 			}

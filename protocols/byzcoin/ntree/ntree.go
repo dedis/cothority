@@ -1,4 +1,4 @@
-package byzcoin_ntree
+package byzcoinNtree
 
 import (
 	"encoding/json"
@@ -10,7 +10,6 @@ import (
 	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
-	"github.com/satori/go.uuid"
 )
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
@@ -84,7 +83,7 @@ func NewNTreeRootProtocol(node *sda.Node, transactions []blkparser.Tx) (*Ntree, 
 	return nt, err
 }
 
-// Announce the new block to sign
+// Start announces the new block to sign
 func (nt *Ntree) Start() error {
 	dbg.Lvl3(nt.Name(), "Start()")
 	go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
@@ -94,6 +93,8 @@ func (nt *Ntree) Start() error {
 	return nil
 }
 
+// Dispatch do nothing yet since we use an implicit listen function in a go
+// routine
 func (nt *Ntree) Dispatch() error {
 	// do nothing
 	return nil
@@ -212,7 +213,7 @@ func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
 // parrallele
 func (nt *Ntree) verifySignatureRequest(msg *RoundSignatureRequest) {
 	// verification if we have too much exceptions
-	threshold := int(math.Ceil(float64(len(nt.Tree().ListNodes())) / 3.0))
+	threshold := int(math.Ceil(float64(len(nt.Tree().List())) / 3.0))
 	if len(msg.Exceptions) > threshold {
 		nt.verifySignatureRequestChan <- false
 	}
@@ -303,7 +304,7 @@ type BlockAnnounce struct {
 	Block *blockchain.TrBlock
 }
 
-// the signatureS of a block goes up the tree using this message
+// NaiveBlockSignature contains the signatures of a block that goes up the tree using this message
 type NaiveBlockSignature struct {
 	Sigs       []crypto.SchnorrSig
 	Exceptions []Exception
@@ -311,23 +312,23 @@ type NaiveBlockSignature struct {
 
 // Exception is  just representing the notion that a peers does not accept to
 // sign something. It justs passes its TreeNodeId inside. No need for public key
-// or whatever because each signatures is independant.
+// or whatever because each signatures is independent.
 type Exception struct {
-	Id uuid.UUID
+	ID sda.TreeNodeID
 }
 
-// RoundSignatureRequest basically is the the block sisgnature broadcasting
-// downt he tree
+// RoundSignatureRequest basically is the the block signature broadcasting
+// down the tree.
 type RoundSignatureRequest struct {
 	*NaiveBlockSignature
 }
 
-// The final signatures
+// RoundSignatureResponse is the final signatures
 type RoundSignatureResponse struct {
 	*NaiveBlockSignature
 }
 
-// Signature that we give back to the simulation or control
+// NtreeSignature is the signature that we give back to the simulation or control
 type NtreeSignature struct {
 	Block *blockchain.TrBlock
 	*RoundSignatureResponse

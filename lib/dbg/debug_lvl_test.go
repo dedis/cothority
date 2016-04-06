@@ -34,6 +34,8 @@ func TestTime(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
+	test := dbg.Testing
+	dbg.Testing = 2
 	lvl := dbg.DebugVisible()
 	time := dbg.ShowTime()
 	color := dbg.UseColors()
@@ -72,6 +74,7 @@ func TestFlags(t *testing.T) {
 	dbg.SetDebugVisible(lvl)
 	dbg.SetShowTime(time)
 	dbg.SetUseColors(color)
+	dbg.Testing = test
 }
 
 func ExampleLevel2() {

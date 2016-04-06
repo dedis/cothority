@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Tests a 2-node system
+// Tests a 5-node system
 func TestNode(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()

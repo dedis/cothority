@@ -1,5 +1,5 @@
-// A novel way of implementing the Bitcoin protocol using CoSi for signing
-// sidechains.
+// Package byzcoin store a novel way of implementing the Bitcoin protocol using
+// CoSi for signing sidechains.
 package byzcoin
 
 import (
@@ -17,9 +17,9 @@ import (
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
 )
 
+// ByzCoin is the main struct for running the protocol
 type ByzCoin struct {
 	// the node we are represented-in
 	*sda.Node
@@ -136,6 +136,7 @@ type ByzCoin struct {
 	finalSignature *BlockSignature
 }
 
+// NewByzCoinProtocol returns a new byzcoin struct
 func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
 	// create the byzcoin
 	bz := new(ByzCoin)
@@ -150,8 +151,8 @@ func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
 
 	//bz.endProto, _ = end.NewEndProtocol(n)
 	bz.aggregatedPublic = n.EntityList().Aggregate
-	bz.threshold = int(math.Ceil(float64(len(bz.Tree().ListNodes())) / 3.0))
-	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().ListNodes())) * 2.0 / 3.0))
+	bz.threshold = int(math.Ceil(float64(len(bz.Tree().List())) / 3.0))
+	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().List())) * 2.0 / 3.0))
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
@@ -167,6 +168,8 @@ func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
 	return bz, nil
 }
 
+// NewByzCoinRootProtocol returns a new byzcoin struct with the block to sign
+// that will be sent to all others nodes
 func NewByzCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64, failMode uint) (*ByzCoin, error) {
 	bz, err := NewByzCoinProtocol(n)
 	if err != nil {
@@ -201,29 +204,29 @@ func (bz *ByzCoin) listen() {
 		select {
 		case msg := <-bz.announceChan:
 			// Announcement
-			err = bz.handleAnnouncement(msg.ByzCoinAnnounce)
+			err = bz.handleAnnouncement(msg.Announce)
 		case msg := <-bz.commitChan:
 			// Commitment
 			if !fail {
-				err = bz.handleCommit(msg.ByzCoinCommitment)
+				err = bz.handleCommit(msg.Commitment)
 			}
 		case msg := <-bz.challengePrepareChan:
 			// Challenge
 			if !fail {
-				err = bz.handleChallengePrepare(&msg.ByzCoinChallengePrepare)
+				err = bz.handleChallengePrepare(&msg.ChallengePrepare)
 			}
 		case msg := <-bz.challengeCommitChan:
 			if !fail {
-				err = bz.handleChallengeCommit(&msg.ByzCoinChallengeCommit)
+				err = bz.handleChallengeCommit(&msg.ChallengeCommit)
 			}
 		case msg := <-bz.responseChan:
 			// Response
 			if !fail {
-				switch msg.ByzCoinResponse.TYPE {
-				case ROUND_PREPARE:
-					err = bz.handleResponsePrepare(&msg.ByzCoinResponse)
-				case ROUND_COMMIT:
-					err = bz.handleResponseCommit(&msg.ByzCoinResponse)
+				switch msg.Response.TYPE {
+				case RoundPrepare:
+					err = bz.handleResponsePrepare(&msg.Response)
+				case RoundCommit:
+					err = bz.handleResponseCommit(&msg.Response)
 				}
 			}
 		case timeout := <-bz.timeoutChan:
@@ -256,8 +259,8 @@ func (bz *ByzCoin) startAnnouncementPrepare() error {
 	}
 
 	ann := bz.prepare.CreateAnnouncement()
-	bza := &ByzCoinAnnounce{
-		TYPE:         ROUND_PREPARE,
+	bza := &Announce{
+		TYPE:         RoundPrepare,
 		Announcement: ann,
 		Timeout:      bz.rootTimeout,
 	}
@@ -269,15 +272,15 @@ func (bz *ByzCoin) startAnnouncementPrepare() error {
 // sends it down the tree.
 func (bz *ByzCoin) startAnnouncementCommit() error {
 	ann := bz.commit.CreateAnnouncement()
-	bza := &ByzCoinAnnounce{
-		TYPE:         ROUND_COMMIT,
+	bza := &Announce{
+		TYPE:         RoundCommit,
 		Announcement: ann,
 	}
 	dbg.Lvl3(bz.Name(), "ByzCoin Start Announcement (COMMIT)")
 	return bz.sendAnnouncement(bza)
 }
 
-func (bz *ByzCoin) sendAnnouncement(bza *ByzCoinAnnounce) error {
+func (bz *ByzCoin) sendAnnouncement(bza *Announce) error {
 	var err error
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, bza)
@@ -286,13 +289,13 @@ func (bz *ByzCoin) sendAnnouncement(bza *ByzCoinAnnounce) error {
 }
 
 // handleAnnouncement pass the announcement to the right CoSi struct.
-func (bz *ByzCoin) handleAnnouncement(ann ByzCoinAnnounce) error {
-	var announcement = new(ByzCoinAnnounce)
+func (bz *ByzCoin) handleAnnouncement(ann Announce) error {
+	var announcement = new(Announce)
 
 	switch ann.TYPE {
-	case ROUND_PREPARE:
-		announcement = &ByzCoinAnnounce{
-			TYPE:         ROUND_PREPARE,
+	case RoundPrepare:
+		announcement = &Announce{
+			TYPE:         RoundPrepare,
 			Announcement: bz.prepare.Announce(ann.Announcement),
 			Timeout:      ann.Timeout,
 		}
@@ -304,9 +307,9 @@ func (bz *ByzCoin) handleAnnouncement(ann ByzCoinAnnounce) error {
 		if bz.IsLeaf() {
 			return bz.startCommitmentPrepare()
 		}
-	case ROUND_COMMIT:
-		announcement = &ByzCoinAnnounce{
-			TYPE:         ROUND_COMMIT,
+	case RoundCommit:
+		announcement = &Announce{
+			TYPE:         RoundCommit,
 			Announcement: bz.commit.Announce(ann.Announcement),
 		}
 		dbg.Lvl3(bz.Name(), "ByzCoin Handle Announcement COMMIT")
@@ -327,7 +330,7 @@ func (bz *ByzCoin) handleAnnouncement(ann ByzCoinAnnounce) error {
 // round.
 func (bz *ByzCoin) startCommitmentPrepare() error {
 	cm := bz.prepare.CreateCommitment()
-	err := bz.SendTo(bz.Parent(), &ByzCoinCommitment{TYPE: ROUND_PREPARE, Commitment: cm})
+	err := bz.SendTo(bz.Parent(), &Commitment{TYPE: RoundPrepare, Commitment: cm})
 	dbg.Lvl3(bz.Name(), "ByzCoin Start Commitment PREPARE")
 	return err
 }
@@ -337,17 +340,17 @@ func (bz *ByzCoin) startCommitmentPrepare() error {
 func (bz *ByzCoin) startCommitmentCommit() error {
 	cm := bz.commit.CreateCommitment()
 
-	err := bz.SendTo(bz.Parent(), &ByzCoinCommitment{TYPE: ROUND_COMMIT, Commitment: cm})
+	err := bz.SendTo(bz.Parent(), &Commitment{TYPE: RoundCommit, Commitment: cm})
 	dbg.Lvl3(bz.Name(), "ByzCoin Start Commitment COMMIT", err)
 	return err
 }
 
 // handle the arrival of a commitment
-func (bz *ByzCoin) handleCommit(ann ByzCoinCommitment) error {
-	var commitment *ByzCoinCommitment
+func (bz *ByzCoin) handleCommit(ann Commitment) error {
+	var commitment *Commitment
 	// store it and check if we have enough commitments
 	switch ann.TYPE {
-	case ROUND_PREPARE:
+	case RoundPrepare:
 		bz.tpcMut.Lock()
 		bz.tempPrepareCommit = append(bz.tempPrepareCommit, ann.Commitment)
 		if len(bz.tempPrepareCommit) < len(bz.Children()) {
@@ -359,12 +362,12 @@ func (bz *ByzCoin) handleCommit(ann ByzCoinCommitment) error {
 		if bz.IsRoot() {
 			return bz.startChallengePrepare()
 		}
-		commitment = &ByzCoinCommitment{
-			TYPE:       ROUND_PREPARE,
+		commitment = &Commitment{
+			TYPE:       RoundPrepare,
 			Commitment: commit,
 		}
 		dbg.Lvl3(bz.Name(), "ByzCoin handle Commit PREPARE")
-	case ROUND_COMMIT:
+	case RoundCommit:
 		bz.tccMut.Lock()
 		bz.tempCommitCommit = append(bz.tempCommitCommit, ann.Commitment)
 		if len(bz.tempCommitCommit) < len(bz.Children()) {
@@ -380,8 +383,8 @@ func (bz *ByzCoin) handleCommit(ann ByzCoinCommitment) error {
 			// round. startChallengeCOmmit will be called then.
 			return nil
 		}
-		commitment = &ByzCoinCommitment{
-			TYPE:       ROUND_COMMIT,
+		commitment = &Commitment{
+			TYPE:       RoundCommit,
 			Commitment: commit,
 		}
 		dbg.Lvl3(bz.Name(), "ByzCoin handle Commit COMMIT")
@@ -402,8 +405,8 @@ func (bz *ByzCoin) startChallengePrepare() error {
 	if err != nil {
 		return err
 	}
-	bizChal := &ByzCoinChallengePrepare{
-		TYPE:      ROUND_PREPARE,
+	bizChal := &ChallengePrepare{
+		TYPE:      RoundPrepare,
 		Challenge: ch,
 		TrBlock:   trblock,
 	}
@@ -432,8 +435,8 @@ func (bz *ByzCoin) startChallengeCommit() error {
 	}
 
 	// send challenge + signature
-	bzc := &ByzCoinChallengeCommit{
-		TYPE:      ROUND_COMMIT,
+	bzc := &ChallengeCommit{
+		TYPE:      RoundCommit,
 		Challenge: chal,
 		Signature: bz.prepare.Signature(),
 	}
@@ -446,7 +449,7 @@ func (bz *ByzCoin) startChallengeCommit() error {
 
 // handlePrepareChallenge receive the challenge messages for the "prepare"
 // round.
-func (bz *ByzCoin) handleChallengePrepare(ch *ByzCoinChallengePrepare) error {
+func (bz *ByzCoin) handleChallengePrepare(ch *ChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
 	go VerifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
@@ -468,7 +471,7 @@ func (bz *ByzCoin) handleChallengePrepare(ch *ByzCoinChallengePrepare) error {
 
 // handleCommitChallenge will verify the signature + check if no more than 1/3
 // of participants refused to sign.
-func (bz *ByzCoin) handleChallengeCommit(ch *ByzCoinChallengeCommit) error {
+func (bz *ByzCoin) handleChallengeCommit(ch *ChallengeCommit) error {
 	// marshal the block
 	marshalled, err := json.Marshal(bz.tempBlock)
 	if err != nil {
@@ -526,8 +529,8 @@ func (bz *ByzCoin) startResponsePrepare() error {
 // up. It will not create the response if it decided the signature is wrong from
 // the prepare phase.
 func (bz *ByzCoin) startResponseCommit() error {
-	bzr := &ByzCoinResponse{
-		TYPE: ROUND_COMMIT,
+	bzr := &Response{
+		TYPE: RoundCommit,
 	}
 	// if i dont want to sign
 	if bz.signRefusal {
@@ -552,7 +555,7 @@ func (bz *ByzCoin) startResponseCommit() error {
 
 // handleResponseCommit handles the responses for the commit round during the
 // response phase.
-func (bz *ByzCoin) handleResponseCommit(bzr *ByzCoinResponse) error {
+func (bz *ByzCoin) handleResponseCommit(bzr *Response) error {
 	// check if we have enough
 	// FIXME possible data race
 	bz.tcrMut.Lock()
@@ -600,7 +603,7 @@ func (bz *ByzCoin) handleResponseCommit(bzr *ByzCoinResponse) error {
 	return err
 }
 
-func (bz *ByzCoin) handleResponsePrepare(bzr *ByzCoinResponse) error {
+func (bz *ByzCoin) handleResponsePrepare(bzr *Response) error {
 	// check if we have enough
 	bz.tprMut.Lock()
 	bz.tempPrepareResponse = append(bz.tempPrepareResponse, bzr.Response)
@@ -642,9 +645,9 @@ func (bz *ByzCoin) handleResponsePrepare(bzr *ByzCoinResponse) error {
 // ByzCoinResponse along with the flag:
 // true => no exception, the verification is correct
 // false => exception, the verification is NOT correct
-func (bz *ByzCoin) waitResponseVerification() (*ByzCoinResponse, bool) {
-	bzr := &ByzCoinResponse{
-		TYPE: ROUND_PREPARE,
+func (bz *ByzCoin) waitResponseVerification() (*Response, bool) {
+	bzr := &Response{
+		TYPE: RoundPrepare,
 	}
 	// wait the verification
 	verified := <-bz.verifyBlockChan
@@ -661,7 +664,7 @@ func (bz *ByzCoin) waitResponseVerification() (*ByzCoinResponse, bool) {
 	return bzr, true
 }
 
-// verifyBlock is a simulation of a real verification block algorithm
+// VerifyBlock is a simulation of a real verification block algorithm
 func VerifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done chan bool) {
 	//We measure the average block verification delays is 174ms for an average
 	//block of 500kB.
@@ -681,7 +684,7 @@ func VerifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done
 	done <- verified
 }
 
-// getblock returns the next block available from the transaction pool.
+// GetBlock returns the next block available from the transaction pool.
 func GetBlock(transactions []blkparser.Tx, lastBlock, lastKeyBlock string) (*blockchain.TrBlock, error) {
 	if len(transactions) < 1 {
 		return nil, errors.New("no transaction available")
@@ -703,10 +706,14 @@ func (bz *ByzCoin) Signature() *BlockSignature {
 	}
 }
 
+// RegisterOnDone registers a callback to call when the byzcoin protocols has
+// really finished (after a view change maybe)
 func (bz *ByzCoin) RegisterOnDone(fn func()) {
 	bz.onDoneCallback = fn
 }
 
+// RegisterOnSignatureDone register a callback to call when the byzcoin
+// protocol reached a signature on the block
 func (bz *ByzCoin) RegisterOnSignatureDone(fn func(*BlockSignature)) {
 	bz.onSignatureDone = fn
 }
@@ -733,9 +740,9 @@ func (bz *ByzCoin) sendAndMeasureViewchange() {
 	bz.vcMeasure = monitor.NewTimeMeasure("viewchange")
 	vc := newViewChange()
 	var err error
-	for _, n := range bz.Tree().ListNodes() {
+	for _, n := range bz.Tree().List() {
 		// don't send to ourself
-		if uuid.Equal(n.Id, bz.TreeNode().Id) {
+		if n.Id.Equals(bz.TreeNode().Id) {
 			continue
 		}
 		err = bz.SendTo(n, vc)

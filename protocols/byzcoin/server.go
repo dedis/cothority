@@ -6,19 +6,20 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
-	"github.com/satori/go.uuid"
 )
 
+// BlockServer is a struct where Client can connect and that instantiate ByzCoin
+// protocols when needed.
 type BlockServer interface {
 	AddTransaction(blkparser.Tx)
 	Instantiate(n *sda.Node) (sda.ProtocolInstance, error)
 }
 
-// ByzCoinServer is the longterm control service that listens for transactions and
+// Server is the long-term control service that listens for transactions and
 // dispatch them to a new ByzCoin for each new signing that we want to do.
 // It creates the ByzCoin protocols and run them. only used by the root since
-// only the root pariticipates to the creation of the block.
-type ByzCoinServer struct {
+// only the root participates to the creation of the block.
+type Server struct {
 	// transactions pool where all the incoming transactions are stored
 	transactions []blkparser.Tx
 	// lock associated
@@ -27,9 +28,6 @@ type ByzCoinServer struct {
 	blockSize int
 	timeOutMs uint64
 	fail      uint
-	// all the protocols byzcoin he generated.Map from RoundID <-> ByzCoin
-	// protocol instance.
-	instances map[uuid.UUID]*ByzCoin
 	// blockSignatureChan is the channel used to pass out the signatures that
 	// ByzCoin's instances have made
 	blockSignatureChan chan BlockSignature
@@ -42,12 +40,11 @@ type ByzCoinServer struct {
 
 // NewByzCoinServer returns a new fresh ByzCoinServer. It must be given the blockSize in order
 // to efficiently give the transactions to the ByzCoin instances.
-func NewByzCoinServer(blockSize int, timeOutMs uint64, fail uint) *ByzCoinServer {
-	s := &ByzCoinServer{
+func NewByzCoinServer(blockSize int, timeOutMs uint64, fail uint) *Server {
+	s := &Server{
 		blockSize:          blockSize,
 		timeOutMs:          timeOutMs,
 		fail:               fail,
-		instances:          make(map[uuid.UUID]*ByzCoin),
 		blockSignatureChan: make(chan BlockSignature),
 		transactionChan:    make(chan blkparser.Tx),
 		requestChan:        make(chan bool),
@@ -57,19 +54,20 @@ func NewByzCoinServer(blockSize int, timeOutMs uint64, fail uint) *ByzCoinServer
 	return s
 }
 
-func (s *ByzCoinServer) AddTransaction(tr blkparser.Tx) {
+// AddTransaction add a new transactions to the list of transactions to commit
+func (s *Server) AddTransaction(tr blkparser.Tx) {
 	s.transactionChan <- tr
 }
 
 // ListenClientTransactions will bind to a port a listen for incoming connection
 // from clients. These client will be able to pass the transactions to the
 // server.
-func (s *ByzCoinServer) ListenClientTransactions() {
+func (s *Server) ListenClientTransactions() {
 	panic("not implemented yet")
 }
 
 // Instantiate takes blockSize transactions and create the byzcoin instances.
-func (s *ByzCoinServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
+func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	currTransactions := s.WaitEnoughBlocks()
 	dbg.Lvl2("Instantiate ByzCoin Round with", len(currTransactions), "transactions")
@@ -79,23 +77,25 @@ func (s *ByzCoinServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error
 	return pi, err
 }
 
-// BlockSignature returns a channel that is given each new block signature as
+// BlockSignaturesChan returns a channel that is given each new block signature as
 // soon as they are arrive (Wether correct or not).
-func (s *ByzCoinServer) BlockSignaturesChan() <-chan BlockSignature {
+func (s *Server) BlockSignaturesChan() <-chan BlockSignature {
 	return s.blockSignatureChan
 }
 
-func (s *ByzCoinServer) onDoneSign(blk BlockSignature) {
+func (s *Server) onDoneSign(blk BlockSignature) {
 	s.blockSignatureChan <- blk
 }
 
-func (s *ByzCoinServer) WaitEnoughBlocks() []blkparser.Tx {
+// WaitEnoughBlocks is called to wait on the server until it has enough
+// transactions to make a block
+func (s *Server) WaitEnoughBlocks() []blkparser.Tx {
 	s.requestChan <- true
 	transactions := <-s.responseChan
 	return transactions
 }
 
-func (s *ByzCoinServer) listenEnoughBlocks() {
+func (s *Server) listenEnoughBlocks() {
 	// TODO the server should have a transaction pool instead:
 	var transactions []blkparser.Tx
 	var want bool
