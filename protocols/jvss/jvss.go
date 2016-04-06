@@ -82,19 +82,15 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 	}
 
 	// Setup message handlers
-	handlers := []interface{}{
+	h := []interface{}{
 		jv.handleSecInit,
 		jv.handleSecConf,
 		jv.handleSigReq,
 		jv.handleSigResp,
 	}
-	for _, h := range handlers {
-		if err := jv.RegisterHandler(h); err != nil {
-			return nil, fmt.Errorf("Error, could not register handler: " + err.Error())
-		}
-	}
+	err := jv.RegisterHandlers(h)
 
-	return jv, nil
+	return jv, err
 }
 
 // Start initiates the JVSS protocol by setting up a long-term shared secret

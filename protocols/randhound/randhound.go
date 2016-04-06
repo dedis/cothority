@@ -8,7 +8,6 @@ package randhound
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"time"
 
 	"github.com/dedis/cothority/lib/sda"
@@ -107,19 +106,15 @@ func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
 	}
 
 	// Setup message handlers
-	handlers := []interface{}{
+	h := []interface{}{
 		rh.handleI1, rh.handleR1,
 		rh.handleI2, rh.handleR2,
 		rh.handleI3, rh.handleR3,
 		rh.handleI4, rh.handleR4,
 	}
-	for _, h := range handlers {
-		if err := rh.RegisterHandler(h); err != nil {
-			return nil, errors.New("Couldn't register handler: " + err.Error())
-		}
-	}
+	err := rh.RegisterHandlers(h)
 
-	return rh, nil
+	return rh, err
 }
 
 // Setup configures a RandHound instance by creating group and session

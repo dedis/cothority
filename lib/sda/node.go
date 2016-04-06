@@ -286,6 +286,16 @@ func (n *Node) RegisterHandler(c interface{}) error {
 	return nil
 }
 
+// RegisterHandlers registers a list of given handlers by calling RegisterHandler above
+func (n *Node) RegisterHandlers(handlers []interface{}) error {
+	for _, h := range handlers {
+		if err := n.RegisterHandler(h); err != nil {
+			return fmt.Errorf("Error, could not register handler: " + err.Error())
+		}
+	}
+	return nil
+}
+
 // ProtocolInstance returns the instance of the running protocol
 func (n *Node) ProtocolInstance() ProtocolInstance {
 	return n.instance
