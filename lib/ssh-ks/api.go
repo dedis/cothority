@@ -92,6 +92,7 @@ func (c *ServerApp) FuncAddServer(data *network.NetworkMessage) network.Protocol
 	if !ok {
 		return &StatusRet{"Didn't get a server"}
 	}
+	dbg.Lvl3("Adding server", req.Server, "to", c.This)
 	c.AddServer(req.Server)
 	return &StatusRet{""}
 }
@@ -101,6 +102,9 @@ func (c *ServerApp) FuncDelServer(data *network.NetworkMessage) network.Protocol
 	req, ok := data.Msg.(DelServer)
 	if !ok {
 		return &StatusRet{"Didn't get a server"}
+	}
+	if c.This.Entity.Addresses[0] == req.Server.Entity.Addresses[0] {
+		return &StatusRet{"Cannot delete own address"}
 	}
 	c.DelServer(req.Server)
 	return &StatusRet{""}
@@ -121,6 +125,7 @@ func (ca *ClientApp) NetworkAddServer(s *Server) error {
 	if ca.Config == nil {
 		return errors.New("No config available yet")
 	}
+	dbg.Lvl3("Servers are", ca.Config.Servers)
 	for _, srv := range ca.Config.Servers {
 		// Add the new server to all servers
 		resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
@@ -151,7 +156,11 @@ func (ca *ClientApp) NetworkDelServer(s *Server) error {
 	if ca.Config == nil {
 		return errors.New("No config available yet")
 	}
-	for _, srv := range ca.Config.Servers {
+	for addr, srv := range ca.Config.Servers {
+		if srv.Entity.Addresses[0] == s.Entity.Addresses[0] {
+			delete(ca.Config.Servers, addr)
+			continue
+		}
 		resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
 			&DelServer{s})
 		if err != nil {

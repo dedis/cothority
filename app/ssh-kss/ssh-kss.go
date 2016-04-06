@@ -113,7 +113,7 @@ func CreateServerConfig(ip, dirSSH, dirSSHD string) (*ServerConfig, error) {
 		return nil, errors.New("While reading public key: " + err.Error())
 	}
 	return &ServerConfig{
-		CoNode:  ssh_ks.NewCoNode(pair, ip, string(sshPub)),
+		CoNode:  ssh_ks.NewServerApp(pair, ip, string(sshPub)),
 		DirSSHD: dirSSHD,
 	}, nil
 }

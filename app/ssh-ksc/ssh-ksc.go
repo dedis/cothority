@@ -82,29 +82,62 @@ func main() {
 		},
 	}
 	app.Before = func(c *cli.Context) error {
-		dbg.Print(c.Int("debug"))
 		dbg.SetDebugVisible(c.Int("debug"))
 		var err error
 		clientApp, err = ssh_ks.ReadClientApp(c.String("config") + "/config.bin")
 		dbg.ErrFatal(err, "Couldn't read config-file")
 		return nil
 	}
+	app.After = func(c *cli.Context) error {
+		clientApp.Write(c.String("config") + "/config.bin")
+		return nil
+	}
 	app.Run(os.Args)
 }
 
 func serverAdd(c *cli.Context) {
-	// Check server
 	srvAddr := c.Args().First()
-	ServerAdd(srvAddr)
+	dbg.Print("Contacting server", srvAddr)
+	ServerAdd(clientApp, srvAddr)
 }
 
-func ServerAdd(srvAddr string) {
-	dbg.Print("Contacting server", srvAddr)
+func ServerAdd(ca *ssh_ks.ClientApp, srvAddr string) {
 	srv, err := ssh_ks.NetworkGetServer(srvAddr)
 	dbg.ErrFatal(err)
-	clientApp.NetworkAddServer(srv)
+	err = ca.NetworkAddServer(srv)
+	dbg.ErrFatal(err)
+	conf, err := ca.NetworkSign(srv)
+	dbg.ErrFatal(err)
+	ca.Config = conf
 }
-func serverDel(c *cli.Context)   {}
+func serverDel(c *cli.Context) {
+	srvAddr := c.Args().First()
+	dbg.Print("Deleting server", srvAddr)
+	ServerDel(clientApp, srvAddr)
+	if len(clientApp.Config.Servers) == 0 {
+		dbg.Print("Deleted last server")
+	}
+}
+
+func ServerDel(ca *ssh_ks.ClientApp, srvAddr string) {
+	srv, err := ssh_ks.NetworkGetServer(srvAddr)
+	dbg.ErrFatal(err)
+	err = ca.NetworkDelServer(srv)
+	dbg.ErrFatal(err)
+	if len(ca.Config.Servers) == 1 {
+		ca.Config = ssh_ks.NewConfig(0)
+	} else {
+		for _, s := range ca.Config.Servers {
+			if s.Entity.Addresses[0] != srv.Entity.Addresses[0] {
+				conf, err := ca.NetworkSign(srv)
+				dbg.ErrFatal(err)
+				ca.Config = conf
+				return
+			}
+		}
+	}
+}
+
 func serverCheck(c *cli.Context) {}
 func clientAdd(c *cli.Context)   {}
 func clientDel(c *cli.Context)   {}

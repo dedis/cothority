@@ -253,7 +253,7 @@ func TestNetworkSign(t *testing.T) {
 
 func newServerLocal(port int) *ssh_ks.ServerApp {
 	key := config.NewKeyPair(network.Suite)
-	return ssh_ks.NewCoNode(key, "localhost:"+strconv.Itoa(port), "Phony SSH public key")
+	return ssh_ks.NewServerApp(key, "localhost:"+strconv.Itoa(port), "Phony SSH public key")
 }
 
 func closeServers(t *testing.T, servers []*ssh_ks.ServerApp) error {

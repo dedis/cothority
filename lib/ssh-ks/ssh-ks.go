@@ -45,7 +45,7 @@ type ServerApp struct {
 
 // NewCoNode creates a new node of the cothority and initializes the
 // Config-structures. It doesn't start the node
-func NewCoNode(key *config.KeyPair, addr, sshdPub string) *ServerApp {
+func NewServerApp(key *config.KeyPair, addr, sshdPub string) *ServerApp {
 	srv := NewServer(key.Public, addr, sshdPub)
 	c := &ServerApp{
 		This:    srv,
@@ -155,6 +155,7 @@ func ReadClientApp(file string) (*ClientApp, error) {
 	ca := NewClientApp("")
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
+		ca.Config = &Config{}
 		return ca, nil
 	}
 	b, err := ioutil.ReadFile(file)
