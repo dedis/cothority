@@ -18,17 +18,21 @@ func ReadPub64(suite abstract.Suite, r io.Reader) (abstract.Point, error) {
 // WritePub64 writes a public point to a base64 representation
 func WritePub64(suite abstract.Suite, w io.Writer, point abstract.Point) error {
 	enc := base64.NewEncoder(base64.StdEncoding, w)
-	err := suite.Write(enc, point)
-	enc.Close()
-	return err
+	return write64(suite, enc, point)
+}
+
+func write64(suite abstract.Suite, enc io.WriteCloser, data ...interface{}) {
+	errW := suite.Write(enc, data)
+	if err := enc.Close(); err != nil && errW == nil {
+		return err
+	}
+	return errW
 }
 
 // WriteSecret64 converts a secret key to a Base64-string
 func WriteSecret64(suite abstract.Suite, w io.Writer, secret abstract.Secret) error {
 	enc := base64.NewEncoder(base64.StdEncoding, w)
-	err := suite.Write(enc, secret)
-	enc.Close()
-	return err
+	return write64(suite, enc, secret)
 }
 
 // ReadSecret64 takes a Base64-encoded secret and returns that secret,
