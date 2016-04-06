@@ -156,11 +156,11 @@ func (ca *ClientApp) NetworkDelServer(s *Server) error {
 	if ca.Config == nil {
 		return errors.New("No config available yet")
 	}
-	for addr, srv := range ca.Config.Servers {
+	for _, srv := range ca.Config.Servers {
 		if srv.Entity.Addresses[0] == s.Entity.Addresses[0] {
-			delete(ca.Config.Servers, addr)
 			continue
 		}
+		dbg.Lvl3("Asking server", srv, "to delete server", s)
 		resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
 			&DelServer{s})
 		if err != nil {
@@ -189,6 +189,7 @@ func (ca *ClientApp) NetworkGetConfig(s *Server) (*Config, error) {
 
 // NetworkSign asks the servers to sign the new configuration
 func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
+	dbg.Lvl3("Asking server", s, "to sign")
 	resp, err := networkSend(ca, s.Entity, &Sign{})
 	if err != nil {
 		return nil, err
@@ -200,7 +201,9 @@ func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
 	if status.Error != "" {
 		return nil, errors.New(status.Error)
 	}
-	return ca.NetworkGetConfig(s)
+	conf, err := ca.NetworkGetConfig(s)
+	dbg.Lvl3("Got configuration", conf, err, "from", s)
+	return conf, err
 }
 
 // NetworkGetServer asks for the Server at a given address
