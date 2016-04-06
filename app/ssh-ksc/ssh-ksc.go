@@ -14,7 +14,7 @@ func init() {
 	network.RegisterMessageType(ssh_ks.Config{})
 }
 
-var config *ssh_ks.Config
+var clientApp *ssh_ks.ClientApp
 
 func main() {
 	app := cli.NewApp()
@@ -84,16 +84,25 @@ func main() {
 	app.Before = func(c *cli.Context) error {
 		dbg.Print(c.Int("debug"))
 		dbg.SetDebugVisible(c.Int("debug"))
-		ssh_ks.ReadConfig(c.String("config") + "/config.bin")
+		var err error
+		clientApp, err = ssh_ks.ReadClientApp(c.String("config") + "/config.bin")
+		dbg.ErrFatal(err, "Couldn't read config-file")
 		return nil
 	}
 	app.Run(os.Args)
 }
 
 func serverAdd(c *cli.Context) {
-
 	// Check server
-	config.AddServer()
+	srvAddr := c.Args().First()
+	ServerAdd(srvAddr)
+}
+
+func ServerAdd(srvAddr string) {
+	dbg.Print("Contacting server", srvAddr)
+	srv, err := ssh_ks.NetworkGetServer(srvAddr)
+	dbg.ErrFatal(err)
+	clientApp.NetworkAddServer(srv)
 }
 func serverDel(c *cli.Context)   {}
 func serverCheck(c *cli.Context) {}

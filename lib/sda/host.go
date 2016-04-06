@@ -379,14 +379,9 @@ func (h *Host) processMessages() {
 			cr := data.Msg.(CosiRequest)
 			h.handleCosiRequest(data.Entity, &cr)
 		default:
-			msgRet := h.ProcessUnknownMessage(&data)
-			if msgRet == nil {
-				dbg.Error("Didn't recognize message", data.MsgType)
-			} else {
-				err := h.SendRaw(data.Entity, msgRet)
-				if err != nil {
-					dbg.Error("Couldn't send back message:", err)
-				}
+			err := h.ProcessUnknownMessage(&data)
+			if err != nil {
+				dbg.Error(err, data.MsgType)
 			}
 		}
 		if err != nil {
@@ -404,12 +399,19 @@ func (h *Host) RegisterMessage(mt network.ProtocolMessage, f ExternalAPI) networ
 
 // ProcessUnknownMessage takes a message and looks it up in
 // the unknown messages
-func (h *Host) ProcessUnknownMessage(m *network.NetworkMessage) network.ProtocolMessage {
+func (h *Host) ProcessUnknownMessage(m *network.NetworkMessage) error {
 	f, ok := h.unknownMsgs[m.MsgType]
 	if !ok {
-		return nil
+		return errors.New("Didn't recognize message")
 	}
-	return f(m)
+	go func() {
+		msgRet := f(m)
+		err := h.SendRaw(m.Entity, msgRet)
+		if err != nil {
+			dbg.Error("Couldn't send back message:", err)
+		}
+	}()
+	return nil
 }
 
 // handleCosiRequest will

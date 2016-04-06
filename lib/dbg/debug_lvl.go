@@ -374,6 +374,14 @@ func TestFatal(t *testing.T, err error, msg ...string) {
 	}
 }
 
+// ErrFatal calls dbg.Fatal in the case err != nil
+func ErrFatal(err error, msg ...string) {
+	if err != nil {
+		lvld(LvlFatal, strings.Join(msg, " "), err)
+		os.Exit(1)
+	}
+}
+
 // ParseEnv looks at the following environment-variables:
 // - DEBUG_LVL - for the actual debug-lvl - default is 1
 // - DEBUG_TIME - whether to show the timestamp - default is false

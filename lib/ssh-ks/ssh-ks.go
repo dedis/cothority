@@ -4,6 +4,8 @@ package ssh_ks
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
@@ -16,11 +18,14 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
+	"sync"
 )
 
 func init() {
 	network.RegisterMessageType(ServerApp{})
+	network.RegisterMessageType(ClientApp{})
 	network.RegisterMessageType(Config{})
 	network.RegisterMessageType(Server{})
 	network.RegisterMessageType(Client{})
@@ -69,6 +74,8 @@ func (c *ServerApp) Start() error {
 	c.host.RegisterMessage(GetServer{}, c.FuncGetServer)
 	c.host.RegisterMessage(GetConfig{}, c.FuncGetConfig)
 	c.host.RegisterMessage(AddServer{}, c.FuncAddServer)
+	c.host.RegisterMessage(DelServer{}, c.FuncDelServer)
+	c.host.RegisterMessage(Sign{}, c.FuncSign)
 	c.host.Listen()
 	c.host.StartProcessMessages()
 	return nil
@@ -112,6 +119,10 @@ func (c *ServerApp) Sign() error {
 	c.Config.Version += 1
 	c.Config.Signature = nil
 	msg := c.Config.Hash()
+	msg2 := c.Config.Hash()
+	if bytes.Compare(msg, msg2) != 0 {
+		dbg.Fatal("Hashing is different")
+	}
 	var err error
 	c.Config.Signature, err = cosi.SignStatement(bytes.NewReader(msg),
 		c.Config.EntityList(c.This.Entity))
@@ -136,6 +147,41 @@ type ClientApp struct {
 func NewClientApp(sshPub string) *ClientApp {
 	pair := config.NewKeyPair(network.Suite)
 	return &ClientApp{NewClient(pair.Public, sshPub), nil, pair.Secret}
+}
+
+// ReadClientApp searches for the client-app and creates a new one if it
+// doesn't exist
+func ReadClientApp(file string) (*ClientApp, error) {
+	ca := NewClientApp("")
+	_, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		return ca, nil
+	}
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	} else {
+		_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+		if err != nil {
+			return nil, err
+		}
+		c, ok := msg.(ClientApp)
+		if !ok {
+			return nil, errors.New("Didn't get a ClientApp structure")
+		}
+		ca = &c
+	}
+	return ca, nil
+}
+
+// Write takes a file and writes the clientApp to that file
+func (ca *ClientApp) Write(file string) error {
+	b, err := network.MarshalRegisteredType(ca)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(file, b, 0660)
+	return err
 }
 
 // Server represents one server of the cothority
@@ -259,11 +305,18 @@ func (conf *Config) EntityList(root *network.Entity) *sda.EntityList {
 	return sda.NewEntityList(list)
 }
 
+var hashLock sync.Mutex
+
 // Hash returns the hash of everything but the signature
 func (conf *Config) Hash() []byte {
+	hashLock.Lock()
 	cop := *conf
 	cop.Signature = nil
-	hash, _ := crypto.HashArgs(network.Suite.Hash(), cop)
+	hash, err := crypto.HashArgs(sha256.New(), &cop)
+	if err != nil {
+		dbg.Fatal(err)
+	}
+	hashLock.Unlock()
 	return hash
 }
 
@@ -279,6 +332,60 @@ func (conf *Config) DelServer(s *Server) error {
 	delete(conf.Servers, s.Entity.Addresses[0])
 	conf.Signature = nil
 	return nil
+}
+
+// MarshalBinary takes care of all maps to give them back in correct
+// order
+func (conf *Config) MarshalBinary() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, uint32(conf.Version))
+	if err != nil {
+		return nil, err
+	}
+	keys := make([]string, 0, len(conf.Servers))
+	for i := range conf.Servers {
+		keys = append(keys, i)
+	}
+	sort.Strings(keys)
+	for _, s := range keys {
+		_, err = buf.WriteString(s)
+		if err != nil {
+			return nil, err
+		}
+		b, err := network.MarshalRegisteredType(conf.Servers[s].Entity)
+		if err != nil {
+			return nil, err
+		}
+		_, err = buf.Write(b)
+		if err != nil {
+			return nil, err
+		}
+	}
+	keys = make([]string, 0, len(conf.Clients))
+	for i := range conf.Clients {
+		keys = append(keys, i)
+	}
+	sort.Strings(keys)
+	for _, s := range keys {
+		_, err = buf.WriteString(s)
+		if err != nil {
+			return nil, err
+		}
+		client := conf.Clients[s]
+		_, err = buf.WriteString(client.SSHpub)
+		if err != nil {
+			return nil, err
+		}
+		b, err := network.MarshalRegisteredType(client.Public)
+		if err != nil {
+			return nil, err
+		}
+		_, err = buf.Write(b)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buf.Bytes(), nil
 }
 
 // SetupTmpHosts sets up a temporary .tmp-directory for testing
