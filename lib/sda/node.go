@@ -205,6 +205,8 @@ func (n *Node) Suite() abstract.Suite {
 // RegisterChannel takes a channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
+// If you pass a pointer to the channel it will be automatically instantiated
+// for you.
 // This function handles also
 // - registration of the message-type
 // - aggregation or not of messages: if you give a channel of slices, the
