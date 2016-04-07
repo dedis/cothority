@@ -127,7 +127,9 @@ func (s *serviceFactory) start(name string, host *Host, o *Overlay, path string)
 	if fn, ok = s.cons[id]; !ok {
 		return nil, errors.New("No Service for this id:" + fmt.Sprintf("%v", id))
 	}
-	return fn(host, &Context{o}, path), nil
+	serv := fn(host, &Context{o}, path)
+	dbg.Lvl1("Instantiated service", name)
+	return serv, nil
 }
 
 // serviceStore is the place where all instantiated services are stored

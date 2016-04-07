@@ -69,6 +69,8 @@ type Host struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
+
+	serviceStore *serviceStore
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -90,6 +92,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	}
 
 	h.overlay = NewOverlay(h)
+	h.serviceStore = newServiceStore(h, h.overlay)
 	return h
 }
 

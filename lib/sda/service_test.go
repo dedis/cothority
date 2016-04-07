@@ -1,6 +1,7 @@
 package sda_test
 
 import (
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"testing"
@@ -50,12 +51,12 @@ func (ds *DummyService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericC
 	dummyConf := conf.Data.(DummyConfig)
 	dummyConf.A++
 	dp := NewDummyProtocol(tn, dummyConf, ds.link)
-	// Optional if you only create one ProtocolInstance in this function
-	// ds.c.RegisterProtocolInstance(dp)
 	return dp, nil
 }
 
 func TestServiceNew(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -71,9 +72,9 @@ func TestServiceNew(t *testing.T) {
 
 func waitOrFatal(ch chan bool, t *testing.T) {
 	select {
-	case <-ch:
+	case _ = <-ch:
 		return
-	case <-time.After(100 * time.Millisecond):
+	case <-time.After(500 * time.Millisecond):
 		t.Fatal("Waited too long")
 	}
 }
