@@ -146,7 +146,9 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		return err
 	}
 	d.sc.Config = string(rc.Toml())
-	d.sc.Save(d.runDir)
+	if err := d.sc.Save(d.runDir); err != nil {
+		return err
+	}
 	dbg.Lvl2("Localhost: Done deploying")
 	return nil
 
@@ -155,7 +157,9 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 // Start will execute one cothority-binary for each server
 // configured
 func (d *Localhost) Start(args ...string) error {
-	os.Chdir(d.runDir)
+	if err := os.Chdir(d.runDir); err != nil {
+		return err
+	}
 	dbg.Lvl4("Localhost: chdir into", d.runDir)
 	ex := d.runDir + "/" + d.Simulation
 	d.running = true
@@ -205,7 +209,10 @@ func (d *Localhost) Wait() error {
 	case e := <-d.errChan:
 		dbg.Lvl3("Finished waiting for hosts:", e)
 		if e != nil {
-			d.Cleanup()
+			if err := d.Cleanup(); err != nil {
+				dbg.Error("Couldn't cleanup running instances",
+					err)
+			}
 			err = e
 		}
 	}
