@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/exec"
 	"sort"
+	"strconv"
 	"sync"
 )
 
@@ -254,11 +255,11 @@ func SetupTmpHosts() (string, error) {
 	if err != nil {
 		return "", errors.New("Coulnd't create tmp-dir: " + err.Error())
 	}
-	err = createBogusSSH(tmp, "id_rsa")
+	err = CreateBogusSSH(tmp, "id_rsa")
 	if err != nil {
 		return "", err
 	}
-	err = createBogusSSH(tmp, "ssh_host_rsa_key")
+	err = CreateBogusSSH(tmp, "ssh_host_rsa_key")
 	if err != nil {
 		return "", err
 	}
@@ -266,14 +267,53 @@ func SetupTmpHosts() (string, error) {
 	return tmp, nil
 }
 
+type sshKey struct {
+	priv []byte
+	pub  []byte
+}
+
+// bKeys are bogus ssh-keys precomputed for faster testing
+var bKeys []sshKey
+var bKeysI int
+
 // createBogusSSH creates a private/public key
-func createBogusSSH(dir, file string) error {
-	dbg.Lvl2("Directory is:", dir)
-	out, err := exec.Command("ssh-keygen", "-t", "rsa", "-b", "4096", "-N", "", "-f",
-		dir+"/"+file).CombinedOutput()
-	dbg.Lvl5(string(out))
+func CreateBogusSSH(dir, file string) error {
+	if bKeys == nil {
+		// Pre-calculate some ssh-keys for faster testing
+		tmp, err := ioutil.TempDir("", "makeSSH")
+		if err != nil {
+			return err
+		}
+		bKeys = make([]sshKey, 5)
+		for i := range bKeys {
+			file := tmp + "/ssh" + strconv.Itoa(i)
+			out, err := exec.Command("ssh-keygen", "-t", "rsa", "-b", "4096", "-N", "", "-f",
+				file).CombinedOutput()
+			dbg.Lvl5(string(out))
+			if err != nil {
+				return err
+			}
+			priv, err := ioutil.ReadFile(file)
+			if err != nil {
+				return err
+			}
+			pub, err := ioutil.ReadFile(file + ".pub")
+			if err != nil {
+				return err
+			}
+			bKeys[i] = sshKey{priv, pub}
+		}
+	}
+	dbg.Lvl4("Directory is:", dir)
+	sk := bKeys[bKeysI]
+	err := ioutil.WriteFile(dir+"/"+file, sk.priv, 0660)
 	if err != nil {
 		return err
 	}
+	err = ioutil.WriteFile(dir+"/"+file+".pub", sk.pub, 0660)
+	if err != nil {
+		return err
+	}
+	bKeysI = (bKeysI + 1) % len(bKeys)
 	return nil
 }

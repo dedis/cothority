@@ -2,12 +2,15 @@ package ssh_ks
 
 import (
 	"bytes"
+	"errors"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -19,66 +22,106 @@ type ServerApp struct {
 	Private abstract.Secret
 	// Config is the configuration that is known actually to the server
 	Config *Config
+	// DirSSHD is the directory where the server's public key is stored
+	DirSSHD string
+	// DirSSH is the directory where the authorized_keys will be written to
+	DirSSH string
 	// host represents the actual running host
 	host *sda.Host
 }
 
 // NewCoNode creates a new node of the cothority and initializes the
 // Config-structures. It doesn't start the node
-func NewServerApp(key *config.KeyPair, addr, sshdPub string) *ServerApp {
-	srv := NewServer(key.Public, addr, sshdPub)
+func NewServerApp(key *config.KeyPair, addr, dirSSHD, dirSSH string) (*ServerApp, error) {
+	sshdPub, err := ioutil.ReadFile(dirSSHD + "/ssh_host_rsa_key.pub")
+	if err != nil {
+		return nil, err
+	}
+	srv := NewServer(key.Public, addr, string(sshdPub))
 	c := &ServerApp{
 		This:    srv,
 		Private: key.Secret,
 		Config:  NewConfig(0),
+		DirSSHD: dirSSHD,
+		DirSSH:  dirSSH,
 	}
 	c.AddServer(srv)
-	return c
+	return c, nil
+}
+
+func ReadServerApp(file string) (*ServerApp, error) {
+	if file == "" {
+		return nil, errors.New("Need a name for the configuration-file")
+	}
+	_, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		return nil, errors.New("Didn't find file " + file)
+	}
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	if err != nil {
+		return nil, err
+	}
+	conf := msg.(ServerApp)
+	return &conf, err
+}
+
+func (sa *ServerApp) WriteConfig(file string) error {
+	b, err := network.MarshalRegisteredType(sa)
+	if err != nil {
+		return err
+	}
+	ioutil.WriteFile(file, b, 0660)
+	return nil
 }
 
 // AddServer inserts a server in the configuration-list
-func (c *ServerApp) AddServer(s *Server) error {
-	c.Config.AddServer(s)
+func (sa *ServerApp) AddServer(s *Server) error {
+	sa.Config.AddServer(s)
 	return nil
 }
 
 // DelServer removes a server from the configuration-list
-func (c *ServerApp) DelServer(s *Server) error {
-	c.Config.DelServer(s)
+func (sa *ServerApp) DelServer(s *Server) error {
+	sa.Config.DelServer(s)
 	return nil
 }
 
 // Start opens the port indicated for listening
-func (c *ServerApp) Start() error {
-	c.host = sda.NewHost(c.This.Entity, c.Private)
-	c.host.RegisterMessage(GetServer{}, c.FuncGetServer)
-	c.host.RegisterMessage(GetConfig{}, c.FuncGetConfig)
-	c.host.RegisterMessage(AddServer{}, c.FuncAddServer)
-	c.host.RegisterMessage(DelServer{}, c.FuncDelServer)
-	c.host.RegisterMessage(AddClient{}, c.FuncAddClient)
-	c.host.RegisterMessage(DelClient{}, c.FuncDelClient)
-	c.host.RegisterMessage(Sign{}, c.FuncSign)
-	c.host.Listen()
-	c.host.StartProcessMessages()
+func (sa *ServerApp) Start() error {
+	sa.host = sda.NewHost(sa.This.Entity, sa.Private)
+	sa.host.RegisterMessage(GetServer{}, sa.FuncGetServer)
+	sa.host.RegisterMessage(GetConfig{}, sa.FuncGetConfig)
+	sa.host.RegisterMessage(AddServer{}, sa.FuncAddServer)
+	sa.host.RegisterMessage(DelServer{}, sa.FuncDelServer)
+	sa.host.RegisterMessage(AddClient{}, sa.FuncAddClient)
+	sa.host.RegisterMessage(DelClient{}, sa.FuncDelClient)
+	sa.host.RegisterMessage(Sign{}, sa.FuncSign)
+	sa.host.RegisterMessage(PropSig{}, sa.FuncPropSig)
+	sa.host.Listen()
+	sa.host.StartProcessMessages()
 	return nil
 }
 
 // Stop closes the connection
-func (c *ServerApp) Stop() error {
-	if c.host != nil {
-		err := c.host.Close()
+func (sa *ServerApp) Stop() error {
+	if sa.host != nil {
+		err := sa.host.Close()
 		if err != nil {
 			return err
 		}
-		c.host.WaitForClose()
-		c.host = nil
+		sa.host.WaitForClose()
+		sa.host = nil
 	}
 	return nil
 }
 
 // Check searches for all CoNodes and tries to connect
-func (c *ServerApp) Check() error {
-	for _, s := range c.Config.Servers {
+func (sa *ServerApp) Check() error {
+	for _, s := range sa.Config.Servers {
 		list := sda.NewEntityList([]*network.Entity{s.Entity})
 		msg := "ssh-ks test"
 		sig, err := cosi.SignStatement(strings.NewReader(msg), list)
@@ -97,87 +140,134 @@ func (c *ServerApp) Check() error {
 
 // Sign sends updates the configuration-structure by increasing the
 // version and asks the cothority to sign the new structure.
-func (c *ServerApp) Sign() error {
-	c.Config.Version += 1
-	c.Config.Signature = nil
-	msg := c.Config.Hash()
-	msg2 := c.Config.Hash()
+func (sa *ServerApp) Sign() error {
+	sa.Config.Version += 1
+	sa.Config.Signature = nil
+	msg := sa.Config.Hash()
+	msg2 := sa.Config.Hash()
 	if bytes.Compare(msg, msg2) != 0 {
 		dbg.Fatal("Hashing is different")
 	}
 	var err error
-	c.Config.Signature, err = cosi.SignStatement(bytes.NewReader(msg),
-		c.Config.EntityList(c.This.Entity))
+	sa.Config.Signature, err = cosi.SignStatement(bytes.NewReader(msg),
+		sa.Config.EntityList(sa.This.Entity))
 	if err != nil {
 		return err
+	}
+	// And send all updated signatures to the other servers
+	for _, srv := range sa.Config.Servers {
+		if srv != sa.This {
+			ps := &PropSig{
+				Version:   sa.Config.Version,
+				Hash:      sa.Config.Hash(),
+				Signature: sa.Config.Signature,
+			}
+			resp, err := networkSend(sa.Private, srv.Entity, ps)
+			err = errMsg(resp, err)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
 
 // FuncGetServer returns our Server
-func (c *ServerApp) FuncGetServer(*network.NetworkMessage) network.ProtocolMessage {
-	return &GetServerRet{c.This}
+func (sa *ServerApp) FuncGetServer(*network.NetworkMessage) network.ProtocolMessage {
+	return &GetServerRet{sa.This}
 }
 
 // FuncGetConfig returns our Config
-func (c *ServerApp) FuncGetConfig(*network.NetworkMessage) network.ProtocolMessage {
-	return &GetConfigRet{c.Config}
+func (sa *ServerApp) FuncGetConfig(*network.NetworkMessage) network.ProtocolMessage {
+	return &GetConfigRet{sa.Config}
 }
 
 // FuncAddServer adds a given server to the configuration
-func (c *ServerApp) FuncAddServer(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncAddServer(data *network.NetworkMessage) network.ProtocolMessage {
 	req, ok := data.Msg.(AddServer)
 	if !ok {
 		return &StatusRet{"Didn't get a server"}
 	}
-	dbg.Lvl3("Adding server", req.Server, "to", c.This)
-	c.AddServer(req.Server)
+	dbg.Lvl3("Adding server", req.Server, "to", sa.This)
+	sa.AddServer(req.Server)
 	return &StatusRet{""}
 }
 
 // FuncDelServer removes a given server from the configuration
-func (c *ServerApp) FuncDelServer(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncDelServer(data *network.NetworkMessage) network.ProtocolMessage {
 	req, ok := data.Msg.(DelServer)
 	if !ok {
 		return &StatusRet{"Didn't get a server"}
 	}
-	if c.This.Entity.Addresses[0] == req.Server.Entity.Addresses[0] {
+	if sa.This.Entity.Addresses[0] == req.Server.Entity.Addresses[0] {
 		return &StatusRet{"Cannot delete own address"}
 	}
-	c.DelServer(req.Server)
+	sa.DelServer(req.Server)
 	return &StatusRet{""}
 }
 
 // FuncAddClient adds a given client to the configuration
-func (c *ServerApp) FuncAddClient(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncAddClient(data *network.NetworkMessage) network.ProtocolMessage {
 	req, ok := data.Msg.(AddClient)
 	if !ok {
 		return &StatusRet{"Didn't get a client"}
 	}
-	dbg.Lvl3("Adding client", req.Client, "to", c.This)
-	c.Config.AddClient(req.Client)
+	dbg.Lvl3("Adding client", req.Client, "to", sa.This)
+	sa.Config.AddClient(req.Client)
 	return &StatusRet{""}
 }
 
 // FuncDelServer removes a given server from the configuration
-func (c *ServerApp) FuncDelClient(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncDelClient(data *network.NetworkMessage) network.ProtocolMessage {
 	req, ok := data.Msg.(DelClient)
 	if !ok {
 		return &StatusRet{"Didn't get a client"}
 	}
-	if c.This.Entity.Addresses[0] == req.Client.SSHpub {
+	if sa.This.Entity.Addresses[0] == req.Client.SSHpub {
 		return &StatusRet{"Cannot delete own address"}
 	}
-	c.Config.DelClient(req.Client)
+	sa.Config.DelClient(req.Client)
 	return &StatusRet{""}
 }
 
 // FuncSign asks all servers to sign the new configuration
-func (c *ServerApp) FuncSign(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncSign(data *network.NetworkMessage) network.ProtocolMessage {
 	status := &StatusRet{}
-	err := c.Sign()
+	err := sa.Sign()
 	if err != nil {
 		status = &StatusRet{err.Error()}
 	}
 	return status
+}
+
+// FuncPropSig checks the hash and if it matches updates the signature
+func (sa *ServerApp) FuncPropSig(data *network.NetworkMessage) network.ProtocolMessage {
+	ps, ok := data.Msg.(PropSig)
+	if !ok {
+		return &StatusRet{"Didn't get a signature"}
+	}
+	cnf := *sa.Config
+	cnf.Version = ps.Version
+	cnf.Signature = ps.Signature
+	if bytes.Compare(ps.Hash, cnf.Hash()) == 0 {
+		err := cnf.VerifySignature()
+		if err != nil {
+			return &StatusRet{"Signature doesn't match"}
+		}
+		sa.Config = &cnf
+	} else {
+		return &StatusRet{"Hashes don't match"}
+	}
+	return &StatusRet{""}
+}
+
+// CreateAuth takes all client public keys and writes them into a authorized_keys
+// file
+func (sa *ServerApp) CreateAuth() error {
+	lines := make([]string, 0, len(sa.Config.Clients))
+	for _, c := range sa.Config.Clients {
+		lines = append(lines, c.SSHpub)
+	}
+	return ioutil.WriteFile(sa.DirSSH+"/authorized_keys",
+		[]byte(strings.Join(lines, "\n")), 0600)
 }

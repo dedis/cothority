@@ -29,50 +29,21 @@ func TestCreateServerConfig(t *testing.T) {
 	}
 
 	for _, s := range servers {
-		sc, err := ReadServerConfig(s.DirSSHD + "/server.conf")
+		sc, err := ssh_ks.ReadServerApp(s.DirSSHD + "/server.conf")
 		if err != nil {
 			t.Fatal(err)
 		}
 		if sc.DirSSHD != s.DirSSHD {
 			t.Fatal("Directories should be the same")
 		}
-		if !sc.CoNode.This.Entity.Equal(s.CoNode.This.Entity) {
+		if !sc.This.Entity.Equal(s.This.Entity) {
 			t.Fatal("Entities are not the same")
 		}
-		if !sc.CoNode.Private.Equal(s.CoNode.Private) {
+		if !sc.Private.Equal(s.Private) {
 			t.Fatal("Entities are not the same")
 		}
 	}
 
-}
-
-func TestStartStopServer(t *testing.T) {
-	servers, err := createServers(2, t)
-	if err != nil {
-		t.Fatal("Server-creation:", err)
-	}
-	for _, server := range servers {
-		err := server.Start()
-		if err != nil {
-			t.Fatal("Couldn't start server")
-		}
-	}
-	for _, server := range servers {
-		err := server.Stop()
-		if err != nil {
-			t.Fatal("Couldn't stop server")
-		}
-	}
-}
-
-func TestCreateSSHDir(t *testing.T) {
-	servers, err := createServers(1, t)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, server := range servers {
-		dbg.Lvl2(server)
-	}
 }
 
 func TestAskServerConfig(t *testing.T) {
@@ -98,8 +69,18 @@ func TestAskServerConfig(t *testing.T) {
 	}
 }
 
-func createServers(nbr int, t *testing.T) ([]*ServerConfig, error) {
-	ret := make([]*ServerConfig, nbr)
+func TestCreateSSHDir(t *testing.T) {
+	servers, err := createServers(1, t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, server := range servers {
+		dbg.Lvl2(server)
+	}
+}
+
+func createServers(nbr int, t *testing.T) ([]*ssh_ks.ServerApp, error) {
+	ret := make([]*ssh_ks.ServerApp, nbr)
 	for i := range ret {
 		tmp, err := ssh_ks.SetupTmpHosts()
 		if err != nil {
@@ -113,14 +94,14 @@ func createServers(nbr int, t *testing.T) ([]*ServerConfig, error) {
 	return ret, nil
 }
 
-func checkServerConfig(sc *ServerConfig, ip, sshd string) error {
+func checkServerConfig(sc *ssh_ks.ServerApp, ip, sshd string) error {
 	if sc.DirSSHD != sshd {
 		return errors.New(fmt.Sprintf("SSHD-dir is wrong: %s instead of %s",
 			sc.DirSSHD, sshd))
 	}
-	if sc.CoNode.This.Entity.Addresses[0] != ip {
+	if sc.This.Entity.Addresses[0] != ip {
 		return errors.New(fmt.Sprintf("IP is wrong: %s instead of %s",
-			sc.CoNode.This.Entity.Addresses[0], ip))
+			sc.This.Entity.Addresses[0], ip))
 	}
 	return nil
 }

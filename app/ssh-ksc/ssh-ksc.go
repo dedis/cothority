@@ -3,9 +3,6 @@
 package main
 
 import (
-	"bytes"
-	"errors"
-	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/ssh-ks"
@@ -97,13 +94,13 @@ func main() {
 func serverAdd(c *cli.Context) {
 	srvAddr := c.Args().First()
 	dbg.Print("Contacting server", srvAddr)
-	ServerAdd(clientApp, srvAddr)
+	clientApp.ServerAdd(srvAddr)
 }
 
 func serverDel(c *cli.Context) {
 	srvAddr := c.Args().First()
 	dbg.Print("Deleting server", srvAddr)
-	err := ServerDel(clientApp, srvAddr)
+	err := clientApp.ServerDel(srvAddr)
 	dbg.ErrFatal(err)
 	if len(clientApp.Config.Servers) == 0 {
 		dbg.Print("Deleted last server")
@@ -111,7 +108,7 @@ func serverDel(c *cli.Context) {
 }
 
 func serverCheck(c *cli.Context) {
-	err := ServerCheck(clientApp)
+	err := clientApp.ServerCheck()
 	if err != nil {
 		dbg.Error(err)
 	} else {
@@ -120,15 +117,15 @@ func serverCheck(c *cli.Context) {
 }
 
 func clientAdd(c *cli.Context) {
-	err := ClientAdd(clientApp, nil)
+	err := clientApp.ClientAdd(nil)
 	dbg.ErrFatal(err)
 }
 
 func clientDel(c *cli.Context) {
-	err := ClientDel(clientApp, nil)
+	err := clientApp.ClientDel(nil)
 	dbg.ErrFatal(err)
 }
 func update(c *cli.Context) {
-	dbg.ErrFatal(Update(clientApp, nil))
+	dbg.ErrFatal(clientApp.Update(nil))
 	dbg.Print("Got latest configuration")
 }

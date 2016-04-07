@@ -6,6 +6,8 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/ssh-ks"
 	"github.com/dedis/crypto/config"
+	"io/ioutil"
+	"os"
 	"strconv"
 	"testing"
 )
@@ -72,37 +74,38 @@ func TestConfigEntityList(t *testing.T) {
 func TestServerSign(t *testing.T) {
 	srvApps := startServers(2)
 	defer closeServers(t, srvApps)
-	c := srvApps[0]
 	for i := 0; i < 10; i++ {
-		err := c.Sign()
+		err := srvApps[0].Sign()
 		dbg.TestFatal(t, err, "Couldn't sign config")
-		if c.Config.Version != i+1 {
-			t.Fatal("Version should now be", i+1)
-		}
-		if c.Config.Signature == nil {
-			t.Fatal("Signature should not be nil")
-		}
-		err = c.Config.VerifySignature()
-		dbg.TestFatal(t, err, "Signature verification failed:")
+		for _, sa := range srvApps {
+			if sa.Config.Version != i+1 {
+				t.Fatal("Version should now be", i+1)
+			}
+			if sa.Config.Signature == nil {
+				t.Fatal("Signature should not be nil")
+			}
+			err = sa.Config.VerifySignature()
+			dbg.TestFatal(t, err, "Signature verification failed:")
 
-		// Change the version and look if it fails
-		c.Config.Version += 1
-		err = c.Config.VerifySignature()
-		if err == nil {
-			t.Fatal("Signature verification should fail now")
-		} else {
-			dbg.Lvl2("Expected error from comparison:", err)
-		}
+			// Change the version and look if it fails
+			sa.Config.Version += 1
+			err = sa.Config.VerifySignature()
+			if err == nil {
+				t.Fatal("Signature verification should fail now")
+			} else {
+				dbg.Lvl2("Expected error from comparison:", err)
+			}
 
-		// Change the response and look if it fails
-		c.Config.Version -= 1
-		su := network.Suite
-		c.Config.Signature.Response.Add(c.Config.Signature.Response, su.Secret().One())
-		err = c.Config.VerifySignature()
-		if err == nil {
-			t.Fatal("Signature verification should fail now")
-		} else {
-			dbg.Lvl2("Expected error from comparison:", err)
+			// Change the response and look if it fails
+			sa.Config.Version -= 1
+			su := network.Suite
+			sa.Config.Signature.Response.Add(sa.Config.Signature.Response, su.Secret().One())
+			err = sa.Config.VerifySignature()
+			if err == nil {
+				t.Fatal("Signature verification should fail now")
+			} else {
+				dbg.Lvl2("Expected error from comparison:", err)
+			}
 		}
 	}
 }
@@ -484,6 +487,21 @@ func TestCAUpdate(t *testing.T) {
 	}
 }
 
+func TestCreateBogusSSH(t *testing.T) {
+	tmp, err := ioutil.TempDir("", "makeSSH")
+	dbg.ErrFatal(err)
+	err = ssh_ks.CreateBogusSSH(tmp, "test")
+	dbg.ErrFatal(err)
+	_, err = os.Stat(tmp + "/test")
+	if os.IsNotExist(err) {
+		t.Fatal("Didn't create private key")
+	}
+	_, err = os.Stat(tmp + "/test.pub")
+	if os.IsNotExist(err) {
+		t.Fatal("Didn't create public key")
+	}
+}
+
 func newTest(nbr int) (*ssh_ks.ClientApp, []*ssh_ks.ServerApp) {
 	tmp, err := ssh_ks.SetupTmpHosts()
 	dbg.ErrFatal(err)
@@ -499,7 +517,11 @@ func newTest(nbr int) (*ssh_ks.ClientApp, []*ssh_ks.ServerApp) {
 
 func newServerLocal(port int) *ssh_ks.ServerApp {
 	key := config.NewKeyPair(network.Suite)
-	return ssh_ks.NewServerApp(key, "localhost:"+strconv.Itoa(port), "Phony SSH public key")
+	tmp, err := ssh_ks.SetupTmpHosts()
+	dbg.ErrFatal(err)
+	sa, err := ssh_ks.NewServerApp(key, "localhost:"+strconv.Itoa(port), tmp, tmp)
+	dbg.ErrFatal(err)
+	return sa
 }
 
 func closeServers(t *testing.T, servers []*ssh_ks.ServerApp) error {

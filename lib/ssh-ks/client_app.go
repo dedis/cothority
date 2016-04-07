@@ -119,7 +119,7 @@ func (ca *ClientApp) NetworkAddClient(c *Client) error {
 	dbg.Lvl3("Adding clients to", ca.Config.Servers)
 	for _, srv := range ca.Config.Servers {
 		dbg.Lvl3("Asking server", srv, "to add client", c)
-		resp, err := networkSend(ca, srv.Entity, &AddClient{c})
+		resp, err := networkSend(ca.Private, srv.Entity, &AddClient{c})
 		err = errMsg(resp, err)
 		if err != nil {
 			return err
@@ -135,7 +135,7 @@ func (ca *ClientApp) NetworkDelClient(c *Client) error {
 	}
 	for _, srv := range ca.Config.Servers {
 		dbg.Lvl3("Asking server", srv, "to del client", c)
-		resp, err := networkSend(ca, srv.Entity, &DelClient{c})
+		resp, err := networkSend(ca.Private, srv.Entity, &DelClient{c})
 		err = errMsg(resp, err)
 		if err != nil {
 			return err
@@ -146,7 +146,7 @@ func (ca *ClientApp) NetworkDelClient(c *Client) error {
 
 // NetworkGetConfig asks the server for its configuration
 func (ca *ClientApp) NetworkGetConfig(s *Server) (*Config, error) {
-	resp, err := networkSend(ca, s.Entity, &GetConfig{})
+	resp, err := networkSend(ca.Private, s.Entity, &GetConfig{})
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (ca *ClientApp) NetworkGetConfig(s *Server) (*Config, error) {
 // NetworkSign asks the servers to sign the new configuration
 func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
 	dbg.Lvl3("Asking server", s, "to sign")
-	resp, err := networkSend(ca, s.Entity, &Sign{})
+	resp, err := networkSend(ca.Private, s.Entity, &Sign{})
 	if err != nil {
 		return nil, err
 	}
@@ -178,25 +178,38 @@ func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
 
 // ServerAdd adds a new server and asks all servers, including the new one,
 // to sign off the new configuration
-func (ca *ClientApp) ServerAdd(srvAddr string) {
+func (ca *ClientApp) ServerAdd(srvAddr string) error {
 	srv, err := NetworkGetServer(srvAddr)
-	dbg.ErrFatal(err)
-	if len(ca.Config.Servers) > 0 {
-		err = ca.NetworkAddServer(srv)
-		dbg.ErrFatal(err)
-		dbg.ErrFatal(ca.Sign())
-	} else {
-		ca.Update(srv)
+	if err != nil {
+		return err
 	}
+	if len(ca.Config.Servers) > 0 {
+		// Only add additional servers, because if it's the first server
+		// we add, just sign and update the configuration
+		err = ca.NetworkAddServer(srv)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = ca.Update(srv)
+		if err != nil {
+			return err
+		}
+	}
+	return ca.Sign()
 }
 
 // ServerDel deletes a server and asks the remaining servers (if any)
 // to sign the new configuration
 func (ca *ClientApp) ServerDel(srvAddr string) error {
 	srv, err := NetworkGetServer(srvAddr)
-	dbg.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	err = ca.NetworkDelServer(srv)
-	dbg.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	if len(ca.Config.Servers) == 1 {
 		dbg.Lvl2("Deleted last server")
 		ca.Config = NewConfig(0)
@@ -266,7 +279,9 @@ func (ca *ClientApp) Update(srv *Server) error {
 		}
 	}
 	conf, err := ca.NetworkGetConfig(srv)
-	dbg.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	ca.Config = conf
 	return nil
 }

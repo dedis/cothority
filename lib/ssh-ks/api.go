@@ -4,6 +4,8 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
 	"time"
@@ -59,6 +61,13 @@ type SignRet struct {
 	Config *Config
 }
 
+// PropSign propagates the signature for a new config
+type PropSig struct {
+	Hash      []byte
+	Version   int
+	Signature *sda.CosiResponse
+}
+
 // StatusRet returns the success (empty string) or failure
 type StatusRet struct {
 	Error string
@@ -79,6 +88,7 @@ func FuncRegister() {
 		DelClient{},
 		Sign{},
 		SignRet{},
+		PropSig{},
 		StatusRet{},
 	}
 	for _, s := range structs {
@@ -103,11 +113,11 @@ func networkSendAnonymous(addr string, req network.ProtocolMessage) (*network.Ne
 	// create a throw-away key pair:
 	kp := config.NewKeyPair(network.Suite)
 	dst := network.NewEntity(kp.Public, addr)
-	return networkSend(NewClientApp(""), dst, req)
+	return networkSend(kp.Secret, dst, req)
 }
 
-func networkSend(src *ClientApp, dst *network.Entity, req network.ProtocolMessage) (*network.NetworkMessage, error) {
-	client := network.NewSecureTcpHost(src.Private, nil)
+func networkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolMessage) (*network.NetworkMessage, error) {
+	client := network.NewSecureTcpHost(sec, nil)
 
 	// Connect to the root
 	dbg.Lvl3("Opening connection")
