@@ -32,7 +32,7 @@ func (dm *DummyProtocol) Dispatch() error {
 }
 
 type DummyService struct {
-	c        *sda.Context
+	c        sda.Context
 	path     string
 	link     chan bool
 	fakeTree *sda.Tree
@@ -61,7 +61,7 @@ func TestServiceNew(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
-	sda.RegisterNewService("DummyService", func(h *sda.Host, c *sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
 		ds.c = c
 		ds.path = path
 		ds.link <- true
@@ -81,7 +81,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
-	sda.RegisterNewService("DummyService", func(h *sda.Host, c *sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
 		ds.c = c
 		ds.path = path
 		ds.link <- true
@@ -130,6 +130,11 @@ func TestServiceProcessRequest(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Too late")
 	}
+}
+
+// Test if a request that makes the service create a new protocol works
+func TestServiceRequestNewProtocol(t *testing.T) {
+
 }
 
 func waitOrFatal(ch chan bool, t *testing.T) {
