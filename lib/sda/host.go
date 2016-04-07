@@ -375,6 +375,9 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
+		case RequestID:
+			r := data.Msg.(Request)
+			h.processRequest(data.Entity, &r)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -382,6 +385,19 @@ func (h *Host) processMessages() {
 			dbg.Error("Sending error:", err)
 		}
 	}
+}
+
+func (h *Host) processRequest(e *network.Entity, r *Request) {
+	// check if the target service is indeed existing
+	var s Service
+	var ok bool
+	if s, ok = h.serviceStore.serviceByID(r.Service); !ok {
+		dbg.Error("Received a request for an unknown service")
+		// XXX TODO should reply with some generic response =>
+		// 404 Service Unknown
+		return
+	}
+	s.ProcessRequest(e, r)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg

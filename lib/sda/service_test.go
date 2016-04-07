@@ -107,14 +107,12 @@ func TestServiceProcessRequest(t *testing.T) {
 		Type:    "wrongType",
 	}
 	// fake a client
-	dbg.Print("Before Client")
 	// have to listen on the service link also
 	go func() {
 		<-ds.link
 	}()
 	h2 := sda.NewLocalHost(2010)
 	defer h2.Close()
-	dbg.Print("After Client")
 	dbg.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.Entity); err != nil {
 		t.Fatal(err)

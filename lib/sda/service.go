@@ -197,13 +197,13 @@ func (s *serviceStore) serviceByString(name string) Service {
 	panic("Not implemented")
 }
 
-func (s *serviceStore) serviceByID(id ServiceID) Service {
+func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
 	var serv Service
 	var ok bool
 	if serv, ok = s.services[id]; !ok {
-		return nil
+		return nil, false
 	}
-	return serv
+	return serv, true
 }
 
 // A Request is a generic packet to represent any kind of request a Service is
@@ -221,4 +221,4 @@ type Request struct {
 }
 
 // RequestType is the type that registered by the network library
-var RequestType = network.RegisterMessageType(Request{})
+var RequestID = network.RegisterMessageType(Request{})
