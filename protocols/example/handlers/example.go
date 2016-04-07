@@ -3,14 +3,11 @@ package example_handlers
 import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 )
 
 func init() {
-	network.RegisterMessageType(Announce{})
-	network.RegisterMessageType(Reply{})
-	sda.ProtocolRegisterName("ExampleHandlers", NewExampleHandlers)
+	sda.RegisterNewProtocol("ExampleHandlers", NewExampleHandlers)
 }
 
 // ProtocolExampleHandlers just holds a message that is passed to all children. It

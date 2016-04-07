@@ -8,6 +8,7 @@ import (
 )
 
 func init() {
+	sda.RegisterNewProtocol("ProtocolJVSS", NewJVSS)
 	sda.SimulationRegister("JVSS", NewSimulation)
 }
 
@@ -43,7 +44,7 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 
 	dbg.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
-	node, err := config.Overlay.CreateNewNodeName("JVSS", config.Tree)
+	node, err := config.Overlay.CreateNewNode("JVSS", config.Tree)
 	if err != nil {
 		return err
 	}

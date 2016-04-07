@@ -57,15 +57,6 @@ type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
 func NewNode(o *Overlay, tok *Token) (*Node, error) {
-	n, err := NewNodeEmpty(o, tok)
-	if err != nil {
-		return nil, err
-	}
-	return n, n.protocolInstantiate()
-}
-
-// NewNodeEmpty creates a new node without a protocol
-func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
 		token:                tok,
 		channels:             make(map[network.MessageTypeID]interface{}),
@@ -82,7 +73,7 @@ func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 		return nil, errors.New("We are not represented in the tree")
 	}
 	go n.dispatchMsgReader()
-	return n, nil
+	return n, n.protocolInstantiate()
 }
 
 // TreeNode gets the treeNode of this node. If there is no TreeNode for the
@@ -248,7 +239,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	return nil
 }
 
-// RegisterChannel takes a channel with a struct that contains two
+// RegisterHandler  channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
 // This function handles also
@@ -307,11 +298,6 @@ func (n *Node) protocolInstantiate() error {
 	if n.token == nil {
 		return errors.New("Hope this is running in test-mode")
 	}
-	pid := n.token.ProtoID
-	p, ok := protocols[pid]
-	if !ok {
-		return errors.New("Protocol " + pid.String() + " doesn't exist")
-	}
 	tree := n.overlay.Tree(n.token.TreeID)
 	if tree == nil {
 		return errors.New("Tree does not exists")
@@ -320,10 +306,15 @@ func (n *Node) protocolInstantiate() error {
 		return errors.New("EntityList does not exists")
 	}
 
+	var pi ProtocolInstance
 	var err error
-	n.instance, err = p(n)
+	if pi, err = ProtocolFactory.Instantiate(n); err != nil {
+		return err
+	}
+	// link the two
+	n.instance = pi
 	go n.instance.Dispatch()
-	return err
+	return nil
 }
 
 // Dispatch - the standard dispatching function is empty
@@ -346,7 +337,10 @@ func (n *Node) Close() error {
 		n.msgDispatchQueueWait <- true
 	}
 	n.msgDispatchQueueMutex.Unlock()
-	return n.ProtocolInstance().Shutdown()
+	if pi := n.ProtocolInstance(); pi != nil {
+		pi.Shutdown()
+	}
+	return nil
 }
 
 func (n *Node) dispatchHandler(msgSlice []*Data) error {
@@ -594,6 +588,16 @@ func (n *Node) TokenID() TokenID {
 // Useful for unit testing.
 func (n *Node) Token() *Token {
 	return n.token
+}
+
+// ProtocolID returns the ProtocolID of the underlying protocolID
+func (n *Node) ProtocolID() ProtocolID {
+	return n.token.ProtoID
+}
+
+// ProtocolName returns the name out of the protocolID
+func (n *Node) ProtocolName() string {
+	return ProtocolFactory.Name(n.token.ProtoID)
 }
 
 // Host returns the underlying Host of this node.

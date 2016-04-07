@@ -21,7 +21,7 @@ func init() {
 	network.RegisterMessageType(PrepareCount{})
 	network.RegisterMessageType(Count{})
 	network.RegisterMessageType(NodeIsUp{})
-	sda.ProtocolRegisterName("Count", NewCount)
+	sda.RegisterNewProtocol("Count", NewCount)
 }
 
 // ProtocolCount holds all channels. If a timeout occurs or the counting

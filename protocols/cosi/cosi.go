@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
+	sda.RegisterNewProtocol("CoSi", NewProtocolCosi)
 }
 
 // This Cosi protocol is the simplest version, the "vanilla" version with the

@@ -8,9 +8,9 @@ import (
 )
 
 func init() {
+	sda.RegisterNewProtocol("ExampleChannels", NewExampleChannels)
 	network.RegisterMessageType(Announce{})
 	network.RegisterMessageType(Reply{})
-	sda.ProtocolRegisterName("ExampleChannels", NewExampleChannels)
 }
 
 // ProtocolExampleChannels just holds a message that is passed to all children.

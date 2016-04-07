@@ -69,6 +69,8 @@ type Host struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
+
+	services *serviceStore
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -90,6 +92,8 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	}
 
 	h.overlay = NewOverlay(h)
+	h.services = newServiceStore(h, h.overlay)
+
 	return h
 }
 
@@ -372,6 +376,11 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
+
+		case RequestType:
+			// we received a Request to dispatch to a Service
+			dbg.Lvl4(h.workingAddress, " Received Request msg")
+			h.dispatchRequest(&data)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -379,6 +388,23 @@ func (h *Host) processMessages() {
 			dbg.Error("Sending error:", err)
 		}
 	}
+}
+
+// dispatchRequest finds the service and dispatch the message to it
+func (h *Host) dispatchRequest(nm *network.Message) {
+	// cast
+	request, ok := nm.Msg.(Request)
+	if !ok {
+		dbg.Error("Could not cast the Request message")
+		return
+	}
+	var serv Service
+	if serv = h.services.serviceByID(request.Service); serv == nil {
+		dbg.Error("No services started using this id", ServiceFactory.Name(request.Service))
+		return
+	}
+	// dispatch
+	serv.ProcessRequest(nm.Entity, &request)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg
@@ -550,10 +576,13 @@ func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-// StartNewNode starts the underlying Node which will instantiate the underlying
-// protocol.
-func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNode(protoID, tree)
+// XXX Should be only in overlay
+func (h *Host) StartNewNodeStatic(name string, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNodeStatic(name, tree)
+}
+
+func (h *Host) StartNewNodeService(service, protocol string, tree *Tree) (*Node, error) {
+	return h.overlay.StartNewNodeService(service, protocol, tree)
 }
 
 // SetupHostsMock can be used to create a Host mock for testing.

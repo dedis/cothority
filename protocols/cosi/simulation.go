@@ -12,6 +12,9 @@ import (
 
 func init() {
 	sda.SimulationRegister("CoSi", NewSimulation)
+	// default protocol initialization. See Run() for override this one for the
+	// root.
+	sda.RegisterNewProtocol("ProtocolCosi", NewProtocolCosi)
 }
 
 // Simulation implements the sda.Simulation of the CoSi protocol.
@@ -64,7 +67,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 		dbg.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateNewNodeName("CoSi", config.Tree)
+		node, err := config.Overlay.CreateNewNode("CoSi", config.Tree)
 		if err != nil {
 			return err
 		}

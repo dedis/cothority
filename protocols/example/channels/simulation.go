@@ -53,7 +53,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		n, err := config.Overlay.StartNewNodeName("ExampleChannels", config.Tree)
+		n, err := config.Overlay.StartNewNode("ExampleChannels", config.Tree)
 		if err != nil {
 			return err
 		}

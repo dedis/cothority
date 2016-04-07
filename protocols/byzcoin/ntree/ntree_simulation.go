@@ -11,7 +11,7 @@ import (
 
 func init() {
 	sda.SimulationRegister("ByzCoinNtree", NewSimulation)
-	sda.ProtocolRegisterName("ByzCoinNtree", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
+	sda.RegisterNewProtocol("Ntree", func(n *sda.Node) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
 }
 
 // Simulation implements da.Simulation interface
@@ -52,6 +52,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl2("Naive Tree Simulation starting with: Rounds=", e.Rounds)
 	server := NewNtreeServer(e.Blocksize)
+	sda.RegisterProtocolConstructor("ByzCoinTreeServer", server)
 	for round := 0; round < e.Rounds; round++ {
 		client := byzcoin.NewClient(server)
 		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
@@ -61,18 +62,12 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmptyName("ByzCoinNtree", sdaConf.Tree)
+		node, err := sdaConf.Overlay.CreateNewNode("ByzCoinNtreeServer", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
-		// instantiate a byzcoin protocol
 		rComplete := monitor.NewTimeMeasure("round")
-		pi, err := server.Instantiate(node)
-		if err != nil {
-			return err
-		}
-
-		nt := pi.(*Ntree)
+		nt := node.ProtocolInstance().(*Ntree)
 		// Register when the protocol is finished (all the nodes have finished)
 		done := make(chan bool)
 		nt.RegisterOnDone(func(sig *NtreeSignature) {

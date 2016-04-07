@@ -42,13 +42,13 @@ func NewLocalTest() *LocalTest {
 
 // StartNewNodeName takes a name and a tree and will create a
 // new Node with the protocol 'name' running from the tree-root
-func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
+func (l *LocalTest) StartNewNodeStatic(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
 		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].StartNewNodeName(name, t)
+			return l.Overlays[h.Entity.ID].StartNewNodeStatic(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -62,20 +62,7 @@ func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
 		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].CreateNewNodeName(name, t)
-		}
-	}
-	return nil, errors.New("Didn't find host for tree-root")
-}
-
-// NewNodeEmptyName create an empty node - use at your own risk!
-func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
-	rootEntityId := t.Root.Entity.ID
-	for _, h := range l.Hosts {
-		if h.Entity.ID.Equals(rootEntityId) {
-			// XXX do we really need multiples overlays ? Can't we just use the
-			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].NewNodeEmptyName(name, t)
+			return l.Overlays[h.Entity.ID].CreateNewNodeStatic(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -172,12 +159,9 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 	if tree == nil {
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
-	protId := ProtocolNameToID(protName)
-	if !ProtocolExists(protId) {
-		return nil, errors.New("Didn't find protocol: " + protName)
-	}
+	protoID := ProtocolFactory.ProtocolID(protName)
 	tok := &Token{
-		ProtoID:      protId,
+		ProtoID:      protoID,
 		EntityListID: tree.EntityList.Id,
 		TreeID:       tree.Id,
 		TreeNodeID:   tn.Id,

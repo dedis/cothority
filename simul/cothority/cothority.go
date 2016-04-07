@@ -11,10 +11,10 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 
 	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/protocols/manage"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 	_ "github.com/dedis/cothority/protocols"
+	"github.com/dedis/cothority/protocols/manage"
 )
 
 // The address of this host - if there is only one host in the config
@@ -91,7 +91,7 @@ func main() {
 		// each level of the tree.
 		timeout := 1000
 		for wait {
-			node, err := rootSC.Overlay.CreateNewNodeName("Count", rootSC.Tree)
+			node, err := rootSC.Overlay.CreateNewNode("Count", rootSC.Tree)
 			if err != nil {
 				dbg.Fatal(err)
 			}
@@ -135,7 +135,7 @@ func main() {
 			closeTree = rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
-		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
+		_, err = rootSC.Overlay.StartNewNode("CloseAll", closeTree)
 		if err != nil {
 			dbg.Fatal(err)
 		}
