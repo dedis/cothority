@@ -54,7 +54,7 @@ func SignStatement(r io.Reader, el *sda.EntityList) (*sda.CosiResponse, error) {
 
 	// Connect to the root
 	host := el.List[0]
-	dbg.Lvl3("Opening connection")
+	dbg.Lvl3("Opening connection to", host.Addresses[0], host.Public)
 	con, err := client.Open(host)
 	defer client.Close()
 	if err != nil {

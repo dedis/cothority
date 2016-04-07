@@ -31,14 +31,15 @@ func NewClientApp(sshPub string) *ClientApp {
 
 // ReadClientApp searches for the client-app and creates a new one if it
 // doesn't exist
-func ReadClientApp(file string) (*ClientApp, error) {
-	ca := NewClientApp("")
+func ReadClientApp(f string) (*ClientApp, error) {
+	file := expandHDir(f)
+	ca := NewClientApp("TestClient-" + f)
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
 		ca.Config = &Config{}
 		return ca, nil
 	}
-	b, err := ioutil.ReadFile(file)
+	b, err := ioutil.ReadFile(expandHDir(file))
 	if err != nil {
 		return nil, err
 	} else {
@@ -61,7 +62,7 @@ func (ca *ClientApp) Write(file string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(file, b, 0660)
+	err = ioutil.WriteFile(expandHDir(file), b, 0660)
 	return err
 }
 
@@ -169,6 +170,7 @@ func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
 		return nil, errors.New("Didn't receive config")
 	}
 	if status.Error != "" {
+		dbg.Error(status.Error)
 		return nil, errors.New(status.Error)
 	}
 	conf, err := ca.NetworkGetConfig(s)
@@ -255,7 +257,10 @@ func (ca *ClientApp) ClientAdd(client *Client) error {
 	if len(ca.Config.Servers) == 0 {
 		return errors.New("Missing servers. Please add one or more servers first")
 	}
-	ca.NetworkAddClient(client)
+	err := ca.NetworkAddClient(client)
+	if err != nil {
+		return err
+	}
 	return ca.Sign()
 }
 
@@ -264,23 +269,37 @@ func (ca *ClientApp) ClientDel(client *Client) error {
 	if len(ca.Config.Servers) == 0 {
 		return errors.New("Missing servers. Please add one or more servers first")
 	}
-	ca.NetworkDelClient(client)
+	err := ca.NetworkDelClient(client)
+	if err != nil {
+		return err
+	}
 	return ca.Sign()
 }
 
 // Update checks for the latest configuration
 // TODO: include SkipChains to get the latest cothority
 func (ca *ClientApp) Update(srv *Server) error {
+	conf := NewConfig(-1)
 	if srv == nil {
+		// If no server is given, we contact all servers and ask
+		// for the latest version
+		dbg.Lvl3("Going to search all servers")
+		for _, s := range ca.Config.Servers {
+			c, err := ca.NetworkGetConfig(s)
+			if err == nil {
+				if conf.Version < c.Version {
+					conf = c
+				}
+			}
+		}
+	} else {
+		// If a server is given, we use that one
+		dbg.Lvl3("Using server", srv, "to update")
 		var err error
-		srv, err = ca.getAnyServer()
+		conf, err = ca.NetworkGetConfig(srv)
 		if err != nil {
 			return err
 		}
-	}
-	conf, err := ca.NetworkGetConfig(srv)
-	if err != nil {
-		return err
 	}
 	ca.Config = conf
 	return nil
@@ -293,6 +312,7 @@ func (ca *ClientApp) Sign() error {
 	if err != nil {
 		return err
 	}
+	dbg.Lvl3("Asking server", srv.Entity.Addresses[0], "for signature")
 	conf, err := ca.NetworkSign(srv)
 	if err != nil {
 		return err

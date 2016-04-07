@@ -533,6 +533,7 @@ func (sc *SecureTcpConn) negotiateOpen(e *Entity) error {
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().Id != e.Id {
 		dbg.Lvl3("Wanted to connect to", e, e.Id, "but got", sc.Entity(), sc.Entity().Id)
+		dbg.Lvl3(e.Public, sc.Entity().Public)
 		dbg.Lvl4("IDs not the same", dbg.Stack())
 		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}

@@ -127,10 +127,10 @@ func networkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolM
 		return &network.NetworkMessage{}, err
 	}
 
-	dbg.Lvl3("Sending sign request")
 	pchan := make(chan network.NetworkMessage)
 	go func() {
 		// send the request
+		dbg.Lvl3("Sending request", req)
 		if err := con.Send(context.TODO(), req); err != nil {
 			close(pchan)
 			return

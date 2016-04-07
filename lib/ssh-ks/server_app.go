@@ -49,7 +49,8 @@ func NewServerApp(key *config.KeyPair, addr, dirSSHD, dirSSH string) (*ServerApp
 	return c, nil
 }
 
-func ReadServerApp(file string) (*ServerApp, error) {
+func ReadServerApp(f string) (*ServerApp, error) {
+	file := expandHDir(f)
 	if file == "" {
 		return nil, errors.New("Need a name for the configuration-file")
 	}
@@ -65,8 +66,8 @@ func ReadServerApp(file string) (*ServerApp, error) {
 	if err != nil {
 		return nil, err
 	}
-	conf := msg.(ServerApp)
-	return &conf, err
+	sa := msg.(ServerApp)
+	return &sa, err
 }
 
 func (sa *ServerApp) WriteConfig(file string) error {
@@ -74,7 +75,7 @@ func (sa *ServerApp) WriteConfig(file string) error {
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(file, b, 0660)
+	ioutil.WriteFile(expandHDir(file), b, 0660)
 	return nil
 }
 
@@ -162,6 +163,7 @@ func (sa *ServerApp) Sign() error {
 				Hash:      sa.Config.Hash(),
 				Signature: sa.Config.Signature,
 			}
+			dbg.Lvl3("Seding propagation to", srv.Entity.Addresses[0])
 			resp, err := networkSend(sa.Private, srv.Entity, ps)
 			err = errMsg(resp, err)
 			if err != nil {
@@ -213,6 +215,9 @@ func (sa *ServerApp) FuncAddClient(data *network.NetworkMessage) network.Protoco
 		return &StatusRet{"Didn't get a client"}
 	}
 	dbg.Lvl3("Adding client", req.Client, "to", sa.This)
+	if req.Client.SSHpub == "" {
+		return &StatusRet{"Client with empty SSHpub is not allowed"}
+	}
 	sa.Config.AddClient(req.Client)
 	return &StatusRet{""}
 }
@@ -232,9 +237,11 @@ func (sa *ServerApp) FuncDelClient(data *network.NetworkMessage) network.Protoco
 
 // FuncSign asks all servers to sign the new configuration
 func (sa *ServerApp) FuncSign(data *network.NetworkMessage) network.ProtocolMessage {
+	dbg.Lvl3("Starting to sign")
 	status := &StatusRet{}
 	err := sa.Sign()
 	if err != nil {
+		dbg.Error(err)
 		status = &StatusRet{err.Error()}
 	}
 	return status

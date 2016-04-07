@@ -17,8 +17,10 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -101,6 +103,9 @@ func ReadConfig(file string) (*Config, error) {
 		}
 		c := msg.(Config)
 		conf = &c
+		if len(conf.Clients) == 0 {
+			conf.Clients = make(map[string]*Client)
+		}
 	}
 	return conf, nil
 }
@@ -143,7 +148,7 @@ func (conf *Config) EntityList(root *network.Entity) *sda.EntityList {
 	// The list is of length 1 with a capacity for all servers
 	list := make([]*network.Entity, 1, len(conf.Servers))
 	for _, srv := range conf.Servers {
-		if srv.Entity == root {
+		if srv.Entity.Addresses[0] == root.Addresses[0] {
 			list[0] = srv.Entity
 		} else {
 			list = append(list, srv.Entity)
@@ -183,6 +188,7 @@ func (conf *Config) DelServer(s *Server) error {
 
 // AddClient inserts a client in the configuration-list
 func (conf *Config) AddClient(c *Client) error {
+	dbg.Lvl3("Adding client", c, "to", conf.Clients, "key", c.SSHpub)
 	conf.Clients[c.SSHpub] = c
 	conf.Signature = nil
 	return nil
@@ -247,6 +253,17 @@ func (conf *Config) MarshalBinary() ([]byte, error) {
 		}
 	}
 	return buf.Bytes(), nil
+}
+
+// List prints the version and a list of Servers and Clients
+func (c *Config) List() {
+	dbg.Print("Config-version:", c.Version)
+	for _, srv := range c.Servers {
+		dbg.Print("Server:", srv.Entity.String())
+	}
+	for n, cl := range c.Clients {
+		dbg.Print("Client:", n, cl.Entity.String())
+	}
 }
 
 // SetupTmpHosts sets up a temporary .tmp-directory for testing
@@ -316,4 +333,15 @@ func CreateBogusSSH(dir, file string) error {
 	}
 	bKeysI = (bKeysI + 1) % len(bKeys)
 	return nil
+}
+
+func expandHDir(dir string) string {
+	usr, _ := user.Current()
+	hdir := usr.HomeDir
+
+	// Check in case of paths like "/something/~/something/"
+	if dir[:2] == "~/" {
+		return strings.Replace(dir, "~", hdir, 1)
+	}
+	return dir
 }

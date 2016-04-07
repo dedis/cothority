@@ -314,6 +314,9 @@ func TestCAServerAdd(t *testing.T) {
 	if len(srv2.Config.Servers) != 1 {
 		t.Fatal("Server 2 should still only know himself")
 	}
+	if srv1.This.Entity.Public != srv1.Config.Servers["localhost:2000"].Entity.Public {
+		t.Fatal("Server.This should be the same as config")
+	}
 	dbg.Lvl1("Adding 2nd server")
 	ca.ServerAdd("localhost:2001")
 	if len(srv1.Config.Servers) != 2 {
@@ -395,6 +398,40 @@ func TestCAClientAdd(t *testing.T) {
 	dbg.ErrFatal(err)
 	if len(ca.Config.Clients) != 2 {
 		t.Fatal("There should be 2 clients now")
+	}
+}
+
+func TestWriteConfig2(t *testing.T) {
+	ca, servers := newTest(2)
+	defer closeServers(t, servers)
+	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
+	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client1")
+	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client2")
+	err := ca.ClientAdd(client1)
+	dbg.ErrFatal(err)
+	err = ca.ClientAdd(client2)
+	dbg.ErrFatal(err)
+	if len(ca.Config.Clients) != 2 {
+		t.Fatal("There should be 2 clients now")
+	}
+
+	tmp, _ := ssh_ks.SetupTmpHosts()
+	file := tmp + "/config.bin"
+	conf1 := ssh_ks.NewConfig(10)
+	err = conf1.WriteConfig(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	conf2, err := ssh_ks.ReadConfig(file)
+	dbg.TestFatal(t, err)
+	if conf1.Version != conf2.Version {
+		t.Fatal("Didn't find same version")
+	}
+	if len(conf1.Clients) != len(conf2.Clients) {
+		t.Fatal("Number of clients should be the same")
 	}
 }
 
@@ -484,6 +521,17 @@ func TestCAUpdate(t *testing.T) {
 	}
 	if bytes.Compare(ca1.Config.Signature.Sum, ca2.Config.Signature.Sum) != 0 {
 		t.Fatal("Should have the same signature")
+	}
+
+	for i := 0; i < 10; i++ {
+		dbg.Lvl3("Round", i)
+		dbg.ErrFatal(ca1.ServerDel(addr1))
+		dbg.ErrFatal(ca2.Update(nil))
+		if len(ca2.Config.Servers) == 2 {
+			t.Fatal("There should be only 1 server left")
+		}
+		dbg.ErrFatal(ca1.ServerAdd(addr1))
+		dbg.ErrFatal(ca2.Update(nil))
 	}
 }
 

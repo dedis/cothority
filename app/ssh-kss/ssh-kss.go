@@ -49,10 +49,12 @@ func main() {
 				dbg.Fatal("Couldn't write config:", err)
 			}
 		}
+		serverApp.Config.List()
 		err = serverApp.Start()
 		if err != nil {
 			dbg.Fatal("Couldn't start server:", err)
 		}
+		<-make(chan bool)
 	}
 	app.Run(os.Args)
 }
@@ -61,11 +63,11 @@ func AskServerConfig(in io.Reader, out io.Writer) (*ssh_ks.ServerApp, error) {
 	inb := bufio.NewReader(in)
 	ip := getArg(inb, out, "Please enter an IP:port where this server has to be reached",
 		"localhost:2000")
-	ssh := getArg(inb, out, "Where should the authorized_keys be stored",
-		"/root/.ssh")
 	sshd := getArg(inb, out, "Where is the system-ssh-directory located",
 		"/etc/sshd")
-	return CreateServerConfig(ip, ssh, sshd)
+	ssh := getArg(inb, out, "Where should the authorized_keys be stored",
+		"/root/.ssh")
+	return CreateServerConfig(ip, sshd, ssh)
 }
 
 func CreateServerConfig(ip, dirSSHD, dirSSH string) (*ssh_ks.ServerApp, error) {

@@ -12,6 +12,9 @@ import (
 // Our clientApp configuration
 var clientApp *ssh_ks.ClientApp
 
+// The config-file
+var configFile string
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "SSH keystore client"
@@ -59,6 +62,18 @@ func main() {
 			Usage:   "update to the latest list",
 			Action:  update,
 		},
+		{
+			Name:    "check",
+			Aliases: []string{"ch"},
+			Usage:   "check all servers",
+			Action:  update,
+		},
+		{
+			Name:    "list",
+			Aliases: []string{"ch"},
+			Usage:   "list servers and clients",
+			Action:  list,
+		},
 	}
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
@@ -80,12 +95,14 @@ func main() {
 	app.Before = func(c *cli.Context) error {
 		dbg.SetDebugVisible(c.Int("debug"))
 		var err error
-		clientApp, err = ssh_ks.ReadClientApp(c.String("config") + "/config.bin")
+		configFile = c.String("config") + "/config.bin"
+		clientApp, err = ssh_ks.ReadClientApp(configFile)
 		dbg.ErrFatal(err, "Couldn't read config-file")
 		return nil
 	}
 	app.After = func(c *cli.Context) error {
-		clientApp.Write(c.String("config") + "/config.bin")
+		err := clientApp.Write(configFile)
+		dbg.ErrFatal(err)
 		return nil
 	}
 	app.Run(os.Args)
@@ -117,15 +134,23 @@ func serverCheck(c *cli.Context) {
 }
 
 func clientAdd(c *cli.Context) {
-	err := clientApp.ClientAdd(nil)
+	dbg.Print("Adding ourselves as client")
+	err := clientApp.ClientAdd(clientApp.This)
 	dbg.ErrFatal(err)
 }
 
 func clientDel(c *cli.Context) {
-	err := clientApp.ClientDel(nil)
+	dbg.Print("Deleting ourselves as client")
+	err := clientApp.ClientDel(clientApp.This)
 	dbg.ErrFatal(err)
 }
+
 func update(c *cli.Context) {
 	dbg.ErrFatal(clientApp.Update(nil))
 	dbg.Print("Got latest configuration")
+	list(c)
+}
+
+func list(c *cli.Context) {
+	clientApp.Config.List()
 }
