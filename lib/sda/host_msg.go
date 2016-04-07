@@ -87,6 +87,17 @@ func (t *Token) Id() TokenID {
 	return t.cacheId
 }
 
+func (t *Token) Clone() *Token {
+	t2 := Token{}
+	copy(t2.EntityListID[:], t.EntityListID[:])
+	copy(t2.TreeID[:], t.TreeID[:])
+	copy(t2.ServiceID[:], t.ServiceID[:])
+	copy(t2.RoundID[:], t.RoundID[:])
+	copy(t2.TreeNodeID[:], t.TreeNodeID[:])
+	copy(t2.cacheId[:], t.cacheId[:])
+	return &t2
+}
+
 // ChangeTreeNodeID return a new Token containing a reference to the given
 // TreeNode
 func (t *Token) ChangeTreeNodeID(newid TreeNodeID) *Token {

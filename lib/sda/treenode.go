@@ -56,7 +56,7 @@ func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode) *TreeNodeInstance
 		handlers:             make(map[network.MessageTypeID]interface{}),
 		messageTypeFlags:     make(map[network.MessageTypeID]uint32),
 		msgQueue:             make(map[network.MessageTypeID][]*Data),
-		treeNode:             nil,
+		treeNode:             tn,
 		msgDispatchQueue:     make([]*Data, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
 	}
@@ -471,6 +471,8 @@ func (n *TreeNodeInstance) Name() string {
 // Info returns a human readable representation name of this Node
 // (IP address and TokenID).
 func (n *TreeNodeInstance) Info() string {
+	_ = n.Entity().Addresses
+	_ = n.TokenID()
 	return fmt.Sprint(n.Entity().Addresses, n.TokenID())
 }
 
@@ -479,10 +481,10 @@ func (n *TreeNodeInstance) TokenID() TokenID {
 	return n.token.Id()
 }
 
-// Token returns the underlying sda.Token struct.
+// Token returns a CLONE of the underlying sda.Token struct.
 // Useful for unit testing.
 func (n *TreeNodeInstance) Token() *Token {
-	return n.token
+	return n.token.Clone()
 }
 
 // Host returns the underlying Host of this node.
@@ -493,8 +495,10 @@ func (n *TreeNodeInstance) Host() *Host {
 	return n.overlay.host
 }
 
-// SetProtocolInstance is used when you first create an empty node and you want
-// to bind it to a protocol instance later.
-func (n *TreeNodeInstance) SetProtocolInstance(pi ProtocolInstance) {
+func (n *TreeNodeInstance) isBinded() bool {
+	return n.instance != nil
+}
+
+func (n *TreeNodeInstance) bind(pi ProtocolInstance) {
 	n.instance = pi
 }

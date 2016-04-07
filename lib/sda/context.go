@@ -1,18 +1,36 @@
 package sda
 
 import (
-	"errors"
+	"github.com/dedis/cothority/lib/network"
 )
 
-// Context is created for each Service
-type Context struct {
-	o *Overlay
+type Context interface {
+	NewTreeNodeInstance(*Tree, *TreeNode) *TreeNodeInstance
+	RegisterProtocolInstance(ProtocolInstance) error
+	SendRaw(*network.Entity, interface{}) error
 }
 
-func (c *Context) NewTreeNodeInstance(tn *TreeNode) *TreeNodeInstance {
-	return &TreeNodeInstance{}
+// defaultContext is the implementation of the Context interface. It is
+// instantiated for each Service.
+type defaultContext struct {
+	*Overlay
+	*Host
+	servID ServiceID
 }
 
-func (c *Context) RegisterProtocolInstance(pi ProtocolInstance) error {
-	return errors.New("Not implemented")
+func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
+	return &defaultContext{
+		Overlay: o,
+		Host:    h,
+		servID:  servID,
+	}
+}
+
+// NewTreeNodeInstance implements the Context interface method
+func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode) *TreeNodeInstance {
+	return dc.Overlay.newTreeNodeInstance(t, tn, dc.servID)
+}
+
+func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {
+	return dc.Host.SendRaw(e, msg)
 }

@@ -169,7 +169,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		if err := os.MkdirAll(configName, 0666); err != nil {
 			dbg.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := Context{o}
+		c := newDefaultContext(h, o, id)
 		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
 			dbg.Error("Trying to instantiate service:", err)

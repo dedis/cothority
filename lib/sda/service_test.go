@@ -48,7 +48,7 @@ func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
 		ds.link <- false
 		return
 	}
-	tni := ds.c.NewTreeNodeInstance(ds.fakeTree.Root)
+	tni := ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root)
 	dp := NewDummyProtocol(tni, DummyConfig{}, ds.link)
 	if err := ds.c.RegisterProtocolInstance(dp); err != nil {
 		ds.link <- false
@@ -146,6 +146,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	// create the entityList and tree
 	el := sda.NewEntityList([]*network.Entity{host.Entity})
 	tree := el.GenerateBinaryTree()
+	dbg.Print("Tree Is ", tree.Root.Entity.Addresses)
 	// give it to the service
 	ds.fakeTree = tree
 

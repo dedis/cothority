@@ -22,6 +22,7 @@ type ProtocolInstance interface {
 	// Start on it.
 	Start() error
 	Dispatch() error
+	// Token is needed to uniquely identify one PI in SDA.
 	Token() *Token
 	// Shutdown cleans up the resources used by this protocol instance
 	Shutdown() error

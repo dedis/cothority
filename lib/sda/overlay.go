@@ -28,17 +28,24 @@ type Overlay struct {
 	entityListLock sync.Mutex
 	// cache for relating token(~Node) to TreeNode
 	cache TreeNodeCache
+
+	// TreeNodeInstance part
+	instances     map[TokenID]*TreeNodeInstance
+	instancesInfo map[TokenID]bool
+	instancesLock sync.Mutex
 }
 
 // NewOverlay creates a new overlay-structure
 func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
-		host:        h,
-		nodes:       make(map[TokenID]*Node),
-		nodeInfo:    make(map[TokenID]bool),
-		trees:       make(map[TreeID]*Tree),
-		entityLists: make(map[EntityListID]*EntityList),
-		cache:       NewTreeNodeCache(),
+		host:          h,
+		nodes:         make(map[TokenID]*Node),
+		nodeInfo:      make(map[TokenID]bool),
+		trees:         make(map[TreeID]*Tree),
+		entityLists:   make(map[EntityListID]*EntityList),
+		cache:         NewTreeNodeCache(),
+		instances:     make(map[TokenID]*TreeNodeInstance),
+		instancesInfo: make(map[TokenID]bool),
 	}
 }
 
@@ -298,6 +305,50 @@ func (o *Overlay) Close() {
 		dbg.Lvl4("Closing node", n.TokenID())
 		o.nodeDelete(n.Token())
 	}
+
+	o.instancesLock.Lock()
+	for _, tni := range o.instances {
+		tni.Close()
+	}
+}
+
+func (o *Overlay) newTreeNodeInstance(t *Tree, tn *TreeNode, servID ServiceID) *TreeNodeInstance {
+	tok := &Token{
+		TreeNodeID:   tn.Id,
+		TreeID:       t.Id,
+		EntityListID: t.EntityList.Id,
+		ServiceID:    servID,
+		RoundID:      RoundID(uuid.NewV4()),
+	}
+
+	o.instancesLock.Lock()
+	defer o.instancesLock.Unlock()
+	tni := newTreeNodeInstance(o, tok, tn)
+	o.instances[tok.Id()] = tni
+	return tni
+}
+
+var ErrWrongTreeNodeInstance = errors.New("TreeNodeInstance associated with this ProtocolInstance is not registered")
+var ErrProtocolRegistered = errors.New("A ProtocolInstance already has been registered using this TreeNodeInstance!")
+
+func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
+	o.instancesLock.Lock()
+	defer o.instancesLock.Unlock()
+	tok := pi.Token()
+	var tni *TreeNodeInstance
+	var ok bool
+	// if the token is not registered from here
+	if tni, ok = o.instances[tok.Id()]; !ok {
+		return ErrWrongTreeNodeInstance
+	}
+	// if the TNI already have a ProtocolInstance binded
+	// i.e. someone wants to use one TreeNodeInstance for multiple
+	// ProtocolInstance
+	if tni.isBinded() {
+		return ErrProtocolRegistered
+	}
+	tni.bind(pi)
+	return nil
 }
 
 // TreeNodeCache is a cache that maps from token to treeNode. Since the mapping
