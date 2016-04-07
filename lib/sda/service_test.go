@@ -40,6 +40,7 @@ type DummyService struct {
 
 func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
 	if r.Type != "NewDummy" {
+		ds.link <- false
 		return
 	}
 	tni := ds.c.NewTreeNodeInstance(ds.fakeTree.Root)
@@ -66,8 +67,71 @@ func TestServiceNew(t *testing.T) {
 		ds.link <- true
 		return ds
 	})
-	go sda.NewLocalHost(2000)
+	go func() {
+		h := sda.NewLocalHost(2000)
+		h.Close()
+	}()
+
 	waitOrFatal(ds.link, t)
+}
+
+func TestServiceProcessRequest(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	ds := &DummyService{
+		link: make(chan bool),
+	}
+	sda.RegisterNewService("DummyService", func(h *sda.Host, c *sda.Context, path string) sda.Service {
+		ds.c = c
+		ds.path = path
+		ds.link <- true
+		return ds
+	})
+	hostCh := make(chan *sda.Host)
+	go func() {
+		h := sda.NewLocalHost(2000)
+		h.Listen()
+		h.StartProcessMessages()
+		dbg.Lvl1("Host created and listening")
+		hostCh <- h
+	}()
+
+	// wait the creation
+	waitOrFatal(ds.link, t)
+	// get the host
+	host := <-hostCh
+	defer host.Close()
+	// Send a request to the service
+	re := &sda.Request{
+		Service: sda.ServiceFactory.ServiceID("DummyService"),
+		Type:    "wrongType",
+	}
+	// fake a client
+	dbg.Print("Before Client")
+	// have to listen on the service link also
+	go func() {
+		<-ds.link
+	}()
+	h2 := sda.NewLocalHost(2010)
+	defer h2.Close()
+	dbg.Print("After Client")
+	dbg.Lvl1("Client connecting to host")
+	if _, err := h2.Connect(host.Entity); err != nil {
+		t.Fatal(err)
+	}
+	dbg.Lvl1("Sending request to service...")
+	if err := h2.SendRaw(host.Entity, re); err != nil {
+		t.Fatal(err)
+	}
+	// wait for the link
+	select {
+	case v := <-ds.link:
+		if v {
+			t.Fatal("was expecting false !")
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Too late")
+	}
 }
 
 func waitOrFatal(ch chan bool, t *testing.T) {
