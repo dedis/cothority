@@ -48,9 +48,6 @@ const (
 	AggregateMessages = 1 << iota
 )
 
-// MsgHandler is called upon reception of a certain message-type
-type MsgHandler func([]*interface{})
-
 // NewNode creates a new node
 func NewNode(o *Overlay, tok *Token) (*Node, error) {
 	n, err := NewNodeEmpty(o, tok)
