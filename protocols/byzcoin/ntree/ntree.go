@@ -65,11 +65,16 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 		tempBlockSig:               new(NaiveBlockSignature),
 		tempSignatureResponse:      &RoundSignatureResponse{new(NaiveBlockSignature)},
 	}
-	node.RegisterChannel(&nt.announceChan)
-	node.RegisterChannel(&nt.blockSignatureChan)
-	node.RegisterChannel(&nt.roundSignatureRequestChan)
-	node.RegisterChannel(&nt.roundSignatureResponseChan)
 
+	chans := []interface{}{
+		&nt.announceChan,
+		&nt.blockSignatureChan,
+		&nt.roundSignatureRequestChan,
+		&nt.roundSignatureResponseChan,
+	}
+	if err := node.RegisterChannels(chans); err != nil {
+		return nil, err
+	}
 	go nt.listen()
 	return nt, nil
 }
@@ -88,7 +93,9 @@ func (nt *Ntree) Start() error {
 	dbg.Lvl3(nt.Name(), "Start()")
 	go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
 	for _, tn := range nt.Children() {
-		nt.SendTo(tn, &BlockAnnounce{nt.block})
+		if err := nt.SendTo(tn, &BlockAnnounce{nt.block}); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -115,7 +122,12 @@ func (nt *Ntree) listen() {
 				continue
 			}
 			for _, tn := range nt.Children() {
-				nt.SendTo(tn, &msg.BlockAnnounce)
+				err := nt.SendTo(tn, &msg.BlockAnnounce)
+				if err != nil {
+					dbg.Error(nt.Name(),
+						"couldn't send to", tn.Name(),
+						err)
+				}
 			}
 			// generate your own signature / exception and pass that up to the
 			// root
@@ -133,7 +145,11 @@ func (nt *Ntree) listen() {
 			}
 
 			for _, tn := range nt.Children() {
-				nt.SendTo(tn, &msg.RoundSignatureRequest)
+				err := nt.SendTo(tn, &msg.RoundSignatureRequest)
+				if err != nil {
+					dbg.Error(nt.Name(), "couldn't sent to",
+						tn.Name(), err)
+				}
 			}
 			// Decide if we want to sign this or not
 		case msg := <-nt.roundSignatureResponseChan:
@@ -205,7 +221,9 @@ func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
 	sigRequest := &RoundSignatureRequest{msg}
 	go nt.verifySignatureRequest(sigRequest)
 	for _, tn := range nt.Children() {
-		nt.SendTo(tn, sigRequest)
+		if err := nt.SendTo(tn, sigRequest); err != nil {
+			dbg.Error(nt.Name(), "couldn't send to", tn.Name(), err)
+		}
 	}
 }
 
@@ -290,7 +308,9 @@ func (nt *Ntree) handleRoundSignatureResponse(msg *RoundSignatureResponse) {
 		}
 		return
 	}
-	nt.SendTo(nt.Parent(), msg)
+	if err := nt.SendTo(nt.Parent(), msg); err != nil {
+		dbg.Error(nt.Name(), "couldn't send to", nt.Name(), err)
+	}
 }
 
 // RegisterOnDone is the callback that will be executed when the final signature

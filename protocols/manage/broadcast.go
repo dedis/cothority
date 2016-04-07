@@ -94,7 +94,9 @@ func (b *Broadcast) listen() {
 // Start will contact everyone and makes the connections
 func (b *Broadcast) Start() error {
 	for _, tn := range b.listNode {
-		b.SendTo(tn, &Announce{})
+		if err := b.SendTo(tn, &Announce{}); err != nil {
+			dbg.Error(b.Name(), "failed to send to", tn.Name(), err)
+		}
 	}
 	dbg.Lvl3(b.Name(), "Sent Announce to everyone")
 	return nil

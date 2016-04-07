@@ -297,6 +297,17 @@ func (n *Node) RegisterHandlers(handlers ...interface{}) error {
 	return nil
 }
 
+// RegisterChannels registers a list of given channels by calling RegisterChannel
+func (n *Node) RegisterChannels(channels ...interface{}) error {
+	for _, c := range channels {
+		if err := n.RegisterChannel(c); err != nil {
+			return errors.New("Error, could not register channel: " +
+				err.Error())
+		}
+	}
+	return nil
+}
+
 // ProtocolInstance returns the instance of the running protocol
 func (n *Node) ProtocolInstance() ProtocolInstance {
 	return n.instance

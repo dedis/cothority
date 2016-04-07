@@ -86,10 +86,15 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft.prepMsgCount = 0
 	pbft.commitMsgCount = 0
 
-	n.RegisterChannel(&pbft.prePrepareChan)
-	n.RegisterChannel(&pbft.prepareChan)
-	n.RegisterChannel(&pbft.commitChan)
-	n.RegisterChannel(&pbft.finishChan)
+	chans := []interface{}{
+		&pbft.prePrepareChan,
+		&pbft.prepareChan,
+		&pbft.commitChan,
+		&pbft.finishChan,
+	}
+	if err := n.RegisterChannels(chans); err != nil {
+		return nil, err
+	}
 	return pbft, nil
 }
 
@@ -248,9 +253,12 @@ func (p *Protocol) handleCommit(com *Commit) {
 // finish is called by the root to tell everyone the root is done
 func (p *Protocol) finish() {
 	p.broadcast(func(tn *sda.TreeNode) {
-		p.SendTo(tn, &Finish{"Finish"})
+		if err := p.SendTo(tn, &Finish{"Finish"}); err != nil {
+			dbg.Error(p.Name(), "couldn't send 'finish' message to",
+				tn.Name(), err)
+		}
 	})
-	// notify ourself
+	// notify ourselves
 	go func() { p.finishChan <- finishChan{nil, Finish{}} }()
 }
 

@@ -63,7 +63,9 @@ func SimulDirToBlockDir(dir string) string {
 	reg, _ := regexp.Compile("simul/.*")
 	blockDir := string(reg.ReplaceAll([]byte(dir), []byte("protocols/byzcoin/block")))
 	if _, err := os.Stat(blockDir); os.IsNotExist(err) {
-		os.Mkdir(blockDir, 0777)
+		if err := os.Mkdir(blockDir, 0777); err != nil {
+			dbg.Error("Couldn't create blocks directory", err)
+		}
 	}
 	return blockDir
 }
@@ -122,7 +124,9 @@ func EnsureBlockIsAvailable(dir string) error {
 		}
 	}
 	destDir := dir + "/blocks"
-	os.Mkdir(destDir, 0777)
+	if err := os.Mkdir(destDir, 0777); err != nil {
+		return err
+	}
 	cmd := exec.Command("cp", block, destDir)
 	if err := cmd.Start(); err != nil {
 		return err
