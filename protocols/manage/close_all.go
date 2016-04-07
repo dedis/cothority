@@ -51,8 +51,12 @@ type CloseMsg struct {
 func NewCloseAll(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolCloseAll{Node: n}
 	p.Done = make(chan bool, 1)
-	p.RegisterHandler(p.FuncPrepareClose)
-	p.RegisterHandler(p.FuncClose)
+	if err := p.RegisterHandler(p.FuncPrepareClose); err != nil {
+		return nil, err
+	}
+	if err := p.RegisterHandler(p.FuncClose); err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
@@ -86,7 +90,10 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	if !p.IsRoot() {
 		dbg.Lvl3("Sending closeall from", p.Entity().Addresses,
 			"to", p.Parent().Entity.Addresses)
-		p.SendTo(p.Parent(), &Close{})
+		if err := p.SendTo(p.Parent(), &Close{}); err != nil {
+			dbg.Error(p.Info(), "couldn't send 'close' tp parent",
+				p.Parent(), err)
+		}
 	} else {
 		dbg.Lvl2("Root received Close")
 		p.Done <- true

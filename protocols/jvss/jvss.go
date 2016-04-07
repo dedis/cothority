@@ -96,9 +96,9 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 // Start initiates the JVSS protocol by setting up a long-term shared secret
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
-	jv.initSecret(LTSS)
+	err := jv.initSecret(LTSS)
 	<-jv.secretsDone
-	return nil
+	return err
 }
 
 // Verify verifies the given message against the given Schnorr signature.
@@ -110,7 +110,7 @@ func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 	}
 
 	h := jv.keyPair.Suite.Hash()
-	h.Write(msg)
+	_, _ = h.Write(msg) // ignore error; verification wil fail anyways
 	return jv.schnorr.VerifySchnorrSig(sig, h)
 }
 
@@ -124,7 +124,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	// Initialise short-term shared secret only used for this signing request
 	sid := SID(fmt.Sprintf("%s%d", STSS, jv.Node.Index()))
-	jv.initSecret(sid)
+	if err := jv.initSecret(sid); err != nil {
+		return nil, err
+	}
 
 	// Wait for setup of shared secrets to finish
 	<-jv.secretsDone
@@ -242,7 +244,9 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 	}
 
 	hash := jv.keyPair.Suite.Hash()
-	hash.Write(msg)
+	if _, err := hash.Write(msg); err != nil {
+		return nil, err
+	}
 	if err := jv.schnorr.NewRound(secret.secret, hash); err != nil {
 		return nil, err
 	}

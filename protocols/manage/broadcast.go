@@ -43,16 +43,24 @@ type Broadcast struct {
 // NewBroadcastProtocol returns an initialised protocol for broadcast
 func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 	b := new(Broadcast).init(n)
-	go b.Start()
+	go func() {
+		if err := b.Start(); err != nil {
+			dbg.Error("Failed to start protocol:", err)
+		}
+	}()
 	return b, nil
 }
 
 func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	b.Node = n
-
-	b.RegisterChannel(&b.ackChan)
-	b.RegisterChannel(&b.announceChan)
-	b.RegisterChannel(&b.okChan)
+	chans := []interface{}{
+		&b.ackChan,
+		&b.announceChan,
+		&b.okChan,
+	}
+	if err := b.RegisterChannels(chans); err != nil {
+		dbg.Error(b.Info(), "failed to register channels:", err)
+	}
 
 	lists := b.Tree().List()
 	b.listNode = make(map[sda.TreeNodeID]*sda.TreeNode)
@@ -105,7 +113,9 @@ func (b *Broadcast) Start() error {
 // handleAnnounce receive the announcement from another node
 // it reply with an ACK.
 func (b *Broadcast) handleAnnounce(tn *sda.TreeNode) {
-	b.SendTo(tn, &ACK{})
+	if err := b.SendTo(tn, &ACK{}); err != nil {
+		dbg.Error(b.Info(), "failed to send ACK to", tn.Name(), err)
+	}
 }
 
 // It checks if we have sent an Announce to this treenode (hopefully yes^^)
@@ -118,7 +128,10 @@ func (b *Broadcast) handleACK(tn *sda.TreeNode) {
 	b.ackdNode++
 	if b.ackdNode == len(b.listNode) {
 		if !b.IsRoot() {
-			b.SendTo(b.Tree().Root, &OK{})
+			if err := b.SendTo(b.Tree().Root, &OK{}); err != nil {
+				dbg.Error(b.Info(), "failed to notify the root",
+					err)
+			}
 			dbg.Lvl3(b.Name(), "Received ALL ACK (notified the root)")
 		}
 	}

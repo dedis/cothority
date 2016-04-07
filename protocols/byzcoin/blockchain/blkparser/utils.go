@@ -4,7 +4,8 @@ package blkparser
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/dedis/cothority2/lib/dbg"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // Get the Tx count, decode the variable length integer

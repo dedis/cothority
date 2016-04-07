@@ -50,7 +50,9 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 	proto := node.ProtocolInstance().(*JVSS)
 
 	dbg.Lvl1("Starting setup")
-	node.StartProtocol()
+	if err := node.StartProtocol(); err != nil {
+		return err
+	}
 	dbg.Lvl1("Setup done")
 
 	for round := 0; round < jvs.Rounds; round++ {
