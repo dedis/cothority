@@ -84,22 +84,12 @@ func TestServiceProcessRequest(t *testing.T) {
 	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
 		ds.c = c
 		ds.path = path
-		ds.link <- true
 		return ds
 	})
-	hostCh := make(chan *sda.Host)
-	go func() {
-		h := sda.NewLocalHost(2000)
-		h.Listen()
-		h.StartProcessMessages()
-		dbg.Lvl1("Host created and listening")
-		hostCh <- h
-	}()
-
-	// wait the creation
-	waitOrFatal(ds.link, t)
-	// get the host
-	host := <-hostCh
+	host := sda.NewLocalHost(2000)
+	host.Listen()
+	host.StartProcessMessages()
+	dbg.Lvl1("Host created and listening")
 	defer host.Close()
 	// Send a request to the service
 	re := &sda.Request{
@@ -107,10 +97,6 @@ func TestServiceProcessRequest(t *testing.T) {
 		Type:    "wrongType",
 	}
 	// fake a client
-	// have to listen on the service link also
-	go func() {
-		<-ds.link
-	}()
 	h2 := sda.NewLocalHost(2010)
 	defer h2.Close()
 	dbg.Lvl1("Client connecting to host")

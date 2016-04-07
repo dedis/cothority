@@ -36,7 +36,7 @@ var NilServiceID = ServiceID(uuid.Nil)
 // A service is initialized with a Host (to send messages to someone), the
 // overlay (to register a Tree + EntityList + start new node), and a path where
 // it can finds / write everything it needs
-type NewServiceFunc func(h *Host, c *Context, path string) Service
+type NewServiceFunc func(c Context, path string) Service
 
 type GenericConfig struct {
 	Type uuid.UUID
@@ -117,7 +117,7 @@ func (s *serviceFactory) Name(id ServiceID) string {
 }
 
 // start launches a new service
-func (s *serviceFactory) start(name string, host *Host, o *Overlay, path string) (Service, error) {
+func (s *serviceFactory) start(name string, c Context, path string) (Service, error) {
 	var id ServiceID
 	var ok bool
 	if id, ok = s.translations[name]; !ok {
@@ -127,7 +127,7 @@ func (s *serviceFactory) start(name string, host *Host, o *Overlay, path string)
 	if fn, ok = s.cons[id]; !ok {
 		return nil, errors.New("No Service for this id:" + fmt.Sprintf("%v", id))
 	}
-	serv := fn(host, &Context{o}, path)
+	serv := fn(c, path)
 	dbg.Lvl1("Instantiated service", name)
 	return serv, nil
 }
@@ -169,7 +169,8 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		if err := os.MkdirAll(configName, 0666); err != nil {
 			dbg.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		s, err := ServiceFactory.start(name, h, o, configName)
+		c := Context{o}
+		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
 			dbg.Error("Trying to instantiate service:", err)
 		}
