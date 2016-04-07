@@ -15,3 +15,7 @@ func (tni *TreeNodeInstance) Shutdown() error {
 func (tni *TreeNodeInstance) Start() error {
 	return nil
 }
+
+func (tni *TreeNodeInstance) SendTo(id TreeNodeID, msg interface{}) error {
+	return nil
+}

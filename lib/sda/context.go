@@ -1,5 +1,9 @@
 package sda
 
+import (
+	"errors"
+)
+
 // Context is created for each Service
 type Context struct {
 	o *Overlay
@@ -10,5 +14,5 @@ func (c *Context) NewTreeNodeInstance(tn *TreeNode) *TreeNodeInstance {
 }
 
 func (c *Context) RegisterProtocolInstance(pi ProtocolInstance) error {
-	return nil
+	return errors.New("Not implemented")
 }
