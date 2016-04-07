@@ -52,7 +52,9 @@ func main() {
 		return
 	}
 	if monitorAddress != "" {
-		monitor.ConnectSink(monitorAddress)
+		if err := monitor.ConnectSink(monitorAddress); err != nil {
+			dbg.Error("Couldn't connect monitor to sink:", err)
+		}
 	}
 	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig
@@ -96,7 +98,9 @@ func main() {
 				dbg.Fatal(err)
 			}
 			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
-			node.StartProtocol()
+			if err := node.StartProtocol(); err != nil {
+				dbg.Error("Couldn't start protcol:", err)
+			}
 			dbg.Lvl1("Started counting children with timeout of", timeout)
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
