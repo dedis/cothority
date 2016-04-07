@@ -41,6 +41,7 @@ type DummyService struct {
 	path     string
 	link     chan bool
 	fakeTree *sda.Tree
+	firstTni *sda.TreeNodeInstance
 }
 
 func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
@@ -48,10 +49,15 @@ func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
 		ds.link <- false
 		return
 	}
-	tni := ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root)
-	dp := NewDummyProtocol(tni, DummyConfig{}, ds.link)
+	if ds.firstTni == nil {
+		ds.firstTni = ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root)
+	}
+
+	dp := NewDummyProtocol(ds.firstTni, DummyConfig{}, ds.link)
+
 	if err := ds.c.RegisterProtocolInstance(dp); err != nil {
 		ds.link <- false
+		return
 	}
 	dp.Start()
 }
@@ -168,6 +174,16 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	}
 	// wait for the link from the
 	waitOrFatalValue(ds.link, true, t)
+
+	// Now RESEND the value so we instantiate using the SAME TREENODE
+	dbg.Lvl1("Sending request AGAIN to service...")
+	if err := h2.SendRaw(host.Entity, re); err != nil {
+		t.Fatal(err)
+	}
+	// wait for the link from the
+	// NOW expect false
+	waitOrFatalValue(ds.link, false, t)
+
 }
 
 func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {
