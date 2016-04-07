@@ -41,6 +41,16 @@ type DelServer struct {
 	Server *Server
 }
 
+// AddClient asks for addition of a client
+type AddClient struct {
+	Client *Client
+}
+
+// DelClient asks for the removal of a client
+type DelClient struct {
+	Client *Client
+}
+
 // Sign asks all servers to sign on the config, will return the new config
 type Sign struct{}
 
@@ -58,152 +68,22 @@ type StatusRet struct {
 // really necessary for the outgoing messages, but useful for
 // external users
 func FuncRegister() {
-	var structs = []struct {
-		S interface{}
-	}{
-		{GetServer{}},
-		{GetServerRet{}},
-		{GetConfig{}},
-		{GetConfigRet{}},
-		{AddServer{}},
-		{DelServer{}},
-		{Sign{}},
-		{SignRet{}},
-		{StatusRet{}},
+	var structs = []interface{}{
+		GetServer{},
+		GetServerRet{},
+		GetConfig{},
+		GetConfigRet{},
+		AddServer{},
+		DelServer{},
+		AddClient{},
+		DelClient{},
+		Sign{},
+		SignRet{},
+		StatusRet{},
 	}
 	for _, s := range structs {
-		network.RegisterMessageType(s.S)
+		network.RegisterMessageType(s)
 	}
-}
-
-// FuncGetServer returns our Server
-func (c *ServerApp) FuncGetServer(*network.NetworkMessage) network.ProtocolMessage {
-	return &GetServerRet{c.This}
-}
-
-// FuncGetConfig returns our Config
-func (c *ServerApp) FuncGetConfig(*network.NetworkMessage) network.ProtocolMessage {
-	return &GetConfigRet{c.Config}
-}
-
-// FuncAddServer adds a given server to the configuration
-func (c *ServerApp) FuncAddServer(data *network.NetworkMessage) network.ProtocolMessage {
-	req, ok := data.Msg.(AddServer)
-	if !ok {
-		return &StatusRet{"Didn't get a server"}
-	}
-	dbg.Lvl3("Adding server", req.Server, "to", c.This)
-	c.AddServer(req.Server)
-	return &StatusRet{""}
-}
-
-// FuncDelServer removes a given server from the configuration
-func (c *ServerApp) FuncDelServer(data *network.NetworkMessage) network.ProtocolMessage {
-	req, ok := data.Msg.(DelServer)
-	if !ok {
-		return &StatusRet{"Didn't get a server"}
-	}
-	if c.This.Entity.Addresses[0] == req.Server.Entity.Addresses[0] {
-		return &StatusRet{"Cannot delete own address"}
-	}
-	c.DelServer(req.Server)
-	return &StatusRet{""}
-}
-
-// FuncSign asks all servers to sign the new configuration
-func (c *ServerApp) FuncSign(data *network.NetworkMessage) network.ProtocolMessage {
-	status := &StatusRet{}
-	err := c.Sign()
-	if err != nil {
-		status = &StatusRet{err.Error()}
-	}
-	return status
-}
-
-// NetworkAddServer adds a new server to the Config
-func (ca *ClientApp) NetworkAddServer(s *Server) error {
-	if ca.Config == nil {
-		return errors.New("No config available yet")
-	}
-	dbg.Lvl3("Servers are", ca.Config.Servers)
-	for _, srv := range ca.Config.Servers {
-		// Add the new server to all servers
-		resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
-			&AddServer{s})
-		if err != nil {
-			return err
-		}
-		errMsg := resp.Msg.(StatusRet).Error
-		if errMsg != "" {
-			return errors.New("Remote-error: " + errMsg)
-		}
-		// Add the other servers to the new server
-		resp, err = networkSendAnonymous(s.Entity.Addresses[0],
-			&AddServer{srv})
-		if err != nil {
-			return err
-		}
-		errMsg = resp.Msg.(StatusRet).Error
-		if errMsg != "" {
-			return errors.New("Remote-error: " + errMsg)
-		}
-	}
-	return nil
-}
-
-// NetworkDelServer deletes a server from the Config
-func (ca *ClientApp) NetworkDelServer(s *Server) error {
-	if ca.Config == nil {
-		return errors.New("No config available yet")
-	}
-	for _, srv := range ca.Config.Servers {
-		if srv.Entity.Addresses[0] == s.Entity.Addresses[0] {
-			continue
-		}
-		dbg.Lvl3("Asking server", srv, "to delete server", s)
-		resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
-			&DelServer{s})
-		if err != nil {
-			return err
-		}
-		errMsg := resp.Msg.(StatusRet).Error
-		if errMsg != "" {
-			return errors.New("Remote-error: " + errMsg)
-		}
-	}
-	return nil
-}
-
-// NetworkGetConfig asks the server for its configuration
-func (ca *ClientApp) NetworkGetConfig(s *Server) (*Config, error) {
-	resp, err := networkSend(ca, s.Entity, &GetConfig{})
-	if err != nil {
-		return nil, err
-	}
-	gcr, ok := resp.Msg.(GetConfigRet)
-	if !ok {
-		return nil, errors.New("Didn't receive config")
-	}
-	return gcr.Config, nil
-}
-
-// NetworkSign asks the servers to sign the new configuration
-func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
-	dbg.Lvl3("Asking server", s, "to sign")
-	resp, err := networkSend(ca, s.Entity, &Sign{})
-	if err != nil {
-		return nil, err
-	}
-	status, ok := resp.Msg.(StatusRet)
-	if !ok {
-		return nil, errors.New("Didn't receive config")
-	}
-	if status.Error != "" {
-		return nil, errors.New(status.Error)
-	}
-	conf, err := ca.NetworkGetConfig(s)
-	dbg.Lvl3("Got configuration", conf, err, "from", s)
-	return conf, err
 }
 
 // NetworkGetServer asks for the Server at a given address

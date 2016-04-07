@@ -14,12 +14,10 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	_ "github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"sort"
-	"strings"
 	"sync"
 )
 
@@ -29,160 +27,6 @@ func init() {
 	network.RegisterMessageType(Config{})
 	network.RegisterMessageType(Server{})
 	network.RegisterMessageType(Client{})
-}
-
-// CoNode is the representation of this Node of the Cothority
-type ServerApp struct {
-	// Ourselves is the identity of this node
-	This *Server
-	// Private key of ourselves
-	Private abstract.Secret
-	// Config is the configuration that is known actually to the server
-	Config *Config
-	// host represents the actual running host
-	host *sda.Host
-}
-
-// NewCoNode creates a new node of the cothority and initializes the
-// Config-structures. It doesn't start the node
-func NewServerApp(key *config.KeyPair, addr, sshdPub string) *ServerApp {
-	srv := NewServer(key.Public, addr, sshdPub)
-	c := &ServerApp{
-		This:    srv,
-		Private: key.Secret,
-		Config:  NewConfig(0),
-	}
-	c.AddServer(srv)
-	return c
-}
-
-// AddServer inserts a server in the configuration-list
-func (c *ServerApp) AddServer(s *Server) error {
-	c.Config.AddServer(s)
-	return nil
-}
-
-// DelServer removes a server from the configuration-list
-func (c *ServerApp) DelServer(s *Server) error {
-	c.Config.DelServer(s)
-	return nil
-}
-
-// Start opens the port indicated for listening
-func (c *ServerApp) Start() error {
-	c.host = sda.NewHost(c.This.Entity, c.Private)
-	c.host.RegisterMessage(GetServer{}, c.FuncGetServer)
-	c.host.RegisterMessage(GetConfig{}, c.FuncGetConfig)
-	c.host.RegisterMessage(AddServer{}, c.FuncAddServer)
-	c.host.RegisterMessage(DelServer{}, c.FuncDelServer)
-	c.host.RegisterMessage(Sign{}, c.FuncSign)
-	c.host.Listen()
-	c.host.StartProcessMessages()
-	return nil
-}
-
-// Stop closes the connection
-func (c *ServerApp) Stop() error {
-	if c.host != nil {
-		err := c.host.Close()
-		if err != nil {
-			return err
-		}
-		c.host.WaitForClose()
-		c.host = nil
-	}
-	return nil
-}
-
-// Check searches for all CoNodes and tries to connect
-func (c *ServerApp) Check() error {
-	for _, s := range c.Config.Servers {
-		list := sda.NewEntityList([]*network.Entity{s.Entity})
-		msg := "ssh-ks test"
-		sig, err := cosi.SignStatement(strings.NewReader(msg), list)
-		if err != nil {
-			return err
-		} else {
-			err := cosi.VerifySignatureHash([]byte(msg), sig, list)
-			if err != nil {
-				return err
-			}
-			dbg.Lvl3("Received signature successfully")
-		}
-	}
-	return nil
-}
-
-// Sign sends updates the configuration-structure by increasing the
-// version and asks the cothority to sign the new structure.
-func (c *ServerApp) Sign() error {
-	c.Config.Version += 1
-	c.Config.Signature = nil
-	msg := c.Config.Hash()
-	msg2 := c.Config.Hash()
-	if bytes.Compare(msg, msg2) != 0 {
-		dbg.Fatal("Hashing is different")
-	}
-	var err error
-	c.Config.Signature, err = cosi.SignStatement(bytes.NewReader(msg),
-		c.Config.EntityList(c.This.Entity))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// ClientApp represents one client and holds all necessary structures
-type ClientApp struct {
-	// This points to the client holding this structure
-	This *Client
-	// Config holds all servers and clients
-	Config *Config
-	// Private is our private key
-	Private abstract.Secret
-}
-
-// NewClientApp creates a new private/public key pair and returns
-// a ClientApp with an empty Config. It takes a public ssh-key.
-func NewClientApp(sshPub string) *ClientApp {
-	pair := config.NewKeyPair(network.Suite)
-	return &ClientApp{NewClient(pair.Public, sshPub), nil, pair.Secret}
-}
-
-// ReadClientApp searches for the client-app and creates a new one if it
-// doesn't exist
-func ReadClientApp(file string) (*ClientApp, error) {
-	ca := NewClientApp("")
-	_, err := os.Stat(file)
-	if os.IsNotExist(err) {
-		ca.Config = &Config{}
-		return ca, nil
-	}
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	} else {
-		_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
-		if err != nil {
-			return nil, err
-		}
-		c, ok := msg.(ClientApp)
-		if !ok {
-			return nil, errors.New("Didn't get a ClientApp structure")
-		}
-		ca = &c
-	}
-	return ca, nil
-}
-
-// Write takes a file and writes the clientApp to that file
-func (ca *ClientApp) Write(file string) error {
-	b, err := network.MarshalRegisteredType(ca)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(file, b, 0660)
-	return err
 }
 
 // Server represents one server of the cothority
@@ -203,8 +47,9 @@ func NewServer(pub abstract.Point, addr, sshdPub string) *Server {
 
 // Client represents one client that can access the cothority
 type Client struct {
-	// Public key of the client
-	Public abstract.Point
+	// Public key of the client - stored as Entity for later
+	// participation of clients in the Cothority
+	Entity *network.Entity
 	// SSHpub is the public key of its ssh-identity
 	SSHpub string
 }
@@ -212,7 +57,7 @@ type Client struct {
 // NewClient creates a new client given a public key and a public
 // ssh-key
 func NewClient(public abstract.Point, sshPub string) *Client {
-	return &Client{public, sshPub}
+	return &Client{network.NewEntity(public, ""), sshPub}
 }
 
 // Config holds everything that needs to be signed by the cothority
@@ -335,6 +180,20 @@ func (conf *Config) DelServer(s *Server) error {
 	return nil
 }
 
+// AddClient inserts a client in the configuration-list
+func (conf *Config) AddClient(c *Client) error {
+	conf.Clients[c.SSHpub] = c
+	conf.Signature = nil
+	return nil
+}
+
+// DelClient removes a client from the configuration-list
+func (conf *Config) DelClient(c *Client) error {
+	delete(conf.Clients, c.SSHpub)
+	conf.Signature = nil
+	return nil
+}
+
 // MarshalBinary takes care of all maps to give them back in correct
 // order
 func (conf *Config) MarshalBinary() ([]byte, error) {
@@ -377,7 +236,7 @@ func (conf *Config) MarshalBinary() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.MarshalRegisteredType(client.Public)
+		b, err := network.MarshalRegisteredType(client.Entity)
 		if err != nil {
 			return nil, err
 		}

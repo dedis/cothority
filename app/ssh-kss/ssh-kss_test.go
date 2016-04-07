@@ -3,22 +3,16 @@ package main
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/ssh-ks"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
-	flag.Parse()
-	dbg.TestOutput(testing.Verbose(), 4)
-	code := m.Run()
-	dbg.AfterTest(nil)
-	os.Exit(code)
+	dbg.MainTest(m)
 }
 
 func TestCreateServerConfig(t *testing.T) {

@@ -382,6 +382,16 @@ func ErrFatal(err error, msg ...string) {
 	}
 }
 
+// MainTest can be called from TestMain to set up some default
+// variables
+func MainTest(m *testing.M) {
+	flag.Parse()
+	TestOutput(testing.Verbose(), 3)
+	code := m.Run()
+	AfterTest(nil)
+	os.Exit(code)
+}
+
 // ParseEnv looks at the following environment-variables:
 // - DEBUG_LVL - for the actual debug-lvl - default is 1
 // - DEBUG_TIME - whether to show the timestamp - default is false

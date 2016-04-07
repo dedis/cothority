@@ -2,22 +2,16 @@ package ssh_ks_test
 
 import (
 	"bytes"
-	"flag"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/ssh-ks"
 	"github.com/dedis/crypto/config"
-	"os"
 	"strconv"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
-	flag.Parse()
-	dbg.TestOutput(testing.Verbose(), 4)
-	code := m.Run()
-	dbg.AfterTest(nil)
-	os.Exit(code)
+	dbg.MainTest(m)
 }
 
 func TestServerCreation(t *testing.T) {
@@ -249,6 +243,258 @@ func TestNetworkSign(t *testing.T) {
 		config, err = clApp.NetworkSign(srv0)
 		dbg.TestFatal(t, err)
 	}
+}
+
+func TestNetworkAddClient(t *testing.T) {
+	srvApp, servers, clApp := createSrvaSeCla(2)
+	defer closeServers(t, srvApp)
+	clApp.NetworkAddServer(servers[0])
+	clApp.NetworkAddServer(servers[1])
+	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"SSH-pub1")
+	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"SSH-pub2")
+	err := clApp.NetworkAddClient(client1)
+	dbg.ErrFatal(err)
+	for _, srv := range srvApp {
+		if len(srv.Config.Clients) != 1 {
+			t.Fatal("Number of clients should be 1 in server", srv.This)
+		}
+	}
+	err = clApp.NetworkAddClient(client2)
+	dbg.ErrFatal(err)
+	for _, srv := range srvApp {
+		if len(srv.Config.Clients) != 2 {
+			t.Fatal("Number of clients should be 2 in server", srv.This)
+		}
+	}
+}
+
+func TestNetworkDelClient(t *testing.T) {
+	srvApp, servers, clApp := createSrvaSeCla(2)
+	defer closeServers(t, srvApp)
+	clApp.NetworkAddServer(servers[0])
+	clApp.NetworkAddServer(servers[1])
+	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"SSH-pub1")
+	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"SSH-pub2")
+	err := clApp.NetworkAddClient(client1)
+	dbg.ErrFatal(err)
+	err = clApp.NetworkAddClient(client2)
+	dbg.ErrFatal(err)
+	err = clApp.NetworkDelClient(client1)
+	dbg.ErrFatal(err)
+	for _, srv := range srvApp {
+		if len(srv.Config.Clients) != 1 {
+			t.Fatal("Number of clients should be 1 in server", srv.This)
+		}
+	}
+	err = clApp.NetworkDelClient(client2)
+	dbg.ErrFatal(err)
+	for _, srv := range srvApp {
+		if len(srv.Config.Clients) != 0 {
+			t.Fatal("Number of clients should be 0 in server", srv.This)
+		}
+	}
+}
+
+func TestCAServerAdd(t *testing.T) {
+	ca, servers := newTest(2)
+	defer closeServers(t, servers)
+	srv1, srv2 := servers[0], servers[1]
+	dbg.Lvl1("Adding 1st server")
+	ca.ServerAdd("localhost:2000")
+	if len(srv1.Config.Servers) != 1 {
+		t.Fatal("Server 1 should still only know himself")
+	}
+	if len(srv2.Config.Servers) != 1 {
+		t.Fatal("Server 2 should still only know himself")
+	}
+	dbg.Lvl1("Adding 2nd server")
+	ca.ServerAdd("localhost:2001")
+	if len(srv1.Config.Servers) != 2 {
+		t.Fatal("Server 1 should have two servers stored")
+	}
+	if len(srv2.Config.Servers) != 2 {
+		t.Fatal("Server 2 should have two servers stored")
+	}
+}
+
+func TestCAServerDel(t *testing.T) {
+	ca, servers := newTest(2)
+	defer closeServers(t, servers)
+	srv1, srv2 := servers[0], servers[1]
+	dbg.Lvl1("Adding 1st server")
+	ca.ServerAdd("localhost:2000")
+	ca.ServerAdd("localhost:2001")
+	if len(srv1.Config.Servers) != 2 {
+		t.Fatal("Server 1 should have two servers stored")
+	}
+	if len(srv2.Config.Servers) != 2 {
+		t.Fatal("Server 2 should have two servers stored")
+	}
+	if len(ca.Config.Servers) != 2 {
+		t.Fatal("ClientApp should have two servers stored")
+	}
+	ca.ServerDel("localhost:2001")
+	if len(srv1.Config.Servers) != 1 {
+		t.Fatal("Server 1 should have only one server stored")
+	}
+	if len(ca.Config.Servers) != 1 {
+		t.Fatal("ClientApp should have one server stored")
+	}
+	ca.ServerDel("localhost:2000")
+	if len(ca.Config.Servers) != 0 {
+		t.Fatal("ClientApp should have no server stored")
+	}
+	if len(ca.Config.Servers) != 0 {
+		t.Fatal("ClientApp should have no servers stored")
+	}
+}
+
+func TestCAServerCheck(t *testing.T) {
+	ca, servers := newTest(2)
+	defer closeServers(t, servers)
+	addr1, addr2 := servers[0].This.Entity.Addresses[0],
+		servers[1].This.Entity.Addresses[0]
+	dbg.Lvl1("Adding 1st server")
+	ca.ServerAdd(addr1)
+	ca.ServerAdd(addr2)
+	err := ca.ServerCheck()
+	dbg.ErrFatal(err)
+	dbg.Lvl2(ca.Config.Servers)
+	ca.ServerDel(addr1)
+	dbg.Lvl2(ca.Config.Servers)
+	err = ca.ServerCheck()
+	dbg.ErrFatal(err)
+	ca.ServerDel(addr2)
+	err = ca.ServerCheck()
+	if err == nil {
+		t.Fatal("Now the server-list should be empty")
+	}
+}
+
+func TestCAClientAdd(t *testing.T) {
+	ca, servers := newTest(2)
+	defer closeServers(t, servers)
+	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
+	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client1")
+	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client2")
+	err := ca.ClientAdd(client1)
+	dbg.ErrFatal(err)
+	if len(ca.Config.Clients) != 1 {
+		t.Fatal("There should be 1 client now")
+	}
+	err = ca.ClientAdd(client2)
+	dbg.ErrFatal(err)
+	if len(ca.Config.Clients) != 2 {
+		t.Fatal("There should be 2 clients now")
+	}
+}
+
+func TestCAClientDel(t *testing.T) {
+	ca, servers := newTest(2)
+	defer closeServers(t, servers)
+	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
+	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client1")
+	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client2")
+	err := ca.ClientAdd(client1)
+	dbg.ErrFatal(err)
+	err = ca.ClientAdd(client2)
+	dbg.ErrFatal(err)
+	if len(ca.Config.Clients) != 2 {
+		t.Fatal("There should be 2 clients now")
+	}
+	err = ca.ClientDel(client2)
+	dbg.ErrFatal(err)
+	if len(ca.Config.Clients) != 1 {
+		t.Fatal("There should be 1 client now")
+	}
+	err = ca.ClientDel(client1)
+	dbg.ErrFatal(err)
+	if len(ca.Config.Clients) != 0 {
+		t.Fatal("There should be no client now")
+	}
+}
+
+func TestCASign(t *testing.T) {
+	ca, servers := newTest(2)
+	defer closeServers(t, servers)
+	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
+	ca.ServerAdd(servers[1].This.Entity.Addresses[0])
+	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client1")
+	err := ca.ClientAdd(client1)
+	dbg.ErrFatal(err)
+	version := ca.Config.Version
+	sign1 := ca.Config.Signature
+	err = ca.Sign()
+	dbg.ErrFatal(err)
+	if ca.Config.Version != version+1 {
+		t.Fatal("Version didn't increase while signing")
+	}
+	sign2 := ca.Config.Signature
+	if sign1.Challenge == sign2.Challenge {
+		t.Fatal("Challenges should be different")
+	}
+	if sign1.Response == sign2.Response {
+		t.Fatal("Responses should be different")
+	}
+	if bytes.Compare(sign1.Sum, sign2.Sum) == 0 {
+		t.Fatal("Sums should be different")
+	}
+}
+
+func TestCAUpdate(t *testing.T) {
+	ca1, servers := newTest(2)
+	defer closeServers(t, servers)
+	addr1, addr2 := servers[0].This.Entity.Addresses[0],
+		servers[1].This.Entity.Addresses[0]
+	ca1.ServerAdd(addr1)
+	ca1.ServerAdd(addr2)
+	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+		"Client1")
+	tmp, err := ssh_ks.SetupTmpHosts()
+	dbg.ErrFatal(err)
+	ca2, err := ssh_ks.ReadClientApp(tmp + "/config.bin")
+	dbg.ErrFatal(err)
+	ca2.ServerAdd(addr1)
+	// Now add a client to ca1, thus making ca2s config invalid
+	err = ca1.ClientAdd(client1)
+	dbg.ErrFatal(err)
+	if bytes.Compare(ca1.Config.Signature.Sum, ca2.Config.Signature.Sum) == 0 {
+		t.Fatal("Should have different signature now")
+	}
+
+	// Update and verify everything is the same
+	ca2.Update(nil)
+	if len(ca2.Config.Servers) != 2 {
+		t.Fatal("Should now have two servers")
+	}
+	if len(ca2.Config.Clients) != 1 {
+		t.Fatal("Should now have one client")
+	}
+	if bytes.Compare(ca1.Config.Signature.Sum, ca2.Config.Signature.Sum) != 0 {
+		t.Fatal("Should have the same signature")
+	}
+}
+
+func newTest(nbr int) (*ssh_ks.ClientApp, []*ssh_ks.ServerApp) {
+	tmp, err := ssh_ks.SetupTmpHosts()
+	dbg.ErrFatal(err)
+	ca, err := ssh_ks.ReadClientApp(tmp + "/config.bin")
+	dbg.ErrFatal(err)
+	servers := make([]*ssh_ks.ServerApp, nbr)
+	for i := range servers {
+		servers[i] = newServerLocal(2000 + i)
+		servers[i].Start()
+	}
+	return ca, servers
 }
 
 func newServerLocal(port int) *ssh_ks.ServerApp {
