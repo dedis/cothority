@@ -21,9 +21,9 @@ func WritePub64(suite abstract.Suite, w io.Writer, point abstract.Point) error {
 	return write64(suite, enc, point)
 }
 
-func write64(suite abstract.Suite, enc io.WriteCloser, data ...interface{}) {
-	errW := suite.Write(enc, data)
-	if err := enc.Close(); err != nil && errW == nil {
+func write64(suite abstract.Suite, wc io.WriteCloser, data ...interface{}) error {
+	errW := suite.Write(wc, data)
+	if err := wc.Close(); err != nil && errW == nil {
 		return err
 	}
 	return errW

@@ -216,7 +216,9 @@ func send(v interface{}) error {
 
 // EndAndCleanup sends a message to end the logging and closes the connection
 func EndAndCleanup() {
-	send(NewSingleMeasure("end", 0))
+	if err := send(NewSingleMeasure("end", 0)); err != nil {
+		dbg.Error("Error while sending 'end' message:", err)
+	}
 	if err := connection.Close(); err != nil {
 		// at least tell that we could not close the connection:
 		dbg.Error("Could not close connecttion:", err)
@@ -232,7 +234,9 @@ func iiToF(sec int64, usec int64) float64 {
 // Returns the sytem and the user time so far.
 func getRTime() (tSys, tUsr float64) {
 	rusage := &syscall.Rusage{}
-	syscall.Getrusage(syscall.RUSAGE_SELF, rusage)
+	if err := syscall.Getrusage(syscall.RUSAGE_SELF, rusage); err != nil {
+		dbg.Error("Couldn't get rusage time:", err)
+	}
 	s, u := rusage.Stime, rusage.Utime
 	return iiToF(int64(s.Sec), int64(s.Usec)), iiToF(int64(u.Sec), int64(u.Usec))
 }
