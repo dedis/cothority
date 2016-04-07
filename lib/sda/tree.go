@@ -2,7 +2,6 @@
 package sda
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -563,21 +562,6 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 // String returns the current treenode's Id as a string.
 func (t *TreeNode) String() string {
 	return string(t.Id.String())
-}
-
-// Stringify returns a string containing the whole tree.
-func (t *TreeNode) Stringify() string {
-	var buf bytes.Buffer
-	var lastDepth int
-	fn := func(d int, n *TreeNode) {
-		if d > lastDepth {
-			buf.Write([]byte("\n\n"))
-		} else {
-			buf.Write([]byte(n.Id.String()))
-		}
-	}
-	t.Visit(0, fn)
-	return buf.String()
 }
 
 // Visit is a recursive function that allows for depth-first calling on all

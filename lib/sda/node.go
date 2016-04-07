@@ -322,7 +322,12 @@ func (n *Node) protocolInstantiate() error {
 
 	var err error
 	n.instance, err = p(n)
-	go n.instance.Dispatch()
+	go func() {
+		if err := n.instance.Dispatch(); err != nil {
+			dbg.Error("Error while dispatching node", n.Info(), ":",
+				err)
+		}
+	}()
 	return err
 }
 

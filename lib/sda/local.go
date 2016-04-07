@@ -146,7 +146,10 @@ func (l *LocalTest) CloseAll() {
 		}
 	}
 	for _, node := range l.Nodes {
-		node.Close()
+		if err := node.Close(); err != nil {
+			dbg.Error("Closing node", node.Name(), "gives error",
+				err)
+		}
 	}
 }
 
