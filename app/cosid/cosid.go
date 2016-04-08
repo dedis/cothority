@@ -57,7 +57,7 @@ func main() {
 // createHost will ask for the public IP:PORT of the host we want to create.
 // The IP:PORT pair *must* be accessible from the Internet as other Hosts will
 // try to contact it.
-func createHost(cfg string) *cosi.CosiApp {
+func createHost(cfg string) *cosi.App {
 	fmt.Println("Configuration file " + cfg + " does not exists")
 	reader := bufio.NewReader(os.Stdin)
 	var err error

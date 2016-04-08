@@ -200,7 +200,7 @@ func handleErrorAndExit(msg string, e error) {
 }
 
 // writeSigAsJSON - writes the JSON out to a file
-func writeSigAsJSON(res *cosi.CosiResponse, outW io.Writer) {
+func writeSigAsJSON(res *cosi.Response, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
 		handleErrorAndExit("Couldn't encode signature: ", err)

@@ -61,11 +61,11 @@ type SignRet struct {
 	Config *Config
 }
 
-// PropSign propagates the signature for a new config
+// PropSig propagates the signature for a new config
 type PropSig struct {
 	Hash      []byte
 	Version   int
-	Signature *cosi.CosiResponse
+	Signature *cosi.Response
 }
 
 // StatusRet returns the success (empty string) or failure

@@ -51,7 +51,7 @@ func TestAskServerConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't setup temp host:", err)
 	}
-	sc, err := AskServerConfig(strings.NewReader("\n"+tmp+"\n"+tmp+"\n"), bytes.NewBufferString(""))
+	sc, err := askServerConfig(strings.NewReader("\n"+tmp+"\n"+tmp+"\n"), bytes.NewBufferString(""))
 	if err != nil {
 		t.Fatal("Couldn't create new config: ", err)
 	}
@@ -59,7 +59,7 @@ func TestAskServerConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal("Didn't get correct config:", err)
 	}
-	sc, err = AskServerConfig(strings.NewReader("localhost:2001\n"+tmp+"\n"+tmp+"\n"), bytes.NewBufferString(""))
+	sc, err = askServerConfig(strings.NewReader("localhost:2001\n"+tmp+"\n"+tmp+"\n"), bytes.NewBufferString(""))
 	if err != nil {
 		t.Fatal("Couldn't create new config: ", err)
 	}
@@ -86,7 +86,7 @@ func createServers(nbr int, t *testing.T) ([]*ssh_ks.ServerApp, error) {
 		if err != nil {
 			t.Fatal("Couldn't setup tmp:", err)
 		}
-		ret[i], err = CreateServerConfig("localhost:"+strconv.Itoa(2000+i), tmp, tmp)
+		ret[i], err = createServerConfig("localhost:"+strconv.Itoa(2000+i), tmp, tmp)
 		if err != nil {
 			return nil, err
 		}

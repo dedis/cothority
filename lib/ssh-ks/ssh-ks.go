@@ -73,7 +73,7 @@ type Config struct {
 	// Clients is a map of IP:Port pointing to Clients
 	Clients map[string]*Client
 	// Signature by CoSi
-	Signature *cosip.CosiResponse
+	Signature *cosip.Response
 }
 
 // NewConfig returns a new initialized config for the configuration-chain

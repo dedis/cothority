@@ -20,6 +20,7 @@ import (
 	"golang.org/x/net/context"
 )
 
+// ExternalAPI can be used to handle external message-calls
 type ExternalAPI func(*network.Message) network.ProtocolMessage
 
 // Host is the structure responsible for holding information about the current

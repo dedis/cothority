@@ -34,7 +34,7 @@ func TestHackyCosi(t *testing.T) {
 	kp := config.NewKeyPair(network.Suite)
 	client := network.NewSecureTCPHost(kp.Secret, network.NewEntity(kp.Public, "localhost:3000"))
 	msg := []byte("Hello World")
-	req := &CosiRequest{
+	req := &Request{
 		EntityList: el,
 		Message:    msg,
 	}
@@ -55,7 +55,7 @@ func TestHackyCosi(t *testing.T) {
 		t.Fatal(err)
 	}
 	// verify signature
-	response, ok := packet.Msg.(CosiResponse)
+	response, ok := packet.Msg.(Response)
 	if !ok {
 		t.Fatal("Could not cast the response to a CoSiResponse")
 	}

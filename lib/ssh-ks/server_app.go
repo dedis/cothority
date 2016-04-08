@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-// CoNode is the representation of this Node of the Cothority
+// ServerApp is the representation of this Node of the Cothority
 type ServerApp struct {
 	// Ourselves is the identity of this node
 	This *Server
@@ -49,6 +49,7 @@ func NewServerApp(key *config.KeyPair, addr, dirSSHD, dirSSH string) (*ServerApp
 	return c, nil
 }
 
+// ReadServerApp reads a configuration file and returns a ServerApp
 func ReadServerApp(f string) (*ServerApp, error) {
 	file := expandHDir(f)
 	if file == "" {
@@ -70,6 +71,8 @@ func ReadServerApp(f string) (*ServerApp, error) {
 	return &sa, err
 }
 
+// WriteConfig takes the whole config and writes it into a file. It can be
+// read back with ReadServerApp
 func (sa *ServerApp) WriteConfig(file string) error {
 	b, err := network.MarshalRegisteredType(sa)
 	if err != nil {
