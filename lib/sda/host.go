@@ -304,7 +304,7 @@ func (h *Host) processMessages() {
 		case <-h.ProcessMessagesQuit:
 			return
 		}
-		dbg.Lvl4("Message Received from", data.From)
+		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType == RequestID)
 		switch data.MsgType {
 		case SDADataMessageID:
 			sdaMsg := data.Msg.(Data)
@@ -397,6 +397,7 @@ func (h *Host) processRequest(e *network.Entity, r *Request) {
 		// 404 Service Unknown
 		return
 	}
+	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
 	s.ProcessRequest(e, r)
 }
 
@@ -610,4 +611,8 @@ func (h *Host) Tx() uint64 {
 // Rx() to implement monitor/CounterIO
 func (h *Host) Rx() uint64 {
 	return h.host.Rx()
+}
+
+func (h *Host) Address() string {
+	return h.workingAddress
 }

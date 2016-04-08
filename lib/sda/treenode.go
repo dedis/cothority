@@ -501,3 +501,7 @@ func (n *TreeNodeInstance) isBinded() bool {
 func (n *TreeNodeInstance) bind(pi ProtocolInstance) {
 	n.instance = pi
 }
+
+func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
+	return n
+}

@@ -33,6 +33,7 @@ type Overlay struct {
 	instances     map[TokenID]*TreeNodeInstance
 	instancesInfo map[TokenID]bool
 	instancesLock sync.Mutex
+	pis           map[TokenID]ProtocolInstance
 }
 
 // NewOverlay creates a new overlay-structure
@@ -46,6 +47,7 @@ func NewOverlay(h *Host) *Overlay {
 		cache:         NewTreeNodeCache(),
 		instances:     make(map[TokenID]*TreeNodeInstance),
 		instancesInfo: make(map[TokenID]bool),
+		pis:           make(map[TokenID]ProtocolInstance),
 	}
 }
 
@@ -55,9 +57,10 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
-	dbg.Lvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
+	dbg.LLvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
+		dbg.Lvl3("Will ask the EntityList from token", sdaMsg.To.EntityListID, len(o.entityLists), o.host.workingAddress)
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
@@ -65,30 +68,45 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 		dbg.Lvl3("Will ask for tree from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
-	// If node does not exists, then create it
-	o.nodeLock.Lock()
-	node := o.nodes[sdaMsg.To.Id()]
-	isDone := o.nodeInfo[sdaMsg.To.Id()]
-	// If we never have seen this token before, then we create it
-	if node == nil && !isDone {
-		dbg.Lvl3(o.host.Entity.First(), "creating new node for token:", sdaMsg.To.Id())
-		var err error
-		o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
-		o.nodeInfo[sdaMsg.To.Id()] = false
-		if err != nil {
-			o.nodeLock.Unlock()
-			return err
-		}
-		node = o.nodes[sdaMsg.To.Id()]
+
+	// TreeNodeInstance
+	o.instancesLock.Lock()
+	pi, ok := o.pis[sdaMsg.To.Id()]
+	o.instancesLock.Unlock()
+	// if the TreeNodeInstance is not there, creates it
+	if !ok {
+		// XXX TODO
+		// see if we know the Service Recipient
+
+		// request the PI from the Service and bind the two
 	}
-	// If node is ALREADY DONE => drop packet
-	if isDone {
-		dbg.Lvl2("Dropped message given to node that is done.")
-		o.nodeLock.Unlock()
-		return nil
-	}
-	o.nodeLock.Unlock()
-	node.DispatchMsg(sdaMsg)
+	// TODO Check if TNI is already Done
+	pi.DispatchMsg(sdaMsg)
+
+	//// If node does not exists, then create it
+	//o.nodeLock.Lock()
+	//node := o.nodes[sdaMsg.To.Id()]
+	//isDone := o.nodeInfo[sdaMsg.To.Id()]
+	//// If we never have seen this token before, then we create it
+	//if node == nil && !isDone {
+	//dbg.Lvl3(o.host.Entity.First(), "creating new node for token:", sdaMsg.To.Id())
+	//var err error
+	//o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
+	//o.nodeInfo[sdaMsg.To.Id()] = false
+	//if err != nil {
+	//o.nodeLock.Unlock()
+	//return err
+	//}
+	//node = o.nodes[sdaMsg.To.Id()]
+	//}
+	//// If node is ALREADY DONE => drop packet
+	//if isDone {
+	//dbg.Lvl2("Dropped message given to node that is done.")
+	//o.nodeLock.Unlock()
+	//return nil
+	//}
+	//o.nodeLock.Unlock()
+	/*node.DispatchMsg(sdaMsg)*/
 	return nil
 }
 
@@ -320,33 +338,38 @@ func (o *Overlay) newTreeNodeInstance(t *Tree, tn *TreeNode, servID ServiceID) *
 		RoundID:      RoundID(uuid.NewV4()),
 	}
 
+	tni := newTreeNodeInstance(o, tok, tn)
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
-	tni := newTreeNodeInstance(o, tok, tn)
 	o.instances[tok.Id()] = tni
+
+	o.RegisterTree(t)
+	o.RegisterEntityList(t.EntityList)
+	dbg.Lvl4(o.host.workingAddress, "Registered NewTreeNodeInstance with Tree + EntityList + ServiceID")
 	return tni
 }
 
-var ErrWrongTreeNodeInstance = errors.New("TreeNodeInstance associated with this ProtocolInstance is not registered")
+var ErrWrongTreeNodeInstance = errors.New("TreeNodeInstance associated with this ProtocolInstance is already registered")
 var ErrProtocolRegistered = errors.New("A ProtocolInstance already has been registered using this TreeNodeInstance!")
 
 func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
-	tok := pi.Token()
 	var tni *TreeNodeInstance
+	var tok = pi.Token()
 	var ok bool
-	// if the token is not registered from here
+	// if the TreeNodeInstance is already registered here
 	if tni, ok = o.instances[tok.Id()]; !ok {
 		return ErrWrongTreeNodeInstance
 	}
-	// if the TNI already have a ProtocolInstance binded
-	// i.e. someone wants to use one TreeNodeInstance for multiple
-	// ProtocolInstance
+
 	if tni.isBinded() {
 		return ErrProtocolRegistered
 	}
+
 	tni.bind(pi)
+	o.pis[tok.Id()] = pi
+	dbg.Lvl4(o.host.workingAddress, "Registered ProtocolInstance !")
 	return nil
 }
 

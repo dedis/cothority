@@ -8,6 +8,7 @@ type Context interface {
 	NewTreeNodeInstance(*Tree, *TreeNode) *TreeNodeInstance
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
+	Address() string
 }
 
 // defaultContext is the implementation of the Context interface. It is
