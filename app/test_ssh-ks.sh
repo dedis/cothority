@@ -1,28 +1,18 @@
 #!/usr/bin/env bash
 
-# highest number of servers and clients
-NBR=3
-# Use for suppressing building if that directory exists
-STATICDIR=test
-# If set, always build
-BUILD=z
-# Debug-level for server
-DBG_SRV=1
-# Debug-level for client
-DBG_CLIENT=1
-# Debug running
-DBG_RUN=y
+. ./libtest.sh
 
 main(){
+    startTest
     build
-#    testBuild
-#    testServerConfig
-#    testClientConfig
-#    testClientAdd
-#    testServerAdd
-#    testClientDel
-    testServerDel
-    cleanup
+    test Build
+    test ServerConfig
+    test ClientConfig
+    test ClientAdd
+    test ServerAdd
+    test ClientDel
+    test ServerDel
+    stopTest
 }
 
 testServerDel(){
@@ -87,8 +77,8 @@ testServerConfig(){
     runSrvCfg 1 &
     runSrvCfg 2 &
     sleep 1
-    testFail lsof -n -i:2001
-    testFail lsof -n -i:2002
+    testOK lsof -n -i:2001
+    testOK lsof -n -i:2002
     pkill -f ssh-kss
     testFile srv1/config.bin
     testFile srv2/config.bin
@@ -96,8 +86,8 @@ testServerConfig(){
 
 testBuild(){
     echo "Testing build"
-    testFail ./ssh-kss help
-    testFail ./ssh-ksc help
+    testOK ./ssh-kss help
+    testOK ./ssh-ksc help
 }
 
 runCl(){
@@ -147,58 +137,6 @@ build(){
             ssh-keygen -t rsa -b 4096 -N "" -f $cl/id_rsa > /dev/null
         fi
     done
-}
-
-testFail(){
-    if ! $@ > /dev/null; then
-        echo "$@ failed"
-        fail
-    fi
-}
-
-testFile(){
-    if [ ! -f $1 ]; then
-        echo "$1 is not here"
-        fail
-    fi
-}
-
-testGrep(){
-    S=$1
-    shift
-    if ! $@ | grep -q "$S"; then
-        fail "Didn't find '$S' in output of '$@'"
-    fi
-}
-
-testNGrep(){
-    S=$1
-    shift
-    if $@ | grep -q "$S"; then
-        fail "Found '$S' in output of '$@'"
-    fi
-}
-
-dbgRun(){
-    if [ "$DBG_RUN" ]; then
-        echo $@
-    fi
-}
-
-fail(){
-    cleanup
-    echo
-    echo -e "\tFAILED: $@"
-    exit 1
-}
-
-cleanup(){
-    pkill ssh-ks 2> /dev/null
-    if [ ! "$STATICDIR" ]; then
-        echo "removing $DIR"
-        #rm -rf $DIR
-    fi
-    sleep .5
 }
 
 main

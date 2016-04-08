@@ -1,31 +1,14 @@
 #!/usr/bin/env bash
 
-# highest number of servers and clients
-NBR=3
-# Use for suppressing building if that directory exists
-#STATICDIR=test
-# If set, always build
-BUILD=z
-# Debug-level for server
-DBG_SRV=1
-# Debug-level for client
-DBG_CLIENT=1
-# Debug running
-DBG_RUN=y
-# where the output should go
-if [ "$DBG_RUN" ]; then
-    OUT=/dev/stdout
-else
-    OUT=/dev/null
-fi
+. ./libtest.sh
 
 main(){
+    startTest
     build
     test Build
     test ServerCfg
     test SignMsg
-    echo "Success"
-    cleanup
+    stopTest
 }
 
 testSignMsg(){
@@ -99,67 +82,6 @@ build(){
         rm -rf $cl
         mkdir $cl
     done
-}
-
-test(){
-    echo "Testing $1"
-    test$1
-}
-
-testOK(){
-    if ! $@ > /dev/null; then
-        fail "starting $@ failed"
-    fi
-}
-
-testFail(){
-    if $@ > /dev/null; then
-        fail "starting $@ failed"
-    fi
-}
-
-testFile(){
-    if [ ! -f $1 ]; then
-        fail "file $1 is not here"
-    fi
-}
-
-testGrep(){
-    S=$1
-    shift
-    if ! $@ | grep -q "$S"; then
-        fail "Didn't find '$S' in output of '$@'"
-    fi
-}
-
-testNGrep(){
-    S=$1
-    shift
-    if $@ | grep -q "$S"; then
-        fail "Found '$S' in output of '$@'"
-    fi
-}
-
-dbgRun(){
-    if [ "$DBG_RUN" ]; then
-        echo $@
-    fi
-}
-
-fail(){
-    echo
-    echo -e "\tFAILED: $@"
-    cleanup
-    exit 1
-}
-
-cleanup(){
-    pkill cosi 2> /dev/null
-    if [ ! "$STATICDIR" ]; then
-        echo "removing $DIR"
-        rm -rf $DIR
-    fi
-    sleep .5
 }
 
 main
