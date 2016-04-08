@@ -116,8 +116,8 @@ func TestHashSuite(t *testing.T) {
 }
 
 func TestHashArgs(t *testing.T) {
-	str1 := "cosi"
-	str2 := "rocks"
+	str1 := binstring("cosi")
+	str2 := binstring("rocks")
 	hash1, err := crypto.HashArgs(hashSuite.Hash(), str1)
 	if err != nil {
 		t.Fatal(err)
@@ -134,4 +134,10 @@ func TestHashArgs(t *testing.T) {
 	if bytes.Compare(hash1, hash2) == 0 {
 		t.Fatal("Making a hash from str1str2 should be different from str2str1")
 	}
+}
+
+type binstring string
+
+func (b binstring) MarshalBinary() ([]byte, error) {
+	return []byte(b), nil
 }
