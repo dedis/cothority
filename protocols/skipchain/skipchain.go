@@ -1,4 +1,4 @@
-// Skipchain Protocol
+//Package skipchain allows for  transative trust of cothorities
 package skipchain
 
 import (
@@ -43,10 +43,10 @@ func NewSkipchain(n *sda.Node) (sda.ProtocolInstance, error) {
 	return Skipchain, nil
 }
 
-// Starts the protocol
+// Start the protocol
 func (p *ProtocolSkipchain) Start() error {
 	dbg.Lvl3("Starting Skipchain")
-	block := &SkipBlock{Index: 0, X_0: p.TreeNode().PublicAggregateSubTree, Nodes: p.Tree().List()}
+	block := &SkipBlock{Index: 0, X0: p.TreeNode().PublicAggregateSubTree, Nodes: p.Tree().List()}
 	//p.LastBlock = block.Hash()
 	return p.HandleGenesis(StructGenesis{p.TreeNode(),
 		MessageGenesis{Block: block}})
@@ -58,7 +58,7 @@ func (p *ProtocolSkipchain) HandleGenesis(msg StructGenesis) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	return nil 
 }
 
 //StartSignature create a new CoSi round and signs the hash of the block
@@ -75,7 +75,7 @@ func (p *ProtocolSkipchain) StartSignature(block SkipBlock) error {
 		block.Signature = &libcosi.Signature{chal, resp}
 		block.Nodes = nil
 		p.HandlePropagate(StructPropagate{MessagePropagate: MessagePropagate{Block: &block}})
-		p.SetupDone <- true// this is send every block. it accumulates?
+		p.SetupDone <- true
 	})
 	proto.StartProtocol()
 
@@ -116,7 +116,7 @@ func (p *ProtocolSkipchain) SignNewBlock(nodes []*sda.TreeNode) error {
 	for i := 0; i < len(nodes); i++ {
 		aggregatekey = suite.Point().Add(aggregatekey, nodes[i].Entity.Public)
 	}
-	block := &SkipBlock{Index: p.SkipChain[string(p.LastBlock)].Index + 1, X_0: aggregatekey, Nodes: nodes} //TODO fill the fields
+	block := &SkipBlock{Index: p.SkipChain[string(p.LastBlock)].Index + 1, X0: aggregatekey, Nodes: nodes} //TODO fill the fields
 	block.BackLink = append(block.BackLink, p.LastBlock)
 	dbg.Lvl3("signing new block")
 	err := p.StartSignature(*block)
@@ -132,9 +132,9 @@ func (p *ProtocolSkipchain) LookUpBlock(block []byte) (SkipBlock,error) {
 	b , exist := p.SkipChain[string(block)]
 	if exist == true {
 		return *b,nil
-	}else{
-		return *p.SkipChain[string(p.Genesis)], errors.New("There is no block with this hash value")	
 	}
+		return *p.SkipChain[string(p.Genesis)], errors.New("There is no block with this hash value")	
+	
 }
 
 
