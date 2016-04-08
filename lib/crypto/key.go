@@ -22,11 +22,10 @@ func WritePub64(suite abstract.Suite, w io.Writer, point abstract.Point) error {
 }
 
 func write64(suite abstract.Suite, wc io.WriteCloser, data ...interface{}) error {
-	errW := suite.Write(wc, data)
-	if err := wc.Close(); err != nil && errW == nil {
+	if err := suite.Write(wc, data); err != nil {
 		return err
 	}
-	return errW
+	return wc.Close()
 }
 
 // WriteSecret64 converts a secret key to a Base64-string
