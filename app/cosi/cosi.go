@@ -22,6 +22,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Cosi signer and verifier"
 	app.Usage = "Collectively sign a file or a message and verify it"
+	app.Version = "1.0"
 	app.Commands = []cli.Command{
 		{
 			Name:    "sign",
@@ -178,6 +179,9 @@ func verifyString(c *cli.Context) {
 	verifyPrintResult(err)
 	os.Remove(f.Name())
 	os.Remove(sigfile)
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 // verifyPrintResult prints out OK or what failed.
