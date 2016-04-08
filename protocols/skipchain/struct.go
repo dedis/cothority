@@ -13,6 +13,7 @@ import (
 type MessageGenesis struct {
 	Block *SkipBlock
 }
+
 // StructGenesis is used for the genesis round
 type StructGenesis struct {
 	*sda.TreeNode
@@ -23,14 +24,16 @@ type StructGenesis struct {
 type MessagePropagate struct {
 	Block *SkipBlock
 }
+
 // StructPropagate is used to send the newly signed block
 type StructPropagate struct {
 	*sda.TreeNode
 	MessagePropagate
 }
+
 // SkipBlock represents a skipblock
 type SkipBlock struct {
-	X0      abstract.Point
+	X0       abstract.Point
 	Index    uint32
 	BackLink [][]byte
 	//the signature is hashing all the above
@@ -38,6 +41,7 @@ type SkipBlock struct {
 	ForwardLink []ForwardStruct
 	Nodes       []*sda.TreeNode //transmited for the signature assigned to null before storage
 }
+
 // ForwardStruct has the hash of the next block and a signauter of it
 type ForwardStruct struct {
 	Hash      []byte

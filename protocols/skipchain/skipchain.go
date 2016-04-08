@@ -18,10 +18,10 @@ func init() {
 // ProtocolSkipchain Genesis
 type ProtocolSkipchain struct {
 	*sda.Node
-	SetupDone    chan bool
-	SkipChain    map[string]*SkipBlock
-	LastBlock    []byte
-	Genesis 	 []byte
+	SetupDone chan bool
+	SkipChain map[string]*SkipBlock
+	LastBlock []byte
+	Genesis   []byte
 }
 
 // NewSkipchain initialises the structures and create the genesis block
@@ -58,7 +58,7 @@ func (p *ProtocolSkipchain) HandleGenesis(msg StructGenesis) error {
 	if err != nil {
 		return err
 	}
-	return nil 
+	return nil
 }
 
 //StartSignature create a new CoSi round and signs the hash of the block
@@ -85,11 +85,11 @@ func (p *ProtocolSkipchain) StartSignature(block SkipBlock) error {
 // HandlePropagate sends the signed block to the nodes who add it in their SkipList
 func (p *ProtocolSkipchain) HandlePropagate(prop StructPropagate) error {
 	//TODO if the block is propagated before now propagate only the signature on recieve nodes set block.Nodes to nil
-	if p.LastBlock!= nil{
-		f:= &ForwardStruct{Hash : prop.Block.Hash(), Signature : prop.Block.Signature}
+	if p.LastBlock != nil {
+		f := &ForwardStruct{Hash: prop.Block.Hash(), Signature: prop.Block.Signature}
 		p.SkipChain[string(p.LastBlock)].ForwardLink = append(p.SkipChain[string(p.LastBlock)].ForwardLink, *f)
 
-	}else{
+	} else {
 		p.Genesis = prop.Block.Hash()
 	}
 	p.LastBlock = prop.Block.Hash()
@@ -128,15 +128,11 @@ func (p *ProtocolSkipchain) SignNewBlock(nodes []*sda.TreeNode) error {
 }
 
 //LookUpBlock returns the block of a corresponding Hash. It should be reimplemented to work over internet
-func (p *ProtocolSkipchain) LookUpBlock(block []byte) (SkipBlock,error) {
-	b , exist := p.SkipChain[string(block)]
+func (p *ProtocolSkipchain) LookUpBlock(block []byte) (SkipBlock, error) {
+	b, exist := p.SkipChain[string(block)]
 	if exist == true {
-		return *b,nil
+		return *b, nil
 	}
-		return *p.SkipChain[string(p.Genesis)], errors.New("There is no block with this hash value")	
-	
+	return *p.SkipChain[string(p.Genesis)], errors.New("There is no block with this hash value")
+
 }
-
-
-
-
