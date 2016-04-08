@@ -53,6 +53,10 @@ func (rId RoundID) String() string {
 // (see Token struct)
 type TokenID uuid.UUID
 
+func (t *TokenID) String() string {
+	return uuid.UUID(*t).String()
+}
+
 // A Token contains all identifiers needed to uniquely identify one protocol
 // instance. It gets passed when a new protocol instance is created and get used
 // by every protocol instance when they want to send a message. That way, the

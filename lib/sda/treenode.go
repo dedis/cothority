@@ -471,9 +471,8 @@ func (n *TreeNodeInstance) Name() string {
 // Info returns a human readable representation name of this Node
 // (IP address and TokenID).
 func (n *TreeNodeInstance) Info() string {
-	_ = n.Entity().Addresses
-	_ = n.TokenID()
-	return fmt.Sprint(n.Entity().Addresses, n.TokenID())
+	tid := n.TokenID()
+	return fmt.Sprintf("%s (%s)", n.Entity().Addresses, tid.String())
 }
 
 // TokenID returns the TokenID of the given node (to uniquely identify it)
