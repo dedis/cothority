@@ -73,8 +73,8 @@ type Host struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
-	// to dispatch unknown messages
-	unknownMsgs map[network.MessageTypeID]ExternalAPI
+	// to dispatch external messages
+	externalMsgs map[network.MessageTypeID]ExternalAPI
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -93,7 +93,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		networkChan:         make(chan network.Message, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
-		unknownMsgs:         make(map[network.MessageTypeID]ExternalAPI),
+		externalMsgs:        make(map[network.MessageTypeID]ExternalAPI),
 	}
 
 	h.overlay = NewOverlay(h)
@@ -388,17 +388,18 @@ func (h *Host) processMessages() {
 	}
 }
 
-// RegisterMessage takes a message-type and registers a function
-func (h *Host) RegisterMessage(mt network.ProtocolMessage, f ExternalAPI) network.MessageTypeID {
+// RegisterExternalMessage takes a message-type and registers a function
+// that will be called if this message arrives
+func (h *Host) RegisterExternalMessage(mt network.ProtocolMessage, f ExternalAPI) network.MessageTypeID {
 	mtID := network.RegisterMessageType(mt)
-	h.unknownMsgs[mtID] = f
+	h.externalMsgs[mtID] = f
 	return mtID
 }
 
 // ProcessUnknownMessage takes a message and looks it up in
 // the unknown messages
 func (h *Host) ProcessUnknownMessage(m *network.Message) error {
-	f, ok := h.unknownMsgs[m.MsgType]
+	f, ok := h.externalMsgs[m.MsgType]
 	if !ok {
 		return errors.New("Didn't recognize message")
 	}

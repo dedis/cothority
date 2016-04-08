@@ -393,11 +393,11 @@ func TestRegisterMsg(t *testing.T) {
 	got1 := make(chan int, 1)
 	got2 := make(chan string, 1)
 	host := sda.NewLocalHost(2000)
-	mt1 := host.RegisterMessage(Msg1{}, func(m *network.NetworkMessage) network.ProtocolMessage {
+	mt1 := host.RegisterExternalMessage(Msg1{}, func(m *network.NetworkMessage) network.ProtocolMessage {
 		got1 <- m.Msg.(Msg1).I
 		return nil
 	})
-	mt2 := host.RegisterMessage(Msg2{}, func(m *network.NetworkMessage) network.ProtocolMessage {
+	mt2 := host.RegisterExternalMessage(Msg2{}, func(m *network.NetworkMessage) network.ProtocolMessage {
 		got2 <- m.Msg.(Msg2).J
 		return nil
 	})

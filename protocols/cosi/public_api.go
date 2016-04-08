@@ -141,7 +141,7 @@ func AddCosiApp(h *sda.Host) {
 		host:    h,
 		overlay: h.GetOverlay(),
 	}
-	ca.host.RegisterMessage(Request{}, ca.HandleCosiRequest)
+	ca.host.RegisterExternalMessage(Request{}, ca.HandleCosiRequest)
 }
 
 // PrintServer prints out the configuration that can be copied to the servers.toml
@@ -155,7 +155,7 @@ func (ca *App) PrintServer() {
 
 // Start listens on the incoming port and DOES NOT return
 func (ca *App) Start() {
-	ca.host.RegisterMessage(Request{}, ca.HandleCosiRequest)
+	ca.host.RegisterExternalMessage(Request{}, ca.HandleCosiRequest)
 	ca.host.Listen()
 	ca.host.StartProcessMessages()
 	ca.host.WaitForClose()
