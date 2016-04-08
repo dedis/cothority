@@ -5,8 +5,8 @@
 main(){
     startTest
     build
-    #test Build
-    #test ServerCfg
+    test Build
+    test ServerCfg
     test SignMsg
     stopTest
 }

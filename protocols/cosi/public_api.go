@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/app"
+	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -144,9 +144,9 @@ func AddCosiApp(h *sda.Host) {
 // PrintServer prints out the configuration that can be copied to the servers.toml
 // file
 func (ca *CosiApp) PrintServer() {
-	serverToml := app.NewServerToml(network.Suite, ca.host.Entity.Public,
+	serverToml := NewServerToml(network.Suite, ca.host.Entity.Public,
 		ca.host.Entity.Addresses...)
-	groupToml := app.NewGroupToml(serverToml)
+	groupToml := NewGroupToml(serverToml)
 	fmt.Println(groupToml.String())
 }
 
@@ -233,7 +233,7 @@ func Sign(r io.Reader, tomlFileName string) (*CosiResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f)
+	el, err := ReadGroupToml(f)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +330,7 @@ func Verify(fileName, groupToml string) error {
 		return err
 	}
 	dbg.Lvl4("Reading group definition")
-	el, err := app.ReadGroupToml(fGroup)
+	el, err := ReadGroupToml(fGroup)
 	if err != nil {
 		return err
 	}
@@ -354,4 +354,103 @@ func VerifySignatureHash(b []byte, sig *CosiResponse, el *sda.EntityList) error 
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
+}
+
+// GroupToml represents the structure of the group.toml file given to the cli.
+type GroupToml struct {
+	Description string
+	Servers     []*ServerToml `toml:"servers"`
+}
+
+// ServerToml is one entry in the group.toml file describing one server to use for
+// the cothority system.
+type ServerToml struct {
+	Addresses   []string
+	Public      string
+	Description string
+}
+
+// ReadGroupToml reads a group.toml file and returns the list of Entity
+// described in the file.
+func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+	group := &GroupToml{}
+	_, err := toml.DecodeReader(f, group)
+	if err != nil {
+		return nil, err
+	}
+	// convert from ServerTomls to entities
+	var entities = make([]*network.Entity, 0, len(group.Servers))
+	for _, s := range group.Servers {
+		en, err := s.toEntity(network.Suite)
+		if err != nil {
+			return nil, err
+		}
+		entities = append(entities, en)
+	}
+	el := sda.NewEntityList(entities)
+	return el, nil
+}
+
+// NewGroupToml creates a new GroupToml struct from the given ServerTomls.
+// Currently used together with calling String() on the GroupToml to output
+// a snippet which is needed to define the CoSi group
+func NewGroupToml(servers ...*ServerToml) *GroupToml {
+	return &GroupToml{
+		Servers: servers,
+	}
+}
+
+// String returns the TOML representation of this GroupToml
+func (gt *GroupToml) String() string {
+	var buff bytes.Buffer
+	if gt.Description == "" {
+		gt.Description = "Description of the system"
+	}
+	for _, s := range gt.Servers {
+		if s.Description == "" {
+			s.Description = "Description of the server"
+		}
+	}
+	enc := toml.NewEncoder(&buff)
+	if err := enc.Encode(gt); err != nil {
+		return "Error encoding grouptoml" + err.Error()
+	}
+	return buff.String()
+}
+
+// toEntity will convert this ServerToml struct to a network entity.
+func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
+	pubR := strings.NewReader(s.Public)
+	public, err := crypto.ReadPub64(suite, pubR)
+	if err != nil {
+		return nil, err
+	}
+	return network.NewEntity(public, s.Addresses...), nil
+}
+
+// Returns a ServerToml out of a public key and some addresses => to be printed
+// or written to a file
+func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
+	var buff bytes.Buffer
+	if err := crypto.WritePub64(suite, &buff, public); err != nil {
+		dbg.Error("Error writing public key")
+		return nil
+	}
+	return &ServerToml{
+		Addresses: addresses,
+		Public:    buff.String(),
+	}
+}
+
+// Returns its TOML representation
+func (s *ServerToml) String() string {
+	var buff bytes.Buffer
+	if s.Description == "" {
+		s.Description = "## Put your description here for convenience ##"
+	}
+	enc := toml.NewEncoder(&buff)
+	if err := enc.Encode(s); err != nil {
+		return "## Error encoding server informations ##" + err.Error()
+	}
+	return buff.String()
 }

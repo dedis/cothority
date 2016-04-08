@@ -11,7 +11,6 @@ import (
 
 	"bytes"
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/app"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -94,7 +93,7 @@ func checkConfig(c *cli.Context) {
 	tomlFileName := c.GlobalString("servers")
 	f, err := os.Open(tomlFileName)
 	handleErrorAndExit("Couldn't open server-file", err)
-	el, err := app.ReadGroupToml(f)
+	el, err := cosi.ReadGroupToml(f)
 	handleErrorAndExit("Error while reading server-file", err)
 	// First check all servers individually
 	for i := range el.List {
