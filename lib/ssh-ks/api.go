@@ -65,7 +65,7 @@ type SignRet struct {
 type PropSig struct {
 	Hash      []byte
 	Version   int
-	Signature *cosi.Response
+	Signature *cosi.SignResponse
 }
 
 // StatusRet returns the success (empty string) or failure

@@ -24,8 +24,8 @@ import (
 
 func init() {
 	dbg.Print("Registering")
-	dbg.Print(network.RegisterMessageType(Request{}))
-	dbg.Print(network.RegisterMessageType(Response{}))
+	dbg.Print(network.RegisterMessageType(SignRequest{}))
+	dbg.Print(network.RegisterMessageType(SignResponse{}))
 }
 
 // App represents the application that will listen for signatures
@@ -35,31 +35,31 @@ type App struct {
 	Entity  *network.Entity
 }
 
-// Request is used by the client to send something to sda that
+// SignRequest is used by the client to send something to sda that
 // will in turn give that to the CoSi system.
 // It contains the message the client wants to sign.
-type Request struct {
+type SignRequest struct {
 	// The entity list to use for creating the cosi tree
 	EntityList *sda.EntityList
 	// the actual message to sign by CoSi.
 	Message []byte
 }
 
-// Response contains the signature out of the CoSi system.
+// SignResponse contains the signature out of the CoSi system.
 // It can be verified using the lib/cosi package.
 // NOTE: the `suite` field is absent here because this struct is a temporary
 // hack and we only supports one suite for the moment,i.e. ed25519.
-type Response struct {
+type SignResponse struct {
 	// The hash of the signed statement
 	Sum []byte
 	// The Challenge out a of the Multi Schnorr signature
 	Challenge abstract.Secret
-	// the Response out of the Multi Schnorr Signature
+	// the SignResponse out of the Multi Schnorr Signature
 	Response abstract.Secret
 }
 
 // MarshalJSON implements golang's JSON marshal interface
-func (s *Response) MarshalJSON() ([]byte, error) {
+func (s *SignResponse) MarshalJSON() ([]byte, error) {
 	cw := new(bytes.Buffer)
 	rw := new(bytes.Buffer)
 
@@ -83,7 +83,7 @@ func (s *Response) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements golang's JSON unmarshal interface
-func (s *Response) UnmarshalJSON(data []byte) error {
+func (s *SignResponse) UnmarshalJSON(data []byte) error {
 	type Aux struct {
 		Sum       string
 		Challenge string
@@ -141,7 +141,7 @@ func AddCosiApp(h *sda.Host) {
 		host:    h,
 		overlay: h.GetOverlay(),
 	}
-	ca.host.RegisterExternalMessage(Request{}, ca.HandleCosiRequest)
+	ca.host.RegisterExternalMessage(SignRequest{}, ca.HandleCosiSignRequest)
 }
 
 // PrintServer prints out the configuration that can be copied to the servers.toml
@@ -155,7 +155,7 @@ func (ca *App) PrintServer() {
 
 // Start listens on the incoming port and DOES NOT return
 func (ca *App) Start() {
-	ca.host.RegisterExternalMessage(Request{}, ca.HandleCosiRequest)
+	ca.host.RegisterExternalMessage(SignRequest{}, ca.HandleCosiSignRequest)
 	ca.host.Listen()
 	ca.host.StartProcessMessages()
 	ca.host.WaitForClose()
@@ -169,21 +169,21 @@ func (ca *App) Write(cnf string) error {
 	return nil
 }
 
-// handleCosiRequest will
+// handleCosiSignRequest will
 // * register the entitylist
 // * create a flat tree out of it with him being at the root
 // * launch a CoSi protocol
 // * wait for it to finish and send back the response to the client
-func (ca *App) HandleCosiRequest(msg *network.Message) network.ProtocolMessage {
-	dbg.Lvl2("Received client CosiRequest from", msg.From)
-	empty := &Response{}
-	cr, ok := msg.Msg.(Request)
+func (ca *App) HandleCosiSignRequest(msg *network.Message) network.ProtocolMessage {
+	dbg.Lvl2("Received client CosiSignRequest from", msg.From)
+	empty := &SignResponse{}
+	cr, ok := msg.Msg.(SignRequest)
 	if !ok {
 		return empty
 	}
 	idx, e := cr.EntityList.Search(ca.host.Entity.ID)
 	if e == nil {
-		dbg.Error("Received CosiRequest without being included in the Entitylist")
+		dbg.Error("Received CosiSignRequest without being included in the Entitylist")
 		return empty
 	}
 	if idx != 0 {
@@ -201,7 +201,7 @@ func (ca *App) HandleCosiRequest(msg *network.Message) network.ProtocolMessage {
 	// run the CoSi protocol
 	node, err := ca.overlay.CreateNewNodeName("CoSi", tree)
 	if err != nil {
-		dbg.Error("Error creating tree upon client request:", err)
+		dbg.Error("Error creating tree upon client SignRequest:", err)
 		return empty
 	}
 	pcosi := node.ProtocolInstance().(*ProtocolCosi)
@@ -212,9 +212,9 @@ func (ca *App) HandleCosiRequest(msg *network.Message) network.ProtocolMessage {
 	}
 	sum := hash.Sum(nil)
 	// Register the handler when the signature is finished
-	rchan := make(chan *Response)
+	rchan := make(chan *SignResponse)
 	fn := func(chal, resp abstract.Secret) {
-		response := &Response{
+		response := &SignResponse{
 			Sum:       sum,
 			Challenge: chal,
 			Response:  resp,
@@ -230,7 +230,7 @@ func (ca *App) HandleCosiRequest(msg *network.Message) network.ProtocolMessage {
 }
 
 // sign takes a stream and a toml file defining the servers
-func Sign(r io.Reader, tomlFileName string) (*Response, error) {
+func Sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 	dbg.Lvl3("Starting signature")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
@@ -250,7 +250,7 @@ func Sign(r io.Reader, tomlFileName string) (*Response, error) {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func SignStatement(r io.Reader, el *sda.EntityList) (*Response, error) {
+func SignStatement(r io.Reader, el *sda.EntityList) (*SignResponse, error) {
 
 	// create a throw-away key pair:
 	kp := config.NewKeyPair(network.Suite)
@@ -259,7 +259,7 @@ func SignStatement(r io.Reader, el *sda.EntityList) (*Response, error) {
 	e := network.NewEntity(kp.Public, "")
 	client := network.NewSecureTCPHost(kp.Secret, e)
 	msg, _ := crypto.HashStream(network.Suite.Hash(), r)
-	req := &Request{
+	req := &SignRequest{
 		EntityList: el,
 		Message:    msg,
 	}
@@ -273,10 +273,10 @@ func SignStatement(r io.Reader, el *sda.EntityList) (*Response, error) {
 		return nil, err
 	}
 
-	dbg.Lvl3("Sending sign request")
-	pchan := make(chan Response)
+	dbg.Lvl3("Sending sign SignRequest")
+	pchan := make(chan SignResponse)
 	go func() {
-		// send the request
+		// send the SignRequest
 		if err := con.Send(context.TODO(), req); err != nil {
 			close(pchan)
 			return
@@ -288,7 +288,7 @@ func SignStatement(r io.Reader, el *sda.EntityList) (*Response, error) {
 			close(pchan)
 			return
 		}
-		pchan <- packet.Msg.(Response)
+		pchan <- packet.Msg.(SignResponse)
 	}()
 	select {
 	case response, ok := <-pchan:
@@ -323,7 +323,7 @@ func Verify(fileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	sig := &Response{}
+	sig := &SignResponse{}
 	dbg.Lvl4("Unmarshalling signature ")
 	if err := json.Unmarshal(sb, sig); err != nil {
 		return err
@@ -343,7 +343,7 @@ func Verify(fileName, groupToml string) error {
 }
 
 // verifySignature checks whether the signature is valid
-func VerifySignatureHash(b []byte, sig *Response, el *sda.EntityList) error {
+func VerifySignatureHash(b []byte, sig *SignResponse, el *sda.EntityList) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
