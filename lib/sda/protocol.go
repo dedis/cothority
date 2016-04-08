@@ -7,7 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// ProtoId uniquely identifies a protocol
+// ProtocolID uniquely identifies a protocol
 type ProtocolID uuid.UUID
 
 // protocols holds a map of all available protocols and how to create an
@@ -51,7 +51,7 @@ func ProtocolRegister(protoID ProtocolID, protocol NewProtocol) {
 
 // ProtocolNameToID returns the ProtocolID corresponding to the given name
 func ProtocolNameToID(name string) ProtocolID {
-	url := network.UuidURL + "protocolname/" + name
+	url := network.NamespaceURL + "protocolname/" + name
 	return ProtocolID(uuid.NewV3(uuid.NamespaceURL, url))
 }
 

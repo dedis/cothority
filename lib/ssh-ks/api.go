@@ -109,25 +109,25 @@ func NetworkGetServer(addr string) (*Server, error) {
 	return conf.Server, nil
 }
 
-func networkSendAnonymous(addr string, req network.ProtocolMessage) (*network.NetworkMessage, error) {
+func networkSendAnonymous(addr string, req network.ProtocolMessage) (*network.Message, error) {
 	// create a throw-away key pair:
 	kp := config.NewKeyPair(network.Suite)
 	dst := network.NewEntity(kp.Public, addr)
 	return networkSend(kp.Secret, dst, req)
 }
 
-func networkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolMessage) (*network.NetworkMessage, error) {
-	client := network.NewSecureTcpHost(sec, nil)
+func networkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolMessage) (*network.Message, error) {
+	client := network.NewSecureTCPHost(sec, nil)
 
 	// Connect to the root
 	dbg.Lvl3("Opening connection")
 	con, err := client.Open(dst)
 	defer client.Close()
 	if err != nil {
-		return &network.NetworkMessage{}, err
+		return &network.Message{}, err
 	}
 
-	pchan := make(chan network.NetworkMessage)
+	pchan := make(chan network.Message)
 	go func() {
 		// send the request
 		dbg.Lvl3("Sending request", req)
@@ -149,6 +149,6 @@ func networkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolM
 		dbg.Lvl5("Response:", response)
 		return &response, nil
 	case <-time.After(time.Second * 10):
-		return &network.NetworkMessage{}, errors.New("Timeout on signing")
+		return &network.Message{}, errors.New("Timeout on signing")
 	}
 }

@@ -329,7 +329,7 @@ func (ca *ClientApp) getAnyServer() (*Server, error) {
 	return nil, errors.New("Found no servers")
 }
 
-func errMsg(status *network.NetworkMessage, err error) error {
+func errMsg(status *network.Message, err error) error {
 	if err != nil {
 		return err
 	}

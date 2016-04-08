@@ -175,17 +175,17 @@ func (sa *ServerApp) Sign() error {
 }
 
 // FuncGetServer returns our Server
-func (sa *ServerApp) FuncGetServer(*network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncGetServer(*network.Message) network.ProtocolMessage {
 	return &GetServerRet{sa.This}
 }
 
 // FuncGetConfig returns our Config
-func (sa *ServerApp) FuncGetConfig(*network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncGetConfig(*network.Message) network.ProtocolMessage {
 	return &GetConfigRet{sa.Config}
 }
 
 // FuncAddServer adds a given server to the configuration
-func (sa *ServerApp) FuncAddServer(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncAddServer(data *network.Message) network.ProtocolMessage {
 	req, ok := data.Msg.(AddServer)
 	if !ok {
 		return &StatusRet{"Didn't get a server"}
@@ -196,7 +196,7 @@ func (sa *ServerApp) FuncAddServer(data *network.NetworkMessage) network.Protoco
 }
 
 // FuncDelServer removes a given server from the configuration
-func (sa *ServerApp) FuncDelServer(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncDelServer(data *network.Message) network.ProtocolMessage {
 	req, ok := data.Msg.(DelServer)
 	if !ok {
 		return &StatusRet{"Didn't get a server"}
@@ -209,7 +209,7 @@ func (sa *ServerApp) FuncDelServer(data *network.NetworkMessage) network.Protoco
 }
 
 // FuncAddClient adds a given client to the configuration
-func (sa *ServerApp) FuncAddClient(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncAddClient(data *network.Message) network.ProtocolMessage {
 	req, ok := data.Msg.(AddClient)
 	if !ok {
 		return &StatusRet{"Didn't get a client"}
@@ -223,7 +223,7 @@ func (sa *ServerApp) FuncAddClient(data *network.NetworkMessage) network.Protoco
 }
 
 // FuncDelServer removes a given server from the configuration
-func (sa *ServerApp) FuncDelClient(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncDelClient(data *network.Message) network.ProtocolMessage {
 	req, ok := data.Msg.(DelClient)
 	if !ok {
 		return &StatusRet{"Didn't get a client"}
@@ -236,7 +236,7 @@ func (sa *ServerApp) FuncDelClient(data *network.NetworkMessage) network.Protoco
 }
 
 // FuncSign asks all servers to sign the new configuration
-func (sa *ServerApp) FuncSign(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncSign(data *network.Message) network.ProtocolMessage {
 	dbg.Lvl3("Starting to sign")
 	status := &StatusRet{}
 	err := sa.Sign()
@@ -248,7 +248,7 @@ func (sa *ServerApp) FuncSign(data *network.NetworkMessage) network.ProtocolMess
 }
 
 // FuncPropSig checks the hash and if it matches updates the signature
-func (sa *ServerApp) FuncPropSig(data *network.NetworkMessage) network.ProtocolMessage {
+func (sa *ServerApp) FuncPropSig(data *network.Message) network.ProtocolMessage {
 	ps, ok := data.Msg.(PropSig)
 	if !ok {
 		return &StatusRet{"Didn't get a signature"}

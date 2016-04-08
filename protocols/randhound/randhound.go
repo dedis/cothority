@@ -1,9 +1,8 @@
-// RandHound is a client/server protocol that allows a list of nodes to produce
+// Package randhound is a client/server protocol that allows a list of nodes to produce
 // a public random string in an unbiasable and verifiable way given that a
 // threshold of nodes is honest. The protocol is driven by a leader (= client)
 // which scavenges the public randomness from its peers (= servers) over the
 // course of four round-trips (= phases).
-
 package randhound
 
 import (
@@ -214,7 +213,7 @@ func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, er
 	}
 
 	// Include public keys of all nodes into group ID
-	for _, x := range rh.Tree().ListNodes() {
+	for _, x := range rh.Tree().List() {
 		pub, err := x.Entity.Public.MarshalBinary()
 		if err != nil {
 			return nil, nil, err

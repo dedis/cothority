@@ -253,7 +253,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessage {
+	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type, but", msg.MsgType)
 	}
 	if msg.Msg.(sda.EntityList).Id != sda.EntityListID(uuid.Nil) {
@@ -267,7 +267,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessage {
+	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type")
 	}
 	if msg.Msg.(sda.EntityList).Id != el.Id {
@@ -309,7 +309,7 @@ func TestTreePropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendTreeMessage {
+	if msg.MsgType != sda.SendTreeMessageID {
 		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
@@ -324,7 +324,7 @@ func TestTreePropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendTreeMessage {
+	if msg.MsgType != sda.SendTreeMessageID {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
 	if msg.Msg.(sda.TreeMarshal).TreeId != tree.Id {
@@ -507,7 +507,7 @@ type SimpleMessage struct {
 
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
-func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
+func testMessageSimple(t *testing.T, msg network.Message) SimpleMessage {
 	if msg.MsgType != SimpleMessageType {
 		t.Fatal("Received non SimpleMessage type")
 	}

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -64,7 +64,7 @@ func (gt *GroupToml) String() string {
 // toEntity will convert this ServerToml struct to a network entity.
 func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
 	pubR := strings.NewReader(s.Public)
-	public, err := cliutils.ReadPub64(suite, pubR)
+	public, err := crypto.ReadPub64(suite, pubR)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
 // or written to a file
 func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
 	var buff bytes.Buffer
-	if err := cliutils.WritePub64(suite, &buff, public); err != nil {
+	if err := crypto.WritePub64(suite, &buff, public); err != nil {
 		dbg.Error("Error writing public key")
 		return nil
 	}

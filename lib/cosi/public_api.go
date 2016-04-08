@@ -45,7 +45,7 @@ func SignStatement(r io.Reader, el *sda.EntityList) (*sda.CosiResponse, error) {
 
 	// create a throw-away entity with an empty  address:
 	e := network.NewEntity(kp.Public, "")
-	client := network.NewSecureTcpHost(kp.Secret, e)
+	client := network.NewSecureTCPHost(kp.Secret, e)
 	msg, _ := crypto.HashStream(network.Suite.Hash(), r)
 	req := &sda.CosiRequest{
 		EntityList: el,

@@ -7,25 +7,36 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
 
 // Our message-types used in sda
-var SDADataMessage = network.RegisterMessageType(SDAData{})
-var RequestTreeMessage = network.RegisterMessageType(RequestTree{})
-var RequestEntityListMessage = network.RegisterMessageType(RequestEntityList{})
-var SendTreeMessage = TreeMarshalType
-var SendEntityListMessage = EntityListType
 
 var CosiRequestMessage = network.RegisterMessageType(CosiRequest{})
 var CosiResponseMessage = network.RegisterMessageType(CosiResponse{})
 
 // SDAData is to be embedded in every message that is made for a
+// ID of SDAData message as registered in network
+var SDADataMessageID = network.RegisterMessageType(Data{})
+
+// ID of RequestTree message as registered in network
+var RequestTreeMessageID = network.RegisterMessageType(RequestTree{})
+
+// ID of RequestEntityList message as registered in network
+var RequestEntityListMessageID = network.RegisterMessageType(RequestEntityList{})
+
+// ID of TreeMarshal message as registered in network
+var SendTreeMessageID = TreeMarshalTypeID
+
+// ID of EntityList message as registered in network
+var SendEntityListMessageID = EntityListTypeID
+
+// Data is to be embedded in every message that is made for a
 // ProtocolInstance
-type SDAData struct {
+type Data struct {
 	// Token uniquely identify the protocol instance this msg is made for
 	From *Token
 	// The TreeNodeId Where the message goes to
@@ -76,7 +87,7 @@ func (t *Token) Id() TokenID {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
 	if t.cacheId == TokenID(uuid.Nil) {
-		url := network.UuidURL + "token/" + t.EntityListID.String() +
+		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
@@ -146,11 +157,11 @@ func (s *CosiResponse) MarshalJSON() ([]byte, error) {
 	cw := new(bytes.Buffer)
 	rw := new(bytes.Buffer)
 
-	err := cliutils.WriteSecret64(network.Suite, cw, s.Challenge)
+	err := crypto.WriteSecret64(network.Suite, cw, s.Challenge)
 	if err != nil {
 		return nil, err
 	}
-	err = cliutils.WriteSecret64(network.Suite, rw, s.Response)
+	err = crypto.WriteSecret64(network.Suite, rw, s.Response)
 	if err != nil {
 		return nil, err
 	}
@@ -182,11 +193,11 @@ func (s *CosiResponse) UnmarshalJSON(data []byte) error {
 	}
 	suite := network.Suite
 	cr := strings.NewReader(aux.Challenge)
-	if s.Challenge, err = cliutils.ReadSecret64(suite, cr); err != nil {
+	if s.Challenge, err = crypto.ReadSecret64(suite, cr); err != nil {
 		return err
 	}
 	rr := strings.NewReader(aux.Response)
-	if s.Response, err = cliutils.ReadSecret64(suite, rr); err != nil {
+	if s.Response, err = crypto.ReadSecret64(suite, rr); err != nil {
 		return err
 	}
 	return nil

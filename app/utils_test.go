@@ -2,7 +2,7 @@ package app
 
 import (
 	"bytes"
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/network"
 	"strings"
 	"testing"
@@ -34,12 +34,12 @@ func TestCreateEntityList(t *testing.T) {
 		t.Fatalf("Wanted %s number of entities, but got %s",
 			want, got)
 	}
-	if el.List[0].Id == el.List[1].Id {
+	if el.List[0].ID == el.List[1].ID {
 		t.Fatal("To different entities have the same ID")
 	}
 	wantKey := "5ThA/lW6WgZNtb+WY1HnoxHWgZlR4dFy/AFNJ5jgmU4="
 	var buff bytes.Buffer
-	if err := cliutils.WritePub64(network.Suite, &buff, el.List[0].Public); err != nil {
+	if err := crypto.WritePub64(network.Suite, &buff, el.List[0].Public); err != nil {
 		t.Fatal("Could not convert key to base64", err)
 	}
 	gotKey := buff.String()

@@ -1,4 +1,4 @@
-package byzcoin_ntree
+package byzcoinNtree
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
@@ -6,17 +6,20 @@ import (
 	"github.com/dedis/cothority/protocols/byzcoin"
 )
 
+// NtreeServer is similar to byzcoin.Server
 type NtreeServer struct {
-	*byzcoin.ByzCoinServer
+	*byzcoin.Server
 }
 
+// NewNtreeServer returns a new block server for Ntree
 func NewNtreeServer(blockSize int) *NtreeServer {
 	ns := new(NtreeServer)
 	// we don't care about timeout + fail in Naive comparison
-	ns.ByzCoinServer = byzcoin.NewByzCoinServer(blockSize, 0, 0)
+	ns.Server = byzcoin.NewByzCoinServer(blockSize, 0, 0)
 	return ns
 }
 
+// Instantiate returns a new NTree protocol instance
 func (nt *NtreeServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
 	dbg.Lvl2("Waiting for enough transactions...")
 	currTransactions := nt.WaitEnoughBlocks()

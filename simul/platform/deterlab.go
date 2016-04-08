@@ -22,21 +22,19 @@ import (
 	"sync"
 
 	"bufio"
-	_ "errors"
 	"fmt"
 	"io/ioutil"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
 
+// Deterlab holds all fields necessary for a Deterlab-run
 type Deterlab struct {
 	// *** Deterlab-related configuration
 	// The login on the platform
@@ -88,7 +86,9 @@ type Deterlab struct {
 
 var simulConfig *sda.SimulationConfig
 
-func (d *Deterlab) Configure(pc *PlatformConfig) {
+// Configure initialises the directories and loads the saved config
+// for Deterlab
+func (d *Deterlab) Configure(pc *Config) {
 	// Directory setup - would also be possible in /tmp
 	pwd, _ := os.Getwd()
 	d.cothorityDir = pwd + "/cothority"
@@ -97,7 +97,7 @@ func (d *Deterlab) Configure(pc *PlatformConfig) {
 	d.buildDir = d.deterDir + "/build"
 	d.MonitorPort = pc.MonitorPort
 	dbg.Lvl3("Dirs are:", d.deterDir, d.deployDir)
-	d.LoadAndCheckDeterlabVars()
+	d.loadAndCheckDeterlabVars()
 
 	d.Debug = pc.Debug
 	if d.Simulation == "" {
@@ -108,8 +108,9 @@ func (d *Deterlab) Configure(pc *PlatformConfig) {
 	d.sshDeter = make(chan string)
 }
 
-// build is the name of the app to build
-// empty = all otherwise build specific package
+// Build prepares all binaries for the Deterlab-simulation.
+// If 'build' is empty, all binaries are created, else only
+// the ones indicated. Either "simul" or "users"
 func (d *Deterlab) Build(build string, arg ...string) error {
 	dbg.Lvl1("Building for", d.Login, d.Host, d.Project, build, "cothorityDir=", d.cothorityDir)
 	start := time.Now()
@@ -133,15 +134,15 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 	}
 	dbg.Lvl3("Starting to build all executables", packages)
 	for _, p := range packages {
-		src_dir := d.deterDir + "/" + p
+		srcDir := d.deterDir + "/" + p
 		basename := path.Base(p)
 		if p == "simul" {
-			src_dir = d.cothorityDir
+			srcDir = d.cothorityDir
 			basename = "cothority"
 		}
 		dst := d.buildDir + "/" + basename
 
-		dbg.Lvl3("Building", p, "from", src_dir, "into", basename)
+		dbg.Lvl3("Building", p, "from", srcDir, "into", basename)
 		wg.Add(1)
 		processor := "amd64"
 		system := "linux"
@@ -152,16 +153,16 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 		go func(src, dest string) {
 			defer wg.Done()
 			// deter has an amd64, linux architecture
-			src_rel, _ := filepath.Rel(d.deterDir, src)
-			dbg.Lvl3("Relative-path is", src_rel, " will build into ", dest)
-			out, err := cliutils.Build("./"+src_rel, dest,
+			srcRel, _ := filepath.Rel(d.deterDir, src)
+			dbg.Lvl3("Relative-path is", srcRel, " will build into ", dest)
+			out, err := Build("./"+srcRel, dest,
 				processor, system, arg...)
 			if err != nil {
-				cliutils.KillGo()
+				KillGo()
 				dbg.Lvl1(out)
 				dbg.Fatal(err)
 			}
-		}(src_dir, dst)
+		}(srcDir, dst)
 	}
 	// wait for the build to finish
 	wg.Wait()
@@ -169,7 +170,7 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 	return nil
 }
 
-// Kills all eventually remaining processes from the last Deploy-run
+// Cleanup kills all eventually remaining processes from the last Deploy-run
 func (d *Deterlab) Cleanup() error {
 	// Cleanup eventual ssh from the proxy-forwarding to the logserver
 	err := exec.Command("pkill", "-9", "-f", "ssh -nNTf").Run()
@@ -183,8 +184,8 @@ func (d *Deterlab) Cleanup() error {
 	sshKill = make(chan string)
 	go func() {
 		// Cleanup eventual residues of previous round - users and sshd
-		cliutils.SshRun(d.Login, d.Host, "killall -9 users sshd")
-		err := cliutils.SshRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
+		SSHRun(d.Login, d.Host, "killall -9 users sshd")
+		err := SSHRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
 			dbg.Lvl1("NOT-Normal error from cleanup")
 			sshKill <- "error"
@@ -198,9 +199,8 @@ func (d *Deterlab) Cleanup() error {
 			if msg == "stopped" {
 				dbg.Lvl3("Users stopped")
 				return nil
-			} else {
-				dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
 			}
+			dbg.Lvl2("Received other command", msg, "probably the app didn't quit correctly")
 		case <-time.After(time.Second * 20):
 			dbg.Lvl3("Timeout error when waiting for end of ssh")
 			return nil
@@ -208,7 +208,7 @@ func (d *Deterlab) Cleanup() error {
 	}
 }
 
-// Creates the appropriate configuration-files and copies everything to the
+// Deploy creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
 	os.RemoveAll(d.deployDir)
@@ -255,7 +255,7 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 
 	// Copy everything over to Deterlab
 	dbg.Lvl1("Copying over to", d.Login, "@", d.Host)
-	err = cliutils.Rsync(d.Login, d.Host, d.deployDir+"/", "remote/")
+	err = Rsync(d.Login, d.Host, d.deployDir+"/", "remote/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -264,6 +264,8 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	return nil
 }
 
+// Start creates a tunnel for the monitor-output and contacts the Deterlab-
+// server to run the simulation
 func (d *Deterlab) Start(args ...string) error {
 	// setup port forwarding for viewing log server
 	d.started = true
@@ -283,7 +285,7 @@ func (d *Deterlab) Start(args ...string) error {
 	}
 	dbg.Lvl3("Setup remote port forwarding", cmd)
 	go func() {
-		err := cliutils.SshRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
+		err := SSHRunStdout(d.Login, d.Host, "cd remote; GOMAXPROCS=8 ./users")
 		if err != nil {
 			dbg.Lvl3(err)
 		}
@@ -293,7 +295,7 @@ func (d *Deterlab) Start(args ...string) error {
 	return nil
 }
 
-// Waiting for the process to finish
+// Wait for the process to finish
 func (d *Deterlab) Wait() error {
 	wait := d.CloseWait
 	if wait == 0 {
@@ -306,9 +308,8 @@ func (d *Deterlab) Wait() error {
 			if msg == "finished" {
 				dbg.Lvl3("Received finished-message, not killing users")
 				return nil
-			} else {
-				dbg.Lvl1("Received out-of-line message", msg)
 			}
+			dbg.Lvl1("Received out-of-line message", msg)
 		case <-time.After(time.Second * time.Duration(wait)):
 			dbg.Lvl1("Quitting after ", wait/60,
 				" minutes of waiting")
@@ -319,35 +320,16 @@ func (d *Deterlab) Wait() error {
 	return nil
 }
 
-// Reads in the deterlab-config and drops out if there is an error
-func DeterFromConfig(name ...string) *Deterlab {
-	d := &Deterlab{}
-	configName := "deter.toml"
-	if len(name) > 0 {
-		configName = name[0]
-	}
-	err := sda.ReadTomlConfig(d, configName)
-	_, caller, line, _ := runtime.Caller(1)
-	who := caller + ":" + strconv.Itoa(line)
-	if err != nil {
-		dbg.Fatal("Couldn't read config in", who, ":", err)
-	}
-	dbg.SetDebugVisible(d.Debug)
-	return d
-}
-
-/*
-* Write the hosts.txt file automatically
-* from project name and number of servers
- */
+// Write the hosts.txt file automatically
+// from project name and number of servers
 func (d *Deterlab) createHosts() error {
-	num_servers := d.Servers
+	numServers := d.Servers
 
 	ip := "10.255.0."
 	name := d.Project + ".isi.deterlab.net"
-	d.Phys = make([]string, 0, num_servers)
-	d.Virt = make([]string, 0, num_servers)
-	for i := 1; i <= num_servers; i++ {
+	d.Phys = make([]string, 0, numServers)
+	d.Virt = make([]string, 0, numServers)
+	for i := 1; i <= numServers; i++ {
 		d.Phys = append(d.Phys, fmt.Sprintf("server-%d.%s.%s", i-1, d.Experiment, name))
 		d.Virt = append(d.Virt, fmt.Sprintf("%s%d", ip, i))
 	}
@@ -361,7 +343,7 @@ func (d *Deterlab) createHosts() error {
 // ask on the command-line.
 // For the login-variable, it will try to set up a connection to d.Host and copy over the
 // public key for a more easy communication
-func (d *Deterlab) LoadAndCheckDeterlabVars() {
+func (d *Deterlab) loadAndCheckDeterlabVars() {
 	deter := Deterlab{}
 	err := sda.ReadTomlConfig(&deter, "deter.toml", d.deterDir)
 	d.Host, d.Login, d.Project, d.Experiment, d.ProxyAddress, d.MonitorAddress =

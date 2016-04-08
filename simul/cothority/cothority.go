@@ -73,7 +73,7 @@ func main() {
 			dbg.Fatal(err)
 		}
 		sims[i] = sim
-		if host.Entity.Id == sc.Tree.Root.Entity.Id {
+		if host.Entity.ID == sc.Tree.Root.Entity.ID {
 			dbg.Lvl2(hostAddress, "is root-node, will start protocol")
 			rootSim = sim
 			rootSC = sc

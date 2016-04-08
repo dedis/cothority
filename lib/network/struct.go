@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
@@ -18,21 +18,37 @@ import (
 	"golang.org/x/net/context"
 )
 
-// How many times should we try to connect
+// MaxRetry defines how many times should we try to connect
 const MaxRetry = 10
 
-// how much time should we wait before trying again
+// WaitRetry defines how much time should we wait before trying again
 const WaitRetry = 100 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
+
+// ErrClosed is when a connection has been closed
 var ErrClosed = errors.New("Connection Closed")
+
+// ErrEOF is when the EOF signal comes to the connection (mostly means that it
+// is shutdown)
 var ErrEOF = errors.New("EOF")
+
+// ErrCanceled means something went wrong with the sending or receiving
 var ErrCanceled = errors.New("Operation Canceled")
+
+// ErrTemp is a temporary error
 var ErrTemp = errors.New("Temporary Error")
+
+// ErrTimeout is raised if the connection has set a timeout on read or write,
+// and the operation lasted longer
 var ErrTimeout = errors.New("Timeout Error")
+
+// ErrUnknown is an unknown error
 var ErrUnknown = errors.New("Unknown Error")
 
+// Size is a type to reprensent the size that is sent before every packet to
+// correctly decode it.
 type Size uint32
 
 // Host is the basic interface to represent a Host of any kind
@@ -53,14 +69,14 @@ type Conn interface {
 	// Send a message through the connection. Always pass a pointer !
 	Send(ctx context.Context, obj ProtocolMessage) error
 	// Receive any message through the connection.
-	Receive(ctx context.Context) (NetworkMessage, error)
+	Receive(ctx context.Context) (Message, error)
 	Close() error
 	monitor.CounterIO
 }
 
-// TcpHost is the underlying implementation of
+// TCPHost is the underlying implementation of
 // Host using Tcp as a communication channel
-type TcpHost struct {
+type TCPHost struct {
 	// A list of connection maintained by this host
 	peers    map[string]Conn
 	peersMut sync.Mutex
@@ -80,9 +96,9 @@ type TcpHost struct {
 	constructors protobuf.Constructors
 }
 
-// TcpConn is the underlying implementation of
+// TCPConn is the underlying implementation of
 // Conn using Tcp
-type TcpConn struct {
+type TCPConn struct {
 	// The name of the endpoint we are connected to.
 	Endpoint string
 
@@ -93,7 +109,7 @@ type TcpConn struct {
 	closed    bool
 	closedMut sync.Mutex
 	// A pointer to the associated host (just-in-case)
-	host *TcpHost
+	host *TCPHost
 	// So we only handle one receiving packet at a time
 	receiveMutex sync.Mutex
 	// So we only handle one sending packet at a time
@@ -123,10 +139,10 @@ type SecureConn interface {
 	Entity() *Entity
 }
 
-// SecureTcpHost is a TcpHost but with the additional property that it handles
+// SecureTCPHost is a TcpHost but with the additional property that it handles
 // Entity.
-type SecureTcpHost struct {
-	*TcpHost
+type SecureTCPHost struct {
+	*TCPHost
 	// Entity of this host
 	entity *Entity
 	// Private key tied to this entity
@@ -137,19 +153,19 @@ type SecureTcpHost struct {
 	// Lock for accessing this structure
 	lockAddress sync.Mutex
 	// list of all connections this host has opened
-	conns     []*SecureTcpConn
+	conns     []*SecureTCPConn
 	connMutex sync.Mutex
 }
 
-// SecureTcpConn is a secured tcp connection using Entity as identity
-type SecureTcpConn struct {
-	*TcpConn
-	*SecureTcpHost
+// SecureTCPConn is a secured tcp connection using Entity as an identity.
+type SecureTCPConn struct {
+	*TCPConn
+	*SecureTCPHost
 	entity *Entity
 }
 
-// NetworkMessage is the container for any NetworkMessage
-type NetworkMessage struct {
+// Message is the container for any NetworkMessage
+type Message struct {
 	// The Entity of the remote peer we are talking to.
 	// Basically, this means that when you open a new connection to someone, and
 	// / or listens to incoming connections, the network library will already
@@ -174,7 +190,7 @@ type Entity struct {
 	// This is the public key of that Entity
 	Public abstract.Point
 	// The EntityID corresponding to that public key
-	Id EntityID
+	ID EntityID
 	// A slice of addresses of where that Id might be found
 	Addresses []string
 	// used to return the next available address
@@ -184,6 +200,7 @@ type Entity struct {
 // EntityID uniquely identifies an Entity struct
 type EntityID uuid.UUID
 
+// Equals returns true if both EntityID are equal or false otherwise.
 func (eid EntityID) Equals(other EntityID) bool {
 	return uuid.Equal(uuid.UUID(eid), uuid.UUID(other))
 }
@@ -205,11 +222,11 @@ type EntityToml struct {
 // of IP-addresses where to find that entity. The Id is based on a
 // version5-UUID which can include a URL that is based on it's public key.
 func NewEntity(public abstract.Point, addresses ...string) *Entity {
-	url := UuidURL + "id/" + public.String()
+	url := NamespaceURL + "id/" + public.String()
 	return &Entity{
 		Public:    public,
 		Addresses: addresses,
-		Id:        EntityID(uuid.NewV5(uuid.NamespaceURL, url)),
+		ID:        EntityID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
 }
 
@@ -238,7 +255,7 @@ func (e *Entity) Equal(e2 *Entity) bool {
 // Toml converts an Entity to a Toml-structure
 func (e *Entity) Toml(suite abstract.Suite) *EntityToml {
 	var buf bytes.Buffer
-	cliutils.WritePub64(suite, &buf, e.Public)
+	crypto.WritePub64(suite, &buf, e.Public)
 	return &EntityToml{
 		Addresses: e.Addresses,
 		Public:    buf.String(),
@@ -247,11 +264,20 @@ func (e *Entity) Toml(suite abstract.Suite) *EntityToml {
 
 // Entity converts an EntityToml structure back to an Entity
 func (e *EntityToml) Entity(suite abstract.Suite) *Entity {
-	pub, _ := cliutils.ReadPub64(suite, strings.NewReader(e.Public))
+	pub, _ := crypto.ReadPub64(suite, strings.NewReader(e.Public))
 	return &Entity{
 		Public:    pub,
 		Addresses: e.Addresses,
 	}
+}
+
+// GlobalBind returns the global-binding address
+func GlobalBind(address string) (string, error) {
+	addr := strings.Split(address, ":")
+	if len(addr) != 2 {
+		return "", errors.New("Not a host:port address")
+	}
+	return "0.0.0.0:" + addr[1], nil
 }
 
 // handleError produces the higher layer error depending on the type
