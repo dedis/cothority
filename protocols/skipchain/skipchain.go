@@ -21,7 +21,7 @@ type ProtocolSkipchain struct {
 	SetupDone    chan bool
 	SkipChain    map[string]*SkipBlock
 	LastBlock    []byte
-	CurrentBlock SkipBlock
+	Genesis 	 []byte
 }
 
 // NewSkipchain initialises the structures and create the genesis block
@@ -47,7 +47,7 @@ func NewSkipchain(n *sda.Node) (sda.ProtocolInstance, error) {
 func (p *ProtocolSkipchain) Start() error {
 	dbg.Lvl3("Starting Skipchain")
 	block := &SkipBlock{Index: 0, X_0: p.TreeNode().PublicAggregateSubTree, Nodes: p.Tree().List()}
-	p.LastBlock = block.Hash()
+	//p.LastBlock = block.Hash()
 	return p.HandleGenesis(StructGenesis{p.TreeNode(),
 		MessageGenesis{Block: block}})
 }
@@ -75,15 +75,23 @@ func (p *ProtocolSkipchain) StartSignature(block SkipBlock) error {
 		block.Signature = &libcosi.Signature{chal, resp}
 		block.Nodes = nil
 		p.HandlePropagate(StructPropagate{MessagePropagate: MessagePropagate{Block: &block}})
-		p.SetupDone <- true
+		p.SetupDone <- true// this is send every block. it accumulates?
 	})
 	proto.StartProtocol()
+
 	return nil
 }
 
 // HandlePropagate sends the signed block to the nodes who add it in their SkipList
 func (p *ProtocolSkipchain) HandlePropagate(prop StructPropagate) error {
 	//TODO if the block is propagated before now propagate only the signature on recieve nodes set block.Nodes to nil
+	if p.LastBlock!= nil{
+		f:= &ForwardStruct{Hash : prop.Block.Hash(), Signature : prop.Block.Signature}
+		p.SkipChain[string(p.LastBlock)].ForwardLink = append(p.SkipChain[string(p.LastBlock)].ForwardLink, *f)
+
+	}else{
+		p.Genesis = prop.Block.Hash()
+	}
 	p.LastBlock = prop.Block.Hash()
 	p.SkipChain[string(p.LastBlock)] = prop.Block
 	if !p.IsLeaf() {
@@ -99,20 +107,36 @@ func (p *ProtocolSkipchain) HandlePropagate(prop StructPropagate) error {
 	return nil
 }
 
-// HandleNewBlock is used to sign new blocks, it is called by the application when something changes
+// SignNewBlock is used to sign new blocks, it is called by the application when something changes
 func (p *ProtocolSkipchain) SignNewBlock(nodes []*sda.TreeNode) error {
 	//create aggregate key and add it
 	suite := network.Suite
 	aggregatekey := suite.Point().Null()
-
+	dbg.Lvl3("calculating key")
 	for i := 0; i < len(nodes); i++ {
 		aggregatekey = suite.Point().Add(aggregatekey, nodes[i].Entity.Public)
 	}
-	block := &SkipBlock{Index: p.SkipChain[string(p.LastBlock)].Index + 1} //TODO fill the fields
+	block := &SkipBlock{Index: p.SkipChain[string(p.LastBlock)].Index + 1, X_0: aggregatekey, Nodes: nodes} //TODO fill the fields
 	block.BackLink = append(block.BackLink, p.LastBlock)
+	dbg.Lvl3("signing new block")
 	err := p.StartSignature(*block)
 	if err != nil {
 		return err
 	}
+	<-p.SetupDone
 	return nil
 }
+
+//LookUpBlock returns the block of a corresponding Hash. It should be reimplemented to work over internet
+func (p *ProtocolSkipchain) LookUpBlock(block []byte) (SkipBlock,error) {
+	b , exist := p.SkipChain[string(block)]
+	if exist == true {
+		return *b,nil
+	}else{
+		return *p.SkipChain[string(p.Genesis)], errors.New("There is no block with this hash value")	
+	}
+}
+
+
+
+
