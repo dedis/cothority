@@ -66,15 +66,19 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 		tempSignatureResponse:      &RoundSignatureResponse{new(NaiveBlockSignature)},
 	}
 
-	chans := []interface{}{
-		&nt.announceChan,
-		&nt.blockSignatureChan,
-		&nt.roundSignatureRequestChan,
-		&nt.roundSignatureResponseChan,
+	if err := node.RegisterChannel(&nt.announceChan); err != nil {
+		return nt, err
 	}
-	if err := node.RegisterChannels(chans); err != nil {
-		return nil, err
+	if err := node.RegisterChannel(&nt.blockSignatureChan); err != nil {
+		return nt, err
 	}
+	if err := node.RegisterChannel(&nt.roundSignatureRequestChan); err != nil {
+		return nt, err
+	}
+	if err := node.RegisterChannel(&nt.roundSignatureResponseChan); err != nil {
+		return nt, err
+	}
+
 	go nt.listen()
 	return nt, nil
 }

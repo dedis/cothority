@@ -86,15 +86,19 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft.prepMsgCount = 0
 	pbft.commitMsgCount = 0
 
-	chans := []interface{}{
-		&pbft.prePrepareChan,
-		&pbft.prepareChan,
-		&pbft.commitChan,
-		&pbft.finishChan,
+	if err := n.RegisterChannel(&pbft.prePrepareChan); err != nil {
+		return pbft, err
 	}
-	if err := n.RegisterChannels(chans); err != nil {
-		return nil, err
+	if err := n.RegisterChannel(&pbft.prepareChan); err != nil {
+		return pbft, err
 	}
+	if err := n.RegisterChannel(&pbft.commitChan); err != nil {
+		return pbft, err
+	}
+	if err := n.RegisterChannel(&pbft.finishChan); err != nil {
+		return pbft, err
+	}
+
 	return pbft, nil
 }
 

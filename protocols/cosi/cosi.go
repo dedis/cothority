@@ -93,15 +93,19 @@ func NewProtocolCosi(node *sda.Node) (sda.ProtocolInstance, error) {
 		tempCommitLock:   new(sync.Mutex),
 		tempResponseLock: new(sync.Mutex),
 	}
-	// Register the three channels we want to register and listens on
-	chans := []interface{}{
-		&pc.announce,
-		&pc.commit,
-		&pc.challenge,
-		&pc.response,
+	// Register the channels we want to register and listens on
+
+	if err := node.RegisterChannel(&pc.announce); err != nil {
+		return pc, err
 	}
-	if err := node.RegisterChannels(chans); err != nil {
-		return nil, err
+	if err := node.RegisterChannel(&pc.commit); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.challenge); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.response); err != nil {
+		return pc, err
 	}
 
 	return pc, err

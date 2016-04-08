@@ -53,13 +53,14 @@ func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 
 func (b *Broadcast) init(n *sda.Node) *Broadcast {
 	b.Node = n
-	chans := []interface{}{
-		&b.ackChan,
-		&b.announceChan,
-		&b.okChan,
+	if err := b.RegisterChannel(&b.ackChan); err != nil {
+		dbg.Error(b.Info(), "failed to register channel:", err)
 	}
-	if err := b.RegisterChannels(chans); err != nil {
-		dbg.Error(b.Info(), "failed to register channels:", err)
+	if err := b.RegisterChannel(&b.announceChan); err != nil {
+		dbg.Error(b.Info(), "failed to register channel:", err)
+	}
+	if err := b.RegisterChannel(&b.okChan); err != nil {
+		dbg.Error(b.Info(), "failed to register channel:", err)
 	}
 
 	lists := b.Tree().List()

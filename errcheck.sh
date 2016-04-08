@@ -5,7 +5,7 @@
 
 # list of lints we want to ensure:
 Ignore="_test.go"
-Out=`$GOPATH/bin/errcheck ./... | grep -v "($Ignore)"`
+Out=`$GOPATH/bin/errcheck ./... | grep -v "$Ignore"`
 
 # if the output isn't empty exit with an error
 if [ -z "$Out" ]; then

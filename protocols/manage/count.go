@@ -73,13 +73,14 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 		timeout: 1024,
 	}
 	p.Count = make(chan int, 1)
-	chans := []interface{}{
-		&p.CountChan,
-		&p.PrepareCountChan,
-		&p.NodeIsUpChan,
+	if err := p.RegisterChannel(&p.CountChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
 	}
-	if err := p.RegisterChannels(chans); err != nil {
-		return p, err
+	if err := p.RegisterChannel(&p.PrepareCountChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
+	}
+	if err := p.RegisterChannel(&p.NodeIsUpChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
 	}
 	return p, nil
 }

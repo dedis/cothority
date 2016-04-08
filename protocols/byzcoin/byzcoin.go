@@ -155,16 +155,23 @@ func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
 	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().List())) * 2.0 / 3.0))
 
 	// register channels
-	chans := []interface{}{
-		&bz.announceChan,
-		&bz.commitChan,
-		&bz.challengePrepareChan,
-		&bz.challengeCommitChan,
-		&bz.responseChan,
-		&bz.viewchangeChan,
+	if err := n.RegisterChannel(&bz.announceChan); err != nil {
+		return bz, err
 	}
-	if err := n.RegisterChannels(chans); err != nil {
-		return nil, err
+	if err := n.RegisterChannel(&bz.commitChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.challengePrepareChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.challengeCommitChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.responseChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.viewchangeChan); err != nil {
+		return bz, err
 	}
 
 	n.OnDoneCallback(bz.nodeDone)

@@ -224,7 +224,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	}
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
-		return errors.New("Input is not channel")
+		return errors.New("Input is not channel but " + cr.Kind().String())
 	}
 	if cr.Elem().Kind() == reflect.Slice {
 		flags += AggregateMessages
@@ -294,17 +294,6 @@ func (n *Node) RegisterHandlers(handlers ...interface{}) error {
 	for _, h := range handlers {
 		if err := n.RegisterHandler(h); err != nil {
 			return errors.New("Error, could not register handler: " + err.Error())
-		}
-	}
-	return nil
-}
-
-// RegisterChannels registers a list of given channels by calling RegisterChannel
-func (n *Node) RegisterChannels(channels ...interface{}) error {
-	for _, c := range channels {
-		if err := n.RegisterChannel(c); err != nil {
-			return errors.New("Error, could not register channel: " +
-				err.Error())
 		}
 	}
 	return nil
