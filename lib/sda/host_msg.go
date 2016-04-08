@@ -1,22 +1,11 @@
 package sda
 
 import (
-	"bytes"
-	"encoding/base64"
-	"encoding/json"
-	"strings"
 	"sync"
 
-	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
-
-// Our message-types used in sda
-
-var CosiRequestMessage = network.RegisterMessageType(CosiRequest{})
-var CosiResponseMessage = network.RegisterMessageType(CosiResponse{})
 
 // SDAData is to be embedded in every message that is made for a
 // ID of SDAData message as registered in network
@@ -124,81 +113,4 @@ type EntityListUnknown struct {
 // SendEntity is the first message we send on creation of a link
 type SendEntity struct {
 	Name string
-}
-
-// CLI Part of SDA
-
-// CosiRequest is used by the client to send something to sda that
-// will in turn give that to the CoSi system.
-// It contains the message the client wants to sign.
-type CosiRequest struct {
-	// The entity list to use for creating the cosi tree
-	EntityList *EntityList
-	// the actual message to sign by CoSi.
-	Message []byte
-}
-
-// CoSiResponse contains the signature out of the CoSi system.
-// It can be verified using the lib/cosi package.
-// NOTE: the `suite` field is absent here because this struct is a temporary
-// hack and we only supports one suite for the moment,i.e. ed25519.
-type CosiResponse struct {
-	// The hash of the signed statement
-	Sum []byte
-	// The Challenge out a of the Multi Schnorr signature
-	Challenge abstract.Secret
-	// the Response out of the Multi Schnorr Signature
-	Response abstract.Secret
-}
-
-// MarshalJSON implements golang's JSON marshal interface
-// XXX might be moved to another package soon
-func (s *CosiResponse) MarshalJSON() ([]byte, error) {
-	cw := new(bytes.Buffer)
-	rw := new(bytes.Buffer)
-
-	err := crypto.WriteSecret64(network.Suite, cw, s.Challenge)
-	if err != nil {
-		return nil, err
-	}
-	err = crypto.WriteSecret64(network.Suite, rw, s.Response)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(struct {
-		Sum       string
-		Challenge string
-		Response  string
-	}{
-		Sum:       base64.StdEncoding.EncodeToString(s.Sum),
-		Challenge: cw.String(),
-		Response:  rw.String(),
-	})
-}
-
-// UnmarshalJSON implements golang's JSON unmarshal interface
-func (s *CosiResponse) UnmarshalJSON(data []byte) error {
-	type Aux struct {
-		Sum       string
-		Challenge string
-		Response  string
-	}
-	aux := &Aux{}
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-	var err error
-	if s.Sum, err = base64.StdEncoding.DecodeString(aux.Sum); err != nil {
-		return err
-	}
-	suite := network.Suite
-	cr := strings.NewReader(aux.Challenge)
-	if s.Challenge, err = crypto.ReadSecret64(suite, cr); err != nil {
-		return err
-	}
-	rr := strings.NewReader(aux.Response)
-	if s.Response, err = crypto.ReadSecret64(suite, rr); err != nil {
-		return err
-	}
-	return nil
 }

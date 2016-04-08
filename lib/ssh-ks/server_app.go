@@ -3,10 +3,10 @@ package ssh_ks
 import (
 	"bytes"
 	"errors"
-	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"io/ioutil"
@@ -102,6 +102,7 @@ func (sa *ServerApp) Start() error {
 	sa.host.RegisterMessage(DelClient{}, sa.FuncDelClient)
 	sa.host.RegisterMessage(Sign{}, sa.FuncSign)
 	sa.host.RegisterMessage(PropSig{}, sa.FuncPropSig)
+	cosi.AddCosiApp(sa.host)
 	sa.host.Listen()
 	sa.host.StartProcessMessages()
 	return nil

@@ -10,16 +10,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dedis/cothority/app"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
-	// Empty imports to have the init-functions called which should
-	// register the protocol
-
 	"github.com/codegangsta/cli"
-	_ "github.com/dedis/cothority/protocols"
-	"github.com/dedis/crypto/config"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/protocols/cosi"
 )
 
 // Main starts the host and will setup the protocol.
@@ -45,24 +38,16 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		dbg.Lvl1("Starting cothority daemon", cliApp.Version)
 		// We're in standalone mode and only start the node
-		host, err := sda.NewHostFromFile(config)
-		// if the file does not exists
-		if os.IsNotExist(err) {
+		cosiApp, err := cosi.ReadCosiApp(config)
+		if err != nil {
 			// then ask informations to create one
-			host = createHost(config)
-		} else if err != nil {
-			dbg.Lvl1("Config file is invalid. (", err, ") Fix it or delete it and re-start to create a new one")
-			os.Exit(1)
+			cosiApp = createHost(config)
+			dbg.ErrFatal(cosiApp.Write(config))
 		}
 
 		dbg.Lvl1("Starting Host: You can copy the following lines in a servers.toml file to use by app/cosi client:")
-		serverToml := app.NewServerToml(host.Suite(), host.Entity.Public, host.Entity.Addresses...)
-		groupToml := app.NewGroupToml(serverToml)
-		fmt.Println(groupToml.String())
-
-		host.Listen()
-		host.StartProcessMessages()
-		host.WaitForClose()
+		cosiApp.PrintServer()
+		cosiApp.Start()
 	}
 
 	cliApp.Run(os.Args)
@@ -72,7 +57,7 @@ func main() {
 // createHost will ask for the public IP:PORT of the host we want to create.
 // The IP:PORT pair *must* be accessible from the Internet as other Hosts will
 // try to contact it.
-func createHost(cfg string) *sda.Host {
+func createHost(cfg string) *cosi.CosiApp {
 	fmt.Println("Configuration file " + cfg + " does not exists")
 	reader := bufio.NewReader(os.Stdin)
 	var err error
@@ -88,17 +73,5 @@ func createHost(cfg string) *sda.Host {
 	}
 
 	ip := str
-
-	// create the public / private keys
-	kp := config.NewKeyPair(network.Suite)
-	entity := network.NewEntity(kp.Public, ip)
-	host := sda.NewHost(entity, kp.Secret)
-
-	// write to the file
-	if err = host.SaveToFile(cfg); err != nil {
-		fmt.Println("Error writing config to file:", err, " => Abort.")
-		os.Exit(1)
-	}
-	fmt.Println("Host written to file", str)
-	return host
+	return cosi.CreateCosiApp(ip)
 }

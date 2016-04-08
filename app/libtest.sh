@@ -3,15 +3,15 @@
 # highest number of servers and clients
 NBR=3
 # Use for suppressing building if that directory exists
-#STATICDIR=test
+STATICDIR=test
 # If set, always build
-BUILD=z
+BUILD=
 # Debug-level for server
 DBG_SRV=1
 # Debug-level for client
 DBG_CLIENT=1
 # Debug running
-DBG_RUN=
+DBG_RUN=z
 
 startTest(){
     # where the output should go

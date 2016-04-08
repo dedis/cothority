@@ -3,7 +3,6 @@ package sda
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
 
@@ -26,14 +25,6 @@ type ProtocolInstance interface {
 	Dispatch() error
 	// Shutdown cleans up the resources used by this protocol instance
 	Shutdown() error
-
-	// SigningMessage is temporary hack:
-	// need to access protocols/cosi from sda (without cycle import).
-	// It takes the message to sign as an argument to the protocol instance
-	// XXX it will be removed in the next release.
-	SigningMessage(msg []byte)
-	// RegisterDoneCallback callback to register when the signature is done
-	RegisterDoneCallback(func(chal, secret abstract.Secret))
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol

@@ -12,10 +12,10 @@ import (
 	"bytes"
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app"
-	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/cosi"
 )
 
 func main() {
@@ -201,13 +201,14 @@ func handleErrorAndExit(msg string, e error) {
 }
 
 // writeSigAsJSON - writes the JSON out to a file
-func writeSigAsJSON(res *sda.CosiResponse, outW io.Writer) {
+func writeSigAsJSON(res *cosi.CosiResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
 		handleErrorAndExit("Couldn't encode signature: ", err)
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
+	outW.Write([]byte("\n"))
 	if _, err := out.WriteTo(outW); err != nil {
 		handleErrorAndExit("Couldn't write signature", err)
 	}

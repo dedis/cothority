@@ -5,15 +5,18 @@
 main(){
     startTest
     build
-    test Build
-    test ServerCfg
+    #test Build
+    #test ServerCfg
     test SignMsg
     stopTest
 }
 
 testSignMsg(){
     setupServers 1
+    echo $OUT
+    runCl 1 sign msg testCosi > $OUT
     runCl 1 sign msg testCosi | tail -n 5 > cl1/signature
+    runCl 1 verify msg testCosi -sig cl1/signature > $OUT
     testOK runCl 1 verify msg testCosi -sig cl1/signature
     testFail runCl 1 verify msg testCosi2 -sig cl1/signature
 }
@@ -32,7 +35,7 @@ testBuild(){
 
 setupServers(){
     CLIENT=$1
-    OOUT=OUT
+    OOUT=$OUT
     OUT=/tmp/config
     SERVERS=cl$CLIENT/servers.toml
     runSrvCfg 1 &
@@ -41,7 +44,7 @@ setupServers(){
     runSrvCfg 2 &
     sleep .5
     tail -n 5 $OUT >> $SERVERS
-    OUT=OOUT
+    OUT=$OOUT
 }
 
 runCl(){

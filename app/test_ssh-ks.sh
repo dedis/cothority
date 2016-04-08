@@ -5,9 +5,9 @@
 main(){
     startTest
     build
-    test Build
-    test ServerConfig
-    test ClientConfig
+    #test Build
+    #test ServerConfig
+    #test ClientConfig
     test ClientAdd
     test ServerAdd
     test ClientDel

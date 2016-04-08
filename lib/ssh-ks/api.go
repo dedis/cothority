@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
@@ -65,7 +65,7 @@ type SignRet struct {
 type PropSig struct {
 	Hash      []byte
 	Version   int
-	Signature *sda.CosiResponse
+	Signature *cosi.CosiResponse
 }
 
 // StatusRet returns the success (empty string) or failure

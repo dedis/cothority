@@ -375,11 +375,6 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
-		case CosiRequestMessage:
-			// Standalone CoSi hack!
-			// A client wants to sign something
-			cr := data.Msg.(CosiRequest)
-			h.handleCosiRequest(data.Entity, &cr)
 		default:
 			err := h.ProcessUnknownMessage(&data)
 			if err != nil {
@@ -414,60 +409,6 @@ func (h *Host) ProcessUnknownMessage(m *network.Message) error {
 		}
 	}()
 	return nil
-}
-
-// handleCosiRequest will
-// * register the entitylist
-// * create a flat tree out of it with him being at the root
-// * launch a CoSi protocol
-// * wait for it to finish and send back the response to the client
-func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
-	dbg.Lvl2(h.workingAddress, "Received client CosiRequest from", client.First())
-	idx, e := cr.EntityList.Search(h.Entity.ID)
-	if e == nil {
-		dbg.Error("Received CoSiRequest without being included in the Entitylist")
-		return
-	}
-	if idx != 0 {
-		// replace the first entity by this host's entity
-		tmp := cr.EntityList.List[0]
-		cr.EntityList.List[0] = e
-		cr.EntityList.List[idx] = tmp
-	}
-	// register & create the tree
-	h.overlay.RegisterEntityList(cr.EntityList)
-	// for the moment let's just stick to a very simple binary tree
-	tree := cr.EntityList.GenerateBinaryTree()
-	h.overlay.RegisterTree(tree)
-
-	// run the CoSi protocol
-	node, err := h.overlay.CreateNewNodeName("CoSi", tree)
-	if err != nil {
-		dbg.Error("Error creating tree upon client request:", err)
-		return
-	}
-	node.ProtocolInstance().SigningMessage(cr.Message)
-	hash := h.Suite().Hash()
-	if _, err := hash.Write(cr.Message); err != nil {
-		dbg.Error("Couldn't hash message:", err)
-	}
-	sum := hash.Sum(nil)
-	// Register the handler when the signature is finished
-	fn := func(chal, resp abstract.Secret) {
-		response := &CosiResponse{
-			Sum:       sum,
-			Challenge: chal,
-			Response:  resp,
-		}
-		dbg.Lvl2(h.workingAddress, "Getting CoSi signature back => sending to client")
-		// send back to client
-		if err := h.SendRaw(client, response); err != nil {
-			dbg.Error(h.workingAddress, "Error sending back Cosi signature back to client", err)
-		}
-	}
-	node.ProtocolInstance().RegisterDoneCallback(fn)
-	dbg.Lvl2(h.workingAddress, "Starting CoSi protocol...")
-	go node.StartProtocol()
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg
@@ -643,6 +584,11 @@ func (h *Host) Suite() abstract.Suite {
 // protocol.
 func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(protoID, tree)
+}
+
+// GetOverlay returns the overlay
+func (h *Host) GetOverlay() *Overlay {
+	return h.overlay
 }
 
 // SetupHostsMock can be used to create a Host mock for testing.
