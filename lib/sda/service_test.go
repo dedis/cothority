@@ -84,8 +84,7 @@ func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
 }
 
 func (ds *DummyService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dummyConf := conf.Data.(DummyConfig)
-	dp := NewDummyProtocol(tn, dummyConf, ds.link)
+	dp := NewDummyProtocol(tn, DummyConfig{}, ds.link)
 	return dp, nil
 }
 
@@ -210,8 +209,10 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
+	var count int
 	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
-		if ds.c != nil {
+		if count == 0 {
+			count++
 			// the client does not need a Service
 			return &DummyService{link: make(chan bool)}
 		}
@@ -222,6 +223,10 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		}
 		return ds
 	})
+	// fake a client
+	h2 := sda.NewLocalHost(2010)
+	defer h2.Close()
+
 	host := sda.NewLocalHost(2000)
 	host.ListenAndBind()
 	host.StartProcessMessages()
@@ -238,9 +243,6 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    "NewDummy",
 	}
-	// fake a client
-	h2 := sda.NewLocalHost(2010)
-	defer h2.Close()
 	dbg.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.Entity); err != nil {
 		t.Fatal(err)
@@ -277,7 +279,6 @@ func TestServiceNewProtocol(t *testing.T) {
 		case 2:
 			// the client does not need a Service
 			return &DummyService{link: make(chan bool)}
-
 		case 1: // children
 			localDs = ds2
 		case 0: // root
@@ -286,6 +287,7 @@ func TestServiceNewProtocol(t *testing.T) {
 		localDs.c = c
 		localDs.path = path
 
+		count++
 		return localDs
 	})
 	host := sda.NewLocalHost(2000)
@@ -296,10 +298,10 @@ func TestServiceNewProtocol(t *testing.T) {
 
 	host2 := sda.NewLocalHost(2002)
 	host2.ListenAndBind()
-	host.StartProcessMessages()
+	host2.StartProcessMessages()
 	defer host2.Close()
 	// create the entityList and tree
-	el := sda.NewEntityList([]*network.Entity{host.Entity})
+	el := sda.NewEntityList([]*network.Entity{host.Entity, host2.Entity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds1.fakeTree = tree
@@ -310,14 +312,14 @@ func TestServiceNewProtocol(t *testing.T) {
 		Type:    "NewDummy",
 	}
 	// fake a client
-	h2 := sda.NewLocalHost(2010)
-	defer h2.Close()
+	client := sda.NewLocalHost(2010)
+	defer client.Close()
 	dbg.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(host.Entity); err != nil {
+	if _, err := client.Connect(host.Entity); err != nil {
 		t.Fatal(err)
 	}
 	dbg.Lvl1("Sending request to service...")
-	if err := h2.SendRaw(host.Entity, re); err != nil {
+	if err := client.SendRaw(host.Entity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the protocol that Starts

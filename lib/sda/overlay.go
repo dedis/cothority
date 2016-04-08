@@ -57,7 +57,6 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
-	dbg.LLvl5(o.host.Entity.Addresses, "got message to transmit:", sdaMsg)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
 		dbg.Lvl3("Will ask the EntityList from token", sdaMsg.To.EntityListID, len(o.entityLists), o.host.workingAddress)
@@ -77,8 +76,23 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	if !ok {
 		// XXX TODO
 		// see if we know the Service Recipient
-
+		s, ok := o.host.serviceStore.serviceByID(sdaMsg.To.ServiceID)
+		if !ok {
+			return errors.New("No service defined here for this message")
+		}
+		tn, err := o.TreeNodeFromToken(sdaMsg.To)
+		if err != nil {
+			return errors.New("No TreeNode defined in this tree here")
+		}
+		tni := o.newTreeNodeInstance(tree, tn, sdaMsg.To.ServiceID)
 		// request the PI from the Service and bind the two
+		pi, err = s.NewProtocol(tni, &sdaMsg.Config)
+		if err != nil {
+			return err
+		}
+		if err := o.RegisterProtocolInstance(pi); err != nil {
+			return errors.New("Error Binding TNI and PI")
+		}
 	}
 	// TODO Check if TNI is already Done
 	pi.DispatchMsg(sdaMsg)

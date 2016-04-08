@@ -38,10 +38,14 @@ var NilServiceID = ServiceID(uuid.Nil)
 // it can finds / write everything it needs
 type NewServiceFunc func(c Context, path string) Service
 
+// GenericConfig is a config that can withhold any type of specific configs for
+// protocols. It is passed down to the service NewProtocol function.
 type GenericConfig struct {
 	Type uuid.UUID
-	Data network.ProtocolMessage
+	//Data network.ProtocolMessage
 }
+
+var GenericConfigID = network.RegisterMessageType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {

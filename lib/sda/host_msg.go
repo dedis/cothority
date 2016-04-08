@@ -38,6 +38,8 @@ type Data struct {
 	Msg network.ProtocolMessage
 	// The actual data as binary blob
 	MsgSlice []byte
+	// Config the actual config
+	Config GenericConfig
 }
 
 // RoundID uniquely identifies a round of a protocol run
