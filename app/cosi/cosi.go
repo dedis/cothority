@@ -138,14 +138,14 @@ func signFile(c *cli.Context) {
 	groupToml := c.GlobalString("servers")
 	file, err := os.Open(fileName)
 	if err != nil {
-		dbg.Error("Couldn't read file to be signed:", err)
+		handleErrorAndExit("Couldn't read file to be signed: ", err)
 	}
 	sig, err := cosi.Sign(file, groupToml)
 	handleErrorAndExit("Couldn't create signature", err)
 	dbg.Lvl1(sig)
 	sigFileName := fileName + ".sig"
 	outFile, err := os.Create(sigFileName)
-	handleErrorAndExit("Couldn't create signature file", err)
+	handleErrorAndExit("Couldn't create signature file: ", err)
 	writeSigAsJSON(sig, outFile)
 	dbg.Lvl1("Signature written to: " + sigFileName)
 }
@@ -171,7 +171,7 @@ func verifyString(c *cli.Context) {
 	f.Close()
 	sigfile := f.Name() + ".sig"
 	sig, err := ioutil.ReadFile(c.String("signature"))
-	handleErrorAndExit("Couldn't read signature", err)
+	handleErrorAndExit("Couldn't read signature: ", err)
 	err = ioutil.WriteFile(sigfile, sig, 0444)
 	handleErrorAndExit("Couldn't write tmp-signature", err)
 	err = cosi.Verify(f.Name(), c.GlobalString("servers"))
@@ -192,7 +192,7 @@ func verifyPrintResult(err error) {
 // handleErrorAndExit is a shortcut for all those pesky err-checks
 func handleErrorAndExit(msg string, e error) {
 	if e != nil {
-		dbg.Fatal(os.Stderr, msg+e.Error())
+		dbg.Fatal(os.Stderr, msg+": "+e.Error())
 	}
 }
 
@@ -200,7 +200,7 @@ func handleErrorAndExit(msg string, e error) {
 func writeSigAsJSON(res *sda.CosiResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		dbg.Error("error:", err)
+		handleErrorAndExit("Couldn't encode signature: ", err)
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
