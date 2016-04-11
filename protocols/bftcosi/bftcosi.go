@@ -56,7 +56,7 @@ type BFTCoSi struct {
 	// channel to notify when the prepare round is finished
 	prepareFinishedChan chan bool
 	// channel used to wait for the verification of the block
-	verifyBlockChan chan bool
+	verifyChan chan bool
 
 	// exceptions given during the rounds that is used in the signature
 	tempExceptions []cosi.Exception
@@ -90,20 +90,6 @@ type BFTCoSi struct {
 	// been generated ( at the end of the response phase of the commit round)
 	onSignatureDone func(*BFTSignature)
 
-	// rootTimeout is the timeout given to the root. It will be passed down the
-	// tree so every nodes knows how much time to wait. This root is a very nice
-	// malicious node.
-	rootTimeout uint64
-	timeoutChan chan uint64
-	// onTimeoutCallback is the function that will be called if a timeout
-	// occurs.
-	onTimeoutCallback func()
-	// function to let callers of the protocol (or the server) add functionality
-	// to certain parts of the protocol; mainly used in simulation to do
-	// measurements. Hence functions will not be called in go routines
-
-	// root fails:
-	rootFailMode uint
 	// Call back when we start the announcement of the prepare phase
 	onAnnouncementPrepare func()
 	// callback when we finished the response of the prepare phase
@@ -135,14 +121,13 @@ func NewBFTCoSiProtocol(n *sda.Node) (*BFTCoSi, error) {
 	bz.suite = n.Suite()
 	bz.prepare = cosi.NewCosi(n.Suite(), n.Private())
 	bz.commit = cosi.NewCosi(n.Suite(), n.Private())
-	bz.verifyBlockChan = make(chan bool)
+	bz.verifyChan = make(chan bool)
 	bz.doneProcessing = make(chan bool, 2)
 	bz.doneSigning = make(chan bool, 1)
-	bz.timeoutChan = make(chan uint64, 1)
 
 	//bz.endProto, _ = end.NewEndProtocol(n)
 	bz.aggregatedPublic = n.EntityList().Aggregate
-	bz.threshold = int(math.Ceil(float64(len(bz.Tree().List())) / 3.0))
+	bz.threshold = int(2.0 * math.Ceil(float64(len(bz.Tree().List())) / 3.0))
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
@@ -159,14 +144,12 @@ func NewBFTCoSiProtocol(n *sda.Node) (*BFTCoSi, error) {
 
 // NewBFTCoSiRootProtocol returns a new bftcosi struct with the block to sign
 // that will be sent to all others nodes
-func NewBFTCoSiRootProtocol(n *sda.Node, msg []byte, timeOutMs uint64, failMode uint) (*BFTCoSi, error) {
+func NewBFTCoSiRootProtocol(n *sda.Node, msg []byte) (*BFTCoSi, error) {
 	bz, err := NewBFTCoSiProtocol(n)
 	bz.Msg = msg
 	if err != nil {
 		return nil, err
 	}
-	bz.rootFailMode = failMode
-	bz.rootTimeout = timeOutMs
 	return bz, err
 }
 
@@ -185,8 +168,6 @@ func (bz *BFTCoSi) Dispatch() error {
 	return nil
 }
 func (bz *BFTCoSi) listen() {
-	fail := (bz.rootFailMode != 0) && bz.IsRoot()
-	var timeoutStarted bool
 	for {
 		var err error
 		select {
@@ -195,35 +176,23 @@ func (bz *BFTCoSi) listen() {
 			err = bz.handleAnnouncement(msg.Announce)
 		case msg := <-bz.commitChan:
 			// Commitment
-			if !fail {
-				err = bz.handleCommit(msg.Commitment)
-			}
+			err = bz.handleCommit(msg.Commitment)
+			
 		case msg := <-bz.challengePrepareChan:
 			// Challenge
-			if !fail {
-				err = bz.handleChallengePrepare(&msg.ChallengePrepare)
-			}
+			err = bz.handleChallengePrepare(&msg.ChallengePrepare)
+			
 		case msg := <-bz.challengeCommitChan:
-			if !fail {
-				err = bz.handleChallengeCommit(&msg.ChallengeCommit)
-			}
+			err = bz.handleChallengeCommit(&msg.ChallengeCommit)
+			
 		case msg := <-bz.responseChan:
 			// Response
-			if !fail {
 				switch msg.Response.TYPE {
 				case RoundPrepare:
 					err = bz.handleResponsePrepare(&msg.Response)
 				case RoundCommit:
 					err = bz.handleResponseCommit(&msg.Response)
 				}
-			}
-		case timeout := <-bz.timeoutChan:
-			// start the timer
-			if timeoutStarted {
-				continue
-			}
-			timeoutStarted = true
-			go bz.startTimer(timeout)
 		case <-bz.doneProcessing:
 			// we are done
 			dbg.Lvl2(bz.Name(), "BFTCoSi Dispatches stop.")
@@ -247,7 +216,6 @@ func (bz *BFTCoSi) startAnnouncementPrepare() error {
 	bza := &Announce{
 		TYPE:         RoundPrepare,
 		Announcement: ann,
-		Timeout:      bz.rootTimeout,
 	}
 	dbg.Lvl3("BFTCoSi Start Announcement (PREPARE)")
 	return bz.sendAnnouncement(bza)
@@ -282,11 +250,7 @@ func (bz *BFTCoSi) handleAnnouncement(ann Announce) error {
 		announcement = &Announce{
 			TYPE:         RoundPrepare,
 			Announcement: bz.prepare.Announce(ann.Announcement),
-			Timeout:      ann.Timeout,
 		}
-
-		bz.timeoutChan <- ann.Timeout
-		// give the timeout
 		dbg.Lvl3(bz.Name(), "BFTCoSi Handle Announcement PREPARE")
 
 		if bz.IsLeaf() {
@@ -383,7 +347,10 @@ func (bz *BFTCoSi) startChallengePrepare() error {
 	// make the challenge out of it
 	// FIXME trblock := bz.tempBlock
 
-	ch, err := bz.prepare.CreateChallenge(bz.Msg)
+	//prep:= &MsgPrepare{Msg : bz.Msg}
+	h := bz.Suite().Hash().Sum(bz.Msg) //should be the prep
+
+	ch, err := bz.prepare.CreateChallenge(h)
 	if err != nil {
 		return err
 	}
@@ -412,8 +379,10 @@ func (bz *BFTCoSi) startChallengeCommit() error {
 	// create the challenge out of it
 
 	// TODO hash MsgCommit
-	h := bz.Suite().Hash().Sum(bz.Msg)
-	chal, err := bz.commit.CreateChallenge(h)
+
+	//com:= &MsgCommit{Msg : bz.Msg}
+	h := bz.Suite().Hash().Sum(bz.Msg) //should be the com
+	chal, err := bz.commit.CreateChallenge(h) 
 	if err != nil {
 		return err
 	}
@@ -437,7 +406,7 @@ func (bz *BFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	bz.Msg = ch.Msg
 	// TODO find a way to pass the verification function or give back the
 	// data for verification (using a channel)
-
+	//check that the challenge is correctly formed 
 	// acknowledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
@@ -480,6 +449,8 @@ func (bz *BFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	if bz.IsLeaf() {
 		return bz.startResponseCommit()
 	}
+
+	//TODO verify that the challenge is correctly formed.
 
 	// send it down
 	for _, tn := range bz.Children() {
@@ -634,7 +605,7 @@ func (bz *BFTCoSi) waitResponseVerification() (*Response, bool) {
 		TYPE: RoundPrepare,
 	}
 	// wait the verification
-	verified := <-bz.verifyBlockChan
+	verified := <-bz.verifyChan
 	if !verified {
 		// append our exception
 		bzr.Exceptions = append(bzr.Exceptions, cosi.Exception{
@@ -670,18 +641,6 @@ func (bz *BFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bz.onSignatureDone = fn
 }
 
-// startTimer starts the timer to decide whether we should request a view change
-// after a certain timeout or not. If the signature is done, we don't. otherwise
-// we start the view change protocol.
-func (bz *BFTCoSi) startTimer(millis uint64) {
-	if bz.rootFailMode != 0 {
-		dbg.Lvl3(bz.Name(), "Started timer (", millis, ")...")
-		select {
-		case <-bz.doneSigning:
-			return
-		}
-	}
-}
 
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
