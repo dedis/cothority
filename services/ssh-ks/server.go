@@ -6,7 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/cosi"
+	"github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"io/ioutil"
@@ -108,8 +108,13 @@ func (sa *ServerKS) Start() error {
 	cosi.AddCosiApp(sa.host)
 	sa.host.Listen()
 	sa.host.StartProcessMessages()
-	sa.host.WaitForClose()
 	return nil
+}
+
+// WaitForClose calls the host equivalent and will only return once the
+// connection is closed
+func (sa *ServerKS) WaitForClose() {
+	sa.host.WaitForClose()
 }
 
 // Stop closes the connection

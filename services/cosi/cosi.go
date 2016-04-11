@@ -23,9 +23,9 @@ import (
 )
 
 func init() {
-	dbg.Print("Registering")
-	dbg.Print(network.RegisterMessageType(SignRequest{}))
-	dbg.Print(network.RegisterMessageType(SignResponse{}))
+	dbg.Lvl3("Registering")
+	dbg.Lvl3(network.RegisterMessageType(SignRequest{}))
+	dbg.Lvl3(network.RegisterMessageType(SignResponse{}))
 }
 
 // App represents the application that will listen for signatures

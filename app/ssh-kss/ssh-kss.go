@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-var serverApp *ssh_ks.ServerKS
+var serverKS *ssh_ks.ServerKS
 
 func main() {
 	app := cli.NewApp()
@@ -38,22 +38,23 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		file := c.String("config")
 		var err error
-		serverApp, err = ssh_ks.ReadServerKS(file)
+		serverKS, err = ssh_ks.ReadServerKS(file)
 		if err != nil {
-			serverApp, err = askServerConfig(os.Stdin, os.Stdout)
+			serverKS, err = askServerConfig(os.Stdin, os.Stdout)
 			if err != nil {
 				dbg.Fatal("While creating new config:", err)
 			}
-			err = serverApp.WriteConfig(file)
+			err = serverKS.WriteConfig(file)
 			if err != nil {
 				dbg.Fatal("Couldn't write config:", err)
 			}
 		}
-		serverApp.Config.List()
-		err = serverApp.Start()
+		serverKS.Config.List()
+		err = serverKS.Start()
 		if err != nil {
 			dbg.Fatal("Couldn't start server:", err)
 		}
+		serverKS.WaitForClose()
 	}
 	app.Run(os.Args)
 }

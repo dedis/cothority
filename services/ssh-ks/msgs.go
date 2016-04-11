@@ -3,7 +3,7 @@ package ssh_ks
 import (
 	"errors"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/protocols/cosi"
+	"github.com/dedis/cothority/services/cosi"
 )
 
 // Here is the external API

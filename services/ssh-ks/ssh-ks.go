@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	cosip "github.com/dedis/cothority/protocols/cosi"
+	scosi "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	"io/ioutil"
 	"os"
@@ -71,7 +71,7 @@ type Config struct {
 	// Clients is a map of IP:Port pointing to Clients
 	Clients map[string]*Client
 	// Signature by CoSi
-	Signature *cosip.SignResponse
+	Signature *scosi.SignResponse
 }
 
 // NewConfig returns a new initialized config for the configuration-chain

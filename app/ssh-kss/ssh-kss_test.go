@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/app/libks"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/ssh-ks"
+	"github.com/dedis/cothority/services/ssh-ks"
 	"strconv"
 	"strings"
 	"testing"
@@ -26,7 +25,7 @@ func TestCreateServerConfig(t *testing.T) {
 	}
 
 	for _, s := range servers {
-		sc, err := libks.ReadServerApp(s.DirSSHD + "/server.conf")
+		sc, err := ssh_ks.ReadServerKS(s.DirSSHD + "/server.conf")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -76,8 +75,8 @@ func TestCreateSSHDir(t *testing.T) {
 	}
 }
 
-func createServers(nbr int, t *testing.T) ([]*libks.ServerApp, error) {
-	ret := make([]*libks.ServerApp, nbr)
+func createServers(nbr int, t *testing.T) ([]*ssh_ks.ServerKS, error) {
+	ret := make([]*ssh_ks.ServerKS, nbr)
 	for i := range ret {
 		tmp, err := ssh_ks.SetupTmpHosts()
 		if err != nil {
@@ -91,7 +90,7 @@ func createServers(nbr int, t *testing.T) ([]*libks.ServerApp, error) {
 	return ret, nil
 }
 
-func checkServerConfig(sc *libks.ServerApp, ip, sshd string) error {
+func checkServerConfig(sc *ssh_ks.ServerKS, ip, sshd string) error {
 	if sc.DirSSHD != sshd {
 		return errors.New(fmt.Sprintf("SSHD-dir is wrong: %s instead of %s",
 			sc.DirSSHD, sshd))

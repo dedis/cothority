@@ -3,13 +3,12 @@ package ssh_ks_test
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/crypto/config"
 	"strconv"
 	"testing"
 )
 
 func TestServerCreation(t *testing.T) {
-	srvApps := createServerApps(2)
+	srvApps := createServerKSs(2)
 	for i, s := range srvApps {
 		if s.This.Entity.Addresses[0] != "localhost:"+strconv.Itoa(2000+i) {
 			t.Fatal("Couldn't verify server", i, s)
@@ -18,7 +17,7 @@ func TestServerCreation(t *testing.T) {
 }
 
 func TestServerAdd(t *testing.T) {
-	srvApps := createServerApps(2)
+	srvApps := createServerKSs(2)
 	srvApps[0].AddServer(srvApps[1].This)
 	addr1 := srvApps[1].This.Entity.Addresses[0]
 	_, ok := srvApps[0].Config.Servers[addr1]
@@ -33,7 +32,7 @@ func TestServerAdd(t *testing.T) {
 }
 
 func TestServerStart(t *testing.T) {
-	srvApps := createServerApps(2)
+	srvApps := createServerKSs(2)
 	srvApps[0].AddServer(srvApps[1].This)
 	err := srvApps[0].Start()
 	dbg.TestFatal(t, err, "Couldn't start server:")
@@ -47,7 +46,7 @@ func TestServerStart(t *testing.T) {
 }
 
 func TestConfigEntityList(t *testing.T) {
-	srvApps := createServerApps(2)
+	srvApps := createServerKSs(2)
 	c := srvApps[0]
 	c.AddServer(srvApps[1].This)
 	el := c.Config.EntityList(c.This.Entity)
@@ -100,63 +99,4 @@ func TestServerSign(t *testing.T) {
 			}
 		}
 	}
-}
-
-func newServerLocal(port int) *libks.ServerApp {
-	key := config.NewKeyPair(network.Suite)
-	tmp, err := SetupTmpHosts()
-	dbg.ErrFatal(err)
-	sa, err := libks.NewServerApp(key, "localhost:"+strconv.Itoa(port), tmp, tmp)
-	dbg.ErrFatal(err)
-	return sa
-}
-
-func closeServers(t *testing.T, servers []*libks.ServerApp) error {
-	for _, s := range servers {
-		err := s.Stop()
-		if err != nil {
-			t.Fatal("Couldn't stop server:", err)
-		}
-	}
-	return nil
-}
-
-func createSrvaSeCla(nbr int) ([]*libks.ServerApp, []*Server, *libks.ClientApp) {
-	srvApps := createServerApps(nbr)
-	servers := make([]*Server, nbr)
-	for s := range srvApps {
-		srvApps[s].Start()
-		var err error
-		servers[s] = srvApps[s].This
-		dbg.ErrFatal(err)
-	}
-	clApp := libks.NewClientApp("")
-	clApp.Config = srvApps[0].Config
-	return srvApps, servers, clApp
-}
-
-func startServers(nbr int) []*libks.ServerApp {
-	servers := addServers(nbr)
-	for _, s := range servers {
-		s.Start()
-	}
-	return servers
-}
-
-func addServers(nbr int) []*libks.ServerApp {
-	srvApps := createServerApps(nbr)
-	for _, c1 := range srvApps {
-		for _, c2 := range srvApps {
-			c1.AddServer(c2.This)
-		}
-	}
-	return srvApps
-}
-
-func createServerApps(nbr int) []*libks.ServerApp {
-	ret := make([]*libks.ServerApp, nbr)
-	for i := range ret {
-		ret[i] = newServerLocal(2000 + i)
-	}
-	return ret
 }
