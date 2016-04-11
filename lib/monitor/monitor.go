@@ -124,7 +124,10 @@ func (m *Monitor) Listen() error {
 			// end of monitoring,
 			if len(m.conns) == 0 {
 				m.listenerLock.Lock()
-				m.listener.Close()
+				if err := m.listener.Close(); err != nil {
+					dbg.Error("Couldn't close listener:",
+						err)
+				}
 				m.listener = nil
 				finished = true
 				m.listenerLock.Unlock()
@@ -143,12 +146,16 @@ func (m *Monitor) Stop() {
 	dbg.Lvl2("Monitor Stop")
 	m.listenerLock.Lock()
 	if m.listener != nil {
-		m.listener.Close()
+		if err := m.listener.Close(); err != nil {
+			dbg.Error("Couldn't close listener:", err)
+		}
 	}
 	m.listenerLock.Unlock()
 	m.mutexConn.Lock()
 	for _, c := range m.conns {
-		c.Close()
+		if err := c.Close(); err != nil {
+			dbg.Error("Couldn't close connection:", err)
+		}
 	}
 	m.mutexConn.Unlock()
 

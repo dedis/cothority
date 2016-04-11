@@ -96,9 +96,15 @@ func Proxy(redirection string) error {
 				nconn--
 				if nconn == 0 {
 					// everything is finished
-					serverEnc.Encode(NewSingleMeasure("end", 0))
-					serverConn.Close()
-					ln.Close()
+					if err := serverEnc.Encode(NewSingleMeasure("end", 0)); err != nil {
+						dbg.Error("Couldn't send 'end' message:", err)
+					}
+					if err := serverConn.Close(); err != nil {
+						dbg.Error("Couldn't close server connection:", err)
+					}
+					if err := ln.Close(); err != nil {
+						dbg.Error("Couldn't close listener:", err)
+					}
 					finished = true
 					break
 				}
@@ -152,7 +158,9 @@ func proxyConnection(conn net.Conn, done chan bool) {
 			break
 		}
 	}
-	conn.Close()
+	if err := conn.Close(); err != nil {
+		dbg.Error("Couldn't close connection:", err)
+	}
 	done <- true
 }
 

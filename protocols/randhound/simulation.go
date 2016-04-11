@@ -1,10 +1,10 @@
 package randhound
 
 import (
-	"log"
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -53,13 +53,15 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	log.Printf("RandHound - shards: %d\n", rhs.Shards)
-	rh.StartProtocol()
+	dbg.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
+	dbg.Printf("RandHound - shards: %d\n", rhs.Shards)
+	if err := rh.StartProtocol(); err != nil {
+		dbg.Error("Error while starting protcol:", err)
+	}
 
 	select {
 	case <-rh.Leader.Done:
-		log.Printf("RandHound - done")
+		dbg.Print("RandHound - done")
 		rnd, err := rh.Random()
 		if err != nil {
 			panic(err)
@@ -68,10 +70,10 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		if err != nil {
 			panic(err)
 		}
-		log.Printf("RandHound - random bytes: %v\n", rnd)
-		log.Printf("RandHound - sharding: %v\n", sharding)
+		dbg.Printf("RandHound - random bytes: %v\n", rnd)
+		dbg.Printf("RandHound - sharding: %v\n", sharding)
 	case <-time.After(time.Second * 60):
-		log.Printf("RandHound - time out")
+		dbg.Print("RandHound - time out")
 	}
 
 	return nil

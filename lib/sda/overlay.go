@@ -139,13 +139,16 @@ func (o *Overlay) StartNewNode(protocolID ProtocolID, tree *Tree) (*Node, error)
 	}
 	// start it
 	dbg.Lvl3("Starting new node at", o.host.Entity.Addresses)
-	node.StartProtocol()
+	if err := node.StartProtocol(); err != nil {
+		dbg.Error("Error while starting protocol from node", node.Info(),
+			err)
+	}
 	return node, nil
 }
 
 // CreateNewNode is used when you want to create the node with the protocol
 // instance but do not want to start it yet. Use case are when you are root, you
-// want to specifiy some additional configuration for example.
+// want to specify some additional configuration for example.
 func (o *Overlay) CreateNewNode(protocolID ProtocolID, tree *Tree) (*Node, error) {
 	node, err := o.NewNodeEmpty(protocolID, tree)
 	if err != nil {

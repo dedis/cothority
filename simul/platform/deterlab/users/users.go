@@ -51,17 +51,26 @@ func main() {
 			defer wg.Done()
 			if kill {
 				dbg.Lvl3("Cleaning up host", h, ".")
-				platform.SSHRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null")
+				if _, err := platform.SSHRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null"); err != nil {
+					dbg.Error("Couldn't run [sudo killall -9 cothority scp 2>/dev/null >/dev/null]",
+						err)
+				}
 				time.Sleep(1 * time.Second)
-				platform.SSHRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null")
+				if _, err := platform.SSHRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null"); err != nil {
+					dbg.Error("Couldn't run [sudo killall -9 cothority 2>/dev/null >/dev/null]",
+						err)
+				}
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
-				platform.SSHRun("", h, "sudo pkill -9 -f '\\./'")
+				_, err := platform.SSHRun("", h, "sudo pkill -9 -f '\\./'")
+				if err != nil {
+					dbg.Error("Couldn't run [sudo pkill -9 -f '\\./']", err)
+				}
 				time.Sleep(1 * time.Second)
 				if dbg.DebugVisible() > 3 {
 					dbg.Lvl4("Cleaning report:")
-					platform.SSHRunStdout("", h, "ps aux")
+					_ = platform.SSHRunStdout("", h, "ps aux")
 				}
 			} else {
 				dbg.Lvl3("Setting the file-limit higher on", h)

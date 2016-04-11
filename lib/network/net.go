@@ -220,7 +220,10 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 		// if negotiation fails we drop the connection
 		if err := stc.exchangeEntity(); err != nil {
 			dbg.Error("Negotiation failed:", err)
-			stc.Close()
+			if err := stc.Close(); err != nil {
+				dbg.Error("Couldn't close secure connection:",
+					err)
+			}
 			return
 		}
 		st.connMutex.Lock()
@@ -245,7 +248,8 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("No address worked for listening on this host %+s.", err.Error())
+	return fmt.Errorf("No address worked for listening on this host %+s.",
+		err.Error())
 }
 
 // Open will try any address that is in the Entity and connect to the first
@@ -353,7 +357,9 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Message, e error) {
 			return EmptyApplicationMessage, e
 		}
 		// put it in the longterm buffer
-		buffer.Write(b[:n])
+		if _, err := buffer.Write(b[:n]); err != nil {
+			dbg.Error("Couldn't write to buffer:", err)
+		}
 		read += Size(n)
 		// if we could not read everything yet
 		if Size(buffer.Len()) < s {

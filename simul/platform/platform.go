@@ -76,7 +76,11 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 	dbg.Lvl3("Reading file", filename)
 
 	file, err := os.Open(filename)
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			dbg.Error("Couldn' close", file.Name())
+		}
+	}()
 	if err != nil {
 		dbg.Fatal("Couldn't open file", file, err)
 	}
@@ -103,7 +107,9 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		// fill in the general config
 		masterConfig.Put(strings.TrimSpace(vals[0]), strings.TrimSpace(vals[1]))
 		// also put it in platform
-		toml.Decode(text, p)
+		if _, err := toml.Decode(text, p); err != nil {
+			dbg.Error("Error decoding", text)
+		}
 		dbg.Lvlf5("Platform is now %+v", p)
 	}
 

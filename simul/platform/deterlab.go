@@ -120,12 +120,22 @@ func (d *Deterlab) Build(build string, arg ...string) error {
 	// Start with a clean build-directory
 	current, _ := os.Getwd()
 	dbg.Lvl3("Current dir is:", current, d.deterDir)
-	defer os.Chdir(current)
+	defer func() {
+		if err := os.Chdir(current); err != nil {
+			dbg.Error("Couldn't change back to", current)
+		}
+	}()
 
 	// Go into deterlab-dir and create the build-dir
-	os.Chdir(d.deterDir)
-	os.RemoveAll(d.buildDir)
-	os.Mkdir(d.buildDir, 0777)
+	if err := os.Chdir(d.deterDir); err != nil {
+		return err
+	}
+	if err := os.RemoveAll(d.buildDir); err != nil {
+		return err
+	}
+	if err := os.Mkdir(d.buildDir, 0777); err != nil {
+		return err
+	}
 
 	// start building the necessary packages
 	packages := []string{"simul", "users"}
@@ -184,7 +194,10 @@ func (d *Deterlab) Cleanup() error {
 	sshKill = make(chan string)
 	go func() {
 		// Cleanup eventual residues of previous round - users and sshd
-		SSHRun(d.Login, d.Host, "killall -9 users sshd")
+		if _, err := SSHRun(d.Login, d.Host, "killall -9 users sshd"); err != nil {
+			dbg.Lvl1("Error while cleaning up:", err)
+		}
+
 		err := SSHRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
 		if err != nil {
 			dbg.Lvl1("NOT-Normal error from cleanup")
@@ -211,8 +224,12 @@ func (d *Deterlab) Cleanup() error {
 // Deploy creates the appropriate configuration-files and copies everything to the
 // deterlab-installation.
 func (d *Deterlab) Deploy(rc RunConfig) error {
-	os.RemoveAll(d.deployDir)
-	os.Mkdir(d.deployDir, 0777)
+	if err := os.RemoveAll(d.deployDir); err != nil {
+		return err
+	}
+	if err := os.Mkdir(d.deployDir, 0777); err != nil {
+		return err
+	}
 
 	dbg.Lvl2("Localhost: Deploying and writing config-files")
 	sim, err := sda.NewSimulation(d.Simulation, string(rc.Toml()))
@@ -239,10 +256,15 @@ func (d *Deterlab) Deploy(rc RunConfig) error {
 	}
 	simulConfig.Config = string(rc.Toml())
 	dbg.Lvl3("Saving configuration")
-	simulConfig.Save(d.deployDir)
+	if err := simulConfig.Save(d.deployDir); err != nil {
+		dbg.Error("Couldn't save configuration:", err)
+	}
 
 	// Copy limit-files for more connections
 	err = exec.Command("cp", d.deterDir+"/cothority.conf", d.deployDir).Run()
+	if err != nil {
+		dbg.Error("Couldn't copy files to", d.deployDir, err)
+	}
 
 	// Copying build-files to deploy-directory
 	build, err := ioutil.ReadDir(d.buildDir)
@@ -322,7 +344,7 @@ func (d *Deterlab) Wait() error {
 
 // Write the hosts.txt file automatically
 // from project name and number of servers
-func (d *Deterlab) createHosts() error {
+func (d *Deterlab) createHosts() {
 	numServers := d.Servers
 
 	ip := "10.255.0."
@@ -336,7 +358,6 @@ func (d *Deterlab) createHosts() error {
 
 	dbg.Lvl3("Physical:", d.Phys)
 	dbg.Lvl3("Internal:", d.Virt)
-	return nil
 }
 
 // Checks whether host, login and project are defined. If any of them are missing, it will

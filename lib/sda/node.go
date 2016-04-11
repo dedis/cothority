@@ -205,6 +205,8 @@ func (n *Node) Suite() abstract.Suite {
 // RegisterChannel takes a channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
+// If you pass a pointer to the channel it will be automatically instantiated
+// for you.
 // This function handles also
 // - registration of the message-type
 // - aggregation or not of messages: if you give a channel of slices, the
@@ -222,7 +224,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	}
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
-		return errors.New("Input is not channel")
+		return errors.New("Input is not channel but " + cr.Kind().String())
 	}
 	if cr.Elem().Kind() == reflect.Slice {
 		flags += AggregateMessages
@@ -322,7 +324,12 @@ func (n *Node) protocolInstantiate() error {
 
 	var err error
 	n.instance, err = p(n)
-	go n.instance.Dispatch()
+	go func() {
+		if err := n.instance.Dispatch(); err != nil {
+			dbg.Error("Error while dispatching node", n.Info(), ":",
+				err)
+		}
+	}()
 	return err
 }
 

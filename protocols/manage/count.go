@@ -73,9 +73,15 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 		timeout: 1024,
 	}
 	p.Count = make(chan int, 1)
-	p.RegisterChannel(&p.CountChan)
-	p.RegisterChannel(&p.PrepareCountChan)
-	p.RegisterChannel(&p.NodeIsUpChan)
+	if err := p.RegisterChannel(&p.CountChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
+	}
+	if err := p.RegisterChannel(&p.PrepareCountChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
+	}
+	if err := p.RegisterChannel(&p.NodeIsUpChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
+	}
 	return p, nil
 }
 
@@ -104,7 +110,11 @@ func (p *ProtocolCount) Dispatch() error {
 			running = false
 		case _ = <-p.NodeIsUpChan:
 			if p.Parent() != nil {
-				p.SendTo(p.Parent(), &NodeIsUp{})
+				err := p.SendTo(p.Parent(), &NodeIsUp{})
+				if err != nil {
+					dbg.Error(p.Info(), "couldn't send to parent",
+						p.Parent().Name(), err)
+				}
 			} else {
 				p.Replies++
 			}
@@ -125,13 +135,21 @@ func (p *ProtocolCount) Dispatch() error {
 // every node that receives one will reply with a 'NodeIsUp'-message
 func (p *ProtocolCount) FuncPC() {
 	if !p.IsRoot() {
-		p.SendTo(p.Parent(), &NodeIsUp{})
+		err := p.SendTo(p.Parent(), &NodeIsUp{})
+		if err != nil {
+			dbg.Error(p.Info(), "couldn't send to parent",
+				p.Parent().Name(), err)
+		}
 	}
 	if !p.IsLeaf() {
 		for _, child := range p.Children() {
 			go func(c *sda.TreeNode) {
 				dbg.Lvl3(p.Info(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
-				p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+				err := p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+				if err != nil {
+					dbg.Error(p.Info(), "couldn't send to child",
+						c.Name())
+				}
 			}(child)
 		}
 	} else {
@@ -148,7 +166,10 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 	}
 	if !p.IsRoot() {
 		dbg.Lvl3(p.Info(), "Sends to", p.Parent().Id, p.Parent().Entity.Addresses)
-		p.SendTo(p.Parent(), &Count{count})
+		if err := p.SendTo(p.Parent(), &Count{count}); err != nil {
+			dbg.Error(p.Name(), "coouldn't send to parent",
+				p.Parent().Name())
+		}
 	} else {
 		p.Count <- count
 	}

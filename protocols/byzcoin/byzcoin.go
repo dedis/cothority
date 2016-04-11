@@ -155,12 +155,24 @@ func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
 	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().List())) * 2.0 / 3.0))
 
 	// register channels
-	n.RegisterChannel(&bz.announceChan)
-	n.RegisterChannel(&bz.commitChan)
-	n.RegisterChannel(&bz.challengePrepareChan)
-	n.RegisterChannel(&bz.challengeCommitChan)
-	n.RegisterChannel(&bz.responseChan)
-	n.RegisterChannel(&bz.viewchangeChan)
+	if err := n.RegisterChannel(&bz.announceChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.commitChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.challengePrepareChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.challengeCommitChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.responseChan); err != nil {
+		return bz, err
+	}
+	if err := n.RegisterChannel(&bz.viewchangeChan); err != nil {
+		return bz, err
+	}
 
 	n.OnDoneCallback(bz.nodeDone)
 
@@ -633,9 +645,7 @@ func (bz *ByzCoin) handleResponsePrepare(bzr *Response) error {
 		if bz.onResponsePrepareDone != nil {
 			bz.onResponsePrepareDone()
 		}
-		bz.startChallengeCommit()
-
-		return nil
+		return bz.startChallengeCommit()
 	}
 	// send up
 	return bz.SendTo(bz.Parent(), bzrReturn)

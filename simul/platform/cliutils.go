@@ -97,5 +97,7 @@ func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) 
 // KillGo kills all go-instances
 func KillGo() {
 	cmd := exec.Command("killall", "go")
-	cmd.Run()
+	if err := cmd.Run(); err != nil {
+		dbg.Lvl3("Couldn't kill all go instances:", err)
+	}
 }
