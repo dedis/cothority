@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
@@ -204,7 +204,7 @@ func (ca *App) HandleCosiSignRequest(msg *network.Message) network.ProtocolMessa
 		dbg.Error("Error creating tree upon client SignRequest:", err)
 		return empty
 	}
-	pcosi := node.ProtocolInstance().(*ProtocolCosi)
+	pcosi := node.ProtocolInstance().(*cosi.ProtocolCosi)
 	pcosi.SigningMessage(cr.Message)
 	hash := network.Suite.Hash()
 	if _, err := hash.Write(cr.Message); err != nil {

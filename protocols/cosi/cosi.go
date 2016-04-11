@@ -235,6 +235,14 @@ func (pc *ProtocolCosi) StartChallenge() error {
 
 }
 
+// VerifySignature verifies if the challenge and the secret (from the response phase) form a
+// correct signature for this message using the aggregated public key.
+// This is copied from lib/cosi, so that you don't need to include both lib/cosi
+// and protocols/cosi
+func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Secret) error {
+	return cosi.VerifySignature(suite, msg, public, challenge, secret)
+}
+
 // handleChallenge dispatch the challenge to the round and then dispatch the
 // results down the tree.
 func (pc *ProtocolCosi) handleChallenge(in *Challenge) error {
