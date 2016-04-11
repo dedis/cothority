@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
+	//sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
 }
 
 // This Cosi protocol is the simplest version, the "vanilla" version with the
@@ -26,7 +26,7 @@ func init() {
 // ProtocolCosi is the main structure holding the round and the sda.Node.
 type ProtocolCosi struct {
 	// The node that represents us
-	*sda.Node
+	*sda.TreeNodeInstance
 	// TreeNodeId cached
 	treeNodeID sda.TreeNodeID
 	// the cosi struct we use (since it is a cosi protocol)
@@ -84,11 +84,11 @@ type ChallengeHook func(*Challenge) error
 // }
 // sda.RegisterNewProtocolName("cothority",fn)
 // ```
-func NewProtocolCosi(node *sda.Node) (sda.ProtocolInstance, error) {
+func NewProtocolCosi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	var err error
 	pc := &ProtocolCosi{
 		Cosi:             cosi.NewCosi(node.Suite(), node.Private()),
-		Node:             node,
+		TreeNodeInstance: node,
 		done:             make(chan bool),
 		tempCommitLock:   new(sync.Mutex),
 		tempResponseLock: new(sync.Mutex),
@@ -133,7 +133,7 @@ func (pc *ProtocolCosi) Dispatch() error {
 
 // StartAnnouncement will start a new announcement.
 func (pc *ProtocolCosi) StartAnnouncement() error {
-	dbg.Lvl3(pc.Node.Name(), "Message:", pc.Message)
+	dbg.Lvl3(pc.Name(), "Message:", pc.Message)
 	out := &Announcement{
 		From:         pc.treeNodeID,
 		Announcement: pc.Cosi.CreateAnnouncement(),
@@ -192,7 +192,7 @@ func (pc *ProtocolCosi) handleCommitment(in *Commitment) error {
 			return nil
 		}
 	}
-	dbg.Lvl3(pc.Node.Name(), "aggregated")
+	dbg.Lvl3(pc.Name(), "aggregated")
 	// pass it to the hook
 	if pc.commitmentHook != nil {
 		return pc.commitmentHook(pc.tempCommitment)
@@ -200,7 +200,7 @@ func (pc *ProtocolCosi) handleCommitment(in *Commitment) error {
 
 	// or make continue the cosi protocol
 	commits := make([]*cosi.Commitment, len(pc.tempCommitment))
-	secretVar := pc.Node.Suite().Point().Null()
+	secretVar := pc.Suite().Point().Null()
 	for i := range pc.tempCommitment {
 		secretVar.Add(secretVar, pc.tempCommitment[i].Commitment.Commitment)
 		commits[i] = pc.tempCommitment[i].Commitment
@@ -230,7 +230,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 	out := &Challenge{
 		Challenge: challenge,
 	}
-	dbg.Lvl3(pc.Node.Name(), "chal=", fmt.Sprintf("%+v", challenge))
+	dbg.Lvl3(pc.Name(), "chal=", fmt.Sprintf("%+v", challenge))
 	return pc.handleChallenge(out)
 
 }
@@ -240,7 +240,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 func (pc *ProtocolCosi) handleChallenge(in *Challenge) error {
 	// TODO check hook
 
-	dbg.Lvl3(pc.Node.Name(), "chal=", fmt.Sprintf("%+v", in.Challenge))
+	dbg.Lvl3(pc.Name(), "chal=", fmt.Sprintf("%+v", in.Challenge))
 	// else dispatch it to cosi
 	challenge := pc.Cosi.Challenge(in.Challenge)
 
@@ -274,14 +274,14 @@ func (pc *ProtocolCosi) handleResponse(in *Response) error {
 		pc.tempResponse = append(pc.tempResponse, in)
 		pc.tempResponseLock.Unlock()
 		// do we have enough ?
-		dbg.Lvl3(pc.Node.Name(), "has", len(pc.tempResponse), "responses")
+		dbg.Lvl3(pc.Name(), "has", len(pc.tempResponse), "responses")
 		if len(pc.tempResponse) < len(pc.Children()) {
 			return nil
 		}
 	}
 	defer pc.Cleanup()
 
-	dbg.Lvl3(pc.Node.Name(), "aggregated")
+	dbg.Lvl3(pc.Name(), "aggregated")
 	responses := make([]*cosi.Response, len(pc.tempResponse))
 	for i := range pc.tempResponse {
 		responses[i] = pc.tempResponse[i].Response
@@ -323,14 +323,14 @@ func (pc *ProtocolCosi) Cleanup() {
 		pc.DoneCallback(pc.Cosi.GetChallenge(), pc.Cosi.GetAggregateResponse())
 	}
 	close(pc.done)
-	pc.Node.Done()
+	pc.TreeNodeInstance.Done()
 
 }
 
 // SigningMessage simply set the message to sign for this round
 func (pc *ProtocolCosi) SigningMessage(msg []byte) {
 	pc.Message = msg
-	dbg.Lvl2(pc.Node.Name(), "Root will sign message=", pc.Message)
+	dbg.Lvl2(pc.Name(), "Root will sign message=", pc.Message)
 }
 
 // RegisterAnnouncementHook allows for handling what should happen upon an
