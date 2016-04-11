@@ -3,7 +3,6 @@ package bftcosi
 import (
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/bftcosi/blockchain"
 )
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"
@@ -19,11 +18,11 @@ const (
 
 // BlockSignature is what a bftcosi protocol outputs. It contains the signature,
 // the block and some possible exceptions.
-type BlockSignature struct {
+type BFTSignature struct {
 	// cosi signature of the commit round.
 	Sig *cosi.Signature
-	// the block signed.
-	Block *blockchain.TrBlock
+
+	Msg []byte
 	// List of peers that did not want to sign.
 	Exceptions []cosi.Exception
 }
@@ -61,7 +60,7 @@ type commitChan struct {
 type ChallengePrepare struct {
 	TYPE RoundType
 	*cosi.Challenge
-	*blockchain.TrBlock
+	Msg []byte
 }
 
 // ChallengeCommit  is the challenge used by ByzCoin during the "commit"

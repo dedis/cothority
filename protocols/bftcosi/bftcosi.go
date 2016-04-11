@@ -4,8 +4,6 @@ package bftcosi
 
 import (
 	"crypto/sha256"
-	"encoding/json"
-	"errors"
 	"math"
 	"sync"
 	"time"
@@ -21,6 +19,7 @@ import (
 type BFTCoSi struct {
 	// the node we are represented-in
 	*sda.Node
+	Msg []byte
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers
@@ -50,10 +49,9 @@ type BFTCoSi struct {
 	verifyBlockChan chan bool
 
 	//  block to pass up between the two rounds (prepare + commits)
-	tempBlock *blockchain.TrBlock
+	// FIXME tempBlock *blockchain.TrBlock
 	// exceptions given during the rounds that is used in the signature
 	tempExceptions []cosi.Exception
-
 
 	// last block computed
 	lastBlock string
@@ -82,7 +80,7 @@ type BFTCoSi struct {
 
 	// onSignatureDone is the callback that will be called when a signature has
 	// been generated ( at the end of the response phase of the commit round)
-	onSignatureDone func(*BlockSignature)
+	onSignatureDone func(*BFTSignature)
 
 	// rootTimeout is the timeout given to the root. It will be passed down the
 	// tree so every nodes knows how much time to wait. This root is a very nice
@@ -127,7 +125,7 @@ type BFTCoSi struct {
 	doneProcessing chan bool
 
 	// finale signature that this BFTCoSi round has produced
-	finalSignature *BlockSignature
+	finalSignature *BFTSignature
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
@@ -164,12 +162,13 @@ func NewBFTCoSiProtocol(n *sda.Node) (*BFTCoSi, error) {
 
 // NewBFTCoSiRootProtocol returns a new bftcosi struct with the block to sign
 // that will be sent to all others nodes
-func NewBFTCoSiRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64, failMode uint) (*BFTCoSi, error) {
+func NewBFTCoSiRootProtocol(n *sda.Node, msg []byte, timeOutMs uint64, failMode uint) (*BFTCoSi, error) {
 	bz, err := NewBFTCoSiProtocol(n)
+	bz.Msg = msg
 	if err != nil {
 		return nil, err
 	}
-	bz.tempBlock, err = GetBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
+	// FIXME bz.tempBlock, err = GetBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
 	bz.rootFailMode = failMode
 	bz.rootTimeout = timeOutMs
 	return bz, err
@@ -236,7 +235,7 @@ func (bz *BFTCoSi) listen() {
 		case <-bz.doneProcessing:
 			// we are done
 			dbg.Lvl2(bz.Name(), "BFTCoSi Dispatches stop.")
-			bz.tempBlock = nil
+			// FIXME bz.tempBlock = nil
 			return
 		}
 		if err != nil {
@@ -390,22 +389,19 @@ func (bz *BFTCoSi) handleCommit(ann Commitment) error {
 // startPrepareChallenge create the challenge and send its down the tree
 func (bz *BFTCoSi) startChallengePrepare() error {
 	// make the challenge out of it
-	trblock := bz.tempBlock
-	marshalled, err := json.Marshal(trblock)
-	if err != nil {
-		return err
-	}
-	ch, err := bz.prepare.CreateChallenge(marshalled)
+	// FIXME trblock := bz.tempBlock
+
+	ch, err := bz.prepare.CreateChallenge(bz.Msg)
 	if err != nil {
 		return err
 	}
 	bizChal := &ChallengePrepare{
 		TYPE:      RoundPrepare,
 		Challenge: ch,
-		TrBlock:   trblock,
+		Msg:       bz.Msg,
 	}
 
-	go VerifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
+	// TODO verification
 	dbg.Lvl3(bz.Name(), "BFTCoSi Start Challenge PREPARE")
 	// send to children
 	for _, tn := range bz.Children() {
@@ -422,8 +418,10 @@ func (bz *BFTCoSi) startChallengeCommit() error {
 		bz.onChallengeCommit()
 	}
 	// create the challenge out of it
-	marshalled := bz.tempBlock.HashSum()
-	chal, err := bz.commit.CreateChallenge(marshalled)
+
+	// TODO hash MsgCommit
+	h := bz.Suite().Hash().Sum(bz.Msg)
+	chal, err := bz.commit.CreateChallenge(h)
 	if err != nil {
 		return err
 	}
@@ -444,10 +442,11 @@ func (bz *BFTCoSi) startChallengeCommit() error {
 // handlePrepareChallenge receive the challenge messages for the "prepare"
 // round.
 func (bz *BFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
-	bz.tempBlock = ch.TrBlock
-	// start the verification of the block
-	go VerifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
-	// acknoledge the challenge and send its down
+	bz.Msg = ch.Msg
+	// TODO find a way to pass the verification function or give back the
+	// data for verification (using a channel)
+
+	// acknowledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
 
@@ -466,15 +465,12 @@ func (bz *BFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 // handleCommitChallenge will verify the signature + check if no more than 1/3
 // of participants refused to sign.
 func (bz *BFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
-	// marshal the block
-	marshalled, err := json.Marshal(bz.tempBlock)
-	if err != nil {
-		return err
-	}
 	ch.Challenge = bz.commit.Challenge(ch.Challenge)
 
 	// verify if the signature is correct
-	if err := cosi.VerifyCosiSignatureWithException(bz.suite, bz.aggregatedPublic, marshalled, ch.Signature, ch.Exceptions); err != nil {
+	if err := cosi.VerifyCosiSignatureWithException(bz.suite,
+		bz.aggregatedPublic, bz.Msg, ch.Signature,
+		ch.Exceptions); err != nil {
 		dbg.Error(bz.Name(), "Verification of the signature failed:", err)
 		bz.signRefusal = true
 	}
@@ -495,7 +491,9 @@ func (bz *BFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 
 	// send it down
 	for _, tn := range bz.Children() {
-		err = bz.SendTo(tn, ch)
+		if err := bz.SendTo(tn, ch); err != nil {
+			dbg.Error(err)
+		}
 	}
 	return nil
 }
@@ -658,44 +656,12 @@ func (bz *BFTCoSi) waitResponseVerification() (*Response, bool) {
 	return bzr, true
 }
 
-// VerifyBlock is a simulation of a real verification block algorithm
-func VerifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done chan bool) {
-	//We measure the average block verification delays is 174ms for an average
-	//block of 500kB.
-	//To simulate the verification cost of bigger blocks we multiply 174ms
-	//times the size/500*1024
-	b, _ := json.Marshal(block)
-	s := len(b)
-	var n time.Duration
-	n = time.Duration(s / (500 * 1024))
-	time.Sleep(150 * time.Millisecond * n) //verification of 174ms per 500KB simulated
-	// verification of the header
-	verified := block.Header.Parent == lastBlock && block.Header.ParentKey == lastKeyBlock
-	verified = verified && block.Header.MerkleRoot == blockchain.HashRootTransactions(block.TransactionList)
-	verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
-	// notify it
-	dbg.Lvl3("Verification of the block done =", verified)
-	done <- verified
-}
-
-// GetBlock returns the next block available from the transaction pool.
-func GetBlock(transactions []blkparser.Tx, lastBlock, lastKeyBlock string) (*blockchain.TrBlock, error) {
-	if len(transactions) < 1 {
-		return nil, errors.New("no transaction available")
-	}
-
-	trlist := blockchain.NewTransactionList(transactions, len(transactions))
-	header := blockchain.NewHeader(trlist, lastBlock, lastKeyBlock)
-	trblock := blockchain.NewTrBlock(trlist, header)
-	return trblock, nil
-}
-
 // Signature will generate the final signature, the output of the BFTCoSi
 // protocol.
-func (bz *BFTCoSi) Signature() *BlockSignature {
-	return &BlockSignature{
+func (bz *BFTCoSi) Signature() *BFTSignature {
+	return &BFTSignature{
 		Sig:        bz.commit.Signature(),
-		Block:      bz.tempBlock,
+		Msg:        bz.Msg,
 		Exceptions: bz.tempExceptions,
 	}
 }
@@ -708,7 +674,7 @@ func (bz *BFTCoSi) RegisterOnDone(fn func()) {
 
 // RegisterOnSignatureDone register a callback to call when the bftcosi
 // protocol reached a signature on the block
-func (bz *BFTCoSi) RegisterOnSignatureDone(fn func(*BlockSignature)) {
+func (bz *BFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bz.onSignatureDone = fn
 }
 
@@ -790,3 +756,12 @@ func (bz *BFTCoSi) nodeDone() bool {
 	}
 	return true
 }
+
+type MsgPrepare struct {
+	Msg []byte
+}
+
+type MsgCommit struct {
+	Msg []byte
+} // TODO write binary marshaller for this and for MsgPrepare (adding some info to
+// diff. between both
