@@ -12,6 +12,12 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+var verificationRegister = make(map[string]interface{})
+
+func RegisterVerification(protocol string, cb func()) {
+	verificationRegister[protocol] = cb
+}
+
 // BFTCoSi is the main struct for running the protocol
 type BFTCoSi struct {
 	// the node we are represented-in
