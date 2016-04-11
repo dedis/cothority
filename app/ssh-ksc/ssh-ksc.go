@@ -5,12 +5,12 @@ package main
 import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/ssh-ks"
+	"github.com/dedis/cothority/services/ssh-ks"
 	"os"
 )
 
 // Our clientApp configuration
-var clientApp *ssh_ks.ClientApp
+var clientApp *ssh_ks.ClientKS
 
 // The config-file
 var configFile string
@@ -96,7 +96,7 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		var err error
 		configFile = c.String("config") + "/config.bin"
-		clientApp, err = ssh_ks.ReadClientApp(configFile)
+		clientApp, err = ssh_ks.ReadClientKS(configFile)
 		dbg.ErrFatal(err, "Couldn't read config-file")
 		return nil
 	}

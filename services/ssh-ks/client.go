@@ -12,8 +12,8 @@ import (
 	"os"
 )
 
-// ClientApp represents one client and holds all necessary structures
-type ClientApp struct {
+// ClientKS represents one client and holds all necessary structures
+type ClientKS struct {
 	// This points to the client holding this structure
 	This *Client
 	// Config holds all servers and clients
@@ -22,24 +22,24 @@ type ClientApp struct {
 	Private abstract.Secret
 }
 
-// NewClientApp creates a new private/public key pair and returns
-// a ClientApp with an empty Config. It takes a public ssh-key.
-func NewClientApp(sshPub string) *ClientApp {
+// NewClientKS creates a new private/public key pair and returns
+// a ClientKS with an empty Config. It takes a public ssh-key.
+func NewClientKS(sshPub string) *ClientKS {
 	pair := config.NewKeyPair(network.Suite)
-	return &ClientApp{NewClient(pair.Public, sshPub), nil, pair.Secret}
+	return &ClientKS{NewClient(pair.Public, sshPub), nil, pair.Secret}
 }
 
-// ReadClientApp searches for the client-app and creates a new one if it
+// ReadClientKS searches for the client-ks and creates a new one if it
 // doesn't exist
-func ReadClientApp(f string) (*ClientApp, error) {
-	file := expandHDir(f)
-	ca := NewClientApp("TestClient-" + f)
+func ReadClientKS(f string) (*ClientKS, error) {
+	file := ExpandHDir(f)
+	ca := NewClientKS("TestClient-" + f)
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
 		ca.Config = &Config{}
 		return ca, nil
 	}
-	b, err := ioutil.ReadFile(expandHDir(file))
+	b, err := ioutil.ReadFile(ExpandHDir(file))
 	if err != nil {
 		return nil, err
 	} else {
@@ -47,44 +47,44 @@ func ReadClientApp(f string) (*ClientApp, error) {
 		if err != nil {
 			return nil, err
 		}
-		c, ok := msg.(ClientApp)
+		c, ok := msg.(ClientKS)
 		if !ok {
-			return nil, errors.New("Didn't get a ClientApp structure")
+			return nil, errors.New("Didn't get a ClientKS structure")
 		}
 		ca = &c
 	}
 	return ca, nil
 }
 
-// Write takes a file and writes the clientApp to that file
-func (ca *ClientApp) Write(file string) error {
+// Write takes a file and writes the clientKS to that file
+func (ca *ClientKS) Write(file string) error {
 	b, err := network.MarshalRegisteredType(ca)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(expandHDir(file), b, 0660)
+	err = ioutil.WriteFile(ExpandHDir(file), b, 0660)
 	return err
 }
 
 // NetworkAddServer adds a new server to the Config
-func (ca *ClientApp) NetworkAddServer(s *Server) error {
+func (ca *ClientKS) NetworkAddServer(s *Server) error {
 	if ca.Config == nil {
 		return errors.New("No config available yet")
 	}
 	dbg.Lvl3("Servers are", ca.Config.Servers)
 	for _, srv := range ca.Config.Servers {
 		// Add the new server to all servers
-		resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
+		resp, err := NetworkSendAnonymous(srv.Entity.Addresses[0],
 			&AddServer{s})
-		err = errMsg(resp, err)
+		err = ErrMsg(resp, err)
 		if err != nil {
 			return err
 		}
 
 		// Add the other servers to the new server
-		resp, err = networkSendAnonymous(s.Entity.Addresses[0],
+		resp, err = NetworkSendAnonymous(s.Entity.Addresses[0],
 			&AddServer{srv})
-		err = errMsg(resp, err)
+		err = ErrMsg(resp, err)
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func (ca *ClientApp) NetworkAddServer(s *Server) error {
 }
 
 // NetworkDelServer deletes a server from the Config
-func (ca *ClientApp) NetworkDelServer(s *Server) error {
+func (ca *ClientKS) NetworkDelServer(s *Server) error {
 	if ca.Config == nil {
 		return errors.New("No config available yet")
 	}
@@ -102,9 +102,9 @@ func (ca *ClientApp) NetworkDelServer(s *Server) error {
 			continue
 		}
 		dbg.Lvl3("Asking server", srv, "to delete server", s)
-		resp, err := networkSendAnonymous(srv.Entity.Addresses[0],
+		resp, err := NetworkSendAnonymous(srv.Entity.Addresses[0],
 			&DelServer{s})
-		err = errMsg(resp, err)
+		err = ErrMsg(resp, err)
 		if err != nil {
 			return err
 		}
@@ -113,15 +113,15 @@ func (ca *ClientApp) NetworkDelServer(s *Server) error {
 }
 
 // NetworkAddClient adds a client to the configuration
-func (ca *ClientApp) NetworkAddClient(c *Client) error {
+func (ca *ClientKS) NetworkAddClient(c *Client) error {
 	if ca.Config == nil {
 		return errors.New("No config available yet")
 	}
 	dbg.Lvl3("Adding clients to", ca.Config.Servers)
 	for _, srv := range ca.Config.Servers {
 		dbg.Lvl3("Asking server", srv, "to add client", c)
-		resp, err := networkSend(ca.Private, srv.Entity, &AddClient{c})
-		err = errMsg(resp, err)
+		resp, err := NetworkSend(ca.Private, srv.Entity, &AddClient{c})
+		err = ErrMsg(resp, err)
 		if err != nil {
 			return err
 		}
@@ -130,14 +130,14 @@ func (ca *ClientApp) NetworkAddClient(c *Client) error {
 }
 
 // NetworkDelClient deletes a client from the configuration
-func (ca *ClientApp) NetworkDelClient(c *Client) error {
+func (ca *ClientKS) NetworkDelClient(c *Client) error {
 	if ca.Config == nil {
 		return errors.New("No config available yet")
 	}
 	for _, srv := range ca.Config.Servers {
 		dbg.Lvl3("Asking server", srv, "to del client", c)
-		resp, err := networkSend(ca.Private, srv.Entity, &DelClient{c})
-		err = errMsg(resp, err)
+		resp, err := NetworkSend(ca.Private, srv.Entity, &DelClient{c})
+		err = ErrMsg(resp, err)
 		if err != nil {
 			return err
 		}
@@ -146,8 +146,8 @@ func (ca *ClientApp) NetworkDelClient(c *Client) error {
 }
 
 // NetworkGetConfig asks the server for its configuration
-func (ca *ClientApp) NetworkGetConfig(s *Server) (*Config, error) {
-	resp, err := networkSend(ca.Private, s.Entity, &GetConfig{})
+func (ca *ClientKS) NetworkGetConfig(s *Server) (*Config, error) {
+	resp, err := NetworkSend(ca.Private, s.Entity, &GetConfig{})
 	if err != nil {
 		return nil, err
 	}
@@ -159,9 +159,9 @@ func (ca *ClientApp) NetworkGetConfig(s *Server) (*Config, error) {
 }
 
 // NetworkSign asks the servers to sign the new configuration
-func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
+func (ca *ClientKS) NetworkSign(s *Server) (*Config, error) {
 	dbg.Lvl3("Asking server", s, "to sign")
-	resp, err := networkSend(ca.Private, s.Entity, &Sign{})
+	resp, err := NetworkSend(ca.Private, s.Entity, &Sign{})
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (ca *ClientApp) NetworkSign(s *Server) (*Config, error) {
 
 // ServerAdd adds a new server and asks all servers, including the new one,
 // to sign off the new configuration
-func (ca *ClientApp) ServerAdd(srvAddr string) error {
+func (ca *ClientKS) ServerAdd(srvAddr string) error {
 	srv, err := NetworkGetServer(srvAddr)
 	if err != nil {
 		return err
@@ -203,7 +203,7 @@ func (ca *ClientApp) ServerAdd(srvAddr string) error {
 
 // ServerDel deletes a server and asks the remaining servers (if any)
 // to sign the new configuration
-func (ca *ClientApp) ServerDel(srvAddr string) error {
+func (ca *ClientKS) ServerDel(srvAddr string) error {
 	srv, err := NetworkGetServer(srvAddr)
 	if err != nil {
 		return err
@@ -228,7 +228,7 @@ func (ca *ClientApp) ServerDel(srvAddr string) error {
 
 // ServerCheck contacts all servers and verifies that all
 // configurations are the same
-func (ca *ClientApp) ServerCheck() error {
+func (ca *ClientKS) ServerCheck() error {
 	if ca.Config == nil {
 		return errors.New("No config defined")
 	}
@@ -253,7 +253,7 @@ func (ca *ClientApp) ServerCheck() error {
 }
 
 // ClientAdd adds a new client and signs the new configuration
-func (ca *ClientApp) ClientAdd(client *Client) error {
+func (ca *ClientKS) ClientAdd(client *Client) error {
 	if len(ca.Config.Servers) == 0 {
 		return errors.New("Missing servers. Please add one or more servers first")
 	}
@@ -265,7 +265,7 @@ func (ca *ClientApp) ClientAdd(client *Client) error {
 }
 
 // ClientDel deletes the client and signs the new configuration
-func (ca *ClientApp) ClientDel(client *Client) error {
+func (ca *ClientKS) ClientDel(client *Client) error {
 	if len(ca.Config.Servers) == 0 {
 		return errors.New("Missing servers. Please add one or more servers first")
 	}
@@ -278,7 +278,7 @@ func (ca *ClientApp) ClientDel(client *Client) error {
 
 // Update checks for the latest configuration
 // TODO: include SkipChains to get the latest cothority
-func (ca *ClientApp) Update(srv *Server) error {
+func (ca *ClientKS) Update(srv *Server) error {
 	conf := NewConfig(-1)
 	if srv == nil {
 		// If no server is given, we contact all servers and ask
@@ -307,7 +307,7 @@ func (ca *ClientApp) Update(srv *Server) error {
 
 // Sign checks for any server and asks it to start
 // a signing round
-func (ca *ClientApp) Sign() error {
+func (ca *ClientKS) Sign() error {
 	srv, err := ca.getAnyServer()
 	if err != nil {
 		return err
@@ -322,24 +322,9 @@ func (ca *ClientApp) Sign() error {
 }
 
 // Gets any server from the config
-func (ca *ClientApp) getAnyServer() (*Server, error) {
+func (ca *ClientKS) getAnyServer() (*Server, error) {
 	for _, srv := range ca.Config.Servers {
 		return srv, nil
 	}
 	return nil, errors.New("Found no servers")
-}
-
-func errMsg(status *network.Message, err error) error {
-	if err != nil {
-		return err
-	}
-	statusMsg, ok := status.Msg.(StatusRet)
-	if !ok {
-		return errors.New("Didn't get a StatusRet")
-	}
-	errMsg := statusMsg.Error
-	if errMsg != "" {
-		return errors.New("Remote-error: " + errMsg)
-	}
-	return nil
 }

@@ -17,16 +17,14 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"os/user"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 )
 
 func init() {
-	network.RegisterMessageType(ServerApp{})
-	network.RegisterMessageType(ClientApp{})
+	network.RegisterMessageType(ServerKS{})
+	network.RegisterMessageType(ClientKS{})
 	network.RegisterMessageType(Config{})
 	network.RegisterMessageType(Server{})
 	network.RegisterMessageType(Client{})
@@ -333,15 +331,4 @@ func CreateBogusSSH(dir, file string) error {
 	}
 	bKeysI = (bKeysI + 1) % len(bKeys)
 	return nil
-}
-
-func expandHDir(dir string) string {
-	usr, _ := user.Current()
-	hdir := usr.HomeDir
-
-	// Check in case of paths like "/something/~/something/"
-	if dir[:2] == "~/" {
-		return strings.Replace(dir, "~", hdir, 1)
-	}
-	return dir
 }

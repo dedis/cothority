@@ -9,14 +9,14 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/ssh-ks"
+	"github.com/dedis/cothority/services/ssh-ks"
 	"github.com/dedis/crypto/config"
 	"io"
 	"os"
 	"strings"
 )
 
-var serverApp *ssh_ks.ServerApp
+var serverApp *ssh_ks.ServerKS
 
 func main() {
 	app := cli.NewApp()
@@ -38,7 +38,7 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		file := c.String("config")
 		var err error
-		serverApp, err = ssh_ks.ReadServerApp(file)
+		serverApp, err = ssh_ks.ReadServerKS(file)
 		if err != nil {
 			serverApp, err = askServerConfig(os.Stdin, os.Stdout)
 			if err != nil {
@@ -54,12 +54,11 @@ func main() {
 		if err != nil {
 			dbg.Fatal("Couldn't start server:", err)
 		}
-		<-make(chan bool)
 	}
 	app.Run(os.Args)
 }
 
-func askServerConfig(in io.Reader, out io.Writer) (*ssh_ks.ServerApp, error) {
+func askServerConfig(in io.Reader, out io.Writer) (*ssh_ks.ServerKS, error) {
 	inb := bufio.NewReader(in)
 	ip := getArg(inb, out, "Please enter an IP:port where this server has to be reached",
 		"localhost:2000")
@@ -70,12 +69,12 @@ func askServerConfig(in io.Reader, out io.Writer) (*ssh_ks.ServerApp, error) {
 	return createServerConfig(ip, sshd, ssh)
 }
 
-func createServerConfig(ip, dirSSHD, dirSSH string) (*ssh_ks.ServerApp, error) {
+func createServerConfig(ip, dirSSHD, dirSSH string) (*ssh_ks.ServerKS, error) {
 	if ip == "" {
 		ip = "localhost:2000"
 	}
 	pair := config.NewKeyPair(network.Suite)
-	return ssh_ks.NewServerApp(pair, ip, dirSSHD, dirSSH)
+	return ssh_ks.NewServerKS(pair, ip, dirSSHD, dirSSH)
 }
 
 func getArg(in *bufio.Reader, out io.Writer, question, def string) string {
