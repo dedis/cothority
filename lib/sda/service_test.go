@@ -335,6 +335,135 @@ func TestServiceNewProtocol(t *testing.T) {
 	waitOrFatalValue(ds2.link, true, t)
 }
 
+func TestServiceBackForthProtocol(t *testing.T) {
+
+}
+
+// BackForthProtocolForth & Back are messages that go down and up the tree.
+// => BackForthProtocol protocol / message
+type SimpleMessageForth struct {
+	Val int
+}
+
+type SimpleMessageBack struct {
+	Val int
+}
+
+var simpleMessageForthType = network.RegisterMessageType(SimpleMessageForth{})
+var simpleMessageBackType = network.RegisterMessageType(SimpleMessageBack{})
+
+type BackForthProtocol struct {
+	*sda.TreeNodeInstance
+	Val       int
+	forthChan chan struct {
+		*sda.TreeNode
+		SimpleMessageForth
+	}
+	backChan chan struct {
+		*sda.TreeNode
+		SimpleMessageBack
+	}
+	handler func(val int)
+}
+
+func newBackForthProtocolRoot(tn *sda.TreeNodeInstance, val int, handler func(int)) (sda.ProtocolInstance, error) {
+	s, err := newBackForthProtocol(tn)
+	s.Val = val
+	s.handler = handler
+	return s, err
+}
+
+func newBackForthProtocol(tn *sda.TreeNodeInstance) (*BackForthProtocol, error) {
+	s := &BackForthProtocol{
+		TreeNodeInstance: tn,
+	}
+	err := s.RegisterChannel(&s.forthChan)
+	if err != nil {
+		return nil, err
+	}
+	err = s.RegisterChannel(&s.backChan)
+	go s.dispatch()
+	return s, nil
+}
+
+func (sp *BackForthProtocol) Start() error {
+	// send down to children
+	msg := SimpleMessageForth{
+		Val: sp.Val,
+	}
+	for _, ch := range sp.Children() {
+		if err := sp.SendTo(ch, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (sp *BackForthProtocol) dispatch() {
+	select {
+	// dispatch the first msg down
+	case m := <-sp.forthChan:
+		msg := m.SimpleMessageForth
+		for _, ch := range sp.Children() {
+			sp.SendTo(ch, msg)
+		}
+		// pass the message up
+	case m := <-sp.backChan:
+		msg := m.SimpleMessageBack
+		// call the handler  if we are the root
+		if sp.IsRoot() {
+			sp.handler(msg.Val)
+		} else {
+			sp.SendTo(sp.Parent(), msg)
+		}
+	}
+}
+
+// Client API request / response emulation
+type simpleRequest struct {
+	entities *sda.EntityList
+	Val      int
+}
+
+type simpleResponse struct {
+	Val int
+}
+
+var simpleRequestType = network.RegisterMessageType(simpleRequest{})
+var simpleResponseType = network.RegisterMessageType(simpleResponse{})
+
+type simpleService struct {
+	ctx sda.Context
+}
+
+func (s *simpleService) ProcessRequest(e *network.Entity, r *sda.Request) {
+	if r.Type != simpleRequestType {
+		return
+	}
+	_, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
+	req := pm.(simpleRequest)
+	tree := req.entities.GenerateBinaryTree()
+	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root)
+	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
+		if err := s.ctx.SendRaw(e, &simpleResponse{
+			Val: n,
+		}); err != nil {
+			dbg.Error(err)
+		}
+	})
+	if err != nil {
+		dbg.Error(err)
+		return
+	}
+	s.ctx.RegisterProtocolInstance(proto)
+	go proto.Start()
+}
+
+func (s *simpleService) NewProtocol(tni *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	pi, err := newBackForthProtocol(tni)
+	return pi, err
+}
+
 func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {
 	select {
 	case b := <-ch:
