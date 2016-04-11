@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/services/ssh-ks"
+	"github.com/dedis/cothority/services/sshks"
 	"strconv"
 	"strings"
 	"testing"
@@ -25,7 +25,7 @@ func TestCreateServerConfig(t *testing.T) {
 	}
 
 	for _, s := range servers {
-		sc, err := ssh_ks.ReadServerKS(s.DirSSHD + "/server.conf")
+		sc, err := sshks.ReadServerKS(s.DirSSHD + "/server.conf")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -43,7 +43,7 @@ func TestCreateServerConfig(t *testing.T) {
 }
 
 func TestAskServerConfig(t *testing.T) {
-	tmp, err := ssh_ks.SetupTmpHosts()
+	tmp, err := sshks.SetupTmpHosts()
 	if err != nil {
 		t.Fatal("Couldn't setup temp host:", err)
 	}
@@ -75,10 +75,10 @@ func TestCreateSSHDir(t *testing.T) {
 	}
 }
 
-func createServers(nbr int, t *testing.T) ([]*ssh_ks.ServerKS, error) {
-	ret := make([]*ssh_ks.ServerKS, nbr)
+func createServers(nbr int, t *testing.T) ([]*sshks.ServerKS, error) {
+	ret := make([]*sshks.ServerKS, nbr)
 	for i := range ret {
-		tmp, err := ssh_ks.SetupTmpHosts()
+		tmp, err := sshks.SetupTmpHosts()
 		if err != nil {
 			t.Fatal("Couldn't setup tmp:", err)
 		}
@@ -90,7 +90,7 @@ func createServers(nbr int, t *testing.T) ([]*ssh_ks.ServerKS, error) {
 	return ret, nil
 }
 
-func checkServerConfig(sc *ssh_ks.ServerKS, ip, sshd string) error {
+func checkServerConfig(sc *sshks.ServerKS, ip, sshd string) error {
 	if sc.DirSSHD != sshd {
 		return errors.New(fmt.Sprintf("SSHD-dir is wrong: %s instead of %s",
 			sc.DirSSHD, sshd))

@@ -5,12 +5,12 @@ package main
 import (
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/services/ssh-ks"
+	"github.com/dedis/cothority/services/sshks"
 	"os"
 )
 
 // Our clientApp configuration
-var clientApp *ssh_ks.ClientKS
+var clientApp *sshks.ClientKS
 
 // The config-file
 var configFile string
@@ -83,7 +83,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: "~/.ssh-ks",
+			Value: "~/.sshks",
 			Usage: "The configuration-directory of ssh-keystore",
 		},
 		cli.StringFlag{
@@ -96,7 +96,7 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		var err error
 		configFile = c.String("config") + "/config.bin"
-		clientApp, err = ssh_ks.ReadClientKS(configFile)
+		clientApp, err = sshks.ReadClientKS(configFile)
 		dbg.ErrFatal(err, "Couldn't read config-file")
 		return nil
 	}

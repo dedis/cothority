@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/services/ssh-ks"
+	"github.com/dedis/cothority/services/sshks"
 	"github.com/dedis/crypto/config"
 	"io/ioutil"
 	"os"
@@ -39,12 +39,12 @@ func TestConfigHash(t *testing.T) {
 }
 
 func TestReadConfig(t *testing.T) {
-	tmp, err := ssh_ks.SetupTmpHosts()
+	tmp, err := sshks.SetupTmpHosts()
 	dbg.TestFatal(t, err)
-	conf, err := ssh_ks.ReadConfig(tmp + "/config.bin")
+	conf, err := sshks.ReadConfig(tmp + "/config.bin")
 	dbg.TestFatal(t, err)
 	// Take a non-existent directory
-	conf, err = ssh_ks.ReadConfig(tmp + "1")
+	conf, err = sshks.ReadConfig(tmp + "1")
 	dbg.TestFatal(t, err)
 	if len(conf.Clients) > 0 {
 		t.Fatal("This should be empty")
@@ -52,15 +52,15 @@ func TestReadConfig(t *testing.T) {
 }
 
 func TestWriteConfig(t *testing.T) {
-	tmp, _ := ssh_ks.SetupTmpHosts()
+	tmp, _ := sshks.SetupTmpHosts()
 	file := tmp + "/config.bin"
-	conf1 := ssh_ks.NewConfig(10)
+	conf1 := sshks.NewConfig(10)
 	err := conf1.WriteConfig(file)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	conf2, err := ssh_ks.ReadConfig(file)
+	conf2, err := sshks.ReadConfig(file)
 	dbg.TestFatal(t, err)
 	if conf1.Version != conf2.Version {
 		t.Fatal("Didn't find same version")
@@ -70,7 +70,7 @@ func TestWriteConfig(t *testing.T) {
 func TestNetworkGetServer(t *testing.T) {
 	conode := startServers(1)[0]
 	defer conode.Stop()
-	srv, err := ssh_ks.NetworkGetServer(conode.This.Entity.Addresses[0])
+	srv, err := sshks.NetworkGetServer(conode.This.Entity.Addresses[0])
 	dbg.TestFatal(t, err)
 	if !srv.Entity.Equal(conode.This.Entity) {
 		t.Fatal("Didn't get the same Entity")
@@ -80,8 +80,8 @@ func TestNetworkGetServer(t *testing.T) {
 func TestNetworkGetConfig(t *testing.T) {
 	conode := startServers(1)[0]
 	defer conode.Stop()
-	srv, _ := ssh_ks.NetworkGetServer(conode.This.Entity.Addresses[0])
-	cl := ssh_ks.NewClientKS("")
+	srv, _ := sshks.NetworkGetServer(conode.This.Entity.Addresses[0])
+	cl := sshks.NewClientKS("")
 	conf, err := cl.NetworkGetConfig(srv)
 	dbg.TestFatal(t, err)
 	if len(conf.Servers) != 1 {
@@ -154,9 +154,9 @@ func TestNetworkAddClient(t *testing.T) {
 	defer closeServers(t, srvApp)
 	clApp.NetworkAddServer(servers[0])
 	clApp.NetworkAddServer(servers[1])
-	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"SSH-pub1")
-	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"SSH-pub2")
 	err := clApp.NetworkAddClient(client1)
 	dbg.ErrFatal(err)
@@ -179,9 +179,9 @@ func TestNetworkDelClient(t *testing.T) {
 	defer closeServers(t, srvApp)
 	clApp.NetworkAddServer(servers[0])
 	clApp.NetworkAddServer(servers[1])
-	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"SSH-pub1")
-	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"SSH-pub2")
 	err := clApp.NetworkAddClient(client1)
 	dbg.ErrFatal(err)
@@ -286,9 +286,9 @@ func TestCAClientAdd(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
 	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
-	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
-	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client2")
 	err := ca.ClientAdd(client1)
 	dbg.ErrFatal(err)
@@ -306,9 +306,9 @@ func TestWriteConfig2(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
 	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
-	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
-	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client2")
 	err := ca.ClientAdd(client1)
 	dbg.ErrFatal(err)
@@ -318,15 +318,15 @@ func TestWriteConfig2(t *testing.T) {
 		t.Fatal("There should be 2 clients now")
 	}
 
-	tmp, _ := ssh_ks.SetupTmpHosts()
+	tmp, _ := sshks.SetupTmpHosts()
 	file := tmp + "/config.bin"
-	conf1 := ssh_ks.NewConfig(10)
+	conf1 := sshks.NewConfig(10)
 	err = conf1.WriteConfig(file)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	conf2, err := ssh_ks.ReadConfig(file)
+	conf2, err := sshks.ReadConfig(file)
 	dbg.TestFatal(t, err)
 	if conf1.Version != conf2.Version {
 		t.Fatal("Didn't find same version")
@@ -340,9 +340,9 @@ func TestCAClientDel(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
 	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
-	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
-	client2 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client2")
 	err := ca.ClientAdd(client1)
 	dbg.ErrFatal(err)
@@ -368,7 +368,7 @@ func TestCASign(t *testing.T) {
 	defer closeServers(t, servers)
 	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
 	ca.ServerAdd(servers[1].This.Entity.Addresses[0])
-	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
 	err := ca.ClientAdd(client1)
 	dbg.ErrFatal(err)
@@ -398,11 +398,11 @@ func TestCAUpdate(t *testing.T) {
 		servers[1].This.Entity.Addresses[0]
 	ca1.ServerAdd(addr1)
 	ca1.ServerAdd(addr2)
-	client1 := ssh_ks.NewClient(config.NewKeyPair(network.Suite).Public,
+	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
-	tmp, err := ssh_ks.SetupTmpHosts()
+	tmp, err := sshks.SetupTmpHosts()
 	dbg.ErrFatal(err)
-	ca2, err := ssh_ks.ReadClientKS(tmp + "/config.bin")
+	ca2, err := sshks.ReadClientKS(tmp + "/config.bin")
 	dbg.ErrFatal(err)
 	ca2.ServerAdd(addr1)
 	// Now add a client to ca1, thus making ca2s config invalid
@@ -439,7 +439,7 @@ func TestCAUpdate(t *testing.T) {
 func TestCreateBogusSSH(t *testing.T) {
 	tmp, err := ioutil.TempDir("", "makeSSH")
 	dbg.ErrFatal(err)
-	err = ssh_ks.CreateBogusSSH(tmp, "test")
+	err = sshks.CreateBogusSSH(tmp, "test")
 	dbg.ErrFatal(err)
 	_, err = os.Stat(tmp + "/test")
 	if os.IsNotExist(err) {
