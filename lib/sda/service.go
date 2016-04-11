@@ -219,8 +219,8 @@ func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
 type Request struct {
 	// Name of the service to direct this request to
 	Service ServiceID `json:"service_id"`
-	// Type is the type of the underlying request
-	Type string `json:"type"`
+	// Type is the type of the underlying message
+	Type network.MessageTypeID `json:"type"`
 	// Data containing all the information in the request
 	Data json.RawMessage `json:"data"`
 }

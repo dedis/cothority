@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/satori/go.uuid"
 	"testing"
 	"time"
 )
@@ -23,8 +24,10 @@ type DummyMsg struct {
 	A int
 }
 
+var dummyMsgType network.MessageTypeID
+
 func init() {
-	network.RegisterMessageType(DummyMsg{})
+	dummyMsgType = network.RegisterMessageType(DummyMsg{})
 }
 
 func NewDummyProtocol(tni *sda.TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
@@ -66,7 +69,7 @@ type DummyService struct {
 }
 
 func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
-	if r.Type != "NewDummy" {
+	if r.Type != dummyMsgType {
 		ds.link <- false
 		return
 	}
@@ -127,7 +130,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	// Send a request to the service
 	re := &sda.Request{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
-		Type:    "wrongType",
+		Type:    network.MessageTypeID(uuid.Nil),
 	}
 	// fake a client
 	h2 := sda.NewLocalHost(2010)
@@ -177,7 +180,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	// Send a request to the service
 	re := &sda.Request{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
-		Type:    "NewDummy",
+		Type:    dummyMsgType,
 	}
 	// fake a client
 	h2 := sda.NewLocalHost(2010)
@@ -241,7 +244,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	// Send a request to the service
 	re := &sda.Request{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
-		Type:    "NewDummy",
+		Type:    dummyMsgType,
 	}
 	dbg.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.Entity); err != nil {
@@ -309,7 +312,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	// Send a request to the service
 	re := &sda.Request{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
-		Type:    "NewDummy",
+		Type:    dummyMsgType,
 	}
 	// fake a client
 	client := sda.NewLocalHost(2010)
