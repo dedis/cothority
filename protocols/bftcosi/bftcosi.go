@@ -3,14 +3,11 @@
 package bftcosi
 
 import (
-	"crypto/sha256"
 	"math"
 	"sync"
-	"time"
 
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 )
@@ -48,8 +45,6 @@ type BFTCoSi struct {
 	// channel used to wait for the verification of the block
 	verifyBlockChan chan bool
 
-	//  block to pass up between the two rounds (prepare + commits)
-	// FIXME tempBlock *blockchain.TrBlock
 	// exceptions given during the rounds that is used in the signature
 	tempExceptions []cosi.Exception
 
@@ -105,22 +100,13 @@ type BFTCoSi struct {
 
 	onResponseCommitDone func()
 	// view change setup and measurement
-	viewchangeChan chan struct {
-		*sda.TreeNode
-		viewChange
-	}
-	vcMeasure *monitor.TimeMeasure
+
 	// bool set to true when the final signature is produced
 	doneSigning chan bool
 	// lock associated
 	doneLock sync.Mutex
 	// threshold for how much exception
 	threshold int
-	// threshold for how much view change acceptance we need
-	// basically n - threshold
-	viewChangeThreshold int
-	// how many view change request have we received
-	vcCounter int
 	// done processing is used to stop the processing of the channels
 	doneProcessing chan bool
 
@@ -144,7 +130,6 @@ func NewBFTCoSiProtocol(n *sda.Node) (*BFTCoSi, error) {
 	//bz.endProto, _ = end.NewEndProtocol(n)
 	bz.aggregatedPublic = n.EntityList().Aggregate
 	bz.threshold = int(math.Ceil(float64(len(bz.Tree().List())) / 3.0))
-	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().List())) * 2.0 / 3.0))
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
@@ -152,7 +137,6 @@ func NewBFTCoSiProtocol(n *sda.Node) (*BFTCoSi, error) {
 	n.RegisterChannel(&bz.challengePrepareChan)
 	n.RegisterChannel(&bz.challengeCommitChan)
 	n.RegisterChannel(&bz.responseChan)
-	n.RegisterChannel(&bz.viewchangeChan)
 
 	n.OnDoneCallback(bz.nodeDone)
 
@@ -168,7 +152,6 @@ func NewBFTCoSiRootProtocol(n *sda.Node, msg []byte, timeOutMs uint64, failMode 
 	if err != nil {
 		return nil, err
 	}
-	// FIXME bz.tempBlock, err = GetBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
 	bz.rootFailMode = failMode
 	bz.rootTimeout = timeOutMs
 	return bz, err
@@ -189,7 +172,6 @@ func (bz *BFTCoSi) Dispatch() error {
 	return nil
 }
 func (bz *BFTCoSi) listen() {
-	// FIXME handle different failure modes
 	fail := (bz.rootFailMode != 0) && bz.IsRoot()
 	var timeoutStarted bool
 	for {
@@ -229,13 +211,10 @@ func (bz *BFTCoSi) listen() {
 			}
 			timeoutStarted = true
 			go bz.startTimer(timeout)
-		case msg := <-bz.viewchangeChan:
-			// receive view change
-			err = bz.handleViewChange(msg.TreeNode, &msg.viewChange)
 		case <-bz.doneProcessing:
 			// we are done
 			dbg.Lvl2(bz.Name(), "BFTCoSi Dispatches stop.")
-			// FIXME bz.tempBlock = nil
+
 			return
 		}
 		if err != nil {
@@ -649,7 +628,7 @@ func (bz *BFTCoSi) waitResponseVerification() (*Response, bool) {
 			Public:     bz.Public(),
 			Commitment: bz.prepare.GetCommitment(),
 		})
-		bz.sendAndMeasureViewchange()
+
 		return bzr, false
 	}
 
@@ -687,62 +666,8 @@ func (bz *BFTCoSi) startTimer(millis uint64) {
 		select {
 		case <-bz.doneSigning:
 			return
-		case <-time.After(time.Millisecond * time.Duration(millis)):
-			bz.sendAndMeasureViewchange()
 		}
 	}
-}
-
-// sendAndMeasureViewChange is a method that creates the viewchange request,
-// broadcast it and measures the time it takes to accept it.
-func (bz *BFTCoSi) sendAndMeasureViewchange() {
-	dbg.Lvl3(bz.Name(), "Created viewchange measure")
-	bz.vcMeasure = monitor.NewTimeMeasure("viewchange")
-	vc := newViewChange()
-	var err error
-	for _, n := range bz.Tree().List() {
-		// don't send to ourself
-		if n.Id.Equals(bz.TreeNode().Id) {
-			continue
-		}
-		err = bz.SendTo(n, vc)
-		if err != nil {
-			dbg.Error(bz.Name(), "Error sending view change", err)
-		}
-	}
-}
-
-// viewChange is simply the last hash / id of the previous leader.
-type viewChange struct {
-	LastBlock [sha256.Size]byte
-}
-
-// newViewChange creates a new view change.
-func newViewChange() *viewChange {
-	res := &viewChange{}
-	for i := 0; i < sha256.Size; i++ {
-		res.LastBlock[i] = 0
-	}
-	return res
-}
-
-// handleViewChange receives a view change request and if received more than
-// 2/3, accept the view change.
-func (bz *BFTCoSi) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
-	bz.vcCounter++
-	// only do it once
-	if bz.vcCounter == bz.viewChangeThreshold {
-		if bz.vcMeasure != nil {
-			bz.vcMeasure.Record()
-		}
-		if bz.IsRoot() {
-			dbg.Lvl3(bz.Name(), "Viewchange threshold reached (2/3) of all nodes")
-			go bz.Done()
-			//	bz.endProto.Start()
-		}
-		return nil
-	}
-	return nil
 }
 
 // nodeDone is either called by the end of EndProtocol or by the end of the
