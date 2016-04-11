@@ -14,6 +14,9 @@ import (
 
 var verificationRegister = make(map[string]interface{})
 
+// RegisterVerification can be used to pass a verification function from another
+// protocol which uses BFTCoSi (for example: ByzCoin). The protocol's verification
+// function doesn't take any arguments and is identified using the protocols name
 func RegisterVerification(protocol string, cb func()) {
 	verificationRegister[protocol] = cb
 }
@@ -23,6 +26,10 @@ type BFTCoSi struct {
 	// the node we are represented-in
 	*sda.Node
 	Msg []byte
+	// ProtoName is the protocol which passes the message to BFTCoSi. Can be
+	// empty. ProtoName will be used to call the corresponding verification
+	// function which was passed to RegisterVerification beforehand.
+	ProtoName string
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers
