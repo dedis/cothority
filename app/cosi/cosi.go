@@ -14,7 +14,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/cosi"
+	"github.com/dedis/cothority/services/cosi"
 )
 
 func main() {

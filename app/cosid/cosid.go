@@ -12,7 +12,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/protocols/cosi"
+	"github.com/dedis/cothority/services/cosi"
 )
 
 // Main starts the host and will setup the protocol.
