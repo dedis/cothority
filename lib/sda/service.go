@@ -222,7 +222,7 @@ type Request struct {
 	// Type is the type of the underlying request
 	Type string `json:"type"`
 	// Data containing all the information in the request
-	Data *json.RawMessage `json:"data"`
+	Data json.RawMessage `json:"data"`
 }
 
 // RequestType is the type that registered by the network library
