@@ -1,4 +1,4 @@
-package ssh_ks
+package sshks
 
 import (
 	"bytes"
@@ -42,17 +42,16 @@ func ReadClientKS(f string) (*ClientKS, error) {
 	b, err := ioutil.ReadFile(ExpandHDir(file))
 	if err != nil {
 		return nil, err
-	} else {
-		_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
-		if err != nil {
-			return nil, err
-		}
-		c, ok := msg.(ClientKS)
-		if !ok {
-			return nil, errors.New("Didn't get a ClientKS structure")
-		}
-		ca = &c
 	}
+	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	if err != nil {
+		return nil, err
+	}
+	c, ok := msg.(ClientKS)
+	if !ok {
+		return nil, errors.New("Didn't get a ClientKS structure")
+	}
+	ca = &c
 	return ca, nil
 }
 
@@ -237,16 +236,15 @@ func (ca *ClientKS) ServerCheck() error {
 	}
 	var cnf *Config
 	for _, srv := range ca.Config.Servers {
-		cnf_, err := ca.NetworkGetConfig(srv)
+		cnfSrv, err := ca.NetworkGetConfig(srv)
 		dbg.ErrFatal(err)
 		if cnf != nil {
-			if bytes.Compare(cnf.Hash(), cnf_.Hash()) != 0 {
+			if bytes.Compare(cnf.Hash(), cnfSrv.Hash()) != 0 {
 				return errors.New("Hashes should be the same\n" +
-					"1st server has " + fmt.Sprintln(cnf_) +
-					"Server" + fmt.Sprint(srv) + "has" + fmt.Sprintln(cnf_))
-			} else {
-				cnf = cnf_
+					"1st server has " + fmt.Sprintln(cnfSrv) +
+					"Server" + fmt.Sprint(srv) + "has" + fmt.Sprintln(cnfSrv))
 			}
+			cnf = cnfSrv
 		}
 	}
 	return nil

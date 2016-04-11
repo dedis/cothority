@@ -1,4 +1,4 @@
-package ssh_ks_test
+package sshks_test
 
 import (
 	"bytes"

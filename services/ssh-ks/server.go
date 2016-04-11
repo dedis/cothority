@@ -1,4 +1,4 @@
-package ssh_ks
+package sshks
 
 import (
 	"bytes"
@@ -138,13 +138,12 @@ func (sa *ServerKS) Check() error {
 		sig, err := cosi.SignStatement(strings.NewReader(msg), list)
 		if err != nil {
 			return err
-		} else {
-			err := cosi.VerifySignatureHash([]byte(msg), sig, list)
-			if err != nil {
-				return err
-			}
-			dbg.Lvl3("Received signature successfully")
 		}
+		err = cosi.VerifySignatureHash([]byte(msg), sig, list)
+		if err != nil {
+			return err
+		}
+		dbg.Lvl3("Received signature successfully")
 	}
 	return nil
 }
@@ -152,7 +151,7 @@ func (sa *ServerKS) Check() error {
 // Sign sends updates the configuration-structure by increasing the
 // version and asks the cothority to sign the new structure.
 func (sa *ServerKS) Sign() error {
-	sa.Config.Version += 1
+	sa.Config.Version++
 	sa.Config.Signature = nil
 	msg := sa.Config.Hash()
 	msg2 := sa.Config.Hash()
@@ -232,7 +231,7 @@ func (sa *ServerKS) FuncAddClient(data *network.Message) network.ProtocolMessage
 	return &StatusRet{""}
 }
 
-// FuncDelServer removes a given server from the configuration
+// FuncDelClient removes a given client from the configuration
 func (sa *ServerKS) FuncDelClient(data *network.Message) network.ProtocolMessage {
 	req, ok := data.Msg.(DelClient)
 	if !ok {
@@ -289,6 +288,7 @@ func (sa *ServerKS) CreateAuth() error {
 		[]byte(strings.Join(lines, "\n")), 0600)
 }
 
+// ErrMsg converts a combined err and status-message to an error
 func ErrMsg(status *network.Message, err error) error {
 	if err != nil {
 		return err

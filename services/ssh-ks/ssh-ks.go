@@ -1,6 +1,6 @@
-// Package ssh_ks offers functions to interact with the ssh-files. It depends
+// Package sshks offers functions to interact with the ssh-files. It depends
 // on the golang/crypto/ssh library.
-package ssh_ks
+package sshks
 
 import (
 	"bytes"
@@ -94,16 +94,15 @@ func ReadConfig(file string) (*Config, error) {
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
-	} else {
-		_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
-		if err != nil {
-			return nil, err
-		}
-		c := msg.(Config)
-		conf = &c
-		if len(conf.Clients) == 0 {
-			conf.Clients = make(map[string]*Client)
-		}
+	}
+	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	if err != nil {
+		return nil, err
+	}
+	c := msg.(Config)
+	conf = &c
+	if len(conf.Clients) == 0 {
+		conf.Clients = make(map[string]*Client)
 	}
 	return conf, nil
 }
@@ -254,12 +253,12 @@ func (conf *Config) MarshalBinary() ([]byte, error) {
 }
 
 // List prints the version and a list of Servers and Clients
-func (c *Config) List() {
-	dbg.Print("Config-version:", c.Version)
-	for _, srv := range c.Servers {
+func (conf *Config) List() {
+	dbg.Print("Config-version:", conf.Version)
+	for _, srv := range conf.Servers {
 		dbg.Print("Server:", srv.Entity.String())
 	}
-	for n, cl := range c.Clients {
+	for n, cl := range conf.Clients {
 		dbg.Print("Client:", n, cl.Entity.String())
 	}
 }
@@ -291,7 +290,7 @@ type sshKey struct {
 var bKeys []sshKey
 var bKeysI int
 
-// createBogusSSH creates a private/public key
+// CreateBogusSSH creates a private/public key
 func CreateBogusSSH(dir, file string) error {
 	if bKeys == nil {
 		// Pre-calculate some ssh-keys for faster testing

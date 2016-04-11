@@ -1,4 +1,4 @@
-package ssh_ks
+package sshks
 
 import (
 	"errors"
@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+// NetworkSendAnonymous makes a connection to a remote host without checking
+// it's public key. This is useful if you want the user to ask only for the
+// address of the server, without providing the public key. Of course this is
+// not secure!
 func NetworkSendAnonymous(addr string, req network.ProtocolMessage) (*network.Message, error) {
 	// create a throw-away key pair:
 	kp := config.NewKeyPair(network.Suite)
@@ -19,6 +23,8 @@ func NetworkSendAnonymous(addr string, req network.ProtocolMessage) (*network.Me
 	return NetworkSend(kp.Secret, dst, req)
 }
 
+// NetworkSend opens the connection to 'dst' and sends the message 'req'. The
+// reply is returned, or an error if the timeout of 10 seconds is reached.
 func NetworkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolMessage) (*network.Message, error) {
 	client := network.NewSecureTCPHost(sec, nil)
 
@@ -56,6 +62,8 @@ func NetworkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolM
 	}
 }
 
+// ExpandHDir takes a string and expands any leading '~' with the home-dir
+// of the user.
 func ExpandHDir(dir string) string {
 	usr, _ := user.Current()
 	hdir := usr.HomeDir

@@ -1,4 +1,4 @@
-package ssh_ks
+package sshks
 
 import (
 	"errors"
@@ -68,7 +68,7 @@ type StatusRet struct {
 	Error string
 }
 
-// FuncRegisterRet registers all messages to the network - not
+// FuncRegister registers all messages to the network - not
 // really necessary for the outgoing messages, but useful for
 // external users
 func FuncRegister() {
