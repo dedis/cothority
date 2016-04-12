@@ -152,31 +152,35 @@ func TestServiceChannels(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
+	sc := &ServiceChannels{}
+
+	sda.RegisterNewService("ChannelsService", func(c sda.Context, path string) sda.Service {
+		dbg.Print("CTX????", c)
+		sc.ctx = c
+		sc.path = path
+		return sc
+	})
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
 	// Add tree + entitylist
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
-	h1.AddEntityList(el)
 	tree := el.GenerateBinaryTree()
+	sc.tree = *tree
+	h1.AddEntityList(el)
+	h1.AddTree(tree)
+	h1.StartProcessMessages()
 
-	ds := &Channels{
-		tree: *tree,
-		link: make(chan bool),
+	dbg.Print(sc.tree, sc.tree.Root)
+	sc.ProcessRequest(nil, nil)
+	select {
+	case msg := <-Incoming:
+		if msg.I != 12 {
+			t.Fatal("Child should receive 12")
+		}
+	case <-time.After(time.Second * 3):
+		t.Fatal("Timeout")
 	}
-
-	sda.RegisterNewService("ChannelsService", func(c sda.Context, path string) sda.Service {
-		ds.c = c
-		ds.path = path
-		ds.link <- true
-		return ds
-	})
-	go func() {
-		h := sda.NewLocalHost(2000)
-		h.Close()
-	}()
-
-	waitOrFatal(ds.link, t)
 }
 
 func TestProtocolHandlers(t *testing.T) {
@@ -345,31 +349,30 @@ func (p *ProtocolChannels) Release() {
 	p.Done()
 }
 
-type Channels struct {
-	c    sda.Context
+type ServiceChannels struct {
+	ctx  sda.Context
 	path string
 	tree sda.Tree
-	link chan bool
 }
 
 // implement services interface
-func (c *Channels) ProcessRequest(e *network.Entity, r *sda.Request) {
-	// dummy service
+func (c *ServiceChannels) ProcessRequest(e *network.Entity, r *sda.Request) {
+	dbg.Print("Tree and ..", c.tree, c.tree.Root)
+	dbg.Print("CTX: ", c.ctx)
 
-	tni := c.c.NewTreeNodeInstance(&c.tree, c.tree.Root)
+	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root)
 	pi, err := NewProtocolChannels(tni)
 	if err != nil {
 		return
 	}
 
-	if err := c.c.RegisterProtocolInstance(pi); err != nil {
-		c.link <- false
+	if err := c.ctx.RegisterProtocolInstance(pi); err != nil {
 		return
 	}
 	pi.Start()
 }
 
-func (c *Channels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+func (c *ServiceChannels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
 	return NewProtocolChannels(tn)
 }
