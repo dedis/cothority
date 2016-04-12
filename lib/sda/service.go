@@ -227,3 +227,20 @@ type Request struct {
 
 // RequestType is the type that registered by the network library
 var RequestID = network.RegisterMessageType(Request{})
+
+// CreateServiceRequest creates a Request message out of any message that is
+// destined to a Service. XXX For the moment it uses protobuf, as it is already
+// handling abstract.Secret/Public stuff that json can't do. Later we may want
+// to think on how to change that.
+func CreateServiceRequest(service string, r interface{}) (*Request, error) {
+	sid := ServiceFactory.ServiceID(service)
+	buff, err := network.MarshalRegisteredType(r)
+	if err != nil {
+		return nil, err
+	}
+	return &Request{
+		Service: sid,
+		Type:    network.RegisterMessageType(r),
+		Data:    buff,
+	}, nil
+}

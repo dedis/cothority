@@ -1,4 +1,4 @@
-package services
+package cosi
 
 import (
 	"encoding/json"
