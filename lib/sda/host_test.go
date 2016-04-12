@@ -7,71 +7,9 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	// Commented: Only needed in test TestHackyCosi
-	//  but importing our protocols imports 3rd party package github.com/btcsuite
-	// which seems to start two go-rountines (which leaks and make our tests fail)
-	"github.com/dedis/cothority/lib/cosi"
-	_ "github.com/dedis/cothority/protocols/cosi"
-	"github.com/dedis/crypto/config"
-	"golang.org/x/net/context"
 
 	"github.com/satori/go.uuid"
 )
-
-// Test hacky way of launching CoSi protocol externally
-func TestHackyCosi(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
-	// make up the hosts and the entity list
-	h1 := sda.NewLocalHost(2000)
-	h1.Listen()
-	h1.StartProcessMessages()
-	defer h1.Close()
-	h2 := sda.NewLocalHost(2010)
-	h2.Listen()
-	h2.StartProcessMessages()
-	defer h2.Close()
-	h3 := sda.NewLocalHost(2020)
-	h3.Listen()
-	h3.StartProcessMessages()
-	defer h3.Close()
-
-	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity, h3.Entity})
-
-	// create the fake client
-	kp := config.NewKeyPair(network.Suite)
-	client := network.NewSecureTcpHost(kp.Secret, network.NewEntity(kp.Public, "localhost:3000"))
-	msg := []byte("Hello World")
-	req := &sda.CosiRequest{
-		EntityList: el,
-		Message:    msg,
-	}
-
-	// Connect to the root
-	con, err := client.Open(h1.Entity)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer client.Close()
-	// send the request
-	if err := con.Send(context.TODO(), req); err != nil {
-		t.Fatal(err)
-	}
-	// wait for the response
-	packet, err := con.Receive(context.TODO())
-	if err != nil {
-		t.Fatal(err)
-	}
-	// verify signature
-	response, ok := packet.Msg.(sda.CosiResponse)
-	if !ok {
-		t.Fatal("Could not cast the response to a CoSiResponse")
-	}
-	if err := cosi.VerifySignature(network.Suite, msg, el.Aggregate, response.Challenge, response.Response); err != nil {
-		t.Fatal("Response has not been verified correctly")
-	}
-
-}
 
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
@@ -253,7 +191,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessage {
+	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type, but", msg.MsgType)
 	}
 	if msg.Msg.(sda.EntityList).Id != sda.EntityListID(uuid.Nil) {
@@ -267,7 +205,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessage {
+	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type")
 	}
 	if msg.Msg.(sda.EntityList).Id != el.Id {
@@ -309,7 +247,7 @@ func TestTreePropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendTreeMessage {
+	if msg.MsgType != sda.SendTreeMessageID {
 		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
@@ -324,7 +262,7 @@ func TestTreePropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendTreeMessage {
+	if msg.MsgType != sda.SendTreeMessageID {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
 	if msg.Msg.(sda.TreeMarshal).TreeId != tree.Id {
@@ -445,6 +383,40 @@ func TestAutoConnection(t *testing.T) {
 	}
 }
 
+func TestRegisterMsg(t *testing.T) {
+	type Msg1 struct {
+		I int
+	}
+	type Msg2 struct {
+		J string
+	}
+	got1 := make(chan int, 1)
+	got2 := make(chan string, 1)
+	host := sda.NewLocalHost(2000)
+	mt1 := host.RegisterExternalMessage(Msg1{}, func(m *network.Message) network.ProtocolMessage {
+		got1 <- m.Msg.(Msg1).I
+		return nil
+	})
+	mt2 := host.RegisterExternalMessage(Msg2{}, func(m *network.Message) network.ProtocolMessage {
+		got2 <- m.Msg.(Msg2).J
+		return nil
+	})
+	host.ProcessExternalMessage(&network.Message{
+		MsgType: mt1,
+		Msg:     Msg1{2},
+	})
+	if <-got1 != 2 {
+		t.Fatal("Message should be 2")
+	}
+	host.ProcessExternalMessage(&network.Message{
+		MsgType: mt2,
+		Msg:     Msg2{"networkmsg"},
+	})
+	if <-got2 != "networkmsg" {
+		t.Fatal("Message should be networkmsg")
+	}
+}
+
 func SetupTwoHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
 	hosts := sda.GenLocalHosts(2, true, false)
 	if h2process {
@@ -473,7 +445,7 @@ type SimpleMessage struct {
 
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
-func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
+func testMessageSimple(t *testing.T, msg network.Message) SimpleMessage {
 	if msg.MsgType != SimpleMessageType {
 		t.Fatal("Received non SimpleMessage type")
 	}

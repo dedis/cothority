@@ -1,4 +1,4 @@
-package byzcoin_ntree
+package byzcoinNtree
 
 import (
 	"github.com/BurntSushi/toml"
@@ -22,6 +22,7 @@ type Simulation struct {
 	byzcoin.SimulationConfig
 }
 
+// NewSimulation returns a new Ntree simulation
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)

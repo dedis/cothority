@@ -29,6 +29,7 @@ type Simulation struct {
 	SimulationConfig
 }
 
+// SimulationConfig is the config used by the simulation for byzcoin
 type SimulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
@@ -41,6 +42,7 @@ type SimulationConfig struct {
 	Fail uint
 }
 
+// NewSimulation returns a fresh byzcoin simulation out of the toml config
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)

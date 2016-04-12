@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cliutils"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -20,10 +20,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-/*
-Host is the structure responsible for holding information about the current
- state
-*/
+// ExternalAPI can be used to handle external message-calls
+type ExternalAPI func(*network.Message) network.ProtocolMessage
+
+// Host is the structure responsible for holding information about the current
+// state
 type Host struct {
 	// Our entity (i.e. identity over the network)
 	Entity *network.Entity
@@ -37,7 +38,7 @@ type Host struct {
 	// The open connections
 	connections map[network.EntityID]network.SecureConn
 	// chan of received messages - testmode
-	networkChan chan network.NetworkMessage
+	networkChan chan network.Message
 	// The database of entities this host knows
 	entities map[network.EntityID]*network.Entity
 	// lock associated to access entityLists
@@ -47,9 +48,9 @@ type Host struct {
 	// map from EntityList.ID => trees that use this entity list
 	pendingTreeMarshal map[EntityListID][]*TreeMarshal
 	// pendingSDAData are a list of message we received that does not correspond
-	// to any local tree or/and entitylist. We first request theses so we can
-	// instantiate properly protocolinstance that will use these SDAData msg.
-	pendingSDAs []*SDAData
+	// to any local Tree or/and EntityList. We first request theses so we can
+	// instantiate properly protocolInstance that will use these SDAData msg.
+	pendingSDAs []*Data
 	// The suite used for this Host
 	suite abstract.Suite
 	// We're about to close
@@ -72,6 +73,8 @@ type Host struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
+	// to dispatch external messages
+	externalMsgs map[network.MessageTypeID]ExternalAPI
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -83,19 +86,21 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		connections:         make(map[network.EntityID]network.SecureConn),
 		entities:            make(map[network.EntityID]*network.Entity),
 		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
-		pendingSDAs:         make([]*SDAData, 0),
-		host:                network.NewSecureTcpHost(pkey, e),
+		pendingSDAs:         make([]*Data, 0),
+		host:                network.NewSecureTCPHost(pkey, e),
 		private:             pkey,
 		suite:               network.Suite,
-		networkChan:         make(chan network.NetworkMessage, 1),
+		networkChan:         make(chan network.Message, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
+		externalMsgs:        make(map[network.MessageTypeID]ExternalAPI),
 	}
 
 	h.overlay = NewOverlay(h)
 	return h
 }
 
+// HostConfig holds all necessary data to create a Host.
 type HostConfig struct {
 	Public   string
 	Private  string
@@ -110,11 +115,11 @@ func NewHostFromFile(name string) (*Host, error) {
 	if err != nil {
 		return nil, err
 	}
-	private, err := cliutils.ReadSecretHex(network.Suite, hc.Private)
+	private, err := crypto.ReadSecretHex(network.Suite, hc.Private)
 	if err != nil {
 		return nil, err
 	}
-	public, err := cliutils.ReadPubHex(network.Suite, hc.Public)
+	public, err := crypto.ReadPubHex(network.Suite, hc.Public)
 	if err != nil {
 		return nil, err
 	}
@@ -125,11 +130,11 @@ func NewHostFromFile(name string) (*Host, error) {
 
 // SaveToFile puts the private/public key and the hostname into a file
 func (h *Host) SaveToFile(name string) error {
-	public, err := cliutils.PubHex(network.Suite, h.Entity.Public)
+	public, err := crypto.PubHex(network.Suite, h.Entity.Public)
 	if err != nil {
 		return err
 	}
-	private, err := cliutils.SecretHex(network.Suite, h.private)
+	private, err := crypto.SecretHex(network.Suite, h.private)
 	if err != nil {
 		return err
 	}
@@ -244,7 +249,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		return errors.New("Can't send nil-packet")
 	}
 	h.entityListsLock.RLock()
-	if _, ok := h.entities[e.Id]; !ok {
+	if _, ok := h.entities[e.ID]; !ok {
 		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.RUnlock()
 		// Connect to that entity
@@ -258,7 +263,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	var c network.SecureConn
 	var ok bool
 	h.networkLock.Lock()
-	if c, ok = h.connections[e.Id]; !ok {
+	if c, ok = h.connections[e.ID]; !ok {
 		h.networkLock.Unlock()
 		return errors.New("Got no connection tied to this Entity")
 	}
@@ -271,6 +276,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	return nil
 }
 
+// StartProcessMessages start the processing of incoming messages.
+// Mostly it used internally (by the cothority's simulation for instance).
+// Protocol/simulation developers usually won't need it.
 func (h *Host) StartProcessMessages() {
 	// The networkLock.Unlock is in the processMessages-method to make
 	// sure the goroutine started
@@ -291,7 +299,7 @@ func (h *Host) processMessages() {
 	h.networkLock.Unlock()
 	for {
 		var err error
-		var data network.NetworkMessage
+		var data network.Message
 		select {
 		case data = <-h.networkChan:
 		case <-h.ProcessMessagesQuit:
@@ -299,15 +307,15 @@ func (h *Host) processMessages() {
 		}
 		dbg.Lvl4("Message Received from", data.From)
 		switch data.MsgType {
-		case SDADataMessage:
-			sdaMsg := data.Msg.(SDAData)
+		case SDADataMessageID:
+			sdaMsg := data.Msg.(Data)
 			sdaMsg.Entity = data.Entity
 			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
 		// A host has sent us a request to get a tree definition
-		case RequestTreeMessage:
+		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
 			tree := h.overlay.Tree(tid)
 			if tree != nil {
@@ -319,7 +327,7 @@ func (h *Host) processMessages() {
 				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
 		// A Host has replied to our request of a tree
-		case SendTreeMessage:
+		case SendTreeMessageID:
 			tm := data.Msg.(TreeMarshal)
 			if tm.TreeId == TreeID(uuid.Nil) {
 				dbg.Error("Received an empty Tree")
@@ -348,7 +356,7 @@ func (h *Host) processMessages() {
 			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
 		// Some host requested an EntityList
-		case RequestEntityListMessage:
+		case RequestEntityListMessageID:
 			id := data.Msg.(RequestEntityList).EntityListID
 			el := h.overlay.EntityList(id)
 			if el != nil {
@@ -358,7 +366,7 @@ func (h *Host) processMessages() {
 				h.SendRaw(data.Entity, &EntityList{})
 			}
 		// Host replied to our request of entitylist
-		case SendEntityListMessage:
+		case SendEntityListMessageID:
 			il := data.Msg.(EntityList)
 			if il.Id == EntityListID(uuid.Nil) {
 				dbg.Lvl2("Received an empty EntityList")
@@ -368,13 +376,11 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
-		case CosiRequestMessage:
-			// Standalone CoSi hack!
-			// A client wants to sign something
-			cr := data.Msg.(CosiRequest)
-			h.handleCosiRequest(data.Entity, &cr)
 		default:
-			dbg.Error("Didn't recognize message", data.MsgType)
+			err := h.ProcessExternalMessage(&data)
+			if err != nil {
+				dbg.Error(err, data.MsgType)
+			}
 		}
 		if err != nil {
 			dbg.Error("Sending error:", err)
@@ -382,63 +388,34 @@ func (h *Host) processMessages() {
 	}
 }
 
-// handleCosiRequest will
-// * register the entitylist
-// * create a flat tree out of it with him being at the root
-// * launch a CoSi protocol
-// * wait for it to finish and send back the response to the client
-func (h *Host) handleCosiRequest(client *network.Entity, cr *CosiRequest) {
-	dbg.Lvl2(h.workingAddress, "Received client CosiRequest from", client.First())
-	idx, e := cr.EntityList.Search(h.Entity.Id)
-	if e == nil {
-		dbg.Error("Received CoSiRequest without being included in the Entitylist")
-		return
-	}
-	if idx != 0 {
-		// replace the first entity by this host's entity
-		tmp := cr.EntityList.List[0]
-		cr.EntityList.List[0] = e
-		cr.EntityList.List[idx] = tmp
-	}
-	// register & create the tree
-	h.overlay.RegisterEntityList(cr.EntityList)
-	// for the moment let's just stick to a very simple binary tree
-	tree := cr.EntityList.GenerateBinaryTree()
-	h.overlay.RegisterTree(tree)
-
-	// run the CoSi protocol
-	node, err := h.overlay.CreateNewNodeName("CoSi", tree)
-	if err != nil {
-		dbg.Error("Error creating tree upon client request:", err)
-		return
-	}
-	node.ProtocolInstance().SigningMessage(cr.Message)
-	hash := h.Suite().Hash()
-	if _, err := hash.Write(cr.Message); err != nil {
-		dbg.Error("Couldn't hash message:", err)
-	}
-	sum := hash.Sum(nil)
-	// Register the handler when the signature is finished
-	fn := func(chal, resp abstract.Secret) {
-		response := &CosiResponse{
-			Sum:       sum,
-			Challenge: chal,
-			Response:  resp,
-		}
-		dbg.Lvl2(h.workingAddress, "Getting CoSi signature back => sending to client")
-		// send back to client
-		if err := h.SendRaw(client, response); err != nil {
-			dbg.Error(h.workingAddress, "Error sending back Cosi signature back to client", err)
-		}
-	}
-	node.ProtocolInstance().RegisterDoneCallback(fn)
-	dbg.Lvl2(h.workingAddress, "Starting CoSi protocol...")
-	go node.StartProtocol()
+// RegisterExternalMessage takes a message-type and registers a function
+// that will be called if this message arrives
+func (h *Host) RegisterExternalMessage(mt network.ProtocolMessage, f ExternalAPI) network.MessageTypeID {
+	mtID := network.RegisterMessageType(mt)
+	h.externalMsgs[mtID] = f
+	return mtID
 }
 
-// sendSDAData marshals the inner msg and then sends a SDAData msg
+// ProcessExternalMessage takes a message and looks it up in
+// the unknown messages
+func (h *Host) ProcessExternalMessage(m *network.Message) error {
+	f, ok := h.externalMsgs[m.MsgType]
+	if !ok {
+		return errors.New("Didn't recognize message")
+	}
+	go func() {
+		msgRet := f(m)
+		err := h.SendRaw(m.Entity, msgRet)
+		if err != nil {
+			dbg.Error("Couldn't send back message:", err)
+		}
+	}()
+	return nil
+}
+
+// sendSDAData marshals the inner msg and then sends a Data msg
 // to the appropriate entity
-func (h *Host) sendSDAData(e *network.Entity, sdaMsg *SDAData) error {
+func (h *Host) sendSDAData(e *network.Entity, sdaMsg *Data) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		typ := network.TypeFromData(sdaMsg.Msg)
@@ -490,7 +467,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // requestTree will ask for the tree the sdadata is related to.
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
-func (h *Host) requestTree(e *network.Entity, sdaMsg *SDAData) error {
+func (h *Host) requestTree(e *network.Entity, sdaMsg *Data) error {
 	h.addPendingSda(sdaMsg)
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
 	return h.SendRaw(e, treeRequest)
@@ -498,7 +475,7 @@ func (h *Host) requestTree(e *network.Entity, sdaMsg *SDAData) error {
 
 // addPendingSda simply append a sda message to a queue. This queue willbe
 // checked each time we receive a new tree / entityList
-func (h *Host) addPendingSda(sda *SDAData) {
+func (h *Host) addPendingSda(sda *Data) {
 	h.pendingSDAsLock.Lock()
 	h.pendingSDAs = append(h.pendingSDAs, sda)
 	h.pendingSDAsLock.Unlock()
@@ -513,7 +490,7 @@ func (h *Host) addPendingSda(sda *SDAData) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		newPending := make([]*SDAData, 0)
+		newPending := make([]*Data, 0)
 		for _, msg := range h.pendingSDAs {
 			// if this message references t
 			if t.Id.Equals(msg.To.TreeID) {
@@ -542,8 +519,8 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	defer h.networkLock.Unlock()
 	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[c.Entity().Id] = id
-	h.connections[c.Entity().Id] = c
+	h.entities[c.Entity().ID] = id
+	h.connections[c.Entity().ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -584,26 +561,39 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 	h.pendingTreeLock.Unlock()
 }
 
+// AddTree registers the given Tree struct in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddTree(t *Tree) {
 	h.overlay.RegisterTree(t)
 }
 
+// AddEntityList registers the given EntityList in the underlying overlay.
+// Useful for unit-testing only.
+// XXX probably move into the tests.
 func (h *Host) AddEntityList(el *EntityList) {
 	h.overlay.RegisterEntityList(el)
 }
 
+// Suite can (and should) be used to get the underlying abstract.Suite.
+// Currently the suite is hardcoded into the network library.
+// Don't use network.Suite but Host's Suite function instead if possible.
 func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-func (h *Host) Private() abstract.Secret {
-	return h.private
-}
-
+// StartNewNode starts the underlying Node which will instantiate the underlying
+// protocol.
 func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
 	return h.overlay.StartNewNode(protoID, tree)
 }
 
+// GetOverlay returns the overlay
+func (h *Host) GetOverlay() *Overlay {
+	return h.overlay
+}
+
+// SetupHostsMock can be used to create a Host mock for testing.
 func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	var hosts []*Host
 	for _, add := range addresses {

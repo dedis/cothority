@@ -41,6 +41,20 @@ func TestHashStream(t *testing.T) {
 	}
 }
 
+func TestHashBytes(t *testing.T) {
+	str := "Hello World"
+	hashed, err := crypto.HashBytes(hashSuite.Hash(), []byte(str))
+	if err != nil {
+		t.Fatal("error hashing" + err.Error())
+	}
+	h := hashSuite.Hash()
+	h.Write([]byte(str))
+	b := h.Sum(nil)
+	if !bytes.Equal(b, hashed) {
+		t.Fatal("hashes not equal")
+	}
+}
+
 func TestHashFile(t *testing.T) {
 	tmpfile := "/tmp/hash_test.bin"
 	for _, i := range []int{16, 128, 1024} {
@@ -56,6 +70,10 @@ func TestHashFile(t *testing.T) {
 		}
 		if len(hash) != 32 {
 			t.Fatal("Length of sha256 should be 32")
+		}
+		hash2, err := crypto.HashFileSuite(hashSuite, tmpfile)
+		if bytes.Compare(hash, hash2) != 0 {
+			t.Fatal("HashFile and HashFileSuite should give the same result")
 		}
 	}
 }
@@ -95,4 +113,31 @@ func TestHashSuite(t *testing.T) {
 	if !bytes.Equal(hashed, hashedSuite) {
 		t.Fatal("hashes not equals")
 	}
+}
+
+func TestHashArgs(t *testing.T) {
+	str1 := binstring("cosi")
+	str2 := binstring("rocks")
+	hash1, err := crypto.HashArgs(hashSuite.Hash(), str1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hash2, err := crypto.HashArgs(hashSuite.Hash(), str1, str1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Compare(hash1, hash2) == 0 {
+		t.Fatal("Making a hash from a string and stringstring should be different")
+	}
+	hash1, _ = crypto.HashArgsSuite(hashSuite, str1, str2)
+	hash2, _ = crypto.HashArgsSuite(hashSuite, str2, str1)
+	if bytes.Compare(hash1, hash2) == 0 {
+		t.Fatal("Making a hash from str1str2 should be different from str2str1")
+	}
+}
+
+type binstring string
+
+func (b binstring) MarshalBinary() ([]byte, error) {
+	return []byte(b), nil
 }
