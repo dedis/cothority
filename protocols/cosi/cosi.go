@@ -100,6 +100,7 @@ func NewProtocolCosi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	node.RegisterChannel(&pc.challenge)
 	node.RegisterChannel(&pc.response)
 
+	go pc.Dispatch()
 	return pc, err
 }
 
@@ -230,7 +231,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 	out := &Challenge{
 		Challenge: challenge,
 	}
-	dbg.Lvl3(pc.Name(), "chal=", fmt.Sprintf("%+v", challenge))
+	dbg.Lvl3(pc.Name(), "Starting Chal=", fmt.Sprintf("%+v", challenge), " (message =", string(pc.Message))
 	return pc.handleChallenge(out)
 
 }

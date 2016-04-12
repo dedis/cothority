@@ -390,7 +390,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.pis[tok.Id()] = pi
-	dbg.LLvl4(o.host.workingAddress, "Registered ProtocolInstance !", fmt.Sprintf("%+v", tok))
+	dbg.Lvl4(o.host.workingAddress, "Registered ProtocolInstance !", fmt.Sprintf("%+v", tok))
 	return nil
 }
 

@@ -289,7 +289,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 			out := n.channels[mt]
 
 			m := n.reflectCreate(to.Elem(), msg)
-			dbg.LLvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
+			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
 	}
@@ -299,10 +299,10 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 // DispatchMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
 func (n *TreeNodeInstance) DispatchMsg(msg *Data) {
-	dbg.Lvl3(n.Info(), "Received message")
+	dbg.Lvl4(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
-	dbg.Lvl3(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
+	dbg.Lvl4(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
 	if len(n.msgDispatchQueue) == 1 && len(n.msgDispatchQueueWait) == 0 {
 		n.msgDispatchQueueWait <- true
 	}
@@ -318,7 +318,7 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 			return
 		}
 		if len(n.msgDispatchQueue) > 0 {
-			dbg.Lvl3(n.Info(), "Read message and dispatching it",
+			dbg.Lvl4(n.Info(), "Read message and dispatching it",
 				len(n.msgDispatchQueue))
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
@@ -329,7 +329,7 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 			}
 		} else {
 			n.msgDispatchQueueMutex.Unlock()
-			dbg.Lvl3(n.Info(), "Waiting for message")
+			dbg.Lvl4(n.Info(), "Waiting for message")
 			<-n.msgDispatchQueueWait
 		}
 	}
@@ -359,7 +359,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	dbg.LLvl4("Going to dispatch", sdaMsg, t)
+	dbg.Lvl4("Going to dispatch", sdaMsg, t)
 
 	switch {
 	case n.channels[msgType] != nil:
