@@ -2,6 +2,7 @@ package sda
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -74,7 +75,6 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	o.instancesLock.Unlock()
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
-		// XXX TODO
 		// see if we know the Service Recipient
 		s, ok := o.host.serviceStore.serviceByID(sdaMsg.To.ServiceID)
 		if !ok {
@@ -84,7 +84,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 		if err != nil {
 			return errors.New("No TreeNode defined in this tree here")
 		}
-		tni := o.newTreeNodeInstance(tree, tn, sdaMsg.To.ServiceID)
+		tni := o.newTreeNodeInstanceFromToken(tn, sdaMsg.To)
 		// request the PI from the Service and bind the two
 		pi, err = s.NewProtocol(tni, &sdaMsg.Config)
 		if err != nil {
@@ -93,6 +93,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 		if err := o.RegisterProtocolInstance(pi); err != nil {
 			return errors.New("Error Binding TNI and PI")
 		}
+		dbg.Lvl2(o.host.workingAddress, "Overlay created new TreeNodeInstance + ProtocolInstance for msg => ", fmt.Sprintf("%+v", sdaMsg.To))
 	}
 	// TODO Check if TNI is already Done
 	pi.DispatchMsg(sdaMsg)
@@ -351,15 +352,21 @@ func (o *Overlay) newTreeNodeInstance(t *Tree, tn *TreeNode, servID ServiceID) *
 		ServiceID:    servID,
 		RoundID:      RoundID(uuid.NewV4()),
 	}
+	tni := o.newTreeNodeInstanceFromToken(tn, tok)
+	o.RegisterTree(t)
+	o.RegisterEntityList(t.EntityList)
+	return tni
+}
 
+// newTreeNodeInstanceFromToken is to be called by the Overlay when it receives
+// a message it does not have a treenodeinstance registered yet. The protocol is
+// already running so we should *not* generate a new RoundID.
+func (o *Overlay) newTreeNodeInstanceFromToken(tn *TreeNode, tok *Token) *TreeNodeInstance {
 	tni := newTreeNodeInstance(o, tok, tn)
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
 	o.instances[tok.Id()] = tni
-
-	o.RegisterTree(t)
-	o.RegisterEntityList(t.EntityList)
-	dbg.Lvl4(o.host.workingAddress, "Registered NewTreeNodeInstance with Tree + EntityList + ServiceID")
+	dbg.Lvl4(o.host.workingAddress, "Registered NewTreeNodeInstance!")
 	return tni
 }
 
@@ -383,7 +390,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.pis[tok.Id()] = pi
-	dbg.Lvl4(o.host.workingAddress, "Registered ProtocolInstance !")
+	dbg.LLvl4(o.host.workingAddress, "Registered ProtocolInstance !", fmt.Sprintf("%+v", tok))
 	return nil
 }
 

@@ -5,6 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 	"testing"
 	"time"
 )
@@ -336,7 +338,47 @@ func TestServiceNewProtocol(t *testing.T) {
 }
 
 func TestServiceBackForthProtocol(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
 
+	// register service
+	sda.RegisterNewService("BackForth", func(c sda.Context, path string) sda.Service {
+		return &simpleService{
+			ctx: c,
+		}
+	})
+	// create hosts
+	hosts, el, _ := local.GenTree(4, true, true, false)
+
+	// create client
+	priv, pub := sda.PrivPub()
+	client := network.NewSecureTCPHost(priv, network.NewEntity(pub, ""))
+	c, err := client.Open(hosts[0].Entity)
+	assert.Nil(t, err)
+	dbg.Print("Client connected to hosts")
+	// create request
+	r := &simpleRequest{
+		Entities: el,
+		Val:      10,
+	}
+	buff, err := network.MarshalRegisteredType(r)
+	assert.Nil(t, err)
+
+	req := &sda.Request{
+		Service: sda.ServiceFactory.ServiceID("BackForth"),
+		Type:    simpleRequestType,
+		Data:    buff,
+	}
+	assert.Nil(t, c.Send(context.TODO(), req))
+
+	nm, err := c.Receive(context.TODO())
+	assert.Nil(t, err)
+
+	assert.Equal(t, nm.MsgType, simpleResponseType)
+	resp := nm.Msg.(simpleResponse)
+	assert.Equal(t, resp.Val, 10)
 }
 
 // BackForthProtocolForth & Back are messages that go down and up the tree.
@@ -355,6 +397,7 @@ var simpleMessageBackType = network.RegisterMessageType(SimpleMessageBack{})
 type BackForthProtocol struct {
 	*sda.TreeNodeInstance
 	Val       int
+	counter   int
 	forthChan chan struct {
 		*sda.TreeNode
 		SimpleMessageForth
@@ -370,6 +413,7 @@ func newBackForthProtocolRoot(tn *sda.TreeNodeInstance, val int, handler func(in
 	s, err := newBackForthProtocol(tn)
 	s.Val = val
 	s.handler = handler
+	dbg.Print("BackForth root => ", s.handler)
 	return s, err
 }
 
@@ -388,7 +432,7 @@ func newBackForthProtocol(tn *sda.TreeNodeInstance) (*BackForthProtocol, error) 
 
 func (sp *BackForthProtocol) Start() error {
 	// send down to children
-	msg := SimpleMessageForth{
+	msg := &SimpleMessageForth{
 		Val: sp.Val,
 	}
 	for _, ch := range sp.Children() {
@@ -400,28 +444,44 @@ func (sp *BackForthProtocol) Start() error {
 }
 
 func (sp *BackForthProtocol) dispatch() {
-	select {
-	// dispatch the first msg down
-	case m := <-sp.forthChan:
-		msg := m.SimpleMessageForth
-		for _, ch := range sp.Children() {
-			sp.SendTo(ch, msg)
-		}
-		// pass the message up
-	case m := <-sp.backChan:
-		msg := m.SimpleMessageBack
-		// call the handler  if we are the root
-		if sp.IsRoot() {
-			sp.handler(msg.Val)
-		} else {
-			sp.SendTo(sp.Parent(), msg)
+	for {
+		select {
+		// dispatch the first msg down
+		case m := <-sp.forthChan:
+			dbg.Print(sp.Name(), "Received Forth")
+			msg := &m.SimpleMessageForth
+			for _, ch := range sp.Children() {
+				sp.SendTo(ch, msg)
+			}
+			if sp.IsLeaf() {
+				dbg.Print(sp.Name(), "Sending BACK to parent !")
+				if err := sp.SendTo(sp.Parent(), &SimpleMessageBack{msg.Val}); err != nil {
+					dbg.Error(err)
+				}
+				return
+			}
+			// pass the message up
+		case m := <-sp.backChan:
+			dbg.Print(sp.Name(), "Received Back")
+			msg := m.SimpleMessageBack
+			// call the handler  if we are the root
+			sp.counter++
+			if sp.counter == len(sp.Children()) {
+				if sp.IsRoot() {
+					sp.handler(msg.Val)
+				} else {
+					sp.SendTo(sp.Parent(), &msg)
+				}
+				sp.Done()
+				return
+			}
 		}
 	}
 }
 
 // Client API request / response emulation
 type simpleRequest struct {
-	entities *sda.EntityList
+	Entities *sda.EntityList
 	Val      int
 }
 
@@ -442,7 +502,7 @@ func (s *simpleService) ProcessRequest(e *network.Entity, r *sda.Request) {
 	}
 	_, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	req := pm.(simpleRequest)
-	tree := req.entities.GenerateBinaryTree()
+	tree := req.Entities.GenerateBinaryTree()
 	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root)
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
 		if err := s.ctx.SendRaw(e, &simpleResponse{
@@ -455,7 +515,9 @@ func (s *simpleService) ProcessRequest(e *network.Entity, r *sda.Request) {
 		dbg.Error(err)
 		return
 	}
-	s.ctx.RegisterProtocolInstance(proto)
+	if err := s.ctx.RegisterProtocolInstance(proto); err != nil {
+		dbg.Error(err)
+	}
 	go proto.Start()
 }
 

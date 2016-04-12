@@ -289,7 +289,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 			out := n.channels[mt]
 
 			m := n.reflectCreate(to.Elem(), msg)
-			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
+			dbg.LLvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
 	}
@@ -359,7 +359,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	dbg.Lvl4("Going to dispatch", sdaMsg, t)
+	dbg.LLvl4("Going to dispatch", sdaMsg, t)
 
 	switch {
 	case n.channels[msgType] != nil:
