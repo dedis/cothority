@@ -163,7 +163,7 @@ func deterFromConfig(name ...string) *platform.Deterlab {
 	return d
 }
 
-// Runs a command on the remote host and outputs eventual error
+// Runs a command on the remote host and outputs an eventual error if debug level >= 3
 func runSSH(host, cmd string) {
 	if _, err := platform.SSHRun("", host, cmd); err != nil {
 		dbg.Lvlf3("Host %s got error %s while running [%s]", host, err.Error(), cmd)
