@@ -15,8 +15,8 @@ func TestServiceCosi(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	// generate 5 hosts, they dont connect, they process messages and they
-	// dont register the tree or entitylist
+	// generate 5 hosts, they don't connect, they process messages and they
+	// don't register the tree or entitylist
 	hosts, el, _ := local.GenTree(5, false, true, false)
 	defer local.CloseAll()
 
@@ -35,7 +35,7 @@ func TestServiceCosi(t *testing.T) {
 		Type:    CosiRequestType,
 		Data:    json.RawMessage(buffRequest),
 	}
-	// fake a client
+	// fake a client: it send a request (here, a message to be signed)
 	private, public := sda.PrivPub()
 	client := network.NewSecureTCPHost(private, network.NewEntity(public, ""))
 	defer client.Close()
