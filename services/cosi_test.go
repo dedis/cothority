@@ -15,10 +15,15 @@ func TestServiceCosi(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	// generate 5 hosts, they don't connect, they process messages and they
+	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	hosts, el, _ := local.GenTree(5, false, true, false)
 	defer local.CloseAll()
+	// creating the hosts automatically registers the cosi service with them
+	// (you still have to do a
+	// sda.RegisterNewService("Cosi", newCosiService)
+	// beforehand). The client (see below) can contact each host to get a
+	// CoSi signature on a message.
 
 	// Send a request to the service
 	var msg = []byte("hello cosi service")
@@ -35,7 +40,7 @@ func TestServiceCosi(t *testing.T) {
 		Type:    CosiRequestType,
 		Data:    json.RawMessage(buffRequest),
 	}
-	// fake a client: it send a request (here, a message to be signed)
+	// fake a client: it sends a request (here, a message to be signed)
 	private, public := sda.PrivPub()
 	client := network.NewSecureTCPHost(private, network.NewEntity(public, ""))
 	defer client.Close()
