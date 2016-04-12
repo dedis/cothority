@@ -23,7 +23,7 @@ type Cosi struct {
 	path string
 }
 
-// CosiRequest is what the Cosi service is expeted to receive from clients.
+// CosiRequest is what the Cosi service is expected to receive from clients.
 type CosiRequest struct {
 	Message    []byte
 	EntityList *sda.EntityList
