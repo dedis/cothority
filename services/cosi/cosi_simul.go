@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("CosiServiceSimulation", NewSimulation)
+	sda.SimulationRegister("CosiService", NewSimulation)
 }
 
 // Simulation implements the sda.Simulation of the CoSi protocol.

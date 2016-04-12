@@ -15,6 +15,7 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 	_ "github.com/dedis/cothority/protocols"
+	_ "github.com/dedis/cothority/services"
 )
 
 // The address of this host - if there is only one host in the config

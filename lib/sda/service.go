@@ -234,6 +234,7 @@ var RequestID = network.RegisterMessageType(Request{})
 // to think on how to change that.
 func CreateServiceRequest(service string, r interface{}) (*Request, error) {
 	sid := ServiceFactory.ServiceID(service)
+	dbg.Print("Name", service, " <-> ServiceID", sid)
 	buff, err := network.MarshalRegisteredType(r)
 	if err != nil {
 		return nil, err
