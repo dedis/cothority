@@ -401,14 +401,14 @@ func TestRegisterMsg(t *testing.T) {
 		got2 <- m.Msg.(Msg2).J
 		return nil
 	})
-	host.ProcessUnknownMessage(&network.Message{
+	host.ProcessExternalMessage(&network.Message{
 		MsgType: mt1,
 		Msg:     Msg1{2},
 	})
 	if <-got1 != 2 {
 		t.Fatal("Message should be 2")
 	}
-	host.ProcessUnknownMessage(&network.Message{
+	host.ProcessExternalMessage(&network.Message{
 		MsgType: mt2,
 		Msg:     Msg2{"networkmsg"},
 	})

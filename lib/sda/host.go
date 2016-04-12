@@ -377,7 +377,7 @@ func (h *Host) processMessages() {
 			}
 			dbg.Lvl4("Received new entityList")
 		default:
-			err := h.ProcessUnknownMessage(&data)
+			err := h.ProcessExternalMessage(&data)
 			if err != nil {
 				dbg.Error(err, data.MsgType)
 			}
@@ -396,9 +396,9 @@ func (h *Host) RegisterExternalMessage(mt network.ProtocolMessage, f ExternalAPI
 	return mtID
 }
 
-// ProcessUnknownMessage takes a message and looks it up in
+// ProcessExternalMessage takes a message and looks it up in
 // the unknown messages
-func (h *Host) ProcessUnknownMessage(m *network.Message) error {
+func (h *Host) ProcessExternalMessage(m *network.Message) error {
 	f, ok := h.externalMsgs[m.MsgType]
 	if !ok {
 		return errors.New("Didn't recognize message")
