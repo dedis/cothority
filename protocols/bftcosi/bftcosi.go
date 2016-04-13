@@ -21,7 +21,7 @@ func init() {
 
 var verificationRegister = make(map[string]VerificationFunction)
 
-type VerificationFunction func([]byte) error
+type VerificationFunction func([]byte, chan bool) error
 
 // RegisterVerification can be used to pass a verification function from another
 // protocol which uses BFTCoSi (for example: ByzCoin). The protocol's verification
@@ -130,7 +130,7 @@ func NewBFTCoSiProtocol(n *sda.Node) (*ProtocolBFTCoSi, error) {
 	bft.suite = n.Suite()
 	bft.prepare = cosi.NewCosi(n.Suite(), n.Private())
 	bft.commit = cosi.NewCosi(n.Suite(), n.Private())
-	bft.verifyChan = make(chan bool, 2)
+	bft.verifyChan = make(chan bool)
 	bft.doneProcessing = make(chan bool, 2)
 	bft.doneSigning = make(chan bool, 1)
 
@@ -149,17 +149,6 @@ func NewBFTCoSiProtocol(n *sda.Node) (*ProtocolBFTCoSi, error) {
 
 	go bft.listen()
 	return bft, nil
-}
-
-// NewBFTCoSiRootProtocol returns a new bftcosi struct with the block to sign
-// that will be sent to all others nodes
-func NewBFTCoSiRootProtocol(n *sda.Node, msg []byte) (*ProtocolBFTCoSi, error) {
-	bft, err := NewBFTCoSiProtocol(n)
-	bft.Msg = msg
-	if err != nil {
-		return nil, err
-	}
-	return bft, err
 }
 
 // Start will start both rounds "prepare" and "commit" at same time. The
@@ -368,10 +357,16 @@ func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	}
 
 	// TODO verification
-	if err := verificationRegister[bft.ProtoName](bft.Msg); err != nil {
+	dbg.Lvl3("Looking for", bft.ProtoName, "in verification register: ",
+		bft.Name())
+	verify, ok := verificationRegister[bft.ProtoName]
+	if !ok {
+		dbg.Error("Couldn't find verification function for",
+			bft.ProtoName)
 		bft.verifyChan <- false
 	} else {
-		bft.verifyChan <- true
+		// XXX why do we need a go function here?
+		go verify(bft.Msg, bft.verifyChan)
 	}
 
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Challenge PREPARE")
@@ -418,6 +413,17 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	// data for verification (using a channel)
 	//check that the challenge is correctly formed
 	// acknowledge the challenge and send its down
+	dbg.Lvl3("Looking for", bft.ProtoName, "in verification register: ",
+		bft.Name())
+	verify, ok := verificationRegister[bft.ProtoName]
+	if !ok {
+		dbg.Error("Couldn't find verification function for",
+			bft.ProtoName)
+		bft.verifyChan <- false
+	} else {
+		// XXX why do we need a go function here?
+		go verify(bft.Msg, bft.verifyChan)
+	}
 	chal := bft.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
 
@@ -611,6 +617,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 // true => no exception, the verification is correct
 // false => exception, the verification is NOT correct
 func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
+	dbg.Lvl3("Waiting for response verification:", bft.Name())
 	r := &Response{
 		TYPE: RoundPrepare,
 	}
@@ -622,9 +629,10 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 			Public:     bft.Public(),
 			Commitment: bft.prepare.GetCommitment(),
 		})
-
+		dbg.Lvl3("Response verification: failed", bft.Name())
 		return r, false
 	}
+	dbg.Lvl3("Response verification: OK", bft.Name())
 
 	return r, true
 }

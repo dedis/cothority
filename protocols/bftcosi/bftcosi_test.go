@@ -15,7 +15,7 @@ func TestBftCoSi(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
-	for _, nbrHosts := range []int{1, 3, 13} {
+	for _, nbrHosts := range []int{3, 13} {
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 		defer local.CloseAll()
@@ -27,10 +27,11 @@ func TestBftCoSi(t *testing.T) {
 		msg := []byte("Hello BFTCoSi")
 
 		counter := 0
-		RegisterVerification("DummyBFTCosi", func([]byte) error {
+		RegisterVerification("DummyBFTCosi", func(m []byte, ok chan bool) error {
 			counter++
 			dbg.Print("Verification called", counter, "times")
 			// everything is OK, always:
+			ok <- true
 			return nil
 		})
 
@@ -51,10 +52,11 @@ func TestBftCoSi(t *testing.T) {
 		})
 		go node.StartProtocol()
 		// are we done yet?
+		wait := time.Second * 3
 		select {
 		case <-done:
-		case <-time.After(time.Second * 2):
-			t.Fatal("Waited 2 sec for BFTCoSi to finish ...")
+		case <-time.After(wait):
+			t.Fatal("Waited", wait, "sec for BFTCoSi to finish ...")
 		}
 	}
 }
