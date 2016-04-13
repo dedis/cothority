@@ -24,12 +24,15 @@ type Service interface {
 	// ProcessServiceRequest(*network.Entity,  *Request)
 }
 
+// ServiceID is a type to represent a uuid for a Service
 type ServiceID uuid.UUID
 
+// String returns the string representation of this ServiceID
 func (s *ServiceID) String() string {
 	return uuid.UUID(*s).String()
 }
 
+// NilServiceID is the empty ServiceID
 var NilServiceID = ServiceID(uuid.Nil)
 
 // NewServiceFunc is the type of a function that is used to instantiate a given Service
@@ -45,6 +48,8 @@ type GenericConfig struct {
 	//Data network.ProtocolMessage
 }
 
+// GenericConfigID is the ID used by the network library for sending / receiving
+// GenericCOnfig
 var GenericConfigID = network.RegisterMessageType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc

@@ -4,6 +4,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 )
 
+// Context is the interface that is given to an Service
 type Context interface {
 	NewTreeNodeInstance(*Tree, *TreeNode) *TreeNodeInstance
 	RegisterProtocolInstance(ProtocolInstance) error

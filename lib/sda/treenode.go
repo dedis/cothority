@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+// TreeNodeInstance represents a protocol-instance in a given TreeNode. It embeds an
+// Overlay where all the tree-structures are stored.
 type TreeNodeInstance struct {
 	overlay *Overlay
 	token   *Token
@@ -566,6 +568,8 @@ func (n *TreeNodeInstance) bind(pi ProtocolInstance) {
 	n.instance = pi
 }
 
+// TreeNodeInstance returns itself (XXX quick hack for this services2 branch
+// version for the tests)
 func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
 	return n
 }

@@ -79,6 +79,7 @@ func (pid ProtocolID) String() string {
 	return uuid.UUID(pid).String()
 }
 
+// ProtocolInstantiate instantiate a protocol from its ID
 func ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
 	fn, ok := protocols[protoID]
 	if !ok {

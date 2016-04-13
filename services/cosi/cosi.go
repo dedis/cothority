@@ -23,32 +23,32 @@ type Cosi struct {
 	path string
 }
 
-// CosiRequest is what the Cosi service is expected to receive from clients.
-type CosiRequest struct {
+// Request is what the Cosi service is expected to receive from clients.
+type Request struct {
 	Message    []byte
 	EntityList *sda.EntityList
 }
 
 // CosiRequestType is the type that is embedded in the Request object for a
 // CosiRequest
-var CosiRequestType = network.RegisterMessageType(CosiRequest{})
+var CosiRequestType = network.RegisterMessageType(Request{})
 
-// CosiResponse is what the Cosi service will reply to clients.
-type CosiResponse struct {
+// Response is what the Cosi service will reply to clients.
+type Response struct {
 	Challenge abstract.Secret
 	Response  abstract.Secret
 }
 
 // CosiRequestType is the type that is embedded in the Request object for a
 // CosiResponse
-var CosiResponseType = network.RegisterMessageType(CosiResponse{})
+var CosiResponseType = network.RegisterMessageType(Response{})
 
 // ProcessRequest treats external request to this service.
 func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 	if r.Type != CosiRequestType {
 		return
 	}
-	var req CosiRequest
+	var req Request
 	// XXX should provide a UnmarshalRegisteredType(buff) func instead of having to give
 	// the constructors with the suite.
 	id, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
@@ -60,7 +60,7 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 		dbg.Error("Wrong message coming in")
 		return
 	}
-	req = pm.(CosiRequest)
+	req = pm.(Request)
 	tree := req.EntityList.GenerateBinaryTree()
 	tni := cs.c.NewTreeNodeInstance(tree, tree.Root)
 	pi, err := cosi.NewProtocolCosi(tni)
@@ -71,7 +71,7 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 	pcosi := pi.(*cosi.ProtocolCosi)
 	pcosi.SigningMessage(req.Message)
 	pcosi.RegisterDoneCallback(func(chall abstract.Secret, resp abstract.Secret) {
-		respMessage := &CosiResponse{
+		respMessage := &Response{
 			Challenge: chall,
 			Response:  resp,
 		}

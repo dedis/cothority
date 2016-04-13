@@ -27,7 +27,7 @@ func TestServiceCosi(t *testing.T) {
 
 	// Send a request to the service
 	var msg = []byte("hello cosi service")
-	req := CosiRequest{
+	req := Request{
 		EntityList: el,
 		Message:    msg,
 	}
@@ -54,12 +54,12 @@ func TestServiceCosi(t *testing.T) {
 
 	// receive the response
 	var nm network.Message
-	var resp CosiResponse
+	var resp Response
 	nm, err = c.Receive(context.TODO())
 	assert.Nil(t, err)
 	assert.Equal(t, nm.MsgType, CosiResponseType)
 
-	resp = nm.Msg.(CosiResponse)
+	resp = nm.Msg.(Response)
 	// verify the response still
 	assert.Nil(t, cosi.VerifySignature(hosts[0].Suite(), msg, el.Aggregate, resp.Challenge, resp.Response))
 }

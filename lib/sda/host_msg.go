@@ -93,6 +93,7 @@ func (t *Token) Id() TokenID {
 	return t.cacheId
 }
 
+// Clone returns a new token out of this one
 func (t *Token) Clone() *Token {
 	t2 := *t
 	return &t2

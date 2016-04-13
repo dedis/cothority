@@ -66,7 +66,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			continue
 		}
 		// send request
-		r := &CosiRequest{
+		r := &Request{
 			Message:    msg,
 			EntityList: config.EntityList,
 		}
@@ -86,7 +86,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			continue
 		}
 
-		resp, ok := nm.Msg.(CosiResponse)
+		resp, ok := nm.Msg.(Response)
 		if !ok {
 			dbg.Error("Received wrong type")
 		}

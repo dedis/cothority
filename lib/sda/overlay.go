@@ -284,6 +284,7 @@ func (o *Overlay) CreateProtocol(t *Tree, name string) (ProtocolInstance, error)
 	return pi, err
 }
 
+// StartProtocol will create and start a P.I.
 func (o *Overlay) StartProtocol(t *Tree, name string) (ProtocolInstance, error) {
 	pi, err := o.CreateProtocol(t, name)
 	if err != nil {
@@ -314,6 +315,9 @@ func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID
 	o.RegisterEntityList(t.EntityList)
 	return tni
 }
+
+// NewTreeNodeInstanceFromService takes a tree, a TreeNode and a service ID and
+// returns a TNI.
 func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, servID ServiceID) *TreeNodeInstance {
 	tok := &Token{
 		TreeNodeID:   tn.Id,
@@ -340,9 +344,15 @@ func (o *Overlay) newTreeNodeInstanceFromToken(tn *TreeNode, tok *Token) *TreeNo
 	return tni
 }
 
+// ErrWrongTreeNodeInstance is returned when you already binded a TNI with a PI.
 var ErrWrongTreeNodeInstance = errors.New("TreeNodeInstance associated with this ProtocolInstance is already registered")
+
+// ErrProtocolRegistered is when the protocolinstance is already registered to
+// the overlay
 var ErrProtocolRegistered = errors.New("A ProtocolInstance already has been registered using this TreeNodeInstance!")
 
+// RegisterProtocolInstance takes a PI and stores it for dispatching the message
+// to it.
 func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
