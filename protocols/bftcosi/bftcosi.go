@@ -8,6 +8,7 @@ import (
 
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 )
@@ -127,7 +128,7 @@ func NewBFTCoSiProtocol(n *sda.Node) (*BFTCoSi, error) {
 
 	//bz.endProto, _ = end.NewEndProtocol(n)
 	bz.aggregatedPublic = n.EntityList().Aggregate
-	bz.threshold = int(2.0 * math.Ceil(float64(len(bz.Tree().List())) / 3.0))
+	bz.threshold = int(2.0 * math.Ceil(float64(len(bz.Tree().List()))/3.0))
 
 	// register channels
 	n.RegisterChannel(&bz.announceChan)
@@ -177,22 +178,22 @@ func (bz *BFTCoSi) listen() {
 		case msg := <-bz.commitChan:
 			// Commitment
 			err = bz.handleCommit(msg.Commitment)
-			
+
 		case msg := <-bz.challengePrepareChan:
 			// Challenge
 			err = bz.handleChallengePrepare(&msg.ChallengePrepare)
-			
+
 		case msg := <-bz.challengeCommitChan:
 			err = bz.handleChallengeCommit(&msg.ChallengeCommit)
-			
+
 		case msg := <-bz.responseChan:
 			// Response
-				switch msg.Response.TYPE {
-				case RoundPrepare:
-					err = bz.handleResponsePrepare(&msg.Response)
-				case RoundCommit:
-					err = bz.handleResponseCommit(&msg.Response)
-				}
+			switch msg.Response.TYPE {
+			case RoundPrepare:
+				err = bz.handleResponsePrepare(&msg.Response)
+			case RoundCommit:
+				err = bz.handleResponseCommit(&msg.Response)
+			}
 		case <-bz.doneProcessing:
 			// we are done
 			dbg.Lvl2(bz.Name(), "BFTCoSi Dispatches stop.")
@@ -347,8 +348,8 @@ func (bz *BFTCoSi) startChallengePrepare() error {
 	// make the challenge out of it
 	// FIXME trblock := bz.tempBlock
 
-	//prep:= &MsgPrepare{Msg : bz.Msg}
-	h := bz.Suite().Hash().Sum(bz.Msg) //should be the prep
+	prep:= &MsgPrepare{Msg : bz.Msg}
+	h := prep.Hash() 
 
 	ch, err := bz.prepare.CreateChallenge(h)
 	if err != nil {
@@ -380,9 +381,9 @@ func (bz *BFTCoSi) startChallengeCommit() error {
 
 	// TODO hash MsgCommit
 
-	//com:= &MsgCommit{Msg : bz.Msg}
-	h := bz.Suite().Hash().Sum(bz.Msg) //should be the com
-	chal, err := bz.commit.CreateChallenge(h) 
+	com:= &MsgCommit{Msg : bz.Msg}
+	h := com.Hash() //should be the com
+	chal, err := bz.commit.CreateChallenge(h)
 	if err != nil {
 		return err
 	}
@@ -406,7 +407,7 @@ func (bz *BFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	bz.Msg = ch.Msg
 	// TODO find a way to pass the verification function or give back the
 	// data for verification (using a channel)
-	//check that the challenge is correctly formed 
+	//check that the challenge is correctly formed
 	// acknowledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
@@ -641,7 +642,6 @@ func (bz *BFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bz.onSignatureDone = fn
 }
 
-
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bz *BFTCoSi) nodeDone() bool {
@@ -658,7 +658,24 @@ type MsgPrepare struct {
 	Msg []byte
 }
 
+func (mp *MsgPrepare) Hash() []byte {
+	h := network.Suite.Hash()
+	temp := append(mp.Msg, 0x1)
+	h.Write(temp)
+
+	return h.Sum(nil)
+}
+
 type MsgCommit struct {
 	Msg []byte
-} // TODO write binary marshaller for this and for MsgPrepare (adding some info to
+} 
+
+func (mc *MsgCommit) Hash() []byte {
+	h := network.Suite.Hash()
+	temp := append(mc.Msg, 0x0)
+	h.Write(temp)
+
+	return h.Sum(nil)
+}
+// TODO write binary marshaller for this and for MsgPrepare (adding some info to
 // diff. between both
