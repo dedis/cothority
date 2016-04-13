@@ -331,14 +331,14 @@ func (bft *ProtocolBFTCoSi) handleCommit(ann Commitment) error {
 // startPrepareChallenge create the challenge and send its down the tree
 func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	// create challenge from message:
-	prep := &MsgPrepare{Msg: bft.Msg}
-	h := prep.Hash()
-	ch, err := bft.prepare.CreateChallenge(h)
+	//prep := &MsgPrepare{Msg: bft.Msg}
+	//h := prep.Hash()
+	ch, err := bft.prepare.CreateChallenge(bft.Msg)
 	if err != nil {
 		return err
 	}
 
-	bizChal := &ChallengePrepare{
+	bftChal := &ChallengePrepare{
 		TYPE:      RoundPrepare,
 		Challenge: ch,
 		Msg:       bft.Msg,
@@ -350,7 +350,7 @@ func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Challenge PREPARE")
 	// send to children
 	for _, tn := range bft.Children() {
-		err = bft.SendTo(tn, bizChal)
+		err = bft.SendTo(tn, bftChal)
 	}
 	return err
 }
@@ -362,8 +362,11 @@ func (bft *ProtocolBFTCoSi) startChallengeCommit() error {
 	if bft.onChallengeCommit != nil {
 		bft.onChallengeCommit()
 	}
+	comm := &MsgCommit{Msg: bft.Msg}
+	h := comm.Hash()
 	// XXX create the challenge from the original message?
-	c, err := bft.commit.CreateChallenge(bft.Msg)
+	dbg.Print("CreateChallenge on ", string(bft.Msg))
+	c, err := bft.commit.CreateChallenge(h)
 	if err != nil {
 		return err
 	}
@@ -408,6 +411,7 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	ch.Challenge = bft.commit.Challenge(ch.Challenge)
 	// verify if the signature is correct
+	dbg.Print("VerifyCosiSignatureWithException msg:", string(bft.Msg))
 	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
 		bft.aggregatedPublic, bft.Msg, ch.Signature,
 		ch.Exceptions); err != nil {
@@ -448,8 +452,11 @@ func (bft *ProtocolBFTCoSi) startResponsePrepare() error {
 	// wait the verification
 	r, ok := bft.waitResponseVerification()
 	if ok {
-		// apend response only if OK
+		dbg.Print("Append response...")
+		// append response only if OK
 		r.Response = resp
+	} else {
+		dbg.Print("Did not Append response...")
 	}
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Response PREPARE with response:", r)
 	// send to parent
@@ -631,15 +638,15 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	return true
 }
 
-const prepareSuffix = 0x1
+const commitPrefix = 0X0
 
-type MsgPrepare struct {
+type MsgCommit struct {
 	Msg []byte
 }
 
-func (mp *MsgPrepare) Hash() []byte {
+func (mc *MsgCommit) Hash() []byte {
 	h := network.Suite.Hash()
-	temp := append(mp.Msg, prepareSuffix)
+	temp := append(mc.Msg, commitPrefix)
 	h.Write(temp)
 
 	return h.Sum(nil)

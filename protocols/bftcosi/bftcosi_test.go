@@ -62,5 +62,6 @@ func TestBftCoSi(t *testing.T) {
 		case <-time.After(wait):
 			t.Fatal("Waited", wait, "sec for BFTCoSi to finish ...")
 		}
+		local.CloseAll()
 	}
 }
