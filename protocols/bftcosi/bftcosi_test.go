@@ -15,6 +15,17 @@ func TestBftCoSi(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
+	counter := 0
+	sda.ProtocolRegisterName("DummyBFTCoSi", func(n *sda.Node) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, func(m []byte, ok chan bool) error {
+			counter++
+			dbg.Print("Verification called", counter, "times")
+			// everything is OK, always:
+			ok <- true
+			return nil
+		})
+	})
+
 	for _, nbrHosts := range []int{3, 13} {
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
@@ -26,17 +37,8 @@ func TestBftCoSi(t *testing.T) {
 		// create the message we want to sign for this round
 		msg := []byte("Hello BFTCoSi")
 
-		counter := 0
-		RegisterVerification("DummyBFTCosi", func(m []byte, ok chan bool) error {
-			counter++
-			dbg.Print("Verification called", counter, "times")
-			// everything is OK, always:
-			ok <- true
-			return nil
-		})
-
 		// Start the protocol
-		node, err := local.CreateNewNodeName("BFTCoSi", tree)
+		node, err := local.CreateNewNodeName("DummyBFTCoSi", tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}

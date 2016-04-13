@@ -11,10 +11,10 @@ import (
 
 // FIXME everything ... reimplement
 func init() {
-	sda.SimulationRegister("ByzCoin", NewSimulation)
+	/*sda.SimulationRegister("ByzCoin", NewSimulation)
 	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n)
-	})
+	})*/
 }
 
 // Simulation implements da.Simulation interface

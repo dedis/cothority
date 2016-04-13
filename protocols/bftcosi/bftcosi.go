@@ -13,22 +13,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-func init() {
-	sda.ProtocolRegisterName("BFTCoSi", func(n *sda.Node) (sda.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n)
-	})
-}
-
-var verificationRegister = make(map[string]VerificationFunction)
-
 type VerificationFunction func([]byte, chan bool) error
-
-// RegisterVerification can be used to pass a verification function from another
-// protocol which uses BFTCoSi (for example: ByzCoin). The protocol's verification
-// function doesn't take any arguments and is identified using the protocols name
-func RegisterVerification(protocol string, cb VerificationFunction) {
-	verificationRegister[protocol] = cb
-}
 
 // BFTCoSi is the main struct for running the protocol
 type ProtocolBFTCoSi struct {
@@ -109,6 +94,8 @@ type ProtocolBFTCoSi struct {
 	onResponseCommitDone func()
 	// view change setup and measurement
 
+	verificationFun VerificationFunction
+
 	// bool set to true when the final signature is produced
 	doneSigning chan bool
 	// lock associated
@@ -123,8 +110,8 @@ type ProtocolBFTCoSi struct {
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
-func NewBFTCoSiProtocol(n *sda.Node) (*ProtocolBFTCoSi, error) {
-	// create the bftcosi
+func NewBFTCoSiProtocol(n *sda.Node, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
+	// create the bftcosi node/protocol-instance
 	bft := new(ProtocolBFTCoSi)
 	bft.Node = n
 	bft.suite = n.Suite()
@@ -133,6 +120,7 @@ func NewBFTCoSiProtocol(n *sda.Node) (*ProtocolBFTCoSi, error) {
 	bft.verifyChan = make(chan bool)
 	bft.doneProcessing = make(chan bool, 2)
 	bft.doneSigning = make(chan bool, 1)
+	bft.verificationFun = verify
 
 	//bz.endProto, _ = end.NewEndProtocol(n)
 	bft.aggregatedPublic = n.EntityList().Aggregate
@@ -356,18 +344,8 @@ func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 		Msg:       bft.Msg,
 	}
 
-	// TODO verification
-	dbg.Lvl3("Looking for", bft.ProtoName, "in verification register: ",
-		bft.Name())
-	verify, ok := verificationRegister[bft.ProtoName]
-	if !ok {
-		dbg.Error("Couldn't find verification function for",
-			bft.ProtoName)
-		bft.verifyChan <- false
-	} else {
-		// XXX why do we need a go function here?
-		go verify(bft.Msg, bft.verifyChan)
-	}
+	// XXX why do we need a go function here?
+	go bft.verificationFun(bft.Msg, bft.verifyChan)
 
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Challenge PREPARE")
 	// send to children
@@ -413,17 +391,8 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	// data for verification (using a channel)
 	//check that the challenge is correctly formed
 	// acknowledge the challenge and send its down
-	dbg.Lvl3("Looking for", bft.ProtoName, "in verification register: ",
-		bft.Name())
-	verify, ok := verificationRegister[bft.ProtoName]
-	if !ok {
-		dbg.Error("Couldn't find verification function for",
-			bft.ProtoName)
-		bft.verifyChan <- false
-	} else {
-		// XXX why do we need a go function here?
-		go verify(bft.Msg, bft.verifyChan)
-	}
+
+	go bft.verificationFun(bft.Msg, bft.verifyChan)
 	chal := bft.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
 
