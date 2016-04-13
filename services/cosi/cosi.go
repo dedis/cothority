@@ -23,7 +23,7 @@ type Cosi struct {
 	path string
 }
 
-// Request is what the Cosi service is expected to receive from clients.
+// ServiceRequest is what the Cosi service is expected to receive from clients.
 type ServiceRequest struct {
 	Message    []byte
 	EntityList *sda.EntityList
@@ -33,7 +33,7 @@ type ServiceRequest struct {
 // CosiRequest
 var CosiRequestType = network.RegisterMessageType(ServiceRequest{})
 
-// Response is what the Cosi service will reply to clients.
+// ServiceResponse is what the Cosi service will reply to clients.
 type ServiceResponse struct {
 	Challenge abstract.Secret
 	Response  abstract.Secret
