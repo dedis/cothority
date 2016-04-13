@@ -6,7 +6,6 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/crypto/abstract"
 )
 
 // TODO Dummy verification function:
@@ -19,6 +18,7 @@ func TestBftCoSi(t *testing.T) {
 	for _, nbrHosts := range []int{1, 3, 13} {
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
+		defer local.CloseAll()
 
 		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
 
@@ -26,15 +26,12 @@ func TestBftCoSi(t *testing.T) {
 		// create the message we want to sign for this round
 		msg := []byte("Hello BFTCoSi")
 
-		// Register the function generating the protocol instance
-		var root *ProtocolBFTCoSi
-		// function that will be called when protocol is finished by the root
-		doneFunc := func(chal abstract.Secret, resp abstract.Secret) {
-			done <- true
-		}
-
-		RegisterVerification("DummyBFTCosi", func() {
-
+		counter := 0
+		RegisterVerification("DummyBFTCosi", func([]byte) error {
+			counter++
+			dbg.Print("Verification called", counter, "times")
+			// everything is OK, always:
+			return nil
 		})
 
 		// Start the protocol
@@ -42,15 +39,22 @@ func TestBftCoSi(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
+
+		// Register the function generating the protocol instance
+		var root *ProtocolBFTCoSi
 		root = node.ProtocolInstance().(*ProtocolBFTCoSi)
 		root.Msg = msg
-		root.RegisterOnDone(doneFunc)
+		root.ProtoName = "DummyBFTCosi"
+		// function that will be called when protocol is finished by the root
+		root.RegisterOnDone(func() {
+			done <- true
+		})
 		go node.StartProtocol()
+		// are we done yet?
 		select {
 		case <-done:
 		case <-time.After(time.Second * 2):
 			t.Fatal("Waited 2 sec for BFTCoSi to finish ...")
 		}
-		local.CloseAll()
 	}
 }

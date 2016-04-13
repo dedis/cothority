@@ -13,12 +13,20 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-var verificationRegister = make(map[string]interface{})
+func init() {
+	sda.ProtocolRegisterName("BFTCoSi", func(n *sda.Node) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n)
+	})
+}
+
+var verificationRegister = make(map[string]VerificationFunction)
+
+type VerificationFunction func([]byte) error
 
 // RegisterVerification can be used to pass a verification function from another
 // protocol which uses BFTCoSi (for example: ByzCoin). The protocol's verification
 // function doesn't take any arguments and is identified using the protocols name
-func RegisterVerification(protocol string, cb func()) {
+func RegisterVerification(protocol string, cb VerificationFunction) {
 	verificationRegister[protocol] = cb
 }
 
@@ -122,7 +130,7 @@ func NewBFTCoSiProtocol(n *sda.Node) (*ProtocolBFTCoSi, error) {
 	bft.suite = n.Suite()
 	bft.prepare = cosi.NewCosi(n.Suite(), n.Private())
 	bft.commit = cosi.NewCosi(n.Suite(), n.Private())
-	bft.verifyChan = make(chan bool)
+	bft.verifyChan = make(chan bool, 2)
 	bft.doneProcessing = make(chan bool, 2)
 	bft.doneSigning = make(chan bool, 1)
 
@@ -345,16 +353,14 @@ func (bft *ProtocolBFTCoSi) handleCommit(ann Commitment) error {
 
 // startPrepareChallenge create the challenge and send its down the tree
 func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
-	// make the challenge out of it
-	// FIXME trblock := bz.tempBlock
-
+	// create challenge from message:
 	prep := &MsgPrepare{Msg: bft.Msg}
 	h := prep.Hash()
-
 	ch, err := bft.prepare.CreateChallenge(h)
 	if err != nil {
 		return err
 	}
+
 	bizChal := &ChallengePrepare{
 		TYPE:      RoundPrepare,
 		Challenge: ch,
@@ -362,6 +368,11 @@ func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	}
 
 	// TODO verification
+	if err := verificationRegister[bft.ProtoName](bft.Msg); err != nil {
+		bft.verifyChan <- false
+	} else {
+		bft.verifyChan <- true
+	}
 
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Challenge PREPARE")
 	// send to children
@@ -595,8 +606,8 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	return bft.SendTo(bft.Parent(), bzrReturn)
 }
 
-// computePrepareResponse wait the end of the verification and returns the
-// BFTCoSiResponse along with the flag:
+// waitResponseVerification waits till  the end of the verification and returns
+// the BFTCoSiResponse along with the flag:
 // true => no exception, the verification is correct
 // false => exception, the verification is NOT correct
 func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
