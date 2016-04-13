@@ -38,7 +38,7 @@ func TestRandHound(t *testing.T) {
 	}
 	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
 	log.Printf("RandHound - shards: %d\n", shards)
-	leader.StartProtocol()
+	leader.Start()
 
 	select {
 	case <-rh.Leader.Done:

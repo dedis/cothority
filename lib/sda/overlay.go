@@ -234,8 +234,8 @@ func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) erro
 // nodeDone is called by node to signify that its work is finished and its
 // ressources can be released
 func (o *Overlay) nodeDone(tok *Token) {
-	o.nodeLock.Lock()
-	defer o.nodeLock.Unlock()
+	o.instancesLock.Lock()
+	defer o.instancesLock.Unlock()
 	o.nodeDelete(tok)
 }
 
