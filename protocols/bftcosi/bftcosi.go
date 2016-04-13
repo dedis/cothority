@@ -362,23 +362,21 @@ func (bft *ProtocolBFTCoSi) startChallengeCommit() error {
 	if bft.onChallengeCommit != nil {
 		bft.onChallengeCommit()
 	}
-	// create the challenge out of it
-	com := &MsgCommit{Msg: bft.Msg}
-	h := com.Hash() //should be the com
-	chal, err := bft.commit.CreateChallenge(h)
+	// XXX create the challenge from the original message?
+	c, err := bft.commit.CreateChallenge(bft.Msg)
 	if err != nil {
 		return err
 	}
 
 	// send challenge + signature
-	bzc := &ChallengeCommit{
+	cc := &ChallengeCommit{
 		TYPE:      RoundCommit,
-		Challenge: chal,
+		Challenge: c,
 		Signature: bft.prepare.Signature(),
 	}
 	dbg.Lvl3("BFTCoSi Start Challenge COMMIT")
 	for _, tn := range bft.Children() {
-		err = bft.SendTo(tn, bzc)
+		err = bft.SendTo(tn, cc)
 	}
 	return err
 }
@@ -387,12 +385,9 @@ func (bft *ProtocolBFTCoSi) startChallengeCommit() error {
 // round.
 func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	bft.Msg = ch.Msg
-	// TODO find a way to pass the verification function or give back the
-	// data for verification (using a channel)
-	//check that the challenge is correctly formed
-	// acknowledge the challenge and send its down
-
+	// start the verification of the message
 	go bft.verificationFun(bft.Msg, bft.verifyChan)
+	// acknowledge the challenge and send its down
 	chal := bft.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
 
@@ -412,7 +407,6 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 // of participants refused to sign.
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	ch.Challenge = bft.commit.Challenge(ch.Challenge)
-
 	// verify if the signature is correct
 	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
 		bft.aggregatedPublic, bft.Msg, ch.Signature,
@@ -421,8 +415,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 		bft.signRefusal = true
 	}
 
-	// Verify if we have no more than 1/3 failed nodes
-
+	// Check if we have no more than 1/3 failed nodes
 	if len(ch.Exceptions) > int(bft.threshold) {
 		dbg.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT", len(ch.Exceptions), len(bft.EntityList().List))
 		bft.signRefusal = true
@@ -434,8 +427,6 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	if bft.IsLeaf() {
 		return bft.startResponseCommit()
 	}
-
-	//TODO verify that the challenge is correctly formed.
 
 	// send it down
 	for _, tn := range bft.Children() {
@@ -460,7 +451,7 @@ func (bft *ProtocolBFTCoSi) startResponsePrepare() error {
 		// apend response only if OK
 		r.Response = resp
 	}
-	dbg.Lvl3(bft.Name(), "BFTCoSi Start Response PREPARE")
+	dbg.Lvl3(bft.Name(), "BFTCoSi Start Response PREPARE with response:", r)
 	// send to parent
 	return bft.SendTo(bft.Parent(), r)
 }
@@ -640,8 +631,7 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	return true
 }
 
-const commitPrefix = 0X0
-const preparePrefix = 0x1
+const prepareSuffix = 0x1
 
 type MsgPrepare struct {
 	Msg []byte
@@ -649,19 +639,7 @@ type MsgPrepare struct {
 
 func (mp *MsgPrepare) Hash() []byte {
 	h := network.Suite.Hash()
-	temp := append(mp.Msg, preparePrefix)
-	h.Write(temp)
-
-	return h.Sum(nil)
-}
-
-type MsgCommit struct {
-	Msg []byte
-}
-
-func (mc *MsgCommit) Hash() []byte {
-	h := network.Suite.Hash()
-	temp := append(mc.Msg, commitPrefix)
+	temp := append(mp.Msg, prepareSuffix)
 	h.Write(temp)
 
 	return h.Sum(nil)

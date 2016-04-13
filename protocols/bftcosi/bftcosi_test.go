@@ -8,25 +8,27 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-// TODO Dummy verification function:
-// always returns OK/true/no-error on data
+// Dummy verification function: always returns OK/true/no-error on data
+var counter int
+
+func veri(m []byte, ok chan bool) error {
+	counter++
+	dbg.Print("Verification called", counter, "times")
+	// everything is OK, always:
+	ok <- true
+	return nil
+}
 
 func TestBftCoSi(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
-	counter := 0
 	sda.ProtocolRegisterName("DummyBFTCoSi", func(n *sda.Node) (sda.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, func(m []byte, ok chan bool) error {
-			counter++
-			dbg.Print("Verification called", counter, "times")
-			// everything is OK, always:
-			ok <- true
-			return nil
-		})
+		return NewBFTCoSiProtocol(n, veri)
 	})
 
 	for _, nbrHosts := range []int{3, 13} {
+		counter = 0
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 		defer local.CloseAll()
