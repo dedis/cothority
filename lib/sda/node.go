@@ -18,6 +18,10 @@ type Node struct {
 	token   *Token
 	// cache for the TreeNode this Node is representing
 	treeNode *TreeNode
+	// cached list of all TreeNodes
+	treeNodeList []*TreeNode
+	// mutex to synchronise creation of treeNodeList
+	mtx sync.Mutex
 	// channels holds all channels available for the different message-types
 	channels map[network.MessageTypeID]interface{}
 	// registered handler-functions for that protocol
@@ -114,12 +118,53 @@ func (n *Node) IsLeaf() bool {
 	return len(n.treeNode.Children) == 0
 }
 
-// SendTo sends to a given node
+// SendTo sends a given message to a given node
 func (n *Node) SendTo(to *TreeNode, msg interface{}) error {
 	if to == nil {
 		return errors.New("Sent to a nil TreeNode")
 	}
 	return n.overlay.SendToTreeNode(n.token, to, msg)
+}
+
+// SendToParent sends a given message to the parent of the calling node (unless it is the root)
+func (n *Node) SendToParent(msg interface{}) error {
+	if n.IsRoot() {
+		return nil
+	}
+	return n.SendTo(n.Parent(), msg)
+}
+
+// SendToChildren sends a given message to all children of the calling node (unless it is a leaf)
+func (n *Node) SendToChildren(msg interface{}) error {
+	if n.IsLeaf() {
+		return nil
+	}
+	for _, node := range n.Children() {
+		if err := n.SendTo(node, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SendToRoot sends a given message to the root node of the tree (unless the calling node is the root itself)
+func (n *Node) SendToRoot(msg interface{}) error {
+	if n.IsRoot() {
+		return nil
+	}
+	return n.SendTo(n.Tree().Root, msg)
+}
+
+// Broadcast sends a given message from the calling node directly to all other TreeNodes
+func (n *Node) Broadcast(msg interface{}) error {
+	for _, node := range n.List() {
+		if node != n.TreeNode() {
+			if err := n.SendTo(node, msg); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Tree returns the tree of that node
@@ -132,6 +177,21 @@ func (n *Node) EntityList() *EntityList {
 	return n.Tree().EntityList
 }
 
+// List returns the list of TreeNodes cached in the node (creating it if necessary)
+func (n *Node) List() []*TreeNode {
+	n.mtx.Lock()
+	if n.treeNodeList == nil {
+		n.treeNodeList = n.Tree().List()
+	}
+	n.mtx.Unlock()
+	return n.treeNodeList
+}
+
+// Index returns the index of the node in the EntityList
+func (n *Node) Index() int {
+	return n.TreeNode().EntityIdx
+}
+
 // Suite can be used to get the current abstract.Suite (currently hardcoded into
 // the network library). Preferably use this function instead of network.Suite
 // when possible.
@@ -142,6 +202,8 @@ func (n *Node) Suite() abstract.Suite {
 // RegisterChannel takes a channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
+// If you pass a pointer to the channel it will be automatically instantiated
+// for you.
 // This function handles also
 // - registration of the message-type
 // - aggregation or not of messages: if you give a channel of slices, the
@@ -159,7 +221,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	}
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
-		return errors.New("Input is not channel")
+		return errors.New("Input is not channel but " + cr.Kind().String())
 	}
 	if cr.Elem().Kind() == reflect.Slice {
 		flags += AggregateMessages
@@ -224,6 +286,16 @@ func (n *Node) RegisterHandler(c interface{}) error {
 	return nil
 }
 
+// RegisterHandlers registers a list of given handlers by calling RegisterHandler above
+func (n *Node) RegisterHandlers(handlers ...interface{}) error {
+	for _, h := range handlers {
+		if err := n.RegisterHandler(h); err != nil {
+			return errors.New("Error, could not register handler: " + err.Error())
+		}
+	}
+	return nil
+}
+
 // ProtocolInstance returns the instance of the running protocol
 func (n *Node) ProtocolInstance() ProtocolInstance {
 	return n.instance
@@ -231,26 +303,32 @@ func (n *Node) ProtocolInstance() ProtocolInstance {
 
 // ProtocolInstantiate creates a new instance of a protocol given by it's name
 func (n *Node) protocolInstantiate() error {
-	if n.token == nil {
-		return errors.New("Hope this is running in test-mode")
-	}
-	pid := n.token.ProtoID
-	_, ok := protocols[pid]
-	if !ok {
-		return errors.New("Protocol " + pid.String() + " doesn't exist")
-	}
-	tree := n.overlay.Tree(n.token.TreeID)
-	if tree == nil {
-		return errors.New("Tree does not exists")
-	}
-	if n.overlay.EntityList(n.token.EntityListID) == nil {
-		return errors.New("EntityList does not exists")
-	}
+	/*if n.token == nil {*/
+	//return errors.New("Hope this is running in test-mode")
+	//}
+	//pid := n.token.ProtoID
+	//p, ok := protocols[pid]
+	//if !ok {
+	//return errors.New("Protocol " + pid.String() + " doesn't exist")
+	//}
+	//tree := n.overlay.Tree(n.token.TreeID)
+	//if tree == nil {
+	//return errors.New("Tree does not exists")
+	//}
+	//if n.overlay.EntityList(n.token.EntityListID) == nil {
+	//return errors.New("EntityList does not exists")
+	//}
 
-	var err error
+	//var err error
 	//n.instance, err = p(n)
-	go n.instance.Dispatch()
-	return err
+	//go func() {
+	//if err := n.instance.Dispatch(); err != nil {
+	//dbg.Error("Error while dispatching node", n.Info(), ":",
+	//err)
+	//}
+	//}()
+	/*return err*/
+	return nil
 }
 
 // Dispatch - the standard dispatching function is empty

@@ -99,7 +99,8 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	proto.RegisterOnDone(func() {
 		broadDone <- true
 	})
-	proto.Start()
+	// ignore error on purpose: Broadcast.Start() always returns nil
+	_ = proto.Start()
 	// wait
 	<-broadDone
 
@@ -142,10 +143,21 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			done <- true
 		})
 		if e.Fail > 0 {
-			go bz.startAnnouncementPrepare()
+			go func() {
+				err := bz.startAnnouncementPrepare()
+				if err != nil {
+					dbg.Error("Error while starting "+
+						"announcment prepare:", err)
+				}
+			}()
 			// do not run bz.startAnnouncementCommit()
 		} else {
-			go bz.Start()
+			go func() {
+				if err := bz.Start(); err != nil {
+					dbg.Error("Couldn't start protocol",
+						err)
+				}
+			}()
 		}
 		// wait for the end
 		<-done

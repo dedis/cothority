@@ -45,7 +45,10 @@ func NewExampleChannels(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 func (p *ProtocolExampleChannels) Start() error {
 	dbg.Lvl3("Starting ExampleChannels")
 	for _, c := range p.Children() {
-		p.SendTo(c, &Announce{"Example is here"})
+		if err := p.SendTo(c, &Announce{"Example is here"}); err != nil {
+			dbg.Error(p.Info(), "failed to send Announcment to",
+				c.Name(), err)
+		}
 	}
 	return nil
 }
@@ -58,11 +61,20 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			if !p.IsLeaf() {
 				// If we have children, send the same message to all of them
 				for _, c := range p.Children() {
-					p.SendTo(c, &announcement.Announce)
+					err := p.SendTo(c, &announcement.Announce)
+					if err != nil {
+						dbg.Error(p.Info(),
+							"failed to send to",
+							c.Name(), err)
+					}
 				}
 			} else {
 				// If we're the leaf, start to reply
-				p.SendTo(p.Parent(), &Reply{1})
+				err := p.SendTo(p.Parent(), &Reply{1})
+				if err != nil {
+					dbg.Error(p.Info(), "failed to send reply to",
+						p.Parent().Name(), err)
+				}
 				return nil
 			}
 		case reply := <-p.ChannelReply:
@@ -73,7 +85,11 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			dbg.Lvl3(p.Entity().Addresses, "is done with total of", children)
 			if !p.IsRoot() {
 				dbg.Lvl3("Sending to parent")
-				p.SendTo(p.Parent(), &Reply{children})
+				err := p.SendTo(p.Parent(), &Reply{children})
+				if err != nil {
+					dbg.Error(p.Info(), "failed to reply to",
+						p.Parent().Name(), err)
+				}
 			} else {
 				dbg.Lvl3("Root-node is done - nbr of children found:", children)
 				p.ChildCount <- children

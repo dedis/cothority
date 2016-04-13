@@ -53,7 +53,9 @@ func main() {
 		return
 	}
 	if monitorAddress != "" {
-		monitor.ConnectSink(monitorAddress)
+		if err := monitor.ConnectSink(monitorAddress); err != nil {
+			dbg.Error("Couldn't connect monitor to sink:", err)
+		}
 	}
 	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig

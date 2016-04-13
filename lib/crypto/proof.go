@@ -5,6 +5,7 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	gohash "hash"
 	"strconv"
@@ -40,8 +41,14 @@ func (c *hashContext) hashNode(buf []byte, left, right HashID) []byte {
 	}
 	h := c.hash
 
-	h.Write(left)
-	h.Write(right)
+	if n, err := h.Write(left); err != nil || n != len(left) {
+		dbg.Error("Written", n, "of", len(left), "bytes.")
+		dbg.Error(err)
+	}
+	if n, err := h.Write(right); err != nil || n != len(right) {
+		dbg.Error("Written", n, "of", len(right), "bytes.")
+		dbg.Error(err)
+	}
 
 	s := h.Sum(buf)
 	return s

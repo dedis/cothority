@@ -15,6 +15,11 @@ type TreeNodeInstance struct {
 	token   *Token
 	// cache for the TreeNode this Node is representing
 	treeNode *TreeNode
+	// cached list of all TreeNodes
+	treeNodeList []*TreeNode
+	// mutex to synchronise creation of treeNodeList
+	mtx sync.Mutex
+
 	// channels holds all channels available for the different message-types
 	channels map[network.MessageTypeID]interface{}
 	// registered handler-functions for that protocol
@@ -207,6 +212,16 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 	n.handlers[typ] = c
 	n.messageTypeFlags[typ] = flags
 	dbg.Lvl3("Registered handler", typ, "with flags", flags)
+	return nil
+}
+
+// RegisterHandlers registers a list of given handlers by calling RegisterHandler above
+func (n *TreeNodeInstance) RegisterHandlers(handlers ...interface{}) error {
+	for _, h := range handlers {
+		if err := n.RegisterHandler(h); err != nil {
+			return errors.New("Error, could not register handler: " + err.Error())
+		}
+	}
 	return nil
 }
 
@@ -484,6 +499,54 @@ func (n *TreeNodeInstance) TokenID() TokenID {
 // Useful for unit testing.
 func (n *TreeNodeInstance) Token() *Token {
 	return n.token.Clone()
+}
+
+// List returns the list of TreeNodes cached in the node (creating it if necessary)
+func (n *TreeNodeInstance) List() []*TreeNode {
+	n.mtx.Lock()
+	if n.treeNodeList == nil {
+		n.treeNodeList = n.Tree().List()
+	}
+	n.mtx.Unlock()
+	return n.treeNodeList
+}
+
+// Index returns the index of the node in the EntityList
+func (n *TreeNodeInstance) Index() int {
+	return n.TreeNode().EntityIdx
+}
+
+// Broadcast sends a given message from the calling node directly to all other TreeNodes
+func (n *TreeNodeInstance) Broadcast(msg interface{}) error {
+	for _, node := range n.List() {
+		if node != n.TreeNode() {
+			if err := n.SendTo(node, msg); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// SendToParent sends a given message to the parent of the calling node (unless it is the root)
+func (n *TreeNodeInstance) SendToParent(msg interface{}) error {
+	if n.IsRoot() {
+		return nil
+	}
+	return n.SendTo(n.Parent(), msg)
+}
+
+// SendToChildren sends a given message to all children of the calling node (unless it is a leaf)
+func (n *TreeNodeInstance) SendToChildren(msg interface{}) error {
+	if n.IsLeaf() {
+		return nil
+	}
+	for _, node := range n.Children() {
+		if err := n.SendTo(node, msg); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Host returns the underlying Host of this node.

@@ -86,7 +86,9 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			done <- true
 		}
 		proto.RegisterDoneCallback(fn)
-		proto.Start()
+		if err := proto.Start(); err != nil {
+			dbg.Error("Couldn't start protocol in round", round)
+		}
 		<-done
 	}
 	dbg.Lvl1("Simulation finished")

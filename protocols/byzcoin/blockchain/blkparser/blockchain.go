@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // Blockchain is a struct representing a block chain
@@ -37,39 +39,21 @@ func NewBlockchain(path string, magic [4]byte) (blockchain *Blockchain, err erro
 func (blockchain *Blockchain) NextBlock() (block *Block, err error) {
 	rawblock, err := blockchain.FetchNextBlock()
 	if err != nil {
-		newblkfile, err2 := os.Open(blkfilename(blockchain.Path, blockchain.CurrentId+1))
+		newblkfile, err2 := os.Open(blkfilename(blockchain.Path,
+			blockchain.CurrentId+1))
 		if err2 != nil {
 			return nil, err2
 		}
 		blockchain.CurrentId++
-		blockchain.CurrentFile.Close()
+		if err := blockchain.CurrentFile.Close(); err != nil {
+			dbg.Error("Couldn't close",
+				blockchain.CurrentFile.Name(),
+				err)
+		}
 		blockchain.CurrentFile = newblkfile
 		rawblock, err = blockchain.FetchNextBlock()
 	}
-
 	block, err = NewBlock(rawblock)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// SkipBlock skips a block in the chain
-func (blockchain *Blockchain) SkipBlock() (err error) {
-	_, err = blockchain.FetchNextBlock()
-	if err != nil {
-		newblkfile, err2 := os.Open(blkfilename(blockchain.Path, blockchain.CurrentId+1))
-		if err2 != nil {
-			return err2
-		}
-		blockchain.CurrentId++
-		blockchain.CurrentFile.Close()
-		blockchain.CurrentFile = newblkfile
-		_, err = blockchain.FetchNextBlock()
-
-	}
-
 	return
 }
 

@@ -362,7 +362,12 @@ func (h *Host) processMessages() {
 				err = h.SendRaw(data.Entity, el)
 			} else {
 				dbg.Lvl2("Requested entityList that we don't have")
-				h.SendRaw(data.Entity, &EntityList{})
+				err := h.SendRaw(data.Entity, &EntityList{})
+				if err != nil {
+					dbg.Error("Couldn't send empty entity list from host:",
+						h.Entity.String(),
+						err)
+				}
 			}
 		// Host replied to our request of entitylist
 		case SendEntityListMessageID:

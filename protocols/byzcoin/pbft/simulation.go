@@ -87,7 +87,10 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	proto.RegisterOnDone(func() {
 		broadDone <- true
 	})
-	proto.Start()
+
+	// ignore error on purpose: Start always returns nil
+	_ = proto.Start()
+
 	// wait
 	<-broadDone
 	dbg.Lvl3("Simulation can start!")

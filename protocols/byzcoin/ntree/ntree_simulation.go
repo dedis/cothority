@@ -79,7 +79,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			done <- true
 		})
 
-		go nt.Start()
+		go func() {
+			if err := nt.Start(); err != nil {
+				dbg.Error("Couldn't start ntree protocol:", err)
+			}
+		}()
 		// wait for the end
 		<-done
 		dbg.Lvl3("Round", round, "finished")

@@ -62,18 +62,17 @@ type Secret struct {
 func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	kp := &config.KeyPair{Suite: node.Suite(), Public: node.Public(), Secret: node.Private()}
-	nodes := node.Tree().List()
-	pk := make([]abstract.Point, len(nodes))
-	for i, tn := range nodes {
+	n := len(node.List())
+	pk := make([]abstract.Point, n)
+	for i, tn := range node.List() {
 		pk[i] = tn.Entity.Public
 	}
 	// NOTE: T <= R <= N (for simplicity we use T = R = N; might change later)
-	info := poly.Threshold{T: len(nodes), R: len(nodes), N: len(nodes)}
+	info := poly.Threshold{T: n, R: n, N: n}
 
 	jv := &JVSS{
 		TreeNodeInstance: node,
 		keyPair:          kp,
-		nodeList:         nodes,
 		pubKeys:          pk,
 		info:             info,
 		schnorr:          new(poly.Schnorr),
@@ -84,27 +83,23 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 
 	// Setup message handlers
-	handlers := []interface{}{
+	h := []interface{}{
 		jv.handleSecInit,
 		jv.handleSecConf,
 		jv.handleSigReq,
 		jv.handleSigResp,
 	}
-	for _, h := range handlers {
-		if err := jv.RegisterHandler(h); err != nil {
-			return nil, fmt.Errorf("Error, could not register handler: " + err.Error())
-		}
-	}
+	err := jv.RegisterHandlers(h...)
 
-	return jv, nil
+	return jv, err
 }
 
 // Start initiates the JVSS protocol by setting up a long-term shared secret
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
-	jv.initSecret(LTSS)
+	err := jv.initSecret(LTSS)
 	<-jv.secretsDone
-	return nil
+	return err
 }
 
 // Verify verifies the given message against the given Schnorr signature.
@@ -116,7 +111,7 @@ func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 	}
 
 	h := jv.keyPair.Suite.Hash()
-	h.Write(msg)
+	_, _ = h.Write(msg) // ignore error; verification wil fail anyways
 	return jv.schnorr.VerifySchnorrSig(sig, h)
 }
 
@@ -129,8 +124,10 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 
 	// Initialise short-term shared secret only used for this signing request
-	sid := SID(fmt.Sprintf("%s%d", STSS, jv.nodeIdx()))
-	jv.initSecret(sid)
+	sid := SID(fmt.Sprintf("%s%d", STSS, jv.Index()))
+	if err := jv.initSecret(sid); err != nil {
+		return nil, err
+	}
 
 	// Wait for setup of shared secrets to finish
 	<-jv.secretsDone
@@ -143,15 +140,15 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	// ... and buffer it
 	secret := jv.secrets[sid]
-	secret.sigs[jv.nodeIdx()] = ps
+	secret.sigs[jv.Index()] = ps
 
 	// Broadcast signing request
 	req := &SigReqMsg{
-		Src: jv.nodeIdx(),
+		Src: jv.Index(),
 		SID: sid,
 		Msg: msg,
 	}
-	if err := jv.broadcast(req); err != nil {
+	if err := jv.Broadcast(req); err != nil {
 		return nil, err
 	}
 
@@ -165,7 +162,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.nodeIdx(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			deals:    make(map[int]*poly.Deal),
@@ -181,15 +178,15 @@ func (jv *JVSS) initSecret(sid SID) error {
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.nodeIdx(), sid))
-		secret.deals[jv.nodeIdx()] = deal
+		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
+		secret.deals[jv.Index()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
-			Src:  jv.nodeIdx(),
+			Src:  jv.Index(),
 			SID:  sid,
 			Deal: db,
 		}
-		if err := jv.broadcast(msg); err != nil {
+		if err := jv.Broadcast(msg); err != nil {
 			return err
 		}
 	}
@@ -202,12 +199,12 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		return fmt.Errorf("Error, shared secret does not exist")
 	}
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.nodeIdx(), sid, len(secret.deals), len(jv.nodeList)))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
 
 	if len(secret.deals) == jv.info.T {
 
 		for _, deal := range secret.deals {
-			if _, err := secret.receiver.AddDeal(jv.nodeIdx(), deal); err != nil {
+			if _, err := secret.receiver.AddDeal(jv.Index(), deal); err != nil {
 				return err
 			}
 		}
@@ -220,21 +217,21 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", jv.nodeIdx(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			dbg.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.nodeIdx(), sid))
+			dbg.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret
 		msg := &SecConfMsg{
-			Src: jv.nodeIdx(),
+			Src: jv.Index(),
 			SID: sid,
 		}
-		if err := jv.broadcast(msg); err != nil {
+		if err := jv.Broadcast(msg); err != nil {
 			return err
 		}
 	}
@@ -248,28 +245,15 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 	}
 
 	hash := jv.keyPair.Suite.Hash()
-	hash.Write(msg)
+	if _, err := hash.Write(msg); err != nil {
+		return nil, err
+	}
 	if err := jv.schnorr.NewRound(secret.secret, hash); err != nil {
 		return nil, err
 	}
 	ps := jv.schnorr.RevealPartialSig()
 	if ps == nil {
-		return nil, fmt.Errorf("Error, node %d could not create partial signature", jv.nodeIdx())
+		return nil, fmt.Errorf("Error, node %d could not create partial signature", jv.Index())
 	}
 	return ps, nil
-}
-
-func (jv *JVSS) nodeIdx() int {
-	return jv.TreeNode().EntityIdx
-}
-
-func (jv *JVSS) broadcast(msg interface{}) error {
-	for _, node := range jv.nodeList {
-		if node != jv.TreeNode() {
-			if err := jv.SendTo(node, msg); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

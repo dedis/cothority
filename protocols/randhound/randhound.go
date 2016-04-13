@@ -8,7 +8,6 @@ package randhound
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"time"
 
 	"github.com/dedis/cothority/lib/sda"
@@ -107,19 +106,15 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 
 	// Setup message handlers
-	handlers := []interface{}{
+	h := []interface{}{
 		rh.handleI1, rh.handleR1,
 		rh.handleI2, rh.handleR2,
 		rh.handleI3, rh.handleR3,
 		rh.handleI4, rh.handleR4,
 	}
-	for _, h := range handlers {
-		if err := rh.RegisterHandler(h); err != nil {
-			return nil, errors.New("Couldn't register handler: " + err.Error())
-		}
-	}
+	err := rh.RegisterHandlers(h...)
 
-	return rh, nil
+	return rh, err
 }
 
 // Setup configures a RandHound instance by creating group and session
@@ -163,7 +158,7 @@ func (rh *RandHound) Start() error {
 		HRc:     rh.hash(rh.Leader.rc),
 	}
 
-	return rh.sendToChildren(rh.Leader.i1)
+	return rh.SendToChildren(rh.Leader.i1)
 }
 
 func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time) (*Session, []byte, error) {
@@ -213,7 +208,7 @@ func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, er
 	}
 
 	// Include public keys of all nodes into group ID
-	for _, x := range rh.Tree().List() {
+	for _, x := range rh.List() {
 		pub, err := x.Entity.Public.MarshalBinary()
 		if err != nil {
 			return nil, nil, err

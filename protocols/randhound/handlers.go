@@ -137,7 +137,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// If we are not a leaf, forward i1 to children
 	if !rh.IsLeaf() {
-		if err := rh.sendToChildren(&i1.I1); err != nil {
+		if err := rh.SendToChildren(&i1.I1); err != nil {
 			return err
 		}
 	}
@@ -158,7 +158,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	rh.Peer.rs = rs
 
 	rh.Peer.r1 = &R1{
-		Src: rh.nodeIdx(),
+		Src: rh.index(),
 		HI1: rh.hash(
 			rh.SID,
 			rh.GID,
@@ -166,14 +166,14 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		),
 		HRs: rh.hash(rh.Peer.rs),
 	}
-	return rh.SendTo(rh.Parent(), rh.Peer.r1)
+	return rh.SendToParent(rh.Peer.r1)
 }
 
 func (rh *RandHound) handleR1(r1 WR1) error {
 
 	// If we are not the root, forward r1 to parent
 	if !rh.IsRoot() {
-		if err := rh.SendTo(rh.Parent(), &r1.R1); err != nil {
+		if err := rh.SendToParent(&r1.R1); err != nil {
 			return err
 		}
 	} else {
@@ -193,7 +193,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				SID: rh.SID,
 				Rc:  rh.Leader.rc,
 			}
-			if err := rh.sendToChildren(rh.Leader.i2); err != nil {
+			if err := rh.SendToChildren(rh.Leader.i2); err != nil {
 				return err
 			}
 		}
@@ -205,14 +205,14 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// If we are not a leaf, forward i2 to children
 	if !rh.IsLeaf() {
-		if err := rh.sendToChildren(&i2.I2); err != nil {
+		if err := rh.SendToChildren(&i2.I2); err != nil {
 			return err
 		}
 	}
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i2.I2.SID) {
-		return fmt.Errorf("I2: peer %d received message with incorrect session ID", rh.nodeIdx())
+		return fmt.Errorf("I2: peer %d received message with incorrect session ID", rh.index())
 	}
 
 	rh.Peer.i2 = &i2.I2
@@ -233,21 +233,21 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	rh.Peer.r2 = &R2{
-		Src: rh.nodeIdx(),
+		Src: rh.index(),
 		HI2: rh.hash(
 			rh.SID,
 			rh.Peer.i2.Rc),
 		Rs:   rh.Peer.rs,
 		Deal: db,
 	}
-	return rh.SendTo(rh.Parent(), rh.Peer.r2)
+	return rh.SendToParent(rh.Peer.r2)
 }
 
 func (rh *RandHound) handleR2(r2 WR2) error {
 
 	// If we are not the root, forward r2 to parent
 	if !rh.IsRoot() {
-		if err := rh.SendTo(rh.Parent(), &r2.R2); err != nil {
+		if err := rh.SendToParent(&r2.R2); err != nil {
 			return err
 		}
 	} else {
@@ -279,7 +279,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 				SID: rh.SID,
 				R2s: rh.Leader.r2,
 			}
-			return rh.sendToChildren(rh.Leader.i3)
+			return rh.SendToChildren(rh.Leader.i3)
 		}
 	}
 	return nil
@@ -289,14 +289,14 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 	// If we are not a leaf, forward i3 to children
 	if !rh.IsLeaf() {
-		if err := rh.sendToChildren(&i3.I3); err != nil {
+		if err := rh.SendToChildren(&i3.I3); err != nil {
 			return err
 		}
 	}
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i3.I3.SID) {
-		return fmt.Errorf("I3: peer %d received message with incorrect session ID", rh.nodeIdx())
+		return fmt.Errorf("I3: peer %d received message with incorrect session ID", rh.index())
 	}
 
 	rh.Peer.i3 = &i3.I3
@@ -323,7 +323,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Determine other peers who chose the current peer as a trustee
 		shareIdx, _ := rh.chooseTrustees(rh.Peer.i2.Rc, r2.Rs)
-		if j, ok := shareIdx[rh.nodeIdx()]; ok { // j is the share index we received from the ith peer
+		if j, ok := shareIdx[rh.index()]; ok { // j is the share index we received from the ith peer
 			resp, err := deal.ProduceResponse(int(j), longPair)
 			if err != nil {
 				return err
@@ -342,20 +342,20 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	}
 
 	rh.Peer.r3 = &R3{
-		Src: rh.nodeIdx(),
+		Src: rh.index(),
 		HI3: rh.hash(
 			rh.SID,
 			rh.Peer.r2.HI2), // TODO: is this enough?
 		Responses: responses,
 	}
-	return rh.SendTo(rh.Parent(), rh.Peer.r3)
+	return rh.SendToParent(rh.Peer.r3)
 }
 
 func (rh *RandHound) handleR3(r3 WR3) error {
 
 	// If we are not the root, forward r3 to parent
 	if !rh.IsRoot() {
-		if err := rh.SendTo(rh.Parent(), &r3.R3); err != nil {
+		if err := rh.SendToParent(&r3.R3); err != nil {
 			return err
 		}
 	} else {
@@ -391,7 +391,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 				SID:     rh.SID,
 				Invalid: rh.Leader.invalid,
 			}
-			return rh.sendToChildren(rh.Leader.i4)
+			return rh.SendToChildren(rh.Leader.i4)
 		}
 	}
 	return nil
@@ -401,21 +401,21 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 
 	// If we are not a leaf, forward i4 to children
 	if !rh.IsLeaf() {
-		if err := rh.sendToChildren(&i4.I4); err != nil {
+		if err := rh.SendToChildren(&i4.I4); err != nil {
 			return err
 		}
 	}
 
 	// Verify session ID
 	if !bytes.Equal(rh.SID, i4.I4.SID) {
-		return fmt.Errorf("I4: peer %d received message with incorrect session ID", rh.nodeIdx())
+		return fmt.Errorf("I4: peer %d received message with incorrect session ID", rh.index())
 	}
 
 	rh.Peer.i4 = &i4.I4
 
 	// Remove all invalid shares and prepare hash buffer
 	buf := new(bytes.Buffer)
-	invalid := rh.Peer.i4.Invalid[rh.nodeIdx()]
+	invalid := rh.Peer.i4.Invalid[rh.index()]
 	for _, dealerIdx := range *invalid {
 		delete(rh.Peer.shares, dealerIdx)
 		if err := binary.Write(buf, binary.LittleEndian, dealerIdx); err != nil {
@@ -424,20 +424,20 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 	}
 
 	rh.Peer.r4 = &R4{
-		Src: rh.nodeIdx(),
+		Src: rh.index(),
 		HI4: rh.hash(
 			rh.SID,
 			buf.Bytes()),
 		Shares: rh.Peer.shares,
 	}
-	return rh.SendTo(rh.Parent(), rh.Peer.r4)
+	return rh.SendToParent(rh.Peer.r4)
 }
 
 func (rh *RandHound) handleR4(r4 WR4) error {
 
 	// If we are not the root, forward r4 to parent
 	if !rh.IsRoot() {
-		if err := rh.SendTo(rh.Parent(), &r4.R4); err != nil {
+		if err := rh.SendToParent(&r4.R4); err != nil {
 			return err
 		}
 	} else {

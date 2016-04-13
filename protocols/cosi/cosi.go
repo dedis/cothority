@@ -93,12 +93,20 @@ func NewProtocolCosi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		tempCommitLock:   new(sync.Mutex),
 		tempResponseLock: new(sync.Mutex),
 	}
-	// Register the three channels we want to register and listens on
-	// By passing pointer = automatic instantiation
-	node.RegisterChannel(&pc.announce)
-	node.RegisterChannel(&pc.commit)
-	node.RegisterChannel(&pc.challenge)
-	node.RegisterChannel(&pc.response)
+	// Register the channels we want to register and listens on
+
+	if err := node.RegisterChannel(&pc.announce); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.commit); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.challenge); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.response); err != nil {
+		return pc, err
+	}
 
 	return pc, err
 }

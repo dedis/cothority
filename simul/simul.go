@@ -74,7 +74,9 @@ func main() {
 			if err != nil {
 				dbg.Fatal("Couldn't deploy:", err)
 			}
-			deployP.Cleanup()
+			if err := deployP.Cleanup(); err != nil {
+				dbg.Error("Couldn't cleanup correctly:", err)
+			}
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
 			testsDone := make(chan bool)
@@ -99,9 +101,15 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 	if nobuild == false {
 		if race {
-			deployP.Build(build, "-race")
+			if err := deployP.Build(build, "-race"); err != nil {
+				dbg.Error("Couln't finish build without errors:",
+					err)
+			}
 		} else {
-			deployP.Build(build)
+			if err := deployP.Build(build); err != nil {
+				dbg.Error("Couln't finish build without errors:",
+					err)
+			}
 		}
 	}
 
@@ -120,7 +128,11 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	if err != nil {
 		dbg.Fatal("error opening test file:", err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			dbg.Error("Couln't close", f.Name())
+		}
+	}()
 	err = f.Sync()
 	if err != nil {
 		dbg.Fatal("error syncing test file:", err)
@@ -207,7 +219,9 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 		var err error
 		if err = deployP.Wait(); err != nil {
 			dbg.Lvl3("Test failed:", err)
-			deployP.Cleanup()
+			if err := deployP.Cleanup(); err != nil {
+				dbg.Lvl3("Couldn't cleanup platform:", err)
+			}
 			done <- struct{}{}
 		}
 		dbg.Lvl3("Test complete:", rs)
