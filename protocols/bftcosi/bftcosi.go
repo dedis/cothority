@@ -20,10 +20,6 @@ type ProtocolBFTCoSi struct {
 	// the node we are represented-in
 	*sda.Node
 	Msg []byte
-	// ProtoName is the protocol which passes the message to BFTCoSi. Can be
-	// empty. ProtoName will be used to call the corresponding verification
-	// function which was passed to RegisterVerification beforehand.
-	ProtoName string
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers

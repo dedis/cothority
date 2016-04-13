@@ -1,34 +1,38 @@
 package bftcosi
 
 import (
-	"testing"
-	"time"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
 )
 
 // Dummy verification function: always returns OK/true/no-error on data
-var counter int
+var veriCount int
 
 func veri(m []byte, ok chan bool) error {
-	counter++
-	dbg.Print("Verification called", counter, "times")
+	veriCount++
+	dbg.Print("Verification called", veriCount, "times")
+	dbg.Print("Ignoring message:", string(m))
 	// everything is OK, always:
 	ok <- true
 	return nil
 }
 
+const TestProtocolName = "DummyBFTCoSi"
+
 func TestBftCoSi(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
-	sda.ProtocolRegisterName("DummyBFTCoSi", func(n *sda.Node) (sda.ProtocolInstance, error) {
+	// Register test protocol using BFTCoSi
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, veri)
 	})
 
 	for _, nbrHosts := range []int{3, 13} {
-		counter = 0
+		veriCount = 0
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 		defer local.CloseAll()
@@ -40,7 +44,7 @@ func TestBftCoSi(t *testing.T) {
 		msg := []byte("Hello BFTCoSi")
 
 		// Start the protocol
-		node, err := local.CreateNewNodeName("DummyBFTCoSi", tree)
+		node, err := local.CreateNewNodeName(TestProtocolName, tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
@@ -49,7 +53,6 @@ func TestBftCoSi(t *testing.T) {
 		var root *ProtocolBFTCoSi
 		root = node.ProtocolInstance().(*ProtocolBFTCoSi)
 		root.Msg = msg
-		root.ProtoName = "DummyBFTCosi"
 		// function that will be called when protocol is finished by the root
 		root.RegisterOnDone(func() {
 			done <- true
@@ -59,6 +62,8 @@ func TestBftCoSi(t *testing.T) {
 		wait := time.Second * 3
 		select {
 		case <-done:
+			assert.Equal(t, veriCount, nbrHosts,
+				"Each host should have called verification.")
 		case <-time.After(wait):
 			t.Fatal("Waited", wait, "sec for BFTCoSi to finish ...")
 		}
