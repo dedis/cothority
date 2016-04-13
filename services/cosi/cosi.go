@@ -24,31 +24,31 @@ type Cosi struct {
 }
 
 // Request is what the Cosi service is expected to receive from clients.
-type Request struct {
+type ServiceRequest struct {
 	Message    []byte
 	EntityList *sda.EntityList
 }
 
 // CosiRequestType is the type that is embedded in the Request object for a
 // CosiRequest
-var CosiRequestType = network.RegisterMessageType(Request{})
+var CosiRequestType = network.RegisterMessageType(ServiceRequest{})
 
 // Response is what the Cosi service will reply to clients.
-type Response struct {
+type ServiceResponse struct {
 	Challenge abstract.Secret
 	Response  abstract.Secret
 }
 
 // CosiRequestType is the type that is embedded in the Request object for a
 // CosiResponse
-var CosiResponseType = network.RegisterMessageType(Response{})
+var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
 // ProcessRequest treats external request to this service.
 func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 	if r.Type != CosiRequestType {
 		return
 	}
-	var req Request
+	var req ServiceRequest
 	// XXX should provide a UnmarshalRegisteredType(buff) func instead of having to give
 	// the constructors with the suite.
 	id, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
@@ -60,7 +60,7 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 		dbg.Error("Wrong message coming in")
 		return
 	}
-	req = pm.(Request)
+	req = pm.(ServiceRequest)
 	tree := req.EntityList.GenerateBinaryTree()
 	tni := cs.c.NewTreeNodeInstance(tree, tree.Root)
 	pi, err := cosi.NewProtocolCosi(tni)
@@ -71,7 +71,7 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 	pcosi := pi.(*cosi.ProtocolCosi)
 	pcosi.SigningMessage(req.Message)
 	pcosi.RegisterDoneCallback(func(chall abstract.Secret, resp abstract.Secret) {
-		respMessage := &Response{
+		respMessage := &ServiceResponse{
 			Challenge: chall,
 			Response:  resp,
 		}
@@ -89,7 +89,9 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 // generate the PI on all others node.
 func (c *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
-	return cosi.NewProtocolCosi(tn)
+	pi, err := cosi.NewProtocolCosi(tn)
+	go pi.Dispatch()
+	return pi, err
 }
 
 func newCosiService(c sda.Context, path string) sda.Service {

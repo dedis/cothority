@@ -335,7 +335,7 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 			return
 		}
 		if len(n.msgDispatchQueue) > 0 {
-			dbg.Lvl4(n.Info(), "Read message and dispatching it",
+			dbg.Print(n.Info(), "Read message and dispatching it",
 				len(n.msgDispatchQueue))
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
@@ -366,7 +366,6 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 	// Put the msg into SDAData
 	sdaMsg.MsgType = t
 	sdaMsg.Msg = msg
-	dbg.Lvlf5("SDA-Message is: %+v", sdaMsg.Msg)
 
 	// if message comes from parent, dispatch directly
 	// if messages come from children we must aggregate them
@@ -376,7 +375,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	dbg.Lvl4("Going to dispatch", sdaMsg, t)
+	dbg.Lvlf5("TNI dispatching -Message is: %+v", sdaMsg.Msg)
 
 	switch {
 	case n.channels[msgType] != nil:
