@@ -24,7 +24,7 @@ func init() {
 // RandHound is the main protocol struct and implements the
 // sda.ProtocolInstance interface.
 type RandHound struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	GID     []byte   // Group ID
 	Group   *Group   // Group parameters
 	SID     []byte   // Session ID
@@ -84,11 +84,11 @@ type Peer struct {
 }
 
 // NewRandHound generates a new RandHound instance.
-func NewRandHound(node *sda.Node) (sda.ProtocolInstance, error) {
+func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	// Setup RandHound protocol struct
 	rh := &RandHound{
-		Node: node,
+		TreeNodeInstance: node,
 	}
 
 	// Setup leader or peer depending on the node's location in the tree
@@ -135,7 +135,7 @@ func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string) error 
 	rh.Group = group
 
 	// Setup session
-	session, sid, err := rh.newSession(rh.Node.Entity().Public, purpose, time.Now())
+	session, sid, err := rh.newSession(rh.Entity().Public, purpose, time.Now())
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string) error 
 // children.
 func (rh *RandHound) Start() error {
 
-	hs := rh.Node.Suite().Hash().Size()
+	hs := rh.Suite().Hash().Size()
 	rc := make([]byte, hs)
 	random.Stream.XORKeyStream(rc, rc)
 	rh.Leader.rc = rc

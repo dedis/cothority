@@ -16,7 +16,7 @@ import (
 // and each verifiers will have independent signatures. The messages are then
 // bigger and the verification time is also longer.
 type Ntree struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	// the block to sign
 	block *blockchain.TrBlock
 	// channel to notify the end of the verification of a block
@@ -57,9 +57,9 @@ type Ntree struct {
 }
 
 // NewNtreeProtocol returns the NtreeProtocol  initialized
-func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
+func NewNtreeProtocol(node *sda.TreeNodeInstance) (*Ntree, error) {
 	nt := &Ntree{
-		Node:                       node,
+		TreeNodeInstance:           node,
 		verifyBlockChan:            make(chan bool),
 		verifySignatureRequestChan: make(chan bool),
 		tempBlockSig:               new(NaiveBlockSignature),
@@ -76,7 +76,7 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 
 // NewNTreeRootProtocol returns a NtreeProtocol with a set of transactions to
 // sign for this round.
-func NewNTreeRootProtocol(node *sda.Node, transactions []blkparser.Tx) (*Ntree, error) {
+func NewNTreeRootProtocol(node *sda.TreeNodeInstance, transactions []blkparser.Tx) (*Ntree, error) {
 	nt, _ := NewNtreeProtocol(node)
 	var err error
 	nt.block, err = byzcoin.GetBlock(transactions, "", "")

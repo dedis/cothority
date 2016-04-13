@@ -29,7 +29,7 @@ func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
 
 // NewTreeNodeInstance implements the Context interface method
 func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode) *TreeNodeInstance {
-	return dc.Overlay.newTreeNodeInstance(t, tn, dc.servID)
+	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, dc.servID)
 }
 
 func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {

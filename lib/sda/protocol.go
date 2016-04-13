@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
@@ -21,8 +22,13 @@ type ProtocolInstance interface {
 	// in turns instantiate a new protocol (with a fresh token), and then call
 	// Start on it.
 	Start() error
+	// Dispatch is called at the beginning by SDA for listening on the channels
+	// XXX Should remove that => not using ncessarily channels
 	Dispatch() error
 
+	// DispatchMsg is a method that is called each time a message arrive for
+	// this protocolInstance. TreeNodeInstance implements that method for you
+	// using channels or handlers.
 	DispatchMsg(*Data)
 	// ProtocolInstance must be using a TreeNodeInstance so SDA knows how to
 	// route the message from / to this PI.
@@ -34,7 +40,7 @@ type ProtocolInstance interface {
 }
 
 // NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*Node) (ProtocolInstance, error)
+type NewProtocol func(*TreeNodeInstance) (ProtocolInstance, error)
 
 // ProtocolRegister takes a protocol and registers it under a given uuid.
 // As this might be called from an 'init'-function, we need to check the
@@ -71,4 +77,12 @@ func ProtocolExists(protoID ProtocolID) bool {
 // String returns canonical string representation of the ID
 func (pid ProtocolID) String() string {
 	return uuid.UUID(pid).String()
+}
+
+func ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
+	fn, ok := protocols[protoID]
+	if !ok {
+		return nil, errors.New("No protocol constructor with this ID")
+	}
+	return fn(tni)
 }

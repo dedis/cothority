@@ -36,16 +36,16 @@ const (
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
-	*sda.Node                         // The SDA TreeNode
-	keyPair     *config.KeyPair       // KeyPair of the host
-	nodeList    []*sda.TreeNode       // List of TreeNodes in the JVSS group
-	pubKeys     []abstract.Point      // List of public keys of the above TreeNodes
-	info        poly.Threshold        // JVSS thresholds
-	schnorr     *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
-	secrets     map[SID]*Secret       // Shared secrets (long- and short-term ones)
-	ltssInit    bool                  // Indicator whether shared secret has been already initialised or not
-	secretsDone chan bool             // Channel to indicate when shared secrets of all peers are ready
-	sigChan     chan *poly.SchnorrSig // Channel for JVSS signature
+	*sda.TreeNodeInstance                       // The SDA TreeNode
+	keyPair               *config.KeyPair       // KeyPair of the host
+	nodeList              []*sda.TreeNode       // List of TreeNodes in the JVSS group
+	pubKeys               []abstract.Point      // List of public keys of the above TreeNodes
+	info                  poly.Threshold        // JVSS thresholds
+	schnorr               *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
+	secrets               map[SID]*Secret       // Shared secrets (long- and short-term ones)
+	ltssInit              bool                  // Indicator whether shared secret has been already initialised or not
+	secretsDone           chan bool             // Channel to indicate when shared secrets of all peers are ready
+	sigChan               chan *poly.SchnorrSig // Channel for JVSS signature
 }
 
 // Secret contains all information for long- and short-term shared secrets.
@@ -59,7 +59,7 @@ type Secret struct {
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
-func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
+func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	kp := &config.KeyPair{Suite: node.Suite(), Public: node.Public(), Secret: node.Private()}
 	nodes := node.Tree().List()
@@ -71,16 +71,16 @@ func NewJVSS(node *sda.Node) (sda.ProtocolInstance, error) {
 	info := poly.Threshold{T: len(nodes), R: len(nodes), N: len(nodes)}
 
 	jv := &JVSS{
-		Node:        node,
-		keyPair:     kp,
-		nodeList:    nodes,
-		pubKeys:     pk,
-		info:        info,
-		schnorr:     new(poly.Schnorr),
-		secrets:     make(map[SID]*Secret),
-		ltssInit:    false,
-		secretsDone: make(chan bool, 1),
-		sigChan:     make(chan *poly.SchnorrSig),
+		TreeNodeInstance: node,
+		keyPair:          kp,
+		nodeList:         nodes,
+		pubKeys:          pk,
+		info:             info,
+		schnorr:          new(poly.Schnorr),
+		secrets:          make(map[SID]*Secret),
+		ltssInit:         false,
+		secretsDone:      make(chan bool, 1),
+		sigChan:          make(chan *poly.SchnorrSig),
 	}
 
 	// Setup message handlers
@@ -260,7 +260,7 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 }
 
 func (jv *JVSS) nodeIdx() int {
-	return jv.Node.TreeNode().EntityIdx
+	return jv.TreeNode().EntityIdx
 }
 
 func (jv *JVSS) broadcast(msg interface{}) error {

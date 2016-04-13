@@ -24,7 +24,7 @@ func init() {
 
 // ProtocolCloseAll is the structure used to hold the Done-channel
 type ProtocolCloseAll struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	// Done receives a 'true' once the protocol is done.
 	Done chan bool
 }
@@ -48,8 +48,8 @@ type CloseMsg struct {
 }
 
 // NewCloseAll will create a new protocol
-func NewCloseAll(n *sda.Node) (sda.ProtocolInstance, error) {
-	p := &ProtocolCloseAll{Node: n}
+func NewCloseAll(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	p := &ProtocolCloseAll{TreeNodeInstance: n}
 	p.Done = make(chan bool, 1)
 	p.RegisterHandler(p.FuncPrepareClose)
 	p.RegisterHandler(p.FuncClose)
@@ -93,9 +93,9 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	}
 	time.Sleep(time.Second)
 	dbg.Lvl3("Closing host", p.Entity().Addresses)
-	err := p.Node.CloseHost()
+	err := p.TreeNodeInstance.CloseHost()
 	if err != nil {
 		dbg.Error("Couldn't close:", err)
 	}
-	p.Node.Done()
+	p.TreeNodeInstance.Done()
 }

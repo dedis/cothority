@@ -43,14 +43,14 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 
 	dbg.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
-	node, err := config.Overlay.CreateNewNodeName("JVSS", config.Tree)
+	p, err := config.Overlay.CreateProtocol(config.Tree, "JVSS")
 	if err != nil {
 		return err
 	}
-	proto := node.ProtocolInstance().(*JVSS)
+	proto := p.(*JVSS)
 
 	dbg.Lvl1("Starting setup")
-	node.StartProtocol()
+	proto.Start()
 	dbg.Lvl1("Setup done")
 
 	for round := 0; round < jvs.Rounds; round++ {

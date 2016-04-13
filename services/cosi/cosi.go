@@ -80,6 +80,7 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 		}
 	})
 	dbg.Lvl1("Cosi Service starting up root protocol")
+	go pi.Dispatch()
 	go pi.Start()
 }
 

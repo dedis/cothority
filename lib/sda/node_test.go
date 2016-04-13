@@ -192,10 +192,11 @@ func TestProtocolHandlers(t *testing.T) {
 	defer local.CloseAll()
 	dbg.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *sda.Node, 2)
-	node, err := local.StartNewNodeName("ProtocolHandlers", tree)
+	p, err := local.CreateProtocol("ProtocolHandlers", tree)
 	if err != nil {
 		t.Fatal(err)
 	}
+	go p.Start()
 	dbg.Lvl2("Waiting for responses")
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers

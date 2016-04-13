@@ -132,7 +132,7 @@ func (s *serviceFactory) start(name string, c Context, path string) (Service, er
 		return nil, errors.New("No Service for this id:" + fmt.Sprintf("%v", id))
 	}
 	serv := fn(c, path)
-	dbg.Lvl1("Instantiated service", name)
+	dbg.Lvl2("Instantiated service", name)
 	return serv, nil
 }
 
@@ -184,6 +184,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		// !! register to the ProtocolFactory !!
 		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
+	dbg.Lvl1(h.workingAddress, "instantiated all services")
 	return &serviceStore{services, configs}
 }
 

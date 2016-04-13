@@ -136,7 +136,7 @@ type WR4 struct {
 func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// If we are not a leaf, forward i1 to children
-	if !rh.Node.IsLeaf() {
+	if !rh.IsLeaf() {
 		if err := rh.sendToChildren(&i1.I1); err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	rh.Session = i1.I1.Session
 
 	// Choose peer's trustee-selsection randomness
-	hs := rh.Node.Suite().Hash().Size()
+	hs := rh.Suite().Hash().Size()
 	rs := make([]byte, hs)
 	random.Stream.XORKeyStream(rs, rs)
 	rh.Peer.rs = rs
@@ -172,7 +172,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 func (rh *RandHound) handleR1(r1 WR1) error {
 
 	// If we are not the root, forward r1 to parent
-	if !rh.Node.IsRoot() {
+	if !rh.IsRoot() {
 		if err := rh.SendTo(rh.Parent(), &r1.R1); err != nil {
 			return err
 		}
@@ -204,7 +204,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// If we are not a leaf, forward i2 to children
-	if !rh.Node.IsLeaf() {
+	if !rh.IsLeaf() {
 		if err := rh.sendToChildren(&i2.I2); err != nil {
 			return err
 		}
@@ -219,11 +219,11 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Construct deal
 	longPair := &config.KeyPair{
-		rh.Node.Suite(),
-		rh.Node.Public(),
-		rh.Node.Private(),
+		rh.Suite(),
+		rh.Public(),
+		rh.Private(),
 	}
-	secretPair := config.NewKeyPair(rh.Node.Suite())
+	secretPair := config.NewKeyPair(rh.Suite())
 	_, trustees := rh.chooseTrustees(rh.Peer.i2.Rc, rh.Peer.rs)
 	deal := &poly.Deal{}
 	deal.ConstructDeal(secretPair, longPair, int(rh.Group.T), int(rh.Group.R), trustees)
@@ -246,7 +246,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 func (rh *RandHound) handleR2(r2 WR2) error {
 
 	// If we are not the root, forward r2 to parent
-	if !rh.Node.IsRoot() {
+	if !rh.IsRoot() {
 		if err := rh.SendTo(rh.Parent(), &r2.R2); err != nil {
 			return err
 		}
@@ -262,7 +262,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 		// Initialise deal
 		deal := &poly.Deal{}
-		deal.UnmarshalInit(int(rh.Group.T), int(rh.Group.R), int(rh.Group.K), rh.Node.Suite())
+		deal.UnmarshalInit(int(rh.Group.T), int(rh.Group.R), int(rh.Group.K), rh.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
@@ -288,7 +288,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 func (rh *RandHound) handleI3(i3 WI3) error {
 
 	// If we are not a leaf, forward i3 to children
-	if !rh.Node.IsLeaf() {
+	if !rh.IsLeaf() {
 		if err := rh.sendToChildren(&i3.I3); err != nil {
 			return err
 		}
@@ -302,9 +302,9 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	rh.Peer.i3 = &i3.I3
 
 	longPair := &config.KeyPair{
-		rh.Node.Suite(),
-		rh.Node.Public(),
-		rh.Node.Private(),
+		rh.Suite(),
+		rh.Public(),
+		rh.Private(),
 	}
 
 	responses := []R3Resp{}
@@ -316,7 +316,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 
 		// Unmarshal Deal
 		deal := &poly.Deal{}
-		deal.UnmarshalInit(int(rh.Group.T), int(rh.Group.R), int(rh.Group.K), rh.Node.Suite())
+		deal.UnmarshalInit(int(rh.Group.T), int(rh.Group.R), int(rh.Group.K), rh.Suite())
 		if err := deal.UnmarshalBinary(r2.Deal); err != nil {
 			return err
 		}
@@ -354,7 +354,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 func (rh *RandHound) handleR3(r3 WR3) error {
 
 	// If we are not the root, forward r3 to parent
-	if !rh.Node.IsRoot() {
+	if !rh.IsRoot() {
 		if err := rh.SendTo(rh.Parent(), &r3.R3); err != nil {
 			return err
 		}
@@ -372,7 +372,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		for _, r3resp := range rh.Leader.r3[r3.Src].Responses {
 
 			resp := &poly.Response{}
-			resp.UnmarshalInit(rh.Node.Suite())
+			resp.UnmarshalInit(rh.Suite())
 			if err := resp.UnmarshalBinary(r3resp.Resp); err != nil {
 				return err
 			}
@@ -400,7 +400,7 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 func (rh *RandHound) handleI4(i4 WI4) error {
 
 	// If we are not a leaf, forward i4 to children
-	if !rh.Node.IsLeaf() {
+	if !rh.IsLeaf() {
 		if err := rh.sendToChildren(&i4.I4); err != nil {
 			return err
 		}
@@ -436,7 +436,7 @@ func (rh *RandHound) handleI4(i4 WI4) error {
 func (rh *RandHound) handleR4(r4 WR4) error {
 
 	// If we are not the root, forward r4 to parent
-	if !rh.Node.IsRoot() {
+	if !rh.IsRoot() {
 		if err := rh.SendTo(rh.Parent(), &r4.R4); err != nil {
 			return err
 		}

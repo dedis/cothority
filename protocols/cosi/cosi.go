@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	//sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
+	sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
 }
 
 // This Cosi protocol is the simplest version, the "vanilla" version with the
@@ -100,7 +100,6 @@ func NewProtocolCosi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	node.RegisterChannel(&pc.challenge)
 	node.RegisterChannel(&pc.response)
 
-	go pc.Dispatch()
 	return pc, err
 }
 

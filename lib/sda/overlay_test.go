@@ -45,11 +45,12 @@ func TestOverlayDone(t *testing.T) {
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	sda.ProtocolRegisterName("ProtocolOverlay", fn)
-	node, err := h1.StartNewNodeName("ProtocolOverlay", tree)
+	p, err := h1.CreateProtocol("ProtocolOverlay", tree)
 	if err != nil {
 		t.Fatal("error starting new node", err)
 	}
-	po := node.ProtocolInstance().(*ProtocolOverlay)
+	go p.Start()
+	po := p.(*ProtocolOverlay)
 	// release the resources
 	var count int
 	po.OnDoneCallback(func() bool {

@@ -13,7 +13,7 @@ func init() {
 // a confirmation once everything is set up, you can register a callback-function
 // using RegisterOnDone()
 type Broadcast struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 
 	announceChan chan struct {
 		*sda.TreeNode
@@ -41,14 +41,15 @@ type Broadcast struct {
 }
 
 // NewBroadcastProtocol returns an initialised protocol for broadcast
-func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	b := new(Broadcast).init(n)
+	// XXX should this start alone ?
 	go b.Start()
 	return b, nil
 }
 
-func (b *Broadcast) init(n *sda.Node) *Broadcast {
-	b.Node = n
+func (b *Broadcast) init(n *sda.TreeNodeInstance) *Broadcast {
+	b.TreeNodeInstance = n
 
 	b.RegisterChannel(&b.ackChan)
 	b.RegisterChannel(&b.announceChan)
@@ -70,7 +71,7 @@ func (b *Broadcast) init(n *sda.Node) *Broadcast {
 
 // NewBroadcastRootProtocol is an abomination that should not exist - will
 // be killed with https://github.com/dedis/cothority/pull/325
-func NewBroadcastRootProtocol(n *sda.Node) (*Broadcast, error) {
+func NewBroadcastRootProtocol(n *sda.TreeNodeInstance) (*Broadcast, error) {
 	b := new(Broadcast).init(n)
 	// it does not start yet.
 	return b, nil
