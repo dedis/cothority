@@ -575,12 +575,6 @@ func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-// StartNewNode starts the underlying Node which will instantiate the underlying
-// protocol.
-func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNode(protoID, tree)
-}
-
 // SetupHostsMock can be used to create a Host mock for testing.
 func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	var hosts []*Host

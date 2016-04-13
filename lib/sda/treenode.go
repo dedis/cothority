@@ -446,6 +446,7 @@ func (n *TreeNodeInstance) Done() {
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()
 		if !ok {
+			dbg.Print("TNI DoneCallback =", n.onDoneCallback, " = ", ok)
 			return
 		}
 	}

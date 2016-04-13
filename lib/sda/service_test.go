@@ -357,7 +357,6 @@ func TestServiceBackForthProtocol(t *testing.T) {
 	client := network.NewSecureTCPHost(priv, network.NewEntity(pub, ""))
 	c, err := client.Open(hosts[0].Entity)
 	assert.Nil(t, err)
-	dbg.Print("Client connected to hosts")
 	// create request
 	r := &simpleRequest{
 		Entities: el,
@@ -413,7 +412,6 @@ func newBackForthProtocolRoot(tn *sda.TreeNodeInstance, val int, handler func(in
 	s, err := newBackForthProtocol(tn)
 	s.Val = val
 	s.handler = handler
-	dbg.Print("BackForth root => ", s.handler)
 	return s, err
 }
 
@@ -448,13 +446,11 @@ func (sp *BackForthProtocol) dispatch() {
 		select {
 		// dispatch the first msg down
 		case m := <-sp.forthChan:
-			dbg.Print(sp.Name(), "Received Forth")
 			msg := &m.SimpleMessageForth
 			for _, ch := range sp.Children() {
 				sp.SendTo(ch, msg)
 			}
 			if sp.IsLeaf() {
-				dbg.Print(sp.Name(), "Sending BACK to parent !")
 				if err := sp.SendTo(sp.Parent(), &SimpleMessageBack{msg.Val}); err != nil {
 					dbg.Error(err)
 				}
@@ -462,7 +458,6 @@ func (sp *BackForthProtocol) dispatch() {
 			}
 			// pass the message up
 		case m := <-sp.backChan:
-			dbg.Print(sp.Name(), "Received Back")
 			msg := m.SimpleMessageBack
 			// call the handler  if we are the root
 			sp.counter++

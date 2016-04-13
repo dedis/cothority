@@ -9,7 +9,7 @@ import (
 )
 
 type ProtocolOverlay struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	done bool
 }
 
@@ -34,9 +34,9 @@ func TestOverlayDone(t *testing.T) {
 	// setup
 	h1 := sda.NewLocalHost(2000)
 	defer h1.Close()
-	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
+	fn := func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		ps := ProtocolOverlay{
-			Node: n,
+			TreeNodeInstance: n,
 		}
 		return &ps, nil
 	}
@@ -49,7 +49,6 @@ func TestOverlayDone(t *testing.T) {
 	if err != nil {
 		t.Fatal("error starting new node", err)
 	}
-	go p.Start()
 	po := p.(*ProtocolOverlay)
 	// release the resources
 	var count int
@@ -63,7 +62,7 @@ func TestOverlayDone(t *testing.T) {
 	po.Release()
 	overlay := h1.Overlay()
 	if _, ok := overlay.TokenToNode(po.Token()); !ok {
-		t.Fatal("Node should exists after call Done()")
+		t.Fatal("Node should exists after first call Done()")
 	}
 	po.Release()
 	if _, ok := overlay.TokenToNode(po.Token()); ok {

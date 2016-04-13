@@ -94,13 +94,7 @@ func (t *Token) Id() TokenID {
 }
 
 func (t *Token) Clone() *Token {
-	t2 := Token{}
-	copy(t2.EntityListID[:], t.EntityListID[:])
-	copy(t2.TreeID[:], t.TreeID[:])
-	copy(t2.ServiceID[:], t.ServiceID[:])
-	copy(t2.RoundID[:], t.RoundID[:])
-	copy(t2.TreeNodeID[:], t.TreeNodeID[:])
-	copy(t2.cacheId[:], t.cacheId[:])
+	t2 := *t
 	return &t2
 }
 

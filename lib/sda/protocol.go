@@ -32,7 +32,7 @@ type ProtocolInstance interface {
 	DispatchMsg(*Data)
 	// ProtocolInstance must be using a TreeNodeInstance so SDA knows how to
 	// route the message from / to this PI.
-	// TreeNodeInstance
+	//TreeNodeInstance() *TreeNodeInstance
 	// XXX TEMP SOLUTION
 	Token() *Token
 	// Shutdown cleans up the resources used by this protocol instance
