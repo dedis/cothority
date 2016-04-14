@@ -6,16 +6,20 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
 
 // Dummy verification function: always returns OK/true/no-error on data
 var veriCount int
+var countMut sync.Mutex
 
 func veri(m []byte, ok chan bool) {
+	countMut.Lock()
 	veriCount++
 	dbg.Print("Verification called", veriCount, "times")
+	countMut.Unlock()
 	dbg.Print("Ignoring message:", string(m))
 	// everything is OK, always:
 	ok <- true
@@ -33,7 +37,9 @@ func TestBftCoSi(t *testing.T) {
 	})
 
 	for _, nbrHosts := range []int{3, 13} {
+		countMut.Lock()
 		veriCount = 0
+		countMut.Unlock()
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 		defer local.CloseAll()
@@ -63,8 +69,11 @@ func TestBftCoSi(t *testing.T) {
 		wait := time.Second * 3
 		select {
 		case <-done:
+			countMut.Lock()
 			assert.Equal(t, veriCount, nbrHosts,
 				"Each host should have called verification.")
+			// if assert fails we don't care for unlocking (t.Fail)
+			countMut.Unlock()
 			sig := root.Signature()
 			if err := cosi.VerifyCosiSignatureWithException(root.Suite(),
 				root.aggregatedPublic, msg, sig.Sig,

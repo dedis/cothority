@@ -372,6 +372,7 @@ func (n *Node) dispatchHandler(msgSlice []*Data) error {
 
 func (n *Node) reflectCreate(t reflect.Type, msg *Data) reflect.Value {
 	m := reflect.Indirect(reflect.New(t))
+	// FIXME data race ...
 	tn := n.Tree().Search(msg.From.TreeNodeID)
 	if tn != nil {
 		m.Field(0).Set(reflect.ValueOf(tn))
@@ -398,7 +399,6 @@ func (n *Node) DispatchChannel(msgSlice []*Data) error {
 	} else {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
-
 			m := n.reflectCreate(to.Elem(), msg)
 			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
