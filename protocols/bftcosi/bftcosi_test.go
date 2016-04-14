@@ -1,6 +1,8 @@
 package bftcosi
 
 import (
+	"fmt"
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
@@ -64,6 +66,13 @@ func TestBftCoSi(t *testing.T) {
 		case <-done:
 			assert.Equal(t, veriCount, nbrHosts,
 				"Each host should have called verification.")
+			sig := root.Signature()
+			if err := cosi.VerifyCosiSignatureWithException(root.Suite(),
+				root.aggregatedPublic, msg, sig.Sig,
+				sig.Exceptions); err != nil {
+
+				t.Fatal(fmt.Sprintf("%s Verification of the signature failed: %s", root.Name(), err.Error()))
+			}
 		case <-time.After(wait):
 			t.Fatal("Waited", wait, "sec for BFTCoSi to finish ...")
 		}

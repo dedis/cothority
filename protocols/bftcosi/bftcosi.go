@@ -327,9 +327,9 @@ func (bft *ProtocolBFTCoSi) handleCommit(ann Commitment) error {
 // startPrepareChallenge create the challenge and send its down the tree
 func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	// create challenge from message:
-	//prep := &MsgPrepare{Msg: bft.Msg}
-	//h := prep.Hash()
-	ch, err := bft.prepare.CreateChallenge(bft.Msg)
+	prep := &MsgPrepare{Msg: bft.Msg}
+	h := prep.Hash()
+	ch, err := bft.prepare.CreateChallenge(h)
 	if err != nil {
 		return err
 	}
@@ -358,11 +358,10 @@ func (bft *ProtocolBFTCoSi) startChallengeCommit() error {
 	if bft.onChallengeCommit != nil {
 		bft.onChallengeCommit()
 	}
-	comm := &MsgCommit{Msg: bft.Msg}
-	h := comm.Hash()
+
 	// XXX create the challenge from the original message?
 	dbg.Print("CreateChallenge on ", string(bft.Msg))
-	c, err := bft.commit.CreateChallenge(h)
+	c, err := bft.commit.CreateChallenge(bft.Msg)
 	if err != nil {
 		return err
 	}
@@ -406,10 +405,13 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 // of participants refused to sign.
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	ch.Challenge = bft.commit.Challenge(ch.Challenge)
+	prep := &MsgPrepare{Msg: bft.Msg}
+	h := prep.Hash()
+
 	// verify if the signature is correct
 	dbg.Print("VerifyCosiSignatureWithException msg:", string(bft.Msg))
 	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
-		bft.aggregatedPublic, bft.Msg, ch.Signature,
+		bft.aggregatedPublic, h, ch.Signature,
 		ch.Exceptions); err != nil {
 		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
@@ -635,6 +637,19 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 }
 
 const commitPrefix = 0X0
+const preparePrefix = 0x1
+
+type MsgPrepare struct {
+	Msg []byte
+}
+
+func (mp *MsgPrepare) Hash() []byte {
+	h := network.Suite.Hash()
+	temp := append(mp.Msg, preparePrefix)
+	h.Write(temp)
+
+	return h.Sum(nil)
+}
 
 type MsgCommit struct {
 	Msg []byte
