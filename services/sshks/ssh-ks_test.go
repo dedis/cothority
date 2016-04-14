@@ -2,13 +2,14 @@ package sshks_test
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+	"testing"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/services/sshks"
 	"github.com/dedis/crypto/config"
-	"io/ioutil"
-	"os"
-	"testing"
 )
 
 func TestAbstract(t *testing.T) {
@@ -82,124 +83,10 @@ func TestNetworkGetConfig(t *testing.T) {
 	defer conode.Stop()
 	srv, _ := sshks.NetworkGetServer(conode.This.Entity.Addresses[0])
 	cl := sshks.NewClientKS("")
-	conf, err := cl.NetworkGetConfig(srv)
+	conf, _, err := cl.NetworkGetConfig(srv)
 	dbg.TestFatal(t, err)
 	if len(conf.Servers) != 1 {
 		t.Fatal("There should be exactly 1 server in the config")
-	}
-}
-
-func TestNetworkAddServer(t *testing.T) {
-	srvApp, servers, clApp := createSrvaSeCla(2)
-	srv0, srv1 := servers[0], servers[1]
-	defer closeServers(t, srvApp)
-
-	err := clApp.NetworkAddServer(srv0)
-	dbg.TestFatal(t, err)
-	conf, _ := clApp.NetworkGetConfig(srv0)
-	if !conf.Servers[srv0.Entity.Addresses[0]].Entity.Public.Equal(srv0.Entity.Public) {
-		t.Fatal("srv0 is not signed up")
-	}
-	err = clApp.NetworkAddServer(srv1)
-	conf, _ = clApp.NetworkGetConfig(srv1)
-	if !conf.Servers[srv1.Entity.Addresses[0]].Entity.Public.Equal(srv1.Entity.Public) {
-		t.Fatal("srv1 is not signed up")
-	}
-	dbg.TestFatal(t, err)
-}
-
-func TestNetworkDelServer(t *testing.T) {
-	srvApp, servers, clApp := createSrvaSeCla(2)
-	srv0, srv1 := servers[0], servers[1]
-	defer closeServers(t, srvApp)
-	if len(clApp.Config.Servers) != 1 {
-		t.Fatal("There should be only 1 server signed up now")
-	}
-	clApp.NetworkAddServer(srv1)
-	conf, _ := clApp.NetworkGetConfig(srv0)
-	if len(conf.Servers) != 2 {
-		t.Fatal("There should be 2 servers signed up now")
-	}
-	err := clApp.NetworkDelServer(srv1)
-	conf, _ = clApp.NetworkGetConfig(srv0)
-	if len(conf.Servers) != 1 {
-		t.Fatal("This should be back to 1 server now")
-	}
-	dbg.TestFatal(t, err)
-}
-
-func TestNetworkSign(t *testing.T) {
-	srvApp, servers, clApp := createSrvaSeCla(2)
-	srv0, srv1 := servers[0], servers[1]
-	defer closeServers(t, srvApp)
-	clApp.NetworkAddServer(srv1)
-	config, err := clApp.NetworkGetConfig(srv0)
-	dbg.TestFatal(t, err)
-	if len(config.Servers) != 2 {
-		t.Fatal("There should be two servers in srv0")
-	}
-	config, err = clApp.NetworkGetConfig(srv1)
-	dbg.TestFatal(t, err)
-	if len(config.Servers) != 2 {
-		t.Fatal("There should be two servers in srv1")
-	}
-	for i := 0; i < 10; i++ {
-		config, err = clApp.NetworkSign(srv0)
-		dbg.TestFatal(t, err)
-	}
-}
-
-func TestNetworkAddClient(t *testing.T) {
-	srvApp, servers, clApp := createSrvaSeCla(2)
-	defer closeServers(t, srvApp)
-	clApp.NetworkAddServer(servers[0])
-	clApp.NetworkAddServer(servers[1])
-	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"SSH-pub1")
-	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"SSH-pub2")
-	err := clApp.NetworkAddClient(client1)
-	dbg.ErrFatal(err)
-	for _, srv := range srvApp {
-		if len(srv.Config.Clients) != 1 {
-			t.Fatal("Number of clients should be 1 in server", srv.This)
-		}
-	}
-	err = clApp.NetworkAddClient(client2)
-	dbg.ErrFatal(err)
-	for _, srv := range srvApp {
-		if len(srv.Config.Clients) != 2 {
-			t.Fatal("Number of clients should be 2 in server", srv.This)
-		}
-	}
-}
-
-func TestNetworkDelClient(t *testing.T) {
-	srvApp, servers, clApp := createSrvaSeCla(2)
-	defer closeServers(t, srvApp)
-	clApp.NetworkAddServer(servers[0])
-	clApp.NetworkAddServer(servers[1])
-	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"SSH-pub1")
-	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"SSH-pub2")
-	err := clApp.NetworkAddClient(client1)
-	dbg.ErrFatal(err)
-	err = clApp.NetworkAddClient(client2)
-	dbg.ErrFatal(err)
-	err = clApp.NetworkDelClient(client1)
-	dbg.ErrFatal(err)
-	for _, srv := range srvApp {
-		if len(srv.Config.Clients) != 1 {
-			t.Fatal("Number of clients should be 1 in server", srv.This)
-		}
-	}
-	err = clApp.NetworkDelClient(client2)
-	dbg.ErrFatal(err)
-	for _, srv := range srvApp {
-		if len(srv.Config.Clients) != 0 {
-			t.Fatal("Number of clients should be 0 in server", srv.This)
-		}
 	}
 }
 
@@ -208,7 +95,7 @@ func TestCAServerAdd(t *testing.T) {
 	defer closeServers(t, servers)
 	srv1, srv2 := servers[0], servers[1]
 	dbg.Lvl1("Adding 1st server")
-	ca.ServerAdd("localhost:2000")
+	ca.AddServer(srv1.This)
 	if len(srv1.Config.Servers) != 1 {
 		t.Fatal("Server 1 should still only know himself")
 	}
@@ -219,7 +106,7 @@ func TestCAServerAdd(t *testing.T) {
 		t.Fatal("Server.This should be the same as config")
 	}
 	dbg.Lvl1("Adding 2nd server")
-	ca.ServerAdd("localhost:2001")
+	ca.AddServer(srv2.This)
 	if len(srv1.Config.Servers) != 2 {
 		t.Fatal("Server 1 should have two servers stored")
 	}
@@ -233,8 +120,8 @@ func TestCAServerDel(t *testing.T) {
 	defer closeServers(t, servers)
 	srv1, srv2 := servers[0], servers[1]
 	dbg.Lvl1("Adding 1st server")
-	ca.ServerAdd("localhost:2000")
-	ca.ServerAdd("localhost:2001")
+	ca.AddServer(srv1.This)
+	ca.AddServer(srv2.This)
 	if len(srv1.Config.Servers) != 2 {
 		t.Fatal("Server 1 should have two servers stored")
 	}
@@ -244,14 +131,14 @@ func TestCAServerDel(t *testing.T) {
 	if len(ca.Config.Servers) != 2 {
 		t.Fatal("ClientKS should have two servers stored")
 	}
-	ca.ServerDel("localhost:2001")
+	ca.DelServer(srv2.This)
 	if len(srv1.Config.Servers) != 1 {
 		t.Fatal("Server 1 should have only one server stored")
 	}
 	if len(ca.Config.Servers) != 1 {
 		t.Fatal("ClientKS should have one server stored")
 	}
-	ca.ServerDel("localhost:2000")
+	ca.DelServer(srv1.This)
 	if len(ca.Config.Servers) != 0 {
 		t.Fatal("ClientKS should have no server stored")
 	}
@@ -263,19 +150,18 @@ func TestCAServerDel(t *testing.T) {
 func TestCAServerCheck(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
-	addr1, addr2 := servers[0].This.Entity.Addresses[0],
-		servers[1].This.Entity.Addresses[0]
+	srv1, srv2 := servers[0].This, servers[1].This
 	dbg.Lvl1("Adding 1st server")
-	ca.ServerAdd(addr1)
-	ca.ServerAdd(addr2)
+	ca.AddServer(srv1)
+	ca.AddServer(srv2)
 	err := ca.ServerCheck()
 	dbg.ErrFatal(err)
 	dbg.Lvl2(ca.Config.Servers)
-	ca.ServerDel(addr1)
+	ca.DelServer(srv1)
 	dbg.Lvl2(ca.Config.Servers)
 	err = ca.ServerCheck()
 	dbg.ErrFatal(err)
-	ca.ServerDel(addr2)
+	ca.DelServer(srv2)
 	err = ca.ServerCheck()
 	if err == nil {
 		t.Fatal("Now the server-list should be empty")
@@ -285,17 +171,17 @@ func TestCAServerCheck(t *testing.T) {
 func TestCAClientAdd(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
-	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
+	ca.AddServer(servers[0].This)
 	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
 	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client2")
-	err := ca.ClientAdd(client1)
+	err := ca.AddClient(client1)
 	dbg.ErrFatal(err)
 	if len(ca.Config.Clients) != 1 {
 		t.Fatal("There should be 1 client now")
 	}
-	err = ca.ClientAdd(client2)
+	err = ca.AddClient(client2)
 	dbg.ErrFatal(err)
 	if len(ca.Config.Clients) != 2 {
 		t.Fatal("There should be 2 clients now")
@@ -305,14 +191,14 @@ func TestCAClientAdd(t *testing.T) {
 func TestWriteConfig2(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
-	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
+	ca.AddServer(servers[0].This)
 	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
 	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client2")
-	err := ca.ClientAdd(client1)
+	err := ca.AddClient(client1)
 	dbg.ErrFatal(err)
-	err = ca.ClientAdd(client2)
+	err = ca.AddClient(client2)
 	dbg.ErrFatal(err)
 	if len(ca.Config.Clients) != 2 {
 		t.Fatal("There should be 2 clients now")
@@ -339,24 +225,24 @@ func TestWriteConfig2(t *testing.T) {
 func TestCAClientDel(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
-	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
+	ca.AddServer(servers[0].This)
 	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
 	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client2")
-	err := ca.ClientAdd(client1)
+	err := ca.AddClient(client1)
 	dbg.ErrFatal(err)
-	err = ca.ClientAdd(client2)
+	err = ca.AddClient(client2)
 	dbg.ErrFatal(err)
 	if len(ca.Config.Clients) != 2 {
 		t.Fatal("There should be 2 clients now")
 	}
-	err = ca.ClientDel(client2)
+	err = ca.DelClient(client2)
 	dbg.ErrFatal(err)
 	if len(ca.Config.Clients) != 1 {
 		t.Fatal("There should be 1 client now")
 	}
-	err = ca.ClientDel(client1)
+	err = ca.DelClient(client1)
 	dbg.ErrFatal(err)
 	if len(ca.Config.Clients) != 0 {
 		t.Fatal("There should be no client now")
@@ -366,16 +252,14 @@ func TestCAClientDel(t *testing.T) {
 func TestCASign(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
-	ca.ServerAdd(servers[0].This.Entity.Addresses[0])
-	ca.ServerAdd(servers[1].This.Entity.Addresses[0])
+	ca.AddServer(servers[0].This)
+	ca.AddServer(servers[1].This)
 	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
-	err := ca.ClientAdd(client1)
+	err := ca.AddClient(client1)
 	dbg.ErrFatal(err)
 	version := ca.Config.Version
 	sign1 := ca.Config.Signature
-	err = ca.Sign()
-	dbg.ErrFatal(err)
 	if ca.Config.Version != version+1 {
 		t.Fatal("Version didn't increase while signing")
 	}
@@ -394,19 +278,18 @@ func TestCASign(t *testing.T) {
 func TestCAUpdate(t *testing.T) {
 	ca1, servers := newTest(2)
 	defer closeServers(t, servers)
-	addr1, addr2 := servers[0].This.Entity.Addresses[0],
-		servers[1].This.Entity.Addresses[0]
-	ca1.ServerAdd(addr1)
-	ca1.ServerAdd(addr2)
+	srv1, srv2 := servers[0].This, servers[1].This
+	ca1.AddServer(srv1)
+	ca1.AddServer(srv2)
 	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
 	tmp, err := sshks.SetupTmpHosts()
 	dbg.ErrFatal(err)
 	ca2, err := sshks.ReadClientKS(tmp + "/config.bin")
 	dbg.ErrFatal(err)
-	ca2.ServerAdd(addr1)
+	ca2.AddServer(srv1)
 	// Now add a client to ca1, thus making ca2s config invalid
-	err = ca1.ClientAdd(client1)
+	err = ca1.AddClient(client1)
 	dbg.ErrFatal(err)
 	if bytes.Compare(ca1.Config.Signature.Sum, ca2.Config.Signature.Sum) == 0 {
 		t.Fatal("Should have different signature now")
@@ -426,12 +309,12 @@ func TestCAUpdate(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		dbg.Lvl3("Round", i)
-		dbg.ErrFatal(ca1.ServerDel(addr1))
+		dbg.ErrFatal(ca1.DelServer(srv1))
 		dbg.ErrFatal(ca2.Update(nil))
 		if len(ca2.Config.Servers) == 2 {
 			t.Fatal("There should be only 1 server left")
 		}
-		dbg.ErrFatal(ca1.ServerAdd(addr1))
+		dbg.ErrFatal(ca1.AddServer(srv1))
 		dbg.ErrFatal(ca2.Update(nil))
 	}
 }

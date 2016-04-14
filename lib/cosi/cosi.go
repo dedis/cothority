@@ -36,6 +36,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
@@ -301,9 +302,11 @@ func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Poin
 		return err
 	}
 	cipher := suite.Cipher(pb)
+	dbg.Print("Message is", msg, pb)
 	cipher.Message(nil, nil, msg)
 	// reconstructed challenge
 	reconstructed := suite.Secret().Pick(cipher)
+	dbg.Print("Challenge is", reconstructed, challenge)
 	if !reconstructed.Equal(challenge) {
 		return errors.New("Reconstructed challenge not equal to one given")
 	}

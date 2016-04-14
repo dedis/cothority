@@ -111,13 +111,13 @@ func main() {
 func serverAdd(c *cli.Context) {
 	srvAddr := c.Args().First()
 	dbg.Print("Contacting server", srvAddr)
-	clientApp.ServerAdd(srvAddr)
+	clientApp.AddServer(srvAddr)
 }
 
 func serverDel(c *cli.Context) {
 	srvAddr := c.Args().First()
 	dbg.Print("Deleting server", srvAddr)
-	err := clientApp.ServerDel(srvAddr)
+	err := clientApp.DelServer(srvAddr)
 	dbg.ErrFatal(err)
 	if len(clientApp.Config.Servers) == 0 {
 		dbg.Print("Deleted last server")
@@ -135,13 +135,13 @@ func serverCheck(c *cli.Context) {
 
 func clientAdd(c *cli.Context) {
 	dbg.Print("Adding ourselves as client")
-	err := clientApp.ClientAdd(clientApp.This)
+	err := clientApp.AddClient(clientApp.This)
 	dbg.ErrFatal(err)
 }
 
 func clientDel(c *cli.Context) {
 	dbg.Print("Deleting ourselves as client")
-	err := clientApp.ClientDel(clientApp.This)
+	err := clientApp.DelClient(clientApp.This)
 	dbg.ErrFatal(err)
 }
 

@@ -2,8 +2,11 @@ package sshks
 
 import (
 	"errors"
+
+	libcosi "github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/services/cosi"
+	"github.com/dedis/crypto/abstract"
 )
 
 // Here is the external API
@@ -26,35 +29,70 @@ type GetConfig struct{}
 // GetConfigRet returns the config
 type GetConfigRet struct {
 	Config *Config
+	// NewConfig is nil if there is no config to be confirmed
+	NewConfig *Config
 }
 
-// AddServer asks for that server to be added to the config
-type AddServer struct {
-	Server *Server
+// Signing-related messages:
+// 1 - SendNewConfig the new message to be signed
+// 2 - GetNewConfig called by the other clients
+// 3 - Sign sent by more than 50% of the clients
+// Once the server receives more than 50% of responses, it will store
+// that config as the current config, then the clients can do
+// 4 - GetConfig to receive the current config signed by more than 50% of the clients
+
+// The very first commitment needs to be sent here - it will return
+// a ResponseRet
+type SendFirstCommit struct {
+	Commitment *libcosi.Commitment
 }
 
-// DelServer asks for that server to be deleted from the config
-type DelServer struct {
-	Server *Server
-}
-
-// AddClient asks for addition of a client
-type AddClient struct {
-	Client *Client
-}
-
-// DelClient asks for the removal of a client
-type DelClient struct {
-	Client *Client
-}
-
-// Sign asks all servers to sign on the config, will return the new config
-type Sign struct{}
-
-// SignRet is the new signed config
-type SignRet struct {
+// SendNewConfig sends the config to be proposed to other clients. It will reply
+// with the challenge that all clients have to respond to
+type SendNewConfig struct {
 	Config *Config
 }
+
+// SendNewConfigRet contains the challenge the clients have to reply to
+type SendNewConfigRet struct {
+	Challenge abstract.Secret
+}
+
+// GetNewConfig asks for the new configuration
+type GetNewConfig struct{}
+
+// GetNewConfigRet replies with the new config and a challenge. This is phase 3
+// of the CoSi-protocol and done by combining the pre-computed commits that
+// are stored in the server. Now this client can 'respond' to
+// (phase 4 of the CoSi-protocol)
+// If there is no new configuration, both are 'nil'
+type GetNewConfigRet struct {
+	NewConfig *Config
+	Challenge *libcosi.Challenge
+}
+
+// Response sends one response (4th phase of the CoSi-protocol) to the server
+// plus a commitment (2nd phase of the CoSi-protocol) for the NEXT round. New
+// clients can send this with a 'Response' = nil to store their commitment.
+type Response struct {
+	// Response for the new config
+	Response *libcosi.Response
+	// NextCommitment is the new commitment for the NEXT round, the commitment
+	// for the actual round should already be on the server
+	NextCommitment *libcosi.Commitment
+}
+
+// ResponseRet returns the status of the signature
+type ResponseRet struct {
+	// ClientsTot how many clients in total are defined
+	ClientsTot int
+	// ClientsSigned how many clients already signed (including this)
+	ClientsSigned int
+	// Config is nil if not enough clients signed off yet
+	Config *Config
+}
+
+// Server-internal messages to be sent between servers
 
 // PropSig propagates the signature for a new config
 type PropSig struct {
@@ -73,18 +111,17 @@ type StatusRet struct {
 // external users
 func FuncRegister() {
 	var structs = []interface{}{
+		SendFirstCommit{},
+		SendNewConfig{},
+		SendNewConfigRet{},
 		ServerKS{},
 		ClientKS{},
 		GetServer{},
 		GetServerRet{},
 		GetConfig{},
 		GetConfigRet{},
-		AddServer{},
-		DelServer{},
-		AddClient{},
-		DelClient{},
-		Sign{},
-		SignRet{},
+		Response{},
+		ResponseRet{},
 		PropSig{},
 		StatusRet{},
 	}

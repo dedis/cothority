@@ -1,10 +1,13 @@
 package sshks_test
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"strconv"
 	"testing"
+
+	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/services/sshks"
 )
 
 func TestServerCreation(t *testing.T) {
@@ -62,41 +65,118 @@ func TestConfigEntityList(t *testing.T) {
 	}
 }
 
-func TestServerSign(t *testing.T) {
-	srvApps := startServers(2)
-	defer closeServers(t, srvApps)
-	for i := 0; i < 10; i++ {
-		err := srvApps[0].Sign()
-		dbg.TestFatal(t, err, "Couldn't sign config")
-		for _, sa := range srvApps {
-			if sa.Config.Version != i+1 {
-				t.Fatal("Version should now be", i+1)
-			}
-			if sa.Config.Signature == nil {
-				t.Fatal("Signature should not be nil")
-			}
-			err = sa.Config.VerifySignature()
-			dbg.TestFatal(t, err, "Signature verification failed:")
+func TestServerFunc(t *testing.T) {
+	client1, servers := newTest(1)
+	defer closeServers(t, servers)
+	e1 := client1.This.Entity
+	co1 := cosi.NewCosi(network.Suite, client1.Private)
+	srv := servers[0]
+	conf := sshks.NewConfig(1)
+	conf.Clients[client1.This.SSHpub] = client1.This
+	conf.Servers[srv.This.Entity.Addresses[0]] = srv.This
 
-			// Change the version and look if it fails
-			sa.Config.Version += 1
-			err = sa.Config.VerifySignature()
-			if err == nil {
-				t.Fatal("Signature verification should fail now")
-			} else {
-				dbg.Lvl2("Expected error from comparison:", err)
-			}
+	// Client1 sends its commit
+	comm1 := co1.CreateCommitment()
+	srv.FuncSendFirstCommit(sendMsg(e1, sshks.SendFirstCommit{comm1}))
 
-			// Change the response and look if it fails
-			sa.Config.Version -= 1
-			su := network.Suite
-			sa.Config.Signature.Response.Add(sa.Config.Signature.Response, su.Secret().One())
-			err = sa.Config.VerifySignature()
-			if err == nil {
-				t.Fatal("Signature verification should fail now")
-			} else {
-				dbg.Lvl2("Expected error from comparison:", err)
-			}
-		}
+	// New config is sent and challenge is returned
+	chMsg := srv.FuncSendNewConfig(sendMsg(e1, sshks.SendNewConfig{conf}))
+	challenge := chMsg.(*sshks.SendNewConfigRet).Challenge
+	co1.Challenge(&cosi.Challenge{Challenge: challenge})
+	resp1, err := co1.CreateResponse()
+	dbg.ErrFatal(err)
+	co2 := cosi.NewCosi(network.Suite, client1.Private)
+	respMsg := srv.FuncResponse(sendMsg(e1, sshks.Response{resp1, co2.CreateCommitment()}))
+	resp := respMsg.(*sshks.ResponseRet)
+	if resp.Config == nil {
+		t.Fatal("The response should be complete now")
 	}
+	confMsg := srv.FuncGetConfig(sendMsg(e1, sshks.GetConfig{}))
+	conf2 := confMsg.(*sshks.GetConfigRet).Config
+	dbg.Print(*conf2)
+	dbg.ErrFatal(conf2.VerifySignature())
+}
+
+func sendMsg(e *network.Entity, msg network.ProtocolMessage) *network.Message {
+	return &network.Message{
+		Msg:    msg,
+		Entity: e,
+	}
+}
+
+func TestServerSign(t *testing.T) {
+	client1, servers := newTest(1)
+	defer closeServers(t, servers)
+	e1 := client1.This.Entity
+	co1 := cosi.NewCosi(network.Suite, client1.Private)
+	srv := servers[0]
+	conf := sshks.NewConfig(1)
+	conf.Clients[client1.This.SSHpub] = client1.This
+
+	// Client1 sends its commit
+	comm1 := co1.CreateCommitment()
+	srv.NextConfig.AddCommit(e1, comm1)
+	// New config is sent and challenge is returned
+	challenge, err := srv.NextConfig.NewConfig(srv, conf)
+	dbg.ErrFatal(err)
+	co1.Challenge(&cosi.Challenge{Challenge: challenge})
+	resp1, err := co1.CreateResponse()
+	dbg.ErrFatal(err)
+	ok := srv.NextConfig.AddResponse(e1, resp1)
+	if !ok {
+		t.Fatal("The response should be complete now")
+	}
+	conf = srv.NextConfig.GetConfig()
+	dbg.ErrFatal(conf.VerifySignature())
+	srv.Config = conf
+
+	// Add a second client
+	client2 := newClient(1)
+	e2 := client2.This.Entity
+	newConfig := sshks.NewConfig(2)
+	newConfig.Clients[client1.This.SSHpub] = client1.This
+	newConfig.Clients[client2.This.SSHpub] = client2.This
+	comm1 = co1.CreateCommitment()
+	srv.NextConfig.AddCommit(e1, comm1)
+	challenge, err = srv.NextConfig.NewConfig(srv, newConfig)
+	dbg.ErrFatal(err)
+	co1.Challenge(&cosi.Challenge{Challenge: challenge})
+	resp1, err = co1.CreateResponse()
+	dbg.ErrFatal(err)
+	ok = srv.NextConfig.AddResponse(e1, resp1)
+	if !ok {
+		t.Fatal("The response should be complete now")
+	}
+	conf = srv.NextConfig.GetConfig()
+	dbg.ErrFatal(conf.VerifySignature())
+	srv.Config = conf
+
+	// Now have both clients sign a new config
+	co2 := cosi.NewCosi(network.Suite, client2.Private)
+	comm1 = co1.CreateCommitment()
+	comm2 := co2.CreateCommitment()
+	conf.Version++
+	srv.NextConfig.AddCommit(e1, comm1)
+	srv.NextConfig.AddCommit(e2, comm2)
+	challenge, err = srv.NextConfig.NewConfig(srv, conf)
+	dbg.ErrFatal(err)
+	co1.Challenge(&cosi.Challenge{challenge})
+	co2.Challenge(&cosi.Challenge{challenge})
+	resp1, err = co1.CreateResponse()
+	dbg.ErrFatal(err)
+	resp2, err := co2.CreateResponse()
+	dbg.ErrFatal(err)
+	ok = srv.NextConfig.AddResponse(e1, resp1)
+	if ok {
+		t.Fatal("One signature should not be enough")
+	}
+	ok = srv.NextConfig.AddResponse(e2, resp2)
+	if !ok {
+		t.Fatal("Two signatures should be enough")
+	}
+	conf = srv.NextConfig.GetConfig()
+	if conf.Version != 3 {
+		t.Fatal("Version should now be 3")
+	}
+	dbg.ErrFatal(conf.VerifySignature())
 }

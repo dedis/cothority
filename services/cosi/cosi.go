@@ -169,7 +169,7 @@ func (ca *App) Write(cnf string) error {
 	return nil
 }
 
-// handleCosiSignRequest will
+// HandleCosiSignRequest will
 // * register the entitylist
 // * create a flat tree out of it with him being at the root
 // * launch a CoSi protocol
@@ -229,7 +229,7 @@ func (ca *App) HandleCosiSignRequest(msg *network.Message) network.ProtocolMessa
 	return <-rchan
 }
 
-// sign takes a stream and a toml file defining the servers
+// Sign takes a stream and a toml file defining the servers
 func Sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 	dbg.Lvl3("Starting signature")
 	f, err := os.Open(tomlFileName)
@@ -248,7 +248,7 @@ func Sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 	return res, nil
 }
 
-// signStatement can be used to sign the contents passed in the io.Reader
+// SignStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
 func SignStatement(r io.Reader, el *sda.EntityList) (*SignResponse, error) {
 
@@ -308,7 +308,7 @@ func SignStatement(r io.Reader, el *sda.EntityList) (*SignResponse, error) {
 	}
 }
 
-// verify takes a file and a group-definition, calls the signature
+// Verify takes a file and a group-definition, calls the signature
 // verification and prints the result
 func Verify(fileName, groupToml string) error {
 	// if the file hash matches the one in the signature

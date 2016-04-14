@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"io/ioutil"
-	"os"
 )
 
 // ClientKS represents one client and holds all necessary structures
@@ -18,25 +20,35 @@ type ClientKS struct {
 	This *Client
 	// Config holds all servers and clients
 	Config *Config
+	// NewConfig is non-nil if there is a configuration waiting
+	NewConfig *Config
 	// Private is our private key
 	Private abstract.Secret
+	// The cosi-structure holds some fields that need to be stored from
+	// one invocation to another so we can still have a valid commit
+	Cosi *cosi.Cosi
 }
 
 // NewClientKS creates a new private/public key pair and returns
 // a ClientKS with an empty Config. It takes a public ssh-key.
 func NewClientKS(sshPub string) *ClientKS {
 	pair := config.NewKeyPair(network.Suite)
-	return &ClientKS{NewClient(pair.Public, sshPub), nil, pair.Secret}
+	return &ClientKS{
+		This:    NewClient(pair.Public, sshPub),
+		Config:  NewConfig(0),
+		Private: pair.Secret,
+		Cosi:    cosi.NewCosi(network.Suite, pair.Secret),
+	}
 }
 
 // ReadClientKS searches for the client-ks and creates a new one if it
 // doesn't exist
 func ReadClientKS(f string) (*ClientKS, error) {
 	file := ExpandHDir(f)
-	ca := NewClientKS("TestClient-" + f)
+	ca := NewClientKS("TestClient-")
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
-		ca.Config = &Config{}
+		ca.Config = NewConfig(0)
 		return ca, nil
 	}
 	b, err := ioutil.ReadFile(ExpandHDir(file))
@@ -65,163 +77,130 @@ func (ca *ClientKS) Write(file string) error {
 	return err
 }
 
-// NetworkAddServer adds a new server to the Config
-func (ca *ClientKS) NetworkAddServer(s *Server) error {
-	if ca.Config == nil {
-		return errors.New("No config available yet")
+// NetworkSendFirstCommit sends the config to be proposed to the other clients
+func (ca *ClientKS) NetworkSendFirstCommit(s *Server) error {
+	sfc := &SendFirstCommit{
+		Commitment: ca.Cosi.CreateCommitment(),
 	}
-	dbg.Lvl3("Servers are", ca.Config.Servers)
-	for _, srv := range ca.Config.Servers {
-		// Add the new server to all servers
-		resp, err := NetworkSendAnonymous(srv.Entity.Addresses[0],
-			&AddServer{s})
-		err = ErrMsg(resp, err)
-		if err != nil {
-			return err
-		}
+	dbg.LLvl3("Sending first commit")
+	status, err := NetworkSend(ca.Private, s.Entity, sfc)
+	return ErrMsg(status, err)
+}
 
-		// Add the other servers to the new server
-		resp, err = NetworkSendAnonymous(s.Entity.Addresses[0],
-			&AddServer{srv})
-		err = ErrMsg(resp, err)
-		if err != nil {
-			return err
-		}
+// NetworkSendNewConfig sends the config to be proposed to the other clients
+func (ca *ClientKS) NetworkSendNewConfig(s *Server) error {
+	sc := &SendNewConfig{
+		Config: ca.NewConfig,
 	}
+	reply, err := NetworkSend(ca.Private, s.Entity, sc)
+	if err != nil {
+		return err
+	}
+	replyCh, ok := reply.Msg.(SendNewConfigRet)
+	if !ok {
+		return errors.New("Didn't get correct message")
+	}
+	if replyCh.Challenge == nil {
+		return errors.New("Challenge is nil")
+	}
+	dbg.Print("Received challenge", replyCh.Challenge)
+	ca.Cosi.Challenge(&cosi.Challenge{replyCh.Challenge})
 	return nil
 }
 
-// NetworkDelServer deletes a server from the Config
-func (ca *ClientKS) NetworkDelServer(s *Server) error {
-	if ca.Config == nil {
-		return errors.New("No config available yet")
-	}
-	for _, srv := range ca.Config.Servers {
-		if srv.Entity.Addresses[0] == s.Entity.Addresses[0] {
-			continue
-		}
-		dbg.Lvl3("Asking server", srv, "to delete server", s)
-		resp, err := NetworkSendAnonymous(srv.Entity.Addresses[0],
-			&DelServer{s})
-		err = ErrMsg(resp, err)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// NetworkAddClient adds a client to the configuration
-func (ca *ClientKS) NetworkAddClient(c *Client) error {
-	if ca.Config == nil {
-		return errors.New("No config available yet")
-	}
-	dbg.Lvl3("Adding clients to", ca.Config.Servers)
-	for _, srv := range ca.Config.Servers {
-		dbg.Lvl3("Asking server", srv, "to add client", c)
-		resp, err := NetworkSend(ca.Private, srv.Entity, &AddClient{c})
-		err = ErrMsg(resp, err)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// NetworkDelClient deletes a client from the configuration
-func (ca *ClientKS) NetworkDelClient(c *Client) error {
-	if ca.Config == nil {
-		return errors.New("No config available yet")
-	}
-	for _, srv := range ca.Config.Servers {
-		dbg.Lvl3("Asking server", srv, "to del client", c)
-		resp, err := NetworkSend(ca.Private, srv.Entity, &DelClient{c})
-		err = ErrMsg(resp, err)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// NetworkGetConfig asks the server for its configuration
-func (ca *ClientKS) NetworkGetConfig(s *Server) (*Config, error) {
+// NetworkGetConfig asks the server for its configuration and returns also
+// an eventual configuration to be signed
+func (ca *ClientKS) NetworkGetConfig(s *Server) (*Config, *Config, error) {
 	resp, err := NetworkSend(ca.Private, s.Entity, &GetConfig{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	gcr, ok := resp.Msg.(GetConfigRet)
 	if !ok {
-		return nil, errors.New("Didn't receive config")
+		return nil, nil, errors.New("Didn't receive config")
 	}
-	return gcr.Config, nil
+	return gcr.Config, gcr.NewConfig, nil
 }
 
-// NetworkSign asks the servers to sign the new configuration
-func (ca *ClientKS) NetworkSign(s *Server) (*Config, error) {
-	dbg.Lvl3("Asking server", s, "to sign")
-	resp, err := NetworkSend(ca.Private, s.Entity, &Sign{})
+// NetworkRespond sends the CoSi-response and a new commit to the
+// server
+func (ca *ClientKS) NetworkResponse(s *Server) (int, int, error) {
+	dbg.Lvl3("Asking server", s.Entity.Addresses[0], "to sign")
+	cosi_new := cosi.NewCosi(network.Suite, ca.Private)
+	cosiResponse, err := ca.Cosi.CreateResponse()
+	dbg.Print("Response is", cosiResponse.Response)
 	if err != nil {
-		return nil, err
+		return -1, -1, err
 	}
-	status, ok := resp.Msg.(StatusRet)
+	response := &Response{
+		Response:       cosiResponse,
+		NextCommitment: cosi_new.CreateCommitment(),
+	}
+	ca.Cosi = cosi_new
+	rep, err := NetworkSend(ca.Private, s.Entity, response)
+	if err != nil {
+		return -1, -1, err
+	}
+	reply, ok := rep.Msg.(ResponseRet)
 	if !ok {
-		return nil, errors.New("Didn't receive config")
+		return -1, -1, errors.New("Didn't receive ResponseRet")
 	}
-	if status.Error != "" {
-		dbg.Error(status.Error)
-		return nil, errors.New(status.Error)
+	if reply.Config != nil {
+		dbg.LLvl3("Received new config", *reply.Config)
+		err := reply.Config.VerifySignature()
+		if err != nil {
+			return -1, -1, err
+		}
+		ca.Config = reply.Config
+	} else {
+		dbg.LLvl3("No new config available")
 	}
-	conf, err := ca.NetworkGetConfig(s)
-	dbg.Lvl3("Got configuration", conf, err, "from", s)
-	return conf, err
+	return reply.ClientsSigned, reply.ClientsTot, err
 }
 
-// ServerAdd adds a new server and asks all servers, including the new one,
-// to sign off the new configuration
-func (ca *ClientKS) ServerAdd(srvAddr string) error {
-	srv, err := NetworkGetServer(srvAddr)
+// AddServer adds a new server. If it's the first server and it's not used by
+// another sshks, the config will be signed off and stored in that server.
+// Else more than 50% of the the other clients have to sign off first.
+func (ca *ClientKS) AddServer(srv *Server) error {
+	var srvSend *Server
+	if len(ca.Config.Servers) == 0 {
+		// If there are no servers, then there will be no
+		// pre-calculated commitment ready. Send one
+		dbg.LLvl3("Adding first server")
+		err := ca.NetworkSendFirstCommit(srv)
+		if err != nil {
+			return err
+		}
+		srvSend = srv
+	} else {
+		var err error
+		srvSend, err = ca.getAnyServer()
+		if err != nil {
+			return err
+		}
+	}
+	dbg.Lvl3("Adding server", srv.Entity.Addresses[0], "to config", ca.Config)
+	ca.NewConfig = ca.Config
+	ca.Config.AddServer(srv)
+	err := ca.NetworkSendNewConfig(srvSend)
 	if err != nil {
 		return err
 	}
-	if len(ca.Config.Servers) > 0 {
-		// Only add additional servers, because if it's the first server
-		// we add, just sign and update the configuration
-		err = ca.NetworkAddServer(srv)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = ca.Update(srv)
-		if err != nil {
-			return err
-		}
-	}
-	return ca.Sign()
+	return ca.SignNewConfig(srv)
 }
 
-// ServerDel deletes a server and asks the remaining servers (if any)
+// AddServerAddr takes an address and will ask the server for it's identity first
+func (ca *ClientKS) AddServerAddr(addr string) error {
+	srv, err := NetworkGetServer(addr)
+	if err != nil {
+		return err
+	}
+	return ca.AddServer(srv)
+}
+
+// DelServer deletes a server and asks the remaining servers (if any)
 // to sign the new configuration
-func (ca *ClientKS) ServerDel(srvAddr string) error {
-	srv, err := NetworkGetServer(srvAddr)
-	if err != nil {
-		return err
-	}
-	err = ca.NetworkDelServer(srv)
-	if err != nil {
-		return err
-	}
-	if len(ca.Config.Servers) == 1 {
-		dbg.Lvl2("Deleted last server")
-		ca.Config = NewConfig(0)
-	} else {
-		delete(ca.Config.Servers, srv.Entity.Addresses[0])
-		err := ca.Sign()
-		if err != nil {
-			return err
-		}
-	}
-	dbg.Lvl3(ca.Config.Servers)
+func (ca *ClientKS) DelServer(srv *Server) error {
 	return nil
 }
 
@@ -236,7 +215,7 @@ func (ca *ClientKS) ServerCheck() error {
 	}
 	var cnf *Config
 	for _, srv := range ca.Config.Servers {
-		cnfSrv, err := ca.NetworkGetConfig(srv)
+		cnfSrv, _, err := ca.NetworkGetConfig(srv)
 		dbg.ErrFatal(err)
 		if cnf != nil {
 			if bytes.Compare(cnf.Hash(), cnfSrv.Hash()) != 0 {
@@ -251,42 +230,46 @@ func (ca *ClientKS) ServerCheck() error {
 }
 
 // ClientAdd adds a new client and signs the new configuration
-func (ca *ClientKS) ClientAdd(client *Client) error {
+func (ca *ClientKS) AddClient(client *Client) error {
+	ca.Config.AddClient(client)
 	if len(ca.Config.Servers) == 0 {
-		return errors.New("Missing servers. Please add one or more servers first")
+		return nil
 	}
-	err := ca.NetworkAddClient(client)
+	srv, err := ca.getAnyServer()
 	if err != nil {
 		return err
 	}
-	return ca.Sign()
+	err = ca.NetworkSendNewConfig(srv)
+	if err != nil {
+		return err
+	}
+	return ca.SignNewConfig(srv)
 }
 
 // ClientDel deletes the client and signs the new configuration
-func (ca *ClientKS) ClientDel(client *Client) error {
-	if len(ca.Config.Servers) == 0 {
-		return errors.New("Missing servers. Please add one or more servers first")
-	}
-	err := ca.NetworkDelClient(client)
-	if err != nil {
-		return err
-	}
-	return ca.Sign()
+func (ca *ClientKS) DelClient(client *Client) error {
+	return nil
 }
 
 // Update checks for the latest configuration
 // TODO: include SkipChains to get the latest cothority
 func (ca *ClientKS) Update(srv *Server) error {
+	needSendCommit := ca.Config.Version == 0
 	conf := NewConfig(-1)
-	if srv == nil {
+	var newconf *Config
+	if srv == nil && !needSendCommit {
 		// If no server is given, we contact all servers and ask
 		// for the latest version
 		dbg.Lvl3("Going to search all servers")
 		for _, s := range ca.Config.Servers {
-			c, err := ca.NetworkGetConfig(s)
+			c, nc, err := ca.NetworkGetConfig(s)
 			if err == nil {
 				if conf.Version < c.Version {
 					conf = c
+				}
+				if nc != nil {
+					dbg.Lvl3("Got new config from", s)
+					newconf = nc
 				}
 			}
 		}
@@ -294,29 +277,42 @@ func (ca *ClientKS) Update(srv *Server) error {
 		// If a server is given, we use that one
 		dbg.Lvl3("Using server", srv, "to update")
 		var err error
-		conf, err = ca.NetworkGetConfig(srv)
+		conf, newconf, err = ca.NetworkGetConfig(srv)
 		if err != nil {
 			return err
 		}
 	}
 	ca.Config = conf
+	ca.NewConfig = newconf
+	if needSendCommit {
+		dbg.LLvl3("Sending first commit for client", ca.This.SSHpub)
+		err := ca.NetworkSendFirstCommit(srv)
+		if err != nil {
+			return err
+		}
+	} else if ca.NewConfig != nil {
+		dbg.LLvl3("Adding challenge")
+		ca.Cosi.Challenge(&cosi.Challenge{ca.NewConfig.Signature.Challenge})
+	}
 	return nil
 }
 
-// Sign checks for any server and asks it to start
-// a signing round
-func (ca *ClientKS) Sign() error {
-	srv, err := ca.getAnyServer()
-	if err != nil {
-		return err
+// ConfirmNewConfig sends a response to the server, thus confirming
+// that we're OK with this new configuration.
+// If srv == nil, a random server is chosen.
+func (ca *ClientKS) SignNewConfig(srv *Server) error {
+	if srv == nil {
+		var err error
+		srv, err = ca.getAnyServer()
+		if err != nil {
+			return err
+		}
 	}
-	dbg.Lvl3("Asking server", srv.Entity.Addresses[0], "for signature")
-	conf, err := ca.NetworkSign(srv)
-	if err != nil {
-		return err
+	sign, total, err := ca.NetworkResponse(srv)
+	if err == nil {
+		dbg.LLvl3("Got", sign, "out of", total, "signatures")
 	}
-	ca.Config = conf
-	return nil
+	return err
 }
 
 // Gets any server from the config

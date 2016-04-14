@@ -2,14 +2,15 @@ package sshks
 
 import (
 	"errors"
+	"os/user"
+	"strings"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
-	"os/user"
-	"strings"
-	"time"
 )
 
 // NetworkSendAnonymous makes a connection to a remote host without checking
@@ -26,7 +27,8 @@ func NetworkSendAnonymous(addr string, req network.ProtocolMessage) (*network.Me
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func NetworkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolMessage) (*network.Message, error) {
-	client := network.NewSecureTCPHost(sec, nil)
+	pub := network.Suite.Point().Mul(nil, sec)
+	client := network.NewSecureTCPHost(sec, network.NewEntity(pub, ""))
 
 	// Connect to the root
 	dbg.Lvl3("Opening connection")

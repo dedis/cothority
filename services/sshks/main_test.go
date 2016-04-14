@@ -14,16 +14,21 @@ func TestMain(m *testing.M) {
 }
 
 func newTest(nbr int) (*sshks.ClientKS, []*sshks.ServerKS) {
-	tmp, err := sshks.SetupTmpHosts()
-	dbg.ErrFatal(err)
-	ca, err := sshks.ReadClientKS(tmp + "/config.bin")
-	dbg.ErrFatal(err)
 	servers := make([]*sshks.ServerKS, nbr)
 	for i := range servers {
 		servers[i] = newServerLocal(2000 + i)
 		servers[i].Start()
 	}
-	return ca, servers
+	return newClient(0), servers
+}
+
+func newClient(id int) *sshks.ClientKS {
+	tmp, err := sshks.SetupTmpHosts()
+	dbg.ErrFatal(err)
+	cks, err := sshks.ReadClientKS(tmp + "/config.bin")
+	dbg.ErrFatal(err)
+	cks.This.SSHpub += strconv.Itoa(id)
+	return cks
 }
 
 func createServerKSs(nbr int) []*sshks.ServerKS {

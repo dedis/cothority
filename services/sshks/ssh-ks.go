@@ -7,6 +7,13 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"sort"
+	"strconv"
+	"sync"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -14,12 +21,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	scosi "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
-	"io/ioutil"
-	"os"
-	"os/exec"
-	"sort"
-	"strconv"
-	"sync"
 )
 
 func init() {
@@ -68,8 +69,10 @@ type Config struct {
 	Version int
 	// Servers is a map of IP:Port pointing to Servers
 	Servers map[string]*Server
-	// Clients is a map of IP:Port pointing to Clients
+	// Clients is a map of strings of public keys pointing to Clients
 	Clients map[string]*Client
+	// Signers denote the clients that signed
+	Signers []*network.Entity
 	// Signature by CoSi
 	Signature *scosi.SignResponse
 }
@@ -122,19 +125,17 @@ func (conf *Config) WriteConfig(file string) error {
 func (conf *Config) VerifySignature() error {
 	// Calculate aggregate public key
 	agg := network.Suite.Point().Null()
-	for _, srv := range conf.Servers {
-		agg.Add(agg, srv.Entity.Public)
+	for _, cl := range conf.Signers {
+		dbg.Print("Signer", cl.Public)
+		agg.Add(agg, cl.Public)
 	}
 	sig := conf.Signature
 
-	// Double-hash the Config.Hash(), as this is what the signature
-	// does
-	fHash, _ := crypto.HashBytes(network.Suite.Hash(), conf.Hash())
-	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
-	if !bytes.Equal(hashHash, sig.Sum) {
+	if !bytes.Equal(conf.Hash(), sig.Sum) {
 		return errors.New("Hash is different")
 	}
-	if err := cosi.VerifySignature(network.Suite, fHash, agg, sig.Challenge, sig.Response); err != nil {
+	dbg.Print("Response is", sig.Response)
+	if err := cosi.VerifySignature(network.Suite, sig.Sum, agg, sig.Challenge, sig.Response); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
@@ -161,6 +162,7 @@ func (conf *Config) Hash() []byte {
 	hashLock.Lock()
 	cop := *conf
 	cop.Signature = nil
+	cop.Signers = nil
 	hash, err := crypto.HashArgs(sha256.New(), &cop)
 	if err != nil {
 		dbg.Fatal(err)
@@ -186,14 +188,14 @@ func (conf *Config) DelServer(s *Server) error {
 // AddClient inserts a client in the configuration-list
 func (conf *Config) AddClient(c *Client) error {
 	dbg.Lvl3("Adding client", c, "to", conf.Clients, "key", c.SSHpub)
-	conf.Clients[c.SSHpub] = c
+	conf.Clients[c.Entity.Public.String()] = c
 	conf.Signature = nil
 	return nil
 }
 
 // DelClient removes a client from the configuration-list
 func (conf *Config) DelClient(c *Client) error {
-	delete(conf.Clients, c.SSHpub)
+	delete(conf.Clients, c.Entity.Public.String())
 	conf.Signature = nil
 	return nil
 }
@@ -261,6 +263,13 @@ func (conf *Config) List() {
 	for n, cl := range conf.Clients {
 		dbg.Print("Client:", n, cl.Entity.String())
 	}
+}
+
+// Sign uses the clients private key to sign off the config and returns
+// the CoSi-structure and the commitment
+func (conf *Config) Sign(cl *ClientKS, comm *cosi.Commitment) (*cosi.Cosi, *cosi.Commitment) {
+	//c := cosi.NewCosi(network.Suite, cl.Private)
+	return nil, nil
 }
 
 // SetupTmpHosts sets up a temporary .tmp-directory for testing
