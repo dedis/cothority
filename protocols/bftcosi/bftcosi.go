@@ -13,7 +13,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-type VerificationFunction func([]byte, chan bool) error
+type VerificationFunction func([]byte, chan bool)
 
 // BFTCoSi is the main struct for running the protocol
 type ProtocolBFTCoSi struct {

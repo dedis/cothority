@@ -13,13 +13,12 @@ import (
 // Dummy verification function: always returns OK/true/no-error on data
 var veriCount int
 
-func veri(m []byte, ok chan bool) error {
+func veri(m []byte, ok chan bool) {
 	veriCount++
 	dbg.Print("Verification called", veriCount, "times")
 	dbg.Print("Ignoring message:", string(m))
 	// everything is OK, always:
 	ok <- true
-	return nil
 }
 
 const TestProtocolName = "DummyBFTCoSi"
