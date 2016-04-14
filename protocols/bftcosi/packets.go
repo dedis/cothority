@@ -16,7 +16,7 @@ const (
 	RoundCommit
 )
 
-// BlockSignature is what a bftcosi protocol outputs. It contains the signature,
+// BFTSignature is what a bftcosi protocol outputs. It contains the signature,
 // the block and some possible exceptions.
 type BFTSignature struct {
 	// cosi signature of the commit round.

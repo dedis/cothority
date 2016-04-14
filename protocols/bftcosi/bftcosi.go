@@ -13,9 +13,11 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// VerificationFunction can be passes to each protocol node. It will be called
+// during the (start/handle) challenge prepare phase of the protocol
 type VerificationFunction func([]byte, chan bool)
 
-// BFTCoSi is the main struct for running the protocol
+// ProtocolBFTCoSi is the main struct for running the protocol
 type ProtocolBFTCoSi struct {
 	// the node we are represented-in
 	*sda.Node
@@ -327,7 +329,7 @@ func (bft *ProtocolBFTCoSi) handleCommit(ann Commitment) error {
 // startPrepareChallenge create the challenge and send its down the tree
 func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	// create challenge from message:
-	prep := &MsgPrepare{Msg: bft.Msg}
+	prep := &msgPrepare{Msg: bft.Msg}
 	h := prep.Hash()
 	ch, err := bft.prepare.CreateChallenge(h)
 	if err != nil {
@@ -340,7 +342,6 @@ func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 		Msg:       bft.Msg,
 	}
 
-	// XXX why do we need a go function here?
 	go bft.verificationFun(bft.Msg, bft.verifyChan)
 
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Challenge PREPARE")
@@ -405,11 +406,10 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 // of participants refused to sign.
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	ch.Challenge = bft.commit.Challenge(ch.Challenge)
-	prep := &MsgPrepare{Msg: bft.Msg}
+	prep := &msgPrepare{Msg: bft.Msg}
 	h := prep.Hash()
 
 	// verify if the signature is correct
-	dbg.Print("VerifyCosiSignatureWithException msg:", string(bft.Msg))
 	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
 		bft.aggregatedPublic, h, ch.Signature,
 		ch.Exceptions); err != nil {
@@ -450,11 +450,8 @@ func (bft *ProtocolBFTCoSi) startResponsePrepare() error {
 	// wait the verification
 	r, ok := bft.waitResponseVerification()
 	if ok {
-		dbg.Print("Append response...")
 		// append response only if OK
 		r.Response = resp
-	} else {
-		dbg.Print("Did not Append response...")
 	}
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Response PREPARE with response:", r)
 	// send to parent
@@ -636,28 +633,15 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	return true
 }
 
-const commitPrefix = 0X0
 const preparePrefix = 0x1
 
-type MsgPrepare struct {
+type msgPrepare struct {
 	Msg []byte
 }
 
-func (mp *MsgPrepare) Hash() []byte {
+func (mp *msgPrepare) Hash() []byte {
 	h := network.Suite.Hash()
 	temp := append(mp.Msg, preparePrefix)
-	h.Write(temp)
-
-	return h.Sum(nil)
-}
-
-type MsgCommit struct {
-	Msg []byte
-}
-
-func (mc *MsgCommit) Hash() []byte {
-	h := network.Suite.Hash()
-	temp := append(mc.Msg, commitPrefix)
 	h.Write(temp)
 
 	return h.Sum(nil)
