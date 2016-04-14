@@ -17,11 +17,10 @@ const (
 )
 
 // BFTSignature is what a bftcosi protocol outputs. It contains the signature,
-// the block and some possible exceptions.
+// the message and some possible exceptions.
 type BFTSignature struct {
 	// cosi signature of the commit round.
 	Sig *cosi.Signature
-
 	Msg []byte
 	// List of peers that did not want to sign.
 	Exceptions []cosi.Exception
@@ -36,7 +35,7 @@ type Announce struct {
 }
 
 // announceChan is the type of the channel that will be used to catch
-// announcement messges.
+// announcement messages.
 type announceChan struct {
 	*sda.TreeNode
 	Announce
@@ -55,15 +54,16 @@ type commitChan struct {
 	Commitment
 }
 
-// ChallengePrepare is the challenge used by ByzCoin during the "prepare" phase. It contains the basic
-// challenge plus the transactions from where the challenge has been generated.
+// ChallengePrepare is the challenge used by ByzCoin during the "prepare" phase.
+// It contains the basic challenge plus the message from which the challenge has
+// been generated.
 type ChallengePrepare struct {
 	TYPE RoundType
 	*cosi.Challenge
 	Msg []byte
 }
 
-// ChallengeCommit  is the challenge used by ByzCoin during the "commit"
+// ChallengeCommit  is the challenge used by BftCoSi during the "commit"
 // phase. It contains the basic challenge (out of the block we want to sign) +
 // the signature of the "prepare" round. It also contains the exception list
 // coming from the "prepare" phase. This exception list has been collected by
@@ -82,7 +82,7 @@ type ChallengeCommit struct {
 	Exceptions []cosi.Exception
 }
 
-// challengeChan is the type of the channel that will be used to dcatch the
+// challengeChan is the type of the channel that will be used to catch the
 // challenge messages.
 type challengePrepareChan struct {
 	*sda.TreeNode

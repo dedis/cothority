@@ -2,13 +2,14 @@ package bftcosi
 
 import (
 	"fmt"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
-	"sync"
-	"testing"
-	"time"
 )
 
 // Dummy verification function: always returns OK/true/no-error on data
@@ -42,8 +43,6 @@ func TestBftCoSi(t *testing.T) {
 		countMut.Unlock()
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
-		defer local.CloseAll()
-
 		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
 
 		done := make(chan bool)
