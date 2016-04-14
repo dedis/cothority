@@ -1,4 +1,4 @@
-package cosi
+package skipchain
 
 import (
 	"encoding/json"

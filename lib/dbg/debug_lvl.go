@@ -32,13 +32,14 @@ package dbg
 import (
 	"flag"
 	"fmt"
-	"github.com/daviddengcn/go-colortext"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/daviddengcn/go-colortext"
 )
 
 // These are information-debugging levels that can be turned on or off.

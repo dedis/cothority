@@ -3,6 +3,7 @@ package skipchain
 
 import (
 	"errors"
+
 	libcosi "github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"

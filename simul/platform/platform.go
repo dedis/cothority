@@ -8,11 +8,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // Platform interface that has to be implemented to add another simulation-

@@ -3,10 +3,11 @@ package monitor
 import (
 	"bytes"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func TestNewDataFilter(t *testing.T) {

@@ -3,11 +3,12 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"sync"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"reflect"
-	"sync"
 )
 
 // TreeNodeInstance represents a protocol-instance in a given TreeNode. It embeds an

@@ -1,14 +1,15 @@
 package sda_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"testing"
-	"time"
 )
 
 type DummyProtocol struct {

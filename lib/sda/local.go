@@ -5,12 +5,13 @@ import (
 	"strconv"
 	"testing"
 
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"time"
 )
 
 // LocalTest represents all that is needed for a local test-run
