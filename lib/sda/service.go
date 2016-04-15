@@ -54,7 +54,7 @@ var GenericConfigID = network.RegisterMessageType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
-	cons map[ServiceID]NewServiceFunc
+	constructors map[ServiceID]NewServiceFunc
 	// translations between name of a Service and its ServiceID. Used to register a
 	// Service using a name.
 	translations map[string]ServiceID
@@ -64,7 +64,7 @@ type serviceFactory struct {
 
 // ServiceFactory is the global service factory to instantiate Services
 var ServiceFactory = serviceFactory{
-	cons:         make(map[ServiceID]NewServiceFunc),
+	constructors: make(map[ServiceID]NewServiceFunc),
 	translations: make(map[string]ServiceID),
 	inverseTr:    make(map[ServiceID]string),
 }
@@ -73,11 +73,11 @@ var ServiceFactory = serviceFactory{
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
-	if _, ok := s.cons[id]; ok {
+	if _, ok := s.constructors[id]; ok {
 		// called at init time so better panic than to continue
 		dbg.Lvl1("RegisterService():", name)
 	}
-	s.cons[id] = fn
+	s.constructors[id] = fn
 	s.translations[name] = id
 	s.inverseTr[id] = name
 }
@@ -89,8 +89,8 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServicesID() []ServiceID {
-	var ids = make([]ServiceID, 0, len(s.cons))
-	for id := range s.cons {
+	var ids = make([]ServiceID, 0, len(s.constructors))
+	for id := range s.constructors {
 		ids = append(ids, id)
 	}
 	return ids
@@ -107,9 +107,8 @@ func (s *serviceFactory) RegisteredServicesName() []string {
 
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
-	var id ServiceID
-	var ok bool
-	if id, ok = s.translations[name]; !ok {
+	id, ok := s.translations[name]
+	if !ok {
 		return NilServiceID
 	}
 	return id
@@ -133,8 +132,8 @@ func (s *serviceFactory) start(name string, c Context, path string) (Service, er
 		return nil, errors.New("No Service for this name: " + name)
 	}
 	var fn NewServiceFunc
-	if fn, ok = s.cons[id]; !ok {
-		return nil, errors.New("No Service for this id:" + fmt.Sprintf("%v", id))
+	if fn, ok = s.constructors[id]; !ok {
+		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
 	serv := fn(c, path)
 	dbg.Lvl2("Instantiated service", name)
@@ -162,7 +161,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
-			panic(err)
+			dbg.Panic(err)
 		}
 	}
 	services := make(map[ServiceID]Service)
@@ -172,7 +171,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		name := ServiceFactory.Name(id)
 		pwd, err := os.Getwd()
 		if err != nil {
-			panic(err)
+			dbg.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
 		if err := os.MkdirAll(configName, 0666); err != nil {

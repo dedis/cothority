@@ -126,8 +126,7 @@ func (n *TreeNodeInstance) EntityList() *EntityList {
 }
 
 // Suite can be used to get the current abstract.Suite (currently hardcoded into
-// the network library). Preferably use this function instead of network.Suite
-// when possible.
+// the network library).
 func (n *TreeNodeInstance) Suite() abstract.Suite {
 	return n.overlay.suite()
 }
@@ -558,16 +557,15 @@ func (n *TreeNodeInstance) Host() *Host {
 	return n.overlay.host
 }
 
+// TreeNodeInstance returns itself (XXX quick hack for this services2 branch
+// version for the tests)
+func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
+	return n
+}
 func (n *TreeNodeInstance) isBinded() bool {
 	return n.instance != nil
 }
 
 func (n *TreeNodeInstance) bind(pi ProtocolInstance) {
 	n.instance = pi
-}
-
-// TreeNodeInstance returns itself (XXX quick hack for this services2 branch
-// version for the tests)
-func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
-	return n
 }
