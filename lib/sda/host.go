@@ -381,7 +381,7 @@ func (h *Host) processMessages() {
 			}
 			dbg.Lvl4("Received new entityList")
 		case RequestID:
-			r := data.Msg.(Request)
+			r := data.Msg.(ClientRequest)
 			h.processRequest(data.Entity, &r)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
@@ -392,7 +392,7 @@ func (h *Host) processMessages() {
 	}
 }
 
-func (h *Host) processRequest(e *network.Entity, r *Request) {
+func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(r.Service)
 	if !ok {
@@ -402,7 +402,7 @@ func (h *Host) processRequest(e *network.Entity, r *Request) {
 		return
 	}
 	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
-	s.ProcessRequest(e, r)
+	s.ProcessClientRequest(e, r)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg

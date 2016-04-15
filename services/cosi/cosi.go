@@ -44,7 +44,7 @@ type ServiceResponse struct {
 var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
 // ProcessRequest treats external request to this service.
-func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
+func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != CosiRequestType {
 		return
 	}

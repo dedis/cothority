@@ -19,9 +19,9 @@ type Service interface {
 	// Each request has a field ServiceID, so each time the Host (dispatcher)
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
-	ProcessRequest(*network.Entity, *Request)
-	// XXX Later we could introduce:
-	// ProcessServiceRequest(*network.Entity,  *Request)
+	ProcessClientRequest(*network.Entity, *ClientRequest)
+	// ProcessServiceRequest takes a message from another Service
+	ProcessServiceMessage(*network.Entity, *ServiceMessage)
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -216,12 +216,12 @@ func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
 	return serv, true
 }
 
-// A Request is a generic packet to represent any kind of request a Service is
+// ClientRequest is a generic packet to represent any kind of request a Service is
 // ready to process. It is simply a JSON packet containing two fields:
 // * Service: a string representing the name of the service for whom the packet
 // is intended for.
 // * Data: contains all the information of the request
-type Request struct {
+type ClientRequest struct {
 	// Name of the service to direct this request to
 	Service ServiceID `json:"service_id"`
 	// Type is the type of the underlying message
@@ -230,23 +230,51 @@ type Request struct {
 	Data json.RawMessage `json:"data"`
 }
 
-// RequestType is the type that registered by the network library
-var RequestID = network.RegisterMessageType(Request{})
+// RequestID is the type that registered by the network library
+var RequestID = network.RegisterMessageType(ClientRequest{})
 
 // CreateServiceRequest creates a Request message out of any message that is
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
 // handling abstract.Secret/Public stuff that json can't do. Later we may want
 // to think on how to change that.
-func CreateServiceRequest(service string, r interface{}) (*Request, error) {
+func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error) {
 	sid := ServiceFactory.ServiceID(service)
 	dbg.Print("Name", service, " <-> ServiceID", sid)
 	buff, err := network.MarshalRegisteredType(r)
 	if err != nil {
 		return nil, err
 	}
-	return &Request{
+	return &ClientRequest{
 		Service: sid,
 		Type:    network.RegisterMessageType(r),
 		Data:    buff,
 	}, nil
+}
+
+// ServiceMessage is a generic struct that contains any data destined to a
+// Service that has been created .. by a Service. => Intra-Service
+// communications.
+type ServiceMessage struct {
+	// Service is the ID of the Service it's destined
+	Service ServiceID
+	// Data is the data encoded using protobuf for the moment.
+	Data []byte
+}
+
+// ServiceMessageID is the ID of the ServiceMessage struct.
+var ServiceMessageID = network.RegisterMessageType(ServiceMessage{})
+
+// CreateServiceMessage takes a service name and some data and encodes the whole
+// as a ServiceMessage.
+func CreateServiceMessage(service string, r interface{}) (*ServiceMessage, error) {
+	sid := ServiceFactory.ServiceID(service)
+	buff, err := network.MarshalRegisteredType(r)
+	if err != nil {
+		return nil, err
+	}
+	return &ServiceMessage{
+		Service: sid,
+		Data:    buff,
+	}, nil
+
 }

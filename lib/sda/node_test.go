@@ -182,7 +182,7 @@ func TestServiceChannels(t *testing.T) {
 	h1.AddTree(tree)
 	h1.StartProcessMessages()
 
-	sc1.ProcessRequest(nil, nil)
+	sc1.ProcessClientRequest(nil, nil)
 	select {
 	case msg := <-Incoming:
 		if msg.I != 12 {
@@ -371,7 +371,7 @@ type ServiceChannels struct {
 }
 
 // implement services interface
-func (c *ServiceChannels) ProcessRequest(e *network.Entity, r *sda.Request) {
+func (c *ServiceChannels) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 
 	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root)
 	pi, err := NewProtocolChannels(tni)
@@ -388,6 +388,10 @@ func (c *ServiceChannels) ProcessRequest(e *network.Entity, r *sda.Request) {
 func (c *ServiceChannels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
 	return NewProtocolChannels(tn)
+}
+
+func (c *ServiceChannels) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+	return
 }
 
 // End: protocol/service channels
