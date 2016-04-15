@@ -164,10 +164,10 @@ func (n *Node) SendToChildrenInParallel(msg interface{}) error {
 	if n.IsLeaf() {
 		return nil
 	}
-	cs := n.Children()
-	errs := make(map[string]error, len(cs))
+	children := n.Children()
+	errs := make(map[string]error, len(children))
 	eMut := sync.Mutex{}
-	for _, node := range n.Children() {
+	for _, node := range children {
 		go func(n2 *TreeNode) {
 			if err := n.SendTo(n2, msg); err != nil {
 				eMut.Lock()
