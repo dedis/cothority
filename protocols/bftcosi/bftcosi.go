@@ -13,8 +13,9 @@ import (
 )
 
 // VerificationFunction can be passes to each protocol node. It will be called
-// during the (start/handle) challenge prepare phase of the protocol
-type VerificationFunction func([]byte, chan bool)
+// (in a go routine) during the (start/handle) challenge prepare phase of the
+// protocol
+type VerificationFunction func([]byte) bool
 
 // ProtocolBFTCoSi is the main struct for running the protocol
 type ProtocolBFTCoSi struct {
@@ -317,7 +318,9 @@ func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 		Msg:       bft.Msg,
 	}
 
-	go bft.verificationFun(bft.Msg, bft.verifyChan)
+	go func() {
+		bft.verifyChan <- bft.verificationFun(bft.Msg)
+	}()
 
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Challenge PREPARE")
 	return bft.SendToChildrenInParallel(bftChal)
@@ -347,7 +350,9 @@ func (bft *ProtocolBFTCoSi) startChallengeCommit() error {
 func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	bft.Msg = ch.Msg
 	// start the verification of the message
-	go bft.verificationFun(bft.Msg, bft.verifyChan)
+	go func() {
+		bft.verifyChan <- bft.verificationFun(bft.Msg)
+	}()
 	// acknowledge the challenge and send its down
 	chal := bft.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal

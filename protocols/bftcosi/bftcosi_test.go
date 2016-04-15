@@ -16,14 +16,14 @@ import (
 var veriCount int
 var countMut sync.Mutex
 
-func verify(m []byte, ok chan bool) {
+func verify(m []byte) bool {
 	countMut.Lock()
 	veriCount++
 	dbg.Print("Verification called", veriCount, "times")
 	countMut.Unlock()
 	dbg.Print("Ignoring message:", string(m))
 	// everything is OK, always:
-	ok <- true
+	return true
 }
 
 const TestProtocolName = "DummyBFTCoSi"
