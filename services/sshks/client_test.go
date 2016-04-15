@@ -144,6 +144,9 @@ func TestAddServerSecondClient(t *testing.T) {
 		t.Fatal("Server should refuse to add unknown client")
 	}
 	dbg.ErrFatal(cks1.AddClient(cks2.This))
+	if len(servers[0].Config.Clients) != 2 {
+		t.Fatal("Should have 2 clients now")
+	}
 
 	// Update second client
 	dbg.ErrFatal(cks2.Update(srv1))

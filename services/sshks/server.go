@@ -158,6 +158,7 @@ func (sa *ServerKS) FuncGetServer(*network.Message) network.ProtocolMessage {
 
 // FuncSendFirstConfig stores the new config before it is signed by other clients
 func (sa *ServerKS) FuncSendFirstCommit(data *network.Message) network.ProtocolMessage {
+	dbg.Print(data.Entity, *sa.Config)
 	if sa.unknownClient(data.Entity) {
 		return &StatusRet{"Refusing unknown client"}
 	}
@@ -209,14 +210,14 @@ func (sa *ServerKS) FuncResponse(data *network.Message) network.ProtocolMessage 
 	}
 	ok = sa.NextConfig.AddResponse(data.Entity, response.Response)
 	if ok {
-		dbg.LLvl3("Storing new config version", sa.NextConfig.config.Version)
 		sa.Config = sa.NextConfig.config
+		dbg.LLvl3("Storing new config version", sa.Config.Version, sa.Config.Clients)
 	}
 	sa.NextConfig.AddCommit(data.Entity, response.NextCommitment)
 	if sa.NextConfig == nil {
 		dbg.LLvl3("No nextconfig yet - just storing commitment")
 	} else {
-		dbg.LLvl3("Just one response. ok is", ok)
+		dbg.LLvl3("Ok is", ok)
 		if ok {
 			err := sa.Config.VerifySignature()
 			if err != nil {

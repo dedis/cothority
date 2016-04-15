@@ -180,9 +180,13 @@ func (ca *ClientKS) AddServer(srv *Server) error {
 		}
 	}
 	dbg.Lvl3("Adding server", srv.Entity.Addresses[0], "to config", ca.Config)
-	ca.NewConfig = ca.Config
-	ca.Config.AddServer(srv)
-	err := ca.NetworkSendNewConfig(srvSend)
+	var err error
+	ca.NewConfig, err = ca.Config.Copy()
+	if err != nil {
+		return err
+	}
+	ca.NewConfig.AddServer(srv)
+	err = ca.NetworkSendNewConfig(srvSend)
 	if err != nil {
 		return err
 	}
@@ -231,7 +235,12 @@ func (ca *ClientKS) ServerCheck() error {
 
 // ClientAdd adds a new client and signs the new configuration
 func (ca *ClientKS) AddClient(client *Client) error {
-	ca.Config.AddClient(client)
+	var err error
+	ca.NewConfig, err = ca.Config.Copy()
+	if err != nil {
+		return nil
+	}
+	ca.NewConfig.AddClient(client)
 	if len(ca.Config.Servers) == 0 {
 		return nil
 	}

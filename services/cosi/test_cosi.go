@@ -1,13 +1,14 @@
 package cosi
 
 import (
+	"testing"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
-	"testing"
 )
 
 // Test hacky way of launching CoSi protocol externally

@@ -272,6 +272,27 @@ func (conf *Config) Sign(cl *ClientKS, comm *cosi.Commitment) (*cosi.Cosi, *cosi
 	return nil, nil
 }
 
+// Copy makes a deep-copy of the config by marshalling and then unmarshalling it
+func (conf *Config) Copy() (*Config, error) {
+	b, err := network.MarshalRegisteredType(conf)
+	if err != nil {
+		return nil, err
+	}
+	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	if err != nil {
+		return nil, err
+	}
+	newConf := msg.(Config)
+	if len(newConf.Clients) == 0 {
+		newConf.Clients = make(map[string]*Client)
+	}
+	if len(newConf.Servers) == 0 {
+		newConf.Servers = make(map[string]*Server)
+	}
+	return &newConf, nil
+
+}
+
 // SetupTmpHosts sets up a temporary .tmp-directory for testing
 func SetupTmpHosts() (string, error) {
 	tmp, err := ioutil.TempDir("", "testHost")
