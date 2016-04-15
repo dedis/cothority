@@ -89,6 +89,7 @@ type challengePrepareChan struct {
 	ChallengePrepare
 }
 
+// challengeCommitChan is the type of the channel used to catch the response messages.
 type challengeCommitChan struct {
 	*sda.TreeNode
 	ChallengeCommit

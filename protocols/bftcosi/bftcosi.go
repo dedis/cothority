@@ -509,13 +509,14 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	}
 
 	dbg.Lvl3("BFTCoSi Handle Response PREPARE")
-	// if I'm root, we are finished, let's notify the "commit" round
 	if bft.IsRoot() {
-		bft.startChallengeCommit()
+		// Notify 'commit'-round as we're root
+		if err := bft.startChallengeCommit(); err != nil {
+			dbg.Error(err)
+		}
 
 		return nil
 	}
-	// send up
 	return bft.SendTo(bft.Parent(), bzrReturn)
 }
 
