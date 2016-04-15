@@ -117,19 +117,19 @@ func NewBFTCoSiProtocol(n *sda.Node, verify VerificationFunction) (*ProtocolBFTC
 
 	// register channels
 	if err := n.RegisterChannel(&bft.announceChan); err != nil {
-		return bft, err
+		return nil, err
 	}
 	if err := n.RegisterChannel(&bft.commitChan); err != nil {
-		return bft, err
+		return nil, err
 	}
 	if err := n.RegisterChannel(&bft.challengePrepareChan); err != nil {
-		return bft, err
+		return nil, err
 	}
 	if err := n.RegisterChannel(&bft.challengeCommitChan); err != nil {
-		return bft, err
+		return nil, err
 	}
 	if err := n.RegisterChannel(&bft.responseChan); err != nil {
-		return bft, err
+		return nil, err
 	}
 
 	n.OnDoneCallback(bft.nodeDone)
@@ -212,11 +212,7 @@ func (bft *ProtocolBFTCoSi) startAnnouncementCommit() error {
 }
 
 func (bft *ProtocolBFTCoSi) sendAnnouncement(a *Announce) error {
-	var err error
-	for _, tn := range bft.Children() {
-		err = bft.SendTo(tn, a)
-	}
-	return err
+	return bft.SendToChildrenInParallel(a)
 }
 
 // handleAnnouncement pass the announcement to the right CoSi struct.
@@ -240,20 +236,15 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(ann Announce) error {
 		announcement.TYPE = RoundCommit
 	}
 
-	var err error
-	for _, tn := range bft.Children() {
-		err = bft.SendTo(tn, announcement)
-	}
-	return err
+	return bft.SendToChildrenInParallel(announcement)
 }
 
 // startPrepareCommitment send the first commitment up the tree for the prepare
 // round.
 func (bft *ProtocolBFTCoSi) startCommitmentPrepare() error {
 	cm := bft.prepare.CreateCommitment()
-	err := bft.SendTo(bft.Parent(), &Commitment{TYPE: RoundPrepare, Commitment: cm})
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Commitment PREPARE")
-	return err
+	return bft.SendToParent(&Commitment{TYPE: RoundPrepare, Commitment: cm})
 }
 
 // startCommitCommitment send the first commitment up the tree for the
@@ -261,9 +252,8 @@ func (bft *ProtocolBFTCoSi) startCommitmentPrepare() error {
 func (bft *ProtocolBFTCoSi) startCommitmentCommit() error {
 	cm := bft.commit.CreateCommitment()
 
-	err := bft.SendTo(bft.Parent(), &Commitment{TYPE: RoundCommit, Commitment: cm})
-	dbg.Lvl3(bft.Name(), "BFTCoSi Start Commitment COMMIT", err)
-	return err
+	dbg.Lvl3(bft.Name(), "BFTCoSi Start Commitment COMMIT")
+	return bft.SendToParent(&Commitment{TYPE: RoundCommit, Commitment: cm})
 }
 
 // handle the arrival of a commitment
@@ -307,8 +297,7 @@ func (bft *ProtocolBFTCoSi) handleCommit(comm Commitment) error {
 	// set same RoundType as for the received commitment:
 	typedCommitment.TYPE = comm.TYPE
 	typedCommitment.Commitment = commitment
-	err := bft.SendTo(bft.Parent(), typedCommitment)
-	return err
+	return bft.SendToParent(typedCommitment)
 }
 
 // startPrepareChallenge create the challenge and send its down the tree
@@ -330,11 +319,7 @@ func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	go bft.verificationFun(bft.Msg, bft.verifyChan)
 
 	dbg.Lvl3(bft.Name(), "BFTCoSi Start Challenge PREPARE")
-	// send to children
-	for _, tn := range bft.Children() {
-		err = bft.SendTo(tn, bftChal)
-	}
-	return err
+	return bft.SendToChildrenInParallel(bftChal)
 }
 
 // startCommitChallenge waits the end of the "prepare" round.
@@ -353,10 +338,7 @@ func (bft *ProtocolBFTCoSi) startChallengeCommit() error {
 		Signature: bft.prepare.Signature(),
 	}
 	dbg.Lvl3("BFTCoSi Start Challenge COMMIT")
-	for _, tn := range bft.Children() {
-		err = bft.SendTo(tn, cc)
-	}
-	return err
+	return bft.SendToChildrenInParallel(cc)
 }
 
 // handlePrepareChallenge receive the challenge messages for the "prepare"
@@ -374,11 +356,8 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	if bft.IsLeaf() {
 		return bft.startResponsePrepare()
 	}
-	var err error
-	for _, tn := range bft.Children() {
-		err = bft.SendTo(tn, ch)
-	}
-	return err
+
+	return bft.SendToChildrenInParallel(ch)
 }
 
 // handleCommitChallenge will verify the signature + check if no more than 1/3
@@ -410,11 +389,8 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 		return bft.startResponseCommit()
 	}
 
-	// send it down
-	for _, tn := range bft.Children() {
-		if err := bft.SendTo(tn, ch); err != nil {
-			dbg.Error(err)
-		}
+	if err := bft.SendToChildrenInParallel(ch); err != nil {
+		dbg.Error(err)
 	}
 	return nil
 }
@@ -470,7 +446,6 @@ func (bft *ProtocolBFTCoSi) startResponseCommit() error {
 // response phase.
 func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 	// check if we have enough
-	// FIXME possible data race
 	bft.tcrMut.Lock()
 	defer bft.tcrMut.Unlock()
 	bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
@@ -562,8 +537,8 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 		dbg.Lvl3("Response verification: failed", bft.Name())
 		return r, false
 	}
-	dbg.Lvl3("Response verification: OK", bft.Name())
 
+	dbg.Lvl3("Response verification: OK", bft.Name())
 	return r, true
 }
 

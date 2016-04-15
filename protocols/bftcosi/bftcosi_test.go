@@ -16,7 +16,7 @@ import (
 var veriCount int
 var countMut sync.Mutex
 
-func veri(m []byte, ok chan bool) {
+func verify(m []byte, ok chan bool) {
 	countMut.Lock()
 	veriCount++
 	dbg.Print("Verification called", veriCount, "times")
@@ -34,7 +34,7 @@ func TestBftCoSi(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.Node) (sda.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, veri)
+		return NewBFTCoSiProtocol(n, verify)
 	})
 
 	for _, nbrHosts := range []int{3, 13} {
