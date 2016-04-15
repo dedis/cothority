@@ -8,7 +8,6 @@ import (
 
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 )
@@ -303,8 +302,10 @@ func (bft *ProtocolBFTCoSi) handleCommit(comm Commitment) error {
 // startPrepareChallenge create the challenge and send its down the tree
 func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
 	// create challenge from message's hash:
-	prep := &msgPrepare{Msg: bft.Msg}
-	h := prep.Hash()
+	hash := bft.Suite().Hash()
+	hash.Write(bft.Msg)
+	h := hash.Sum(nil)
+
 	ch, err := bft.prepare.CreateChallenge(h)
 	if err != nil {
 		return err
@@ -364,8 +365,9 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 // of participants refused to sign.
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	ch.Challenge = bft.commit.Challenge(ch.Challenge)
-	prep := &msgPrepare{Msg: bft.Msg}
-	h := prep.Hash()
+	hash := bft.Suite().Hash()
+	hash.Write(bft.Msg)
+	h := hash.Sum(nil)
 
 	// verify if the signature is correct
 	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
@@ -573,18 +575,4 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 		bft.onDoneCallback()
 	}
 	return true
-}
-
-const preparePrefix = 0x1
-
-type msgPrepare struct {
-	Msg []byte
-}
-
-func (mp *msgPrepare) Hash() []byte {
-	h := network.Suite.Hash()
-	temp := append(mp.Msg, preparePrefix)
-	h.Write(temp)
-
-	return h.Sum(nil)
 }
