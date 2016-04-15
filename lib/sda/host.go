@@ -383,6 +383,9 @@ func (h *Host) processMessages() {
 		case RequestID:
 			r := data.Msg.(ClientRequest)
 			h.processRequest(data.Entity, &r)
+		case ServiceMessageID:
+			m := data.Msg.(ServiceMessage)
+			h.processServiceMessage(data.Entity, &m)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -390,6 +393,20 @@ func (h *Host) processMessages() {
 			dbg.Error("Sending error:", err)
 		}
 	}
+}
+
+func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
+	// check if the target service is indeed existing
+	s, ok := h.serviceStore.serviceByID(m.Service)
+	if !ok {
+		dbg.Error("Received a request for an unknown service")
+		// XXX TODO should reply with some generic response =>
+		// 404 Service Unknown
+		return
+	}
+	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
+	s.ProcessServiceMessage(e, m)
+
 }
 
 func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
