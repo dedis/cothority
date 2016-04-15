@@ -84,6 +84,10 @@ func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	go pi.Start()
 }
 
+func (cs *Cosi) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+	return
+}
+
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.

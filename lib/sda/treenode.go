@@ -334,7 +334,7 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 			return
 		}
 		if len(n.msgDispatchQueue) > 0 {
-			dbg.Print(n.Info(), "Read message and dispatching it",
+			dbg.Lvl4(n.Info(), "Read message and dispatching it",
 				len(n.msgDispatchQueue))
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
