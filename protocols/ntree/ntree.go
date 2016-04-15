@@ -21,7 +21,7 @@ func init() {
 type Protocol struct {
 	*sda.Node
 	// the message we want to sign (and the root node propagates)
-	message []byte
+	Message []byte
 	// signature of this particular participant:
 	signature *SignatureReply
 	// Simulation related
@@ -50,7 +50,7 @@ func (p *Protocol) Start() error {
 		if len(p.Children()) > 0 {
 			dbg.Lvl3("Starting ntree/naive")
 			return p.HandleSignRequest(structMessage{p.TreeNode(),
-				Message{p.message, p.verifySignature}})
+				Message{p.Message, p.verifySignature}})
 		} else {
 			return errors.New("No children for root")
 		}
@@ -62,9 +62,9 @@ func (p *Protocol) Start() error {
 // HandleSignRequest is a handler for incoming sign-requests. It's registered as
 // a handler in the sda.Node.
 func (p *Protocol) HandleSignRequest(msg structMessage) error {
-	p.message = msg.Msg
+	p.Message = msg.Msg
 	p.verifySignature = msg.VerifySignature
-	signature, err := crypto.SignSchnorr(network.Suite, p.Private(), p.message)
+	signature, err := crypto.SignSchnorr(network.Suite, p.Private(), p.Message)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
 	}
 	entity := p.EntityList().List[sig.Index]
 	var s string
-	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.message, sig.Sig); err != nil {
+	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.Message, sig.Sig); err != nil {
 		s = "FAIL"
 	} else {
 		s = "SUCCESS"

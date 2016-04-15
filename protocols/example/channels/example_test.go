@@ -1,12 +1,13 @@
 package example_channels_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/example/channels"
-	"testing"
-	"time"
 )
 
 // Tests a 2-node system

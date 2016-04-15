@@ -8,15 +8,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/simul/platform"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"strconv"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/simul/platform"
 )
 
 var kill = false

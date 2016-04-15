@@ -1,6 +1,8 @@
 package manage
 
 import (
+	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
@@ -14,45 +16,82 @@ func init() {
 // using RegisterOnDone()
 type Broadcast struct {
 	*sda.Node
-	onDoneCb func()
+	onDoneCb    func()
+	repliesLeft int
+	tnIndex     int
 }
 
 // NewBroadcastProtocol returns a new Broadcast protocol
 func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
-	b := &Broadcast{n}
-
-	return b
+	b := &Broadcast{
+		Node:    n,
+		tnIndex: -1,
+	}
+	for i, tn := range n.Tree().List() {
+		if tn.Id == n.TreeNode().Id {
+			b.tnIndex = i
+		}
+	}
+	if b.tnIndex == -1 {
+		return nil, errors.New("Didn't find my TreeNode in the Tree")
+	}
+	err := n.RegisterHandler(b.handleContactNodes)
+	if err != nil {
+		return nil, err
+	}
+	err = n.RegisterHandler(b.handleDone)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 // Start will contact everyone and makes the connections
 func (b *Broadcast) Start() error {
-	for i, tn := range b.Tree().List()[1:] {
-		b.SendTo(tn, &ConnectToAll{i})
-	}
+	n := len(b.Tree().List())
+	b.repliesLeft = n * (n - 1) / 2
+	b.SendTo(b.Root(), &ContactNodes{})
 	dbg.Lvl3(b.Name(), "Sent Announce to everyone")
 	return nil
 }
 
 // handleAnnounce receive the announcement from another node
 // it reply with an ACK.
-func (b *Broadcast) handleConnectToAll(msg struct {
+func (b *Broadcast) handleContactNodes(msg struct {
 	*sda.TreeNode
-	ConnectToAll
-}) {
-	// Only connect to all nodes that are not the server
-	for _, tn := range b.Tree().List()[msg.Index+1:] {
-		dbg.Lvl3("Connecting to", tn.Entity.String())
-		b.SendTo(tn, &Connected{})
+	ContactNodes
+}) error {
+	dbg.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
+	if msg.TreeNode.Id == b.Root().Id {
+		dbg.Lvl3(b.Info(), "Contacting everybody")
+		// Connect to all nodes that are later in the TreeNodeList, but only if
+		// the message comes from root
+		for _, tn := range b.Tree().List()[b.tnIndex+1:] {
+			dbg.Lvl3("Connecting to", tn.String())
+			err := b.SendTo(tn, &ContactNodes{})
+			if err != nil {
+				return err
+			}
+		}
 	}
-	b.SendTo(msg.TreeNode, &Connected{})
+	// Tell Root we're done
+	return b.SendTo(b.Root(), &Done{})
 }
 
-// It checks if we have sent an Announce to this treenode (hopefully yes^^)
-// if yes it checks if everyone has been ACK'd, if yes, it finishes.
-func (b *Broadcast) handleConnected(struct {
+// Every node being contacted sends back a Done to the root which has
+// to count to decide if all is done
+func (b *Broadcast) handleDone(struct {
 	*sda.TreeNode
-	Connected
+	Done
 }) {
+	b.repliesLeft--
+	dbg.Lvl3("Got reply and waiting for more:", b.repliesLeft)
+	if b.repliesLeft == 0 {
+		if b.onDoneCb != nil {
+			dbg.Lvl2("Done with broadcasting to everybody")
+			b.onDoneCb()
+		}
+	}
 }
 
 // RegisterOnDone takes a function that will be called once all connections
@@ -61,9 +100,8 @@ func (b *Broadcast) RegisterOnDone(fn func()) {
 	b.onDoneCb = fn
 }
 
-type ConnectToAll struct {
-	Index int
-}
+// ContactNodes is sent from the root to ALL other nodes
+type ContactNodes struct{}
 
-type Connected struct {
-}
+// Done is sent back to root once everybody has been contacted
+type Done struct{}

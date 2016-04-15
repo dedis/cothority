@@ -37,7 +37,7 @@ func TestNtree(t *testing.T) {
 			t.Fatal("Couldn't create new node:", err)
 		}
 		root = node.ProtocolInstance().(*ntree.Protocol)
-		root.SetMessage(msg)
+		root.Message = msg
 		root.OnDoneCallback(doneFunc)
 		err = node.StartProtocol()
 		if nbrHosts == 1 {
