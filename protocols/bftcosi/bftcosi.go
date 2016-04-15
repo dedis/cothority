@@ -102,24 +102,35 @@ type ProtocolBFTCoSi struct {
 // NewBFTCoSiProtocol returns a new bftcosi struct
 func NewBFTCoSiProtocol(n *sda.Node, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
 	// initialize the bftcosi node/protocol-instance
-	bft := new(ProtocolBFTCoSi)
-	bft.Node = n
-	bft.suite = n.Suite()
-	bft.prepare = cosi.NewCosi(n.Suite(), n.Private())
-	bft.commit = cosi.NewCosi(n.Suite(), n.Private())
-	bft.verifyChan = make(chan bool)
-	bft.doneProcessing = make(chan bool, 2)
-	bft.doneSigning = make(chan bool, 1)
-	bft.verificationFun = verify
-	bft.aggregatedPublic = n.EntityList().Aggregate
-	bft.threshold = int(2.0 * math.Ceil(float64(len(bft.Tree().List()))/3.0))
+	bft := &ProtocolBFTCoSi{
+		Node:             n,
+		suite:            n.Suite(),
+		prepare:          cosi.NewCosi(n.Suite(), n.Private()),
+		commit:           cosi.NewCosi(n.Suite(), n.Private()),
+		verifyChan:       make(chan bool),
+		doneProcessing:   make(chan bool, 2),
+		doneSigning:      make(chan bool, 1),
+		verificationFun:  verify,
+		aggregatedPublic: n.EntityList().Aggregate,
+		threshold:        int(2.0 * math.Ceil(float64(len(n.Tree().List()))/3.0)),
+	}
 
 	// register channels
-	n.RegisterChannel(&bft.announceChan)
-	n.RegisterChannel(&bft.commitChan)
-	n.RegisterChannel(&bft.challengePrepareChan)
-	n.RegisterChannel(&bft.challengeCommitChan)
-	n.RegisterChannel(&bft.responseChan)
+	if err := n.RegisterChannel(&bft.announceChan); err != nil {
+		return bft, err
+	}
+	if err := n.RegisterChannel(&bft.commitChan); err != nil {
+		return bft, err
+	}
+	if err := n.RegisterChannel(&bft.challengePrepareChan); err != nil {
+		return bft, err
+	}
+	if err := n.RegisterChannel(&bft.challengeCommitChan); err != nil {
+		return bft, err
+	}
+	if err := n.RegisterChannel(&bft.responseChan); err != nil {
+		return bft, err
+	}
 
 	n.OnDoneCallback(bft.nodeDone)
 
