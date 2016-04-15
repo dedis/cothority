@@ -84,6 +84,7 @@ func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	go pi.Start()
 }
 
+// ProcessServiceMessage is to implement the Service interface.
 func (cs *Cosi) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
 	return
 }
