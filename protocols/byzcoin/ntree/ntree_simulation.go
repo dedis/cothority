@@ -1,4 +1,4 @@
-package byzcoin_ntree
+package byzcoinNtree
 
 import (
 	"github.com/BurntSushi/toml"
@@ -22,6 +22,7 @@ type Simulation struct {
 	byzcoin.SimulationConfig
 }
 
+// NewSimulation returns a new Ntree simulation
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)
@@ -80,7 +81,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			done <- true
 		})
 
-		go nt.Start()
+		go func() {
+			if err := nt.Start(); err != nil {
+				dbg.Error("Couldn't start ntree protocol:", err)
+			}
+		}()
 		// wait for the end
 		<-done
 		dbg.Lvl3("Round", round, "finished")

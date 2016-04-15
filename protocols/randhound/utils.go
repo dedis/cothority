@@ -72,7 +72,7 @@ func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstrac
 	// Choose trustees uniquely
 	shareIdx := make(map[uint32]uint32)
 	trustees := make([]abstract.Point, rh.Group.K)
-	tns := rh.Tree().ListNodes()
+	tns := rh.List()
 	j := uint32(0)
 	for uint32(len(shareIdx)) < rh.Group.K {
 		i := uint32(random.Uint64(prng) % uint64(len(tns)))
@@ -90,17 +90,8 @@ func (rh *RandHound) hash(bytes ...[]byte) []byte {
 	return abstract.Sum(rh.Node.Suite(), bytes...)
 }
 
-func (rh *RandHound) nodeIdx() uint32 {
-	return uint32(rh.Node.TreeNode().EntityIdx)
-}
-
-func (rh *RandHound) sendToChildren(msg interface{}) error {
-	for _, c := range rh.Children() {
-		if err := rh.SendTo(c, msg); err != nil {
-			return err
-		}
-	}
-	return nil
+func (rh *RandHound) index() uint32 {
+	return uint32(rh.Node.Index())
 }
 
 func (rh *RandHound) generateTranscript() {} // TODO

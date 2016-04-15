@@ -1,5 +1,3 @@
-// Package manage implements a protocol which sends a message to all nodes so
-// that the connections are set up
 package manage
 
 import (
@@ -11,7 +9,9 @@ func init() {
 	sda.ProtocolRegisterName("Broadcast", NewBroadcastProtocol)
 }
 
-// Broadcast will just simply broadcast
+// Broadcast ensures that all nodes are connected to each other. If you need
+// a confirmation once everything is set up, you can register a callback-function
+// using RegisterOnDone()
 type Broadcast struct {
 	*sda.Node
 	onDoneCb func()
@@ -26,7 +26,7 @@ func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 
 // Start will contact everyone and makes the connections
 func (b *Broadcast) Start() error {
-	for i, tn := range b.Tree().ListNodes()[1:] {
+	for i, tn := range b.Tree().List()[1:] {
 		b.SendTo(tn, &ConnectToAll{i})
 	}
 	dbg.Lvl3(b.Name(), "Sent Announce to everyone")
@@ -40,7 +40,7 @@ func (b *Broadcast) handleConnectToAll(msg struct {
 	ConnectToAll
 }) {
 	// Only connect to all nodes that are not the server
-	for _, tn := range b.Tree().ListNodes()[msg.Index+1:] {
+	for _, tn := range b.Tree().List()[msg.Index+1:] {
 		dbg.Lvl3("Connecting to", tn.Entity.String())
 		b.SendTo(tn, &Connected{})
 	}
@@ -55,6 +55,8 @@ func (b *Broadcast) handleConnected(struct {
 }) {
 }
 
+// RegisterOnDone takes a function that will be called once all connections
+// are set up.
 func (b *Broadcast) RegisterOnDone(fn func()) {
 	b.onDoneCb = fn
 }

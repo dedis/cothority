@@ -19,10 +19,12 @@ func init() {
 	sda.SimulationRegister("ExampleChannels", NewSimulation)
 }
 
+// Simulation implements sda.Simulation.
 type Simulation struct {
 	sda.SimulationBFTree
 }
 
+// NewSimulation is used internally to register the simulation.
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)
@@ -32,6 +34,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
+// Setup implements sda.Simulation.
 func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
@@ -43,6 +46,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
+// Run implements sda.Simulation.
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)

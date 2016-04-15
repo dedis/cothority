@@ -3,7 +3,6 @@ package crypto
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
@@ -32,7 +31,7 @@ func SignSchnorr(suite abstract.Suite, private abstract.Secret, msg []byte) (Sch
 	r := suite.Point().Mul(nil, k)
 
 	// create challenge e based on message and r
-	e, err := hash(r, msg)
+	e, err := hash(suite, r, msg)
 	if err != nil {
 		return SchnorrSig{}, err
 	}
@@ -52,7 +51,7 @@ func VerifySchnorr(suite abstract.Suite, public abstract.Point, msg []byte, sig 
 	rv := suite.Point().Add(gs, ye)
 
 	// recompute challenge (e) from rv
-	e, err := hash(rv, msg)
+	e, err := hash(suite, rv, msg)
 	if err != nil {
 		return err
 	}
@@ -64,12 +63,11 @@ func VerifySchnorr(suite abstract.Suite, public abstract.Point, msg []byte, sig 
 	return nil
 }
 
-func hash(r abstract.Point, msg []byte) (abstract.Secret, error) {
+func hash(suite abstract.Suite, r abstract.Point, msg []byte) (abstract.Secret, error) {
 	rBuf, err := r.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
-	suite := network.Suite
 	cipher := suite.Cipher(rBuf)
 	cipher.Message(nil, nil, msg)
 	// (re)compute challenge (e)

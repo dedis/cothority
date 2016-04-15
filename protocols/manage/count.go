@@ -3,14 +3,19 @@ package manage
 import (
 	"time"
 
+	"sync"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"sync"
 )
 
 /*
-Protocol used to close all connections, starting from the leaf-nodes.
+The count-protocol returns the number of nodes reachable in a given
+timeout. To correctly wait for the whole tree, every node that receives
+a message sends a message to the root before contacting its children.
+As long as the root receives those messages, he knows the counting
+still goes on.
 */
 
 func init() {
@@ -20,6 +25,9 @@ func init() {
 	sda.ProtocolRegisterName("Count", NewCount)
 }
 
+// ProtocolCount holds all channels. If a timeout occurs or the counting
+// is done, the Count-channel receives the number of nodes reachable in
+// the tree.
 type ProtocolCount struct {
 	*sda.Node
 	Replies          int
@@ -38,20 +46,27 @@ type ProtocolCount struct {
 	}
 }
 
+// PrepareCount is sent so that every node can contact the root to say
+// the counting is still going on.
 type PrepareCount struct {
 	Timeout int
 }
+
+// NodeIsUp - if it is received by the root it will reset the counter.
 type NodeIsUp struct{}
 
+// Count sends the number of children to the parent node.
 type Count struct {
 	Children int
 }
 
+// CountMsg is wrapper around the Count-structure
 type CountMsg struct {
 	*sda.TreeNode
 	Count
 }
 
+// NewCount returns a new protocolInstance
 func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolCount{
 		Node:    n,
@@ -59,10 +74,24 @@ func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
 		timeout: 1024,
 	}
 	p.Count = make(chan int, 1)
-	p.RegisterChannel(&p.CountChan)
-	p.RegisterChannel(&p.PrepareCountChan)
-	p.RegisterChannel(&p.NodeIsUpChan)
+	if err := p.RegisterChannel(&p.CountChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
+	}
+	if err := p.RegisterChannel(&p.PrepareCountChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
+	}
+	if err := p.RegisterChannel(&p.NodeIsUpChan); err != nil {
+		dbg.Error("Couldn't reister channel:", err)
+	}
 	return p, nil
+}
+
+// Start the protocol
+func (p *ProtocolCount) Start() error {
+	// Send an empty message
+	dbg.Lvl3("Starting to count")
+	p.FuncPC()
+	return nil
 }
 
 // Dispatch listens for all channels and waits for a timeout in case nothing
@@ -82,7 +111,11 @@ func (p *ProtocolCount) Dispatch() error {
 			running = false
 		case _ = <-p.NodeIsUpChan:
 			if p.Parent() != nil {
-				p.SendTo(p.Parent(), &NodeIsUp{})
+				err := p.SendTo(p.Parent(), &NodeIsUp{})
+				if err != nil {
+					dbg.Error(p.Info(), "couldn't send to parent",
+						p.Parent().Name(), err)
+				}
 			} else {
 				p.Replies++
 			}
@@ -103,13 +136,21 @@ func (p *ProtocolCount) Dispatch() error {
 // every node that receives one will reply with a 'NodeIsUp'-message
 func (p *ProtocolCount) FuncPC() {
 	if !p.IsRoot() {
-		p.SendTo(p.Parent(), &NodeIsUp{})
+		err := p.SendTo(p.Parent(), &NodeIsUp{})
+		if err != nil {
+			dbg.Error(p.Info(), "couldn't send to parent",
+				p.Parent().Name(), err)
+		}
 	}
 	if !p.IsLeaf() {
 		for _, child := range p.Children() {
 			go func(c *sda.TreeNode) {
 				dbg.Lvl3(p.Info(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
-				p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+				err := p.SendTo(c, &PrepareCount{Timeout: p.timeout})
+				if err != nil {
+					dbg.Error(p.Info(), "couldn't send to child",
+						c.Name())
+				}
 			}(child)
 		}
 	} else {
@@ -126,28 +167,24 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 	}
 	if !p.IsRoot() {
 		dbg.Lvl3(p.Info(), "Sends to", p.Parent().Id, p.Parent().Entity.Addresses)
-		p.SendTo(p.Parent(), &Count{count})
+		if err := p.SendTo(p.Parent(), &Count{count}); err != nil {
+			dbg.Error(p.Name(), "coouldn't send to parent",
+				p.Parent().Name())
+		}
 	} else {
 		p.Count <- count
 	}
 	dbg.Lvl3(p.Node.Entity().First(), "Done")
 }
 
-// Starts the protocol
-func (p *ProtocolCount) Start() error {
-	// Send an empty message
-	dbg.Lvl3("Starting to count")
-	p.FuncPC()
-	return nil
-}
-
-// Sets the timeout
+// SetTimeout sets the new timeout
 func (p *ProtocolCount) SetTimeout(t int) {
 	p.timeoutMu.Lock()
 	p.timeout = t
 	p.timeoutMu.Unlock()
 }
 
+// Timeout returns the current timeout
 func (p *ProtocolCount) Timeout() int {
 	p.timeoutMu.Lock()
 	defer p.timeoutMu.Unlock()

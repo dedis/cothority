@@ -1,11 +1,12 @@
 package ntree_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/ntree"
-	"testing"
-	"time"
 )
 
 func TestNtree(t *testing.T) {

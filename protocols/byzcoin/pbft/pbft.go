@@ -1,4 +1,4 @@
-// Practical Byzantine Fault Tolerance with some simplifications.
+// Package pbft is the Practical Byzantine Fault Tolerance algorithm with some simplifications.
 package pbft
 
 import (
@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	NotFound = -1
+	notFound = -1
 )
 
 // Protocol implements sda.Protocol
@@ -58,26 +58,26 @@ type Protocol struct {
 }
 
 const (
-	STATE_PREPREPARE = iota
-	STATE_PREPARE
-	STATE_COMMIT
-	STATE_FINISHED
+	statePrePrepare = iota
+	statePrepare
+	stateCommit
+	stateFinished
 )
 
 // NewProtocol returns a new pbft protocol
 func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft := new(Protocol)
-	pbft.state = STATE_PREPREPARE
+	pbft.state = statePrePrepare
 	tree := n.Tree()
 	pbft.Node = n
-	pbft.nodeList = tree.ListNodes()
-	idx := NotFound
+	pbft.nodeList = tree.List()
+	idx := notFound
 	for i, tn := range pbft.nodeList {
 		if tn.Id.Equals(n.TreeNode().Id) {
 			idx = i
 		}
 	}
-	if idx == NotFound {
+	if idx == notFound {
 		panic(fmt.Sprintf("Could not find ourselves %+v in the list of nodes %+v", n, pbft.nodeList))
 	}
 	pbft.index = idx
@@ -86,10 +86,19 @@ func NewProtocol(n *sda.Node) (*Protocol, error) {
 	pbft.prepMsgCount = 0
 	pbft.commitMsgCount = 0
 
-	n.RegisterChannel(&pbft.prePrepareChan)
-	n.RegisterChannel(&pbft.prepareChan)
-	n.RegisterChannel(&pbft.commitChan)
-	n.RegisterChannel(&pbft.finishChan)
+	if err := n.RegisterChannel(&pbft.prePrepareChan); err != nil {
+		return pbft, err
+	}
+	if err := n.RegisterChannel(&pbft.prepareChan); err != nil {
+		return pbft, err
+	}
+	if err := n.RegisterChannel(&pbft.commitChan); err != nil {
+		return pbft, err
+	}
+	if err := n.RegisterChannel(&pbft.finishChan); err != nil {
+		return pbft, err
+	}
+
 	return pbft, nil
 }
 
@@ -111,12 +120,12 @@ func (p *Protocol) Dispatch() error {
 	}
 }
 
-// Start() implements the ProtocolInstance interface of sda.
+// Start implements the ProtocolInstance interface of sda.
 func (p *Protocol) Start() error {
 	return p.PrePrepare()
 }
 
-// PrePrepare intializes a full run of the protocol
+// PrePrepare intializes a full run of the protocol.
 func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block
 	var err error
@@ -127,7 +136,7 @@ func (p *Protocol) PrePrepare() error {
 		if tempErr != nil {
 			err = tempErr
 		}
-		p.state = STATE_PREPARE
+		p.state = statePrepare
 	})
 	dbg.Lvl3(p.Node.Name(), "Broadcast PrePrepare DONE")
 	return err
@@ -136,7 +145,7 @@ func (p *Protocol) PrePrepare() error {
 // handlePrePrepare receive preprepare messages and go to Prepare if it received
 // enough.
 func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
-	if p.state != STATE_PREPREPARE {
+	if p.state != statePrePrepare {
 		//dbg.Lvl3(p.Name(), "DROP preprepare packet : Already broadcasted prepare")
 		return
 	}
@@ -146,7 +155,7 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	var err error
 	if verifyBlock(prePre.TrBlock, "", "") {
 		// STATE TRANSITION PREPREPARE => PREPARE
-		p.state = STATE_PREPARE
+		p.state = statePrepare
 		prep := &Prepare{prePre.TrBlock.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
 			//dbg.Print(p.Node.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
@@ -173,7 +182,7 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 }
 
 func (p *Protocol) handlePrepare(pre *Prepare) {
-	if p.state != STATE_PREPARE {
+	if p.state != statePrepare {
 		//dbg.Lvl3(p.Name(), "STORE prepare packet: wrong state")
 		p.tempPrepareMsg = append(p.tempPrepareMsg, pre)
 		return
@@ -190,7 +199,7 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 	if p.prepMsgCount >= localThreshold {
 		// TRANSITION PREPARE => COMMIT
 		dbg.Lvl3(p.Node.Name(), "Threshold (", localThreshold, ") reached: broadcast Commit")
-		p.state = STATE_COMMIT
+		p.state = stateCommit
 		// reset counter
 		p.prepMsgCount = 0
 		var err error
@@ -219,7 +228,7 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 // handleCommit receives commit messages and signal the end if it received
 // enough of it.
 func (p *Protocol) handleCommit(com *Commit) {
-	if p.state != STATE_COMMIT {
+	if p.state != stateCommit {
 		//	dbg.Lvl3(p.Name(), "STORE handle commit packet")
 		p.tempCommitMsg = append(p.tempCommitMsg, com)
 		return
@@ -232,7 +241,7 @@ func (p *Protocol) handleCommit(com *Commit) {
 		dbg.Lvl4("Leader got ", p.commitMsgCount)
 	}
 	if p.commitMsgCount >= p.threshold {
-		p.state = STATE_FINISHED
+		p.state = stateFinished
 		// reset counter
 		p.commitMsgCount = 0
 		dbg.Lvl3(p.Node.Name(), "Threshold reached: We are done... CONSENSUS")
@@ -248,9 +257,12 @@ func (p *Protocol) handleCommit(com *Commit) {
 // finish is called by the root to tell everyone the root is done
 func (p *Protocol) finish() {
 	p.broadcast(func(tn *sda.TreeNode) {
-		p.SendTo(tn, &Finish{"Finish"})
+		if err := p.SendTo(tn, &Finish{"Finish"}); err != nil {
+			dbg.Error(p.Name(), "couldn't send 'finish' message to",
+				tn.Name(), err)
+		}
 	})
-	// notify ourself
+	// notify ourselves
 	go func() { p.finishChan <- finishChan{nil, Finish{}} }()
 }
 

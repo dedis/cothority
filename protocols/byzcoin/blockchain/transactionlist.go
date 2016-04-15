@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"log"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 )
 
@@ -17,10 +18,16 @@ type TransactionList struct {
 func (tl *TransactionList) HashSum() []byte {
 	h := sha256.New()
 	for _, tx := range tl.Txs {
-		h.Write([]byte(tx.Hash))
+		if _, err := h.Write([]byte(tx.Hash)); err != nil {
+			dbg.Error("Couldn't hash TX list", err)
+		}
 	}
-	binary.Write(h, binary.LittleEndian, tl.TxCnt)
-	binary.Write(h, binary.LittleEndian, tl.Fees)
+	if err := binary.Write(h, binary.LittleEndian, tl.TxCnt); err != nil {
+		dbg.Error("Couldn't hash TX list", err)
+	}
+	if err := binary.Write(h, binary.LittleEndian, tl.Fees); err != nil {
+		dbg.Error("Couldn't hash TX list", err)
+	}
 	return h.Sum(nil)
 }
 

@@ -64,7 +64,7 @@ func main() {
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		deployP.Configure(&platform.PlatformConfig{
+		deployP.Configure(&platform.Config{
 			MonitorPort: monitorPort,
 			Debug:       dbg.DebugVisible(),
 		})
@@ -74,7 +74,9 @@ func main() {
 			if err != nil {
 				dbg.Fatal("Couldn't deploy:", err)
 			}
-			deployP.Cleanup()
+			if err := deployP.Cleanup(); err != nil {
+				dbg.Error("Couldn't cleanup correctly:", err)
+			}
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
 			testsDone := make(chan bool)
@@ -93,15 +95,21 @@ func main() {
 	}
 }
 
-// Runs the given tests and puts the output into the
+// RunTests the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, runconfigs []platform.RunConfig) {
 
 	if nobuild == false {
 		if race {
-			deployP.Build(build, "-race")
+			if err := deployP.Build(build, "-race"); err != nil {
+				dbg.Error("Couln't finish build without errors:",
+					err)
+			}
 		} else {
-			deployP.Build(build)
+			if err := deployP.Build(build); err != nil {
+				dbg.Error("Couln't finish build without errors:",
+					err)
+			}
 		}
 	}
 
@@ -120,7 +128,11 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	if err != nil {
 		dbg.Fatal("error opening test file:", err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			dbg.Error("Couln't close", f.Name())
+		}
+	}()
 	err = f.Sync()
 	if err != nil {
 		dbg.Fatal("error syncing test file:", err)
@@ -170,7 +182,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 }
 
-// Runs a single test - takes a test-file as a string that will be copied
+// RunTest a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
@@ -207,7 +219,9 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 		var err error
 		if err = deployP.Wait(); err != nil {
 			dbg.Lvl3("Test failed:", err)
-			deployP.Cleanup()
+			if err := deployP.Cleanup(); err != nil {
+				dbg.Lvl3("Couldn't cleanup platform:", err)
+			}
 			done <- struct{}{}
 		}
 		dbg.Lvl3("Test complete:", rs)
@@ -245,14 +259,14 @@ func CheckHosts(rc platform.RunConfig) {
 		}
 		bf = 2
 		for calcHosts(bf, depth) < hosts {
-			bf += 1
+			bf++
 		}
 		rc.Put("bf", strconv.Itoa(bf))
 	}
 	if depth == 0 {
 		depth = 1
 		for calcHosts(bf, depth) < hosts {
-			depth += 1
+			depth++
 		}
 		rc.Put("depth", strconv.Itoa(depth))
 	}
@@ -288,13 +302,13 @@ func testFile(name string) string {
 
 // returns a tuple of start and stop configurations to run
 func getStartStop(rcs int) (int, int) {
-	ss_str := strings.Split(simRange, ":")
-	start, err := strconv.Atoi(ss_str[0])
+	ssStr := strings.Split(simRange, ":")
+	start, err := strconv.Atoi(ssStr[0])
 	stop := rcs - 1
 	if err == nil {
 		stop = start
-		if len(ss_str) > 1 {
-			stop, err = strconv.Atoi(ss_str[1])
+		if len(ssStr) > 1 {
+			stop, err = strconv.Atoi(ssStr[1])
 			if err != nil {
 				stop = rcs
 			}

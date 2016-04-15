@@ -8,71 +8,72 @@ import (
 )
 
 func init() {
-	// FIXME Protocol doesn't exists:
 	sda.SimulationRegister("JVSS", NewSimulation)
-	sda.ProtocolRegisterName("JVSS", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewJVSSProtocolInstance(node) })
 }
 
+// Simulation implements a JVSS simulation
 type Simulation struct {
 	sda.SimulationBFTree
-	// 0 - no check
-	// 1 - check signatures at the end
-	Checking int
+	Verify bool
 }
 
+// NewSimulation creates a JVSS simulation
 func NewSimulation(config string) (sda.Simulation, error) {
-	es := &Simulation{Checking: 1}
-	_, err := toml.Decode(config, es)
+	jvs := &Simulation{Verify: true}
+	_, err := toml.Decode(config, jvs)
 	if err != nil {
 		return nil, err
 	}
-	return es, nil
+	return jvs, nil
 }
 
-func (jv *Simulation) Setup(dir string, hosts []string) (
-	*sda.SimulationConfig, error) {
-	sc := &sda.SimulationConfig{}
-	jv.CreateEntityList(sc, hosts, 2000)
-	err := jv.CreateTree(sc)
-	return sc, err
+// Setup configures a JVSS simulation
+func (jvs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+	sim := new(sda.SimulationConfig)
+	jvs.CreateEntityList(sim, hosts, 2000)
+	err := jvs.CreateTree(sim)
+	return sim, err
 }
 
-func (jv *Simulation) Run(config *sda.SimulationConfig) error {
+// Run initiates a JVSS simulation
+func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
+
 	size := config.Tree.Size()
-	dbg.Lvl2("Size is:", size, "rounds:", jv.Rounds)
 	msg := []byte("Test message for JVSS simulation")
+
+	dbg.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
 	node, err := config.Overlay.CreateNewNodeName("JVSS", config.Tree)
 	if err != nil {
 		return err
 	}
-	proto := node.ProtocolInstance().(*JVSSProtocol)
-	//m := monitor.NewMeasure("longterm")
-	// compute and measure long-term secret:
-	proto.Start()
-	//m.Measure()
+	proto := node.ProtocolInstance().(*JVSS)
 
-	for round := 0; round < jv.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
+	dbg.Lvl1("Starting setup")
+	if err := node.StartProtocol(); err != nil {
+		return err
+	}
+	dbg.Lvl1("Setup done")
 
-		// we only measure the signing process
+	for round := 0; round < jvs.Rounds; round++ {
+		dbg.Lvl1("Starting signing round", round)
 		r := monitor.NewTimeMeasure("round")
+		dbg.Lvl2("Requesting signature")
 		sig, err := proto.Sign(msg)
 		if err != nil {
-			dbg.Error("Couldn't create signature")
+			dbg.Error("Could not create signature")
 			return err
 		}
-
-		// see if we got a valid signature:
-		if jv.Checking == 1 {
-			err = proto.Verify(msg, sig)
-			if err != nil {
-				dbg.Error("Got invalid signature")
+		if jvs.Verify {
+			dbg.Lvl2("Signature received")
+			if err := proto.Verify(msg, sig); err != nil {
+				dbg.Error("Signature invalid")
 				return err
 			}
-			dbg.Lvl3("Signature is OK")
+			dbg.Lvl2("Signature valid")
 		}
 		r.Record()
 	}
+
 	return nil
 }

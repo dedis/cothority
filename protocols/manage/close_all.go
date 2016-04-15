@@ -1,10 +1,11 @@
 package manage
 
 import (
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"time"
 )
 
 /*
@@ -22,18 +23,26 @@ func init() {
 	sda.ProtocolRegisterName("CloseAll", NewCloseAll)
 }
 
+// ProtocolCloseAll is the structure used to hold the Done-channel
 type ProtocolCloseAll struct {
 	*sda.Node
+	// Done receives a 'true' once the protocol is done.
 	Done chan bool
 }
 
+// PrepareClose is sent down the tree until the nodes
 type PrepareClose struct{}
+
+// PrepareCloseMsg is the wrapper for the PrepareClose message
 type PrepareCloseMsg struct {
 	*sda.TreeNode
 	PrepareClose
 }
 
+// Close is sent to the parent just before the node shuts down
 type Close struct{}
+
+// CloseMsg is the wrapper for the Close message
 type CloseMsg struct {
 	*sda.TreeNode
 	Close
@@ -43,9 +52,23 @@ type CloseMsg struct {
 func NewCloseAll(n *sda.Node) (sda.ProtocolInstance, error) {
 	p := &ProtocolCloseAll{Node: n}
 	p.Done = make(chan bool, 1)
-	p.RegisterHandler(p.FuncPrepareClose)
-	p.RegisterHandler(p.FuncClose)
+	if err := p.RegisterHandler(p.FuncPrepareClose); err != nil {
+		return nil, err
+	}
+	if err := p.RegisterHandler(p.FuncClose); err != nil {
+		return nil, err
+	}
 	return p, nil
+}
+
+// Start the protocol and waits for the `Close`-message to arrive back at
+// the root-node.
+func (p *ProtocolCloseAll) Start() error {
+	// Send an empty message
+	p.FuncPrepareClose(PrepareCloseMsg{TreeNode: p.TreeNode()})
+	// Wait till the end
+	<-p.Done
+	return nil
 }
 
 // FuncPrepareClose sends a `PrepareClose`-message down the tree.
@@ -68,7 +91,10 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	if !p.IsRoot() {
 		dbg.Lvl3("Sending closeall from", p.Entity().Addresses,
 			"to", p.Parent().Entity.Addresses)
-		p.SendTo(p.Parent(), &Close{})
+		if err := p.SendTo(p.Parent(), &Close{}); err != nil {
+			dbg.Error(p.Info(), "couldn't send 'close' tp parent",
+				p.Parent(), err)
+		}
 	} else {
 		dbg.Lvl2("Root received Close")
 		p.Done <- true
@@ -80,14 +106,4 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 		dbg.Error("Couldn't close:", err)
 	}
 	p.Node.Done()
-}
-
-// Starts the protocol and waits for the `Close`-message to arrive back at
-// the root-node.
-func (p *ProtocolCloseAll) Start() error {
-	// Send an empty message
-	p.FuncPrepareClose(PrepareCloseMsg{TreeNode: p.TreeNode()})
-	// Wait till the end
-	<-p.Done
-	return nil
 }

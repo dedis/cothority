@@ -1,21 +1,32 @@
 package sda
 
 import (
+	"sync"
+
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
-	"sync"
 )
 
 // Our message-types used in sda
-var SDADataMessage = network.RegisterMessageType(SDAData{})
-var RequestTreeMessage = network.RegisterMessageType(RequestTree{})
-var RequestEntityListMessage = network.RegisterMessageType(RequestEntityList{})
-var SendTreeMessage = TreeMarshalType
-var SendEntityListMessage = EntityListType
 
-// SDAData is to be embedded in every message that is made for a
+// ID of SDAData message as registered in network
+var SDADataMessageID = network.RegisterMessageType(Data{})
+
+// ID of RequestTree message as registered in network
+var RequestTreeMessageID = network.RegisterMessageType(RequestTree{})
+
+// ID of RequestEntityList message as registered in network
+var RequestEntityListMessageID = network.RegisterMessageType(RequestEntityList{})
+
+// ID of TreeMarshal message as registered in network
+var SendTreeMessageID = TreeMarshalTypeID
+
+// ID of EntityList message as registered in network
+var SendEntityListMessageID = EntityListTypeID
+
+// Data is to be embedded in every message that is made for a
 // ProtocolInstance
-type SDAData struct {
+type Data struct {
 	// Token uniquely identify the protocol instance this msg is made for
 	From *Token
 	// The TreeNodeId Where the message goes to
@@ -66,7 +77,7 @@ func (t *Token) Id() TokenID {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
 	if t.cacheId == TokenID(uuid.Nil) {
-		url := network.UuidURL + "token/" + t.EntityListID.String() +
+		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))

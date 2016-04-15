@@ -14,6 +14,7 @@ func init() {
 	sda.SimulationRegister("CoSi", NewSimulation)
 }
 
+// Simulation implements the sda.Simulation of the CoSi protocol.
 type Simulation struct {
 	sda.SimulationBFTree
 
@@ -23,6 +24,8 @@ type Simulation struct {
 	Checking int
 }
 
+// NewSimulation returns an sda.Simulation or an error if sth. is wrong.
+// Used to register the CoSi protocol.
 func NewSimulation(config string) (sda.Simulation, error) {
 	cs := &Simulation{Checking: 2}
 	_, err := toml.Decode(config, cs)
@@ -33,6 +36,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	return cs, nil
 }
 
+// Setup implements sda.Simulation.
 func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	cs.CreateEntityList(sim, hosts, 2000)
@@ -40,6 +44,7 @@ func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, 
 	return sim, err
 }
 
+// Node implements sda.Simulation.
 func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
 	err := cs.SimulationBFTree.Node(sc)
 	if err != nil {
@@ -49,6 +54,7 @@ func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
 	return nil
 }
 
+// Run implements sda.Simulation.
 func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
@@ -80,7 +86,9 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			done <- true
 		}
 		proto.RegisterDoneCallback(fn)
-		proto.Start()
+		if err := proto.Start(); err != nil {
+			dbg.Error("Couldn't start protocol in round", round)
+		}
 		<-done
 	}
 	dbg.Lvl1("Simulation finished")

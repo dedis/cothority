@@ -91,14 +91,20 @@ func Proxy(redirection string) error {
 		for finished == false {
 			select {
 			case <-newConn:
-				nconn += 1
+				nconn++
 			case <-closeConn:
-				nconn -= 1
+				nconn--
 				if nconn == 0 {
 					// everything is finished
-					serverEnc.Encode(NewSingleMeasure("end", 0))
-					serverConn.Close()
-					ln.Close()
+					if err := serverEnc.Encode(NewSingleMeasure("end", 0)); err != nil {
+						dbg.Error("Couldn't send 'end' message:", err)
+					}
+					if err := serverConn.Close(); err != nil {
+						dbg.Error("Couldn't close server connection:", err)
+					}
+					if err := ln.Close(); err != nil {
+						dbg.Error("Couldn't close listener:", err)
+					}
 					finished = true
 					break
 				}
@@ -133,7 +139,7 @@ func proxyConnection(conn net.Conn, done chan bool) {
 				break
 			}
 			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
-			nerr += 1
+			nerr++
 			if nerr > 1 {
 				dbg.Lvl1("Too many errors from", conn.RemoteAddr().String(), ": Abort connection")
 				break
@@ -152,7 +158,9 @@ func proxyConnection(conn net.Conn, done chan bool) {
 			break
 		}
 	}
-	conn.Close()
+	if err := conn.Close(); err != nil {
+		dbg.Error("Couldn't close connection:", err)
+	}
 	done <- true
 }
 

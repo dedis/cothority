@@ -2,11 +2,12 @@ package manage
 
 import (
 	"errors"
+	"strconv"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"strconv"
 )
 
 /*
@@ -17,12 +18,15 @@ func init() {
 	sda.SimulationRegister("Count", NewSimulation)
 }
 
-type Simulation struct {
+// Simulation only holds the BFTree simulation
+type simulation struct {
 	sda.SimulationBFTree
 }
 
+// NewSimulation returns the new simulation, where all fields are
+// initialised using the config-file
 func NewSimulation(config string) (sda.Simulation, error) {
-	es := &Simulation{}
+	es := &simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -30,7 +34,8 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (e *Simulation) Setup(dir string, hosts []string) (
+// Setup creates the tree used for that simulation
+func (e *simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
@@ -41,7 +46,9 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-func (e *Simulation) Run(config *sda.SimulationConfig) error {
+// Run is used on the destination machines and runs a number of
+// rounds
+func (e *simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {

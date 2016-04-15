@@ -1,4 +1,4 @@
-package byzcoin_ntree
+package byzcoinNtree
 
 import (
 	"encoding/json"
@@ -65,10 +65,19 @@ func NewNtreeProtocol(node *sda.Node) (*Ntree, error) {
 		tempBlockSig:               new(NaiveBlockSignature),
 		tempSignatureResponse:      &RoundSignatureResponse{new(NaiveBlockSignature)},
 	}
-	node.RegisterChannel(&nt.announceChan)
-	node.RegisterChannel(&nt.blockSignatureChan)
-	node.RegisterChannel(&nt.roundSignatureRequestChan)
-	node.RegisterChannel(&nt.roundSignatureResponseChan)
+
+	if err := node.RegisterChannel(&nt.announceChan); err != nil {
+		return nt, err
+	}
+	if err := node.RegisterChannel(&nt.blockSignatureChan); err != nil {
+		return nt, err
+	}
+	if err := node.RegisterChannel(&nt.roundSignatureRequestChan); err != nil {
+		return nt, err
+	}
+	if err := node.RegisterChannel(&nt.roundSignatureResponseChan); err != nil {
+		return nt, err
+	}
 
 	go nt.listen()
 	return nt, nil
@@ -83,16 +92,20 @@ func NewNTreeRootProtocol(node *sda.Node, transactions []blkparser.Tx) (*Ntree, 
 	return nt, err
 }
 
-// Announce the new block to sign
+// Start announces the new block to sign
 func (nt *Ntree) Start() error {
 	dbg.Lvl3(nt.Name(), "Start()")
 	go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
 	for _, tn := range nt.Children() {
-		nt.SendTo(tn, &BlockAnnounce{nt.block})
+		if err := nt.SendTo(tn, &BlockAnnounce{nt.block}); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
+// Dispatch do nothing yet since we use an implicit listen function in a go
+// routine
 func (nt *Ntree) Dispatch() error {
 	// do nothing
 	return nil
@@ -113,7 +126,12 @@ func (nt *Ntree) listen() {
 				continue
 			}
 			for _, tn := range nt.Children() {
-				nt.SendTo(tn, &msg.BlockAnnounce)
+				err := nt.SendTo(tn, &msg.BlockAnnounce)
+				if err != nil {
+					dbg.Error(nt.Name(),
+						"couldn't send to", tn.Name(),
+						err)
+				}
 			}
 			// generate your own signature / exception and pass that up to the
 			// root
@@ -131,7 +149,11 @@ func (nt *Ntree) listen() {
 			}
 
 			for _, tn := range nt.Children() {
-				nt.SendTo(tn, &msg.RoundSignatureRequest)
+				err := nt.SendTo(tn, &msg.RoundSignatureRequest)
+				if err != nil {
+					dbg.Error(nt.Name(), "couldn't sent to",
+						tn.Name(), err)
+				}
 			}
 			// Decide if we want to sign this or not
 		case msg := <-nt.roundSignatureResponseChan:
@@ -203,7 +225,9 @@ func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
 	sigRequest := &RoundSignatureRequest{msg}
 	go nt.verifySignatureRequest(sigRequest)
 	for _, tn := range nt.Children() {
-		nt.SendTo(tn, sigRequest)
+		if err := nt.SendTo(tn, sigRequest); err != nil {
+			dbg.Error(nt.Name(), "couldn't send to", tn.Name(), err)
+		}
 	}
 }
 
@@ -211,7 +235,7 @@ func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
 // parrallele
 func (nt *Ntree) verifySignatureRequest(msg *RoundSignatureRequest) {
 	// verification if we have too much exceptions
-	threshold := int(math.Ceil(float64(len(nt.Tree().ListNodes())) / 3.0))
+	threshold := int(math.Ceil(float64(len(nt.Tree().List())) / 3.0))
 	if len(msg.Exceptions) > threshold {
 		nt.verifySignatureRequestChan <- false
 	}
@@ -288,7 +312,9 @@ func (nt *Ntree) handleRoundSignatureResponse(msg *RoundSignatureResponse) {
 		}
 		return
 	}
-	nt.SendTo(nt.Parent(), msg)
+	if err := nt.SendTo(nt.Parent(), msg); err != nil {
+		dbg.Error(nt.Name(), "couldn't send to", nt.Name(), err)
+	}
 }
 
 // RegisterOnDone is the callback that will be executed when the final signature
@@ -302,7 +328,7 @@ type BlockAnnounce struct {
 	Block *blockchain.TrBlock
 }
 
-// the signatureS of a block goes up the tree using this message
+// NaiveBlockSignature contains the signatures of a block that goes up the tree using this message
 type NaiveBlockSignature struct {
 	Sigs       []crypto.SchnorrSig
 	Exceptions []Exception
@@ -312,7 +338,7 @@ type NaiveBlockSignature struct {
 // sign something. It justs passes its TreeNodeId inside. No need for public key
 // or whatever because each signatures is independent.
 type Exception struct {
-	Id sda.TreeNodeID
+	ID sda.TreeNodeID
 }
 
 // RoundSignatureRequest basically is the the block signature broadcasting
@@ -321,12 +347,12 @@ type RoundSignatureRequest struct {
 	*NaiveBlockSignature
 }
 
-// The final signatures
+// RoundSignatureResponse is the final signatures
 type RoundSignatureResponse struct {
 	*NaiveBlockSignature
 }
 
-// Signature that we give back to the simulation or control
+// NtreeSignature is the signature that we give back to the simulation or control
 type NtreeSignature struct {
 	Block *blockchain.TrBlock
 	*RoundSignatureResponse

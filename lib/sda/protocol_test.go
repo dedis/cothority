@@ -26,7 +26,7 @@ type ProtocolTest struct {
 func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
 		Node:     n,
-		StartMsg: make(chan string),
+		StartMsg: make(chan string, 1),
 		DispMsg:  make(chan string),
 	}, nil
 }

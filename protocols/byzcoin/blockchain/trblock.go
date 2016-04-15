@@ -10,6 +10,7 @@ import (
 	"net"
 
 	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 type Block struct {
@@ -31,11 +32,21 @@ func (tr *TrBlock) MarshalBinary() ([]byte, error) {
 // Hash returns a hash representation of the block
 func (tr *TrBlock) HashSum() []byte {
 	h := sha256.New()
-	h.Write(tr.Magic[:])
-	binary.Write(h, binary.LittleEndian, tr.BlockSize)
-	h.Write([]byte(tr.HeaderHash))
-	h.Write(tr.Header.HashSum())
-	h.Write(tr.TransactionList.HashSum())
+	if _, err := h.Write(tr.Magic[:]); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if err := binary.Write(h, binary.LittleEndian, tr.BlockSize); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if _, err := h.Write([]byte(tr.HeaderHash)); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if _, err := h.Write(tr.Header.HashSum()); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if _, err := h.Write(tr.TransactionList.HashSum()); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
 	return h.Sum(nil)
 }
 
@@ -47,13 +58,21 @@ type Header struct {
 	LeaderId   net.IP
 }
 
-// Hash returns a hash representation of the header
+// HashSum returns a hash representation of the header
 func (h *Header) HashSum() []byte {
 	ha := sha256.New()
-	ha.Write([]byte(h.MerkleRoot))
-	ha.Write([]byte(h.Parent))
-	ha.Write([]byte(h.ParentKey))
-	ha.Write([]byte(h.PublicKey))
+	if _, err := ha.Write([]byte(h.MerkleRoot)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
+	if _, err := ha.Write([]byte(h.Parent)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
+	if _, err := ha.Write([]byte(h.ParentKey)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
+	if _, err := ha.Write([]byte(h.PublicKey)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
 	return ha.Sum(nil)
 }
 
@@ -107,7 +126,9 @@ func (trb *Block) Hash(h *Header) (res string) {
 func HashHeader(h *Header) string {
 	data := fmt.Sprintf("%v", h)
 	sha := sha256.New()
-	sha.Write([]byte(data))
+	if _, err := sha.Write([]byte(data)); err != nil {
+		dbg.Error("Couldn't hash header:", err)
+	}
 	hash := sha.Sum(nil)
 	return hex.EncodeToString(hash)
 }
