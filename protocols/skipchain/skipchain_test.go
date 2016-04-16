@@ -12,9 +12,9 @@ import (
 func TestNode(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	nbrNodes := 2
+	nbrNodes := 5
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
-	//dbg.Lvl3(tree.Dump())
+	dbg.Lvl4(tree.Dump())
 	defer local.CloseAll()
 
 	node, err := local.StartNewNodeName("Skipchain", tree)
