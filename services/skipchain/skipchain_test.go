@@ -12,7 +12,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func TestServiceCosi(t *testing.T) {
+func TestService(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
@@ -36,7 +36,7 @@ func TestServiceCosi(t *testing.T) {
 	buffRequest, err := network.MarshalRegisteredType(&req)
 	assert.Nil(t, err)
 
-	re := &sda.Request{
+	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("Cosi"),
 		Type:    CosiRequestType,
 		Data:    json.RawMessage(buffRequest),

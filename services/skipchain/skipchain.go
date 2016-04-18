@@ -14,7 +14,7 @@ import (
 // updated version that chains all signatures for example.
 
 func init() {
-	sda.RegisterNewService("Skipchain", newCosiService)
+	sda.RegisterNewService("Skipchain", newSkipchainService)
 }
 
 // Cosi is the service that handles collective signing operations
@@ -44,7 +44,7 @@ type ServiceResponse struct {
 var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
 // ProcessRequest treats external request to this service.
-func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
+func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != CosiRequestType {
 		return
 	}
@@ -94,7 +94,7 @@ func (c *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (s
 	return pi, err
 }
 
-func newCosiService(c sda.Context, path string) sda.Service {
+func newSkipchainService(c sda.Context, path string) sda.Service {
 	return &Cosi{
 		c:    c,
 		path: path,
