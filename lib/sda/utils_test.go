@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_collectErrors(t *testing.T) {
-	testMap := map[string]error{
-		"127.0.0.1": errors.New("We are offline, sorry."),
-		"127.0.0.2": errors.New("Timeout..."),
+func TestCollectErrors(t *testing.T) {
+	var testMap = []collectedErrors{
+		{"127.0.0.1", errors.New("We are offline, sorry.")},
+		{"127.0.0.2", errors.New("Timeout...")},
 	}
 	err := collectErrors("Error while contacting %s: %s\n", testMap)
 	assert.NotNil(t, err, "Should create a valid error.")
