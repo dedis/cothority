@@ -465,7 +465,7 @@ func (bz *ByzCoin) handleChallengePrepare(ch *ChallengePrepare) error {
 	bz.tempBlock = ch.TrBlock
 	// start the verification of the block
 	go VerifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
-	// acknoledge the challenge and send its down
+	// acknowledge the challenge and send its down
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
 

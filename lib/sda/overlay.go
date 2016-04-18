@@ -143,6 +143,8 @@ func (o *Overlay) RegisterTree(t *Tree) {
 
 // TreeFromToken searches for the tree corresponding to a token.
 func (o *Overlay) TreeFromToken(tok *Token) *Tree {
+	o.treesMut.Lock()
+	defer o.treesMut.Unlock()
 	return o.trees[tok.TreeID]
 }
 

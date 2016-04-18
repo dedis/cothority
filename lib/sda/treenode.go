@@ -303,7 +303,6 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 	} else {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
-
 			m := n.reflectCreate(to.Elem(), msg)
 			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
