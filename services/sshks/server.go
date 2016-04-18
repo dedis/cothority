@@ -158,7 +158,7 @@ func (sa *ServerKS) FuncGetServer(*network.Message) network.ProtocolMessage {
 
 // FuncSendFirstConfig stores the new config before it is signed by other clients
 func (sa *ServerKS) FuncSendFirstCommit(data *network.Message) network.ProtocolMessage {
-	dbg.Print(data.Entity, *sa.Config)
+	dbg.Lvl3(data.Entity, *sa.Config)
 	if sa.unknownClient(data.Entity) {
 		return &StatusRet{"Refusing unknown client"}
 	}
@@ -179,6 +179,7 @@ func (sa *ServerKS) FuncSendNewConfig(data *network.Message) network.ProtocolMes
 	if !ok {
 		return &StatusRet{"Didn't get a config"}
 	}
+	dbg.LLvl3("Got new config", *conf.Config)
 	chal, err := sa.NextConfig.NewConfig(sa, conf.Config)
 	if err != nil {
 		return &SendNewConfigRet{}
@@ -319,15 +320,16 @@ func NewNextConfig(sa *ServerKS) *NextConfig {
 		cosi:      libcosi.NewCosi(network.Suite, sa.Private),
 		responses: make(map[abstract.Point]*libcosi.Response),
 		commits:   make(map[abstract.Point]*libcosi.Commitment),
+		config:    NewConfig(0),
 	}
 }
 
 // NewConfig adds a new config and initialises all values to 0
 func (nc *NextConfig) NewConfig(sa *ServerKS, conf *Config) (abstract.Secret, error) {
-	dbg.Print("SA-config version is", sa.Config.Version)
+	dbg.Lvl3("SA-config version is", sa.Config.Version)
 	nc.config = conf
 	nc.config.Version = sa.Config.Version + 1
-	dbg.Print("Config-version is", nc.config.Version)
+	dbg.Lvl3("Config-version is", nc.config.Version)
 	nc.cosi = libcosi.NewCosi(network.Suite, sa.Private)
 	nc.responses = make(map[abstract.Point]*libcosi.Response)
 	nc.clients = len(sa.Config.Clients)
@@ -338,7 +340,7 @@ func (nc *NextConfig) NewConfig(sa *ServerKS, conf *Config) (abstract.Secret, er
 	hashConfig := nc.config.Hash()
 	ac := network.Suite.Point().Null()
 	for _, c := range nc.commits {
-		dbg.Print("Commitment", c.Commitment)
+		dbg.Lvl3("Commitment", c.Commitment)
 		ac.Add(ac, c.Commitment)
 	}
 	pb, err := ac.MarshalBinary()
@@ -346,10 +348,10 @@ func (nc *NextConfig) NewConfig(sa *ServerKS, conf *Config) (abstract.Secret, er
 		return nil, err
 	}
 	cipher := network.Suite.Cipher(pb)
-	dbg.Print("Message is", hashConfig, pb)
+	dbg.Lvl3("Message is", hashConfig, pb)
 	cipher.Message(nil, nil, hashConfig)
 	challenge := network.Suite.Secret().Pick(cipher)
-	dbg.Print("Challenge is", challenge)
+	dbg.Lvl3("Challenge is", challenge)
 	nc.config.Signature = &cosi.SignResponse{
 		Sum:       hashConfig,
 		Challenge: challenge,
@@ -364,7 +366,7 @@ func (nc *NextConfig) NewConfig(sa *ServerKS, conf *Config) (abstract.Secret, er
 
 // AddCommit stores that commit for the next challenge-creation
 func (nc *NextConfig) AddCommit(e *network.Entity, c *libcosi.Commitment) {
-	dbg.Print("Adding commit for", e.Public, c.Commitment)
+	dbg.Lvl3("Adding commit for", e.Public, c.Commitment)
 	nc.commits[e.Public] = c
 }
 
@@ -383,7 +385,7 @@ func (nc *NextConfig) AddResponse(e *network.Entity, r *libcosi.Response) bool {
 	// Create the aggregated Response
 	aggregateResponse := network.Suite.Secret().Zero()
 	for _, resp := range nc.responses {
-		dbg.Print("Adding response", resp.Response)
+		dbg.Lvl3("Adding response", resp.Response)
 		aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.Response)
 	}
 	nc.config.Signature.Response = aggregateResponse

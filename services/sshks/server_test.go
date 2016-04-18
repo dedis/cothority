@@ -175,8 +175,8 @@ func TestServerSign(t *testing.T) {
 		t.Fatal("Two signatures should be enough")
 	}
 	conf = srv.NextConfig.GetConfig()
-	if conf.Version != 3 {
-		t.Fatal("Version should now be 3")
+	if conf.Version != 4 {
+		t.Fatal("Version should now be 4")
 	}
 	dbg.ErrFatal(conf.VerifySignature())
 }

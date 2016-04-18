@@ -83,6 +83,8 @@ func TestNetworkGetConfig(t *testing.T) {
 	defer conode.Stop()
 	srv, _ := sshks.NetworkGetServer(conode.This.Entity.Addresses[0])
 	cl := sshks.NewClientKS("")
+	conode.Config = sshks.NewConfig(1)
+	conode.Config.Servers[srv.Entity.Addresses[0]] = srv
 	conf, _, err := cl.NetworkGetConfig(srv)
 	dbg.TestFatal(t, err)
 	if len(conf.Servers) != 1 {
@@ -102,7 +104,7 @@ func TestCAServerAdd(t *testing.T) {
 	if len(srv2.Config.Servers) != 1 {
 		t.Fatal("Server 2 should still only know himself")
 	}
-	if srv1.This.Entity.Public != srv1.Config.Servers["localhost:2000"].Entity.Public {
+	if !srv1.This.Entity.Public.Equal(srv1.Config.Servers["localhost:2000"].Entity.Public) {
 		t.Fatal("Server.This should be the same as config")
 	}
 	dbg.Lvl1("Adding 2nd server")
@@ -171,18 +173,10 @@ func TestCAServerCheck(t *testing.T) {
 func TestCAClientAdd(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
-	ca.AddServer(servers[0].This)
+	dbg.ErrFatal(ca.AddServer(servers[0].This))
 	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
-	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"Client2")
-	err := ca.AddClient(client1)
-	dbg.ErrFatal(err)
-	if len(ca.Config.Clients) != 1 {
-		t.Fatal("There should be 1 client now")
-	}
-	err = ca.AddClient(client2)
-	dbg.ErrFatal(err)
+	dbg.ErrFatal(ca.AddClient(client1))
 	if len(ca.Config.Clients) != 2 {
 		t.Fatal("There should be 2 clients now")
 	}
@@ -276,32 +270,23 @@ func TestCASign(t *testing.T) {
 }
 
 func TestCAUpdate(t *testing.T) {
-	ca1, servers := newTest(2)
+	ca1, servers := newTest(1)
 	defer closeServers(t, servers)
-	srv1, srv2 := servers[0].This, servers[1].This
-	ca1.AddServer(srv1)
-	ca1.AddServer(srv2)
-	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"Client1")
-	tmp, err := sshks.SetupTmpHosts()
-	dbg.ErrFatal(err)
-	ca2, err := sshks.ReadClientKS(tmp + "/config.bin")
-	dbg.ErrFatal(err)
-	ca2.AddServer(srv1)
-	// Now add a client to ca1, thus making ca2s config invalid
-	err = ca1.AddClient(client1)
-	dbg.ErrFatal(err)
-	if bytes.Compare(ca1.Config.Signature.Sum, ca2.Config.Signature.Sum) == 0 {
-		t.Fatal("Should have different signature now")
-	}
+	srv1 := servers[0].This
+	dbg.ErrFatal(ca1.AddServer(srv1))
+	ca2 := newClient(2)
+	dbg.ErrFatal(ca1.AddClient(ca2.This))
+	dbg.ErrFatal(ca2.AddServer(srv1))
 
-	// Update and verify everything is the same
-	ca2.Update(nil)
-	if len(ca2.Config.Servers) != 2 {
-		t.Fatal("Should now have two servers")
+	// Now add a client to ca1, thus making ca2s config invalid
+	if ca2.Config.Signature == nil{
+		t.Fatal("Signature of ca2 is nil")
 	}
-	if len(ca2.Config.Clients) != 1 {
-		t.Fatal("Should now have one client")
+	if len(ca2.Config.Servers) != 1 {
+		t.Fatal("Should have one server")
+	}
+	if len(ca2.Config.Clients) != 2 {
+		t.Fatal("Should have two clients")
 	}
 	if bytes.Compare(ca1.Config.Signature.Sum, ca2.Config.Signature.Sum) != 0 {
 		t.Fatal("Should have the same signature")

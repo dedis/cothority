@@ -33,12 +33,15 @@ type ClientKS struct {
 // a ClientKS with an empty Config. It takes a public ssh-key.
 func NewClientKS(sshPub string) *ClientKS {
 	pair := config.NewKeyPair(network.Suite)
-	return &ClientKS{
+	cks := &ClientKS{
 		This:    NewClient(pair.Public, sshPub),
 		Config:  NewConfig(0),
 		Private: pair.Secret,
 		Cosi:    cosi.NewCosi(network.Suite, pair.Secret),
 	}
+	cks.Config.Clients[cks.This.Entity.Public.String()] = cks.This
+	cks.NewConfig = cks.Config
+	return cks
 }
 
 // ReadClientKS searches for the client-ks and creates a new one if it
@@ -48,7 +51,6 @@ func ReadClientKS(f string) (*ClientKS, error) {
 	ca := NewClientKS("TestClient-")
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
-		ca.Config = NewConfig(0)
 		return ca, nil
 	}
 	b, err := ioutil.ReadFile(ExpandHDir(file))
@@ -98,12 +100,12 @@ func (ca *ClientKS) NetworkSendNewConfig(s *Server) error {
 	}
 	replyCh, ok := reply.Msg.(SendNewConfigRet)
 	if !ok {
-		return errors.New("Didn't get correct message")
+		return ErrMsg(reply, nil)
 	}
 	if replyCh.Challenge == nil {
 		return errors.New("Challenge is nil")
 	}
-	dbg.Print("Received challenge", replyCh.Challenge)
+	dbg.Lvl3("Received challenge", replyCh.Challenge)
 	ca.Cosi.Challenge(&cosi.Challenge{replyCh.Challenge})
 	return nil
 }
@@ -128,7 +130,7 @@ func (ca *ClientKS) NetworkResponse(s *Server) (int, int, error) {
 	dbg.Lvl3("Asking server", s.Entity.Addresses[0], "to sign")
 	cosi_new := cosi.NewCosi(network.Suite, ca.Private)
 	cosiResponse, err := ca.Cosi.CreateResponse()
-	dbg.Print("Response is", cosiResponse.Response)
+	dbg.Lvl3("Response is", cosiResponse.Response)
 	if err != nil {
 		return -1, -1, err
 	}
@@ -162,6 +164,7 @@ func (ca *ClientKS) NetworkResponse(s *Server) (int, int, error) {
 // another sshks, the config will be signed off and stored in that server.
 // Else more than 50% of the the other clients have to sign off first.
 func (ca *ClientKS) AddServer(srv *Server) error {
+	dbg.Lvl3("Adding server", srv.Entity.Addresses[0], "to config", ca.Config)
 	var srvSend *Server
 	if len(ca.Config.Servers) == 0 {
 		// If there are no servers, then there will be no
@@ -172,6 +175,16 @@ func (ca *ClientKS) AddServer(srv *Server) error {
 			return err
 		}
 		srvSend = srv
+		now, next, err := ca.NetworkGetConfig(srvSend)
+		if err != nil{
+			return err
+		}
+		if now.Version > 0{
+			dbg.LLvl2("Found server with available config")
+			ca.Config = now
+			ca.NewConfig = next
+			return nil
+		}
 	} else {
 		var err error
 		srvSend, err = ca.getAnyServer()
@@ -190,7 +203,7 @@ func (ca *ClientKS) AddServer(srv *Server) error {
 	if err != nil {
 		return err
 	}
-	return ca.SignNewConfig(srv)
+	return ca.SignNewConfig(srvSend)
 }
 
 // AddServerAddr takes an address and will ask the server for it's identity first
@@ -242,6 +255,9 @@ func (ca *ClientKS) AddClient(client *Client) error {
 	}
 	ca.NewConfig.AddClient(client)
 	if len(ca.Config.Servers) == 0 {
+		// If we don't have any server, we need to save the
+		// config
+		ca.Config = ca.NewConfig
 		return nil
 	}
 	srv, err := ca.getAnyServer()

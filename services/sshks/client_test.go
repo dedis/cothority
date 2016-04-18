@@ -18,14 +18,13 @@ func TestNetworkFunctions(t *testing.T) {
 
 	// Adding ourselves and first server
 	dbg.Print("Public key", client.This.Entity.Public)
-	client.Config = sshks.NewConfig(1)
+	client.NewConfig = sshks.NewConfig(1)
 	client.Cosi = cosi.NewCosi(network.Suite, client.Private)
-	dbg.ErrFatal(client.Config.AddClient(client.This))
-	dbg.ErrFatal(client.Config.AddServer(srv))
+	dbg.ErrFatal(client.NewConfig.AddClient(client.This))
+	dbg.ErrFatal(client.NewConfig.AddServer(srv))
 	dbg.ErrFatal(client.NetworkSendFirstCommit(srv))
 	dbg.ErrFatal(client.NetworkSendNewConfig(srv))
-	_, _, err := client.NetworkResponse(srv)
-	dbg.ErrFatal(err)
+	dbg.ErrFatal(client.SignNewConfig(srv))
 
 	// Verify the configuration
 	conf := client.Config
@@ -38,7 +37,8 @@ func TestNetworkFunctions(t *testing.T) {
 	if len(conf.Clients) != 1 {
 		t.Fatal("Should have 1 client signed up")
 	}
-	if conf.Clients[client.This.SSHpub].Entity.ID != client.This.Entity.ID {
+	dbg.Print(conf.Clients, *client.This)
+	if conf.Clients[client.This.Entity.Public.String()].Entity.ID != client.This.Entity.ID {
 		t.Fatal("First stored client should be us")
 	}
 	if conf.Servers[srv.Entity.Addresses[0]].Entity.ID != srv.Entity.ID {
@@ -66,7 +66,7 @@ func TestFirstClient(t *testing.T) {
 	if len(conf.Clients) != 1 {
 		t.Fatal("Should have 1 client signed up")
 	}
-	if conf.Clients[client.This.SSHpub].Entity.ID != client.This.Entity.ID {
+	if conf.Clients[client.This.Entity.Public.String()].Entity.ID != client.This.Entity.ID {
 		t.Fatal("First stored client should be us")
 	}
 	if conf.Servers[srv1.Entity.Addresses[0]].Entity.ID != srv1.Entity.ID {
@@ -93,6 +93,9 @@ func TestMoreClients(t *testing.T) {
 	// Setup first client and server
 	dbg.ErrFatal(cks1.AddClient(cks1.This))
 	dbg.ErrFatal(cks1.AddServer(srv1))
+	if len(servers[0].Config.Clients) != 1{
+		t.Fatal("Should have 1 client now")
+	}
 
 	// Add a second client
 	cks2 := newClient(1)

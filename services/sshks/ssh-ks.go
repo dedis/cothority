@@ -126,7 +126,7 @@ func (conf *Config) VerifySignature() error {
 	// Calculate aggregate public key
 	agg := network.Suite.Point().Null()
 	for _, cl := range conf.Signers {
-		dbg.Print("Signer", cl.Public)
+		dbg.Lvl3("Signer", cl.Public)
 		agg.Add(agg, cl.Public)
 	}
 	sig := conf.Signature
@@ -134,7 +134,7 @@ func (conf *Config) VerifySignature() error {
 	if !bytes.Equal(conf.Hash(), sig.Sum) {
 		return errors.New("Hash is different")
 	}
-	dbg.Print("Response is", sig.Response)
+	dbg.Lvl3("Response is", sig.Response)
 	if err := cosi.VerifySignature(network.Suite, sig.Sum, agg, sig.Challenge, sig.Response); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
