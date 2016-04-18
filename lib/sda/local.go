@@ -216,23 +216,6 @@ func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
 }
 
-// NodesFromOverlay creates a TokenID to Node map from an EntityID
-func (l *LocalTest) NodesFromOverlay(entityId network.EntityID) map[TokenID]*Node {
-	return l.Overlays[entityId].nodes
-}
-
-// AllNodes returns all nodes from all hosts in that LocalTest
-func (l *LocalTest) AllNodes() []*Node {
-	var nodes []*Node
-	for h := range l.Hosts {
-		overlay := l.Hosts[h].overlay
-		for i := range overlay.nodes {
-			nodes = append(nodes, overlay.nodes[i])
-		}
-	}
-	return nodes
-}
-
 // NewLocalHost creates a new host with the given address and registers it.
 func NewLocalHost(port int) *Host {
 	address := "localhost:" + strconv.Itoa(port)

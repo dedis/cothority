@@ -49,7 +49,7 @@ type TreeNodeInstance struct {
 // before sending to the (parent) Node
 // https://golang.org/ref/spec#Iota
 const (
-	aggregateMessages = 1 << iota
+	AggregateMessages = 1 << iota
 )
 
 // MsgHandler is called upon reception of a certain message-type
@@ -154,7 +154,7 @@ func (n *TreeNodeInstance) RegisterChannel(c interface{}) error {
 		return errors.New("Input is not channel")
 	}
 	if cr.Elem().Kind() == reflect.Slice {
-		flags += aggregateMessages
+		flags += AggregateMessages
 		cr = cr.Elem()
 	}
 	if cr.Elem().Kind() != reflect.Struct {
@@ -193,7 +193,7 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 	}
 	cr = cr.In(0)
 	if cr.Kind() == reflect.Slice {
-		flags += aggregateMessages
+		flags += AggregateMessages
 		cr = cr.Elem()
 	}
 	if cr.Kind() != reflect.Struct {
@@ -258,7 +258,7 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
 	f := reflect.ValueOf(n.handlers[mt])
-	if n.HasFlag(mt, aggregateMessages) {
+	if n.HasFlag(mt, AggregateMessages) {
 		msgs := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
@@ -289,7 +289,7 @@ func (n *TreeNodeInstance) reflectCreate(t reflect.Type, msg *Data) reflect.Valu
 func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
-	if n.HasFlag(mt, aggregateMessages) {
+	if n.HasFlag(mt, AggregateMessages) {
 		dbg.Lvl4("Received aggregated message of type:", mt)
 		to = to.Elem()
 		out := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
@@ -411,7 +411,7 @@ func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
 func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equals(n.Parent().Id)
-	if fromParent || !n.HasFlag(mt, aggregateMessages) {
+	if fromParent || !n.HasFlag(mt, AggregateMessages) {
 		return mt, []*Data{sdaMsg}, true
 	}
 	// store the msg according to its type
