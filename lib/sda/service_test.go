@@ -71,7 +71,7 @@ type DummyService struct {
 	Config   DummyConfig
 }
 
-func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
+func (ds *DummyService) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != dummyMsgType {
 		ds.link <- false
 		return
@@ -92,6 +92,24 @@ func (ds *DummyService) ProcessRequest(e *network.Entity, r *sda.Request) {
 func (ds *DummyService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dp := NewDummyProtocol(tn, DummyConfig{}, ds.link)
 	return dp, nil
+}
+
+func (ds *DummyService) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+	id, m, err := network.UnmarshalRegisteredType(s.Data, network.DefaultConstructors(network.Suite))
+	if err != nil {
+		ds.link <- false
+		return
+	}
+	if id != dummyMsgType {
+		ds.link <- false
+		return
+	}
+	dms := m.(DummyMsg)
+	if dms.A != 10 {
+		ds.link <- false
+		return
+	}
+	ds.link <- true
 }
 
 func TestServiceNew(t *testing.T) {
@@ -131,7 +149,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	dbg.Lvl1("Host created and listening")
 	defer host.Close()
 	// Send a request to the service
-	re := &sda.Request{
+	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    network.MessageTypeID(uuid.Nil),
 	}
@@ -181,7 +199,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	ds.fakeTree = tree
 
 	// Send a request to the service
-	re := &sda.Request{
+	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
 	}
@@ -245,7 +263,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	ds.fakeTree = tree
 
 	// Send a request to the service
-	re := &sda.Request{
+	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
 	}
@@ -313,7 +331,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	ds1.fakeTree = tree
 
 	// Send a request to the service
-	re := &sda.Request{
+	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
 	}
@@ -336,6 +354,52 @@ func TestServiceNewProtocol(t *testing.T) {
 	// now wait for the SECOND LINK on the SECOND HOST that the SECOND SERVICE
 	// should have started (ds2) in ProcessRequest
 	waitOrFatalValue(ds2.link, true, t)
+}
+
+func TestServiceProcessServiceMessage(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	ds1 := &DummyService{
+		link: make(chan bool),
+	}
+	ds2 := &DummyService{
+		link: make(chan bool),
+	}
+	var count int
+	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
+		var s *DummyService
+		if count == 0 {
+			s = ds1
+		} else {
+			s = ds2
+		}
+		s.c = c
+		s.path = path
+		return s
+	})
+	// create two hosts
+	h2 := sda.NewLocalHost(2010)
+	defer h2.Close()
+	h1 := sda.NewLocalHost(2000)
+	h1.ListenAndBind()
+	h1.StartProcessMessages()
+	defer h1.Close()
+	dbg.Lvl1("Host created and listening")
+
+	// connect themselves
+	dbg.Lvl1("Client connecting to host")
+	if _, err := h2.Connect(h1.Entity); err != nil {
+		t.Fatal(err)
+	}
+
+	// create request
+	m, err := sda.CreateServiceMessage("DummyService", &DummyMsg{10})
+	assert.Nil(t, err)
+	dbg.Lvl1("Sending request to service...")
+	assert.Nil(t, h2.SendRaw(h1.Entity, m))
+
+	// wait for the link from the Service on host 1
+	waitOrFatalValue(ds1.link, true, t)
 }
 
 func TestServiceBackForthProtocol(t *testing.T) {
@@ -366,7 +430,7 @@ func TestServiceBackForthProtocol(t *testing.T) {
 	buff, err := network.MarshalRegisteredType(r)
 	assert.Nil(t, err)
 
-	req := &sda.Request{
+	req := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("BackForth"),
 		Type:    simpleRequestType,
 		Data:    buff,
@@ -492,7 +556,7 @@ type simpleService struct {
 	ctx sda.Context
 }
 
-func (s *simpleService) ProcessRequest(e *network.Entity, r *sda.Request) {
+func (s *simpleService) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != simpleRequestType {
 		return
 	}
@@ -520,6 +584,10 @@ func (s *simpleService) ProcessRequest(e *network.Entity, r *sda.Request) {
 func (s *simpleService) NewProtocol(tni *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	pi, err := newBackForthProtocol(tni)
 	return pi, err
+}
+
+func (s *simpleService) ProcessServiceMessage(e *network.Entity, r *sda.ServiceMessage) {
+	return
 }
 
 func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {

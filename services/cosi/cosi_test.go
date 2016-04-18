@@ -36,7 +36,7 @@ func TestServiceCosi(t *testing.T) {
 	buffRequest, err := network.MarshalRegisteredType(&req)
 	assert.Nil(t, err)
 
-	re := &sda.Request{
+	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("Cosi"),
 		Type:    CosiRequestType,
 		Data:    json.RawMessage(buffRequest),

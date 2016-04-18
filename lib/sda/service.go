@@ -20,9 +20,9 @@ type Service interface {
 	// Each request has a field ServiceID, so each time the Host (dispatcher)
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
-	ProcessRequest(*network.Entity, *Request)
-	// XXX Later we could introduce:
-	// ProcessServiceRequest(*network.Entity,  *Request)
+	ProcessClientRequest(*network.Entity, *ClientRequest)
+	// ProcessServiceRequest takes a message from another Service
+	ProcessServiceMessage(*network.Entity, *ServiceMessage)
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -55,7 +55,7 @@ var GenericConfigID = network.RegisterMessageType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
-	cons map[ServiceID]NewServiceFunc
+	constructors map[ServiceID]NewServiceFunc
 	// translations between name of a Service and its ServiceID. Used to register a
 	// Service using a name.
 	translations map[string]ServiceID
@@ -65,7 +65,7 @@ type serviceFactory struct {
 
 // ServiceFactory is the global service factory to instantiate Services
 var ServiceFactory = serviceFactory{
-	cons:         make(map[ServiceID]NewServiceFunc),
+	constructors: make(map[ServiceID]NewServiceFunc),
 	translations: make(map[string]ServiceID),
 	inverseTr:    make(map[ServiceID]string),
 }
@@ -74,11 +74,11 @@ var ServiceFactory = serviceFactory{
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
-	if _, ok := s.cons[id]; ok {
+	if _, ok := s.constructors[id]; ok {
 		// called at init time so better panic than to continue
 		dbg.Lvl1("RegisterService():", name)
 	}
-	s.cons[id] = fn
+	s.constructors[id] = fn
 	s.translations[name] = id
 	s.inverseTr[id] = name
 }
@@ -90,8 +90,8 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServicesID() []ServiceID {
-	var ids = make([]ServiceID, 0, len(s.cons))
-	for id := range s.cons {
+	var ids = make([]ServiceID, 0, len(s.constructors))
+	for id := range s.constructors {
 		ids = append(ids, id)
 	}
 	return ids
@@ -108,9 +108,8 @@ func (s *serviceFactory) RegisteredServicesName() []string {
 
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
-	var id ServiceID
-	var ok bool
-	if id, ok = s.translations[name]; !ok {
+	id, ok := s.translations[name]
+	if !ok {
 		return NilServiceID
 	}
 	return id
@@ -134,8 +133,8 @@ func (s *serviceFactory) start(name string, c Context, path string) (Service, er
 		return nil, errors.New("No Service for this name: " + name)
 	}
 	var fn NewServiceFunc
-	if fn, ok = s.cons[id]; !ok {
-		return nil, errors.New("No Service for this id:" + fmt.Sprintf("%v", id))
+	if fn, ok = s.constructors[id]; !ok {
+		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
 	serv := fn(c, path)
 	dbg.Lvl2("Instantiated service", name)
@@ -163,7 +162,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
-			panic(err)
+			dbg.Panic(err)
 		}
 	}
 	services := make(map[ServiceID]Service)
@@ -173,7 +172,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		name := ServiceFactory.Name(id)
 		pwd, err := os.Getwd()
 		if err != nil {
-			panic(err)
+			dbg.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
 		if err := os.MkdirAll(configName, 0666); err != nil {
@@ -218,12 +217,12 @@ func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
 	return serv, true
 }
 
-// A Request is a generic packet to represent any kind of request a Service is
+// ClientRequest is a generic packet to represent any kind of request a Service is
 // ready to process. It is simply a JSON packet containing two fields:
 // * Service: a string representing the name of the service for whom the packet
 // is intended for.
 // * Data: contains all the information of the request
-type Request struct {
+type ClientRequest struct {
 	// Name of the service to direct this request to
 	Service ServiceID `json:"service_id"`
 	// Type is the type of the underlying message
@@ -232,23 +231,51 @@ type Request struct {
 	Data json.RawMessage `json:"data"`
 }
 
-// RequestType is the type that registered by the network library
-var RequestID = network.RegisterMessageType(Request{})
+// RequestID is the type that registered by the network library
+var RequestID = network.RegisterMessageType(ClientRequest{})
 
 // CreateServiceRequest creates a Request message out of any message that is
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
 // handling abstract.Secret/Public stuff that json can't do. Later we may want
 // to think on how to change that.
-func CreateServiceRequest(service string, r interface{}) (*Request, error) {
+func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error) {
 	sid := ServiceFactory.ServiceID(service)
 	dbg.Print("Name", service, " <-> ServiceID", sid)
 	buff, err := network.MarshalRegisteredType(r)
 	if err != nil {
 		return nil, err
 	}
-	return &Request{
+	return &ClientRequest{
 		Service: sid,
 		Type:    network.RegisterMessageType(r),
 		Data:    buff,
 	}, nil
+}
+
+// ServiceMessage is a generic struct that contains any data destined to a
+// Service that has been created .. by a Service. => Intra-Service
+// communications.
+type ServiceMessage struct {
+	// Service is the ID of the Service it's destined
+	Service ServiceID
+	// Data is the data encoded using protobuf for the moment.
+	Data []byte
+}
+
+// ServiceMessageID is the ID of the ServiceMessage struct.
+var ServiceMessageID = network.RegisterMessageType(ServiceMessage{})
+
+// CreateServiceMessage takes a service name and some data and encodes the whole
+// as a ServiceMessage.
+func CreateServiceMessage(service string, r interface{}) (*ServiceMessage, error) {
+	sid := ServiceFactory.ServiceID(service)
+	buff, err := network.MarshalRegisteredType(r)
+	if err != nil {
+		return nil, err
+	}
+	return &ServiceMessage{
+		Service: sid,
+		Data:    buff,
+	}, nil
+
 }

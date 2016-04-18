@@ -44,7 +44,7 @@ type ServiceResponse struct {
 var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
 // ProcessRequest treats external request to this service.
-func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
+func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != CosiRequestType {
 		return
 	}
@@ -82,6 +82,11 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.Request) {
 	dbg.Lvl1("Cosi Service starting up root protocol")
 	go pi.Dispatch()
 	go pi.Start()
+}
+
+// ProcessServiceMessage is to implement the Service interface.
+func (cs *Cosi) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+	return
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is

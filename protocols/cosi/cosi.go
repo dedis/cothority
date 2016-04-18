@@ -332,7 +332,7 @@ func (pc *ProtocolCosi) Cleanup() {
 		pc.DoneCallback(pc.Cosi.GetChallenge(), pc.Cosi.GetAggregateResponse())
 	}
 	close(pc.done)
-	pc.TreeNodeInstance.Done()
+	pc.Done()
 
 }
 

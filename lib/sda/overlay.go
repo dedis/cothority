@@ -31,24 +31,24 @@ type Overlay struct {
 	cache TreeNodeCache
 
 	// TreeNodeInstance part
-	instances     map[TokenID]*TreeNodeInstance
-	instancesInfo map[TokenID]bool
-	instancesLock sync.Mutex
-	pis           map[TokenID]ProtocolInstance
+	instances         map[TokenID]*TreeNodeInstance
+	instancesInfo     map[TokenID]bool
+	instancesLock     sync.Mutex
+	protocolInstances map[TokenID]ProtocolInstance
 }
 
 // NewOverlay creates a new overlay-structure
 func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
-		host:          h,
-		nodes:         make(map[TokenID]*Node),
-		nodeInfo:      make(map[TokenID]bool),
-		trees:         make(map[TreeID]*Tree),
-		entityLists:   make(map[EntityListID]*EntityList),
-		cache:         NewTreeNodeCache(),
-		instances:     make(map[TokenID]*TreeNodeInstance),
-		instancesInfo: make(map[TokenID]bool),
-		pis:           make(map[TokenID]ProtocolInstance),
+		host:              h,
+		nodes:             make(map[TokenID]*Node),
+		nodeInfo:          make(map[TokenID]bool),
+		trees:             make(map[TreeID]*Tree),
+		entityLists:       make(map[EntityListID]*EntityList),
+		cache:             NewTreeNodeCache(),
+		instances:         make(map[TokenID]*TreeNodeInstance),
+		instancesInfo:     make(map[TokenID]bool),
+		protocolInstances: make(map[TokenID]ProtocolInstance),
 	}
 }
 
@@ -71,7 +71,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	// TreeNodeInstance
 	var pi ProtocolInstance
 	o.instancesLock.Lock()
-	pi, ok := o.pis[sdaMsg.To.Id()]
+	pi, ok := o.protocolInstances[sdaMsg.To.Id()]
 	o.instancesLock.Unlock()
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
@@ -369,7 +369,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 	}
 
 	tni.bind(pi)
-	o.pis[tok.Id()] = pi
+	o.protocolInstances[tok.Id()] = pi
 	dbg.Lvl4(o.host.workingAddress, "Registered ProtocolInstance !", fmt.Sprintf("%+v", tok))
 	return nil
 }

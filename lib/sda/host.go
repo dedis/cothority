@@ -382,8 +382,11 @@ func (h *Host) processMessages() {
 			}
 			dbg.Lvl4("Received new entityList")
 		case RequestID:
-			r := data.Msg.(Request)
+			r := data.Msg.(ClientRequest)
 			h.processRequest(data.Entity, &r)
+		case ServiceMessageID:
+			m := data.Msg.(ServiceMessage)
+			h.processServiceMessage(data.Entity, &m)
 		default:
 			dbg.Error("Didn't recognize message", data.MsgType)
 		}
@@ -393,18 +396,31 @@ func (h *Host) processMessages() {
 	}
 }
 
-func (h *Host) processRequest(e *network.Entity, r *Request) {
+func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
 	// check if the target service is indeed existing
-	var s Service
-	var ok bool
-	if s, ok = h.serviceStore.serviceByID(r.Service); !ok {
+	s, ok := h.serviceStore.serviceByID(m.Service)
+	if !ok {
 		dbg.Error("Received a request for an unknown service")
 		// XXX TODO should reply with some generic response =>
 		// 404 Service Unknown
 		return
 	}
 	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
-	s.ProcessRequest(e, r)
+	s.ProcessServiceMessage(e, m)
+
+}
+
+func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
+	// check if the target service is indeed existing
+	s, ok := h.serviceStore.serviceByID(r.Service)
+	if !ok {
+		dbg.Error("Received a request for an unknown service")
+		// XXX TODO should reply with some generic response =>
+		// 404 Service Unknown
+		return
+	}
+	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
+	s.ProcessClientRequest(e, r)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg
