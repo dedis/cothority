@@ -137,7 +137,10 @@ func (n *Node) SendToParent(msg interface{}) error {
 	return n.SendTo(n.Parent(), msg)
 }
 
-// SendToChildren sends a given message to all children of the calling node (unless it is a leaf)
+// SendToChildren sends a given message to all children of the calling node.
+// It stops sending if sending to one of the children fails. In that case it
+// returns an error. If the underlying node is a leaf node this function does
+// nothing.
 func (n *Node) SendToChildren(msg interface{}) error {
 	if n.IsLeaf() {
 		return nil
@@ -148,6 +151,32 @@ func (n *Node) SendToChildren(msg interface{}) error {
 		}
 	}
 	return nil
+}
+
+// SendToChildrenInParallel sends a given message to all children of the calling
+// node. It has the following differences to node.SendToChildren:
+// The actual sending happens in a go routine (in parallel).
+// It continues sending to the other nodes if sending to one of the children
+// fails. In that case it will collect all errors (separated by '\n'.)
+// If the underlying node is a leaf node this function does
+// nothing.
+func (n *Node) SendToChildrenInParallel(msg interface{}) error {
+	if n.IsLeaf() {
+		return nil
+	}
+	children := n.Children()
+	errs := make(map[string]error, len(children))
+	eMut := sync.Mutex{}
+	for _, node := range children {
+		go func(n2 *TreeNode) {
+			if err := n.SendTo(n2, msg); err != nil {
+				eMut.Lock()
+				errs[node.Name()] = err
+				eMut.Unlock()
+			}
+		}(node)
+	}
+	return collectErrors("Error while sending to %s: %s\n", errs)
 }
 
 // SendToRoot sends a given message to the root node of the tree (unless the calling node is the root itself)
@@ -405,7 +434,6 @@ func (n *Node) DispatchChannel(msgSlice []*Data) error {
 	} else {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
-
 			m := n.reflectCreate(to.Elem(), msg)
 			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)

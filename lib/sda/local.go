@@ -142,7 +142,8 @@ func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
 		err := host.Close()
 		if err != nil {
-			dbg.Error("Closing host", host, "gives error", err)
+			dbg.Error("Closing host", host.Entity.First(),
+				"gives error", err)
 		}
 	}
 	for _, node := range l.Nodes {
