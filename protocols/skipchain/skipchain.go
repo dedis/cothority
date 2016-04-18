@@ -48,7 +48,6 @@ func NewSkipchain(n *sda.Node) (sda.ProtocolInstance, error) {
 func (p *ProtocolSkipchain) Start() error {
 	dbg.Lvl3("Starting Skipchain")
 	block := &SkipBlock{Index: 0, X0: p.TreeNode().PublicAggregateSubTree, Nodes: p.Tree().List()}
-	//p.LastBlock = block.Hash()
 	return p.HandleGenesis(StructGenesis{p.TreeNode(),
 		MessageGenesis{Block: block}})
 }
