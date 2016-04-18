@@ -16,15 +16,18 @@ This is a simple ExampleHandlers-protocol with two steps:
 */
 
 func init() {
-	sda.SimulationRegister("ExampleHandlers", NewExampleHandlersSimulation)
+	sda.SimulationRegister("ExampleHandlers", NewSimulation)
 }
 
-type ExampleHandlersSimulation struct {
+// Simulation implements sda.Simulation.
+type Simulation struct {
 	sda.SimulationBFTree
 }
 
-func NewExampleHandlersSimulation(config string) (sda.Simulation, error) {
-	es := &ExampleHandlersSimulation{}
+// NewSimulation is used internally to register the simulation (see the init()
+// function above).
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -32,7 +35,8 @@ func NewExampleHandlersSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (e *ExampleHandlersSimulation) Setup(dir string, hosts []string) (
+// Setup implements sda.Simulation.
+func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
@@ -43,18 +47,19 @@ func (e *ExampleHandlersSimulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-func (e *ExampleHandlersSimulation) Run(config *sda.SimulationConfig) error {
+// Run implements sda.Simulation.
+func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		round := monitor.NewMeasure("round")
+		round := monitor.NewTimeMeasure("round")
 		n, err := config.Overlay.StartNewNodeName("ExampleHandlers", config.Tree)
 		if err != nil {
 			return err
 		}
 		children := <-n.ProtocolInstance().(*ProtocolExampleHandlers).ChildCount
-		round.Measure()
+		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +
 				" children")

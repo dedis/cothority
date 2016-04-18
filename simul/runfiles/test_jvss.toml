@@ -1,0 +1,9 @@
+Simulation = "JVSS"
+Servers = 16
+Bf = 2
+Rounds = 3
+
+Hosts
+8
+16
+32

@@ -1,14 +1,9 @@
-Simulation = "CoSiSimulation"
+Simulation = "CoSi"
 Servers = 16
 Bf = 8
 Rounds = 10
 CloseWait = 6000
 
 Hosts
-100
-1000
-2000
-4000
-8000
-16000
-32000
+3
+10

@@ -9,7 +9,6 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"time"
 
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/protocols/manage"
@@ -46,13 +45,16 @@ func main() {
 	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible, monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", hostAddress)
+	measures := make([]*monitor.CounterIOMeasure, len(scs))
 	if err != nil {
 		// We probably are not needed
 		dbg.Lvl2(err)
 		return
 	}
 	if monitorAddress != "" {
-		monitor.ConnectSink(monitorAddress)
+		if err := monitor.ConnectSink(monitorAddress); err != nil {
+			dbg.Error("Couldn't connect monitor to sink:", err)
+		}
 	}
 	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig
@@ -60,8 +62,9 @@ func main() {
 	for i, sc := range scs {
 		// Starting all hosts for that server
 		host := sc.Host
+		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
-		host.ListenNoblock()
+		host.Listen()
 		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
@@ -72,7 +75,7 @@ func main() {
 			dbg.Fatal(err)
 		}
 		sims[i] = sim
-		if host.Entity.Id == sc.Tree.Root.Entity.Id {
+		if host.Entity.ID == sc.Tree.Root.Entity.ID {
 			dbg.Lvl2(hostAddress, "is root-node, will start protocol")
 			rootSim = sim
 			rootSC = sc
@@ -84,7 +87,7 @@ func main() {
 		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
-		childrenWait := monitor.NewMeasure("ChildrenWait")
+		childrenWait := monitor.NewTimeMeasure("ChildrenWait")
 		wait := true
 		// The timeout starts with 1 second, which is the time of response between
 		// each level of the tree.
@@ -95,7 +98,9 @@ func main() {
 				dbg.Fatal(err)
 			}
 			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
-			node.Start()
+			if err := node.StartProtocol(); err != nil {
+				dbg.Error("Couldn't start protcol:", err)
+			}
 			dbg.Lvl1("Started counting children with timeout of", timeout)
 			select {
 			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
@@ -105,19 +110,18 @@ func main() {
 				} else {
 					dbg.Lvl1("Found only", count, "children, counting again")
 				}
-				//case <-time.After(time.Millisecond * time.Duration(timeout) * 2):
-				//	// Wait longer than the root-node before aborting
-				//	dbg.Lvl1("Timed out waiting for children")
 			}
 			// Double the timeout and try again if not successful.
 			timeout *= 2
 		}
-		childrenWait.Measure()
+		childrenWait.Record()
 		dbg.Lvl1("Starting new node", simul)
+		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Host)
 		err := rootSim.Run(rootSC)
 		if err != nil {
 			dbg.Fatal(err)
 		}
+		measureNet.Record()
 
 		// Test if all Entities are used in the tree, else we'll run into
 		// troubles with CloseAll
@@ -125,19 +129,17 @@ func main() {
 			dbg.Error("The tree doesn't use all Entities from the list!\n" +
 				"This means that the CloseAll will fail and the experiment never ends!")
 		}
+		closeTree := rootSC.Tree
 		if rootSC.GetSingleHost() {
 			// In case of "SingleHost" we need a new tree that contains every
 			// entity only once, whereas rootSC.Tree will have the same
 			// entity at different TreeNodes, which makes it difficult to
 			// correctly close everything.
 			dbg.Lvl2("Making new root-tree for SingleHost config")
-			closeTree := rootSC.EntityList.GenerateBinaryTree()
+			closeTree = rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
-			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
-		} else {
-			_, err = rootSC.Overlay.StartNewNodeName("CloseAll", rootSC.Tree)
 		}
-		monitor.EndAndCleanup()
+		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
 		if err != nil {
 			dbg.Fatal(err)
 		}
@@ -146,17 +148,16 @@ func main() {
 	// Wait for all hosts to be closed
 	allClosed := make(chan bool)
 	go func() {
-		for _, sc := range scs {
+		for i, sc := range scs {
 			sc.Host.WaitForClose()
+			// record the bandwidth
+			measures[i].Record()
 			dbg.Lvl3(hostAddress, "Simulation closed host", sc.Host.Entity.Addresses, "closed")
 		}
 		allClosed <- true
 	}()
 	dbg.Lvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
-	select {
-	case <-allClosed:
-		dbg.Lvl2(hostAddress, ": all hosts closed")
-	case <-time.After(time.Second * time.Duration(scs[0].GetCloseWait())):
-		dbg.Lvl2(hostAddress, ": didn't close after", scs[0].GetCloseWait(), " seconds")
-	}
+	<-allClosed
+	dbg.Lvl2(hostAddress, "has all hosts closed")
+	monitor.EndAndCleanup()
 }

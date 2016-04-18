@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("ByzCoinSimulation", NewSimulation)
+	sda.SimulationRegister("ByzCoin", NewSimulation)
 	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
@@ -29,6 +29,7 @@ type Simulation struct {
 	SimulationConfig
 }
 
+// SimulationConfig is the config used by the simulation for byzcoin
 type SimulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
@@ -41,6 +42,7 @@ type SimulationConfig struct {
 	Fail uint
 }
 
+// NewSimulation returns a fresh byzcoin simulation out of the toml config
 func NewSimulation(config string) (sda.Simulation, error) {
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)
@@ -68,24 +70,25 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 }
 
 type monitorMut struct {
-	*monitor.Measure
+	*monitor.TimeMeasure
 	sync.Mutex
 }
 
 func (m *monitorMut) NewMeasure(id string) {
 	m.Lock()
 	defer m.Unlock()
-	m.Measure = monitor.NewMeasure(id)
+	m.TimeMeasure = monitor.NewTimeMeasure(id)
 }
-func (m *monitorMut) MeasureAndReset() {
+func (m *monitorMut) Record() {
 	m.Lock()
 	defer m.Unlock()
-	m.Measure = nil
+	m.TimeMeasure.Record()
+	m.TimeMeasure = nil
 }
 
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
-	dbg.Lvl1("Simulation starting with:  Rounds=", e.Rounds)
+	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
 	node, _ := sdaConf.Overlay.NewNodeEmptyName("Broadcast", sdaConf.Tree)
@@ -96,7 +99,8 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	proto.RegisterOnDone(func() {
 		broadDone <- true
 	})
-	proto.Start()
+	// ignore error on purpose: Broadcast.Start() always returns nil
+	_ = proto.Start()
 	// wait
 	<-broadDone
 
@@ -115,7 +119,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			return err
 		}
 		// instantiate a byzcoin protocol
-		rComplete := monitor.NewMeasure("round")
+		rComplete := monitor.NewTimeMeasure("round")
 		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
@@ -124,11 +128,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		bz := pi.(*ByzCoin)
 		// Register callback for the generation of the signature !
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
-			rComplete.Measure()
+			rComplete.Record()
 			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
 				dbg.Error("Round", round, "failed:", err)
 			} else {
-				dbg.Lvl1("Round", round, "success")
+				dbg.Lvl2("Round", round, "success")
 			}
 		})
 
@@ -138,10 +142,21 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			done <- true
 		})
 		if e.Fail > 0 {
-			go bz.startAnnouncementPrepare()
+			go func() {
+				err := bz.startAnnouncementPrepare()
+				if err != nil {
+					dbg.Error("Error while starting "+
+						"announcment prepare:", err)
+				}
+			}()
 			// do not run bz.startAnnouncementCommit()
 		} else {
-			go bz.Start()
+			go func() {
+				if err := bz.Start(); err != nil {
+					dbg.Error("Couldn't start protocol",
+						err)
+				}
+			}()
 		}
 		// wait for the end
 		<-done

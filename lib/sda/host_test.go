@@ -31,7 +31,7 @@ func TestHostClose(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
-	h1.Listen()
+	h1.ListenAndBind()
 	_, err := h2.Connect(h1.Entity)
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
@@ -46,7 +46,7 @@ func TestHostClose(t *testing.T) {
 	}
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	h3 := sda.NewLocalHost(2002)
-	h3.Listen()
+	h3.ListenAndBind()
 	c, err := h2.Connect(h3.Entity)
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
@@ -74,11 +74,14 @@ func TestHostClose2(t *testing.T) {
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
+// also tests for the counterIO interface that it works well
 func TestHostMessaging(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	h1, h2 := SetupTwoHosts(t, false)
+	bw1 := h1.Tx()
+	br2 := h2.Rx()
 	msgSimple := &SimpleMessage{3}
 	err := h1.SendRaw(h2.Entity, msgSimple)
 	if err != nil {
@@ -88,6 +91,15 @@ func TestHostMessaging(t *testing.T) {
 	decoded := testMessageSimple(t, msg)
 	if decoded.I != 3 {
 		t.Fatal("Received message from h2 -> h1 is wrong")
+	}
+
+	written := h1.Tx() - bw1
+	read := h2.Rx() - br2
+	if written == 0 || read == 0 || written != read {
+		t.Logf("Before => bw1 = %d vs br2 = %d", bw1, br2)
+		t.Logf("Tx = %d, Rx = %d", written, read)
+		t.Logf("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
+		t.Fatal("Something is wrong with Host.CounterIO")
 	}
 
 	h1.Close()
@@ -178,10 +190,10 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessage {
+	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type, but", msg.MsgType)
 	}
-	if msg.Msg.(sda.EntityList).Id != uuid.Nil {
+	if msg.Msg.(sda.EntityList).Id != sda.EntityListID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
@@ -192,7 +204,7 @@ func TestPeerListPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessage {
+	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type")
 	}
 	if msg.Msg.(sda.EntityList).Id != el.Id {
@@ -234,11 +246,11 @@ func TestTreePropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendTreeMessage {
+	if msg.MsgType != sda.SendTreeMessageID {
 		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).EntityId != uuid.Nil {
+	if msg.Msg.(sda.TreeMarshal).EntityListID != sda.EntityListID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
@@ -249,10 +261,10 @@ func TestTreePropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendTreeMessage {
+	if msg.MsgType != sda.SendTreeMessageID {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
-	if msg.Msg.(sda.TreeMarshal).NodeId != tree.Id {
+	if msg.Msg.(sda.TreeMarshal).TreeId != tree.Id {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
@@ -322,27 +334,27 @@ func TestListTreePropagation(t *testing.T) {
 
 func TestTokenId(t *testing.T) {
 	t1 := &sda.Token{
-		EntityListID: uuid.NewV1(),
-		TreeID:       uuid.NewV1(),
-		ProtocolID:   uuid.NewV1(),
-		RoundID:      uuid.NewV1(),
+		EntityListID: sda.EntityListID(uuid.NewV1()),
+		TreeID:       sda.TreeID(uuid.NewV1()),
+		ProtoID:      sda.ProtocolID(uuid.NewV1()),
+		RoundID:      sda.RoundID(uuid.NewV1()),
 	}
 	id1 := t1.Id()
 	t2 := &sda.Token{
-		EntityListID: uuid.NewV1(),
-		TreeID:       uuid.NewV1(),
-		ProtocolID:   uuid.NewV1(),
-		RoundID:      uuid.NewV1(),
+		EntityListID: sda.EntityListID(uuid.NewV1()),
+		TreeID:       sda.TreeID(uuid.NewV1()),
+		ProtoID:      sda.ProtocolID(uuid.NewV1()),
+		RoundID:      sda.RoundID(uuid.NewV1()),
 	}
 	id2 := t2.Id()
-	if uuid.Equal(id1, id2) {
+	if uuid.Equal(uuid.UUID(id1), uuid.UUID(id2)) {
 		t.Fatal("Both token are the same")
 	}
-	if !uuid.Equal(id1, t1.Id()) {
+	if !uuid.Equal(uuid.UUID(id1), uuid.UUID(t1.Id())) {
 		t.Fatal("Twice the Id of the same token should be equal")
 	}
-	t3 := t1.ChangeTreeNodeID(uuid.NewV1())
-	if uuid.Equal(t1.TreeNodeID, t3.TreeNodeID) {
+	t3 := t1.ChangeTreeNodeID(sda.TreeNodeID(uuid.NewV1()))
+	if t1.TreeNodeID.Equals(t3.TreeNodeID) {
 		t.Fatal("OtherToken should modify copy")
 	}
 }
@@ -353,7 +365,7 @@ func TestAutoConnection(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
-	h2.Listen()
+	h2.ListenAndBind()
 
 	defer h1.Close()
 	defer h2.Close()
@@ -398,7 +410,7 @@ type SimpleMessage struct {
 
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
-func testMessageSimple(t *testing.T, msg network.NetworkMessage) SimpleMessage {
+func testMessageSimple(t *testing.T, msg network.Message) SimpleMessage {
 	if msg.MsgType != SimpleMessageType {
 		t.Fatal("Received non SimpleMessage type")
 	}

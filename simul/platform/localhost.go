@@ -9,10 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
+	// Import protocols so every protocols is registered to the sda
 	_ "github.com/dedis/cothority/protocols"
 	"strings"
 )
@@ -49,22 +48,26 @@ type Localhost struct {
 	// Whether we started a simulation
 	running bool
 	// WaitGroup for running processes
-	wg_run sync.WaitGroup
+	wgRun sync.WaitGroup
 
 	// errors go here:
 	errChan chan error
+
+	// Listening monitor port
+	monitorPort int
 
 	// SimulationConfig holds all things necessary for the run
 	sc *sda.SimulationConfig
 }
 
-// Configure various
-func (d *Localhost) Configure(pc *PlatformConfig) {
+// Configure various internal variables
+func (d *Localhost) Configure(pc *Config) {
 	pwd, _ := os.Getwd()
 	d.runDir = pwd + "/platform/localhost"
 	d.localDir = pwd
 	d.debug = pc.Debug
 	d.running = false
+	d.monitorPort = pc.MonitorPort
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
 		dbg.Fatal("No simulation defined in simulation")
@@ -73,13 +76,13 @@ func (d *Localhost) Configure(pc *PlatformConfig) {
 	dbg.Lvl3("Localhost configured ...")
 }
 
-// Will build the application
+// Build makes sure that the binary is available for our local platform
 func (d *Localhost) Build(build string, arg ...string) error {
 	src := "./cothority"
 	dst := d.runDir + "/" + d.Simulation
 	start := time.Now()
 	// build for the local machine
-	res, err := cliutils.Build(src, dst,
+	res, err := Build(src, dst,
 		runtime.GOARCH, runtime.GOOS,
 		arg...)
 	if err != nil {
@@ -91,6 +94,7 @@ func (d *Localhost) Build(build string, arg ...string) error {
 	return err
 }
 
+// Cleanup kills all running cothority-binaryes
 func (d *Localhost) Cleanup() error {
 	dbg.Lvl3("Cleaning up")
 	ex := d.runDir + "/" + d.Simulation
@@ -104,6 +108,7 @@ func (d *Localhost) Cleanup() error {
 	return nil
 }
 
+// Deploy copies all files to the run-directory
 func (d *Localhost) Deploy(rc RunConfig) error {
 	if runtime.GOOS == "darwin" {
 		files, err := exec.Command("ulimit", "-n").Output()
@@ -141,24 +146,30 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 		return err
 	}
 	d.sc.Config = string(rc.Toml())
-	d.sc.Save(d.runDir)
+	if err := d.sc.Save(d.runDir); err != nil {
+		return err
+	}
 	dbg.Lvl2("Localhost: Done deploying")
 	return nil
 
 }
 
+// Start will execute one cothority-binary for each server
+// configured
 func (d *Localhost) Start(args ...string) error {
-	os.Chdir(d.runDir)
+	if err := os.Chdir(d.runDir); err != nil {
+		return err
+	}
 	dbg.Lvl4("Localhost: chdir into", d.runDir)
 	ex := d.runDir + "/" + d.Simulation
 	d.running = true
 	dbg.Lvl1("Starting", d.servers, "applications of", ex)
 	for index := 0; index < d.servers; index++ {
-		d.wg_run.Add(1)
+		d.wgRun.Add(1)
 		dbg.Lvl3("Starting", index)
 		host := "localhost" + strconv.Itoa(index)
 		cmdArgs := []string{"-address", host, "-monitor",
-			"localhost:" + strconv.Itoa(monitor.DefaultSinkPort),
+			"localhost:" + strconv.Itoa(d.monitorPort),
 			"-simul", d.Simulation,
 			"-debug", strconv.Itoa(dbg.DebugVisible()),
 		}
@@ -174,20 +185,20 @@ func (d *Localhost) Start(args ...string) error {
 				dbg.Error("Error running localhost", h, ":", err)
 				d.errChan <- err
 			}
-			d.wg_run.Done()
+			d.wgRun.Done()
 			dbg.Lvl3("host (index", i, ")", h, "done")
 		}(index, host)
 	}
 	return nil
 }
 
-// Waits for all processes to finish
+// Wait for all processes to finish
 func (d *Localhost) Wait() error {
 	dbg.Lvl3("Waiting for processes to finish")
 
 	var err error
 	go func() {
-		d.wg_run.Wait()
+		d.wgRun.Wait()
 		dbg.Lvl3("WaitGroup is 0")
 		// write to error channel when done:
 		d.errChan <- nil
@@ -198,7 +209,10 @@ func (d *Localhost) Wait() error {
 	case e := <-d.errChan:
 		dbg.Lvl3("Finished waiting for hosts:", e)
 		if e != nil {
-			d.Cleanup()
+			if err := d.Cleanup(); err != nil {
+				dbg.Error("Couldn't cleanup running instances",
+					err)
+			}
 			err = e
 		}
 	}

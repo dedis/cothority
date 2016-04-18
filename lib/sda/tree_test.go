@@ -1,15 +1,17 @@
 package sda_test
 
 import (
+	"math/rand"
+	"net"
+	"strconv"
+	"testing"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"net"
-	"strconv"
-	"testing"
 )
 
 var tSuite = network.Suite
@@ -66,7 +68,7 @@ func TestEntityListNew(t *testing.T) {
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.Id == uuid.Nil {
+	if pl.Id == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(pl.Id.String()) != 36 {
@@ -91,7 +93,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in EntityList. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.Id == uuid.Nil {
+	if decodedList.Id == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(decodedList.Id.String()) != 36 {
@@ -132,7 +134,7 @@ func TestTreeChildren(t *testing.T) {
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
-	if child.Entity.Id != peerList.List[1].Id {
+	if child.Entity.ID != peerList.List[1].ID {
 		t.Fatal("Parent of child of root is not the root...")
 	}
 }
@@ -169,8 +171,8 @@ func TestGetNode(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(10, 2000)
-	for _, tn := range tree.ListNodes() {
-		node := tree.GetTreeNode(tn.Id)
+	for _, tn := range tree.List() {
+		node := tree.Search(tn.Id)
 		if node == nil {
 			t.Fatal("Didn't find treeNode with id", tn.Id)
 		}
@@ -194,6 +196,33 @@ func TestBinaryTree(t *testing.T) {
 	if !tree.IsBinary(root) {
 		t.Fatal("Tree should be binary")
 	}
+}
+
+func TestTreeNodeEntityIndex(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	names := genLocalhostPeerNames(13, 2000)
+	peerList := genEntityList(tSuite, names)
+	tree := peerList.GenerateNaryTree(3)
+
+	ln := tree.List()
+	randomNode := ln[rand.Intn(len(ln))]
+	var idx int
+	for i, e := range peerList.List {
+		if e.Equal(randomNode.Entity) {
+			idx = i
+			break
+		}
+	}
+
+	if idx == 0 {
+		t.Fatal("Could not find the entity in the node")
+	}
+
+	if randomNode.EntityIdx != idx {
+		t.Fatal("Index of entity do not correlate")
+	}
+
 }
 
 func TestNaryTree(t *testing.T) {
@@ -252,11 +281,11 @@ func TestBigNaryTree(t *testing.T) {
 		t.Fatal("Tree should be 3-ary")
 	}
 	for _, child := range root.Children {
-		if child.Entity.Id == root.Entity.Id {
+		if child.Entity.ID == root.Entity.ID {
 			t.Fatal("Child should not have same identity as parent")
 		}
 		for _, c := range child.Children {
-			if c.Entity.Id == child.Entity.Id {
+			if c.Entity.ID == child.Entity.ID {
 				t.Fatal("Child should not have same identity as parent")
 			}
 		}

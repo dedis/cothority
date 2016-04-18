@@ -8,17 +8,22 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("NaiveTreeSimulation", NewSimulation)
-	sda.ProtocolRegisterName("CoSiNtree", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocol(node) })
+	sda.SimulationRegister("NaiveTree", NewSimulation)
 }
 
+// Simulation holds everything necessary for one NTree-round
 type Simulation struct {
 	sda.SimulationBFTree
 	Message string
+	// 0 - no check
+	// 1 - check only direct children's signature
+	// 2 - check the whole subtree
+	Checking int
 }
 
+// NewSimulation creates a new NTree-simulation
 func NewSimulation(config string) (sda.Simulation, error) {
-	es := &Simulation{}
+	es := &Simulation{Checking: 2}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -26,6 +31,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
+// Setup prepares the simulation on the local end
 func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
@@ -37,32 +43,36 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
+// Run starts the simulation on the simulation-side
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte(e.Message)
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round, "with message", string(msg))
-		round := monitor.NewMeasure("round")
+		round := monitor.NewTimeMeasure("round")
 
-		node, err := config.Overlay.CreateNewNodeName("CoSiNtree", config.Tree)
+		node, err := config.Overlay.CreateNewNodeName("NaiveTree", config.Tree)
 		if err != nil {
 			dbg.Error("Quitting the simulation....", err)
 			return err
 		}
-		node.ProtocolInstance().(*Protocol).SetMessage(msg)
+		pi := node.ProtocolInstance().(*Protocol)
+		pi.message = msg
+		pi.verifySignature = e.Checking
+
 		done := make(chan bool)
 		node.OnDoneCallback(func() bool {
 			done <- true
 			return true
 		})
-		err = node.Start()
+		err = pi.Start()
 		if err != nil {
 			dbg.Error("Quitting the simulation....", err)
 			return err
 		}
 		<-done
-		round.Measure()
+		round.Record()
 	}
 	return nil
 }
