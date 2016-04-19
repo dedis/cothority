@@ -1,21 +1,21 @@
 package medco_test
 
 import (
-	"testing"
-	"github.com/dedis/cothority/lib/testutil"
-	_"github.com/dedis/cothority_clone/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
-	"time"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/medco"
-	"strconv"
 	"github.com/dedis/crypto/random"
 	"reflect"
+	"strconv"
+	"testing"
+	"time"
 )
 
-const NUM_MESS = 10
-const NUM_BUCKET = 3
+const NUM_MESS = 100
+const NUM_BUCKET = 1
+var BUCKET_DESC = []int64{/*10,20,30,40,50,60,70, 80,90*/}
 const needle = "code0"
 func codeGen(i int) string {
 	return "code" + strconv.Itoa(i%1)
@@ -42,7 +42,7 @@ func Test5Nodes(t *testing.T) {
 	clientQuery,_ := medco.EncryptBytes(suite, aggregateKey, []byte(needle))
 
 	dbg.Lvl1("Encrypting dummy data...")
-	targetCounts := make([]int64, 3)
+	targetCounts := make([]int64, NUM_BUCKET)
 	var code string
 	EncryptedData := make([]medco.ElGamalData, NUM_MESS, NUM_MESS)
 	for i := 0; i < NUM_MESS; i++ {
@@ -56,10 +56,11 @@ func Test5Nodes(t *testing.T) {
 	}
 	dbg.Lvl1("... Done")
 
+
 	root.ProtocolInstance().(*medco.PrivateCountProtocol).EncryptedData = &EncryptedData
 	root.ProtocolInstance().(*medco.PrivateCountProtocol).ClientPublicKey = &clientPublic
 	root.ProtocolInstance().(*medco.PrivateCountProtocol).ClientQuery = clientQuery
-	root.ProtocolInstance().(*medco.PrivateCountProtocol).Buckets = &[]string{"1","2","3"}
+	root.ProtocolInstance().(*medco.PrivateCountProtocol).BucketDesc = &BUCKET_DESC
 
 	feedback := root.ProtocolInstance().(*medco.PrivateCountProtocol).FeedbackChannel
 

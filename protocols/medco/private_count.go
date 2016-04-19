@@ -1,12 +1,15 @@
 package medco
 
 import (
-	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/dbg"
-	"math/rand"
-	"github.com/dedis/cothority/lib/network"
+	"bufio"
 	"errors"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
+	"math/rand"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -19,10 +22,11 @@ type PrivateCountProtocol struct {
 	FeedbackChannel     chan CipherVector
 
 	shortTermSecret     abstract.Secret
+	bucketCount	    int
 
 	ClientPublicKey     *abstract.Point
-	ClientQuery	    *CipherText
-	Buckets		    *[]string
+	ClientQuery         *CipherText
+	BucketDesc          *[]int64
 	EncryptedData       *[]ElGamalData
 }
 
@@ -46,13 +50,15 @@ func NewPrivateCountProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 		shortTermSecret: n.Suite().Secret().Pick(n.Suite().Cipher([]byte("Cothosecrets" + n.Name()))),
 	}
 
-	errs := make([]error, 0)
-	errs = append(errs, newInstance.RegisterChannel(&newInstance.ElGamalQueryChannel))
-	errs = append(errs, newInstance.RegisterChannel(&newInstance.PHQueryChannel))
-	errs = append(errs, newInstance.RegisterChannel(&newInstance.ElGamalDataChannel))
-	errs = append(errs, newInstance.RegisterChannel(&newInstance.ResultChannel))
+	var channels = []interface{}{
+		&newInstance.ElGamalQueryChannel, // Probabilistically-to-deterministically encrypted query conversion channel
+		&newInstance.PHQueryChannel,	  // Deterministically encrypted query broadcast channel
+		&newInstance.ElGamalDataChannel,  // Probabilistically-to-deterministically encrypted data conversion channel
+		&newInstance.ResultChannel } // Encrypted, bucketed count reporting channel
 
-	for _, err := range errs {
+	// Encrypted, bucketed count reporting channel
+	for _, channel := range channels {
+		err := newInstance.RegisterChannel(channel)
 		if err != nil {
 			return nil, errors.New("Could not register channel :\n" + err.Error())
 		}
@@ -72,7 +78,13 @@ func (p *PrivateCountProtocol) Start() error {
 		return errors.New("No query was provided by the client.")
 	}
 
-	queryMessage := &ElGamalQueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.Buckets ,*p.ClientPublicKey}
+	if (p.BucketDesc == nil) {
+		return errors.New("No bucket description provided by the client.")
+	}
+	p.bucketCount = len(*p.BucketDesc) + 1
+
+	// The starting node starts the protocol by sending the probabilistically encrypted query to the next node
+	queryMessage := &ElGamalQueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.BucketDesc,*p.ClientPublicKey}
 	queryMessage.Query.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 	queryMessage.SetVisited(p.Node.TreeNode(), p.Node.Tree())
 
@@ -83,42 +95,48 @@ func (p *PrivateCountProtocol) Start() error {
 func (p *PrivateCountProtocol) Dispatch() error {
 
 	dbg.Lvl1("Began running protocol", p.Node.Name())
+
+	// 1. Query crypto-switching phase
 	deterministicQuery, buckets, _ := p.queryReplacementPhase()
 	dbg.Lvl1(p.Node.Name(), "Finished query replacement phase.")
 
-	if p.EncryptedData != nil {
-		dbg.Lvl1(p.Node.Name(), "Injecting its data.")
-		go func() {
-			for _, cipherText := range *p.EncryptedData {
-				p.sendToNext(&ElGamalDataMessage{&VisitorMessage{0}, cipherText})
-			}
-			dbg.Lvl1(p.Node.Name(), "Finished injecting its data.")
-		}()
-	}
-
+	// 2. Data crypto-switching phase
+	go p.injectEncryptedData() // If the node has some local data, inject it to the system
 	encryptedBuckets, _ := p.dataReplacementAndCountingPhase(deterministicQuery, buckets)
 	dbg.Lvl1(p.Node.Name(), "Finished data replacement phase.")
 
 
-	dbg.Lvl1("Reporting its count")
+	// 3. Match count reporting phase
+	dbg.Lvl1(p.TreeNode().Name(), "Reporting its count")
 	p.matchCountReportingPhase(&encryptedBuckets)
 
 	return nil
 }
 
-func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText, []string,error) {
+// 1. Query crypto-switching phase
+func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText, []int64,error) {
 	for {
 		select {
+		// Node receives a Query for deterministic conversion
 		case encQuery := <-p.ElGamalQueryChannel:
+
+			// Removes its own probabilistic contribution contribution
 			encQuery.Query.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 			encQuery.SetVisited(p.TreeNode(), p.Tree())
 			p.ClientPublicKey = &encQuery.Public
+			p.BucketDesc = &encQuery.Buckets
+			p.bucketCount = len(encQuery.Buckets)+1
+
+			// If Node is the last probabilistic contribution in ciphertext, complete the deterministic
+			// conversion and broadcast the deterministic query
 			if !p.sendToNext(&encQuery.ElGamalQueryMessage) {
 				deterministicQuery := DeterministCipherText{encQuery.Query.C}
 				msg := &PHQueryMessage{deterministicQuery, encQuery.Buckets,encQuery.Public}
 				p.broadcast(msg)
 				return &msg.Query, encQuery.Buckets ,nil
 			}
+
+		// Node receives a deterministic query to be matched against data
 		case deterministicQuery := <-p.PHQueryChannel:
 			p.ClientPublicKey = &deterministicQuery.Public
 			return &deterministicQuery.Query, deterministicQuery.Buckets ,nil
@@ -126,40 +144,57 @@ func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText, 
 	}
 }
 
-func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *DeterministCipherText, buckets []string) (CipherVector, error) {
-	encryptedBuckets := NullCipherVector(p.Suite(), len(buckets), *p.ClientPublicKey)
+// 2. Data crypto-switching phase
+func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *DeterministCipherText, buckets []int64) (CipherVector, error) {
+	encryptedBuckets := NullCipherVector(p.Suite(), p.bucketCount, *p.ClientPublicKey)
+	i := 0
 	for {
 		select {
+		// Node receives a new probabilistically encrypted data and its counting vector
 		case encDataMessage := <-p.ElGamalDataChannel:
+
+			// Remove its probabilistic contribution
 			encDataMessage.Code.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 			encDataMessage.SetVisited(p.TreeNode(), p.Tree())
-			if !p.sendToNext(&encDataMessage.ElGamalDataMessage) {
-				if query.Equals(&DeterministCipherText{encDataMessage.Code.C}) {
-					encryptedBuckets.Add(encryptedBuckets, encDataMessage.Buckets)
-				}
+			i +=  1
+			//dbg.Lvl1("Processed", i, "messages.")
+			// If node is the last probabilitic contribution and the ciphertext matches the query,
+			// sums the current counting vector with the one of the data.
+			if 	!p.sendToNext(&encDataMessage.ElGamalDataMessage) &&
+				query.Equals(&DeterministCipherText{encDataMessage.Code.C}) {
+
+				encryptedBuckets.Add(encryptedBuckets, encDataMessage.Buckets)
 			}
-		case <-time.After(time.Second * 3):
+
+		case <-time.After(3*time.Second):
 			return encryptedBuckets, nil
 		}
 	}
 }
 
+// 3. Match count reporting phase
 func (p *PrivateCountProtocol) matchCountReportingPhase(encryptedBuckets *CipherVector) {
 	reportedBuckets := *encryptedBuckets
+
+	// If node is not a leaf, waits for its children to report their counts
 	if !p.IsLeaf() {
 		results := <-p.ResultChannel
 		for _, result := range results {
 			reportedBuckets.Add(reportedBuckets, result.Result)
 		}
 	}
-	if p.IsRoot() {
-		p.FeedbackChannel <- *encryptedBuckets
-	} else {
+
+	// If node is not the root, sends count to its parent, else report the count to report channel
+	if !p.IsRoot() {
 		p.SendTo(p.Parent(), &ResultMessage{*encryptedBuckets})
+	} else {
+		p.FeedbackChannel <- *encryptedBuckets
 	}
 
 }
 
+// Sends the message msg to the next randomly chosen node. If such node exist (all node already received the message),
+// returns false. Otherwise, return true.
 func (p *PrivateCountProtocol) sendToNext(msg VisitorMessageI) bool {
 	candidates := make([]*sda.TreeNode, 0)
 	for _, node := range p.Tree().ListNodes() {
@@ -177,6 +212,7 @@ func (p *PrivateCountProtocol) sendToNext(msg VisitorMessageI) bool {
 	return false
 }
 
+// Sends the given message to all node except self
 func (p *PrivateCountProtocol) broadcast(msg interface{}) {
 	for _, node := range p.Tree().ListNodes() {
 		if !node.Equal(p.TreeNode()) {
@@ -184,3 +220,42 @@ func (p *PrivateCountProtocol) broadcast(msg interface{}) {
 		}
 	}
 }
+
+// For testing purpose, read a file with the test data and inject them.
+func (p *PrivateCountProtocol) injectEncryptedData() {
+
+	// For testing purpose, let consider buckets to be age buckets
+	bucket := func (age int64) int {
+		var i int
+		for i=0; i < p.bucketCount-1 && age >= (*p.BucketDesc)[i]; i++ {}
+		return i
+	}
+
+	filep, err := os.Open(p.TreeNode().Id.String()+".txt")
+	defer filep.Close()
+
+	if p.EncryptedData == nil {
+		if err == nil {
+			dbg.Lvl1(p.TreeNode().Name(), "Is STARTING to inject its data.")
+			filereader := bufio.NewScanner(filep)
+			filereader.Split(bufio.ScanWords)
+			for filereader.Scan() {
+				code := filereader.Text()
+				filereader.Scan()
+				age,_ := strconv.ParseInt(filereader.Text(), 10, 0)
+				cipherText, _ := EncryptBytes(p.Suite(), p.EntityList().Aggregate, []byte(code))
+				encBuckets := NullCipherVector(p.Suite(), p.bucketCount, *p.ClientPublicKey)
+				encBuckets[bucket(int64(age))] = *EncryptInt(p.Suite(), *p.ClientPublicKey, 1)
+				elGamalData := ElGamalData{encBuckets, *cipherText}
+				p.sendToNext(&ElGamalDataMessage{&VisitorMessage{0}, elGamalData})
+			}
+			dbg.Lvl1(p.TreeNode().Name(), "Is DONE injecting its data.")
+		}
+	} else {
+		for _, cipherText := range *p.EncryptedData {
+			p.sendToNext(&ElGamalDataMessage{&VisitorMessage{0}, cipherText})
+		}
+	}
+}
+
+

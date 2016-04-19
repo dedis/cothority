@@ -51,6 +51,20 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
+// CreateNewNodeName takes a name and a tree and will create a
+// new Node with the protocol 'name' running from the tree-root without starting it
+func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
+	rootEntityId := t.Root.Entity.Id
+	for _, h := range l.Hosts {
+		if uuid.Equal(h.Entity.Id, rootEntityId) {
+			// XXX do we really need multiples overlays ? Can't we just use the
+			// Node, since it is already dispatched as like a TreeNode ?
+			return l.Overlays[h.Entity.Id].CreateNewNodeName(name, t)
+		}
+	}
+	return nil, errors.New("Didn't find host for tree-root")
+}
+
 func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
 	rootEntityId := t.Root.Entity.Id
 	for _, h := range l.Hosts {
