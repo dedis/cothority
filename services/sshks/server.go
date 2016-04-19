@@ -1,7 +1,6 @@
 package sshks
 
 import (
-	"bytes"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -107,7 +106,7 @@ func (sa *ServerKS) Start() error {
 	sa.host.RegisterExternalMessage(GetServer{}, sa.FuncGetServer)
 	sa.host.RegisterExternalMessage(GetConfig{}, sa.FuncGetConfig)
 	sa.host.RegisterExternalMessage(Response{}, sa.FuncResponse)
-	sa.host.RegisterExternalMessage(PropSig{}, sa.FuncPropSig)
+	sa.host.RegisterExternalMessage(PropConfig{}, sa.FuncPropConfig)
 	cosi.AddCosiApp(sa.host)
 	sa.host.Listen()
 	sa.host.StartProcessMessages()
@@ -167,6 +166,10 @@ func (sa *ServerKS) FuncSendFirstCommit(data *network.Message) network.ProtocolM
 		return &StatusRet{"Didn't get a commit"}
 	}
 	sa.NextConfig.AddCommit(data.Entity, comm.Commitment)
+	err := sa.PropagateConfig()
+	if err != nil {
+		return &StatusRet{"Couldn't propagate commits: " + err.Error()}
+	}
 	return &StatusRet{""}
 }
 
@@ -179,7 +182,7 @@ func (sa *ServerKS) FuncSendNewConfig(data *network.Message) network.ProtocolMes
 	if !ok {
 		return &StatusRet{"Didn't get a config"}
 	}
-	dbg.LLvl3("Got new config", *conf.Config)
+	dbg.Lvl3("Got new config", *conf.Config)
 	chal, err := sa.NextConfig.NewConfig(sa, conf.Config)
 	if err != nil {
 		return &SendNewConfigRet{}
@@ -192,7 +195,7 @@ func (sa *ServerKS) FuncGetConfig(*network.Message) network.ProtocolMessage {
 	var newconf *Config
 	if sa.NextConfig.config.Version > sa.Config.Version {
 		newconf = sa.NextConfig.config
-		dbg.LLvl3("Adding new config", *newconf)
+		dbg.Lvl3("Adding new config", *newconf)
 	}
 	return &GetConfigRet{
 		Config:    sa.Config,
@@ -200,7 +203,8 @@ func (sa *ServerKS) FuncGetConfig(*network.Message) network.ProtocolMessage {
 	}
 }
 
-// FuncSign asks all servers to sign the new configuration
+// FuncResponse sends a response to an accepted config. If the server receives
+// enough responses, it will sign the message
 func (sa *ServerKS) FuncResponse(data *network.Message) network.ProtocolMessage {
 	if sa.unknownClient(data.Entity) {
 		return &StatusRet{"Refusing unknown client"}
@@ -212,18 +216,23 @@ func (sa *ServerKS) FuncResponse(data *network.Message) network.ProtocolMessage 
 	ok = sa.NextConfig.AddResponse(data.Entity, response.Response)
 	if ok {
 		sa.Config = sa.NextConfig.config
-		dbg.LLvl3("Storing new config version", sa.Config.Version, sa.Config.Clients)
+		dbg.Lvl3("Storing new config version", sa.Config.Version, sa.Config.Clients)
 	}
 	sa.NextConfig.AddCommit(data.Entity, response.NextCommitment)
 	if sa.NextConfig == nil {
-		dbg.LLvl3("No nextconfig yet - just storing commitment")
+		dbg.Lvl3("No nextconfig yet - just storing commitment")
 	} else {
-		dbg.LLvl3("Ok is", ok)
+		dbg.Lvl3("Ok is", ok)
 		if ok {
 			err := sa.Config.VerifySignature()
 			if err != nil {
 				dbg.Error("Signature is wrong - sending anyway",
 					err)
+			} else {
+				err = sa.PropagateConfig()
+				if err != nil {
+					dbg.Error(err)
+				}
 			}
 			return &ResponseRet{
 				ClientsTot:    sa.NextConfig.clients,
@@ -236,28 +245,42 @@ func (sa *ServerKS) FuncResponse(data *network.Message) network.ProtocolMessage 
 	return &ResponseRet{sa.NextConfig.clients, sa.NextConfig.signers, nil}
 }
 
-// FuncPropSig checks the hash and if it matches updates the signature
-func (sa *ServerKS) FuncPropSig(data *network.Message) network.ProtocolMessage {
-	if sa.unknownClient(data.Entity) {
-		return &StatusRet{"Refusing unknown client"}
+// FuncPropConfig stores the new config and also all new commits
+func (sa *ServerKS) FuncPropConfig(data *network.Message) network.ProtocolMessage {
+	if sa.unknownServer(data.Entity) {
+		return &StatusRet{"Refusing unknown server"}
 	}
-	ps, ok := data.Msg.(PropSig)
+	pc, ok := data.Msg.(PropConfig)
 	if !ok {
-		return &StatusRet{"Didn't get a signature"}
+		return &StatusRet{"Didn't get a config"}
 	}
-	cnf := *sa.Config
-	cnf.Version = ps.Version
-	cnf.Signature = ps.Signature
-	if bytes.Compare(ps.Hash, cnf.Hash()) == 0 {
-		err := cnf.VerifySignature()
-		if err != nil {
-			return &StatusRet{"Signature doesn't match"}
-		}
-		sa.Config = &cnf
-	} else {
-		return &StatusRet{"Hashes don't match"}
+	err := pc.Config.VerifySignature()
+	if err != nil {
+		return &StatusRet{"Wrong signature"}
 	}
+	sa.Config = pc.Config
+	sa.NextConfig.commits = pc.Commits
 	return &StatusRet{""}
+}
+
+// PropagateConfig sends the new config to all other servers
+func (sa *ServerKS) PropagateConfig() error {
+	pc := &PropConfig{
+		Config:  sa.Config,
+		Commits: sa.NextConfig.commits,
+	}
+	for _, s := range sa.Config.Servers {
+		if !s.Entity.Public.Equal(sa.This.Entity.Public) {
+			dbg.Lvl3("Sending new config to", s.Entity.String())
+			resp, err := NetworkSend(sa.Private, s.Entity, pc)
+			errm := ErrMsg(resp, err)
+			dbg.Lvlf3("Response is %+v %+v - %+v", resp, err, errm)
+			if errm != nil {
+				return errm
+			}
+		}
+	}
+	return nil
 }
 
 // CreateAuth takes all client public keys and writes them into a authorized_keys
@@ -279,6 +302,18 @@ func (sa *ServerKS) unknownClient(e *network.Entity) bool {
 		return false
 	}
 	_, known := sa.Config.Clients[e.Public.String()]
+	return !known
+}
+
+// unknownServer returns true if the message comes from an
+// unknown server
+func (sa *ServerKS) unknownServer(e *network.Entity) bool {
+	dbg.Lvl3("My servers:", sa.Config.Servers, "server asking:", *e)
+	if len(sa.Config.Servers) == 1 {
+		// If we're a new server, accept everything
+		return false
+	}
+	_, known := sa.Config.Servers[e.Public.String()]
 	return !known
 }
 

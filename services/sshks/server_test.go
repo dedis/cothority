@@ -22,13 +22,13 @@ func TestServerCreation(t *testing.T) {
 func TestServerAdd(t *testing.T) {
 	srvApps := createServerKSs(2)
 	srvApps[0].AddServer(srvApps[1].This)
-	addr1 := srvApps[1].This.Entity.Addresses[0]
-	_, ok := srvApps[0].Config.Servers[addr1]
+	id1 := srvApps[1].This.Id()
+	_, ok := srvApps[0].Config.Servers[id1]
 	if !ok {
 		t.Fatal("Didn't find server 1 in server 0")
 	}
 	srvApps[0].DelServer(srvApps[1].This)
-	_, ok = srvApps[0].Config.Servers[addr1]
+	_, ok = srvApps[0].Config.Servers[id1]
 	if ok {
 		t.Fatal("Shouldn't find server 1 in server 0")
 	}
@@ -93,7 +93,6 @@ func TestServerFunc(t *testing.T) {
 	}
 	confMsg := srv.FuncGetConfig(sendMsg(e1, sshks.GetConfig{}))
 	conf2 := confMsg.(*sshks.GetConfigRet).Config
-	dbg.Print(*conf2)
 	dbg.ErrFatal(conf2.VerifySignature())
 }
 

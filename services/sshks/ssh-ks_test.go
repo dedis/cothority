@@ -104,7 +104,7 @@ func TestCAServerAdd(t *testing.T) {
 	if len(srv2.Config.Servers) != 1 {
 		t.Fatal("Server 2 should still only know himself")
 	}
-	if !srv1.This.Entity.Public.Equal(srv1.Config.Servers["localhost:2000"].Entity.Public) {
+	if !srv1.This.Entity.Public.Equal(srv1.Config.Servers[srv1.This.Id()].Entity.Public) {
 		t.Fatal("Server.This should be the same as config")
 	}
 	dbg.Lvl1("Adding 2nd server")
@@ -154,17 +154,18 @@ func TestCAServerCheck(t *testing.T) {
 	defer closeServers(t, servers)
 	srv1, srv2 := servers[0].This, servers[1].This
 	dbg.Lvl1("Adding 1st server")
-	ca.AddServer(srv1)
-	ca.AddServer(srv2)
+	dbg.ErrFatal(ca.AddServer(srv1))
+	dbg.ErrFatal(ca.AddServer(srv2))
+	dbg.ErrFatal(ca.ServerCheck())
+	dbg.Lvl2(ca.Config.Servers)
+
+	dbg.ErrFatal(ca.DelServer(srv1))
+	dbg.Lvl2(ca.Config.Servers)
+
+	dbg.ErrFatal(ca.ServerCheck())
+
+	dbg.ErrFatal(ca.DelServer(srv2))
 	err := ca.ServerCheck()
-	dbg.ErrFatal(err)
-	dbg.Lvl2(ca.Config.Servers)
-	ca.DelServer(srv1)
-	dbg.Lvl2(ca.Config.Servers)
-	err = ca.ServerCheck()
-	dbg.ErrFatal(err)
-	ca.DelServer(srv2)
-	err = ca.ServerCheck()
 	if err == nil {
 		t.Fatal("Now the server-list should be empty")
 	}
@@ -220,26 +221,19 @@ func TestCAClientDel(t *testing.T) {
 	ca, servers := newTest(2)
 	defer closeServers(t, servers)
 	ca.AddServer(servers[0].This)
-	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"Client1")
-	client2 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
-		"Client2")
-	err := ca.AddClient(client1)
-	dbg.ErrFatal(err)
-	err = ca.AddClient(client2)
-	dbg.ErrFatal(err)
+	ca2 := newClient(1)
+	dbg.ErrFatal(ca.AddClient(ca2.This))
 	if len(ca.Config.Clients) != 2 {
 		t.Fatal("There should be 2 clients now")
 	}
-	err = ca.DelClient(client2)
-	dbg.ErrFatal(err)
+	dbg.ErrFatal(ca2.AddServer(servers[0].This))
+
+	dbg.ErrFatal(ca.DelClient(ca2.This))
+	dbg.ErrFatal(ca2.Update(nil))
+	dbg.ErrFatal(ca2.SignNewConfig(nil))
+	dbg.ErrFatal(ca.Update(nil))
 	if len(ca.Config.Clients) != 1 {
 		t.Fatal("There should be 1 client now")
-	}
-	err = ca.DelClient(client1)
-	dbg.ErrFatal(err)
-	if len(ca.Config.Clients) != 0 {
-		t.Fatal("There should be no client now")
 	}
 }
 
@@ -250,13 +244,16 @@ func TestCASign(t *testing.T) {
 	ca.AddServer(servers[1].This)
 	client1 := sshks.NewClient(config.NewKeyPair(network.Suite).Public,
 		"Client1")
-	err := ca.AddClient(client1)
+	conf1, err := ca.Config.Copy()
 	dbg.ErrFatal(err)
-	version := ca.Config.Version
-	sign1 := ca.Config.Signature
-	if ca.Config.Version != version+1 {
-		t.Fatal("Version didn't increase while signing")
+	dbg.ErrFatal(ca.AddClient(client1))
+
+	if ca.Config.Version != conf1.Version+1 {
+		t.Fatal("Version didn't increase while signing",
+			ca.Config.Version, conf1.Version)
 	}
+
+	sign1 := conf1.Signature
 	sign2 := ca.Config.Signature
 	if sign1.Challenge == sign2.Challenge {
 		t.Fatal("Challenges should be different")
@@ -279,7 +276,7 @@ func TestCAUpdate(t *testing.T) {
 	dbg.ErrFatal(ca2.AddServer(srv1))
 
 	// Now add a client to ca1, thus making ca2s config invalid
-	if ca2.Config.Signature == nil{
+	if ca2.Config.Signature == nil {
 		t.Fatal("Signature of ca2 is nil")
 	}
 	if len(ca2.Config.Servers) != 1 {

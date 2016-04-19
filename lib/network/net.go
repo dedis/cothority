@@ -531,7 +531,7 @@ func (sc *SecureTCPConn) negotiateOpen(e *Entity) error {
 	if err := sc.exchangeEntity(); err != nil {
 		return err
 	}
-	if sc.SecureTCPHost.entity == nil || sc.SecureTCPHost.entity.Addresses[0] == ""{
+	if sc.SecureTCPHost.entity == nil || sc.SecureTCPHost.entity.Addresses[0] == "" {
 		return nil
 	}
 	// verify the Entity if its the same we are supposed to connect

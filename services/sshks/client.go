@@ -39,7 +39,7 @@ func NewClientKS(sshPub string) *ClientKS {
 		Private: pair.Secret,
 		Cosi:    cosi.NewCosi(network.Suite, pair.Secret),
 	}
-	cks.Config.Clients[cks.This.Entity.Public.String()] = cks.This
+	cks.Config.Clients[cks.This.Id()] = cks.This
 	cks.NewConfig = cks.Config
 	return cks
 }
@@ -84,7 +84,7 @@ func (ca *ClientKS) NetworkSendFirstCommit(s *Server) error {
 	sfc := &SendFirstCommit{
 		Commitment: ca.Cosi.CreateCommitment(),
 	}
-	dbg.LLvl3("Sending first commit")
+	dbg.Lvl3("Sending first commit")
 	status, err := NetworkSend(ca.Private, s.Entity, sfc)
 	return ErrMsg(status, err)
 }
@@ -148,14 +148,14 @@ func (ca *ClientKS) NetworkResponse(s *Server) (int, int, error) {
 		return -1, -1, errors.New("Didn't receive ResponseRet")
 	}
 	if reply.Config != nil {
-		dbg.LLvl3("Received new config", *reply.Config)
+		dbg.Lvl3("Received new config", *reply.Config)
 		err := reply.Config.VerifySignature()
 		if err != nil {
 			return -1, -1, err
 		}
 		ca.Config = reply.Config
 	} else {
-		dbg.LLvl3("No new config available")
+		dbg.Lvl3("No new config available")
 	}
 	return reply.ClientsSigned, reply.ClientsTot, err
 }
@@ -169,18 +169,18 @@ func (ca *ClientKS) AddServer(srv *Server) error {
 	if len(ca.Config.Servers) == 0 {
 		// If there are no servers, then there will be no
 		// pre-calculated commitment ready. Send one
-		dbg.LLvl3("Adding first server")
+		dbg.Lvl3("Adding first server")
 		err := ca.NetworkSendFirstCommit(srv)
 		if err != nil {
 			return err
 		}
 		srvSend = srv
 		now, next, err := ca.NetworkGetConfig(srvSend)
-		if err != nil{
+		if err != nil {
 			return err
 		}
-		if now.Version > 0{
-			dbg.LLvl2("Found server with available config")
+		if now.Version > 0 {
+			dbg.Lvl2("Found server with available config")
 			ca.Config = now
 			ca.NewConfig = next
 			return nil
@@ -218,7 +218,30 @@ func (ca *ClientKS) AddServerAddr(addr string) error {
 // DelServer deletes a server and asks the remaining servers (if any)
 // to sign the new configuration
 func (ca *ClientKS) DelServer(srv *Server) error {
-	return nil
+	var err error
+	ca.NewConfig, err = ca.Config.Copy()
+	if err != nil {
+		return err
+	}
+	err = ca.NewConfig.DelServer(srv)
+	if err != nil {
+		return err
+	}
+	if len(ca.NewConfig.Servers) == 0 {
+		dbg.Lvl2("Deleted last server - nothing to do")
+		ca.Config.Servers = make(map[string]*Server)
+		return nil
+	}
+	srvSend, err := ca.getAnyNewServer()
+	if err != nil {
+		return err
+	}
+	dbg.Lvl3("Sending to server", srvSend.Entity.String())
+	err = ca.NetworkSendNewConfig(srvSend)
+	if err != nil {
+		return err
+	}
+	return ca.SignNewConfig(srvSend)
 }
 
 // ServerCheck contacts all servers and verifies that all
@@ -273,7 +296,27 @@ func (ca *ClientKS) AddClient(client *Client) error {
 
 // ClientDel deletes the client and signs the new configuration
 func (ca *ClientKS) DelClient(client *Client) error {
-	return nil
+	var err error
+	ca.NewConfig, err = ca.Config.Copy()
+	if err != nil {
+		return nil
+	}
+	ca.NewConfig.DelClient(client)
+	if len(ca.Config.Servers) == 0 {
+		// If we don't have any server, we need to save the
+		// config
+		ca.Config = ca.NewConfig
+		return nil
+	}
+	srv, err := ca.getAnyServer()
+	if err != nil {
+		return err
+	}
+	err = ca.NetworkSendNewConfig(srv)
+	if err != nil {
+		return err
+	}
+	return ca.SignNewConfig(srv)
 }
 
 // Update checks for the latest configuration
@@ -282,7 +325,8 @@ func (ca *ClientKS) Update(srv *Server) error {
 	needSendCommit := ca.Config.Version == 0
 	conf := NewConfig(-1)
 	var newconf *Config
-	if srv == nil && !needSendCommit {
+	sendSrv := srv
+	if srv == nil {
 		// If no server is given, we contact all servers and ask
 		// for the latest version
 		dbg.Lvl3("Going to search all servers")
@@ -297,6 +341,7 @@ func (ca *ClientKS) Update(srv *Server) error {
 					newconf = nc
 				}
 			}
+			sendSrv = s
 		}
 	} else {
 		// If a server is given, we use that one
@@ -310,13 +355,13 @@ func (ca *ClientKS) Update(srv *Server) error {
 	ca.Config = conf
 	ca.NewConfig = newconf
 	if needSendCommit {
-		dbg.LLvl3("Sending first commit for client", ca.This.SSHpub)
-		err := ca.NetworkSendFirstCommit(srv)
+		dbg.Lvl3("Sending first commit for client", ca.This.SSHpub, sendSrv)
+		err := ca.NetworkSendFirstCommit(sendSrv)
 		if err != nil {
 			return err
 		}
 	} else if ca.NewConfig != nil {
-		dbg.LLvl3("Adding challenge")
+		dbg.Lvl3("Adding challenge")
 		ca.Cosi.Challenge(&cosi.Challenge{ca.NewConfig.Signature.Challenge})
 	}
 	return nil
@@ -335,7 +380,7 @@ func (ca *ClientKS) SignNewConfig(srv *Server) error {
 	}
 	sign, total, err := ca.NetworkResponse(srv)
 	if err == nil {
-		dbg.LLvl3("Got", sign, "out of", total, "signatures")
+		dbg.Lvl3("Got", sign, "out of", total, "signatures")
 	}
 	return err
 }
@@ -343,6 +388,14 @@ func (ca *ClientKS) SignNewConfig(srv *Server) error {
 // Gets any server from the config
 func (ca *ClientKS) getAnyServer() (*Server, error) {
 	for _, srv := range ca.Config.Servers {
+		return srv, nil
+	}
+	return nil, errors.New("Found no servers")
+}
+
+// Gets any server from the NewConfig
+func (ca *ClientKS) getAnyNewServer() (*Server, error) {
+	for _, srv := range ca.NewConfig.Servers {
 		return srv, nil
 	}
 	return nil, errors.New("Found no servers")

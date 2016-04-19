@@ -47,6 +47,11 @@ func NewServer(pub abstract.Point, addr, sshdPub string) *Server {
 	}
 }
 
+// Id returns the ID of the server which is the public key stringified
+func (s *Server) Id() string {
+	return s.Entity.Public.String()
+}
+
 // Client represents one client that can access the cothority
 type Client struct {
 	// Public key of the client - stored as Entity for later
@@ -62,12 +67,17 @@ func NewClient(public abstract.Point, sshPub string) *Client {
 	return &Client{network.NewEntity(public, ""), sshPub}
 }
 
+// Id returns the ID of the client which is the public key stringified
+func (c *Client) Id() string {
+	return c.Entity.Public.String()
+}
+
 // Config holds everything that needs to be signed by the cothority
 // and transferred to the clients
 type Config struct {
 	// Version holds an incremental number of that version
 	Version int
-	// Servers is a map of IP:Port pointing to Servers
+	// Servers is a map of strings of public keys pointing to Servers
 	Servers map[string]*Server
 	// Clients is a map of strings of public keys pointing to Clients
 	Clients map[string]*Client
@@ -173,14 +183,14 @@ func (conf *Config) Hash() []byte {
 
 // AddServer inserts a server in the configuration-list
 func (conf *Config) AddServer(s *Server) error {
-	conf.Servers[s.Entity.Addresses[0]] = s
+	conf.Servers[s.Id()] = s
 	conf.Signature = nil
 	return nil
 }
 
 // DelServer removes a server from the configuration-list
 func (conf *Config) DelServer(s *Server) error {
-	delete(conf.Servers, s.Entity.Addresses[0])
+	delete(conf.Servers, s.Id())
 	conf.Signature = nil
 	return nil
 }
@@ -188,14 +198,14 @@ func (conf *Config) DelServer(s *Server) error {
 // AddClient inserts a client in the configuration-list
 func (conf *Config) AddClient(c *Client) error {
 	dbg.Lvl3("Adding client", c, "to", conf.Clients, "key", c.SSHpub)
-	conf.Clients[c.Entity.Public.String()] = c
+	conf.Clients[c.Id()] = c
 	conf.Signature = nil
 	return nil
 }
 
 // DelClient removes a client from the configuration-list
 func (conf *Config) DelClient(c *Client) error {
-	delete(conf.Clients, c.Entity.Public.String())
+	delete(conf.Clients, c.Id())
 	conf.Signature = nil
 	return nil
 }

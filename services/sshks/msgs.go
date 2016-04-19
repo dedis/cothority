@@ -5,7 +5,6 @@ import (
 
 	libcosi "github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -94,11 +93,12 @@ type ResponseRet struct {
 
 // Server-internal messages to be sent between servers
 
-// PropSig propagates the signature for a new config
-type PropSig struct {
-	Hash      []byte
-	Version   int
-	Signature *cosi.SignResponse
+// PropConfig propagates the new config - it also needs to send the latest
+// commit-map of pre-computed commits, so clients can sign anywhere
+type PropConfig struct {
+	Config *Config
+	// Commits is a map of public-keys to pre-computed commits from the clients
+	Commits map[abstract.Point]*libcosi.Commitment
 }
 
 // StatusRet returns the success (empty string) or failure
@@ -122,7 +122,7 @@ func FuncRegister() {
 		GetConfigRet{},
 		Response{},
 		ResponseRet{},
-		PropSig{},
+		PropConfig{},
 		StatusRet{},
 	}
 	for _, s := range structs {

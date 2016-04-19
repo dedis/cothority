@@ -17,7 +17,7 @@ func TestNetworkFunctions(t *testing.T) {
 	srv := servers[0].This
 
 	// Adding ourselves and first server
-	dbg.Print("Public key", client.This.Entity.Public)
+	dbg.Lvl2("Public key", client.This.Entity.Public)
 	client.NewConfig = sshks.NewConfig(1)
 	client.Cosi = cosi.NewCosi(network.Suite, client.Private)
 	dbg.ErrFatal(client.NewConfig.AddClient(client.This))
@@ -37,11 +37,11 @@ func TestNetworkFunctions(t *testing.T) {
 	if len(conf.Clients) != 1 {
 		t.Fatal("Should have 1 client signed up")
 	}
-	dbg.Print(conf.Clients, *client.This)
-	if conf.Clients[client.This.Entity.Public.String()].Entity.ID != client.This.Entity.ID {
+	dbg.Lvl2(conf.Clients, *client.This)
+	if conf.Clients[client.This.Id()].Entity.ID != client.This.Entity.ID {
 		t.Fatal("First stored client should be us")
 	}
-	if conf.Servers[srv.Entity.Addresses[0]].Entity.ID != srv.Entity.ID {
+	if conf.Servers[srv.Id()].Entity.ID != srv.Entity.ID {
 		t.Fatal("First stored server should be this one")
 	}
 }
@@ -66,10 +66,10 @@ func TestFirstClient(t *testing.T) {
 	if len(conf.Clients) != 1 {
 		t.Fatal("Should have 1 client signed up")
 	}
-	if conf.Clients[client.This.Entity.Public.String()].Entity.ID != client.This.Entity.ID {
+	if conf.Clients[client.This.Id()].Entity.ID != client.This.Entity.ID {
 		t.Fatal("First stored client should be us")
 	}
-	if conf.Servers[srv1.Entity.Addresses[0]].Entity.ID != srv1.Entity.ID {
+	if conf.Servers[srv1.Id()].Entity.ID != srv1.Entity.ID {
 		t.Fatal("First stored server should be this one")
 	}
 
@@ -93,7 +93,7 @@ func TestMoreClients(t *testing.T) {
 	// Setup first client and server
 	dbg.ErrFatal(cks1.AddClient(cks1.This))
 	dbg.ErrFatal(cks1.AddServer(srv1))
-	if len(servers[0].Config.Clients) != 1{
+	if len(servers[0].Config.Clients) != 1 {
 		t.Fatal("Should have 1 client now")
 	}
 
