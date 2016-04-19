@@ -1,19 +1,13 @@
 package sda
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"net"
-	"os"
 	"reflect"
-	"strings"
 	"sync"
 
 	"time"
 
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -579,81 +573,4 @@ func (h *Host) Rx() uint64 {
 // Address is the addres where this host is listening
 func (h *Host) Address() string {
 	return h.workingAddress
-}
-
-// HostConfig holds all necessary data to create a Host.
-type HostConfig struct {
-	Public    string
-	Private   string
-	Addresses []string
-}
-
-// Save will save this HostConfig to the given file name
-func (hc *HostConfig) Save(file string) error {
-	fd, err := os.Create(file)
-	if err != nil {
-		return err
-	}
-	err = toml.NewEncoder(fd).Encode(hc)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// ParseConfig will try to parse the config file into a HostConfig.
-// It returns the HostConfig, the Host so we can already use it and an error if
-// occured.
-func ParseConfig(file string) (*HostConfig, *Host, error) {
-	hc := &HostConfig{}
-	_, err := toml.DecodeFile(file, hc)
-	if err != nil {
-		return nil, nil, err
-	}
-	// Try to decode the Hex values
-	secret, err := crypto.ReadSecretHex(network.Suite, hc.Private)
-	if err != nil {
-		return nil, nil, err
-	}
-	point, err := crypto.ReadPubHex(network.Suite, hc.Public)
-	if err != nil {
-		return nil, nil, err
-	}
-	host := NewHost(network.NewEntity(point, hc.Addresses...), secret)
-	return hc, host, nil
-}
-
-// CreateHostFile will ask through the command line to create a Private / Public
-// key, what is the listening address
-func CreateHostFile() (*HostConfig, error) {
-	reader := bufio.NewReader(os.Stdin)
-	var err error
-	var str string
-	// IP:PORT
-	fmt.Println("[+] Type the IP:PORT (ipv4) address of this host (accessible from Internet):")
-	str, err = reader.ReadString('\n')
-	str = strings.TrimSpace(str)
-	_, _, errStr := net.SplitHostPort(str)
-	if err != nil || errStr != nil {
-		return nil, fmt.Errorf("Error reading IP:PORT (", str, ") ", errStr, " => Abort")
-	}
-
-	fmt.Println("[+] Creation of the private and public keys...")
-	kp := config.NewKeyPair(network.Suite)
-	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
-	if err != nil {
-		return nil, fmt.Errorf("Could not parse private key. Abort.")
-	}
-	pubStr, err := crypto.PubHex(network.Suite, kp.Public)
-	if err != nil {
-		return nil, fmt.Errorf("Could not parse public key. Abort.")
-	}
-	fmt.Println("\tPrivate:\t", privStr)
-	fmt.Println("\tPublic: \t", pubStr)
-	config := &HostConfig{
-		Public:    pubStr,
-		Private:   privStr,
-		Addresses: []string{str},
-	}
-	return config, nil
 }
