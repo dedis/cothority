@@ -1,23 +1,23 @@
 package sda
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"reflect"
 	"sync"
 
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/crypto"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"time"
 )
+
+// ExternalAPI can be used to handle external message-calls
+type ExternalAPI func(*network.Message) network.ProtocolMessage
 
 // Host is the structure responsible for holding information about the current
 // state
@@ -94,61 +94,6 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	h.overlay = NewOverlay(h)
 	h.serviceStore = newServiceStore(h, h.overlay)
 	return h
-}
-
-// HostConfig holds all necessary data to create a Host.
-type HostConfig struct {
-	Public   string
-	Private  string
-	HostAddr []string
-}
-
-// NewHostFromFile reads the configuration-options from the given file
-// and initialises a Host.
-func NewHostFromFile(name string) (*Host, error) {
-	hc := &HostConfig{}
-	_, err := toml.DecodeFile(name, hc)
-	if err != nil {
-		return nil, err
-	}
-	private, err := crypto.ReadSecretHex(network.Suite, hc.Private)
-	if err != nil {
-		return nil, err
-	}
-	public, err := crypto.ReadPubHex(network.Suite, hc.Public)
-	if err != nil {
-		return nil, err
-	}
-	entity := network.NewEntity(public, hc.HostAddr...)
-	host := NewHost(entity, private)
-	return host, nil
-}
-
-// SaveToFile puts the private/public key and the hostname into a file
-func (h *Host) SaveToFile(name string) error {
-	public, err := crypto.PubHex(network.Suite, h.Entity.Public)
-	if err != nil {
-		return err
-	}
-	private, err := crypto.SecretHex(network.Suite, h.private)
-	if err != nil {
-		return err
-	}
-	hc := &HostConfig{
-		Public:   public,
-		Private:  private,
-		HostAddr: h.Entity.Addresses,
-	}
-	buf := new(bytes.Buffer)
-	err = toml.NewEncoder(buf).Encode(hc)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-	err = ioutil.WriteFile(name, buf.Bytes(), 0660)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-	return nil
 }
 
 // listen starts listening for messages coming from any host that tries to
@@ -313,7 +258,7 @@ func (h *Host) processMessages() {
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
-		// A host has sent us a request to get a tree definition
+			// A host has sent us a request to get a tree definition
 		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
 			tree := h.overlay.Tree(tid)
@@ -325,7 +270,7 @@ func (h *Host) processMessages() {
 				// "error" ?
 				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
-		// A Host has replied to our request of a tree
+			// A Host has replied to our request of a tree
 		case SendTreeMessageID:
 			tm := data.Msg.(TreeMarshal)
 			if tm.TreeId == TreeID(uuid.Nil) {
@@ -354,7 +299,7 @@ func (h *Host) processMessages() {
 			dbg.Lvl4("Received new tree")
 			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
-		// Some host requested an EntityList
+			// Some host requested an EntityList
 		case RequestEntityListMessageID:
 			id := data.Msg.(RequestEntityList).EntityListID
 			el := h.overlay.EntityList(id)
@@ -369,7 +314,7 @@ func (h *Host) processMessages() {
 						err)
 				}
 			}
-		// Host replied to our request of entitylist
+			// Host replied to our request of entitylist
 		case SendEntityListMessageID:
 			il := data.Msg.(EntityList)
 			if il.Id == EntityListID(uuid.Nil) {
@@ -387,9 +332,6 @@ func (h *Host) processMessages() {
 			m := data.Msg.(ServiceMessage)
 			h.processServiceMessage(data.Entity, &m)
 		default:
-			dbg.Error("Didn't recognize message", data.MsgType)
-		}
-		if err != nil {
 			dbg.Error("Sending error:", err)
 		}
 	}

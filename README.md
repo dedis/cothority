@@ -77,7 +77,7 @@ cd $GOPATH/src/github.com/dedis/cothority
 git checkout cosi_cli
 cd app
 go install cosi/cosi.go
-go install cosid/cosid.go
+go install cothorityd/cothorityd.go
 ```
 
 The two binaries `cosi` and `cosid` will be added to `$GOBIN`. If you already
