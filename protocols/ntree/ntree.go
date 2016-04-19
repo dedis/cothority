@@ -61,7 +61,7 @@ func (p *Protocol) Start() error {
 
 // HandleSignRequest is a handler for incoming sign-requests. It's registered as
 // a handler in the sda.Node.
-func (p *Protocol) HandleSignRequest(msg structMessage) error {
+func (p *Protocol) HandleSignRequest(msg structMessage) {
 	p.Message = msg.Msg
 	p.verifySignature = msg.VerifySignature
 	signature, err := crypto.SignSchnorr(network.Suite, p.Private(), p.Message)
@@ -90,7 +90,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 // HandleSignBundle is a handler responsible for adding the node's signature
 // and verifying the children's signatures (verification level can be controlled
 // by the VerifySignature flag).
-func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
+func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 	dbg.Lvl3("Appending our signature to the collected ones and send to parent")
 	var sig SignatureBundle
 	sig.ChildSig = p.signature

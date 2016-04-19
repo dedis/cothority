@@ -60,7 +60,7 @@ func (b *Broadcast) Start() error {
 func (b *Broadcast) handleContactNodes(msg struct {
 	*sda.TreeNode
 	ContactNodes
-}) error {
+}) {
 	dbg.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
 	if msg.TreeNode.Id == b.Root().Id {
 		dbg.Lvl3(b.Info(), "Contacting everybody")
