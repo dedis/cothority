@@ -133,11 +133,11 @@ func checkList(list *sda.EntityList) {
 	}
 	dbg.Print("Sending message to", serverStr)
 	msg := "verification"
-	sig, err := SignStatement(strings.NewReader(msg), list)
+	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
 		dbg.Error("When contacting servers", serverStr, err)
 	} else {
-		err := VerifySignatureHash([]byte(msg), sig, list)
+		err := verifySignatureHash([]byte(msg), sig, list)
 		if err != nil {
 			dbg.Error("Signature was invalid:", err)
 		}
@@ -153,7 +153,7 @@ func signFile(c *cli.Context) {
 	if err != nil {
 		handleErrorAndExit("Couldn't read file to be signed: ", err)
 	}
-	sig, err := Sign(file, groupToml)
+	sig, err := sign(file, groupToml)
 	handleErrorAndExit("Couldn't create signature", err)
 	dbg.Lvl1(sig)
 	sigFileName := fileName + ".sig"
@@ -166,14 +166,14 @@ func signFile(c *cli.Context) {
 func signString(c *cli.Context) {
 	msg := strings.NewReader(c.Args().First())
 	groupToml := c.GlobalString("servers")
-	sig, err := Sign(msg, groupToml)
+	sig, err := sign(msg, groupToml)
 	handleErrorAndExit("Couldn't create signature", err)
 	writeSigAsJSON(sig, os.Stdout)
 }
 
 func verifyFile(c *cli.Context) {
 	dbg.SetDebugVisible(c.GlobalInt("debug"))
-	err := Verify(c.Args().First(), c.GlobalString("servers"))
+	err := verify(c.Args().First(), c.GlobalString("servers"))
 	verifyPrintResult(err)
 }
 
@@ -187,7 +187,7 @@ func verifyString(c *cli.Context) {
 	handleErrorAndExit("Couldn't read signature: ", err)
 	err = ioutil.WriteFile(sigfile, sig, 0444)
 	handleErrorAndExit("Couldn't write tmp-signature", err)
-	err = Verify(f.Name(), c.GlobalString("servers"))
+	err = verify(f.Name(), c.GlobalString("servers"))
 	verifyPrintResult(err)
 	os.Remove(f.Name())
 	os.Remove(sigfile)
@@ -292,7 +292,7 @@ func (s *SignResponse) UnmarshalJSON(data []byte) error {
 }
 
 // sign takes a stream and a toml file defining the servers
-func Sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
+func sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 	dbg.Lvl3("Starting signature")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
@@ -303,7 +303,7 @@ func Sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 		return nil, err
 	}
 	dbg.Lvl2("Sending signature to", el)
-	res, err := SignStatement(r, el)
+	res, err := signStatement(r, el)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +312,7 @@ func Sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func SignStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
+func signStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 
 	// create a throw-away key pair:
 	priv, pub := sda.PrivPub()
@@ -384,7 +384,7 @@ func SignStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 
 // verify takes a file and a group-definition, calls the signature
 // verification and prints the result
-func Verify(fileName, groupToml string) error {
+func verify(fileName, groupToml string) error {
 	// if the file hash matches the one in the signature
 	dbg.Lvl4("Reading file " + fileName)
 	b, err := ioutil.ReadFile(fileName)
@@ -412,12 +412,11 @@ func Verify(fileName, groupToml string) error {
 		return err
 	}
 	dbg.Lvl4("Verfifying signature")
-	err = VerifySignatureHash(b, sig, el)
+	err = verifySignatureHash(b, sig, el)
 	return err
 }
 
-// verifySignature checks whether the signature is valid
-func VerifySignatureHash(b []byte, sig *SignResponse, el *sda.EntityList) error {
+func verifySignatureHash(b []byte, sig *SignResponse, el *sda.EntityList) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
@@ -427,7 +426,8 @@ func VerifySignatureHash(b []byte, sig *SignResponse, el *sda.EntityList) error 
 			"belongig to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	if err := cosi.VerifySignature(network.Suite, fHash, el.Aggregate, sig.Challenge, sig.Response); err != nil {
+	if err := cosi.VerifySignature(network.Suite, fHash, el.Aggregate,
+		sig.Challenge, sig.Response); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
