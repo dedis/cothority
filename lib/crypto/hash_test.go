@@ -2,6 +2,7 @@ package crypto_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/edwards/ed25519"
@@ -41,6 +42,26 @@ func TestHashStream(t *testing.T) {
 	}
 }
 
+func TestHashStreamAndByteEqual(t *testing.T) {
+	var buff bytes.Buffer
+	rb := make([]byte, 2048)
+	_, _ = rand.Read(rb)
+	str := string(rb)
+	dbg.Print(str)
+	buff.WriteString(str)
+	hashed, err := crypto.HashStream(hashSuite.Hash(), &buff)
+	if err != nil {
+		t.Fatal("error hashing" + err.Error())
+	}
+
+	hashed2, err := crypto.HashBytes(hashSuite.Hash(), []byte(str))
+	if err != nil {
+		t.Fatal("error hashing" + err.Error())
+	}
+	if !bytes.Equal(hashed2, hashed) {
+		t.Fatal("Ouch")
+	}
+}
 func TestHashBytes(t *testing.T) {
 	str := "Hello World"
 	hashed, err := crypto.HashBytes(hashSuite.Hash(), []byte(str))

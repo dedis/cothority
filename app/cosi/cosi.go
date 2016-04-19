@@ -429,8 +429,7 @@ func verifySignatureHash(b []byte, sig *SignResponse, el *sda.EntityList) error 
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
-	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
-	if !bytes.Equal(hashHash, sig.Sum) {
+	if !bytes.Equal(fHash, sig.Sum) {
 		return errors.New("You are trying to verify a signature " +
 			"belongig to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
