@@ -48,7 +48,7 @@ your request to sign the message.
 
 ## Installation
 
-We provide a binaries for the `cosi` and `cosid` program. They are pre-compiled
+We provide a binaries for the `cosi` and `cothorityd` program. They are pre-compiled
 for MacOSX and Linux and don't need any go-installation. But of course you can also
 compile from source.
 
@@ -80,7 +80,7 @@ go install cosi/cosi.go
 go install cothorityd/cothorityd.go
 ```
 
-The two binaries `cosi` and `cosid` will be added to `$GOBIN`. If you already
+The two binaries `cosi` and `cothorityd` will be added to `$GOBIN`. If you already
 have an old version of cothority, be sure to update `github.com/dedis/crypto` and
 `github.com/dedis/protobuf`.
 
@@ -116,7 +116,7 @@ Next time you run the server it will directly read that file and start up.
 If you chose another filename than `config.toml`, you can use `-config file.toml`. 
 
 ### Creating a Collective Signing Group
-By running several `cosid` instances (and copying the appropriate lines 
+By running several `cothorityd` instances (and copying the appropriate lines 
 of their output) you can create a `servers.toml` that looks like 
 this:
 
