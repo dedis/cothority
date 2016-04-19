@@ -31,7 +31,7 @@ func NetworkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolM
 	client := network.NewSecureTCPHost(sec, network.NewEntity(pub, ""))
 
 	// Connect to the root
-	dbg.Lvl3("Opening connection")
+	dbg.Lvl4("Opening connection to", dst)
 	con, err := client.Open(dst)
 	defer client.Close()
 	if err != nil {
@@ -41,12 +41,12 @@ func NetworkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolM
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Lvl3("Sending request", req)
+		dbg.Lvlf3("Sending request %+v", req)
 		if err := con.Send(context.TODO(), req); err != nil {
 			close(pchan)
 			return
 		}
-		dbg.Lvl3("Waiting for the response")
+		dbg.Lvl4("Waiting for the response")
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
 		if err != nil {
@@ -57,7 +57,7 @@ func NetworkSend(sec abstract.Secret, dst *network.Entity, req network.ProtocolM
 	}()
 	select {
 	case response := <-pchan:
-		dbg.Lvl5("Response:", response)
+		dbg.Lvlf5("Response: %+v", response)
 		return &response, nil
 	case <-time.After(time.Second * 10):
 		return &network.Message{}, errors.New("Timeout on signing")

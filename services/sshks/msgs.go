@@ -91,14 +91,19 @@ type ResponseRet struct {
 	Config *Config
 }
 
+// ProposeClient makes a new config with the client that needs to be
+// confirmed by the already signed-up clients. It returns a StatusRet
+type ProposeClient struct {
+	Client *Client
+}
+
 // Server-internal messages to be sent between servers
 
 // PropConfig propagates the new config - it also needs to send the latest
 // commit-map of pre-computed commits, so clients can sign anywhere
 type PropConfig struct {
-	Config *Config
-	// Commits is a map of public-keys to pre-computed commits from the clients
-	Commits map[abstract.Point]*libcosi.Commitment
+	Config     *Config
+	NextConfig *NextConfig
 }
 
 // StatusRet returns the success (empty string) or failure
@@ -123,6 +128,7 @@ func FuncRegister() {
 		Response{},
 		ResponseRet{},
 		PropConfig{},
+		ProposeClient{},
 		StatusRet{},
 	}
 	for _, s := range structs {

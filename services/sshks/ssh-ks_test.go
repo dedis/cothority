@@ -230,7 +230,7 @@ func TestCAClientDel(t *testing.T) {
 
 	dbg.ErrFatal(ca.DelClient(ca2.This))
 	dbg.ErrFatal(ca2.Update(nil))
-	dbg.ErrFatal(ca2.SignNewConfig(nil))
+	dbg.ErrFatal(ca2.ConfirmNewConfig(nil))
 	dbg.ErrFatal(ca.Update(nil))
 	if len(ca.Config.Clients) != 1 {
 		t.Fatal("There should be 1 client now")

@@ -66,6 +66,7 @@ func ReadClientKS(f string) (*ClientKS, error) {
 		return nil, errors.New("Didn't get a ClientKS structure")
 	}
 	ca = &c
+	ca.Cosi.SetSuite(network.Suite)
 	return ca, nil
 }
 
@@ -203,7 +204,7 @@ func (ca *ClientKS) AddServer(srv *Server) error {
 	if err != nil {
 		return err
 	}
-	return ca.SignNewConfig(srvSend)
+	return ca.ConfirmNewConfig(srvSend)
 }
 
 // AddServerAddr takes an address and will ask the server for it's identity first
@@ -241,7 +242,16 @@ func (ca *ClientKS) DelServer(srv *Server) error {
 	if err != nil {
 		return err
 	}
-	return ca.SignNewConfig(srvSend)
+	return ca.ConfirmNewConfig(srvSend)
+}
+
+// DelServerAddr takes an address and will ask the server for it's identity first
+func (ca *ClientKS) DelServerAddr(addr string) error {
+	srv, err := NetworkGetServer(addr)
+	if err != nil {
+		return err
+	}
+	return ca.DelServer(srv)
 }
 
 // ServerCheck contacts all servers and verifies that all
@@ -269,6 +279,23 @@ func (ca *ClientKS) ServerCheck() error {
 	return nil
 }
 
+// ServerPropose sends our configuration to the server which will propose
+// a new configuration including our client
+func (ca *ClientKS) ServerPropose(srv *Server) error {
+	msg, err := NetworkSend(ca.Private, srv.Entity, &ProposeClient{ca.This})
+	dbg.Printf("%+v", msg)
+	return ErrMsg(msg, err)
+}
+
+// ServerProposeAddr searches for the server at address and calls ServerPropose
+func (ca *ClientKS) ServerProposeAddr(addr string) error {
+	srv, err := NetworkGetServer(addr)
+	if err != nil {
+		return err
+	}
+	return ca.ServerPropose(srv)
+}
+
 // ClientAdd adds a new client and signs the new configuration
 func (ca *ClientKS) AddClient(client *Client) error {
 	var err error
@@ -291,7 +318,7 @@ func (ca *ClientKS) AddClient(client *Client) error {
 	if err != nil {
 		return err
 	}
-	return ca.SignNewConfig(srv)
+	return ca.ConfirmNewConfig(srv)
 }
 
 // ClientDel deletes the client and signs the new configuration
@@ -316,7 +343,7 @@ func (ca *ClientKS) DelClient(client *Client) error {
 	if err != nil {
 		return err
 	}
-	return ca.SignNewConfig(srv)
+	return ca.ConfirmNewConfig(srv)
 }
 
 // Update checks for the latest configuration
@@ -329,7 +356,7 @@ func (ca *ClientKS) Update(srv *Server) error {
 	if srv == nil {
 		// If no server is given, we contact all servers and ask
 		// for the latest version
-		dbg.Lvl3("Going to search all servers")
+		dbg.Lvl4(ca.This.SSHpub, "Going to search all servers", ca.Config.Servers)
 		for _, s := range ca.Config.Servers {
 			c, nc, err := ca.NetworkGetConfig(s)
 			if err == nil {
@@ -340,6 +367,8 @@ func (ca *ClientKS) Update(srv *Server) error {
 					dbg.Lvl3("Got new config from", s)
 					newconf = nc
 				}
+			} else {
+				dbg.Error(err)
 			}
 			sendSrv = s
 		}
@@ -370,7 +399,7 @@ func (ca *ClientKS) Update(srv *Server) error {
 // ConfirmNewConfig sends a response to the server, thus confirming
 // that we're OK with this new configuration.
 // If srv == nil, a random server is chosen.
-func (ca *ClientKS) SignNewConfig(srv *Server) error {
+func (ca *ClientKS) ConfirmNewConfig(srv *Server) error {
 	if srv == nil {
 		var err error
 		srv, err = ca.getAnyServer()
@@ -378,6 +407,7 @@ func (ca *ClientKS) SignNewConfig(srv *Server) error {
 			return err
 		}
 	}
+	dbg.Lvl4("Sending to server", srv)
 	sign, total, err := ca.NetworkResponse(srv)
 	if err == nil {
 		dbg.Lvl3("Got", sign, "out of", total, "signatures")

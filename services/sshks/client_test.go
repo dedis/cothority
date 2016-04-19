@@ -24,7 +24,7 @@ func TestNetworkFunctions(t *testing.T) {
 	dbg.ErrFatal(client.NewConfig.AddServer(srv))
 	dbg.ErrFatal(client.NetworkSendFirstCommit(srv))
 	dbg.ErrFatal(client.NetworkSendNewConfig(srv))
-	dbg.ErrFatal(client.SignNewConfig(srv))
+	dbg.ErrFatal(client.ConfirmNewConfig(srv))
 
 	// Verify the configuration
 	conf := client.Config
@@ -126,7 +126,7 @@ func TestMoreClients(t *testing.T) {
 	if cks2.NewConfig == nil {
 		t.Fatal("Client 2 should have a NewConfig now")
 	}
-	dbg.ErrFatal(cks2.SignNewConfig(nil))
+	dbg.ErrFatal(cks2.ConfirmNewConfig(nil))
 
 	//dbg.ErrFatal(cks2.AddClient(cks3.This))
 }
@@ -165,15 +165,101 @@ func TestAddServerSecondClient(t *testing.T) {
 		t.Fatal("Should have 2 clients in cks1", *cks1.Config)
 	}
 	dbg.ErrFatal(cks2.Update(nil))
-	dbg.ErrFatal(cks2.SignNewConfig(nil))
+	dbg.ErrFatal(cks2.ConfirmNewConfig(nil))
 	if len(cks2.Config.Clients) != 3 {
 		t.Fatal("Should have 3 clients in cks2")
 	}
 	dbg.ErrFatal(cks1.Update(nil))
 }
 
+func TestServerPropose(t *testing.T) {
+	cks1, servers := newTest(2)
+	defer closeServers(t, servers)
+	srv1, srv2 := servers[0].This, servers[1].This
+
+	// Setup first client and server
+	dbg.ErrFatal(cks1.AddServer(srv1))
+	dbg.ErrFatal(cks1.AddServer(srv2))
+
+	cks2 := newClient(1)
+	err := cks2.AddServer(srv1)
+	if err == nil {
+		t.Fatal("Client 2 shouldn't be able to sign up")
+	}
+	dbg.ErrFatal(cks2.ServerPropose(srv1))
+	dbg.ErrFatal(cks1.Update(srv2))
+	if cks1.NewConfig == nil {
+		t.Fatal("Didn't propagate new config")
+	}
+	if cks1.NewConfig.Version != 3 {
+		t.Fatal("New proposed version should be 3:", cks1.NewConfig.Version)
+	}
+	if len(cks1.NewConfig.Clients) != 2 {
+		t.Fatal("Should have 2 clients in proposed config")
+	}
+
+	dbg.ErrFatal(cks1.ConfirmNewConfig(nil))
+	dbg.ErrFatal(cks2.AddServer(srv1))
+	if len(cks2.Config.Clients) != 2 {
+		t.Fatal("Client2 should have both clients")
+	}
+	if len(cks1.Config.Clients) != 2 {
+		t.Fatal("Client1 should also have both clients")
+	}
+
+	cks3 := newClient(2)
+	err = cks3.AddServer(srv1)
+	if err == nil {
+		t.Fatal("Client3 should not be able to connect to srv1")
+	}
+	if len(servers[0].Config.Clients) == 3 {
+		t.Fatal("Server should not have stored client 3")
+	}
+
+	// Now add client three, but this time both clients need to sign
+	dbg.ErrFatal(cks3.ServerPropose(srv1))
+	dbg.ErrFatal(cks1.Update(nil))
+	dbg.ErrFatal(cks2.Update(nil))
+	dbg.ErrFatal(cks1.ConfirmNewConfig(nil))
+	if len(cks1.Config.Clients) == 3 {
+		t.Fatal("Client1 should not have client 3 yet")
+	}
+	dbg.ErrFatal(cks2.ConfirmNewConfig(nil))
+	dbg.ErrFatal(cks3.AddServer(srv1))
+	if len(servers[0].Config.Clients) != 3 {
+		t.Fatal("There should be 3 clients stored now")
+	}
+}
+
 func TestClientSign(t *testing.T) {
-	// Test if a signature sends directly the new commitment
+	// Test if a partial signature is correctly propagated
+	cks1, servers := newTest(3)
+	defer closeServers(t, servers)
+	srv1, srv2, srv3 := servers[0].This, servers[1].This, servers[2].This
+	cks2 := newClient(1)
+
+	// Setup first client and server
+	dbg.ErrFatal(cks1.AddServer(srv1))
+	dbg.ErrFatal(cks1.AddServer(srv2))
+	dbg.ErrFatal(cks1.AddClient(cks2.This))
+	dbg.ErrFatal(cks2.AddServer(srv1))
+
+	// Adding third server over one server and updating over the other
+	var err error
+	cks2.NewConfig, err = cks2.Config.Copy()
+	dbg.ErrFatal(err)
+	cks2.NewConfig.AddServer(srv3)
+	dbg.ErrFatal(cks2.NetworkSendNewConfig(srv2))
+	dbg.ErrFatal(cks2.ConfirmNewConfig(srv2))
+	dbg.ErrFatal(cks1.Update(srv1))
+	dbg.ErrFatal(cks1.ConfirmNewConfig(srv1))
+	dbg.ErrFatal(cks2.Update(srv2))
+	if len(cks1.Config.Servers) != 3 {
+		t.Fatal("Client 1 should have 3 servers now")
+	}
+	if len(cks2.Config.Servers) != 3 {
+		t.Fatal("Client 2 should have 3 servers now")
+	}
 }
 
 func TestConfigMultiple(t *testing.T) {

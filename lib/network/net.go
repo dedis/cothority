@@ -219,7 +219,7 @@ func NewSecureTCPHost(private abstract.Secret, e *Entity) *SecureTCPHost {
 // Returns an error if it can listen on any address
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		dbg.Lvl3(st.workingAddress, "connected with", c.Remote())
+		dbg.Lvl4(st.workingAddress, "connected with", c.Remote())
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
@@ -240,7 +240,7 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	if st.entity == nil {
 		return errors.New("Can't listen without Entity")
 	}
-	dbg.Lvl3("Addresses are", st.entity.Addresses)
+	dbg.Lvl4("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
 		dbg.Lvl3("Starting to listen on", addr)
 		st.lockAddress.Lock()
@@ -267,10 +267,10 @@ func (st *SecureTCPHost) Open(e *Entity) (SecureConn, error) {
 	// try all names
 	for _, addr := range e.Addresses {
 		// try to connect with this name
-		dbg.Lvl3("Trying address", addr)
+		dbg.Lvl4("Trying address", addr)
 		c, err := st.TCPHost.openTCPConn(addr)
 		if err != nil {
-			dbg.Lvl3("Address didn't accept connection:", addr, "=>", err)
+			dbg.Lvl2("Address didn't accept connection:", addr, "=>", err)
 			continue
 		}
 		// create the secure connection
@@ -536,8 +536,8 @@ func (sc *SecureTCPConn) negotiateOpen(e *Entity) error {
 	}
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().ID != e.ID {
-		dbg.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.Entity(), sc.Entity().ID)
-		dbg.Lvl3(e.Public, sc.Entity().Public)
+		dbg.Lvl2("Wanted to connect to", e, e.ID, "but got", sc.Entity(), sc.Entity().ID)
+		dbg.Lvl2(e.Public, sc.Entity().Public)
 		dbg.Lvl4("IDs not the same", dbg.Stack())
 		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}

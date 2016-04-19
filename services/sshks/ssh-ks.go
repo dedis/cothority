@@ -270,8 +270,8 @@ func (conf *Config) List() {
 	for _, srv := range conf.Servers {
 		dbg.Print("Server:", srv.Entity.String())
 	}
-	for n, cl := range conf.Clients {
-		dbg.Print("Client:", n, cl.Entity.String())
+	for _, cl := range conf.Clients {
+		dbg.Print("Client:", cl.SSHpub, cl.Entity.String())
 	}
 }
 

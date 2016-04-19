@@ -11,7 +11,7 @@ DBG_SRV=1
 # Debug-level for client
 DBG_CLIENT=1
 # Debug running
-DBG_RUN=z
+DBG_RUN=
 
 startTest(){
     # where the output should go
@@ -20,6 +20,7 @@ startTest(){
     else
         OUT=/dev/null
     fi
+    set +m
 }
 
 test(){
@@ -50,7 +51,9 @@ testFile(){
 testGrep(){
     S=$1
     shift
-    if ! $@ | grep -q "$S"; then
+    STR=$( $@ )
+    if ! echo $STR | grep -q "$S"; then
+        dbgRun $STR
         fail "Didn't find '$S' in output of '$@'"
     fi
 }
