@@ -22,7 +22,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	service "github.com/dedis/cothority/services/cosi"
+	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -33,7 +33,6 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Cosi signer and verifier"
 	app.Usage = "Collectively sign a file or a message and verify it"
-	app.Version = "1.0"
 	app.Commands = []cli.Command{
 		{
 			Name:    "sign",
@@ -325,7 +324,7 @@ func SignStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 	dbg.Lvl3("Opening connection to", host.First(), host.Public)
 
 	// create request
-	r := &service.ServiceRequest{
+	r := &s.ServiceRequest{
 		Message:    msg,
 		EntityList: el,
 	}
@@ -337,8 +336,8 @@ func SignStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 	con, err := client.Open(host)
 	defer client.Close()
 	if err != nil {
-		return nil, fmt.Errorf("Client % scould not connect to service %s:",
-			e.First(), host.First(), err.Error())
+		return nil, fmt.Errorf("Client could not connect to service %s: %s",
+			host.First(), err.Error())
 	}
 
 	dbg.Lvl3("Sending sign SignRequest")
