@@ -23,7 +23,7 @@ func TestCosiCommitment(t *testing.T) {
 		aggCommit = aggCommit.Add(aggCommit, com.Commitment)
 	}
 	// add commitment of root
-	aggCommit = aggCommit.Add(aggCommit, root.commitment)
+	aggCommit = aggCommit.Add(aggCommit, root.Commitment)
 	if !aggCommit.Equal(root.aggregateCommitment) {
 		t.Fatal("Aggregate Commitment are not equal")
 	}
@@ -38,7 +38,7 @@ func TestCosiChallenge(t *testing.T) {
 	}
 	for _, child := range children {
 		child.Challenge(chal)
-		if !child.challenge.Equal(chal.Challenge) {
+		if !child.ChallengeR.Equal(chal.Challenge) {
 			t.Fatal("Error during challenge on children")
 		}
 	}
@@ -69,7 +69,7 @@ func TestCosiResponse(t *testing.T) {
 	}
 
 	// verify it
-	aggResponse = aggResponse.Add(aggResponse, root.response)
+	aggResponse = aggResponse.Add(aggResponse, root.ResponseR)
 	if !aggResponse.Equal(root.aggregateResponse) {
 		t.Fatal("Responses aggregated not equal")
 	}
@@ -86,10 +86,10 @@ func TestCosiVerifyResponse(t *testing.T) {
 	aggregatedPublic := testSuite.Point().Null()
 	for _, ch := range children {
 		// add children public key
-		aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, ch.private))
+		aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, ch.Private))
 	}
 	// add root public key
-	aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, root.private))
+	aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, root.Private))
 	// verify the responses / commitment
 	if err := root.VerifyResponses(aggregatedPublic); err != nil {
 		t.Fatal("Verification of responses / commitment has failed:", err)
@@ -97,7 +97,7 @@ func TestCosiVerifyResponse(t *testing.T) {
 
 	// recompute the challenge and check if it is the same
 	commitment := testSuite.Point()
-	commitment = commitment.Add(commitment.Mul(nil, root.aggregateResponse), testSuite.Point().Mul(aggregatedPublic, root.challenge))
+	commitment = commitment.Add(commitment.Mul(nil, root.aggregateResponse), testSuite.Point().Mul(aggregatedPublic, root.ChallengeR))
 	// T is the recreated V_hat
 	T := testSuite.Point().Null()
 	T = T.Add(T, commitment)
@@ -111,13 +111,13 @@ func TestCosiVerifyResponse(t *testing.T) {
 	// reconstructed challenge
 	challenge := testSuite.Secret().Pick(cipher)
 
-	if !challenge.Equal(root.challenge) {
+	if !challenge.Equal(root.ChallengeR) {
 		t.Fatal("Root challenge != challenge recomputed")
 	}
-	if !challenge.Equal(children[0].challenge) {
+	if !challenge.Equal(children[0].ChallengeR) {
 		t.Fatal("Children[0] challenge != challenge recomputed")
 	}
-	if err := VerifySignature(testSuite, msg, aggregatedPublic, root.challenge, root.aggregateResponse); err != nil {
+	if err := VerifySignature(testSuite, msg, aggregatedPublic, root.ChallengeR, root.aggregateResponse); err != nil {
 		t.Fatal("Error veriying:", err)
 	}
 }
