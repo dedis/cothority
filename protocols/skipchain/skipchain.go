@@ -18,7 +18,7 @@ func init() {
 
 // ProtocolSkipchain Genesis
 type ProtocolSkipchain struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	SetupDone chan bool
 	SkipChain map[string]*SkipBlock
 	LastBlock []byte
@@ -26,12 +26,12 @@ type ProtocolSkipchain struct {
 }
 
 // NewSkipchain initialises the structures and create the genesis block
-func NewSkipchain(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewSkipchain(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	Skipchain := &ProtocolSkipchain{
-		Node:      n,
-		SetupDone: make(chan bool),
-		SkipChain: make(map[string]*SkipBlock),
+		TreeNodeInstance: n,
+		SetupDone:        make(chan bool),
+		SkipChain:        make(map[string]*SkipBlock),
 	}
 	err := Skipchain.RegisterHandler(Skipchain.HandleGenesis)
 	if err != nil {
