@@ -19,7 +19,7 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-// Cothorityd config
+// CothoritydConfig is the Cothority daemon config
 type CothoritydConfig struct {
 	Public    string
 	Private   string
