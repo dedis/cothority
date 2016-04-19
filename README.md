@@ -76,8 +76,8 @@ go get github.com/dedis/cothority
 cd $GOPATH/src/github.com/dedis/cothority
 git checkout cosi_cli
 cd app
-go install cosi
-go install cosid
+go install cosi/cosi.go
+go install cothorityd/cothorityd.go
 ```
 
 The two binaries `cosi` and `cosid` will be added to `$GOBIN`. If you already
@@ -221,7 +221,7 @@ For all commands, if you chose another filename for the servers than `servers.to
 give that on the command-line, so for example to sign a message:
 
 ```bash
-cosi sign msg "Hello CoSi" -servers my_servers.toml
+cosi -servers my_servers.toml sign msg "Hello CoSi"
 ```
 
 # Simulation

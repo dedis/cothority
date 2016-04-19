@@ -535,7 +535,10 @@ func (n *TreeNodeInstance) SendToParent(msg interface{}) error {
 	return n.SendTo(n.Parent(), msg)
 }
 
-// SendToChildren sends a given message to all children of the calling node (unless it is a leaf)
+// SendToChildren sends a given message to all children of the calling node.
+// It stops sending if sending to one of the children fails. In that case it
+// returns an error. If the underlying node is a leaf node this function does
+// nothing.
 func (n *TreeNodeInstance) SendToChildren(msg interface{}) error {
 	if n.IsLeaf() {
 		return nil
@@ -546,6 +549,32 @@ func (n *TreeNodeInstance) SendToChildren(msg interface{}) error {
 		}
 	}
 	return nil
+}
+
+// SendToChildrenInParallel sends a given message to all children of the calling
+// node. It has the following differences to node.SendToChildren:
+// The actual sending happens in a go routine (in parallel).
+// It continues sending to the other nodes if sending to one of the children
+// fails. In that case it will collect all errors (separated by '\n'.)
+// If the underlying node is a leaf node this function does
+// nothing.
+func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
+	if n.IsLeaf() {
+		return nil
+	}
+	children := n.Children()
+	errs := make([]collectedErrors, 0, len(children))
+	eMut := sync.Mutex{}
+	for _, node := range children {
+		go func(n2 *TreeNode) {
+			if err := n.SendTo(n2, msg); err != nil {
+				eMut.Lock()
+				errs = append(errs, collectedErrors{node.Name(), err})
+				eMut.Unlock()
+			}
+		}(node)
+	}
+	return collectErrors("Error while sending to %s: %s\n", errs)
 }
 
 // Host returns the underlying Host of this node.
