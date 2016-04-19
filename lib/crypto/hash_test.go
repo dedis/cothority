@@ -47,7 +47,6 @@ func TestHashStreamAndByteEqual(t *testing.T) {
 	rb := make([]byte, 2048)
 	_, _ = rand.Read(rb)
 	str := string(rb)
-	dbg.Print(str)
 	buff.WriteString(str)
 	hashed, err := crypto.HashStream(hashSuite.Hash(), &buff)
 	if err != nil {
@@ -59,7 +58,7 @@ func TestHashStreamAndByteEqual(t *testing.T) {
 		t.Fatal("error hashing" + err.Error())
 	}
 	if !bytes.Equal(hashed2, hashed) {
-		t.Fatal("Ouch")
+		t.Fatal("Ouch: HashStream and HashByte differ.")
 	}
 }
 func TestHashBytes(t *testing.T) {

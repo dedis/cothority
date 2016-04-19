@@ -4,7 +4,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -23,7 +22,6 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	s "github.com/dedis/cothority/services/cosi"
-	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
 
@@ -211,7 +209,7 @@ func verifyPrintResult(err error) {
 }
 
 // writeSigAsJSON - writes the JSON out to a file
-func writeSigAsJSON(res *SignResponse, outW io.Writer) {
+func writeSigAsJSON(res *s.ServiceResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
 		handleErrorAndExit("Couldn't encode signature: ", err)
@@ -232,72 +230,8 @@ func handleErrorAndExit(msg string, e error) {
 	}
 }
 
-// SignResponse contains the signature out of the CoSi system.
-// It can be verified using the lib/cosi package.
-// NOTE: the `suite` field is absent here because this struct is a temporary
-// hack and we only supports one suite for the moment,i.e. ed25519.
-type SignResponse struct {
-	// The hash of the signed statement
-	Sum []byte
-	// The Challenge out a of the Multi Schnorr signature
-	Challenge abstract.Secret
-	// the SignResponse out of the Multi Schnorr Signature
-	Response abstract.Secret
-}
-
-// MarshalJSON implements golang's JSON marshal interface
-func (s *SignResponse) MarshalJSON() ([]byte, error) {
-	cw := new(bytes.Buffer)
-	rw := new(bytes.Buffer)
-
-	err := crypto.WriteSecret64(network.Suite, cw, s.Challenge)
-	if err != nil {
-		return nil, err
-	}
-	err = crypto.WriteSecret64(network.Suite, rw, s.Response)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(struct {
-		Sum       string
-		Challenge string
-		Response  string
-	}{
-		Sum:       base64.StdEncoding.EncodeToString(s.Sum),
-		Challenge: cw.String(),
-		Response:  rw.String(),
-	})
-}
-
-// UnmarshalJSON implements golang's JSON unmarshal interface
-func (s *SignResponse) UnmarshalJSON(data []byte) error {
-	type Aux struct {
-		Sum       string
-		Challenge string
-		Response  string
-	}
-	aux := &Aux{}
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-	var err error
-	if s.Sum, err = base64.StdEncoding.DecodeString(aux.Sum); err != nil {
-		return err
-	}
-	suite := network.Suite
-	cr := strings.NewReader(aux.Challenge)
-	if s.Challenge, err = crypto.ReadSecret64(suite, cr); err != nil {
-		return err
-	}
-	rr := strings.NewReader(aux.Response)
-	if s.Response, err = crypto.ReadSecret64(suite, rr); err != nil {
-		return err
-	}
-	return nil
-}
-
 // sign takes a stream and a toml file defining the servers
-func sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
+func sign(r io.Reader, tomlFileName string) (*s.ServiceResponse, error) {
 	dbg.Lvl3("Starting signature")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
@@ -321,7 +255,8 @@ func sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func signStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
+func signStatement(read io.Reader, el *sda.EntityList) (*s.ServiceResponse,
+	error) {
 
 	// create a throw-away key pair:
 	priv, pub := sda.PrivPub()
@@ -381,11 +316,7 @@ func signStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &SignResponse{
-			Sum:       msg,
-			Challenge: response.Challenge,
-			Response:  response.Response,
-		}, nil
+		return &response, nil
 	case <-time.After(RequestTimeOut):
 		return nil, errors.New("Timeout on signing.")
 	}
@@ -406,7 +337,7 @@ func verify(fileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	sig := &SignResponse{}
+	sig := &s.ServiceResponse{}
 	dbg.Lvl4("Unmarshalling signature ")
 	if err := json.Unmarshal(sb, sig); err != nil {
 		return err
@@ -425,11 +356,12 @@ func verify(fileName, groupToml string) error {
 	return err
 }
 
-func verifySignatureHash(b []byte, sig *SignResponse, el *sda.EntityList) error {
+func verifySignatureHash(b []byte, sig *s.ServiceResponse, el *sda.EntityList) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
-	if !bytes.Equal(fHash, sig.Sum) {
+	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
+	if !bytes.Equal(hashHash, sig.Sum) {
 		return errors.New("You are trying to verify a signature " +
 			"belongig to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
