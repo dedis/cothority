@@ -30,7 +30,7 @@ testServerCfg(){
 
 testBuild(){
     testOK ./cosi help
-    testOK ./cosid help
+    testOK ./cothorityd
 }
 
 setupServers(){
@@ -59,7 +59,7 @@ runSrvCfg(){
 }
 
 runSrv(){
-    ./cosid -d $DBG_SRV -c srv$1/config.toml
+    ./cothority -d $DBG_SRV -c srv$1/config.toml
 }
 
 build(){
@@ -72,7 +72,7 @@ build(){
     mkdir -p $DIR
     cd $DIR
     echo "Building in $DIR"
-    for app in cosi cosid; do
+    for app in cosi cothorityd; do
         if [ ! -e $app -o "$BUILD" ]; then
             go build $BUILDDIR/$app/$app.go
         fi
