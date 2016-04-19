@@ -341,7 +341,7 @@ func SignStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 	}
 
 	dbg.Lvl3("Sending sign SignRequest")
-	pchan := make(chan SignResponse)
+	pchan := make(chan s.ServiceResponse)
 	go func() {
 		// send the SignRequest
 		if err := con.Send(context.TODO(), req); err != nil {
@@ -355,8 +355,9 @@ func SignStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 			close(pchan)
 			return
 		}
-		pchan <- packet.Msg.(SignResponse)
+		pchan <- packet.Msg.(s.ServiceResponse)
 	}()
+
 	select {
 	case response, ok := <-pchan:
 		dbg.Lvl5("Response:", ok, response)
@@ -369,7 +370,11 @@ func SignStatement(read io.Reader, el *sda.EntityList) (*SignResponse, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &response, nil
+		return &SignResponse{
+			Sum:       msg,
+			Challenge: response.Challenge,
+			Response:  response.Response,
+		}, nil
 	case <-time.After(RequestTimeOut):
 		return nil, errors.New("Timeout on signing.")
 	}
