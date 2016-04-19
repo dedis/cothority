@@ -52,22 +52,13 @@ func main() {
 			defer wg.Done()
 			if kill {
 				dbg.Lvl3("Cleaning up host", h, ".")
-				if _, err := platform.SSHRun("", h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null"); err != nil {
-					dbg.Error("Couldn't run [sudo killall -9 cothority scp 2>/dev/null >/dev/null]",
-						err)
-				}
+				runSSH(h, "sudo killall -9 cothority scp 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
-				if _, err := platform.SSHRun("", h, "sudo killall -9 cothority 2>/dev/null >/dev/null"); err != nil {
-					dbg.Error("Couldn't run [sudo killall -9 cothority 2>/dev/null >/dev/null]",
-						err)
-				}
+				runSSH(h, "sudo killall -9 cothority 2>/dev/null >/dev/null")
 				time.Sleep(1 * time.Second)
 				// Also kill all other process that start with "./" and are probably
 				// locally started processes
-				_, err := platform.SSHRun("", h, "sudo pkill -9 -f '\\./'")
-				if err != nil {
-					dbg.Error("Couldn't run [sudo pkill -9 -f '\\./']", err)
-				}
+				runSSH(h, "sudo pkill -9 -f '\\./'")
 				time.Sleep(1 * time.Second)
 				if dbg.DebugVisible() > 3 {
 					dbg.Lvl4("Cleaning report:")
@@ -171,4 +162,11 @@ func deterFromConfig(name ...string) *platform.Deterlab {
 	}
 	dbg.SetDebugVisible(d.Debug)
 	return d
+}
+
+// Runs a command on the remote host and outputs an eventual error if debug level >= 3
+func runSSH(host, cmd string) {
+	if _, err := platform.SSHRun("", host, cmd); err != nil {
+		dbg.Lvlf3("Host %s got error %s while running [%s]", host, err.Error(), cmd)
+	}
 }

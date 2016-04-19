@@ -70,10 +70,15 @@ func getFullName(filename string, dirOpt ...string) string {
 	return dir + "/" + filepath.Base(filename)
 }
 
-func collectErrors(format string, m map[string]error) error {
+type collectedErrors struct {
+	s string
+	e error
+}
+
+func collectErrors(format string, m []collectedErrors) error {
 	var errStr string
-	for k, v := range m {
-		errStr += fmt.Sprintf(format, k, v)
+	for _, e := range m {
+		errStr += fmt.Sprintf(format, e.s, e.e)
 	}
 	if errStr == "" {
 		return nil

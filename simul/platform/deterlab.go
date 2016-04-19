@@ -195,7 +195,7 @@ func (d *Deterlab) Cleanup() error {
 	go func() {
 		// Cleanup eventual residues of previous round - users and sshd
 		if _, err := SSHRun(d.Login, d.Host, "killall -9 users sshd"); err != nil {
-			dbg.Lvl1("Error while cleaning up:", err)
+			dbg.Lvl3("Error while cleaning up:", err)
 		}
 
 		err := SSHRunStdout(d.Login, d.Host, "test -f remote/users && ( cd remote; ./users -kill )")
