@@ -108,6 +108,11 @@ func checkConfig(c *cli.Context) {
 	handleErrorAndExit("Couldn't open server-file", err)
 	el, err := config.ReadGroupToml(f)
 	handleErrorAndExit("Error while reading server-file", err)
+	if len(el.List) == 0 {
+		handleErrorAndExit("Empty entity list",
+			errors.New("Empty or invalid cosi group file:"+
+				tomlFileName))
+	}
 	// First check all servers individually
 	for i := range el.List {
 		checkList(sda.NewEntityList(el.List[i : i+1]))
@@ -155,7 +160,7 @@ func signFile(c *cli.Context) {
 	}
 	sig, err := sign(file, groupToml)
 	handleErrorAndExit("Couldn't create signature", err)
-	dbg.Lvl1(sig)
+	dbg.Lvl3(sig)
 	sigFileName := fileName + ".sig"
 	outFile, err := os.Create(sigFileName)
 	handleErrorAndExit("Couldn't create signature file: ", err)
@@ -301,6 +306,10 @@ func sign(r io.Reader, tomlFileName string) (*SignResponse, error) {
 	el, err := config.ReadGroupToml(f)
 	if err != nil {
 		return nil, err
+	}
+	if len(el.List) <= 0 {
+		return nil, errors.New("Empty or invalid cosi group file:" +
+			tomlFileName)
 	}
 	dbg.Lvl2("Sending signature to", el)
 	res, err := signStatement(r, el)

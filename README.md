@@ -92,10 +92,10 @@ You can create a default server configuration with a fresh
 public/private key pair as follows:
 
 ```bash
-cosid
+cothorityd
 ```
 
-Follow the instructions on the screen. `cosid` will ask you for
+Follow the instructions on the screen. `cothorityd` will ask you for
 a server address and port, and where you want to store the server 
 configuration. Then you will see an output similar to this:
 
