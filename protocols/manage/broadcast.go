@@ -70,12 +70,12 @@ func (b *Broadcast) handleContactNodes(msg struct {
 			dbg.Lvl3("Connecting to", tn.String())
 			err := b.SendTo(tn, &ContactNodes{})
 			if err != nil {
-				return err
+				return
 			}
 		}
 	}
 	// Tell Root we're done
-	return b.SendTo(b.Root(), &Done{})
+	b.SendTo(b.Root(), &Done{})
 }
 
 // Every node being contacted sends back a Done to the root which has
