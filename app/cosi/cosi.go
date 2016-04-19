@@ -27,6 +27,8 @@ import (
 	"golang.org/x/net/context"
 )
 
+// RequestTimeOut defines when the client stops waiting for the CoSi group to
+// reply
 const RequestTimeOut = time.Second * 10
 
 func main() {
