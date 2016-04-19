@@ -1,7 +1,0 @@
-Machines = 128
-App = "naive"
-Suite = "Ed25519"
-SkipChecks = true
-
-Ppm,  Rounds
-1, 3

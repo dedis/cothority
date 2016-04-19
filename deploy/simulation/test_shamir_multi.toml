@@ -1,8 +1,0 @@
-Machines = 2
-App = "shamir"
-Rounds = 10
-
-ppm, bf
-1, 2
-2, 2
-4, 2

@@ -39,8 +39,8 @@ func TestDataFilterFilter(t *testing.T) {
 
 func TestStatsUpdate(t *testing.T) {
 	rc := make(map[string]string)
-	rc["machines"] = "2"
-	rc["ppm"] = "2"
+	rc["servers"] = "2"
+	rc["hosts"] = "2"
 	stats := NewStats(rc)
 
 	m1 := Measure{
@@ -66,8 +66,8 @@ func TestStatsUpdate(t *testing.T) {
 
 func TestStatsNotWriteUnknownMeasures(t *testing.T) {
 	rc := make(map[string]string)
-	rc["machines"] = "2"
-	rc["ppm"] = "2"
+	rc["servers"] = "2"
+	rc["hosts"] = "2"
 	stats := NewStats(rc)
 
 	m1 := Measure{

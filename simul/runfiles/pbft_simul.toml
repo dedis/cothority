@@ -1,0 +1,8 @@
+Servers = 2
+Simulation = "PbftSimulation"
+Rounds = 5
+BF = 5
+BlocksDir = "/Users/khoffi/go/src/github.com/dedis/cothority/protocols/byzcoin/blocks"
+
+Hosts, Blocksize
+70, 5000
