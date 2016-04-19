@@ -157,7 +157,7 @@ func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *Determinis
 			encDataMessage.Code.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 			encDataMessage.SetVisited(p.TreeNode(), p.Tree())
 			i +=  1
-			//dbg.Lvl1("Processed", i, "messages.")
+			dbg.Lvl1(i)
 			// If node is the last probabilitic contribution and the ciphertext matches the query,
 			// sums the current counting vector with the one of the data.
 			if 	!p.sendToNext(&encDataMessage.ElGamalDataMessage) &&

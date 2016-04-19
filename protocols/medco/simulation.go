@@ -18,7 +18,7 @@ import (
 
 
 
-const NUM_MESS = 100
+const NUM_MESS = 10000
 const NUM_BUCKET = 1
 var BUCKET_DESC = []int64{}
 const needle = "code1"
