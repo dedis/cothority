@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func Boldify(s string) string {
@@ -40,9 +41,11 @@ func Rsync(username, host, file, dest string) error {
 	if username != "" {
 		addr = username + "@" + addr
 	}
-	cmd := exec.Command("rsync", "-Pauz", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
-	//cmd.Stdout = os.Stdout
+	cmd := exec.Command("rsync", "-Pauz", "--progress", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
 	cmd.Stderr = os.Stderr
+	if dbg.DebugVisible() > 1 {
+		cmd.Stdout = os.Stdout
+	}
 	return cmd.Run()
 }
 
@@ -54,7 +57,6 @@ func SshRun(username, host, command string) ([]byte, error) {
 
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
-	//log.Println(cmd)
 	//cmd.Stderr = os.Stderr
 	return cmd.Output()
 }

@@ -14,11 +14,13 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"io"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // This file handles the collection of measurements, aggregates them and
@@ -26,14 +28,17 @@ import (
 
 // listen is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
-var Sink = "0.0.0.0"
-var SinkPort = "10003"
+const Sink = "0.0.0.0"
+const DefaultSinkPort = 10000
 
 // Monitor struct is used to collect measures and make the statistics about
 // them. It takes a stats object so it update that in a concurrent-safe manner
 // for each new measure it receives.
 type Monitor struct {
 	listener net.Listener
+
+	// XXX
+	SinkPort int
 
 	// Current conections
 	conns map[string]net.Conn
@@ -51,16 +56,18 @@ type Monitor struct {
 	// channel to notify the end of a connection
 	// send the name of the connection when finishd
 	done chan string
+
+	listenerLock sync.Mutex
 }
 
 // NewMonitor returns a new monitor given the stats
-func NewMonitor(stats *Stats) Monitor {
-	return Monitor{
-		conns:      make(map[string]net.Conn),
-		stats:      stats,
-		mutexStats: sync.Mutex{},
-		measures:   make(chan Measure),
-		done:       make(chan string),
+func NewMonitor(stats *Stats) *Monitor {
+	return &Monitor{
+		conns:    make(map[string]net.Conn),
+		stats:    stats,
+		SinkPort: DefaultSinkPort,
+		measures: make(chan Measure),
+		done:     make(chan string),
 	}
 }
 
@@ -68,12 +75,14 @@ func NewMonitor(stats *Stats) Monitor {
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func (m *Monitor) Listen() error {
-	ln, err := net.Listen("tcp", Sink+":"+SinkPort)
+	ln, err := net.Listen("tcp", Sink+":"+strconv.Itoa(m.SinkPort))
 	if err != nil {
 		return fmt.Errorf("Error while monitor is binding address: %v", err)
 	}
+	m.listenerLock.Lock()
 	m.listener = ln
-	dbg.Lvl2("Monitor listening for stats on", Sink, ":", SinkPort)
+	m.listenerLock.Unlock()
+	dbg.Lvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
 	finished := false
 	go func() {
 		for {
@@ -116,7 +125,7 @@ func (m *Monitor) Listen() error {
 			}
 		}
 	}
-	dbg.Lvl2("Monitor finished waiting !")
+	dbg.Lvl2("Monitor finished waiting")
 	m.conns = make(map[string]net.Conn)
 	return nil
 }
@@ -125,7 +134,11 @@ func (m *Monitor) Listen() error {
 // And will stop updating the stats
 func (m *Monitor) Stop() {
 	dbg.Lvl2("Monitor Stop")
-	m.listener.Close()
+	m.listenerLock.Lock()
+	if m.listener != nil {
+		m.listener.Close()
+	}
+	m.listenerLock.Unlock()
 	m.mutexConn.Lock()
 	for _, c := range m.conns {
 		c.Close()
@@ -144,11 +157,11 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 		measure := Measure{}
 		if err := dec.Decode(&measure); err != nil {
 			// if end of connection
-			if err == io.EOF {
+			if err == io.EOF || strings.Contains(err.Error(), "closed") {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error monitor decoding from", conn.RemoteAddr().String(), ":", err)
+			dbg.Lvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
 				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")

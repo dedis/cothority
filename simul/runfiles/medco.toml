@@ -1,0 +1,7 @@
+Simulation = "PrivateCount"
+Servers = 3
+Bf = 2
+Rounds = 1
+
+Hosts
+3

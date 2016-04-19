@@ -1,5 +1,0 @@
-Machines = 16
-App = "sign"
-
-ppm, bf, rounds, rate, suite
-256, 8, 20, 10, "Ed25519"

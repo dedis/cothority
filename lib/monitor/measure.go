@@ -12,10 +12,11 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"net"
 	"syscall"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // Sink is the server address where all measures are transmitted to for
@@ -60,11 +61,6 @@ func ConnectSink(addr string) error {
 	return nil
 }
 
-func StopSink() {
-	connection.Close()
-	encoder = nil
-}
-
 // Only sends a ready-string
 func Ready(addr string) error {
 	if encoder == nil {
@@ -107,6 +103,10 @@ func send(v interface{}) {
 	if !enabled {
 		return
 	}
+
+	// For a large number of clients (˜10'000), the connection phase
+	// can take some time. This is a linear backoff to enable connection
+	// even when there are a lot of request:
 	for wait := 500; wait < 1000; wait += 100 {
 		if err := encoder.Encode(v); err == nil {
 			return
@@ -169,9 +169,14 @@ func (m *Measure) reset() {
 }
 
 // Prints a message to end the logging.
-func End() {
+func EndAndCleanup() {
 	send(Measure{Name: "end"})
-	connection.Close()
+	if err := connection.Close(); err != nil {
+		dbg.Error("Could not close connection:", err)
+	} else {
+		dbg.Lvl3("Closed connection:", connection)
+		encoder = nil
+	}
 }
 
 // Converts microseconds to seconds.
