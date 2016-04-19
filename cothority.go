@@ -33,6 +33,7 @@ package main
 
 import (
 	"flag"
+	"os"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -53,7 +54,7 @@ var debugVisible int
 // Initialize before 'init' so we can directly use the fields as parameters
 // to 'Flag'
 func init() {
-	flag.StringVar(&ConfigFile, "config", "config.toml", "which config-file to use")
+	flag.StringVar(&ConfigFile, "config", "cothorityd.toml", "which config-file to use")
 	flag.IntVar(&debugVisible, "debug", 1, "verbosity: 0-5")
 }
 
@@ -61,11 +62,28 @@ func init() {
 func main() {
 	flag.Parse()
 	dbg.SetDebugVisible(debugVisible)
-	// We're in standalone mode and only start the node
-	host, err := sda.NewHostFromFile(ConfigFile)
-	if err != nil {
-		dbg.Fatal("Couldn't get host:", err)
+
+	if _, err := os.Stat(ConfigFile); os.IsNotExist(err) {
+		// the config file does not exists, let's create it
+		config, err := sda.CreateHostFile()
+		if err != nil {
+			dbg.Fatal("Could not create config file:", err)
+		}
+		// write it down
+		dbg.Lvl1("Writing the config file down in'", ConfigFile, "'")
+		if err := config.Save(ConfigFile); err != nil {
+			dbg.Fatal("Could not save the config file", err)
+		}
 	}
+
+	// Let's read the config
+	config, host, err := sda.ParseConfig(ConfigFile)
+	if err != nil {
+		dbg.Fatal("Couldn't parse config:", err)
+	}
+	dbg.Lvl1("Starting host", config.Addresses)
+	dbg.Lvl1("Public key:", config.Public)
+
 	host.ListenAndBind()
 	host.StartProcessMessages()
 	host.WaitForClose()
