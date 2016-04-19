@@ -15,12 +15,6 @@ import (
 // Nodes and ProtocolInstances upon request and dispatches the messages.
 type Overlay struct {
 	host *Host
-	// mapping from Token.Id() to Node
-	nodes map[TokenID]*Node
-	// false = NOT DONE
-	// true = DONE
-	nodeInfo map[TokenID]bool
-	nodeLock sync.Mutex
 	// mapping from Tree.Id to Tree
 	trees    map[TreeID]*Tree
 	treesMut sync.Mutex
@@ -41,8 +35,6 @@ type Overlay struct {
 func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:              h,
-		nodes:             make(map[TokenID]*Node),
-		nodeInfo:          make(map[TokenID]bool),
 		trees:             make(map[TreeID]*Tree),
 		entityLists:       make(map[EntityListID]*EntityList),
 		cache:             NewTreeNodeCache(),
@@ -72,7 +64,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	var pi ProtocolInstance
 	o.instancesLock.Lock()
 	pi, ok := o.protocolInstances[sdaMsg.To.Id()]
+	done := o.instancesInfo[sdaMsg.To.Id()]
 	o.instancesLock.Unlock()
+	if done {
+		dbg.Lvl3("Message for TreeNodeInstance that is already finished")
+		return nil
+	}
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
 		tn, err := o.TreeNodeFromToken(sdaMsg.To)
@@ -146,6 +143,8 @@ func (o *Overlay) RegisterTree(t *Tree) {
 
 // TreeFromToken searches for the tree corresponding to a token.
 func (o *Overlay) TreeFromToken(tok *Token) *Tree {
+	o.treesMut.Lock()
+	defer o.treesMut.Unlock()
 	return o.trees[tok.TreeID]
 }
 
@@ -209,28 +208,6 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Protocol
 	return o.host.sendSDAData(to.Entity, sda)
 }
 
-// SendToToken is the main function protocol instance must use in order to send a
-// message across the network.
-func (o *Overlay) SendToToken(from, to *Token, msg network.ProtocolMessage) error {
-	if from == nil {
-		return errors.New("From-token is nil")
-	}
-	if to == nil {
-		return errors.New("To-token is nil")
-	}
-	o.nodeLock.Lock()
-	if o.nodes[from.Id()] == nil {
-		o.nodeLock.Unlock()
-		return errors.New("No protocol instance registered with this token.")
-	}
-	o.nodeLock.Unlock()
-	tn, err := o.TreeNodeFromToken(to)
-	if err != nil {
-		return errors.New("Didn't find TreeNode for token: " + err.Error())
-	}
-	return o.SendToTreeNode(from, tn, msg)
-}
-
 // nodeDone is called by node to signify that its work is finished and its
 // ressources can be released
 func (o *Overlay) nodeDone(tok *Token) {
@@ -254,7 +231,7 @@ func (o *Overlay) nodeDelete(tok *Token) {
 	}
 	delete(o.instances, tok.Id())
 	// mark it done !
-	o.nodeInfo[tok.Id()] = true
+	o.instancesInfo[tok.Id()] = true
 }
 
 func (o *Overlay) suite() abstract.Suite {

@@ -2,6 +2,8 @@ package sda
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -66,4 +68,15 @@ func getFullName(filename string, dirOpt ...string) string {
 		}
 	}
 	return dir + "/" + filepath.Base(filename)
+}
+
+func collectErrors(format string, m map[string]error) error {
+	var errStr string
+	for k, v := range m {
+		errStr += fmt.Sprintf(format, k, v)
+	}
+	if errStr == "" {
+		return nil
+	}
+	return errors.New(errStr)
 }
