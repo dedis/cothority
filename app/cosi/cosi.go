@@ -83,7 +83,7 @@ func main() {
 	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "servers, s", // FIXME doesn't work
+			Name:  "servers, s",
 			Value: "servers.toml",
 			Usage: "server-list for collective signature",
 		},
