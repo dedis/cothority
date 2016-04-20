@@ -2,12 +2,12 @@ package skipchain
 
 import (
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/sda"
 )
 
 func init() {
 	var msgs = []interface{}{
-		&ActiveAdd{},
+		&AddSkipBlock{},
 		&ActiveAddRet{},
 	}
 	for _, m := range msgs {
@@ -18,61 +18,36 @@ func init() {
 // This file holds all messages that can be sent to the SkipChain,
 // both from the outside and between instances of this service
 
-// External calls - there are two modes:
-// 1 - active: all nodes are always up and reachable
-// 2 - polling: nodes can be down and behind NATs
+// External calls
 
-// ActiveAdd - adds a new skipblock to the chain. Previous may be nil
+// AddSkipBlock - adds a new skipblock to the chain. Previous may be nil
 // if you want to create a new SkipChain.
 // The forward-link of 'Previous' has to be signed by the cothority
-type ActiveAdd struct {
-	Previous *SkipBlock
-	New      *SkipBlock
+type AddSkipBlock struct {
+	Previous     *SkipBlock
+	PreviousTree *sda.TreeMarshal
+	New          *SkipBlock
+	NewTree      *sda.TreeMarshal
 }
 
 // ActiveAddRet - returns the signed SkipBlock with updated backlinks
 type ActiveAddRet struct {
 	*SkipBlock
+	Tree *sda.TreeMarshal
 }
 
-// PollPreCommit - sends commits for future challenges. At least
-// maxHeight + 1 commits need to be sent in advance
-type PollPreCommit struct {
-	Commits []*abstract.Point
-}
-
-// PollPropose - sends a proposition for a new SkipBlock and commits. It
-// will return PollChallenge. If New is nil, it will return a PollChallenge
-// if one is waiting or a ErrorRet{nil} if the queue is empty.
-type PollPropose struct {
-	New *SkipBlock
-}
-
-// PollChallenge - returns all SkipBlocks that need updated ForwardLinks
-// and the corresponding challenges
-type PollChallenge struct {
-	SkipBlocks []*SkipBlock
-	Challenges []*abstract.Secret
-}
-
-// PollResponse - sends the response for the requested SkipBlocks.
-// The commits sent will only be used for future SkipBlocks
-type PollResponse struct {
-	SkipBlocks []*SkipBlock
-	Responses  []*abstract.Secret
-	Commits    []*abstract.Point
-}
-
-// GetUpdateChain - the client sends the last known SkipBlock and will
-// get the shortest chain to the current SkipBlock
+// GetUpdateChain - the client sends the hash of the last known
+// Skipblock and will get back a list of all necessary SkipBlocks
+// to get to the latest.
 type GetUpdateChain struct {
-	*SkipBlock
+	hash []byte
 }
 
 // GetUpdateChainRet - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
 type GetUpdateChainRet struct {
 	Update []*SkipBlock
+	Tree   []*sda.TreeMarshal
 }
 
 // Internal calls
