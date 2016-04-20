@@ -400,7 +400,7 @@ func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(m.Service)
 	if !ok {
-		dbg.Error("Received a request for an unknown service")
+		dbg.Error("Received a message for an unknown service", m.Service)
 		// XXX TODO should reply with some generic response =>
 		// 404 Service Unknown
 		return
@@ -414,7 +414,7 @@ func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(r.Service)
 	if !ok {
-		dbg.Error("Received a request for an unknown service")
+		dbg.Error("Received a request for an unknown service", r.Service)
 		// XXX TODO should reply with some generic response =>
 		// 404 Service Unknown
 		return

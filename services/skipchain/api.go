@@ -5,22 +5,23 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 )
 
-// SkipchainClient is a structure to communicate with the Skipchain
+// Client is a structure to communicate with the Skipchain
 // service from the outside
-type SkipchainClient struct {
+type SCClient struct {
 	*Client
 }
 
 // NewSkipchainClient instantiates a new client with name 'n'
-func NewSkipchainClient() *SkipchainClient {
-	return &SkipchainClient{Client: NewClient("Skipchain")}
+func NewSkipchainClient() *SCClient {
+	return &SCClient{Client: NewClient("Skipchain")}
 }
 
-// SendActiveAdd takes a previous and a new skipchain and sends it to the
+// ActiveAdd takes a previous and a new skipchain and sends it to the
 // first TreeNodeEntity
-func (sc *SkipchainClient) ActiveAdd(prev, new *SkipBlock) (*ActiveAddRet, error) {
+func (sc *SCClient) ActiveAdd(prev, new *SkipBlock) (*AddRet, error) {
 	dbg.LLvl3("Adding a new skipblock", new)
 	dbg.Print("dbg")
 	if new.Tree == nil {
@@ -36,17 +37,21 @@ func (sc *SkipchainClient) ActiveAdd(prev, new *SkipBlock) (*ActiveAddRet, error
 	dst := nodes[0].Entity
 	dbg.Print("dbg")
 	var sb1 SkipBlock
+	var tm1 *sda.TreeMarshal
 	if prev != nil {
 		sb1 = *prev
 		sb1.Tree = nil
+		tm1 = prev.Tree.MakeTreeMarshal()
 	}
 	sb2 := *new
 	sb2.Tree = nil
 	msg := &AddSkipBlock{
-		Previous:     sb1,
-		PreviousTree: prev.Tree.MakeTreeMarshal(),
+		Previous:     &sb1,
+		PreviousTree: tm1,
+		New: &sb2,
+		NewTree: new.Tree.MakeTreeMarshal(),
 	}
-	b, err := network.MarshalRegisteredType(&AddSkipBlock{prev, new})
+	b, err := network.MarshalRegisteredType(msg)
 	dbg.Print("dbg")
 	if err != nil {
 		return nil, err
@@ -54,14 +59,14 @@ func (sc *SkipchainClient) ActiveAdd(prev, new *SkipBlock) (*ActiveAddRet, error
 	dbg.Print("dbg")
 	dbg.LLvl4("Sending message to", dst)
 	dbg.Print("dbg")
-	msg, err := sc.Send(dst, b)
+	reply, err := sc.Send(dst, b)
 	dbg.Print("dbg")
-	if err != nil {
-		return nil, err
+	if e := ErrMsg(reply, err); e != nil {
+		return nil, e
 	}
-	aar, ok := msg.Msg.(ActiveAddRet)
+	aar, ok := reply.Msg.(AddRet)
 	if !ok {
-		return nil, ErrMsg(msg, err)
+		return nil, errors.New("Couldn't cast reply to AddRet")
 	}
 	return &aar, nil
 }

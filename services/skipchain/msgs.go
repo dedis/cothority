@@ -8,7 +8,7 @@ import (
 func init() {
 	var msgs = []interface{}{
 		&AddSkipBlock{},
-		&ActiveAddRet{},
+		&AddRet{},
 	}
 	for _, m := range msgs {
 		network.RegisterMessageType(m)
@@ -31,7 +31,7 @@ type AddSkipBlock struct {
 }
 
 // ActiveAddRet - returns the signed SkipBlock with updated backlinks
-type ActiveAddRet struct {
+type AddRet struct {
 	*SkipBlock
 	Tree *sda.TreeMarshal
 }
