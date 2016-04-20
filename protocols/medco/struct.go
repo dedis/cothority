@@ -14,42 +14,42 @@ type VisitorMessage struct {
 	VisitedSet NodeSet
 }
 
-type ElGamalQueryMessage struct {
+type QueryMessage struct {
 	*VisitorMessage
-	Query CipherText
-	Buckets []int64
-	Public abstract.Point
+	Filter             CipherText
+	BucketsDescription []int64
+	QuerierPublicKey   abstract.Point
 }
 
-type ElGamalQueryStruct struct {
+type QueryStruct struct {
 	*sda.TreeNode
-	ElGamalQueryMessage
+	QueryMessage
 }
 
-type PHQueryMessage struct {
+type ProcessableQueryMessage struct {
 	Query DeterministCipherText
 	Buckets []int64
 	Public abstract.Point
 }
 
-type PHQueryStruct struct {
+type ProcessableQueryStruct struct {
 	*sda.TreeNode
-	PHQueryMessage
+	ProcessableQueryMessage
 }
 
-type ElGamalData struct {
+type HolderResponseData struct {
 	Buckets CipherVector
 	Code CipherText
 }
 
-type ElGamalDataMessage struct {
+type HolderResponseDataMessage struct {
 	*VisitorMessage
-	ElGamalData
+	HolderResponseData
 }
 
-type ElGamalDataStruct struct {
+type HolderResponseDataStruct struct {
 	*sda.TreeNode
-	ElGamalDataMessage
+	HolderResponseDataMessage
 }
 
 type ResultMessage struct {

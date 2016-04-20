@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
-	"math/rand"
 	"os"
 	"strconv"
 	"time"
@@ -15,28 +14,29 @@ import (
 
 type PrivateCountProtocol struct {
 	*sda.Node
-	ElGamalQueryChannel chan ElGamalQueryStruct
-	PHQueryChannel      chan PHQueryStruct
-	ElGamalDataChannel  chan ElGamalDataStruct
+	ElGamalQueryChannel chan QueryStruct
+	PHQueryChannel      chan ProcessableQueryStruct
+	ElGamalDataChannel  chan HolderResponseDataStruct
 	ResultChannel       chan []ResultStruct
 	FeedbackChannel     chan CipherVector
 
+	nextNodeInCircuit   *sda.TreeNode
 	shortTermSecret     abstract.Secret
-	bucketCount	    int
+	bucketCount         int
 
 	ClientPublicKey     *abstract.Point
 	ClientQuery         *CipherText
 	BucketDesc          *[]int64
-	EncryptedData       *[]ElGamalData
+	EncryptedData       *[]HolderResponseData
 }
 
 func init() {
-	network.RegisterMessageType(ElGamalQueryMessage{})
-	network.RegisterMessageType(ElGamalQueryStruct{})
-	network.RegisterMessageType(ElGamalDataMessage{})
-	network.RegisterMessageType(ElGamalDataStruct{})
-	network.RegisterMessageType(PHQueryMessage{})
-	network.RegisterMessageType(PHQueryStruct{})
+	network.RegisterMessageType(QueryMessage{})
+	network.RegisterMessageType(QueryStruct{})
+	network.RegisterMessageType(HolderResponseDataMessage{})
+	network.RegisterMessageType(HolderResponseDataStruct{})
+	network.RegisterMessageType(ProcessableQueryMessage{})
+	network.RegisterMessageType(ProcessableQueryStruct{})
 	network.RegisterMessageType(ResultMessage{})
 	network.RegisterMessageType(ResultStruct{})
 	sda.ProtocolRegisterName("PrivateCount", NewPrivateCountProtocol)
@@ -64,6 +64,16 @@ func NewPrivateCountProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 		}
 	}
 
+	var i int
+	var node *sda.TreeNode
+	var nodeList = n.Tree().List()
+	for i, node = range nodeList {
+		if n.TreeNode().Equal(node) {
+			newInstance.nextNodeInCircuit = nodeList[(i+1)%len(nodeList)]
+			break
+		}
+	}
+
 	return newInstance, nil
 }
 
@@ -83,9 +93,10 @@ func (p *PrivateCountProtocol) Start() error {
 	}
 	p.bucketCount = len(*p.BucketDesc) + 1
 
+
 	// The starting node starts the protocol by sending the probabilistically encrypted query to the next node
-	queryMessage := &ElGamalQueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.BucketDesc,*p.ClientPublicKey}
-	queryMessage.Query.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
+	queryMessage := &QueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.BucketDesc,*p.ClientPublicKey}
+	queryMessage.Filter.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 	queryMessage.SetVisited(p.Node.TreeNode(), p.Node.Tree())
 
 	p.sendToNext(queryMessage)
@@ -95,6 +106,7 @@ func (p *PrivateCountProtocol) Start() error {
 func (p *PrivateCountProtocol) Dispatch() error {
 
 	dbg.Lvl1("Began running protocol", p.Node.Name())
+
 
 	// 1. Query crypto-switching phase
 	deterministicQuery, buckets, _ := p.queryReplacementPhase()
@@ -119,21 +131,21 @@ func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText, 
 		select {
 		// Node receives a Query for deterministic conversion
 		case encQuery := <-p.ElGamalQueryChannel:
-
+			dbg.Lvl1(p.Node.Name(), "recieved msg")
 			// Removes its own probabilistic contribution contribution
-			encQuery.Query.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
+			encQuery.Filter.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 			encQuery.SetVisited(p.TreeNode(), p.Tree())
-			p.ClientPublicKey = &encQuery.Public
-			p.BucketDesc = &encQuery.Buckets
-			p.bucketCount = len(encQuery.Buckets)+1
+			p.ClientPublicKey = &encQuery.QuerierPublicKey
+			p.BucketDesc = &encQuery.BucketsDescription
+			p.bucketCount = len(encQuery.BucketsDescription)+1
 
 			// If Node is the last probabilistic contribution in ciphertext, complete the deterministic
 			// conversion and broadcast the deterministic query
-			if !p.sendToNext(&encQuery.ElGamalQueryMessage) {
-				deterministicQuery := DeterministCipherText{encQuery.Query.C}
-				msg := &PHQueryMessage{deterministicQuery, encQuery.Buckets,encQuery.Public}
+			if !p.sendToNext(&encQuery.QueryMessage) {
+				deterministicQuery := DeterministCipherText{encQuery.Filter.C}
+				msg := &ProcessableQueryMessage{deterministicQuery, encQuery.BucketsDescription,encQuery.QuerierPublicKey}
 				p.broadcast(msg)
-				return &msg.Query, encQuery.Buckets ,nil
+				return &msg.Query, encQuery.BucketsDescription,nil
 			}
 
 		// Node receives a deterministic query to be matched against data
@@ -163,7 +175,7 @@ func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *Determinis
 			//dbg.Lvl1(i)
 			// If node is the last probabilitic contribution and the ciphertext matches the query,
 			// sums the current counting vector with the one of the data.
-			if 	!p.sendToNext(&encDataMessage.ElGamalDataMessage) &&
+			if 	!p.sendToNext(&encDataMessage.HolderResponseDataMessage) &&
 				query.Equals(&DeterministCipherText{encDataMessage.Code.C}) {
 
 				encryptedBuckets.Add(encryptedBuckets, encDataMessage.Buckets)
@@ -199,14 +211,8 @@ func (p *PrivateCountProtocol) matchCountReportingPhase(encryptedBuckets *Cipher
 // Sends the message msg to the next randomly chosen node. If such node exist (all node already received the message),
 // returns false. Otherwise, return true.
 func (p *PrivateCountProtocol) sendToNext(msg VisitorMessageI) bool {
-	candidates := make([]*sda.TreeNode, 0)
-	for _, node := range p.Tree().List() {
-		if !msg.AlreadyVisited(node, p.Node.Tree()) {
-			candidates = append(candidates, node)
-		}
-	}
-	if len(candidates) > 0 {
-		err := p.SendTo(candidates[rand.Intn(len(candidates))], msg)
+	if !msg.AlreadyVisited(p.nextNodeInCircuit, p.Tree()) {
+		err := p.SendTo(p.nextNodeInCircuit, msg)
 		if err != nil {
 			dbg.Lvl1("Had an error sending a message: ", err)
 		}
@@ -249,14 +255,14 @@ func (p *PrivateCountProtocol) injectEncryptedData() {
 				cipherText, _ := EncryptBytes(p.Suite(), p.EntityList().Aggregate, []byte(code))
 				encBuckets := NullCipherVector(p.Suite(), p.bucketCount, *p.ClientPublicKey)
 				encBuckets[bucket(int64(age))] = *EncryptInt(p.Suite(), *p.ClientPublicKey, 1)
-				elGamalData := ElGamalData{encBuckets, *cipherText}
-				p.sendToNext(&ElGamalDataMessage{&VisitorMessage{0}, elGamalData})
+				elGamalData := HolderResponseData{encBuckets, *cipherText}
+				p.sendToNext(&HolderResponseDataMessage{&VisitorMessage{0}, elGamalData})
 			}
 			dbg.Lvl1(p.TreeNode().Name(), "Is DONE injecting its data.")
 		}
 	} else {
 		for _, cipherText := range *p.EncryptedData {
-			p.sendToNext(&ElGamalDataMessage{&VisitorMessage{0}, cipherText})
+			p.sendToNext(&HolderResponseDataMessage{&VisitorMessage{0}, cipherText})
 		}
 	}
 }

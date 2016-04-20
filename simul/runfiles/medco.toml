@@ -1,8 +1,8 @@
 Simulation = "PrivateCount"
-Servers = 3
+Servers = 5
 Bf = 2
 Rounds = 1
-CloseWait = 600
+RunWait = 600
 
 Hosts
-3
+5

@@ -42,7 +42,7 @@ func Test5Nodes(t *testing.T) {
 	dbg.Lvl1("Encrypting dummy data...")
 	targetCounts := make([]int64, NUM_BUCKET)
 	var code string
-	EncryptedData := make([]medco.ElGamalData, NUM_MESS, NUM_MESS)
+	EncryptedData := make([]medco.HolderResponseData, NUM_MESS, NUM_MESS)
 	for i := 0; i < NUM_MESS; i++ {
 		if code = codeGen(i); code  == needle {
 			targetCounts[bucketGen(i)] += 1
@@ -50,7 +50,7 @@ func Test5Nodes(t *testing.T) {
 		c, _ := medco.EncryptBytes(suite, aggregateKey, []byte(code))
 		buckets := medco.NullCipherVector(suite, NUM_BUCKET, clientPublic)
 		buckets[bucketGen(i)] = *medco.EncryptInt(suite, clientPublic, 1)
-		EncryptedData[i] = medco.ElGamalData{buckets, *c}
+		EncryptedData[i] = medco.HolderResponseData{buckets, *c}
 	}
 	dbg.Lvl1("... Done")
 
