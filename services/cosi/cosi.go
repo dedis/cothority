@@ -1,6 +1,7 @@
 package cosi
 
 import (
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -35,6 +36,7 @@ var CosiRequestType = network.RegisterMessageType(ServiceRequest{})
 
 // ServiceResponse is what the Cosi service will reply to clients.
 type ServiceResponse struct {
+	Sum       []byte
 	Challenge abstract.Secret
 	Response  abstract.Secret
 }
@@ -70,8 +72,14 @@ func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	cs.c.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.ProtocolCosi)
 	pcosi.SigningMessage(req.Message)
+	h, err := crypto.HashBytes(network.Suite.Hash(), req.Message)
+	if err != nil {
+		dbg.Error("Couldn't hash message:", err)
+		return
+	}
 	pcosi.RegisterDoneCallback(func(chall abstract.Secret, resp abstract.Secret) {
 		respMessage := &ServiceResponse{
+			Sum:       h,
 			Challenge: chall,
 			Response:  resp,
 		}

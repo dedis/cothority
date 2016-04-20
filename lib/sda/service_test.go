@@ -152,6 +152,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    network.MessageTypeID(uuid.Nil),
+		Data:    []byte("a"),
 	}
 	// fake a client
 	h2 := sda.NewLocalHost(2010)
@@ -202,6 +203,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
+		Data:    []byte("a"),
 	}
 	// fake a client
 	h2 := sda.NewLocalHost(2010)
@@ -266,6 +268,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
+		Data:    []byte("a"),
 	}
 	dbg.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.Entity); err != nil {
@@ -334,6 +337,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
+		Data:    []byte("a"),
 	}
 	// fake a client
 	client := sda.NewLocalHost(2010)
@@ -439,6 +443,34 @@ func TestServiceBackForthProtocol(t *testing.T) {
 
 	nm, err := c.Receive(context.TODO())
 	assert.Nil(t, err)
+
+	assert.Equal(t, nm.MsgType, simpleResponseType)
+	resp := nm.Msg.(simpleResponse)
+	assert.Equal(t, resp.Val, 10)
+}
+
+func TestClient_Send(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+
+	// register service
+	sda.RegisterNewService("BackForth", func(c sda.Context, path string) sda.Service {
+		return &simpleService{
+			ctx: c,
+		}
+	})
+	// create hosts
+	hosts, el, _ := local.GenTree(4, true, true, false)
+	client := sda.NewClient("BackForth")
+
+	r := &simpleRequest{
+		Entities: el,
+		Val:      10,
+	}
+	nm, err := client.Send(hosts[0].Entity, r)
+	dbg.ErrFatal(err)
 
 	assert.Equal(t, nm.MsgType, simpleResponseType)
 	resp := nm.Msg.(simpleResponse)

@@ -237,9 +237,9 @@ func (am *Message) UnmarshalBinary(buf []byte) error {
 	return err
 }
 
-// ConstructFrom takes a NetworkMessage and then constructs a
-// NetworkMessage from it. Error if the type is unknown
-func newNetworkMessage(obj ProtocolMessage) (*Message, error) {
+// ConstructFrom takes a ProtocolMessage and then constructs a
+// Message from it. Error if the type is unknown
+func NewNetworkMessage(obj ProtocolMessage) (*Message, error) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() != reflect.Ptr {
 		return nil, fmt.Errorf("Send takes a pointer to the message, not a copy...")

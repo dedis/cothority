@@ -7,8 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// Our message-types used in sda
-
+// SDAData is to be embedded in every message that is made for a
 // ID of SDAData message as registered in network
 var SDADataMessageID = network.RegisterMessageType(Data{})
 

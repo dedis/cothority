@@ -1,0 +1,14 @@
+[[servers]]
+  Addresses = ["192.33.210.8:2000"]
+  Public = "vcJ5ihor3Lg3AMJwXx5ns0cu89UpBFaXZX87wha4edU="
+  Description = "EPFL DeDiS server"
+
+[[servers]]
+  Addresses = ["83.212.126.36:2048"]
+  Public = "GxrZx6cotKW1q7ZFkU/ervS21FOoFmiFRwPOpINJkEc="
+  Description = "Lefteris Cosi-server"
+
+[[servers]]
+  Addresses = ["85.218.26.144:10101"]
+  Public = "SLZh1gTtJyys7hDLhfZmyx2XpujflwpVijfasG1D++0="
+  Description = "Ludovic's Server"
