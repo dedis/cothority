@@ -26,6 +26,7 @@ func TestServiceCosi(t *testing.T) {
 	// CoSi signature on a message.
 
 	// Send a request to the service
+	client :=
 	var msg = []byte("hello cosi service")
 	req := ServiceRequest{
 		EntityList: el,
