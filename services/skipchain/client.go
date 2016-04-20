@@ -1,35 +1,35 @@
 package skipchain
 
 import (
+	"errors"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/dbg"
-	"golang.org/x/net/context"
 	"github.com/dedis/crypto/config"
+	"golang.org/x/net/context"
 	"time"
-	"errors"
 )
 
 // Client for a service
-type Client struct{
+type Client struct {
 	Private abstract.Secret
 	*network.Entity
 	Name string
 }
 
 // NewClient returns a random client using the name
-func NewClient(n string)*Client{
+func NewClient(n string) *Client {
 	kp := config.NewKeyPair(network.Suite)
 	return &Client{
-		Entity: network.NewEntity(kp.Public, ""),
+		Entity:  network.NewEntity(kp.Public, ""),
 		Private: kp.Secret,
-		Name: n,
+		Name:    n,
 	}
 }
 
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
-func (c *Client)Send(dst *network.Entity, req network.ProtocolMessage) (*network.Message, error) {
+func (c *Client) Send(dst *network.Entity, req network.ProtocolMessage) (*network.Message, error) {
 	client := network.NewSecureTCPHost(c.Private, c.Entity)
 
 	// Connect to the root
@@ -67,13 +67,13 @@ func (c *Client)Send(dst *network.Entity, req network.ProtocolMessage) (*network
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file
-func (c *Client)BinaryMarshaler()([]byte, error){
+func (c *Client) BinaryMarshaler() ([]byte, error) {
 	dbg.Fatal("Not yet implemented")
 	return nil, nil
 }
 
 // BinaryUnmarshaler sets the different values from a byte-slice
-func (c *Client)BinaryUnmarshaler(b []byte)error{
+func (c *Client) BinaryUnmarshaler(b []byte) error {
 	dbg.Fatal("Not yet implemented")
 	return nil
 }
@@ -94,4 +94,3 @@ func ErrMsg(em *network.Message, err error) error {
 	}
 	return nil
 }
-
