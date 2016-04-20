@@ -58,7 +58,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 			return err
 		}
 		pi := node.ProtocolInstance().(*Protocol)
-		pi.message = msg
+		pi.Message = msg
 		pi.verifySignature = e.Checking
 
 		done := make(chan bool)

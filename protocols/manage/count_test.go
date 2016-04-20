@@ -1,4 +1,4 @@
-package example_channels_test
+package manage_test
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 )
 
 // Tests a 2-node system
-func TestNode(t *testing.T) {
+func TestClose(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()

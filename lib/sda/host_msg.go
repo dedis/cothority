@@ -1,9 +1,10 @@
 package sda
 
 import (
+	"sync"
+
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
-	"sync"
 )
 
 // Our message-types used in sda
