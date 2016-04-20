@@ -10,6 +10,8 @@ import (
 )
 
 func TestCompileAndRun(t *testing.T) {
+	t.Skip("FIXME: @ineiti/@nikkolasg: Test can't work like this, because " +
+		"`runCommand` doesn't return after `./cothirityd` is started.")
 	// binary named after the package:
 	bin := "./cothorityd"
 	build := exec.Command("go", "build")
