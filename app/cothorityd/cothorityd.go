@@ -36,6 +36,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -63,29 +64,53 @@ func init() {
 
 // Main starts the host and will setup the protocol.
 func main() {
-	flag.Parse()
-	dbg.SetDebugVisible(debugVisible)
 
+	cliApp := cli.NewApp()
+	cliApp.Name = "Cothorityd server"
+	cliApp.Usage = "Serve a cothority"
+	cliApp.Version = "1.0"
+	cliApp.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: "cothorityd.toml",
+			Usage: "config-file for the server",
+		},
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 1,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+	}
+	cliApp.Action = func(c *cli.Context) {
+		config := c.String("config")
+		dbg.SetDebugVisible(c.Int("debug"))
+		dbg.Lvl1("Starting cothority daemon", cliApp.Version)
+		startCothorityd(config)
+	}
+
+	cliApp.Run(os.Args)
+
+}
+
+func startCothorityd(configName string) {
 	if _, err := os.Stat(ConfigFile); os.IsNotExist(err) {
 		// the config file does not exists, let's create it
-		config, fname, err := config.CreateCothoritydConfig(ConfigFile)
+		config, fname, err := config.CreateCothoritydConfig(configName)
 		if err != nil {
 			dbg.Fatal("Could not create config file:", err)
 		}
-		dbg.Print("fname = ", fname)
-		if fname == "" {
-			fname = ConfigFile
+		if fname != "" {
+			configName = fname
 		}
 		// write it down
 		dbg.Lvl1("Writing the config file down in '", fname, "'")
 		if err := config.Save(fname); err != nil {
 			dbg.Fatal("Could not save the config file", err)
 		}
-		ConfigFile = fname
 	}
 
 	// Let's read the config
-	conf, host, err := config.ParseCothorityd(ConfigFile)
+	conf, host, err := config.ParseCothorityd(configName)
 	if err != nil {
 		dbg.Fatal("Couldn't parse config:", err)
 	}
