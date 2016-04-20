@@ -103,8 +103,8 @@ func startCothorityd(configName string) {
 			configName = fname
 		}
 		// write it down
-		dbg.Lvl1("Writing the config file down in '", fname, "'")
-		if err := config.Save(fname); err != nil {
+		dbg.Lvl1("Writing the config file down in '", configName, "'")
+		if err := config.Save(configName); err != nil {
 			dbg.Fatal("Could not save the config file", err)
 		}
 	}

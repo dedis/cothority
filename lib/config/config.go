@@ -77,7 +77,7 @@ func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, erro
 	}
 
 	if net.ParseIP(h) == nil {
-		return nil, "", errors.New("Invalid IP address")
+		return nil, "", errors.New("Invalid IP address " + h)
 	}
 
 	fmt.Println("[+] Creation of the private and public keys...")

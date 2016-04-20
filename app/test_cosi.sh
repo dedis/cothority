@@ -2,6 +2,8 @@
 
 . ./libtest.sh
 
+tails=8
+
 main(){
     startTest
     build
@@ -14,7 +16,9 @@ main(){
 testSignMsg(){
     setupServers 1
     echo $OUT
+    echo "Running first sign"
     runCl 1 sign msg testCosi > $OUT
+    echo "Running second sign"
     runCl 1 sign msg testCosi | tail -n 5 > cl1/signature
     runCl 1 verify msg testCosi -sig cl1/signature > $OUT
     testOK runCl 1 verify msg testCosi -sig cl1/signature
@@ -30,7 +34,7 @@ testServerCfg(){
 
 testBuild(){
     testOK ./cosi help
-    testOK ./cothorityd
+    testOK ./cothorityd help
 }
 
 setupServers(){
@@ -40,10 +44,10 @@ setupServers(){
     SERVERS=cl$CLIENT/servers.toml
     runSrvCfg 1 &
     sleep .5
-    tail -n 5 $OUT > $SERVERS
+    tail -n $tails $OUT > $SERVERS
     runSrvCfg 2 &
     sleep .5
-    tail -n 5 $OUT >> $SERVERS
+    tail -n $tails $OUT >> $SERVERS
     OUT=$OOUT
 }
 
@@ -55,11 +59,11 @@ runCl(){
 }
 
 runSrvCfg(){
-    echo -e "localhost:200$1\nsrv$1/config.toml\n" | runSrv $1 > $OUT
+    echo -e "127.0.0.1:200$1\nsrv$1/config.toml\n" | runSrv $1 > $OUT
 }
 
 runSrv(){
-    ./cothority -d $DBG_SRV -c srv$1/config.toml
+    ./cothorityd -d $DBG_SRV -c srv$1/config.toml
 }
 
 build(){
