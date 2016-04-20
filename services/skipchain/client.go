@@ -4,8 +4,11 @@ import (
 	"errors"
 	"time"
 
+	"encoding/json"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
@@ -24,22 +27,22 @@ in place of the standard reply. The Client.Send method will catch that and retur
 type Client struct {
 	Private abstract.Secret
 	*network.Entity
-	Name string
+	ServiceID sda.ServiceID
 }
 
-// NewClient returns a random client using the name
-func NewClient(n string) *Client {
+// NewClient returns a random client using the service s
+func NewClient(s string) *Client {
 	kp := config.NewKeyPair(network.Suite)
 	return &Client{
-		Entity:  network.NewEntity(kp.Public, ""),
-		Private: kp.Secret,
-		Name:    n,
+		Entity:    network.NewEntity(kp.Public, ""),
+		Private:   kp.Secret,
+		ServiceID: sda.ServiceFactory.ServiceID(s),
 	}
 }
 
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
-func (c *Client) Send(dst *network.Entity, req network.ProtocolMessage) (*network.Message, error) {
+func (c *Client) Send(dst *network.Entity, req []byte) (*network.Message, error) {
 	client := network.NewSecureTCPHost(c.Private, c.Entity)
 
 	// Connect to the root
@@ -47,14 +50,19 @@ func (c *Client) Send(dst *network.Entity, req network.ProtocolMessage) (*networ
 	con, err := client.Open(dst)
 	defer client.Close()
 	if err != nil {
-		return &network.Message{}, err
+		return nil, err
 	}
 
+	serviceReq := &sda.ClientRequest{
+		Service: c.ServiceID,
+		Type:    CosiRequestType,
+		Data:    json.RawMessage(req),
+	}
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Lvlf3("Sending request %+v", req)
-		if err := con.Send(context.TODO(), req); err != nil {
+		dbg.Lvlf3("Sending request %+v", serviceReq)
+		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
 		}
@@ -71,7 +79,7 @@ func (c *Client) Send(dst *network.Entity, req network.ProtocolMessage) (*networ
 	case response := <-pchan:
 		dbg.Lvlf5("Response: %+v", response)
 		// Catch an eventual error
-		err := ErrMsg(response, nil)
+		err := ErrMsg(&response, nil)
 		if err != nil {
 			return nil, err
 		}

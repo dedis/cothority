@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net"
 
+	"bytes"
+	"encoding/gob"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -97,6 +100,53 @@ func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 func (t *Tree) Marshal() ([]byte, error) {
 	buf, err := network.MarshalRegisteredType(t.MakeTreeMarshal())
 	return buf, err
+}
+
+type TBMstruct struct {
+	T  []byte
+	EL []byte
+}
+
+// BinaryMarshaler does the same as Marshal
+func (t *Tree) BinaryMarshaler() ([]byte, error) {
+	bt, err := t.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	bel, err := network.MarshalRegisteredType(t.EntityList)
+	if err != nil {
+		return nil, err
+	}
+	var out bytes.Buffer
+	enc := gob.NewEncoder(&out)
+	err = enc.Encode(TBMstruct{bt, bel})
+	if err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
+}
+
+// BinaryUnmarshaler takes a TreeMarshal and stores it in the tree
+func (t *Tree) BinaryUnmarshaler(b []byte) error {
+	dec := gob.NewDecoder(bytes.NewReader(b))
+	var s = TBMstruct{}
+	err := dec.Decode(&s)
+	if err != nil {
+		return err
+	}
+	_, m, err := network.UnmarshalRegisteredType(s.EL, network.DefaultConstructors(network.Suite))
+	el, ok := m.(EntityList)
+	if !ok {
+		return errors.New("Didn't find EntityList in binary-slice")
+	}
+	tree, err := NewTreeFromMarshal(s.T, &el)
+	if err != nil {
+		return err
+	}
+	t.EntityList = &el
+	t.Id = tree.Id
+	t.Root = tree.Root
+	return nil
 }
 
 // Equal verifies if the given tree is equal

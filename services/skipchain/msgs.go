@@ -1,8 +1,19 @@
 package skipchain
 
 import (
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 )
+
+func init() {
+	var msgs = []interface{}{
+		&ActiveAdd{},
+		&ActiveAddRet{},
+	}
+	for _, m := range msgs {
+		network.RegisterMessageType(m)
+	}
+}
 
 // This file holds all messages that can be sent to the SkipChain,
 // both from the outside and between instances of this service

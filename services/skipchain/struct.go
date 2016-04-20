@@ -2,6 +2,7 @@ package skipchain
 
 import (
 	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 )
@@ -22,11 +23,19 @@ type SkipBlock struct {
 	//the signature is hashing all the above
 	Signature   *cosi.Signature
 	ForwardLink []ForwardStruct
-	Nodes       []*sda.TreeNode //transmited for the signature assigned to null before storage
+	Nodes       []*sda.TreeNode //transmitted for the signature assigned to null before storage
 }
 
-func NewSkipBlock() *SkipBlock {
-	return &SkipBlock{}
+func NewSkipBlock(tree *sda.Tree) *SkipBlock {
+	X0 := network.Suite.Point().Null()
+	nodes := tree.List()
+	for _, tn := range nodes {
+		X0.Add(X0, tn.Entity.Public)
+	}
+	return &SkipBlock{
+		X0:    X0,
+		Nodes: nodes,
+	}
 }
 
 // ForwardStruct has the hash of the next block and a signauter of it
