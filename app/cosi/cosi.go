@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"fmt"
+
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/cosi"

@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding"
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/abstract"
 	h "hash"
 	"io"
 	"os"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
 )
 
 // Hash simply returns the Hash of the slice of bytes given

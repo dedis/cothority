@@ -152,7 +152,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    network.MessageTypeID(uuid.Nil),
-		Data: []byte("a"),
+		Data:    []byte("a"),
 	}
 	// fake a client
 	h2 := sda.NewLocalHost(2010)
@@ -203,7 +203,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
-		Data: []byte("a"),
+		Data:    []byte("a"),
 	}
 	// fake a client
 	h2 := sda.NewLocalHost(2010)
@@ -268,7 +268,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
-		Data: []byte("a"),
+		Data:    []byte("a"),
 	}
 	dbg.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.Entity); err != nil {
@@ -337,7 +337,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	re := &sda.ClientRequest{
 		Service: sda.ServiceFactory.ServiceID("DummyService"),
 		Type:    dummyMsgType,
-		Data: []byte("a"),
+		Data:    []byte("a"),
 	}
 	// fake a client
 	client := sda.NewLocalHost(2010)

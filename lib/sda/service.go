@@ -327,7 +327,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		return nil, err
 	}
 	b, err := m.MarshalBinary()
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	serviceReq := &ClientRequest{
