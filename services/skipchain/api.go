@@ -10,18 +10,18 @@ import (
 
 // Client is a structure to communicate with the Skipchain
 // service from the outside
-type SCClient struct {
-	*Client
+type Client struct {
+	*sda.Client
 }
 
 // NewSkipchainClient instantiates a new client with name 'n'
-func NewSkipchainClient() *SCClient {
-	return &SCClient{Client: NewClient("Skipchain")}
+func NewSkipchainClient() *Client {
+	return &Client{Client: sda.NewClient("Skipchain")}
 }
 
 // ActiveAdd takes a previous and a new skipchain and sends it to the
 // first TreeNodeEntity
-func (sc *SCClient) ActiveAdd(prev, new *SkipBlock) (*AddRet, error) {
+func (sc *Client) ActiveAdd(prev, new *SkipBlock) (*AddRet, error) {
 	dbg.LLvl3("Adding a new skipblock", new)
 	dbg.Print("dbg")
 	if new.Tree == nil {
@@ -61,7 +61,7 @@ func (sc *SCClient) ActiveAdd(prev, new *SkipBlock) (*AddRet, error) {
 	dbg.Print("dbg")
 	reply, err := sc.Send(dst, b)
 	dbg.Print("dbg")
-	if e := ErrMsg(reply, err); e != nil {
+	if e := sda.ErrMsg(reply, err); e != nil {
 		return nil, e
 	}
 	aar, ok := reply.Msg.(AddRet)
