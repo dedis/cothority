@@ -34,7 +34,7 @@ type RevInitMsg struct {
 type RevShareMsg struct {
 	Src   int
 	SID   SID
-	Share abstract.Secret
+	Share *abstract.Secret
 	Index int
 }
 
@@ -130,12 +130,13 @@ func (tv *TimeVault) handleRevInit(m WRevInitMsg) error {
 		Share: s.secret.Share,
 		Index: s.secret.Index,
 	}
-	return nil
+	return tv.Node.SendTo(tv.Node.List()[msg.Src], reply)
 
 }
 
 func (tv *TimeVault) handleRevShare(m WRevShareMsg) error {
 	msg := m.RevShareMsg
 	_ = msg
+	dbg.Lvl1("Msg:", msg)
 	return nil
 }

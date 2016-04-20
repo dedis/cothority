@@ -80,7 +80,7 @@ func (tv *TimeVault) Start() error {
 }
 
 // Seal encrypts a given message and releases the decryption key after a given time.
-func (tv *TimeVault) Seal(msg []byte, time time.Duration) error {
+func (tv *TimeVault) Seal(msg []byte, dur time.Duration) error {
 
 	// Generate two shared secrets for ElGamal encryption
 	var err error
@@ -98,13 +98,12 @@ func (tv *TimeVault) Seal(msg []byte, time time.Duration) error {
 	}
 
 	// Do ElGamal encryption
+	M, m := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
 	X := tv.secrets[sid0].secret.Pub.SecretCommit()
 	Y := tv.secrets[sid1].secret.Pub.SecretCommit()
-	S := tv.keyPair.Suite.Point().Add(X, Y)
-	M, m := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
-	C := tv.keyPair.Suite.Point().Add(M, S)
+	C := tv.keyPair.Suite.Point().Add(M, tv.keyPair.Suite.Point().Add(X, Y))
 
-	dbg.Lvl1("Ciphertext:", C)
+	dbg.Lvl1("Ciphertext:", C, m)
 
 	// Reveal shares
 	if err := tv.Broadcast(&RevInitMsg{Src: tv.Node.Index(), SID: sid0}); err != nil {
@@ -116,6 +115,10 @@ func (tv *TimeVault) Seal(msg []byte, time time.Duration) error {
 	// - Periodically query the TimeVault group with the given ID
 	// - Once the timer in the go routine expired, broadcast a reveal secrets msg
 	// - Once all shares have arrived, decrypt the message and pipe it out through a public channel
+
+	select {
+	case <-time.After(dur):
+	}
 
 	return nil
 }
