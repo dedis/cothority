@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/dedis/cothority/simul/platform"
 	"strconv"
 	"testing"
+
+	"github.com/dedis/cothority/simul/platform"
 )
 
 func TestBuild(t *testing.T) {

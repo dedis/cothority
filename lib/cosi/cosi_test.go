@@ -2,9 +2,10 @@ package cosi
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
-	"testing"
 )
 
 var testSuite = edwards.NewAES128SHA256Ed25519(false)

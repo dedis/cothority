@@ -64,11 +64,6 @@ type GetUpdateChainRet struct {
 	Update []*SkipBlock
 }
 
-// ErrorRet is used when an error is returned - Error may be nil
-type ErrorRet struct {
-	Error error
-}
-
 // Internal calls
 
 // PropagateSkipBlock sends a newly signed SkipBlock to all members of

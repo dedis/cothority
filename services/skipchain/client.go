@@ -2,13 +2,23 @@ package skipchain
 
 import (
 	"errors"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
-	"time"
 )
+
+/*
+A simple client structure to be used when wanting to connect to services. It
+holds the private and public key and allows to connect to a service through
+the network.
+The error-handling is done using the ErrorRet structure which can be returned
+in place of the standard reply. The Client.Send method will catch that and return
+ the appropriate error.
+*/
 
 // Client for a service
 type Client struct {
@@ -60,6 +70,11 @@ func (c *Client) Send(dst *network.Entity, req network.ProtocolMessage) (*networ
 	select {
 	case response := <-pchan:
 		dbg.Lvlf5("Response: %+v", response)
+		// Catch an eventual error
+		err := ErrMsg(response, nil)
+		if err != nil {
+			return nil, err
+		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
 		return &network.Message{}, errors.New("Timeout on signing")
@@ -76,6 +91,11 @@ func (c *Client) BinaryMarshaler() ([]byte, error) {
 func (c *Client) BinaryUnmarshaler(b []byte) error {
 	dbg.Fatal("Not yet implemented")
 	return nil
+}
+
+// ErrorRet is used when an error is returned - Error may be nil
+type ErrorRet struct {
+	Error error
 }
 
 // ErrMsg converts a combined err and status-message to an error. It

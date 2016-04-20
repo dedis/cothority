@@ -1,14 +1,6 @@
 package skipchain
 
-import (
-	"errors"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
-	"golang.org/x/net/context"
-	"time"
-)
+import "github.com/dedis/cothority/lib/network"
 
 func init() {
 }
