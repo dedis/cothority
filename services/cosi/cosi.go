@@ -14,8 +14,10 @@ import (
 // As a prototype, it just signs and returns. It would be very easy to write an
 // updated version that chains all signatures for example.
 
+const ServiceName = "CoSi"
+
 func init() {
-	sda.RegisterNewService("Cosi", newCosiService)
+	sda.RegisterNewService(ServiceName, newCosiService)
 }
 
 // Cosi is the service that handles collective signing operations

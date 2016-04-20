@@ -1,25 +1,25 @@
 package cosi
 
 import (
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
 
-// SkipchainClient is a structure to communicate with the Skipchain
-// service from the outside
+// Client is a structure to communicate with the CoSi
+// service
 type Client struct {
 	*sda.Client
 }
 
-// NewSkipchainClient instantiates a new client with name 'n'
+// NewClient instantiates a new cosi.Client
 func NewClient() *Client {
-	return &Client{Client: sda.NewClient("Skipchain")}
+	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
-// SendActiveAdd takes a previous and a new skipchain and sends it to the
-// first TreeNodeEntity
+// SignMsg sends a CoSi sign request to the Cothority defined by the given
+// EntityList
 func (c *Client) SignMsg(el *sda.EntityList, msg []byte) (*ServiceResponse, error) {
-	dbg.LLvl3("Starting signing-request", new)
 	serviceReq := &ServiceRequest{
 		EntityList: el,
 		Message:    msg,
@@ -27,12 +27,12 @@ func (c *Client) SignMsg(el *sda.EntityList, msg []byte) (*ServiceResponse, erro
 	dst := el.List[0]
 	dbg.LLvl4("Sending message to", dst)
 	reply, err := c.Send(dst, serviceReq)
-	if err != nil {
-		return nil, err
+	if e := sda.ErrMsg(reply, err); e != nil {
+		return nil, e
 	}
 	sr, ok := reply.Msg.(ServiceResponse)
 	if !ok {
-		return nil, sda.ErrMsg(sr, err)
+		return nil, errors.New("This is odd: couldn't cast reply.")
 	}
 	return &sr, nil
 }
