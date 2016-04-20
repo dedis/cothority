@@ -70,6 +70,7 @@ func verifyCorrectOutput(cmdStr string, input io.Reader, output string, args ...
 	if err = cmd.Start(); err != nil {
 		return err
 	}
+	defer cmd.Process.Kill()
 	var found bool
 	var buff = make([]byte, 1024)
 	for {
