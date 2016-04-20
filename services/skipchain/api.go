@@ -22,10 +22,14 @@ func NewSkipchainClient() *SkipchainClient {
 // first TreeNodeEntity
 func (sc *SkipchainClient) ActiveAdd(prev, new *SkipBlock) (*ActiveAddRet, error) {
 	dbg.LLvl3("Adding a new skipblock", new)
-	if len(new.Nodes) == 0 {
+	if new.Tree == nil {
+		return nil, errors.New("No tree given")
+	}
+	nodes := new.Tree.List()
+	if len(nodes) == 0 {
 		return nil, errors.New("Need at least one node in the Cothority")
 	}
-	dst := new.Nodes[0].Entity
+	dst := nodes[0].Entity
 	b, err := network.MarshalRegisteredType(&ActiveAdd{prev, new})
 	if err != nil {
 		return nil, err

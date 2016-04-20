@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"net"
 
-	"bytes"
-	"encoding/gob"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -25,6 +22,11 @@ import (
 // - which Tree we are using.
 // - The overlay network: a mapping from PeerId
 // It contains the PeerId of the parent and the sub tree of the children.
+
+func init() {
+	network.RegisterMessageType(Tree{})
+	network.RegisterMessageType(TBMstruct{})
+}
 
 // Tree is a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
@@ -46,8 +48,6 @@ func (tId TreeID) Equals(tId2 TreeID) bool {
 func (tId TreeID) String() string {
 	return uuid.UUID(tId).String()
 }
-
-var _ = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
@@ -104,7 +104,7 @@ func (t *Tree) Marshal() ([]byte, error) {
 
 type TBMstruct struct {
 	T  []byte
-	EL []byte
+	EL *EntityList
 }
 
 // BinaryMarshaler does the same as Marshal
@@ -113,37 +113,29 @@ func (t *Tree) BinaryMarshaler() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	bel, err := network.MarshalRegisteredType(t.EntityList)
+	tbm := &TBMstruct{
+		T:  bt,
+		EL: t.EntityList,
+	}
+	b, err := network.MarshalRegisteredType(tbm)
 	if err != nil {
 		return nil, err
 	}
-	var out bytes.Buffer
-	enc := gob.NewEncoder(&out)
-	err = enc.Encode(TBMstruct{bt, bel})
-	if err != nil {
-		return nil, err
-	}
-	return out.Bytes(), nil
+	return b, nil
 }
 
 // BinaryUnmarshaler takes a TreeMarshal and stores it in the tree
 func (t *Tree) BinaryUnmarshaler(b []byte) error {
-	dec := gob.NewDecoder(bytes.NewReader(b))
-	var s = TBMstruct{}
-	err := dec.Decode(&s)
-	if err != nil {
-		return err
-	}
-	_, m, err := network.UnmarshalRegisteredType(s.EL, network.DefaultConstructors(network.Suite))
-	el, ok := m.(EntityList)
+	_, m, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	tbm, ok := m.(TBMstruct)
 	if !ok {
-		return errors.New("Didn't find EntityList in binary-slice")
+		return errors.New("Didn't find TBMstruct")
 	}
-	tree, err := NewTreeFromMarshal(s.T, &el)
+	tree, err := NewTreeFromMarshal(tbm.T, tbm.EL)
 	if err != nil {
 		return err
 	}
-	t.EntityList = &el
+	t.EntityList = tbm.EL
 	t.Id = tree.Id
 	t.Root = tree.Root
 	return nil

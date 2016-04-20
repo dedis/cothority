@@ -23,7 +23,8 @@ type SkipBlock struct {
 	//the signature is hashing all the above
 	Signature   *cosi.Signature
 	ForwardLink []ForwardStruct
-	Nodes       []*sda.TreeNode //transmitted for the signature assigned to null before storage
+	//transmitted for the signature - not included in the hash
+	Tree *sda.Tree
 }
 
 func NewSkipBlock(tree *sda.Tree) *SkipBlock {
@@ -33,8 +34,8 @@ func NewSkipBlock(tree *sda.Tree) *SkipBlock {
 		X0.Add(X0, tn.Entity.Public)
 	}
 	return &SkipBlock{
-		X0:    X0,
-		Nodes: nodes,
+		X0:   X0,
+		Tree: tree,
 	}
 }
 
