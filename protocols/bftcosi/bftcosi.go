@@ -20,7 +20,7 @@ type VerificationFunction func([]byte) bool
 // ProtocolBFTCoSi is the main struct for running the protocol
 type ProtocolBFTCoSi struct {
 	// the node we are represented-in
-	*sda.Node
+	*sda.TreeNodeInstance
 	Msg []byte
 	// the suite we use
 	suite abstract.Suite
@@ -100,10 +100,10 @@ type ProtocolBFTCoSi struct {
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
-func NewBFTCoSiProtocol(n *sda.Node, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
+func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
 	// initialize the bftcosi node/protocol-instance
 	bft := &ProtocolBFTCoSi{
-		Node:             n,
+		TreeNodeInstance: n,
 		suite:            n.Suite(),
 		prepare:          cosi.NewCosi(n.Suite(), n.Private()),
 		commit:           cosi.NewCosi(n.Suite(), n.Private()),

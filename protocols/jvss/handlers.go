@@ -102,10 +102,10 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	secret.numConfs++
 	secret.mtx.Unlock()
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Node.Index(), msg.SID, secret.numConfs, len(jv.Node.List())))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfs, len(jv.List())))
 
 	// Check if we have enough confirmations to proceed
-	if (secret.numConfs == len(jv.Node.List())) && (msg.SID == LTSS || msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Node.Index()))) {
+	if (secret.numConfs == len(jv.List())) && (msg.SID == LTSS || msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) {
 		jv.secretsDone <- true
 	}
 
@@ -123,12 +123,12 @@ func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 
 	// Send it back to initiator
 	resp := &SigRespMsg{
-		Src: jv.Node.Index(),
+		Src: jv.Index(),
 		SID: msg.SID,
 		Sig: ps,
 	}
 
-	if err := jv.SendTo(jv.Node.List()[msg.Src], resp); err != nil {
+	if err := jv.SendTo(jv.List()[msg.Src], resp); err != nil {
 		return err
 	}
 
@@ -148,7 +148,7 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	}
 	secret.sigs[msg.Src] = msg.Sig
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s signatures %d/%d", jv.Node.Index(), msg.SID, len(secret.sigs), len(jv.Node.List())))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s signatures %d/%d", jv.Index(), msg.SID, len(secret.sigs), len(jv.List())))
 
 	// Create Schnorr signature once we received enough partial signatures
 	if jv.info.T == len(secret.sigs) {

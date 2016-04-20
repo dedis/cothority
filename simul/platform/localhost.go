@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	// Import protocols so every protocols is registered to the sda
 	_ "github.com/dedis/cothority/protocols"
+	_ "github.com/dedis/cothority/services"
 	"strings"
 )
 

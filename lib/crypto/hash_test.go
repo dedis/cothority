@@ -2,6 +2,7 @@ package crypto_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/edwards/ed25519"
@@ -41,6 +42,25 @@ func TestHashStream(t *testing.T) {
 	}
 }
 
+func TestHashStreamAndByteEqual(t *testing.T) {
+	var buff bytes.Buffer
+	rb := make([]byte, 2048)
+	_, _ = rand.Read(rb)
+	str := string(rb)
+	buff.WriteString(str)
+	hashed, err := crypto.HashStream(hashSuite.Hash(), &buff)
+	if err != nil {
+		t.Fatal("error hashing" + err.Error())
+	}
+
+	hashed2, err := crypto.HashBytes(hashSuite.Hash(), []byte(str))
+	if err != nil {
+		t.Fatal("error hashing" + err.Error())
+	}
+	if !bytes.Equal(hashed2, hashed) {
+		t.Fatal("Ouch: HashStream and HashByte differ.")
+	}
+}
 func TestHashBytes(t *testing.T) {
 	str := "Hello World"
 	hashed, err := crypto.HashBytes(hashSuite.Hash(), []byte(str))
@@ -116,8 +136,8 @@ func TestHashSuite(t *testing.T) {
 }
 
 func TestHashArgs(t *testing.T) {
-	str1 := "cosi"
-	str2 := "rocks"
+	str1 := binstring("cosi")
+	str2 := binstring("rocks")
 	hash1, err := crypto.HashArgs(hashSuite.Hash(), str1)
 	if err != nil {
 		t.Fatal(err)
@@ -134,4 +154,10 @@ func TestHashArgs(t *testing.T) {
 	if bytes.Compare(hash1, hash2) == 0 {
 		t.Fatal("Making a hash from str1str2 should be different from str2str1")
 	}
+}
+
+type binstring string
+
+func (b binstring) MarshalBinary() ([]byte, error) {
+	return []byte(b), nil
 }

@@ -20,11 +20,10 @@ func NewNtreeServer(blockSize int) *NtreeServer {
 }
 
 // Instantiate returns a new NTree protocol instance
-func (nt *NtreeServer) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
+func (nt *NtreeServer) Instantiate(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	dbg.Lvl2("Waiting for enough transactions...")
 	currTransactions := nt.WaitEnoughBlocks()
 	pi, err := NewNTreeRootProtocol(node, currTransactions)
-	node.SetProtocolInstance(pi)
 	dbg.Lvl2("Instantiated Ntree Root Protocol with", len(currTransactions), "transactions")
 	return pi, err
 }

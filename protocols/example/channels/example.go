@@ -17,7 +17,7 @@ func init() {
 // It also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
 type ProtocolExampleChannels struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	Message         string
 	ChildCount      chan int
 	ChannelAnnounce chan StructAnnounce
@@ -25,10 +25,10 @@ type ProtocolExampleChannels struct {
 }
 
 // NewExampleChannels initialises the structure for use in one round
-func NewExampleChannels(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewExampleChannels(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	ExampleChannels := &ProtocolExampleChannels{
-		Node:       n,
-		ChildCount: make(chan int),
+		TreeNodeInstance: n,
+		ChildCount:       make(chan int),
 	}
 	err := ExampleChannels.RegisterChannel(&ExampleChannels.ChannelAnnounce)
 	if err != nil {

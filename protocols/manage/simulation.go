@@ -53,11 +53,12 @@ func (e *simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		n, err := config.Overlay.StartNewNodeName("Count", config.Tree)
+		p, err := config.Overlay.CreateProtocol(config.Tree, "Count")
 		if err != nil {
 			return err
 		}
-		children := <-n.ProtocolInstance().(*ProtocolCount).Count
+		go p.Start()
+		children := <-p.(*ProtocolCount).Count
 		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +

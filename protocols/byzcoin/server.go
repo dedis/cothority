@@ -12,7 +12,7 @@ import (
 // protocols when needed.
 type BlockServer interface {
 	AddTransaction(blkparser.Tx)
-	Instantiate(n *sda.Node) (sda.ProtocolInstance, error)
+	Instantiate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 }
 
 // Server is the long-term control service that listens for transactions and
@@ -67,12 +67,11 @@ func (s *Server) ListenClientTransactions() {
 }
 
 // Instantiate takes blockSize transactions and create the byzcoin instances.
-func (s *Server) Instantiate(node *sda.Node) (sda.ProtocolInstance, error) {
+func (s *Server) Instantiate(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	currTransactions := s.WaitEnoughBlocks()
 	dbg.Lvl2("Instantiate ByzCoin Round with", len(currTransactions), "transactions")
 	pi, err := NewByzCoinRootProtocol(node, currTransactions, s.timeOutMs, s.fail)
-	node.SetProtocolInstance(pi)
 
 	return pi, err
 }
