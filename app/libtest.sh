@@ -79,6 +79,7 @@ fail(){
 cleanup(){
     pkill cosi 2> /dev/null
     pkill ssh-ks 2> /dev/null
+    pkill cothorityd 2> /dev/null
     sleep .5
     rm -f srv*/*bin
     rm -f cl*/*bin
