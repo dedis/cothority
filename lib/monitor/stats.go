@@ -2,8 +2,6 @@ package monitor
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/montanaflynn/stats"
 	"io"
 	"math"
 	"regexp"
@@ -11,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/montanaflynn/stats"
 )
 
 // Stats contains all structures that are related to the computations of stats
