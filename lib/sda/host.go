@@ -16,9 +16,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-// ExternalAPI can be used to handle external message-calls
-type ExternalAPI func(*network.Message) network.ProtocolMessage
-
 // Host is the structure responsible for holding information about the current
 // state
 type Host struct {
@@ -71,9 +68,6 @@ type Host struct {
 	ProcessMessagesQuit chan bool
 
 	serviceStore *serviceStore
-
-	// to dispatch external messages
-	externalMsgs map[network.MessageTypeID]ExternalAPI
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -92,7 +86,6 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		networkChan:         make(chan network.Message, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
-		externalMsgs:        make(map[network.MessageTypeID]ExternalAPI),
 	}
 
 	h.overlay = NewOverlay(h)
@@ -336,40 +329,9 @@ func (h *Host) processMessages() {
 			m := data.Msg.(ServiceMessage)
 			h.processServiceMessage(data.Entity, &m)
 		default:
-			err := h.ProcessExternalMessage(&data)
-			if err != nil {
-				dbg.Error(err, data.MsgType)
-			}
-		}
-		if err != nil {
 			dbg.Error("Sending error:", err)
 		}
 	}
-}
-
-// RegisterExternalMessage takes a message-type and registers a function
-// that will be called if this message arrives
-func (h *Host) RegisterExternalMessage(mt network.ProtocolMessage, f ExternalAPI) network.MessageTypeID {
-	mtID := network.RegisterMessageType(mt)
-	h.externalMsgs[mtID] = f
-	return mtID
-}
-
-// ProcessExternalMessage takes a message and looks it up in
-// the unknown messages
-func (h *Host) ProcessExternalMessage(m *network.Message) error {
-	f, ok := h.externalMsgs[m.MsgType]
-	if !ok {
-		return errors.New("Didn't recognize message")
-	}
-	go func() {
-		msgRet := f(m)
-		err := h.SendRaw(m.Entity, msgRet)
-		if err != nil {
-			dbg.Error("Couldn't send back message:", err)
-		}
-	}()
-	return nil
 }
 
 func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
