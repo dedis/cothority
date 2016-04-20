@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
+	"github.com/dedis/crypto/random"
 )
 
 func init() {
@@ -66,6 +67,8 @@ func NewTimeVault(node *sda.Node) (sda.ProtocolInstance, error) {
 	h := []interface{}{
 		tv.handleSecInit,
 		tv.handleSecConf,
+		tv.handleRevInit,
+		tv.handleRevShare,
 	}
 	err := tv.RegisterHandlers(h...)
 
@@ -80,22 +83,33 @@ func (tv *TimeVault) Start() error {
 func (tv *TimeVault) Seal(msg []byte, time time.Duration) error {
 
 	// Generate two shared secrets for ElGamal encryption
-	var sid SID
 	var err error
-	sid = SID(fmt.Sprintf("%s-0-%d", TVSS, tv.Node.Index()))
-	err = tv.initSecret(sid)
+	sid0 := SID(fmt.Sprintf("%s-0-%d", TVSS, tv.Node.Index()))
+	err = tv.initSecret(sid0)
 	<-tv.secretsDone
 	if err != nil {
 		return err
 	}
-	dbg.Lvl1("Secret 0 done")
-	sid = SID(fmt.Sprintf("%s-1-%d", TVSS, tv.Node.Index()))
-	err = tv.initSecret(sid)
+	sid1 := SID(fmt.Sprintf("%s-1-%d", TVSS, tv.Node.Index()))
+	err = tv.initSecret(sid1)
 	<-tv.secretsDone
 	if err != nil {
 		return err
 	}
-	dbg.Lvl1("Secret 1 done")
+
+	// Do ElGamal encryption
+	X := tv.secrets[sid0].secret.Pub.SecretCommit()
+	Y := tv.secrets[sid1].secret.Pub.SecretCommit()
+	S := tv.keyPair.Suite.Point().Add(X, Y)
+	M, m := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
+	C := tv.keyPair.Suite.Point().Add(M, S)
+
+	dbg.Lvl1("Ciphertext:", C)
+
+	// Reveal shares
+	if err := tv.Broadcast(&RevInitMsg{Src: tv.Node.Index(), SID: sid0}); err != nil {
+		return err
+	}
 
 	// TODO:
 	// - Encrypt the msg and start a timer, put that into a go routine, return an ID

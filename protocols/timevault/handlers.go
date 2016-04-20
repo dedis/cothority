@@ -5,6 +5,7 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
 )
 
@@ -23,6 +24,20 @@ type SecConfMsg struct {
 	SID SID
 }
 
+// RevInitMsg is used to prompt peers to reveal their shares
+type RevInitMsg struct {
+	Src int
+	SID SID
+}
+
+// RevShareMsg is used to reveal the secret share of the given peer
+type RevShareMsg struct {
+	Src   int
+	SID   SID
+	Share abstract.Secret
+	Index int
+}
+
 // WSecInitMsg is a SDA-wrapper around SecInitMsg.
 type WSecInitMsg struct {
 	*sda.TreeNode
@@ -33,6 +48,18 @@ type WSecInitMsg struct {
 type WSecConfMsg struct {
 	*sda.TreeNode
 	SecConfMsg
+}
+
+// WRevInitMsg is a SDA-wrapper around RevInitMsg
+type WRevInitMsg struct {
+	*sda.TreeNode
+	RevInitMsg
+}
+
+// WRevShareMsg is a SDA-wrapper around RevShareMsg
+type WRevShareMsg struct {
+	*sda.TreeNode
+	RevShareMsg
 }
 
 func (tv *TimeVault) handleSecInit(m WSecInitMsg) error {
@@ -85,5 +112,30 @@ func (tv *TimeVault) handleSecConf(m WSecConfMsg) error {
 		tv.secretsDone <- true
 	}
 
+	return nil
+}
+
+func (tv *TimeVault) handleRevInit(m WRevInitMsg) error {
+	msg := m.RevInitMsg
+
+	// TODO: Authenticity of this query should be checked to prevent that anybody can trigger share revealing
+	s, ok := tv.secrets[msg.SID]
+	if !ok {
+		return fmt.Errorf("Error, shared secret does not exist")
+	}
+
+	reply := &RevShareMsg{
+		Src:   tv.Node.Index(),
+		SID:   msg.SID,
+		Share: s.secret.Share,
+		Index: s.secret.Index,
+	}
+	return nil
+
+}
+
+func (tv *TimeVault) handleRevShare(m WRevShareMsg) error {
+	msg := m.RevShareMsg
+	_ = msg
 	return nil
 }

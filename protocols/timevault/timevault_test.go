@@ -20,7 +20,7 @@ func TestTimeVault(t *testing.T) {
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
-	dbg.TestOutput(true, 1)
+	dbg.TestOutput(true, 2)
 
 	dbg.Lvl1("TimeVault - starting")
 	leader, err := local.CreateNewNodeName(name, tree)
