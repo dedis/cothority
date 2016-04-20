@@ -18,7 +18,7 @@ func init() {
 }
 
 // Cosi is the service that handles collective signing operations
-type Cosi struct {
+type Service struct {
 	c    sda.Context
 	path string
 }
@@ -44,7 +44,7 @@ type ServiceResponse struct {
 var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
 // ProcessRequest treats external request to this service.
-func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.ClientRequest) {
+func (cs *Service) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != CosiRequestType {
 		return
 	}
@@ -84,10 +84,15 @@ func (cs *Cosi) ProcessRequest(e *network.Entity, r *sda.ClientRequest) {
 	go pi.Start()
 }
 
+// ProcessServiceMessage is to implement the Service interface.
+func (cs *Service) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+	return
+}
+
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
-func (c *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+func (c *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocolCosi(tn)
 	go pi.Dispatch()
@@ -95,7 +100,7 @@ func (c *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (s
 }
 
 func newSkipchainService(c sda.Context, path string) sda.Service {
-	return &Cosi{
+	return &Service{
 		c:    c,
 		path: path,
 	}
