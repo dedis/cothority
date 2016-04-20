@@ -7,25 +7,25 @@ import (
 	"strings"
 	"time"
 
+	"net"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"net"
 )
 
-/*
-Simulation is an interface needed by every protocol that wants to be available
-to be used in a simulation.
-*/
+type simulationCreate func(string) (Simulation, error)
 
-var simulationRegistered map[string]SimulationCreate
+var simulationRegistered map[string]simulationCreate
 
+// SimulationFileName is the name of the (binary encoded) file containing the
+// simulation config.
 const SimulationFileName = "simulation.bin"
 
-type SimulationCreate func(string) (Simulation, error)
-
+// Simulation is an interface needed by every protocol that wants to be available
+// to be used in a simulation.
 type Simulation interface {
 	// This has to initialise all necessary files and copy them to the
 	// 'dir'-directory. This directory will be accessible to all simulated
@@ -65,6 +65,8 @@ type SimulationConfig struct {
 	Config string
 }
 
+// SimulationConfigFile stores the state of the simulation's config.
+// Only used internally.
 type SimulationConfigFile struct {
 	TreeMarshal *TreeMarshal
 	EntityList  *EntityList
@@ -160,9 +162,12 @@ func (sc *SimulationConfig) Save(dir string) error {
 	return nil
 }
 
-func SimulationRegister(name string, sim SimulationCreate) {
+// SimulationRegister is must to be called to register a simulation.
+// Protocol or simulation developers must not forget to call this function
+// with the protocol's name.
+func SimulationRegister(name string, sim simulationCreate) {
 	if simulationRegistered == nil {
-		simulationRegistered = make(map[string]SimulationCreate)
+		simulationRegistered = make(map[string]simulationCreate)
 	}
 	simulationRegistered[name] = sim
 }
@@ -185,11 +190,14 @@ func NewSimulation(name string, conf string) (Simulation, error) {
 	return simInst, nil
 }
 
+// SimulationBFTree is the main struct storing the data for all the simulations
+// which use a tree with a certain branching factor or depth.
 type SimulationBFTree struct {
 	Rounds     int
 	BF         int
 	Hosts      int
 	SingleHost bool
+	Depth      int
 }
 
 // CreateEntityLists creates an EntityList with the host-names in 'addresses'.
@@ -205,10 +213,11 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	if s.SingleHost {
 		// If we want to work with a single host, we only make one
 		// host per server
+		dbg.Fatal("Not supported yet")
 		hosts = nbrAddr
-	}
-	if hosts > s.Hosts {
-		hosts = s.Hosts
+		if hosts > s.Hosts {
+			hosts = s.Hosts
+		}
 	}
 	localhosts := false
 	listeners := make([]net.Listener, hosts)
@@ -284,35 +293,4 @@ func (sc SimulationConfig) GetSingleHost() bool {
 		return false
 	}
 	return sh.SingleHost
-}
-
-// GetCloseWait returns the number of seconds to wait for closing everything.
-func (sc SimulationConfig) GetCloseWait() int {
-	var cw struct{ CloseWait int }
-	_, err := toml.Decode(sc.Config, &cw)
-	if err != nil {
-		dbg.Error("Couldn't decode string", sc.Config, "into toml.")
-		return 120
-	}
-	if cw.CloseWait == 0 {
-		// Default value for CloseWait
-		return 120
-	}
-	return cw.CloseWait
-}
-
-// GetExperimentWait returns the number of seconds to wait before the experiment
-// should be considered failed
-func (sc SimulationConfig) GetExperimentWait() int {
-	var cw struct{ ExperimentWait int }
-	_, err := toml.Decode(sc.Config, &cw)
-	if err != nil {
-		dbg.Error("Couldn't decode string", sc.Config, "into toml.")
-		return 600
-	}
-	if cw.ExperimentWait == 0 {
-		// Default value for ExperimentWait
-		return 600
-	}
-	return cw.ExperimentWait
 }

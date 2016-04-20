@@ -1,14 +1,16 @@
+// Bitcoin-blockchain specific functions.
 package blockchain
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net"
 
-	"github.com/dedis/cothority/lib/hashid"
-	"github.com/dedis/cothority/lib/proof"
+	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 type Block struct {
@@ -27,12 +29,51 @@ func (tr *TrBlock) MarshalBinary() ([]byte, error) {
 	return json.Marshal(tr)
 }
 
+// Hash returns a hash representation of the block
+func (tr *TrBlock) HashSum() []byte {
+	h := sha256.New()
+	if _, err := h.Write(tr.Magic[:]); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if err := binary.Write(h, binary.LittleEndian, tr.BlockSize); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if _, err := h.Write([]byte(tr.HeaderHash)); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if _, err := h.Write(tr.Header.HashSum()); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	if _, err := h.Write(tr.TransactionList.HashSum()); err != nil {
+		dbg.Error("Couldn't hash block:", err)
+	}
+	return h.Sum(nil)
+}
+
 type Header struct {
 	MerkleRoot string
 	Parent     string
 	ParentKey  string
 	PublicKey  string
 	LeaderId   net.IP
+}
+
+// HashSum returns a hash representation of the header
+func (h *Header) HashSum() []byte {
+	ha := sha256.New()
+	if _, err := ha.Write([]byte(h.MerkleRoot)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
+	if _, err := ha.Write([]byte(h.Parent)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
+	if _, err := ha.Write([]byte(h.ParentKey)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
+	if _, err := ha.Write([]byte(h.PublicKey)); err != nil {
+		dbg.Error("Couldn't hash header", err)
+	}
+	return ha.Sum(nil)
 }
 
 func (trb *TrBlock) NewTrBlock(transactions TransactionList, header *Header) *TrBlock {
@@ -66,13 +107,13 @@ func NewHeader(transactions TransactionList, parent, parentKey string) *Header {
 	return hdr
 }
 func HashRootTransactions(transactions TransactionList) string {
-	var hashes []hashid.HashId
+	var hashes []crypto.HashID
 
 	for _, t := range transactions.Txs {
 		temp, _ := hex.DecodeString(t.Hash)
 		hashes = append(hashes, temp)
 	}
-	out, _ := proof.ProofTree(sha256.New, hashes)
+	out, _ := crypto.ProofTree(sha256.New, hashes)
 	return hex.EncodeToString(out)
 }
 
@@ -85,7 +126,9 @@ func (trb *Block) Hash(h *Header) (res string) {
 func HashHeader(h *Header) string {
 	data := fmt.Sprintf("%v", h)
 	sha := sha256.New()
-	sha.Write([]byte(data))
+	if _, err := sha.Write([]byte(data)); err != nil {
+		dbg.Error("Couldn't hash header:", err)
+	}
 	hash := sha.Sum(nil)
 	return hex.EncodeToString(hash)
 }

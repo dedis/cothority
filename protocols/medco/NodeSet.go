@@ -3,12 +3,11 @@ package medco
 import (
 	"github.com/dedis/cothority/lib/sda"
 	"errors"
-	"github.com/satori/go.uuid"
 )
 
 const max_Node_Count = 32
 
-var masks = make(map[uuid.UUID]NodeSet)
+var masks = make(map[sda.TreeNodeID]NodeSet)
 
 
 type NodeSet uint32
@@ -44,7 +43,7 @@ func getMask(n *sda.TreeNode, tree *sda.Tree) (NodeSet, error) {
 }
 
 func computeMask(n *sda.TreeNode, tree *sda.Tree) (NodeSet, error) {
-	for i,node := range tree.ListNodes() {
+	for i,node := range tree.List() {
 		if node.Equal(n) {
 			return NodeSet(1<<uint(i)), nil
 		}

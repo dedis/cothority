@@ -157,7 +157,10 @@ func (p *PrivateCountProtocol) dataReplacementAndCountingPhase(query *Determinis
 			encDataMessage.Code.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 			encDataMessage.SetVisited(p.TreeNode(), p.Tree())
 			i +=  1
-			dbg.Lvl1(i)
+			if i%1000 == 0 {
+				dbg.Lvl1(i, "messages processed.")
+			}
+			//dbg.Lvl1(i)
 			// If node is the last probabilitic contribution and the ciphertext matches the query,
 			// sums the current counting vector with the one of the data.
 			if 	!p.sendToNext(&encDataMessage.ElGamalDataMessage) &&
@@ -197,7 +200,7 @@ func (p *PrivateCountProtocol) matchCountReportingPhase(encryptedBuckets *Cipher
 // returns false. Otherwise, return true.
 func (p *PrivateCountProtocol) sendToNext(msg VisitorMessageI) bool {
 	candidates := make([]*sda.TreeNode, 0)
-	for _, node := range p.Tree().ListNodes() {
+	for _, node := range p.Tree().List() {
 		if !msg.AlreadyVisited(node, p.Node.Tree()) {
 			candidates = append(candidates, node)
 		}
@@ -214,7 +217,7 @@ func (p *PrivateCountProtocol) sendToNext(msg VisitorMessageI) bool {
 
 // Sends the given message to all node except self
 func (p *PrivateCountProtocol) broadcast(msg interface{}) {
-	for _, node := range p.Tree().ListNodes() {
+	for _, node := range p.Tree().List() {
 		if !node.Equal(p.TreeNode()) {
 			p.SendTo(node, msg)
 		}

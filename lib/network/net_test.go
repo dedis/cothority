@@ -11,7 +11,6 @@ import (
 	"os"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
@@ -33,18 +32,18 @@ type TestRegisterS struct {
 
 func TestMain(m *testing.M) {
 	code := m.Run()
-	testutil.AfterTest(nil)
+	dbg.AfterTest(nil)
 	os.Exit(code)
 }
 
 func TestRegister(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	if TypeFromData(&TestRegisterS{}) != ErrorType {
 		t.Fatal("TestRegister should not yet be there")
 	}
 
 	trType := RegisterMessageType(&TestRegisterS{})
-	if uuid.Equal(trType, uuid.Nil) {
+	if uuid.Equal(uuid.UUID(trType), uuid.Nil) {
 		t.Fatal("Couldn't register TestRegister-struct")
 	}
 
@@ -58,7 +57,7 @@ func TestRegister(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	gotConnect := make(chan bool)
@@ -66,8 +65,8 @@ func TestMultiClose(t *testing.T) {
 		dbg.Lvl3("Getting connection from", s)
 		gotConnect <- true
 	}
-	h1 := NewTcpHost()
-	h2 := NewTcpHost()
+	h1 := NewTCPHost()
+	h2 := NewTCPHost()
 	done := make(chan bool)
 	go func() {
 		err := h1.Listen("localhost:2000", fn)
@@ -94,7 +93,7 @@ func TestMultiClose(t *testing.T) {
 	}
 	<-done
 
-	h3 := NewTcpHost()
+	h3 := NewTCPHost()
 	go func() {
 		err := h3.Listen("localhost:2000", fn)
 		if err != nil {
@@ -121,8 +120,7 @@ func TestMultiClose(t *testing.T) {
 
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
-	t.Skip("Fixme data race in test (underlying API seems fine)")
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
@@ -133,12 +131,12 @@ func TestSecureMultiClose(t *testing.T) {
 
 	kp1 := config.NewKeyPair(Suite)
 	entity1 := NewEntity(kp1.Public, "localhost:2000")
-	entity3 := NewEntity(kp1.Public, "localhost:2000")
+	//entity3 := NewEntity(kp1.Public, "localhost:2000")
 	kp2 := config.NewKeyPair(Suite)
 	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
-	h1 := NewSecureTcpHost(kp1.Secret, entity1)
-	h2 := NewSecureTcpHost(kp2.Secret, entity2)
+	h1 := NewSecureTCPHost(kp1.Secret, entity1)
+	h2 := NewSecureTCPHost(kp2.Secret, entity2)
 	done := make(chan bool)
 	go func() {
 		err := h1.Listen(fn)
@@ -148,7 +146,7 @@ func TestSecureMultiClose(t *testing.T) {
 		done <- true
 	}()
 
-	s, err := h2.Open(entity1)
+	_, err := h2.Open(entity1)
 	if err != nil {
 		t.Fatal("Couldn't open h2:", err)
 	}
@@ -161,45 +159,86 @@ func TestSecureMultiClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
-	s.Close()
 	<-done
 
 	dbg.Lvl3("Finished first connection, starting 2nd")
-	h3 := NewSecureTcpHost(kp1.Secret, entity3)
 	receiverStarted2 := make(chan bool)
 	fn2 := func(s SecureConn) {
 		dbg.Lvl3("Getting connection from", s.Entity().First())
-		close(receiverStarted2)
-
+		receiverStarted2 <- true
 	}
 	done2 := make(chan bool)
 	go func() {
-		err = h3.Listen(fn2)
+		err := h1.Listen(fn2)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener:", err)
 		}
 		done2 <- true
 	}()
-	sc, err := h2.Open(entity3)
+	_, err = h2.Open(h1.entity)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = sc.Close()
-	if err != nil {
-		t.Fatal("Couldn't close connection to entity1:", err)
-	}
 
 	<-receiverStarted2
-	err = h3.Close()
+	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close h1:", err)
 	}
+
 	<-done2
+}
+
+func TestTcpCounterIO(t *testing.T) {
+	defer dbg.AfterTest(t)
+
+	RegisterMessageType(&TestRegisterS{})
+	dbg.TestOutput(testing.Verbose(), 4)
+	receiverStarted := make(chan bool)
+	fn := func(s Conn) {
+		err := s.Send(context.TODO(), &TestRegisterS{10})
+		if err != nil {
+			t.Fatal("Error while sending message:", err)
+		}
+		close(receiverStarted)
+	}
+
+	h1 := NewTCPHost()
+	h2 := NewTCPHost()
+	done := make(chan bool)
+	go func() {
+		err := h1.Listen("localhost:3000", fn)
+		if err != nil {
+			t.Fatal("Listening failed for h1:", err)
+		}
+		done <- true
+	}()
+
+	c2, err := h2.Open("localhost:3000")
+	if err != nil {
+		t.Fatal("Couldn't open h2:", err)
+	}
+	<-receiverStarted
+	c2.Receive(context.TODO())
+	err = h1.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	err = h2.Close()
+	if err != nil {
+		t.Fatal("Couldn't close:", err)
+	}
+	<-done
+	// verify the amount of bytes read / written
+	if h1.Tx() == 0 || h1.Tx() != h2.Rx() || h2.Rx() == 0 || h2.Rx() != c2.Rx() {
+		t.Fatal("stg is wrong with CounterIO implementation of TcpConn / TcpHost")
+	}
+
 }
 
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	opened := make(chan bool)
@@ -213,8 +252,8 @@ func TestSecureTcp(t *testing.T) {
 	kp2 := config.NewKeyPair(Suite)
 	entity2 := NewEntity(kp2.Public, "localhost:2001")
 
-	host1 := NewSecureTcpHost(kp1.Secret, entity1)
-	host2 := NewSecureTcpHost(kp1.Secret, entity2)
+	host1 := NewSecureTCPHost(kp1.Secret, entity1)
+	host2 := NewSecureTCPHost(kp1.Secret, entity2)
 
 	done := make(chan bool)
 	go func() {
@@ -246,11 +285,11 @@ func TestSecureTcp(t *testing.T) {
 
 // Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	// Create one client + one server
-	clientHost := NewTcpHost()
-	serverHost := NewTcpHost()
+	clientHost := NewTCPHost()
+	serverHost := NewTCPHost()
 	// Give them keys
 	clientPub := Suite.Point().Base()
 	serverPub := Suite.Point().Add(Suite.Point().Base(), Suite.Point().Base())

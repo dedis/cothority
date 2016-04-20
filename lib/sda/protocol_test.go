@@ -9,13 +9,10 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/satori/go.uuid"
 )
 
-var testID = uuid.NewV5(uuid.NamespaceURL, "test")
-var simpleID = uuid.NewV5(uuid.NamespaceURL, "simple")
-var aggregateID = uuid.NewV5(uuid.NamespaceURL, "aggregate")
+var testProtoID = sda.ProtocolID(uuid.NewV5(uuid.NamespaceURL, "test"))
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
@@ -29,7 +26,7 @@ type ProtocolTest struct {
 func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
 		Node:     n,
-		StartMsg: make(chan string),
+		StartMsg: make(chan string, 1),
 		DispMsg:  make(chan string),
 	}, nil
 }
@@ -82,19 +79,17 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	sda.ProtocolRegister(testID, NewProtocolTest)
-	if !sda.ProtocolExists(testID) {
+	sda.ProtocolRegister(testProtoID, NewProtocolTest)
+	if !sda.ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
 	}
 }
-
-var testString = ""
 
 // This makes h2 the leader, so it creates a tree and entity list
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	// setup
@@ -114,7 +109,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}
 
 	network.RegisterMessageType(SimpleMessage{})
-	sda.ProtocolRegister(testID, fn)
+	sda.ProtocolRegister(testProtoID, fn)
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
@@ -126,7 +121,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	h1.AddTree(tree)
 	// start the protocol
 	go func() {
-		_, err := h1.StartNewNode(testID, tree)
+		_, err := h1.StartNewNode(testProtoID, tree)
 		if err != nil {
 			t.Fatal(fmt.Sprintf("Could not start protocol %v", err))
 		}
@@ -147,5 +142,4 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("Could not receive from channel of host 1")
 	}
-	// then it's all good
 }

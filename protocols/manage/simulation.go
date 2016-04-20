@@ -14,15 +14,18 @@ Defines the simulation for the count-protocol
 */
 
 func init() {
-	sda.SimulationRegister("Count", NewCountSimulation)
+	sda.SimulationRegister("Count", NewSimulation)
 }
 
-type CountSimulation struct {
+// Simulation only holds the BFTree simulation
+type simulation struct {
 	sda.SimulationBFTree
 }
 
-func NewCountSimulation(config string) (sda.Simulation, error) {
-	es := &CountSimulation{}
+// NewSimulation returns the new simulation, where all fields are
+// initialised using the config-file
+func NewSimulation(config string) (sda.Simulation, error) {
+	es := &simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -30,7 +33,8 @@ func NewCountSimulation(config string) (sda.Simulation, error) {
 	return es, nil
 }
 
-func (e *CountSimulation) Setup(dir string, hosts []string) (
+// Setup creates the tree used for that simulation
+func (e *simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateEntityList(sc, hosts, 2000)
@@ -41,18 +45,20 @@ func (e *CountSimulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-func (e *CountSimulation) Run(config *sda.SimulationConfig) error {
+// Run is used on the destination machines and runs a number of
+// rounds
+func (e *simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		round := monitor.NewMeasure("round")
+		round := monitor.NewTimeMeasure("round")
 		n, err := config.Overlay.StartNewNodeName("Count", config.Tree)
 		if err != nil {
 			return err
 		}
 		children := <-n.ProtocolInstance().(*ProtocolCount).Count
-		round.Measure()
+		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +
 				" children")

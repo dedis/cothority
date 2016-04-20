@@ -1,24 +1,27 @@
+// Package platform contains interface and implementation to run SDA code
+// amongst multiple platforms. Such implementations include Localhost (run your
+// test locally) and Deterlab (similar to emulab).
 package platform
 
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"os"
+	"strconv"
 	"strings"
 )
 
-// Generic interface to represent a platform where to run tests
-// or direct applications. For now only localhost + deterlab.
-// one could imagine EC2 or OpenStack or whatever you can as long as you
-// implement this interface !
+// Platform interface that has to be implemented to add another simulation-
+// platform.
 type Platform interface {
 	// Does the initial configuration of all structures needed for the platform
-	Configure()
-	// Builds all necessary binaries
-	Build(string) error
+	Configure(*Config)
+	// Build builds all necessary binaries
+	Build(build string, arg ...string) error
 	// Makes sure that there is no part of the application still running
 	Cleanup() error
 	// Copies the binaries to the appropriate directory/machines, together with
@@ -31,10 +34,17 @@ type Platform interface {
 	Wait() error
 }
 
-var deterlab string = "deterlab"
-var localhost string = "localhost"
+// Config is passed to Platform.Config and prepares the platform for
+// specific system-wide configurations
+type Config struct {
+	MonitorPort int
+	Debug       int
+}
 
-// Return the appropriate platform
+var deterlab = "deterlab"
+var localhost = "localhost"
+
+// NewPlatform returns the appropriate platform
 // [deterlab,localhost]
 func NewPlatform(t string) Platform {
 	var p Platform
@@ -47,27 +57,30 @@ func NewPlatform(t string) Platform {
 	return p
 }
 
-/* Reads in a configuration-file for a run. The configuration-file has the
- * following syntax:
- * Name1 = value1
- * Name2 = value2
- * [empty line]
- * n1, n2, n3, n4
- * v11, v12, v13, v14
- * v21, v22, v23, v24
- *
- * The Name1...Namen are global configuration-options.
- * n1..nn are configuration-options for one run
- * Both the global and the run-configuration are copied to both
- * the platform and the app-configuration.
- */
+// ReadRunFile reads from a configuration-file for a run. The configuration-file has the
+// following syntax:
+// Name1 = value1
+// Name2 = value2
+// [empty line]
+// n1, n2, n3, n4
+// v11, v12, v13, v14
+// v21, v22, v23, v24
+//
+// The Name1...Namen are global configuration-options.
+// n1..nn are configuration-options for one run
+// Both the global and the run-configuration are copied to both
+// the platform and the app-configuration.
 func ReadRunFile(p Platform, filename string) []RunConfig {
 	var runconfigs []RunConfig
 	masterConfig := NewRunConfig()
 	dbg.Lvl3("Reading file", filename)
 
 	file, err := os.Open(filename)
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			dbg.Error("Couldn' close", file.Name())
+		}
+	}()
 	if err != nil {
 		dbg.Fatal("Couldn't open file", file, err)
 	}
@@ -94,7 +107,9 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		// fill in the general config
 		masterConfig.Put(strings.TrimSpace(vals[0]), strings.TrimSpace(vals[1]))
 		// also put it in platform
-		toml.Decode(text, p)
+		if _, err := toml.Decode(text, p); err != nil {
+			dbg.Error("Error decoding", text)
+		}
 		dbg.Lvlf5("Platform is now %+v", p)
 	}
 
@@ -117,12 +132,14 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 	return runconfigs
 }
 
-// Struct that represent the configuration to apply for one "test"
+// RunConfig is a struct that represent the configuration to apply for one "test"
 // Note: a "simulation" is a set of "tests"
 type RunConfig struct {
 	fields map[string]string
 }
 
+// NewRunConfig returns an initialised config to be used for reading
+// in runconfig-files
 func NewRunConfig() *RunConfig {
 	rc := new(RunConfig)
 	rc.fields = make(map[string]string)
@@ -132,19 +149,35 @@ func NewRunConfig() *RunConfig {
 // One problem for now is RunConfig read also the ' " ' char (34 ASCII)
 // and thus when doing Get() , also return the value enclosed by ' " '
 // One fix is to each time we Get(), aautomatically delete those chars
-var replacer *strings.Replacer = strings.NewReplacer("\"", "", "'", "")
+var replacer = strings.NewReplacer("\"", "", "'", "")
 
-// Returns the associated value of the field in the config
+// Get returns the associated value of the field in the config
 func (r *RunConfig) Get(field string) string {
 	return replacer.Replace(r.fields[strings.ToLower(field)])
 }
 
-// Insert a new field - value relationship
+// Delete a field from the runconfig (delete for example Simulation which we
+// dont care in the final csv)
+func (r *RunConfig) Delete(field string) {
+	delete(r.fields, field)
+}
+
+// GetInt returns the integer of the field, or error if not defined
+func (r *RunConfig) GetInt(field string) (int, error) {
+	val := r.Get(field)
+	if val == "" {
+		return 0, errors.New("Didn't find " + field)
+	}
+	ret, err := strconv.Atoi(val)
+	return ret, err
+}
+
+// Put inserts a new field - value relationship
 func (r *RunConfig) Put(field, value string) {
 	r.fields[strings.ToLower(field)] = value
 }
 
-// Returns this config as bytes in a Toml format
+// Toml returns this config as bytes in a Toml format
 func (r *RunConfig) Toml() []byte {
 	var buf bytes.Buffer
 	for k, v := range r.fields {
@@ -153,7 +186,7 @@ func (r *RunConfig) Toml() []byte {
 	return buf.Bytes()
 }
 
-// Returns this config as a Map
+// Map returns this config as a Map
 func (r *RunConfig) Map() map[string]string {
 	tomap := make(map[string]string)
 	for k := range r.fields {
@@ -169,4 +202,17 @@ func (r *RunConfig) Clone() *RunConfig {
 		rc.fields[k] = v
 	}
 	return rc
+}
+
+// String prints out the current status-line
+func (r *RunConfig) String() string {
+	fields := []string{"simulation", "servers", "hosts", "bf", "depth", "rounds"}
+	var ret string
+	for _, f := range fields {
+		v := r.Get(f)
+		if v != "" {
+			ret = fmt.Sprintf("%s%s:%s ", ret, f, v)
+		}
+	}
+	return ret
 }

@@ -1,16 +1,20 @@
+// Package cosi implements a round of a Collective Signing protocol.
 package cosi
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
-	"sync"
 )
 
-// This file is the implementation of a round of a Cothority-based protocol.
+func init() {
+	sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
+}
+
 // This Cosi protocol is the simplest version, the "vanilla" version with the
 // four phases:
 //  - Announcement
@@ -24,12 +28,12 @@ type ProtocolCosi struct {
 	// The node that represents us
 	*sda.Node
 	// TreeNodeId cached
-	treeNodeId uuid.UUID
+	treeNodeID sda.TreeNodeID
 	// the cosi struct we use (since it is a cosi protocol)
 	// Public because we will need it from other protocols.
 	Cosi *cosi.Cosi
 	// the message we want to sign typically given by the Root
-	message []byte
+	Message []byte
 	// The channel waiting for Announcement message
 	announce chan chanAnnouncement
 	// the channel waiting for Commitment message
@@ -41,21 +45,34 @@ type ProtocolCosi struct {
 	// the channel that indicates if we are finished or not
 	done chan bool
 	// temporary buffer of commitment messages
-	tempCommitment []*CosiCommitment
+	tempCommitment []*Commitment
 	// lock associated
 	tempCommitLock *sync.Mutex
 	// temporary buffer of Response messages
-	tempResponse []*CosiResponse
+	tempResponse []*Response
 	// lock associated
 	tempResponseLock *sync.Mutex
+	DoneCallback     func(chal abstract.Secret, response abstract.Secret)
+
 	// hooks related to the various phase of the protocol.
 	// XXX NOT DEPLOYED YET / NOT IN USE.
 	// announcement hook
 	announcementHook AnnouncementHook
 	commitmentHook   CommitmentHook
 	challengeHook    ChallengeHook
-	DoneCallback     func(chal abstract.Secret, response abstract.Secret)
 }
+
+// AnnouncementHook allows for handling what should happen upon an
+// announcement
+type AnnouncementHook func(in *Announcement) error
+
+// CommitmentHook allows for handling what should happen when a
+// commitment is received
+type CommitmentHook func(in []*Commitment) error
+
+// ChallengeHook allows for handling what should happen when a
+// challenge is received
+type ChallengeHook func(*Challenge) error
 
 // NewProtocolCosi returns a ProtocolCosi with the node set with the right channels.
 // Use this function like this:
@@ -67,7 +84,7 @@ type ProtocolCosi struct {
 // }
 // sda.RegisterNewProtocolName("cothority",fn)
 // ```
-func NewProtocolCosi(node *sda.Node) (*ProtocolCosi, error) {
+func NewProtocolCosi(node *sda.Node) (sda.ProtocolInstance, error) {
 	var err error
 	pc := &ProtocolCosi{
 		Cosi:             cosi.NewCosi(node.Suite(), node.Private()),
@@ -76,25 +93,25 @@ func NewProtocolCosi(node *sda.Node) (*ProtocolCosi, error) {
 		tempCommitLock:   new(sync.Mutex),
 		tempResponseLock: new(sync.Mutex),
 	}
-	// Register the three channels we want to register and listens on
-	// By passing pointer = automatic instantiation
-	node.RegisterChannel(&pc.announce)
-	node.RegisterChannel(&pc.commit)
-	node.RegisterChannel(&pc.challenge)
-	node.RegisterChannel(&pc.response)
+	// Register the channels we want to register and listens on
+
+	if err := node.RegisterChannel(&pc.announce); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.commit); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.challenge); err != nil {
+		return pc, err
+	}
+	if err := node.RegisterChannel(&pc.response); err != nil {
+		return pc, err
+	}
 
 	return pc, err
 }
 
-// NewRootProtocolCosi is used by the root to collectively sign this message
-// (vanilla version of the protocol where no contributions are done)
-func NewRootProtocolCosi(msg []byte, node *sda.Node) (*ProtocolCosi, error) {
-	pc, err := NewProtocolCosi(node)
-	pc.message = msg
-	return pc, err
-}
-
-// Start() will call the announcement function of its inner Round structure. It
+// Start will call the announcement function of its inner Round structure. It
 // will pass nil as *in* message.
 func (pc *ProtocolCosi) Start() error {
 	return pc.StartAnnouncement()
@@ -106,13 +123,13 @@ func (pc *ProtocolCosi) Dispatch() error {
 		var err error
 		select {
 		case packet := <-pc.announce:
-			err = pc.handleAnnouncement(&packet.CosiAnnouncement)
+			err = pc.handleAnnouncement(&packet.Announcement)
 		case packet := <-pc.commit:
-			err = pc.handleCommitment(&packet.CosiCommitment)
+			err = pc.handleCommitment(&packet.Commitment)
 		case packet := <-pc.challenge:
-			err = pc.handleChallenge(&packet.CosiChallenge)
+			err = pc.handleChallenge(&packet.Challenge)
 		case packet := <-pc.response:
-			err = pc.handleResponse(&packet.CosiResponse)
+			err = pc.handleResponse(&packet.Response)
 		case <-pc.done:
 			return nil
 		}
@@ -124,28 +141,19 @@ func (pc *ProtocolCosi) Dispatch() error {
 
 // StartAnnouncement will start a new announcement.
 func (pc *ProtocolCosi) StartAnnouncement() error {
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartAnnouncement (msg=", pc.message)
-	// First check the hook
-	if pc.announcementHook != nil {
-		return pc.announcementHook(nil)
-	}
-	// otherwise make the announcement  yourself
-	announcement := pc.Cosi.CreateAnnouncement()
-
-	out := &CosiAnnouncement{
-		From:         pc.treeNodeId,
-		Announcement: announcement,
+	dbg.Lvl3(pc.Node.Name(), "Message:", pc.Message)
+	out := &Announcement{
+		From:         pc.treeNodeID,
+		Announcement: pc.Cosi.CreateAnnouncement(),
 	}
 
-	return pc.sendAnnouncement(out)
+	return pc.handleAnnouncement(out)
 }
-
-type AnnouncementHook func(in *CosiAnnouncement) error
 
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
-func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
-	dbg.Lvl3("ProtocolCosi.HandleAnnouncement (msg=", pc.message)
+func (pc *ProtocolCosi) handleAnnouncement(in *Announcement) error {
+	dbg.Lvl3("Message:", pc.Message)
 	// If we have a hook on announcement call the hook
 	// the hook is responsible to call pc.Cosi.Announce(in)
 	if pc.announcementHook != nil {
@@ -157,10 +165,10 @@ func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
 
 	// If we are leaf, we should go to commitment
 	if pc.IsLeaf() {
-		return pc.StartCommitment()
+		return pc.handleCommitment(nil)
 	}
-	out := &CosiAnnouncement{
-		From:         pc.treeNodeId,
+	out := &Announcement{
+		From:         pc.treeNodeID,
 		Announcement: announcement,
 	}
 
@@ -169,7 +177,7 @@ func (pc *ProtocolCosi) handleAnnouncement(in *CosiAnnouncement) error {
 }
 
 // sendAnnouncement simply send the announcement to every children
-func (pc *ProtocolCosi) sendAnnouncement(ann *CosiAnnouncement) error {
+func (pc *ProtocolCosi) sendAnnouncement(ann *Announcement) error {
 	var err error
 	for _, tn := range pc.Children() {
 		// still try to send to everyone
@@ -178,38 +186,21 @@ func (pc *ProtocolCosi) sendAnnouncement(ann *CosiAnnouncement) error {
 	return err
 }
 
-type CommitmentHook func(in []*CosiCommitment) error
-
-// StartCommitment create a new commitment and send it up (or to the hook)
-func (pc *ProtocolCosi) StartCommitment() error {
-	// First check the hook
-	if pc.commitmentHook != nil {
-		return pc.commitmentHook(nil)
+// handleAllCommitment takes the full set of messages from the children and passes
+// it to the parent
+func (pc *ProtocolCosi) handleCommitment(in *Commitment) error {
+	if !pc.IsLeaf() {
+		// add to temporary
+		pc.tempCommitLock.Lock()
+		pc.tempCommitment = append(pc.tempCommitment, in)
+		pc.tempCommitLock.Unlock()
+		// do we have enough ?
+		// TODO: exception mechanism will be put into another protocol
+		if len(pc.tempCommitment) < len(pc.Children()) {
+			return nil
+		}
 	}
-	// otherwise make it yourself
-	commitment := pc.Cosi.CreateCommitment()
-	out := &CosiCommitment{
-		From:       pc.treeNodeId,
-		Commitment: commitment,
-	}
-
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartCommitment() Send to", pc.Parent().Id)
-	return pc.SendTo(pc.Parent(), out)
-}
-
-// handleAllCommitment takes the full set of messages from the children and pass
-// it along the round.
-func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
-	// add to temporary
-	pc.tempCommitLock.Lock()
-	pc.tempCommitment = append(pc.tempCommitment, in)
-	pc.tempCommitLock.Unlock()
-	// do we have enough ?
-	// TODO: exception mechanism will be put into another protocol
-	if len(pc.tempCommitment) < len(pc.Children()) {
-		return nil
-	}
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleCommitment aggregated")
+	dbg.Lvl3(pc.Node.Name(), "aggregated")
 	// pass it to the hook
 	if pc.commitmentHook != nil {
 		return pc.commitmentHook(pc.tempCommitment)
@@ -232,62 +223,49 @@ func (pc *ProtocolCosi) handleCommitment(in *CosiCommitment) error {
 	}
 
 	// otherwise send it to parent
-	outMsg := &CosiCommitment{
-		From:       pc.treeNodeId,
+	outMsg := &Commitment{
 		Commitment: out,
 	}
 	return pc.SendTo(pc.Parent(), outMsg)
 }
 
-type ChallengeHook func(*CosiChallenge) error
-
 // StartChallenge start the challenge phase. Typically called by the Root ;)
 func (pc *ProtocolCosi) StartChallenge() error {
-	// first check the hook
-	/*if pc.challengeHook != nil {*/
-	//return pc.challengeHook(nil)
-	/*}*/
-
-	if pc.message == nil {
-		return fmt.Errorf("%s StartChallenge() called without message (=%v)", pc.Node.Name(), pc.message)
-	}
-	challenge, err := pc.Cosi.CreateChallenge(pc.message)
+	challenge, err := pc.Cosi.CreateChallenge(pc.Message)
 	if err != nil {
 		return err
 	}
-	out := &CosiChallenge{
-		From:      pc.treeNodeId,
+	out := &Challenge{
 		Challenge: challenge,
 	}
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.StartChallenge() chal=", fmt.Sprintf("%+v", challenge))
-	return pc.sendChallenge(out)
+	dbg.Lvl3(pc.Node.Name(), "chal=", fmt.Sprintf("%+v", challenge))
+	return pc.handleChallenge(out)
 
 }
 
 // handleChallenge dispatch the challenge to the round and then dispatch the
 // results down the tree.
-func (pc *ProtocolCosi) handleChallenge(in *CosiChallenge) error {
+func (pc *ProtocolCosi) handleChallenge(in *Challenge) error {
 	// TODO check hook
 
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleChallenge() chal=", fmt.Sprintf("%+v", in.Challenge))
+	dbg.Lvl3(pc.Node.Name(), "chal=", fmt.Sprintf("%+v", in.Challenge))
 	// else dispatch it to cosi
 	challenge := pc.Cosi.Challenge(in.Challenge)
 
 	// if we are leaf, then go to response
 	if pc.IsLeaf() {
-		return pc.StartResponse()
+		return pc.handleResponse(nil)
 	}
 
 	// otherwise send it to children
-	out := &CosiChallenge{
-		From:      pc.treeNodeId,
+	out := &Challenge{
 		Challenge: challenge,
 	}
 	return pc.sendChallenge(out)
 }
 
 // sendChallenge sends the challenge down the tree.
-func (pc *ProtocolCosi) sendChallenge(out *CosiChallenge) error {
+func (pc *ProtocolCosi) sendChallenge(out *Challenge) error {
 	var err error
 	for _, tn := range pc.Children() {
 		err = pc.SendTo(tn, out)
@@ -296,40 +274,22 @@ func (pc *ProtocolCosi) sendChallenge(out *CosiChallenge) error {
 
 }
 
-func (pc *ProtocolCosi) StartResponse() error {
-	// TODO check the hook
-	// else do it yourself
-	resp, err := pc.Cosi.CreateResponse()
-	if err != nil {
-		return err
-	}
-	out := &CosiResponse{
-		From:     pc.treeNodeId,
-		Response: resp,
-	}
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi().StartResponse()")
-	err = pc.SendTo(pc.Parent(), out)
-	pc.Cleanup()
-	return err
-}
-
 // handleResponse brings up the response of each node in the tree to the root.
-func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
+func (pc *ProtocolCosi) handleResponse(in *Response) error {
+	if !pc.IsLeaf() {
+		// add to temporary
+		pc.tempResponseLock.Lock()
+		pc.tempResponse = append(pc.tempResponse, in)
+		pc.tempResponseLock.Unlock()
+		// do we have enough ?
+		dbg.Lvl3(pc.Node.Name(), "has", len(pc.tempResponse), "responses")
+		if len(pc.tempResponse) < len(pc.Children()) {
+			return nil
+		}
+	}
 	defer pc.Cleanup()
 
-	// add to temporary
-	pc.tempResponseLock.Lock()
-	pc.tempResponse = append(pc.tempResponse, in)
-	pc.tempResponseLock.Unlock()
-	// do we have enough ?
-	if len(pc.tempResponse) < len(pc.Children()) {
-		return nil
-	}
-
-	dbg.Lvl3(pc.Node.Name(), "ProtocolCosi.HandleResponse() aggregated")
-	// TODO check the hook
-
-	// else do it yourself
+	dbg.Lvl3(pc.Node.Name(), "aggregated")
 	responses := make([]*cosi.Response, len(pc.tempResponse))
 	for i := range pc.tempResponse {
 		responses[i] = pc.tempResponse[i].Response
@@ -338,8 +298,21 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 	if err != nil {
 		return err
 	}
-	out := &CosiResponse{
-		From:     pc.treeNodeId,
+
+	// Simulation feature => time the verification process.
+	if (VerifyResponse == 1 && pc.IsRoot()) || VerifyResponse == 2 {
+		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Doing Response verification", VerifyResponse)
+		// verify the responses at each level with the aggregate public key of this
+		// subtree.
+		if err := pc.Cosi.VerifyResponses(pc.TreeNode().PublicAggregateSubTree); err != nil {
+			dbg.Error("Verification error")
+			return fmt.Errorf("%s Verifcation of responses failed:%s", pc.Name(), err)
+		}
+	} else {
+		dbg.Lvl3(pc.Name(), "(root=", pc.IsRoot(), ") Skipping Response verification", VerifyResponse)
+	}
+
+	out := &Response{
 		Response: outResponse,
 	}
 	// send it back to parent
@@ -349,11 +322,12 @@ func (pc *ProtocolCosi) handleResponse(in *CosiResponse) error {
 	return nil
 }
 
-// Closes the protocol
+// Cleanup closes the protocol and calls DoneCallback, if defined
 func (pc *ProtocolCosi) Cleanup() {
 	dbg.Lvl3(pc.Entity().First(), "Cleaning up")
 	// if callback when finished
 	if pc.DoneCallback != nil {
+		dbg.Lvl3("Calling doneCallback")
 		pc.DoneCallback(pc.Cosi.GetChallenge(), pc.Cosi.GetAggregateResponse())
 	}
 	close(pc.done)
@@ -363,23 +337,30 @@ func (pc *ProtocolCosi) Cleanup() {
 
 // SigningMessage simply set the message to sign for this round
 func (pc *ProtocolCosi) SigningMessage(msg []byte) {
-	pc.message = msg
-	dbg.Lvl2(pc.Node.Name(), "Root will sign message=", pc.message)
+	pc.Message = msg
+	dbg.Lvl2(pc.Node.Name(), "Root will sign message=", pc.Message)
 }
 
-// TODO Still see if it is relevant...
+// RegisterAnnouncementHook allows for handling what should happen upon an
+// announcement
 func (pc *ProtocolCosi) RegisterAnnouncementHook(fn AnnouncementHook) {
 	pc.announcementHook = fn
 }
 
+// RegisterCommitmentHook allows for handling what should happen when a
+// commitment is received
 func (pc *ProtocolCosi) RegisterCommitmentHook(fn CommitmentHook) {
 	pc.commitmentHook = fn
 }
 
+// RegisterChallengeHook allows for handling what should happen when a
+// challenge is received
 func (pc *ProtocolCosi) RegisterChallengeHook(fn ChallengeHook) {
 	pc.challengeHook = fn
 }
 
+// RegisterDoneCallback allows for handling what should happen when a
+// the protocol is done
 func (pc *ProtocolCosi) RegisterDoneCallback(fn func(chal, resp abstract.Secret)) {
 	pc.DoneCallback = fn
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/satori/go.uuid"
 )
@@ -15,7 +14,8 @@ import (
 func init() {
 	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
 	sda.ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
-	sda.ProtocolRegister(testID, NewProtocolTest)
+	sda.ProtocolRegisterName("ProtocolBlocking", NewProtocolBlocking)
+	sda.ProtocolRegister(testProtoID, NewProtocolTest)
 	Incoming = make(chan struct {
 		*sda.TreeNode
 		NodeTestMsg
@@ -23,7 +23,7 @@ func init() {
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
@@ -45,7 +45,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 }
 
 func TestNodeChannelCreate(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 
@@ -65,7 +65,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
+	err = n.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -83,7 +83,7 @@ func TestNodeChannelCreate(t *testing.T) {
 }
 
 func TestNodeChannel(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 
@@ -103,7 +103,7 @@ func TestNodeChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.SDAData{&sda.SDAData{
+	err = n.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -122,7 +122,7 @@ func TestNodeChannel(t *testing.T) {
 
 // Test instantiation of Node
 func TestNewNode(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
@@ -132,7 +132,7 @@ func TestNewNode(t *testing.T) {
 	h1.AddTree(tree)
 
 	// Try directly StartNewNode
-	node, err := h1.StartNewNode(testID, tree)
+	node, err := h1.StartNewNode(testProtoID, tree)
 	if err != nil {
 		t.Fatal("Could not start new protocol", err)
 	}
@@ -150,7 +150,7 @@ func TestNewNode(t *testing.T) {
 }
 
 func TestProtocolChannels(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	h1, h2 := SetupTwoHosts(t, true)
@@ -180,7 +180,7 @@ func TestProtocolChannels(t *testing.T) {
 }
 
 func TestProtocolHandlers(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
@@ -195,7 +195,7 @@ func TestProtocolHandlers(t *testing.T) {
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers
 
-	if child1.Entity().Id == child2.Entity().Id {
+	if child1.Entity().ID == child2.Entity().ID {
 		t.Fatal("Both entities should be different")
 	}
 
@@ -207,13 +207,13 @@ func TestProtocolHandlers(t *testing.T) {
 	}
 	child2.SendTo(node.TreeNode(), &NodeTestAggMsg{})
 	final := <-IncomingHandlers
-	if final.Entity().Id != node.Entity().Id {
+	if final.Entity().ID != node.Entity().ID {
 		t.Fatal("This should be the same ID")
 	}
 }
 
 func TestMsgAggregation(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
@@ -241,21 +241,23 @@ func TestMsgAggregation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(proto.IncomingAgg) == 0 {
+	select {
+	case msgs := <-proto.IncomingAgg:
+		if msgs[0].I != 3 {
+			t.Fatal("First message should be 3")
+		}
+		if msgs[1].I != 4 {
+			t.Fatal("Second message should be 4")
+		}
+	case <-time.After(time.Second):
 		t.Fatal("Messages should BE there")
-	}
-	msgs := <-proto.IncomingAgg
-	if msgs[0].I != 3 {
-		t.Fatal("First message should be 3")
-	}
-	if msgs[1].I != 4 {
-		t.Fatal("Second message should be 4")
 	}
 }
 
 func TestFlags(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
+	testType := network.MessageTypeID(uuid.Nil)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
@@ -263,21 +265,21 @@ func TestFlags(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't create node.")
 	}
-	if n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	if n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
-	n.SetFlag(uuid.Nil, sda.AggregateMessages)
-	if !n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	n.SetFlag(testType, sda.AggregateMessages)
+	if !n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should HAVE AggregateMessages-flag cleared")
 	}
-	n.ClearFlag(uuid.Nil, sda.AggregateMessages)
-	if n.HasFlag(uuid.Nil, sda.AggregateMessages) {
+	n.ClearFlag(testType, sda.AggregateMessages)
+	if n.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
 }
 
 func TestSendLimitedTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenBigTree(7, 1, 2, true, true)
@@ -336,11 +338,7 @@ func (p *ProtocolChannels) Start() error {
 	return nil
 }
 
-func (p *ProtocolChannels) Dispatch() error {
-	return nil
-}
-
-// relese ressources ==> call Done()
+// release resources ==> call Done()
 func (p *ProtocolChannels) Release() {
 	p.Done()
 }
@@ -392,4 +390,96 @@ func (p *ProtocolHandlers) Dispatch() error {
 // relese ressources ==> call Done()
 func (p *ProtocolHandlers) Release() {
 	p.Done()
+}
+
+func TestBlocking(t *testing.T) {
+	defer dbg.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 4)
+
+	l := sda.NewLocalTest()
+	_, _, tree := l.GenTree(2, true, true, true)
+	defer l.CloseAll()
+
+	n1, err := l.StartNewNodeName("ProtocolBlocking", tree)
+	if err != nil {
+		t.Fatal("Couldn't start protocol")
+	}
+	n2, err := l.StartNewNodeName("ProtocolBlocking", tree)
+	if err != nil {
+		t.Fatal("Couldn't start protocol")
+	}
+
+	p1 := n1.ProtocolInstance().(*BlockingProtocol)
+	p2 := n2.ProtocolInstance().(*BlockingProtocol)
+	go func() {
+		// Send two messages to n1, which blocks the old interface
+		err := l.SendTreeNode("", n2, n1, &NodeTestMsg{})
+		if err != nil {
+			t.Fatal("Couldn't send message:", err)
+		}
+		err = l.SendTreeNode("", n2, n1, &NodeTestMsg{})
+		if err != nil {
+			t.Fatal("Couldn't send message:", err)
+		}
+		// Now send a message to n2, but in the old interface this
+		// blocks.
+		err = l.SendTreeNode("", n1, n2, &NodeTestMsg{})
+		if err != nil {
+			t.Fatal("Couldn't send message:", err)
+		}
+	}()
+	// Release p2
+	p2.stopBlockChan <- true
+	select {
+	case <-p2.doneChan:
+		dbg.Lvl2("Node 2 done")
+		p1.stopBlockChan <- true
+		<-p1.doneChan
+	case <-time.After(time.Second):
+		t.Fatal("Node 2 didn't receive")
+	}
+}
+
+// BlockingProtocol is a protocol that will block until it receives a "continue"
+// signal on the continue channel. It is used for testing the asynchronous
+// & non blocking handling of the messages in sda.
+type BlockingProtocol struct {
+	*sda.Node
+	// the protocol will signal on this channel that it is done
+	doneChan chan bool
+	// stopBLockChan is used to signal the protocol to stop blocking the
+	// incoming messages on the Incoming chan
+	stopBlockChan chan bool
+	Incoming      chan struct {
+		*sda.TreeNode
+		NodeTestMsg
+	}
+}
+
+func NewProtocolBlocking(node *sda.Node) (sda.ProtocolInstance, error) {
+	bp := &BlockingProtocol{
+		Node:          node,
+		doneChan:      make(chan bool),
+		stopBlockChan: make(chan bool),
+	}
+
+	node.RegisterChannel(&bp.Incoming)
+	return bp, nil
+}
+
+func (bp *BlockingProtocol) Start() error {
+	return nil
+}
+
+func (bp *BlockingProtocol) Dispatch() error {
+	// first wait on stopBlockChan
+	<-bp.stopBlockChan
+	dbg.Lvl2("BlockingProtocol: will continue")
+	// Then wait on the actual message
+	<-bp.Incoming
+	dbg.Lvl2("BlockingProtocol: received message => signal Done")
+	// then signal that you are done
+	bp.doneChan <- true
+	return nil
 }

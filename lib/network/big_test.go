@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -25,7 +24,7 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // It generates one connection between each host and then starts sending
 // messages all around.
 func TestHugeConnections(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	// How many hosts are run
 	nbrHosts := 10
 	// 16MB of message size
@@ -50,7 +49,7 @@ func TestHugeConnections(t *testing.T) {
 	// Create all hosts and open the connections
 	for i := 0; i < nbrHosts; i++ {
 		privkeys[i], ids[i] = genEntity("localhost:" + strconv.Itoa(2000+i))
-		hosts[i] = NewSecureTcpHost(privkeys[i], ids[i])
+		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
 		dbg.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
 			err := hosts[h].Listen(func(c SecureConn) {

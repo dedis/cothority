@@ -11,42 +11,60 @@ import (
 )
 
 func init() {
-	sda.SimulationRegister("CoSiSimulation", NewCoSiSimulation)
-	// default protocol initialization. See Run() for override this one for the
-	// root.
-	sda.ProtocolRegisterName("ProtocolCosi", func(node *sda.Node) (sda.ProtocolInstance, error) { return NewProtocolCosi(node) })
+	sda.SimulationRegister("CoSi", NewSimulation)
 }
 
-type CoSiSimulation struct {
+// Simulation implements the sda.Simulation of the CoSi protocol.
+type Simulation struct {
 	sda.SimulationBFTree
+
+	// 0 - don't check any signatures
+	// 1 - only the root-node checks the aggregate signature
+	// 2 - every node checks the aggregate signature
+	Checking int
 }
 
-func NewCoSiSimulation(config string) (sda.Simulation, error) {
-	cs := new(CoSiSimulation)
+// NewSimulation returns an sda.Simulation or an error if sth. is wrong.
+// Used to register the CoSi protocol.
+func NewSimulation(config string) (sda.Simulation, error) {
+	cs := &Simulation{Checking: 2}
 	_, err := toml.Decode(config, cs)
 	if err != nil {
 		return nil, err
 	}
+
 	return cs, nil
 }
 
-func (cs *CoSiSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
+// Setup implements sda.Simulation.
+func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	cs.CreateEntityList(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
 	return sim, err
 }
 
-func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
+// Node implements sda.Simulation.
+func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
+	err := cs.SimulationBFTree.Node(sc)
+	if err != nil {
+		return err
+	}
+	VerifyResponse = cs.Checking
+	return nil
+}
+
+// Run implements sda.Simulation.
+func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.EntityList.List)
 	msg := []byte("Hello World Cosi Simulation")
 	aggPublic := computeAggregatedPublic(config.EntityList)
-	dbg.Lvl1("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
+	dbg.Lvl2("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		roundM := monitor.NewMeasure("round")
+		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateNewNodeName("ProtocolCosi", config.Tree)
+		node, err := config.Overlay.CreateNewNodeName("CoSi", config.Tree)
 		if err != nil {
 			return err
 		}
@@ -57,20 +75,20 @@ func (cs *CoSiSimulation) Run(config *sda.SimulationConfig) error {
 		// tell us when it is done
 		done := make(chan bool)
 		fn := func(chal, resp abstract.Secret) {
-			roundM.Measure()
-			if err := proto.Cosi.VerifyResponses(aggPublic); err != nil {
-				dbg.Lvl1("Round", round, " has failed responses")
-			}
+			roundM.Record()
+			//  No need to verify it twice here. It already happens in
+			//  handleResponse() even for the root.
 			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
 				dbg.Lvl1("Round", round, " => fail verification")
 			} else {
-				dbg.Lvl1("Round", round, " => success")
+				dbg.Lvl2("Round", round, " => success")
 			}
 			done <- true
-			// TODO make the verification here
 		}
 		proto.RegisterDoneCallback(fn)
-		proto.Start()
+		if err := proto.Start(); err != nil {
+			dbg.Error("Couldn't start protocol in round", round)
+		}
 		<-done
 	}
 	dbg.Lvl1("Simulation finished")

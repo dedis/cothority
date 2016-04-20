@@ -1,36 +1,19 @@
-// Outputting data: output to csv files (for loading into excel)
-//   make a datastructure per test output file
-//   all output should be in the test_data subdirectory
-//
-// connect with logging server (receive json until "EOF" seen or "terminating")
-//   connect to websocket ws://localhost:8080/log
-//   receive each message as bytes
-//		 if bytes contains "EOF" or contains "terminating"
-//       wrap up the round, output to test_data directory, kill deploy2deter
-//
-// for memstats check localhost:8080/d/server-0-0/debug/vars
-//   parse out the memstats zones that we are concerned with
-//
-// different graphs needed rounds:
-//   load on the x-axis: increase messages per round holding everything else constant
-//			hpn=40 bf=10, bf=50
-//
-// latency on y-axis, timestamp servers on x-axis push timestampers as higher as possible
-//
-//
+// The main file for running simulations on localhost or remote platforms.
 package main
 
 import (
 	"flag"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
+	"math"
+	"time"
 )
 
 // Configuration-variables
@@ -43,23 +26,27 @@ var build = ""
 var machines = 3
 var monitorPort = monitor.DefaultSinkPort
 var simRange = ""
-var debugVisible int
+var race = false
+var runWait = 180
+var experimentWait = 0
 
 func init() {
 	flag.StringVar(&platformDst, "platform", platformDst, "platform to deploy to [deterlab,localhost]")
 	flag.BoolVar(&nobuild, "nobuild", false, "Don't rebuild all helpers")
 	flag.BoolVar(&clean, "clean", false, "Only clean platform")
 	flag.StringVar(&build, "build", "", "List of packages to build")
+	flag.BoolVar(&race, "race", false, "Build with go's race detection enabled (doesn't work on all platforms)")
 	flag.IntVar(&machines, "machines", machines, "Number of machines on Deterlab")
 	flag.IntVar(&monitorPort, "mport", monitorPort, "Port-number for monitor")
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
-	flag.IntVar(&debugVisible, "debug", dbg.DebugVisible(), "Change debug level (0-5)")
+	flag.IntVar(&runWait, "runwait", runWait, "How long to wait for each simulation to finish - overwrites .toml-value")
+	flag.IntVar(&experimentWait, "experimentwait", experimentWait, "How long to wait for the whole experiment to finish")
+	dbg.AddFlags()
 }
 
 // Reads in the platform that we want to use and prepares for the tests
 func main() {
 	flag.Parse()
-	dbg.SetDebugVisible(debugVisible)
 	deployP = platform.NewPlatform(platformDst)
 	if deployP == nil {
 		dbg.Fatal("Platform not recognized.", platformDst)
@@ -77,32 +64,59 @@ func main() {
 		if len(runconfigs) == 0 {
 			dbg.Fatal("No tests found in", simulation)
 		}
-		deployP.Configure()
+		deployP.Configure(&platform.Config{
+			MonitorPort: monitorPort,
+			Debug:       dbg.DebugVisible(),
+		})
 
 		if clean {
 			err := deployP.Deploy(runconfigs[0])
 			if err != nil {
 				dbg.Fatal("Couldn't deploy:", err)
 			}
-			deployP.Cleanup()
+			if err := deployP.Cleanup(); err != nil {
+				dbg.Error("Couldn't cleanup correctly:", err)
+			}
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
-			RunTests(logname, runconfigs)
+			testsDone := make(chan bool)
+			go func() {
+				RunTests(logname, runconfigs)
+				testsDone <- true
+			}()
+			timeout := getExperimentWait(runconfigs)
+			select {
+			case <-testsDone:
+				dbg.Lvl3("Done with test", simulation)
+			case <-time.After(time.Second * time.Duration(timeout)):
+				dbg.Fatal("Test failed to finish in", timeout, "seconds")
+			}
 		}
 	}
 }
 
-// Runs the given tests and puts the output into the
+// RunTests the given tests and puts the output into the
 // given file name. It outputs RunStats in a CSV format.
 func RunTests(name string, runconfigs []platform.RunConfig) {
 
 	if nobuild == false {
-		deployP.Build(build)
+		if race {
+			if err := deployP.Build(build, "-race"); err != nil {
+				dbg.Error("Couln't finish build without errors:",
+					err)
+			}
+		} else {
+			if err := deployP.Build(build); err != nil {
+				dbg.Error("Couln't finish build without errors:",
+					err)
+			}
+		}
 	}
 
-	MkTestDir()
-	rs := make([]monitor.Stats, len(runconfigs))
-	nTimes := 1
+	mkTestDir()
+	rs := make([]*monitor.Stats, len(runconfigs))
+	// Try 10 times to run the test
+	nTimes := 10
 	stopOnSuccess := true
 	var f *os.File
 	args := os.O_CREATE | os.O_RDWR | os.O_TRUNC
@@ -110,11 +124,15 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	if simRange != "" {
 		args = os.O_CREATE | os.O_RDWR | os.O_APPEND
 	}
-	f, err := os.OpenFile(TestFile(name), args, 0660)
+	f, err := os.OpenFile(testFile(name), args, 0660)
 	if err != nil {
 		dbg.Fatal("error opening test file:", err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			dbg.Error("Couln't close", f.Name())
+		}
+	}()
 	err = f.Sync()
 	if err != nil {
 		dbg.Fatal("error syncing test file:", err)
@@ -127,15 +145,17 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			dbg.Lvl2("Skipping", t, "because of range")
 			continue
 		}
-		dbg.Lvl1("Doing run", t)
+		// Waiting for the document-branch to be merged, then uncomment this
+		//dbg.Lvl1("Starting run with parameters -", t.String())
 
 		// run test t nTimes times
 		// take the average of all successful runs
-		runs := make([]monitor.Stats, 0, nTimes)
+		runs := make([]*monitor.Stats, 0, nTimes)
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				dbg.Fatal("error running test:", err)
+				dbg.Error("Error running test, trying again:", err)
+				continue
 			}
 
 			runs = append(runs, stats)
@@ -162,29 +182,26 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 }
 
-// Runs a single test - takes a test-file as a string that will be copied
+// RunTest a single test - takes a test-file as a string that will be copied
 // to the deterlab-server
-func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
+func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
-	if platformDst == "localhost" {
-		machs := rc.Get("machines")
-		ppms := rc.Get("ppm")
-		mach, _ := strconv.Atoi(machs)
-		ppm, _ := strconv.Atoi(ppms)
-		rc.Put("machines", "1")
-		rc.Put("ppm", strconv.Itoa(ppm*mach))
-	}
-	rs := monitor.NewStats(rc.Map())
+	CheckHosts(rc)
+	rc.Delete("simulation")
+	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
 
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
+
+	monitor.SinkPort = monitorPort
 	if err := deployP.Cleanup(); err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
+	monitor.SinkPort = monitorPort
 	go func() {
 		if err := monitor.Listen(); err != nil {
 			dbg.Fatal("Could not monitor.Listen():", err)
@@ -195,26 +212,75 @@ func RunTest(rc platform.RunConfig) (monitor.Stats, error) {
 	err := deployP.Start()
 	if err != nil {
 		dbg.Error(err)
-		return *rs, err
+		return rs, err
 	}
 
 	go func() {
 		var err error
 		if err = deployP.Wait(); err != nil {
 			dbg.Lvl3("Test failed:", err)
-			deployP.Cleanup()
+			if err := deployP.Cleanup(); err != nil {
+				dbg.Lvl3("Couldn't cleanup platform:", err)
+			}
 			done <- struct{}{}
 		}
 		dbg.Lvl3("Test complete:", rs)
 		done <- struct{}{}
 	}()
 
+	timeOut := getRunWait(rc)
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
 		monitor.Stop()
-		return *rs, err
+		return rs, nil
+	case <-time.After(time.Second * time.Duration(timeOut)):
+		monitor.Stop()
+		return rs, errors.New("Simulation timeout")
 	}
+}
+
+// CheckHosts verifies that there is either a 'Hosts' or a 'Depth/BF'
+// -parameter in the Runconfig
+func CheckHosts(rc platform.RunConfig) {
+	hosts, _ := rc.GetInt("hosts")
+	bf, _ := rc.GetInt("bf")
+	depth, _ := rc.GetInt("depth")
+	if hosts == 0 {
+		if depth == 0 || bf == 0 {
+			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
+		}
+		hosts = calcHosts(bf, depth)
+		rc.Put("hosts", strconv.Itoa(hosts))
+	}
+	if bf == 0 {
+		if depth == 0 || hosts == 0 {
+			dbg.Fatal("No BF and no Depth or hosts given - stopping")
+		}
+		bf = 2
+		for calcHosts(bf, depth) < hosts {
+			bf++
+		}
+		rc.Put("bf", strconv.Itoa(bf))
+	}
+	if depth == 0 {
+		depth = 1
+		for calcHosts(bf, depth) < hosts {
+			depth++
+		}
+		rc.Put("depth", strconv.Itoa(depth))
+	}
+}
+
+// Geometric sum to count the total number of nodes:
+// Root-node: 1
+// 1st level: bf (branching-factor)*/
+// 2nd level: bf^2 (each child has bf children)
+// 3rd level: bf^3
+// So total: sum(level=0..depth)(bf^level)
+func calcHosts(bf, depth int) int {
+	return int((1 - math.Pow(float64(bf), float64(depth+1))) /
+		float64(1-bf))
 }
 
 type runFile struct {
@@ -223,30 +289,26 @@ type runFile struct {
 	Runs     string
 }
 
-func MkTestDir() {
+func mkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
 		dbg.Fatal("failed to make test directory")
 	}
 }
 
-func TestFile(name string) string {
+func testFile(name string) string {
 	return "test_data/" + name + ".csv"
-}
-
-func isZero(f float64) bool {
-	return math.Abs(f) < 0.0000001
 }
 
 // returns a tuple of start and stop configurations to run
 func getStartStop(rcs int) (int, int) {
-	ss_str := strings.Split(simRange, ":")
-	start, err := strconv.Atoi(ss_str[0])
+	ssStr := strings.Split(simRange, ":")
+	start, err := strconv.Atoi(ssStr[0])
 	stop := rcs - 1
 	if err == nil {
 		stop = start
-		if len(ss_str) > 1 {
-			stop, err = strconv.Atoi(ss_str[1])
+		if len(ssStr) > 1 {
+			stop, err = strconv.Atoi(ssStr[1])
 			if err != nil {
 				stop = rcs
 			}
@@ -254,4 +316,33 @@ func getStartStop(rcs int) (int, int) {
 	}
 	dbg.Lvl2("Range is", start, ":", stop)
 	return start, stop
+}
+
+// getRunWait returns either the command-line value or the value from the runconfig
+// file
+func getRunWait(rc platform.RunConfig) int {
+	rcWait, err := rc.GetInt("runwait")
+	if err == nil {
+		return rcWait
+	}
+	return runWait
+}
+
+// getExperimentWait returns
+// 1. the command-line value
+// 2. the value from runconfig
+// 3. #runconfigs * runWait
+func getExperimentWait(rcs []platform.RunConfig) int {
+	if experimentWait > 0 {
+		return experimentWait
+	}
+	rcExp, err := rcs[0].GetInt("experimentwait")
+	if err == nil {
+		return rcExp
+	}
+	wait := 0
+	for _, rc := range rcs {
+		wait += getRunWait(rc)
+	}
+	return wait
 }

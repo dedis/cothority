@@ -6,12 +6,10 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
-	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 )
 
-var SimplePacketType uuid.UUID
+var SimplePacketType MessageTypeID
 
 func init() {
 	SimplePacketType = RegisterMessageType(SimplePacket{})
@@ -22,12 +20,12 @@ type SimplePacket struct {
 }
 
 func TestSimple(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
-	client := NewTcpHost()
+	client := NewTCPHost()
 	clientName := "client"
-	server := NewTcpHost()
+	server := NewTCPHost()
 	serverName := "server"
 
 	done := make(chan bool)

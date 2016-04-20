@@ -1,13 +1,14 @@
-// Monitor package handle the logging, collection and computation of
-// statisticals data. Every application can send some Measure (for the moment,
+// Package monitor package handle the logging, collection and computation of
+// statistical data. Every application can send some Measure (for the moment,
 // we mostly measure the CPU time but it can be applied later for any kind of
-// measures). The Monitor receives them and update a Stats struct. This Statss
-// struct can hold many different kinds of Measurement (the measure of an
-// specific action such as "round time" or "verify time" etc). Theses
-// measurements contains Values which compute the actual min/max/dev/avg values.
-// There exists the Proxy file so we can have a Proxy relaying Measure from
-// clients to the Monitor listening. An starter feature is also the DataFilter
-// which can apply somes filtering rules to the data before making any
+// measures). The Monitor receives them and updates a Stats struct. This Stats
+// struct can hold many different kinds of Measurements (the measure of a
+// specific action such as "round time" or "verify time" etc). These
+// measurements contain Values which compute the actual min/max/dev/avg values.
+//
+// The Proxy allows to relay Measure from
+// clients to the listening Monitor. A starter feature is also the DataFilter
+// which can apply some filtering rules to the data before making any
 // statistics about them.
 package monitor
 
@@ -26,19 +27,20 @@ import (
 // This file handles the collection of measurements, aggregates them and
 // write CSV file reports
 
-// listen is the address where to listen for the monitor. The endpoint can be a
+// Sink is the address where to listen for the monitor. The endpoint can be a
 // monitor.Proxy or a direct connection with measure.go
 const Sink = "0.0.0.0"
+
+// DefaultSinkPort is the default port where a monitor will listen and a proxy
+// will contact the monitor.
 const DefaultSinkPort = 10000
 
 // Monitor struct is used to collect measures and make the statistics about
 // them. It takes a stats object so it update that in a concurrent-safe manner
 // for each new measure it receives.
 type Monitor struct {
-	listener net.Listener
-
-	// XXX
-	SinkPort int
+	listener     net.Listener
+	listenerLock *sync.Mutex
 
 	// Current conections
 	conns map[string]net.Conn
@@ -51,27 +53,29 @@ type Monitor struct {
 	mutexStats sync.Mutex
 
 	// channel to give new measures
-	measures chan Measure
+	measures chan *SingleMeasure
 
 	// channel to notify the end of a connection
 	// send the name of the connection when finishd
 	done chan string
 
-	listenerLock sync.Mutex
+	SinkPort int
 }
 
 // NewMonitor returns a new monitor given the stats
 func NewMonitor(stats *Stats) *Monitor {
 	return &Monitor{
-		conns:    make(map[string]net.Conn),
-		stats:    stats,
-		SinkPort: DefaultSinkPort,
-		measures: make(chan Measure),
-		done:     make(chan string),
+		conns:        make(map[string]net.Conn),
+		stats:        stats,
+		mutexStats:   sync.Mutex{},
+		SinkPort:     DefaultSinkPort,
+		measures:     make(chan *SingleMeasure),
+		done:         make(chan string),
+		listenerLock: new(sync.Mutex),
 	}
 }
 
-// Monitor will start listening for incoming connections on this address
+// Listen will start listening for incoming connections on this address
 // It needs the stats struct pointer to update when measures come
 // Return an error if something went wrong during the connection setup
 func (m *Monitor) Listen() error {
@@ -119,8 +123,14 @@ func (m *Monitor) Listen() error {
 			m.mutexConn.Unlock()
 			// end of monitoring,
 			if len(m.conns) == 0 {
-				m.listener.Close()
+				m.listenerLock.Lock()
+				if err := m.listener.Close(); err != nil {
+					dbg.Error("Couldn't close listener:",
+						err)
+				}
+				m.listener = nil
 				finished = true
+				m.listenerLock.Unlock()
 				break
 			}
 		}
@@ -130,18 +140,22 @@ func (m *Monitor) Listen() error {
 	return nil
 }
 
-// StopMonitor will close every connections it has
+// Stop will close every connections it has
 // And will stop updating the stats
 func (m *Monitor) Stop() {
 	dbg.Lvl2("Monitor Stop")
 	m.listenerLock.Lock()
 	if m.listener != nil {
-		m.listener.Close()
+		if err := m.listener.Close(); err != nil {
+			dbg.Error("Couldn't close listener:", err)
+		}
 	}
 	m.listenerLock.Unlock()
 	m.mutexConn.Lock()
 	for _, c := range m.conns {
-		c.Close()
+		if err := c.Close(); err != nil {
+			dbg.Error("Couldn't close connection:", err)
+		}
 	}
 	m.mutexConn.Unlock()
 
@@ -151,18 +165,17 @@ func (m *Monitor) Stop() {
 // stats
 func (m *Monitor) handleConnection(conn net.Conn) {
 	dec := json.NewDecoder(conn)
-	enc := json.NewEncoder(conn)
 	nerr := 0
 	for {
-		measure := Measure{}
-		if err := dec.Decode(&measure); err != nil {
+		measure := &SingleMeasure{}
+		if err := dec.Decode(measure); err != nil {
 			// if end of connection
 			if err == io.EOF || strings.Contains(err.Error(), "closed") {
 				break
 			}
 			// otherwise log it
 			dbg.Lvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
-			nerr += 1
+			nerr++
 			if nerr > 1 {
 				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
 				break
@@ -175,14 +188,6 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 		case "end":
 			dbg.Lvl3("Finishing monitor")
 			m.done <- conn.RemoteAddr().String()
-		case "ready":
-			m.stats.Ready++
-			dbg.Lvl3("Increasing counter to", m.stats.Ready)
-		case "ready_count":
-			dbg.Lvl3("Sending stats")
-			m_send := measure
-			m_send.Ready = m.stats.Ready
-			enc.Encode(m_send)
 		default:
 			m.measures <- measure
 		}
@@ -191,7 +196,7 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 
 // updateMeasures will add that specific measure to the global stats
 // in a concurrently safe manner
-func (m *Monitor) update(meas Measure) {
+func (m *Monitor) update(meas *SingleMeasure) {
 	m.mutexStats.Lock()
 	// updating
 	m.stats.Update(meas)

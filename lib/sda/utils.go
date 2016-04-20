@@ -2,11 +2,14 @@ package sda
 
 import (
 	"bytes"
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 /*
@@ -65,4 +68,20 @@ func getFullName(filename string, dirOpt ...string) string {
 		}
 	}
 	return dir + "/" + filepath.Base(filename)
+}
+
+type collectedErrors struct {
+	s string
+	e error
+}
+
+func collectErrors(format string, m []collectedErrors) error {
+	var errStr string
+	for _, e := range m {
+		errStr += fmt.Sprintf(format, e.s, e.e)
+	}
+	if errStr == "" {
+		return nil
+	}
+	return errors.New(errStr)
 }

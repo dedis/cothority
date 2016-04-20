@@ -1,17 +1,16 @@
 package sda_test
 
 import (
+	"math/rand"
+	"net"
 	"strconv"
 	"testing"
 
-	"net"
-
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 )
 
@@ -20,7 +19,7 @@ var prefix = "localhost:"
 
 // test the ID generation
 func TestTreeId(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
@@ -45,7 +44,7 @@ func TestTreeId(t *testing.T) {
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
@@ -62,14 +61,14 @@ func TestTreeConnectedTo(t *testing.T) {
 
 // Test initialisation of new peer-list
 func TestEntityListNew(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	adresses := []string{"localhost:1010", "localhost:1012"}
 	pl := genEntityList(tSuite, adresses)
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.Id == uuid.Nil {
+	if pl.Id == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(pl.Id.String()) != 36 {
@@ -79,7 +78,7 @@ func TestEntityListNew(t *testing.T) {
 
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genEntityList(tSuite, names)
@@ -94,7 +93,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in EntityList. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.Id == uuid.Nil {
+	if decodedList.Id == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(decodedList.Id.String()) != 36 {
@@ -115,7 +114,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // Test access to tree:
 // - parent
 func TestTreeParent(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
@@ -128,21 +127,21 @@ func TestTreeParent(t *testing.T) {
 
 // - children
 func TestTreeChildren(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := genEntityList(tSuite, names)
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
-	if child.Entity.Id != peerList.List[1].Id {
+	if child.Entity.ID != peerList.List[1].ID {
 		t.Fatal("Parent of child of root is not the root...")
 	}
 }
 
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
@@ -169,11 +168,11 @@ func TestUnMarshalTree(t *testing.T) {
 }
 
 func TestGetNode(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(10, 2000)
-	for _, tn := range tree.ListNodes() {
-		node := tree.GetTreeNode(tn.Id)
+	for _, tn := range tree.List() {
+		node := tree.Search(tn.Id)
 		if node == nil {
 			t.Fatal("Didn't find treeNode with id", tn.Id)
 		}
@@ -181,7 +180,7 @@ func TestGetNode(t *testing.T) {
 }
 
 func TestBinaryTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(7, 2000)
 	root := tree.Root
@@ -199,8 +198,35 @@ func TestBinaryTree(t *testing.T) {
 	}
 }
 
+func TestTreeNodeEntityIndex(t *testing.T) {
+	defer dbg.AfterTest(t)
+	dbg.TestOutput(testing.Verbose(), 4)
+	names := genLocalhostPeerNames(13, 2000)
+	peerList := genEntityList(tSuite, names)
+	tree := peerList.GenerateNaryTree(3)
+
+	ln := tree.List()
+	randomNode := ln[rand.Intn(len(ln))]
+	var idx int
+	for i, e := range peerList.List {
+		if e.Equal(randomNode.Entity) {
+			idx = i
+			break
+		}
+	}
+
+	if idx == 0 {
+		t.Fatal("Could not find the entity in the node")
+	}
+
+	if randomNode.EntityIdx != idx {
+		t.Fatal("Index of entity do not correlate")
+	}
+
+}
+
 func TestNaryTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
@@ -243,7 +269,7 @@ func TestNaryTree(t *testing.T) {
 }
 
 func TestBigNaryTree(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalDiffPeerNames(3, 2000)
@@ -255,11 +281,11 @@ func TestBigNaryTree(t *testing.T) {
 		t.Fatal("Tree should be 3-ary")
 	}
 	for _, child := range root.Children {
-		if child.Entity.Id == root.Entity.Id {
+		if child.Entity.ID == root.Entity.ID {
 			t.Fatal("Child should not have same identity as parent")
 		}
 		for _, c := range child.Children {
-			if c.Entity.Id == child.Entity.Id {
+			if c.Entity.ID == child.Entity.ID {
 				t.Fatal("Child should not have same identity as parent")
 			}
 		}
@@ -267,7 +293,7 @@ func TestBigNaryTree(t *testing.T) {
 }
 
 func TestTreeIsColored(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
@@ -284,7 +310,7 @@ func TestTreeIsColored(t *testing.T) {
 }
 
 func TestBinaryTrees(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
@@ -302,6 +328,61 @@ func TestBinaryTrees(t *testing.T) {
 	if tree.IsBinary(tree.Root) {
 		t.Fatal("Tree with 4 nodes should NOT be binary")
 	}
+}
+
+func TestEntityListIsUsed(t *testing.T) {
+	dbg.TestOutput(testing.Verbose(), 4)
+	port := 2000
+	for hostExp := uint(2); hostExp < 8; hostExp++ {
+		hosts := (1 << hostExp) - 1
+		dbg.Lvl2("Trying tree with", hosts, "hosts")
+		names := make([]string, hosts)
+		for i := 0; i < hosts; i++ {
+			names[i] = "localhost" + strconv.Itoa(i/2) + ":" +
+				strconv.Itoa(port+i)
+
+		}
+		peerList := genEntityList(tSuite, names)
+		tree := peerList.GenerateBigNaryTree(2, hosts)
+		if !tree.UsesList() {
+			t.Fatal("Didn't find all Entities in tree", tree.Dump())
+		}
+	}
+}
+
+// Test whether the computation of the subtree aggregate public key is correct .
+func TestTreeComputeSubtreeAggregate(t *testing.T) {
+	names := genLocalDiffPeerNames(7, 2000)
+	entities := genEntityList(tSuite, names)
+
+	// create tree
+	tree := entities.GenerateBinaryTree()
+
+	// manual check for 2nd level of tree (left part)
+	lchild := tree.Root.Children[0]
+	n2, n4, n5 := lchild.Entity, lchild.Children[0].Entity, lchild.Children[1].Entity
+	agg_left := tSuite.Point().Add(n2.Public, n4.Public)
+	agg_left = agg_left.Add(agg_left, n5.Public)
+	if !tree.Root.Children[0].PublicAggregateSubTree.Equal(agg_left) {
+		t.Fatal("Aggregate is not correct for the left part")
+	}
+
+	// right part
+	rchild := tree.Root.Children[1]
+	n3, n4, n5 := rchild.Entity, rchild.Children[0].Entity, rchild.Children[1].Entity
+	agg_right := tSuite.Point().Add(n3.Public, n4.Public)
+	agg_right = agg_right.Add(agg_right, n5.Public)
+	if !tree.Root.Children[1].PublicAggregateSubTree.Equal(agg_right) {
+		t.Fatal("Aggregate is not correct for the right part")
+	}
+
+	// root part
+	agg := tSuite.Point().Add(agg_right, agg_left)
+	agg = agg.Add(agg, tree.Root.Entity.Public)
+	if !tree.Root.PublicAggregateSubTree.Equal(agg) {
+		t.Fatal("Aggregate not correct for root")
+	}
+
 }
 
 // - public keys
@@ -330,7 +411,7 @@ func genLocalDiffPeerNames(n, p int) []string {
 func genEntityList(suite abstract.Suite, names []string) *sda.EntityList {
 	var ids []*network.Entity
 	for _, n := range names {
-		kp := cliutils.KeyPair(suite)
+		kp := config.NewKeyPair(suite)
 		ids = append(ids, network.NewEntity(kp.Public, n))
 	}
 	return sda.NewEntityList(ids)

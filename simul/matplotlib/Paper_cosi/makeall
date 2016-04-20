@@ -1,0 +1,61 @@
+#!/bin/bash
+
+CSV_DIR=.
+CSV_REL=""
+PIC="true"
+#SHOW="true"
+EXT="eps"
+
+main(){
+  plot_roundtime
+  plot_over
+  plot_bf
+  plot_stamp
+}
+
+add_dir(){
+  for c in $@; do
+    CSV_REL="$CSV_REL $CSV_DIR/$c"
+  done
+}
+
+plot(){
+  if [ "$SHOW" = "true" ]; then
+    python2.7 time_plot.py $1 $CSV_REL
+  fi
+  if [ "$PIC" = "true" ]; then
+    python2.7 time_plot.py $1 $CSV_REL $2.$EXT
+  fi
+  if [ "$3" != "noclear" ]; then
+    CSV_REL=""
+  fi
+}
+
+plot_roundtime(){
+  add_dir sign_huge.csv shamir_multi_adapted.csv naive_multi_adapted.csv naive_multi_adapted_skipcheck.csv ntree_multi_adapted.csv
+  plot 0 comparison_roundtime noclear
+  plot 1 comparison_systime noclear
+  plot 3 comparison_check noclear
+  CSV_REL=""
+}
+
+plot_over(){
+  add_dir sign_over_1.csv sign_over_2.csv sign_over_3.csv
+  plot 4 sign_over
+}
+
+plot_bf(){
+  add_dir sign_multi_bf.csv
+  plot 5 sign_multi_bf
+
+  #for bf in 128 512 2048 8192; do
+  #  add_dir sign_multi_bf_$bf.csv
+  #done
+  #plot 7 sign_multi_bf
+}
+
+plot_stamp(){
+  add_dir stamp_perc100-2.csv
+  plot 6 stamp_rate
+}
+main

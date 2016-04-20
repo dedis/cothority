@@ -20,15 +20,17 @@ experiment, where each experiment makes up one line.
 If you use the `sda.SimulationBFTree`, the following variables are also available:
 
 - BF - branching factor: how many children each node has
+- Depth - the depth of the tree in levels below the root-node
 - Rounds - for how many rounds the simulation should run
 
 ## Timeouts
 
 Two timeout variables are available:
 
-- CloseWait - how many seconds to wait for closing all nodes (default: 120)
-- ExperimentWait - how many seconds to wait for the experiment to finish
-    (default: 600)
+- RunWait - how many seconds to wait for a run (one line of .toml-file) to finish
+    (default: 180)
+- ExperimentWait - how many seconds to wait for the while experiment to finish
+    (default: RunWait * #Runs)
 
 ## Experimental
 

@@ -2,39 +2,47 @@ package sda
 
 import (
 	"errors"
-	"reflect"
-
 	"fmt"
+	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/satori/go.uuid"
 )
 
-/*
-Node represents a protocol-instance in a given TreeNode. It is linked to
-Overlay where all the tree-structures are stored.
-*/
-
+// Node represents a protocol-instance in a given TreeNode. It embeds an
+// Overlay where all the tree-structures are stored.
 type Node struct {
 	overlay *Overlay
 	token   *Token
 	// cache for the TreeNode this Node is representing
 	treeNode *TreeNode
+	// cached list of all TreeNodes
+	treeNodeList []*TreeNode
+	// mutex to synchronise creation of treeNodeList
+	mtx sync.Mutex
 	// channels holds all channels available for the different message-types
-	channels map[uuid.UUID]interface{}
+	channels map[network.MessageTypeID]interface{}
 	// registered handler-functions for that protocol
-	handlers map[uuid.UUID]interface{}
+	handlers map[network.MessageTypeID]interface{}
 	// flags for messages - only one channel/handler possible
-	messageTypeFlags map[uuid.UUID]uint32
+	messageTypeFlags map[network.MessageTypeID]uint32
 	// The protocolInstance belonging to that node
 	instance ProtocolInstance
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
-	msgQueue map[uuid.UUID][]*SDAData
+	msgQueue map[network.MessageTypeID][]*Data
 	// done callback
 	onDoneCallback func() bool
+	// queue holding msgs
+	msgDispatchQueue []*Data
+	// locking for msgqueue
+	msgDispatchQueueMutex sync.Mutex
+	// kicking off new message
+	msgDispatchQueueWait chan bool
+	// whether this node is closing
+	closing bool
 }
 
 // AggregateMessages (if set) tells to aggregate messages from all children
@@ -59,18 +67,21 @@ func NewNode(o *Overlay, tok *Token) (*Node, error) {
 // NewNodeEmpty creates a new node without a protocol
 func NewNodeEmpty(o *Overlay, tok *Token) (*Node, error) {
 	n := &Node{overlay: o,
-		token:            tok,
-		channels:         make(map[uuid.UUID]interface{}),
-		handlers:         make(map[uuid.UUID]interface{}),
-		msgQueue:         make(map[uuid.UUID][]*SDAData),
-		messageTypeFlags: make(map[uuid.UUID]uint32),
-		treeNode:         nil,
+		token:                tok,
+		channels:             make(map[network.MessageTypeID]interface{}),
+		handlers:             make(map[network.MessageTypeID]interface{}),
+		messageTypeFlags:     make(map[network.MessageTypeID]uint32),
+		msgQueue:             make(map[network.MessageTypeID][]*Data),
+		treeNode:             nil,
+		msgDispatchQueue:     make([]*Data, 0, 1),
+		msgDispatchQueueWait: make(chan bool, 1),
 	}
 	var err error
 	n.treeNode, err = n.overlay.TreeNodeFromToken(n.token)
 	if err != nil {
 		return nil, errors.New("We are not represented in the tree")
 	}
+	go n.dispatchMsgReader()
 	return n, nil
 }
 
@@ -110,12 +121,82 @@ func (n *Node) IsLeaf() bool {
 	return len(n.treeNode.Children) == 0
 }
 
-// SendTo sends to a given node
+// SendTo sends a given message to a given node
 func (n *Node) SendTo(to *TreeNode, msg interface{}) error {
 	if to == nil {
 		return errors.New("Sent to a nil TreeNode")
 	}
 	return n.overlay.SendToTreeNode(n.token, to, msg)
+}
+
+// SendToParent sends a given message to the parent of the calling node (unless it is the root)
+func (n *Node) SendToParent(msg interface{}) error {
+	if n.IsRoot() {
+		return nil
+	}
+	return n.SendTo(n.Parent(), msg)
+}
+
+// SendToChildren sends a given message to all children of the calling node.
+// It stops sending if sending to one of the children fails. In that case it
+// returns an error. If the underlying node is a leaf node this function does
+// nothing.
+func (n *Node) SendToChildren(msg interface{}) error {
+	if n.IsLeaf() {
+		return nil
+	}
+	for _, node := range n.Children() {
+		if err := n.SendTo(node, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SendToChildrenInParallel sends a given message to all children of the calling
+// node. It has the following differences to node.SendToChildren:
+// The actual sending happens in a go routine (in parallel).
+// It continues sending to the other nodes if sending to one of the children
+// fails. In that case it will collect all errors (separated by '\n'.)
+// If the underlying node is a leaf node this function does
+// nothing.
+func (n *Node) SendToChildrenInParallel(msg interface{}) error {
+	if n.IsLeaf() {
+		return nil
+	}
+	children := n.Children()
+	errs := make([]collectedErrors, 0, len(children))
+	eMut := sync.Mutex{}
+	for _, node := range children {
+		go func(n2 *TreeNode) {
+			if err := n.SendTo(n2, msg); err != nil {
+				eMut.Lock()
+				errs = append(errs, collectedErrors{node.Name(), err})
+				eMut.Unlock()
+			}
+		}(node)
+	}
+	return collectErrors("Error while sending to %s: %s\n", errs)
+}
+
+// SendToRoot sends a given message to the root node of the tree (unless the calling node is the root itself)
+func (n *Node) SendToRoot(msg interface{}) error {
+	if n.IsRoot() {
+		return nil
+	}
+	return n.SendTo(n.Tree().Root, msg)
+}
+
+// Broadcast sends a given message from the calling node directly to all other TreeNodes
+func (n *Node) Broadcast(msg interface{}) error {
+	for _, node := range n.List() {
+		if node != n.TreeNode() {
+			if err := n.SendTo(node, msg); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Tree returns the tree of that node
@@ -128,13 +209,33 @@ func (n *Node) EntityList() *EntityList {
 	return n.Tree().EntityList
 }
 
+// List returns the list of TreeNodes cached in the node (creating it if necessary)
+func (n *Node) List() []*TreeNode {
+	n.mtx.Lock()
+	if n.treeNodeList == nil {
+		n.treeNodeList = n.Tree().List()
+	}
+	n.mtx.Unlock()
+	return n.treeNodeList
+}
+
+// Index returns the index of the node in the EntityList
+func (n *Node) Index() int {
+	return n.TreeNode().EntityIdx
+}
+
+// Suite can be used to get the current abstract.Suite (currently hardcoded into
+// the network library). Preferably use this function instead of network.Suite
+// when possible.
 func (n *Node) Suite() abstract.Suite {
-	return n.overlay.Suite()
+	return n.overlay.suite()
 }
 
 // RegisterChannel takes a channel with a struct that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
+// If you pass a pointer to the channel it will be automatically instantiated
+// for you.
 // This function handles also
 // - registration of the message-type
 // - aggregation or not of messages: if you give a channel of slices, the
@@ -152,7 +253,7 @@ func (n *Node) RegisterChannel(c interface{}) error {
 	}
 	// Check we have the correct channel-type
 	if cr.Kind() != reflect.Chan {
-		return errors.New("Input is not channel")
+		return errors.New("Input is not channel but " + cr.Kind().String())
 	}
 	if cr.Elem().Kind() == reflect.Slice {
 		flags += AggregateMessages
@@ -168,7 +269,8 @@ func (n *Node) RegisterChannel(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Elem().Field(1).Type),
+	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+		cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
 	n.channels[typ] = c
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type) n.channels[typ] = c
@@ -206,12 +308,23 @@ func (n *Node) RegisterHandler(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToUUID(cr.Field(1).Type),
+	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+		cr.Field(1).Type),
 		cr.Field(1).Type)
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.handlers[typ] = c
 	n.messageTypeFlags[typ] = flags
 	dbg.Lvl3("Registered handler", typ, "with flags", flags)
+	return nil
+}
+
+// RegisterHandlers registers a list of given handlers by calling RegisterHandler above
+func (n *Node) RegisterHandlers(handlers ...interface{}) error {
+	for _, h := range handlers {
+		if err := n.RegisterHandler(h); err != nil {
+			return errors.New("Error, could not register handler: " + err.Error())
+		}
+	}
 	return nil
 }
 
@@ -225,7 +338,7 @@ func (n *Node) protocolInstantiate() error {
 	if n.token == nil {
 		return errors.New("Hope this is running in test-mode")
 	}
-	pid := n.token.ProtocolID
+	pid := n.token.ProtoID
 	p, ok := protocols[pid]
 	if !ok {
 		return errors.New("Protocol " + pid.String() + " doesn't exist")
@@ -240,7 +353,12 @@ func (n *Node) protocolInstantiate() error {
 
 	var err error
 	n.instance, err = p(n)
-	go n.instance.Dispatch()
+	go func() {
+		if err := n.instance.Dispatch(); err != nil {
+			dbg.Error("Error while dispatching node", n.Info(), ":",
+				err)
+		}
+	}()
 	return err
 }
 
@@ -255,30 +373,42 @@ func (n *Node) Shutdown() error {
 	return nil
 }
 
-func (n *Node) DispatchHandler(msgSlice []*SDAData) error {
+// Close shuts down the go-routine and calls the protocolInstance-shutdown
+func (n *Node) Close() error {
+	dbg.Lvl3("Closing node", n.Info())
+	n.msgDispatchQueueMutex.Lock()
+	n.closing = true
+	if len(n.msgDispatchQueueWait) == 0 {
+		n.msgDispatchQueueWait <- true
+	}
+	n.msgDispatchQueueMutex.Unlock()
+	return n.ProtocolInstance().Shutdown()
+}
+
+func (n *Node) dispatchHandler(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
 	f := reflect.ValueOf(n.handlers[mt])
 	if n.HasFlag(mt, AggregateMessages) {
 		msgs := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
-			msgs.Index(i).Set(n.ReflectCreate(to.Elem(), msg))
+			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
 		dbg.Lvl4("Dispatching aggregation to", n.Entity().Addresses)
 		f.Call([]reflect.Value{msgs})
 	} else {
 		for _, msg := range msgSlice {
 			dbg.Lvl4("Dispatching to", n.Entity().Addresses)
-			m := n.ReflectCreate(to, msg)
+			m := n.reflectCreate(to, msg)
 			f.Call([]reflect.Value{m})
 		}
 	}
 	return nil
 }
 
-func (n *Node) ReflectCreate(t reflect.Type, msg *SDAData) reflect.Value {
+func (n *Node) reflectCreate(t reflect.Type, msg *Data) reflect.Value {
 	m := reflect.Indirect(reflect.New(t))
-	tn := n.Tree().GetTreeNode(msg.From.TreeNodeID)
+	tn := n.Tree().Search(msg.From.TreeNodeID)
 	if tn != nil {
 		m.Field(0).Set(reflect.ValueOf(tn))
 		m.Field(1).Set(reflect.Indirect(reflect.ValueOf(msg.Msg)))
@@ -287,7 +417,7 @@ func (n *Node) ReflectCreate(t reflect.Type, msg *SDAData) reflect.Value {
 }
 
 // DispatchChannel takes a message and sends it to a channel
-func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
+func (n *Node) DispatchChannel(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
@@ -296,7 +426,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 		out := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
 			dbg.Lvl4("Dispatching aggregated to", to)
-			m := n.ReflectCreate(to.Elem(), msg)
+			m := n.reflectCreate(to.Elem(), msg)
 			dbg.Lvl4("Adding msg", m, "to", n.Entity().Addresses)
 			out.Index(i).Set(m)
 		}
@@ -304,8 +434,7 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	} else {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
-
-			m := n.ReflectCreate(to.Elem(), msg)
+			m := n.reflectCreate(to.Elem(), msg)
 			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
@@ -313,8 +442,47 @@ func (n *Node) DispatchChannel(msgSlice []*SDAData) error {
 	return nil
 }
 
-// DispatchMsg will dispatch this SDAData to the right instance
-func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
+// DispatchMsg takes a message and puts it into a queue for later processing.
+// This allows a protocol to have a backlog of messages.
+func (n *Node) DispatchMsg(msg *Data) {
+	dbg.Lvl3(n.Info(), "Received message")
+	n.msgDispatchQueueMutex.Lock()
+	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
+	dbg.Lvl3(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
+	if len(n.msgDispatchQueue) == 1 && len(n.msgDispatchQueueWait) == 0 {
+		n.msgDispatchQueueWait <- true
+	}
+	n.msgDispatchQueueMutex.Unlock()
+}
+
+func (n *Node) dispatchMsgReader() {
+	for {
+		n.msgDispatchQueueMutex.Lock()
+		if n.closing == true {
+			dbg.Lvl3("Closing reader")
+			n.msgDispatchQueueMutex.Unlock()
+			return
+		}
+		if len(n.msgDispatchQueue) > 0 {
+			dbg.Lvl3(n.Info(), "Read message and dispatching it",
+				len(n.msgDispatchQueue))
+			msg := n.msgDispatchQueue[0]
+			n.msgDispatchQueue = n.msgDispatchQueue[1:]
+			n.msgDispatchQueueMutex.Unlock()
+			err := n.dispatchMsgToProtocol(msg)
+			if err != nil {
+				dbg.Error("Error while dispatching message:", err)
+			}
+		} else {
+			n.msgDispatchQueueMutex.Unlock()
+			dbg.Lvl3(n.Info(), "Waiting for message")
+			<-n.msgDispatchQueueWait
+		}
+	}
+}
+
+// dispatchMsgToProtocol will dispatch this sda.Data to the right instance
+func (n *Node) dispatchMsgToProtocol(sdaMsg *Data) error {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
 	// to manually registers their messages. Since it is done automatically by
@@ -337,15 +505,15 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	dbg.Lvl4("Going to dispatch", sdaMsg)
+	dbg.Lvl4("Going to dispatch", sdaMsg, t)
 
 	switch {
 	case n.channels[msgType] != nil:
-		dbg.Lvl4("Dispatching to channel")
+		dbg.Lvl4(n.Info(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
-		err = n.DispatchHandler(msgs)
+		err = n.dispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")
 	}
@@ -353,17 +521,17 @@ func (n *Node) DispatchMsg(sdaMsg *SDAData) error {
 }
 
 // SetFlag makes sure a given flag is set
-func (n *Node) SetFlag(mt uuid.UUID, f uint32) {
+func (n *Node) SetFlag(mt network.MessageTypeID, f uint32) {
 	n.messageTypeFlags[mt] |= f
 }
 
 // ClearFlag makes sure a given flag is removed
-func (n *Node) ClearFlag(mt uuid.UUID, f uint32) {
+func (n *Node) ClearFlag(mt network.MessageTypeID, f uint32) {
 	n.messageTypeFlags[mt] &^= f
 }
 
 // HasFlag returns true if the given flag is set
-func (n *Node) HasFlag(mt uuid.UUID, f uint32) bool {
+func (n *Node) HasFlag(mt network.MessageTypeID, f uint32) bool {
 	return n.messageTypeFlags[mt]&f != 0
 }
 
@@ -371,15 +539,15 @@ func (n *Node) HasFlag(mt uuid.UUID, f uint32) bool {
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
+func (n *Node) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
 	mt := sdaMsg.MsgType
-	fromParent := !n.IsRoot() && uuid.Equal(sdaMsg.From.TreeNodeID, n.Parent().Id)
+	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equals(n.Parent().Id)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
-		return mt, []*SDAData{sdaMsg}, true
+		return mt, []*Data{sdaMsg}, true
 	}
 	// store the msg according to its type
 	if _, ok := n.msgQueue[mt]; !ok {
-		n.msgQueue[mt] = make([]*SDAData, 0)
+		n.msgQueue[mt] = make([]*Data, 0)
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
@@ -397,14 +565,14 @@ func (n *Node) aggregate(sdaMsg *SDAData) (uuid.UUID, []*SDAData, bool) {
 	return mt, nil, false
 }
 
-// Start calls the start-method on the protocol which in turn will initiate
-// the first message to its children
-func (n *Node) Start() error {
+// StartProtocol calls the Start() on the underlying protocol which in turn will
+// initiate the first message to its children
+func (n *Node) StartProtocol() error {
 	return n.instance.Start()
 }
 
-// Done returns a channel that must be given a bool when a protocol instance has
-// finished its work.
+// Done calls onDoneCallback if available and only finishes when the return-
+// value is true.
 func (n *Node) Done() {
 	if n.onDoneCallback != nil {
 		ok := n.onDoneCallback()
@@ -412,8 +580,8 @@ func (n *Node) Done() {
 			return
 		}
 	}
+	dbg.Lvl3(n.Info(), "has finished. Deleting its resources")
 	n.overlay.nodeDone(n.token)
-	dbg.Lvl3(n.Name(), "has finished. Deleting its resources")
 }
 
 // OnDoneCallback should be called if we want to control the Done() of the node.
@@ -425,12 +593,12 @@ func (n *Node) OnDoneCallback(fn func() bool) {
 	n.onDoneCallback = fn
 }
 
-// Private returns the corresponding private key
+// Private returns the private key of the entity
 func (n *Node) Private() abstract.Secret {
-	return n.overlay.host.private
+	return n.Host().private
 }
 
-// Public() returns the public key.
+// Public returns the public key of the entity
 func (n *Node) Public() abstract.Point {
 	return n.Entity().Public
 }
@@ -441,21 +609,26 @@ func (n *Node) CloseHost() error {
 	return n.Host().Close()
 }
 
+// Name returns a human readable name of this Node (IP address).
 func (n *Node) Name() string {
 	return n.Entity().First()
 }
 
-func (n *Node) TokenID() uuid.UUID {
+// Info returns a human readable representation name of this Node
+// (IP address and TokenID).
+func (n *Node) Info() string {
+	return fmt.Sprint(n.Entity().Addresses, n.TokenID())
+}
+
+// TokenID returns the TokenID of the given node (to uniquely identify it)
+func (n *Node) TokenID() TokenID {
 	return n.token.Id()
 }
 
+// Token returns the underlying sda.Token struct.
+// Useful for unit testing.
 func (n *Node) Token() *Token {
 	return n.token
-}
-
-// Myself nicely displays who we are
-func (n *Node) Myself() string {
-	return fmt.Sprint(n.Entity().Addresses, n.TokenID())
 }
 
 // Host returns the underlying Host of this node.

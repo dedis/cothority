@@ -18,13 +18,13 @@ import (
 
 
 
-const NUM_MESS = 10000
+const NUM_MESS = 1000
 const NUM_BUCKET = 1
 var BUCKET_DESC = []int64{}
 const needle = "code1"
 
 func codeGen(i int) string {
-	return "code" + strconv.Itoa(i%1)
+	return "code" + strconv.Itoa(i%100)
 }
 
 func ageGen(i int) int64 {
@@ -66,7 +66,7 @@ func (sim *PrivateCountSimulation) Setup(dir string, hosts []string) (*sda.Simul
 
 	expectedResults := make([]int64, NUM_BUCKET)
 	dbg.Lvl1("Begin test encrypted data generation")
-	for _, node := range sc.Tree.ListNodes() {
+	for _, node := range sc.Tree.List() {
 		for bucket, count := range createTestDataFile(node.Id.String(), dir, NUM_MESS/sim.Hosts) {
 			expectedResults[bucket] += count
 		}
@@ -102,17 +102,17 @@ func (sim *PrivateCountSimulation) Run(config *sda.SimulationConfig) error {
 		root.ProtocolInstance().(*PrivateCountProtocol).ClientPublicKey = &clientPublic
 		root.ProtocolInstance().(*PrivateCountProtocol).ClientQuery = clientQuery
 		root.ProtocolInstance().(*PrivateCountProtocol).BucketDesc = &BUCKET_DESC
+		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 
-		round := monitor.NewMeasure("MEDCO_PROTOCOL")
-		root.Start()
+		root.StartProtocol()
 
 		result := <-root.ProtocolInstance().(*PrivateCountProtocol).FeedbackChannel
 		dbg.Lvl1("Got result", DecryptIntVector(suite, clientSecret, result), "expected", expectedResults)
-		round.Measure()
+		round.Record()
 	}
 	// Clean up
 
-	for _, node := range config.Tree.ListNodes() {
+	for _, node := range config.Tree.List() {
 		os.Remove(node.Id.String()+".txt")
 	}
 

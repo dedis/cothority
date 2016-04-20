@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
 )
 
@@ -17,13 +16,13 @@ import (
 // Now you connect to someone else using Entity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	priv1, id1 := genEntity("localhost:2000")
 	priv2, id2 := genEntity("localhost:2001")
-	sHost1 := NewSecureTcpHost(priv1, id1)
-	sHost2 := NewSecureTcpHost(priv2, id2)
+	sHost1 := NewSecureTCPHost(priv1, id1)
+	sHost2 := NewSecureTCPHost(priv2, id2)
 
 	packetToSend := SimplePacket{"HelloWorld"}
 	done := make(chan error)
@@ -85,7 +84,7 @@ func TestSecureSimple(t *testing.T) {
 }
 
 func genEntity(name string) (abstract.Secret, *Entity) {
-	kp := cliutils.KeyPair(Suite)
+	kp := config.NewKeyPair(Suite)
 	return kp.Secret, &Entity{
 		Public:    kp.Public,
 		Addresses: []string{name},

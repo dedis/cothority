@@ -4,7 +4,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/example/channels"
 	"testing"
 	"time"
@@ -12,7 +11,7 @@ import (
 
 // Tests a 2-node system
 func TestNode(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	nbrNodes := 2

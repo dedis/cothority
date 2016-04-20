@@ -1,0 +1,10 @@
+Simulation = "CoSi"
+Servers = 16
+Bf = 4
+Rounds = 10
+CloseWait = 6000
+
+Depth
+1
+2
+3

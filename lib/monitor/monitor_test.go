@@ -3,22 +3,39 @@ package monitor
 import (
 	"bytes"
 	"fmt"
+	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
-
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/testutil"
 )
 
-func TestMonitor(t *testing.T) {
-	defer testutil.AfterTest(t)
-
+// setupMonitor launches a basic monitor with a created Stats object
+// When finished with the monitor, just call `End()`
+func setupMonitor(t *testing.T) (*Monitor, *Stats) {
 	dbg.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
 	m["servers"] = "1"
-	m["hosts"] = "1"
+	stat := NewStats(m)
+	// First set up monitor listening
+	mon := NewMonitor(stat)
+	go mon.Listen()
+	time.Sleep(100 * time.Millisecond)
+
+	// Then measure
+	err := ConnectSink("localhost:" + strconv.Itoa(mon.SinkPort))
+	EnableMeasure(true)
+	if err != nil {
+		t.Fatal(fmt.Sprintf("Error starting monitor: %s", err))
+	}
+	return mon, stat
+}
+
+func TestReadyNormal(t *testing.T) {
+	defer dbg.AfterTest(t)
+
+	dbg.TestOutput(testing.Verbose(), 3)
+	m := make(map[string]string)
+	m["servers"] = "1"
 	stat := NewStats(m)
 	fresh := stat.String()
 	// First set up monitor listening
@@ -29,88 +46,49 @@ func TestMonitor(t *testing.T) {
 	// Then measure
 	err := ConnectSink("localhost:" + strconv.Itoa(DefaultSinkPort))
 	if err != nil {
-		t.Error(fmt.Sprintf("Error starting monitor: %s", err))
+		t.Fatal(fmt.Sprintf("Error starting monitor: %s", err))
 		return
 	}
 
-	meas := NewMeasure("round")
-	meas.Measure()
+	meas := NewSingleMeasure("round", 10)
+	meas.Record()
 	time.Sleep(200 * time.Millisecond)
-	meas.Measure()
+	NewSingleMeasure("round", 20)
 	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
-	updated := stat.String()
+	updated := mon.Stats().String()
 	if updated == fresh {
-		t.Error("Stats not updated ?")
-	}
-}
-
-func TestReadyNormal(t *testing.T) {
-	defer testutil.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 3)
-	m := make(map[string]string)
-	m["servers"] = "1"
-	m["hosts"] = "1"
-	m["Ready"] = "0"
-	stat := NewStats(m)
-	if stat.Ready != 0 {
-		t.Fatal("Stats should start with ready==0")
-	}
-	// First set up monitor listening
-	mon := NewMonitor(stat)
-	go mon.Listen()
-	time.Sleep(100 * time.Millisecond)
-	host := "localhost:" + strconv.Itoa(DefaultSinkPort)
-	if stat.Ready != 0 {
-		t.Fatal("Stats should have ready==0 after start of Monitor")
+		t.Fatal("Stats not updated ?")
 	}
 
-	s, err := GetReady(host)
-	if err != nil {
-		t.Fatal("Couldn't get number of peers:", err)
-	}
-	if s.Ready != 0 {
-		t.Fatal("Stats.Ready != 0")
-	}
-
-	err = Ready(host)
-	if err != nil {
-		t.Errorf("Error starting monitor: %s", err)
-		return
-	}
-
-	s, err = GetReady(host)
-	if err != nil {
-		t.Fatal("Couldn't get number of peers:", err)
-	}
-	if s.Ready != 1 {
-		t.Fatal("Stats.Ready != 1")
-	}
-
-	EndAndCleanup()
 }
 
 func TestKeyOrder(t *testing.T) {
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"
 	m["bf"] = "2"
-	m["rounds"] = "3"
+	// create stats
+	stat := NewStats(m)
+	m1 := NewSingleMeasure("round", 10)
+	m2 := NewSingleMeasure("setup", 5)
+	stat.Update(m1)
+	stat.Update(m2)
+	str := new(bytes.Buffer)
+	stat.WriteHeader(str)
+	stat.WriteValues(str)
 
-	for i := 0; i < 20; i++ {
-		// First set up monitor listening
-		stat := NewStats(m)
-		NewMonitor(stat)
-		time.Sleep(100 * time.Millisecond)
-		b := bytes.NewBuffer(make([]byte, 1024))
-		stat.WriteHeader(b)
-		dbg.Lvl2("Order:", strings.TrimSpace(b.String()))
-		if strings.Contains(b.String(), "rounds, bf") {
-			t.Fatal("Order of fields is not correct")
-		}
+	stat2 := NewStats(m)
+	stat2.Update(m1)
+	stat2.Update(m2)
+
+	str2 := new(bytes.Buffer)
+	stat2.WriteHeader(str2)
+	stat2.WriteValues(str2)
+	if !bytes.Equal(str.Bytes(), str2.Bytes()) {
+		t.Fatal("KeyOrder / output not the same for same stats")
 	}
 }

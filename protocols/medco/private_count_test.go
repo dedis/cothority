@@ -4,7 +4,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/lib/testutil"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/crypto/random"
 	"reflect"
@@ -25,8 +24,7 @@ func bucketGen(i int) int {
 }
 
 func Test5Nodes(t *testing.T) {
-
-	defer testutil.AfterTest(t)
+	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	nNodes := 5
 	dbg.TestOutput(testing.Verbose(), 1)
@@ -64,7 +62,7 @@ func Test5Nodes(t *testing.T) {
 
 	feedback := root.ProtocolInstance().(*medco.PrivateCountProtocol).FeedbackChannel
 
-	go root.Start()
+	go root.StartProtocol()
 
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nNodes*2) * time.Millisecond
 
