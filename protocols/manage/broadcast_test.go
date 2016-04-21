@@ -22,7 +22,6 @@ func TestBroadcast(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't start protocol:", err)
 		}
-		go pi.Start()
 		protocol := pi.(*manage.Broadcast)
 		done := make(chan bool)
 		protocol.RegisterOnDone(func() {
