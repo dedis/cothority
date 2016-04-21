@@ -131,7 +131,6 @@ func (p *PrivateCountProtocol) queryReplacementPhase() (*DeterministCipherText, 
 		select {
 		// Node receives a Query for deterministic conversion
 		case encQuery := <-p.ElGamalQueryChannel:
-			dbg.Lvl1(p.Node.Name(), "recieved msg")
 			// Removes its own probabilistic contribution contribution
 			encQuery.Filter.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
 			encQuery.SetVisited(p.TreeNode(), p.Tree())
@@ -208,8 +207,8 @@ func (p *PrivateCountProtocol) matchCountReportingPhase(encryptedBuckets *Cipher
 
 }
 
-// Sends the message msg to the next randomly chosen node. If such node exist (all node already received the message),
-// returns false. Otherwise, return true.
+// Sends the message msg to the next node in the circuit based on the next TreeNode in Tree.List() If not visited yet.
+// If the message already visited the next node, doesn't send and returns false. Otherwise, return true.
 func (p *PrivateCountProtocol) sendToNext(msg VisitorMessageI) bool {
 	if !msg.AlreadyVisited(p.nextNodeInCircuit, p.Tree()) {
 		err := p.SendTo(p.nextNodeInCircuit, msg)
