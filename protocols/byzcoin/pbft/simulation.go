@@ -76,12 +76,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	// Here we first setup the N^2 connections with a broadcast protocol
-	tni := sdaConf.Overlay.NewTreeNodeInstanceFromProtoName(sdaConf.Tree, "Broadcast")
+	pi, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "Broadcast")
 	if err != nil {
 		dbg.Error(err)
 	}
-	proto, _ := manage.NewBroadcastRootProtocol(tni)
-	sdaConf.Overlay.RegisterProtocolInstance(proto)
+	proto := pi.(*manage.Broadcast)
 	// channel to notify we are done
 	broadDone := make(chan bool)
 	proto.RegisterOnDone(func() {
