@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/dedis/cothority.svg)](https://travis-ci.org/dedis/cothority)
-
 # Cothority
 
 This repository provides an implementation for the prototype of the 
