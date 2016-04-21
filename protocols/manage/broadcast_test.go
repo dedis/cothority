@@ -18,11 +18,12 @@ func TestBroadcast(t *testing.T) {
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenTree(nbrNodes, false, true, true)
 
-		node, err := local.CreateNewNodeName("Broadcast", tree)
+		pi, err := local.CreateProtocol("Broadcast", tree)
 		if err != nil {
 			t.Fatal("Couldn't start protocol:", err)
 		}
-		protocol := node.ProtocolInstance().(*manage.Broadcast)
+		go pi.Start()
+		protocol := pi.(*manage.Broadcast)
 		done := make(chan bool)
 		protocol.RegisterOnDone(func() {
 			done <- true

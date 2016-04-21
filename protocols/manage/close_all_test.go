@@ -19,11 +19,12 @@ func TestCloseall(t *testing.T) {
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 	defer local.CloseAll()
 
-	node, err := local.StartNewNodeName("ExampleChannels", tree)
+	pi, err := local.CreateProtocol("ExampleChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	protocol := node.ProtocolInstance().(*example_channels.ProtocolExampleChannels)
+	go pi.Start()
+	protocol := pi.(*example_channels.ProtocolExampleChannels)
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:
