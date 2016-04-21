@@ -15,6 +15,7 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 	_ "github.com/dedis/cothority/protocols"
+	_ "github.com/dedis/cothority/services"
 )
 
 // The address of this host - if there is only one host in the config
@@ -48,7 +49,7 @@ func main() {
 	measures := make([]*monitor.CounterIOMeasure, len(scs))
 	if err != nil {
 		// We probably are not needed
-		dbg.Lvl2(err)
+		dbg.Lvl2(err, hostAddress)
 		return
 	}
 	if monitorAddress != "" {
@@ -93,17 +94,16 @@ func main() {
 		// each level of the tree.
 		timeout := 1000
 		for wait {
-			node, err := rootSC.Overlay.CreateNewNodeName("Count", rootSC.Tree)
+			p, err := rootSC.Overlay.CreateProtocol(rootSC.Tree, "Count")
 			if err != nil {
 				dbg.Fatal(err)
 			}
-			node.ProtocolInstance().(*manage.ProtocolCount).SetTimeout(timeout)
-			if err := node.StartProtocol(); err != nil {
-				dbg.Error("Couldn't start protcol:", err)
-			}
+			proto := p.(*manage.ProtocolCount)
+			proto.SetTimeout(timeout)
+			proto.Start()
 			dbg.Lvl1("Started counting children with timeout of", timeout)
 			select {
-			case count := <-node.ProtocolInstance().(*manage.ProtocolCount).Count:
+			case count := <-proto.Count:
 				if count == rootSC.Tree.Size() {
 					dbg.Lvl1("Found all", count, "children")
 					wait = false
@@ -139,7 +139,8 @@ func main() {
 			closeTree = rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
-		_, err = rootSC.Overlay.StartNewNodeName("CloseAll", closeTree)
+		pi, err := rootSC.Overlay.CreateProtocol(closeTree, "CloseAll")
+		pi.Start()
 		if err != nil {
 			dbg.Fatal(err)
 		}

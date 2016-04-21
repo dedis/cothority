@@ -1,0 +1,9 @@
+Simulation = "CosiService"
+Servers = 1
+Bf = 8
+Rounds = 10
+CloseWait = 6000
+
+Hosts
+3
+10

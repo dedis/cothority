@@ -193,7 +193,7 @@ func TestStatsString(t *testing.T) {
 			dbg.Fatal("Could not Listen():", err)
 		}
 	}()
-
+	time.Sleep(100 * time.Millisecond)
 	ConnectSink("localhost:10000")
 	measure := NewTimeMeasure("test")
 	time.Sleep(time.Millisecond * 100)

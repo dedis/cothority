@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash 
 
 DBG=${1:-1}
 echo Building deploy-binary with debug-level: $DBG

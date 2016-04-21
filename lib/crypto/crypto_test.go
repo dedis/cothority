@@ -2,9 +2,10 @@ package crypto_test
 
 import (
 	"flag"
-	"github.com/dedis/cothority/lib/dbg"
 	"os"
 	"testing"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func TestMain(m *testing.M) {

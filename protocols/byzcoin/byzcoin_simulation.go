@@ -16,7 +16,7 @@ import (
 
 func init() {
 	sda.SimulationRegister("ByzCoin", NewSimulation)
-	sda.ProtocolRegisterName("ByzCoin", func(n *sda.Node) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName("ByzCoin", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
 }
@@ -91,11 +91,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	node, err := sdaConf.Overlay.CreateNewNodeName("Broadcast", sdaConf.Tree)
+	pi, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "Broadcast")
 	if err != nil {
 		return err
 	}
-	proto := node.ProtocolInstance().(*manage.Broadcast)
+	proto, _ := pi.(*manage.Broadcast)
 	// channel to notify we are done
 	broadDone := make(chan bool)
 	proto.RegisterOnDone(func() {
@@ -116,22 +116,23 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 		dbg.Lvl1("Starting round", round)
 		// create an empty node
-		node, err := sdaConf.Overlay.NewNodeEmptyName("ByzCoin", sdaConf.Tree)
+		tni := sdaConf.Overlay.NewTreeNodeInstanceFromProtoName(sdaConf.Tree, "ByzCoin")
 		if err != nil {
 			return err
 		}
 		// instantiate a byzcoin protocol
 		rComplete := monitor.NewTimeMeasure("round")
-		pi, err := server.Instantiate(node)
+		pi, err := server.Instantiate(tni)
 		if err != nil {
 			return err
 		}
+		sdaConf.Overlay.RegisterProtocolInstance(pi)
 
 		bz := pi.(*ByzCoin)
 		// Register callback for the generation of the signature !
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Record()
-			if err := verifyBlockSignature(node.Suite(), node.EntityList().Aggregate, sig); err != nil {
+			if err := verifyBlockSignature(tni.Suite(), tni.EntityList().Aggregate, sig); err != nil {
 				dbg.Error("Round", round, "failed:", err)
 			} else {
 				dbg.Lvl2("Round", round, "success")

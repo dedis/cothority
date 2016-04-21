@@ -33,7 +33,7 @@ func TestBftCoSi(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 
 	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.Node) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
@@ -50,20 +50,20 @@ func TestBftCoSi(t *testing.T) {
 		msg := []byte("Hello BFTCoSi")
 
 		// Start the protocol
-		node, err := local.CreateNewNodeName(TestProtocolName, tree)
+		node, err := local.CreateProtocol(TestProtocolName, tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
 
 		// Register the function generating the protocol instance
 		var root *ProtocolBFTCoSi
-		root = node.ProtocolInstance().(*ProtocolBFTCoSi)
+		root = node.(*ProtocolBFTCoSi)
 		root.Msg = msg
 		// function that will be called when protocol is finished by the root
 		root.RegisterOnDone(func() {
 			done <- true
 		})
-		go node.StartProtocol()
+		go node.Start()
 		// are we done yet?
 		wait := time.Second * 3
 		select {
