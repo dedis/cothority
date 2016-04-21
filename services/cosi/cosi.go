@@ -14,6 +14,7 @@ import (
 // As a prototype, it just signs and returns. It would be very easy to write an
 // updated version that chains all signatures for example.
 
+// ServiceName is the name to refer to the CoSi service
 const ServiceName = "CoSi"
 
 func init() {
@@ -43,11 +44,11 @@ type ServiceResponse struct {
 	Response  abstract.Secret
 }
 
-// CosiRequestType is the type that is embedded in the Request object for a
+// CosiResponseType is the type that is embedded in the Request object for a
 // CosiResponse
 var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
-// ProcessRequest treats external request to this service.
+// ProcessClientRequest treats external request to this service.
 func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != CosiRequestType {
 		return
@@ -102,7 +103,7 @@ func (cs *Cosi) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
-func (c *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+func (cs *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocolCosi(tn)
 	go pi.Dispatch()
