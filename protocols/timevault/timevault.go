@@ -27,11 +27,13 @@ const (
 
 type TimeVault struct {
 	*sda.Node
-	keyPair     *config.KeyPair
-	pubKeys     []abstract.Point
-	info        poly.Threshold
-	secrets     map[SID]*Secret // TODO: Could make sense to store pairs of secrets?!
-	secretsDone chan bool
+	keyPair          *config.KeyPair
+	pubKeys          []abstract.Point
+	info             poly.Threshold
+	secrets          map[SID]*Secret // TODO: Could make sense to store pairs of secrets?!
+	recoveredSecrets map[SID]*RecoveredSecret
+	secretsDone      chan bool
+	secretsChan      chan abstract.Secret
 }
 
 type Secret struct {
@@ -40,6 +42,13 @@ type Secret struct {
 	deals    map[int]*poly.Deal // Buffer for deals
 	numConfs int                // Number of collected confirmations that shared secrets are ready
 	mtx      sync.Mutex         // Mutex to sync access to numConfs
+}
+
+// TODO: Rename to vault
+type RecoveredSecret struct {
+	PriShares *poly.PriShares
+	NumShares int
+	mtx       sync.Mutex
 }
 
 func NewTimeVault(node *sda.Node) (sda.ProtocolInstance, error) {
@@ -61,6 +70,7 @@ func NewTimeVault(node *sda.Node) (sda.ProtocolInstance, error) {
 		info:        info,
 		secrets:     make(map[SID]*Secret),
 		secretsDone: make(chan bool, 1),
+		secretsChan: make(chan abstract.Secret, 1),
 	}
 
 	// Setup message handlers
@@ -82,43 +92,55 @@ func (tv *TimeVault) Start() error {
 // Seal encrypts a given message and releases the decryption key after a given time.
 func (tv *TimeVault) Seal(msg []byte, dur time.Duration) error {
 
-	// Generate two shared secrets for ElGamal encryption
+	// Generate shared secret for ElGamal encryption
 	var err error
-	sid0 := SID(fmt.Sprintf("%s-0-%d", TVSS, tv.Node.Index()))
-	err = tv.initSecret(sid0)
-	<-tv.secretsDone
-	if err != nil {
-		return err
-	}
-	sid1 := SID(fmt.Sprintf("%s-1-%d", TVSS, tv.Node.Index()))
-	err = tv.initSecret(sid1)
+	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.Node.Index()))
+	err = tv.initSecret(sid)
 	<-tv.secretsDone
 	if err != nil {
 		return err
 	}
 
 	// Do ElGamal encryption
-	M, m := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
-	X := tv.secrets[sid0].secret.Pub.SecretCommit()
-	Y := tv.secrets[sid1].secret.Pub.SecretCommit()
-	C := tv.keyPair.Suite.Point().Add(M, tv.keyPair.Suite.Point().Add(X, Y))
 
-	dbg.Lvl1("Ciphertext:", C, m)
+	// Generate an emphereal key pair for masking
+	eKP := config.NewKeyPair(tv.keyPair.Suite)
+	M, _ := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
+	X := tv.secrets[sid].secret.Pub.SecretCommit()
+	C := tv.keyPair.Suite.Point().Add(M, tv.keyPair.Suite.Point().Mul(X, eKP.Secret))
 
-	// Reveal shares
-	if err := tv.Broadcast(&RevInitMsg{Src: tv.Node.Index(), SID: sid0}); err != nil {
+	// Run Timer
+	<-time.After(dur)
+
+	// Setup list of recovered secrets if necessary
+	if tv.recoveredSecrets == nil {
+		tv.recoveredSecrets = make(map[SID]*RecoveredSecret)
+	}
+
+	rs := &RecoveredSecret{PriShares: &poly.PriShares{}, NumShares: 0}
+	rs.PriShares.Empty(tv.keyPair.Suite, tv.info.T, tv.info.N)
+	rs.PriShares.SetShare(tv.secrets[sid].secret.Index, *tv.secrets[sid].secret.Share)
+	rs.NumShares++
+	tv.recoveredSecrets[sid] = rs
+
+	// Start process to reveal shares
+	if err := tv.Broadcast(&RevInitMsg{Src: tv.Node.Index(), SID: sid}); err != nil {
 		return err
 	}
+	x := <-tv.secretsChan
 
-	// TODO:
-	// - Encrypt the msg and start a timer, put that into a go routine, return an ID
-	// - Periodically query the TimeVault group with the given ID
-	// - Once the timer in the go routine expired, broadcast a reveal secrets msg
-	// - Once all shares have arrived, decrypt the message and pipe it out through a public channel
+	// Do ElGamal decryption
+	XX := tv.keyPair.Suite.Point().Mul(nil, x)
 
-	select {
-	case <-time.After(dur):
-	}
+	dbg.Lvl1("Recovered secret valid?", X.Equal(XX))
+	ix := tv.keyPair.Suite.Secret().Neg(x)
+	Z := tv.keyPair.Suite.Point().Mul(eKP.Public, ix)
+	MM := tv.keyPair.Suite.Point().Add(C, Z)
+	dbg.Lvl1("Recovered message equal?", M.Equal(MM))
+
+	data, _ := MM.Data()
+
+	dbg.Lvl1("Data:", string(data))
 
 	return nil
 }

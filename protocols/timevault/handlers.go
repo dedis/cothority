@@ -106,9 +106,7 @@ func (tv *TimeVault) handleSecConf(m WSecConfMsg) error {
 	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", tv.Node.Index(), msg.SID, secret.numConfs, len(tv.Node.List())))
 
 	// Check if we have enough confirmations to proceed
-	s0 := SID(fmt.Sprintf("%s-0-%d", TVSS, tv.Node.Index()))
-	s1 := SID(fmt.Sprintf("%s-1-%d", TVSS, tv.Node.Index()))
-	if (secret.numConfs == len(tv.Node.List())) && ((msg.SID == s0) || (msg.SID == s1)) {
+	if (secret.numConfs == len(tv.Node.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", TVSS, tv.Node.Index()))) {
 		tv.secretsDone <- true
 	}
 
@@ -136,7 +134,17 @@ func (tv *TimeVault) handleRevInit(m WRevInitMsg) error {
 
 func (tv *TimeVault) handleRevShare(m WRevShareMsg) error {
 	msg := m.RevShareMsg
-	_ = msg
-	dbg.Lvl1("Msg:", msg)
+
+	rs := tv.recoveredSecrets[msg.SID]
+	rs.PriShares.SetShare(msg.Index, *msg.Share)
+	rs.mtx.Lock()
+	rs.NumShares++
+	rs.mtx.Unlock()
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s shares %d/%d", tv.Node.Index(), msg.SID, rs.NumShares, len(tv.Node.List())))
+	if rs.NumShares == tv.info.T {
+		sec := rs.PriShares.Secret()
+		tv.secretsChan <- sec
+	}
+
 	return nil
 }
