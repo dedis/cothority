@@ -42,9 +42,10 @@ type Secret struct {
 	deals    map[int]*poly.Deal // Buffer for deals
 	numConfs int                // Number of collected confirmations that shared secrets are ready
 	mtx      sync.Mutex         // Mutex to sync access to numConfs
+	duration time.Duration      // Duration after which the timer expires
+	expired  bool               // Indicator if timer has expired
 }
 
-// TODO: Rename to vault
 type RecoveredSecret struct {
 	PriShares *poly.PriShares
 	NumShares int
@@ -90,27 +91,37 @@ func (tv *TimeVault) Start() error {
 }
 
 // Seal encrypts a given message and releases the decryption key after a given time.
-func (tv *TimeVault) Seal(msg []byte, dur time.Duration) error {
+func (tv *TimeVault) Seal(msg []byte, duration time.Duration) (SID, abstract.Point, abstract.Point, error) {
 
 	// Generate shared secret for ElGamal encryption
 	var err error
 	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.Node.Index()))
-	err = tv.initSecret(sid)
-	<-tv.secretsDone
+	err = tv.initSecret(sid, duration)
 	if err != nil {
-		return err
+		return "", nil, nil, err
 	}
+	<-tv.secretsDone
 
 	// Do ElGamal encryption
-
-	// Generate an emphereal key pair for masking
-	eKP := config.NewKeyPair(tv.keyPair.Suite)
-	M, _ := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
+	kp := config.NewKeyPair(tv.keyPair.Suite)
+	m, _ := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
 	X := tv.secrets[sid].secret.Pub.SecretCommit()
-	C := tv.keyPair.Suite.Point().Add(M, tv.keyPair.Suite.Point().Mul(X, eKP.Secret))
+	c := tv.keyPair.Suite.Point().Add(m, tv.keyPair.Suite.Point().Mul(X, kp.Secret))
 
-	// Run Timer
-	<-time.After(dur)
+	return sid, kp.Public, c, nil
+}
+
+// Open tries to decrypt the given ciphertext from the given shared secret ID and emphereal public key
+func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byte, error) {
+
+	secret, ok := tv.secrets[sid]
+	if !ok {
+		return nil, fmt.Errorf("Error, shared secret does not exist")
+	}
+
+	if !secret.expired {
+		return nil, fmt.Errorf("Error, secret has not yet expired")
+	}
 
 	// Setup list of recovered secrets if necessary
 	if tv.recoveredSecrets == nil {
@@ -125,27 +136,18 @@ func (tv *TimeVault) Seal(msg []byte, dur time.Duration) error {
 
 	// Start process to reveal shares
 	if err := tv.Broadcast(&RevInitMsg{Src: tv.Node.Index(), SID: sid}); err != nil {
-		return err
+		return nil, err
 	}
 	x := <-tv.secretsChan
 
 	// Do ElGamal decryption
-	XX := tv.keyPair.Suite.Point().Mul(nil, x)
+	X := tv.keyPair.Suite.Point().Mul(key, x)
+	msg, err := tv.keyPair.Suite.Point().Sub(ct, X).Data()
 
-	dbg.Lvl1("Recovered secret valid?", X.Equal(XX))
-	ix := tv.keyPair.Suite.Secret().Neg(x)
-	Z := tv.keyPair.Suite.Point().Mul(eKP.Public, ix)
-	MM := tv.keyPair.Suite.Point().Add(C, Z)
-	dbg.Lvl1("Recovered message equal?", M.Equal(MM))
-
-	data, _ := MM.Data()
-
-	dbg.Lvl1("Data:", string(data))
-
-	return nil
+	return msg, err
 }
 
-func (tv *TimeVault) initSecret(sid SID) error {
+func (tv *TimeVault) initSecret(sid SID, duration time.Duration) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := tv.secrets[sid]; !ok {
@@ -154,6 +156,8 @@ func (tv *TimeVault) initSecret(sid SID) error {
 			receiver: poly.NewReceiver(tv.keyPair.Suite, tv.info, tv.keyPair),
 			deals:    make(map[int]*poly.Deal),
 			numConfs: 0,
+			duration: duration,
+			expired:  false,
 		}
 		tv.secrets[sid] = sec
 	}
@@ -168,12 +172,13 @@ func (tv *TimeVault) initSecret(sid SID) error {
 		secret.deals[tv.Node.Index()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
-			Src:  tv.Node.Index(),
-			SID:  sid,
-			Deal: db,
+			Src:      tv.Node.Index(),
+			SID:      sid,
+			Deal:     db,
+			Duration: duration,
 		}
 		if err := tv.Broadcast(msg); err != nil {
-			return err
+			dbg.Warn("Broadcast failed", err)
 		}
 	}
 	return nil
@@ -211,9 +216,16 @@ func (tv *TimeVault) finaliseSecret(sid SID) error {
 			SID: sid,
 		}
 		if err := tv.Broadcast(msg); err != nil {
-			return err
+			dbg.Warn("Broadcast failed", err)
 		}
+
+		// Start timer for revealing secret
+		timer := time.NewTimer(secret.duration)
+		go func() {
+			<-timer.C
+			secret.expired = true
+		}()
+
 	}
 	return nil
-
 }

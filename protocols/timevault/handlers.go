@@ -2,6 +2,7 @@ package timevault
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -9,12 +10,12 @@ import (
 	"github.com/dedis/crypto/poly"
 )
 
-// SecInitMsg are used to initialise new shared secrets both long- and
-// short-term.
+// SecInitMsg are used to initialise new shared secrets.
 type SecInitMsg struct {
-	Src  int
-	SID  SID
-	Deal []byte
+	Src      int
+	SID      SID
+	Deal     []byte
+	Duration time.Duration
 }
 
 // SecConfMsg are used to confirm to other peers that we have finished setting
@@ -66,7 +67,7 @@ func (tv *TimeVault) handleSecInit(m WSecInitMsg) error {
 	msg := m.SecInitMsg
 
 	// Initialise shared secret
-	if err := tv.initSecret(msg.SID); err != nil {
+	if err := tv.initSecret(msg.SID, msg.Duration); err != nil {
 		return err
 	}
 
@@ -116,17 +117,20 @@ func (tv *TimeVault) handleSecConf(m WSecConfMsg) error {
 func (tv *TimeVault) handleRevInit(m WRevInitMsg) error {
 	msg := m.RevInitMsg
 
-	// TODO: Authenticity of this query should be checked to prevent that anybody can trigger share revealing
-	s, ok := tv.secrets[msg.SID]
+	secret, ok := tv.secrets[msg.SID]
 	if !ok {
 		return fmt.Errorf("Error, shared secret does not exist")
+	}
+
+	if !secret.expired {
+		return fmt.Errorf("Error, secret has not yet expired")
 	}
 
 	reply := &RevShareMsg{
 		Src:   tv.Node.Index(),
 		SID:   msg.SID,
-		Share: s.secret.Share,
-		Index: s.secret.Index,
+		Share: secret.secret.Share,
+		Index: secret.secret.Index,
 	}
 	return tv.Node.SendTo(tv.Node.List()[msg.Src], reply)
 

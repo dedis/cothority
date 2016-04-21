@@ -31,6 +31,26 @@ func TestTimeVault(t *testing.T) {
 	leader.StartProtocol()
 	dbg.Lvl1("TimeVault - setup done")
 
-	tv.Seal(msg, time.Second)
+	sid, key, c, err := tv.Seal(msg, time.Second*2)
+	if err != nil {
+		dbg.Fatal(err)
+	}
 
+	// This should fail because the timer has not yet expired
+	m, err := tv.Open(sid, key, c)
+	if err != nil {
+		dbg.Lvl1(err)
+	}
+
+	<-time.After(time.Second * 5)
+
+	// Now we should be able to open the secret and decrypt the ciphertext
+	m, err = tv.Open(sid, key, c)
+	if err != nil {
+		dbg.Lvl1(err)
+	}
+	if string(m) != string(msg) {
+		dbg.Lvl1("Error, decryption failed")
+	}
+	dbg.Lvl1(string(m))
 }
