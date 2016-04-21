@@ -23,12 +23,12 @@ func TestTimeVault(t *testing.T) {
 	dbg.TestOutput(true, 2)
 
 	dbg.Lvl1("TimeVault - starting")
-	leader, err := local.CreateNewNodeName(name, tree)
+	leader, err := local.CreateProtocol(name, tree)
 	if err != nil {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}
-	tv := leader.ProtocolInstance().(*timevault.TimeVault)
-	leader.StartProtocol()
+	tv := leader.(*timevault.TimeVault)
+	leader.Start()
 	dbg.Lvl1("TimeVault - setup done")
 
 	sid, key, c, err := tv.Seal(msg, time.Second*2)

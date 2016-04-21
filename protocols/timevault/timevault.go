@@ -26,7 +26,7 @@ const (
 )
 
 type TimeVault struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	keyPair          *config.KeyPair
 	pubKeys          []abstract.Point
 	info             poly.Threshold
@@ -52,7 +52,7 @@ type RecoveredSecret struct {
 	mtx       sync.Mutex
 }
 
-func NewTimeVault(node *sda.Node) (sda.ProtocolInstance, error) {
+func NewTimeVault(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	kp := &config.KeyPair{Suite: node.Suite(), Public: node.Public(), Secret: node.Private()}
 	n := len(node.List())
@@ -65,13 +65,13 @@ func NewTimeVault(node *sda.Node) (sda.ProtocolInstance, error) {
 	info := poly.Threshold{T: n, R: n, N: n}
 
 	tv := &TimeVault{
-		Node:        node,
-		keyPair:     kp,
-		pubKeys:     pk,
-		info:        info,
-		secrets:     make(map[SID]*Secret),
-		secretsDone: make(chan bool, 1),
-		secretsChan: make(chan abstract.Secret, 1),
+		TreeNodeInstance: node,
+		keyPair:          kp,
+		pubKeys:          pk,
+		info:             info,
+		secrets:          make(map[SID]*Secret),
+		secretsDone:      make(chan bool, 1),
+		secretsChan:      make(chan abstract.Secret, 1),
 	}
 
 	// Setup message handlers
@@ -95,7 +95,7 @@ func (tv *TimeVault) Seal(msg []byte, duration time.Duration) (SID, abstract.Poi
 
 	// Generate shared secret for ElGamal encryption
 	var err error
-	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.Node.Index()))
+	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.TreeNodeInstance.Index()))
 	err = tv.initSecret(sid, duration)
 	if err != nil {
 		return "", nil, nil, err
@@ -135,7 +135,7 @@ func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byt
 	tv.recoveredSecrets[sid] = rs
 
 	// Start process to reveal shares
-	if err := tv.Broadcast(&RevInitMsg{Src: tv.Node.Index(), SID: sid}); err != nil {
+	if err := tv.Broadcast(&RevInitMsg{Src: tv.TreeNodeInstance.Index(), SID: sid}); err != nil {
 		return nil, err
 	}
 	x := <-tv.secretsChan
@@ -151,7 +151,7 @@ func (tv *TimeVault) initSecret(sid SID, duration time.Duration) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := tv.secrets[sid]; !ok {
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", tv.Node.Index(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", tv.TreeNodeInstance.Index(), sid))
 		sec := &Secret{
 			receiver: poly.NewReceiver(tv.keyPair.Suite, tv.info, tv.keyPair),
 			deals:    make(map[int]*poly.Deal),
@@ -168,11 +168,11 @@ func (tv *TimeVault) initSecret(sid SID, duration time.Duration) error {
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(tv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, tv.keyPair, tv.info.T, tv.info.R, tv.pubKeys)
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", tv.Node.Index(), sid))
-		secret.deals[tv.Node.Index()] = deal
+		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", tv.TreeNodeInstance.Index(), sid))
+		secret.deals[tv.TreeNodeInstance.Index()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
-			Src:      tv.Node.Index(),
+			Src:      tv.TreeNodeInstance.Index(),
 			SID:      sid,
 			Deal:     db,
 			Duration: duration,
@@ -190,12 +190,12 @@ func (tv *TimeVault) finaliseSecret(sid SID) error {
 		return fmt.Errorf("Error, shared secret does not exist")
 	}
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", tv.Node.Index(), sid, len(secret.deals), len(tv.Node.List())))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", tv.TreeNodeInstance.Index(), sid, len(secret.deals), len(tv.TreeNodeInstance.List())))
 
 	if len(secret.deals) == tv.info.T {
 
 		for _, deal := range secret.deals {
-			if _, err := secret.receiver.AddDeal(tv.Node.Index(), deal); err != nil {
+			if _, err := secret.receiver.AddDeal(tv.TreeNodeInstance.Index(), deal); err != nil {
 				return err
 			}
 		}
@@ -208,11 +208,11 @@ func (tv *TimeVault) finaliseSecret(sid SID) error {
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", tv.Node.Index(), sid))
+		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", tv.TreeNodeInstance.Index(), sid))
 
 		// Broadcast that we have finished setting up our shared secret
 		msg := &SecConfMsg{
-			Src: tv.Node.Index(),
+			Src: tv.TreeNodeInstance.Index(),
 			SID: sid,
 		}
 		if err := tv.Broadcast(msg); err != nil {

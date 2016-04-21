@@ -104,10 +104,10 @@ func (tv *TimeVault) handleSecConf(m WSecConfMsg) error {
 	secret.numConfs++
 	secret.mtx.Unlock()
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", tv.Node.Index(), msg.SID, secret.numConfs, len(tv.Node.List())))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", tv.TreeNodeInstance.Index(), msg.SID, secret.numConfs, len(tv.TreeNodeInstance.List())))
 
 	// Check if we have enough confirmations to proceed
-	if (secret.numConfs == len(tv.Node.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", TVSS, tv.Node.Index()))) {
+	if (secret.numConfs == len(tv.TreeNodeInstance.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", TVSS, tv.TreeNodeInstance.Index()))) {
 		tv.secretsDone <- true
 	}
 
@@ -127,12 +127,12 @@ func (tv *TimeVault) handleRevInit(m WRevInitMsg) error {
 	}
 
 	reply := &RevShareMsg{
-		Src:   tv.Node.Index(),
+		Src:   tv.TreeNodeInstance.Index(),
 		SID:   msg.SID,
 		Share: secret.secret.Share,
 		Index: secret.secret.Index,
 	}
-	return tv.Node.SendTo(tv.Node.List()[msg.Src], reply)
+	return tv.TreeNodeInstance.SendTo(tv.TreeNodeInstance.List()[msg.Src], reply)
 
 }
 
@@ -144,7 +144,7 @@ func (tv *TimeVault) handleRevShare(m WRevShareMsg) error {
 	rs.mtx.Lock()
 	rs.NumShares++
 	rs.mtx.Unlock()
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s shares %d/%d", tv.Node.Index(), msg.SID, rs.NumShares, len(tv.Node.List())))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s shares %d/%d", tv.TreeNodeInstance.Index(), msg.SID, rs.NumShares, len(tv.TreeNodeInstance.List())))
 	if rs.NumShares == tv.info.T {
 		sec := rs.PriShares.Secret()
 		tv.secretsChan <- sec
