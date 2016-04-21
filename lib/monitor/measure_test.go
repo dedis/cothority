@@ -2,9 +2,10 @@ package monitor
 
 import (
 	"bytes"
-	"github.com/dedis/cothority/lib/dbg"
 	"testing"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 type DummyCounterIO struct {

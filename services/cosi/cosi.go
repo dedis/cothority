@@ -1,6 +1,7 @@
 package cosi
 
 import (
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -13,8 +14,11 @@ import (
 // As a prototype, it just signs and returns. It would be very easy to write an
 // updated version that chains all signatures for example.
 
+// ServiceName is the name to refer to the CoSi service
+const ServiceName = "CoSi"
+
 func init() {
-	sda.RegisterNewService("Cosi", newCosiService)
+	sda.RegisterNewService(ServiceName, newCosiService)
 }
 
 // Cosi is the service that handles collective signing operations
@@ -35,15 +39,16 @@ var CosiRequestType = network.RegisterMessageType(ServiceRequest{})
 
 // ServiceResponse is what the Cosi service will reply to clients.
 type ServiceResponse struct {
+	Sum       []byte
 	Challenge abstract.Secret
 	Response  abstract.Secret
 }
 
-// CosiRequestType is the type that is embedded in the Request object for a
+// CosiResponseType is the type that is embedded in the Request object for a
 // CosiResponse
 var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
-// ProcessRequest treats external request to this service.
+// ProcessClientRequest treats external request to this service.
 func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	if r.Type != CosiRequestType {
 		return
@@ -70,8 +75,14 @@ func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 	cs.c.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.ProtocolCosi)
 	pcosi.SigningMessage(req.Message)
+	h, err := crypto.HashBytes(network.Suite.Hash(), req.Message)
+	if err != nil {
+		dbg.Error("Couldn't hash message:", err)
+		return
+	}
 	pcosi.RegisterDoneCallback(func(chall abstract.Secret, resp abstract.Secret) {
 		respMessage := &ServiceResponse{
+			Sum:       h,
 			Challenge: chall,
 			Response:  resp,
 		}
@@ -92,7 +103,7 @@ func (cs *Cosi) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
-func (c *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+func (cs *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocolCosi(tn)
 	go pi.Dispatch()

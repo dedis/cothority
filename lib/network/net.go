@@ -26,6 +26,7 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 )
 
 // Network part //
@@ -42,7 +43,7 @@ func NewTCPHost() *TCPHost {
 }
 
 // Open will create a new connection between this host
-// and the remote host named "name". This is a TcpConn.
+// and the remote host named "name". This is a TCPConn.
 // If anything went wrong, Conn will be nil.
 func (t *TCPHost) Open(name string) (Conn, error) {
 	c, err := t.openTCPConn(name)
@@ -129,7 +130,7 @@ func (t *TCPHost) Tx() uint64 {
 	return size
 }
 
-// OpenTcpConn is private method that opens a TcpConn to the given name
+// OpenTCPConn is private method that opens a TCPConn to the given name
 func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
@@ -144,7 +145,7 @@ func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 		time.Sleep(WaitRetry)
 	}
 	if conn == nil {
-		return nil, fmt.Errorf("Could not connect to %s.", name)
+		return nil, fmt.Errorf("Could not connect to %s: %s", name, err)
 	}
 	c := TCPConn{
 		Endpoint: name,
@@ -155,9 +156,9 @@ func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	return &c, err
 }
 
-// listen is the private function that takes a function that takes a TcpConn.
-// That way we can control what to do of the TcpConn before returning it to the
-// function given by the user. Used by SecureTcpHost
+// listen is the private function that takes a function that takes a TCPConn.
+// That way we can control what to do of the TCPConn before returning it to the
+// function given by the user. Used by SecureTCPHost
 func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
@@ -199,12 +200,18 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 }
 
 // NewSecureTCPHost returns a Secure Tcp Host
+// If the entity is nil, it will not verify the identity of the
+// remote host
 func NewSecureTCPHost(private abstract.Secret, e *Entity) *SecureTCPHost {
+	addr := ""
+	if e != nil {
+		addr = e.First()
+	}
 	return &SecureTCPHost{
 		private:        private,
 		entity:         e,
 		TCPHost:        NewTCPHost(),
-		workingAddress: e.First(),
+		workingAddress: addr,
 	}
 }
 
@@ -233,6 +240,9 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	}
 	var addr string
 	var err error
+	if st.entity == nil {
+		return errors.New("Can't listen without Entity")
+	}
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
 		dbg.Lvl3("Starting to listen on", addr)
@@ -389,7 +399,7 @@ const maxChunkSize Size = 1400
 func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
-	am, err := newNetworkMessage(obj)
+	am, err := NewNetworkMessage(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
@@ -447,7 +457,7 @@ func (c *TCPConn) Close() error {
 }
 
 // Rx returns the number of bytes read by this connection
-// Needed so TcpConn implements the CounterIO interface from lib/monitor
+// Needed so TCPConn implements the CounterIO interface from lib/monitor
 func (c *TCPConn) Rx() uint64 {
 	c.bRxLock.Lock()
 	defer c.bRxLock.Unlock()
@@ -462,7 +472,7 @@ func (c *TCPConn) addReadBytes(b uint64) {
 }
 
 // Tx returns the number of bytes written by this connection
-// Needed so TcpConn implements the CounterIO interface from lib/monitor
+// Needed so TCPConn implements the CounterIO interface from lib/monitor
 func (c *TCPConn) Tx() uint64 {
 	c.bTxLock.Lock()
 	defer c.bTxLock.Unlock()
@@ -492,10 +502,14 @@ func (sc *SecureTCPConn) Entity() *Entity {
 // exchangeEntity is made to exchange the Entity between the two parties.
 // when a connection request is made during listening
 func (sc *SecureTCPConn) exchangeEntity() error {
+	ourEnt := sc.SecureTCPHost.entity
+	if ourEnt == nil {
+		ourEnt = NewEntity(config.NewKeyPair(Suite).Public, "")
+	}
 	// Send our Entity to the remote endpoint
-	dbg.Lvl4("Sending our identity", sc.SecureTCPHost.entity.ID, "to",
+	dbg.Lvl4("Sending our identity", ourEnt.ID, "to",
 		sc.TCPConn.conn.RemoteAddr().String())
-	if err := sc.TCPConn.Send(context.TODO(), sc.SecureTCPHost.entity); err != nil {
+	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
 	// Receive the other Entity
@@ -510,7 +524,7 @@ func (sc *SecureTCPConn) exchangeEntity() error {
 
 	// Set the Entity for this connection
 	e := nm.Msg.(Entity)
-	dbg.Lvl4(sc.SecureTCPHost.entity.ID, "Received identity", e.ID)
+	dbg.Lvl4(ourEnt.ID, "Received identity", e.ID)
 
 	sc.entity = &e
 	dbg.Lvl4("Identity exchange complete")
@@ -523,9 +537,13 @@ func (sc *SecureTCPConn) negotiateOpen(e *Entity) error {
 	if err := sc.exchangeEntity(); err != nil {
 		return err
 	}
+	if sc.SecureTCPHost.entity == nil {
+		return nil
+	}
 	// verify the Entity if its the same we are supposed to connect
 	if sc.Entity().ID != e.ID {
 		dbg.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.Entity(), sc.Entity().ID)
+		dbg.Lvl3(e.Public, sc.Entity().Public)
 		dbg.Lvl4("IDs not the same", dbg.Stack())
 		return errors.New("Warning: Entity received during negotiation is wrong.")
 	}

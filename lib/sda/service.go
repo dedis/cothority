@@ -1,14 +1,18 @@
 package sda
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/satori/go.uuid"
 	"os"
 	"path"
+	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
+	"github.com/satori/go.uuid"
+	"golang.org/x/net/context"
 )
 
 // Service is a generic interface to define any type of services.
@@ -188,7 +192,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		// !! register to the ProtocolFactory !!
 		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
-	dbg.Lvl1(h.workingAddress, "instantiated all services")
+	dbg.Lvl2(h.workingAddress, "instantiated all services")
 	return &serviceStore{services, configs}
 }
 
@@ -227,7 +231,7 @@ type ClientRequest struct {
 	// Type is the type of the underlying message
 	Type network.MessageTypeID `json:"type"`
 	// Data containing all the information in the request
-	Data json.RawMessage `json:"data"`
+	Data []byte `json:"data"`
 }
 
 // RequestID is the type that registered by the network library
@@ -239,7 +243,7 @@ var RequestID = network.RegisterMessageType(ClientRequest{})
 // to think on how to change that.
 func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error) {
 	sid := ServiceFactory.ServiceID(service)
-	dbg.Print("Name", service, " <-> ServiceID", sid)
+	dbg.Lvl1("Name", service, " <-> ServiceID", sid.String())
 	buff, err := network.MarshalRegisteredType(r)
 	if err != nil {
 		return nil, err
@@ -277,4 +281,121 @@ func CreateServiceMessage(service string, r interface{}) (*ServiceMessage, error
 		Data:    buff,
 	}, nil
 
+}
+
+/*
+A simple client structure to be used when wanting to connect to services. It
+holds the private and public key and allows to connect to a service through
+the network.
+The error-handling is done using the ErrorRet structure which can be returned
+in place of the standard reply. The Client.Send method will catch that and return
+ the appropriate error.
+*/
+
+// Client for a service
+type Client struct {
+	private abstract.Secret
+	*network.Entity
+	ServiceID ServiceID
+}
+
+// NewClient returns a random client using the service s
+func NewClient(s string) *Client {
+	kp := config.NewKeyPair(network.Suite)
+	return &Client{
+		Entity:    network.NewEntity(kp.Public, ""),
+		private:   kp.Secret,
+		ServiceID: ServiceFactory.ServiceID(s),
+	}
+}
+
+// NetworkSend opens the connection to 'dst' and sends the message 'req'. The
+// reply is returned, or an error if the timeout of 10 seconds is reached.
+func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
+	client := network.NewSecureTCPHost(c.private, c.Entity)
+
+	// Connect to the root
+	dbg.Lvl4("Opening connection to", dst)
+	con, err := client.Open(dst)
+	defer client.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := network.NewNetworkMessage(msg)
+	if err != nil {
+		return nil, err
+	}
+	b, err := m.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	serviceReq := &ClientRequest{
+		Service: c.ServiceID,
+		Type:    m.MsgType,
+		Data:    b,
+	}
+	pchan := make(chan network.Message)
+	go func() {
+		// send the request
+		dbg.Lvlf3("Sending request %+v", serviceReq)
+		if err := con.Send(context.TODO(), serviceReq); err != nil {
+			close(pchan)
+			return
+		}
+		dbg.Lvl4("Waiting for the response")
+		// wait for the response
+		packet, err := con.Receive(context.TODO())
+		if err != nil {
+			close(pchan)
+			return
+		}
+		pchan <- packet
+	}()
+	select {
+	case response := <-pchan:
+		dbg.Lvlf5("Response: %+v", response)
+		// Catch an eventual error
+		err := ErrMsg(&response, nil)
+		if err != nil {
+			return nil, err
+		}
+		return &response, nil
+	case <-time.After(time.Second * 10):
+		return &network.Message{}, errors.New("Timeout on signing")
+	}
+}
+
+// BinaryMarshaler can be used to store the client in a configuration-file
+func (c *Client) BinaryMarshaler() ([]byte, error) {
+	dbg.Fatal("Not yet implemented")
+	return nil, nil
+}
+
+// BinaryUnmarshaler sets the different values from a byte-slice
+func (c *Client) BinaryUnmarshaler(b []byte) error {
+	dbg.Fatal("Not yet implemented")
+	return nil
+}
+
+// ErrorRet is used when an error is returned - Error may be nil
+type ErrorRet struct {
+	Error error
+}
+
+// ErrMsg converts a combined err and status-message to an error. It
+// returns either the error, or the errormsg, if there is one.
+func ErrMsg(em *network.Message, err error) error {
+	if err != nil {
+		return err
+	}
+	errMsg, ok := em.Msg.(ErrorRet)
+	if !ok {
+		return nil
+	}
+	errMsgStr := errMsg.Error.Error()
+	if errMsgStr != "" {
+		return errors.New("Remote-error: " + errMsgStr)
+	}
+	return nil
 }

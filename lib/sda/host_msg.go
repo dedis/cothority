@@ -1,13 +1,13 @@
 package sda
 
 import (
+	"sync"
+
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
-	"sync"
 )
 
-// Our message-types used in sda
-
+// SDAData is to be embedded in every message that is made for a
 // ID of SDAData message as registered in network
 var SDADataMessageID = network.RegisterMessageType(Data{})
 
