@@ -38,10 +38,10 @@ func TestTimeVault(t *testing.T) {
 	}
 
 	// This should fail because the timer has not yet expired
-	m, err := tv.Open(sid, key, c)
-	if err != nil {
-		dbg.Lvl2(err)
-	}
+	//m, err := tv.Open(sid, key, c)
+	//if err != nil {
+	//	dbg.Lvl2(err)
+	//}
 
 	<-time.After(time.Second * 5)
 
