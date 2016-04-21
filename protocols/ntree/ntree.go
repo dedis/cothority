@@ -1,7 +1,9 @@
 package ntree
 
 import (
+	"errors"
 	"fmt"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -17,9 +19,9 @@ func init() {
 
 // Protocol implements the sda.ProtocolInstance interface
 type Protocol struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	// the message we want to sign (and the root node propagates)
-	message []byte
+	Message []byte
 	// signature of this particular participant:
 	signature *SignatureReply
 	// Simulation related
@@ -27,9 +29,9 @@ type Protocol struct {
 }
 
 // NewProtocol is used internally to register the protocol.
-func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
+func NewProtocol(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	p := &Protocol{
-		Node: node,
+		TreeNodeInstance: node,
 	}
 	err := p.RegisterHandler(p.HandleSignRequest)
 	if err != nil {
@@ -45,9 +47,13 @@ func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
 // Start implements sda.ProtocolInstance.
 func (p *Protocol) Start() error {
 	if p.IsRoot() {
-		dbg.Lvl3("Starting ntree/naive")
-		return p.HandleSignRequest(structMessage{p.TreeNode(),
-			Message{p.message, p.verifySignature}})
+		if len(p.Children()) > 0 {
+			dbg.Lvl3("Starting ntree/naive")
+			return p.HandleSignRequest(structMessage{p.TreeNode(),
+				Message{p.Message, p.verifySignature}})
+		} else {
+			return errors.New("No children for root")
+		}
 	} else {
 		return fmt.Errorf("Called Start() on non-root ProtocolInstance")
 	}
@@ -56,9 +62,9 @@ func (p *Protocol) Start() error {
 // HandleSignRequest is a handler for incoming sign-requests. It's registered as
 // a handler in the sda.Node.
 func (p *Protocol) HandleSignRequest(msg structMessage) error {
-	p.message = msg.Msg
+	p.Message = msg.Msg
 	p.verifySignature = msg.VerifySignature
-	signature, err := crypto.SignSchnorr(network.Suite, p.Private(), p.message)
+	signature, err := crypto.SignSchnorr(network.Suite, p.Private(), p.Message)
 	if err != nil {
 		return err
 	}
@@ -84,7 +90,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 // HandleSignBundle is a handler responsible for adding the node's signature
 // and verifying the children's signatures (verification level can be controlled
 // by the VerifySignature flag).
-func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
+func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 	dbg.Lvl3("Appending our signature to the collected ones and send to parent")
 	var sig SignatureBundle
 	sig.ChildSig = p.signature
@@ -119,12 +125,11 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	}
 
 	if !p.IsRoot() {
-		return p.SendTo(p.Parent(), &sig)
+		p.SendTo(p.Parent(), &sig)
+	} else {
+		dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
+		p.Done()
 	}
-
-	dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
-	p.Done()
-	return nil
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
@@ -134,7 +139,7 @@ func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
 	}
 	entity := p.EntityList().List[sig.Index]
 	var s string
-	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.message, sig.Sig); err != nil {
+	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.Message, sig.Sig); err != nil {
 		s = "FAIL"
 	} else {
 		s = "SUCCESS"

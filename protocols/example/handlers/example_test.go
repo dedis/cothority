@@ -19,11 +19,11 @@ func TestNode(t *testing.T) {
 	//dbg.Lvl3(tree.Dump())
 	defer local.CloseAll()
 
-	node, err := local.StartNewNodeName("ExampleHandlers", tree)
+	pi, err := local.StartProtocol("ExampleHandlers", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	protocol := node.ProtocolInstance().(*example_handlers.ProtocolExampleHandlers)
+	protocol := pi.(*example_handlers.ProtocolExampleHandlers)
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:

@@ -26,7 +26,7 @@ const (
 // this skipped computation anyways
 type Protocol struct {
 	// the node we are represented-in
-	*sda.Node
+	*sda.TreeNodeInstance
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers
@@ -65,11 +65,11 @@ const (
 )
 
 // NewProtocol returns a new pbft protocol
-func NewProtocol(n *sda.Node) (*Protocol, error) {
+func NewProtocol(n *sda.TreeNodeInstance) (*Protocol, error) {
 	pbft := new(Protocol)
 	pbft.state = statePrePrepare
 	tree := n.Tree()
-	pbft.Node = n
+	pbft.TreeNodeInstance = n
 	pbft.nodeList = tree.List()
 	idx := notFound
 	for i, tn := range pbft.nodeList {
@@ -129,16 +129,16 @@ func (p *Protocol) Start() error {
 func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block
 	var err error
-	dbg.Lvl2(p.Node.Name(), "Broadcast PrePrepare")
+	dbg.Lvl2(p.Name(), "Broadcast PrePrepare")
 	prep := &PrePrepare{p.trBlock}
 	p.broadcast(func(tn *sda.TreeNode) {
-		tempErr := p.Node.SendTo(tn, prep)
+		tempErr := p.SendTo(tn, prep)
 		if tempErr != nil {
 			err = tempErr
 		}
 		p.state = statePrepare
 	})
-	dbg.Lvl3(p.Node.Name(), "Broadcast PrePrepare DONE")
+	dbg.Lvl3(p.Name(), "Broadcast PrePrepare DONE")
 	return err
 }
 
@@ -158,8 +158,8 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 		p.state = statePrepare
 		prep := &Prepare{prePre.TrBlock.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
-			//dbg.Print(p.Node.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
-			tempErr := p.Node.SendTo(tn, prep)
+			//dbg.Print(p.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
+			tempErr := p.SendTo(tn, prep)
 			if tempErr != nil {
 				err = tempErr
 				dbg.Error(p.Name(), "Error broadcasting PREPARE =>", err)
@@ -172,7 +172,7 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 			}
 			p.tempPrepareMsg = nil
 		}()
-		dbg.Lvl3(p.Node.Name(), "handlePrePrepare() BROADCASTING PREPARE msgs DONE")
+		dbg.Lvl3(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msgs DONE")
 	} else {
 		dbg.Lvl3(p.Name(), "Block couldn't be verified")
 	}
@@ -198,14 +198,14 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 	}
 	if p.prepMsgCount >= localThreshold {
 		// TRANSITION PREPARE => COMMIT
-		dbg.Lvl3(p.Node.Name(), "Threshold (", localThreshold, ") reached: broadcast Commit")
+		dbg.Lvl3(p.Name(), "Threshold (", localThreshold, ") reached: broadcast Commit")
 		p.state = stateCommit
 		// reset counter
 		p.prepMsgCount = 0
 		var err error
 		com := &Commit{pre.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
-			tempErr := p.Node.SendTo(tn, com)
+			tempErr := p.SendTo(tn, com)
 			if tempErr != nil {
 				dbg.Error(p.Name(), "Error while broadcasting Commit =>", tempErr)
 				err = tempErr
@@ -235,7 +235,7 @@ func (p *Protocol) handleCommit(com *Commit) {
 	}
 	// finish after threshold of Commit msgs
 	p.commitMsgCount++
-	dbg.Lvl4(p.Node.Name(), "----------------\nWe got", p.commitMsgCount,
+	dbg.Lvl4(p.Name(), "----------------\nWe got", p.commitMsgCount,
 		"COMMIT msgs and threshold is", p.threshold)
 	if p.IsRoot() {
 		dbg.Lvl4("Leader got ", p.commitMsgCount)
@@ -244,9 +244,9 @@ func (p *Protocol) handleCommit(com *Commit) {
 		p.state = stateFinished
 		// reset counter
 		p.commitMsgCount = 0
-		dbg.Lvl3(p.Node.Name(), "Threshold reached: We are done... CONSENSUS")
+		dbg.Lvl3(p.Name(), "Threshold reached: We are done... CONSENSUS")
 		if p.IsRoot() && p.onDoneCB != nil {
-			dbg.Lvl3(p.Node.Name(), "We are root and threshold reached: return to the simulation.")
+			dbg.Lvl3(p.Name(), "We are root and threshold reached: return to the simulation.")
 			p.onDoneCB()
 			p.finish()
 		}
@@ -268,7 +268,7 @@ func (p *Protocol) finish() {
 
 // sendCb should contain the real sendTo call and the msg to broadcast
 // example for sendCb:
-// func(tn *sda.TreeNode) { p.Node.SendTo(tn, &registerdMsg )}
+// func(tn *sda.TreeNode) { p.SendTo(tn, &registerdMsg )}
 func (p *Protocol) broadcast(sendCb func(*sda.TreeNode)) {
 	for i, tn := range p.nodeList {
 		if i == p.index {

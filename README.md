@@ -48,7 +48,7 @@ your request to sign the message.
 
 ## Installation
 
-We provide a binaries for the `cosi` and `cosid` program. They are pre-compiled
+We provide a binaries for the `cosi` and `cothorityd` program. They are pre-compiled
 for MacOSX and Linux and don't need any go-installation. But of course you can also
 compile from source.
 
@@ -73,14 +73,12 @@ and that `$GOPATH` and `$GOBIN` are set
 
 ```bash
 go get github.com/dedis/cothority
-cd $GOPATH/src/github.com/dedis/cothority
-git checkout cosi_cli
-cd app
+cd $GOPATH/src/github.com/dedis/cothority/app
 go install cosi/cosi.go
-go install cosid/cosid.go
+go install cothorityd/cothorityd.go
 ```
 
-The two binaries `cosi` and `cosid` will be added to `$GOBIN`. If you already
+The two binaries `cosi` and `cothorityd` will be added to `$GOBIN`. If you already
 have an old version of cothority, be sure to update `github.com/dedis/crypto` and
 `github.com/dedis/protobuf`.
 
@@ -92,10 +90,10 @@ You can create a default server configuration with a fresh
 public/private key pair as follows:
 
 ```bash
-cosid
+cothorityd
 ```
 
-Follow the instructions on the screen. `cosid` will ask you for
+Follow the instructions on the screen. `cothorityd` will ask you for
 a server address and port, and where you want to store the server 
 configuration. Then you will see an output similar to this:
 
@@ -116,7 +114,7 @@ Next time you run the server it will directly read that file and start up.
 If you chose another filename than `config.toml`, you can use `-config file.toml`. 
 
 ### Creating a Collective Signing Group
-By running several `cosid` instances (and copying the appropriate lines 
+By running several `cothorityd` instances (and copying the appropriate lines 
 of their output) you can create a `servers.toml` that looks like 
 this:
 
@@ -221,7 +219,7 @@ For all commands, if you chose another filename for the servers than `servers.to
 give that on the command-line, so for example to sign a message:
 
 ```bash
-cosi sign msg "Hello CoSi" -servers my_servers.toml
+cosi -servers my_servers.toml sign msg "Hello CoSi"
 ```
 
 # Simulation

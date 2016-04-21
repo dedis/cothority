@@ -1,10 +1,11 @@
 package dbg_test
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func init() {

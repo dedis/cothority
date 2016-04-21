@@ -32,13 +32,16 @@ package dbg
 import (
 	"flag"
 	"fmt"
-	"github.com/daviddengcn/go-colortext"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
+	"testing"
 	"time"
+
+	"github.com/daviddengcn/go-colortext"
 )
 
 // These are information-debugging levels that can be turned on or off.
@@ -375,6 +378,32 @@ func UseColors() bool {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 	return useColors
+}
+
+// TestFatal calls t.Fatal in the case err != nil
+func TestFatal(t *testing.T, err error, msg ...string) {
+	if err != nil {
+		lvld(lvlFatal, strings.Join(msg, " "), err)
+		os.Exit(1)
+	}
+}
+
+// ErrFatal calls dbg.Fatal in the case err != nil
+func ErrFatal(err error, msg ...string) {
+	if err != nil {
+		lvld(lvlFatal, strings.Join(msg, " "), err)
+		os.Exit(1)
+	}
+}
+
+// MainTest can be called from TestMain to set up some default
+// variables
+func MainTest(m *testing.M) {
+	flag.Parse()
+	TestOutput(testing.Verbose(), 3)
+	code := m.Run()
+	AfterTest(nil)
+	os.Exit(code)
 }
 
 // ParseEnv looks at the following environment-variables:

@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding"
 	"errors"
-	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/abstract"
 	h "hash"
 	"io"
 	"os"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
 )
 
 // Hash simply returns the Hash of the slice of bytes given
@@ -91,17 +91,13 @@ func HashFileSuite(suite abstract.Suite, file string) ([]byte, error) {
 
 // HashArgs takes all args and returns the hash. Every arg has to implement
 // BinaryMarshaler or will be added using fmt.Sprint
-func HashArgs(hash h.Hash, args ...interface{}) ([]byte, error) {
+func HashArgs(hash h.Hash, args ...encoding.BinaryMarshaler) ([]byte, error) {
 	var res, buf []byte
 	var err error
 	for _, a := range args {
-		if _, ok := a.(encoding.BinaryMarshaler); ok {
-			buf, err = a.(encoding.BinaryMarshaler).MarshalBinary()
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			buf = []byte(fmt.Sprint(a))
+		buf, err = a.MarshalBinary()
+		if err != nil {
+			return nil, err
 		}
 		res, err = HashBytes(hash, buf)
 		if err != nil {
@@ -112,6 +108,6 @@ func HashArgs(hash h.Hash, args ...interface{}) ([]byte, error) {
 }
 
 // HashArgsSuite makes a new hash from the suite and calls HashArgs
-func HashArgsSuite(suite abstract.Suite, args ...interface{}) ([]byte, error) {
+func HashArgsSuite(suite abstract.Suite, args ...encoding.BinaryMarshaler) ([]byte, error) {
 	return HashArgs(suite.Hash(), args...)
 }

@@ -17,8 +17,12 @@ func (h *Host) Receive() network.Message {
 	return data
 }
 
-func (h *Host) StartNewNodeName(name string, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNodeName(name, tree)
+func (h *Host) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
+	return h.overlay.CreateProtocol(t, name)
+}
+
+func (h *Host) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
+	return h.overlay.StartProtocol(t, name)
 }
 
 func (h *Host) EntityList(id EntityListID) (*EntityList, bool) {
@@ -39,7 +43,7 @@ func (h *Host) Overlay() *Overlay {
 	return h.overlay
 }
 
-func (o *Overlay) TokenToNode(tok *Token) (*Node, bool) {
-	v, ok := o.nodes[tok.Id()]
-	return v, ok
+func (o *Overlay) TokenToNode(tok *Token) (*TreeNodeInstance, bool) {
+	tni, ok := o.instances[tok.Id()]
+	return tni, ok
 }

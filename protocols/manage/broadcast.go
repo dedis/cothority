@@ -1,6 +1,8 @@
 package manage
 
 import (
+	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
@@ -13,147 +15,83 @@ func init() {
 // a confirmation once everything is set up, you can register a callback-function
 // using RegisterOnDone()
 type Broadcast struct {
-	*sda.Node
-
-	announceChan chan struct {
-		*sda.TreeNode
-		Announce
-	}
-
-	ackChan chan struct {
-		*sda.TreeNode
-		ACK
-	}
-
-	okChan chan struct {
-		*sda.TreeNode
-		OK
-	}
-
-	// map for all the nodes => state
-	listNode map[sda.TreeNodeID]*sda.TreeNode
-	// how many peers are connected with me
-	ackdNode int
-	done     chan bool
-	onDoneCb func()
-	// how many peers are connected with everyone
-	okdNode int
+	*sda.TreeNodeInstance
+	onDoneCb    func()
+	repliesLeft int
+	tnIndex     int
 }
 
-// NewBroadcastProtocol returns an initialised protocol for broadcast
-func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
-	b := new(Broadcast).init(n)
-	go func() {
-		if err := b.Start(); err != nil {
-			dbg.Error("Failed to start protocol:", err)
+// NewBroadcastProtocol returns a new Broadcast protocol
+func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	b := &Broadcast{
+		TreeNodeInstance: n,
+		tnIndex:          -1,
+	}
+	for i, tn := range n.Tree().List() {
+		if tn.Id == n.TreeNode().Id {
+			b.tnIndex = i
 		}
-	}()
+	}
+	if b.tnIndex == -1 {
+		return nil, errors.New("Didn't find my TreeNode in the Tree")
+	}
+	err := n.RegisterHandler(b.handleContactNodes)
+	if err != nil {
+		return nil, err
+	}
+	err = n.RegisterHandler(b.handleDone)
+	if err != nil {
+		return nil, err
+	}
 	return b, nil
-}
-
-func (b *Broadcast) init(n *sda.Node) *Broadcast {
-	b.Node = n
-	if err := b.RegisterChannel(&b.ackChan); err != nil {
-		dbg.Error(b.Info(), "failed to register channel:", err)
-	}
-	if err := b.RegisterChannel(&b.announceChan); err != nil {
-		dbg.Error(b.Info(), "failed to register channel:", err)
-	}
-	if err := b.RegisterChannel(&b.okChan); err != nil {
-		dbg.Error(b.Info(), "failed to register channel:", err)
-	}
-
-	lists := b.Tree().List()
-	b.listNode = make(map[sda.TreeNodeID]*sda.TreeNode)
-	b.ackdNode = 0
-	b.done = make(chan bool, 1)
-	for _, tn := range lists {
-		if tn.Id.Equals(n.TreeNode().Id) {
-			continue
-		}
-		b.listNode[tn.Id] = tn
-	}
-	go b.listen()
-	return b
-}
-
-// NewBroadcastRootProtocol is an abomination that should not exist - will
-// be killed with https://github.com/dedis/cothority/pull/325
-func NewBroadcastRootProtocol(n *sda.Node) (*Broadcast, error) {
-	b := new(Broadcast).init(n)
-	// it does not start yet.
-	return b, nil
-}
-
-func (b *Broadcast) listen() {
-	for {
-		select {
-		case msg := <-b.announceChan:
-			b.handleAnnounce(msg.TreeNode)
-		case msg := <-b.ackChan:
-			b.handleACK(msg.TreeNode)
-		case msg := <-b.okChan:
-			b.handleOk(msg.TreeNode)
-		case <-b.done:
-			return
-		}
-	}
 }
 
 // Start will contact everyone and makes the connections
 func (b *Broadcast) Start() error {
-	for _, tn := range b.listNode {
-		if err := b.SendTo(tn, &Announce{}); err != nil {
-			dbg.Error(b.Name(), "failed to send to", tn.Name(), err)
-		}
-	}
+	n := len(b.Tree().List())
+	b.repliesLeft = n * (n - 1) / 2
+	b.SendTo(b.Root(), &ContactNodes{})
 	dbg.Lvl3(b.Name(), "Sent Announce to everyone")
 	return nil
 }
 
 // handleAnnounce receive the announcement from another node
 // it reply with an ACK.
-func (b *Broadcast) handleAnnounce(tn *sda.TreeNode) {
-	if err := b.SendTo(tn, &ACK{}); err != nil {
-		dbg.Error(b.Info(), "failed to send ACK to", tn.Name(), err)
-	}
-}
-
-// It checks if we have sent an Announce to this treenode (hopefully yes^^)
-// if yes it checks if everyone has been ACK'd, if yes, it finishes.
-func (b *Broadcast) handleACK(tn *sda.TreeNode) {
-	if _, ok := b.listNode[tn.Id]; !ok {
-		dbg.Error(b.Name(), "Broadcast Received ACK from unknown treenode")
-	}
-
-	b.ackdNode++
-	if b.ackdNode == len(b.listNode) {
-		if !b.IsRoot() {
-			if err := b.SendTo(b.Tree().Root, &OK{}); err != nil {
-				dbg.Error(b.Info(), "failed to notify the root",
-					err)
+func (b *Broadcast) handleContactNodes(msg struct {
+	*sda.TreeNode
+	ContactNodes
+}) {
+	dbg.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
+	if msg.TreeNode.Id == b.Root().Id {
+		dbg.Lvl3(b.Info(), "Contacting everybody")
+		// Connect to all nodes that are later in the TreeNodeList, but only if
+		// the message comes from root
+		for _, tn := range b.Tree().List()[b.tnIndex+1:] {
+			dbg.Lvl3("Connecting to", tn.String())
+			err := b.SendTo(tn, &ContactNodes{})
+			if err != nil {
+				return
 			}
-			dbg.Lvl3(b.Name(), "Received ALL ACK (notified the root)")
 		}
 	}
+	// Tell Root we're done
+	b.SendTo(b.Root(), &Done{})
 }
 
-func (b *Broadcast) handleOk(tn *sda.TreeNode) {
-	if _, ok := b.listNode[tn.Id]; !ok {
-		dbg.Error(b.Name(), "Broadcast Received ACK from unknown treenode")
-	}
-
-	b.okdNode++
-	dbg.Lvl2(b.Name(), "Received OK with ackNode=", b.ackdNode, " and okdNode=", b.okdNode)
-	if b.ackdNode == len(b.listNode) && b.okdNode == len(b.listNode) {
-		// Yahooo we are done
-		dbg.Lvl3(b.Name(), " Knows EVERYONE is connected to EVERYONE")
-		b.done <- true
+// Every node being contacted sends back a Done to the root which has
+// to count to decide if all is done
+func (b *Broadcast) handleDone(struct {
+	*sda.TreeNode
+	Done
+}) {
+	b.repliesLeft--
+	dbg.Lvl3("Got reply and waiting for more:", b.repliesLeft)
+	if b.repliesLeft == 0 {
 		if b.onDoneCb != nil {
+			dbg.Lvl2("Done with broadcasting to everybody")
 			b.onDoneCb()
 		}
 	}
-
 }
 
 // RegisterOnDone takes a function that will be called once all connections
@@ -162,14 +100,8 @@ func (b *Broadcast) RegisterOnDone(fn func()) {
 	b.onDoneCb = fn
 }
 
-// Announce is the first message sent to all nodes.
-type Announce struct {
-}
+// ContactNodes is sent from the root to ALL other nodes
+type ContactNodes struct{}
 
-// ACK is the second message that goes back to the sender.
-type ACK struct {
-}
-
-// OK is sent from all nodes back to the root.
-type OK struct {
-}
+// Done is sent back to root once everybody has been contacted
+type Done struct{}

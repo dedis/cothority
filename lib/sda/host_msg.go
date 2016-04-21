@@ -1,13 +1,13 @@
 package sda
 
 import (
+	"sync"
+
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
-	"sync"
 )
 
-// Our message-types used in sda
-
+// SDAData is to be embedded in every message that is made for a
 // ID of SDAData message as registered in network
 var SDADataMessageID = network.RegisterMessageType(Data{})
 
@@ -38,6 +38,8 @@ type Data struct {
 	Msg network.ProtocolMessage
 	// The actual data as binary blob
 	MsgSlice []byte
+	// Config the actual config
+	Config GenericConfig
 }
 
 // RoundID uniquely identifies a round of a protocol run
@@ -53,6 +55,10 @@ func (rId RoundID) String() string {
 // (see Token struct)
 type TokenID uuid.UUID
 
+func (t *TokenID) String() string {
+	return uuid.UUID(*t).String()
+}
+
 // A Token contains all identifiers needed to uniquely identify one protocol
 // instance. It gets passed when a new protocol instance is created and get used
 // by every protocol instance when they want to send a message. That way, the
@@ -61,10 +67,13 @@ type TokenID uuid.UUID
 type Token struct {
 	EntityListID EntityListID
 	TreeID       TreeID
-	ProtoID      ProtocolID
-	RoundID      RoundID
-	TreeNodeID   TreeNodeID
-	cacheId      TokenID
+	// TO BE REMOVED
+	ProtoID   ProtocolID
+	ServiceID ServiceID
+	RoundID   RoundID
+	// TreeNodeID is defined by the
+	TreeNodeID TreeNodeID
+	cacheId    TokenID
 }
 
 // Global mutex when we're working on Tokens. Needed because we
@@ -77,11 +86,17 @@ func (t *Token) Id() TokenID {
 	defer tokenMutex.Unlock()
 	if t.cacheId == TokenID(uuid.Nil) {
 		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
-			t.RoundID.String() + t.ProtoID.String() + t.TreeID.String() +
+			t.RoundID.String() + t.ServiceID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
 	}
 	return t.cacheId
+}
+
+// Clone returns a new token out of this one
+func (t *Token) Clone() *Token {
+	t2 := *t
+	return &t2
 }
 
 // ChangeTreeNodeID return a new Token containing a reference to the given

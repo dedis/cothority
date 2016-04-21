@@ -1,12 +1,13 @@
 package cosi
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
-	"testing"
-	"time"
 )
 
 func TestCosi(t *testing.T) {
@@ -42,14 +43,14 @@ func TestCosi(t *testing.T) {
 		}
 
 		// Start the protocol
-		node, err := local.CreateNewNodeName("CoSi", tree)
+		p, err := local.CreateProtocol("CoSi", tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
-		root = node.ProtocolInstance().(*ProtocolCosi)
+		root = p.(*ProtocolCosi)
 		root.Message = msg
 		root.RegisterDoneCallback(doneFunc)
-		go node.StartProtocol()
+		go root.StartProtocol()
 		select {
 		case <-done:
 		case <-time.After(time.Second * 2):

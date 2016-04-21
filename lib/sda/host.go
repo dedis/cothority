@@ -1,22 +1,19 @@
 package sda
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"reflect"
 	"sync"
 
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/crypto"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"time"
 )
 
 // Host is the structure responsible for holding information about the current
@@ -69,6 +66,8 @@ type Host struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
+
+	serviceStore *serviceStore
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -90,62 +89,8 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	}
 
 	h.overlay = NewOverlay(h)
+	h.serviceStore = newServiceStore(h, h.overlay)
 	return h
-}
-
-// HostConfig holds all necessary data to create a Host.
-type HostConfig struct {
-	Public   string
-	Private  string
-	HostAddr []string
-}
-
-// NewHostFromFile reads the configuration-options from the given file
-// and initialises a Host.
-func NewHostFromFile(name string) (*Host, error) {
-	hc := &HostConfig{}
-	_, err := toml.DecodeFile(name, hc)
-	if err != nil {
-		return nil, err
-	}
-	private, err := crypto.ReadSecretHex(network.Suite, hc.Private)
-	if err != nil {
-		return nil, err
-	}
-	public, err := crypto.ReadPubHex(network.Suite, hc.Public)
-	if err != nil {
-		return nil, err
-	}
-	entity := network.NewEntity(public, hc.HostAddr...)
-	host := NewHost(entity, private)
-	return host, nil
-}
-
-// SaveToFile puts the private/public key and the hostname into a file
-func (h *Host) SaveToFile(name string) error {
-	public, err := crypto.PubHex(network.Suite, h.Entity.Public)
-	if err != nil {
-		return err
-	}
-	private, err := crypto.SecretHex(network.Suite, h.private)
-	if err != nil {
-		return err
-	}
-	hc := &HostConfig{
-		Public:   public,
-		Private:  private,
-		HostAddr: h.Entity.Addresses,
-	}
-	buf := new(bytes.Buffer)
-	err = toml.NewEncoder(buf).Encode(hc)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-	err = ioutil.WriteFile(name, buf.Bytes(), 0660)
-	if err != nil {
-		dbg.Fatal(err)
-	}
-	return nil
 }
 
 // listen starts listening for messages coming from any host that tries to
@@ -301,7 +246,7 @@ func (h *Host) processMessages() {
 		case <-h.ProcessMessagesQuit:
 			return
 		}
-		dbg.Lvl4("Message Received from", data.From)
+		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType == RequestID)
 		switch data.MsgType {
 		case SDADataMessageID:
 			sdaMsg := data.Msg.(Data)
@@ -310,7 +255,7 @@ func (h *Host) processMessages() {
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
-		// A host has sent us a request to get a tree definition
+			// A host has sent us a request to get a tree definition
 		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
 			tree := h.overlay.Tree(tid)
@@ -322,7 +267,7 @@ func (h *Host) processMessages() {
 				// "error" ?
 				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
 			}
-		// A Host has replied to our request of a tree
+			// A Host has replied to our request of a tree
 		case SendTreeMessageID:
 			tm := data.Msg.(TreeMarshal)
 			if tm.TreeId == TreeID(uuid.Nil) {
@@ -351,7 +296,7 @@ func (h *Host) processMessages() {
 			dbg.Lvl4("Received new tree")
 			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
-		// Some host requested an EntityList
+			// Some host requested an EntityList
 		case RequestEntityListMessageID:
 			id := data.Msg.(RequestEntityList).EntityListID
 			el := h.overlay.EntityList(id)
@@ -366,7 +311,7 @@ func (h *Host) processMessages() {
 						err)
 				}
 			}
-		// Host replied to our request of entitylist
+			// Host replied to our request of entitylist
 		case SendEntityListMessageID:
 			il := data.Msg.(EntityList)
 			if il.Id == EntityListID(uuid.Nil) {
@@ -377,13 +322,43 @@ func (h *Host) processMessages() {
 				h.checkPendingTreeMarshal(&il)
 			}
 			dbg.Lvl4("Received new entityList")
+		case RequestID:
+			r := data.Msg.(ClientRequest)
+			h.processRequest(data.Entity, &r)
+		case ServiceMessageID:
+			m := data.Msg.(ServiceMessage)
+			h.processServiceMessage(data.Entity, &m)
 		default:
-			dbg.Error("Didn't recognize message", data.MsgType)
-		}
-		if err != nil {
 			dbg.Error("Sending error:", err)
 		}
 	}
+}
+
+func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
+	// check if the target service is indeed existing
+	s, ok := h.serviceStore.serviceByID(m.Service)
+	if !ok {
+		dbg.Error("Received a request for an unknown service")
+		// XXX TODO should reply with some generic response =>
+		// 404 Service Unknown
+		return
+	}
+	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
+	s.ProcessServiceMessage(e, m)
+
+}
+
+func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
+	// check if the target service is indeed existing
+	s, ok := h.serviceStore.serviceByID(r.Service)
+	if !ok {
+		dbg.Error("Received a request for an unknown service")
+		// XXX TODO should reply with some generic response =>
+		// 404 Service Unknown
+		return
+	}
+	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
+	s.ProcessClientRequest(e, r)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg
@@ -555,12 +530,6 @@ func (h *Host) Suite() abstract.Suite {
 	return h.suite
 }
 
-// StartNewNode starts the underlying Node which will instantiate the underlying
-// protocol.
-func (h *Host) StartNewNode(protoID ProtocolID, tree *Tree) (*Node, error) {
-	return h.overlay.StartNewNode(protoID, tree)
-}
-
 // SetupHostsMock can be used to create a Host mock for testing.
 func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 	var hosts []*Host
@@ -596,4 +565,9 @@ func (h *Host) Tx() uint64 {
 // Rx() to implement monitor/CounterIO
 func (h *Host) Rx() uint64 {
 	return h.host.Rx()
+}
+
+// Address is the addres where this host is listening
+func (h *Host) Address() string {
+	return h.workingAddress
 }

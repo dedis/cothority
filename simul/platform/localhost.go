@@ -12,8 +12,10 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	// Import protocols so every protocols is registered to the sda
-	_ "github.com/dedis/cothority/protocols"
 	"strings"
+
+	_ "github.com/dedis/cothority/protocols"
+	_ "github.com/dedis/cothority/services"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes
