@@ -46,7 +46,7 @@ func TestTimeVault(t *testing.T) {
 	<-time.After(time.Second * 5)
 
 	// Now we should be able to open the secret and decrypt the ciphertext
-	m, err = tv.Open(sid, key, c)
+	m, err := tv.Open(sid, key, c)
 	if err != nil {
 		dbg.Lvl2(err)
 	}
