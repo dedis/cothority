@@ -338,7 +338,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Lvlf3("Sending request %+v", serviceReq)
+		dbg.LLvlf3("Sending request %+v", serviceReq)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
@@ -362,7 +362,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
-		return &network.Message{}, errors.New("Timeout on signing")
+		return &network.Message{}, errors.New("Timeout on sending message")
 	}
 }
 

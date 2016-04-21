@@ -1,18 +1,8 @@
 package skipchain
 
-import (
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
-)
+import "github.com/dedis/cothority/lib/sda"
 
 func init() {
-	var msgs = []interface{}{
-		&AddSkipBlock{},
-		&AddRet{},
-	}
-	for _, m := range msgs {
-		network.RegisterMessageType(m)
-	}
 }
 
 // This file holds all messages that can be sent to the SkipChain,

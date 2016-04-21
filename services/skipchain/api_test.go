@@ -16,9 +16,9 @@ func TestActiveAdd(t *testing.T) {
 	_, _, tree := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
-	c := NewSkipchainClient()
+	c := NewClient()
 	sb0 := NewSkipBlock(tree)
-	aar, err := c.ActiveAdd(nil, sb0)
+	aar, err := c.AddSkipBlock(nil, sb0)
 	dbg.ErrFatal(err)
 	if aar == nil {
 		t.Fatal("Returned SkipBlock is nil")
