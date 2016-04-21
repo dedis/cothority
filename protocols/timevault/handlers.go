@@ -122,6 +122,8 @@ func (tv *TimeVault) handleRevInit(m WRevInitMsg) error {
 		return fmt.Errorf("Error, shared secret does not exist")
 	}
 
+	secret.mtx.Lock()
+	defer secret.mtx.Unlock()
 	if !secret.expired {
 		return fmt.Errorf("Error, secret has not yet expired")
 	}

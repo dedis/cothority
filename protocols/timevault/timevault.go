@@ -130,6 +130,8 @@ func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byt
 		return nil, fmt.Errorf("Error, shared secret does not exist")
 	}
 
+	secret.mtx.Lock()
+	defer secret.mtx.Unlock()
 	if !secret.expired {
 		return nil, fmt.Errorf("Error, secret has not yet expired")
 	}
@@ -234,7 +236,9 @@ func (tv *TimeVault) finaliseSecret(sid SID) error {
 		timer := time.NewTimer(secret.duration)
 		go func() {
 			<-timer.C
+			secret.mtx.Lock()
 			secret.expired = true
+			secret.mtx.Unlock()
 		}()
 	}
 	return nil
