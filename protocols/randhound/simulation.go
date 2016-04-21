@@ -44,11 +44,11 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
-	leader, err := config.Overlay.CreateNewNodeName("RandHound", config.Tree)
+	leader, err := config.Overlay.CreateProtocol(config.Tree, "RandHound")
 	if err != nil {
 		return err
 	}
-	rh := leader.ProtocolInstance().(*RandHound)
+	rh := leader.(*RandHound)
 	err = rh.Setup(uint32(rhs.Hosts), rhs.Trustees, rhs.Purpose)
 	if err != nil {
 		return err

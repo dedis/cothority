@@ -15,17 +15,17 @@ func init() {
 // a confirmation once everything is set up, you can register a callback-function
 // using RegisterOnDone()
 type Broadcast struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	onDoneCb    func()
 	repliesLeft int
 	tnIndex     int
 }
 
 // NewBroadcastProtocol returns a new Broadcast protocol
-func NewBroadcastProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	b := &Broadcast{
-		Node:    n,
-		tnIndex: -1,
+		TreeNodeInstance: n,
+		tnIndex:          -1,
 	}
 	for i, tn := range n.Tree().List() {
 		if tn.Id == n.TreeNode().Id {

@@ -25,7 +25,7 @@ type LocalTest struct {
 	// A map of Tree.Id to Trees
 	Trees map[TreeID]*Tree
 	// All single nodes
-	Nodes []*Node
+	Nodes []*TreeNodeInstance
 }
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
@@ -37,19 +37,19 @@ func NewLocalTest() *LocalTest {
 		Overlays:    make(map[network.EntityID]*Overlay),
 		EntityLists: make(map[EntityListID]*EntityList),
 		Trees:       make(map[TreeID]*Tree),
-		Nodes:       make([]*Node, 0, 1),
+		Nodes:       make([]*TreeNodeInstance, 0, 1),
 	}
 }
 
-// StartNewNodeName takes a name and a tree and will create a
+// StartProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' running from the tree-root
-func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
+func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
 		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].StartNewNodeName(name, t)
+			return l.Overlays[h.Entity.ID].StartProtocol(t, name)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -57,26 +57,13 @@ func (l *LocalTest) StartNewNodeName(name string, t *Tree) (*Node, error) {
 
 // CreateNewNodeName takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
-func (l *LocalTest) CreateNewNodeName(name string, t *Tree) (*Node, error) {
+func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
 		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].CreateNewNodeName(name, t)
-		}
-	}
-	return nil, errors.New("Didn't find host for tree-root")
-}
-
-// NewNodeEmptyName create an empty node - use at your own risk!
-func (l *LocalTest) NewNodeEmptyName(name string, t *Tree) (*Node, error) {
-	rootEntityId := t.Root.Entity.ID
-	for _, h := range l.Hosts {
-		if h.Entity.ID.Equals(rootEntityId) {
-			// XXX do we really need multiples overlays ? Can't we just use the
-			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].NewNodeEmptyName(name, t)
+			return l.Overlays[h.Entity.ID].CreateProtocol(t, name)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -148,10 +135,7 @@ func (l *LocalTest) CloseAll() {
 		}
 	}
 	for _, node := range l.Nodes {
-		if err := node.Close(); err != nil {
-			dbg.Error("Closing node", node.Name(), "gives error",
-				err)
-		}
+		node.Close()
 	}
 }
 
@@ -168,7 +152,7 @@ func (l *LocalTest) GetTree(tn *TreeNode) *Tree {
 }
 
 // NewNode creates a new node on a TreeNode
-func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
+func (l *LocalTest) NewTreeNodeInstance(tn *TreeNode, protName string) (*TreeNodeInstance, error) {
 	o := l.Overlays[tn.Entity.ID]
 	if o == nil {
 		return nil, errors.New("Didn't find corresponding overlay")
@@ -188,17 +172,15 @@ func (l *LocalTest) NewNode(tn *TreeNode, protName string) (*Node, error) {
 		TreeNodeID:   tn.Id,
 		RoundID:      RoundID(uuid.NewV4()),
 	}
-	node, err := NewNode(o, tok)
-	if err == nil {
-		l.Nodes = append(l.Nodes, node)
-	}
-	return node, err
+	node := newTreeNodeInstance(o, tok, tn)
+	l.Nodes = append(l.Nodes, node)
+	return node, nil
 }
 
 // GetNodes returns all Nodes that belong to a treeNode
-func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
-	nodes := make([]*Node, 0)
-	for _, n := range l.Overlays[tn.Entity.ID].nodes {
+func (l *LocalTest) GetNodes(tn *TreeNode) []*TreeNodeInstance {
+	nodes := make([]*TreeNodeInstance, 0)
+	for _, n := range l.Overlays[tn.Entity.ID].instances {
 		nodes = append(nodes, n)
 	}
 	return nodes
@@ -206,7 +188,7 @@ func (l *LocalTest) GetNodes(tn *TreeNode) []*Node {
 
 // SendTreeNode injects a message directly in the Overlay-layer, bypassing
 // Host and Network
-func (l *LocalTest) SendTreeNode(proto string, from, to *Node, msg network.ProtocolMessage) error {
+func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg network.ProtocolMessage) error {
 	if from.Tree().Id != to.Tree().Id {
 		return errors.New("Can't send from one tree to another")
 	}
@@ -234,23 +216,6 @@ func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
 // called
 func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
-}
-
-// NodesFromOverlay creates a TokenID to Node map from an EntityID
-func (l *LocalTest) NodesFromOverlay(entityId network.EntityID) map[TokenID]*Node {
-	return l.Overlays[entityId].nodes
-}
-
-// AllNodes returns all nodes from all hosts in that LocalTest
-func (l *LocalTest) AllNodes() []*Node {
-	var nodes []*Node
-	for h := range l.Hosts {
-		overlay := l.Hosts[h].overlay
-		for i := range overlay.nodes {
-			nodes = append(nodes, overlay.nodes[i])
-		}
-	}
-	return nodes
 }
 
 // NewLocalHost creates a new host with the given address and registers it.

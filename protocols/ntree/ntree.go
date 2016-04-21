@@ -19,7 +19,7 @@ func init() {
 
 // Protocol implements the sda.ProtocolInstance interface
 type Protocol struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	// the message we want to sign (and the root node propagates)
 	Message []byte
 	// signature of this particular participant:
@@ -29,9 +29,9 @@ type Protocol struct {
 }
 
 // NewProtocol is used internally to register the protocol.
-func NewProtocol(node *sda.Node) (sda.ProtocolInstance, error) {
+func NewProtocol(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	p := &Protocol{
-		Node: node,
+		TreeNodeInstance: node,
 	}
 	err := p.RegisterHandler(p.HandleSignRequest)
 	if err != nil {

@@ -22,7 +22,7 @@ import (
 // ByzCoin is the main struct for running the protocol
 type ByzCoin struct {
 	// the node we are represented-in
-	*sda.Node
+	*sda.TreeNodeInstance
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers
@@ -137,10 +137,10 @@ type ByzCoin struct {
 }
 
 // NewByzCoinProtocol returns a new byzcoin struct
-func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
+func NewByzCoinProtocol(n *sda.TreeNodeInstance) (*ByzCoin, error) {
 	// create the byzcoin
 	bz := new(ByzCoin)
-	bz.Node = n
+	bz.TreeNodeInstance = n
 	bz.suite = n.Suite()
 	bz.prepare = cosi.NewCosi(n.Suite(), n.Private())
 	bz.commit = cosi.NewCosi(n.Suite(), n.Private())
@@ -182,7 +182,7 @@ func NewByzCoinProtocol(n *sda.Node) (*ByzCoin, error) {
 
 // NewByzCoinRootProtocol returns a new byzcoin struct with the block to sign
 // that will be sent to all others nodes
-func NewByzCoinRootProtocol(n *sda.Node, transactions []blkparser.Tx, timeOutMs uint64, failMode uint) (*ByzCoin, error) {
+func NewByzCoinRootProtocol(n *sda.TreeNodeInstance, transactions []blkparser.Tx, timeOutMs uint64, failMode uint) (*ByzCoin, error) {
 	bz, err := NewByzCoinProtocol(n)
 	if err != nil {
 		return nil, err

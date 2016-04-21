@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	_ "github.com/dedis/cothority/protocols"
+	_ "github.com/dedis/cothority/services"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes

@@ -29,7 +29,7 @@ func init() {
 // is done, the Count-channel receives the number of nodes reachable in
 // the tree.
 type ProtocolCount struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	Replies          int
 	Count            chan int
 	Quit             chan bool
@@ -67,11 +67,11 @@ type CountMsg struct {
 }
 
 // NewCount returns a new protocolInstance
-func NewCount(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewCount(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	p := &ProtocolCount{
-		Node:    n,
-		Quit:    make(chan bool),
-		timeout: 1024,
+		TreeNodeInstance: n,
+		Quit:             make(chan bool),
+		timeout:          1024,
 	}
 	p.Count = make(chan int, 1)
 	if err := p.RegisterChannel(&p.CountChan); err != nil {
@@ -174,7 +174,7 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 	} else {
 		p.Count <- count
 	}
-	dbg.Lvl3(p.Node.Entity().First(), "Done")
+	dbg.Lvl3(p.Entity().First(), "Done")
 }
 
 // SetTimeout sets the new timeout

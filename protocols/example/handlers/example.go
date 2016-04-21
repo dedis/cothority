@@ -18,16 +18,16 @@ func init() {
 // also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
 type ProtocolExampleHandlers struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	Message    string
 	ChildCount chan int
 }
 
 // NewExampleHandlers initialises the structure for use in one round
-func NewExampleHandlers(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewExampleHandlers(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	ExampleHandlers := &ProtocolExampleHandlers{
-		Node:       n,
-		ChildCount: make(chan int),
+		TreeNodeInstance: n,
+		ChildCount:       make(chan int),
 	}
 	err := ExampleHandlers.RegisterHandler(ExampleHandlers.HandleAnnounce)
 	if err != nil {
