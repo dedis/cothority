@@ -1,3 +1,6 @@
+// Package timevault provides a mechanism to encrypt a message with a shared
+// secret key using ElGamal and provide the decrypted message on request after
+// an initially specified timer has expired.
 package timevault
 
 import (
@@ -17,25 +20,28 @@ func init() {
 	sda.ProtocolRegisterName("TimeVault", NewTimeVault)
 }
 
-// Type of shared secret identifiers
+// SID is the type for shared secret identifiers
 type SID string
 
-// Identifiers for TimeVault shared secrets.
+// Base identifier for TimeVault shared secrets.
 const (
 	TVSS SID = "TVSS"
 )
 
+// TimeVault is the main protocol struct and implements the
+// sda.ProtocolInstance interface.
 type TimeVault struct {
 	*sda.TreeNodeInstance
 	keyPair          *config.KeyPair
 	pubKeys          []abstract.Point
 	info             poly.Threshold
-	secrets          map[SID]*Secret // TODO: Could make sense to store pairs of secrets?!
+	secrets          map[SID]*Secret
 	recoveredSecrets map[SID]*RecoveredSecret
 	secretsDone      chan bool
 	secretsChan      chan abstract.Secret
 }
 
+// Secret contains all information on shared secrets.
 type Secret struct {
 	secret   *poly.SharedSecret // Shared secret
 	receiver *poly.Receiver     // Receiver to aggregate deals
@@ -46,12 +52,14 @@ type Secret struct {
 	expired  bool               // Indicator if timer has expired
 }
 
+// RecoveredSecret contains all information necessary to reconstruct a shared secret.
 type RecoveredSecret struct {
-	PriShares *poly.PriShares
-	NumShares int
-	mtx       sync.Mutex
+	priShares *poly.PriShares // The secret shares
+	numShares int             // Number of secret shares
+	mtx       sync.Mutex      // Mutex to sync access to numShares
 }
 
+// NewTimeVault creates a new TimeVault protocol and returns it.
 func NewTimeVault(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	kp := &config.KeyPair{Suite: node.Suite(), Public: node.Public(), Secret: node.Private()}
@@ -86,17 +94,19 @@ func NewTimeVault(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	return tv, err
 }
 
+// Start initiates the TimeVault protocol.
 func (tv *TimeVault) Start() error {
 	return nil
 }
 
-// Seal encrypts a given message and releases the decryption key after a given time.
+// Seal encrypts a given message using ElGamal with a secret shared among all
+// participating peers. It moreover starts a timer indicating when the shared
+// secret can be released.
 func (tv *TimeVault) Seal(msg []byte, duration time.Duration) (SID, abstract.Point, abstract.Point, error) {
 
 	// Generate shared secret for ElGamal encryption
-	var err error
 	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.TreeNodeInstance.Index()))
-	err = tv.initSecret(sid, duration)
+	err := tv.initSecret(sid, duration)
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -111,7 +121,8 @@ func (tv *TimeVault) Seal(msg []byte, duration time.Duration) (SID, abstract.Poi
 	return sid, kp.Public, c, nil
 }
 
-// Open tries to decrypt the given ciphertext from the given shared secret ID and emphereal public key
+// Open decrypts the given ciphertext from the given shared secret ID and
+// emphereal public key if the timer of the shared secret has already expired.
 func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byte, error) {
 
 	secret, ok := tv.secrets[sid]
@@ -128,10 +139,10 @@ func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byt
 		tv.recoveredSecrets = make(map[SID]*RecoveredSecret)
 	}
 
-	rs := &RecoveredSecret{PriShares: &poly.PriShares{}, NumShares: 0}
-	rs.PriShares.Empty(tv.keyPair.Suite, tv.info.T, tv.info.N)
-	rs.PriShares.SetShare(tv.secrets[sid].secret.Index, *tv.secrets[sid].secret.Share)
-	rs.NumShares++
+	rs := &RecoveredSecret{priShares: &poly.PriShares{}, numShares: 0}
+	rs.priShares.Empty(tv.keyPair.Suite, tv.info.T, tv.info.N)
+	rs.priShares.SetShare(tv.secrets[sid].secret.Index, *tv.secrets[sid].secret.Share)
+	rs.numShares++
 	tv.recoveredSecrets[sid] = rs
 
 	// Start process to reveal shares
@@ -225,7 +236,6 @@ func (tv *TimeVault) finaliseSecret(sid SID) error {
 			<-timer.C
 			secret.expired = true
 		}()
-
 	}
 	return nil
 }

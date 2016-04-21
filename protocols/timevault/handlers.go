@@ -140,13 +140,13 @@ func (tv *TimeVault) handleRevShare(m WRevShareMsg) error {
 	msg := m.RevShareMsg
 
 	rs := tv.recoveredSecrets[msg.SID]
-	rs.PriShares.SetShare(msg.Index, *msg.Share)
+	rs.priShares.SetShare(msg.Index, *msg.Share)
 	rs.mtx.Lock()
-	rs.NumShares++
+	rs.numShares++
 	rs.mtx.Unlock()
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s shares %d/%d", tv.TreeNodeInstance.Index(), msg.SID, rs.NumShares, len(tv.TreeNodeInstance.List())))
-	if rs.NumShares == tv.info.T {
-		sec := rs.PriShares.Secret()
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s shares %d/%d", tv.TreeNodeInstance.Index(), msg.SID, rs.numShares, len(tv.TreeNodeInstance.List())))
+	if rs.numShares == tv.info.T {
+		sec := rs.priShares.Secret()
 		tv.secretsChan <- sec
 	}
 

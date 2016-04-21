@@ -1,6 +1,7 @@
 package timevault_test
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
@@ -39,7 +40,7 @@ func TestTimeVault(t *testing.T) {
 	// This should fail because the timer has not yet expired
 	m, err := tv.Open(sid, key, c)
 	if err != nil {
-		dbg.Lvl1(err)
+		dbg.Lvl2(err)
 	}
 
 	<-time.After(time.Second * 5)
@@ -47,10 +48,9 @@ func TestTimeVault(t *testing.T) {
 	// Now we should be able to open the secret and decrypt the ciphertext
 	m, err = tv.Open(sid, key, c)
 	if err != nil {
-		dbg.Lvl1(err)
+		dbg.Lvl2(err)
 	}
-	if string(m) != string(msg) {
-		dbg.Lvl1("Error, decryption failed")
+	if !bytes.Equal(m, msg) {
+		dbg.Fatal("Error, decryption failed")
 	}
-	dbg.Lvl1(string(m))
 }
