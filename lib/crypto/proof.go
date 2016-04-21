@@ -5,10 +5,11 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/abstract"
 	gohash "hash"
 	"strconv"
+
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
 )
 
 // HashFunc exports a hashfunction

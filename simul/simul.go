@@ -9,11 +9,12 @@ import (
 	"strings"
 
 	"errors"
+	"math"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/simul/platform"
-	"math"
-	"time"
 )
 
 // Configuration-variables

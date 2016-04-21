@@ -2,11 +2,12 @@ package example_handlers
 
 import (
 	"errors"
+	"strconv"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	"strconv"
 )
 
 /*

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"strings"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/network"
-	"strings"
 )
 
 // MarshalJSON implements golang's JSON marshal interface

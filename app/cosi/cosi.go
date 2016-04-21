@@ -13,7 +13,6 @@ import (
 	"errors"
 	"time"
 
-	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/cosi"
@@ -22,7 +21,6 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	s "github.com/dedis/cothority/services/cosi"
-	"golang.org/x/net/context"
 )
 
 // RequestTimeOut defines when the client stops waiting for the CoSi group to
@@ -258,65 +256,34 @@ func sign(r io.Reader, tomlFileName string) (*s.ServiceResponse, error) {
 func signStatement(read io.Reader, el *sda.EntityList) (*s.ServiceResponse,
 	error) {
 
-	// create a throw-away key pair:
-	priv, pub := sda.PrivPub()
-	// create a throw-away entity with an empty  address:
-	e := network.NewEntity(pub)
-
-	client := network.NewSecureTCPHost(priv, e)
+	client := s.NewClient()
 	msg, _ := crypto.HashStream(network.Suite.Hash(), read)
-	// connect to the root:
-	host := el.List[0]
-	dbg.Lvl3("Opening connection to", host.First(), host.Public)
 
-	// create request
-	r := &s.ServiceRequest{
-		Message:    msg,
-		EntityList: el,
-	}
-	req, err := sda.CreateServiceRequest("Cosi", r)
-	if err != nil {
-		errors.New("could not create service request")
-	}
-
-	con, err := client.Open(host)
-	defer client.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Client could not connect to service %s: %s",
-			host.First(), err.Error())
-	}
-
-	dbg.Lvl3("Sending sign SignRequest")
-	pchan := make(chan s.ServiceResponse)
+	pchan := make(chan *s.ServiceResponse)
+	var err error
 	go func() {
-		// send the SignRequest
-		if err := con.Send(context.TODO(), req); err != nil {
+		dbg.Lvl3("Waiting for the response on SignRequest")
+		response, e := client.SignMsg(el, msg)
+		if e != nil {
+			err = e
 			close(pchan)
 			return
 		}
-		dbg.Lvl3("Waiting for the response")
-		// wait for the response
-		packet, err := con.Receive(context.TODO())
-		if err != nil {
-			close(pchan)
-			return
-		}
-		pchan <- packet.Msg.(s.ServiceResponse)
+		pchan <- response
 	}()
 
 	select {
 	case response, ok := <-pchan:
-		dbg.Lvl5("Response:", ok, response)
-		if !ok {
-			return nil, errors.New("Invalid repsonse: Could not " +
-				"cast the received response to the right type")
+		dbg.Lvl5("Response:", response)
+		if !ok || err != nil {
+			return nil, errors.New("Received an invalid repsonse.")
 		}
 		err = cosi.VerifySignature(network.Suite, msg, el.Aggregate,
 			response.Challenge, response.Response)
 		if err != nil {
 			return nil, err
 		}
-		return &response, nil
+		return response, nil
 	case <-time.After(RequestTimeOut):
 		return nil, errors.New("Timeout on signing.")
 	}

@@ -399,7 +399,7 @@ const maxChunkSize Size = 1400
 func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
-	am, err := newNetworkMessage(obj)
+	am, err := NewNetworkMessage(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}

@@ -3,11 +3,12 @@ package crypto_test
 import (
 	"bytes"
 	"crypto/rand"
+	"io/ioutil"
+	"testing"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/edwards/ed25519"
-	"io/ioutil"
-	"testing"
 )
 
 var hashSuite = ed25519.NewAES128SHA256Ed25519(false)
