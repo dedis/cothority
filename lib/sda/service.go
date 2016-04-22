@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(&ErrorRet{})
+	network.RegisterMessageType(&StatusRet{})
 }
 
 // Service is a generic interface to define any type of services.
@@ -384,9 +384,9 @@ func (c *Client) BinaryUnmarshaler(b []byte) error {
 	return nil
 }
 
-// ErrorRet is used when an error is returned - Error may be nil
-type ErrorRet struct {
-	Error error
+// StatusRet is used when a status is returned - mostly an error
+type StatusRet struct {
+	Status string
 }
 
 // ErrMsg converts a combined err and status-message to an error. It
@@ -395,13 +395,13 @@ func ErrMsg(em *network.Message, err error) error {
 	if err != nil {
 		return err
 	}
-	errMsg, ok := em.Msg.(ErrorRet)
+	status, ok := em.Msg.(StatusRet)
 	if !ok {
 		return nil
 	}
-	errMsgStr := errMsg.Error.Error()
-	if errMsgStr != "" {
-		return errors.New("Remote-error: " + errMsgStr)
+	statusStr := status.Status
+	if statusStr != "" {
+		return errors.New("Remote-error: " + statusStr)
 	}
 	return nil
 }

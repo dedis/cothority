@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(&AddRet{})
+	network.RegisterMessageType(&RNBRet{})
 }
 
 // This file holds all messages that can be sent to the SkipChain,
@@ -23,7 +23,7 @@ type RequestNewBlock struct {
 }
 
 // AddRet - returns the signed SkipBlock with updated backlinks
-type AddRet struct {
+type RNBRet struct {
 	*SkipBlock
 }
 
@@ -36,7 +36,7 @@ type GetUpdateChain struct {
 
 // GetUpdateChainRet - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
-type GetUpdateChainRet struct {
+type GUCRet struct {
 	Update []*SkipBlock
 }
 

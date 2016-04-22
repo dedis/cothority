@@ -1,6 +1,8 @@
 package skipchain
 
 import (
+	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -26,8 +28,11 @@ type Service struct {
 // application-protocol to verify if the new EntityList should be included
 // in the SkipChain.
 func (cs *Service) RequestNewBlock(e *network.Entity, msg *RequestNewBlock) (network.ProtocolMessage, error) {
+	if !cs.verifyNewEntityList(msg.AppId, msg.EntityList) {
+		return nil, errors.New("New EntityList has been rejected")
+	}
 	sb := NewSkipBlock(msg.EntityList)
-	ar := &AddRet{
+	ar := &RNBRet{
 		SkipBlock: sb,
 	}
 	return ar, nil
@@ -41,6 +46,12 @@ func (c *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 	pi, err := cosi.NewProtocolCosi(tn)
 	go pi.Dispatch()
 	return pi, err
+}
+
+func (c *Service) verifyNewEntityList(app string, el *sda.EntityList) bool {
+	// TODO: implement a protocol that can check on the veracity of the new
+	// TODO: EntityList
+	return app == "accept"
 }
 
 func newSkipchainService(c sda.Context, path string) sda.Service {

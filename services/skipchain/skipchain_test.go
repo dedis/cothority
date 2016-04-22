@@ -21,5 +21,9 @@ func TestService(t *testing.T) {
 
 	client := NewClient()
 	_, err := client.RequestNewBlock("", el)
+	if err == nil {
+		t.Fatal("The block should be rejected")
+	}
+	_, err = client.RequestNewBlock("accept", el)
 	dbg.ErrFatal(err)
 }

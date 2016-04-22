@@ -5,6 +5,8 @@ import (
 
 	"reflect"
 
+	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -60,6 +62,15 @@ func TestProcessor_GetReply(t *testing.T) {
 	if val.I != 11 {
 		t.Fatal("Value got lost - should be 11")
 	}
+
+	rep = p.GetReply(e, mkClientRequest(&testMsg{42}))
+	errMsg, ok := rep.(*sda.StatusRet)
+	if !ok {
+		t.Fatal("42 should return an error")
+	}
+	if errMsg.Status == "" {
+		t.Fatal("The error should be non-empty")
+	}
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
@@ -100,6 +111,10 @@ type testMsg struct {
 }
 
 func procMsg(e *network.Entity, msg *testMsg) (network.ProtocolMessage, error) {
+	// Return an error for testing
+	if msg.I == 42 {
+		return nil, errors.New("6 * 9 != 42")
+	}
 	return msg, nil
 }
 

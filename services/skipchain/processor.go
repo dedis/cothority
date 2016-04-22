@@ -85,14 +85,14 @@ func (p *Processor) GetReply(e *network.Entity, cr *sda.ClientRequest) network.P
 	mt := cr.Type
 	fu, ok := p.functions[mt]
 	if !ok {
-		return &sda.ErrorRet{errors.New("Don't know message: " + mt.String())}
+		return &sda.StatusRet{"Don't know message: " + mt.String()}
 	}
 
 	_, m, err := network.UnmarshalRegisteredType(cr.Data,
 		network.DefaultConstructors(network.Suite))
 
 	if err != nil {
-		return &sda.ErrorRet{err}
+		return &sda.StatusRet{err.Error()}
 	}
 
 	//to0 := reflect.TypeOf(fu).In(0)
@@ -110,7 +110,7 @@ func (p *Processor) GetReply(e *network.Entity, cr *sda.ClientRequest) network.P
 	errI := ret[1].Interface()
 
 	if errI != nil {
-		return &sda.ErrorRet{errI.(error)}
+		return &sda.StatusRet{errI.(error).Error()}
 	}
 
 	return ret[0].Interface()
