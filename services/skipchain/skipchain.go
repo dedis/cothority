@@ -3,10 +3,10 @@ package skipchain
 import (
 	"errors"
 
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/cosi"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -28,10 +28,18 @@ type Service struct {
 // application-protocol to verify if the new EntityList should be included
 // in the SkipChain.
 func (cs *Service) RequestNewBlock(e *network.Entity, msg *RequestNewBlock) (network.ProtocolMessage, error) {
-	if !cs.verifyNewEntityList(msg.AppId, msg.EntityList) {
+	sb := NewSkipBlock(msg.EntityList)
+	if msg.SkipBlock.Index == 0 {
+		// Create Genesis SkipBlock
+		sb.Index = 1
+		sb.BackLink = [][]byte{[]byte("Genesis")}
+	} else {
+		// Create SkipBlock with back-links
+	}
+	if !cs.verifyNewSkipBlock(msg.AppId, msg.SkipBlock, sb) {
 		return nil, errors.New("New EntityList has been rejected")
 	}
-	sb := NewSkipBlock(msg.EntityList)
+
 	ar := &RNBRet{
 		SkipBlock: sb,
 	}
@@ -43,15 +51,20 @@ func (cs *Service) RequestNewBlock(e *network.Entity, msg *RequestNewBlock) (net
 // generate the PI on all others node.
 func (c *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("SkipChain received New Protocol event", tn, conf)
-	pi, err := cosi.NewProtocolCosi(tn)
-	go pi.Dispatch()
-	return pi, err
+	return nil, nil
 }
 
-func (c *Service) verifyNewEntityList(app string, el *sda.EntityList) bool {
+// verifyNewSkipBlock calls the appropriate app-verification and returns
+// either a signature on the newest SkipBlock or nil if the SkipBlock
+// has been refused
+func (c *Service) verifyNewSkipBlock(app string, last, newest *SkipBlock) bool {
 	// TODO: implement a protocol that can check on the veracity of the new
 	// TODO: EntityList
-	return app == "accept"
+	accepted := app == "accept"
+	if accepted{
+		newest.Signature = cosi.NewSignature(network.Suite)
+	}
+	return accepted
 }
 
 func newSkipchainService(c sda.Context, path string) sda.Service {

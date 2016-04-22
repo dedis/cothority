@@ -22,14 +22,18 @@ func NewClient() *Client {
 
 // RequestNewBlock sends an EntityList to the SkipChain and will ask
 // the application 'app' to verify the new EntityList.
-func (sc *Client) RequestNewBlock(app string, el *sda.EntityList) (*RNBRet, error) {
+func (sc *Client) RequestNewBlock(app string, sb *SkipBlock, el *sda.EntityList) (*RNBRet, error) {
 	dbg.Lvl3("Adding a new skipblock", el)
 	if len(el.List) == 0 {
 		return nil, errors.New("Need at least one node in the Cothority")
 	}
 
+	if sb == nil{
+		sb = NewSkipBlock(el)
+	}
 	msg := &RequestNewBlock{
 		AppId:      app,
+		SkipBlock: sb,
 		EntityList: el,
 	}
 

@@ -20,10 +20,10 @@ func TestService(t *testing.T) {
 	defer local.CloseAll()
 
 	client := NewClient()
-	_, err := client.RequestNewBlock("", el)
-	if err == nil {
+	_, err := client.RequestNewBlock("", nil, el)
+	if err == nil{
 		t.Fatal("The block should be rejected")
 	}
-	_, err = client.RequestNewBlock("accept", el)
+	_, err = client.RequestNewBlock("accept", nil, el)
 	dbg.ErrFatal(err)
 }

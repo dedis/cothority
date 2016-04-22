@@ -14,11 +14,14 @@ func init() {
 
 // External calls
 
-// RequestNewBlock - Requests a new skipblock to be created.
+// RequestNewBlock - Requests a new skipblock to be appended to
+// the given SkipBlock. If the given SkipBlock has Index 0 (which
+// is invalid), a new SkipChain will be created.
 // The AppId will be used to call the corresponding verification-
 // routines who will have to sign off on the new Tree.
 type RequestNewBlock struct {
 	AppId string
+	*SkipBlock
 	*sda.EntityList
 }
 
@@ -31,7 +34,7 @@ type RNBRet struct {
 // Skipblock and will get back a list of all necessary SkipBlocks
 // to get to the latest.
 type GetUpdateChain struct {
-	hash []byte
+	*SkipBlock
 }
 
 // GetUpdateChainRet - returns the shortest chain to the current SkipBlock,

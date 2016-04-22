@@ -37,6 +37,7 @@ func NewSkipBlock(el *sda.EntityList) *SkipBlock {
 		X0:         X0,
 		EntityList: el,
 		Signature:  cosi.NewSignature(network.Suite),
+		Index:      0,
 	}
 }
 

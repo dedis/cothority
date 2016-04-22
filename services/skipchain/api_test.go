@@ -13,11 +13,12 @@ func TestClient_RequestNewBlock(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	sb, err := c.RequestNewBlock("", el)
+	sb, err := c.RequestNewBlock("", nil, el)
 	if err == nil {
 		t.Fatal("The block should be rejected")
 	}
-	sb, err = c.RequestNewBlock("accept", el)
+
+	sb, err = c.RequestNewBlock("accept", nil, el)
 	dbg.ErrFatal(err)
 	if sb == nil {
 		t.Fatal("Returned SkipBlock is nil")
