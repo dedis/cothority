@@ -16,14 +16,10 @@ func TestService(t *testing.T) {
 
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	_, _, tree := local.GenTree(5, false, true, false)
+	_, el, _ := local.GenTree(5, false, true, false)
 	defer local.CloseAll()
 
 	client := NewClient()
-	ar, err := client.AddSkipBlock("", tree)
+	_, err := client.RequestNewBlock("", el)
 	dbg.ErrFatal(err)
-
-	if ar.Index != 1 {
-		t.Fatal("Root-block should be 1")
-	}
 }

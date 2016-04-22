@@ -73,6 +73,17 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	s := local.Services[h.Entity.ID]
 	ts := s[testServiceID]
 	ts.ProcessClientRequest(h.Entity, mkClientRequest(&testMsg{12}))
+	msg := ts.(*testService).Context.(*testContext).Msg
+	if msg == nil {
+		t.Fatal("Msg should not be nil")
+	}
+	tm, ok := msg.(*testMsg)
+	if !ok {
+		t.Fatalf("Couldn't cast to *testMsg - %+v", tm)
+	}
+	if tm.I != 12 {
+		t.Fatal("Didn't send 12")
+	}
 }
 
 func mkClientRequest(msg network.ProtocolMessage) *sda.ClientRequest {
@@ -120,9 +131,14 @@ type testService struct {
 	*Processor
 }
 
+type testContext struct {
+	sda.Context
+	Msg interface{}
+}
+
 func newTestService(c sda.Context, path string) sda.Service {
 	ts := &testService{
-		Processor: NewProcessor(c),
+		Processor: NewProcessor(&testContext{Context: c}),
 	}
 	ts.AddMessage(ts.ProcessMsg)
 	return ts
@@ -134,6 +150,11 @@ func (ts *testService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericCo
 
 func (ts *testService) ProcessMsg(e *network.Entity, msg *testMsg) (network.ProtocolMessage, error) {
 	return msg, nil
+}
+
+func (ts *testContext) SendRaw(to *network.Entity, msg interface{}) error {
+	ts.Msg = msg
+	return nil
 }
 
 func returnMsg(e *network.Entity, msg network.ProtocolMessage) (network.ProtocolMessage, error) {

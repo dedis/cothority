@@ -104,6 +104,13 @@ type Signature struct {
 	Response  abstract.Secret
 }
 
+func NewSignature(s abstract.Suite) *Signature {
+	return &Signature{
+		s.Secret().One(),
+		s.Secret().One(),
+	}
+}
+
 // Exception is what a node that does not want to sign should include when
 // passing up a response
 type Exception struct {

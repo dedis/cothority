@@ -19,25 +19,16 @@ func init() {
 // Service handles adding new SkipBlocks
 type Service struct {
 	*Processor
-	c    sda.Context
 	path string
 }
 
+// RequestNewBlock receives a new EntityList and will call the appropriate
+// application-protocol to verify if the new EntityList should be included
+// in the SkipChain.
 func (cs *Service) RequestNewBlock(e *network.Entity, msg *RequestNewBlock) (network.ProtocolMessage, error) {
-	tree := &sda.Tree{}
-	err := tree.BinaryUnmarshaler(msg.Tree)
-	if err != nil {
-		return nil, err
-	}
-	sb := NewSkipBlock(tree)
-	tb, err := sb.Tree.BinaryMarshaler()
-	if err != nil {
-		return nil, err
-	}
-	sb.Tree = nil
+	sb := NewSkipBlock(msg.EntityList)
 	ar := &AddRet{
 		SkipBlock: sb,
-		Tree:      tb,
 	}
 	return ar, nil
 }
@@ -46,7 +37,7 @@ func (cs *Service) RequestNewBlock(e *network.Entity, msg *RequestNewBlock) (net
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
 func (c *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl1("Cosi Service received New Protocol event")
+	dbg.Lvl1("SkipChain received New Protocol event", tn, conf)
 	pi, err := cosi.NewProtocolCosi(tn)
 	go pi.Dispatch()
 	return pi, err
@@ -55,7 +46,6 @@ func (c *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 func newSkipchainService(c sda.Context, path string) sda.Service {
 	s := &Service{
 		Processor: NewProcessor(c),
-		c:         c,
 		path:      path,
 	}
 	s.AddMessage(s.RequestNewBlock)

@@ -21,26 +21,27 @@ type SkipBlock struct {
 	Index    uint32
 	BackLink [][]byte
 	//the signature is hashing all the above
-	Signature   *cosi.Signature
+	*cosi.Signature
 	ForwardLink []ForwardStruct
 	//transmitted for the signature - not included in the hash
-	Tree *sda.Tree
+	*sda.EntityList
 }
 
-func NewSkipBlock(tree *sda.Tree) *SkipBlock {
+func NewSkipBlock(el *sda.EntityList) *SkipBlock {
 	X0 := network.Suite.Point().Null()
-	nodes := tree.List()
+	nodes := el.List
 	for _, tn := range nodes {
-		X0.Add(X0, tn.Entity.Public)
+		X0.Add(X0, tn.Public)
 	}
 	return &SkipBlock{
-		X0:   X0,
-		Tree: tree,
+		X0:         X0,
+		EntityList: el,
+		Signature:  cosi.NewSignature(network.Suite),
 	}
 }
 
 // ForwardStruct has the hash of the next block and a signauter of it
 type ForwardStruct struct {
-	Hash      []byte
-	Signature *cosi.Signature
+	Hash []byte
+	*cosi.Signature
 }

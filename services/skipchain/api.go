@@ -20,24 +20,19 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient("Skipchain")}
 }
 
-// AddSkipBlock takes a previous and a new skipchain and sends it to the
-// first TreeNodeEntity
-func (sc *Client) AddSkipBlock(app string, tree *sda.Tree) (*AddRet, error) {
-	dbg.Lvl3("Adding a new skipblock", tree)
-	nodes := tree.List()
+// RequestNewBlock sends an EntityList to the SkipChain and will ask
+// the application 'app' to verify the new EntityList.
+func (sc *Client) RequestNewBlock(app string, el *sda.EntityList) (*AddRet, error) {
+	dbg.Lvl3("Adding a new skipblock", el)
+	nodes := el.List
 	if len(nodes) == 0 {
 		return nil, errors.New("Need at least one node in the Cothority")
 	}
-	dst := nodes[0].Entity
-
-	tb, err := tree.BinaryMarshaler()
-	if err != nil {
-		return nil, err
-	}
+	dst := nodes[0]
 
 	msg := &RequestNewBlock{
-		AppId: app,
-		Tree:  tb,
+		AppId:      app,
+		EntityList: el,
 	}
 
 	dbg.Lvl4("Sending message to", dst)

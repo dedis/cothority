@@ -7,15 +7,18 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-func TestActiveAdd(t *testing.T) {
+func TestClient_AddSkipBlock(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, _, tree := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
-	aar, err := c.AddSkipBlock("", tree)
+	sb, err := c.RequestNewBlock("", el)
 	dbg.ErrFatal(err)
-	if aar == nil {
+	if sb == nil {
 		t.Fatal("Returned SkipBlock is nil")
+	}
+	if sb.Index != 1 {
+		t.Fatal("Root-block should be 1")
 	}
 }

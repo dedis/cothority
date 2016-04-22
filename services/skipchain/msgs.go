@@ -1,6 +1,9 @@
 package skipchain
 
-import "github.com/dedis/cothority/lib/network"
+import (
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
+)
 
 func init() {
 	network.RegisterMessageType(&AddRet{})
@@ -16,13 +19,12 @@ func init() {
 // routines who will have to sign off on the new Tree.
 type RequestNewBlock struct {
 	AppId string
-	Tree  []byte
+	*sda.EntityList
 }
 
 // AddRet - returns the signed SkipBlock with updated backlinks
 type AddRet struct {
 	*SkipBlock
-	Tree []byte
 }
 
 // GetUpdateChain - the client sends the hash of the last known
@@ -36,7 +38,6 @@ type GetUpdateChain struct {
 // starting from the SkipBlock the client sent
 type GetUpdateChainRet struct {
 	Update []*SkipBlock
-	Tree   []byte
 }
 
 // Internal calls
