@@ -149,7 +149,7 @@ func (tv *TimeVault) handleRevShare(m WRevShareMsg) error {
 	dbg.Lvl2(fmt.Sprintf("Node %d: %s shares %d/%d", tv.TreeNodeInstance.Index(), msg.SID, rs.numShares, len(tv.TreeNodeInstance.List())))
 	if rs.numShares == tv.info.T {
 		sec := rs.priShares.Secret()
-		tv.secretsChan <- sec
+		rs.secretsChan <- sec
 	}
 
 	return nil

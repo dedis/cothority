@@ -4,9 +4,6 @@
 package timevault
 
 import (
-	"bytes"
-	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -16,7 +13,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
-	"github.com/dedis/crypto/random"
 )
 
 func init() {
@@ -41,7 +37,6 @@ type TimeVault struct {
 	secrets          map[SID]*Secret
 	recoveredSecrets map[SID]*RecoveredSecret
 	secretsDone      chan bool
-	secretsChan      chan abstract.Secret
 }
 
 // Secret contains all information on shared secrets.
@@ -57,9 +52,10 @@ type Secret struct {
 
 // RecoveredSecret contains all information necessary to reconstruct a shared secret.
 type RecoveredSecret struct {
-	priShares *poly.PriShares // The secret shares
-	numShares int             // Number of secret shares
-	mtx       sync.Mutex      // Mutex to sync access to numShares
+	priShares   *poly.PriShares      // The secret shares
+	numShares   int                  // Number of secret shares
+	mtx         sync.Mutex           // Mutex to sync access to numShares
+	secretsChan chan abstract.Secret // Channel to communicate reocvered shared secret
 }
 
 // NewTimeVault creates a new TimeVault protocol and returns it.
@@ -82,7 +78,6 @@ func NewTimeVault(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		info:             info,
 		secrets:          make(map[SID]*Secret),
 		secretsDone:      make(chan bool, 1),
-		secretsChan:      make(chan abstract.Secret, 1),
 	}
 
 	// Setup message handlers
@@ -102,34 +97,24 @@ func (tv *TimeVault) Start() error {
 	return nil
 }
 
-// Seal encrypts a given message using ElGamal with a secret shared among all
-// participating peers. It moreover starts a timer indicating when the shared
+// Seal generates a shared secret and starts a timer indicating when the shared
 // secret can be released.
-func (tv *TimeVault) Seal(msg []byte, duration time.Duration) (SID, abstract.Point, abstract.Point, error) {
+func (tv *TimeVault) Seal(duration time.Duration) (SID, abstract.Point, error) {
 
-	// Generate shared secret for ElGamal encryption
-	sid, err := tv.newSID(msg)
-	if err != nil {
-		return "", nil, nil, err
-	}
+	// Generate shared secret
+	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.Index()))
 	if err := tv.initSecret(sid, duration); err != nil {
-		return "", nil, nil, err
+		return "", nil, err
 	}
 	<-tv.secretsDone
 
-	// Do ElGamal encryption
-	kp := config.NewKeyPair(tv.keyPair.Suite)
-	m, _ := tv.keyPair.Suite.Point().Pick(msg, random.Stream)
-	X := tv.secrets[sid].secret.Pub.SecretCommit()
-	c := tv.keyPair.Suite.Point().Add(m, tv.keyPair.Suite.Point().Mul(X, kp.Secret))
-
-	return sid, kp.Public, c, nil
+	return sid, tv.secrets[sid].secret.Pub.SecretCommit(), nil
 }
 
-// Open decrypts the given ciphertext from the given shared secret ID and an
-// emphereal public key. This function returns an error if the timer of the
-// shared secret has not yet expired.
-func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byte, error) {
+// Open checks if the timer of a shared secret has already expired and if so
+// recovers and returns the secret. If the timer has not yet expired, the
+// function returns an error.
+func (tv *TimeVault) Open(sid SID) (abstract.Secret, error) {
 
 	secret, ok := tv.secrets[sid]
 	if !ok {
@@ -147,7 +132,11 @@ func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byt
 		tv.recoveredSecrets = make(map[SID]*RecoveredSecret)
 	}
 
-	rs := &RecoveredSecret{priShares: &poly.PriShares{}, numShares: 0}
+	rs := &RecoveredSecret{
+		priShares:   &poly.PriShares{},
+		numShares:   0,
+		secretsChan: make(chan abstract.Secret, 1),
+	}
 	rs.priShares.Empty(tv.keyPair.Suite, tv.info.T, tv.info.N)
 	rs.priShares.SetShare(tv.secrets[sid].secret.Index, *tv.secrets[sid].secret.Share)
 	rs.numShares++
@@ -157,35 +146,28 @@ func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byt
 	if err := tv.Broadcast(&RevInitMsg{Src: tv.TreeNodeInstance.Index(), SID: sid}); err != nil {
 		return nil, err
 	}
-	x := <-tv.secretsChan
+	x := <-rs.secretsChan
 
-	// Do ElGamal decryption
-	X := tv.keyPair.Suite.Point().Mul(key, x)
-	msg, err := tv.keyPair.Suite.Point().Sub(ct, X).Data()
-
-	return msg, err
+	return x, nil
 }
 
-func (tv *TimeVault) newSID(msg []byte) (SID, error) {
-	buf := new(bytes.Buffer)
-	timestamp, err := time.Now().MarshalBinary()
-	if err != nil {
-		return "", err
-	}
-	if err := binary.Write(buf, binary.LittleEndian, msg); err != nil {
-		return "", err
-	}
-	if err := binary.Write(buf, binary.LittleEndian, []byte(TVSS)); err != nil {
-		return "", err
-	}
-	if err := binary.Write(buf, binary.LittleEndian, uint32(tv.TreeNodeInstance.Index())); err != nil {
-		return "", err
-	}
-	if err := binary.Write(buf, binary.LittleEndian, timestamp); err != nil {
-		return "", err
-	}
-	return SID(hex.EncodeToString(abstract.Sum(tv.keyPair.Suite, buf.Bytes()))), nil
-}
+//func (tv *TimeVault) newSID(base SID) (SID, error) {
+//	buf := new(bytes.Buffer)
+//	timestamp, err := time.Now().MarshalBinary()
+//	if err != nil {
+//		return "", err
+//	}
+//	if err := binary.Write(buf, binary.LittleEndian, []byte(base)); err != nil {
+//		return "", err
+//	}
+//	if err := binary.Write(buf, binary.LittleEndian, uint32(tv.TreeNodeInstance.Index())); err != nil {
+//		return "", err
+//	}
+//	if err := binary.Write(buf, binary.LittleEndian, timestamp); err != nil {
+//		return "", err
+//	}
+//	return SID(hex.EncodeToString(abstract.Sum(tv.keyPair.Suite, buf.Bytes()))), nil
+//}
 
 func (tv *TimeVault) initSecret(sid SID, duration time.Duration) error {
 
