@@ -3,41 +3,29 @@ package skipchain
 import (
 	"testing"
 
+	"reflect"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"reflect"
 	"github.com/dedis/crypto/config"
 )
 
-func TestProcessor(t *testing.T) {
-	p := &Processor{}
-	p.AddMessage(returnMsg)
-	msg := &testMsg{10}
-	b, err := network.MarshalRegisteredType(msg)
-	dbg.ErrFatal(err)
-	cr := &sda.ClientRequest{
-		Type: network.TypeFromData(msg),
-		Data: b,
-	}
-	reply := p.GetReply(nil, cr)
-	tm, ok := reply.(testMsg)
-	if !ok {
-		t.Fatal("Couldn't cast to *testMsg")
-	}
-	if tm.I != 10 {
-		t.Fatal("Lost value in between")
-	}
+var testServiceID sda.ServiceID
+
+func init() {
+	sda.RegisterNewService("testService", newTestService)
+	testServiceID = sda.ServiceFactory.ServiceID("testService")
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
-	p := NewProcessor()
+	p := NewProcessor(nil)
 	dbg.ErrFatal(p.AddMessage(procMsg))
-	if len(p.functions) != 1{
+	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
 	}
 	mt := network.TypeFromData(&testMsg{})
-	if mt == network.ErrorType{
+	if mt == network.ErrorType {
 		t.Fatal("Didn't register message-type correctly")
 	}
 	var wrongFunctions = []interface{}{
@@ -48,36 +36,56 @@ func TestProcessor_AddMessage(t *testing.T) {
 		procMsgWrong5,
 		procMsgWrong6,
 	}
-	for _, f := range wrongFunctions{
+	for _, f := range wrongFunctions {
 		dbg.Lvl2("Checking function %+v", reflect.TypeOf(f).String())
 		err := p.AddMessage(f)
-		if err == nil{
+		if err == nil {
 			t.Fatalf("Shouldn't accept function %+v", reflect.TypeOf(f).String())
 		}
 	}
 }
 
 func TestProcessor_GetReply(t *testing.T) {
-	p := NewProcessor()
+	p := NewProcessor(nil)
 	dbg.ErrFatal(p.AddMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
 	e := network.NewEntity(pair.Public, "")
-	b, err := network.MarshalRegisteredType(&testMsg{11})
-	dbg.ErrFatal(err)
-	request := &sda.ClientRequest{
-		Type: network.TypeFromData(&testMsg{}),
-		Data: b,
-	}
 
-	rep := p.GetReply(e, request)
+	rep := p.GetReply(e, mkClientRequest(&testMsg{11}))
 	val, ok := rep.(*testMsg)
-	if !ok{
+	if !ok {
 		t.Fatalf("Couldn't cast reply to testMsg: %+v", rep)
 	}
-	if val.I != 11{
+	if val.I != 11 {
 		t.Fatal("Value got lost - should be 11")
 	}
+}
+
+func TestProcessor_ProcessClientRequest(t *testing.T) {
+	local := sda.NewLocalTest()
+
+	// generate 5 hosts, they don't connect, they process messages, and they
+	// don't register the tree or entitylist
+	h := local.GenLocalHosts(1, false, false)[0]
+	defer local.CloseAll()
+
+	s := local.Services[h.Entity.ID]
+	ts := s[testServiceID]
+	ts.ProcessClientRequest(h.Entity, mkClientRequest(&testMsg{12}))
+}
+
+func mkClientRequest(msg network.ProtocolMessage) *sda.ClientRequest {
+	b, err := network.MarshalRegisteredType(msg)
+	dbg.ErrFatal(err)
+	return &sda.ClientRequest{
+		Type: network.TypeFromData(msg),
+		Data: b,
+	}
+}
+
+type testMsg struct {
+	I int
 }
 
 func procMsg(e *network.Entity, msg *testMsg) (network.ProtocolMessage, error) {
@@ -96,7 +104,7 @@ func procMsgWrong3(e *network.Entity, msg testMsg) (network.ProtocolMessage, err
 	return msg, nil
 }
 
-func procMsgWrong4(e *network.Entity, msg *testMsg) (error) {
+func procMsgWrong4(e *network.Entity, msg *testMsg) error {
 	return nil
 }
 
@@ -108,15 +116,16 @@ func procMsgWrong6(e *network.Entity, msg *int) (network.ProtocolMessage, error)
 	return msg, nil
 }
 
-
 type testService struct {
 	*Processor
 }
 
-func newTestService(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) sda.Service {
-	return &testService{
-		Processor: NewProcessor(),
+func newTestService(c sda.Context, path string) sda.Service {
+	ts := &testService{
+		Processor: NewProcessor(c),
 	}
+	ts.AddMessage(ts.ProcessMsg)
+	return ts
 }
 
 func (ts *testService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {

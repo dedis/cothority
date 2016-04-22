@@ -7,18 +7,20 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+func TestMain(m *testing.M) {
+	dbg.MainTest(m)
+}
+
 func TestService(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
+
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	_, _, tree := local.GenTree(5, false, true, false)
 	defer local.CloseAll()
 
-	first := NewSkipBlock(tree)
 	client := NewClient()
-	ar, err := client.AddSkipBlock(nil, first)
+	ar, err := client.AddSkipBlock("", tree)
 	dbg.ErrFatal(err)
 
 	if ar.Index != 1 {

@@ -11,11 +11,13 @@ import (
 
 type Processor struct {
 	functions map[network.MessageTypeID]interface{}
+	sda.Context
 }
 
-func NewProcessor() *Processor {
+func NewProcessor(c sda.Context) *Processor {
 	return &Processor{
 		functions: make(map[network.MessageTypeID]interface{}),
+		Context:   c,
 	}
 }
 
@@ -45,7 +47,7 @@ func (p *Processor) AddMessage(f interface{}) error {
 	if ft.Out(0) != reflect.TypeOf((*network.ProtocolMessage)(nil)).Elem() {
 		return errors.New("Need 2 return values: *network.ProtocolMessage* and error")
 	}
-	if ft.Out(1) != reflect.TypeOf((*error)(nil)).Elem(){
+	if ft.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
 		return errors.New("Need 2 return values: network.ProtocolMessage and *error*")
 	}
 	// Automatic registration of the message to the network library.
@@ -57,25 +59,38 @@ func (p *Processor) AddMessage(f interface{}) error {
 	return nil
 }
 
-func (p *Processor) ProcessClientRequest(e *network.Entity, cr *sda.ClientRequest) {
+// ProcessClientRequest takes a request from a client, calculates the reply
+// and sends it back.
+func (p *Processor) ProcessClientRequest(e *network.Entity,
+	cr *sda.ClientRequest) {
+	reply := p.GetReply(e, cr)
+
+	if err := p.SendRaw(e, reply); err != nil {
+		dbg.Error(err)
+	}
 }
 
 // ProcessServiceMessage is to implement the Service interface.
-func (p *Processor) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+func (p *Processor) ProcessServiceMessage(e *network.Entity,
+	s *sda.ServiceMessage) {
+	cr := &sda.ClientRequest{
+		Data: s.Data,
+	}
+	p.GetReply(e, cr)
 }
 
-type testMsg struct {
-	I int
-}
-
+// GetReply takes a clientRequest and passes it to the corresponding
+// handler-function.
 func (p *Processor) GetReply(e *network.Entity, cr *sda.ClientRequest) network.ProtocolMessage {
 	mt := cr.Type
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &sda.ErrorRet{errors.New("Don't know message: " + mt.String())}
 	}
+
 	_, m, err := network.UnmarshalRegisteredType(cr.Data,
 		network.DefaultConstructors(network.Suite))
+
 	if err != nil {
 		return &sda.ErrorRet{err}
 	}
@@ -89,9 +104,12 @@ func (p *Processor) GetReply(e *network.Entity, cr *sda.ClientRequest) network.P
 	arg0.Elem().Set(reflect.ValueOf(e).Elem())
 	arg1 := reflect.New(to1.Elem())
 	arg1.Elem().Set(reflect.ValueOf(m))
+
 	ret := f.Call([]reflect.Value{arg0, arg1})
+
 	errI := ret[1].Interface()
-	if errI != nil{
+
+	if errI != nil {
 		return &sda.ErrorRet{errI.(error)}
 	}
 

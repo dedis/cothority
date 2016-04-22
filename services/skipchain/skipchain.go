@@ -19,25 +19,27 @@ func init() {
 // Service handles adding new SkipBlocks
 type Service struct {
 	*Processor
-	c         sda.Context
-	path      string
+	c    sda.Context
+	path string
 }
 
-// ProcessRequest treats external request to this service.
-func (s *Service) ProcessClientRequest(e *network.Entity, cr *sda.ClientRequest) {
-	var reply network.ProtocolMessage
-	if err := s.c.SendRaw(e, reply); err != nil {
-		dbg.Error(err)
+func (cs *Service) RequestNewBlock(e *network.Entity, msg *RequestNewBlock) (network.ProtocolMessage, error) {
+	tree := &sda.Tree{}
+	err := tree.BinaryUnmarshaler(msg.Tree)
+	if err != nil {
+		return nil, err
 	}
-}
-
-// ProcessServiceMessage is to implement the Service interface.
-func (cs *Service) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
-	return
-}
-
-func (cs *Service) AddSkipBlock(e *network.Entity, msg *AddSkipBlock) (network.ProtocolMessage, error) {
-	return nil, nil
+	sb := NewSkipBlock(tree)
+	tb, err := sb.Tree.BinaryMarshaler()
+	if err != nil {
+		return nil, err
+	}
+	sb.Tree = nil
+	ar := &AddRet{
+		SkipBlock: sb,
+		Tree:      tb,
+	}
+	return ar, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -52,9 +54,10 @@ func (c *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 
 func newSkipchainService(c sda.Context, path string) sda.Service {
 	s := &Service{
-		c:    c,
-		path: path,
+		Processor: NewProcessor(c),
+		c:         c,
+		path:      path,
 	}
-	//s.AddMessage(s.AddSkipBlock)
+	s.AddMessage(s.RequestNewBlock)
 	return s
 }

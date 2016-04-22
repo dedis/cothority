@@ -15,6 +15,10 @@ import (
 	"golang.org/x/net/context"
 )
 
+func init() {
+	network.RegisterMessageType(&ErrorRet{})
+}
+
 // Service is a generic interface to define any type of services.
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
@@ -326,7 +330,9 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	if err != nil {
 		return nil, err
 	}
+
 	b, err := m.MarshalBinary()
+
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +344,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.LLvlf3("Sending request %+v", serviceReq)
+		dbg.Lvlf4("Sending request %+v", serviceReq)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
