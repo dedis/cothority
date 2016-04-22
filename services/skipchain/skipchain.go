@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"crypto/rand"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -32,7 +33,16 @@ func (cs *Service) RequestNewBlock(e *network.Entity, msg *RequestNewBlock) (net
 	if msg.SkipBlock.Index == 0 {
 		// Create Genesis SkipBlock
 		sb.Index = 1
-		sb.BackLink = [][]byte{[]byte("Genesis")}
+		rnd := make([]byte, 16)
+		n, err := rand.Read(rnd)
+		if err != nil{
+			return nil, err
+		}
+		if n != 16{
+			return nil, errors.New("Couldn't read 16 random bytes")
+		}
+		// The Genesis has a random BackLink to identifiy the SkipChain
+		sb.BackLink = [][]byte{rnd}
 	} else {
 		// Create SkipBlock with back-links
 	}
