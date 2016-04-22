@@ -12,10 +12,10 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
 	sda.ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
 	sda.ProtocolRegisterName("ProtocolBlocking", NewProtocolBlocking)
-	sda.ProtocolRegister(testProtoID, NewProtocolTest)
+	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
+	sda.ProtocolRegisterName(testProto, NewProtocolTest)
 	Incoming = make(chan struct {
 		*sda.TreeNode
 		NodeTestMsg
@@ -29,7 +29,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
-	n, err := local.NewNode(tree.Root, "ProtocolChannels")
+	p, err := local.CreateProtocol("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -38,7 +38,8 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 		*sda.TreeNode
 		NodeTestMsg
 	}
-	err = n.RegisterChannel(&c)
+	tni := p.(*ProtocolChannels).TreeNodeInstance
+	err = tni.RegisterChannel(&c)
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
@@ -53,7 +54,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
-	n, err := local.NewNode(tree.Root, "ProtocolChannels")
+	p, err := local.CreateProtocol("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -61,11 +62,12 @@ func TestNodeChannelCreate(t *testing.T) {
 		*sda.TreeNode
 		NodeTestMsg
 	}
-	err = n.RegisterChannel(&c)
+	tni := p.(*ProtocolChannels).TreeNodeInstance
+	err = tni.RegisterChannel(&c)
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.Data{&sda.Data{
+	err = tni.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -91,7 +93,7 @@ func TestNodeChannel(t *testing.T) {
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
-	n, err := local.NewNode(tree.Root, "ProtocolChannels")
+	p, err := local.CreateProtocol("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -99,11 +101,12 @@ func TestNodeChannel(t *testing.T) {
 		*sda.TreeNode
 		NodeTestMsg
 	}, 1)
-	err = n.RegisterChannel(c)
+	tni := p.(*ProtocolChannels).TreeNodeInstance
+	err = tni.RegisterChannel(c)
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = n.DispatchChannel([]*sda.Data{&sda.Data{
+	err = tni.DispatchChannel([]*sda.Data{&sda.Data{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -132,11 +135,11 @@ func TestNewNode(t *testing.T) {
 	h1.AddTree(tree)
 
 	// Try directly StartNewNode
-	node, err := h1.StartNewNode(testProtoID, tree)
+	proto, err := h1.StartProtocol(testProto, tree)
 	if err != nil {
 		t.Fatal("Could not start new protocol", err)
 	}
-	p := node.ProtocolInstance().(*ProtocolTest)
+	p := proto.(*ProtocolTest)
 	m := <-p.DispMsg
 	if m != "Dispatch" {
 		t.Fatal("Dispatch() not called - msg is:", m)
@@ -149,26 +152,37 @@ func TestNewNode(t *testing.T) {
 	h2.Close()
 }
 
-func TestProtocolChannels(t *testing.T) {
+func TestServiceChannels(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
+	sc1 := &ServiceChannels{}
+	sc2 := &ServiceChannels{}
+	var count int
+	sda.RegisterNewService("ChannelsService", func(c sda.Context, path string) sda.Service {
+		var sc *ServiceChannels
+		if count == 0 {
+			sc = sc1
+		} else {
+			sc = sc2
+		}
+		count++
+		sc.ctx = c
+		sc.path = path
+		return sc
+	})
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
 	// Add tree + entitylist
 	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
-	h1.AddEntityList(el)
 	tree := el.GenerateBinaryTree()
+	sc1.tree = *tree
+	h1.AddEntityList(el)
 	h1.AddTree(tree)
 	h1.StartProcessMessages()
 
-	// Try directly StartNewProtocol
-	_, err := h1.StartNewNodeName("ProtocolChannels", tree)
-	if err != nil {
-		t.Fatal("Couldn't start protocol:", err)
-	}
-
+	sc1.ProcessClientRequest(nil, nil)
 	select {
 	case msg := <-Incoming:
 		if msg.I != 12 {
@@ -186,11 +200,12 @@ func TestProtocolHandlers(t *testing.T) {
 	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
 	dbg.Lvl2("Sending to children")
-	IncomingHandlers = make(chan *sda.Node, 2)
-	node, err := local.StartNewNodeName("ProtocolHandlers", tree)
+	IncomingHandlers = make(chan *sda.TreeNodeInstance, 2)
+	p, err := local.CreateProtocol("ProtocolHandlers", tree)
 	if err != nil {
 		t.Fatal(err)
 	}
+	go p.Start()
 	dbg.Lvl2("Waiting for responses")
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers
@@ -201,13 +216,14 @@ func TestProtocolHandlers(t *testing.T) {
 
 	dbg.Lvl2("Sending to parent")
 
-	child1.SendTo(node.TreeNode(), &NodeTestAggMsg{})
+	tni := p.(*ProtocolHandlers).TreeNodeInstance
+	child1.SendTo(tni.TreeNode(), &NodeTestAggMsg{})
 	if len(IncomingHandlers) > 0 {
 		t.Fatal("This should not trigger yet")
 	}
-	child2.SendTo(node.TreeNode(), &NodeTestAggMsg{})
+	child2.SendTo(tni.TreeNode(), &NodeTestAggMsg{})
 	final := <-IncomingHandlers
-	if final.Entity().ID != node.Entity().ID {
+	if final.Entity().ID != tni.Entity().ID {
 		t.Fatal("This should be the same ID")
 	}
 }
@@ -218,11 +234,11 @@ func TestMsgAggregation(t *testing.T) {
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
-	root, err := local.StartNewNodeName("ProtocolChannels", tree)
+	root, err := local.StartProtocol("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
-	proto := root.ProtocolInstance().(*ProtocolChannels)
+	proto := root.(*ProtocolChannels)
 	// Wait for both children to be up
 	<-Incoming
 	<-Incoming
@@ -230,14 +246,14 @@ func TestMsgAggregation(t *testing.T) {
 	child1 := local.GetNodes(tree.Root.Children[0])[0]
 	child2 := local.GetNodes(tree.Root.Children[1])[0]
 
-	err = local.SendTreeNode("ProtocolChannels", child1, root, &NodeTestAggMsg{3})
+	err = local.SendTreeNode("ProtocolChannels", child1, proto.TreeNodeInstance, &NodeTestAggMsg{3})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(proto.IncomingAgg) > 0 {
 		t.Fatal("Messages should NOT be there")
 	}
-	err = local.SendTreeNode("ProtocolChannels", child2, root, &NodeTestAggMsg{4})
+	err = local.SendTreeNode("ProtocolChannels", child2, proto.TreeNodeInstance, &NodeTestAggMsg{4})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,19 +277,20 @@ func TestFlags(t *testing.T) {
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
-	n, err := local.NewNode(tree.Root, "ProtocolChannels")
+	p, err := local.CreateProtocol("ProtocolChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't create node.")
 	}
-	if n.HasFlag(testType, sda.AggregateMessages) {
+	tni := p.(*ProtocolChannels).TreeNodeInstance
+	if tni.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
-	n.SetFlag(testType, sda.AggregateMessages)
-	if !n.HasFlag(testType, sda.AggregateMessages) {
+	tni.SetFlag(testType, sda.AggregateMessages)
+	if !tni.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should HAVE AggregateMessages-flag cleared")
 	}
-	n.ClearFlag(testType, sda.AggregateMessages)
-	if n.HasFlag(testType, sda.AggregateMessages) {
+	tni.ClearFlag(testType, sda.AggregateMessages)
+	if tni.HasFlag(testType, sda.AggregateMessages) {
 		t.Fatal("Should NOT have AggregateMessages-flag")
 	}
 }
@@ -287,17 +304,21 @@ func TestSendLimitedTree(t *testing.T) {
 
 	dbg.Lvl3(tree.Dump())
 
-	root, err := local.StartNewNodeName("Count", tree)
+	root, err := local.StartProtocol("Count", tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
-	protoCount := root.ProtocolInstance().(*manage.ProtocolCount)
+	// XXX using manage here ... maybe theses are the kind of protocol /
+	// services we want to embed directly into SDA instead of exporting them and
+	// then importing them again in sda_test. If we really need them ...
+	protoCount := root.(*manage.ProtocolCount)
 	count := <-protoCount.Count
 	if count != 7 {
 		t.Fatal("Didn't get a count of 7:", count)
 	}
 }
 
+// Protocol/service Channels test code:
 type NodeTestMsg struct {
 	I int
 }
@@ -312,16 +333,16 @@ type NodeTestAggMsg struct {
 }
 
 type ProtocolChannels struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	IncomingAgg chan []struct {
 		*sda.TreeNode
 		NodeTestAggMsg
 	}
 }
 
-func NewProtocolChannels(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewProtocolChannels(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	p := &ProtocolChannels{
-		Node: n,
+		TreeNodeInstance: n,
 	}
 	p.RegisterChannel(Incoming)
 	p.RegisterChannel(&p.IncomingAgg)
@@ -343,15 +364,47 @@ func (p *ProtocolChannels) Release() {
 	p.Done()
 }
 
-type ProtocolHandlers struct {
-	*sda.Node
+type ServiceChannels struct {
+	ctx  sda.Context
+	path string
+	tree sda.Tree
 }
 
-var IncomingHandlers chan *sda.Node
+// implement services interface
+func (c *ServiceChannels) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 
-func NewProtocolHandlers(n *sda.Node) (sda.ProtocolInstance, error) {
+	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root)
+	pi, err := NewProtocolChannels(tni)
+	if err != nil {
+		return
+	}
+
+	if err := c.ctx.RegisterProtocolInstance(pi); err != nil {
+		return
+	}
+	pi.Start()
+}
+
+func (c *ServiceChannels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	dbg.Lvl1("Cosi Service received New Protocol event")
+	return NewProtocolChannels(tn)
+}
+
+func (c *ServiceChannels) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+	return
+}
+
+// End: protocol/service channels
+
+type ProtocolHandlers struct {
+	*sda.TreeNodeInstance
+}
+
+var IncomingHandlers chan *sda.TreeNodeInstance
+
+func NewProtocolHandlers(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	p := &ProtocolHandlers{
-		Node: n,
+		TreeNodeInstance: n,
 	}
 	p.RegisterHandler(p.HandleMessageOne)
 	p.RegisterHandler(p.HandleMessageAggregate)
@@ -372,7 +425,7 @@ func (p *ProtocolHandlers) HandleMessageOne(msg struct {
 	*sda.TreeNode
 	NodeTestMsg
 }) {
-	IncomingHandlers <- p.Node
+	IncomingHandlers <- p.TreeNodeInstance
 }
 
 func (p *ProtocolHandlers) HandleMessageAggregate(msg []struct {
@@ -380,14 +433,14 @@ func (p *ProtocolHandlers) HandleMessageAggregate(msg []struct {
 	NodeTestAggMsg
 }) {
 	dbg.Lvl3("Received message")
-	IncomingHandlers <- p.Node
+	IncomingHandlers <- p.TreeNodeInstance
 }
 
 func (p *ProtocolHandlers) Dispatch() error {
 	return nil
 }
 
-// relese ressources ==> call Done()
+// release resources ==> call Done()
 func (p *ProtocolHandlers) Release() {
 	p.Done()
 }
@@ -401,30 +454,32 @@ func TestBlocking(t *testing.T) {
 	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()
 
-	n1, err := l.StartNewNodeName("ProtocolBlocking", tree)
+	n1, err := l.StartProtocol("ProtocolBlocking", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol")
 	}
-	n2, err := l.StartNewNodeName("ProtocolBlocking", tree)
+	n2, err := l.StartProtocol("ProtocolBlocking", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol")
 	}
 
-	p1 := n1.ProtocolInstance().(*BlockingProtocol)
-	p2 := n2.ProtocolInstance().(*BlockingProtocol)
+	p1 := n1.(*BlockingProtocol)
+	p2 := n2.(*BlockingProtocol)
+	tn1 := p1.TreeNodeInstance
+	tn2 := p2.TreeNodeInstance
 	go func() {
 		// Send two messages to n1, which blocks the old interface
-		err := l.SendTreeNode("", n2, n1, &NodeTestMsg{})
+		err := l.SendTreeNode("", tn2, tn1, &NodeTestMsg{})
 		if err != nil {
 			t.Fatal("Couldn't send message:", err)
 		}
-		err = l.SendTreeNode("", n2, n1, &NodeTestMsg{})
+		err = l.SendTreeNode("", tn2, tn1, &NodeTestMsg{})
 		if err != nil {
 			t.Fatal("Couldn't send message:", err)
 		}
 		// Now send a message to n2, but in the old interface this
 		// blocks.
-		err = l.SendTreeNode("", n1, n2, &NodeTestMsg{})
+		err = l.SendTreeNode("", tn1, tn2, &NodeTestMsg{})
 		if err != nil {
 			t.Fatal("Couldn't send message:", err)
 		}
@@ -445,7 +500,7 @@ func TestBlocking(t *testing.T) {
 // signal on the continue channel. It is used for testing the asynchronous
 // & non blocking handling of the messages in sda.
 type BlockingProtocol struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	// the protocol will signal on this channel that it is done
 	doneChan chan bool
 	// stopBLockChan is used to signal the protocol to stop blocking the
@@ -457,11 +512,11 @@ type BlockingProtocol struct {
 	}
 }
 
-func NewProtocolBlocking(node *sda.Node) (sda.ProtocolInstance, error) {
+func NewProtocolBlocking(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	bp := &BlockingProtocol{
-		Node:          node,
-		doneChan:      make(chan bool),
-		stopBlockChan: make(chan bool),
+		TreeNodeInstance: node,
+		doneChan:         make(chan bool),
+		stopBlockChan:    make(chan bool),
 	}
 
 	node.RegisterChannel(&bp.Incoming)

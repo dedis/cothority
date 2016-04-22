@@ -12,22 +12,25 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-var testProtoID = sda.ProtocolID(uuid.NewV5(uuid.NamespaceURL, "test"))
+var testProto = "test"
+var testProtoID = sda.ProtocolID(uuid.NewV5(uuid.NamespaceURL, testProto))
+
+var simpleProto = "simple"
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	StartMsg chan string
 	DispMsg  chan string
 }
 
 // NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewProtocolTest(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	return &ProtocolTest{
-		Node:     n,
-		StartMsg: make(chan string, 1),
-		DispMsg:  make(chan string),
+		TreeNodeInstance: n,
+		StartMsg:         make(chan string, 1),
+		DispMsg:          make(chan string),
 	}, nil
 }
 
@@ -48,13 +51,11 @@ func (p *ProtocolTest) Start() error {
 type SimpleProtocol struct {
 	// chan to get back to testing
 	Chan chan bool
-	*sda.Node
+	*sda.TreeNodeInstance
 }
 
 // Sends a simple message to its first children
 func (p *SimpleProtocol) Start() error {
-	dbg.Lvl2("Sending from", p.Entity().First(), "to",
-		p.Children()[0].Entity.First())
 	err := p.SendTo(p.Children()[0], &SimpleMessage{10})
 	if err != nil {
 		return err
@@ -68,7 +69,6 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 	*sda.TreeNode
 	SimpleMessage
 }) error {
-	dbg.Lvl2("Dispatching", msg)
 	if msg.I != 10 {
 		return errors.New("Not the value expected")
 	}
@@ -98,10 +98,10 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	chans := []chan bool{chanH1, chanH2}
 	id := 0
 	// custom creation function so we know the step due to the channels
-	fn := func(n *sda.Node) (sda.ProtocolInstance, error) {
+	fn := func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		ps := SimpleProtocol{
-			Node: n,
-			Chan: chans[id],
+			TreeNodeInstance: n,
+			Chan:             chans[id],
 		}
 		ps.RegisterHandler(ps.ReceiveMessage)
 		id++
@@ -109,7 +109,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}
 
 	network.RegisterMessageType(SimpleMessage{})
-	sda.ProtocolRegister(testProtoID, fn)
+	sda.ProtocolRegisterName(simpleProto, fn)
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
@@ -121,7 +121,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	h1.AddTree(tree)
 	// start the protocol
 	go func() {
-		_, err := h1.StartNewNode(testProtoID, tree)
+		_, err := h1.StartProtocol(simpleProto, tree)
 		if err != nil {
 			t.Fatal(fmt.Sprintf("Could not start protocol %v", err))
 		}

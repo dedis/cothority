@@ -32,14 +32,14 @@ func TestNtree(t *testing.T) {
 		}
 
 		// Start the protocol
-		node, err := local.CreateNewNodeName("NaiveTree", tree)
+		pi, err := local.CreateProtocol("NaiveTree", tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
-		root = node.ProtocolInstance().(*ntree.Protocol)
+		root = pi.(*ntree.Protocol)
 		root.Message = msg
 		root.OnDoneCallback(doneFunc)
-		err = node.StartProtocol()
+		err = pi.Start()
 		if nbrHosts == 1 {
 			if err == nil {
 				t.Fatal("Shouldn't be able to start NTree with 1 node")

@@ -3,10 +3,11 @@ package monitor
 import (
 	"bytes"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // setupMonitor launches a basic monitor with a created Stats object

@@ -17,7 +17,7 @@ func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.Entity, err
 	}
 
 	// Compute a permutation of [0,n-1]
-	prng := rh.Node.Suite().Cipher(seed)
+	prng := rh.Suite().Cipher(seed)
 	m := make([]uint32, rh.Group.N)
 	for i := range m {
 		j := int(random.Uint64(prng) % uint64(i+1))
@@ -26,7 +26,7 @@ func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.Entity, err
 	}
 
 	// Create sharding of the current EntityList according to the above permutation
-	el := rh.Node.EntityList().List
+	el := rh.EntityList().List
 	n := int(rh.Group.N / shards)
 	sharding := [][]*network.Entity{}
 	shard := []*network.Entity{}
@@ -43,11 +43,11 @@ func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.Entity, err
 // Random returns the public random string produced by RandHound
 func (rh *RandHound) Random() ([]byte, error) {
 
-	if !rh.Node.IsRoot() {
+	if !rh.IsRoot() {
 		return nil, fmt.Errorf("Random function can only be called from the leader node")
 	}
 
-	output := rh.Node.Suite().Secret().Zero()
+	output := rh.Suite().Secret().Zero()
 	for _, state := range rh.Leader.states {
 		output.Add(output, state.PriShares.Secret())
 	}
@@ -67,7 +67,7 @@ func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstrac
 	var seed []byte
 	seed = append(seed, Rc...)
 	seed = append(seed, Rs...)
-	prng := rh.Node.Suite().Cipher(seed)
+	prng := rh.Suite().Cipher(seed)
 
 	// Choose trustees uniquely
 	shareIdx := make(map[uint32]uint32)
@@ -87,11 +87,11 @@ func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstrac
 }
 
 func (rh *RandHound) hash(bytes ...[]byte) []byte {
-	return abstract.Sum(rh.Node.Suite(), bytes...)
+	return abstract.Sum(rh.Suite(), bytes...)
 }
 
 func (rh *RandHound) index() uint32 {
-	return uint32(rh.Node.Index())
+	return uint32(rh.Index())
 }
 
 func (rh *RandHound) generateTranscript() {} // TODO
