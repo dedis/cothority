@@ -5,25 +5,89 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
 	dbg.MainTest(m)
 }
 
-func TestService(t *testing.T) {
-	local := sda.NewLocalTest()
-
-	// generate 5 hosts, they don't connect, they process messages, and they
-	// don't register the tree or entitylist
-	_, el, _ := local.GenTree(5, false, true, false)
-	defer local.CloseAll()
-
-	client := NewClient()
-	_, err := client.RequestNewBlock("", nil, el)
-	if err == nil{
-		t.Fatal("The block should be rejected")
+func TestSkipBlockData_Hash(t *testing.T) {
+	sbd1 := &SkipBlockData{
+		SkipBlockCommon: &SkipBlockCommon{
+			Height: 1,
+		},
+		Data: []byte("1"),
 	}
-	_, err = client.RequestNewBlock("accept", nil, el)
-	dbg.ErrFatal(err)
+	h1 := sbd1.hash()
+	assert.Equal(t, h1, sbd1.Hash)
+
+	sbd2 := &SkipBlockData{
+		SkipBlockCommon: &SkipBlockCommon{
+			Height: 2,
+		},
+		Data: []byte("2"),
+	}
+	h2 := sbd2.hash()
+	assert.NotEqual(t, h1, h2)
+}
+
+func TestSkipBlockRoster_Hash(t *testing.T) {
+	local := sda.NewLocalTest()
+	hosts, el, _ := local.GenTree(2, false, false, false)
+	defer local.CloseAll()
+	sbd1 := &SkipBlockRoster{
+		SkipBlockCommon: &SkipBlockCommon{
+			Height: 1,
+		},
+		EntityList: el,
+	}
+	h1 := sbd1.hash()
+	assert.Equal(t, h1, sbd1.Hash)
+
+	sbd2 := &SkipBlockRoster{
+		SkipBlockCommon: &SkipBlockCommon{
+			Height: 1,
+		},
+		EntityList: local.GenEntityListFromHost(hosts[0]),
+	}
+	h2 := sbd2.hash()
+	assert.NotEqual(t, h1, h2)
+}
+
+func TestService_ProposeSkipBlock(t *testing.T) {
+	// send a ProposeBlock
+	genesis := &SkipBlockData{
+		Data: []byte("At the beginning the world was void and empty"),
+		SkipBlockCommon: &SkipBlockCommon{
+			MaximumHeight: 2,
+		},
+	}
+	blockCount := 0
+	s := newSkipchainService(nil, "").(*Service)
+	psbr, err := s.ProposeSkipBlock(nil, genesis)
+	assert.Nil(t, err)
+	latest := psbr.Latest.(*SkipBlockData)
+	// verify creation of GenesisBlock:
+	blockCount++
+	assert.Equal(t, blockCount, latest.Index)
+	assert.Equal(t, 1, len(latest.BackLink))
+	assert.NotEqual(t, 0, latest.BackLink)
+
+	next := &SkipBlockData{
+		Data: []byte("And the spirit of the lord was upon the waters"),
+		SkipBlockCommon: &SkipBlockCommon{
+			MaximumHeight: 2,
+		},
+	}
+	psbr2, err := s.ProposeSkipBlock(genesis.Hash, next)
+	latest = psbr2.Latest.(*SkipBlockData)
+	// verify creation of GenesisBlock:
+	blockCount++
+	assert.Equal(t, blockCount, latest.Index)
+	assert.Equal(t, 1, len(latest.BackLink))
+	assert.NotEqual(t, 0, latest.BackLink)
+}
+
+func TestService_GetUpdateChain(t *testing.T) {
 }
