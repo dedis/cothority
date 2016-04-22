@@ -13,8 +13,8 @@ import (
 )
 
 const NUM_MESS = 5
-const NUM_BUCKET = 1
-var BUCKET_DESC = []int64{/*10,20,30,40,50,60,70, 80,90*/}
+const NUM_BUCKET = 2
+var BUCKET_DESC = []int64{50}
 const needle = "code0"
 func codeGen(i int) string {
 	return "code" + strconv.Itoa(i%1)
@@ -26,17 +26,18 @@ func bucketGen(i int) int {
 func Test5Nodes(t *testing.T) {
 	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
-	nNodes := 5
 	dbg.TestOutput(testing.Verbose(), 1)
-	host,entityList, tree := local.GenTree(nNodes, false, true, true)
+	host,entityList, tree := local.GenTree(5, true, true, true)
 	defer local.CloseAll()
 
 
+	rootInstance,_ := local.CreateProtocol("PrivateCount", tree)
+	protocol := rootInstance.(*medco.PrivateCountProtocol)
 
-	root,_ := local.CreateNewNodeName("PrivateCount", tree)
+	dbg.Lvl1(local.Nodes) // == []
+
 	suite := host[0].Suite()
 	aggregateKey := entityList.Aggregate
-
 	clientSecret  := suite.Secret().Pick(random.Stream)
 	clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
 	clientQuery,_ := medco.EncryptBytes(suite, aggregateKey, []byte(needle))
@@ -57,19 +58,29 @@ func Test5Nodes(t *testing.T) {
 	dbg.Lvl1("... Done")
 
 
-	root.ProtocolInstance().(*medco.PrivateCountProtocol).EncryptedData = &EncryptedData
-	root.ProtocolInstance().(*medco.PrivateCountProtocol).ClientPublicKey = &clientPublic
-	root.ProtocolInstance().(*medco.PrivateCountProtocol).ClientQuery = clientQuery
-	root.ProtocolInstance().(*medco.PrivateCountProtocol).BucketDesc = &BUCKET_DESC
+	protocol.EncryptedData = &EncryptedData
+	protocol.ClientPublicKey = &clientPublic
+	protocol.ClientQuery = clientQuery
+	protocol.BucketDesc = &BUCKET_DESC
 
-	feedback := root.ProtocolInstance().(*medco.PrivateCountProtocol).FeedbackChannel
+	feedback := protocol.FeedbackChannel
 
-	go root.StartProtocol()
+	go protocol.StartProtocol()
 
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nNodes*2) * time.Millisecond
+	for i:=0; i < 10; i++ {
+		dbg.Lvl1(local.Nodes)// == []
+		<- time.After(1*time.Second)
+	}
+
+
+	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
 	select {
 	case encryptedResult := <- feedback:
+
+		dbg.Lvl1(local.Nodes)// == []
+
+
 		result := medco.DecryptIntVector(suite, clientSecret, encryptedResult)
 		dbg.Lvl1("RESULT:")
 		dbg.Lvl1("Done with result =",result, "(target", targetCounts,")" )

@@ -13,7 +13,7 @@ import (
 )
 
 type PrivateCountProtocol struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 	ElGamalQueryChannel chan QueryStruct
 	PHQueryChannel      chan ProcessableQueryStruct
 	ElGamalDataChannel  chan HolderResponseDataStruct
@@ -43,9 +43,9 @@ func init() {
 }
 
 
-func NewPrivateCountProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewPrivateCountProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	newInstance := &PrivateCountProtocol{
-		Node: n,
+		TreeNodeInstance: n,
 		FeedbackChannel: make(chan CipherVector),
 		shortTermSecret: n.Suite().Secret().Pick(n.Suite().Cipher([]byte("Cothosecrets" + n.Name()))),
 	}
@@ -78,7 +78,7 @@ func NewPrivateCountProtocol(n *sda.Node) (sda.ProtocolInstance, error) {
 }
 
 func (p *PrivateCountProtocol) Start() error {
-	dbg.Lvl1("Started visitor protocol as node", p.Node.Name())
+	dbg.Lvl1("Started visitor protocol as node", p.Name())
 
 	if (p.ClientPublicKey == nil) {
 		return errors.New("No public key was provided by the client.")
@@ -97,7 +97,7 @@ func (p *PrivateCountProtocol) Start() error {
 	// The starting node starts the protocol by sending the probabilistically encrypted query to the next node
 	queryMessage := &QueryMessage{&VisitorMessage{0}, *p.ClientQuery, *p.BucketDesc,*p.ClientPublicKey}
 	queryMessage.Filter.ReplaceContribution(p.Suite(), p.Private(), p.shortTermSecret)
-	queryMessage.SetVisited(p.Node.TreeNode(), p.Node.Tree())
+	queryMessage.SetVisited(p.TreeNode(), p.Tree())
 
 	p.sendToNext(queryMessage)
 	return nil
@@ -105,17 +105,17 @@ func (p *PrivateCountProtocol) Start() error {
 
 func (p *PrivateCountProtocol) Dispatch() error {
 
-	dbg.Lvl1("Began running protocol", p.Node.Name())
+	dbg.Lvl1("Began running protocol", p.Name())
 
 
 	// 1. Query crypto-switching phase
 	deterministicQuery, buckets, _ := p.queryReplacementPhase()
-	dbg.Lvl1(p.Node.Name(), "Finished query replacement phase.")
+	dbg.Lvl1(p.Name(), "Finished query replacement phase.")
 
 	// 2. Data crypto-switching phase
 	go p.injectEncryptedData() // If the node has some local data, inject it to the system
 	encryptedBuckets, _ := p.dataReplacementAndCountingPhase(deterministicQuery, buckets)
-	dbg.Lvl1(p.Node.Name(), "Finished data replacement phase.")
+	dbg.Lvl1(p.Name(), "Finished data replacement phase.")
 
 
 	// 3. Match count reporting phase

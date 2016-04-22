@@ -25,7 +25,7 @@ func init() {
 // It also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
 type PrivateAggregateProtocol struct {
-	*sda.Node
+	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
 	FeedbackChannel      chan Aggregatable
@@ -39,9 +39,9 @@ type PrivateAggregateProtocol struct {
 }
 
 // NewExampleChannels initialises the structure for use in one round
-func NewPrivateAggregate(n *sda.Node) (sda.ProtocolInstance, error) {
+func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	privateAggregateProtocol := &PrivateAggregateProtocol{
-		Node:       n,
+		TreeNodeInstance:       n,
 		FeedbackChannel: make(chan Aggregatable),
 	}
 

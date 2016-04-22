@@ -13,12 +13,12 @@ import (
 func TestPrivateAggregate5Nodes(t *testing.T) {
 	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
-	nNodes := 5
 	dbg.TestOutput(testing.Verbose(), 1)
-	host,entityList, tree := local.GenTree(nNodes, false, true, true)
+	host,entityList, tree := local.GenTree(5, false, true, true)
 	defer local.CloseAll()
 
-	root,_ := local.CreateNewNodeName("PrivateAggregate", tree)
+	rootInstance,_ := local.CreateProtocol("PrivateAggregate", tree)
+	protocol := rootInstance.(*medco.PrivateAggregateProtocol)
 
 	suite := host[0].Suite()
 	aggregateKey := entityList.Aggregate
@@ -28,17 +28,17 @@ func TestPrivateAggregate5Nodes(t *testing.T) {
 
 
 	ref := medco.DataRef(0)
-	root.ProtocolInstance().(*medco.PrivateAggregateProtocol).DataReference = &ref
-	feedback := root.ProtocolInstance().(*medco.PrivateAggregateProtocol).FeedbackChannel
+	protocol.DataReference = &ref
+	feedback := protocol.FeedbackChannel
 
-	go root.StartProtocol()
+	go protocol.StartProtocol()
 
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nNodes*2) * time.Millisecond
+	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
-	dbg.Lvl1(local.Nodes)
 
 	select {
 	case encryptedResult := <- feedback:
+		dbg.Lvl1(local.Nodes)
 		dbg.Lvl1("Recieved results", encryptedResult)
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")

@@ -12,8 +12,6 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
-
-
 )
 
 
@@ -82,7 +80,7 @@ func (sim *PrivateCountSimulation) Setup(dir string, hosts []string) (*sda.Simul
 func (sim *PrivateCountSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		root, err := config.Overlay.CreateNewNodeName("PrivateCount", config.Tree)
+		rooti, err := config.Overlay.CreateProtocol( config.Tree,"PrivateCount")
 		if err != nil {
 			return err
 		}
@@ -92,6 +90,7 @@ func (sim *PrivateCountSimulation) Run(config *sda.SimulationConfig) error {
 			return err
 		}
 
+		root := rooti.(*PrivateCountProtocol)
 		suite := root.Suite()
 		aggregateKey := root.EntityList().Aggregate
 
