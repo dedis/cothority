@@ -107,7 +107,7 @@ func (tv *TimeVault) handleSecConf(m WSecConfMsg) error {
 	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", tv.TreeNodeInstance.Index(), msg.SID, secret.numConfs, len(tv.TreeNodeInstance.List())))
 
 	// Check if we have enough confirmations to proceed
-	if (secret.numConfs == len(tv.TreeNodeInstance.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", TVSS, tv.TreeNodeInstance.Index()))) {
+	if secret.numConfs == len(tv.TreeNodeInstance.List()) {
 		tv.secretsDone <- true
 	}
 

@@ -21,7 +21,7 @@ func TestTimeVault(t *testing.T) {
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
-	dbg.TestOutput(testing.Verbose(), 1)
+	dbg.TestOutput(true, 1)
 
 	dbg.Lvl1("TimeVault - starting")
 	leader, err := local.CreateProtocol(name, tree)
@@ -36,12 +36,7 @@ func TestTimeVault(t *testing.T) {
 	if err != nil {
 		dbg.Fatal(err)
 	}
-
-	// This should fail because the timer has not yet expired
-	//m, err := tv.Open(sid, key, c)
-	//if err != nil {
-	//	dbg.Lvl2(err)
-	//}
+	dbg.Lvl1("TimeVault - sealing done")
 
 	<-time.After(time.Second * 5)
 
@@ -53,4 +48,5 @@ func TestTimeVault(t *testing.T) {
 	if !bytes.Equal(m, msg) {
 		dbg.Fatal("Error, decryption failed")
 	}
+	dbg.Lvl1("TimeVault - opening successful")
 }

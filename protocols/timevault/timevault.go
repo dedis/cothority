@@ -4,6 +4,9 @@
 package timevault
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -105,9 +108,11 @@ func (tv *TimeVault) Start() error {
 func (tv *TimeVault) Seal(msg []byte, duration time.Duration) (SID, abstract.Point, abstract.Point, error) {
 
 	// Generate shared secret for ElGamal encryption
-	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.TreeNodeInstance.Index()))
-	err := tv.initSecret(sid, duration)
+	sid, err := tv.newSID(msg)
 	if err != nil {
+		return "", nil, nil, err
+	}
+	if err := tv.initSecret(sid, duration); err != nil {
 		return "", nil, nil, err
 	}
 	<-tv.secretsDone
@@ -121,8 +126,9 @@ func (tv *TimeVault) Seal(msg []byte, duration time.Duration) (SID, abstract.Poi
 	return sid, kp.Public, c, nil
 }
 
-// Open decrypts the given ciphertext from the given shared secret ID and
-// emphereal public key if the timer of the shared secret has already expired.
+// Open decrypts the given ciphertext from the given shared secret ID and an
+// emphereal public key. This function returns an error if the timer of the
+// shared secret has not yet expired.
 func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byte, error) {
 
 	secret, ok := tv.secrets[sid]
@@ -158,6 +164,27 @@ func (tv *TimeVault) Open(sid SID, key abstract.Point, ct abstract.Point) ([]byt
 	msg, err := tv.keyPair.Suite.Point().Sub(ct, X).Data()
 
 	return msg, err
+}
+
+func (tv *TimeVault) newSID(msg []byte) (SID, error) {
+	buf := new(bytes.Buffer)
+	timestamp, err := time.Now().MarshalBinary()
+	if err != nil {
+		return "", err
+	}
+	if err := binary.Write(buf, binary.LittleEndian, msg); err != nil {
+		return "", err
+	}
+	if err := binary.Write(buf, binary.LittleEndian, []byte(TVSS)); err != nil {
+		return "", err
+	}
+	if err := binary.Write(buf, binary.LittleEndian, uint32(tv.TreeNodeInstance.Index())); err != nil {
+		return "", err
+	}
+	if err := binary.Write(buf, binary.LittleEndian, timestamp); err != nil {
+		return "", err
+	}
+	return SID(hex.EncodeToString(abstract.Sum(tv.keyPair.Suite, buf.Bytes()))), nil
 }
 
 func (tv *TimeVault) initSecret(sid SID, duration time.Duration) error {
