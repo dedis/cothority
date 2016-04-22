@@ -73,11 +73,9 @@ and that `$GOPATH` and `$GOBIN` are set
 
 ```bash
 go get github.com/dedis/cothority
-cd $GOPATH/src/github.com/dedis/cothority
-git checkout cosi_cli
-cd app
-go install cosi/cosi.go
-go install cothorityd/cothorityd.go
+cd $GOPATH/src/github.com/dedis/cothority/app
+go install ./cosi/
+go install ./cothorityd/
 ```
 
 The two binaries `cosi` and `cothorityd` will be added to `$GOBIN`. If you already
