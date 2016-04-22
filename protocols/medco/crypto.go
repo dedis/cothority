@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dedis/crypto/random"
+	"reflect"
 )
 
 
@@ -51,6 +52,18 @@ func (cv *CipherVector) Add(cv1, cv2 CipherVector) error{
 		(*cv)[i].Add(cv1[i], cv2[i])
 	}
 	return  nil
+}
+
+func (cv *CipherVector) Aggregate(ag1, ag2 Aggregatable) error {
+	cv1, ok1 := ag1.(*CipherVector)
+	cv2, ok2 := ag2.(*CipherVector)
+	if ok1 && ok2 {
+		cv.Add(*cv1, *cv2)
+		return nil
+	} else {
+
+		return errors.New("Cannot aggregate " + reflect.TypeOf(ag1).String() + " and " + reflect.TypeOf(ag2).String())
+	}
 }
 
 func InitCipherVector(suite abstract.Suite, dim int) *CipherVector {

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const NUM_MESS = 100
+const NUM_MESS = 5
 const NUM_BUCKET = 1
 var BUCKET_DESC = []int64{/*10,20,30,40,50,60,70, 80,90*/}
 const needle = "code0"
@@ -30,6 +30,8 @@ func Test5Nodes(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 1)
 	host,entityList, tree := local.GenTree(nNodes, false, true, true)
 	defer local.CloseAll()
+
+
 
 	root,_ := local.CreateNewNodeName("PrivateCount", tree)
 	suite := host[0].Suite()
