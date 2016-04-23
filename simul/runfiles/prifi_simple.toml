@@ -1,0 +1,8 @@
+Simulation = "PriFi"
+Servers = 2
+Bf = 1
+Rounds = 1
+CloseWait = 6000
+
+Hosts
+2
