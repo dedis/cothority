@@ -177,7 +177,10 @@ func (jv *JVSS) initSecret(sid SID) error {
 
 	// Initialise and broadcast our deal if necessary
 	if len(secret.deals) == 0 {
-		kp := config.NewKeyPair(jv.keyPair.Suite)
+		kp := jv.keyPair
+		if sid != LTSS {
+			kp = config.NewKeyPair(jv.keyPair.Suite)
+		}
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
 		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
 		secret.deals[jv.Index()] = deal

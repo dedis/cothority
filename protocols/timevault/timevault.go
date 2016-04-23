@@ -39,6 +39,8 @@ type TimeVault struct {
 	secretsDone      chan bool
 }
 
+// TODO: generalise the shared secret struct from JVSS and introduce timed secret
+
 // Secret contains all information on shared secrets.
 type Secret struct {
 	secret   *poly.SharedSecret // Shared secret
@@ -107,6 +109,8 @@ func (tv *TimeVault) Seal(duration time.Duration) (SID, abstract.Point, error) {
 		return "", nil, err
 	}
 	<-tv.secretsDone
+
+	// TODO: create a co-signature of the public key using the timevault peers
 
 	return sid, tv.secrets[sid].secret.Pub.SecretCommit(), nil
 }
