@@ -51,12 +51,12 @@ type JVSS struct {
 
 // Secret contains all information for long- and short-term shared secrets.
 type Secret struct {
-	secret   *poly.SharedSecret              // Shared secret
-	receiver *poly.Receiver                  // Receiver to aggregate deals
-	deals    map[int]*poly.Deal              // Buffer for deals
-	sigs     map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
-	numConfs int                             // Number of collected confirmations that shared secrets are ready
-	mtx      sync.Mutex                      // Mutex to sync access to numConfs
+	secret        *poly.SharedSecret              // Shared secret
+	receiver      *poly.Receiver                  // Receiver to aggregate deals
+	deals         map[int]*poly.Deal              // Buffer for deals
+	sigs          map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
+	confirmations int                             // Number of collected confirmations that shared secrets are ready
+	mtx           sync.Mutex                      // Mutex to sync access to confirmations
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -165,10 +165,10 @@ func (jv *JVSS) initSecret(sid SID) error {
 	if _, ok := jv.secrets[sid]; !ok {
 		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &Secret{
-			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
-			deals:    make(map[int]*poly.Deal),
-			sigs:     make(map[int]*poly.SchnorrPartialSig),
-			numConfs: 0,
+			receiver:      poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
+			deals:         make(map[int]*poly.Deal),
+			sigs:          make(map[int]*poly.SchnorrPartialSig),
+			confirmations: 0,
 		}
 		jv.secrets[sid] = sec
 	}
@@ -219,7 +219,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		}
 		secret.secret = sec
 		secret.mtx.Lock()
-		secret.numConfs++
+		secret.confirmations++
 		secret.mtx.Unlock()
 		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
