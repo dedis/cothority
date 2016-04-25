@@ -1,0 +1,8 @@
+Simulation = "TimeVault"
+Servers = 16
+Bf = 2
+
+Hosts
+4
+8
+16
