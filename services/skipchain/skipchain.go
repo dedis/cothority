@@ -21,6 +21,9 @@ type Service struct {
 	path string
 }
 
+// ProposeSkipBlock takes a hash for the latest valid SkipBlock and a SkipBlock
+// that will be verified. If the verification returns true, the new SkipBlock
+// will be signed and added to the chain and returned.
 func (s *Service) ProposeSkipBlock(latest crypto.HashID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
 	return nil, nil
 }
