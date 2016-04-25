@@ -105,33 +105,9 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
-	// TODO Check if TNI is already Done
+	// TODO Check if TreeNodeInstance is already Done
 	pi.DispatchMsg(sdaMsg)
 
-	//// If node does not exists, then create it
-	//o.nodeLock.Lock()
-	//node := o.nodes[sdaMsg.To.Id()]
-	//isDone := o.nodeInfo[sdaMsg.To.Id()]
-	//// If we never have seen this token before, then we create it
-	//if node == nil && !isDone {
-	//dbg.Lvl3(o.host.Entity.First(), "creating new node for token:", sdaMsg.To.Id())
-	//var err error
-	//o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
-	//o.nodeInfo[sdaMsg.To.Id()] = false
-	//if err != nil {
-	//o.nodeLock.Unlock()
-	//return err
-	//}
-	//node = o.nodes[sdaMsg.To.Id()]
-	//}
-	//// If node is ALREADY DONE => drop packet
-	//if isDone {
-	//dbg.Lvl2("Dropped message given to node that is done.")
-	//o.nodeLock.Unlock()
-	//return nil
-	//}
-	//o.nodeLock.Unlock()
-	/*node.DispatchMsg(sdaMsg)*/
 	return nil
 }
 
