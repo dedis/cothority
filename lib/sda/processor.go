@@ -8,12 +8,21 @@ import (
 	"github.com/dedis/cothority/lib/network"
 )
 
+// ServiceProcessor allows for an easy integration of external messages
+// into the Services. You have to embed it into your Service-structer,
+// then it will offer an 'AddMessage'-method that takes a message of type
+// 	func ReceiveMsg(e *network.Entity, msg *anyMessageType)(error, *replyMsg)
+// where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
+// with the network. Once 'anyMessageType' is received by the service,
+// the function 'ReceiveMsg' should return an error and any 'replyMsg' it
+// wants to send.
 type ServiceProcessor struct {
 	functions map[network.MessageTypeID]interface{}
 	Context
 }
 
-func NewProcessor(c Context) *ServiceProcessor {
+// NewServiceProcessor initializes your ServiceProcessor.
+func NewServiceProcessor(c Context) *ServiceProcessor {
 	return &ServiceProcessor{
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,

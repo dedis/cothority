@@ -20,7 +20,7 @@ func init() {
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
-	p := NewProcessor(nil)
+	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.AddMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
@@ -47,7 +47,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
-	p := NewProcessor(nil)
+	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.AddMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
@@ -152,7 +152,7 @@ type testContext struct {
 
 func newTestService(c Context, path string) Service {
 	ts := &testService{
-		ServiceProcessor: NewProcessor(&testContext{Context: c}),
+		ServiceProcessor: NewServiceProcessor(&testContext{Context: c}),
 	}
 	ts.AddMessage(ts.ProcessMsg)
 	return ts
