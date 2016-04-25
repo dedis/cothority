@@ -58,7 +58,7 @@ func TestSkipBlockRoster_Hash(t *testing.T) {
 func TestService_ProposeSkipBlock(t *testing.T) {
 	// send a ProposeBlock
 	genesis := &SkipBlockData{
-		Data: []byte("At the beginning the world was void and empty"),
+		Data: []byte("In the beginning God created the heaven and the earth."),
 		SkipBlockCommon: &SkipBlockCommon{
 			MaximumHeight: 2,
 		},
@@ -75,7 +75,9 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	assert.NotEqual(t, 0, latest.BackLink)
 
 	next := &SkipBlockData{
-		Data: []byte("And the spirit of the lord was upon the waters"),
+		Data: []byte("And the earth was without form, and void; " +
+			"and darkness was upon the face of the deep. " +
+			"And the Spirit of God moved upon the face of the waters."),
 		SkipBlockCommon: &SkipBlockCommon{
 			MaximumHeight: 2,
 		},
