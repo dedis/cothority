@@ -20,6 +20,8 @@ type LocalTest struct {
 	Hosts map[network.EntityID]*Host
 	// A map of Entity.Id to Overlays
 	Overlays map[network.EntityID]*Overlay
+	// A map of Entity.Id to Services
+	Services map[network.EntityID]map[ServiceID]Service
 	// A map of EntityList.Id to EntityLists
 	EntityLists map[EntityListID]*EntityList
 	// A map of Tree.Id to Trees
@@ -35,6 +37,7 @@ func NewLocalTest() *LocalTest {
 	return &LocalTest{
 		Hosts:       make(map[network.EntityID]*Host),
 		Overlays:    make(map[network.EntityID]*Overlay),
+		Services:    make(map[network.EntityID]map[ServiceID]Service),
 		EntityLists: make(map[EntityListID]*EntityList),
 		Trees:       make(map[TreeID]*Tree),
 		Nodes:       make([]*TreeNodeInstance, 0, 1),
@@ -69,15 +72,21 @@ func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, erro
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
+func (l *LocalTest) GenLocalHosts(n int, c, pm bool) []*Host {
+	hosts := GenLocalHosts(n, c, pm)
+	for _, host := range hosts {
+		l.Hosts[host.Entity.ID] = host
+		l.Overlays[host.Entity.ID] = host.overlay
+		l.Services[host.Entity.ID] = host.serviceStore.services
+	}
+	return hosts
+}
+
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
 func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := GenLocalHosts(n, connect, processMsg)
-	for _, host := range hosts {
-		l.Hosts[host.Entity.ID] = host
-		l.Overlays[host.Entity.ID] = host.overlay
-	}
+	hosts := l.GenLocalHosts(n, connect, processMsg)
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
@@ -97,11 +106,7 @@ func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host,
 // nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
 // be used more than once in the tree.
 func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := GenLocalHosts(nbrHosts, connect, true)
-	for _, host := range hosts {
-		l.Hosts[host.Entity.ID] = host
-		l.Overlays[host.Entity.ID] = host.overlay
-	}
+	hosts := l.GenLocalHosts(nbrHosts, connect, true)
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
