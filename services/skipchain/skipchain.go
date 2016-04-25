@@ -35,14 +35,16 @@ type Service struct {
 // there already exist previous blocks, it will return an error.
 func (s *Service) ProposeSkipBlock(latest crypto.HashID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
 	if latest == nil /* && FIXME: DO SOME VERIFICATION */ { // genesis
-		curID := string(proposed.updateHash())
-		s.SkipBlocks[curID] = proposed
 		sbc := proposed.GetCommon()
 		sbc.Index++
+		// genesis block has a random backlink:
 		sbc.BackLink = make([][]byte, 1)
 		bl := make([]byte, 32)
 		_, _ = rand.Read(bl)
 		sbc.BackLink[0] = bl
+		// update
+		curID := string(proposed.updateHash())
+		s.SkipBlocks[curID] = proposed
 		reply := &ProposedSkipBlockReply{
 			Previous: nil, // genesis block
 			Latest:   proposed,

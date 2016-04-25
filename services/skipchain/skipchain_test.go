@@ -89,13 +89,15 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 			MaximumHeight: 2,
 		},
 	}
-	psbr2, err := s.ProposeSkipBlock(genesis.Hash, next)
-	latest = psbr2.Latest.(*SkipBlockData)
+	id := psbr.Latest.updateHash()
+	psbr2, err := s.ProposeSkipBlock(id, next)
+	assert.Nil(t, err)
+	latest2 := psbr2.Latest.GetCommon()
 	// verify creation of GenesisBlock:
 	blockCount++
-	assert.Equal(t, blockCount, latest.Index)
-	assert.Equal(t, 1, len(latest.BackLink))
-	assert.NotEqual(t, 0, latest.BackLink)
+	assert.Equal(t, blockCount, latest2.Index)
+	assert.Equal(t, 1, len(latest2.BackLink))
+	assert.NotEqual(t, 0, latest2.BackLink)
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -108,7 +110,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbs := make([]*SkipBlockRoster, sbLength)
 	sbs[0] = makeGenesisRoster(s, el)
 	for i := 1; i < sbLength-1; i++ {
-		el.List = el.List[0 : sbLength-i]
+		el.List = el.List[0 : sbLength-(i+1)]
 		reply, err := s.ProposeSkipBlock(sbs[i-1].Hash,
 			&SkipBlockRoster{EntityList: el})
 		dbg.ErrFatal(err)
