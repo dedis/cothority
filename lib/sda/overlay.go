@@ -98,9 +98,11 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			}
 		}
 		if err := o.RegisterProtocolInstance(pi); err != nil {
-			return errors.New("Error Binding TNI and PI")
+			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
+				err.Error())
 		}
-		dbg.Lvl2(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ", fmt.Sprintf("%+v", sdaMsg.To))
+		dbg.Lvl2(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
+			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
 	// TODO Check if TNI is already Done
@@ -341,7 +343,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 		return ErrWrongTreeNodeInstance
 	}
 
-	if tni.isBinded() {
+	if tni.isBound() {
 		return ErrProtocolRegistered
 	}
 
