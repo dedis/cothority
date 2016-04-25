@@ -71,7 +71,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 // and sends it back.
 func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 	cr *ClientRequest) {
-	reply := p.GetReply(e, cr)
+	reply := p.GetReply(e, cr.Data)
 
 	if err := p.SendRaw(e, reply); err != nil {
 		dbg.Error(err)
@@ -81,23 +81,18 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 // ProcessServiceMessage is to implement the Service interface.
 func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 	s *ServiceMessage) {
-	cr := &ClientRequest{
-		Data: s.Data,
-	}
-	p.GetReply(e, cr)
+	p.GetReply(e, s.Data)
 }
 
 // GetReply takes a clientRequest and passes it to the corresponding
 // handler-function.
-func (p *ServiceProcessor) GetReply(e *network.Entity, cr *ClientRequest) network.ProtocolMessage {
-	mt := cr.Type
+func (p *ServiceProcessor) GetReply(e *network.Entity, data []byte) network.ProtocolMessage {
+	mt, m, err := network.UnmarshalRegisteredType(data,
+		network.DefaultConstructors(network.Suite))
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &StatusRet{"Don't know message: " + mt.String()}
 	}
-
-	_, m, err := network.UnmarshalRegisteredType(cr.Data,
-		network.DefaultConstructors(network.Suite))
 
 	if err != nil {
 		return &StatusRet{err.Error()}
