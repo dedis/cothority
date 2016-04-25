@@ -9,20 +9,20 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-type Processor struct {
+type ServiceProcessor struct {
 	functions map[network.MessageTypeID]interface{}
 	sda.Context
 }
 
-func NewProcessor(c sda.Context) *Processor {
-	return &Processor{
+func NewProcessor(c sda.Context) *ServiceProcessor {
+	return &ServiceProcessor{
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,
 	}
 }
 
 // AddMessage puts a new message in the message-handler
-func (p *Processor) AddMessage(f interface{}) error {
+func (p *ServiceProcessor) AddMessage(f interface{}) error {
 	ft := reflect.TypeOf(f)
 	// Check we have the correct channel-type
 	if ft.Kind() != reflect.Func {
@@ -61,7 +61,7 @@ func (p *Processor) AddMessage(f interface{}) error {
 
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
-func (p *Processor) ProcessClientRequest(e *network.Entity,
+func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 	cr *sda.ClientRequest) {
 	reply := p.GetReply(e, cr)
 
@@ -71,7 +71,7 @@ func (p *Processor) ProcessClientRequest(e *network.Entity,
 }
 
 // ProcessServiceMessage is to implement the Service interface.
-func (p *Processor) ProcessServiceMessage(e *network.Entity,
+func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 	s *sda.ServiceMessage) {
 	cr := &sda.ClientRequest{
 		Data: s.Data,
@@ -81,7 +81,7 @@ func (p *Processor) ProcessServiceMessage(e *network.Entity,
 
 // GetReply takes a clientRequest and passes it to the corresponding
 // handler-function.
-func (p *Processor) GetReply(e *network.Entity, cr *sda.ClientRequest) network.ProtocolMessage {
+func (p *ServiceProcessor) GetReply(e *network.Entity, cr *sda.ClientRequest) network.ProtocolMessage {
 	mt := cr.Type
 	fu, ok := p.functions[mt]
 	if !ok {

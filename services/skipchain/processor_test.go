@@ -143,7 +143,7 @@ func procMsgWrong6(e *network.Entity, msg *int) (network.ProtocolMessage, error)
 }
 
 type testService struct {
-	*Processor
+	*ServiceProcessor
 }
 
 type testContext struct {
@@ -153,7 +153,7 @@ type testContext struct {
 
 func newTestService(c sda.Context, path string) sda.Service {
 	ts := &testService{
-		Processor: NewProcessor(&testContext{Context: c}),
+		ServiceProcessor: NewProcessor(&testContext{Context: c}),
 	}
 	ts.AddMessage(ts.ProcessMsg)
 	return ts
