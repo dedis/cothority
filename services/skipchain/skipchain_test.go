@@ -3,6 +3,8 @@ package skipchain
 import (
 	"testing"
 
+	"bytes"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
@@ -111,6 +113,36 @@ func TestService_GetUpdateChain(t *testing.T) {
 		dbg.ErrFatal(err)
 		sbs[i] = reply.Latest.(*SkipBlockRoster)
 	}
+	for i := 0; i < sbLength; i++ {
+		sbc, err := s.GetUpdateChain(sbs[i].Hash)
+		dbg.ErrFatal(err)
+		if !bytes.Equal(sbc.Update[0].GetCommon().Hash,
+			sbs[i].Hash) {
+			t.Fatal("First hash is not from our SkipBlock")
+		}
+		if !bytes.Equal(sbc.Update[len(sbc.Update)-1].GetCommon().Hash,
+			sbs[sbLength-1].Hash) {
+			t.Fatal("Last Hash is not equal to last SkipBlock")
+		}
+		for up, sb1 := range sbc.Update {
+			dbg.ErrFatal(sb1.VerifySignatures())
+			if up < len(sbc.Update)-1 {
+				sb2 := sbc.Update[up]
+				h1 := sb1.GetCommon().Height
+				h2 := sb2.GetCommon().Height
+				// height := min(h1, h2)
+				height := h1
+				if h2 < height {
+					height = h2
+				}
+				if !bytes.Equal(sb1.GetCommon().ForwardLink[height].Hash,
+					sb2.GetCommon().Hash) {
+					t.Fatal("Forward-pointer of", up,
+						"is different of hash in", up+1)
+				}
+			}
+		}
+	}
 }
 
 func TestService_PropagateSkipBlock(t *testing.T) {
@@ -136,5 +168,5 @@ func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlockRoster {
 func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.EntityList, *Service) {
 	hosts := local.GenLocalHosts(nbr, false, false)
 	el := local.GenEntityListFromHost(hosts...)
-	return hosts, el, local.Services[hosts[0].Entity.ID][sda.ServiceFactory.ServiceID("SkipChain")].(*Service)
+	return hosts, el, local.Services[hosts[0].Entity.ID][sda.ServiceFactory.ServiceID("Skipchain")].(*Service)
 }
