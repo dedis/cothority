@@ -38,10 +38,10 @@ func TestProcessor_AddMessage(t *testing.T) {
 		procMsgWrong6,
 	}
 	for _, f := range wrongFunctions {
-		dbg.Lvl2("Checking function %+v", reflect.TypeOf(f).String())
+		dbg.Lvl2("Checking function", reflect.TypeOf(f).String())
 		err := p.RegisterMessage(f)
 		if err == nil {
-			t.Fatalf("Shouldn't accept function %+v", reflect.TypeOf(f).String())
+			t.Fatalf("Shouldn't accept function %+s", reflect.TypeOf(f).String())
 		}
 	}
 }
