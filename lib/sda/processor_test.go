@@ -100,7 +100,6 @@ func mkClientRequest(msg network.ProtocolMessage) *ClientRequest {
 	b, err := network.MarshalRegisteredType(msg)
 	dbg.ErrFatal(err)
 	return &ClientRequest{
-		Type: network.TypeFromData(msg),
 		Data: b,
 	}
 }

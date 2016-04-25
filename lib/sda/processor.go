@@ -90,14 +90,12 @@ func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 // GetReply takes a clientRequest and passes it to the corresponding
 // handler-function.
 func (p *ServiceProcessor) GetReply(e *network.Entity, cr *ClientRequest) network.ProtocolMessage {
-	mt := cr.Type
+	mt, m, err := network.UnmarshalRegisteredType(cr.Data,
+		network.DefaultConstructors(network.Suite))
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &StatusRet{"Don't know message: " + mt.String()}
 	}
-
-	_, m, err := network.UnmarshalRegisteredType(cr.Data,
-		network.DefaultConstructors(network.Suite))
 
 	if err != nil {
 		return &StatusRet{err.Error()}
