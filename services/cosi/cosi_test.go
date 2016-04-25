@@ -1,11 +1,12 @@
 package cosi
 
 import (
+	"testing"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestServiceCosi(t *testing.T) {

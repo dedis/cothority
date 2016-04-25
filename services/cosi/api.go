@@ -2,6 +2,7 @@ package cosi
 
 import (
 	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
