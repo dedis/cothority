@@ -232,6 +232,8 @@ func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
 type ClientRequest struct {
 	// Name of the service to direct this request to
 	Service ServiceID `json:"service_id"`
+	// Type is the type of the underlying message
+	Type network.MessageTypeID `json:"type"`
 	// Data containing all the information in the request
 	Data []byte `json:"data"`
 }
@@ -252,6 +254,7 @@ func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error)
 	}
 	return &ClientRequest{
 		Service: sid,
+		Type:    network.RegisterMessageType(r),
 		Data:    buff,
 	}, nil
 }
@@ -335,6 +338,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	}
 	serviceReq := &ClientRequest{
 		Service: c.ServiceID,
+		Type:    m.MsgType,
 		Data:    b,
 	}
 	pchan := make(chan network.Message)

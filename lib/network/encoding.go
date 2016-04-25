@@ -207,14 +207,16 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Me
 	if err := binary.Read(b, globalOrder, &tID); err != nil {
 		return ErrorType, nil, err
 	}
-	typ, ok := registry.get(tID)
-	if !ok {
+	var typ reflect.Type
+	var ok bool
+	if typ, ok = registry.get(tID); !ok {
 		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
 			typ.Name())
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
-	if err := protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
+	var err error
+	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
 		return tID, ptrVal.Elem().Interface(), err
 	}
 	return tID, ptrVal.Elem().Interface(), nil
