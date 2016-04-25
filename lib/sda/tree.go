@@ -23,6 +23,11 @@ import (
 // - The overlay network: a mapping from PeerId
 // It contains the PeerId of the parent and the sub tree of the children.
 
+func init() {
+	network.RegisterMessageType(Tree{})
+	network.RegisterMessageType(TBMstruct{})
+}
+
 // Tree is a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
 type Tree struct {
@@ -43,8 +48,6 @@ func (tId TreeID) Equals(tId2 TreeID) bool {
 func (tId TreeID) String() string {
 	return uuid.UUID(tId).String()
 }
-
-var _ = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
@@ -97,6 +100,45 @@ func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 func (t *Tree) Marshal() ([]byte, error) {
 	buf, err := network.MarshalRegisteredType(t.MakeTreeMarshal())
 	return buf, err
+}
+
+type TBMstruct struct {
+	T  []byte
+	EL *EntityList
+}
+
+// BinaryMarshaler does the same as Marshal
+func (t *Tree) BinaryMarshaler() ([]byte, error) {
+	bt, err := t.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	tbm := &TBMstruct{
+		T:  bt,
+		EL: t.EntityList,
+	}
+	b, err := network.MarshalRegisteredType(tbm)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// BinaryUnmarshaler takes a TreeMarshal and stores it in the tree
+func (t *Tree) BinaryUnmarshaler(b []byte) error {
+	_, m, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	tbm, ok := m.(TBMstruct)
+	if !ok {
+		return errors.New("Didn't find TBMstruct")
+	}
+	tree, err := NewTreeFromMarshal(tbm.T, tbm.EL)
+	if err != nil {
+		return err
+	}
+	t.EntityList = tbm.EL
+	t.Id = tree.Id
+	t.Root = tree.Root
+	return nil
 }
 
 // Equal verifies if the given tree is equal
