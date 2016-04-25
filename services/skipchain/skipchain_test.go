@@ -67,7 +67,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 			MaximumHeight: 2,
 		},
 	}
-	blockCount := 0
+	blockCount := uint32(0)
 	s := newSkipchainService(nil, "").(*Service)
 	psbr, err := s.ProposeSkipBlock(nil, genesis)
 	assert.Nil(t, err)
@@ -75,6 +75,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	// verify creation of GenesisBlock:
 	blockCount++
 	assert.Equal(t, blockCount, latest.Index)
+	// the genesis block has a random back-link:
 	assert.Equal(t, 1, len(latest.BackLink))
 	assert.NotEqual(t, 0, latest.BackLink)
 

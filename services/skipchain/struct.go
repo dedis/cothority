@@ -8,14 +8,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-// ProtocolSkipchain Genesis
-type ProtocolSkipchain struct {
-	SetupDone chan bool
-	// SkipBlocks points from HashID to SkipBlock but HashID is not a valid
-	// key-type for maps, so we need to cast it to string
-	SkipBlocks map[string]*SkipBlock
-}
-
 type SkipBlock interface {
 	// Hash calculates the hash, writes it to the SkipBlock and returns
 	// calculated hash.

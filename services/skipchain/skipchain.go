@@ -1,6 +1,9 @@
 package skipchain
 
 import (
+	"crypto/rand"
+	"errors"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
@@ -18,14 +21,55 @@ func init() {
 // Service handles adding new SkipBlocks
 type Service struct {
 	*sda.ServiceProcessor
-	path string
+	// SkipBlocks points from HashID to SkipBlock but HashID is not a valid
+	// key-type for maps, so we need to cast it to string
+	SkipBlocks map[string]SkipBlock
+	path       string
 }
 
 // ProposeSkipBlock takes a hash for the latest valid SkipBlock and a SkipBlock
 // that will be verified. If the verification returns true, the new SkipBlock
 // will be signed and added to the chain and returned.
+// If the given nil as the latest block it verify if we are actually creating
+// the first (genesis) block and create it. If it is called with nil although
+// there already exist previous blocks, it will return an error.
 func (s *Service) ProposeSkipBlock(latest crypto.HashID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
-	return nil, nil
+	if latest == nil /* && FIXME: DO SOME VERIFICATION */ { // genesis
+		curID := string(proposed.updateHash())
+		s.SkipBlocks[curID] = proposed
+		sbc := proposed.GetCommon()
+		sbc.Index++
+		sbc.BackLink = make([][]byte, 1)
+		bl := make([]byte, 32)
+		_, _ = rand.Read(bl)
+		sbc.BackLink[0] = bl
+		reply := &ProposedSkipBlockReply{
+			Previous: nil, // genesis block
+			Latest:   proposed,
+		}
+		return reply, nil
+	}
+
+	prev, ok := s.SkipBlocks[string(latest)]
+	if !ok {
+		return nil, errors.New("Couldn't find latest block.")
+	}
+	if s.verifyNewSkipBlock(prev, proposed) {
+		curID := string(proposed.updateHash())
+		s.SkipBlocks[curID] = proposed
+		sbc := proposed.GetCommon()
+		sbc.Index = prev.GetCommon().Index + 1
+		sbc.BackLink = make([][]byte, 1)
+		sbc.BackLink[0] = prev.updateHash()
+
+		reply := &ProposedSkipBlockReply{
+			Previous: prev,
+			Latest:   proposed,
+		}
+		return reply, nil
+	}
+
+	return nil, errors.New("Verification of proposed block failed.")
 }
 
 // GetUpdateChain returns a slice of SkipBlocks that point to the latest
@@ -57,7 +101,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 // verifyNewSkipBlock calls the appropriate app-verification and returns
 // either a signature on the newest SkipBlock or nil if the SkipBlock
 // has been refused
-func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlockCommon) bool {
+func (s *Service) verifyNewSkipBlock(latest, newest SkipBlock) bool {
 	// TODO: implement a protocol that can check on the veracity of the new
 	// TODO: EntityList
 	return true
@@ -67,6 +111,7 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
+		SkipBlocks:       make(map[string]SkipBlock),
 	}
 	return s
 }
