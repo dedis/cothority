@@ -15,6 +15,10 @@ import (
 	"golang.org/x/net/context"
 )
 
+func init() {
+	network.RegisterMessageType(&StatusRet{})
+}
+
 // Service is a generic interface to define any type of services.
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
@@ -192,7 +196,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		// !! register to the ProtocolFactory !!
 		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
-	dbg.Lvl2(h.workingAddress, "instantiated all services")
+	dbg.Lvl3(h.workingAddress, "instantiated all services")
 	return &serviceStore{services, configs}
 }
 
@@ -227,11 +231,9 @@ func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
 // * Data: contains all the information of the request
 type ClientRequest struct {
 	// Name of the service to direct this request to
-	Service ServiceID `json:"service_id"`
-	// Type is the type of the underlying message
-	Type network.MessageTypeID `json:"type"`
+	Service ServiceID
 	// Data containing all the information in the request
-	Data []byte `json:"data"`
+	Data []byte
 }
 
 // RequestID is the type that registered by the network library
@@ -250,7 +252,6 @@ func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error)
 	}
 	return &ClientRequest{
 		Service: sid,
-		Type:    network.RegisterMessageType(r),
 		Data:    buff,
 	}, nil
 }
@@ -326,19 +327,20 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	if err != nil {
 		return nil, err
 	}
+
 	b, err := m.MarshalBinary()
+
 	if err != nil {
 		return nil, err
 	}
 	serviceReq := &ClientRequest{
 		Service: c.ServiceID,
-		Type:    m.MsgType,
 		Data:    b,
 	}
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Lvlf3("Sending request %+v", serviceReq)
+		dbg.Lvlf4("Sending request %+v", serviceReq)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
@@ -362,7 +364,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
-		return &network.Message{}, errors.New("Timeout on signing")
+		return &network.Message{}, errors.New("Timeout on sending message")
 	}
 }
 
@@ -378,9 +380,9 @@ func (c *Client) BinaryUnmarshaler(b []byte) error {
 	return nil
 }
 
-// ErrorRet is used when an error is returned - Error may be nil
-type ErrorRet struct {
-	Error error
+// StatusRet is used when a status is returned - mostly an error
+type StatusRet struct {
+	Status string
 }
 
 // ErrMsg converts a combined err and status-message to an error. It
@@ -389,13 +391,13 @@ func ErrMsg(em *network.Message, err error) error {
 	if err != nil {
 		return err
 	}
-	errMsg, ok := em.Msg.(ErrorRet)
+	status, ok := em.Msg.(StatusRet)
 	if !ok {
 		return nil
 	}
-	errMsgStr := errMsg.Error.Error()
-	if errMsgStr != "" {
-		return errors.New("Remote-error: " + errMsgStr)
+	statusStr := status.Status
+	if statusStr != "" {
+		return errors.New("Remote-error: " + statusStr)
 	}
 	return nil
 }
