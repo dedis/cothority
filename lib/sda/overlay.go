@@ -29,6 +29,8 @@ type Overlay struct {
 	instancesInfo     map[TokenID]bool
 	instancesLock     sync.Mutex
 	protocolInstances map[TokenID]ProtocolInstance
+
+	transmitMux sync.Mutex
 }
 
 // NewOverlay creates a new overlay-structure
@@ -41,6 +43,7 @@ func NewOverlay(h *Host) *Overlay {
 		instances:         make(map[TokenID]*TreeNodeInstance),
 		instancesInfo:     make(map[TokenID]bool),
 		protocolInstances: make(map[TokenID]ProtocolInstance),
+		transmitMux:       sync.Mutex{},
 	}
 }
 
@@ -50,6 +53,8 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
+	o.transmitMux.Lock()
+	defer o.transmitMux.Unlock()
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
 		dbg.Lvl3("Will ask the EntityList from token", sdaMsg.To.EntityListID, len(o.entityLists), o.host.workingAddress)
@@ -101,7 +106,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
 				err.Error())
 		}
-		dbg.Lvl2(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
+		dbg.Lvl4(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}

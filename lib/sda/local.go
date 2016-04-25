@@ -3,7 +3,6 @@ package sda
 import (
 	"errors"
 	"strconv"
-	"testing"
 
 	"time"
 
@@ -33,7 +32,6 @@ type LocalTest struct {
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
-	dbg.TestOutput(testing.Verbose(), 3)
 	return &LocalTest{
 		Hosts:       make(map[network.EntityID]*Host),
 		Overlays:    make(map[network.EntityID]*Overlay),
