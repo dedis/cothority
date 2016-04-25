@@ -51,6 +51,14 @@ type SkipBlockCommon struct {
 	ForwardLink []ForwardStruct
 }
 
+func (sbc *SkipBlockCommon) VerifySignatures() error {
+	return nil
+}
+
+func (sbc *SkipBlockCommon) GetCommon() *SkipBlockCommon {
+	return sbc
+}
+
 type SkipBlockData struct {
 	*SkipBlockCommon
 	// RosterPointer points to the SkipBlock of the responsible Roster
