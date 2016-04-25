@@ -17,7 +17,7 @@ type ProtocolSkipchain struct {
 type SkipBlock interface {
 	// Hash calculates the hash, writes it to the SkipBlock and returns
 	// calculated hash.
-	hash() crypto.HashID
+	updateHash() crypto.HashID
 }
 
 // SkipBlock represents a skipblock
@@ -51,7 +51,7 @@ type SkipBlockData struct {
 	Data []byte
 }
 
-func (sbd *SkipBlockData) hash() crypto.HashID {
+func (sbd *SkipBlockData) updateHash() crypto.HashID {
 	suite := network.Suite
 	copy := *sbd
 	copy.Signature = cosi.NewSignature(suite)
@@ -78,8 +78,23 @@ type SkipBlockRoster struct {
 	EntityList *sda.EntityList
 }
 
-func (sbr *SkipBlockRoster) hash() crypto.HashID {
-	return nil
+func (sbr *SkipBlockRoster) updateHash() crypto.HashID {
+	suite := network.Suite
+	copy := *sbr
+	copy.Signature = cosi.NewSignature(suite)
+	copy.Hash = nil
+	copy.ForwardLink = nil
+	b, err := network.MarshalRegisteredType(&copy)
+	if err != nil {
+		dbg.Panic("Couldn't marshal skip-block:", err)
+	}
+	h, err := crypto.HashBytes(suite.Hash(), b)
+	if err != nil {
+		dbg.Panic("Couldn't hash skip-block:", err)
+	}
+	// store the generated hash:
+	sbr.Hash = h
+	return h
 }
 
 func NewSkipBlockCommon() *SkipBlockCommon {

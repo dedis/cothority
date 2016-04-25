@@ -15,6 +15,7 @@ func init() {
 		&PropagateSkipBlock{},
 		&ForwardSignature{},
 		&SkipBlockData{},
+		&SkipBlockRoster{},
 	}
 	for _, m := range msgs {
 		network.RegisterMessageType(m)

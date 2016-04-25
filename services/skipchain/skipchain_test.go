@@ -19,7 +19,7 @@ func TestSkipBlockData_Hash(t *testing.T) {
 		},
 		Data: []byte("1"),
 	}
-	h1 := sbd1.hash()
+	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
 	sbd2 := &SkipBlockData{
@@ -28,7 +28,7 @@ func TestSkipBlockData_Hash(t *testing.T) {
 		},
 		Data: []byte("2"),
 	}
-	h2 := sbd2.hash()
+	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
 }
 
@@ -40,18 +40,20 @@ func TestSkipBlockRoster_Hash(t *testing.T) {
 		SkipBlockCommon: &SkipBlockCommon{
 			Height: 1,
 		},
+		RosterName: "genesis",
 		EntityList: el,
 	}
-	h1 := sbd1.hash()
+	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
 	sbd2 := &SkipBlockRoster{
 		SkipBlockCommon: &SkipBlockCommon{
 			Height: 1,
 		},
+		RosterName: "genesis",
 		EntityList: local.GenEntityListFromHost(hosts[0]),
 	}
-	h2 := sbd2.hash()
+	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
 }
 
