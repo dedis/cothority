@@ -11,13 +11,21 @@ import (
 // ProtocolSkipchain Genesis
 type ProtocolSkipchain struct {
 	SetupDone chan bool
-	SkipChain map[string]*SkipBlock
+	// SkipBlocks points from HashID to SkipBlock but HashID is not a valid
+	// key-type for maps, so we need to cast it to string
+	SkipBlocks map[string]*SkipBlock
 }
 
 type SkipBlock interface {
 	// Hash calculates the hash, writes it to the SkipBlock and returns
 	// calculated hash.
 	updateHash() crypto.HashID
+	// VerifySignature checks if the main signature and all forward-links
+	// are correctly signed and returns an error if not.
+	VerifySignatures() error
+	// GetCommon returns the part of the main information about the
+	// SkipBlock which is the SkipBlockCommon structure.
+	GetCommon() *SkipBlockCommon
 }
 
 // SkipBlock represents a skipblock
@@ -45,8 +53,8 @@ type SkipBlockCommon struct {
 
 type SkipBlockData struct {
 	*SkipBlockCommon
-	// RosterPointer points to the SkipChain of the responsible Roster
-	RosterPointer string
+	// RosterPointer points to the SkipBlock of the responsible Roster
+	RosterPointer crypto.HashID
 	// Data is any data to b-e stored in that SkipBlock
 	Data []byte
 }
@@ -103,7 +111,7 @@ func NewSkipBlockCommon() *SkipBlockCommon {
 	}
 }
 
-// ForwardStruct has the hash of the next block and a signauter of it
+// ForwardStruct has the hash of the next block and a signature of it
 type ForwardStruct struct {
 	Hash []byte
 	*cosi.Signature

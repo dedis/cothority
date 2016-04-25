@@ -28,8 +28,22 @@ func (s *Service) ProposeSkipBlock(latest crypto.HashID, proposed SkipBlock) (*P
 	return nil, nil
 }
 
+// GetUpdateChain returns a slice of SkipBlocks that point to the latest
+// SkipBlock. Comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(latest crypto.HashID) (*GetUpdateChainReply, error) {
 	return nil, nil
+}
+
+// PropagateSkipBlock sends a newly signed SkipBlock to all members of
+// the Cothority
+func (s *Service) PropagateSkipBlock(latest SkipBlock) {
+
+}
+
+// ForwardSignature asks this responsible for a SkipChain to sign off
+// a new ForwardLink. This will probably be sent to all members of any
+// SkipChain-definition at time 'n'
+func (s *Service) ForwardSignature(updating *ForwardSignature) {
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is

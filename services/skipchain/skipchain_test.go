@@ -57,6 +57,10 @@ func TestSkipBlockRoster_Hash(t *testing.T) {
 	assert.NotEqual(t, h1, h2)
 }
 
+func TestSkipBlockInterface(t *testing.T) {
+	// Tests the different accessors
+}
+
 func TestService_ProposeSkipBlock(t *testing.T) {
 	// send a ProposeBlock
 	genesis := &SkipBlockData{
@@ -94,4 +98,12 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
+	// Create a small chain and test whether we can get from one element
+	// of the chain to the last element with a valid slice of SkipBlocks
+}
+
+func TestService_PropagateSkipBlock(t *testing.T) {
+}
+
+func TestService_ForwardSignature(t *testing.T) {
 }
