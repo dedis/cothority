@@ -4,6 +4,7 @@
 package timevault
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -115,6 +116,10 @@ func (tv *TimeVault) Seal(duration time.Duration) (SID, abstract.Point, error) {
 	return sid, tv.secrets[sid].secret.Pub.SecretCommit(), nil
 }
 
+// ErrNotExpired is used when requesting to open a seal while the timer is not
+// finished yet
+var ErrNotExpired = errors.New("Timeout has not expired for this secret yet")
+
 // Open checks if the timer of a shared secret has already expired and if so
 // recovers and returns the secret. If the timer has not yet expired, the
 // function returns an error.
@@ -128,7 +133,7 @@ func (tv *TimeVault) Open(sid SID) (abstract.Secret, error) {
 	secret.mtx.Lock()
 	defer secret.mtx.Unlock()
 	if !secret.expired {
-		return nil, fmt.Errorf("Error, secret has not yet expired")
+		return nil, ErrNotExpired
 	}
 
 	// Setup list of recovered secrets if necessary
