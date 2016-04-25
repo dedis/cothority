@@ -43,7 +43,8 @@ type TreeNodeInstance struct {
 	// kicking off new message
 	msgDispatchQueueWait chan bool
 	// whether this node is closing
-	closing bool
+	closing     bool
+	instanceMut sync.RWMutex
 }
 
 // aggregateMessages (if set) tells to aggregate messages from all children
@@ -67,6 +68,7 @@ func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode) *TreeNodeInstance
 		treeNode:             tn,
 		msgDispatchQueue:     make([]*Data, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
+		instanceMut:          sync.RWMutex{},
 	}
 	go n.dispatchMsgReader()
 	return n
@@ -213,7 +215,7 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.handlers[typ] = c
 	n.messageTypeFlags[typ] = flags
-	dbg.Lvl3("Registered handler", typ, "with flags", flags)
+	dbg.Lvl3(n.Host().workingAddress, "Registered handler", typ, "with flags", flags)
 	return nil
 }
 
@@ -229,6 +231,8 @@ func (n *TreeNodeInstance) RegisterHandlers(handlers ...interface{}) error {
 
 // ProtocolInstance returns the instance of the running protocol
 func (n *TreeNodeInstance) ProtocolInstance() ProtocolInstance {
+	n.instanceMut.RLock()
+	defer n.instanceMut.RUnlock()
 	return n.instance
 }
 
@@ -437,6 +441,8 @@ func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Da
 // StartProtocol calls the Start() on the underlying protocol which in turn will
 // initiate the first message to its children
 func (n *TreeNodeInstance) StartProtocol() error {
+	n.instanceMut.RLock()
+	defer n.instanceMut.RUnlock()
 	return n.instance.Start()
 }
 
@@ -592,9 +598,13 @@ func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
 	return n
 }
 func (n *TreeNodeInstance) isBound() bool {
+	n.instanceMut.RLock()
+	defer n.instanceMut.RUnlock()
 	return n.instance != nil
 }
 
 func (n *TreeNodeInstance) bind(pi ProtocolInstance) {
+	n.instanceMut.Lock()
+	defer n.instanceMut.Unlock()
 	n.instance = pi
 }
