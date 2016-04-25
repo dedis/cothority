@@ -65,6 +65,8 @@ func (sbd *SkipBlockData) hash() crypto.HashID {
 	if err != nil {
 		dbg.Panic("Couldn't hash skip-block:", err)
 	}
+	// store the generated hash:
+	sbd.Hash = h
 	return h
 }
 
@@ -76,7 +78,7 @@ type SkipBlockRoster struct {
 	EntityList *sda.EntityList
 }
 
-func (sbd *SkipBlockRoster) hash() crypto.HashID {
+func (sbr *SkipBlockRoster) hash() crypto.HashID {
 	return nil
 }
 
