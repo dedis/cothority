@@ -591,7 +591,7 @@ func (n *TreeNodeInstance) Host() *Host {
 func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
 	return n
 }
-func (n *TreeNodeInstance) isBinded() bool {
+func (n *TreeNodeInstance) isBound() bool {
 	return n.instance != nil
 }
 
