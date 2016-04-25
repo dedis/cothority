@@ -1,4 +1,4 @@
-package skipchain
+package sda
 
 import (
 	"testing"
@@ -9,19 +9,18 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/config"
 )
 
-var testServiceID sda.ServiceID
+var testServiceID ServiceID
 
 func init() {
-	sda.RegisterNewService("testService", newTestService)
-	testServiceID = sda.ServiceFactory.ServiceID("testService")
+	RegisterNewService("testService", newTestService)
+	testServiceID = ServiceFactory.ServiceID("testService")
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
-	p := NewProcessor(nil)
+	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.AddMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
@@ -48,7 +47,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
-	p := NewProcessor(nil)
+	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.AddMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
@@ -64,7 +63,7 @@ func TestProcessor_GetReply(t *testing.T) {
 	}
 
 	rep = p.GetReply(e, mkClientRequest(&testMsg{42}))
-	errMsg, ok := rep.(*sda.StatusRet)
+	errMsg, ok := rep.(*StatusRet)
 	if !ok {
 		t.Fatal("42 should return an error")
 	}
@@ -74,7 +73,7 @@ func TestProcessor_GetReply(t *testing.T) {
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
-	local := sda.NewLocalTest()
+	local := NewLocalTest()
 
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
@@ -97,10 +96,10 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	}
 }
 
-func mkClientRequest(msg network.ProtocolMessage) *sda.ClientRequest {
+func mkClientRequest(msg network.ProtocolMessage) *ClientRequest {
 	b, err := network.MarshalRegisteredType(msg)
 	dbg.ErrFatal(err)
-	return &sda.ClientRequest{
+	return &ClientRequest{
 		Type: network.TypeFromData(msg),
 		Data: b,
 	}
@@ -147,19 +146,19 @@ type testService struct {
 }
 
 type testContext struct {
-	sda.Context
+	Context
 	Msg interface{}
 }
 
-func newTestService(c sda.Context, path string) sda.Service {
+func newTestService(c Context, path string) Service {
 	ts := &testService{
-		ServiceProcessor: NewProcessor(&testContext{Context: c}),
+		ServiceProcessor: NewServiceProcessor(&testContext{Context: c}),
 	}
 	ts.AddMessage(ts.ProcessMsg)
 	return ts
 }
 
-func (ts *testService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+func (ts *testService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
 	return nil, nil
 }
 

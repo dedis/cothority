@@ -51,7 +51,7 @@ func (b *Broadcast) Start() error {
 	n := len(b.Tree().List())
 	b.repliesLeft = n * (n - 1) / 2
 	b.SendTo(b.Root(), &ContactNodes{})
-	dbg.Lvl3(b.Name(), "Sent Announce to everyone")
+	dbg.Lvl3(b.Name(), "Sent Announce to", b.repliesLeft, "nodes")
 	return nil
 }
 

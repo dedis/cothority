@@ -25,7 +25,7 @@ import (
 
 func init() {
 	network.RegisterMessageType(Tree{})
-	network.RegisterMessageType(TBMstruct{})
+	network.RegisterMessageType(tbmStruct{})
 }
 
 // Tree is a topology to be used by any network layer/host layer
@@ -102,7 +102,7 @@ func (t *Tree) Marshal() ([]byte, error) {
 	return buf, err
 }
 
-type TBMstruct struct {
+type tbmStruct struct {
 	T  []byte
 	EL *EntityList
 }
@@ -113,7 +113,7 @@ func (t *Tree) BinaryMarshaler() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	tbm := &TBMstruct{
+	tbm := &tbmStruct{
 		T:  bt,
 		EL: t.EntityList,
 	}
@@ -127,7 +127,7 @@ func (t *Tree) BinaryMarshaler() ([]byte, error) {
 // BinaryUnmarshaler takes a TreeMarshal and stores it in the tree
 func (t *Tree) BinaryUnmarshaler(b []byte) error {
 	_, m, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
-	tbm, ok := m.(TBMstruct)
+	tbm, ok := m.(tbmStruct)
 	if !ok {
 		return errors.New("Didn't find TBMstruct")
 	}

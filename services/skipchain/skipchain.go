@@ -17,7 +17,7 @@ func init() {
 
 // Service handles adding new SkipBlocks
 type Service struct {
-	*ServiceProcessor
+	*sda.ServiceProcessor
 	path string
 }
 
@@ -48,7 +48,7 @@ func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlockCommon) bool {
 
 func newSkipchainService(c sda.Context, path string) sda.Service {
 	s := &Service{
-		ServiceProcessor: NewProcessor(c),
+		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}
 	return s

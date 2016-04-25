@@ -22,7 +22,7 @@ type Overlay struct {
 	entityLists    map[EntityListID]*EntityList
 	entityListLock sync.Mutex
 	// cache for relating token(~Node) to TreeNode
-	cache TreeNodeCache
+	cache *TreeNodeCache
 
 	// TreeNodeInstance part
 	instances         map[TokenID]*TreeNodeInstance
@@ -98,38 +98,16 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			}
 		}
 		if err := o.RegisterProtocolInstance(pi); err != nil {
-			return errors.New("Error Binding TNI and PI")
+			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
+				err.Error())
 		}
-		dbg.Lvl2(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ", fmt.Sprintf("%+v", sdaMsg.To))
+		dbg.Lvl2(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
+			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
-	// TODO Check if TNI is already Done
+	// TODO Check if TreeNodeInstance is already Done
 	pi.DispatchMsg(sdaMsg)
 
-	//// If node does not exists, then create it
-	//o.nodeLock.Lock()
-	//node := o.nodes[sdaMsg.To.Id()]
-	//isDone := o.nodeInfo[sdaMsg.To.Id()]
-	//// If we never have seen this token before, then we create it
-	//if node == nil && !isDone {
-	//dbg.Lvl3(o.host.Entity.First(), "creating new node for token:", sdaMsg.To.Id())
-	//var err error
-	//o.nodes[sdaMsg.To.Id()], err = NewNode(o, sdaMsg.To)
-	//o.nodeInfo[sdaMsg.To.Id()] = false
-	//if err != nil {
-	//o.nodeLock.Unlock()
-	//return err
-	//}
-	//node = o.nodes[sdaMsg.To.Id()]
-	//}
-	//// If node is ALREADY DONE => drop packet
-	//if isDone {
-	//dbg.Lvl2("Dropped message given to node that is done.")
-	//o.nodeLock.Unlock()
-	//return nil
-	//}
-	//o.nodeLock.Unlock()
-	/*node.DispatchMsg(sdaMsg)*/
 	return nil
 }
 
@@ -341,7 +319,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 		return ErrWrongTreeNodeInstance
 	}
 
-	if tni.isBinded() {
+	if tni.isBound() {
 		return ErrProtocolRegistered
 	}
 
@@ -355,21 +333,26 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 // is not 1-1 (many Token can point to one TreeNode, but one token leads to one
 // TreeNode), we have to do certain
 // lookup, but that's better than searching the tree each time.
-type TreeNodeCache map[TreeID]map[TreeNodeID]*TreeNode
+type TreeNodeCache struct {
+	Entries map[TreeID]map[TreeNodeID]*TreeNode
+	sync.Mutex
+}
 
 // Returns a new TreeNodeCache
-func NewTreeNodeCache() TreeNodeCache {
-	m := make(map[TreeID]map[TreeNodeID]*TreeNode)
-	return m
+func NewTreeNodeCache() *TreeNodeCache {
+	return &TreeNodeCache{
+		Entries: make(map[TreeID]map[TreeNodeID]*TreeNode),
+	}
 }
 
 // Cache a TreeNode that relates to the Tree
 // It will also cache the parent and children of the treenode since that's most
 // likely what we are going to query.
 func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
-	var mm map[TreeNodeID]*TreeNode
-	var ok bool
-	if mm, ok = tnc[tree.Id]; !ok {
+	tnc.Lock()
+	defer tnc.Unlock()
+	mm, ok := tnc.Entries[tree.Id]
+	if !ok {
 		mm = make(map[TreeNodeID]*TreeNode)
 	}
 	// add treenode
@@ -383,23 +366,24 @@ func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 		mm[c.Id] = c
 	}
 	// add cache
-	tnc[tree.Id] = mm
+	tnc.Entries[tree.Id] = mm
 }
 
 // GetFromToken returns the TreeNode that the token is pointing at, or
 // nil if there is none for this token.
 func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
-	var mm map[TreeNodeID]*TreeNode
-	var ok bool
+	tnc.Lock()
+	defer tnc.Unlock()
 	if tok == nil {
 		return nil
 	}
-	if mm, ok = tnc[tok.TreeID]; !ok {
+	mm, ok := tnc.Entries[tok.TreeID]
+	if !ok {
 		// no tree cached for this token :...
 		return nil
 	}
-	var tn *TreeNode
-	if tn, ok = mm[tok.TreeNodeID]; !ok {
+	tn, ok := mm[tok.TreeNodeID]
+	if !ok {
 		// no treeNode cached for this token...
 		// XXX Should we search the tree ? Then we need to keep reference to the
 		// tree ...

@@ -72,8 +72,11 @@ func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, erro
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
-func (l *LocalTest) GenLocalHosts(n int, c, pm bool) []*Host {
-	hosts := GenLocalHosts(n, c, pm)
+// GenLocalHost returns a slice of 'n' Hosts. If 'connect' is true, the
+// hosts will be connected between each other. If 'processMsg' is true,
+// the ProcessMsg-method will be called.
+func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
+	hosts := GenLocalHosts(n, connect, processMsg)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.ID] = host
 		l.Overlays[host.Entity.ID] = host.overlay

@@ -1,4 +1,4 @@
-package skipchain
+package sda
 
 import (
 	"errors"
@@ -6,15 +6,23 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
 )
 
+// ServiceProcessor allows for an easy integration of external messages
+// into the Services. You have to embed it into your Service-structer,
+// then it will offer an 'AddMessage'-method that takes a message of type
+// 	func ReceiveMsg(e *network.Entity, msg *anyMessageType)(error, *replyMsg)
+// where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
+// with the network. Once 'anyMessageType' is received by the service,
+// the function 'ReceiveMsg' should return an error and any 'replyMsg' it
+// wants to send.
 type ServiceProcessor struct {
 	functions map[network.MessageTypeID]interface{}
-	sda.Context
+	Context
 }
 
-func NewProcessor(c sda.Context) *ServiceProcessor {
+// NewServiceProcessor initializes your ServiceProcessor.
+func NewServiceProcessor(c Context) *ServiceProcessor {
 	return &ServiceProcessor{
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,
@@ -62,7 +70,7 @@ func (p *ServiceProcessor) AddMessage(f interface{}) error {
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
 func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
-	cr *sda.ClientRequest) {
+	cr *ClientRequest) {
 	reply := p.GetReply(e, cr)
 
 	if err := p.SendRaw(e, reply); err != nil {
@@ -72,8 +80,8 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 
 // ProcessServiceMessage is to implement the Service interface.
 func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
-	s *sda.ServiceMessage) {
-	cr := &sda.ClientRequest{
+	s *ServiceMessage) {
+	cr := &ClientRequest{
 		Data: s.Data,
 	}
 	p.GetReply(e, cr)
@@ -81,18 +89,18 @@ func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 
 // GetReply takes a clientRequest and passes it to the corresponding
 // handler-function.
-func (p *ServiceProcessor) GetReply(e *network.Entity, cr *sda.ClientRequest) network.ProtocolMessage {
+func (p *ServiceProcessor) GetReply(e *network.Entity, cr *ClientRequest) network.ProtocolMessage {
 	mt := cr.Type
 	fu, ok := p.functions[mt]
 	if !ok {
-		return &sda.StatusRet{"Don't know message: " + mt.String()}
+		return &StatusRet{"Don't know message: " + mt.String()}
 	}
 
 	_, m, err := network.UnmarshalRegisteredType(cr.Data,
 		network.DefaultConstructors(network.Suite))
 
 	if err != nil {
-		return &sda.StatusRet{err.Error()}
+		return &StatusRet{err.Error()}
 	}
 
 	//to0 := reflect.TypeOf(fu).In(0)
@@ -110,7 +118,7 @@ func (p *ServiceProcessor) GetReply(e *network.Entity, cr *sda.ClientRequest) ne
 	errI := ret[1].Interface()
 
 	if errI != nil {
-		return &sda.StatusRet{errI.(error).Error()}
+		return &StatusRet{errI.(error).Error()}
 	}
 
 	return ret[0].Interface()
