@@ -40,7 +40,6 @@ func TestSkipBlockRoster_Hash(t *testing.T) {
 		SkipBlockCommon: &SkipBlockCommon{
 			Height: 1,
 		},
-		RosterName: "genesis",
 		EntityList: el,
 	}
 	h1 := sbd1.updateHash()
@@ -50,7 +49,6 @@ func TestSkipBlockRoster_Hash(t *testing.T) {
 		SkipBlockCommon: &SkipBlockCommon{
 			Height: 1,
 		},
-		RosterName: "genesis",
 		EntityList: local.GenEntityListFromHost(hosts[0]),
 	}
 	h2 := sbd2.updateHash()
@@ -100,10 +98,43 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 func TestService_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, s := makeHELS(local, 4)
+	sbLength := 10
+	sbs := make([]*SkipBlockRoster, sbLength)
+	sbs[0] = makeGenesisRoster(s, el)
+	for i := 1; i < sbLength-1; i++ {
+		el.List = el.List[0 : sbLength-i]
+		reply, err := s.ProposeSkipBlock(sbs[i-1].Hash,
+			&SkipBlockRoster{EntityList: el})
+		dbg.ErrFatal(err)
+		sbs[i] = reply.Latest.(*SkipBlockRoster)
+	}
 }
 
 func TestService_PropagateSkipBlock(t *testing.T) {
 }
 
 func TestService_ForwardSignature(t *testing.T) {
+}
+
+// makes a genesis Roster-block
+func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlockRoster {
+	sb := &SkipBlockRoster{
+		SkipBlockCommon: &SkipBlockCommon{
+			MaximumHeight: 4,
+		},
+		EntityList: el,
+	}
+	reply, err := s.ProposeSkipBlock(nil, sb)
+	dbg.ErrFatal(err)
+	return reply.Latest.(*SkipBlockRoster)
+}
+
+// Makes a Host, an EntityList, and a service
+func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.EntityList, *Service) {
+	hosts := local.GenLocalHosts(nbr, false, false)
+	el := local.GenEntityListFromHost(hosts...)
+	return hosts, el, local.Services[hosts[0].Entity.ID][sda.ServiceFactory.ServiceID("SkipChain")].(*Service)
 }

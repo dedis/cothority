@@ -88,8 +88,6 @@ func (sbd *SkipBlockData) updateHash() crypto.HashID {
 
 type SkipBlockRoster struct {
 	*SkipBlockCommon
-	// RosterName is the name of this SkipChain
-	RosterName string
 	// EntityList holds the roster-definition of that SkipBlock
 	EntityList *sda.EntityList
 }
