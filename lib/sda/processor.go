@@ -10,7 +10,7 @@ import (
 
 // ServiceProcessor allows for an easy integration of external messages
 // into the Services. You have to embed it into your Service-structer,
-// then it will offer an 'AddMessage'-method that takes a message of type
+// then it will offer an 'RegisterMessage'-method that takes a message of type
 // 	func ReceiveMsg(e *network.Entity, msg *anyMessageType)(error, *replyMsg)
 // where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
 // with the network. Once 'anyMessageType' is received by the service,
@@ -29,8 +29,8 @@ func NewServiceProcessor(c Context) *ServiceProcessor {
 	}
 }
 
-// AddMessage puts a new message in the message-handler
-func (p *ServiceProcessor) AddMessage(f interface{}) error {
+// RegisterMessage puts a new message in the message-handler
+func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	ft := reflect.TypeOf(f)
 	// Check we have the correct channel-type
 	if ft.Kind() != reflect.Func {
