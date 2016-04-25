@@ -106,7 +106,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
 				err.Error())
 		}
-		dbg.Lvl2(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
+		dbg.Lvl4(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}

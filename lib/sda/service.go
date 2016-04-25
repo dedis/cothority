@@ -196,7 +196,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		// !! register to the ProtocolFactory !!
 		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
-	dbg.Lvl2(h.workingAddress, "instantiated all services")
+	dbg.Lvl3(h.workingAddress, "instantiated all services")
 	return &serviceStore{services, configs}
 }
 

@@ -13,7 +13,7 @@ import (
 // Tests a 2-node system
 func TestBroadcast(t *testing.T) {
 	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	dbg.TestOutput(testing.Verbose(), 3)
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenTree(nbrNodes, false, true, true)
