@@ -50,8 +50,8 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 func (b *Broadcast) Start() error {
 	n := len(b.Tree().List())
 	b.repliesLeft = n * (n - 1) / 2
+	dbg.Lvl3(b.Name(), "Sending announce to", b.repliesLeft, "nodes")
 	b.SendTo(b.Root(), &ContactNodes{})
-	dbg.Lvl3(b.Name(), "Sent Announce to", b.repliesLeft, "nodes")
 	return nil
 }
 
