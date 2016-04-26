@@ -36,17 +36,8 @@ type Service struct {
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
 func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
-	if latest == nil /* && FIXME: DO SOME VERIFICATION */ { // genesis
-		sbc := proposed.GetCommon()
-		sbc.Index++
-		// genesis block has a random backlink:
-		sbc.BackLink = make([]SkipBlockID, 1)
-		bl := make([]byte, 32)
-		_, _ = rand.Read(bl)
-		sbc.BackLink[0] = bl
-		// update
-		curID := string(proposed.updateHash())
-		s.SkipBlocks[curID] = proposed
+	if latest == nil && len(s.SkipBlocks) == 0 { // genesis block creation
+		s.updateSkipBlock(nil, proposed)
 		reply := &ProposedSkipBlockReply{
 			Previous: nil, // genesis block
 			Latest:   proposed,
@@ -59,13 +50,7 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 		return nil, errors.New("Couldn't find latest block.")
 	}
 	if s.verifyNewSkipBlock(prev, proposed) {
-		curID := string(proposed.updateHash())
-		s.SkipBlocks[curID] = proposed
-		sbc := proposed.GetCommon()
-		sbc.Index = prev.GetCommon().Index + 1
-		sbc.BackLink = make([]SkipBlockID, 1)
-		sbc.BackLink[0] = prev.updateHash()
-
+		s.updateSkipBlock(prev, proposed)
 		reply := &ProposedSkipBlockReply{
 			Previous: prev,
 			Latest:   proposed,
@@ -74,6 +59,25 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 	}
 
 	return nil, errors.New("Verification of proposed block failed.")
+}
+
+func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
+	sbc := proposed.GetCommon()
+	if prev == nil { // genesis
+		sbc.Index++
+		// genesis block has a random back-link:
+		sbc.BackLink = make([]SkipBlockID, 1)
+		bl := make([]byte, 32)
+		_, _ = rand.Read(bl)
+		sbc.BackLink[0] = bl
+	} else {
+		sbc.Index = prev.GetCommon().Index + 1
+		sbc.BackLink = make([]SkipBlockID, 1)
+		sbc.BackLink[0] = prev.updateHash()
+	}
+	// update
+	curID := string(proposed.updateHash())
+	s.SkipBlocks[curID] = proposed
 }
 
 // GetUpdateChain returns a slice of SkipBlocks that point to the latest

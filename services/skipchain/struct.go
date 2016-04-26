@@ -9,8 +9,8 @@ import (
 )
 
 type SkipBlock interface {
-	// Hash calculates the hash, writes it to the SkipBlock and returns
-	// calculated hash.
+	// updateHash updates the hash, stores it in the SkipBlock and return the
+	// resulting hash to the caller
 	updateHash() SkipBlockID
 	// VerifySignature checks if the main signature and all forward-links
 	// are correctly signed and returns an error if not.
