@@ -86,8 +86,8 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 
 // GetUpdateChain returns a slice of SkipBlocks that point to the latest
 // SkipBlock. Comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, error) {
-	block, ok := s.SkipBlocks[string(latest)]
+func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply, error) {
+	block, ok := s.SkipBlocks[string(latestKnown)]
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
