@@ -79,6 +79,12 @@ func (s *Service) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, erro
 	return nil, nil
 }
 
+// SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
+// yet.
+func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) (*GetUpdateChainReply, error) {
+	return nil, nil
+}
+
 // GetChildrenSkipList creates a new SkipChain if that 'service' doesn't exist
 // yet.
 func (s *Service) GetChildrenSkipList(name string) (*GetUpdateChainReply, error) {

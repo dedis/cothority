@@ -101,7 +101,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	_, el, s := makeHELS(local, 4)
 	sbLength := 10
 	sbs := make([]*SkipBlockRoster, sbLength)
-	sbs[0] = makeGenesisRoster(s, el)
+	sbs[0] = makeGenesisRoster(s, el, nil)
 	for i := 1; i < sbLength-1; i++ {
 		el.List = el.List[0 : sbLength-(i+1)]
 		reply, err := s.ProposeSkipBlock(sbs[i-1].Hash,
@@ -141,6 +141,21 @@ func TestService_GetUpdateChain(t *testing.T) {
 	}
 }
 
+func TestService_SetChildrenSkipBlock(t *testing.T) {
+	t.Skip("Implementation not yet started")
+	// How many nodes in Root
+	nodesRoot := 10
+	// How many nodes in Children
+	nodesChildren := 5
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	hosts, el, s := makeHELS(local, nodesRoot)
+	sbRoot := makeGenesisRoster(s, el, nil)
+	elInt := local.GenEntityListFromHost(hosts[:nodesChildren])
+	sbInt := makeGenesisRoster(s, elInt, nil)
+	s.SetChildrenSkipBlock(sbRoot.Hash, sbInt.Hash)
+}
+
 func TestService_GetChildrenSkipList(t *testing.T) {
 	t.Skip("Implementation not yet started")
 	//// How many nodes in Root
@@ -160,13 +175,10 @@ func TestService_ForwardSignature(t *testing.T) {
 }
 
 // makes a genesis Roster-block
-func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlockRoster {
-	sb := &SkipBlockRoster{
-		SkipBlockCommon: &SkipBlockCommon{
-			MaximumHeight: 4,
-		},
-		EntityList: el,
-	}
+func makeGenesisRoster(s *Service, el *sda.EntityList, parent SkipBlockID) *SkipBlockRoster {
+	sb := NewSkipBlockRoster(el)
+	sb.MaximumHeight = 4
+	sb.ParentBlock = parent
 	reply, err := s.ProposeSkipBlock(nil, sb)
 	dbg.ErrFatal(err)
 	return reply.Latest.(*SkipBlockRoster)

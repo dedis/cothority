@@ -66,18 +66,18 @@ type GetUpdateChainReply struct {
 	Update []SkipBlock
 }
 
+// SetChildrenSkipList adds a child-SkipBlock to a parent SkipBlock
+type SetChildrenSkipBlock struct {
+	Parent SkipBlockID
+	Child  SkipBlockID
+}
+
 // GetChildrenSkipList - if the SkipList doesn't exist yet, creates the
 // Genesis-block of that SkipList.
 // It returns a 'GetUpdateChainReply' with the chain from the first to
 // the last SkipBlock.
 type GetChildrenSkipList struct {
-	VerifierId VerifierID
-}
-
-// SetChildrenSkipList adds a child-SkipBlock to a parent SkipBlock
-type SetChildrenSkipBlock struct {
-	Parent SkipBlockID
-	Child  SkipBlockID
+VerifierId VerifierID
 }
 
 // Internal calls
