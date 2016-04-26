@@ -37,7 +37,7 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 		sbc := proposed.GetCommon()
 		sbc.Index++
 		// genesis block has a random backlink:
-		sbc.BackLink = make([][]byte, 1)
+		sbc.BackLink = make([]SkipBlockID, 1)
 		bl := make([]byte, 32)
 		_, _ = rand.Read(bl)
 		sbc.BackLink[0] = bl
@@ -60,7 +60,7 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 		s.SkipBlocks[curID] = proposed
 		sbc := proposed.GetCommon()
 		sbc.Index = prev.GetCommon().Index + 1
-		sbc.BackLink = make([][]byte, 1)
+		sbc.BackLink = make([]SkipBlockID, 1)
 		sbc.BackLink[0] = prev.updateHash()
 
 		reply := &ProposedSkipBlockReply{
@@ -76,6 +76,12 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 // GetUpdateChain returns a slice of SkipBlocks that point to the latest
 // SkipBlock. Comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, error) {
+	return nil, nil
+}
+
+// GetChildrenSkipList creates a new SkipChain if that 'service' doesn't exist
+// yet.
+func (s *Service) GetChildrenSkipList(name string) (*GetUpdateChainReply, error) {
 	return nil, nil
 }
 

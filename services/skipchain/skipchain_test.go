@@ -38,21 +38,13 @@ func TestSkipBlockRoster_Hash(t *testing.T) {
 	local := sda.NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
-	sbd1 := &SkipBlockRoster{
-		SkipBlockCommon: &SkipBlockCommon{
-			Height: 1,
-		},
-		EntityList: el,
-	}
+	sbd1 := NewSkipBlockRoster(el)
+	sbd1.Height = 1
 	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
-	sbd2 := &SkipBlockRoster{
-		SkipBlockCommon: &SkipBlockCommon{
-			Height: 1,
-		},
-		EntityList: local.GenEntityListFromHost(hosts[0]),
-	}
+	sbd2 := NewSkipBlockRoster(local.GenEntityListFromHost(hosts[0]))
+	sbd2.Height = 1
 	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
 }
@@ -103,6 +95,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 func TestService_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
+	t.Skip("Implementation not yet started")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, s := makeHELS(local, 4)
@@ -146,6 +139,18 @@ func TestService_GetUpdateChain(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestService_GetChildrenSkipList(t *testing.T) {
+	t.Skip("Implementation not yet started")
+	//// How many nodes in Root
+	//nodesRoot := 10
+	//// How many nodes in Children
+	//nodesChildren := 5
+	//local := sda.NewLocalTest()
+	//defer local.CloseAll()
+	//_, el, s := makeHELS(local, nodesRoot)
+	//sbRoot := makeGenesisRoster(s, el)
 }
 
 func TestService_PropagateSkipBlock(t *testing.T) {

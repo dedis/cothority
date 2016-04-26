@@ -21,8 +21,16 @@ func init() {
 	}
 }
 
-type VerifierId uuid.UUID
-type RosterId uuid.UUID
+type VerifierID uuid.UUID
+type RosterID uuid.UUID
+
+var (
+	VerifyShard     = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Shard"))
+	VerifyTUF       = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TUF"))
+	VerifySSH       = VerifierID(uuid.NewV5(uuid.NamespaceURL, "SSH-ks"))
+	VerifyConiks    = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Coniks"))
+	VerifyTimeVault = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TimeVault"))
+)
 
 // This file holds all messages that can be sent to the SkipChain,
 // both from the outside and between instances of this service
@@ -56,6 +64,20 @@ type GetUpdateChain struct {
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
 	Update []SkipBlock
+}
+
+// GetChildrenSkipList - if the SkipList doesn't exist yet, creates the
+// Genesis-block of that SkipList.
+// It returns a 'GetUpdateChainReply' with the chain from the first to
+// the last SkipBlock.
+type GetChildrenSkipList struct {
+	VerifierId VerifierID
+}
+
+// SetChildrenSkipList adds a child-SkipBlock to a parent SkipBlock
+type SetChildrenSkipBlock struct {
+	Parent SkipBlockID
+	Child  SkipBlockID
 }
 
 // Internal calls

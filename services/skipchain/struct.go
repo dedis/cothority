@@ -30,19 +30,22 @@ type SkipBlockCommon struct {
 	// For deterministic SkipChains at what height to stop:
 	// - if negative: we will use random distribution to calculate the
 	// height of each new block
-	// - else: the max hieght determines the hieght of the next block
+	// - else: the max height determines the height of the next block
 	MaximumHeight uint32
 	// BackLink is a slice of hashes to previous SkipBlocks
-	BackLink [][]byte
-	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
-	VerifierID VerifierId
+	BackLink []SkipBlockID
+	// VerifierId is a SkipBlock-protocol verifying new SkipBlocks
+	VerifierId VerifierID
+	// SkipBlockParent points to the SkipBlock of the responsible Roster -
+	// is nil if this is the Root-roster
+	ParentBlock SkipBlockID
 	// Hash is calculated on all previous values
 	Hash SkipBlockID
 	// the signature on the above hash
 	Signature *cosi.Signature
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
-	ForwardLink []ForwardStruct
+	ForwardLink []BlockLink
 }
 
 func (sbc *SkipBlockCommon) VerifySignatures() error {
@@ -55,8 +58,6 @@ func (sbc *SkipBlockCommon) GetCommon() *SkipBlockCommon {
 
 type SkipBlockData struct {
 	*SkipBlockCommon
-	// RosterPointer points to the SkipBlock of the responsible Roster
-	RosterPointer SkipBlockID
 	// Data is any data to b-e stored in that SkipBlock
 	Data []byte
 }
@@ -84,8 +85,19 @@ type SkipBlockRoster struct {
 	*SkipBlockCommon
 	// EntityList holds the roster-definition of that SkipBlock
 	EntityList *sda.EntityList
-	// SkipLists that depend on us
-	ChildrenSL map[string]SkipBlockID
+	// SkipLists that depend on us, given as the first SkipBlock - can
+	// be a Data or a Roster SkipBlock
+	ChildSL *BlockLink
+}
+
+func NewSkipBlockRoster(el *sda.EntityList) *SkipBlockRoster {
+	return &SkipBlockRoster{
+		SkipBlockCommon: NewSkipBlockCommon(),
+		EntityList:      el,
+		ChildSL: &BlockLink{
+			Signature: cosi.NewSignature(network.Suite),
+		},
+	}
 }
 
 func (sbr *SkipBlockRoster) updateHash() SkipBlockID {
@@ -113,8 +125,8 @@ func NewSkipBlockCommon() *SkipBlockCommon {
 	}
 }
 
-// ForwardStruct has the hash of the next block and a signature of it
-type ForwardStruct struct {
-	Hash []byte
+// BlockLink has the hash and a signature of a block
+type BlockLink struct {
+	Hash SkipBlockID
 	*cosi.Signature
 }
