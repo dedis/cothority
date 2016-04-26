@@ -77,7 +77,7 @@ type SetChildrenSkipBlock struct {
 // It returns a 'GetUpdateChainReply' with the chain from the first to
 // the last SkipBlock.
 type GetChildrenSkipList struct {
-VerifierId VerifierID
+	VerifierId VerifierID
 }
 
 // Internal calls

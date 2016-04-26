@@ -6,7 +6,9 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -147,13 +149,53 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	nodesRoot := 10
 	// How many nodes in Children
 	nodesChildren := 5
+
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	hosts, el, s := makeHELS(local, nodesRoot)
-	sbRoot := makeGenesisRoster(s, el, nil)
-	elInt := local.GenEntityListFromHost(hosts[:nodesChildren])
-	sbInt := makeGenesisRoster(s, elInt, nil)
-	s.SetChildrenSkipBlock(sbRoot.Hash, sbInt.Hash)
+	hosts, el, service := makeHELS(local, nodesRoot)
+
+	// Setting up two chains and linking one to the other
+	sbRoot := makeGenesisRoster(service, el, nil)
+	elInt := local.GenEntityListFromHost(hosts[:nodesChildren]...)
+	sbInt := makeGenesisRoster(service, elInt, sbRoot.Hash)
+	service.SetChildrenSkipBlock(sbRoot.Hash, sbInt.Hash)
+
+	// Verifying other nodes also got the updated chains
+	// Check for the root-chain
+	for _, h := range hosts {
+		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
+		sb, err := s.GetUpdateChain(sbRoot.Hash)
+		dbg.ErrFatal(err)
+		if len(sb.Update) != 1 {
+			t.Fatal("There should be only 1 SkipBlock in the update")
+		}
+		link := sb.Update[0].(*SkipBlockRoster).ChildSL
+		if !bytes.Equal(link.Hash, sbInt.Hash) {
+			t.Fatal("The child-link doesn't point to our intermediate SkipBlock")
+		}
+		// We need to verify the signature on the child-link, too. This
+		// has to be signed by the collective signature of sbRoot.
+		if err = cosi.VerifySignature(network.Suite, link.Hash, sbRoot.EntityList.Aggregate,
+			link.Challenge, link.Response); err != nil {
+			t.Fatal("Signature on child-link is not valid")
+		}
+	}
+
+	// And check for the intermediate-chain to be updated
+	for _, h := range hosts[:nodesChildren] {
+		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
+		sb, err := s.GetUpdateChain(sbInt.Hash)
+		dbg.ErrFatal(err)
+		if len(sb.Update) != 1 {
+			t.Fatal("There should be only 1 SkipBlock in the update")
+		}
+		if !bytes.Equal(sb.Update[0].GetCommon().ParentBlock, sbRoot.Hash) {
+			t.Fatal("The intermediate SkipBlock doesn't point to the root")
+		}
+		if err = sb.Update[0].VerifySignatures(); err != nil {
+			t.Fatal("Signature of that SkipBlock doesn't fit")
+		}
+	}
 }
 
 func TestService_GetChildrenSkipList(t *testing.T) {
@@ -188,5 +230,5 @@ func makeGenesisRoster(s *Service, el *sda.EntityList, parent SkipBlockID) *Skip
 func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.EntityList, *Service) {
 	hosts := local.GenLocalHosts(nbr, false, false)
 	el := local.GenEntityListFromHost(hosts...)
-	return hosts, el, local.Services[hosts[0].Entity.ID][sda.ServiceFactory.ServiceID("Skipchain")].(*Service)
+	return hosts, el, local.Services[hosts[0].Entity.ID][skipchainSID].(*Service)
 }

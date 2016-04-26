@@ -15,7 +15,10 @@ import (
 
 func init() {
 	sda.RegisterNewService("Skipchain", newSkipchainService)
+	skipchainSID = sda.ServiceFactory.ServiceID("Skipchain")
 }
+
+var skipchainSID sda.ServiceID
 
 // Service handles adding new SkipBlocks
 type Service struct {
@@ -81,8 +84,8 @@ func (s *Service) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, erro
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) (*GetUpdateChainReply, error) {
-	return nil, nil
+func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) error {
+	return nil
 }
 
 // GetChildrenSkipList creates a new SkipChain if that 'service' doesn't exist
