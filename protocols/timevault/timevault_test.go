@@ -50,7 +50,7 @@ func TestTimeVault(t *testing.T) {
 	if err != nil {
 		dbg.Fatal(err)
 	}
-	dbg.Lvl1("TimeVault - sealing done")
+	dbg.Lvl1("TimeVault - seal created")
 
 	// Do ElGamal encryption
 	c, eKey := ElGamalEncrypt(tv.Suite(), msg, key)
@@ -62,6 +62,8 @@ func TestTimeVault(t *testing.T) {
 	if err != nil {
 		dbg.Fatal(err)
 	}
+	dbg.Lvl1("TimeVault - opening secret successful")
+
 	X := tv.Suite().Point().Mul(eKey, x)
 	m, err := ElGamalDecrypt(tv.Suite(), c, X)
 	if err != nil {

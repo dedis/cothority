@@ -4,6 +4,9 @@
 package timevault
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -104,7 +107,10 @@ func (tv *TimeVault) Start() error {
 func (tv *TimeVault) Seal(duration time.Duration) (SID, abstract.Point, error) {
 
 	// Generate shared secret
-	sid := SID(fmt.Sprintf("%s%d", TVSS, tv.Index()))
+	sid, err := tv.newSID()
+	if err != nil {
+		return "", nil, err
+	}
 	if err := tv.initSecret(sid, duration); err != nil {
 		return "", nil, err
 	}
@@ -155,23 +161,23 @@ func (tv *TimeVault) Open(sid SID) (abstract.Secret, error) {
 	return x, nil
 }
 
-//func (tv *TimeVault) newSID(base SID) (SID, error) {
-//	buf := new(bytes.Buffer)
-//	timestamp, err := time.Now().MarshalBinary()
-//	if err != nil {
-//		return "", err
-//	}
-//	if err := binary.Write(buf, binary.LittleEndian, []byte(base)); err != nil {
-//		return "", err
-//	}
-//	if err := binary.Write(buf, binary.LittleEndian, uint32(tv.TreeNodeInstance.Index())); err != nil {
-//		return "", err
-//	}
-//	if err := binary.Write(buf, binary.LittleEndian, timestamp); err != nil {
-//		return "", err
-//	}
-//	return SID(hex.EncodeToString(abstract.Sum(tv.keyPair.Suite, buf.Bytes()))), nil
-//}
+func (tv *TimeVault) newSID() (SID, error) {
+	buf := new(bytes.Buffer)
+	timestamp, err := time.Now().MarshalBinary()
+	if err != nil {
+		return "", err
+	}
+	if err := binary.Write(buf, binary.LittleEndian, []byte(TVSS)); err != nil {
+		return "", err
+	}
+	if err := binary.Write(buf, binary.LittleEndian, uint32(tv.TreeNodeInstance.Index())); err != nil {
+		return "", err
+	}
+	if err := binary.Write(buf, binary.LittleEndian, timestamp); err != nil {
+		return "", err
+	}
+	return SID(hex.EncodeToString(abstract.Sum(tv.keyPair.Suite, buf.Bytes()))), nil
+}
 
 func (tv *TimeVault) initSecret(sid SID, duration time.Duration) error {
 
