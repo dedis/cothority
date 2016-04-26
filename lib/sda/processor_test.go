@@ -21,7 +21,7 @@ func init() {
 
 func TestProcessor_AddMessage(t *testing.T) {
 	p := NewServiceProcessor(nil)
-	dbg.ErrFatal(p.AddMessage(procMsg))
+	dbg.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
 	}
@@ -38,17 +38,17 @@ func TestProcessor_AddMessage(t *testing.T) {
 		procMsgWrong6,
 	}
 	for _, f := range wrongFunctions {
-		dbg.Lvl2("Checking function %+v", reflect.TypeOf(f).String())
-		err := p.AddMessage(f)
+		dbg.Lvl2("Checking function", reflect.TypeOf(f).String())
+		err := p.RegisterMessage(f)
 		if err == nil {
-			t.Fatalf("Shouldn't accept function %+v", reflect.TypeOf(f).String())
+			t.Fatalf("Shouldn't accept function %+s", reflect.TypeOf(f).String())
 		}
 	}
 }
 
 func TestProcessor_GetReply(t *testing.T) {
 	p := NewServiceProcessor(nil)
-	dbg.ErrFatal(p.AddMessage(procMsg))
+	dbg.ErrFatal(p.RegisterMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
 	e := network.NewEntity(pair.Public, "")
@@ -100,7 +100,6 @@ func mkClientRequest(msg network.ProtocolMessage) *ClientRequest {
 	b, err := network.MarshalRegisteredType(msg)
 	dbg.ErrFatal(err)
 	return &ClientRequest{
-		Type: network.TypeFromData(msg),
 		Data: b,
 	}
 }
@@ -154,7 +153,7 @@ func newTestService(c Context, path string) Service {
 	ts := &testService{
 		ServiceProcessor: NewServiceProcessor(&testContext{Context: c}),
 	}
-	ts.AddMessage(ts.ProcessMsg)
+	ts.RegisterMessage(ts.ProcessMsg)
 	return ts
 }
 

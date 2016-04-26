@@ -50,9 +50,6 @@ var CosiResponseType = network.RegisterMessageType(ServiceResponse{})
 
 // ProcessClientRequest treats external request to this service.
 func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
-	if r.Type != CosiRequestType {
-		return
-	}
 	var req ServiceRequest
 	// XXX should provide a UnmarshalRegisteredType(buff) func instead of having to give
 	// the constructors with the suite.

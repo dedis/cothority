@@ -424,7 +424,6 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		n, err := c.conn.Write(b[:length])
 		if err != nil {
 			dbg.Error("Couldn't write chunk starting at", sent, "size", length, err)
-			dbg.Error(dbg.Stack())
 			return handleError(err)
 		}
 		sent += Size(n)
