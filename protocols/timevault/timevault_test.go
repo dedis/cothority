@@ -43,7 +43,6 @@ func TestTimeVault(t *testing.T) {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}
 	tv := leader.(*timevault.TimeVault)
-	leader.Start()
 	dbg.Lvl1("TimeVault - setup done")
 
 	sid, key, err := tv.Seal(time.Second * 2)

@@ -63,7 +63,12 @@ type RecoveredSecret struct {
 
 // NewTimeVault creates a new TimeVault protocol and returns it.
 func NewTimeVault(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	return NewTimeVaultProtocol(node)
+}
 
+// NewTimeVaultProtocol returns the actual struct (so a Service don't need to
+// cast it to the right type)
+func NewTimeVaultProtocol(node *sda.TreeNodeInstance) (*TimeVault, error) {
 	kp := &config.KeyPair{Suite: node.Suite(), Public: node.Public(), Secret: node.Private()}
 	n := len(node.List())
 	pk := make([]abstract.Point, n)
@@ -102,6 +107,8 @@ func (tv *TimeVault) Start() error {
 
 // Seal generates a shared secret and starts a timer indicating when the shared
 // secret can be released.
+// It returns the ID of the sealing, the public key associated and any error if
+// one occured.
 func (tv *TimeVault) Seal(duration time.Duration) (SID, abstract.Point, error) {
 
 	// Generate shared secret

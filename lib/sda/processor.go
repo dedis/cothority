@@ -11,7 +11,7 @@ import (
 // ServiceProcessor allows for an easy integration of external messages
 // into the Services. You have to embed it into your Service-structer,
 // then it will offer an 'RegisterMessage'-method that takes a message of type
-// 	func ReceiveMsg(e *network.Entity, msg *anyMessageType)(error, *replyMsg)
+// 	func ReceiveMsg(e *network.Entity, msg *anyMessageType)(*replyMsg,error)
 // where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
 // with the network. Once 'anyMessageType' is received by the service,
 // the function 'ReceiveMsg' should return an error and any 'replyMsg' it
@@ -53,7 +53,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Need 2 return values: network.ProtocolMessage and error")
 	}
 	if ft.Out(0) != reflect.TypeOf((*network.ProtocolMessage)(nil)).Elem() {
-		return errors.New("Need 2 return values: *network.ProtocolMessage* and error")
+		return errors.New("Need 2 return values: *network.ProtocolMessage* and error" + ft.Out(0).String())
 	}
 	if ft.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
 		return errors.New("Need 2 return values: network.ProtocolMessage and *error*")
