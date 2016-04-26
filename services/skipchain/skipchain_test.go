@@ -137,6 +137,8 @@ func TestService_GetUpdateChain(t *testing.T) {
 				sbc2 := sb2.GetCommon()
 				h1 := sbc1.Height
 				h2 := sbc2.Height
+				dbg.Print("sbc1.Height=", sbc1.Height)
+				dbg.Print("sbc2.Height=", sbc2.Height)
 				// height := min(h1, h2)
 				height := h1
 				if h2 < height {
