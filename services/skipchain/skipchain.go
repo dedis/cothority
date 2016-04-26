@@ -94,7 +94,7 @@ func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) error {
 
 // GetChildrenSkipList creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) GetChildrenSkipList(name string) (*GetUpdateChainReply, error) {
+func (s *Service) GetChildrenSkipList(sb SkipBlock, verifier VerifierID) (*GetUpdateChainReply, error) {
 	return nil, nil
 }
 
