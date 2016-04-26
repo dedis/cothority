@@ -77,7 +77,9 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 		bl := make([]byte, 32)
 		_, _ = rand.Read(bl)
 		sbc.BackLink[0] = bl
+		// empty forward link:
 		sbc.ForwardLink = make([]BlockLink, 1)
+
 		curID = string(proposed.updateHash())
 	} else {
 		prevCommon := prev.GetCommon()
@@ -90,9 +92,9 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 			BlockLink{Hash: curHashID,
 				Signature: cosi.NewSignature(network.Suite), // FIXME get real signature
 			})
+
 		curID = string(curHashID)
 	}
-	dbg.LLvl5(fmt.Sprintf("sbc=%+v", sbc))
 	// update
 	s.SkipBlocks[curID] = proposed
 }
@@ -106,24 +108,27 @@ func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply,
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
-	path := make([]SkipBlock, 2)
-	path[0] = block
-	dbg.Print("Added block to update", block)
-	// FIXME how to determine the latest blocks
-	forwardlinks := block.GetCommon().ForwardLink
-	for _, linkId := range forwardlinks {
-		if linkId.Hash != nil {
-			sb := s.SkipBlocks[string(linkId.Hash)]
-			path = append(path, sb)
-			dbg.Print("Added block to update", sb)
-		}
-	}
-
+	path := s.followForward(block)
 	reply := &GetUpdateChainReply{
 		Update: path,
 	}
 
 	return reply, nil
+}
+
+func (s *Service) followForward(sb SkipBlock) []SkipBlock {
+	path := make([]SkipBlock, 2)
+	// add current
+	path[0] = sb
+	forwardlinks := sb.GetCommon().ForwardLink
+	for _, linkId := range forwardlinks {
+		if linkId.Hash != nil {
+			sb := s.SkipBlocks[string(linkId.Hash)]
+			path = append(path, sb)
+			path = append(path, s.followForward(sb)...)
+		}
+	}
+	return path
 }
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
