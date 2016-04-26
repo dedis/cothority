@@ -22,8 +22,8 @@ type SkipBlock interface {
 
 type SkipBlockID crypto.HashID
 
-// SkipBlock represents a skipblock
-type SkipBlockCommon struct {
+// SkipBlockFix represents the fixed part of a SkipBlock
+type SkipBlockFix struct {
 	Index uint32
 	// Height of that SkipBlock
 	Height uint32
@@ -39,6 +39,23 @@ type SkipBlockCommon struct {
 	// SkipBlockParent points to the SkipBlock of the responsible Roster -
 	// is nil if this is the Root-roster
 	ParentBlock SkipBlockID
+}
+
+func (sbf *SkipBlockFix) addSliceToHash(slice []byte) SkipBlockID {
+	b, err := network.MarshalRegisteredType(sbf)
+	if err != nil {
+		dbg.Panic("Couldn't marshal SkipBlockFix:", err)
+	}
+	h, err := crypto.HashBytes(network.Suite.Hash(), append(b, slice...))
+	if err != nil {
+		dbg.Panic("Couldn't hash SkipBlockFix:", err)
+	}
+	return h
+}
+
+// SkipBlockCommon represents a SkipBlock
+type SkipBlockCommon struct {
+	*SkipBlockFix
 	// Hash is calculated on all previous values
 	Hash SkipBlockID
 	// the signature on the above hash
@@ -46,6 +63,13 @@ type SkipBlockCommon struct {
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []BlockLink
+}
+
+func NewSkipBlockCommon() *SkipBlockCommon {
+	return &SkipBlockCommon{
+		SkipBlockFix: &SkipBlockFix{},
+		Signature:    cosi.NewSignature(network.Suite),
+	}
 }
 
 func (sbc *SkipBlockCommon) VerifySignatures() error {
@@ -63,22 +87,8 @@ type SkipBlockData struct {
 }
 
 func (sbd *SkipBlockData) updateHash() SkipBlockID {
-	suite := network.Suite
-	copy := *sbd
-	copy.Signature = cosi.NewSignature(suite)
-	copy.Hash = nil
-	copy.ForwardLink = nil
-	b, err := network.MarshalRegisteredType(&copy)
-	if err != nil {
-		dbg.Panic("Couldn't marshal skip-block:", err)
-	}
-	h, err := crypto.HashBytes(suite.Hash(), b)
-	if err != nil {
-		dbg.Panic("Couldn't hash skip-block:", err)
-	}
-	// store the generated hash:
-	sbd.Hash = h
-	return h
+	sbd.Hash = sbd.addSliceToHash(sbd.Data)
+	return sbd.Hash
 }
 
 type SkipBlockRoster struct {
@@ -101,28 +111,8 @@ func NewSkipBlockRoster(el *sda.EntityList) *SkipBlockRoster {
 }
 
 func (sbr *SkipBlockRoster) updateHash() SkipBlockID {
-	suite := network.Suite
-	copy := *sbr
-	copy.Signature = cosi.NewSignature(suite)
-	copy.Hash = nil
-	copy.ForwardLink = nil
-	b, err := network.MarshalRegisteredType(&copy)
-	if err != nil {
-		dbg.Panic("Couldn't marshal skip-block:", err)
-	}
-	h, err := crypto.HashBytes(suite.Hash(), b)
-	if err != nil {
-		dbg.Panic("Couldn't hash skip-block:", err)
-	}
-	// store the generated hash:
-	sbr.Hash = h
-	return h
-}
-
-func NewSkipBlockCommon() *SkipBlockCommon {
-	return &SkipBlockCommon{
-		Signature: cosi.NewSignature(network.Suite),
-	}
+	sbr.Hash = sbr.addSliceToHash(sbr.EntityList.Id[:])
+	return sbr.Hash
 }
 
 // BlockLink has the hash and a signature of a block

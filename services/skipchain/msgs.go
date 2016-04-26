@@ -13,6 +13,8 @@ func init() {
 		&GetUpdateChainReply{},
 		&PropagateSkipBlock{},
 		&ForwardSignature{},
+		&SkipBlockFix{},
+		&SkipBlockCommon{},
 		&SkipBlockData{},
 		&SkipBlockRoster{},
 	}
@@ -30,6 +32,7 @@ var (
 	VerifySSH       = VerifierID(uuid.NewV5(uuid.NamespaceURL, "SSH-ks"))
 	VerifyConiks    = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Coniks"))
 	VerifyTimeVault = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TimeVault"))
+	VerifyNone      = VerifierID(uuid.Nil)
 )
 
 // This file holds all messages that can be sent to the SkipChain,
@@ -77,6 +80,7 @@ type SetChildrenSkipBlock struct {
 // It returns a 'GetUpdateChainReply' with the chain from the first to
 // the last SkipBlock.
 type GetChildrenSkipList struct {
+	Current    SkipBlock
 	VerifierId VerifierID
 }
 
