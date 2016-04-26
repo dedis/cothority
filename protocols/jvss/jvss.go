@@ -200,7 +200,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 func (jv *JVSS) finaliseSecret(sid SID) error {
 	secret, ok := jv.secrets[sid]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 
 	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
@@ -245,7 +245,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error) {
 	secret, ok := jv.secrets[sid]
 	if !ok {
-		return nil, fmt.Errorf("Error, shared secret does not exist")
+		return nil, ErrWrongID
 	}
 
 	hash := jv.keyPair.Suite.Hash()

@@ -78,7 +78,7 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	// Buffer received deal for later
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 	secret.deals[msg.Src] = deal
 
@@ -95,7 +95,7 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 
 	secret.mtx.Lock()
@@ -144,7 +144,7 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	// Collect partial signatures
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 	secret.sigs[msg.Src] = msg.Sig
 

@@ -240,7 +240,6 @@ func (h *Host) processMessages() {
 	for {
 		var err error
 		var data network.Message
-		dbg.Print(h.workingAddress, " waiting for new message")
 		select {
 		case data = <-h.networkChan:
 		case <-h.ProcessMessagesQuit:
@@ -255,7 +254,6 @@ func (h *Host) processMessages() {
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
-			dbg.Print(h.workingAddress, "TransmitMsg Done!")
 			// A host has sent us a request to get a tree definition
 		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
@@ -359,7 +357,7 @@ func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 		return
 	}
 	dbg.Lvl3("host", h.Address(), " => Dispatch request to Request")
-	s.ProcessClientRequest(e, r)
+	go s.ProcessClientRequest(e, r)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg

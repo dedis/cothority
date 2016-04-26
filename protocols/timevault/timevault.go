@@ -31,6 +31,8 @@ const (
 	TVSS SID = "TVSS"
 )
 
+var ErrWrongID = errors.New("shared secret ID does not exists")
+
 // TimeVault is the main protocol struct and implements the
 // sda.ProtocolInstance interface.
 type TimeVault struct {
@@ -119,6 +121,7 @@ func (tv *TimeVault) Seal(duration time.Duration) (SID, abstract.Point, error) {
 	if err != nil {
 		return "", nil, err
 	}
+	dbg.Print("timevauld sid =", sid, len(tv.secrets))
 	if err := tv.initSecret(sid, duration); err != nil {
 		return "", nil, err
 	}
@@ -139,17 +142,18 @@ var ErrNotExpired = errors.New("Timeout has not expired for this secret yet")
 // function returns an error.
 func (tv *TimeVault) Open(sid SID) (abstract.Secret, error) {
 
+	dbg.Print("0")
 	secret, ok := tv.secrets[sid]
 	if !ok {
-		return nil, fmt.Errorf("Error, shared secret does not exist")
+		return nil, ErrWrongID
 	}
-
+	dbg.Print("1")
 	secret.mtx.Lock()
 	defer secret.mtx.Unlock()
 	if !secret.expired {
 		return nil, ErrNotExpired
 	}
-
+	dbg.Print("2")
 	// Setup list of recovered secrets if necessary
 	if tv.recoveredSecrets == nil {
 		tv.recoveredSecrets = make(map[SID]*RecoveredSecret)

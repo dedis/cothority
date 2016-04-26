@@ -80,7 +80,7 @@ func (tv *TimeVault) handleSecInit(m WSecInitMsg) error {
 	// Buffer received deal for later
 	secret, ok := tv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 	secret.deals[msg.Src] = deal
 
@@ -97,7 +97,7 @@ func (tv *TimeVault) handleSecConf(m WSecConfMsg) error {
 
 	secret, ok := tv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 
 	secret.mtx.Lock()
@@ -119,7 +119,7 @@ func (tv *TimeVault) handleRevInit(m WRevInitMsg) error {
 
 	secret, ok := tv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 
 	secret.mtx.Lock()
