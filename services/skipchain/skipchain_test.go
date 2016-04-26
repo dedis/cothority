@@ -88,6 +88,9 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	assert.Equal(t, blockCount, latest2.Index)
 	assert.Equal(t, 1, len(latest2.BackLink))
 	assert.NotEqual(t, 0, latest2.BackLink)
+
+	// We've added 2 blocks:
+	assert.Equal(t, 2, len(s.SkipBlocks))
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -127,15 +130,17 @@ func TestService_GetUpdateChain(t *testing.T) {
 			dbg.ErrFatal(sb1.VerifySignatures())
 			if up < len(sbc.Update)-1 {
 				sb2 := sbc.Update[up]
-				h1 := sb1.GetCommon().Height
-				h2 := sb2.GetCommon().Height
+				sbc1 := sb1.GetCommon()
+				sbc2 := sb2.GetCommon()
+				h1 := sbc1.Height
+				h2 := sbc2.Height
 				// height := min(h1, h2)
 				height := h1
 				if h2 < height {
 					height = h2
 				}
-				if !bytes.Equal(sb1.GetCommon().ForwardLink[height].Hash,
-					sb2.GetCommon().Hash) {
+				if !bytes.Equal(sbc1.ForwardLink[height].Hash,
+					sbc2.Hash) {
 					t.Fatal("Forward-pointer of", up,
 						"is different of hash in", up+1)
 				}
