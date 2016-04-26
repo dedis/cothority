@@ -11,7 +11,7 @@ import (
 type SkipBlock interface {
 	// Hash calculates the hash, writes it to the SkipBlock and returns
 	// calculated hash.
-	updateHash() crypto.HashID
+	updateHash() SkipBlockID
 	// VerifySignature checks if the main signature and all forward-links
 	// are correctly signed and returns an error if not.
 	VerifySignatures() error
@@ -19,6 +19,8 @@ type SkipBlock interface {
 	// SkipBlock which is the SkipBlockCommon structure.
 	GetCommon() *SkipBlockCommon
 }
+
+type SkipBlockID crypto.HashID
 
 // SkipBlock represents a skipblock
 type SkipBlockCommon struct {
@@ -35,7 +37,7 @@ type SkipBlockCommon struct {
 	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
 	VerifierID VerifierId
 	// Hash is calculated on all previous values
-	Hash crypto.HashID
+	Hash SkipBlockID
 	// the signature on the above hash
 	Signature *cosi.Signature
 	// ForwardLink will be calculated once future SkipBlocks are
@@ -54,12 +56,12 @@ func (sbc *SkipBlockCommon) GetCommon() *SkipBlockCommon {
 type SkipBlockData struct {
 	*SkipBlockCommon
 	// RosterPointer points to the SkipBlock of the responsible Roster
-	RosterPointer crypto.HashID
+	RosterPointer SkipBlockID
 	// Data is any data to b-e stored in that SkipBlock
 	Data []byte
 }
 
-func (sbd *SkipBlockData) updateHash() crypto.HashID {
+func (sbd *SkipBlockData) updateHash() SkipBlockID {
 	suite := network.Suite
 	copy := *sbd
 	copy.Signature = cosi.NewSignature(suite)
@@ -82,9 +84,11 @@ type SkipBlockRoster struct {
 	*SkipBlockCommon
 	// EntityList holds the roster-definition of that SkipBlock
 	EntityList *sda.EntityList
+	// SkipLists that depend on us
+	ChildrenSL map[string]SkipBlockID
 }
 
-func (sbr *SkipBlockRoster) updateHash() crypto.HashID {
+func (sbr *SkipBlockRoster) updateHash() SkipBlockID {
 	suite := network.Suite
 	copy := *sbr
 	copy.Signature = cosi.NewSignature(suite)

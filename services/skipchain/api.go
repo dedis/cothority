@@ -1,9 +1,6 @@
 package skipchain
 
-import (
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/sda"
-)
+import "github.com/dedis/cothority/lib/sda"
 
 // Client is a structure to communicate with the Skipchain
 // service from the outside
@@ -16,10 +13,10 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient("Skipchain")}
 }
 
-func (c *Client) ProposeSkipBlock(latest crypto.HashID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
+func (c *Client) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
 	return nil, nil
 }
 
-func (c *Client) GetUpdateChain(latest crypto.HashID) (*GetUpdateChainReply, error) {
+func (c *Client) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, error) {
 	return nil, nil
 }

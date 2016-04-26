@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"errors"
 
-	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
@@ -21,7 +20,7 @@ func init() {
 // Service handles adding new SkipBlocks
 type Service struct {
 	*sda.ServiceProcessor
-	// SkipBlocks points from HashID to SkipBlock but HashID is not a valid
+	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
 	SkipBlocks map[string]SkipBlock
 	path       string
@@ -33,7 +32,7 @@ type Service struct {
 // If the given nil as the latest block it verify if we are actually creating
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(latest crypto.HashID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
+func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
 	if latest == nil /* && FIXME: DO SOME VERIFICATION */ { // genesis
 		sbc := proposed.GetCommon()
 		sbc.Index++
@@ -76,7 +75,7 @@ func (s *Service) ProposeSkipBlock(latest crypto.HashID, proposed SkipBlock) (*P
 
 // GetUpdateChain returns a slice of SkipBlocks that point to the latest
 // SkipBlock. Comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(latest crypto.HashID) (*GetUpdateChainReply, error) {
+func (s *Service) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, error) {
 	return nil, nil
 }
 
