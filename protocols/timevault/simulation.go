@@ -61,7 +61,7 @@ func (tvs *Simulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("TimeVault - seal created")
 
 	// Do ElGamal encryption
-	c, eKey := ElGamalEncrypt(proto.Suite(), msg, key)
+	c, eKey := elGamalEncrypt(proto.Suite(), msg, key)
 
 	<-time.After(time.Second * 5)
 
@@ -72,7 +72,7 @@ func (tvs *Simulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("TimeVault - opening secret successful")
 
 	X := proto.Suite().Point().Mul(eKey, x)
-	m, err := ElGamalDecrypt(proto.Suite(), c, X)
+	m, err := elGamalDecrypt(proto.Suite(), c, X)
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -86,13 +86,13 @@ func (tvs *Simulation) Run(config *sda.SimulationConfig) error {
 	return nil
 }
 
-func ElGamalEncrypt(suite abstract.Suite, msg []byte, key abstract.Point) (abstract.Point, abstract.Point) {
+func elGamalEncrypt(suite abstract.Suite, msg []byte, key abstract.Point) (abstract.Point, abstract.Point) {
 	kp := config.NewKeyPair(suite)
 	m, _ := suite.Point().Pick(msg, random.Stream) // can take at most 29 bytes in one step
 	c := suite.Point().Add(m, suite.Point().Mul(key, kp.Secret))
 	return c, kp.Public
 }
 
-func ElGamalDecrypt(suite abstract.Suite, c abstract.Point, key abstract.Point) ([]byte, error) {
+func elGamalDecrypt(suite abstract.Suite, c abstract.Point, key abstract.Point) ([]byte, error) {
 	return suite.Point().Sub(c, key).Data()
 }
