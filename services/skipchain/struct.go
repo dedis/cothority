@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
 )
 
 type SkipBlock interface {
@@ -22,7 +23,8 @@ type SkipBlock interface {
 
 type SkipBlockID crypto.HashID
 
-// SkipBlockFix represents the fixed part of a SkipBlock
+// SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
+// and signed.
 type SkipBlockFix struct {
 	Index uint32
 	// Height of that SkipBlock
@@ -41,6 +43,8 @@ type SkipBlockFix struct {
 	ParentBlock SkipBlockID
 }
 
+// addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
+// This is used
 func (sbf *SkipBlockFix) addSliceToHash(slice []byte) SkipBlockID {
 	b, err := network.MarshalRegisteredType(sbf)
 	if err != nil {
@@ -53,44 +57,70 @@ func (sbf *SkipBlockFix) addSliceToHash(slice []byte) SkipBlockID {
 	return h
 }
 
-// SkipBlockCommon represents a SkipBlock
+// SkipBlockCommon represents a SkipBlock of any type - the fields that won't
+// be hashed (yet).
 type SkipBlockCommon struct {
 	*SkipBlockFix
-	// Hash is calculated on all previous values
-	Hash SkipBlockID
-	// the signature on the above hash
-	Signature *cosi.Signature
+	// This is our block Hash and Signature
+	*BlockLink
+	// Aggregate is the aggregate key of our responsible roster
+	Aggregate abstract.Point
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []BlockLink
 }
 
+// NewSkipBlockCommon pre-initialises the block so it can be sent over
+// the network
 func NewSkipBlockCommon() *SkipBlockCommon {
 	return &SkipBlockCommon{
 		SkipBlockFix: &SkipBlockFix{},
-		Signature:    cosi.NewSignature(network.Suite),
+		BlockLink:    NewBlockLink(),
 	}
 }
 
+// VerifySignature returns whether all signatures are correctly signed
+// by the aggregate public key of the roster. It needs the aggregate key.
 func (sbc *SkipBlockCommon) VerifySignatures() error {
+	if err := sbc.BlockLink.VerifySignature(sbc.Aggregate); err != nil {
+		return err
+	}
+	for _, fl := range sbc.ForwardLink {
+		if err := fl.VerifySignature(sbc.Aggregate); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
+// GetCommon returns the common skipblock part from the interface.
 func (sbc *SkipBlockCommon) GetCommon() *SkipBlockCommon {
 	return sbc
 }
 
+// SkipBlockData is a SkipBlock that can hold some data.
 type SkipBlockData struct {
 	*SkipBlockCommon
-	// Data is any data to b-e stored in that SkipBlock
+	// Data is any data to be stored in that SkipBlock
 	Data []byte
 }
 
+// NewSkipBlockData initialises a SkipBlockData so that it can be sent
+// over the network
+func NewSkipBlockData() *SkipBlockData {
+	return &SkipBlockData{
+		SkipBlockCommon: NewSkipBlockCommon(),
+	}
+}
+
+// updateHash is used to store the hash of the SkipBlockFix and the
+// data.
 func (sbd *SkipBlockData) updateHash() SkipBlockID {
 	sbd.Hash = sbd.addSliceToHash(sbd.Data)
 	return sbd.Hash
 }
 
+// SkipBlockRoster is a SkipBlock tracking different Rosters
 type SkipBlockRoster struct {
 	*SkipBlockCommon
 	// EntityList holds the roster-definition of that SkipBlock
@@ -100,6 +130,7 @@ type SkipBlockRoster struct {
 	ChildSL *BlockLink
 }
 
+// NewSkipBlockRoster initialises a SkipBlockRoster
 func NewSkipBlockRoster(el *sda.EntityList) *SkipBlockRoster {
 	return &SkipBlockRoster{
 		SkipBlockCommon: NewSkipBlockCommon(),
@@ -110,13 +141,40 @@ func NewSkipBlockRoster(el *sda.EntityList) *SkipBlockRoster {
 	}
 }
 
+// updateHash is used to store the hash of the SkipBlockFix and the
+// EntityList
 func (sbr *SkipBlockRoster) updateHash() SkipBlockID {
 	sbr.Hash = sbr.addSliceToHash(sbr.EntityList.Id[:])
 	return sbr.Hash
+}
+
+// VerifySignatures checks the main hash and all available ForwardLinks. If this
+// structure holds a ChildSkipList, its signature will also be verified.
+func (sbr *SkipBlockRoster) VerifySignatures() error {
+	err := sbr.SkipBlockCommon.VerifySignatures()
+	if err != nil || sbr.ChildSL.Hash == nil {
+		return err
+	}
+	return sbr.ChildSL.VerifySignature(sbr.Aggregate)
 }
 
 // BlockLink has the hash and a signature of a block
 type BlockLink struct {
 	Hash SkipBlockID
 	*cosi.Signature
+}
+
+// NewBlockLink pre-initialises the signature so it can be sent
+// over the network.
+func NewBlockLink() *BlockLink {
+	return &BlockLink{
+		Signature: cosi.NewSignature(network.Suite),
+	}
+}
+
+// VerifySignature returns whether the BlockLink has been signed
+// correctly using the aggregate key given.
+func (bl *BlockLink) VerifySignature(aggregate abstract.Point) error {
+	return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
+		bl.Challenge, bl.Response)
 }

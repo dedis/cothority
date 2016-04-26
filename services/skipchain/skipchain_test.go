@@ -6,9 +6,7 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -176,9 +174,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		}
 		// We need to verify the signature on the child-link, too. This
 		// has to be signed by the collective signature of sbRoot.
-		if err = cosi.VerifySignature(network.Suite, link.Hash, sbRoot.EntityList.Aggregate,
-			link.Challenge, link.Response); err != nil {
-			t.Fatal("Signature on child-link is not valid")
+		if err = sbRoot.VerifySignatures(); err != nil {
+			t.Fatal("Signature on child-link is not valid:", err)
 		}
 	}
 
@@ -213,10 +210,66 @@ func TestService_GetChildrenSkipList(t *testing.T) {
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
 	elInt := local.GenEntityListFromHost(hosts[:nodesChildren]...)
-	sbInt := makeGenesisRosterArgs(service, elInt, sbRoot.Hash, VerifyShard)
-	service.SetChildrenSkipBlock(sbRoot.Hash, sbInt.Hash)
+	sbInt1 := makeGenesisRosterArgs(service, elInt, sbRoot.Hash, VerifyShard)
+	service.SetChildrenSkipBlock(sbRoot.Hash, sbInt1.Hash)
 
-	service.GetChildrenSkipList(sbRoot, VerifyShard)
+	reply, err := service.GetChildrenSkipList(sbRoot, VerifyShard)
+	dbg.ErrFatal(err)
+	if len(reply.Update) != 1 {
+		t.Fatal("There should be only one block for the moment.")
+	}
+
+	elInt = local.GenEntityListFromHost(hosts[1 : nodesChildren+1]...)
+	sbInt2 := makeGenesisRosterArgs(service, elInt, sbRoot.Hash, VerifyShard)
+	_, err = service.ProposeSkipBlock(sbInt1.Hash, sbInt2)
+	dbg.ErrFatal(err)
+
+	reply, err = service.GetChildrenSkipList(sbRoot, VerifyShard)
+	dbg.ErrFatal(err)
+	if len(reply.Update) != 2 {
+		t.Fatal("There should be two blocks now.")
+	}
+	if !bytes.Equal(reply.Update[0].GetCommon().Hash, sbInt1.Hash) {
+		t.Fatal("First entry in update should be the first intermediate-block")
+	}
+	if !bytes.Equal(reply.Update[1].GetCommon().Hash, sbInt2.Hash) {
+		t.Fatal("Second entry in update should be the second intermediate-block")
+	}
+}
+
+func TestSkipBlockCommon_VerifySignatures(t *testing.T) {
+	t.Skip("Implementation not yet started")
+	// How many nodes in Root
+	nodesRoot := 10
+
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, service := makeHELS(local, nodesRoot)
+
+	// Setting up two chains and linking one to the other
+	makeGenesisRoster(service, el)
+}
+
+func TestMultiSkipChains(t *testing.T) {
+	// How many nodes in Root
+	nodesRoot := 10
+
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, service := makeHELS(local, nodesRoot)
+
+	// Setting up two chains and linking one to the other
+	sbr1 := makeGenesisRoster(service, el)
+	sbr2 := makeGenesisRoster(service, el)
+	if bytes.Equal(sbr1.Hash, sbr2.Hash) {
+		t.Fatal("Two new SkipChains even with same roster should have different Hash")
+	}
+	if err := sbr1.VerifySignatures(); err != nil {
+		t.Fatal("Verification of first GenesisBlock should not fail")
+	}
+	if err := sbr2.VerifySignatures(); err != nil {
+		t.Fatal("Verification of second GenesisBlock should not fail")
+	}
 }
 
 func TestService_PropagateSkipBlock(t *testing.T) {
