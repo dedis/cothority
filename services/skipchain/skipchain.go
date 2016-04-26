@@ -6,7 +6,9 @@ import (
 
 	"fmt"
 
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -67,6 +69,7 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 	dbg.LLvl4(fmt.Sprintf("prev=%+v\nproposed=%+v", prev, proposed))
 	sbc := proposed.GetCommon()
+	var curID string
 	if prev == nil { // genesis
 		sbc.Index++
 		// genesis block has a random back-link:
@@ -74,14 +77,23 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 		bl := make([]byte, 32)
 		_, _ = rand.Read(bl)
 		sbc.BackLink[0] = bl
+		sbc.ForwardLink = make([]BlockLink, 1)
+		curID = string(proposed.updateHash())
 	} else {
-		dbg.Print(fmt.Sprintf("sbc=%+v", sbc))
-		sbc.Index = prev.GetCommon().Index + 1
+		prevCommon := prev.GetCommon()
+		sbc.Index = prevCommon.Index + 1
 		sbc.BackLink = make([]SkipBlockID, 1)
 		sbc.BackLink[0] = prev.updateHash()
+		// update forward link of previous block:
+		curHashID := proposed.updateHash()
+		prevCommon.ForwardLink = append(prevCommon.ForwardLink,
+			BlockLink{Hash: curHashID,
+				Signature: cosi.NewSignature(network.Suite), // FIXME get real signature
+			})
+		curID = string(curHashID)
 	}
+	dbg.LLvl5(fmt.Sprintf("sbc=%+v", sbc))
 	// update
-	curID := string(proposed.updateHash())
 	s.SkipBlocks[curID] = proposed
 }
 
@@ -96,12 +108,14 @@ func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply,
 	// at least the latest know and the next block:
 	path := make([]SkipBlock, 2)
 	path[0] = block
+	dbg.Print("Added block to update", block)
 	// FIXME how to determine the latest blocks
 	forwardlinks := block.GetCommon().ForwardLink
 	for _, linkId := range forwardlinks {
 		if linkId.Hash != nil {
 			sb := s.SkipBlocks[string(linkId.Hash)]
 			path = append(path, sb)
+			dbg.Print("Added block to update", sb)
 		}
 	}
 
