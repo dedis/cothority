@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dedis/crypto/random"
-	"reflect"
 )
 
 
@@ -16,7 +15,8 @@ var currentGreatestM abstract.Point
 var currentGreatestInt int64 = 0
 
 type CipherText struct {
-	K, C abstract.Point
+	//Suite abstract.Suite
+	K, C  abstract.Point
 }
 
 type DeterministCipherText struct {
@@ -54,15 +54,19 @@ func (cv *CipherVector) Add(cv1, cv2 CipherVector) error{
 	return  nil
 }
 
-func (cv *CipherVector) Aggregate(ag1, ag2 Aggregatable) error {
-	cv1, ok1 := ag1.(*CipherVector)
-	cv2, ok2 := ag2.(*CipherVector)
-	if ok1 && ok2 {
-		cv.Add(*cv1, *cv2)
-		return nil
-	} else {
+func (c *CipherText) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKey, newKey abstract.Point, randomnessContribution abstract.Secret) {
+	ephemKeyContrib := suite.Point().Mul(suite.Point().Base(), randomnessContribution)
+	oldBlindingContrib := suite.Point().Mul(originalEphemKey, private)
+	newBlindingContrib := suite.Point().Mul(newKey, randomnessContribution)
 
-		return errors.New("Cannot aggregate " + reflect.TypeOf(ag1).String() + " and " + reflect.TypeOf(ag2).String())
+	c.K.Add(c.K, ephemKeyContrib)
+	c.C.Sub(c.C, oldBlindingContrib)
+	c.C.Add(c.C, newBlindingContrib)
+}
+
+func (cv *CipherVector) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKeys []abstract.Point, newKey abstract.Point, randomnessContribution abstract.Secret){
+	for i,c := range *cv {
+		c.SwitchForKey(suite,private, originalEphemKeys[i],newKey,randomnessContribution)
 	}
 }
 
@@ -143,10 +147,91 @@ func DecryptInt(suite abstract.Suite, prikey abstract.Secret, cipher CipherText)
 }
 
 func DecryptIntVector(suite abstract.Suite, prikey abstract.Secret, cipherVector CipherVector) []int64 {
-
 	result := make([]int64, len(cipherVector))
 	for i, c := range cipherVector {
 		result[i] = DecryptInt(suite, prikey, c)
 	}
 	return result
 }
+
+
+//func (c *CipherText) Aggregate(ag1, ag2 Aggregatable) error {
+//		c1, ok1 := ag1.(*CipherText)
+//		c2, ok2 := ag2.(*CipherText)
+//		if ok1 && ok2 {
+//			c.Add(*c1, *c2)
+//			return nil
+//		} else {
+//
+//			return errors.New("Cannot aggregate " + reflect.TypeOf(ag1).String() + " and " + reflect.TypeOf(ag2).String())
+//		}
+//}
+//func (cv *CipherVector) Aggregate(ag1, ag2 Aggregatable) error {
+//	cv1, ok1 := ag1.(*CipherVector)
+//	cv2, ok2 := ag2.(*CipherVector)
+//	if ok1 && ok2 {
+//		cv.Add(*cv1, *cv2)
+//		return nil
+//	} else {
+//
+//		return errors.New("Cannot aggregate " + reflect.TypeOf(ag1).String() + " and " + reflect.TypeOf(ag2).String())
+//	}
+//}
+
+//func (c * CipherText) MarshalBinary() (data []byte, err error) {
+//	pointSize := (*c).Suite.PointLen()
+//	data = make([]byte, 0, 2*pointSize)
+//	b1,_ := c.K.MarshalBinary()
+//	b2,_ := c.C.MarshalBinary()
+//	data = append(data, b1...)
+//	data = append(data, b2...)
+//	return
+//}
+//
+//func (c *CipherText) UnmarshalBinary(data []byte) error {
+//	pointSize := (*c).Suite.PointLen()
+//	c.K.UnmarshalBinary(data[:pointSize])
+//	c.C.UnmarshalBinary(data[pointSize:])
+//	return nil
+//}
+//
+//func (c *CipherText) MarshalSize() int {
+//	return 2 * c.Suite.PointLen()
+//}
+//
+//func (c *CipherText) MarshalTo(w io.Writer) (int, error) {
+//	b,_ := c.MarshalBinary()
+//	return w.Write(b)
+//}
+//
+//func (c *CipherText) UnmarshalFrom(r io.Reader) (int, error) {
+//	buf := make([]byte, 2*c.Suite.PointLen())
+//	n, err := io.ReadFull(r, buf)
+//	if err != nil {
+//		return n, err
+//	}
+//	return n, c.UnmarshalBinary(buf)
+//}
+//
+//func (cv *CipherVector) MarshalBinary() (data []byte, err error) {
+//	pointSize := (*cv)[0].suite.PointLen()
+//	data = make([]byte, 2, 2+len(cv)*2*pointSize)
+//	binary.BigEndian.PutUint16(data, len(cv))
+//	for _, c := range *cv {
+//		data = append(data, c.MarshalBinary()...)
+//	}
+//	return
+//}
+//
+//func (cv *CipherVector) UnmarshalBinary(data []byte) error {
+//	pointSize := (*cv)[0].suite.PointLen()
+//	ciphSize := 2*pointSize
+//	numEl := binary.BigEndian.Uint16(data)
+//	data = data[2:]
+//	*cv = make(CipherVector, numEl)
+//	for _, c := range *cv {
+//		c.UnmarshalBinary(data[:ciphSize])
+//		data = data[ciphSize:]
+//	}
+//	return
+//}

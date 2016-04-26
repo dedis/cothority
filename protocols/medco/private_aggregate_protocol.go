@@ -6,10 +6,12 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/crypto/abstract"
 )
 
 
 type Aggregatable interface {
+	abstract.Marshaling
 	Aggregate(a1 Aggregatable, a2 Aggregatable) error
 }
 
@@ -28,7 +30,7 @@ type PrivateAggregateProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel      chan Aggregatable
+	FeedbackChannel      chan CipherVector
 
 	// Protocol communication channels
 	DataReferenceChannel chan DataReferenceStruct
@@ -42,7 +44,7 @@ type PrivateAggregateProtocol struct {
 func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	privateAggregateProtocol := &PrivateAggregateProtocol{
 		TreeNodeInstance:       n,
-		FeedbackChannel: make(chan Aggregatable),
+		FeedbackChannel: make(chan CipherVector),
 	}
 
 	if err := privateAggregateProtocol.RegisterChannel(&privateAggregateProtocol.DataReferenceChannel); err != nil {
@@ -57,7 +59,6 @@ func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) 
 
 // Starts the protocol
 func (p *PrivateAggregateProtocol) Start() error {
-
 	if p.DataReference == nil {
 		return errors.New("No data reference provided for aggregation.")
 	}
@@ -86,7 +87,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 3. Result reporting
 	if p.IsRoot() {
-		p.FeedbackChannel <- aggregatedContribution
+		p.FeedbackChannel <- *aggregatedContribution
 	}
 
 	return nil
@@ -102,19 +103,19 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() *DataRef {
 	return &dataReferenceMessage.DataReference
 }
 
-func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution Aggregatable) Aggregatable {
+func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *CipherVector) *CipherVector {
 	if !p.IsLeaf() {
 		for _,childrenContribution := range <- p.ChildDataChannel {
-			localContribution.Aggregate(localContribution, childrenContribution.ChildData)
+			localContribution.Add(*localContribution, childrenContribution.ChildData)
 		}
 	}
 	if !p.IsRoot() {
-		p.SendToParent(&ChildAggregatedDataMessage{localContribution})
+		p.SendToParent(&ChildAggregatedDataMessage{*localContribution})
 	}
 	return localContribution
 }
 
-func (p *PrivateAggregateProtocol) getAggregatedDataFromReference(ref DataRef) Aggregatable {
+func (p *PrivateAggregateProtocol) getAggregatedDataFromReference(ref DataRef) *CipherVector {
 	switch ref {
 	case 0:
 		nodeList := p.Tree().List()
@@ -125,7 +126,6 @@ func (p *PrivateAggregateProtocol) getAggregatedDataFromReference(ref DataRef) A
 				return &nullVect
 			}
 		}
-
 	}
 	return nil
 }

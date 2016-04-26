@@ -12,7 +12,7 @@ type DataReferenceStruct struct {
 }
 
 type ChildAggregatedDataMessage struct {
-	ChildData Aggregatable
+	ChildData CipherVector
 }
 
 type ChildAggregatedDataStruct struct {
