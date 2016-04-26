@@ -95,20 +95,25 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 func TestService_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
-	t.Skip("Implementation not yet started")
+	//t.Skip("Implementation not yet started")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, s := makeHELS(local, 4)
 	sbLength := 10
+	_, el, s := makeHELS(local, sbLength)
 	sbs := make([]*SkipBlockRoster, sbLength)
 	sbs[0] = makeGenesisRoster(s, el)
-	for i := 1; i < sbLength-1; i++ {
+	// init skipchain
+	for i := 1; i < sbLength; i++ {
 		el.List = el.List[0 : sbLength-(i+1)]
 		reply, err := s.ProposeSkipBlock(sbs[i-1].Hash,
-			&SkipBlockRoster{EntityList: el})
+			&SkipBlockRoster{
+				SkipBlockCommon: &SkipBlockCommon{},
+				EntityList:      el,
+			})
 		dbg.ErrFatal(err)
 		sbs[i] = reply.Latest.(*SkipBlockRoster)
 	}
+
 	for i := 0; i < sbLength; i++ {
 		sbc, err := s.GetUpdateChain(sbs[i].Hash)
 		dbg.ErrFatal(err)

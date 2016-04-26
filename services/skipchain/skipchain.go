@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 
+	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 )
@@ -39,6 +40,7 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 			Previous: nil, // genesis block
 			Latest:   proposed,
 		}
+		dbg.LLvl3(fmt.Sprintf("Successfuly created genesis: %+v", reply))
 		return reply, nil
 	}
 
@@ -59,6 +61,7 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 }
 
 func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
+	dbg.LLvl4(fmt.Sprintf("prev=%+v\nproposed=%+v", prev, proposed))
 	sbc := proposed.GetCommon()
 	if prev == nil { // genesis
 		sbc.Index++
@@ -68,6 +71,7 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 		_, _ = rand.Read(bl)
 		sbc.BackLink[0] = bl
 	} else {
+		dbg.Print(fmt.Sprintf("sbc=%+v", sbc))
 		sbc.Index = prev.GetCommon().Index + 1
 		sbc.BackLink = make([]SkipBlockID, 1)
 		sbc.BackLink[0] = prev.updateHash()
@@ -80,7 +84,14 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 // GetUpdateChain returns a slice of SkipBlocks that point to the latest
 // SkipBlock. Comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, error) {
-	return nil, nil
+	block, ok := s.SkipBlocks[string(latest)]
+	if !ok {
+		return nil, errors.New("Couldn't find latest skipblock")
+	}
+	reply := &GetUpdateChainReply{
+		Update: []SkipBlock{block},
+	}
+	return reply, nil
 }
 
 // GetChildrenSkipList creates a new SkipChain if that 'service' doesn't exist
