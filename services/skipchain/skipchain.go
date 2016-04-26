@@ -85,16 +85,30 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 	s.SkipBlocks[curID] = proposed
 }
 
-// GetUpdateChain returns a slice of SkipBlocks that point to the latest
-// SkipBlock. Comparable to search in SkipLists.
+// GetUpdateChain returns a slice of SkipBlocks which describe the path from the
+// latest known block the caller knows of to the actual latest SkipBlock.
+// Comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply, error) {
 	block, ok := s.SkipBlocks[string(latestKnown)]
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
-	reply := &GetUpdateChainReply{
-		Update: []SkipBlock{block},
+	// at least the latest know and the next block:
+	path := make([]SkipBlock, 2)
+	path[0] = block
+	// FIXME how to determine the latest blocks
+	forwardlinks := block.GetCommon().ForwardLink
+	for _, linkId := range forwardlinks {
+		if linkId.Hash != nil {
+			sb := s.SkipBlocks[string(linkId.Hash)]
+			path = append(path, sb)
+		}
 	}
+
+	reply := &GetUpdateChainReply{
+		Update: path,
+	}
+
 	return reply, nil
 }
 
