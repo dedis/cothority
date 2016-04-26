@@ -55,6 +55,7 @@ func NewOverlay(h *Host) *Overlay {
 func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	o.transmitMux.Lock()
 	defer o.transmitMux.Unlock()
+	dbg.Printf(o.host.workingAddress, "%+v", sdaMsg.To)
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
 		dbg.Lvl3(o.host.workingAddress, "Will ask the EntityList from token", sdaMsg.To.EntityListID, len(o.entityLists))

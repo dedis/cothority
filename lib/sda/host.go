@@ -210,7 +210,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	h.networkLock.Unlock()
 
 	dbg.Lvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
-	if err := c.Send(context.TODO(), msg); err != nil && err != network.ErrClosed {
+	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
 	}
 	return nil
@@ -240,12 +240,13 @@ func (h *Host) processMessages() {
 	for {
 		var err error
 		var data network.Message
+		dbg.Print(h.workingAddress, " waiting for new message")
 		select {
 		case data = <-h.networkChan:
 		case <-h.ProcessMessagesQuit:
 			return
 		}
-		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType == RequestID)
+		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
 		case SDADataMessageID:
 			sdaMsg := data.Msg.(Data)
@@ -254,6 +255,7 @@ func (h *Host) processMessages() {
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
 			}
+			dbg.Print(h.workingAddress, "TransmitMsg Done!")
 			// A host has sent us a request to get a tree definition
 		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
