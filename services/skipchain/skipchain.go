@@ -117,7 +117,7 @@ func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply,
 }
 
 func (s *Service) followForward(sb SkipBlock) []SkipBlock {
-	path := make([]SkipBlock, 2)
+	path := make([]SkipBlock, 1)
 	// add current
 	path[0] = sb
 	forwardlinks := sb.GetCommon().ForwardLink
@@ -125,7 +125,20 @@ func (s *Service) followForward(sb SkipBlock) []SkipBlock {
 		if linkId.Hash != nil {
 			sb := s.SkipBlocks[string(linkId.Hash)]
 			path = append(path, sb)
-			path = append(path, s.followForward(sb)...)
+			path = append(path, s.followForwardInternal(sb)...)
+		}
+	}
+	return path
+}
+
+func (s *Service) followForwardInternal(curSb SkipBlock) []SkipBlock {
+	path := make([]SkipBlock, 0)
+	forwardlinks := curSb.GetCommon().ForwardLink
+	for _, linkId := range forwardlinks {
+		if linkId.Hash != nil {
+			sb := s.SkipBlocks[string(linkId.Hash)]
+			path = append(path, sb)
+			path = append(path, s.followForwardInternal(sb)...)
 		}
 	}
 	return path
