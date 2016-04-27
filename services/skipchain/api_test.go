@@ -33,9 +33,9 @@ func TestClient_CreateRootInterm(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	root, interm, err := c.CreateRootInterm(el, el, 1,1, VerifyNone)
+	root, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
-	if root == nil || interm == nil{
+	if root == nil || interm == nil {
 		t.Fatal("Pointers are nil")
 	}
 	if err = root.VerifySignatures(); err != nil {
