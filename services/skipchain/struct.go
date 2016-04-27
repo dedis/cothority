@@ -1,6 +1,8 @@
 package skipchain
 
 import (
+	"bytes"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -19,6 +21,10 @@ type SkipBlock interface {
 	// GetCommon returns the part of the main information about the
 	// SkipBlock which is the SkipBlockCommon structure.
 	GetCommon() *SkipBlockCommon
+	// Hash returns the hash of the SkipBlock which is its ID
+	Hash() *SkipBlockID
+	// Equal tests if both hashes are equal
+	Equal(SkipBlock) bool
 }
 
 type SkipBlockID crypto.HashID
@@ -33,7 +39,7 @@ type SkipBlockFix struct {
 	// - if negative: we will use random distribution to calculate the
 	// height of each new block
 	// - else: the max height determines the height of the next block
-	MaximumHeight uint32
+	MaximumHeight int
 	// BackLink is a slice of hashes to previous SkipBlocks
 	BackLink []SkipBlockID
 	// VerifierId is a SkipBlock-protocol verifying new SkipBlocks
@@ -67,7 +73,7 @@ type SkipBlockCommon struct {
 	Aggregate abstract.Point
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
-	ForwardLink []BlockLink
+	ForwardLink []*BlockLink
 }
 
 // NewSkipBlockCommon pre-initialises the block so it can be sent over
@@ -96,6 +102,16 @@ func (sbc *SkipBlockCommon) VerifySignatures() error {
 // GetCommon returns the common skipblock part from the interface.
 func (sbc *SkipBlockCommon) GetCommon() *SkipBlockCommon {
 	return sbc
+}
+
+// Hash returns the hash of the SkipBlock
+func (sbc *SkipBlockCommon) Hash() SkipBlockID {
+	return sbc.Hash
+}
+
+// Equal returns bool if both hashes are equal
+func (sbc *SkipBlockCommon) Equal(sb SkipBlock) bool {
+	return bytes.Equal(sbc.Hash, sb.Hash())
 }
 
 // SkipBlockData is a SkipBlock that can hold some data.

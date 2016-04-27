@@ -6,6 +6,8 @@ import (
 
 	"fmt"
 
+	"bytes"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -166,10 +168,66 @@ func (s *Service) PropagateSkipBlock(latest SkipBlock) {
 
 }
 
+// SignBlock signs off the new block pointed to by the hash by first
+// verifying its validity and then collectively signing off the block.
+// The new signature is NOT broadcasted to the roster!
+func (s *Service) SignBlock(sb SkipBlock) error {
+	prev, ok := s.SkipBlocks[string(sb.GetCommon().BackLink[0])]
+	if !ok {
+		return errors.New("Didn't find SkipBlock")
+	}
+	if !s.verifyNewSkipBlock(prev, sb) {
+		return errors.New("Refused")
+	}
+	// TODO: sign off the block with the roster
+	sb.GetCommon().Signature = cosi.NewSignature(network.Suite)
+	return nil
+}
+
 // ForwardSignature asks this responsible for a SkipChain to sign off
-// a new ForwardLink. This will probably be sent to all members of any
-// SkipChain-definition at time 'n'
-func (s *Service) ForwardSignature(updating *ForwardSignature) {
+// a new ForwardLink. Upon success the new signature will be
+// broadcast to the entire roster and all backward- and forward-links.
+// It returns the SkipBlock with the updated ForwardSignature or an error.
+func (s *Service) ForwardSignature(updating *ForwardSignature) (SkipBlock, error) {
+	sb, ok := s.SkipBlocks[string(updating.ToUpdate)]
+	if !ok {
+		return nil, errors.New("Didn't find SkipBlock")
+	}
+	if updating.Latest.VerifySignatures() != nil {
+		return nil, errors.New("Couldn't verify signature of new block")
+	}
+	comm := sb.GetCommon()
+	commLatest := updating.Latest.GetCommon()
+	updateHeight := 0
+	latestHeight := len(commLatest.BackLink)
+	for updateHeight = 0; updateHeight < latestHeight; updateHeight++ {
+		if bytes.Equal(commLatest.BackLink[updateHeight], comm.Hash()) {
+			break
+		}
+	}
+	if updateHeight == latestHeight {
+		return nil, errors.New("Didn't find ourselves in the backlinks")
+	}
+	currHeight := len(comm.ForwardLink)
+	if currHeight == 0 {
+		comm.ForwardLink = make([]*BlockLink, 0, comm.Height)
+		// As we are the direct predecessor of the block, we need
+		// to verify using the verification-function whether that
+		// block is valid or not.
+		if !s.verifyNewSkipBlock(sb, updating.Latest) {
+			return nil, errors.New("New SkipBlock not accepted!")
+		}
+	} else {
+		// We only need to verify that we have a complete link-history
+		// from ourselves to the proposed SkipBlock
+		if !s.verifyLinkedSkipBlock(sb, updating.Latest) {
+			return nil, errors.New("Didn't find a valid update-path")
+		}
+	}
+	comm.ForwardLink[currHeight].Hash = updating.Latest.GetCommon().Hash()
+
+	// TODO: sign off on the forward-link
+	return sb, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -184,8 +242,15 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 // either a signature on the newest SkipBlock or nil if the SkipBlock
 // has been refused
 func (s *Service) verifyNewSkipBlock(latest, newest SkipBlock) bool {
-	// TODO: implement a protocol that can check on the veracity of the new
-	// TODO: EntityList
+	// TODO: implement a couple of protocols that can check all
+	// TODO: Verify* constants
+	return true
+}
+
+// verifyLinkedSkipBlock checks if we have a valid link connecting the two
+// SkipBlocks with each other.
+func (s *Service) verifyLinkedSkipBlock(latest, newest SkipBlock) bool {
+	// TODO: check we have a valid link
 	return true
 }
 
