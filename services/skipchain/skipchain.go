@@ -40,6 +40,9 @@ type Service struct {
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
 func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
+	// later we will support higher blocks
+	proposed.GetCommon().Height = 1
+
 	if latest == nil && len(s.SkipBlocks) == 0 { // genesis block creation
 		s.updateSkipBlock(nil, proposed)
 		reply := &ProposedSkipBlockReply{
@@ -99,36 +102,37 @@ func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
 	s.SkipBlocks[curID] = proposed
 }
 
-// GetUpdateChain returns a slice of SkipBlocks which describe the path from the
-// latest known block the caller knows of to the actual latest SkipBlock.
-// Comparable to search in SkipLists.
+// GetUpdateChain returns a slice of SkipBlocks which describe the part of the
+// skipchain from the latest block the caller knows of to the actual latest
+// SkipBlock.
+// Somehow comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply, error) {
 	block, ok := s.SkipBlocks[string(latestKnown)]
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
-	path := s.followForward(block)
+	blocks := s.followForward(block)
 	reply := &GetUpdateChainReply{
-		Update: path,
+		Update: blocks,
 	}
 
 	return reply, nil
 }
 
 func (s *Service) followForward(sb SkipBlock) []SkipBlock {
-	path := make([]SkipBlock, 1)
+	blocks := make([]SkipBlock, 1)
 	// add current
-	path[0] = sb
+	blocks[0] = sb
 	forwardlinks := sb.GetCommon().ForwardLink
 	for _, linkId := range forwardlinks {
 		if linkId.Hash != nil {
 			sb := s.SkipBlocks[string(linkId.Hash)]
-			path = append(path, sb)
-			path = append(path, s.followForwardInternal(sb)...)
+			blocks = append(blocks, sb)
+			blocks = append(blocks, s.followForwardInternal(sb)...)
 		}
 	}
-	return path
+	return blocks
 }
 
 func (s *Service) followForwardInternal(curSb SkipBlock) []SkipBlock {

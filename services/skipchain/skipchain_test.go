@@ -132,19 +132,19 @@ func TestService_GetUpdateChain(t *testing.T) {
 			// FIXME re-enable verification:
 			// dbg.ErrFatal(sb1.VerifySignatures())
 			if up < len(sbc.Update)-1 {
-				sb2 := sbc.Update[up]
+				sb2 := sbc.Update[up+1]
 				sbc1 := sb1.GetCommon()
 				sbc2 := sb2.GetCommon()
 				h1 := sbc1.Height
 				h2 := sbc2.Height
 				dbg.Print("sbc1.Height=", sbc1.Height)
 				dbg.Print("sbc2.Height=", sbc2.Height)
-				// height := min(h1, h2)
+				// height := min(len(sb1.ForwardLink), h2)
 				height := h1
 				if h2 < height {
 					height = h2
 				}
-				if !bytes.Equal(sbc1.ForwardLink[height].Hash,
+				if !bytes.Equal(sbc1.ForwardLink[height-1].Hash,
 					sbc2.Hash) {
 					t.Fatal("Forward-pointer of", up,
 						"is different of hash in", up+1)
