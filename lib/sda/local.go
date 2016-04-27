@@ -224,6 +224,11 @@ func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 	h.checkPendingTreeMarshal(el)
 }
 
+// GetPrivate returns the private key of a host
+func (l *LocalTest) GetPrivate(h *Host) abstract.Secret {
+	return h.private
+}
+
 // NewLocalHost creates a new host with the given address and registers it.
 func NewLocalHost(port int) *Host {
 	address := "localhost:" + strconv.Itoa(port)
