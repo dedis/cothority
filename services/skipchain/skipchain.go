@@ -317,11 +317,14 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 		SkipBlocks:       make(map[string]SkipBlock),
 	}
 	if err := s.RegisterMessage(s.PropagateSkipBlock); err != nil {
-		dbg.Fatal("Linus doesn't remember all interfaces in his head:", err)
+		dbg.Fatal("Registration-error:", err)
 	}
-	//if err := s.RegisterMessage(s.ProposeSkipBlock); err!=nil {
-	//	dbg.Fatal("Linus doesn't remember all interfaces in his head:", err)
-	//}
+	if err := s.RegisterMessage(s.ProposeSkipBlockData); err != nil {
+		dbg.Fatal("Registration-error:", err)
+	}
+	if err := s.RegisterMessage(s.ProposeSkipBlockRoster); err != nil {
+		dbg.Fatal("Registration-error:", err)
+	}
 	//if err := s.RegisterMessage(s.GetUpdateChain); err!=nil {
 	//	dbg.Fatal("Linus doesn't remember all interfaces in his head:", err)
 	//}
