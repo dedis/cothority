@@ -20,8 +20,8 @@ func NewClient() *Client {
 
 // SignMsg sends a CoSi sign request to the Cothority defined by the given
 // EntityList
-func (c *Client) SignMsg(el *sda.EntityList, msg []byte) (*ServiceResponse, error) {
-	serviceReq := &ServiceRequest{
+func (c *Client) SignMsg(el *sda.EntityList, msg []byte) (*SignatureResponse, error) {
+	serviceReq := &SignatureRequest{
 		EntityList: el,
 		Message:    msg,
 	}
@@ -31,7 +31,7 @@ func (c *Client) SignMsg(el *sda.EntityList, msg []byte) (*ServiceResponse, erro
 	if e := sda.ErrMsg(reply, err); e != nil {
 		return nil, e
 	}
-	sr, ok := reply.Msg.(ServiceResponse)
+	sr, ok := reply.Msg.(SignatureResponse)
 	if !ok {
 		return nil, errors.New("This is odd: couldn't cast reply.")
 	}
