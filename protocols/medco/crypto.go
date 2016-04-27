@@ -109,6 +109,14 @@ func EncryptInt(suite abstract.Suite, pubkey abstract.Point, integer int64) *Cip
 	return EncryptPoint(suite, pubkey, M)
 }
 
+func EncryptIntArray(suite abstract.Suite, pubkey abstract.Point, intArray []int64) *CipherVector {
+	cv := make(CipherVector, len(intArray))
+	for i, n := range intArray {
+		cv[i] = *EncryptInt(suite,pubkey, n)
+	}
+	return &cv
+}
+
 func EncryptPoint(suite abstract.Suite, pubkey abstract.Point, M abstract.Point) *CipherText {
 	B := suite.Point().Base()
 	k := suite.Secret().Pick(random.Stream) // ephemeral private key

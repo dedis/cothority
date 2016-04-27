@@ -295,7 +295,7 @@ in place of the standard reply. The Client.Send method will catch that and retur
 
 // Client for a service
 type Client struct {
-	private abstract.Secret
+	Private   abstract.Secret
 	*network.Entity
 	ServiceID ServiceID
 }
@@ -305,7 +305,7 @@ func NewClient(s string) *Client {
 	kp := config.NewKeyPair(network.Suite)
 	return &Client{
 		Entity:    network.NewEntity(kp.Public, ""),
-		private:   kp.Secret,
+		Private:   kp.Secret,
 		ServiceID: ServiceFactory.ServiceID(s),
 	}
 }
@@ -313,7 +313,7 @@ func NewClient(s string) *Client {
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
-	client := network.NewSecureTCPHost(c.private, c.Entity)
+	client := network.NewSecureTCPHost(c.Private, c.Entity)
 
 	// Connect to the root
 	dbg.Lvl4("Opening connection to", dst)

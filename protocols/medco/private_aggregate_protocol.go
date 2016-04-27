@@ -15,7 +15,7 @@ type Aggregatable interface {
 	Aggregate(a1 Aggregatable, a2 Aggregatable) error
 }
 
-type DataRef int
+type DataRef *CipherVector
 
 func init() {
 	network.RegisterMessageType(DataReferenceMessage{})
@@ -117,7 +117,7 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *
 
 func (p *PrivateAggregateProtocol) getAggregatedDataFromReference(ref DataRef) *CipherVector {
 	switch ref {
-	case 0:
+	case nil:
 		nodeList := p.Tree().List()
 		nullVect := NullCipherVector(p.Suite(), len(nodeList), p.Public())
 		for i, node := range nodeList {
