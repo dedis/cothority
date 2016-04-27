@@ -117,9 +117,26 @@ func TestClient_ProposeRoster(t *testing.T) {
 	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
 	dbg.ErrFatal(err)
 	el.List = el.List[:nbrHosts-1]
-	reply, err := c.ProposeRoster(interm.Hash, el)
+	reply1, err := c.ProposeRoster(interm.Hash, el)
 	dbg.ErrFatal(err)
-	dbg.Print(reply)
+	_, err = c.ProposeRoster(interm.Hash, el)
+	if err == nil {
+		t.Fatal("Appending two Blocks to the same last block should fail")
+	}
+	reply2, err := c.ProposeRoster(reply1.Latest.GetHash(), el)
+	dbg.ErrFatal(err)
+	if !bytes.Equal(reply1.Latest.GetCommon().ForwardLink[0].Hash,
+		reply2.Latest.GetHash()) {
+		t.Fatal("second should point to third SkipBlock")
+	}
+
+	updates, err := c.GetUpdateChain(interm.GetHash())
+	if len(updates.Update) != 3 {
+		t.Fatal("Should now have three Blocks to go from Genesis to current")
+	}
+	if !updates.Update[2].Equal(reply2.Latest) {
+		t.Fatal("Last block in update-chain should be last block added")
+	}
 }
 
 type testData struct {
