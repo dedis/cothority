@@ -32,7 +32,7 @@ type Cosi struct {
 	path string
 }
 
-// ServiceRequest is what the Cosi service is expected to receive from clients.
+// SignatureRequest is what the Cosi service is expected to receive from clients.
 type SignatureRequest struct {
 	Message    []byte
 	EntityList *sda.EntityList
@@ -42,7 +42,7 @@ type SignatureRequest struct {
 // CosiRequest
 var CosiRequestType = network.RegisterMessageType(SignatureRequest{})
 
-// ServiceResponse is what the Cosi service will reply to clients.
+// SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
 	Sum       []byte
 	Challenge abstract.Secret
@@ -53,7 +53,7 @@ type SignatureResponse struct {
 // CosiResponse
 var CosiResponseType = network.RegisterMessageType(SignatureResponse{})
 
-// ProcessClientRequest treats external request to this service.
+// SignatureRequest treats external request to this service.
 func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (network.ProtocolMessage, error) {
 	tree := req.EntityList.GenerateBinaryTree()
 	tni := cs.NewTreeNodeInstance(tree, tree.Root)
