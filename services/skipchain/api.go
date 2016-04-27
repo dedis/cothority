@@ -20,9 +20,25 @@ func NewClient() *Client {
 // maximumHeight of maxHRoot and an intermediate SkipChain with
 // maximumHeight of maxHInterm. It connects both chains for later
 // reference.
-func (c *Client) CreateRootInterm(maxHRoot, maxHInterm int, ver VerifierID) (root, interm *SkipBlockRoster, err error) {
-	return nil, nil, nil
-
+func (c *Client) CreateRootInterm(elRoot, elInter *sda.EntityList, maxHRoot, maxHInter int, ver VerifierID) (root, inter *SkipBlockRoster, err error) {
+	err = nil
+	root = NewSkipBlockRoster(elRoot)
+	root.MaximumHeight = maxHRoot
+	root.VerifierId = ver
+	inter = NewSkipBlockRoster(elInter)
+	inter.MaximumHeight = maxHInter
+	inter.VerifierId = ver
+	rootMsg, err := c.Send(elRoot.List[0], &ProposeSkipBlockRoster{nil, root})
+	if err != nil {
+		return
+	}
+	root = rootMsg.Msg.(ProposedSkipBlockReplyRoster).Latest
+	interMsg, err := c.Send(elInter.List[0], &ProposeSkipBlockRoster{nil, inter})
+	if err != nil {
+		return
+	}
+	inter = interMsg.Msg.(ProposedSkipBlockReplyRoster).Latest
+	return
 }
 
 // CreateData adds a Data-chain to the given intermediate-chain using

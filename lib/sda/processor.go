@@ -94,7 +94,7 @@ func (p *ServiceProcessor) GetReply(e *network.Entity, cr *ClientRequest) networ
 		network.DefaultConstructors(network.Suite))
 	fu, ok := p.functions[mt]
 	if !ok {
-		return &StatusRet{"Don't know message: " + mt.String()}
+		return &StatusRet{"Didn't register message-handler: " + mt.String()}
 	}
 
 	if err != nil {

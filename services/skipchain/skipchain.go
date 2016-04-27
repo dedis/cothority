@@ -71,6 +71,20 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 
 	return nil, errors.New("Verification of proposed block failed.")
 }
+func (s *Service) ProposeSkipBlockData(latest SkipBlockID, proposed *SkipBlockData) (*ProposedSkipBlockReplyData, error) {
+	reply, err := s.ProposeSkipBlock(latest, proposed)
+	if err != nil{
+		return nil, err
+	}
+	return &ProposedSkipBlockReplyData{reply.Previous.(*SkipBlockData), reply.Latest.(*SkipBlockData)}, nil
+}
+func (s *Service) ProposeSkipBlockRoster(latest SkipBlockID, proposed *SkipBlockRoster) (*ProposedSkipBlockReplyRoster, error) {
+	reply, err := s.ProposeSkipBlock(latest, proposed)
+	if err != nil{
+		return nil, err
+	}
+	return &ProposedSkipBlockReplyRoster{reply.Previous.(*SkipBlockRoster), reply.Latest.(*SkipBlockRoster)}, nil
+}
 
 func (s *Service) updateNewSkipBlock(prev, proposed SkipBlock) {
 	dbg.LLvl4(fmt.Sprintf("prev=%+v\nproposed=%+v", prev, proposed))

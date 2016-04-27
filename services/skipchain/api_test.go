@@ -28,14 +28,16 @@ func TestClient_GetUpdateChain(t *testing.T) {
 }
 
 func TestClient_CreateRootInterm(t *testing.T) {
-	t.Skip("To be implemented")
 	l := sda.NewLocalTest()
-	l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
-	root, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
+	root, interm, err := c.CreateRootInterm(el, el, 1,1, VerifyNone)
 	dbg.ErrFatal(err)
+	if root == nil || interm == nil{
+		t.Fatal("Pointers are nil")
+	}
 	if err = root.VerifySignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
 	}
@@ -53,11 +55,11 @@ func TestClient_CreateRootInterm(t *testing.T) {
 func TestClient_CreateData(t *testing.T) {
 	t.Skip("To be implemented")
 	l := sda.NewLocalTest()
-	l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
+	_, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data, err := c.CreateData(interm, 4, td, VerifyNone)
@@ -80,11 +82,11 @@ func TestClient_CreateData(t *testing.T) {
 func TestClient_ProposeData(t *testing.T) {
 	t.Skip("To be implemented")
 	l := sda.NewLocalTest()
-	l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
+	_, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data1, err := c.CreateData(interm, 4, td, VerifyNone)
@@ -114,7 +116,7 @@ func TestClient_ProposeRoster(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
+	_, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	el.List = el.List[:nbrHosts-1]
 	reply1, err := c.ProposeRoster(interm.Hash, el)

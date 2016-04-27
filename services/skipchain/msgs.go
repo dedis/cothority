@@ -8,7 +8,11 @@ import (
 func init() {
 	var msgs = []interface{}{
 		&ProposeSkipBlock{},
+		&ProposeSkipBlockData{},
+		&ProposeSkipBlockRoster{},
 		&ProposedSkipBlockReply{},
+		&ProposedSkipBlockReplyData{},
+		&ProposedSkipBlockReplyRoster{},
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
 		&PropagateSkipBlock{},
@@ -49,11 +53,27 @@ type ProposeSkipBlock struct {
 	Latest   SkipBlockID
 	Proposed SkipBlock
 }
+type ProposeSkipBlockData struct {
+	Latest   SkipBlockID
+	Proposed *SkipBlockData
+}
+type ProposeSkipBlockRoster struct {
+	Latest   SkipBlockID
+	Proposed *SkipBlockRoster
+}
 
 // ProoposedReply - returns the signed SkipBlock with updated backlinks
 type ProposedSkipBlockReply struct {
 	Previous SkipBlock
 	Latest   SkipBlock
+}
+type ProposedSkipBlockReplyData struct {
+	Previous *SkipBlockData
+	Latest   *SkipBlockData
+}
+type ProposedSkipBlockReplyRoster struct {
+	Previous *SkipBlockRoster
+	Latest   *SkipBlockRoster
 }
 
 // GetUpdateChain - the client sends the hash of the last known
