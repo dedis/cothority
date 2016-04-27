@@ -26,7 +26,7 @@ func (c *Client) SignMsg(el *sda.EntityList, msg []byte) (*SignatureResponse, er
 		Message:    msg,
 	}
 	dst := el.List[0]
-	dbg.LLvl4("Sending message to", dst)
+	dbg.Lvl4("Sending message to", dst)
 	reply, err := c.Send(dst, serviceReq)
 	if e := sda.ErrMsg(reply, err); e != nil {
 		return nil, e

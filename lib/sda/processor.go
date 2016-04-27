@@ -59,7 +59,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Need 2 return values: network.ProtocolMessage and *error*")
 	}
 	// Automatic registration of the message to the network library.
-	dbg.LLvl3("Registering handler", cr1.String())
+	dbg.Lvl3("Registering handler", cr1.String())
 	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
 		cr1.Elem()),
 		cr1.Elem())

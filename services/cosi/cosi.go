@@ -1,14 +1,15 @@
 package cosi
 
 import (
+	"errors"
+
+	libcosi "github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	libcosi "github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/crypto/abstract"
-	"errors"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -53,8 +54,7 @@ type SignatureResponse struct {
 var CosiResponseType = network.RegisterMessageType(SignatureResponse{})
 
 // ProcessClientRequest treats external request to this service.
-func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest)(network.ProtocolMessage, error) {
-	dbg.Print("Requesting signature")
+func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (network.ProtocolMessage, error) {
 	tree := req.EntityList.GenerateBinaryTree()
 	tni := cs.NewTreeNodeInstance(tree, tree.Root)
 	pi, err := cosi.NewProtocolCosi(tni)
@@ -63,31 +63,26 @@ func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest)(netwo
 	}
 	cs.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.ProtocolCosi)
-	dbg.Print("Requesting signature")
 	pcosi.SigningMessage(req.Message)
-	dbg.Print("Requesting signature")
 	h, err := crypto.HashBytes(network.Suite.Hash(), req.Message)
 	if err != nil {
 		return nil, errors.New("Couldn't hash message: " + err.Error())
 	}
 	response := make(chan *libcosi.Signature)
 	pcosi.RegisterDoneCallback(func(chall abstract.Secret, resp abstract.Secret) {
-		dbg.Print("Received response")
 		response <- &libcosi.Signature{
 			Challenge: chall,
-			Response: resp,
+			Response:  resp,
 		}
 	})
 	dbg.Lvl1("Cosi Service starting up root protocol")
 	go pi.Dispatch()
 	go pi.Start()
-	dbg.Print("Requesting signature")
 	sig := <-response
-	dbg.Print("Response here")
 	return &SignatureResponse{
-		Sum: h,
-		Challenge:sig.Challenge,
-		Response:sig.Response,
+		Sum:       h,
+		Challenge: sig.Challenge,
+		Response:  sig.Response,
 	}, nil
 }
 
@@ -104,10 +99,10 @@ func (cs *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (
 func newCosiService(c sda.Context, path string) sda.Service {
 	s := &Cosi{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		path: path,
+		path:             path,
 	}
 	err := s.RegisterMessage(s.SignatureRequest)
-	if err != nil{
+	if err != nil {
 		dbg.ErrFatal(err, "Couldn't register message:")
 	}
 	return s
