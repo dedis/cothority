@@ -232,6 +232,10 @@ func TestService_GetChildrenSkipList(t *testing.T) {
 func TestService_PropagateSkipBlock(t *testing.T) {
 }
 
+func TestService_SignBlock(t *testing.T) {
+
+}
+
 func TestService_ForwardSignature(t *testing.T) {
 }
 
