@@ -12,6 +12,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"strconv"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -170,10 +171,10 @@ func (s *Service) GetChildrenSkipList(sb SkipBlock, verifier VerifierID) (*GetUp
 
 // PropagateSkipBlock is called when a new SkipBlock or updated SkipBlock is
 // available
-func (s *Service) PropagateSkipBlock(latest SkipBlock) error {
-	dbg.Print(s.Address())
-	s.SkipBlocks[string(latest.GetHash())] = latest
-	return nil
+func (s *Service) PropagateSkipBlock(e *network.Entity, latest *PropagateSkipBlock) (network.ProtocolMessage, error) {
+	dbg.Print("PropagateSkipBlock ....", s.Address())
+	s.SkipBlocks[string(latest.SkipBlock.GetHash())] = latest.SkipBlock
+	return nil, nil
 }
 
 func (s *Service) startPropagation(latest SkipBlock) error {
@@ -190,20 +191,20 @@ func (s *Service) startPropagation(latest SkipBlock) error {
 	} else {
 		el = latest.(*SkipBlockRoster).EntityList
 	}
-	for _, e := range el.List {
-		b, err := network.MarshalRegisteredType(&PropagateSkipBlock{latest})
+	for i, e := range el.List {
+		dbg.Print("Sending", strconv.Itoa(i))
+
+		cr, err := sda.CreateClientRequest("Skipchain", &PropagateSkipBlock{latest})
 		if err != nil {
 			dbg.Error(err)
 			return err
 		}
-		if err := s.SendRaw(e, &sda.ServiceMessage{
-			Service: skipchainSID,
-			Data:    b,
-		}); err != nil {
+		if err := s.SendRaw(e, cr); err != nil {
 			dbg.Error(err)
 			return err
 		}
 	}
+	dbg.Print("Finished propagation")
 	return nil
 }
 
@@ -300,8 +301,14 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 		path:             path,
 		SkipBlocks:       make(map[string]SkipBlock),
 	}
-	s.RegisterMessage(s.PropagateSkipBlock)
-	s.RegisterMessage(s.ProposeSkipBlock)
-	s.RegisterMessage(s.GetUpdateChain)
+	if err := s.RegisterMessage(s.PropagateSkipBlock); err != nil {
+		dbg.Fatal("Linus doesn't remember all interfaces in his head:", err)
+	}
+	//if err := s.RegisterMessage(s.ProposeSkipBlock); err!=nil {
+	//	dbg.Fatal("Linus doesn't remember all interfaces in his head:", err)
+	//}
+	//if err := s.RegisterMessage(s.GetUpdateChain); err!=nil {
+	//	dbg.Fatal("Linus doesn't remember all interfaces in his head:", err)
+	//}
 	return s
 }

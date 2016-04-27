@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
 	"strconv"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -168,7 +169,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	elInterm := local.GenEntityListFromHost(hosts[:nodesChildren]...)
 	sbInterm := makeGenesisRosterArgs(service, elInterm, sbRoot.Hash, VerifyShard)
 	service.SetChildrenSkipBlock(sbRoot.Hash, sbInterm.Hash)
-
+	// wait for block propagation
+	time.Sleep(1 * time.Second)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
@@ -257,7 +259,7 @@ func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlockRoster {
 
 // Makes a Host, an EntityList, and a service
 func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.EntityList, *Service) {
-	hosts := local.GenLocalHosts(nbr, false, false)
+	hosts := local.GenLocalHosts(nbr, false, true)
 	el := local.GenEntityListFromHost(hosts...)
 	return hosts, el, local.Services[hosts[0].Entity.ID][skipchainSID].(*Service)
 }
