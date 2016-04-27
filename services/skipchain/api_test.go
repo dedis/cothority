@@ -16,7 +16,7 @@ func TestClientGenesis(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	c.ProposeSkipBlock(nil, nil)
+	c.ProposeRoster(nil, nil)
 }
 
 func TestClient_ProposeSkipBlock(t *testing.T) {
@@ -34,7 +34,7 @@ func TestClient_CreateRootInterm(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	root, interm, err := c.CreateRootInterm(4, 4)
+	root, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
 	dbg.ErrFatal(err)
 	if err = root.VerifySignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
@@ -57,7 +57,7 @@ func TestClient_CreateData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(4, 4)
+	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data, err := c.CreateData(interm, 4, td, VerifyNone)
@@ -84,7 +84,7 @@ func TestClient_ProposeData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(4, 4)
+	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data1, err := c.CreateData(interm, 4, td, VerifyNone)
@@ -101,9 +101,25 @@ func TestClient_ProposeData(t *testing.T) {
 	if len(data_last.Update) != 2 {
 		t.Fatal("Should have two SkipBlocks for update-chain")
 	}
-	if !data_last.Update[1].Equal(data2) {
+	if !data_last.Update[1].Equal(data2.Latest) {
 		t.Fatal("Newest SkipBlock should be stored")
 	}
+}
+
+func TestClient_ProposeRoster(t *testing.T) {
+	t.Skip("To be implemented")
+	nbrHosts := 5
+	l := sda.NewLocalTest()
+	_, el, _ := l.GenTree(nbrHosts, true, true, true)
+	defer l.CloseAll()
+
+	c := NewClient()
+	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
+	dbg.ErrFatal(err)
+	el.List = el.List[:nbrHosts-1]
+	reply, err := c.ProposeRoster(interm.Hash, el)
+	dbg.ErrFatal(err)
+	dbg.Print(reply)
 }
 
 type testData struct {
