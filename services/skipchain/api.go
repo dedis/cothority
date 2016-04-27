@@ -20,7 +20,7 @@ func NewClient() *Client {
 // maximumHeight of maxHRoot and an intermediate SkipChain with
 // maximumHeight of maxHInterm. It connects both chains for later
 // reference.
-func (c *Client) CreateRootInterm(maxHRoot, maxHInterm int) (root, interm *SkipBlockRoster, err error) {
+func (c *Client) CreateRootInterm(maxHRoot, maxHInterm int, ver VerifierID) (root, interm *SkipBlockRoster, err error) {
 	return nil, nil, nil
 
 }
@@ -32,11 +32,11 @@ func (c *Client) CreateData(interm *SkipBlockRoster, maxH int, data network.Prot
 	return nil, nil
 }
 
-func (c *Client) ProposeData(latest SkipBlockID, data network.ProtocolMessage) (*SkipBlockData, error) {
+func (c *Client) ProposeRoster(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
 	return nil, nil
 }
 
-func (c *Client) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
+func (c *Client) ProposeData(latest SkipBlockID, data network.ProtocolMessage) (*SkipBlockData, error) {
 	return nil, nil
 }
 

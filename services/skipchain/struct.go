@@ -22,7 +22,7 @@ type SkipBlock interface {
 	// SkipBlock which is the SkipBlockCommon structure.
 	GetCommon() *SkipBlockCommon
 	// Hash returns the hash of the SkipBlock which is its ID
-	Hash() *SkipBlockID
+	GetHash() SkipBlockID
 	// Equal tests if both hashes are equal
 	Equal(SkipBlock) bool
 }
@@ -105,13 +105,13 @@ func (sbc *SkipBlockCommon) GetCommon() *SkipBlockCommon {
 }
 
 // Hash returns the hash of the SkipBlock
-func (sbc *SkipBlockCommon) Hash() SkipBlockID {
+func (sbc *SkipBlockCommon) GetHash() SkipBlockID {
 	return sbc.Hash
 }
 
 // Equal returns bool if both hashes are equal
 func (sbc *SkipBlockCommon) Equal(sb SkipBlock) bool {
-	return bytes.Equal(sbc.Hash, sb.Hash())
+	return bytes.Equal(sbc.Hash, sb.GetHash())
 }
 
 // SkipBlockData is a SkipBlock that can hold some data.
@@ -168,7 +168,7 @@ func (sbr *SkipBlockRoster) updateHash() SkipBlockID {
 // structure holds a ChildSkipList, its signature will also be verified.
 func (sbr *SkipBlockRoster) VerifySignatures() error {
 	err := sbr.SkipBlockCommon.VerifySignatures()
-	if err != nil || sbr.ChildSL.Hash == nil {
+	if err != nil || (sbr.ChildSL != nil && sbr.ChildSL.Hash == nil) {
 		return err
 	}
 	return sbr.ChildSL.VerifySignature(sbr.Aggregate)
@@ -191,6 +191,8 @@ func NewBlockLink() *BlockLink {
 // VerifySignature returns whether the BlockLink has been signed
 // correctly using the aggregate key given.
 func (bl *BlockLink) VerifySignature(aggregate abstract.Point) error {
-	return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
-		bl.Challenge, bl.Response)
+	// TODO: enable real verification once we have signatures
+	return nil
+	//return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
+	//	bl.Challenge, bl.Response)
 }

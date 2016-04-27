@@ -72,7 +72,7 @@ func TestClient_CreateData(t *testing.T) {
 	}
 	_, td1, err := network.UnmarshalRegisteredType(data.Data, network.DefaultConstructors(network.Suite))
 	dbg.ErrFatal(err)
-	if *td != *td1 {
+	if *td != td1.(testData) {
 		t.Fatal("Stored data is not the same as initial data")
 	}
 }
@@ -98,10 +98,10 @@ func TestClient_ProposeData(t *testing.T) {
 	dbg.ErrFatal(err)
 	data_last, err := c.GetUpdateChain(data1.Hash)
 	dbg.ErrFatal(err)
-	if len(data_last) != 2 {
+	if len(data_last.Update) != 2 {
 		t.Fatal("Should have two SkipBlocks for update-chain")
 	}
-	if !data_last.Update[1].Equal(data2.Hash) {
+	if !data_last.Update[1].Equal(data2) {
 		t.Fatal("Newest SkipBlock should be stored")
 	}
 }

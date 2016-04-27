@@ -42,11 +42,11 @@ type Service struct {
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
 func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
-	// later we will support higher blocks
-	proposed.GetCommon().Height = 1
 
 	if latest == nil && len(s.SkipBlocks) == 0 { // genesis block creation
-		s.updateSkipBlock(nil, proposed)
+		// TODO set real verifier
+		proposed.GetCommon().VerifierId = VerifyNone
+		s.updateNewSkipBlock(nil, proposed)
 		reply := &ProposedSkipBlockReply{
 			Previous: nil, // genesis block
 			Latest:   proposed,
@@ -59,8 +59,9 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 	if !ok {
 		return nil, errors.New("Couldn't find latest block.")
 	}
+	proposed.GetCommon().VerifierId = prev.GetCommon().VerifierId
 	if s.verifyNewSkipBlock(prev, proposed) {
-		s.updateSkipBlock(prev, proposed)
+		s.updateNewSkipBlock(prev, proposed)
 		reply := &ProposedSkipBlockReply{
 			Previous: prev,
 			Latest:   proposed,
@@ -71,32 +72,34 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 	return nil, errors.New("Verification of proposed block failed.")
 }
 
-func (s *Service) updateSkipBlock(prev, proposed SkipBlock) {
+func (s *Service) updateNewSkipBlock(prev, proposed SkipBlock) {
 	dbg.LLvl4(fmt.Sprintf("prev=%+v\nproposed=%+v", prev, proposed))
 	sbc := proposed.GetCommon()
+	// later we will support higher blocks
+	sbc.Height = 1
+
 	var curID string
+	sbc.BackLink = make([]SkipBlockID, sbc.Height)
 	if prev == nil { // genesis
 		sbc.Index++
 		// genesis block has a random back-link:
-		sbc.BackLink = make([]SkipBlockID, 1)
 		bl := make([]byte, 32)
 		_, _ = rand.Read(bl)
 		sbc.BackLink[0] = bl
 		// empty forward link:
-		sbc.ForwardLink = make([]BlockLink, 1)
 
 		curID = string(proposed.updateHash())
 	} else {
 		prevCommon := prev.GetCommon()
 		sbc.Index = prevCommon.Index + 1
-		sbc.BackLink = make([]SkipBlockID, 1)
+		// TODO: add higher backlinks
 		sbc.BackLink[0] = prev.updateHash()
 		// update forward link of previous block:
 		curHashID := proposed.updateHash()
-		prevCommon.ForwardLink = append(prevCommon.ForwardLink,
-			BlockLink{Hash: curHashID,
-				Signature: cosi.NewSignature(network.Suite), // FIXME get real signature
-			})
+
+		prevCommon.ForwardLink = make([]*BlockLink, 1) // TODO later with height
+		prevCommon.ForwardLink[0] = NewBlockLink()
+		prevCommon.ForwardLink[0].Hash = curHashID
 
 		curID = string(curHashID)
 	}
@@ -114,40 +117,21 @@ func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply,
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
-	blocks := s.followForward(block)
+	blocks := []SkipBlock{block}
+	for len(block.GetCommon().ForwardLink) > 0 {
+		// TODO: get highest forwardlink
+		link := block.GetCommon().ForwardLink[0]
+		block, ok = s.SkipBlocks[string(link.Hash)]
+		if !ok {
+			return nil, errors.New("Missing block in forward-chain")
+		}
+		blocks = append(blocks, block)
+	}
 	reply := &GetUpdateChainReply{
 		Update: blocks,
 	}
 
 	return reply, nil
-}
-
-func (s *Service) followForward(sb SkipBlock) []SkipBlock {
-	blocks := make([]SkipBlock, 1)
-	// add current
-	blocks[0] = sb
-	forwardlinks := sb.GetCommon().ForwardLink
-	for _, linkId := range forwardlinks {
-		if linkId.Hash != nil {
-			sb := s.SkipBlocks[string(linkId.Hash)]
-			blocks = append(blocks, sb)
-			blocks = append(blocks, s.followForwardInternal(sb)...)
-		}
-	}
-	return blocks
-}
-
-func (s *Service) followForwardInternal(curSb SkipBlock) []SkipBlock {
-	path := make([]SkipBlock, 0)
-	forwardlinks := curSb.GetCommon().ForwardLink
-	for _, linkId := range forwardlinks {
-		if linkId.Hash != nil {
-			sb := s.SkipBlocks[string(linkId.Hash)]
-			path = append(path, sb)
-			path = append(path, s.followForwardInternal(sb)...)
-		}
-	}
-	return path
 }
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
@@ -189,45 +173,46 @@ func (s *Service) SignBlock(sb SkipBlock) error {
 // broadcast to the entire roster and all backward- and forward-links.
 // It returns the SkipBlock with the updated ForwardSignature or an error.
 func (s *Service) ForwardSignature(updating *ForwardSignature) (SkipBlock, error) {
-	sb, ok := s.SkipBlocks[string(updating.ToUpdate)]
+	current, ok := s.SkipBlocks[string(updating.ToUpdate)]
 	if !ok {
 		return nil, errors.New("Didn't find SkipBlock")
 	}
 	if updating.Latest.VerifySignatures() != nil {
 		return nil, errors.New("Couldn't verify signature of new block")
 	}
-	comm := sb.GetCommon()
+	commCurrent := current.GetCommon()
 	commLatest := updating.Latest.GetCommon()
 	updateHeight := 0
 	latestHeight := len(commLatest.BackLink)
 	for updateHeight = 0; updateHeight < latestHeight; updateHeight++ {
-		if bytes.Equal(commLatest.BackLink[updateHeight], comm.Hash()) {
+		if bytes.Equal(commLatest.BackLink[updateHeight], commCurrent.Hash) {
 			break
 		}
 	}
 	if updateHeight == latestHeight {
 		return nil, errors.New("Didn't find ourselves in the backlinks")
 	}
-	currHeight := len(comm.ForwardLink)
+	currHeight := len(commCurrent.ForwardLink)
 	if currHeight == 0 {
-		comm.ForwardLink = make([]*BlockLink, 0, comm.Height)
+		commCurrent.ForwardLink = make([]*BlockLink, 0, commCurrent.Height)
 		// As we are the direct predecessor of the block, we need
 		// to verify using the verification-function whether that
 		// block is valid or not.
-		if !s.verifyNewSkipBlock(sb, updating.Latest) {
+		if !s.verifyNewSkipBlock(current, updating.Latest) {
 			return nil, errors.New("New SkipBlock not accepted!")
 		}
 	} else {
 		// We only need to verify that we have a complete link-history
 		// from ourselves to the proposed SkipBlock
-		if !s.verifyLinkedSkipBlock(sb, updating.Latest) {
+		if !s.verifyLinkedSkipBlock(current, updating.Latest) {
 			return nil, errors.New("Didn't find a valid update-path")
 		}
 	}
-	comm.ForwardLink[currHeight].Hash = updating.Latest.GetCommon().Hash()
+	commCurrent.ForwardLink[currHeight].Hash = updating.Latest.GetHash()
 
-	// TODO: sign off on the forward-link
-	return sb, nil
+	// TODO: sign off on the forward-link (signature on hash of current and
+	// following block)
+	return current, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -244,7 +229,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 func (s *Service) verifyNewSkipBlock(latest, newest SkipBlock) bool {
 	// TODO: implement a couple of protocols that can check all
 	// TODO: Verify* constants
-	return true
+	return newest.GetCommon().VerifierId == VerifyNone
 }
 
 // verifyLinkedSkipBlock checks if we have a valid link connecting the two
