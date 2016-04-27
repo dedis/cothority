@@ -6,10 +6,9 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/stretchr/testify/assert"
+	"strconv"
 )
 
 func TestMain(m *testing.M) {
@@ -154,7 +153,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
-	t.Skip("Implementation not yet started")
+	//t.Skip("Implementation not yet started")
 	// How many nodes in Root
 	nodesRoot := 10
 	// How many nodes in Children
@@ -166,27 +165,28 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
-	elInt := local.GenEntityListFromHost(hosts[:nodesChildren]...)
-	sbInt := makeGenesisRosterArgs(service, elInt, sbRoot.Hash, VerifyShard)
-	service.SetChildrenSkipBlock(sbRoot.Hash, sbInt.Hash)
+	elInterm := local.GenEntityListFromHost(hosts[:nodesChildren]...)
+	sbInterm := makeGenesisRosterArgs(service, elInterm, sbRoot.Hash, VerifyShard)
+	service.SetChildrenSkipBlock(sbRoot.Hash, sbInterm.Hash)
 
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
-	for _, h := range hosts {
+	for i, h := range hosts {
+		dbg.Print(skipchainSID)
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
 		sb, err := s.GetUpdateChain(sbRoot.Hash)
-		dbg.ErrFatal(err)
-		if len(sb.Update) != 1 {
+		dbg.Print(s)
+		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
+		if len(sb.Update) != 1 { // we expect only the first block
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
 		link := sb.Update[0].(*SkipBlockRoster).ChildSL
-		if !bytes.Equal(link.Hash, sbInt.Hash) {
+		if !bytes.Equal(link.Hash, sbInterm.Hash) {
 			t.Fatal("The child-link doesn't point to our intermediate SkipBlock")
 		}
 		// We need to verify the signature on the child-link, too. This
 		// has to be signed by the collective signature of sbRoot.
-		if err = cosi.VerifySignature(network.Suite, link.Hash, sbRoot.EntityList.Aggregate,
-			link.Challenge, link.Response); err != nil {
+		if err = sbRoot.VerifySignatures(); err != nil {
 			t.Fatal("Signature on child-link is not valid")
 		}
 	}
@@ -194,7 +194,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	// And check for the intermediate-chain to be updated
 	for _, h := range hosts[:nodesChildren] {
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
-		sb, err := s.GetUpdateChain(sbInt.Hash)
+
+		sb, err := s.GetUpdateChain(sbInterm.Hash)
 		dbg.ErrFatal(err)
 		if len(sb.Update) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")

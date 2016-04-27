@@ -16,7 +16,7 @@ func TestClientGenesis(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	c.ProposeSkipBlock(nil, nil)
+	c.ProposeRoster(nil, nil)
 }
 
 func TestClient_ProposeSkipBlock(t *testing.T) {
@@ -34,7 +34,7 @@ func TestClient_CreateRootInterm(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	root, interm, err := c.CreateRootInterm(4, 4)
+	root, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
 	dbg.ErrFatal(err)
 	if err = root.VerifySignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
@@ -57,7 +57,7 @@ func TestClient_CreateData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(4, 4)
+	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data, err := c.CreateData(interm, 4, td, VerifyNone)
@@ -84,7 +84,7 @@ func TestClient_ProposeData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(4, 4)
+	_, interm, err := c.CreateRootInterm(4, 4, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data1, err := c.CreateData(interm, 4, td, VerifyNone)
