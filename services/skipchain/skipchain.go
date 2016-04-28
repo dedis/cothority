@@ -44,8 +44,7 @@ type Service struct {
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
 func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
-
-	if latest == nil { // genesis block creation
+	if latest == nil || len(latest) == 0 { // genesis block creation
 		// TODO set real verifier
 		proposed.GetCommon().VerifierId = VerifyNone
 		s.updateNewSkipBlock(nil, proposed)
