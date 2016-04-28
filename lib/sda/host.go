@@ -323,7 +323,6 @@ func (h *Host) processMessages() {
 			dbg.Lvl4("Received new entityList")
 		case RequestID:
 			r := data.Msg.(ClientRequest)
-			dbg.Lvl1("Processing request at (empty ?)", data.Entity)
 			h.processRequest(data.Entity, &r)
 		case ServiceMessageID:
 			m := data.Msg.(ServiceMessage)
