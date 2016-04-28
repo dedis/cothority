@@ -117,7 +117,8 @@ func TestService_GetUpdateChain(t *testing.T) {
 	}
 
 	for i := 0; i < sbLength; i++ {
-		sbc, err := s.GetUpdateChain(sbs[i].Hash)
+		m, err := s.GetUpdateChain(el.List[i], &GetUpdateChain{sbs[i].Hash})
+		sbc := m.(*GetUpdateChainReply)
 		dbg.ErrFatal(err)
 		if !bytes.Equal(sbc.Update[0].GetCommon().Hash,
 			sbs[i].Hash) {
@@ -177,7 +178,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for i, h := range hosts {
 		dbg.Print(skipchainSID)
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
-		sb, err := s.GetUpdateChain(sbRoot.Hash)
+		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbRoot.Hash})
+		sb := m.(*GetUpdateChainReply)
 		dbg.Print(s)
 		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		if len(sb.Update) != 1 { // we expect only the first block
@@ -198,7 +200,9 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts[:nodesChildren] {
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
 
-		sb, err := s.GetUpdateChain(sbInterm.Hash)
+		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbInterm.Hash})
+		sb := m.(*GetUpdateChainReply)
+
 		dbg.ErrFatal(err)
 		if len(sb.Update) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")

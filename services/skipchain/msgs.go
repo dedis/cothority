@@ -53,24 +53,28 @@ type ProposeSkipBlock struct {
 	Latest   SkipBlockID
 	Proposed SkipBlock
 }
+
 type ProposeSkipBlockData struct {
 	Latest   SkipBlockID
 	Proposed *SkipBlockData
 }
+
 type ProposeSkipBlockRoster struct {
 	Latest   SkipBlockID
 	Proposed *SkipBlockRoster
 }
 
-// ProoposedReply - returns the signed SkipBlock with updated backlinks
+// ProposedSkipBlockReply - returns the signed SkipBlock with updated backlinks
 type ProposedSkipBlockReply struct {
 	Previous SkipBlock
 	Latest   SkipBlock
 }
+
 type ProposedSkipBlockReplyData struct {
 	Previous *SkipBlockData
 	Latest   *SkipBlockData
 }
+
 type ProposedSkipBlockReplyRoster struct {
 	Previous *SkipBlockRoster
 	Latest   *SkipBlockRoster
@@ -110,6 +114,12 @@ type GetChildrenSkipList struct {
 // the Cothority
 type PropagateSkipBlock struct {
 	SkipBlock SkipBlock
+}
+
+// PropagateSkipBlock sends a newly signed SkipBlock to all members of
+// the Cothority
+type PropagateSkipBlockData struct {
+	SkipBlock SkipBlockData
 }
 
 // ForwardSignature asks this responsible for a SkipChain to sign off

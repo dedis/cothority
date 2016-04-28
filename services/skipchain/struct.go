@@ -131,7 +131,7 @@ func NewSkipBlockData() *SkipBlockData {
 
 // updateHash is used to store the hash of the SkipBlockFix and the
 // data.
-func (sbd *SkipBlockData) updateHash() SkipBlockID {
+func (sbd SkipBlockData) updateHash() SkipBlockID {
 	sbd.Hash = sbd.addSliceToHash(sbd.Data)
 	return sbd.Hash
 }
