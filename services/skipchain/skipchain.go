@@ -50,8 +50,8 @@ func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 			Latest:   proposed,
 		}
 		dbg.Lvlf3("Successfuly created genesis: %+v", reply)
-		_ = s.startPropagation(proposed)
-		return reply, nil
+		err := s.startPropagation(proposed)
+		return reply, err
 	}
 
 	var prev SkipBlock
@@ -181,7 +181,11 @@ func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) error {
 	pbRoster.ChildSL = NewBlockLink()
 	pbRoster.ChildSL.Hash = child
 
-	return s.startPropagation(childBlock)
+	err := s.startPropagation(childBlock)
+	if err != nil {
+		return err
+	}
+	return s.startPropagation(parentBlock)
 }
 
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (SkipBlock, bool) {

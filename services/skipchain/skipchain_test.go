@@ -6,6 +6,7 @@ import (
 	"bytes"
 
 	"strconv"
+
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -115,7 +116,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	//t.Skip("Implementation not yet started")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	sbLength := 10
+	sbLength := 3
 	_, el, s := makeHELS(local, sbLength)
 	sbs := make([]*SkipBlockRoster, sbLength)
 	sbs[0] = makeGenesisRoster(s, el)
@@ -135,15 +136,13 @@ func TestService_GetUpdateChain(t *testing.T) {
 		m, err := s.GetUpdateChain(nil, &GetUpdateChain{sbs[i].Hash})
 		sbc := m.(*GetUpdateChainReply)
 		dbg.ErrFatal(err)
-		if !bytes.Equal(sbc.Update[0].GetCommon().Hash,
-			sbs[i].Hash) {
+		if !sbc.Update[0].Equal(sbs[i]) {
 			t.Fatal("First hash is not from our SkipBlock")
 		}
-		if !bytes.Equal(sbc.Update[len(sbc.Update)-1].GetCommon().Hash,
-			sbs[sbLength-1].Hash) {
-			dbg.Lvl2(sbc.Update[len(sbc.Update)-1].GetCommon().Hash)
+		if !sbc.Update[len(sbc.Update)-1].Equal(sbs[sbLength-1]) {
+			dbg.Lvl2(sbc.Update[len(sbc.Update)-1].GetHash())
 			dbg.Lvl2(sbs[sbLength-1].Hash)
-			t.Fatal("Last Hash is not equal to last SkipBlock")
+			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
 		}
 		for up, sb1 := range sbc.Update {
 			dbg.ErrFatal(sb1.VerifySignatures())
@@ -173,9 +172,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 func TestService_SetChildrenSkipBlock(t *testing.T) {
 	//t.Skip("Implementation not yet started")
 	// How many nodes in Root
-	nodesRoot := 10
-	// How many nodes in Children
-	nodesChildren := 5
+	nodesRoot := 3
 
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
@@ -183,11 +180,10 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
-	elInterm := local.GenEntityListFromHost(hosts[:nodesChildren]...)
-	sbInterm := makeGenesisRosterArgs(service, elInterm, sbRoot.Hash, VerifyShard)
+	sbInterm := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyShard)
 	service.SetChildrenSkipBlock(sbRoot.Hash, sbInterm.Hash)
-	// wait for block propagation
-	time.Sleep(2 * time.Second)
+	// Wait for block-propagation
+	time.Sleep(time.Millisecond * 100)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
@@ -196,13 +192,13 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbRoot.Hash})
 		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		sb := m.(*GetUpdateChainReply)
-		dbg.Lvl2(s)
+		dbg.Lvl2(s.Context)
 		if len(sb.Update) != 1 { // we expect only the first block
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
 		link := sb.Update[0].(*SkipBlockRoster).ChildSL
 		if !bytes.Equal(link.Hash, sbInterm.Hash) {
-			t.Fatal("The child-link doesn't point to our intermediate SkipBlock")
+			t.Fatal("The child-link doesn't point to our intermediate SkipBlock", i)
 		}
 		// We need to verify the signature on the child-link, too. This
 		// has to be signed by the collective signature of sbRoot.
@@ -212,7 +208,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	}
 
 	// And check for the intermediate-chain to be updated
-	for _, h := range hosts[:nodesChildren] {
+	for _, h := range hosts {
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
 
 		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbInterm.Hash})
