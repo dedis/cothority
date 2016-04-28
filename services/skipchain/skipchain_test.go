@@ -55,15 +55,23 @@ func TestSkipBlockInterface(t *testing.T) {
 }
 
 func TestService_ProposeSkipBlock(t *testing.T) {
+	// First create a roster to attach the data to it
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, service := makeHELS(local, 5)
+
+	// Setting up root roster
+	sbRoot := makeGenesisRoster(service, el)
+
 	// send a ProposeBlock
 	genesis := &SkipBlockData{
 		Data:            []byte("In the beginning God created the heaven and the earth."),
 		SkipBlockCommon: NewSkipBlockCommon(),
 	}
 	genesis.MaximumHeight = 2
+	genesis.ParentBlock = sbRoot.Hash
 	blockCount := uint32(0)
-	s := newSkipchainService(nil, "").(*Service)
-	psbr, err := s.ProposeSkipBlock(nil, genesis)
+	psbr, err := service.proposeSkipBlock(nil, genesis)
 	assert.Nil(t, err)
 	latest := psbr.Latest.(*SkipBlockData)
 	// verify creation of GenesisBlock:
@@ -79,10 +87,17 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 			"And the Spirit of God moved upon the face of the waters."),
 		SkipBlockCommon: NewSkipBlockCommon(),
 	}
-	genesis.MaximumHeight = 2
-	id := psbr.Latest.updateHash()
-	psbr2, err := s.ProposeSkipBlock(id, next)
+	next.MaximumHeight = 2
+	next.ParentBlock = sbRoot.Hash
+	id := psbr.Latest.GetHash()
+	psbr2, err := service.proposeSkipBlock(id, next)
 	assert.Nil(t, err)
+	dbg.Lvl2(psbr2)
+	if psbr2 == nil {
+		t.Fatal("Didn't get anything in return")
+	}
+	assert.NotNil(t, psbr2)
+	assert.NotNil(t, psbr2.Latest)
 	latest2 := psbr2.Latest.GetCommon()
 	// verify creation of GenesisBlock:
 	blockCount++
@@ -90,8 +105,8 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	assert.Equal(t, 1, len(latest2.BackLink))
 	assert.NotEqual(t, 0, latest2.BackLink)
 
-	// We've added 2 blocks:
-	assert.Equal(t, 2, len(s.SkipBlocks))
+	// We've added 2 blocks, + root block = 3
+	assert.Equal(t, 3, len(service.SkipBlocks))
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -107,7 +122,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
 		el.List = el.List[0 : sbLength-(i+1)]
-		reply, err := s.ProposeSkipBlock(sbs[i-1].Hash,
+		reply, err := s.proposeSkipBlock(sbs[i-1].Hash,
 			&SkipBlockRoster{
 				SkipBlockCommon: NewSkipBlockCommon(),
 				EntityList:      el,
@@ -117,7 +132,8 @@ func TestService_GetUpdateChain(t *testing.T) {
 	}
 
 	for i := 0; i < sbLength; i++ {
-		sbc, err := s.GetUpdateChain(sbs[i].Hash)
+		m, err := s.GetUpdateChain(nil, &GetUpdateChain{sbs[i].Hash})
+		sbc := m.(*GetUpdateChainReply)
 		dbg.ErrFatal(err)
 		if !bytes.Equal(sbc.Update[0].GetCommon().Hash,
 			sbs[i].Hash) {
@@ -125,8 +141,8 @@ func TestService_GetUpdateChain(t *testing.T) {
 		}
 		if !bytes.Equal(sbc.Update[len(sbc.Update)-1].GetCommon().Hash,
 			sbs[sbLength-1].Hash) {
-			dbg.Print(sbc.Update[len(sbc.Update)-1].GetCommon().Hash)
-			dbg.Print(sbs[sbLength-1].Hash)
+			dbg.Lvl2(sbc.Update[len(sbc.Update)-1].GetCommon().Hash)
+			dbg.Lvl2(sbs[sbLength-1].Hash)
 			t.Fatal("Last Hash is not equal to last SkipBlock")
 		}
 		for up, sb1 := range sbc.Update {
@@ -137,8 +153,8 @@ func TestService_GetUpdateChain(t *testing.T) {
 				sbc2 := sb2.GetCommon()
 				h1 := sbc1.Height
 				h2 := sbc2.Height
-				dbg.Print("sbc1.Height=", sbc1.Height)
-				dbg.Print("sbc2.Height=", sbc2.Height)
+				dbg.Lvl2("sbc1.Height=", sbc1.Height)
+				dbg.Lvl2("sbc2.Height=", sbc2.Height)
 				// height := min(len(sb1.ForwardLink), h2)
 				height := h1
 				if h2 < height {
@@ -171,15 +187,16 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	sbInterm := makeGenesisRosterArgs(service, elInterm, sbRoot.Hash, VerifyShard)
 	service.SetChildrenSkipBlock(sbRoot.Hash, sbInterm.Hash)
 	// wait for block propagation
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
-		dbg.Print(skipchainSID)
+		dbg.Lvl2(skipchainSID)
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
-		sb, err := s.GetUpdateChain(sbRoot.Hash)
-		dbg.Print(s)
+		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbRoot.Hash})
 		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
+		sb := m.(*GetUpdateChainReply)
+		dbg.Lvl2(s)
 		if len(sb.Update) != 1 { // we expect only the first block
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
@@ -198,7 +215,9 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts[:nodesChildren] {
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
 
-		sb, err := s.GetUpdateChain(sbInterm.Hash)
+		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbInterm.Hash})
+		sb := m.(*GetUpdateChainReply)
+
 		dbg.ErrFatal(err)
 		if len(sb.Update) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")
@@ -249,7 +268,7 @@ func makeGenesisRosterArgs(s *Service, el *sda.EntityList, parent SkipBlockID,
 	sb.MaximumHeight = 4
 	sb.ParentBlock = parent
 	sb.VerifierId = vid
-	reply, err := s.ProposeSkipBlock(nil, sb)
+	reply, err := s.proposeSkipBlock(nil, sb)
 	dbg.ErrFatal(err)
 	return reply.Latest.(*SkipBlockRoster)
 }

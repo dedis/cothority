@@ -8,7 +8,7 @@ import (
 
 	"bytes"
 
-	"strconv"
+	"reflect"
 
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
@@ -16,14 +16,11 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-// This file contains all the code to run a CoSi service. It is used to reply to
-// client request for signing something using CoSi.
-// As a prototype, it just signs and returns. It would be very easy to write an
-// updated version that chains all signatures for example.
+const ServiceName = "Skipchain"
 
 func init() {
 	sda.RegisterNewService("Skipchain", newSkipchainService)
-	skipchainSID = sda.ServiceFactory.ServiceID("Skipchain")
+	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
 }
 
 var skipchainSID sda.ServiceID
@@ -43,9 +40,8 @@ type Service struct {
 // If the given nil as the latest block it verify if we are actually creating
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
-
-	if latest == nil { // genesis block creation
+func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
+	if latest == nil || len(latest) == 0 { // genesis block creation
 		// TODO set real verifier
 		proposed.GetCommon().VerifierId = VerifyNone
 		s.updateNewSkipBlock(nil, proposed)
@@ -53,13 +49,12 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 			Previous: nil, // genesis block
 			Latest:   proposed,
 		}
-		dbg.LLvl3(fmt.Sprintf("Successfuly created genesis: %+v", reply))
+		dbg.Lvlf3("Successfuly created genesis: %+v", reply)
 		_ = s.startPropagation(proposed)
 		return reply, nil
 	}
 
 	var prev SkipBlock
-	dbg.Print(latest, len(latest), latest.IsNull())
 	if !latest.IsNull() {
 		var ok bool
 		prev, ok = s.SkipBlocks[string(latest)]
@@ -82,19 +77,29 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 	}
 	return reply, nil
 }
-func (s *Service) ProposeSkipBlockData(e *network.Entity, prop *ProposeSkipBlockData) (network.ProtocolMessage, error) {
-	reply, err := s.ProposeSkipBlock(prop.Latest, prop.Proposed)
+func (s *Service) ProposeSkipBlockData(e *network.Entity, psbd *ProposeSkipBlockData) (network.ProtocolMessage, error) {
+	reply, err := s.proposeSkipBlock(psbd.Latest, psbd.Proposed)
 	if err != nil {
 		return nil, err
 	}
 	return &ProposedSkipBlockReplyData{reply.Previous.(*SkipBlockData), reply.Latest.(*SkipBlockData)}, nil
 }
-func (s *Service) ProposeSkipBlockRoster(e *network.Entity, prop *ProposeSkipBlockRoster) (network.ProtocolMessage, error) {
-	reply, err := s.ProposeSkipBlock(prop.Latest, prop.Proposed)
+func (s *Service) ProposeSkipBlockRoster(e *network.Entity, psbr *ProposeSkipBlockRoster) (network.ProtocolMessage, error) {
+	reply, err := s.proposeSkipBlock(psbr.Latest, psbr.Proposed)
 	if err != nil {
 		return nil, err
 	}
-	return &ProposedSkipBlockReplyRoster{reply.Previous.(*SkipBlockRoster), reply.Latest.(*SkipBlockRoster)}, nil
+
+	var prev *SkipBlockRoster
+	var latest *SkipBlockRoster
+	if reply.Previous != nil {
+		prev = reply.Previous.(*SkipBlockRoster)
+	}
+	if reply.Latest != nil {
+		latest = reply.Latest.(*SkipBlockRoster)
+	}
+
+	return &ProposedSkipBlockReplyRoster{prev, latest}, nil
 }
 
 func (s *Service) updateNewSkipBlock(prev, proposed SkipBlock) {
@@ -118,7 +123,7 @@ func (s *Service) updateNewSkipBlock(prev, proposed SkipBlock) {
 		prevCommon := prev.GetCommon()
 		sbc.Index = prevCommon.Index + 1
 		// TODO: add higher backlinks
-		sbc.BackLink[0] = prev.updateHash()
+		sbc.BackLink[0] = prev.GetHash()
 		// update forward link of previous block:
 		curHashID := proposed.updateHash()
 
@@ -136,8 +141,8 @@ func (s *Service) updateNewSkipBlock(prev, proposed SkipBlock) {
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(latestKnown SkipBlockID) (*GetUpdateChainReply, error) {
-	block, ok := s.getSkipBlockByID(latestKnown)
+func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain) (network.ProtocolMessage, error) {
+	block, ok := s.getSkipBlockByID(latestKnown.Latest)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
@@ -176,7 +181,7 @@ func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) error {
 	pbRoster.ChildSL = NewBlockLink()
 	pbRoster.ChildSL.Hash = child
 
-	return nil
+	return s.startPropagation(childBlock)
 }
 
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (SkipBlock, bool) {
@@ -190,17 +195,24 @@ func (s *Service) GetChildrenSkipList(sb SkipBlock, verifier VerifierID) (*GetUp
 	return nil, nil
 }
 
-// PropagateSkipBlock is called when a new SkipBlock or updated SkipBlock is
-// available
-func (s *Service) PropagateSkipBlock(e *network.Entity, latest *PropagateSkipBlock) (network.ProtocolMessage, error) {
-	dbg.Print("PropagateSkipBlock ....", s.Address())
+// PropagateSkipBlockData is called when a new SkipBlock or updated SkipBlock is
+// available.
+func (s *Service) PropagateSkipBlockData(e *network.Entity, latest *PropagateSkipBlockData) (network.ProtocolMessage, error) {
 	s.SkipBlocks[string(latest.SkipBlock.GetHash())] = latest.SkipBlock
 	return nil, nil
 }
 
+// PropagateSkipBlockData is called when a new SkipBlock or updated SkipBlock is
+// available.
+func (s *Service) PropagateSkipBlockRoster(e *network.Entity, latest *PropagateSkipBlockRoster) (network.ProtocolMessage, error) {
+	s.SkipBlocks[string(latest.SkipBlock.GetHash())] = latest.SkipBlock
+	return nil, nil
+}
+
+// notify other services about new/updated skipblock
 func (s *Service) startPropagation(latest SkipBlock) error {
-	dbg.Print("Starting propagation of new block.")
 	var el *sda.EntityList
+
 	if dataBlock, isData := latest.(*SkipBlockData); isData {
 		parent, ok := s.getSkipBlockByID(dataBlock.ParentBlock)
 		if !ok {
@@ -212,20 +224,27 @@ func (s *Service) startPropagation(latest SkipBlock) error {
 	} else {
 		el = latest.(*SkipBlockRoster).EntityList
 	}
-	for i, e := range el.List {
-		dbg.Print("Sending", strconv.Itoa(i))
-
-		cr, err := sda.CreateClientRequest("Skipchain", &PropagateSkipBlock{latest})
+	for _, e := range el.List {
+		var cr *sda.ServiceMessage
+		var err error
+		switch latest.(type) {
+		case *SkipBlockData:
+			cr, err = sda.CreateServiceMessage(ServiceName,
+				&PropagateSkipBlockData{latest.(*SkipBlockData)})
+		case *SkipBlockRoster:
+			cr, err = sda.CreateServiceMessage(ServiceName,
+				&PropagateSkipBlockRoster{latest.(*SkipBlockRoster)})
+		default:
+			return errors.New("Can't propagate this type: " +
+				reflect.TypeOf(latest).String())
+		}
 		if err != nil {
-			dbg.Error(err)
 			return err
 		}
 		if err := s.SendRaw(e, cr); err != nil {
-			dbg.Error(err)
 			return err
 		}
 	}
-	dbg.Print("Finished propagation")
 	return nil
 }
 
@@ -322,17 +341,20 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 		path:             path,
 		SkipBlocks:       make(map[string]SkipBlock),
 	}
-	if err := s.RegisterMessage(s.PropagateSkipBlock); err != nil {
-		dbg.Fatal("Registration-error:", err)
+	if err := s.RegisterMessage(s.PropagateSkipBlockData); err != nil {
+		dbg.Fatal("Registration error:", err)
+	}
+	if err := s.RegisterMessage(s.PropagateSkipBlockRoster); err != nil {
+		dbg.Fatal("Registration error:", err)
 	}
 	if err := s.RegisterMessage(s.ProposeSkipBlockData); err != nil {
-		dbg.Fatal("Registration-error:", err)
+		dbg.Fatal("Registration error:", err)
 	}
 	if err := s.RegisterMessage(s.ProposeSkipBlockRoster); err != nil {
-		dbg.Fatal("Registration-error:", err)
+		dbg.Fatal("Registration error:", err)
 	}
-	//if err := s.RegisterMessage(s.GetUpdateChain); err!=nil {
-	//	dbg.Fatal("Linus doesn't remember all interfaces in his head:", err)
-	//}
+	if err := s.RegisterMessage(s.GetUpdateChain); err != nil {
+		dbg.Fatal("Registration error:", err)
+	}
 	return s
 }

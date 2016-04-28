@@ -209,11 +209,11 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	}
 	h.networkLock.Unlock()
 
-	dbg.LLvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
+	dbg.Lvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
 	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
 	}
-	dbg.LLvl5("Message sent")
+	dbg.Lvl5("Message sent")
 	return nil
 }
 
@@ -326,7 +326,7 @@ func (h *Host) processMessages() {
 			r := data.Msg.(ClientRequest)
 			h.processRequest(data.Entity, &r)
 		case ServiceMessageID:
-			dbg.Print("Got SMID")
+			dbg.Lvl4("Got SMID")
 			m := data.Msg.(ServiceMessage)
 			h.processServiceMessage(data.Entity, &m)
 		default:

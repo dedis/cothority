@@ -29,7 +29,7 @@ type SkipBlock interface {
 
 type SkipBlockID crypto.HashID
 
-func (sbid SkipBlockID)IsNull()bool{
+func (sbid SkipBlockID) IsNull() bool {
 	return len(sbid) == 0
 }
 
@@ -135,7 +135,7 @@ func NewSkipBlockData() *SkipBlockData {
 
 // updateHash is used to store the hash of the SkipBlockFix and the
 // data.
-func (sbd *SkipBlockData) updateHash() SkipBlockID {
+func (sbd SkipBlockData) updateHash() SkipBlockID {
 	sbd.Hash = sbd.addSliceToHash(sbd.Data)
 	return sbd.Hash
 }
@@ -163,14 +163,14 @@ func NewSkipBlockRoster(el *sda.EntityList) *SkipBlockRoster {
 
 // updateHash is used to store the hash of the SkipBlockFix and the
 // EntityList
-func (sbr *SkipBlockRoster) updateHash() SkipBlockID {
+func (sbr SkipBlockRoster) updateHash() SkipBlockID {
 	sbr.Hash = sbr.addSliceToHash(sbr.EntityList.Id[:])
 	return sbr.Hash
 }
 
 // VerifySignatures checks the main hash and all available ForwardLinks. If this
 // structure holds a ChildSkipList, its signature will also be verified.
-func (sbr *SkipBlockRoster) VerifySignatures() error {
+func (sbr SkipBlockRoster) VerifySignatures() error {
 	err := sbr.SkipBlockCommon.VerifySignatures()
 	if err != nil || (sbr.ChildSL != nil && sbr.ChildSL.Hash == nil) {
 		return err
