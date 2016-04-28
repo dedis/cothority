@@ -29,6 +29,10 @@ type SkipBlock interface {
 
 type SkipBlockID crypto.HashID
 
+func (sbid SkipBlockID)IsNull()bool{
+	return len(sbid) == 0
+}
+
 // SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
 // and signed.
 type SkipBlockFix struct {

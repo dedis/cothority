@@ -71,7 +71,6 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 // and sends it back.
 func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 	cr *ClientRequest) {
-	dbg.Print("Got client request", cr)
 	reply := p.GetReply(e, cr)
 
 	if err := p.SendRaw(e, reply); err != nil {

@@ -58,33 +58,39 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 		return reply, nil
 	}
 
-	prev, ok := s.SkipBlocks[string(latest)]
-	if !ok {
-		return nil, errors.New("Couldn't find latest block.")
-	}
-	proposed.GetCommon().VerifierId = prev.GetCommon().VerifierId
-	if s.verifyNewSkipBlock(prev, proposed) {
-		s.updateNewSkipBlock(prev, proposed)
-		reply := &ProposedSkipBlockReply{
-			Previous: prev,
-			Latest:   proposed,
+	var prev SkipBlock
+	dbg.Print(latest, len(latest), latest.IsNull())
+	if !latest.IsNull() {
+		var ok bool
+		prev, ok = s.SkipBlocks[string(latest)]
+		if !ok {
+			return nil, errors.New("Couldn't find latest block.")
 		}
-		// notify all other services with the same ID:
-		_ = s.startPropagation(proposed)
-		return reply, nil
+		proposed.GetCommon().VerifierId = prev.GetCommon().VerifierId
+		if s.verifyNewSkipBlock(prev, proposed) {
+			s.updateNewSkipBlock(prev, proposed)
+		}
+	}
+	reply := &ProposedSkipBlockReply{
+		Previous: prev,
+		Latest:   proposed,
 	}
 
-	return nil, errors.New("Verification of proposed block failed.")
+	// notify all other services with the same ID:
+	if err := s.startPropagation(proposed); err != nil {
+		return nil, err
+	}
+	return reply, nil
 }
-func (s *Service) ProposeSkipBlockData(latest SkipBlockID, proposed *SkipBlockData) (*ProposedSkipBlockReplyData, error) {
-	reply, err := s.ProposeSkipBlock(latest, proposed)
+func (s *Service) ProposeSkipBlockData(e *network.Entity, prop *ProposeSkipBlockData) (network.ProtocolMessage, error) {
+	reply, err := s.ProposeSkipBlock(prop.Latest, prop.Proposed)
 	if err != nil {
 		return nil, err
 	}
 	return &ProposedSkipBlockReplyData{reply.Previous.(*SkipBlockData), reply.Latest.(*SkipBlockData)}, nil
 }
-func (s *Service) ProposeSkipBlockRoster(latest SkipBlockID, proposed *SkipBlockRoster) (*ProposedSkipBlockReplyRoster, error) {
-	reply, err := s.ProposeSkipBlock(latest, proposed)
+func (s *Service) ProposeSkipBlockRoster(e *network.Entity, prop *ProposeSkipBlockRoster) (network.ProtocolMessage, error) {
+	reply, err := s.ProposeSkipBlock(prop.Latest, prop.Proposed)
 	if err != nil {
 		return nil, err
 	}
