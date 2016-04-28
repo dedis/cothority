@@ -63,7 +63,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	genesis.MaximumHeight = 2
 	blockCount := uint32(0)
 	s := newSkipchainService(nil, "").(*Service)
-	psbr, err := s.ProposeSkipBlock(nil, genesis)
+	psbr, err := s.proposeSkipBlock(nil, genesis)
 	assert.Nil(t, err)
 	latest := psbr.Latest.(*SkipBlockData)
 	// verify creation of GenesisBlock:
@@ -81,7 +81,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	}
 	genesis.MaximumHeight = 2
 	id := psbr.Latest.updateHash()
-	psbr2, err := s.ProposeSkipBlock(id, next)
+	psbr2, err := s.proposeSkipBlock(id, next)
 	assert.Nil(t, err)
 	latest2 := psbr2.Latest.GetCommon()
 	// verify creation of GenesisBlock:
@@ -107,7 +107,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
 		el.List = el.List[0 : sbLength-(i+1)]
-		reply, err := s.ProposeSkipBlock(sbs[i-1].Hash,
+		reply, err := s.proposeSkipBlock(sbs[i-1].Hash,
 			&SkipBlockRoster{
 				SkipBlockCommon: NewSkipBlockCommon(),
 				EntityList:      el,
@@ -117,7 +117,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	}
 
 	for i := 0; i < sbLength; i++ {
-		m, err := s.GetUpdateChain(el.List[i], &GetUpdateChain{sbs[i].Hash})
+		m, err := s.GetUpdateChain(nil, &GetUpdateChain{sbs[i].Hash})
 		sbc := m.(*GetUpdateChainReply)
 		dbg.ErrFatal(err)
 		if !bytes.Equal(sbc.Update[0].GetCommon().Hash,
@@ -253,7 +253,7 @@ func makeGenesisRosterArgs(s *Service, el *sda.EntityList, parent SkipBlockID,
 	sb.MaximumHeight = 4
 	sb.ParentBlock = parent
 	sb.VerifierId = vid
-	reply, err := s.ProposeSkipBlock(nil, sb)
+	reply, err := s.proposeSkipBlock(nil, sb)
 	dbg.ErrFatal(err)
 	return reply.Latest.(*SkipBlockRoster)
 }

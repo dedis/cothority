@@ -7,15 +7,19 @@ import (
 
 func init() {
 	var msgs = []interface{}{
+		// Propose
 		&ProposeSkipBlock{},
 		&ProposeSkipBlockData{},
 		&ProposeSkipBlockRoster{},
 		&ProposedSkipBlockReply{},
 		&ProposedSkipBlockReplyData{},
 		&ProposedSkipBlockReplyRoster{},
+		// Propagate
+		&PropagateSkipBlockRoster{},
+		&PropagateSkipBlockData{},
+		//
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
-		&PropagateSkipBlock{},
 		&ForwardSignature{},
 		&SkipBlockFix{},
 		&SkipBlockCommon{},
@@ -112,14 +116,12 @@ type GetChildrenSkipList struct {
 
 // PropagateSkipBlock sends a newly signed SkipBlock to all members of
 // the Cothority
-type PropagateSkipBlock struct {
-	SkipBlock SkipBlock
-}
-
-// PropagateSkipBlock sends a newly signed SkipBlock to all members of
-// the Cothority
 type PropagateSkipBlockData struct {
 	SkipBlock SkipBlockData
+}
+
+type PropagateSkipBlockRoster struct {
+	SkipBlock *SkipBlockRoster
 }
 
 // ForwardSignature asks this responsible for a SkipChain to sign off

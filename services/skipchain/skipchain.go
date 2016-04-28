@@ -14,16 +14,14 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"reflect"
 )
 
-// This file contains all the code to run a CoSi service. It is used to reply to
-// client request for signing something using CoSi.
-// As a prototype, it just signs and returns. It would be very easy to write an
-// updated version that chains all signatures for example.
+const ServiceName = "Skipchain"
 
 func init() {
 	sda.RegisterNewService("Skipchain", newSkipchainService)
-	skipchainSID = sda.ServiceFactory.ServiceID("Skipchain")
+	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
 }
 
 var skipchainSID sda.ServiceID
@@ -43,7 +41,7 @@ type Service struct {
 // If the given nil as the latest block it verify if we are actually creating
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
+func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*ProposedSkipBlockReply, error) {
 	if latest == nil || len(latest) == 0 { // genesis block creation
 		// TODO set real verifier
 		proposed.GetCommon().VerifierId = VerifyNone
@@ -76,18 +74,30 @@ func (s *Service) ProposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 	return nil, errors.New("Verification of proposed block failed.")
 }
 func (s *Service) ProposeSkipBlockData(e *network.Entity, psbd *ProposeSkipBlockData) (network.ProtocolMessage, error) {
-	reply, err := s.ProposeSkipBlock(psbd.Latest, psbd.Proposed)
+	reply, err := s.proposeSkipBlock(psbd.Latest, psbd.Proposed)
 	if err != nil {
 		return nil, err
 	}
 	return &ProposedSkipBlockReplyData{reply.Previous.(*SkipBlockData), reply.Latest.(*SkipBlockData)}, nil
 }
 func (s *Service) ProposeSkipBlockRoster(e *network.Entity, psbr *ProposeSkipBlockRoster) (network.ProtocolMessage, error) {
-	reply, err := s.ProposeSkipBlock(psbr.Latest, psbr.Proposed)
+	reply, err := s.proposeSkipBlock(psbr.Latest, psbr.Proposed)
 	if err != nil {
 		return nil, err
 	}
-	return &ProposedSkipBlockReplyRoster{reply.Previous.(*SkipBlockRoster), reply.Latest.(*SkipBlockRoster)}, nil
+
+	dbg.Print(reply.Previous)
+	dbg.Print(reply.Latest)
+	var prev *SkipBlockRoster
+	var latest *SkipBlockRoster
+	if reply.Previous != nil {
+		prev = reply.Previous.(*SkipBlockRoster)
+	}
+	if reply.Latest != nil {
+		latest = reply.Latest.(*SkipBlockRoster)
+	}
+
+	return &ProposedSkipBlockReplyRoster{prev, latest}, nil
 }
 
 func (s *Service) updateNewSkipBlock(prev, proposed SkipBlock) {
@@ -129,8 +139,8 @@ func (s *Service) updateNewSkipBlock(prev, proposed SkipBlock) {
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(e *network.Entity, u *GetUpdateChain) (network.ProtocolMessage, error) {
-	block, ok := s.getSkipBlockByID(u.Latest)
+func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain) (network.ProtocolMessage, error) {
+	block, ok := s.getSkipBlockByID(latestKnown.Latest)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
@@ -208,8 +218,19 @@ func (s *Service) startPropagation(latest SkipBlock) error {
 	}
 	for i, e := range el.List {
 		dbg.Print("Sending", strconv.Itoa(i))
+		var cr *sda.ServiceMessage
+		var err error
+		switch v := latest.(type) {
+		case *SkipBlockData:
+			cr, err = sda.CreateServiceMessage(ServiceName,
+				&PropagateSkipBlockData{latest.(SkipBlockData)})
+		case *SkipBlockRoster:
+			cr, err = sda.CreateServiceMessage(ServiceName,
+				&PropagateSkipBlockRoster{latest.(*SkipBlockRoster)})
+		default:
+			dbg.Print("Unknown Block type", reflect.TypeOf(v))
 
-		cr, err := sda.CreateClientRequest("Skipchain", &PropagateSkipBlock{latest})
+		}
 		if err != nil {
 			dbg.Error(err)
 			return err

@@ -159,14 +159,14 @@ func NewSkipBlockRoster(el *sda.EntityList) *SkipBlockRoster {
 
 // updateHash is used to store the hash of the SkipBlockFix and the
 // EntityList
-func (sbr *SkipBlockRoster) updateHash() SkipBlockID {
+func (sbr SkipBlockRoster) updateHash() SkipBlockID {
 	sbr.Hash = sbr.addSliceToHash(sbr.EntityList.Id[:])
 	return sbr.Hash
 }
 
 // VerifySignatures checks the main hash and all available ForwardLinks. If this
 // structure holds a ChildSkipList, its signature will also be verified.
-func (sbr *SkipBlockRoster) VerifySignatures() error {
+func (sbr SkipBlockRoster) VerifySignatures() error {
 	err := sbr.SkipBlockCommon.VerifySignatures()
 	if err != nil || (sbr.ChildSL != nil && sbr.ChildSL.Hash == nil) {
 		return err
