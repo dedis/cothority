@@ -66,7 +66,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			continue
 		}
 		// send request
-		r := &ServiceRequest{
+		r := &SignatureRequest{
 			Message:    msg,
 			EntityList: config.EntityList,
 		}
@@ -86,7 +86,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			continue
 		}
 
-		resp, ok := nm.Msg.(ServiceResponse)
+		resp, ok := nm.Msg.(SignatureResponse)
 		if !ok {
 			dbg.Error("Received wrong type")
 		}

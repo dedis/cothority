@@ -1,0 +1,8 @@
+Simulation = "PrivateCount"
+Servers = 5
+Bf = 2
+Rounds = 1
+RunWait = 600
+
+Hosts
+5
