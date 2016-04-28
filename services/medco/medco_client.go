@@ -28,7 +28,7 @@ func (c *MedcoClient) StartService(entities *sda.EntityList) error {
 		dbg.Error("Got error when starting the service: "+err.Error())
 		return err
 	}
-	dbg.Lvl1("Successfully started the service: (empty?)", resp.Msg.(ServiceResponse).code, resp.Msg.(ServiceResponse).text)
+	dbg.Lvl1("Successfully started the service: (empty?)", resp.Msg.(ServiceResponse).Code, resp.Msg.(ServiceResponse).Text)
 	return nil
 }
 

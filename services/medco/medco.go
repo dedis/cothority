@@ -46,29 +46,34 @@ func NewMedcoService(c sda.Context, path string) sda.Service {
 func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *SurveyCreationQuery) (network.ProtocolMessage, error) {
 
 	mcs.entityList = &recq.EntityList
-	if recq.EntityList.List[0].Equal(e) {
-		tree := recq.EntityList.GenerateBinaryTree()
-		treeNodeInst := mcs.NewTreeNodeInstance(tree, tree.Root)
-		treeNodeInst.SendToChildren(recq)
+	if mcs.Context.Entity().Equal(mcs.entityList.List[0]) {
+		msg, _ := sda.CreateServiceMessage(MEDCO_SERVICE_NAME, recq)
+		// No easy way to get our TreeNode object from the Tree + cannot send ServiceMessage w/ SendToChildren: use SendRaw
+		for _,e := range mcs.entityList.List {
+			if !e.Equal(mcs.Context.Entity()) {
+				mcs.SendRaw(e, msg)
+			}
+		}
 		dbg.Lvl1(e," initiated the survey as the root.")
 	} else {
-		dbg.Lvl1(e," created the survey, root is : ",recq.EntityList.List[0])
+		dbg.Lvl1(e," created the survey, root is : ",mcs.entityList.List[0])
 	}
-	return &ServiceResponse{int16(201), "Created"}, nil
+
+	return &ServiceResponse{int32(201), "Created"}, nil
 }
 
 func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *SurveyResponseData) (network.ProtocolMessage, error) {
 
 	if mcs.localResult == nil {
-		mcs.localResult = &resp.CipherVector
+		mcs.localResult = &resp.Vect
 	} else {
-		err := mcs.localResult.Add(*mcs.localResult, resp.CipherVector)
+		err := mcs.localResult.Add(*mcs.localResult, resp.Vect)
 		if err != nil {
 			dbg.Lvl1("Got error when aggregating survey response.")
 			return 500, err
 		}
 	}
-	return 200, nil
+	return &ServiceResponse{int32(200), "Ok"}, nil
 }
 
 func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *SurveyResultsQuery) (network.ProtocolMessage, error) {
