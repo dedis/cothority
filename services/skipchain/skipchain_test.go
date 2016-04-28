@@ -172,16 +172,16 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	sbInterm := makeGenesisRosterArgs(service, elInterm, sbRoot.Hash, VerifyShard)
 	service.SetChildrenSkipBlock(sbRoot.Hash, sbInterm.Hash)
 	// wait for block propagation
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
 		dbg.Print(skipchainSID)
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
 		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbRoot.Hash})
+		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		sb := m.(*GetUpdateChainReply)
 		dbg.Print(s)
-		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		if len(sb.Update) != 1 { // we expect only the first block
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}

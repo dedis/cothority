@@ -193,10 +193,18 @@ func (s *Service) GetChildrenSkipList(sb SkipBlock, verifier VerifierID) (*GetUp
 	return nil, nil
 }
 
-// PropagateSkipBlock is called when a new SkipBlock or updated SkipBlock is
+// PropagateSkipBlockData is called when a new SkipBlock or updated SkipBlock is
 // available.
 func (s *Service) PropagateSkipBlockData(e *network.Entity, latest *PropagateSkipBlockData) (network.ProtocolMessage, error) {
-	dbg.Print("PropagateSkipBlock ....", s.Address())
+	dbg.Print("PropagateSkipBlockData ....", s.Address())
+	s.SkipBlocks[string(latest.SkipBlock.GetHash())] = latest.SkipBlock
+	return nil, nil
+}
+
+// PropagateSkipBlockData is called when a new SkipBlock or updated SkipBlock is
+// available.
+func (s *Service) PropagateSkipBlockRoster(e *network.Entity, latest *PropagateSkipBlockRoster) (network.ProtocolMessage, error) {
+	dbg.Print("PropagateSkipBlockRoster ....", s.Address())
 	s.SkipBlocks[string(latest.SkipBlock.GetHash())] = latest.SkipBlock
 	return nil, nil
 }
@@ -205,6 +213,7 @@ func (s *Service) PropagateSkipBlockData(e *network.Entity, latest *PropagateSki
 func (s *Service) startPropagation(latest SkipBlock) error {
 	dbg.Print("Starting propagation of new block.")
 	var el *sda.EntityList
+
 	if dataBlock, isData := latest.(*SkipBlockData); isData {
 		parent, ok := s.getSkipBlockByID(dataBlock.ParentBlock)
 		if !ok {
@@ -338,6 +347,9 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 		SkipBlocks:       make(map[string]SkipBlock),
 	}
 	if err := s.RegisterMessage(s.PropagateSkipBlockData); err != nil {
+		dbg.Fatal("Registration error:", err)
+	}
+	if err := s.RegisterMessage(s.PropagateSkipBlockRoster); err != nil {
 		dbg.Fatal("Registration error:", err)
 	}
 	if err := s.RegisterMessage(s.ProposeSkipBlockData); err != nil {

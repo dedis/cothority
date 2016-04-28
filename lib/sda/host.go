@@ -326,7 +326,7 @@ func (h *Host) processMessages() {
 			r := data.Msg.(ClientRequest)
 			h.processRequest(data.Entity, &r)
 		case ServiceMessageID:
-			dbg.Print("Got SMID")
+			dbg.LLvl4("Got SMID")
 			m := data.Msg.(ServiceMessage)
 			h.processServiceMessage(data.Entity, &m)
 		default:
