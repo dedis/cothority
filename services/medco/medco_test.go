@@ -13,12 +13,15 @@ func TestServiceCosi(t *testing.T) {
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	_, el, _ := local.GenTree(5, false, true, false)
+	_, el, _ := local.GenTree(5, true, true, true)
 	defer local.CloseAll()
 
 	// Send a request to the service
 	client := medco.NewMedcoClient(el.List[0])
-	client.StartService(el)
+
+	if client.StartService(el) != nil {
+		t.Fatal("Service did not start.")
+	}
 
 
 }

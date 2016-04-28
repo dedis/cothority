@@ -11,6 +11,11 @@ type SurveyCreationQuery struct {
 	sda.EntityList
 }
 
+type ServiceResponse struct {
+	code int16
+	text string
+}
+
 type SurveyResponseData struct {
 	medco.CipherVector
 }
