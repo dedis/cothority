@@ -84,30 +84,25 @@ func TestClient_CreateData(t *testing.T) {
 }
 
 func TestClient_ProposeData(t *testing.T) {
-	t.Skip("To be implemented")
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
-	data1, err := c.CreateData(interm, 4, td, VerifyNone)
+	data1, err := c.CreateData(inter, 4, td, VerifyNone)
 	dbg.ErrFatal(err)
-	_, err = c.ProposeData(interm.Hash, td)
-	if err == nil {
-		t.Fatal("Shouldn't be able to add data-SkipBlock to Intermediate")
-	}
 	td.A++
-	data2, err := c.ProposeData(data1.Hash, td)
+	data2, err := c.ProposeData(inter, data1, td)
 	dbg.ErrFatal(err)
-	data_last, err := c.GetUpdateChain(data1.Hash)
+	data_last, err := c.GetUpdateChain(inter, data1.Hash)
 	dbg.ErrFatal(err)
-	if len(data_last.Update) != 2 {
+	if len(data_last.UpdateData) != 2 {
 		t.Fatal("Should have two SkipBlocks for update-chain")
 	}
-	if !data_last.Update[1].Equal(data2.Latest) {
+	if !data_last.UpdateData[1].Equal(data2.Latest) {
 		t.Fatal("Newest SkipBlock should be stored")
 	}
 }
@@ -120,12 +115,12 @@ func TestClient_ProposeRoster(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	el.List = el.List[:nbrHosts-1]
-	reply1, err := c.ProposeRoster(interm.Hash, el)
+	reply1, err := c.ProposeRoster(inter.Hash, el)
 	dbg.ErrFatal(err)
-	_, err = c.ProposeRoster(interm.Hash, el)
+	_, err = c.ProposeRoster(inter.Hash, el)
 	if err == nil {
 		t.Fatal("Appending two Blocks to the same last block should fail")
 	}
@@ -136,11 +131,11 @@ func TestClient_ProposeRoster(t *testing.T) {
 		t.Fatal("second should point to third SkipBlock")
 	}
 
-	updates, err := c.GetUpdateChain(interm.GetHash())
-	if len(updates.Update) != 3 {
+	updates, err := c.GetUpdateChain(inter, inter.GetHash())
+	if len(updates.UpdateData) != 3 {
 		t.Fatal("Should now have three Blocks to go from Genesis to current")
 	}
-	if !updates.Update[2].Equal(reply2.Latest) {
+	if !updates.UpdateData[2].Equal(reply2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
 }

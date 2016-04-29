@@ -349,14 +349,14 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
 		if err != nil {
-			close(pchan)
-			return
+			packet.Msg = StatusRet{err.Error()}
+			packet.MsgType = network.TypeFromData(&StatusRet{})
 		}
 		pchan <- packet
 	}()
 	select {
 	case response := <-pchan:
-		dbg.Lvlf5("Response: %+v", response)
+		dbg.Lvlf5("Response: %+v %+v", response, response.Msg)
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {

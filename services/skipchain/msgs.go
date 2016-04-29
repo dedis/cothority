@@ -98,7 +98,8 @@ type GetUpdateChain struct {
 // GetUpdateChainRet - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
-	Update []SkipBlock
+	UpdateData   []*SkipBlockData
+	UpdateRoster []*SkipBlockRoster
 }
 
 // SetChildrenSkipBlock adds a child-SkipBlock to a parent SkipBlock

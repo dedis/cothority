@@ -432,7 +432,7 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		// bytes left to send
 		b = b[n:]
 	}
-	// update stats on the conn
+	// update stats on the connection
 	c.addWrittenBytes(uint64(packetSize))
 	return nil
 }

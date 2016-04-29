@@ -135,18 +135,18 @@ func TestService_GetUpdateChain(t *testing.T) {
 		m, err := s.GetUpdateChain(nil, &GetUpdateChain{sbs[i].Hash})
 		sbc := m.(*GetUpdateChainReply)
 		dbg.ErrFatal(err)
-		if !sbc.Update[0].Equal(sbs[i]) {
+		if !sbc.UpdateRoster[0].Equal(sbs[i]) {
 			t.Fatal("First hash is not from our SkipBlock")
 		}
-		if !sbc.Update[len(sbc.Update)-1].Equal(sbs[sbLength-1]) {
-			dbg.Lvl2(sbc.Update[len(sbc.Update)-1].GetHash())
+		if !sbc.UpdateRoster[len(sbc.UpdateRoster)-1].Equal(sbs[sbLength-1]) {
+			dbg.Lvl2(sbc.UpdateRoster[len(sbc.UpdateRoster)-1].GetHash())
 			dbg.Lvl2(sbs[sbLength-1].Hash)
 			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
 		}
-		for up, sb1 := range sbc.Update {
+		for up, sb1 := range sbc.UpdateRoster {
 			dbg.ErrFatal(sb1.VerifySignatures())
-			if up < len(sbc.Update)-1 {
-				sb2 := sbc.Update[up+1]
+			if up < len(sbc.UpdateRoster)-1 {
+				sb2 := sbc.UpdateRoster[up+1]
 				sbc1 := sb1.GetCommon()
 				sbc2 := sb2.GetCommon()
 				h1 := sbc1.Height
@@ -192,10 +192,10 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		sb := m.(*GetUpdateChainReply)
 		dbg.Lvl2(s.Context)
-		if len(sb.Update) != 1 { // we expect only the first block
+		if len(sb.UpdateRoster) != 1 { // we expect only the first block
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
-		link := sb.Update[0].(*SkipBlockRoster).ChildSL
+		link := sb.UpdateRoster[0].ChildSL
 		if !bytes.Equal(link.Hash, sbInterm.Hash) {
 			t.Fatal("The child-link doesn't point to our intermediate SkipBlock", i)
 		}
@@ -214,13 +214,13 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		sb := m.(*GetUpdateChainReply)
 
 		dbg.ErrFatal(err)
-		if len(sb.Update) != 1 {
+		if len(sb.UpdateRoster) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
-		if !bytes.Equal(sb.Update[0].GetCommon().ParentBlock, sbRoot.Hash) {
+		if !bytes.Equal(sb.UpdateRoster[0].GetCommon().ParentBlock, sbRoot.Hash) {
 			t.Fatal("The intermediate SkipBlock doesn't point to the root")
 		}
-		if err = sb.Update[0].VerifySignatures(); err != nil {
+		if err = sb.UpdateRoster[0].VerifySignatures(); err != nil {
 			t.Fatal("Signature of that SkipBlock doesn't fit")
 		}
 	}

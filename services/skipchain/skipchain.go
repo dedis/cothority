@@ -78,11 +78,21 @@ func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 	return reply, nil
 }
 func (s *Service) ProposeSkipBlockData(e *network.Entity, psbd *ProposeSkipBlockData) (reply network.ProtocolMessage, err error) {
-	parentID := psbd.Proposed.ParentBlock
-	if parentID.IsNull() {
-		return nil, errors.New("Data-block doesn't have parent")
+	prop := psbd.Proposed
+	if !psbd.Latest.IsNull() {
+		latestSB, ok := s.getSkipBlockByID(psbd.Latest)
+		if !ok {
+			return nil, errors.New("Didn't find latest block")
+		}
+		latest, ok := latestSB.(*SkipBlockData)
+		if !ok {
+			return nil, errors.New("Didn't get SkipBlockData as latest")
+		}
+		prop.MaximumHeight = latest.MaximumHeight
+		prop.ParentBlock = latest.ParentBlock
+		prop.VerifierId = latest.VerifierId
 	}
-	parent, ok := s.getSkipBlockByID(parentID)
+	parent, ok := s.getSkipBlockByID(prop.ParentBlock)
 	if !ok {
 		return nil, errors.New("Didn't find parent-block of data-block")
 	}
@@ -172,8 +182,18 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 		}
 		blocks = append(blocks, block)
 	}
-	reply := &GetUpdateChainReply{
-		Update: blocks,
+	reply := &GetUpdateChainReply{}
+	switch blocks[0].(type) {
+	case *SkipBlockData:
+		reply.UpdateData = make([]*SkipBlockData, len(blocks))
+		for i, b := range blocks {
+			reply.UpdateData[i] = b.(*SkipBlockData)
+		}
+	case *SkipBlockRoster:
+		reply.UpdateRoster = make([]*SkipBlockRoster, len(blocks))
+		for i, b := range blocks {
+			reply.UpdateRoster[i] = b.(*SkipBlockRoster)
+		}
 	}
 
 	return reply, nil

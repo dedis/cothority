@@ -326,7 +326,7 @@ func (h *Host) processMessages() {
 			r := data.Msg.(ClientRequest)
 			h.processRequest(data.Entity, &r)
 		case ServiceMessageID:
-			dbg.Lvl4("Got SMID")
+			dbg.Lvl4("Got ServiceMessageID")
 			m := data.Msg.(ServiceMessage)
 			h.processServiceMessage(data.Entity, &m)
 		default:
@@ -344,7 +344,7 @@ func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl3("host", h.Address(), " => Dispatch request to ServiceMessage")
+	dbg.Lvl5("host", h.Address(), m)
 	s.ProcessServiceMessage(e, m)
 
 }
@@ -358,7 +358,7 @@ func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl3("host", h.Address(), " => Dispatch request to Request")
+	dbg.Lvl5("host", h.Address(), " => Dispatch request to Request")
 	go s.ProcessClientRequest(e, r)
 }
 

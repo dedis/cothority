@@ -89,12 +89,29 @@ func (c *Client) ProposeRoster(latest SkipBlockID, roster *sda.EntityList) (*Pro
 
 // ProposeData will propose to add a new SkipBlock containing 'data' to an existing
 // SkipChain. If it succeeds, it will return the old and the new SkipBlock.
-func (c *Client) ProposeData(latest SkipBlockID, data network.ProtocolMessage) (*ProposedSkipBlockReply, error) {
-	return nil, nil
+func (c *Client) ProposeData(parent *SkipBlockRoster, latest *SkipBlockData, d network.ProtocolMessage) (reply *ProposedSkipBlockReplyData, err error) {
+	h := parent.EntityList.List[0]
+	data := NewSkipBlockData()
+	b, err := network.MarshalRegisteredType(d)
+	if err != nil {
+		return
+	}
+	data.Data = b
+	r, err := c.Send(h, &ProposeSkipBlockData{latest.Hash, data})
+	replyVal := r.Msg.(ProposedSkipBlockReplyData)
+	reply = &replyVal
+	return
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain.
-func (c *Client) GetUpdateChain(latest SkipBlockID) (*GetUpdateChainReply, error) {
-	return nil, nil
+func (c *Client) GetUpdateChain(parent *SkipBlockRoster, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
+	h := parent.EntityList.List[0]
+	r, err := c.Send(h, &GetUpdateChain{latest})
+	if err != nil {
+		return
+	}
+	replyVal := r.Msg.(GetUpdateChainReply)
+	reply = &replyVal
+	return
 }
