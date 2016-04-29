@@ -10,6 +10,10 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+func init() {
+	network.RegisterMessageType(&testData{})
+}
+
 func TestClientGenesis(t *testing.T) {
 	l := sda.NewLocalTest()
 	l.GenTree(5, true, true, true)
@@ -53,23 +57,23 @@ func TestClient_CreateRootInterm(t *testing.T) {
 }
 
 func TestClient_CreateData(t *testing.T) {
-	t.Skip("To be implemented")
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
-	data, err := c.CreateData(interm, 4, td, VerifyNone)
+	data, err := c.CreateData(inter, 4, td, VerifyNone)
+	dbg.ErrFatal(err)
 	if err = data.VerifySignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
 	}
-	if !bytes.Equal(data.ParentBlock, interm.Hash) {
+	if !bytes.Equal(data.ParentBlock, inter.Hash) {
 		t.Fatal("Data-chain doesn't point to intermediate-chain")
 	}
-	if !bytes.Equal(interm.ChildSL.Hash, data.Hash) {
+	if !bytes.Equal(inter.ChildSL.Hash, data.Hash) {
 		t.Fatal("Intermediate chain doesn't point to data-chain")
 	}
 	_, td1, err := network.UnmarshalRegisteredType(data.Data, network.DefaultConstructors(network.Suite))

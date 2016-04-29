@@ -78,6 +78,7 @@ type ProposedSkipBlockReply struct {
 }
 
 type ProposedSkipBlockReplyData struct {
+	Parent   *SkipBlockRoster
 	Previous *SkipBlockData
 	Latest   *SkipBlockData
 }

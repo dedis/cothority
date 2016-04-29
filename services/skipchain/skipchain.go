@@ -77,12 +77,27 @@ func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 	}
 	return reply, nil
 }
-func (s *Service) ProposeSkipBlockData(e *network.Entity, psbd *ProposeSkipBlockData) (network.ProtocolMessage, error) {
-	reply, err := s.proposeSkipBlock(psbd.Latest, psbd.Proposed)
-	if err != nil {
-		return nil, err
+func (s *Service) ProposeSkipBlockData(e *network.Entity, psbd *ProposeSkipBlockData) (reply network.ProtocolMessage, err error) {
+	parentID := psbd.Proposed.ParentBlock
+	if parentID.IsNull() {
+		return nil, errors.New("Data-block doesn't have parent")
 	}
-	return &ProposedSkipBlockReplyData{reply.Previous.(*SkipBlockData), reply.Latest.(*SkipBlockData)}, nil
+	parent, ok := s.getSkipBlockByID(parentID)
+	if !ok {
+		return nil, errors.New("Didn't find parent-block of data-block")
+	}
+	psbr, err := s.proposeSkipBlock(psbd.Latest, psbd.Proposed)
+	if err != nil {
+		return
+	}
+	reply = &ProposedSkipBlockReplyData{
+		Parent: parent.(*SkipBlockRoster),
+		Latest: psbr.Latest.(*SkipBlockData),
+	}
+	if prev := psbr.Previous; prev != nil {
+		reply.(*ProposedSkipBlockReplyData).Previous = prev.(*SkipBlockData)
+	}
+	return
 }
 func (s *Service) ProposeSkipBlockRoster(e *network.Entity, psbr *ProposeSkipBlockRoster) (network.ProtocolMessage, error) {
 	reply, err := s.proposeSkipBlock(psbr.Latest, psbr.Proposed)
@@ -178,8 +193,7 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 		return nil, errors.New("Couldn't find skipblock!")
 	}
 	pbRoster := parentBlock.(*SkipBlockRoster)
-	cbc := childBlock.GetCommon()
-	cbc.ParentBlock = parent
+	childBlock.GetCommon().ParentBlock = parent
 	pbRoster.ChildSL = NewBlockLink()
 	pbRoster.ChildSL.Hash = child
 
@@ -237,7 +251,6 @@ func (s *Service) startPropagation(latest SkipBlock) error {
 	if dataBlock, isData := latest.(*SkipBlockData); isData {
 		parent, ok := s.getSkipBlockByID(dataBlock.ParentBlock)
 		if !ok {
-			dbg.Error("Didn't find parent of data")
 			return errors.New("Didn't find parent of data")
 		}
 		el = parent.(*SkipBlockRoster).EntityList

@@ -53,8 +53,31 @@ func (c *Client) CreateRootInterm(elRoot, elInter *sda.EntityList, maxHRoot, max
 // CreateData adds a Data-chain to the given intermediate-chain using
 // a maximumHeight of maxH. It will add 'data' to that chain which will
 // be verified using the ver-function.
-func (c *Client) CreateData(interm *SkipBlockRoster, maxH int, data network.ProtocolMessage, ver VerifierID) (*SkipBlockData, error) {
-	return nil, nil
+func (c *Client) CreateData(parent *SkipBlockRoster, maxH int, d network.ProtocolMessage, ver VerifierID) (data *SkipBlockData, err error) {
+	h := parent.EntityList.List[0]
+	data = NewSkipBlockData()
+	b, err := network.MarshalRegisteredType(d)
+	if err != nil {
+		return
+	}
+	data.Data = b
+	data.MaximumHeight = maxH
+	data.VerifierId = ver
+	data.ParentBlock = parent.Hash
+	dataMsg, err := c.Send(h, &ProposeSkipBlockData{nil, data})
+	if err != nil {
+		return
+	}
+	data = dataMsg.Msg.(ProposedSkipBlockReplyData).Latest
+
+	replyMsg, err := c.Send(h, &SetChildrenSkipBlock{parent.Hash, data.Hash})
+	if err != nil {
+		return
+	}
+	reply := replyMsg.Msg.(SetChildrenSkipBlockReply)
+	*parent = *reply.Parent
+	data = reply.ChildData
+	return
 }
 
 // ProposeRoster will propose to add a new SkipBlock containing the 'roster' to
