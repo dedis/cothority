@@ -9,24 +9,18 @@ func init() {
 	var msgs = []interface{}{
 		// Propose
 		&ProposeSkipBlock{},
-		&ProposeSkipBlockData{},
-		&ProposeSkipBlockRoster{},
-		&ProposedSkipBlockReplyData{},
-		&ProposedSkipBlockReplyRoster{},
+		&ProposedSkipBlockReply{},
 		&SetChildrenSkipBlock{},
 		&SetChildrenSkipBlockReply{},
 		// Propagation
-		&PropagateSkipBlockRoster{},
-		&PropagateSkipBlockData{},
+		&PropagateSkipBlock{},
 		// Requests for data
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
 		// Data-structures
 		&ForwardSignature{},
 		&SkipBlockFix{},
-		&SkipBlockCommon{},
-		&SkipBlockData{},
-		&SkipBlockRoster{},
+		&SkipBlock{},
 	}
 	for _, m := range msgs {
 		network.RegisterMessageType(m)
@@ -57,34 +51,13 @@ var (
 // routines who will have to sign off on the new Tree.
 type ProposeSkipBlock struct {
 	Latest   SkipBlockID
-	Proposed SkipBlock
-}
-
-type ProposeSkipBlockData struct {
-	Latest   SkipBlockID
-	Proposed *SkipBlockData
-}
-
-type ProposeSkipBlockRoster struct {
-	Latest   SkipBlockID
-	Proposed *SkipBlockRoster
+	Proposed *SkipBlock
 }
 
 // ProposedSkipBlockReply - returns the signed SkipBlock with updated backlinks
 type ProposedSkipBlockReply struct {
-	Previous SkipBlock
-	Latest   SkipBlock
-}
-
-type ProposedSkipBlockReplyData struct {
-	Parent   *SkipBlockRoster
-	Previous *SkipBlockData
-	Latest   *SkipBlockData
-}
-
-type ProposedSkipBlockReplyRoster struct {
-	Previous *SkipBlockRoster
-	Latest   *SkipBlockRoster
+	Previous *SkipBlock
+	Latest   *SkipBlock
 }
 
 // GetUpdateChain - the client sends the hash of the last known
@@ -97,8 +70,7 @@ type GetUpdateChain struct {
 // GetUpdateChainRet - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
-	UpdateData   []*SkipBlockData
-	UpdateRoster []*SkipBlockRoster
+	Update []*SkipBlock
 }
 
 // SetChildrenSkipBlock adds a child-SkipBlock to a parent SkipBlock
@@ -110,9 +82,8 @@ type SetChildrenSkipBlock struct {
 // SetChildrenSkipBlockReply is the reply from SetChildrenSkipBlock. Only one
 // of ChildData and ChildRoster will be non-nil
 type SetChildrenSkipBlockReply struct {
-	Parent      *SkipBlockRoster
-	ChildData   *SkipBlockData
-	ChildRoster *SkipBlockRoster
+	Parent *SkipBlock
+	Child  *SkipBlock
 }
 
 // GetChildrenSkipList - if the SkipList doesn't exist yet, creates the
@@ -120,7 +91,7 @@ type SetChildrenSkipBlockReply struct {
 // It returns a 'GetUpdateChainReply' with the chain from the first to
 // the last SkipBlock.
 type GetChildrenSkipList struct {
-	Current    SkipBlock
+	Current    *SkipBlock
 	VerifierId VerifierID
 }
 
@@ -128,12 +99,8 @@ type GetChildrenSkipList struct {
 
 // PropagateSkipBlock sends a newly signed SkipBlock to all members of
 // the Cothority
-type PropagateSkipBlockData struct {
-	SkipBlock *SkipBlockData
-}
-
-type PropagateSkipBlockRoster struct {
-	SkipBlock *SkipBlockRoster
+type PropagateSkipBlock struct {
+	SkipBlock *SkipBlock
 }
 
 // ForwardSignature asks this responsible for a SkipChain to sign off
@@ -141,5 +108,5 @@ type PropagateSkipBlockRoster struct {
 // SkipChain-definition at time 'n'
 type ForwardSignature struct {
 	ToUpdate SkipBlockID
-	Latest   SkipBlock
+	Latest   *SkipBlock
 }

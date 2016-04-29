@@ -18,34 +18,32 @@ func TestMain(m *testing.M) {
 	dbg.MainTest(m)
 }
 
-func TestSkipBlockData_Hash(t *testing.T) {
-	sbd1 := &SkipBlockData{
-		SkipBlockCommon: NewSkipBlockCommon(),
-		Data:            []byte("1"),
-	}
+func TestSkipBlock_Hash1(t *testing.T) {
+	sbd1 := NewSkipBlock()
+	sbd1.Data = []byte("1")
 	sbd1.Height = 4
 	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
-	sbd2 := &SkipBlockData{
-		SkipBlockCommon: NewSkipBlockCommon(),
-		Data:            []byte("2"),
-	}
+	sbd2 := NewSkipBlock()
+	sbd2.Data = []byte("2")
 	sbd1.Height = 2
 	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
 }
 
-func TestSkipBlockRoster_Hash(t *testing.T) {
+func TestSkipBlock_Hash2(t *testing.T) {
 	local := sda.NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
-	sbd1 := NewSkipBlockRoster(el)
+	sbd1 := NewSkipBlock()
+	sbd1.EntityList = el
 	sbd1.Height = 1
 	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
-	sbd2 := NewSkipBlockRoster(local.GenEntityListFromHost(hosts[0]))
+	sbd2 := NewSkipBlock()
+	sbd2.EntityList = local.GenEntityListFromHost(hosts[0])
 	sbd2.Height = 1
 	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
@@ -65,16 +63,15 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	sbRoot := makeGenesisRoster(service, el)
 
 	// send a ProposeBlock
-	genesis := &SkipBlockData{
-		Data:            []byte("In the beginning God created the heaven and the earth."),
-		SkipBlockCommon: NewSkipBlockCommon(),
-	}
+	genesis := NewSkipBlock()
+	genesis.Data = []byte("In the beginning God created the heaven and the earth.")
 	genesis.MaximumHeight = 2
 	genesis.ParentBlock = sbRoot.Hash
+	genesis.EntityList = sbRoot.EntityList
 	blockCount := uint32(0)
 	psbr, err := service.proposeSkipBlock(nil, genesis)
 	assert.Nil(t, err)
-	latest := psbr.Latest.(*SkipBlockData)
+	latest := psbr.Latest
 	// verify creation of GenesisBlock:
 	blockCount++
 	assert.Equal(t, blockCount, latest.Index)
@@ -82,15 +79,14 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	assert.Equal(t, 1, len(latest.BackLink))
 	assert.NotEqual(t, 0, latest.BackLink)
 
-	next := &SkipBlockData{
-		Data: []byte("And the earth was without form, and void; " +
-			"and darkness was upon the face of the deep. " +
-			"And the Spirit of God moved upon the face of the waters."),
-		SkipBlockCommon: NewSkipBlockCommon(),
-	}
+	next := NewSkipBlock()
+	next.Data = []byte("And the earth was without form, and void; " +
+		"and darkness was upon the face of the deep. " +
+		"And the Spirit of God moved upon the face of the waters.")
 	next.MaximumHeight = 2
 	next.ParentBlock = sbRoot.Hash
-	id := psbr.Latest.GetHash()
+	next.EntityList = sbRoot.EntityList
+	id := psbr.Latest.Hash
 	psbr2, err := service.proposeSkipBlock(id, next)
 	assert.Nil(t, err)
 	dbg.Lvl2(psbr2)
@@ -99,7 +95,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	}
 	assert.NotNil(t, psbr2)
 	assert.NotNil(t, psbr2.Latest)
-	latest2 := psbr2.Latest.GetCommon()
+	latest2 := psbr2.Latest
 	// verify creation of GenesisBlock:
 	blockCount++
 	assert.Equal(t, blockCount, latest2.Index)
@@ -117,49 +113,45 @@ func TestService_GetUpdateChain(t *testing.T) {
 	defer local.CloseAll()
 	sbLength := 3
 	_, el, s := makeHELS(local, sbLength)
-	sbs := make([]*SkipBlockRoster, sbLength)
+	sbs := make([]*SkipBlock, sbLength)
 	sbs[0] = makeGenesisRoster(s, el)
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
 		el.List = el.List[0 : sbLength-(i+1)]
-		reply, err := s.proposeSkipBlock(sbs[i-1].Hash,
-			&SkipBlockRoster{
-				SkipBlockCommon: NewSkipBlockCommon(),
-				EntityList:      el,
-			})
+		newSB := NewSkipBlock()
+		newSB.EntityList = el
+		reply, err := s.proposeSkipBlock(sbs[i-1].Hash, newSB)
 		dbg.ErrFatal(err)
-		sbs[i] = reply.Latest.(*SkipBlockRoster)
+		sbs[i] = reply.Latest
 	}
 
 	for i := 0; i < sbLength; i++ {
 		m, err := s.GetUpdateChain(nil, &GetUpdateChain{sbs[i].Hash})
 		sbc := m.(*GetUpdateChainReply)
 		dbg.ErrFatal(err)
-		if !sbc.UpdateRoster[0].Equal(sbs[i]) {
+		if !sbc.Update[0].Equal(sbs[i]) {
 			t.Fatal("First hash is not from our SkipBlock")
 		}
-		if !sbc.UpdateRoster[len(sbc.UpdateRoster)-1].Equal(sbs[sbLength-1]) {
-			dbg.Lvl2(sbc.UpdateRoster[len(sbc.UpdateRoster)-1].GetHash())
+		if !sbc.Update[len(sbc.Update)-1].Equal(sbs[sbLength-1]) {
+			dbg.Lvl2(sbc.Update[len(sbc.Update)-1].Hash)
 			dbg.Lvl2(sbs[sbLength-1].Hash)
 			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
 		}
-		for up, sb1 := range sbc.UpdateRoster {
+		for up, sb1 := range sbc.Update {
 			dbg.ErrFatal(sb1.VerifySignatures())
-			if up < len(sbc.UpdateRoster)-1 {
-				sb2 := sbc.UpdateRoster[up+1]
-				sbc1 := sb1.GetCommon()
-				sbc2 := sb2.GetCommon()
-				h1 := sbc1.Height
-				h2 := sbc2.Height
-				dbg.Lvl2("sbc1.Height=", sbc1.Height)
-				dbg.Lvl2("sbc2.Height=", sbc2.Height)
+			if up < len(sbc.Update)-1 {
+				sb2 := sbc.Update[up+1]
+				h1 := sb1.Height
+				h2 := sb2.Height
+				dbg.Lvl2("sbc1.Height=", sb1.Height)
+				dbg.Lvl2("sbc2.Height=", sb2.Height)
 				// height := min(len(sb1.ForwardLink), h2)
 				height := h1
 				if h2 < height {
 					height = h2
 				}
-				if !bytes.Equal(sbc1.ForwardLink[height-1].Hash,
-					sbc2.Hash) {
+				if !bytes.Equal(sb1.ForwardLink[height-1].Hash,
+					sb2.Hash) {
 					t.Fatal("Forward-pointer of", up,
 						"is different of hash in", up+1)
 				}
@@ -192,10 +184,10 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		sb := m.(*GetUpdateChainReply)
 		dbg.Lvl2(s.Context)
-		if len(sb.UpdateRoster) != 1 { // we expect only the first block
+		if len(sb.Update) != 1 { // we expect only the first block
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
-		link := sb.UpdateRoster[0].ChildSL
+		link := sb.Update[0].ChildSL
 		if !bytes.Equal(link.Hash, sbInterm.Hash) {
 			t.Fatal("The child-link doesn't point to our intermediate SkipBlock", i)
 		}
@@ -214,13 +206,13 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		sb := m.(*GetUpdateChainReply)
 
 		dbg.ErrFatal(err)
-		if len(sb.UpdateRoster) != 1 {
+		if len(sb.Update) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
-		if !bytes.Equal(sb.UpdateRoster[0].GetCommon().ParentBlock, sbRoot.Hash) {
+		if !bytes.Equal(sb.Update[0].ParentBlock, sbRoot.Hash) {
 			t.Fatal("The intermediate SkipBlock doesn't point to the root")
 		}
-		if err = sb.UpdateRoster[0].VerifySignatures(); err != nil {
+		if err = sb.Update[0].VerifySignatures(); err != nil {
 			t.Fatal("Signature of that SkipBlock doesn't fit")
 		}
 	}
@@ -259,17 +251,18 @@ func TestService_ForwardSignature(t *testing.T) {
 
 // makes a genesis Roster-block
 func makeGenesisRosterArgs(s *Service, el *sda.EntityList, parent SkipBlockID,
-	vid VerifierID) *SkipBlockRoster {
-	sb := NewSkipBlockRoster(el)
+	vid VerifierID) *SkipBlock {
+	sb := NewSkipBlock()
+	sb.EntityList = el
 	sb.MaximumHeight = 4
 	sb.ParentBlock = parent
 	sb.VerifierId = vid
 	reply, err := s.proposeSkipBlock(nil, sb)
 	dbg.ErrFatal(err)
-	return reply.Latest.(*SkipBlockRoster)
+	return reply.Latest
 }
 
-func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlockRoster {
+func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlock {
 	return makeGenesisRosterArgs(s, el, nil, VerifyNone)
 }
 
