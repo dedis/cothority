@@ -25,8 +25,8 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	aggregateKey := entityList.Aggregate
 
 	// Encrypt test data with group key
-	testCipherVect := make(medco.CipherVector, 3)
-	for i, p := range []int64{1,2,3} {
+	testCipherVect := make(medco.CipherVector, 4)
+	for i, p := range []int64{1,2,3,6} {
 		testCipherVect[i] = *medco.EncryptInt(suite, aggregateKey, p)
 	}
 

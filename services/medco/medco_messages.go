@@ -12,8 +12,7 @@ type SurveyCreationQuery struct {
 }
 
 type ServiceResponse struct {
-	Code int32
-	Text string
+	SurveyCode int32
 }
 
 type SurveyResponseData struct {
@@ -25,5 +24,5 @@ type SurveyResultsQuery struct {
 }
 
 type SurveyResultResponse struct {
-	medco.CipherVector
+	Vect medco.CipherVector
 }

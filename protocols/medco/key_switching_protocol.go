@@ -69,7 +69,7 @@ func (p *KeySwitchingProtocol) Start() error {
 		return errors.New("No new public key to be switched on provided.")
 	}
 
-	dbg.Lvl1(p.Name(),"started a Key Switching Protocol")
+	dbg.Lvl1(p.Entity(),"started a Key Switching Protocol")
 
 	initialCipherVector := *InitCipherVector(p.Suite(), len(*p.TargetOfSwitch))
 	p.originalEphemKeys = make([]abstract.Point, len(*p.TargetOfSwitch))
@@ -79,7 +79,6 @@ func (p *KeySwitchingProtocol) Start() error {
 	}
 
 	p.sendToNext(&KeySwitchedCipherMessage{
-		VisitorMessage{0},
 		initialCipherVector,
 		*p.TargetPublicKey,
 		p.originalEphemKeys})
@@ -97,25 +96,21 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 	keySwitchingTarget.Vect.SwitchForKey(p.Suite(), p.Private(), keySwitchingTarget.OriginalEphemeralKeys, keySwitchingTarget.NewKey, randomnessContrib)
 
 	if p.IsRoot() {
+		dbg.Lvl1(p.Entity(), "completed key switching.")
 		p.FeedbackChannel <- keySwitchingTarget.Vect
 	} else {
+		dbg.Lvl1(p.Entity(), "carried on key switching.")
 		p.sendToNext(&keySwitchingTarget.KeySwitchedCipherMessage)
 	}
-
-	dbg.Lvl1(p.Name(), "completed key switching.")
 
 	return nil
 }
 
 // Sends the message msg to the next node in the circuit based on the next TreeNode in Tree.List() If not visited yet.
 // If the message already visited the next node, doesn't send and returns false. Otherwise, return true.
-func (p *KeySwitchingProtocol) sendToNext(msg VisitorMessageI) bool {
-	if !msg.AlreadyVisited(p.nextNodeInCircuit, p.Tree()) {
-		err := p.SendTo(p.nextNodeInCircuit, msg)
-		if err != nil {
-			dbg.Lvl1("Had an error sending a message: ", err)
-		}
-		return true;
+func (p *KeySwitchingProtocol) sendToNext(msg interface{}) {
+	err := p.SendTo(p.nextNodeInCircuit, msg)
+	if err != nil {
+		dbg.Lvl1("Had an error sending a message: ", err)
 	}
-	return false
 }

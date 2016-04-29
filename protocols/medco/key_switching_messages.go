@@ -6,7 +6,6 @@ import (
 )
 
 type KeySwitchedCipherMessage struct {
-	VisitorMessage
 	Vect CipherVector
 	NewKey abstract.Point
 	OriginalEphemeralKeys []abstract.Point

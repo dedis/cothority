@@ -27,8 +27,6 @@ func TestPrivateAggregate5Nodes(t *testing.T) {
 	_=aggregateKey
 
 
-	ref := medco.DataRef(0)
-	protocol.DataReference = &ref
 	feedback := protocol.FeedbackChannel
 
 	go protocol.StartProtocol()

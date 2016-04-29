@@ -6,41 +6,49 @@ import (
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/btcsuite/goleveldb/leveldb/errors"
+	"github.com/dedis/crypto/abstract"
+	"strconv"
 )
 
 type MedcoClient struct {
 	*sda.Client
 	entryPoint *network.Entity
+	localClientNumber int64
 }
+
+var localClientCounter = int64(0)
 
 func NewMedcoClient(entryPoint *network.Entity) *MedcoClient {
 	newClient := &MedcoClient{
 		Client:                sda.NewClient(MEDCO_SERVICE_NAME),
 		entryPoint:        entryPoint,
+		localClientNumber: localClientCounter,
 	}
+	newClient.Addresses = []string{newClient.String()}
+	localClientCounter += 1
 	return newClient
 }
 
 
-func (c *MedcoClient) StartService(entities *sda.EntityList) error {
+func (c *MedcoClient) CreateSurvey(entities *sda.EntityList) error {
+	dbg.Lvl1(c, "is creating a survey.")
 	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{*entities})
 	if err != nil {
-		dbg.Error("Got error when starting the service: "+err.Error())
+		dbg.Error("Got error when creating survey: "+err.Error())
 		return err
 	}
-	dbg.Lvl1("Successfully started the service: (empty?)", resp.Msg.(ServiceResponse).Code, resp.Msg.(ServiceResponse).Text)
+	dbg.Lvl1(c, "successfully created the survey with code", resp.Msg.(ServiceResponse).SurveyCode)
 	return nil
 }
 
-func (c *MedcoClient) SendSurveyResultsData(data []int64) error {
+func (c *MedcoClient) SendSurveyResultsData(data []int64, groupKey abstract.Point) error {
 	suite := network.Suite
-	cv := medco.EncryptIntArray(suite, c.Public, data)
+	cv := medco.EncryptIntArray(suite, groupKey, data)
 	_, err := c.Send(c.entryPoint, &SurveyResponseData{*cv})
 	if err != nil {
 		dbg.Error("Got error when sending a message: "+err.Error())
 		return err
 	}
-	dbg.Lvl1("Successfully answered survey")
 	return nil
 }
 
@@ -52,12 +60,16 @@ func (c *MedcoClient) GetSurveyResults() (*[]int64, error) {
 		return nil, err
 	}
 	if encResults, ok := resp.Msg.(SurveyResultResponse); ok == true {
-		results := medco.DecryptIntVector(suite, c.Private, encResults.CipherVector)
+		dbg.Lvl1(c, "got the survey result from", c.entryPoint)
+		results := medco.DecryptIntVector(suite, c.Private, encResults.Vect)
 		return &results, nil
 	} else {
 		dbg.Error("Bad response type from service.")
 		return nil, errors.New("Bad response type from service")
 	}
+}
 
+func (c *MedcoClient) String() string {
+	return "[Client-"+strconv.FormatInt(c.localClientNumber,10)+"]"
 }
 

@@ -44,9 +44,8 @@ func NewMedcoService(c sda.Context, path string) sda.Service {
 }
 
 func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *SurveyCreationQuery) (network.ProtocolMessage, error) {
-
 	mcs.entityList = &recq.EntityList
-	if mcs.Context.Entity().Equal(mcs.entityList.List[0]) {
+	if mcs.Entity().Equal(mcs.entityList.List[0]) {
 		msg, _ := sda.CreateServiceMessage(MEDCO_SERVICE_NAME, recq)
 		// No easy way to get our TreeNode object from the Tree + cannot send ServiceMessage w/ SendToChildren: use SendRaw
 		for _,e := range mcs.entityList.List {
@@ -54,12 +53,12 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *Surv
 				mcs.SendRaw(e, msg)
 			}
 		}
-		dbg.Lvl1(e," initiated the survey as the root.")
+		dbg.Lvl1(mcs.Entity()," initiated the survey as the root.")
 	} else {
-		dbg.Lvl1(e," created the survey, root is : ",mcs.entityList.List[0])
+		dbg.Lvl1(mcs.Entity()," created the survey, root is : ",mcs.entityList.List[0])
 	}
 
-	return &ServiceResponse{int32(201), "Created"}, nil
+	return &ServiceResponse{int32(1)}, nil
 }
 
 func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *SurveyResponseData) (network.ProtocolMessage, error) {
@@ -73,15 +72,18 @@ func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *Surve
 			return 500, err
 		}
 	}
-	return &ServiceResponse{int32(200), "Ok"}, nil
+	dbg.Lvl1(mcs.Entity(), "recieved survey response data from ", e)
+	return &ServiceResponse{int32(1)}, nil
 }
 
 func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *SurveyResultsQuery) (network.ProtocolMessage, error) {
 
+	dbg.Lvl1(mcs.Entity(), "recieved a survey result query from", e)
 	tree := mcs.entityList.GenerateBinaryTree()
 	treeNodeInst := mcs.NewTreeNodeInstance(tree, tree.Root)
+	treeNodeInst2 := mcs.NewTreeNodeInstance(tree, tree.Root)
 	pi1,err1 := medco.NewPrivateAggregate(treeNodeInst)
-	pi2, err2 := medco.NewKeySwitchingProtocol(treeNodeInst)
+	pi2, err2 := medco.NewKeySwitchingProtocol(treeNodeInst2)
 	if err1 != nil || err2 != nil{
 		return nil, errors.New("Could not instanciate the required protocols")
 	}
@@ -102,7 +104,7 @@ func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *Surve
 	go mcs.keySwitchProtocol.Dispatch()
 	go mcs.keySwitchProtocol.Start()
 	keySwitchedResult := <- mcs.keySwitchProtocol.FeedbackChannel
-
+	dbg.Lvl1(mcs.Entity(), "completed the query processing...")
 	return &SurveyResultResponse{keySwitchedResult}, nil
 }
 
@@ -113,12 +115,19 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 		pi, err = medco.NewPrivateAggregate(tn)
 		ref := medco.DataRef(mcs.localResult)
 		pi.(*medco.PrivateAggregateProtocol).DataReference = &ref
+		mcs.aggregateProtocol = pi.(*medco.PrivateAggregateProtocol)
 	} else if mcs.keySwitchProtocol == nil {
 		pi, err = medco.NewKeySwitchingProtocol(tn)
-		pi.(*medco.KeySwitchingProtocol).TargetOfSwitch = mcs.aggregatedResults
+		//pi.(*medco.KeySwitchingProtocol).TargetOfSwitch = mcs.aggregatedResults
+		mcs.keySwitchProtocol = pi.(*medco.KeySwitchingProtocol)
 	} else {
 		pi = nil
 		err = errors.New("Recieved an unexpected NewProtocol event.")
 	}
+
+	if err != nil {
+		dbg.Error(err)
+	}
+	go pi.Dispatch()
 	return pi, err
 }

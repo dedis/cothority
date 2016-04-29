@@ -63,10 +63,10 @@ func (p *PrivateAggregateProtocol) Start() error {
 		return errors.New("No data reference provided for aggregation.")
 	}
 
-	dbg.Lvl1(p.Name(),"started a Private Aggregate Protocol for data reference ", *p.DataReference)
+	dbg.Lvl1(p.Entity(),"started a Private Aggregate Protocol")
+
 
 	p.SendToChildren(&DataReferenceMessage{*p.DataReference})
-
 	return nil
 }
 
@@ -75,20 +75,22 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 1. Aggregation announcement phase
 	if !p.IsRoot() {
-		p.DataReference = p.aggregationAnnouncementPhase()
+		p.aggregationAnnouncementPhase()
 	}
 
-	localContribution := p.getAggregatedDataFromReference(*p.DataReference)
+	localContribution := *p.DataReference//p.getAggregatedDataFromReference(*p.DataReference)
 
 	// 2. Ascending aggregation phase
 	aggregatedContribution := p.ascendingAggregationPhase(localContribution)
-	dbg.Lvl1(p.Name(), "completed aggregation phase.")
+	dbg.Lvl1(p.Entity(), "completed aggregation phase.")
 
 
 	// 3. Result reporting
 	if p.IsRoot() {
 		p.FeedbackChannel <- *aggregatedContribution
 	}
+
+	//p.Close()
 
 	return nil
 }
@@ -104,6 +106,10 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() *DataRef {
 }
 
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *CipherVector) *CipherVector {
+	if localContribution == nil {
+		nullContrib := NullCipherVector(p.Suite(), 4, p.EntityList().Aggregate)
+		localContribution = &nullContrib
+	}
 	if !p.IsLeaf() {
 		for _,childrenContribution := range <- p.ChildDataChannel {
 			localContribution.Add(*localContribution, childrenContribution.ChildData)
