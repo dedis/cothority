@@ -66,7 +66,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	genesis := NewSkipBlock()
 	genesis.Data = []byte("In the beginning God created the heaven and the earth.")
 	genesis.MaximumHeight = 2
-	genesis.ParentBlock = sbRoot.Hash
+	genesis.ParentBlockId = sbRoot.Hash
 	genesis.EntityList = sbRoot.EntityList
 	blockCount := uint32(0)
 	psbrMsg, err := service.ProposeSkipBlock(nil, &ProposeSkipBlock{nil, genesis})
@@ -77,15 +77,15 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	blockCount++
 	assert.Equal(t, blockCount, latest.Index)
 	// the genesis block has a random back-link:
-	assert.Equal(t, 1, len(latest.BackLink))
-	assert.NotEqual(t, 0, latest.BackLink)
+	assert.Equal(t, 1, len(latest.BackLinkIds))
+	assert.NotEqual(t, 0, latest.BackLinkIds)
 
 	next := NewSkipBlock()
 	next.Data = []byte("And the earth was without form, and void; " +
 		"and darkness was upon the face of the deep. " +
 		"And the Spirit of God moved upon the face of the waters.")
 	next.MaximumHeight = 2
-	next.ParentBlock = sbRoot.Hash
+	next.ParentBlockId = sbRoot.Hash
 	next.EntityList = sbRoot.EntityList
 	id := psbr.Latest.Hash
 	psbrMsg, err = service.ProposeSkipBlock(nil, &ProposeSkipBlock{id, genesis})
@@ -101,8 +101,8 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	// verify creation of GenesisBlock:
 	blockCount++
 	assert.Equal(t, blockCount, latest2.Index)
-	assert.Equal(t, 1, len(latest2.BackLink))
-	assert.NotEqual(t, 0, latest2.BackLink)
+	assert.Equal(t, 1, len(latest2.BackLinkIds))
+	assert.NotEqual(t, 0, latest2.BackLinkIds)
 
 	// We've added 2 blocks, + root block = 3
 	assert.Equal(t, 3, len(service.SkipBlocks))
@@ -174,8 +174,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
-	sbInterm := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyShard)
-	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInterm.Hash}
+	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyShard)
+	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
 	// Wait for block-propagation
 	time.Sleep(time.Millisecond * 100)
@@ -192,7 +192,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
 		link := sb.Update[0].ChildSL
-		if !bytes.Equal(link.Hash, sbInterm.Hash) {
+		if !bytes.Equal(link.Hash, sbInter.Hash) {
 			t.Fatal("The child-link doesn't point to our intermediate SkipBlock", i)
 		}
 		// We need to verify the signature on the child-link, too. This
@@ -206,41 +206,20 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts {
 		s := local.Services[h.Entity.ID][skipchainSID].(*Service)
 
-		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbInterm.Hash})
+		m, err := s.GetUpdateChain(h.Entity, &GetUpdateChain{sbInter.Hash})
 		sb := m.(*GetUpdateChainReply)
 
 		dbg.ErrFatal(err)
 		if len(sb.Update) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
-		if !bytes.Equal(sb.Update[0].ParentBlock, sbRoot.Hash) {
+		if !bytes.Equal(sb.Update[0].ParentBlockId, sbRoot.Hash) {
 			t.Fatal("The intermediate SkipBlock doesn't point to the root")
 		}
 		if err = sb.Update[0].VerifySignatures(); err != nil {
 			t.Fatal("Signature of that SkipBlock doesn't fit")
 		}
 	}
-}
-
-func TestService_GetChildrenSkipList(t *testing.T) {
-	t.Skip("Implementation not yet started")
-	// How many nodes in Root
-	nodesRoot := 10
-	// How many nodes in Children
-	nodesChildren := 5
-
-	local := sda.NewLocalTest()
-	defer local.CloseAll()
-	hosts, el, service := makeHELS(local, nodesRoot)
-
-	// Setting up two chains and linking one to the other
-	sbRoot := makeGenesisRoster(service, el)
-	elInt := local.GenEntityListFromHost(hosts[:nodesChildren]...)
-	sbInt := makeGenesisRosterArgs(service, elInt, sbRoot.Hash, VerifyShard)
-	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInt.Hash}
-	service.SetChildrenSkipBlock(nil, scsb)
-
-	service.GetChildrenSkipList(sbRoot, VerifyShard)
 }
 
 func TestService_PropagateSkipBlock(t *testing.T) {
@@ -259,7 +238,7 @@ func makeGenesisRosterArgs(s *Service, el *sda.EntityList, parent SkipBlockID,
 	sb := NewSkipBlock()
 	sb.EntityList = el
 	sb.MaximumHeight = 4
-	sb.ParentBlock = parent
+	sb.ParentBlockId = parent
 	sb.VerifierId = vid
 	psbrMsg, err := s.ProposeSkipBlock(nil,
 		&ProposeSkipBlock{nil, sb})

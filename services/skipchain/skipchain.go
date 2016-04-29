@@ -41,17 +41,17 @@ type Service struct {
 func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (network.ProtocolMessage, error) {
 	prop := psbd.Proposed
 	var latest *SkipBlock
-	if !psbd.Latest.IsNull() {
+	if !psbd.LatestId.IsNull() {
 		var ok bool
-		latest, ok = s.getSkipBlockByID(psbd.Latest)
+		latest, ok = s.getSkipBlockByID(psbd.LatestId)
 		if !ok {
 			return nil, errors.New("Didn't find latest block")
 		}
 		prop.MaximumHeight = latest.MaximumHeight
-		prop.ParentBlock = latest.ParentBlock
+		prop.ParentBlockId = latest.ParentBlockId
 		prop.VerifierId = latest.VerifierId
 		if s.verifyNewSkipBlock(latest, prop) {
-			s.updateNewSkipBlock(latest, prop)
+			s.updateSkipBlockLinks(latest, prop)
 		} else {
 			return nil, errors.New("Verification error")
 		}
@@ -61,7 +61,7 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 	} else {
 		// TODO: allow for other verificators
 		prop.VerifierId = VerifyNone
-		s.updateNewSkipBlock(nil, prop)
+		s.updateSkipBlockLinks(nil, prop)
 	}
 	err := s.startPropagation(prop)
 	if err != nil {
@@ -74,37 +74,35 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 	return reply, nil
 }
 
-func (s *Service) updateNewSkipBlock(prev, proposed *SkipBlock) {
+// updateSkipBlockLinks takes care of back- and forward-links
+func (s *Service) updateSkipBlockLinks(prev, proposed *SkipBlock) {
 	dbg.Lvl4(fmt.Sprintf("\nprev=%+v\nproposed=%+v", prev, proposed))
 	// later we will support higher blocks
 	proposed.Height = 1
 
-	var curID string
-	proposed.BackLink = make([]SkipBlockID, proposed.Height)
+	proposed.BackLinkIds = make([]SkipBlockID, proposed.Height)
 	if prev == nil { // genesis
 		proposed.Index++
 		// genesis block has a random back-link:
 		bl := make([]byte, 32)
-		_, _ = rand.Read(bl)
-		proposed.BackLink[0] = bl
+		rand.Read(bl)
+		proposed.BackLinkIds[0] = bl
 		// empty forward link:
-		proposed.Hash = proposed.calculateHash()
-		curID = string(proposed.Hash)
+		proposed.updateHash()
 	} else {
 		proposed.Index = prev.Index + 1
 		// TODO: add higher backlinks
-		proposed.BackLink[0] = prev.Hash
+		proposed.BackLinkIds[0] = prev.Hash
 		// update forward link of previous block:
-		proposed.Hash = proposed.calculateHash()
 
-		prev.ForwardLink = make([]*BlockLink, 1) // TODO later with height
+		// TODO later with height
+		// TODO: use ForwardLink-call to previous block
+		prev.ForwardLink = make([]*BlockLink, 1)
 		prev.ForwardLink[0] = NewBlockLink()
-		prev.ForwardLink[0].Hash = proposed.Hash
-
-		curID = string(proposed.Hash)
+		prev.ForwardLink[0].Hash = proposed.updateHash()
 	}
 	// update
-	s.SkipBlocks[curID] = proposed
+	s.storeSkipBlock(proposed)
 }
 
 // GetUpdateChain returns a slice of SkipBlocks which describe the part of the
@@ -112,7 +110,7 @@ func (s *Service) updateNewSkipBlock(prev, proposed *SkipBlock) {
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain) (network.ProtocolMessage, error) {
-	block, ok := s.getSkipBlockByID(latestKnown.Latest)
+	block, ok := s.getSkipBlockByID(latestKnown.LatestId)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
@@ -135,8 +133,8 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
 func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipBlock) (network.ProtocolMessage, error) {
-	parentID := scsb.Parent
-	childID := scsb.Child
+	parentID := scsb.ParentId
+	childID := scsb.ChildId
 	parent, ok := s.getSkipBlockByID(parentID)
 	if !ok {
 		return nil, errors.New("Couldn't find skipblock!")
@@ -145,7 +143,7 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 	if !ok {
 		return nil, errors.New("Couldn't find skipblock!")
 	}
-	child.ParentBlock = parentID
+	child.ParentBlockId = parentID
 	parent.ChildSL = NewBlockLink()
 	parent.ChildSL.Hash = childID
 
@@ -160,46 +158,18 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 	return reply, s.startPropagation(parent)
 }
 
-func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
-	b, ok := s.SkipBlocks[string(sbID)]
-	return b, ok
-}
-
-// GetChildrenSkipList creates a new SkipChain if that 'service' doesn't exist
-// yet.
-func (s *Service) GetChildrenSkipList(sb *SkipBlock, verifier VerifierID) (*GetUpdateChainReply, error) {
-	return nil, nil
-}
-
 // PropagateSkipBlockData is called when a new SkipBlock or updated SkipBlock is
 // available.
 func (s *Service) PropagateSkipBlock(e *network.Entity, latest *PropagateSkipBlock) (network.ProtocolMessage, error) {
-	s.SkipBlocks[string(latest.SkipBlock.Hash)] = latest.SkipBlock
+	s.storeSkipBlock(latest.SkipBlock)
 	return nil, nil
-}
-
-// notify other services about new/updated skipblock
-func (s *Service) startPropagation(latest *SkipBlock) error {
-	for _, e := range latest.EntityList.List {
-		var cr *sda.ServiceMessage
-		var err error
-		cr, err = sda.CreateServiceMessage(ServiceName,
-			&PropagateSkipBlock{latest})
-		if err != nil {
-			return err
-		}
-		if err := s.SendRaw(e, cr); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // SignBlock signs off the new block pointed to by the hash by first
 // verifying its validity and then collectively signing off the block.
 // The new signature is NOT broadcasted to the roster!
 func (s *Service) SignBlock(sb *SkipBlock) error {
-	prev, ok := s.SkipBlocks[string(sb.BackLink[0])]
+	prev, ok := s.getSkipBlockByID(sb.BackLinkIds[0])
 	if !ok {
 		return errors.New("Didn't find SkipBlock")
 	}
@@ -216,7 +186,7 @@ func (s *Service) SignBlock(sb *SkipBlock) error {
 // broadcast to the entire roster and all backward- and forward-links.
 // It returns the SkipBlock with the updated ForwardSignature or an error.
 func (s *Service) ForwardSignature(updating *ForwardSignature) (*SkipBlock, error) {
-	current, ok := s.SkipBlocks[string(updating.ToUpdate)]
+	current, ok := s.getSkipBlockByID(updating.ToUpdate)
 	if !ok {
 		return nil, errors.New("Didn't find SkipBlock")
 	}
@@ -225,9 +195,9 @@ func (s *Service) ForwardSignature(updating *ForwardSignature) (*SkipBlock, erro
 	}
 	latest := updating.Latest
 	updateHeight := 0
-	latestHeight := len(latest.BackLink)
+	latestHeight := len(latest.BackLinkIds)
 	for updateHeight = 0; updateHeight < latestHeight; updateHeight++ {
-		if bytes.Equal(latest.BackLink[updateHeight], current.Hash) {
+		if bytes.Equal(latest.BackLinkIds[updateHeight], current.Hash) {
 			break
 		}
 	}
@@ -283,6 +253,35 @@ func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlock) bool {
 func (s *Service) verifyLinkedSkipBlock(latest, newest *SkipBlock) bool {
 	// TODO: check we have a valid link
 	return true
+}
+
+// getSkipBlockByID returns the skip-block or false if it doesn't exist
+func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
+	b, ok := s.SkipBlocks[string(sbID)]
+	return b, ok
+}
+
+// storeSkipBlock stores the given SkipBlock in the service-list
+func (s *Service) storeSkipBlock(sb *SkipBlock) SkipBlockID {
+	s.SkipBlocks[string(sb.Hash)] = sb
+	return sb.Hash
+}
+
+// notify other services about new/updated skipblock
+func (s *Service) startPropagation(latest *SkipBlock) error {
+	for _, e := range latest.EntityList.List {
+		var cr *sda.ServiceMessage
+		var err error
+		cr, err = sda.CreateServiceMessage(ServiceName,
+			&PropagateSkipBlock{latest})
+		if err != nil {
+			return err
+		}
+		if err := s.SendRaw(e, cr); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func newSkipchainService(c sda.Context, path string) sda.Service {

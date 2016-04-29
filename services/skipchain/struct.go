@@ -29,12 +29,12 @@ type SkipBlockFix struct {
 	// - else: the max height determines the height of the next block
 	MaximumHeight int
 	// BackLink is a slice of hashes to previous SkipBlocks
-	BackLink []SkipBlockID
+	BackLinkIds []SkipBlockID
 	// VerifierId is a SkipBlock-protocol verifying new SkipBlocks
 	VerifierId VerifierID
 	// SkipBlockParent points to the SkipBlock of the responsible Roster -
 	// is nil if this is the Root-roster
-	ParentBlock SkipBlockID
+	ParentBlockId SkipBlockID
 	// Aggregate is the aggregate key of our responsible roster
 	Aggregate abstract.Point
 	// Data is any data to be stored in that SkipBlock

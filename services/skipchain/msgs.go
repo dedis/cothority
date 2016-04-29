@@ -50,7 +50,7 @@ var (
 // The AppId will be used to call the corresponding verification-
 // routines who will have to sign off on the new Tree.
 type ProposeSkipBlock struct {
-	Latest   SkipBlockID
+	LatestId SkipBlockID
 	Proposed *SkipBlock
 }
 
@@ -64,7 +64,7 @@ type ProposedSkipBlockReply struct {
 // Skipblock and will get back a list of all necessary SkipBlocks
 // to get to the latest.
 type GetUpdateChain struct {
-	Latest SkipBlockID
+	LatestId SkipBlockID
 }
 
 // GetUpdateChainRet - returns the shortest chain to the current SkipBlock,
@@ -75,8 +75,8 @@ type GetUpdateChainReply struct {
 
 // SetChildrenSkipBlock adds a child-SkipBlock to a parent SkipBlock
 type SetChildrenSkipBlock struct {
-	Parent SkipBlockID
-	Child  SkipBlockID
+	ParentId SkipBlockID
+	ChildId  SkipBlockID
 }
 
 // SetChildrenSkipBlockReply is the reply from SetChildrenSkipBlock. Only one

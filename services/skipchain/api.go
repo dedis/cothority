@@ -16,11 +16,11 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient("Skipchain")}
 }
 
-// CreateRootInterm creates two Skipchains: a root SkipChain with
+// CreateRootInter creates two Skipchains: a root SkipChain with
 // maximumHeight of maxHRoot and an intermediate SkipChain with
-// maximumHeight of maxHInterm. It connects both chains for later
+// maximumHeight of maxHInter. It connects both chains for later
 // reference.
-func (c *Client) CreateRootInterm(elRoot, elInter *sda.EntityList, maxHRoot, maxHInter int, ver VerifierID) (root, inter *SkipBlock, err error) {
+func (c *Client) CreateRootInter(elRoot, elInter *sda.EntityList, maxHRoot, maxHInter int, ver VerifierID) (root, inter *SkipBlock, err error) {
 	h := elRoot.List[0]
 	err = nil
 	root = NewSkipBlock()
@@ -65,7 +65,7 @@ func (c *Client) CreateData(parent *SkipBlock, maxH int, d network.ProtocolMessa
 	data.Data = b
 	data.MaximumHeight = maxH
 	data.VerifierId = ver
-	data.ParentBlock = parent.Hash
+	data.ParentBlockId = parent.Hash
 	data.EntityList = parent.EntityList
 	dataMsg, err := c.Send(h, &ProposeSkipBlock{nil, data})
 	if err != nil {

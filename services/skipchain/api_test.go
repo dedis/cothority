@@ -22,27 +22,27 @@ func TestClient_GetUpdateChain(t *testing.T) {
 
 }
 
-func TestClient_CreateRootInterm(t *testing.T) {
+func TestClient_CreateRootInter(t *testing.T) {
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
-	root, interm, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
+	root, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
-	if root == nil || interm == nil {
+	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
 	}
 	if err = root.VerifySignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
 	}
-	if err = interm.VerifySignatures(); err != nil {
+	if err = inter.VerifySignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
 	}
-	if !bytes.Equal(root.ChildSL.Hash, interm.Hash) {
+	if !bytes.Equal(root.ChildSL.Hash, inter.Hash) {
 		t.Fatal("Root doesn't point to intermediate")
 	}
-	if !bytes.Equal(interm.ParentBlock, root.Hash) {
+	if !bytes.Equal(inter.ParentBlockId, root.Hash) {
 		t.Fatal("Intermediate doesn't point to root")
 	}
 }
@@ -53,7 +53,7 @@ func TestClient_CreateData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data, err := c.CreateData(inter, 4, td, VerifyNone)
@@ -61,7 +61,7 @@ func TestClient_CreateData(t *testing.T) {
 	if err = data.VerifySignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
 	}
-	if !bytes.Equal(data.ParentBlock, inter.Hash) {
+	if !bytes.Equal(data.ParentBlockId, inter.Hash) {
 		t.Fatal("Data-chain doesn't point to intermediate-chain")
 	}
 	if !bytes.Equal(inter.ChildSL.Hash, data.Hash) {
@@ -80,7 +80,7 @@ func TestClient_ProposeData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	data1, err := c.CreateData(inter, 4, td, VerifyNone)
@@ -105,7 +105,7 @@ func TestClient_ProposeRoster(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	el.List = el.List[:nbrHosts-1]
 	sb1, err := c.ProposeRoster(inter, el)
