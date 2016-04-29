@@ -119,5 +119,9 @@ func (p *ServiceProcessor) GetReply(e *network.Entity, cr *ClientRequest) networ
 		return &StatusRet{errI.(error).Error()}
 	}
 
-	return ret[0].Interface()
+	reply := ret[0].Interface()
+	if reply == nil {
+		reply = &StatusRet{""}
+	}
+	return reply
 }

@@ -21,6 +21,7 @@ func NewClient() *Client {
 // maximumHeight of maxHInterm. It connects both chains for later
 // reference.
 func (c *Client) CreateRootInterm(elRoot, elInter *sda.EntityList, maxHRoot, maxHInter int, ver VerifierID) (root, inter *SkipBlockRoster, err error) {
+	h := elRoot.List[0]
 	err = nil
 	root = NewSkipBlockRoster(elRoot)
 	root.MaximumHeight = maxHRoot
@@ -28,16 +29,24 @@ func (c *Client) CreateRootInterm(elRoot, elInter *sda.EntityList, maxHRoot, max
 	inter = NewSkipBlockRoster(elInter)
 	inter.MaximumHeight = maxHInter
 	inter.VerifierId = ver
-	rootMsg, err := c.Send(elRoot.List[0], &ProposeSkipBlockRoster{nil, root})
+	rootMsg, err := c.Send(h, &ProposeSkipBlockRoster{nil, root})
 	if err != nil {
 		return
 	}
 	root = rootMsg.Msg.(ProposedSkipBlockReplyRoster).Latest
-	interMsg, err := c.Send(elInter.List[0], &ProposeSkipBlockRoster{nil, inter})
+	interMsg, err := c.Send(h, &ProposeSkipBlockRoster{nil, inter})
 	if err != nil {
 		return
 	}
 	inter = interMsg.Msg.(ProposedSkipBlockReplyRoster).Latest
+
+	replyMsg, err := c.Send(h, &SetChildrenSkipBlock{root.Hash, inter.Hash})
+	if err != nil {
+		return
+	}
+	reply := replyMsg.Msg.(SetChildrenSkipBlockReply)
+	root = reply.Parent
+	inter = reply.ChildRoster
 	return
 }
 

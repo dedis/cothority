@@ -113,7 +113,6 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 func TestService_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
-	//t.Skip("Implementation not yet started")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 3
@@ -170,7 +169,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
-	//t.Skip("Implementation not yet started")
 	// How many nodes in Root
 	nodesRoot := 3
 
@@ -181,7 +179,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
 	sbInterm := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyShard)
-	service.SetChildrenSkipBlock(sbRoot.Hash, sbInterm.Hash)
+	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInterm.Hash}
+	service.SetChildrenSkipBlock(nil, scsb)
 	// Wait for block-propagation
 	time.Sleep(time.Millisecond * 100)
 	// Verifying other nodes also got the updated chains
@@ -242,7 +241,8 @@ func TestService_GetChildrenSkipList(t *testing.T) {
 	sbRoot := makeGenesisRoster(service, el)
 	elInt := local.GenEntityListFromHost(hosts[:nodesChildren]...)
 	sbInt := makeGenesisRosterArgs(service, elInt, sbRoot.Hash, VerifyShard)
-	service.SetChildrenSkipBlock(sbRoot.Hash, sbInt.Hash)
+	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInt.Hash}
+	service.SetChildrenSkipBlock(nil, scsb)
 
 	service.GetChildrenSkipList(sbRoot, VerifyShard)
 }

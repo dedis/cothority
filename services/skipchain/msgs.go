@@ -14,12 +14,15 @@ func init() {
 		&ProposedSkipBlockReply{},
 		&ProposedSkipBlockReplyData{},
 		&ProposedSkipBlockReplyRoster{},
-		// Propagate
+		&SetChildrenSkipBlock{},
+		&SetChildrenSkipBlockReply{},
+		// Propagation
 		&PropagateSkipBlockRoster{},
 		&PropagateSkipBlockData{},
-		//
+		// Requests for data
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
+		// Data-structures
 		&ForwardSignature{},
 		&SkipBlockFix{},
 		&SkipBlockCommon{},
@@ -97,10 +100,18 @@ type GetUpdateChainReply struct {
 	Update []SkipBlock
 }
 
-// SetChildrenSkipList adds a child-SkipBlock to a parent SkipBlock
+// SetChildrenSkipBlock adds a child-SkipBlock to a parent SkipBlock
 type SetChildrenSkipBlock struct {
 	Parent SkipBlockID
 	Child  SkipBlockID
+}
+
+// SetChildrenSkipBlockReply is the reply from SetChildrenSkipBlock. Only one
+// of ChildData and ChildRoster will be non-nil
+type SetChildrenSkipBlockReply struct {
+	Parent      *SkipBlockRoster
+	ChildData   *SkipBlockData
+	ChildRoster *SkipBlockRoster
 }
 
 // GetChildrenSkipList - if the SkipList doesn't exist yet, creates the

@@ -28,7 +28,6 @@ func TestClient_GetUpdateChain(t *testing.T) {
 }
 
 func TestClient_CreateRootInterm(t *testing.T) {
-	t.Skip("TODO")
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()

@@ -166,14 +166,16 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) error {
+func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipBlock) (network.ProtocolMessage, error) {
+	parent := scsb.Parent
+	child := scsb.Child
 	parentBlock, ok := s.getSkipBlockByID(parent)
 	if !ok {
-		return errors.New("Couldn't find skipblock!")
+		return nil, errors.New("Couldn't find skipblock!")
 	}
 	childBlock, ok := s.getSkipBlockByID(child)
 	if !ok {
-		return errors.New("Couldn't find skipblock!")
+		return nil, errors.New("Couldn't find skipblock!")
 	}
 	pbRoster := parentBlock.(*SkipBlockRoster)
 	cbc := childBlock.GetCommon()
@@ -183,9 +185,24 @@ func (s *Service) SetChildrenSkipBlock(parent, child SkipBlockID) error {
 
 	err := s.startPropagation(childBlock)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return s.startPropagation(parentBlock)
+	// Parent-block is always of type roster, but child-block can be
+	// data or roster.
+	reply := &SetChildrenSkipBlockReply{
+		Parent: parentBlock.(*SkipBlockRoster),
+	}
+	switch childBlock.(type) {
+	case *SkipBlockData:
+		reply.ChildData = childBlock.(*SkipBlockData)
+	case *SkipBlockRoster:
+		reply.ChildRoster = childBlock.(*SkipBlockRoster)
+	default:
+		return nil, errors.New("Unknown SkipBlock-type: " +
+			reflect.TypeOf(childBlock).String())
+	}
+
+	return reply, s.startPropagation(parentBlock)
 }
 
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (SkipBlock, bool) {
@@ -355,6 +372,9 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 		dbg.Fatal("Registration error:", err)
 	}
 	if err := s.RegisterMessage(s.ProposeSkipBlockRoster); err != nil {
+		dbg.Fatal("Registration error:", err)
+	}
+	if err := s.RegisterMessage(s.SetChildrenSkipBlock); err != nil {
 		dbg.Fatal("Registration error:", err)
 	}
 	if err := s.RegisterMessage(s.GetUpdateChain); err != nil {
