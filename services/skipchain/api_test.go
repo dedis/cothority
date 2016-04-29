@@ -108,7 +108,6 @@ func TestClient_ProposeData(t *testing.T) {
 }
 
 func TestClient_ProposeRoster(t *testing.T) {
-	t.Skip("To be implemented")
 	nbrHosts := 5
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(nbrHosts, true, true, true)
@@ -118,24 +117,27 @@ func TestClient_ProposeRoster(t *testing.T) {
 	_, inter, err := c.CreateRootInterm(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	el.List = el.List[:nbrHosts-1]
-	reply1, err := c.ProposeRoster(inter.Hash, el)
+	sb1, err := c.ProposeRoster(inter, el)
 	dbg.ErrFatal(err)
-	_, err = c.ProposeRoster(inter.Hash, el)
+	_, err = c.ProposeRoster(inter, el)
 	if err == nil {
 		t.Fatal("Appending two Blocks to the same last block should fail")
 	}
-	reply2, err := c.ProposeRoster(reply1.Latest.GetHash(), el)
+	sb2, err := c.ProposeRoster(sb1.Latest, el)
 	dbg.ErrFatal(err)
-	if !bytes.Equal(reply1.Latest.GetCommon().ForwardLink[0].Hash,
-		reply2.Latest.GetHash()) {
+	if !sb2.Previous.Equal(sb1.Latest) {
+		t.Fatal("New previous should be previous latest")
+	}
+	if !bytes.Equal(sb2.Previous.GetCommon().ForwardLink[0].Hash,
+		sb2.Latest.GetHash()) {
 		t.Fatal("second should point to third SkipBlock")
 	}
 
 	updates, err := c.GetUpdateChain(inter, inter.GetHash())
-	if len(updates.UpdateData) != 3 {
+	if len(updates.UpdateRoster) != 3 {
 		t.Fatal("Should now have three Blocks to go from Genesis to current")
 	}
-	if !updates.UpdateData[2].Equal(reply2.Latest) {
+	if !updates.UpdateRoster[2].Equal(sb2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
 }

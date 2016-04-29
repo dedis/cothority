@@ -83,8 +83,16 @@ func (c *Client) CreateData(parent *SkipBlockRoster, maxH int, d network.Protoco
 // ProposeRoster will propose to add a new SkipBlock containing the 'roster' to
 // an existing SkipChain. If it succeeds, it will return the old and the new
 // SkipBlock
-func (c *Client) ProposeRoster(latest SkipBlockID, roster *sda.EntityList) (*ProposedSkipBlockReply, error) {
-	return nil, nil
+func (c *Client) ProposeRoster(latest *SkipBlockRoster, el *sda.EntityList) (reply *ProposedSkipBlockReplyRoster, err error) {
+	h := latest.EntityList.List[0]
+	roster := NewSkipBlockRoster(el)
+	r, err := c.Send(h, &ProposeSkipBlockRoster{latest.Hash, roster})
+	if err != nil {
+		return
+	}
+	replyVal := r.Msg.(ProposedSkipBlockReplyRoster)
+	reply = &replyVal
+	return
 }
 
 // ProposeData will propose to add a new SkipBlock containing 'data' to an existing

@@ -45,12 +45,12 @@ func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 		// TODO set real verifier
 		proposed.GetCommon().VerifierId = VerifyNone
 		s.updateNewSkipBlock(nil, proposed)
+		err := s.startPropagation(proposed)
 		reply := &ProposedSkipBlockReply{
 			Previous: nil, // genesis block
 			Latest:   proposed,
 		}
 		dbg.Lvlf3("Successfuly created genesis: %+v", reply)
-		err := s.startPropagation(proposed)
 		return reply, err
 	}
 
@@ -64,6 +64,8 @@ func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed SkipBlock) (*Pro
 		proposed.GetCommon().VerifierId = prev.GetCommon().VerifierId
 		if s.verifyNewSkipBlock(prev, proposed) {
 			s.updateNewSkipBlock(prev, proposed)
+		} else {
+			return nil, errors.New("Verification error")
 		}
 	}
 	reply := &ProposedSkipBlockReply{
@@ -379,7 +381,11 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 func (s *Service) verifyNewSkipBlock(latest, newest SkipBlock) bool {
 	// TODO: implement a couple of protocols that can check all
 	// TODO: Verify* constants
-	return newest.GetCommon().VerifierId == VerifyNone
+	switch newest.GetCommon().VerifierId {
+	case VerifyNone:
+		return len(latest.GetCommon().ForwardLink) == 0
+	}
+	return false
 }
 
 // verifyLinkedSkipBlock checks if we have a valid link connecting the two

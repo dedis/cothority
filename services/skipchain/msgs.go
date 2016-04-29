@@ -11,7 +11,6 @@ func init() {
 		&ProposeSkipBlock{},
 		&ProposeSkipBlockData{},
 		&ProposeSkipBlockRoster{},
-		&ProposedSkipBlockReply{},
 		&ProposedSkipBlockReplyData{},
 		&ProposedSkipBlockReplyRoster{},
 		&SetChildrenSkipBlock{},
