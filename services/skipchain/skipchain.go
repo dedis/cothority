@@ -38,64 +38,38 @@ type Service struct {
 // If the given nil as the latest block it verify if we are actually creating
 // the first (genesis) block and create it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) proposeSkipBlock(latest SkipBlockID, proposed *SkipBlock) (*ProposedSkipBlockReply, error) {
-	if latest == nil || len(latest) == 0 { // genesis block creation
-		// TODO set real verifier
-		proposed.VerifierId = VerifyNone
-		s.updateNewSkipBlock(nil, proposed)
-		err := s.startPropagation(proposed)
-		reply := &ProposedSkipBlockReply{
-			Previous: nil, // genesis block
-			Latest:   proposed,
-		}
-		dbg.Lvlf3("Successfuly created genesis: %+v", reply)
-		return reply, err
-	}
-
-	var prev *SkipBlock
-	if !latest.IsNull() {
-		var ok bool
-		prev, ok = s.SkipBlocks[string(latest)]
-		if !ok {
-			return nil, errors.New("Couldn't find latest block.")
-		}
-		proposed.VerifierId = prev.VerifierId
-		if s.verifyNewSkipBlock(prev, proposed) {
-			s.updateNewSkipBlock(prev, proposed)
-		} else {
-			return nil, errors.New("Verification error")
-		}
-	}
-	reply := &ProposedSkipBlockReply{
-		Previous: prev,
-		Latest:   proposed,
-	}
-
-	// notify all other services with the same ID:
-	if err := s.startPropagation(proposed); err != nil {
-		return nil, err
-	}
-	return reply, nil
-}
-
 func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (network.ProtocolMessage, error) {
 	prop := psbd.Proposed
+	var latest *SkipBlock
 	if !psbd.Latest.IsNull() {
-		latest, ok := s.getSkipBlockByID(psbd.Latest)
+		var ok bool
+		latest, ok = s.getSkipBlockByID(psbd.Latest)
 		if !ok {
 			return nil, errors.New("Didn't find latest block")
 		}
 		prop.MaximumHeight = latest.MaximumHeight
 		prop.ParentBlock = latest.ParentBlock
 		prop.VerifierId = latest.VerifierId
+		if s.verifyNewSkipBlock(latest, prop) {
+			s.updateNewSkipBlock(latest, prop)
+		} else {
+			return nil, errors.New("Verification error")
+		}
+		if err := s.startPropagation(latest); err != nil {
+			return nil, err
+		}
+	} else {
+		// TODO: allow for other verificators
+		prop.VerifierId = VerifyNone
+		s.updateNewSkipBlock(nil, prop)
 	}
-	psbr, err := s.proposeSkipBlock(psbd.Latest, psbd.Proposed)
+	err := s.startPropagation(prop)
 	if err != nil {
 		return nil, err
 	}
 	reply := &ProposedSkipBlockReply{
-		Previous: psbr.Previous,
-		Latest:   psbr.Latest,
+		Previous: latest,
+		Latest:   prop,
 	}
 	return reply, nil
 }

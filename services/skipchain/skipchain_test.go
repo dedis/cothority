@@ -69,8 +69,9 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	genesis.ParentBlock = sbRoot.Hash
 	genesis.EntityList = sbRoot.EntityList
 	blockCount := uint32(0)
-	psbr, err := service.proposeSkipBlock(nil, genesis)
+	psbrMsg, err := service.ProposeSkipBlock(nil, &ProposeSkipBlock{nil, genesis})
 	assert.Nil(t, err)
+	psbr := psbrMsg.(*ProposedSkipBlockReply)
 	latest := psbr.Latest
 	// verify creation of GenesisBlock:
 	blockCount++
@@ -87,8 +88,9 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	next.ParentBlock = sbRoot.Hash
 	next.EntityList = sbRoot.EntityList
 	id := psbr.Latest.Hash
-	psbr2, err := service.proposeSkipBlock(id, next)
+	psbrMsg, err = service.ProposeSkipBlock(nil, &ProposeSkipBlock{id, genesis})
 	assert.Nil(t, err)
+	psbr2 := psbrMsg.(*ProposedSkipBlockReply)
 	dbg.Lvl2(psbr2)
 	if psbr2 == nil {
 		t.Fatal("Didn't get anything in return")
@@ -120,8 +122,10 @@ func TestService_GetUpdateChain(t *testing.T) {
 		el.List = el.List[0 : sbLength-(i+1)]
 		newSB := NewSkipBlock()
 		newSB.EntityList = el
-		reply, err := s.proposeSkipBlock(sbs[i-1].Hash, newSB)
-		dbg.ErrFatal(err)
+		psbrMsg, err := s.ProposeSkipBlock(nil,
+			&ProposeSkipBlock{sbs[i-1].Hash, newSB})
+		assert.Nil(t, err)
+		reply := psbrMsg.(*ProposedSkipBlockReply)
 		sbs[i] = reply.Latest
 	}
 
@@ -257,9 +261,11 @@ func makeGenesisRosterArgs(s *Service, el *sda.EntityList, parent SkipBlockID,
 	sb.MaximumHeight = 4
 	sb.ParentBlock = parent
 	sb.VerifierId = vid
-	reply, err := s.proposeSkipBlock(nil, sb)
+	psbrMsg, err := s.ProposeSkipBlock(nil,
+		&ProposeSkipBlock{nil, sb})
+	psbr := psbrMsg.(*ProposedSkipBlockReply)
 	dbg.ErrFatal(err)
-	return reply.Latest
+	return psbr.Latest
 }
 
 func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlock {
