@@ -275,6 +275,13 @@ func (s *Service) storeSkipBlock(sb *SkipBlock) SkipBlockID {
 	return sb.Hash
 }
 
+// lenSkipBlock returns the actual length using mutexes
+func (s *Service) lenSkipBlocks() int {
+	s.sbMutex.Lock()
+	defer s.sbMutex.Unlock()
+	return len(s.SkipBlocks)
+}
+
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(latest *SkipBlock) error {
 	for _, e := range latest.EntityList.List {

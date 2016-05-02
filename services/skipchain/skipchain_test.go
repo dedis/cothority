@@ -105,7 +105,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	assert.NotEqual(t, 0, latest2.BackLinkIds)
 
 	// We've added 2 blocks, + root block = 3
-	assert.Equal(t, 3, len(service.SkipBlocks))
+	assert.Equal(t, 3, service.lenSkipBlocks())
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
