@@ -104,6 +104,7 @@ type Signature struct {
 	Response  abstract.Secret
 }
 
+// NewSignature returns a pre-initialized signature with Secret.One
 func NewSignature(s abstract.Suite) *Signature {
 	return &Signature{
 		s.Secret().One(),

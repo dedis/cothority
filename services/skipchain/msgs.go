@@ -27,16 +27,22 @@ func init() {
 	}
 }
 
+// VerifierID represents one of the verifications used to accept or
+// deny a SkipBlock.
 type VerifierID uuid.UUID
-type RosterID uuid.UUID
 
 var (
-	VerifyShard     = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Shard"))
-	VerifyTUF       = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TUF"))
-	VerifySSH       = VerifierID(uuid.NewV5(uuid.NamespaceURL, "SSH-ks"))
-	VerifyConiks    = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Coniks"))
+	// VerifyNone does only basic syntax checking
+	VerifyNone = VerifierID(uuid.Nil)
+	// VerifyShard makes sure that the child SkipChain will always be
+	// a part of its parent SkipChain
+	VerifyShard = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Shard"))
+	// VerifySSH makes sure that a given number of client-devices signed
+	// off on the changes
+	VerifySSH = VerifierID(uuid.NewV5(uuid.NamespaceURL, "SSH-ks"))
+	// VerifyTimeVault will make sure that a valid TimeVault asks for an
+	// additional SkipBlockData
 	VerifyTimeVault = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TimeVault"))
-	VerifyNone      = VerifierID(uuid.Nil)
 )
 
 // This file holds all messages that can be sent to the SkipChain,
@@ -44,13 +50,13 @@ var (
 
 // External calls
 
-// RequestNewBlock - Requests a new skipblock to be appended to
+// ProposeSkipBlock - Requests a new skipblock to be appended to
 // the given SkipBlock. If the given SkipBlock has Index 0 (which
 // is invalid), a new SkipChain will be created.
 // The AppId will be used to call the corresponding verification-
 // routines who will have to sign off on the new Tree.
 type ProposeSkipBlock struct {
-	LatestId SkipBlockID
+	LatestID SkipBlockID
 	Proposed *SkipBlock
 }
 
@@ -64,10 +70,10 @@ type ProposedSkipBlockReply struct {
 // Skipblock and will get back a list of all necessary SkipBlocks
 // to get to the latest.
 type GetUpdateChain struct {
-	LatestId SkipBlockID
+	LatestID SkipBlockID
 }
 
-// GetUpdateChainRet - returns the shortest chain to the current SkipBlock,
+// GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
 	Update []*SkipBlock
@@ -75,8 +81,8 @@ type GetUpdateChainReply struct {
 
 // SetChildrenSkipBlock adds a child-SkipBlock to a parent SkipBlock
 type SetChildrenSkipBlock struct {
-	ParentId SkipBlockID
-	ChildId  SkipBlockID
+	ParentID SkipBlockID
+	ChildID  SkipBlockID
 }
 
 // SetChildrenSkipBlockReply is the reply from SetChildrenSkipBlock. Only one
@@ -92,7 +98,7 @@ type SetChildrenSkipBlockReply struct {
 // the last SkipBlock.
 type GetChildrenSkipList struct {
 	Current    *SkipBlock
-	VerifierId VerifierID
+	VerifierID VerifierID
 }
 
 // Internal calls

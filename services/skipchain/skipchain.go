@@ -16,10 +16,11 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+// ServiceName can be used to refer to the name of this service
 const ServiceName = "Skipchain"
 
 func init() {
-	sda.RegisterNewService("Skipchain", newSkipchainService)
+	sda.RegisterNewService(ServiceName, newSkipchainService)
 	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
 }
 
@@ -44,15 +45,15 @@ type Service struct {
 func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (network.ProtocolMessage, error) {
 	prop := psbd.Proposed
 	var latest *SkipBlock
-	if !psbd.LatestId.IsNull() {
+	if !psbd.LatestID.IsNull() {
 		var ok bool
-		latest, ok = s.getSkipBlockByID(psbd.LatestId)
+		latest, ok = s.getSkipBlockByID(psbd.LatestID)
 		if !ok {
 			return nil, errors.New("Didn't find latest block")
 		}
 		prop.MaximumHeight = latest.MaximumHeight
-		prop.ParentBlockId = latest.ParentBlockId
-		prop.VerifierId = latest.VerifierId
+		prop.ParentBlockID = latest.ParentBlockID
+		prop.VerifierID = latest.VerifierID
 		if s.verifyNewSkipBlock(latest, prop) {
 			s.updateSkipBlockLinks(latest, prop)
 		} else {
@@ -63,7 +64,7 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 		}
 	} else {
 		// TODO: allow for other verificators
-		prop.VerifierId = VerifyNone
+		prop.VerifierID = VerifyNone
 		s.updateSkipBlockLinks(nil, prop)
 	}
 	err := s.startPropagation(prop)
@@ -113,7 +114,7 @@ func (s *Service) updateSkipBlockLinks(prev, proposed *SkipBlock) {
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain) (network.ProtocolMessage, error) {
-	block, ok := s.getSkipBlockByID(latestKnown.LatestId)
+	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
@@ -136,8 +137,8 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
 func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipBlock) (network.ProtocolMessage, error) {
-	parentID := scsb.ParentId
-	childID := scsb.ChildId
+	parentID := scsb.ParentID
+	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
 	if !ok {
 		return nil, errors.New("Couldn't find skipblock!")
@@ -146,7 +147,7 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 	if !ok {
 		return nil, errors.New("Couldn't find skipblock!")
 	}
-	child.ParentBlockId = parentID
+	child.ParentBlockID = parentID
 	parent.ChildSL = NewBlockLink()
 	parent.ChildSL.Hash = childID
 
@@ -161,7 +162,7 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 	return reply, s.startPropagation(parent)
 }
 
-// PropagateSkipBlockData is called when a new SkipBlock or updated SkipBlock is
+// PropagateSkipBlock is called when a new SkipBlock or updated SkipBlock is
 // available.
 func (s *Service) PropagateSkipBlock(e *network.Entity, latest *PropagateSkipBlock) (network.ProtocolMessage, error) {
 	s.storeSkipBlock(latest.SkipBlock)
@@ -244,7 +245,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlock) bool {
 	// TODO: implement a couple of protocols that can check all
 	// TODO: Verify* constants
-	switch newest.VerifierId {
+	switch newest.VerifierID {
 	case VerifyNone:
 		return len(latest.ForwardLink) == 0
 	}

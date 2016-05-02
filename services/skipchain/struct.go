@@ -11,8 +11,10 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID crypto.HashID
 
+// IsNull returns true if the ID is undefined
 func (sbid SkipBlockID) IsNull() bool {
 	return len(sbid) == 0
 }
@@ -30,11 +32,11 @@ type SkipBlockFix struct {
 	MaximumHeight int
 	// BackLink is a slice of hashes to previous SkipBlocks
 	BackLinkIds []SkipBlockID
-	// VerifierId is a SkipBlock-protocol verifying new SkipBlocks
-	VerifierId VerifierID
+	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
+	VerifierID VerifierID
 	// SkipBlockParent points to the SkipBlock of the responsible Roster -
 	// is nil if this is the Root-roster
-	ParentBlockId SkipBlockID
+	ParentBlockID SkipBlockID
 	// Aggregate is the aggregate key of our responsible roster
 	Aggregate abstract.Point
 	// Data is any data to be stored in that SkipBlock
@@ -71,7 +73,7 @@ type SkipBlock struct {
 	ChildSL *BlockLink
 }
 
-// NewSkipBlockCommon pre-initialises the block so it can be sent over
+// NewSkipBlock pre-initialises the block so it can be sent over
 // the network
 func NewSkipBlock() *SkipBlock {
 	return &SkipBlock{
@@ -82,7 +84,7 @@ func NewSkipBlock() *SkipBlock {
 	}
 }
 
-// VerifySignature returns whether all signatures are correctly signed
+// VerifySignatures returns whether all signatures are correctly signed
 // by the aggregate public key of the roster. It needs the aggregate key.
 func (sbc *SkipBlock) VerifySignatures() error {
 	if err := sbc.BlockLink.VerifySignature(sbc.Aggregate); err != nil {

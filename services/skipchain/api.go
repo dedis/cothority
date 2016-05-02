@@ -26,11 +26,11 @@ func (c *Client) CreateRootInter(elRoot, elInter *sda.EntityList, maxHRoot, maxH
 	root = NewSkipBlock()
 	root.EntityList = elRoot
 	root.MaximumHeight = maxHRoot
-	root.VerifierId = ver
+	root.VerifierID = ver
 	inter = NewSkipBlock()
 	inter.EntityList = elInter
 	inter.MaximumHeight = maxHInter
-	inter.VerifierId = ver
+	inter.VerifierID = ver
 	rootMsg, err := c.Send(h, &ProposeSkipBlock{nil, root})
 	if err != nil {
 		return
@@ -64,8 +64,8 @@ func (c *Client) CreateData(parent *SkipBlock, maxH int, d network.ProtocolMessa
 	}
 	data.Data = b
 	data.MaximumHeight = maxH
-	data.VerifierId = ver
-	data.ParentBlockId = parent.Hash
+	data.VerifierID = ver
+	data.ParentBlockID = parent.Hash
 	data.EntityList = parent.EntityList
 	dataMsg, err := c.Send(h, &ProposeSkipBlock{nil, data})
 	if err != nil {

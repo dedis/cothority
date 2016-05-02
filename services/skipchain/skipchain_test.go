@@ -66,7 +66,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	genesis := NewSkipBlock()
 	genesis.Data = []byte("In the beginning God created the heaven and the earth.")
 	genesis.MaximumHeight = 2
-	genesis.ParentBlockId = sbRoot.Hash
+	genesis.ParentBlockID = sbRoot.Hash
 	genesis.EntityList = sbRoot.EntityList
 	blockCount := uint32(0)
 	psbrMsg, err := service.ProposeSkipBlock(nil, &ProposeSkipBlock{nil, genesis})
@@ -85,7 +85,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 		"and darkness was upon the face of the deep. " +
 		"And the Spirit of God moved upon the face of the waters.")
 	next.MaximumHeight = 2
-	next.ParentBlockId = sbRoot.Hash
+	next.ParentBlockID = sbRoot.Hash
 	next.EntityList = sbRoot.EntityList
 	id := psbr.Latest.Hash
 	psbrMsg, err = service.ProposeSkipBlock(nil, &ProposeSkipBlock{id, genesis})
@@ -174,7 +174,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
-	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyShard)
+	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
 	// Wait for block-propagation
@@ -213,7 +213,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		if len(sb.Update) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
-		if !bytes.Equal(sb.Update[0].ParentBlockId, sbRoot.Hash) {
+		if !bytes.Equal(sb.Update[0].ParentBlockID, sbRoot.Hash) {
 			t.Fatal("The intermediate SkipBlock doesn't point to the root")
 		}
 		if err = sb.Update[0].VerifySignatures(); err != nil {
@@ -238,8 +238,8 @@ func makeGenesisRosterArgs(s *Service, el *sda.EntityList, parent SkipBlockID,
 	sb := NewSkipBlock()
 	sb.EntityList = el
 	sb.MaximumHeight = 4
-	sb.ParentBlockId = parent
-	sb.VerifierId = vid
+	sb.ParentBlockID = parent
+	sb.VerifierID = vid
 	psbrMsg, err := s.ProposeSkipBlock(nil,
 		&ProposeSkipBlock{nil, sb})
 	psbr := psbrMsg.(*ProposedSkipBlockReply)

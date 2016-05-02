@@ -42,7 +42,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 	if !bytes.Equal(root.ChildSL.Hash, inter.Hash) {
 		t.Fatal("Root doesn't point to intermediate")
 	}
-	if !bytes.Equal(inter.ParentBlockId, root.Hash) {
+	if !bytes.Equal(inter.ParentBlockID, root.Hash) {
 		t.Fatal("Intermediate doesn't point to root")
 	}
 }
@@ -61,7 +61,7 @@ func TestClient_CreateData(t *testing.T) {
 	if err = data.VerifySignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
 	}
-	if !bytes.Equal(data.ParentBlockId, inter.Hash) {
+	if !bytes.Equal(data.ParentBlockID, inter.Hash) {
 		t.Fatal("Data-chain doesn't point to intermediate-chain")
 	}
 	if !bytes.Equal(inter.ChildSL.Hash, data.Hash) {
@@ -88,12 +88,12 @@ func TestClient_ProposeData(t *testing.T) {
 	td.A++
 	data2, err := c.ProposeData(inter, data1, td)
 	dbg.ErrFatal(err)
-	data_last, err := c.GetUpdateChain(inter, data1.Hash)
+	dataLast, err := c.GetUpdateChain(inter, data1.Hash)
 	dbg.ErrFatal(err)
-	if len(data_last.Update) != 2 {
+	if len(dataLast.Update) != 2 {
 		t.Fatal("Should have two SkipBlocks for update-chain")
 	}
-	if !data_last.Update[1].Equal(data2.Latest) {
+	if !dataLast.Update[1].Equal(data2.Latest) {
 		t.Fatal("Newest SkipBlock should be stored")
 	}
 }
