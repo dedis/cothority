@@ -35,7 +35,7 @@ func TestSealOpen(t *testing.T) {
 
 	time.Sleep(timeout)
 	// simulate 2 client requests in parallel:
-	finished := make(chan bool, 2)
+
 	go func() {
 		op1, err := client.Open(el, res1.ID)
 		assert.Nil(t, err)
@@ -43,23 +43,23 @@ func TestSealOpen(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.True(t, network.Suite.Point().Mul(nil, op1.Private).Equal(res1.Key))
-		assert.Equal(t, op1.ID, res1.ID)
-		finished <- true
+		assert.Equal(t, op1.ID, res1.ID, "SID of req and response not equal")
+		dbg.Print("Waiting for finish 1")
+		time.Sleep(time.Millisecond)
 	}()
 
 	go func() {
-		//op2, err := client.Open(el, res2.ID)
-		//assert.Nil(t, err)
-		//if err != nil {
-		//	t.Fatal(err)
-		//}
-		//assert.Equal(t, op2.ID, res2.ID)
-		//assert.True(t, network.Suite.Point().Mul(nil, op2.Private).Equal(res2.Key))
-		//finished <- true
+		op2, err := client.Open(el, res2.ID)
+		assert.Nil(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, op2.ID, res2.ID, "SID of req and response not equal")
+		assert.True(t, network.Suite.Point().Mul(nil, op2.Private).Equal(res2.Key))
+		dbg.Print("Waiting for finish 2")
+		time.Sleep(time.Millisecond)
 	}()
-	dbg.Print("Waiting")
-	<-finished
-	//<-finished
+	time.Sleep(time.Second)
 
 	dbg.Print("DONE")
 

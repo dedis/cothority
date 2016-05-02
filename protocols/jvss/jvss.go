@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"sync"
 
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
@@ -196,6 +197,8 @@ func (jv *JVSS) initSecret(sid SID) error {
 	}
 	return nil
 }
+
+var ErrWrongID = errors.New("shared secret ID does not exists")
 
 func (jv *JVSS) finaliseSecret(sid SID) error {
 	secret, ok := jv.secrets[sid]
