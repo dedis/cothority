@@ -93,16 +93,22 @@ func (tv *service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig
 func (tv *service) handleClientSeal(e *network.Entity, seal *sealRequest) (network.ProtocolMessage, error) {
 	tree := seal.Group.GenerateBinaryTree()
 	tni := tv.c.NewTreeNodeInstance(tree, tree.Root)
+	var proto *timevault.TimeVault
+	var err error
+	proto, ok := tv.current[seal.Group.Id]
+	if !ok {
+		proto, err = timevault.NewTimeVaultProtocol(tni)
+		if err != nil {
+			return nil, err
+		}
+		tv.current[seal.Group.Id] = proto
+		if err := tv.c.RegisterProtocolInstance(proto); err != nil {
+			dbg.Error(err)
+		}
+	}
 	dbg.Lvl2("Timevault service -> Client Seal request")
-	p, err := timevault.NewTimeVaultProtocol(tni)
-	if err != nil {
-		return nil, err
-	}
-	if err := tv.c.RegisterProtocolInstance(p); err != nil {
-		dbg.Error(err)
-	}
-	tv.current[tni.EntityList().Id] = p
-	id, pub, err := p.Seal(seal.Timeout)
+	//tv.current[tni.EntityList().Id] = proto
+	id, pub, err := proto.Seal(seal.Timeout)
 	dbg.Print("handleClientSeal", id)
 	resp := &SealResponse{
 		Key: pub,

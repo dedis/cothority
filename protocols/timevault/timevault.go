@@ -63,7 +63,7 @@ type RecoveredSecret struct {
 	priShares   *poly.PriShares      // The secret shares
 	numShares   int                  // Number of secret shares
 	mtx         sync.Mutex           // Mutex to sync access to numShares
-	secretsChan chan abstract.Secret // Channel to communicate reocvered shared secret
+	secretsChan chan abstract.Secret // Channel to communicate recovered shared secret
 }
 
 // NewTimeVault creates a new TimeVault protocol and returns it.
@@ -90,7 +90,7 @@ func NewTimeVaultProtocol(node *sda.TreeNodeInstance) (*TimeVault, error) {
 		pubKeys:          pk,
 		info:             info,
 		secrets:          make(map[SID]*Secret),
-		secretsDone:      make(chan bool, 1),
+		secretsDone:      make(chan bool, n),
 	}
 
 	// Setup message handlers
@@ -162,7 +162,7 @@ func (tv *TimeVault) Open(sid SID) (abstract.Secret, error) {
 	rs := &RecoveredSecret{
 		priShares:   &poly.PriShares{},
 		numShares:   0,
-		secretsChan: make(chan abstract.Secret, 1),
+		secretsChan: make(chan abstract.Secret, 2),
 	}
 	rs.priShares.Empty(tv.keyPair.Suite, tv.info.T, tv.info.N)
 	rs.priShares.SetShare(tv.secrets[sid].secret.Index, *tv.secrets[sid].secret.Share)
