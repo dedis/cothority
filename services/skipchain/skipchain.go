@@ -8,6 +8,8 @@ import (
 
 	"bytes"
 
+	"sync"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -29,6 +31,7 @@ type Service struct {
 	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
 	SkipBlocks map[string]*SkipBlock
+	sbMutex    sync.Mutex
 	path       string
 }
 
@@ -257,13 +260,17 @@ func (s *Service) verifyLinkedSkipBlock(latest, newest *SkipBlock) bool {
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
+	s.sbMutex.Lock()
 	b, ok := s.SkipBlocks[string(sbID)]
+	s.sbMutex.Unlock()
 	return b, ok
 }
 
 // storeSkipBlock stores the given SkipBlock in the service-list
 func (s *Service) storeSkipBlock(sb *SkipBlock) SkipBlockID {
+	s.sbMutex.Lock()
 	s.SkipBlocks[string(sb.Hash)] = sb
+	s.sbMutex.Unlock()
 	return sb.Hash
 }
 
