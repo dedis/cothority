@@ -154,19 +154,12 @@ class MPlot:
 
     # Takes one x and y to make a nice bar-graph even with logarithmic
     # scale
-    def plotBar(self, stats, axis, values, label, color, logx=2,
-                               limit_values=None, delta_x=0):
+    def plotBar(self, stats, axis, values, label, color,
+                barNum, logx=2, width=2, totalBars = 4):
         val = stats.get_values(values)
         x = val.x
         y1 = val.avg
-        if limit_values != None:
-            x = x[0:limit_values]
-            y1 = y1[0:limit_values]
-        w = 1. / 2.5
-
-        xd = [t * math.pow(logx, delta_x * w) for t in x]
-        width = [t * ( math.pow(logx, w) - 1) for t in xd]
-
+        xd = [t + width*barNum for t in x]
         return axis.bar(xd, y1, width, color=color, bottom=0, zorder=3,
                        label=label)
 

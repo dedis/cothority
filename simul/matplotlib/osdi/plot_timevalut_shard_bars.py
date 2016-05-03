@@ -31,22 +31,25 @@ def plotResources():
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
 
+
     ax1.set_ylabel("Resource Usage (KB)")
     ax2.set_ylabel('Resource Usage (Seconds)')
 
     mplot.plotBar(data, ax1, "round_open_bw_tx", "Bandwidth (Open)",
-                        colors[0][0], delta_x=-1)
+                        colors[0][0], barNum=0)
     mplot.plotBar(data, ax1, "round_seal_bw_tx", "Bandwidth (Seal)",
-                        colors[0][1], delta_x=-0.5)
+                        colors[0][1], barNum=1)
 
-    mplot.plotBar(data, ax1, "round_seal_user", "CPU (Seal)",
-                                colors[1][0], delta_x=0)
-    mplot.plotBar(data, ax1, "round_open_user", "CPU (Open)",
-                                colors[1][1], delta_x=0.5)
+    mplot.plotBar(data, ax2, "round_seal_user", "CPU (Seal)",
+                                colors[1][0], barNum=2)
+    mplot.plotBar(data, ax2, "round_open_user", "CPU (Open)",
+                                colors[1][1], barNum=3)
 
-    plt.legend(loc=u'upper left')
+    ax2.legend(loc=1)
+    ax1.legend(loc=0)
 
-    plt.xlabel("Shard Size")
+    ax1.set_xlabel("Shard Size")
+
 
     mplot.plotEnd()
 
