@@ -83,6 +83,13 @@ class CSVStats:
             for t in ['avg', 'min', 'max']:
                 self.columns[column + "_" +t][i] += dx
 
+    # adjust that column-avg,min,max with that value
+    def add_columns(self, column1, column2):
+        for i in range(0, len(self.x)):
+            for t in ['avg', 'min', 'max']:
+                self.columns[column1 + "_" +t][i] += self.columns[column2 + "_" +t][i]
+
+
     # adjust that column-avg,min,max by multiplying with that value
     def column_mul(self, column, dx):
         for i in range(0, len(self.x)):

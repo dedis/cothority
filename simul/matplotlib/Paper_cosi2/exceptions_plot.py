@@ -13,9 +13,7 @@ os.environ["LANG"] = "en_US.UTF-8"
 import sys
 sys.path.insert(1,'..')
 from mplot import MPlot
-from stats import CSVStats
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import math
 import random
 try:
@@ -60,7 +58,7 @@ def length_bloom(total, ex_list):
         #print pnew
         bf = pybloomfilter.BloomFilter(total / 2, p, '/tmp/sda.bloom')
         for ex in ex_len_list:
-            bf.add(ex)
+            bf.add_columns(ex)
         if false_positives(total, bf, ex_len_list):
             print total, ex_len, creation
         else:

@@ -19,8 +19,10 @@ import (
 	"github.com/dedis/crypto/poly"
 )
 
+const ProtocolName = "TimeVault"
+
 func init() {
-	sda.ProtocolRegisterName("TimeVault", NewTimeVault)
+	sda.ProtocolRegisterName(ProtocolName, NewTimeVault)
 }
 
 // SID is the type for shared secret identifiers

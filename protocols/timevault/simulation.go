@@ -6,6 +6,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -50,6 +51,8 @@ func (tvs *Simulation) Run(config *sda.SimulationConfig) error {
 	}
 	proto := p.(*TimeVault)
 
+	sealMeasure := monitor.NewTimeMeasure("round_seal")
+	sealBWMeasure := monitor.NewCounterIOMeasure("round_seal_bw", config.Host)
 	dbg.Lvl1("TimeVault - starting")
 	proto.Start()
 	dbg.Lvl1("TimeVault - setup done")
@@ -62,14 +65,19 @@ func (tvs *Simulation) Run(config *sda.SimulationConfig) error {
 
 	// Do ElGamal encryption
 	c, eKey := elGamalEncrypt(proto.Suite(), msg, key)
+	sealMeasure.Record()
+	sealBWMeasure.Record()
 
 	<-time.After(time.Second * 5)
 
+	openMeasure := monitor.NewTimeMeasure("round_open")
+	openBWMeasure := monitor.NewCounterIOMeasure("round_open_bw", config.Host)
 	x, err := proto.Open(sid)
 	if err != nil {
 		dbg.Fatal(err)
 	}
 	dbg.Lvl1("TimeVault - opening secret successful")
+	openBWMeasure.Record()
 
 	X := proto.Suite().Point().Mul(eKey, x)
 	m, err := elGamalDecrypt(proto.Suite(), c, X)
@@ -80,7 +88,7 @@ func (tvs *Simulation) Run(config *sda.SimulationConfig) error {
 	if !bytes.Equal(m, msg) {
 		dbg.Fatal("Error, decryption failed")
 	}
-
+	openMeasure.Record()
 	dbg.Lvl1("TimeVault - decryption successful")
 
 	return nil
