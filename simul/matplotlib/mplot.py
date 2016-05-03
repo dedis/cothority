@@ -17,6 +17,7 @@ import matplotlib.ticker
 import csv
 import math
 
+
 # Our CSVs have a space after the comma, so we need a new 'dialect', here
 # called 'deploy'
 csv.register_dialect('deploy', delimiter=',', doublequote=False, quotechar='',
@@ -153,8 +154,7 @@ class MPlot:
 
     # Takes one x and y to make a nice bar-graph even with logarithmic
     # scale
-    def plotBar(self, stats, values, label, color,
-                               ymin=None, logx=2,
+    def plotBar(self, stats, axis, values, label, color, logx=2,
                                limit_values=None, delta_x=0):
         val = stats.get_values(values)
         x = val.x
@@ -166,9 +166,9 @@ class MPlot:
 
         xd = [t * math.pow(logx, delta_x * w) for t in x]
         width = [t * ( math.pow(logx, w) - 1) for t in xd]
-        return plt.bar(xd, y1, width, color=color, bottom=ymin, zorder=3,
-                       label=label), val
 
+        return axis.bar(xd, y1, width, color=color, bottom=0, zorder=3,
+                       label=label)
 
 
     # Puts the most used arguments for starting a plot with

@@ -20,36 +20,34 @@ import matplotlib.pyplot as plt
 # the last two values from JVSS are off-grid and writes them with arrows7
 # directly on the plot
 def plotResources():
-    # prepare 2 Y-axis:
-    fig, ax1 = plt.subplots()
-
     mplot.plotPrepareLogLog()
     data = read_csvs('test_timevault')[0]
     plot_show('comparison_timevault')
     data.add_columns("round_open_bw_tx", "round_open_bw_rx")
     data.add_columns("round_seal_bw_tx", "round_seal_bw_rx")
+    data.column_mul("round_open_bw_tx", 0.001)
+    data.column_mul("round_seal_bw_tx", 0.001)
 
-    openBW_bar = mplot.plotBar(data, "round_open_bw_tx", "Bandwidth (Open)",
-                        colors[0][0], delta_x=-0.5)
-    sealBW_bar = mplot.plotBar(data, "round_seal_bw_tx", "Bandwidth (Seal)",
-                        colors[0][1], delta_x=-0.25)
-    sealCPU_bar = mplot.plotBar(data, "round_seal_user", "CPU (Seal)",
-                                colors[1][0], delta_x=0.)
-    openCPU_bar = mplot.plotBar(data, "round_open_user", "CPU (Open)",
-                                colors[1][1], delta_x=0.25)
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
 
+    ax1.set_ylabel("Resource Usage (KB)")
+    ax2.set_ylabel('Resource Usage (Seconds)')
 
+    mplot.plotBar(data, ax1, "round_open_bw_tx", "Bandwidth (Open)",
+                        colors[0][0], delta_x=-1)
+    mplot.plotBar(data, ax1, "round_seal_bw_tx", "Bandwidth (Seal)",
+                        colors[0][1], delta_x=-0.5)
 
-    # bar2 = mplot.plotBar(data, "bandwidth_rx", "Bandwidth (RX)",
-    #                    colors[1][0], delta_x=0.5)
-
+    mplot.plotBar(data, ax1, "round_seal_user", "CPU (Seal)",
+                                colors[1][0], delta_x=0)
+    mplot.plotBar(data, ax1, "round_open_user", "CPU (Open)",
+                                colors[1][1], delta_x=0.5)
 
     plt.legend(loc=u'upper left')
 
-    plt.ylabel("Resource Usage")
     plt.xlabel("Shard Size")
-    # ax = plt.axes()
-    # ax.set_xticks([2,8,32,128,512,2048,8192, 32768])
+
     mplot.plotEnd()
 
 
