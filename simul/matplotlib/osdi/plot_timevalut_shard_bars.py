@@ -23,14 +23,6 @@ def plotResources():
     # prepare 2 Y-axis:
     fig, ax1 = plt.subplots()
 
-    ax2 = ax1.twinx()
-    ax1.plot(x, y1)
-    ax2.plot(x, y2)
-
-    ax1.set_xlabel('X data')
-    ax1.set_ylabel('Y1 data')
-    ax2.set_ylabel('Y2 data')
-
     mplot.plotPrepareLogLog()
     data = read_csvs('test_timevault')[0]
     plot_show('comparison_timevault')
