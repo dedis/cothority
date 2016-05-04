@@ -152,16 +152,6 @@ class MPlot:
         return plt.bar(xd, y1, width, color=color, bottom=ymin, zorder=3,
                        label=label), val1, val2
 
-    # Takes one x and y to make a nice bar-graph even with logarithmic
-    # scale
-    def plotBar(self, stats, axis, values, label, color,
-                barNum, logx=2, width=2, totalBars = 4):
-        val = stats.get_values(values)
-        x = val.x
-        y1 = val.avg
-        xd = [t + width*barNum for t in x]
-        return axis.bar(xd, y1, width, color=color, bottom=0, zorder=3,
-                       label=label)
 
 
     # Puts the most used arguments for starting a plot with

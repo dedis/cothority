@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-# Plots the graph of one of the test-runs
-# It takes the CSV-file as argument and shows the plot
-# of the times used for each round
 
 import os
 
@@ -16,60 +13,77 @@ from stats import CSVStats
 import matplotlib.pyplot as plt
 
 
-# Plots a Cothority and a JVSS run with regard to their averages. Supposes that
-# the last two values from JVSS are off-grid and writes them with arrows7
-# directly on the plot
+# Plots resource usage compared to shard size
 def plotResources():
-    mplot.plotPrepareLogLog()
+
     data = read_csvs('test_timevault')[0]
     plot_show('comparison_timevault')
+
+    # add both bandwidth measurements (TX+RX) to get the total BW:
     data.add_columns("round_open_bw_tx", "round_open_bw_rx")
     data.add_columns("round_seal_bw_tx", "round_seal_bw_rx")
+    # divide by 1000 ->
     data.column_mul("round_open_bw_tx", 0.001)
     data.column_mul("round_seal_bw_tx", 0.001)
 
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
+    # logarithmic y-axes
+    ax1.set_yscale("log", basey=10)
+    ax2.set_yscale("log", basey=10)
 
-
-    ax1.set_ylabel("Resource Usage (KB)")
+    ax1.set_ylabel("Bandwidth Usage (KB)")
     ax2.set_ylabel('Resource Usage (Seconds)')
+    width = 0.25
 
-    mplot.plotBar(data, ax1, "round_open_bw_tx", "Bandwidth (Open)",
-                        colors[0][0], barNum=0)
-    mplot.plotBar(data, ax1, "round_seal_bw_tx", "Bandwidth (Seal)",
-                        colors[0][1], barNum=1)
+    val = data.get_values("round_open_bw_tx")
+    y = val.avg
+    # init positions of the bars:
+    x = val.x
+    pos = list(range(len(x)))
+    ax1.bar(pos,
+           y,
+           width,
+           color='lightgreen',
+           label="Bandwidth (Open)")
 
-    mplot.plotBar(data, ax2, "round_seal_user", "CPU (Seal)",
-                                colors[1][0], barNum=2)
-    mplot.plotBar(data, ax2, "round_open_user", "CPU (Open)",
-                                colors[1][1], barNum=3)
+    val = data.get_values("round_seal_bw_tx")
+    y = val.avg
+    ax1.bar([p + 0.25*width for p in pos],
+            y,
+            width,
+            color='green',
+            label="Bandwidth (Seal)")
 
-    ax2.legend(loc=1)
-    ax1.legend(loc=0)
+    val = data.get_values("round_seal_user")
+    y = val.avg
+    ax2.bar([p + width for p in pos],
+            y,
+            width,
+            color='lightblue',
+            label="CPU (Seal)")
 
+    val = data.get_values("round_open_user")
+    y = val.avg
+    ax2.bar([p + 1.5*width for p in pos],
+            y,
+            width,
+            color='blue',
+            label="CPU (Open)")
+
+
+    ax1.legend(loc='upper left')
+    # transform the location of the legend:
+    ax2.legend(loc='center left', bbox_to_anchor=(0., 0.75))
+
+    ax1.set_xticks([p + 1. * width for p in pos])
+    # Set the labels for the x ticks (4, 8, 16, ...)
+    ax1.set_xticklabels([int(i) for i in x])
+    # common label of axes
     ax1.set_xlabel("Shard Size")
-
 
     mplot.plotEnd()
 
-
-def arrow(x, y, label, dx=1., dy=1., text_align='left'):
-    plt.annotate(label, xy=(x + dx / 10, y + dy / 10),
-                 xytext=(x + dx / 2, y + dy / 2),
-                 horizontalalignment=text_align,
-                 arrowprops=dict(facecolor='black', headlength=5, width=0.1,
-                                 headwidth=8))
-
-
-
-
-# Colors for the Cothority
-colors = [['lightgreen', 'green'],
-          ['lightblue', 'blue'],
-          ['yellow', 'brown'],
-          ['pink', 'red'],
-          ['pink', 'red']]
 mplot = MPlot()
 
 
