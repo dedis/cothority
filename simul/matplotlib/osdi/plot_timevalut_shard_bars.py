@@ -36,24 +36,26 @@ def plotResources():
     ax2.set_ylabel('Resource Usage (Seconds)')
     width = 0.25
 
-    val = data.get_values("round_open_bw_tx")
+    val = data.get_values("round_seal_bw_tx")
     y = val.avg
     # init positions of the bars:
     x = val.x
     pos = list(range(len(x)))
     ax1.bar(pos,
+            y,
+            width,
+            color='green',
+            label="Bandwidth (Seal)")
+
+
+    val = data.get_values("round_open_bw_tx")
+    y = val.avg
+    ax1.bar([p + 0.5*width for p in pos],
            y,
            width,
            color='lightgreen',
            label="Bandwidth (Open)")
 
-    val = data.get_values("round_seal_bw_tx")
-    y = val.avg
-    ax1.bar([p + 0.25*width for p in pos],
-            y,
-            width,
-            color='green',
-            label="Bandwidth (Seal)")
 
     val = data.get_values("round_seal_user")
     y = val.avg
