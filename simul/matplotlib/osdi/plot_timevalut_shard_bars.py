@@ -33,8 +33,8 @@ def plotResources():
     ax2.set_yscale("log", basey=10)
 
     ax1.set_ylabel("Bandwidth Usage (KB)")
-    ax2.set_ylabel('Resource Usage (Seconds)')
-    width = 0.25
+    ax2.set_ylabel('CPU Usage (Seconds)')
+    width = 0.2
 
     val = data.get_values("round_seal_bw_tx")
     y = val.avg
@@ -50,7 +50,7 @@ def plotResources():
 
     val = data.get_values("round_open_bw_tx")
     y = val.avg
-    ax1.bar([p + 0.5*width for p in pos],
+    ax1.bar([p + width for p in pos],
            y,
            width,
            color='lightgreen',
@@ -59,18 +59,18 @@ def plotResources():
 
     val = data.get_values("round_seal_user")
     y = val.avg
-    ax2.bar([p + width for p in pos],
+    ax2.bar([p + 2.2*width for p in pos],
             y,
             width,
-            color='lightblue',
+            color='blue',
             label="CPU (Seal)")
 
     val = data.get_values("round_open_user")
     y = val.avg
-    ax2.bar([p + 1.5*width for p in pos],
+    ax2.bar([p + 3.2*width for p in pos],
             y,
             width,
-            color='blue',
+            color='lightblue',
             label="CPU (Open)")
 
 
@@ -78,7 +78,7 @@ def plotResources():
     # transform the location of the legend:
     ax2.legend(loc='center left', bbox_to_anchor=(0., 0.75))
 
-    ax1.set_xticks([p + 1. * width for p in pos])
+    ax1.set_xticks([p + 2. * width for p in pos])
     # Set the labels for the x ticks (4, 8, 16, ...)
     ax1.set_xticklabels([int(i) for i in x])
     # common label of axes
