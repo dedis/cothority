@@ -22,9 +22,12 @@ def plotResources():
     # add both bandwidth measurements (TX+RX) to get the total BW:
     data.add_columns("round_open_bw_tx", "round_open_bw_rx")
     data.add_columns("round_seal_bw_tx", "round_seal_bw_rx")
+    data.add_columns("round_open_bw_tx", "round_seal_bw_tx")
     # divide by 1000 ->
     data.column_mul("round_open_bw_tx", 0.001)
-    data.column_mul("round_seal_bw_tx", 0.001)
+    #data.column_mul("round_seal_bw_tx", 0.001)
+    data.add_columns("round_seal_user", "round_open_user")
+
 
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
@@ -45,40 +48,40 @@ def plotResources():
             y,
             width,
             color='green',
-            label="Bandwidth (Seal)")
+            label="Bandwidth (Seal & Open)")
 
 
-    val = data.get_values("round_open_bw_tx")
-    y = val.avg
-    ax1.bar([p + width for p in pos],
-           y,
-           width,
-           color='lightgreen',
-           label="Bandwidth (Open)")
-
+    # val = data.get_values("round_open_bw_tx")
+    # y = val.avg
+    # ax1.bar([p + width for p in pos],
+    #        y,
+    #        width,
+    #        color='lightgreen',
+    #        label="Bandwidth (Open)")
+    #
 
     val = data.get_values("round_seal_user")
     y = val.avg
-    ax2.bar([p + 2.2*width for p in pos],
+    ax2.bar([p + 1.*width for p in pos],
             y,
             width,
             color='blue',
-            label="CPU (Seal)")
+            label="CPU (Seal & Open)")
 
-    val = data.get_values("round_open_user")
-    y = val.avg
-    ax2.bar([p + 3.2*width for p in pos],
-            y,
-            width,
-            color='lightblue',
-            label="CPU (Open)")
+    # val = data.get_values("round_open_user")
+    # y = val.avg
+    # ax2.bar([p + 3.2*width for p in pos],
+    #         y,
+    #         width,
+    #         color='lightblue',
+    #         label="CPU (Seal & Open)")
 
 
     ax1.legend(loc='upper left')
     # transform the location of the legend:
-    ax2.legend(loc='center left', bbox_to_anchor=(0., 0.75))
+    ax2.legend(loc='center left', bbox_to_anchor=(0., 0.85))
 
-    ax1.set_xticks([p + 2. * width for p in pos])
+    ax1.set_xticks([p + 1. * width for p in pos])
     # Set the labels for the x ticks (4, 8, 16, ...)
     ax1.set_xticklabels([int(i) for i in x])
     # common label of axes
@@ -109,8 +112,8 @@ def read_csvs(*values):
 # Write to file
 write_file = True
 # What file extension - .png, .eps
-file_extension = 'png'
-#file_extension = 'eps'
+#file_extension = 'png'
+file_extension = 'eps'
 # Show figure
 mplot.show_fig = False
 
