@@ -207,7 +207,7 @@ func verifyPrintResult(err error) {
 }
 
 // writeSigAsJSON - writes the JSON out to a file
-func writeSigAsJSON(res *s.ServiceResponse, outW io.Writer) {
+func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
 		handleErrorAndExit("Couldn't encode signature: ", err)
@@ -229,7 +229,7 @@ func handleErrorAndExit(msg string, e error) {
 }
 
 // sign takes a stream and a toml file defining the servers
-func sign(r io.Reader, tomlFileName string) (*s.ServiceResponse, error) {
+func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 	dbg.Lvl3("Starting signature")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
@@ -253,13 +253,13 @@ func sign(r io.Reader, tomlFileName string) (*s.ServiceResponse, error) {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func signStatement(read io.Reader, el *sda.EntityList) (*s.ServiceResponse,
+func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 	error) {
 
 	client := s.NewClient()
 	msg, _ := crypto.HashStream(network.Suite.Hash(), read)
 
-	pchan := make(chan *s.ServiceResponse)
+	pchan := make(chan *s.SignatureResponse)
 	var err error
 	go func() {
 		dbg.Lvl3("Waiting for the response on SignRequest")
@@ -304,7 +304,7 @@ func verify(fileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	sig := &s.ServiceResponse{}
+	sig := &s.SignatureResponse{}
 	dbg.Lvl4("Unmarshalling signature ")
 	if err := json.Unmarshal(sb, sig); err != nil {
 		return err
@@ -323,7 +323,7 @@ func verify(fileName, groupToml string) error {
 	return err
 }
 
-func verifySignatureHash(b []byte, sig *s.ServiceResponse, el *sda.EntityList) error {
+func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)

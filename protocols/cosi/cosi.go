@@ -123,7 +123,6 @@ func (pc *ProtocolCosi) Dispatch() error {
 		var err error
 		select {
 		case packet := <-pc.announce:
-			dbg.Print("Annoucement")
 			err = pc.handleAnnouncement(&packet.Announcement)
 		case packet := <-pc.commit:
 			err = pc.handleCommitment(&packet.Commitment)

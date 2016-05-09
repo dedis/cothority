@@ -210,7 +210,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	h.networkLock.Unlock()
 
 	dbg.Lvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
-	if err := c.Send(context.TODO(), msg); err != nil && err != network.ErrClosed {
+	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
 	}
 	return nil
@@ -245,7 +245,7 @@ func (h *Host) processMessages() {
 		case <-h.ProcessMessagesQuit:
 			return
 		}
-		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType == RequestID)
+		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
 		case SDADataMessageID:
 			sdaMsg := data.Msg.(Data)
@@ -357,7 +357,7 @@ func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 		return
 	}
 	dbg.Lvl3("host", h.Address(), " => Dispatch request to Request")
-	s.ProcessClientRequest(e, r)
+	go s.ProcessClientRequest(e, r)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg
