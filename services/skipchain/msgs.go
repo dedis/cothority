@@ -79,7 +79,8 @@ type GetUpdateChainReply struct {
 	Update []*SkipBlock
 }
 
-// SetChildrenSkipBlock adds a child-SkipBlock to a parent SkipBlock
+// SetChildrenSkipBlock adds a link to a child-SkipBlock in the
+// parent-SkipBlock
 type SetChildrenSkipBlock struct {
 	ParentID SkipBlockID
 	ChildID  SkipBlockID
