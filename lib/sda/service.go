@@ -385,6 +385,9 @@ type StatusRet struct {
 	Status string
 }
 
+// StatusOK is used when there is no error but nothing to return
+var StatusOK = &StatusRet{""}
+
 // ErrMsg converts a combined err and status-message to an error. It
 // returns either the error, or the errormsg, if there is one.
 func ErrMsg(em *network.Message, err error) error {
