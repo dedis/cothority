@@ -49,14 +49,14 @@ func TestClient_CreateRootInter(t *testing.T) {
 
 func TestClient_CreateData(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(2, true, true, true)
 	defer l.CloseAll()
 
 	c := NewClient()
 	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
-	data, err := c.CreateData(inter, 4, td, VerifyNone)
+	inter, data, err := c.CreateData(inter, 4, VerifyNone, td)
 	dbg.ErrFatal(err)
 	if err = data.VerifySignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
@@ -83,7 +83,7 @@ func TestClient_ProposeData(t *testing.T) {
 	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
-	data1, err := c.CreateData(inter, 4, td, VerifyNone)
+	inter, data1, err := c.CreateData(inter, 4, VerifyNone, td)
 	dbg.ErrFatal(err)
 	td.A++
 	data2, err := c.ProposeData(inter, data1, td)

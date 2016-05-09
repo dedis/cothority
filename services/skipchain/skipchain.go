@@ -39,8 +39,8 @@ type Service struct {
 // ProposeSkipBlock takes a hash for the latest valid SkipBlock and a SkipBlock
 // that will be verified. If the verification returns true, the new SkipBlock
 // will be signed and added to the chain and returned.
-// If the given nil as the latest block it verify if we are actually creating
-// the first (genesis) block and create it. If it is called with nil although
+// If the the latest block given is nil it verify if we are actually creating
+// the first (genesis) block and creates it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
 func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (network.ProtocolMessage, error) {
 	prop := psbd.Proposed
@@ -284,7 +284,16 @@ func (s *Service) lenSkipBlocks() int {
 
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(latest *SkipBlock) error {
-	for _, e := range latest.EntityList.List {
+	list := latest.EntityList
+	if list == nil {
+		// Suppose it's a dataSkipBlock
+		sb, ok := s.getSkipBlockByID(latest.ParentBlockID)
+		if !ok {
+			return errors.New("Didn't find EntityList nor parent")
+		}
+		list = sb.EntityList
+	}
+	for _, e := range list.List {
 		var cr *sda.ServiceMessage
 		var err error
 		cr, err = sda.CreateServiceMessage(ServiceName,

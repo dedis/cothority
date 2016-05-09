@@ -82,7 +82,7 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 	s := local.Services[h.Entity.ID]
 	ts := s[testServiceID]
-	cr := &ClientRequest{Data:mkClientRequest(&testMsg{12})}
+	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
 	ts.ProcessClientRequest(h.Entity, cr)
 	msg := ts.(*testService).Context.(*testContext).Msg
 	if msg == nil {
