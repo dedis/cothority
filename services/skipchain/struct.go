@@ -11,6 +11,14 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+type AppSkipBlock interface{
+	// VerifyNewSkipBlock takes the last signed SkipBlock and the
+	// proposed Skipblock. It returns true if the proposed SkipBlock
+	// has to be accepted or false if it rejects.
+	VerifyProposedSkipBlock(last, proposed *SkipBlock) bool
+	VoteNewSkipBlock(proposedID SkipBlockID, vote bool)
+}
+
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID crypto.HashID
 
