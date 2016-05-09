@@ -364,7 +364,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
-		return &network.Message{}, errors.New("Timeout on sending message")
+		return &network.Message{}, errors.New("Timeout on receiving message")
 	}
 }
 

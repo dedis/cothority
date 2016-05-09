@@ -85,7 +85,7 @@ func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
 
 // GenTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the EntityList and Tree
-// will be registered with the overlay.
+// will be registered with the overlay OF THE ROOT.
 func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
 	hosts := l.GenLocalHosts(n, connect, processMsg)
 

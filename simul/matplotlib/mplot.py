@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 import csv
 import math
-import numpy as np
+
 
 # Our CSVs have a space after the comma, so we need a new 'dialect', here
 # called 'deploy'
@@ -151,6 +151,8 @@ class MPlot:
         plt.bar(xd, y12, width, color=color, bottom=y1, zorder=3, hatch='//')
         return plt.bar(xd, y1, width, color=color, bottom=ymin, zorder=3,
                        label=label), val1, val2
+
+
 
     # Puts the most used arguments for starting a plot with
     # LogLog by default.

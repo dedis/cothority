@@ -78,7 +78,7 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	// Buffer received deal for later
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 	secret.deals[msg.Src] = deal
 
@@ -95,17 +95,17 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 
 	secret.mtx.Lock()
-	secret.numConfs++
+	secret.confirmations++
 	secret.mtx.Unlock()
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfs, len(jv.List())))
+	dbg.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.confirmations, len(jv.List())))
 
 	// Check if we have enough confirmations to proceed
-	if (secret.numConfs == len(jv.List())) && (msg.SID == LTSS || msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) {
+	if (secret.confirmations == len(jv.List())) && (msg.SID == LTSS || msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) {
 		jv.secretsDone <- true
 	}
 
@@ -144,7 +144,7 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	// Collect partial signatures
 	secret, ok := jv.secrets[msg.SID]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 	secret.sigs[msg.Src] = msg.Sig
 

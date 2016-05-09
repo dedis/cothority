@@ -1,18 +1,20 @@
-// JVSS provides a threshold signing scheme based on Shamir's joint verifiable
-// secret sharing algorithm and Schnorr signatures. The protocl runs in two
-// phases. During the protocol setup a long-term shared secret is establised
-// between all participants. Afterwards, any of the members can request a
-// signature, which triggers the creation of another, short-term shared secret.
-// Each member then sends its partial signature to the requester which finally
-// puts everything together to get the final Schnorr signature. To verify a
-// given Schnorr signature a member still has to be able to access the
-// long-term shared secret from which that particular signature was created.
+// Package jvss provides a threshold signing scheme based on Shamir's joint
+// verifiable secret sharing algorithm and Schnorr signatures. The protocl runs
+// in two phases. During the protocol setup a long-term shared secret is
+// establised between all participants. Afterwards, any of the members can
+// request a signature, which triggers the creation of another, short-term
+// shared secret.  Each member then sends its partial signature to the
+// requester which finally puts everything together to get the final Schnorr
+// signature. To verify a given Schnorr signature a member still has to be able
+// to access the long-term shared secret from which that particular signature
+// was created.
 package jvss
 
 import (
 	"fmt"
 	"sync"
 
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
@@ -24,10 +26,10 @@ func init() {
 	sda.ProtocolRegisterName("JVSS", NewJVSS)
 }
 
-// Type of shared secret identifiers
+// SID is the type for shared secret identifiers
 type SID string
 
-// Identifiers for long- and short-term shared secrets.
+// Base identifiers for long- and short-term shared secrets.
 const (
 	LTSS SID = "LTSS"
 	STSS SID = "STSS"
@@ -50,12 +52,12 @@ type JVSS struct {
 
 // Secret contains all information for long- and short-term shared secrets.
 type Secret struct {
-	secret   *poly.SharedSecret              // Shared secret
-	receiver *poly.Receiver                  // Receiver to aggregate deals
-	deals    map[int]*poly.Deal              // Buffer for deals
-	sigs     map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
-	numConfs int                             // Number of collected confirmations that shared secrets are ready
-	mtx      sync.Mutex                      // Mutex to sync access to numConfs
+	secret        *poly.SharedSecret              // Shared secret
+	receiver      *poly.Receiver                  // Receiver to aggregate deals
+	deals         map[int]*poly.Deal              // Buffer for deals
+	sigs          map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
+	confirmations int                             // Number of collected confirmations that shared secrets are ready
+	mtx           sync.Mutex                      // Mutex to sync access to confirmations
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -164,10 +166,10 @@ func (jv *JVSS) initSecret(sid SID) error {
 	if _, ok := jv.secrets[sid]; !ok {
 		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &Secret{
-			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
-			deals:    make(map[int]*poly.Deal),
-			sigs:     make(map[int]*poly.SchnorrPartialSig),
-			numConfs: 0,
+			receiver:      poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
+			deals:         make(map[int]*poly.Deal),
+			sigs:          make(map[int]*poly.SchnorrPartialSig),
+			confirmations: 0,
 		}
 		jv.secrets[sid] = sec
 	}
@@ -176,7 +178,10 @@ func (jv *JVSS) initSecret(sid SID) error {
 
 	// Initialise and broadcast our deal if necessary
 	if len(secret.deals) == 0 {
-		kp := config.NewKeyPair(jv.keyPair.Suite)
+		kp := jv.keyPair
+		if sid != LTSS {
+			kp = config.NewKeyPair(jv.keyPair.Suite)
+		}
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
 		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
 		secret.deals[jv.Index()] = deal
@@ -193,10 +198,12 @@ func (jv *JVSS) initSecret(sid SID) error {
 	return nil
 }
 
+var ErrWrongID = errors.New("shared secret ID does not exists")
+
 func (jv *JVSS) finaliseSecret(sid SID) error {
 	secret, ok := jv.secrets[sid]
 	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+		return ErrWrongID
 	}
 
 	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
@@ -215,7 +222,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		}
 		secret.secret = sec
 		secret.mtx.Lock()
-		secret.numConfs++
+		secret.confirmations++
 		secret.mtx.Unlock()
 		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
@@ -241,7 +248,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error) {
 	secret, ok := jv.secrets[sid]
 	if !ok {
-		return nil, fmt.Errorf("Error, shared secret does not exist")
+		return nil, ErrWrongID
 	}
 
 	hash := jv.keyPair.Suite.Hash()
