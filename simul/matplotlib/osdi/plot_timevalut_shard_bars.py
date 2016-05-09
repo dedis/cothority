@@ -65,6 +65,8 @@ def plotResources():
     val = data.get_values("round_open_user")
     y = val.avg
 
+    ax2.set_ylim(ymin=0.0067)
+    ax2.set_ylim(ymax=900)
     ax2.bar([p + width for p in pos],
             y,
             width,
