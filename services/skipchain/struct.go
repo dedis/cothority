@@ -3,6 +3,8 @@ package skipchain
 import (
 	"bytes"
 
+	"fmt"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -19,17 +21,25 @@ func (sbid SkipBlockID) IsNull() bool {
 	return len(sbid) == 0
 }
 
+func (sbid SkipBlockID) String() string {
+	if sbid.IsNull() {
+		return "Nil"
+	}
+	return fmt.Sprintf("%x", []byte(sbid[0:8]))
+}
+
 // SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
 // and signed.
 type SkipBlockFix struct {
-	Index uint32
+	Index int
 	// Height of that SkipBlock
-	Height uint32
-	// For deterministic SkipChains at what height to stop:
-	// - if negative: we will use random distribution to calculate the
-	// height of each new block
-	// - else: the max height determines the height of the next block
+	Height int
+	// The max height determines the height of the next block
 	MaximumHeight int
+	// For deterministic SkipChains, chose a value >= 1 - higher
+	// bases mean more 'height = 1' SkipBlocks
+	// For random SkipChains, chose a value of 0
+	BaseHeight int
 	// BackLink is a slice of hashes to previous SkipBlocks
 	BackLinkIds []SkipBlockID
 	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
@@ -86,29 +96,49 @@ func NewSkipBlock() *SkipBlock {
 
 // VerifySignatures returns whether all signatures are correctly signed
 // by the aggregate public key of the roster. It needs the aggregate key.
-func (sbc *SkipBlock) VerifySignatures() error {
-	if err := sbc.BlockLink.VerifySignature(sbc.Aggregate); err != nil {
+func (sb *SkipBlock) VerifySignatures() error {
+	if err := sb.BlockLink.VerifySignature(sb.Aggregate); err != nil {
 		return err
 	}
-	for _, fl := range sbc.ForwardLink {
-		if err := fl.VerifySignature(sbc.Aggregate); err != nil {
+	for _, fl := range sb.ForwardLink {
+		if err := fl.VerifySignature(sb.Aggregate); err != nil {
 			return err
 		}
 	}
-	if sbc.ChildSL != nil && sbc.ChildSL.Hash == nil {
-		return sbc.ChildSL.VerifySignature(sbc.Aggregate)
+	if sb.ChildSL != nil && sb.ChildSL.Hash == nil {
+		return sb.ChildSL.VerifySignature(sb.Aggregate)
 	}
 	return nil
 }
 
 // Equal returns bool if both hashes are equal
-func (sbc *SkipBlock) Equal(sb *SkipBlock) bool {
-	return bytes.Equal(sbc.Hash, sb.Hash)
+func (sb *SkipBlock) Equal(other *SkipBlock) bool {
+	return bytes.Equal(sb.Hash, other.Hash)
 }
 
-func (sbc *SkipBlock) updateHash() SkipBlockID {
-	sbc.Hash = sbc.calculateHash()
-	return sbc.Hash
+// Copy makes a deep copy of the SkipBlock
+func (sb *SkipBlock) Copy() *SkipBlock {
+	b := *sb
+	sbf := *b.SkipBlockFix
+	b.SkipBlockFix = &sbf
+	b.BlockLink = b.BlockLink.Copy()
+	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
+	for i, fl := range sb.ForwardLink {
+		b.ForwardLink[i] = fl.Copy()
+	}
+	if b.ChildSL != nil {
+		b.ChildSL = sb.ChildSL.Copy()
+	}
+	return &b
+}
+
+func (sb *SkipBlock) String() string {
+	return sb.Hash.String()
+}
+
+func (sb *SkipBlock) updateHash() SkipBlockID {
+	sb.Hash = sb.calculateHash()
+	return sb.Hash
 }
 
 // BlockLink has the hash and a signature of a block
@@ -122,6 +152,18 @@ type BlockLink struct {
 func NewBlockLink() *BlockLink {
 	return &BlockLink{
 		Signature: cosi.NewSignature(network.Suite),
+	}
+}
+
+// Copy makes a deep copy of a blocklink
+func (bl *BlockLink) Copy() *BlockLink {
+	sig := &cosi.Signature{
+		Challenge: network.Suite.Secret().Set(bl.Challenge),
+		Response:  network.Suite.Secret().Set(bl.Response),
+	}
+	return &BlockLink{
+		Hash:      bl.Hash,
+		Signature: sig,
 	}
 }
 

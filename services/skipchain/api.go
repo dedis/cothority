@@ -23,12 +23,12 @@ func NewClient() *Client {
 // maximumHeight of maxHRoot and an intermediate SkipChain with
 // maximumHeight of maxHInter. It connects both chains for later
 // reference.
-func (c *Client) CreateRootInter(elRoot, elInter *sda.EntityList, maxHRoot, maxHInter int, ver VerifierID) (root, inter *SkipBlock, err error) {
-	root, err = c.CreateRoster(elRoot, maxHRoot, ver, nil)
+func (c *Client) CreateRootInter(elRoot, elInter *sda.EntityList, baseHeight, maxHRoot, maxHInter int, ver VerifierID) (root, inter *SkipBlock, err error) {
+	root, err = c.CreateRoster(elRoot, baseHeight, maxHRoot, ver, nil)
 	if err != nil {
 		return
 	}
-	inter, err = c.CreateRoster(elInter, maxHInter, ver, root.Hash)
+	inter, err = c.CreateRoster(elInter, baseHeight, maxHInter, ver, root.Hash)
 	if err != nil {
 		return
 	}
@@ -43,11 +43,12 @@ func (c *Client) ProposeRoster(latest *SkipBlock, el *sda.EntityList) (reply *Pr
 }
 
 // CreateRoster will create a new SkipChainRoster with the parameters given
-func (c *Client) CreateRoster(el *sda.EntityList, maxH int, ver VerifierID, parent SkipBlockID) (*SkipBlock, error) {
+func (c *Client) CreateRoster(el *sda.EntityList, baseH, maxH int, ver VerifierID, parent SkipBlockID) (*SkipBlock, error) {
 	genesis := NewSkipBlock()
 	genesis.EntityList = el
 	genesis.VerifierID = ver
 	genesis.MaximumHeight = maxH
+	genesis.BaseHeight = baseH
 	genesis.ParentBlockID = parent
 	sb, err := c.proposeSkipBlock(genesis, nil, nil)
 	if err != nil {
@@ -63,10 +64,11 @@ func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.Pro
 }
 
 // CreateData will create a new SkipChainData with the parameters given
-func (c *Client) CreateData(parent *SkipBlock, maxH int, ver VerifierID, d network.ProtocolMessage) (
+func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, d network.ProtocolMessage) (
 	*SkipBlock, *SkipBlock, error) {
 	data := NewSkipBlock()
 	data.MaximumHeight = maxH
+	data.BaseHeight = baseH
 	data.VerifierID = ver
 	data.ParentBlockID = parent.Hash
 	data.EntityList = parent.EntityList

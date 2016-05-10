@@ -10,6 +10,7 @@ type Context interface {
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
 	Address() string
+	Entity() *network.Entity
 }
 
 // defaultContext is the implementation of the Context interface. It is
@@ -33,6 +34,12 @@ func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode) *TreeNodeIn
 	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, dc.servID)
 }
 
+// SendRaw sends a message to the entity
 func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {
 	return dc.Host.SendRaw(e, msg)
+}
+
+// Entity returns the entity the service uses
+func (dc *defaultContext) Entity() *network.Entity {
+	return dc.Host.Entity
 }

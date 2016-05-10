@@ -28,7 +28,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	root, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
+	root, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
@@ -53,10 +53,10 @@ func TestClient_CreateData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
-	inter, data, err := c.CreateData(inter, 4, VerifyNone, td)
+	inter, data, err := c.CreateData(inter, 1, 1, VerifyNone, td)
 	dbg.ErrFatal(err)
 	if err = data.VerifySignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
@@ -80,10 +80,10 @@ func TestClient_ProposeData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
-	inter, data1, err := c.CreateData(inter, 4, VerifyNone, td)
+	inter, data1, err := c.CreateData(inter, 1, 1, VerifyNone, td)
 	dbg.ErrFatal(err)
 	td.A++
 	data2, err := c.ProposeData(inter, data1, td)
@@ -91,7 +91,7 @@ func TestClient_ProposeData(t *testing.T) {
 	dataLast, err := c.GetUpdateChain(inter, data1.Hash)
 	dbg.ErrFatal(err)
 	if len(dataLast.Update) != 2 {
-		t.Fatal("Should have two SkipBlocks for update-chain")
+		t.Fatal("Should have two SkipBlocks for update-chain", len(dataLast.Update))
 	}
 	if !dataLast.Update[1].Equal(data2.Latest) {
 		t.Fatal("Newest SkipBlock should be stored")
@@ -105,7 +105,7 @@ func TestClient_ProposeRoster(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInter(el, el, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	el.List = el.List[:nbrHosts-1]
 	sb1, err := c.ProposeRoster(inter, el)
