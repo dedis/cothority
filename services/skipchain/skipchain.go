@@ -63,7 +63,7 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 		prop.VerifierID = prev.VerifierID
 		prop.Index = prev.Index + 1
 		index := prop.Index
-		for prop.Height = 1; index % prop.BaseHeight == 0; prop.Height++ {
+		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
 			if prop.Height >= prop.MaximumHeight {
 				break
@@ -74,7 +74,7 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 		prop.BackLinkIds = make([]SkipBlockID, prop.Height)
 		pointer := prev
 		for h := range prop.BackLinkIds {
-			for pointer.Height < h + 1 {
+			for pointer.Height < h+1 {
 				var ok bool
 				pointer, ok = s.getSkipBlockByID(pointer.BackLinkIds[0])
 				if !ok {
@@ -105,14 +105,14 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 		prop.Aggregate = prop.EntityList.Aggregate
 	}
 	el, err := prop.GetResponsible(s)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	prop.AggregateResp = el.Aggregate
 
 	prop.updateHash()
 
-	prev, prop, err 	= s.signNewSkipBlock(prev, prop)
+	prev, prop, err = s.signNewSkipBlock(prev, prop)
 	if err != nil {
 		return nil, errors.New("Verification error: " + err.Error())
 	}
@@ -136,7 +136,7 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block}
 	for len(block.ForwardLink) > 0 {
-		link := block.ForwardLink[len(block.ForwardLink) - 1]
+		link := block.ForwardLink[len(block.ForwardLink)-1]
 		block, ok = s.getSkipBlockByID(link.Hash)
 		if !ok {
 			return nil, errors.New("Missing block in forward-chain")
@@ -241,7 +241,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// create the message we want to sign for this round
 	msg := []byte(block.Hash)
 	el, err := block.GetResponsible(s)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	if len(el.List) == 0 {
@@ -295,7 +295,7 @@ func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlock) error {
 // SkipBlocks with each other.
 func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 	height := len(newest.BackLinkIds)
-	blocks := make([]*SkipBlock, height + 1)
+	blocks := make([]*SkipBlock, height+1)
 	blocks[0] = newest
 	for h := range newest.BackLinkIds {
 		dbg.Lvl4("Searching forward-link for", h)
@@ -305,16 +305,16 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 		}
 		bc := b.Copy()
 		dbg.Lvl4("Checking", b.Index, b, len(bc.ForwardLink))
-		if len(bc.ForwardLink) >= h + 1 {
+		if len(bc.ForwardLink) >= h+1 {
 			return nil, errors.New("Backlinking to a block which has a forwardlink")
 		}
-		for len(bc.ForwardLink) < h + 1 {
+		for len(bc.ForwardLink) < h+1 {
 			fl := NewBlockLink()
 			fl.Hash = newest.Hash
 			bc.ForwardLink = append(bc.ForwardLink, fl)
 		}
 		dbg.Lvl4("Block has now height of", len(bc.ForwardLink))
-		blocks[h + 1] = bc
+		blocks[h+1] = bc
 	}
 	return blocks, nil
 }
