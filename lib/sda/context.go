@@ -9,6 +9,7 @@ type Context interface {
 	NewTreeNodeInstance(*Tree, *TreeNode) *TreeNodeInstance
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
+	CreateProtocol(t *Tree, name string) (ProtocolInstance, error)
 	Address() string
 	Entity() *network.Entity
 }

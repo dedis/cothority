@@ -118,7 +118,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbs[0] = makeGenesisRoster(s, el)
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
-		el.List = el.List[0 : sbLength-(i+1)]
 		newSB := NewSkipBlock()
 		newSB.EntityList = el
 		psbrMsg, err := s.ProposeSkipBlock(nil,
