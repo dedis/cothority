@@ -30,6 +30,10 @@ func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
 	}
 }
 
+func (dc *defaultContext) Entity() *network.Entity {
+	return dc.Host.Entity
+}
+
 // NewTreeNodeInstance implements the Context interface method
 func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode) *TreeNodeInstance {
 	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, dc.servID)
