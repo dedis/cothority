@@ -5,11 +5,14 @@ import (
 
 	"fmt"
 
+	"errors"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -49,6 +52,8 @@ type SkipBlockFix struct {
 	ParentBlockID SkipBlockID
 	// Aggregate is the aggregate key of our responsible roster
 	Aggregate abstract.Point
+	// AggregateResp is the aggreate key of the responsible block for us
+	AggregateResp abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
 	// EntityList holds the roster-definition of that SkipBlock
@@ -73,8 +78,11 @@ func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
 // be hashed (yet).
 type SkipBlock struct {
 	*SkipBlockFix
-	// This is our block Hash and Signature
-	*BlockLink
+	// Hash is our Block-hash
+	Hash SkipBlockID
+	// BlockSig is the BFT-signature of the hash
+	BlockSig *bftcosi.BFTSignature
+
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
@@ -90,24 +98,28 @@ func NewSkipBlock() *SkipBlock {
 		SkipBlockFix: &SkipBlockFix{
 			Data: make([]byte, 0),
 		},
-		BlockLink: NewBlockLink(),
+		BlockSig: &bftcosi.BFTSignature{
+			Sig: cosi.NewSignature(network.Suite),
+			Msg: make([]byte, 0),
+		},
 	}
 }
 
 // VerifySignatures returns whether all signatures are correctly signed
 // by the aggregate public key of the roster. It needs the aggregate key.
 func (sb *SkipBlock) VerifySignatures() error {
-	if err := sb.BlockLink.VerifySignature(sb.Aggregate); err != nil {
+	if err := sb.BlockSig.Verify(network.Suite, sb.AggregateResp, sb.Hash); err != nil {
+		dbg.Error(err.Error() + dbg.Stack())
 		return err
 	}
-	for _, fl := range sb.ForwardLink {
-		if err := fl.VerifySignature(sb.Aggregate); err != nil {
-			return err
-		}
-	}
-	if sb.ChildSL != nil && sb.ChildSL.Hash == nil {
-		return sb.ChildSL.VerifySignature(sb.Aggregate)
-	}
+	//for _, fl := range sb.ForwardLink {
+	//	if err := fl.VerifySignature(sb.Aggregate); err != nil {
+	//		return err
+	//	}
+	//}
+	//if sb.ChildSL != nil && sb.ChildSL.Hash == nil {
+	//	return sb.ChildSL.VerifySignature(sb.Aggregate)
+	//}
 	return nil
 }
 
@@ -121,7 +133,11 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b := *sb
 	sbf := *b.SkipBlockFix
 	b.SkipBlockFix = &sbf
-	b.BlockLink = b.BlockLink.Copy()
+	b.BlockSig = &bftcosi.BFTSignature{
+		Sig:        &cosi.Signature{b.BlockSig.Sig.Challenge, b.BlockSig.Sig.Response},
+		Msg:        b.BlockSig.Msg,
+		Exceptions: b.BlockSig.Exceptions,
+	}
 	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
@@ -134,6 +150,37 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 
 func (sb *SkipBlock) String() string {
 	return sb.Hash.String()
+}
+
+// GetResponsible searches for the block that is responsible for us - for
+// - Genesis-block - it's himself
+// - Follower - it's the previous block
+// - Data - it's his parent
+func (sb *SkipBlock) GetResponsible(s *Service) (*sda.EntityList, error) {
+	el := sb.EntityList
+	if el == nil {
+		// We're a data-block, so use the parent's EntityList
+		if sb.ParentBlockID.IsNull() {
+			return nil, errors.New("Didn't find an EntityList")
+		}
+		parent, ok := s.getSkipBlockByID(sb.ParentBlockID)
+		if !ok {
+			return nil, errors.New("No EntityList and no parent")
+		}
+		if parent.EntityList == nil {
+			return nil, errors.New("Parent doesn't have EntityList")
+		}
+		el = parent.EntityList
+	} else {
+		if sb.Index > 0 {
+			latest, ok := s.getSkipBlockByID(sb.BackLinkIds[0])
+			if !ok {
+				return nil, errors.New("Non-genesis block and no previous block available")
+			}
+			el = latest.EntityList
+		}
+	}
+	return el, nil
 }
 
 func (sb *SkipBlock) updateHash() SkipBlockID {
@@ -171,7 +218,7 @@ func (bl *BlockLink) Copy() *BlockLink {
 // correctly using the aggregate key given.
 func (bl *BlockLink) VerifySignature(aggregate abstract.Point) error {
 	// TODO: enable real verification once we have signatures
-	return nil
-	//return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
-	//	bl.Challenge, bl.Response)
+	//return nil
+	return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
+		bl.Challenge, bl.Response)
 }

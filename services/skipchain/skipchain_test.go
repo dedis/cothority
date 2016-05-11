@@ -13,6 +13,7 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
 )
@@ -118,7 +119,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbs[0] = makeGenesisRoster(s, el)
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
-		el.List = el.List[0 : sbLength-(i+1)]
 		newSB := NewSkipBlock()
 		newSB.EntityList = el
 		psbrMsg, err := s.ProposeSkipBlock(nil,
@@ -317,7 +317,24 @@ func TestCopy(t *testing.T) {
 }
 
 func TestService_SignBlock(t *testing.T) {
+	// Testing whether we sign correctly the SkipBlocks
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, service := makeHELS(local, 3)
 
+	sbRoot := makeGenesisRosterArgs(service, el, nil, VerifyNone, 1, 1)
+	el2 := sda.NewEntityList(el.List[0:2])
+	sb := NewSkipBlock()
+	sb.EntityList = el2
+	psbr, err := service.ProposeSkipBlock(nil,
+		&ProposeSkipBlock{sbRoot.Hash, sb})
+	dbg.ErrFatal(err)
+	reply := psbr.(*ProposedSkipBlockReply)
+	sbRoot = reply.Previous
+	sbSecond := reply.Latest
+	dbg.ErrFatal(sbRoot.VerifySignatures())
+	dbg.ErrFatal(sbSecond.VerifySignatures())
+	dbg.ErrFatal(sbSecond.BlockSig.Verify(network.Suite, sbRoot.Aggregate, sbSecond.Hash))
 }
 
 func TestService_ForwardSignature(t *testing.T) {

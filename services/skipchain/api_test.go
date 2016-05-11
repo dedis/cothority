@@ -107,14 +107,14 @@ func TestClient_ProposeRoster(t *testing.T) {
 	c := NewClient()
 	_, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
-	el.List = el.List[:nbrHosts-1]
-	sb1, err := c.ProposeRoster(inter, el)
+	el2 := sda.NewEntityList(el.List[:nbrHosts-1])
+	sb1, err := c.ProposeRoster(inter, el2)
 	dbg.ErrFatal(err)
-	_, err = c.ProposeRoster(inter, el)
+	_, err = c.ProposeRoster(inter, el2)
 	if err == nil {
 		t.Fatal("Appending two Blocks to the same last block should fail")
 	}
-	sb2, err := c.ProposeRoster(sb1.Latest, el)
+	sb2, err := c.ProposeRoster(sb1.Latest, el2)
 	dbg.ErrFatal(err)
 	if !sb2.Previous.Equal(sb1.Latest) {
 		t.Fatal("New previous should be previous latest")

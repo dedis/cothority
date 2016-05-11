@@ -14,8 +14,8 @@ import (
 
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
-// protocol
-type VerificationFunction func([]byte) bool
+// protocol. The passed message is the same as sent in the challenge phase.
+type VerificationFunction func(Msg []byte) bool
 
 // ProtocolBFTCoSi is the main struct for running the protocol
 type ProtocolBFTCoSi struct {
@@ -25,7 +25,7 @@ type ProtocolBFTCoSi struct {
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers
-	aggregatedPublic abstract.Point
+	AggregatedPublic abstract.Point
 	// prepare-round cosi
 	prepare *cosi.Cosi
 	// commit-round cosi
@@ -111,7 +111,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		doneProcessing:   make(chan bool, 2),
 		doneSigning:      make(chan bool, 1),
 		verificationFun:  verify,
-		aggregatedPublic: n.EntityList().Aggregate,
+		AggregatedPublic: n.EntityList().Aggregate,
 		threshold:        int(2.0 * math.Ceil(float64(len(n.Tree().List()))/3.0)),
 	}
 
@@ -376,7 +376,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 
 	// verify if the signature is correct
 	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
-		bft.aggregatedPublic, h, ch.Signature,
+		bft.AggregatedPublic, h, ch.Signature,
 		ch.Exceptions); err != nil {
 		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
@@ -577,7 +577,8 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	dbg.Lvl3(bft.Name(), "nodeDone()")
 	bft.doneProcessing <- true
-	if bft.onDoneCallback != nil { // only true for the root
+	if bft.onDoneCallback != nil {
+		// only true for the root
 		bft.onDoneCallback()
 	}
 	return true

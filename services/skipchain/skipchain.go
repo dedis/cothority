@@ -10,10 +10,12 @@ import (
 
 	"strconv"
 
-	"github.com/dedis/cothority/lib/cosi"
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/bftcosi"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -99,9 +101,18 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 		rand.Read(bl)
 		prop.BackLinkIds = []SkipBlockID{SkipBlockID(bl)}
 	}
+	if prop.EntityList != nil {
+		prop.Aggregate = prop.EntityList.Aggregate
+	}
+	el, err := prop.GetResponsible(s)
+	if err != nil {
+		return nil, err
+	}
+	prop.AggregateResp = el.Aggregate
+
 	prop.updateHash()
 
-	prev, prop, err := s.signNewSkipBlock(prev, prop)
+	prev, prop, err = s.signNewSkipBlock(prev, prop)
 	if err != nil {
 		return nil, errors.New("Verification error: " + err.Error())
 	}
@@ -168,7 +179,12 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 // PropagateSkipBlock is called when a new SkipBlock or updated SkipBlock is
 // available.
 func (s *Service) PropagateSkipBlock(e *network.Entity, latest *PropagateSkipBlock) (network.ProtocolMessage, error) {
-	s.storeSkipBlock(latest.SkipBlock)
+	sb := latest.SkipBlock
+	if err := sb.VerifySignatures(); err != nil {
+		dbg.Error(err)
+		return nil, err
+	}
+	s.storeSkipBlock(sb)
 	return nil, nil
 }
 
@@ -192,7 +208,14 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 	}
 
 	// Sign it
-	newest.BlockLink.Signature = cosi.NewSignature(network.Suite)
+	err := s.startBFTSignature(newest)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := newest.VerifySignatures(); err != nil {
+		dbg.Error("Couldn't verify signature: " + err.Error())
+		return nil, nil, err
+	}
 
 	newblocks := make([]*SkipBlock, 1)
 	if latest == nil {
@@ -209,11 +232,48 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 	}
 
 	// Store and propagate the new SkipBlocks
-	for _, b := range newblocks {
-		s.storeSkipBlock(b)
-	}
 	s.startPropagation(newblocks)
 	return latest, newblocks[0], nil
+}
+
+func (s *Service) startBFTSignature(block *SkipBlock) error {
+	done := make(chan bool)
+	// create the message we want to sign for this round
+	msg := []byte(block.Hash)
+	el, err := block.GetResponsible(s)
+	if err != nil {
+		return err
+	}
+	if len(el.List) == 0 {
+		return errors.New("Found empty EntityList")
+	}
+
+	// Start the protocol
+	tree := el.GenerateBigNaryTree(2, len(el.List))
+	node, err := s.CreateProtocol(tree, SkipchainBFT)
+	if err != nil {
+		return errors.New("Couldn't create new node: " + err.Error())
+	}
+
+	// Register the function generating the protocol instance
+	root := node.(*bftcosi.ProtocolBFTCoSi)
+	root.Msg = msg
+	// function that will be called when protocol is finished by the root
+	root.RegisterOnDone(func() {
+		done <- true
+	})
+	go node.Start()
+	select {
+	case <-done:
+		block.BlockSig = root.Signature()
+		if err := block.BlockSig.Verify(network.Suite, el.Aggregate, msg); err != nil {
+			return errors.New("Couldn't verify signature")
+		}
+		return nil
+	case <-time.After(time.Second * 3):
+		return errors.New("Timed out while waiting for signature")
+	}
+	return errors.New("Nothing happened...")
 }
 
 func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlock) error {
@@ -259,6 +319,43 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 	return blocks, nil
 }
 
+// notify other services about new/updated skipblock
+func (s *Service) startPropagation(blocks []*SkipBlock) error {
+	for _, block := range blocks {
+		list := block.EntityList
+		if list == nil {
+			// Suppose it's a dataSkipBlock
+			sb, ok := s.getSkipBlockByID(block.ParentBlockID)
+			if !ok {
+				return errors.New("Didn't find EntityList nor parent")
+			}
+			list = sb.EntityList
+		}
+		for _, e := range list.List {
+			if e.ID.Equals(s.Context.Entity().ID) {
+				s.storeSkipBlock(block)
+				continue
+			}
+			var cr *sda.ServiceMessage
+			var err error
+			cr, err = sda.CreateServiceMessage(ServiceName,
+				&PropagateSkipBlock{block})
+			if err != nil {
+				return err
+			}
+			if err := s.SendRaw(e, cr); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// bftVerify takes a message and verifies it's valid
+func (s *Service) bftVerify(msg []byte) bool {
+	return true
+}
+
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
 	s.sbMutex.Lock()
@@ -282,36 +379,7 @@ func (s *Service) lenSkipBlocks() int {
 	return len(s.SkipBlocks)
 }
 
-// notify other services about new/updated skipblock
-func (s *Service) startPropagation(blocks []*SkipBlock) error {
-	for _, block := range blocks {
-		list := block.EntityList
-		if list == nil {
-			// Suppose it's a dataSkipBlock
-			sb, ok := s.getSkipBlockByID(block.ParentBlockID)
-			if !ok {
-				return errors.New("Didn't find EntityList nor parent")
-			}
-			list = sb.EntityList
-		}
-		for _, e := range list.List {
-			if e.ID.Equals(s.Context.Entity().ID) {
-				continue
-			}
-			var cr *sda.ServiceMessage
-			var err error
-			cr, err = sda.CreateServiceMessage(ServiceName,
-				&PropagateSkipBlock{block})
-			if err != nil {
-				return err
-			}
-			if err := s.SendRaw(e, cr); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
+const SkipchainBFT = "SkipchainBFT"
 
 func newSkipchainService(c sda.Context, path string) sda.Service {
 	s := &Service{
@@ -319,6 +387,9 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 		path:             path,
 		SkipBlocks:       make(map[string]*SkipBlock),
 	}
+	sda.ProtocolRegisterName(SkipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
+	})
 	if err := s.RegisterMessage(s.PropagateSkipBlock); err != nil {
 		dbg.Fatal("Registration error:", err)
 	}

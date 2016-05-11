@@ -65,7 +65,7 @@ func TestBftCoSi(t *testing.T) {
 			countMut.Unlock()
 			sig := root.Signature()
 			if err := cosi.VerifyCosiSignatureWithException(root.Suite(),
-				root.aggregatedPublic, msg, sig.Sig,
+				root.AggregatedPublic, msg, sig.Sig,
 				sig.Exceptions); err != nil {
 
 				t.Fatal(fmt.Sprintf("%s Verification of the signature failed: %s", root.Name(), err.Error()))
