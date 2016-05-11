@@ -3,11 +3,16 @@ package skipchain
 import (
 	"bytes"
 
+	"fmt"
+
+	"errors"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -27,17 +32,25 @@ func (sbid SkipBlockID) IsNull() bool {
 	return len(sbid) == 0
 }
 
+func (sbid SkipBlockID) String() string {
+	if sbid.IsNull() {
+		return "Nil"
+	}
+	return fmt.Sprintf("%x", []byte(sbid[0:8]))
+}
+
 // SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
 // and signed.
 type SkipBlockFix struct {
-	Index uint32
+	Index int
 	// Height of that SkipBlock
-	Height uint32
-	// For deterministic SkipChains at what height to stop:
-	// - if negative: we will use random distribution to calculate the
-	// height of each new block
-	// - else: the max height determines the height of the next block
+	Height int
+	// The max height determines the height of the next block
 	MaximumHeight int
+	// For deterministic SkipChains, chose a value >= 1 - higher
+	// bases mean more 'height = 1' SkipBlocks
+	// For random SkipChains, chose a value of 0
+	BaseHeight int
 	// BackLink is a slice of hashes to previous SkipBlocks
 	BackLinkIds []SkipBlockID
 	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
@@ -47,6 +60,8 @@ type SkipBlockFix struct {
 	ParentBlockID SkipBlockID
 	// Aggregate is the aggregate key of our responsible roster
 	Aggregate abstract.Point
+	// AggregateResp is the aggreate key of the responsible block for us
+	AggregateResp abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
 	// EntityList holds the roster-definition of that SkipBlock
@@ -71,8 +86,11 @@ func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
 // be hashed (yet).
 type SkipBlock struct {
 	*SkipBlockFix
-	// This is our block Hash and Signature
-	*BlockLink
+	// Hash is our Block-hash
+	Hash SkipBlockID
+	// BlockSig is the BFT-signature of the hash
+	BlockSig *bftcosi.BFTSignature
+
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
@@ -88,35 +106,94 @@ func NewSkipBlock() *SkipBlock {
 		SkipBlockFix: &SkipBlockFix{
 			Data: make([]byte, 0),
 		},
-		BlockLink: NewBlockLink(),
+		BlockSig: &bftcosi.BFTSignature{
+			Sig: cosi.NewSignature(network.Suite),
+			Msg: make([]byte, 0),
+		},
 	}
 }
 
 // VerifySignatures returns whether all signatures are correctly signed
 // by the aggregate public key of the roster. It needs the aggregate key.
-func (sbc *SkipBlock) VerifySignatures() error {
-	if err := sbc.BlockLink.VerifySignature(sbc.Aggregate); err != nil {
+func (sb *SkipBlock) VerifySignatures() error {
+	if err := sb.BlockSig.Verify(network.Suite, sb.AggregateResp, sb.Hash); err != nil {
+		dbg.Error(err.Error() + dbg.Stack())
 		return err
 	}
-	for _, fl := range sbc.ForwardLink {
-		if err := fl.VerifySignature(sbc.Aggregate); err != nil {
-			return err
-		}
-	}
-	if sbc.ChildSL != nil && sbc.ChildSL.Hash == nil {
-		return sbc.ChildSL.VerifySignature(sbc.Aggregate)
-	}
+	//for _, fl := range sb.ForwardLink {
+	//	if err := fl.VerifySignature(sb.Aggregate); err != nil {
+	//		return err
+	//	}
+	//}
+	//if sb.ChildSL != nil && sb.ChildSL.Hash == nil {
+	//	return sb.ChildSL.VerifySignature(sb.Aggregate)
+	//}
 	return nil
 }
 
 // Equal returns bool if both hashes are equal
-func (sbc *SkipBlock) Equal(sb *SkipBlock) bool {
-	return bytes.Equal(sbc.Hash, sb.Hash)
+func (sb *SkipBlock) Equal(other *SkipBlock) bool {
+	return bytes.Equal(sb.Hash, other.Hash)
 }
 
-func (sbc *SkipBlock) updateHash() SkipBlockID {
-	sbc.Hash = sbc.calculateHash()
-	return sbc.Hash
+// Copy makes a deep copy of the SkipBlock
+func (sb *SkipBlock) Copy() *SkipBlock {
+	b := *sb
+	sbf := *b.SkipBlockFix
+	b.SkipBlockFix = &sbf
+	b.BlockSig = &bftcosi.BFTSignature{
+		Sig:        &cosi.Signature{b.BlockSig.Sig.Challenge, b.BlockSig.Sig.Response},
+		Msg:        b.BlockSig.Msg,
+		Exceptions: b.BlockSig.Exceptions,
+	}
+	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
+	for i, fl := range sb.ForwardLink {
+		b.ForwardLink[i] = fl.Copy()
+	}
+	if b.ChildSL != nil {
+		b.ChildSL = sb.ChildSL.Copy()
+	}
+	return &b
+}
+
+func (sb *SkipBlock) String() string {
+	return sb.Hash.String()
+}
+
+// GetResponsible searches for the block that is responsible for us - for
+// - Genesis-block - it's himself
+// - Follower - it's the previous block
+// - Data - it's his parent
+func (sb *SkipBlock) GetResponsible(s *Service) (*sda.EntityList, error) {
+	el := sb.EntityList
+	if el == nil {
+		// We're a data-block, so use the parent's EntityList
+		if sb.ParentBlockID.IsNull() {
+			return nil, errors.New("Didn't find an EntityList")
+		}
+		parent, ok := s.getSkipBlockByID(sb.ParentBlockID)
+		if !ok {
+			return nil, errors.New("No EntityList and no parent")
+		}
+		if parent.EntityList == nil {
+			return nil, errors.New("Parent doesn't have EntityList")
+		}
+		el = parent.EntityList
+	} else {
+		if sb.Index > 0 {
+			latest, ok := s.getSkipBlockByID(sb.BackLinkIds[0])
+			if !ok {
+				return nil, errors.New("Non-genesis block and no previous block available")
+			}
+			el = latest.EntityList
+		}
+	}
+	return el, nil
+}
+
+func (sb *SkipBlock) updateHash() SkipBlockID {
+	sb.Hash = sb.calculateHash()
+	return sb.Hash
 }
 
 // BlockLink has the hash and a signature of a block
@@ -133,11 +210,23 @@ func NewBlockLink() *BlockLink {
 	}
 }
 
+// Copy makes a deep copy of a blocklink
+func (bl *BlockLink) Copy() *BlockLink {
+	sig := &cosi.Signature{
+		Challenge: network.Suite.Secret().Set(bl.Challenge),
+		Response:  network.Suite.Secret().Set(bl.Response),
+	}
+	return &BlockLink{
+		Hash:      bl.Hash,
+		Signature: sig,
+	}
+}
+
 // VerifySignature returns whether the BlockLink has been signed
 // correctly using the aggregate key given.
 func (bl *BlockLink) VerifySignature(aggregate abstract.Point) error {
 	// TODO: enable real verification once we have signatures
-	return nil
-	//return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
-	//	bl.Challenge, bl.Response)
+	//return nil
+	return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
+		bl.Challenge, bl.Response)
 }

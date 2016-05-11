@@ -9,7 +9,11 @@ import (
 
 	"time"
 
+	"errors"
+	"fmt"
+
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
 )
@@ -49,10 +53,6 @@ func TestSkipBlock_Hash2(t *testing.T) {
 	assert.NotEqual(t, h1, h2)
 }
 
-func TestSkipBlockInterface(t *testing.T) {
-	// Tests the different accessors
-}
-
 func TestService_ProposeSkipBlock(t *testing.T) {
 	// First create a roster to attach the data to it
 	local := sda.NewLocalTest()
@@ -66,15 +66,15 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	genesis := NewSkipBlock()
 	genesis.Data = []byte("In the beginning God created the heaven and the earth.")
 	genesis.MaximumHeight = 2
+	genesis.BaseHeight = 2
 	genesis.ParentBlockID = sbRoot.Hash
 	genesis.EntityList = sbRoot.EntityList
-	blockCount := uint32(0)
+	blockCount := 0
 	psbrMsg, err := service.ProposeSkipBlock(nil, &ProposeSkipBlock{nil, genesis})
 	assert.Nil(t, err)
 	psbr := psbrMsg.(*ProposedSkipBlockReply)
 	latest := psbr.Latest
 	// verify creation of GenesisBlock:
-	blockCount++
 	assert.Equal(t, blockCount, latest.Index)
 	// the genesis block has a random back-link:
 	assert.Equal(t, 1, len(latest.BackLinkIds))
@@ -88,7 +88,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	next.ParentBlockID = sbRoot.Hash
 	next.EntityList = sbRoot.EntityList
 	id := psbr.Latest.Hash
-	psbrMsg, err = service.ProposeSkipBlock(nil, &ProposeSkipBlock{id, genesis})
+	psbrMsg, err = service.ProposeSkipBlock(nil, &ProposeSkipBlock{id, next})
 	assert.Nil(t, err)
 	psbr2 := psbrMsg.(*ProposedSkipBlockReply)
 	dbg.Lvl2(psbr2)
@@ -119,7 +119,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbs[0] = makeGenesisRoster(s, el)
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
-		el.List = el.List[0 : sbLength-(i+1)]
 		newSB := NewSkipBlock()
 		newSB.EntityList = el
 		psbrMsg, err := s.ProposeSkipBlock(nil,
@@ -174,7 +173,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
-	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone)
+	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone, 1, 1)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
 	// Wait for block-propagation
@@ -188,7 +187,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		dbg.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		sb := m.(*GetUpdateChainReply)
 		dbg.Lvl2(s.Context)
-		if len(sb.Update) != 1 { // we expect only the first block
+		if len(sb.Update) != 1 {
+			// we expect only the first block
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
 		link := sb.Update[0].ChildSL
@@ -222,11 +222,119 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	}
 }
 
-func TestService_PropagateSkipBlock(t *testing.T) {
+func TestService_MultiLevel(t *testing.T) {
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, service := makeHELS(local, 3)
+
+	for base := 1; base <= 3; base++ {
+		for height := 1; height <= 3; height++ {
+			if base == 1 && height > 1 {
+				break
+			}
+			sbRoot := makeGenesisRosterArgs(service, el, nil, VerifyNone,
+				base, height)
+			latest := sbRoot
+			dbg.Lvl1("Adding blocks for", base, height)
+			for sbi := 1; sbi < 10; sbi++ {
+				sb := NewSkipBlock()
+				sb.EntityList = el
+				psbr, err := service.ProposeSkipBlock(nil,
+					&ProposeSkipBlock{latest.Hash, sb})
+				dbg.ErrFatal(err)
+				latest = psbr.(*ProposedSkipBlockReply).Latest
+			}
+
+			dbg.ErrFatal(checkMLForwardBackward(service, sbRoot, base, height))
+			dbg.ErrFatal(checkMLUpdate(service, sbRoot, latest, base, height))
+		}
+	}
+	// Setting up two chains and linking one to the other
+}
+
+func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
+	genesis, ok := service.getSkipBlockByID(root.Hash)
+	if !ok {
+		return errors.New("Didn't find genesis-block in service")
+	}
+	if len(genesis.ForwardLink) != height {
+		return errors.New("Genesis-block doesn't have forward-links of " +
+			strconv.Itoa(height))
+	}
+	return nil
+}
+
+func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) error {
+	chain, err := service.GetUpdateChain(nil, &GetUpdateChain{root.Hash})
+	if err != nil {
+		return err
+	}
+	updates := chain.(*GetUpdateChainReply).Update
+	genesis := updates[0]
+	if len(genesis.ForwardLink) != height {
+		return errors.New("Genesis-block doesn't have height " + strconv.Itoa(height))
+	}
+	if len(updates[1].BackLinkIds) != height {
+		return errors.New("Second block doesn't have correct number of backlinks")
+	}
+	l := updates[len(updates)-1]
+	if len(l.ForwardLink) != 0 {
+		return errors.New("Last block still has forward-links")
+	}
+	if !l.Equal(latest) {
+		return errors.New("Last block from update is not the same as last block")
+	}
+	if base > 1 && height > 1 && len(updates) == 10 {
+		return fmt.Errorf("Shouldn't need 10 blocks with base %d and height %d",
+			base, height)
+	}
+	return nil
+}
+
+func TestCopy(t *testing.T) {
+	// Test if copy is deep or only shallow
+	b1 := NewBlockLink()
+	b1.Challenge.One()
+	b2 := b1.Copy()
+	b2.Challenge.Zero()
+	if b1.Challenge.Equal(b2.Challenge) {
+		t.Fatal("They should not be equal")
+	}
+
+	sb1 := NewSkipBlock()
+	sb1.ChildSL = NewBlockLink()
+	sb2 := sb1.Copy()
+	sb1.ChildSL.Challenge.Zero()
+	sb2.ChildSL.Challenge.One()
+	if sb1.ChildSL.Challenge.Equal(sb2.ChildSL.Challenge) {
+		t.Fatal("They should not be equal")
+	}
+	sb1.Height = 10
+	sb2.Height = 20
+	if sb1.Height == sb2.Height {
+		t.Fatal("Should not be equal")
+	}
 }
 
 func TestService_SignBlock(t *testing.T) {
+	// Testing whether we sign correctly the SkipBlocks
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, service := makeHELS(local, 3)
 
+	sbRoot := makeGenesisRosterArgs(service, el, nil, VerifyNone, 1, 1)
+	el2 := sda.NewEntityList(el.List[0:2])
+	sb := NewSkipBlock()
+	sb.EntityList = el2
+	psbr, err := service.ProposeSkipBlock(nil,
+		&ProposeSkipBlock{sbRoot.Hash, sb})
+	dbg.ErrFatal(err)
+	reply := psbr.(*ProposedSkipBlockReply)
+	sbRoot = reply.Previous
+	sbSecond := reply.Latest
+	dbg.ErrFatal(sbRoot.VerifySignatures())
+	dbg.ErrFatal(sbSecond.VerifySignatures())
+	dbg.ErrFatal(sbSecond.BlockSig.Verify(network.Suite, sbRoot.Aggregate, sbSecond.Hash))
 }
 
 func TestService_ForwardSignature(t *testing.T) {
@@ -234,21 +342,22 @@ func TestService_ForwardSignature(t *testing.T) {
 
 // makes a genesis Roster-block
 func makeGenesisRosterArgs(s *Service, el *sda.EntityList, parent SkipBlockID,
-	vid VerifierID) *SkipBlock {
+	vid VerifierID, base, height int) *SkipBlock {
 	sb := NewSkipBlock()
 	sb.EntityList = el
-	sb.MaximumHeight = 4
+	sb.MaximumHeight = height
+	sb.BaseHeight = base
 	sb.ParentBlockID = parent
 	sb.VerifierID = vid
 	psbrMsg, err := s.ProposeSkipBlock(nil,
 		&ProposeSkipBlock{nil, sb})
-	psbr := psbrMsg.(*ProposedSkipBlockReply)
 	dbg.ErrFatal(err)
+	psbr := psbrMsg.(*ProposedSkipBlockReply)
 	return psbr.Latest
 }
 
 func makeGenesisRoster(s *Service, el *sda.EntityList) *SkipBlock {
-	return makeGenesisRosterArgs(s, el, nil, VerifyNone)
+	return makeGenesisRosterArgs(s, el, nil, VerifyNone, 1, 1)
 }
 
 // Makes a Host, an EntityList, and a service
