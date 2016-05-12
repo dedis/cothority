@@ -145,22 +145,6 @@ func runServer(ctx *cli.Context) {
 func interactiveConfig() {
 	fmt.Println("[+] Welcome ! Let's setup the configuration file for a cothority server...")
 
-	// create the keys
-	fmt.Println("[+] Creation of the ed25519 private and public keys...")
-	kp := config.NewKeyPair(network.Suite)
-	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
-	if err != nil {
-		stderrExit("[-] Error formating private key to hexadecimal. Abort.")
-	}
-
-	pubStr, err := crypto.PubHex(network.Suite, kp.Public)
-	if err != nil {
-		stderrExit("[-] Could not parse public key. Abort.")
-	}
-
-	fmt.Println("[+] Private:\t", privStr)
-	fmt.Println("[+] Public: \t", pubStr)
-
 	fmt.Print("[*] We need to know on which [address:]PORT you want your server to listen to: ")
 	reader := bufio.NewReader(os.Stdin)
 	var str = readString(reader)
@@ -189,8 +173,8 @@ func interactiveConfig() {
 	}
 
 	var text = `[+] We now need to get a reachable address for other cothority servers 
-					and clients to contact you. This address will be put in a group definition 
-					file that you can share and combine with others to form a Cothority roster.`
+    and clients to contact you. This address will be put in a group definition 
+	file that you can share and combine with others to form a Cothority roster.`
 	fmt.Println(text)
 
 	var publicAddress string
@@ -228,6 +212,24 @@ func interactiveConfig() {
 		reachableAddress = tryIp
 		fmt.Println("[+] Address", reachableAddress, " publicly available from Internet!")
 	}
+
+	// create the keys
+	fmt.Println("[+] Creation of the ed25519 private and public keys...")
+	kp := config.NewKeyPair(network.Suite)
+	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
+	if err != nil {
+		stderrExit("[-] Error formating private key to hexadecimal. Abort.")
+	}
+
+	pubStr, err := crypto.PubHex(network.Suite, kp.Public)
+	if err != nil {
+		stderrExit("[-] Could not parse public key. Abort.")
+	}
+
+	fmt.Println("[+] Private:\t", privStr)
+	fmt.Println("[+] Public: \t", pubStr)
+
+
 
 	var configDone bool
 	var configFile string
@@ -293,7 +295,7 @@ func interactiveConfig() {
 }
 
 func stderr(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, a...)
+	fmt.Fprintf(os.Stderr, format + "\n", a...)
 }
 func stderrExit(format string, a ...interface{}) {
 	stderr(format, a...)
