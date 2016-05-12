@@ -172,7 +172,6 @@ func interactiveConfig() {
 		portStr = splitted[1]
 	}
 
-	fmt.Println("amithere2?")
 	// let's check if they are correct
 	serverBinding = hostStr + ":" + portStr
 	hostStr, portStr, err := net.SplitHostPort(serverBinding)
