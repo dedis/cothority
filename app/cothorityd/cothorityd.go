@@ -255,7 +255,7 @@ func interactiveConfig() {
 		var dirName = path.Dir(configFile)
 		if _, err := os.Stat(dirName); os.IsNotExist(err) {
 			fmt.Println("[+] Creating inexistant directory configuration", dirName)
-			if err = os.Mkdir(dirName, 0666); err != nil {
+			if err = os.MkdirAll(dirName, 0744); err != nil {
 				stderrExit("[-] Could not create directory configuration", dirName, err)
 			}
 		}
@@ -304,7 +304,7 @@ func interactiveConfig() {
 }
 
 func stderr(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format+"\n", a...)
+	fmt.Fprintf(os.Stderr, fmt.Sprint(a...)+"\n")
 }
 func stderrExit(format string, a ...interface{}) {
 	stderr(format, a...)
