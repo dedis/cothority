@@ -151,7 +151,6 @@ func interactiveConfig() {
 	fmt.Print("[*] We need to know on which [address:]PORT you want your server to listen to: ")
 	reader := bufio.NewReader(os.Stdin)
 	var str = readString(reader)
-
 	// let's dissect the port / IP
 	var hostStr string
 	var ipProvided bool = true
@@ -173,6 +172,7 @@ func interactiveConfig() {
 		portStr = splitted[1]
 	}
 
+	fmt.Println("amithere2?")
 	// let's check if they are correct
 	serverBinding = hostStr + ":" + portStr
 	hostStr, portStr, err := net.SplitHostPort(serverBinding)
@@ -307,7 +307,7 @@ func interactiveConfig() {
 }
 
 func stderr(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, fmt.Sprint(a...)+"\n")
+	fmt.Fprintf(os.Stderr, fmt.Sprintf(format, a...)+"\n")
 }
 func stderrExit(format string, a ...interface{}) {
 	stderr(format, a...)
