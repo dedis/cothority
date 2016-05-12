@@ -44,6 +44,7 @@ import (
 	"os/user"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/codegangsta/cli"
@@ -153,29 +154,36 @@ func interactiveConfig() {
 	var hostStr string
 	var ipProvided bool = true
 	var portStr string
-	var combined string
+	var serverBinding string
 	splitted := strings.Split(str, ":")
 
-	// No IP provided
+	// one element provided
 	if len(splitted) == 1 {
+		if _, err := strconv.Atoi(splitted[0]); err != nil {
+			stderrExit("[-] You have to provide a port number at least!")
+		}
+		// ip
 		ipProvided = false
 		hostStr = "0.0.0.0"
+		portStr = splitted[0]
+	} else {
+		hostStr = splitted[0]
+		portStr = splitted[1]
 	}
 
 	// let's check if they are correct
-	combined = hostStr + ":" + portStr
-	hostStr, portStr, err = net.SplitHostPort(combined)
+	serverBinding = hostStr + ":" + portStr
+	hostStr, portStr, err := net.SplitHostPort(serverBinding)
 	if err != nil {
-		stderrExit("[-] Invalid connection information for", combined, " :", err)
+		stderrExit("[-] Invalid connection information for", serverBinding, " :", err)
 	}
 	if net.ParseIP(hostStr) == nil {
-		stderrExit("[-] Invalid connection  information for", combined)
+		stderrExit("[-] Invalid connection  information for", serverBinding)
 	}
 
-	var text = `[+] We now need to get a reachable address for other cothority servers 
-    and clients to contact you. This address will be put in a group definition 
-	file that you can share and combine with others to form a Cothority roster.`
-	fmt.Println(text)
+	fmt.Println("[+] We now need to get a reachable address for other cothority servers")
+	fmt.Println("    and clients to contact you. This address will be put in a group definition")
+	fmt.Println("    file that you can share and combine with others to form a Cothority roster.")
 
 	var publicAddress string
 	var failedPublic bool
@@ -187,34 +195,37 @@ func interactiveConfig() {
 			stderr("[-] Could not get your public IP address")
 			failedPublic = true
 		} else {
-			var read = bufio.NewReader(resp.Body)
+			buff, err := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
-			publicAddress, err = read.ReadString('\n')
 			if err != nil {
-				stderr("[-] Could not parse your public IP address")
+				stderr("[-] Could not parse your public IP address", err)
 				failedPublic = true
+			} else {
+				publicAddress = strings.TrimSpace(string(buff)) + ":" + portStr
 			}
 		}
+	} else {
 	}
 
 	var reachableAddress string
 	// Let's directly ask the user for a reachable address
 	if failedPublic {
-		reachableAddress = askReachableAddress(reader)
+		reachableAddress = askReachableAddress(reader, portStr)
 	} else {
 		// try  to connect to ipfound:portgiven
-		tryIp := publicAddress + ":" + portStr
-		fmt.Println("[+] Your public IP address seems to be", tryIp, ". Let's try see if you are reachable with the port given")
+		tryIp := publicAddress
+		fmt.Println("[+] Check if the address", tryIp, " is reachable from Internet...")
 		if err := tryConnect(tryIp); err != nil {
 			stderr("[-] Could not connect to your public IP")
-			reachableAddress = askReachableAddress(reader)
+			reachableAddress = askReachableAddress(reader, portStr)
+		} else {
+			reachableAddress = tryIp
+			fmt.Println("[+] Address", reachableAddress, " publicly available from Internet!")
 		}
-		reachableAddress = tryIp
-		fmt.Println("[+] Address", reachableAddress, " publicly available from Internet!")
 	}
 
 	// create the keys
-	fmt.Println("[+] Creation of the ed25519 private and public keys...")
+	fmt.Println("\n[+] Creation of the ed25519 private and public keys...")
 	kp := config.NewKeyPair(network.Suite)
 	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
 	if err != nil {
@@ -227,9 +238,7 @@ func interactiveConfig() {
 	}
 
 	fmt.Println("[+] Private:\t", privStr)
-	fmt.Println("[+] Public: \t", pubStr)
-
-
+	fmt.Println("[+] Public: \t", pubStr, "\n")
 
 	var configDone bool
 	var configFile string
@@ -265,12 +274,13 @@ func interactiveConfig() {
 				stderrExit("[-] Could not interpret your response. Abort.")
 			}
 		}
+		configDone = true
 	}
 
 	conf := &c.CothoritydConfig{
 		Public:    pubStr,
 		Private:   privStr,
-		Addresses: []string{str},
+		Addresses: []string{serverBinding},
 	}
 	if err = conf.Save(configFile); err != nil {
 		stderrExit("[-] Unable to write the config to file:", err)
@@ -280,8 +290,7 @@ func interactiveConfig() {
 	// group definition part
 	var dirName = path.Dir(configFile)
 	var groupFile = path.Join(dirName, GROUP_DEF)
-	serverToml := c.NewServerToml(network.Suite, kp.Public,
-		conf.Addresses...)
+	serverToml := c.NewServerToml(network.Suite, kp.Public, reachableAddress)
 	groupToml := c.NewGroupToml(serverToml)
 
 	if err := groupToml.Save(groupFile); err != nil {
@@ -295,7 +304,7 @@ func interactiveConfig() {
 }
 
 func stderr(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format + "\n", a...)
+	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 func stderrExit(format string, a ...interface{}) {
 	stderr(format, a...)
@@ -304,7 +313,7 @@ func stderrExit(format string, a ...interface{}) {
 
 func getDefaultConfigFile() string {
 	u, err := user.Current()
-	// can't get the user dir, so fallback to current one
+	// can't get the user dir, so fallback to currere ynt one
 	if err != nil {
 		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
 		if curr, err := os.Getwd(); err != nil {
@@ -331,11 +340,24 @@ func readString(reader *bufio.Reader) string {
 	return strings.TrimSpace(str)
 }
 
-func askReachableAddress(reader *bufio.Reader) string {
-	fmt.Println("[+] Enter the IP address you would like others cothority servers and client to contact you: ")
+func askReachableAddress(reader *bufio.Reader, port string) string {
+	fmt.Print("[+] Enter the IP address you would like others cothority servers and client to contact you: ")
 	ipStr := readString(reader)
-	if net.ParseIP(ipStr) == nil {
-		stderrExit("[-] Invalid IP address given.")
+
+	splitted := strings.Split(ipStr, ":")
+	if len(splitted) == 2 && splitted[1] != port {
+		// if the client gave a port number, it must be the same
+		stderrExit("[-] The port you gave is not the same as the one your server will be listening. Abort.")
+	} else if len(splitted) == 2 && net.ParseIP(splitted[0]) != nil {
+		// of if the IP address is wrong
+		stderrExit("[-] Invalid IP address given (", ipStr, ")")
+	} else {
+		// check if the ip is valid
+		if net.ParseIP(ipStr) == nil {
+			stderrExit("[-] Invalid IP address given (", ipStr, ")")
+		}
+		// add the port
+		ipStr = ipStr + ":" + port
 	}
 	return ipStr
 }
