@@ -32,12 +32,23 @@ Well, it is possible, but there is no way to start a protocol.
 package main
 
 import (
-	"flag"
+	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
+	"os/user"
+	"path"
+	"runtime"
+	"strings"
 
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/config"
+	c "github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	// Empty imports to have the init-functions called which should
@@ -45,22 +56,19 @@ import (
 
 	_ "github.com/dedis/cothority/protocols"
 	_ "github.com/dedis/cothority/services"
+	"github.com/dedis/crypto/config"
 )
+
+const BIN = "cothorityd"
+const SERVER_CONFIG = "config.toml"
+const GROUP_DEF = "group.toml"
+const VERSION = "1.1"
+
+const CONNECTION_CHECKER = "http://www.canyouseeme.org/"
 
 /*
 Cothority is a general node that can be used for all available protocols.
 */
-
-// ConfigFile represents the configuration for a standalone run
-var ConfigFile string
-var debugVisible int
-
-// Initialize before 'init' so we can directly use the fields as parameters
-// to 'Flag'
-func init() {
-	flag.StringVar(&ConfigFile, "config", "cothorityd.toml", "which config-file to use")
-	flag.IntVar(&debugVisible, "debug", 1, "verbosity: 0-5")
-}
 
 // Main starts the host and will setup the protocol.
 func main() {
@@ -68,12 +76,35 @@ func main() {
 	cliApp := cli.NewApp()
 	cliApp.Name = "Cothorityd server"
 	cliApp.Usage = "Serve a cothority"
-	cliApp.Version = "1.0"
+	cliApp.Version = VERSION
+	cliApp.Commands = []cli.Command{
+		{
+			Name:    "setup",
+			Aliases: []string{"s"},
+			Usage:   "Setup the configuration for the server (interactive)",
+			Action: func(c *cli.Context) {
+				if c.String("config") != "" {
+					stderrExit("[-] Configuration file option can't be used for the 'setup' command")
+				}
+				if c.String("debug") != "" {
+					stderrExit("[-] Debug option can't be used for the 'setup' command")
+				}
+				interactiveConfig()
+			},
+		},
+		{
+			Name:  "server",
+			Usage: "Run the cothority server",
+			Action: func(c *cli.Context) {
+				runServer(c)
+			},
+		},
+	}
 	cliApp.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: "cothorityd.toml",
-			Usage: "config-file for the server",
+			Value: getDefaultConfigFile(),
+			Usage: "Configuration file of the server",
 		},
 		cli.IntFlag{
 			Name:  "debug, d",
@@ -81,47 +112,272 @@ func main() {
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 	}
+	// default action
 	cliApp.Action = func(c *cli.Context) {
-		config := c.String("config")
-		dbg.SetDebugVisible(c.Int("debug"))
-		dbg.Lvl1("Starting cothority daemon", cliApp.Version)
-		startCothorityd(config)
+		runServer(c)
 	}
 
 	cliApp.Run(os.Args)
 
 }
 
-func startCothorityd(configName string) {
-	if _, err := os.Stat(ConfigFile); os.IsNotExist(err) {
-		// the config file does not exists, let's create it
-		config, fname, err := config.CreateCothoritydConfig(configName)
-		if err != nil {
-			dbg.Fatal("Could not create config file:", err)
-		}
-		if fname != "" {
-			configName = fname
-		}
-		// write it down
-		dbg.Lvl1("Writing the config file down in '", configName, "'")
-		if err := config.Save(configName); err != nil {
-			dbg.Fatal("Could not save the config file", err)
-		}
-	}
+func runServer(ctx *cli.Context) {
+	// first check the options
+	dbg.SetDebugVisible(ctx.Int("debug"))
+	config := ctx.String("config")
 
+	if _, err := os.Stat(config); os.IsNotExist(err) {
+		dbg.Fatalf("[-] Configuration file does not exists. %s", config)
+	}
 	// Let's read the config
-	conf, host, err := config.ParseCothorityd(configName)
+	_, host, err := c.ParseCothorityd(config)
 	if err != nil {
 		dbg.Fatal("Couldn't parse config:", err)
 	}
-
-	fmt.Print("\n\n\t\t\033[1mServer config to contact this cothorityd\033[0m\n\n")
-	serverToml := config.NewServerToml(network.Suite, host.Entity.Public,
-		conf.Addresses...)
-	groupToml := config.NewGroupToml(serverToml)
-	fmt.Println(groupToml.String())
-	fmt.Println("\n")
 	host.ListenAndBind()
 	host.StartProcessMessages()
 	host.WaitForClose()
+
+}
+
+// CreateCothoritydConfig will ask through the command line to create a Private / Public
+// key, what is the listening address
+func interactiveConfig() {
+	fmt.Println("[+] Welcome ! Let's setup the configuration file for a cothority server...")
+
+	// create the keys
+	fmt.Println("[+] Creation of the ed25519 private and public keys...")
+	kp := config.NewKeyPair(network.Suite)
+	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
+	if err != nil {
+		stderrExit("[-] Error formating private key to hexadecimal. Abort.")
+	}
+
+	pubStr, err := crypto.PubHex(network.Suite, kp.Public)
+	if err != nil {
+		stderrExit("[-] Could not parse public key. Abort.")
+	}
+
+	fmt.Println("[+] Private:\t", privStr)
+	fmt.Println("[+] Public: \t", pubStr)
+
+	fmt.Print("[*] We need to know on which [address:]PORT you want your server to listen to: ")
+	reader := bufio.NewReader(os.Stdin)
+	var str = readString(reader)
+
+	// let's dissect the port / IP
+	var hostStr string
+	var ipProvided bool = true
+	var portStr string
+	var combined string
+	splitted := strings.Split(str, ":")
+
+	// No IP provided
+	if len(splitted) == 1 {
+		ipProvided = false
+		hostStr = "0.0.0.0"
+	}
+
+	// let's check if they are correct
+	combined = hostStr + ":" + portStr
+	hostStr, portStr, err = net.SplitHostPort(combined)
+	if err != nil {
+		stderrExit("[-] Invalid connection information for", combined, " :", err)
+	}
+	if net.ParseIP(hostStr) == nil {
+		stderrExit("[-] Invalid connection  information for", combined)
+	}
+
+	var text = `[+] We now need to get a reachable address for other cothority servers 
+					and clients to contact you. This address will be put in a group definition 
+					file that you can share and combine with others to form a Cothority roster.`
+	fmt.Println(text)
+
+	var publicAddress string
+	var failedPublic bool
+	// if IP was not provided then let's get the public IP address
+	if !ipProvided {
+		resp, err := http.Get("http://myexternalip.com/raw")
+		// cant get the public ip then ask the user for a reachable one
+		if err != nil {
+			stderr("[-] Could not get your public IP address")
+			failedPublic = true
+		} else {
+			var read = bufio.NewReader(resp.Body)
+			resp.Body.Close()
+			publicAddress, err = read.ReadString('\n')
+			if err != nil {
+				stderr("[-] Could not parse your public IP address")
+				failedPublic = true
+			}
+		}
+	}
+
+	var reachableAddress string
+	// Let's directly ask the user for a reachable address
+	if failedPublic {
+		reachableAddress = askReachableAddress(reader)
+	} else {
+		// try  to connect to ipfound:portgiven
+		tryIp := publicAddress + ":" + portStr
+		fmt.Println("[+] Your public IP address seems to be", tryIp, ". Let's try see if you are reachable with the port given")
+		if err := tryConnect(tryIp); err != nil {
+			stderr("[-] Could not connect to your public IP")
+			reachableAddress = askReachableAddress(reader)
+		}
+		reachableAddress = tryIp
+		fmt.Println("[+] Address", reachableAddress, " publicly available from Internet!")
+	}
+
+	var configDone bool
+	var configFile string
+	var defaultFile = getDefaultConfigFile()
+	for !configDone {
+		// get name of config file and write to config file
+		fmt.Println("[*] Name of the config file [", defaultFile, "]. Type <Enter> to use the default: ")
+		configFile = readString(reader)
+		if configFile == "" {
+			configFile = defaultFile
+		}
+
+		// check if the directory exists
+		var dirName = path.Dir(configFile)
+		if _, err := os.Stat(dirName); os.IsNotExist(err) {
+			fmt.Println("[-] Creating directory configuration", dirName)
+			if err = os.Mkdir(dirName, 0744); err != nil {
+				stderrExit("[-] Could not create directory configuration", dirName)
+			}
+		}
+		// check if the file exists and ask for override
+		if _, err := os.Stat(configFile); err == nil {
+			fmt.Println("[*] Configuration file already exists. Override ? (y/n) : ")
+			var answer = readString(reader)
+			answer = strings.ToLower(answer)
+			if answer == "y" {
+				configDone = true
+				continue
+			} else if answer == "n" {
+				// let's try again
+				continue
+			} else {
+				stderrExit("[-] Could not interpret your response. Abort.")
+			}
+		}
+	}
+
+	conf := &c.CothoritydConfig{
+		Public:    pubStr,
+		Private:   privStr,
+		Addresses: []string{str},
+	}
+	if err = conf.Save(configFile); err != nil {
+		stderrExit("[-] Unable to write the config to file:", err)
+	}
+	fmt.Println("[+] Sucess ! You can now use the cothority server with the config file", configFile)
+
+	// group definition part
+	var dirName = path.Dir(configFile)
+	var groupFile = path.Join(dirName, GROUP_DEF)
+	serverToml := c.NewServerToml(network.Suite, kp.Public,
+		conf.Addresses...)
+	groupToml := c.NewGroupToml(serverToml)
+
+	if err := groupToml.Save(groupFile); err != nil {
+		stderrExit("[-] Could not write your group file snippet:", err)
+	}
+
+	fmt.Println("[+] Saved a group definition snippet for your server at", groupFile)
+	fmt.Println(groupToml.String() + "\n")
+
+	fmt.Println("[+] We're done ! Have good time using cothority :)")
+}
+
+func stderr(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, a...)
+}
+func stderrExit(format string, a ...interface{}) {
+	stderr(format, a...)
+	os.Exit(1)
+}
+
+func getDefaultConfigFile() string {
+	u, err := user.Current()
+	// can't get the user dir, so fallback to current one
+	if err != nil {
+		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
+		if curr, err := os.Getwd(); err != nil {
+			stderrExit("[-] Impossible to get the current directory.", err)
+		} else {
+			return path.Join(curr, SERVER_CONFIG)
+		}
+	}
+	// let's try to stick to usual OS folders
+	switch runtime.GOOS {
+	case "darwin":
+		return path.Join(u.HomeDir, "Library", BIN, SERVER_CONFIG)
+	default:
+		return path.Join(u.HomeDir, ".config", BIN, SERVER_CONFIG)
+		// TODO WIndows ? FreeBSD ?
+	}
+}
+
+func readString(reader *bufio.Reader) string {
+	str, err := reader.ReadString('\n')
+	if err != nil {
+		stderrExit("[-] Could not read input.")
+	}
+	return strings.TrimSpace(str)
+}
+
+func askReachableAddress(reader *bufio.Reader) string {
+	fmt.Println("[+] Enter the IP address you would like others cothority servers and client to contact you: ")
+	ipStr := readString(reader)
+	if net.ParseIP(ipStr) == nil {
+		stderrExit("[-] Invalid IP address given.")
+	}
+	return ipStr
+}
+
+// Service used to get the port connection service
+const WHATS_MY_IP = "http://www.whatsmyip.org/"
+
+// tryConnect will try to connect to the IP:Port given
+func tryConnect(ip string) error {
+	_, port, err := net.SplitHostPort(ip)
+	if err != nil {
+		return err
+	}
+	values := url.Values{}
+	values.Set("port", port)
+	values.Set("timeout", "default")
+
+	// ask the check
+	url := WHATS_MY_IP + "port-scanner/scan.php"
+	req, err := http.NewRequest("POST", url, bytes.NewBufferString(values.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Host", "www.whatsmyip.org")
+	req.Header.Set("Referer", "http://www.whatsmyip.org/port-scanner/")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:46.0) Gecko/20100101 Firefox/46.0")
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("X-Requested-With", "XMLHttpRequest")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	buffer, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Contains(buffer, []byte("1")) {
+		return errors.New("Address unrechable")
+	}
+	return nil
 }

@@ -149,6 +149,16 @@ func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
 	return el, nil
 }
 
+func (gt *GroupToml) Save(fname string) error {
+	file, err := os.Create(fname)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(gt.String())
+	return err
+}
+
 // String returns the TOML representation of this GroupToml
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
