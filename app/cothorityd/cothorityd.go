@@ -341,8 +341,24 @@ func askReachableAddress(reader *bufio.Reader) string {
 // Service used to get the port connection service
 const WHATS_MY_IP = "http://www.whatsmyip.org/"
 
-// tryConnect will try to connect to the IP:Port given
+// tryConnect will bind to the ip address and ask a internet service to try to
+// connect to it
 func tryConnect(ip string) error {
+
+	stopCh := make(chan bool, 1)
+	// let's bind
+	go func() {
+		ln, err := net.Listen("tcp", ip)
+		if err != nil {
+			fmt.Println("[-] Trouble with binding to the address:", err)
+			return
+		}
+		con, _ := ln.Accept()
+		<-stopCh
+		con.Close()
+	}()
+	defer func() { stopCh <- true }()
+
 	_, port, err := net.SplitHostPort(ip)
 	if err != nil {
 		return err
