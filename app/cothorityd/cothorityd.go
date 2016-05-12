@@ -83,7 +83,7 @@ func main() {
 			Name:    "setup",
 			Aliases: []string{"s"},
 			Usage:   "Setup the configuration for the server (interactive)",
-			Action: func(c *cli.Context) {
+			Action: func(c *cli.Context) error {
 				if c.String("config") != "" {
 					stderrExit("[-] Configuration file option can't be used for the 'setup' command")
 				}
@@ -91,6 +91,7 @@ func main() {
 					stderrExit("[-] Debug option can't be used for the 'setup' command")
 				}
 				interactiveConfig()
+				return nil
 			},
 		},
 		{
@@ -114,8 +115,9 @@ func main() {
 		},
 	}
 	// default action
-	cliApp.Action = func(c *cli.Context) {
+	cliApp.Action = func(c *cli.Context) error {
 		runServer(c)
+		return nil
 	}
 
 	cliApp.Run(os.Args)
