@@ -254,9 +254,9 @@ func interactiveConfig() {
 		// check if the directory exists
 		var dirName = path.Dir(configFile)
 		if _, err := os.Stat(dirName); os.IsNotExist(err) {
-			fmt.Println("[-] Creating directory configuration", dirName)
-			if err = os.Mkdir(dirName, 0744); err != nil {
-				stderrExit("[-] Could not create directory configuration", dirName)
+			fmt.Println("[+] Creating inexistant directory configuration", dirName)
+			if err = os.Mkdir(dirName, 0666); err != nil {
+				stderrExit("[-] Could not create directory configuration", dirName, err)
 			}
 		}
 		// check if the file exists and ask for override
