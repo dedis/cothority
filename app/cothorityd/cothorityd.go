@@ -207,6 +207,7 @@ func interactiveConfig() {
 			}
 		}
 	} else {
+		publicAddress = serverBinding
 	}
 
 	var reachableAddress string
