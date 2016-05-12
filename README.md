@@ -97,29 +97,24 @@ You can create a default server configuration with a fresh
 public/private key pair as follows:
 
 ```bash
+cothorityd setup
+```
+
+Follow the instructions on the screen. At the end, you should have two files:
+* One local server configuration file which is used by your cothority server,
+* One group definition file that you will share with other cothority members and
+  clients that wants to contact you.
+
+To run the server, simply type:
+```bash
 cothorityd
 ```
 
-Follow the instructions on the screen. The `cothorityd` server will ask you for
-a server address and port, and where you want to store the server 
-configuration. Then you will see an output similar to this:
-
-```
-Description = "Buckaroo Bonzai's Cothority Server"
-
-[[servers]]
-  Addresses = ["127.0.0.1:2000"]
-  Public = "6T7FwlCuVixvu7XMI9gRPmyCuqxKk/WUaGbwVvhA+kc="
-  Description = "Description of the server"
-```  
-
-You can cut-and-paste this into a file `servers.toml`. 
-
-The server configuration itself will get stored in the filename you provided, or
-in `config.toml` by default.
-Next time you run the server it will directly read that file and start up.
-If you chose a filename other than `config.toml`,
-then specify `-config path/file.toml` on the `cothorityd` command-line.
+The server will try to read the default configuration file; if you have put the
+file in a custom location, provide the path using:
+```base
+cothorityd -config path/file.toml
+``` 
 
 ### Creating a Collective Signing Group
 By running several `cothorityd` instances (and copying the appropriate lines 
