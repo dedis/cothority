@@ -90,6 +90,15 @@ func TestOutput(t *testing.T) {
 		dbg.Lvl1("Testing stdout")
 	}, true, false))
 	dbg.ErrFatal(checkOutput(func() {
+		dbg.LLvl1("Testing stdout")
+	}, true, false))
+	dbg.ErrFatal(checkOutput(func() {
+		dbg.Print("Testing stdout")
+	}, false, true))
+	dbg.ErrFatal(checkOutput(func() {
+		dbg.Warn("Testing stdout")
+	}, false, true))
+	dbg.ErrFatal(checkOutput(func() {
 		dbg.Error("Testing errout")
 	}, false, true))
 }
