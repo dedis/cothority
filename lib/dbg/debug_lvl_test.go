@@ -93,7 +93,7 @@ func TestOutput(t *testing.T) {
 	}, true, false))
 	dbg.ErrFatal(checkOutput(func() {
 		dbg.Print("Testing stdout")
-	}, false, true))
+	}, true, false))
 	dbg.ErrFatal(checkOutput(func() {
 		dbg.Warn("Testing stdout")
 	}, false, true))

@@ -84,11 +84,11 @@ var StaticMsg = ""
 var regexpPaths, _ = regexp.Compile(".*/")
 
 const (
-	lvlPrint = iota - 10
-	lvlWarning
+	lvlWarning = iota - 10
 	lvlError
 	lvlFatal
 	lvlPanic
+	lvlPrint
 )
 
 func lvl(lvl int, args ...interface{}) {
@@ -161,7 +161,7 @@ func lvl(lvl int, args ...interface{}) {
 	}
 	TestStr = fmt.Sprintf("%-2s%s", lvlStr, str)
 	if Testing != 2 {
-		if lvl <= lvlPanic{
+		if lvl < lvlPrint {
 			fmt.Fprint(os.Stderr, TestStr)
 		} else {
 			fmt.Fprint(os.Stdout, TestStr)
