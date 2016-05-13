@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"math/rand"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -465,6 +466,20 @@ func (el *EntityList) GenerateNaryTree(N int) *Tree {
 	return NewTree(el, root)
 }
 
+// GenerateBinaryTree creates a binary tree out of the EntityList
+// out of it. The first element of the EntityList will be the root element.
+func (el *EntityList) GenerateBinaryTree() *Tree {
+	return el.GenerateNaryTree(2)
+}
+
+// GetRandom returns a random element of the EntityList
+func (el *EntityList) GetRandom()*network.Entity{
+	if el.List == nil || len(el.List) == 0{
+		return nil
+	}
+	return el.List[rand.Int() % len(el.List)]
+}
+
 // addNary is a recursive function to create the binary tree
 func (el *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	if start <= end && end < len(el.List) {
@@ -483,12 +498,6 @@ func (el *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	} else {
 		return nil
 	}
-}
-
-// GenerateBinaryTree creates a binary tree out of the EntityList
-// out of it. The first element of the EntityList will be the root element.
-func (el *EntityList) GenerateBinaryTree() *Tree {
-	return el.GenerateNaryTree(2)
 }
 
 // TreeNode is one node in the tree

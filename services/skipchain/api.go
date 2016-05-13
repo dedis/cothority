@@ -8,6 +8,12 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+// TODO - make all requests go to the correct Entity
+//	if a new block is proposed, it needs to be sent to the 'latest' EL
+// TODO - send whole block along in 'data' for BFTSignature
+// TODO - correctly convert the BFT-signature to CoSi-Signature by removing
+//	the exception-field
+
 // Client is a structure to communicate with the Skipchain
 // service from the outside
 type Client struct {
@@ -19,20 +25,20 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient("Skipchain")}
 }
 
-// CreateRootInter creates two Skipchains: a root SkipChain with
-// maximumHeight of maxHRoot and an intermediate SkipChain with
-// maximumHeight of maxHInter. It connects both chains for later
+// CreateRootControl creates two Skipchains: a root SkipChain with
+// maximumHeight of maxHRoot and an control SkipChain with
+// maximumHeight of maxHControl. It connects both chains for later
 // reference.
-func (c *Client) CreateRootInter(elRoot, elInter *sda.EntityList, baseHeight, maxHRoot, maxHInter int, ver VerifierID) (root, inter *SkipBlock, err error) {
+func (c *Client) CreateRootControl(elRoot, elControl *sda.EntityList, baseHeight, maxHRoot, maxHControl int, ver VerifierID) (root, control *SkipBlock, err error) {
 	root, err = c.CreateRoster(elRoot, baseHeight, maxHRoot, ver, nil)
 	if err != nil {
 		return
 	}
-	inter, err = c.CreateRoster(elInter, baseHeight, maxHInter, ver, root.Hash)
+	control, err = c.CreateRoster(elControl, baseHeight, maxHControl, ver, root.Hash)
 	if err != nil {
 		return
 	}
-	return c.LinkParentChildBlock(root, inter)
+	return c.LinkParentChildBlock(root, control)
 }
 
 // ProposeRoster will propose to add a new SkipBlock containing the 'roster' to

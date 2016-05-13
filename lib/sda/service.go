@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 func init() {
@@ -366,6 +367,25 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	case <-time.After(time.Second * 10):
 		return &network.Message{}, errors.New("Timeout on sending message")
 	}
+}
+
+// SendToAll sends a message to all Entities of the EntityList and returns
+// all errors encountered concatenated together as a string.
+func (c *Client)SendToAll(dst *EntityList, msg network.ProtocolMessage)([]*network.Message, error){
+	msgs := make([]*network.Message, len(dst.List))
+	errstrs := []string{}
+	for i, e := range dst.List{
+		var err error
+		msgs[i], err = c.Send(e, msg)
+		if err != nil{
+			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
+		}
+	}
+	var err error
+	if len(errstrs) > 0{
+		err = errors.New(strings.Join(errstrs, "\n"))
+	}
+	return msgs, err
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file

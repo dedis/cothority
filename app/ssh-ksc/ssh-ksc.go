@@ -7,11 +7,11 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/services/sshks"
+	"github.com/dedis/cothority/services/identity"
 )
 
 // Our clientApp configuration
-var clientApp *sshks.ClientKS
+var clientApp *identity.ClientKS
 
 // The config-file
 var configFile string
@@ -102,7 +102,7 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		var err error
 		configFile = c.String("config") + "/config.bin"
-		clientApp, err = sshks.ReadClientKS(configFile)
+		clientApp, err = identity.ReadClientKS(configFile)
 		if clientApp.This.SSHpub == "TestClient-" {
 			clientApp.This.SSHpub += c.String("config")
 		}
