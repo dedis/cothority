@@ -13,6 +13,7 @@ import (
 	"errors"
 	"time"
 
+	"fmt"
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
@@ -30,57 +31,48 @@ const RequestTimeOut = time.Second * 10
 const cothorityDef = "group"
 
 func init() {
-	dbg.SetDebugVisible(0)
+	dbg.SetDebugVisible(1)
 	dbg.SetUseColors(false)
 }
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "Cosi signer and verifier"
-	app.Usage = "Collectively sign a file or a message and verify it"
+	app.Usage = "Collectively sign a file or verify its signature."
 	app.Commands = []cli.Command{
 		{
 			Name:    "sign",
 			Aliases: []string{"s"},
-			Usage:   "collectively sign",
-			Subcommands: []cli.Command{
-				{
-					Name:   "file",
-					Usage:  "file to sign",
-					Action: signFile,
-				}, {
-					Name:   "msg",
-					Usage:  "message to sign",
-					Action: signString,
+			Usage: `Collectively sign file and write signature to standard output.
+	If you want to store the the signature in a file instead you can use the -out option explained below.`,
+			Action: signFile,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "out, o",
+					Usage: "Write signature to `outfile` instead of standard output",
 				},
 			},
 		},
 		{
 			Name:    "verify",
 			Aliases: []string{"v"},
-			Usage:   "verify collective signature",
-			Subcommands: []cli.Command{
-				{
-					Name:   "file",
-					Usage:  "file to verify",
-					Action: verifyFile,
-				}, {
-					Name:   "msg",
-					Usage:  "message to verify",
-					Action: verifyString,
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "signature, sig",
-							Usage: "Use the `FILE` containing signature instead of standard input.",
-						},
-					},
+			Usage:   "verify collective signature of a file",
+			Action:  verifyFile,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file, f",
+					Usage: "verify signature of `FILE`",
+				},
+				cli.StringFlag{
+					Name:  "signature, s",
+					Usage: "use the `SIGNATURE_FILE` containing the signature (instead of reading from standard input)",
 				},
 			},
 		},
 		{
 			Name:    "check",
 			Aliases: []string{"c"},
-			Usage:   "check the server-file",
+			Usage:   "check if the servers int the group configuration are up and running",
 			Action:  checkConfig,
 		},
 	}
@@ -88,12 +80,12 @@ func main() {
 		cli.StringFlag{
 			Name:  cothorityDef + ", g",
 			Value: "servers.toml",
-			Usage: "Cothority group definition: a list of servers which participate in the collective signing process",
+			Usage: "Cothority group definition in `FILE.toml`: a list of servers which participate in the collective signing process",
 		},
 		cli.IntFlag{
 			Name:  "debug, d",
 			Value: 0,
-			Usage: "debug-level: 1 for terse, 5 for maximal",
+			Usage: "debug-level: `integer`: 1 for terse, 5 for maximal",
 		},
 	}
 	app.Before = func(c *cli.Context) error {
@@ -108,13 +100,12 @@ func main() {
 func checkConfig(c *cli.Context) error {
 	tomlFileName := c.GlobalString(cothorityDef)
 	f, err := os.Open(tomlFileName)
-	handleErrorAndExit("Couldn't open server-file", err)
+	stderrAndExit("Couldn't open group definition file: %v", err)
 	el, err := config.ReadGroupToml(f)
-	handleErrorAndExit("Error while reading server-file", err)
+	stderrAndExit("Error while reading group definition file: %v", err)
 	if len(el.List) == 0 {
-		handleErrorAndExit("Empty entity list",
-			errors.New("Empty or invalid cosi group file:"+
-				tomlFileName))
+		stderrAndExit("Empty entity or invalid group defintion in: %s",
+			tomlFileName)
 	}
 	// First check all servers individually
 	for i := range el.List {
@@ -140,82 +131,64 @@ func checkList(list *sda.EntityList) {
 	for _, s := range list.List {
 		serverStr += s.Addresses[0] + " "
 	}
-	dbg.Print("Sending message to", serverStr)
+	fmt.Println("Sending message to: " + serverStr)
 	msg := "verification"
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		dbg.Error("When contacting servers", serverStr, err)
+		fmt.Fprintln(os.Stderr, "When contacting servers: %s. Error: %s",
+			serverStr, err.Error())
 	} else {
 		err := verifySignatureHash([]byte(msg), sig, list)
 		if err != nil {
-			dbg.Error("Signature was invalid:", err)
+			fmt.Fprintln(os.Stderr, "Signature was invalid: %s",
+				err.Error())
+		} else {
+			fmt.Println("Received signature successfully")
 		}
-		dbg.Print("Received signature successfully")
 	}
 }
 
 // signFile will search for the file and sign it
-// it never returns an error (signature required by codegangsta/cli)
+// it always returns nil as an error
 func signFile(c *cli.Context) error {
 	fileName := c.Args().First()
 	groupToml := c.GlobalString(cothorityDef)
 	file, err := os.Open(fileName)
 	if err != nil {
-		handleErrorAndExit("Couldn't read file to be signed: ", err)
+		stderrAndExit("Couldn't read file to be signed: %v", err)
 	}
 	sig, err := sign(file, groupToml)
-	handleErrorAndExit("Couldn't create signature", err)
+	stderrAndExit("Couldn't create signature: %v", err)
 	dbg.Lvl3(sig)
-	sigFileName := fileName + ".sig"
-	outFile, err := os.Create(sigFileName)
-	handleErrorAndExit("Couldn't create signature file: ", err)
+	var outFile *os.File
+	outFileName := c.String("out")
+	if outFileName != "" {
+		outFile, err = os.Create(outFileName)
+		stderrAndExit("Couldn't create signature file: %v", err)
+	} else {
+		outFile = os.Stdout
+	}
 	writeSigAsJSON(sig, outFile)
-	dbg.Lvl1("Signature written to: " + sigFileName)
-	return nil
-}
-
-func signString(c *cli.Context) error {
-	msg := strings.NewReader(c.Args().First())
-	groupToml := c.GlobalString(cothorityDef)
-	sig, err := sign(msg, groupToml)
-	handleErrorAndExit("Couldn't create signature", err)
-	writeSigAsJSON(sig, os.Stdout)
+	if outFileName != "" {
+		dbg.Lvl2("Signature written to: %s", outFile.Name())
+	} // else keep the Stdout empty
 	return nil
 }
 
 func verifyFile(c *cli.Context) error {
 	dbg.SetDebugVisible(c.GlobalInt("debug"))
-	err := verify(c.Args().First(), c.GlobalString(cothorityDef))
+	sigOrEmpty := c.String("signature")
+	err := verify(c.Args().First(), sigOrEmpty, c.GlobalString(cothorityDef))
 	verifyPrintResult(err)
-	return nil
-}
-
-func verifyString(c *cli.Context) error {
-	f, err := ioutil.TempFile("", "cosi")
-	handleErrorAndExit("Couldn't create temp file", err)
-	f.Write([]byte(c.Args().First()))
-	f.Close()
-	sigfile := f.Name() + ".sig"
-	sig, err := ioutil.ReadFile(c.String("signature"))
-	handleErrorAndExit("Couldn't read signature: ", err)
-	err = ioutil.WriteFile(sigfile, sig, 0444)
-	handleErrorAndExit("Couldn't write tmp-signature", err)
-	err = verify(f.Name(), c.GlobalString(cothorityDef))
-	verifyPrintResult(err)
-	os.Remove(f.Name())
-	os.Remove(sigfile)
-	if err != nil {
-		os.Exit(1)
-	}
 	return nil
 }
 
 // verifyPrintResult prints out OK or what failed.
 func verifyPrintResult(err error) {
 	if err == nil {
-		dbg.Print("OK: Signature is valid.")
+		fmt.Println("OK: Signature is valid.")
 	} else {
-		dbg.Print("Invalid: Signature verification failed:", err)
+		fmt.Println("Invalid: Signature verification failed: %v", err)
 	}
 }
 
@@ -223,27 +196,29 @@ func verifyPrintResult(err error) {
 func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		handleErrorAndExit("Couldn't encode signature: ", err)
+		stderrAndExit("Couldn't encode signature: %v", err)
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
 	outW.Write([]byte("\n"))
 	if _, err := out.WriteTo(outW); err != nil {
-		handleErrorAndExit("Couldn't write signature", err)
+		stderrAndExit("Couldn't write signature: %v", err)
 	}
 	outW.Write([]byte("\n"))
 }
 
-// handleErrorAndExit is a shortcut for all those pesky err-checks
-func handleErrorAndExit(msg string, e error) {
-	if e != nil {
-		dbg.Fatal(os.Stderr, msg+": "+e.Error())
-	}
+func stderr(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, fmt.Sprintf(format, a...)+"\n")
+}
+
+func stderrAndExit(format string, a ...interface{}) {
+	stderr(format, a...)
+	os.Exit(1)
 }
 
 // sign takes a stream and a toml file defining the servers
 func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
-	dbg.Lvl3("Starting signature")
+	dbg.Lvl2("Starting signature")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return nil, err
@@ -303,8 +278,9 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 }
 
 // verify takes a file and a group-definition, calls the signature
-// verification and prints the result
-func verify(fileName, groupToml string) error {
+// verification and prints the result. If sigFileName is empty it
+// assumes to find the standard signature in fileName.sig
+func verify(fileName, sigFileName, groupToml string) error {
 	// if the file hash matches the one in the signature
 	dbg.Lvl4("Reading file " + fileName)
 	b, err := ioutil.ReadFile(fileName)
@@ -313,13 +289,19 @@ func verify(fileName, groupToml string) error {
 	}
 	// Read the JSON signature file
 	dbg.Lvl4("Reading signature")
-	sb, err := ioutil.ReadFile(fileName + ".sig")
+	var sigBytes []byte
+	if sigFileName == "" {
+		fmt.Println("Reading signature from standard input ...")
+		sigBytes, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		sigBytes, err = ioutil.ReadFile(sigFileName)
+	}
 	if err != nil {
 		return err
 	}
 	sig := &s.SignatureResponse{}
 	dbg.Lvl4("Unmarshalling signature ")
-	if err := json.Unmarshal(sb, sig); err != nil {
+	if err := json.Unmarshal(sigBytes, sig); err != nil {
 		return err
 	}
 	fGroup, err := os.Open(groupToml)

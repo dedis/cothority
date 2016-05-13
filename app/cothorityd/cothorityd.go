@@ -273,6 +273,7 @@ func interactiveConfig() {
 func stderr(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, fmt.Sprintf(format, a...)+"\n")
 }
+
 func stderrExit(format string, a ...interface{}) {
 	stderr(format, a...)
 	os.Exit(1)
@@ -280,7 +281,7 @@ func stderrExit(format string, a ...interface{}) {
 
 func getDefaultConfigFile() string {
 	u, err := user.Current()
-	// can't get the user dir, so fallback to currere ynt one
+	// can't get the user dir, so fallback to current working dir
 	if err != nil {
 		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
 		if curr, err := os.Getwd(); err != nil {
