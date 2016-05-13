@@ -1,6 +1,20 @@
 /*
-Cothority-SDA is a framework that allows testing, simulating and
-deploying crypto-related protocols.
+Cothorityd is the daemon that serves and participate in all kinds of
+protocols defined in the cothority project.
+
+You first need to setup the config file for the server by running
+```
+cothorityd setup
+```
+
+Then run the server using just
+```
+cothorityd
+```
+
+You can communicate with the daemon using some clients that are in
+the cothority/app directory.At the time or writing only the Cosi client
+is available.
 
 # Running a simulation
 
