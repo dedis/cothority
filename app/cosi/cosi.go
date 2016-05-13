@@ -27,6 +27,13 @@ import (
 // reply
 const RequestTimeOut = time.Second * 10
 
+const cothorityDef = "group"
+
+func init() {
+	dbg.SetDebugVisible(0)
+	dbg.SetUseColors(false)
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "Cosi signer and verifier"
@@ -64,7 +71,7 @@ func main() {
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "signature, sig",
-							Usage: "signature-file",
+							Usage: "Use the `FILE` containing signature instead of standard input.",
 						},
 					},
 				},
@@ -79,13 +86,13 @@ func main() {
 	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "servers, s",
+			Name:  cothorityDef + ", g",
 			Value: "servers.toml",
-			Usage: "server-list for collective signature",
+			Usage: "Cothority group definition: a list of servers which participate in the collective signing process",
 		},
 		cli.IntFlag{
 			Name:  "debug, d",
-			Value: 1,
+			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 	}
@@ -99,7 +106,7 @@ func main() {
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func checkConfig(c *cli.Context) error {
-	tomlFileName := c.GlobalString("servers")
+	tomlFileName := c.GlobalString(cothorityDef)
 	f, err := os.Open(tomlFileName)
 	handleErrorAndExit("Couldn't open server-file", err)
 	el, err := config.ReadGroupToml(f)
@@ -151,7 +158,7 @@ func checkList(list *sda.EntityList) {
 // it never returns an error (signature required by codegangsta/cli)
 func signFile(c *cli.Context) error {
 	fileName := c.Args().First()
-	groupToml := c.GlobalString("servers")
+	groupToml := c.GlobalString(cothorityDef)
 	file, err := os.Open(fileName)
 	if err != nil {
 		handleErrorAndExit("Couldn't read file to be signed: ", err)
@@ -169,15 +176,16 @@ func signFile(c *cli.Context) error {
 
 func signString(c *cli.Context) error {
 	msg := strings.NewReader(c.Args().First())
-	groupToml := c.GlobalString("servers")
+	groupToml := c.GlobalString(cothorityDef)
 	sig, err := sign(msg, groupToml)
 	handleErrorAndExit("Couldn't create signature", err)
 	writeSigAsJSON(sig, os.Stdout)
+	return nil
 }
 
 func verifyFile(c *cli.Context) error {
 	dbg.SetDebugVisible(c.GlobalInt("debug"))
-	err := verify(c.Args().First(), c.GlobalString("servers"))
+	err := verify(c.Args().First(), c.GlobalString(cothorityDef))
 	verifyPrintResult(err)
 	return nil
 }
@@ -192,7 +200,7 @@ func verifyString(c *cli.Context) error {
 	handleErrorAndExit("Couldn't read signature: ", err)
 	err = ioutil.WriteFile(sigfile, sig, 0444)
 	handleErrorAndExit("Couldn't write tmp-signature", err)
-	err = verify(f.Name(), c.GlobalString("servers"))
+	err = verify(f.Name(), c.GlobalString(cothorityDef))
 	verifyPrintResult(err)
 	os.Remove(f.Name())
 	os.Remove(sigfile)

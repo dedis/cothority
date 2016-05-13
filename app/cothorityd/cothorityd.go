@@ -1,34 +1,3 @@
-/*
-Cothority-SDA is a framework that allows testing, simulating and
-deploying crypto-related protocols.
-
-# Running a simulation
-
-Your best starting point is the simul/-directory where you can start different
-protocols and test them on your local computer. After building, you can
-start any protocol you like:
-	cd simul
-	go build
-	./simul runfiles/test_cosi.toml
-Once a simulation is done, you can look at the results in the test_data-directory:
-	cat test_data/test_cosi.csv
-To have a simple plot of the round-time, you need to have matplotlib installed
-in version 1.5.1.
-	matplotlib/plot.py test_data/test_cosi.csv
-If plot.py complains about missing matplotlib-library, you can install it using
-	sudo easy_install "matplotlib == 1.5.1"
-at least on a Mac.
-
-# Writing your own protocol
-
-If you want to experiment with a protocol of your own, have a look at
-the protocols-package-documentation.
-
-# Deploying
-
-Unfortunately it's not possible to deploy the Cothority as a stand-alon app.
-Well, it is possible, but there is no way to start a protocol.
-*/
 package main
 
 import (
@@ -47,11 +16,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/codegangsta/cli"
 	c "github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"gopkg.in/codegangsta/cli.v1"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
