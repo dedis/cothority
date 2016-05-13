@@ -29,65 +29,9 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-const BIN = "cothorityd"
+const BIN = "cosi"
 const SERVER_CONFIG = "config.toml"
 const GROUP_DEF = "group.toml"
-const VERSION = "1.1"
-
-func main() {
-
-	cliApp := cli.NewApp()
-	cliApp.Name = "Cothorityd server"
-	cliApp.Usage = "Serve a cothority"
-	cliApp.Version = VERSION
-	serverFlags := []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Value: getDefaultConfigFile(),
-			Usage: "Configuration file of the server",
-		},
-		cli.IntFlag{
-			Name:  "debug, d",
-			Value: 1,
-			Usage: "debug-level: 1 for terse, 5 for maximal",
-		},
-	}
-
-	cliApp.Commands = []cli.Command{
-		{
-			Name:    "setup",
-			Aliases: []string{"s"},
-			Usage:   "Setup the configuration for the server (interactive)",
-			Action: func(c *cli.Context) error {
-				if c.String("config") != "" {
-					stderrExit("[-] Configuration file option can't be used for the 'setup' command")
-				}
-				if c.String("debug") != "" {
-					stderrExit("[-] Debug option can't be used for the 'setup' command")
-				}
-				interactiveConfig()
-				return nil
-			},
-		},
-		{
-			Name:  "server",
-			Usage: "Run the cothority server",
-			Action: func(c *cli.Context) {
-				runServer(c)
-			},
-			Flags: serverFlags,
-		},
-	}
-	cliApp.Flags = serverFlags
-	// default action
-	cliApp.Action = func(c *cli.Context) error {
-		runServer(c)
-		return nil
-	}
-
-	cliApp.Run(os.Args)
-
-}
 
 func runServer(ctx *cli.Context) {
 	// first check the options
@@ -95,7 +39,8 @@ func runServer(ctx *cli.Context) {
 	config := ctx.String("config")
 
 	if _, err := os.Stat(config); os.IsNotExist(err) {
-		dbg.Fatalf("[-] Configuration file does not exists. %s", config)
+		dbg.Fatalf("[-] Configuration file does not exists. %s. "+
+			"Use cosi server setup to create one.", config)
 	}
 	// Let's read the config
 	_, host, err := c.ParseCothorityd(config)
@@ -108,10 +53,10 @@ func runServer(ctx *cli.Context) {
 
 }
 
-// CreateCothoritydConfig will ask through the command line to create a Private / Public
+// interactiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
 func interactiveConfig() {
-	fmt.Println("[+] Welcome ! Let's setup the configuration file for a cothority server...")
+	fmt.Println("[+] Welcome ! Let's setup the configuration file for a CoSi server...")
 
 	fmt.Print("[*] We need to know on which [address:]PORT you want your server to listen to: ")
 	reader := bufio.NewReader(os.Stdin)
@@ -147,7 +92,7 @@ func interactiveConfig() {
 		stderrExit("[-] Invalid connection  information for %s", serverBinding)
 	}
 
-	fmt.Println("[+] We now need to get a reachable address for other cothority servers")
+	fmt.Println("[+] We now need to get a reachable address for other CoSi servers")
 	fmt.Println("    and clients to contact you. This address will be put in a group definition")
 	fmt.Println("    file that you can share and combine with others to form a Cothority roster.")
 
@@ -252,7 +197,7 @@ func interactiveConfig() {
 	if err = conf.Save(configFile); err != nil {
 		stderrExit("[-] Unable to write the config to file:", err)
 	}
-	fmt.Println("[+] Sucess ! You can now use the cothority server with the config file", configFile)
+	fmt.Println("[+] Sucess! You can now use the CoSi server with the config file", configFile)
 
 	// group definition part
 	var dirName = path.Dir(configFile)
@@ -267,7 +212,7 @@ func interactiveConfig() {
 	fmt.Println("[+] Saved a group definition snippet for your server at", groupFile)
 	fmt.Println(groupToml.String() + "\n")
 
-	fmt.Println("[+] We're done ! Have good time using cothority :)")
+	fmt.Println("[+] We're done! Have good time using CoSi :)")
 }
 
 func stderr(format string, a ...interface{}) {

@@ -39,6 +39,19 @@ func main() {
 			Usage: "debug-level: `integer`: 1 for terse, 5 for maximal",
 		},
 	}
+	serverFlags := []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: getDefaultConfigFile(),
+			Usage: "Configuration file of the server",
+		},
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 1,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+	}
+
 	app.Commands = []cli.Command{
 		// BEGIN CLIENT ----------
 		{
@@ -79,7 +92,32 @@ func main() {
 
 		// CLIENT END ----------
 		// BEGIN SERVER --------
-
+		{
+			Name:  "server",
+			Usage: "act as Cothority server",
+			Action: func(c *cli.Context) error {
+				runServer(c)
+				return nil
+			},
+			Flags: serverFlags,
+			Subcommands: []cli.Command{
+				{
+					Name:    "setup",
+					Aliases: []string{"s"},
+					Usage:   "Setup the configuration for the server (interactive)",
+					Action: func(c *cli.Context) error {
+						if c.String("config") != "" {
+							stderrExit("[-] Configuration file option can't be used for the 'setup' command")
+						}
+						if c.String("debug") != "" {
+							stderrExit("[-] Debug option can't be used for the 'setup' command")
+						}
+						interactiveConfig()
+						return nil
+					},
+				},
+			},
+		},
 		// SERVER END ----------
 
 	}
