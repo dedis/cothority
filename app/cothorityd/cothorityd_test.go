@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -13,6 +14,7 @@ func TestCompileAndRun(t *testing.T) {
 	// binary named after the package:
 	bin := "./cothorityd"
 	build := exec.Command("go", "build")
+	fmt.Println("Launching building command")
 	err := build.Run()
 	if err != nil {
 		t.Fatal(err)
@@ -21,18 +23,21 @@ func TestCompileAndRun(t *testing.T) {
 		os.Remove(bin)
 		build.Process.Kill()
 	}()
-	if err = runCommand(bin, makeReader("129u.898.9090e:21-2")); err == nil {
+	fmt.Println("Launching first command")
+	if err = runCommand(bin, makeReader("129u.898.9090e:21-2"), "setup"); err == nil {
 		t.Fatal("There should be an error:", err)
 	}
 
 	// Test with valid IP + config name
 	configName := "config.toml.test"
-	if err = verifyCorrectOutput(bin, makeReader("127.0.0.1:2000", configName), "Addresses"); err != nil {
+	fmt.Println("Launching second command")
+	if err = verifyCorrectOutput(bin, makeReader("127.0.0.1:2000", "127.0.0.1:2000", configName), "Addresses", "setup"); err != nil {
 		t.Fatal(err)
 	}
 
 	// Test without giving anything => use the already existing config name
-	if err = verifyCorrectOutput(bin, nil, "Addresses", "-config", configName); err != nil && err != io.EOF {
+	fmt.Println("Launching third command")
+	if err = verifyCorrectOutput(bin, nil, "", "-config", configName); err != nil && err != io.EOF {
 		t.Fatal("There should NOT be an error", err)
 	}
 
@@ -71,16 +76,21 @@ func verifyCorrectOutput(cmdStr string, input io.Reader, output string, args ...
 	defer cmd.Process.Kill()
 	var found bool
 	var buff = make([]byte, 1024)
+	if output == "" {
+		return nil
+	}
 	for {
 		n, err := stdout.Read(buff)
+		fmt.Println(string(buff))
 		if err != nil {
+			if err == io.EOF {
+				break
+			}
 			return err
 		}
-
 		if n == 0 {
 			return errors.New("No output")
 		}
-
 		if bytes.Contains(buff, []byte(output)) {
 			found = true
 			break

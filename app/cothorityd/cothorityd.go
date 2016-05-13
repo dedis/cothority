@@ -350,13 +350,13 @@ func askReachableAddress(reader *bufio.Reader, port string) string {
 	if len(splitted) == 2 && splitted[1] != port {
 		// if the client gave a port number, it must be the same
 		stderrExit("[-] The port you gave is not the same as the one your server will be listening. Abort.")
-	} else if len(splitted) == 2 && net.ParseIP(splitted[0]) != nil {
+	} else if len(splitted) == 2 && net.ParseIP(splitted[0]) == nil {
 		// of if the IP address is wrong
-		stderrExit("[-] Invalid IP address given (", ipStr, ")")
-	} else {
+		stderrExit("[-] Invalid IP:port address given (%s)", ipStr)
+	} else if len(splitted) == 1 {
 		// check if the ip is valid
 		if net.ParseIP(ipStr) == nil {
-			stderrExit("[-] Invalid IP address given (", ipStr, ")")
+			stderrExit("[-] Invalid IP address given (%s)", ipStr)
 		}
 		// add the port
 		ipStr = ipStr + ":" + port
