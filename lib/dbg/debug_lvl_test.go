@@ -85,7 +85,6 @@ func TestFlags(t *testing.T) {
 }
 
 func TestOutput(t *testing.T) {
-
 	dbg.ErrFatal(checkOutput(func() {
 		dbg.Lvl1("Testing stdout")
 	}, true, false))
