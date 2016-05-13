@@ -78,6 +78,19 @@ func main() {
 	cliApp.Name = "Cothorityd server"
 	cliApp.Usage = "Serve a cothority"
 	cliApp.Version = VERSION
+	serverFlags := []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: getDefaultConfigFile(),
+			Usage: "Configuration file of the server",
+		},
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 1,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+	}
+
 	cliApp.Commands = []cli.Command{
 		{
 			Name:    "setup",
@@ -100,20 +113,10 @@ func main() {
 			Action: func(c *cli.Context) {
 				runServer(c)
 			},
+			Flags: serverFlags,
 		},
 	}
-	cliApp.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Value: getDefaultConfigFile(),
-			Usage: "Configuration file of the server",
-		},
-		cli.IntFlag{
-			Name:  "debug, d",
-			Value: 1,
-			Usage: "debug-level: 1 for terse, 5 for maximal",
-		},
-	}
+	cliApp.Flags = serverFlags
 	// default action
 	cliApp.Action = func(c *cli.Context) error {
 		runServer(c)
