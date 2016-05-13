@@ -34,13 +34,6 @@ const SERVER_CONFIG = "config.toml"
 const GROUP_DEF = "group.toml"
 const VERSION = "1.1"
 
-const CONNECTION_CHECKER = "http://www.canyouseeme.org/"
-
-/*
-Cothority is a general node that can be used for all available protocols.
-*/
-
-// Main starts the host and will setup the protocol.
 func main() {
 
 	cliApp := cli.NewApp()
