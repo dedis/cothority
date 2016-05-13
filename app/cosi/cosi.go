@@ -13,7 +13,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
@@ -21,6 +20,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	s "github.com/dedis/cothority/services/cosi"
+	"gopkg.in/codegangsta/cli.v1"
 )
 
 // RequestTimeOut defines when the client stops waiting for the CoSi group to
@@ -98,7 +98,7 @@ func main() {
 
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
-func checkConfig(c *cli.Context) {
+func checkConfig(c *cli.Context) error {
 	tomlFileName := c.GlobalString("servers")
 	f, err := os.Open(tomlFileName)
 	handleErrorAndExit("Couldn't open server-file", err)
@@ -124,6 +124,7 @@ func checkConfig(c *cli.Context) {
 			}
 		}
 	}
+	return nil
 }
 
 // checkList sends a message to the list and waits for the reply
@@ -147,7 +148,8 @@ func checkList(list *sda.EntityList) {
 }
 
 // signFile will search for the file and sign it
-func signFile(c *cli.Context) {
+// it never returns an error (signature required by codegangsta/cli)
+func signFile(c *cli.Context) error {
 	fileName := c.Args().First()
 	groupToml := c.GlobalString("servers")
 	file, err := os.Open(fileName)
@@ -162,9 +164,10 @@ func signFile(c *cli.Context) {
 	handleErrorAndExit("Couldn't create signature file: ", err)
 	writeSigAsJSON(sig, outFile)
 	dbg.Lvl1("Signature written to: " + sigFileName)
+	return nil
 }
 
-func signString(c *cli.Context) {
+func signString(c *cli.Context) error {
 	msg := strings.NewReader(c.Args().First())
 	groupToml := c.GlobalString("servers")
 	sig, err := sign(msg, groupToml)
@@ -172,13 +175,14 @@ func signString(c *cli.Context) {
 	writeSigAsJSON(sig, os.Stdout)
 }
 
-func verifyFile(c *cli.Context) {
+func verifyFile(c *cli.Context) error {
 	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	err := verify(c.Args().First(), c.GlobalString("servers"))
 	verifyPrintResult(err)
+	return nil
 }
 
-func verifyString(c *cli.Context) {
+func verifyString(c *cli.Context) error {
 	f, err := ioutil.TempFile("", "cosi")
 	handleErrorAndExit("Couldn't create temp file", err)
 	f.Write([]byte(c.Args().First()))
@@ -195,6 +199,7 @@ func verifyString(c *cli.Context) {
 	if err != nil {
 		os.Exit(1)
 	}
+	return nil
 }
 
 // verifyPrintResult prints out OK or what failed.
