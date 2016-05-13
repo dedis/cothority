@@ -352,11 +352,11 @@ func askReachableAddress(reader *bufio.Reader, port string) string {
 		stderrExit("[-] The port you gave is not the same as the one your server will be listening. Abort.")
 	} else if len(splitted) == 2 && net.ParseIP(splitted[0]) != nil {
 		// of if the IP address is wrong
-		stderrExit("[-] Invalid IP address given (", ipStr, ")")
+		stderrExit("[-] Invalid IP address given (%s)", ipStr)
 	} else {
 		// check if the ip is valid
 		if net.ParseIP(ipStr) == nil {
-			stderrExit("[-] Invalid IP address given (", ipStr, ")")
+			stderrExit("[-] Invalid IP address given (%s)", ipStr)
 		}
 		// add the port
 		ipStr = ipStr + ":" + port
