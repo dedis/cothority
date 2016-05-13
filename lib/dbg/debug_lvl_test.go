@@ -5,7 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"bytes"
+	"io"
+
+	"errors"
+
 	"github.com/dedis/cothority/lib/dbg"
+	"time"
 )
 
 func init() {
@@ -76,6 +82,82 @@ func TestFlags(t *testing.T) {
 	dbg.SetShowTime(time)
 	dbg.SetUseColors(color)
 	dbg.Testing = test
+}
+
+func TestOutput(t *testing.T) {
+
+	dbg.ErrFatal(checkOutput(func() {
+		dbg.Lvl1("Testing stdout")
+	}, true, false))
+	dbg.ErrFatal(checkOutput(func() {
+		dbg.Error("Testing errout")
+	}, false, true))
+}
+
+func checkOutput(f func(), wantsStd, wantsErr bool) error {
+	oldStd := os.Stdout
+	oldErr := os.Stderr
+	rStd, wStd, err := os.Pipe()
+	dbg.ErrFatal(err)
+	rErr, wErr, err := os.Pipe()
+	dbg.ErrFatal(err)
+	os.Stdout = wStd
+	os.Stderr = wErr
+
+	chanStd := make(chan string, 1024)
+	go func() {
+		var buf bytes.Buffer
+		n, err := io.Copy(&buf, rStd)
+		if n == 0 || err != nil {
+			return
+		}
+		chanStd <- buf.String()
+	}()
+	chanErr := make(chan string, 1024)
+	go func() {
+		var buf bytes.Buffer
+		_, err := io.Copy(&buf, rErr)
+		if err != nil {
+			return
+		}
+		chanErr <- buf.String()
+	}()
+
+	f()
+	// Flush buffers
+	wStd.Close()
+	wErr.Close()
+	time.Sleep(time.Millisecond * 100)
+	stdStr := ""
+	for len(chanStd) > 0 {
+		stdStr += <-chanStd
+	}
+	errStr := ""
+	for len(chanErr) > 0 {
+		errStr += <-chanErr
+	}
+	// back to normal state
+	os.Stdout = oldStd
+	os.Stderr = oldErr
+	if wantsStd {
+		if len(stdStr) == 0 {
+			return errors.New("Stdout was empty")
+		}
+	} else {
+		if len(stdStr) > 0 {
+			return errors.New("Stdout was full")
+		}
+	}
+	if wantsErr {
+		if len(errStr) == 0 {
+			return errors.New("Stderr was empty")
+		}
+	} else {
+		if len(errStr) > 0 {
+			return errors.New("Stderr was full")
+		}
+	}
+	return err
 }
 
 func ExampleLevel2() {

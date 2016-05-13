@@ -161,7 +161,11 @@ func lvl(lvl int, args ...interface{}) {
 	}
 	TestStr = fmt.Sprintf("%-2s%s", lvlStr, str)
 	if Testing != 2 {
-		fmt.Print(TestStr)
+		if lvl <= lvlPanic{
+			fmt.Fprint(os.Stderr, TestStr)
+		} else {
+			fmt.Fprint(os.Stdout, TestStr)
+		}
 	}
 	if useColors {
 		ct.ResetColor()
