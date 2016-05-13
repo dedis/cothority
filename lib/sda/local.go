@@ -47,7 +47,7 @@ func NewLocalTest() *LocalTest {
 func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.ID.Equals(rootEntityId) {
+		if h.Entity.ID.Equal(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.ID].StartProtocol(t, name)
@@ -61,7 +61,7 @@ func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error
 func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.ID.Equals(rootEntityId) {
+		if h.Entity.ID.Equal(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.ID].CreateProtocol(t, name)
@@ -283,7 +283,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 				time.Sleep(time.Millisecond * 10)
 				root.entityListsLock.RLock()
 				for id, _ := range root.entities {
-					if id.Equals(host.Entity.ID) {
+					if id.Equal(host.Entity.ID) {
 						connected = true
 						break
 					}

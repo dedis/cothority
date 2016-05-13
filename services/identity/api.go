@@ -3,10 +3,11 @@ package identity
 import (
 	"bufio"
 
+	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/services/skipchain"
-	"github.com/dedis/cothority/lib/crypto"
 )
 
 /*
@@ -21,6 +22,7 @@ func init() {
 		&AddIdentityReply{},
 		&AttachToIdentity{},
 		&ConfigNewCheck{},
+		&ConfigUpdate{},
 	} {
 		network.RegisterMessageType(s)
 	}
@@ -69,7 +71,7 @@ func (i *Identity) SaveToStream(out bufio.Writer) error {
 func (i *Identity) AttachToIdentity(ID IdentityID) error {
 	i.ID = ID
 	err := i.ConfigUpdate()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	confPropose := i.Config.Copy()
@@ -99,7 +101,7 @@ func (i *Identity) CreateIdentity() error {
 // ConfigNewPropose collects new IdentityLists and waits for confirmation with
 // ConfigNewVote
 func (i *Identity) ConfigNewPropose(il *AccountList) error {
-	_, err := i.SendToAll(i.cothority, &Proposition{i.ID, il})
+	_, err := i.SendToAll(i.cothority, &PropagateProposition{i.ID, il})
 	return err
 }
 
@@ -120,11 +122,41 @@ func (i *Identity) ConfigNewCheck() error {
 
 // ConfigNewVote sends a vote (accept or reject) with regard to a new configuration
 func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
+	hash, err := i.Proposed.Hash()
+	if err != nil {
+		return err
+	}
+	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
+	if err != nil {
+		return err
+	}
+	msg, err := i.Send(i.cothority.GetRandom(), &Vote{
+		ID:        i.ID,
+		Signer:    i.ManagerStr,
+		Signature: &sig,
+	})
+	if err != nil {
+		return err
+	}
+	if msg == nil {
+		dbg.LLvl3("Threshold not reached")
+	} else {
+		dbg.LLvl3("Threashold reached and signed")
+		sb := msg.Msg.(skipchain.SkipBlock)
+		i.data = &sb
+	}
 	return nil
 }
 
 // ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() error {
+	msg, err := i.Send(i.cothority.GetRandom(), &ConfigUpdate{ID: i.ID})
+	if err != nil {
+		return err
+	}
+	cu := msg.Msg.(ConfigUpdate)
+	// TODO - verify new config
+	i.Config = cu.AccountList
 	return nil
 }

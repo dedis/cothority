@@ -12,6 +12,7 @@ type Context interface {
 	CreateProtocol(t *Tree, name string) (ProtocolInstance, error)
 	Address() string
 	Entity() *network.Entity
+	GetID() ServiceID
 }
 
 // defaultContext is the implementation of the Context interface. It is
@@ -43,4 +44,9 @@ func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {
 // Entity returns the entity the service uses
 func (dc *defaultContext) Entity() *network.Entity {
 	return dc.Host.Entity
+}
+
+// GetID returns the service-id
+func (dc *defaultContext) GetID() ServiceID{
+	return dc.servID
 }

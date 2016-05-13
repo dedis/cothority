@@ -97,7 +97,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 	if !bytes.Equal(parent.Hash, child.ParentBlockID) {
 		return nil, nil, errors.New("Child doesn't point to that parent")
 	}
-	host := parent.EntityList.List[0]
+	host := parent.EntityList.GetRandom()
 	replyMsg, err := c.Send(host, &SetChildrenSkipBlock{parent.Hash, child.Hash})
 	if err != nil {
 		return nil, nil, err
@@ -109,7 +109,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain.
 func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
-	h := parent.EntityList.List[0]
+	h := parent.EntityList.GetRandom()
 	r, err := c.Send(h, &GetUpdateChain{latest})
 	if err != nil {
 		return
@@ -150,7 +150,7 @@ func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.EntityList, d netwo
 		}
 		propose.Data = b
 	}
-	host := activeRoster.List[0]
+	host := activeRoster.GetRandom()
 	r, err := c.Send(host, &ProposeSkipBlock{hash, propose})
 	if err != nil {
 		return

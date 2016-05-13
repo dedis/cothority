@@ -332,7 +332,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			list = sb.EntityList
 		}
 		for _, e := range list.List {
-			if e.ID.Equals(s.Context.Entity().ID) {
+			if e.ID.Equal(s.Context.Entity().ID) {
 				s.storeSkipBlock(block)
 				continue
 			}

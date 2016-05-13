@@ -39,7 +39,6 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 
 	c1 := NewIdentity(el, 50, "one", "public1")
 	dbg.ErrFatal(c1.CreateIdentity())
-	dbg.Print(c1.ID)
 	time.Sleep(time.Second)
 
 	conf2 := c1.Config.Copy()
@@ -68,7 +67,6 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 
 	c1 := NewIdentity(el, 50, "one", "public1")
 	dbg.ErrFatal(c1.CreateIdentity())
-	dbg.Print(c1.ID)
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
@@ -96,7 +94,6 @@ func TestIdentity_ConfigNewVote(t *testing.T) {
 
 	c1 := NewIdentity(el, 50, "one", "public1")
 	dbg.ErrFatal(c1.CreateIdentity())
-	dbg.Print(c1.ID)
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
@@ -107,7 +104,14 @@ func TestIdentity_ConfigNewVote(t *testing.T) {
 	hash, err := conf2.Hash()
 	dbg.ErrFatal(err)
 	dbg.ErrFatal(c1.ConfigNewVote(hash, true))
-	//dbg.ErrFatal(c1.)
+	dbg.ErrFatal(c1.ConfigUpdate())
+
+	if len(c1.Config.Owners) != 2{
+		t.Fatal("Should have two owners now")
+	}
+	if len(c1.Config.Data) != 2{
+		t.Fatal("Should have two data-entries now")
+	}
 }
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
@@ -139,17 +143,12 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 	dbg.ErrFatal(c1.CreateIdentity())
 
 	c2 := NewIdentity(el, 50, "two", "public2")
+	c2.ID = c1.ID
 	dbg.ErrFatal(c2.ConfigUpdate())
 
-	conf2 := c1.Config.Copy()
-	kp2 := config.NewKeyPair(network.Suite)
-	conf2.Owners["two"] = &Owner{kp2.Public}
-	dbg.ErrFatal(c1.ConfigNewPropose(conf2))
-
-	dbg.ErrFatal(c1.ConfigUpdate())
-	assert.NotNil(t, c1.Proposed)
-	o2 := c1.Proposed.Owners[c2.ManagerStr]
-	if !o2.Point.Equal(c2.Entity.Public) {
-		t.Fatal("Added owner is not c2")
+	assert.NotNil(t, c2.Config)
+	o1 := c2.Config.Owners[c1.ManagerStr]
+	if !o1.Point.Equal(c1.Entity.Public) {
+		t.Fatal("Owner is not c1")
 	}
 }

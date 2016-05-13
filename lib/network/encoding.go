@@ -192,6 +192,7 @@ func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
 	var err error
 	if buf, err = protobuf.Encode(data); err != nil {
 		dbg.Error("Error for protobuf encoding:", err)
+		dbg.Error(dbg.Stack())
 		return nil, err
 	}
 	_, err = b.Write(buf)

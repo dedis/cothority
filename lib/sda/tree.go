@@ -375,7 +375,7 @@ func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 			return i, e
 		}
 	}
-	return 0, nil
+	return -1, nil
 }
 
 // Get simply returns the entity that is stored at that index in the entitylist

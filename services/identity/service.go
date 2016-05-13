@@ -8,13 +8,14 @@ accordingly.
 */
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/services/skipchain"
-	"errors"
-	"strings"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -38,7 +39,7 @@ type Service struct {
 type IdentityStorage struct {
 	Latest   *AccountList
 	Proposed *AccountList
-	Votes    []*crypto.SchnorrSig
+	Votes    map[string]*crypto.SchnorrSig
 	Root     *skipchain.SkipBlock
 	Data     *skipchain.SkipBlock
 }
@@ -70,21 +71,21 @@ func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.Proto
 
 	// TODO - do we really want to propagate the errors here?
 	errorStr := []string{}
-	for _, e := range ids.Root.EntityList.List{
-		if e.ID.Equals(s.Entity().ID){
+	for _, e := range ids.Root.EntityList.List {
+		if e.ID.Equal(s.Entity().ID) {
 			continue
 		}
 		cr, err := sda.CreateServiceMessage(ServiceName,
 			&PropagateIdentity{ids})
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		err = s.SendRaw(e, cr)
-		if err != nil{
+		if err != nil {
 			errorStr = append(errorStr, err.Error())
 		}
 	}
-	if len(errorStr) > 0{
+	if len(errorStr) > 0 {
 		err = errors.New(strings.Join(errorStr, "\n"))
 		return nil, err
 	}
@@ -92,42 +93,126 @@ func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.Proto
 }
 
 // PropagateIdentity stores that identity on a remote node
-func (s *Service) PropagateIdentity(e *network.Entity, pi *PropagateIdentity)(network.ProtocolMessage, error){
+func (s *Service) PropagateIdentity(e *network.Entity, pi *PropagateIdentity) (network.ProtocolMessage, error) {
 	id := string(pi.Data.Hash)
-	if _, exists := s.Identities[id]; exists{
+	if _, exists := s.Identities[id]; exists {
 		return nil, errors.New("That identity already exists here")
 	}
-	dbg.Print("Storing identity in", s)
+	dbg.Lvl3("Storing identity in", s)
 	s.Identities[id] = pi.IdentityStorage
 	return nil, nil
 }
 
 // ProposeConfig only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeConfig(e *network.Entity, p *Proposition) (network.ProtocolMessage, error) {
+func (s *Service) ProposeConfig(e *network.Entity, p *PropagateProposition) (network.ProtocolMessage, error) {
 	dbg.Lvlf3("%s Storing proposed config from %x", s.Context.Address(), p.AccountList)
 	sid, ok := s.Identities[string(p.ID)]
-	if !ok{
+	if !ok {
 		return nil, errors.New("Didn't find Identity")
 	}
 	sid.Proposed = p.AccountList
+	sid.Votes = make(map[string]*crypto.SchnorrSig)
 	return nil, nil
 }
 
-func (s *Service)ConfigNewCheck(e *network.Entity, cnc *ConfigNewCheck)(network.ProtocolMessage, error){
+// ConfigNewCheck returns an eventual config-proposition
+func (s *Service) ConfigNewCheck(e *network.Entity, cnc *ConfigNewCheck) (network.ProtocolMessage, error) {
 	sid, ok := s.Identities[string(cnc.ID)]
-	if !ok{
+	if !ok {
 		return nil, errors.New("Didn't find Identity")
 	}
 	return &ConfigNewCheck{
-		ID: cnc.ID,
+		ID:          cnc.ID,
 		AccountList: sid.Proposed,
+	}, nil
+}
+
+// ConfigUpdate returns a new configuration update
+func (s *Service) ConfigUpdate(e *network.Entity, cu *ConfigUpdate) (network.ProtocolMessage, error) {
+	sid, ok := s.Identities[string(cu.ID)]
+	if !ok {
+		return nil, errors.New("Didn't find Identity")
+	}
+	return &ConfigUpdate{
+		ID:          cu.ID,
+		AccountList: sid.Latest,
 	}, nil
 }
 
 // VoteConfig takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
+// An empty signature signifies that the vote has been rejected.
 func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessage, error) {
+	sid, ok := s.Identities[string(v.ID)]
+	if !ok {
+		return nil, errors.New("Didn't find identity")
+	}
+	owner, ok := sid.Latest.Owners[v.Signer]
+	if !ok {
+		return nil, errors.New("Didn't find signer")
+	}
+	if sid.Proposed == nil {
+		return nil, errors.New("No proposed block")
+	}
+	hash, err := sid.Proposed.Hash()
+	if err != nil {
+		return nil, errors.New("Couldn't get hash")
+	}
+	if _, exists := sid.Votes[v.Signer]; exists {
+		return nil, errors.New("Already voted for that block")
+	}
+	dbg.LLvl3(v.Signer, "voted", v.Signature)
+	if v.Signature != nil {
+		err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
+		if err != nil {
+			return nil, errors.New("Wrong signature: " + err.Error())
+		}
+	}
+	sid.Votes[v.Signer] = v.Signature
+	dbg.Print("signature")
+	if i, _ := sid.Root.EntityList.Search(e.ID); i == -1 {
+		dbg.Print("usercall")
+		// We have been contacted by the user
+		err = s.SendISMOthers(sid.Root.EntityList, v)
+		if err != nil {
+			// This is not really bad, as one of the nodes might just be
+			// offline
+			dbg.Error("While propagating vote:", err)
+		}
+
+		if len(sid.Votes) >= sid.Latest.Threshold ||
+		len(sid.Votes) == len(sid.Latest.Owners){
+			dbg.LLvl3("Having majority or all votes")
+		}
+		reply, err := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
+		if err != nil{
+			return nil, err
+		}
+		sid.Data = reply.Latest
+		psb := &UpdateSkipBlock{
+			ID: v.ID,
+		}
+		err = s.SendISMOthers(sid.Root.EntityList, psb)
+		if err != nil{
+			return nil, err
+		}
+		return sid.Data, nil
+	}
+	return nil, nil
+}
+
+// PropagateSkipBlock sends a new SkipBlock to all other services
+func (s *Service) PropagateSkipBlock(e *network.Entity, psb *UpdateSkipBlock)(network.ProtocolMessage, error){
+	sid, ok := s.Identities[string(psb.ID)]
+	if !ok{
+		return nil, errors.New("Didn't find identity")
+	}
+	gucr, err := s.skipchain.GetUpdateChain(sid.Root, sid.Data.Hash)
+	if err != nil{
+		return nil, err
+	}
+	sid.Data = gucr.Update[len(gucr.Update)-1]
 	return nil, nil
 }
 
@@ -144,7 +229,8 @@ func newIdentityService(c sda.Context, path string) sda.Service {
 		path:             path,
 	}
 	for _, f := range []interface{}{s.ProposeConfig, s.VoteConfig,
-		s.AddIdentity, s.PropagateIdentity, s.ConfigNewCheck} {
+		s.AddIdentity, s.PropagateIdentity, s.ConfigNewCheck,
+		s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
 			dbg.Fatal("Registration error:", err)
 		}
