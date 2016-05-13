@@ -47,6 +47,19 @@ func main() {
 	cliApp.Name = "Cothorityd server"
 	cliApp.Usage = "Serve a cothority"
 	cliApp.Version = VERSION
+	serverFlags := []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: getDefaultConfigFile(),
+			Usage: "Configuration file of the server",
+		},
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 1,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+	}
+
 	cliApp.Commands = []cli.Command{
 		{
 			Name:    "setup",
@@ -69,20 +82,10 @@ func main() {
 			Action: func(c *cli.Context) {
 				runServer(c)
 			},
+			Flags: serverFlags,
 		},
 	}
-	cliApp.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Value: getDefaultConfigFile(),
-			Usage: "Configuration file of the server",
-		},
-		cli.IntFlag{
-			Name:  "debug, d",
-			Value: 1,
-			Usage: "debug-level: 1 for terse, 5 for maximal",
-		},
-	}
+	cliApp.Flags = serverFlags
 	// default action
 	cliApp.Action = func(c *cli.Context) error {
 		runServer(c)
@@ -145,10 +148,10 @@ func interactiveConfig() {
 	serverBinding = hostStr + ":" + portStr
 	hostStr, portStr, err := net.SplitHostPort(serverBinding)
 	if err != nil {
-		stderrExit("[-] Invalid connection information for", serverBinding, " :", err)
+		stderrExit("[-] Invalid connection information for %s: %v", serverBinding, err)
 	}
 	if net.ParseIP(hostStr) == nil {
-		stderrExit("[-] Invalid connection  information for", serverBinding)
+		stderrExit("[-] Invalid connection  information for %s", serverBinding)
 	}
 
 	fmt.Println("[+] We now need to get a reachable address for other cothority servers")
@@ -227,7 +230,7 @@ func interactiveConfig() {
 		if _, err := os.Stat(dirName); os.IsNotExist(err) {
 			fmt.Println("[+] Creating inexistant directory configuration", dirName)
 			if err = os.MkdirAll(dirName, 0744); err != nil {
-				stderrExit("[-] Could not create directory configuration", dirName, err)
+				stderrExit("[-] Could not create directory configuration %s %v", dirName, err)
 			}
 		}
 		// check if the file exists and ask for override
@@ -265,7 +268,7 @@ func interactiveConfig() {
 	groupToml := c.NewGroupToml(serverToml)
 
 	if err := groupToml.Save(groupFile); err != nil {
-		stderrExit("[-] Could not write your group file snippet:", err)
+		stderrExit("[-] Could not write your group file snippet: %v", err)
 	}
 
 	fmt.Println("[+] Saved a group definition snippet for your server at", groupFile)
@@ -288,7 +291,7 @@ func getDefaultConfigFile() string {
 	if err != nil {
 		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
 		if curr, err := os.Getwd(); err != nil {
-			stderrExit("[-] Impossible to get the current directory.", err)
+			stderrExit("[-] Impossible to get the current directory. %v", err)
 		} else {
 			return path.Join(curr, SERVER_CONFIG)
 		}
