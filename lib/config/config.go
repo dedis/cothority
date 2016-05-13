@@ -149,6 +149,7 @@ func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
 	return el, nil
 }
 
+// Save saves this group configuration into the given filename.
 func (gt *GroupToml) Save(fname string) error {
 	file, err := os.Create(fname)
 	if err != nil {

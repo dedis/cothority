@@ -29,9 +29,9 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-const BIN = "cosi"
-const SERVER_CONFIG = "config.toml"
-const GROUP_DEF = "group.toml"
+const binName = "cosi"
+const serverConfig = "config.toml"
+const groupDef = "group.toml"
 
 func runServer(ctx *cli.Context) {
 	// first check the options
@@ -201,7 +201,7 @@ func interactiveConfig() {
 
 	// group definition part
 	var dirName = path.Dir(configFile)
-	var groupFile = path.Join(dirName, GROUP_DEF)
+	var groupFile = path.Join(dirName, groupDef)
 	serverToml := c.NewServerToml(network.Suite, kp.Public, reachableAddress)
 	groupToml := c.NewGroupToml(serverToml)
 
@@ -232,15 +232,15 @@ func getDefaultConfigFile() string {
 		if curr, err := os.Getwd(); err != nil {
 			stderrExit("[-] Impossible to get the current directory. %v", err)
 		} else {
-			return path.Join(curr, SERVER_CONFIG)
+			return path.Join(curr, serverConfig)
 		}
 	}
 	// let's try to stick to usual OS folders
 	switch runtime.GOOS {
 	case "darwin":
-		return path.Join(u.HomeDir, "Library", BIN, SERVER_CONFIG)
+		return path.Join(u.HomeDir, "Library", binName, serverConfig)
 	default:
-		return path.Join(u.HomeDir, ".config", BIN, SERVER_CONFIG)
+		return path.Join(u.HomeDir, ".config", binName, serverConfig)
 		// TODO WIndows ? FreeBSD ?
 	}
 }
