@@ -13,6 +13,7 @@ import (
 // TODO - send whole block along in 'data' for BFTSignature
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing
 //	the exception-field
+// TODO - if List[0] is replaced with GetRandom() it crashes !?!
 
 // Client is a structure to communicate with the Skipchain
 // service from the outside
@@ -97,7 +98,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 	if !bytes.Equal(parent.Hash, child.ParentBlockID) {
 		return nil, nil, errors.New("Child doesn't point to that parent")
 	}
-	host := parent.EntityList.GetRandom()
+	host := parent.EntityList.List[0]
 	replyMsg, err := c.Send(host, &SetChildrenSkipBlock{parent.Hash, child.Hash})
 	if err != nil {
 		return nil, nil, err
@@ -109,7 +110,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain.
 func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
-	h := parent.EntityList.GetRandom()
+	h := parent.EntityList.List[0]
 	r, err := c.Send(h, &GetUpdateChain{latest})
 	if err != nil {
 		return
@@ -150,7 +151,7 @@ func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.EntityList, d netwo
 		}
 		propose.Data = b
 	}
-	host := activeRoster.GetRandom()
+	host := activeRoster.List[0]
 	r, err := c.Send(host, &ProposeSkipBlock{hash, propose})
 	if err != nil {
 		return
