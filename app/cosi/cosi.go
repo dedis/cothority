@@ -22,6 +22,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	s "github.com/dedis/cothority/services/cosi"
 	"gopkg.in/codegangsta/cli.v1"
+	"sync"
 )
 
 // RequestTimeOut defines when the client stops waiting for the CoSi group to
@@ -100,52 +101,70 @@ func main() {
 func checkConfig(c *cli.Context) error {
 	tomlFileName := c.GlobalString(cothorityDef)
 	f, err := os.Open(tomlFileName)
-	stderrAndExit("Couldn't open group definition file: %v", err)
+	printErrAndExit("Couldn't open group definition file: %v", err)
 	el, err := config.ReadGroupToml(f)
-	stderrAndExit("Error while reading group definition file: %v", err)
+	printErrAndExit("Error while reading group definition file: %v", err)
 	if len(el.List) == 0 {
-		stderrAndExit("Empty entity or invalid group defintion in: %s",
+		printErrAndExit("Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
+	var wg sync.WaitGroup
+	// quick and dirty way to sum up the delat for the wait group:
+	wg.Add(len(el.List))
+	for i, _ := range el.List {
+		for _, _ = range el.List[i+1:] {
+			// two calls of checkList (see below)
+			wg.Add(2)
+		}
+	}
+	fmt.Print("Will check the availability and responsiveness of the " +
+		"servers forming the group and inform you about possible " +
+		"problems.\nThis make take some time ...")
 	// First check all servers individually
 	for i := range el.List {
-		checkList(sda.NewEntityList(el.List[i : i+1]))
+		go checkList(sda.NewEntityList(el.List[i:i+1]), &wg)
 	}
 	if len(el.List) > 1 {
 		// Then check pairs of servers
 		for i, first := range el.List {
 			for _, second := range el.List[i+1:] {
 				es := []*network.Entity{first, second}
-				checkList(sda.NewEntityList(es))
+				go checkList(sda.NewEntityList(es), &wg)
 				es[0], es[1] = es[1], es[0]
-				checkList(sda.NewEntityList(es))
+				go checkList(sda.NewEntityList(es), &wg)
 			}
 		}
 	}
+
+	wg.Wait()
 	return nil
 }
 
 // checkList sends a message to the list and waits for the reply
-func checkList(list *sda.EntityList) {
+func checkList(list *sda.EntityList, wg *sync.WaitGroup) {
+	defer wg.Done()
 	serverStr := ""
 	for _, s := range list.List {
 		serverStr += s.Addresses[0] + " "
 	}
-	fmt.Println("Sending message to: " + serverStr)
+	dbg.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "When contacting servers: %s. Error: %s",
-			serverStr, err.Error())
+		fmt.Fprintln(os.Stderr,
+			fmt.Sprintf("Error '%v' while contacting servers: %s",
+				err, serverStr))
 	} else {
 		err := verifySignatureHash([]byte(msg), sig, list)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Signature was invalid: %s",
-				err.Error())
+			fmt.Println(os.Stderr,
+				fmt.Sprintf("Received signature was invalid: %v",
+					err))
 		} else {
 			fmt.Println("Received signature successfully")
 		}
 	}
+
 }
 
 // signFile will search for the file and sign it
@@ -155,16 +174,16 @@ func signFile(c *cli.Context) error {
 	groupToml := c.GlobalString(cothorityDef)
 	file, err := os.Open(fileName)
 	if err != nil {
-		stderrAndExit("Couldn't read file to be signed: %v", err)
+		printErrAndExit("Couldn't read file to be signed: %v", err)
 	}
 	sig, err := sign(file, groupToml)
-	stderrAndExit("Couldn't create signature: %v", err)
+	printErrAndExit("Couldn't create signature: %v", err)
 	dbg.Lvl3(sig)
 	var outFile *os.File
 	outFileName := c.String("out")
 	if outFileName != "" {
 		outFile, err = os.Create(outFileName)
-		stderrAndExit("Couldn't create signature file: %v", err)
+		printErrAndExit("Couldn't create signature file: %v", err)
 	} else {
 		outFile = os.Stdout
 	}
@@ -196,24 +215,22 @@ func verifyPrintResult(err error) {
 func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		stderrAndExit("Couldn't encode signature: %v", err)
+		printErrAndExit("Couldn't encode signature: %v", err)
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
 	outW.Write([]byte("\n"))
 	if _, err := out.WriteTo(outW); err != nil {
-		stderrAndExit("Couldn't write signature: %v", err)
+		printErrAndExit("Couldn't write signature: %v", err)
 	}
 	outW.Write([]byte("\n"))
 }
 
-func stderr(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, fmt.Sprintf(format, a...)+"\n")
-}
-
-func stderrAndExit(format string, a ...interface{}) {
-	stderr(format, a...)
-	os.Exit(1)
+func printErrAndExit(format string, a ...interface{}) {
+	if len(a) > 0 && a[0] != nil {
+		fmt.Fprintln(os.Stderr, fmt.Sprintf(format, a...))
+		os.Exit(1)
+	}
 }
 
 // sign takes a stream and a toml file defining the servers
@@ -273,7 +290,7 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 		}
 		return response, nil
 	case <-time.After(RequestTimeOut):
-		return nil, errors.New("Timeout on signing.")
+		return nil, errors.New("timeout on signing request")
 	}
 }
 
