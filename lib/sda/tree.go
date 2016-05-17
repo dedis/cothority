@@ -334,6 +334,8 @@ func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeN
 type EntityList struct {
 	Id EntityListID
 	// TODO make that a map so search is O(1)
+	// List is the List of actual "entities"
+	// Be careful if you access it in go-routines (not safe by default)
 	List []*network.Entity
 	// Aggregate public key
 	Aggregate abstract.Point

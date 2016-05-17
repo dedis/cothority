@@ -1,45 +1,26 @@
-/*
-Cothority-SDA is a framework that allows testing, simulating and
-deploying crypto-related protocols.
-
-# Running a simulation
-
-Your best starting point is the simul/-directory where you can start different
-protocols and test them on your local computer. After building, you can
-start any protocol you like:
-	cd simul
-	go build
-	./simul runfiles/test_cosi.toml
-Once a simulation is done, you can look at the results in the test_data-directory:
-	cat test_data/test_cosi.csv
-To have a simple plot of the round-time, you need to have matplotlib installed
-in version 1.5.1.
-	matplotlib/plot.py test_data/test_cosi.csv
-If plot.py complains about missing matplotlib-library, you can install it using
-	sudo easy_install "matplotlib == 1.5.1"
-at least on a Mac.
-
-# Writing your own protocol
-
-If you want to experiment with a protocol of your own, have a look at
-the protocols-package-documentation.
-
-# Deploying
-
-Unfortunately it's not possible to deploy the Cothority as a stand-alon app.
-Well, it is possible, but there is no way to start a protocol.
-*/
+// Cothorityd is the main binary for running a Cothority server.
+// A Cothority server can participate in various distributed protocols using the
+// *cothority/lib/sda* library with the underlying *dedis/crypto* library.
+// Basically, you first need to setup a config file for the server by using:
+//
+// 		./cothorityd setup
+//
+// Then you can launch the daemon with:
+//
+//  	./cothorityd
+//
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
+	"os/user"
+	"path"
+	"runtime"
 
-	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/config"
+	c "github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
+	"gopkg.in/codegangsta/cli.v1"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
@@ -47,33 +28,30 @@ import (
 	_ "github.com/dedis/cothority/services"
 )
 
-/*
-Cothority is a general node that can be used for all available protocols.
-*/
+// DefaultName is the name of the binary we produce and is used to create a directory
+// folder with this name
+const DefaultName = "cothorityd"
 
-// ConfigFile represents the configuration for a standalone run
-var ConfigFile string
-var debugVisible int
+// DefaultServerConfig is the default name of a server configuration file
+const DefaultServerConfig = "config.toml"
 
-// Initialize before 'init' so we can directly use the fields as parameters
-// to 'Flag'
-func init() {
-	flag.StringVar(&ConfigFile, "config", "cothorityd.toml", "which config-file to use")
-	flag.IntVar(&debugVisible, "debug", 1, "verbosity: 0-5")
-}
+// DefaultGroupFile is the default name of a group definition file
+const DefaultGroupFile = "group.toml"
 
-// Main starts the host and will setup the protocol.
+// Version of this binary
+const Version = "1.1"
+
 func main() {
 
 	cliApp := cli.NewApp()
 	cliApp.Name = "Cothorityd server"
 	cliApp.Usage = "Serve a cothority"
-	cliApp.Version = "1.0"
-	cliApp.Flags = []cli.Flag{
+	cliApp.Version = Version
+	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: "cothorityd.toml",
-			Usage: "config-file for the server",
+			Value: getDefaultConfigFile(),
+			Usage: "Configuration file of the server",
 		},
 		cli.IntFlag{
 			Name:  "debug, d",
@@ -81,47 +59,79 @@ func main() {
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 	}
-	cliApp.Action = func(c *cli.Context) {
-		config := c.String("config")
-		dbg.SetDebugVisible(c.Int("debug"))
-		dbg.Lvl1("Starting cothority daemon", cliApp.Version)
-		startCothorityd(config)
+
+	cliApp.Commands = []cli.Command{
+		{
+			Name:    "setup",
+			Aliases: []string{"s"},
+			Usage:   "Setup the configuration for the server (interactive)",
+			Action: func(c *cli.Context) error {
+				if c.String("config") != "" {
+					stderrExit("[-] Configuration file option can't be used for the 'setup' command")
+				}
+				if c.String("debug") != "" {
+					stderrExit("[-] Debug option can't be used for the 'setup' command")
+				}
+				interactiveConfig()
+				return nil
+			},
+		},
+		{
+			Name:  "server",
+			Usage: "Run the cothority server",
+			Action: func(c *cli.Context) {
+				runServer(c)
+			},
+			Flags: serverFlags,
+		},
+	}
+	cliApp.Flags = serverFlags
+	// default action
+	cliApp.Action = func(c *cli.Context) error {
+		runServer(c)
+		return nil
 	}
 
 	cliApp.Run(os.Args)
 
 }
 
-func startCothorityd(configName string) {
-	if _, err := os.Stat(ConfigFile); os.IsNotExist(err) {
-		// the config file does not exists, let's create it
-		config, fname, err := config.CreateCothoritydConfig(configName)
-		if err != nil {
-			dbg.Fatal("Could not create config file:", err)
-		}
-		if fname != "" {
-			configName = fname
-		}
-		// write it down
-		dbg.Lvl1("Writing the config file down in '", configName, "'")
-		if err := config.Save(configName); err != nil {
-			dbg.Fatal("Could not save the config file", err)
-		}
-	}
+func runServer(ctx *cli.Context) {
+	// first check the options
+	dbg.SetDebugVisible(ctx.Int("debug"))
+	config := ctx.String("config")
 
+	if _, err := os.Stat(config); os.IsNotExist(err) {
+		dbg.Fatalf("[-] Configuration file does not exists. %s", config)
+	}
 	// Let's read the config
-	conf, host, err := config.ParseCothorityd(configName)
+	_, host, err := c.ParseCothorityd(config)
 	if err != nil {
 		dbg.Fatal("Couldn't parse config:", err)
 	}
-
-	fmt.Print("\n\n\t\t\033[1mServer config to contact this cothorityd\033[0m\n\n")
-	serverToml := config.NewServerToml(network.Suite, host.Entity.Public,
-		conf.Addresses...)
-	groupToml := config.NewGroupToml(serverToml)
-	fmt.Println(groupToml.String())
-	fmt.Println("\n")
 	host.ListenAndBind()
 	host.StartProcessMessages()
 	host.WaitForClose()
+
+}
+
+func getDefaultConfigFile() string {
+	u, err := user.Current()
+	// can't get the user dir, so fallback to current working dir
+	if err != nil {
+		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
+		if curr, err := os.Getwd(); err != nil {
+			stderrExit("[-] Impossible to get the current directory. %v", err)
+		} else {
+			return path.Join(curr, DefaultServerConfig)
+		}
+	}
+	// let's try to stick to usual OS folders
+	switch runtime.GOOS {
+	case "darwin":
+		return path.Join(u.HomeDir, "Library", DefaultName, DefaultServerConfig)
+	default:
+		return path.Join(u.HomeDir, ".config", DefaultName, DefaultServerConfig)
+		// TODO WIndows ? FreeBSD ?
+	}
 }
