@@ -91,6 +91,7 @@ func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessag
 	if err != nil{
 		return err
 	}
+	dbg.Lvl4("Raw-sending to", e)
 	return p.SendRaw(e, sm)
 }
 
@@ -99,6 +100,7 @@ func (p *ServiceProcessor) SendISMOthers(el *EntityList, msg network.ProtocolMes
 	errStrs := []string{}
 	for _, e := range el.List{
 		if !e.ID.Equal(p.Context.Entity().ID){
+			dbg.Lvl3("Sending to", e)
 			err := p.SendISM(e, msg)
 			if err != nil{
 				errStrs = append(errStrs, err.Error())

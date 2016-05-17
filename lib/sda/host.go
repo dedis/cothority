@@ -353,7 +353,7 @@ func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
 		return
 	}
 	dbg.Lvl5("host", h.Address(), m)
-	s.ProcessServiceMessage(e, m)
+	go s.ProcessServiceMessage(e, m)
 
 }
 

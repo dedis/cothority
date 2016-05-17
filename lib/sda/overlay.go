@@ -57,12 +57,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	defer o.transmitMux.Unlock()
 	// do we have the entitylist ? if not, ask for it.
 	if o.EntityList(sdaMsg.To.EntityListID) == nil {
-		dbg.Lvl3("Will ask the EntityList from token", sdaMsg.To.EntityListID, len(o.entityLists), o.host.workingAddress)
+		dbg.Lvl4("Will ask the EntityList from token", sdaMsg.To.EntityListID, len(o.entityLists), o.host.workingAddress)
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		dbg.Lvl3("Will ask for tree from token")
+		dbg.Lvl4("Will ask for tree from token")
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	// TreeNodeInstance
@@ -72,7 +72,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	done := o.instancesInfo[sdaMsg.To.Id()]
 	o.instancesLock.Unlock()
 	if done {
-		dbg.Lvl3("Message for TreeNodeInstance that is already finished")
+		dbg.Lvl4("Message for TreeNodeInstance that is already finished")
 		return nil
 	}
 	// if the TreeNodeInstance is not there, creates it

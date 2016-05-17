@@ -23,6 +23,7 @@ func init() {
 		&AttachToIdentity{},
 		&ConfigNewCheck{},
 		&ConfigUpdate{},
+		&UpdateSkipBlock{},
 	} {
 		network.RegisterMessageType(s)
 	}
@@ -101,7 +102,7 @@ func (i *Identity) CreateIdentity() error {
 // ConfigNewPropose collects new IdentityLists and waits for confirmation with
 // ConfigNewVote
 func (i *Identity) ConfigNewPropose(il *AccountList) error {
-	_, err := i.SendToAll(i.cothority, &PropagateProposition{i.ID, il})
+	_, err := i.Send(i.cothority.GetRandom(), &PropagateProposition{i.ID, il})
 	return err
 }
 
@@ -122,6 +123,7 @@ func (i *Identity) ConfigNewCheck() error {
 
 // ConfigNewVote sends a vote (accept or reject) with regard to a new configuration
 func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
+	dbg.Lvl3("Voting on", i.Proposed.Owners)
 	hash, err := i.Proposed.Hash()
 	if err != nil {
 		return err
@@ -139,11 +141,12 @@ func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
 		return err
 	}
 	if msg == nil {
-		dbg.LLvl3("Threshold not reached")
+		dbg.Lvl3("Threshold not reached")
 	} else {
-		dbg.LLvl3("Threashold reached and signed")
+		dbg.Lvl3("Threshold reached and signed")
 		sb := msg.Msg.(skipchain.SkipBlock)
 		i.data = &sb
+		i.Config = i.Proposed
 	}
 	return nil
 }
