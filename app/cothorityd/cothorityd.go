@@ -1,3 +1,10 @@
+// Cothorityd is the main binary for running a Cothority server.
+// A Cothority server can participate in various distributed protocols using the
+// `cothority/lib/sda` library with the underlying `dedis/crypto` library.
+// Basically, you first need to setup a config file for the server by using:
+// `	cothorityd setup`
+// Then you can launch the daemon with:
+// ` 	cothorityd`
 package main
 
 import (
