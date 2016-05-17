@@ -110,18 +110,12 @@ func checkConfig(c *cli.Context) error {
 		printErrAndExit("Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
-	var wg sync.WaitGroup
-	// quick and dirty way to sum up the delat for the wait group:
-	wg.Add(len(el.List))
-	for i := range el.List {
-		for _ = range el.List[i+1:] {
-			// two calls of checkList (see below)
-			wg.Add(2)
-		}
-	}
 	fmt.Print("Will check the availability and responsiveness of the " +
 		"servers forming the group and inform you about possible " +
 		"problems.\nThis make take some time ...")
+
+	var wg sync.WaitGroup
+	wg.Add(len(el.List))
 	// First check all servers individually
 	for i := range el.List {
 		go checkList(sda.NewEntityList(el.List[i:i+1]), &wg)
@@ -130,6 +124,7 @@ func checkConfig(c *cli.Context) error {
 		// Then check pairs of servers
 		for i, first := range el.List {
 			for _, second := range el.List[i+1:] {
+				wg.Add(2)
 				es := []*network.Entity{first, second}
 				go checkList(sda.NewEntityList(es), &wg)
 				es[0], es[1] = es[1], es[0]
