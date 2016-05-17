@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
@@ -105,7 +104,7 @@ func (h *Host) listen(wait bool) {
 		h.handleConn(c)
 	}
 	go func() {
-		dbg.Lvl3("Host listens on:", h.workingAddress)
+		dbg.Lvl4("Host listens on:", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
 			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
@@ -113,10 +112,10 @@ func (h *Host) listen(wait bool) {
 	}()
 	if wait {
 		for {
-			dbg.Lvl3(h.Entity.First(), "checking if listener is up")
+			dbg.Lvl4(h.Entity.First(), "checking if listener is up")
 			_, err := h.Connect(h.Entity)
 			if err == nil {
-				dbg.Lvl3(h.Entity.First(), "managed to connect to itself")
+				dbg.Lvl4(h.Entity.First(), "managed to connect to itself")
 				break
 			}
 			time.Sleep(network.WaitRetry)
@@ -162,7 +161,7 @@ func (h *Host) Close() error {
 		h.closingMut.Unlock()
 		return errors.New("Already closing")
 	}
-	dbg.Lvl3(h.Entity.First(), "Starts closing")
+	dbg.Lvl4(h.Entity.First(), "Starts closing")
 	h.isClosing = true
 	h.closingMut.Unlock()
 	if h.processMessagesStarted {
@@ -170,14 +169,14 @@ func (h *Host) Close() error {
 		close(h.ProcessMessagesQuit)
 	}
 	for _, c := range h.connections {
-		dbg.Lvl3(h.Entity.First(), "Closing connection", c)
+		dbg.Lvl4(h.Entity.First(), "Closing connection", c)
 		err := c.Close()
 		if err != nil {
 			dbg.Error(h.Entity.First(), "Couldn't close connection", c)
 			return err
 		}
 	}
-	dbg.Lvl3(h.Entity.First(), "Closing tcpHost")
+	dbg.Lvl4(h.Entity.First(), "Closing tcpHost")
 	err := h.host.Close()
 	h.connections = make(map[network.EntityID]network.SecureConn)
 	h.overlay.Close()
@@ -210,8 +209,8 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	}
 	h.networkLock.Unlock()
 
-	dbg.Lvl4(h.Entity.Addresses, "sends to", e)
-	if err := c.Send(context.TODO(), msg); err != nil && err != network.ErrClosed {
+	dbg.Lvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
+	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
 	}
 	return nil
@@ -246,7 +245,7 @@ func (h *Host) processMessages() {
 		case <-h.ProcessMessagesQuit:
 			return
 		}
-		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType == RequestID)
+		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
 		case SDADataMessageID:
 			sdaMsg := data.Msg.(Data)
@@ -338,12 +337,12 @@ func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(m.Service)
 	if !ok {
-		dbg.Error("Received a request for an unknown service")
+		dbg.Error("Received a message for an unknown service", m.Service)
 		// XXX TODO should reply with some generic response =>
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
+	dbg.Lvl3("host", h.Address(), " => Dispatch request to ServiceMessage")
 	s.ProcessServiceMessage(e, m)
 
 }
@@ -352,13 +351,13 @@ func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(r.Service)
 	if !ok {
-		dbg.Error("Received a request for an unknown service")
+		dbg.Error("Received a request for an unknown service", r.Service)
 		// XXX TODO should reply with some generic response =>
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl3("host", h.Address(), " => Dispatch request to Service")
-	s.ProcessClientRequest(e, r)
+	dbg.Lvl3("host", h.Address(), " => Dispatch request to Request")
+	go s.ProcessClientRequest(e, r)
 }
 
 // sendSDAData marshals the inner msg and then sends a Data msg
@@ -402,7 +401,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 				h.Entity.First(), err, h.isClosing))
 			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-				dbg.Lvl3(h.Entity.First(), "quitting handleConn for-loop", err)
+				dbg.Lvl4(h.Entity.First(), "quitting handleConn for-loop", err)
 				return
 			}
 			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
@@ -461,7 +460,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
-	dbg.Lvl3(h.Entity.First(), "registers", c.Entity().First())
+	dbg.Lvl4(h.Entity.First(), "registers", c.Entity().First())
 	h.networkLock.Lock()
 	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()

@@ -2,32 +2,38 @@
 
 # Cothority
 
-This repository provides an implementation for the prototype of the 
-collective authority (cothority) framework. 
+This repository implements a of the collective authority (cothority) framework. 
 The system is based on CoSi, a novel protocol for collective signing 
-which itself builds upon Merkle trees and Schnorr multi-signatures over 
-elliptic curves. 
+which itself builds on Schnorr multi-signatures over elliptic curves. 
 CoSi enables authorities to have their statements collectively signed 
 (co-signed) by a diverse, decentralized, and scalable group of 
 (potentially thousands of) witnesses and, for example, could be employed 
 to proactively harden critical Internet authorities. 
-Among other things, one could imagine applications to the Certificate 
-Transparency project, DNSSEC, software distribution, the Tor anonymity 
-network or cryptocurrencies.
+Among other things, one could imagine applications to Certificate 
+Transparency, DNSSEC, software distribution, the Tor anonymity 
+network, and cryptocurrencies.
 
 ## Further Information
 
+Primary information sources:
 * Keeping Authorities "Honest or Bust" with Decentralized Witness 
-Cosigning: [paper](http://arxiv.org/abs/1503.08768), 
+Cosigning: [paper](http://dedis.cs.yale.edu/dissent/papers/witness-abs), 
 [slides](http://dedis.cs.yale.edu/dissent/pres/151009-stanford-cothorities.pdf)
-* Certificate Cothority - Towards Trustworthy Collective CAs: 
-[paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
-* For questions and discussions please refer to our 
+* For questions and discussions please join the
 [mailing list](https://groups.google.com/forum/#!forum/cothority).
 
+Other cothority-related research papers:
+* Certificate Cothority - Towards Trustworthy Collective CAs: 
+[paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
+* Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing: [paper](http://arxiv.org/abs/1602.06997)
+ 
+
 ## Warning
-**The software provided in this repository is highly experimental and 
-under heavy development. Do not use it for anything security-critical. 
+**The software provided in this repository is highly experimental and under
+heavy development. Do not use it yet for anything security-critical.  or if you
+use it, do so in a way that supplements (rather than replacing) existing, stable
+signing mechanisms.
+
 All usage is at your own risk!**
 
 ## Requirements
@@ -35,30 +41,34 @@ All usage is at your own risk!**
 In order to build (and run) the simulations you need to install a recent 
 [Golang](https://golang.org/dl/) version (1.5.2+).
 See Golang's documentation on how-to 
-[install and configure](https://golang.org/doc/install) Go (including 
-setting up a GOPATH environment variable). 
-You can either run various simulations or standalone applications: 
+[install and configure](https://golang.org/doc/install) Go,
+including setting the GOPATH environment variable. 
+You can run CoSi either as a standalone application or in testbed simulations,
+as described below. 
 
-# Commandline Interface
 
-We have provided a simple manually-driven collective signing application, 
-`cosi`, which you can use to request the collective signing group you 
-defined to witness and cosign any message you propose. In this case the 
-witnesses are not validating or checking the messages you’re proposing 
-in any way; they are merely attesting the fact that they have observed 
-your request to sign the message.
+# Command-line Interface
+
+You can run `cosi`, a simple standalone collective signing application, 
+to request a collective signing group you define
+to witness and cosign any message you propose.
+In the current implementation,
+these witnesses do not validate or check the messages you propose
+in any way; they merely serve to provide transparency
+by publicly attesting the fact that
+they have observed and cosigned the message.
 
 ## Installation
 
-We provide a binaries for the `cosi` and `cothorityd` program. They are pre-compiled
-for MacOSX and Linux and don't need any go-installation. But of course you can also
-compile from source.
-
-### Installing from .tar.gz
+For convenience we provide x86-64 binaries for Linux and Mac OS X,
+which are self-contained and don't require Go to be installed.
+But of course you can also compile the tools from source.
+ 
+### Installing binaries from .tar.gz
 
 Download the latest package from 
 
-https://github.com/dedis/cothority/releases/latest
+	https://github.com/dedis/cothority/releases/latest
 
 and untar into a directory that is in your `$PATH`:
 
@@ -68,21 +78,18 @@ tar xf conode-*tar.gz -C ~/bin
 
 ### Installing from source
 
-To install the commandline interface from source, make sure that go is installed
-and that `$GOPATH` and `$GOBIN` are set 
-(https://golang.org/doc/code.html#GOPATH). The apps are only in a special branch,
-`cosi_cli`, so you have to change to that branch:
+To install the command-line tools from source, make sure that
+[Go is installed](https://golang.org/doc/install)
+and that
+[`$GOPATH` and `$GOBIN` are set](https://golang.org/doc/code.html#GOPATH).
 
 ```bash
-go get github.com/dedis/cothority
-cd $GOPATH/src/github.com/dedis/cothority/app
-go install ./cosi/
-go install ./cothorityd/
+go get -u github.com/dedis/cothority/app/cosi
+go get -u github.com/dedis/cothority/app/cothorityd
 ```
 
-The two binaries `cosi` and `cothorityd` will be added to `$GOBIN`. If you already
-have an old version of cothority, be sure to update `github.com/dedis/crypto` and
-`github.com/dedis/protobuf`.
+The two binaries `cosi` and `cothorityd` will be installed in
+the directory indicated by `$GOBIN`.
 
 ## Running your own CoSi server
 
@@ -92,28 +99,24 @@ You can create a default server configuration with a fresh
 public/private key pair as follows:
 
 ```bash
+cothorityd setup
+```
+
+Follow the instructions on the screen. At the end, you should have two files:
+* One local server configuration file which is used by your cothority server,
+* One group definition file that you will share with other cothority members and
+  clients that wants to contact you.
+
+To run the server, simply type:
+```bash
 cothorityd
 ```
 
-Follow the instructions on the screen. `cothorityd` will ask you for
-a server address and port, and where you want to store the server 
-configuration. Then you will see an output similar to this:
-
-```
-Description = "Description of the system"
-
-[[servers]]
-  Addresses = ["127.0.0.1:2000"]
-  Public = "6T7FwlCuVixvu7XMI9gRPmyCuqxKk/WUaGbwVvhA+kc="
-  Description = "Description of the server"
-```  
-
-You can copy and paste it into a file `servers.toml`. 
-
-The server configuration itself will get stored in the filename you provided, or
-in `config.toml` by default.
-Next time you run the server it will directly read that file and start up.
-If you chose another filename than `config.toml`, you can use `-config file.toml`. 
+The server will try to read the default configuration file; if you have put the
+file in a custom location, provide the path using:
+```base
+cothorityd -config path/file.toml
+``` 
 
 ### Creating a Collective Signing Group
 By running several `cothorityd` instances (and copying the appropriate lines 

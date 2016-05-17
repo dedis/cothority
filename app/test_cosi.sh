@@ -9,25 +9,27 @@ main(){
     build
     test Build
     test ServerCfg
-    test SignMsg
+    test SignFile
     stopTest
 }
 
-testSignMsg(){
+testSignFile(){
     setupServers 1
     echo $OUT
     echo "Running first sign"
-    runCl 1 sign msg testCosi > $OUT
+    echo "My Test Message File" > foo.txt
+    echo "My Second Test Message File" > bar.txt
+    runCl 1 sign foo.txt > /dev/null
     echo "Running second sign"
-    runCl 1 sign msg testCosi | tail -n 5 > cl1/signature
-    runCl 1 verify msg testCosi -sig cl1/signature > $OUT
-    testOK runCl 1 verify msg testCosi -sig cl1/signature
-    testFail runCl 1 verify msg testCosi2 -sig cl1/signature
+    runCl 1 sign foo.txt -o cl1/signature > /dev/null
+    testOK runCl 1 verify foo.txt -s cl1/signature
+    testFail runCl 1 verify bar.txt -s cl1/signature
+    rm foo.txt
+    rm bar.txt
 }
 
 testServerCfg(){
-    runSrvCfg 1 &
-    sleep .5
+    runSrvCfg 1
     pkill cosid
     testFile srv1/config.toml
 }
@@ -42,24 +44,27 @@ setupServers(){
     OOUT=$OUT
     OUT=/tmp/config
     SERVERS=cl$CLIENT/servers.toml
-    runSrvCfg 1 &
-    sleep .5
-    tail -n $tails $OUT > $SERVERS
-    runSrvCfg 2 &
-    sleep .5
-    tail -n $tails $OUT >> $SERVERS
+    rm -f srv1/*
+    rm -f srv2/*
+    runSrvCfg 1 
+    tail -n 4 srv1/group.toml >  $SERVERS
+    runSrvCfg 2 
+    echo >> $SERVERS
+    tail -n 4 srv2/group.toml >> $SERVERS
+    runSrv 1 &
+    runSrv 2 &
     OUT=$OOUT
 }
 
 runCl(){
     D=cl$1/servers.toml
     shift
-    dbgRun "Running Client with $D $@"
-    ./cosi -d $DBG_CLIENT -s $D $@
+    echo "Running Client with $D $@"
+    ./cosi -d 3 -g $D $@
 }
 
 runSrvCfg(){
-    echo -e "127.0.0.1:200$1\nsrv$1/config.toml\n" | runSrv $1 > $OUT
+    echo -e "200$1\n127.0.0.1:200$1\n$(pwd)/srv$1/config.toml\n" | ./cothorityd setup > $OUT
 }
 
 runSrv(){
@@ -78,7 +83,7 @@ build(){
     echo "Building in $DIR"
     for app in cosi cothorityd; do
         if [ ! -e $app -o "$BUILD" ]; then
-            go build $BUILDDIR/$app/$app.go
+            go build -o $app $BUILDDIR/$app/*go
         fi
     done
     for n in $(seq $NBR); do
