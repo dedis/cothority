@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"fmt"
+	"sync"
+
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
@@ -22,7 +24,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	s "github.com/dedis/cothority/services/cosi"
 	"gopkg.in/codegangsta/cli.v1"
-	"sync"
 )
 
 // RequestTimeOut defines when the client stops waiting for the CoSi group to
@@ -111,8 +112,8 @@ func checkConfig(c *cli.Context) error {
 	var wg sync.WaitGroup
 	// quick and dirty way to sum up the delat for the wait group:
 	wg.Add(len(el.List))
-	for i, _ := range el.List {
-		for _, _ = range el.List[i+1:] {
+	for i := range el.List {
+		for _ = range el.List[i+1:] {
 			// two calls of checkList (see below)
 			wg.Add(2)
 		}

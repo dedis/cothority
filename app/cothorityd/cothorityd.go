@@ -29,17 +29,25 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-const BIN = "cothorityd"
-const SERVER_CONFIG = "config.toml"
-const GROUP_DEF = "group.toml"
-const VERSION = "1.1"
+// DefaultName is the name of the binary we produce and is used to create a directory
+// folder with this name
+const DefaultName = "cothorityd"
+
+// DefaultServerConfig is the default name of a server configuration file
+const DefaultServerConfig = "config.toml"
+
+// DefaultGroupFile is the default name of a group definition file
+const DefaultGroupFile = "group.toml"
+
+// Version of this binary
+const Version = "1.1"
 
 func main() {
 
 	cliApp := cli.NewApp()
 	cliApp.Name = "Cothorityd server"
 	cliApp.Usage = "Serve a cothority"
-	cliApp.Version = VERSION
+	cliApp.Version = Version
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
@@ -118,7 +126,7 @@ func interactiveConfig() {
 	var str = readString(reader)
 	// let's dissect the port / IP
 	var hostStr string
-	var ipProvided bool = true
+	var ipProvided = true
 	var portStr string
 	var serverBinding string
 	splitted := strings.Split(str, ":")
@@ -180,13 +188,13 @@ func interactiveConfig() {
 		reachableAddress = askReachableAddress(reader, portStr)
 	} else {
 		// try  to connect to ipfound:portgiven
-		tryIp := publicAddress
-		fmt.Println("[+] Check if the address", tryIp, " is reachable from Internet...")
-		if err := tryConnect(tryIp); err != nil {
+		tryIP := publicAddress
+		fmt.Println("[+] Check if the address", tryIP, " is reachable from Internet...")
+		if err := tryConnect(tryIP); err != nil {
 			stderr("[-] Could not connect to your public IP")
 			reachableAddress = askReachableAddress(reader, portStr)
 		} else {
-			reachableAddress = tryIp
+			reachableAddress = tryIP
 			fmt.Println("[+] Address", reachableAddress, " publicly available from Internet!")
 		}
 	}
@@ -256,7 +264,7 @@ func interactiveConfig() {
 
 	// group definition part
 	var dirName = path.Dir(configFile)
-	var groupFile = path.Join(dirName, GROUP_DEF)
+	var groupFile = path.Join(dirName, DefaultGroupFile)
 	serverToml := c.NewServerToml(network.Suite, kp.Public, reachableAddress)
 	groupToml := c.NewGroupToml(serverToml)
 
@@ -287,15 +295,15 @@ func getDefaultConfigFile() string {
 		if curr, err := os.Getwd(); err != nil {
 			stderrExit("[-] Impossible to get the current directory. %v", err)
 		} else {
-			return path.Join(curr, SERVER_CONFIG)
+			return path.Join(curr, DefaultServerConfig)
 		}
 	}
 	// let's try to stick to usual OS folders
 	switch runtime.GOOS {
 	case "darwin":
-		return path.Join(u.HomeDir, "Library", BIN, SERVER_CONFIG)
+		return path.Join(u.HomeDir, "Library", DefaultName, DefaultServerConfig)
 	default:
-		return path.Join(u.HomeDir, ".config", BIN, SERVER_CONFIG)
+		return path.Join(u.HomeDir, ".config", DefaultName, DefaultServerConfig)
 		// TODO WIndows ? FreeBSD ?
 	}
 }
@@ -330,8 +338,9 @@ func askReachableAddress(reader *bufio.Reader, port string) string {
 	return ipStr
 }
 
-// Service used to get the port connection service
-const WHATS_MY_IP = "http://www.whatsmyip.org/"
+// WhatsMyIP is the DNS name of the online service  used
+// to get the port connection service
+const WhatsMyIP = "http://www.whatsmyip.org/"
 
 // tryConnect will bind to the ip address and ask a internet service to try to
 // connect to it
@@ -360,7 +369,7 @@ func tryConnect(ip string) error {
 	values.Set("timeout", "default")
 
 	// ask the check
-	url := WHATS_MY_IP + "port-scanner/scan.php"
+	url := WhatsMyIP + "port-scanner/scan.php"
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return err
