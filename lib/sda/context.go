@@ -4,12 +4,12 @@ import (
 	"github.com/dedis/cothority/lib/network"
 )
 
-// Context is the interface that is given to an Service
+// Context is the interface that is given to a Service
 type Context interface {
 	NewTreeNodeInstance(*Tree, *TreeNode) *TreeNodeInstance
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
-	CreateProtocol(t *Tree, name string) (ProtocolInstance, error)
+	CreateProtocol(*Tree, string) (ProtocolInstance, error)
 	Address() string
 	Entity() *network.Entity
 }
@@ -30,10 +30,6 @@ func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
 	}
 }
 
-func (dc *defaultContext) Entity() *network.Entity {
-	return dc.Host.Entity
-}
-
 // NewTreeNodeInstance implements the Context interface method
 func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode) *TreeNodeInstance {
 	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, dc.servID)
@@ -47,4 +43,8 @@ func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {
 // Entity returns the entity the service uses
 func (dc *defaultContext) Entity() *network.Entity {
 	return dc.Host.Entity
+}
+
+func (dc *defaultContext) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+	return dc.Overlay.CreateProtocol(t, name)
 }

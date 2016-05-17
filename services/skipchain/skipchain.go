@@ -135,6 +135,7 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 	}
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block}
+	dbg.Lvl3("Starting to search chain")
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[len(block.ForwardLink)-1]
 		block, ok = s.getSkipBlockByID(link.Hash)
@@ -143,6 +144,7 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 		}
 		blocks = append(blocks, block)
 	}
+	dbg.Lvl3("Found", len(blocks), "blocks")
 	reply := &GetUpdateChainReply{blocks}
 
 	return reply, nil
@@ -185,6 +187,7 @@ func (s *Service) PropagateSkipBlock(e *network.Entity, latest *PropagateSkipBlo
 		return nil, err
 	}
 	s.storeSkipBlock(sb)
+	dbg.Lvlf3("Stored skip block in %x", s.Context.Entity().ID[0:8])
 	return nil, nil
 }
 
@@ -232,6 +235,7 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 	}
 
 	// Store and propagate the new SkipBlocks
+	dbg.Lvl4("Finished signing new block", newest)
 	s.startPropagation(newblocks)
 	return latest, newblocks[0], nil
 }
@@ -321,6 +325,7 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(blocks []*SkipBlock) error {
+	dbg.Lvlf3("Starting to propagate for service %x", s.Context.Entity().ID[0:8])
 	for _, block := range blocks {
 		list := block.EntityList
 		if list == nil {
@@ -332,7 +337,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			list = sb.EntityList
 		}
 		for _, e := range list.List {
-			if e.ID.Equals(s.Context.Entity().ID) {
+			if e.ID.Equal(s.Context.Entity().ID) {
 				s.storeSkipBlock(block)
 				continue
 			}

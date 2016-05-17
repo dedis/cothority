@@ -28,7 +28,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	root, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
+	root, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
@@ -53,7 +53,7 @@ func TestClient_CreateData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	inter, data, err := c.CreateData(inter, 1, 1, VerifyNone, td)
@@ -80,7 +80,7 @@ func TestClient_ProposeData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	inter, data1, err := c.CreateData(inter, 1, 1, VerifyNone, td)
@@ -105,7 +105,7 @@ func TestClient_ProposeRoster(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
-	_, inter, err := c.CreateRootInter(el, el, 1, 1, 1, VerifyNone)
+	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	dbg.ErrFatal(err)
 	el2 := sda.NewEntityList(el.List[:nbrHosts-1])
 	sb1, err := c.ProposeRoster(inter, el2)

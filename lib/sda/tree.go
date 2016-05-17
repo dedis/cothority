@@ -240,6 +240,7 @@ func (t *Tree) UsesList() bool {
 	return true
 }
 
+
 // computeSubtreeAggregate will compute the aggregate subtree public key for
 // each node of the tree.
 // root is the root of the subtree we want to compute the aggregate for
@@ -613,6 +614,14 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	for _, c := range t.Children {
 		c.Visit(firstDepth+1, fn)
 	}
+}
+
+// SubtreeCount returns how many children are attached to that
+// TreeNode.
+func (t *TreeNode) SubtreeCount()int{
+	ret := -1
+	t.Visit(0, func(int, *TreeNode){ret++})
+	return ret
 }
 
 // EntityListToml is the struct can can embedded EntityToml to be written in a
