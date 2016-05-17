@@ -29,17 +29,17 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-const binName = "cothorityd"
-const serverConfig = "config.toml"
-const groupDef = "group.toml"
-const version = "1.1"
+const BIN = "cothorityd"
+const SERVER_CONFIG = "config.toml"
+const GROUP_DEF = "group.toml"
+const VERSION = "1.1"
 
 func main() {
 
 	cliApp := cli.NewApp()
 	cliApp.Name = "Cothorityd server"
 	cliApp.Usage = "Serve a cothority"
-	cliApp.Version = version
+	cliApp.Version = VERSION
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
@@ -256,7 +256,7 @@ func interactiveConfig() {
 
 	// group definition part
 	var dirName = path.Dir(configFile)
-	var groupFile = path.Join(dirName, groupDef)
+	var groupFile = path.Join(dirName, GROUP_DEF)
 	serverToml := c.NewServerToml(network.Suite, kp.Public, reachableAddress)
 	groupToml := c.NewGroupToml(serverToml)
 
@@ -287,15 +287,15 @@ func getDefaultConfigFile() string {
 		if curr, err := os.Getwd(); err != nil {
 			stderrExit("[-] Impossible to get the current directory. %v", err)
 		} else {
-			return path.Join(curr, serverConfig)
+			return path.Join(curr, SERVER_CONFIG)
 		}
 	}
 	// let's try to stick to usual OS folders
 	switch runtime.GOOS {
 	case "darwin":
-		return path.Join(u.HomeDir, "Library", binName, serverConfig)
+		return path.Join(u.HomeDir, "Library", BIN, SERVER_CONFIG)
 	default:
-		return path.Join(u.HomeDir, ".config", binName, serverConfig)
+		return path.Join(u.HomeDir, ".config", BIN, SERVER_CONFIG)
 		// TODO WIndows ? FreeBSD ?
 	}
 }
@@ -331,7 +331,7 @@ func askReachableAddress(reader *bufio.Reader, port string) string {
 }
 
 // Service used to get the port connection service
-const whatsMyIP = "http://www.whatsmyip.org/"
+const WHATS_MY_IP = "http://www.whatsmyip.org/"
 
 // tryConnect will bind to the ip address and ask a internet service to try to
 // connect to it
@@ -360,7 +360,7 @@ func tryConnect(ip string) error {
 	values.Set("timeout", "default")
 
 	// ask the check
-	url := whatsMyIP + "port-scanner/scan.php"
+	url := WHATS_MY_IP + "port-scanner/scan.php"
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return err
