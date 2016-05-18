@@ -16,6 +16,9 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+
+// AppSkipBlock is the interface needed to add a new SkipBlockType with
+// a verification
 type AppSkipBlock interface{
 	// VerifyNewSkipBlock takes the last signed SkipBlock and the
 	// proposed Skipblock. It returns true if the proposed SkipBlock

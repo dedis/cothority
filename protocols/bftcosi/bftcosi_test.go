@@ -40,7 +40,7 @@ func TestBftCoSi(t *testing.T) {
 		msg := []byte("Hello BFTCoSi")
 
 		// Start the protocol
-		node, err := local.CreateProtocol(TestProtocolName, tree)
+		node, err := local.CreateProtocol(tree, TestProtocolName)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
