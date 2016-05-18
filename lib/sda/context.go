@@ -2,6 +2,7 @@ package sda
 
 import (
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // Context is the interface that is given to a Service
@@ -10,6 +11,7 @@ type Context interface {
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
 	CreateProtocol(*Tree, string) (ProtocolInstance, error)
+	CreateProtocolAuto(*Tree, string) (ProtocolInstance, error)
 	Address() string
 	Entity() *network.Entity
 }
@@ -46,5 +48,12 @@ func (dc *defaultContext) Entity() *network.Entity {
 }
 
 func (dc *defaultContext) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
-	return dc.Overlay.CreateProtocol(t, name)
+	pi, err := dc.Overlay.CreateProtocolService(dc.servID, t, name)
+	dbg.Printf("Storing service id +%v", pi.Token().ServiceID)
+	return pi, err
+}
+
+func (dc *defaultContext) CreateProtocolAuto(t *Tree, name string) (ProtocolInstance, error) {
+	pi, err := dc.Overlay.CreateProtocol(t, name)
+	return pi, err
 }

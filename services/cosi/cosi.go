@@ -92,7 +92,6 @@ func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (netw
 func (cs *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocolCosi(tn)
-	go pi.Dispatch()
 	return pi, err
 }
 
