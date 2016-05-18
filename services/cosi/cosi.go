@@ -56,7 +56,7 @@ var CosiResponseType = network.RegisterMessageType(SignatureResponse{})
 // SignatureRequest treats external request to this service.
 func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (network.ProtocolMessage, error) {
 	tree := req.EntityList.GenerateBinaryTree()
-	tni := cs.NewTreeNodeInstance(tree, tree.Root)
+	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.ProtocolName)
 	pi, err := cosi.NewProtocolCosi(tni)
 	if err != nil {
 		return nil, errors.New("Couldn't make new protocol: " + err.Error())
@@ -92,6 +92,7 @@ func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (netw
 func (cs *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocolCosi(tn)
+	go pi.Dispatch()
 	return pi, err
 }
 

@@ -191,6 +191,8 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 			return nil, err
 		}
 		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
+		go pi.Dispatch()
+		return pi, err
 	}
 	return nil, nil
 }
@@ -212,7 +214,7 @@ func (s *Service) PropagateSkipBlock(data []byte) {
 		return
 	}
 	s.storeSkipBlock(sb)
-	dbg.LLvlf3("Stored skip block %+v in %x", *sb, s.Context.Entity().ID[0:8])
+	dbg.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.Entity().ID[0:8])
 }
 
 // signNewSkipBlock should start a BFT-signature on the newest block
@@ -252,7 +254,9 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 
 	// Store and propagate the new SkipBlocks
 	dbg.Lvl4("Finished signing new block", newest)
-	s.startPropagation(newblocks)
+	if err = s.startPropagation(newblocks); err != nil{
+		return nil, nil, err
+	}
 	return latest, newblocks[0], nil
 }
 
@@ -343,23 +347,27 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	dbg.Lvlf3("Starting to propagate for service %x", s.Context.Entity().ID[0:8])
 	for _, block := range blocks {
-		list := block.EntityList
-		if list == nil {
+		roster := block.EntityList
+		if roster == nil {
 			// Suppose it's a dataSkipBlock
 			sb, ok := s.getSkipBlockByID(block.ParentBlockID)
 			if !ok {
 				return errors.New("Didn't find EntityList nor parent")
 			}
-			list = sb.EntityList
+			roster = sb.EntityList
 		}
 		blockData, err := network.MarshalRegisteredType(block)
 		if err != nil {
 			return err
 		}
-		dbg.Print("starting propagation", len(list.List))
-		manage.PropagateStartAndWait(s, list.GenerateNaryTree(8),
+		replies, err := manage.PropagateStartAndWait(s, roster.GenerateNaryTree(8),
 			blockData, 1000, s.PropagateSkipBlock)
-		dbg.Print("Finished propagation")
+		if replies != len(roster.List){
+			dbg.Warn("Did only get", replies, "out of", len(roster.List))
+		}
+		if err != nil{
+			return err
+		}
 	}
 	return nil
 }

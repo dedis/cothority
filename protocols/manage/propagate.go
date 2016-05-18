@@ -103,20 +103,17 @@ func (p *Propagate) Start() error {
 // Dispatch can handle timeouts
 func (p *Propagate) Dispatch() error {
 	process := true
-	dbg.Print(p.Entity())
 	for process {
 		select {
 		case msg := <-p.ChannelSD:
 			if p.onData != nil {
-				dbg.LLvl4(p.Entity(), "saving data")
 				p.onData(msg.Data)
-			}
-			if !p.IsLeaf() {
-				dbg.LLvl4("Sending to children")
-				p.SendToChildren(&msg.PropagateSendData)
-			} else {
 				p.SendToParent(&PropagateReply{})
+			}
+			if p.IsLeaf() {
 				process = false
+			} else {
+				p.SendToChildren(&msg.PropagateSendData)
 			}
 		case <-p.ChannelReply:
 			p.received++
@@ -124,11 +121,10 @@ func (p *Propagate) Dispatch() error {
 				p.SendToParent(&PropagateReply{})
 			}
 			if p.received == p.subtree {
-				p.SendToParent(&PropagateReply{})
 				process = false
 			}
 		case <-time.After(time.Millisecond * time.Duration(p.sd.Msec)):
-			dbg.Lvl3(p.Entity(), "Timeout")
+			dbg.Fatal("Bye")
 			process = false
 		}
 	}

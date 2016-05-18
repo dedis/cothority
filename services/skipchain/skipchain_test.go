@@ -7,8 +7,6 @@ import (
 
 	"strconv"
 
-	"time"
-
 	"errors"
 	"fmt"
 
@@ -177,7 +175,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
 	// Wait for block-propagation
-	time.Sleep(time.Millisecond * 100)
+	//time.Sleep(time.Millisecond * 100)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {

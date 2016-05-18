@@ -1,13 +1,10 @@
 package sda
 
-import (
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/dbg"
-)
+import "github.com/dedis/cothority/lib/network"
 
 // Context is the interface that is given to a Service
 type Context interface {
-	NewTreeNodeInstance(*Tree, *TreeNode) *TreeNodeInstance
+	NewTreeNodeInstance(*Tree, *TreeNode, string) *TreeNodeInstance
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
 	CreateProtocol(*Tree, string) (ProtocolInstance, error)
@@ -33,8 +30,8 @@ func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
 }
 
 // NewTreeNodeInstance implements the Context interface method
-func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode) *TreeNodeInstance {
-	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, dc.servID)
+func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
+	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), dc.servID)
 }
 
 // SendRaw sends a message to the entity
@@ -49,7 +46,6 @@ func (dc *defaultContext) Entity() *network.Entity {
 
 func (dc *defaultContext) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
 	pi, err := dc.Overlay.CreateProtocolService(dc.servID, t, name)
-	dbg.Printf("Storing service id +%v", pi.Token().ServiceID)
 	return pi, err
 }
 
