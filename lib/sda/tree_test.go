@@ -401,6 +401,22 @@ func TestTree_BinaryMarshaler(t *testing.T) {
 	dbg.Lvl1(tree2.Dump())
 }
 
+func TestTreeNode_SubtreeCount(t *testing.T) {
+	tree, _ := genLocalTree(15, 2000)
+	if tree.Root.SubtreeCount() != 14{
+		t.Fatal("Not enough nodes in subtree-count")
+	}
+	if tree.Root.Children[0].SubtreeCount() != 6{
+		t.Fatal("Not enough nodes in partial subtree")
+	}
+	if tree.Root.Children[0].Children[0].SubtreeCount() != 2{
+		t.Fatal("Not enough nodes in partial subtree")
+	}
+	if tree.Root.Children[0].Children[0].Children[0].SubtreeCount() != 0{
+		t.Fatal("Not enough nodes in partial subtree")
+	}
+}
+
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph

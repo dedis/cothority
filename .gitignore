@@ -9,3 +9,5 @@ simul/matplotlib/*csv
 simul/simul
 lib/sda/testdata
 *.pyc
+.DS_Store
+app/test

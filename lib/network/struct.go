@@ -201,8 +201,8 @@ type Entity struct {
 // EntityID uniquely identifies an Entity struct
 type EntityID uuid.UUID
 
-// Equals returns true if both EntityID are equal or false otherwise.
-func (eid EntityID) Equals(other EntityID) bool {
+// Equal returns true if both EntityID are equal or false otherwise.
+func (eid EntityID) Equal(other EntityID) bool {
 	return uuid.Equal(uuid.UUID(eid), uuid.UUID(other))
 }
 
