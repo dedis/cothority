@@ -183,7 +183,7 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl1("SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
+	dbg.Lvl1(s.Entity(), "SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
 	switch tn.ProtocolName() {
 	case "Propagate":
 		pi, err := manage.NewPropagateProtocol(tn)
@@ -191,21 +191,15 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 			return nil, err
 		}
 		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
-		go pi.Dispatch()
 		return pi, err
 	}
 	return nil, nil
 }
 
-// propagateSkipBlock will save a new SkipBlock
-func (s *Service) PropagateSkipBlock(data []byte) {
-	_, sbMsg, err := network.UnmarshalRegistered(data)
-	if err != nil {
-		dbg.Error("Error in unmarshalling:", err)
-		return
-	}
-	sb, ok := sbMsg.(*SkipBlock)
-	if !ok{
+// PropagateSkipBlock will save a new SkipBlock
+func (s *Service) PropagateSkipBlock(msg network.ProtocolMessage) {
+	sb, ok := msg.(*SkipBlock)
+	if !ok {
 		dbg.Error("Couldn't convert to SkipBlock")
 		return
 	}
@@ -254,7 +248,7 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 
 	// Store and propagate the new SkipBlocks
 	dbg.Lvl4("Finished signing new block", newest)
-	if err = s.startPropagation(newblocks); err != nil{
+	if err = s.startPropagation(newblocks); err != nil {
 		return nil, nil, err
 	}
 	return latest, newblocks[0], nil
@@ -274,7 +268,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 
 	// Start the protocol
 	tree := el.GenerateBigNaryTree(2, len(el.List))
-	node, err := s.CreateProtocolAuto(tree, SkipchainBFT)
+	node, err := s.CreateProtocolAuto(tree, skipchainBFT)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
 	}
@@ -356,17 +350,13 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			}
 			roster = sb.EntityList
 		}
-		blockData, err := network.MarshalRegisteredType(block)
+		replies, err := manage.PropagateStartAndWait(s, roster,
+			block, 1000, s.PropagateSkipBlock)
 		if err != nil {
 			return err
 		}
-		replies, err := manage.PropagateStartAndWait(s, roster.GenerateNaryTree(8),
-			blockData, 1000, s.PropagateSkipBlock)
-		if replies != len(roster.List){
+		if replies != len(roster.List) {
 			dbg.Warn("Did only get", replies, "out of", len(roster.List))
-		}
-		if err != nil{
-			return err
 		}
 	}
 	return nil
@@ -400,7 +390,7 @@ func (s *Service) lenSkipBlocks() int {
 	return len(s.SkipBlocks)
 }
 
-const SkipchainBFT = "SkipchainBFT"
+const skipchainBFT = "SkipchainBFT"
 
 func newSkipchainService(c sda.Context, path string) sda.Service {
 	s := &Service{
@@ -408,7 +398,7 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 		path:             path,
 		SkipBlocks:       make(map[string]*SkipBlock),
 	}
-	sda.ProtocolRegisterName(SkipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
 	})
 	if err := s.RegisterMessage(s.ProposeSkipBlock); err != nil {
