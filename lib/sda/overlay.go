@@ -306,6 +306,11 @@ func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID 
 	return tni
 }
 
+// Entity Returns the entity of the Host
+func (o *Overlay) Entity()*network.Entity{
+	return o.host.Entity
+}
+
 // newTreeNodeInstanceFromToken is to be called by the Overlay when it receives
 // a message it does not have a treenodeinstance registered yet. The protocol is
 // already running so we should *not* generate a new RoundID.
