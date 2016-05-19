@@ -77,6 +77,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	}
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
+		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.Entity, sdaMsg.To.Id())
 		tn, err := o.TreeNodeFromToken(sdaMsg.To)
 		if err != nil {
 			return errors.New("No TreeNode defined in this tree here")
@@ -104,6 +105,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			if pi == nil {
 				return nil
 			}
+			go pi.Dispatch()
 		}
 		if err := o.RegisterProtocolInstance(pi); err != nil {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
@@ -114,6 +116,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 
 	}
 
+	dbg.Lvl4("Dispatching message", o.host.Entity)
 	// TODO Check if TreeNodeInstance is already Done
 	pi.DispatchMsg(sdaMsg)
 
@@ -241,6 +244,8 @@ func (o *Overlay) CreateProtocol(t *Tree, name string) (ProtocolInstance, error)
 	return o.CreateProtocolService(ServiceID(uuid.Nil), t, name)
 }
 
+// CreateProtocolService adds the service-id to the token so the protocol will
+// be picked up by the correct service
 func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (ProtocolInstance, error) {
 	tni := o.NewTreeNodeInstanceFromService(t, t.Root, ProtocolNameToID(name), sid)
 	pi, err := ProtocolInstantiate(tni.token.ProtoID, tni)
@@ -303,6 +308,11 @@ func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID 
 	return tni
 }
 
+// Entity Returns the entity of the Host
+func (o *Overlay) Entity() *network.Entity {
+	return o.host.Entity
+}
+
 // newTreeNodeInstanceFromToken is to be called by the Overlay when it receives
 // a message it does not have a treenodeinstance registered yet. The protocol is
 // already running so we should *not* generate a new RoundID.
@@ -340,7 +350,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.protocolInstances[tok.Id()] = pi
-	dbg.Lvlf4("%s registered ProtocolInstance %+v", o.host.workingAddress, tok)
+	dbg.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.Id())
 	return nil
 }
 

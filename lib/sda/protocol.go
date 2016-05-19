@@ -47,7 +47,7 @@ func ProtocolNameToID(name string) ProtocolID {
 }
 
 // ProtocolIDToName returns the name to the corresponding protocolID
-func ProtocolIDToName(id ProtocolID) string{
+func ProtocolIDToName(id ProtocolID) string {
 	return protocolNames[id]
 }
 

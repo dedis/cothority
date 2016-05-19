@@ -84,7 +84,7 @@ var tokenMutex sync.Mutex
 func (t *Token) Id() TokenID {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
-	if t.cacheId == TokenID(uuid.Nil) || true{
+	if t.cacheId == TokenID(uuid.Nil) {
 		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ServiceID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()

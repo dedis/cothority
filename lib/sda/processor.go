@@ -4,6 +4,8 @@ import (
 	"errors"
 	"reflect"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 )
@@ -81,6 +83,36 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 	s *ServiceMessage) {
 	p.GetReply(e, s.Data)
+}
+
+// SendISM takes the message and sends it to the corresponding service
+func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessage) error {
+	sName := ServiceFactory.Name(p.Context.GetID())
+	sm, err := CreateServiceMessage(sName, msg)
+	if err != nil {
+		return err
+	}
+	dbg.Lvl4("Raw-sending to", e)
+	return p.SendRaw(e, sm)
+}
+
+// SendISMOthers sends an InterServiceMessage to all other services
+func (p *ServiceProcessor) SendISMOthers(el *EntityList, msg network.ProtocolMessage) error {
+	errStrs := []string{}
+	for _, e := range el.List {
+		if !e.ID.Equal(p.Context.Entity().ID) {
+			dbg.Lvl3("Sending to", e)
+			err := p.SendISM(e, msg)
+			if err != nil {
+				errStrs = append(errStrs, err.Error())
+			}
+		}
+	}
+	var err error
+	if len(errStrs) > 0 {
+		err = errors.New(strings.Join(errStrs, "\n"))
+	}
+	return err
 }
 
 // GetReply takes a clientRequest and passes it to the corresponding

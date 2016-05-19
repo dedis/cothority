@@ -7,6 +7,8 @@ import (
 	"path"
 	"time"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -77,7 +79,7 @@ var ServiceFactory = serviceFactory{
 	inverseTr:    make(map[ServiceID]string),
 }
 
-// RegisterByName takes an name, creates a ServiceID out of it and store the
+// RegisterByName takes a name, creates a ServiceID out of it and stores the
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
@@ -295,7 +297,7 @@ in place of the standard reply. The Client.Send method will catch that and retur
 
 // Client for a service
 type Client struct {
-	private abstract.Secret
+	Private abstract.Secret
 	*network.Entity
 	ServiceID ServiceID
 }
@@ -305,7 +307,7 @@ func NewClient(s string) *Client {
 	kp := config.NewKeyPair(network.Suite)
 	return &Client{
 		Entity:    network.NewEntity(kp.Public, ""),
-		private:   kp.Secret,
+		Private:   kp.Secret,
 		ServiceID: ServiceFactory.ServiceID(s),
 	}
 }
@@ -313,7 +315,7 @@ func NewClient(s string) *Client {
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
-	client := network.NewSecureTCPHost(c.private, c.Entity)
+	client := network.NewSecureTCPHost(c.Private, c.Entity)
 
 	// Connect to the root
 	dbg.Lvl4("Opening connection to", dst)
@@ -366,6 +368,25 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	case <-time.After(time.Second * 10):
 		return &network.Message{}, errors.New("Timeout on sending message")
 	}
+}
+
+// SendToAll sends a message to all Entities of the EntityList and returns
+// all errors encountered concatenated together as a string.
+func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
+	msgs := make([]*network.Message, len(dst.List))
+	errstrs := []string{}
+	for i, e := range dst.List {
+		var err error
+		msgs[i], err = c.Send(e, msg)
+		if err != nil {
+			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
+		}
+	}
+	var err error
+	if len(errstrs) > 0 {
+		err = errors.New(strings.Join(errstrs, "\n"))
+	}
+	return msgs, err
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file

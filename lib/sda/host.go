@@ -337,7 +337,7 @@ func (h *Host) processMessages() {
 			h.processServiceMessage(data.Entity, &m)
 		default:
 			if data.MsgType != network.ErrorType {
-				dbg.LLvl3("Unknown message received:", data)
+				dbg.Lvl3("Unknown message received:", data)
 			}
 		}
 	}
