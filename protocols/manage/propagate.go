@@ -5,10 +5,11 @@ import (
 
 	"time"
 
+	"reflect"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"reflect"
 )
 
 func init() {
@@ -36,16 +37,14 @@ type Propagate struct {
 	sync.Mutex
 }
 
-type PropagateData interface {
-	StoreData(data []byte) error
-}
-
-type CI interface {
+// CreateProtocolEntity is the necessary interface to start a protocol.
+// It is implemented by Service and Overlay.
+type CreateProtocolEntity interface {
 	CreateProtocol(t *sda.Tree, name string) (sda.ProtocolInstance, error)
 	Entity() *network.Entity
 }
 
-// SendData is the message to pass the data to the children
+// PropagateSendData is the message to pass the data to the children
 type PropagateSendData struct {
 	// Data is the data to transmit
 	Data []byte
@@ -53,14 +52,14 @@ type PropagateSendData struct {
 	Msec int
 }
 
-// Reply is sent from the children back to the root
+// PropagateReply is sent from the children back to the root
 type PropagateReply struct {
 	Level int
 }
 
 // StartAndWait starts the propagation protocol and blocks till everything
 // is OK or the timeout has been reached
-func PropagateStartAndWait(ci CI, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
+func PropagateStartAndWait(ci CreateProtocolEntity, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
 	//dbg.Print(el, tree.Dump())
 	tree := el.GenerateNaryTreeWithRoot(8, ci.Entity())
 	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))

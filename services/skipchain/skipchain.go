@@ -199,7 +199,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 // PropagateSkipBlock will save a new SkipBlock
 func (s *Service) PropagateSkipBlock(msg network.ProtocolMessage) {
 	sb, ok := msg.(*SkipBlock)
-	if !ok{
+	if !ok {
 		dbg.Error("Couldn't convert to SkipBlock")
 		return
 	}
@@ -248,7 +248,7 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 
 	// Store and propagate the new SkipBlocks
 	dbg.Lvl4("Finished signing new block", newest)
-	if err = s.startPropagation(newblocks); err != nil{
+	if err = s.startPropagation(newblocks); err != nil {
 		return nil, nil, err
 	}
 	return latest, newblocks[0], nil
@@ -352,10 +352,10 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 		}
 		replies, err := manage.PropagateStartAndWait(s, roster,
 			block, 1000, s.PropagateSkipBlock)
-		if err != nil{
+		if err != nil {
 			return err
 		}
-		if replies != len(roster.List){
+		if replies != len(roster.List) {
 			dbg.Warn("Did only get", replies, "out of", len(roster.List))
 		}
 	}

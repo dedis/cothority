@@ -231,17 +231,16 @@ func (l *LocalTest) GetPrivate(h *Host) abstract.Secret {
 
 // GetServices returns a slice of all services asked for.
 // The sid is the id of the service that will be collected.
-func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID)[]Service{
+func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 	services := make([]Service, len(hosts))
-	for i, h := range hosts{
+	for i, h := range hosts {
 		services[i] = l.Services[h.Entity.ID][sid]
 	}
 	return services
 }
 
-
 // MakeHELS is an abbreviation to make a Host, an EntityList, and a service
-func (l *LocalTest)MakeHELS(nbr int, sid ServiceID) ([]*Host, *EntityList, Service) {
+func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *EntityList, Service) {
 	hosts := l.GenLocalHosts(nbr, false, true)
 	el := l.GenEntityListFromHost(hosts...)
 	return hosts, el, l.Services[hosts[0].Entity.ID][sid]

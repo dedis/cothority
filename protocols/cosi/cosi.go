@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// ProtocolName for the CollectiveSigning protocol
 var ProtocolName = "CoSi"
 
 func init() {

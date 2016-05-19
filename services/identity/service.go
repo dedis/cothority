@@ -36,13 +36,14 @@ func init() {
 // Service handles identities
 type Service struct {
 	*sda.ServiceProcessor
-	identities      map[string]*IdentityStorage
+	identities      map[string]*Storage
 	identitiesMutex sync.Mutex
 	skipchain       *skipchain.Client
 	path            string
 }
 
-type IdentityStorage struct {
+// Storage stores one identity together with the skipblocks
+type Storage struct {
 	sync.Mutex
 	Latest   *AccountList
 	Proposed *AccountList
@@ -54,7 +55,7 @@ type IdentityStorage struct {
 // AddIdentity will register a new SkipChain and add it to our list of
 // managed identities
 func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.ProtocolMessage, error) {
-	ids := &IdentityStorage{
+	ids := &Storage{
 		Latest: ai.AccountList,
 	}
 	var err error
@@ -69,7 +70,7 @@ func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.Proto
 		return nil, err
 	}
 
-	s.setIdentityStorage(IdentityID(ids.Data.Hash), ids)
+	s.setIdentityStorage(ID(ids.Data.Hash), ids)
 
 	reply := &AddIdentityReply{
 		Root: ids.Root,
@@ -101,12 +102,12 @@ func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.Proto
 
 // PropagateIdentity stores that identity on a remote node
 func (s *Service) PropagateIdentity(e *network.Entity, pi *PropagateIdentity) (network.ProtocolMessage, error) {
-	id := IdentityID(pi.Data.Hash)
+	id := ID(pi.Data.Hash)
 	if s.getIdentityStorage(id) != nil {
 		return nil, errors.New("That identity already exists here")
 	}
 	dbg.Lvl3("Storing identity in", s)
-	s.setIdentityStorage(id, pi.IdentityStorage)
+	s.setIdentityStorage(id, pi.Storage)
 	return nil, nil
 }
 
@@ -211,7 +212,7 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
 		dbg.Lvl3("SB signed is", msg.(*AccountList).Owners)
 		usb := &UpdateSkipBlock{
-			ID:      v.ID,
+			ID:     v.ID,
 			Latest: reply.Latest,
 		}
 		_, err = manage.PropagateStartAndWait(s, sid.Root.EntityList, usb, 1000, s.Propagate)
@@ -241,7 +242,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 // Propagate handles propagation of all data in the identity-service
 func (s *Service) Propagate(msg network.ProtocolMessage) {
 	dbg.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
-	id := IdentityID(nil)
+	id := ID(nil)
 	switch msg.(type) {
 	case *PropagateProposition:
 		id = msg.(*PropagateProposition).ID
@@ -258,7 +259,7 @@ func (s *Service) Propagate(msg network.ProtocolMessage) {
 		}
 		sid.Lock()
 		defer sid.Unlock()
-		switch msg.(type){
+		switch msg.(type) {
 		case *PropagateProposition:
 			p := msg.(*PropagateProposition)
 			sid.Proposed = p.AccountList
@@ -269,7 +270,7 @@ func (s *Service) Propagate(msg network.ProtocolMessage) {
 		case *UpdateSkipBlock:
 			skipblock := msg.(*UpdateSkipBlock).Latest
 			_, msgLatest, err := network.UnmarshalRegistered(skipblock.Data)
-			if err != nil{
+			if err != nil {
 				dbg.Error(err)
 				return
 			}
@@ -287,7 +288,7 @@ func (s *Service) Propagate(msg network.ProtocolMessage) {
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
-func (s *Service) getIdentityStorage(id IdentityID) *IdentityStorage {
+func (s *Service) getIdentityStorage(id ID) *Storage {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	is, ok := s.identities[string(id)]
@@ -298,7 +299,7 @@ func (s *Service) getIdentityStorage(id IdentityID) *IdentityStorage {
 }
 
 // setIdentityStorage saves an IdentityStorage
-func (s *Service) setIdentityStorage(id IdentityID, is *IdentityStorage) {
+func (s *Service) setIdentityStorage(id ID, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	dbg.Lvlf3("%s %x %v", s.Context.Entity(), id[0:8], is.Latest.Owners)
@@ -308,7 +309,7 @@ func (s *Service) setIdentityStorage(id IdentityID, is *IdentityStorage) {
 func newIdentityService(c sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		identities:       make(map[string]*IdentityStorage),
+		identities:       make(map[string]*Storage),
 		skipchain:        skipchain.NewClient(),
 		path:             path,
 	}

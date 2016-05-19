@@ -10,6 +10,7 @@ import (
 	"os"
 )
 
+// Server holds all identities
 type Server struct {
 	Identities []*identity.Identity
 }
@@ -44,6 +45,7 @@ func main() {
 	app.Run(os.Args)
 }
 
+// ReadIdentities goes through all files in ~/.ssh/*.id
 func ReadIdentities(file string) (*Server, error) {
 	return nil, nil
 }

@@ -27,6 +27,7 @@ type BFTSignature struct {
 	Exceptions []cosi.Exception
 }
 
+// Verify returns whether the verification of the signature succeeds or not.
 func (bs *BFTSignature) Verify(s abstract.Suite, agg abstract.Point, msg []byte) error {
 	return cosi.VerifyCosiSignatureWithException(s, agg, msg, bs.Sig, bs.Exceptions)
 }

@@ -244,6 +244,8 @@ func (o *Overlay) CreateProtocol(t *Tree, name string) (ProtocolInstance, error)
 	return o.CreateProtocolService(ServiceID(uuid.Nil), t, name)
 }
 
+// CreateProtocolService adds the service-id to the token so the protocol will
+// be picked up by the correct service
 func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (ProtocolInstance, error) {
 	tni := o.NewTreeNodeInstanceFromService(t, t.Root, ProtocolNameToID(name), sid)
 	pi, err := ProtocolInstantiate(tni.token.ProtoID, tni)
@@ -307,7 +309,7 @@ func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID 
 }
 
 // Entity Returns the entity of the Host
-func (o *Overlay) Entity()*network.Entity{
+func (o *Overlay) Entity() *network.Entity {
 	return o.host.Entity
 }
 

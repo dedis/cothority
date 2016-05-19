@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"net"
 
+	"math/rand"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"math/rand"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -240,7 +241,6 @@ func (t *Tree) UsesList() bool {
 	}
 	return true
 }
-
 
 // computeSubtreeAggregate will compute the aggregate subtree public key for
 // each node of the tree.
@@ -489,11 +489,11 @@ func (el *EntityList) GenerateBinaryTree() *Tree {
 }
 
 // GetRandom returns a random element of the EntityList
-func (el *EntityList) GetRandom()*network.Entity{
-	if el.List == nil || len(el.List) == 0{
+func (el *EntityList) GetRandom() *network.Entity {
+	if el.List == nil || len(el.List) == 0 {
 		return nil
 	}
-	return el.List[rand.Int() % len(el.List)]
+	return el.List[rand.Int()%len(el.List)]
 }
 
 // addNary is a recursive function to create the binary tree
@@ -642,9 +642,9 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 
 // SubtreeCount returns how many children are attached to that
 // TreeNode.
-func (t *TreeNode) SubtreeCount()int{
+func (t *TreeNode) SubtreeCount() int {
 	ret := -1
-	t.Visit(0, func(int, *TreeNode){ret++})
+	t.Visit(0, func(int, *TreeNode) { ret++ })
 	return ret
 }
 

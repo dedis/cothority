@@ -32,7 +32,7 @@ func init() {
 // Identity can both follow and update an IdentityList
 type Identity struct {
 	*sda.Client
-	ID         IdentityID
+	ID         ID
 	Config     *AccountList
 	Proposed   *AccountList
 	ManagerStr string
@@ -69,7 +69,7 @@ func (i *Identity) SaveToStream(out io.Writer) error {
 }
 
 // AttachToIdentity proposes to attach it to an existing Identity
-func (i *Identity) AttachToIdentity(ID IdentityID) error {
+func (i *Identity) AttachToIdentity(ID ID) error {
 	i.ID = ID
 	err := i.ConfigUpdate()
 	if err != nil {
@@ -94,7 +94,7 @@ func (i *Identity) CreateIdentity() error {
 	air := msg.Msg.(AddIdentityReply)
 	i.root = air.Root
 	i.data = air.Data
-	i.ID = IdentityID(i.data.Hash)
+	i.ID = ID(i.data.Hash)
 
 	return nil
 }

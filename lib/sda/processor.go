@@ -4,9 +4,10 @@ import (
 	"errors"
 	"reflect"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"strings"
 )
 
 // ServiceProcessor allows for an easy integration of external messages
@@ -85,10 +86,10 @@ func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 }
 
 // SendISM takes the message and sends it to the corresponding service
-func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessage)error{
+func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessage) error {
 	sName := ServiceFactory.Name(p.Context.GetID())
 	sm, err := CreateServiceMessage(sName, msg)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	dbg.Lvl4("Raw-sending to", e)
@@ -96,19 +97,19 @@ func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessag
 }
 
 // SendISMOthers sends an InterServiceMessage to all other services
-func (p *ServiceProcessor) SendISMOthers(el *EntityList, msg network.ProtocolMessage) error{
+func (p *ServiceProcessor) SendISMOthers(el *EntityList, msg network.ProtocolMessage) error {
 	errStrs := []string{}
-	for _, e := range el.List{
-		if !e.ID.Equal(p.Context.Entity().ID){
+	for _, e := range el.List {
+		if !e.ID.Equal(p.Context.Entity().ID) {
 			dbg.Lvl3("Sending to", e)
 			err := p.SendISM(e, msg)
-			if err != nil{
+			if err != nil {
 				errStrs = append(errStrs, err.Error())
 			}
 		}
 	}
 	var err error
-	if len(errStrs) > 0{
+	if len(errStrs) > 0 {
 		err = errors.New(strings.Join(errStrs, "\n"))
 	}
 	return err

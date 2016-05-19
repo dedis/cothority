@@ -12,8 +12,11 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-type IdentityID skipchain.SkipBlockID
+// ID represents one skipblock and corresponds to its Hash
+type ID skipchain.SkipBlockID
 
+// AccountList holds the information about all accounts belonging to an
+// identity
 type AccountList struct {
 	Threshold int
 	Listeners []*network.Entity
@@ -21,9 +24,10 @@ type AccountList struct {
 	Data      map[abstract.Point]string
 }
 
+// NewAccountList returns a new List with the first owner initialised
 func NewAccountList(threshold int, pub abstract.Point, owner string, sshPub string) *AccountList {
 	return &AccountList{
-		Threshold:  threshold,
+		Threshold: threshold,
 		Owners:    map[string]*Owner{owner: &Owner{pub}},
 		Listeners: []*network.Entity{},
 		Data:      map[abstract.Point]string{pub: sshPub},
@@ -111,7 +115,7 @@ type AddIdentityReply struct {
 // AttachToIdentity requests to attach the manager-device to an
 // existing identity
 type AttachToIdentity struct {
-	ID        IdentityID
+	ID        ID
 	Public    abstract.Point
 	PublicSSH string
 }
@@ -119,21 +123,21 @@ type AttachToIdentity struct {
 // ConfigNewCheck verifies if a new config is available. On sending,
 // the ID is given, on receiving, the AccountList is given.
 type ConfigNewCheck struct {
-	ID          IdentityID
+	ID          ID
 	AccountList *AccountList
 }
 
 // ConfigUpdate verifies if a new update is available. On sending,
 // the ID is given, on receiving, the AccountList is given.
 type ConfigUpdate struct {
-	ID          IdentityID
+	ID          ID
 	AccountList *AccountList
 }
 
 // Vote sends the signature for a specific IdentityList. It replies nil
 // if the threshold hasn't been reached, or the new SkipBlock
 type Vote struct {
-	ID        IdentityID
+	ID        ID
 	Signer    string
 	Signature *crypto.SchnorrSig
 }
@@ -142,17 +146,17 @@ type Vote struct {
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
-	*IdentityStorage
+	*Storage
 }
 
 // PropagateProposition sends a new proposition to be stored in all identities
 type PropagateProposition struct {
-	ID IdentityID
+	ID ID
 	*AccountList
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
 type UpdateSkipBlock struct {
-	ID IdentityID
+	ID     ID
 	Latest *skipchain.SkipBlock
 }

@@ -7,13 +7,14 @@ import (
 	"path"
 	"time"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"strings"
 )
 
 func init() {
@@ -296,7 +297,7 @@ in place of the standard reply. The Client.Send method will catch that and retur
 
 // Client for a service
 type Client struct {
-	Private   abstract.Secret
+	Private abstract.Secret
 	*network.Entity
 	ServiceID ServiceID
 }
@@ -371,18 +372,18 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 
 // SendToAll sends a message to all Entities of the EntityList and returns
 // all errors encountered concatenated together as a string.
-func (c *Client)SendToAll(dst *EntityList, msg network.ProtocolMessage)([]*network.Message, error){
+func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
 	msgs := make([]*network.Message, len(dst.List))
 	errstrs := []string{}
-	for i, e := range dst.List{
+	for i, e := range dst.List {
 		var err error
 		msgs[i], err = c.Send(e, msg)
-		if err != nil{
+		if err != nil {
 			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
 		}
 	}
 	var err error
-	if len(errstrs) > 0{
+	if len(errstrs) > 0 {
 		err = errors.New(strings.Join(errstrs, "\n"))
 	}
 	return msgs, err
