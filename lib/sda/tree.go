@@ -544,7 +544,7 @@ func (tId TreeNodeID) String() string {
 
 // Equals returns true if and only if the given TreeNodeID equals the current
 // one.
-func (tId TreeNodeID) Equals(tId2 TreeNodeID) bool {
+func (tId TreeNodeID) Equal(tId2 TreeNodeID) bool {
 	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
 
