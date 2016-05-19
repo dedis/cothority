@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"testing"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -417,15 +419,33 @@ func TestTreeNode_SubtreeCount(t *testing.T) {
 	}
 }
 
+func TestEntityList_GenerateNaryTree(t *testing.T) {
+	names := genLocalhostPeerNames(10, 2000)
+	peerList := genEntityList(tSuite, names)
+	peerList.GenerateNaryTree(4)
+	for i := 0; i <= 9; i++ {
+		if !strings.Contains(peerList.List[i].Addresses[0],
+			strconv.Itoa(2000+i)) {
+			t.Fatal("Missing port:", 2000+i, peerList.List)
+		}
+	}
+}
+
 func TestEntityList_GenerateNaryTreeWithRoot(t *testing.T) {
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genEntityList(tSuite, names)
 	for _, e := range peerList.List {
 		tree := peerList.GenerateNaryTreeWithRoot(4, e)
+		for i := 0; i <= 9; i++ {
+			if !strings.Contains(peerList.List[i].Addresses[0],
+				strconv.Itoa(2000+i)) {
+				t.Fatal("Missing port:", 2000+i, peerList.List)
+			}
+		}
 		if tree.Root.Entity.ID != e.ID {
 			t.Fatal("Entity", e, "is not root", tree.Dump())
 		}
-		if len(tree.List()) != 10{
+		if len(tree.List()) != 10 {
 			t.Fatal("Missing nodes")
 		}
 		if !tree.UsesList() {

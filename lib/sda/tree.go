@@ -466,9 +466,10 @@ func (el *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 // The root is given as an Entity.
 func (el *EntityList) GenerateNaryTreeWithRoot(N int, rootEntity *network.Entity) *Tree {
 	rootIndex, _ := el.Search(rootEntity.ID)
-	onlyRoot := el.List[rootIndex:rootIndex+1]
-	uptoRoot := el.List[:rootIndex]
-	afterRoot := el.List[rootIndex+1:]
+	cList := el.List
+	onlyRoot := []*network.Entity{cList[rootIndex]}
+	uptoRoot := cList[:rootIndex]
+	afterRoot := cList[rootIndex+1:]
 	list := append(onlyRoot, uptoRoot...)
 	list = append(list, afterRoot...)
 	return NewEntityList(list).GenerateNaryTree(N)

@@ -93,7 +93,6 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			if err != nil {
 				return err
 			}
-			dbg.Print()
 			go pi.Dispatch()
 
 			/// use the Services to instantiate it
@@ -106,7 +105,6 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			if pi == nil {
 				return nil
 			}
-			dbg.Print()
 			go pi.Dispatch()
 		}
 		if err := o.RegisterProtocolInstance(pi); err != nil {
@@ -255,7 +253,6 @@ func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (Pr
 	if err = o.RegisterProtocolInstance(pi); err != nil {
 		return nil, err
 	}
-	dbg.Print()
 	go pi.Dispatch()
 	return pi, err
 }

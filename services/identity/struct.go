@@ -154,4 +154,5 @@ type PropagateProposition struct {
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
 type UpdateSkipBlock struct {
 	ID IdentityID
+	Latest *skipchain.SkipBlock
 }

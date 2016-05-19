@@ -13,13 +13,14 @@ import (
 
 	"sync"
 
+	"reflect"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/services/skipchain"
-	"reflect"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -119,10 +120,10 @@ func (s *Service) ProposeConfig(e *network.Entity, p *PropagateProposition) (net
 	roster := sid.Root.EntityList
 	replies, err := manage.PropagateStartAndWait(s, roster,
 		p, 1000, s.Propagate)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
-	if replies != len(roster.List){
+	if replies != len(roster.List) {
 		dbg.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	return nil, nil
@@ -160,12 +161,12 @@ func (s *Service) ConfigUpdate(e *network.Entity, cu *ConfigUpdate) (network.Pro
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
 func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessage, error) {
+	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find identity")
 	}
 	sid.Lock()
-	defer sid.Unlock()
 	dbg.Lvl3("Voting on", sid.Proposed.Owners)
 	owner, ok := sid.Latest.Owners[v.Signer]
 	if !ok {
@@ -188,61 +189,37 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 			return nil, errors.New("Wrong signature: " + err.Error())
 		}
 	}
-	sid.Votes[v.Signer] = v.Signature
-	if i, _ := sid.Root.EntityList.Search(e.ID); i == -1 {
-		// We have been contacted by the user
-		err = s.SendISMOthers(sid.Root.EntityList, v)
-		if err != nil {
-			// This is not really bad, as one of the nodes might just be
-			// offline
-			dbg.Error("While propagating vote:", err)
-		}
+	sid.Unlock()
 
-		if len(sid.Votes) >= sid.Latest.Threshold ||
-			len(sid.Votes) == len(sid.Latest.Owners) {
-			dbg.Lvl3("Having majority or all votes")
-		}
+	// Propagate the vote
+	_, err = manage.PropagateStartAndWait(s, sid.Root.EntityList, v, 1000, s.Propagate)
+	if err != nil {
+		return nil, err
+	}
+	if len(sid.Votes) >= sid.Latest.Threshold ||
+		len(sid.Votes) == len(sid.Latest.Owners) {
+		// If we have enough signatures, make a new data-skipblock and
+		// propagate it
+		dbg.Lvl3("Having majority or all votes")
+
+		// Making a new data-skipblock
 		dbg.Lvl3("Sending data-block with", sid.Proposed.Owners)
 		reply, err := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
 		if err != nil {
 			return nil, err
 		}
-		sid.Data = reply.Latest
-		_, msg, _ := network.UnmarshalRegistered(sid.Data.Data)
+		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
 		dbg.Lvl3("SB signed is", msg.(*AccountList).Owners)
 		usb := &UpdateSkipBlock{
-			ID: v.ID,
+			ID:      v.ID,
+			Latest: reply.Latest,
 		}
-		err = s.SendISMOthers(sid.Root.EntityList, usb)
+		_, err = manage.PropagateStartAndWait(s, sid.Root.EntityList, usb, 1000, s.Propagate)
 		if err != nil {
 			return nil, err
 		}
-		sid.Latest = sid.Proposed
 		return sid.Data, nil
 	}
-	return nil, nil
-}
-
-// UpdateSkipBlock asks the SkipChain for the latest block and updates the
-// AccountList
-func (s *Service) UpdateSkipBlock(e *network.Entity, psb *UpdateSkipBlock) (network.ProtocolMessage, error) {
-	sid := s.getIdentityStorage(psb.ID)
-	if sid == nil {
-		return nil, errors.New("Didn't find identity")
-	}
-	sid.Lock()
-	defer sid.Unlock()
-	gucr, err := s.skipchain.GetUpdateChain(sid.Root, sid.Data.Hash)
-	if err != nil {
-		return nil, err
-	}
-	sid.Data = gucr.Update[len(gucr.Update)-1]
-	_, msg, err := network.UnmarshalRegistered(sid.Data.Data)
-	al, ok := msg.(*AccountList)
-	if !ok {
-		return nil, errors.New("Didn't find AccountList")
-	}
-	sid.Latest = al
 	return nil, nil
 }
 
@@ -263,23 +240,50 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 
 // Propagate handles propagation of all data in the identity-service
 func (s *Service) Propagate(msg network.ProtocolMessage) {
-	dbg.LLvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
-	switch msg.(type){
+	dbg.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+	id := IdentityID(nil)
+	switch msg.(type) {
 	case *PropagateProposition:
-		p := msg.(*PropagateProposition)
-		dbg.LLvlf3("%s Storing proposed config from %x", s.Context.Address(), p.AccountList.Owners)
-		sid := s.getIdentityStorage(p.ID)
+		id = msg.(*PropagateProposition).ID
+	case *Vote:
+		id = msg.(*Vote).ID
+	case *UpdateSkipBlock:
+		id = msg.(*UpdateSkipBlock).ID
+	}
+
+	if id != nil {
+		sid := s.getIdentityStorage(id)
 		if sid == nil {
 			dbg.Error("Didn't find entity in", s)
 		}
 		sid.Lock()
-		sid.Proposed = p.AccountList
-		sid.Votes = make(map[string]*crypto.SchnorrSig)
-		sid.Unlock()
+		defer sid.Unlock()
+		switch msg.(type){
+		case *PropagateProposition:
+			p := msg.(*PropagateProposition)
+			sid.Proposed = p.AccountList
+			sid.Votes = make(map[string]*crypto.SchnorrSig)
+		case *Vote:
+			v := msg.(*Vote)
+			sid.Votes[v.Signer] = v.Signature
+		case *UpdateSkipBlock:
+			skipblock := msg.(*UpdateSkipBlock).Latest
+			_, msgLatest, err := network.UnmarshalRegistered(skipblock.Data)
+			if err != nil{
+				dbg.Error(err)
+				return
+			}
+			al, ok := msgLatest.(*AccountList)
+			if !ok {
+				dbg.Error(err)
+				return
+			}
+			sid.Data = skipblock
+			sid.Latest = al
+			sid.Proposed = nil
+		}
 	}
 }
-
-
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
@@ -310,7 +314,7 @@ func newIdentityService(c sda.Context, path string) sda.Service {
 	}
 	for _, f := range []interface{}{s.ProposeConfig, s.VoteConfig,
 		s.AddIdentity, s.PropagateIdentity, s.ConfigNewCheck,
-		s.ConfigUpdate, s.UpdateSkipBlock} {
+		s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
 			dbg.Fatal("Registration error:", err)
 		}
