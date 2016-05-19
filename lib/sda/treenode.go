@@ -255,6 +255,11 @@ func (n *TreeNodeInstance) Close() error {
 	return n.ProtocolInstance().Shutdown()
 }
 
+// ProtocolName will return the string representing that protocol
+func (n *TreeNodeInstance) ProtocolName() string {
+	return ProtocolIDToName(n.token.ProtoID)
+}
+
 func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
