@@ -183,7 +183,7 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl1("SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
+	dbg.Lvl1(s.Entity(), "SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
 	switch tn.ProtocolName() {
 	case "Propagate":
 		pi, err := manage.NewPropagateProtocol(tn)
@@ -191,20 +191,14 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 			return nil, err
 		}
 		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
-		go pi.Dispatch()
 		return pi, err
 	}
 	return nil, nil
 }
 
 // PropagateSkipBlock will save a new SkipBlock
-func (s *Service) PropagateSkipBlock(data []byte) {
-	_, sbMsg, err := network.UnmarshalRegistered(data)
-	if err != nil {
-		dbg.Error("Error in unmarshalling:", err)
-		return
-	}
-	sb, ok := sbMsg.(*SkipBlock)
+func (s *Service) PropagateSkipBlock(msg network.ProtocolMessage) {
+	sb, ok := msg.(*SkipBlock)
 	if !ok{
 		dbg.Error("Couldn't convert to SkipBlock")
 		return
@@ -356,17 +350,13 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			}
 			roster = sb.EntityList
 		}
-		blockData, err := network.MarshalRegisteredType(block)
-		if err != nil {
-			return err
-		}
-		replies, err := manage.PropagateStartAndWait(s, roster.GenerateNaryTree(8),
-			blockData, 1000, s.PropagateSkipBlock)
-		if replies != len(roster.List){
-			dbg.Warn("Did only get", replies, "out of", len(roster.List))
-		}
+		replies, err := manage.PropagateStartAndWait(s, roster,
+			block, 1000, s.PropagateSkipBlock)
 		if err != nil{
 			return err
+		}
+		if replies != len(roster.List){
+			dbg.Warn("Did only get", replies, "out of", len(roster.List))
 		}
 	}
 	return nil

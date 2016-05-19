@@ -403,17 +403,34 @@ func TestTree_BinaryMarshaler(t *testing.T) {
 
 func TestTreeNode_SubtreeCount(t *testing.T) {
 	tree, _ := genLocalTree(15, 2000)
-	if tree.Root.SubtreeCount() != 14{
+	if tree.Root.SubtreeCount() != 14 {
 		t.Fatal("Not enough nodes in subtree-count")
 	}
-	if tree.Root.Children[0].SubtreeCount() != 6{
+	if tree.Root.Children[0].SubtreeCount() != 6 {
 		t.Fatal("Not enough nodes in partial subtree")
 	}
-	if tree.Root.Children[0].Children[0].SubtreeCount() != 2{
+	if tree.Root.Children[0].Children[0].SubtreeCount() != 2 {
 		t.Fatal("Not enough nodes in partial subtree")
 	}
-	if tree.Root.Children[0].Children[0].Children[0].SubtreeCount() != 0{
+	if tree.Root.Children[0].Children[0].Children[0].SubtreeCount() != 0 {
 		t.Fatal("Not enough nodes in partial subtree")
+	}
+}
+
+func TestEntityList_GenerateNaryTreeWithRoot(t *testing.T) {
+	names := genLocalhostPeerNames(10, 2000)
+	peerList := genEntityList(tSuite, names)
+	for _, e := range peerList.List {
+		tree := peerList.GenerateNaryTreeWithRoot(4, e)
+		if tree.Root.Entity.ID != e.ID {
+			t.Fatal("Entity", e, "is not root", tree.Dump())
+		}
+		if len(tree.List()) != 10{
+			t.Fatal("Missing nodes")
+		}
+		if !tree.UsesList() {
+			t.Fatal("Not all elements are in the tree")
+		}
 	}
 }
 

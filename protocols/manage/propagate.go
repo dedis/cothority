@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 )
 
@@ -17,7 +18,7 @@ func init() {
 // and waits for confirmation before returning.
 type Propagate struct {
 	*sda.TreeNodeInstance
-	onData    func([]byte)
+	onData    func(network.ProtocolMessage)
 	onDoneCb  func(int)
 	sd        *PropagateSendData
 	ChannelSD chan struct {
@@ -40,6 +41,7 @@ type PropagateData interface {
 
 type CI interface {
 	CreateProtocol(t *sda.Tree, name string) (sda.ProtocolInstance, error)
+	Entity() *network.Entity
 }
 
 // SendData is the message to pass the data to the children
@@ -57,9 +59,14 @@ type PropagateReply struct {
 
 // StartAndWait starts the propagation protocol and blocks till everything
 // is OK or the timeout has been reached
-func PropagateStartAndWait(ci CI, tree *sda.Tree, d []byte, msec int, f func([]byte)) (int, error) {
-	dbg.Lvl2("Starting to propagate")
+func PropagateStartAndWait(ci CI, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
+	tree := el.GenerateNaryTreeWithRoot(8, ci.Entity())
+	dbg.Lvl2("Starting to propagate", tree.Dump())
 	pi, err := ci.CreateProtocol(tree, "Propagate")
+	if err != nil {
+		return -1, err
+	}
+	d, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return -1, err
 	}
@@ -96,6 +103,7 @@ func NewPropagateProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 
 // Start will contact everyone and make the connections
 func (p *Propagate) Start() error {
+	dbg.LLvl4("going to contact", p.Root().Entity)
 	p.SendTo(p.Root(), p.sd)
 	return nil
 }
@@ -103,20 +111,30 @@ func (p *Propagate) Start() error {
 // Dispatch can handle timeouts
 func (p *Propagate) Dispatch() error {
 	process := true
+	dbg.LLvl4(p.Entity())
 	for process {
 		select {
 		case msg := <-p.ChannelSD:
+			dbg.LLvl3(p.Entity(), "Got data from", msg.Entity)
 			if p.onData != nil {
-				p.onData(msg.Data)
+				_, netMsg, err := network.UnmarshalRegistered(msg.Data)
+				if err == nil {
+					p.onData(netMsg)
+				}
+			}
+			if !p.IsRoot() {
+				dbg.LLvl3(p.Entity(), "Sending to parent")
 				p.SendToParent(&PropagateReply{})
 			}
 			if p.IsLeaf() {
 				process = false
 			} else {
+				dbg.LLvl3(p.Entity(), "Sending to children")
 				p.SendToChildren(&msg.PropagateSendData)
 			}
 		case <-p.ChannelReply:
 			p.received++
+			dbg.LLvl4(p.Entity(), "received:", p.received, p.subtree)
 			if !p.IsRoot() {
 				p.SendToParent(&PropagateReply{})
 			}
@@ -124,7 +142,7 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 		case <-time.After(time.Millisecond * time.Duration(p.sd.Msec)):
-			dbg.Fatal("Bye")
+			dbg.Fatal("Timeout")
 			process = false
 		}
 	}
@@ -147,7 +165,7 @@ func (p *Propagate) RegisterOnDone(fn func(int)) {
 // RegisterOnData takes a function that will be called once all connections
 // are set up. The argument to the function is the number of children that
 // sent OK after the propagation
-func (p *Propagate) RegisterOnData(fn func([]byte)) {
+func (p *Propagate) RegisterOnData(fn func(network.ProtocolMessage)) {
 	p.onData = fn
 }
 

@@ -17,7 +17,9 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/services/skipchain"
+	"reflect"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -110,21 +112,18 @@ func (s *Service) PropagateIdentity(e *network.Entity, pi *PropagateIdentity) (n
 // ProposeConfig only stores the proposed configuration internally. Signatures
 // come later.
 func (s *Service) ProposeConfig(e *network.Entity, p *PropagateProposition) (network.ProtocolMessage, error) {
-	dbg.Lvlf3("%s Storing proposed config from %x", s.Context.Address(), p.AccountList.Owners)
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
 	}
-	sid.Lock()
-	defer sid.Unlock()
-	sid.Proposed = p.AccountList
-	sid.Votes = make(map[string]*crypto.SchnorrSig)
-	if i, _ := sid.Root.EntityList.Search(e.ID); i < 0 {
-		dbg.Lvl3("Sending to others")
-		err := s.SendISMOthers(sid.Root.EntityList, p)
-		if err != nil {
-			return nil, err
-		}
+	roster := sid.Root.EntityList
+	replies, err := manage.PropagateStartAndWait(s, roster,
+		p, 1000, s.Propagate)
+	if err != nil{
+		return nil, err
+	}
+	if replies != len(roster.List){
+		dbg.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	return nil, nil
 }
@@ -132,11 +131,11 @@ func (s *Service) ProposeConfig(e *network.Entity, p *PropagateProposition) (net
 // ConfigNewCheck returns an eventual config-proposition
 func (s *Service) ConfigNewCheck(e *network.Entity, cnc *ConfigNewCheck) (network.ProtocolMessage, error) {
 	sid := s.getIdentityStorage(cnc.ID)
-	sid.Lock()
-	defer sid.Unlock()
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
 	}
+	sid.Lock()
+	defer sid.Unlock()
 	return &ConfigNewCheck{
 		ID:          cnc.ID,
 		AccountList: sid.Proposed,
@@ -248,9 +247,39 @@ func (s *Service) UpdateSkipBlock(e *network.Entity, psb *UpdateSkipBlock) (netw
 }
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
-func (s *Service) NewProtocol(*sda.TreeNodeInstance, *sda.GenericConfig) (sda.ProtocolInstance, error) {
+func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	dbg.Lvl1(s.Entity(), "Identity received New Protocol event", tn.ProtocolName(), tn, conf)
+	switch tn.ProtocolName() {
+	case "Propagate":
+		pi, err := manage.NewPropagateProtocol(tn)
+		if err != nil {
+			return nil, err
+		}
+		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
+		return pi, err
+	}
 	return nil, nil
 }
+
+// Propagate handles propagation of all data in the identity-service
+func (s *Service) Propagate(msg network.ProtocolMessage) {
+	dbg.LLvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+	switch msg.(type){
+	case *PropagateProposition:
+		p := msg.(*PropagateProposition)
+		dbg.LLvlf3("%s Storing proposed config from %x", s.Context.Address(), p.AccountList.Owners)
+		sid := s.getIdentityStorage(p.ID)
+		if sid == nil {
+			dbg.Error("Didn't find entity in", s)
+		}
+		sid.Lock()
+		sid.Proposed = p.AccountList
+		sid.Votes = make(map[string]*crypto.SchnorrSig)
+		sid.Unlock()
+	}
+}
+
+
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found

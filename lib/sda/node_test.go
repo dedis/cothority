@@ -373,7 +373,7 @@ type ServiceChannels struct {
 // implement services interface
 func (c *ServiceChannels) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 
-	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root)
+	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root, "ProtocolChannels")
 	pi, err := NewProtocolChannels(tni)
 	if err != nil {
 		return

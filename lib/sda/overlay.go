@@ -77,6 +77,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	}
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
+		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.Entity, sdaMsg.To.Id())
 		tn, err := o.TreeNodeFromToken(sdaMsg.To)
 		if err != nil {
 			return errors.New("No TreeNode defined in this tree here")
@@ -92,6 +93,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			if err != nil {
 				return err
 			}
+			dbg.Print()
 			go pi.Dispatch()
 
 			/// use the Services to instantiate it
@@ -104,6 +106,8 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 			if pi == nil {
 				return nil
 			}
+			dbg.Print()
+			go pi.Dispatch()
 		}
 		if err := o.RegisterProtocolInstance(pi); err != nil {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
@@ -114,6 +118,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 
 	}
 
+	dbg.Lvl4("Dispatching message", o.host.Entity)
 	// TODO Check if TreeNodeInstance is already Done
 	pi.DispatchMsg(sdaMsg)
 
@@ -250,6 +255,7 @@ func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (Pr
 	if err = o.RegisterProtocolInstance(pi); err != nil {
 		return nil, err
 	}
+	dbg.Print()
 	go pi.Dispatch()
 	return pi, err
 }
@@ -340,7 +346,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.protocolInstances[tok.Id()] = pi
-	dbg.Lvlf4("%s registered ProtocolInstance %+v", o.host.workingAddress, tok)
+	dbg.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.Id())
 	return nil
 }
 
