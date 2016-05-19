@@ -752,7 +752,7 @@ func (bz *ByzCoin) sendAndMeasureViewchange() {
 	var err error
 	for _, n := range bz.Tree().List() {
 		// don't send to ourself
-		if n.Id.Equals(bz.TreeNode().Id) {
+		if n.Id.Equal(bz.TreeNode().Id) {
 			continue
 		}
 		err = bz.SendTo(n, vc)
