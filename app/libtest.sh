@@ -9,7 +9,7 @@ BUILD=
 # Debug-level for server
 DBG_SRV=1
 # Debug-level for client
-DBG_CLIENT=1
+DBG_CLIENT= 
 # Debug running
 DBG_RUN=
 

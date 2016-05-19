@@ -46,9 +46,8 @@ func main() {
 		{
 			Name:    "sign",
 			Aliases: []string{"s"},
-			Usage: `Collectively sign file and write signature to standard output.
-	If you want to store the the signature in a file instead you can use the -out option explained below.`,
-			Action: signFile,
+			Usage:   "Collectively sign file and write signature to standard output.",
+			Action:  signFile,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "out, o",
@@ -59,13 +58,9 @@ func main() {
 		{
 			Name:    "verify",
 			Aliases: []string{"v"},
-			Usage:   "verify collective signature of a file",
+			Usage:   "verify collective signature of a FILE",
 			Action:  verifyFile,
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "file, f",
-					Usage: "verify signature of `FILE`",
-				},
 				cli.StringFlag{
 					Name:  "signature, s",
 					Usage: "use the `SIGNATURE_FILE` containing the signature (instead of reading from standard input)",
@@ -82,8 +77,8 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  optionGroup + " ," + optionGroupShort,
-			Value: "servers.toml",
-			Usage: "Cothority group definition in `FILE.toml`: a list of servers which participate in the collective signing process",
+			Value: "group.toml",
+			Usage: "Cothority group definition in `FILE.toml`",
 		},
 		cli.IntFlag{
 			Name:  "debug, d",
@@ -194,8 +189,9 @@ func signFile(c *cli.Context) error {
 func verifyFile(c *cli.Context) error {
 	dbg.SetDebugVisible(c.GlobalInt("debug"))
 	sigOrEmpty := c.String("signature")
-	err := verify(c.Args().First(), sigOrEmpty, c.GlobalString(optionGroup))
-	verifyPrintResult(err)
+	if err := verify(c.Args().First(), sigOrEmpty, c.GlobalString(optionGroup)); err != nil {
+		os.Exit(1)
+	}
 	return nil
 }
 
