@@ -1,7 +1,7 @@
 package identity
 
 import (
-	"bufio"
+	"io"
 
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -59,12 +59,12 @@ func NewIdentity(cothority *sda.EntityList, majority int, owner, sshPub string) 
 
 // NewClientFromStream reads the configuration of that client from
 // any stream
-func NewIdentityFromStream(in bufio.Reader) (*Identity, error) {
+func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	return nil, nil
 }
 
 // SaveToStream stores the configuration of the client to a stream
-func (i *Identity) SaveToStream(out bufio.Writer) error {
+func (i *Identity) SaveToStream(out io.Writer) error {
 	return nil
 }
 

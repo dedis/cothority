@@ -11,7 +11,7 @@ import (
 )
 
 // Our clientApp configuration
-var clientApp *identity.ClientKS
+var clientApp *identity.Identity
 
 // The config-file
 var configFile string
@@ -21,30 +21,6 @@ func main() {
 	app.Name = "SSH keystore client"
 	app.Usage = "Connects to a ssh-keystore-server and updates/changes information"
 	app.Commands = []cli.Command{
-		{
-			Name:    "server",
-			Aliases: []string{"s"},
-			Usage:   "handle servers",
-			Subcommands: []cli.Command{
-				{
-					Name:   "add",
-					Usage:  "add a server",
-					Action: serverAdd,
-				}, {
-					Name:   "del",
-					Usage:  "deletes a server",
-					Action: serverDel,
-				}, {
-					Name:   "check",
-					Usage:  "check servers",
-					Action: serverCheck,
-				}, {
-					Name:   "propose",
-					Usage:  "propose to add a new config",
-					Action: serverPropose,
-				},
-			},
-		},
 		{
 			Name:    "clientRemove",
 			Aliases: []string{"cr"},
@@ -102,91 +78,36 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		var err error
 		configFile = c.String("config") + "/config.bin"
-		clientApp, err = identity.ReadClientKS(configFile)
-		if clientApp.This.SSHpub == "TestClient-" {
-			clientApp.This.SSHpub += c.String("config")
-		}
+		file, err := os.Open(configFile)
+		defer file.Close()
+		dbg.ErrFatal(err)
+		clientApp, err = identity.NewIdentityFromStream(file)
 		dbg.ErrFatal(err, "Couldn't read config-file")
 		return nil
 	}
 	app.After = func(c *cli.Context) error {
-		err := clientApp.Write(configFile)
+		file, err := os.Create(configFile)
+		dbg.ErrFatal(err)
+		err = clientApp.SaveToStream(file)
 		dbg.ErrFatal(err)
 		return nil
 	}
 	app.Run(os.Args)
 }
 
-func serverAdd(c *cli.Context) {
-	srvAddr := c.Args().First()
-	dbg.Print("Contacting server", srvAddr)
-	err := clientApp.AddServerAddr(srvAddr)
-	if err != nil {
-		dbg.Print("Server refused to join - proposing new configuration")
-	}
-}
-
-func serverDel(c *cli.Context) {
-	srvAddr := c.Args().First()
-	dbg.Print("Deleting server", srvAddr)
-	err := clientApp.DelServerAddr(srvAddr)
-	dbg.ErrFatal(err)
-	if len(clientApp.Config.Servers) == 0 {
-		dbg.Print("Deleted last server")
-	}
-}
-
-func serverCheck(c *cli.Context) {
-	err := clientApp.ServerCheck()
-	if err != nil {
-		dbg.Error(err)
-	} else {
-		dbg.Print("Correctly checked servers")
-	}
-}
-
-func serverPropose(c *cli.Context) {
-	err := clientApp.ServerProposeAddr(c.Args().First())
-	if err != nil {
-		dbg.Error(err)
-	} else {
-		dbg.Print("Proposed my config to the server - needs to be confirmed first.")
-	}
-}
-
 func clientDel(c *cli.Context) {
-	client := c.Args().First()
-	dbg.Print("Deleting client with public key", client)
-	err := clientApp.DelClient(clientApp.This)
-	dbg.ErrFatal(err)
 }
 
 func update(c *cli.Context) {
-	if len(clientApp.Config.Servers) == 0 {
-		dbg.Print("No servers defined yet - use 'server add'")
-		return
-	}
-	dbg.ErrFatal(clientApp.Update(nil))
-	dbg.Print("Got latest configuration")
 	list(c)
 }
 
 func confirm(c *cli.Context) {
 	dbg.Print("Confirmed new config")
-	err := clientApp.ConfirmNewConfig(nil)
-	if err != nil {
-		dbg.Print("Couldn't confirm:", err)
-	}
-	list(c)
 }
 
 func list(c *cli.Context) {
-	clientApp.Config.List()
 }
 
 func listNew(c *cli.Context) {
-	if clientApp.NewConfig != nil {
-		dbg.Print("New config:")
-		clientApp.NewConfig.List()
-	}
 }
