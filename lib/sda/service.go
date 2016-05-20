@@ -7,6 +7,8 @@ import (
 	"path"
 	"time"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -14,6 +16,10 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 )
+
+func init() {
+	network.RegisterMessageType(&StatusRet{})
+}
 
 // Service is a generic interface to define any type of services.
 type Service interface {
@@ -73,7 +79,7 @@ var ServiceFactory = serviceFactory{
 	inverseTr:    make(map[ServiceID]string),
 }
 
-// RegisterByName takes an name, creates a ServiceID out of it and store the
+// RegisterByName takes a name, creates a ServiceID out of it and stores the
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
@@ -192,7 +198,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		// !! register to the ProtocolFactory !!
 		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
-	dbg.Lvl2(h.workingAddress, "instantiated all services")
+	dbg.Lvl3(h.workingAddress, "instantiated all services")
 	return &serviceStore{services, configs}
 }
 
@@ -227,11 +233,9 @@ func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
 // * Data: contains all the information of the request
 type ClientRequest struct {
 	// Name of the service to direct this request to
-	Service ServiceID `json:"service_id"`
-	// Type is the type of the underlying message
-	Type network.MessageTypeID `json:"type"`
+	Service ServiceID
 	// Data containing all the information in the request
-	Data []byte `json:"data"`
+	Data []byte
 }
 
 // RequestID is the type that registered by the network library
@@ -241,7 +245,7 @@ var RequestID = network.RegisterMessageType(ClientRequest{})
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
 // handling abstract.Secret/Public stuff that json can't do. Later we may want
 // to think on how to change that.
-func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error) {
+func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) {
 	sid := ServiceFactory.ServiceID(service)
 	dbg.Lvl1("Name", service, " <-> ServiceID", sid.String())
 	buff, err := network.MarshalRegisteredType(r)
@@ -250,7 +254,6 @@ func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error)
 	}
 	return &ClientRequest{
 		Service: sid,
-		Type:    network.RegisterMessageType(r),
 		Data:    buff,
 	}, nil
 }
@@ -294,7 +297,7 @@ in place of the standard reply. The Client.Send method will catch that and retur
 
 // Client for a service
 type Client struct {
-	private abstract.Secret
+	Private abstract.Secret
 	*network.Entity
 	ServiceID ServiceID
 }
@@ -304,7 +307,7 @@ func NewClient(s string) *Client {
 	kp := config.NewKeyPair(network.Suite)
 	return &Client{
 		Entity:    network.NewEntity(kp.Public, ""),
-		private:   kp.Secret,
+		Private:   kp.Secret,
 		ServiceID: ServiceFactory.ServiceID(s),
 	}
 }
@@ -312,7 +315,7 @@ func NewClient(s string) *Client {
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
-	client := network.NewSecureTCPHost(c.private, c.Entity)
+	client := network.NewSecureTCPHost(c.Private, c.Entity)
 
 	// Connect to the root
 	dbg.Lvl4("Opening connection to", dst)
@@ -326,19 +329,20 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	if err != nil {
 		return nil, err
 	}
+
 	b, err := m.MarshalBinary()
+
 	if err != nil {
 		return nil, err
 	}
 	serviceReq := &ClientRequest{
 		Service: c.ServiceID,
-		Type:    m.MsgType,
 		Data:    b,
 	}
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Lvlf3("Sending request %+v", serviceReq)
+		dbg.Lvlf4("Sending request %+v", serviceReq)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
@@ -347,14 +351,14 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
 		if err != nil {
-			close(pchan)
-			return
+			packet.Msg = StatusRet{err.Error()}
+			packet.MsgType = network.TypeFromData(&StatusRet{})
 		}
 		pchan <- packet
 	}()
 	select {
 	case response := <-pchan:
-		dbg.Lvlf5("Response: %+v", response)
+		dbg.Lvlf5("Response: %+v %+v", response, response.Msg)
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {
@@ -362,8 +366,27 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
-		return &network.Message{}, errors.New("Timeout on signing")
+		return &network.Message{}, errors.New("Timeout on sending message")
 	}
+}
+
+// SendToAll sends a message to all Entities of the EntityList and returns
+// all errors encountered concatenated together as a string.
+func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
+	msgs := make([]*network.Message, len(dst.List))
+	errstrs := []string{}
+	for i, e := range dst.List {
+		var err error
+		msgs[i], err = c.Send(e, msg)
+		if err != nil {
+			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
+		}
+	}
+	var err error
+	if len(errstrs) > 0 {
+		err = errors.New(strings.Join(errstrs, "\n"))
+	}
+	return msgs, err
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file
@@ -378,10 +401,13 @@ func (c *Client) BinaryUnmarshaler(b []byte) error {
 	return nil
 }
 
-// ErrorRet is used when an error is returned - Error may be nil
-type ErrorRet struct {
-	Error error
+// StatusRet is used when a status is returned - mostly an error
+type StatusRet struct {
+	Status string
 }
+
+// StatusOK is used when there is no error but nothing to return
+var StatusOK = &StatusRet{""}
 
 // ErrMsg converts a combined err and status-message to an error. It
 // returns either the error, or the errormsg, if there is one.
@@ -389,13 +415,13 @@ func ErrMsg(em *network.Message, err error) error {
 	if err != nil {
 		return err
 	}
-	errMsg, ok := em.Msg.(ErrorRet)
+	status, ok := em.Msg.(StatusRet)
 	if !ok {
 		return nil
 	}
-	errMsgStr := errMsg.Error.Error()
-	if errMsgStr != "" {
-		return errors.New("Remote-error: " + errMsgStr)
+	statusStr := status.Status
+	if statusStr != "" {
+		return errors.New("Remote-error: " + statusStr)
 	}
 	return nil
 }

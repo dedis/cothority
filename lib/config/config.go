@@ -149,15 +149,26 @@ func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
 	return el, nil
 }
 
+// Save writes the grouptoml definition into the file
+func (gt *GroupToml) Save(fname string) error {
+	file, err := os.Create(fname)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(gt.String())
+	return err
+}
+
 // String returns the TOML representation of this GroupToml
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
-		gt.Description = "Description of the system"
+		gt.Description = "Best Cothority Roster"
 	}
 	for _, s := range gt.Servers {
 		if s.Description == "" {
-			s.Description = "Description of the server"
+			s.Description = "Buckaroo Bonzai's Cothority Server"
 		}
 	}
 	enc := toml.NewEncoder(&buff)
@@ -177,7 +188,7 @@ func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
 	return network.NewEntity(public, s.Addresses...), nil
 }
 
-// Returns a ServerToml out of a public key and some addresses => to be printed
+// NewServerToml returns  a ServerToml out of a public key and some addresses => to be printed
 // or written to a file
 func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
 	var buff bytes.Buffer

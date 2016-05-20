@@ -11,8 +11,11 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// ProtocolName for the CollectiveSigning protocol
+var ProtocolName = "CoSi"
+
 func init() {
-	sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
+	sda.ProtocolRegisterName(ProtocolName, NewProtocolCosi)
 }
 
 // This Cosi protocol is the simplest version, the "vanilla" version with the
@@ -123,7 +126,6 @@ func (pc *ProtocolCosi) Dispatch() error {
 		var err error
 		select {
 		case packet := <-pc.announce:
-			dbg.Print("Annoucement")
 			err = pc.handleAnnouncement(&packet.Announcement)
 		case packet := <-pc.commit:
 			err = pc.handleCommitment(&packet.Commitment)

@@ -1,15 +1,17 @@
 package sda
 
-import (
-	"github.com/dedis/cothority/lib/network"
-)
+import "github.com/dedis/cothority/lib/network"
 
-// Context is the interface that is given to an Service
+// Context is the interface that is given to a Service
 type Context interface {
-	NewTreeNodeInstance(*Tree, *TreeNode) *TreeNodeInstance
+	NewTreeNodeInstance(*Tree, *TreeNode, string) *TreeNodeInstance
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
+	CreateProtocol(*Tree, string) (ProtocolInstance, error)
+	CreateProtocolAuto(*Tree, string) (ProtocolInstance, error)
 	Address() string
+	Entity() *network.Entity
+	GetID() ServiceID
 }
 
 // defaultContext is the implementation of the Context interface. It is
@@ -29,10 +31,35 @@ func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
 }
 
 // NewTreeNodeInstance implements the Context interface method
-func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode) *TreeNodeInstance {
-	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, dc.servID)
+func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
+	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), dc.servID)
 }
 
+// SendRaw sends a message to the entity
 func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {
 	return dc.Host.SendRaw(e, msg)
+}
+
+// Entity returns the entity the service uses
+func (dc *defaultContext) Entity() *network.Entity {
+	return dc.Host.Entity
+}
+
+// GetID returns the service-id
+func (dc *defaultContext) GetID() ServiceID {
+	return dc.servID
+}
+
+// CreateProtocol makes a TreeNodeInstance from the root-node of the tree and
+// prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
+func (dc *defaultContext) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+	pi, err := dc.Overlay.CreateProtocolService(dc.servID, t, name)
+	return pi, err
+}
+
+// CreateProtocolAuto is like CreateProtocol but doesn't bind a service to it,
+// so it will be handled automatically by the SDA.
+func (dc *defaultContext) CreateProtocolAuto(t *Tree, name string) (ProtocolInstance, error) {
+	pi, err := dc.Overlay.CreateProtocol(t, name)
+	return pi, err
 }

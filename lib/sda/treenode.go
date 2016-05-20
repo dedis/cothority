@@ -255,6 +255,11 @@ func (n *TreeNodeInstance) Close() error {
 	return n.ProtocolInstance().Shutdown()
 }
 
+// ProtocolName will return the string representing that protocol
+func (n *TreeNodeInstance) ProtocolName() string {
+	return ProtocolIDToName(n.token.ProtoID)
+}
+
 func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
@@ -410,7 +415,7 @@ func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
 // message being analyzed.
 func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
 	mt := sdaMsg.MsgType
-	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equals(n.Parent().Id)
+	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equal(n.Parent().Id)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
 		return mt, []*Data{sdaMsg}, true
 	}
@@ -591,7 +596,7 @@ func (n *TreeNodeInstance) Host() *Host {
 func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
 	return n
 }
-func (n *TreeNodeInstance) isBinded() bool {
+func (n *TreeNodeInstance) isBound() bool {
 	return n.instance != nil
 }
 

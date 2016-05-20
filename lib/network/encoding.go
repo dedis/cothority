@@ -29,6 +29,11 @@ type ProtocolMessage interface{}
 // MessageTypeID is the ID used to uniquely identify different registered messages
 type MessageTypeID uuid.UUID
 
+// ErrorType is reserved by the network library. When you receive a message of
+// ErrorType, it is generally because an error happened, then you can call
+// Error() on it.
+var ErrorType = MessageTypeID(uuid.Nil)
+
 // String returns the canonical string representation of the MessageTypeID
 func (mId MessageTypeID) String() string {
 	return uuid.UUID(mId).String()
@@ -156,11 +161,6 @@ var registry = newTypeRegistry()
 
 var globalOrder = binary.BigEndian
 
-// ErrorType is reserved by the network library. When you receive a message of
-// ErrorType, it is generally because an error happened, then you can call
-// Error() on it.
-var ErrorType = MessageTypeID(uuid.Nil)
-
 // EmptyApplicationMessage is the default empty message that is returned in case
 // something went wrong.
 //
@@ -192,6 +192,7 @@ func MarshalRegisteredType(data ProtocolMessage) ([]byte, error) {
 	var err error
 	if buf, err = protobuf.Encode(data); err != nil {
 		dbg.Error("Error for protobuf encoding:", err)
+		dbg.Error(dbg.Stack())
 		return nil, err
 	}
 	_, err = b.Write(buf)
@@ -207,19 +208,39 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Me
 	if err := binary.Read(b, globalOrder, &tID); err != nil {
 		return ErrorType, nil, err
 	}
-	var typ reflect.Type
-	var ok bool
-	if typ, ok = registry.get(tID); !ok {
+	typ, ok := registry.get(tID)
+	if !ok {
 		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
 			typ.Name())
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
-	var err error
-	if err = protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
+	if err := protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
 		return tID, ptrVal.Elem().Interface(), err
 	}
 	return tID, ptrVal.Elem().Interface(), nil
+}
+
+// UnmarshalRegistered is like UnmarshalRegisteredType but it uses a
+// default constructor and returns a pointer to struct.
+func UnmarshalRegistered(buf []byte) (MessageTypeID, ProtocolMessage, error) {
+	b := bytes.NewBuffer(buf)
+	var tID MessageTypeID
+	if err := binary.Read(b, globalOrder, &tID); err != nil {
+		return ErrorType, nil, err
+	}
+	typ, ok := registry.get(tID)
+	if !ok {
+		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
+			typ.Name())
+	}
+	ptrVal := reflect.New(typ)
+	ptr := ptrVal.Interface()
+	constructors := DefaultConstructors(Suite)
+	if err := protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
+		return ErrorType, nil, err
+	}
+	return tID, ptrVal.Interface(), nil
 }
 
 // MarshalBinary the application message => to bytes

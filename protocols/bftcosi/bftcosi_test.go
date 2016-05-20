@@ -16,16 +16,6 @@ import (
 var veriCount int
 var countMut sync.Mutex
 
-func verify(m []byte) bool {
-	countMut.Lock()
-	veriCount++
-	dbg.Print("Verification called", veriCount, "times")
-	countMut.Unlock()
-	dbg.Print("Ignoring message:", string(m))
-	// everything is OK, always:
-	return true
-}
-
 const TestProtocolName = "DummyBFTCoSi"
 
 func TestBftCoSi(t *testing.T) {
@@ -50,7 +40,7 @@ func TestBftCoSi(t *testing.T) {
 		msg := []byte("Hello BFTCoSi")
 
 		// Start the protocol
-		node, err := local.CreateProtocol(TestProtocolName, tree)
+		node, err := local.CreateProtocol(tree, TestProtocolName)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
@@ -75,7 +65,7 @@ func TestBftCoSi(t *testing.T) {
 			countMut.Unlock()
 			sig := root.Signature()
 			if err := cosi.VerifyCosiSignatureWithException(root.Suite(),
-				root.aggregatedPublic, msg, sig.Sig,
+				root.AggregatedPublic, msg, sig.Sig,
 				sig.Exceptions); err != nil {
 
 				t.Fatal(fmt.Sprintf("%s Verification of the signature failed: %s", root.Name(), err.Error()))
@@ -85,4 +75,14 @@ func TestBftCoSi(t *testing.T) {
 		}
 		local.CloseAll()
 	}
+}
+
+func verify(m []byte) bool {
+	countMut.Lock()
+	veriCount++
+	dbg.Lvl1("Verification called", veriCount, "times")
+	countMut.Unlock()
+	dbg.Lvl1("Ignoring message:", string(m))
+	// everything is OK, always:
+	return true
 }

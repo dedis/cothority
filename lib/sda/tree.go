@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net"
 
+	"math/rand"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -22,6 +24,11 @@ import (
 // - which Tree we are using.
 // - The overlay network: a mapping from PeerId
 // It contains the PeerId of the parent and the sub tree of the children.
+
+func init() {
+	network.RegisterMessageType(Tree{})
+	network.RegisterMessageType(tbmStruct{})
+}
 
 // Tree is a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
@@ -43,8 +50,6 @@ func (tId TreeID) Equals(tId2 TreeID) bool {
 func (tId TreeID) String() string {
 	return uuid.UUID(tId).String()
 }
-
-var _ = network.RegisterMessageType(Tree{})
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
@@ -97,6 +102,45 @@ func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 func (t *Tree) Marshal() ([]byte, error) {
 	buf, err := network.MarshalRegisteredType(t.MakeTreeMarshal())
 	return buf, err
+}
+
+type tbmStruct struct {
+	T  []byte
+	EL *EntityList
+}
+
+// BinaryMarshaler does the same as Marshal
+func (t *Tree) BinaryMarshaler() ([]byte, error) {
+	bt, err := t.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	tbm := &tbmStruct{
+		T:  bt,
+		EL: t.EntityList,
+	}
+	b, err := network.MarshalRegisteredType(tbm)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// BinaryUnmarshaler takes a TreeMarshal and stores it in the tree
+func (t *Tree) BinaryUnmarshaler(b []byte) error {
+	_, m, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	tbm, ok := m.(tbmStruct)
+	if !ok {
+		return errors.New("Didn't find TBMstruct")
+	}
+	tree, err := NewTreeFromMarshal(tbm.T, tbm.EL)
+	if err != nil {
+		return err
+	}
+	t.EntityList = tbm.EL
+	t.Id = tree.Id
+	t.Root = tree.Root
+	return nil
 }
 
 // Equal verifies if the given tree is equal
@@ -292,6 +336,8 @@ func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeN
 type EntityList struct {
 	Id EntityListID
 	// TODO make that a map so search is O(1)
+	// List is the List of actual "entities"
+	// Be careful if you access it in go-routines (not safe by default)
 	List []*network.Entity
 	// Aggregate public key
 	Aggregate abstract.Point
@@ -332,7 +378,7 @@ func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 			return i, e
 		}
 	}
-	return 0, nil
+	return -1, nil
 }
 
 // Get simply returns the entity that is stored at that index in the entitylist
@@ -416,11 +462,38 @@ func (el *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 	return NewTree(el, root)
 }
 
+// GenerateNaryTreeWithRoot creates a tree where each node has N children.
+// The root is given as an Entity.
+func (el *EntityList) GenerateNaryTreeWithRoot(N int, rootEntity *network.Entity) *Tree {
+	rootIndex, _ := el.Search(rootEntity.ID)
+	cList := el.List
+	onlyRoot := []*network.Entity{cList[rootIndex]}
+	uptoRoot := cList[:rootIndex]
+	afterRoot := cList[rootIndex+1:]
+	list := append(onlyRoot, uptoRoot...)
+	list = append(list, afterRoot...)
+	return NewEntityList(list).GenerateNaryTree(N)
+}
+
 // GenerateNaryTree creates a tree where each node has N children.
 // The first element of the EntityList will be the root element.
 func (el *EntityList) GenerateNaryTree(N int) *Tree {
 	root := el.addNary(nil, N, 0, len(el.List)-1)
 	return NewTree(el, root)
+}
+
+// GenerateBinaryTree creates a binary tree out of the EntityList
+// out of it. The first element of the EntityList will be the root element.
+func (el *EntityList) GenerateBinaryTree() *Tree {
+	return el.GenerateNaryTree(2)
+}
+
+// GetRandom returns a random element of the EntityList
+func (el *EntityList) GetRandom() *network.Entity {
+	if el.List == nil || len(el.List) == 0 {
+		return nil
+	}
+	return el.List[rand.Int()%len(el.List)]
 }
 
 // addNary is a recursive function to create the binary tree
@@ -441,12 +514,6 @@ func (el *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	} else {
 		return nil
 	}
-}
-
-// GenerateBinaryTree creates a binary tree out of the EntityList
-// out of it. The first element of the EntityList will be the root element.
-func (el *EntityList) GenerateBinaryTree() *Tree {
-	return el.GenerateNaryTree(2)
 }
 
 // TreeNode is one node in the tree
@@ -477,7 +544,7 @@ func (tId TreeNodeID) String() string {
 
 // Equals returns true if and only if the given TreeNodeID equals the current
 // one.
-func (tId TreeNodeID) Equals(tId2 TreeNodeID) bool {
+func (tId TreeNodeID) Equal(tId2 TreeNodeID) bool {
 	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
 
@@ -571,6 +638,14 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	for _, c := range t.Children {
 		c.Visit(firstDepth+1, fn)
 	}
+}
+
+// SubtreeCount returns how many children are attached to that
+// TreeNode.
+func (t *TreeNode) SubtreeCount() int {
+	ret := -1
+	t.Visit(0, func(int, *TreeNode) { ret++ })
+	return ret
 }
 
 // EntityListToml is the struct can can embedded EntityToml to be written in a

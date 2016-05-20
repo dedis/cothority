@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"testing"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -383,6 +385,73 @@ func TestTreeComputeSubtreeAggregate(t *testing.T) {
 		t.Fatal("Aggregate not correct for root")
 	}
 
+}
+
+func TestTree_BinaryMarshaler(t *testing.T) {
+	tree, _ := genLocalTree(5, 2000)
+	b, err := tree.BinaryMarshaler()
+	dbg.ErrFatal(err)
+	tree2 := &sda.Tree{}
+	dbg.ErrFatal(tree2.BinaryUnmarshaler(b))
+	if !tree.Equal(tree2) {
+		t.Fatal("Unmarshalled tree is not equal")
+	}
+	if tree.Root == tree2.Root {
+		t.Fatal("Addresses should not be equal")
+	}
+	dbg.Lvl1(tree.Dump())
+	dbg.Lvl1(tree2.Dump())
+}
+
+func TestTreeNode_SubtreeCount(t *testing.T) {
+	tree, _ := genLocalTree(15, 2000)
+	if tree.Root.SubtreeCount() != 14 {
+		t.Fatal("Not enough nodes in subtree-count")
+	}
+	if tree.Root.Children[0].SubtreeCount() != 6 {
+		t.Fatal("Not enough nodes in partial subtree")
+	}
+	if tree.Root.Children[0].Children[0].SubtreeCount() != 2 {
+		t.Fatal("Not enough nodes in partial subtree")
+	}
+	if tree.Root.Children[0].Children[0].Children[0].SubtreeCount() != 0 {
+		t.Fatal("Not enough nodes in partial subtree")
+	}
+}
+
+func TestEntityList_GenerateNaryTree(t *testing.T) {
+	names := genLocalhostPeerNames(10, 2000)
+	peerList := genEntityList(tSuite, names)
+	peerList.GenerateNaryTree(4)
+	for i := 0; i <= 9; i++ {
+		if !strings.Contains(peerList.List[i].Addresses[0],
+			strconv.Itoa(2000+i)) {
+			t.Fatal("Missing port:", 2000+i, peerList.List)
+		}
+	}
+}
+
+func TestEntityList_GenerateNaryTreeWithRoot(t *testing.T) {
+	names := genLocalhostPeerNames(10, 2000)
+	peerList := genEntityList(tSuite, names)
+	for _, e := range peerList.List {
+		tree := peerList.GenerateNaryTreeWithRoot(4, e)
+		for i := 0; i <= 9; i++ {
+			if !strings.Contains(peerList.List[i].Addresses[0],
+				strconv.Itoa(2000+i)) {
+				t.Fatal("Missing port:", 2000+i, peerList.List)
+			}
+		}
+		if tree.Root.Entity.ID != e.ID {
+			t.Fatal("Entity", e, "is not root", tree.Dump())
+		}
+		if len(tree.List()) != 10 {
+			t.Fatal("Missing nodes")
+		}
+		if !tree.UsesList() {
+			t.Fatal("Not all elements are in the tree")
+		}
+	}
 }
 
 // - public keys
