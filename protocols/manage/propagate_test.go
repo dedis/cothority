@@ -6,23 +6,33 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/manage"
 )
 
+type PropagateMsg struct {
+	Data []byte
+}
+
+func init() {
+	network.RegisterMessageType(PropagateMsg{})
+}
+
 // Tests an n-node system
 func TestPropagate(t *testing.T) {
 	//defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 1)
+	dbg.TestOutput(testing.Verbose(), 3)
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
-		_, _, tree := local.GenTree(nbrNodes, false, true, true)
+		_, el, _ := local.GenTree(nbrNodes, false, true, true)
+		o := local.Overlays[el.List[0].ID]
 
 		i := 0
-		msg := []byte("propagate")
-		nodes, err := manage.PropagateStartAndWait(local, tree, msg, 1000,
-			func(m []byte) {
-				if bytes.Equal(msg, m) {
+		msg := &PropagateMsg{[]byte("propagate")}
+		nodes, err := manage.PropagateStartAndWait(o, el, msg, 1000,
+			func(m network.ProtocolMessage) {
+				if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
 					i++
 				} else {
 					t.Error("Didn't receive correct data")
