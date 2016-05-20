@@ -21,7 +21,7 @@ type AccountList struct {
 	Threshold int
 	Listeners []*network.Entity
 	Owners    map[string]*Owner
-	Data      map[abstract.Point]string
+	Data      map[string]string
 }
 
 // NewAccountList returns a new List with the first owner initialised
@@ -30,7 +30,7 @@ func NewAccountList(threshold int, pub abstract.Point, owner string, sshPub stri
 		Threshold: threshold,
 		Owners:    map[string]*Owner{owner: &Owner{pub}},
 		Listeners: []*network.Entity{},
-		Data:      map[abstract.Point]string{pub: sshPub},
+		Data:      map[string]string{owner: sshPub},
 	}
 }
 
@@ -77,7 +77,7 @@ func (il *AccountList) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(il.Data[il.Owners[s].Point]))
+		_, err = hash.Write([]byte(il.Data[s]))
 		if err != nil {
 			return nil, err
 		}

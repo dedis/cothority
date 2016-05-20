@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/codegangsta/cli"
@@ -21,6 +22,12 @@ func main() {
 	app.Name = "SSH keystore client"
 	app.Usage = "Connects to a ssh-keystore-server and updates/changes information"
 	app.Commands = []cli.Command{
+		{
+			Name:    "setup",
+			Aliases: []string{"s"},
+			Usage:   "setting up a new client",
+			Action:  CmdSetup,
+		},
 		{
 			Name:    "clientRemove",
 			Aliases: []string{"cr"},
@@ -76,23 +83,52 @@ func main() {
 	}
 	app.Before = func(c *cli.Context) error {
 		dbg.SetDebugVisible(c.Int("debug"))
-		var err error
 		configFile = c.String("config") + "/config.bin"
-		file, err := os.Open(configFile)
-		defer file.Close()
-		dbg.ErrFatal(err)
-		clientApp, err = identity.NewIdentityFromStream(file)
-		dbg.ErrFatal(err, "Couldn't read config-file")
+		err := LoadConfig()
+		if err != nil {
+			fmt.Print("Problems reading config-file. Most probably you")
+			fmt.Print("should start a new one by running with the 'setup'")
+			fmt.Print("argument.")
+		}
+		dbg.ErrFatal(err, "Couldn't read config-file", configFile)
 		return nil
 	}
 	app.After = func(c *cli.Context) error {
-		file, err := os.Create(configFile)
-		dbg.ErrFatal(err)
-		err = clientApp.SaveToStream(file)
-		dbg.ErrFatal(err)
+		err := SaveConfig()
+		dbg.ErrFatal(err, "Error while creating config-file", configFile)
 		return nil
 	}
 	app.Run(os.Args)
+}
+
+func LoadConfig() error {
+	file, err := os.Open(configFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	clientApp, err = identity.NewIdentityFromStream(file)
+	return nil
+}
+
+func SaveConfig() error {
+	file, err := os.Create(configFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	err = clientApp.SaveToStream(file)
+	return err
+}
+
+func CmdSetup(c *cli.Context) {
+	Setup(c.Args().First())
+}
+
+func Setup(groupFile string) {
+	if groupFile == "" {
+
+	}
 }
 
 func clientDel(c *cli.Context) {

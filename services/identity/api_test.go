@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"io/ioutil"
+	"os"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
@@ -28,7 +31,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Owners["two"] = &Owner{kp2.Public}
-	conf2.Data[kp2.Public] = "public2"
+	conf2.Data["two"] = "public2"
 	dbg.ErrFatal(c1.ConfigNewPropose(conf2))
 
 	dbg.ErrFatal(c1.ConfigNewCheck())
@@ -38,7 +41,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	o2, ok := al.Owners["two"]
 	assert.True(t, ok)
 	assert.True(t, kp2.Public.Equal(o2.Point))
-	pub2, ok := al.Data[o2.Point]
+	pub2, ok := al.Data["two"]
 	assert.True(t, ok)
 	assert.Equal(t, "public2", pub2)
 }
@@ -146,7 +149,7 @@ func TestIdentity_ConfigNewVote(t *testing.T) {
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Owners["two2"] = &Owner{kp2.Public}
-	conf2.Data[kp2.Public] = "public2"
+	conf2.Data["two2"] = "public2"
 	dbg.ErrFatal(c1.ConfigNewPropose(conf2))
 	dbg.ErrFatal(c1.ConfigNewCheck())
 	hash, err := conf2.Hash()
@@ -163,5 +166,32 @@ func TestIdentity_ConfigNewVote(t *testing.T) {
 	dbg.ErrFatal(c1.ConfigUpdate())
 	if len(c1.Config.Owners) != 2 {
 		t.Fatal("Update should have two owners now")
+	}
+}
+
+func TestIdentity_SaveToStream(t *testing.T) {
+	l := sda.NewLocalTest()
+	_, el, _ := l.GenTree(5, true, true, true)
+	defer l.CloseAll()
+	id := NewIdentity(el, 50, "one1", "public1")
+	tmpfile, err := ioutil.TempFile("", "example")
+	dbg.ErrFatal(err)
+	defer os.Remove(tmpfile.Name())
+	id.SaveToStream(tmpfile)
+	tmpfile.Seek(0, 0)
+	id2, err := NewIdentityFromStream(tmpfile)
+	assert.NotNil(t, id2)
+	dbg.ErrFatal(err)
+	tmpfile.Close()
+
+	if id.Config.Threshold != id2.Config.Threshold {
+		t.Fatal("Loaded threshold is not the same")
+	}
+	p, p2 := id.Config.Owners["one1"].Point, id2.Config.Owners["one1"].Point
+	if !p.Equal(p2) {
+		t.Fatal("Public keys are not the same")
+	}
+	if id.Config.Data["one1"] != id2.Config.Data["one1"] {
+		t.Fatal("Owners are not the same", id.Config.Data, id2.Config.Data)
 	}
 }

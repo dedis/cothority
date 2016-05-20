@@ -60,12 +60,28 @@ func NewIdentity(cothority *sda.EntityList, majority int, owner, sshPub string) 
 // NewClientFromStream reads the configuration of that client from
 // any stream
 func NewIdentityFromStream(in io.Reader) (*Identity, error) {
-	return nil, nil
+	data := []byte{}
+	buffer := make([]byte, 1024)
+	var n int
+	var err error
+	for n, err = in.Read(buffer); n > 0; n, err = in.Read(buffer) {
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, buffer...)
+	}
+	_, id, err := network.UnmarshalRegistered(data)
+	return id.(*Identity), err
 }
 
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
-	return nil
+	data, err := network.MarshalRegisteredType(i)
+	if err != nil {
+		return err
+	}
+	_, err = out.Write(data)
+	return err
 }
 
 // AttachToIdentity proposes to attach it to an existing Identity
@@ -77,7 +93,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 	}
 	confPropose := i.Config.Copy()
 	confPropose.Owners[i.ManagerStr] = &Owner{i.Entity.Public}
-	confPropose.Data[i.Entity.Public] = i.SSHPub
+	confPropose.Data[i.ManagerStr] = i.SSHPub
 	err = i.ConfigNewPropose(confPropose)
 	if err != nil {
 		return err
