@@ -391,7 +391,7 @@ func (el *EntityList) Get(idx int) *network.Entity {
 // Publics returns the public-keys of the underlying EntityList. It won't modify
 // the underlying list.
 func (el *EntityList) Publics() []abstract.Point {
-	res := make([]abstract.Point, len(el))
+	res := make([]abstract.Point, len(el.List))
 	for i, p := range el.List {
 		res[i] = p.Public
 	}
