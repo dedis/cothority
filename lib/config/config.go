@@ -164,11 +164,11 @@ func (gt *GroupToml) Save(fname string) error {
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
-		gt.Description = "Best Cothority Roster"
+		gt.Description = "Description of your cothority roster"
 	}
 	for _, s := range gt.Servers {
 		if s.Description == "" {
-			s.Description = "Buckaroo Bonzai's Cothority Server"
+			s.Description = "Description of your server"
 		}
 	}
 	enc := toml.NewEncoder(&buff)
