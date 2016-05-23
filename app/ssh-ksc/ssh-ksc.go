@@ -3,11 +3,17 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"io/ioutil"
+	"os/user"
+
+	"strings"
+
 	"github.com/codegangsta/cli"
+	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/oi"
 	"github.com/dedis/cothority/services/identity"
 )
 
@@ -82,20 +88,16 @@ func main() {
 		},
 	}
 	app.Before = func(c *cli.Context) error {
+		os.Mkdir(c.String("config"), 0660)
 		dbg.SetDebugVisible(c.Int("debug"))
 		configFile = c.String("config") + "/config.bin"
-		err := LoadConfig()
-		if err != nil {
-			fmt.Print("Problems reading config-file. Most probably you")
-			fmt.Print("should start a new one by running with the 'setup'")
-			fmt.Print("argument.")
-		}
-		dbg.ErrFatal(err, "Couldn't read config-file", configFile)
 		return nil
 	}
 	app.After = func(c *cli.Context) error {
-		err := SaveConfig()
-		dbg.ErrFatal(err, "Error while creating config-file", configFile)
+		if clientApp != nil {
+			err := SaveConfig()
+			dbg.ErrFatal(err, "Error while creating config-file", configFile)
+		}
 		return nil
 	}
 	app.Run(os.Args)
@@ -108,6 +110,10 @@ func LoadConfig() error {
 	}
 	defer file.Close()
 	clientApp, err = identity.NewIdentityFromStream(file)
+	oi.ErrFatal(err,
+		"Problems reading config-file. Most probably you\n",
+		"should start a new one by running with the 'setup'\n",
+		"argument.")
 	return nil
 }
 
@@ -122,13 +128,28 @@ func SaveConfig() error {
 }
 
 func CmdSetup(c *cli.Context) {
-	Setup(c.Args().First())
+	name, err := os.Hostname()
+	oi.ErrFatal(err, "Couldn't get hostname for naming")
+
+	Setup(c.Args().First(), name, c.GlobalString("config-ssh")+"/id_rsa.pub")
 }
 
-func Setup(groupFile string) {
+func Setup(groupFile, hostname, pubFileName string) {
 	if groupFile == "" {
-
+		groupFile = "group.toml"
 	}
+	reader, err := os.Open(groupFile)
+	oi.ErrFatal(err, "Didn't find group-file: ", groupFile)
+	el, err := config.ReadGroupToml(reader)
+	oi.ErrFatal(err, "Couldn't read group-file")
+	tildeToHome(pubFileName)
+	pubFile, err := os.Open(pubFileName)
+	oi.ErrFatal(err, "Couldn't open public-ssh: ", pubFileName)
+	pub, err := ioutil.ReadAll(pubFile)
+	oi.ErrFatal(err, "Couldn't read public-ssh: ", pubFileName)
+
+	clientApp = identity.NewIdentity(el, 2, hostname, string(pub))
+	oi.ErrFatal(clientApp.CreateIdentity(), "Couldn't contact servers")
 }
 
 func clientDel(c *cli.Context) {
@@ -146,4 +167,13 @@ func list(c *cli.Context) {
 }
 
 func listNew(c *cli.Context) {
+}
+
+func tildeToHome(path string) string {
+	if strings.HasPrefix(path, "~") {
+		usr, err := user.Current()
+		oi.ErrFatal(err)
+		return usr.HomeDir + path[1:len(path)-1]
+	}
+	return path
 }

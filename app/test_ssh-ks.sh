@@ -6,13 +6,18 @@ main(){
     startTest
     build
     test Build
-    test ServerConfig
-    test ClientConfig
-    test ClientAdd
-    test ServerAdd
-    test ClientDel
-    test ServerDel
+    test Cothorityd
+    #test ServerConfig
+    #test ClientConfig
+    #test ClientAdd
+    #test ServerAdd
+    #test ClientDel
+    #test ServerDel
     stopTest
+}
+
+testCothorityd(){
+    ./cothorityd
 }
 
 testServerDel(){
@@ -108,7 +113,7 @@ testServerConfig(){
 }
 
 testBuild(){
-    echo "Testing build"
+    testOK ./cothorityd help
     testOK ./ssh-kss help
     testOK ./ssh-ksc -c cl1 -cs cl1 help
 }
@@ -150,9 +155,9 @@ build(){
     mkdir -p $DIR
     cd $DIR
     echo "Building in $DIR"
-    for app in ssh-ksc ssh-kss; do
+    for app in cothorityd ssh-ksc ssh-kss; do
         if [ ! -e $app -o "$BUILD" ]; then
-            if ! go build $BUILDDIR/$app/$app.go; then
+            if ! go build -o $app $BUILDDIR/$app/*.go; then
                 fail "Couldn't build $app"
             fi
         fi

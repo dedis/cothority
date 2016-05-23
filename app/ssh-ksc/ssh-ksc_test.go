@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/services/identity"
 	"github.com/stretchr/testify/assert"
@@ -14,6 +17,7 @@ import (
 
 func TestMain(m *testing.M) {
 	dbg.MainTest(m)
+	tmpCleanup()
 }
 
 func TestLoadConfig(t *testing.T) {
@@ -46,5 +50,49 @@ func TestLoadConfig(t *testing.T) {
 }
 
 func TestSetup(t *testing.T) {
+	tmpfile := tmpName()
+	_, local := saveGroupToml(5, tmpfile)
+	defer local.CloseAll()
 
+	sshPub := tmpName()
+	ioutil.WriteFile(sshPub, []byte("sshpub"), 0660)
+	Setup(tmpfile, "test", sshPub)
+
+	assert.NotNil(t, clientApp)
+	assert.NotNil(t, clientApp.Config)
+	assert.Equal(t, "sshpub", clientApp.Config.Data["test"])
+	assert.NotEqual(t, 0, len(clientApp.ID))
+}
+
+func saveGroupToml(n int, file string) (*config.GroupToml, *sda.LocalTest) {
+	local := sda.NewLocalTest()
+	hosts := local.GenLocalHosts(n, true, true)
+	servers := make([]*config.ServerToml, n)
+	for i, h := range hosts {
+		pub, err := crypto.Pub64(network.Suite, h.Entity.Public)
+		dbg.ErrFatal(err)
+		servers[i] = &config.ServerToml{
+			Addresses: h.Entity.Addresses,
+			Public:    pub,
+		}
+	}
+	gt := config.NewGroupToml(servers...)
+	dbg.ErrFatal(gt.Save(file))
+	return gt, local
+}
+
+var tmpfiles = []string{}
+
+func tmpName() string {
+	file, err := ioutil.TempFile("", "tmpfile")
+	dbg.ErrFatal(err)
+	file.Close()
+	tmpfiles = append(tmpfiles, file.Name())
+	return file.Name()
+}
+
+func tmpCleanup() {
+	for _, s := range tmpfiles {
+		os.Remove(s)
+	}
 }

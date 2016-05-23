@@ -16,6 +16,7 @@ import (
 
 	c "github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/config"
 )
@@ -44,10 +45,13 @@ func interactiveConfig() {
 		ipProvided = false
 		hostStr = "0.0.0.0"
 		portStr = splitted[0]
+		dbg.Print("global")
 	} else {
 		hostStr = splitted[0]
 		portStr = splitted[1]
+		dbg.Print("host", hostStr)
 	}
+	dbg.Print(ipProvided)
 
 	// let's check if they are correct
 	serverBinding = hostStr + ":" + portStr
@@ -59,14 +63,14 @@ func interactiveConfig() {
 		stderrExit("[-] Invalid connection  information for %s", serverBinding)
 	}
 
-	fmt.Println("[+] We now need to get a reachable address for other cothority servers")
-	fmt.Println("    and clients to contact you. This address will be put in a group definition")
-	fmt.Println("    file that you can share and combine with others to form a Cothority roster.")
-
 	var publicAddress string
 	var failedPublic bool
 	// if IP was not provided then let's get the public IP address
 	if !ipProvided {
+		fmt.Println("[+] We now need to get a reachable address for other cothority servers")
+		fmt.Println("    and clients to contact you. This address will be put in a group definition")
+		fmt.Println("    file that you can share and combine with others to form a Cothority roster.")
+
 		resp, err := http.Get("http://myexternalip.com/raw")
 		// cant get the public ip then ask the user for a reachable one
 		if err != nil {
@@ -86,20 +90,16 @@ func interactiveConfig() {
 		publicAddress = serverBinding
 	}
 
-	var reachableAddress string
 	// Let's directly ask the user for a reachable address
 	if failedPublic {
-		reachableAddress = askReachableAddress(reader, portStr)
+		publicAddress = askReachableAddress(reader, portStr)
 	} else {
 		// try  to connect to ipfound:portgiven
-		tryIP := publicAddress
-		fmt.Println("[+] Check if the address", tryIP, " is reachable from Internet...")
-		if err := tryConnect(tryIP); err != nil {
-			stderr("[-] Could not connect to your public IP")
-			reachableAddress = askReachableAddress(reader, portStr)
+		fmt.Println("[+] Check if the address", publicAddress, " is reachable from Internet...")
+		if err := tryConnect(publicAddress); err != nil {
+			fmt.Println("[+] Could not connect to your public IP")
 		} else {
-			reachableAddress = tryIP
-			fmt.Println("[+] Address", reachableAddress, " publicly available from Internet!")
+			fmt.Println("[+] Address", publicAddress, " publicly available from Internet!")
 		}
 	}
 
@@ -169,7 +169,7 @@ func interactiveConfig() {
 	// group definition part
 	var dirName = path.Dir(configFile)
 	var groupFile = path.Join(dirName, DefaultGroupFile)
-	serverToml := c.NewServerToml(network.Suite, kp.Public, reachableAddress)
+	serverToml := c.NewServerToml(network.Suite, kp.Public, publicAddress)
 	groupToml := c.NewGroupToml(serverToml)
 
 	if err := groupToml.Save(groupFile); err != nil {
