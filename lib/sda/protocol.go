@@ -3,9 +3,9 @@ package sda
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/network"
 )
 
 // ProtocolID uniquely identifies a protocol

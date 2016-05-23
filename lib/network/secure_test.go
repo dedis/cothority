@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Secure_test is analog to simple_test it uses the same structure to send

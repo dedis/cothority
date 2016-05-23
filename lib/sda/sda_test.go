@@ -3,7 +3,7 @@ package sda
 import (
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // To avoid setting up testing-verbosity in all tests

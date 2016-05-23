@@ -1,5 +1,5 @@
 package services
 
 import (
-	_ "github.com/dedis/cothority/services/cosi"
+	_ "gopkg.in/dedis/cothority.v0/services/cosi"
 )
