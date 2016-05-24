@@ -186,6 +186,7 @@ func (h *Host) CloseConnections() error {
 	}
 	dbg.Lvl4(h.Entity.First(), "Closing tcpHost")
 	h.connections = make(map[network.EntityID]network.SecureConn)
+	h.entities = make(map[network.EntityID]*network.Entity)
 	return h.host.Close()
 }
 
@@ -194,9 +195,11 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
+	dbg.Print()
 	h.entityListsLock.RLock()
+	dbg.Print()
 	if _, ok := h.entities[e.ID]; !ok {
-		dbg.Lvl4(h.Entity.First(), "Connecting to", e.Addresses)
+		dbg.LLvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.RUnlock()
 		// Connect to that entity
 		_, err := h.Connect(e)
@@ -204,20 +207,28 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 			return err
 		}
 	} else {
+		dbg.Print()
 		h.entityListsLock.RUnlock()
 	}
+	dbg.Print()
 	h.networkLock.Lock()
+	dbg.Print()
 	c, ok := h.connections[e.ID]
 	if !ok {
 		h.networkLock.Unlock()
+		dbg.Print()
 		return errors.New("Got no connection tied to this Entity")
 	}
+	dbg.Print()
 	h.networkLock.Unlock()
 
-	dbg.Lvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
+	dbg.Print()
+	dbg.LLvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
 	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
+		return err
 	}
+	dbg.LLvl4("Sent")
 	return nil
 }
 
@@ -472,20 +483,23 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	defer h.networkLock.Unlock()
 	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[c.Entity().ID] = id
-	h.connections[c.Entity().ID] = c
+	h.entities[id.ID] = id
+	h.connections[id.ID] = c
 }
 
 // unregisterConnection removes a connection from the map
 func (h *Host) unregisterConnection(c network.SecureConn) {
-	dbg.Lvl4(h.Entity.First(), "registers", c.Entity().First())
+	dbg.LLvl4(h.Entity.First(), "UNregisters", c.Entity().First())
 	h.networkLock.Lock()
+	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()
+	defer h.entityListsLock.Unlock()
 	id := c.Entity().ID
 	if _, exists := h.connections[id]; !exists {
 		return
 	}
 	delete(h.connections, id)
+	delete(h.entities, id)
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

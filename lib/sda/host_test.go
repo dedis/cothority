@@ -392,12 +392,12 @@ func TestReconnection(t *testing.T) {
 func sendrcv(from, to *sda.Host) error {
 	err := from.SendRaw(to.Entity, &SimpleMessage{12})
 	if err != nil {
-		errors.New("Couldn't send message: " + err.Error())
+		return errors.New("Couldn't send message: " + err.Error())
 	}
 	// Receive the message
 	msg := to.Receive()
 	if msg.Msg.(SimpleMessage).I != 12 {
-		errors.New("Simple message got distorted")
+		return errors.New("Simple message got distorted")
 	}
 	return nil
 }
