@@ -12,7 +12,6 @@ script:
   #- go get -u github.com/kisielk/errcheck
   #- ./errcheck.sh
   # do not run any test binary in parallel (see go help build for more info on the -p flag)
-  # quick hack to enable travis testing for PRs from 'branch' to v0:
   - if [ ${TRAVIS_BRANCH} == 'v0' ]; then go test -race -p=1 gopkg.in/dedis/cothority.v0/./...; else go test -race -p=1 ./...; fi
 
 notifications:
