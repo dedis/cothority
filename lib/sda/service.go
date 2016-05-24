@@ -300,7 +300,6 @@ type Client struct {
 	private abstract.Secret
 	*network.Entity
 	ServiceID ServiceID
-	conn map[network.EntityID]network.SecureConn
 	sync.Mutex
 }
 
@@ -311,7 +310,6 @@ func NewClient(s string) *Client {
 		Entity:    network.NewEntity(kp.Public, ""),
 		private:   kp.Secret,
 		ServiceID: ServiceFactory.ServiceID(s),
-		conn: make(map[network.EntityID]network.SecureConn),
 	}
 }
 
@@ -323,17 +321,13 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	client := network.NewSecureTCPHost(c.private, c.Entity)
 
 	// Connect to the root
-	con, exists := c.conn[dst.ID]
-	if !exists{
-		dbg.Print("Opening connection to", dst)
-		var err error
-		con, err = client.Open(dst)
-		if err != nil{
-			return nil, err
-		}
-		c.conn[dst.ID] = con
-	}
+	dbg.Lvl4("Opening connection to", dst)
+	con, err := client.Open(dst)
 	dbg.Print("Connection is opened")
+	defer client.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	m, err := network.NewNetworkMessage(msg)
 	if err != nil {
@@ -390,20 +384,6 @@ func (c *Client) BinaryMarshaler() ([]byte, error) {
 // BinaryUnmarshaler sets the different values from a byte-slice
 func (c *Client) BinaryUnmarshaler(b []byte) error {
 	dbg.Fatal("Not yet implemented")
-	return nil
-}
-
-// Closes the connection
-func (c *Client) Close(e *network.Entity)error{
-	con, exists := c.conn[e.ID]
-	if !exists{
-		return errors.New("Didn't find connection")
-	}
-	err := con.Close()
-	if err != nil{
-		return err
-	}
-	delete(c.conn, e.ID)
 	return nil
 }
 
