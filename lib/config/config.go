@@ -128,7 +128,7 @@ type ServerToml struct {
 	Description string
 }
 
-// ReadGroupDescToml reads a group.toml file and returns the list of Entity
+// ReadGroupDescToml reads a group.toml file and returns the list of Entities
 // and descriptions in the file.
 func ReadGroupDescToml(f io.Reader) (*sda.EntityList, []string, error) {
 	group := &GroupToml{}
