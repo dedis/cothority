@@ -168,6 +168,14 @@ func (h *Host) Close() error {
 		// Tell ProcessMessages to quit
 		close(h.ProcessMessagesQuit)
 	}
+	if err := h.CloseConnections(); err != nil {
+		return err
+	}
+	h.overlay.Close()
+	return nil
+}
+
+func (h *Host) CloseConnections() error {
 	for _, c := range h.connections {
 		dbg.Lvl4(h.Entity.First(), "Closing connection", c)
 		err := c.Close()
@@ -177,10 +185,8 @@ func (h *Host) Close() error {
 		}
 	}
 	dbg.Lvl4(h.Entity.First(), "Closing tcpHost")
-	err := h.host.Close()
 	h.connections = make(map[network.EntityID]network.SecureConn)
-	h.overlay.Close()
-	return err
+	return h.host.Close()
 }
 
 // SendRaw sends to an Entity without wrapping the msg into a SDAMessage
@@ -200,10 +206,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	} else {
 		h.entityListsLock.RUnlock()
 	}
-	var c network.SecureConn
-	var ok bool
 	h.networkLock.Lock()
-	if c, ok = h.connections[e.ID]; !ok {
+	c, ok := h.connections[e.ID]
+	if !ok {
 		h.networkLock.Unlock()
 		return errors.New("Got no connection tied to this Entity")
 	}
@@ -402,6 +407,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
 				dbg.Lvl4(h.Entity.First(), "quitting handleConn for-loop", err)
+				h.unregisterConnection(c)
 				return
 			}
 			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
@@ -468,6 +474,18 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	id := c.Entity()
 	h.entities[c.Entity().ID] = id
 	h.connections[c.Entity().ID] = c
+}
+
+// unregisterConnection removes a connection from the map
+func (h *Host) unregisterConnection(c network.SecureConn) {
+	dbg.Lvl4(h.Entity.First(), "registers", c.Entity().First())
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+	id := c.Entity().ID
+	if _, exists := h.connections[id]; !exists {
+		return
+	}
+	delete(h.connections, id)
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

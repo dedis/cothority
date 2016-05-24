@@ -426,11 +426,13 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		}
 
 		// Sending 'length' bytes
+		dbg.Print("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
 		n, err := c.conn.Write(b[:length])
 		if err != nil {
 			dbg.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			return handleError(err)
 		}
+		dbg.Print("Sent")
 		sent += Size(n)
 
 		// bytes left to send
