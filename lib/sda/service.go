@@ -323,7 +323,6 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	// Connect to the root
 	dbg.Lvl4("Opening connection to", dst)
 	con, err := client.Open(dst)
-	dbg.Print("Connection is opened")
 	defer client.Close()
 	if err != nil {
 		return nil, err
@@ -346,15 +345,14 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Printf("Sending request %x", serviceReq.Service)
+		dbg.Lvlf4("Sending request %x", serviceReq.Service)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
 		}
-		dbg.Print("Waiting for the response from", reflect.ValueOf(con).Pointer())
+		dbg.Lvl4("Waiting for the response from", reflect.ValueOf(con).Pointer())
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
-		dbg.Print("Got response")
 		if err != nil {
 			close(pchan)
 			return
@@ -363,7 +361,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	}()
 	select {
 	case response := <-pchan:
-		dbg.LLvlf5("Response: %+v", response)
+		dbg.Lvlf5("Response: %+v", response)
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {

@@ -209,9 +209,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	}
 	h.networkLock.Unlock()
 
-	dbg.LLvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
+	dbg.Lvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
 	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
-		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
+		dbg.Error("Couldn't send to", c.Entity().First(), ":", err)
 	}
 	return nil
 }
@@ -460,7 +460,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
-	dbg.LLvl4(h.Entity.First(), "registers", c.Entity().First())
+	dbg.Lvl4(h.Entity.First(), "registers", c.Entity().First())
 	h.networkLock.Lock()
 	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()
@@ -469,7 +469,8 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	_, oke := h.entities[id.ID]
 	_, okc := h.connections[id.ID]
 	if oke || okc{
-		dbg.Error("Entity or Connection already registered", oke, okc)
+		// TODO - we should catch this in some way
+		dbg.Lvl3("Entity or Connection already registered", oke, okc)
 	}
 	h.entities[id.ID] = id
 	h.connections[id.ID] = c

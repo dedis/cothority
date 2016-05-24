@@ -623,7 +623,6 @@ func (s *simpleService) ProcessClientRequest(e *network.Entity, r *sda.ClientReq
 	tree := req.Entities.GenerateBinaryTree()
 	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root)
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
-		dbg.Print("Sending to", e.ID)
 		if err := s.ctx.SendRaw(e, &simpleResponse{
 			Val: n,
 		}); err != nil {
