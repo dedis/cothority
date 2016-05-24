@@ -21,7 +21,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // This file handles the collection of measurements, aggregates them and

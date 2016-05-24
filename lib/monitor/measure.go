@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Sink is the server address where all measures are transmitted to for

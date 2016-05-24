@@ -1,8 +1,8 @@
 package sda
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/network"
 )
 
 // Export some private functions of Host for testing

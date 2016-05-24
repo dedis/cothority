@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 var tSuite = network.Suite
@@ -399,6 +399,21 @@ func TestTree_BinaryMarshaler(t *testing.T) {
 	}
 	dbg.Lvl1(tree.Dump())
 	dbg.Lvl1(tree2.Dump())
+}
+
+func TestEntityList_Publics(t *testing.T) {
+	_, el := genLocalTree(1, 2000)
+	agg := el.Publics()
+	if !agg[0].Equal(el.List[0].Public) {
+		t.Fatal("Aggregate of 1 key is not correct")
+	}
+	_, el = genLocalTree(2, 2000)
+	agg = el.Publics()
+	agg2 := el.List[0].Public.Add(el.List[0].Public,
+		el.List[1].Public)
+	if !agg[0].Equal(agg2) {
+		t.Fatal("Aggregate of 2 keys is not correct")
+	}
 }
 
 // - public keys

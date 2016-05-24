@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // setupMonitor launches a basic monitor with a created Stats object

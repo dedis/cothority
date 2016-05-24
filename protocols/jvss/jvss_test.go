@@ -3,9 +3,9 @@ package jvss_test
 import (
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/jvss"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"gopkg.in/dedis/cothority.v0/protocols/jvss"
 )
 
 func TestJVSS(t *testing.T) {
