@@ -9,6 +9,7 @@ import (
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"sync"
 )
 
 type DummyProtocol struct {
@@ -113,8 +114,6 @@ func (ds *DummyService) ProcessServiceMessage(e *network.Entity, s *sda.ServiceM
 }
 
 func TestServiceNew(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -133,8 +132,6 @@ func TestServiceNew(t *testing.T) {
 }
 
 func TestServiceProcessRequest(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -177,8 +174,6 @@ func TestServiceProcessRequest(t *testing.T) {
 
 // Test if a request that makes the service create a new protocol works
 func TestServiceRequestNewProtocol(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -230,8 +225,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 }
 
 func TestServiceProtocolProcessMessage(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -289,8 +282,6 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 
 // test for calling the NewProtocol method on a remote Service
 func TestServiceNewProtocol(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	ds1 := &DummyService{
 		link: make(chan bool),
 		Config: DummyConfig{
@@ -363,8 +354,6 @@ func TestServiceNewProtocol(t *testing.T) {
 }
 
 func TestServiceProcessServiceMessage(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	ds1 := &DummyService{
 		link: make(chan bool),
 	}
@@ -409,8 +398,6 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 }
 
 func TestServiceBackForthProtocol(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 
@@ -451,8 +438,6 @@ func TestServiceBackForthProtocol(t *testing.T) {
 }
 
 func TestClient_Send(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 
@@ -476,6 +461,45 @@ func TestClient_Send(t *testing.T) {
 	assert.Equal(t, nm.MsgType, simpleResponseType)
 	resp := nm.Msg.(simpleResponse)
 	assert.Equal(t, resp.Val, 10)
+}
+
+func TestClient_Parallel(t *testing.T) {
+	nbrNodes := 2
+	nbrParallel := 2
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+
+	// register service
+	sda.RegisterNewService("BackForth", func(c sda.Context, path string) sda.Service {
+		return &simpleService{
+			ctx: c,
+		}
+	})
+	// create hosts
+	hosts, el, _ := local.GenTree(nbrNodes, true, true, false)
+	client := sda.NewClient("BackForth")
+
+	wg := sync.WaitGroup{}
+	wg.Add(nbrParallel)
+	for i := 0; i < nbrParallel; i++ {
+		go func(i int) {
+			//time.Sleep(time.Duration(i) * time.Millisecond * 100)
+			dbg.Lvl1("Starting message", i)
+			r := &simpleRequest{
+				Entities: el,
+				Val:      10 * i,
+			}
+			nm, err := client.Send(hosts[0].Entity, r)
+			dbg.ErrFatal(err)
+
+			assert.Equal(t, nm.MsgType, simpleResponseType)
+			resp := nm.Msg.(simpleResponse)
+			assert.Equal(t, resp.Val, 10*i)
+			dbg.Lvl1("Done with message", i)
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
 }
 
 // BackForthProtocolForth & Back are messages that go down and up the tree.
@@ -599,6 +623,7 @@ func (s *simpleService) ProcessClientRequest(e *network.Entity, r *sda.ClientReq
 	tree := req.Entities.GenerateBinaryTree()
 	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root)
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
+		dbg.Print("Sending to", e.ID)
 		if err := s.ctx.SendRaw(e, &simpleResponse{
 			Val: n,
 		}); err != nil {

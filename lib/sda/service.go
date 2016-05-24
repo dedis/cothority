@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
+	"reflect"
 )
 
 func init() {
@@ -340,14 +341,16 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Lvlf4("Sending request %+v", serviceReq)
+		dbg.Printf("Sending request %+v", serviceReq)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
 		}
-		dbg.Lvl4("Waiting for the response")
+		dbg.Print("Waiting for the response from", con)
+		dbg.Print(reflect.ValueOf(con).Pointer())
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
+		dbg.Print("Got response")
 		if err != nil {
 			close(pchan)
 			return
@@ -356,7 +359,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	}()
 	select {
 	case response := <-pchan:
-		dbg.Lvlf5("Response: %+v", response)
+		dbg.LLvlf5("Response: %+v", response)
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {
