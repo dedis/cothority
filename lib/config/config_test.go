@@ -2,11 +2,11 @@ package config
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
-	"testing"
 	"strings"
+	"testing"
 )
 
-func TestMain(m *testing.M){
+func TestMain(m *testing.M) {
 	dbg.MainTest(m)
 }
 
@@ -26,13 +26,13 @@ func TestReadGroupDescToml(t *testing.T) {
 	el, desc, err := ReadGroupDescToml(strings.NewReader(serverGroup))
 	dbg.ErrFatal(err)
 
-	if len(el.List) != 2{
+	if len(el.List) != 2 {
 		t.Fatal("Should have 2 Entities")
 	}
-	if len(desc) != 2{
+	if len(desc) != 2 {
 		t.Fatal("Should have 2 descriptions")
 	}
-	if desc[1] != "Ismail's server"{
+	if desc[1] != "Ismail's server" {
 		t.Fatal("This should be Ismail's server")
 	}
 }
