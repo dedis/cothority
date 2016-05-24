@@ -468,7 +468,7 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	id := c.Entity()
 	_, oke := h.entities[id.ID]
 	_, okc := h.connections[id.ID]
-	if oke || okc{
+	if oke || okc {
 		// TODO - we should catch this in some way
 		dbg.Lvl3("Entity or Connection already registered", oke, okc)
 	}
