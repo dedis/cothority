@@ -211,7 +211,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 
 	dbg.Lvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
 	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
-		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
+		dbg.Error("Couldn't send to", c.Entity().First(), ":", err)
 	}
 	return nil
 }
@@ -456,7 +456,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 	}()
 }
 
-// registerConnection registers a Entity for a new connection, mapped with the
+// registerConnection registers an Entity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
@@ -466,8 +466,14 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	defer h.networkLock.Unlock()
 	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[c.Entity().ID] = id
-	h.connections[c.Entity().ID] = c
+	_, oke := h.entities[id.ID]
+	_, okc := h.connections[id.ID]
+	if oke || okc {
+		// TODO - we should catch this in some way
+		dbg.Lvl3("Entity or Connection already registered", oke, okc)
+	}
+	h.entities[id.ID] = id
+	h.connections[id.ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
