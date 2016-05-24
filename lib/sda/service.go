@@ -14,6 +14,7 @@ import (
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
 	"reflect"
+	"sync"
 )
 
 func init() {
@@ -299,6 +300,8 @@ type Client struct {
 	private abstract.Secret
 	*network.Entity
 	ServiceID ServiceID
+	conn map[network.EntityID]network.SecureConn
+	sync.Mutex
 }
 
 // NewClient returns a random client using the service s
@@ -308,21 +311,29 @@ func NewClient(s string) *Client {
 		Entity:    network.NewEntity(kp.Public, ""),
 		private:   kp.Secret,
 		ServiceID: ServiceFactory.ServiceID(s),
+		conn: make(map[network.EntityID]network.SecureConn),
 	}
 }
 
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
+	c.Lock()
+	defer c.Unlock()
 	client := network.NewSecureTCPHost(c.private, c.Entity)
 
 	// Connect to the root
-	dbg.Lvl4("Opening connection to", dst)
-	con, err := client.Open(dst)
-	defer client.Close()
-	if err != nil {
-		return nil, err
+	con, exists := c.conn[dst.ID]
+	if !exists{
+		dbg.Print("Opening connection to", dst)
+		var err error
+		con, err = client.Open(dst)
+		if err != nil{
+			return nil, err
+		}
+		c.conn[dst.ID] = con
 	}
+	dbg.Print("Connection is opened")
 
 	m, err := network.NewNetworkMessage(msg)
 	if err != nil {
@@ -341,13 +352,12 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Printf("Sending request %+v", serviceReq)
+		dbg.Printf("Sending request %x", serviceReq.Service)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
 		}
-		dbg.Print("Waiting for the response from", con)
-		dbg.Print(reflect.ValueOf(con).Pointer())
+		dbg.Print("Waiting for the response from", reflect.ValueOf(con).Pointer())
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
 		dbg.Print("Got response")
@@ -380,6 +390,20 @@ func (c *Client) BinaryMarshaler() ([]byte, error) {
 // BinaryUnmarshaler sets the different values from a byte-slice
 func (c *Client) BinaryUnmarshaler(b []byte) error {
 	dbg.Fatal("Not yet implemented")
+	return nil
+}
+
+// Closes the connection
+func (c *Client) Close(e *network.Entity)error{
+	con, exists := c.conn[e.ID]
+	if !exists{
+		return errors.New("Didn't find connection")
+	}
+	err := con.Close()
+	if err != nil{
+		return err
+	}
+	delete(c.conn, e.ID)
 	return nil
 }
 

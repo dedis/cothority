@@ -456,18 +456,23 @@ func (h *Host) checkPendingSDA(t *Tree) {
 	}()
 }
 
-// registerConnection registers a Entity for a new connection, mapped with the
+// registerConnection registers an Entity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
-	dbg.Lvl4(h.Entity.First(), "registers", c.Entity().First())
+	dbg.LLvl4(h.Entity.First(), "registers", c.Entity().First())
 	h.networkLock.Lock()
 	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()
 	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[c.Entity().ID] = id
-	h.connections[c.Entity().ID] = c
+	_, oke := h.entities[id.ID]
+	_, okc := h.connections[id.ID]
+	if oke || okc{
+		dbg.Error("Entity or Connection already registered", oke, okc)
+	}
+	h.entities[id.ID] = id
+	h.connections[id.ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
