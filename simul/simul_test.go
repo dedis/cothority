@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/dedis/cothority/simul/platform"
+	"gopkg.in/dedis/cothority.v0/simul/platform"
 )
 
 func TestBuild(t *testing.T) {

@@ -7,15 +7,15 @@ package main
 import (
 	"flag"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/protocols/manage"
+	"gopkg.in/dedis/cothority.v0/lib/monitor"
+	"gopkg.in/dedis/cothority.v0/protocols/manage"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
-	_ "github.com/dedis/cothority/protocols"
-	_ "github.com/dedis/cothority/services"
+	_ "gopkg.in/dedis/cothority.v0/protocols"
+	_ "gopkg.in/dedis/cothority.v0/services"
 )
 
 // The address of this host - if there is only one host in the config

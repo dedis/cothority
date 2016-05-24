@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/network"
 )
 
 // In this file we define the main structures used for a running protocol
@@ -386,6 +386,16 @@ func (el *EntityList) Get(idx int) *network.Entity {
 		return nil
 	}
 	return el.List[idx]
+}
+
+// Publics returns the public-keys of the underlying EntityList. It won't modify
+// the underlying list.
+func (el *EntityList) Publics() []abstract.Point {
+	res := make([]abstract.Point, len(el.List))
+	for i, p := range el.List {
+		res[i] = p.Public
+	}
+	return res
 }
 
 // GenerateBigNaryTree creates a tree where each node has N children.

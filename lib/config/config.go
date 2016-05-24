@@ -11,12 +11,12 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"gopkg.in/dedis/cothority.v0/lib/crypto"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 // CothoritydConfig is the Cothority daemon config
@@ -164,11 +164,11 @@ func (gt *GroupToml) Save(fname string) error {
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
-		gt.Description = "Best Cothority Roster"
+		gt.Description = "Description of your cothority roster"
 	}
 	for _, s := range gt.Servers {
 		if s.Description == "" {
-			s.Description = "Buckaroo Bonzai's Cothority Server"
+			s.Description = "Description of your server"
 		}
 	}
 	enc := toml.NewEncoder(&buff)

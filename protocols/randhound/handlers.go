@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 // I1 is the message sent by the leader to the peers in phase 1.

@@ -2,9 +2,9 @@ package jvss
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/monitor"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 func init() {

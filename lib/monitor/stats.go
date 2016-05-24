@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/montanaflynn/stats"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Stats contains all structures that are related to the computations of stats

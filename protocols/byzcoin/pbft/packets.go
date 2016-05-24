@@ -1,8 +1,8 @@
 package pbft
 
 import (
-	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain"
 )
 
 // Messages which will be sent around by the most naive PBFT simulation in

@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Scp copies the given files to the remote host
