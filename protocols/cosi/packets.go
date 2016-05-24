@@ -1,8 +1,8 @@
 package cosi
 
 import (
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/sda"
+	"gopkg.in/dedis/cothority.v0/lib/cosi"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 // This files defines the structure we use for registering to the channels by

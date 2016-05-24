@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Platform interface that has to be implemented to add another simulation-

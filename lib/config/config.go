@@ -11,12 +11,12 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"gopkg.in/dedis/cothority.v0/lib/crypto"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 // CothoritydConfig is the Cothority daemon config
@@ -128,25 +128,34 @@ type ServerToml struct {
 	Description string
 }
 
-// ReadGroupToml reads a group.toml file and returns the list of Entity
-// described in the file.
-func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+// ReadGroupDescToml reads a group.toml file and returns the list of Entity
+// and descriptions in the file.
+func ReadGroupDescToml(f io.Reader) (*sda.EntityList, []string, error) {
 	group := &GroupToml{}
 	_, err := toml.DecodeReader(f, group)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// convert from ServerTomls to entities
-	var entities = make([]*network.Entity, 0, len(group.Servers))
-	for _, s := range group.Servers {
+	var entities = make([]*network.Entity, len(group.Servers))
+	var descs = make([]string, len(group.Servers))
+	for i, s := range group.Servers {
 		en, err := s.toEntity(network.Suite)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		entities = append(entities, en)
+		entities[i] = en
+		descs[i] = s.Description
 	}
 	el := sda.NewEntityList(entities)
-	return el, nil
+	return el, descs, nil
+}
+
+// ReadGroupToml reads a group.toml file and returns the list of Entity
+// described in the file.
+func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+	el, _, err := ReadGroupDescToml(f)
+	return el, err
 }
 
 // Save writes the grouptoml definition into the file
@@ -164,11 +173,11 @@ func (gt *GroupToml) Save(fname string) error {
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
-		gt.Description = "Best Cothority Roster"
+		gt.Description = "Description of your cothority roster"
 	}
 	for _, s := range gt.Servers {
 		if s.Description == "" {
-			s.Description = "Buckaroo Bonzai's Cothority Server"
+			s.Description = "Description of your server"
 		}
 	}
 	enc := toml.NewEncoder(&buff)

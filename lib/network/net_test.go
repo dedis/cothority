@@ -11,10 +11,10 @@ import (
 
 	"os"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 type PublicPacket struct {

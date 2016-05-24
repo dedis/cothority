@@ -2,11 +2,11 @@ package pbft
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
-	"github.com/dedis/cothority/protocols/manage"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/monitor"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain"
+	"gopkg.in/dedis/cothority.v0/protocols/manage"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}

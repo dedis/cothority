@@ -1,8 +1,8 @@
 package bftcosi
 
 import (
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/sda"
+	"gopkg.in/dedis/cothority.v0/lib/cosi"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"

@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/cothority.v0/lib/cosi"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 // Dummy verification function: always returns OK/true/no-error on data
