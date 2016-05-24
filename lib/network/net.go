@@ -376,10 +376,8 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Message, e error) {
 			// make b size = bytes that we still need to read (no more no less)
 			b = b[:s-read]
 		}
-		dbg.Lvl4("total:", len(buffer.Bytes()), "next_read:", len(b), "n:", n, "s:", s)
 	}
 
-	dbg.Lvl4("Read bytes:", s)
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
 		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())

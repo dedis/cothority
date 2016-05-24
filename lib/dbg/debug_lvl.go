@@ -404,7 +404,7 @@ func ErrFatal(err error, msg ...string) {
 // variables
 func MainTest(m *testing.M) {
 	flag.Parse()
-	TestOutput(testing.Verbose(), 4)
+	TestOutput(testing.Verbose(), 3)
 	code := m.Run()
 	AfterTest(nil)
 	os.Exit(code)
