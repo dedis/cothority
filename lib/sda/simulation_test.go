@@ -2,8 +2,11 @@ package sda_test
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"testing"
+
+	"io/ioutil"
 
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
@@ -61,8 +64,11 @@ func TestLoadSave(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sc.Save("/tmp")
-	sc2, err := sda.LoadSimulationConfig("/tmp", "local1:2000")
+	dir, err := ioutil.TempDir("", "example")
+	dbg.ErrFatal(err)
+	defer os.RemoveAll(dir)
+	sc.Save(dir)
+	sc2, err := sda.LoadSimulationConfig(dir, "local1:2000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,8 +85,11 @@ func TestMultipleInstances(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sc.Save("/tmp")
-	sc2, err := sda.LoadSimulationConfig("/tmp", "local1")
+	dir, err := ioutil.TempDir("", "example")
+	dbg.ErrFatal(err)
+	defer os.RemoveAll(dir)
+	sc.Save(dir)
+	sc2, err := sda.LoadSimulationConfig(dir, "local1")
 	if err != nil {
 		t.Fatal(err)
 	}

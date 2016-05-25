@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
 	"strings"
 	"testing"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func TestMain(m *testing.M) {
