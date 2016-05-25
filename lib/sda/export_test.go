@@ -47,3 +47,21 @@ func (o *Overlay) TokenToNode(tok *Token) (*TreeNodeInstance, bool) {
 	tni, ok := o.instances[tok.Id()]
 	return tni, ok
 }
+
+func (h *Host) AbortConnections() error {
+	for _, c := range h.connections {
+		h.unregisterConnection(c)
+	}
+	close(h.ProcessMessagesQuit)
+	return h.host.Close()
+}
+
+func (h *Host) CloseConnections() error {
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+	return h.closeConnections()
+}
+
+func (h *Host) SetForceSendError(err error) {
+	h.forceSendError = err
+}

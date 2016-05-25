@@ -369,31 +369,46 @@ func TestAutoConnection(t *testing.T) {
 func TestReconnection(t *testing.T) {
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
-	h2.ListenAndBind()
-
-	dbg.ErrFatal(sendrcv(h1, h2))
-	dbg.ErrFatal(sendrcv(h2, h1))
-	h1.Close()
-	h1 = sda.NewLocalHost(2000)
-
-	dbg.ErrFatal(sendrcv(h2, h1))
-
 	defer h1.Close()
 	defer h2.Close()
 
+	h1.ListenAndBind()
+	h2.ListenAndBind()
+
+	dbg.Lvl1("Sending h1->h2")
+	dbg.ErrFatal(sendrcv(h1, h2))
+	dbg.Lvl1("Sending h2->h1")
+	dbg.ErrFatal(sendrcv(h2, h1))
+	dbg.Lvl1("Closing h1")
+	h1.CloseConnections()
+
+	dbg.Lvl1("Listening again on h1")
+	h1.ListenAndBind()
+
+	dbg.Lvl1("Sending h2->h1")
+	dbg.ErrFatal(sendrcv(h2, h1))
+	dbg.Lvl1("Sending h1->h2")
+	dbg.ErrFatal(sendrcv(h1, h2))
+
+	dbg.Lvl1("Shutting down listener of h2")
+	h2.AbortConnections()
+	h2.ListenAndBind()
+
+	dbg.Lvl1("Sending h1->h2")
+	h1.SetForceSendError(network.ErrClosed)
+	dbg.ErrFatal(sendrcv(h1, h2))
 }
 
-func sendrcv(h1, h2 *sda.Host) error {
-	err := h1.SendRaw(h2.Entity, &SimpleMessage{12})
+func sendrcv(from, to *sda.Host) error {
+	err := from.SendRaw(to.Entity, &SimpleMessage{12})
 	if err != nil {
-		errors.New("Couldn't send message: " + err.Error())
+		return errors.New("Couldn't send message: " + err.Error())
 	}
 	// Receive the message
-	msg := h2.Receive()
+	msg := to.Receive()
 	if msg.Msg.(SimpleMessage).I != 12 {
-		errors.New("Simple message got distorted")
+		return errors.New("Simple message got distorted")
 	}
-	h1.Close()
 	return nil
 }
 

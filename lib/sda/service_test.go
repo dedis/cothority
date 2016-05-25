@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"sync"
+
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
-	"sync"
 )
 
 type DummyProtocol struct {

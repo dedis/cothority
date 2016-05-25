@@ -403,7 +403,7 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
-	dbg.Lvl5("Message SEND =>", fmt.Sprintf("%+v", am))
+	dbg.Lvlf5("Message SEND => %+v", am)
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
@@ -426,6 +426,7 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 		}
 
 		// Sending 'length' bytes
+		dbg.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
 		n, err := c.conn.Write(b[:length])
 		if err != nil {
 			dbg.Error("Couldn't write chunk starting at", sent, "size", length, err)
