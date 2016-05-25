@@ -367,7 +367,6 @@ func TestAutoConnection(t *testing.T) {
 }
 
 func TestReconnection(t *testing.T) {
-	dbg.SetDebugVisible(1)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	defer h1.Close()
