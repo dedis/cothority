@@ -63,6 +63,9 @@ type Host struct {
 	ProcessMessagesQuit chan bool
 
 	serviceStore *serviceStore
+
+	// Force a sending error - for testing only
+	forceSendError error
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -205,9 +208,21 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	}
 
 	dbg.LLvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
-	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
-		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
-		return err
+	var err error
+	if h.forceSendError != nil {
+		err = h.forceSendError
+		dbg.LLvl3("Forcing sending error to", err, "and resetting")
+		h.forceSendError = nil
+	} else {
+		err = c.Send(context.TODO(), msg)
+	}
+	if err != nil /*&& err != network.ErrClosed*/ {
+		dbg.LLvl2("Couldn't send to", c.Entity().First(), ":", err, "trying again")
+		c, err = h.Connect(e)
+		if err != nil {
+			return err
+		}
+		return c.Send(context.TODO(), msg)
 	}
 	dbg.LLvl4("Sent")
 	return nil

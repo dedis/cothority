@@ -396,7 +396,8 @@ func TestReconnection(t *testing.T) {
 	h2.ListenAndBind()
 
 	dbg.Lvl1("Sending h1->h2")
-	//dbg.ErrFatal(sendrcv(h1, h2))
+	h1.SetForceSendError(network.ErrClosed)
+	dbg.ErrFatal(sendrcv(h1, h2))
 }
 
 func sendrcv(from, to *sda.Host) error {

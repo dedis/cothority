@@ -61,3 +61,7 @@ func (h *Host) CloseConnections() error {
 	defer h.networkLock.Unlock()
 	return h.closeConnections()
 }
+
+func (h *Host) SetForceSendError(err error) {
+	h.forceSendError = err
+}
