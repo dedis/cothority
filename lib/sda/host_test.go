@@ -367,6 +367,7 @@ func TestAutoConnection(t *testing.T) {
 }
 
 func TestReconnection(t *testing.T) {
+	dbg.SetDebugVisible(1)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	defer h1.Close()
@@ -385,8 +386,10 @@ func TestReconnection(t *testing.T) {
 	dbg.Lvl1("Listening again on h1")
 	h1.ListenAndBind()
 
-	dbg.Lvl1("Sending again")
+	dbg.Lvl1("Sending h2->h1")
 	dbg.ErrFatal(sendrcv(h2, h1))
+	dbg.Lvl1("Sending h1->h2")
+	dbg.ErrFatal(sendrcv(h1, h2))
 }
 
 func sendrcv(from, to *sda.Host) error {

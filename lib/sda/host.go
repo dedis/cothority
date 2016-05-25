@@ -151,7 +151,7 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 	return c, nil
 }
 
-// Close shuts down the listener
+// Close shuts down all network connections and closes the listener.
 func (h *Host) Close() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
@@ -175,6 +175,8 @@ func (h *Host) Close() error {
 	return nil
 }
 
+// CloseConnections only shuts down the network connections - used mainly
+// for testing.
 func (h *Host) CloseConnections() error {
 	for _, c := range h.connections {
 		dbg.Lvl4(h.Entity.First(), "Closing connection", c)
@@ -195,9 +197,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
-	dbg.Print()
 	h.entityListsLock.RLock()
-	dbg.Print()
 	if _, ok := h.entities[e.ID]; !ok {
 		dbg.LLvl4(h.Entity.First(), "Connecting to", e.Addresses)
 		h.entityListsLock.RUnlock()
@@ -207,23 +207,17 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 			return err
 		}
 	} else {
-		dbg.Print()
 		h.entityListsLock.RUnlock()
 	}
-	dbg.Print()
 	h.networkLock.Lock()
-	dbg.Print()
 	c, ok := h.connections[e.ID]
 	if !ok {
 		h.networkLock.Unlock()
-		dbg.Print()
 		return errors.New("Got no connection tied to this Entity")
 	}
-	dbg.Print()
 	h.networkLock.Unlock()
 
-	dbg.Print()
-	dbg.LLvlf4("%s sends to %s msg: %+v", e, h.Entity.Addresses, msg)
+	dbg.LLvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
 	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
 		return err
@@ -407,6 +401,13 @@ func (h *Host) handleConn(c network.SecureConn) {
 	for {
 		ctx := context.TODO()
 		am, err := c.Receive(ctx)
+		// This is for testing purposes only: if the connection is missing
+		// in the map, we just return silently
+		if _, cont := h.connections[c.Entity().ID]; !cont {
+			dbg.LLvl3("Quitting handleConn because entry is not there")
+			h.unregisterConnection(c)
+			return
+		}
 		// So the receiver can know about the error
 		am.SetError(err)
 		am.From = address
