@@ -49,6 +49,8 @@ func (o *Overlay) TokenToNode(tok *Token) (*TreeNodeInstance, bool) {
 }
 
 func (h *Host) AbortConnections() error {
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
 	h.closeConnections()
 	close(h.ProcessMessagesQuit)
 	return h.host.Close()
