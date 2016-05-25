@@ -49,9 +49,9 @@ func (o *Overlay) TokenToNode(tok *Token) (*TreeNodeInstance, bool) {
 }
 
 func (h *Host) AbortConnections() error {
-	for _, c := range h.connections {
-		h.unregisterConnection(c)
-	}
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+	h.closeConnections()
 	close(h.ProcessMessagesQuit)
 	return h.host.Close()
 }
@@ -62,6 +62,15 @@ func (h *Host) CloseConnections() error {
 	return h.closeConnections()
 }
 
-func (h *Host) SetForceSendError(err error) {
-	h.forceSendError = err
+func (h *Host) RegisterConnection(e *network.Entity, c network.SecureConn) {
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+	h.connections[e.ID] = c
+}
+
+func (h *Host) Connection(e *network.Entity) network.SecureConn {
+	h.networkLock.RLock()
+	defer h.networkLock.RUnlock()
+	c, _ := h.connections[e.ID]
+	return c
 }

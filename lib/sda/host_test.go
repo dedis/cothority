@@ -391,11 +391,16 @@ func TestReconnection(t *testing.T) {
 	dbg.ErrFatal(sendrcv(h1, h2))
 
 	dbg.Lvl1("Shutting down listener of h2")
+	// closing h2, but simulate *hard* failure, without sending a FIN packet
+	c2 := h1.Connection(h2.Entity)
+	// making h2 fails
 	h2.AbortConnections()
+	// making h2 backup again
 	h2.ListenAndBind()
+	// and re-registering the connection to h2 from h1
+	h1.RegisterConnection(h2.Entity, c2)
 
 	dbg.Lvl1("Sending h1->h2")
-	h1.SetForceSendError(network.ErrClosed)
 	dbg.ErrFatal(sendrcv(h1, h2))
 }
 
