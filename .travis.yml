@@ -8,7 +8,6 @@ script:
   - go test -race -p=1 ./...
   # Check for correct formatting
   - ./gofmt.sh
-
   # Downloading and installing linter
   - go get -u github.com/golang/lint/golint
   # Check the linter
