@@ -485,13 +485,11 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	id := c.Entity()
-	_, oke := h.entities[id.ID]
 	_, okc := h.connections[id.ID]
-	if oke || okc {
+	if okc {
 		// TODO - we should catch this in some way
-		dbg.Lvl3("Entity or Connection already registered", oke, okc)
+		dbg.Lvl3("Connection already registered", okc)
 	}
-	h.entities[id.ID] = id
 	h.connections[id.ID] = c
 }
 
