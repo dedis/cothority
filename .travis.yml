@@ -3,6 +3,14 @@ language: go
 go:
   - 1.6.2
 script:
+  # If we're in a branch for gopkg.in, switch to that directory and checkout the
+  # correct branch
+  - if [ ${TRAVIS_BRANCH} == 'v0' ]; then 
+        BRANCH=$( git rev-parse --abbrev-ref HEAD ); 
+        cd $GOPATH/src/gopkg.in/dedis/cothority.v0; 
+        echo $BRANCH;
+        git checkout $BRANCH;
+    fi;
   # formatting:
   - ./gofmt.sh
   # linter:
@@ -11,15 +19,8 @@ script:
   # check for missing error handling:
   #- go get -u github.com/kisielk/errcheck
   #- ./errcheck.sh
-  # do not run any test binary in parallel (see go help build for more info on the -p flag)
-  - if [ ${TRAVIS_BRANCH} == 'v0' ]; then 
-        BRANCH=$( git rev-parse --abbrev-ref HEAD ); 
-        cd $GOPATH/src/gopkg.in/dedis/cothority.v0; 
-        git checkout $BRANCH;
-        go test -race -p=1 gopkg.in/dedis/cothority.v0/./...;
-    else 
-        go test -race -p=1 ./...;
-    fi
+    # do not run any test binary in parallel (see go help build for more info on the -p flag)
+  - go test -race -p=1 ./...
 
 notifications:
   email: false
