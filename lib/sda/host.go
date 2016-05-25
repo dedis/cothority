@@ -198,33 +198,31 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	c, ok := h.connections[e.ID]
 	h.networkLock.RUnlock()
 	if !ok {
-		dbg.Print("Connecting")
 		var err error
 		c, err = h.Connect(e)
-		dbg.Print("Connection done")
 		if err != nil {
 			return err
 		}
 	}
 
-	dbg.LLvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
+	dbg.Lvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
 	var err error
 	if h.forceSendError != nil {
 		err = h.forceSendError
-		dbg.LLvl3("Forcing sending error to", err, "and resetting")
+		dbg.Lvl3("Forcing sending error to", err, "and resetting")
 		h.forceSendError = nil
 	} else {
 		err = c.Send(context.TODO(), msg)
 	}
 	if err != nil /*&& err != network.ErrClosed*/ {
-		dbg.LLvl2("Couldn't send to", c.Entity().First(), ":", err, "trying again")
+		dbg.Lvl2("Couldn't send to", c.Entity().First(), ":", err, "trying again")
 		c, err = h.Connect(e)
 		if err != nil {
 			return err
 		}
 		return c.Send(context.TODO(), msg)
 	}
-	dbg.LLvl4("Sent")
+	dbg.Lvl4("Sent")
 	return nil
 }
 
@@ -409,7 +407,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		_, cont := h.connections[c.Entity().ID]
 		h.networkLock.Unlock()
 		if !cont {
-			dbg.LLvl3("Quitting handleConn because entry is not there")
+			dbg.Lvl3("Quitting handleConn because entry is not there")
 			h.unregisterConnection(c)
 			return
 		}
@@ -419,8 +417,8 @@ func (h *Host) handleConn(c network.SecureConn) {
 		dbg.Lvl5("Got message", am)
 		if err != nil {
 			h.closingMut.Lock()
-			dbg.Lvl4(fmt.Sprintf("%+v got error (%+s) while receiving message (isClosing=%+v)",
-				h.Entity.First(), err, h.isClosing))
+			dbg.Lvlf4("%+v got error (%+s) while receiving message (isClosing=%+v)",
+				h.Entity.First(), err, h.isClosing)
 			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
 				dbg.Lvl4(h.Entity.First(), "quitting handleConn for-loop", err)
@@ -492,7 +490,7 @@ func (h *Host) registerConnection(c network.SecureConn) {
 
 // unregisterConnection removes a connection from the map
 func (h *Host) unregisterConnection(c network.SecureConn) {
-	dbg.LLvl4(h.Entity.First(), "UNregisters", c.Entity().First())
+	dbg.Lvl4(h.Entity.First(), "UNregisters", c.Entity().First())
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	id := c.Entity().ID
