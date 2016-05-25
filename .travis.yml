@@ -13,9 +13,9 @@ script:
   #- ./errcheck.sh
   # do not run any test binary in parallel (see go help build for more info on the -p flag)
   - if [ ${TRAVIS_BRANCH} == 'v0' ]; then 
-        GOPKG=$GOPATH/src/gopkg.in/dedis/cothority.v0;
-        rm -rf $GOPKG;
-        ln -s $(pwd) $GOPKG;
+        BRANCH=$( git rev-parse --abbrev-ref HEAD ); 
+        cd $GOPATH/src/gopkg.in/dedis/cothority.v0; 
+        git checkout $BRANCH
         go test -race -p=1 gopkg.in/dedis/cothority.v0/./...;
     else 
         go test -race -p=1 ./...;
