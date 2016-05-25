@@ -477,7 +477,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 	}()
 }
 
-// registerConnection registers a Entity for a new connection, mapped with the
+// registerConnection registers an Entity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
@@ -485,6 +485,13 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	id := c.Entity()
+	_, oke := h.entities[id.ID]
+	_, okc := h.connections[id.ID]
+	if oke || okc {
+		// TODO - we should catch this in some way
+		dbg.Lvl3("Entity or Connection already registered", oke, okc)
+	}
+	h.entities[id.ID] = id
 	h.connections[id.ID] = c
 }
 
