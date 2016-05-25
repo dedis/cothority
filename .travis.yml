@@ -1,24 +1,10 @@
 # build script for dedis/cothority libraries
 language: go
+go_import_path: gopkg.in/dedis/cothority.v0
 go:
   - 1.6.2
 script:
-  # If we're in a branch for gopkg.in, switch to that directory and checkout the
-  # correct branch
-  # do not run any test binary in parallel (see go help build for more info on the -p flag)
-  - if [ ${TRAVIS_BRANCH} == 'v0' ]; then 
-        GOPKG=$GOPATH/src/gopkg.in/dedis/cothority.v0; 
-        rm -rf $GOPKG; 
-        cp -a ../cothority $GOPKG;
-        cd $GOPKG;
-    fi;
-    go test -race -p=1 ./...;
-    ./gofmt.sh;
-    go get -u github.com/golang/lint/golint;
-    ./lint.sh;
-  # check for missing error handling:
-  #- go get -u github.com/kisielk/errcheck
-  #- ./errcheck.sh
+  - .travis.yml
 
 notifications:
   email: false
