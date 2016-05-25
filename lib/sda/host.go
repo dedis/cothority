@@ -63,9 +63,6 @@ type Host struct {
 	ProcessMessagesQuit chan bool
 
 	serviceStore *serviceStore
-
-	// Force a sending error - for testing only
-	forceSendError error
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -205,15 +202,9 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		}
 	}
 
-	dbg.Lvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
+	dbg.LLvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
 	var err error
-	if h.forceSendError != nil {
-		err = h.forceSendError
-		dbg.Lvl3("Forcing sending error to", err, "and resetting")
-		h.forceSendError = nil
-	} else {
-		err = c.Send(context.TODO(), msg)
-	}
+	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Lvl2("Couldn't send to", c.Entity().First(), ":", err, "trying again")
 		c, err = h.Connect(e)
@@ -407,7 +398,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		_, cont := h.connections[c.Entity().ID]
 		h.networkLock.Unlock()
 		if !cont {
-			dbg.Lvl3("Quitting handleConn because entry is not there")
+			dbg.Lvl3(h.workingAddress, "Quitting handleConn because entry is not there")
 			h.unregisterConnection(c)
 			return
 		}
