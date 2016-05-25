@@ -63,9 +63,6 @@ type Host struct {
 	ProcessMessagesQuit chan bool
 
 	serviceStore *serviceStore
-
-	// Force a sending error - for testing only
-	forceSendError error
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -151,8 +148,6 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 
 // Close shuts down all network connections and closes the listener.
 func (h *Host) Close() error {
-	h.networkLock.Lock()
-	defer h.networkLock.Unlock()
 
 	h.closingMut.Lock()
 	if h.isClosing {
@@ -176,8 +171,10 @@ func (h *Host) Close() error {
 // CloseConnections only shuts down the network connections - used mainly
 // for testing.
 func (h *Host) closeConnections() error {
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
 	for _, c := range h.connections {
-		dbg.Lvl4(h.Entity.First(), "Closing connection", c)
+		dbg.Lvl4(h.Entity.First(), "Closing connection", c, c.Remote(), c.Local())
 		err := c.Close()
 		if err != nil {
 			dbg.Error(h.Entity.First(), "Couldn't close connection", c)
@@ -187,6 +184,20 @@ func (h *Host) closeConnections() error {
 	dbg.Lvl4(h.Entity.First(), "Closing tcpHost")
 	h.connections = make(map[network.EntityID]network.SecureConn)
 	return h.host.Close()
+}
+
+// closeConnection closes a connection and removes it from the connections-map
+// The h.networkLock must be taken.
+func (h *Host) closeConnection(c network.SecureConn) error {
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+	dbg.Lvl4(h.Entity.First(), "Closing connection", c, c.Remote(), c.Local())
+	err := c.Close()
+	if err != nil {
+		return err
+	}
+	delete(h.connections, c.Entity().ID)
+	return nil
 }
 
 // SendRaw sends to an Entity without wrapping the msg into a SDAMessage
@@ -207,20 +218,17 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 
 	dbg.Lvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
 	var err error
-	if h.forceSendError != nil {
-		err = h.forceSendError
-		dbg.Lvl3("Forcing sending error to", err, "and resetting")
-		h.forceSendError = nil
-	} else {
-		err = c.Send(context.TODO(), msg)
-	}
+	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Lvl2("Couldn't send to", c.Entity().First(), ":", err, "trying again")
 		c, err = h.Connect(e)
 		if err != nil {
 			return err
 		}
-		return c.Send(context.TODO(), msg)
+		err = c.Send(context.TODO(), msg)
+		if err != nil {
+			return err
+		}
 	}
 	dbg.Lvl4("Sent")
 	return nil
@@ -407,8 +415,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		_, cont := h.connections[c.Entity().ID]
 		h.networkLock.Unlock()
 		if !cont {
-			dbg.Lvl3("Quitting handleConn because entry is not there")
-			h.unregisterConnection(c)
+			dbg.Lvl3(h.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
 			return
 		}
 		// So the receiver can know about the error
@@ -421,8 +428,8 @@ func (h *Host) handleConn(c network.SecureConn) {
 				h.Entity.First(), err, h.isClosing)
 			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-				dbg.Lvl4(h.Entity.First(), "quitting handleConn for-loop", err)
-				h.unregisterConnection(c)
+				dbg.Lvl4(h.Entity.First(), c.Remote(), "quitting handleConn for-loop", err)
+				h.closeConnection(c)
 				return
 			}
 			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
@@ -491,18 +498,6 @@ func (h *Host) registerConnection(c network.SecureConn) {
 		dbg.Lvl3("Connection already registered", okc)
 	}
 	h.connections[id.ID] = c
-}
-
-// unregisterConnection removes a connection from the map
-func (h *Host) unregisterConnection(c network.SecureConn) {
-	dbg.Lvl4(h.Entity.First(), "UNregisters", c.Entity().First())
-	h.networkLock.Lock()
-	defer h.networkLock.Unlock()
-	id := c.Entity().ID
-	if _, exists := h.connections[id]; !exists {
-		return
-	}
-	delete(h.connections, id)
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

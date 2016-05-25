@@ -334,6 +334,11 @@ func (c *TCPConn) Remote() string {
 	return c.Endpoint
 }
 
+// Local returns the local address and port
+func (c *TCPConn) Local() string {
+	return c.conn.LocalAddr().String()
+}
+
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
@@ -413,7 +418,6 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	// First write the size
 	packetSize := Size(len(b))
 	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
-		dbg.Error("Couldn't write number of bytes")
 		return err
 	}
 	// Then send everything through the connection
