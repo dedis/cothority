@@ -202,7 +202,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		}
 	}
 
-	dbg.LLvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
+	dbg.Lvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
 	var err error
 	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
