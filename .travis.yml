@@ -15,7 +15,7 @@ script:
   - if [ ${TRAVIS_BRANCH} == 'v0' ]; then 
         BRANCH=$( git rev-parse --abbrev-ref HEAD ); 
         cd $GOPATH/src/gopkg.in/dedis/cothority.v0; 
-        git checkout $BRANCH
+        git checkout $BRANCH;
         go test -race -p=1 gopkg.in/dedis/cothority.v0/./...;
     else 
         go test -race -p=1 ./...;
