@@ -12,12 +12,10 @@ script:
         cp -a ../cothority $GOPKG;
         cd $GOPKG;
     fi;
-    go test -race -p=1 ./...
-  # formatting:
-  - ./gofmt.sh
-  # linter:
-  - go get -u github.com/golang/lint/golint
-  - ./lint.sh
+    go test -race -p=1 ./...;
+    ./gofmt.sh;
+    go get -u github.com/golang/lint/golint;
+    ./lint.sh;
   # check for missing error handling:
   #- go get -u github.com/kisielk/errcheck
   #- ./errcheck.sh
