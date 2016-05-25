@@ -55,3 +55,9 @@ func (h *Host) AbortConnections() error {
 	close(h.ProcessMessagesQuit)
 	return h.host.Close()
 }
+
+func (h *Host) CloseConnections() error {
+	h.networkLock.Lock()
+	defer h.networkLock.Unlock()
+	return h.closeConnections()
+}

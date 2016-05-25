@@ -31,10 +31,6 @@ type Host struct {
 	connections map[network.EntityID]network.SecureConn
 	// chan of received messages - testmode
 	networkChan chan network.Message
-	// The database of entities this host knows
-	entities map[network.EntityID]*network.Entity
-	// lock associated to access entityLists
-	entityListsLock sync.RWMutex
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
@@ -49,7 +45,7 @@ type Host struct {
 	isClosing  bool
 	closingMut sync.Mutex
 	// lock associated to access network connections
-	networkLock sync.Mutex
+	networkLock sync.RWMutex
 	// lock associated to access trees
 	treesLock sync.Mutex
 	// lock associated with pending TreeMarshal
@@ -76,7 +72,6 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 		Entity:              e,
 		workingAddress:      e.First(),
 		connections:         make(map[network.EntityID]network.SecureConn),
-		entities:            make(map[network.EntityID]*network.Entity),
 		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
 		pendingSDAs:         make([]*Data, 0),
 		host:                network.NewSecureTCPHost(pkey, e),
@@ -168,7 +163,7 @@ func (h *Host) Close() error {
 		// Tell ProcessMessages to quit
 		close(h.ProcessMessagesQuit)
 	}
-	if err := h.CloseConnections(); err != nil {
+	if err := h.closeConnections(); err != nil {
 		return err
 	}
 	h.overlay.Close()
@@ -177,7 +172,7 @@ func (h *Host) Close() error {
 
 // CloseConnections only shuts down the network connections - used mainly
 // for testing.
-func (h *Host) CloseConnections() error {
+func (h *Host) closeConnections() error {
 	for _, c := range h.connections {
 		dbg.Lvl4(h.Entity.First(), "Closing connection", c)
 		err := c.Close()
@@ -188,7 +183,6 @@ func (h *Host) CloseConnections() error {
 	}
 	dbg.Lvl4(h.Entity.First(), "Closing tcpHost")
 	h.connections = make(map[network.EntityID]network.SecureConn)
-	h.entities = make(map[network.EntityID]*network.Entity)
 	return h.host.Close()
 }
 
@@ -197,25 +191,18 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
-	h.entityListsLock.RLock()
-	if _, ok := h.entities[e.ID]; !ok {
-		dbg.LLvl4(h.Entity.First(), "Connecting to", e.Addresses)
-		h.entityListsLock.RUnlock()
-		// Connect to that entity
-		_, err := h.Connect(e)
+	h.networkLock.RLock()
+	c, ok := h.connections[e.ID]
+	h.networkLock.RUnlock()
+	if !ok {
+		dbg.Print("Connecting")
+		var err error
+		c, err = h.Connect(e)
+		dbg.Print("Connection done")
 		if err != nil {
 			return err
 		}
-	} else {
-		h.entityListsLock.RUnlock()
 	}
-	h.networkLock.Lock()
-	c, ok := h.connections[e.ID]
-	if !ok {
-		h.networkLock.Unlock()
-		return errors.New("Got no connection tied to this Entity")
-	}
-	h.networkLock.Unlock()
 
 	dbg.LLvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
 	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
@@ -403,7 +390,10 @@ func (h *Host) handleConn(c network.SecureConn) {
 		am, err := c.Receive(ctx)
 		// This is for testing purposes only: if the connection is missing
 		// in the map, we just return silently
-		if _, cont := h.connections[c.Entity().ID]; !cont {
+		h.networkLock.Lock()
+		_, cont := h.connections[c.Entity().ID]
+		h.networkLock.Unlock()
+		if !cont {
 			dbg.LLvl3("Quitting handleConn because entry is not there")
 			h.unregisterConnection(c)
 			return
@@ -480,11 +470,8 @@ func (h *Host) checkPendingSDA(t *Tree) {
 func (h *Host) registerConnection(c network.SecureConn) {
 	dbg.Lvl4(h.Entity.First(), "registers", c.Entity().First())
 	h.networkLock.Lock()
-	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()
-	defer h.entityListsLock.Unlock()
 	id := c.Entity()
-	h.entities[id.ID] = id
 	h.connections[id.ID] = c
 }
 
@@ -492,15 +479,12 @@ func (h *Host) registerConnection(c network.SecureConn) {
 func (h *Host) unregisterConnection(c network.SecureConn) {
 	dbg.LLvl4(h.Entity.First(), "UNregisters", c.Entity().First())
 	h.networkLock.Lock()
-	h.entityListsLock.Lock()
 	defer h.networkLock.Unlock()
-	defer h.entityListsLock.Unlock()
 	id := c.Entity().ID
 	if _, exists := h.connections[id]; !exists {
 		return
 	}
 	delete(h.connections, id)
-	delete(h.entities, id)
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
