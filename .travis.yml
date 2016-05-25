@@ -12,7 +12,14 @@ script:
   #- go get -u github.com/kisielk/errcheck
   #- ./errcheck.sh
   # do not run any test binary in parallel (see go help build for more info on the -p flag)
-  - if [ ${TRAVIS_BRANCH} == 'v0' ]; then go test -race -p=1 gopkg.in/dedis/cothority.v0/./...; else go test -race -p=1 ./...; fi
+  - if [ ${TRAVIS_BRANCH} == 'v0' ]; then 
+	GOPKG=$GOPATH/src/gopkg.in/dedis/cothority.v0
+	rm -rf $GOPKG
+	ln -s $(pwd) $GOPKG
+        go test -race -p=1 gopkg.in/dedis/cothority.v0/./...
+    else 
+        go test -race -p=1 ./...
+    fi
 
 notifications:
   email: false
