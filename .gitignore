@@ -9,3 +9,4 @@ simul/matplotlib/*csv
 simul/simul
 lib/sda/testdata
 *.pyc
+*.iml

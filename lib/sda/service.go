@@ -7,14 +7,15 @@ import (
 	"path"
 	"time"
 
+	"reflect"
+	"sync"
+
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
-	"reflect"
-	"sync"
 )
 
 func init() {
