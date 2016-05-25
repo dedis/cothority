@@ -391,10 +391,12 @@ func TestReconnection(t *testing.T) {
 	dbg.ErrFatal(sendrcv(h1, h2))
 
 	dbg.Lvl1("Shutting down listener of h2")
+
 	// closing h2, but simulate *hard* failure, without sending a FIN packet
 	c2 := h1.Connection(h2.Entity)
 	// making h2 fails
 	h2.AbortConnections()
+	dbg.Lvl1("asking h2 to listen again")
 	// making h2 backup again
 	h2.ListenAndBind()
 	// and re-registering the connection to h2 from h1
@@ -410,7 +412,9 @@ func sendrcv(from, to *sda.Host) error {
 		return errors.New("Couldn't send message: " + err.Error())
 	}
 	// Receive the message
+	dbg.Lvl2("Waiting to receive")
 	msg := to.Receive()
+	dbg.Lvl2("Received")
 	if msg.Msg.(SimpleMessage).I != 12 {
 		return errors.New("Simple message got distorted")
 	}
