@@ -4,7 +4,15 @@ go_import_path: gopkg.in/dedis/cothority.v0
 go:
   - 1.6.2
 script:
-  - .travis.yml
+  # do not run any test binary in parallel (see go help build for more info on the -p flag)
+  - go test -race -p=1 ./...
+  # Check for correct formatting
+  - ./gofmt.sh
+
+  # Downloading and installing linter
+  - go get -u github.com/golang/lint/golint
+  # Check the linter
+  - ./lint.sh
 
 notifications:
   email: false
