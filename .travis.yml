@@ -6,13 +6,10 @@ script:
   # If we're in a branch for gopkg.in, switch to that directory and checkout the
   # correct branch
   - if [ ${TRAVIS_BRANCH} == 'v0' ]; then 
-#        BRANCH=$( git rev-parse --abbrev-ref HEAD ); 
         GOPKG=$GOPATH/src/gopkg.in/dedis/cothority.v0; 
-        rm -rf $GOPKG
-        cp -a ../cothority $GOPKG
-        cd $GOPKG
-#        echo $BRANCH;
-#        git checkout $BRANCH;
+        rm -rf $GOPKG; 
+        cp -a ../cothority $GOPKG;
+        cd $GOPKG;
     fi;
   # formatting:
   - ./gofmt.sh
