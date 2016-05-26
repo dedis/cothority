@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	c "github.com/dedis/cothority/lib/config"
+	c "github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -29,6 +29,7 @@ import (
 	_ "github.com/dedis/cosi/protocol"
 	_ "github.com/dedis/cosi/service"
 	"github.com/dedis/cothority/lib/oi"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
 
@@ -71,7 +72,7 @@ func runServer(ctx *cli.Context) {
 
 // interactiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
-func InteractiveConfig(binaryName string) {
+func InteractiveConfig(binaryName string, ed25519 bool) {
 	oi.Info("Setting up a cothority-server.")
 	oi.Inputf("Please enter the [address:]PORT for incoming requests [%d]: ", DefaultPort)
 	reader := bufio.NewReader(os.Stdin)
@@ -156,7 +157,7 @@ func InteractiveConfig(binaryName string) {
 	}
 
 	// create the keys
-	privStr, pubStr := createKeyPair()
+	privStr, pubStr := createKeyPair(ed25519)
 	conf := &c.CothoritydConfig{
 		Public:    pubStr,
 		Private:   privStr,
@@ -228,15 +229,20 @@ func checkOverwrite(file string, reader *bufio.Reader) bool {
 }
 
 // createKeyPair returns the private and public key hexadecimal representation
-func createKeyPair() (string, string) {
+func createKeyPair(ed25519 bool) (string, string) {
 	oi.Info("Creating ed25519 private and public keys.")
 	kp := config.NewKeyPair(network.Suite)
 	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
 	if err != nil {
 		oi.Fatal("Error formating private key to hexadecimal. Abort.")
 	}
-	// use the transformation for ed25519 signatures
-	point := cosi.Ed25519Public(network.Suite, kp.Secret)
+	var point abstract.Point
+	if ed25519 {
+		// use the transformation for ed25519 signatures
+		point = cosi.Ed25519Public(network.Suite, kp.Secret)
+	} else {
+		point = kp.Public
+	}
 	pubStr, err := crypto.PubHex(network.Suite, point)
 	if err != nil {
 		oi.Fatal("Could not parse public key. Abort.")

@@ -4,9 +4,9 @@
 . ./libtest.sh
 DBG_RUN=1
 # Debug-level for server
-DBG_SRV=3
+DBG_SRV=1
 # Debug-level for client
-DBG_CLIENT=3
+DBG_CLIENT=1
 
 main(){
     startTest

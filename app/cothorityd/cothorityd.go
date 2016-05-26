@@ -18,7 +18,7 @@ import (
 	"path"
 	"runtime"
 
-	c "github.com/dedis/cothority/lib/config"
+	c "github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/lib/dbg"
 	"gopkg.in/codegangsta/cli.v1"
 	// Empty imports to have the init-functions called which should
@@ -74,7 +74,7 @@ func main() {
 				if c.String("debug") != "" {
 					oi.Fatal("[-] Debug option can't be used for the 'setup' command")
 				}
-				server.InteractiveConfig("cothorityd")
+				server.InteractiveConfig("cothorityd", false)
 				return nil
 			},
 		},

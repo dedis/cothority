@@ -16,7 +16,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
