@@ -34,8 +34,9 @@ testOK(){
 }
 
 testFail(){
-    if $@ > /dev/null; then
-        fail "starting $@ failed"
+    dbgOut "Assert FAIL for $@"
+    if $@; then
+        fail "starting $@ should've failed, but succeeded"
     fi
 }
 

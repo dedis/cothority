@@ -26,12 +26,16 @@ main(){
 testCothorityd(){
     runCoCfg 1
     runCoCfg 2
+    runCoCfg 3
     backg runCo 1
     backg runCo 2
     sleep 1
     cp co1/group.toml .
     tail -n 4 co2/group.toml >> group.toml
-    testOK runCl 1 setup group.toml
+    testOK runCl 1 check group.toml
+    #testOK runCl 1 setup group.toml
+    tail -n 4 co3/group.toml >> group.toml
+    testFail runCl 1 check group.toml
 }
 
 testClientConfig(){

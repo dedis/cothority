@@ -12,6 +12,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app/lib/config"
+	"github.com/dedis/cothority/app/lib/server"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/oi"
 	_ "github.com/dedis/cothority/services"
@@ -56,7 +57,7 @@ func main() {
 			Name:    "check",
 			Aliases: []string{"ch"},
 			Usage:   "check all servers",
-			Action:  update,
+			Action:  check,
 		},
 		{
 			Name:    "list",
@@ -159,6 +160,10 @@ func clientDel(c *cli.Context) {
 
 func update(c *cli.Context) {
 	list(c)
+}
+
+func check(c *cli.Context) {
+	server.CheckConfig(c.Args().First())
 }
 
 func confirm(c *cli.Context) {

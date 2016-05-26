@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -14,12 +16,14 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
-	c "github.com/dedis/cothority/app/lib/config"
+	s "github.com/dedis/cosi/service"
+	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"gopkg.in/codegangsta/cli.v1"
+	"github.com/dedis/cothority/lib/sda"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
@@ -30,7 +34,7 @@ import (
 	_ "github.com/dedis/cosi/service"
 	"github.com/dedis/cothority/lib/oi"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
+	crypconf "github.com/dedis/crypto/config"
 )
 
 // DefaultServerConfig is the name of the default file to lookup for server
@@ -51,24 +55,8 @@ const DefaultAddress = "127.0.0.1"
 // Service used to get the port connection service
 const whatsMyIP = "http://www.whatsmyip.org/"
 
-func runServer(ctx *cli.Context) {
-	// first check the options
-	config := ctx.String("config")
-
-	if _, err := os.Stat(config); os.IsNotExist(err) {
-		dbg.Fatalf("[-] Configuration file does not exist. %s. "+
-			"Use `cosi server setup` to create one.", config)
-	}
-	// Let's read the config
-	_, host, err := c.ParseCothorityd(config)
-	if err != nil {
-		dbg.Fatal("Couldn't parse config:", err)
-	}
-	host.ListenAndBind()
-	host.StartProcessMessages()
-	host.WaitForClose()
-
-}
+// How long we're willing to wait for a signature
+var RequestTimeOut = time.Second * 10
 
 // interactiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
@@ -158,7 +146,7 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 
 	// create the keys
 	privStr, pubStr := createKeyPair(ed25519)
-	conf := &c.CothoritydConfig{
+	conf := &config.CothoritydConfig{
 		Public:    pubStr,
 		Private:   privStr,
 		Addresses: []string{serverBinding},
@@ -199,11 +187,132 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 		oi.Fatal("Impossible to parse public key:", err)
 	}
 
-	server := c.NewServerToml(network.Suite, public, publicAddress)
-	group := c.NewGroupToml(server)
+	server := config.NewServerToml(network.Suite, public, publicAddress)
+	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)
 	oi.Info("All configurations saved, ready to serve signatures now.")
+}
+
+// CheckConfig contacts all servers and verifies if it receives a valid
+// signature from each.
+func CheckConfig(tomlFileName string) error {
+	f, err := os.Open(tomlFileName)
+	oi.ErrFatal(err, "Couldn't open group definition file")
+	el, descs, err := config.ReadGroupDescToml(f)
+	oi.ErrFatal(err, "Error while reading group definition file", err)
+	if len(el.List) == 0 {
+		oi.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
+			tomlFileName)
+	}
+	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
+	// First check all servers individually
+	for i := range el.List {
+		checkList(sda.NewEntityList(el.List[i:i+1]), descs[i:i+1])
+	}
+	if len(el.List) > 1 {
+		// Then check pairs of servers
+		for i, first := range el.List {
+			for j, second := range el.List[i+1:] {
+				desc := []string{descs[i], descs[i+j+1]}
+				es := []*network.Entity{first, second}
+				checkList(sda.NewEntityList(es), desc)
+				es[0], es[1] = es[1], es[0]
+				desc[0], desc[1] = desc[1], desc[0]
+				checkList(sda.NewEntityList(es), desc)
+			}
+		}
+	}
+
+	return nil
+}
+
+// checkList sends a message to the list and waits for the reply
+func checkList(list *sda.EntityList, descs []string) {
+	serverStr := ""
+	for i, s := range list.List {
+		name := strings.Split(descs[i], " ")[0]
+		serverStr += fmt.Sprintf("%s_%s ", s.Addresses[0], name)
+	}
+	dbg.Lvl3("Sending message to: " + serverStr)
+	msg := "verification"
+	fmt.Print("[+] Checking server(s) ", serverStr, ": ")
+	sig, err := signStatement(strings.NewReader(msg), list)
+	if err != nil {
+		fmt.Fprintln(os.Stderr,
+			fmt.Sprintf("Error '%v'", err))
+	} else {
+		err := verifySignatureHash([]byte(msg), sig, list)
+		if err != nil {
+			fmt.Println(os.Stderr,
+				fmt.Sprintf("Invalid signature: %v", err))
+		} else {
+			fmt.Println("Success")
+		}
+	}
+
+}
+
+// signStatement can be used to sign the contents passed in the io.Reader
+// (pass an io.File or use an strings.NewReader for strings)
+func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
+	error) {
+	publics := entityListToPublics(el)
+	client := s.NewClient()
+	msg, _ := crypto.HashStream(network.Suite.Hash(), read)
+
+	pchan := make(chan *s.SignatureResponse)
+	var err error
+	go func() {
+		dbg.Lvl3("Waiting for the response on SignRequest")
+		response, e := client.SignMsg(el, msg)
+		if e != nil {
+			err = e
+			close(pchan)
+			return
+		}
+		pchan <- response
+	}()
+
+	select {
+	case response, ok := <-pchan:
+		dbg.Lvl5("Response:", response)
+		if !ok || err != nil {
+			return nil, errors.New("Received an invalid repsonse.")
+		}
+
+		err = cosi.VerifySignature(network.Suite, publics, msg, response.Signature)
+		if err != nil {
+			return nil, err
+		}
+		return response, nil
+	case <-time.After(RequestTimeOut):
+		return nil, errors.New("timeout on signing request")
+	}
+}
+
+func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList) error {
+	// We have to hash twice, as the hash in the signature is the hash of the
+	// message sent to be signed
+	publics := entityListToPublics(el)
+	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
+	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
+	if !bytes.Equal(hashHash, sig.Sum) {
+		return errors.New("You are trying to verify a signature " +
+			"belonging to another file. (The hash provided by the signature " +
+			"doesn't match with the hash of the file.)")
+	}
+	if err := cosi.VerifySignature(network.Suite, publics, fHash, sig.Signature); err != nil {
+		return errors.New("Invalid sig:" + err.Error())
+	}
+	return nil
+}
+func entityListToPublics(el *sda.EntityList) []abstract.Point {
+	publics := make([]abstract.Point, len(el.List))
+	for i, e := range el.List {
+		publics[i] = e.Public
+	}
+	return publics
 }
 
 func isPublicIP(ip string) bool {
@@ -231,7 +340,7 @@ func checkOverwrite(file string, reader *bufio.Reader) bool {
 // createKeyPair returns the private and public key hexadecimal representation
 func createKeyPair(ed25519 bool) (string, string) {
 	oi.Info("Creating ed25519 private and public keys.")
-	kp := config.NewKeyPair(network.Suite)
+	kp := crypconf.NewKeyPair(network.Suite)
 	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
 	if err != nil {
 		oi.Fatal("Error formating private key to hexadecimal. Abort.")
@@ -252,7 +361,7 @@ func createKeyPair(ed25519 bool) (string, string) {
 	return privStr, pubStr
 }
 
-func saveFiles(conf *c.CothoritydConfig, fileConf string, group *c.GroupToml, fileGroup string) {
+func saveFiles(conf *config.CothoritydConfig, fileConf string, group *config.GroupToml, fileGroup string) {
 	if err := conf.Save(fileConf); err != nil {
 		oi.Fatal("Unable to write the config to file:", err)
 	}
