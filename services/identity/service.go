@@ -9,7 +9,6 @@ accordingly.
 
 import (
 	"errors"
-	"strings"
 
 	"sync"
 
@@ -55,60 +54,38 @@ type Storage struct {
 // AddIdentity will register a new SkipChain and add it to our list of
 // managed identities
 func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.ProtocolMessage, error) {
+	dbg.Lvlf2("Adding identity %+v", *ai)
 	ids := &Storage{
 		Latest: ai.AccountList,
 	}
+	dbg.Lvl3("Creating Root-skipchain")
 	var err error
 	ids.Root, err = s.skipchain.CreateRoster(ai.EntityList, 2, 10,
 		skipchain.VerifyNone, nil)
 	if err != nil {
 		return nil, err
 	}
+	dbg.Lvl3("Creating Data-skipchain")
 	ids.Root, ids.Data, err = s.skipchain.CreateData(ids.Root, 2, 10,
 		skipchain.VerifyNone, ai.AccountList)
 	if err != nil {
 		return nil, err
 	}
 
-	s.setIdentityStorage(ID(ids.Data.Hash), ids)
-
-	reply := &AddIdentityReply{
-		Root: ids.Root,
-		Data: ids.Data,
-	}
-
-	// TODO - do we really want to propagate the errors here?
-	errorStr := []string{}
-	for _, e := range ids.Root.EntityList.List {
-		if e.ID.Equal(s.Entity().ID) {
-			continue
-		}
-		cr, err := sda.CreateServiceMessage(ServiceName,
-			&PropagateIdentity{ids})
-		if err != nil {
-			return nil, err
-		}
-		err = s.SendRaw(e, cr)
-		if err != nil {
-			errorStr = append(errorStr, err.Error())
-		}
-	}
-	if len(errorStr) > 0 {
-		err = errors.New(strings.Join(errorStr, "\n"))
+	roster := ids.Root.EntityList
+	replies, err := manage.PropagateStartAndWait(s, roster,
+		&PropagateIdentity{ids}, 1000, s.Propagate)
+	if err != nil {
 		return nil, err
 	}
-	return reply, nil
-}
-
-// PropagateIdentity stores that identity on a remote node
-func (s *Service) PropagateIdentity(e *network.Entity, pi *PropagateIdentity) (network.ProtocolMessage, error) {
-	id := ID(pi.Data.Hash)
-	if s.getIdentityStorage(id) != nil {
-		return nil, errors.New("That identity already exists here")
+	if replies != len(roster.List) {
+		dbg.Warn("Did only get", replies, "out of", len(roster.List))
 	}
-	dbg.Lvl3("Storing identity in", s)
-	s.setIdentityStorage(id, pi.Storage)
-	return nil, nil
+
+	return &AddIdentityReply{
+		Root: ids.Root,
+		Data: ids.Data,
+	}, nil
 }
 
 // ProposeConfig only stores the proposed configuration internally. Signatures
@@ -250,12 +227,23 @@ func (s *Service) Propagate(msg network.ProtocolMessage) {
 		id = msg.(*Vote).ID
 	case *UpdateSkipBlock:
 		id = msg.(*UpdateSkipBlock).ID
+	case *PropagateIdentity:
+		pi := msg.(*PropagateIdentity)
+		id = ID(pi.Data.Hash)
+		if s.getIdentityStorage(id) != nil {
+			dbg.Error("Couldn't store new identity")
+			return
+		}
+		dbg.Lvl3("Storing identity in", s)
+		s.setIdentityStorage(id, pi.Storage)
+		return
 	}
 
 	if id != nil {
 		sid := s.getIdentityStorage(id)
 		if sid == nil {
 			dbg.Error("Didn't find entity in", s)
+			return
 		}
 		sid.Lock()
 		defer sid.Unlock()
@@ -314,8 +302,7 @@ func newIdentityService(c sda.Context, path string) sda.Service {
 		path:             path,
 	}
 	for _, f := range []interface{}{s.ProposeConfig, s.VoteConfig,
-		s.AddIdentity, s.PropagateIdentity, s.ConfigNewCheck,
-		s.ConfigUpdate} {
+		s.AddIdentity, s.ConfigNewCheck, s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
 			dbg.Fatal("Registration error:", err)
 		}

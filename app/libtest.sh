@@ -6,10 +6,6 @@ NBR=3
 STATICDIR=test
 # If set, always build
 BUILD=
-# Debug-level for server
-DBG_SRV=1
-# Debug-level for client
-DBG_CLIENT= 
 # Debug running
 DBG_RUN=
 
@@ -31,7 +27,8 @@ test(){
 }
 
 testOK(){
-    if ! $@ > /dev/null; then
+    dbgOut "Assert OK for $@"
+    if ! $@; then
         fail "starting $@ failed"
     fi
 }
@@ -66,9 +63,18 @@ testNGrep(){
     fi
 }
 
-dbgRun(){
+dbgOut(){
     if [ "$DBG_RUN" ]; then
-        echo $@
+        echo -e "$@"
+    fi
+}
+
+dbgRun(){
+    if [ "$GREP" ]; then
+        $@ | tee $GREP > $OUT
+    else
+        dbgOut "\nRUNNING:\n$@\n"
+        $@ > $OUT
     fi
 }
 
@@ -79,7 +85,12 @@ fail(){
     exit 1
 }
 
+backg(){
+    ( $@ 2>&1 & )
+}
+
 cleanup(){
+    pkill cothorityd 2> /dev/null
     pkill cosi 2> /dev/null
     pkill ssh-ks 2> /dev/null
     sleep .5

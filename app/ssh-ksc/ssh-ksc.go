@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/cothority/lib/config"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/oi"
+	_ "github.com/dedis/cothority/services"
 	"github.com/dedis/cothority/services/identity"
 )
 
@@ -130,19 +131,20 @@ func SaveConfig() error {
 func CmdSetup(c *cli.Context) {
 	name, err := os.Hostname()
 	oi.ErrFatal(err, "Couldn't get hostname for naming")
+	if c.Args().First() == "" {
+		oi.Fatal("Group-file argument missing")
+	}
 
 	Setup(c.Args().First(), name, c.GlobalString("config-ssh")+"/id_rsa.pub")
 }
 
 func Setup(groupFile, hostname, pubFileName string) {
-	if groupFile == "" {
-		groupFile = "group.toml"
-	}
+	groupFile = tildeToHome(groupFile)
 	reader, err := os.Open(groupFile)
 	oi.ErrFatal(err, "Didn't find group-file: ", groupFile)
 	el, err := config.ReadGroupToml(reader)
 	oi.ErrFatal(err, "Couldn't read group-file")
-	tildeToHome(pubFileName)
+	pubFileName = tildeToHome(pubFileName)
 	pubFile, err := os.Open(pubFileName)
 	oi.ErrFatal(err, "Couldn't open public-ssh: ", pubFileName)
 	pub, err := ioutil.ReadAll(pubFile)
@@ -173,7 +175,7 @@ func tildeToHome(path string) string {
 	if strings.HasPrefix(path, "~") {
 		usr, err := user.Current()
 		oi.ErrFatal(err)
-		return usr.HomeDir + path[1:len(path)-1]
+		return usr.HomeDir + path[1:len(path)]
 	}
 	return path
 }

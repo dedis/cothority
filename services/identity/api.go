@@ -20,6 +20,7 @@ func init() {
 		&AccountList{},
 		&AddIdentity{},
 		&AddIdentityReply{},
+		&PropagateIdentity{},
 		&AttachToIdentity{},
 		&ConfigNewCheck{},
 		&ConfigUpdate{},
