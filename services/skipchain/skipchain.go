@@ -183,7 +183,7 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl1(s.Entity(), "SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
+	dbg.Lvl3(s.Entity(), "SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
 	switch tn.ProtocolName() {
 	case "Propagate":
 		pi, err := manage.NewPropagateProtocol(tn)
