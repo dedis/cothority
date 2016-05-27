@@ -13,3 +13,6 @@ script:
   #- ./errcheck.sh
   # do not run any test binary in parallel (see go help build for more info on the -p flag)
   - go test -race -p=1 ./...
+
+notifications:
+  email: false
