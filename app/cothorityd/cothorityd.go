@@ -25,7 +25,7 @@ import (
 	// register the protocol
 
 	"github.com/dedis/cothority/app/lib/server"
-	"github.com/dedis/cothority/lib/oi"
+	"github.com/dedis/cothority/app/lib/oi"
 	_ "github.com/dedis/cothority/protocols"
 	_ "github.com/dedis/cothority/services"
 )

@@ -18,7 +18,7 @@ import (
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/oi"
+	"github.com/dedis/cothority/app/lib/oi"
 	"github.com/dedis/cothority/lib/sda"
 	s "github.com/dedis/cothority/services/cosi"
 	"gopkg.in/codegangsta/cli.v1"
