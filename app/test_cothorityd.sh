@@ -3,7 +3,7 @@
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
-DBG_SHOW=2
+DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=1
 # Debug-level for client

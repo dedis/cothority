@@ -3,7 +3,7 @@
 # highest number of servers and clients
 NBR=3
 # Use for suppressing building if that directory exists
-STATICDIR=test
+STATICDIR=
 # If set, always build
 BUILD=
 # Show the output of the commands
