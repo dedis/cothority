@@ -26,7 +26,7 @@ func TestLoadConfig(t *testing.T) {
 	tmpfile.Close()
 	configFile = tmpfile.Name()
 	os.Remove(configFile)
-	err = LoadConfig()
+	err = loadConfig()
 	assert.NotNil(t, err)
 
 	local := sda.NewLocalTest()
@@ -34,11 +34,11 @@ func TestLoadConfig(t *testing.T) {
 	defer local.CloseAll()
 	clientApp = identity.NewIdentity(el, 50, "one1", "sshpub1")
 
-	err = SaveConfig()
+	err = saveConfig()
 	dbg.ErrFatal(err)
 
 	clientApp = nil
-	err = LoadConfig()
+	err = loadConfig()
 	dbg.ErrFatal(err)
 
 	if clientApp.Config.Threshold != 50 {
@@ -56,7 +56,7 @@ func TestSetup(t *testing.T) {
 
 	sshPub := tmpName()
 	ioutil.WriteFile(sshPub, []byte("sshpub"), 0660)
-	Setup(tmpfile, "test", sshPub, "")
+	setup(tmpfile, "test", sshPub, "")
 
 	assert.NotNil(t, clientApp)
 	assert.NotNil(t, clientApp.Config)

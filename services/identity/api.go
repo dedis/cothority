@@ -161,6 +161,7 @@ func (i *Identity) ConfigNewCheck() error {
 	return nil
 }
 
+// VoteProposed calls the 'accept'-vote on the current propose-configuration
 func (i *Identity) VoteProposed(accept bool) error {
 	if i.Proposed == nil {
 		return errors.New("No proposed config")

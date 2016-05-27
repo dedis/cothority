@@ -21,16 +21,16 @@ import (
 	"github.com/dedis/cothority/lib/oi"
 )
 
-type Servers struct {
+type servers struct {
 	IDs []*identity.Identity
 }
 
-var serverKS = &Servers{}
+var serverKS = &servers{}
 
 var configFile string
 
 func main() {
-	network.RegisterMessageType(Servers{})
+	network.RegisterMessageType(servers{})
 	app := cli.NewApp()
 	app.Name = "SSH keystore server"
 	app.Usage = "Serves as a server to listen to requests"
@@ -76,7 +76,7 @@ func main() {
 		os.Mkdir(c.String("config"), 0660)
 		dbg.SetDebugVisible(c.Int("debug"))
 		configFile = c.String("config") + "/config.bin"
-		if err := LoadConfig(); err != nil {
+		if err := loadConfig(); err != nil {
 			oi.Error("Problems reading config-file. Most probably you\n",
 				"should start a new one by running with the 'setup'\n",
 				"argument.")
@@ -85,14 +85,14 @@ func main() {
 	}
 	app.After = func(c *cli.Context) error {
 		if len(serverKS.IDs) > 0 {
-			SaveConfig()
+			saveConfig()
 		}
 		return nil
 	}
 	app.Run(os.Args)
 }
 
-func LoadConfig() error {
+func loadConfig() error {
 	buf, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -104,11 +104,11 @@ func LoadConfig() error {
 	if err != nil {
 		return err
 	}
-	serverKS = msg.(*Servers)
+	serverKS = msg.(*servers)
 	return nil
 }
 
-func SaveConfig() {
+func saveConfig() {
 	buf, err := network.MarshalRegisteredType(serverKS)
 	oi.ErrFatal(err, "Couldn't marshal servers")
 	oi.ErrFatal(ioutil.WriteFile(configFile, buf, 0660))

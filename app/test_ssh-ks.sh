@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 
-. ./libtest.sh
+. lib/test/libtest.sh
+. lib/test/cothorityd.sh
 DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=1
@@ -12,7 +13,6 @@ main(){
     startTest
     build
     test Build
-    test Cothorityd
     test ClientSetup
     test ClientAdd
     test ServerSetup
@@ -20,8 +20,8 @@ main(){
 }
 
 testServerSetup(){
-    coClient
-    coClientSetup
+    cothoritySetup
+    clientSetup
     testOK runSrv 1 setup group.toml $ID
     testGrep client_1 runSrv 1 list
     testNGrep client_2 runSrv 1 list
@@ -33,7 +33,7 @@ testServerSetup(){
     testGrep client_2 runSrv 1 list
 
     testOut "Adding identity 'user'"
-    coClientSetup user
+    clientSetup user
     testOK runSrv 1 setup group.toml $ID
     testGrep client_1 runSrv 1 list
     testGrep client_2 runSrv 1 list
@@ -45,7 +45,7 @@ testServerSetup(){
 }
 
 testClientAdd(){
-    coClient
+    cothoritySetup
     # Setting up first client
     testOK runCl 1 setup -n client_1 group.toml
     testOK runGrep Identity-ID: runCl 1 list
@@ -68,12 +68,12 @@ testClientAdd(){
 }
 
 testClientSetup(){
-    coClient
+    cothoritySetup
     testOK runCl 1 setup group.toml
     testFile cl1/config.bin
 }
 
-coClientSetup(){
+clientSetup(){
     DBG_OLD=$DBG_SHOW
     DBG_SHOW=0
     CLIENT=${1:-client}
@@ -83,34 +83,6 @@ coClientSetup(){
     runCl 2 setup -n ${CLIENT}_2 -a $ID group.toml
     runCl 1 update
     DBG_SHOW=$DBG_OLD
-}
-
-coClient(){
-    DBG_OLD=$DBG_SHOW
-    DBG_SHOW=0
-    runCoCfg 1
-    runCoCfg 2
-    runCoCfg 3
-    runCoBG 1
-    runCoBG 2
-    sleep 1
-    cp co1/group.toml .
-    tail -n 4 co2/group.toml >> group.toml
-    DBG_SHOW=$DBG_OLD
-}
-
-testCothorityd(){
-    runCoCfg 1
-    runCoCfg 2
-    runCoCfg 3
-    runCoBG 1
-    runCoBG 2
-    sleep 1
-    cp co1/group.toml .
-    tail -n 4 co2/group.toml >> group.toml
-    testOK runCl 1 check group.toml
-    tail -n 4 co3/group.toml >> group.toml
-    testFail runCl 1 check group.toml
 }
 
 testBuild(){
@@ -129,22 +101,6 @@ runSrv(){
     nb=$1
     shift
     dbgRun ./ssh-kss -d $DBG_SRV -c srv$nb -cs srv$nb $@
-}
-
-runCoCfg(){
-    echo -e "127.0.0.1:200$1\nco$1\n\n" | dbgRun runCo $1 setup
-}
-
-runCoBG(){
-    nb=$1
-    shift
-    ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ 2>&1 > /dev/null & )
-}
-
-runCo(){
-    nb=$1
-    shift
-    dbgRun ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@
 }
 
 build(){

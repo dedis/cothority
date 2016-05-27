@@ -36,7 +36,7 @@ func main() {
 			Name:      "setup",
 			Aliases:   []string{"s"},
 			Usage:     "setting up a new client",
-			Action:    CmdSetup,
+			Action:    cmdSetup,
 			ArgsUsage: "group-file",
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -106,7 +106,7 @@ func main() {
 		os.Mkdir(c.String("config"), 0660)
 		dbg.SetDebugVisible(c.Int("debug"))
 		configFile = c.String("config") + "/config.bin"
-		if err := LoadConfig(); err != nil {
+		if err := loadConfig(); err != nil {
 			oi.Error("Problems reading config-file. Most probably you\n",
 				"should start a new one by running with the 'setup'\n",
 				"argument.")
@@ -115,7 +115,7 @@ func main() {
 	}
 	app.After = func(c *cli.Context) error {
 		if clientApp != nil {
-			err := SaveConfig()
+			err := saveConfig()
 			dbg.ErrFatal(err, "Error while creating config-file", configFile)
 		}
 		return nil
@@ -123,7 +123,7 @@ func main() {
 	app.Run(os.Args)
 }
 
-func LoadConfig() error {
+func loadConfig() error {
 	file, err := os.Open(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -139,7 +139,7 @@ func LoadConfig() error {
 	return nil
 }
 
-func SaveConfig() error {
+func saveConfig() error {
 	file, err := os.Create(configFile)
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func SaveConfig() error {
 	return err
 }
 
-func CmdSetup(c *cli.Context) {
+func cmdSetup(c *cli.Context) {
 	name, err := os.Hostname()
 	if c.String("name") != "" {
 		name = c.String("name")
@@ -160,11 +160,11 @@ func CmdSetup(c *cli.Context) {
 		oi.Fatal("Group-file argument missing")
 	}
 
-	Setup(c.Args().First(), name, c.GlobalString("config-ssh")+"/id_rsa.pub",
+	setup(c.Args().First(), name, c.GlobalString("config-ssh")+"/id_rsa.pub",
 		c.String("add"))
 }
 
-func Setup(groupFile, hostname, pubFileName, add string) {
+func setup(groupFile, hostname, pubFileName, add string) {
 	groupFile = tildeToHome(groupFile)
 	reader, err := os.Open(groupFile)
 	oi.ErrFatal(err, "Didn't find group-file: ", groupFile)
