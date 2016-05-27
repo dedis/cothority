@@ -376,8 +376,8 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 
 	// verify if the signature is correct
 	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
-		bft.AggregatedPublic, h,
-		ch.Signature, ch.Exceptions); err != nil {
+		bft.AggregatedPublic, h, ch.Signature,
+		ch.Exceptions); err != nil {
 		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
