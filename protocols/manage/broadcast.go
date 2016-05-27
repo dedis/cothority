@@ -46,7 +46,7 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 	return b, nil
 }
 
-// Start will contact everyone and makes the connections
+// Start will contact everyone and make the connections
 func (b *Broadcast) Start() error {
 	n := len(b.Tree().List())
 	b.repliesLeft = n * (n - 1) / 2
