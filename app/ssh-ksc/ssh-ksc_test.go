@@ -27,7 +27,7 @@ func TestLoadConfig(t *testing.T) {
 	configFile = tmpfile.Name()
 	os.Remove(configFile)
 	err = loadConfig()
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 
 	local := sda.NewLocalTest()
 	_, el, _ := local.GenTree(5, false, false, false)
