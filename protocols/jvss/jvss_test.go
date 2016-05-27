@@ -23,7 +23,7 @@ func TestJVSS(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 1)
 
 	dbg.Lvl1("JVSS - starting")
-	leader, err := local.CreateProtocol(name, tree)
+	leader, err := local.CreateProtocol(tree, name)
 	if err != nil {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}

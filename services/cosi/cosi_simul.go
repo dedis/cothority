@@ -70,7 +70,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			Message:    msg,
 			EntityList: config.EntityList,
 		}
-		req, err := sda.CreateServiceRequest(ServiceName, r)
+		req, err := sda.CreateClientRequest(ServiceName, r)
 		if err != nil {
 			dbg.Error("could not create service request")
 			continue
