@@ -31,7 +31,7 @@ import (
 	_ "github.com/dedis/cosi/protocol"
 	_ "github.com/dedis/cosi/service"
 	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/oi"
+	"github.com/dedis/cothority/app/lib/oi"
 	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
