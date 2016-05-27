@@ -265,7 +265,12 @@ func (o *Overlay) StartProtocol(t *Tree, name string) (ProtocolInstance, error) 
 	if err != nil {
 		return nil, err
 	}
-	go pi.Start()
+	go func() {
+		err := pi.Start()
+		if err != nil {
+			dbg.Error("Error while starting:", err)
+		}
+	}()
 	return pi, err
 }
 
