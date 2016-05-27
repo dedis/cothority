@@ -4,6 +4,9 @@ import (
 	"encoding/binary"
 	"sort"
 
+	"fmt"
+	"strings"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -35,8 +38,8 @@ func NewAccountList(threshold int, pub abstract.Point, owner string, sshPub stri
 }
 
 // Copy makes a deep copy of the AccountList
-func (il *AccountList) Copy() *AccountList {
-	b, err := network.MarshalRegisteredType(il)
+func (al *AccountList) Copy() *AccountList {
+	b, err := network.MarshalRegisteredType(al)
 	if err != nil {
 		dbg.Error("Couldn't marshal AccountList:", err)
 		return nil
@@ -51,13 +54,13 @@ func (il *AccountList) Copy() *AccountList {
 
 // Hash makes a cryptographic hash of the configuration-file - this
 // can be used as an ID
-func (il *AccountList) Hash() (crypto.HashID, error) {
+func (al *AccountList) Hash() (crypto.HashID, error) {
 	hash := network.Suite.Hash()
-	err := binary.Write(hash, binary.LittleEndian, int32(il.Threshold))
+	err := binary.Write(hash, binary.LittleEndian, int32(al.Threshold))
 	if err != nil {
 		return nil, err
 	}
-	for _, e := range il.Listeners {
+	for _, e := range al.Listeners {
 		b, err := network.MarshalRegisteredType(e)
 		if err != nil {
 			return nil, err
@@ -68,7 +71,7 @@ func (il *AccountList) Hash() (crypto.HashID, error) {
 		}
 	}
 	owners := []string{}
-	for s := range il.Owners {
+	for s := range al.Owners {
 		owners = append(owners, s)
 	}
 	sort.Strings(owners)
@@ -77,11 +80,11 @@ func (il *AccountList) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(il.Data[s]))
+		_, err = hash.Write([]byte(al.Data[s]))
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.MarshalRegisteredType(il.Owners[s])
+		b, err := network.MarshalRegisteredType(al.Owners[s])
 		if err != nil {
 			return nil, err
 		}
@@ -91,6 +94,16 @@ func (il *AccountList) Hash() (crypto.HashID, error) {
 		}
 	}
 	return hash.Sum(nil), nil
+}
+
+// String returns a nicely formatted output of the AccountList
+func (al *AccountList) String() string {
+	owners := []string{}
+	for n := range al.Owners {
+		owners = append(owners, fmt.Sprintf("%s - %s", n, al.Data[n]))
+	}
+	return fmt.Sprintf("Threshold: %d\nOwners:\n%s", al.Threshold,
+		strings.Join(owners, "\n"))
 }
 
 // Owner has write-access to the IdentityList if the threshold is given

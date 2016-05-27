@@ -203,7 +203,7 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl1(s.Entity(), "Identity received New Protocol event", tn.ProtocolName(), tn, conf)
+	dbg.Lvl3(s.Entity(), "Identity received New Protocol event", tn.ProtocolName(), tn, conf)
 	switch tn.ProtocolName() {
 	case "Propagate":
 		pi, err := manage.NewPropagateProtocol(tn)

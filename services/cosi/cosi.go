@@ -75,7 +75,7 @@ func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (netw
 			Response:  resp,
 		}
 	})
-	dbg.Lvl1("Cosi Service starting up root protocol")
+	dbg.Lvl2("Cosi Service starting up root protocol")
 	go pi.Dispatch()
 	go pi.Start()
 	sig := <-response
@@ -90,7 +90,7 @@ func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (netw
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all other nodes.
 func (cs *Cosi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl1("Cosi Service received New Protocol event")
+	dbg.Lvl2("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocolCosi(tn)
 	return pi, err
 }

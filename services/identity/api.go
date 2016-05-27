@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"errors"
 	"io"
 
 	"github.com/dedis/cothority/lib/crypto"
@@ -21,10 +22,12 @@ func init() {
 		&AddIdentity{},
 		&AddIdentityReply{},
 		&PropagateIdentity{},
+		&PropagateProposition{},
 		&AttachToIdentity{},
 		&ConfigNewCheck{},
 		&ConfigUpdate{},
 		&UpdateSkipBlock{},
+		&Vote{},
 	} {
 		network.RegisterMessageType(s)
 	}
@@ -38,8 +41,8 @@ type Identity struct {
 	Proposed   *AccountList
 	ManagerStr string
 	SSHPub     string
+	Cothority  *sda.EntityList
 	skipchain  *skipchain.Client
-	cothority  *sda.EntityList
 	root       *skipchain.SkipBlock
 	data       *skipchain.SkipBlock
 }
@@ -53,9 +56,23 @@ func NewIdentity(cothority *sda.EntityList, majority int, owner, sshPub string) 
 		Config:     NewAccountList(majority, client.Public, owner, sshPub),
 		ManagerStr: owner,
 		SSHPub:     sshPub,
-		cothority:  cothority,
+		Cothority:  cothority,
 		skipchain:  skipchain.NewClient(),
 	}
+}
+
+// NewIdentityFromCothority searches for a given cothority
+func NewIdentityFromCothority(el *sda.EntityList, id ID) (*Identity, error) {
+	iden := &Identity{
+		Client:    sda.NewClient(ServiceName),
+		Cothority: el,
+		ID:        id,
+	}
+	err := iden.ConfigUpdate()
+	if err != nil {
+		return nil, err
+	}
+	return iden, nil
 }
 
 // NewClientFromStream reads the configuration of that client from
@@ -69,10 +86,13 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 		if err != nil {
 			return nil, err
 		}
-		data = append(data, buffer...)
+		data = append(data, buffer[0:n]...)
 	}
 	_, id, err := network.UnmarshalRegistered(data)
-	return id.(*Identity), err
+	if err != nil {
+		return nil, err
+	}
+	return id.(*Identity), nil
 }
 
 // SaveToStream stores the configuration of the client to a stream
@@ -92,6 +112,9 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 	if err != nil {
 		return err
 	}
+	if _, exists := i.Config.Owners[i.ManagerStr]; exists {
+		return errors.New("Adding with an existing account-name")
+	}
 	confPropose := i.Config.Copy()
 	confPropose.Owners[i.ManagerStr] = &Owner{i.Entity.Public}
 	confPropose.Data[i.ManagerStr] = i.SSHPub
@@ -104,7 +127,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() error {
-	msg, err := i.Send(i.cothority.GetRandom(), &AddIdentity{i.Config, i.cothority})
+	msg, err := i.Send(i.Cothority.GetRandom(), &AddIdentity{i.Config, i.Cothority})
 	if err != nil {
 		return err
 	}
@@ -119,14 +142,14 @@ func (i *Identity) CreateIdentity() error {
 // ConfigNewPropose collects new IdentityLists and waits for confirmation with
 // ConfigNewVote
 func (i *Identity) ConfigNewPropose(il *AccountList) error {
-	_, err := i.Send(i.cothority.GetRandom(), &PropagateProposition{i.ID, il})
+	_, err := i.Send(i.Cothority.GetRandom(), &PropagateProposition{i.ID, il})
 	return err
 }
 
 // ConfigNewCheck verifies if there is a new configuration awaiting that
 // needs approval from clients
 func (i *Identity) ConfigNewCheck() error {
-	msg, err := i.Send(i.cothority.GetRandom(), &ConfigNewCheck{
+	msg, err := i.Send(i.Cothority.GetRandom(), &ConfigNewCheck{
 		ID:          i.ID,
 		AccountList: nil,
 	})
@@ -136,6 +159,17 @@ func (i *Identity) ConfigNewCheck() error {
 	cnc := msg.Msg.(ConfigNewCheck)
 	i.Proposed = cnc.AccountList
 	return nil
+}
+
+func (i *Identity) VoteProposed(accept bool) error {
+	if i.Proposed == nil {
+		return errors.New("No proposed config")
+	}
+	h, err := i.Proposed.Hash()
+	if err != nil {
+		return err
+	}
+	return i.ConfigNewVote(h, accept)
 }
 
 // ConfigNewVote sends a vote (accept or reject) with regard to a new configuration
@@ -149,7 +183,7 @@ func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
 	if err != nil {
 		return err
 	}
-	msg, err := i.Send(i.cothority.GetRandom(), &Vote{
+	msg, err := i.Send(i.Cothority.GetRandom(), &Vote{
 		ID:        i.ID,
 		Signer:    i.ManagerStr,
 		Signature: &sig,
@@ -171,7 +205,10 @@ func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
 // ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() error {
-	msg, err := i.Send(i.cothority.GetRandom(), &ConfigUpdate{ID: i.ID})
+	if i.Cothority == nil || len(i.Cothority.List) == 0 {
+		return errors.New("Didn't find any list in the cothority")
+	}
+	msg, err := i.Send(i.Cothority.GetRandom(), &ConfigUpdate{ID: i.ID})
 	if err != nil {
 		return err
 	}

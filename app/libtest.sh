@@ -6,16 +6,10 @@ NBR=3
 STATICDIR=test
 # If set, always build
 BUILD=
-# Debug running
-DBG_RUN=
+# Show the output of the commands
+DBG_SHOW=0
 
 startTest(){
-    # where the output should go
-    if [ "$DBG_RUN" ]; then
-        OUT=/dev/stdout
-    else
-        OUT=/dev/null
-    fi
     set +m
 }
 
@@ -27,15 +21,15 @@ test(){
 }
 
 testOK(){
-    dbgOut "Assert OK for $@"
-    if ! $@; then
+    testOut "Assert OK for '$@'"
+    if ! dbgRun "$@"; then
         fail "starting $@ failed"
     fi
 }
 
 testFail(){
-    dbgOut "Assert FAIL for $@"
-    if $@; then
+    testOut "Assert FAIL for '$@'"
+    if dbgRun "$@"; then
         fail "starting $@ should've failed, but succeeded"
     fi
 }
@@ -47,36 +41,68 @@ testFile(){
 }
 
 testGrep(){
-    S=$1
+    S="$1"
     shift
-    STR=$( $@ )
-    if ! echo $STR | grep -q "$S"; then
-        dbgRun $STR
+    testOut "Assert grepping '$S' in '$@'"
+    runGrep "$S" "$@"
+    if [ ! "$GRP" ]; then
         fail "Didn't find '$S' in output of '$@'"
     fi
 }
 
 testNGrep(){
-    S=$1
+    S="$1"
     shift
-    if $@ | grep -q "$S"; then
-        fail "Found '$S' in output of '$@'"
+    testOut "Assert NOT grepping '$S' in '$@'"
+    runGrep "$S" "$@"
+    if [ "$GRP" ]; then
+        fail "Did find '$S' in output of '$@'"
+    fi
+}
+
+testOut(){
+    if [ "$DBG_SHOW" -ge 1 ]; then
+        echo -e "$@"
     fi
 }
 
 dbgOut(){
-    if [ "$DBG_RUN" ]; then
+    if [ "$DBG_SHOW" -ge 2 ]; then
         echo -e "$@"
     fi
 }
 
 dbgRun(){
-    if [ "$GREP" ]; then
-        $@ | tee $GREP > $OUT
+    if [ "$DBG_SHOW" -ge 2 ]; then
+        OUT=/dev/stdout
     else
-        dbgOut "\nRUNNING:\n$@\n"
-        $@ > $OUT
+        OUT=/dev/null
     fi
+    if [ "$GREP" ]; then
+        $@ 2>&1 | tee $GREP > $OUT
+    else
+        $@ 2>&1 > $OUT
+    fi
+}
+
+runSed(){
+    SED="$1"
+    shift
+    OLDGREP=$GREP
+    GREP=$( mktemp )
+    dbgRun "$@"
+    SED=$( cat $GREP | sed -e "$SED" )
+    GREP=$OLDGREP
+}
+
+runGrep(){
+    GRP="$1"
+    shift
+    OLDGREP=$GREP
+    GREP=$( mktemp )
+    dbgRun "$@"
+    GRP=$( cat $GREP | egrep "$GRP" )
+    GREP=$OLDGREP
 }
 
 fail(){

@@ -56,7 +56,7 @@ func TestSetup(t *testing.T) {
 
 	sshPub := tmpName()
 	ioutil.WriteFile(sshPub, []byte("sshpub"), 0660)
-	Setup(tmpfile, "test", sshPub)
+	Setup(tmpfile, "test", sshPub, "")
 
 	assert.NotNil(t, clientApp)
 	assert.NotNil(t, clientApp.Config)

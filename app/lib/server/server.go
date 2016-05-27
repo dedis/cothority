@@ -18,7 +18,6 @@ import (
 	"strings"
 	"time"
 
-	s "github.com/dedis/cosi/service"
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -29,10 +28,11 @@ import (
 
 	"regexp"
 
-	"github.com/dedis/cosi/lib"
 	_ "github.com/dedis/cosi/protocol"
 	_ "github.com/dedis/cosi/service"
+	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/oi"
+	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
 )
@@ -56,7 +56,7 @@ const DefaultAddress = "127.0.0.1"
 const whatsMyIP = "http://www.whatsmyip.org/"
 
 // How long we're willing to wait for a signature
-var RequestTimeOut = time.Second * 10
+var RequestTimeOut = time.Second * 1
 
 // interactiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
@@ -197,6 +197,7 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 // CheckConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func CheckConfig(tomlFileName string) error {
+	success := true
 	f, err := os.Open(tomlFileName)
 	oi.ErrFatal(err, "Couldn't open group definition file")
 	el, descs, err := config.ReadGroupDescToml(f)
@@ -208,7 +209,7 @@ func CheckConfig(tomlFileName string) error {
 	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
 	// First check all servers individually
 	for i := range el.List {
-		checkList(sda.NewEntityList(el.List[i:i+1]), descs[i:i+1])
+		success = success && checkList(sda.NewEntityList(el.List[i:i+1]), descs[i:i+1]) == nil
 	}
 	if len(el.List) > 1 {
 		// Then check pairs of servers
@@ -216,19 +217,22 @@ func CheckConfig(tomlFileName string) error {
 			for j, second := range el.List[i+1:] {
 				desc := []string{descs[i], descs[i+j+1]}
 				es := []*network.Entity{first, second}
-				checkList(sda.NewEntityList(es), desc)
+				success = success && checkList(sda.NewEntityList(es), desc) == nil
 				es[0], es[1] = es[1], es[0]
 				desc[0], desc[1] = desc[1], desc[0]
-				checkList(sda.NewEntityList(es), desc)
+				success = success && checkList(sda.NewEntityList(es), desc) == nil
 			}
 		}
 	}
 
+	if !success {
+		return errors.New("At least one of the tests failed")
+	}
 	return nil
 }
 
 // checkList sends a message to the list and waits for the reply
-func checkList(list *sda.EntityList, descs []string) {
+func checkList(list *sda.EntityList, descs []string) error {
 	serverStr := ""
 	for i, s := range list.List {
 		name := strings.Split(descs[i], " ")[0]
@@ -241,23 +245,25 @@ func checkList(list *sda.EntityList, descs []string) {
 	if err != nil {
 		fmt.Fprintln(os.Stderr,
 			fmt.Sprintf("Error '%v'", err))
+		return err
 	} else {
 		err := verifySignatureHash([]byte(msg), sig, list)
 		if err != nil {
 			fmt.Println(os.Stderr,
 				fmt.Sprintf("Invalid signature: %v", err))
+			return err
 		} else {
 			fmt.Println("Success")
 		}
 	}
-
+	return nil
 }
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
 func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 	error) {
-	publics := entityListToPublics(el)
+	//publics := entityListToPublics(el)
 	client := s.NewClient()
 	msg, _ := crypto.HashStream(network.Suite.Hash(), read)
 
@@ -281,7 +287,8 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 			return nil, errors.New("Received an invalid repsonse.")
 		}
 
-		err = cosi.VerifySignature(network.Suite, publics, msg, response.Signature)
+		err = cosi.VerifySignature(network.Suite, msg, el.Aggregate,
+			response.Challenge, response.Response)
 		if err != nil {
 			return nil, err
 		}
@@ -294,7 +301,7 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
-	publics := entityListToPublics(el)
+	//publics := entityListToPublics(el)
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
 	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
 	if !bytes.Equal(hashHash, sig.Sum) {
@@ -302,7 +309,9 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList)
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	if err := cosi.VerifySignature(network.Suite, publics, fHash, sig.Signature); err != nil {
+	err := cosi.VerifySignature(network.Suite, fHash, el.Aggregate,
+		sig.Challenge, sig.Response)
+	if err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
@@ -348,7 +357,7 @@ func createKeyPair(ed25519 bool) (string, string) {
 	var point abstract.Point
 	if ed25519 {
 		// use the transformation for ed25519 signatures
-		point = cosi.Ed25519Public(network.Suite, kp.Secret)
+		//point = cosi.Ed25519Public(network.Suite, kp.Secret)
 	} else {
 		point = kp.Public
 	}
