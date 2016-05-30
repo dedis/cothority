@@ -374,7 +374,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 // all errors encountered concatenated together as a string.
 func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
 	msgs := make([]*network.Message, len(dst.List))
-	errstrs := []string{}
+	var errstrs []string
 	for i, e := range dst.List {
 		var err error
 		msgs[i], err = c.Send(e, msg)
