@@ -10,8 +10,9 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"time"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 func init() {

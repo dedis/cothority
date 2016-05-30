@@ -1,4 +1,4 @@
-package main
+package cothority
 
 /*
 This repository implements a of the collective authority (cothority) framework.
