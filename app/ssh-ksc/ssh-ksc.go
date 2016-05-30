@@ -14,9 +14,9 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app/lib/config"
+	"github.com/dedis/cothority/app/lib/oi"
 	"github.com/dedis/cothority/app/lib/server"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/oi"
 	_ "github.com/dedis/cothority/services"
 	"github.com/dedis/cothority/services/identity"
 )

@@ -17,8 +17,8 @@ import (
 	"io/ioutil"
 
 	"github.com/dedis/cothority/app/lib/config"
+	"github.com/dedis/cothority/app/lib/oi"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/oi"
 )
 
 type servers struct {

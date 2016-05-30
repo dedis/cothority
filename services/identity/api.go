@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io"
 
+	"io/ioutil"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -78,15 +80,9 @@ func NewIdentityFromCothority(el *sda.EntityList, id ID) (*Identity, error) {
 // NewClientFromStream reads the configuration of that client from
 // any stream
 func NewIdentityFromStream(in io.Reader) (*Identity, error) {
-	data := []byte{}
-	buffer := make([]byte, 1024)
-	var n int
-	var err error
-	for n, err = in.Read(buffer); n > 0; n, err = in.Read(buffer) {
-		if err != nil {
-			return nil, err
-		}
-		data = append(data, buffer[0:n]...)
+	data, err := ioutil.ReadAll(in)
+	if err != nil {
+		return nil, err
 	}
 	_, id, err := network.UnmarshalRegistered(data)
 	if err != nil {
