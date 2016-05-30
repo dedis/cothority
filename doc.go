@@ -11,4 +11,4 @@ to proactively harden critical Internet authorities.
 Among other things, one could imagine applications to Certificate
 Transparency, DNSSEC, software distribution, the Tor anonymity
 network, and cryptocurrencies.
- */
+*/
