@@ -83,7 +83,7 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 
 	assert.NotNil(t, c2.Config)
 	o1 := c2.Config.Owners[c1.ManagerStr]
-	if !o1.Point.Equal(c1.Entity.Public) {
+	if !o1.Point.Equal(c1.Public) {
 		t.Fatal("Owner is not c1")
 	}
 }

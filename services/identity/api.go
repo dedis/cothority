@@ -11,6 +11,8 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/services/skipchain"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 )
 
 /*
@@ -38,6 +40,8 @@ func init() {
 // Identity can both follow and update an IdentityList
 type Identity struct {
 	*sda.Client
+	Private    abstract.Secret
+	Public     abstract.Point
 	ID         ID
 	Config     *AccountList
 	Proposed   *AccountList
@@ -53,9 +57,12 @@ type Identity struct {
 // different accounts
 func NewIdentity(cothority *sda.EntityList, majority int, owner, sshPub string) *Identity {
 	client := sda.NewClient(ServiceName)
+	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
 		Client:     client,
-		Config:     NewAccountList(majority, client.Public, owner, sshPub),
+		Private:    kp.Secret,
+		Public:     kp.Public,
+		Config:     NewAccountList(majority, kp.Public, owner, sshPub),
 		ManagerStr: owner,
 		SSHPub:     sshPub,
 		Cothority:  cothority,
@@ -112,7 +119,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 		return errors.New("Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
-	confPropose.Owners[i.ManagerStr] = &Owner{i.Entity.Public}
+	confPropose.Owners[i.ManagerStr] = &Owner{i.Public}
 	confPropose.Data[i.ManagerStr] = i.SSHPub
 	err = i.ConfigNewPropose(confPropose)
 	if err != nil {
