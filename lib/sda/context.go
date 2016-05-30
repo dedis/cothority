@@ -7,8 +7,8 @@ type Context interface {
 	NewTreeNodeInstance(*Tree, *TreeNode, string) *TreeNodeInstance
 	RegisterProtocolInstance(ProtocolInstance) error
 	SendRaw(*network.Entity, interface{}) error
-	CreateProtocol(*Tree, string) (ProtocolInstance, error)
-	CreateProtocolAuto(*Tree, string) (ProtocolInstance, error)
+	CreateProtocolService(*Tree, string) (ProtocolInstance, error)
+	CreateProtocolSDA(*Tree, string) (ProtocolInstance, error)
 	Address() string
 	Entity() *network.Entity
 	GetID() ServiceID
@@ -52,14 +52,14 @@ func (dc *defaultContext) GetID() ServiceID {
 
 // CreateProtocol makes a TreeNodeInstance from the root-node of the tree and
 // prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
-func (dc *defaultContext) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+func (dc *defaultContext) CreateProtocolService(t *Tree, name string) (ProtocolInstance, error) {
 	pi, err := dc.Overlay.CreateProtocolService(dc.servID, t, name)
 	return pi, err
 }
 
 // CreateProtocolAuto is like CreateProtocol but doesn't bind a service to it,
 // so it will be handled automatically by the SDA.
-func (dc *defaultContext) CreateProtocolAuto(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := dc.Overlay.CreateProtocol(t, name)
+func (dc *defaultContext) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
+	pi, err := dc.Overlay.CreateProtocolSDA(t, name)
 	return pi, err
 }

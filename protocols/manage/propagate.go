@@ -40,7 +40,7 @@ type Propagate struct {
 // CreateProtocolEntity is the necessary interface to start a protocol.
 // It is implemented by Service and Overlay.
 type CreateProtocolEntity interface {
-	CreateProtocol(t *sda.Tree, name string) (sda.ProtocolInstance, error)
+	CreateProtocolService(t *sda.Tree, name string) (sda.ProtocolInstance, error)
 	Entity() *network.Entity
 }
 
@@ -63,7 +63,7 @@ func PropagateStartAndWait(ci CreateProtocolEntity, el *sda.EntityList, msg netw
 	//dbg.Print(el, tree.Dump())
 	tree := el.GenerateNaryTreeWithRoot(8, ci.Entity())
 	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
-	pi, err := ci.CreateProtocol(tree, "Propagate")
+	pi, err := ci.CreateProtocolService(tree, "Propagate")
 	if err != nil {
 		return -1, err
 	}

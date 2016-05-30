@@ -76,7 +76,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	// Here we first setup the N^2 connections with a broadcast protocol
-	pi, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "Broadcast")
+	pi, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "Broadcast")
 	if err != nil {
 		dbg.Error(err)
 	}
@@ -95,7 +95,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl3("Simulation can start!")
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		p, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "ByzCoinPBFT")
+		p, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "ByzCoinPBFT")
 		if err != nil {
 			return err
 		}
