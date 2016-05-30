@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
 
-. lib/test/libtest.sh
-. lib/test/cothorityd.sh
 DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=1
 # Debug-level for client
 DBG_CLIENT=1
+# Uncomment to build in local dir
+STATICDIR=test
+
+. lib/test/libtest.sh
+. lib/test/cothorityd.sh
 
 main(){
     startTest
