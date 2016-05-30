@@ -43,7 +43,7 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 
 	dbg.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
-	p, err := config.Overlay.CreateProtocol(config.Tree, "JVSS")
+	p, err := config.Overlay.CreateProtocolSDA(config.Tree, "JVSS")
 	if err != nil {
 		return err
 	}
