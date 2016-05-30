@@ -11,7 +11,6 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
@@ -297,17 +296,13 @@ in place of the standard reply. The Client.Send method will catch that and retur
 
 // Client for a service
 type Client struct {
-	Private abstract.Secret
-	*network.Entity
+	host      *network.SecureTCPHost
 	ServiceID ServiceID
 }
 
 // NewClient returns a random client using the service s
 func NewClient(s string) *Client {
-	kp := config.NewKeyPair(network.Suite)
 	return &Client{
-		Entity:    network.NewEntity(kp.Public, ""),
-		Private:   kp.Secret,
 		ServiceID: ServiceFactory.ServiceID(s),
 	}
 }
@@ -315,12 +310,16 @@ func NewClient(s string) *Client {
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
-	client := network.NewSecureTCPHost(c.Private, c.Entity)
+	if c.host == nil {
+		kp := config.NewKeyPair(network.Suite)
+		c.host = network.NewSecureTCPHost(kp.Secret,
+			network.NewEntity(kp.Public, ""))
+	}
 
 	// Connect to the root
 	dbg.Lvl4("Opening connection to", dst)
-	con, err := client.Open(dst)
-	defer client.Close()
+	con, err := c.host.Open(dst)
+	defer c.host.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -374,7 +373,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 // all errors encountered concatenated together as a string.
 func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
 	msgs := make([]*network.Message, len(dst.List))
-	errstrs := []string{}
+	var errstrs []string
 	for i, e := range dst.List {
 		var err error
 		msgs[i], err = c.Send(e, msg)

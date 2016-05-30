@@ -64,7 +64,7 @@ func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, erro
 		if h.Entity.ID.Equal(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].CreateProtocol(t, name)
+			return l.Overlays[h.Entity.ID].CreateProtocolSDA(t, name)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -239,7 +239,8 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 	return services
 }
 
-// MakeHELS is an abbreviation to make a Host, an EntityList, and a service
+// MakeHELS is an abbreviation to make a Host, an EntityList, and a service.
+// It returns the service of the first host in the slice.
 func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *EntityList, Service) {
 	hosts := l.GenLocalHosts(nbr, false, true)
 	el := l.GenEntityListFromHost(hosts...)
