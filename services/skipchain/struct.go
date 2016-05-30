@@ -101,6 +101,14 @@ type SkipBlock struct {
 	ChildSL *BlockLink
 }
 
+// NewSignature returns a pre-initialized signature with Secret.One
+func newSignature(s abstract.Suite) *cosi.Signature {
+	return &cosi.Signature{
+		s.Secret().One(),
+		s.Secret().One(),
+	}
+}
+
 // NewSkipBlock pre-initialises the block so it can be sent over
 // the network
 func NewSkipBlock() *SkipBlock {
@@ -109,7 +117,7 @@ func NewSkipBlock() *SkipBlock {
 			Data: make([]byte, 0),
 		},
 		BlockSig: &bftcosi.BFTSignature{
-			Sig: cosi.NewSignature(network.Suite),
+			Sig: newSignature(network.Suite),
 			Msg: make([]byte, 0),
 		},
 	}
@@ -208,7 +216,7 @@ type BlockLink struct {
 // over the network.
 func NewBlockLink() *BlockLink {
 	return &BlockLink{
-		Signature: cosi.NewSignature(network.Suite),
+		Signature: newSignature(network.Suite),
 	}
 }
 
