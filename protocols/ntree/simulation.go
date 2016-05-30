@@ -52,7 +52,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 		dbg.Lvl1("Starting round", round, "with message", string(msg))
 		round := monitor.NewTimeMeasure("round")
 
-		p, err := config.Overlay.CreateProtocol(config.Tree, "NaiveTree")
+		p, err := config.Overlay.CreateProtocolSDA(config.Tree, "NaiveTree")
 		if err != nil {
 			dbg.Error("Quitting the simulation....", err)
 			return err
