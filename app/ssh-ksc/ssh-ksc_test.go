@@ -81,7 +81,7 @@ func saveGroupToml(n int, file string) (*config.GroupToml, *sda.LocalTest) {
 	return gt, local
 }
 
-var tmpfiles = []string{}
+var tmpfiles []string
 
 func tmpName() string {
 	file, err := ioutil.TempFile("", "tmpfile")

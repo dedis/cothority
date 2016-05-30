@@ -70,7 +70,7 @@ func (al *AccountList) Hash() (crypto.HashID, error) {
 			return nil, err
 		}
 	}
-	owners := []string{}
+	var owners []string
 	for s := range al.Owners {
 		owners = append(owners, s)
 	}
@@ -98,7 +98,7 @@ func (al *AccountList) Hash() (crypto.HashID, error) {
 
 // String returns a nicely formatted output of the AccountList
 func (al *AccountList) String() string {
-	owners := []string{}
+	var owners []string
 	for n := range al.Owners {
 		owners = append(owners, fmt.Sprintf("%s - %s", n, al.Data[n]))
 	}
