@@ -12,8 +12,10 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+var ProtocolID sda.ProtocolID
+
 func init() {
-	sda.ProtocolRegisterName("Propagate", NewPropagateProtocol)
+	ProtocolID = sda.ProtocolRegisterName("Propagate", NewPropagateProtocol)
 }
 
 // Propagate is a protocol that sends some data to all attached nodes
@@ -40,7 +42,7 @@ type Propagate struct {
 // CreateProtocolEntity is the necessary interface to start a protocol.
 // It is implemented by Service and Overlay.
 type CreateProtocolEntity interface {
-	CreateProtocolSDA(t *sda.Tree, name string) (sda.ProtocolInstance, error)
+	CreateProtocol(t *sda.Tree, name string) (sda.ProtocolInstance, error)
 	Entity() *network.Entity
 }
 
@@ -57,16 +59,33 @@ type PropagateReply struct {
 	Level int
 }
 
-// StartAndWait starts the propagation protocol and blocks till everything
-// is OK or the timeout has been reached
-func PropagateStartAndWait(ci CreateProtocolEntity, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
-	//dbg.Print(el, tree.Dump())
-	tree := el.GenerateNaryTreeWithRoot(8, ci.Entity())
+// PropagateStartAndWaitSDA starts the propagation protocol and blocks till everything
+// is OK or the timeout has been reached.
+// This is used when you want to start a protocol without a service.
+func PropagateStartAndWaitSDA(o *sda.Overlay, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
+	tree := el.GenerateNaryTreeWithRoot(8, o.Entity())
 	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
-	pi, err := ci.CreateProtocolSDA(tree, "Propagate")
+	pi, err := o.CreateProtocolSDA(tree, "Propagate")
 	if err != nil {
 		return -1, err
 	}
+	return propagateStartAndWait(pi, msg, msec, f)
+}
+
+// PropagateStartAndWaitService starts the propagation protocol and blocks till everything
+// is OK or the timeout has been reached.
+// This is used when you want to start a protocol included in a service.
+func PropagateStartAndWaitService(c sda.Context, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
+	tree := el.GenerateNaryTreeWithRoot(8, c.Entity())
+	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
+	pi, err := c.CreateProtocolService(tree, "Propagate")
+	if err != nil {
+		return -1, err
+	}
+	return propagateStartAndWait(pi, msg, msec, f)
+}
+
+func propagateStartAndWait(pi sda.ProtocolInstance, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
 	d, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return -1, err
