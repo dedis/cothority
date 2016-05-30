@@ -239,8 +239,7 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 	return services
 }
 
-// MakeHELS is an abbreviation to make a Host, an EntityList, and a service.
-// It returns the service of the first host in the list.
+// MakeHELS is an abbreviation to make a Host, an EntityList, and a service
 func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *EntityList, Service) {
 	hosts := l.GenLocalHosts(nbr, false, true)
 	el := l.GenEntityListFromHost(hosts...)
