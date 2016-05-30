@@ -30,7 +30,7 @@ func TestPropagate(t *testing.T) {
 
 		i := 0
 		msg := &PropagateMsg{[]byte("propagate")}
-		nodes, err := manage.PropagateStartAndWait(o, el, msg, 1000,
+		nodes, err := manage.PropagateStartAndWaitSDA(o, el, msg, 1000,
 			func(m network.ProtocolMessage) {
 				if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
 					i++
