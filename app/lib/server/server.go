@@ -23,11 +23,11 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	// Empty imports to have the init-functions called which should
-	// register the protocol
 
 	"regexp"
 
+	// Empty imports to have the init-functions called which should
+	// register the protocol
 	_ "github.com/dedis/cosi/protocol"
 	_ "github.com/dedis/cosi/service"
 	"github.com/dedis/cothority/app/lib/oi"
@@ -70,31 +70,28 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 	var ipProvided = true
 	var portStr string
 	var serverBinding string
-	splitted := strings.Split(str, ":")
+	if !strings.Contains(str, ":") {
+		str = ":" + str
+	}
+	host, port, err := net.SplitHostPort(str)
+	oi.ErrFatal(err, "Couldn't interpret", str)
 
 	if str == "" {
 		portStr = strconv.Itoa(DefaultPort)
 		hostStr = "0.0.0.0"
 		ipProvided = false
-	} else if len(splitted) == 1 {
+	} else if host == "" {
 		// one element provided
-		if _, err := strconv.Atoi(splitted[0]); err != nil {
-			oi.Fatal("You have to provide a port number at least!")
-		}
 		// ip
 		ipProvided = false
 		hostStr = "0.0.0.0"
-		portStr = splitted[0]
-	} else if len(splitted) == 2 {
-		hostStr = splitted[0]
-		portStr = splitted[1]
+		portStr = port
+	} else {
+		hostStr = host
+		portStr = port
 	}
-	// let's check if they are correct
+
 	serverBinding = hostStr + ":" + portStr
-	hostStr, portStr, err := net.SplitHostPort(serverBinding)
-	if err != nil {
-		oi.Fatalf("Invalid connection information for %s: %v", serverBinding, err)
-	}
 	if net.ParseIP(hostStr) == nil {
 		oi.Fatal("Invalid connection  information for", serverBinding)
 	}
