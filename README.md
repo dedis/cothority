@@ -2,7 +2,7 @@
 
 # Cothority
 
-This repository implements a of the collective authority (cothority) framework. 
+This repository implements the collective authority (cothority) framework.
 The system is based on CoSi, a novel protocol for collective signing 
 which itself builds on Schnorr multi-signatures over elliptic curves. 
 CoSi enables authorities to have their statements collectively signed 
