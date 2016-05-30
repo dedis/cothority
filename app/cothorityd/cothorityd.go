@@ -24,7 +24,6 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
-	"github.com/dedis/cothority/app/lib/oi"
 	"github.com/dedis/cothority/app/lib/server"
 	_ "github.com/dedis/cothority/protocols"
 	_ "github.com/dedis/cothority/services"
