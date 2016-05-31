@@ -24,8 +24,8 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
-	"github.com/dedis/cothority/app/lib/oi"
 	"github.com/dedis/cothority/app/lib/server"
+	"github.com/dedis/cothority/app/lib/ui"
 	_ "github.com/dedis/cothority/protocols"
 	_ "github.com/dedis/cothority/services"
 )
@@ -69,10 +69,10 @@ func main() {
 			Usage:   "Setup the configuration for the server (interactive)",
 			Action: func(c *cli.Context) error {
 				if c.String("config") != "" {
-					oi.Fatal("Configuration file option can't be used for the 'setup' command")
+					ui.Fatal("Configuration file option can't be used for the 'setup' command")
 				}
 				if c.String("debug") != "" {
-					oi.Fatal("[-] Debug option can't be used for the 'setup' command")
+					ui.Fatal("[-] Debug option can't be used for the 'setup' command")
 				}
 				server.InteractiveConfig("cothorityd", false)
 				return nil
@@ -123,7 +123,7 @@ func getDefaultConfigFile() string {
 	if err != nil {
 		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
 		if curr, err := os.Getwd(); err != nil {
-			oi.Fatal("Impossible to get the current directory. %v", err)
+			ui.Fatal("Impossible to get the current directory. %v", err)
 		} else {
 			return path.Join(curr, DefaultServerConfig)
 		}
