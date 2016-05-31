@@ -1,9 +1,20 @@
-package oi
+package ui
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 )
+
+var in io.Reader
+var out io.Writer
+
+func init() {
+	in = os.Stdin
+	out = os.Stdout
+}
 
 // Format indicates how the prints will be shown
 var Format = FormatPython
@@ -77,26 +88,48 @@ func ErrFatalf(err error, f string, args ...interface{}) {
 	ErrFatal(err, fmt.Sprintf(f, args...))
 }
 
-// Input prints the arguments given with a 'input'-format
-func Input(args ...interface{}) string {
+// Input prints the arguments given with a 'input'-format and
+// proposes the 'def' string as default. If the user presses
+// 'enter', the 'dev' will be returned.
+func Input(def string, args ...interface{}) string {
 	print(input, args...)
-	return "no input yet"
+	fmt.Fprintf(out, " [%s]: ", def)
+	reader := bufio.NewReader(in)
+	str, err := reader.ReadString('\n')
+	if err != nil {
+		Fatal("Could not read input.")
+	}
+	str = strings.TrimSpace(str)
+	if str == "" {
+		return def
+	} else {
+		return str
+	}
 }
 
 // Inputf takes a format and calls Input
-func Inputf(f string, args ...interface{}) string {
-	return Input(fmt.Sprintf(f, args...))
+func Inputf(def string, f string, args ...interface{}) string {
+	return Input(def, fmt.Sprintf(f, args...))
+}
+
+// InputYN asks a Yes/No question
+func InputYN(def bool, args ...interface{}) bool {
+	defStr := "Yn"
+	if !def {
+		defStr = "Ny"
+	}
+	return strings.ToLower(string(Input(defStr, args...)[0])) == "y"
 }
 
 func print(lvl int, args ...interface{}) {
 	switch Format {
 	case FormatPython:
 		prefix := []string{"[+]", "[-]", "[!]", "[X]", "[?]"}
-		fmt.Print(prefix[lvl], " ")
+		fmt.Fprint(out, prefix[lvl], " ")
 	case FormatNone:
 	}
-	fmt.Print(args...)
+	fmt.Fprint(out, args...)
 	if lvl != input {
-		fmt.Print("\n")
+		fmt.Fprint(out, "\n")
 	}
 }

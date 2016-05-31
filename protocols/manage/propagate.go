@@ -12,10 +12,8 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-var ProtocolID sda.ProtocolID
-
 func init() {
-	ProtocolID = sda.ProtocolRegisterName("Propagate", NewPropagateProtocol)
+	sda.ProtocolRegisterName("Propagate", NewPropagateProtocol)
 }
 
 // Propagate is a protocol that sends some data to all attached nodes
