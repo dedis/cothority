@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-var in io.Reader
+var in *bufio.Reader
 var out io.Writer
 
 func init() {
-	in = os.Stdin
+	in = bufio.NewReader(os.Stdin)
 	out = os.Stdout
 }
 
@@ -94,8 +94,7 @@ func ErrFatalf(err error, f string, args ...interface{}) {
 func Input(def string, args ...interface{}) string {
 	print(input, args...)
 	fmt.Fprintf(out, " [%s]: ", def)
-	reader := bufio.NewReader(in)
-	str, err := reader.ReadString('\n')
+	str, err := in.ReadString('\n')
 	if err != nil {
 		Fatal("Could not read input.")
 	}
