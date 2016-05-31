@@ -91,7 +91,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	pi, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "Broadcast")
+	pi, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "Broadcast")
 	if err != nil {
 		return err
 	}

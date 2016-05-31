@@ -27,7 +27,7 @@ func TestRandHound(t *testing.T) {
 
 	// Setup and Start RandHound
 	log.Printf("RandHound - starting")
-	leader, err := local.CreateProtocol(name, tree)
+	leader, err := local.CreateProtocol(tree, name)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}

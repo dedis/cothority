@@ -163,11 +163,12 @@ func (h *Host) Close() error {
 	}
 	dbg.Lvl4(h.Entity.First(), "Starts closing")
 	h.isClosing = true
-	h.closingMut.Unlock()
 	if h.processMessagesStarted {
 		// Tell ProcessMessages to quit
 		close(h.ProcessMessagesQuit)
+		close(h.networkChan)
 	}
+	h.closingMut.Unlock()
 	for _, c := range h.connections {
 		dbg.Lvl4(h.Entity.First(), "Closing connection", c)
 		err := c.Close()
@@ -213,6 +214,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 	if err := c.Send(context.TODO(), msg); err != nil /*&& err != network.ErrClosed*/ {
 		dbg.Error("ERROR Sending to", c.Entity().First(), ":", err)
 	}
+	dbg.Lvl5("Message sent")
 	return nil
 }
 
@@ -238,7 +240,6 @@ func (h *Host) StartProcessMessages() {
 func (h *Host) processMessages() {
 	h.networkLock.Unlock()
 	for {
-		var err error
 		var data network.Message
 		select {
 		case data = <-h.networkChan:
@@ -258,6 +259,7 @@ func (h *Host) processMessages() {
 		case RequestTreeMessageID:
 			tid := data.Msg.(RequestTree).TreeID
 			tree := h.overlay.Tree(tid)
+			var err error
 			if tree != nil {
 				err = h.SendRaw(data.Entity, tree.MakeTreeMarshal())
 			} else {
@@ -265,6 +267,9 @@ func (h *Host) processMessages() {
 				// the tree is Nil. Should we think of a way of sending back an
 				// "error" ?
 				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
+			}
+			if err != nil {
+				dbg.Error("Couldn't send tree:", err)
 			}
 			// A Host has replied to our request of a tree
 		case SendTreeMessageID:
@@ -299,16 +304,18 @@ func (h *Host) processMessages() {
 		case RequestEntityListMessageID:
 			id := data.Msg.(RequestEntityList).EntityListID
 			el := h.overlay.EntityList(id)
+			var err error
 			if el != nil {
 				err = h.SendRaw(data.Entity, el)
 			} else {
 				dbg.Lvl2("Requested entityList that we don't have")
-				err := h.SendRaw(data.Entity, &EntityList{})
-				if err != nil {
-					dbg.Error("Couldn't send empty entity list from host:",
-						h.Entity.String(),
-						err)
-				}
+				err = h.SendRaw(data.Entity, &EntityList{})
+			}
+			if err != nil {
+				dbg.Error("Couldn't send empty entity list from host:",
+					h.Entity.String(),
+					err)
+				continue
 			}
 			// Host replied to our request of entitylist
 		case SendEntityListMessageID:
@@ -325,10 +332,13 @@ func (h *Host) processMessages() {
 			r := data.Msg.(ClientRequest)
 			h.processRequest(data.Entity, &r)
 		case ServiceMessageID:
+			dbg.Lvl4("Got ServiceMessageID")
 			m := data.Msg.(ServiceMessage)
 			h.processServiceMessage(data.Entity, &m)
 		default:
-			dbg.Error("Sending error:", err)
+			if data.MsgType != network.ErrorType {
+				dbg.Lvl3("Unknown message received:", data)
+			}
 		}
 	}
 }
@@ -342,8 +352,8 @@ func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl3("host", h.Address(), " => Dispatch request to ServiceMessage")
-	s.ProcessServiceMessage(e, m)
+	dbg.Lvl5("host", h.Address(), m)
+	go s.ProcessServiceMessage(e, m)
 
 }
 
@@ -356,7 +366,7 @@ func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl3("host", h.Address(), " => Dispatch request to Request")
+	dbg.Lvl5("host", h.Address(), " => Dispatch request to Request")
 	go s.ProcessClientRequest(e, r)
 }
 
@@ -406,7 +416,11 @@ func (h *Host) handleConn(c network.SecureConn) {
 			}
 			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
 		} else {
-			h.networkChan <- am
+			h.closingMut.Lock()
+			if !h.isClosing {
+				h.networkChan <- am
+			}
+			h.closingMut.Unlock()
 		}
 	}
 }
@@ -566,7 +580,7 @@ func (h *Host) Rx() uint64 {
 	return h.host.Rx()
 }
 
-// Address is the addres where this host is listening
+// Address is the address where this host is listening
 func (h *Host) Address() string {
 	return h.workingAddress
 }

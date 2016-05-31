@@ -11,8 +11,11 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// ProtocolName for the CollectiveSigning protocol
+var ProtocolName = "CoSi"
+
 func init() {
-	sda.ProtocolRegisterName("CoSi", NewProtocolCosi)
+	sda.ProtocolRegisterName(ProtocolName, NewProtocolCosi)
 }
 
 // This Cosi protocol is the simplest version, the "vanilla" version with the

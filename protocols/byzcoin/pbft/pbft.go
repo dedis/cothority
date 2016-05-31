@@ -73,7 +73,7 @@ func NewProtocol(n *sda.TreeNodeInstance) (*Protocol, error) {
 	pbft.nodeList = tree.List()
 	idx := notFound
 	for i, tn := range pbft.nodeList {
-		if tn.Id.Equals(n.TreeNode().Id) {
+		if tn.Id.Equal(n.TreeNode().Id) {
 			idx = i
 		}
 	}
