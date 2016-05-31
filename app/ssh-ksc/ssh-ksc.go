@@ -184,7 +184,6 @@ func setup(groupFile, hostname, pubFileName, add string) {
 	clientApp = identity.NewIdentity(el, 2, hostname, string(pub))
 
 	if add == "" {
-		dbg.Print(clientApp)
 		ui.ErrFatal(clientApp.CreateIdentity(), "Couldn't contact servers")
 	} else {
 		id, err := hex.DecodeString(add)
