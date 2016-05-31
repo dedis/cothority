@@ -4,13 +4,24 @@ import "github.com/dedis/cothority/lib/network"
 
 // Context is the interface that is given to a Service
 type Context interface {
+	// NewTreeNodeInstance implements the Context interface method
 	NewTreeNodeInstance(*Tree, *TreeNode, string) *TreeNodeInstance
+	// RegisterProtocolInstance takes a PI and stores it for dispatching the message
+	// to it.
 	RegisterProtocolInstance(ProtocolInstance) error
+	// SendRaw sends a message to the entity
 	SendRaw(*network.Entity, interface{}) error
+	// CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
+	// prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
 	CreateProtocolService(*Tree, string) (ProtocolInstance, error)
+	// CreateProtocolSDA is like CreateProtocolService but doesn't bind a service to it,
+	// so it will be handled automatically by the SDA.
 	CreateProtocolSDA(*Tree, string) (ProtocolInstance, error)
+	// Address is the address where this host is listening
 	Address() string
+	// Entity returns the entity the service uses
 	Entity() *network.Entity
+	// GetID returns the service-id
 	GetID() ServiceID
 }
 
@@ -50,14 +61,14 @@ func (dc *defaultContext) GetID() ServiceID {
 	return dc.servID
 }
 
-// CreateProtocol makes a TreeNodeInstance from the root-node of the tree and
+// CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
 // prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
 func (dc *defaultContext) CreateProtocolService(t *Tree, name string) (ProtocolInstance, error) {
 	pi, err := dc.Overlay.CreateProtocolService(dc.servID, t, name)
 	return pi, err
 }
 
-// CreateProtocolAuto is like CreateProtocol but doesn't bind a service to it,
+// CreateProtocolSDA is like CreateProtocolService but doesn't bind a service to it,
 // so it will be handled automatically by the SDA.
 func (dc *defaultContext) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
 	pi, err := dc.Overlay.CreateProtocolSDA(t, name)
