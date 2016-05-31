@@ -580,7 +580,7 @@ func (h *Host) Rx() uint64 {
 	return h.host.Rx()
 }
 
-// Address is the addres where this host is listening
+// Address is the address where this host is listening
 func (h *Host) Address() string {
 	return h.workingAddress
 }
