@@ -100,9 +100,10 @@ func (al *AccountList) Hash() (crypto.HashID, error) {
 func (al *AccountList) String() string {
 	var owners []string
 	for n := range al.Owners {
-		owners = append(owners, fmt.Sprintf("%s - %s", n, al.Data[n]))
+		owners = append(owners, fmt.Sprintf("Owner: %s\nData: %s",
+			n, al.Data[n]))
 	}
-	return fmt.Sprintf("Threshold: %d\nOwners:\n%s", al.Threshold,
+	return fmt.Sprintf("Threshold: %d\n%s", al.Threshold,
 		strings.Join(owners, "\n"))
 }
 

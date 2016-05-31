@@ -15,12 +15,12 @@ STATICDIR=test
 main(){
     startTest
     build
-    #test Build
-    #test ClientSetup
-    #test ClientAdd
+    test Build
+    test ClientSetup
+    test ClientAdd
     test ClientDel
-    #test ServerSetup
-    #test ServerSSH
+    test ServerSetup
+    test ServerSSH
     stopTest
 }
 
@@ -34,12 +34,12 @@ testServerSSH(){
     testGrep "My private key" cat $ak
     testGrep ssh-rsa cat $ak
     runSrv 1 update
-    testOK [ $(grep ssh-rsa $ak | wc -l) = 1 ]
+    testCount 1 ssh-rsa cat $ak
 
     # Add a second client
     runCl 1 confirm
     runSrv 1 update
-    testOK [ $(grep ssh-rsa $ak | wc -l) = 2 ]
+    testCount 2 ssh-rsa cat $ak
 }
 
 testServerSetup(){
@@ -93,10 +93,16 @@ testClientAdd(){
 testClientDel(){
     cothoritySetup
     clientSetup
-    testOK [ $( runCl 1 list | grep ssh-rsa | wc -l ) = 1 ]
+    testCount 1 ssh-rsa runCl 1 list
     runCl 1 confirm
-    testOK [ $( runCl 1 list | grep ssh-rsa | wc -l ) = 2 ]
-    runCl 1 clientRemove
+    testCount 2 ssh-rsa dbgRun runCl 1 list
+    runCl 1 ownerRemove client_2
+    testCount 2 ssh-rsa dbgRun runCl 1 list
+    testOK runCl 2 listNew
+    testOK runCl 2 confirm
+    testCount 1 ssh-rsa dbgRun runCl 2 list
+    testOK runCl 1 update
+    testCount 1 ssh-rsa dbgRun runCl 1 list
 }
 
 testClientSetup(){

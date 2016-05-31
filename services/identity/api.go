@@ -146,6 +146,7 @@ func (i *Identity) CreateIdentity() error {
 // ConfigNewVote
 func (i *Identity) ConfigNewPropose(il *AccountList) error {
 	_, err := i.Send(i.Cothority.GetRandom(), &PropagateProposition{i.ID, il})
+	i.Proposed = il
 	return err
 }
 
@@ -198,10 +199,14 @@ func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
 	if msg == nil {
 		dbg.Lvl3("Threshold not reached")
 	} else {
-		dbg.Lvl3("Threshold reached and signed")
-		sb := msg.Msg.(skipchain.SkipBlock)
-		i.data = &sb
-		i.Config = i.Proposed
+		sb, ok := msg.Msg.(skipchain.SkipBlock)
+		if ok {
+			dbg.Lvl3("Threshold reached and signed")
+			i.data = &sb
+			i.Config = i.Proposed
+		} else {
+			return errors.New(msg.Msg.(sda.StatusRet).Status)
+		}
 	}
 	return nil
 }

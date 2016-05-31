@@ -50,10 +50,11 @@ func main() {
 			},
 		},
 		{
-			Name:    "clientRemove",
-			Aliases: []string{"cr"},
-			Usage:   "remove a client",
-			Action:  clientDel,
+			Name:      "ownerRemove",
+			Aliases:   []string{"or"},
+			Usage:     "remove an owner",
+			ArgsUsage: "owner-name",
+			Action:    ownerDel,
 		},
 		{
 			Name:    "update",
@@ -193,8 +194,20 @@ func setup(groupFile, hostname, pubFileName, add string) {
 	}
 }
 
-func clientDel(c *cli.Context) {
-	ui.Fatal("Not implemented yet")
+func ownerDel(c *cli.Context) {
+	owner := c.Args().First()
+	if _, exists := clientApp.Config.Owners[owner]; !exists {
+		ui.Info("Owners available:")
+		for o := range clientApp.Config.Owners {
+			ui.Info(o)
+		}
+		return
+	}
+	prop := clientApp.Config.Copy()
+	delete(prop.Owners, owner)
+	ui.ErrFatal(clientApp.ConfigNewPropose(prop))
+	ui.ErrFatal(clientApp.VoteProposed(true))
+	update(c)
 }
 
 func update(c *cli.Context) {
@@ -224,9 +237,6 @@ func list(c *cli.Context) {
 	ui.Info("Account name:", clientApp.ManagerStr)
 	ui.Infof("Identity-ID: %x", clientApp.ID)
 	ui.Infof("Current config: %s", clientApp.Config)
-	if clientApp.Proposed != nil {
-		ui.Infof("Proposed config: %s", clientApp.Proposed)
-	}
 }
 
 func listNew(c *cli.Context) {
@@ -235,6 +245,9 @@ func listNew(c *cli.Context) {
 	}
 	ui.ErrFatal(clientApp.ConfigNewCheck(), "Couldn't update the config")
 	list(c)
+	if clientApp.Proposed != nil {
+		ui.Infof("Proposed config: %s", clientApp.Proposed)
+	}
 }
 
 func tildeToHome(path string) string {
