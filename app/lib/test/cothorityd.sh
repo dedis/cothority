@@ -20,7 +20,7 @@ runCo(){
 
 cothoritySetup(){
     DBG_OLD=$DBG_SHOW
-    DBG_SHOW=2
+    DBG_SHOW=0
     runCoCfg 1
     runCoCfg 2
     runCoCfg 3

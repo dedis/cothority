@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-DBG_SHOW=2
+DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=1
 # Debug-level for client
@@ -16,10 +16,22 @@ main(){
     startTest
     build
     #test Build
-    test ClientSetup
+    #test ClientSetup
     #test ClientAdd
     #test ServerSetup
+    test ServerSSH
     stopTest
+}
+
+testServerSSH(){
+    cothoritySetup
+    clientSetup
+    ak=srv1/authorized_keys
+    echo "My private key" > $ak
+    runSrv 1 setup group.toml $ID
+    testFile $ak
+    testGrep "My private key" cat $ak
+    testGrep ssh-rsa cat $ak
 }
 
 testServerSetup(){
