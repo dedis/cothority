@@ -16,13 +16,17 @@ import (
 
 	"io/ioutil"
 
+	"bytes"
+
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/network"
 )
 
 type servers struct {
-	IDs []*identity.Identity
+	PathSSH   string
+	PathSSHKS string
+	IDs       []*identity.Identity
 }
 
 var serverKS = &servers{}
@@ -139,16 +143,73 @@ func setup(c *cli.Context) {
 	iden, err := identity.NewIdentityFromCothority(el, id)
 	ui.ErrFatal(err, "Couldn't get identity")
 	serverKS.IDs = append(serverKS.IDs, iden)
+	serverKS.PathSSH = c.GlobalString("config-ssh")
+	serverKS.PathSSHKS = c.GlobalString("config")
 
+	updateAllow(true)
 	list(c)
 }
 
 func update(c *cli.Context) {
+	updateAllow(false)
 	for _, s := range serverKS.IDs {
 		ui.ErrFatal(s.ConfigUpdate())
 	}
-
+	updateAllow(true)
 	list(c)
+}
+
+func updateAllow(add bool) {
+	ui.Info(serverKS.PathSSH)
+	ak := serverKS.PathSSH + "/authorized_keys"
+	for _, id := range serverKS.IDs {
+		for _, ssh := range id.Config.Data {
+			ui.Info(ssh)
+			if add {
+				if !grep(ak, ssh) {
+					addLine(ak, ssh)
+				}
+			} else {
+				deleteLine(ak, ssh)
+			}
+		}
+	}
+}
+
+func grep(fileName, str string) bool {
+	buf, err := ioutil.ReadFile(fileName)
+	ui.ErrFatal(err)
+	return bytes.Contains(buf, []byte(str))
+}
+
+func addLine(file, str string) {
+	content, err := ioutil.ReadFile(file)
+	ui.ErrFatal(err)
+	found := false
+	for _, l := range strings.Split(string(content), "\n") {
+		found = found || (l == str)
+	}
+	if !found {
+		concat := append(content, []byte(str+"\n")...)
+		err := ioutil.WriteFile(file, concat, 0660)
+		ui.ErrFatal(err)
+	}
+}
+
+func deleteLine(file, str string) {
+	if !grep(file, str) {
+		return
+	}
+	var lines []string
+	content, err := ioutil.ReadFile(file)
+	ui.ErrFatal(err)
+	for _, l := range strings.Split(string(content), "\n") {
+		if l != str {
+			lines = append(lines, l)
+		}
+	}
+	err = ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), 0660)
+	ui.ErrFatal(err)
 }
 
 func list(c *cli.Context) {

@@ -168,8 +168,8 @@ func setup(groupFile, hostname, pubFileName, add string) {
 	groupFile = tildeToHome(groupFile)
 	reader, err := os.Open(groupFile)
 	ui.ErrFatal(err, "Didn't find group-file: ", groupFile)
-	defer reader.Close()
 	el, err := config.ReadGroupToml(reader)
+	reader.Close()
 	ui.ErrFatal(err, "Couldn't read group-file")
 	if len(el.List) == 0 {
 		ui.Fatal("EntityList is empty")
@@ -178,8 +178,8 @@ func setup(groupFile, hostname, pubFileName, add string) {
 	pubFileName = tildeToHome(pubFileName)
 	pubFile, err := os.Open(pubFileName)
 	ui.ErrFatal(err, "Couldn't open public-ssh: ", pubFileName)
-	defer pubFile.Close()
 	pub, err := ioutil.ReadAll(pubFile)
+	pubFile.Close()
 	ui.ErrFatal(err, "Couldn't read public-ssh: ", pubFileName)
 	clientApp = identity.NewIdentity(el, 2, hostname, string(pub))
 
@@ -194,6 +194,7 @@ func setup(groupFile, hostname, pubFileName, add string) {
 }
 
 func clientDel(c *cli.Context) {
+	ui.Fatal("Not implemented yet")
 }
 
 func update(c *cli.Context) {

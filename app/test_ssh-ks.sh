@@ -18,8 +18,9 @@ main(){
     #test Build
     #test ClientSetup
     #test ClientAdd
+    test ClientDel
     #test ServerSetup
-    test ServerSSH
+    #test ServerSSH
     stopTest
 }
 
@@ -32,6 +33,13 @@ testServerSSH(){
     testFile $ak
     testGrep "My private key" cat $ak
     testGrep ssh-rsa cat $ak
+    runSrv 1 update
+    testOK [ $(grep ssh-rsa $ak | wc -l) = 1 ]
+
+    # Add a second client
+    runCl 1 confirm
+    runSrv 1 update
+    testOK [ $(grep ssh-rsa $ak | wc -l) = 2 ]
 }
 
 testServerSetup(){
@@ -80,6 +88,15 @@ testClientAdd(){
     testOK runCl 2 update
     testNGrep "Proposed config" runCl 2 list
     testGrep client_2 runCl 2 list
+}
+
+testClientDel(){
+    cothoritySetup
+    clientSetup
+    testOK [ $( runCl 1 list | grep ssh-rsa | wc -l ) = 1 ]
+    runCl 1 confirm
+    testOK [ $( runCl 1 list | grep ssh-rsa | wc -l ) = 2 ]
+    runCl 1 clientRemove
 }
 
 testClientSetup(){
