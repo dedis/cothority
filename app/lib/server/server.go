@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -62,7 +61,7 @@ var RequestTimeOut = time.Second * 1
 // key, what is the listening address
 func InteractiveConfig(binaryName string, ed25519 bool) {
 	ui.Info("Setting up a cothority-server.")
-	str := ui.Inputf(DefaultPort, "Please enter the [address:]PORT for incoming requests")
+	str := ui.Inputf(strconv.Itoa(DefaultPort), "Please enter the [address:]PORT for incoming requests")
 	// let's dissect the port / IP
 	var hostStr string
 	var ipProvided = true
@@ -123,7 +122,7 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 
 	// Let's directly ask the user for a reachable address
 	if failedPublic {
-		publicAddress = askReachableAddress(reader, portStr)
+		publicAddress = askReachableAddress(portStr)
 	} else {
 		if isPublicIP(publicAddress) {
 			// try  to connect to ipfound:portgiven
@@ -131,7 +130,7 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 			ui.Info("Check if the address", tryIP, "is reachable from Internet...")
 			if err := tryConnect(tryIP, serverBinding); err != nil {
 				ui.Error("Could not connect to your public IP")
-				publicAddress = askReachableAddress(reader, portStr)
+				publicAddress = askReachableAddress(portStr)
 			} else {
 				publicAddress = tryIP
 				ui.Info("Address", publicAddress, "is publicly available from Internet.")
@@ -326,7 +325,7 @@ func isPublicIP(ip string) bool {
 
 // Returns true if file exists and user is OK to overwrite, or file dont exists
 // Return false if file exists and user is NOT OK to overwrite.
-func checkOverwrite(file string, reader *bufio.Reader) bool {
+func checkOverwrite(file string) bool {
 	// check if the file exists and ask for override
 	if _, err := os.Stat(file); err == nil {
 		return ui.InputYN(true, "Configuration file "+file+" already exists. Override?")
@@ -394,15 +393,7 @@ func getDefaultConfigFile(binaryName string) string {
 	}
 }
 
-func readString(reader *bufio.Reader) string {
-	str, err := reader.ReadString('\n')
-	if err != nil {
-		ui.Fatal("Could not read input.")
-	}
-	return strings.TrimSpace(str)
-}
-
-func askReachableAddress(reader *bufio.Reader, port string) string {
+func askReachableAddress(port string) string {
 	ipStr := ui.Input(DefaultAddress, "IP-address where your server can be reached")
 
 	splitted := strings.Split(ipStr, ":")

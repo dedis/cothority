@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/app/lib/config"
+	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -95,14 +96,14 @@ func main() {
 func checkConfig(c *cli.Context) {
 	tomlFileName := c.GlobalString(optionGroup)
 	f, err := os.Open(tomlFileName)
-	oi.ErrFatal(err, "Couldn't open group definition file.")
+	ui.ErrFatal(err, "Couldn't open group definition file.")
 	el, err := config.ReadGroupToml(f)
-	oi.ErrFatal(err, "Error while reading group definition file.")
+	ui.ErrFatal(err, "Error while reading group definition file.")
 	if len(el.List) == 0 {
-		oi.Fatalf("Empty entity or invalid group defintion in: %s",
+		ui.Fatalf("Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
-	oi.Info("Will check the availability and responsiveness of the " +
+	ui.Info("Will check the availability and responsiveness of the " +
 		"servers forming the group and inform you about possible " +
 		"problems.\nThis make take some time ...")
 
@@ -123,7 +124,7 @@ func checkConfig(c *cli.Context) {
 		}
 	}
 	if failures > 0 {
-		oi.Fatalf("This many failures: %d", failures)
+		ui.Fatalf("This many failures: %d", failures)
 	}
 	return
 }
@@ -138,16 +139,16 @@ func checkList(list *sda.EntityList) int {
 	msg := "verification"
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		oi.Errorf("Error '%v' while contacting servers: %s",
+		ui.Errorf("Error '%v' while contacting servers: %s",
 			err, serverStr)
 		return 1
 	} else {
 		err := verifySignatureHash([]byte(msg), sig, list)
 		if err != nil {
-			oi.Errorf("Received signature was invalid: %v", err)
+			ui.Errorf("Received signature was invalid: %v", err)
 			return 1
 		} else {
-			oi.Info("Received signature successfully")
+			ui.Info("Received signature successfully")
 		}
 	}
 	return 0
@@ -160,16 +161,16 @@ func signFile(c *cli.Context) error {
 	groupToml := c.GlobalString(optionGroup)
 	file, err := os.Open(fileName)
 	if err != nil {
-		oi.ErrFatal(err, "Couldn't read file to be signed.")
+		ui.ErrFatal(err, "Couldn't read file to be signed.")
 	}
 	sig, err := sign(file, groupToml)
-	oi.ErrFatal(err, "Couldn't create signature.")
+	ui.ErrFatal(err, "Couldn't create signature.")
 	dbg.Lvl3(sig)
 	var outFile *os.File
 	outFileName := c.String("out")
 	if outFileName != "" {
 		outFile, err = os.Create(outFileName)
-		oi.ErrFatal(err, "Couldn't create signature file.")
+		ui.ErrFatal(err, "Couldn't create signature file.")
 	} else {
 		outFile = os.Stdout
 	}
@@ -193,13 +194,13 @@ func verifyFile(c *cli.Context) error {
 func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		oi.Fatal("Couldn't encode signature.")
+		ui.Fatal("Couldn't encode signature.")
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
 	outW.Write([]byte("\n"))
 	_, err = out.WriteTo(outW)
-	oi.ErrFatal(err, "Couldn't write signature.")
+	ui.ErrFatal(err, "Couldn't write signature.")
 	outW.Write([]byte("\n"))
 }
 
@@ -278,7 +279,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	dbg.Lvl4("Reading signature")
 	var sigBytes []byte
 	if sigFileName == "" {
-		oi.Info("Reading signature from standard input ...")
+		ui.Info("Reading signature from standard input ...")
 		sigBytes, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		sigBytes, err = ioutil.ReadFile(sigFileName)
