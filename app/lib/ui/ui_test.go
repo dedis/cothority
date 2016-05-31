@@ -25,6 +25,10 @@ func TestInput(t *testing.T) {
 	assert.Equal(t, "[?] Question [def]: ", getOutput())
 	setInput("")
 	assert.Equal(t, "def", Input("def", "Question"))
+	dbg.Print("two-lines-input")
+	setInput("1\n2")
+	assert.Equal(t, "1", Input("", "Question1"))
+	assert.Equal(t, "2", Input("1", "Question2"))
 }
 
 func TestInputYN(t *testing.T) {
@@ -49,7 +53,7 @@ func TestInfo(t *testing.T) {
 func setInput(s string) {
 	// Flush output
 	getOutput()
-	in = bytes.NewReader([]byte(s + "\n"))
+	in = bufio.NewReader(bytes.NewReader([]byte(s + "\n")))
 }
 
 func getOutput() string {
