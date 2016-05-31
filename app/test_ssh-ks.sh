@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-DBG_SHOW=1
+DBG_SHOW=2
 # Debug-level for server
 DBG_SRV=1
 # Debug-level for client
@@ -15,10 +15,10 @@ STATICDIR=test
 main(){
     startTest
     build
-    test Build
+    #test Build
     test ClientSetup
-    test ClientAdd
-    test ServerSetup
+    #test ClientAdd
+    #test ServerSetup
     stopTest
 }
 

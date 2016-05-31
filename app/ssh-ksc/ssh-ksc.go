@@ -14,8 +14,8 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/dedis/cothority/app/lib/config"
-	"github.com/dedis/cothority/app/lib/oi"
 	"github.com/dedis/cothority/app/lib/server"
+	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/dbg"
 	_ "github.com/dedis/cothority/services"
 	"github.com/dedis/cothority/services/identity"
@@ -107,7 +107,7 @@ func main() {
 		dbg.SetDebugVisible(c.Int("debug"))
 		configFile = c.String("config") + "/config.bin"
 		if err := loadConfig(); err != nil {
-			oi.Error("Problems reading config-file. Most probably you\n",
+			ui.Error("Problems reading config-file. Most probably you\n",
 				"should start a new one by running with the 'setup'\n",
 				"argument.")
 		}
@@ -154,10 +154,10 @@ func cmdSetup(c *cli.Context) {
 	if c.String("name") != "" {
 		name = c.String("name")
 	} else {
-		oi.ErrFatal(err, "Couldn't get hostname for naming")
+		ui.ErrFatal(err, "Couldn't get hostname for naming")
 	}
 	if c.Args().First() == "" {
-		oi.Fatal("Group-file argument missing")
+		ui.Fatal("Group-file argument missing")
 	}
 
 	setup(c.Args().First(), name, c.GlobalString("config-ssh")+"/id_rsa.pub",
@@ -167,26 +167,30 @@ func cmdSetup(c *cli.Context) {
 func setup(groupFile, hostname, pubFileName, add string) {
 	groupFile = tildeToHome(groupFile)
 	reader, err := os.Open(groupFile)
-	oi.ErrFatal(err, "Didn't find group-file: ", groupFile)
+	ui.ErrFatal(err, "Didn't find group-file: ", groupFile)
 	defer reader.Close()
 	el, err := config.ReadGroupToml(reader)
-	oi.ErrFatal(err, "Couldn't read group-file")
+	ui.ErrFatal(err, "Couldn't read group-file")
+	if len(el.List) == 0 {
+		ui.Fatal("EntityList is empty")
+	}
 
 	pubFileName = tildeToHome(pubFileName)
 	pubFile, err := os.Open(pubFileName)
-	oi.ErrFatal(err, "Couldn't open public-ssh: ", pubFileName)
+	ui.ErrFatal(err, "Couldn't open public-ssh: ", pubFileName)
 	defer pubFile.Close()
 	pub, err := ioutil.ReadAll(pubFile)
-	oi.ErrFatal(err, "Couldn't read public-ssh: ", pubFileName)
+	ui.ErrFatal(err, "Couldn't read public-ssh: ", pubFileName)
 	clientApp = identity.NewIdentity(el, 2, hostname, string(pub))
 
 	if add == "" {
-		oi.ErrFatal(clientApp.CreateIdentity(), "Couldn't contact servers")
+		dbg.Print(clientApp)
+		ui.ErrFatal(clientApp.CreateIdentity(), "Couldn't contact servers")
 	} else {
 		id, err := hex.DecodeString(add)
-		oi.ErrFatal(err, "Couldn't convert id to hex")
-		oi.ErrFatal(clientApp.AttachToIdentity(identity.ID(id)), "Couldn't attach")
-		oi.Info("Proposed to attach to given identity - now you need to confirm it.")
+		ui.ErrFatal(err, "Couldn't convert id to hex")
+		ui.ErrFatal(clientApp.AttachToIdentity(identity.ID(id)), "Couldn't attach")
+		ui.Info("Proposed to attach to given identity - now you need to confirm it.")
 	}
 }
 
@@ -195,48 +199,48 @@ func clientDel(c *cli.Context) {
 
 func update(c *cli.Context) {
 	checkClientApp()
-	oi.ErrFatal(clientApp.ConfigUpdate(), "Couldn't update the config")
-	oi.ErrFatal(clientApp.ConfigNewCheck(), "Didn't get newest proposals")
+	ui.ErrFatal(clientApp.ConfigUpdate(), "Couldn't update the config")
+	ui.ErrFatal(clientApp.ConfigNewCheck(), "Didn't get newest proposals")
 	list(c)
 }
 
 func check(c *cli.Context) {
-	oi.ErrFatal(server.CheckConfig(c.Args().First()))
+	ui.ErrFatal(server.CheckConfig(c.Args().First()))
 }
 
 func confirm(c *cli.Context) {
 	checkClientApp()
 	if clientApp.Proposed == nil {
-		oi.Fatal("Didn't find a proposed config - check if one exists with 'listNew'.")
+		ui.Fatal("Didn't find a proposed config - check if one exists with 'listNew'.")
 	}
-	oi.ErrFatal(clientApp.VoteProposed(true))
-	oi.Info("Confirmed new config")
-	oi.ErrFatal(clientApp.ConfigUpdate())
-	oi.ErrFatal(clientApp.ConfigNewCheck())
+	ui.ErrFatal(clientApp.VoteProposed(true))
+	ui.Info("Confirmed new config")
+	ui.ErrFatal(clientApp.ConfigUpdate())
+	ui.ErrFatal(clientApp.ConfigNewCheck())
 	list(c)
 }
 
 func list(c *cli.Context) {
-	oi.Info("Account name:", clientApp.ManagerStr)
-	oi.Infof("Identity-ID: %x", clientApp.ID)
-	oi.Infof("Current config: %s", clientApp.Config)
+	ui.Info("Account name:", clientApp.ManagerStr)
+	ui.Infof("Identity-ID: %x", clientApp.ID)
+	ui.Infof("Current config: %s", clientApp.Config)
 	if clientApp.Proposed != nil {
-		oi.Infof("Proposed config: %s", clientApp.Proposed)
+		ui.Infof("Proposed config: %s", clientApp.Proposed)
 	}
 }
 
 func listNew(c *cli.Context) {
 	if clientApp == nil {
-		oi.Fatal("No configuration available. Please 'setup' first.")
+		ui.Fatal("No configuration available. Please 'setup' first.")
 	}
-	oi.ErrFatal(clientApp.ConfigNewCheck(), "Couldn't update the config")
+	ui.ErrFatal(clientApp.ConfigNewCheck(), "Couldn't update the config")
 	list(c)
 }
 
 func tildeToHome(path string) string {
 	if strings.HasPrefix(path, "~") {
 		usr, err := user.Current()
-		oi.ErrFatal(err)
+		ui.ErrFatal(err)
 		return usr.HomeDir + path[1:len(path)]
 	}
 	return path
@@ -244,6 +248,6 @@ func tildeToHome(path string) string {
 
 func checkClientApp() {
 	if clientApp == nil {
-		oi.Fatal("No configuration available. Please 'setup' first.")
+		ui.Fatal("No configuration available. Please 'setup' first.")
 	}
 }
