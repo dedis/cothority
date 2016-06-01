@@ -84,9 +84,10 @@ func main() {
 		},
 	}
 	app.Before = func(c *cli.Context) error {
-		os.Mkdir(c.String("config"), 0660)
+		configDir := tildeToHome(c.String("config"))
+		os.Mkdir(configDir, 0660)
 		dbg.SetDebugVisible(c.Int("debug"))
-		configFile = c.String("config") + "/config.bin"
+		configFile = configDir + "/config.bin"
 		if err := loadConfig(); err != nil {
 			ui.Error("Problems reading config-file. Most probably you\n",
 				"should start a new one by running with the 'setup'\n",
@@ -172,8 +173,8 @@ func addId(c *cli.Context) {
 	iden, err := identity.NewIdentityFromCothority(el, id)
 	ui.ErrFatal(err, "Couldn't get identity")
 	serverKS.IDs = append(serverKS.IDs, iden)
-	serverKS.PathSSH = c.GlobalString("config-ssh")
-	serverKS.PathSSHKS = c.GlobalString("config")
+	serverKS.PathSSH = tildeToHome(c.GlobalString("config-ssh"))
+	serverKS.PathSSHKS = tildeToHome(c.GlobalString("config"))
 	updateAllow(true)
 	list(c)
 }

@@ -104,9 +104,10 @@ func main() {
 		},
 	}
 	app.Before = func(c *cli.Context) error {
-		os.Mkdir(c.String("config"), 0660)
+		configDir := tildeToHome(c.String("config"))
+		os.Mkdir(configDir, 0660)
 		dbg.SetDebugVisible(c.Int("debug"))
-		configFile = c.String("config") + "/config.bin"
+		configFile = configDir + "/config.bin"
 		if err := loadConfig(); err != nil {
 			ui.Error("Problems reading config-file. Most probably you\n",
 				"should start a new one by running with the 'setup'\n",
@@ -117,7 +118,7 @@ func main() {
 	app.After = func(c *cli.Context) error {
 		if clientApp != nil {
 			err := saveConfig()
-			dbg.ErrFatal(err, "Error while creating config-file", configFile)
+			ui.ErrFatal(err, "Error while creating config-file", configFile)
 		}
 		return nil
 	}
@@ -218,7 +219,13 @@ func update(c *cli.Context) {
 }
 
 func check(c *cli.Context) {
-	ui.ErrFatal(server.CheckConfig(c.Args().First()))
+	groupFile := c.Args().First()
+	if groupFile == "" {
+		ui.Info("Taking default group-definition")
+		ui.ErrFatal(server.CheckServers(clientApp.Cothority, nil))
+	} else {
+		ui.ErrFatal(server.CheckConfig(c.Args().First()))
+	}
 }
 
 func confirm(c *cli.Context) {

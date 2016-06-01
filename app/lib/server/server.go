@@ -186,7 +186,6 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 // CheckConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func CheckConfig(tomlFileName string) error {
-	success := true
 	f, err := os.Open(tomlFileName)
 	ui.ErrFatal(err, "Couldn't open group definition file")
 	el, descs, err := config.ReadGroupDescToml(f)
@@ -196,15 +195,29 @@ func CheckConfig(tomlFileName string) error {
 			tomlFileName)
 	}
 	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
+	return CheckServers(el, descs)
+}
+
+// CheckServers contacts all servers in the entity-list and then makes checks
+// on each pair. If 'descs' is 'nil', it doesn't print the description.
+func CheckServers(el *sda.EntityList, descs []string) error {
+	success := true
 	// First check all servers individually
 	for i := range el.List {
-		success = success && checkList(sda.NewEntityList(el.List[i:i+1]), descs[i:i+1]) == nil
+		desc := []string{"no description", "no description"}
+		if descs != nil {
+			desc = descs[i : i+1]
+		}
+		success = success && checkList(sda.NewEntityList(el.List[i:i+1]), desc) == nil
 	}
 	if len(el.List) > 1 {
 		// Then check pairs of servers
 		for i, first := range el.List {
 			for j, second := range el.List[i+1:] {
-				desc := []string{descs[i], descs[i+j+1]}
+				desc := []string{"no description", "no description"}
+				if descs != nil {
+					desc = []string{descs[i], descs[i+j+1]}
+				}
 				es := []*network.Entity{first, second}
 				success = success && checkList(sda.NewEntityList(es), desc) == nil
 				es[0], es[1] = es[1], es[0]
