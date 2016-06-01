@@ -40,11 +40,18 @@ func main() {
 	app.Usage = "Serves as a server to listen to requests"
 	app.Commands = []cli.Command{
 		{
-			Name:      "setup",
-			Aliases:   []string{"s"},
-			Usage:     "setting up a new server",
-			Action:    setup,
+			Name:      "addId",
+			Aliases:   []string{"a"},
+			Usage:     "adding a new identity",
+			Action:    addId,
 			ArgsUsage: "group-file identity-hash",
+		},
+		{
+			Name:      "delId",
+			Aliases:   []string{"d"},
+			Usage:     "delete an identity",
+			Action:    delId,
+			ArgsUsage: "identity-hash",
 		},
 		{
 			Name:    "update",
@@ -119,7 +126,28 @@ func saveConfig() {
 	return
 }
 
-func setup(c *cli.Context) {
+func delId(c *cli.Context) {
+	idHex, err := hex.DecodeString(c.Args().First())
+	ui.ErrFatal(err)
+	idFound := -1
+	for idCnt, id := range serverKS.IDs {
+		if bytes.Equal(id.ID, idHex) {
+			ui.Infof("Will delete id %x", idHex)
+			idFound = idCnt
+		}
+	}
+	if idFound == -1 {
+		ui.Errorf("Didn't find ID %x", idHex)
+		list(c)
+		return
+	}
+	updateAllow(false)
+	serverKS.IDs = append(serverKS.IDs[:idFound], serverKS.IDs[idFound+1:]...)
+	updateAllow(true)
+	list(c)
+}
+
+func addId(c *cli.Context) {
 	groupFile := tildeToHome(c.Args().Get(0))
 	idStr := c.Args().Get(1)
 	if groupFile == "" {
@@ -129,10 +157,11 @@ func setup(c *cli.Context) {
 		ui.Fatal("Please inidicate what ID to follow")
 	}
 
+	updateAllow(false)
 	reader, err := os.Open(groupFile)
 	ui.ErrFatal(err, "Didn't find group-file: ", groupFile)
-	defer reader.Close()
 	el, err := config.ReadGroupToml(reader)
+	reader.Close()
 	ui.ErrFatal(err, "Couldn't read group-file")
 	if el == nil {
 		ui.Fatal("Group-file didn't contain any entities")
@@ -145,7 +174,6 @@ func setup(c *cli.Context) {
 	serverKS.IDs = append(serverKS.IDs, iden)
 	serverKS.PathSSH = c.GlobalString("config-ssh")
 	serverKS.PathSSHKS = c.GlobalString("config")
-
 	updateAllow(true)
 	list(c)
 }
@@ -160,11 +188,9 @@ func update(c *cli.Context) {
 }
 
 func updateAllow(add bool) {
-	ui.Info(serverKS.PathSSH)
 	ak := serverKS.PathSSH + "/authorized_keys"
 	for _, id := range serverKS.IDs {
 		for _, ssh := range id.Config.Data {
-			ui.Info(ssh)
 			if add {
 				if !grep(ak, ssh) {
 					addLine(ak, ssh)
@@ -196,7 +222,8 @@ func addLine(file, str string) {
 	}
 }
 
-func deleteLine(file, str string) {
+func deleteLine(file, strOrig string) {
+	str := strings.TrimSpace(strOrig)
 	if !grep(file, str) {
 		return
 	}

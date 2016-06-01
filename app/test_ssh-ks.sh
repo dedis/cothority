@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=1
@@ -19,33 +18,49 @@ main(){
     test ClientSetup
     test ClientAdd
     test ClientDel
-    test ServerSetup
+    test ServerAddId
     test ServerSSH
+    test ServerDelId
     stopTest
 }
 
+testServerDelId(){
+    serverSetup
+    testCount 1 ssh-rsa cat $AK
+    clientSetup user
+    runCl 1 confirm
+    testOK runSrv 1 addId group.toml $ID
+    testCount 2 ssh-rsa cat $AK
+    testOK runSrv 1 delId $ID
+    testCount 1 ssh-rsa cat $AK
+}
+
 testServerSSH(){
-    cothoritySetup
-    clientSetup
-    ak=srv1/authorized_keys
-    echo "My private key" > $ak
-    runSrv 1 setup group.toml $ID
-    testFile $ak
-    testGrep "My private key" cat $ak
-    testGrep ssh-rsa cat $ak
+    serverSetup
+    testFile $AK
+    testGrep "My private key" cat $AK
+    testGrep ssh-rsa cat $AK
     runSrv 1 update
-    testCount 1 ssh-rsa cat $ak
+    testCount 1 ssh-rsa cat $AK
 
     # Add a second client
     runCl 1 confirm
     runSrv 1 update
-    testCount 2 ssh-rsa cat $ak
+    testCount 2 ssh-rsa cat $AK
 }
 
-testServerSetup(){
+serverSetup(){
     cothoritySetup
     clientSetup
-    testOK runSrv 1 setup group.toml $ID
+    AK=srv1/authorized_keys
+    echo "My private key" > $AK
+    runSrv 1 addId group.toml $ID
+}
+
+testServerAddId(){
+    cothoritySetup
+    clientSetup
+    testOK runSrv 1 addId group.toml $ID
     testGrep client_1 runSrv 1 list
     testNGrep client_2 runSrv 1 list
 
@@ -57,7 +72,7 @@ testServerSetup(){
 
     testOut "Adding identity 'user'"
     clientSetup user
-    testOK runSrv 1 setup group.toml $ID
+    testOK runSrv 1 addId group.toml $ID
     testGrep client_1 runSrv 1 list
     testGrep client_2 runSrv 1 list
     testGrep user_1 runSrv 1 list
