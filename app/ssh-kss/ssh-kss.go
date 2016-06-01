@@ -24,9 +24,8 @@ import (
 )
 
 type servers struct {
-	PathSSH   string
-	PathSSHKS string
-	IDs       []*identity.Identity
+	PathSSH string
+	IDs     []*identity.Identity
 }
 
 var serverKS = &servers{}
@@ -73,12 +72,7 @@ func main() {
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 		cli.StringFlag{
-			Name:  "config, c",
-			Value: "/etc/ssh-ks",
-			Usage: "The configuration-file of ssh-keystore",
-		},
-		cli.StringFlag{
-			Name:  "config-ssh, cs",
+			Name:  "config, cs",
 			Value: "~/.ssh",
 			Usage: "The configuration-directory of the ssh-directory",
 		},
@@ -173,8 +167,7 @@ func addId(c *cli.Context) {
 	iden, err := identity.NewIdentityFromCothority(el, id)
 	ui.ErrFatal(err, "Couldn't get identity")
 	serverKS.IDs = append(serverKS.IDs, iden)
-	serverKS.PathSSH = tildeToHome(c.GlobalString("config-ssh"))
-	serverKS.PathSSHKS = tildeToHome(c.GlobalString("config"))
+	serverKS.PathSSH = tildeToHome(c.GlobalString("config"))
 	updateAllow(true)
 	list(c)
 }
