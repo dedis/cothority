@@ -10,6 +10,10 @@ import (
 	"github.com/dedis/cothority/protocols/example/channels"
 )
 
+func TestMain(m *testing.M) {
+	dbg.MainTest(m)
+}
+
 // Tests a 2-node system
 func TestClose(t *testing.T) {
 	defer dbg.AfterTest(t)
