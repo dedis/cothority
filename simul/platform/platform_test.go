@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/simul/platform"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/simul/platform"
 )
 
 var testfile = `Machines = 8

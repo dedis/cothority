@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // Get the Tx count, decode the variable length integer

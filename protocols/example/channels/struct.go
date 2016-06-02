@@ -1,6 +1,6 @@
 package example_channels
 
-import "gopkg.in/dedis/cothority.v0/lib/sda"
+import "github.com/dedis/cothority/lib/sda"
 
 // Announce is used to pass a message to all children
 type Announce struct {

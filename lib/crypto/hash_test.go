@@ -8,9 +8,9 @@ import (
 
 	"os"
 
+	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/edwards/ed25519"
-	"gopkg.in/dedis/cothority.v0/lib/crypto"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 var hashSuite = ed25519.NewAES128SHA256Ed25519(false)

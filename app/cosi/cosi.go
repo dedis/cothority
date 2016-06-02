@@ -16,14 +16,14 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
+	s "github.com/dedis/cothority/services/cosi"
 	"gopkg.in/codegangsta/cli.v1"
-	"gopkg.in/dedis/cothority.v0/lib/config"
-	"gopkg.in/dedis/cothority.v0/lib/cosi"
-	"gopkg.in/dedis/cothority.v0/lib/crypto"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/network"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
-	s "gopkg.in/dedis/cothority.v0/services/cosi"
 )
 
 // RequestTimeOut defines when the client stops waiting for the CoSi group to

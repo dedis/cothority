@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"gopkg.in/dedis/cothority.v0/lib/crypto"
-	"gopkg.in/dedis/cothority.v0/lib/network"
+	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/network"
 )
 
 // MarshalJSON implements golang's JSON marshal interface

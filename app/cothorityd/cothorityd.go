@@ -18,14 +18,14 @@ import (
 	"path"
 	"runtime"
 
+	c "github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/lib/dbg"
 	"gopkg.in/codegangsta/cli.v1"
-	c "gopkg.in/dedis/cothority.v0/lib/config"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
-	_ "gopkg.in/dedis/cothority.v0/protocols"
-	_ "gopkg.in/dedis/cothority.v0/services"
+	_ "github.com/dedis/cothority/protocols"
+	_ "github.com/dedis/cothority/services"
 )
 
 // DefaultName is the name of the binary we produce and is used to create a directory

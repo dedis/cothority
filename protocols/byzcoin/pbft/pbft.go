@@ -7,10 +7,10 @@ import (
 	"math"
 	"time"
 
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
-	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain"
 )
 
 const (

@@ -24,9 +24,9 @@ import (
 
 	"errors"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Network part //

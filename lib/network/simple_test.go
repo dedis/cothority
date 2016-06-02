@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"golang.org/x/net/context"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 var SimplePacketType MessageTypeID

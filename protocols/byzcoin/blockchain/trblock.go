@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"net"
 
-	"gopkg.in/dedis/cothority.v0/lib/crypto"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 type Block struct {

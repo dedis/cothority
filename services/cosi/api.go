@@ -3,8 +3,8 @@ package cosi
 import (
 	"errors"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
 )
 
 // Client is a structure to communicate with the CoSi

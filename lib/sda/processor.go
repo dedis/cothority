@@ -4,8 +4,8 @@ import (
 	"errors"
 	"reflect"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/network"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 )
 
 // ServiceProcessor allows for an easy integration of external messages

@@ -3,8 +3,8 @@ package sda
 import (
 	"sync"
 
+	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
-	"gopkg.in/dedis/cothority.v0/lib/network"
 )
 
 // SDAData is to be embedded in every message that is made for a

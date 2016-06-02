@@ -9,13 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
 	// Import protocols so every protocols is registered to the sda
 	"strings"
 
-	_ "gopkg.in/dedis/cothority.v0/protocols"
-	_ "gopkg.in/dedis/cothority.v0/services"
+	_ "github.com/dedis/cothority/protocols"
+	_ "github.com/dedis/cothority/services"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes

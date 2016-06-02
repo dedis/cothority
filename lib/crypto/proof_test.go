@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"gopkg.in/dedis/cothority.v0/lib/crypto"
+	"github.com/dedis/cothority/lib/crypto"
 )
 
 func TestPath(t *testing.T) {

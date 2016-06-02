@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
-	"gopkg.in/dedis/cothority.v0/protocols/ntree"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/ntree"
 )
 
 func TestNtree(t *testing.T) {

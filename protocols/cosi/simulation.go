@@ -2,12 +2,12 @@ package cosi
 
 import (
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
-	"gopkg.in/dedis/cothority.v0/lib/cosi"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/monitor"
-	"gopkg.in/dedis/cothority.v0/lib/network"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 func init() {

@@ -1,7 +1,7 @@
 package sda
 
 import (
-	"gopkg.in/dedis/cothority.v0/lib/network"
+	"github.com/dedis/cothority/lib/network"
 )
 
 // Context is the interface that is given to an Service

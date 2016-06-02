@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
-	"gopkg.in/dedis/cothority.v0/protocols/randhound"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/randhound"
 )
 
 func TestRandHound(t *testing.T) {

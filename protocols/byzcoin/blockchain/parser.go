@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 )
 
 type Parser struct {

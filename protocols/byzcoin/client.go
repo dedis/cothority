@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}

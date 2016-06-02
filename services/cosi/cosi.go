@@ -3,13 +3,13 @@ package cosi
 import (
 	"errors"
 
+	libcosi "github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/cothority/lib/crypto"
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/crypto/abstract"
-	libcosi "gopkg.in/dedis/cothority.v0/lib/cosi"
-	"gopkg.in/dedis/cothority.v0/lib/crypto"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-	"gopkg.in/dedis/cothority.v0/lib/network"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
-	"gopkg.in/dedis/cothority.v0/protocols/cosi"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
