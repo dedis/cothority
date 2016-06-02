@@ -465,7 +465,6 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
-	//t.Skip("Fixme: Fails on travis...")
 	nbrNodes := 2
 	nbrParallel := 2
 	local := sda.NewLocalTest()
@@ -484,7 +483,6 @@ func TestClient_Parallel(t *testing.T) {
 	wg.Add(nbrParallel)
 	for i := 0; i < nbrParallel; i++ {
 		go func(i int) {
-			// time.Sleep(time.Duration(i) * time.Millisecond * 100)
 			dbg.Lvl1("Starting message", i)
 			r := &simpleRequest{
 				Entities: el,
