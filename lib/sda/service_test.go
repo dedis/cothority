@@ -465,6 +465,7 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
+	t.Skip()
 	nbrNodes := 2
 	nbrParallel := 2
 	local := sda.NewLocalTest()
