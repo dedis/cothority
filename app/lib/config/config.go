@@ -128,34 +128,48 @@ type ServerToml struct {
 	Description string
 }
 
+// Group holds the EntityList and the server-descriptions
+type Group struct {
+	EntityList  *sda.EntityList
+	description map[*network.Entity]string
+}
+
+// GetDescription returns the description of an entity
+func (g *Group) GetDescription(e *network.Entity) string {
+	return g.description[e]
+}
+
 // ReadGroupDescToml reads a group.toml file and returns the list of Entities
 // and descriptions in the file.
-func ReadGroupDescToml(f io.Reader) (*sda.EntityList, []string, error) {
+func ReadGroupDescToml(f io.Reader) (*Group, error) {
 	group := &GroupToml{}
 	_, err := toml.DecodeReader(f, group)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// convert from ServerTomls to entities
 	var entities = make([]*network.Entity, len(group.Servers))
-	var descs = make([]string, len(group.Servers))
+	var descs = make(map[*network.Entity]string)
 	for i, s := range group.Servers {
 		en, err := s.toEntity(network.Suite)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		entities[i] = en
-		descs[i] = s.Description
+		descs[en] = s.Description
 	}
 	el := sda.NewEntityList(entities)
-	return el, descs, nil
+	return &Group{el, descs}, nil
 }
 
 // ReadGroupToml reads a group.toml file and returns the list of Entity
 // described in the file.
 func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
-	el, _, err := ReadGroupDescToml(f)
-	return el, err
+	group, err := ReadGroupDescToml(f)
+	if err != nil {
+		return nil, err
+	}
+	return group.EntityList, nil
 }
 
 // Save writes the grouptoml definition into the file
