@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 # highest number of servers and clients
-NBR=3
+NBR=${NBR:-3}
 # Use for suppressing building if that directory exists
-STATICDIR=
+STATICDIR=${STATICDIR:-}
 # If set, always build
-BUILD=
+BUILD=${BUILD:-}
 # Show the output of the commands
-DBG_SHOW=0
+DBG_SHOW=${DBG_SHOW:-0}
 
 startTest(){
     set +m
@@ -46,7 +46,18 @@ testGrep(){
     testOut "Assert grepping '$S' in '$@'"
     runGrep "$S" "$@"
     if [ ! "$GRP" ]; then
-        fail "Didn't find '$S' in output of '$@'"
+        fail "Didn't find '$S' in output of '$@': $GRP"
+    fi
+}
+
+testCount(){
+    C="$1"
+    S="$2"
+    shift 2
+    testOut "Assert counting '$C' of '$S' in '$@'"
+    runGrep "$S" "$@"
+    if [ $WC -ne $C ]; then
+        fail "Didn't find '$C' (but '$WC') of '$S' in output of '$@': $GRP"
     fi
 }
 
@@ -56,7 +67,7 @@ testNGrep(){
     testOut "Assert NOT grepping '$S' in '$@'"
     runGrep "$S" "$@"
     if [ "$GRP" ]; then
-        fail "Did find '$S' in output of '$@'"
+        fail "Did find '$S' in output of '$@': $GRP"
     fi
 }
 
@@ -101,6 +112,7 @@ runGrep(){
     OLDGREP=$GREP
     GREP=$( mktemp )
     dbgRun "$@"
+    WC=$( cat $GREP | egrep "$GRP" | wc -l )
     GRP=$( cat $GREP | egrep "$GRP" )
     GREP=$OLDGREP
 }
