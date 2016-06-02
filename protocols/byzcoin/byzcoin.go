@@ -10,13 +10,13 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/cothority.v0/lib/cosi"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/monitor"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
 	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain"
 	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain/blkparser"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // ByzCoin is the main struct for running the protocol

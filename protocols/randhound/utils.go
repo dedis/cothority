@@ -3,9 +3,9 @@ package randhound
 import (
 	"fmt"
 
+	"gopkg.in/dedis/cothority.v0/lib/network"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/cothority.v0/lib/network"
 )
 
 // Shard produces a pseudorandom sharding of the network entity list

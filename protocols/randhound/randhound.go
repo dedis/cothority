@@ -10,10 +10,10 @@ import (
 	"encoding/binary"
 	"time"
 
+	"gopkg.in/dedis/cothority.v0/lib/sda"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/poly"
 	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 func init() {

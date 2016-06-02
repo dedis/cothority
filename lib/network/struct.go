@@ -10,13 +10,13 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/protobuf.v0"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"gopkg.in/dedis/cothority.v0/lib/crypto"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/monitor"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/protobuf.v0"
 )
 
 // MaxRetry defines how many times should we try to connect

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // In this file we define the main structures used for a running protocol

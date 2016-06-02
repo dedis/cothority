@@ -8,8 +8,8 @@ import (
 	"io"
 	"os"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // Hash simply returns the Hash of the slice of bytes given

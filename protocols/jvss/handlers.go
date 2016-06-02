@@ -3,9 +3,9 @@ package jvss
 import (
 	"fmt"
 
-	"gopkg.in/dedis/crypto.v0/poly"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"gopkg.in/dedis/crypto.v0/poly"
 )
 
 // SecInitMsg are used to initialise new shared secrets both long- and
