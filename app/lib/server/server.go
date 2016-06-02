@@ -59,7 +59,7 @@ var RequestTimeOut = time.Second * 1
 
 // interactiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
-func InteractiveConfig(binaryName string, ed25519 bool) {
+func InteractiveConfig(binaryName string) {
 	ui.Info("Setting up a cothority-server.")
 	str := ui.Inputf(strconv.Itoa(DefaultPort), "Please enter the [address:]PORT for incoming requests")
 	// let's dissect the port / IP
@@ -139,7 +139,7 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 	}
 
 	// create the keys
-	privStr, pubStr := createKeyPair(ed25519)
+	privStr, pubStr := createKeyPair()
 	conf := &config.CothoritydConfig{
 		Public:    pubStr,
 		Private:   privStr,
@@ -347,7 +347,7 @@ func checkOverwrite(file string) bool {
 }
 
 // createKeyPair returns the private and public key hexadecimal representation
-func createKeyPair(ed25519 bool) (string, string) {
+func createKeyPair() (string, string) {
 	ui.Info("Creating ed25519 private and public keys.")
 	kp := crypconf.NewKeyPair(network.Suite)
 	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
@@ -355,12 +355,9 @@ func createKeyPair(ed25519 bool) (string, string) {
 		ui.Fatal("Error formating private key to hexadecimal. Abort.")
 	}
 	var point abstract.Point
-	if ed25519 {
-		// use the transformation for ed25519 signatures
-		//point = cosi.Ed25519Public(network.Suite, kp.Secret)
-	} else {
-		point = kp.Public
-	}
+	// use the transformation for EdDSA signatures
+	//point = cosi.Ed25519Public(network.Suite, kp.Secret)
+	point = kp.Public
 	pubStr, err := crypto.PubHex(network.Suite, point)
 	if err != nil {
 		ui.Fatal("Could not parse public key. Abort.")
@@ -481,7 +478,7 @@ func tryConnect(ip string, binding string) error {
 	}
 
 	if !bytes.Contains(buffer, []byte("1")) {
-		return errors.New("Address unrechable")
+		return errors.New("Address unreachable")
 	}
 	return nil
 }
