@@ -188,35 +188,36 @@ func InteractiveConfig(binaryName string) {
 func CheckConfig(tomlFileName string) error {
 	f, err := os.Open(tomlFileName)
 	ui.ErrFatal(err, "Couldn't open group definition file")
-	el, descs, err := config.ReadGroupDescToml(f)
+	group, err := config.ReadGroupDescToml(f)
 	ui.ErrFatal(err, "Error while reading group definition file", err)
-	if len(el.List) == 0 {
+	if len(group.EntityList.List) == 0 {
 		ui.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
 	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
-	return CheckServers(el, descs)
+	return CheckServers(group)
 }
 
 // CheckServers contacts all servers in the entity-list and then makes checks
 // on each pair. If 'descs' is 'nil', it doesn't print the description.
-func CheckServers(el *sda.EntityList, descs []string) error {
+func CheckServers(g *config.Group) error {
 	success := true
 	// First check all servers individually
-	for i := range el.List {
-		desc := []string{"no description", "no description"}
-		if descs != nil {
-			desc = descs[i : i+1]
+	for _, e := range g.EntityList.List {
+		desc := []string{"none", "none"}
+		if d := g.GetDescription(e); d != "" {
+			desc = []string{d, d}
 		}
-		success = success && checkList(sda.NewEntityList(el.List[i:i+1]), desc) == nil
+		el := sda.NewEntityList([]*network.Entity{e})
+		success = success && checkList(el, desc) == nil
 	}
-	if len(el.List) > 1 {
+	if len(g.EntityList.List) > 1 {
 		// Then check pairs of servers
-		for i, first := range el.List {
-			for j, second := range el.List[i+1:] {
-				desc := []string{"no description", "no description"}
-				if descs != nil {
-					desc = []string{descs[i], descs[i+j+1]}
+		for i, first := range g.EntityList.List {
+			for _, second := range g.EntityList.List[i+1:] {
+				desc := []string{"none", "none"}
+				if d1 := g.GetDescription(first); d1 != "" {
+					desc = []string{d1, g.GetDescription(second)}
 				}
 				es := []*network.Entity{first, second}
 				success = success && checkList(sda.NewEntityList(es), desc) == nil
