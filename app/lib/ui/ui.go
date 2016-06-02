@@ -127,12 +127,7 @@ func print(lvl int, args ...interface{}) {
 		fmt.Fprint(out, prefix[lvl], " ")
 	case FormatNone:
 	}
-	for i, a := range args {
-		fmt.Fprint(out, a)
-		if i != len(args)-1 {
-			fmt.Fprint(out, " ")
-		}
-	}
+	fmt.Fprint(out, args...)
 	if lvl != input {
 		fmt.Fprint(out, "\n")
 	}
