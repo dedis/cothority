@@ -335,10 +335,10 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	}
 
 	b, err := m.MarshalBinary()
-
 	if err != nil {
 		return nil, err
 	}
+
 	serviceReq := &ClientRequest{
 		Service: c.ServiceID,
 		Data:    b,
