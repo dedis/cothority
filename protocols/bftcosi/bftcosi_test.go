@@ -16,16 +16,6 @@ import (
 var veriCount int
 var countMut sync.Mutex
 
-func verify(m []byte) bool {
-	countMut.Lock()
-	veriCount++
-	dbg.Print("Verification called", veriCount, "times")
-	countMut.Unlock()
-	dbg.Print("Ignoring message:", string(m))
-	// everything is OK, always:
-	return true
-}
-
 const TestProtocolName = "DummyBFTCoSi"
 
 func TestBftCoSi(t *testing.T) {
@@ -85,4 +75,14 @@ func TestBftCoSi(t *testing.T) {
 		}
 		local.CloseAll()
 	}
+}
+
+func verify(m []byte) bool {
+	countMut.Lock()
+	veriCount++
+	dbg.Lvl1("Verification called", veriCount, "times")
+	countMut.Unlock()
+	dbg.Lvl1("Ignoring message:", string(m))
+	// everything is OK, always:
+	return true
 }

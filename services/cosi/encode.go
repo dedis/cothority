@@ -11,7 +11,7 @@ import (
 )
 
 // MarshalJSON implements golang's JSON marshal interface
-func (s *ServiceResponse) MarshalJSON() ([]byte, error) {
+func (s *SignatureResponse) MarshalJSON() ([]byte, error) {
 	cw := new(bytes.Buffer)
 	rw := new(bytes.Buffer)
 
@@ -35,7 +35,7 @@ func (s *ServiceResponse) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements golang's JSON unmarshal interface
-func (s *ServiceResponse) UnmarshalJSON(data []byte) error {
+func (s *SignatureResponse) UnmarshalJSON(data []byte) error {
 	type Aux struct {
 		Sum       string
 		Challenge string
