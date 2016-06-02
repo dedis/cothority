@@ -1,14 +1,15 @@
-package manage_test
+package manage
 
 import (
 	"testing"
 
 	"bytes"
 
+	"reflect"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/manage"
 )
 
 type PropagateMsg struct {
@@ -21,8 +22,6 @@ func init() {
 
 // Tests an n-node system
 func TestPropagate(t *testing.T) {
-	//defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 3)
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
 		_, el, _ := local.GenTree(nbrNodes, false, true, true)
@@ -30,7 +29,12 @@ func TestPropagate(t *testing.T) {
 
 		i := 0
 		msg := &PropagateMsg{[]byte("propagate")}
-		nodes, err := manage.PropagateStartAndWaitSDA(o, el, msg, 1000,
+
+		tree := el.GenerateNaryTreeWithRoot(8, o.Entity())
+		dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
+		pi, err := o.CreateProtocolSDA(tree, "Propagate")
+		dbg.ErrFatal(err)
+		nodes, err := propagateStartAndWait(pi, msg, 1000,
 			func(m network.ProtocolMessage) {
 				if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
 					i++

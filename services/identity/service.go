@@ -73,7 +73,7 @@ func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.Proto
 	}
 
 	roster := ids.Root.EntityList
-	replies, err := manage.PropagateStartAndWaitService(s, roster,
+	replies, err := manage.PropagateStartAndWait(s, roster,
 		&PropagateIdentity{ids}, 1000, s.Propagate)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (s *Service) ProposeConfig(e *network.Entity, p *PropagateProposition) (net
 		return nil, errors.New("Didn't find Identity")
 	}
 	roster := sid.Root.EntityList
-	replies, err := manage.PropagateStartAndWaitService(s, roster,
+	replies, err := manage.PropagateStartAndWait(s, roster,
 		p, 1000, s.Propagate)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 	sid.Unlock()
 
 	// Propagate the vote
-	_, err = manage.PropagateStartAndWaitService(s, sid.Root.EntityList, v, 1000, s.Propagate)
+	_, err = manage.PropagateStartAndWait(s, sid.Root.EntityList, v, 1000, s.Propagate)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 			ID:     v.ID,
 			Latest: reply.Latest,
 		}
-		_, err = manage.PropagateStartAndWaitService(s, sid.Root.EntityList, usb, 1000, s.Propagate)
+		_, err = manage.PropagateStartAndWait(s, sid.Root.EntityList, usb, 1000, s.Propagate)
 		if err != nil {
 			return nil, err
 		}

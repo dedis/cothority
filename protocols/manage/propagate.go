@@ -37,18 +37,12 @@ type Propagate struct {
 	sync.Mutex
 }
 
-// CreateProtocolEntity is the necessary interface to start a protocol.
-// It is implemented by Service and Overlay.
-type CreateProtocolEntity interface {
-	CreateProtocol(t *sda.Tree, name string) (sda.ProtocolInstance, error)
-	Entity() *network.Entity
-}
-
 // PropagateSendData is the message to pass the data to the children
 type PropagateSendData struct {
 	// Data is the data to transmit
 	Data []byte
-	// Msec is the timeout in milliseconds
+	// How long the root will wait for the children before
+	// timing out
 	Msec int
 }
 
@@ -57,24 +51,11 @@ type PropagateReply struct {
 	Level int
 }
 
-// PropagateStartAndWaitSDA starts the propagation protocol and blocks until
+// PropagateStartAndWait starts the propagation protocol and blocks until
 // all children stored the new value or the timeout has been reached.
 // The return value is the number of nodes that acknowledged having
 // stored the new value or an error if the protocol couldn't start.
-// This is used when you want to start a protocol without a service.
-func PropagateStartAndWaitSDA(o *sda.Overlay, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
-	tree := el.GenerateNaryTreeWithRoot(8, o.Entity())
-	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
-	pi, err := o.CreateProtocolSDA(tree, "Propagate")
-	if err != nil {
-		return -1, err
-	}
-	return propagateStartAndWait(pi, msg, msec, f)
-}
-
-// PropagateStartAndWaitService is like PropagateStartAndWaitSDA but
-// is used when you want to start a protocol included in a service.
-func PropagateStartAndWaitService(c sda.Context, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
+func PropagateStartAndWait(c sda.Context, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
 	tree := el.GenerateNaryTreeWithRoot(8, c.Entity())
 	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 	pi, err := c.CreateProtocolService(tree, "Propagate")
@@ -84,6 +65,7 @@ func PropagateStartAndWaitService(c sda.Context, el *sda.EntityList, msg network
 	return propagateStartAndWait(pi, msg, msec, f)
 }
 
+// Separate function for testing
 func propagateStartAndWait(pi sda.ProtocolInstance, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
 	d, err := network.MarshalRegisteredType(msg)
 	if err != nil {
