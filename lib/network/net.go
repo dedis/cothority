@@ -9,7 +9,7 @@
 // it will automatically detect the underlying type of struct given, and decode
 // it accordingly. You can provide your own decode / encode methods if for
 // example, you have a variable length packet structure. Since this library uses
-// github.com/dedis/protobuf library for encoding, you just have to
+// gopkg.in/dedis/protobuf.v0 library for encoding, you just have to
 // implement MarshalBinary or UnmarshalBinary.
 package network
 
@@ -24,8 +24,8 @@ import (
 
 	"errors"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 

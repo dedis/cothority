@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dedis/crypto/config"
+	"gopkg.in/dedis/crypto.v0/config"
 	c "gopkg.in/dedis/cothority.v0/lib/config"
 	"gopkg.in/dedis/cothority.v0/lib/crypto"
 	"gopkg.in/dedis/cothority.v0/lib/network"

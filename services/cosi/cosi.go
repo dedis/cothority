@@ -3,7 +3,7 @@ package cosi
 import (
 	"errors"
 
-	"github.com/dedis/crypto/abstract"
+	"gopkg.in/dedis/crypto.v0/abstract"
 	libcosi "gopkg.in/dedis/cothority.v0/lib/cosi"
 	"gopkg.in/dedis/cothority.v0/lib/crypto"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"

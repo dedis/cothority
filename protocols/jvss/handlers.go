@@ -3,7 +3,7 @@ package jvss
 import (
 	"fmt"
 
-	"github.com/dedis/crypto/poly"
+	"gopkg.in/dedis/crypto.v0/poly"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
