@@ -222,7 +222,7 @@ func check(c *cli.Context) {
 	groupFile := c.Args().First()
 	if groupFile == "" {
 		ui.Info("Taking default group-definition")
-		ui.ErrFatal(server.CheckServers(clientApp.Cothority, nil))
+		ui.ErrFatal(server.CheckServers(&config.Group{EntityList: clientApp.Cothority}))
 	} else {
 		ui.ErrFatal(server.CheckConfig(c.Args().First()))
 	}

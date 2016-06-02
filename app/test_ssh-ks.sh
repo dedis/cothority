@@ -153,7 +153,7 @@ runCl(){
 runSrv(){
     nb=$1
     shift
-    dbgRun ./ssh-kss -d $DBG_SRV -c srv$nb -cs srv$nb $@
+    dbgRun ./ssh-kss -d $DBG_SRV --cs srv$nb $@
 }
 
 build(){

@@ -198,13 +198,14 @@ func updateAllow(add bool) {
 
 func grep(fileName, str string) bool {
 	buf, err := ioutil.ReadFile(fileName)
-	ui.ErrFatal(err)
+	if err != nil {
+		return false
+	}
 	return bytes.Contains(buf, []byte(str))
 }
 
 func addLine(file, str string) {
-	content, err := ioutil.ReadFile(file)
-	ui.ErrFatal(err)
+	content, _ := ioutil.ReadFile(file)
 	found := false
 	for _, l := range strings.Split(string(content), "\n") {
 		found = found || (l == str)
