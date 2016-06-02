@@ -52,6 +52,8 @@ func (p *CommunicateProtocolHandlers) HandleDataUp(msg StructDataUp) error {
 	toSend := &DataDown{receivedNo + 1}
 
 	for _, c := range p.Children() {
+		var a int = 2
+		var b int = 3
 		dbg.Lvl1("I'm", p.Entity().Public, ", sending DataDown to ", c.Entity().Public)
 		err := p.SendTo(c, toSend)
 		if err != nil {

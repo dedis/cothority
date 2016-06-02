@@ -1,10 +1,10 @@
-package cosi
+package prifi
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/cothority/protocols/cosi"
+	"github.com/dedis/cothority/protocols/prifi"
 	"github.com/dedis/crypto/abstract"
 )
 

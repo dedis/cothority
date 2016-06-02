@@ -28,6 +28,9 @@ type Simulation struct {
 // NewSimulation is used internally to register the simulation (see the init()
 // function above).
 func NewSimulation(config string) (sda.Simulation, error) {
+
+	dbg.Lvl1("PriFi Service received New Protocol event - 2")
+
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
