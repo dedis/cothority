@@ -1,6 +1,6 @@
 #!/bin/bash
 cd app
-for sh in cosi cothorityd ssh_ks; do
+for sh in cosi cothorityd; do
 	./test_$sh.sh || exit 1
 done
 cd ..
