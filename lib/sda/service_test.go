@@ -465,7 +465,7 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
-	t.Skip("Fixme: Fails on travis...")
+	//t.Skip("Fixme: Fails on travis...")
 	nbrNodes := 2
 	nbrParallel := 2
 	local := sda.NewLocalTest()
@@ -479,7 +479,6 @@ func TestClient_Parallel(t *testing.T) {
 	})
 	// create hosts
 	hosts, el, _ := local.GenTree(nbrNodes, true, true, false)
-	client := sda.NewClient("BackForth")
 
 	wg := sync.WaitGroup{}
 	wg.Add(nbrParallel)
@@ -491,6 +490,7 @@ func TestClient_Parallel(t *testing.T) {
 				Entities: el,
 				Val:      10 * i,
 			}
+			client := sda.NewClient("BackForth")
 			nm, err := client.Send(hosts[0].Entity, r)
 			dbg.ErrFatal(err)
 
