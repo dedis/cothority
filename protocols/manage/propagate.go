@@ -57,8 +57,10 @@ type PropagateReply struct {
 	Level int
 }
 
-// PropagateStartAndWaitSDA starts the propagation protocol and blocks till everything
-// is OK or the timeout has been reached.
+// PropagateStartAndWaitSDA starts the propagation protocol and blocks until
+// all children stored the new value or the timeout has been reached.
+// The return value is the number of nodes that acknowledged having
+// stored the new value or an error if the protocol couldn't start.
 // This is used when you want to start a protocol without a service.
 func PropagateStartAndWaitSDA(o *sda.Overlay, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
 	tree := el.GenerateNaryTreeWithRoot(8, o.Entity())
@@ -70,9 +72,8 @@ func PropagateStartAndWaitSDA(o *sda.Overlay, el *sda.EntityList, msg network.Pr
 	return propagateStartAndWait(pi, msg, msec, f)
 }
 
-// PropagateStartAndWaitService starts the propagation protocol and blocks till everything
-// is OK or the timeout has been reached.
-// This is used when you want to start a protocol included in a service.
+// PropagateStartAndWaitService is like PropagateStartAndWaitSDA but
+// is used when you want to start a protocol included in a service.
 func PropagateStartAndWaitService(c sda.Context, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
 	tree := el.GenerateNaryTreeWithRoot(8, c.Entity())
 	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
