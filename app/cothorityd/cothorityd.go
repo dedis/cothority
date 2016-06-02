@@ -74,7 +74,7 @@ func main() {
 				if c.String("debug") != "" {
 					ui.Fatal("[-] Debug option can't be used for the 'setup' command")
 				}
-				server.InteractiveConfig("cothorityd", false)
+				server.InteractiveConfig("cothorityd")
 				return nil
 			},
 		},
