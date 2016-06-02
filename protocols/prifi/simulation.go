@@ -58,12 +58,13 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocol(config.Tree, "PriFi")
+		p, err := config.Overlay.CreateProtocol(config.Tree, "Prifi-Communicate")
 		if err != nil {
 			return err
 		}
+		dbg.Print("Protocol created")
 		go p.Start()
-		children := <-p.(*ProtocolExampleHandlers).ChildCount
+		children := <-p.(*CommunicateProtocolHandlers).ChildCount
 		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +

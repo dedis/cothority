@@ -113,7 +113,7 @@ func (p *PriFi) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) 
 // generate the PI on all others node.
 func (p *PriFi) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl1("PriFi Service received New Protocol event")
-	pi, err := cosi.NewProtocolCosi(tn)
+	pi, err := prifi.NewCommunicateProtocol(tn)
 	go pi.Dispatch()
 	return pi, err
 }

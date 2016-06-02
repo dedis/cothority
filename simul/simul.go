@@ -187,13 +187,10 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 // to the deterlab-server
 func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	done := make(chan struct{})
-	dbg.Print("Before CheckHost")
 	CheckHosts(rc)
 	rc.Delete("simulation")
 	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
-	dbg.Print("Before creating Monitor")
 	monitor := monitor.NewMonitor(rs)
-	dbg.Print("Before Deploy JASPON")
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
 		return rs, err
@@ -212,7 +209,6 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
-	dbg.Print("Before Starting up application")
 	err := deployP.Start()
 	if err != nil {
 		dbg.Error(err)
@@ -272,6 +268,7 @@ func CheckHosts(rc platform.RunConfig) {
 		for calcHosts(bf, depth) < hosts {
 			depth++
 		}
+
 		rc.Put("depth", strconv.Itoa(depth))
 	}
 }

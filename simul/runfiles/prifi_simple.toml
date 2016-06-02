@@ -1,6 +1,6 @@
 Simulation = "PriFi"
 Servers = 2
-Bf = 1
+Bf = 2
 Rounds = 1
 CloseWait = 6000
 
