@@ -1,6 +1,6 @@
 # build script for dedis/cothority libraries
 language: go
-go_import_path: gopkg.in/dedis/cothority.v0
+
 go:
   - 1.6.2
 script:
