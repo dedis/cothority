@@ -7,10 +7,9 @@ import (
 	"path"
 	"time"
 
-	"strings"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
@@ -78,7 +77,7 @@ var ServiceFactory = serviceFactory{
 	inverseTr:    make(map[ServiceID]string),
 }
 
-// RegisterByName takes a name, creates a ServiceID out of it and stores the
+// RegisterByName takes an name, creates a ServiceID out of it and store the
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
@@ -244,7 +243,7 @@ var RequestID = network.RegisterMessageType(ClientRequest{})
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
 // handling abstract.Secret/Public stuff that json can't do. Later we may want
 // to think on how to change that.
-func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) {
+func CreateServiceRequest(service string, r interface{}) (*ClientRequest, error) {
 	sid := ServiceFactory.ServiceID(service)
 	dbg.Lvl1("Name", service, " <-> ServiceID", sid.String())
 	buff, err := network.MarshalRegisteredType(r)
@@ -296,13 +295,17 @@ in place of the standard reply. The Client.Send method will catch that and retur
 
 // Client for a service
 type Client struct {
-	host      *network.SecureTCPHost
+	private abstract.Secret
+	*network.Entity
 	ServiceID ServiceID
 }
 
 // NewClient returns a random client using the service s
 func NewClient(s string) *Client {
+	kp := config.NewKeyPair(network.Suite)
 	return &Client{
+		Entity:    network.NewEntity(kp.Public, ""),
+		private:   kp.Secret,
 		ServiceID: ServiceFactory.ServiceID(s),
 	}
 }
@@ -310,16 +313,12 @@ func NewClient(s string) *Client {
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
-	if c.host == nil {
-		kp := config.NewKeyPair(network.Suite)
-		c.host = network.NewSecureTCPHost(kp.Secret,
-			network.NewEntity(kp.Public, ""))
-	}
+	client := network.NewSecureTCPHost(c.private, c.Entity)
 
 	// Connect to the root
 	dbg.Lvl4("Opening connection to", dst)
-	con, err := c.host.Open(dst)
-	defer c.host.Close()
+	con, err := client.Open(dst)
+	defer client.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -350,14 +349,14 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
 		if err != nil {
-			packet.Msg = StatusRet{err.Error()}
-			packet.MsgType = network.TypeFromData(&StatusRet{})
+			close(pchan)
+			return
 		}
 		pchan <- packet
 	}()
 	select {
 	case response := <-pchan:
-		dbg.Lvlf5("Response: %+v %+v", response, response.Msg)
+		dbg.Lvlf5("Response: %+v", response)
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {
@@ -367,25 +366,6 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	case <-time.After(time.Second * 10):
 		return &network.Message{}, errors.New("Timeout on sending message")
 	}
-}
-
-// SendToAll sends a message to all Entities of the EntityList and returns
-// all errors encountered concatenated together as a string.
-func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
-	msgs := make([]*network.Message, len(dst.List))
-	var errstrs []string
-	for i, e := range dst.List {
-		var err error
-		msgs[i], err = c.Send(e, msg)
-		if err != nil {
-			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
-		}
-	}
-	var err error
-	if len(errstrs) > 0 {
-		err = errors.New(strings.Join(errstrs, "\n"))
-	}
-	return msgs, err
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file
@@ -404,9 +384,6 @@ func (c *Client) BinaryUnmarshaler(b []byte) error {
 type StatusRet struct {
 	Status string
 }
-
-// StatusOK is used when there is no error but nothing to return
-var StatusOK = &StatusRet{""}
 
 // ErrMsg converts a combined err and status-message to an error. It
 // returns either the error, or the errormsg, if there is one.

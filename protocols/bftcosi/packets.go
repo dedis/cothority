@@ -3,7 +3,6 @@ package bftcosi
 import (
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/crypto/abstract"
 )
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"
@@ -25,11 +24,6 @@ type BFTSignature struct {
 	Msg []byte
 	// List of peers that did not want to sign.
 	Exceptions []cosi.Exception
-}
-
-// Verify returns whether the verification of the signature succeeds or not.
-func (bs *BFTSignature) Verify(s abstract.Suite, agg abstract.Point, msg []byte) error {
-	return cosi.VerifyCosiSignatureWithException(s, agg, msg, bs.Sig, bs.Exceptions)
 }
 
 // Announce is the struct used during the announcement phase (of both

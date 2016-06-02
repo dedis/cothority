@@ -94,7 +94,7 @@ func main() {
 		// each level of the tree.
 		timeout := 1000
 		for wait {
-			p, err := rootSC.Overlay.CreateProtocolSDA(rootSC.Tree, "Count")
+			p, err := rootSC.Overlay.CreateProtocol(rootSC.Tree, "Count")
 			if err != nil {
 				dbg.Fatal(err)
 			}
@@ -139,7 +139,7 @@ func main() {
 			closeTree = rootSC.EntityList.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
-		pi, err := rootSC.Overlay.CreateProtocolSDA(closeTree, "CloseAll")
+		pi, err := rootSC.Overlay.CreateProtocol(closeTree, "CloseAll")
 		pi.Start()
 		if err != nil {
 			dbg.Fatal(err)

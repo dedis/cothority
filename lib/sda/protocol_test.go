@@ -9,9 +9,11 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"github.com/satori/go.uuid"
 )
 
 var testProto = "test"
+var testProtoID = sda.ProtocolID(uuid.NewV5(uuid.NamespaceURL, testProto))
 
 var simpleProto = "simple"
 
@@ -77,15 +79,9 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	testProtoID := sda.ProtocolRegisterName(testProto, NewProtocolTest)
+	sda.ProtocolRegister(testProtoID, NewProtocolTest)
 	if !sda.ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
-	}
-	if sda.ProtocolNameToID(testProto) != testProtoID {
-		t.Fatal("Not correct translation from string to ID")
-	}
-	if sda.ProtocolIDToName(testProtoID) != testProto {
-		t.Fatal("Not correct translation from ID to String")
 	}
 }
 

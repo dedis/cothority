@@ -40,7 +40,7 @@ func TestBftCoSi(t *testing.T) {
 		msg := []byte("Hello BFTCoSi")
 
 		// Start the protocol
-		node, err := local.CreateProtocol(tree, TestProtocolName)
+		node, err := local.CreateProtocol(TestProtocolName, tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
@@ -65,7 +65,7 @@ func TestBftCoSi(t *testing.T) {
 			countMut.Unlock()
 			sig := root.Signature()
 			if err := cosi.VerifyCosiSignatureWithException(root.Suite(),
-				root.AggregatedPublic, msg, sig.Sig,
+				root.aggregatedPublic, msg, sig.Sig,
 				sig.Exceptions); err != nil {
 
 				t.Fatal(fmt.Sprintf("%s Verification of the signature failed: %s", root.Name(), err.Error()))

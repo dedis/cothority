@@ -163,9 +163,6 @@ func (c *Cosi) Commit(comms []*Commitment) *Commitment {
 // CreateChallenge creates the challenge out of the message it has been given.
 // This is typically called by Root.
 func (c *Cosi) CreateChallenge(msg []byte) (*Challenge, error) {
-	if c.aggregateCommitment == nil {
-		return nil, errors.New("Empty aggregate-commitment")
-	}
 	pb, err := c.aggregateCommitment.MarshalBinary()
 	cipher := c.suite.Cipher(pb)
 	cipher.Message(nil, nil, msg)

@@ -284,7 +284,7 @@ func TestSecureTcp(t *testing.T) {
 	if !<-opened {
 		t.Fatal("Lazy programmers - no select")
 	}
-	dbg.Lvl4("Closing connections")
+	dbg.Lvl3("Closing connections")
 	if err := host1.Close(); err != nil {
 		t.Fatal("Couldn't close host", host1)
 	}

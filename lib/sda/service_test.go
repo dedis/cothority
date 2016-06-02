@@ -77,7 +77,7 @@ func (ds *DummyService) ProcessClientRequest(e *network.Entity, r *sda.ClientReq
 		return
 	}
 	if ds.firstTni == nil {
-		ds.firstTni = ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root, "DummyService")
+		ds.firstTni = ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root)
 	}
 
 	dp := NewDummyProtocol(ds.firstTni, ds.Config, ds.link)
@@ -597,7 +597,7 @@ func (s *simpleService) ProcessClientRequest(e *network.Entity, r *sda.ClientReq
 	}
 	req := pm.(simpleRequest)
 	tree := req.Entities.GenerateBinaryTree()
-	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root, "BackForth")
+	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root)
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
 		if err := s.ctx.SendRaw(e, &simpleResponse{
 			Val: n,

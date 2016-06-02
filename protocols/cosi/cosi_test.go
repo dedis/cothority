@@ -43,7 +43,7 @@ func TestCosi(t *testing.T) {
 		}
 
 		// Start the protocol
-		p, err := local.CreateProtocol(tree, "CoSi")
+		p, err := local.CreateProtocol("CoSi", tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}

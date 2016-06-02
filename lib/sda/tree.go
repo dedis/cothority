@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net"
 
-	"math/rand"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
@@ -378,7 +376,7 @@ func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
 			return i, e
 		}
 	}
-	return -1, nil
+	return 0, nil
 }
 
 // Get simply returns the entity that is stored at that index in the entitylist
@@ -462,38 +460,11 @@ func (el *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 	return NewTree(el, root)
 }
 
-// GenerateNaryTreeWithRoot creates a tree where each node has N children.
-// The root is given as an Entity.
-func (el *EntityList) GenerateNaryTreeWithRoot(N int, rootEntity *network.Entity) *Tree {
-	rootIndex, _ := el.Search(rootEntity.ID)
-	cList := el.List
-	onlyRoot := []*network.Entity{cList[rootIndex]}
-	uptoRoot := cList[:rootIndex]
-	afterRoot := cList[rootIndex+1:]
-	list := append(onlyRoot, uptoRoot...)
-	list = append(list, afterRoot...)
-	return NewEntityList(list).GenerateNaryTree(N)
-}
-
 // GenerateNaryTree creates a tree where each node has N children.
 // The first element of the EntityList will be the root element.
 func (el *EntityList) GenerateNaryTree(N int) *Tree {
 	root := el.addNary(nil, N, 0, len(el.List)-1)
 	return NewTree(el, root)
-}
-
-// GenerateBinaryTree creates a binary tree out of the EntityList
-// out of it. The first element of the EntityList will be the root element.
-func (el *EntityList) GenerateBinaryTree() *Tree {
-	return el.GenerateNaryTree(2)
-}
-
-// GetRandom returns a random element of the EntityList
-func (el *EntityList) GetRandom() *network.Entity {
-	if el.List == nil || len(el.List) == 0 {
-		return nil
-	}
-	return el.List[rand.Int()%len(el.List)]
 }
 
 // addNary is a recursive function to create the binary tree
@@ -514,6 +485,12 @@ func (el *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	} else {
 		return nil
 	}
+}
+
+// GenerateBinaryTree creates a binary tree out of the EntityList
+// out of it. The first element of the EntityList will be the root element.
+func (el *EntityList) GenerateBinaryTree() *Tree {
+	return el.GenerateNaryTree(2)
 }
 
 // TreeNode is one node in the tree
@@ -544,7 +521,7 @@ func (tId TreeNodeID) String() string {
 
 // Equals returns true if and only if the given TreeNodeID equals the current
 // one.
-func (tId TreeNodeID) Equal(tId2 TreeNodeID) bool {
+func (tId TreeNodeID) Equals(tId2 TreeNodeID) bool {
 	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
 }
 
@@ -638,14 +615,6 @@ func (t *TreeNode) Visit(firstDepth int, fn func(depth int, n *TreeNode)) {
 	for _, c := range t.Children {
 		c.Visit(firstDepth+1, fn)
 	}
-}
-
-// SubtreeCount returns how many children are attached to that
-// TreeNode.
-func (t *TreeNode) SubtreeCount() int {
-	ret := -1
-	t.Visit(0, func(int, *TreeNode) { ret++ })
-	return ret
 }
 
 // EntityListToml is the struct can can embedded EntityToml to be written in a

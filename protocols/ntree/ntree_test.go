@@ -32,7 +32,7 @@ func TestNtree(t *testing.T) {
 		}
 
 		// Start the protocol
-		pi, err := local.CreateProtocol(tree, "NaiveTree")
+		pi, err := local.CreateProtocol("NaiveTree", tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}

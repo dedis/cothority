@@ -4,8 +4,6 @@ import (
 	"errors"
 	"reflect"
 
-	"strings"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 )
@@ -61,7 +59,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Need 2 return values: network.ProtocolMessage and *error*")
 	}
 	// Automatic registration of the message to the network library.
-	dbg.Lvl4("Registering handler", cr1.String())
+	dbg.Lvl3("Registering handler", cr1.String())
 	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
 		cr1.Elem()),
 		cr1.Elem())
@@ -73,7 +71,8 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 // and sends it back.
 func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 	cr *ClientRequest) {
-	reply := p.GetReply(e, cr.Data)
+	reply := p.GetReply(e, cr)
+
 	if err := p.SendRaw(e, reply); err != nil {
 		dbg.Error(err)
 	}
@@ -82,47 +81,20 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 // ProcessServiceMessage is to implement the Service interface.
 func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 	s *ServiceMessage) {
-	p.GetReply(e, s.Data)
-}
-
-// SendISM takes the message and sends it to the corresponding service
-func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessage) error {
-	sName := ServiceFactory.Name(p.Context.GetID())
-	sm, err := CreateServiceMessage(sName, msg)
-	if err != nil {
-		return err
+	cr := &ClientRequest{
+		Data: s.Data,
 	}
-	dbg.Lvl4("Raw-sending to", e)
-	return p.SendRaw(e, sm)
-}
-
-// SendISMOthers sends an InterServiceMessage to all other services
-func (p *ServiceProcessor) SendISMOthers(el *EntityList, msg network.ProtocolMessage) error {
-	var errStrs []string
-	for _, e := range el.List {
-		if !e.ID.Equal(p.Context.Entity().ID) {
-			dbg.Lvl3("Sending to", e)
-			err := p.SendISM(e, msg)
-			if err != nil {
-				errStrs = append(errStrs, err.Error())
-			}
-		}
-	}
-	var err error
-	if len(errStrs) > 0 {
-		err = errors.New(strings.Join(errStrs, "\n"))
-	}
-	return err
+	p.GetReply(e, cr)
 }
 
 // GetReply takes a clientRequest and passes it to the corresponding
 // handler-function.
-func (p *ServiceProcessor) GetReply(e *network.Entity, d []byte) network.ProtocolMessage {
-	mt, m, err := network.UnmarshalRegisteredType(d,
+func (p *ServiceProcessor) GetReply(e *network.Entity, cr *ClientRequest) network.ProtocolMessage {
+	mt, m, err := network.UnmarshalRegisteredType(cr.Data,
 		network.DefaultConstructors(network.Suite))
 	fu, ok := p.functions[mt]
 	if !ok {
-		return &StatusRet{"Didn't register message-handler: " + mt.String()}
+		return &StatusRet{"Don't know message: " + mt.String()}
 	}
 
 	if err != nil {
@@ -147,9 +119,5 @@ func (p *ServiceProcessor) GetReply(e *network.Entity, d []byte) network.Protoco
 		return &StatusRet{errI.(error).Error()}
 	}
 
-	reply := ret[0].Interface()
-	if reply == nil {
-		reply = StatusOK
-	}
-	return reply
+	return ret[0].Interface()
 }

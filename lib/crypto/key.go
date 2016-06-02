@@ -5,10 +5,6 @@ import (
 	"encoding/hex"
 	"io"
 
-	"bytes"
-
-	"errors"
-
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -24,15 +20,6 @@ func ReadPub64(suite abstract.Suite, r io.Reader) (abstract.Point, error) {
 func WritePub64(suite abstract.Suite, w io.Writer, point abstract.Point) error {
 	enc := base64.NewEncoder(base64.StdEncoding, w)
 	return write64(suite, enc, point)
-}
-
-// Pub64 converts a public point to a base64 representation
-func Pub64(suite abstract.Suite, point abstract.Point) (string, error) {
-	var buff bytes.Buffer
-	if err := WritePub64(suite, &buff, point); err != nil {
-		return "", errors.New("Couldn't convert to base64")
-	}
-	return buff.String(), nil
 }
 
 func write64(suite abstract.Suite, wc io.WriteCloser, data ...interface{}) error {

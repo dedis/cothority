@@ -82,8 +82,7 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 	s := local.Services[h.Entity.ID]
 	ts := s[testServiceID]
-	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
-	ts.ProcessClientRequest(h.Entity, cr)
+	ts.ProcessClientRequest(h.Entity, mkClientRequest(&testMsg{12}))
 	msg := ts.(*testService).Context.(*testContext).Msg
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
@@ -97,10 +96,12 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	}
 }
 
-func mkClientRequest(msg network.ProtocolMessage) []byte {
+func mkClientRequest(msg network.ProtocolMessage) *ClientRequest {
 	b, err := network.MarshalRegisteredType(msg)
 	dbg.ErrFatal(err)
-	return b
+	return &ClientRequest{
+		Data: b,
+	}
 }
 
 type testMsg struct {

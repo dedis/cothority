@@ -47,7 +47,7 @@ func NewLocalTest() *LocalTest {
 func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.ID.Equal(rootEntityId) {
+		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.ID].StartProtocol(t, name)
@@ -58,13 +58,13 @@ func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error
 
 // CreateNewNodeName takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
-func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootEntityId := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.ID.Equal(rootEntityId) {
+		if h.Entity.ID.Equals(rootEntityId) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.Entity.ID].CreateProtocolSDA(t, name)
+			return l.Overlays[h.Entity.ID].CreateProtocol(t, name)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -229,24 +229,6 @@ func (l *LocalTest) GetPrivate(h *Host) abstract.Secret {
 	return h.private
 }
 
-// GetServices returns a slice of all services asked for.
-// The sid is the id of the service that will be collected.
-func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
-	services := make([]Service, len(hosts))
-	for i, h := range hosts {
-		services[i] = l.Services[h.Entity.ID][sid]
-	}
-	return services
-}
-
-// MakeHELS is an abbreviation to make a Host, an EntityList, and a service.
-// It returns the service of the first host in the slice.
-func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *EntityList, Service) {
-	hosts := l.GenLocalHosts(nbr, false, true)
-	el := l.GenEntityListFromHost(hosts...)
-	return hosts, el, l.Services[hosts[0].Entity.ID][sid]
-}
-
 // NewLocalHost creates a new host with the given address and registers it.
 func NewLocalHost(port int) *Host {
 	address := "localhost:" + strconv.Itoa(port)
@@ -283,7 +265,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 				time.Sleep(time.Millisecond * 10)
 				root.entityListsLock.RLock()
 				for id, _ := range root.entities {
-					if id.Equal(host.Entity.ID) {
+					if id.Equals(host.Entity.ID) {
 						connected = true
 						break
 					}

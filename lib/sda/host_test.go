@@ -355,7 +355,7 @@ func TestTokenId(t *testing.T) {
 		t.Fatal("Twice the Id of the same token should be equal")
 	}
 	t3 := t1.ChangeTreeNodeID(sda.TreeNodeID(uuid.NewV1()))
-	if t1.TreeNodeID.Equal(t3.TreeNodeID) {
+	if t1.TreeNodeID.Equals(t3.TreeNodeID) {
 		t.Fatal("OtherToken should modify copy")
 	}
 }
