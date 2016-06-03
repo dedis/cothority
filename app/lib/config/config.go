@@ -145,7 +145,7 @@ func ReadGroupDescToml(f io.Reader) (*Group, error) {
 	group := &GroupToml{}
 	_, err := toml.DecodeReader(f, group)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// convert from ServerTomls to entities
 	var entities = make([]*network.Entity, len(group.Servers))
@@ -153,7 +153,7 @@ func ReadGroupDescToml(f io.Reader) (*Group, error) {
 	for i, s := range group.Servers {
 		en, err := s.toEntity(network.Suite)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		entities[i] = en
 		descs[en] = s.Description
