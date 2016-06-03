@@ -9,6 +9,9 @@ import (
 
 	"strings"
 
+	"reflect"
+	"sync"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/config"
@@ -298,6 +301,7 @@ in place of the standard reply. The Client.Send method will catch that and retur
 type Client struct {
 	host      *network.SecureTCPHost
 	ServiceID ServiceID
+	sync.Mutex
 }
 
 // NewClient returns a random client using the service s
@@ -310,6 +314,8 @@ func NewClient(s string) *Client {
 // NetworkSend opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
 func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
+	c.Lock()
+	defer c.Unlock()
 	if c.host == nil {
 		kp := config.NewKeyPair(network.Suite)
 		c.host = network.NewSecureTCPHost(kp.Secret,
@@ -330,10 +336,10 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	}
 
 	b, err := m.MarshalBinary()
-
 	if err != nil {
 		return nil, err
 	}
+
 	serviceReq := &ClientRequest{
 		Service: c.ServiceID,
 		Data:    b,
@@ -341,12 +347,12 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	pchan := make(chan network.Message)
 	go func() {
 		// send the request
-		dbg.Lvlf4("Sending request %+v", serviceReq)
+		dbg.Lvlf4("Sending request %x", serviceReq.Service)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
 		}
-		dbg.Lvl4("Waiting for the response")
+		dbg.Lvl4("Waiting for the response from", reflect.ValueOf(con).Pointer())
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
 		if err != nil {
