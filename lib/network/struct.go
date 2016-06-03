@@ -67,6 +67,8 @@ type Host interface {
 type Conn interface {
 	// Gives the address of the remote endpoint
 	Remote() string
+	// Returns the local address and port
+	Local() string
 	// Send a message through the connection. Always pass a pointer !
 	Send(ctx context.Context, obj ProtocolMessage) error
 	// Receive any message through the connection.

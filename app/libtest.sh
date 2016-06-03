@@ -3,15 +3,15 @@
 # highest number of servers and clients
 NBR=3
 # Use for suppressing building if that directory exists
-STATICDIR=test
+STATICDIR=
 # If set, always build
 BUILD=
-# Debug-level for server
-DBG_SRV=1
-# Debug-level for client
-DBG_CLIENT= 
 # Debug running
-DBG_RUN=z
+#DBG_RUN=
+# Debug-level for server
+DBG_SRV=${DBG_RUN:-0}
+# Debug-level for client
+DBG_CLIENT=${DBG_RUN:-0}
 
 startTest(){
     # where the output should go
@@ -36,7 +36,7 @@ testOK(){
 }
 
 testFail(){
-    if $@ > /dev/null; then
+    if $@ > /dev/null 2>&1; then
         fail "starting $@ failed"
     fi
 }
