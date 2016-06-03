@@ -6,11 +6,11 @@ import (
 
 	"time"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
 )
 
 // LocalTest represents all that is needed for a local test-run

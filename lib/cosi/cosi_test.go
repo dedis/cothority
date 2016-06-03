@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/edwards"
+	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/edwards"
 )
 
 var testSuite = edwards.NewAES128SHA256Ed25519(false)

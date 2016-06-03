@@ -14,10 +14,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dedis/crypto/config"
 	c "gopkg.in/dedis/cothority.v0/lib/config"
 	"gopkg.in/dedis/cothority.v0/lib/crypto"
 	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/crypto.v0/config"
 )
 
 // CreateCothoritydConfig will ask through the command line to create a Private / Public

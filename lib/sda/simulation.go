@@ -10,10 +10,10 @@ import (
 	"net"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
 )
 
 type simulationCreate func(string) (Simulation, error)

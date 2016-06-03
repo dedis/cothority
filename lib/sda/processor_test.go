@@ -7,9 +7,9 @@ import (
 
 	"errors"
 
-	"github.com/dedis/crypto/config"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/crypto.v0/config"
 )
 
 var testServiceID ServiceID

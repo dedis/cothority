@@ -6,10 +6,10 @@ import (
 	"math"
 	"sync"
 
-	"github.com/dedis/crypto/abstract"
 	"gopkg.in/dedis/cothority.v0/lib/cosi"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // VerificationFunction can be passes to each protocol node. It will be called

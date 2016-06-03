@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/dedis/crypto/abstract"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/network"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // TreeNodeInstance represents a protocol-instance in a given TreeNode. It embeds an

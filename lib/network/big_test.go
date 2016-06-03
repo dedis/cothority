@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 /*

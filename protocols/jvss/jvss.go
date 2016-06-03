@@ -13,11 +13,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/poly"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/poly"
 )
 
 func init() {

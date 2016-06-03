@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/suites"
 	"gopkg.in/dedis/cothority.v0/lib/crypto"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain/blkparser"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/suites"
 )
 
 type MessageType int

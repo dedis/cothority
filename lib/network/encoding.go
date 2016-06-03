@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
-	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/edwards"
+	"gopkg.in/dedis/protobuf.v0"
 )
 
 /// Encoding part ///

@@ -5,13 +5,13 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/crypto/abstract"
 	"gopkg.in/dedis/cothority.v0/lib/cosi"
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
 	"gopkg.in/dedis/cothority.v0/lib/monitor"
 	"gopkg.in/dedis/cothority.v0/lib/sda"
 	"gopkg.in/dedis/cothority.v0/protocols/byzcoin/blockchain"
 	"gopkg.in/dedis/cothority.v0/protocols/manage"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 func init() {

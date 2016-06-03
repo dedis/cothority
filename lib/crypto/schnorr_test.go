@@ -3,8 +3,8 @@ package crypto
 import (
 	"testing"
 
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/edwards/ed25519"
+	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/edwards/ed25519"
 )
 
 func TestSchnorrSignature(t *testing.T) {
