@@ -40,7 +40,7 @@ func (p *PriFiProtocolHandlers) Start() error {
 	firstMessage := &CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
 	firstMessageWrapper := Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage}
 
-	return p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
+	return p.Received_CLI_REL_UPSTREAM_DATA_dummypingpong(firstMessageWrapper)
 }
 
 // NewExampleHandlers initialises the structure for use in one round
@@ -52,7 +52,7 @@ func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 
 	//register client handlers
-	err := PriFiHandlers.RegisterHandler(PriFiHandlers.Received_REL_CLI_DOWNSTREAM_DATA)
+	err := PriFiHandlers.RegisterHandler(PriFiHandlers.Received_REL_CLI_DOWNSTREAM_DATA_dummypingpong) //TODO : switch with actual protocol
 	if err != nil {
 		return nil, errors.New("couldn't register handler: " + err.Error())
 	}
@@ -70,7 +70,7 @@ func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	if err != nil {
 		return nil, errors.New("couldn't register handler: " + err.Error())
 	}
-	err = PriFiHandlers.RegisterHandler(PriFiHandlers.Received_CLI_REL_UPSTREAM_DATA)
+	err = PriFiHandlers.RegisterHandler(PriFiHandlers.Received_CLI_REL_UPSTREAM_DATA_dummypingpong) //TODO : switch with actual protocol
 	if err != nil {
 		return nil, errors.New("couldn't register handler: " + err.Error())
 	}
