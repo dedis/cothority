@@ -87,7 +87,7 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg
 		dbg.Lvl1("I'm", p.Name(), ", keeping relaystate at ", relayState)
 	}
 
-	toSend := &REL_CLI_DOWNSTREAM_DATA{relayState, make([]byte, 0)}
+	toSend := &REL_CLI_DOWNSTREAM_DATA{relayState, make([]byte, 0), false}
 
 	for _, c := range p.Children() {
 		dbg.Lvl1("I'm", p.Name(), ", sending REL_CLI_DOWNSTREAM_DATA with relayState ", relayState)

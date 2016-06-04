@@ -37,8 +37,9 @@ type CLI_REL_UPSTREAM_DATA struct {
 }
 
 type REL_CLI_DOWNSTREAM_DATA struct {
-	RoundId int32
-	Data    []byte
+	RoundId    int32
+	Data       []byte
+	FlagResync bool
 }
 
 type REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG struct {

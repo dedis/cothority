@@ -138,6 +138,10 @@ func (p *PriFiProtocolHandlers) Received_REL_CLI_DOWNSTREAM_DATA(msg Struct_REL_
 		dbg.Lvl5("Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA")
 	}
 
+	/*
+	 * HANDLE THE DOWNSTREAM DATA
+	 */
+
 	//pass the data to the VPN/SOCKS5 proxy, if enabled
 	if clientState.DataOutputEnabled {
 		clientState.DataFromDCNet <- msg.Data //TODO : this should be encrypted, and we need to check if it's our data
@@ -162,6 +166,20 @@ func (p *PriFiProtocolHandlers) Received_REL_CLI_DOWNSTREAM_DATA(msg Struct_REL_
 			}
 		}
 	}
+	//if the flag "Resync" is on, we cannot write data up, but need to resend the keys instead
+	if msg.FlagResync == true {
+
+		dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : Relay wants to resync, going to state CLIENT_STATE_INITIALIZING ")
+		clientState.currentState = CLIENT_STATE_INITIALIZING
+
+		//TODO : regenerate ephemeral keys ?
+
+		return nil
+	}
+
+	/*
+	 * PRODUCE THE UPSTREAM DATA
+	 */
 
 	var upstreamCellContent []byte
 
@@ -317,7 +335,9 @@ func (p *PriFiProtocolHandlers) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(m
 		dbg.Lvl3("Client " + strconv.Itoa(clientState.Id) + "; Our slot is " + strconv.Itoa(mySlot) + " out of " + strconv.Itoa(len(ephPubKeys)) + " slots")
 	}
 
+	//prepare for commmunication
 	clientState.MySlot = mySlot
+	clientState.roundCount = 0
 
 	//change state
 	clientState.currentState = CLIENT_STATE_READY
