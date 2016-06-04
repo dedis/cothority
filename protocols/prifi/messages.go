@@ -42,12 +42,13 @@ type REL_CLI_DOWNSTREAM_DATA struct {
 }
 
 type REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG struct {
+	Base         abstract.Point
 	EphPks       []abstract.Point
 	TrusteesSigs [][]byte
 }
 
 type REL_CLI_TELL_TRUSTEES_PK struct {
-	Pk abstract.Point
+	Pks []abstract.Point
 }
 
 type REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE struct {
