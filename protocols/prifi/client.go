@@ -5,8 +5,46 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/crypto/abstract"
+	"github.com/lbarman/prifi/dcnet"
 )
 
+//Constants
+const MaxUint uint32 = uint32(4294967295)
+const socksHeaderLength = 6 // Number of bytes of cell payload to reserve for connection header, length
+const WAIT_FOR_PUBLICKEY_SLEEP_TIME = 100 * time.Millisecond
+const CLIENT_FAILED_CONNECTION_WAIT_BEFORE_RETRY = 1000 * time.Millisecond
+const UDP_DATAGRAM_WAIT_TIMEOUT = 5 * time.Second
+
+//State information to hold :
+type ClientState struct {
+	Id   int
+	Name string
+
+	//PublicKey			abstract.Point  //those are kept by the SDA stack
+	//privateKey		abstract.Secret  //those are kept by the SDA stack
+
+	EphemeralPublicKey  abstract.Point
+	ephemeralPrivateKey abstract.Secret
+
+	nClients  int
+	nTrustees int
+
+	PayloadLength       int
+	UsablePayloadLength int
+	UseSocksProxy       bool
+	LatencyTest         bool
+	UseUDP              bool
+
+	TrusteePublicKey []abstract.Point
+	sharedSecrets    []abstract.Point
+
+	CellCoder dcnet.CellCoder
+
+	MessageHistory abstract.Cipher
+}
+
+//dummy state, to be removed
 var clientState int32 = 0
 
 //Messages to handle :
