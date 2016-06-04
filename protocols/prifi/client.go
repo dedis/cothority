@@ -1,6 +1,7 @@
 package prifi
 
 import (
+	"encoding/binary"
 	"errors"
 	"math/rand"
 	"strconv"
@@ -50,6 +51,10 @@ type ClientState struct {
 	UseUDP              bool
 	MySlot              int
 	currentState        int16
+	DataForDCNet        chan []byte //VPN / SOCKS should put data there !
+	DataFromDCNet       chan []byte //VPN / SOCKS should read data from there !
+	DataOutputEnabled   bool        //if FALSE, nothing will be written to DataFromDCNet
+	roundCount          int32       //modulo number of clients, used only to test if "isMySlot"
 }
 
 //dummy state, to be removed
@@ -89,6 +94,7 @@ func initClient(clientId int, nTrustees int, nClients int, payloadLength int, us
 
 	params.MySlot = -1
 	params.currentState = CLIENT_STATE_INITIALIZING
+	params.roundCount = 0
 
 	return params
 }
@@ -123,6 +129,87 @@ func (p *PriFiProtocolHandlers) Received_REL_CLI_DOWNSTREAM_DATA_dummypingpong(m
 
 func (p *PriFiProtocolHandlers) Received_REL_CLI_DOWNSTREAM_DATA(msg Struct_REL_CLI_DOWNSTREAM_DATA) error {
 
+	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
+	if clientState.currentState != CLIENT_STATE_READY {
+		e := "Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA, but not in state CLIENT_STATE_READY, in state " + strconv.Itoa(int(clientState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl5("Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA")
+	}
+
+	//pass the data to the VPN/SOCKS5 proxy, if enabled
+	if clientState.DataOutputEnabled {
+		clientState.DataFromDCNet <- msg.Data //TODO : this should be encrypted, and we need to check if it's our data
+	}
+
+	//write the next upstream slice. First, determine if we can embed payload this round
+	currentRound := clientState.roundCount % int32(clientState.nClients)
+	isMySlot := false
+	if currentRound == int32(clientState.MySlot) {
+		isMySlot = true
+	}
+	//test if it is the answer from our ping (for latency test)
+	if clientState.LatencyTest && len(msg.Data) > 2 {
+		pattern := int(binary.BigEndian.Uint16(msg.Data[0:2]))
+		if pattern == 43690 { //1010101010101010
+			clientId := int(binary.BigEndian.Uint16(msg.Data[2:4]))
+			if clientId == clientState.Id {
+				timestamp := int64(binary.BigEndian.Uint64(msg.Data[4:12]))
+				diff := MsTimeStamp() - timestamp
+
+				dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : New latency measured " + strconv.FormatInt(diff, 10))
+			}
+		}
+	}
+
+	var upstreamCellContent []byte
+
+	//if we can...
+	if isMySlot {
+		select {
+
+		//either select data from the data we have to send, if any
+		case upstreamCellContent = <-clientState.DataForDCNet:
+
+		//or, if we have nothing to send, and we are doing Latency tests, embed a pre-crafted message that we will recognize later on
+		default:
+			if clientState.LatencyTest {
+
+				if clientState.PayloadLength < 12 {
+					panic("Trying to do a Latency test, but payload is smaller than 10 bytes.")
+				}
+
+				buffer := make([]byte, clientState.PayloadLength)
+				pattern := uint16(43690)  //1010101010101010
+				currTime := MsTimeStamp() //timestamp in Ms
+
+				binary.BigEndian.PutUint16(buffer[0:2], pattern)
+				binary.BigEndian.PutUint16(buffer[2:4], uint16(clientState.Id))
+				binary.BigEndian.PutUint64(buffer[4:12], uint64(currTime))
+
+				upstreamCellContent = buffer
+			}
+		}
+	}
+
+	//produce the next upstream cell
+	upstreamCell := clientState.CellCoder.ClientEncode(upstreamCellContent, clientState.PayloadLength, clientState.MessageHistory)
+
+	//send the data to the relay
+	toSend := &CLI_REL_UPSTREAM_DATA{clientState.roundCount, upstreamCell}
+	err := p.SendTo(p.Parent(), toSend) //TODO : this should be the root ! make sure of it
+	if err != nil {
+		e := "Could not send CLI_REL_UPSTREAM_DATA, error is " + err.Error()
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Client " + strconv.Itoa(trusteeState.Id) + " : sent CLI_REL_UPSTREAM_DATA for round " + strconv.Itoa(int(clientState.roundCount)))
+	}
+
+	//one round just passed
+	clientState.roundCount++
+
 	return nil
 }
 
@@ -134,7 +221,7 @@ func (p *PriFiProtocolHandlers) Received_REL_CLI_TELL_TRUSTEES_PK(msg Struct_REL
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl3("Trustee " + strconv.Itoa(clientState.Id) + " : REL_CLI_TELL_TRUSTEES_PK")
+		dbg.Lvl3("Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_TELL_TRUSTEES_PK")
 	}
 
 	//sanity check
@@ -254,4 +341,12 @@ func (clientState *ClientState) generateEphemeralKeys() {
 	clientState.EphemeralPublicKey = Epub
 	clientState.ephemeralPrivateKey = Epriv
 
+}
+
+/**
+ * Auxiliary function that returns the current timestamp, in miliseconds
+ */
+func MsTimeStamp() int64 {
+	//http://stackoverflow.com/questions/24122821/go-golang-time-now-unixnano-convert-to-milliseconds
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }
