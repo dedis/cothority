@@ -9,20 +9,19 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/protocols/prifi/config"
 	"github.com/dedis/cothority/protocols/prifi/crypto"
-	"github.com/dedis/cothority/protocols/prifi/dcnet"
 	"github.com/dedis/crypto/abstract"
 	crypto_proof "github.com/dedis/crypto/proof"
 	"github.com/dedis/crypto/shuffle"
 )
 
+const (
+	TRUSTEE_STATE_INITIALIZING int16 = iota
+	TRUSTEE_STATE_SHUFFLE_DONE
+	TRUSTEE_STATE_READY
+)
+
 //State information to hold :
 var trusteeState TrusteeState
-
-type NeffShuffleResult struct {
-	base  abstract.Point
-	pks   []abstract.Point
-	proof []byte
-}
 
 type TrusteeState struct {
 	Id            int
@@ -40,18 +39,68 @@ type TrusteeState struct {
 	ClientPublicKeys []abstract.Point
 	sharedSecrets    []abstract.Point
 
-	CellCoder dcnet.CellCoder //TODO : Code it here
-
 	MessageHistory abstract.Cipher
 
 	neffShuffleToVerify NeffShuffleResult
+
+	currentState int16
+}
+
+type NeffShuffleResult struct {
+	base  abstract.Point
+	pks   []abstract.Point
+	proof []byte
+}
+
+/**
+ * Used to initialize the state of this trustee. Must be called before anything else.
+ */
+func (p *PriFiProtocolHandlers) initTrustee(trusteeId int, nClients int, nTrustees int, payloadLength int) *TrusteeState {
+	params := new(TrusteeState)
+
+	params.Id = trusteeId
+	params.Name = "Trustee-" + strconv.Itoa(trusteeId)
+	params.TrusteeId = trusteeId
+	params.nClients = nClients
+	params.nTrustees = nTrustees
+	params.PayloadLength = payloadLength
+
+	//prepare the crypto parameters
+	rand := config.CryptoSuite.Cipher([]byte(params.Name))
+	base := config.CryptoSuite.Point().Base()
+
+	//generate own parameters
+	params.privateKey = config.CryptoSuite.Secret().Pick(rand)
+	params.PublicKey = config.CryptoSuite.Point().Mul(base, params.privateKey)
+
+	//placeholders for pubkeys and secrets
+	params.ClientPublicKeys = make([]abstract.Point, nClients)
+	params.sharedSecrets = make([]abstract.Point, nClients)
+
+	//sets the cell coder, and the history
+	params.neffShuffleToVerify = NeffShuffleResult{}
+
+	params.currentState = TRUSTEE_STATE_INITIALIZING
+
+	return params
 }
 
 //Messages to handle :
 //REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE
 //REL_TRU_TELL_TRANSCRIPT
 
+/**
+ * This message happens when the connection to a relay is established. It contains the long-term and ephemeral public keys of the clients,
+ * a base given by the relay. In addition to deriving the secrets, the trustees uses the ephemeral keys to perform a neff shuffle. He remembers
+ * this shuffle, to check the correctness of the chain of shuffle afterwards.
+ */
 func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE(msg Struct_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE) error {
+
+	if trusteeState.currentState != TRUSTEE_STATE_INITIALIZING {
+		e := "Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE, but not in state TRUSTEE_STATE_INITIALIZING, in state " + strconv.Itoa(int(trusteeState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	}
 
 	rand := config.CryptoSuite.Cipher([]byte(trusteeState.Name)) //TODO: this should be random
 	clientsPks := msg.Pks
@@ -103,10 +152,25 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AN
 	//remember our shuffle
 	trusteeState.neffShuffleToVerify = NeffShuffleResult{base2, ephPublicKeys2, proof}
 
+	//change state
+	trusteeState.currentState = TRUSTEE_STATE_SHUFFLE_DONE
+
 	return nil
 }
 
+/**
+ * This message happens when all trustees have already shuffled. They need to verify all the shuffles, and also that
+ * their own shuffle has been included in the chain of shuffles. If that's the case, this trustee signs the *last*
+ * shuffle, and send it back to the relay.
+ */
 func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_TRU_TELL_TRANSCRIPT) error {
+
+	//we can only receive this message when we are in TRUSTEE_STATE_SHUFFLE_DONE
+	if trusteeState.currentState != TRUSTEE_STATE_SHUFFLE_DONE {
+		e := "Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE, but not in state TRUSTEE_STATE_SHUFFLE_DONE, in state " + strconv.Itoa(int(trusteeState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	}
 
 	rand := config.CryptoSuite.Cipher([]byte(trusteeState.Name)) //TODO: this should be random
 	G_s := msg.G_s
