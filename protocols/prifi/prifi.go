@@ -12,23 +12,29 @@ import (
 func init() {
 	network.RegisterMessageType(DataUp{})
 	network.RegisterMessageType(DataDown{})
-	sda.ProtocolRegisterName("Prifi-Communicate", NewCommunicateProtocol)
+	sda.ProtocolRegisterName("PriFi", NewPriFiProtocol)
 }
 
 // ProtocolExampleHandlers just holds a message that is passed to all children. It
 // also defines a channel that will receive the number of children. Only the
 // root-node will write to the channel.
-type CommunicateProtocolHandlers struct {
+type PriFiProtocolHandlers struct {
 	*sda.TreeNodeInstance
 	Message    string
 	ChildCount chan int
 }
 
-// NewExampleHandlers initialises the structure for use in one round
-func NewCommunicateProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+func (p *PriFiProtocolHandlers) Start() error {
 
-	dbg.Print("NEW PROTOCOL !!")
-	ExampleHandlers := &CommunicateProtocolHandlers{
+	dbg.Print("Starting PriFiProtocolHandlers")
+
+	return p.HandleDataUp(StructDataUp{p.TreeNode(), DataUp{100}})
+}
+
+// NewExampleHandlers initialises the structure for use in one round
+func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+
+	ExampleHandlers := &PriFiProtocolHandlers{
 		TreeNodeInstance: n,
 		ChildCount:       make(chan int),
 	}
@@ -43,17 +49,24 @@ func NewCommunicateProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, erro
 	return ExampleHandlers, nil
 }
 
-func (p *CommunicateProtocolHandlers) HandleDataUp(msg StructDataUp) error {
+func (p *PriFiProtocolHandlers) HandleDataUp(msg StructDataUp) error {
 
 	receivedNo := msg.Data
-	dbg.Lvl1("I'm", p.Entity().Public, ", I received the DataUp with content", receivedNo)
+
+	if receivedNo == 110 {
+		//SWITCH PROTOCOL
+		dbg.Print("COMMUNICATE: I'd like to switch to protocol SETUP")
+	}
+
+	dbg.Lvl1("COMMUNICATE: I'm", p.Name())
+	dbg.Lvl1("COMMUNICATE: I received the DataUp with content", receivedNo)
 
 	time.Sleep(1000 * time.Millisecond)
 
 	toSend := &DataDown{receivedNo + 1}
 
 	for _, c := range p.Children() {
-		dbg.Lvl1("I'm", p.Entity().Public, ", sending DataDown to ", c.Entity.Public)
+		dbg.Lvl1("COMMUNICATE: I'm", p.Name(), ", sending DataDown to ", c.Entity.Public)
 		err := p.SendTo(c, toSend)
 		if err != nil {
 			return err
@@ -63,23 +76,18 @@ func (p *CommunicateProtocolHandlers) HandleDataUp(msg StructDataUp) error {
 	return nil
 }
 
-func (p *CommunicateProtocolHandlers) HandleDataDown(msg StructDataDown) error {
+func (p *PriFiProtocolHandlers) HandleDataDown(msg StructDataDown) error {
 
 	receivedNo := msg.Data
-	dbg.Lvl1("I'm", p.Entity().Public, ", I received the DataDown with content", receivedNo)
+
+	dbg.Lvl2("COMMUNICATE: I'm", p.Name())
+	dbg.Lvl2("COMMUNICATE: I received the DataDown with content", receivedNo)
 
 	toSend := &DataUp{receivedNo + 1}
 
 	time.Sleep(1000 * time.Millisecond)
 
-	dbg.Lvl1("I'm", p.Entity().Public, ", sending DataUp to ", p.Parent().Entity.String)
+	dbg.Lvl2("COMMUNICATE: I'm", p.Entity().Public, ", sending DataUp to ", p.Parent().Entity.String)
 
 	return p.SendTo(p.Parent(), toSend)
-}
-
-func (p *CommunicateProtocolHandlers) Start() error {
-
-	dbg.Print("Starting CommunicateProtocolHandlers")
-
-	return p.HandleDataUp(StructDataUp{p.TreeNode(), DataUp{100}})
 }

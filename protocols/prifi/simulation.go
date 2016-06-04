@@ -58,13 +58,14 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocol(config.Tree, "Prifi-Communicate")
+		p, err := config.Overlay.CreateProtocol(config.Tree, "PriFi")
 		if err != nil {
 			return err
 		}
 		dbg.Print("Protocol created")
 		go p.Start()
-		children := <-p.(*CommunicateProtocolHandlers).ChildCount
+
+		children := <-p.(*PriFiProtocolHandlers).ChildCount
 		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +
@@ -73,3 +74,11 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	}
 	return nil
 }
+
+// Node - standard registers the entityList and the Tree with that Overlay,
+// so we don't have to pass that around for the experiments.
+//func (s *SimulationBFTree) Node(sc *SimulationConfig) error {
+//	sc.Overlay.RegisterEntityList(sc.EntityList)
+//	sc.Overlay.RegisterTree(sc.Tree)
+//	return nil
+//}
