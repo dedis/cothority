@@ -69,7 +69,7 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg Struct_C
 	return nil
 }
 
-func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_REL_UPSTREAM_DATA) error {
+func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg Struct_CLI_REL_UPSTREAM_DATA) error {
 
 	receivedNo := msg.RoundId
 
@@ -96,6 +96,11 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_RE
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_REL_UPSTREAM_DATA) error {
 
 	return nil
 }
