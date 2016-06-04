@@ -10,8 +10,17 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(DataUp{})
-	network.RegisterMessageType(DataDown{})
+	network.RegisterMessageType(CLI_REL_TELL_PK_AND_EPH_PK{})
+	network.RegisterMessageType(CLI_REL_UPSTREAM_DATA{})
+	network.RegisterMessageType(REL_CLI_DOWNSTREAM_DATA{})
+	network.RegisterMessageType(REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG{})
+	network.RegisterMessageType(REL_CLI_TELL_TRUSTEES_PK{})
+	network.RegisterMessageType(REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE{})
+	network.RegisterMessageType(REL_TRU_TELL_TRANSCRIPT{})
+	network.RegisterMessageType(TRU_REL_DC_CIPHER{})
+	network.RegisterMessageType(TRU_REL_SHUFFLE_SIG{})
+	network.RegisterMessageType(TRU_REL_TELL_NEW_BASE_AND_EPH_PKS{})
+	network.RegisterMessageType(TRU_REL_TELL_PK{})
 	sda.ProtocolRegisterName("PriFi", NewPriFiProtocol)
 }
 
@@ -28,7 +37,9 @@ func (p *PriFiProtocolHandlers) Start() error {
 
 	dbg.Print("Starting PriFiProtocolHandlers")
 
-	return p.HandleDataUp(StructDataUp{p.TreeNode(), DataUp{100}})
+	firstMessage := &CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
+
+	return p.HandleDataUp(Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage})
 }
 
 // NewExampleHandlers initialises the structure for use in one round
@@ -49,9 +60,9 @@ func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	return ExampleHandlers, nil
 }
 
-func (p *PriFiProtocolHandlers) HandleDataUp(msg StructDataUp) error {
+func (p *PriFiProtocolHandlers) HandleDataUp(msg Struct_CLI_REL_UPSTREAM_DATA) error {
 
-	receivedNo := msg.Data
+	receivedNo := msg.RoundId
 
 	if receivedNo == 110 {
 		//SWITCH PROTOCOL
@@ -63,7 +74,7 @@ func (p *PriFiProtocolHandlers) HandleDataUp(msg StructDataUp) error {
 
 	time.Sleep(1000 * time.Millisecond)
 
-	toSend := &DataDown{receivedNo + 1}
+	toSend := &REL_CLI_DOWNSTREAM_DATA{receivedNo + 1, make([]byte, 0)}
 
 	for _, c := range p.Children() {
 		dbg.Lvl1("COMMUNICATE: I'm", p.Name(), ", sending DataDown to ", c.Entity.Public)
@@ -76,14 +87,14 @@ func (p *PriFiProtocolHandlers) HandleDataUp(msg StructDataUp) error {
 	return nil
 }
 
-func (p *PriFiProtocolHandlers) HandleDataDown(msg StructDataDown) error {
+func (p *PriFiProtocolHandlers) HandleDataDown(msg Struct_REL_CLI_DOWNSTREAM_DATA) error {
 
-	receivedNo := msg.Data
+	receivedNo := msg.RoundId
 
 	dbg.Lvl2("COMMUNICATE: I'm", p.Name())
 	dbg.Lvl2("COMMUNICATE: I received the DataDown with content", receivedNo)
 
-	toSend := &DataUp{receivedNo + 1}
+	toSend := &CLI_REL_UPSTREAM_DATA{receivedNo + 1, make([]byte, 0)}
 
 	time.Sleep(1000 * time.Millisecond)
 
