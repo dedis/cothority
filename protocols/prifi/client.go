@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/protocols/prifi/dcnet"
 	"github.com/dedis/crypto/abstract"
-	"github.com/lbarman/prifi/dcnet"
 )
 
 //Constants

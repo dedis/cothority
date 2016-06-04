@@ -1,8 +1,8 @@
 package prifi
 
 import (
+	"github.com/dedis/cothority/protocols/prifi/dcnet"
 	"github.com/dedis/crypto/abstract"
-	"github.com/lbarman/prifi/dcnet"
 )
 
 //State information to hold :
