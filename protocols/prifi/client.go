@@ -1,10 +1,13 @@
 package prifi
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 )
+
+var clientState int32 = 0
 
 //Messages to handle :
 //REL_CLI_DOWNSTREAM_DATA
@@ -18,11 +21,18 @@ func (p *PriFiProtocolHandlers) Received_REL_CLI_DOWNSTREAM_DATA(msg Struct_REL_
 	dbg.Lvl2("I'm", p.Name())
 	dbg.Lvl2("I received the REL_CLI_DOWNSTREAM_DATA with content", receivedNo)
 
-	toSend := &CLI_REL_UPSTREAM_DATA{receivedNo + 1, make([]byte, 0)}
+	if clientState == 0 {
+		clientState = int32(rand.Intn(10000))
+		dbg.Lvl2("I'm", p.Name(), ", setting clientstate to ", clientState)
+	} else {
+		dbg.Lvl2("I'm", p.Name(), ", keeping clientstate at ", clientState)
+	}
+
+	toSend := &CLI_REL_UPSTREAM_DATA{clientState, make([]byte, 0)}
 
 	time.Sleep(1000 * time.Millisecond)
 
-	dbg.Lvl2("I'm", p.Entity().Public, ", sending CLI_REL_UPSTREAM_DATA to ", p.Parent().Entity.String)
+	dbg.Lvl2("I'm", p.Name(), ", sending CLI_REL_UPSTREAM_DATA with clientState ", clientState)
 
 	return p.SendTo(p.Parent(), toSend)
 }

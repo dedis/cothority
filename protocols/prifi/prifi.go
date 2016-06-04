@@ -33,6 +33,16 @@ type PriFiProtocolHandlers struct {
 	ChildCount chan int
 }
 
+func (p *PriFiProtocolHandlers) Start() error {
+
+	dbg.Print("Starting PriFi")
+
+	firstMessage := &CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
+	firstMessageWrapper := Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage}
+
+	return p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
+}
+
 // NewExampleHandlers initialises the structure for use in one round
 func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
@@ -91,14 +101,4 @@ func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return nil, errors.New("couldn't register handler: " + err.Error())
 	}
 	return PriFiHandlers, nil
-}
-
-func (p *PriFiProtocolHandlers) Start() error {
-
-	dbg.Print("Starting PriFiProtocolHandlers")
-
-	firstMessage := &CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
-	firstMessageWrapper := Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage}
-
-	return p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
 }

@@ -1,10 +1,13 @@
 package prifi
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/dedis/cothority/lib/dbg"
 )
+
+var relayState int32 = 0
 
 //Messages to handle :
 //CLI_REL_TELL_PK_AND_EPH_PK
@@ -28,10 +31,19 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_RE
 
 	time.Sleep(1000 * time.Millisecond)
 
-	toSend := &REL_CLI_DOWNSTREAM_DATA{receivedNo + 1, make([]byte, 0)}
+	if relayState == 0 {
+		dbg.Print(rand.Intn(10000))
+		dbg.Print(rand.Intn(10000))
+		relayState = int32(rand.Intn(10000))
+		dbg.Lvl1("I'm", p.Name(), ", setting relaystate to ", relayState)
+	} else {
+		dbg.Lvl1("I'm", p.Name(), ", keeping relaystate at ", relayState)
+	}
+
+	toSend := &REL_CLI_DOWNSTREAM_DATA{relayState, make([]byte, 0)}
 
 	for _, c := range p.Children() {
-		dbg.Lvl1("I'm", p.Name(), ", sending REL_CLI_DOWNSTREAM_DATA to ", c.Entity.Public)
+		dbg.Lvl1("I'm", p.Name(), ", sending REL_CLI_DOWNSTREAM_DATA with relayState ", relayState)
 		err := p.SendTo(c, toSend)
 		if err != nil {
 			return err
