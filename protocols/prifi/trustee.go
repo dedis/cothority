@@ -2,6 +2,7 @@ package prifi
 
 import (
 	"errors"
+	"time"
 
 	"bytes"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/protocols/prifi/config"
 	"github.com/dedis/cothority/protocols/prifi/crypto"
+	"github.com/dedis/cothority/protocols/prifi/dcnet"
 	"github.com/dedis/crypto/abstract"
 	crypto_proof "github.com/dedis/crypto/proof"
 	"github.com/dedis/crypto/shuffle"
@@ -19,6 +21,14 @@ const (
 	TRUSTEE_STATE_SHUFFLE_DONE
 	TRUSTEE_STATE_READY
 )
+const (
+	TRUSTEE_KILL_SEND_PROCESS int16 = iota
+	TRUSTEE_RATE_STOPPED
+	TRUSTEE_RATE_HALF
+	TRUSTEE_RATE_FULL
+)
+
+const TRUSTEE_SLEEP_TIME = 1 * time.Second
 
 //State information to hold :
 var trusteeState TrusteeState
@@ -40,10 +50,12 @@ type TrusteeState struct {
 	sharedSecrets    []abstract.Point
 
 	MessageHistory abstract.Cipher
+	CellCoder      dcnet.CellCoder
 
 	neffShuffleToVerify NeffShuffleResult
 
 	currentState int16
+	sendingRate  chan int16
 }
 
 type NeffShuffleResult struct {
@@ -79,8 +91,10 @@ func (p *PriFiProtocolHandlers) initTrustee(trusteeId int, nClients int, nTruste
 
 	//sets the cell coder, and the history
 	params.neffShuffleToVerify = NeffShuffleResult{}
+	params.CellCoder = config.Factory()
 
 	params.currentState = TRUSTEE_STATE_INITIALIZING
+	params.sendingRate = make(chan int16)
 
 	return params
 }
@@ -88,6 +102,57 @@ func (p *PriFiProtocolHandlers) initTrustee(trusteeId int, nClients int, nTruste
 //Messages to handle :
 //REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE
 //REL_TRU_TELL_TRANSCRIPT
+
+/**
+ * This method sends DC-net ciphers to the relay, once started. One can control the rate by sending data to "rateChan".
+ */
+func (p *PriFiProtocolHandlers) Send_TRU_REL_DC_CIPHER(rateChan chan int16) {
+
+	stop := false
+	currentRate := TRUSTEE_RATE_STOPPED
+	roundId := int32(0)
+
+	for !stop {
+		select {
+		case newRate := <-rateChan:
+			currentRate = newRate
+			dbg.Error("Trustee " + strconv.Itoa(trusteeState.Id) + " : rate changed from " + strconv.Itoa(int(currentRate)) + " to " + strconv.Itoa(int(newRate)))
+
+			if newRate == TRUSTEE_KILL_SEND_PROCESS {
+				stop = true
+			}
+
+		default:
+			if currentRate == TRUSTEE_RATE_FULL {
+				roundId, _ = sendData(p, roundId)
+
+			} else if currentRate == TRUSTEE_RATE_HALF {
+				roundId, _ = sendData(p, roundId)
+				time.Sleep(TRUSTEE_SLEEP_TIME)
+
+			} else if currentRate == TRUSTEE_RATE_STOPPED {
+				time.Sleep(TRUSTEE_SLEEP_TIME)
+			}
+
+		}
+	}
+
+}
+
+func sendData(p *PriFiProtocolHandlers, roundId int32) (int32, error) {
+	data := trusteeState.CellCoder.TrusteeEncode(trusteeState.PayloadLength)
+
+	//send the data
+	toSend := &TRU_REL_DC_CIPHER{roundId, data}
+	err := p.SendTo(p.Parent(), toSend) //TODO : this should be the root ! make sure of it
+	if err != nil {
+		e := "Could not send Struct_TRU_REL_DC_CIPHER for round (" + strconv.Itoa(int(roundId)) + ") error is " + err.Error()
+		dbg.Error(e)
+		return roundId, errors.New(e)
+	}
+
+	return roundId + 1, nil
+}
 
 /**
  * This message happens when the connection to a relay is established. It contains the long-term and ephemeral public keys of the clients,
@@ -109,7 +174,7 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AN
 
 	//sanity check
 	if len(clientsPks) < 2 || len(clientsEphemeralPks) < 2 || len(clientsPks) != len(clientsEphemeralPks) {
-		e := "One of the following check failed : len(clientsPks)>1, len(clientsEphemeralPks)>1, len(clientsPks)==len(clientsEphemeralPks)"
+		e := "Trustee " + strconv.Itoa(trusteeState.Id) + " : One of the following check failed : len(clientsPks)>1, len(clientsEphemeralPks)>1, len(clientsPks)==len(clientsEphemeralPks)"
 		dbg.Error(e)
 		return errors.New(e)
 	}
@@ -162,6 +227,7 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AN
  * This message happens when all trustees have already shuffled. They need to verify all the shuffles, and also that
  * their own shuffle has been included in the chain of shuffles. If that's the case, this trustee signs the *last*
  * shuffle, and send it back to the relay.
+ * If everything succeed, starts the goroutine for sending DC-net ciphers to the relay
  */
 func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_TRU_TELL_TRANSCRIPT) error {
 
@@ -276,6 +342,12 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_
 
 	//we can forget our shuffle
 	//trusteeState.neffShuffleToVerify = NeffShuffleResult{base2, ephPublicKeys2, proof}
+
+	//change state
+	trusteeState.currentState = TRUSTEE_STATE_READY
+
+	//everything is ready, we start sending
+	go p.Send_TRU_REL_DC_CIPHER(trusteeState.sendingRate)
 
 	return nil
 }
