@@ -82,8 +82,8 @@ func (p *PriFiProtocolHandlers) initTrustee(trusteeId int, nClients int, nTruste
 	base := config.CryptoSuite.Point().Base()
 
 	//generate own parameters
-	params.privateKey = config.CryptoSuite.Secret().Pick(rand)
-	params.PublicKey = config.CryptoSuite.Point().Mul(base, params.privateKey)
+	params.privateKey = config.CryptoSuite.Secret().Pick(rand)                 //NO, this should be kept by SDA
+	params.PublicKey = config.CryptoSuite.Point().Mul(base, params.privateKey) //NO, this should be kept by SDA
 
 	//placeholders for pubkeys and secrets
 	params.ClientPublicKeys = make([]abstract.Point, nClients)
@@ -166,6 +166,7 @@ func sendData(p *PriFiProtocolHandlers, roundId int32) (int32, error) {
  */
 func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE(msg Struct_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE) error {
 
+	//this can only happens in the state TRUSTEE_STATE_INITIALIZING
 	if trusteeState.currentState != TRUSTEE_STATE_INITIALIZING {
 		e := "Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE, but not in state TRUSTEE_STATE_INITIALIZING, in state " + strconv.Itoa(int(trusteeState.currentState))
 		dbg.Error(e)
@@ -174,6 +175,7 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AN
 		dbg.Lvl3("Trustee " + strconv.Itoa(trusteeState.Id) + " : Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE")
 	}
 
+	//begin parsing the message
 	rand := config.CryptoSuite.Cipher([]byte(trusteeState.Name)) //TODO: this should be random
 	clientsPks := msg.Pks
 	clientsEphemeralPks := msg.EphPks
@@ -240,7 +242,7 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AN
  */
 func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_TRU_TELL_TRANSCRIPT) error {
 
-	//we can only receive this message when we are in TRUSTEE_STATE_SHUFFLE_DONE
+	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
 	if trusteeState.currentState != TRUSTEE_STATE_SHUFFLE_DONE {
 		e := "Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE, but not in state TRUSTEE_STATE_SHUFFLE_DONE, in state " + strconv.Itoa(int(trusteeState.currentState))
 		dbg.Error(e)
@@ -249,6 +251,7 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_
 		dbg.Lvl3("Trustee " + strconv.Itoa(trusteeState.Id) + " : Received_REL_TRU_TELL_TRANSCRIPT")
 	}
 
+	//begin parsing the message
 	rand := config.CryptoSuite.Cipher([]byte(trusteeState.Name)) //TODO: this should be random
 	G_s := msg.G_s
 	ephPublicKeys_s := msg.EphPks
