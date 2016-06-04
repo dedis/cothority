@@ -139,6 +139,9 @@ func (p *PriFiProtocolHandlers) Send_TRU_REL_DC_CIPHER(rateChan chan int16) {
 
 }
 
+/**
+ * Auxiliary function used by Send_TRU_REL_DC_CIPHER
+ */
 func sendData(p *PriFiProtocolHandlers, roundId int32) (int32, error) {
 	data := trusteeState.CellCoder.TrusteeEncode(trusteeState.PayloadLength)
 
@@ -149,6 +152,8 @@ func sendData(p *PriFiProtocolHandlers, roundId int32) (int32, error) {
 		e := "Could not send Struct_TRU_REL_DC_CIPHER for round (" + strconv.Itoa(int(roundId)) + ") error is " + err.Error()
 		dbg.Error(e)
 		return roundId, errors.New(e)
+	} else {
+		dbg.Lvl5("Trustee " + strconv.Itoa(trusteeState.Id) + " : sent cipher " + strconv.Itoa(int(roundId)))
 	}
 
 	return roundId + 1, nil
@@ -165,6 +170,8 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AN
 		e := "Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE, but not in state TRUSTEE_STATE_INITIALIZING, in state " + strconv.Itoa(int(trusteeState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
+	} else {
+		dbg.Lvl3("Trustee " + strconv.Itoa(trusteeState.Id) + " : Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE")
 	}
 
 	rand := config.CryptoSuite.Cipher([]byte(trusteeState.Name)) //TODO: this should be random
@@ -209,9 +216,11 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AN
 	toSend := &TRU_REL_TELL_NEW_BASE_AND_EPH_PKS{base2, ephPublicKeys2, proof}
 	err = p.SendTo(p.Parent(), toSend) //TODO : this should be the root ! make sure of it
 	if err != nil {
-		e := "Could not send REL_CLI_DOWNSTREAM_DATA, error is " + err.Error()
+		e := "Could not send TRU_REL_TELL_NEW_BASE_AND_EPH_PKS, error is " + err.Error()
 		dbg.Error(e)
 		return errors.New(e)
+	} else {
+		dbg.Lvl3("Trustee " + strconv.Itoa(trusteeState.Id) + " : sent TRU_REL_TELL_NEW_BASE_AND_EPH_PKS")
 	}
 
 	//remember our shuffle
@@ -236,6 +245,8 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_
 		e := "Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE, but not in state TRUSTEE_STATE_SHUFFLE_DONE, in state " + strconv.Itoa(int(trusteeState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
+	} else {
+		dbg.Lvl3("Trustee " + strconv.Itoa(trusteeState.Id) + " : Received_REL_TRU_TELL_TRANSCRIPT")
 	}
 
 	rand := config.CryptoSuite.Cipher([]byte(trusteeState.Name)) //TODO: this should be random
@@ -338,6 +349,8 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_
 		e := "Could not send TRU_REL_SHUFFLE_SIG, error is " + err.Error()
 		dbg.Error(e)
 		return errors.New(e)
+	} else {
+		dbg.Lvl3("Trustee " + strconv.Itoa(trusteeState.Id) + " : sent TRU_REL_SHUFFLE_SIG")
 	}
 
 	//we can forget our shuffle
