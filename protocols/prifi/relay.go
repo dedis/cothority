@@ -171,6 +171,23 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg
 
 func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_REL_UPSTREAM_DATA) error {
 
+	//if this is not the message destinated for this round, discard it ! (we are in lock-step)
+	if relayState.currentDCNetRound.currentRound != msg.RoundId {
+		e := "Relay : Client sent DC-net cipher for round , " + strconv.Itoa(int(msg.RoundId)) + " but current round is " + strconv.Itoa(int(relayState.currentDCNetRound.currentRound))
+		dbg.Error(e)
+		return errors.New(e)
+
+	} else {
+		//else, if this is the message we need for this round
+
+		relayState.CellCoder.DecodeClient(msg.Data)
+		relayState.currentDCNetRound.clientCipherCount++
+
+		if relayState.currentDCNetRound.hasAllCiphers() {
+			p.finalizeUpstreamDataAndSendDownstreamData()
+		}
+	}
+
 	return nil
 }
 
@@ -226,7 +243,6 @@ func (p *PriFiProtocolHandlers) finalizeUpstreamDataAndSendDownstreamData() erro
 	}
 
 	if len(upstreamPlaintext) != relayState.UpstreamCellSize {
-		panic("DecodeCell produced wrong-size payload")
 		e := "Relay : DecodeCell produced wrong-size payload, " + strconv.Itoa(len(upstreamPlaintext)) + "!=" + strconv.Itoa(relayState.UpstreamCellSize)
 		dbg.Error(e)
 		return errors.New(e)
@@ -272,8 +288,20 @@ func (p *PriFiProtocolHandlers) finalizeUpstreamDataAndSendDownstreamData() erro
 	}
 
 	//prepare for the next round
-	relayState.currentDCNetRound = DCNetRound{relayState.currentDCNetRound.currentRound + 1, 0, 0}
+	nextRound := relayState.currentDCNetRound.currentRound + 1
+	relayState.currentDCNetRound = DCNetRound{nextRound, 0, 0}
 	relayState.CellCoder.DecodeStart(relayState.UpstreamCellSize, relayState.MessageHistory)
+
+	//if we have buffered messages for next round, use them now
+	if _, ok := relayState.bufferedTrusteeCiphers[nextRound]; ok {
+		for trusteeId, data := range relayState.bufferedTrusteeCiphers[nextRound].Data {
+			//start decoding using this data
+			dbg.Lvl5("Relay : using pre-cached DC-net cipher from trustee " + strconv.Itoa(trusteeId) + " for round " + strconv.Itoa(int(nextRound)))
+			relayState.CellCoder.DecodeTrustee(data)
+			relayState.currentDCNetRound.trusteeCipherCount++
+		}
+		delete(relayState.bufferedTrusteeCiphers, nextRound)
+	}
 
 	return nil
 }
