@@ -21,10 +21,12 @@ const INBETWEEN_CONFIG_SLEEP_TIME = 0 * time.Second
 const NEWCLIENT_CHECK_SLEEP_TIME = 10 * time.Millisecond
 const CLIENT_READ_TIMEOUT = 5 * time.Second
 const RELAY_FAILED_CONNECTION_WAIT_BEFORE_RETRY = 10 * time.Second
+
 const (
-	PROTOCOL_STATUS_OK = iota
-	PROTOCOL_STATUS_GONNA_RESYNC
-	PROTOCOL_STATUS_RESYNCING
+	RELAY_STATE_COLLECTING_CLIENT_PKS int16 = iota
+	RELAY_STATE_COLLECTING_SHUFFLES
+	RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
+	RELAY_STATE_COMMUNICATING
 )
 
 type NodeRepresentation struct {
@@ -71,28 +73,29 @@ type RelayState struct {
 	//privateKey			abstract.Secret
 	//trusteesHosts			[]string
 
-	Name                     string
-	nClients                 int
-	nTrustees                int
-	UseUDP                   bool
-	UseDummyDataDown         bool
-	UDPBroadcastConn         net.Conn
-	privateKey               abstract.Secret //those are kept by the SDA stack
-	PublicKey                abstract.Point  //those are kept by the SDA stack
-	clients                  []NodeRepresentation
-	trustees                 []NodeRepresentation
-	CellCoder                dcnet.CellCoder
-	MessageHistory           abstract.Cipher
-	UpstreamCellSize         int
-	DownstreamCellSize       int
-	WindowSize               int
-	ReportingLimit           int
-	currentShuffleTranscript NeffShuffleState
-	currentDCNetRound        DCNetRound
 	bufferedTrusteeCiphers   map[int32]BufferedTrusteeCipher
+	CellCoder                dcnet.CellCoder
+	clients                  []NodeRepresentation
+	currentDCNetRound        DCNetRound
+	currentShuffleTranscript NeffShuffleState
+	currentState             int16
 	DataForClients           chan []byte //VPN / SOCKS should put data there !
 	DataFromDCNet            chan []byte //VPN / SOCKS should read data from there !
 	DataOutputEnabled        bool        //if FALSE, nothing will be written to DataFromDCNet
+	DownstreamCellSize       int
+	MessageHistory           abstract.Cipher
+	Name                     string
+	nClients                 int
+	nTrustees                int
+	privateKey               abstract.Secret //those are kept by the SDA stack
+	PublicKey                abstract.Point  //those are kept by the SDA stack
+	ReportingLimit           int
+	trustees                 []NodeRepresentation
+	UDPBroadcastConn         net.Conn
+	UpstreamCellSize         int
+	UseDummyDataDown         bool
+	UseUDP                   bool
+	WindowSize               int
 }
 
 func initRelay(nTrustees int, nClients int, upstreamCellSize int, downstreamCellSize int, windowSize int, useDummyDataDown bool, reportingLimit int, useUDP bool) *RelayState {
@@ -119,6 +122,8 @@ func initRelay(nTrustees int, nClients int, upstreamCellSize int, downstreamCell
 
 	//sets the cell coder, and the history
 	params.CellCoder = config.Factory()
+
+	params.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
 
 	return params
 }
@@ -171,6 +176,17 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg
 
 func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_REL_UPSTREAM_DATA) error {
 
+	//this can only happens in the state RELAY_STATE_COMMUNICATING
+	if relayState.currentState != RELAY_STATE_COMMUNICATING {
+		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(relayState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : received CLI_REL_UPSTREAM_DATA")
+	}
+
+	//TODO : add a timeout somewhere here
+
 	//if this is not the message destinated for this round, discard it ! (we are in lock-step)
 	if relayState.currentDCNetRound.currentRound != msg.RoundId {
 		e := "Relay : Client sent DC-net cipher for round , " + strconv.Itoa(int(msg.RoundId)) + " but current round is " + strconv.Itoa(int(relayState.currentDCNetRound.currentRound))
@@ -193,7 +209,17 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_RE
 
 func (p *PriFiProtocolHandlers) Received_TRU_REL_DC_CIPHER(msg Struct_TRU_REL_DC_CIPHER) error {
 
+	//this can only happens in the state RELAY_STATE_COMMUNICATING
+	if relayState.currentState != RELAY_STATE_COMMUNICATING {
+		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(relayState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : received CLI_REL_UPSTREAM_DATA")
+	}
+
 	//TODO : add rate-control somewhere here
+	//TODO : add a timeout somewhere here
 
 	//if this is the message we need for this round
 	if relayState.currentDCNetRound.currentRound == msg.RoundId {
@@ -325,6 +351,15 @@ func (p *PriFiProtocolHandlers) Received_TRU_REL_TELL_PK(msg Struct_TRU_REL_TELL
 
 func (p *PriFiProtocolHandlers) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg Struct_CLI_REL_TELL_PK_AND_EPH_PK) error {
 
+	//this can only happens in the state RELAY_STATE_COLLECTING_CLIENT_PKS
+	if relayState.currentState != RELAY_STATE_COLLECTING_CLIENT_PKS {
+		e := "Relay : Received a CLI_REL_TELL_PK_AND_EPH_PK, but not in state RELAY_STATE_COLLECTING_CLIENT_PKS, in state " + strconv.Itoa(int(relayState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : received CLI_REL_TELL_PK_AND_EPH_PK")
+	}
+
 	//collect this client information
 	nextId := len(relayState.clients)
 	newClient := NodeRepresentation{nextId, true, msg.Pk, msg.EphPk}
@@ -365,13 +400,23 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg Struct_C
 			dbg.Lvl3("Relay : sent REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE (0-th iteration)")
 		}
 
-		//should change state here
+		//changing state
+		relayState.currentState = RELAY_STATE_COLLECTING_SHUFFLES
 	}
 
 	return nil
 }
 
 func (p *PriFiProtocolHandlers) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg Struct_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS) error {
+
+	//this can only happens in the state RELAY_STATE_COLLECTING_SHUFFLES
+	if relayState.currentState != RELAY_STATE_COLLECTING_SHUFFLES {
+		e := "Relay : Received a TRU_REL_TELL_NEW_BASE_AND_EPH_PKS, but not in state RELAY_STATE_COLLECTING_SHUFFLES, in state " + strconv.Itoa(int(relayState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : received TRU_REL_TELL_NEW_BASE_AND_EPH_PKS")
+	}
 
 	//store this shuffle's result in our transcript
 	j := relayState.currentShuffleTranscript.nextFreeId_Proofs
@@ -424,13 +469,23 @@ func (p *PriFiProtocolHandlers) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg S
 			}
 		}
 
-		//change state
+		//changing state
+		relayState.currentState = RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
 	}
 
 	return nil
 }
 
 func (p *PriFiProtocolHandlers) Received_TRU_REL_SHUFFLE_SIG(msg Struct_TRU_REL_SHUFFLE_SIG) error {
+
+	//this can only happens in the state RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
+	if relayState.currentState != RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES {
+		e := "Relay : Received a TRU_REL_SHUFFLE_SIG, but not in state RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES, in state " + strconv.Itoa(int(relayState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : received TRU_REL_SHUFFLE_SIG")
+	}
 
 	//sanity check
 	if msg.TrusteeId < 0 || msg.TrusteeId > len(relayState.currentShuffleTranscript.signatures_s) {
@@ -472,7 +527,8 @@ func (p *PriFiProtocolHandlers) Received_TRU_REL_SHUFFLE_SIG(msg Struct_TRU_REL_
 		relayState.currentDCNetRound = DCNetRound{0, 0, 0}
 		relayState.CellCoder.DecodeStart(relayState.UpstreamCellSize, relayState.MessageHistory)
 
-		//change state
+		//changing state
+		relayState.currentState = RELAY_STATE_COMMUNICATING
 	}
 
 	return nil
