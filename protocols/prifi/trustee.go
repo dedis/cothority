@@ -146,7 +146,7 @@ func sendData(p *PriFiProtocolHandlers, roundId int32) (int32, error) {
 	data := trusteeState.CellCoder.TrusteeEncode(trusteeState.PayloadLength)
 
 	//send the data
-	toSend := &TRU_REL_DC_CIPHER{roundId, data}
+	toSend := &TRU_REL_DC_CIPHER{roundId, trusteeState.Id, data}
 	err := p.SendTo(p.Parent(), toSend) //TODO : this should be the root ! make sure of it
 	if err != nil {
 		e := "Could not send Struct_TRU_REL_DC_CIPHER for round (" + strconv.Itoa(int(roundId)) + ") error is " + err.Error()

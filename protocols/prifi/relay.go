@@ -1,6 +1,7 @@
 package prifi
 
 import (
+	"encoding/binary"
 	"errors"
 	"math/rand"
 	"net"
@@ -43,6 +44,24 @@ type NeffShuffleState struct {
 	signature_count   int
 }
 
+type DCNetRound struct {
+	currentRound       int32
+	trusteeCipherCount int
+	clientCipherCount  int
+}
+
+func (dcnet *DCNetRound) hasAllCiphers() bool {
+	if relayState.nClients == dcnet.clientCipherCount && relayState.nTrustees == dcnet.trusteeCipherCount {
+		return true
+	}
+	return false
+}
+
+type BufferedTrusteeCipher struct {
+	RoundId int32
+	Data    map[int][]byte
+}
+
 var relayState RelayState
 
 //State information to hold :
@@ -69,6 +88,11 @@ type RelayState struct {
 	WindowSize               int
 	ReportingLimit           int
 	currentShuffleTranscript NeffShuffleState
+	currentDCNetRound        DCNetRound
+	bufferedTrusteeCiphers   map[int32]BufferedTrusteeCipher
+	DataForClients           chan []byte //VPN / SOCKS should put data there !
+	DataFromDCNet            chan []byte //VPN / SOCKS should read data from there !
+	DataOutputEnabled        bool        //if FALSE, nothing will be written to DataFromDCNet
 }
 
 func initRelay(nTrustees int, nClients int, upstreamCellSize int, downstreamCellSize int, windowSize int, useDummyDataDown bool, reportingLimit int, useUDP bool) *RelayState {
@@ -151,6 +175,105 @@ func (p *PriFiProtocolHandlers) Received_CLI_REL_UPSTREAM_DATA(msg Struct_CLI_RE
 }
 
 func (p *PriFiProtocolHandlers) Received_TRU_REL_DC_CIPHER(msg Struct_TRU_REL_DC_CIPHER) error {
+
+	//TODO : add rate-control somewhere here
+
+	//if this is the message we need for this round
+	if relayState.currentDCNetRound.currentRound == msg.RoundId {
+		relayState.CellCoder.DecodeTrustee(msg.Data)
+		relayState.currentDCNetRound.trusteeCipherCount++
+
+		if relayState.currentDCNetRound.hasAllCiphers() {
+			p.finalizeUpstreamDataAndSendDownstreamData()
+		}
+	} else {
+		//else, we need to buffer this message somewhere
+		if _, ok := relayState.bufferedTrusteeCiphers[msg.RoundId]; ok {
+			//the roundId already exists, simply add data
+			relayState.bufferedTrusteeCiphers[msg.RoundId].Data[msg.TrusteeId] = msg.Data
+		} else {
+			//else, create the key
+			newKey := BufferedTrusteeCipher{msg.RoundId, make(map[int][]byte)}
+			newKey.Data[msg.TrusteeId] = msg.Data
+			relayState.bufferedTrusteeCiphers[msg.RoundId] = newKey
+		}
+	}
+	return nil
+}
+
+func (p *PriFiProtocolHandlers) finalizeUpstreamDataAndSendDownstreamData() error {
+
+	/*
+	 * Finish processing the upstream data
+	 */
+
+	//we decode the DC-net cell
+	upstreamPlaintext := relayState.CellCoder.DecodeCell()
+
+	// Process the decoded cell
+
+	//check if we have a latency test message
+	if len(upstreamPlaintext) >= 2 {
+		pattern := int(binary.BigEndian.Uint16(upstreamPlaintext[0:2]))
+		if pattern == 43690 { //1010101010101010
+			//cellDown := prifinet.DataWithConnectionId{-1, upstreamPlaintext}
+			//priorityDownStream = append(priorityDownStream, cellDown)
+		}
+	}
+
+	if upstreamPlaintext == nil {
+		// empty upstream cell
+	}
+
+	if len(upstreamPlaintext) != relayState.UpstreamCellSize {
+		panic("DecodeCell produced wrong-size payload")
+		e := "Relay : DecodeCell produced wrong-size payload, " + strconv.Itoa(len(upstreamPlaintext)) + "!=" + strconv.Itoa(relayState.UpstreamCellSize)
+		dbg.Error(e)
+		return errors.New(e)
+	}
+
+	if relayState.DataOutputEnabled {
+		relayState.DataFromDCNet <- upstreamPlaintext
+	}
+
+	/*
+	 * Process the downstream data
+	 */
+
+	var downstreamCellContent []byte
+
+	select {
+
+	//either select data from the data we have to send, if any
+	case downstreamCellContent = <-relayState.DataForClients:
+
+	default:
+		downstreamCellContent = make([]byte, 1)
+	}
+
+	flagResync := false
+
+	if !relayState.UseUDP {
+		//broadcast to all clients
+		for i := 0; i < relayState.nClients; i++ {
+			//send to the i-th client
+			toSend := &REL_CLI_DOWNSTREAM_DATA{relayState.currentDCNetRound.currentRound, downstreamCellContent, flagResync}
+			err := p.SendTo(p.Parent(), toSend) //TODO : this should be the client X !
+			if err != nil {
+				e := "Could not send REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(relayState.currentDCNetRound.currentRound)) + ", error is " + err.Error()
+				dbg.Error(e)
+				return errors.New(e)
+			} else {
+				dbg.Lvl5("Relay : sent REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(relayState.currentDCNetRound.currentRound)))
+			}
+		}
+	} else {
+		panic("UDP not supported yet")
+	}
+
+	//prepare for the next round
+	relayState.currentDCNetRound = DCNetRound{relayState.currentDCNetRound.currentRound + 1, 0, 0}
+	relayState.CellCoder.DecodeStart(relayState.UpstreamCellSize, relayState.MessageHistory)
 
 	return nil
 }
@@ -249,6 +372,9 @@ func (p *PriFiProtocolHandlers) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg S
 		ephPublicKeys_s := relayState.currentShuffleTranscript.ephPubKeys_s
 		proof_s := relayState.currentShuffleTranscript.proof_s
 
+		//when receiving the next message (and after processing it), trustees will start sending data. Prepare to buffer it
+		relayState.bufferedTrusteeCiphers = make(map[int32]BufferedTrusteeCipher)
+
 		//broadcast to all trustees
 		for j := 0; j < relayState.nTrustees; j++ {
 			//send to the j-th trustee
@@ -306,6 +432,12 @@ func (p *PriFiProtocolHandlers) Received_TRU_REL_SHUFFLE_SIG(msg Struct_TRU_REL_
 				dbg.Lvl3("Relay : sent REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG to " + strconv.Itoa(i+1) + "-th client")
 			}
 		}
+
+		//prepare to collect the ciphers
+		relayState.currentDCNetRound = DCNetRound{0, 0, 0}
+		relayState.CellCoder.DecodeStart(relayState.UpstreamCellSize, relayState.MessageHistory)
+
+		//change state
 	}
 
 	return nil

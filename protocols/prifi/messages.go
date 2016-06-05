@@ -65,8 +65,9 @@ type REL_TRU_TELL_TRANSCRIPT struct {
 }
 
 type TRU_REL_DC_CIPHER struct {
-	RoundId int32
-	Data    []byte
+	RoundId   int32
+	TrusteeId int
+	Data      []byte
 }
 
 type TRU_REL_SHUFFLE_SIG struct {
