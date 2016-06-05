@@ -233,8 +233,8 @@ func (p *PriFiProtocolHandlers) finalizeUpstreamDataAndSendDownstreamData() erro
 	if len(upstreamPlaintext) >= 2 {
 		pattern := int(binary.BigEndian.Uint16(upstreamPlaintext[0:2]))
 		if pattern == 43690 { //1010101010101010
-			//cellDown := prifinet.DataWithConnectionId{-1, upstreamPlaintext}
-			//priorityDownStream = append(priorityDownStream, cellDown)
+			//then, we simply have to send it down
+			relayState.DataForClients <- upstreamPlaintext
 		}
 	}
 
@@ -265,6 +265,13 @@ func (p *PriFiProtocolHandlers) finalizeUpstreamDataAndSendDownstreamData() erro
 
 	default:
 		downstreamCellContent = make([]byte, 1)
+	}
+
+	//if we want to use dummy data down, pad to the correct size
+	if relayState.UseDummyDataDown && len(downstreamCellContent) < relayState.DownstreamCellSize {
+		data := make([]byte, relayState.DownstreamCellSize)
+		copy(data[0:], downstreamCellContent)
+		downstreamCellContent = data
 	}
 
 	flagResync := false
