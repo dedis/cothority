@@ -61,7 +61,7 @@ type REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE struct {
 type REL_TRU_TELL_TRANSCRIPT struct {
 	G_s    []abstract.Point
 	EphPks [][]abstract.Point
-	Sigs   [][]byte
+	Proofs [][]byte
 }
 
 type TRU_REL_DC_CIPHER struct {
@@ -70,7 +70,8 @@ type TRU_REL_DC_CIPHER struct {
 }
 
 type TRU_REL_SHUFFLE_SIG struct {
-	Sig []byte
+	TrusteeId int
+	Sig       []byte
 }
 
 type TRU_REL_TELL_NEW_BASE_AND_EPH_PKS struct {

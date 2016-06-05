@@ -255,7 +255,7 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_
 	rand := config.CryptoSuite.Cipher([]byte(trusteeState.Name)) //TODO: this should be random
 	G_s := msg.G_s
 	ephPublicKeys_s := msg.EphPks
-	proof_s := msg.Sigs
+	proof_s := msg.Proofs
 
 	//Todo : verify each individual permutations
 	var err error = nil
@@ -346,7 +346,7 @@ func (p *PriFiProtocolHandlers) Received_REL_TRU_TELL_TRANSCRIPT(msg Struct_REL_
 	dbg.Lvl2("Trustee " + strconv.Itoa(trusteeState.Id) + "; Sending signature")
 
 	//send the answer
-	toSend := &TRU_REL_SHUFFLE_SIG{sig}
+	toSend := &TRU_REL_SHUFFLE_SIG{trusteeState.Id, sig}
 	err = p.SendTo(p.Parent(), toSend) //TODO : this should be the root ! make sure of it
 	if err != nil {
 		e := "Could not send TRU_REL_SHUFFLE_SIG, error is " + err.Error()
