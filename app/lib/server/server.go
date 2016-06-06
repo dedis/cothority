@@ -27,10 +27,10 @@ import (
 
 	// Empty imports to have the init-functions called which should
 	// register the protocol
-	_ "github.com/dedis/cothority/protocols/cosi"
-	_ "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/cosi"
+	_ "github.com/dedis/cothority/protocols/cosi"
+	_ "github.com/dedis/cothority/services/cosi"
 	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
