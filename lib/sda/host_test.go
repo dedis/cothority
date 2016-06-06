@@ -14,6 +14,7 @@ import (
 
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
+	defer dbg.AfterTest(t)
 	h1 := sda.NewLocalHost(2000)
 	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
@@ -26,6 +27,7 @@ func TestHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
+	defer dbg.AfterTest(t)
 	time.Sleep(time.Second)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
@@ -59,6 +61,7 @@ func TestHostClose(t *testing.T) {
 }
 
 func TestHostClose2(t *testing.T) {
+	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 
@@ -71,6 +74,7 @@ func TestHostClose2(t *testing.T) {
 // Test connection of multiple Hosts and sending messages back and forth
 // also tests for the counterIO interface that it works well
 func TestHostMessaging(t *testing.T) {
+	defer dbg.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	bw1 := h1.Tx()
 	br2 := h2.Rx()
@@ -100,6 +104,7 @@ func TestHostMessaging(t *testing.T) {
 
 // Test sending data back and forth using the sendSDAData
 func TestHostSendMsgDuplex(t *testing.T) {
+	defer dbg.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{5}
 	err := h1.SendRaw(h2.Entity, msgSimple)
@@ -122,6 +127,7 @@ func TestHostSendMsgDuplex(t *testing.T) {
 
 // Test sending data back and forth using the SendTo
 func TestHostSendDuplex(t *testing.T) {
+	defer dbg.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{5}
 	err := h1.SendRaw(h2.Entity, msgSimple)
@@ -145,6 +151,7 @@ func TestHostSendDuplex(t *testing.T) {
 // Test when a peer receives a New EntityList, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
+	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
@@ -164,6 +171,7 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
+	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
@@ -217,6 +225,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
+	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, false, false)
 	defer local.CloseAll()
@@ -277,6 +286,7 @@ func TestTreePropagation(t *testing.T) {
 // h1 ask for the entitylist (because it dont know)
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
+	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, true, false)
 	defer local.CloseAll()
@@ -319,6 +329,7 @@ func TestListTreePropagation(t *testing.T) {
 }
 
 func TestTokenId(t *testing.T) {
+	defer dbg.AfterTest(t)
 	t1 := &sda.Token{
 		EntityListID: sda.EntityListID(uuid.NewV1()),
 		TreeID:       sda.TreeID(uuid.NewV1()),
@@ -347,6 +358,7 @@ func TestTokenId(t *testing.T) {
 
 // Test the automatic connection upon request
 func TestAutoConnection(t *testing.T) {
+	defer dbg.AfterTest(t)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h2.ListenAndBind()
@@ -367,6 +379,7 @@ func TestAutoConnection(t *testing.T) {
 }
 
 func TestReconnection(t *testing.T) {
+	defer dbg.AfterTest(t)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	defer h1.Close()

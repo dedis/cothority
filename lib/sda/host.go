@@ -150,8 +150,8 @@ func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
 func (h *Host) Close() error {
 
 	h.closingMut.Lock()
+	defer h.closingMut.Unlock()
 	if h.isClosing {
-		h.closingMut.Unlock()
 		return errors.New("Already closing")
 	}
 	dbg.Lvl4(h.Entity.First(), "Starts closing")
