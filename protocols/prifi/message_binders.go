@@ -1,5 +1,9 @@
 package prifi
 
+func (p *PriFiSDAWrapper) Received_ALL_ALL_PARAMETERS(msg Struct_ALL_ALL_PARAMETERS) error {
+	return prifiProtocol.ReceivedMessage(msg.ALL_ALL_PARAMETERS)
+}
+
 //client handlers
 func (p *PriFiSDAWrapper) Received_REL_CLI_DOWNSTREAM_DATA(msg Struct_REL_CLI_DOWNSTREAM_DATA) error {
 	return prifiProtocol.ReceivedMessage(msg.REL_CLI_DOWNSTREAM_DATA)

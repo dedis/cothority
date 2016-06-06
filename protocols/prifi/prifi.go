@@ -129,8 +129,15 @@ func NewPriFiSDAWrapperProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, 
 		TreeNodeInstance: n,
 		DoneChannel:      make(chan bool),
 	}
+
+	//register handlers
+	err := prifiSDAWrapperHandlers.RegisterHandler(prifiSDAWrapperHandlers.Received_ALL_ALL_PARAMETERS)
+	if err != nil {
+		return nil, errors.New("couldn't register handler: " + err.Error())
+	}
+
 	//register client handlers
-	err := prifiSDAWrapperHandlers.RegisterHandler(prifiSDAWrapperHandlers.Received_REL_CLI_DOWNSTREAM_DATA)
+	err = prifiSDAWrapperHandlers.RegisterHandler(prifiSDAWrapperHandlers.Received_REL_CLI_DOWNSTREAM_DATA)
 	if err != nil {
 		return nil, errors.New("couldn't register handler: " + err.Error())
 	}

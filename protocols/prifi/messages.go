@@ -7,6 +7,11 @@ import (
 
 //wrappers
 
+type Struct_ALL_ALL_PARAMETERS struct {
+	*sda.TreeNode
+	prifi_lib.ALL_ALL_PARAMETERS
+}
+
 type Struct_CLI_REL_TELL_PK_AND_EPH_PK struct {
 	*sda.TreeNode
 	prifi_lib.CLI_REL_TELL_PK_AND_EPH_PK
