@@ -20,19 +20,33 @@ func init() {
 // Simulation implements sda.Simulation.
 type Simulation struct {
 	sda.SimulationBFTree
+	SimulationConfig
 }
+
+// SimulationConfig is the config used by the simulation for byzcoin
+type SimulationConfig struct {
+	NTrustees             int
+	CellSizeUp            int
+	CellSizeDown          int
+	RelayWindowSize       int
+	RelayUseDummyDataDown bool
+	RelayReportingLimit   int
+	UseUDP                bool
+	DoLatencyTests        bool
+}
+
+var prifiConfig SimulationConfig
 
 // NewSimulation is used internally to register the simulation (see the init()
 // function above).
 func NewSimulation(config string) (sda.Simulation, error) {
-
-	dbg.Lvl1("PriFi Service received New Protocol event - 2")
-
 	es := &Simulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
 	}
+	prifiConfig = es.SimulationConfig
+
 	return es, nil
 }
 
@@ -51,11 +65,13 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 // Run implements sda.Simulation.
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
+
 	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
 		p, err := config.Overlay.CreateProtocol(config.Tree, "PriFi-SDA-Wrapper")
+		p.(*PriFiSDAWrapper).SetConfig(prifiConfig)
 		if err != nil {
 			return err
 		}

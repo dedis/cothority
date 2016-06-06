@@ -24,6 +24,10 @@ var prifiProtocol *prifi_lib.PriFiProtocol
 //the "PriFi-Wrapper-Protocol start". It calls the PriFi library with the correct parameters
 func (p *PriFiSDAWrapper) Start() error {
 
+	if !p.configSet {
+		dbg.Error("Trying to start PriFi Library, but config not set !")
+	}
+
 	dbg.Lvl3("Starting PriFi-SDA-Wrapper Protocol")
 
 	//initialize the first message (here the dummy ping-pong game)
@@ -58,7 +62,15 @@ func init() {
 //This is the PriFi-SDA-Wrapper protocol struct. It contains the SDA-tree, and a chanel that stops the simulation when it receives a "true"
 type PriFiSDAWrapper struct {
 	*sda.TreeNodeInstance
+	configSet   bool
+	config      interface{}
 	DoneChannel chan bool
+}
+
+func (p *PriFiSDAWrapper) SetConfig(config interface{}) {
+	p.config = config
+	p.configSet = false
+	dbg.Lvl2("Setting PriFi config to be : ", config)
 }
 
 /**
