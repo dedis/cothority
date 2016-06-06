@@ -4,7 +4,15 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 )
 
+const (
+	PRIFI_ROLE_UNDEFINED int16 = iota
+	PRIFI_ROLE_RELAY
+	PRIFI_ROLE_CLIENT
+	PRIFI_ROLE_TRUSTEE
+)
+
 type PriFiProtocol struct {
+	role          int16
 	messageSender MessageSender
 }
 
@@ -23,6 +31,7 @@ func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
 		panic("But prifi is nil !")
 	}
 
+	//ALL_ALL_PARAMETERS
 	//CLI_REL_TELL_PK_AND_EPH_PK
 	//CLI_REL_UPSTREAM_DATA
 	//REL_CLI_DOWNSTREAM_DATA
@@ -36,6 +45,17 @@ func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
 	//TRU_REL_TELL_PK
 
 	switch typedMsg := msg.(type) {
+	case ALL_ALL_PARAMETERS:
+		switch prifi.role {
+		case PRIFI_ROLE_RELAY:
+			return prifi.Received_ALL_REL_PARAMETERS(typedMsg)
+		case PRIFI_ROLE_CLIENT:
+			return prifi.Received_ALL_CLI_PARAMETERS(typedMsg)
+		case PRIFI_ROLE_TRUSTEE:
+			return prifi.Received_ALL_TRU_PARAMETERS(typedMsg)
+		default:
+			panic("Received parameters, but we have no role yet !")
+		}
 	case CLI_REL_TELL_PK_AND_EPH_PK:
 		return prifi.Received_CLI_REL_TELL_PK_AND_EPH_PK(typedMsg)
 	case CLI_REL_UPSTREAM_DATA:
@@ -66,19 +86,19 @@ func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
 }
 
 func NewPriFiRelay(msgSender MessageSender, state *RelayState) *PriFiProtocol {
-	prifi := PriFiProtocol{msgSender}
+	prifi := PriFiProtocol{PRIFI_ROLE_RELAY, msgSender}
 	relayState = *state
 	return &prifi
 }
 
 func NewPriFiClient(msgSender MessageSender, state *ClientState) *PriFiProtocol {
-	prifi := PriFiProtocol{msgSender}
+	prifi := PriFiProtocol{PRIFI_ROLE_CLIENT, msgSender}
 	clientState = *state
 	return &prifi
 }
 
 func NewPriFiTrustee(msgSender MessageSender, state *TrusteeState) *PriFiProtocol {
-	prifi := PriFiProtocol{msgSender}
+	prifi := PriFiProtocol{PRIFI_ROLE_TRUSTEE, msgSender}
 	trusteeState = *state
 	return &prifi
 }

@@ -9,6 +9,7 @@ import (
  * Syntax : SOURCE_DEST_CONTENT_CONTENT
  */
 
+//ALL_ALL_PARAMETERS
 //CLI_REL_TELL_PK_AND_EPH_PK
 //CLI_REL_UPSTREAM_DATA
 //REL_CLI_DOWNSTREAM_DATA
@@ -24,6 +25,21 @@ import (
 //not used yet :
 //REL_CLI_DOWNSTREAM_DATA
 //CLI_REL_DOWNSTREAM_NACK
+
+type ALL_ALL_PARAMETERS struct {
+	DoLatencyTests        bool
+	DownCellSize          int
+	NClients              int
+	NextFreeClientId      int
+	NextFreeTrusteeId     int
+	NTrustees             int
+	RelayReportingLimit   int
+	RelayUseDummyDataDown bool
+	RelayWindowSize       int
+	StartNow              bool
+	UpCellSize            int
+	UseUDP                bool
+}
 
 type CLI_REL_TELL_PK_AND_EPH_PK struct {
 	Pk    abstract.Point

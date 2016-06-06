@@ -23,7 +23,8 @@ const CLIENT_READ_TIMEOUT = 5 * time.Second
 const RELAY_FAILED_CONNECTION_WAIT_BEFORE_RETRY = 10 * time.Second
 
 const (
-	RELAY_STATE_COLLECTING_CLIENT_PKS int16 = iota
+	RELAY_STATE_BEFORE_INIT int16 = iota
+	RELAY_STATE_COLLECTING_CLIENT_PKS
 	RELAY_STATE_COLLECTING_SHUFFLES
 	RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
 	RELAY_STATE_COMMUNICATING
@@ -123,7 +124,7 @@ func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstream
 	//sets the cell coder, and the history
 	params.CellCoder = config.Factory()
 
-	params.currentState = RELAY_STATE_COMMUNICATING
+	params.currentState = RELAY_STATE_BEFORE_INIT
 
 	return params
 }
@@ -132,12 +133,39 @@ func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstream
 var relayStateInt int32 = 0
 
 //Messages to handle :
+//ALL_ALL_PARAMETERS
 //CLI_REL_TELL_PK_AND_EPH_PK
 //CLI_REL_UPSTREAM_DATA
 //TRU_REL_DC_CIPHER
 //TRU_REL_SHUFFLE_SIG
 //TRU_REL_TELL_NEW_BASE_AND_EPH_PKS
 //TRU_REL_TELL_PK
+
+/**
+ * This is the "INIT" message that shares all the public parameters.
+ */
+func (p *PriFiProtocol) Received_ALL_REL_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
+
+	//this can only happens in the state RELAY_STATE_BEFORE_INIT
+	if relayState.currentState != RELAY_STATE_BEFORE_INIT {
+		e := "Relay : Received a ALL_ALL_PARAMETERS, but not in state RELAY_STATE_BEFORE_INIT, in state " + strconv.Itoa(int(relayState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : received ALL_ALL_PARAMETERS")
+	}
+
+	relayState = *NewRelayState(msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DownCellSize, msg.RelayWindowSize, msg.RelayUseDummyDataDown, msg.RelayReportingLimit, msg.UseUDP)
+
+	if msg.StartNow {
+		//start prifi protocol if need be !
+		//relay does not have to do anything, client start the contact
+	}
+
+	relayState.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
+
+	return nil
+}
 
 func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg CLI_REL_UPSTREAM_DATA) error {
 

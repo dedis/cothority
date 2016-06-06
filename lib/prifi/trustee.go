@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	TRUSTEE_STATE_INITIALIZING int16 = iota
+	TRUSTEE_STATE_BEFORE_INIT int16 = iota
+	TRUSTEE_STATE_INITIALIZING
 	TRUSTEE_STATE_SHUFFLE_DONE
 	TRUSTEE_STATE_READY
 )
@@ -100,8 +101,35 @@ func NewTrusteeState(trusteeId int, nClients int, nTrustees int, payloadLength i
 }
 
 //Messages to handle :
+//ALL_ALL_PARAMETERS
 //REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE
 //REL_TRU_TELL_TRANSCRIPT
+
+/**
+ * This is the "INIT" message that shares all the public parameters.
+ */
+func (p *PriFiProtocol) Received_ALL_TRU_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
+
+	//this can only happens in the state RELAY_STATE_BEFORE_INIT
+	if trusteeState.currentState != TRUSTEE_STATE_BEFORE_INIT {
+		e := "Trustee : Received a ALL_ALL_PARAMETERS, but not in state TRUSTEE_STATE_BEFORE_INIT, in state " + strconv.Itoa(int(trusteeState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Trustee : received ALL_ALL_PARAMETERS")
+	}
+
+	trusteeState = *NewTrusteeState(msg.NextFreeTrusteeId, msg.NTrustees, msg.NClients, msg.UpCellSize)
+
+	if msg.StartNow {
+		//start prifi protocol if need be !
+		//trustees don't do anything, client start the contact
+	}
+
+	trusteeState.currentState = TRUSTEE_STATE_INITIALIZING
+
+	return nil
+}
 
 /**
  * This method sends DC-net ciphers to the relay, once started. One can control the rate by sending data to "rateChan".

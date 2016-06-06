@@ -22,7 +22,8 @@ const CLIENT_FAILED_CONNECTION_WAIT_BEFORE_RETRY = 1000 * time.Millisecond
 const UDP_DATAGRAM_WAIT_TIMEOUT = 5 * time.Second
 
 const (
-	CLIENT_STATE_INITIALIZING int16 = iota
+	CLIENT_STATE_BEFORE_INIT int16 = iota
+	CLIENT_STATE_INITIALIZING
 	CLIENT_STATE_EPH_KEYS_SENT
 	CLIENT_STATE_READY
 )
@@ -100,9 +101,37 @@ func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int
 }
 
 //Messages to handle :
+//ALL_ALL_PARAMETERS
 //REL_CLI_DOWNSTREAM_DATA
 //REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG
 //REL_CLI_TELL_TRUSTEES_PK
+
+/**
+ * This is the "INIT" message that shares all the public parameters.
+ */
+func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
+
+	//this can only happens in the state RELAY_STATE_BEFORE_INIT
+	if clientState.currentState != CLIENT_STATE_BEFORE_INIT {
+		e := "Client : Received a ALL_ALL_PARAMETERS, but not in state CLIENT_STATE_BEFORE_INIT, in state " + strconv.Itoa(int(clientState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Client : received ALL_ALL_PARAMETERS")
+	}
+
+	clientState = *NewClientState(msg.NextFreeClientId, msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DoLatencyTests, msg.UseUDP)
+
+	if msg.StartNow {
+		//start prifi protocol if need be !
+
+		//TODO : should send his public key to the relay !
+	}
+
+	clientState.currentState = CLIENT_STATE_INITIALIZING
+
+	return nil
+}
 
 func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA_dummypingpong(msg REL_CLI_DOWNSTREAM_DATA) error {
 
