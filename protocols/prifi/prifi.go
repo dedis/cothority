@@ -1,8 +1,15 @@
 package prifi
 
+/*
+ * PRIFI SDA WRAPPER
+ *
+ * Caution : this is not the "PriFi protocol", which is really a "PriFi Library" which you need to import, and feed with some network methods.
+ * This is the "PriFi-SDA-Wrapper" protocol, which imports the PriFi lib, gives it "SendToXXX()" methods and calls the "prifi_library.MessageReceived()"
+ * methods (it build a map that converts the SDA tree into identities), and starts the PriFi Library.
+ */
+
 import (
 	"errors"
-	"strconv"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -10,13 +17,14 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
+//this is the actual "PriFi" (DC-net) protocol/library
 //defined in cothority/lib/prifi/prifi.go
 var prifiProtocol *prifi_lib.PriFiProtocol
 
 //the "PriFi-Wrapper-Protocol start". It calls the PriFi library with the correct parameters
 func (p *PriFiSDAWrapper) Start() error {
 
-	dbg.Print("Starting PriFi Library")
+	dbg.Lvl3("Starting PriFi-SDA-Wrapper Protocol")
 
 	//initialize the first message (here the dummy ping-pong game)
 	firstMessage := &prifi_lib.CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
@@ -25,6 +33,10 @@ func (p *PriFiSDAWrapper) Start() error {
 	return p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
 }
 
+/**
+ * On initialization of the PriFi-SDA-Wrapper protocol, it need to register the PriFi-Lib messages to be able to marshall them.
+ * If we forget some messages there, it will crash when PriFi-Lib will call SendToXXX() with this message !
+ */
 func init() {
 
 	//register the prifi_lib's message with the network lib here
@@ -40,56 +52,25 @@ func init() {
 	network.RegisterMessageType(prifi_lib.TRU_REL_TELL_NEW_BASE_AND_EPH_PKS{})
 	network.RegisterMessageType(prifi_lib.TRU_REL_TELL_PK{})
 
-	sda.ProtocolRegisterName("PriFi", NewPriFiProtocol)
+	sda.ProtocolRegisterName("PriFi-SDA-Wrapper", NewPriFiSDAWrapperProtocol)
 }
 
-// ProtocolExampleHandlers just holds a message that is passed to all children. It
-// also defines a channel that will receive the number of children. Only the
-// root-node will write to the channel.
+//This is the PriFi-SDA-Wrapper protocol struct. It contains the SDA-tree, and a chanel that stops the simulation when it receives a "true"
 type PriFiSDAWrapper struct {
 	*sda.TreeNodeInstance
-	ChildCount chan int
+	DoneChannel chan bool
 }
 
-type MessageSender struct {
-	tree     *sda.TreeNodeInstance
-	relay    *sda.TreeNode
-	clients  map[int]*sda.TreeNode
-	trustees map[int]*sda.TreeNode
-}
-
-func (ms MessageSender) SendToClient(i int, msg interface{}) error {
-	dbg.Lvl1("Sending a message to client ", i, " - ", msg)
-
-	if client, ok := ms.clients[i]; ok {
-		return ms.tree.SendTo(client, msg)
-	} else {
-		panic("Client " + strconv.Itoa(i) + " is unknown !")
-	}
-
-	return nil
-}
-
-func (ms MessageSender) SendToTrustee(i int, msg interface{}) error {
-
-	dbg.Lvl1("Sending a message to trustee ", i, " - ", msg)
-
-	if trustee, ok := ms.trustees[i]; ok {
-		return ms.tree.SendTo(trustee, msg)
-	} else {
-		panic("Trustee " + strconv.Itoa(i) + " is unknown !")
-	}
-
-	return nil
-}
-
-func (ms MessageSender) SendToRelay(msg interface{}) error {
-	dbg.Lvl1("Sending a message to relay ", " - ", msg)
-	return ms.tree.SendTo(ms.relay, msg)
-}
-
-// NewExampleHandlers initialises the structure for use in one round
-func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+/**
+ * This function is called on all nodes of the SDA-tree (when they receive their first prifi message).
+ * It build a network map (deterministic from the order of the tree), which allows to build the
+ * messageSender struct needed by PriFi-Lib.
+ * Then, it instantiate PriFi-Lib with the correct state, given the role of the node.
+ * Finally, it registers handlers so it can unmarshal messages and give them back to prifi. It is kind of ridiculous to have a handler for each
+ * message, as PriFi-Lib is able to recognize the messages (everything is fed to ReceivedMessage() in PriFi-Lib), but that is how the SDA works
+ * for now.
+ */
+func NewPriFiSDAWrapperProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	//fill in the network host map
 	nodes := n.List()
@@ -134,9 +115,8 @@ func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	//instantiate our PriFi wrapper protocol
 	prifiSDAWrapperHandlers := &PriFiSDAWrapper{
 		TreeNodeInstance: n,
-		ChildCount:       make(chan int),
+		DoneChannel:      make(chan bool),
 	}
-
 	//register client handlers
 	err := prifiSDAWrapperHandlers.RegisterHandler(prifiSDAWrapperHandlers.Received_REL_CLI_DOWNSTREAM_DATA)
 	if err != nil {
@@ -186,5 +166,6 @@ func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	if err != nil {
 		return nil, errors.New("couldn't register handler: " + err.Error())
 	}
+
 	return prifiSDAWrapperHandlers, nil
 }
