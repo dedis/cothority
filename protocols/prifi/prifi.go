@@ -2,6 +2,7 @@ package prifi
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
@@ -12,22 +13,21 @@ import (
 //defined in cothority/lib/prifi/prifi.go
 var prifiProtocol *prifi_lib.PriFiProtocol
 
+//the "PriFi-Wrapper-Protocol start". It calls the PriFi library with the correct parameters
+func (p *PriFiSDAWrapper) Start() error {
+
+	dbg.Print("Starting PriFi Library")
+
+	//initialize the first message (here the dummy ping-pong game)
+	firstMessage := &prifi_lib.CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
+	firstMessageWrapper := Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage}
+
+	return p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
+}
+
 func init() {
 
-	messageSender := MessageSender{}
-
-	//first of all, instantiate our prifi library
-	currentNode := "relay"
-	switch currentNode {
-	case "relay":
-		prifiProtocol = prifi_lib.NewPriFiRelay(messageSender)
-	case "client":
-		prifiProtocol = prifi_lib.NewPriFiClient(0, messageSender)
-	case "trustee":
-		prifiProtocol = prifi_lib.NewPriFiTrustee(0, messageSender)
-	}
-
-	//then, register the prifi_lib's message with the network lib here
+	//register the prifi_lib's message with the network lib here
 	network.RegisterMessageType(prifi_lib.CLI_REL_TELL_PK_AND_EPH_PK{})
 	network.RegisterMessageType(prifi_lib.CLI_REL_UPSTREAM_DATA{})
 	network.RegisterMessageType(prifi_lib.REL_CLI_DOWNSTREAM_DATA{})
@@ -48,15 +48,24 @@ func init() {
 // root-node will write to the channel.
 type PriFiSDAWrapper struct {
 	*sda.TreeNodeInstance
-	Message    string
 	ChildCount chan int
 }
 
 type MessageSender struct {
+	tree     *sda.TreeNodeInstance
+	relay    *sda.TreeNode
+	clients  map[int]*sda.TreeNode
+	trustees map[int]*sda.TreeNode
 }
 
 func (ms MessageSender) SendToClient(i int, msg interface{}) error {
 	dbg.Lvl1("Sending a message to client ", i, " - ", msg)
+
+	if client, ok := ms.clients[i]; ok {
+		return ms.tree.SendTo(client, msg)
+	} else {
+		panic("Client " + strconv.Itoa(i) + " is unknown !")
+	}
 
 	return nil
 }
@@ -65,29 +74,64 @@ func (ms MessageSender) SendToTrustee(i int, msg interface{}) error {
 
 	dbg.Lvl1("Sending a message to trustee ", i, " - ", msg)
 
+	if trustee, ok := ms.trustees[i]; ok {
+		return ms.tree.SendTo(trustee, msg)
+	} else {
+		panic("Trustee " + strconv.Itoa(i) + " is unknown !")
+	}
+
 	return nil
 }
 
 func (ms MessageSender) SendToRelay(msg interface{}) error {
-
 	dbg.Lvl1("Sending a message to relay ", " - ", msg)
-
-	return nil
-}
-
-func (p *PriFiSDAWrapper) Start() error {
-
-	dbg.Print("Starting PriFi")
-
-	firstMessage := &prifi_lib.CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
-	firstMessageWrapper := Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage}
-
-	return p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
+	return ms.tree.SendTo(ms.relay, msg)
 }
 
 // NewExampleHandlers initialises the structure for use in one round
 func NewPriFiProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
+	//fill in the network host map
+	nodes := n.List()
+	nodeRelay := nodes[0]
+	nodesTrustee := make(map[int]*sda.TreeNode)
+	nodesTrustee[0] = nodes[1]
+	nodesClient := make(map[int]*sda.TreeNode)
+	for i := 2; i < len(nodes); i++ {
+		nodesClient[i-2] = nodes[i]
+	}
+	messageSender := MessageSender{n, nodeRelay, nodesTrustee, nodesClient}
+
+	//parameters goes there
+	nClients := 2
+	nTrustees := 1
+	upCellSize := 1000
+	downCellSize := 10000
+	relayWindowSize := 10
+	relayUseDummyDataDown := false
+	relayReportingLimit := -1
+	useUDP := false
+	doLatencyTests := true
+
+	//first of all, instantiate our prifi library with the correct role, given our position in the tree
+	switch n.Index() {
+	case 0:
+		dbg.Print(n.Name(), " starting as a PriFi relay")
+		relayState := prifi_lib.NewRelayState(nTrustees, nClients, upCellSize, downCellSize, relayWindowSize, relayUseDummyDataDown, relayReportingLimit, useUDP)
+		prifiProtocol = prifi_lib.NewPriFiRelay(messageSender, relayState)
+	case 1:
+		dbg.Print(n.Name(), " starting as PriFi trustee 0")
+		trusteeId := 0
+		trusteeState := prifi_lib.NewTrusteeState(trusteeId, nTrustees, nClients, upCellSize)
+		prifiProtocol = prifi_lib.NewPriFiTrustee(messageSender, trusteeState)
+	default:
+		clientId := (n.Index() - 2)
+		dbg.Print(n.Name(), " starting as a PriFi client", clientId)
+		clientState := prifi_lib.NewClientState(clientId, nTrustees, nClients, upCellSize, doLatencyTests, useUDP)
+		prifiProtocol = prifi_lib.NewPriFiClient(messageSender, clientState)
+	}
+
+	//instantiate our PriFi wrapper protocol
 	prifiSDAWrapperHandlers := &PriFiSDAWrapper{
 		TreeNodeInstance: n,
 		ChildCount:       make(chan int),
