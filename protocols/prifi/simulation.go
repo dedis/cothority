@@ -65,7 +65,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 		dbg.Print("Protocol created")
 		go p.Start()
 
-		children := <-p.(*PriFiProtocolHandlers).ChildCount
+		children := <-p.(*PriFiSDAWrapper).ChildCount
 		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +
