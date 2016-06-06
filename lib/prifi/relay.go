@@ -418,8 +418,29 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_PK(msg TRU_REL_TELL_PK) error {
 	relayState.trustees[msg.TrusteeId] = NodeRepresentation{msg.TrusteeId, true, msg.Pk, msg.Pk}
 	relayState.nTrusteesPkCollected++
 
+	//if we have them all...
 	if relayState.nTrusteesPkCollected == relayState.nTrustees {
-		panic("We got them all !")
+
+		//prepare the message for the clients
+		trusteesPk := make([]abstract.Point, relayState.nTrustees)
+		for i := 0; i < relayState.nTrustees; i++ {
+			trusteesPk[i] = relayState.trustees[i].PublicKey
+		}
+
+		//Send the pack to the clients
+		toSend := &REL_CLI_TELL_TRUSTEES_PK{trusteesPk}
+		for i := 0; i < relayState.nClients; i++ {
+			err := p.messageSender.SendToClient(i, toSend)
+			if err != nil {
+				e := "Could not send REL_CLI_TELL_TRUSTEES_PK (" + strconv.Itoa(i) + "-th client), error is " + err.Error()
+				dbg.Error(e)
+				return errors.New(e)
+			} else {
+				dbg.Lvl3("Relay : sent REL_CLI_TELL_TRUSTEES_PK (" + strconv.Itoa(i) + "-th client)")
+			}
+		}
+
+		relayState.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
 	}
 
 	return nil
