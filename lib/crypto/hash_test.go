@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"os"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/edwards/ed25519"
@@ -77,7 +79,13 @@ func TestHashBytes(t *testing.T) {
 }
 
 func TestHashFile(t *testing.T) {
-	tmpfile := "/tmp/hash_test.bin"
+	tmpfileIO, err := ioutil.TempFile("", "hash_test.bin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpfileIO.Close()
+	tmpfile := tmpfileIO.Name()
+	defer os.Remove(tmpfile)
 	for _, i := range []int{16, 128, 1024} {
 		str := make([]byte, i)
 		err := ioutil.WriteFile(tmpfile, str, 0777)
@@ -100,9 +108,15 @@ func TestHashFile(t *testing.T) {
 }
 
 func TestHashChunk(t *testing.T) {
-	tmpfile := "/tmp/hash_test.bin"
+	tmpfileIO, err := ioutil.TempFile("", "hash_test.bin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpfileIO.Close()
+	tmpfile := tmpfileIO.Name()
+	defer os.Remove(tmpfile)
 	str := make([]byte, 1234)
-	err := ioutil.WriteFile(tmpfile, str, 0777)
+	err = ioutil.WriteFile(tmpfile, str, 0777)
 	if err != nil {
 		t.Fatal("Couldn't write file")
 	}

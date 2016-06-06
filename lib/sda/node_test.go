@@ -24,7 +24,6 @@ func init() {
 
 func TestNodeChannelCreateSlice(t *testing.T) {
 	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -47,9 +46,6 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 
 func TestNodeChannelCreate(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
-
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -86,9 +82,6 @@ func TestNodeChannelCreate(t *testing.T) {
 
 func TestNodeChannel(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
-
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -154,8 +147,6 @@ func TestNewNode(t *testing.T) {
 
 func TestServiceChannels(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
@@ -447,9 +438,6 @@ func (p *ProtocolHandlers) Release() {
 
 func TestBlocking(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
-
 	l := sda.NewLocalTest()
 	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()
