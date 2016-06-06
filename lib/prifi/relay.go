@@ -98,7 +98,7 @@ type RelayState struct {
 	WindowSize               int
 }
 
-func initRelay(nTrustees int, nClients int, upstreamCellSize int, downstreamCellSize int, windowSize int, useDummyDataDown bool, reportingLimit int, useUDP bool) *RelayState {
+func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstreamCellSize int, windowSize int, useDummyDataDown bool, reportingLimit int, useUDP bool) *RelayState {
 	params := new(RelayState)
 
 	params.Name = "Relay"
@@ -123,7 +123,7 @@ func initRelay(nTrustees int, nClients int, upstreamCellSize int, downstreamCell
 	//sets the cell coder, and the history
 	params.CellCoder = config.Factory()
 
-	params.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
+	params.currentState = RELAY_STATE_COMMUNICATING
 
 	return params
 }

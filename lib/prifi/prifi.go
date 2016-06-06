@@ -1,6 +1,8 @@
 package prifi
 
-import ()
+import (
+	"github.com/dedis/cothority/lib/dbg"
+)
 
 type PriFiProtocol struct {
 	messageSender MessageSender
@@ -15,6 +17,11 @@ type MessageSender interface {
 }
 
 func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
+
+	if prifi == nil {
+		dbg.Print("Received a message ", msg)
+		panic("But prifi is nil !")
+	}
 
 	//CLI_REL_TELL_PK_AND_EPH_PK
 	//CLI_REL_UPSTREAM_DATA
@@ -32,9 +39,9 @@ func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
 	case CLI_REL_TELL_PK_AND_EPH_PK:
 		return prifi.Received_CLI_REL_TELL_PK_AND_EPH_PK(typedMsg)
 	case CLI_REL_UPSTREAM_DATA:
-		return prifi.Received_CLI_REL_UPSTREAM_DATA(typedMsg)
+		return prifi.Received_CLI_REL_UPSTREAM_DATA_dummypingpong(typedMsg)
 	case REL_CLI_DOWNSTREAM_DATA:
-		return prifi.Received_REL_CLI_DOWNSTREAM_DATA(typedMsg)
+		return prifi.Received_REL_CLI_DOWNSTREAM_DATA_dummypingpong(typedMsg)
 	case REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG:
 		return prifi.Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(typedMsg)
 	case REL_CLI_TELL_TRUSTEES_PK:
@@ -58,20 +65,20 @@ func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
 	return nil
 }
 
-func NewPriFiRelay(msgSender MessageSender) *PriFiProtocol {
+func NewPriFiRelay(msgSender MessageSender, state *RelayState) *PriFiProtocol {
 	prifi := PriFiProtocol{msgSender}
-
+	relayState = *state
 	return &prifi
 }
 
-func NewPriFiClient(clientId int, msgSender MessageSender) *PriFiProtocol {
+func NewPriFiClient(msgSender MessageSender, state *ClientState) *PriFiProtocol {
 	prifi := PriFiProtocol{msgSender}
-
+	clientState = *state
 	return &prifi
 }
 
-func NewPriFiTrustee(trusteeId int, msgSender MessageSender) *PriFiProtocol {
+func NewPriFiTrustee(msgSender MessageSender, state *TrusteeState) *PriFiProtocol {
 	prifi := PriFiProtocol{msgSender}
-
+	trusteeState = *state
 	return &prifi
 }

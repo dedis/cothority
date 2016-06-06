@@ -63,7 +63,7 @@ var clientStateInt int32 = 0
 /**
  * Used to initialize the state of this trustee. Must be called before anything else.
  */
-func initClient(clientId int, nTrustees int, nClients int, payloadLength int, useSocksProxy bool, latencyTest bool, useUDP bool) *ClientState {
+func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int, latencyTest bool, useUDP bool) *ClientState {
 
 	params := new(ClientState)
 
@@ -72,7 +72,7 @@ func initClient(clientId int, nTrustees int, nClients int, payloadLength int, us
 	params.nClients = nClients
 	params.nTrustees = nTrustees
 	params.PayloadLength = payloadLength
-	params.UseSocksProxy = useSocksProxy
+	params.UseSocksProxy = false //deprecated
 	params.LatencyTest = latencyTest
 	params.UseUDP = useUDP
 
@@ -124,6 +124,8 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA_dummypingpong(msg REL_C
 
 	dbg.Lvl2("sending CLI_REL_UPSTREAM_DATA with clientState ", clientStateInt)
 
+	dbg.Print(p)
+	dbg.Print(p.messageSender)
 	return p.messageSender.SendToRelay(toSend)
 }
 

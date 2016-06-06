@@ -67,7 +67,7 @@ type NeffShuffleResult struct {
 /**
  * Used to initialize the state of this trustee. Must be called before anything else.
  */
-func (p *PriFiProtocol) initTrustee(trusteeId int, nClients int, nTrustees int, payloadLength int) *TrusteeState {
+func NewTrusteeState(trusteeId int, nClients int, nTrustees int, payloadLength int) *TrusteeState {
 	params := new(TrusteeState)
 
 	params.Id = trusteeId
