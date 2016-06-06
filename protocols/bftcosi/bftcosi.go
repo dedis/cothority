@@ -113,6 +113,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		verificationFun:  verify,
 		AggregatedPublic: n.EntityList().Aggregate,
 		threshold:        int(2.0 * math.Ceil(float64(len(n.Tree().List()))/3.0)),
+		Msg:              make([]byte, 0),
 	}
 
 	// register channels
