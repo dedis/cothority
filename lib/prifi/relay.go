@@ -23,6 +23,7 @@ const RELAY_FAILED_CONNECTION_WAIT_BEFORE_RETRY = 10 * time.Second
 
 const (
 	RELAY_STATE_BEFORE_INIT int16 = iota
+	RELAY_STATE_COLLECTING_TRUSTEES_PKS
 	RELAY_STATE_COLLECTING_CLIENT_PKS
 	RELAY_STATE_COLLECTING_SHUFFLES
 	RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
@@ -91,6 +92,7 @@ type RelayState struct {
 	PublicKey                abstract.Point  //those are kept by the SDA stack
 	ReportingLimit           int
 	trustees                 []NodeRepresentation
+	nTrusteesPkCollected     int
 	UpstreamCellSize         int
 	UseDummyDataDown         bool
 	UseUDP                   bool
@@ -119,6 +121,10 @@ func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstream
 	params.nClients = nClients
 	params.nTrustees = nTrustees
 
+	params.clients = make([]NodeRepresentation, 0)
+	params.trustees = make([]NodeRepresentation, nTrustees)
+	params.nTrusteesPkCollected = 0
+
 	//sets the cell coder, and the history
 	params.CellCoder = config.Factory()
 
@@ -126,7 +132,7 @@ func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstream
 	params.DataFromDCNet = make(chan []byte)
 	params.DataOutputEnabled = dataOutputEnabled
 
-	params.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
+	params.currentState = RELAY_STATE_COLLECTING_TRUSTEES_PKS
 
 	return params
 }
@@ -149,21 +155,16 @@ var relayStateInt int32 = 0
 func (p *PriFiProtocol) Received_ALL_REL_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
-	if relayState.currentState != RELAY_STATE_BEFORE_INIT {
+	if relayState.currentState != RELAY_STATE_BEFORE_INIT && !msg.ForceParams {
 		dbg.Lvl1("Relay : Received a ALL_ALL_PARAMETERS, but not in state RELAY_STATE_BEFORE_INIT, ignoring. ")
 		return nil
+	} else if relayState.currentState != RELAY_STATE_BEFORE_INIT && msg.ForceParams {
+		dbg.Lvl1("Relay : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
 	} else {
 		dbg.Lvl3("Relay : received ALL_ALL_PARAMETERS")
 	}
 
 	relayState = *NewRelayState(msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DownCellSize, msg.RelayWindowSize, msg.RelayUseDummyDataDown, msg.RelayReportingLimit, msg.UseUDP, msg.RelayDataOutputEnabled)
-
-	if msg.StartNow {
-		//start prifi protocol if need be !
-		//relay does not have to do anything, client start the contact
-	}
-
-	relayState.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
 
 	dbg.Lvlf5("%+v\n", relayState)
 	dbg.Lvl1("Relay has been initialized by message. ")
@@ -173,17 +174,32 @@ func (p *PriFiProtocol) Received_ALL_REL_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 	dbg.Print(relayState.nTrustees)
 
 	//broadcast those parameters
-	for i := 0; i < relayState.nClients; i++ {
-		dbg.Lvl1("Sending to client", i)
-		p.messageSender.SendToClient(i, &msg)
-	}
-	for j := 0; j < relayState.nTrustees; j++ {
-		dbg.Lvl1("Sending to client", j)
-		p.messageSender.SendToTrustee(j, &msg)
+	if msg.StartNow {
+
+		relayState.currentState = RELAY_STATE_COLLECTING_TRUSTEES_PKS
+		p.ConnectToTrustees()
 	}
 	dbg.Lvl1("Done")
 
 	return nil
+}
+
+func (p *PriFiProtocol) ConnectToTrustees() {
+
+	var msg = &ALL_ALL_PARAMETERS{
+		NClients:          relayState.nClients,
+		NextFreeTrusteeId: 0,
+		NTrustees:         relayState.nTrustees,
+		StartNow:          true,
+		ForceParams:       true,
+		UpCellSize:        relayState.UpstreamCellSize,
+	}
+
+	for j := 0; j < relayState.nTrustees; j++ {
+		dbg.Lvl1("Sending to trustee", j)
+		msg.NextFreeTrusteeId = j
+		p.messageSender.SendToTrustee(j, msg)
+	}
 }
 
 func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg CLI_REL_UPSTREAM_DATA) error {
@@ -390,8 +406,22 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 
 func (p *PriFiProtocol) Received_TRU_REL_TELL_PK(msg TRU_REL_TELL_PK) error {
 
-	//Note : is this still needed ? I don't think so; maybe if the trustees also have an ephemeral key ?
-	panic("We thought that was useless !")
+	//this can only happens in the state RELAY_STATE_COLLECTING_TRUSTEES_PKS
+	if relayState.currentState != RELAY_STATE_COLLECTING_TRUSTEES_PKS {
+		e := "Relay : Received a TRU_REL_TELL_PK, but not in state RELAY_STATE_COLLECTING_TRUSTEES_PKS, in state " + strconv.Itoa(int(relayState.currentState))
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : received RELAY_STATE_COLLECTING_TRUSTEES_PKS")
+	}
+
+	relayState.trustees[msg.TrusteeId] = NodeRepresentation{msg.TrusteeId, true, msg.Pk, msg.Pk}
+	relayState.nTrusteesPkCollected++
+
+	if relayState.nTrusteesPkCollected == relayState.nTrustees {
+		panic("We got them all !")
+	}
+
 	return nil
 }
 

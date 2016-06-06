@@ -111,9 +111,11 @@ func NewTrusteeState(trusteeId int, nClients int, nTrustees int, payloadLength i
 func (p *PriFiProtocol) Received_ALL_TRU_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
-	if trusteeState.currentState != TRUSTEE_STATE_BEFORE_INIT {
+	if trusteeState.currentState != TRUSTEE_STATE_BEFORE_INIT && !msg.ForceParams {
 		dbg.Lvl1("Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a ALL_ALL_PARAMETERS, but not in state TRUSTEE_STATE_BEFORE_INIT, ignoring. ")
 		return nil
+	} else if trusteeState.currentState != TRUSTEE_STATE_BEFORE_INIT && msg.ForceParams {
+		dbg.Lvl1("Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
 	} else {
 		dbg.Lvl3("Trustee : received ALL_ALL_PARAMETERS")
 	}
@@ -121,14 +123,29 @@ func (p *PriFiProtocol) Received_ALL_TRU_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 	trusteeState = *NewTrusteeState(msg.NextFreeTrusteeId, msg.NTrustees, msg.NClients, msg.UpCellSize)
 
 	if msg.StartNow {
-		//start prifi protocol if need be !
-		//trustees don't do anything, client start the contact
+		// send our public key to the relay
+		p.Send_TRU_REL_PK()
 	}
 
 	trusteeState.currentState = TRUSTEE_STATE_INITIALIZING
 
 	dbg.Lvlf5("%+v\n", relayState)
-	dbg.Lvl1("Trustee " + strconv.Itoa(clientState.Id) + " has been initialized by message. ")
+	dbg.Lvl1("Trustee " + strconv.Itoa(trusteeState.Id) + " has been initialized by message. ")
+	return nil
+}
+
+func (p *PriFiProtocol) Send_TRU_REL_PK() error {
+
+	toSend := &TRU_REL_TELL_PK{trusteeState.Id, trusteeState.PublicKey}
+	err := p.messageSender.SendToRelay(toSend)
+	if err != nil {
+		e := "Could not send TRU_REL_TELL_PK, error is " + err.Error()
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Relay : sent TRU_REL_TELL_PK ")
+	}
+
 	return nil
 }
 

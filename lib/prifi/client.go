@@ -112,9 +112,11 @@ func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int
 func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
-	if clientState.currentState != CLIENT_STATE_BEFORE_INIT {
+	if clientState.currentState != CLIENT_STATE_BEFORE_INIT && !msg.ForceParams {
 		dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : Received a ALL_ALL_PARAMETERS, but not in state CLIENT_STATE_BEFORE_INIT, ignoring. ")
 		return nil
+	} else if clientState.currentState != CLIENT_STATE_BEFORE_INIT && msg.ForceParams {
+		dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
 	} else {
 		dbg.Lvl3("Client : received ALL_ALL_PARAMETERS")
 	}
@@ -124,7 +126,7 @@ func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 	if msg.StartNow {
 		//start prifi protocol if need be !
 
-		//TODO : should send his public key to the relay !
+		//nothing to do, relay tells the trustee's public keys
 	}
 
 	clientState.currentState = CLIENT_STATE_INITIALIZING

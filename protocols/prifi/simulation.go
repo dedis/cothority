@@ -84,6 +84,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 		UseUDP:                  tomlConfig.UseUDP,
 		ClientDataOutputEnabled: false,
 		RelayDataOutputEnabled:  false,
+		ForceParams:             true,
 	}
 
 	dbg.Lvl2("NClients is:", tomlConfig.NClients, ", NTrustees is:", tomlConfig.NTrustees, ", rounds:", e.Rounds)

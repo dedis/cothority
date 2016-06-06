@@ -27,20 +27,21 @@ import (
 //CLI_REL_DOWNSTREAM_NACK
 
 type ALL_ALL_PARAMETERS struct {
+	ClientDataOutputEnabled bool
 	DoLatencyTests          bool
 	DownCellSize            int
+	ForceParams             bool
 	NClients                int
 	NextFreeClientId        int
 	NextFreeTrusteeId       int
 	NTrustees               int
+	RelayDataOutputEnabled  bool
 	RelayReportingLimit     int
 	RelayUseDummyDataDown   bool
 	RelayWindowSize         int
 	StartNow                bool
 	UpCellSize              int
 	UseUDP                  bool
-	ClientDataOutputEnabled bool
-	RelayDataOutputEnabled  bool
 }
 
 type CLI_REL_TELL_PK_AND_EPH_PK struct {
@@ -99,5 +100,6 @@ type TRU_REL_TELL_NEW_BASE_AND_EPH_PKS struct {
 }
 
 type TRU_REL_TELL_PK struct {
-	Pk abstract.Point
+	TrusteeId int
+	Pk        abstract.Point
 }

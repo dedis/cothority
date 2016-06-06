@@ -41,14 +41,14 @@ func (p *PriFiSDAWrapper) Start() error {
 		dbg.Lvl2("Client ", (i - nTrustees - 1), " -> ", nodes[i].Name())
 	}
 
-	//simulate the first message received (here the parameters)
-	//configMessageWrapper := Struct_ALL_ALL_PARAMETERS{p.TreeNode(), p.config}
-	//_ = p.Received_ALL_ALL_PARAMETERS(configMessageWrapper)
+	//simulate the first message received (here the parameters). If StartNow = true, the relay will handle the situation from now on
+	configMessageWrapper := Struct_ALL_ALL_PARAMETERS{p.TreeNode(), p.config}
+	_ = p.Received_ALL_ALL_PARAMETERS(configMessageWrapper)
 
 	//initialize the first message (here the dummy ping-pong game)
-	firstMessage := &prifi_lib.CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
-	firstMessageWrapper := Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage}
-	_ = p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
+	//firstMessage := &prifi_lib.CLI_REL_UPSTREAM_DATA{100, make([]byte, 0)}
+	//firstMessageWrapper := Struct_CLI_REL_UPSTREAM_DATA{p.TreeNode(), *firstMessage}
+	//_ = p.Received_CLI_REL_UPSTREAM_DATA(firstMessageWrapper)
 
 	return nil
 }
@@ -113,7 +113,7 @@ func NewPriFiSDAWrapperProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, 
 	for i := 1 + nTrustees; i < len(nodes); i++ {
 		nodesClient[i-1-nTrustees] = nodes[i]
 	}
-	messageSender := MessageSender{n, nodeRelay, nodesTrustee, nodesClient}
+	messageSender := MessageSender{n, nodeRelay, nodesClient, nodesTrustee}
 
 	//parameters goes there
 	nClients := tomlConfig.NClients //my eyes are bleeding. Sorry for this part
@@ -131,7 +131,7 @@ func NewPriFiSDAWrapperProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, 
 		dbg.Print(n.Name(), " starting as a PriFi relay")
 		relayState := prifi_lib.NewRelayState(nTrustees, nClients, upCellSize, downCellSize, relayWindowSize, relayUseDummyDataDown, relayReportingLimit, useUDP, sendDataOutOfDCNet)
 		prifiProtocol = prifi_lib.NewPriFiRelayWithState(messageSender, relayState)
-	} else if n.Index() > 1 && n.Index() < nTrustees {
+	} else if n.Index() > 0 && n.Index() <= nTrustees {
 		trusteeId := n.Index() - 1
 		dbg.Print(n.Name(), " starting as PriFi trustee", trusteeId)
 		trusteeState := prifi_lib.NewTrusteeState(trusteeId, nTrustees, nClients, upCellSize)
