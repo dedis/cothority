@@ -390,6 +390,16 @@ func (el *EntityList) Get(idx int) *network.Entity {
 	return el.List[idx]
 }
 
+// Publics returns the public-keys of the underlying EntityList. It won't modify
+// the underlying list.
+func (el *EntityList) Publics() []abstract.Point {
+	res := make([]abstract.Point, len(el.List))
+	for i, p := range el.List {
+		res[i] = p.Public
+	}
+	return res
+}
+
 // GenerateBigNaryTree creates a tree where each node has N children.
 // It will make a tree with exactly 'nodes' elements, regardless of the
 // size of the EntityList. If 'nodes' is bigger than the number of elements
