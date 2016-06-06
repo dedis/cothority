@@ -267,7 +267,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	root := hosts[0]
 	for _, host := range hosts {
 		host.ListenAndBind()
-		dbg.Lvl3("Listening on", host.Entity.First(), host.Entity.ID)
+		dbg.Lvlf3("Listening on %s %x", host.Entity.First(), host.Entity.ID)
 		if processMessages {
 			host.StartProcessMessages()
 		}
@@ -281,14 +281,14 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 			connected := false
 			for !connected {
 				time.Sleep(time.Millisecond * 10)
-				root.entityListsLock.RLock()
-				for id, _ := range root.entities {
+				root.networkLock.Lock()
+				for id, _ := range root.connections {
 					if id.Equal(host.Entity.ID) {
 						connected = true
 						break
 					}
 				}
-				root.entityListsLock.RUnlock()
+				root.networkLock.Unlock()
 			}
 			dbg.Lvl4(host.Entity.First(), "is connected to root")
 		}

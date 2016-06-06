@@ -20,6 +20,7 @@ func init() {
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
+	defer dbg.AfterTest(t)
 	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
@@ -47,6 +48,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
+	defer dbg.AfterTest(t)
 	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.RegisterMessage(procMsg))
 
@@ -73,6 +75,7 @@ func TestProcessor_GetReply(t *testing.T) {
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
+	defer dbg.AfterTest(t)
 	local := NewLocalTest()
 
 	// generate 5 hosts, they don't connect, they process messages, and they

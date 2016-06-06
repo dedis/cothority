@@ -1,6 +1,7 @@
 package sda_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -27,9 +28,7 @@ func TestHostNew(t *testing.T) {
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
 	defer dbg.AfterTest(t)
-
 	time.Sleep(time.Second)
-	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h1.ListenAndBind()
@@ -63,8 +62,6 @@ func TestHostClose(t *testing.T) {
 
 func TestHostClose2(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 
@@ -78,8 +75,6 @@ func TestHostClose2(t *testing.T) {
 // also tests for the counterIO interface that it works well
 func TestHostMessaging(t *testing.T) {
 	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
-
 	h1, h2 := SetupTwoHosts(t, false)
 	bw1 := h1.Tx()
 	br2 := h2.Rx()
@@ -334,6 +329,7 @@ func TestListTreePropagation(t *testing.T) {
 }
 
 func TestTokenId(t *testing.T) {
+	defer dbg.AfterTest(t)
 	t1 := &sda.Token{
 		EntityListID: sda.EntityListID(uuid.NewV1()),
 		TreeID:       sda.TreeID(uuid.NewV1()),
@@ -363,7 +359,6 @@ func TestTokenId(t *testing.T) {
 // Test the automatic connection upon request
 func TestAutoConnection(t *testing.T) {
 	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h2.ListenAndBind()
@@ -381,6 +376,62 @@ func TestAutoConnection(t *testing.T) {
 	if msg.Msg.(SimpleMessage).I != 12 {
 		t.Fatal("Simple message got distorted")
 	}
+}
+
+func TestReconnection(t *testing.T) {
+	defer dbg.AfterTest(t)
+	h1 := sda.NewLocalHost(2000)
+	h2 := sda.NewLocalHost(2001)
+	defer h1.Close()
+	defer h2.Close()
+
+	h1.ListenAndBind()
+	h2.ListenAndBind()
+
+	dbg.Lvl1("Sending h1->h2")
+	dbg.ErrFatal(sendrcv(h1, h2))
+	dbg.Lvl1("Sending h2->h1")
+	dbg.ErrFatal(sendrcv(h2, h1))
+	dbg.Lvl1("Closing h1")
+	h1.CloseConnections()
+
+	dbg.Lvl1("Listening again on h1")
+	h1.ListenAndBind()
+
+	dbg.Lvl1("Sending h2->h1")
+	dbg.ErrFatal(sendrcv(h2, h1))
+	dbg.Lvl1("Sending h1->h2")
+	dbg.ErrFatal(sendrcv(h1, h2))
+
+	dbg.Lvl1("Shutting down listener of h2")
+
+	// closing h2, but simulate *hard* failure, without sending a FIN packet
+	c2 := h1.Connection(h2.Entity)
+	// making h2 fails
+	h2.AbortConnections()
+	dbg.Lvl1("asking h2 to listen again")
+	// making h2 backup again
+	h2.ListenAndBind()
+	// and re-registering the connection to h2 from h1
+	h1.RegisterConnection(h2.Entity, c2)
+
+	dbg.Lvl1("Sending h1->h2")
+	dbg.ErrFatal(sendrcv(h1, h2))
+}
+
+func sendrcv(from, to *sda.Host) error {
+	err := from.SendRaw(to.Entity, &SimpleMessage{12})
+	if err != nil {
+		return errors.New("Couldn't send message: " + err.Error())
+	}
+	// Receive the message
+	dbg.Lvl2("Waiting to receive")
+	msg := to.Receive()
+	dbg.Lvl2("Received")
+	if msg.Msg.(SimpleMessage).I != 12 {
+		return errors.New("Simple message got distorted")
+	}
+	return nil
 }
 
 func SetupTwoHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
