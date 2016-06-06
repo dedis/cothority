@@ -13,10 +13,8 @@ import (
 	"errors"
 	"time"
 
-	"fmt"
-	"sync"
-
-	"github.com/dedis/cothority/lib/config"
+	"github.com/dedis/cothority/app/lib/config"
+	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
@@ -95,46 +93,44 @@ func main() {
 
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
-func checkConfig(c *cli.Context) error {
+func checkConfig(c *cli.Context) {
 	tomlFileName := c.GlobalString(optionGroup)
 	f, err := os.Open(tomlFileName)
-	printErrAndExit("Couldn't open group definition file: %v", err)
+	ui.ErrFatal(err, "Couldn't open group definition file.")
 	el, err := config.ReadGroupToml(f)
-	printErrAndExit("Error while reading group definition file: %v", err)
+	ui.ErrFatal(err, "Error while reading group definition file.")
 	if len(el.List) == 0 {
-		printErrAndExit("Empty entity or invalid group defintion in: %s",
+		ui.Fatalf("Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
-	fmt.Print("Will check the availability and responsiveness of the " +
+	ui.Info("Will check the availability and responsiveness of the " +
 		"servers forming the group and inform you about possible " +
 		"problems.\nThis make take some time ...")
 
-	var wg sync.WaitGroup
-	wg.Add(len(el.List))
 	// First check all servers individually
+	failures := 0
 	for i := range el.List {
-		go checkList(sda.NewEntityList(el.List[i:i+1]), &wg)
+		failures += checkList(sda.NewEntityList(el.List[i : i+1]))
 	}
 	if len(el.List) > 1 {
 		// Then check pairs of servers
 		for i, first := range el.List {
 			for _, second := range el.List[i+1:] {
-				wg.Add(2)
 				es := []*network.Entity{first, second}
-				go checkList(sda.NewEntityList(es), &wg)
+				failures += checkList(sda.NewEntityList(es))
 				es[0], es[1] = es[1], es[0]
-				go checkList(sda.NewEntityList(es), &wg)
+				failures += checkList(sda.NewEntityList(es))
 			}
 		}
 	}
-
-	wg.Wait()
-	return nil
+	if failures > 0 {
+		ui.Fatalf("This many failures: %d", failures)
+	}
+	return
 }
 
 // checkList sends a message to the list and waits for the reply
-func checkList(list *sda.EntityList, wg *sync.WaitGroup) {
-	defer wg.Done()
+func checkList(list *sda.EntityList) int {
 	serverStr := ""
 	for _, s := range list.List {
 		serverStr += s.Addresses[0] + " "
@@ -143,20 +139,19 @@ func checkList(list *sda.EntityList, wg *sync.WaitGroup) {
 	msg := "verification"
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		fmt.Fprintln(os.Stderr,
-			fmt.Sprintf("Error '%v' while contacting servers: %s",
-				err, serverStr))
+		ui.Errorf("Error '%v' while contacting servers: %s",
+			err, serverStr)
+		return 1
 	} else {
 		err := verifySignatureHash([]byte(msg), sig, list)
 		if err != nil {
-			fmt.Println(os.Stderr,
-				fmt.Sprintf("Received signature was invalid: %v",
-					err))
+			ui.Errorf("Received signature was invalid: %v", err)
+			return 1
 		} else {
-			fmt.Println("Received signature successfully")
+			ui.Info("Received signature successfully")
 		}
 	}
-
+	return 0
 }
 
 // signFile will search for the file and sign it
@@ -166,16 +161,16 @@ func signFile(c *cli.Context) error {
 	groupToml := c.GlobalString(optionGroup)
 	file, err := os.Open(fileName)
 	if err != nil {
-		printErrAndExit("Couldn't read file to be signed: %v", err)
+		ui.ErrFatal(err, "Couldn't read file to be signed.")
 	}
 	sig, err := sign(file, groupToml)
-	printErrAndExit("Couldn't create signature: %v", err)
+	ui.ErrFatal(err, "Couldn't create signature.")
 	dbg.Lvl3(sig)
 	var outFile *os.File
 	outFileName := c.String("out")
 	if outFileName != "" {
 		outFile, err = os.Create(outFileName)
-		printErrAndExit("Couldn't create signature file: %v", err)
+		ui.ErrFatal(err, "Couldn't create signature file.")
 	} else {
 		outFile = os.Stdout
 	}
@@ -195,35 +190,18 @@ func verifyFile(c *cli.Context) error {
 	return nil
 }
 
-// verifyPrintResult prints out OK or what failed.
-func verifyPrintResult(err error) {
-	if err == nil {
-		fmt.Println("OK: Signature is valid.")
-	} else {
-		fmt.Println("Invalid: Signature verification failed: %v", err)
-	}
-}
-
 // writeSigAsJSON - writes the JSON out to a file
 func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		printErrAndExit("Couldn't encode signature: %v", err)
+		ui.Fatal("Couldn't encode signature.")
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
 	outW.Write([]byte("\n"))
-	if _, err := out.WriteTo(outW); err != nil {
-		printErrAndExit("Couldn't write signature: %v", err)
-	}
+	_, err = out.WriteTo(outW)
+	ui.ErrFatal(err, "Couldn't write signature.")
 	outW.Write([]byte("\n"))
-}
-
-func printErrAndExit(format string, a ...interface{}) {
-	if len(a) > 0 && a[0] != nil {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf(format, a...))
-		os.Exit(1)
-	}
 }
 
 // sign takes a stream and a toml file defining the servers
@@ -301,7 +279,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	dbg.Lvl4("Reading signature")
 	var sigBytes []byte
 	if sigFileName == "" {
-		fmt.Println("Reading signature from standard input ...")
+		ui.Info("Reading signature from standard input ...")
 		sigBytes, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		sigBytes, err = ioutil.ReadFile(sigFileName)

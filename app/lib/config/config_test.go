@@ -24,16 +24,16 @@ Public = "apIWOKSt6JcOvNnjcVcPCNcaJJh/kPEjkbn2xSW+W+Q="
 Description = "Ismail's server"`
 
 func TestReadGroupDescToml(t *testing.T) {
-	el, desc, err := ReadGroupDescToml(strings.NewReader(serverGroup))
+	group, err := ReadGroupDescToml(strings.NewReader(serverGroup))
 	dbg.ErrFatal(err)
 
-	if len(el.List) != 2 {
+	if len(group.EntityList.List) != 2 {
 		t.Fatal("Should have 2 Entities")
 	}
-	if len(desc) != 2 {
+	if len(group.description) != 2 {
 		t.Fatal("Should have 2 descriptions")
 	}
-	if desc[1] != "Ismail's server" {
+	if group.description[group.EntityList.List[1]] != "Ismail's server" {
 		t.Fatal("This should be Ismail's server")
 	}
 }
