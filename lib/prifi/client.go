@@ -64,7 +64,7 @@ var clientStateInt int32 = 0
 /**
  * Used to initialize the state of this trustee. Must be called before anything else.
  */
-func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int, latencyTest bool, useUDP bool) *ClientState {
+func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int, latencyTest bool, useUDP bool, dataOutputEnabled bool) *ClientState {
 
 	params := new(ClientState)
 
@@ -113,14 +113,13 @@ func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
 	if clientState.currentState != CLIENT_STATE_BEFORE_INIT {
-		e := "Client : Received a ALL_ALL_PARAMETERS, but not in state CLIENT_STATE_BEFORE_INIT, in state " + strconv.Itoa(int(clientState.currentState))
-		dbg.Error(e)
-		return errors.New(e)
+		dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : Received a ALL_ALL_PARAMETERS, but not in state CLIENT_STATE_BEFORE_INIT, ignoring. ")
+		return nil
 	} else {
 		dbg.Lvl3("Client : received ALL_ALL_PARAMETERS")
 	}
 
-	clientState = *NewClientState(msg.NextFreeClientId, msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DoLatencyTests, msg.UseUDP)
+	clientState = *NewClientState(msg.NextFreeClientId, msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DoLatencyTests, msg.UseUDP, msg.ClientDataOutputEnabled)
 
 	if msg.StartNow {
 		//start prifi protocol if need be !
@@ -129,6 +128,9 @@ func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 	}
 
 	clientState.currentState = CLIENT_STATE_INITIALIZING
+
+	dbg.Lvlf5("%+v\n", clientState)
+	dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " has been initialized by message. ")
 
 	return nil
 }

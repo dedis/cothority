@@ -5,6 +5,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
+
+	prifi_lib "github.com/dedis/cothority/lib/prifi"
 )
 
 /*
@@ -25,6 +27,7 @@ type Simulation struct {
 
 // SimulationConfig is the config used by the simulation for byzcoin
 type SimulationConfig struct {
+	NClients              int
 	NTrustees             int
 	CellSizeUp            int
 	CellSizeDown          int
@@ -35,7 +38,7 @@ type SimulationConfig struct {
 	DoLatencyTests        bool
 }
 
-var prifiConfig SimulationConfig
+var tomlConfig SimulationConfig
 
 // NewSimulation is used internally to register the simulation (see the init()
 // function above).
@@ -45,7 +48,8 @@ func NewSimulation(config string) (sda.Simulation, error) {
 	if err != nil {
 		return nil, err
 	}
-	prifiConfig = es.SimulationConfig
+	tomlConfig = es.SimulationConfig
+	tomlConfig.NClients = es.SimulationBFTree.Hosts - tomlConfig.NTrustees - 1
 
 	return es, nil
 }
@@ -64,14 +68,30 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 
 // Run implements sda.Simulation.
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
-	size := config.Tree.Size()
 
-	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
+	var prifiConfig = &prifi_lib.ALL_ALL_PARAMETERS{
+		DoLatencyTests:          tomlConfig.DoLatencyTests,
+		DownCellSize:            tomlConfig.CellSizeDown,
+		NClients:                tomlConfig.NClients,
+		NextFreeClientId:        0,
+		NextFreeTrusteeId:       0,
+		NTrustees:               tomlConfig.NTrustees,
+		RelayReportingLimit:     tomlConfig.RelayReportingLimit,
+		RelayUseDummyDataDown:   tomlConfig.RelayUseDummyDataDown,
+		RelayWindowSize:         tomlConfig.RelayWindowSize,
+		StartNow:                true,
+		UpCellSize:              tomlConfig.CellSizeUp,
+		UseUDP:                  tomlConfig.UseUDP,
+		ClientDataOutputEnabled: false,
+		RelayDataOutputEnabled:  false,
+	}
+
+	dbg.Lvl2("NClients is:", tomlConfig.NClients, ", NTrustees is:", tomlConfig.NTrustees, ", rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
 		p, err := config.Overlay.CreateProtocol(config.Tree, "PriFi-SDA-Wrapper")
-		p.(*PriFiSDAWrapper).SetConfig(prifiConfig)
+		p.(*PriFiSDAWrapper).SetConfig(*prifiConfig)
 		if err != nil {
 			return err
 		}

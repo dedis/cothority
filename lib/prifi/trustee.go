@@ -112,9 +112,8 @@ func (p *PriFiProtocol) Received_ALL_TRU_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
 	if trusteeState.currentState != TRUSTEE_STATE_BEFORE_INIT {
-		e := "Trustee : Received a ALL_ALL_PARAMETERS, but not in state TRUSTEE_STATE_BEFORE_INIT, in state " + strconv.Itoa(int(trusteeState.currentState))
-		dbg.Error(e)
-		return errors.New(e)
+		dbg.Lvl1("Trustee " + strconv.Itoa(trusteeState.Id) + " : Received a ALL_ALL_PARAMETERS, but not in state TRUSTEE_STATE_BEFORE_INIT, ignoring. ")
+		return nil
 	} else {
 		dbg.Lvl3("Trustee : received ALL_ALL_PARAMETERS")
 	}
@@ -128,6 +127,8 @@ func (p *PriFiProtocol) Received_ALL_TRU_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 
 	trusteeState.currentState = TRUSTEE_STATE_INITIALIZING
 
+	dbg.Lvlf5("%+v\n", relayState)
+	dbg.Lvl1("Trustee " + strconv.Itoa(clientState.Id) + " has been initialized by message. ")
 	return nil
 }
 

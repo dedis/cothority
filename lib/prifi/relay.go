@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"math/rand"
-	"net"
 	"strconv"
 	"time"
 
@@ -92,14 +91,13 @@ type RelayState struct {
 	PublicKey                abstract.Point  //those are kept by the SDA stack
 	ReportingLimit           int
 	trustees                 []NodeRepresentation
-	UDPBroadcastConn         net.Conn
 	UpstreamCellSize         int
 	UseDummyDataDown         bool
 	UseUDP                   bool
 	WindowSize               int
 }
 
-func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstreamCellSize int, windowSize int, useDummyDataDown bool, reportingLimit int, useUDP bool) *RelayState {
+func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstreamCellSize int, windowSize int, useDummyDataDown bool, reportingLimit int, useUDP bool, dataOutputEnabled bool) *RelayState {
 	params := new(RelayState)
 
 	params.Name = "Relay"
@@ -124,7 +122,11 @@ func NewRelayState(nTrustees int, nClients int, upstreamCellSize int, downstream
 	//sets the cell coder, and the history
 	params.CellCoder = config.Factory()
 
-	params.currentState = RELAY_STATE_BEFORE_INIT
+	params.DataForClients = make(chan []byte)
+	params.DataFromDCNet = make(chan []byte)
+	params.DataOutputEnabled = dataOutputEnabled
+
+	params.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
 
 	return params
 }
@@ -148,14 +150,13 @@ func (p *PriFiProtocol) Received_ALL_REL_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
 	if relayState.currentState != RELAY_STATE_BEFORE_INIT {
-		e := "Relay : Received a ALL_ALL_PARAMETERS, but not in state RELAY_STATE_BEFORE_INIT, in state " + strconv.Itoa(int(relayState.currentState))
-		dbg.Error(e)
-		return errors.New(e)
+		dbg.Lvl1("Relay : Received a ALL_ALL_PARAMETERS, but not in state RELAY_STATE_BEFORE_INIT, ignoring. ")
+		return nil
 	} else {
 		dbg.Lvl3("Relay : received ALL_ALL_PARAMETERS")
 	}
 
-	relayState = *NewRelayState(msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DownCellSize, msg.RelayWindowSize, msg.RelayUseDummyDataDown, msg.RelayReportingLimit, msg.UseUDP)
+	relayState = *NewRelayState(msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DownCellSize, msg.RelayWindowSize, msg.RelayUseDummyDataDown, msg.RelayReportingLimit, msg.UseUDP, msg.RelayDataOutputEnabled)
 
 	if msg.StartNow {
 		//start prifi protocol if need be !
@@ -163,6 +164,24 @@ func (p *PriFiProtocol) Received_ALL_REL_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 	}
 
 	relayState.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
+
+	dbg.Lvlf5("%+v\n", relayState)
+	dbg.Lvl1("Relay has been initialized by message. ")
+
+	dbg.Print(p.messageSender)
+	dbg.Print(relayState.nClients)
+	dbg.Print(relayState.nTrustees)
+
+	//broadcast those parameters
+	for i := 0; i < relayState.nClients; i++ {
+		dbg.Lvl1("Sending to client", i)
+		p.messageSender.SendToClient(i, &msg)
+	}
+	for j := 0; j < relayState.nTrustees; j++ {
+		dbg.Lvl1("Sending to client", j)
+		p.messageSender.SendToTrustee(j, &msg)
+	}
+	dbg.Lvl1("Done")
 
 	return nil
 }

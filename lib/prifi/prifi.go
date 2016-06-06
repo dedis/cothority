@@ -85,20 +85,44 @@ func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
 	return nil
 }
 
-func NewPriFiRelay(msgSender MessageSender, state *RelayState) *PriFiProtocol {
+func NewPriFiRelay(msgSender MessageSender) *PriFiProtocol {
+	prifi := PriFiProtocol{PRIFI_ROLE_RELAY, msgSender}
+	return &prifi
+}
+
+func NewPriFiClient(msgSender MessageSender) *PriFiProtocol {
+	prifi := PriFiProtocol{PRIFI_ROLE_CLIENT, msgSender}
+	return &prifi
+}
+
+func NewPriFiTrustee(msgSender MessageSender) *PriFiProtocol {
+	prifi := PriFiProtocol{PRIFI_ROLE_TRUSTEE, msgSender}
+	return &prifi
+}
+
+func NewPriFiRelayWithState(msgSender MessageSender, state *RelayState) *PriFiProtocol {
 	prifi := PriFiProtocol{PRIFI_ROLE_RELAY, msgSender}
 	relayState = *state
+
+	dbg.Lvlf5("%+v\n", relayState)
+	dbg.Lvl1("Relay has been initialized by function call. ")
 	return &prifi
 }
 
-func NewPriFiClient(msgSender MessageSender, state *ClientState) *PriFiProtocol {
+func NewPriFiClientWithState(msgSender MessageSender, state *ClientState) *PriFiProtocol {
 	prifi := PriFiProtocol{PRIFI_ROLE_CLIENT, msgSender}
 	clientState = *state
+	dbg.Lvlf5("%+v\n", clientState)
+
+	dbg.Lvl1("Client has been initialized by function call. ")
 	return &prifi
 }
 
-func NewPriFiTrustee(msgSender MessageSender, state *TrusteeState) *PriFiProtocol {
+func NewPriFiTrusteeWithState(msgSender MessageSender, state *TrusteeState) *PriFiProtocol {
 	prifi := PriFiProtocol{PRIFI_ROLE_TRUSTEE, msgSender}
 	trusteeState = *state
+
+	dbg.Lvlf5("%+v\n", trusteeState)
+	dbg.Lvl1("Trustee has been initialized by function call. ")
 	return &prifi
 }

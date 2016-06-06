@@ -27,18 +27,20 @@ import (
 //CLI_REL_DOWNSTREAM_NACK
 
 type ALL_ALL_PARAMETERS struct {
-	DoLatencyTests        bool
-	DownCellSize          int
-	NClients              int
-	NextFreeClientId      int
-	NextFreeTrusteeId     int
-	NTrustees             int
-	RelayReportingLimit   int
-	RelayUseDummyDataDown bool
-	RelayWindowSize       int
-	StartNow              bool
-	UpCellSize            int
-	UseUDP                bool
+	DoLatencyTests          bool
+	DownCellSize            int
+	NClients                int
+	NextFreeClientId        int
+	NextFreeTrusteeId       int
+	NTrustees               int
+	RelayReportingLimit     int
+	RelayUseDummyDataDown   bool
+	RelayWindowSize         int
+	StartNow                bool
+	UpCellSize              int
+	UseUDP                  bool
+	ClientDataOutputEnabled bool
+	RelayDataOutputEnabled  bool
 }
 
 type CLI_REL_TELL_PK_AND_EPH_PK struct {
