@@ -27,10 +27,10 @@ import (
 
 	// Empty imports to have the init-functions called which should
 	// register the protocol
-	_ "github.com/dedis/cosi/protocol"
-	_ "github.com/dedis/cosi/service"
 	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/cosi"
+	_ "github.com/dedis/cothority/protocols/cosi"
+	_ "github.com/dedis/cothority/services/cosi"
 	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
@@ -59,7 +59,7 @@ var RequestTimeOut = time.Second * 1
 
 // interactiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
-func InteractiveConfig(binaryName string, ed25519 bool) {
+func InteractiveConfig(binaryName string) {
 	ui.Info("Setting up a cothority-server.")
 	str := ui.Inputf(strconv.Itoa(DefaultPort), "Please enter the [address:]PORT for incoming requests")
 	// let's dissect the port / IP
@@ -139,7 +139,7 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 	}
 
 	// create the keys
-	privStr, pubStr := createKeyPair(ed25519)
+	privStr, pubStr := createKeyPair()
 	conf := &config.CothoritydConfig{
 		Public:    pubStr,
 		Private:   privStr,
@@ -186,25 +186,39 @@ func InteractiveConfig(binaryName string, ed25519 bool) {
 // CheckConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func CheckConfig(tomlFileName string) error {
-	success := true
 	f, err := os.Open(tomlFileName)
 	ui.ErrFatal(err, "Couldn't open group definition file")
-	el, descs, err := config.ReadGroupDescToml(f)
+	group, err := config.ReadGroupDescToml(f)
 	ui.ErrFatal(err, "Error while reading group definition file", err)
-	if len(el.List) == 0 {
+	if len(group.EntityList.List) == 0 {
 		ui.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
 	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
+	return CheckServers(group)
+}
+
+// CheckServers contacts all servers in the entity-list and then makes checks
+// on each pair. If 'descs' is 'nil', it doesn't print the description.
+func CheckServers(g *config.Group) error {
+	success := true
 	// First check all servers individually
-	for i := range el.List {
-		success = success && checkList(sda.NewEntityList(el.List[i:i+1]), descs[i:i+1]) == nil
+	for _, e := range g.EntityList.List {
+		desc := []string{"none", "none"}
+		if d := g.GetDescription(e); d != "" {
+			desc = []string{d, d}
+		}
+		el := sda.NewEntityList([]*network.Entity{e})
+		success = success && checkList(el, desc) == nil
 	}
-	if len(el.List) > 1 {
+	if len(g.EntityList.List) > 1 {
 		// Then check pairs of servers
-		for i, first := range el.List {
-			for j, second := range el.List[i+1:] {
-				desc := []string{descs[i], descs[i+j+1]}
+		for i, first := range g.EntityList.List {
+			for _, second := range g.EntityList.List[i+1:] {
+				desc := []string{"none", "none"}
+				if d1 := g.GetDescription(first); d1 != "" {
+					desc = []string{d1, g.GetDescription(second)}
+				}
 				es := []*network.Entity{first, second}
 				success = success && checkList(sda.NewEntityList(es), desc) == nil
 				es[0], es[1] = es[1], es[0]
@@ -334,7 +348,7 @@ func checkOverwrite(file string) bool {
 }
 
 // createKeyPair returns the private and public key hexadecimal representation
-func createKeyPair(ed25519 bool) (string, string) {
+func createKeyPair() (string, string) {
 	ui.Info("Creating ed25519 private and public keys.")
 	kp := crypconf.NewKeyPair(network.Suite)
 	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
@@ -342,12 +356,9 @@ func createKeyPair(ed25519 bool) (string, string) {
 		ui.Fatal("Error formating private key to hexadecimal. Abort.")
 	}
 	var point abstract.Point
-	if ed25519 {
-		// use the transformation for ed25519 signatures
-		//point = cosi.Ed25519Public(network.Suite, kp.Secret)
-	} else {
-		point = kp.Public
-	}
+	// use the transformation for EdDSA signatures
+	//point = cosi.Ed25519Public(network.Suite, kp.Secret)
+	point = kp.Public
 	pubStr, err := crypto.PubHex(network.Suite, point)
 	if err != nil {
 		ui.Fatal("Could not parse public key. Abort.")
@@ -468,7 +479,7 @@ func tryConnect(ip string, binding string) error {
 	}
 
 	if !bytes.Contains(buffer, []byte("1")) {
-		return errors.New("Address unrechable")
+		return errors.New("Address unreachable")
 	}
 	return nil
 }

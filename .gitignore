@@ -10,3 +10,4 @@ simul/simul
 lib/sda/testdata
 *.pyc
 *.iml
+.DS_Store

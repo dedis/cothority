@@ -25,7 +25,6 @@ func TestInput(t *testing.T) {
 	assert.Equal(t, "[?] Question [def]: ", getOutput())
 	setInput("")
 	assert.Equal(t, "def", Input("def", "Question"))
-	dbg.Print("two-lines-input")
 	setInput("1\n2")
 	assert.Equal(t, "1", Input("", "Question1"))
 	assert.Equal(t, "2", Input("1", "Question2"))
@@ -48,6 +47,8 @@ func TestInfo(t *testing.T) {
 	Format = FormatNone
 	Info("None")
 	assert.Equal(t, "None\n", getOutput())
+	Info("None", "Python")
+	assert.Equal(t, "None Python\n", getOutput())
 }
 
 func setInput(s string) {
