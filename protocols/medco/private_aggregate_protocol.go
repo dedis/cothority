@@ -7,15 +7,8 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/services/medco/store"
 )
-
-
-type Aggregatable interface {
-	abstract.Marshaling
-	Aggregate(a1 Aggregatable, a2 Aggregatable) error
-}
-
-type DataRef *CipherVector
 
 func init() {
 	network.RegisterMessageType(DataReferenceMessage{})
@@ -30,14 +23,14 @@ type PrivateAggregateProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel      chan CipherVector
+	FeedbackChannel      chan map[[store.MAX_GROUP_ATTR]DeterministCipherText]CipherVector
 
 	// Protocol communication channels
 	DataReferenceChannel chan DataReferenceStruct
 	ChildDataChannel    chan []ChildAggregatedDataStruct
 
 	// Protocol state data
-	DataReference *DataRef
+	DataReference *map[[store.MAX_GROUP_ATTR]DeterministCipherText]CipherVector
 }
 
 // NewExampleChannels initialises the structure for use in one round
@@ -66,7 +59,7 @@ func (p *PrivateAggregateProtocol) Start() error {
 	dbg.Lvl1(p.Entity(),"started a Private Aggregate Protocol")
 
 
-	p.SendToChildren(&DataReferenceMessage{*p.DataReference})
+	p.SendToChildren(&DataReferenceMessage{})
 	return nil
 }
 
@@ -90,19 +83,15 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 		p.FeedbackChannel <- *aggregatedContribution
 	}
 
-	//p.Close()
-
 	return nil
 }
 
 
-func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() *DataRef {
+func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	dataReferenceMessage := <-p.DataReferenceChannel
 	if !p.IsLeaf() {
-		// If we have children, send the same message to all of them
 		p.SendToChildren(&dataReferenceMessage.DataReferenceMessage)
 	}
-	return &dataReferenceMessage.DataReference
 }
 
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *CipherVector) *CipherVector {
@@ -119,19 +108,4 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *
 		p.SendToParent(&ChildAggregatedDataMessage{*localContribution})
 	}
 	return localContribution
-}
-
-func (p *PrivateAggregateProtocol) getAggregatedDataFromReference(ref DataRef) *CipherVector {
-	switch ref {
-	case nil:
-		nodeList := p.Tree().List()
-		nullVect := NullCipherVector(p.Suite(), len(nodeList), p.Public())
-		for i, node := range nodeList {
-			if node.Equal(p.TreeNode()) {
-				nullVect[i] = *EncryptInt(p.Suite(), p.Public(), 1)
-				return &nullVect
-			}
-		}
-	}
-	return nil
 }

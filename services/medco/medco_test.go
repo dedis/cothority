@@ -1,4 +1,4 @@
-package medco_test
+package medco_service_test
 
 import (
 	"testing"

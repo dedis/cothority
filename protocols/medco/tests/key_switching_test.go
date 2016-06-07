@@ -9,6 +9,7 @@ import (
 	"time"
 	_"reflect"
 	"github.com/dedis/crypto/random"
+	"reflect"
 )
 
 func TestKeySwitching5Nodes(t *testing.T) {
@@ -26,7 +27,8 @@ func TestKeySwitching5Nodes(t *testing.T) {
 
 	// Encrypt test data with group key
 	testCipherVect := make(medco.CipherVector, 4)
-	for i, p := range []int64{1,2,3,6} {
+	expRes := []int64{1,2,3,6}
+	for i, p := range expRes {
 		testCipherVect[i] = *medco.EncryptInt(suite, aggregateKey, p)
 	}
 
@@ -44,8 +46,11 @@ func TestKeySwitching5Nodes(t *testing.T) {
 
 	select {
 	case encryptedResult := <- feedback:
-		dbg.Lvl1(local.Nodes)
-		dbg.Lvl1("Recieved results", medco.DecryptIntVector(suite, clientPrivate,encryptedResult))
+		res := medco.DecryptIntVector(suite, clientPrivate,encryptedResult)
+		dbg.Lvl1("Recieved results", res)
+		if !reflect.DeepEqual(res,expRes ){
+			t.Fatal("Wrong results, expected", expRes, "but got", res)
+		}
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}

@@ -1,4 +1,4 @@
-package medco
+package medco_service
 
 import (
 	"github.com/dedis/cothority/protocols/medco"
@@ -15,8 +15,9 @@ type ServiceResponse struct {
 	SurveyCode int32
 }
 
-type SurveyResponseData struct {
-	Vect medco.CipherVector
+type ClientResponse struct {
+	ProbabilisticGroupingAttributes medco.CipherVector
+	AggregatingAttributes medco.CipherVector
 }
 
 type SurveyResultsQuery struct {

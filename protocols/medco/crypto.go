@@ -64,9 +64,41 @@ func (c *CipherText) SwitchForKey(suite abstract.Suite, private abstract.Secret,
 	c.C.Add(c.C, newBlindingContrib)
 }
 
+func (c *CipherText) SwitchToDeterministic(suite abstract.Suite, private, newPrivate abstract.Secret) {
+	EGContrib := suite.Point().Mul(c.K, private)
+	PHContrib := suite.Point().Mul(suite.Point().Base(), newPrivate)
+	c.C.Sub(c.C, EGContrib)
+	c.C.Add(c.C, PHContrib)
+}
+
+func (c *CipherText) SwitchToProbabilistic(suite abstract.Suite, private abstract.Secret, targetPublic abstract.Point) {
+	PHContrib := suite.Point().Mul(suite.Point().Base(), private)
+	r := suite.Secret().Pick(random.Stream)
+	EGEphemContrib := suite.Point().Mul(suite.Point().Base(), r)
+	EGContrib := suite.Point().Mul(targetPublic, r)
+	c.K.Add(c.K, EGEphemContrib)
+	c.C.Sub(c.C, PHContrib)
+	c.C.Add(EGContrib)
+}
+
 func (cv *CipherVector) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKeys []abstract.Point, newKey abstract.Point, randomnessContribution abstract.Secret){
+	// Can be optimized
 	for i,c := range *cv {
 		c.SwitchForKey(suite,private, originalEphemKeys[i],newKey,randomnessContribution)
+	}
+}
+
+func (cv *CipherVector) SwitchToDeterministic(suite abstract.Suite, private, newPrivate abstract.Secret) {
+	// Can be optimized
+	for _,c := range *cv {
+		c.SwitchToDeterministic(suite, private, newPrivate)
+	}
+}
+
+func (cv *CipherVector) SwitchToProbabilistic(suite abstract.Suite, private abstract.Secret, targetPublic abstract.Point) {
+	// Can be optimized
+	for _,c := range *cv {
+		c.SwitchToProbabilistic(suite,private, targetPublic)
 	}
 }
 

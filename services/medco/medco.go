@@ -1,4 +1,4 @@
-package medco
+package medco_service
 
 import (
 	"github.com/dedis/cothority/lib/sda"
@@ -6,13 +6,18 @@ import (
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/btcsuite/goleveldb/leveldb/errors"
+	"github.com/dedis/cothority/services/medco/store"
+	"github.com/satori/go.uuid"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/random"
 )
 
 const MEDCO_SERVICE_NAME = "MedCo"
 
 func init() {
 	sda.RegisterNewService(MEDCO_SERVICE_NAME, NewMedcoService)
-	network.RegisterMessageType(&SurveyResponseData{})
+	network.RegisterMessageType(&ClientResponse{})
 	network.RegisterMessageType(&SurveyResultsQuery{})
 	network.RegisterMessageType(&SurveyCreationQuery{})
 	network.RegisterMessageType(&SurveyResultResponse{})
@@ -23,20 +28,18 @@ type MedcoService struct {
 	*sda.ServiceProcessor
 	homePath string
 
-	aggregateProtocol *medco.PrivateAggregateProtocol
-	keySwitchProtocol *medco.KeySwitchingProtocol
-
-	localResult *medco.CipherVector
 	entityList *sda.EntityList
-	aggregatedResults *medco.CipherVector
+	tree *sda.Tree
+	store *store.Survey
+	surveyPHKey abstract.Secret
+
 }
 
 func NewMedcoService(c sda.Context, path string) sda.Service {
 	newMedCoInstance := &MedcoService{
-		ServiceProcessor: 	sda.NewServiceProcessor(c),
-		homePath:		path,
+		ServiceProcessor:        sda.NewServiceProcessor(c),
+		homePath:                path,
 	}
-
 	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyResponseData)
 	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyResultsQuery)
 	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyCreationQuery)
@@ -44,7 +47,11 @@ func NewMedcoService(c sda.Context, path string) sda.Service {
 }
 
 func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *SurveyCreationQuery) (network.ProtocolMessage, error) {
+	// Future: should initialise a survey store
 	mcs.entityList = &recq.EntityList
+	mcs.store = store.NewSurvey()
+	mcs.surveyPHKey = network.Suite.Secret().Pick(random.Stream)
+
 	if mcs.Entity().Equal(mcs.entityList.List[0]) {
 		msg, _ := sda.CreateServiceMessage(MEDCO_SERVICE_NAME, recq)
 		// No easy way to get our TreeNode object from the Tree + cannot send ServiceMessage w/ SendToChildren: use SendRaw
@@ -61,54 +68,50 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *Surv
 	return &ServiceResponse{int32(1)}, nil
 }
 
-func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *SurveyResponseData) (network.ProtocolMessage, error) {
+func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *ClientResponse) (network.ProtocolMessage, error) {
+	// Future: insert a new row in the CollectedData table of the survey store. Potentially trigger a flush in pipeline
 
-	if mcs.localResult == nil {
-		mcs.localResult = &resp.Vect
-	} else {
-		err := mcs.localResult.Add(*mcs.localResult, resp.Vect)
-		if err != nil {
-			dbg.Lvl1("Got error when aggregating survey response.")
-			return 500, err
-		}
-	}
+	mcs.store.InsertClientResponse(resp)
+
+
 	dbg.Lvl1(mcs.Entity(), "recieved survey response data from ", e)
 	return &ServiceResponse{int32(1)}, nil
 }
 
+
+
 func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *SurveyResultsQuery) (network.ProtocolMessage, error) {
+	// Future: flushes every tables in the pipeline order. Answers the request.
+
 
 	dbg.Lvl1(mcs.Entity(), "recieved a survey result query from", e)
-	tree := mcs.entityList.GenerateBinaryTree()
-	treeNodeInst := mcs.NewTreeNodeInstance(tree, tree.Root)
-	treeNodeInst2 := mcs.NewTreeNodeInstance(tree, tree.Root)
-	pi1,err1 := medco.NewPrivateAggregate(treeNodeInst)
-	pi2, err2 := medco.NewKeySwitchingProtocol(treeNodeInst2)
-	if err1 != nil || err2 != nil{
-		return nil, errors.New("Could not instanciate the required protocols")
-	}
-	mcs.RegisterProtocolInstance(pi1)
-	mcs.RegisterProtocolInstance(pi2)
-	mcs.aggregateProtocol = pi1.(*medco.PrivateAggregateProtocol)
-	mcs.keySwitchProtocol = pi2.(*medco.KeySwitchingProtocol)
+	mcs.tree = mcs.entityList.GenerateBinaryTree()
 
-	ref := medco.DataRef(mcs.localResult)
-	mcs.aggregateProtocol.DataReference = &ref
-	go mcs.aggregateProtocol.Dispatch()
-	go mcs.aggregateProtocol.Start()
-	res := <- mcs.aggregateProtocol.FeedbackChannel
-	mcs.aggregatedResults = &res
 
-	mcs.keySwitchProtocol.TargetOfSwitch = mcs.aggregatedResults
-	mcs.keySwitchProtocol.TargetPublicKey = &resq.ClientPublic
-	go mcs.keySwitchProtocol.Dispatch()
-	go mcs.keySwitchProtocol.Start()
-	keySwitchedResult := <- mcs.keySwitchProtocol.FeedbackChannel
+
+
+
+
+
+
+	// This should go in flushGroupedData ===>
+
+	// <===
+
+	// This should go in flush aggregated ===>
+
+	// <===
+
+
 	dbg.Lvl1(mcs.Entity(), "completed the query processing...")
 	return &SurveyResultResponse{keySwitchedResult}, nil
 }
 
 func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	// Observation : which data we operate the protocol on is important only for aggreg and there is no ambiguity
+	// for those data (we aggregate everything that is ready to be aggregated). For key switching, this is a
+	// problem as we need to know from which key to which key we switch. The current best solution seems to be make
+	// two versions of the key switching protocol because it also solves the interface unmarshalling problem.
 	var pi sda.ProtocolInstance
 	var err error
 	if mcs.aggregateProtocol == nil {
@@ -130,4 +133,95 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	}
 	go pi.Dispatch()
 	return pi, err
+}
+
+// Pipeline steps forward operations
+
+// Performs the private grouping on the currently collected data
+func (mcs *MedcoService) flushCollectedData() error {
+
+	var probabilisticGroupingAttributes *map[uuid.UUID]medco.CipherVector
+
+	probabilisticGroupingAttributes = mcs.store.PollProbabilisticGroupingAttributes()
+
+	tni := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root)
+	pi, err := medco.NewDeterministSwitchingProtocol(tni)
+	if err != nil {
+		return nil, errors.New("Could not instanciate the required protocols")
+	}
+	mcs.RegisterProtocolInstance(pi)
+	protocol := pi.(*medco.DeterministSwitchingProtocol)
+	protocol.TargetOfSwitch = probabilisticGroupingAttributes
+	protocol.SurveyPHKey = &mcs.surveyPHKey
+	go protocol.Dispatch()
+	go protocol.Start()
+
+	deterministicSwitchedResult := <- protocol.FeedbackChannel
+
+	mcs.store.PushDeterministicGroupingAttributes(deterministicSwitchedResult)
+
+	return nil
+}
+
+// Performs the per-group aggregation on the currently grouped data
+func (mcs *MedcoService) flushGroupedData() error {
+
+	var groupedData *map[store.GroupingAttributes]medco.CipherVector
+
+	groupedData = mcs.store.PollLocallyAggregatedResponses()
+	treeNodeInst := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root)
+	pi,err := medco.NewPrivateAggregate(treeNodeInst)
+	if err != nil {
+		return nil, errors.New("Could not instanciate the required protocols")
+	}
+	mcs.RegisterProtocolInstance(pi)
+	aggregateProtocol := pi.(*medco.PrivateAggregateProtocol)
+	aggregateProtocol.DataReference = groupedData
+	go aggregateProtocol.Dispatch()
+	go aggregateProtocol.Start()
+	cothorityAggregatedData := <- aggregateProtocol.FeedbackChannel
+
+	mcs.store.PushCothorityAggregatedGroups(cothorityAggregatedData)
+
+	return nil
+}
+
+// Perform the switch to data querier key on the currently aggregated data
+func (mcs *MedcoService) flushAggregatedData(querierKey abstract.Point) error {
+
+	var aggregatedGroups *map[uuid.UUID]store.GroupingAttributes
+	var aggregatedAttributes *map[uuid.UUID]medco.CipherVector
+
+	aggregatedGroups, aggregatedAttributes = mcs.store.PollCothorityAggregatedGroups()
+
+	treeNodeIKeySwitch := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root)
+	piKeySwitch, err := medco.NewKeySwitchingProtocol(treeNodeIKeySwitch)
+	if err != nil {
+		return nil, errors.New("Could not instanciate the required protocols")
+	}
+	mcs.RegisterProtocolInstance(piKeySwitch)
+	keySwitchProtocol := piKeySwitch.(*medco.KeySwitchingProtocol)
+	keySwitchProtocol.TargetOfSwitch = aggregatedAttributes
+	keySwitchProtocol.TargetPublicKey = querierKey
+	go keySwitchProtocol.Dispatch()
+	go keySwitchProtocol.Start()
+	keySwitchedAggregatedAttributes := <- keySwitchProtocol.FeedbackChannel
+
+
+	treeNodeISchemeSwitch := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root)
+	piProbSwitch, err2 := medco.NewProbabilisticSwitchingProtocol(treeNodeISchemeSwitch)
+	if err2 != nil {
+		return nil, errors.New("Could not instanciate the required protocols")
+	}
+	mcs.RegisterProtocolInstance(piProbSwitch)
+	probabilisticSwitchProtocol := piProbSwitch.(*medco.KeySwitchingProtocol)
+	probabilisticSwitchProtocol.TargetOfSwitch = aggregatedGroups
+	probabilisticSwitchProtocol.TargetPublicKey = querierKey
+	go probabilisticSwitchProtocol.Dispatch()
+	go probabilisticSwitchProtocol.Start()
+	keySwitchedAggregatedGroups := <- probabilisticSwitchProtocol.FeedbackChannel
+
+	mcs.store.PushQuerierKeyEncryptedData(keySwitchedAggregatedGroups, keySwitchedAggregatedAttributes)
+
+	return nil
 }

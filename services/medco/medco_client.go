@@ -1,4 +1,4 @@
-package medco
+package medco_service
 
 import (
 	"github.com/dedis/cothority/lib/sda"
