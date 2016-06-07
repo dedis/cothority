@@ -128,36 +128,70 @@ type ServerToml struct {
 	Description string
 }
 
-// ReadGroupToml reads a group.toml file and returns the list of Entity
-// described in the file.
-func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+// Group holds the EntityList and the server-descriptions
+type Group struct {
+	EntityList  *sda.EntityList
+	description map[*network.Entity]string
+}
+
+// GetDescription returns the description of an entity
+func (g *Group) GetDescription(e *network.Entity) string {
+	return g.description[e]
+}
+
+// ReadGroupDescToml reads a group.toml file and returns the list of Entities
+// and descriptions in the file.
+func ReadGroupDescToml(f io.Reader) (*Group, error) {
 	group := &GroupToml{}
 	_, err := toml.DecodeReader(f, group)
 	if err != nil {
 		return nil, err
 	}
 	// convert from ServerTomls to entities
-	var entities = make([]*network.Entity, 0, len(group.Servers))
-	for _, s := range group.Servers {
+	var entities = make([]*network.Entity, len(group.Servers))
+	var descs = make(map[*network.Entity]string)
+	for i, s := range group.Servers {
 		en, err := s.toEntity(network.Suite)
 		if err != nil {
 			return nil, err
 		}
-		entities = append(entities, en)
+		entities[i] = en
+		descs[en] = s.Description
 	}
 	el := sda.NewEntityList(entities)
-	return el, nil
+	return &Group{el, descs}, nil
+}
+
+// ReadGroupToml reads a group.toml file and returns the list of Entity
+// described in the file.
+func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+	group, err := ReadGroupDescToml(f)
+	if err != nil {
+		return nil, err
+	}
+	return group.EntityList, nil
+}
+
+// Save writes the grouptoml definition into the file
+func (gt *GroupToml) Save(fname string) error {
+	file, err := os.Create(fname)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(gt.String())
+	return err
 }
 
 // String returns the TOML representation of this GroupToml
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
-		gt.Description = "Description of the system"
+		gt.Description = "Description of your cothority roster"
 	}
 	for _, s := range gt.Servers {
 		if s.Description == "" {
-			s.Description = "Description of the server"
+			s.Description = "Description of your server"
 		}
 	}
 	enc := toml.NewEncoder(&buff)
@@ -177,7 +211,7 @@ func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
 	return network.NewEntity(public, s.Addresses...), nil
 }
 
-// Returns a ServerToml out of a public key and some addresses => to be printed
+// NewServerToml returns  a ServerToml out of a public key and some addresses => to be printed
 // or written to a file
 func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
 	var buff bytes.Buffer

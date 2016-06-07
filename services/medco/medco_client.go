@@ -61,7 +61,7 @@ func (c *MedcoClient) GetSurveyResults() (*[]int64, error) {
 	}
 	if encResults, ok := resp.Msg.(SurveyResultResponse); ok == true {
 		dbg.Lvl1(c, "got the survey result from", c.entryPoint)
-		results := medco.DecryptIntVector(suite, c.Private, encResults.Vect)
+		results := medco.DecryptIntVector(suite, c.private, encResults.Vect)
 		return &results, nil
 	} else {
 		dbg.Error("Bad response type from service.")

@@ -114,6 +114,8 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	// two versions of the key switching protocol because it also solves the interface unmarshalling problem.
 	var pi sda.ProtocolInstance
 	var err error
+
+
 	if mcs.aggregateProtocol == nil {
 		pi, err = medco.NewPrivateAggregate(tn)
 		ref := medco.DataRef(mcs.localResult)

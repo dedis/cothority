@@ -334,6 +334,8 @@ func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeN
 type EntityList struct {
 	Id EntityListID
 	// TODO make that a map so search is O(1)
+	// List is the List of actual "entities"
+	// Be careful if you access it in go-routines (not safe by default)
 	List []*network.Entity
 	// Aggregate public key
 	Aggregate abstract.Point
@@ -384,6 +386,16 @@ func (el *EntityList) Get(idx int) *network.Entity {
 		return nil
 	}
 	return el.List[idx]
+}
+
+// Publics returns the public-keys of the underlying EntityList. It won't modify
+// the underlying list.
+func (el *EntityList) Publics() []abstract.Point {
+	res := make([]abstract.Point, len(el.List))
+	for i, p := range el.List {
+		res[i] = p.Public
+	}
+	return res
 }
 
 // GenerateBigNaryTree creates a tree where each node has N children.
