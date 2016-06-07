@@ -5,9 +5,10 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"github.com/dedis/crypto/abstract"
 	gohash "hash"
 	"strconv"
+
+	"github.com/dedis/crypto/abstract"
 )
 
 type HashFunc func() gohash.Hash

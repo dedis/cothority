@@ -5,14 +5,15 @@ package jvss
 import (
 	"errors"
 	"fmt"
+	"hash"
+	"sync"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
 	"github.com/satori/go.uuid"
-	"hash"
-	"sync"
 )
 
 // JVSS Protocol Instance structure holding the information for a long-term JVSS

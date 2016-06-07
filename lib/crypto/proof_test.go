@@ -2,8 +2,9 @@ package crypto_test
 
 import (
 	"crypto/sha256"
-	"github.com/dedis/cothority/lib/crypto"
 	"testing"
+
+	"github.com/dedis/cothority/lib/crypto"
 )
 
 func TestPath(t *testing.T) {

@@ -3,12 +3,13 @@ package cosi
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
-	"sync"
 )
 
 func init() {

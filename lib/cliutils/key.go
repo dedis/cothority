@@ -3,8 +3,9 @@ package cliutils
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/dedis/crypto/abstract"
 	"io"
+
+	"github.com/dedis/crypto/abstract"
 )
 
 // Read a public point to a base64 representation

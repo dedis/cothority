@@ -3,10 +3,11 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
 	"io"
 	"net"
 	"strconv"
+
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 // Implements a simple proxy

@@ -1,16 +1,17 @@
 package sda_test
 
 import (
+	"math/rand"
+	"net"
+	"strconv"
+	"testing"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"math/rand"
-	"net"
-	"strconv"
-	"testing"
 )
 
 var tSuite = network.Suite

@@ -2,11 +2,12 @@ package sda
 
 import (
 	"bytes"
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 /*

@@ -7,9 +7,10 @@ package main
 import (
 	"flag"
 
+	"time"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
-	"time"
 
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/protocols/manage"

@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"sync"
 
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
@@ -16,7 +18,6 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
-	"time"
 )
 
 /*

@@ -9,11 +9,12 @@ import (
 	"sync"
 	"time"
 
+	"strings"
+
 	"github.com/dedis/cothority/lib/cliutils"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	_ "github.com/dedis/cothority/protocols"
-	"strings"
 )
 
 // Localhost is responsible for launching the app with the specified number of nodes

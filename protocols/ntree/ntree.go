@@ -8,6 +8,7 @@ package ntree
 
 import (
 	"fmt"
+
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
