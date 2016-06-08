@@ -3,14 +3,23 @@ package medco
 import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/sda"
-"errors"
+	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/random"
+	."github.com/dedis/cothority/services/medco/structs"
+	"github.com/satori/go.uuid"
 )
 
-type KeySwitchable interface {
-	SwitchForKey(public abstract.Point)
+type KeySwitchedCipherMessage struct {
+	Data map[uuid.UUID]CipherVector
+	NewKey abstract.Point
+	OriginalEphemeralKeys map[uuid.UUID][]abstract.Point
+}
+
+type KeySwitchedCipherStruct struct {
+	*sda.TreeNode
+	KeySwitchedCipherMessage
 }
 
 
@@ -23,22 +32,22 @@ type KeySwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel           chan CipherVector
+	FeedbackChannel           chan map[uuid.UUID]CipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan KeySwitchedCipherStruct
 
 	// Protocol state data
 	nextNodeInCircuit         *sda.TreeNode
-	TargetOfSwitch            *CipherVector
+	TargetOfSwitch            *map[uuid.UUID]CipherVector
 	TargetPublicKey           *abstract.Point
-	originalEphemKeys         []abstract.Point
+	originalEphemKeys         map[uuid.UUID][]abstract.Point
 }
 
 func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	keySwitchingProtocol := &KeySwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel: make(chan CipherVector),
+		FeedbackChannel: make(chan map[uuid.UUID]CipherVector),
 	}
 
 	if err := keySwitchingProtocol.RegisterChannel(&keySwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -71,15 +80,19 @@ func (p *KeySwitchingProtocol) Start() error {
 
 	dbg.Lvl1(p.Entity(),"started a Key Switching Protocol")
 
-	initialCipherVector := *InitCipherVector(p.Suite(), len(*p.TargetOfSwitch))
-	p.originalEphemKeys = make([]abstract.Point, len(*p.TargetOfSwitch))
-	for i, c := range *p.TargetOfSwitch {
-		initialCipherVector[i].C = c.C
-		p.originalEphemKeys[i] = c.K
+	initialMap := make(map[uuid.UUID]CipherVector, len(*p.TargetOfSwitch))
+	p.originalEphemKeys = make(map[uuid.UUID][]abstract.Point, len(*p.TargetOfSwitch))
+	for k := range *p.TargetOfSwitch {
+		initialCipherVector := *InitCipherVector(p.Suite(), len((*p.TargetOfSwitch)[k]))
+		for i, c := range (*p.TargetOfSwitch)[k] {
+			initialCipherVector[i].C = c.C
+			p.originalEphemKeys[k][i] = c.K
+		}
+		initialMap[k] = initialCipherVector
 	}
 
 	p.sendToNext(&KeySwitchedCipherMessage{
-		initialCipherVector,
+		initialMap,
 		*p.TargetPublicKey,
 		p.originalEphemKeys})
 
@@ -93,11 +106,14 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 
 	randomnessContrib := p.Suite().Secret().Pick(random.Stream)
 
-	keySwitchingTarget.Vect.SwitchForKey(p.Suite(), p.Private(), keySwitchingTarget.OriginalEphemeralKeys, keySwitchingTarget.NewKey, randomnessContrib)
+	for k := range keySwitchingTarget.Data {
+		cv := keySwitchingTarget.Data[k]
+		cv.SwitchForKey(p.Suite(), p.Private(), keySwitchingTarget.OriginalEphemeralKeys[k], keySwitchingTarget.NewKey, randomnessContrib)
+	}
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed key switching.")
-		p.FeedbackChannel <- keySwitchingTarget.Vect
+		p.FeedbackChannel <- keySwitchingTarget.Data
 	} else {
 		dbg.Lvl1(p.Entity(), "carried on key switching.")
 		p.sendToNext(&keySwitchingTarget.KeySwitchedCipherMessage)

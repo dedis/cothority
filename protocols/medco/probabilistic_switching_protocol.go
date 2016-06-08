@@ -7,12 +7,13 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	."github.com/dedis/cothority/services/medco/structs"
 )
 
 
 func init() {
 	network.RegisterMessageType(ProbabilisticSwitchedMessage{})
-	sda.ProtocolRegisterName("DeterministSwitching", NewProbabilisticSwitchingProtocol)
+	sda.ProtocolRegisterName("ProbabilisticSwitching", NewProbabilisticSwitchingProtocol)
 }
 
 type ProbabilisticSwitchedMessage struct {
@@ -35,8 +36,9 @@ type ProbabilisticSwitchingProtocol struct {
 
 	// Protocol state data
 	nextNodeInCircuit         *sda.TreeNode
-	TargetOfSwitch            *map[uuid.UUID]CipherVector
+	TargetOfSwitch            *map[uuid.UUID]DeterministCipherVector
 	SurveyPHKey		  *abstract.Secret
+	TargetPublicKey		  *abstract.Point
 }
 
 func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -71,7 +73,15 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 
 	dbg.Lvl1(p.Entity(),"started a Probabilistic Switching Protocol")
 
-	p.sendToNext(&ProbabilisticSwitchedMessage{*p.TargetOfSwitch})
+	targetOfSwitch := make(map[uuid.UUID]CipherVector, len(*p.TargetOfSwitch))
+	for k := range *p.TargetOfSwitch {
+		for i, dc := range (*p.TargetOfSwitch)[k] {
+			var pc CipherText
+			pc.C = dc.C
+			targetOfSwitch[k][i] = pc
+		}
+	}
+	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch})
 
 	return nil
 }
@@ -81,8 +91,9 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <- p.PreviousNodeInPathChannel
 
-	for k,_ := range *p.TargetOfSwitch {
-		(*p.TargetOfSwitch)[k].SwitchToProbabilistic(p.Suite(), p.Private(), p.SurveyPHKey)
+	for k := range probabilisticSwitchingTarget.Data {
+		elem := probabilisticSwitchingTarget.Data[k]
+		elem.SwitchToProbabilistic(p.Suite(), *p.SurveyPHKey, *p.TargetPublicKey)
 	}
 
 

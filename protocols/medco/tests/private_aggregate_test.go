@@ -30,6 +30,7 @@ func TestPrivateAggregate5Nodes(t *testing.T) {
 	feedback := protocol.FeedbackChannel
 
 	go protocol.StartProtocol()
+	dbg.Lvl1("Started")
 
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 

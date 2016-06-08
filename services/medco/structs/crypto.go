@@ -1,4 +1,4 @@
-package medco
+package medco_structs
 
 import (
 	"github.com/dedis/crypto/abstract"
@@ -22,6 +22,8 @@ type CipherText struct {
 type DeterministCipherText struct {
 	C abstract.Point
 }
+
+type DeterministCipherVector []DeterministCipherText
 
 type CipherVector []CipherText
 
@@ -78,7 +80,7 @@ func (c *CipherText) SwitchToProbabilistic(suite abstract.Suite, private abstrac
 	EGContrib := suite.Point().Mul(targetPublic, r)
 	c.K.Add(c.K, EGEphemContrib)
 	c.C.Sub(c.C, PHContrib)
-	c.C.Add(EGContrib)
+	c.C.Add(c.C, EGContrib)
 }
 
 func (cv *CipherVector) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKeys []abstract.Point, newKey abstract.Point, randomnessContribution abstract.Secret){

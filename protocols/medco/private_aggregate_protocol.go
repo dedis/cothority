@@ -2,13 +2,28 @@ package medco
 
 import (
 	"errors"
-
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/services/medco/store"
+	."github.com/dedis/cothority/services/medco/structs"
 )
+
+type DataReferenceMessage struct {
+}
+
+type DataReferenceStruct struct {
+	*sda.TreeNode
+	DataReferenceMessage
+}
+
+type ChildAggregatedDataMessage struct {
+	ChildData map[GroupingAttributes]CipherVector
+}
+
+type ChildAggregatedDataStruct struct {
+	*sda.TreeNode
+	ChildAggregatedDataMessage
+}
 
 func init() {
 	network.RegisterMessageType(DataReferenceMessage{})
@@ -23,21 +38,21 @@ type PrivateAggregateProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel      chan map[[store.MAX_GROUP_ATTR]DeterministCipherText]CipherVector
+	FeedbackChannel      chan map[GroupingAttributes]CipherVector
 
 	// Protocol communication channels
 	DataReferenceChannel chan DataReferenceStruct
 	ChildDataChannel    chan []ChildAggregatedDataStruct
 
 	// Protocol state data
-	DataReference *map[[store.MAX_GROUP_ATTR]DeterministCipherText]CipherVector
+	DataReference *map[GroupingAttributes]CipherVector
 }
 
 // NewExampleChannels initialises the structure for use in one round
 func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	privateAggregateProtocol := &PrivateAggregateProtocol{
 		TreeNodeInstance:       n,
-		FeedbackChannel: make(chan CipherVector),
+		FeedbackChannel: make(chan map[GroupingAttributes]CipherVector),
 	}
 
 	if err := privateAggregateProtocol.RegisterChannel(&privateAggregateProtocol.DataReferenceChannel); err != nil {
@@ -71,10 +86,8 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 		p.aggregationAnnouncementPhase()
 	}
 
-	localContribution := *p.DataReference//p.getAggregatedDataFromReference(*p.DataReference)
-
 	// 2. Ascending aggregation phase
-	aggregatedContribution := p.ascendingAggregationPhase(localContribution)
+	aggregatedContribution := p.ascendingAggregationPhase(p.DataReference)
 	dbg.Lvl1(p.Entity(), "completed aggregation phase.")
 
 
@@ -94,14 +107,22 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	}
 }
 
-func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *CipherVector) *CipherVector {
+func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *map[GroupingAttributes]CipherVector) *map[GroupingAttributes]CipherVector {
 	if localContribution == nil {
-		nullContrib := NullCipherVector(p.Suite(), 4, p.EntityList().Aggregate)
-		localContribution = &nullContrib
+		emptyMap := make(map[GroupingAttributes]CipherVector,0)
+		localContribution = &emptyMap
 	}
 	if !p.IsLeaf() {
 		for _,childrenContribution := range <- p.ChildDataChannel {
-			localContribution.Add(*localContribution, childrenContribution.ChildData)
+
+			for group := range childrenContribution.ChildData {
+				if aggr, ok := (*localContribution)[group]; ok {
+					localAggr := (*localContribution)[group]
+					localAggr.Add(localAggr, aggr)
+				} else {
+					(*localContribution)[group] = aggr
+				}
+			}
 		}
 	}
 	if !p.IsRoot() {

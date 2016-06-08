@@ -7,16 +7,16 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/satori/go.uuid"
+	"github.com/dedis/cothority/services/medco/structs"
 )
-
 
 func init() {
 	network.RegisterMessageType(DeterministicSwitchedMessage{})
-	sda.ProtocolRegisterName("DeterministSwitching", NewDeterministSwitchingProtocol)
+	sda.ProtocolRegisterName("DeterministicSwitching", NewDeterministSwitchingProtocol)
 }
 
 type DeterministicSwitchedMessage struct {
-	Data map[uuid.UUID]CipherVector
+	Data map[uuid.UUID]medco_structs.CipherVector
 }
 
 type DeterministicSwitchedStruct struct {
@@ -24,25 +24,25 @@ type DeterministicSwitchedStruct struct {
 	DeterministicSwitchedMessage
 }
 
-type DeterministSwitchingProtocol struct {
+type DeterministicSwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel           chan map[uuid.UUID]CipherVector
+	FeedbackChannel           chan map[uuid.UUID]medco_structs.DeterministCipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan DeterministicSwitchedStruct
 
 	// Protocol state data
 	nextNodeInCircuit         *sda.TreeNode
-	TargetOfSwitch            *map[uuid.UUID]CipherVector
+	TargetOfSwitch            *map[uuid.UUID]medco_structs.CipherVector
 	SurveyPHKey		  *abstract.Secret
 }
 
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	deterministicSwitchingProtocol := &DeterministSwitchingProtocol{
+	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel: make(chan map[uuid.UUID]CipherVector),
+		FeedbackChannel: make(chan map[uuid.UUID]medco_structs.DeterministCipherVector),
 	}
 
 	if err := deterministicSwitchingProtocol.RegisterChannel(&deterministicSwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -63,7 +63,7 @@ func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInsta
 }
 
 // Starts the protocol
-func (p *DeterministSwitchingProtocol) Start() error {
+func (p *DeterministicSwitchingProtocol) Start() error {
 
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as deterministic switching target.")
@@ -77,18 +77,25 @@ func (p *DeterministSwitchingProtocol) Start() error {
 }
 
 // Dispatch is an infinite loop to handle messages from channels
-func (p *DeterministSwitchingProtocol) Dispatch() error {
+func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <- p.PreviousNodeInPathChannel
 
-	for k,_ := range *p.TargetOfSwitch {
-		(*p.TargetOfSwitch)[k].SwitchToDeterministic(p.Suite(), p.Private(), p.SurveyPHKey)
+	for k := range deterministicSwitchingTarget.Data {
+		elem := deterministicSwitchingTarget.Data[k]
+		elem.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
 	}
 
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
-		p.FeedbackChannel <- deterministicSwitchingTarget.Data
+		deterministicSwitchedData := make(map[uuid.UUID]medco_structs.DeterministCipherVector, len(deterministicSwitchingTarget.Data))
+		for k := range deterministicSwitchingTarget.Data {
+			for i, c := range deterministicSwitchingTarget.Data[k] {
+				deterministicSwitchedData[k][i] = medco_structs.DeterministCipherText{c.C}
+			}
+		}
+		p.FeedbackChannel <- deterministicSwitchedData
 	} else {
 		dbg.Lvl1(p.Entity(), "carried on deterministic switching.")
 		p.sendToNext(&deterministicSwitchingTarget.DeterministicSwitchedMessage)
@@ -99,7 +106,7 @@ func (p *DeterministSwitchingProtocol) Dispatch() error {
 
 // Sends the message msg to the next node in the circuit based on the next TreeNode in Tree.List() If not visited yet.
 // If the message already visited the next node, doesn't send and returns false. Otherwise, return true.
-func (p *DeterministSwitchingProtocol) sendToNext(msg interface{}) {
+func (p *DeterministicSwitchingProtocol) sendToNext(msg interface{}) {
 	err := p.SendTo(p.nextNodeInCircuit, msg)
 	if err != nil {
 		dbg.Lvl1("Had an error sending a message: ", err)

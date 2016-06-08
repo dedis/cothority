@@ -10,6 +10,7 @@ import (
 	_"reflect"
 	"github.com/dedis/crypto/random"
 	"reflect"
+	."github.com/dedis/cothority/services/medco/structs"
 )
 
 func TestKeySwitching5Nodes(t *testing.T) {
@@ -26,10 +27,10 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	aggregateKey := entityList.Aggregate
 
 	// Encrypt test data with group key
-	testCipherVect := make(medco.CipherVector, 4)
+	testCipherVect := make(CipherVector, 4)
 	expRes := []int64{1,2,3,6}
 	for i, p := range expRes {
-		testCipherVect[i] = *medco.EncryptInt(suite, aggregateKey, p)
+		testCipherVect[i] = *EncryptInt(suite, aggregateKey, p)
 	}
 
 	// Generate client key
@@ -46,7 +47,7 @@ func TestKeySwitching5Nodes(t *testing.T) {
 
 	select {
 	case encryptedResult := <- feedback:
-		res := medco.DecryptIntVector(suite, clientPrivate,encryptedResult)
+		res := DecryptIntVector(suite, clientPrivate,encryptedResult)
 		dbg.Lvl1("Recieved results", res)
 		if !reflect.DeepEqual(res,expRes ){
 			t.Fatal("Wrong results, expected", expRes, "but got", res)
