@@ -350,20 +350,20 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Message, e error) {
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
 	// First read the size
-	var s Size
+	var total Size
 	defer func() {
 		if err := recover(); err != nil {
 			nm = EmptyApplicationMessage
-			e = fmt.Errorf("Error Received message (size=%d): %v", s, err)
+			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
-	if err = binary.Read(c.conn, globalOrder, &s); err != nil {
+	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
-	b := make([]byte, s)
+	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer
-	for Size(buffer.Len()) < s {
+	for read < total {
 		// read the size of the next packet
 		n, err := c.conn.Read(b)
 		// if error then quit
@@ -376,11 +376,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Message, e error) {
 			dbg.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
-		// if we could not read everything yet
-		if Size(buffer.Len()) < s {
-			// make b size = bytes that we still need to read (no more no less)
-			b = b[:s-read]
-		}
+		dbg.Lvl5("Read", read, "out of", total, "bytes")
 	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
@@ -389,7 +385,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Message, e error) {
 	}
 	am.From = c.Remote()
 	// set the size read
-	c.addReadBytes(uint64(s))
+	c.addReadBytes(uint64(total))
 	return am, nil
 }
 
@@ -414,7 +410,6 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
-	//c.Conn.SetWriteDeadline(time.Now().Add(timeOut))
 	// First write the size
 	packetSize := Size(len(b))
 	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
@@ -437,11 +432,12 @@ func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
 			return handleError(err)
 		}
 		sent += Size(n)
+		dbg.Lvl5("Sent", sent, "out of", packetSize)
 
 		// bytes left to send
 		b = b[n:]
 	}
-	// update stats on the conn
+	// update stats on the connection
 	c.addWrittenBytes(uint64(packetSize))
 	return nil
 }

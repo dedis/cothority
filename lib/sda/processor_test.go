@@ -20,6 +20,7 @@ func init() {
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
+	defer dbg.AfterTest(t)
 	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
@@ -47,6 +48,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
+	defer dbg.AfterTest(t)
 	p := NewServiceProcessor(nil)
 	dbg.ErrFatal(p.RegisterMessage(procMsg))
 
@@ -73,6 +75,7 @@ func TestProcessor_GetReply(t *testing.T) {
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
+	defer dbg.AfterTest(t)
 	local := NewLocalTest()
 
 	// generate 5 hosts, they don't connect, they process messages, and they
@@ -82,7 +85,8 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 	s := local.Services[h.Entity.ID]
 	ts := s[testServiceID]
-	ts.ProcessClientRequest(h.Entity, mkClientRequest(&testMsg{12}))
+	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
+	ts.ProcessClientRequest(h.Entity, cr)
 	msg := ts.(*testService).Context.(*testContext).Msg
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
@@ -96,12 +100,10 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	}
 }
 
-func mkClientRequest(msg network.ProtocolMessage) *ClientRequest {
+func mkClientRequest(msg network.ProtocolMessage) []byte {
 	b, err := network.MarshalRegisteredType(msg)
 	dbg.ErrFatal(err)
-	return &ClientRequest{
-		Data: b,
-	}
+	return b
 }
 
 type testMsg struct {
