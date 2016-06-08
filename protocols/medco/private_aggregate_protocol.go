@@ -8,6 +8,8 @@ import (
 	."github.com/dedis/cothority/services/medco/structs"
 )
 
+const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"
+
 type DataReferenceMessage struct {
 }
 
@@ -28,7 +30,7 @@ type ChildAggregatedDataStruct struct {
 func init() {
 	network.RegisterMessageType(DataReferenceMessage{})
 	network.RegisterMessageType(ChildAggregatedDataMessage{})
-	sda.ProtocolRegisterName("PrivateAggregate", NewPrivateAggregate)
+	sda.ProtocolRegisterName(PRIVATE_AGGREGATE_PROTOCOL_NAME, NewPrivateAggregate)
 }
 
 // ProtocolExampleChannels just holds a message that is passed to all children.

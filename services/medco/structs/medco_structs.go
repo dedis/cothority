@@ -4,6 +4,7 @@ import "github.com/btcsuite/goleveldb/leveldb/errors"
 
 const MAX_GROUP_ATTR int = 10  //we must have this limit because slices cannot be used as keys in maps
 type GroupingAttributes [MAX_GROUP_ATTR]DeterministCipherText
+type TempID uint64
 
 type ClientResponse struct {
 	ProbabilisticGroupingAttributes CipherVector

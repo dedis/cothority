@@ -24,12 +24,11 @@ func init() {
 
 func TestNodeChannelCreateSlice(t *testing.T) {
 	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(tree, "ProtocolChannels")
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -47,14 +46,11 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 
 func TestNodeChannelCreate(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
-
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(tree, "ProtocolChannels")
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -86,14 +82,11 @@ func TestNodeChannelCreate(t *testing.T) {
 
 func TestNodeChannel(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
-
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(tree, "ProtocolChannels")
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -154,8 +147,6 @@ func TestNewNode(t *testing.T) {
 
 func TestServiceChannels(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
@@ -201,7 +192,7 @@ func TestProtocolHandlers(t *testing.T) {
 	defer local.CloseAll()
 	dbg.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *sda.TreeNodeInstance, 2)
-	p, err := local.CreateProtocol("ProtocolHandlers", tree)
+	p, err := local.CreateProtocol(tree, "ProtocolHandlers")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -277,7 +268,7 @@ func TestFlags(t *testing.T) {
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(tree, "ProtocolChannels")
 	if err != nil {
 		t.Fatal("Couldn't create node.")
 	}
@@ -373,7 +364,7 @@ type ServiceChannels struct {
 // implement services interface
 func (c *ServiceChannels) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 
-	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root)
+	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root, "ProtocolChannels")
 	pi, err := NewProtocolChannels(tni)
 	if err != nil {
 		return
@@ -447,9 +438,6 @@ func (p *ProtocolHandlers) Release() {
 
 func TestBlocking(t *testing.T) {
 	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
-
 	l := sda.NewLocalTest()
 	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()

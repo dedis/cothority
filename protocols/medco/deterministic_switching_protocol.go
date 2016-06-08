@@ -6,17 +6,22 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/satori/go.uuid"
-	"github.com/dedis/cothority/services/medco/structs"
+	."github.com/dedis/cothority/services/medco/structs"
 )
+
+const DETERMINISTIC_SWITCHING_PROTOCOL_NAME = "DeterministicSwitching"
 
 func init() {
 	network.RegisterMessageType(DeterministicSwitchedMessage{})
-	sda.ProtocolRegisterName("DeterministicSwitching", NewDeterministSwitchingProtocol)
+	sda.ProtocolRegisterName(DETERMINISTIC_SWITCHING_PROTOCOL_NAME, NewDeterministSwitchingProtocol)
 }
 
 type DeterministicSwitchedMessage struct {
-	Data map[uuid.UUID]medco_structs.CipherVector
+	Data map[TempID]CipherVector
+}
+
+type TestMess struct {
+	Test map[TempID]CipherVector
 }
 
 type DeterministicSwitchedStruct struct {
@@ -28,21 +33,21 @@ type DeterministicSwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel           chan map[uuid.UUID]medco_structs.DeterministCipherVector
+	FeedbackChannel           chan map[TempID]DeterministCipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan DeterministicSwitchedStruct
 
 	// Protocol state data
 	nextNodeInCircuit         *sda.TreeNode
-	TargetOfSwitch            *map[uuid.UUID]medco_structs.CipherVector
+	TargetOfSwitch            *map[TempID]CipherVector
 	SurveyPHKey		  *abstract.Secret
 }
 
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel: make(chan map[uuid.UUID]medco_structs.DeterministCipherVector),
+		FeedbackChannel: make(chan map[TempID]DeterministCipherVector),
 	}
 
 	if err := deterministicSwitchingProtocol.RegisterChannel(&deterministicSwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -89,10 +94,11 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
-		deterministicSwitchedData := make(map[uuid.UUID]medco_structs.DeterministCipherVector, len(deterministicSwitchingTarget.Data))
+		deterministicSwitchedData := make(map[TempID]DeterministCipherVector, len(deterministicSwitchingTarget.Data))
 		for k := range deterministicSwitchingTarget.Data {
+			deterministicSwitchedData[k] = make(DeterministCipherVector, len(deterministicSwitchingTarget.Data[k]))
 			for i, c := range deterministicSwitchingTarget.Data[k] {
-				deterministicSwitchedData[k][i] = medco_structs.DeterministCipherText{c.C}
+				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
 			}
 		}
 		p.FeedbackChannel <- deterministicSwitchedData

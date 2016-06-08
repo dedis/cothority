@@ -83,6 +83,18 @@ func (c *CipherText) SwitchToProbabilistic(suite abstract.Suite, private abstrac
 	c.C.Add(c.C, EGContrib)
 }
 
+func (c CipherText) String() string {
+	cstr := "nil"
+	kstr := cstr
+	if c.C != nil {
+		cstr = c.C.String()[1:4]
+	}
+	if c.K != nil {
+		kstr = c.K.String()[1:4]
+	}
+	return fmt.Sprintf("CipherText{%s,%s}", kstr,cstr )
+}
+
 func (cv *CipherVector) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKeys []abstract.Point, newKey abstract.Point, randomnessContribution abstract.Secret){
 	// Can be optimized
 	for i,c := range *cv {

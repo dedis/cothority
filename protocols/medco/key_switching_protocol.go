@@ -8,13 +8,14 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/random"
 	."github.com/dedis/cothority/services/medco/structs"
-	"github.com/satori/go.uuid"
 )
 
+const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
+
 type KeySwitchedCipherMessage struct {
-	Data map[uuid.UUID]CipherVector
+	Data map[TempID]CipherVector
 	NewKey abstract.Point
-	OriginalEphemeralKeys map[uuid.UUID][]abstract.Point
+	OriginalEphemeralKeys map[TempID][]abstract.Point
 }
 
 type KeySwitchedCipherStruct struct {
@@ -25,29 +26,29 @@ type KeySwitchedCipherStruct struct {
 
 func init() {
 	network.RegisterMessageType(KeySwitchedCipherMessage{})
-	sda.ProtocolRegisterName("KeySwitching", NewKeySwitchingProtocol)
+	sda.ProtocolRegisterName(KEY_SWITCHING_PROTOCOL_NAME, NewKeySwitchingProtocol)
 }
 
 type KeySwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel           chan map[uuid.UUID]CipherVector
+	FeedbackChannel           chan map[TempID]CipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan KeySwitchedCipherStruct
 
 	// Protocol state data
 	nextNodeInCircuit         *sda.TreeNode
-	TargetOfSwitch            *map[uuid.UUID]CipherVector
+	TargetOfSwitch            *map[TempID]CipherVector
 	TargetPublicKey           *abstract.Point
-	originalEphemKeys         map[uuid.UUID][]abstract.Point
+	originalEphemKeys         map[TempID][]abstract.Point
 }
 
 func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	keySwitchingProtocol := &KeySwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel: make(chan map[uuid.UUID]CipherVector),
+		FeedbackChannel: make(chan map[TempID]CipherVector),
 	}
 
 	if err := keySwitchingProtocol.RegisterChannel(&keySwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -80,10 +81,11 @@ func (p *KeySwitchingProtocol) Start() error {
 
 	dbg.Lvl1(p.Entity(),"started a Key Switching Protocol")
 
-	initialMap := make(map[uuid.UUID]CipherVector, len(*p.TargetOfSwitch))
-	p.originalEphemKeys = make(map[uuid.UUID][]abstract.Point, len(*p.TargetOfSwitch))
+	initialMap := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
+	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
 	for k := range *p.TargetOfSwitch {
 		initialCipherVector := *InitCipherVector(p.Suite(), len((*p.TargetOfSwitch)[k]))
+		p.originalEphemKeys[k] = make([]abstract.Point, len((*p.TargetOfSwitch)[k]))
 		for i, c := range (*p.TargetOfSwitch)[k] {
 			initialCipherVector[i].C = c.C
 			p.originalEphemKeys[k][i] = c.K

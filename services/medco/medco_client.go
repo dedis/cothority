@@ -31,7 +31,6 @@ func NewMedcoClient(entryPoint *network.Entity) *MedcoClient {
 		private:		keys.Secret,
 	}
 
-	newClient.Addresses = []string{newClient.String()}
 	localClientCounter += 1
 	return newClient
 }

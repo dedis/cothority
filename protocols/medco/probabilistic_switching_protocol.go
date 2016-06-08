@@ -6,18 +6,19 @@ import (
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/satori/go.uuid"
 	."github.com/dedis/cothority/services/medco/structs"
 )
 
+const PROBABILISTIC_SWITCHING_PROTOCOL_NAME = "ProbabilisticSwitching"
 
 func init() {
 	network.RegisterMessageType(ProbabilisticSwitchedMessage{})
-	sda.ProtocolRegisterName("ProbabilisticSwitching", NewProbabilisticSwitchingProtocol)
+	sda.ProtocolRegisterName(PROBABILISTIC_SWITCHING_PROTOCOL_NAME, NewProbabilisticSwitchingProtocol)
 }
 
 type ProbabilisticSwitchedMessage struct {
-	Data map[uuid.UUID]CipherVector
+	Data map[TempID]CipherVector
+	TargetPublicKey abstract.Point
 }
 
 type ProbabilisticSwitchedStruct struct {
@@ -29,14 +30,14 @@ type ProbabilisticSwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel           chan map[uuid.UUID]CipherVector
+	FeedbackChannel           chan map[TempID]CipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan ProbabilisticSwitchedStruct
 
 	// Protocol state data
 	nextNodeInCircuit         *sda.TreeNode
-	TargetOfSwitch            *map[uuid.UUID]DeterministCipherVector
+	TargetOfSwitch            *map[TempID]DeterministCipherVector
 	SurveyPHKey		  *abstract.Secret
 	TargetPublicKey		  *abstract.Point
 }
@@ -44,7 +45,7 @@ type ProbabilisticSwitchingProtocol struct {
 func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	probabilisticSwitchingProtocol := &ProbabilisticSwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel: make(chan map[uuid.UUID]CipherVector),
+		FeedbackChannel: make(chan map[TempID]CipherVector),
 	}
 
 	if err := probabilisticSwitchingProtocol.RegisterChannel(&probabilisticSwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -70,18 +71,23 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as probabilistic switching target.")
 	}
+	if p.TargetPublicKey== nil {
+		return errors.New("No map given as target public key.")
+	}
 
 	dbg.Lvl1(p.Entity(),"started a Probabilistic Switching Protocol")
 
-	targetOfSwitch := make(map[uuid.UUID]CipherVector, len(*p.TargetOfSwitch))
+	targetOfSwitch := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
 	for k := range *p.TargetOfSwitch {
+		targetOfSwitch[k] = make(CipherVector, len((*p.TargetOfSwitch)[k]))
 		for i, dc := range (*p.TargetOfSwitch)[k] {
 			var pc CipherText
+			pc.K = network.Suite.Point().Null()
 			pc.C = dc.C
 			targetOfSwitch[k][i] = pc
 		}
 	}
-	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch})
+	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch, *p.TargetPublicKey})
 
 	return nil
 }
@@ -93,7 +99,7 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	for k := range probabilisticSwitchingTarget.Data {
 		elem := probabilisticSwitchingTarget.Data[k]
-		elem.SwitchToProbabilistic(p.Suite(), *p.SurveyPHKey, *p.TargetPublicKey)
+		elem.SwitchToProbabilistic(p.Suite(), *p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey) // TROUVER CE QUI EST NIL ICI
 	}
 
 

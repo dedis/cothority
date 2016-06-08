@@ -415,7 +415,7 @@ func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
 // message being analyzed.
 func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
 	mt := sdaMsg.MsgType
-	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equals(n.Parent().Id)
+	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equal(n.Parent().Id)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
 		return mt, []*Data{sdaMsg}, true
 	}
