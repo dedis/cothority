@@ -3,7 +3,6 @@ package prifi
 import (
 	"encoding/binary"
 	"errors"
-	"math/rand"
 	"strconv"
 	"time"
 
@@ -135,31 +134,6 @@ func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 	dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " has been initialized by message. ")
 
 	return nil
-}
-
-func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA_dummypingpong(msg REL_CLI_DOWNSTREAM_DATA) error {
-
-	receivedNo := msg.RoundId
-
-	//dbg.Lvl2("I'm", p.Name())
-	dbg.Lvl2("I received the REL_CLI_DOWNSTREAM_DATA with content", receivedNo)
-
-	if clientStateInt == 0 {
-		clientStateInt = int32(rand.Intn(10000))
-		dbg.Lvl2("setting clientstate to ", clientStateInt)
-	} else {
-		dbg.Lvl2("keeping clientstate at ", clientStateInt)
-	}
-
-	toSend := &CLI_REL_UPSTREAM_DATA{clientStateInt, make([]byte, 0)}
-
-	time.Sleep(1000 * time.Millisecond)
-
-	dbg.Lvl2("sending CLI_REL_UPSTREAM_DATA with clientState ", clientStateInt)
-
-	dbg.Print(p)
-	dbg.Print(p.messageSender)
-	return p.messageSender.SendToRelay(toSend)
 }
 
 func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_DATA) error {
@@ -365,7 +339,11 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_C
 	if mySlot == -1 {
 		e := "Client " + strconv.Itoa(p.clientState.Id) + "; Can't recognize our slot !"
 		dbg.Error(e)
-		return errors.New(e)
+
+		mySlot = p.clientState.Id
+		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + "; Our self-assigned slot is " + strconv.Itoa(mySlot) + " out of " + strconv.Itoa(len(ephPubKeys)) + " slots")
+
+		//return errors.New(e)
 	} else {
 		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + "; Our slot is " + strconv.Itoa(mySlot) + " out of " + strconv.Itoa(len(ephPubKeys)) + " slots")
 	}
@@ -376,6 +354,7 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_C
 
 	//change state
 	p.clientState.currentState = CLIENT_STATE_READY
+	dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " is ready to communicate.")
 
 	return nil
 }

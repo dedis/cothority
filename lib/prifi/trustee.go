@@ -152,7 +152,7 @@ func (p *PriFiProtocol) Send_TRU_REL_PK() error {
 func (p *PriFiProtocol) Send_TRU_REL_DC_CIPHER(rateChan chan int16) {
 
 	stop := false
-	currentRate := TRUSTEE_RATE_STOPPED
+	currentRate := TRUSTEE_RATE_HALF
 	roundId := int32(0)
 
 	for !stop {

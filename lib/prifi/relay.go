@@ -3,7 +3,6 @@ package prifi
 import (
 	"encoding/binary"
 	"errors"
-	"math/rand"
 	"strconv"
 	"time"
 
@@ -204,35 +203,6 @@ func (p *PriFiProtocol) ConnectToTrustees() {
 	}
 }
 
-func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg CLI_REL_UPSTREAM_DATA) error {
-
-	receivedNo := msg.RoundId
-
-	//dbg.Lvl1("I'm", p.Name())
-	dbg.Lvl1("I received the CLI_REL_UPSTREAM_DATA with content", receivedNo)
-
-	time.Sleep(1000 * time.Millisecond)
-
-	if relayStateInt == 0 {
-		dbg.Print(rand.Intn(10000))
-		dbg.Print(rand.Intn(10000))
-		relayStateInt = int32(rand.Intn(10000))
-		dbg.Lvl1("setting relaystate to ", relayStateInt)
-	} else {
-		dbg.Lvl1("keeping relaystate at ", relayStateInt)
-	}
-
-	toSend := &REL_CLI_DOWNSTREAM_DATA{relayStateInt, make([]byte, 0), false}
-
-	dbg.Lvl1("sending REL_CLI_DOWNSTREAM_DATA with relayState ", relayStateInt)
-	err := p.messageSender.SendToClient(0, toSend)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 /*
  * DC-Net communication operation
  */
@@ -262,7 +232,11 @@ func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA(msg CLI_REL_UPSTREAM_DATA
 		p.relayState.CellCoder.DecodeClient(msg.Data)
 		p.relayState.currentDCNetRound.clientCipherCount++
 
+		dbg.Print("Relay collecting cells for round", p.relayState.currentDCNetRound.currentRound, ", ", p.relayState.currentDCNetRound.clientCipherCount, "/", p.relayState.nClients, ", ", p.relayState.currentDCNetRound.trusteeCipherCount, "/", p.relayState.nTrustees)
+
 		if p.hasAllCiphers(&p.relayState.currentDCNetRound) {
+
+			dbg.Print("Proceeding then  !")
 			p.finalizeUpstreamDataAndSendDownstreamData()
 		}
 	}
@@ -313,8 +287,12 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 	 * Finish processing the upstream data
 	 */
 
+	dbg.Print("Here")
+
 	//we decode the DC-net cell
 	upstreamPlaintext := p.relayState.CellCoder.DecodeCell()
+
+	dbg.Print("Cell decoded")
 
 	// Process the decoded cell
 
@@ -326,6 +304,8 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 			p.relayState.DataForClients <- upstreamPlaintext
 		}
 	}
+
+	dbg.Print("Here 2")
 
 	if upstreamPlaintext == nil {
 		// empty upstream cell
@@ -341,6 +321,8 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 		p.relayState.DataFromDCNet <- upstreamPlaintext
 	}
 
+	dbg.Print("Here 3")
+
 	/*
 	 * Process the downstream data
 	 */
@@ -355,6 +337,8 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 	default:
 		downstreamCellContent = make([]byte, 1)
 	}
+
+	dbg.Print("Here 4")
 
 	//if we want to use dummy data down, pad to the correct size
 	if p.relayState.UseDummyDataDown && len(downstreamCellContent) < p.relayState.DownstreamCellSize {
@@ -398,6 +382,9 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 		}
 		delete(p.relayState.bufferedTrusteeCiphers, nextRound)
 	}
+
+	//sleep so it does not go too fast for debug
+	time.Sleep(1000 * time.Millisecond)
 
 	return nil
 }
@@ -641,6 +628,21 @@ func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) er
 
 		//changing state
 		p.relayState.currentState = RELAY_STATE_COMMUNICATING
+
+		//send first bit down
+		//broadcast to all clients
+		for i := 0; i < p.relayState.nClients; i++ {
+			//send to the i-th client
+			toSend := &REL_CLI_DOWNSTREAM_DATA{p.relayState.currentDCNetRound.currentRound, make([]byte, 0), false}
+			err := p.messageSender.SendToClient(i, toSend)
+			if err != nil {
+				e := "Could not send REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound)) + ", error is " + err.Error()
+				dbg.Error(e)
+				return errors.New(e)
+			} else {
+				dbg.Lvl5("Relay : sent REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound)))
+			}
+		}
 	}
 
 	return nil
