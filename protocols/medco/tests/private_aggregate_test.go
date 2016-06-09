@@ -11,7 +11,7 @@ import (
 	//"fmt"
 	"time"
 	_"reflect"
-	//"github.com/dedis/cothority/services/medco/structs"
+	"github.com/dedis/cothority/services/medco/structs"
 )
 
 func TestPrivateAggregate5Nodes(t *testing.T) {
@@ -46,12 +46,18 @@ func TestPrivateAggregate5Nodes(t *testing.T) {
 	var det2 medco_structs.DeterministCipherText
 	det1.C = suite.Point().Base()
 	det2.C = suite.Point().Add(det1.C, det1.C)
-	groupAttr := medco_structs.GroupingAttributes{det1,det1}	
+	groupAttr := medco_structs.GroupingAttributes{det1, det1}
+	dbg.LLvl1(det1)
+	dbg.Printf("%#v", groupAttr)	
 	groupAttr2 := medco_structs.GroupingAttributes{det2,det2}
 	aggrAttr := testCipherVect
 	var mpMessage map[medco_structs.GroupingAttributes]medco_structs.CipherVector
-	mpMessage[groupAttr] = aggrAttr
-	mpMessage[groupAttr2] = aggrAttr
+	_=groupAttr
+	_=groupAttr2
+	_=aggrAttr
+	_=mpMessage
+	/*mpMessage[groupAttr] = aggrAttr
+	mpMessage[groupAttr2] = aggrAttr*/
 	protocol.DataReference = &mpMessage
 	
 	
