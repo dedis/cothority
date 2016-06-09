@@ -179,6 +179,7 @@ func (p *PriFiProtocol) Send_TRU_REL_DC_CIPHER(rateChan chan int16) {
 		default:
 			if currentRate == TRUSTEE_RATE_FULL {
 				roundId, _ = sendData(p, roundId)
+				time.Sleep(1000 * time.Millisecond)
 
 			} else if currentRate == TRUSTEE_RATE_HALF {
 				roundId, _ = sendData(p, roundId)

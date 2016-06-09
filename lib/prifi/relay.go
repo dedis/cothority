@@ -274,7 +274,7 @@ func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA(msg CLI_REL_UPSTREAM_DATA
 
 		if p.relayState.currentDCNetRound.hasAllCiphers(p) {
 
-			dbg.Lvl3("Relay has collected all ciphers, decoding...")
+			dbg.Lvl3("Relay has collected all ciphers (2), decoding...")
 			p.finalizeUpstreamData()
 
 			//sleep so it does not go too fast for debug
@@ -410,6 +410,7 @@ func (p *PriFiProtocol) sendDownstreamData() error {
 
 	//TODO : if something went wrong before, this flag should be used to warn the clients that the config has changed
 	flagResync := false
+	dbg.Lvl3("Relay is gonna broadcast messages for round " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound)) + ".")
 
 	if !p.relayState.UseUDP {
 		//broadcast to all clients
@@ -428,6 +429,7 @@ func (p *PriFiProtocol) sendDownstreamData() error {
 	} else {
 		panic("UDP not supported yet")
 	}
+	dbg.Lvl3("Relay is done broadcasting messages for round " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound)) + ".")
 
 	//prepare for the next round
 	nextRound := p.relayState.currentDCNetRound.currentRound + 1
@@ -454,6 +456,7 @@ func (p *PriFiProtocol) sendDownstreamData() error {
 		delete(p.relayState.bufferedClientCiphers, nextRound)
 	}
 
+	dbg.Lvl2("Relay has finished round" + strconv.Itoa(int(nextRound-1)) + ".")
 	return nil
 }
 
