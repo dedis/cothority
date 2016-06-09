@@ -1,5 +1,19 @@
 package prifi
 
+/**
+ * PriFi Trustee
+ * ************
+ * This regroups the behavior of the Trustee client.
+ * Needs to be instantiated via the PriFiProtocol in prifi.go
+ * Then, this file simple handle the answer to the different message kind :
+ *
+ * - ALL_ALL_PARAMETERS - (specialized into ALL_TRU_PARAMETERS) - used to initialize the relay over the network / overwrite its configuration
+ * - REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE - the client's identities (and ephemeral ones), and a base. We react by Neff-Shuffling and sending the result
+ * - REL_TRU_TELL_TRANSCRIPT - the Neff-Shuffle's results. We perform some checks, sign the last one, send it to the relay, and follow by continously sending ciphers.
+ *
+ * TODO : debug the actual shuffle (the current code is a placeholder that does not shuffle, but takes the same time)
+ */
+
 import (
 	"errors"
 	"time"
@@ -16,46 +30,45 @@ import (
 	"github.com/dedis/crypto/shuffle"
 )
 
+// possible state the trustees are in. This restrict the kind of messages they can receive at a given point
 const (
 	TRUSTEE_STATE_BEFORE_INIT int16 = iota
 	TRUSTEE_STATE_INITIALIZING
 	TRUSTEE_STATE_SHUFFLE_DONE
 	TRUSTEE_STATE_READY
 )
+
+// possible sending mode (rates, to be precise) for the trustees
 const (
-	TRUSTEE_KILL_SEND_PROCESS int16 = iota
-	TRUSTEE_RATE_STOPPED
-	TRUSTEE_RATE_HALF
-	TRUSTEE_RATE_FULL
+	TRUSTEE_KILL_SEND_PROCESS int16 = iota //kill the goroutine for sending messages
+	TRUSTEE_RATE_STOPPED                   //never send
+	TRUSTEE_RATE_HALF                      //sleeps after each message
+	TRUSTEE_RATE_FULL                      //never sleeps
 )
 
+//this is the time a trustee sleeps after each sent message in the TRUSTEE_RATE_HALF mode
 const TRUSTEE_SLEEP_TIME = 1 * time.Second
 
+//the mutable variable held by the client
 type TrusteeState struct {
-	Id            int
-	Name          string
-	TrusteeId     int
-	PayloadLength int
-	//activeConnection net.Conn //those are kept by the SDA stack
-
-	PublicKey  abstract.Point  //those are kept by the SDA stack
-	privateKey abstract.Secret //those are kept by the SDA stack
-
-	nClients  int
-	nTrustees int
-
-	ClientPublicKeys []abstract.Point
-	sharedSecrets    []abstract.Point
-
-	MessageHistory abstract.Cipher
-	CellCoder      dcnet.CellCoder
-
+	CellCoder           dcnet.CellCoder
+	ClientPublicKeys    []abstract.Point
+	currentState        int16
+	Id                  int
+	MessageHistory      abstract.Cipher
+	Name                string
+	nClients            int
 	neffShuffleToVerify NeffShuffleResult
-
-	currentState int16
-	sendingRate  chan int16
+	nTrustees           int
+	PayloadLength       int
+	privateKey          abstract.Secret
+	PublicKey           abstract.Point
+	sendingRate         chan int16
+	sharedSecrets       []abstract.Point
+	TrusteeId           int
 }
 
+//this hold the result of the NeffShuffle, since it needs to be verified when we receive REL_TRU_TELL_TRANSCRIPT
 type NeffShuffleResult struct {
 	base  abstract.Point
 	pks   []abstract.Point
@@ -97,11 +110,6 @@ func NewTrusteeState(trusteeId int, nClients int, nTrustees int, payloadLength i
 	return params
 }
 
-//Messages to handle :
-//ALL_ALL_PARAMETERS
-//REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE
-//REL_TRU_TELL_TRANSCRIPT
-
 /**
  * This is the "INIT" message that shares all the public parameters.
  */
@@ -127,10 +135,14 @@ func (p *PriFiProtocol) Received_ALL_TRU_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 	p.trusteeState.currentState = TRUSTEE_STATE_INITIALIZING
 
 	dbg.Lvlf5("%+v\n", p.trusteeState)
-	dbg.Lvl1("Trustee " + strconv.Itoa(p.trusteeState.Id) + " has been initialized by message. ")
+	dbg.Lvl2("Trustee " + strconv.Itoa(p.trusteeState.Id) + " has been initialized by message. ")
 	return nil
 }
 
+/**
+ * This is used when the trustee boots.
+ * The first action of a trustee is to tell his public key to the relay (this, of course, provides no security, but this is a version of the protocol)
+ */
 func (p *PriFiProtocol) Send_TRU_REL_PK() error {
 
 	toSend := &TRU_REL_TELL_PK{p.trusteeState.Id, p.trusteeState.PublicKey}
@@ -147,7 +159,7 @@ func (p *PriFiProtocol) Send_TRU_REL_PK() error {
 }
 
 /**
- * This method sends DC-net ciphers to the relay, once started. One can control the rate by sending data to "rateChan".
+ * This method sends DC-net ciphers to the relay continuously once started. One can control the rate by sending flags to "rateChan".
  */
 func (p *PriFiProtocol) Send_TRU_REL_DC_CIPHER(rateChan chan int16) {
 
@@ -159,7 +171,7 @@ func (p *PriFiProtocol) Send_TRU_REL_DC_CIPHER(rateChan chan int16) {
 		select {
 		case newRate := <-rateChan:
 			currentRate = newRate
-			dbg.Error("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : rate changed from " + strconv.Itoa(int(currentRate)) + " to " + strconv.Itoa(int(newRate)))
+			dbg.Lvl2("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : rate changed from " + strconv.Itoa(int(currentRate)) + " to " + strconv.Itoa(int(newRate)))
 
 			if newRate == TRUSTEE_KILL_SEND_PROCESS {
 				stop = true
@@ -183,7 +195,8 @@ func (p *PriFiProtocol) Send_TRU_REL_DC_CIPHER(rateChan chan int16) {
 }
 
 /**
- * Auxiliary function used by Send_TRU_REL_DC_CIPHER
+ * Auxiliary function used by Send_TRU_REL_DC_CIPHER. It computes the DC-net's cipher and sends it.
+ * It returns the new round number (previous + 1).
  */
 func sendData(p *PriFiProtocol, roundId int32) (int32, error) {
 	data := p.trusteeState.CellCoder.TrusteeEncode(p.trusteeState.PayloadLength)
@@ -196,16 +209,16 @@ func sendData(p *PriFiProtocol, roundId int32) (int32, error) {
 		dbg.Error(e)
 		return roundId, errors.New(e)
 	} else {
-		dbg.Lvl5("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : sent cipher " + strconv.Itoa(int(roundId)))
+		dbg.Lvl3("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : sent cipher " + strconv.Itoa(int(roundId)))
 	}
 
 	return roundId + 1, nil
 }
 
 /**
- * This message happens when the connection to a relay is established. It contains the long-term and ephemeral public keys of the clients,
- * a base given by the relay. In addition to deriving the secrets, the trustees uses the ephemeral keys to perform a neff shuffle. He remembers
- * this shuffle, to check the correctness of the chain of shuffle afterwards.
+ * We receive this message when the connection to a relay is established. It contains the long-term and ephemeral public keys of the clients,
+ * and a base given by the relay. In addition to deriving the secrets, the trustee uses the ephemeral keys to perform a neff shuffle. He remembers
+ * this shuffle in order to check the correctness of the chain of shuffle afterwards.
  */
 func (p *PriFiProtocol) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE(msg REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE) error {
 
@@ -216,10 +229,6 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE(m
 		return errors.New(e)
 	} else {
 		dbg.Lvl3("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE")
-	}
-
-	if p.role != PRIFI_ROLE_TRUSTEE {
-		panic("This message wants me to become a trustee ! I'm not one !")
 	}
 
 	//begin parsing the message
@@ -237,11 +246,11 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE(m
 
 	//fill in the clients keys
 	for i := 0; i < len(clientsPks); i++ {
-		//p.trusteeState.ClientPublicKeys[i] = clientsPublicKeys[i] not sure this is needed since there is a tree ?
+		p.trusteeState.ClientPublicKeys[i] = clientsPks[i]
 		p.trusteeState.sharedSecrets[i] = config.CryptoSuite.Point().Mul(clientsPks[i], p.trusteeState.privateKey)
 	}
 
-	//TODO : THIS IS NOT SHUFFLING; THIS IS A PLACEHOLDER FOR THE ACTUAL SHUFFLE. NOT SHUFFLE IS DONE
+	//TODO : THIS IS NOT SHUFFLING; THIS IS A PLACEHOLDER FOR THE ACTUAL SHUFFLE. NO SHUFFLE IS DONE
 
 	//perform the neff-shuffle
 	H := p.trusteeState.PublicKey
@@ -284,8 +293,8 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE(m
 /**
  * This message happens when all trustees have already shuffled. They need to verify all the shuffles, and also that
  * their own shuffle has been included in the chain of shuffles. If that's the case, this trustee signs the *last*
- * shuffle, and send it back to the relay.
- * If everything succeed, starts the goroutine for sending DC-net ciphers to the relay
+ * shuffle (which will be used by the clients), and send it back to the relay.
+ * If everything succeed, starts the goroutine for sending DC-net ciphers to the relay.
  */
 func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSCRIPT) error {
 
@@ -312,8 +321,11 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 			}
 		}
 		msg.EphPks = b
+	} else {
+		dbg.Print("Probably the Protobuf lib has been patched ! you might remove this code.")
 	}
 	// END OF PATCH
+
 	//begin parsing the message
 	rand := config.CryptoSuite.Cipher([]byte(p.trusteeState.Name)) //TODO: this should be random
 	G_s := msg.G_s
@@ -339,7 +351,7 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 				verify = false
 			}
 		}
-		verify = true // LB: This shuffle needs to be fixed
+		verify = true // TODO: This shuffle needs to be fixed
 
 		if !verify {
 			if err != nil {
@@ -353,6 +365,8 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 			}
 		}
 	}
+	dbg.Lvl3("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : Proofs verified...")
+
 	//we verify that our shuffle was included
 	ownPermutationFound := false
 	for j := 0; j < p.trusteeState.nTrustees; j++ {
@@ -381,6 +395,7 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 		dbg.Error(e)
 		return errors.New(e)
 	}
+	dbg.Lvl2("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : We found our proof...")
 
 	//prepare the transcript signature. Since it is OK, we're gonna sign the latest permutation
 	M := make([]byte, 0)
@@ -404,7 +419,7 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 
 	sig := crypto.SchnorrSign(config.CryptoSuite, rand, M, p.trusteeState.privateKey)
 
-	dbg.Lvl2("Trustee " + strconv.Itoa(p.trusteeState.Id) + "; Sending signature")
+	dbg.Lvl2("Trustee " + strconv.Itoa(p.trusteeState.Id) + "; Sending signature of transcript")
 
 	//send the answer
 	toSend := &TRU_REL_SHUFFLE_SIG{p.trusteeState.Id, sig}

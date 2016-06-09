@@ -43,7 +43,7 @@ const (
 	CLIENT_STATE_READY
 )
 
-//the mutable variable hold by the client
+//the mutable variable held by the client
 type ClientState struct {
 	CellCoder           dcnet.CellCoder
 	currentState        int16
