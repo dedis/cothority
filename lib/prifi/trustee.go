@@ -80,11 +80,11 @@ func NewTrusteeState(trusteeId int, nClients int, nTrustees int, payloadLength i
 
 	//prepare the crypto parameters
 	rand := config.CryptoSuite.Cipher([]byte(params.Name))
-	base := config.CryptoSuite.Point().Base()
+	//base := config.CryptoSuite.Point().Base()
 
 	//generate own parameters
-	params.privateKey = config.CryptoSuite.Secret().Pick(rand)                 //NO, this should be kept by SDA
-	params.PublicKey = config.CryptoSuite.Point().Mul(base, params.privateKey) //NO, this should be kept by SDA
+	params.privateKey = config.CryptoSuite.Secret().Pick(rand)                //NO, this should be kept by SDA
+	params.PublicKey = config.CryptoSuite.Point().Mul(nil, params.privateKey) //NO, this should be kept by SDA
 
 	//placeholders for pubkeys and secrets
 	params.ClientPublicKeys = make([]abstract.Point, nClients)

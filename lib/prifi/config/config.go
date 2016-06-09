@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/dedis/cothority/lib/prifi/dcnet"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/nist"
+	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/suites"
 )
 
@@ -11,7 +11,7 @@ import (
 const LLD_PROTOCOL_VERSION = 3
 
 //sets the crypto suite used
-var CryptoSuite = nist.NewAES128SHA256P256()
+var CryptoSuite = edwards.NewAES128SHA256Ed25519(false) //nist.NewAES128SHA256P256()
 
 //sets the factory for the dcnet's cell encoder/decoder
 var Factory = dcnet.SimpleCoderFactory

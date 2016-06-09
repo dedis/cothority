@@ -412,7 +412,7 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_PK(msg TRU_REL_TELL_PK) error {
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl3("Relay : received RELAY_STATE_COLLECTING_TRUSTEES_PKS")
+		dbg.Lvl3("Relay : received TRU_REL_TELL_PK")
 	}
 
 	relayState.trustees[msg.TrusteeId] = NodeRepresentation{msg.TrusteeId, true, msg.Pk, msg.Pk}
@@ -477,7 +477,9 @@ func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_
 			pks[i] = relayState.clients[i].PublicKey
 			ephPks[i] = relayState.clients[i].EphemeralPublicKey
 		}
-		G := config.CryptoSuite.Point().Base()
+
+		//G := relayState.clients[0].PublicKey
+		G := config.CryptoSuite.Point().Base() // LUDOVIC BARMAN- HERE IS THE PROBLEM
 
 		//prepare the empty shuffle
 		emptyG_s := make([]abstract.Point, relayState.nTrustees)
@@ -487,6 +489,11 @@ func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_
 		relayState.currentShuffleTranscript = NeffShuffleState{pks, emptyG_s, emptyEphPks_s, emptyProof_s, 0, emptySignature_s, 0}
 
 		//send to the 1st trustee
+
+		dbg.Print("Relay sending REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE iteration 0")
+		dbg.Print(pks)
+		dbg.Print(ephPks)
+		dbg.Print(G)
 		toSend := &REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE{pks, ephPks, G}
 		err := p.messageSender.SendToTrustee(0, toSend) //TODO : this should be the trustee X !
 		if err != nil {
@@ -531,6 +538,12 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 		G := msg.NewBase
 
 		//send to the i-th trustee
+
+		dbg.Print("Relay sending REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE iteration " + strconv.Itoa(j+1))
+		dbg.Print(pks)
+		dbg.Print(ephPks)
+		dbg.Print(G)
+
 		toSend := &REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE{pks, ephPks, G}
 		err := p.messageSender.SendToTrustee(j+1, toSend) //TODO : this should be the trustee X !
 		if err != nil {
