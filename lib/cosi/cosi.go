@@ -36,7 +36,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
@@ -192,10 +191,15 @@ func (c *Cosi) CreateResponse() (*Response, error) {
 
 // Response generates the response from the commitment, challenge and the
 // responses of its children.
-func (c *Cosi) Response(responses []*Response) (*Response, error) {
-	// create your own response
-	if err := c.genResponse(); err != nil {
-		return nil, err
+// if respond == true, will also add our response
+func (c *Cosi) Response(respond bool, responses []*Response) (*Response, error) {
+	if respond {
+		// create your own response
+		if err := c.genResponse(); err != nil {
+			return nil, err
+		}
+	} else {
+		c.response = c.suite.Secret().Zero()
 	}
 	aggregateResponse := c.suite.Secret().Zero()
 	for _, resp := range responses {
@@ -331,7 +335,6 @@ func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, m
 	subPublic := suite.Point().Add(suite.Point().Null(), public)
 	aggExCommit := suite.Point().Null()
 	for _, ex := range exceptions {
-		dbg.Print("Substracting", ex.Public, ex.Commitment)
 		subPublic = subPublic.Sub(subPublic, ex.Public)
 		aggExCommit = aggExCommit.Add(aggExCommit, ex.Commitment)
 	}

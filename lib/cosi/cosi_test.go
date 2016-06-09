@@ -66,7 +66,7 @@ func TestCosiResponse(t *testing.T) {
 		aggResponse = aggResponse.Add(aggResponse, r.Response)
 	}
 	// pass them up to the root
-	_, err := root.Response(responses)
+	_, err := root.Response(true, responses)
 	if err != nil {
 		t.Fatal("Response phase failed:", err)
 	}
@@ -139,7 +139,7 @@ func TestVerify(t *testing.T) {
 	c2.Challenge(ch)
 	re, err := c2.CreateResponse()
 	dbg.ErrFatal(err)
-	_, err = c1.Response([]*Response{re})
+	_, err = c1.Response(true, []*Response{re})
 	dbg.ErrFatal(err)
 
 	dbg.ErrFatal(VerifySignature(network.Suite, msg, agg, c1.challenge, c1.aggregateResponse))
@@ -160,9 +160,14 @@ func TestVerifyWithException(t *testing.T) {
 	rootPub := testSuite.Point().Mul(nil, root.private)
 	aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, rootPub)
 
-	ex := []Exception{Exception{rootPub, root.commitment}}
-	response := testSuite.Secret().Sub(root.aggregateResponse, root.response)
+	ex := []Exception{{rootPub, root.commitment}}
+	response := root.aggregateResponse
+	if VerifySignatureWithException(testSuite, aggregatedPublic, msg,
+		root.challenge, response, ex) == nil {
+		t.Fatal("This should fail")
+	}
 
+	response = testSuite.Secret().Sub(root.aggregateResponse, root.response)
 	dbg.ErrFatal(VerifySignatureWithException(testSuite, aggregatedPublic, msg,
 		root.challenge, response, ex))
 }
@@ -232,7 +237,7 @@ func genFinalCosi(nb int, msg []byte) (*Cosi, []*Cosi, error) {
 		aggResponse = aggResponse.Add(aggResponse, r.Response)
 	}
 	// pass them up to the root
-	_, err := root.Response(responses)
+	_, err := root.Response(true, responses)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Response phase failed:%v", err)
 	}
