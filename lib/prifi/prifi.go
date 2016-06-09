@@ -7,7 +7,7 @@ import (
 /**
  * PriFi - Library
  * ***************
- * This is a network-agnostic PriFi library. Feed it with a MessageSender interface (that know how to contact the different entities),
+ * This is a network-agnostic PriFi library. Feed it with a MessageSender interface (that knows how to contact the different entities),
  * and call ReceivedMessage(msg) with the received messages.
  * Then, it runs the PriFi anonymous communication network among those entities.
  */
@@ -31,10 +31,20 @@ const (
 
 //this is the interface we need to give this library for it to work.
 type MessageSender interface {
+
+	/**
+	 * This should deliver the message "msg" to the client i.
+	 */
 	SendToClient(i int, msg interface{}) error
 
+	/**
+	 * This should deliver the message "msg" to the trustee i.
+	 */
 	SendToTrustee(i int, msg interface{}) error
 
+	/**
+	 * This should deliver the message "msg" to the relay.
+	 */
 	SendToRelay(msg interface{}) error
 }
 

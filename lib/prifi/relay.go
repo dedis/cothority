@@ -403,7 +403,7 @@ func (p *PriFiProtocol) sendDownstreamData() error {
 		for i := 0; i < p.relayState.nClients; i++ {
 			//send to the i-th client
 			toSend := &REL_CLI_DOWNSTREAM_DATA{p.relayState.currentDCNetRound.currentRound, downstreamCellContent, flagResync}
-			err := p.messageSender.SendToClient(i, toSend) //TODO : this should be the client X !
+			err := p.messageSender.SendToClient(i, toSend)
 			if err != nil {
 				e := "Could not send REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound)) + ", error is " + err.Error()
 				dbg.Error(e)
@@ -522,7 +522,8 @@ func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_
 			ephPks[i] = p.relayState.clients[i].EphemeralPublicKey
 		}
 
-		G := config.CryptoSuite.Point()
+		//G := config.CryptoSuite.Point().Base()
+		G := p.relayState.clients[0].PublicKey //TODO : Fix this
 
 		//prepare the empty shuffle
 		emptyG_s := make([]abstract.Point, p.relayState.nTrustees)
@@ -533,7 +534,7 @@ func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_
 
 		//send to the 1st trustee
 		toSend := &REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE{pks, ephPks, G}
-		err := p.messageSender.SendToTrustee(0, toSend) //TODO : this should be the trustee X !
+		err := p.messageSender.SendToTrustee(0, toSend)
 		if err != nil {
 			e := "Could not send REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE (0-th iteration), error is " + err.Error()
 			dbg.Error(e)
@@ -584,7 +585,7 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 
 		//send to the i-th trustee
 		toSend := &REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE{pks, ephPks, G}
-		err := p.messageSender.SendToTrustee(j+1, toSend) //TODO : this should be the trustee X !
+		err := p.messageSender.SendToTrustee(j+1, toSend)
 		if err != nil {
 			e := "Could not send REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE (" + strconv.Itoa(j+1) + "-th iteration), error is " + err.Error()
 			dbg.Error(e)
@@ -669,7 +670,7 @@ func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) er
 		for i := 0; i < p.relayState.nClients; i++ {
 			//send to the i-th client
 			toSend := &REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG{G, ephPks, signatures}
-			err := p.messageSender.SendToClient(i, toSend) //TODO : this should be the client X !
+			err := p.messageSender.SendToClient(i, toSend)
 			if err != nil {
 				e := "Could not send REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG to " + strconv.Itoa(i+1) + "-th client, error is " + err.Error()
 				dbg.Error(e)
