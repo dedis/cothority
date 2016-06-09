@@ -8,7 +8,7 @@ import (
  	"fmt"
  	"github.com/dedis/cothority/services/medco/store"
 	."github.com/dedis/cothority/services/medco/structs"
-	"encoding/json"
+	//"encoding/json"
 )
 
 var suite = edwards.NewAES128SHA256Ed25519(false)
@@ -124,11 +124,11 @@ func TestStoring(t *testing.T) {
 		fmt.Println("PushDeterministicGroupingAttributes error")
 		t.Errorf("PushDeterministicGroupingAttributes error")
 	} else {
-		t.Logf("inserPushDeterministicGroupingAttributestion OK")
+		t.Logf("PushDeterministicGroupingAttributestion OK")
 		fmt.Println("PushDeterministicGroupingAttributes OK")
 	}
 	
-	storage.PushCothorityAggregatedGroups(storage.LocGroupingAggregating)
+	storage.PushCothorityAggregatedGroups(storage.LocGroupingGroups,storage.LocGroupingAggregating)
 	
 	if !(len(storage.LocGroupingAggregating) == 2){
 		fmt.Println("PushCothorityAggregatedGroups error")
