@@ -6,12 +6,15 @@ import (
  	"github.com/dedis/cothority/lib/dbg"
  	"testing"
  	"fmt"
- 	"github.com/dedis/cothority/protocols/medco"
  	"github.com/dedis/cothority/services/medco/store"
- 	"github.com/satori/go.uuid"
+	."github.com/dedis/cothority/services/medco/structs"
+	"encoding/json"
 )
 
 var suite = edwards.NewAES128SHA256Ed25519(false)
+
+
+
 
 func TestStoring(t *testing.T) {
 	dbg.Lvl1("Test beginning")
@@ -19,24 +22,32 @@ func TestStoring(t *testing.T) {
 	//construc variables
 	secKey := suite.Secret().Pick(random.Stream)
 	pubKey := suite.Point().Mul(suite.Point().Base(), secKey)
-	nullEnc := medco.EncryptInt(suite, pubKey, 0)//*CipherText
-	oneEnc := medco.EncryptInt(suite, pubKey, 1)//*CipherText
+	nullEnc := EncryptInt(suite, pubKey, 0)//*CipherText
+	oneEnc := EncryptInt(suite, pubKey, 1)//*CipherText
+	oneBEnc := EncryptInt(suite, pubKey, 1)//*CipherText
+
+	oneEnc.SwitchToDeterministic(suite, secKey, secKey)
+	oneBEnc.SwitchToDeterministic(suite, secKey, secKey)
+
+
 	
-	var dnull medco.DeterministCipherText
-	var done medco.DeterministCipherText
+	var dnull DeterministCipherText
+	var done DeterministCipherText
+	var doneB DeterministCipherText
 	dnull.C = nullEnc.C
 	done.C = oneEnc.C//deterministic ciphertext
+	doneB.C = oneBEnc.C
 	
-	nullVectEnc := medco.NullCipherVector(suite, 4, pubKey)//CipherVector
+	nullVectEnc := NullCipherVector(suite, 4, pubKey)//CipherVector
 	_=nullVectEnc
-	testCipherVect1 := make(medco.CipherVector, 4)
+	testCipherVect1 := make(CipherVector, 4)
 	for i, p := range []int64{1,2,3,6} {
-		testCipherVect1[i] = *medco.EncryptInt(suite, pubKey, p)
+		testCipherVect1[i] = *EncryptInt(suite, pubKey, p)
 	}
 	
-	testCipherVect2 := make(medco.CipherVector, 4)
+	testCipherVect2 := make(CipherVector, 4)
 	for i, p := range []int64{2,4,8,6} {
-		testCipherVect2[i] = *medco.EncryptInt(suite, pubKey, p)
+		testCipherVect2[i] = *EncryptInt(suite, pubKey, p)
 	}
 	
 	
@@ -46,7 +57,7 @@ func TestStoring(t *testing.T) {
 	
 	//AddAggregate & GetAggregateLoc Test
 	//fmt.Println("FIRST AGGREGATION")
-	storage.InsertClientResponse(store.ClientResponse{nil,testCipherVect1})
+	storage.InsertClientResponse(ClientResponse{nil,testCipherVect1})
 	
 	
 	if !(len(storage.PollDeliverableResults()) == 1){
@@ -58,7 +69,7 @@ func TestStoring(t *testing.T) {
 	}
 	
 	//storage.DisplayResults()
-	storage.InsertClientResponse(store.ClientResponse{nil,testCipherVect2})
+	storage.InsertClientResponse(ClientResponse{nil,testCipherVect2})
 	//fmt.Println("SECOND AGGREGATION")
 	
 	
@@ -74,9 +85,9 @@ func TestStoring(t *testing.T) {
 	
 	//GROUPING
 	storage = store.NewSurvey()
-	storage.InsertClientResponse(store.ClientResponse{testCipherVect2,testCipherVect2})
-	storage.InsertClientResponse(store.ClientResponse{testCipherVect1,testCipherVect2})
-	storage.InsertClientResponse(store.ClientResponse{testCipherVect2,testCipherVect1})
+	storage.InsertClientResponse(ClientResponse{testCipherVect2,testCipherVect2})
+	storage.InsertClientResponse(ClientResponse{testCipherVect1,testCipherVect2})
+	storage.InsertClientResponse(ClientResponse{testCipherVect2,testCipherVect1})
 	
 	if !(len(storage.ClientResponses) == 3){
 		fmt.Println("insertion error")
@@ -88,7 +99,7 @@ func TestStoring(t *testing.T) {
 	
 	probaGroups := storage.PollProbabilisticGroupingAttributes()
 	//verif two maps creation -> OK
-	var indexes []uuid.UUID
+	var indexes []TempID
 	for i,v := range *probaGroups{
 		_=v
 		//fmt.Println(i, " : ", v)
@@ -98,18 +109,18 @@ func TestStoring(t *testing.T) {
 	//for i,v := range storage.AggregatingAttributes{
 	//	fmt.Println(i, " : ", v)
 	//}
-	groupedAttr := make(map[uuid.UUID][store.MAX_GROUP_ATTR]medco.DeterministCipherText)
-	groupedAttr[indexes[0]] = [store.MAX_GROUP_ATTR]medco.DeterministCipherText{dnull, done}
-	groupedAttr[indexes[1]] = [store.MAX_GROUP_ATTR]medco.DeterministCipherText{dnull, dnull}
-	groupedAttr[indexes[2]] = [store.MAX_GROUP_ATTR]medco.DeterministCipherText{dnull, done}
-	
-	locRes := storage.PushDeterministicGroupingAttributes(groupedAttr)
-	_=locRes
+	groupedAttr := make(map[TempID]GroupingAttributes)
+	groupedAttr[indexes[0]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, done}
+	groupedAttr[indexes[1]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, dnull}
+	groupedAttr[indexes[2]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, doneB}
+
+
+	storage.PushDeterministicGroupingAttributes(groupedAttr)
 	//for i,v := range *locRes{
 	//	fmt.Println(i, " : ", v)
 	//}
 	
-	if !(len(storage.LocGroupingResults) == 2){
+	if !(len(storage.LocGroupingAggregating) == 2){
 		fmt.Println("PushDeterministicGroupingAttributes error")
 		t.Errorf("PushDeterministicGroupingAttributes error")
 	} else {
@@ -117,9 +128,9 @@ func TestStoring(t *testing.T) {
 		fmt.Println("PushDeterministicGroupingAttributes OK")
 	}
 	
-	storage.PushCothorityAggregatedGroups(storage.LocGroupingResults)
+	storage.PushCothorityAggregatedGroups(storage.LocGroupingAggregating)
 	
-	if !(len(storage.LocGroupingResults) == 2){
+	if !(len(storage.LocGroupingAggregating) == 2){
 		fmt.Println("PushCothorityAggregatedGroups error")
 		t.Errorf("PushCothorityAggregatedGroups error")
 	} else {
@@ -127,7 +138,7 @@ func TestStoring(t *testing.T) {
 		fmt.Println("PushCothorityAggregatedGroups OK")
 	}
 	
-	groupedDetAttr := storage.PollDeterministicGroupingAttributes()
+	groupedDetAttr, aggrAttr := storage.PollCothorityAggregatedGroups()
 	if !(len(*groupedDetAttr) == 2){
 		fmt.Println("PollDeterministicGroupingAttributes error")
 		t.Errorf("PollDeterministicGroupingAttributes error")
@@ -136,7 +147,7 @@ func TestStoring(t *testing.T) {
 		fmt.Println("PollDeterministicGroupingAttributes OK")
 	}
 	
-	var indexes1 []uuid.UUID
+	var indexes1 []TempID
 	for i,v := range *groupedDetAttr{
 		_=v
 		//fmt.Println(i, " : ", v)
@@ -151,12 +162,12 @@ func TestStoring(t *testing.T) {
 	//	fmt.Println(i, " : ", v)
 	//}
 	
-	reencrGroupAttr := make(map[uuid.UUID]medco.CipherVector)
+	reencrGroupAttr := make(map[TempID]CipherVector)
 	reencrGroupAttr[indexes1[0]] = testCipherVect2
 	reencrGroupAttr[indexes1[1]] = testCipherVect1
 	//reencrGroupAttr[indexes[2]] = [100]medco.DeterministCipherText{dnull, done}
 	
-	storage.PushQuerierKeyEncryptedGroupingAttributes(reencrGroupAttr)
+	storage.PushQuerierKeyEncryptedData(reencrGroupAttr, *aggrAttr)
 	
 	//storage.DisplayResults()
 	
