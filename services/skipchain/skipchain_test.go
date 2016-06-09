@@ -289,6 +289,36 @@ func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) 
 	return nil
 }
 
+func TestService_Verification(t *testing.T) {
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	sbLength := 3
+	_, el, service := makeHELS(local, sbLength)
+	elRoot := sda.NewEntityList(el.List[0:2])
+	sbRoot := makeGenesisRoster(service, elRoot)
+
+	dbg.Lvl1("Creating non-conforming skipBlock")
+	sb := NewSkipBlock()
+	sb.EntityList = el
+	sb.MaximumHeight = 1
+	sb.BaseHeight = 1
+	sb.ParentBlockID = sbRoot.Hash
+	sb.VerifierID = VerifyShard
+	_, err := service.ProposeSkipBlock(nil,
+		&ProposeSkipBlock{nil, sb})
+	if err == nil {
+		t.Fatal("Shouldn't accept a non-confoirming skipblock")
+	}
+
+	dbg.Lvl1("Creating skipblock with same EntityList as root")
+	sbInter := makeGenesisRosterArgs(service, elRoot, sbRoot.Hash, VerifyShard, 1, 1)
+	dbg.Lvl1("Creating skipblock with sub-EntityList from root")
+	elSub := sda.NewEntityList(el.List[0:1])
+	sbInter = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, VerifyShard, 1, 1)
+	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
+	service.SetChildrenSkipBlock(nil, scsb)
+}
+
 func TestCopy(t *testing.T) {
 	// Test if copy is deep or only shallow
 	b1 := NewBlockLink()

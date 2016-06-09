@@ -184,16 +184,19 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	dbg.Lvl3(s.Entity(), "SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
+	var pi sda.ProtocolInstance
+	var err error
 	switch tn.ProtocolName() {
 	case "Propagate":
-		pi, err := manage.NewPropagateProtocol(tn)
+		pi, err = manage.NewPropagateProtocol(tn)
 		if err != nil {
 			return nil, err
 		}
 		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
-		return pi, err
+	case skipchainBFT:
+		pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify)
 	}
-	return nil, nil
+	return pi, err
 }
 
 // PropagateSkipBlock will save a new SkipBlock
@@ -267,8 +270,8 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	}
 
 	// Start the protocol
-	tree := el.GenerateBigNaryTree(2, len(el.List))
-	node, err := s.CreateProtocolSDA(tree, skipchainBFT)
+	tree := el.GenerateNaryTreeWithRoot(2, s.Entity())
+	node, err := s.CreateProtocolService(tree, skipchainBFT)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
 	}
@@ -276,6 +279,13 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// Register the function generating the protocol instance
 	root := node.(*bftcosi.ProtocolBFTCoSi)
 	root.Msg = msg
+	data, err := network.MarshalRegisteredType(block)
+	if err != nil {
+		return errors.New("Couldn't marshal block: " + err.Error())
+	}
+	root.Data = data
+	root.VerificationFunction = s.bftVerify
+	dbg.Print(msg, block.Hash)
 	// function that will be called when protocol is finished by the root
 	root.RegisterOnDone(func() {
 		done <- true
@@ -284,6 +294,9 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	select {
 	case <-done:
 		block.BlockSig = root.Signature()
+		if len(block.BlockSig.Exceptions) != 0 {
+			return errors.New("Not everybody signed off the new block")
+		}
 		if err := block.BlockSig.Verify(network.Suite, el.Aggregate, msg); err != nil {
 			return errors.New("Couldn't verify signature")
 		}
@@ -363,8 +376,41 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 }
 
 // bftVerify takes a message and verifies it's valid
-func (s *Service) bftVerify(msg []byte) bool {
-	return true
+func (s *Service) bftVerify(msg []byte, data []byte) bool {
+	dbg.LLvlf4("%s verifying block %x", s.Entity(), msg)
+	_, sbN, err := network.UnmarshalRegistered(data)
+	if err != nil {
+		dbg.Error("Couldn't unmarshal SkipBlock", data)
+		return false
+	}
+	sb := sbN.(*SkipBlock)
+	if !sb.Hash.Equal(SkipBlockID(msg)) {
+		dbg.Lvlf2("Data skipBlock different from msg %x %x", msg, sb.Hash)
+		return false
+	}
+	switch sb.VerifierID {
+	case VerifyNone:
+		dbg.LLvl4("No verification - accepted")
+		return true
+	case VerifyShard:
+		if sb.ParentBlockID.IsNull() {
+			dbg.LLvl3("No-child skipblock cannot verify to be shard")
+		} else {
+			sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
+			if !exists {
+				dbg.LLvl3("Parent skipblock doesn't exist")
+			} else {
+				for _, e := range sb.EntityList.List {
+					if i, _ := sbParent.EntityList.Search(e.ID); i < 0 {
+						dbg.LLvl3("Entity in child doesn't exist in parent")
+						return false
+					}
+				}
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
