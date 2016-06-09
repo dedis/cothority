@@ -19,7 +19,7 @@ type DataReferenceStruct struct {
 }
 
 type ChildAggregatedDataMessage struct {
-	ChildData map[GroupingAttributes]CipherVector
+	ChildData []KeyValGACV
 }
 
 type ChildAggregatedDataStruct struct {
@@ -77,6 +77,7 @@ func (p *PrivateAggregateProtocol) Start() error {
 
 
 	p.SendToChildren(&DataReferenceMessage{})
+
 	return nil
 }
 
@@ -116,8 +117,8 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *
 	}
 	if !p.IsLeaf() {
 		for _,childrenContribution := range <- p.ChildDataChannel {
-
-			for group := range childrenContribution.ChildData {
+			childDataMap := SliceToMapGACV(childrenContribution.ChildData)
+			for group := range childDataMap {
 				if aggr, ok := (*localContribution)[group]; ok {
 					localAggr := (*localContribution)[group]
 					localAggr.Add(localAggr, aggr)
@@ -128,7 +129,7 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *
 		}
 	}
 	if !p.IsRoot() {
-		p.SendToParent(&ChildAggregatedDataMessage{*localContribution})
+		p.SendToParent(&ChildAggregatedDataMessage{MapToSliceGACV(*localContribution)})
 	}
 	return localContribution
 }

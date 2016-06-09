@@ -1,6 +1,8 @@
 package medco_structs
 
-import "github.com/btcsuite/goleveldb/leveldb/errors"
+import (
+	"github.com/btcsuite/goleveldb/leveldb/errors"
+)
 
 const MAX_GROUP_ATTR int = 2  //we must have this limit because slices cannot be used as keys in maps
 type GroupingAttributes [MAX_GROUP_ATTR]DeterministCipherText

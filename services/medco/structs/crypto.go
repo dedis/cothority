@@ -95,10 +95,10 @@ func (c CipherText) String() string {
 	cstr := "nil"
 	kstr := cstr
 	if c.C != nil {
-		cstr = c.C.String()[1:4]
+		cstr = c.C.String()[1:7]
 	}
 	if c.K != nil {
-		kstr = c.K.String()[1:4]
+		kstr = c.K.String()[1:7]
 	}
 	return fmt.Sprintf("CipherText{%s,%s}", kstr,cstr )
 }

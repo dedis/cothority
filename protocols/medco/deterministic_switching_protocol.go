@@ -13,11 +13,13 @@ const DETERMINISTIC_SWITCHING_PROTOCOL_NAME = "DeterministicSwitching"
 
 func init() {
 	network.RegisterMessageType(DeterministicSwitchedMessage{})
+	network.RegisterMessageType(CipherText{})
+	network.RegisterMessageType(CipherVector{})
 	sda.ProtocolRegisterName(DETERMINISTIC_SWITCHING_PROTOCOL_NAME, NewDeterministSwitchingProtocol)
 }
 
 type DeterministicSwitchedMessage struct {
-	Data map[TempID]CipherVector
+	Data []KeyValCV
 }
 
 type DeterministicSwitchedStruct struct {
@@ -72,9 +74,9 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 
 	dbg.Lvl1(p.Entity(),"started a Deterministic Switching Protocol")
 
-	dbg.Lvl1("STARTING WITH:", *p.TargetOfSwitch)
+	targetSliced := MapToSliceCV(*p.TargetOfSwitch)
 
-	p.sendToNext(&DeterministicSwitchedMessage{*p.TargetOfSwitch})
+	p.sendToNext(&DeterministicSwitchedMessage{targetSliced})
 
 	return nil
 }
@@ -84,22 +86,17 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <- p.PreviousNodeInPathChannel
 
-	dbg.Lvl1("CONTINUING WITH", deterministicSwitchingTarget.Data)
-
-	for k := range deterministicSwitchingTarget.Data {
-		elem := deterministicSwitchingTarget.Data[k]
-		elem.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
+	for _,kv := range deterministicSwitchingTarget.Data {
+		kv.Val.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
 	}
-	deterministicSwitchingTarget.Data[1] = append(deterministicSwitchingTarget.Data[1], CipherText{})
-	dbg.Lvl1("OR WITH", deterministicSwitchingTarget.Data)
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
 		deterministicSwitchedData := make(map[TempID]DeterministCipherVector, len(deterministicSwitchingTarget.Data))
-		for k := range deterministicSwitchingTarget.Data {
-			deterministicSwitchedData[k] = make(DeterministCipherVector, len(deterministicSwitchingTarget.Data[k]))
-			for i, c := range deterministicSwitchingTarget.Data[k] {
-				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
+		for _,kv := range deterministicSwitchingTarget.Data {
+			deterministicSwitchedData[kv.Key] = make(DeterministCipherVector, len(kv.Val))
+			for i, c := range kv.Val {
+				deterministicSwitchedData[kv.Key][i] = DeterministCipherText{c.C}
 			}
 		}
 		p.FeedbackChannel <- deterministicSwitchedData

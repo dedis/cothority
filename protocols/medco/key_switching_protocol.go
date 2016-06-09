@@ -13,9 +13,9 @@ import (
 const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
 
 type KeySwitchedCipherMessage struct {
-	Data map[TempID]CipherVector
+	Data []KeyValCV
 	NewKey abstract.Point
-	OriginalEphemeralKeys map[TempID][]abstract.Point
+	OriginalEphemeralKeys []KeyValSPoint
 }
 
 type KeySwitchedCipherStruct struct {
@@ -94,9 +94,9 @@ func (p *KeySwitchingProtocol) Start() error {
 	}
 
 	p.sendToNext(&KeySwitchedCipherMessage{
-		initialMap,
+		MapToSliceCV(initialMap),
 		*p.TargetPublicKey,
-		p.originalEphemKeys})
+		MapToSliceSPoint(p.originalEphemKeys)})
 
 	return nil
 }
@@ -106,16 +106,18 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 
 	keySwitchingTarget := <- p.PreviousNodeInPathChannel
 
+	origEphemKeys := SliceToMapSPoint(keySwitchingTarget.OriginalEphemeralKeys)
+
 	randomnessContrib := p.Suite().Secret().Pick(random.Stream)
 
-	for k := range keySwitchingTarget.Data {
-		cv := keySwitchingTarget.Data[k]
-		cv.SwitchForKey(p.Suite(), p.Private(), keySwitchingTarget.OriginalEphemeralKeys[k], keySwitchingTarget.NewKey, randomnessContrib)
+	for _,kv := range keySwitchingTarget.Data {
+		cv := kv.Val
+		cv.SwitchForKey(p.Suite(), p.Private(), origEphemKeys[kv.Key], keySwitchingTarget.NewKey, randomnessContrib)
 	}
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed key switching.")
-		p.FeedbackChannel <- keySwitchingTarget.Data
+		p.FeedbackChannel <- SliceToMapCV(keySwitchingTarget.Data)
 	} else {
 		dbg.Lvl1(p.Entity(), "carried on key switching.")
 		p.sendToNext(&keySwitchingTarget.KeySwitchedCipherMessage)

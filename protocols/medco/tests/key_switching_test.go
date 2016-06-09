@@ -20,7 +20,7 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	host,entityList, tree := local.GenTree(5, false, true, true)
 	defer local.CloseAll()
 
-	rootInstance,_ := local.CreateProtocol("KeySwitching", tree)
+	rootInstance,_ := local.CreateProtocol(tree, "KeySwitching")
 	protocol := rootInstance.(*medco.KeySwitchingProtocol)
 
 	suite := host[0].Suite()
