@@ -5,7 +5,9 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"fmt"
 	."github.com/dedis/cothority/services/medco/structs"
+	
 )
 
 const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"
@@ -79,7 +81,7 @@ func (p *PrivateAggregateProtocol) Start() error {
 	if p.GroupedData == nil {
 		return errors.New("No data reference provided for aggregation.")
 	}
-
+	
 	dbg.Lvl1(p.Entity(),"started a Private Aggregate Protocol")
 
 

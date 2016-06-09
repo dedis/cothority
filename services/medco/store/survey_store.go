@@ -19,7 +19,7 @@ type Survey struct {
 	AggregatingAttributes                  map[TempID]CipherVector       //2
 
 	LocGroupingAggregating                 map[GroupingKey]CipherVector  //b & c
-	LocGroupingGroups		       map[GroupingKey]GroupingAttributes
+	LocGroupingGroups		       		   map[GroupingKey]GroupingAttributes
 
 	GroupedDeterministicGroupingAttributes map[TempID]GroupingAttributes //4
 	GroupedAggregatingAttributes           map[TempID]CipherVector       // 5
@@ -81,7 +81,7 @@ func (s *Survey) PushDeterministicGroupingAttributes(detGroupAttr map[TempID]Gro
 }
 
 func (s *Survey) PollLocallyAggregatedResponses()  (*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
-	return &s.LocGroupingAggregating
+	return &s.LocGroupingGroups, &s.LocGroupingAggregating
 }
 
 func (s *Survey) nextId() TempID {
@@ -105,6 +105,9 @@ func AddInMapping (s map[GroupingKey]CipherVector, key GroupingKey, added Cipher
 func (s *Survey) PushCothorityAggregatedGroups(gNew map[GroupingKey]GroupingAttributes, sNew map[GroupingKey]CipherVector ){
 	for key, value := range sNew {
 		AddInMapping(s.LocGroupingAggregating, key, value)
+		if _,ok := s.LocGroupingGroups[key]; !ok {
+			s.LocGroupingGroups[key] = gNew[key]
+		}
 	}
 }
 
