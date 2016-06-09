@@ -31,23 +31,23 @@ func (prifi *PriFiProtocol) WhoAmI() {
 
 	dbg.Print("###################### WHO AM I ######################")
 	if prifi.role == PRIFI_ROLE_RELAY {
-		dbg.Print("I' a relay, look :")
+		dbg.Print("I' a relay, my name is ", prifi.relayState.Name)
 		dbg.Printf("%+v\n", prifi.relayState)
-		dbg.Print("I'm not : ")
-		dbg.Printf("%+v\n", prifi.clientState)
-		dbg.Printf("%+v\n", prifi.trusteeState)
+		//dbg.Print("I'm not : ")
+		//dbg.Printf("%+v\n", prifi.clientState)
+		//dbg.Printf("%+v\n", prifi.trusteeState)
 	} else if prifi.role == PRIFI_ROLE_CLIENT {
-		dbg.Print("I' a client, look :")
+		dbg.Print("I' a client, my name is ", prifi.clientState.Name)
 		dbg.Printf("%+v\n", prifi.clientState)
-		dbg.Print("I'm not : ")
-		dbg.Printf("%+v\n", prifi.relayState)
-		dbg.Printf("%+v\n", prifi.trusteeState)
+		//dbg.Print("I'm not : ")
+		//dbg.Printf("%+v\n", prifi.relayState)
+		//dbg.Printf("%+v\n", prifi.trusteeState)
 	} else if prifi.role == PRIFI_ROLE_TRUSTEE {
-		dbg.Print("I' a trustee, look :")
+		dbg.Print("I' a trustee, my name is ", prifi.trusteeState.Name)
 		dbg.Printf("%+v\n", prifi.trusteeState)
-		dbg.Print("I'm not : ")
-		dbg.Printf("%+v\n", prifi.clientState)
-		dbg.Printf("%+v\n", prifi.relayState)
+		//dbg.Print("I'm not : ")
+		//dbg.Printf("%+v\n", prifi.clientState)
+		//dbg.Printf("%+v\n", prifi.relayState)
 	}
 	dbg.Print("###################### -------- ######################")
 }
@@ -58,8 +58,6 @@ func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
 		dbg.Print("Received a message ", msg)
 		panic("But prifi is nil !")
 	}
-
-	prifi.WhoAmI()
 
 	//ALL_ALL_PARAMETERS
 	//CLI_REL_TELL_PK_AND_EPH_PK
@@ -121,7 +119,7 @@ func NewPriFiRelay(msgSender MessageSender) *PriFiProtocol {
 		messageSender: msgSender,
 	}
 
-	prifi.WhoAmI()
+	//prifi.WhoAmI()
 	return &prifi
 }
 
@@ -130,7 +128,7 @@ func NewPriFiClient(msgSender MessageSender) *PriFiProtocol {
 		role:          PRIFI_ROLE_CLIENT,
 		messageSender: msgSender,
 	}
-	prifi.WhoAmI()
+	//prifi.WhoAmI()
 	return &prifi
 }
 
@@ -139,7 +137,7 @@ func NewPriFiTrustee(msgSender MessageSender) *PriFiProtocol {
 		role:          PRIFI_ROLE_TRUSTEE,
 		messageSender: msgSender,
 	}
-	prifi.WhoAmI()
+	//prifi.WhoAmI()
 	return &prifi
 }
 
@@ -151,7 +149,7 @@ func NewPriFiRelayWithState(msgSender MessageSender, state *RelayState) *PriFiPr
 	}
 
 	dbg.Lvl1("Relay has been initialized by function call. ")
-	prifi.WhoAmI()
+	//prifi.WhoAmI()
 	return &prifi
 }
 
@@ -162,7 +160,7 @@ func NewPriFiClientWithState(msgSender MessageSender, state *ClientState) *PriFi
 		clientState:   *state,
 	}
 	dbg.Lvl1("Client has been initialized by function call. ")
-	prifi.WhoAmI()
+	//prifi.WhoAmI()
 	return &prifi
 }
 
@@ -174,6 +172,6 @@ func NewPriFiTrusteeWithState(msgSender MessageSender, state *TrusteeState) *Pri
 	}
 
 	dbg.Lvl1("Trustee has been initialized by function call. ")
-	prifi.WhoAmI()
+	//prifi.WhoAmI()
 	return &prifi
 }
