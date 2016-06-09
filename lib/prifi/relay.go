@@ -298,11 +298,11 @@ func (p *PriFiProtocol) Received_TRU_REL_DC_CIPHER(msg TRU_REL_DC_CIPHER) error 
 
 	//this can only happens in the state RELAY_STATE_COMMUNICATING
 	if p.relayState.currentState != RELAY_STATE_COMMUNICATING {
-		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(p.relayState.currentState))
+		e := "Relay : Received a TRU_REL_DC_CIPHER, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
 		//return errors.New(e)
 	} else {
-		dbg.Lvl3("Relay : received CLI_REL_UPSTREAM_DATA")
+		dbg.Lvl3("Relay : received TRU_REL_DC_CIPHER")
 	}
 
 	//TODO @ Mohamad : add rate-control somewhere here
@@ -642,6 +642,10 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 			}
 		}
 
+		//prepare to collect the ciphers
+		p.relayState.currentDCNetRound = DCNetRound{0, 0, 0}
+		p.relayState.CellCoder.DecodeStart(p.relayState.UpstreamCellSize, p.relayState.MessageHistory)
+
 		//changing state
 		p.relayState.currentState = RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
 	}
@@ -688,10 +692,6 @@ func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) er
 		G := p.relayState.currentShuffleTranscript.G_s[lastPermutationIndex]
 		ephPks := p.relayState.currentShuffleTranscript.ephPubKeys_s[lastPermutationIndex]
 		signatures := p.relayState.currentShuffleTranscript.signatures_s
-
-		//prepare to collect the ciphers
-		p.relayState.currentDCNetRound = DCNetRound{0, 0, 0}
-		p.relayState.CellCoder.DecodeStart(p.relayState.UpstreamCellSize, p.relayState.MessageHistory)
 
 		//changing state
 		dbg.Lvl2("Relay : ready to communicate.")
