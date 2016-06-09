@@ -99,6 +99,7 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	for k := range probabilisticSwitchingTarget.Data {
 		elem := probabilisticSwitchingTarget.Data[k]
+		dbg.Lvl1(p.Entity(),elem, p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey)
 		elem.SwitchToProbabilistic(p.Suite(), *p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey) // TROUVER CE QUI EST NIL ICI
 	}
 

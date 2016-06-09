@@ -45,6 +45,14 @@ func (dc *DeterministCipherText) Equals(dc2 *DeterministCipherText) bool {
 	return dc2.C.Equal(dc.C)
 }
 
+func (dc DeterministCipherText) String() string {
+	cstr := "<nil>"
+	if dc.C != nil {
+		cstr = dc.C.String()[1:4]
+	}
+	return fmt.Sprintf("DetCipherText{%s}", cstr)
+}
+
 func (cv *CipherVector) Add(cv1, cv2 CipherVector) error{
 	if len(cv1) != len(cv2) {
 		return errors.New("Cannot add CipherVectors of different lenght.")

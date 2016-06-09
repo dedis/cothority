@@ -48,6 +48,7 @@ func (c *MedcoClient) CreateSurvey(entities *sda.EntityList) error {
 }
 
 func (c *MedcoClient) SendSurveyResultsData(grouping, aggregating []int64, groupKey abstract.Point) error {
+	dbg.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
 	suite := network.Suite
 	encGrouping := EncryptIntArray(suite, groupKey, grouping)
 	encAggregating := EncryptIntArray(suite, groupKey, aggregating)

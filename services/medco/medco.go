@@ -105,8 +105,6 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	var pi sda.ProtocolInstance
 	var err error
 
-	dbg.Lvl1("cow cow le ", tn.ProtocolName())
-
 	switch tn.ProtocolName() {
 	case medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME:
 		pi, err = medco.NewDeterministSwitchingProtocol(tn)
@@ -139,6 +137,8 @@ func (mcs *MedcoService) flushCollectedData() error {
 
 	probabilisticGroupingAttributes = mcs.store.PollProbabilisticGroupingAttributes()
 
+	dbg.Lvl1("BEFORE DET SWITCH", *probabilisticGroupingAttributes)
+
 	tni := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root, medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME)
 	pi, err := medco.NewDeterministSwitchingProtocol(tni)
 	if err != nil {
@@ -153,7 +153,10 @@ func (mcs *MedcoService) flushCollectedData() error {
 
 	deterministicSwitchedResult := <- protocol.FeedbackChannel
 
+	dbg.Lvl1("AFTER DET SWITCH", deterministicSwitchedResult)
+	
 	deterministicGroupAttributes := make(map[TempID]GroupingAttributes, len(deterministicSwitchedResult))
+
 
 	for k := range deterministicSwitchedResult {
 		var err error
@@ -162,6 +165,8 @@ func (mcs *MedcoService) flushCollectedData() error {
 			return err
 		}
 	}
+
+	dbg.Lvl1("AFTER DET SWITCH", deterministicGroupAttributes)
 
 	mcs.store.PushDeterministicGroupingAttributes(deterministicGroupAttributes)
 
@@ -227,6 +232,7 @@ func (mcs *MedcoService) flushAggregatedData(querierKey *abstract.Point) error {
 	}
 	probabilisticSwitchProtocol.TargetOfSwitch = &targetOfSwitch
 	probabilisticSwitchProtocol.TargetPublicKey = querierKey
+	probabilisticSwitchProtocol.SurveyPHKey = &mcs.surveyPHKey
 	go probabilisticSwitchProtocol.Dispatch()
 	go probabilisticSwitchProtocol.Start()
 	keySwitchedAggregatedGroups := <- probabilisticSwitchProtocol.FeedbackChannel

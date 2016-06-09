@@ -20,10 +20,6 @@ type DeterministicSwitchedMessage struct {
 	Data map[TempID]CipherVector
 }
 
-type TestMess struct {
-	Test map[TempID]CipherVector
-}
-
 type DeterministicSwitchedStruct struct {
 	*sda.TreeNode
 	DeterministicSwitchedMessage
@@ -76,6 +72,8 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 
 	dbg.Lvl1(p.Entity(),"started a Deterministic Switching Protocol")
 
+	dbg.Lvl1("STARTING WITH:", *p.TargetOfSwitch)
+
 	p.sendToNext(&DeterministicSwitchedMessage{*p.TargetOfSwitch})
 
 	return nil
@@ -86,11 +84,14 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <- p.PreviousNodeInPathChannel
 
+	dbg.Lvl1("CONTINUING WITH", deterministicSwitchingTarget.Data)
+
 	for k := range deterministicSwitchingTarget.Data {
 		elem := deterministicSwitchingTarget.Data[k]
 		elem.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
 	}
-
+	deterministicSwitchingTarget.Data[1] = append(deterministicSwitchingTarget.Data[1], CipherText{})
+	dbg.Lvl1("OR WITH", deterministicSwitchingTarget.Data)
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
