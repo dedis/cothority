@@ -8,9 +8,13 @@ import (
  	"fmt"
  	"github.com/dedis/cothority/services/medco/store"
 	."github.com/dedis/cothority/services/medco/structs"
+	"encoding/json"
 )
 
 var suite = edwards.NewAES128SHA256Ed25519(false)
+
+
+
 
 func TestStoring(t *testing.T) {
 	dbg.Lvl1("Test beginning")
@@ -110,12 +114,13 @@ func TestStoring(t *testing.T) {
 	groupedAttr[indexes[1]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, dnull}
 	groupedAttr[indexes[2]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, doneB}
 
+
 	storage.PushDeterministicGroupingAttributes(groupedAttr)
 	//for i,v := range *locRes{
 	//	fmt.Println(i, " : ", v)
 	//}
 	
-	if !(len(storage.LocGroupingResults) == 2){
+	if !(len(storage.LocGroupingAggregating) == 2){
 		fmt.Println("PushDeterministicGroupingAttributes error")
 		t.Errorf("PushDeterministicGroupingAttributes error")
 	} else {
@@ -123,9 +128,9 @@ func TestStoring(t *testing.T) {
 		fmt.Println("PushDeterministicGroupingAttributes OK")
 	}
 	
-	storage.PushCothorityAggregatedGroups(storage.LocGroupingResults)
+	storage.PushCothorityAggregatedGroups(storage.LocGroupingAggregating)
 	
-	if !(len(storage.LocGroupingResults) == 2){
+	if !(len(storage.LocGroupingAggregating) == 2){
 		fmt.Println("PushCothorityAggregatedGroups error")
 		t.Errorf("PushCothorityAggregatedGroups error")
 	} else {

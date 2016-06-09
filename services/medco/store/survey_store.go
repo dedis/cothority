@@ -11,19 +11,20 @@ type Survey_Database []Survey
 
 
 type Survey struct {
-	Id uuid.UUID
-	ClientResponses []ClientResponse //a
-	DeliverableResults []SurveyResult //d & 6
+	Id                                     uuid.UUID
+	ClientResponses                        []ClientResponse              //a
+	DeliverableResults                     []SurveyResult                //d & 6
 
-	ProbabilisticGroupingAttributes map[TempID]CipherVector //1
-	AggregatingAttributes map[TempID]CipherVector //2
-	
-	LocGroupingResults map[GroupingAttributes]CipherVector //b & c
-	
+	ProbabilisticGroupingAttributes        map[TempID]CipherVector       //1
+	AggregatingAttributes                  map[TempID]CipherVector       //2
+
+	LocGroupingAggregating                 map[GroupingKey]CipherVector  //b & c
+	LocGroupingGroups		       map[GroupingKey]GroupingAttributes
+
 	GroupedDeterministicGroupingAttributes map[TempID]GroupingAttributes //4
-	GroupedAggregatingAttributes map[TempID]CipherVector // 5
+	GroupedAggregatingAttributes           map[TempID]CipherVector       // 5
 
-	lastId uint64
+	lastId                                 uint64
 }
 
 //construct survey	
@@ -35,7 +36,8 @@ func NewSurvey() *Survey {
 		ProbabilisticGroupingAttributes : make(map[TempID]CipherVector),
 		AggregatingAttributes : make(map[TempID]CipherVector),
 
-		LocGroupingResults : make(map[GroupingAttributes]CipherVector),
+		LocGroupingAggregating : make(map[GroupingKey]CipherVector),
+		LocGroupingGroups: make(map[GroupingKey]GroupingAttributes),
 	
 		GroupedDeterministicGroupingAttributes : make(map[TempID]GroupingAttributes),
 		GroupedAggregatingAttributes : make(map[TempID]CipherVector),
@@ -68,16 +70,18 @@ func (s *Survey) PollProbabilisticGroupingAttributes() *map[TempID]CipherVector{
 
 
 func (s *Survey) PushDeterministicGroupingAttributes(detGroupAttr map[TempID]GroupingAttributes) {
+
 	for k,v := range detGroupAttr{
-			AddInMapping(s.LocGroupingResults, v, s.AggregatingAttributes[k])
+		AddInMapping(s.LocGroupingAggregating, v.Key(), s.AggregatingAttributes[k])
+		s.LocGroupingGroups[v.Key()] = v
 	}
 	
 	s.AggregatingAttributes = make(map[TempID]CipherVector) //clear maps
 	s.ProbabilisticGroupingAttributes = make(map[TempID]CipherVector)
 }
 
-func (s *Survey) PollLocallyAggregatedResponses()  *map[GroupingAttributes]CipherVector {
-	return &s.LocGroupingResults
+func (s *Survey) PollLocallyAggregatedResponses()  (*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
+	return &s.LocGroupingAggregating
 }
 
 func (s *Survey) nextId() TempID {
@@ -85,7 +89,7 @@ func (s *Survey) nextId() TempID {
 	return TempID(s.lastId)
 }
 
-func AddInMapping (s map[GroupingAttributes]CipherVector, key GroupingAttributes, added CipherVector){
+func AddInMapping (s map[GroupingKey]CipherVector, key GroupingKey, added CipherVector){
 	var tempPointer *CipherVector
 	if _,ok := s[key]; !ok{
 		s[key] = added
@@ -98,20 +102,20 @@ func AddInMapping (s map[GroupingAttributes]CipherVector, key GroupingAttributes
 }
 
 
-func (s *Survey) PushCothorityAggregatedGroups(sNew map[GroupingAttributes]CipherVector ){
+func (s *Survey) PushCothorityAggregatedGroups(gNew map[GroupingKey]GroupingAttributes, sNew map[GroupingKey]CipherVector ){
 	for key, value := range sNew {
-		AddInMapping(s.LocGroupingResults, key, value)
+		AddInMapping(s.LocGroupingAggregating, key, value)
 	}
 }
 
 
 func (s *Survey) PollCothorityAggregatedGroups() (*map[TempID]GroupingAttributes, *map[TempID]CipherVector) {
-	for key,value := range s.LocGroupingResults{
+	for key,value := range s.LocGroupingAggregating {
 		newId := s.nextId()
-		s.GroupedDeterministicGroupingAttributes[newId] = key
+		s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
 		s.GroupedAggregatingAttributes[newId] = value
 	}
-	s.LocGroupingResults = make(map[GroupingAttributes]CipherVector)
+	s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
 	
 	return &s.GroupedDeterministicGroupingAttributes, &s.GroupedAggregatingAttributes
 }
