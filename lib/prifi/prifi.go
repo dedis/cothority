@@ -4,6 +4,24 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 )
 
+/**
+ * PriFi - Library
+ * ***************
+ * This is a network-agnostic PriFi library. Feed it with a MessageSender interface (that know how to contact the different entities),
+ * and call ReceivedMessage(msg) with the received messages.
+ * Then, it runs the PriFi anonymous communication network among those entities.
+ */
+
+//the mutable variable held by this entity
+type PriFiProtocol struct {
+	role          int16
+	messageSender MessageSender
+	clientState   ClientState  //only one of those will be set
+	relayState    RelayState   //only one of those will be set
+	trusteeState  TrusteeState //only one of those will be set
+}
+
+// possible role this entity are in. This restrict the kind of messages it can receive at a given point (roles are mutually exclusive)
 const (
 	PRIFI_ROLE_UNDEFINED int16 = iota
 	PRIFI_ROLE_RELAY
@@ -11,14 +29,7 @@ const (
 	PRIFI_ROLE_TRUSTEE
 )
 
-type PriFiProtocol struct {
-	role          int16
-	messageSender MessageSender
-	clientState   ClientState //only one of those will be set
-	relayState    RelayState
-	trusteeState  TrusteeState
-}
-
+//this is the interface we need to give this library for it to work.
 type MessageSender interface {
 	SendToClient(i int, msg interface{}) error
 
@@ -27,6 +38,71 @@ type MessageSender interface {
 	SendToRelay(msg interface{}) error
 }
 
+/*
+ * call the functions below on the appropriate machine on the network.
+ * if you call *without state* (one of the first 3 methods), IT IS NOT SUFFICIENT FOR PRIFI to start; this entity will expect a ALL_ALL_PARAMETERS as a
+ * first message to finish initializing itself (this is handly if only the Relay has access to the configuration file).
+ * Otherwise, the 3 last methods fully initialize the entity.
+ */
+
+func NewPriFiRelay(msgSender MessageSender) *PriFiProtocol {
+	prifi := PriFiProtocol{
+		role:          PRIFI_ROLE_RELAY,
+		messageSender: msgSender,
+	}
+
+	return &prifi
+}
+
+func NewPriFiClient(msgSender MessageSender) *PriFiProtocol {
+	prifi := PriFiProtocol{
+		role:          PRIFI_ROLE_CLIENT,
+		messageSender: msgSender,
+	}
+	return &prifi
+}
+
+func NewPriFiTrustee(msgSender MessageSender) *PriFiProtocol {
+	prifi := PriFiProtocol{
+		role:          PRIFI_ROLE_TRUSTEE,
+		messageSender: msgSender,
+	}
+	return &prifi
+}
+
+func NewPriFiRelayWithState(msgSender MessageSender, state *RelayState) *PriFiProtocol {
+	prifi := PriFiProtocol{
+		role:          PRIFI_ROLE_RELAY,
+		messageSender: msgSender,
+		relayState:    *state,
+	}
+
+	dbg.Lvl1("Relay has been initialized by function call. ")
+	return &prifi
+}
+
+func NewPriFiClientWithState(msgSender MessageSender, state *ClientState) *PriFiProtocol {
+	prifi := PriFiProtocol{
+		role:          PRIFI_ROLE_CLIENT,
+		messageSender: msgSender,
+		clientState:   *state,
+	}
+	dbg.Lvl1("Client has been initialized by function call. ")
+	return &prifi
+}
+
+func NewPriFiTrusteeWithState(msgSender MessageSender, state *TrusteeState) *PriFiProtocol {
+	prifi := PriFiProtocol{
+		role:          PRIFI_ROLE_TRUSTEE,
+		messageSender: msgSender,
+		trusteeState:  *state,
+	}
+
+	dbg.Lvl1("Trustee has been initialized by function call. ")
+	return &prifi
+}
+
+//debug. Prints role
 func (prifi *PriFiProtocol) WhoAmI() {
 
 	dbg.Print("###################### WHO AM I ######################")
@@ -50,128 +126,4 @@ func (prifi *PriFiProtocol) WhoAmI() {
 		//dbg.Printf("%+v\n", prifi.relayState)
 	}
 	dbg.Print("###################### -------- ######################")
-}
-
-func (prifi *PriFiProtocol) ReceivedMessage(msg interface{}) error {
-
-	if prifi == nil {
-		dbg.Print("Received a message ", msg)
-		panic("But prifi is nil !")
-	}
-
-	//ALL_ALL_PARAMETERS
-	//CLI_REL_TELL_PK_AND_EPH_PK
-	//CLI_REL_UPSTREAM_DATA
-	//REL_CLI_DOWNSTREAM_DATA
-	//REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG
-	//REL_CLI_TELL_TRUSTEES_PK
-	//REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE
-	//REL_TRU_TELL_TRANSCRIPT
-	//TRU_REL_DC_CIPHER
-	//TRU_REL_SHUFFLE_SIG
-	//TRU_REL_TELL_NEW_BASE_AND_EPH_PKS
-	//TRU_REL_TELL_PK
-
-	switch typedMsg := msg.(type) {
-	case ALL_ALL_PARAMETERS:
-		switch prifi.role {
-		case PRIFI_ROLE_RELAY:
-			return prifi.Received_ALL_REL_PARAMETERS(typedMsg)
-		case PRIFI_ROLE_CLIENT:
-			return prifi.Received_ALL_CLI_PARAMETERS(typedMsg)
-		case PRIFI_ROLE_TRUSTEE:
-			return prifi.Received_ALL_TRU_PARAMETERS(typedMsg)
-		default:
-			panic("Received parameters, but we have no role yet !")
-		}
-	case CLI_REL_TELL_PK_AND_EPH_PK:
-		return prifi.Received_CLI_REL_TELL_PK_AND_EPH_PK(typedMsg)
-	case CLI_REL_UPSTREAM_DATA:
-		return prifi.Received_CLI_REL_UPSTREAM_DATA(typedMsg)
-	case REL_CLI_DOWNSTREAM_DATA:
-		return prifi.Received_REL_CLI_DOWNSTREAM_DATA(typedMsg)
-	case REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG:
-		return prifi.Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(typedMsg)
-	case REL_CLI_TELL_TRUSTEES_PK:
-		return prifi.Received_REL_CLI_TELL_TRUSTEES_PK(typedMsg)
-	case REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE:
-		return prifi.Received_REL_TRU_TELL_CLIENTS_PKS_AND_EPH_PKS_AND_BASE(typedMsg)
-	case REL_TRU_TELL_TRANSCRIPT:
-		return prifi.Received_REL_TRU_TELL_TRANSCRIPT(typedMsg)
-	case TRU_REL_DC_CIPHER:
-		return prifi.Received_TRU_REL_DC_CIPHER(typedMsg)
-	case TRU_REL_SHUFFLE_SIG:
-		return prifi.Received_TRU_REL_SHUFFLE_SIG(typedMsg)
-	case TRU_REL_TELL_NEW_BASE_AND_EPH_PKS:
-		return prifi.Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(typedMsg)
-	case TRU_REL_TELL_PK:
-		return prifi.Received_TRU_REL_TELL_PK(typedMsg)
-	default:
-		panic("unrecognized message !")
-	}
-
-	return nil
-}
-
-func NewPriFiRelay(msgSender MessageSender) *PriFiProtocol {
-	prifi := PriFiProtocol{
-		role:          PRIFI_ROLE_RELAY,
-		messageSender: msgSender,
-	}
-
-	//prifi.WhoAmI()
-	return &prifi
-}
-
-func NewPriFiClient(msgSender MessageSender) *PriFiProtocol {
-	prifi := PriFiProtocol{
-		role:          PRIFI_ROLE_CLIENT,
-		messageSender: msgSender,
-	}
-	//prifi.WhoAmI()
-	return &prifi
-}
-
-func NewPriFiTrustee(msgSender MessageSender) *PriFiProtocol {
-	prifi := PriFiProtocol{
-		role:          PRIFI_ROLE_TRUSTEE,
-		messageSender: msgSender,
-	}
-	//prifi.WhoAmI()
-	return &prifi
-}
-
-func NewPriFiRelayWithState(msgSender MessageSender, state *RelayState) *PriFiProtocol {
-	prifi := PriFiProtocol{
-		role:          PRIFI_ROLE_RELAY,
-		messageSender: msgSender,
-		relayState:    *state,
-	}
-
-	dbg.Lvl1("Relay has been initialized by function call. ")
-	//prifi.WhoAmI()
-	return &prifi
-}
-
-func NewPriFiClientWithState(msgSender MessageSender, state *ClientState) *PriFiProtocol {
-	prifi := PriFiProtocol{
-		role:          PRIFI_ROLE_CLIENT,
-		messageSender: msgSender,
-		clientState:   *state,
-	}
-	dbg.Lvl1("Client has been initialized by function call. ")
-	//prifi.WhoAmI()
-	return &prifi
-}
-
-func NewPriFiTrusteeWithState(msgSender MessageSender, state *TrusteeState) *PriFiProtocol {
-	prifi := PriFiProtocol{
-		role:          PRIFI_ROLE_TRUSTEE,
-		messageSender: msgSender,
-		trusteeState:  *state,
-	}
-
-	dbg.Lvl1("Trustee has been initialized by function call. ")
-	//prifi.WhoAmI()
-	return &prifi
 }
