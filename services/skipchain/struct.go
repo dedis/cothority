@@ -41,6 +41,10 @@ func (sbid SkipBlockID) String() string {
 	return fmt.Sprintf("%x", []byte(sbid[0:8]))
 }
 
+func (sbid SkipBlockID) Equal(sb SkipBlockID) bool {
+	return bytes.Equal([]byte(sbid), []byte(sb))
+}
+
 // SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
 // and signed.
 type SkipBlockFix struct {

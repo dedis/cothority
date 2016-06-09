@@ -36,6 +36,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
@@ -198,8 +199,13 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 	}
 	aggregateResponse := c.suite.Secret().Zero()
 	for _, resp := range responses {
+		if resp == nil {
+			continue
+		}
 		// add responses of child
-		aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.Response)
+		if resp.Response != nil {
+			aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.Response)
+		}
 		// add responses of it's children if there is one (i.e. if it is not a
 		// leaf)
 		if resp.ChildrenResp != nil {
@@ -289,10 +295,10 @@ func (c *Cosi) genResponse() error {
 
 // VerifySignature verifies if the challenge and the secret (from the response phase) form a
 // correct signature for this message using the aggregated public key.
-func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Secret) error {
+func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, response abstract.Secret) error {
 	// recompute the challenge and check if it is the same
 	commitment := suite.Point()
-	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
+	commitment = commitment.Add(commitment.Mul(nil, response), suite.Point().Mul(public, challenge))
 
 	return verifyCommitment(suite, msg, commitment, challenge)
 
@@ -317,18 +323,22 @@ func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Poin
 // the exceptions given. An exception is the pubilc key + commitment of a peer that did not
 // sign.
 // NOTE: No exception mechanism for "before" commitment has been yet coded.
-func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, secret abstract.Secret, exceptions []Exception) error {
+func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, response abstract.Secret, exceptions []Exception) error {
+	if response == nil {
+		return errors.New("Response is empty")
+	}
 	// first reduce the aggregate public key
 	subPublic := suite.Point().Add(suite.Point().Null(), public)
 	aggExCommit := suite.Point().Null()
 	for _, ex := range exceptions {
+		dbg.Print("Substracting", ex.Public, ex.Commitment)
 		subPublic = subPublic.Sub(subPublic, ex.Public)
 		aggExCommit = aggExCommit.Add(aggExCommit, ex.Commitment)
 	}
 
 	// recompute the challenge and check if it is the same
 	commitment := suite.Point()
-	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
+	commitment = commitment.Add(commitment.Mul(nil, response), suite.Point().Mul(subPublic, challenge))
 	// ADD the exceptions commitment here
 	commitment = commitment.Add(commitment, aggExCommit)
 	// check if it is ok

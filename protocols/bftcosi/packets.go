@@ -66,7 +66,8 @@ type commitChan struct {
 type ChallengePrepare struct {
 	TYPE RoundType
 	*cosi.Challenge
-	Msg []byte
+	Msg  []byte
+	Data []byte
 }
 
 // ChallengeCommit  is the challenge used by BftCoSi during the "commit"

@@ -14,19 +14,38 @@ import (
 
 // Dummy verification function: always returns OK/true/no-error on data
 var veriCount int
+var failCount int
 var countMut sync.Mutex
 
-const TestProtocolName = "DummyBFTCoSi"
+func TestMain(m *testing.M) {
+	dbg.MainTest(m)
+}
 
 func TestBftCoSi(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	const TestProtocolName = "DummyBFTCoSi"
 
 	// Register test protocol using BFTCoSi
 	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
+	runProtocol(t, TestProtocolName)
+}
+
+func TestCheckFail(t *testing.T) {
+	const TestProtocolName = "DummyBFTCoSiFail"
+
+	// Register test protocol using BFTCoSi
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, verifyFail)
+	})
+
+	for failCount = 1; failCount <= 3; failCount++ {
+		runProtocol(t, TestProtocolName)
+	}
+}
+
+func runProtocol(t *testing.T, name string) {
 	for _, nbrHosts := range []int{3, 13} {
 		countMut.Lock()
 		veriCount = 0
@@ -34,13 +53,14 @@ func TestBftCoSi(t *testing.T) {
 		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
+		dbg.Print("Tree is:", tree.Dump())
 
 		done := make(chan bool)
 		// create the message we want to sign for this round
 		msg := []byte("Hello BFTCoSi")
 
 		// Start the protocol
-		node, err := local.CreateProtocol(tree, TestProtocolName)
+		node, err := local.CreateProtocol(tree, name)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
@@ -49,6 +69,7 @@ func TestBftCoSi(t *testing.T) {
 		var root *ProtocolBFTCoSi
 		root = node.(*ProtocolBFTCoSi)
 		root.Msg = msg
+		root.Data = []byte("1")
 		// function that will be called when protocol is finished by the root
 		root.RegisterOnDone(func() {
 			done <- true
@@ -77,12 +98,34 @@ func TestBftCoSi(t *testing.T) {
 	}
 }
 
-func verify(m []byte) bool {
+func verify(m []byte, d []byte) bool {
 	countMut.Lock()
 	veriCount++
 	dbg.Lvl1("Verification called", veriCount, "times")
 	countMut.Unlock()
 	dbg.Lvl1("Ignoring message:", string(m))
+	if len(d) != 1 {
+		dbg.Error("Didn't receive correct data")
+		return false
+	}
+	// everything is OK, always:
+	return true
+}
+
+func verifyFail(m []byte, d []byte) bool {
+	countMut.Lock()
+	defer countMut.Unlock()
+	veriCount++
+	if veriCount == failCount {
+		dbg.Lvl1("Failing for count==", failCount)
+		return false
+	}
+	dbg.Lvl1("Verification called", veriCount, "times")
+	dbg.Lvl1("Ignoring message:", string(m))
+	if len(d) != 1 {
+		dbg.Error("Didn't receive correct data")
+		return false
+	}
 	// everything is OK, always:
 	return true
 }
