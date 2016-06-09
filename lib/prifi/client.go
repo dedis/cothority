@@ -1,5 +1,22 @@
 package prifi
 
+/**
+ * PriFi Client
+ * ************
+ * This regroups the behavior of the PriFi client.
+ * Needs to be instantiated via the PriFiProtocol in prifi.go
+ * Then, this file simple handle the answer to the different message kind :
+ *
+ * - ALL_ALL_PARAMETERS (specialized into ALL_CLI_PARAMETERS) - used to initialize the client over the network / overwrite its configuration
+ * - REL_CLI_TELL_TRUSTEES_PK - the trustee's identities. We react by sending our identity + ephemeral identity
+ * - REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG - the shuffle from the trustees. We do some check, if they pass, we can communicate. We send the first round to the relay.
+ * - REL_CLI_DOWNSTREAM_DATA - the data from the relay, for one round. We react by finishing the round (sending our data to the relay)
+ *
+ * TODO : traffic need to be encrypted
+ * TODO : we need to test / sort out the downstream traffic data that is not for us
+ * TODO : integrate a VPN / SOCKS somewhere, for now this client has nothing to say ! (except latency-test messages)
+ */
+
 import (
 	"encoding/binary"
 	"errors"
@@ -13,13 +30,12 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-//Constants
 const MaxUint uint32 = uint32(4294967295)
-const socksHeaderLength = 6 // Number of bytes of cell payload to reserve for connection header, length
 const WAIT_FOR_PUBLICKEY_SLEEP_TIME = 100 * time.Millisecond
 const CLIENT_FAILED_CONNECTION_WAIT_BEFORE_RETRY = 1000 * time.Millisecond
 const UDP_DATAGRAM_WAIT_TIMEOUT = 5 * time.Second
 
+// possible state the clients are in. This restrict the kind of messages they can receive at a given point
 const (
 	CLIENT_STATE_BEFORE_INIT int16 = iota
 	CLIENT_STATE_INITIALIZING
@@ -27,49 +43,56 @@ const (
 	CLIENT_STATE_READY
 )
 
+//the mutable variable hold by the client
 type ClientState struct {
 	CellCoder           dcnet.CellCoder
+	currentState        int16
+	DataForDCNet        chan []byte //VPN / SOCKS should put data there !
+	DataFromDCNet       chan []byte //VPN / SOCKS should read data from there !
+	DataOutputEnabled   bool        //if FALSE, nothing will be written to DataFromDCNet
 	ephemeralPrivateKey abstract.Secret
 	EphemeralPublicKey  abstract.Point
 	Id                  int
 	LatencyTest         bool
 	MessageHistory      abstract.Cipher
+	MySlot              int
 	Name                string
 	nClients            int
 	nTrustees           int
 	PayloadLength       int
-	privateKey          abstract.Secret //those are kept by the SDA stack
-	PublicKey           abstract.Point  //those are kept by the SDA stack
+	privateKey          abstract.Secret
+	PublicKey           abstract.Point
+	roundCount          int32 //modulo number of clients, used only to test if "isMySlot"
 	sharedSecrets       []abstract.Point
 	TrusteePublicKey    []abstract.Point
 	UsablePayloadLength int
 	UseSocksProxy       bool
 	UseUDP              bool
-	MySlot              int
-	currentState        int16
-	DataForDCNet        chan []byte //VPN / SOCKS should put data there !
-	DataFromDCNet       chan []byte //VPN / SOCKS should read data from there !
-	DataOutputEnabled   bool        //if FALSE, nothing will be written to DataFromDCNet
-	roundCount          int32       //modulo number of clients, used only to test if "isMySlot"
 }
 
-//dummy state, to be removed
-var clientStateInt int32 = 0
-
 /**
- * Used to initialize the state of this trustee. Must be called before anything else.
+ * Used to initialize the state of this client. Must be called before anything else.
  */
 func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int, latencyTest bool, useUDP bool, dataOutputEnabled bool) *ClientState {
 
+	//set the defaults
 	params := new(ClientState)
-
-	params.Name = "Client-" + strconv.Itoa(clientId)
 	params.Id = clientId
+	params.Name = "Client-" + strconv.Itoa(clientId)
+	params.CellCoder = config.Factory()
+	params.currentState = CLIENT_STATE_INITIALIZING
+	params.DataForDCNet = make(chan []byte)
+	params.DataFromDCNet = make(chan []byte)
+	params.DataOutputEnabled = dataOutputEnabled
+	params.LatencyTest = latencyTest
+	//params.MessageHistory =
+	params.MySlot = -1
 	params.nClients = nClients
 	params.nTrustees = nTrustees
 	params.PayloadLength = payloadLength
+	params.roundCount = 0
+	params.UsablePayloadLength = params.CellCoder.ClientCellSize(payloadLength)
 	params.UseSocksProxy = false //deprecated
-	params.LatencyTest = latencyTest
 	params.UseUDP = useUDP
 
 	//prepare the crypto parameters
@@ -84,22 +107,8 @@ func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int
 	params.TrusteePublicKey = make([]abstract.Point, nTrustees)
 	params.sharedSecrets = make([]abstract.Point, nTrustees)
 
-	//sets the cell coder, and the history
-	params.CellCoder = config.Factory()
-	params.UsablePayloadLength = params.CellCoder.ClientCellSize(payloadLength)
-
-	params.MySlot = -1
-	params.currentState = CLIENT_STATE_INITIALIZING
-	params.roundCount = 0
-
 	return params
 }
-
-//Messages to handle :
-//ALL_ALL_PARAMETERS
-//REL_CLI_DOWNSTREAM_DATA
-//REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG
-//REL_CLI_TELL_TRUSTEES_PK
 
 /**
  * This is the "INIT" message that shares all the public parameters.
@@ -111,31 +120,30 @@ func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 		dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " : Received a ALL_ALL_PARAMETERS, but not in state CLIENT_STATE_BEFORE_INIT, ignoring. ")
 		return nil
 	} else if p.clientState.currentState != CLIENT_STATE_BEFORE_INIT && msg.ForceParams {
-		dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
+		dbg.Lvl2("Client " + strconv.Itoa(p.clientState.Id) + " : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
 	} else {
 		dbg.Lvl3("Client : received ALL_ALL_PARAMETERS")
 	}
 
-	if p.role != PRIFI_ROLE_CLIENT {
-		panic("This message wants me to become a client ! I'm not one !")
-	}
-
 	p.clientState = *NewClientState(msg.NextFreeClientId, msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DoLatencyTests, msg.UseUDP, msg.ClientDataOutputEnabled)
 
-	if msg.StartNow {
-		//start prifi protocol if need be !
-
-		//nothing to do, relay tells the trustee's public keys
-	}
-
+	//after receiving this message, we are done with the state CLIENT_STATE_BEFORE_INIT, and are ready for initializing
 	p.clientState.currentState = CLIENT_STATE_INITIALIZING
 
 	dbg.Lvlf5("%+v\n", p.clientState)
-	dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " has been initialized by message. ")
+	dbg.Lvl2("Client " + strconv.Itoa(p.clientState.Id) + " has been initialized by message. ")
 
 	return nil
 }
 
+/**
+ * This is part of PriFi's main loop. This is what happens in one round, for this client.
+ * We receive some downstream data. It should be encrypted, and we should test if this data is for us or not; is so, push it into the SOCKS/VPN chanel.
+ * For now, we do nothing with the downstream data.
+ * Once we received some data from the relay, we need to reply with a DC-net cell (that will get combined with other client's cell to produce some plaintext).
+ * If we're lucky (if this is our slot), we are allowed to embed some message (which will be the output produced by the relay). Either we send something from the
+ * SOCKS/VPN data, or if we're running latency tests, we send a "ping" message to compute the latency. If we have nothing to say, we send 0's.
+ */
 func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_DATA) error {
 
 	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
@@ -144,7 +152,7 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl5("Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA")
+		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA")
 	}
 
 	/*
@@ -186,6 +194,9 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 		return nil
 	}
 
+	//one round just passed
+	p.clientState.roundCount++
+
 	/*
 	 * PRODUCE THE UPSTREAM DATA
 	 */
@@ -225,24 +236,28 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 
 	//send the data to the relay
 	toSend := &CLI_REL_UPSTREAM_DATA{p.clientState.roundCount, upstreamCell}
-	err := p.messageSender.SendToRelay(toSend) //TODO : this should be the root ! make sure of it
+	err := p.messageSender.SendToRelay(toSend)
 	if err != nil {
-		e := "Could not send CLI_REL_UPSTREAM_DATA, error is " + err.Error()
+		e := "Could not send CLI_REL_UPSTREAM_DATA, for round " + strconv.Itoa(int(p.clientState.roundCount)) + ", error is " + err.Error()
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
 		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " : sent CLI_REL_UPSTREAM_DATA for round " + strconv.Itoa(int(p.clientState.roundCount)))
 	}
 
-	//one round just passed
-	p.clientState.roundCount++
-
 	return nil
 }
 
+/**
+ * This happens when we connect.
+ * The relay sends us a pack of public key which correspond to the set of pre-agreed trustees.
+ * Of course, there should be check on those public keys (each client need to trust one), but for now we assume those public keys belong indeed to the trustees,
+ * and that clients have agreed on the set of trustees.
+ * Once we receive this message, we need to reply with our Public Key (Used to derive DC-net secrets), and our Ephemeral Public Key (used for the Shuffle protocol)
+ */
 func (p *PriFiProtocol) Received_REL_CLI_TELL_TRUSTEES_PK(msg REL_CLI_TELL_TRUSTEES_PK) error {
 
-	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
+	//this can only happens in the state CLIENT_STATE_INITIALIZING
 	if p.clientState.currentState != CLIENT_STATE_INITIALIZING {
 		e := "Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_TELL_TRUSTEES_PK, but not in state CLIENT_STATE_INITIALIZING, in state " + strconv.Itoa(int(p.clientState.currentState))
 		dbg.Error(e)
@@ -274,7 +289,7 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_TRUSTEES_PK(msg REL_CLI_TELL_TRUST
 
 	//send the keys to the relay
 	toSend := &CLI_REL_TELL_PK_AND_EPH_PK{p.clientState.PublicKey, p.clientState.EphemeralPublicKey}
-	err := p.messageSender.SendToRelay(toSend) //TODO : this should be the root ! make sure of it
+	err := p.messageSender.SendToRelay(toSend)
 	if err != nil {
 		e := "Could not send CLI_REL_TELL_PK_AND_EPH_PK, error is " + err.Error()
 		dbg.Error(e)
@@ -289,6 +304,15 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_TRUSTEES_PK(msg REL_CLI_TELL_TRUST
 	return nil
 }
 
+/**
+ * This happens after the Shuffle protocol has been done by the Trustees and the Relay.
+ * The relay is sending us the result, so we should check that the protocol went well :
+ * 1) each trustee announced must have signed the shuffle
+ * 2) we need to locate which is our slot <-- THIS IS BUGGY NOW
+ * When this is done, we are ready to communicate !
+ * As the client should send the first data, we do so; to keep this function simple, the first data is blank (the message has no content / this is a wasted message). The
+ * actual embedding of data happens only in the "round function", that is Received_REL_CLI_DOWNSTREAM_DATA()
+ */
 func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG) error {
 
 	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
@@ -356,6 +380,20 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_C
 	p.clientState.currentState = CLIENT_STATE_READY
 	dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " is ready to communicate.")
 
+	//produce a blank cell (we could embed data, but let's keep the code simple, one wasted message is not much)
+	upstreamCell := p.clientState.CellCoder.ClientEncode(make([]byte, 0), p.clientState.PayloadLength, p.clientState.MessageHistory)
+
+	//send the data to the relay
+	toSend := &CLI_REL_UPSTREAM_DATA{p.clientState.roundCount, upstreamCell}
+	err := p.messageSender.SendToRelay(toSend)
+	if err != nil {
+		e := "Could not send CLI_REL_UPSTREAM_DATA, for round " + strconv.Itoa(int(p.clientState.roundCount)) + ", error is " + err.Error()
+		dbg.Error(e)
+		return errors.New(e)
+	} else {
+		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " : sent CLI_REL_UPSTREAM_DATA for round " + strconv.Itoa(int(p.clientState.roundCount)))
+	}
+
 	return nil
 }
 
@@ -365,7 +403,7 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_C
 func (clientState *ClientState) generateEphemeralKeys() {
 
 	//prepare the crypto parameters
-	rand := config.CryptoSuite.Cipher([]byte(clientState.Name))
+	rand := config.CryptoSuite.Cipher([]byte(clientState.Name + "ephemeral"))
 	base := config.CryptoSuite.Point().Base()
 
 	//generate ephemeral keys
