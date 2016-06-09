@@ -57,7 +57,7 @@ func (dc *defaultContext) Entity() *network.Entity {
 }
 
 // GetID returns the service-id
-func (dc *defaultContext) GetID() ServiceID {
+func (dc *defaultContext) ServiceID() ServiceID {
 	return dc.servID
 }
 
