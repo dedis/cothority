@@ -10,7 +10,7 @@ import (
 )
 
 func TestServiceMedco(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
@@ -33,8 +33,8 @@ func TestServiceMedco(t *testing.T) {
 		dataHolder[i] = medco_service.NewMedcoClient(el.List[0])
 		grp := make([]int64, 2)
 		aggr := make([]int64, 4)
-		grp[i%2] = 2
-		aggr[i] = 1
+		grp[i%2] = int64(i)
+		aggr[i] = 3
 		dataHolder[i].SendSurveyResultsData(grp, aggr, el.Aggregate)
 	}
 	grp,aggr ,err := client.GetSurveyResults()
@@ -78,7 +78,7 @@ type testMsg2 struct{
 
 
 func TestMarshalMedco(t *testing.T){
-	//t.Skip()
+	t.Skip()
 	dbg.TestOutput(testing.Verbose(), 5)
 	network.RegisterMessageType(testMsg{})
 	cv := CipherVector{CipherText{}, CipherText{}}

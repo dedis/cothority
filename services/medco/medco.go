@@ -116,7 +116,9 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 		pi.(*medco.ProbabilisticSwitchingProtocol).SurveyPHKey = &mcs.surveyPHKey
 	case medco.PRIVATE_AGGREGATE_PROTOCOL_NAME:
 		pi, err = medco.NewPrivateAggregate(tn)
-		pi.(*medco.PrivateAggregateProtocol).GroupedData = mcs.store.PollLocallyAggregatedResponses()
+		groups, groupedData := mcs.store.PollLocallyAggregatedResponses()
+		pi.(*medco.PrivateAggregateProtocol).GroupedData = groupedData
+		pi.(*medco.PrivateAggregateProtocol).Groups = groups
 	case medco.KEY_SWITCHING_PROTOCOL_NAME:
 		pi, err = medco.NewKeySwitchingProtocol(tn)
 	default:
@@ -197,7 +199,7 @@ func (mcs *MedcoService) flushGroupedData() error {
 
 	dbg.Lvl1("AFTER AGGR", cothorityAggregatedData)
 
-	mcs.store.PushCothorityAggregatedGroups(cothorityAggregatedData)
+	mcs.store.PushCothorityAggregatedGroups(cothorityAggregatedData.Groups, cothorityAggregatedData.GroupedData)
 
 	return nil
 }

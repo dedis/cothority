@@ -5,7 +5,6 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	"fmt"
 	."github.com/dedis/cothority/services/medco/structs"
 	
 )
