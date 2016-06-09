@@ -22,7 +22,7 @@ type Context interface {
 	// Entity returns the entity the service uses
 	Entity() *network.Entity
 	// GetID returns the service-id
-	ServiceID() ServiceID
+	GetID() ServiceID
 }
 
 // defaultContext is the implementation of the Context interface. It is
@@ -57,7 +57,7 @@ func (dc *defaultContext) Entity() *network.Entity {
 }
 
 // GetID returns the service-id
-func (dc *defaultContext) ServiceID() ServiceID {
+func (dc *defaultContext) GetID() ServiceID {
 	return dc.servID
 }
 
