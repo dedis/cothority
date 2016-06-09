@@ -5,7 +5,9 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
+	"fmt"
 	."github.com/dedis/cothority/services/medco/structs"
+	
 )
 
 const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"
@@ -69,10 +71,11 @@ func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) 
 
 // Starts the protocol
 func (p *PrivateAggregateProtocol) Start() error {
+	fmt.Println("start ", p.DataReference)
 	if p.DataReference == nil {
 		return errors.New("No data reference provided for aggregation.")
 	}
-
+	
 	dbg.Lvl1(p.Entity(),"started a Private Aggregate Protocol")
 
 
@@ -89,6 +92,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 	}
 
 	// 2. Ascending aggregation phase
+	fmt.Println("dispatch dat ref ", p.DataReference)
 	aggregatedContribution := p.ascendingAggregationPhase(p.DataReference)
 	dbg.Lvl1(p.Entity(), "completed aggregation phase.")
 
