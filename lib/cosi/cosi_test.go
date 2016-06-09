@@ -172,6 +172,31 @@ func TestVerifyWithException(t *testing.T) {
 		root.challenge, response, ex))
 }
 
+func TestVerifyWithException2(t *testing.T) {
+	msg := []byte("Exceptions")
+	p1 := config.NewKeyPair(network.Suite)
+	p2 := config.NewKeyPair(network.Suite)
+	agg := network.Suite.Point().Add(p1.Public, p2.Public)
+	c1 := NewCosi(network.Suite, p1.Secret)
+	c2 := NewCosi(network.Suite, p2.Secret)
+	c2.Announce(c1.CreateAnnouncement())
+	c1.Commit([]*Commitment{c2.CreateCommitment()})
+	ch, err := c1.CreateChallenge(msg)
+	dbg.ErrFatal(err)
+	c2.Challenge(ch)
+	re, err := c2.CreateResponse()
+	dbg.ErrFatal(err)
+	_, err = c1.Response(false, []*Response{re})
+	dbg.ErrFatal(err)
+
+	if VerifySignature(network.Suite, msg, agg, c1.challenge, c1.aggregateResponse) == nil {
+		t.Fatal("This shouldn't be verifiable")
+	}
+	ex := []Exception{{p1.Public, c1.commitment}}
+	dbg.ErrFatal(VerifySignatureWithException(testSuite, agg, msg,
+		c1.challenge, c1.aggregateResponse, ex))
+}
+
 func genKeyPair(nb int) []*config.KeyPair {
 	var kps []*config.KeyPair
 	for i := 0; i < nb; i++ {
