@@ -17,10 +17,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-//this is the actual "PriFi" (DC-net) protocol/library
-//defined in cothority/lib/prifi/prifi.go
-var prifiProtocol *prifi_lib.PriFiProtocol
-
 //the "PriFi-Wrapper-Protocol start". It calls the PriFi library with the correct parameters
 func (p *PriFiSDAWrapper) Start() error {
 
@@ -82,6 +78,9 @@ type PriFiSDAWrapper struct {
 	configSet   bool
 	config      prifi_lib.ALL_ALL_PARAMETERS
 	DoneChannel chan bool
+
+	//this is the actual "PriFi" (DC-net) protocol/library, defined in cothority/lib/prifi/prifi.go
+	prifiProtocol *prifi_lib.PriFiProtocol
 }
 
 func (p *PriFiSDAWrapper) SetConfig(config prifi_lib.ALL_ALL_PARAMETERS) {
@@ -126,6 +125,8 @@ func NewPriFiSDAWrapperProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, 
 	doLatencyTests := tomlConfig.DoLatencyTests
 	sendDataOutOfDCNet := false
 
+	var prifiProtocol *prifi_lib.PriFiProtocol
+
 	//first of all, instantiate our prifi library with the correct role, given our position in the tree
 	if n.Index() == 0 {
 		dbg.Print(n.Name(), " starting as a PriFi relay")
@@ -147,6 +148,7 @@ func NewPriFiSDAWrapperProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, 
 	prifiSDAWrapperHandlers := &PriFiSDAWrapper{
 		TreeNodeInstance: n,
 		DoneChannel:      make(chan bool),
+		prifiProtocol:    prifiProtocol,
 	}
 
 	//register handlers
