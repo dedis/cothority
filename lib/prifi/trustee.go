@@ -3,7 +3,7 @@ package prifi
 /**
  * PriFi Trustee
  * ************
- * This regroups the behavior of the Trustee client.
+ * This regroups the behavior of the PriFi trustee.
  * Needs to be instantiated via the PriFiProtocol in prifi.go
  * Then, this file simple handle the answer to the different message kind :
  *
@@ -83,29 +83,28 @@ func NewTrusteeState(trusteeId int, nClients int, nTrustees int, payloadLength i
 
 	params.Id = trusteeId
 	params.Name = "Trustee-" + strconv.Itoa(trusteeId)
-	params.TrusteeId = trusteeId
+	params.CellCoder = config.Factory()
 	params.nClients = nClients
+	params.neffShuffleToVerify = NeffShuffleResult{}
 	params.nTrustees = nTrustees
 	params.PayloadLength = payloadLength
+	params.sendingRate = make(chan int16)
+	params.TrusteeId = trusteeId
 
 	//prepare the crypto parameters
 	rand := config.CryptoSuite.Cipher([]byte(params.Name))
-	//base := config.CryptoSuite.Point().Base()
+	base := config.CryptoSuite.Point().Base()
 
 	//generate own parameters
-	params.privateKey = config.CryptoSuite.Secret().Pick(rand)                //NO, this should be kept by SDA
-	params.PublicKey = config.CryptoSuite.Point().Mul(nil, params.privateKey) //NO, this should be kept by SDA
+	params.privateKey = config.CryptoSuite.Secret().Pick(rand)
+	params.PublicKey = config.CryptoSuite.Point().Mul(base, params.privateKey)
 
 	//placeholders for pubkeys and secrets
 	params.ClientPublicKeys = make([]abstract.Point, nClients)
 	params.sharedSecrets = make([]abstract.Point, nClients)
 
-	//sets the cell coder, and the history
-	params.neffShuffleToVerify = NeffShuffleResult{}
-	params.CellCoder = config.Factory()
-
+	//sets the new state
 	params.currentState = TRUSTEE_STATE_INITIALIZING
-	params.sendingRate = make(chan int16)
 
 	return params
 }

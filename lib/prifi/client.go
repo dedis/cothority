@@ -80,7 +80,6 @@ func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int
 	params.Id = clientId
 	params.Name = "Client-" + strconv.Itoa(clientId)
 	params.CellCoder = config.Factory()
-	params.currentState = CLIENT_STATE_INITIALIZING
 	params.DataForDCNet = make(chan []byte)
 	params.DataFromDCNet = make(chan []byte)
 	params.DataOutputEnabled = dataOutputEnabled
@@ -106,6 +105,9 @@ func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int
 	//placeholders for pubkeys and secrets
 	params.TrusteePublicKey = make([]abstract.Point, nTrustees)
 	params.sharedSecrets = make([]abstract.Point, nTrustees)
+
+	//sets the new state
+	params.currentState = CLIENT_STATE_INITIALIZING
 
 	return params
 }
