@@ -86,7 +86,7 @@ func (dcnet *DCNetRound) hasAllCiphers(p *PriFiProtocol) bool {
 }
 
 //holds the ciphertexts received in advance from the trustees
-type BufferedTrusteeCipher struct {
+type BufferedCipher struct {
 	RoundId int32
 	Data    map[int][]byte
 }
@@ -98,7 +98,8 @@ type RelayState struct {
 	//privateKey			abstract.Secret
 	//trusteesHosts			[]string
 
-	bufferedTrusteeCiphers   map[int32]BufferedTrusteeCipher
+	bufferedTrusteeCiphers   map[int32]BufferedCipher
+	bufferedClientCiphers    map[int32]BufferedCipher
 	CellCoder                dcnet.CellCoder
 	clients                  []NodeRepresentation
 	currentDCNetRound        DCNetRound
@@ -238,7 +239,7 @@ func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA(msg CLI_REL_UPSTREAM_DATA
 	if p.relayState.currentState != RELAY_STATE_COMMUNICATING {
 		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
-		return errors.New(e)
+		//return errors.New(e)
 	} else {
 		dbg.Lvl3("Relay : received CLI_REL_UPSTREAM_DATA")
 	}
@@ -249,7 +250,19 @@ func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA(msg CLI_REL_UPSTREAM_DATA
 	if p.relayState.currentDCNetRound.currentRound != msg.RoundId {
 		e := "Relay : Client sent DC-net cipher for round , " + strconv.Itoa(int(msg.RoundId)) + " but current round is " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound))
 		dbg.Error(e)
-		return errors.New(e)
+
+		//else, we need to buffer this message somewhere
+		if _, ok := p.relayState.bufferedClientCiphers[msg.RoundId]; ok {
+			//the roundId already exists, simply add data
+			p.relayState.bufferedClientCiphers[msg.RoundId].Data[msg.ClientId] = msg.Data
+		} else {
+			//else, create the key in the map, and store the data
+			newKey := BufferedCipher{msg.RoundId, make(map[int][]byte)}
+			newKey.Data[msg.ClientId] = msg.Data
+			p.relayState.bufferedClientCiphers[msg.RoundId] = newKey
+		}
+
+		//return errors.New(e)
 
 	} else {
 		//else, if this is the message we need for this round
@@ -287,7 +300,7 @@ func (p *PriFiProtocol) Received_TRU_REL_DC_CIPHER(msg TRU_REL_DC_CIPHER) error 
 	if p.relayState.currentState != RELAY_STATE_COMMUNICATING {
 		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
-		return errors.New(e)
+		//return errors.New(e)
 	} else {
 		dbg.Lvl3("Relay : received CLI_REL_UPSTREAM_DATA")
 	}
@@ -320,7 +333,7 @@ func (p *PriFiProtocol) Received_TRU_REL_DC_CIPHER(msg TRU_REL_DC_CIPHER) error 
 			p.relayState.bufferedTrusteeCiphers[msg.RoundId].Data[msg.TrusteeId] = msg.Data
 		} else {
 			//else, create the key in the map, and store the data
-			newKey := BufferedTrusteeCipher{msg.RoundId, make(map[int][]byte)}
+			newKey := BufferedCipher{msg.RoundId, make(map[int][]byte)}
 			newKey.Data[msg.TrusteeId] = msg.Data
 			p.relayState.bufferedTrusteeCiphers[msg.RoundId] = newKey
 		}
@@ -430,6 +443,15 @@ func (p *PriFiProtocol) sendDownstreamData() error {
 			p.relayState.currentDCNetRound.trusteeCipherCount++
 		}
 		delete(p.relayState.bufferedTrusteeCiphers, nextRound)
+	}
+	if _, ok := p.relayState.bufferedClientCiphers[nextRound]; ok {
+		for clientId, data := range p.relayState.bufferedClientCiphers[nextRound].Data {
+			//start decoding using this data
+			dbg.Lvl3("Relay : using pre-cached DC-net cipher from client " + strconv.Itoa(clientId) + " for round " + strconv.Itoa(int(nextRound)))
+			p.relayState.CellCoder.DecodeTrustee(data)
+			p.relayState.currentDCNetRound.clientCipherCount++
+		}
+		delete(p.relayState.bufferedClientCiphers, nextRound)
 	}
 
 	return nil
@@ -603,7 +625,8 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 		proof_s := p.relayState.currentShuffleTranscript.proof_s
 
 		//when receiving the next message (and after processing it), trustees will start sending data. Prepare to buffer it
-		p.relayState.bufferedTrusteeCiphers = make(map[int32]BufferedTrusteeCipher)
+		p.relayState.bufferedTrusteeCiphers = make(map[int32]BufferedCipher)
+		p.relayState.bufferedClientCiphers = make(map[int32]BufferedCipher)
 
 		//broadcast to all trustees
 		for j := 0; j < p.relayState.nTrustees; j++ {
@@ -666,6 +689,14 @@ func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) er
 		ephPks := p.relayState.currentShuffleTranscript.ephPubKeys_s[lastPermutationIndex]
 		signatures := p.relayState.currentShuffleTranscript.signatures_s
 
+		//prepare to collect the ciphers
+		p.relayState.currentDCNetRound = DCNetRound{0, 0, 0}
+		p.relayState.CellCoder.DecodeStart(p.relayState.UpstreamCellSize, p.relayState.MessageHistory)
+
+		//changing state
+		dbg.Lvl2("Relay : ready to communicate.")
+		p.relayState.currentState = RELAY_STATE_COMMUNICATING
+
 		//broadcast to all clients
 		for i := 0; i < p.relayState.nClients; i++ {
 			//send to the i-th client
@@ -679,14 +710,6 @@ func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) er
 				dbg.Lvl3("Relay : sent REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG to " + strconv.Itoa(i+1) + "-th client")
 			}
 		}
-
-		//prepare to collect the ciphers
-		p.relayState.currentDCNetRound = DCNetRound{0, 0, 0}
-		p.relayState.CellCoder.DecodeStart(p.relayState.UpstreamCellSize, p.relayState.MessageHistory)
-
-		//changing state
-		dbg.Lvl2("Relay : ready to communicate.")
-		p.relayState.currentState = RELAY_STATE_COMMUNICATING
 	}
 
 	return nil

@@ -53,8 +53,9 @@ type CLI_REL_TELL_PK_AND_EPH_PK struct {
 }
 
 type CLI_REL_UPSTREAM_DATA struct {
-	RoundId int32
-	Data    []byte
+	ClientId int
+	RoundId  int32
+	Data     []byte
 }
 
 type REL_CLI_DOWNSTREAM_DATA struct {

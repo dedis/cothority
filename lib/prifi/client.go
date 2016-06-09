@@ -237,7 +237,7 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 	upstreamCell := p.clientState.CellCoder.ClientEncode(upstreamCellContent, p.clientState.PayloadLength, p.clientState.MessageHistory)
 
 	//send the data to the relay
-	toSend := &CLI_REL_UPSTREAM_DATA{p.clientState.roundCount, upstreamCell}
+	toSend := &CLI_REL_UPSTREAM_DATA{p.clientState.Id, p.clientState.roundCount, upstreamCell}
 	err := p.messageSender.SendToRelay(toSend)
 	if err != nil {
 		e := "Could not send CLI_REL_UPSTREAM_DATA, for round " + strconv.Itoa(int(p.clientState.roundCount)) + ", error is " + err.Error()
@@ -386,7 +386,7 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_C
 	upstreamCell := p.clientState.CellCoder.ClientEncode(make([]byte, 0), p.clientState.PayloadLength, p.clientState.MessageHistory)
 
 	//send the data to the relay
-	toSend := &CLI_REL_UPSTREAM_DATA{p.clientState.roundCount, upstreamCell}
+	toSend := &CLI_REL_UPSTREAM_DATA{p.clientState.Id, p.clientState.roundCount, upstreamCell}
 	err := p.messageSender.SendToRelay(toSend)
 	if err != nil {
 		e := "Could not send CLI_REL_UPSTREAM_DATA, for round " + strconv.Itoa(int(p.clientState.roundCount)) + ", error is " + err.Error()

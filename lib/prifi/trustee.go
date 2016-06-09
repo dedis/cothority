@@ -313,9 +313,7 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 		for i := 0; i < p.trusteeState.nTrustees; i++ {
 			b[i] = make([]abstract.Point, p.trusteeState.nClients)
 			for j := 0; j < p.trusteeState.nClients; j++ {
-				dbg.Print(i, "-", j)
 				v := a[i*p.trusteeState.nTrustees+j][0]
-				dbg.Print(v)
 				b[i][j] = v
 			}
 		}
