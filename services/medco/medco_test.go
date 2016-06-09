@@ -10,6 +10,7 @@ import (
 )
 
 func TestServiceMedco(t *testing.T) {
+	t.Skip()
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
@@ -77,7 +78,7 @@ type testMsg2 struct{
 
 
 func TestMarshalMedco(t *testing.T){
-	t.Skip()
+	//t.Skip()
 	dbg.TestOutput(testing.Verbose(), 5)
 	network.RegisterMessageType(testMsg{})
 	cv := CipherVector{CipherText{}, CipherText{}}

@@ -19,12 +19,18 @@ type DataReferenceStruct struct {
 }
 
 type ChildAggregatedDataMessage struct {
-	ChildData []KeyValGACV
+	ChildData []KeyValGKCV
+	ChildGroups []KeyValGKGA
 }
 
 type ChildAggregatedDataStruct struct {
 	*sda.TreeNode
 	ChildAggregatedDataMessage
+}
+
+type CothorityAggregatedData struct {
+	Groups		     map[GroupingKey]GroupingAttributes
+	GroupedData          map[GroupingKey]CipherVector
 }
 
 func init() {
@@ -40,21 +46,22 @@ type PrivateAggregateProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel      chan map[GroupingAttributes]CipherVector
+	FeedbackChannel      chan CothorityAggregatedData
 
 	// Protocol communication channels
 	DataReferenceChannel chan DataReferenceStruct
-	ChildDataChannel    chan []ChildAggregatedDataStruct
+	ChildDataChannel     chan []ChildAggregatedDataStruct
 
 	// Protocol state data
-	DataReference *map[GroupingAttributes]CipherVector
+	GroupedData          *map[GroupingKey]CipherVector
+	Groups		     *map[GroupingKey]GroupingAttributes
 }
 
 // NewExampleChannels initialises the structure for use in one round
 func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	privateAggregateProtocol := &PrivateAggregateProtocol{
 		TreeNodeInstance:       n,
-		FeedbackChannel: make(chan map[GroupingAttributes]CipherVector),
+		FeedbackChannel: make(chan CothorityAggregatedData),
 	}
 
 	if err := privateAggregateProtocol.RegisterChannel(&privateAggregateProtocol.DataReferenceChannel); err != nil {
@@ -69,7 +76,7 @@ func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) 
 
 // Starts the protocol
 func (p *PrivateAggregateProtocol) Start() error {
-	if p.DataReference == nil {
+	if p.GroupedData == nil {
 		return errors.New("No data reference provided for aggregation.")
 	}
 
@@ -90,13 +97,13 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 	}
 
 	// 2. Ascending aggregation phase
-	aggregatedContribution := p.ascendingAggregationPhase(p.DataReference)
+	groups, aggregatedData := p.ascendingAggregationPhase(p.Groups, p.GroupedData)
 	dbg.Lvl1(p.Entity(), "completed aggregation phase.")
 
 
 	// 3. Result reporting
 	if p.IsRoot() {
-		p.FeedbackChannel <- *aggregatedContribution
+		p.FeedbackChannel <- CothorityAggregatedData{*groups, *aggregatedData}
 	}
 
 	return nil
@@ -110,15 +117,20 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	}
 }
 
-func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *map[GroupingAttributes]CipherVector) *map[GroupingAttributes]CipherVector {
+func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localGroups *map[GroupingKey]GroupingAttributes,
+								localContribution *map[GroupingKey]CipherVector)(
+*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
+
 	if localContribution == nil {
-		emptyMap := make(map[GroupingAttributes]CipherVector,0)
+		emptyMap := make(map[GroupingKey]CipherVector,0)
 		localContribution = &emptyMap
 	}
 	if !p.IsLeaf() {
 		for _,childrenContribution := range <- p.ChildDataChannel {
-			childDataMap := SliceToMapGACV(childrenContribution.ChildData)
+			childDataMap := SliceToMapGKCV(childrenContribution.ChildData)
+			childGroupMap := SliceToMapGKGA(childrenContribution.ChildGroups)
 			for group := range childDataMap {
+				(*localGroups)[group] = childGroupMap[group]
 				if aggr, ok := (*localContribution)[group]; ok {
 					localAggr := (*localContribution)[group]
 					localAggr.Add(localAggr, aggr)
@@ -129,7 +141,7 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localContribution *
 		}
 	}
 	if !p.IsRoot() {
-		p.SendToParent(&ChildAggregatedDataMessage{MapToSliceGACV(*localContribution)})
+		p.SendToParent(&ChildAggregatedDataMessage{MapToSliceGKCV(*localContribution), MapToSliceGKGA(*localGroups)})
 	}
-	return localContribution
+	return  localGroups, localContribution
 }

@@ -23,21 +23,42 @@ func SliceToMapCV(s []KeyValCV) map[TempID]CipherVector {
 	return m
 }
 
-type KeyValGACV struct {
-	Key GroupingAttributes
+type KeyValGKCV struct {
+	Key GroupingKey
 	Val CipherVector
 }
 
-func MapToSliceGACV(m map[GroupingAttributes]CipherVector) []KeyValGACV {
-	s := make([]KeyValGACV, 0, len(m))
+func MapToSliceGKCV(m map[GroupingKey]CipherVector) []KeyValGKCV {
+	s := make([]KeyValGKCV, 0, len(m))
 	for k, v := range m {
-		s = append(s, KeyValGACV{Key: k, Val: v})
+		s = append(s, KeyValGKCV{Key: k, Val: v})
 	}
 	return s
 }
 
-func SliceToMapGACV(s []KeyValGACV) map[GroupingAttributes]CipherVector {
-	m := make(map[GroupingAttributes]CipherVector, len(s))
+func SliceToMapGKCV(s []KeyValGKCV) map[GroupingKey]CipherVector {
+	m := make(map[GroupingKey]CipherVector, len(s))
+	for _,kv := range s {
+		m[kv.Key] = kv.Val
+	}
+	return m
+}
+
+type KeyValGKGA struct {
+	Key GroupingKey
+	Val GroupingAttributes
+}
+
+func MapToSliceGKGA(m map[GroupingKey]GroupingAttributes) []KeyValGKGA {
+	s := make([]KeyValGKGA, 0, len(m))
+	for k, v := range m {
+		s = append(s, KeyValGKGA{Key: k, Val: v})
+	}
+	return s
+}
+
+func SliceToMapGKGA(s []KeyValGKGA) map[GroupingKey]GroupingAttributes {
+	m := make(map[GroupingKey]GroupingAttributes, len(s))
 	for _,kv := range s {
 		m[kv.Key] = kv.Val
 	}

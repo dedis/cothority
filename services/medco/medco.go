@@ -116,7 +116,7 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 		pi.(*medco.ProbabilisticSwitchingProtocol).SurveyPHKey = &mcs.surveyPHKey
 	case medco.PRIVATE_AGGREGATE_PROTOCOL_NAME:
 		pi, err = medco.NewPrivateAggregate(tn)
-		pi.(*medco.PrivateAggregateProtocol).DataReference = mcs.store.PollLocallyAggregatedResponses()
+		pi.(*medco.PrivateAggregateProtocol).GroupedData = mcs.store.PollLocallyAggregatedResponses()
 	case medco.KEY_SWITCHING_PROTOCOL_NAME:
 		pi, err = medco.NewKeySwitchingProtocol(tn)
 	default:
@@ -176,10 +176,10 @@ func (mcs *MedcoService) flushCollectedData() error {
 // Performs the per-group aggregation on the currently grouped data
 func (mcs *MedcoService) flushGroupedData() error {
 
-	var groupedData *map[GroupingAttributes]CipherVector
+	var groupedData *map[GroupingKey]CipherVector
+	var groups *map[GroupingKey]GroupingAttributes
 
-
-	groupedData = mcs.store.PollLocallyAggregatedResponses()
+	groups, groupedData = mcs.store.PollLocallyAggregatedResponses()
 	dbg.Lvl1("BEFORE AGGR", *groupedData)
 
 	treeNodeInst := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root, medco.PRIVATE_AGGREGATE_PROTOCOL_NAME)
@@ -189,7 +189,8 @@ func (mcs *MedcoService) flushGroupedData() error {
 	}
 	mcs.RegisterProtocolInstance(pi)
 	aggregateProtocol := pi.(*medco.PrivateAggregateProtocol)
-	aggregateProtocol.DataReference = groupedData
+	aggregateProtocol.GroupedData = groupedData
+	aggregateProtocol.Groups = groups
 	go aggregateProtocol.Dispatch()
 	go aggregateProtocol.Start()
 	cothorityAggregatedData := <- aggregateProtocol.FeedbackChannel
