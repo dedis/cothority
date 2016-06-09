@@ -298,6 +298,22 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 		dbg.Lvl3("Trustee " + strconv.Itoa(p.trusteeState.Id) + " : Received_REL_TRU_TELL_TRANSCRIPT")
 	}
 
+	// PROTOBUF FLATTENS MY 2-DIMENSIONAL ARRAY. THIS IS A PATCH
+	a := msg.EphPks
+	b := make([][]abstract.Point, p.trusteeState.nTrustees)
+	if len(a) > p.trusteeState.nTrustees {
+		for i := 0; i < p.trusteeState.nTrustees; i++ {
+			b[i] = make([]abstract.Point, p.trusteeState.nClients)
+			for j := 0; j < p.trusteeState.nClients; j++ {
+				dbg.Print(i, "-", j)
+				v := a[i*p.trusteeState.nTrustees+j][0]
+				dbg.Print(v)
+				b[i][j] = v
+			}
+		}
+		msg.EphPks = b
+	}
+	// END OF PATCH
 	//begin parsing the message
 	rand := config.CryptoSuite.Cipher([]byte(p.trusteeState.Name)) //TODO: this should be random
 	G_s := msg.G_s
@@ -323,7 +339,7 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 				verify = false
 			}
 		}
-		verify = true
+		verify = true // LB: This shuffle needs to be fixed
 
 		if !verify {
 			if err != nil {
@@ -337,7 +353,6 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 			}
 		}
 	}
-
 	//we verify that our shuffle was included
 	ownPermutationFound := false
 	for j := 0; j < p.trusteeState.nTrustees; j++ {
@@ -347,7 +362,6 @@ func (p *PriFiProtocol) Received_REL_TRU_TELL_TRANSCRIPT(msg REL_TRU_TELL_TRANSC
 			dbg.Lvl3("Trustee " + strconv.Itoa(p.trusteeState.Id) + "; Find in transcript : Found indice " + strconv.Itoa(j) + " that seems to match, verifing all the keys...")
 
 			allKeyEqual := true
-
 			for k := 0; k < p.trusteeState.nClients; k++ {
 				if !p.trusteeState.neffShuffleToVerify.pks[k].Equal(ephPublicKeys_s[j][k]) {
 					dbg.Lvl1("Trustee " + strconv.Itoa(p.trusteeState.Id) + "; Transcript invalid for trustee " + strconv.Itoa(j) + ". Aborting.")
