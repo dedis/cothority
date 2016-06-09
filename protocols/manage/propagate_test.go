@@ -20,6 +20,10 @@ func init() {
 	network.RegisterMessageType(PropagateMsg{})
 }
 
+func TestMain(m *testing.M) {
+	dbg.MainTest(m)
+}
+
 // Tests an n-node system
 func TestPropagate(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {

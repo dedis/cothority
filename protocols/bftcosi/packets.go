@@ -64,9 +64,9 @@ type commitChan struct {
 // It contains the basic challenge plus the message from which the challenge has
 // been generated.
 type ChallengePrepare struct {
-	TYPE RoundType
 	*cosi.Challenge
-	Msg []byte
+	Msg  []byte
+	Data []byte
 }
 
 // ChallengeCommit  is the challenge used by BftCoSi during the "commit"
@@ -78,7 +78,6 @@ type ChallengePrepare struct {
 // signature and to see how many peers did not sign. It's not spoofable because
 // otherwise the signature verification will be wrong.
 type ChallengeCommit struct {
-	TYPE RoundType
 	*cosi.Challenge
 	// Signature is the basic signature Challenge / response
 	Signature *cosi.Signature
