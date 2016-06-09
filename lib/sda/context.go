@@ -22,7 +22,7 @@ type Context interface {
 	// Entity returns the entity the service uses
 	Entity() *network.Entity
 	// GetID returns the service-id
-	GetID() ServiceID
+	ServiceID() ServiceID
 }
 
 // defaultContext is the implementation of the Context interface. It is
