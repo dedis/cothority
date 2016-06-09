@@ -28,10 +28,6 @@ const (
 	CLIENT_STATE_READY
 )
 
-//State information to hold :
-
-var clientState ClientState
-
 type ClientState struct {
 	CellCoder           dcnet.CellCoder
 	ephemeralPrivateKey abstract.Secret
@@ -112,16 +108,20 @@ func NewClientState(clientId int, nTrustees int, nClients int, payloadLength int
 func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
-	if clientState.currentState != CLIENT_STATE_BEFORE_INIT && !msg.ForceParams {
-		dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : Received a ALL_ALL_PARAMETERS, but not in state CLIENT_STATE_BEFORE_INIT, ignoring. ")
+	if p.clientState.currentState != CLIENT_STATE_BEFORE_INIT && !msg.ForceParams {
+		dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " : Received a ALL_ALL_PARAMETERS, but not in state CLIENT_STATE_BEFORE_INIT, ignoring. ")
 		return nil
-	} else if clientState.currentState != CLIENT_STATE_BEFORE_INIT && msg.ForceParams {
-		dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
+	} else if p.clientState.currentState != CLIENT_STATE_BEFORE_INIT && msg.ForceParams {
+		dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
 	} else {
 		dbg.Lvl3("Client : received ALL_ALL_PARAMETERS")
 	}
 
-	clientState = *NewClientState(msg.NextFreeClientId, msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DoLatencyTests, msg.UseUDP, msg.ClientDataOutputEnabled)
+	if p.role != PRIFI_ROLE_CLIENT {
+		panic("This message wants me to become a client ! I'm not one !")
+	}
+
+	p.clientState = *NewClientState(msg.NextFreeClientId, msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DoLatencyTests, msg.UseUDP, msg.ClientDataOutputEnabled)
 
 	if msg.StartNow {
 		//start prifi protocol if need be !
@@ -129,10 +129,10 @@ func (p *PriFiProtocol) Received_ALL_CLI_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 		//nothing to do, relay tells the trustee's public keys
 	}
 
-	clientState.currentState = CLIENT_STATE_INITIALIZING
+	p.clientState.currentState = CLIENT_STATE_INITIALIZING
 
-	dbg.Lvlf5("%+v\n", clientState)
-	dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " has been initialized by message. ")
+	dbg.Lvlf5("%+v\n", p.clientState)
+	dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " has been initialized by message. ")
 
 	return nil
 }
@@ -165,12 +165,12 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA_dummypingpong(msg REL_C
 func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_DATA) error {
 
 	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
-	if clientState.currentState != CLIENT_STATE_READY {
-		e := "Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA, but not in state CLIENT_STATE_READY, in state " + strconv.Itoa(int(clientState.currentState))
+	if p.clientState.currentState != CLIENT_STATE_READY {
+		e := "Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA, but not in state CLIENT_STATE_READY, in state " + strconv.Itoa(int(p.clientState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl5("Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA")
+		dbg.Lvl5("Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_DOWNSTREAM_DATA")
 	}
 
 	/*
@@ -178,34 +178,34 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 	 */
 
 	//pass the data to the VPN/SOCKS5 proxy, if enabled
-	if clientState.DataOutputEnabled {
-		clientState.DataFromDCNet <- msg.Data //TODO : this should be encrypted, and we need to check if it's our data
+	if p.clientState.DataOutputEnabled {
+		p.clientState.DataFromDCNet <- msg.Data //TODO : this should be encrypted, and we need to check if it's our data
 	}
 
 	//write the next upstream slice. First, determine if we can embed payload this round
-	currentRound := clientState.roundCount % int32(clientState.nClients)
+	currentRound := p.clientState.roundCount % int32(p.clientState.nClients)
 	isMySlot := false
-	if currentRound == int32(clientState.MySlot) {
+	if currentRound == int32(p.clientState.MySlot) {
 		isMySlot = true
 	}
 	//test if it is the answer from our ping (for latency test)
-	if clientState.LatencyTest && len(msg.Data) > 2 {
+	if p.clientState.LatencyTest && len(msg.Data) > 2 {
 		pattern := int(binary.BigEndian.Uint16(msg.Data[0:2]))
 		if pattern == 43690 { //1010101010101010
 			clientId := int(binary.BigEndian.Uint16(msg.Data[2:4]))
-			if clientId == clientState.Id {
+			if clientId == p.clientState.Id {
 				timestamp := int64(binary.BigEndian.Uint64(msg.Data[4:12]))
 				diff := MsTimeStamp() - timestamp
 
-				dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : New latency measured " + strconv.FormatInt(diff, 10))
+				dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " : New latency measured " + strconv.FormatInt(diff, 10))
 			}
 		}
 	}
 	//if the flag "Resync" is on, we cannot write data up, but need to resend the keys instead
 	if msg.FlagResync == true {
 
-		dbg.Lvl1("Client " + strconv.Itoa(clientState.Id) + " : Relay wants to resync, going to state CLIENT_STATE_INITIALIZING ")
-		clientState.currentState = CLIENT_STATE_INITIALIZING
+		dbg.Lvl1("Client " + strconv.Itoa(p.clientState.Id) + " : Relay wants to resync, going to state CLIENT_STATE_INITIALIZING ")
+		p.clientState.currentState = CLIENT_STATE_INITIALIZING
 
 		//TODO : regenerate ephemeral keys ?
 
@@ -223,22 +223,22 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 		select {
 
 		//either select data from the data we have to send, if any
-		case upstreamCellContent = <-clientState.DataForDCNet:
+		case upstreamCellContent = <-p.clientState.DataForDCNet:
 
 		//or, if we have nothing to send, and we are doing Latency tests, embed a pre-crafted message that we will recognize later on
 		default:
-			if clientState.LatencyTest {
+			if p.clientState.LatencyTest {
 
-				if clientState.PayloadLength < 12 {
+				if p.clientState.PayloadLength < 12 {
 					panic("Trying to do a Latency test, but payload is smaller than 10 bytes.")
 				}
 
-				buffer := make([]byte, clientState.PayloadLength)
+				buffer := make([]byte, p.clientState.PayloadLength)
 				pattern := uint16(43690)  //1010101010101010
 				currTime := MsTimeStamp() //timestamp in Ms
 
 				binary.BigEndian.PutUint16(buffer[0:2], pattern)
-				binary.BigEndian.PutUint16(buffer[2:4], uint16(clientState.Id))
+				binary.BigEndian.PutUint16(buffer[2:4], uint16(p.clientState.Id))
 				binary.BigEndian.PutUint64(buffer[4:12], uint64(currTime))
 
 				upstreamCellContent = buffer
@@ -247,21 +247,21 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 	}
 
 	//produce the next upstream cell
-	upstreamCell := clientState.CellCoder.ClientEncode(upstreamCellContent, clientState.PayloadLength, clientState.MessageHistory)
+	upstreamCell := p.clientState.CellCoder.ClientEncode(upstreamCellContent, p.clientState.PayloadLength, p.clientState.MessageHistory)
 
 	//send the data to the relay
-	toSend := &CLI_REL_UPSTREAM_DATA{clientState.roundCount, upstreamCell}
+	toSend := &CLI_REL_UPSTREAM_DATA{p.clientState.roundCount, upstreamCell}
 	err := p.messageSender.SendToRelay(toSend) //TODO : this should be the root ! make sure of it
 	if err != nil {
 		e := "Could not send CLI_REL_UPSTREAM_DATA, error is " + err.Error()
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl3("Client " + strconv.Itoa(trusteeState.Id) + " : sent CLI_REL_UPSTREAM_DATA for round " + strconv.Itoa(int(clientState.roundCount)))
+		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " : sent CLI_REL_UPSTREAM_DATA for round " + strconv.Itoa(int(p.clientState.roundCount)))
 	}
 
 	//one round just passed
-	clientState.roundCount++
+	p.clientState.roundCount++
 
 	return nil
 }
@@ -269,48 +269,48 @@ func (p *PriFiProtocol) Received_REL_CLI_DOWNSTREAM_DATA(msg REL_CLI_DOWNSTREAM_
 func (p *PriFiProtocol) Received_REL_CLI_TELL_TRUSTEES_PK(msg REL_CLI_TELL_TRUSTEES_PK) error {
 
 	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
-	if clientState.currentState != CLIENT_STATE_INITIALIZING {
-		e := "Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_TELL_TRUSTEES_PK, but not in state CLIENT_STATE_INITIALIZING, in state " + strconv.Itoa(int(clientState.currentState))
+	if p.clientState.currentState != CLIENT_STATE_INITIALIZING {
+		e := "Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_TELL_TRUSTEES_PK, but not in state CLIENT_STATE_INITIALIZING, in state " + strconv.Itoa(int(p.clientState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl3("Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_TELL_TRUSTEES_PK")
+		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_TELL_TRUSTEES_PK")
 	}
 
 	//sanity check
 	if len(msg.Pks) < 1 {
-		e := "Client " + strconv.Itoa(clientState.Id) + " : len(msg.Pks) must be >= 1"
+		e := "Client " + strconv.Itoa(p.clientState.Id) + " : len(msg.Pks) must be >= 1"
 		dbg.Error(e)
 		return errors.New(e)
 	}
 
 	//first, collect the public keys from the trustees, and derive the secrets
-	clientState.nTrustees = len(msg.Pks)
+	p.clientState.nTrustees = len(msg.Pks)
 
-	clientState.TrusteePublicKey = make([]abstract.Point, clientState.nTrustees)
-	clientState.sharedSecrets = make([]abstract.Point, clientState.nTrustees)
+	p.clientState.TrusteePublicKey = make([]abstract.Point, p.clientState.nTrustees)
+	p.clientState.sharedSecrets = make([]abstract.Point, p.clientState.nTrustees)
 
 	for i := 0; i < len(msg.Pks); i++ {
-		clientState.TrusteePublicKey[i] = msg.Pks[i]
-		clientState.sharedSecrets[i] = config.CryptoSuite.Point().Mul(msg.Pks[i], clientState.privateKey)
+		p.clientState.TrusteePublicKey[i] = msg.Pks[i]
+		p.clientState.sharedSecrets[i] = config.CryptoSuite.Point().Mul(msg.Pks[i], p.clientState.privateKey)
 	}
 
 	//then, generate our ephemeral keys (used for shuffling)
-	clientState.generateEphemeralKeys()
+	p.clientState.generateEphemeralKeys()
 
 	//send the keys to the relay
-	toSend := &CLI_REL_TELL_PK_AND_EPH_PK{clientState.PublicKey, clientState.EphemeralPublicKey}
+	toSend := &CLI_REL_TELL_PK_AND_EPH_PK{p.clientState.PublicKey, p.clientState.EphemeralPublicKey}
 	err := p.messageSender.SendToRelay(toSend) //TODO : this should be the root ! make sure of it
 	if err != nil {
 		e := "Could not send CLI_REL_TELL_PK_AND_EPH_PK, error is " + err.Error()
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl3("Client " + strconv.Itoa(trusteeState.Id) + " : sent CLI_REL_TELL_PK_AND_EPH_PK")
+		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + " : sent CLI_REL_TELL_PK_AND_EPH_PK")
 	}
 
 	//change state
-	clientState.currentState = CLIENT_STATE_EPH_KEYS_SENT
+	p.clientState.currentState = CLIENT_STATE_EPH_KEYS_SENT
 
 	return nil
 }
@@ -318,12 +318,12 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_TRUSTEES_PK(msg REL_CLI_TELL_TRUST
 func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG) error {
 
 	//this can only happens in the state TRUSTEE_STATE_SHUFFLE_DONE
-	if clientState.currentState != CLIENT_STATE_EPH_KEYS_SENT {
-		e := "Client " + strconv.Itoa(clientState.Id) + " : Received a REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG, but not in state CLIENT_STATE_EPH_KEYS_SENT, in state " + strconv.Itoa(int(clientState.currentState))
+	if p.clientState.currentState != CLIENT_STATE_EPH_KEYS_SENT {
+		e := "Client " + strconv.Itoa(p.clientState.Id) + " : Received a REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG, but not in state CLIENT_STATE_EPH_KEYS_SENT, in state " + strconv.Itoa(int(p.clientState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl3("Trustee " + strconv.Itoa(clientState.Id) + " : REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG")
+		dbg.Lvl3("Trustee " + strconv.Itoa(p.clientState.Id) + " : REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG")
 	}
 
 	//verify the signature
@@ -339,20 +339,20 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_C
 		M = append(M, pkBytes...)
 	}
 
-	for j := 0; j < clientState.nTrustees; j++ {
-		err := crypto.SchnorrVerify(config.CryptoSuite, M, clientState.TrusteePublicKey[j], signatures[j])
+	for j := 0; j < p.clientState.nTrustees; j++ {
+		err := crypto.SchnorrVerify(config.CryptoSuite, M, p.clientState.TrusteePublicKey[j], signatures[j])
 
 		if err != nil {
-			e := "Client " + strconv.Itoa(clientState.Id) + " : signature from trustee " + strconv.Itoa(j) + " is invalid "
+			e := "Client " + strconv.Itoa(p.clientState.Id) + " : signature from trustee " + strconv.Itoa(j) + " is invalid "
 			dbg.Error(e)
 			return errors.New(e)
 		}
 	}
 
-	dbg.Lvl3("Client " + strconv.Itoa(clientState.Id) + "; all signatures Ok")
+	dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + "; all signatures Ok")
 
 	//now, using the ephemeral keys received (the output of the neff shuffle), identify our slot
-	myPrivKey := clientState.ephemeralPrivateKey
+	myPrivKey := p.clientState.ephemeralPrivateKey
 	ephPubInBaseG := config.CryptoSuite.Point().Mul(G, myPrivKey)
 	mySlot := -1
 
@@ -363,19 +363,19 @@ func (p *PriFiProtocol) Received_REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG(msg REL_C
 	}
 
 	if mySlot == -1 {
-		e := "Client " + strconv.Itoa(clientState.Id) + "; Can't recognize our slot !"
+		e := "Client " + strconv.Itoa(p.clientState.Id) + "; Can't recognize our slot !"
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
-		dbg.Lvl3("Client " + strconv.Itoa(clientState.Id) + "; Our slot is " + strconv.Itoa(mySlot) + " out of " + strconv.Itoa(len(ephPubKeys)) + " slots")
+		dbg.Lvl3("Client " + strconv.Itoa(p.clientState.Id) + "; Our slot is " + strconv.Itoa(mySlot) + " out of " + strconv.Itoa(len(ephPubKeys)) + " slots")
 	}
 
 	//prepare for commmunication
-	clientState.MySlot = mySlot
-	clientState.roundCount = 0
+	p.clientState.MySlot = mySlot
+	p.clientState.roundCount = 0
 
 	//change state
-	clientState.currentState = CLIENT_STATE_READY
+	p.clientState.currentState = CLIENT_STATE_READY
 
 	return nil
 }

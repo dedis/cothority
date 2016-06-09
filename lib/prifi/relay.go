@@ -53,8 +53,8 @@ type DCNetRound struct {
 	clientCipherCount  int
 }
 
-func (dcnet *DCNetRound) hasAllCiphers() bool {
-	if relayState.nClients == dcnet.clientCipherCount && relayState.nTrustees == dcnet.trusteeCipherCount {
+func (p *PriFiProtocol) hasAllCiphers(dcnet *DCNetRound) bool {
+	if p.relayState.nClients == dcnet.clientCipherCount && p.relayState.nTrustees == dcnet.trusteeCipherCount {
 		return true
 	}
 	return false
@@ -64,8 +64,6 @@ type BufferedTrusteeCipher struct {
 	RoundId int32
 	Data    map[int][]byte
 }
-
-var relayState RelayState
 
 //State information to hold :
 type RelayState struct {
@@ -155,28 +153,32 @@ var relayStateInt int32 = 0
 func (p *PriFiProtocol) Received_ALL_REL_PARAMETERS(msg ALL_ALL_PARAMETERS) error {
 
 	//this can only happens in the state RELAY_STATE_BEFORE_INIT
-	if relayState.currentState != RELAY_STATE_BEFORE_INIT && !msg.ForceParams {
+	if p.relayState.currentState != RELAY_STATE_BEFORE_INIT && !msg.ForceParams {
 		dbg.Lvl1("Relay : Received a ALL_ALL_PARAMETERS, but not in state RELAY_STATE_BEFORE_INIT, ignoring. ")
 		return nil
-	} else if relayState.currentState != RELAY_STATE_BEFORE_INIT && msg.ForceParams {
+	} else if p.relayState.currentState != RELAY_STATE_BEFORE_INIT && msg.ForceParams {
 		dbg.Lvl1("Relay : Received a ALL_ALL_PARAMETERS && ForceParams = true, processing. ")
 	} else {
 		dbg.Lvl3("Relay : received ALL_ALL_PARAMETERS")
 	}
 
-	relayState = *NewRelayState(msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DownCellSize, msg.RelayWindowSize, msg.RelayUseDummyDataDown, msg.RelayReportingLimit, msg.UseUDP, msg.RelayDataOutputEnabled)
+	if p.role != PRIFI_ROLE_RELAY {
+		panic("This message wants me to become a relay ! I'm not one !")
+	}
 
-	dbg.Lvlf5("%+v\n", relayState)
+	p.relayState = *NewRelayState(msg.NTrustees, msg.NClients, msg.UpCellSize, msg.DownCellSize, msg.RelayWindowSize, msg.RelayUseDummyDataDown, msg.RelayReportingLimit, msg.UseUDP, msg.RelayDataOutputEnabled)
+
+	dbg.Lvlf5("%+v\n", p.relayState)
 	dbg.Lvl1("Relay has been initialized by message. ")
 
 	dbg.Print(p.messageSender)
-	dbg.Print(relayState.nClients)
-	dbg.Print(relayState.nTrustees)
+	dbg.Print(p.relayState.nClients)
+	dbg.Print(p.relayState.nTrustees)
 
 	//broadcast those parameters
 	if msg.StartNow {
 
-		relayState.currentState = RELAY_STATE_COLLECTING_TRUSTEES_PKS
+		p.relayState.currentState = RELAY_STATE_COLLECTING_TRUSTEES_PKS
 		p.ConnectToTrustees()
 	}
 	dbg.Lvl1("Done")
@@ -187,15 +189,15 @@ func (p *PriFiProtocol) Received_ALL_REL_PARAMETERS(msg ALL_ALL_PARAMETERS) erro
 func (p *PriFiProtocol) ConnectToTrustees() {
 
 	var msg = &ALL_ALL_PARAMETERS{
-		NClients:          relayState.nClients,
+		NClients:          p.relayState.nClients,
 		NextFreeTrusteeId: 0,
-		NTrustees:         relayState.nTrustees,
+		NTrustees:         p.relayState.nTrustees,
 		StartNow:          true,
 		ForceParams:       true,
-		UpCellSize:        relayState.UpstreamCellSize,
+		UpCellSize:        p.relayState.UpstreamCellSize,
 	}
 
-	for j := 0; j < relayState.nTrustees; j++ {
+	for j := 0; j < p.relayState.nTrustees; j++ {
 		dbg.Lvl1("Sending to trustee", j)
 		msg.NextFreeTrusteeId = j
 		p.messageSender.SendToTrustee(j, msg)
@@ -238,8 +240,8 @@ func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA_dummypingpong(msg CLI_REL
 func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA(msg CLI_REL_UPSTREAM_DATA) error {
 
 	//this can only happens in the state RELAY_STATE_COMMUNICATING
-	if relayState.currentState != RELAY_STATE_COMMUNICATING {
-		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(relayState.currentState))
+	if p.relayState.currentState != RELAY_STATE_COMMUNICATING {
+		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
@@ -249,18 +251,18 @@ func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA(msg CLI_REL_UPSTREAM_DATA
 	//TODO : add a timeout somewhere here
 
 	//if this is not the message destinated for this round, discard it ! (we are in lock-step)
-	if relayState.currentDCNetRound.currentRound != msg.RoundId {
-		e := "Relay : Client sent DC-net cipher for round , " + strconv.Itoa(int(msg.RoundId)) + " but current round is " + strconv.Itoa(int(relayState.currentDCNetRound.currentRound))
+	if p.relayState.currentDCNetRound.currentRound != msg.RoundId {
+		e := "Relay : Client sent DC-net cipher for round , " + strconv.Itoa(int(msg.RoundId)) + " but current round is " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound))
 		dbg.Error(e)
 		return errors.New(e)
 
 	} else {
 		//else, if this is the message we need for this round
 
-		relayState.CellCoder.DecodeClient(msg.Data)
-		relayState.currentDCNetRound.clientCipherCount++
+		p.relayState.CellCoder.DecodeClient(msg.Data)
+		p.relayState.currentDCNetRound.clientCipherCount++
 
-		if relayState.currentDCNetRound.hasAllCiphers() {
+		if p.hasAllCiphers(&p.relayState.currentDCNetRound) {
 			p.finalizeUpstreamDataAndSendDownstreamData()
 		}
 	}
@@ -271,8 +273,8 @@ func (p *PriFiProtocol) Received_CLI_REL_UPSTREAM_DATA(msg CLI_REL_UPSTREAM_DATA
 func (p *PriFiProtocol) Received_TRU_REL_DC_CIPHER(msg TRU_REL_DC_CIPHER) error {
 
 	//this can only happens in the state RELAY_STATE_COMMUNICATING
-	if relayState.currentState != RELAY_STATE_COMMUNICATING {
-		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(relayState.currentState))
+	if p.relayState.currentState != RELAY_STATE_COMMUNICATING {
+		e := "Relay : Received a CLI_REL_UPSTREAM_DATA, but not in state RELAY_STATE_COMMUNICATING, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
@@ -283,23 +285,23 @@ func (p *PriFiProtocol) Received_TRU_REL_DC_CIPHER(msg TRU_REL_DC_CIPHER) error 
 	//TODO : add a timeout somewhere here
 
 	//if this is the message we need for this round
-	if relayState.currentDCNetRound.currentRound == msg.RoundId {
-		relayState.CellCoder.DecodeTrustee(msg.Data)
-		relayState.currentDCNetRound.trusteeCipherCount++
+	if p.relayState.currentDCNetRound.currentRound == msg.RoundId {
+		p.relayState.CellCoder.DecodeTrustee(msg.Data)
+		p.relayState.currentDCNetRound.trusteeCipherCount++
 
-		if relayState.currentDCNetRound.hasAllCiphers() {
+		if p.hasAllCiphers(&p.relayState.currentDCNetRound) {
 			p.finalizeUpstreamDataAndSendDownstreamData()
 		}
 	} else {
 		//else, we need to buffer this message somewhere
-		if _, ok := relayState.bufferedTrusteeCiphers[msg.RoundId]; ok {
+		if _, ok := p.relayState.bufferedTrusteeCiphers[msg.RoundId]; ok {
 			//the roundId already exists, simply add data
-			relayState.bufferedTrusteeCiphers[msg.RoundId].Data[msg.TrusteeId] = msg.Data
+			p.relayState.bufferedTrusteeCiphers[msg.RoundId].Data[msg.TrusteeId] = msg.Data
 		} else {
 			//else, create the key
 			newKey := BufferedTrusteeCipher{msg.RoundId, make(map[int][]byte)}
 			newKey.Data[msg.TrusteeId] = msg.Data
-			relayState.bufferedTrusteeCiphers[msg.RoundId] = newKey
+			p.relayState.bufferedTrusteeCiphers[msg.RoundId] = newKey
 		}
 	}
 	return nil
@@ -312,7 +314,7 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 	 */
 
 	//we decode the DC-net cell
-	upstreamPlaintext := relayState.CellCoder.DecodeCell()
+	upstreamPlaintext := p.relayState.CellCoder.DecodeCell()
 
 	// Process the decoded cell
 
@@ -321,7 +323,7 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 		pattern := int(binary.BigEndian.Uint16(upstreamPlaintext[0:2]))
 		if pattern == 43690 { //1010101010101010
 			//then, we simply have to send it down
-			relayState.DataForClients <- upstreamPlaintext
+			p.relayState.DataForClients <- upstreamPlaintext
 		}
 	}
 
@@ -329,14 +331,14 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 		// empty upstream cell
 	}
 
-	if len(upstreamPlaintext) != relayState.UpstreamCellSize {
-		e := "Relay : DecodeCell produced wrong-size payload, " + strconv.Itoa(len(upstreamPlaintext)) + "!=" + strconv.Itoa(relayState.UpstreamCellSize)
+	if len(upstreamPlaintext) != p.relayState.UpstreamCellSize {
+		e := "Relay : DecodeCell produced wrong-size payload, " + strconv.Itoa(len(upstreamPlaintext)) + "!=" + strconv.Itoa(p.relayState.UpstreamCellSize)
 		dbg.Error(e)
 		return errors.New(e)
 	}
 
-	if relayState.DataOutputEnabled {
-		relayState.DataFromDCNet <- upstreamPlaintext
+	if p.relayState.DataOutputEnabled {
+		p.relayState.DataFromDCNet <- upstreamPlaintext
 	}
 
 	/*
@@ -348,33 +350,33 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 	select {
 
 	//either select data from the data we have to send, if any
-	case downstreamCellContent = <-relayState.DataForClients:
+	case downstreamCellContent = <-p.relayState.DataForClients:
 
 	default:
 		downstreamCellContent = make([]byte, 1)
 	}
 
 	//if we want to use dummy data down, pad to the correct size
-	if relayState.UseDummyDataDown && len(downstreamCellContent) < relayState.DownstreamCellSize {
-		data := make([]byte, relayState.DownstreamCellSize)
+	if p.relayState.UseDummyDataDown && len(downstreamCellContent) < p.relayState.DownstreamCellSize {
+		data := make([]byte, p.relayState.DownstreamCellSize)
 		copy(data[0:], downstreamCellContent)
 		downstreamCellContent = data
 	}
 
 	flagResync := false
 
-	if !relayState.UseUDP {
+	if !p.relayState.UseUDP {
 		//broadcast to all clients
-		for i := 0; i < relayState.nClients; i++ {
+		for i := 0; i < p.relayState.nClients; i++ {
 			//send to the i-th client
-			toSend := &REL_CLI_DOWNSTREAM_DATA{relayState.currentDCNetRound.currentRound, downstreamCellContent, flagResync}
+			toSend := &REL_CLI_DOWNSTREAM_DATA{p.relayState.currentDCNetRound.currentRound, downstreamCellContent, flagResync}
 			err := p.messageSender.SendToClient(i, toSend) //TODO : this should be the client X !
 			if err != nil {
-				e := "Could not send REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(relayState.currentDCNetRound.currentRound)) + ", error is " + err.Error()
+				e := "Could not send REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound)) + ", error is " + err.Error()
 				dbg.Error(e)
 				return errors.New(e)
 			} else {
-				dbg.Lvl5("Relay : sent REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(relayState.currentDCNetRound.currentRound)))
+				dbg.Lvl5("Relay : sent REL_CLI_DOWNSTREAM_DATA to " + strconv.Itoa(i+1) + "-th client for round " + strconv.Itoa(int(p.relayState.currentDCNetRound.currentRound)))
 			}
 		}
 	} else {
@@ -382,19 +384,19 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 	}
 
 	//prepare for the next round
-	nextRound := relayState.currentDCNetRound.currentRound + 1
-	relayState.currentDCNetRound = DCNetRound{nextRound, 0, 0}
-	relayState.CellCoder.DecodeStart(relayState.UpstreamCellSize, relayState.MessageHistory)
+	nextRound := p.relayState.currentDCNetRound.currentRound + 1
+	p.relayState.currentDCNetRound = DCNetRound{nextRound, 0, 0}
+	p.relayState.CellCoder.DecodeStart(p.relayState.UpstreamCellSize, p.relayState.MessageHistory)
 
 	//if we have buffered messages for next round, use them now
-	if _, ok := relayState.bufferedTrusteeCiphers[nextRound]; ok {
-		for trusteeId, data := range relayState.bufferedTrusteeCiphers[nextRound].Data {
+	if _, ok := p.relayState.bufferedTrusteeCiphers[nextRound]; ok {
+		for trusteeId, data := range p.relayState.bufferedTrusteeCiphers[nextRound].Data {
 			//start decoding using this data
 			dbg.Lvl5("Relay : using pre-cached DC-net cipher from trustee " + strconv.Itoa(trusteeId) + " for round " + strconv.Itoa(int(nextRound)))
-			relayState.CellCoder.DecodeTrustee(data)
-			relayState.currentDCNetRound.trusteeCipherCount++
+			p.relayState.CellCoder.DecodeTrustee(data)
+			p.relayState.currentDCNetRound.trusteeCipherCount++
 		}
-		delete(relayState.bufferedTrusteeCiphers, nextRound)
+		delete(p.relayState.bufferedTrusteeCiphers, nextRound)
 	}
 
 	return nil
@@ -407,29 +409,29 @@ func (p *PriFiProtocol) finalizeUpstreamDataAndSendDownstreamData() error {
 func (p *PriFiProtocol) Received_TRU_REL_TELL_PK(msg TRU_REL_TELL_PK) error {
 
 	//this can only happens in the state RELAY_STATE_COLLECTING_TRUSTEES_PKS
-	if relayState.currentState != RELAY_STATE_COLLECTING_TRUSTEES_PKS {
-		e := "Relay : Received a TRU_REL_TELL_PK, but not in state RELAY_STATE_COLLECTING_TRUSTEES_PKS, in state " + strconv.Itoa(int(relayState.currentState))
+	if p.relayState.currentState != RELAY_STATE_COLLECTING_TRUSTEES_PKS {
+		e := "Relay : Received a TRU_REL_TELL_PK, but not in state RELAY_STATE_COLLECTING_TRUSTEES_PKS, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
 		dbg.Lvl3("Relay : received TRU_REL_TELL_PK")
 	}
 
-	relayState.trustees[msg.TrusteeId] = NodeRepresentation{msg.TrusteeId, true, msg.Pk, msg.Pk}
-	relayState.nTrusteesPkCollected++
+	p.relayState.trustees[msg.TrusteeId] = NodeRepresentation{msg.TrusteeId, true, msg.Pk, msg.Pk}
+	p.relayState.nTrusteesPkCollected++
 
 	//if we have them all...
-	if relayState.nTrusteesPkCollected == relayState.nTrustees {
+	if p.relayState.nTrusteesPkCollected == p.relayState.nTrustees {
 
 		//prepare the message for the clients
-		trusteesPk := make([]abstract.Point, relayState.nTrustees)
-		for i := 0; i < relayState.nTrustees; i++ {
-			trusteesPk[i] = relayState.trustees[i].PublicKey
+		trusteesPk := make([]abstract.Point, p.relayState.nTrustees)
+		for i := 0; i < p.relayState.nTrustees; i++ {
+			trusteesPk[i] = p.relayState.trustees[i].PublicKey
 		}
 
 		//Send the pack to the clients
 		toSend := &REL_CLI_TELL_TRUSTEES_PK{trusteesPk}
-		for i := 0; i < relayState.nClients; i++ {
+		for i := 0; i < p.relayState.nClients; i++ {
 			err := p.messageSender.SendToClient(i, toSend)
 			if err != nil {
 				e := "Could not send REL_CLI_TELL_TRUSTEES_PK (" + strconv.Itoa(i) + "-th client), error is " + err.Error()
@@ -440,7 +442,7 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_PK(msg TRU_REL_TELL_PK) error {
 			}
 		}
 
-		relayState.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
+		p.relayState.currentState = RELAY_STATE_COLLECTING_CLIENT_PKS
 	}
 
 	return nil
@@ -449,8 +451,8 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_PK(msg TRU_REL_TELL_PK) error {
 func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_AND_EPH_PK) error {
 
 	//this can only happens in the state RELAY_STATE_COLLECTING_CLIENT_PKS
-	if relayState.currentState != RELAY_STATE_COLLECTING_CLIENT_PKS {
-		e := "Relay : Received a CLI_REL_TELL_PK_AND_EPH_PK, but not in state RELAY_STATE_COLLECTING_CLIENT_PKS, in state " + strconv.Itoa(int(relayState.currentState))
+	if p.relayState.currentState != RELAY_STATE_COLLECTING_CLIENT_PKS {
+		e := "Relay : Received a CLI_REL_TELL_PK_AND_EPH_PK, but not in state RELAY_STATE_COLLECTING_CLIENT_PKS, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
@@ -458,35 +460,35 @@ func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_
 	}
 
 	//collect this client information
-	nextId := len(relayState.clients)
+	nextId := len(p.relayState.clients)
 	newClient := NodeRepresentation{nextId, true, msg.Pk, msg.EphPk}
 
-	relayState.clients = append(relayState.clients, newClient)
+	p.relayState.clients = append(p.relayState.clients, newClient)
 
 	//TODO : sanity check that we don't have twice the same client
 
 	dbg.Lvl3("Relay : Received a CLI_REL_TELL_PK_AND_EPH_PK, registered client ID" + strconv.Itoa(nextId))
 
 	//if we have collected all clients, continue
-	if len(relayState.clients) == relayState.nClients {
+	if len(p.relayState.clients) == p.relayState.nClients {
 
 		//prepare the arrays; pack the public keys and ephemeral public keys
-		pks := make([]abstract.Point, relayState.nClients)
-		ephPks := make([]abstract.Point, relayState.nClients)
-		for i := 0; i < relayState.nClients; i++ {
-			pks[i] = relayState.clients[i].PublicKey
-			ephPks[i] = relayState.clients[i].EphemeralPublicKey
+		pks := make([]abstract.Point, p.relayState.nClients)
+		ephPks := make([]abstract.Point, p.relayState.nClients)
+		for i := 0; i < p.relayState.nClients; i++ {
+			pks[i] = p.relayState.clients[i].PublicKey
+			ephPks[i] = p.relayState.clients[i].EphemeralPublicKey
 		}
 
-		//G := relayState.clients[0].PublicKey
-		G := config.CryptoSuite.Point().Base() // LUDOVIC BARMAN- HERE IS THE PROBLEM
+		G := p.relayState.clients[0].PublicKey
+		//G := config.CryptoSuite.Point() // LUDOVIC BARMAN- HERE IS THE PROBLEM
 
 		//prepare the empty shuffle
-		emptyG_s := make([]abstract.Point, relayState.nTrustees)
-		emptyEphPks_s := make([][]abstract.Point, relayState.nTrustees)
-		emptyProof_s := make([][]byte, relayState.nTrustees)
-		emptySignature_s := make([][]byte, relayState.nTrustees)
-		relayState.currentShuffleTranscript = NeffShuffleState{pks, emptyG_s, emptyEphPks_s, emptyProof_s, 0, emptySignature_s, 0}
+		emptyG_s := make([]abstract.Point, p.relayState.nTrustees)
+		emptyEphPks_s := make([][]abstract.Point, p.relayState.nTrustees)
+		emptyProof_s := make([][]byte, p.relayState.nTrustees)
+		emptySignature_s := make([][]byte, p.relayState.nTrustees)
+		p.relayState.currentShuffleTranscript = NeffShuffleState{pks, emptyG_s, emptyEphPks_s, emptyProof_s, 0, emptySignature_s, 0}
 
 		//send to the 1st trustee
 
@@ -505,7 +507,7 @@ func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_
 		}
 
 		//changing state
-		relayState.currentState = RELAY_STATE_COLLECTING_SHUFFLES
+		p.relayState.currentState = RELAY_STATE_COLLECTING_SHUFFLES
 	}
 
 	return nil
@@ -514,8 +516,8 @@ func (p *PriFiProtocol) Received_CLI_REL_TELL_PK_AND_EPH_PK(msg CLI_REL_TELL_PK_
 func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_TELL_NEW_BASE_AND_EPH_PKS) error {
 
 	//this can only happens in the state RELAY_STATE_COLLECTING_SHUFFLES
-	if relayState.currentState != RELAY_STATE_COLLECTING_SHUFFLES {
-		e := "Relay : Received a TRU_REL_TELL_NEW_BASE_AND_EPH_PKS, but not in state RELAY_STATE_COLLECTING_SHUFFLES, in state " + strconv.Itoa(int(relayState.currentState))
+	if p.relayState.currentState != RELAY_STATE_COLLECTING_SHUFFLES {
+		e := "Relay : Received a TRU_REL_TELL_NEW_BASE_AND_EPH_PKS, but not in state RELAY_STATE_COLLECTING_SHUFFLES, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
@@ -523,17 +525,17 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 	}
 
 	//store this shuffle's result in our transcript
-	j := relayState.currentShuffleTranscript.nextFreeId_Proofs
-	relayState.currentShuffleTranscript.G_s[j] = msg.NewBase
-	relayState.currentShuffleTranscript.ephPubKeys_s[j] = msg.NewEphPks
-	relayState.currentShuffleTranscript.proof_s[j] = msg.Proof
+	j := p.relayState.currentShuffleTranscript.nextFreeId_Proofs
+	p.relayState.currentShuffleTranscript.G_s[j] = msg.NewBase
+	p.relayState.currentShuffleTranscript.ephPubKeys_s[j] = msg.NewEphPks
+	p.relayState.currentShuffleTranscript.proof_s[j] = msg.Proof
 
-	relayState.currentShuffleTranscript.nextFreeId_Proofs = j + 1
+	p.relayState.currentShuffleTranscript.nextFreeId_Proofs = j + 1
 
 	//if we're still waiting on some trustees, send them the new shuffle
-	if relayState.currentShuffleTranscript.nextFreeId_Proofs != relayState.nTrustees {
+	if p.relayState.currentShuffleTranscript.nextFreeId_Proofs != p.relayState.nTrustees {
 
-		pks := relayState.currentShuffleTranscript.ClientPublicKeys
+		pks := p.relayState.currentShuffleTranscript.ClientPublicKeys
 		ephPks := msg.NewEphPks
 		G := msg.NewBase
 
@@ -558,15 +560,15 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 		//if we have all the shuffles
 
 		//pack transcript
-		G_s := relayState.currentShuffleTranscript.G_s
-		ephPublicKeys_s := relayState.currentShuffleTranscript.ephPubKeys_s
-		proof_s := relayState.currentShuffleTranscript.proof_s
+		G_s := p.relayState.currentShuffleTranscript.G_s
+		ephPublicKeys_s := p.relayState.currentShuffleTranscript.ephPubKeys_s
+		proof_s := p.relayState.currentShuffleTranscript.proof_s
 
 		//when receiving the next message (and after processing it), trustees will start sending data. Prepare to buffer it
-		relayState.bufferedTrusteeCiphers = make(map[int32]BufferedTrusteeCipher)
+		p.relayState.bufferedTrusteeCiphers = make(map[int32]BufferedTrusteeCipher)
 
 		//broadcast to all trustees
-		for j := 0; j < relayState.nTrustees; j++ {
+		for j := 0; j < p.relayState.nTrustees; j++ {
 			//send to the j-th trustee
 			toSend := &REL_TRU_TELL_TRANSCRIPT{G_s, ephPublicKeys_s, proof_s}
 			err := p.messageSender.SendToTrustee(j, toSend) //TODO : this should be the trustee X !
@@ -580,7 +582,7 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 		}
 
 		//changing state
-		relayState.currentState = RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
+		p.relayState.currentState = RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
 	}
 
 	return nil
@@ -589,8 +591,8 @@ func (p *PriFiProtocol) Received_TRU_REL_TELL_NEW_BASE_AND_EPH_PKS(msg TRU_REL_T
 func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) error {
 
 	//this can only happens in the state RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES
-	if relayState.currentState != RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES {
-		e := "Relay : Received a TRU_REL_SHUFFLE_SIG, but not in state RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES, in state " + strconv.Itoa(int(relayState.currentState))
+	if p.relayState.currentState != RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES {
+		e := "Relay : Received a TRU_REL_SHUFFLE_SIG, but not in state RELAY_STATE_COLLECTING_SHUFFLE_SIGNATURES, in state " + strconv.Itoa(int(p.relayState.currentState))
 		dbg.Error(e)
 		return errors.New(e)
 	} else {
@@ -598,29 +600,29 @@ func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) er
 	}
 
 	//sanity check
-	if msg.TrusteeId < 0 || msg.TrusteeId > len(relayState.currentShuffleTranscript.signatures_s) {
-		e := "Relay : One of the following check failed : msg.TrusteeId >= 0 && msg.TrusteeId < len(relayState.currentShuffleTranscript.signatures_s) ; msg.TrusteeId = " + strconv.Itoa(trusteeState.Id) + ";"
+	if msg.TrusteeId < 0 || msg.TrusteeId > len(p.relayState.currentShuffleTranscript.signatures_s) {
+		e := "Relay : One of the following check failed : msg.TrusteeId >= 0 && msg.TrusteeId < len(p.relayState.currentShuffleTranscript.signatures_s) ; msg.TrusteeId = " + strconv.Itoa(msg.TrusteeId) + ";"
 		dbg.Error(e)
 		return errors.New(e)
 	}
 
 	//store this shuffle's signature in our transcript
-	relayState.currentShuffleTranscript.signatures_s[msg.TrusteeId] = msg.Sig
-	relayState.currentShuffleTranscript.signature_count++
+	p.relayState.currentShuffleTranscript.signatures_s[msg.TrusteeId] = msg.Sig
+	p.relayState.currentShuffleTranscript.signature_count++
 
 	//if we have all the signatures
-	if relayState.currentShuffleTranscript.signature_count == relayState.nTrustees {
+	if p.relayState.currentShuffleTranscript.signature_count == p.relayState.nTrustees {
 
 		//We could verify here before broadcasting to the clients, for performance (but this does not add security)
 
 		//prepare the message for the clients
-		lastPermutationIndex := relayState.nTrustees - 1
-		G := relayState.currentShuffleTranscript.G_s[lastPermutationIndex]
-		ephPks := relayState.currentShuffleTranscript.ephPubKeys_s[lastPermutationIndex]
-		signatures := relayState.currentShuffleTranscript.signatures_s
+		lastPermutationIndex := p.relayState.nTrustees - 1
+		G := p.relayState.currentShuffleTranscript.G_s[lastPermutationIndex]
+		ephPks := p.relayState.currentShuffleTranscript.ephPubKeys_s[lastPermutationIndex]
+		signatures := p.relayState.currentShuffleTranscript.signatures_s
 
 		//broadcast to all clients
-		for i := 0; i < relayState.nClients; i++ {
+		for i := 0; i < p.relayState.nClients; i++ {
 			//send to the i-th client
 			toSend := &REL_CLI_TELL_EPH_PKS_AND_TRUSTEES_SIG{G, ephPks, signatures}
 			err := p.messageSender.SendToClient(i, toSend) //TODO : this should be the client X !
@@ -634,11 +636,11 @@ func (p *PriFiProtocol) Received_TRU_REL_SHUFFLE_SIG(msg TRU_REL_SHUFFLE_SIG) er
 		}
 
 		//prepare to collect the ciphers
-		relayState.currentDCNetRound = DCNetRound{0, 0, 0}
-		relayState.CellCoder.DecodeStart(relayState.UpstreamCellSize, relayState.MessageHistory)
+		p.relayState.currentDCNetRound = DCNetRound{0, 0, 0}
+		p.relayState.CellCoder.DecodeStart(p.relayState.UpstreamCellSize, p.relayState.MessageHistory)
 
 		//changing state
-		relayState.currentState = RELAY_STATE_COMMUNICATING
+		p.relayState.currentState = RELAY_STATE_COMMUNICATING
 	}
 
 	return nil
