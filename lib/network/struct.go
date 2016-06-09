@@ -196,15 +196,13 @@ type Entity struct {
 	ID EntityID
 	// A slice of addresses of where that Id might be found
 	Addresses []string
-	// used to return the next available address
-	iter int
 }
 
 // EntityID uniquely identifies an Entity struct
 type EntityID uuid.UUID
 
-// Equals returns true if both EntityID are equal or false otherwise.
-func (eid EntityID) Equals(other EntityID) bool {
+// Equal returns true if both EntityID are equal or false otherwise.
+func (eid EntityID) Equal(other EntityID) bool {
 	return uuid.Equal(uuid.UUID(eid), uuid.UUID(other))
 }
 
@@ -239,15 +237,6 @@ func (e *Entity) First() string {
 		return e.Addresses[0]
 	}
 	return ""
-}
-
-// Next returns the next address like an iterator,
-// starting at the beginning if nothing worked
-func (e *Entity) Next() string {
-	addr := e.Addresses[e.iter]
-	e.iter = (e.iter + 1) % len(e.Addresses)
-	return addr
-
 }
 
 // Equal tests on same public key
