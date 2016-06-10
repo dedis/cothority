@@ -174,27 +174,31 @@ func TestVerifyWithException(t *testing.T) {
 
 func TestVerifyWithException2(t *testing.T) {
 	msg := []byte("Exceptions")
-	p1 := config.NewKeyPair(network.Suite)
-	p2 := config.NewKeyPair(network.Suite)
-	agg := network.Suite.Point().Add(p1.Public, p2.Public)
-	c1 := NewCosi(network.Suite, p1.Secret)
-	c2 := NewCosi(network.Suite, p2.Secret)
-	c2.Announce(c1.CreateAnnouncement())
-	c1.Commit([]*Commitment{c2.CreateCommitment()})
-	ch, err := c1.CreateChallenge(msg)
+	keyRoot := config.NewKeyPair(network.Suite)
+	keyLeaf := config.NewKeyPair(network.Suite)
+	agg := network.Suite.Point().Add(keyRoot.Public, keyLeaf.Public)
+	root := NewCosi(network.Suite, keyRoot.Secret)
+	leaf := NewCosi(network.Suite, keyLeaf.Secret)
+	leaf.Announce(root.CreateAnnouncement())
+	root.Commit([]*Commitment{leaf.CreateCommitment()})
+	ch, err := root.CreateChallenge(msg)
 	dbg.ErrFatal(err)
-	c2.Challenge(ch)
-	re, err := c2.CreateResponse()
+	leaf.Challenge(ch)
+	re, err := leaf.CreateResponse()
 	dbg.ErrFatal(err)
-	_, err = c1.Response(false, []*Response{re})
+	_, err = root.Response(false, []*Response{re})
 	dbg.ErrFatal(err)
 
-	if VerifySignature(network.Suite, msg, agg, c1.challenge, c1.aggregateResponse) == nil {
+	if VerifySignature(network.Suite, msg, agg, root.challenge, root.aggregateResponse) == nil {
 		t.Fatal("This shouldn't be verifiable")
 	}
-	ex := []Exception{{p1.Public, c1.commitment}}
+	ex := []Exception{{keyRoot.Public, root.commitment}}
 	dbg.ErrFatal(VerifySignatureWithException(testSuite, agg, msg,
-		c1.challenge, c1.aggregateResponse, ex))
+		root.challenge, root.aggregateResponse, ex))
+
+	if err := root.VerifyResponses(agg); err != nil {
+		t.Fatal("Verification of responses / commitment has failed:", err)
+	}
 }
 
 func genKeyPair(nb int) []*config.KeyPair {
