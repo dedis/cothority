@@ -97,13 +97,8 @@ func AddInMapping (s map[GroupingKey]CipherVector, key GroupingKey, added Cipher
 	if _,ok := s[key]; !ok{
 		s[key] = added
 	} else {
-		fmt.Println("v1 ", s[key])
-		fmt.Println("added ", added)
-		
 		result := Add2(s[key],added)
-		fmt.Println("result ", result)
 		s[key] = result
-		fmt.Println("result ", s[key])
 	}
 }
 
