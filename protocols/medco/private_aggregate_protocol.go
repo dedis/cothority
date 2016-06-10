@@ -98,7 +98,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 	}
 
 	// 2. Ascending aggregation phase
-	groups, aggregatedData := p.ascendingAggregationPhase(p.Groups, p.GroupedData)
+	groups, aggregatedData := p.ascendingAggregationPhase()
 	dbg.Lvl1(p.Entity(), "completed aggregation phase.")
 
 
@@ -106,7 +106,6 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 	if p.IsRoot() {
 		p.FeedbackChannel <- CothorityAggregatedData{*groups, *aggregatedData}
 	}
-
 	return nil
 }
 
@@ -118,31 +117,33 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	}
 }
 
-func (p *PrivateAggregateProtocol) ascendingAggregationPhase(localGroups *map[GroupingKey]GroupingAttributes,
-								localContribution *map[GroupingKey]CipherVector)(
+func (p *PrivateAggregateProtocol) ascendingAggregationPhase()(
 *map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
 
-	if localContribution == nil {
+	if p.GroupedData == nil { // TODO: Aggregate a zero contribution
 		emptyMap := make(map[GroupingKey]CipherVector,0)
-		localContribution = &emptyMap
+		emptyGroupMap := make(map[GroupingKey]GroupingAttributes, 0)
+		p.GroupedData = &emptyMap
+		p.Groups = &emptyGroupMap
 	}
+
 	if !p.IsLeaf() {
 		for _,childrenContribution := range <- p.ChildDataChannel {
 			childDataMap := SliceToMapGKCV(childrenContribution.ChildData)
 			childGroupMap := SliceToMapGKGA(childrenContribution.ChildGroups)
 			for group := range childDataMap {
-				(*localGroups)[group] = childGroupMap[group]
-				if aggr, ok := (*localContribution)[group]; ok {
-					localAggr := (*localContribution)[group]
+				(*p.Groups)[group] = childGroupMap[group]
+				if aggr, ok := (*p.GroupedData)[group]; ok {
+					localAggr := (*p.GroupedData)[group]
 					localAggr.Add(localAggr, aggr)
 				} else {
-					(*localContribution)[group] = aggr
+					(*p.GroupedData)[group] = aggr
 				}
 			}
 		}
 	}
 	if !p.IsRoot() {
-		p.SendToParent(&ChildAggregatedDataMessage{MapToSliceGKCV(*localContribution), MapToSliceGKGA(*localGroups)})
+		p.SendToParent(&ChildAggregatedDataMessage{MapToSliceGKCV(*p.GroupedData), MapToSliceGKGA(*p.Groups)})
 	}
-	return  localGroups, localContribution
+	return  p.Groups, p.GroupedData
 }
