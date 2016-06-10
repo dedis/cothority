@@ -394,7 +394,7 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		return true
 	case VerifyShard:
 		if sb.ParentBlockID.IsNull() {
-			dbg.Lvl3("No-child skipblock cannot verify to be shard")
+			dbg.Lvl3("No parent skipblock to verify against")
 		} else {
 			sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
 			if !exists {
