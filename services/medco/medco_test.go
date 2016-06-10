@@ -32,11 +32,12 @@ func TestServiceMedco(t *testing.T) {
 	for i:=0; i < 4; i++ {
 		dataHolder[i] = medco_service.NewMedcoClient(el.List[0])
 		grp := make([]int64, 2)
-		aggr := make([]int64, 4)
+		aggr := make([]int64, 100)
 		grp[i%2] = int64(2)
 		aggr[i%2] = 3
 		dataHolder[i].SendSurveyResultsData(grp, aggr, el.Aggregate)
 	}
+
 	grp,aggr ,err := client.GetSurveyResults()
 	if err != nil {
 		t.Fatal("Service could not output the results.")

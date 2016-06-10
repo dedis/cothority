@@ -1,17 +1,16 @@
 package store_test
 
 import (
-	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/random"
  	"github.com/dedis/cothority/lib/dbg"
  	"testing"
  	"fmt"
  	"github.com/dedis/cothority/services/medco/store"
 	."github.com/dedis/cothority/services/medco/structs"
-	//"encoding/json"
+	"github.com/dedis/cothority/lib/network"
 )
 
-var suite = edwards.NewAES128SHA256Ed25519(false)
+var suite = network.Suite
 
 
 

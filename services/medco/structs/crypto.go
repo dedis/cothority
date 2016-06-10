@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/cothority/lib/network"
 )
 
 
@@ -43,7 +43,7 @@ func (c *CipherText) Add(c1, c2 CipherText) *CipherText {
 }
 
 func  Add23(c1, c2 CipherText) CipherText {
-	suite := edwards.NewAES128SHA256Ed25519(false)
+	suite := network.Suite
 	result := CipherText{suite.Point(), suite.Point()}
 	result.C.Add(c1.C,c2.C)
 	result.K.Add(c1.K,c2.K)

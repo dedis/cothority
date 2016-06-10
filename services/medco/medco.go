@@ -126,7 +126,6 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	if err != nil {
 		dbg.Error(err)
 	}
-	go pi.Dispatch()
 	return pi, err
 }
 

@@ -9,9 +9,10 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
+_	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
+"github.com/dedis/crypto/edwards/ed25519"
 )
 
 /// Encoding part ///
@@ -21,7 +22,7 @@ import (
 // to use any suite we want (the decoding stuff is much harder then, because we
 // don't want to send the suite in the wire).
 // It will surely change in futur releases so we can permit this behavior.
-var Suite = edwards.NewAES128SHA256Ed25519(false)
+var Suite = ed25519.NewAES128SHA256Ed25519(false)
 
 // ProtocolMessage is a type for any message that the user wants to send
 type ProtocolMessage interface{}

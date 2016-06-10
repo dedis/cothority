@@ -48,7 +48,6 @@ func TestPrivateAggregate5Nodes(t *testing.T) {
 	protocol.Groups = &testGAMap
 	protocol.GroupedData = &testCVMap
 
-	go protocol.Dispatch()
 	go protocol.StartProtocol()
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 	
@@ -60,7 +59,6 @@ func TestPrivateAggregate5Nodes(t *testing.T) {
 		for k := range encryptedResult.GroupedData {
 			dbg.Lvl1(k, DecryptIntVector(suite, clientPrivate, encryptedResult.GroupedData[k]))
 		}
-
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}
