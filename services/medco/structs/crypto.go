@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dedis/crypto/random"
+	"github.com/dedis/crypto/edwards"
 )
 
 
@@ -41,6 +42,20 @@ func (c *CipherText) Add(c1, c2 CipherText) *CipherText {
 	return c
 }
 
+func  Add23(c1, c2 CipherText) CipherText {
+	suite := edwards.NewAES128SHA256Ed25519(false)
+	result := CipherText{suite.Point(), suite.Point()}
+	result.C.Add(c1.C,c2.C)
+	result.K.Add(c1.K,c2.K)
+	return result
+}
+
+func (c *CipherText) Sub(c1, c2 CipherText) *CipherText {
+	c.C.Sub(c1.C,c2.C)
+	c.K.Sub(c1.K,c2.K)
+	return c
+}
+
 func (dc *DeterministCipherText) Equals(dc2 *DeterministCipherText) bool {
 	return dc2.C.Equal(dc.C)
 }
@@ -64,8 +79,48 @@ func (cv *CipherVector) Add(cv1, cv2 CipherVector) error{
 	return  nil
 }
 
-func (c *CipherText) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKey, newKey abstract.Point, randomnessContribution abstract.Secret) {
-	ephemKeyContrib := suite.Point().Mul(suite.Point().Base(), randomnessContribution)
+func Add2(cv1, cv2 CipherVector) CipherVector{
+	var result CipherVector
+	if len(cv1) != len(cv2) {
+		//return errors.New("Cannot add CipherVectors of different lenght.")
+	}
+	var i int
+	for i, _ = range cv1 {
+		if i == 0 {
+			result = CipherVector{Add23(cv1[i], cv2[i])}
+		} else {
+			result = append(result, Add23(cv1[i], cv2[i]))
+		}
+	}
+	return  result
+}
+
+func (cv *CipherVector) Sub(cv1, cv2 CipherVector) error{
+	if len(cv1) != len(cv2) {
+		return errors.New("Cannot add CipherVectors of different lenght.")
+	}
+	var i int
+	for i, _ = range cv1 {
+		(*cv)[i].Sub(cv1[i], cv2[i])
+	}
+	return  nil
+}
+
+func  Sub2(cv1, cv2 CipherVector) CipherVector{
+	cv := cv1
+	if len(cv1) != len(cv2) {
+		//return errors.New("Cannot add CipherVectors of different lenght.")
+	}
+	var i int
+	for i, _ = range cv1 {
+		(cv)[i].Sub(cv1[i], cv2[i])
+	}
+	return  cv
+}
+
+//func (c *CipherText) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKey, newKey abstract.Point, randomnessContribution abstract.Secret) {
+func (c *CipherText) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKey, newKey abstract.Point, randomnessContribution abstract.Secret, ephemKeyContrib abstract.Point) {	
+	//ephemKeyContrib := suite.Point().Mul(suite.Point().Base(), randomnessContribution)
 	oldBlindingContrib := suite.Point().Mul(originalEphemKey, private)
 	newBlindingContrib := suite.Point().Mul(newKey, randomnessContribution)
 
@@ -74,15 +129,17 @@ func (c *CipherText) SwitchForKey(suite abstract.Suite, private abstract.Secret,
 	c.C.Add(c.C, newBlindingContrib)
 }
 
-func (c *CipherText) SwitchToDeterministic(suite abstract.Suite, private, newPrivate abstract.Secret) {
+//func (c *CipherText) SwitchToDeterministic(suite abstract.Suite, private, newPrivate abstract.Secret) {
+func (c *CipherText) SwitchToDeterministic(suite abstract.Suite, private abstract.Secret, PHContrib abstract.Point) {
 	EGContrib := suite.Point().Mul(c.K, private)
-	PHContrib := suite.Point().Mul(suite.Point().Base(), newPrivate)
+	//PHContrib := suite.Point().Mul(suite.Point().Base(), newPrivate)
 	c.C.Sub(c.C, EGContrib)
 	c.C.Add(c.C, PHContrib)
 }
 
-func (c *CipherText) SwitchToProbabilistic(suite abstract.Suite, private abstract.Secret, targetPublic abstract.Point) {
-	PHContrib := suite.Point().Mul(suite.Point().Base(), private)
+func (c *CipherText) SwitchToProbabilistic(suite abstract.Suite, PHContrib abstract.Point, targetPublic abstract.Point) {
+	//PHContrib := suite.Point().Mul(suite.Point().Base(), private)
+	
 	r := suite.Secret().Pick(random.Stream)
 	EGEphemContrib := suite.Point().Mul(suite.Point().Base(), r)
 	EGContrib := suite.Point().Mul(targetPublic, r)
@@ -105,22 +162,31 @@ func (c CipherText) String() string {
 
 func (cv *CipherVector) SwitchForKey(suite abstract.Suite, private abstract.Secret, originalEphemKeys []abstract.Point, newKey abstract.Point, randomnessContribution abstract.Secret){
 	// Can be optimized
+	ephemKeyContrib := suite.Point().Mul(suite.Point().Base(), randomnessContribution)
+	//
 	for i,c := range *cv {
-		c.SwitchForKey(suite,private, originalEphemKeys[i],newKey,randomnessContribution)
+		//c.SwitchForKey(suite,private, originalEphemKeys[i],newKey,randomnessContribution)
+		c.SwitchForKey(suite,private, originalEphemKeys[i],newKey,randomnessContribution, ephemKeyContrib)
 	}
 }
 
 func (cv *CipherVector) SwitchToDeterministic(suite abstract.Suite, private, newPrivate abstract.Secret) {
 	// Can be optimized
+	PHContrib := suite.Point().Mul(suite.Point().Base(), newPrivate)
+	//
 	for _,c := range *cv {
-		c.SwitchToDeterministic(suite, private, newPrivate)
+		//c.SwitchToDeterministic(suite, private, newPrivate)
+		c.SwitchToDeterministic(suite, private, PHContrib)
 	}
 }
 
 func (cv *CipherVector) SwitchToProbabilistic(suite abstract.Suite, private abstract.Secret, targetPublic abstract.Point) {
 	// Can be optimized
+	PHContrib := suite.Point().Mul(suite.Point().Base(), private)
+	//
 	for _,c := range *cv {
-		c.SwitchToProbabilistic(suite,private, targetPublic)
+		//c.SwitchToProbabilistic(suite,private, targetPublic)
+		c.SwitchToProbabilistic(suite,PHContrib, targetPublic)
 	}
 }
 
