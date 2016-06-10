@@ -4,16 +4,15 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 )
 
-// TODO - make all requests go to the correct Entity
-//	if a new block is proposed, it needs to be sent to the 'latest' EL
 // TODO - send whole block along in 'data' for BFTSignature
+//	and verify the validity of the block
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing
 //	the exception-field
-// TODO - if List[0] is replaced with GetRandom() it crashes !?!
 
 // Client is a structure to communicate with the Skipchain
 // service from the outside
@@ -31,10 +30,12 @@ func NewClient() *Client {
 // maximumHeight of maxHControl. It connects both chains for later
 // reference.
 func (c *Client) CreateRootControl(elRoot, elControl *sda.EntityList, baseHeight, maxHRoot, maxHControl int, ver VerifierID) (root, control *SkipBlock, err error) {
+	dbg.Lvl2("Creating root roster")
 	root, err = c.CreateRoster(elRoot, baseHeight, maxHRoot, ver, nil)
 	if err != nil {
 		return
 	}
+	dbg.Lvl2("Creating control roster")
 	control, err = c.CreateRoster(elControl, baseHeight, maxHControl, ver, root.Hash)
 	if err != nil {
 		return
@@ -98,7 +99,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 	if !bytes.Equal(parent.Hash, child.ParentBlockID) {
 		return nil, nil, errors.New("Child doesn't point to that parent")
 	}
-	host := parent.EntityList.List[0]
+	host := parent.EntityList.GetRandom()
 	replyMsg, err := c.Send(host, &SetChildrenSkipBlock{parent.Hash, child.Hash})
 	if err != nil {
 		return nil, nil, err
@@ -110,7 +111,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain.
 func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
-	h := parent.EntityList.List[0]
+	h := parent.EntityList.GetRandom()
 	r, err := c.Send(h, &GetUpdateChain{latest})
 	if err != nil {
 		return
@@ -151,7 +152,7 @@ func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.EntityList, d netwo
 		}
 		propose.Data = b
 	}
-	host := activeRoster.List[0]
+	host := activeRoster.GetRandom()
 	r, err := c.Send(host, &ProposeSkipBlock{hash, propose})
 	if err != nil {
 		return

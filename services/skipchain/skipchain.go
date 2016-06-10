@@ -49,8 +49,6 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
-	// TODO: support heights > 1
-
 	if !psbd.LatestID.IsNull() {
 		// We're appending a block to an existing chain
 		var ok bool
@@ -265,8 +263,11 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	if err != nil {
 		return err
 	}
-	if len(el.List) == 0 {
+	switch len(el.List) {
+	case 0:
 		return errors.New("Found empty EntityList")
+	case 1:
+		return errors.New("Need more than 1 entry for EntityList")
 	}
 
 	// Start the protocol
@@ -285,7 +286,6 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	}
 	root.Data = data
 	root.VerificationFunction = s.bftVerify
-	dbg.Print(msg, block.Hash)
 	// function that will be called when protocol is finished by the root
 	root.RegisterOnDone(func() {
 		done <- true
@@ -377,7 +377,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 
 // bftVerify takes a message and verifies it's valid
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
-	dbg.LLvlf4("%s verifying block %x", s.Entity(), msg)
+	dbg.Lvlf4("%s verifying block %x", s.Entity(), msg)
 	_, sbN, err := network.UnmarshalRegistered(data)
 	if err != nil {
 		dbg.Error("Couldn't unmarshal SkipBlock", data)
@@ -390,19 +390,19 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	}
 	switch sb.VerifierID {
 	case VerifyNone:
-		dbg.LLvl4("No verification - accepted")
+		dbg.Lvl4("No verification - accepted")
 		return true
 	case VerifyShard:
 		if sb.ParentBlockID.IsNull() {
-			dbg.LLvl3("No-child skipblock cannot verify to be shard")
+			dbg.Lvl3("No parent SkipBlock to verifiy shard against")
 		} else {
 			sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
 			if !exists {
-				dbg.LLvl3("Parent skipblock doesn't exist")
+				dbg.Lvl3("Parent skipblock doesn't exist")
 			} else {
 				for _, e := range sb.EntityList.List {
 					if i, _ := sbParent.EntityList.Search(e.ID); i < 0 {
-						dbg.LLvl3("Entity in child doesn't exist in parent")
+						dbg.Lvl3("Entity in child doesn't exist in parent")
 						return false
 					}
 				}

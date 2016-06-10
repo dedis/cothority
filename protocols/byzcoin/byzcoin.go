@@ -585,7 +585,7 @@ func (bz *ByzCoin) handleResponseCommit(bzr *Response) error {
 		})
 		bz.tcrMut.Unlock()
 	} else {
-		resp, err := bz.commit.Response(bz.tempCommitResponse)
+		resp, err := bz.commit.Response(true, bz.tempCommitResponse)
 		bz.tcrMut.Unlock()
 		if err != nil {
 			return err
@@ -628,7 +628,7 @@ func (bz *ByzCoin) handleResponsePrepare(bzr *Response) error {
 	bzrReturn, ok := bz.waitResponseVerification()
 	if ok {
 		// append response
-		resp, err := bz.prepare.Response(bz.tempPrepareResponse)
+		resp, err := bz.prepare.Response(true, bz.tempPrepareResponse)
 		bz.tprMut.Unlock()
 		if err != nil {
 			return err

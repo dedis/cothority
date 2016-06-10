@@ -292,9 +292,9 @@ func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) 
 func TestService_Verification(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	sbLength := 3
+	sbLength := 4
 	_, el, service := makeHELS(local, sbLength)
-	elRoot := sda.NewEntityList(el.List[0:2])
+	elRoot := sda.NewEntityList(el.List[0:3])
 	sbRoot := makeGenesisRoster(service, elRoot)
 
 	dbg.Lvl1("Creating non-conforming skipBlock")
@@ -313,7 +313,7 @@ func TestService_Verification(t *testing.T) {
 	dbg.Lvl1("Creating skipblock with same EntityList as root")
 	sbInter := makeGenesisRosterArgs(service, elRoot, sbRoot.Hash, VerifyShard, 1, 1)
 	dbg.Lvl1("Creating skipblock with sub-EntityList from root")
-	elSub := sda.NewEntityList(el.List[0:1])
+	elSub := sda.NewEntityList(el.List[0:2])
 	sbInter = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, VerifyShard, 1, 1)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
