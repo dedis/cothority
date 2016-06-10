@@ -90,6 +90,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 		// created
 		if !ok {
 			pi, err = ProtocolInstantiate(sdaMsg.To.ProtoID, tni)
+			o.host.newProtocolCallback(tni)
 			if err != nil {
 				return err
 			}

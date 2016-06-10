@@ -63,6 +63,8 @@ type Host struct {
 	ProcessMessagesQuit chan bool
 
 	serviceStore *serviceStore
+
+	newProtocolCallback func(*TreeNodeInstance)
 }
 
 // NewHost starts a new Host that will listen on the network for incoming

@@ -14,7 +14,7 @@ import (
 func TestNode(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
-	local := sda.NewLocalTest()
+	local := sda.NewLocalTest(Callback)
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 	defer local.CloseAll()
@@ -34,4 +34,9 @@ func TestNode(t *testing.T) {
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}
+}
+
+
+func Callback(tn *sda.TreeNodeInstance) {
+	dbg.Lvl1("Calllelddd")
 }
