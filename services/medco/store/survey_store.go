@@ -19,6 +19,7 @@ type Survey struct {
 	AggregatingAttributes                  map[TempID]CipherVector       //2
 
 	LocGroupingAggregating                 map[GroupingKey]CipherVector  //b & c
+	AfterAggrProto			               map[GroupingKey]CipherVector
 	LocGroupingGroups		       		   map[GroupingKey]GroupingAttributes
 
 	GroupedDeterministicGroupingAttributes map[TempID]GroupingAttributes //4
@@ -38,7 +39,8 @@ func NewSurvey() *Survey {
 
 		LocGroupingAggregating : make(map[GroupingKey]CipherVector),
 		LocGroupingGroups: make(map[GroupingKey]GroupingAttributes),
-	
+		AfterAggrProto : make(map[GroupingKey]CipherVector),
+		
 		GroupedDeterministicGroupingAttributes : make(map[TempID]GroupingAttributes),
 		GroupedAggregatingAttributes : make(map[TempID]CipherVector),
 	}
@@ -90,36 +92,42 @@ func (s *Survey) nextId() TempID {
 }
 
 func AddInMapping (s map[GroupingKey]CipherVector, key GroupingKey, added CipherVector){
-	var tempPointer *CipherVector
+	//var tempPointer *CipherVector
+	//tempPointer = nil
 	if _,ok := s[key]; !ok{
 		s[key] = added
 	} else {
-		tempVar := s[key]
-		tempPointer = &tempVar
-		tempPointer.Add(*tempPointer,added)
-		s[key] = *tempPointer
+		fmt.Println("v1 ", s[key])
+		fmt.Println("added ", added)
+		
+		result := Add2(s[key],added)
+		fmt.Println("result ", result)
+		s[key] = result
+		fmt.Println("result ", s[key])
 	}
 }
 
 
 func (s *Survey) PushCothorityAggregatedGroups(gNew map[GroupingKey]GroupingAttributes, sNew map[GroupingKey]CipherVector ){
 	for key, value := range sNew {
-		AddInMapping(s.LocGroupingAggregating, key, value)
+		_=value
+		AddInMapping(s.AfterAggrProto, key, value)
 		if _,ok := s.LocGroupingGroups[key]; !ok {
 			s.LocGroupingGroups[key] = gNew[key]
 		}
 	}
+	s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
 }
 
 
 func (s *Survey) PollCothorityAggregatedGroups() (*map[TempID]GroupingAttributes, *map[TempID]CipherVector) {
-	for key,value := range s.LocGroupingAggregating {
+	for key,value := range s.AfterAggrProto {
 		newId := s.nextId()
 		s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
 		s.GroupedAggregatingAttributes[newId] = value
 	}
-	s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
-	
+	s.AfterAggrProto = make(map[GroupingKey]CipherVector)
+	s.LocGroupingGroups = make (map[GroupingKey]GroupingAttributes)
 	return &s.GroupedDeterministicGroupingAttributes, &s.GroupedAggregatingAttributes
 }
 

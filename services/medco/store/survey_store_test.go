@@ -26,8 +26,8 @@ func TestStoring(t *testing.T) {
 	oneEnc := EncryptInt(suite, pubKey, 1)//*CipherText
 	oneBEnc := EncryptInt(suite, pubKey, 1)//*CipherText
 
-	oneEnc.SwitchToDeterministic(suite, secKey, secKey)
-	oneBEnc.SwitchToDeterministic(suite, secKey, secKey)
+	oneEnc.SwitchToDeterministic(suite, secKey, pubKey)
+	oneBEnc.SwitchToDeterministic(suite, secKey, pubKey)
 
 
 	
@@ -88,6 +88,7 @@ func TestStoring(t *testing.T) {
 	storage.InsertClientResponse(ClientResponse{testCipherVect2,testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect1,testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect2,testCipherVect1})
+	//storage.InsertClientResponse(ClientResponse{testCipherVect2,testCipherVect1})
 	
 	if !(len(storage.ClientResponses) == 3){
 		fmt.Println("insertion error")
@@ -113,7 +114,7 @@ func TestStoring(t *testing.T) {
 	groupedAttr[indexes[0]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, done}
 	groupedAttr[indexes[1]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, dnull}
 	groupedAttr[indexes[2]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, doneB}
-
+	//groupedAttr[indexes[3]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, doneB}
 
 	storage.PushDeterministicGroupingAttributes(groupedAttr)
 	//for i,v := range *locRes{
