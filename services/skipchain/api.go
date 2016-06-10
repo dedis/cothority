@@ -9,10 +9,8 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 )
 
-// TODO - send whole block along in 'data' for BFTSignature
-//	and verify the validity of the block
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing
-//	the exception-field
+//	the exception-field - has to wait for new cosi-library in crypto
 
 // Client is a structure to communicate with the Skipchain
 // service from the outside
