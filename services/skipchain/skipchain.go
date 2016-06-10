@@ -49,8 +49,6 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
-	// TODO: support heights > 1
-
 	if !psbd.LatestID.IsNull() {
 		// We're appending a block to an existing chain
 		var ok bool
@@ -265,12 +263,16 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	if err != nil {
 		return err
 	}
-	if len(el.List) == 0 {
+	switch len(el.List) {
+	case 0:
 		return errors.New("Found empty EntityList")
+	case 1:
+		return errors.New("Need more than 1 entry for EntityList")
 	}
 
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.Entity())
+	dbg.Print(tree.Dump())
 	node, err := s.CreateProtocolService(tree, skipchainBFT)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
@@ -285,7 +287,6 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	}
 	root.Data = data
 	root.VerificationFunction = s.bftVerify
-	dbg.Print(msg, block.Hash)
 	// function that will be called when protocol is finished by the root
 	root.RegisterOnDone(func() {
 		done <- true
