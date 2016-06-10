@@ -272,7 +272,6 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.Entity())
-	dbg.Print(tree.Dump())
 	node, err := s.CreateProtocolService(tree, skipchainBFT)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
@@ -378,7 +377,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 
 // bftVerify takes a message and verifies it's valid
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
-	dbg.LLvlf4("%s verifying block %x", s.Entity(), msg)
+	dbg.Lvlf4("%s verifying block %x", s.Entity(), msg)
 	_, sbN, err := network.UnmarshalRegistered(data)
 	if err != nil {
 		dbg.Error("Couldn't unmarshal SkipBlock", data)
@@ -391,19 +390,19 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	}
 	switch sb.VerifierID {
 	case VerifyNone:
-		dbg.LLvl4("No verification - accepted")
+		dbg.Lvl4("No verification - accepted")
 		return true
 	case VerifyShard:
 		if sb.ParentBlockID.IsNull() {
-			dbg.LLvl3("No-child skipblock cannot verify to be shard")
+			dbg.Lvl3("No-child skipblock cannot verify to be shard")
 		} else {
 			sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
 			if !exists {
-				dbg.LLvl3("Parent skipblock doesn't exist")
+				dbg.Lvl3("Parent skipblock doesn't exist")
 			} else {
 				for _, e := range sb.EntityList.List {
 					if i, _ := sbParent.EntityList.Search(e.ID); i < 0 {
-						dbg.LLvl3("Entity in child doesn't exist in parent")
+						dbg.Lvl3("Entity in child doesn't exist in parent")
 						return false
 					}
 				}
