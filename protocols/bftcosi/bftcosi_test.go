@@ -200,8 +200,8 @@ func bitCount(x int) int {
 }
 
 func verifyFailBit(m []byte, d []byte) bool {
-	myBit := uint(veriCount)
 	countMut.Lock()
+	myBit := uint(veriCount)
 	defer countMut.Unlock()
 	veriCount++
 	if failCount&(1<<myBit) != 0 {
