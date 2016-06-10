@@ -87,7 +87,7 @@ func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
 
 // SendISM takes the message and sends it to the corresponding service
 func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessage) error {
-	sName := ServiceFactory.Name(p.Context.GetID())
+	sName := ServiceFactory.Name(p.Context.ServiceID())
 	sm, err := CreateServiceMessage(sName, msg)
 	if err != nil {
 		return err
