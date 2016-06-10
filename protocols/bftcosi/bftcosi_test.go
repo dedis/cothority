@@ -56,10 +56,28 @@ func TestCheckFailMore(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verifyFailMore)
 	})
 
-	for _, n := range []int{3, 13} {
+	for _, n := range []int{3, 4, 13} {
 		for failCount = 1; failCount <= 3; failCount++ {
 			dbg.Lvl1("FailMore at", failCount)
-			runProtocolOnce(t, n, TestProtocolName, failCount == 1 || n > 3)
+			runProtocolOnce(t, n, TestProtocolName,
+				failCount < n*2/3)
+		}
+	}
+}
+
+func TestCheckFailBit(t *testing.T) {
+	const TestProtocolName = "DummyBFTCoSiFailBit"
+
+	// Register test protocol using BFTCoSi
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, verifyFailBit)
+	})
+
+	for _, n := range []int{2, 3, 4} {
+		for failCount = 0; failCount < 1<<uint(n); failCount++ {
+			dbg.Lvl1("FailBit at", failCount)
+			runProtocolOnce(t, n, TestProtocolName,
+				bitCount(failCount) < n*2/3)
 		}
 	}
 }
@@ -76,7 +94,8 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
+	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
+	dbg.Lvl3("Tree is:", tree.Dump())
 
 	done := make(chan bool)
 	// create the message we want to sign for this round
@@ -111,10 +130,10 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 		err := cosi.VerifyCosiSignatureWithException(root.Suite(),
 			root.AggregatedPublic, msg, sig.Sig, nil)
 		if succeed && err != nil {
-			t.Fatalf("%s Verification of the signature failed: %s", root.Name(), err.Error())
+			t.Fatalf("%s Verification of the signature failed: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}
 		if !succeed && err == nil {
-			t.Fatal(root.Name(), "Shouldn't have succeeded for", nbrHosts, "hosts, and failing:", failCount)
+			t.Fatal(root.Name(), "Shouldn't have succeeded for", nbrHosts, "hosts, but signed for count:", failCount)
 		}
 	case <-time.After(wait):
 		t.Fatal("Waited", wait, "sec for BFTCoSi to finish ...")
@@ -158,7 +177,7 @@ func verifyFailMore(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if veriCount <= failCount {
-		dbg.Lvl1("Failing for count==", failCount)
+		dbg.Lvlf1("Failing for %d<=%d", veriCount, failCount)
 		return false
 	}
 	dbg.Lvl1("Verification called", veriCount, "times")
@@ -167,6 +186,29 @@ func verifyFailMore(m []byte, d []byte) bool {
 		dbg.Error("Didn't receive correct data")
 		return false
 	}
+	// everything is OK, always:
+	return true
+}
+
+func bitCount(x int) int {
+	count := 0
+	for x != 0 {
+		x &= x - 1
+		count++
+	}
+	return count
+}
+
+func verifyFailBit(m []byte, d []byte) bool {
+	myBit := uint(veriCount)
+	countMut.Lock()
+	defer countMut.Unlock()
+	veriCount++
+	if failCount&(1<<myBit) != 0 {
+		dbg.Lvl1("Failing for myBit==", myBit)
+		return false
+	}
+	dbg.Lvl1("Verification called", veriCount, "times")
 	// everything is OK, always:
 	return true
 }

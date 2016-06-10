@@ -3,7 +3,6 @@
 package bftcosi
 
 import (
-	"math"
 	"sync"
 
 	"github.com/dedis/cothority/lib/cosi"
@@ -115,7 +114,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		doneSigning:          make(chan bool, 1),
 		VerificationFunction: verify,
 		AggregatedPublic:     n.EntityList().Aggregate,
-		threshold:            int(2.0 * math.Ceil(float64(len(n.Tree().List()))/3.0)),
+		threshold:            len(n.Tree().List()) * 2 / 3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
 	}
@@ -382,8 +381,8 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 
 	// Check if we have no more than 1/3 failed nodes
 	if len(ch.Exceptions) >= int(bft.threshold) {
-		dbg.Lvl2("More than 1/3 (%d/%d) refused to sign ! ABORT",
-			len(ch.Exceptions), len(bft.EntityList().List))
+		dbg.Lvlf2("%s: More than 1/3 (%d/%d) refused to sign - aborting.",
+			bft.Entity(), len(ch.Exceptions), len(bft.EntityList().List))
 		bft.signRefusal = true
 	}
 
@@ -464,7 +463,9 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 		}
 	} else {
 		r = &Response{TYPE: RoundCommit,
-			Response: &cosi.Response{}}
+			Response: &cosi.Response{
+				Response: bft.suite.Secret().Zero(),
+			}}
 	}
 
 	if bft.signRefusal {
