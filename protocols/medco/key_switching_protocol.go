@@ -12,10 +12,12 @@ import (
 
 const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
 
+
 type KeySwitchedCipherMessage struct {
 	Data []KeyValCV
 	NewKey abstract.Point
 	OriginalEphemeralKeys []KeyValSPoint
+	Proof [][]CompleteProof
 }
 
 type KeySwitchedCipherStruct struct {
@@ -96,7 +98,8 @@ func (p *KeySwitchingProtocol) Start() error {
 	p.sendToNext(&KeySwitchedCipherMessage{
 		MapToSliceCV(initialMap),
 		*p.TargetPublicKey,
-		MapToSliceSPoint(p.originalEphemKeys)})
+		MapToSliceSPoint(p.originalEphemKeys),
+		[][]CompleteProof{}})
 
 	return nil
 }
@@ -109,12 +112,45 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 	origEphemKeys := SliceToMapSPoint(keySwitchingTarget.OriginalEphemeralKeys)
 
 	randomnessContrib := p.Suite().Secret().Pick(random.Stream)
+	//keySwitchingTarget.KeySwitchedCipherMessage.Proof = [][]CompleteProof{}
+	length := len(keySwitchingTarget.KeySwitchedCipherMessage.Proof)
+	newProofs :=  [][]CompleteProof{}
+	dbg.LLvl1("ICI")
+	for i,kv := range keySwitchingTarget.Data {
+		//dbg.LLvl1(kv.Key)
+		if PROOF{
+			if length != 0 {
+				for u:=0; u < len(kv.Val); u++ {
+					if !VectSwitchCheckProof(keySwitchingTarget.KeySwitchedCipherMessage.Proof[0]){
+						
+						dbg.Errorf("ATTENTION, false proof detected")
+					}
+					keySwitchingTarget.KeySwitchedCipherMessage.Proof = keySwitchingTarget.KeySwitchedCipherMessage.Proof[1:]
+				}
+			}
+		}
 
-	for _,kv := range keySwitchingTarget.Data {
-		cv := kv.Val
-		cv.SwitchForKey(p.Suite(), p.Private(), origEphemKeys[kv.Key], keySwitchingTarget.NewKey, randomnessContrib)
+		//cv.SwitchForKey(p.Suite(), p.Private(), origEphemKeys[kv.Key], keySwitchingTarget.NewKey, randomnessContrib)
+		keySwitchNewVec := SwitchForKey2(kv.Val, p.Suite(), p.Private(), origEphemKeys[kv.Key], keySwitchingTarget.NewKey, randomnessContrib)
+		
+		
+		if PROOF{
+			dbg.LLvl1("proofs creation")
+			dbg.LLvl1("newProofs ", len(newProofs))
+			if len(newProofs) == 0 {
+				newProofs = [][]CompleteProof{[]CompleteProof{}}
+			} else {
+				newProofs = append(newProofs, []CompleteProof{})
+			}
+				//dbg.LLvl1(i)
+				newProofs[i] = VectSwitchKeyProof(p.Suite(), p.Private(), randomnessContrib, origEphemKeys[kv.Key], keySwitchingTarget.NewKey, kv.Val, keySwitchNewVec)
+				//dbg.LLvl1(newProofs[i])
+		}
+		keySwitchingTarget.Data[i].Val = keySwitchNewVec
+		
 	}
-
+	
+	keySwitchingTarget.Proof = newProofs
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed key switching.")
 		p.FeedbackChannel <- SliceToMapCV(keySwitchingTarget.Data)

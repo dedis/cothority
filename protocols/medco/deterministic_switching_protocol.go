@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	."github.com/dedis/cothority/services/medco/structs"
+		//"github.com/dedis/crypto/random"
 )
 
 const DETERMINISTIC_SWITCHING_PROTOCOL_NAME = "DeterministicSwitching"
@@ -20,6 +21,8 @@ func init() {
 
 type DeterministicSwitchedMessage struct {
 	Data []KeyValCV
+	OriginalEphemeralKeys []KeyValSPoint
+	Proof [][]CompleteProof
 }
 
 type DeterministicSwitchedStruct struct {
@@ -40,7 +43,10 @@ type DeterministicSwitchingProtocol struct {
 	nextNodeInCircuit         *sda.TreeNode
 	TargetOfSwitch            *map[TempID]CipherVector
 	SurveyPHKey		  *abstract.Secret
+	originalEphemKeys         map[TempID][]abstract.Point
 }
+
+var nilPH *abstract.Secret
 
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
@@ -71,12 +77,26 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as deterministic switching target.")
 	}
+	nilPH = p.SurveyPHKey
+	if p.SurveyPHKey == nil {
+		return errors.New("No PH key given.")
+	}
 
 	dbg.Lvl1(p.Entity(),"started a Deterministic Switching Protocol")
 
 	targetSliced := MapToSliceCV(*p.TargetOfSwitch)
-
-	p.sendToNext(&DeterministicSwitchedMessage{targetSliced})
+	
+	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
+	
+	for k := range *p.TargetOfSwitch {
+		p.originalEphemKeys[k] = make([]abstract.Point, len((*p.TargetOfSwitch)[k]))
+		for i, c := range (*p.TargetOfSwitch)[k] {
+			p.originalEphemKeys[k][i] = c.K
+		}
+	}
+	p.sendToNext(&DeterministicSwitchedMessage{targetSliced,
+		MapToSliceSPoint(p.originalEphemKeys),
+		[][]CompleteProof{}})
 
 	return nil
 }
@@ -85,10 +105,49 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <- p.PreviousNodeInPathChannel
-
-	for _,kv := range deterministicSwitchingTarget.Data {
-		kv.Val.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
+	
+	origEphemKeys := SliceToMapSPoint(deterministicSwitchingTarget.OriginalEphemeralKeys)
+	
+	if p.SurveyPHKey == nil {
+		p.SurveyPHKey = nilPH
 	}
+	
+	length := len(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
+	newProofs :=  [][]CompleteProof{}
+	for i,kv := range deterministicSwitchingTarget.Data {
+		if PROOF{
+			if length != 0 {
+				for u:=0; u < len(kv.Val); u++ {
+					if !VectSwitchCheckProof(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof[0]){
+						
+						dbg.Errorf("ATTENTION, false proof detected")
+					}
+					deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof = deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof[1:]
+				}
+			}
+		}
+		
+		//kv.Val.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
+		schemeSwitchNewVec := SwitchToDeterministic2(kv.Val, p.Suite(), p.Private(), *p.SurveyPHKey)
+		dbg.LLvl1(schemeSwitchNewVec)
+		if PROOF{
+			dbg.LLvl1("proofs creation")
+			if len(newProofs) == 0 {
+				newProofs = [][]CompleteProof{[]CompleteProof{}}
+			} else {
+				newProofs = append(newProofs, []CompleteProof{})
+			}
+				//dbg.LLvl1(i)
+				//suite abstract.Suite, k abstract.Secret, s abstract.Secret, Rjs []abstract.Point, C1 CipherVector, C2 CipherVector
+				newProofs[i] = VectSwitchSchemeProof(p.Suite(), p.Private(), *p.SurveyPHKey, origEphemKeys[kv.Key], kv.Val, schemeSwitchNewVec)
+				//dbg.LLvl1(newProofs[i])
+		}
+		deterministicSwitchingTarget.Data[i].Val = schemeSwitchNewVec
+		
+	}
+	
+	deterministicSwitchingTarget.Proof = newProofs
+	
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed deterministic switching.")

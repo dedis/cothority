@@ -137,6 +137,18 @@ func (c *CipherText) SwitchToDeterministic(suite abstract.Suite, private abstrac
 	c.C.Add(c.C, PHContrib)
 }
 
+func SwitchToDeterministic23(c CipherText, suite abstract.Suite, private abstract.Secret, PHContrib abstract.Point) CipherText{
+	EGContrib := suite.Point().Mul(c.K, private)
+	//PHContrib := suite.Point().Mul(suite.Point().Base(), newPrivate)
+	
+	newCi := CipherText{suite.Point(), suite.Point()}
+	newCi.K = c.K
+	newCi.C.Sub(c.C, EGContrib)
+	newCi.C.Add(newCi.C, PHContrib)
+	
+	return newCi
+}
+
 func (c *CipherText) SwitchToProbabilistic(suite abstract.Suite, PHContrib abstract.Point, targetPublic abstract.Point) {
 	//PHContrib := suite.Point().Mul(suite.Point().Base(), private)
 	
@@ -170,6 +182,34 @@ func (cv *CipherVector) SwitchForKey(suite abstract.Suite, private abstract.Secr
 	}
 }
 
+func  SwitchForKey2(cv CipherVector, suite abstract.Suite, private abstract.Secret, originalEphemKeys []abstract.Point, newKey abstract.Point, randomnessContribution abstract.Secret) CipherVector{
+	newCi := CipherText{suite.Point(), suite.Point()}
+	result := CipherVector{newCi} 
+	ephemKeyContrib := suite.Point().Mul(suite.Point().Base(), randomnessContribution)
+	for i,c := range cv {
+		if (i != 0 ){
+			result = append(result, newCi)
+		}
+		result[i] = SwitchForKey23(c,suite,private, originalEphemKeys[i],newKey,randomnessContribution, ephemKeyContrib)
+	}
+	return result
+}
+
+func SwitchForKey23(c CipherText, suite abstract.Suite, private abstract.Secret, originalEphemKey, newKey abstract.Point, randomnessContribution abstract.Secret, ephemKeyContrib abstract.Point) CipherText{
+	//ephemKeyContrib = suite.Point().Mul(suite.Point().Base(), randomnessContribution)
+	oldBlindingContrib := suite.Point().Mul(originalEphemKey, private)
+	newBlindingContrib := suite.Point().Mul(newKey, randomnessContribution)
+	
+	newCi := CipherText{suite.Point(), suite.Point()}
+	
+	newCi.K.Add(c.K, ephemKeyContrib)
+	newCi.C.Sub(c.C, oldBlindingContrib)
+	newCi.C.Add(newCi.C, newBlindingContrib)
+	
+	return newCi
+}
+
+
 func (cv *CipherVector) SwitchToDeterministic(suite abstract.Suite, private, newPrivate abstract.Secret) {
 	// Can be optimized
 	PHContrib := suite.Point().Mul(suite.Point().Base(), newPrivate)
@@ -179,6 +219,23 @@ func (cv *CipherVector) SwitchToDeterministic(suite abstract.Suite, private, new
 		c.SwitchToDeterministic(suite, private, PHContrib)
 	}
 }
+
+func SwitchToDeterministic2(cv CipherVector, suite abstract.Suite, private, newPrivate abstract.Secret) CipherVector{
+	// Can be optimized
+	newCi := CipherText{suite.Point(), suite.Point()}
+	result := CipherVector{newCi} 
+	PHContrib := suite.Point().Mul(suite.Point().Base(), newPrivate)
+	//
+	for i,c := range cv {
+		//c.SwitchToDeterministic(suite, private, newPrivate)
+		if (i != 0 ){
+			result = append(result, newCi)
+		}
+		result[i] = SwitchToDeterministic23(c, suite, private, PHContrib)
+	}
+	return result
+}
+
 
 func (cv *CipherVector) SwitchToProbabilistic(suite abstract.Suite, private abstract.Secret, targetPublic abstract.Point) {
 	// Can be optimized
