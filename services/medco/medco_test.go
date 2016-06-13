@@ -33,8 +33,8 @@ func TestServiceMedco(t *testing.T) {
 		dataHolder[i] = medco_service.NewMedcoClient(el.List[0])
 		grp := make([]int64, 2)
 		aggr := make([]int64, 4)
-		grp[i%2] = int64(i)
-		aggr[i] = 3
+		grp[i%2] = int64(2)
+		aggr[i%2] = 3
 		dataHolder[i].SendSurveyResultsData(grp, aggr, el.Aggregate)
 	}
 	grp,aggr ,err := client.GetSurveyResults()
@@ -49,8 +49,6 @@ func TestServiceMedco(t *testing.T) {
 	//if !reflect.DeepEqual(*results, expected) {
 	//	t.Fatal("Wrong results.")
 	//}
-
-
 }
 
 

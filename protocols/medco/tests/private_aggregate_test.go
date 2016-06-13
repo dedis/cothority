@@ -2,66 +2,53 @@ package medco_test
 
 import (
 	"testing"
-	//"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/lib/network"
-	//"github.com/dedis/crypto/abstract"
-	//"fmt"
 	"time"
 	_"reflect"
-	"github.com/dedis/cothority/services/medco/structs"
+	."github.com/dedis/cothority/services/medco/structs"
+	"github.com/dedis/crypto/random"
 )
 
 func TestPrivateAggregate5Nodes(t *testing.T) {
 	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	dbg.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
-	host,entityList, tree := local.GenTree(5, false, true, true)
+	_,/*entityList*/_, tree := local.GenTree(5, false, true, true)
 	defer local.CloseAll()
-	
-	
+
 	p,err := local.CreateProtocol(tree, "PrivateAggregate")
-	
+	//tni, _ := local.NewTreeNodeInstance(tree.Root, "PrivateAggregate")
+	//p,err := medco.NewPrivateAggregate(tni)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
 	protocol := p.(*medco.PrivateAggregateProtocol)
 	
-	suite := host[0].Suite()
-	aggregateKey := entityList.Aggregate
+	suite := network.Suite
+	//aggregateKey := entityList.Aggregate
+	// Generate client key
+	clientPrivate := suite.Secret().Pick(random.Stream)
+	clientPublic := suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
-	_=suite
-	_=aggregateKey
-	
-	dbg.LLvl1("dataref")
-	//DataReference creation
-	testCipherVect := make(medco_structs.CipherVector, 4)
-	for i, val := range []int64{1,2,3,6} {
-		testCipherVect[i] = *medco_structs.EncryptInt(suite, aggregateKey, val)
-	}
-	
-	var det1 medco_structs.DeterministCipherText
-	var det2 medco_structs.DeterministCipherText
-	det1.C = suite.Point().Base()
-	det2.C = suite.Point().Add(det1.C, det1.C)
-	groupAttr := medco_structs.GroupingAttributes{det1, det1}
-	dbg.LLvl1(det1)
-	dbg.Printf("%#v", groupAttr)	
-	groupAttr2 := medco_structs.GroupingAttributes{det2,det2}
-	aggrAttr := testCipherVect
-	var mpMessage map[medco_structs.GroupingAttributes]medco_structs.CipherVector
-	_=groupAttr
-	_=groupAttr2
-	_=aggrAttr
-	_=mpMessage
-	/*mpMessage[groupAttr] = aggrAttr
-	mpMessage[groupAttr2] = aggrAttr*/
-	protocol.DataReference = &mpMessage
-	
-	
-	dbg.LLvl1("Start PROTOCOL")
+	// Generate test data
+	testGAMap := make(map[GroupingKey]GroupingAttributes)
+	grpattr1 := DeterministCipherText{suite.Point().Base()}
+	grpattr2 := DeterministCipherText{suite.Point().Null()}
+	groupingAttrA,_ := DeterministicCipherVectorToGroupingAttributes(DeterministCipherVector{grpattr1, grpattr1})
+	groupingAttrB,_ := DeterministicCipherVectorToGroupingAttributes(DeterministCipherVector{grpattr2, grpattr2})
+	testGAMap[groupingAttrA.Key()] = groupingAttrA
+	testGAMap[groupingAttrB.Key()] = groupingAttrB
+	testCVMap := make(map[GroupingKey]CipherVector)
+	testCVMap[groupingAttrA.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1,2,3,4,5})
+	testCVMap[groupingAttrB.Key()] = *EncryptIntArray(suite, clientPublic, []int64{6,7,8,9,10})
+
+	protocol.Groups = &testGAMap
+	protocol.GroupedData = &testCVMap
+
+	go protocol.Dispatch()
 	go protocol.StartProtocol()
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 	
@@ -69,8 +56,11 @@ func TestPrivateAggregate5Nodes(t *testing.T) {
 
 	select {
 	case encryptedResult := <- feedback:
-		dbg.Lvl1(local.Nodes)
-		dbg.Lvl1("Recieved results", encryptedResult)
+		dbg.Lvl1("Recieved results:")
+		for k := range encryptedResult.GroupedData {
+			dbg.Lvl1(k, DecryptIntVector(suite, clientPrivate, encryptedResult.GroupedData[k]))
+		}
+
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}

@@ -7,9 +7,7 @@ import (
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/lib/network"
 	"time"
-	_"reflect"
 	"github.com/dedis/crypto/random"
-	"reflect"
 	."github.com/dedis/cothority/services/medco/structs"
 )
 
@@ -18,12 +16,16 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	local := sda.NewLocalTest()
 	dbg.TestOutput(testing.Verbose(), 5)
 	host,entityList, tree := local.GenTree(5, false, true, true)
+
 	defer local.CloseAll()
 
-	rootInstance,_ := local.CreateProtocol(tree, "KeySwitching")
+	rootInstance,err := local.CreateProtocol(tree, "KeySwitching")
+	if err != nil {
+		t.Fatal("Couldn't start protocol:", err)
+	}
 	protocol := rootInstance.(*medco.KeySwitchingProtocol)
 
-	suite := host[0].Suite()
+	suite := network.Suite
 	aggregateKey := entityList.Aggregate
 
 	// Encrypt test data with group key
@@ -45,11 +47,13 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	mapi[TempID(2)] = testCipherVect1
 	mapi[TempID(3)] = testCipherVect1
 
+
 	// Generate client key
 	clientPrivate := suite.Secret().Pick(random.Stream)
 	clientPublic := suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
 	protocol.TargetOfSwitch = &mapi
+
 	protocol.TargetPublicKey = &clientPublic
 	feedback := protocol.FeedbackChannel
 
@@ -66,6 +70,9 @@ func TestKeySwitching5Nodes(t *testing.T) {
 		if !reflect.DeepEqual(res,expRes ){
 			t.Fatal("Wrong results, expected", expRes, "but got", res)
 		}
+		//if !reflect.DeepEqual(res,expRes ){
+		//	t.Fatal("Wrong results, expected", expRes, "but got", res)
+		//}
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}
