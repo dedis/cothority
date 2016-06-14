@@ -17,7 +17,7 @@ func MapToSliceCV(m map[TempID]CipherVector) []KeyValCV {
 
 func SliceToMapCV(s []KeyValCV) map[TempID]CipherVector {
 	m := make(map[TempID]CipherVector, len(s))
-	for _,kv := range s {
+	for _, kv := range s {
 		m[kv.Key] = kv.Val
 	}
 	return m
@@ -38,7 +38,7 @@ func MapToSliceGKCV(m map[GroupingKey]CipherVector) []KeyValGKCV {
 
 func SliceToMapGKCV(s []KeyValGKCV) map[GroupingKey]CipherVector {
 	m := make(map[GroupingKey]CipherVector, len(s))
-	for _,kv := range s {
+	for _, kv := range s {
 		m[kv.Key] = kv.Val
 	}
 	return m
@@ -59,7 +59,7 @@ func MapToSliceGKGA(m map[GroupingKey]GroupingAttributes) []KeyValGKGA {
 
 func SliceToMapGKGA(s []KeyValGKGA) map[GroupingKey]GroupingAttributes {
 	m := make(map[GroupingKey]GroupingAttributes, len(s))
-	for _,kv := range s {
+	for _, kv := range s {
 		m[kv.Key] = kv.Val
 	}
 	return m
@@ -80,7 +80,7 @@ func MapToSliceSPoint(m map[TempID][]abstract.Point) []KeyValSPoint {
 
 func SliceToMapSPoint(s []KeyValSPoint) map[TempID][]abstract.Point {
 	m := make(map[TempID][]abstract.Point, len(s))
-	for _,kv := range s {
+	for _, kv := range s {
 		m[kv.Key] = kv.Val
 	}
 	return m

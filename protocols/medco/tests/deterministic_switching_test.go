@@ -1,26 +1,26 @@
 package medco_test
 
 import (
-	"testing"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/medco"
-	"github.com/dedis/cothority/lib/network"
-	"time"
-	_"reflect"
+	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/random"
 	"reflect"
-	."github.com/dedis/cothority/services/medco/structs"
+	_ "reflect"
+	"testing"
+	"time"
 )
 
 func TestDeterministicSwitching5Nodes(t *testing.T) {
 	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	dbg.TestOutput(testing.Verbose(), 1)
-	host,entityList, tree := local.GenTree(5, false, true, true)
+	host, entityList, tree := local.GenTree(5, false, true, true)
 	defer local.CloseAll()
 
-	rootInstance,_ := local.CreateProtocol(tree, "DeterministicSwitching")
+	rootInstance, _ := local.CreateProtocol(tree, "DeterministicSwitching")
 	protocol := rootInstance.(*medco.DeterministicSwitchingProtocol)
 
 	suite := host[0].Suite()
@@ -28,17 +28,17 @@ func TestDeterministicSwitching5Nodes(t *testing.T) {
 
 	// Encrypt test data with group key
 	testCipherVect := make(CipherVector, 4)
-	expRes := []int64{1,2,3,6}
+	expRes := []int64{1, 2, 3, 6}
 	for i, p := range expRes {
 		testCipherVect[i] = *EncryptInt(suite, aggregateKey, p)
 	}
-	
+
 	testCipherVect1 := make(CipherVector, 4)
-	expRes1 := []int64{1,2,3,6}
+	expRes1 := []int64{1, 2, 3, 6}
 	for i, p := range expRes1 {
 		testCipherVect1[i] = *EncryptInt(suite, aggregateKey, p)
 	}
-	
+
 	var mapi map[TempID]CipherVector
 	mapi = make(map[TempID]CipherVector)
 	mapi[TempID(1)] = testCipherVect
@@ -51,7 +51,7 @@ func TestDeterministicSwitching5Nodes(t *testing.T) {
 
 	protocol.TargetOfSwitch = &mapi
 	protocol.SurveyPHKey = &clientPrivate
-	
+
 	dbg.LLvl1(protocol.SurveyPHKey)
 	feedback := protocol.FeedbackChannel
 
@@ -60,12 +60,12 @@ func TestDeterministicSwitching5Nodes(t *testing.T) {
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
 	select {
-	case encryptedResult := <- feedback:
+	case encryptedResult := <-feedback:
 		res := encryptedResult[TempID(1)]
 		dbg.Lvl1("Recieved results", res)
 		res1 := encryptedResult[TempID(2)]
 		dbg.Lvl1("Recieved results", res1)
-		if !reflect.DeepEqual(res,res1 ){
+		if !reflect.DeepEqual(res, res1) {
 			t.Fatal("Wrong results, expected", expRes, "but got", res)
 		}
 	case <-time.After(timeout):

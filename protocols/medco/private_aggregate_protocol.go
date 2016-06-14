@@ -5,8 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	."github.com/dedis/cothority/services/medco/structs"
-	
+	. "github.com/dedis/cothority/services/medco/structs"
 )
 
 const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"
@@ -20,7 +19,7 @@ type DataReferenceStruct struct {
 }
 
 type ChildAggregatedDataMessage struct {
-	ChildData []KeyValGKCV
+	ChildData   []KeyValGKCV
 	ChildGroups []KeyValGKGA
 }
 
@@ -30,8 +29,8 @@ type ChildAggregatedDataStruct struct {
 }
 
 type CothorityAggregatedData struct {
-	Groups		     map[GroupingKey]GroupingAttributes
-	GroupedData          map[GroupingKey]CipherVector
+	Groups      map[GroupingKey]GroupingAttributes
+	GroupedData map[GroupingKey]CipherVector
 }
 
 func init() {
@@ -47,22 +46,22 @@ type PrivateAggregateProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel      chan CothorityAggregatedData
+	FeedbackChannel chan CothorityAggregatedData
 
 	// Protocol communication channels
 	DataReferenceChannel chan DataReferenceStruct
 	ChildDataChannel     chan []ChildAggregatedDataStruct
 
 	// Protocol state data
-	GroupedData          *map[GroupingKey]CipherVector
-	Groups		     *map[GroupingKey]GroupingAttributes
+	GroupedData *map[GroupingKey]CipherVector
+	Groups      *map[GroupingKey]GroupingAttributes
 }
 
 // NewExampleChannels initialises the structure for use in one round
 func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	privateAggregateProtocol := &PrivateAggregateProtocol{
-		TreeNodeInstance:       n,
-		FeedbackChannel: make(chan CothorityAggregatedData),
+		TreeNodeInstance: n,
+		FeedbackChannel:  make(chan CothorityAggregatedData),
 	}
 
 	if err := privateAggregateProtocol.RegisterChannel(&privateAggregateProtocol.DataReferenceChannel); err != nil {
@@ -80,9 +79,8 @@ func (p *PrivateAggregateProtocol) Start() error {
 	if p.GroupedData == nil {
 		return errors.New("No data reference provided for aggregation.")
 	}
-	
-	dbg.Lvl1(p.Entity(),"started a Private Aggregate Protocol")
 
+	dbg.Lvl1(p.Entity(), "started a Private Aggregate Protocol")
 
 	p.SendToChildren(&DataReferenceMessage{})
 
@@ -101,14 +99,12 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 	groups, aggregatedData := p.ascendingAggregationPhase()
 	dbg.Lvl1(p.Entity(), "completed aggregation phase.")
 
-
 	// 3. Result reporting
 	if p.IsRoot() {
 		p.FeedbackChannel <- CothorityAggregatedData{*groups, *aggregatedData}
 	}
 	return nil
 }
-
 
 func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	dataReferenceMessage := <-p.DataReferenceChannel
@@ -117,18 +113,18 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	}
 }
 
-func (p *PrivateAggregateProtocol) ascendingAggregationPhase()(
-*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
+func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
+	*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
 
 	if p.GroupedData == nil { // TODO: Aggregate a zero contribution
-		emptyMap := make(map[GroupingKey]CipherVector,0)
+		emptyMap := make(map[GroupingKey]CipherVector, 0)
 		emptyGroupMap := make(map[GroupingKey]GroupingAttributes, 0)
 		p.GroupedData = &emptyMap
 		p.Groups = &emptyGroupMap
 	}
 
 	if !p.IsLeaf() {
-		for _,childrenContribution := range <- p.ChildDataChannel {
+		for _, childrenContribution := range <-p.ChildDataChannel {
 			childDataMap := SliceToMapGKCV(childrenContribution.ChildData)
 			childGroupMap := SliceToMapGKGA(childrenContribution.ChildGroups)
 			for group := range childDataMap {
@@ -145,5 +141,5 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase()(
 	if !p.IsRoot() {
 		p.SendToParent(&ChildAggregatedDataMessage{MapToSliceGKCV(*p.GroupedData), MapToSliceGKGA(*p.Groups)})
 	}
-	return  p.Groups, p.GroupedData
+	return p.Groups, p.GroupedData
 }

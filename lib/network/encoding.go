@@ -9,10 +9,10 @@ import (
 
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/crypto/abstract"
-_	"github.com/dedis/crypto/edwards"
+	_ "github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/edwards/ed25519"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-"github.com/dedis/crypto/edwards/ed25519"
 )
 
 /// Encoding part ///
