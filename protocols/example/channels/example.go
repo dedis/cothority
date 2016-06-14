@@ -71,7 +71,7 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 				}
 			} else {
 				// If we're the leaf, start to reply
-				err := p.SendTo(p.Parent(), &Reply{1})
+				err := p.SendTo(p.Parent(), &Reply{1, p.Message})
 				if err != nil {
 					dbg.Error(p.Info(), "failed to send reply to",
 						p.Parent().Name(), err)
@@ -82,11 +82,12 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			children := 1
 			for _, c := range reply {
 				children += c.ChildrenCount
+				dbg.Lvl1("Child message was:", c.Message)
 			}
 			dbg.Lvl3(p.Entity().Addresses, "is done with total of", children)
 			if !p.IsRoot() {
 				dbg.Lvl3("Sending to parent")
-				err := p.SendTo(p.Parent(), &Reply{children})
+				err := p.SendTo(p.Parent(), &Reply{children, p.Message})
 				if err != nil {
 					dbg.Error(p.Info(), "failed to reply to",
 						p.Parent().Name(), err)

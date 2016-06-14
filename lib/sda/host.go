@@ -63,6 +63,9 @@ type Host struct {
 	ProcessMessagesQuit chan bool
 
 	serviceStore *serviceStore
+
+	// factory overriding protocol instance creation
+	newProtocol func(*TreeNodeInstance) (ProtocolInstance, error)
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -243,6 +246,12 @@ func (h *Host) StartProcessMessages() {
 	h.networkLock.Lock()
 	h.processMessagesStarted = true
 	go h.processMessages()
+}
+
+// RegisterNewProtocolFactory registers a new constructor function for the overlay to use for creating new
+// ProtocolInstance's
+func (h *Host) RegisterNewProtocol(fn func(*TreeNodeInstance) (ProtocolInstance, error)) {
+	h.newProtocol = fn
 }
 
 // ProcessMessages checks if it is one of the messages for us or dispatch it
