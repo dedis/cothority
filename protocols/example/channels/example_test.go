@@ -25,7 +25,6 @@ func TestNode(t *testing.T) {
 		t.Fatal("Couldn't create protocol:", err)
 	}
 
-
 	protocol := p.(*example_channels.ProtocolExampleChannels)
 	protocol.Start()
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
@@ -49,12 +48,12 @@ func TestNode2(t *testing.T) {
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 
 	// Register a constructor at host level
-	for _,h := range local.Hosts {
+	for _, h := range local.Hosts {
 		h.RegisterNewProtocol(NewProtocol)
 	}
 	defer local.CloseAll()
 
-	p, err := local.StartProtocol("ExampleChannels",tree)
+	p, err := local.StartProtocol("ExampleChannels", tree)
 	if err != nil {
 		t.Fatal("Couldn't create protocol:", err)
 	}
@@ -75,5 +74,5 @@ func TestNode2(t *testing.T) {
 func NewProtocol(tn *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	pi, err := example_channels.NewExampleChannels(tn)
 	pi.(*example_channels.ProtocolExampleChannels).Message = "This works."
-	return pi,err
+	return pi, err
 }

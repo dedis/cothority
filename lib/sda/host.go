@@ -65,7 +65,7 @@ type Host struct {
 	serviceStore *serviceStore
 
 	// factory overriding protocol instance creation
-	newProtocol func(*TreeNodeInstance)(ProtocolInstance, error)
+	newProtocol func(*TreeNodeInstance) (ProtocolInstance, error)
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -250,7 +250,7 @@ func (h *Host) StartProcessMessages() {
 
 // RegisterNewProtocolFactory registers a new constructor function for the overlay to use for creating new
 // ProtocolInstance's
-func (h *Host) RegisterNewProtocol(fn func(*TreeNodeInstance)(ProtocolInstance, error)) {
+func (h *Host) RegisterNewProtocol(fn func(*TreeNodeInstance) (ProtocolInstance, error)) {
 	h.newProtocol = fn
 }
 

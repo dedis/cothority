@@ -17,7 +17,7 @@ type StructAnnounce struct {
 // Reply returns the count of all children.
 type Reply struct {
 	ChildrenCount int
-	Message string
+	Message       string
 }
 
 // StructReply contains Reply and the data necessary to identify the
