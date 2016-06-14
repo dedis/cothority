@@ -1,30 +1,28 @@
 package medco
 
 import (
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/sda"
 	"errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/lib/sda"
+	. "github.com/dedis/cothority/services/medco/structs"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
-	."github.com/dedis/cothority/services/medco/structs"
 )
 
 const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
 
-
 type KeySwitchedCipherMessage struct {
-	Data []KeyValCV
-	NewKey abstract.Point
-	OriginalEphemeralKeys []KeyValSPoint
-	Proof [][]CompleteProof
+	Data                  map[TempID]CipherVector
+	NewKey                abstract.Point
+	OriginalEphemeralKeys map[TempID][]abstract.Point
+	Proof                 map[TempID][]CompleteProof
 }
 
 type KeySwitchedCipherStruct struct {
 	*sda.TreeNode
 	KeySwitchedCipherMessage
 }
-
 
 func init() {
 	network.RegisterMessageType(KeySwitchedCipherMessage{})
@@ -35,22 +33,22 @@ type KeySwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel           chan map[TempID]CipherVector
+	FeedbackChannel chan map[TempID]CipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan KeySwitchedCipherStruct
 
 	// Protocol state data
-	nextNodeInCircuit         *sda.TreeNode
-	TargetOfSwitch            *map[TempID]CipherVector
-	TargetPublicKey           *abstract.Point
-	originalEphemKeys         map[TempID][]abstract.Point
+	nextNodeInCircuit *sda.TreeNode
+	TargetOfSwitch    *map[TempID]CipherVector
+	TargetPublicKey   *abstract.Point
+	originalEphemKeys map[TempID][]abstract.Point
 }
 
 func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	keySwitchingProtocol := &KeySwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel: make(chan map[TempID]CipherVector),
+		FeedbackChannel:  make(chan map[TempID]CipherVector),
 	}
 
 	if err := keySwitchingProtocol.RegisterChannel(&keySwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -81,7 +79,7 @@ func (p *KeySwitchingProtocol) Start() error {
 		return errors.New("No new public key to be switched on provided.")
 	}
 
-	dbg.Lvl1(p.Entity(),"started a Key Switching Protocol")
+	dbg.Lvl1(p.Entity(), "started a Key Switching Protocol")
 
 	initialMap := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
@@ -96,10 +94,10 @@ func (p *KeySwitchingProtocol) Start() error {
 	}
 
 	p.sendToNext(&KeySwitchedCipherMessage{
-		MapToSliceCV(initialMap),
+		initialMap,
 		*p.TargetPublicKey,
-		MapToSliceSPoint(p.originalEphemKeys),
-		[][]CompleteProof{}})
+		p.originalEphemKeys,
+		map[TempID][]CompleteProof{}})
 
 	return nil
 }
@@ -107,53 +105,44 @@ func (p *KeySwitchingProtocol) Start() error {
 // Dispatch is an infinite loop to handle messages from channels
 func (p *KeySwitchingProtocol) Dispatch() error {
 
-	keySwitchingTarget := <- p.PreviousNodeInPathChannel
+	keySwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	origEphemKeys := SliceToMapSPoint(keySwitchingTarget.OriginalEphemeralKeys)
+	origEphemKeys := keySwitchingTarget.OriginalEphemeralKeys
 
 	randomnessContrib := p.Suite().Secret().Pick(random.Stream)
 	//keySwitchingTarget.KeySwitchedCipherMessage.Proof = [][]CompleteProof{}
 	length := len(keySwitchingTarget.KeySwitchedCipherMessage.Proof)
-	newProofs :=  [][]CompleteProof{}
-	dbg.LLvl1("ICI")
-	for i,kv := range keySwitchingTarget.Data {
+	newProofs := map[TempID][]CompleteProof{}
+	for k, v := range keySwitchingTarget.Data {
 		//dbg.LLvl1(kv.Key)
-		if PROOF{
+		if PROOF {
 			if length != 0 {
-				for u:=0; u < len(kv.Val); u++ {
-					if !VectSwitchCheckProof(keySwitchingTarget.KeySwitchedCipherMessage.Proof[0]){
-						
+				for _,v := range keySwitchingTarget.KeySwitchedCipherMessage.Proof {
+					if !VectSwitchCheckProof(v) {
+
 						dbg.Errorf("ATTENTION, false proof detected")
 					}
-					keySwitchingTarget.KeySwitchedCipherMessage.Proof = keySwitchingTarget.KeySwitchedCipherMessage.Proof[1:]
 				}
 			}
 		}
 
 		//cv.SwitchForKey(p.Suite(), p.Private(), origEphemKeys[kv.Key], keySwitchingTarget.NewKey, randomnessContrib)
-		keySwitchNewVec := SwitchForKey2(kv.Val, p.Suite(), p.Private(), origEphemKeys[kv.Key], keySwitchingTarget.NewKey, randomnessContrib)
-		
-		
-		if PROOF{
+		keySwitchNewVec := SwitchForKey2(v, p.Suite(), p.Private(), origEphemKeys[k], keySwitchingTarget.NewKey, randomnessContrib)
+
+		if PROOF {
 			dbg.LLvl1("proofs creation")
-			dbg.LLvl1("newProofs ", len(newProofs))
-			if len(newProofs) == 0 {
-				newProofs = [][]CompleteProof{[]CompleteProof{}}
-			} else {
-				newProofs = append(newProofs, []CompleteProof{})
-			}
-				//dbg.LLvl1(i)
-				newProofs[i] = VectSwitchKeyProof(p.Suite(), p.Private(), randomnessContrib, origEphemKeys[kv.Key], keySwitchingTarget.NewKey, kv.Val, keySwitchNewVec)
-				//dbg.LLvl1(newProofs[i])
+			//dbg.LLvl1(i)
+			newProofs[k] = VectSwitchKeyProof(p.Suite(), p.Private(), randomnessContrib, origEphemKeys[k], keySwitchingTarget.NewKey, v, keySwitchNewVec)
+			//dbg.LLvl1(newProofs[i])
 		}
-		keySwitchingTarget.Data[i].Val = keySwitchNewVec
-		
+		keySwitchingTarget.Data[k] = keySwitchNewVec
+
 	}
-	
+
 	keySwitchingTarget.Proof = newProofs
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed key switching.")
-		p.FeedbackChannel <- SliceToMapCV(keySwitchingTarget.Data)
+		p.FeedbackChannel <- keySwitchingTarget.Data
 	} else {
 		dbg.Lvl1(p.Entity(), "carried on key switching.")
 		p.sendToNext(&keySwitchingTarget.KeySwitchedCipherMessage)

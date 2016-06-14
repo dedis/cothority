@@ -1,25 +1,26 @@
 package medco_test
 
 import (
-	"testing"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/medco"
-	"github.com/dedis/cothority/lib/network"
-	"time"
+	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/random"
-	."github.com/dedis/cothority/services/medco/structs"
+	"testing"
+	"time"
+	"reflect"
 )
 
 func TestKeySwitching5Nodes(t *testing.T) {
 	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	dbg.TestOutput(testing.Verbose(), 5)
-	host,entityList, tree := local.GenTree(5, false, true, true)
+	_, entityList, tree := local.GenTree(5, false, true, true)
 
 	defer local.CloseAll()
 
-	rootInstance,err := local.CreateProtocol(tree, "KeySwitching")
+	rootInstance, err := local.CreateProtocol(tree, "KeySwitching")
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
@@ -30,23 +31,22 @@ func TestKeySwitching5Nodes(t *testing.T) {
 
 	// Encrypt test data with group key
 	testCipherVect := make(CipherVector, 4)
-	expRes := []int64{1,2,3,6}
+	expRes := []int64{1, 2, 3, 6}
 	for i, p := range expRes {
 		testCipherVect[i] = *EncryptInt(suite, aggregateKey, p)
 	}
-	
+
 	testCipherVect1 := make(CipherVector, 4)
-	expRes1 := []int64{7,8,9,7}
+	expRes1 := []int64{7, 8, 9, 7}
 	for i, p := range expRes1 {
 		testCipherVect1[i] = *EncryptInt(suite, aggregateKey, p)
 	}
-	
+
 	var mapi map[TempID]CipherVector
 	mapi = make(map[TempID]CipherVector)
 	mapi[TempID(1)] = testCipherVect
 	mapi[TempID(2)] = testCipherVect1
 	mapi[TempID(3)] = testCipherVect1
-
 
 	// Generate client key
 	clientPrivate := suite.Secret().Pick(random.Stream)
@@ -62,12 +62,12 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
 	select {
-	case encryptedResult := <- feedback:
-		res := DecryptIntVector(suite, clientPrivate,encryptedResult[TempID(1)])
+	case encryptedResult := <-feedback:
+		res := DecryptIntVector(suite, clientPrivate, encryptedResult[TempID(1)])
 		dbg.Lvl1("Recieved results", res)
-		res1 := DecryptIntVector(suite, clientPrivate,encryptedResult[TempID(2)])
+		res1 := DecryptIntVector(suite, clientPrivate, encryptedResult[TempID(2)])
 		dbg.Lvl1("Recieved results", res1)
-		if !reflect.DeepEqual(res,expRes ){
+		if !reflect.DeepEqual(res, expRes) {
 			t.Fatal("Wrong results, expected", expRes, "but got", res)
 		}
 		//if !reflect.DeepEqual(res,expRes ){
@@ -77,4 +77,3 @@ func TestKeySwitching5Nodes(t *testing.T) {
 		t.Fatal("Didn't finish in time")
 	}
 }
-

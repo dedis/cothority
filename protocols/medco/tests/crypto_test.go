@@ -1,13 +1,13 @@
 package medco_test
 
 import (
-	"testing"
+	"github.com/dedis/cothority/lib/dbg"
+	. "github.com/dedis/cothority/services/medco/structs"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/random"
 	"reflect"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/dbg"
-	."github.com/dedis/cothority/services/medco/structs"
+	"testing"
 )
 
 var suite = edwards.NewAES128SHA256Ed25519(false)
@@ -25,7 +25,7 @@ func TestNullCipherText(t *testing.T) {
 	nullEnc := EncryptInt(suite, pubKey, 0)
 	nullDec := DecryptInt(suite, secKey, *nullEnc)
 
-	if (0 != nullDec) {
+	if 0 != nullDec {
 		t.Fatal("Decryption of encryption of 0 should be 0, got", nullDec)
 	}
 
@@ -33,7 +33,7 @@ func TestNullCipherText(t *testing.T) {
 	twoTimesNullEnc.Add(*nullEnc, *nullEnc)
 	twoTimesNullDec := DecryptInt(suite, secKey, twoTimesNullEnc)
 
-	if (0 != nullDec) {
+	if 0 != nullDec {
 		t.Fatal("Decryption of encryption of 0+0 should be 0, got", twoTimesNullDec)
 	}
 
@@ -47,21 +47,19 @@ func TestNullCipherVector(t *testing.T) {
 
 	nullVectDec := DecryptIntVector(suite, secKey, nullVectEnc)
 
-	target := []int64{0,0,0,0,0,0,0,0,0,0}
-	if (!reflect.DeepEqual(nullVectDec, target)) {
-		t.Fatal("Null vector of dimension 4 should be ",target, "got", nullVectDec )
+	target := []int64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	if !reflect.DeepEqual(nullVectDec, target) {
+		t.Fatal("Null vector of dimension 4 should be ", target, "got", nullVectDec)
 	}
 
 	twoTimesNullEnc := InitCipherVector(suite, 10)
 	err := twoTimesNullEnc.Add(nullVectEnc, nullVectEnc)
-	twoTimesNullDec := DecryptIntVector(suite,secKey,*twoTimesNullEnc)
+	twoTimesNullDec := DecryptIntVector(suite, secKey, *twoTimesNullEnc)
 
-	if (!reflect.DeepEqual(twoTimesNullDec, target)) {
-		t.Fatal("Null vector + Null vector should be ",target, "got", twoTimesNullDec )
+	if !reflect.DeepEqual(twoTimesNullDec, target) {
+		t.Fatal("Null vector + Null vector should be ", target, "got", twoTimesNullDec)
 	}
-	if (err != nil) {
+	if err != nil {
 		t.Fatal("No error should be produced, got", err)
 	}
 }
-
-
