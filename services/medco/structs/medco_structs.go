@@ -19,3 +19,14 @@ type ClientResponse struct {
 func (ga *GroupingAttributes) Key() GroupingKey {
 	return GroupingKey(fmt.Sprint(ga))
 }
+
+func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool{
+	if ga == nil || ga2 == nil {
+		return ga == ga2
+	}
+	equal := true
+	for i, attr := range *ga {
+		equal = equal && attr.Equals(&(*ga2)[i])
+	}
+	return equal
+}
