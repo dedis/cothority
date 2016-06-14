@@ -20,9 +20,9 @@ func init() {
 }
 
 type DeterministicSwitchedMessage struct {
-	Data                  []KeyValCV
-	OriginalEphemeralKeys []KeyValSPoint
-	Proof                 [][]CompleteProof
+	Data                  map[TempID]CipherVector
+	OriginalEphemeralKeys map[TempID][]abstract.Point
+	Proof                 map[TempID][]CompleteProof
 }
 
 type DeterministicSwitchedStruct struct {
@@ -84,8 +84,6 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 
 	dbg.Lvl1(p.Entity(), "started a Deterministic Switching Protocol")
 
-	targetSliced := MapToSliceCV(*p.TargetOfSwitch)
-
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
 
 	for k := range *p.TargetOfSwitch {
@@ -94,9 +92,9 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 			p.originalEphemKeys[k][i] = c.K
 		}
 	}
-	p.sendToNext(&DeterministicSwitchedMessage{targetSliced,
-		MapToSliceSPoint(p.originalEphemKeys),
-		[][]CompleteProof{}})
+	p.sendToNext(&DeterministicSwitchedMessage{*p.TargetOfSwitch,
+		p.originalEphemKeys,
+		map[TempID][]CompleteProof{}})
 
 	return nil
 }
@@ -106,44 +104,35 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	origEphemKeys := SliceToMapSPoint(deterministicSwitchingTarget.OriginalEphemeralKeys)
+	origEphemKeys := deterministicSwitchingTarget.OriginalEphemeralKeys
 
 	if p.SurveyPHKey == nil {
 		p.SurveyPHKey = nilPH
 	}
 
 	length := len(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
-	newProofs := [][]CompleteProof{}
-	for i, kv := range deterministicSwitchingTarget.Data {
+	newProofs := map[TempID][]CompleteProof{}
+	for k, v := range deterministicSwitchingTarget.Data {
 		if PROOF {
 			if length != 0 {
-				for u := 0; u < len(kv.Val); u++ {
-					if !VectSwitchCheckProof(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof[0]) {
-
+				for _,v := range deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof {
+					if !VectSwitchCheckProof(v) {
 						dbg.Errorf("ATTENTION, false proof detected")
 					}
-					deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof = deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof[1:]
 				}
 			}
 		}
 
 		//kv.Val.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
-		schemeSwitchNewVec := SwitchToDeterministic2(kv.Val, p.Suite(), p.Private(), *p.SurveyPHKey)
-		dbg.LLvl1(schemeSwitchNewVec)
+		schemeSwitchNewVec := SwitchToDeterministic2(v, p.Suite(), p.Private(), *p.SurveyPHKey)
 		if PROOF {
 			dbg.LLvl1("proofs creation")
-			if len(newProofs) == 0 {
-				newProofs = [][]CompleteProof{[]CompleteProof{}}
-			} else {
-				newProofs = append(newProofs, []CompleteProof{})
-			}
 			//dbg.LLvl1(i)
 			//suite abstract.Suite, k abstract.Secret, s abstract.Secret, Rjs []abstract.Point, C1 CipherVector, C2 CipherVector
-			newProofs[i] = VectSwitchSchemeProof(p.Suite(), p.Private(), *p.SurveyPHKey, origEphemKeys[kv.Key], kv.Val, schemeSwitchNewVec)
+			newProofs[k] = VectSwitchSchemeProof(p.Suite(), p.Private(), *p.SurveyPHKey, origEphemKeys[k], v, schemeSwitchNewVec)
 			//dbg.LLvl1(newProofs[i])
 		}
-		deterministicSwitchingTarget.Data[i].Val = schemeSwitchNewVec
-
+		deterministicSwitchingTarget.Data[k] = schemeSwitchNewVec
 	}
 
 	deterministicSwitchingTarget.Proof = newProofs
@@ -151,10 +140,10 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
 		deterministicSwitchedData := make(map[TempID]DeterministCipherVector, len(deterministicSwitchingTarget.Data))
-		for _, kv := range deterministicSwitchingTarget.Data {
-			deterministicSwitchedData[kv.Key] = make(DeterministCipherVector, len(kv.Val))
-			for i, c := range kv.Val {
-				deterministicSwitchedData[kv.Key][i] = DeterministCipherText{c.C}
+		for k, v := range deterministicSwitchingTarget.Data {
+			deterministicSwitchedData[k] = make(DeterministCipherVector, len(v))
+			for i, c := range v {
+				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
 			}
 		}
 		p.FeedbackChannel <- deterministicSwitchedData

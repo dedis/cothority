@@ -19,8 +19,8 @@ type DataReferenceStruct struct {
 }
 
 type ChildAggregatedDataMessage struct {
-	ChildData   []KeyValGKCV
-	ChildGroups []KeyValGKGA
+	ChildData   map[GroupingKey]CipherVector
+	ChildGroups map[GroupingKey]GroupingAttributes
 }
 
 type ChildAggregatedDataStruct struct {
@@ -125,10 +125,8 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 
 	if !p.IsLeaf() {
 		for _, childrenContribution := range <-p.ChildDataChannel {
-			childDataMap := SliceToMapGKCV(childrenContribution.ChildData)
-			childGroupMap := SliceToMapGKGA(childrenContribution.ChildGroups)
-			for group := range childDataMap {
-				(*p.Groups)[group] = childGroupMap[group]
+			for group := range childrenContribution.ChildData {
+				(*p.Groups)[group] = childrenContribution.ChildGroups[group]
 				if aggr, ok := (*p.GroupedData)[group]; ok {
 					localAggr := (*p.GroupedData)[group]
 					localAggr.Add(localAggr, aggr)
@@ -139,7 +137,7 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 		}
 	}
 	if !p.IsRoot() {
-		p.SendToParent(&ChildAggregatedDataMessage{MapToSliceGKCV(*p.GroupedData), MapToSliceGKGA(*p.Groups)})
+		p.SendToParent(&ChildAggregatedDataMessage{*p.GroupedData, *p.Groups})
 	}
 	return p.Groups, p.GroupedData
 }

@@ -26,12 +26,12 @@ type SurveyStoreInterface interface {
 	PushDeterministicGroupingAttributes(map[uuid.UUID]GroupingAttributes)
 
 	// Retrieves the group-wise aggregated responses
-	PollLocallyAggregatedResponses() *map[GroupingAttributes]CipherVector
+	PollLocallyAggregatedResponses() *map[GroupingKey]CipherVector
 
 	// *** The private aggregate protocol aggregates the results among the cothority
 
 	// Pushes the result of the private aggregate protocol in the -AggregatedResponses- map (= merge the maps)
-	PushCothorityAggregatedGroups(map[GroupingAttributes]CipherVector)
+	PushCothorityAggregatedGroups(map[GroupingKey]CipherVector)
 
 	// Creates two maps -DeterministicGroupingAttributes- [UUID] CipherVector and -AggregatedAttributes- [UUID] CipherVector (= split keyset and valueset)
 	PollDeterministicGroupingAttributes() *map[uuid.UUID]GroupingAttributes

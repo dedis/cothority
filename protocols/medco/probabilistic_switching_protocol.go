@@ -17,7 +17,7 @@ func init() {
 }
 
 type ProbabilisticSwitchedMessage struct {
-	Data            []KeyValCV
+	Data            map[TempID]CipherVector
 	TargetPublicKey abstract.Point
 }
 
@@ -87,7 +87,7 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 			targetOfSwitch[k][i] = pc
 		}
 	}
-	p.sendToNext(&ProbabilisticSwitchedMessage{MapToSliceCV(targetOfSwitch), *p.TargetPublicKey})
+	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch, *p.TargetPublicKey})
 
 	return nil
 }
@@ -97,13 +97,13 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	for _, kv := range probabilisticSwitchingTarget.Data {
-		kv.Val.SwitchToProbabilistic(p.Suite(), *p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey)
+	for _, v := range probabilisticSwitchingTarget.Data {
+		v.SwitchToProbabilistic(p.Suite(), *p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey)
 	}
 
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed probabilistic switching.")
-		p.FeedbackChannel <- SliceToMapCV(probabilisticSwitchingTarget.Data)
+		p.FeedbackChannel <- probabilisticSwitchingTarget.Data
 	} else {
 		dbg.Lvl1(p.Entity(), "carried on probabilistic switching.")
 		p.sendToNext(&probabilisticSwitchingTarget.ProbabilisticSwitchedMessage)

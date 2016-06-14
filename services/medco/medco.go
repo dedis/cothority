@@ -150,11 +150,7 @@ func (mcs *MedcoService) flushCollectedData() error {
 	deterministicGroupAttributes := make(map[TempID]GroupingAttributes, len(deterministicSwitchedResult))
 
 	for k := range deterministicSwitchedResult {
-		var err error
-		deterministicGroupAttributes[k], err = DeterministicCipherVectorToGroupingAttributes(deterministicSwitchedResult[k])
-		if err != nil {
-			return err
-		}
+		deterministicGroupAttributes[k] = GroupingAttributes(deterministicSwitchedResult[k])
 	}
 
 	mcs.store.PushDeterministicGroupingAttributes(deterministicGroupAttributes)
@@ -219,7 +215,7 @@ func (mcs *MedcoService) flushAggregatedData(querierKey *abstract.Point) error {
 
 	targetOfSwitch := make(map[TempID]DeterministCipherVector, len(*aggregatedGroups))
 	for k := range *aggregatedGroups {
-		targetOfSwitch[k] = GroupingAttributesToDeterministicCipherVector((*aggregatedGroups)[k])
+		targetOfSwitch[k] = DeterministCipherVector((*aggregatedGroups)[k])
 	}
 	probabilisticSwitchProtocol.TargetOfSwitch = &targetOfSwitch
 	probabilisticSwitchProtocol.TargetPublicKey = querierKey
