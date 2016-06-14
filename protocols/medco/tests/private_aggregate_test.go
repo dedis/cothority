@@ -29,8 +29,6 @@ func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 	pi, err := medco.NewPrivateAggregate(tni)
 	protocol := pi.(*medco.PrivateAggregateProtocol)
 
-
-
 	testGAMap := make(map[GroupingKey]GroupingAttributes)
 	testCVMap := make(map[GroupingKey]CipherVector)
 

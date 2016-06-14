@@ -103,24 +103,44 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	switch tn.ProtocolName() {
 	case medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME:
 		pi, err = medco.NewDeterministSwitchingProtocol(tn)
-		pi.(*medco.DeterministicSwitchingProtocol).SurveyPHKey = &mcs.surveyPHKey
-	case medco.PROBABILISTIC_SWITCHING_PROTOCOL_NAME:
-		pi, err = medco.NewProbabilisticSwitchingProtocol(tn)
-		pi.(*medco.ProbabilisticSwitchingProtocol).SurveyPHKey = &mcs.surveyPHKey
+		detSwitch := pi.(*medco.DeterministicSwitchingProtocol)
+		detSwitch.SurveyPHKey = &mcs.surveyPHKey
+		if tn.IsRoot() {
+			detSwitch.TargetOfSwitch = mcs.store.PollProbabilisticGroupingAttributes()
+		}
 	case medco.PRIVATE_AGGREGATE_PROTOCOL_NAME:
 		pi, err = medco.NewPrivateAggregate(tn)
 		groups, groupedData := mcs.store.PollLocallyAggregatedResponses()
 		pi.(*medco.PrivateAggregateProtocol).GroupedData = groupedData
 		pi.(*medco.PrivateAggregateProtocol).Groups = groups
+	case medco.PROBABILISTIC_SWITCHING_PROTOCOL_NAME:
+		pi, err = medco.NewProbabilisticSwitchingProtocol(tn)
+		probSwitch := pi.(*medco.ProbabilisticSwitchingProtocol)
+		probSwitch.SurveyPHKey = &mcs.surveyPHKey
+		if tn.IsRoot() {
+			groups,_ := mcs.store.PollCothorityAggregatedGroups()
+			probSwitch.TargetOfSwitch  = GroupingAttributesToDeterministicCipherVector(groups)
+			probSwitch.TargetPublicKey = &mcs.clientPublic
+		}
 	case medco.KEY_SWITCHING_PROTOCOL_NAME:
 		pi, err = medco.NewKeySwitchingProtocol(tn)
+		keySwitch := pi.(*medco.KeySwitchingProtocol)
+		if tn.IsRoot() {
+			_,keySwitch.TargetOfSwitch = mcs.store.PollCothorityAggregatedGroups()
+			keySwitch.TargetPublicKey = &mcs.clientPublic
+		}
 	default:
 		return nil, errors.New("Service attempts to start an unknown protocol: " + tn.ProtocolName() + ".")
 	}
+	return pi, err
+}
 
-	if err != nil {
-		dbg.Error(err)
-	}
+func (mcs *MedcoService) startProtocol(name string) (sda.ProtocolInstance, error) {
+	tni := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root,name)
+	pi , err := mcs.NewProtocol(tni, nil)
+	mcs.RegisterProtocolInstance(pi)
+	go pi.Dispatch()
+	go pi.Start()
 	return pi, err
 }
 
@@ -129,102 +149,49 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 // Performs the private grouping on the currently collected data
 func (mcs *MedcoService) flushCollectedData() error {
 
-	var probabilisticGroupingAttributes *map[TempID]CipherVector
-
-	probabilisticGroupingAttributes = mcs.store.PollProbabilisticGroupingAttributes()
-
-	tni := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root, medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME)
-	pi, err := medco.NewDeterministSwitchingProtocol(tni)
+	pi, err := mcs.startProtocol(medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME)
 	if err != nil {
-		return errors.New("Could not instanciate the required protocols")
+		return err
 	}
-	mcs.RegisterProtocolInstance(pi)
-	protocol := pi.(*medco.DeterministicSwitchingProtocol)
-	protocol.TargetOfSwitch = probabilisticGroupingAttributes
-	protocol.SurveyPHKey = &mcs.surveyPHKey
-	go protocol.Dispatch()
-	go protocol.Start()
+	deterministicSwitchedResult := <-pi.(*medco.DeterministicSwitchingProtocol).FeedbackChannel
 
-	deterministicSwitchedResult := <-protocol.FeedbackChannel
-
-	deterministicGroupAttributes := make(map[TempID]GroupingAttributes, len(deterministicSwitchedResult))
-
-	for k := range deterministicSwitchedResult {
-		deterministicGroupAttributes[k] = GroupingAttributes(deterministicSwitchedResult[k])
-	}
-
-	mcs.store.PushDeterministicGroupingAttributes(deterministicGroupAttributes)
-
+	mcs.store.PushDeterministicGroupingAttributes(*DeterministicCipherVectorToGroupingAttributes(&deterministicSwitchedResult))
 	return err
 }
 
 // Performs the per-group aggregation on the currently grouped data
 func (mcs *MedcoService) flushGroupedData() error {
 
-	var groupedData *map[GroupingKey]CipherVector
-	var groups *map[GroupingKey]GroupingAttributes
-
-	groups, groupedData = mcs.store.PollLocallyAggregatedResponses()
-
-	treeNodeInst := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root, medco.PRIVATE_AGGREGATE_PROTOCOL_NAME)
-	pi, err := medco.NewPrivateAggregate(treeNodeInst)
+	pi, err := mcs.startProtocol(medco.PRIVATE_AGGREGATE_PROTOCOL_NAME)
 	if err != nil {
-		return errors.New("Could not instanciate the required protocols")
+		return err
 	}
-	mcs.RegisterProtocolInstance(pi)
-	aggregateProtocol := pi.(*medco.PrivateAggregateProtocol)
-	aggregateProtocol.GroupedData = groupedData
-	aggregateProtocol.Groups = groups
-	go aggregateProtocol.Dispatch()
-	go aggregateProtocol.Start()
-	cothorityAggregatedData := <-aggregateProtocol.FeedbackChannel
+	cothorityAggregatedData := <-pi.(*medco.PrivateAggregateProtocol).FeedbackChannel
 
 	mcs.store.PushCothorityAggregatedGroups(cothorityAggregatedData.Groups, cothorityAggregatedData.GroupedData)
 
-	return nil
+	return err
 }
 
 // Perform the switch to data querier key on the currently aggregated data
 func (mcs *MedcoService) flushAggregatedData(querierKey *abstract.Point) error {
 
-	var aggregatedGroups *map[TempID]GroupingAttributes
-	var aggregatedAttributes *map[TempID]CipherVector
+	mcs.clientPublic = *querierKey
 
-	aggregatedGroups, aggregatedAttributes = mcs.store.PollCothorityAggregatedGroups()
-
-	treeNodeIKeySwitch := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root, medco.KEY_SWITCHING_PROTOCOL_NAME)
-	piKeySwitch, err := medco.NewKeySwitchingProtocol(treeNodeIKeySwitch)
+	pi, err := mcs.startProtocol(medco.KEY_SWITCHING_PROTOCOL_NAME)
 	if err != nil {
-		return errors.New("Could not instanciate the required protocols")
+		return err
 	}
-	mcs.RegisterProtocolInstance(piKeySwitch)
-	keySwitchProtocol := piKeySwitch.(*medco.KeySwitchingProtocol)
-	keySwitchProtocol.TargetOfSwitch = aggregatedAttributes
-	keySwitchProtocol.TargetPublicKey = querierKey
-	go keySwitchProtocol.Dispatch()
-	go keySwitchProtocol.Start()
-	keySwitchedAggregatedAttributes := <-keySwitchProtocol.FeedbackChannel
+	keySwitchedAggregatedAttributes := <-pi.(*medco.KeySwitchingProtocol).FeedbackChannel
 
-	treeNodeISchemeSwitch := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root, medco.PROBABILISTIC_SWITCHING_PROTOCOL_NAME)
-	piProbSwitch, err2 := medco.NewProbabilisticSwitchingProtocol(treeNodeISchemeSwitch)
-	if err2 != nil {
-		return errors.New("Could not instanciate the required protocols")
-	}
-	mcs.RegisterProtocolInstance(piProbSwitch)
-	probabilisticSwitchProtocol := piProbSwitch.(*medco.ProbabilisticSwitchingProtocol)
 
-	targetOfSwitch := make(map[TempID]DeterministCipherVector, len(*aggregatedGroups))
-	for k := range *aggregatedGroups {
-		targetOfSwitch[k] = DeterministCipherVector((*aggregatedGroups)[k])
+	pi, err = mcs.startProtocol(medco.PROBABILISTIC_SWITCHING_PROTOCOL_NAME)
+	if err != nil {
+		return err
 	}
-	probabilisticSwitchProtocol.TargetOfSwitch = &targetOfSwitch
-	probabilisticSwitchProtocol.TargetPublicKey = querierKey
-	probabilisticSwitchProtocol.SurveyPHKey = &mcs.surveyPHKey
-	go probabilisticSwitchProtocol.Dispatch()
-	go probabilisticSwitchProtocol.Start()
-	keySwitchedAggregatedGroups := <-probabilisticSwitchProtocol.FeedbackChannel
+	keySwitchedAggregatedGroups := <-pi.(*medco.ProbabilisticSwitchingProtocol).FeedbackChannel
 
 	mcs.store.PushQuerierKeyEncryptedData(keySwitchedAggregatedGroups, keySwitchedAggregatedAttributes)
 
-	return nil
+	return err
 }

@@ -7,7 +7,7 @@ import (
 const MAX_GROUP_ATTR int = 2
 const PROOF = false
 
-type GroupingAttributes []DeterministCipherText
+type GroupingAttributes DeterministCipherVector
 type GroupingKey string
 type TempID uint64
 
@@ -24,9 +24,21 @@ func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool{
 	if ga == nil || ga2 == nil {
 		return ga == ga2
 	}
-	equal := true
-	for i, attr := range *ga {
-		equal = equal && attr.Equals(&(*ga2)[i])
+	return ga.Equal(ga2)
+}
+
+func GroupingAttributesToDeterministicCipherVector(ga *map[TempID]GroupingAttributes) *map[TempID]DeterministCipherVector {
+	deterministicCipherVector := make(map[TempID]DeterministCipherVector, len(*ga))
+	for k := range *ga {
+		deterministicCipherVector[k] = DeterministCipherVector((*ga)[k])
 	}
-	return equal
+	return &deterministicCipherVector
+}
+
+func DeterministicCipherVectorToGroupingAttributes(dcv *map[TempID]DeterministCipherVector) *map[TempID]GroupingAttributes {
+	deterministicGroupAttributes := make(map[TempID]GroupingAttributes, len(*dcv))
+	for k := range *dcv {
+		deterministicGroupAttributes[k] = GroupingAttributes((*dcv)[k])
+	}
+	return &deterministicGroupAttributes
 }
