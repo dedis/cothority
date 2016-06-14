@@ -9,13 +9,14 @@ import (
 	"github.com/dedis/crypto/random"
 	"testing"
 	"time"
+	"reflect"
 )
 
 func TestKeySwitching5Nodes(t *testing.T) {
 	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
 	dbg.TestOutput(testing.Verbose(), 5)
-	host, entityList, tree := local.GenTree(5, false, true, true)
+	_, entityList, tree := local.GenTree(5, false, true, true)
 
 	defer local.CloseAll()
 

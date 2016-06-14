@@ -4,11 +4,11 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/proof"
+	"github.com/dedis/cothority/lib/network"
 )
 
-var suite = edwards.NewAES128SHA256Ed25519(false)
+var suite = network.Suite
 
 type CompleteProof struct {
 	//suite abstract.Suite

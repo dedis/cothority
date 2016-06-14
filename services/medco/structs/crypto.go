@@ -16,7 +16,6 @@ var currentGreatestM abstract.Point
 var currentGreatestInt int64 = 0
 
 type CipherText struct {
-	//Suite abstract.Suite
 	K, C abstract.Point
 }
 
