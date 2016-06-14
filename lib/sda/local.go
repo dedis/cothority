@@ -27,13 +27,11 @@ type LocalTest struct {
 	Trees map[TreeID]*Tree
 	// All single nodes
 	Nodes []*TreeNodeInstance
-	// A Callback to be called at protocol instantiation
-	NewProtocolCallback func(*TreeNodeInstance)
 }
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
-func NewLocalTest(newProtocolCallback func(*TreeNodeInstance)) *LocalTest {
+func NewLocalTest() *LocalTest {
 	return &LocalTest{
 		Hosts:       make(map[network.EntityID]*Host),
 		Overlays:    make(map[network.EntityID]*Overlay),
@@ -41,7 +39,6 @@ func NewLocalTest(newProtocolCallback func(*TreeNodeInstance)) *LocalTest {
 		EntityLists: make(map[EntityListID]*EntityList),
 		Trees:       make(map[TreeID]*Tree),
 		Nodes:       make([]*TreeNodeInstance, 0, 1),
-		NewProtocolCallback: newProtocolCallback,
 	}
 }
 
@@ -76,13 +73,12 @@ func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, erro
 // GenLocalHost returns a slice of 'n' Hosts. If 'connect' is true, the
 // hosts will be connected between each other. If 'processMsg' is true,
 // the ProcessMsg-method will be called.
-func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool, newProtocolCallback func(*TreeNodeInstance)) []*Host {
+func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
 	hosts := GenLocalHosts(n, connect, processMsg)
 	for _, host := range hosts {
 		l.Hosts[host.Entity.ID] = host
 		l.Overlays[host.Entity.ID] = host.overlay
 		l.Services[host.Entity.ID] = host.serviceStore.services
-		host.newProtocolCallback = newProtocolCallback
 	}
 	return hosts
 }
@@ -91,7 +87,7 @@ func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool, newProtocolCa
 // be connected to the root host. If register is true, the EntityList and Tree
 // will be registered with the overlay.
 func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := l.GenLocalHosts(n, connect, processMsg, l.NewProtocolCallback)
+	hosts := l.GenLocalHosts(n, connect, processMsg)
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
@@ -111,7 +107,7 @@ func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host,
 // nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
 // be used more than once in the tree.
 func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
-	hosts := l.GenLocalHosts(nbrHosts, connect, true, l.NewProtocolCallback)
+	hosts := l.GenLocalHosts(nbrHosts, connect, true)
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
@@ -246,7 +242,7 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 // MakeHELS is an abbreviation to make a Host, an EntityList, and a service.
 // It returns the service of the first host in the slice.
 func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *EntityList, Service) {
-	hosts := l.GenLocalHosts(nbr, false, true, l.NewProtocolCallback)
+	hosts := l.GenLocalHosts(nbr, false, true)
 	el := l.GenEntityListFromHost(hosts...)
 	return hosts, el, l.Services[hosts[0].Entity.ID][sid]
 }

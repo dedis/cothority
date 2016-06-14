@@ -89,8 +89,13 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 		// no servies defined => check if there is a protocol that can be
 		// created
 		if !ok {
-			pi, err = ProtocolInstantiate(sdaMsg.To.ProtoID, tni)
-			o.host.newProtocolCallback(tni)
+
+			if o.host.newProtocol != nil {
+				pi, err = o.host.newProtocol(tni) // If constructor registered at host, use it
+			} else {
+				pi, err = ProtocolInstantiate(sdaMsg.To.ProtoID, tni)
+			}
+
 			if err != nil {
 				return err
 			}

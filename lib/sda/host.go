@@ -49,22 +49,23 @@ type Host struct {
 	// lock associated to access trees
 	treesLock sync.Mutex
 	// lock associated with pending TreeMarshal
-	pendingTreeLock sync.Mutex
+	pendingTreeLock        sync.Mutex
 	// lock associated with pending SDAdata
-	pendingSDAsLock sync.Mutex
+	pendingSDAsLock        sync.Mutex
 	// working address is mostly for debugging purposes so we know what address
 	// is known as right now
-	workingAddress string
+	workingAddress         string
 	// listening is a flag to tell whether this host is listening or not
-	listening bool
+	listening              bool
 	// whether processMessages has started
 	processMessagesStarted bool
 	// tell processMessages to quit
-	ProcessMessagesQuit chan bool
+	ProcessMessagesQuit    chan bool
 
-	serviceStore *serviceStore
+	serviceStore           *serviceStore
 
-	newProtocolCallback func(*TreeNodeInstance)
+	// factory overriding protocol instance creation
+	newProtocol            func(*TreeNodeInstance)(ProtocolInstance, error)
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -245,6 +246,12 @@ func (h *Host) StartProcessMessages() {
 	h.networkLock.Lock()
 	h.processMessagesStarted = true
 	go h.processMessages()
+}
+
+// RegisterNewProtocolFactory registers a new constructor function for the overlay to use for creating new
+// ProtocolInstance's
+func (h *Host) RegisterNewProtocol(fn func(*TreeNodeInstance)(ProtocolInstance, error)) {
+	h.newProtocol = fn
 }
 
 // ProcessMessages checks if it is one of the messages for us or dispatch it
