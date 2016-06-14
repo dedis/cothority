@@ -6,6 +6,7 @@ import (
 )
 
 const MAX_GROUP_ATTR int = 2  //we must have this limit because slices cannot be used as keys in maps
+const PROOF = true
 type GroupingAttributes [MAX_GROUP_ATTR]DeterministCipherText
 type GroupingKey string
 type TempID uint64
