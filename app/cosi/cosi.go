@@ -142,15 +142,13 @@ func checkList(list *sda.EntityList) int {
 		ui.Errorf("Error '%v' while contacting servers: %s",
 			err, serverStr)
 		return 1
-	} else {
-		err := verifySignatureHash([]byte(msg), sig, list)
-		if err != nil {
-			ui.Errorf("Received signature was invalid: %v", err)
-			return 1
-		} else {
-			ui.Info("Received signature successfully")
-		}
 	}
+	err := verifySignatureHash([]byte(msg), sig, list)
+	if err != nil {
+		ui.Errorf("Received signature was invalid: %v", err)
+		return 1
+	}
+	ui.Info("Received signature successfully")
 	return 0
 }
 

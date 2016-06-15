@@ -68,8 +68,8 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	// TreeNodeInstance
 	var pi ProtocolInstance
 	o.instancesLock.Lock()
-	pi, ok := o.protocolInstances[sdaMsg.To.Id()]
-	done := o.instancesInfo[sdaMsg.To.Id()]
+	pi, ok := o.protocolInstances[sdaMsg.To.ID()]
+	done := o.instancesInfo[sdaMsg.To.ID()]
 	o.instancesLock.Unlock()
 	if done {
 		dbg.Lvl4("Message for TreeNodeInstance that is already finished")
@@ -77,7 +77,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	}
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
-		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.Entity, sdaMsg.To.Id())
+		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.Entity, sdaMsg.To.ID())
 		tn, err := o.TreeNodeFromToken(sdaMsg.To)
 		if err != nil {
 			return errors.New("No TreeNode defined in this tree here")
@@ -126,7 +126,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 // RegisterTree takes a tree and puts it in the map
 func (o *Overlay) RegisterTree(t *Tree) {
 	o.treesMut.Lock()
-	o.trees[t.Id] = t
+	o.trees[t.ID] = t
 	o.treesMut.Unlock()
 	o.host.checkPendingSDA(t)
 }
@@ -149,7 +149,7 @@ func (o *Overlay) Tree(tid TreeID) *Tree {
 func (o *Overlay) RegisterEntityList(el *EntityList) {
 	o.entityListLock.Lock()
 	defer o.entityListLock.Unlock()
-	o.entityLists[el.Id] = el
+	o.entityLists[el.ID] = el
 }
 
 // EntityListFromToken returns the entitylist corresponding to a token
@@ -192,7 +192,7 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Protocol
 	sda := &Data{
 		Msg:  msg,
 		From: from,
-		To:   from.ChangeTreeNodeID(to.Id),
+		To:   from.ChangeTreeNodeID(to.ID),
 	}
 	dbg.Lvl4("Sending to entity", to.Entity.Addresses)
 	return o.host.sendSDAData(to.Entity, sda)
@@ -209,19 +209,19 @@ func (o *Overlay) nodeDone(tok *Token) {
 // nodeDelete needs to be separated from nodeDone, as it is also called from
 // Close, but due to locking-issues here we don't lock.
 func (o *Overlay) nodeDelete(tok *Token) {
-	tni, ok := o.instances[tok.Id()]
+	tni, ok := o.instances[tok.ID()]
 	if !ok {
-		dbg.Lvl2("Node", tok.Id(), "already gone")
+		dbg.Lvl2("Node", tok.ID(), "already gone")
 		return
 	}
-	dbg.Lvl4("Closing node", tok.Id())
+	dbg.Lvl4("Closing node", tok.ID())
 	err := tni.Close()
 	if err != nil {
 		dbg.Error("Error while closing node:", err)
 	}
-	delete(o.instances, tok.Id())
+	delete(o.instances, tok.ID())
 	// mark it done !
-	o.instancesInfo[tok.Id()] = true
+	o.instancesInfo[tok.ID()] = true
 }
 
 func (o *Overlay) suite() abstract.Suite {
@@ -285,9 +285,9 @@ func (o *Overlay) NewTreeNodeInstanceFromProtoName(t *Tree, name string) *TreeNo
 // root) and and protocolID and returns a fresh TreeNodeInstance.
 func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID ProtocolID) *TreeNodeInstance {
 	tok := &Token{
-		TreeNodeID:   tn.Id,
-		TreeID:       t.Id,
-		EntityListID: t.EntityList.Id,
+		TreeNodeID:   tn.ID,
+		TreeID:       t.ID,
+		EntityListID: t.EntityList.ID,
 		ProtoID:      protoID,
 		RoundID:      RoundID(uuid.NewV4()),
 	}
@@ -301,9 +301,9 @@ func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID
 // returns a TNI.
 func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID ProtocolID, servID ServiceID) *TreeNodeInstance {
 	tok := &Token{
-		TreeNodeID:   tn.Id,
-		TreeID:       t.Id,
-		EntityListID: t.EntityList.Id,
+		TreeNodeID:   tn.ID,
+		TreeID:       t.ID,
+		EntityListID: t.EntityList.ID,
 		ProtoID:      protoID,
 		ServiceID:    servID,
 		RoundID:      RoundID(uuid.NewV4()),
@@ -326,7 +326,7 @@ func (o *Overlay) newTreeNodeInstanceFromToken(tn *TreeNode, tok *Token) *TreeNo
 	tni := newTreeNodeInstance(o, tok, tn)
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
-	o.instances[tok.Id()] = tni
+	o.instances[tok.ID()] = tni
 	return tni
 }
 
@@ -346,7 +346,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 	var tok = pi.Token()
 	var ok bool
 	// if the TreeNodeInstance doesn't exist
-	if tni, ok = o.instances[tok.Id()]; !ok {
+	if tni, ok = o.instances[tok.ID()]; !ok {
 		return ErrWrongTreeNodeInstance
 	}
 
@@ -355,8 +355,8 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 	}
 
 	tni.bind(pi)
-	o.protocolInstances[tok.Id()] = pi
-	dbg.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.Id())
+	o.protocolInstances[tok.ID()] = pi
+	dbg.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.ID())
 	return nil
 }
 
@@ -369,7 +369,7 @@ type TreeNodeCache struct {
 	sync.Mutex
 }
 
-// Returns a new TreeNodeCache
+// NewTreeNodeCache Returns a new TreeNodeCache
 func NewTreeNodeCache() *TreeNodeCache {
 	return &TreeNodeCache{
 		Entries: make(map[TreeID]map[TreeNodeID]*TreeNode),
@@ -382,22 +382,22 @@ func NewTreeNodeCache() *TreeNodeCache {
 func (tnc *TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 	tnc.Lock()
 	defer tnc.Unlock()
-	mm, ok := tnc.Entries[tree.Id]
+	mm, ok := tnc.Entries[tree.ID]
 	if !ok {
 		mm = make(map[TreeNodeID]*TreeNode)
 	}
 	// add treenode
-	mm[treeNode.Id] = treeNode
+	mm[treeNode.ID] = treeNode
 	// add parent if not root
 	if treeNode.Parent != nil {
-		mm[treeNode.Parent.Id] = treeNode.Parent
+		mm[treeNode.Parent.ID] = treeNode.Parent
 	}
 	// add children
 	for _, c := range treeNode.Children {
-		mm[c.Id] = c
+		mm[c.ID] = c
 	}
 	// add cache
-	tnc.Entries[tree.Id] = mm
+	tnc.Entries[tree.ID] = mm
 }
 
 // GetFromToken returns the TreeNode that the token is pointing at, or
