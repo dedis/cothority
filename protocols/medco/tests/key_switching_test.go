@@ -15,7 +15,7 @@ import (
 func TestKeySwitching5Nodes(t *testing.T) {
 	defer dbg.AfterTest(t)
 	local := sda.NewLocalTest()
-	dbg.TestOutput(testing.Verbose(), 5)
+	dbg.TestOutput(testing.Verbose(), 1)
 	_, entityList, tree := local.GenTree(5, false, true, true)
 
 	defer local.CloseAll()
@@ -41,7 +41,7 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	for i, p := range expRes1 {
 		testCipherVect1[i] = *EncryptInt(suite, aggregateKey, p)
 	}
-
+	dbg.LLvl1(testCipherVect)
 	var mapi map[TempID]CipherVector
 	mapi = make(map[TempID]CipherVector)
 	mapi[TempID(1)] = testCipherVect

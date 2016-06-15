@@ -110,30 +110,21 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 	origEphemKeys := keySwitchingTarget.OriginalEphemeralKeys
 
 	randomnessContrib := p.Suite().Secret().Pick(random.Stream)
-	//keySwitchingTarget.KeySwitchedCipherMessage.Proof = [][]CompleteProof{}
+	
 	length := len(keySwitchingTarget.KeySwitchedCipherMessage.Proof)
 	newProofs := map[TempID][]CompleteProof{}
 	for k, v := range keySwitchingTarget.Data {
-		//dbg.LLvl1(kv.Key)
 		if PROOF {
 			if length != 0 {
-				for _,v := range keySwitchingTarget.KeySwitchedCipherMessage.Proof {
-					if !VectSwitchCheckProof(v) {
-
-						dbg.Errorf("ATTENTION, false proof detected")
-					}
-				}
+				SwitchCheckMapProofs(keySwitchingTarget.KeySwitchedCipherMessage.Proof)
 			}
 		}
-
-		//cv.SwitchForKey(p.Suite(), p.Private(), origEphemKeys[kv.Key], keySwitchingTarget.NewKey, randomnessContrib)
-		keySwitchNewVec := SwitchForKey2(v, p.Suite(), p.Private(), origEphemKeys[k], keySwitchingTarget.NewKey, randomnessContrib)
-
+		
+		keySwitchNewVec := v.SwitchForKeyNoReplace(p.Suite(), p.Private(), origEphemKeys[k], keySwitchingTarget.NewKey, randomnessContrib)
+		dbg.LLvl1(keySwitchNewVec)
 		if PROOF {
 			dbg.LLvl1("proofs creation")
-			//dbg.LLvl1(i)
 			newProofs[k] = VectSwitchKeyProof(p.Suite(), p.Private(), randomnessContrib, origEphemKeys[k], keySwitchingTarget.NewKey, v, keySwitchNewVec)
-			//dbg.LLvl1(newProofs[i])
 		}
 		keySwitchingTarget.Data[k] = keySwitchNewVec
 

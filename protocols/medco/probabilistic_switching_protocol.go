@@ -19,6 +19,7 @@ func init() {
 type ProbabilisticSwitchedMessage struct {
 	Data            map[TempID]CipherVector
 	TargetPublicKey abstract.Point
+	Proof                 map[TempID][]CompleteProof
 }
 
 type ProbabilisticSwitchedStruct struct {
@@ -74,8 +75,13 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 	if p.TargetPublicKey == nil {
 		return errors.New("No map given as target public key.")
 	}
+	nilPH = p.SurveyPHKey
+	if p.SurveyPHKey == nil {
+		return errors.New("No PH key given.")
+	}
 
 	dbg.Lvl1(p.Entity(), "started a Probabilistic Switching Protocol")
+
 
 	targetOfSwitch := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
 	for k := range *p.TargetOfSwitch {
@@ -87,7 +93,8 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 			targetOfSwitch[k][i] = pc
 		}
 	}
-	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch, *p.TargetPublicKey})
+	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch, *p.TargetPublicKey, 
+	map[TempID][]CompleteProof{}})
 
 	return nil
 }
@@ -97,10 +104,30 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	for _, v := range probabilisticSwitchingTarget.Data {
-		v.SwitchToProbabilistic(p.Suite(), *p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey)
+	
+	if p.SurveyPHKey == nil {
+		p.SurveyPHKey = nilPH
 	}
-
+	
+	length := len(probabilisticSwitchingTarget.ProbabilisticSwitchedMessage.Proof)
+	newProofs := map[TempID][]CompleteProof{}
+	for k, v := range probabilisticSwitchingTarget.Data {
+		if PROOF {
+			if length != 0 {
+				SwitchCheckMapProofs(probabilisticSwitchingTarget.ProbabilisticSwitchedMessage.Proof)
+			}
+		}
+		schemeSwitchNewVec,rjs := v.SwitchToProbabilisticNoReplace(p.Suite(), *p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey)
+		if PROOF {
+			dbg.LLvl1("proofs creation")
+			//newProofs[k] = VectSwitchSchemeProof(p.Suite(), p.Private(), *p.SurveyPHKey, []abstract.Point{probabilisticSwitchingTarget.TargetPublicKey, probabilisticSwitchingTarget.TargetPublicKey, probabilisticSwitchingTarget.TargetPublicKey, probabilisticSwitchingTarget.TargetPublicKey}, v, schemeSwitchNewVec)
+			newProofs[k] = VectSwitchToProbProof(p.Suite(), *p.SurveyPHKey, rjs, probabilisticSwitchingTarget.TargetPublicKey, v, schemeSwitchNewVec)
+		}
+		probabilisticSwitchingTarget.Data[k] = schemeSwitchNewVec
+	}
+	
+	probabilisticSwitchingTarget.Proof = newProofs
+	
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed probabilistic switching.")
 		p.FeedbackChannel <- probabilisticSwitchingTarget.Data

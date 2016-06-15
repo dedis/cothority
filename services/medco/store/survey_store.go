@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/satori/go.uuid"
+	
 )
 
 const AGGREGATION_ID int = 0
@@ -95,7 +96,7 @@ func AddInMapping(s map[GroupingKey]CipherVector, key GroupingKey, added CipherV
 	if _, ok := s[key]; !ok {
 		s[key] = added
 	} else {
-		result := Add2(s[key], added)
+		result := added.AddNoReplace(s[key], added)
 		s[key] = result
 	}
 }

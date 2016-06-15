@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
+	"github.com/dedis/cothority/lib/dbg"
 )
 
 const MAX_HOMOMORPHIC_INT int64 = 300
@@ -149,6 +150,19 @@ func (c *CipherText) SwitchToDeterministicNoReplace(suite abstract.Suite, privat
 	return newCi
 }
 
+func (c *CipherText) SwitchToProbabilisticNoReplace(suite abstract.Suite, PHContrib abstract.Point, targetPublic abstract.Point) (CipherText, abstract.Secret){
+
+	r := suite.Secret().Pick(random.Stream)
+	EGEphemContrib := suite.Point().Mul(suite.Point().Base(), r)
+	EGContrib := suite.Point().Mul(targetPublic, r)
+	newCi := CipherText{suite.Point(), suite.Point()}
+	newCi.K.Add(c.K, EGEphemContrib)
+	newCi.C.Sub(c.C, PHContrib)
+	newCi.C.Add(newCi.C, EGContrib)
+	
+	return newCi, r
+}
+
 func (c *CipherText) SwitchToProbabilistic(suite abstract.Suite, PHContrib abstract.Point, targetPublic abstract.Point) {
 
 	r := suite.Secret().Pick(random.Stream)
@@ -228,6 +242,22 @@ func (cv *CipherVector) SwitchToDeterministicNoReplace (suite abstract.Suite, pr
 		result[i] = c.SwitchToDeterministicNoReplace(suite, private, PHContrib)
 	}
 	return result
+}
+
+func (cv *CipherVector) SwitchToProbabilisticNoReplace(suite abstract.Suite, private abstract.Secret, targetPublic abstract.Point) (CipherVector, []abstract.Secret){
+	newCi := CipherText{suite.Point(), suite.Point()}
+	result := CipherVector{newCi}
+	newRj := []abstract.Secret{suite.Secret().One()}
+	PHContrib := suite.Point().Mul(suite.Point().Base(), private)
+	
+	for i, c := range *cv {
+		if (i != 0 ){
+			result = append(result, newCi)
+			newRj = append(newRj,suite.Secret().One())
+		}
+		result[i],newRj[i] = c.SwitchToProbabilisticNoReplace(suite, PHContrib, targetPublic)
+	}
+	return result, newRj
 }
 
 func (cv *CipherVector) SwitchToProbabilistic(suite abstract.Suite, private abstract.Secret, targetPublic abstract.Point) {
