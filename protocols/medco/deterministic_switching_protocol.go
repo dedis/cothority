@@ -72,7 +72,6 @@ func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInsta
 
 // Starts the protocol
 func (p *DeterministicSwitchingProtocol) Start() error {
-
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as deterministic switching target.")
 	}
@@ -114,22 +113,15 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 	for k, v := range deterministicSwitchingTarget.Data {
 		if PROOF {
 			if length != 0 {
-				for _,v := range deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof {
-					if !VectSwitchCheckProof(v) {
-						dbg.Errorf("ATTENTION, false proof detected")
-					}
-				}
+				SwitchCheckMapProofs(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
 			}
 		}
 
-		//kv.Val.SwitchToDeterministic(p.Suite(), p.Private(), *p.SurveyPHKey)
-		schemeSwitchNewVec := SwitchToDeterministic2(v, p.Suite(), p.Private(), *p.SurveyPHKey)
+		schemeSwitchNewVec := v.SwitchToDeterministicNoReplace(p.Suite(), p.Private(), *p.SurveyPHKey)
 		if PROOF {
 			dbg.LLvl1("proofs creation")
-			//dbg.LLvl1(i)
-			//suite abstract.Suite, k abstract.Secret, s abstract.Secret, Rjs []abstract.Point, C1 CipherVector, C2 CipherVector
 			newProofs[k] = VectSwitchSchemeProof(p.Suite(), p.Private(), *p.SurveyPHKey, origEphemKeys[k], v, schemeSwitchNewVec)
-			//dbg.LLvl1(newProofs[i])
+
 		}
 		deterministicSwitchingTarget.Data[k] = schemeSwitchNewVec
 	}
