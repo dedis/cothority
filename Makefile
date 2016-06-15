@@ -31,7 +31,8 @@ test_lint:
 	go get -u github.com/golang/lint/golint; \
 	failOn="should have comment or be unexported\| by other packages, and that stutters; consider calling this"; \
 	failOn="$$failOn\|should be of the form"; \
-	lintfiles=$$( golint ./... | grep "$$failOn" ); \
+	exclude="protocols/byzcoin/blockchain"; \
+	lintfiles=$$( golint ./... | grep "$$failOn" | grep -v "$$exclude" ); \
 	if [ -n "$$lintfiles" ]; then \
 		echo "Lint errors:"; \
 		echo "$$lintfiles"; \
