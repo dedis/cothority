@@ -3,16 +3,14 @@ package store
 import (
 	"fmt"
 	. "github.com/dedis/cothority/services/medco/structs"
-	"github.com/satori/go.uuid"
 	
 )
 
 const AGGREGATION_ID int = 0
 
-type Survey_Database []Survey
+type Survey_Database []SurveyStore
 
-type Survey struct {
-	Id                 uuid.UUID
+type SurveyStore struct {
 	ClientResponses    []ClientResponse //a
 	DeliverableResults []SurveyResult   //d & 6
 
@@ -30,10 +28,8 @@ type Survey struct {
 }
 
 //construct survey
-func NewSurvey() *Survey {
-	return &Survey{
-
-		Id: uuid.NewV4(),
+func NewSurvey() *SurveyStore {
+	return &SurveyStore{
 
 		ProbabilisticGroupingAttributes: make(map[TempID]CipherVector),
 		AggregatingAttributes:           make(map[TempID]CipherVector),
@@ -47,7 +43,7 @@ func NewSurvey() *Survey {
 	}
 }
 
-func (s *Survey) InsertClientResponse(cr ClientResponse) {
+func (s *SurveyStore) InsertClientResponse(cr ClientResponse) {
 	if cr.ProbabilisticGroupingAttributes == nil { //only aggregation, no grouping
 		if len(s.DeliverableResults) != 0 {
 			s.DeliverableResults[AGGREGATION_ID].AggregatingAttributes.Add(s.DeliverableResults[AGGREGATION_ID].AggregatingAttributes, cr.AggregatingAttributes)
@@ -59,7 +55,7 @@ func (s *Survey) InsertClientResponse(cr ClientResponse) {
 	}
 }
 
-func (s *Survey) PollProbabilisticGroupingAttributes() *map[TempID]CipherVector {
+func (s *SurveyStore) PollProbabilisticGroupingAttributes() *map[TempID]CipherVector {
 	for _, v := range s.ClientResponses {
 		newId := s.nextId()
 		s.AggregatingAttributes[newId] = v.AggregatingAttributes
@@ -70,7 +66,7 @@ func (s *Survey) PollProbabilisticGroupingAttributes() *map[TempID]CipherVector 
 	return &s.ProbabilisticGroupingAttributes
 }
 
-func (s *Survey) PushDeterministicGroupingAttributes(detGroupAttr map[TempID]GroupingAttributes) {
+func (s *SurveyStore) PushDeterministicGroupingAttributes(detGroupAttr map[TempID]GroupingAttributes) {
 
 	for k, v := range detGroupAttr {
 		AddInMapping(s.LocGroupingAggregating, v.Key(), s.AggregatingAttributes[k])
@@ -81,11 +77,11 @@ func (s *Survey) PushDeterministicGroupingAttributes(detGroupAttr map[TempID]Gro
 	s.ProbabilisticGroupingAttributes = make(map[TempID]CipherVector)
 }
 
-func (s *Survey) PollLocallyAggregatedResponses() (*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
+func (s *SurveyStore) PollLocallyAggregatedResponses() (*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
 	return &s.LocGroupingGroups, &s.LocGroupingAggregating
 }
 
-func (s *Survey) nextId() TempID {
+func (s *SurveyStore) nextId() TempID {
 	s.lastId += 1
 	return TempID(s.lastId)
 }
@@ -101,7 +97,7 @@ func AddInMapping(s map[GroupingKey]CipherVector, key GroupingKey, added CipherV
 	}
 }
 
-func (s *Survey) PushCothorityAggregatedGroups(gNew map[GroupingKey]GroupingAttributes, sNew map[GroupingKey]CipherVector) {
+func (s *SurveyStore) PushCothorityAggregatedGroups(gNew map[GroupingKey]GroupingAttributes, sNew map[GroupingKey]CipherVector) {
 	for key, value := range sNew {
 		_ = value
 		AddInMapping(s.AfterAggrProto, key, value)
@@ -112,7 +108,7 @@ func (s *Survey) PushCothorityAggregatedGroups(gNew map[GroupingKey]GroupingAttr
 	s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
 }
 
-func (s *Survey) PollCothorityAggregatedGroups() (*map[TempID]GroupingAttributes, *map[TempID]CipherVector) {
+func (s *SurveyStore) PollCothorityAggregatedGroups() (*map[TempID]GroupingAttributes, *map[TempID]CipherVector) {
 	for key, value := range s.AfterAggrProto {
 		newId := s.nextId()
 		s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
@@ -123,7 +119,7 @@ func (s *Survey) PollCothorityAggregatedGroups() (*map[TempID]GroupingAttributes
 	return &s.GroupedDeterministicGroupingAttributes, &s.GroupedAggregatingAttributes
 }
 
-func (s *Survey) PushQuerierKeyEncryptedData(groupingAttributes map[TempID]CipherVector, aggregatingAttributes map[TempID]CipherVector) {
+func (s *SurveyStore) PushQuerierKeyEncryptedData(groupingAttributes map[TempID]CipherVector, aggregatingAttributes map[TempID]CipherVector) {
 	for key, value := range groupingAttributes {
 		s.DeliverableResults = append(s.DeliverableResults, SurveyResult{value, aggregatingAttributes[key]})
 	}
@@ -131,11 +127,11 @@ func (s *Survey) PushQuerierKeyEncryptedData(groupingAttributes map[TempID]Ciphe
 	s.GroupedAggregatingAttributes = make(map[TempID]CipherVector)
 }
 
-func (s *Survey) PollDeliverableResults() []SurveyResult {
+func (s *SurveyStore) PollDeliverableResults() []SurveyResult {
 	return s.DeliverableResults
 }
 
-func (s *Survey) DisplayResults() {
+func (s *SurveyStore) DisplayResults() {
 	for _, v := range s.DeliverableResults {
 		fmt.Println("[ ", v.GroupingAttributes, " ] : ", v.AggregatingAttributes, ")")
 	}

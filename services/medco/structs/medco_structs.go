@@ -2,6 +2,10 @@ package medco_structs
 
 import (
 	"strings"
+	"github.com/dedis/cothority/services/medco/store"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/sda"
+	"github.com/satori/go.uuid"
 )
 
 const MAX_GROUP_ATTR int = 2
@@ -14,6 +18,24 @@ type TempID uint64
 type ClientResponse struct {
 	ProbabilisticGroupingAttributes CipherVector
 	AggregatingAttributes           CipherVector
+}
+
+type SurveyID struct {
+	*uuid.UUID
+}
+
+type Survey struct {
+	*store.SurveyStore
+	ID SurveyID
+	EntityList   *sda.EntityList
+	SurveyPHKey  abstract.Secret
+	ClientPublic abstract.Point
+	SurveyDescription SurveyDescription
+}
+
+type SurveyDescription struct {
+	GroupingAttributesCount uint
+	AggregatingAttributesCount uint
 }
 
 func (ga *GroupingAttributes) Key() GroupingKey {

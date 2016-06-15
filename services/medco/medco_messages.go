@@ -4,10 +4,13 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/services/medco/store"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/services/medco/structs"
 )
 
 type SurveyCreationQuery struct {
 	sda.EntityList
+	medco_structs.SurveyDescription
+	*medco_structs.SurveyID
 }
 
 type ServiceResponse struct {

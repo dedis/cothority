@@ -10,6 +10,7 @@ import (
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
+	"github.com/satori/go.uuid"
 )
 
 const MEDCO_SERVICE_NAME = "MedCo"
@@ -27,10 +28,7 @@ type MedcoService struct {
 	*sda.ServiceProcessor
 	homePath string
 
-	entityList   *sda.EntityList
-	store        *store.Survey
-	surveyPHKey  abstract.Secret
-	clientPublic abstract.Point
+	surveys  map[string]Survey
 }
 
 func NewMedcoService(c sda.Context, path string) sda.Service {
@@ -45,22 +43,25 @@ func NewMedcoService(c sda.Context, path string) sda.Service {
 }
 
 func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *SurveyCreationQuery) (network.ProtocolMessage, error) {
-	mcs.entityList = &recq.EntityList
-	mcs.store = store.NewSurvey()
-	mcs.surveyPHKey = network.Suite.Secret().Pick(random.Stream)
 
-	if mcs.Entity().Equal(mcs.entityList.List[0]) {
+	if recq.SurveyID == nil {
+		newID := SurveyID(uuid.NewV4())
+		recq.SurveyID = &newID
 		msg, _ := sda.CreateServiceMessage(MEDCO_SERVICE_NAME, recq)
-		// No easy way to get our TreeNode object from the Tree + cannot send ServiceMessage w/ SendToChildren: use SendRaw
-		for _, e := range mcs.entityList.List {
-			if !e.Equal(mcs.Context.Entity()) {
-				mcs.SendRaw(e, msg)
-			}
-		}
-		dbg.Lvl1(mcs.Entity(), " initiated the survey as the root.")
-	} else {
-		dbg.Lvl1(mcs.Entity(), " created the survey, root is : ", mcs.entityList.List[0])
+		mcs.SendISMOthers(recq.EntityList, msg)
+		dbg.Lvl1(mcs.Entity(), "initiated the survey", newID)
 	}
+
+	mcs.surveys[*recq.SurveyID] =  Survey{
+		SurveyStore: store.NewSurvey(),
+		ID: *recq.SurveyID,
+		EntityList: recq.EntityList,
+		SurveyPHKey: network.Suite.Secret().Pick(random.Stream),
+		ClientPublic: nil,
+		SurveyDescription: recq.SurveyDescription,
+	}
+
+	dbg.Lvl1(mcs.Entity(), "created the survey", *recq.SurveyID)
 
 	return &ServiceResponse{int32(1)}, nil
 }
@@ -80,11 +81,6 @@ func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *Surve
 	mcs.clientPublic = resq.ClientPublic
 	pi,_ := mcs.startProtocol(medco.MEDCO_SERVICE_PROTOCOL_NAME)
 
-	//mcs.FlushCollectedData()
-	//
-	//mcs.FlushGroupedData()
-	//
-	//mcs.FlushAggregatedData()
 	<- pi.(*medco.MedcoServiceProtocol).FeedbackChannel
 	dbg.Lvl1(mcs.Entity(), "completed the query processing...")
 	return &SurveyResultResponse{mcs.store.PollDeliverableResults()}, nil
