@@ -472,6 +472,15 @@ func TestEntityList_Publics(t *testing.T) {
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph
+//BenchmarkTreeMarshal will be the benchmark for the conversion between TreeMarshall and Tree
+func BenchmarkTreeMarshal(b *testing.B) {
+	tree, _ := genLocalTree(100, 2000)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b, _ := tree.BinaryMarshaler()
+		tree.BinaryUnmarshaler(b)
+	}
+}
 
 // genLocalhostPeerNames will generate n localhost names with port indices starting from p
 func genLocalhostPeerNames(n, p int) []string {
