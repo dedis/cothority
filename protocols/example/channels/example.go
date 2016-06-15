@@ -1,4 +1,4 @@
-package example_channels
+package channels
 
 import (
 	"errors"
@@ -42,7 +42,7 @@ func NewExampleChannels(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	return ExampleChannels, nil
 }
 
-// Starts the protocol
+// Start sends the Announce message to all children
 func (p *ProtocolExampleChannels) Start() error {
 	dbg.Lvl3("Starting ExampleChannels")
 	for _, c := range p.Children() {

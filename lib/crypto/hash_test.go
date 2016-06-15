@@ -10,7 +10,7 @@ import (
 
 	"github.com/dedis/cothority/lib/crypto"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/ed25519"
 )
 
 var hashSuite = ed25519.NewAES128SHA256Ed25519(false)

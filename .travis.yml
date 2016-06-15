@@ -1,17 +1,13 @@
-# build script for dedis/cothority libraries
 language: go
 
 go:
-  - 1.6.2
+  - 1.6
+
+install:
+  - make install_dev
+
 script:
-  # do not run any test binary in parallel (see go help build for more info on the -p flag)
-  - go test -race -p=1 ./...
-  # Check for correct formatting
-  - ./gofmt.sh
-  # Downloading and installing linter
-  - go get -u github.com/golang/lint/golint
-  # Check the linter
-  - ./lint.sh
+  - make test
 
 notifications:
   email: false
