@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/services/medco"
 	"testing"
+	"github.com/dedis/cothority/services/medco/structs"
 )
 
 func TestServiceMedco(t *testing.T) {
@@ -19,8 +20,8 @@ func TestServiceMedco(t *testing.T) {
 
 	// Send a request to the service
 	client := medco_service.NewMedcoClient(el.List[0])
-
-	if client.CreateSurvey(el) != nil {
+	surveyDesc := medco_structs.SurveyDescription{2,10}
+	if client.CreateSurvey(el, surveyDesc) != nil {
 		t.Fatal("Service did not start.")
 	}
 
@@ -28,7 +29,7 @@ func TestServiceMedco(t *testing.T) {
 	dataHolder := make([]*medco_service.MedcoClient, 10)
 	for i := 0; i < 10; i++ {
 		dataHolder[i] = medco_service.NewMedcoClient(el.List[i%5])
-		grp := make([]int64, 0)
+		grp := make([]int64, 2)
 		aggr := make([]int64, 10)
 		//grp[i%2] = int64(2)
 		aggr[i%2] = 3

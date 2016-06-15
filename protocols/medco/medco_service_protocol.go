@@ -5,6 +5,7 @@ import (
 	"github.com/btcsuite/goleveldb/leveldb/errors"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/services/medco/structs"
 )
 
 const MEDCO_SERVICE_PROTOCOL_NAME = "MedcoServiceProtocol"
@@ -16,9 +17,9 @@ func init() {
 }
 
 type MedcoServiceInterface interface {
-	FlushCollectedData() error
-	FlushGroupedData() error
-	FlushAggregatedData() error
+	FlushCollectedData(medco_structs.SurveyID) error
+	FlushGroupedData(medco_structs.SurveyID) error
+	FlushAggregatedData(medco_structs.SurveyID) error
 }
 
 type TriggerFlushCollectedDataMessage struct {}
@@ -44,6 +45,7 @@ type MedcoServiceProtocol struct {
 	FeedbackChannel chan DoneProcessingMessage
 
 	MedcoServiceInstance MedcoServiceInterface
+	TargetSurvey *medco_structs.SurveyID
 }
 
 func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -75,13 +77,13 @@ func (p *MedcoServiceProtocol) Dispatch() error {
 
 	if !p.IsRoot() {
 		<- p.TriggerFlushCollectedData
-		p.MedcoServiceInstance.FlushCollectedData()
+		p.MedcoServiceInstance.FlushCollectedData(*p.TargetSurvey)
 		p.SendTo(p.Root(), &DoneFlushCollectedDataMessage{})
 	} else {
-		p.MedcoServiceInstance.FlushCollectedData()
+		p.MedcoServiceInstance.FlushCollectedData(*p.TargetSurvey)
 		<- p.DoneFlushCollectedData
-		p.MedcoServiceInstance.FlushGroupedData()
-		p.MedcoServiceInstance.FlushAggregatedData()
+		p.MedcoServiceInstance.FlushGroupedData(*p.TargetSurvey)
+		p.MedcoServiceInstance.FlushAggregatedData(*p.TargetSurvey)
 		p.FeedbackChannel <- DoneProcessingMessage{}
 	}
 

@@ -46,7 +46,7 @@ func TestStoring(t *testing.T) {
 	}
 
 	//constructor test
-	storage := NewSurvey()
+	storage := NewSurveyStore()
 	_ = storage
 
 	//AddAggregate & GetAggregateLoc Test
@@ -76,7 +76,7 @@ func TestStoring(t *testing.T) {
 	//storage.DisplayResults()
 
 	//GROUPING
-	storage = NewSurvey()
+	storage = NewSurveyStore()
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect1, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect1})

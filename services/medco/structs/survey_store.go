@@ -32,7 +32,7 @@ type SurveyStore struct {
 }
 
 //construct survey
-func NewSurvey() *SurveyStore {
+func NewSurveyStore() *SurveyStore {
 	return &SurveyStore{
 		//ProbabilisticGroupingAttributes: make(map[TempID]CipherVector),
 		AggregatingAttributes:           make(map[TempID]CipherVector),

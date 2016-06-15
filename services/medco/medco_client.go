@@ -15,6 +15,7 @@ type MedcoClient struct {
 	*sda.Client
 	entryPoint        *network.Entity
 	localClientNumber int64
+	surveyID 	  SurveyID
 	public            abstract.Point
 	private           abstract.Secret
 }
@@ -35,14 +36,16 @@ func NewMedcoClient(entryPoint *network.Entity) *MedcoClient {
 	return newClient
 }
 
-func (c *MedcoClient) CreateSurvey(entities *sda.EntityList) error {
+func (c *MedcoClient) CreateSurvey(entities *sda.EntityList, surveyDescription SurveyDescription) error {
 	dbg.Lvl1(c, "is creating a survey.")
-	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{*entities})
+	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{nil, *entities, surveyDescription})
 	if err != nil {
 		dbg.Error("Got error when creating survey: " + err.Error())
 		return err
 	}
-	dbg.Lvl1(c, "successfully created the survey with code", resp.Msg.(ServiceResponse).SurveyCode)
+
+	c.surveyID = resp.Msg.(ServiceResponse).SurveyID
+	dbg.Lvl1(c, "successfully created the survey with ID", resp.Msg.(ServiceResponse).SurveyID)
 	return nil
 }
 
@@ -61,7 +64,7 @@ func (c *MedcoClient) SendSurveyResultsData(grouping, aggregating []int64, group
 
 func (c *MedcoClient) GetSurveyResults() (*[][]int64, *[][]int64, error) {
 	suite := network.Suite
-	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{c.public})
+	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{c.surveyID, c.public})
 	if err != nil {
 		dbg.Error("Got error when querying the results: " + err.Error())
 		return nil, nil, err
