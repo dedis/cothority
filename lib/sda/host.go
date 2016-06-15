@@ -382,6 +382,9 @@ func (h *Host) sendSDAData(e *network.Entity, sdaMsg *Data) error {
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
 	dbg.Lvl4("Sending to", e.Addresses)
+
+	//LUDOVIC BARMAN : ADD UDP HERE
+
 	return h.SendRaw(e, sdaMsg)
 }
 

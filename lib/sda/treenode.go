@@ -113,6 +113,7 @@ func (n *TreeNodeInstance) SendTo(to *TreeNode, msg interface{}) error {
 	if to == nil {
 		return errors.New("Sent to a nil TreeNode")
 	}
+	//LUDOVIC BARMAN : ADD UDP HERE
 	return n.overlay.SendToTreeNode(n.token, to, msg)
 }
 

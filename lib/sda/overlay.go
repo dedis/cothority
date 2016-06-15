@@ -187,6 +187,8 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Protocol
 		From: from,
 		To:   from.ChangeTreeNodeID(to.Id),
 	}
+
+	//LUDOVIC BARMAN : ADD UDP HERE
 	dbg.Lvl4("Sending to entity", to.Entity.Addresses)
 	return o.host.sendSDAData(to.Entity, sda)
 }
