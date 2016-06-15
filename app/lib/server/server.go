@@ -250,7 +250,7 @@ func checkList(list *sda.EntityList, descs []string) error {
 		ui.Error(err)
 		return err
 	}
-	err := verifySignatureHash([]byte(msg), sig, list)
+	err = verifySignatureHash([]byte(msg), sig, list)
 	if err != nil {
 		ui.Errorf("Invalid signature: %v", err)
 		return err
