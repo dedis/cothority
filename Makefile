@@ -29,7 +29,7 @@ test_lint:
 	@echo Checking linting of files
 	@{ \
 	go get github.com/golang/lint/golint; \
-	exclude="protocols/byzcoin"; \
+	exclude="protocols/byzcoin|_test.go"; \
 	lintfiles=$$( golint ./... | egrep -v "($$exclude)" ); \
 	if [ -n "$$lintfiles" ]; then \
 		echo "Lint errors:"; \
