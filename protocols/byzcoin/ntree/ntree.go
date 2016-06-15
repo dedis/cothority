@@ -185,7 +185,7 @@ func (nt *Ntree) computeBlockSignature() {
 
 	// if stg is wrong, we put exceptions
 	if !ok {
-		nt.tempBlockSig.Exceptions = append(nt.tempBlockSig.Exceptions, Exception{nt.TreeNode().Id})
+		nt.tempBlockSig.Exceptions = append(nt.tempBlockSig.Exceptions, Exception{nt.TreeNode().ID})
 	} else { // we put signature
 		schnorr, _ := crypto.SignSchnorr(nt.Suite(), nt.Private(), marshalled)
 		nt.tempBlockSig.Sigs = append(nt.tempBlockSig.Sigs, schnorr)
@@ -273,7 +273,7 @@ func (nt *Ntree) computeSignatureResponse() {
 	// wait for the verification to be done
 	ok := <-nt.verifySignatureRequestChan
 	if !ok {
-		nt.tempSignatureResponse.Exceptions = append(nt.tempSignatureResponse.Exceptions, Exception{nt.TreeNode().Id})
+		nt.tempSignatureResponse.Exceptions = append(nt.tempSignatureResponse.Exceptions, Exception{nt.TreeNode().ID})
 	} else {
 		// compute the message out of the previous signature
 		// marshal only the header here (so signature between the two phases are

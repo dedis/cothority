@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/edwards/ed25519"
+	"github.com/dedis/crypto/ed25519"
 )
 
 func TestSchnorrSignature(t *testing.T) {

@@ -1,4 +1,3 @@
-// topology is a general
 package sda
 
 import (
@@ -33,7 +32,7 @@ func init() {
 // Tree is a topology to be used by any network layer/host layer
 // It contains the peer list we use, and the tree we use
 type Tree struct {
-	Id         TreeID
+	ID         TreeID
 	EntityList *EntityList
 	Root       *TreeNode
 }
@@ -42,8 +41,8 @@ type Tree struct {
 type TreeID uuid.UUID
 
 // Equals returns true if and only if the given TreeID equals the current one.
-func (tId TreeID) Equals(tId2 TreeID) bool {
-	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
+func (tId TreeID) Equals(tID2 TreeID) bool {
+	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tID2))
 }
 
 // String returns a canonical representation of the TreeID.
@@ -54,11 +53,11 @@ func (tId TreeID) String() string {
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
 func NewTree(el *EntityList, r *TreeNode) *Tree {
-	url := network.NamespaceURL + "tree/" + el.Id.String() + r.Id.String()
+	url := network.NamespaceURL + "tree/" + el.ID.String() + r.ID.String()
 	t := &Tree{
 		EntityList: el,
 		Root:       r,
-		Id:         TreeID(uuid.NewV5(uuid.NamespaceURL, url)),
+		ID:         TreeID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
 	// network.Suite used for the moment => explicit mark that something is
 	// wrong and that needs to be changed !
@@ -89,8 +88,8 @@ func (t *Tree) MakeTreeMarshal() *TreeMarshal {
 		return &TreeMarshal{}
 	}
 	treeM := &TreeMarshal{
-		TreeId:       t.Id,
-		EntityListID: t.EntityList.Id,
+		TreeID:       t.ID,
+		EntityListID: t.EntityList.ID,
 	}
 	treeM.Children = append(treeM.Children, TreeMarshalCopyTree(t.Root))
 	return treeM
@@ -138,14 +137,14 @@ func (t *Tree) BinaryUnmarshaler(b []byte) error {
 		return err
 	}
 	t.EntityList = tbm.EL
-	t.Id = tree.Id
+	t.ID = tree.ID
 	t.Root = tree.Root
 	return nil
 }
 
 // Equal verifies if the given tree is equal
 func (t *Tree) Equal(t2 *Tree) bool {
-	if t.Id != t2.Id || t.EntityList.Id != t2.EntityList.Id {
+	if t.ID != t2.ID || t.EntityList.ID != t2.EntityList.ID {
 		dbg.Lvl4("Ids of trees don't match")
 		return false
 	}
@@ -155,19 +154,19 @@ func (t *Tree) Equal(t2 *Tree) bool {
 // String writes the definition of the tree
 func (t *Tree) String() string {
 	return fmt.Sprintf("TreeId:%s - EntityListId:%s - RootId:%s",
-		t.Id, t.EntityList.Id, t.Root.Id)
+		t.ID, t.EntityList.ID, t.Root.ID)
 }
 
 // Dump returns string about the tree
 func (t *Tree) Dump() string {
-	ret := "Tree " + t.Id.String() + " is:"
+	ret := "Tree " + t.ID.String() + " is:"
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
 		if tn.Parent != nil {
 			ret += fmt.Sprintf("\n%2d - %s/%s has parent %s/%s", d,
-				tn.Id, tn.Entity.Addresses,
-				tn.Parent.Id, tn.Parent.Entity.Addresses)
+				tn.ID, tn.Entity.Addresses,
+				tn.Parent.ID, tn.Parent.Entity.Addresses)
 		} else {
-			ret += fmt.Sprintf("\n%s/%s is root", tn.Id, tn.Entity.Addresses)
+			ret += fmt.Sprintf("\n%s/%s is root", tn.ID, tn.Entity.Addresses)
 		}
 	})
 	return ret
@@ -176,7 +175,7 @@ func (t *Tree) Dump() string {
 // Search searches the Tree for the given TreeNodeID and returns the corresponding TreeNode
 func (t *Tree) Search(tn TreeNodeID) (ret *TreeNode) {
 	found := func(d int, tns *TreeNode) {
-		if tns.Id == tn {
+		if tns.ID == tn {
 			ret = tns
 		}
 	}
@@ -203,7 +202,7 @@ func (t *Tree) IsBinary(root *TreeNode) bool {
 func (t *Tree) IsNary(root *TreeNode, N int) bool {
 	nChild := len(root.Children)
 	if nChild != N && nChild != 0 {
-		dbg.Lvl3("Only", nChild, "children for", root.Id)
+		dbg.Lvl3("Only", nChild, "children for", root.ID)
 		return false
 	}
 	for _, c := range root.Children {
@@ -218,7 +217,7 @@ func (t *Tree) IsNary(root *TreeNode, N int) bool {
 func (t *Tree) Size() int {
 	size := 0
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
-		size += 1
+		size++
 	})
 	return size
 }
@@ -264,11 +263,11 @@ func (t *Tree) computeSubtreeAggregate(suite abstract.Suite, root *TreeNode) abs
 // to copy the whole nodelist
 type TreeMarshal struct {
 	// This is the UUID of the corresponding TreeNode
-	TreeNodeId TreeNodeID
+	TreeNodeID TreeNodeID
 	// TreeId identifies the Tree for the top-node
-	TreeId TreeID
+	TreeID TreeID
 	// This is the UUID of the Entity, except
-	EntityId network.EntityID
+	EntityID network.EntityID
 	// for the top-node this contains the EntityList's ID
 	EntityListID EntityListID
 	// All children from this tree. The top-node only has one child, which is
@@ -277,7 +276,7 @@ type TreeMarshal struct {
 }
 
 func (tm *TreeMarshal) String() string {
-	s := fmt.Sprintf("%v", tm.EntityId)
+	s := fmt.Sprintf("%v", tm.EntityID)
 	s += "\n"
 	for i := range tm.Children {
 		s += tm.Children[i].String()
@@ -285,15 +284,15 @@ func (tm *TreeMarshal) String() string {
 	return s
 }
 
-// ID of TreeMarshal message as registered in network
+// TreeMarshalTypeID of TreeMarshal message as registered in network
 var TreeMarshalTypeID = network.RegisterMessageType(TreeMarshal{})
 
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
 func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	tm := &TreeMarshal{
-		TreeNodeId: tr.Id,
-		EntityId:   tr.Entity.ID,
+		TreeNodeID: tr.ID,
+		EntityID:   tr.Entity.ID,
 	}
 	for i := range tr.Children {
 		tm.Children = append(tm.Children,
@@ -304,11 +303,11 @@ func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 
 // MakeTree creates a tree given an EntityList
 func (tm TreeMarshal) MakeTree(el *EntityList) (*Tree, error) {
-	if el.Id != tm.EntityListID {
+	if el.ID != tm.EntityListID {
 		return nil, errors.New("Not correct EntityList-Id")
 	}
 	tree := &Tree{
-		Id:         tm.TreeId,
+		ID:         tm.TreeID,
 		EntityList: el,
 	}
 	tree.Root = tm.Children[0].MakeTreeFromList(nil, el)
@@ -318,10 +317,10 @@ func (tm TreeMarshal) MakeTree(el *EntityList) (*Tree, error) {
 
 // MakeTreeFromList creates a sub-tree given an EntityList
 func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeNode {
-	idx, ent := el.Search(tm.EntityId)
+	idx, ent := el.Search(tm.EntityID)
 	tn := &TreeNode{
 		Parent:    parent,
-		Id:        tm.TreeNodeId,
+		ID:        tm.TreeNodeID,
 		Entity:    ent,
 		EntityIdx: idx,
 	}
@@ -334,7 +333,7 @@ func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeN
 // An EntityList is a list of Entity we choose to run  some tree on it ( and
 // therefor some protocols)
 type EntityList struct {
-	Id EntityListID
+	ID EntityListID
 	// TODO make that a map so search is O(1)
 	// List is the List of actual "entities"
 	// Be careful if you access it in go-routines (not safe by default)
@@ -352,7 +351,7 @@ func (elId EntityListID) String() string {
 	return uuid.UUID(elId).String()
 }
 
-// ID of EntityList message as registered in network
+// EntityListTypeID of EntityList message as registered in network
 var EntityListTypeID = network.RegisterMessageType(EntityList{})
 
 // NewEntityList creates a new Entity from a list of entities. It also
@@ -366,15 +365,15 @@ func NewEntityList(ids []*network.Entity) *EntityList {
 	return &EntityList{
 		List:      ids,
 		Aggregate: agg,
-		Id:        EntityListID(uuid.NewV4()),
+		ID:        EntityListID(uuid.NewV4()),
 	}
 }
 
 // Search searches the EntityList for the given EntityID and returns the
 // corresponding Entity.
-func (el *EntityList) Search(eId network.EntityID) (int, *network.Entity) {
+func (el *EntityList) Search(eID network.EntityID) (int, *network.Entity) {
 	for i, e := range el.List {
-		if e.ID == eId {
+		if e.ID == eID {
 			return i, e
 		}
 	}
@@ -460,11 +459,11 @@ func (el *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 				child := NewTreeNode(elIndex, el.List[elIndex])
 				used[elIndex] = true
 				elIndex = (elIndex + 1) % ilLen
-				totalNodes += 1
+				totalNodes++
 				parent.Children[n] = child
 				child.Parent = parent
 				newLevelNodes[newLevelNodesCounter] = child
-				newLevelNodesCounter += 1
+				newLevelNodesCounter++
 			}
 		}
 		levelNodes = newLevelNodes[:newLevelNodesCounter]
@@ -508,28 +507,27 @@ func (el *EntityList) GetRandom() *network.Entity {
 
 // addNary is a recursive function to create the binary tree
 func (el *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
-	if start <= end && end < len(el.List) {
-		node := NewTreeNode(start, el.List[start])
-		if parent != nil {
-			node.Parent = parent
-			parent.Children = append(parent.Children, node)
-		}
-		diff := end - start
-		for n := 0; n < N; n++ {
-			s := diff * n / N
-			e := diff * (n + 1) / N
-			el.addNary(node, N, start+s+1, start+e)
-		}
-		return node
-	} else {
+	if !(start <= end && end < len(el.List)) {
 		return nil
 	}
+	node := NewTreeNode(start, el.List[start])
+	if parent != nil {
+		node.Parent = parent
+		parent.Children = append(parent.Children, node)
+	}
+	diff := end - start
+	for n := 0; n < N; n++ {
+		s := diff * n / N
+		e := diff * (n + 1) / N
+		el.addNary(node, N, start+s+1, start+e)
+	}
+	return node
 }
 
 // TreeNode is one node in the tree
 type TreeNode struct {
 	// The Id represents that node of the tree
-	Id TreeNodeID
+	ID TreeNodeID
 	// The Entity points to the corresponding host. One given host
 	// can be used more than once in a tree.
 	Entity *network.Entity
@@ -552,10 +550,10 @@ func (tId TreeNodeID) String() string {
 	return uuid.UUID(tId).String()
 }
 
-// Equals returns true if and only if the given TreeNodeID equals the current
+// Equal returns true if and only if the given TreeNodeID equals the current
 // one.
-func (tId TreeNodeID) Equal(tId2 TreeNodeID) bool {
-	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tId2))
+func (tId TreeNodeID) Equal(tID2 TreeNodeID) bool {
+	return uuid.Equal(uuid.UUID(tId), uuid.UUID(tID2))
 }
 
 // Name returns a human readable representation of the TreeNode (IP address).
@@ -572,7 +570,7 @@ func NewTreeNode(entityIdx int, ni *network.Entity) *TreeNode {
 		EntityIdx: entityIdx,
 		Parent:    nil,
 		Children:  make([]*TreeNode, 0),
-		Id:        TreeNodeID(uuid.NewV4()),
+		ID:        TreeNodeID(uuid.NewV4()),
 	}
 	return tn
 }
@@ -608,7 +606,7 @@ func (t *TreeNode) IsInTree(tree *Tree) bool {
 	for root.Parent != nil {
 		root = *root.Parent
 	}
-	return tree.Root.Id == root.Id
+	return tree.Root.ID == root.ID
 }
 
 // AddChild adds a child to this tree-node.
@@ -619,7 +617,7 @@ func (t *TreeNode) AddChild(c *TreeNode) {
 
 // Equal tests if that node is equal to the given node
 func (t *TreeNode) Equal(t2 *TreeNode) bool {
-	if t.Id != t2.Id || t.Entity.ID != t2.Entity.ID {
+	if t.ID != t2.ID || t.Entity.ID != t2.Entity.ID {
 		dbg.Lvl4("TreeNode: ids are not equal")
 		return false
 	}
@@ -638,7 +636,7 @@ func (t *TreeNode) Equal(t2 *TreeNode) bool {
 
 // String returns the current treenode's Id as a string.
 func (t *TreeNode) String() string {
-	return string(t.Id.String())
+	return string(t.ID.String())
 }
 
 // Visit is a recursive function that allows for depth-first calling on all
@@ -661,7 +659,7 @@ func (t *TreeNode) SubtreeCount() int {
 // EntityListToml is the struct can can embedded EntityToml to be written in a
 // toml file
 type EntityListToml struct {
-	Id   EntityListID
+	ID   EntityListID
 	List []*network.EntityToml
 }
 
@@ -672,7 +670,7 @@ func (el *EntityList) Toml(suite abstract.Suite) *EntityListToml {
 		ids[i] = el.List[i].Toml(suite)
 	}
 	return &EntityListToml{
-		Id:   el.Id,
+		ID:   el.ID,
 		List: ids,
 	}
 }
@@ -684,7 +682,7 @@ func (elt *EntityListToml) EntityList(suite abstract.Suite) *EntityList {
 		ids[i] = elt.List[i].Entity(suite)
 	}
 	return &EntityList{
-		Id:   elt.Id,
+		ID:   elt.ID,
 		List: ids,
 	}
 }

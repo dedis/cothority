@@ -123,7 +123,7 @@ func getDefaultConfigFile() string {
 	if err != nil {
 		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
 		if curr, err := os.Getwd(); err != nil {
-			ui.Fatal("Impossible to get the current directory. %v", err)
+			ui.Fatalf("Impossible to get the current directory. %v", err)
 		} else {
 			return path.Join(curr, DefaultServerConfig)
 		}

@@ -219,9 +219,9 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Construct deal
 	longPair := &config.KeyPair{
-		rh.Suite(),
-		rh.Public(),
-		rh.Private(),
+		Suite:  rh.Suite(),
+		Public: rh.Public(),
+		Secret: rh.Private(),
 	}
 	secretPair := config.NewKeyPair(rh.Suite())
 	_, trustees := rh.chooseTrustees(rh.Peer.i2.Rc, rh.Peer.rs)
@@ -302,9 +302,9 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	rh.Peer.i3 = &i3.I3
 
 	longPair := &config.KeyPair{
-		rh.Suite(),
-		rh.Public(),
-		rh.Private(),
+		Suite:  rh.Suite(),
+		Public: rh.Public(),
+		Secret: rh.Private(),
 	}
 
 	responses := []R3Resp{}
