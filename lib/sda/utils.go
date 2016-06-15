@@ -12,11 +12,8 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 )
 
-/*
- * Writes any structure to a toml-file
- *
- * Takes a filename and an optional directory-name.
- */
+// WriteTomlConfig write  any structure to a toml-file
+// Takes a filename and an optional directory-name.
 func WriteTomlConfig(conf interface{}, filename string, dirOpt ...string) {
 	buf := new(bytes.Buffer)
 	if err := toml.NewEncoder(buf).Encode(conf); err != nil {
@@ -28,11 +25,8 @@ func WriteTomlConfig(conf interface{}, filename string, dirOpt ...string) {
 	}
 }
 
-/*
- * Reads any structure from a toml-file
- *
- * Takes a filename and an optional directory-name
- */
+// ReadTomlConfig read any structure from a toml-file
+// Takes a filename and an optional directory-name
 func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 	buf, err := ioutil.ReadFile(getFullName(filename, dirOpt...))
 	if err != nil {

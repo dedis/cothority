@@ -44,7 +44,7 @@ func (h *Host) Overlay() *Overlay {
 }
 
 func (o *Overlay) TokenToNode(tok *Token) (*TreeNodeInstance, bool) {
-	tni, ok := o.instances[tok.Id()]
+	tni, ok := o.instances[tok.ID()]
 	return tni, ok
 }
 

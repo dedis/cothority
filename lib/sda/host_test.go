@@ -159,12 +159,12 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 
 	// Add the marshalled version of the tree
 	local.AddPendingTreeMarshal(h1, tree.MakeTreeMarshal())
-	if _, ok := h1.GetTree(tree.Id); ok {
+	if _, ok := h1.GetTree(tree.ID); ok {
 		t.Fatal("host 1 should not have the tree definition yet.")
 	}
 	// Now make it check
 	local.CheckPendingTreeMarshal(h1, el)
-	if _, ok := h1.GetTree(tree.Id); !ok {
+	if _, ok := h1.GetTree(tree.ID); !ok {
 		t.Fatal("Host 1 should have the tree definition now.")
 	}
 }
@@ -181,7 +181,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 	// Check that h2 sends back an empty list if it is unknown
 	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{
-		EntityListID: el.Id})
+		EntityListID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -189,13 +189,13 @@ func TestPeerListPropagation(t *testing.T) {
 	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type, but", msg.MsgType)
 	}
-	if msg.Msg.(sda.EntityList).Id != sda.EntityListID(uuid.Nil) {
+	if msg.Msg.(sda.EntityList).ID != sda.EntityListID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
 	// Now add the list to h2 and try again
 	h2.AddEntityList(el)
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -203,22 +203,22 @@ func TestPeerListPropagation(t *testing.T) {
 	if msg.MsgType != sda.SendEntityListMessageID {
 		t.Fatal("h1 didn't receive EntityList type")
 	}
-	if msg.Msg.(sda.EntityList).Id != el.Id {
+	if msg.Msg.(sda.EntityList).ID != el.ID {
 		t.Fatal("List should be equal to original list")
 	}
 
 	// And test whether it gets stored correctly
 	h1.StartProcessMessages()
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	list, ok := h1.EntityList(el.Id)
+	list, ok := h1.EntityList(el.ID)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
-	if list.Id != el.Id {
+	if list.ID != el.ID {
 		t.Fatal("IDs do not match")
 	}
 }
@@ -237,7 +237,7 @@ func TestTreePropagation(t *testing.T) {
 	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
+	err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -252,7 +252,7 @@ func TestTreePropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -260,18 +260,18 @@ func TestTreePropagation(t *testing.T) {
 	if msg.MsgType != sda.SendTreeMessageID {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
-	if msg.Msg.(sda.TreeMarshal).TreeId != tree.Id {
+	if msg.Msg.(sda.TreeMarshal).TreeID != tree.ID {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
 	// And test whether it gets stored correctly
 	h1.StartProcessMessages()
-	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id})
+	err = h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	tree2, ok := h1.GetTree(tree.Id)
+	tree2, ok := h1.GetTree(tree.ID)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
@@ -298,7 +298,7 @@ func TestListTreePropagation(t *testing.T) {
 	// and the tree
 	h2.AddTree(tree)
 	// make the communcation happen
-	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.Id}); err != nil {
+	if err := h1.SendRaw(h2.Entity, &sda.RequestTree{TreeID: tree.ID}); err != nil {
 		t.Fatal("Could not send tree request to host2", err)
 	}
 
@@ -309,13 +309,13 @@ func TestListTreePropagation(t *testing.T) {
 		// Sleep a bit
 		time.Sleep(100 * time.Millisecond)
 		// then look if we have both the tree and the entity list
-		if _, ok := h1.GetTree(tree.Id); !ok {
+		if _, ok := h1.GetTree(tree.ID); !ok {
 			tryTree++
 			continue
 		}
 		// We got the tree that's already something, now do we get the entity
 		// list
-		if _, ok := h1.EntityList(el.Id); !ok {
+		if _, ok := h1.EntityList(el.ID); !ok {
 			tryEntity++
 			continue
 		}
@@ -336,18 +336,18 @@ func TestTokenId(t *testing.T) {
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
 		RoundID:      sda.RoundID(uuid.NewV1()),
 	}
-	id1 := t1.Id()
+	id1 := t1.ID()
 	t2 := &sda.Token{
 		EntityListID: sda.EntityListID(uuid.NewV1()),
 		TreeID:       sda.TreeID(uuid.NewV1()),
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
 		RoundID:      sda.RoundID(uuid.NewV1()),
 	}
-	id2 := t2.Id()
+	id2 := t2.ID()
 	if uuid.Equal(uuid.UUID(id1), uuid.UUID(id2)) {
 		t.Fatal("Both token are the same")
 	}
-	if !uuid.Equal(uuid.UUID(id1), uuid.UUID(t1.Id())) {
+	if !uuid.Equal(uuid.UUID(id1), uuid.UUID(t1.ID())) {
 		t.Fatal("Twice the Id of the same token should be equal")
 	}
 	t3 := t1.ChangeTreeNodeID(sda.TreeNodeID(uuid.NewV1()))

@@ -145,7 +145,7 @@ func (p *ProtocolCount) FuncPC() {
 	if !p.IsLeaf() {
 		for _, child := range p.Children() {
 			go func(c *sda.TreeNode) {
-				dbg.Lvl3(p.Info(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
+				dbg.Lvl3(p.Info(), "sending to", c.Entity.Addresses, c.ID, p.timeout)
 				err := p.SendTo(c, &PrepareCount{Timeout: p.timeout})
 				if err != nil {
 					dbg.Error(p.Info(), "couldn't send to child",
@@ -166,7 +166,7 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 		count += c.Count.Children
 	}
 	if !p.IsRoot() {
-		dbg.Lvl3(p.Info(), "Sends to", p.Parent().Id, p.Parent().Entity.Addresses)
+		dbg.Lvl3(p.Info(), "Sends to", p.Parent().ID, p.Parent().Entity.Addresses)
 		if err := p.SendTo(p.Parent(), &Count{count}); err != nil {
 			dbg.Error(p.Name(), "coouldn't send to parent",
 				p.Parent().Name())
