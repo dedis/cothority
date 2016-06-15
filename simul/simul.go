@@ -101,6 +101,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	if simRange != "" {
 		args = os.O_CREATE | os.O_RDWR | os.O_APPEND
 	}
+	dbg.Print("Opening", TestFile(name))
 	f, err := os.OpenFile(TestFile(name), args, 0660)
 	if err != nil {
 		dbg.Fatal("error opening test file:", err)
@@ -142,15 +143,19 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 
 		s := monitor.AverageStats(runs)
 		if i == 0 {
+			dbg.LLvl4("Writing headers for monitor")
+			s.WriteHeader(os.Stdout)
 			s.WriteHeader(f)
 		}
 		rs[i] = s
+		dbg.LLvl3("Writing values to test-data:", f)
 		rs[i].WriteValues(f)
 		err = f.Sync()
 		if err != nil {
 			dbg.Fatal("error syncing data to test file:", err)
 		}
 	}
+	dbg.Print("Finishing test")
 }
 
 // Runs a single test - takes a test-file as a string that will be copied
@@ -202,6 +207,7 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	// can timeout the command if it takes too long
 	select {
 	case <-done:
+		dbg.Print("Is done - stopping monitor")
 		monitor.Stop()
 		return rs, err
 	}

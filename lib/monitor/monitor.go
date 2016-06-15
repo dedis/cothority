@@ -83,7 +83,7 @@ func (m *Monitor) Listen() error {
 	m.listenerLock.Lock()
 	m.listener = ln
 	m.listenerLock.Unlock()
-	dbg.Lvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
+	dbg.LLvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
 	finished := false
 	go func() {
 		for {
@@ -97,10 +97,10 @@ func (m *Monitor) Listen() error {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl2("Error while monitor accept connection:", operr)
+				dbg.LLvl2("Error while monitor accept connection:", operr)
 				continue
 			}
-			dbg.Lvl3("Monitor: new connection from", conn.RemoteAddr().String())
+			dbg.LLvl3("Monitor: new connection from", conn.RemoteAddr().String())
 			m.mutexConn.Lock()
 			m.conns[conn.RemoteAddr().String()] = conn
 			go m.handleConnection(conn)
@@ -114,7 +114,7 @@ func (m *Monitor) Listen() error {
 			m.update(measure)
 		// end of a peer conn
 		case peer := <-m.done:
-			dbg.Lvl3("Connections left:", len(m.conns))
+			dbg.LLvl3("Connections left:", len(m.conns))
 			m.mutexConn.Lock()
 			delete(m.conns, peer)
 			m.mutexConn.Unlock()
@@ -129,7 +129,7 @@ func (m *Monitor) Listen() error {
 			}
 		}
 	}
-	dbg.Lvl2("Monitor finished waiting")
+	dbg.LLvl2("Monitor finished waiting")
 	m.conns = make(map[string]net.Conn)
 	return nil
 }
@@ -137,7 +137,7 @@ func (m *Monitor) Listen() error {
 // StopMonitor will close every connections it has
 // And will stop updating the stats
 func (m *Monitor) Stop() {
-	dbg.Lvl2("Monitor Stop")
+	dbg.LLvl2("Monitor Stop")
 	m.listenerLock.Lock()
 	if m.listener != nil {
 		m.listener.Close()
@@ -164,19 +164,19 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
+			dbg.LLvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
 			nerr += 1
 			if nerr > 1 {
-				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
+				dbg.LLvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
 				break
 			}
 		}
 
-		dbg.Lvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
+		dbg.LLvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
 		// Special case where the measurement is indicating a FINISHED step
 		switch strings.ToLower(measure.Name) {
 		case "end":
-			dbg.Lvl3("Finishing monitor")
+			dbg.LLvl3("Finishing monitor")
 			m.done <- conn.RemoteAddr().String()
 		default:
 			m.measures <- measure

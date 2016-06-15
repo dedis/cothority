@@ -70,8 +70,7 @@ func (m *MiniNet) Configure(pc *PlatformConfig) {
 	// Clean the MiniNet-dir, create it and change into it
 	os.RemoveAll(m.mininetDir)
 	os.Mkdir(m.mininetDir, 0777)
-	os.Chdir(m.mininetDir)
-	sda.WriteTomlConfig(*m, "mininet.toml", m.mininetDir)
+	sda.WriteTomlConfig(*m, m.mininetDir+"/mininet.toml", m.mininetDir)
 
 	if m.Simulation == "" {
 		dbg.Fatal("No simulation defined in runconfig")
@@ -84,14 +83,15 @@ func (m *MiniNet) Configure(pc *PlatformConfig) {
 // build is the name of the app to build
 // empty = all otherwise build specific package
 func (m *MiniNet) Build(build string, arg ...string) error {
+	current, _ := os.Getwd()
+	dbg.Lvl3("Current dir is:", current, m.mininetDir)
+	defer os.Chdir(current)
+	os.Chdir(m.mininetDir)
+
 	dbg.Lvl1("Building for", m.Login, m.Host, build, "cothorityDir=", m.cothorityDir)
 	start := time.Now()
 
 	// Start with a clean build-directory
-	current, _ := os.Getwd()
-	dbg.Lvl3("Current dir is:", current, m.mininetDir)
-	defer os.Chdir(current)
-
 	src_dir := m.cothorityDir
 	dst := m.mininetDir + "/cothority"
 	processor := "amd64"
@@ -207,7 +207,8 @@ func (m *MiniNet) Start(args ...string) error {
 		if err != nil {
 			dbg.Lvl3(err)
 		}
-		time.Sleep(time.Second * 60)
+		dbg.Print("Finished ssh-command")
+		time.Sleep(time.Second * 10)
 		m.sshMininet <- "finished"
 	}()
 

@@ -106,7 +106,8 @@ func main() {
 					dbg.Lvl1("Found all", count, "children")
 					wait = false
 				} else {
-					dbg.Lvl1("Found only", count, "children, counting again")
+					dbg.Lvlf1("Found only %d out of %d children, counting again",
+						count, rootSC.Tree.Size())
 				}
 				//case <-time.After(time.Millisecond * time.Duration(timeout) * 2):
 				//	// Wait longer than the root-node before aborting

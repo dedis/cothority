@@ -90,7 +90,7 @@ func (p *ProtocolCount) Dispatch() error {
 		case <-time.After(time.Duration(p.Timeout()) * time.Millisecond):
 			dbg.Lvl3(p.Info(), "timed out while waiting for", p.Timeout())
 			if p.IsRoot() {
-				dbg.Lvl2("Didn't get all children in time:", p.Replies)
+				dbg.Lvlf2("Didn't get all children in time:", p.Replies)
 				p.Count <- p.Replies
 				running = false
 			}
