@@ -28,11 +28,9 @@ test_fmt:
 test_lint:
 	@echo Checking linting of files
 	@{ \
-	go get -u github.com/golang/lint/golint; \
-	failOn="should have comment or be unexported\| by other packages, and that stutters; consider calling this"; \
-	failOn="$$failOn\|should be of the form"; \
-	exclude="protocols/byzcoin/blockchain"; \
-	lintfiles=$$( golint ./... | grep "$$failOn" | grep -v "$$exclude" ); \
+	go get github.com/golang/lint/golint; \
+	exclude="protocols/byzcoin"; \
+	lintfiles=$$( golint ./... | egrep -v "($$exclude)" ); \
 	if [ -n "$$lintfiles" ]; then \
 		echo "Lint errors:"; \
 		echo "$$lintfiles"; \
