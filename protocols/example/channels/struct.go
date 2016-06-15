@@ -1,4 +1,4 @@
-package example_channels
+package channels
 
 import "github.com/dedis/cothority/lib/sda"
 

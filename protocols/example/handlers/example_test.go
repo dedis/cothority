@@ -1,4 +1,4 @@
-package example_handlers_test
+package handlers_test
 
 import (
 	"testing"
@@ -23,7 +23,7 @@ func TestNode(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	protocol := pi.(*example_handlers.ProtocolExampleHandlers)
+	protocol := pi.(*handlers.ProtocolExampleHandlers)
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:
