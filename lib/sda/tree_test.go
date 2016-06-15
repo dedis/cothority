@@ -473,12 +473,43 @@ func TestEntityList_Publics(t *testing.T) {
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph
 //BenchmarkTreeMarshal will be the benchmark for the conversion between TreeMarshall and Tree
+//It takes 37461141 ns before optimization on Macbook Pro
 func BenchmarkTreeMarshal(b *testing.B) {
-	tree, _ := genLocalTree(100, 2000)
+	tree, _ := genLocalTree(10000, 2000)
+	t, _ := tree.BinaryMarshaler()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		b, _ := tree.BinaryMarshaler()
-		tree.BinaryUnmarshaler(b)
+		tree.BinaryUnmarshaler(t)
+	}
+}
+
+//BenchmarkMakeTree will time the amount of time it will take to make the tree
+func BenchmarkMakeTree(b *testing.B) {
+	tree, _ := genLocalTree(10000, 2000)
+	el := tree.EntityList
+	T := tree.MakeTreeMarshal()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		T.MakeTree(el)
+	}
+}
+
+//BenchmarkUnmarshalRegisteredType will time the amout it takes to perform the UnmarshalRegisteredType
+func BenchmarkUnmarshalRegisteredType(b *testing.B) {
+	tree, _ := genLocalTree(10000, 2000)
+	buf, _ := tree.BinaryMarshaler()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = network.UnmarshalRegisteredType(buf, network.DefaultConstructors(network.Suite))
+	}
+}
+
+//BenchmarkBinaryMarshaller will time the binary marshaler in order to compare MarshalerRegisteredType(used within BinaryMarshaler) to the UnmarshalRegisteredType
+func BenchmarkBinaryMarshaler(b *testing.B) {
+	tree, _ := genLocalTree(10000, 2000)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree.BinaryMarshaler()
 	}
 }
 
