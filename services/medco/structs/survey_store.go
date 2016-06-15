@@ -1,20 +1,24 @@
-package store
+package medco_structs
 
 import (
 	"fmt"
-	. "github.com/dedis/cothority/services/medco/structs"
-	
+
 )
 
 const AGGREGATION_ID int = 0
 
 type Survey_Database []SurveyStore
 
+type SurveyResult struct{
+	GroupingAttributes CipherVector
+	AggregatingAttributes CipherVector
+}
+
 type SurveyStore struct {
 	ClientResponses    []ClientResponse //a
 	DeliverableResults []SurveyResult   //d & 6
 
-	ProbabilisticGroupingAttributes map[TempID]CipherVector //1
+	//ProbabilisticGroupingAttributes map[TempID]CipherVector //1
 	AggregatingAttributes           map[TempID]CipherVector //2
 
 	LocGroupingAggregating map[GroupingKey]CipherVector //b & c
@@ -30,8 +34,7 @@ type SurveyStore struct {
 //construct survey
 func NewSurvey() *SurveyStore {
 	return &SurveyStore{
-
-		ProbabilisticGroupingAttributes: make(map[TempID]CipherVector),
+		//ProbabilisticGroupingAttributes: make(map[TempID]CipherVector),
 		AggregatingAttributes:           make(map[TempID]CipherVector),
 
 		LocGroupingAggregating: make(map[GroupingKey]CipherVector),
@@ -44,26 +47,31 @@ func NewSurvey() *SurveyStore {
 }
 
 func (s *SurveyStore) InsertClientResponse(cr ClientResponse) {
-	if cr.ProbabilisticGroupingAttributes == nil { //only aggregation, no grouping
+	if len(cr.ProbabilisticGroupingAttributes) == 0 { //only aggregation, no grouping
 		if len(s.DeliverableResults) != 0 {
 			s.DeliverableResults[AGGREGATION_ID].AggregatingAttributes.Add(s.DeliverableResults[AGGREGATION_ID].AggregatingAttributes, cr.AggregatingAttributes)
 		} else {
-			s.DeliverableResults = append(s.DeliverableResults, SurveyResult{nil, cr.AggregatingAttributes})
+			s.DeliverableResults = append(s.DeliverableResults, SurveyResult{CipherVector{}, cr.AggregatingAttributes})
 		}
 	} else { //grouping
 		s.ClientResponses = append(s.ClientResponses, cr)
 	}
 }
 
-func (s *SurveyStore) PollProbabilisticGroupingAttributes() *map[TempID]CipherVector {
+func (s *SurveyStore) HasNextClientResponses() bool {
+	return (len(s.ClientResponses) == 0)
+}
+
+func (s *SurveyStore) PollProbabilisticGroupingAttributes() map[TempID]CipherVector {
+	polledProbGroupAttr := make(map[TempID]CipherVector)
 	for _, v := range s.ClientResponses {
 		newId := s.nextId()
 		s.AggregatingAttributes[newId] = v.AggregatingAttributes
-		s.ProbabilisticGroupingAttributes[newId] = v.ProbabilisticGroupingAttributes
+		polledProbGroupAttr[newId] = v.ProbabilisticGroupingAttributes
 	}
 	s.ClientResponses = s.ClientResponses[:0] //clear table
 
-	return &s.ProbabilisticGroupingAttributes
+	return polledProbGroupAttr
 }
 
 func (s *SurveyStore) PushDeterministicGroupingAttributes(detGroupAttr map[TempID]GroupingAttributes) {
@@ -74,11 +82,18 @@ func (s *SurveyStore) PushDeterministicGroupingAttributes(detGroupAttr map[TempI
 	}
 
 	s.AggregatingAttributes = make(map[TempID]CipherVector) //clear maps
-	s.ProbabilisticGroupingAttributes = make(map[TempID]CipherVector)
+	//s.ProbabilisticGroupingAttributes = make(map[TempID]CipherVector)
 }
 
-func (s *SurveyStore) PollLocallyAggregatedResponses() (*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
-	return &s.LocGroupingGroups, &s.LocGroupingAggregating
+func (s *SurveyStore) HasNextAggregatedResponses() bool {
+	return (len(s.LocGroupingGroups) == 0)
+}
+
+func (s *SurveyStore) PollLocallyAggregatedResponses() (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector) {
+	LocGroupingGroupsReturn := s.LocGroupingGroups
+	s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
+	return LocGroupingGroupsReturn, s.LocGroupingAggregating
+
 }
 
 func (s *SurveyStore) nextId() TempID {
@@ -87,8 +102,6 @@ func (s *SurveyStore) nextId() TempID {
 }
 
 func AddInMapping(s map[GroupingKey]CipherVector, key GroupingKey, added CipherVector) {
-	//var tempPointer *CipherVector
-	//tempPointer = nil
 	if _, ok := s[key]; !ok {
 		s[key] = added
 	} else {
@@ -105,30 +118,57 @@ func (s *SurveyStore) PushCothorityAggregatedGroups(gNew map[GroupingKey]Groupin
 			s.LocGroupingGroups[key] = gNew[key]
 		}
 	}
-	s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
+	//s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
 }
 
-func (s *SurveyStore) PollCothorityAggregatedGroups() (*map[TempID]GroupingAttributes, *map[TempID]CipherVector) {
-	for key, value := range s.AfterAggrProto {
-		newId := s.nextId()
-		s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
-		s.GroupedAggregatingAttributes[newId] = value
+func (s *SurveyStore) HasNextAggregatedGroupsId() bool {
+	return (len(s.GroupedDeterministicGroupingAttributes) == 0)
+}
+func (s *SurveyStore) PollCothorityAggregatedGroupsId() map[TempID]GroupingAttributes{
+	if len(s.AfterAggrProto) != 0 {
+		for key, value := range s.AfterAggrProto {
+			newId := s.nextId()
+			s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
+			s.GroupedAggregatingAttributes[newId] = value
+		}
+		s.AfterAggrProto = make(map[GroupingKey]CipherVector)
+		s.LocGroupingGroups = make(map[GroupingKey]GroupingAttributes)
 	}
-	s.AfterAggrProto = make(map[GroupingKey]CipherVector)
-	s.LocGroupingGroups = make(map[GroupingKey]GroupingAttributes)
-	return &s.GroupedDeterministicGroupingAttributes, &s.GroupedAggregatingAttributes
+	groupIds := s.GroupedDeterministicGroupingAttributes
+	s.GroupedDeterministicGroupingAttributes = make(map[TempID]GroupingAttributes)
+	return groupIds
+}
+
+func (s *SurveyStore) HasNextAggregatedGroupsAttr() bool {
+	return (len(s.GroupedAggregatingAttributes) == 0)
+}
+func (s *SurveyStore) PollCothorityAggregatedGroupsAttr() map[TempID]CipherVector {
+	if len(s.AfterAggrProto) != 0 {
+		for key, value := range s.AfterAggrProto {
+			newId := s.nextId()
+			s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
+			s.GroupedAggregatingAttributes[newId] = value
+		}
+		s.AfterAggrProto = make(map[GroupingKey]CipherVector)
+		s.LocGroupingGroups = make(map[GroupingKey]GroupingAttributes)
+	}
+	groupAttrs:= s.GroupedAggregatingAttributes
+	s.GroupedAggregatingAttributes = make(map[TempID]CipherVector)
+	return groupAttrs
 }
 
 func (s *SurveyStore) PushQuerierKeyEncryptedData(groupingAttributes map[TempID]CipherVector, aggregatingAttributes map[TempID]CipherVector) {
 	for key, value := range groupingAttributes {
 		s.DeliverableResults = append(s.DeliverableResults, SurveyResult{value, aggregatingAttributes[key]})
 	}
-	s.GroupedDeterministicGroupingAttributes = make(map[TempID]GroupingAttributes)
-	s.GroupedAggregatingAttributes = make(map[TempID]CipherVector)
+	//s.GroupedDeterministicGroupingAttributes = make(map[TempID]GroupingAttributes)
+	//s.GroupedAggregatingAttributes = make(map[TempID]CipherVector)
 }
 
 func (s *SurveyStore) PollDeliverableResults() []SurveyResult {
-	return s.DeliverableResults
+	results := s.DeliverableResults
+	s.DeliverableResults = s.DeliverableResults[:0]
+	return results
 }
 
 func (s *SurveyStore) DisplayResults() {
