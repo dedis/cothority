@@ -57,8 +57,23 @@ func (c *CipherText) Sub(c1, c2 CipherText) *CipherText {
 	return c
 }
 
-func (dc *DeterministCipherText) Equals(dc2 *DeterministCipherText) bool {
+func (dc *DeterministCipherText) Equal(dc2 *DeterministCipherText) bool {
+	if dc == nil || dc2 == nil {
+		return dc == dc2
+	}
 	return dc2.C.Equal(dc.C)
+}
+
+func (dcv *DeterministCipherVector) Equal(dcv2 *DeterministCipherVector) bool {
+	if dcv == nil || dcv2 == nil {
+		return dcv == dcv2
+	}
+	for i, _ := range *dcv2 {
+		if !(*dcv)[i].Equal(&(*dcv2)[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 func (dc DeterministCipherText) String() string {

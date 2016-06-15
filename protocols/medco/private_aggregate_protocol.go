@@ -125,10 +125,9 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 
 	if !p.IsLeaf() {
 		for _, childrenContribution := range <-p.ChildDataChannel {
-			for group := range childrenContribution.ChildData {
+			for group,aggr := range childrenContribution.ChildData {
 				(*p.Groups)[group] = childrenContribution.ChildGroups[group]
-				if aggr, ok := (*p.GroupedData)[group]; ok {
-					localAggr := (*p.GroupedData)[group]
+				if localAggr, ok := (*p.GroupedData)[group]; ok {
 					localAggr.Add(localAggr, aggr)
 				} else {
 					(*p.GroupedData)[group] = aggr
