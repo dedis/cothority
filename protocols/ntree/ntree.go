@@ -46,17 +46,15 @@ func NewProtocol(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 // Start implements sda.ProtocolInstance.
 func (p *Protocol) Start() error {
-	if p.IsRoot() {
-		if len(p.Children()) > 0 {
-			dbg.Lvl3("Starting ntree/naive")
-			return p.HandleSignRequest(structMessage{p.TreeNode(),
-				Message{p.Message, p.verifySignature}})
-		} else {
-			return errors.New("No children for root")
-		}
-	} else {
+	if !p.IsRoot() {
 		return fmt.Errorf("Called Start() on non-root ProtocolInstance")
 	}
+	if len(p.Children()) < 1 {
+		return errors.New("No children for root")
+	}
+	dbg.Lvl3("Starting ntree/naive")
+	return p.HandleSignRequest(structMessage{p.TreeNode(),
+		Message{p.Message, p.verifySignature}})
 }
 
 // HandleSignRequest is a handler for incoming sign-requests. It's registered as

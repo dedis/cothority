@@ -260,7 +260,7 @@ func (am *Message) UnmarshalBinary(buf []byte) error {
 	return err
 }
 
-// ConstructFrom takes a ProtocolMessage and then constructs a
+// NewNetworkMessage takes a ProtocolMessage and then constructs a
 // Message from it. Error if the type is unknown
 func NewNetworkMessage(obj ProtocolMessage) (*Message, error) {
 	val := reflect.ValueOf(obj)

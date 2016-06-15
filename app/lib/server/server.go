@@ -29,6 +29,7 @@ import (
 	// register the protocol
 	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/cosi"
+	// For the moment, the server only serves CoSi requests
 	_ "github.com/dedis/cothority/protocols/cosi"
 	_ "github.com/dedis/cothority/services/cosi"
 	s "github.com/dedis/cothority/services/cosi"
@@ -54,10 +55,10 @@ const DefaultAddress = "127.0.0.1"
 // Service used to get the port connection service
 const whatsMyIP = "http://www.whatsmyip.org/"
 
-// How long we're willing to wait for a signature
+// RequestTimeOut is how long we're willing to wait for a signature
 var RequestTimeOut = time.Second * 1
 
-// interactiveConfig will ask through the command line to create a Private / Public
+// InteractiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
 func InteractiveConfig(binaryName string) {
 	ui.Info("Setting up a cothority-server.")
@@ -248,15 +249,13 @@ func checkList(list *sda.EntityList, descs []string) error {
 	if err != nil {
 		ui.Error(err)
 		return err
-	} else {
-		err := verifySignatureHash([]byte(msg), sig, list)
-		if err != nil {
-			ui.Errorf("Invalid signature: %v", err)
-			return err
-		} else {
-			ui.Info("Success")
-		}
 	}
+	err := verifySignatureHash([]byte(msg), sig, list)
+	if err != nil {
+		ui.Errorf("Invalid signature: %v", err)
+		return err
+	}
+	ui.Info("Success")
 	return nil
 }
 

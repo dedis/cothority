@@ -7,20 +7,20 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// SDAData is to be embedded in every message that is made for a
+// SDADataMessageID is to be embedded in every message that is made for a
 // ID of SDAData message as registered in network
 var SDADataMessageID = network.RegisterMessageType(Data{})
 
-// ID of RequestTree message as registered in network
+// RequestTreeMessageID of RequestTree message as registered in network
 var RequestTreeMessageID = network.RegisterMessageType(RequestTree{})
 
-// ID of RequestEntityList message as registered in network
+// RequestEntityListMessageID of RequestEntityList message as registered in network
 var RequestEntityListMessageID = network.RegisterMessageType(RequestEntityList{})
 
-// ID of TreeMarshal message as registered in network
+// SendTreeMessageID of TreeMarshal message as registered in network
 var SendTreeMessageID = TreeMarshalTypeID
 
-// ID of EntityList message as registered in network
+// SendEntityListMessageID of EntityList message as registered in network
 var SendEntityListMessageID = EntityListTypeID
 
 // Data is to be embedded in every message that is made for a
@@ -73,24 +73,24 @@ type Token struct {
 	RoundID   RoundID
 	// TreeNodeID is defined by the
 	TreeNodeID TreeNodeID
-	cacheId    TokenID
+	cacheID    TokenID
 }
 
 // Global mutex when we're working on Tokens. Needed because we
 // copy Tokens in ChangeTreeNodeID.
 var tokenMutex sync.Mutex
 
-// Id returns the TokenID which can be used to identify by token in map
-func (t *Token) Id() TokenID {
+// ID returns the TokenID which can be used to identify by token in map
+func (t *Token) ID() TokenID {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
-	if t.cacheId == TokenID(uuid.Nil) {
+	if t.cacheID == TokenID(uuid.Nil) {
 		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
 			t.RoundID.String() + t.ServiceID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
-		t.cacheId = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
+		t.cacheID = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
 	}
-	return t.cacheId
+	return t.cacheID
 }
 
 // Clone returns a new token out of this one
@@ -104,10 +104,10 @@ func (t *Token) Clone() *Token {
 func (t *Token) ChangeTreeNodeID(newid TreeNodeID) *Token {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
-	t_other := *t
-	t_other.TreeNodeID = newid
-	t_other.cacheId = TokenID(uuid.Nil)
-	return &t_other
+	tOther := *t
+	tOther.TreeNodeID = newid
+	tOther.cacheID = TokenID(uuid.Nil)
+	return &tOther
 }
 
 // RequestTree is used to ask the parent for a given Tree

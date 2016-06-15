@@ -45,9 +45,9 @@ func NewLocalTest() *LocalTest {
 // StartProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' running from the tree-root
 func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
-	rootEntityId := t.Root.Entity.ID
+	rootEntityID := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.ID.Equal(rootEntityId) {
+		if h.Entity.ID.Equal(rootEntityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.ID].StartProtocol(t, name)
@@ -56,12 +56,12 @@ func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
-// CreateNewNodeName takes a name and a tree and will create a
+// CreateProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
 func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
-	rootEntityId := t.Root.Entity.ID
+	rootEntityID := t.Root.Entity.ID
 	for _, h := range l.Hosts {
-		if h.Entity.ID.Equal(rootEntityId) {
+		if h.Entity.ID.Equal(rootEntityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.Entity.ID].CreateProtocolSDA(t, name)
@@ -70,7 +70,7 @@ func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, erro
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
-// GenLocalHost returns a slice of 'n' Hosts. If 'connect' is true, the
+// GenLocalHosts returns a slice of 'n' Hosts. If 'connect' is true, the
 // hosts will be connected between each other. If 'processMsg' is true,
 // the ProcessMsg-method will be called.
 func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
@@ -91,7 +91,7 @@ func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host,
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
-	l.Trees[tree.Id] = tree
+	l.Trees[tree.ID] = tree
 	if register {
 		hosts[0].overlay.RegisterEntityList(list)
 		hosts[0].overlay.RegisterTree(tree)
@@ -111,7 +111,7 @@ func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, reg
 
 	list := l.GenEntityListFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
-	l.Trees[tree.Id] = tree
+	l.Trees[tree.ID] = tree
 	if register {
 		hosts[0].overlay.RegisterEntityList(list)
 		hosts[0].overlay.RegisterTree(tree)
@@ -119,7 +119,7 @@ func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, reg
 	return hosts, list, tree
 }
 
-// GenEntityListFromHosts takes a number of hosts as arguments and creates
+// GenEntityListFromHost takes a number of hosts as arguments and creates
 // an EntityList.
 func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
 	var entities []*network.Entity
@@ -127,7 +127,7 @@ func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
 		entities = append(entities, hosts[i].Entity)
 	}
 	list := NewEntityList(entities)
-	l.EntityLists[list.Id] = list
+	l.EntityLists[list.ID] = list
 	return list
 }
 
@@ -157,7 +157,7 @@ func (l *LocalTest) GetTree(tn *TreeNode) *Tree {
 	return tree
 }
 
-// NewNode creates a new node on a TreeNode
+// NewTreeNodeInstance creates a new node on a TreeNode
 func (l *LocalTest) NewTreeNodeInstance(tn *TreeNode, protName string) (*TreeNodeInstance, error) {
 	o := l.Overlays[tn.Entity.ID]
 	if o == nil {
@@ -167,15 +167,15 @@ func (l *LocalTest) NewTreeNodeInstance(tn *TreeNode, protName string) (*TreeNod
 	if tree == nil {
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
-	protId := ProtocolNameToID(protName)
-	if !ProtocolExists(protId) {
+	protID := ProtocolNameToID(protName)
+	if !ProtocolExists(protID) {
 		return nil, errors.New("Didn't find protocol: " + protName)
 	}
 	tok := &Token{
-		ProtoID:      protId,
-		EntityListID: tree.EntityList.Id,
-		TreeID:       tree.Id,
-		TreeNodeID:   tn.Id,
+		ProtoID:      protID,
+		EntityListID: tree.EntityList.ID,
+		TreeID:       tree.ID,
+		TreeNodeID:   tn.ID,
 		RoundID:      RoundID(uuid.NewV4()),
 	}
 	node := newTreeNodeInstance(o, tok, tn)
@@ -185,7 +185,7 @@ func (l *LocalTest) NewTreeNodeInstance(tn *TreeNode, protName string) (*TreeNod
 
 // GetNodes returns all Nodes that belong to a treeNode
 func (l *LocalTest) GetNodes(tn *TreeNode) []*TreeNodeInstance {
-	nodes := make([]*TreeNodeInstance, 0)
+	var nodes []*TreeNodeInstance
 	for _, n := range l.Overlays[tn.Entity.ID].instances {
 		nodes = append(nodes, n)
 	}
@@ -195,7 +195,7 @@ func (l *LocalTest) GetNodes(tn *TreeNode) []*TreeNodeInstance {
 // SendTreeNode injects a message directly in the Overlay-layer, bypassing
 // Host and Network
 func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg network.ProtocolMessage) error {
-	if from.Tree().Id != to.Tree().Id {
+	if from.Tree().ID != to.Tree().ID {
 		return errors.New("Can't send from one tree to another")
 	}
 	b, err := network.MarshalRegisteredType(msg)
@@ -282,7 +282,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 			for !connected {
 				time.Sleep(time.Millisecond * 10)
 				root.networkLock.Lock()
-				for id, _ := range root.connections {
+				for id := range root.connections {
 					if id.Equal(host.Entity.ID) {
 						connected = true
 						break

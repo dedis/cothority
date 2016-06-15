@@ -178,7 +178,7 @@ func (n *TreeNodeInstance) RegisterChannel(c interface{}) error {
 	return nil
 }
 
-// RegisterChannel takes a channel with a struct that contains two
+// RegisterHandler takes a function which takes a struct as argument that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
 // This function handles also
@@ -415,7 +415,7 @@ func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
 // message being analyzed.
 func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
 	mt := sdaMsg.MsgType
-	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equal(n.Parent().Id)
+	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equal(n.Parent().ID)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
 		return mt, []*Data{sdaMsg}, true
 	}
@@ -497,7 +497,7 @@ func (n *TreeNodeInstance) Info() string {
 
 // TokenID returns the TokenID of the given node (to uniquely identify it)
 func (n *TreeNodeInstance) TokenID() TokenID {
-	return n.token.Id()
+	return n.token.ID()
 }
 
 // Token returns a CLONE of the underlying sda.Token struct.

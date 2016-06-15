@@ -67,8 +67,8 @@ func TestNodeChannelCreate(t *testing.T) {
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
-			TreeID:     tree.Id,
-			TreeNodeID: tree.Root.Id,
+			TreeID:     tree.ID,
+			TreeNodeID: tree.Root.ID,
 		}},
 	})
 	if err != nil {
@@ -103,8 +103,8 @@ func TestNodeChannel(t *testing.T) {
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
-			TreeID:     tree.Id,
-			TreeNodeID: tree.Root.Id,
+			TreeID:     tree.ID,
+			TreeNodeID: tree.Root.ID,
 		}},
 	})
 	if err != nil {
