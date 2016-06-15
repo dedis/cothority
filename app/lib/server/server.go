@@ -194,7 +194,7 @@ func CheckConfig(tomlFileName string) error {
 		ui.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
-	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
+	ui.Info("Checking the availability and responsiveness of the servers in the group...")
 	return CheckServers(group)
 }
 
@@ -243,20 +243,18 @@ func checkList(list *sda.EntityList, descs []string) error {
 	}
 	dbg.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
-	fmt.Print("[+] Checking server(s) ", serverStr, ": ")
+	ui.Info("Checking server(s) ", serverStr, ": ")
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		fmt.Fprintln(os.Stderr,
-			fmt.Sprintf("Error '%v'", err))
+		ui.Error(err)
 		return err
 	} else {
 		err := verifySignatureHash([]byte(msg), sig, list)
 		if err != nil {
-			fmt.Println(os.Stderr,
-				fmt.Sprintf("Invalid signature: %v", err))
+			ui.Errorf("Invalid signature: %v", err)
 			return err
 		} else {
-			fmt.Println("Success")
+			ui.Info("Success")
 		}
 	}
 	return nil

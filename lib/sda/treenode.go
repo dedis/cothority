@@ -574,9 +574,12 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 	for _, node := range children {
 		go func(n2 *TreeNode) {
 			if err := n.SendTo(n2, msg); err != nil {
-				eMut.Lock()
-				errs = append(errs, collectedErrors{node.Name(), err})
-				eMut.Unlock()
+				func(name string) {
+					eMut.Lock()
+					newerr := collectedErrors{name, err}
+					errs = append(errs, newerr)
+					eMut.Unlock()
+				}(node.Name())
 			}
 		}(node)
 	}

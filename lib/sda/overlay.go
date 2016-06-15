@@ -379,7 +379,7 @@ func NewTreeNodeCache() *TreeNodeCache {
 // Cache a TreeNode that relates to the Tree
 // It will also cache the parent and children of the treenode since that's most
 // likely what we are going to query.
-func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
+func (tnc *TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 	tnc.Lock()
 	defer tnc.Unlock()
 	mm, ok := tnc.Entries[tree.Id]
@@ -402,7 +402,7 @@ func (tnc TreeNodeCache) Cache(tree *Tree, treeNode *TreeNode) {
 
 // GetFromToken returns the TreeNode that the token is pointing at, or
 // nil if there is none for this token.
-func (tnc TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
+func (tnc *TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
 	tnc.Lock()
 	defer tnc.Unlock()
 	if tok == nil {
