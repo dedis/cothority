@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/edwards"
+	"github.com/dedis/crypto/ed25519"
 )
 
-var testSuite = edwards.NewAES128SHA256Ed25519(false)
+var testSuite = ed25519.NewAES128SHA256Ed25519(false)
 
 // TestCosiCommitment test if the commitment generation is correct
 func TestCosiCommitment(t *testing.T) {
