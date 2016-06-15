@@ -1,13 +1,14 @@
-package store_test
+package medco_structs_test
 
 import (
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/services/medco/store"
-	. "github.com/dedis/cothority/services/medco/structs"
+
 	"github.com/dedis/crypto/random"
 	"testing"
+
+	."github.com/dedis/cothority/services/medco/structs"
 )
 
 var suite = network.Suite
@@ -18,7 +19,7 @@ func TestStoring(t *testing.T) {
 	//construc variables
 	secKey := suite.Secret().Pick(random.Stream)
 	pubKey := suite.Point().Mul(suite.Point().Base(), secKey)
-	nullEnc := EncryptInt(suite, pubKey, 0) //*CipherText
+	nullEnc :=EncryptInt(suite, pubKey, 0) //*CipherText
 	oneEnc := EncryptInt(suite, pubKey, 1)  //*CipherText
 	oneBEnc := EncryptInt(suite, pubKey, 1) //*CipherText
 
@@ -45,7 +46,7 @@ func TestStoring(t *testing.T) {
 	}
 
 	//constructor test
-	storage := store.NewSurvey()
+	storage := NewSurvey()
 	_ = storage
 
 	//AddAggregate & GetAggregateLoc Test
@@ -75,7 +76,7 @@ func TestStoring(t *testing.T) {
 	//storage.DisplayResults()
 
 	//GROUPING
-	storage = store.NewSurvey()
+	storage = NewSurvey()
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect1, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect1})
@@ -92,7 +93,7 @@ func TestStoring(t *testing.T) {
 	probaGroups := storage.PollProbabilisticGroupingAttributes()
 	//verif two maps creation -> OK
 	var indexes []TempID
-	for i, v := range *probaGroups {
+	for i, v := range probaGroups {
 		_ = v
 		//fmt.Println(i, " : ", v)
 		indexes = append(indexes, i)
@@ -102,9 +103,9 @@ func TestStoring(t *testing.T) {
 	//	fmt.Println(i, " : ", v)
 	//}
 	groupedAttr := make(map[TempID]GroupingAttributes)
-	groupedAttr[indexes[0]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, done}
-	groupedAttr[indexes[1]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, dnull}
-	groupedAttr[indexes[2]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, doneB}
+	groupedAttr[indexes[0]] = []DeterministCipherText{dnull, done}
+	groupedAttr[indexes[1]] = []DeterministCipherText{dnull, dnull}
+	groupedAttr[indexes[2]] = []DeterministCipherText{dnull, doneB}
 	//groupedAttr[indexes[3]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, doneB}
 
 	storage.PushDeterministicGroupingAttributes(groupedAttr)
@@ -130,8 +131,9 @@ func TestStoring(t *testing.T) {
 		fmt.Println("PushCothorityAggregatedGroups OK")
 	}
 
-	groupedDetAttr, aggrAttr := storage.PollCothorityAggregatedGroups()
-	if !(len(*groupedDetAttr) == 2) {
+	groupedDetAttr := storage.PollCothorityAggregatedGroupsId()
+	aggrAttr := storage.PollCothorityAggregatedGroupsAttr()
+	if !(len(groupedDetAttr) == 2) {
 		fmt.Println("PollDeterministicGroupingAttributes error")
 		t.Errorf("PollDeterministicGroupingAttributes error")
 	} else {
@@ -140,7 +142,7 @@ func TestStoring(t *testing.T) {
 	}
 
 	var indexes1 []TempID
-	for i, v := range *groupedDetAttr {
+	for i, v := range groupedDetAttr {
 		_ = v
 		//fmt.Println(i, " : ", v)
 		indexes1 = append(indexes1, i)
@@ -159,7 +161,7 @@ func TestStoring(t *testing.T) {
 	reencrGroupAttr[indexes1[1]] = testCipherVect1
 	//reencrGroupAttr[indexes[2]] = [100]medco.DeterministCipherText{dnull, done}
 
-	storage.PushQuerierKeyEncryptedData(reencrGroupAttr, *aggrAttr)
+	storage.PushQuerierKeyEncryptedData(reencrGroupAttr, aggrAttr)
 
 	//storage.DisplayResults()
 
