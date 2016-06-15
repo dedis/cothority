@@ -1,7 +1,7 @@
 package medco_structs
 
 import (
-	"fmt"
+	"strings"
 )
 
 const MAX_GROUP_ATTR int = 2
@@ -17,7 +17,11 @@ type ClientResponse struct {
 }
 
 func (ga *GroupingAttributes) Key() GroupingKey {
-	return GroupingKey(fmt.Sprint(ga))
+	var key []string
+	for _, a := range DeterministCipherVector(*ga) {
+		key = append(key, a.C.String())
+	}
+	return GroupingKey(strings.Join(key,""))
 }
 
 func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool{

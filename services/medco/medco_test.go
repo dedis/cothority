@@ -25,9 +25,9 @@ func TestServiceMedco(t *testing.T) {
 	}
 
 	dbg.Lvl1("Sending response data... ")
-	dataHolder := make([]*medco_service.MedcoClient, 4)
-	for i := 0; i < 4; i++ {
-		dataHolder[i] = medco_service.NewMedcoClient(el.List[0])
+	dataHolder := make([]*medco_service.MedcoClient, 10)
+	for i := 0; i < 10; i++ {
+		dataHolder[i] = medco_service.NewMedcoClient(el.List[i%5])
 		grp := make([]int64, 2)
 		aggr := make([]int64, 10)
 		grp[i%2] = int64(2)

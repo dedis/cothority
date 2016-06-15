@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
-	//"github.com/dedis/crypto/random"
 )
 
 const DETERMINISTIC_SWITCHING_PROTOCOL_NAME = "DeterministicSwitching"
@@ -138,7 +137,6 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 	deterministicSwitchingTarget.Proof = newProofs
 
 	if p.IsRoot() {
-		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
 		deterministicSwitchedData := make(map[TempID]DeterministCipherVector, len(deterministicSwitchingTarget.Data))
 		for k, v := range deterministicSwitchingTarget.Data {
 			deterministicSwitchedData[k] = make(DeterministCipherVector, len(v))
@@ -146,6 +144,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
 			}
 		}
+		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
 		p.FeedbackChannel <- deterministicSwitchedData
 	} else {
 		dbg.Lvl1(p.Entity(), "carried on deterministic switching.")

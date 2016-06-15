@@ -28,7 +28,6 @@ type MedcoService struct {
 	homePath string
 
 	entityList   *sda.EntityList
-	tree         *sda.Tree
 	store        *store.Survey
 	surveyPHKey  abstract.Secret
 	clientPublic abstract.Point
@@ -46,9 +45,7 @@ func NewMedcoService(c sda.Context, path string) sda.Service {
 }
 
 func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *SurveyCreationQuery) (network.ProtocolMessage, error) {
-	// Future: should initialise a survey store
 	mcs.entityList = &recq.EntityList
-	mcs.tree = mcs.entityList.GenerateBinaryTree()
 	mcs.store = store.NewSurvey()
 	mcs.surveyPHKey = network.Suite.Secret().Pick(random.Stream)
 
@@ -69,7 +66,6 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *Surv
 }
 
 func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *ClientResponse) (network.ProtocolMessage, error) {
-	// Future: insert a new row in the CollectedData table of the survey store. Potentially trigger a flush in pipeline
 
 	mcs.store.InsertClientResponse(*resp)
 
@@ -78,16 +74,18 @@ func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *Clien
 }
 
 func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *SurveyResultsQuery) (network.ProtocolMessage, error) {
-	// Future: flushes every tables in the pipeline order. Answers the request.
 
 	dbg.Lvl1(mcs.Entity(), "recieved a survey result query from", e)
 
-	mcs.flushCollectedData()
+	mcs.clientPublic = resq.ClientPublic
+	pi,_ := mcs.startProtocol(medco.MEDCO_SERVICE_PROTOCOL_NAME)
 
-	mcs.flushGroupedData()
-
-	mcs.flushAggregatedData(&resq.ClientPublic)
-
+	//mcs.FlushCollectedData()
+	//
+	//mcs.FlushGroupedData()
+	//
+	//mcs.FlushAggregatedData()
+	<- pi.(*medco.MedcoServiceProtocol).FeedbackChannel
 	dbg.Lvl1(mcs.Entity(), "completed the query processing...")
 	return &SurveyResultResponse{mcs.store.PollDeliverableResults()}, nil
 }
@@ -101,6 +99,9 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	var err error
 
 	switch tn.ProtocolName() {
+	case medco.MEDCO_SERVICE_PROTOCOL_NAME:
+		pi, err = medco.NewMedcoServiceProcotol(tn)
+		pi.(*medco.MedcoServiceProtocol).MedcoServiceInstance = mcs
 	case medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME:
 		pi, err = medco.NewDeterministSwitchingProtocol(tn)
 		detSwitch := pi.(*medco.DeterministicSwitchingProtocol)
@@ -136,7 +137,8 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 }
 
 func (mcs *MedcoService) startProtocol(name string) (sda.ProtocolInstance, error) {
-	tni := mcs.NewTreeNodeInstance(mcs.tree, mcs.tree.Root,name)
+	tree := mcs.entityList.GenerateNaryTreeWithRoot(2, mcs.Entity())
+	tni := mcs.NewTreeNodeInstance(tree, tree.Root, name)
 	pi , err := mcs.NewProtocol(tni, nil)
 	mcs.RegisterProtocolInstance(pi)
 	go pi.Dispatch()
@@ -147,8 +149,9 @@ func (mcs *MedcoService) startProtocol(name string) (sda.ProtocolInstance, error
 // Pipeline steps forward operations
 
 // Performs the private grouping on the currently collected data
-func (mcs *MedcoService) flushCollectedData() error {
+func (mcs *MedcoService) FlushCollectedData() error {
 
+	// TODO: Start only if data
 	pi, err := mcs.startProtocol(medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME)
 	if err != nil {
 		return err
@@ -160,7 +163,7 @@ func (mcs *MedcoService) flushCollectedData() error {
 }
 
 // Performs the per-group aggregation on the currently grouped data
-func (mcs *MedcoService) flushGroupedData() error {
+func (mcs *MedcoService) FlushGroupedData() error {
 
 	pi, err := mcs.startProtocol(medco.PRIVATE_AGGREGATE_PROTOCOL_NAME)
 	if err != nil {
@@ -174,9 +177,7 @@ func (mcs *MedcoService) flushGroupedData() error {
 }
 
 // Perform the switch to data querier key on the currently aggregated data
-func (mcs *MedcoService) flushAggregatedData(querierKey *abstract.Point) error {
-
-	mcs.clientPublic = *querierKey
+func (mcs *MedcoService) FlushAggregatedData() error {
 
 	pi, err := mcs.startProtocol(medco.KEY_SWITCHING_PROTOCOL_NAME)
 	if err != nil {
