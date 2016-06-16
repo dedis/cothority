@@ -28,11 +28,10 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 	"github.com/dedis/cothority/app/lib/ui"
-	"github.com/dedis/cothority/lib/cosi"
+	"github.com/dedis/crypto/cosi"
 	// For the moment, the server only serves CoSi requests
-	_ "github.com/dedis/cothority/protocols/cosi"
-	_ "github.com/dedis/cothority/services/cosi"
-	s "github.com/dedis/cothority/services/cosi"
+	_ "github.com/dedis/cosi/protocol"
+	s "github.com/dedis/cosi/service"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
 )
@@ -286,9 +285,7 @@ func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 		if !ok || err != nil {
 			return nil, errors.New("Received an invalid repsonse.")
 		}
-
-		err = cosi.VerifySignature(network.Suite, msg, el.Aggregate,
-			response.Challenge, response.Response)
+		err = cosi.VerifySignature(network.Suite, el.Publics(), msg, response.Signature)
 		if err != nil {
 			return nil, err
 		}
@@ -309,8 +306,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) err
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	err := cosi.VerifySignature(network.Suite, fHash, el.Aggregate,
-		sig.Challenge, sig.Response)
+	err := cosi.VerifySignature(network.Suite, el.Publics(), fHash, sig.Signature)
 	if err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
