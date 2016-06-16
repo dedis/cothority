@@ -8,23 +8,23 @@ import (
 
 
 type SurveyCreationQuery struct {
-	*medco_structs.SurveyID
+	SurveyID *medco_structs.SurveyID
 	sda.EntityList
 	medco_structs.SurveyDescription
 }
 
 type SurveyResponseQuery struct {
-	medco_structs.SurveyID
+	SurveyID medco_structs.SurveyID
 	medco_structs.ClientResponse
 }
 
 type SurveyResultsQuery struct {
-	medco_structs.SurveyID
+	SurveyID     medco_structs.SurveyID
 	ClientPublic abstract.Point
 }
 
 type ServiceResponse struct {
-	medco_structs.SurveyID
+	SurveyID medco_structs.SurveyID
 }
 
 

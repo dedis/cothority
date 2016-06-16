@@ -22,7 +22,9 @@ type MedcoServiceInterface interface {
 	FlushAggregatedData(medco_structs.SurveyID) error
 }
 
-type TriggerFlushCollectedDataMessage struct {}
+type TriggerFlushCollectedDataMessage struct {
+	SurveyID medco_structs.SurveyID
+}
 type DoneFlushCollectedDataMessage struct {}
 type DoneProcessingMessage struct {}
 
@@ -66,9 +68,12 @@ func (p *MedcoServiceProtocol) Start() error {
 	if p.MedcoServiceInstance == nil {
 		return errors.New("No Medco Service pointer provided.")
 	}
+	if p.TargetSurvey == nil {
+		return errors.New("No Target Survey ID pointer provided")
+	}
 
 	dbg.Lvl1(p.Entity(), "started a Medco Service Protocol.")
-	p.Broadcast(&TriggerFlushCollectedDataMessage{})
+	p.Broadcast(&TriggerFlushCollectedDataMessage{*p.TargetSurvey})
 
 	return nil
 }
@@ -76,8 +81,8 @@ func (p *MedcoServiceProtocol) Start() error {
 func (p *MedcoServiceProtocol) Dispatch() error {
 
 	if !p.IsRoot() {
-		<- p.TriggerFlushCollectedData
-		p.MedcoServiceInstance.FlushCollectedData(*p.TargetSurvey)
+		msg := <- p.TriggerFlushCollectedData
+		p.MedcoServiceInstance.FlushCollectedData(msg.SurveyID)
 		p.SendTo(p.Root(), &DoneFlushCollectedDataMessage{})
 	} else {
 		p.MedcoServiceInstance.FlushCollectedData(*p.TargetSurvey)

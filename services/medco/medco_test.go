@@ -21,7 +21,8 @@ func TestServiceMedco(t *testing.T) {
 	// Send a request to the service
 	client := medco_service.NewMedcoClient(el.List[0])
 	surveyDesc := medco_structs.SurveyDescription{2,10}
-	if client.CreateSurvey(el, surveyDesc) != nil {
+	surveyID, err := client.CreateSurvey(el, surveyDesc)
+	if err != nil {
 		t.Fatal("Service did not start.")
 	}
 
@@ -33,10 +34,10 @@ func TestServiceMedco(t *testing.T) {
 		aggr := make([]int64, 10)
 		//grp[i%2] = int64(2)
 		aggr[i%2] = 3
-		dataHolder[i].SendSurveyResultsData(grp, aggr, el.Aggregate)
+		dataHolder[i].SendSurveyResultsData(*surveyID, grp, aggr, el.Aggregate)
 	}
 
-	grp, aggr, err := client.GetSurveyResults()
+	grp, aggr, err := client.GetSurveyResults(*surveyID)
 	if err != nil {
 		t.Fatal("Service could not output the results.")
 	}

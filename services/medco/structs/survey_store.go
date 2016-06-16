@@ -2,7 +2,6 @@ package medco_structs
 
 import (
 	"fmt"
-
 )
 
 const AGGREGATION_ID int = 0
@@ -34,6 +33,8 @@ type SurveyStore struct {
 //construct survey
 func NewSurveyStore() *SurveyStore {
 	return &SurveyStore{
+		ClientResponses: make([]ClientResponse,0,100),
+		DeliverableResults: make([]SurveyResult, 0, 100),
 		//ProbabilisticGroupingAttributes: make(map[TempID]CipherVector),
 		AggregatingAttributes:           make(map[TempID]CipherVector),
 

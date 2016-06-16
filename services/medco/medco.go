@@ -34,6 +34,7 @@ func NewMedcoService(c sda.Context, path string) sda.Service {
 	newMedCoInstance := &MedcoService{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		homePath:         path,
+		surveys: make(map[SurveyID]Survey),
 	}
 	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyResponseData)
 	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyResultsQuery)
@@ -48,7 +49,12 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *Surv
 		newID := SurveyID(uuid.NewV4().String())
 		recq.SurveyID = &newID
 		msg, _ := sda.CreateServiceMessage(MEDCO_SERVICE_NAME, recq)
-		mcs.SendISMOthers(&recq.EntityList, msg)
+		//mcs.SendISMOthers(&recq.EntityList, msg)
+		for _, e := range recq.EntityList.List {
+			if !e.Equal(mcs.Entity()) {
+				mcs.SendRaw(e, msg)
+			}
+		}
 		dbg.Lvl1(mcs.Entity(), "initiated the survey", newID)
 	}
 
@@ -60,40 +66,46 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *Surv
 		ClientPublic: nil,
 		SurveyDescription: recq.SurveyDescription,
 	}
-
+	mcs.currentSurveyID = *recq.SurveyID
 	dbg.Lvl1(mcs.Entity(), "created the survey", *recq.SurveyID)
 
 	return &ServiceResponse{*recq.SurveyID}, nil
 }
 
 func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *SurveyResponseQuery) (network.ProtocolMessage, error) {
-
-	mcs.surveys[resp.SurveyID].InsertClientResponse(resp.ClientResponse)
-	dbg.Lvl1(mcs.Entity(), "recieved survey response data from ", e)
-	return &ServiceResponse{"1"}, nil
+	dbg.Lvl1(mcs.Entity(), "recieved response data for survey ",resp.SurveyID)
+	if survey, ok := mcs.surveys[resp.SurveyID]; ok {
+		survey.InsertClientResponse(resp.ClientResponse)
+		return &ServiceResponse{"1"}, nil
+	}
+	dbg.Lvl1(mcs.Entity(),"does not know about this survey!")
+	return &ServiceResponse{"2"}, nil
 }
 
 func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *SurveyResultsQuery) (network.ProtocolMessage, error) {
 
 	dbg.Lvl1(mcs.Entity(), "recieved a survey result query from", e)
-	survey := mcs.surveys[resq.SurveyID]
+	survey, _ := mcs.surveys[resq.SurveyID]
 	survey.ClientPublic = resq.ClientPublic
+	mcs.surveys[resq.SurveyID] = survey
 	pi,_ := mcs.startProtocol(medco.MEDCO_SERVICE_PROTOCOL_NAME, resq.SurveyID)
 
 	<- pi.(*medco.MedcoServiceProtocol).FeedbackChannel
 	dbg.Lvl1(mcs.Entity(), "completed the query processing...")
-	return &SurveyResultResponse{mcs.surveys[resq.SurveyID].PollDeliverableResults()}, nil
+	survey, _ = mcs.surveys[resq.SurveyID]
+	return &SurveyResultResponse{survey.PollDeliverableResults()}, nil
 }
 
 func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	// Observation : which data we operate the protocol on is important only for aggreg and there is no ambiguity
-	// for those data (we aggregate everything that is ready to be aggregated). For key switching, this is a
-	// problem as we need to know from which key to which key we switch. The current best solution seems to be make
-	// two versions of the key switching protocol because it also solves the interface unmarshalling problem.
+
 	var pi sda.ProtocolInstance
 	var err error
 	targetSurveyID := mcs.currentSurveyID
-	targetSurvey := mcs.surveys[targetSurveyID]
+	targetSurvey, ok := mcs.surveys[targetSurveyID]
+	if !ok {
+		dbg.Lvl1("NOT FOUND")
+		return nil, errors.New("Survey not found")
+	}
 	switch tn.ProtocolName() {
 	case medco.MEDCO_SERVICE_PROTOCOL_NAME:
 		pi, err = medco.NewMedcoServiceProcotol(tn)
@@ -137,7 +149,12 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 }
 
 func (mcs *MedcoService) startProtocol(name string, targetSurvey SurveyID) (sda.ProtocolInstance, error) {
-	survey := mcs.surveys[targetSurvey]
+	survey, ok := mcs.surveys[targetSurvey]
+	if !ok {
+		dbg.Lvl1("NOT FOUND", targetSurvey)
+		return nil, errors.New("Survey Not Found")
+	}
+	//dbg.Printf("%#v",survey)
 	tree := survey.EntityList.GenerateNaryTreeWithRoot(2, mcs.Entity())
 	tni := mcs.NewTreeNodeInstance(tree, tree.Root, name)
 	mcs.currentSurveyID = targetSurvey
@@ -159,8 +176,8 @@ func (mcs *MedcoService) FlushCollectedData(targetSurvey SurveyID) error {
 		return err
 	}
 	deterministicSwitchedResult := <-pi.(*medco.DeterministicSwitchingProtocol).FeedbackChannel
-
-	mcs.surveys[targetSurvey].PushDeterministicGroupingAttributes(*DeterministicCipherVectorToGroupingAttributes(&deterministicSwitchedResult))
+	survey,_ := mcs.surveys[targetSurvey]
+	survey.PushDeterministicGroupingAttributes(*DeterministicCipherVectorToGroupingAttributes(&deterministicSwitchedResult))
 	return err
 }
 

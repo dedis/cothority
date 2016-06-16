@@ -30,8 +30,8 @@ type Survey struct {
 }
 
 type SurveyDescription struct {
-	GroupingAttributesCount uint
-	AggregatingAttributesCount uint
+	GroupingAttributesCount int32
+	AggregatingAttributesCount uint32
 }
 
 func (ga *GroupingAttributes) Key() GroupingKey {
