@@ -38,7 +38,7 @@ func TestHugeConnections(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 3)
 	privkeys := make([]abstract.Scalar, nbrHosts)
-	ids := make([]*Entity, nbrHosts)
+	ids := make([]*ServerIdentity, nbrHosts)
 	hosts := make([]SecureHost, nbrHosts)
 	// 2-dimensional array of connections between all hosts, where only
 	// the upper-right half is populated. The lower-left half is the
@@ -48,7 +48,7 @@ func TestHugeConnections(t *testing.T) {
 	wg := sync.WaitGroup{}
 	// Create all hosts and open the connections
 	for i := 0; i < nbrHosts; i++ {
-		privkeys[i], ids[i] = genEntity("localhost:" + strconv.Itoa(2000+i))
+		privkeys[i], ids[i] = genServerIdentity("localhost:" + strconv.Itoa(2000+i))
 		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
 		dbg.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {

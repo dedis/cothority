@@ -136,15 +136,15 @@ func TestSecureMultiClose(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
 	fn := func(s SecureConn) {
-		dbg.Lvl3("Getting connection from", s.Entity().First())
+		dbg.Lvl3("Getting connection from", s.ServerIdentity().First())
 		close(receiverStarted)
 	}
 
 	kp1 := config.NewKeyPair(Suite)
-	entity1 := NewEntity(kp1.Public, "localhost:2000")
-	//entity3 := NewEntity(kp1.Public, "localhost:2000")
+	entity1 := NewServerIdentity(kp1.Public, "localhost:2000")
+	//entity3 := NewServerIdentity(kp1.Public, "localhost:2000")
 	kp2 := config.NewKeyPair(Suite)
-	entity2 := NewEntity(kp2.Public, "localhost:2001")
+	entity2 := NewServerIdentity(kp2.Public, "localhost:2001")
 
 	h1 := NewSecureTCPHost(kp1.Secret, entity1)
 	h2 := NewSecureTCPHost(kp2.Secret, entity2)
@@ -175,7 +175,7 @@ func TestSecureMultiClose(t *testing.T) {
 	dbg.Lvl3("Finished first connection, starting 2nd")
 	receiverStarted2 := make(chan bool)
 	fn2 := func(s SecureConn) {
-		dbg.Lvl3("Getting connection from", s.Entity().First())
+		dbg.Lvl3("Getting connection from", s.ServerIdentity().First())
 		receiverStarted2 <- true
 	}
 	done2 := make(chan bool)
@@ -259,9 +259,9 @@ func TestSecureTcp(t *testing.T) {
 	}
 
 	kp1 := config.NewKeyPair(Suite)
-	entity1 := NewEntity(kp1.Public, "localhost:2000")
+	entity1 := NewServerIdentity(kp1.Public, "localhost:2000")
 	kp2 := config.NewKeyPair(Suite)
-	entity2 := NewEntity(kp2.Public, "localhost:2001")
+	entity2 := NewServerIdentity(kp2.Public, "localhost:2001")
 
 	host1 := NewSecureTCPHost(kp1.Secret, entity1)
 	host2 := NewSecureTCPHost(kp1.Secret, entity2)
@@ -278,7 +278,7 @@ func TestSecureTcp(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if !conn.Entity().Public.Equal(kp1.Public) {
+	if !conn.ServerIdentity().Public.Equal(kp1.Public) {
 		t.Fatal("Connection-id is not from host1")
 	}
 	if !<-opened {
@@ -415,7 +415,7 @@ func (s *SimpleServer) Name() string {
 	return "Server "
 }
 
-func (s *SimpleServer) ProxySend(c Conn, msg ProtocolMessage) {
+func (s *SimpleServer) ProxySend(c Conn, msg Body) {
 	ctx := context.TODO()
 	if err := c.Send(ctx, msg); err != nil {
 		s.t.Fatal(err)

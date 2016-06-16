@@ -40,8 +40,8 @@ func TestOverlayDone(t *testing.T) {
 		}
 		return &ps, nil
 	}
-	el := sda.NewEntityList([]*network.Entity{h1.Entity})
-	h1.AddEntityList(el)
+	el := sda.NewRoster([]*network.ServerIdentity{h1.ServerIdentity})
+	h1.AddRoster(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	sda.ProtocolRegisterName("ProtocolOverlay", fn)

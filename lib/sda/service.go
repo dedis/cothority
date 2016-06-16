@@ -31,9 +31,9 @@ type Service interface {
 	// Each request has a field ServiceID, so each time the Host (dispatcher)
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
-	ProcessClientRequest(*network.Entity, *ClientRequest)
+	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
 	// ProcessServiceRequest takes a message from another Service
-	ProcessServiceMessage(*network.Entity, *ServiceMessage)
+	ProcessServiceMessage(*network.ServerIdentity, *InterServiceMessage)
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -49,7 +49,7 @@ var NilServiceID = ServiceID(uuid.Nil)
 
 // NewServiceFunc is the type of a function that is used to instantiate a given Service
 // A service is initialized with a Host (to send messages to someone), the
-// overlay (to register a Tree + EntityList + start new node), and a path where
+// overlay (to register a Tree + Roster + start new node), and a path where
 // it can finds / write everything it needs
 type NewServiceFunc func(c Context, path string) Service
 
@@ -260,10 +260,10 @@ func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) 
 	}, nil
 }
 
-// ServiceMessage is a generic struct that contains any data destined to a
+// InterServiceMessage is a generic struct that contains any data destined to a
 // Service that has been created .. by a Service. => Intra-Service
 // communications.
-type ServiceMessage struct {
+type InterServiceMessage struct {
 	// Service is the ID of the Service it's destined
 	Service ServiceID
 	// Data is the data encoded using protobuf for the moment.
@@ -271,17 +271,17 @@ type ServiceMessage struct {
 }
 
 // ServiceMessageID is the ID of the ServiceMessage struct.
-var ServiceMessageID = network.RegisterMessageType(ServiceMessage{})
+var ServiceMessageID = network.RegisterMessageType(InterServiceMessage{})
 
 // CreateServiceMessage takes a service name and some data and encodes the whole
 // as a ServiceMessage.
-func CreateServiceMessage(service string, r interface{}) (*ServiceMessage, error) {
+func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, error) {
 	sid := ServiceFactory.ServiceID(service)
 	buff, err := network.MarshalRegisteredType(r)
 	if err != nil {
 		return nil, err
 	}
-	return &ServiceMessage{
+	return &InterServiceMessage{
 		Service: sid,
 		Data:    buff,
 	}, nil
@@ -313,13 +313,13 @@ func NewClient(s string) *Client {
 
 // Send opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
-func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*network.Message, error) {
+func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 	c.Lock()
 	defer c.Unlock()
 	if c.host == nil {
 		kp := config.NewKeyPair(network.Suite)
 		c.host = network.NewSecureTCPHost(kp.Secret,
-			network.NewEntity(kp.Public, ""))
+			network.NewServerIdentity(kp.Public, ""))
 	}
 
 	// Connect to the root
@@ -344,7 +344,7 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		Service: c.ServiceID,
 		Data:    b,
 	}
-	pchan := make(chan network.Message)
+	pchan := make(chan network.Packet)
 	go func() {
 		// send the request
 		dbg.Lvlf4("Sending request %x", serviceReq.Service)
@@ -371,14 +371,14 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
-		return &network.Message{}, errors.New("Timeout on sending message")
+		return &network.Packet{}, errors.New("Timeout on sending message")
 	}
 }
 
-// SendToAll sends a message to all Entities of the EntityList and returns
+// SendToAll sends a message to all ServerIdentities of the Roster and returns
 // all errors encountered concatenated together as a string.
-func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
-	msgs := make([]*network.Message, len(dst.List))
+func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
+	msgs := make([]*network.Packet, len(dst.List))
 	var errstrs []string
 	for i, e := range dst.List {
 		var err error
@@ -416,7 +416,7 @@ var StatusOK = &StatusRet{""}
 
 // ErrMsg converts a combined err and status-message to an error. It
 // returns either the error, or the errormsg, if there is one.
-func ErrMsg(em *network.Message, err error) error {
+func ErrMsg(em *network.Packet, err error) error {
 	if err != nil {
 		return err
 	}

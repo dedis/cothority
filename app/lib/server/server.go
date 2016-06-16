@@ -190,7 +190,7 @@ func CheckConfig(tomlFileName string) error {
 	ui.ErrFatal(err, "Couldn't open group definition file")
 	group, err := config.ReadGroupDescToml(f)
 	ui.ErrFatal(err, "Error while reading group definition file", err)
-	if len(group.EntityList.List) == 0 {
+	if len(group.Roster.List) == 0 {
 		ui.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
@@ -203,27 +203,27 @@ func CheckConfig(tomlFileName string) error {
 func CheckServers(g *config.Group) error {
 	success := true
 	// First check all servers individually
-	for _, e := range g.EntityList.List {
+	for _, e := range g.Roster.List {
 		desc := []string{"none", "none"}
 		if d := g.GetDescription(e); d != "" {
 			desc = []string{d, d}
 		}
-		el := sda.NewEntityList([]*network.Entity{e})
+		el := sda.NewRoster([]*network.ServerIdentity{e})
 		success = success && checkList(el, desc) == nil
 	}
-	if len(g.EntityList.List) > 1 {
+	if len(g.Roster.List) > 1 {
 		// Then check pairs of servers
-		for i, first := range g.EntityList.List {
-			for _, second := range g.EntityList.List[i+1:] {
+		for i, first := range g.Roster.List {
+			for _, second := range g.Roster.List[i+1:] {
 				desc := []string{"none", "none"}
 				if d1 := g.GetDescription(first); d1 != "" {
 					desc = []string{d1, g.GetDescription(second)}
 				}
-				es := []*network.Entity{first, second}
-				success = success && checkList(sda.NewEntityList(es), desc) == nil
+				es := []*network.ServerIdentity{first, second}
+				success = success && checkList(sda.NewRoster(es), desc) == nil
 				es[0], es[1] = es[1], es[0]
 				desc[0], desc[1] = desc[1], desc[0]
-				success = success && checkList(sda.NewEntityList(es), desc) == nil
+				success = success && checkList(sda.NewRoster(es), desc) == nil
 			}
 		}
 	}
@@ -235,7 +235,7 @@ func CheckServers(g *config.Group) error {
 }
 
 // checkList sends a message to the list and waits for the reply
-func checkList(list *sda.EntityList, descs []string) error {
+func checkList(list *sda.Roster, descs []string) error {
 	serverStr := ""
 	for i, s := range list.List {
 		name := strings.Split(descs[i], " ")[0]
@@ -260,7 +260,7 @@ func checkList(list *sda.EntityList, descs []string) error {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
+func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	error) {
 	//publics := entityListToPublics(el)
 	client := s.NewClient()
@@ -295,7 +295,7 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 	}
 }
 
-func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList) error {
+func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	//publics := entityListToPublics(el)
@@ -312,7 +312,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList)
 	}
 	return nil
 }
-func entityListToPublics(el *sda.EntityList) []abstract.Point {
+func entityListToPublics(el *sda.Roster) []abstract.Point {
 	publics := make([]abstract.Point, len(el.List))
 	for i, e := range el.List {
 		publics[i] = e.Public

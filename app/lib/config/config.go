@@ -57,7 +57,7 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	host := sda.NewHost(network.NewEntity(point, hc.Addresses...), secret)
+	host := sda.NewHost(network.NewServerIdentity(point, hc.Addresses...), secret)
 	return hc, host, nil
 }
 
@@ -128,18 +128,18 @@ type ServerToml struct {
 	Description string
 }
 
-// Group holds the EntityList and the server-descriptions
+// Group holds the Roster and the server-descriptions
 type Group struct {
-	EntityList  *sda.EntityList
-	description map[*network.Entity]string
+	Roster      *sda.Roster
+	description map[*network.ServerIdentity]string
 }
 
 // GetDescription returns the description of an entity
-func (g *Group) GetDescription(e *network.Entity) string {
+func (g *Group) GetDescription(e *network.ServerIdentity) string {
 	return g.description[e]
 }
 
-// ReadGroupDescToml reads a group.toml file and returns the list of Entities
+// ReadGroupDescToml reads a group.toml file and returns the list of ServerIdentities
 // and descriptions in the file.
 func ReadGroupDescToml(f io.Reader) (*Group, error) {
 	group := &GroupToml{}
@@ -148,28 +148,28 @@ func ReadGroupDescToml(f io.Reader) (*Group, error) {
 		return nil, err
 	}
 	// convert from ServerTomls to entities
-	var entities = make([]*network.Entity, len(group.Servers))
-	var descs = make(map[*network.Entity]string)
+	var entities = make([]*network.ServerIdentity, len(group.Servers))
+	var descs = make(map[*network.ServerIdentity]string)
 	for i, s := range group.Servers {
-		en, err := s.toEntity(network.Suite)
+		en, err := s.toServerIdentity(network.Suite)
 		if err != nil {
 			return nil, err
 		}
 		entities[i] = en
 		descs[en] = s.Description
 	}
-	el := sda.NewEntityList(entities)
+	el := sda.NewRoster(entities)
 	return &Group{el, descs}, nil
 }
 
-// ReadGroupToml reads a group.toml file and returns the list of Entity
+// ReadGroupToml reads a group.toml file and returns the list of ServerIdentity
 // described in the file.
-func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+func ReadGroupToml(f io.Reader) (*sda.Roster, error) {
 	group, err := ReadGroupDescToml(f)
 	if err != nil {
 		return nil, err
 	}
-	return group.EntityList, nil
+	return group.Roster, nil
 }
 
 // Save writes the grouptoml definition into the file
@@ -201,14 +201,14 @@ func (gt *GroupToml) String() string {
 	return buff.String()
 }
 
-// toEntity will convert this ServerToml struct to a network entity.
-func (s *ServerToml) toEntity(suite abstract.Suite) (*network.Entity, error) {
+// toServerIdentity will convert this ServerToml struct to a network entity.
+func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIdentity, error) {
 	pubR := strings.NewReader(s.Public)
 	public, err := crypto.ReadPub64(suite, pubR)
 	if err != nil {
 		return nil, err
 	}
-	return network.NewEntity(public, s.Addresses...), nil
+	return network.NewServerIdentity(public, s.Addresses...), nil
 }
 
 // NewServerToml returns  a ServerToml out of a public key and some addresses => to be printed

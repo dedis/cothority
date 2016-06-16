@@ -24,12 +24,12 @@ func TestTreeId(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
-	idsList := genEntityList(tSuite, names)
+	idsList := genRoster(tSuite, names)
 	// Generate two example topology
 	tree := idsList.GenerateBinaryTree()
 	/*
 			TODO: re-calculate the uuid
-		root, _ := ExampleGenerateTreeFromEntityList(idsList)
+		root, _ := ExampleGenerateTreeFromRoster(idsList)
 		tree := sda.Tree{IdList: idsList, Root: root}
 		var h bytes.Buffer
 		h.Write(idsList.Id().Bytes())
@@ -49,7 +49,7 @@ func TestTreeConnectedTo(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	// Generate the network
@@ -62,15 +62,15 @@ func TestTreeConnectedTo(t *testing.T) {
 }
 
 // Test initialisation of new peer-list
-func TestEntityListNew(t *testing.T) {
+func TestRosterNew(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	adresses := []string{"localhost:1010", "localhost:1012"}
-	pl := genEntityList(tSuite, adresses)
+	pl := genRoster(tSuite, adresses)
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.ID == sda.EntityListID(uuid.Nil) {
+	if pl.ID == sda.RosterID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(pl.ID.String()) != 36 {
@@ -83,19 +83,19 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
-	idsList := genEntityList(tSuite, names)
+	idsList := genRoster(tSuite, names)
 	// write it
 	sda.WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
 	// decode it
-	var decoded sda.EntityListToml
+	var decoded sda.RosterToml
 	if err := sda.ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
 		t.Fatal("COuld not read from file the entityList")
 	}
-	decodedList := decoded.EntityList(tSuite)
+	decodedList := decoded.Roster(tSuite)
 	if len(decodedList.List) != 3 {
-		t.Fatalf("Expected two identities in EntityList. Instead got %d", len(decodedList.List))
+		t.Fatalf("Expected two identities in Roster. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.ID == sda.EntityListID(uuid.Nil) {
+	if decodedList.ID == sda.RosterID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(decodedList.ID.String()) != 36 {
@@ -118,7 +118,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 func TestTreeParent(t *testing.T) {
 	defer dbg.AfterTest(t)
 	names := genLocalhostPeerNames(3, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
@@ -132,11 +132,11 @@ func TestTreeChildren(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	names := genLocalhostPeerNames(2, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
-	if child.Entity.ID != peerList.List[1].ID {
+	if child.ServerIdentity.ID != peerList.List[1].ID {
 		t.Fatal("Parent of child of root is not the root...")
 	}
 }
@@ -147,7 +147,7 @@ func TestUnMarshalTree(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	tree_binary, err := tree.Marshal()
@@ -200,18 +200,18 @@ func TestBinaryTree(t *testing.T) {
 	}
 }
 
-func TestTreeNodeEntityIndex(t *testing.T) {
+func TestTreeNodeServerIdentityIndex(t *testing.T) {
 	defer dbg.AfterTest(t)
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
 
 	ln := tree.List()
 	randomNode := ln[rand.Intn(len(ln))]
 	var idx int
 	for i, e := range peerList.List {
-		if e.Equal(randomNode.Entity) {
+		if e.Equal(randomNode.ServerIdentity) {
 			idx = i
 			break
 		}
@@ -221,7 +221,7 @@ func TestTreeNodeEntityIndex(t *testing.T) {
 		t.Fatal("Could not find the entity in the node")
 	}
 
-	if randomNode.EntityIdx != idx {
+	if randomNode.ServerIdentityIdx != idx {
 		t.Fatal("Index of entity do not correlate")
 	}
 
@@ -232,7 +232,7 @@ func TestNaryTree(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
 	root := tree.Root
 	if len(root.Children) != 3 {
@@ -253,7 +253,7 @@ func TestNaryTree(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names = genLocalhostPeerNames(14, 2000)
-	peerList = genEntityList(tSuite, names)
+	peerList = genRoster(tSuite, names)
 	tree = peerList.GenerateNaryTree(3)
 	root = tree.Root
 	if len(root.Children) != 3 {
@@ -275,7 +275,7 @@ func TestBigNaryTree(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := genLocalDiffPeerNames(3, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
 	root := tree.Root
 	dbg.Lvl2(tree.Dump())
@@ -283,11 +283,11 @@ func TestBigNaryTree(t *testing.T) {
 		t.Fatal("Tree should be 3-ary")
 	}
 	for _, child := range root.Children {
-		if child.Entity.ID == root.Entity.ID {
+		if child.ServerIdentity.ID == root.ServerIdentity.ID {
 			t.Fatal("Child should not have same identity as parent")
 		}
 		for _, c := range child.Children {
-			if c.Entity.ID == child.Entity.ID {
+			if c.ServerIdentity.ID == child.ServerIdentity.ID {
 				t.Fatal("Child should not have same identity as parent")
 			}
 		}
@@ -299,12 +299,12 @@ func TestTreeIsColored(t *testing.T) {
 
 	dbg.TestOutput(testing.Verbose(), 4)
 	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
 	root := tree.Root
-	rootHost, _, _ := net.SplitHostPort(root.Entity.Addresses[0])
+	rootHost, _, _ := net.SplitHostPort(root.ServerIdentity.Addresses[0])
 	for _, child := range root.Children {
-		childHost, _, _ := net.SplitHostPort(child.Entity.Addresses[0])
+		childHost, _, _ := net.SplitHostPort(child.ServerIdentity.Addresses[0])
 		if rootHost == childHost {
 			t.Fatal("Child", childHost, "is the same as root", rootHost)
 		}
@@ -332,7 +332,7 @@ func TestBinaryTrees(t *testing.T) {
 	}
 }
 
-func TestEntityListIsUsed(t *testing.T) {
+func TestRosterIsUsed(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 4)
 	port := 2000
 	for hostExp := uint(2); hostExp < 8; hostExp++ {
@@ -344,10 +344,10 @@ func TestEntityListIsUsed(t *testing.T) {
 				strconv.Itoa(port+i)
 
 		}
-		peerList := genEntityList(tSuite, names)
+		peerList := genRoster(tSuite, names)
 		tree := peerList.GenerateBigNaryTree(2, hosts)
 		if !tree.UsesList() {
-			t.Fatal("Didn't find all Entities in tree", tree.Dump())
+			t.Fatal("Didn't find all ServerIdentities in tree", tree.Dump())
 		}
 	}
 }
@@ -355,14 +355,14 @@ func TestEntityListIsUsed(t *testing.T) {
 // Test whether the computation of the subtree aggregate public key is correct .
 func TestTreeComputeSubtreeAggregate(t *testing.T) {
 	names := genLocalDiffPeerNames(7, 2000)
-	entities := genEntityList(tSuite, names)
+	entities := genRoster(tSuite, names)
 
 	// create tree
 	tree := entities.GenerateBinaryTree()
 
 	// manual check for 2nd level of tree (left part)
 	lchild := tree.Root.Children[0]
-	n2, n4, n5 := lchild.Entity, lchild.Children[0].Entity, lchild.Children[1].Entity
+	n2, n4, n5 := lchild.ServerIdentity, lchild.Children[0].ServerIdentity, lchild.Children[1].ServerIdentity
 	agg_left := tSuite.Point().Add(n2.Public, n4.Public)
 	agg_left = agg_left.Add(agg_left, n5.Public)
 	if !tree.Root.Children[0].PublicAggregateSubTree.Equal(agg_left) {
@@ -371,7 +371,7 @@ func TestTreeComputeSubtreeAggregate(t *testing.T) {
 
 	// right part
 	rchild := tree.Root.Children[1]
-	n3, n4, n5 := rchild.Entity, rchild.Children[0].Entity, rchild.Children[1].Entity
+	n3, n4, n5 := rchild.ServerIdentity, rchild.Children[0].ServerIdentity, rchild.Children[1].ServerIdentity
 	agg_right := tSuite.Point().Add(n3.Public, n4.Public)
 	agg_right = agg_right.Add(agg_right, n5.Public)
 	if !tree.Root.Children[1].PublicAggregateSubTree.Equal(agg_right) {
@@ -380,7 +380,7 @@ func TestTreeComputeSubtreeAggregate(t *testing.T) {
 
 	// root part
 	agg := tSuite.Point().Add(agg_right, agg_left)
-	agg = agg.Add(agg, tree.Root.Entity.Public)
+	agg = agg.Add(agg, tree.Root.ServerIdentity.Public)
 	if !tree.Root.PublicAggregateSubTree.Equal(agg) {
 		t.Fatal("Aggregate not correct for root")
 	}
@@ -419,9 +419,9 @@ func TestTreeNode_SubtreeCount(t *testing.T) {
 	}
 }
 
-func TestEntityList_GenerateNaryTree(t *testing.T) {
+func TestRoster_GenerateNaryTree(t *testing.T) {
 	names := genLocalhostPeerNames(10, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	peerList.GenerateNaryTree(4)
 	for i := 0; i <= 9; i++ {
 		if !strings.Contains(peerList.List[i].Addresses[0],
@@ -431,9 +431,9 @@ func TestEntityList_GenerateNaryTree(t *testing.T) {
 	}
 }
 
-func TestEntityList_GenerateNaryTreeWithRoot(t *testing.T) {
+func TestRoster_GenerateNaryTreeWithRoot(t *testing.T) {
 	names := genLocalhostPeerNames(10, 2000)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	for _, e := range peerList.List {
 		tree := peerList.GenerateNaryTreeWithRoot(4, e)
 		for i := 0; i <= 9; i++ {
@@ -442,8 +442,8 @@ func TestEntityList_GenerateNaryTreeWithRoot(t *testing.T) {
 				t.Fatal("Missing port:", 2000+i, peerList.List)
 			}
 		}
-		if tree.Root.Entity.ID != e.ID {
-			t.Fatal("Entity", e, "is not root", tree.Dump())
+		if tree.Root.ServerIdentity.ID != e.ID {
+			t.Fatal("ServerIdentity", e, "is not root", tree.Dump())
 		}
 		if len(tree.List()) != 10 {
 			t.Fatal("Missing nodes")
@@ -454,7 +454,7 @@ func TestEntityList_GenerateNaryTreeWithRoot(t *testing.T) {
 	}
 }
 
-func TestEntityList_Publics(t *testing.T) {
+func TestRoster_Publics(t *testing.T) {
 	_, el := genLocalTree(1, 2000)
 	agg := el.Publics()
 	if !agg[0].Equal(el.List[0].Public) {
@@ -482,7 +482,7 @@ func BenchmarkTreeMarshal(b *testing.B) {
 // BenchmarkMakeTree will time the amount of time it will take to make the tree
 func BenchmarkMakeTree(b *testing.B) {
 	tree, _ := genLocalTree(1000, 2000)
-	el := tree.EntityList
+	el := tree.Roster
 	T := tree.MakeTreeMarshal()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -527,19 +527,19 @@ func genLocalDiffPeerNames(n, p int) []string {
 	return names
 }
 
-// genEntityList generates a EntityList out of names
-func genEntityList(suite abstract.Suite, names []string) *sda.EntityList {
-	var ids []*network.Entity
+// genRoster generates a Roster out of names
+func genRoster(suite abstract.Suite, names []string) *sda.Roster {
+	var ids []*network.ServerIdentity
 	for _, n := range names {
 		kp := config.NewKeyPair(suite)
-		ids = append(ids, network.NewEntity(kp.Public, n))
+		ids = append(ids, network.NewServerIdentity(kp.Public, n))
 	}
-	return sda.NewEntityList(ids)
+	return sda.NewRoster(ids)
 }
 
-func genLocalTree(count, port int) (*sda.Tree, *sda.EntityList) {
+func genLocalTree(count, port int) (*sda.Tree, *sda.Roster) {
 	names := genLocalhostPeerNames(count, port)
-	peerList := genEntityList(tSuite, names)
+	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBinaryTree()
 	return tree, peerList
 }

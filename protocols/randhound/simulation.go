@@ -34,7 +34,7 @@ func NewRHSimulation(config string) (sda.Simulation, error) {
 func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	rhs.Hosts = len(hosts)
-	rhs.CreateEntityList(sim, hosts, 2000)
+	rhs.CreateRoster(sim, hosts, 2000)
 	err := rhs.CreateTree(sim)
 	if err != nil {
 		return nil, err

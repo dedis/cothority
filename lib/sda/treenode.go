@@ -33,11 +33,11 @@ type TreeNodeInstance struct {
 	instance ProtocolInstance
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
-	msgQueue map[network.MessageTypeID][]*Data
+	msgQueue map[network.MessageTypeID][]*ProtocolMsg
 	// done callback
 	onDoneCallback func() bool
 	// queue holding msgs
-	msgDispatchQueue []*Data
+	msgDispatchQueue []*ProtocolMsg
 	// locking for msgqueue
 	msgDispatchQueueMutex sync.Mutex
 	// kicking off new message
@@ -63,9 +63,9 @@ func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode) *TreeNodeInstance
 		channels:             make(map[network.MessageTypeID]interface{}),
 		handlers:             make(map[network.MessageTypeID]interface{}),
 		messageTypeFlags:     make(map[network.MessageTypeID]uint32),
-		msgQueue:             make(map[network.MessageTypeID][]*Data),
+		msgQueue:             make(map[network.MessageTypeID][]*ProtocolMsg),
 		treeNode:             tn,
-		msgDispatchQueue:     make([]*Data, 0, 1),
+		msgDispatchQueue:     make([]*ProtocolMsg, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
 	}
 	go n.dispatchMsgReader()
@@ -78,9 +78,9 @@ func (n *TreeNodeInstance) TreeNode() *TreeNode {
 	return n.treeNode
 }
 
-// Entity returns our entity
-func (n *TreeNodeInstance) Entity() *network.Entity {
-	return n.treeNode.Entity
+// ServerIdentity returns our entity
+func (n *TreeNodeInstance) ServerIdentity() *network.ServerIdentity {
+	return n.treeNode.ServerIdentity
 }
 
 // Parent returns the parent-TreeNode of ourselves
@@ -121,9 +121,9 @@ func (n *TreeNodeInstance) Tree() *Tree {
 	return n.overlay.TreeFromToken(n.token)
 }
 
-// EntityList returns the entity-list
-func (n *TreeNodeInstance) EntityList() *EntityList {
-	return n.Tree().EntityList
+// Roster returns the entity-list
+func (n *TreeNodeInstance) Roster() *Roster {
+	return n.Tree().Roster
 }
 
 // Suite can be used to get the current abstract.Suite (currently hardcoded into
@@ -260,7 +260,7 @@ func (n *TreeNodeInstance) ProtocolName() string {
 	return ProtocolIDToName(n.token.ProtoID)
 }
 
-func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
+func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
 	f := reflect.ValueOf(n.handlers[mt])
@@ -269,11 +269,11 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
 		for i, msg := range msgSlice {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
-		dbg.Lvl4("Dispatching aggregation to", n.Entity().Addresses)
+		dbg.Lvl4("Dispatching aggregation to", n.ServerIdentity().Addresses)
 		f.Call([]reflect.Value{msgs})
 	} else {
 		for _, msg := range msgSlice {
-			dbg.Lvl4("Dispatching to", n.Entity().Addresses)
+			dbg.Lvl4("Dispatching to", n.ServerIdentity().Addresses)
 			m := n.reflectCreate(to, msg)
 			f.Call([]reflect.Value{m})
 		}
@@ -281,7 +281,7 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
 	return nil
 }
 
-func (n *TreeNodeInstance) reflectCreate(t reflect.Type, msg *Data) reflect.Value {
+func (n *TreeNodeInstance) reflectCreate(t reflect.Type, msg *ProtocolMsg) reflect.Value {
 	m := reflect.Indirect(reflect.New(t))
 	tn := n.Tree().Search(msg.From.TreeNodeID)
 	if tn != nil {
@@ -292,7 +292,7 @@ func (n *TreeNodeInstance) reflectCreate(t reflect.Type, msg *Data) reflect.Valu
 }
 
 // DispatchChannel takes a message and sends it to a channel
-func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
+func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
@@ -302,7 +302,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 		for i, msg := range msgSlice {
 			dbg.Lvl4("Dispatching aggregated to", to)
 			m := n.reflectCreate(to.Elem(), msg)
-			dbg.Lvl4("Adding msg", m, "to", n.Entity().Addresses)
+			dbg.Lvl4("Adding msg", m, "to", n.ServerIdentity().Addresses)
 			out.Index(i).Set(m)
 		}
 		reflect.ValueOf(n.channels[mt]).Send(out)
@@ -317,9 +317,9 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 	return nil
 }
 
-// DispatchMsg takes a message and puts it into a queue for later processing.
+// ProcessProtocolMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
-func (n *TreeNodeInstance) DispatchMsg(msg *Data) {
+func (n *TreeNodeInstance) ProcessProtocolMsg(msg *ProtocolMsg) {
 	dbg.Lvl4(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
@@ -357,7 +357,7 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 }
 
 // dispatchMsgToProtocol will dispatch this sda.Data to the right instance
-func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
+func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
 	// to manually registers their messages. Since it is done automatically by
@@ -365,7 +365,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 	var err error
 	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
-		dbg.Error(n.Entity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
+		dbg.Error(n.ServerIdentity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
 	}
 	// Put the msg into SDAData
 	sdaMsg.MsgType = t
@@ -386,7 +386,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 		dbg.Lvl4(n.Info(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
-		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
+		dbg.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
 		err = n.dispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")
@@ -413,19 +413,19 @@ func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
+func (n *TreeNodeInstance) aggregate(sdaMsg *ProtocolMsg) (network.MessageTypeID, []*ProtocolMsg, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equal(n.Parent().ID)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
-		return mt, []*Data{sdaMsg}, true
+		return mt, []*ProtocolMsg{sdaMsg}, true
 	}
 	// store the msg according to its type
 	if _, ok := n.msgQueue[mt]; !ok {
-		n.msgQueue[mt] = make([]*Data, 0)
+		n.msgQueue[mt] = make([]*ProtocolMsg, 0)
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
-	dbg.Lvl4(n.Entity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
+	dbg.Lvl4(n.ServerIdentity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
 
 	// do we have everything yet or no
 	// get the node this host is in this tree
@@ -474,7 +474,7 @@ func (n *TreeNodeInstance) Private() abstract.Scalar {
 
 // Public returns the public key of the entity
 func (n *TreeNodeInstance) Public() abstract.Point {
-	return n.Entity().Public
+	return n.ServerIdentity().Public
 }
 
 // CloseHost closes the underlying sda.Host (which closes the overlay
@@ -485,14 +485,14 @@ func (n *TreeNodeInstance) CloseHost() error {
 
 // Name returns a human readable name of this Node (IP address).
 func (n *TreeNodeInstance) Name() string {
-	return n.Entity().First()
+	return n.ServerIdentity().First()
 }
 
 // Info returns a human readable representation name of this Node
 // (IP address and TokenID).
 func (n *TreeNodeInstance) Info() string {
 	tid := n.TokenID()
-	return fmt.Sprintf("%s (%s)", n.Entity().Addresses, tid.String())
+	return fmt.Sprintf("%s (%s)", n.ServerIdentity().Addresses, tid.String())
 }
 
 // TokenID returns the TokenID of the given node (to uniquely identify it)
@@ -516,9 +516,9 @@ func (n *TreeNodeInstance) List() []*TreeNode {
 	return n.treeNodeList
 }
 
-// Index returns the index of the node in the EntityList
+// Index returns the index of the node in the Roster
 func (n *TreeNodeInstance) Index() int {
-	return n.TreeNode().EntityIdx
+	return n.TreeNode().ServerIdentityIdx
 }
 
 // Broadcast sends a given message from the calling node directly to all other TreeNodes

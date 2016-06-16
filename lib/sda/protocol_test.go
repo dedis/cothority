@@ -119,8 +119,8 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	defer h2.Close()
 	h1.StartProcessMessages()
 	// create small Tree
-	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
-	h1.AddEntityList(el)
+	el := sda.NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
+	h1.AddRoster(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 	// start the protocol

@@ -10,7 +10,7 @@ type Context interface {
 	// to it.
 	RegisterProtocolInstance(ProtocolInstance) error
 	// SendRaw sends a message to the entity
-	SendRaw(*network.Entity, interface{}) error
+	SendRaw(*network.ServerIdentity, interface{}) error
 	// CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
 	// prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
 	CreateProtocolService(*Tree, string) (ProtocolInstance, error)
@@ -19,8 +19,8 @@ type Context interface {
 	CreateProtocolSDA(*Tree, string) (ProtocolInstance, error)
 	// Address is the address where this host is listening
 	Address() string
-	// Entity returns the entity the service uses
-	Entity() *network.Entity
+	// ServerIdentity returns the entity the service uses
+	ServerIdentity() *network.ServerIdentity
 	// GetID returns the service-id
 	ServiceID() ServiceID
 }
@@ -47,13 +47,13 @@ func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName s
 }
 
 // SendRaw sends a message to the entity
-func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {
+func (dc *defaultContext) SendRaw(e *network.ServerIdentity, msg interface{}) error {
 	return dc.Host.SendRaw(e, msg)
 }
 
-// Entity returns the entity the service uses
-func (dc *defaultContext) Entity() *network.Entity {
-	return dc.Host.Entity
+// ServerIdentity returns the entity the service uses
+func (dc *defaultContext) ServerIdentity() *network.ServerIdentity {
+	return dc.Host.ServerIdentity
 }
 
 // GetID returns the service-id

@@ -63,7 +63,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = tni.DispatchChannel([]*sda.Data{&sda.Data{
+	err = tni.DispatchChannel([]*sda.ProtocolMsg{&sda.ProtocolMsg{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -99,7 +99,7 @@ func TestNodeChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = tni.DispatchChannel([]*sda.Data{&sda.Data{
+	err = tni.DispatchChannel([]*sda.ProtocolMsg{&sda.ProtocolMsg{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -122,8 +122,8 @@ func TestNewNode(t *testing.T) {
 
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
-	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
-	h1.AddEntityList(el)
+	el := sda.NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
+	h1.AddRoster(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 
@@ -166,10 +166,10 @@ func TestServiceChannels(t *testing.T) {
 	defer h1.Close()
 	defer h2.Close()
 	// Add tree + entitylist
-	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
+	el := sda.NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
 	tree := el.GenerateBinaryTree()
 	sc1.tree = *tree
-	h1.AddEntityList(el)
+	h1.AddRoster(el)
 	h1.AddTree(tree)
 	h1.StartProcessMessages()
 
@@ -201,7 +201,7 @@ func TestProtocolHandlers(t *testing.T) {
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers
 
-	if child1.Entity().ID == child2.Entity().ID {
+	if child1.ServerIdentity().ID == child2.ServerIdentity().ID {
 		t.Fatal("Both entities should be different")
 	}
 
@@ -214,7 +214,7 @@ func TestProtocolHandlers(t *testing.T) {
 	}
 	child2.SendTo(tni.TreeNode(), &NodeTestAggMsg{})
 	final := <-IncomingHandlers
-	if final.Entity().ID != tni.Entity().ID {
+	if final.ServerIdentity().ID != tni.ServerIdentity().ID {
 		t.Fatal("This should be the same ID")
 	}
 }
@@ -362,7 +362,7 @@ type ServiceChannels struct {
 }
 
 // implement services interface
-func (c *ServiceChannels) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
+func (c *ServiceChannels) ProcessClientRequest(e *network.ServerIdentity, r *sda.ClientRequest) {
 
 	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root, "ProtocolChannels")
 	pi, err := NewProtocolChannels(tni)
@@ -381,7 +381,7 @@ func (c *ServiceChannels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generi
 	return NewProtocolChannels(tn)
 }
 
-func (c *ServiceChannels) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+func (c *ServiceChannels) ProcessServiceMessage(e *network.ServerIdentity, s *sda.InterServiceMessage) {
 	return
 }
 

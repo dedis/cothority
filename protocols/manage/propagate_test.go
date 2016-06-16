@@ -30,12 +30,12 @@ func TestPropagate(t *testing.T) {
 		i := 0
 		msg := &PropagateMsg{[]byte("propagate")}
 
-		tree := el.GenerateNaryTreeWithRoot(8, o.Entity())
+		tree := el.GenerateNaryTreeWithRoot(8, o.ServerIdentity())
 		dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 		pi, err := o.CreateProtocolSDA(tree, "Propagate")
 		dbg.ErrFatal(err)
 		nodes, err := propagateStartAndWait(pi, msg, 1000,
-			func(m network.ProtocolMessage) {
+			func(m network.Body) {
 				if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
 					i++
 				} else {

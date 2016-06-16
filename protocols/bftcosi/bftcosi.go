@@ -111,7 +111,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		doneProcessing:   make(chan bool, 2),
 		doneSigning:      make(chan bool, 1),
 		verificationFun:  verify,
-		AggregatedPublic: n.EntityList().Aggregate,
+		AggregatedPublic: n.Roster().Aggregate,
 		threshold:        int(2.0 * math.Ceil(float64(len(n.Tree().List()))/3.0)),
 	}
 
@@ -385,7 +385,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	// Check if we have no more than 1/3 failed nodes
 	if len(ch.Exceptions) > int(bft.threshold) {
 		dbg.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT",
-			len(ch.Exceptions), len(bft.EntityList().List))
+			len(ch.Exceptions), len(bft.Roster().List))
 		bft.signRefusal = true
 	}
 

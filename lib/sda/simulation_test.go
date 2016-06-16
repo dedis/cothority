@@ -25,7 +25,7 @@ func TestSimulationBF(t *testing.T) {
 		"local1:2002", "local2:2002",
 		"local1:2003",
 	}
-	for i, a := range sc.EntityList.List {
+	for i, a := range sc.Roster.List {
 		if a.Addresses[0] != addresses[i] {
 			t.Fatal("Address", a.Addresses[0], "should be", addresses[i])
 		}
@@ -96,7 +96,7 @@ func TestMultipleInstances(t *testing.T) {
 	if len(sc2) != 4 {
 		t.Fatal("We should have 4 local1-hosts but have", len(sc2))
 	}
-	if sc2[0].Host.Entity.ID == sc2[1].Host.Entity.ID {
+	if sc2[0].Host.ServerIdentity.ID == sc2[1].Host.ServerIdentity.ID {
 		t.Fatal("Hosts are not copies")
 	}
 }
@@ -107,8 +107,8 @@ func createBFTree(hosts, bf int) (*sda.SimulationConfig, *sda.SimulationBFTree, 
 		Hosts: hosts,
 		BF:    bf,
 	}
-	sb.CreateEntityList(sc, []string{"local1", "local2"}, 2000)
-	if len(sc.EntityList.List) != hosts {
+	sb.CreateRoster(sc, []string{"local1", "local2"}, 2000)
+	if len(sc.Roster.List) != hosts {
 		return nil, nil, errors.New("Didn't get correct number of entities")
 	}
 	err := sb.CreateTree(sc)

@@ -38,7 +38,9 @@ test_lint:
 	fi \
 	}
 
-test: test_fmt test_lint
+test_go:
 	go test -race -p=1 ./...
+
+test: test_fmt test_lint test_go
 
 all: install test
