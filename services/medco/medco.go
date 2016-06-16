@@ -47,13 +47,9 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *Surv
 	if recq.SurveyID == nil {
 		newID := SurveyID(uuid.NewV4().String())
 		recq.SurveyID = &newID
-		msg, _ := sda.CreateServiceMessage(MEDCO_SERVICE_NAME, recq)
-		//mcs.SendISMOthers(&recq.EntityList, msg)
-		for _, e := range recq.EntityList.List {
-			if !e.Equal(mcs.Entity()) {
-				mcs.SendRaw(e, msg)
-			}
-		}
+
+		mcs.SendISMOthers(&recq.EntityList, recq)
+
 		dbg.Lvl1(mcs.Entity(), "initiated the survey", newID)
 	}
 
