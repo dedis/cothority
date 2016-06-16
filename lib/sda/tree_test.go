@@ -39,7 +39,7 @@ func TestTreeId(t *testing.T) {
 				t.Fatal("Id generated is wrong")
 			}
 	*/
-	if len(tree.Id.String()) != 36 {
+	if len(tree.ID.String()) != 36 {
 		t.Fatal("Id generated is wrong")
 	}
 }
@@ -70,10 +70,10 @@ func TestEntityListNew(t *testing.T) {
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.Id == sda.EntityListID(uuid.Nil) {
+	if pl.ID == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
-	if len(pl.Id.String()) != 36 {
+	if len(pl.ID.String()) != 36 {
 		t.Fatal("PeerList ID does not seem to be a UUID.")
 	}
 }
@@ -95,10 +95,10 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in EntityList. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.Id == sda.EntityListID(uuid.Nil) {
+	if decodedList.ID == sda.EntityListID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
-	if len(decodedList.Id.String()) != 36 {
+	if len(decodedList.ID.String()) != 36 {
 		t.Fatal("PeerList ID does not seem to be a UUID hash.")
 	}
 }
@@ -122,7 +122,7 @@ func TestTreeParent(t *testing.T) {
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
 	child := tree.Root.Children[0]
-	if child.Parent.Id != tree.Root.Id {
+	if child.Parent.ID != tree.Root.ID {
 		t.Fatal("Parent of child of root is not the root...")
 	}
 }
@@ -174,9 +174,9 @@ func TestGetNode(t *testing.T) {
 
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.List() {
-		node := tree.Search(tn.Id)
+		node := tree.Search(tn.ID)
 		if node == nil {
-			t.Fatal("Didn't find treeNode with id", tn.Id)
+			t.Fatal("Didn't find treeNode with id", tn.ID)
 		}
 	}
 }
@@ -469,9 +469,45 @@ func TestEntityList_Publics(t *testing.T) {
 	}
 }
 
-// - public keys
-// - corner-case: accessing parent/children with multiple instances of the same peer
-// in the graph
+// BenchmarkTreeMarshal will be the benchmark for the conversion between TreeMarshall and Tree
+func BenchmarkTreeMarshal(b *testing.B) {
+	tree, _ := genLocalTree(1000, 2000)
+	t, _ := tree.BinaryMarshaler()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree.BinaryUnmarshaler(t)
+	}
+}
+
+// BenchmarkMakeTree will time the amount of time it will take to make the tree
+func BenchmarkMakeTree(b *testing.B) {
+	tree, _ := genLocalTree(1000, 2000)
+	el := tree.EntityList
+	T := tree.MakeTreeMarshal()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		T.MakeTree(el)
+	}
+}
+
+// BenchmarkUnmarshalRegisteredType will time the amout it takes to perform the UnmarshalRegisteredType
+func BenchmarkUnmarshalRegisteredType(b *testing.B) {
+	tree, _ := genLocalTree(1000, 2000)
+	buf, _ := tree.BinaryMarshaler()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = network.UnmarshalRegisteredType(buf, network.DefaultConstructors(network.Suite))
+	}
+}
+
+// BenchmarkBinaryMarshaller will time the binary marshaler in order to compare MarshalerRegisteredType(used within BinaryMarshaler) to the UnmarshalRegisteredType
+func BenchmarkBinaryMarshaler(b *testing.B) {
+	tree, _ := genLocalTree(1000, 2000)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree.BinaryMarshaler()
+	}
+}
 
 // genLocalhostPeerNames will generate n localhost names with port indices starting from p
 func genLocalhostPeerNames(n, p int) []string {

@@ -28,7 +28,7 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 		tnIndex:          -1,
 	}
 	for i, tn := range n.Tree().List() {
-		if tn.Id == n.TreeNode().Id {
+		if tn.ID == n.TreeNode().ID {
 			b.tnIndex = i
 		}
 	}
@@ -62,7 +62,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 	ContactNodes
 }) {
 	dbg.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
-	if msg.TreeNode.Id == b.Root().Id {
+	if msg.TreeNode.ID == b.Root().ID {
 		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
 		if b.repliesLeft == 0 {
 			dbg.Lvl3("Won't contact anybody - finishing")

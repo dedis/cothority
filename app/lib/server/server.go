@@ -29,6 +29,7 @@ import (
 	// register the protocol
 	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/cosi"
+	// For the moment, the server only serves CoSi requests
 	_ "github.com/dedis/cothority/protocols/cosi"
 	_ "github.com/dedis/cothority/services/cosi"
 	s "github.com/dedis/cothority/services/cosi"
@@ -54,10 +55,10 @@ const DefaultAddress = "127.0.0.1"
 // Service used to get the port connection service
 const whatsMyIP = "http://www.whatsmyip.org/"
 
-// How long we're willing to wait for a signature
+// RequestTimeOut is how long we're willing to wait for a signature
 var RequestTimeOut = time.Second * 1
 
-// interactiveConfig will ask through the command line to create a Private / Public
+// InteractiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
 func InteractiveConfig(binaryName string) {
 	ui.Info("Setting up a cothority-server.")
@@ -194,7 +195,7 @@ func CheckConfig(tomlFileName string) error {
 		ui.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
-	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
+	ui.Info("Checking the availability and responsiveness of the servers in the group...")
 	return CheckServers(group)
 }
 
@@ -243,22 +244,18 @@ func checkList(list *sda.EntityList, descs []string) error {
 	}
 	dbg.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
-	fmt.Print("[+] Checking server(s) ", serverStr, ": ")
+	ui.Info("Checking server(s) ", serverStr, ": ")
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		fmt.Fprintln(os.Stderr,
-			fmt.Sprintf("Error '%v'", err))
+		ui.Error(err)
 		return err
-	} else {
-		err := verifySignatureHash([]byte(msg), sig, list)
-		if err != nil {
-			fmt.Println(os.Stderr,
-				fmt.Sprintf("Invalid signature: %v", err))
-			return err
-		} else {
-			fmt.Println("Success")
-		}
 	}
+	err = verifySignatureHash([]byte(msg), sig, list)
+	if err != nil {
+		ui.Errorf("Invalid signature: %v", err)
+		return err
+	}
+	ui.Info("Success")
 	return nil
 }
 

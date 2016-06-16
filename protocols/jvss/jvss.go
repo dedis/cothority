@@ -1,4 +1,4 @@
-// JVSS provides a threshold signing scheme based on Shamir's joint verifiable
+// Package jvss provides a threshold signing scheme based on Shamir's joint verifiable
 // secret sharing algorithm and Schnorr signatures. The protocl runs in two
 // phases. During the protocol setup a long-term shared secret is establised
 // between all participants. Afterwards, any of the members can request a
@@ -24,7 +24,7 @@ func init() {
 	sda.ProtocolRegisterName("JVSS", NewJVSS)
 }
 
-// Type of shared secret identifiers
+// SID is the type of shared secret identifiers
 type SID string
 
 // Identifiers for long- and short-term shared secrets.

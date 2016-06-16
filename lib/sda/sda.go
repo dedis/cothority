@@ -1,5 +1,5 @@
 /*
-SDA is the Secure Distributed API which offers a simple framework for generating
+Package sda is the Secure Distributed API which offers a simple framework for generating
 your own distributed systems. It is based on a description of your protocol
 and offers sending and receiving messages, handling trees and host-lists, and
 easy deploying to Localhost, Deterlab or a real-system.

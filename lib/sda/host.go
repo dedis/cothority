@@ -290,7 +290,7 @@ func (h *Host) processMessages() {
 			// A Host has replied to our request of a tree
 		case SendTreeMessageID:
 			tm := data.Msg.(TreeMarshal)
-			if tm.TreeId == TreeID(uuid.Nil) {
+			if tm.TreeID == TreeID(uuid.Nil) {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
@@ -336,7 +336,7 @@ func (h *Host) processMessages() {
 			// Host replied to our request of entitylist
 		case SendEntityListMessageID:
 			il := data.Msg.(EntityList)
-			if il.Id == EntityListID(uuid.Nil) {
+			if il.ID == EntityListID(uuid.Nil) {
 				dbg.Lvl2("Received an empty EntityList")
 			} else {
 				h.overlay.RegisterEntityList(&il)
@@ -477,10 +477,10 @@ func (h *Host) addPendingSda(sda *Data) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		newPending := make([]*Data, 0)
+		var newPending []*Data
 		for _, msg := range h.pendingSDAs {
 			// if this message references t
-			if t.Id.Equals(msg.To.TreeID) {
+			if t.ID.Equals(msg.To.TreeID) {
 				// instantiate it and go
 				err := h.overlay.TransmitMsg(msg)
 				if err != nil {
@@ -533,7 +533,7 @@ func (h *Host) addPendingTreeMarshal(tm *TreeMarshal) {
 // converted to Tree.
 func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 	h.pendingTreeLock.Lock()
-	sl, ok := h.pendingTreeMarshal[el.Id]
+	sl, ok := h.pendingTreeMarshal[el.ID]
 	if !ok {
 		// no tree for this entitty list
 		return
@@ -598,12 +598,12 @@ func (h *Host) WaitForClose() {
 	}
 }
 
-// Tx() to implement monitor/CounterIO
+// Tx to implement monitor/CounterIO
 func (h *Host) Tx() uint64 {
 	return h.host.Tx()
 }
 
-// Rx() to implement monitor/CounterIO
+// Rx to implement monitor/CounterIO
 func (h *Host) Rx() uint64 {
 	return h.host.Rx()
 }
