@@ -8,7 +8,7 @@ CellSizeUp = 1000
 CellSizeDown = 10000
 RelayWindowSize = 10
 RelayUseDummyDataDown = false
-RelayReportingLimit = -1
+RelayReportingLimit = 10
 UseUDP = false
 DoLatencyTests = true
 
