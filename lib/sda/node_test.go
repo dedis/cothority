@@ -63,7 +63,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = tni.DispatchChannel([]*sda.Data{&sda.Data{
+	err = tni.DispatchChannel([]*sda.ProtocolMsg{&sda.ProtocolMsg{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -99,7 +99,7 @@ func TestNodeChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't register channel:", err)
 	}
-	err = tni.DispatchChannel([]*sda.Data{&sda.Data{
+	err = tni.DispatchChannel([]*sda.ProtocolMsg{&sda.ProtocolMsg{
 		Msg:     NodeTestMsg{3},
 		MsgType: network.RegisterMessageType(NodeTestMsg{}),
 		From: &sda.Token{
@@ -381,7 +381,7 @@ func (c *ServiceChannels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generi
 	return NewProtocolChannels(tn)
 }
 
-func (c *ServiceChannels) ProcessServiceMessage(e *network.ServerIdentity, s *sda.ServiceMessage) {
+func (c *ServiceChannels) ProcessServiceMessage(e *network.ServerIdentity, s *sda.InterServiceMessage) {
 	return
 }
 

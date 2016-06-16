@@ -54,7 +54,7 @@ func (dm *DummyProtocol) Start() error {
 	return nil
 }
 
-func (dm *DummyProtocol) DispatchMsg(msg *sda.Data) {
+func (dm *DummyProtocol) ProcessProtocolMsg(msg *sda.ProtocolMsg) {
 	dm.link <- true
 }
 
@@ -96,7 +96,7 @@ func (ds *DummyService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericC
 	return dp, nil
 }
 
-func (ds *DummyService) ProcessServiceMessage(e *network.ServerIdentity, s *sda.ServiceMessage) {
+func (ds *DummyService) ProcessServiceMessage(e *network.ServerIdentity, s *sda.InterServiceMessage) {
 	id, m, err := network.UnmarshalRegisteredType(s.Data, network.DefaultConstructors(network.Suite))
 	if err != nil {
 		ds.link <- false
@@ -644,7 +644,7 @@ func (s *simpleService) NewProtocol(tni *sda.TreeNodeInstance, conf *sda.Generic
 	return pi, err
 }
 
-func (s *simpleService) ProcessServiceMessage(e *network.ServerIdentity, r *sda.ServiceMessage) {
+func (s *simpleService) ProcessServiceMessage(e *network.ServerIdentity, r *sda.InterServiceMessage) {
 	return
 }
 

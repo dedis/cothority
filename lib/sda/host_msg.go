@@ -9,7 +9,7 @@ import (
 
 // SDADataMessageID is to be embedded in every message that is made for a
 // ID of SDAData message as registered in network
-var SDADataMessageID = network.RegisterMessageType(Data{})
+var SDADataMessageID = network.RegisterMessageType(ProtocolMsg{})
 
 // RequestTreeMessageID of RequestTree message as registered in network
 var RequestTreeMessageID = network.RegisterMessageType(RequestTree{})
@@ -25,7 +25,7 @@ var SendRosterMessageID = RosterTypeID
 
 // Data is to be embedded in every message that is made for a
 // ProtocolInstance
-type Data struct {
+type ProtocolMsg struct {
 	// Token uniquely identify the protocol instance this msg is made for
 	From *Token
 	// The TreeNodeId Where the message goes to

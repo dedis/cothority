@@ -202,7 +202,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 	if err != nil {
 		return err
 	}
-	sdaMsg := &Data{
+	sdaMsg := &ProtocolMsg{
 		MsgSlice: b,
 		MsgType:  network.TypeToMessageTypeID(msg),
 		From:     from.token,

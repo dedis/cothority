@@ -38,7 +38,7 @@ type Host struct {
 	// pendingSDAData are a list of message we received that does not correspond
 	// to any local Tree or/and Roster. We first request theses so we can
 	// instantiate properly protocolInstance that will use these SDAData msg.
-	pendingSDAs []*Data
+	pendingSDAs []*ProtocolMsg
 	// The suite used for this Host
 	suite abstract.Suite
 	// We're about to close
@@ -73,7 +73,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 		workingAddress:      e.First(),
 		connections:         make(map[network.ServerIdentityID]network.SecureConn),
 		pendingTreeMarshal:  make(map[RosterID][]*TreeMarshal),
-		pendingSDAs:         make([]*Data, 0),
+		pendingSDAs:         make([]*ProtocolMsg, 0),
 		host:                network.NewSecureTCPHost(pkey, e),
 		private:             pkey,
 		suite:               network.Suite,
@@ -265,7 +265,7 @@ func (h *Host) processMessages() {
 		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
 		case SDADataMessageID:
-			sdaMsg := data.Msg.(Data)
+			sdaMsg := data.Msg.(ProtocolMsg)
 			sdaMsg.ServerIdentity = data.ServerIdentity
 			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
@@ -349,7 +349,7 @@ func (h *Host) processMessages() {
 			h.processRequest(data.ServerIdentity, &r)
 		case ServiceMessageID:
 			dbg.Lvl4("Got ServiceMessageID")
-			m := data.Msg.(ServiceMessage)
+			m := data.Msg.(InterServiceMessage)
 			h.processServiceMessage(data.ServerIdentity, &m)
 		default:
 			if data.MsgType != network.ErrorType {
@@ -359,7 +359,7 @@ func (h *Host) processMessages() {
 	}
 }
 
-func (h *Host) processServiceMessage(e *network.ServerIdentity, m *ServiceMessage) {
+func (h *Host) processServiceMessage(e *network.ServerIdentity, m *InterServiceMessage) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(m.Service)
 	if !ok {
@@ -388,7 +388,7 @@ func (h *Host) processRequest(e *network.ServerIdentity, r *ClientRequest) {
 
 // sendSDAData marshals the inner msg and then sends a Data msg
 // to the appropriate entity
-func (h *Host) sendSDAData(e *network.ServerIdentity, sdaMsg *Data) error {
+func (h *Host) sendSDAData(e *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		typ := network.TypeFromData(sdaMsg.Msg)
@@ -454,7 +454,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // requestTree will ask for the tree the sdadata is related to.
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
-func (h *Host) requestTree(e *network.ServerIdentity, sdaMsg *Data) error {
+func (h *Host) requestTree(e *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
 	h.addPendingSda(sdaMsg)
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
 	return h.SendRaw(e, treeRequest)
@@ -462,7 +462,7 @@ func (h *Host) requestTree(e *network.ServerIdentity, sdaMsg *Data) error {
 
 // addPendingSda simply append a sda message to a queue. This queue willbe
 // checked each time we receive a new tree / entityList
-func (h *Host) addPendingSda(sda *Data) {
+func (h *Host) addPendingSda(sda *ProtocolMsg) {
 	h.pendingSDAsLock.Lock()
 	h.pendingSDAs = append(h.pendingSDAs, sda)
 	h.pendingSDAsLock.Unlock()
@@ -477,7 +477,7 @@ func (h *Host) addPendingSda(sda *Data) {
 func (h *Host) checkPendingSDA(t *Tree) {
 	go func() {
 		h.pendingSDAsLock.Lock()
-		var newPending []*Data
+		var newPending []*ProtocolMsg
 		for _, msg := range h.pendingSDAs {
 			// if this message references t
 			if t.ID.Equals(msg.To.TreeID) {

@@ -33,7 +33,7 @@ type Service interface {
 	// then dispatch it through ProcessRequest.
 	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
 	// ProcessServiceRequest takes a message from another Service
-	ProcessServiceMessage(*network.ServerIdentity, *ServiceMessage)
+	ProcessServiceMessage(*network.ServerIdentity, *InterServiceMessage)
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -263,7 +263,7 @@ func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) 
 // ServiceMessage is a generic struct that contains any data destined to a
 // Service that has been created .. by a Service. => Intra-Service
 // communications.
-type ServiceMessage struct {
+type InterServiceMessage struct {
 	// Service is the ID of the Service it's destined
 	Service ServiceID
 	// Data is the data encoded using protobuf for the moment.
@@ -271,17 +271,17 @@ type ServiceMessage struct {
 }
 
 // ServiceMessageID is the ID of the ServiceMessage struct.
-var ServiceMessageID = network.RegisterMessageType(ServiceMessage{})
+var ServiceMessageID = network.RegisterMessageType(InterServiceMessage{})
 
 // CreateServiceMessage takes a service name and some data and encodes the whole
 // as a ServiceMessage.
-func CreateServiceMessage(service string, r interface{}) (*ServiceMessage, error) {
+func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, error) {
 	sid := ServiceFactory.ServiceID(service)
 	buff, err := network.MarshalRegisteredType(r)
 	if err != nil {
 		return nil, err
 	}
-	return &ServiceMessage{
+	return &InterServiceMessage{
 		Service: sid,
 		Data:    buff,
 	}, nil

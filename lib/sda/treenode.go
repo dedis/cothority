@@ -33,11 +33,11 @@ type TreeNodeInstance struct {
 	instance ProtocolInstance
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
-	msgQueue map[network.MessageTypeID][]*Data
+	msgQueue map[network.MessageTypeID][]*ProtocolMsg
 	// done callback
 	onDoneCallback func() bool
 	// queue holding msgs
-	msgDispatchQueue []*Data
+	msgDispatchQueue []*ProtocolMsg
 	// locking for msgqueue
 	msgDispatchQueueMutex sync.Mutex
 	// kicking off new message
@@ -63,9 +63,9 @@ func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode) *TreeNodeInstance
 		channels:             make(map[network.MessageTypeID]interface{}),
 		handlers:             make(map[network.MessageTypeID]interface{}),
 		messageTypeFlags:     make(map[network.MessageTypeID]uint32),
-		msgQueue:             make(map[network.MessageTypeID][]*Data),
+		msgQueue:             make(map[network.MessageTypeID][]*ProtocolMsg),
 		treeNode:             tn,
-		msgDispatchQueue:     make([]*Data, 0, 1),
+		msgDispatchQueue:     make([]*ProtocolMsg, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
 	}
 	go n.dispatchMsgReader()
@@ -260,7 +260,7 @@ func (n *TreeNodeInstance) ProtocolName() string {
 	return ProtocolIDToName(n.token.ProtoID)
 }
 
-func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
+func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
 	f := reflect.ValueOf(n.handlers[mt])
@@ -281,7 +281,7 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
 	return nil
 }
 
-func (n *TreeNodeInstance) reflectCreate(t reflect.Type, msg *Data) reflect.Value {
+func (n *TreeNodeInstance) reflectCreate(t reflect.Type, msg *ProtocolMsg) reflect.Value {
 	m := reflect.Indirect(reflect.New(t))
 	tn := n.Tree().Search(msg.From.TreeNodeID)
 	if tn != nil {
@@ -292,7 +292,7 @@ func (n *TreeNodeInstance) reflectCreate(t reflect.Type, msg *Data) reflect.Valu
 }
 
 // DispatchChannel takes a message and sends it to a channel
-func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
+func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
@@ -319,7 +319,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 
 // DispatchMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
-func (n *TreeNodeInstance) DispatchMsg(msg *Data) {
+func (n *TreeNodeInstance) ProcessProtocolMsg(msg *ProtocolMsg) {
 	dbg.Lvl4(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
@@ -357,7 +357,7 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 }
 
 // dispatchMsgToProtocol will dispatch this sda.Data to the right instance
-func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
+func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 	// Decode the inner message here. In older versions, it was decoded before,
 	// but first there is no use to do it before, and then every protocols had
 	// to manually registers their messages. Since it is done automatically by
@@ -413,15 +413,15 @@ func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Data, bool) {
+func (n *TreeNodeInstance) aggregate(sdaMsg *ProtocolMsg) (network.MessageTypeID, []*ProtocolMsg, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equal(n.Parent().ID)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {
-		return mt, []*Data{sdaMsg}, true
+		return mt, []*ProtocolMsg{sdaMsg}, true
 	}
 	// store the msg according to its type
 	if _, ok := n.msgQueue[mt]; !ok {
-		n.msgQueue[mt] = make([]*Data, 0)
+		n.msgQueue[mt] = make([]*ProtocolMsg, 0)
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs

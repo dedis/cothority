@@ -81,7 +81,7 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
 
 // ProcessServiceMessage is to implement the Service interface.
 func (p *ServiceProcessor) ProcessServiceMessage(e *network.ServerIdentity,
-	s *ServiceMessage) {
+	s *InterServiceMessage) {
 	p.GetReply(e, s.Data)
 }
 

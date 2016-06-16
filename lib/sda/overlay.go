@@ -52,7 +52,7 @@ func NewOverlay(h *Host) *Overlay {
 // - ask for the Tree
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
-func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
+func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	o.transmitMux.Lock()
 	defer o.transmitMux.Unlock()
 	// do we have the entitylist ? if not, ask for it.
@@ -118,7 +118,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 
 	dbg.Lvl4("Dispatching message", o.host.ServerIdentity)
 	// TODO Check if TreeNodeInstance is already Done
-	pi.DispatchMsg(sdaMsg)
+	pi.ProcessProtocolMsg(sdaMsg)
 
 	return nil
 }
@@ -189,7 +189,7 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 
 // SendToTreeNode sends a message to a treeNode
 func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) error {
-	sda := &Data{
+	sda := &ProtocolMsg{
 		Msg:  msg,
 		From: from,
 		To:   from.ChangeTreeNodeID(to.ID),

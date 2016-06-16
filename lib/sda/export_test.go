@@ -7,7 +7,7 @@ import (
 
 // Export some private functions of Host for testing
 
-func (h *Host) SendSDAData(id *network.ServerIdentity, msg *Data) error {
+func (h *Host) SendSDAData(id *network.ServerIdentity, msg *ProtocolMsg) error {
 	return h.sendSDAData(id, msg)
 }
 

@@ -30,7 +30,7 @@ type ProtocolInstance interface {
 	// DispatchMsg is a method that is called each time a message arrives for
 	// this protocolInstance. TreeNodeInstance implements that method for you
 	// using channels or handlers.
-	DispatchMsg(*Data)
+	ProcessProtocolMsg(*ProtocolMsg)
 	// The token representing this ProtocolInstance
 	Token() *Token
 	// Shutdown cleans up the resources used by this protocol instance
