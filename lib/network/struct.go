@@ -167,7 +167,7 @@ type SecureTCPConn struct {
 	entity *ServerIdentity
 }
 
-// Message is the container for any NetworkMessage
+// Packet is the container for any NetworkMessage
 type Packet struct {
 	// The ServerIdentity of the remote peer we are talking to.
 	// Basically, this means that when you open a new connection to someone, and

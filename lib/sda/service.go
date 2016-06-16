@@ -260,7 +260,7 @@ func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) 
 	}, nil
 }
 
-// ServiceMessage is a generic struct that contains any data destined to a
+// InterServiceMessage is a generic struct that contains any data destined to a
 // Service that has been created .. by a Service. => Intra-Service
 // communications.
 type InterServiceMessage struct {

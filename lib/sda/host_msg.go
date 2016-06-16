@@ -23,7 +23,7 @@ var SendTreeMessageID = TreeMarshalTypeID
 // SendRosterMessageID of Roster message as registered in network
 var SendRosterMessageID = RosterTypeID
 
-// Data is to be embedded in every message that is made for a
+// ProtocolMsg is to be embedded in every message that is made for a
 // ProtocolInstance
 type ProtocolMsg struct {
 	// Token uniquely identify the protocol instance this msg is made for

@@ -317,7 +317,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 	return nil
 }
 
-// DispatchMsg takes a message and puts it into a queue for later processing.
+// ProcessProtocolMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
 func (n *TreeNodeInstance) ProcessProtocolMsg(msg *ProtocolMsg) {
 	dbg.Lvl4(n.Info(), "Received message")

@@ -23,7 +23,7 @@ import (
 // It will surely change in futur releases so we can permit this behavior.
 var Suite = ed25519.NewAES128SHA256Ed25519(false)
 
-// ProtocolMessage is a type for any message that the user wants to send
+// Body is a type for any message that the user wants to send
 type Body interface{}
 
 // MessageTypeID is the ID used to uniquely identify different registered messages
