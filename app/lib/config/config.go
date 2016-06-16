@@ -49,7 +49,7 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
 		return nil, nil, err
 	}
 	// Try to decode the Hex values
-	secret, err := crypto.ReadSecretHex(network.Suite, hc.Private)
+	secret, err := crypto.ReadScalarHex(network.Suite, hc.Private)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,7 +82,7 @@ func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, erro
 
 	fmt.Println("[+] Creation of the private and public keys...")
 	kp := config.NewKeyPair(network.Suite)
-	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
+	privStr, err := crypto.ScalarHex(network.Suite, kp.Secret)
 	if err != nil {
 		return nil, "", fmt.Errorf("Could not parse private key. Abort.")
 	}

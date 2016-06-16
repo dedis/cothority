@@ -30,8 +30,8 @@ type BlockReply struct {
 	MerkleRoot    []byte          // root of the merkle tree
 	PrfLen        int             // Length of proof
 	Prf           crypto.Proof    // Merkle proof of value
-	Response      abstract.Secret // Aggregate response
-	Challenge     abstract.Secret // Aggregate challenge
+	Response      abstract.Scalar // Aggregate response
+	Challenge     abstract.Scalar // Aggregate challenge
 	AggCommit     abstract.Point  // Aggregate commitment key
 	AggPublic     abstract.Point  // Aggregate public key (use for easy troubleshooting)
 	SignatureInfo []byte          // All other elements necessary
@@ -77,14 +77,14 @@ func (sr *BlockReply) UnmarshalJSON(dataJSON []byte) error {
 	}
 	aux := &struct {
 		SignatureInfo []byte
-		Response      abstract.Secret
-		Challenge     abstract.Secret
+		Response      abstract.Scalar
+		Challenge     abstract.Scalar
 		AggCommit     abstract.Point
 		AggPublic     abstract.Point
 		*Alias
 	}{
-		Response:  suite.Secret(),
-		Challenge: suite.Secret(),
+		Response:  suite.Scalar(),
+		Challenge: suite.Scalar(),
 		AggCommit: suite.Point(),
 		AggPublic: suite.Point(),
 		Alias:     (*Alias)(sr),

@@ -47,7 +47,7 @@ func (rh *RandHound) Random() ([]byte, error) {
 		return nil, fmt.Errorf("Random function can only be called from the leader node")
 	}
 
-	output := rh.Suite().Secret().Zero()
+	output := rh.Suite().Scalar().Zero()
 	for _, state := range rh.Leader.states {
 		output.Add(output, state.PriShares.Secret())
 	}

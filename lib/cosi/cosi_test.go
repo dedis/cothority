@@ -53,7 +53,7 @@ func TestCosiResponse(t *testing.T) {
 	var responses []*Response
 
 	// for verification later
-	aggResponse := testSuite.Secret().Zero()
+	aggResponse := testSuite.Scalar().Zero()
 	for _, ch := range children {
 		// generate the response of each children
 		r, err := ch.CreateResponse()
@@ -110,7 +110,7 @@ func TestCosiVerifyResponse(t *testing.T) {
 	cipher := testSuite.Cipher(pb)
 	cipher.Message(nil, nil, msg)
 	// reconstructed challenge
-	challenge := testSuite.Secret().Pick(cipher)
+	challenge := testSuite.Scalar().Pick(cipher)
 
 	if !challenge.Equal(root.challenge) {
 		t.Fatal("Root challenge != challenge recomputed")
@@ -177,7 +177,7 @@ func genFinalCosi(nb int, msg []byte) (*Cosi, []*Cosi, error) {
 	var responses []*Response
 
 	// for verification later
-	aggResponse := testSuite.Secret().Zero()
+	aggResponse := testSuite.Scalar().Zero()
 	for _, ch := range children {
 		// generate the response of each children
 		r, err := ch.CreateResponse()

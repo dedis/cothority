@@ -42,19 +42,19 @@ func write64(suite abstract.Suite, wc io.WriteCloser, data ...interface{}) error
 	return wc.Close()
 }
 
-// WriteSecret64 converts a secret key to a Base64-string
-func WriteSecret64(suite abstract.Suite, w io.Writer, secret abstract.Secret) error {
+// WriteScalar64 converts a scalar key to a Base64-string
+func WriteScalar64(suite abstract.Suite, w io.Writer, scalar abstract.Scalar) error {
 	enc := base64.NewEncoder(base64.StdEncoding, w)
-	return write64(suite, enc, secret)
+	return write64(suite, enc, scalar)
 }
 
-// ReadSecret64 takes a Base64-encoded secret and returns that secret,
+// ReadScalar64 takes a Base64-encoded scalar and returns that scalar,
 // optionally an error
-func ReadSecret64(suite abstract.Suite, r io.Reader) (abstract.Secret, error) {
-	sec := suite.Secret()
+func ReadScalar64(suite abstract.Suite, r io.Reader) (abstract.Scalar, error) {
+	s := suite.Scalar()
 	dec := base64.NewDecoder(base64.StdEncoding, r)
-	err := suite.Read(dec, &sec)
-	return sec, err
+	err := suite.Read(dec, &s)
+	return s, err
 }
 
 // PubHex converts a Public point to a hexadecimal representation
@@ -75,19 +75,19 @@ func ReadPubHex(suite abstract.Suite, s string) (abstract.Point, error) {
 	return point, err
 }
 
-// SecretHex encodes a secret to hexadecimal
-func SecretHex(suite abstract.Suite, secret abstract.Secret) (string, error) {
-	sbuf, err := secret.MarshalBinary()
+// ScalarHex encodes a scalar to hexadecimal
+func ScalarHex(suite abstract.Suite, scalar abstract.Scalar) (string, error) {
+	sbuf, err := scalar.MarshalBinary()
 	return hex.EncodeToString(sbuf), err
 }
 
-// ReadSecretHex reads a secret in hexadecimal from string
-func ReadSecretHex(suite abstract.Suite, str string) (abstract.Secret, error) {
+// ReadScalarHex reads a scalar in hexadecimal from string
+func ReadScalarHex(suite abstract.Suite, str string) (abstract.Scalar, error) {
 	enc, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
-	sec := suite.Secret()
-	err = sec.UnmarshalBinary(enc)
-	return sec, err
+	s := suite.Scalar()
+	err = s.UnmarshalBinary(enc)
+	return s, err
 }

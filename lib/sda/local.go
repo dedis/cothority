@@ -225,7 +225,7 @@ func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
 }
 
 // GetPrivate returns the private key of a host
-func (l *LocalTest) GetPrivate(h *Host) abstract.Secret {
+func (l *LocalTest) GetPrivate(h *Host) abstract.Scalar {
 	return h.private
 }
 
@@ -297,7 +297,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 }
 
 // PrivPub creates a private/public key pair.
-func PrivPub() (abstract.Secret, abstract.Point) {
+func PrivPub() (abstract.Scalar, abstract.Point) {
 	keypair := config.NewKeyPair(network.Suite)
 	return keypair.Secret, keypair.Public
 }

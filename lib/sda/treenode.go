@@ -468,7 +468,7 @@ func (n *TreeNodeInstance) OnDoneCallback(fn func() bool) {
 }
 
 // Private returns the private key of the entity
-func (n *TreeNodeInstance) Private() abstract.Secret {
+func (n *TreeNodeInstance) Private() abstract.Scalar {
 	return n.Host().private
 }
 
