@@ -191,15 +191,25 @@ func (c *Cosi) CreateResponse() (*Response, error) {
 
 // Response generates the response from the commitment, challenge and the
 // responses of its children.
-func (c *Cosi) Response(responses []*Response) (*Response, error) {
-	// create your own response
-	if err := c.genResponse(); err != nil {
-		return nil, err
+// if respond == true, will also add our response
+func (c *Cosi) Response(respond bool, responses []*Response) (*Response, error) {
+	if respond {
+		// create your own response
+		if err := c.genResponse(); err != nil {
+			return nil, err
+		}
+	} else {
+		c.response = c.suite.Secret().Zero()
 	}
 	aggregateResponse := c.suite.Secret().Zero()
 	for _, resp := range responses {
+		if resp == nil {
+			continue
+		}
 		// add responses of child
-		aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.Response)
+		if resp.Response != nil {
+			aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.Response)
+		}
 		// add responses of it's children if there is one (i.e. if it is not a
 		// leaf)
 		if resp.ChildrenResp != nil {
@@ -289,10 +299,10 @@ func (c *Cosi) genResponse() error {
 
 // VerifySignature verifies if the challenge and the secret (from the response phase) form a
 // correct signature for this message using the aggregated public key.
-func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Secret) error {
+func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, response abstract.Secret) error {
 	// recompute the challenge and check if it is the same
 	commitment := suite.Point()
-	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
+	commitment = commitment.Add(commitment.Mul(nil, response), suite.Point().Mul(public, challenge))
 
 	return verifyCommitment(suite, msg, commitment, challenge)
 
@@ -317,7 +327,10 @@ func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Poin
 // the exceptions given. An exception is the pubilc key + commitment of a peer that did not
 // sign.
 // NOTE: No exception mechanism for "before" commitment has been yet coded.
-func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, secret abstract.Secret, exceptions []Exception) error {
+func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, response abstract.Secret, exceptions []Exception) error {
+	if response == nil {
+		return errors.New("Response is empty")
+	}
 	// first reduce the aggregate public key
 	subPublic := suite.Point().Add(suite.Point().Null(), public)
 	aggExCommit := suite.Point().Null()
@@ -328,7 +341,7 @@ func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, m
 
 	// recompute the challenge and check if it is the same
 	commitment := suite.Point()
-	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
+	commitment = commitment.Add(commitment.Mul(nil, response), suite.Point().Mul(subPublic, challenge))
 	// ADD the exceptions commitment here
 	commitment = commitment.Add(commitment, aggExCommit)
 	// check if it is ok

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/edwards"
 )
@@ -64,7 +66,7 @@ func TestCosiResponse(t *testing.T) {
 		aggResponse = aggResponse.Add(aggResponse, r.Response)
 	}
 	// pass them up to the root
-	_, err := root.Response(responses)
+	_, err := root.Response(true, responses)
 	if err != nil {
 		t.Fatal("Response phase failed:", err)
 	}
@@ -120,6 +122,82 @@ func TestCosiVerifyResponse(t *testing.T) {
 	}
 	if err := VerifySignature(testSuite, msg, aggregatedPublic, root.challenge, root.aggregateResponse); err != nil {
 		t.Fatal("Error veriying:", err)
+	}
+}
+
+func TestVerify(t *testing.T) {
+	msg := []byte("Exceptions")
+	p1 := config.NewKeyPair(network.Suite)
+	p2 := config.NewKeyPair(network.Suite)
+	agg := network.Suite.Point().Add(p1.Public, p2.Public)
+	c1 := NewCosi(network.Suite, p1.Secret)
+	c2 := NewCosi(network.Suite, p2.Secret)
+	c2.Announce(c1.CreateAnnouncement())
+	c1.Commit([]*Commitment{c2.CreateCommitment()})
+	ch, err := c1.CreateChallenge(msg)
+	dbg.ErrFatal(err)
+	c2.Challenge(ch)
+	re, err := c2.CreateResponse()
+	dbg.ErrFatal(err)
+	_, err = c1.Response(true, []*Response{re})
+	dbg.ErrFatal(err)
+
+	dbg.ErrFatal(VerifySignature(network.Suite, msg, agg, c1.challenge, c1.aggregateResponse))
+}
+
+func TestVerifyWithException(t *testing.T) {
+	msg := []byte("Hello World Cosi")
+	root, children, err := genFinalCosi(5, msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	aggregatedPublic := testSuite.Point().Null()
+	for _, ch := range children {
+		// add children public key
+		aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, testSuite.Point().Mul(nil, ch.private))
+	}
+	// add root public key
+	rootPub := testSuite.Point().Mul(nil, root.private)
+	aggregatedPublic = aggregatedPublic.Add(aggregatedPublic, rootPub)
+
+	ex := []Exception{{rootPub, root.commitment}}
+	response := root.aggregateResponse
+	if VerifySignatureWithException(testSuite, aggregatedPublic, msg,
+		root.challenge, response, ex) == nil {
+		t.Fatal("This should fail")
+	}
+
+	response = testSuite.Secret().Sub(root.aggregateResponse, root.response)
+	dbg.ErrFatal(VerifySignatureWithException(testSuite, aggregatedPublic, msg,
+		root.challenge, response, ex))
+}
+
+func TestVerifyWithException2(t *testing.T) {
+	msg := []byte("Exceptions")
+	keyRoot := config.NewKeyPair(network.Suite)
+	keyLeaf := config.NewKeyPair(network.Suite)
+	agg := network.Suite.Point().Add(keyRoot.Public, keyLeaf.Public)
+	root := NewCosi(network.Suite, keyRoot.Secret)
+	leaf := NewCosi(network.Suite, keyLeaf.Secret)
+	leaf.Announce(root.CreateAnnouncement())
+	root.Commit([]*Commitment{leaf.CreateCommitment()})
+	ch, err := root.CreateChallenge(msg)
+	dbg.ErrFatal(err)
+	leaf.Challenge(ch)
+	re, err := leaf.CreateResponse()
+	dbg.ErrFatal(err)
+	_, err = root.Response(false, []*Response{re})
+	dbg.ErrFatal(err)
+
+	if VerifySignature(network.Suite, msg, agg, root.challenge, root.aggregateResponse) == nil {
+		t.Fatal("This shouldn't be verifiable")
+	}
+	ex := []Exception{{keyRoot.Public, root.commitment}}
+	dbg.ErrFatal(VerifySignatureWithException(testSuite, agg, msg,
+		root.challenge, root.aggregateResponse, ex))
+
+	if err := root.VerifyResponses(agg); err != nil {
+		t.Fatal("Verification of responses / commitment has failed:", err)
 	}
 }
 
@@ -188,7 +266,7 @@ func genFinalCosi(nb int, msg []byte) (*Cosi, []*Cosi, error) {
 		aggResponse = aggResponse.Add(aggResponse, r.Response)
 	}
 	// pass them up to the root
-	_, err := root.Response(responses)
+	_, err := root.Response(true, responses)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Response phase failed:%v", err)
 	}

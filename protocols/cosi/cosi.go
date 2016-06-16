@@ -305,7 +305,7 @@ func (pc *ProtocolCosi) handleResponse(in *Response) error {
 	for i := range pc.tempResponse {
 		responses[i] = pc.tempResponse[i].Response
 	}
-	outResponse, err := pc.Cosi.Response(responses)
+	outResponse, err := pc.Cosi.Response(true, responses)
 	if err != nil {
 		return err
 	}

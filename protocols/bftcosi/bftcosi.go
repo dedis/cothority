@@ -3,7 +3,6 @@
 package bftcosi
 
 import (
-	"math"
 	"sync"
 
 	"github.com/dedis/cothority/lib/cosi"
@@ -15,13 +14,16 @@ import (
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
 // protocol. The passed message is the same as sent in the challenge phase.
-type VerificationFunction func(Msg []byte) bool
+type VerificationFunction func(Msg []byte, Data []byte) bool
 
 // ProtocolBFTCoSi is the main struct for running the protocol
 type ProtocolBFTCoSi struct {
 	// the node we are represented-in
 	*sda.TreeNodeInstance
+	// The message that will be signed by the BFTCosi
 	Msg []byte
+	// Data going along the msg to the verification
+	Data []byte
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers
@@ -56,17 +58,16 @@ type ProtocolBFTCoSi struct {
 	// last block computed
 	lastBlock string
 	// temporary buffer of "prepare" commitments
-	tempPrepareCommit []*cosi.Commitment
-	tpcMut            sync.Mutex
+	tempCommitPrepare []*cosi.Commitment
+	tcMut             sync.Mutex
 	// temporary buffer of "commit" commitments
 	tempCommitCommit []*cosi.Commitment
-	tccMut           sync.Mutex
 	// temporary buffer of "prepare" responses
-	tempPrepareResponse []*cosi.Response
-	tprMut              sync.Mutex
+	tempResponsePrepare []*cosi.Response
+	trpMut              sync.Mutex
 	// temporary buffer of "commit" responses
-	tempCommitResponse []*cosi.Response
-	tcrMut             sync.Mutex
+	tempResponseCommit []*cosi.Response
+	trcMut             sync.Mutex
 
 	// refusal to sign for the commit phase or not. This flag is set during the
 	// Challenge of the commit phase and will be used during the response of the
@@ -84,7 +85,7 @@ type ProtocolBFTCoSi struct {
 
 	// verificationFun will be called
 	// during the (start/handle) challenge prepare phase of the protocol
-	verificationFun VerificationFunction
+	VerificationFunction VerificationFunction
 
 	// bool set to true when the final signature is produced
 	doneSigning chan bool
@@ -103,16 +104,18 @@ type ProtocolBFTCoSi struct {
 func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
 	// initialize the bftcosi node/protocol-instance
 	bft := &ProtocolBFTCoSi{
-		TreeNodeInstance: n,
-		suite:            n.Suite(),
-		prepare:          cosi.NewCosi(n.Suite(), n.Private()),
-		commit:           cosi.NewCosi(n.Suite(), n.Private()),
-		verifyChan:       make(chan bool),
-		doneProcessing:   make(chan bool, 2),
-		doneSigning:      make(chan bool, 1),
-		verificationFun:  verify,
-		AggregatedPublic: n.EntityList().Aggregate,
-		threshold:        int(2.0 * math.Ceil(float64(len(n.Tree().List()))/3.0)),
+		TreeNodeInstance:     n,
+		suite:                n.Suite(),
+		prepare:              cosi.NewCosi(n.Suite(), n.Private()),
+		commit:               cosi.NewCosi(n.Suite(), n.Private()),
+		verifyChan:           make(chan bool),
+		doneProcessing:       make(chan bool, 2),
+		doneSigning:          make(chan bool, 1),
+		VerificationFunction: verify,
+		AggregatedPublic:     n.EntityList().Aggregate,
+		threshold:            len(n.Tree().List()) * 2 / 3,
+		Msg:                  make([]byte, 0),
+		Data:                 make([]byte, 0),
 	}
 
 	// register channels
@@ -141,10 +144,10 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 // "commit" round will wait till the end of the "prepare" round during its
 // challenge phase.
 func (bft *ProtocolBFTCoSi) Start() error {
-	if err := bft.startAnnouncementPrepare(); err != nil {
+	if err := bft.startAnnouncement(RoundPrepare); err != nil {
 		return err
 	}
-	return bft.startAnnouncementCommit()
+	return bft.startAnnouncement(RoundCommit)
 }
 
 // Dispatch listens on all channels and implements the sda.ProtocolInstance
@@ -158,7 +161,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 			err = bft.handleAnnouncement(msg.Announce)
 		case msg := <-bft.commitChan:
 			// Commitment
-			err = bft.handleCommit(msg.Commitment)
+			err = bft.handleCommitment(msg.Commitment)
 
 		case msg := <-bft.challengePrepareChan:
 			// Challenge
@@ -169,12 +172,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 
 		case msg := <-bft.responseChan:
 			// Response
-			switch msg.Response.TYPE {
-			case RoundPrepare:
-				err = bft.handleResponsePrepare(&msg.Response)
-			case RoundCommit:
-				err = bft.handleResponseCommit(&msg.Response)
-			}
+			err = bft.startResponse(msg.Response.TYPE, &msg.Response)
 		case <-bft.doneProcessing:
 			// we are done
 			dbg.Lvl2(bft.Name(), "BFTCoSi Dispatches stop.")
@@ -185,369 +183,6 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 			dbg.Error("Error handling messages:", err)
 		}
 	}
-}
-
-// startAnnouncementPrepare create its announcement for the prepare round and
-// sends it down the tree.
-func (bft *ProtocolBFTCoSi) startAnnouncementPrepare() error {
-	ann := bft.prepare.CreateAnnouncement()
-	a := &Announce{
-		TYPE:         RoundPrepare,
-		Announcement: ann,
-	}
-	dbg.Lvl4("BFTCoSi Start Announcement (PREPARE)")
-	return bft.sendAnnouncement(a)
-}
-
-// startAnnouncementCommit create the announcement for the commit phase and
-// sends it down the tree.
-func (bft *ProtocolBFTCoSi) startAnnouncementCommit() error {
-	ann := bft.commit.CreateAnnouncement()
-	a := &Announce{
-		TYPE:         RoundCommit,
-		Announcement: ann,
-	}
-	dbg.Lvl4(bft.Name(), "BFTCoSi Start Announcement (COMMIT)")
-	return bft.sendAnnouncement(a)
-}
-
-func (bft *ProtocolBFTCoSi) sendAnnouncement(a *Announce) error {
-	return bft.SendToChildrenInParallel(a)
-}
-
-// handleAnnouncement pass the announcement to the right CoSi struct.
-func (bft *ProtocolBFTCoSi) handleAnnouncement(ann Announce) error {
-	announcement := &Announce{
-		Announcement: bft.prepare.Announce(ann.Announcement),
-	}
-
-	switch ann.TYPE {
-	case RoundPrepare:
-		dbg.Lvl4(bft.Name(), "BFTCoSi Handle Announcement PREPARE")
-		if bft.IsLeaf() {
-			return bft.startCommitmentPrepare()
-		}
-		announcement.TYPE = RoundPrepare
-	case RoundCommit:
-		dbg.Lvl4(bft.Name(), "BFTCoSi Handle Announcement COMMIT")
-		if bft.IsLeaf() {
-			return bft.startCommitmentCommit()
-		}
-		announcement.TYPE = RoundCommit
-	}
-
-	return bft.SendToChildrenInParallel(announcement)
-}
-
-// startPrepareCommitment send the first commitment up the tree for the prepare
-// round.
-func (bft *ProtocolBFTCoSi) startCommitmentPrepare() error {
-	cm := bft.prepare.CreateCommitment()
-	dbg.Lvl4(bft.Name(), "BFTCoSi Start Commitment PREPARE")
-	return bft.SendToParent(&Commitment{TYPE: RoundPrepare, Commitment: cm})
-}
-
-// startCommitCommitment send the first commitment up the tree for the
-// commitment round.
-func (bft *ProtocolBFTCoSi) startCommitmentCommit() error {
-	cm := bft.commit.CreateCommitment()
-
-	dbg.Lvl4(bft.Name(), "BFTCoSi Start Commitment COMMIT")
-	return bft.SendToParent(&Commitment{TYPE: RoundCommit, Commitment: cm})
-}
-
-// handle the arrival of a commitment
-func (bft *ProtocolBFTCoSi) handleCommit(comm Commitment) error {
-	typedCommitment := &Commitment{}
-	var commitment *cosi.Commitment
-	// store it and check if we have enough commitments
-	switch comm.TYPE {
-	case RoundPrepare:
-		bft.tpcMut.Lock()
-		bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
-		if len(bft.tempPrepareCommit) < len(bft.Children()) {
-			bft.tpcMut.Unlock()
-			return nil
-		}
-		commitment = bft.prepare.Commit(bft.tempPrepareCommit)
-		bft.tpcMut.Unlock()
-		if bft.IsRoot() {
-			return bft.startChallengePrepare()
-		}
-
-		dbg.Lvl4(bft.Name(), "BFTCoSi handle Commit PREPARE")
-	case RoundCommit:
-		bft.tccMut.Lock()
-		bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
-		if len(bft.tempCommitCommit) < len(bft.Children()) {
-			bft.tccMut.Unlock()
-			return nil
-		}
-		commitment = bft.commit.Commit(bft.tempCommitCommit)
-		bft.tccMut.Unlock()
-		if bft.IsRoot() {
-			// do nothing:
-			// stop the processing of the round, wait the end of
-			// the "prepare" round: calls startChallengeCommit
-			return nil
-		}
-
-		dbg.Lvl4(bft.Name(), "BFTCoSi handle Commit COMMIT")
-	}
-	// set same RoundType as for the received commitment:
-	typedCommitment.TYPE = comm.TYPE
-	typedCommitment.Commitment = commitment
-	return bft.SendToParent(typedCommitment)
-}
-
-// startPrepareChallenge create the challenge and send its down the tree
-func (bft *ProtocolBFTCoSi) startChallengePrepare() error {
-	// create challenge from message's hash:
-	hash := bft.Suite().Hash()
-	hash.Write(bft.Msg)
-	h := hash.Sum(nil)
-
-	ch, err := bft.prepare.CreateChallenge(h)
-	if err != nil {
-		return err
-	}
-
-	bftChal := &ChallengePrepare{
-		TYPE:      RoundPrepare,
-		Challenge: ch,
-		Msg:       bft.Msg,
-	}
-
-	go func() {
-		bft.verifyChan <- bft.verificationFun(bft.Msg)
-	}()
-
-	dbg.Lvl4(bft.Name(), "BFTCoSi Start Challenge PREPARE")
-	return bft.SendToChildrenInParallel(bftChal)
-}
-
-// startCommitChallenge waits the end of the "prepare" round.
-// Then it creates the challenge and sends it along with the
-// "prepare" signature down the tree.
-func (bft *ProtocolBFTCoSi) startChallengeCommit() error {
-	c, err := bft.commit.CreateChallenge(bft.Msg)
-	if err != nil {
-		return err
-	}
-
-	// send challenge + signature
-	cc := &ChallengeCommit{
-		TYPE:      RoundCommit,
-		Challenge: c,
-		Signature: bft.prepare.Signature(),
-	}
-	dbg.Lvl4("BFTCoSi Start Challenge COMMIT")
-	return bft.SendToChildrenInParallel(cc)
-}
-
-// handlePrepareChallenge receive the challenge messages for the "prepare"
-// round.
-func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
-	bft.Msg = ch.Msg
-	// start the verification of the message
-	go func() {
-		bft.verifyChan <- bft.verificationFun(bft.Msg)
-	}()
-	// acknowledge the challenge and send its down
-	chal := bft.prepare.Challenge(ch.Challenge)
-	ch.Challenge = chal
-
-	dbg.Lvl4(bft.Name(), "BFTCoSi handle Challenge PREPARE")
-	// go to response if leaf
-	if bft.IsLeaf() {
-		return bft.startResponsePrepare()
-	}
-
-	return bft.SendToChildrenInParallel(ch)
-}
-
-// handleCommitChallenge will verify the signature + check if no more than 1/3
-// of participants refused to sign.
-func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
-	ch.Challenge = bft.commit.Challenge(ch.Challenge)
-	hash := bft.Suite().Hash()
-	hash.Write(bft.Msg)
-	h := hash.Sum(nil)
-
-	// verify if the signature is correct
-	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
-		bft.AggregatedPublic, h, ch.Signature,
-		ch.Exceptions); err != nil {
-		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
-		bft.signRefusal = true
-	}
-
-	// Check if we have no more than 1/3 failed nodes
-	if len(ch.Exceptions) > int(bft.threshold) {
-		dbg.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT",
-			len(ch.Exceptions), len(bft.EntityList().List))
-		bft.signRefusal = true
-	}
-
-	// store the exceptions for later usage
-	bft.tempExceptions = ch.Exceptions
-	dbg.Lvl4("BFTCoSi handle Challenge COMMIT")
-	if bft.IsLeaf() {
-		return bft.startResponseCommit()
-	}
-
-	if err := bft.SendToChildrenInParallel(ch); err != nil {
-		dbg.Error(err)
-	}
-	return nil
-}
-
-// startPrepareResponse wait the verification of the block and then start the
-// challenge process
-func (bft *ProtocolBFTCoSi) startResponsePrepare() error {
-	// create response
-	resp, err := bft.prepare.CreateResponse()
-	if err != nil {
-		return err
-	}
-	// wait the verification
-	r, ok := bft.waitResponseVerification()
-	if ok {
-		// append response only if OK
-		r.Response = resp
-	}
-	dbg.Lvl4(bft.Name(), "BFTCoSi Start Response PREPARE with response:", r)
-	// send to parent
-	return bft.SendTo(bft.Parent(), r)
-}
-
-// startCommitResponse will create the response for the commit phase and send it
-// up. It will not create the response if it decided the signature is wrong from
-// the prepare phase.
-func (bft *ProtocolBFTCoSi) startResponseCommit() error {
-	r := &Response{
-		TYPE: RoundCommit,
-	}
-	// if i dont want to sign
-	if bft.signRefusal {
-		r.Exceptions = append(r.Exceptions, cosi.Exception{
-			Public:     bft.Public(),
-			Commitment: bft.commit.GetCommitment(),
-		})
-	} else {
-		// otherwise i create the response
-		resp, err := bft.commit.CreateResponse()
-		if err != nil {
-			return err
-		}
-		r.Response = resp
-	}
-	dbg.Lvl4(bft.Name(), "BFTCoSi Start Response COMMIT")
-	// send to parent
-	err := bft.SendTo(bft.Parent(), r)
-	bft.Done()
-	return err
-}
-
-// handleResponseCommit handles the responses for the commit round during the
-// response phase.
-func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
-	// check if we have enough
-	bft.tcrMut.Lock()
-	defer bft.tcrMut.Unlock()
-	bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
-
-	if len(bft.tempCommitResponse) < len(bft.Children()) {
-		return nil
-	}
-
-	if bft.signRefusal {
-		r.Exceptions = append(r.Exceptions, cosi.Exception{
-			Public:     bft.Public(),
-			Commitment: bft.commit.GetCommitment(),
-		})
-	} else {
-		resp, err := bft.commit.Response(bft.tempCommitResponse)
-		if err != nil {
-			return err
-		}
-		r.Response = resp
-	}
-
-	// notify we have finished to participate in this signature
-	bft.doneSigning <- true
-	dbg.Lvl4(bft.Name(), "BFTCoSi handle Response COMMIT (refusal=", bft.signRefusal, ")")
-	// if root we have finished
-	if bft.IsRoot() {
-		sig := bft.Signature()
-		if bft.onSignatureDone != nil {
-			bft.onSignatureDone(sig)
-		}
-		bft.Done()
-		return nil
-	}
-
-	// otherwise , send the response up
-	err := bft.SendTo(bft.Parent(), r)
-	bft.Done()
-	return err
-}
-
-func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
-	// check if we have enough
-	bft.tprMut.Lock()
-	defer bft.tprMut.Unlock()
-	bft.tempPrepareResponse = append(bft.tempPrepareResponse, r.Response)
-	if len(bft.tempPrepareResponse) < len(bft.Children()) {
-		return nil
-	}
-
-	// wait for verification
-	bzrReturn, ok := bft.waitResponseVerification()
-	if ok {
-		// append response
-		resp, err := bft.prepare.Response(bft.tempPrepareResponse)
-		if err != nil {
-			return err
-		}
-		bzrReturn.Response = resp
-	}
-
-	dbg.Lvl4("BFTCoSi Handle Response PREPARE")
-	if bft.IsRoot() {
-		// Notify 'commit'-round as we're root
-		if err := bft.startChallengeCommit(); err != nil {
-			dbg.Error(err)
-		}
-
-		return nil
-	}
-	return bft.SendTo(bft.Parent(), bzrReturn)
-}
-
-// waitResponseVerification waits till  the end of the verification and returns
-// the BFTCoSiResponse along with the flag:
-// true => no exception, the verification is correct
-// false => exception, the verification is NOT correct
-func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
-	dbg.Lvl4("Waiting for response verification:", bft.Name())
-	r := &Response{
-		TYPE: RoundPrepare,
-	}
-	// wait the verification
-	verified := <-bft.verifyChan
-	if !verified {
-		// append our exception
-		r.Exceptions = append(r.Exceptions, cosi.Exception{
-			Public:     bft.Public(),
-			Commitment: bft.prepare.GetCommitment(),
-		})
-		dbg.Lvl4("Response verification: failed", bft.Name())
-		return r, false
-	}
-
-	dbg.Lvl4("Response verification: OK", bft.Name())
-	return r, true
 }
 
 // Signature will generate the final signature, the output of the BFTCoSi
@@ -570,6 +205,316 @@ func (bft *ProtocolBFTCoSi) RegisterOnDone(fn func()) {
 // protocol reached a signature on the block
 func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bft.onSignatureDone = fn
+}
+
+func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.Cosi {
+	if t == RoundPrepare {
+		return bft.prepare
+	}
+	return bft.commit
+}
+
+// startAnnouncementPrepare create its announcement for the prepare round and
+// sends it down the tree.
+func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
+	ann := bft.getCosi(t).CreateAnnouncement()
+	a := &Announce{
+		TYPE:         t,
+		Announcement: ann,
+	}
+	dbg.Lvl4("RoundType:", t)
+	return bft.SendToChildrenInParallel(a)
+}
+
+// handleAnnouncement passes the announcement to the right CoSi struct.
+func (bft *ProtocolBFTCoSi) handleAnnouncement(ann Announce) error {
+	dbg.Lvl4(bft.Name(), "RoundType:", ann.TYPE)
+	if bft.IsLeaf() {
+		return bft.startCommitment(ann.TYPE)
+	}
+	return bft.SendToChildrenInParallel(&ann)
+}
+
+// startCommitment sends the first commitment to the parent node
+func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
+	cm := bft.getCosi(t).CreateCommitment()
+	dbg.Lvl4(bft.Name(), "RoundType:", t)
+	return bft.SendToParent(&Commitment{TYPE: t, Commitment: cm})
+}
+
+// handleCommitment collects all commitments from children and passes them
+// to the parent or starts the challenge-round if it's the root.
+func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
+	dbg.Lvl4(bft.Name(), "RoundType:", comm.TYPE)
+
+	var commitment *cosi.Commitment
+	// store it and check if we have enough commitments
+	bft.tcMut.Lock()
+	defer bft.tcMut.Unlock()
+	switch comm.TYPE {
+	case RoundPrepare:
+		bft.tempCommitPrepare = append(bft.tempCommitPrepare, comm.Commitment)
+		if len(bft.tempCommitPrepare) < len(bft.Children()) {
+			return nil
+		}
+		commitment = bft.prepare.Commit(bft.tempCommitPrepare)
+		if bft.IsRoot() {
+			return bft.startChallenge(RoundPrepare)
+		}
+	case RoundCommit:
+		bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
+		if len(bft.tempCommitCommit) < len(bft.Children()) {
+			return nil
+		}
+		commitment = bft.commit.Commit(bft.tempCommitCommit)
+		if bft.IsRoot() {
+			// do nothing:
+			// stop the processing of the round, wait the end of
+			// the "prepare" round: calls startChallengeCommit
+			return nil
+		}
+
+	}
+	// set same RoundType as for the received commitment:
+	typedCommitment := &Commitment{
+		TYPE:       comm.TYPE,
+		Commitment: commitment,
+	}
+	return bft.SendToParent(typedCommitment)
+}
+
+// startChallenge creates the challenge and sends it to its children
+func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
+	h := bft.Msg
+	if t == RoundPrepare {
+		// create challenge from message's hash:
+		hash := bft.Suite().Hash()
+		hash.Write(bft.Msg)
+		h = hash.Sum(nil)
+	}
+
+	ch, err := bft.getCosi(t).CreateChallenge(h)
+	if err != nil {
+		return err
+	}
+
+	dbg.Lvl4(bft.Name(), "RoundType:", t)
+	if t == RoundPrepare {
+		bftChal := &ChallengePrepare{
+			Challenge: ch,
+			Msg:       bft.Msg,
+			Data:      bft.Data,
+		}
+
+		return bft.handleChallengePrepare(bftChal)
+	} else {
+		// send challenge + signature
+		cc := &ChallengeCommit{
+			Challenge:  ch,
+			Signature:  bft.prepare.Signature(),
+			Exceptions: bft.tempExceptions,
+		}
+		return bft.handleChallengeCommit(cc)
+	}
+}
+
+// handleChallengePrepare collects the challenge-messages
+func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
+	if !bft.IsRoot() {
+		bft.Msg = ch.Msg
+		bft.Data = ch.Data
+		// start the verification of the message
+		// acknowledge the challenge and send it down
+		chal := bft.prepare.Challenge(ch.Challenge)
+		ch.Challenge = chal
+	}
+	go func() {
+		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
+	}()
+
+	dbg.Lvl4(bft.Name(), "BFTCoSi handle Challenge PREPARE")
+	// go to response if leaf
+	if bft.IsLeaf() {
+		return bft.startResponse(RoundPrepare, nil)
+	}
+	return bft.SendToChildrenInParallel(ch)
+}
+
+// handleChallengeCommit verifies the signature and checks if not more than
+// the threshold of participants refused to sign
+func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
+	if !bft.IsRoot() {
+		ch.Challenge = bft.commit.Challenge(ch.Challenge)
+	}
+	hash := bft.Suite().Hash()
+	hash.Write(bft.Msg)
+	h := hash.Sum(nil)
+
+	// verify if the signature is correct
+	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
+		bft.AggregatedPublic, h, ch.Signature,
+		ch.Exceptions); err != nil {
+		dbg.Lvl2(bft.Name(), "Verification of the signature failed:", err)
+		bft.signRefusal = true
+	}
+
+	// Check if we have no more than threshold failed nodes
+	if len(ch.Exceptions) >= int(bft.threshold) {
+		dbg.Lvlf2("%s: More than 1/3 (%d/%d) refused to sign - aborting.",
+			bft.Entity(), len(ch.Exceptions), len(bft.EntityList().List))
+		bft.signRefusal = true
+	}
+
+	// store the exceptions for later usage
+	bft.tempExceptions = ch.Exceptions
+	dbg.Lvl4("BFTCoSi handle Challenge COMMIT")
+
+	if bft.IsLeaf() {
+		return bft.handleResponseCommit(nil)
+	}
+
+	return bft.SendToChildrenInParallel(ch)
+}
+
+// startResponse dispatches the response to the correct round-type
+func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
+	if t == RoundPrepare {
+		return bft.handleResponsePrepare(r)
+	}
+	return bft.handleResponseCommit(r)
+}
+
+// handleResponsePrepare waits for the verification of the block and then starts the
+// challenge process.
+// If 'r' is nil, it will starts the response process.
+func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
+	if r != nil {
+		// check if we have enough responses
+		bft.trpMut.Lock()
+		defer bft.trpMut.Unlock()
+		bft.tempResponsePrepare = append(bft.tempResponsePrepare, r.Response)
+		bft.tempExceptions = append(bft.tempExceptions, r.Exceptions...)
+		if len(bft.tempResponsePrepare) < len(bft.Children()) {
+			return nil
+		}
+	}
+
+	// wait for verification
+	bzrReturn, ok := bft.waitResponseVerification()
+	// append response
+	if !ok {
+		dbg.Lvl3(bft.Entity(), "Refused to sign")
+	}
+
+	// Return if we're not root
+	if !bft.IsRoot() {
+		return bft.SendTo(bft.Parent(), bzrReturn)
+	}
+
+	// Verify the signature is correct
+	hash := bft.Suite().Hash()
+	hash.Write(bft.Msg)
+	h := hash.Sum(nil)
+	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
+		bft.AggregatedPublic, h, bft.prepare.Signature(),
+		bzrReturn.Exceptions); err != nil {
+		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
+		bft.signRefusal = true
+	}
+	// Start the challenge of the 'commit'-round
+	if err := bft.startChallenge(RoundCommit); err != nil {
+		dbg.Error(err)
+	}
+
+	return nil
+}
+
+// handleResponseCommit collects all commits from the children and either
+// passes the aggregate commit to its parent or starts a response-round
+func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
+	if r != nil {
+		// check if we have enough
+		bft.trcMut.Lock()
+		defer bft.trcMut.Unlock()
+		bft.tempResponseCommit = append(bft.tempResponseCommit, r.Response)
+
+		if len(bft.tempResponseCommit) < len(bft.Children()) {
+			return nil
+		}
+	} else {
+		r = &Response{TYPE: RoundCommit,
+			Response: &cosi.Response{
+				Response: bft.suite.Secret().Zero(),
+			}}
+	}
+
+	if bft.signRefusal {
+		r.Exceptions = append(r.Exceptions, cosi.Exception{
+			Public:     bft.Public(),
+			Commitment: bft.commit.GetCommitment(),
+		})
+	} else {
+		var err error
+		if bft.IsLeaf() {
+			r.Response, err = bft.commit.CreateResponse()
+		} else {
+			r.Response, err = bft.commit.Response(true, bft.tempResponseCommit)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	// notify we have finished to participate in this signature
+	bft.doneSigning <- true
+	dbg.Lvl4(bft.Name(), "BFTCoSi handle Response COMMIT (refusal=", bft.signRefusal, ")")
+	// if root we have finished
+	if bft.IsRoot() {
+		sig := bft.Signature()
+		if bft.onSignatureDone != nil {
+			bft.onSignatureDone(sig)
+		}
+		bft.Done()
+		return nil
+	}
+
+	// otherwise , send the response up
+	err := bft.SendTo(bft.Parent(), r)
+	bft.Done()
+	return err
+}
+
+// waitResponseVerification waits till the end of the verification and returns
+// the BFTCoSiResponse along with the flag:
+// true => no exception, the verification is correct
+// false => exception, the verification failed
+func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
+	dbg.Lvl4(bft.Name(), "Waiting for response verification:")
+	// wait the verification
+	verified := <-bft.verifyChan
+
+	resp, err := bft.prepare.Response(verified, bft.tempResponsePrepare)
+	if err != nil {
+		return nil, false
+	}
+
+	if !verified {
+		// Add our exception
+		bft.tempExceptions = append(bft.tempExceptions, cosi.Exception{
+			Public:     bft.Public(),
+			Commitment: bft.prepare.GetCommitment(),
+		})
+		dbg.Lvl4(bft.Name(), "Response verification: failed")
+	}
+
+	r := &Response{
+		TYPE:       RoundPrepare,
+		Exceptions: bft.tempExceptions,
+		Response:   resp,
+	}
+
+	dbg.Lvl4("Response verification:", verified, bft.Name())
+	return r, verified
 }
 
 // nodeDone is either called by the end of EndProtocol or by the end of the
