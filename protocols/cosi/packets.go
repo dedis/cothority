@@ -51,7 +51,7 @@ type Challenge struct {
 }
 
 /* Message []byte*/
-//C       abstract.Secret // challenge
+//C       abstract.Scalar // challenge
 
 //// Depth  byte
 //MTRoot hashid.HashId // the very root of the big Merkle Tree
@@ -65,7 +65,7 @@ type Response struct {
 }
 
 /* Message []byte*/
-//R_hat   abstract.Secret // response
+//R_hat   abstract.Scalar // response
 
 //// public keys of children servers that did not respond to
 //// challenge from root

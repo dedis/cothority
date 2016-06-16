@@ -27,7 +27,7 @@ func TestCosi(t *testing.T) {
 		// Register the function generating the protocol instance
 		var root *ProtocolCosi
 		// function that will be called when protocol is finished by the root
-		doneFunc := func(chal abstract.Secret, resp abstract.Secret) {
+		doneFunc := func(chal abstract.Scalar, resp abstract.Scalar) {
 			suite := hosts[0].Suite()
 			aggPublic := suite.Point().Null()
 			for _, e := range el.List {

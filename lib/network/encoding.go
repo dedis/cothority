@@ -111,9 +111,9 @@ func DumpTypes() {
 func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 	constructors := make(protobuf.Constructors)
 	var point abstract.Point
-	var secret abstract.Secret
+	var secret abstract.Scalar
 	constructors[reflect.TypeOf(&point).Elem()] = func() interface{} { return suite.Point() }
-	constructors[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Secret() }
+	constructors[reflect.TypeOf(&secret).Elem()] = func() interface{} { return suite.Scalar() }
 	return constructors
 }
 

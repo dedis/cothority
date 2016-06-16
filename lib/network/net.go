@@ -202,7 +202,7 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 // NewSecureTCPHost returns a Secure Tcp Host
 // If the entity is nil, it will not verify the identity of the
 // remote host
-func NewSecureTCPHost(private abstract.Secret, e *Entity) *SecureTCPHost {
+func NewSecureTCPHost(private abstract.Scalar, e *Entity) *SecureTCPHost {
 	addr := ""
 	if e != nil {
 		addr = e.First()

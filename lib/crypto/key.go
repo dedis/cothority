@@ -43,15 +43,15 @@ func write64(suite abstract.Suite, wc io.WriteCloser, data ...interface{}) error
 }
 
 // WriteSecret64 converts a secret key to a Base64-string
-func WriteSecret64(suite abstract.Suite, w io.Writer, secret abstract.Secret) error {
+func WriteSecret64(suite abstract.Suite, w io.Writer, secret abstract.Scalar) error {
 	enc := base64.NewEncoder(base64.StdEncoding, w)
 	return write64(suite, enc, secret)
 }
 
 // ReadSecret64 takes a Base64-encoded secret and returns that secret,
 // optionally an error
-func ReadSecret64(suite abstract.Suite, r io.Reader) (abstract.Secret, error) {
-	sec := suite.Secret()
+func ReadSecret64(suite abstract.Suite, r io.Reader) (abstract.Scalar, error) {
+	sec := suite.Scalar()
 	dec := base64.NewDecoder(base64.StdEncoding, r)
 	err := suite.Read(dec, &sec)
 	return sec, err
@@ -76,18 +76,18 @@ func ReadPubHex(suite abstract.Suite, s string) (abstract.Point, error) {
 }
 
 // SecretHex encodes a secret to hexadecimal
-func SecretHex(suite abstract.Suite, secret abstract.Secret) (string, error) {
+func SecretHex(suite abstract.Suite, secret abstract.Scalar) (string, error) {
 	sbuf, err := secret.MarshalBinary()
 	return hex.EncodeToString(sbuf), err
 }
 
 // ReadSecretHex reads a secret in hexadecimal from string
-func ReadSecretHex(suite abstract.Suite, str string) (abstract.Secret, error) {
+func ReadSecretHex(suite abstract.Suite, str string) (abstract.Scalar, error) {
 	enc, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
-	sec := suite.Secret()
+	sec := suite.Scalar()
 	err = sec.UnmarshalBinary(enc)
 	return sec, err
 }

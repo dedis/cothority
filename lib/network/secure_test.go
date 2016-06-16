@@ -83,7 +83,7 @@ func TestSecureSimple(t *testing.T) {
 	}
 }
 
-func genEntity(name string) (abstract.Secret, *Entity) {
+func genEntity(name string) (abstract.Scalar, *Entity) {
 	kp := config.NewKeyPair(Suite)
 	return kp.Secret, &Entity{
 		Public:    kp.Public,

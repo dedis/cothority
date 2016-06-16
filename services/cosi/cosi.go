@@ -45,8 +45,8 @@ var CosiRequestType = network.RegisterMessageType(SignatureRequest{})
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
 	Sum       []byte
-	Challenge abstract.Secret
-	Response  abstract.Secret
+	Challenge abstract.Scalar
+	Response  abstract.Scalar
 }
 
 // CosiResponseType is the type that is embedded in the Request object for a
@@ -69,7 +69,7 @@ func (cs *Cosi) SignatureRequest(e *network.Entity, req *SignatureRequest) (netw
 		return nil, errors.New("Couldn't hash message: " + err.Error())
 	}
 	response := make(chan *libcosi.Signature)
-	pcosi.RegisterDoneCallback(func(chall abstract.Secret, resp abstract.Secret) {
+	pcosi.RegisterDoneCallback(func(chall abstract.Scalar, resp abstract.Scalar) {
 		response <- &libcosi.Signature{
 			Challenge: chall,
 			Response:  resp,

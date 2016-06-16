@@ -149,7 +149,7 @@ type SecureTCPHost struct {
 	// Entity of this host
 	entity *Entity
 	// Private key tied to this entity
-	private abstract.Secret
+	private abstract.Scalar
 	// workingaddress is a private field used mostly for testing
 	// so we know which address this host is listening on
 	workingAddress string

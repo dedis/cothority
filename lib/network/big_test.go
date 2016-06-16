@@ -37,7 +37,7 @@ func TestHugeConnections(t *testing.T) {
 	bigMessageType := RegisterMessageType(big)
 
 	dbg.TestOutput(testing.Verbose(), 3)
-	privkeys := make([]abstract.Secret, nbrHosts)
+	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*Entity, nbrHosts)
 	hosts := make([]SecureHost, nbrHosts)
 	// 2-dimensional array of connections between all hosts, where only

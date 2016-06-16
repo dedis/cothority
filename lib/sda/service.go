@@ -245,7 +245,7 @@ var RequestID = network.RegisterMessageType(ClientRequest{})
 
 // CreateClientRequest creates a Request message out of any message that is
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
-// handling abstract.Secret/Public stuff that json can't do. Later we may want
+// handling abstract.Scalar/Public stuff that json can't do. Later we may want
 // to think on how to change that.
 func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) {
 	sid := ServiceFactory.ServiceID(service)
