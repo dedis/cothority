@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/services/medco"
 	"testing"
 	"github.com/dedis/cothority/services/medco/structs"
+	"time"
 )
 
 func TestServiceMedco(t *testing.T) {
@@ -26,6 +27,8 @@ func TestServiceMedco(t *testing.T) {
 		t.Fatal("Service did not start.")
 	}
 
+	<-time.After(0*time.Second)
+
 	dbg.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco_service.MedcoClient, 10)
 	for i := 0; i < 10; i++ {
@@ -33,9 +36,11 @@ func TestServiceMedco(t *testing.T) {
 		grp := make([]int64, 2)
 		aggr := make([]int64, 10)
 		//grp[i%2] = int64(2)
-		aggr[i%2] = 3
+		aggr[i] = 3
 		dataHolder[i].SendSurveyResultsData(*surveyID, grp, aggr, el.Aggregate)
 	}
+
+	<-time.After(0*time.Second)
 
 	grp, aggr, err := client.GetSurveyResults(*surveyID)
 	if err != nil {

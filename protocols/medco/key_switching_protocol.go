@@ -121,7 +121,6 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 		}
 		
 		keySwitchNewVec := v.SwitchForKeyNoReplace(p.Suite(), p.Private(), origEphemKeys[k], keySwitchingTarget.NewKey, randomnessContrib)
-		dbg.LLvl1(keySwitchNewVec)
 		if PROOF {
 			dbg.LLvl1("proofs creation")
 			newProofs[k] = VectSwitchKeyProof(p.Suite(), p.Private(), randomnessContrib, origEphemKeys[k], keySwitchingTarget.NewKey, v, keySwitchNewVec)

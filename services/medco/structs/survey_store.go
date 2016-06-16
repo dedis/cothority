@@ -33,8 +33,6 @@ type SurveyStore struct {
 //construct survey
 func NewSurveyStore() *SurveyStore {
 	return &SurveyStore{
-		ClientResponses: make([]ClientResponse,0,100),
-		DeliverableResults: make([]SurveyResult, 0, 100),
 		//ProbabilisticGroupingAttributes: make(map[TempID]CipherVector),
 		AggregatingAttributes:           make(map[TempID]CipherVector),
 
@@ -91,9 +89,9 @@ func (s *SurveyStore) HasNextAggregatedResponses() bool {
 }
 
 func (s *SurveyStore) PollLocallyAggregatedResponses() (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector) {
-	LocGroupingGroupsReturn := s.LocGroupingGroups
+	LocGroupingAggregatingReturn := s.LocGroupingAggregating
 	s.LocGroupingAggregating = make(map[GroupingKey]CipherVector)
-	return LocGroupingGroupsReturn, s.LocGroupingAggregating
+	return s.LocGroupingGroups, LocGroupingAggregatingReturn
 
 }
 
@@ -171,6 +169,7 @@ func (s *SurveyStore) PollDeliverableResults() []SurveyResult {
 	s.DeliverableResults = s.DeliverableResults[:0]
 	return results
 }
+
 
 func (s *SurveyStore) DisplayResults() {
 	for _, v := range s.DeliverableResults {
