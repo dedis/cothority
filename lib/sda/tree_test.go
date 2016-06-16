@@ -470,7 +470,6 @@ func TestEntityList_Publics(t *testing.T) {
 }
 
 // BenchmarkTreeMarshal will be the benchmark for the conversion between TreeMarshall and Tree
-
 func BenchmarkTreeMarshal(b *testing.B) {
 	tree, _ := genLocalTree(1000, 2000)
 	t, _ := tree.BinaryMarshaler()
