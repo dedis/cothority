@@ -15,11 +15,11 @@ func (s *SignatureResponse) MarshalJSON() ([]byte, error) {
 	cw := new(bytes.Buffer)
 	rw := new(bytes.Buffer)
 
-	err := crypto.WriteSecret64(network.Suite, cw, s.Challenge)
+	err := crypto.WriteScalar64(network.Suite, cw, s.Challenge)
 	if err != nil {
 		return nil, err
 	}
-	err = crypto.WriteSecret64(network.Suite, rw, s.Response)
+	err = crypto.WriteScalar64(network.Suite, rw, s.Response)
 	if err != nil {
 		return nil, err
 	}
@@ -51,11 +51,11 @@ func (s *SignatureResponse) UnmarshalJSON(data []byte) error {
 	}
 	suite := network.Suite
 	cr := strings.NewReader(aux.Challenge)
-	if s.Challenge, err = crypto.ReadSecret64(suite, cr); err != nil {
+	if s.Challenge, err = crypto.ReadScalar64(suite, cr); err != nil {
 		return err
 	}
 	rr := strings.NewReader(aux.Response)
-	if s.Response, err = crypto.ReadSecret64(suite, rr); err != nil {
+	if s.Response, err = crypto.ReadScalar64(suite, rr); err != nil {
 		return err
 	}
 	return nil

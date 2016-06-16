@@ -348,7 +348,7 @@ func checkOverwrite(file string) bool {
 func createKeyPair() (string, string) {
 	ui.Info("Creating ed25519 private and public keys.")
 	kp := crypconf.NewKeyPair(network.Suite)
-	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
+	privStr, err := crypto.ScalarHex(network.Suite, kp.Secret)
 	if err != nil {
 		ui.Fatal("Error formating private key to hexadecimal. Abort.")
 	}
