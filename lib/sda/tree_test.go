@@ -469,13 +469,10 @@ func TestEntityList_Publics(t *testing.T) {
 	}
 }
 
-// - public keys
-// - corner-case: accessing parent/children with multiple instances of the same peer
-// in the graph
-//BenchmarkTreeMarshal will be the benchmark for the conversion between TreeMarshall and Tree
-//It takes 37461141 ns before optimization on Macbook Pro
+// BenchmarkTreeMarshal will be the benchmark for the conversion between TreeMarshall and Tree
+
 func BenchmarkTreeMarshal(b *testing.B) {
-	tree, _ := genLocalTree(10000, 2000)
+	tree, _ := genLocalTree(1000, 2000)
 	t, _ := tree.BinaryMarshaler()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -483,9 +480,9 @@ func BenchmarkTreeMarshal(b *testing.B) {
 	}
 }
 
-//BenchmarkMakeTree will time the amount of time it will take to make the tree
+// BenchmarkMakeTree will time the amount of time it will take to make the tree
 func BenchmarkMakeTree(b *testing.B) {
-	tree, _ := genLocalTree(10000, 2000)
+	tree, _ := genLocalTree(1000, 2000)
 	el := tree.EntityList
 	T := tree.MakeTreeMarshal()
 	b.ResetTimer()
@@ -494,9 +491,9 @@ func BenchmarkMakeTree(b *testing.B) {
 	}
 }
 
-//BenchmarkUnmarshalRegisteredType will time the amout it takes to perform the UnmarshalRegisteredType
+// BenchmarkUnmarshalRegisteredType will time the amout it takes to perform the UnmarshalRegisteredType
 func BenchmarkUnmarshalRegisteredType(b *testing.B) {
-	tree, _ := genLocalTree(10000, 2000)
+	tree, _ := genLocalTree(1000, 2000)
 	buf, _ := tree.BinaryMarshaler()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -504,9 +501,9 @@ func BenchmarkUnmarshalRegisteredType(b *testing.B) {
 	}
 }
 
-//BenchmarkBinaryMarshaller will time the binary marshaler in order to compare MarshalerRegisteredType(used within BinaryMarshaler) to the UnmarshalRegisteredType
+// BenchmarkBinaryMarshaller will time the binary marshaler in order to compare MarshalerRegisteredType(used within BinaryMarshaler) to the UnmarshalRegisteredType
 func BenchmarkBinaryMarshaler(b *testing.B) {
-	tree, _ := genLocalTree(10000, 2000)
+	tree, _ := genLocalTree(1000, 2000)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		tree.BinaryMarshaler()
