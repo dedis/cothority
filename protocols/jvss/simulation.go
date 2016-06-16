@@ -30,7 +30,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 // Setup configures a JVSS simulation
 func (jvs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
-	jvs.CreateEntityList(sim, hosts, 2000)
+	jvs.CreateRoster(sim, hosts, 2000)
 	err := jvs.CreateTree(sim)
 	return sim, err
 }

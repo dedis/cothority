@@ -21,8 +21,8 @@ type LocalTest struct {
 	Overlays map[network.EntityID]*Overlay
 	// A map of Entity.Id to Services
 	Services map[network.EntityID]map[ServiceID]Service
-	// A map of EntityList.Id to EntityLists
-	EntityLists map[EntityListID]*EntityList
+	// A map of Roster.Id to Rosters
+	Rosters map[RosterID]*Roster
 	// A map of Tree.Id to Trees
 	Trees map[TreeID]*Tree
 	// All single nodes
@@ -36,7 +36,7 @@ func NewLocalTest() *LocalTest {
 		Hosts:       make(map[network.EntityID]*Host),
 		Overlays:    make(map[network.EntityID]*Overlay),
 		Services:    make(map[network.EntityID]map[ServiceID]Service),
-		EntityLists: make(map[EntityListID]*EntityList),
+		Rosters: make(map[RosterID]*Roster),
 		Trees:       make(map[TreeID]*Tree),
 		Nodes:       make([]*TreeNodeInstance, 0, 1),
 	}
@@ -84,50 +84,50 @@ func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
 }
 
 // GenTree will create a tree of n hosts. If connect is true, they will
-// be connected to the root host. If register is true, the EntityList and Tree
+// be connected to the root host. If register is true, the Roster and Tree
 // will be registered with the overlay.
-func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *EntityList, *Tree) {
+func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
 	hosts := l.GenLocalHosts(n, connect, processMsg)
 
-	list := l.GenEntityListFromHost(hosts...)
+	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
 	l.Trees[tree.ID] = tree
 	if register {
-		hosts[0].overlay.RegisterEntityList(list)
+		hosts[0].overlay.RegisterRoster(list)
 		hosts[0].overlay.RegisterTree(tree)
 	}
 	return hosts, list, tree
 }
 
 // GenBigTree will create a tree of n hosts. If connect is true, they will
-// be connected to the root host. If register is true, the EntityList and Tree
+// be connected to the root host. If register is true, the Roster and Tree
 // will be registered with the overlay.
 // 'nbrHosts' is how many hosts are created
 // 'nbrTreeNodes' is how many TreeNodes are created
 // nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
 // be used more than once in the tree.
-func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *EntityList, *Tree) {
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
 	hosts := l.GenLocalHosts(nbrHosts, connect, true)
 
-	list := l.GenEntityListFromHost(hosts...)
+	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
 	l.Trees[tree.ID] = tree
 	if register {
-		hosts[0].overlay.RegisterEntityList(list)
+		hosts[0].overlay.RegisterRoster(list)
 		hosts[0].overlay.RegisterTree(tree)
 	}
 	return hosts, list, tree
 }
 
-// GenEntityListFromHost takes a number of hosts as arguments and creates
-// an EntityList.
-func (l *LocalTest) GenEntityListFromHost(hosts ...*Host) *EntityList {
+// GenRosterFromHost takes a number of hosts as arguments and creates
+// an Roster.
+func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
 	var entities []*network.Entity
 	for i := range hosts {
 		entities = append(entities, hosts[i].Entity)
 	}
-	list := NewEntityList(entities)
-	l.EntityLists[list.ID] = list
+	list := NewRoster(entities)
+	l.Rosters[list.ID] = list
 	return list
 }
 
@@ -173,7 +173,7 @@ func (l *LocalTest) NewTreeNodeInstance(tn *TreeNode, protName string) (*TreeNod
 	}
 	tok := &Token{
 		ProtoID:      protID,
-		EntityListID: tree.EntityList.ID,
+		RosterID: tree.Roster.ID,
 		TreeID:       tree.ID,
 		TreeNodeID:   tn.ID,
 		RoundID:      RoundID(uuid.NewV4()),
@@ -220,7 +220,7 @@ func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
 
 // CheckPendingTreeMarshal looks whether there are any treeMarshals to be
 // called
-func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *EntityList) {
+func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *Roster) {
 	h.checkPendingTreeMarshal(el)
 }
 
@@ -239,11 +239,11 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 	return services
 }
 
-// MakeHELS is an abbreviation to make a Host, an EntityList, and a service.
+// MakeHELS is an abbreviation to make a Host, an Roster, and a service.
 // It returns the service of the first host in the slice.
-func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *EntityList, Service) {
+func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
 	hosts := l.GenLocalHosts(nbr, false, true)
-	el := l.GenEntityListFromHost(hosts...)
+	el := l.GenRosterFromHost(hosts...)
 	return hosts, el, l.Services[hosts[0].Entity.ID][sid]
 }
 

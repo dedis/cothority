@@ -121,9 +121,9 @@ func (n *TreeNodeInstance) Tree() *Tree {
 	return n.overlay.TreeFromToken(n.token)
 }
 
-// EntityList returns the entity-list
-func (n *TreeNodeInstance) EntityList() *EntityList {
-	return n.Tree().EntityList
+// Roster returns the entity-list
+func (n *TreeNodeInstance) Roster() *Roster {
+	return n.Tree().Roster
 }
 
 // Suite can be used to get the current abstract.Suite (currently hardcoded into
@@ -516,7 +516,7 @@ func (n *TreeNodeInstance) List() []*TreeNode {
 	return n.treeNodeList
 }
 
-// Index returns the index of the node in the EntityList
+// Index returns the index of the node in the Roster
 func (n *TreeNodeInstance) Index() int {
 	return n.TreeNode().EntityIdx
 }

@@ -18,8 +18,8 @@ type Overlay struct {
 	// mapping from Tree.Id to Tree
 	trees    map[TreeID]*Tree
 	treesMut sync.Mutex
-	// mapping from EntityList.id to EntityList
-	entityLists    map[EntityListID]*EntityList
+	// mapping from Roster.id to Roster
+	entityLists    map[RosterID]*Roster
 	entityListLock sync.Mutex
 	// cache for relating token(~Node) to TreeNode
 	cache *TreeNodeCache
@@ -38,7 +38,7 @@ func NewOverlay(h *Host) *Overlay {
 	return &Overlay{
 		host:              h,
 		trees:             make(map[TreeID]*Tree),
-		entityLists:       make(map[EntityListID]*EntityList),
+		entityLists:       make(map[RosterID]*Roster),
 		cache:             NewTreeNodeCache(),
 		instances:         make(map[TokenID]*TreeNodeInstance),
 		instancesInfo:     make(map[TokenID]bool),
@@ -56,8 +56,8 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	o.transmitMux.Lock()
 	defer o.transmitMux.Unlock()
 	// do we have the entitylist ? if not, ask for it.
-	if o.EntityList(sdaMsg.To.EntityListID) == nil {
-		dbg.Lvl4("Will ask the EntityList from token", sdaMsg.To.EntityListID, len(o.entityLists), o.host.workingAddress)
+	if o.Roster(sdaMsg.To.RosterID) == nil {
+		dbg.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.workingAddress)
 		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
@@ -145,20 +145,20 @@ func (o *Overlay) Tree(tid TreeID) *Tree {
 	return o.trees[tid]
 }
 
-// RegisterEntityList puts an entityList in the map
-func (o *Overlay) RegisterEntityList(el *EntityList) {
+// RegisterRoster puts an entityList in the map
+func (o *Overlay) RegisterRoster(el *Roster) {
 	o.entityListLock.Lock()
 	defer o.entityListLock.Unlock()
 	o.entityLists[el.ID] = el
 }
 
-// EntityListFromToken returns the entitylist corresponding to a token
-func (o *Overlay) EntityListFromToken(tok *Token) *EntityList {
-	return o.entityLists[tok.EntityListID]
+// RosterFromToken returns the entitylist corresponding to a token
+func (o *Overlay) RosterFromToken(tok *Token) *Roster {
+	return o.entityLists[tok.RosterID]
 }
 
-// EntityList returns the entityList given by EntityListID
-func (o *Overlay) EntityList(elid EntityListID) *EntityList {
+// Roster returns the entityList given by RosterID
+func (o *Overlay) Roster(elid RosterID) *Roster {
 	o.entityListLock.Lock()
 	defer o.entityListLock.Unlock()
 	return o.entityLists[elid]
@@ -287,13 +287,13 @@ func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID
 	tok := &Token{
 		TreeNodeID:   tn.ID,
 		TreeID:       t.ID,
-		EntityListID: t.EntityList.ID,
+		RosterID: t.Roster.ID,
 		ProtoID:      protoID,
 		RoundID:      RoundID(uuid.NewV4()),
 	}
 	tni := o.newTreeNodeInstanceFromToken(tn, tok)
 	o.RegisterTree(t)
-	o.RegisterEntityList(t.EntityList)
+	o.RegisterRoster(t.Roster)
 	return tni
 }
 
@@ -303,14 +303,14 @@ func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID 
 	tok := &Token{
 		TreeNodeID:   tn.ID,
 		TreeID:       t.ID,
-		EntityListID: t.EntityList.ID,
+		RosterID: t.Roster.ID,
 		ProtoID:      protoID,
 		ServiceID:    servID,
 		RoundID:      RoundID(uuid.NewV4()),
 	}
 	tni := o.newTreeNodeInstanceFromToken(tn, tok)
 	o.RegisterTree(t)
-	o.RegisterEntityList(t.EntityList)
+	o.RegisterRoster(t.Roster)
 	return tni
 }
 

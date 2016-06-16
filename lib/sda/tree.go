@@ -19,7 +19,7 @@ import (
 // The tree contains the peerId which is the ID given to a an Entity / server
 // during one protocol instance. A server can have many peerId in one tree.
 // ProtocolInstance needs to know:
-// - which EntityList we are using ( a selection of proper servers )
+// - which Roster we are using ( a selection of proper servers )
 // - which Tree we are using.
 // - The overlay network: a mapping from PeerId
 // It contains the PeerId of the parent and the sub tree of the children.
@@ -33,7 +33,7 @@ func init() {
 // It contains the peer list we use, and the tree we use
 type Tree struct {
 	ID         TreeID
-	EntityList *EntityList
+	Roster *Roster
 	Root       *TreeNode
 }
 
@@ -52,10 +52,10 @@ func (tId TreeID) String() string {
 
 // NewTree creates a new tree using the entityList and the root-node. It
 // also generates the id.
-func NewTree(el *EntityList, r *TreeNode) *Tree {
+func NewTree(el *Roster, r *TreeNode) *Tree {
 	url := network.NamespaceURL + "tree/" + el.ID.String() + r.ID.String()
 	t := &Tree{
-		EntityList: el,
+		Roster: el,
 		Root:       r,
 		ID:         TreeID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
@@ -65,9 +65,9 @@ func NewTree(el *EntityList, r *TreeNode) *Tree {
 	return t
 }
 
-// NewTreeFromMarshal takes a slice of bytes and an EntityList to re-create
+// NewTreeFromMarshal takes a slice of bytes and an Roster to re-create
 // the original tree
-func NewTreeFromMarshal(buf []byte, el *EntityList) (*Tree, error) {
+func NewTreeFromMarshal(buf []byte, el *Roster) (*Tree, error) {
 	tp, pm, err := network.UnmarshalRegisteredType(buf,
 		network.DefaultConstructors(network.Suite))
 	if err != nil {
@@ -84,12 +84,12 @@ func NewTreeFromMarshal(buf []byte, el *EntityList) (*Tree, error) {
 // MakeTreeMarshal creates a replacement-tree that is safe to send: no
 // parent (creates loops), only sends ids (not send the entityList again)
 func (t *Tree) MakeTreeMarshal() *TreeMarshal {
-	if t.EntityList == nil {
+	if t.Roster == nil {
 		return &TreeMarshal{}
 	}
 	treeM := &TreeMarshal{
 		TreeID:       t.ID,
-		EntityListID: t.EntityList.ID,
+		RosterID: t.Roster.ID,
 	}
 	treeM.Children = append(treeM.Children, TreeMarshalCopyTree(t.Root))
 	return treeM
@@ -105,7 +105,7 @@ func (t *Tree) Marshal() ([]byte, error) {
 
 type tbmStruct struct {
 	T  []byte
-	EL *EntityList
+	EL *Roster
 }
 
 // BinaryMarshaler does the same as Marshal
@@ -116,7 +116,7 @@ func (t *Tree) BinaryMarshaler() ([]byte, error) {
 	}
 	tbm := &tbmStruct{
 		T:  bt,
-		EL: t.EntityList,
+		EL: t.Roster,
 	}
 	b, err := network.MarshalRegisteredType(tbm)
 	if err != nil {
@@ -136,7 +136,7 @@ func (t *Tree) BinaryUnmarshaler(b []byte) error {
 	if err != nil {
 		return err
 	}
-	t.EntityList = tbm.EL
+	t.Roster = tbm.EL
 	t.ID = tree.ID
 	t.Root = tree.Root
 	return nil
@@ -144,7 +144,7 @@ func (t *Tree) BinaryUnmarshaler(b []byte) error {
 
 // Equal verifies if the given tree is equal
 func (t *Tree) Equal(t2 *Tree) bool {
-	if t.ID != t2.ID || t.EntityList.ID != t2.EntityList.ID {
+	if t.ID != t2.ID || t.Roster.ID != t2.Roster.ID {
 		dbg.Lvl4("Ids of trees don't match")
 		return false
 	}
@@ -153,8 +153,8 @@ func (t *Tree) Equal(t2 *Tree) bool {
 
 // String writes the definition of the tree
 func (t *Tree) String() string {
-	return fmt.Sprintf("TreeId:%s - EntityListId:%s - RootId:%s",
-		t.ID, t.EntityList.ID, t.Root.ID)
+	return fmt.Sprintf("TreeId:%s - RosterId:%s - RootId:%s",
+		t.ID, t.Roster.ID, t.Root.ID)
 }
 
 // Dump returns string about the tree
@@ -226,7 +226,7 @@ func (t *Tree) Size() int {
 // in the tree
 func (t *Tree) UsesList() bool {
 	nodes := t.List()
-	for _, p := range t.EntityList.List {
+	for _, p := range t.Roster.List {
 		found := false
 		for _, n := range nodes {
 			if n.Entity.ID == p.ID {
@@ -268,8 +268,8 @@ type TreeMarshal struct {
 	TreeID TreeID
 	// This is the UUID of the Entity, except
 	EntityID network.EntityID
-	// for the top-node this contains the EntityList's ID
-	EntityListID EntityListID
+	// for the top-node this contains the Roster's ID
+	RosterID RosterID
 	// All children from this tree. The top-node only has one child, which is
 	// the root
 	Children []*TreeMarshal
@@ -301,22 +301,22 @@ func TreeMarshalCopyTree(tr *TreeNode) *TreeMarshal {
 	return tm
 }
 
-// MakeTree creates a tree given an EntityList
-func (tm TreeMarshal) MakeTree(el *EntityList) (*Tree, error) {
-	if el.ID != tm.EntityListID {
-		return nil, errors.New("Not correct EntityList-Id")
+// MakeTree creates a tree given an Roster
+func (tm TreeMarshal) MakeTree(el *Roster) (*Tree, error) {
+	if el.ID != tm.RosterID {
+		return nil, errors.New("Not correct Roster-Id")
 	}
 	tree := &Tree{
 		ID:         tm.TreeID,
-		EntityList: el,
+		Roster: el,
 	}
 	tree.Root = tm.Children[0].MakeTreeFromList(nil, el)
 	tree.computeSubtreeAggregate(network.Suite, tree.Root)
 	return tree, nil
 }
 
-// MakeTreeFromList creates a sub-tree given an EntityList
-func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeNode {
+// MakeTreeFromList creates a sub-tree given an Roster
+func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *Roster) *TreeNode {
 	idx, ent := el.Search(tm.EntityID)
 	tn := &TreeNode{
 		Parent:    parent,
@@ -330,10 +330,10 @@ func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *EntityList) *TreeN
 	return tn
 }
 
-// An EntityList is a list of Entity we choose to run  some tree on it ( and
+// An Roster is a list of Entity we choose to run  some tree on it ( and
 // therefor some protocols)
-type EntityList struct {
-	ID EntityListID
+type Roster struct {
+	ID RosterID
 	// TODO make that a map so search is O(1)
 	// List is the List of actual "entities"
 	// Be careful if you access it in go-routines (not safe by default)
@@ -342,36 +342,36 @@ type EntityList struct {
 	Aggregate abstract.Point
 }
 
-// EntityListID uniquely identifies an EntityList
-type EntityListID uuid.UUID
+// RosterID uniquely identifies an Roster
+type RosterID uuid.UUID
 
 // String returns the default representation of the ID (wrapper around
 // uuid.UUID.String()
-func (elId EntityListID) String() string {
+func (elId RosterID) String() string {
 	return uuid.UUID(elId).String()
 }
 
-// EntityListTypeID of EntityList message as registered in network
-var EntityListTypeID = network.RegisterMessageType(EntityList{})
+// RosterTypeID of Roster message as registered in network
+var RosterTypeID = network.RegisterMessageType(Roster{})
 
-// NewEntityList creates a new Entity from a list of entities. It also
+// NewRoster creates a new Entity from a list of entities. It also
 // adds a UUID which is randomly chosen.
-func NewEntityList(ids []*network.Entity) *EntityList {
+func NewRoster(ids []*network.Entity) *Roster {
 	// compute the aggregate key already
 	agg := network.Suite.Point().Null()
 	for _, e := range ids {
 		agg = agg.Add(agg, e.Public)
 	}
-	return &EntityList{
+	return &Roster{
 		List:      ids,
 		Aggregate: agg,
-		ID:        EntityListID(uuid.NewV4()),
+		ID:        RosterID(uuid.NewV4()),
 	}
 }
 
-// Search searches the EntityList for the given EntityID and returns the
+// Search searches the Roster for the given EntityID and returns the
 // corresponding Entity.
-func (el *EntityList) Search(eID network.EntityID) (int, *network.Entity) {
+func (el *Roster) Search(eID network.EntityID) (int, *network.Entity) {
 	for i, e := range el.List {
 		if e.ID == eID {
 			return i, e
@@ -382,16 +382,16 @@ func (el *EntityList) Search(eID network.EntityID) (int, *network.Entity) {
 
 // Get simply returns the entity that is stored at that index in the entitylist
 // returns nil if index error
-func (el *EntityList) Get(idx int) *network.Entity {
+func (el *Roster) Get(idx int) *network.Entity {
 	if idx < 0 || idx > len(el.List) {
 		return nil
 	}
 	return el.List[idx]
 }
 
-// Publics returns the public-keys of the underlying EntityList. It won't modify
+// Publics returns the public-keys of the underlying Roster. It won't modify
 // the underlying list.
-func (el *EntityList) Publics() []abstract.Point {
+func (el *Roster) Publics() []abstract.Point {
 	res := make([]abstract.Point, len(el.List))
 	for i, p := range el.List {
 		res[i] = p.Public
@@ -401,15 +401,15 @@ func (el *EntityList) Publics() []abstract.Point {
 
 // GenerateBigNaryTree creates a tree where each node has N children.
 // It will make a tree with exactly 'nodes' elements, regardless of the
-// size of the EntityList. If 'nodes' is bigger than the number of elements
-// in the EntityList, it will add some or all elements in the EntityList
+// size of the Roster. If 'nodes' is bigger than the number of elements
+// in the Roster, it will add some or all elements in the Roster
 // more than once.
-// If the length of the EntityList is equal to 'nodes', it is guaranteed that
-// all Entities from the EntityList will be used in the tree.
+// If the length of the Roster is equal to 'nodes', it is guaranteed that
+// all Entities from the Roster will be used in the tree.
 // However, for some configurations it is impossible to use all Entities from
-// the EntityList and still avoid having a parent and a child from the same
+// the Roster and still avoid having a parent and a child from the same
 // host. In this case use-all has preference over not-the-same-host.
-func (el *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
+func (el *Roster) GenerateBigNaryTree(N, nodes int) *Tree {
 	// list of which hosts are already used
 	used := make([]bool, len(el.List))
 	ilLen := len(el.List)
@@ -473,7 +473,7 @@ func (el *EntityList) GenerateBigNaryTree(N, nodes int) *Tree {
 
 // GenerateNaryTreeWithRoot creates a tree where each node has N children.
 // The root is given as an Entity.
-func (el *EntityList) GenerateNaryTreeWithRoot(N int, rootEntity *network.Entity) *Tree {
+func (el *Roster) GenerateNaryTreeWithRoot(N int, rootEntity *network.Entity) *Tree {
 	rootIndex, _ := el.Search(rootEntity.ID)
 	cList := el.List
 	onlyRoot := []*network.Entity{cList[rootIndex]}
@@ -481,24 +481,24 @@ func (el *EntityList) GenerateNaryTreeWithRoot(N int, rootEntity *network.Entity
 	afterRoot := cList[rootIndex+1:]
 	list := append(onlyRoot, uptoRoot...)
 	list = append(list, afterRoot...)
-	return NewEntityList(list).GenerateNaryTree(N)
+	return NewRoster(list).GenerateNaryTree(N)
 }
 
 // GenerateNaryTree creates a tree where each node has N children.
-// The first element of the EntityList will be the root element.
-func (el *EntityList) GenerateNaryTree(N int) *Tree {
+// The first element of the Roster will be the root element.
+func (el *Roster) GenerateNaryTree(N int) *Tree {
 	root := el.addNary(nil, N, 0, len(el.List)-1)
 	return NewTree(el, root)
 }
 
-// GenerateBinaryTree creates a binary tree out of the EntityList
-// out of it. The first element of the EntityList will be the root element.
-func (el *EntityList) GenerateBinaryTree() *Tree {
+// GenerateBinaryTree creates a binary tree out of the Roster
+// out of it. The first element of the Roster will be the root element.
+func (el *Roster) GenerateBinaryTree() *Tree {
 	return el.GenerateNaryTree(2)
 }
 
-// GetRandom returns a random element of the EntityList
-func (el *EntityList) GetRandom() *network.Entity {
+// GetRandom returns a random element of the Roster
+func (el *Roster) GetRandom() *network.Entity {
 	if el.List == nil || len(el.List) == 0 {
 		return nil
 	}
@@ -506,7 +506,7 @@ func (el *EntityList) GetRandom() *network.Entity {
 }
 
 // addNary is a recursive function to create the binary tree
-func (el *EntityList) addNary(parent *TreeNode, N, start, end int) *TreeNode {
+func (el *Roster) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	if !(start <= end && end < len(el.List)) {
 		return nil
 	}
@@ -531,7 +531,7 @@ type TreeNode struct {
 	// The Entity points to the corresponding host. One given host
 	// can be used more than once in a tree.
 	Entity *network.Entity
-	// EntityIdx is the index in the EntityList where the `Entity` is located
+	// EntityIdx is the index in the Roster where the `Entity` is located
 	EntityIdx int
 	// Parent link
 	Parent *TreeNode
@@ -656,32 +656,32 @@ func (t *TreeNode) SubtreeCount() int {
 	return ret
 }
 
-// EntityListToml is the struct can can embedded EntityToml to be written in a
+// RosterToml is the struct can can embedded EntityToml to be written in a
 // toml file
-type EntityListToml struct {
-	ID   EntityListID
+type RosterToml struct {
+	ID   RosterID
 	List []*network.EntityToml
 }
 
 // Toml returns the toml-writable version of this entityList
-func (el *EntityList) Toml(suite abstract.Suite) *EntityListToml {
+func (el *Roster) Toml(suite abstract.Suite) *RosterToml {
 	ids := make([]*network.EntityToml, len(el.List))
 	for i := range el.List {
 		ids[i] = el.List[i].Toml(suite)
 	}
-	return &EntityListToml{
+	return &RosterToml{
 		ID:   el.ID,
 		List: ids,
 	}
 }
 
-// EntityList returns the Id list from this toml read struct
-func (elt *EntityListToml) EntityList(suite abstract.Suite) *EntityList {
+// Roster returns the Id list from this toml read struct
+func (elt *RosterToml) Roster(suite abstract.Suite) *Roster {
 	ids := make([]*network.Entity, len(elt.List))
 	for i := range elt.List {
 		ids[i] = elt.List[i].Entity(suite)
 	}
-	return &EntityList{
+	return &Roster{
 		ID:   elt.ID,
 		List: ids,
 	}

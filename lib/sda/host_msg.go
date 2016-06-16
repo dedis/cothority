@@ -14,14 +14,14 @@ var SDADataMessageID = network.RegisterMessageType(Data{})
 // RequestTreeMessageID of RequestTree message as registered in network
 var RequestTreeMessageID = network.RegisterMessageType(RequestTree{})
 
-// RequestEntityListMessageID of RequestEntityList message as registered in network
-var RequestEntityListMessageID = network.RegisterMessageType(RequestEntityList{})
+// RequestRosterMessageID of RequestRoster message as registered in network
+var RequestRosterMessageID = network.RegisterMessageType(RequestRoster{})
 
 // SendTreeMessageID of TreeMarshal message as registered in network
 var SendTreeMessageID = TreeMarshalTypeID
 
-// SendEntityListMessageID of EntityList message as registered in network
-var SendEntityListMessageID = EntityListTypeID
+// SendRosterMessageID of Roster message as registered in network
+var SendRosterMessageID = RosterTypeID
 
 // Data is to be embedded in every message that is made for a
 // ProtocolInstance
@@ -65,7 +65,7 @@ func (t *TokenID) String() string {
 // host knows how to create the SDAData message around the protocol's message
 // with the right fields set.
 type Token struct {
-	EntityListID EntityListID
+	RosterID RosterID
 	TreeID       TreeID
 	// TO BE REMOVED
 	ProtoID   ProtocolID
@@ -85,7 +85,7 @@ func (t *Token) ID() TokenID {
 	tokenMutex.Lock()
 	defer tokenMutex.Unlock()
 	if t.cacheID == TokenID(uuid.Nil) {
-		url := network.NamespaceURL + "token/" + t.EntityListID.String() +
+		url := network.NamespaceURL + "token/" + t.RosterID.String() +
 			t.RoundID.String() + t.ServiceID.String() + t.ProtoID.String() + t.TreeID.String() +
 			t.TreeNodeID.String()
 		t.cacheID = TokenID(uuid.NewV5(uuid.NamespaceURL, url))
@@ -116,13 +116,13 @@ type RequestTree struct {
 	TreeID TreeID
 }
 
-// RequestEntityList is used to ask the parent for a given EntityList
-type RequestEntityList struct {
-	EntityListID EntityListID
+// RequestRoster is used to ask the parent for a given Roster
+type RequestRoster struct {
+	RosterID RosterID
 }
 
-// EntityListUnknown is used in case the entity list is unknown
-type EntityListUnknown struct {
+// RosterUnknown is used in case the entity list is unknown
+type RosterUnknown struct {
 }
 
 // SendEntity is the first message we send on creation of a link

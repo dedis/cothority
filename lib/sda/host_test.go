@@ -148,7 +148,7 @@ func TestHostSendDuplex(t *testing.T) {
 	h2.Close()
 }
 
-// Test when a peer receives a New EntityList, it can create the trees that are
+// Test when a peer receives a New Roster, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
 	defer dbg.AfterTest(t)
@@ -180,41 +180,41 @@ func TestPeerListPropagation(t *testing.T) {
 	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendRaw(h2.Entity, &sda.RequestEntityList{
-		EntityListID: el.ID})
+	err := h1.SendRaw(h2.Entity, &sda.RequestRoster{
+		RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessageID {
-		t.Fatal("h1 didn't receive EntityList type, but", msg.MsgType)
+	if msg.MsgType != sda.SendRosterMessageID {
+		t.Fatal("h1 didn't receive Roster type, but", msg.MsgType)
 	}
-	if msg.Msg.(sda.EntityList).ID != sda.EntityListID(uuid.Nil) {
+	if msg.Msg.(sda.Roster).ID != sda.RosterID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
 	// Now add the list to h2 and try again
-	h2.AddEntityList(el)
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.ID})
+	h2.AddRoster(el)
+	err = h1.SendRaw(h2.Entity, &sda.RequestRoster{RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendEntityListMessageID {
-		t.Fatal("h1 didn't receive EntityList type")
+	if msg.MsgType != sda.SendRosterMessageID {
+		t.Fatal("h1 didn't receive Roster type")
 	}
-	if msg.Msg.(sda.EntityList).ID != el.ID {
+	if msg.Msg.(sda.Roster).ID != el.ID {
 		t.Fatal("List should be equal to original list")
 	}
 
 	// And test whether it gets stored correctly
 	h1.StartProcessMessages()
-	err = h1.SendRaw(h2.Entity, &sda.RequestEntityList{EntityListID: el.ID})
+	err = h1.SendRaw(h2.Entity, &sda.RequestRoster{RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	time.Sleep(time.Second)
-	list, ok := h1.EntityList(el.ID)
+	list, ok := h1.Roster(el.ID)
 	if !ok {
 		t.Fatal("List-id not found")
 	}
@@ -232,8 +232,8 @@ func TestTreePropagation(t *testing.T) {
 	h1 := hosts[0]
 	h2 := hosts[1]
 	// Suppose both hosts have the list available, but not the tree
-	h1.AddEntityList(el)
-	h2.AddEntityList(el)
+	h1.AddRoster(el)
+	h2.AddRoster(el)
 	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty tree if it is unknown
@@ -246,7 +246,7 @@ func TestTreePropagation(t *testing.T) {
 		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).EntityListID != sda.EntityListID(uuid.Nil) {
+	if msg.Msg.(sda.TreeMarshal).RosterID != sda.RosterID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
@@ -294,7 +294,7 @@ func TestListTreePropagation(t *testing.T) {
 	h2 := hosts[1]
 
 	// h2 knows the entity list
-	h2.AddEntityList(el)
+	h2.AddRoster(el)
 	// and the tree
 	h2.AddTree(tree)
 	// make the communcation happen
@@ -315,7 +315,7 @@ func TestListTreePropagation(t *testing.T) {
 		}
 		// We got the tree that's already something, now do we get the entity
 		// list
-		if _, ok := h1.EntityList(el.ID); !ok {
+		if _, ok := h1.Roster(el.ID); !ok {
 			tryEntity++
 			continue
 		}
@@ -331,14 +331,14 @@ func TestListTreePropagation(t *testing.T) {
 func TestTokenId(t *testing.T) {
 	defer dbg.AfterTest(t)
 	t1 := &sda.Token{
-		EntityListID: sda.EntityListID(uuid.NewV1()),
+		RosterID: sda.RosterID(uuid.NewV1()),
 		TreeID:       sda.TreeID(uuid.NewV1()),
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
 		RoundID:      sda.RoundID(uuid.NewV1()),
 	}
 	id1 := t1.ID()
 	t2 := &sda.Token{
-		EntityListID: sda.EntityListID(uuid.NewV1()),
+		RosterID: sda.RosterID(uuid.NewV1()),
 		TreeID:       sda.TreeID(uuid.NewV1()),
 		ProtoID:      sda.ProtocolID(uuid.NewV1()),
 		RoundID:      sda.RoundID(uuid.NewV1()),

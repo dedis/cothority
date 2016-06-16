@@ -122,8 +122,8 @@ func TestNewNode(t *testing.T) {
 
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
-	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
-	h1.AddEntityList(el)
+	el := sda.NewRoster([]*network.Entity{h1.Entity, h2.Entity})
+	h1.AddRoster(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
 
@@ -166,10 +166,10 @@ func TestServiceChannels(t *testing.T) {
 	defer h1.Close()
 	defer h2.Close()
 	// Add tree + entitylist
-	el := sda.NewEntityList([]*network.Entity{h1.Entity, h2.Entity})
+	el := sda.NewRoster([]*network.Entity{h1.Entity, h2.Entity})
 	tree := el.GenerateBinaryTree()
 	sc1.tree = *tree
-	h1.AddEntityList(el)
+	h1.AddRoster(el)
 	h1.AddTree(tree)
 	h1.StartProcessMessages()
 

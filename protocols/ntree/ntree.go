@@ -131,11 +131,11 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
-	if sig.Index >= len(p.EntityList().List) {
+	if sig.Index >= len(p.Roster().List) {
 		dbg.Error("Index in signature reply out of range")
 		return "FAIL"
 	}
-	entity := p.EntityList().List[sig.Index]
+	entity := p.Roster().List[sig.Index]
 	var s string
 	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.Message, sig.Sig); err != nil {
 		s = "FAIL"

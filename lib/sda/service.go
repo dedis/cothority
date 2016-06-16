@@ -49,7 +49,7 @@ var NilServiceID = ServiceID(uuid.Nil)
 
 // NewServiceFunc is the type of a function that is used to instantiate a given Service
 // A service is initialized with a Host (to send messages to someone), the
-// overlay (to register a Tree + EntityList + start new node), and a path where
+// overlay (to register a Tree + Roster + start new node), and a path where
 // it can finds / write everything it needs
 type NewServiceFunc func(c Context, path string) Service
 
@@ -375,9 +375,9 @@ func (c *Client) Send(dst *network.Entity, msg network.ProtocolMessage) (*networ
 	}
 }
 
-// SendToAll sends a message to all Entities of the EntityList and returns
+// SendToAll sends a message to all Entities of the Roster and returns
 // all errors encountered concatenated together as a string.
-func (c *Client) SendToAll(dst *EntityList, msg network.ProtocolMessage) ([]*network.Message, error) {
+func (c *Client) SendToAll(dst *Roster, msg network.ProtocolMessage) ([]*network.Message, error) {
 	msgs := make([]*network.Message, len(dst.List))
 	var errstrs []string
 	for i, e := range dst.List {

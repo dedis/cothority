@@ -128,9 +128,9 @@ type ServerToml struct {
 	Description string
 }
 
-// Group holds the EntityList and the server-descriptions
+// Group holds the Roster and the server-descriptions
 type Group struct {
-	EntityList  *sda.EntityList
+	Roster  *sda.Roster
 	description map[*network.Entity]string
 }
 
@@ -158,18 +158,18 @@ func ReadGroupDescToml(f io.Reader) (*Group, error) {
 		entities[i] = en
 		descs[en] = s.Description
 	}
-	el := sda.NewEntityList(entities)
+	el := sda.NewRoster(entities)
 	return &Group{el, descs}, nil
 }
 
 // ReadGroupToml reads a group.toml file and returns the list of Entity
 // described in the file.
-func ReadGroupToml(f io.Reader) (*sda.EntityList, error) {
+func ReadGroupToml(f io.Reader) (*sda.Roster, error) {
 	group, err := ReadGroupDescToml(f)
 	if err != nil {
 		return nil, err
 	}
-	return group.EntityList, nil
+	return group.Roster, nil
 }
 
 // Save writes the grouptoml definition into the file

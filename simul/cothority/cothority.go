@@ -136,7 +136,7 @@ func main() {
 			// entity at different TreeNodes, which makes it difficult to
 			// correctly close everything.
 			dbg.Lvl2("Making new root-tree for SingleHost config")
-			closeTree = rootSC.EntityList.GenerateBinaryTree()
+			closeTree = rootSC.Roster.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
 		pi, err := rootSC.Overlay.CreateProtocolSDA(closeTree, "CloseAll")

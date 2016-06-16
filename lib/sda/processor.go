@@ -97,7 +97,7 @@ func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessag
 }
 
 // SendISMOthers sends an InterServiceMessage to all other services
-func (p *ServiceProcessor) SendISMOthers(el *EntityList, msg network.ProtocolMessage) error {
+func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.ProtocolMessage) error {
 	var errStrs []string
 	for _, e := range el.List {
 		if !e.ID.Equal(p.Context.Entity().ID) {

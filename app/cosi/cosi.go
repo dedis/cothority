@@ -110,16 +110,16 @@ func checkConfig(c *cli.Context) {
 	// First check all servers individually
 	failures := 0
 	for i := range el.List {
-		failures += checkList(sda.NewEntityList(el.List[i : i+1]))
+		failures += checkList(sda.NewRoster(el.List[i : i+1]))
 	}
 	if len(el.List) > 1 {
 		// Then check pairs of servers
 		for i, first := range el.List {
 			for _, second := range el.List[i+1:] {
 				es := []*network.Entity{first, second}
-				failures += checkList(sda.NewEntityList(es))
+				failures += checkList(sda.NewRoster(es))
 				es[0], es[1] = es[1], es[0]
-				failures += checkList(sda.NewEntityList(es))
+				failures += checkList(sda.NewRoster(es))
 			}
 		}
 	}
@@ -130,7 +130,7 @@ func checkConfig(c *cli.Context) {
 }
 
 // checkList sends a message to the list and waits for the reply
-func checkList(list *sda.EntityList) int {
+func checkList(list *sda.Roster) int {
 	serverStr := ""
 	for _, s := range list.List {
 		serverStr += s.Addresses[0] + " "
@@ -227,7 +227,7 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
+func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	error) {
 
 	client := s.NewClient()
@@ -304,7 +304,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	return err
 }
 
-func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList) error {
+func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)

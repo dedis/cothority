@@ -33,10 +33,10 @@ type Host struct {
 	networkChan chan network.Message
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
-	// map from EntityList.ID => trees that use this entity list
-	pendingTreeMarshal map[EntityListID][]*TreeMarshal
+	// map from Roster.ID => trees that use this entity list
+	pendingTreeMarshal map[RosterID][]*TreeMarshal
 	// pendingSDAData are a list of message we received that does not correspond
-	// to any local Tree or/and EntityList. We first request theses so we can
+	// to any local Tree or/and Roster. We first request theses so we can
 	// instantiate properly protocolInstance that will use these SDAData msg.
 	pendingSDAs []*Data
 	// The suite used for this Host
@@ -72,7 +72,7 @@ func NewHost(e *network.Entity, pkey abstract.Scalar) *Host {
 		Entity:              e,
 		workingAddress:      e.First(),
 		connections:         make(map[network.EntityID]network.SecureConn),
-		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
+		pendingTreeMarshal:  make(map[RosterID][]*TreeMarshal),
 		pendingSDAs:         make([]*Data, 0),
 		host:                network.NewSecureTCPHost(pkey, e),
 		private:             pkey,
@@ -294,12 +294,12 @@ func (h *Host) processMessages() {
 				dbg.Error("Received an empty Tree")
 				continue
 			}
-			il := h.overlay.EntityList(tm.EntityListID)
+			il := h.overlay.Roster(tm.RosterID)
 			// The entity list does not exists, we should request that, too
 			if il == nil {
-				msg := &RequestEntityList{tm.EntityListID}
+				msg := &RequestRoster{tm.RosterID}
 				if err := h.SendRaw(data.Entity, msg); err != nil {
-					dbg.Error("Requesting EntityList in SendTree failed", err)
+					dbg.Error("Requesting Roster in SendTree failed", err)
 				}
 
 				// put the tree marshal into pending queue so when we receive the
@@ -316,16 +316,16 @@ func (h *Host) processMessages() {
 			dbg.Lvl4("Received new tree")
 			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
-			// Some host requested an EntityList
-		case RequestEntityListMessageID:
-			id := data.Msg.(RequestEntityList).EntityListID
-			el := h.overlay.EntityList(id)
+			// Some host requested an Roster
+		case RequestRosterMessageID:
+			id := data.Msg.(RequestRoster).RosterID
+			el := h.overlay.Roster(id)
 			var err error
 			if el != nil {
 				err = h.SendRaw(data.Entity, el)
 			} else {
 				dbg.Lvl2("Requested entityList that we don't have")
-				err = h.SendRaw(data.Entity, &EntityList{})
+				err = h.SendRaw(data.Entity, &Roster{})
 			}
 			if err != nil {
 				dbg.Error("Couldn't send empty entity list from host:",
@@ -334,12 +334,12 @@ func (h *Host) processMessages() {
 				continue
 			}
 			// Host replied to our request of entitylist
-		case SendEntityListMessageID:
-			il := data.Msg.(EntityList)
-			if il.ID == EntityListID(uuid.Nil) {
-				dbg.Lvl2("Received an empty EntityList")
+		case SendRosterMessageID:
+			il := data.Msg.(Roster)
+			if il.ID == RosterID(uuid.Nil) {
+				dbg.Lvl2("Received an empty Roster")
 			} else {
-				h.overlay.RegisterEntityList(&il)
+				h.overlay.RegisterRoster(&il)
 				// Check if some trees can be constructed from this entitylist
 				h.checkPendingTreeMarshal(&il)
 			}
@@ -513,25 +513,25 @@ func (h *Host) registerConnection(c network.SecureConn) {
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
-// This list is checked each time we receive a new EntityList
-// so trees using this EntityList can be constructed.
+// This list is checked each time we receive a new Roster
+// so trees using this Roster can be constructed.
 func (h *Host) addPendingTreeMarshal(tm *TreeMarshal) {
 	h.pendingTreeLock.Lock()
 	var sl []*TreeMarshal
 	var ok bool
 	// initiate the slice before adding
-	if sl, ok = h.pendingTreeMarshal[tm.EntityListID]; !ok {
+	if sl, ok = h.pendingTreeMarshal[tm.RosterID]; !ok {
 		sl = make([]*TreeMarshal, 0)
 	}
 	sl = append(sl, tm)
-	h.pendingTreeMarshal[tm.EntityListID] = sl
+	h.pendingTreeMarshal[tm.RosterID] = sl
 	h.pendingTreeLock.Unlock()
 }
 
-// checkPendingTreeMarshal is called each time we add a new EntityList to the
+// checkPendingTreeMarshal is called each time we add a new Roster to the
 // system. It checks if some treeMarshal use this entityList so they can be
 // converted to Tree.
-func (h *Host) checkPendingTreeMarshal(el *EntityList) {
+func (h *Host) checkPendingTreeMarshal(el *Roster) {
 	h.pendingTreeLock.Lock()
 	sl, ok := h.pendingTreeMarshal[el.ID]
 	if !ok {
@@ -541,7 +541,7 @@ func (h *Host) checkPendingTreeMarshal(el *EntityList) {
 	for _, tm := range sl {
 		tree, err := tm.MakeTree(el)
 		if err != nil {
-			dbg.Error("Tree from EntityList failed")
+			dbg.Error("Tree from Roster failed")
 			continue
 		}
 		// add the tree into our "database"
@@ -557,11 +557,11 @@ func (h *Host) AddTree(t *Tree) {
 	h.overlay.RegisterTree(t)
 }
 
-// AddEntityList registers the given EntityList in the underlying overlay.
+// AddRoster registers the given Roster in the underlying overlay.
 // Useful for unit-testing only.
 // XXX probably move into the tests.
-func (h *Host) AddEntityList(el *EntityList) {
-	h.overlay.RegisterEntityList(el)
+func (h *Host) AddRoster(el *Roster) {
+	h.overlay.RegisterRoster(el)
 }
 
 // Suite can (and should) be used to get the underlying abstract.Suite.

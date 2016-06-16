@@ -25,8 +25,8 @@ func (h *Host) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	return h.overlay.StartProtocol(t, name)
 }
 
-func (h *Host) EntityList(id EntityListID) (*EntityList, bool) {
-	el := h.overlay.EntityList(id)
+func (h *Host) Roster(id RosterID) (*Roster, bool) {
+	el := h.overlay.Roster(id)
 	return el, el != nil
 }
 

@@ -189,7 +189,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	dbg.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
-	el := sda.NewEntityList([]*network.Entity{host.Entity})
+	el := sda.NewRoster([]*network.Entity{host.Entity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds.fakeTree = tree
@@ -253,7 +253,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	dbg.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
-	el := sda.NewEntityList([]*network.Entity{host.Entity})
+	el := sda.NewRoster([]*network.Entity{host.Entity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds.fakeTree = tree
@@ -321,7 +321,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	host2.StartProcessMessages()
 	defer host2.Close()
 	// create the entityList and tree
-	el := sda.NewEntityList([]*network.Entity{host.Entity, host2.Entity})
+	el := sda.NewRoster([]*network.Entity{host.Entity, host2.Entity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds1.fakeTree = tree
@@ -598,7 +598,7 @@ func (sp *BackForthProtocol) dispatch() {
 
 // Client API request / response emulation
 type simpleRequest struct {
-	Entities *sda.EntityList
+	Entities *sda.Roster
 	Val      int
 }
 

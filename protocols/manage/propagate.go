@@ -55,7 +55,7 @@ type PropagateReply struct {
 // all children stored the new value or the timeout has been reached.
 // The return value is the number of nodes that acknowledged having
 // stored the new value or an error if the protocol couldn't start.
-func PropagateStartAndWait(c sda.Context, el *sda.EntityList, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
+func PropagateStartAndWait(c sda.Context, el *sda.Roster, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
 	tree := el.GenerateNaryTreeWithRoot(8, c.Entity())
 	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 	pi, err := c.CreateProtocolService(tree, "Propagate")

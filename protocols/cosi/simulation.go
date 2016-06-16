@@ -39,7 +39,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 // Setup implements sda.Simulation.
 func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
-	cs.CreateEntityList(sim, hosts, 2000)
+	cs.CreateRoster(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
 	return sim, err
 }
@@ -56,9 +56,9 @@ func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
 
 // Run implements sda.Simulation.
 func (cs *Simulation) Run(config *sda.SimulationConfig) error {
-	size := len(config.EntityList.List)
+	size := len(config.Roster.List)
 	msg := []byte("Hello World Cosi Simulation")
-	aggPublic := computeAggregatedPublic(config.EntityList)
+	aggPublic := computeAggregatedPublic(config.Roster)
 	dbg.Lvl2("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
@@ -95,7 +95,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	return nil
 }
 
-func computeAggregatedPublic(el *sda.EntityList) abstract.Point {
+func computeAggregatedPublic(el *sda.Roster) abstract.Point {
 	suite := network.Suite
 	agg := suite.Point().Null()
 	for _, e := range el.List {

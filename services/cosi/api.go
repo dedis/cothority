@@ -19,10 +19,10 @@ func NewClient() *Client {
 }
 
 // SignMsg sends a CoSi sign request to the Cothority defined by the given
-// EntityList
-func (c *Client) SignMsg(el *sda.EntityList, msg []byte) (*SignatureResponse, error) {
+// Roster
+func (c *Client) SignMsg(el *sda.Roster, msg []byte) (*SignatureResponse, error) {
 	serviceReq := &SignatureRequest{
-		EntityList: el,
+		Roster: el,
 		Message:    msg,
 	}
 	dst := el.List[0]

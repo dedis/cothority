@@ -33,7 +33,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 // Setup implements sda.Simulation.
 func (cs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
-	cs.CreateEntityList(sim, hosts, 2000)
+	cs.CreateRoster(sim, hosts, 2000)
 	err := cs.CreateTree(sim)
 	return sim, err
 }
@@ -49,7 +49,7 @@ func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
 
 // Run implements sda.Simulation.
 func (cs *Simulation) Run(config *sda.SimulationConfig) error {
-	size := len(config.EntityList.List)
+	size := len(config.Roster.List)
 	msg := []byte("Hello World Cosi Simulation")
 	dbg.Lvl2("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
@@ -68,7 +68,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 		// send request
 		r := &SignatureRequest{
 			Message:    msg,
-			EntityList: config.EntityList,
+			Roster: config.Roster,
 		}
 		req, err := sda.CreateClientRequest(ServiceName, r)
 		if err != nil {
@@ -91,7 +91,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			dbg.Error("Received wrong type")
 		}
 
-		if err = cosi.VerifySignature(config.Host.Suite(), msg, config.EntityList.Aggregate, resp.Challenge, resp.Response); err != nil {
+		if err = cosi.VerifySignature(config.Host.Suite(), msg, config.Roster.Aggregate, resp.Challenge, resp.Response); err != nil {
 			dbg.Error("Invalid signature !")
 		}
 		roundM.Record()

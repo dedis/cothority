@@ -25,8 +25,8 @@ func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.Entity, err
 		m[j] = uint32(i)
 	}
 
-	// Create sharding of the current EntityList according to the above permutation
-	el := rh.EntityList().List
+	// Create sharding of the current Roster according to the above permutation
+	el := rh.Roster().List
 	n := int(rh.Group.N / shards)
 	sharding := [][]*network.Entity{}
 	shard := []*network.Entity{}
