@@ -74,7 +74,7 @@ type SimulationConfigFile struct {
 	Config      string
 }
 
-// Load gets all configuration from dir + SimulationFileName and instantiates the
+// LoadSimulationConfig gets all configuration from dir + SimulationFileName and instantiates the
 // corresponding host 'ha'.
 func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 	network.RegisterMessageType(SimulationConfigFile{})
@@ -98,7 +98,7 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		return nil, err
 	}
 
-	ret := make([]*SimulationConfig, 0)
+	var ret []*SimulationConfig
 	if ha != "" {
 		if !strings.Contains(ha, ":") {
 			// to correctly match hosts a column is needed, else
@@ -200,7 +200,7 @@ type SimulationBFTree struct {
 	Depth      int
 }
 
-// CreateEntityLists creates an EntityList with the host-names in 'addresses'.
+// CreateEntityList creates an EntityList with the host-names in 'addresses'.
 // It creates 's.Hosts' entries, starting from 'port' for each round through
 // 'addresses'
 func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []string, port int) {
@@ -263,7 +263,7 @@ func (s *SimulationBFTree) CreateEntityList(sc *SimulationConfig, addresses []st
 	dbg.Lvl3("Creating entity List took: " + time.Now().Sub(start).String())
 }
 
-// Creates the tree as defined in SimulationBFTree and stores the result
+// CreateTree the tree as defined in SimulationBFTree and stores the result
 // in 'sc'
 func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
 	dbg.Lvl3("CreateTree strarted")

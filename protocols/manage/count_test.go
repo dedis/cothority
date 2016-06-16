@@ -24,7 +24,7 @@ func TestClose(t *testing.T) {
 		t.Fatal("Couldn't start protocol:", err)
 	}
 	go pi.Start()
-	protocol := pi.(*example_channels.ProtocolExampleChannels)
+	protocol := pi.(*channels.ProtocolExampleChannels)
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:

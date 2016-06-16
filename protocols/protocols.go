@@ -1,5 +1,5 @@
 /*
-The storage point of all protocols that Cothority can run.
+Package protocols contains all protocols that Cothority can run.
 
 If you want to add a new protocol, chose one of example/channels or
 example/handlers and copy it to a new directory under protocols.

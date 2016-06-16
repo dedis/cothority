@@ -10,6 +10,7 @@ import (
 
 // The main messages used by CoSi
 
+// VerifyResponse tells when and if responses are to be verified
 // see https://github.com/dedis/cothority/issues/260
 // 0 - no check at all
 // 1 - check only at root

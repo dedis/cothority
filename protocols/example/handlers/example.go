@@ -1,4 +1,4 @@
-package example_handlers
+package handlers
 
 import (
 	"errors"
@@ -40,7 +40,7 @@ func NewExampleHandlers(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	return ExampleHandlers, nil
 }
 
-// Starts the protocol
+// Start sends the Announcement-message to all children
 func (p *ProtocolExampleHandlers) Start() error {
 	dbg.Lvl3("Starting ExampleHandlers")
 	return p.HandleAnnounce(StructAnnounce{p.TreeNode(),
@@ -77,9 +77,8 @@ func (p *ProtocolExampleHandlers) HandleReply(reply []StructReply) error {
 	if !p.IsRoot() {
 		dbg.Lvl3("Sending to parent")
 		return p.SendTo(p.Parent(), &Reply{children})
-	} else {
-		dbg.Lvl3("Root-node is done - nbr of children found:", children)
-		p.ChildCount <- children
 	}
+	dbg.Lvl3("Root-node is done - nbr of children found:", children)
+	p.ChildCount <- children
 	return nil
 }

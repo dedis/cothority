@@ -73,7 +73,7 @@ func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, erro
 	str = strings.TrimSpace(str)
 	h, _, errStr := net.SplitHostPort(str)
 	if err != nil || errStr != nil {
-		return nil, "", fmt.Errorf("Error reading IP:PORT (", str, ") ", errStr, " => Abort")
+		return nil, "", errors.New("Error reading IP:PORT (" + str + ") " + errStr.Error() + " => Abort")
 	}
 
 	if net.ParseIP(h) == nil {
