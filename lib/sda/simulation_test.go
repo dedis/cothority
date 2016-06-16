@@ -96,7 +96,7 @@ func TestMultipleInstances(t *testing.T) {
 	if len(sc2) != 4 {
 		t.Fatal("We should have 4 local1-hosts but have", len(sc2))
 	}
-	if sc2[0].Host.Entity.ID == sc2[1].Host.Entity.ID {
+	if sc2[0].Host.ServerIdentity.ID == sc2[1].Host.ServerIdentity.ID {
 		t.Fatal("Hosts are not copies")
 	}
 }

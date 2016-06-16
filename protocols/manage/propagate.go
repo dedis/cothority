@@ -20,7 +20,7 @@ func init() {
 // and waits for confirmation before returning.
 type Propagate struct {
 	*sda.TreeNodeInstance
-	onData    func(network.ProtocolMessage)
+	onData    func(network.Body)
 	onDoneCb  func(int)
 	sd        *PropagateSendData
 	ChannelSD chan struct {
@@ -55,8 +55,8 @@ type PropagateReply struct {
 // all children stored the new value or the timeout has been reached.
 // The return value is the number of nodes that acknowledged having
 // stored the new value or an error if the protocol couldn't start.
-func PropagateStartAndWait(c sda.Context, el *sda.Roster, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
-	tree := el.GenerateNaryTreeWithRoot(8, c.Entity())
+func PropagateStartAndWait(c sda.Context, el *sda.Roster, msg network.Body, msec int, f func(network.Body)) (int, error) {
+	tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
 	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 	pi, err := c.CreateProtocolService(tree, "Propagate")
 	if err != nil {
@@ -66,7 +66,7 @@ func PropagateStartAndWait(c sda.Context, el *sda.Roster, msg network.ProtocolMe
 }
 
 // Separate function for testing
-func propagateStartAndWait(pi sda.ProtocolInstance, msg network.ProtocolMessage, msec int, f func(network.ProtocolMessage)) (int, error) {
+func propagateStartAndWait(pi sda.ProtocolInstance, msg network.Body, msec int, f func(network.Body)) (int, error) {
 	d, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return -1, err
@@ -106,7 +106,7 @@ func NewPropagateProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 
 // Start will contact everyone and make the connections
 func (p *Propagate) Start() error {
-	dbg.Lvl4("going to contact", p.Root().Entity)
+	dbg.Lvl4("going to contact", p.Root().ServerIdentity)
 	p.SendTo(p.Root(), p.sd)
 	return nil
 }
@@ -114,14 +114,14 @@ func (p *Propagate) Start() error {
 // Dispatch can handle timeouts
 func (p *Propagate) Dispatch() error {
 	process := true
-	dbg.Lvl4(p.Entity())
+	dbg.Lvl4(p.ServerIdentity())
 	for process {
 		p.Lock()
 		timeout := time.Millisecond * time.Duration(p.sd.Msec)
 		p.Unlock()
 		select {
 		case msg := <-p.ChannelSD:
-			dbg.Lvl3(p.Entity(), "Got data from", msg.Entity)
+			dbg.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity)
 			if p.onData != nil {
 				_, netMsg, err := network.UnmarshalRegistered(msg.Data)
 				if err == nil {
@@ -129,18 +129,18 @@ func (p *Propagate) Dispatch() error {
 				}
 			}
 			if !p.IsRoot() {
-				dbg.Lvl3(p.Entity(), "Sending to parent")
+				dbg.Lvl3(p.ServerIdentity(), "Sending to parent")
 				p.SendToParent(&PropagateReply{})
 			}
 			if p.IsLeaf() {
 				process = false
 			} else {
-				dbg.Lvl3(p.Entity(), "Sending to children")
+				dbg.Lvl3(p.ServerIdentity(), "Sending to children")
 				p.SendToChildren(&msg.PropagateSendData)
 			}
 		case <-p.ChannelReply:
 			p.received++
-			dbg.Lvl4(p.Entity(), "received:", p.received, p.subtree)
+			dbg.Lvl4(p.ServerIdentity(), "received:", p.received, p.subtree)
 			if !p.IsRoot() {
 				p.SendToParent(&PropagateReply{})
 			}
@@ -171,7 +171,7 @@ func (p *Propagate) RegisterOnDone(fn func(int)) {
 // RegisterOnData takes a function that will be called once all connections
 // are set up. The argument to the function is the number of children that
 // sent OK after the propagation
-func (p *Propagate) RegisterOnData(fn func(network.ProtocolMessage)) {
+func (p *Propagate) RegisterOnData(fn func(network.Body)) {
 	p.onData = fn
 }
 

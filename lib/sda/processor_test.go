@@ -53,7 +53,7 @@ func TestProcessor_GetReply(t *testing.T) {
 	dbg.ErrFatal(p.RegisterMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
-	e := network.NewEntity(pair.Public, "")
+	e := network.NewServerIdentity(pair.Public, "")
 
 	rep := p.GetReply(e, mkClientRequest(&testMsg{11}))
 	val, ok := rep.(*testMsg)
@@ -83,10 +83,10 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	h := local.GenLocalHosts(1, false, false)[0]
 	defer local.CloseAll()
 
-	s := local.Services[h.Entity.ID]
+	s := local.Services[h.ServerIdentity.ID]
 	ts := s[testServiceID]
 	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
-	ts.ProcessClientRequest(h.Entity, cr)
+	ts.ProcessClientRequest(h.ServerIdentity, cr)
 	msg := ts.(*testService).Context.(*testContext).Msg
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
@@ -100,7 +100,7 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	}
 }
 
-func mkClientRequest(msg network.ProtocolMessage) []byte {
+func mkClientRequest(msg network.Body) []byte {
 	b, err := network.MarshalRegisteredType(msg)
 	dbg.ErrFatal(err)
 	return b
@@ -110,7 +110,7 @@ type testMsg struct {
 	I int
 }
 
-func procMsg(e *network.Entity, msg *testMsg) (network.ProtocolMessage, error) {
+func procMsg(e *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I == 42 {
 		return nil, errors.New("6 * 9 != 42")
@@ -118,27 +118,27 @@ func procMsg(e *network.Entity, msg *testMsg) (network.ProtocolMessage, error) {
 	return msg, nil
 }
 
-func procMsgWrong1(msg *testMsg) (network.ProtocolMessage, error) {
+func procMsgWrong1(msg *testMsg) (network.Body, error) {
 	return msg, nil
 }
 
-func procMsgWrong2(e *network.Entity) (network.ProtocolMessage, error) {
+func procMsgWrong2(e *network.ServerIdentity) (network.Body, error) {
 	return nil, nil
 }
 
-func procMsgWrong3(e *network.Entity, msg testMsg) (network.ProtocolMessage, error) {
+func procMsgWrong3(e *network.ServerIdentity, msg testMsg) (network.Body, error) {
 	return msg, nil
 }
 
-func procMsgWrong4(e *network.Entity, msg *testMsg) error {
+func procMsgWrong4(e *network.ServerIdentity, msg *testMsg) error {
 	return nil
 }
 
-func procMsgWrong5(e *network.Entity, msg *testMsg) (error, network.ProtocolMessage) {
+func procMsgWrong5(e *network.ServerIdentity, msg *testMsg) (error, network.Body) {
 	return nil, msg
 }
 
-func procMsgWrong6(e *network.Entity, msg *int) (network.ProtocolMessage, error) {
+func procMsgWrong6(e *network.ServerIdentity, msg *int) (network.Body, error) {
 	return msg, nil
 }
 
@@ -163,15 +163,15 @@ func (ts *testService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (P
 	return nil, nil
 }
 
-func (ts *testService) ProcessMsg(e *network.Entity, msg *testMsg) (network.ProtocolMessage, error) {
+func (ts *testService) ProcessMsg(e *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	return msg, nil
 }
 
-func (ts *testContext) SendRaw(to *network.Entity, msg interface{}) error {
+func (ts *testContext) SendRaw(to *network.ServerIdentity, msg interface{}) error {
 	ts.Msg = msg
 	return nil
 }
 
-func returnMsg(e *network.Entity, msg network.ProtocolMessage) (network.ProtocolMessage, error) {
+func returnMsg(e *network.ServerIdentity, msg network.Body) (network.Body, error) {
 	return msg, nil
 }

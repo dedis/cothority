@@ -116,7 +116,7 @@ func checkConfig(c *cli.Context) {
 		// Then check pairs of servers
 		for i, first := range el.List {
 			for _, second := range el.List[i+1:] {
-				es := []*network.Entity{first, second}
+				es := []*network.ServerIdentity{first, second}
 				failures += checkList(sda.NewRoster(es))
 				es[0], es[1] = es[1], es[0]
 				failures += checkList(sda.NewRoster(es))

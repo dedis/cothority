@@ -130,7 +130,7 @@ func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string) error 
 	rh.Group = group
 
 	// Setup session
-	session, sid, err := rh.newSession(rh.Entity().Public, purpose, time.Now())
+	session, sid, err := rh.newSession(rh.ServerIdentity().Public, purpose, time.Now())
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, er
 
 	// Include public keys of all nodes into group ID
 	for _, x := range rh.List() {
-		pub, err := x.Entity.Public.MarshalBinary()
+		pub, err := x.ServerIdentity.Public.MarshalBinary()
 		if err != nil {
 			return nil, nil, err
 		}

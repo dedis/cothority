@@ -72,7 +72,7 @@ type DummyService struct {
 	Config   DummyConfig
 }
 
-func (ds *DummyService) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
+func (ds *DummyService) ProcessClientRequest(e *network.ServerIdentity, r *sda.ClientRequest) {
 	msgT, _, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	if err != nil || msgT != dummyMsgType {
 		ds.link <- false
@@ -96,7 +96,7 @@ func (ds *DummyService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericC
 	return dp, nil
 }
 
-func (ds *DummyService) ProcessServiceMessage(e *network.Entity, s *sda.ServiceMessage) {
+func (ds *DummyService) ProcessServiceMessage(e *network.ServerIdentity, s *sda.ServiceMessage) {
 	id, m, err := network.UnmarshalRegisteredType(s.Data, network.DefaultConstructors(network.Suite))
 	if err != nil {
 		ds.link <- false
@@ -155,11 +155,11 @@ func TestServiceProcessRequest(t *testing.T) {
 	h2 := sda.NewLocalHost(2010)
 	defer h2.Close()
 	dbg.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(host.Entity); err != nil {
+	if _, err := h2.Connect(host.ServerIdentity); err != nil {
 		t.Fatal(err)
 	}
 	dbg.Lvl1("Sending request to service...")
-	if err := h2.SendRaw(host.Entity, re); err != nil {
+	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link
@@ -189,7 +189,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	dbg.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
-	el := sda.NewRoster([]*network.Entity{host.Entity})
+	el := sda.NewRoster([]*network.ServerIdentity{host.ServerIdentity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds.fakeTree = tree
@@ -205,11 +205,11 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	h2 := sda.NewLocalHost(2010)
 	defer h2.Close()
 	dbg.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(host.Entity); err != nil {
+	if _, err := h2.Connect(host.ServerIdentity); err != nil {
 		t.Fatal(err)
 	}
 	dbg.Lvl1("Sending request to service...")
-	if err := h2.SendRaw(host.Entity, re); err != nil {
+	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the
@@ -217,7 +217,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 
 	// Now RESEND the value so we instantiate using the SAME TREENODE
 	dbg.Lvl1("Sending request AGAIN to service...")
-	if err := h2.SendRaw(host.Entity, re); err != nil {
+	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the
@@ -253,7 +253,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	dbg.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
-	el := sda.NewRoster([]*network.Entity{host.Entity})
+	el := sda.NewRoster([]*network.ServerIdentity{host.ServerIdentity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds.fakeTree = tree
@@ -266,11 +266,11 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		Data:    b,
 	}
 	dbg.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(host.Entity); err != nil {
+	if _, err := h2.Connect(host.ServerIdentity); err != nil {
 		t.Fatal(err)
 	}
 	dbg.Lvl1("Sending request to service...")
-	if err := h2.SendRaw(host.Entity, re); err != nil {
+	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the protocol
@@ -321,7 +321,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	host2.StartProcessMessages()
 	defer host2.Close()
 	// create the entityList and tree
-	el := sda.NewRoster([]*network.Entity{host.Entity, host2.Entity})
+	el := sda.NewRoster([]*network.ServerIdentity{host.ServerIdentity, host2.ServerIdentity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds1.fakeTree = tree
@@ -337,11 +337,11 @@ func TestServiceNewProtocol(t *testing.T) {
 	client := sda.NewLocalHost(2010)
 	defer client.Close()
 	dbg.Lvl1("Client connecting to host")
-	if _, err := client.Connect(host.Entity); err != nil {
+	if _, err := client.Connect(host.ServerIdentity); err != nil {
 		t.Fatal(err)
 	}
 	dbg.Lvl1("Sending request to service...")
-	if err := client.SendRaw(host.Entity, re); err != nil {
+	if err := client.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the protocol that Starts
@@ -384,7 +384,7 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 
 	// connect themselves
 	dbg.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(h1.Entity); err != nil {
+	if _, err := h2.Connect(h1.ServerIdentity); err != nil {
 		t.Fatal(err)
 	}
 
@@ -392,7 +392,7 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 	m, err := sda.CreateServiceMessage("DummyService", &DummyMsg{10})
 	assert.Nil(t, err)
 	dbg.Lvl1("Sending request to service...")
-	assert.Nil(t, h2.SendRaw(h1.Entity, m))
+	assert.Nil(t, h2.SendRaw(h1.ServerIdentity, m))
 
 	// wait for the link from the Service on host 1
 	waitOrFatalValue(ds1.link, true, t)
@@ -413,13 +413,13 @@ func TestServiceBackForthProtocol(t *testing.T) {
 
 	// create client
 	priv, pub := sda.PrivPub()
-	client := network.NewSecureTCPHost(priv, network.NewEntity(pub, ""))
-	c, err := client.Open(hosts[0].Entity)
+	client := network.NewSecureTCPHost(priv, network.NewServerIdentity(pub, ""))
+	c, err := client.Open(hosts[0].ServerIdentity)
 	assert.Nil(t, err)
 	// create request
 	r := &simpleRequest{
-		Entities: el,
-		Val:      10,
+		ServerIdentities: el,
+		Val:              10,
 	}
 	buff, err := network.MarshalRegisteredType(r)
 	assert.Nil(t, err)
@@ -453,10 +453,10 @@ func TestClient_Send(t *testing.T) {
 	client := sda.NewClient("BackForth")
 
 	r := &simpleRequest{
-		Entities: el,
-		Val:      10,
+		ServerIdentities: el,
+		Val:              10,
 	}
-	nm, err := client.Send(hosts[0].Entity, r)
+	nm, err := client.Send(hosts[0].ServerIdentity, r)
 	dbg.ErrFatal(err)
 
 	assert.Equal(t, nm.MsgType, simpleResponseType)
@@ -485,11 +485,11 @@ func TestClient_Parallel(t *testing.T) {
 		go func(i int) {
 			dbg.Lvl1("Starting message", i)
 			r := &simpleRequest{
-				Entities: el,
-				Val:      10 * i,
+				ServerIdentities: el,
+				Val:              10 * i,
 			}
 			client := sda.NewClient("BackForth")
-			nm, err := client.Send(hosts[0].Entity, r)
+			nm, err := client.Send(hosts[0].ServerIdentity, r)
 			dbg.ErrFatal(err)
 
 			assert.Equal(t, nm.MsgType, simpleResponseType)
@@ -598,8 +598,8 @@ func (sp *BackForthProtocol) dispatch() {
 
 // Client API request / response emulation
 type simpleRequest struct {
-	Entities *sda.Roster
-	Val      int
+	ServerIdentities *sda.Roster
+	Val              int
 }
 
 type simpleResponse struct {
@@ -613,14 +613,14 @@ type simpleService struct {
 	ctx sda.Context
 }
 
-func (s *simpleService) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
+func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *sda.ClientRequest) {
 	msgT, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	dbg.ErrFatal(err)
 	if msgT != simpleRequestType {
 		return
 	}
 	req := pm.(simpleRequest)
-	tree := req.Entities.GenerateBinaryTree()
+	tree := req.ServerIdentities.GenerateBinaryTree()
 	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root, "BackForth")
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
 		if err := s.ctx.SendRaw(e, &simpleResponse{
@@ -644,7 +644,7 @@ func (s *simpleService) NewProtocol(tni *sda.TreeNodeInstance, conf *sda.Generic
 	return pi, err
 }
 
-func (s *simpleService) ProcessServiceMessage(e *network.Entity, r *sda.ServiceMessage) {
+func (s *simpleService) ProcessServiceMessage(e *network.ServerIdentity, r *sda.ServiceMessage) {
 	return
 }
 

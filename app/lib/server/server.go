@@ -209,7 +209,7 @@ func CheckServers(g *config.Group) error {
 		if d := g.GetDescription(e); d != "" {
 			desc = []string{d, d}
 		}
-		el := sda.NewRoster([]*network.Entity{e})
+		el := sda.NewRoster([]*network.ServerIdentity{e})
 		success = success && checkList(el, desc) == nil
 	}
 	if len(g.Roster.List) > 1 {
@@ -220,7 +220,7 @@ func CheckServers(g *config.Group) error {
 				if d1 := g.GetDescription(first); d1 != "" {
 					desc = []string{d1, g.GetDescription(second)}
 				}
-				es := []*network.Entity{first, second}
+				es := []*network.ServerIdentity{first, second}
 				success = success && checkList(sda.NewRoster(es), desc) == nil
 				es[0], es[1] = es[1], es[0]
 				desc[0], desc[1] = desc[1], desc[0]

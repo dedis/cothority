@@ -31,11 +31,11 @@ type Data struct {
 	// The TreeNodeId Where the message goes to
 	To *Token
 	// NOTE: this is taken from network.NetworkMessage
-	Entity *network.Entity
+	ServerIdentity *network.ServerIdentity
 	// MsgType of the underlying data
 	MsgType network.MessageTypeID
 	// The interface to the actual Data
-	Msg network.ProtocolMessage
+	Msg network.Body
 	// The actual data as binary blob
 	MsgSlice []byte
 	// Config the actual config
@@ -66,7 +66,7 @@ func (t *TokenID) String() string {
 // with the right fields set.
 type Token struct {
 	RosterID RosterID
-	TreeID       TreeID
+	TreeID   TreeID
 	// TO BE REMOVED
 	ProtoID   ProtocolID
 	ServiceID ServiceID
@@ -125,7 +125,7 @@ type RequestRoster struct {
 type RosterUnknown struct {
 }
 
-// SendEntity is the first message we send on creation of a link
-type SendEntity struct {
+// SendServerIdentity is the first message we send on creation of a link
+type SendServerIdentity struct {
 	Name string
 }

@@ -19,18 +19,18 @@ import (
 // state
 type Host struct {
 	// Our entity (i.e. identity over the network)
-	Entity *network.Entity
+	ServerIdentity *network.ServerIdentity
 	// Our private-key
 	private abstract.Scalar
 	// The TCPHost
 	host network.SecureHost
-	// Overlay handles the mapping from tree and entityList to Entity.
+	// Overlay handles the mapping from tree and entityList to ServerIdentity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
 	// The open connections
-	connections map[network.EntityID]network.SecureConn
+	connections map[network.ServerIdentityID]network.SecureConn
 	// chan of received messages - testmode
-	networkChan chan network.Message
+	networkChan chan network.Packet
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from Roster.ID => trees that use this entity list
@@ -67,17 +67,17 @@ type Host struct {
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(e *network.Entity, pkey abstract.Scalar) *Host {
+func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
-		Entity:              e,
+		ServerIdentity:      e,
 		workingAddress:      e.First(),
-		connections:         make(map[network.EntityID]network.SecureConn),
+		connections:         make(map[network.ServerIdentityID]network.SecureConn),
 		pendingTreeMarshal:  make(map[RosterID][]*TreeMarshal),
 		pendingSDAs:         make([]*Data, 0),
 		host:                network.NewSecureTCPHost(pkey, e),
 		private:             pkey,
 		suite:               network.Suite,
-		networkChan:         make(chan network.Message, 1),
+		networkChan:         make(chan network.Packet, 1),
 		isClosing:           false,
 		ProcessMessagesQuit: make(chan bool),
 	}
@@ -91,7 +91,7 @@ func NewHost(e *network.Entity, pkey abstract.Scalar) *Host {
 // contact this host. If 'wait' is true, it will try to connect to itself before
 // returning.
 func (h *Host) listen(wait bool) {
-	dbg.Lvl3(h.Entity.First(), "starts to listen")
+	dbg.Lvl3(h.ServerIdentity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
@@ -107,10 +107,10 @@ func (h *Host) listen(wait bool) {
 	}()
 	if wait {
 		for {
-			dbg.Lvl4(h.Entity.First(), "checking if listener is up")
-			_, err := h.Connect(h.Entity)
+			dbg.Lvl4(h.ServerIdentity.First(), "checking if listener is up")
+			_, err := h.Connect(h.ServerIdentity)
 			if err == nil {
-				dbg.Lvl4(h.Entity.First(), "managed to connect to itself")
+				dbg.Lvl4(h.ServerIdentity.First(), "managed to connect to itself")
 				break
 			}
 			time.Sleep(network.WaitRetry)
@@ -132,7 +132,7 @@ func (h *Host) Listen() {
 }
 
 // Connect takes an entity where to connect to
-func (h *Host) Connect(id *network.Entity) (network.SecureConn, error) {
+func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 	var err error
 	var c network.SecureConn
 	// try to open connection
@@ -154,7 +154,7 @@ func (h *Host) Close() error {
 	if h.isClosing {
 		return errors.New("Already closing")
 	}
-	dbg.Lvl4(h.Entity.First(), "Starts closing")
+	dbg.Lvl4(h.ServerIdentity.First(), "Starts closing")
 	h.isClosing = true
 	if h.processMessagesStarted {
 		// Tell ProcessMessages to quit
@@ -174,15 +174,15 @@ func (h *Host) closeConnections() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	for _, c := range h.connections {
-		dbg.Lvl4(h.Entity.First(), "Closing connection", c, c.Remote(), c.Local())
+		dbg.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
 		err := c.Close()
 		if err != nil {
-			dbg.Error(h.Entity.First(), "Couldn't close connection", c)
+			dbg.Error(h.ServerIdentity.First(), "Couldn't close connection", c)
 			return err
 		}
 	}
-	dbg.Lvl4(h.Entity.First(), "Closing tcpHost")
-	h.connections = make(map[network.EntityID]network.SecureConn)
+	dbg.Lvl4(h.ServerIdentity.First(), "Closing tcpHost")
+	h.connections = make(map[network.ServerIdentityID]network.SecureConn)
 	return h.host.Close()
 }
 
@@ -191,17 +191,17 @@ func (h *Host) closeConnections() error {
 func (h *Host) closeConnection(c network.SecureConn) error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
-	dbg.Lvl4(h.Entity.First(), "Closing connection", c, c.Remote(), c.Local())
+	dbg.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
 	err := c.Close()
 	if err != nil {
 		return err
 	}
-	delete(h.connections, c.Entity().ID)
+	delete(h.connections, c.ServerIdentity().ID)
 	return nil
 }
 
-// SendRaw sends to an Entity without wrapping the msg into a SDAMessage
-func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
+// SendRaw sends to an ServerIdentity without wrapping the msg into a SDAMessage
+func (h *Host) SendRaw(e *network.ServerIdentity, msg network.Body) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
@@ -216,11 +216,11 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		}
 	}
 
-	dbg.Lvlf4("%s sends to %s msg: %+v", h.Entity.Addresses, e, msg)
+	dbg.Lvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, e, msg)
 	var err error
 	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
-		dbg.Lvl2("Couldn't send to", c.Entity().First(), ":", err, "trying again")
+		dbg.Lvl2("Couldn't send to", c.ServerIdentity().First(), ":", err, "trying again")
 		c, err = h.Connect(e)
 		if err != nil {
 			return err
@@ -256,7 +256,7 @@ func (h *Host) StartProcessMessages() {
 func (h *Host) processMessages() {
 	h.networkLock.Unlock()
 	for {
-		var data network.Message
+		var data network.Packet
 		select {
 		case data = <-h.networkChan:
 		case <-h.ProcessMessagesQuit:
@@ -266,7 +266,7 @@ func (h *Host) processMessages() {
 		switch data.MsgType {
 		case SDADataMessageID:
 			sdaMsg := data.Msg.(Data)
-			sdaMsg.Entity = data.Entity
+			sdaMsg.ServerIdentity = data.ServerIdentity
 			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
 				dbg.Error("ProcessSDAMessage returned:", err)
@@ -277,12 +277,12 @@ func (h *Host) processMessages() {
 			tree := h.overlay.Tree(tid)
 			var err error
 			if tree != nil {
-				err = h.SendRaw(data.Entity, tree.MakeTreeMarshal())
+				err = h.SendRaw(data.ServerIdentity, tree.MakeTreeMarshal())
 			} else {
 				// XXX Take care here for we must verify at the other side that
 				// the tree is Nil. Should we think of a way of sending back an
 				// "error" ?
-				err = h.SendRaw(data.Entity, (&Tree{}).MakeTreeMarshal())
+				err = h.SendRaw(data.ServerIdentity, (&Tree{}).MakeTreeMarshal())
 			}
 			if err != nil {
 				dbg.Error("Couldn't send tree:", err)
@@ -298,7 +298,7 @@ func (h *Host) processMessages() {
 			// The entity list does not exists, we should request that, too
 			if il == nil {
 				msg := &RequestRoster{tm.RosterID}
-				if err := h.SendRaw(data.Entity, msg); err != nil {
+				if err := h.SendRaw(data.ServerIdentity, msg); err != nil {
 					dbg.Error("Requesting Roster in SendTree failed", err)
 				}
 
@@ -322,14 +322,14 @@ func (h *Host) processMessages() {
 			el := h.overlay.Roster(id)
 			var err error
 			if el != nil {
-				err = h.SendRaw(data.Entity, el)
+				err = h.SendRaw(data.ServerIdentity, el)
 			} else {
 				dbg.Lvl2("Requested entityList that we don't have")
-				err = h.SendRaw(data.Entity, &Roster{})
+				err = h.SendRaw(data.ServerIdentity, &Roster{})
 			}
 			if err != nil {
 				dbg.Error("Couldn't send empty entity list from host:",
-					h.Entity.String(),
+					h.ServerIdentity.String(),
 					err)
 				continue
 			}
@@ -346,11 +346,11 @@ func (h *Host) processMessages() {
 			dbg.Lvl4("Received new entityList")
 		case RequestID:
 			r := data.Msg.(ClientRequest)
-			h.processRequest(data.Entity, &r)
+			h.processRequest(data.ServerIdentity, &r)
 		case ServiceMessageID:
 			dbg.Lvl4("Got ServiceMessageID")
 			m := data.Msg.(ServiceMessage)
-			h.processServiceMessage(data.Entity, &m)
+			h.processServiceMessage(data.ServerIdentity, &m)
 		default:
 			if data.MsgType != network.ErrorType {
 				dbg.Lvl3("Unknown message received:", data)
@@ -359,7 +359,7 @@ func (h *Host) processMessages() {
 	}
 }
 
-func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
+func (h *Host) processServiceMessage(e *network.ServerIdentity, m *ServiceMessage) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(m.Service)
 	if !ok {
@@ -373,7 +373,7 @@ func (h *Host) processServiceMessage(e *network.Entity, m *ServiceMessage) {
 
 }
 
-func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
+func (h *Host) processRequest(e *network.ServerIdentity, r *ClientRequest) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(r.Service)
 	if !ok {
@@ -388,7 +388,7 @@ func (h *Host) processRequest(e *network.Entity, r *ClientRequest) {
 
 // sendSDAData marshals the inner msg and then sends a Data msg
 // to the appropriate entity
-func (h *Host) sendSDAData(e *network.Entity, sdaMsg *Data) error {
+func (h *Host) sendSDAData(e *network.ServerIdentity, sdaMsg *Data) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		typ := network.TypeFromData(sdaMsg.Msg)
@@ -420,7 +420,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		// This is for testing purposes only: if the connection is missing
 		// in the map, we just return silently
 		h.networkLock.Lock()
-		_, cont := h.connections[c.Entity().ID]
+		_, cont := h.connections[c.ServerIdentity().ID]
 		h.networkLock.Unlock()
 		if !cont {
 			dbg.Lvl3(h.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
@@ -433,14 +433,14 @@ func (h *Host) handleConn(c network.SecureConn) {
 		if err != nil {
 			h.closingMut.Lock()
 			dbg.Lvlf4("%+v got error (%+s) while receiving message (isClosing=%+v)",
-				h.Entity.First(), err, h.isClosing)
+				h.ServerIdentity.First(), err, h.isClosing)
 			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-				dbg.Lvl4(h.Entity.First(), c.Remote(), "quitting handleConn for-loop", err)
+				dbg.Lvl4(h.ServerIdentity.First(), c.Remote(), "quitting handleConn for-loop", err)
 				h.closeConnection(c)
 				return
 			}
-			dbg.Error(h.Entity.Addresses, "Error with connection", address, "=>", err)
+			dbg.Error(h.ServerIdentity.Addresses, "Error with connection", address, "=>", err)
 		} else {
 			h.closingMut.Lock()
 			if !h.isClosing {
@@ -454,7 +454,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 // requestTree will ask for the tree the sdadata is related to.
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
-func (h *Host) requestTree(e *network.Entity, sdaMsg *Data) error {
+func (h *Host) requestTree(e *network.ServerIdentity, sdaMsg *Data) error {
 	h.addPendingSda(sdaMsg)
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
 	return h.SendRaw(e, treeRequest)
@@ -496,14 +496,14 @@ func (h *Host) checkPendingSDA(t *Tree) {
 	}()
 }
 
-// registerConnection registers an Entity for a new connection, mapped with the
+// registerConnection registers an ServerIdentity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
-	dbg.Lvl4(h.Entity.First(), "registers", c.Entity().First())
+	dbg.Lvl4(h.ServerIdentity.First(), "registers", c.ServerIdentity().First())
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
-	id := c.Entity()
+	id := c.ServerIdentity()
 	_, okc := h.connections[id.ID]
 	if okc {
 		// TODO - we should catch this in some way
@@ -585,7 +585,7 @@ func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
 
 func newHostMock(s abstract.Suite, address string) *Host {
 	kp := config.NewKeyPair(s)
-	en := network.NewEntity(kp.Public, address)
+	en := network.NewServerIdentity(kp.Public, address)
 	return NewHost(en, kp.Secret)
 }
 

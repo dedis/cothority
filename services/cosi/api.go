@@ -22,8 +22,8 @@ func NewClient() *Client {
 // Roster
 func (c *Client) SignMsg(el *sda.Roster, msg []byte) (*SignatureResponse, error) {
 	serviceReq := &SignatureRequest{
-		Roster: el,
-		Message:    msg,
+		Roster:  el,
+		Message: msg,
 	}
 	dst := el.List[0]
 	dbg.Lvl4("Sending message to", dst)

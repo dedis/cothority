@@ -78,9 +78,9 @@ func (n *TreeNodeInstance) TreeNode() *TreeNode {
 	return n.treeNode
 }
 
-// Entity returns our entity
-func (n *TreeNodeInstance) Entity() *network.Entity {
-	return n.treeNode.Entity
+// ServerIdentity returns our entity
+func (n *TreeNodeInstance) ServerIdentity() *network.ServerIdentity {
+	return n.treeNode.ServerIdentity
 }
 
 // Parent returns the parent-TreeNode of ourselves
@@ -269,11 +269,11 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*Data) error {
 		for i, msg := range msgSlice {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
-		dbg.Lvl4("Dispatching aggregation to", n.Entity().Addresses)
+		dbg.Lvl4("Dispatching aggregation to", n.ServerIdentity().Addresses)
 		f.Call([]reflect.Value{msgs})
 	} else {
 		for _, msg := range msgSlice {
-			dbg.Lvl4("Dispatching to", n.Entity().Addresses)
+			dbg.Lvl4("Dispatching to", n.ServerIdentity().Addresses)
 			m := n.reflectCreate(to, msg)
 			f.Call([]reflect.Value{m})
 		}
@@ -302,7 +302,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*Data) error {
 		for i, msg := range msgSlice {
 			dbg.Lvl4("Dispatching aggregated to", to)
 			m := n.reflectCreate(to.Elem(), msg)
-			dbg.Lvl4("Adding msg", m, "to", n.Entity().Addresses)
+			dbg.Lvl4("Adding msg", m, "to", n.ServerIdentity().Addresses)
 			out.Index(i).Set(m)
 		}
 		reflect.ValueOf(n.channels[mt]).Send(out)
@@ -365,7 +365,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 	var err error
 	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
-		dbg.Error(n.Entity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
+		dbg.Error(n.ServerIdentity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
 	}
 	// Put the msg into SDAData
 	sdaMsg.MsgType = t
@@ -386,7 +386,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *Data) error {
 		dbg.Lvl4(n.Info(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
-		dbg.Lvl4("Dispatching to handler", n.Entity().Addresses)
+		dbg.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
 		err = n.dispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")
@@ -425,7 +425,7 @@ func (n *TreeNodeInstance) aggregate(sdaMsg *Data) (network.MessageTypeID, []*Da
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
-	dbg.Lvl4(n.Entity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
+	dbg.Lvl4(n.ServerIdentity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
 
 	// do we have everything yet or no
 	// get the node this host is in this tree
@@ -474,7 +474,7 @@ func (n *TreeNodeInstance) Private() abstract.Scalar {
 
 // Public returns the public key of the entity
 func (n *TreeNodeInstance) Public() abstract.Point {
-	return n.Entity().Public
+	return n.ServerIdentity().Public
 }
 
 // CloseHost closes the underlying sda.Host (which closes the overlay
@@ -485,14 +485,14 @@ func (n *TreeNodeInstance) CloseHost() error {
 
 // Name returns a human readable name of this Node (IP address).
 func (n *TreeNodeInstance) Name() string {
-	return n.Entity().First()
+	return n.ServerIdentity().First()
 }
 
 // Info returns a human readable representation name of this Node
 // (IP address and TokenID).
 func (n *TreeNodeInstance) Info() string {
 	tid := n.TokenID()
-	return fmt.Sprintf("%s (%s)", n.Entity().Addresses, tid.String())
+	return fmt.Sprintf("%s (%s)", n.ServerIdentity().Addresses, tid.String())
 }
 
 // TokenID returns the TokenID of the given node (to uniquely identify it)
@@ -518,7 +518,7 @@ func (n *TreeNodeInstance) List() []*TreeNode {
 
 // Index returns the index of the node in the Roster
 func (n *TreeNodeInstance) Index() int {
-	return n.TreeNode().EntityIdx
+	return n.TreeNode().ServerIdentityIdx
 }
 
 // Broadcast sends a given message from the calling node directly to all other TreeNodes

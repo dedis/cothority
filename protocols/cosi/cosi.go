@@ -335,7 +335,7 @@ func (pc *ProtocolCosi) handleResponse(in *Response) error {
 
 // Cleanup closes the protocol and calls DoneCallback, if defined
 func (pc *ProtocolCosi) Cleanup() {
-	dbg.Lvl3(pc.Entity().First(), "Cleaning up")
+	dbg.Lvl3(pc.ServerIdentity().First(), "Cleaning up")
 	// if callback when finished
 	if pc.DoneCallback != nil {
 		dbg.Lvl3("Calling doneCallback")

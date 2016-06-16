@@ -13,7 +13,7 @@ import (
 // ServiceProcessor allows for an easy integration of external messages
 // into the Services. You have to embed it into your Service-structer,
 // then it will offer an 'RegisterMessage'-method that takes a message of type
-// 	func ReceiveMsg(e *network.Entity, msg *anyMessageType)(error, *replyMsg)
+// 	func ReceiveMsg(e *network.ServerIdentity, msg *anyMessageType)(error, *replyMsg)
 // where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
 // with the network. Once 'anyMessageType' is received by the service,
 // the function 'ReceiveMsg' should return an error and any 'replyMsg' it
@@ -39,10 +39,10 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Input is not function")
 	}
 	if ft.NumIn() != 2 {
-		return errors.New("Need two arguments: *network.Entity and *struct")
+		return errors.New("Need two arguments: *network.ServerIdentity and *struct")
 	}
-	if ft.In(0) != reflect.TypeOf(&network.Entity{}) {
-		return errors.New("First argument must be *network.Entity")
+	if ft.In(0) != reflect.TypeOf(&network.ServerIdentity{}) {
+		return errors.New("First argument must be *network.ServerIdentity")
 	}
 	cr1 := ft.In(1)
 	if cr1.Kind() != reflect.Ptr {
@@ -54,7 +54,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	if ft.NumOut() != 2 {
 		return errors.New("Need 2 return values: network.ProtocolMessage and error")
 	}
-	if ft.Out(0) != reflect.TypeOf((*network.ProtocolMessage)(nil)).Elem() {
+	if ft.Out(0) != reflect.TypeOf((*network.Body)(nil)).Elem() {
 		return errors.New("Need 2 return values: *network.ProtocolMessage* and error")
 	}
 	if ft.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
@@ -71,7 +71,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
-func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
+func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
 	cr *ClientRequest) {
 	reply := p.GetReply(e, cr.Data)
 	if err := p.SendRaw(e, reply); err != nil {
@@ -80,13 +80,13 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.Entity,
 }
 
 // ProcessServiceMessage is to implement the Service interface.
-func (p *ServiceProcessor) ProcessServiceMessage(e *network.Entity,
+func (p *ServiceProcessor) ProcessServiceMessage(e *network.ServerIdentity,
 	s *ServiceMessage) {
 	p.GetReply(e, s.Data)
 }
 
 // SendISM takes the message and sends it to the corresponding service
-func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessage) error {
+func (p *ServiceProcessor) SendISM(e *network.ServerIdentity, msg network.Body) error {
 	sName := ServiceFactory.Name(p.Context.ServiceID())
 	sm, err := CreateServiceMessage(sName, msg)
 	if err != nil {
@@ -97,10 +97,10 @@ func (p *ServiceProcessor) SendISM(e *network.Entity, msg network.ProtocolMessag
 }
 
 // SendISMOthers sends an InterServiceMessage to all other services
-func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.ProtocolMessage) error {
+func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 	var errStrs []string
 	for _, e := range el.List {
-		if !e.ID.Equal(p.Context.Entity().ID) {
+		if !e.ID.Equal(p.Context.ServerIdentity().ID) {
 			dbg.Lvl3("Sending to", e)
 			err := p.SendISM(e, msg)
 			if err != nil {
@@ -117,7 +117,7 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.ProtocolMessage
 
 // GetReply takes a clientRequest and passes it to the corresponding
 // handler-function.
-func (p *ServiceProcessor) GetReply(e *network.Entity, d []byte) network.ProtocolMessage {
+func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, d []byte) network.Body {
 	mt, m, err := network.UnmarshalRegisteredType(d,
 		network.DefaultConstructors(network.Suite))
 	fu, ok := p.functions[mt]
@@ -134,7 +134,7 @@ func (p *ServiceProcessor) GetReply(e *network.Entity, d []byte) network.Protoco
 	f := reflect.ValueOf(fu)
 
 	dbg.Lvl4("Dispatching to", e.Addresses)
-	arg0 := reflect.New(reflect.TypeOf(network.Entity{}))
+	arg0 := reflect.New(reflect.TypeOf(network.ServerIdentity{}))
 	arg0.Elem().Set(reflect.ValueOf(e).Elem())
 	arg1 := reflect.New(to1.Elem())
 	arg1.Elem().Set(reflect.ValueOf(m))

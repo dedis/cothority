@@ -202,7 +202,7 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 // NewSecureTCPHost returns a Secure Tcp Host
 // If the entity is nil, it will not verify the identity of the
 // remote host
-func NewSecureTCPHost(private abstract.Scalar, e *Entity) *SecureTCPHost {
+func NewSecureTCPHost(private abstract.Scalar, e *ServerIdentity) *SecureTCPHost {
 	addr := ""
 	if e != nil {
 		addr = e.First()
@@ -215,7 +215,7 @@ func NewSecureTCPHost(private abstract.Scalar, e *Entity) *SecureTCPHost {
 	}
 }
 
-// Listen will try each addresses it the host Entity.
+// Listen will try each addresses it the host ServerIdentity.
 // Returns an error if it can listen on any address
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
@@ -225,7 +225,7 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 			SecureTCPHost: st,
 		}
 		// if negotiation fails we drop the connection
-		if err := stc.exchangeEntity(); err != nil {
+		if err := stc.exchangeServerIdentity(); err != nil {
 			dbg.Error("Negotiation failed:", err)
 			if err := stc.Close(); err != nil {
 				dbg.Error("Couldn't close secure connection:",
@@ -241,7 +241,7 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	var addr string
 	var err error
 	if st.entity == nil {
-		return errors.New("Can't listen without Entity")
+		return errors.New("Can't listen without ServerIdentity")
 	}
 	dbg.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
@@ -262,10 +262,10 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 		err.Error())
 }
 
-// Open will try any address that is in the Entity and connect to the first
-// one that works. Then it exchanges the Entity to verify it is talking with the
+// Open will try any address that is in the ServerIdentity and connect to the first
+// one that works. Then it exchanges the ServerIdentity to verify it is talking with the
 // right host.
-func (st *SecureTCPHost) Open(e *Entity) (SecureConn, error) {
+func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
 	var secure SecureTCPConn
 	var success bool
 	// try all names
@@ -287,7 +287,7 @@ func (st *SecureTCPHost) Open(e *Entity) (SecureConn, error) {
 		break
 	}
 	if !success {
-		return nil, fmt.Errorf("Could not connect to any address tied to this Entity")
+		return nil, fmt.Errorf("Could not connect to any address tied to this ServerIdentity")
 	}
 	// Exchange and verify entities
 	err := secure.negotiateOpen(e)
@@ -342,10 +342,10 @@ func (c *TCPConn) Local() string {
 // Receive waits for any input on the connection and returns
 // the ApplicationMessage **decoded** and an error if something
 // wrong occured
-func (c *TCPConn) Receive(ctx context.Context) (nm Message, e error) {
+func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	c.receiveMutex.Lock()
 	defer c.receiveMutex.Unlock()
-	var am Message
+	var am Packet
 	am.Constructors = c.host.constructors
 	var err error
 	//c.Conn.SetReadDeadline(time.Now().Add(timeOut))
@@ -397,7 +397,7 @@ const maxChunkSize Size = 1400
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with the size through the network.
 // Returns an error if anything was wrong
-func (c *TCPConn) Send(ctx context.Context, obj ProtocolMessage) error {
+func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkMessage(obj)
@@ -487,44 +487,44 @@ func (c *TCPConn) addWrittenBytes(b uint64) {
 	c.bTx += b
 }
 
-// Receive is analog to Conn.Receive but also set the right Entity in the
+// Receive is analog to Conn.Receive but also set the right ServerIdentity in the
 // message
-func (sc *SecureTCPConn) Receive(ctx context.Context) (Message, error) {
+func (sc *SecureTCPConn) Receive(ctx context.Context) (Packet, error) {
 	nm, err := sc.TCPConn.Receive(ctx)
-	nm.Entity = sc.entity
+	nm.ServerIdentity = sc.entity
 	return nm, err
 }
 
-// Entity returns the underlying entity tied to this connection
-func (sc *SecureTCPConn) Entity() *Entity {
+// ServerIdentity returns the underlying entity tied to this connection
+func (sc *SecureTCPConn) ServerIdentity() *ServerIdentity {
 	return sc.entity
 }
 
-// exchangeEntity is made to exchange the Entity between the two parties.
+// exchangeServerIdentity is made to exchange the ServerIdentity between the two parties.
 // when a connection request is made during listening
-func (sc *SecureTCPConn) exchangeEntity() error {
+func (sc *SecureTCPConn) exchangeServerIdentity() error {
 	ourEnt := sc.SecureTCPHost.entity
 	if ourEnt == nil {
-		ourEnt = NewEntity(config.NewKeyPair(Suite).Public, "")
+		ourEnt = NewServerIdentity(config.NewKeyPair(Suite).Public, "")
 	}
-	// Send our Entity to the remote endpoint
+	// Send our ServerIdentity to the remote endpoint
 	dbg.Lvl4("Sending our identity", ourEnt.ID, "to",
 		sc.TCPConn.conn.RemoteAddr().String())
 	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
 	}
-	// Receive the other Entity
+	// Receive the other ServerIdentity
 	nm, err := sc.TCPConn.Receive(context.TODO())
 	if err != nil {
-		return fmt.Errorf("Error while receiving Entity during negotiation %s", err)
+		return fmt.Errorf("Error while receiving ServerIdentity during negotiation %s", err)
 	}
 	// Check if it is correct
-	if nm.MsgType != EntityType {
+	if nm.MsgType != ServerIdentityType {
 		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
 	}
 
-	// Set the Entity for this connection
-	e := nm.Msg.(Entity)
+	// Set the ServerIdentity for this connection
+	e := nm.Msg.(ServerIdentity)
 	dbg.Lvl4(ourEnt.ID, "Received identity", e.ID)
 
 	sc.entity = &e
@@ -533,20 +533,20 @@ func (sc *SecureTCPConn) exchangeEntity() error {
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
-// negotiateListen it also verify the Entity.
-func (sc *SecureTCPConn) negotiateOpen(e *Entity) error {
-	if err := sc.exchangeEntity(); err != nil {
+// negotiateListen it also verify the ServerIdentity.
+func (sc *SecureTCPConn) negotiateOpen(e *ServerIdentity) error {
+	if err := sc.exchangeServerIdentity(); err != nil {
 		return err
 	}
 	if sc.SecureTCPHost.entity == nil {
 		return nil
 	}
-	// verify the Entity if its the same we are supposed to connect
-	if sc.Entity().ID != e.ID {
-		dbg.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.Entity(), sc.Entity().ID)
-		dbg.Lvl3(e.Public, sc.Entity().Public)
+	// verify the ServerIdentity if its the same we are supposed to connect
+	if sc.ServerIdentity().ID != e.ID {
+		dbg.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.ServerIdentity(), sc.ServerIdentity().ID)
+		dbg.Lvl3(e.Public, sc.ServerIdentity().Public)
 		dbg.Lvl4("IDs not the same", dbg.Stack())
-		return errors.New("Warning: Entity received during negotiation is wrong.")
+		return errors.New("Warning: ServerIdentity received during negotiation is wrong.")
 	}
 
 	return nil

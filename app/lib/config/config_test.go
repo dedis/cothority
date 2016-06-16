@@ -28,7 +28,7 @@ func TestReadGroupDescToml(t *testing.T) {
 	dbg.ErrFatal(err)
 
 	if len(group.Roster.List) != 2 {
-		t.Fatal("Should have 2 Entities")
+		t.Fatal("Should have 2 ServerIdentities")
 	}
 	if len(group.description) != 2 {
 		t.Fatal("Should have 2 descriptions")

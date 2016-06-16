@@ -12,15 +12,15 @@ import (
 
 // Secure_test is analog to simple_test it uses the same structure to send
 // The difference lies in which host and connections it uses. here we are going
-// to use SecureTcpHost and SecureConn with Entities
-// Now you connect to someone else using Entity instead of directly addresses
+// to use SecureTcpHost and SecureConn with ServerIdentities
+// Now you connect to someone else using ServerIdentity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
 	defer dbg.AfterTest(t)
 
 	dbg.TestOutput(testing.Verbose(), 4)
-	priv1, id1 := genEntity("localhost:2000")
-	priv2, id2 := genEntity("localhost:2001")
+	priv1, id1 := genServerIdentity("localhost:2000")
+	priv2, id2 := genServerIdentity("localhost:2001")
 	sHost1 := NewSecureTCPHost(priv1, id1)
 	sHost2 := NewSecureTCPHost(priv2, id2)
 
@@ -42,7 +42,7 @@ func TestSecureSimple(t *testing.T) {
 				c.Close()
 				done <- fmt.Errorf("Not same packet received!")
 			}
-			if !nm.Entity.Equal(id2) {
+			if !nm.ServerIdentity.Equal(id2) {
 				c.Close()
 				done <- fmt.Errorf("Not same entity")
 			}
@@ -83,9 +83,9 @@ func TestSecureSimple(t *testing.T) {
 	}
 }
 
-func genEntity(name string) (abstract.Scalar, *Entity) {
+func genServerIdentity(name string) (abstract.Scalar, *ServerIdentity) {
 	kp := config.NewKeyPair(Suite)
-	return kp.Secret, &Entity{
+	return kp.Secret, &ServerIdentity{
 		Public:    kp.Public,
 		Addresses: []string{name},
 	}

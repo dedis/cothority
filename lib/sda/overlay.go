@@ -58,12 +58,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	// do we have the entitylist ? if not, ask for it.
 	if o.Roster(sdaMsg.To.RosterID) == nil {
 		dbg.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.workingAddress)
-		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
+		return o.host.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
 		dbg.Lvl4("Will ask for tree from token")
-		return o.host.requestTree(sdaMsg.Entity, sdaMsg)
+		return o.host.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
 	// TreeNodeInstance
 	var pi ProtocolInstance
@@ -77,7 +77,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 	}
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
-		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.Entity, sdaMsg.To.ID())
+		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.ServerIdentity, sdaMsg.To.ID())
 		tn, err := o.TreeNodeFromToken(sdaMsg.To)
 		if err != nil {
 			return errors.New("No TreeNode defined in this tree here")
@@ -116,7 +116,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *Data) error {
 
 	}
 
-	dbg.Lvl4("Dispatching message", o.host.Entity)
+	dbg.Lvl4("Dispatching message", o.host.ServerIdentity)
 	// TODO Check if TreeNodeInstance is already Done
 	pi.DispatchMsg(sdaMsg)
 
@@ -188,14 +188,14 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 }
 
 // SendToTreeNode sends a message to a treeNode
-func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
+func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) error {
 	sda := &Data{
 		Msg:  msg,
 		From: from,
 		To:   from.ChangeTreeNodeID(to.ID),
 	}
-	dbg.Lvl4("Sending to entity", to.Entity.Addresses)
-	return o.host.sendSDAData(to.Entity, sda)
+	dbg.Lvl4("Sending to entity", to.ServerIdentity.Addresses)
+	return o.host.sendSDAData(to.ServerIdentity, sda)
 }
 
 // nodeDone is called by node to signify that its work is finished and its
@@ -285,11 +285,11 @@ func (o *Overlay) NewTreeNodeInstanceFromProtoName(t *Tree, name string) *TreeNo
 // root) and and protocolID and returns a fresh TreeNodeInstance.
 func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID ProtocolID) *TreeNodeInstance {
 	tok := &Token{
-		TreeNodeID:   tn.ID,
-		TreeID:       t.ID,
-		RosterID: t.Roster.ID,
-		ProtoID:      protoID,
-		RoundID:      RoundID(uuid.NewV4()),
+		TreeNodeID: tn.ID,
+		TreeID:     t.ID,
+		RosterID:   t.Roster.ID,
+		ProtoID:    protoID,
+		RoundID:    RoundID(uuid.NewV4()),
 	}
 	tni := o.newTreeNodeInstanceFromToken(tn, tok)
 	o.RegisterTree(t)
@@ -301,12 +301,12 @@ func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID
 // returns a TNI.
 func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID ProtocolID, servID ServiceID) *TreeNodeInstance {
 	tok := &Token{
-		TreeNodeID:   tn.ID,
-		TreeID:       t.ID,
-		RosterID: t.Roster.ID,
-		ProtoID:      protoID,
-		ServiceID:    servID,
-		RoundID:      RoundID(uuid.NewV4()),
+		TreeNodeID: tn.ID,
+		TreeID:     t.ID,
+		RosterID:   t.Roster.ID,
+		ProtoID:    protoID,
+		ServiceID:  servID,
+		RoundID:    RoundID(uuid.NewV4()),
 	}
 	tni := o.newTreeNodeInstanceFromToken(tn, tok)
 	o.RegisterTree(t)
@@ -314,9 +314,9 @@ func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID 
 	return tni
 }
 
-// Entity Returns the entity of the Host
-func (o *Overlay) Entity() *network.Entity {
-	return o.host.Entity
+// ServerIdentity Returns the entity of the Host
+func (o *Overlay) ServerIdentity() *network.ServerIdentity {
+	return o.host.ServerIdentity
 }
 
 // newTreeNodeInstanceFromToken is to be called by the Overlay when it receives

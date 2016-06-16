@@ -7,11 +7,11 @@ import (
 
 // Export some private functions of Host for testing
 
-func (h *Host) SendSDAData(id *network.Entity, msg *Data) error {
+func (h *Host) SendSDAData(id *network.ServerIdentity, msg *Data) error {
 	return h.sendSDAData(id, msg)
 }
 
-func (h *Host) Receive() network.Message {
+func (h *Host) Receive() network.Packet {
 	data := <-h.networkChan
 	dbg.Lvl5("Got message", data)
 	return data
@@ -35,7 +35,7 @@ func (h *Host) GetTree(id TreeID) (*Tree, bool) {
 	return t, t != nil
 }
 
-func (h *Host) SendToTreeNode(from *Token, to *TreeNode, msg network.ProtocolMessage) error {
+func (h *Host) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) error {
 	return h.overlay.SendToTreeNode(from, to, msg)
 }
 
@@ -58,13 +58,13 @@ func (h *Host) CloseConnections() error {
 	return h.closeConnections()
 }
 
-func (h *Host) RegisterConnection(e *network.Entity, c network.SecureConn) {
+func (h *Host) RegisterConnection(e *network.ServerIdentity, c network.SecureConn) {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	h.connections[e.ID] = c
 }
 
-func (h *Host) Connection(e *network.Entity) network.SecureConn {
+func (h *Host) Connection(e *network.ServerIdentity) network.SecureConn {
 	h.networkLock.RLock()
 	defer h.networkLock.RUnlock()
 	c, _ := h.connections[e.ID]

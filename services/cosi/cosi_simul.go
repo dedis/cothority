@@ -57,18 +57,18 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 		roundM := monitor.NewTimeMeasure("round")
 		// create client
 		priv, pub := sda.PrivPub()
-		client := network.NewSecureTCPHost(priv, network.NewEntity(pub))
+		client := network.NewSecureTCPHost(priv, network.NewServerIdentity(pub))
 
 		// connect
-		c, err := client.Open(config.Host.Entity)
+		c, err := client.Open(config.Host.ServerIdentity)
 		if err != nil {
 			dbg.Error("Client could not connect to service")
 			continue
 		}
 		// send request
 		r := &SignatureRequest{
-			Message:    msg,
-			Roster: config.Roster,
+			Message: msg,
+			Roster:  config.Roster,
 		}
 		req, err := sda.CreateClientRequest(ServiceName, r)
 		if err != nil {

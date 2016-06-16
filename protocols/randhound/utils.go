@@ -10,7 +10,7 @@ import (
 
 // Shard produces a pseudorandom sharding of the network entity list
 // based on a seed and a number of requested shards.
-func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.Entity, error) {
+func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.ServerIdentity, error) {
 
 	if shards == 0 || rh.Group.N < shards {
 		return nil, fmt.Errorf("Number of requested shards not supported")
@@ -28,13 +28,13 @@ func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.Entity, err
 	// Create sharding of the current Roster according to the above permutation
 	el := rh.Roster().List
 	n := int(rh.Group.N / shards)
-	sharding := [][]*network.Entity{}
-	shard := []*network.Entity{}
+	sharding := [][]*network.ServerIdentity{}
+	shard := []*network.ServerIdentity{}
 	for i, j := range m {
 		shard = append(shard, el[j])
 		if (i%n == n-1) || (i == len(m)-1) {
 			sharding = append(sharding, shard)
-			shard = make([]*network.Entity, 0)
+			shard = make([]*network.ServerIdentity, 0)
 		}
 	}
 	return sharding, nil
@@ -79,7 +79,7 @@ func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstrac
 		// Add trustee only if not done so before; choosing yourself as an trustee is fine; ignore leader at index 0
 		if _, ok := shareIdx[i]; !ok && !tns[i].IsRoot() {
 			shareIdx[i] = j // j is the share index
-			trustees[j] = tns[i].Entity.Public
+			trustees[j] = tns[i].ServerIdentity.Public
 			j++
 		}
 	}

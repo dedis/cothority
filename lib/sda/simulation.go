@@ -32,7 +32,7 @@ type Simulation interface {
 	// hosts.
 	// Setup also gets a slice of all available hosts. In turn it has
 	// to return a tree using one or more of these hosts. It can create
-	// the Roster as desired, putting more than one Entity/Host on the same host.
+	// the Roster as desired, putting more than one ServerIdentity/Host on the same host.
 	// The 'config'-argument holds all arguments read from the runfile in
 	// toml-format.
 	Setup(dir string, hosts []string) (*SimulationConfig, error)
@@ -69,7 +69,7 @@ type SimulationConfig struct {
 // Only used internally.
 type SimulationConfigFile struct {
 	TreeMarshal *TreeMarshal
-	Roster  *Roster
+	Roster      *Roster
 	PrivateKeys map[string]abstract.Scalar
 	Config      string
 }
@@ -89,7 +89,7 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 	}
 	scf := msg.(SimulationConfigFile)
 	sc := &SimulationConfig{
-		Roster:  scf.Roster,
+		Roster:      scf.Roster,
 		PrivateKeys: scf.PrivateKeys,
 		Config:      scf.Config,
 	}
@@ -146,7 +146,7 @@ func (sc *SimulationConfig) Save(dir string) error {
 	network.RegisterMessageType(&SimulationConfigFile{})
 	scf := &SimulationConfigFile{
 		TreeMarshal: sc.Tree.MakeTreeMarshal(),
-		Roster:  sc.Roster,
+		Roster:      sc.Roster,
 		PrivateKeys: sc.PrivateKeys,
 		Config:      sc.Config,
 	}
@@ -224,7 +224,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 	if strings.Contains(addresses[0], "localhost") {
 		localhosts = true
 	}
-	entities := make([]*network.Entity, hosts)
+	entities := make([]*network.ServerIdentity, hosts)
 	dbg.Lvl3("Doing", hosts, "hosts")
 	key := config.NewKeyPair(network.Suite)
 	for c := 0; c < hosts; c++ {
@@ -246,7 +246,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 		} else {
 			address += strconv.Itoa(port + c/nbrAddr)
 		}
-		entities[c] = network.NewEntity(key.Public, address)
+		entities[c] = network.NewServerIdentity(key.Public, address)
 		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
 	}
 	// And close all our listeners
