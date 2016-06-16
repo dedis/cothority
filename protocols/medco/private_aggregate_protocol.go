@@ -97,7 +97,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 2. Ascending aggregation phase
 	groups, aggregatedData := p.ascendingAggregationPhase()
-	dbg.Lvl1(p.Entity(), "completed aggregation phase (", len(*groups),"groups )")
+	dbg.Lvl1(p.Entity(), "completed aggregation phase (", len(*aggregatedData),"groups )")
 
 	// 3. Result reporting
 	if p.IsRoot() {
@@ -116,7 +116,7 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 	*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
 
-	if p.GroupedData == nil { // TODO: Aggregate a zero contribution
+	if p.GroupedData == nil {
 		emptyMap := make(map[GroupingKey]CipherVector, 0)
 		emptyGroupMap := make(map[GroupingKey]GroupingAttributes, 0)
 		p.GroupedData = &emptyMap

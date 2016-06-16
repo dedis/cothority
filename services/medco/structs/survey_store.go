@@ -5,6 +5,7 @@ import (
 )
 
 const AGGREGATION_ID int = 0
+const DEFAULT_GROUP = GroupingKey("DefaultGroup")
 
 type Survey_Database []SurveyStore
 
@@ -47,11 +48,13 @@ func NewSurveyStore() *SurveyStore {
 
 func (s *SurveyStore) InsertClientResponse(cr ClientResponse) {
 	if len(cr.ProbabilisticGroupingAttributes) == 0 { //only aggregation, no grouping
-		if len(s.DeliverableResults) != 0 {
-			s.DeliverableResults[AGGREGATION_ID].AggregatingAttributes.Add(s.DeliverableResults[AGGREGATION_ID].AggregatingAttributes, cr.AggregatingAttributes)
+		mapValue, ok := s.LocGroupingAggregating[DEFAULT_GROUP]
+		if !ok {
+			mapValue = cr.AggregatingAttributes
 		} else {
-			s.DeliverableResults = append(s.DeliverableResults, SurveyResult{CipherVector{}, cr.AggregatingAttributes})
+			mapValue.Add(mapValue, cr.AggregatingAttributes)
 		}
+		s.LocGroupingAggregating[DEFAULT_GROUP] = mapValue
 	} else { //grouping
 		s.ClientResponses = append(s.ClientResponses, cr)
 	}
@@ -85,7 +88,7 @@ func (s *SurveyStore) PushDeterministicGroupingAttributes(detGroupAttr map[TempI
 }
 
 func (s *SurveyStore) HasNextAggregatedResponses() bool {
-	return (len(s.LocGroupingGroups) == 0)
+	return (len(s.LocGroupingAggregating) == 0)
 }
 
 func (s *SurveyStore) PollLocallyAggregatedResponses() (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector) {
@@ -111,7 +114,6 @@ func AddInMapping(s map[GroupingKey]CipherVector, key GroupingKey, added CipherV
 
 func (s *SurveyStore) PushCothorityAggregatedGroups(gNew map[GroupingKey]GroupingAttributes, sNew map[GroupingKey]CipherVector) {
 	for key, value := range sNew {
-		_ = value
 		AddInMapping(s.AfterAggrProto, key, value)
 		if _, ok := s.LocGroupingGroups[key]; !ok {
 			s.LocGroupingGroups[key] = gNew[key]
@@ -157,8 +159,9 @@ func (s *SurveyStore) PollCothorityAggregatedGroupsAttr() map[TempID]CipherVecto
 }
 
 func (s *SurveyStore) PushQuerierKeyEncryptedData(groupingAttributes map[TempID]CipherVector, aggregatingAttributes map[TempID]CipherVector) {
-	for key, value := range groupingAttributes {
-		s.DeliverableResults = append(s.DeliverableResults, SurveyResult{value, aggregatingAttributes[key]})
+	for tempid, cv := range aggregatingAttributes {
+		group, _ := groupingAttributes[tempid] // Null value of a CipherVector is the empty CipherVector
+		s.DeliverableResults = append(s.DeliverableResults, SurveyResult{group, cv})
 	}
 	//s.GroupedDeterministicGroupingAttributes = make(map[TempID]GroupingAttributes)
 	//s.GroupedAggregatingAttributes = make(map[TempID]CipherVector)

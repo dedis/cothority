@@ -17,9 +17,9 @@ func init() {
 }
 
 type MedcoServiceInterface interface {
-	FlushCollectedData(medco_structs.SurveyID) error
-	FlushGroupedData(medco_structs.SurveyID) error
-	FlushAggregatedData(medco_structs.SurveyID) error
+	DeterministicSwitchingPhase(medco_structs.SurveyID) error
+	AggregationPhase(medco_structs.SurveyID) error
+	KeySwitchingPhase(medco_structs.SurveyID) error
 }
 
 type TriggerFlushCollectedDataMessage struct {
@@ -47,7 +47,7 @@ type MedcoServiceProtocol struct {
 	FeedbackChannel chan DoneProcessingMessage
 
 	MedcoServiceInstance MedcoServiceInterface
-	TargetSurvey *medco_structs.SurveyID
+	TargetSurvey *medco_structs.Survey
 }
 
 func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -73,22 +73,34 @@ func (p *MedcoServiceProtocol) Start() error {
 	}
 
 	dbg.Lvl1(p.Entity(), "started a Medco Service Protocol.")
-	p.Broadcast(&TriggerFlushCollectedDataMessage{*p.TargetSurvey})
+	p.Broadcast(&TriggerFlushCollectedDataMessage{p.TargetSurvey.ID})
 
 	return nil
 }
 
 func (p *MedcoServiceProtocol) Dispatch() error {
 
-	if !p.IsRoot() {
-		msg := <- p.TriggerFlushCollectedData
-		p.MedcoServiceInstance.FlushCollectedData(msg.SurveyID)
-		p.SendTo(p.Root(), &DoneFlushCollectedDataMessage{})
-	} else {
-		p.MedcoServiceInstance.FlushCollectedData(*p.TargetSurvey)
-		<- p.DoneFlushCollectedData
-		p.MedcoServiceInstance.FlushGroupedData(*p.TargetSurvey)
-		p.MedcoServiceInstance.FlushAggregatedData(*p.TargetSurvey)
+
+	// 1st phase (optional) : Grouping
+	if p.TargetSurvey.SurveyDescription.GroupingAttributesCount > 0 {
+		if p.IsRoot() {
+			p.MedcoServiceInstance.DeterministicSwitchingPhase(p.TargetSurvey.ID)
+			<-p.DoneFlushCollectedData
+		} else {
+			msg := <-p.TriggerFlushCollectedData
+			p.MedcoServiceInstance.DeterministicSwitchingPhase(msg.SurveyID)
+			p.SendTo(p.Root(), &DoneFlushCollectedDataMessage{})
+		}
+	}
+
+	// 2nd phase: Aggregating
+	if (p.IsRoot()) {
+		p.MedcoServiceInstance.AggregationPhase(p.TargetSurvey.ID)
+	}
+
+	// 4rd phase: Key Switching
+	if (p.IsRoot()) {
+		p.MedcoServiceInstance.KeySwitchingPhase(p.TargetSurvey.ID)
 		p.FeedbackChannel <- DoneProcessingMessage{}
 	}
 
