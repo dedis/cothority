@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -69,7 +69,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	// fill our own signature
 	p.signature = &SignatureReply{
 		Sig:   signature,
-		Index: p.TreeNode().EntityIdx}
+		Index: p.TreeNode().ServerIdentityIdx}
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &msg.Message)
@@ -131,11 +131,11 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
-	if sig.Index >= len(p.EntityList().List) {
+	if sig.Index >= len(p.Roster().List) {
 		dbg.Error("Index in signature reply out of range")
 		return "FAIL"
 	}
-	entity := p.EntityList().List[sig.Index]
+	entity := p.Roster().List[sig.Index]
 	var s string
 	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.Message, sig.Sig); err != nil {
 		s = "FAIL"

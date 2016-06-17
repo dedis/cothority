@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -127,8 +126,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 		// if assert fails we don't care for unlocking (t.Fail)
 		countMut.Unlock()
 		sig := root.Signature()
-		err := cosi.VerifyCosiSignatureWithException(root.Suite(),
-			root.AggregatedPublic, msg, sig.Sig, nil)
+		err := sig.Verify(root.Suite(), root.AggregatedPublic)
 		if succeed && err != nil {
 			t.Fatalf("%s Verification of the signature failed: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}

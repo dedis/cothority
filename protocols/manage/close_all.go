@@ -3,9 +3,9 @@ package manage
 import (
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 /*
@@ -73,11 +73,11 @@ func (p *ProtocolCloseAll) Start() error {
 
 // FuncPrepareClose sends a `PrepareClose`-message down the tree.
 func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
-	dbg.Lvl3(pc.Entity.Addresses, "sent PrepClose to", p.Entity().Addresses)
+	dbg.Lvl3(pc.ServerIdentity.Addresses, "sent PrepClose to", p.ServerIdentity().Addresses)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &PrepareClose{})
-			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses, "(err=", err, ")")
+			dbg.Lvl3(p.ServerIdentity().Addresses, "sends to", c.ServerIdentity.Addresses, "(err=", err, ")")
 		}
 	} else {
 		p.FuncClose(nil)
@@ -89,8 +89,8 @@ func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
 // network communication.
 func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	if !p.IsRoot() {
-		dbg.Lvl3("Sending closeall from", p.Entity().Addresses,
-			"to", p.Parent().Entity.Addresses)
+		dbg.Lvl3("Sending closeall from", p.ServerIdentity().Addresses,
+			"to", p.Parent().ServerIdentity.Addresses)
 		if err := p.SendTo(p.Parent(), &Close{}); err != nil {
 			dbg.Error(p.Info(), "couldn't send 'close' tp parent",
 				p.Parent(), err)
@@ -100,7 +100,7 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 		p.Done <- true
 	}
 	time.Sleep(time.Second)
-	dbg.Lvl3("Closing host", p.Entity().Addresses)
+	dbg.Lvl3("Closing host", p.ServerIdentity().Addresses)
 	err := p.TreeNodeInstance.CloseHost()
 	if err != nil {
 		dbg.Error("Couldn't close:", err)

@@ -5,8 +5,8 @@ package bftcosi
 import (
 	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
 )
@@ -116,7 +116,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		doneProcessing:       make(chan bool, 2),
 		doneSigning:          make(chan bool, 1),
 		VerificationFunction: verify,
-		AggregatedPublic:     n.EntityList().Aggregate,
+		AggregatedPublic:     n.Roster().Aggregate,
 		threshold:            len(n.Tree().List()) * 2 / 3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
@@ -214,7 +214,7 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bft.onSignatureDone = fn
 }
 
-func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.Cosi {
+func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.CoSi {
 	if t == RoundPrepare {
 		return bft.prepare
 	}
@@ -242,7 +242,7 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(ann Announce) error {
 
 // startCommitment sends the first commitment to the parent node
 func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
-	cm := bft.getCosi(t).CreateCommitment()
+	cm := bft.getCosi(t).CreateCommitment(nil)
 	dbg.Lvl4(bft.Name(), "RoundType:", t)
 	return bft.SendToParent(&Commitment{TYPE: t, Commitment: cm})
 }
@@ -254,15 +254,15 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 
 	var commitment abstract.Point
 	// store it and check if we have enough commitments
-	bft.tcMut.Lock()
-	defer bft.tcMut.Unlock()
+	bft.tpcMut.Lock()
+	defer bft.tpcMut.Unlock()
 	switch comm.TYPE {
 	case RoundPrepare:
-		bft.tempCommitPrepare = append(bft.tempCommitPrepare, comm.Commitment)
-		if len(bft.tempCommitPrepare) < len(bft.Children()) {
+		bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
+		if len(bft.tempPrepareCommit) < len(bft.Children()) {
 			return nil
 		}
-		commitment = bft.prepare.Commit(nil, bft.tempCommitPrepare)
+		commitment = bft.prepare.Commit(nil, bft.tempPrepareCommit)
 		if bft.IsRoot() {
 			return bft.startChallenge(RoundPrepare)
 		}
@@ -290,15 +290,14 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 
 // startChallenge creates the challenge and sends it to its children
 func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
-	h := bft.Msg
 	if t == RoundPrepare {
 		// create challenge from message's hash:
-		hash := bft.Suite().Hash()
-		hash.Write(bft.Msg)
-		h = hash.Sum(nil)
+		// XXX Why ? Since Challenge() already hash the message
+		// and the message is being broadcasted in its original form anyway.
+		// It's way more simpler to treat it as-is for the moment.
 	}
 
-	ch, err := bft.getCosi(t).CreateChallenge(h)
+	ch, err := bft.getCosi(t).CreateChallenge(bft.Msg)
 	if err != nil {
 		return err
 	}
@@ -315,9 +314,12 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	} else {
 		// send challenge + signature
 		cc := &ChallengeCommit{
-			Challenge:  ch,
-			Signature:  bft.prepare.Signature(),
-			Exceptions: bft.tempExceptions,
+			Challenge: ch,
+			Signature: &BFTSignature{
+				Msg:        bft.Msg,
+				Sig:        bft.prepare.Signature(),
+				Exceptions: bft.tempExceptions,
+			},
 		}
 		return bft.handleChallengeCommit(cc)
 	}
@@ -330,8 +332,7 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 		bft.Data = ch.Data
 		// start the verification of the message
 		// acknowledge the challenge and send it down
-		chal := bft.prepare.Challenge(ch.Challenge)
-		ch.Challenge = chal
+		bft.prepare.Challenge(ch.Challenge)
 	}
 	go func() {
 		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
@@ -350,27 +351,22 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	if !bft.IsRoot() {
 		bft.commit.Challenge(ch.Challenge)
 	}
-	hash := bft.Suite().Hash()
-	hash.Write(bft.Msg)
-	h := hash.Sum(nil)
 
 	// verify if the signature is correct
-	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
-		bft.AggregatedPublic, h, ch.Signature,
-		ch.Exceptions); err != nil {
+	if err := ch.Signature.Verify(bft.suite, bft.AggregatedPublic); err != nil {
 		dbg.Lvl2(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
 
 	// Check if we have no more than threshold failed nodes
-	if len(ch.Exceptions) >= int(bft.threshold) {
+	if len(ch.Signature.Exceptions) >= int(bft.threshold) {
 		dbg.Lvlf2("%s: More than threshold (%d/%d) refused to sign - aborting.",
-			bft.Entity(), len(ch.Exceptions), len(bft.EntityList().List))
+			bft.Roster(), len(ch.Signature.Exceptions), len(bft.Roster().List))
 		bft.signRefusal = true
 	}
 
 	// store the exceptions for later usage
-	bft.tempExceptions = ch.Exceptions
+	bft.tempExceptions = ch.Signature.Exceptions
 	dbg.Lvl4("BFTCoSi handle Challenge COMMIT")
 
 	if bft.IsLeaf() {
@@ -393,11 +389,11 @@ func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
 func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	if r != nil {
 		// check if we have enough responses
-		bft.trpMut.Lock()
-		defer bft.trpMut.Unlock()
-		bft.tempResponsePrepare = append(bft.tempResponsePrepare, r.Response)
+		bft.tprMut.Lock()
+		defer bft.tprMut.Unlock()
+		bft.tempPrepareResponse = append(bft.tempPrepareResponse, r.Response)
 		bft.tempExceptions = append(bft.tempExceptions, r.Exceptions...)
-		if len(bft.tempResponsePrepare) < len(bft.Children()) {
+		if len(bft.tempPrepareResponse) < len(bft.Children()) {
 			return nil
 		}
 	}
@@ -406,7 +402,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	bzrReturn, ok := bft.waitResponseVerification()
 	// append response
 	if !ok {
-		dbg.Lvl3(bft.Entity(), "Refused to sign")
+		dbg.Lvl3(bft.Roster(), "Refused to sign")
 	}
 
 	// Return if we're not root
@@ -415,12 +411,12 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	}
 
 	// Verify the signature is correct
-	hash := bft.Suite().Hash()
-	hash.Write(bft.Msg)
-	h := hash.Sum(nil)
-	if err := cosi.VerifyCosiSignatureWithException(bft.suite,
-		bft.AggregatedPublic, h, bft.prepare.Signature(),
-		bzrReturn.Exceptions); err != nil {
+	sig := &BFTSignature{
+		Msg:        bft.Msg,
+		Sig:        bft.prepare.Signature(),
+		Exceptions: bft.tempExceptions,
+	}
+	if err := sig.Verify(bft.suite, bft.AggregatedPublic); err != nil {
 		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
@@ -437,31 +433,32 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 	if r != nil {
 		// check if we have enough
-		bft.trcMut.Lock()
-		defer bft.trcMut.Unlock()
-		bft.tempResponseCommit = append(bft.tempResponseCommit, r.Response)
+		bft.tcrMut.Lock()
+		defer bft.tcrMut.Unlock()
+		bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
 
-		if len(bft.tempResponseCommit) < len(bft.Children()) {
+		if len(bft.tempCommitResponse) < len(bft.Children()) {
 			return nil
 		}
 	} else {
-		r = &Response{TYPE: RoundCommit,
-			Response: &cosi.Response{
-				Response: bft.suite.Secret().Zero(),
-			}}
+		r = &Response{
+			TYPE:     RoundCommit,
+			Response: bft.suite.Scalar().Zero(),
+		}
 	}
 
 	if bft.signRefusal {
 		r.Exceptions = append(r.Exceptions, Exception{
-			Index:  bft.index,
-			Commit: bft.commit.GetCommitment(),
+			Index:      bft.index,
+			Commitment: bft.commit.GetCommitment(),
 		})
 	} else {
 		var err error
 		if bft.IsLeaf() {
 			r.Response, err = bft.commit.CreateResponse()
 		} else {
-			r.Response, err = bft.commit.Response(true, bft.tempResponseCommit)
+			// XXX TODO
+			r.Response, err = bft.commit.Response(bft.tempCommitResponse)
 		}
 		if err != nil {
 			return err
@@ -496,18 +493,20 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	// wait the verification
 	verified := <-bft.verifyChan
 
-	resp, err := bft.prepare.Response(verified, bft.tempResponsePrepare)
+	resp, err := bft.prepare.Response(bft.tempPrepareResponse)
 	if err != nil {
 		return nil, false
 	}
 
 	if !verified {
-		// append our exception
-		r.Exceptions = append(r.Exceptions, Exception{
-			Index:  bft.index,
-			Commit: bft.prepare.GetCommitment(),
+		// Add our exception
+		bft.tempExceptions = append(bft.tempExceptions, Exception{
+			Index:      bft.index,
+			Commitment: bft.prepare.GetCommitment(),
 		})
 		dbg.Lvl4(bft.Name(), "Response verification: failed")
+		// Don't include our response!
+		resp = bft.suite.Scalar().Set(resp).Sub(resp, bft.prepare.GetResponse())
 	}
 
 	r := &Response{

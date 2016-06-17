@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/cosi"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -150,7 +150,7 @@ func NewByzCoinProtocol(n *sda.TreeNodeInstance) (*ByzCoin, error) {
 	bz.timeoutChan = make(chan uint64, 1)
 
 	//bz.endProto, _ = end.NewEndProtocol(n)
-	bz.aggregatedPublic = n.EntityList().Aggregate
+	bz.aggregatedPublic = n.Roster().Aggregate
 	bz.threshold = int(math.Ceil(float64(len(bz.Tree().List())) / 3.0))
 	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().List())) * 2.0 / 3.0))
 
@@ -500,7 +500,7 @@ func (bz *ByzCoin) handleChallengeCommit(ch *ChallengeCommit) error {
 	// Verify if we have no more than 1/3 failed nodes
 
 	if len(ch.Exceptions) > int(bz.threshold) {
-		dbg.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT", len(ch.Exceptions), len(bz.EntityList().List))
+		dbg.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT", len(ch.Exceptions), len(bz.Roster().List))
 		bz.signRefusal = true
 	}
 

@@ -1,9 +1,11 @@
 package bftcosi
 
 import (
-	"github.com/dedis/cothority/lib/sda"
+	"crypto/sha512"
+	"errors"
+
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/cosi"
 )
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"
@@ -20,7 +22,7 @@ const (
 // BFTSignature is what a bftcosi protocol outputs. It contains the signature,
 // the message and some possible exceptions.
 type BFTSignature struct {
-	// cosi signature of the commit round.
+	// cosi signature
 	Sig []byte
 	Msg []byte
 	// List of peers that did not want to sign.
@@ -28,8 +30,48 @@ type BFTSignature struct {
 }
 
 // Verify returns whether the verification of the signature succeeds or not.
-func (bs *BFTSignature) Verify(s abstract.Suite, agg abstract.Point, msg []byte) error {
-	return cosi.VerifyCosiSignatureWithException(s, agg, msg, bs.Sig, bs.Exceptions)
+// Specifically, it adjusts the signature according to the exception in the
+// signature, so it can be verified by dedis/crypto/cosi.
+// Aggregate is the aggregate public key of all signers, and the msg is the msg
+// being signed.
+func (bs *BFTSignature) Verify(s abstract.Suite, Aggregate abstract.Point) error {
+	aggExCommit := s.Point().Null()
+	for _, ex := range bs.Exceptions {
+		aggExCommit = aggExCommit.Add(aggExCommit, ex.Commitment)
+	}
+
+	// get back the commit to recreate  the challenge
+	origCommit := s.Point()
+	if err := origCommit.UnmarshalBinary(bs.Sig[0:32]); err != nil {
+		return err
+	}
+
+	// re create challenge
+	h := sha512.New()
+	if _, err := origCommit.MarshalTo(h); err != nil {
+		return err
+	}
+	if _, err := Aggregate.MarshalTo(h); err != nil {
+		return err
+	}
+	if _, err := h.Write(bs.Msg); err != nil {
+		return err
+	}
+
+	// redo like in cosi -k*A + r*B == C
+	// only with C being the reduced version
+	k := s.Scalar().SetBytes(h.Sum(nil))
+	minusPublic := s.Point().Neg(Aggregate)
+	ka := s.Point().Mul(minusPublic, k)
+	r := s.Scalar().SetBytes(bs.Sig[32:64])
+	rb := s.Point().Mul(nil, r)
+	left := s.Point().Add(rb, ka)
+
+	right := s.Point().Sub(origCommit, aggExCommit)
+	if !left.Equal(right) {
+		return errors.New("Commit recreated is not equal to one given")
+	}
+	return nil
 }
 
 // Announce is the struct used during the announcement phase (of both
@@ -77,13 +119,10 @@ type ChallengePrepare struct {
 // signature and to see how many peers did not sign. It's not spoofable because
 // otherwise the signature verification will be wrong.
 type ChallengeCommit struct {
+	// Challenge for the current round
 	Challenge abstract.Scalar
-	// Signature is the basic signature Challenge / response
-	Signature []byte
-	// Exception is the list of peers that did not want to sign. It's needed for
-	// verifying the signature. It can not be spoofed otherwise the signature
-	// would be wrong.
-	Exceptions []Exception
+	// Signature is the signature response generated at the previous round (prepare)
+	Signature *BFTSignature
 }
 
 // challengeChan is the type of the channel that will be used to catch the
@@ -120,6 +159,6 @@ type responseChan struct {
 // The commit is needed in order to be able to
 // correctly verify the signature
 type Exception struct {
-	Index  int
-	Commit abstract.Point
+	Index      int
+	Commitment abstract.Point
 }

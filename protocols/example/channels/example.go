@@ -3,9 +3,9 @@ package channels
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -83,7 +83,7 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			for _, c := range reply {
 				children += c.ChildrenCount
 			}
-			dbg.Lvl3(p.Entity().Addresses, "is done with total of", children)
+			dbg.Lvl3(p.ServerIdentity().Addresses, "is done with total of", children)
 			if !p.IsRoot() {
 				dbg.Lvl3("Sending to parent")
 				err := p.SendTo(p.Parent(), &Reply{children})

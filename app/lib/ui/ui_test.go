@@ -6,7 +6,7 @@ import (
 
 	"bufio"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/dbg"
 	"github.com/stretchr/testify/assert"
 )
 

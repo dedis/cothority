@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 

@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
@@ -65,7 +65,7 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	n := len(node.List())
 	pk := make([]abstract.Point, n)
 	for i, tn := range node.List() {
-		pk[i] = tn.Entity.Public
+		pk[i] = tn.ServerIdentity.Public
 	}
 	// NOTE: T <= R <= N (for simplicity we use T = R = N; might change later)
 	info := poly.Threshold{T: n, R: n, N: n}

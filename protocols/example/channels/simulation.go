@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 /*
@@ -39,7 +39,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	e.CreateEntityList(sc, hosts, 2000)
+	e.CreateRoster(sc, hosts, 2000)
 	err := e.CreateTree(sc)
 	if err != nil {
 		return nil, err

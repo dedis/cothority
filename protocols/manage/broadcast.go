@@ -3,8 +3,8 @@ package manage
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -81,7 +81,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 		}
 	} else {
 		// Tell the caller we're done
-		dbg.Lvl3("Sending back to", msg.TreeNode.Entity.String())
+		dbg.Lvl3("Sending back to", msg.TreeNode.ServerIdentity.String())
 		b.SendTo(msg.TreeNode, &Done{})
 	}
 }
@@ -101,7 +101,7 @@ func (b *Broadcast) handleDone(msg struct {
 		}
 		if !b.IsRoot() {
 			// Tell root we're done
-			dbg.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.Entity.String())
+			dbg.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.ServerIdentity.String())
 			b.SendTo(b.Root(), &Done{})
 		}
 

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"math"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/sda"
 )
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
