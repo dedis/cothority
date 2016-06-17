@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/services/medco"
 	"testing"
 	"github.com/dedis/cothority/services/medco/structs"
+	"time"
 )
 
 func TestServiceMedco(t *testing.T) {
@@ -20,23 +21,30 @@ func TestServiceMedco(t *testing.T) {
 
 	// Send a request to the service
 	client := medco_service.NewMedcoClient(el.List[0])
-	surveyDesc := medco_structs.SurveyDescription{2,10}
-	if client.CreateSurvey(el, surveyDesc) != nil {
+
+
+	surveyDesc := medco_structs.SurveyDescription{1,10}
+	surveyID, err := client.CreateSurvey(el, surveyDesc)
+	if err != nil {
 		t.Fatal("Service did not start.")
 	}
+
+	<-time.After(0*time.Second)
 
 	dbg.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco_service.MedcoClient, 10)
 	for i := 0; i < 10; i++ {
 		dataHolder[i] = medco_service.NewMedcoClient(el.List[i%5])
-		grp := make([]int64, 2)
+		grp := make([]int64, 1)
 		aggr := make([]int64, 10)
-		//grp[i%2] = int64(2)
-		aggr[i%2] = 3
-		dataHolder[i].SendSurveyResultsData(grp, aggr, el.Aggregate)
+		grp[0] = int64(i%4)
+		aggr[i] = 3
+		dataHolder[i].SendSurveyResultsData(*surveyID, grp, aggr, el.Aggregate)
 	}
 
-	grp, aggr, err := client.GetSurveyResults()
+	<-time.After(0*time.Second)
+
+	grp, aggr, err := client.GetSurveyResults(*surveyID)
 	if err != nil {
 		t.Fatal("Service could not output the results.")
 	}

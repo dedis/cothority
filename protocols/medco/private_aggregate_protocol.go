@@ -80,7 +80,7 @@ func (p *PrivateAggregateProtocol) Start() error {
 		return errors.New("No data reference provided for aggregation.")
 	}
 
-	dbg.Lvl1(p.Entity(), "started a Private Aggregate Protocol")
+	dbg.Lvl1(p.Entity(), "started a Private Aggregate Protocol (", len(*p.GroupedData), " local groups )")
 
 	p.SendToChildren(&DataReferenceMessage{})
 
@@ -97,7 +97,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 2. Ascending aggregation phase
 	groups, aggregatedData := p.ascendingAggregationPhase()
-	dbg.Lvl1(p.Entity(), "completed aggregation phase.")
+	dbg.Lvl1(p.Entity(), "completed aggregation phase (", len(*aggregatedData),"groups )")
 
 	// 3. Result reporting
 	if p.IsRoot() {
@@ -115,7 +115,7 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 	*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
-	if p.GroupedData == nil { // TODO: Aggregate a zero contribution
+	if p.GroupedData == nil {
 		emptyMap := make(map[GroupingKey]CipherVector, 0)
 		emptyGroupMap := make(map[GroupingKey]GroupingAttributes, 0)
 		p.GroupedData = &emptyMap

@@ -80,7 +80,7 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 		return errors.New("No PH key given.")
 	}
 
-	dbg.Lvl1(p.Entity(), "started a Deterministic Switching Protocol")
+	dbg.Lvl1(p.Entity(), "started a Deterministic Switching Protocol (", len(*p.TargetOfSwitch), "rows )")
 
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
 
@@ -138,7 +138,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
 			}
 		}
-		dbg.Lvl1(p.Entity(), "completed deterministic switching.")
+		dbg.Lvl1(p.Entity(), "completed deterministic switching (", len(deterministicSwitchedData),"row )")
 		p.FeedbackChannel <- deterministicSwitchedData
 	} else {
 		dbg.Lvl1(p.Entity(), "carried on deterministic switching.")

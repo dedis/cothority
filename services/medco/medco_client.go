@@ -15,7 +15,6 @@ type MedcoClient struct {
 	*sda.Client
 	entryPoint        *network.Entity
 	localClientNumber int64
-	surveyID 	  SurveyID
 	public            abstract.Point
 	private           abstract.Secret
 }
@@ -36,25 +35,24 @@ func NewMedcoClient(entryPoint *network.Entity) *MedcoClient {
 	return newClient
 }
 
-func (c *MedcoClient) CreateSurvey(entities *sda.EntityList, surveyDescription SurveyDescription) error {
+func (c *MedcoClient) CreateSurvey(entities *sda.EntityList, surveyDescription SurveyDescription) (*SurveyID, error) {
 	dbg.Lvl1(c, "is creating a survey.")
 	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{nil, *entities, surveyDescription})
 	if err != nil {
 		dbg.Error("Got error when creating survey: " + err.Error())
-		return err
+		return nil, err
 	}
-
-	c.surveyID = resp.Msg.(ServiceResponse).SurveyID
 	dbg.Lvl1(c, "successfully created the survey with ID", resp.Msg.(ServiceResponse).SurveyID)
-	return nil
+	surveyID := resp.Msg.(ServiceResponse).SurveyID
+	return &surveyID,nil
 }
 
-func (c *MedcoClient) SendSurveyResultsData(grouping, aggregating []int64, groupKey abstract.Point) error {
+func (c *MedcoClient) SendSurveyResultsData(surveyID SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
 	dbg.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
 	suite := network.Suite
 	encGrouping := EncryptIntArray(suite, groupKey, grouping)
 	encAggregating := EncryptIntArray(suite, groupKey, aggregating)
-	_, err := c.Send(c.entryPoint, &ClientResponse{*encGrouping, *encAggregating})
+	_, err := c.Send(c.entryPoint, &SurveyResponseQuery{surveyID, ClientResponse{*encGrouping, *encAggregating}})
 	if err != nil {
 		dbg.Error("Got error when sending a message: " + err.Error())
 		return err
@@ -62,9 +60,9 @@ func (c *MedcoClient) SendSurveyResultsData(grouping, aggregating []int64, group
 	return nil
 }
 
-func (c *MedcoClient) GetSurveyResults() (*[][]int64, *[][]int64, error) {
+func (c *MedcoClient) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, error) {
 	suite := network.Suite
-	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{c.surveyID, c.public})
+	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {
 		dbg.Error("Got error when querying the results: " + err.Error())
 		return nil, nil, err
