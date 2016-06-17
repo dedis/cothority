@@ -4,6 +4,7 @@ import (
 	"strings"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/lib/sda"
+	//"reflect"
 )
 
 const MAX_GROUP_ATTR int = 2
@@ -46,7 +47,13 @@ func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool{
 	if ga == nil || ga2 == nil {
 		return ga == ga2
 	}
-	return ga.Equal(ga2)
+	for i,v := range *ga {
+		temp := (*ga2)[i]
+		if !v.Equal(&temp){
+			return false
+		}
+	}
+	return true
 }
 
 func GroupingAttributesToDeterministicCipherVector(ga *map[TempID]GroupingAttributes) *map[TempID]DeterministCipherVector {

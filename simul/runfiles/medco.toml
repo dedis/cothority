@@ -1,4 +1,4 @@
-Simulation = "PrivateCount"
+Simulation = "PrivateAggregate"
 Servers = 5
 Bf = 2
 Rounds = 1

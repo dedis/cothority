@@ -115,7 +115,6 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 	*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
-
 	if p.GroupedData == nil {
 		emptyMap := make(map[GroupingKey]CipherVector, 0)
 		emptyGroupMap := make(map[GroupingKey]GroupingAttributes, 0)

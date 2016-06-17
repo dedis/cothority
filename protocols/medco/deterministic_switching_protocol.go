@@ -109,7 +109,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 				SwitchCheckMapProofs(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
 			}
 		}
-
+		//dbg.LLvl1(*p.SurveyPHKey)
 		schemeSwitchNewVec := v.SwitchToDeterministicNoReplace(p.Suite(), p.Private(), *p.SurveyPHKey)
 		if PROOF {
 			dbg.LLvl1("proofs creation")
