@@ -34,12 +34,21 @@ type BFTSignature struct {
 // signature, so it can be verified by dedis/crypto/cosi.
 // Aggregate is the aggregate public key of all signers, and the msg is the msg
 // being signed.
-func (bs *BFTSignature) Verify(s abstract.Suite, Aggregate abstract.Point) error {
+func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error {
+	// compute the aggregate key of all the signers
+	aggPublic := s.Point().Null()
+	for i := range publics {
+		aggPublic.Add(aggPublic, publics[i])
+	}
+	// compute the reduced public aggregate key (all - exception)
+	aggReducedPublic := s.Point().Null().Add(s.Point().Null(), aggPublic)
+
+	// compute the aggregate commit of exception
 	aggExCommit := s.Point().Null()
 	for _, ex := range bs.Exceptions {
 		aggExCommit = aggExCommit.Add(aggExCommit, ex.Commitment)
+		aggReducedPublic.Sub(aggReducedPublic, publics[ex.Index])
 	}
-
 	// get back the commit to recreate  the challenge
 	origCommit := s.Point()
 	if err := origCommit.UnmarshalBinary(bs.Sig[0:32]); err != nil {
@@ -51,7 +60,7 @@ func (bs *BFTSignature) Verify(s abstract.Suite, Aggregate abstract.Point) error
 	if _, err := origCommit.MarshalTo(h); err != nil {
 		return err
 	}
-	if _, err := Aggregate.MarshalTo(h); err != nil {
+	if _, err := aggPublic.MarshalTo(h); err != nil {
 		return err
 	}
 	if _, err := h.Write(bs.Msg); err != nil {
@@ -61,7 +70,7 @@ func (bs *BFTSignature) Verify(s abstract.Suite, Aggregate abstract.Point) error
 	// redo like in cosi -k*A + r*B == C
 	// only with C being the reduced version
 	k := s.Scalar().SetBytes(h.Sum(nil))
-	minusPublic := s.Point().Neg(Aggregate)
+	minusPublic := s.Point().Neg(aggReducedPublic)
 	ka := s.Point().Mul(minusPublic, k)
 	r := s.Scalar().SetBytes(bs.Sig[32:64])
 	rb := s.Point().Mul(nil, r)

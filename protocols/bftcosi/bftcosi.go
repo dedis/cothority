@@ -214,13 +214,6 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bft.onSignatureDone = fn
 }
 
-func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.CoSi {
-	if t == RoundPrepare {
-		return bft.prepare
-	}
-	return bft.commit
-}
-
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
 func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
@@ -353,7 +346,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	}
 
 	// verify if the signature is correct
-	if err := ch.Signature.Verify(bft.suite, bft.AggregatedPublic); err != nil {
+	if err := ch.Signature.Verify(bft.suite, bft.Roster().Publics()); err != nil {
 		dbg.Lvl2(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
@@ -416,7 +409,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 		Sig:        bft.prepare.Signature(),
 		Exceptions: bft.tempExceptions,
 	}
-	if err := sig.Verify(bft.suite, bft.AggregatedPublic); err != nil {
+	if err := sig.Verify(bft.suite, bft.Roster().Publics()); err != nil {
 		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
@@ -529,4 +522,11 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 		bft.onDoneCallback()
 	}
 	return true
+}
+
+func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.CoSi {
+	if t == RoundPrepare {
+		return bft.prepare
+	}
+	return bft.commit
 }
