@@ -2,9 +2,9 @@ package pbft
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/manage"
 )
@@ -43,7 +43,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 	}
 
 	sc := &sda.SimulationConfig{}
-	e.CreateEntityList(sc, hosts, 2000)
+	e.CreateRoster(sc, hosts, 2000)
 	err = e.CreateTree(sc)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	// Here we first setup the N^2 connections with a broadcast protocol
-	pi, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "Broadcast")
+	pi, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "Broadcast")
 	if err != nil {
 		dbg.Error(err)
 	}
@@ -95,7 +95,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dbg.Lvl3("Simulation can start!")
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		p, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "ByzCoinPBFT")
+		p, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "ByzCoinPBFT")
 		if err != nil {
 			return err
 		}

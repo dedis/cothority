@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/example/channels"
 )
 
@@ -19,12 +19,12 @@ func TestCloseall(t *testing.T) {
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 	defer local.CloseAll()
 
-	pi, err := local.CreateProtocol("ExampleChannels", tree)
+	pi, err := local.CreateProtocol(tree, "ExampleChannels")
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
 	go pi.Start()
-	protocol := pi.(*example_channels.ProtocolExampleChannels)
+	protocol := pi.(*channels.ProtocolExampleChannels)
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:

@@ -14,9 +14,9 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/simul/platform"
 )
 

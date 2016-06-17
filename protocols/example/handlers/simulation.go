@@ -1,13 +1,13 @@
-package example_handlers
+package handlers
 
 import (
 	"errors"
 	"strconv"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 /*
@@ -40,7 +40,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	e.CreateEntityList(sc, hosts, 2000)
+	e.CreateRoster(sc, hosts, 2000)
 	err := e.CreateTree(sc)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocol(config.Tree, "ExampleHandlers")
+		p, err := config.Overlay.CreateProtocolSDA(config.Tree, "ExampleHandlers")
 		if err != nil {
 			return err
 		}

@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/manage"
 )
 
@@ -18,7 +18,7 @@ func TestBroadcast(t *testing.T) {
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenTree(nbrNodes, false, true, true)
 
-		pi, err := local.CreateProtocol("Broadcast", tree)
+		pi, err := local.CreateProtocol(tree, "Broadcast")
 		if err != nil {
 			t.Fatal("Couldn't start protocol:", err)
 		}

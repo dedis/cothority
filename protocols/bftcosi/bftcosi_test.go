@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/cosi"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,7 +40,7 @@ func TestBftCoSi(t *testing.T) {
 		msg := []byte("Hello BFTCoSi")
 
 		// Start the protocol
-		node, err := local.CreateProtocol(TestProtocolName, tree)
+		node, err := local.CreateProtocol(tree, TestProtocolName)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
@@ -65,7 +65,7 @@ func TestBftCoSi(t *testing.T) {
 			countMut.Unlock()
 			sig := root.Signature()
 			if err := cosi.VerifyCosiSignatureWithException(root.Suite(),
-				root.aggregatedPublic, msg, sig.Sig,
+				root.AggregatedPublic, msg, sig.Sig,
 				sig.Exceptions); err != nil {
 
 				t.Fatal(fmt.Sprintf("%s Verification of the signature failed: %s", root.Name(), err.Error()))

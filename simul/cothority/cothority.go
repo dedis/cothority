@@ -7,10 +7,10 @@ package main
 import (
 	"flag"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 
-	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/manage"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
@@ -64,7 +64,7 @@ func main() {
 		// Starting all hosts for that server
 		host := sc.Host
 		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
-		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
+		dbg.Lvl3(hostAddress, "Starting host", host.ServerIdentity.Addresses)
 		host.Listen()
 		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
@@ -76,7 +76,7 @@ func main() {
 			dbg.Fatal(err)
 		}
 		sims[i] = sim
-		if host.Entity.ID == sc.Tree.Root.Entity.ID {
+		if host.ServerIdentity.ID == sc.Tree.Root.ServerIdentity.ID {
 			dbg.Lvl2(hostAddress, "is root-node, will start protocol")
 			rootSim = sim
 			rootSC = sc
@@ -84,7 +84,7 @@ func main() {
 	}
 	if rootSim != nil {
 		// If this cothority has the root-host, it will start the simulation
-		dbg.Lvl2("Starting protocol", simul, "on host", rootSC.Host.Entity.Addresses)
+		dbg.Lvl2("Starting protocol", simul, "on host", rootSC.Host.ServerIdentity.Addresses)
 		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
@@ -94,7 +94,7 @@ func main() {
 		// each level of the tree.
 		timeout := 1000
 		for wait {
-			p, err := rootSC.Overlay.CreateProtocol(rootSC.Tree, "Count")
+			p, err := rootSC.Overlay.CreateProtocolSDA(rootSC.Tree, "Count")
 			if err != nil {
 				dbg.Fatal(err)
 			}
@@ -123,10 +123,10 @@ func main() {
 		}
 		measureNet.Record()
 
-		// Test if all Entities are used in the tree, else we'll run into
+		// Test if all ServerIdentities are used in the tree, else we'll run into
 		// troubles with CloseAll
 		if !rootSC.Tree.UsesList() {
-			dbg.Error("The tree doesn't use all Entities from the list!\n" +
+			dbg.Error("The tree doesn't use all ServerIdentities from the list!\n" +
 				"This means that the CloseAll will fail and the experiment never ends!")
 		}
 		closeTree := rootSC.Tree
@@ -136,10 +136,10 @@ func main() {
 			// entity at different TreeNodes, which makes it difficult to
 			// correctly close everything.
 			dbg.Lvl2("Making new root-tree for SingleHost config")
-			closeTree = rootSC.EntityList.GenerateBinaryTree()
+			closeTree = rootSC.Roster.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
-		pi, err := rootSC.Overlay.CreateProtocol(closeTree, "CloseAll")
+		pi, err := rootSC.Overlay.CreateProtocolSDA(closeTree, "CloseAll")
 		pi.Start()
 		if err != nil {
 			dbg.Fatal(err)
@@ -153,11 +153,11 @@ func main() {
 			sc.Host.WaitForClose()
 			// record the bandwidth
 			measures[i].Record()
-			dbg.Lvl3(hostAddress, "Simulation closed host", sc.Host.Entity.Addresses, "closed")
+			dbg.Lvl3(hostAddress, "Simulation closed host", sc.Host.ServerIdentity.Addresses, "closed")
 		}
 		allClosed <- true
 	}()
-	dbg.Lvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
+	dbg.Lvl3(hostAddress, scs[0].Host.ServerIdentity.First(), "is waiting for all hosts to close")
 	<-allClosed
 	dbg.Lvl2(hostAddress, "has all hosts closed")
 	monitor.EndAndCleanup()

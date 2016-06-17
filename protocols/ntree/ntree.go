@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -46,17 +46,15 @@ func NewProtocol(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 // Start implements sda.ProtocolInstance.
 func (p *Protocol) Start() error {
-	if p.IsRoot() {
-		if len(p.Children()) > 0 {
-			dbg.Lvl3("Starting ntree/naive")
-			return p.HandleSignRequest(structMessage{p.TreeNode(),
-				Message{p.Message, p.verifySignature}})
-		} else {
-			return errors.New("No children for root")
-		}
-	} else {
+	if !p.IsRoot() {
 		return fmt.Errorf("Called Start() on non-root ProtocolInstance")
 	}
+	if len(p.Children()) < 1 {
+		return errors.New("No children for root")
+	}
+	dbg.Lvl3("Starting ntree/naive")
+	return p.HandleSignRequest(structMessage{p.TreeNode(),
+		Message{p.Message, p.verifySignature}})
 }
 
 // HandleSignRequest is a handler for incoming sign-requests. It's registered as
@@ -71,7 +69,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	// fill our own signature
 	p.signature = &SignatureReply{
 		Sig:   signature,
-		Index: p.TreeNode().EntityIdx}
+		Index: p.TreeNode().ServerIdentityIdx}
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &msg.Message)
@@ -133,11 +131,11 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
-	if sig.Index >= len(p.EntityList().List) {
+	if sig.Index >= len(p.Roster().List) {
 		dbg.Error("Index in signature reply out of range")
 		return "FAIL"
 	}
-	entity := p.EntityList().List[sig.Index]
+	entity := p.Roster().List[sig.Index]
 	var s string
 	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.Message, sig.Sig); err != nil {
 		s = "FAIL"
