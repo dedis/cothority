@@ -47,9 +47,9 @@ func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool{
 	if ga == nil || ga2 == nil {
 		return ga == ga2
 	}
-	for i,v := range *ga {
+	for i,v := range DeterministCipherVector(*ga) {
 		temp := (*ga2)[i]
-		if !v.Equal(&temp){
+		if !v.Equal(&temp) {
 			return false
 		}
 	}
