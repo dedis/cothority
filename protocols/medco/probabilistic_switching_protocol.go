@@ -76,7 +76,6 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 	if p.TargetPublicKey == nil {
 		return errors.New("No map given as target public key.")
 	}
-	nilPH = p.SurveyPHKey
 	if p.SurveyPHKey == nil {
 		return errors.New("No PH key given.")
 	}
@@ -104,13 +103,6 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
-
-
-	if p.SurveyPHKey == nil {
-		dbg.LLvl1(p, " does not have any PH key, will use 1")
-		temp := (suite.Secret().One())
-		p.SurveyPHKey = &temp
-	}
 
 	//TIME measurements
 	round := monitor.NewTimeMeasure("MEDCO_COMPUT")

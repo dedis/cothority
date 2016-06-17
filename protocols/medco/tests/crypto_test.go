@@ -1,13 +1,13 @@
 package medco_test
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"reflect"
 	"testing"
 	"github.com/dedis/cothority/lib/network"
+	"github.com/stretchr/testify/assert"
 )
 
 var suite = network.Suite
@@ -40,7 +40,6 @@ func TestNullCipherText(t *testing.T) {
 }
 
 func TestNullCipherVector(t *testing.T) {
-	dbg.SetDebugVisible(3)
 	secKey, pubKey := genKeys()
 
 	nullVectEnc := NullCipherVector(suite, 10, pubKey)
@@ -62,4 +61,29 @@ func TestNullCipherVector(t *testing.T) {
 	if err != nil {
 		t.Fatal("No error should be produced, got", err)
 	}
+}
+
+func TestEqualDeterministCipherText(t *testing.T) {
+	dcv1 := DeterministCipherVector{DeterministCipherText{suite.Point().Base()}, DeterministCipherText{suite.Point().Null()}}
+	dcv2 := DeterministCipherVector{DeterministCipherText{suite.Point().Base()}, DeterministCipherText{suite.Point().Null()}}
+	ga1 := GroupingAttributes(dcv1)
+	ga2 := GroupingAttributes(dcv2)
+
+	assert.True(t, dcv1.Equal(&dcv2))
+	assert.True(t, dcv1.Equal(&dcv1))
+	assert.True(t, ga1.Equal(&ga2))
+
+	dcv1 = DeterministCipherVector{}
+	dcv2 = DeterministCipherVector{}
+	assert.True(t, dcv1.Equal(&dcv2))
+	assert.True(t, dcv1.Equal(&dcv1))
+
+	var nilp *DeterministCipherVector
+	pdcv1 := &dcv1
+	assert.True(t, pdcv1.Equal(&dcv2))
+	assert.False(t, pdcv1.Equal(nilp))
+
+	pdcv1 = nil
+	assert.False(t, pdcv1.Equal(&dcv2))
+	assert.True(t, pdcv1.Equal(nilp))
 }
