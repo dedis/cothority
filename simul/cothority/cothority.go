@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/cothority/protocols/manage"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
+
 	_ "github.com/dedis/cothority/protocols"
 )
 
@@ -54,6 +55,7 @@ func main() {
 		return
 	}
 	if monitorAddress != "" {
+		dbg.Lvl1("Starting monitor for", hostAddress)
 		monitor.ConnectSink(monitorAddress)
 	}
 	sims := make([]sda.Simulation, len(scs))

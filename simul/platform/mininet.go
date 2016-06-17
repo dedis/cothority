@@ -208,7 +208,7 @@ func (m *MiniNet) Start(args ...string) error {
 			dbg.Lvl3(err)
 		}
 		dbg.Print("Finished ssh-command")
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 100)
 		m.sshMininet <- "finished"
 	}()
 
