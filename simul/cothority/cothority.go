@@ -7,10 +7,10 @@ package main
 import (
 	"flag"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 
-	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/manage"
 	// Empty imports to have the init-functions called which should
 	// register the protocol

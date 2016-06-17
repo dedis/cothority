@@ -1,6 +1,6 @@
 // Cothorityd is the main binary for running a Cothority server.
 // A Cothority server can participate in various distributed protocols using the
-// *cothority/lib/sda* library with the underlying *dedis/crypto* library.
+// *cothority/sda* library with the underlying *dedis/crypto* library.
 // Basically, you first need to setup a config file for the server by using:
 //
 // 		./cothorityd setup
@@ -19,7 +19,7 @@ import (
 	"runtime"
 
 	c "github.com/dedis/cothority/app/lib/config"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/dbg"
 	"gopkg.in/codegangsta/cli.v1"
 	// Empty imports to have the init-functions called which should
 	// register the protocol

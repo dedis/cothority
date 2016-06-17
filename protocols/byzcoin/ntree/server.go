@@ -1,9 +1,9 @@
 package byzcoinNtree
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/protocols/byzcoin"
+	"github.com/dedis/cothority/sda"
 )
 
 // NtreeServer is similar to byzcoin.Server
