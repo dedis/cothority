@@ -123,7 +123,7 @@ func checkOutput(f func(), wantsStd, wantsErr bool) error {
 	return nil
 }
 
-func ExampleLevel2() {
+func ExampleLvl2() {
 	SetDebugVisible(2)
 	stdToOs()
 	Lvl1("Level1")
@@ -139,7 +139,7 @@ func ExampleLevel2() {
 	// 2 : (                       log.ExampleLevel2:   0) - Level2
 }
 
-func ExampleMultiParams() {
+func ExampleLvl1() {
 	stdToOs()
 	Lvl1("Multiple", "parameters")
 	stdToBuf()
@@ -148,7 +148,7 @@ func ExampleMultiParams() {
 	// 1 : (                  log.ExampleMultiParams:   0) - Multiple parameters
 }
 
-func ExampleLLvl() {
+func ExampleLLvl1() {
 	stdToOs()
 	Lvl1("Lvl output")
 	LLvl1("LLvl output")
@@ -168,7 +168,7 @@ func thisIsAVeryLongFunctionNameThatWillOverflow() {
 	Lvl1("Overflow")
 }
 
-func ExampleLongFunctions() {
+func ExampleLvlf1() {
 	stdToOs()
 	Lvl1("Before")
 	thisIsAVeryLongFunctionNameThatWillOverflow()
@@ -181,7 +181,7 @@ func ExampleLongFunctions() {
 	// 1 : (                       log.ExampleLongFunctions:   0) - After
 }
 
-func ExampleLongFunctionsLimit() {
+func ExampleLvl2() {
 	NamePadding = -1
 	stdToOs()
 	Lvl1("Before")
