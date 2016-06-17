@@ -5,10 +5,10 @@ package bftcosi
 import (
 	"sync"
 
-	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/cosi"
 )
 
 // VerificationFunction can be passes to each protocol node. It will be called
@@ -29,9 +29,9 @@ type ProtocolBFTCoSi struct {
 	// aggregated public key of the peers
 	AggregatedPublic abstract.Point
 	// prepare-round cosi
-	prepare *cosi.Cosi
+	prepare *cosi.CoSi
 	// commit-round cosi
-	commit *cosi.Cosi
+	commit *cosi.CoSi
 	// channel for announcement
 	announceChan chan announceChan
 	// channel for commitment
@@ -53,21 +53,22 @@ type ProtocolBFTCoSi struct {
 	verifyChan chan bool
 
 	// exceptions given during the rounds that is used in the signature
-	tempExceptions []cosi.Exception
+	tempExceptions []Exception
 
 	// last block computed
 	lastBlock string
 	// temporary buffer of "prepare" commitments
-	tempCommitPrepare []*cosi.Commitment
-	tcMut             sync.Mutex
+	tempPrepareCommit []abstract.Point
+	tpcMut            sync.Mutex
 	// temporary buffer of "commit" commitments
-	tempCommitCommit []*cosi.Commitment
+	tempCommitCommit []abstract.Point
+	tccMut           sync.Mutex
 	// temporary buffer of "prepare" responses
-	tempResponsePrepare []*cosi.Response
-	trpMut              sync.Mutex
+	tempPrepareResponse []abstract.Scalar
+	tprMut              sync.Mutex
 	// temporary buffer of "commit" responses
-	tempResponseCommit []*cosi.Response
-	trcMut             sync.Mutex
+	tempCommitResponse []abstract.Scalar
+	tcrMut             sync.Mutex
 
 	// refusal to sign for the commit phase or not. This flag is set during the
 	// Challenge of the commit phase and will be used during the response of the
@@ -98,6 +99,9 @@ type ProtocolBFTCoSi struct {
 
 	// finale signature that this BFTCoSi round has produced
 	finalSignature *BFTSignature
+
+	// our index in the Roster list
+	index int
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
@@ -106,8 +110,8 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 	bft := &ProtocolBFTCoSi{
 		TreeNodeInstance:     n,
 		suite:                n.Suite(),
-		prepare:              cosi.NewCosi(n.Suite(), n.Private()),
-		commit:               cosi.NewCosi(n.Suite(), n.Private()),
+		prepare:              cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+		commit:               cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
 		verifyChan:           make(chan bool),
 		doneProcessing:       make(chan bool, 2),
 		doneSigning:          make(chan bool, 1),
@@ -117,6 +121,9 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
 	}
+
+	idx, _ := n.Roster().Search(bft.ServerIdentity().ID)
+	bft.index = idx
 
 	// register channels
 	if err := n.RegisterChannel(&bft.announceChan); err != nil {
@@ -217,10 +224,8 @@ func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.Cosi {
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
 func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
-	ann := bft.getCosi(t).CreateAnnouncement()
 	a := &Announce{
-		TYPE:         t,
-		Announcement: ann,
+		TYPE: t,
 	}
 	dbg.Lvl4("RoundType:", t)
 	return bft.SendToChildrenInParallel(a)
@@ -247,7 +252,7 @@ func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
 func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 	dbg.Lvl4(bft.Name(), "RoundType:", comm.TYPE)
 
-	var commitment *cosi.Commitment
+	var commitment abstract.Point
 	// store it and check if we have enough commitments
 	bft.tcMut.Lock()
 	defer bft.tcMut.Unlock()
@@ -257,7 +262,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 		if len(bft.tempCommitPrepare) < len(bft.Children()) {
 			return nil
 		}
-		commitment = bft.prepare.Commit(bft.tempCommitPrepare)
+		commitment = bft.prepare.Commit(nil, bft.tempCommitPrepare)
 		if bft.IsRoot() {
 			return bft.startChallenge(RoundPrepare)
 		}
@@ -266,7 +271,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 		if len(bft.tempCommitCommit) < len(bft.Children()) {
 			return nil
 		}
-		commitment = bft.commit.Commit(bft.tempCommitCommit)
+		commitment = bft.commit.Commit(nil, bft.tempCommitCommit)
 		if bft.IsRoot() {
 			// do nothing:
 			// stop the processing of the round, wait the end of
@@ -331,7 +336,6 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 	go func() {
 		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
 	}()
-
 	dbg.Lvl4(bft.Name(), "BFTCoSi handle Challenge PREPARE")
 	// go to response if leaf
 	if bft.IsLeaf() {
@@ -344,7 +348,7 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 // the threshold of participants refused to sign
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	if !bft.IsRoot() {
-		ch.Challenge = bft.commit.Challenge(ch.Challenge)
+		bft.commit.Challenge(ch.Challenge)
 	}
 	hash := bft.Suite().Hash()
 	hash.Write(bft.Msg)
@@ -384,7 +388,6 @@ func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
 	return bft.handleResponseCommit(r)
 }
 
-// handleResponsePrepare waits for the verification of the block and then starts the
 // challenge process.
 // If 'r' is nil, it will starts the response process.
 func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
@@ -449,9 +452,9 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 	}
 
 	if bft.signRefusal {
-		r.Exceptions = append(r.Exceptions, cosi.Exception{
-			Public:     bft.Public(),
-			Commitment: bft.commit.GetCommitment(),
+		r.Exceptions = append(r.Exceptions, Exception{
+			Index:  bft.index,
+			Commit: bft.commit.GetCommitment(),
 		})
 	} else {
 		var err error
@@ -499,10 +502,10 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	}
 
 	if !verified {
-		// Add our exception
-		bft.tempExceptions = append(bft.tempExceptions, cosi.Exception{
-			Public:     bft.Public(),
-			Commitment: bft.prepare.GetCommitment(),
+		// append our exception
+		r.Exceptions = append(r.Exceptions, Exception{
+			Index:  bft.index,
+			Commit: bft.prepare.GetCommitment(),
 		})
 		dbg.Lvl4(bft.Name(), "Response verification: failed")
 	}
