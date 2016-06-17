@@ -45,8 +45,6 @@ type DeterministicSwitchingProtocol struct {
 	originalEphemKeys map[TempID][]abstract.Point
 }
 
-var nilPH *abstract.Secret
-
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
 		TreeNodeInstance: n,
@@ -75,7 +73,6 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as deterministic switching target.")
 	}
-	nilPH = p.SurveyPHKey
 	if p.SurveyPHKey == nil {
 		return errors.New("No PH key given.")
 	}
@@ -103,10 +100,6 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
 
 	origEphemKeys := deterministicSwitchingTarget.OriginalEphemeralKeys
-
-	if p.SurveyPHKey == nil {
-		p.SurveyPHKey = nilPH
-	}
 
 	length := len(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
 	newProofs := map[TempID][]CompleteProof{}

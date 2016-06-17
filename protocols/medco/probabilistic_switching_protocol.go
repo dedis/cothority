@@ -75,7 +75,6 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 	if p.TargetPublicKey == nil {
 		return errors.New("No map given as target public key.")
 	}
-	nilPH = p.SurveyPHKey
 	if p.SurveyPHKey == nil {
 		return errors.New("No PH key given.")
 	}
@@ -104,11 +103,6 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	
-	if p.SurveyPHKey == nil {
-		p.SurveyPHKey = nilPH
-	}
-	
 	length := len(probabilisticSwitchingTarget.ProbabilisticSwitchedMessage.Proof)
 	newProofs := map[TempID][]CompleteProof{}
 	for k, v := range probabilisticSwitchingTarget.Data {
