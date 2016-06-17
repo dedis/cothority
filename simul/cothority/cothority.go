@@ -92,7 +92,7 @@ func main() {
 		wait := true
 		// The timeout starts with 1 second, which is the time of response between
 		// each level of the tree.
-		timeout := 1000
+		timeout := 1000000000
 		for wait {
 			p, err := rootSC.Overlay.CreateProtocolSDA(rootSC.Tree, "Count")
 			if err != nil {

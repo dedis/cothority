@@ -8,7 +8,7 @@ import (
 )
 
 const MAX_GROUP_ATTR int = 2
-const PROOF = true
+const PROOF = false
 
 type GroupingAttributes DeterministCipherVector
 type GroupingKey string

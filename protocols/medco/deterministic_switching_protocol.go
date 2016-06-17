@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 const DETERMINISTIC_SWITCHING_PROTOCOL_NAME = "DeterministicSwitching"
@@ -82,6 +83,7 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 
 	dbg.Lvl1(p.Entity(), "started a Deterministic Switching Protocol (", len(*p.TargetOfSwitch), "rows )")
 
+
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
 
 	for k := range *p.TargetOfSwitch {
@@ -110,6 +112,10 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 		p.SurveyPHKey = &temp
 	}
 
+	//time measurements
+	round := monitor.NewTimeMeasure("MEDCO_COMPUT")
+	//
+
 	length := len(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
 	newProofs := map[TempID][]CompleteProof{}
 	for k, v := range deterministicSwitchingTarget.Data {
@@ -127,6 +133,10 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 		}
 		deterministicSwitchingTarget.Data[k] = schemeSwitchNewVec
 	}
+
+	//time measurements
+	round.Record()
+	//
 
 	deterministicSwitchingTarget.Proof = newProofs
 

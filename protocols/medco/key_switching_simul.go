@@ -1,23 +1,17 @@
 package medco
 
 import (
-	//"bufio"
-	//"errors"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/random"
 	. "github.com/dedis/cothority/services/medco/structs"
-	//"math"
-	//"math/rand"
-	//"os"
-	//"strconv"
-	//"fmt"
+
 	"reflect"
 )
-const NUM_ATTR = 3
-const NUM_VECT = 2
+const NUM_ATTR = 100000
+const NUM_VECT = 1
 
 // we have 5 clients
 func init() {
@@ -68,7 +62,7 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 
 		ciphertexts := make(map[TempID]CipherVector)
 
-		dbg.Lvl1("ciphertexts",ciphertexts)
+		//dbg.Lvl1("ciphertexts",ciphertexts)
 
 		var tab []int64
 		for i := 0; i < NUM_ATTR; i++{

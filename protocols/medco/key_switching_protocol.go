@@ -8,6 +8,7 @@ import (
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
@@ -106,7 +107,9 @@ func (p *KeySwitchingProtocol) Start() error {
 func (p *KeySwitchingProtocol) Dispatch() error {
 
 	keySwitchingTarget := <-p.PreviousNodeInPathChannel
-
+	//time measurements
+	round := monitor.NewTimeMeasure("MEDCO_COMPUT")
+	//
 	origEphemKeys := keySwitchingTarget.OriginalEphemeralKeys
 
 	randomnessContrib := p.Suite().Secret().Pick(random.Stream)
@@ -130,6 +133,9 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 	}
 
 	keySwitchingTarget.Proof = newProofs
+	//time measurements
+	round.Record()
+	//
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed key switching.")
 		p.FeedbackChannel <- keySwitchingTarget.Data

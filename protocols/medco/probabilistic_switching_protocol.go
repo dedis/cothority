@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/cothority/lib/monitor"
 )
 
 const PROBABILISTIC_SWITCHING_PROTOCOL_NAME = "ProbabilisticSwitching"
@@ -110,7 +111,10 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 		temp := (suite.Secret().One())
 		p.SurveyPHKey = &temp
 	}
-	
+
+	//TIME measurements
+	round := monitor.NewTimeMeasure("MEDCO_COMPUT")
+	//
 	length := len(probabilisticSwitchingTarget.ProbabilisticSwitchedMessage.Proof)
 	newProofs := map[TempID][]CompleteProof{}
 	for k, v := range probabilisticSwitchingTarget.Data {
@@ -129,7 +133,9 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 	}
 	
 	probabilisticSwitchingTarget.Proof = newProofs
-	
+	//TIME measurements
+	round.Record()
+	//
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed probabilistic switching.")
 		p.FeedbackChannel <- probabilisticSwitchingTarget.Data

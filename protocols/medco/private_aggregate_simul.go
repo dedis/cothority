@@ -1,28 +1,19 @@
 package medco
 
 import (
-	//"bufio"
-	//"errors"
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	//"github.com/dedis/crypto/random"
 	. "github.com/dedis/cothority/services/medco/structs"
 )
 
-//make it parametrable
-var grpattr1 = DeterministCipherText{suite.Point().Base()}
-var grpattr2 = DeterministCipherText{suite.Point().Null()}
-var groupingAttrA = GroupingAttributes{grpattr1, grpattr1}
-var groupingAttrB = GroupingAttributes{grpattr2, grpattr2}
-//var clientPrivate = suite.Secret().Pick(random.Stream)
+
+var grpattr = DeterministCipherText{suite.Point().Base()}
 var clientPrivate = suite.Secret().One() //one -> to have the same for each node
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
-var groupingAttrC = GroupingAttributes{grpattr1, grpattr2}
 
 func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector){
-	grpattr := DeterministCipherText{suite.Point().Base()}
 	testGAMap := make(map[GroupingKey]GroupingAttributes)
 	testCVMap := make(map[GroupingKey]CipherVector)
 
@@ -85,7 +76,6 @@ func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.S
 }
 
 
-// Run when all node ready , run as a node ?
 func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
@@ -96,7 +86,6 @@ func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 
 
 		root := rooti.(*PrivateAggregateProtocol)
-		suite := root.Suite()
 
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 
@@ -109,8 +98,6 @@ func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 		for i,v := range result.GroupedData{
 			dbg.Lvl1(i, " ", DecryptIntVector(suite, clientPrivate, v))
 		}
-		//dbg.Lvl1("Got result", DecryptIntVector(suite, clientPrivate, result.GroupedData[groupingAttrA.Key()]), " &", DecryptIntVector(suite, clientPrivate, result.GroupedData[groupingAttrB.Key()]), " & ", DecryptIntVector(suite, clientPrivate, result.GroupedData[groupingAttrC.Key()]))
-
 	}
 
 	return nil
@@ -125,7 +112,6 @@ func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstanc
 	groupMap := make(map[GroupingKey]GroupingAttributes)
 	attribMap := make(map[GroupingKey]CipherVector)
 
-	//make it parametrable
 	switch tni.Index() {
 	/*case 0:
 		// Generate test data

@@ -1,8 +1,8 @@
 Simulation = "PrivateAggregate"
-Servers = 5
+Servers = 3
 Bf = 2
 Rounds = 1
-RunWait = 600
+RunWait = 600000
 
 Hosts
-5
+3

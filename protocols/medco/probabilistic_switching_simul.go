@@ -8,12 +8,13 @@ import (
 	"github.com/dedis/crypto/random"
 	. "github.com/dedis/cothority/services/medco/structs"
 )
-const NUM_ATTR_PROB = 3
-const NUM_VECT_PROB = 2
+const NUM_ATTR_PROB = 2
+const NUM_VECT_PROB = 10
 
 // we have 5 clients
 func init() {
 	sda.SimulationRegister("ProbabilisticSwitching", NewProbabilisticSwitchingSimulation)
+	sda.ProtocolRegisterName("ProbabilisticSwitchingSimul", NewProbabilisticSwitchingSimul)
 
 }
 
@@ -38,7 +39,7 @@ func (sim *ProbabilisticSwitchingSimulation) Setup(dir string, hosts []string) (
 
 	if err != nil {
 		return nil, err
-	}    // global variable?
+	}
 
 	dbg.Lvl1("Begin test encrypted data generation")
 
@@ -48,45 +49,12 @@ func (sim *ProbabilisticSwitchingSimulation) Setup(dir string, hosts []string) (
 func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		dbg.Lvl1("Starting round", round)
-		rooti, err := config.Overlay.CreateProtocolSDA( config.Tree,"ProbabilisticSwitching")
+		rooti, err := config.Overlay.CreateProtocolSDA( config.Tree,"ProbabilisticSwitchingSimul")
 		if err != nil {
 			return err
 		}
 
 		root := rooti.(*ProbabilisticSwitchingProtocol)
-		suite := root.Suite()
-		aggregateKey := root.EntityList().Aggregate
-
-		ciphertexts := make(map[TempID]DeterministCipherVector)
-
-		var tab []int64
-		for i := 0; i < NUM_ATTR_DET; i++{
-			if i == 0{
-				tab = []int64{1}
-			} else {
-				tab = append(tab, 1)
-			}
-		}
-
-		for i := 0; i < NUM_VECT_DET; i++{
-			encrypted := *EncryptIntArray(suite, aggregateKey, tab)
-			for ind,v := range encrypted {
-				if ind == 0{
-					ciphertexts[TempID(i)] = DeterministCipherVector{DeterministCipherText{v.C}}
-				} else {
-					ciphertexts[TempID(i)] = append(ciphertexts[TempID(i)], DeterministCipherText{v.C})
-				}
-			}
-		}
-
-
-
-		clientSecret  := suite.Secret().Pick(random.Stream)
-		clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
-
-		root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).SurveyPHKey = &clientSecret
-		root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).TargetOfSwitch = &ciphertexts
-		root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).TargetPublicKey = &clientPublic
 
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 		root.StartProtocol()
@@ -109,4 +77,47 @@ func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) e
 	}
 
 	return nil
+}
+
+
+func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	protocol, err := NewProbabilisticSwitchingProtocol(tni)
+	pap := protocol.(*ProbabilisticSwitchingProtocol)
+
+	if (tni.Index() == 0){
+		clientSecret  := suite.Secret().Pick(random.Stream)
+		clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
+
+		suite := pap.Suite()
+		aggregateKey := pap.EntityList().Aggregate
+
+		ciphertexts := make(map[TempID]DeterministCipherVector)
+
+		var tab []int64
+		for i := 0; i < NUM_ATTR_PROB; i++{
+			if i == 0{
+				tab = []int64{1}
+			} else {
+				tab = append(tab, 1)
+			}
+		}
+
+		for i := 0; i < NUM_VECT_PROB; i++{
+			encrypted := *EncryptIntArray(suite, aggregateKey, tab)
+			for ind,v := range encrypted {
+				if ind == 0{
+					ciphertexts[TempID(i)] = DeterministCipherVector{DeterministCipherText{v.C}}
+				} else {
+					ciphertexts[TempID(i)] = append(ciphertexts[TempID(i)], DeterministCipherText{v.C})
+				}
+			}
+		}
+
+		pap.TargetOfSwitch = &ciphertexts
+		pap.TargetPublicKey = &clientPublic
+	}
+	tempKey := suite.Secret().Pick(random.Stream)
+	pap.SurveyPHKey = &tempKey
+
+	return protocol, err
 }
