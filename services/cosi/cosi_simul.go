@@ -1,6 +1,6 @@
 package cosi
 
-import (
+/*import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/lib/cosi"
 	"github.com/dedis/cothority/lib/dbg"
@@ -70,8 +70,8 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 			Message:    msg,
 			EntityList: config.EntityList,
 		}
-		req, err := sda.CreateServiceRequest(ServiceName, r)
-		if err != nil {
+		//req, err := //sda.CreateServiceRequest(ServiceName, r)
+		/*if err != nil {
 			dbg.Error("could not create service request")
 			continue
 		}
@@ -99,3 +99,4 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	dbg.Lvl1("Simulation finished")
 	return nil
 }
+*/

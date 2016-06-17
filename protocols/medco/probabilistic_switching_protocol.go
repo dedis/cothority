@@ -104,9 +104,11 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	
+
 	if p.SurveyPHKey == nil {
-		p.SurveyPHKey = nilPH
+		dbg.LLvl1(p, " does not have any PH key, will use 1")
+		temp := (suite.Secret().One())
+		p.SurveyPHKey = &temp
 	}
 	
 	length := len(probabilisticSwitchingTarget.ProbabilisticSwitchedMessage.Proof)

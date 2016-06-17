@@ -105,7 +105,9 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 	origEphemKeys := deterministicSwitchingTarget.OriginalEphemeralKeys
 
 	if p.SurveyPHKey == nil {
-		p.SurveyPHKey = nilPH
+		dbg.LLvl1(p, " does not have any PH key, will use 1")
+		temp := (suite.Secret().One())
+		p.SurveyPHKey = &temp
 	}
 
 	length := len(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
@@ -116,7 +118,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 				SwitchCheckMapProofs(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
 			}
 		}
-
+		//dbg.LLvl1(*p.SurveyPHKey)
 		schemeSwitchNewVec := v.SwitchToDeterministicNoReplace(p.Suite(), p.Private(), *p.SurveyPHKey)
 		if PROOF {
 			dbg.LLvl1("proofs creation")
