@@ -7,7 +7,7 @@ import (
 
 	"reflect"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
@@ -57,7 +57,7 @@ type PropagateReply struct {
 // stored the new value or an error if the protocol couldn't start.
 func PropagateStartAndWait(c sda.Context, el *sda.Roster, msg network.Body, msec int, f func(network.Body)) (int, error) {
 	tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
-	dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
+	log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 	pi, err := c.CreateProtocolService(tree, "Propagate")
 	if err != nil {
 		return -1, err
@@ -84,7 +84,7 @@ func propagateStartAndWait(pi sda.ProtocolInstance, msg network.Body, msec int, 
 		return -1, err
 	}
 	ret := <-done
-	dbg.Lvl2("Finished propagation with", ret, "replies")
+	log.Lvl2("Finished propagation with", ret, "replies")
 	return ret, nil
 }
 
@@ -106,7 +106,7 @@ func NewPropagateProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 
 // Start will contact everyone and make the connections
 func (p *Propagate) Start() error {
-	dbg.Lvl4("going to contact", p.Root().ServerIdentity)
+	log.Lvl4("going to contact", p.Root().ServerIdentity)
 	p.SendTo(p.Root(), p.sd)
 	return nil
 }
@@ -114,14 +114,14 @@ func (p *Propagate) Start() error {
 // Dispatch can handle timeouts
 func (p *Propagate) Dispatch() error {
 	process := true
-	dbg.Lvl4(p.ServerIdentity())
+	log.Lvl4(p.ServerIdentity())
 	for process {
 		p.Lock()
 		timeout := time.Millisecond * time.Duration(p.sd.Msec)
 		p.Unlock()
 		select {
 		case msg := <-p.ChannelSD:
-			dbg.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity)
+			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity)
 			if p.onData != nil {
 				_, netMsg, err := network.UnmarshalRegistered(msg.Data)
 				if err == nil {
@@ -129,18 +129,18 @@ func (p *Propagate) Dispatch() error {
 				}
 			}
 			if !p.IsRoot() {
-				dbg.Lvl3(p.ServerIdentity(), "Sending to parent")
+				log.Lvl3(p.ServerIdentity(), "Sending to parent")
 				p.SendToParent(&PropagateReply{})
 			}
 			if p.IsLeaf() {
 				process = false
 			} else {
-				dbg.Lvl3(p.ServerIdentity(), "Sending to children")
+				log.Lvl3(p.ServerIdentity(), "Sending to children")
 				p.SendToChildren(&msg.PropagateSendData)
 			}
 		case <-p.ChannelReply:
 			p.received++
-			dbg.Lvl4(p.ServerIdentity(), "received:", p.received, p.subtree)
+			log.Lvl4(p.ServerIdentity(), "received:", p.received, p.subtree)
 			if !p.IsRoot() {
 				p.SendToParent(&PropagateReply{})
 			}
@@ -148,7 +148,7 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 		case <-time.After(timeout):
-			dbg.Fatal("Timeout")
+			log.Fatal("Timeout")
 			process = false
 		}
 	}

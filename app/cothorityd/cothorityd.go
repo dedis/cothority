@@ -19,7 +19,7 @@ import (
 	"runtime"
 
 	c "github.com/dedis/cothority/app/lib/config"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"gopkg.in/codegangsta/cli.v1"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
@@ -100,16 +100,16 @@ func main() {
 
 func runServer(ctx *cli.Context) {
 	// first check the options
-	dbg.SetDebugVisible(ctx.Int("debug"))
+	log.SetDebugVisible(ctx.Int("debug"))
 	config := ctx.String("config")
 
 	if _, err := os.Stat(config); os.IsNotExist(err) {
-		dbg.Fatalf("[-] Configuration file does not exists. %s", config)
+		log.Fatalf("[-] Configuration file does not exists. %s", config)
 	}
 	// Let's read the config
 	_, host, err := c.ParseCothorityd(config)
 	if err != nil {
-		dbg.Fatal("Couldn't parse config:", err)
+		log.Fatal("Couldn't parse config:", err)
 	}
 	host.ListenAndBind()
 	host.StartProcessMessages()

@@ -7,7 +7,7 @@ import (
 
 	"math/rand"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
@@ -145,7 +145,7 @@ func (t *Tree) BinaryUnmarshaler(b []byte) error {
 // Equal verifies if the given tree is equal
 func (t *Tree) Equal(t2 *Tree) bool {
 	if t.ID != t2.ID || t.Roster.ID != t2.Roster.ID {
-		dbg.Lvl4("Ids of trees don't match")
+		log.Lvl4("Ids of trees don't match")
 		return false
 	}
 	return t.Root.Equal(t2.Root)
@@ -202,7 +202,7 @@ func (t *Tree) IsBinary(root *TreeNode) bool {
 func (t *Tree) IsNary(root *TreeNode, N int) bool {
 	nChild := len(root.Children)
 	if nChild != N && nChild != 0 {
-		dbg.Lvl3("Only", nChild, "children for", root.ID)
+		log.Lvl3("Only", nChild, "children for", root.ID)
 		return false
 	}
 	for _, c := range root.Children {
@@ -618,16 +618,16 @@ func (t *TreeNode) AddChild(c *TreeNode) {
 // Equal tests if that node is equal to the given node
 func (t *TreeNode) Equal(t2 *TreeNode) bool {
 	if t.ID != t2.ID || t.ServerIdentity.ID != t2.ServerIdentity.ID {
-		dbg.Lvl4("TreeNode: ids are not equal")
+		log.Lvl4("TreeNode: ids are not equal")
 		return false
 	}
 	if len(t.Children) != len(t2.Children) {
-		dbg.Lvl4("TreeNode: number of children are not equal")
+		log.Lvl4("TreeNode: number of children are not equal")
 		return false
 	}
 	for i, c := range t.Children {
 		if !c.Equal(t2.Children[i]) {
-			dbg.Lvl4("TreeNode: children are not equal")
+			log.Lvl4("TreeNode: children are not equal")
 			return false
 		}
 	}

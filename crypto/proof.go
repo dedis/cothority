@@ -8,7 +8,7 @@ import (
 	gohash "hash"
 	"strconv"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -43,12 +43,12 @@ func (c *hashContext) hashNode(buf []byte, left, right HashID) []byte {
 	h := c.hash
 
 	if n, err := h.Write(left); err != nil || n != len(left) {
-		dbg.Error("Written", n, "of", len(left), "bytes.")
-		dbg.Error(err)
+		log.Error("Written", n, "of", len(left), "bytes.")
+		log.Error(err)
 	}
 	if n, err := h.Write(right); err != nil || n != len(right) {
-		dbg.Error("Written", n, "of", len(right), "bytes.")
-		dbg.Error(err)
+		log.Error("Written", n, "of", len(right), "bytes.")
+		log.Error(err)
 	}
 
 	s := h.Sum(buf)

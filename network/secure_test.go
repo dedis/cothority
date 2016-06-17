@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"golang.org/x/net/context"
@@ -16,9 +16,9 @@ import (
 // Now you connect to someone else using ServerIdentity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	priv1, id1 := genServerIdentity("localhost:2000")
 	priv2, id2 := genServerIdentity("localhost:2001")
 	sHost1 := NewSecureTCPHost(priv1, id1)
@@ -46,7 +46,7 @@ func TestSecureSimple(t *testing.T) {
 				c.Close()
 				done <- fmt.Errorf("Not same entity")
 			}
-			dbg.Lvl3("Connection accepted")
+			log.Lvl3("Connection accepted")
 			close(done)
 		})
 		if err != nil {

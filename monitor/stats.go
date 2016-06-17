@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/montanaflynn/stats"
 )
 
@@ -162,7 +162,7 @@ func NewDataFilter(config map[string]string) DataFilter {
 	}
 	reg, err := regexp.Compile("filter_(\\w+)")
 	if err != nil {
-		dbg.Lvl1("DataFilter: Error compiling regexp:", err)
+		log.Lvl1("DataFilter: Error compiling regexp:", err)
 		return df
 	}
 	// analyse the each entry
@@ -173,14 +173,14 @@ func NewDataFilter(config map[string]string) DataFilter {
 			// this value must be filtered by how many ?
 			perc, err := strconv.ParseFloat(v, 64)
 			if err != nil {
-				dbg.Lvl1("DataFilter: Cannot parse value for filter measure:", measure)
+				log.Lvl1("DataFilter: Cannot parse value for filter measure:", measure)
 				continue
 			}
 			measure = strings.Replace(measure, "filter_", "", -1)
 			df.percentiles[measure] = perc
 		}
 	}
-	dbg.Lvl3("Filtering:", df.percentiles)
+	log.Lvl3("Filtering:", df.percentiles)
 	return df
 }
 
@@ -193,7 +193,7 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 	// Compute the percentile value
 	max, err := stats.PercentileNearestRank(values, df.percentiles[measure])
 	if err != nil {
-		dbg.Lvl2("Monitor: Error filtering data(", values, "):", err)
+		log.Lvl2("Monitor: Error filtering data(", values, "):", err)
 		return values
 	}
 
@@ -206,11 +206,11 @@ func (df *DataFilter) Filter(measure string, values []float64) []float64 {
 	}
 	// check if we foud something to filter out
 	if maxIndex == -1 {
-		dbg.Lvl3("Filtering: nothing to filter for", measure)
+		log.Lvl3("Filtering: nothing to filter for", measure)
 		return values
 	}
 	// return the values below the percentile
-	dbg.Lvl3("Filtering: filters out", measure, ":", maxIndex, "/", len(values))
+	log.Lvl3("Filtering: filters out", measure, ":", maxIndex, "/", len(values))
 	return values[:maxIndex]
 }
 
@@ -252,10 +252,10 @@ func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
 	for _, def := range defaults {
 		valStr, ok := rc[def]
 		if !ok {
-			dbg.Fatal("Could not find the default value", def, "in the RunConfig")
+			log.Fatal("Could not find the default value", def, "in the RunConfig")
 		}
 		if i, err := strconv.Atoi(valStr); err != nil {
-			dbg.Fatal("Could not parse to integer value", def)
+			log.Fatal("Could not parse to integer value", def)
 		} else {
 			// registers the static value
 			s.static[def] = i
@@ -278,7 +278,7 @@ func (s *Stats) readRunConfig(rc map[string]string, defaults ...string) {
 		}
 		// store it
 		if i, err := strconv.Atoi(v); err != nil {
-			dbg.Lvl3("Could not parse the value", k, "from runconfig (v=", v, ")")
+			log.Lvl3("Could not parse the value", k, "from runconfig (v=", v, ")")
 			continue
 		} else {
 			s.static[k] = i
@@ -373,7 +373,7 @@ func AverageValue(st ...*Value) *Value {
 	name := st[0].name
 	for _, s := range st {
 		if s.name != name {
-			dbg.Error("Averaging not the sames Values ...?")
+			log.Error("Averaging not the sames Values ...?")
 			return new(Value)
 		}
 		t.store = append(t.store, s.store...)

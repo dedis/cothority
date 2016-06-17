@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/crypto"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
@@ -248,7 +248,7 @@ func (e *ServerIdentity) Equal(e2 *ServerIdentity) bool {
 func (e *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
 	var buf bytes.Buffer
 	if err := crypto.WritePub64(suite, &buf, e.Public); err != nil {
-		dbg.Error("Error while writing public key:", err)
+		log.Error("Error while writing public key:", err)
 	}
 	return &ServerIdentityToml{
 		Addresses: e.Addresses,
@@ -260,7 +260,7 @@ func (e *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
 func (e *ServerIdentityToml) ServerIdentity(suite abstract.Suite) *ServerIdentity {
 	pub, err := crypto.ReadPub64(suite, strings.NewReader(e.Public))
 	if err != nil {
-		dbg.Error("Error while reading public key:", err)
+		log.Error("Error while reading public key:", err)
 	}
 	return &ServerIdentity{
 		Public:    pub,

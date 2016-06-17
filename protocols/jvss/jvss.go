@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -162,7 +162,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
+		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			deals:    make(map[int]*poly.Deal),
@@ -178,7 +178,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
+		log.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
 		secret.deals[jv.Index()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
@@ -199,7 +199,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		return fmt.Errorf("Error, shared secret does not exist")
 	}
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
+	log.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
 
 	if len(secret.deals) == jv.info.T {
 
@@ -217,13 +217,13 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
+		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			dbg.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
+			log.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret

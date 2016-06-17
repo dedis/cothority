@@ -3,7 +3,7 @@ package sda_test
 import (
 	"testing"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
@@ -28,9 +28,9 @@ func (po *ProtocolOverlay) Release() {
 }
 
 func TestOverlayDone(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	// setup
 	h1 := sda.NewLocalHost(2000)
 	defer h1.Close()

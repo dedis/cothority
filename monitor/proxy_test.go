@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 func TestProxy(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 3)
+	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"

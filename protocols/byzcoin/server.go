@@ -3,7 +3,7 @@ package byzcoin
 import (
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/cothority/sda"
 )
@@ -70,7 +70,7 @@ func (s *Server) ListenClientTransactions() {
 func (s *Server) Instantiate(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	// wait until we have enough blocks
 	currTransactions := s.WaitEnoughBlocks()
-	dbg.Lvl2("Instantiate ByzCoin Round with", len(currTransactions), "transactions")
+	log.Lvl2("Instantiate ByzCoin Round with", len(currTransactions), "transactions")
 	pi, err := NewByzCoinRootProtocol(node, currTransactions, s.timeOutMs, s.fail)
 
 	return pi, err

@@ -8,13 +8,13 @@ import (
 
 	"io/ioutil"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 )
 
 func TestSimulationBF(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -47,8 +47,8 @@ func TestSimulationBF(t *testing.T) {
 }
 
 func TestBigTree(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 4)
 	for i := uint(12); i < 15; i++ {
 		_, _, err := createBFTree(1<<i-1, 2)
 		if err != nil {
@@ -58,14 +58,14 @@ func TestBigTree(t *testing.T) {
 }
 
 func TestLoadSave(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	dir, err := ioutil.TempDir("", "example")
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
 	sc2, err := sda.LoadSimulationConfig(dir, "local1:2000")
@@ -78,15 +78,15 @@ func TestLoadSave(t *testing.T) {
 }
 
 func TestMultipleInstances(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	dir, err := ioutil.TempDir("", "example")
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
 	sc2, err := sda.LoadSimulationConfig(dir, "local1")
