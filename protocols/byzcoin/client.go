@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 )
 
@@ -36,10 +36,10 @@ func (c *Client) StartClientSimulation(blocksDir string, numTxs int) error {
 }
 
 func (c *Client) triggerTransactions(blocksPath string, nTxs int) error {
-	dbg.Lvl2("ByzCoin Client will trigger up to", nTxs, "transactions")
+	log.Lvl2("ByzCoin Client will trigger up to", nTxs, "transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 	if err != nil {
-		dbg.Error("Error: Couldn't parse blocks in", blocksPath,
+		log.Error("Error: Couldn't parse blocks in", blocksPath,
 			".\nPlease download bitcoin blocks as .dat files first and place them in",
 			blocksPath, "Either run a bitcoin node (recommended) or using a torrent.")
 		return err

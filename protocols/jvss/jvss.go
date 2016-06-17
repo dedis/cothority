@@ -1,4 +1,4 @@
-// JVSS provides a threshold signing scheme based on Shamir's joint verifiable
+// Package jvss provides a threshold signing scheme based on Shamir's joint verifiable
 // secret sharing algorithm and Schnorr signatures. The protocl runs in two
 // phases. During the protocol setup a long-term shared secret is establised
 // between all participants. Afterwards, any of the members can request a
@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
@@ -24,7 +24,7 @@ func init() {
 	sda.ProtocolRegisterName("JVSS", NewJVSS)
 }
 
-// Type of shared secret identifiers
+// SID is the type of shared secret identifiers
 type SID string
 
 // Identifiers for long- and short-term shared secrets.
@@ -65,7 +65,7 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	n := len(node.List())
 	pk := make([]abstract.Point, n)
 	for i, tn := range node.List() {
-		pk[i] = tn.Entity.Public
+		pk[i] = tn.ServerIdentity.Public
 	}
 	// NOTE: T <= R <= N (for simplicity we use T = R = N; might change later)
 	info := poly.Threshold{T: n, R: n, N: n}
@@ -162,7 +162,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
+		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			deals:    make(map[int]*poly.Deal),
@@ -178,7 +178,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
-		dbg.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
+		log.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
 		secret.deals[jv.Index()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
@@ -199,7 +199,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		return fmt.Errorf("Error, shared secret does not exist")
 	}
 
-	dbg.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
+	log.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
 
 	if len(secret.deals) == jv.info.T {
 
@@ -217,13 +217,13 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		secret.mtx.Lock()
 		secret.numConfs++
 		secret.mtx.Unlock()
-		dbg.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
+		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid == LTSS && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			dbg.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
+			log.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret
