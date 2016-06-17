@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/dbg"
 )
 
 func TestMain(m *testing.M) {
