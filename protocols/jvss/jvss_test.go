@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/dbg"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/jvss"
+	"github.com/dedis/cothority/sda"
 )
 
 func TestJVSS(t *testing.T) {

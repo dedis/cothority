@@ -8,9 +8,9 @@ import (
 	"github.com/dedis/cothority/cosi"
 	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/monitor"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/manage"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 

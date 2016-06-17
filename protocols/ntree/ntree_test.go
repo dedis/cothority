@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/dbg"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/ntree"
+	"github.com/dedis/cothority/sda"
 )
 
 func TestNtree(t *testing.T) {

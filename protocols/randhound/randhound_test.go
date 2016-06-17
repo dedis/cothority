@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/dbg"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/randhound"
+	"github.com/dedis/cothority/sda"
 )
 
 func TestRandHound(t *testing.T) {

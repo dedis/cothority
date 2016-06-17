@@ -4,8 +4,8 @@ import (
 	"sync"
 
 	"github.com/dedis/cothority/dbg"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/sda"
 )
 
 // BlockServer is a struct where Client can connect and that instantiate ByzCoin

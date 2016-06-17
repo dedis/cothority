@@ -6,8 +6,8 @@ import (
 
 	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/example/handlers"
+	"github.com/dedis/cothority/sda"
 )
 
 // Tests a 2-node system
