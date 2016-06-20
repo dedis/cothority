@@ -135,8 +135,8 @@ func ExampleLvl2() {
 	SetDebugVisible(1)
 
 	// Output:
-	// 1 : (                       log.ExampleLevel2:   0) - Level1
-	// 2 : (                       log.ExampleLevel2:   0) - Level2
+	// 1 : (                         log.ExampleLvl2:   0) - Level1
+	// 2 : (                         log.ExampleLvl2:   0) - Level2
 }
 
 func ExampleLvl1() {
@@ -145,7 +145,7 @@ func ExampleLvl1() {
 	stdToBuf()
 
 	// Output:
-	// 1 : (                  log.ExampleMultiParams:   0) - Multiple parameters
+	// 1 : (                         log.ExampleLvl1:   0) - Multiple parameters
 }
 
 func ExampleLLvl1() {
@@ -157,10 +157,10 @@ func ExampleLLvl1() {
 	stdToBuf()
 
 	// Output:
-	// 1 : (                         log.ExampleLLvl:   0) - Lvl output
-	// 1!: (                         log.ExampleLLvl:   0) - LLvl output
-	// 1 : (                         log.ExampleLLvl:   0) - Lvlf output
-	// 1!: (                         log.ExampleLLvl:   0) - LLvlf output
+	// 1 : (                        log.ExampleLLvl1:   0) - Lvl output
+	// 1!: (                        log.ExampleLLvl1:   0) - LLvl output
+	// 1 : (                        log.ExampleLLvl1:   0) - Lvlf output
+	// 1!: (                        log.ExampleLLvl1:   0) - LLvlf output
 }
 
 func thisIsAVeryLongFunctionNameThatWillOverflow() {
@@ -176,12 +176,12 @@ func ExampleLvlf1() {
 	stdToBuf()
 
 	// Output:
-	// 1 : (                log.ExampleLongFunctions:   0) - Before
+	// 1 : (                        log.ExampleLvlf1:   0) - Before
 	// 1 : (log.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
-	// 1 : (                       log.ExampleLongFunctions:   0) - After
+	// 1 : (                               log.ExampleLvlf1:   0) - After
 }
 
-func ExampleLvl2() {
+func ExampleLvl3() {
 	NamePadding = -1
 	stdToOs()
 	Lvl1("Before")
@@ -190,7 +190,7 @@ func ExampleLvl2() {
 	stdToBuf()
 
 	// Output:
-	// 1 : (log.ExampleLongFunctionsLimit:   0) - Before
+	// 1 : (log.ExampleLvl3:   0) - Before
 	// 1 : (log.thisIsAVeryLongFunctionNameThatWillOverflow:   0) - Overflow
-	// 1 : (log.ExampleLongFunctionsLimit:   0) - After
+	// 1 : (log.ExampleLvl3:   0) - After
 }
