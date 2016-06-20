@@ -56,6 +56,20 @@ import (
 	"github.com/daviddengcn/go-colortext"
 )
 
+// NamePadding - the padding of functions to make a nice debug-output - this is automatically updated
+// whenever there are longer functions and kept at that new maximum. If you prefer
+// to have a fixed output and don't remember oversized names, put a negative value
+// in here
+var NamePadding = 40
+
+// LinePadding of line-numbers for a nice debug-output - used in the same way as
+// NamePadding
+var LinePadding = 3
+
+// StaticMsg - if this variable is set, it will be outputted between the
+// position and the message
+var StaticMsg = ""
+
 // These are information-debugging levels that can be turned on or off.
 // Every logging greater than 'DebugVisible' will be discarded. So you can
 // Log at different levels and easily turn on or off the amount of logging
@@ -70,28 +84,8 @@ var useColors = true
 
 var debugMut sync.RWMutex
 
-// NamePadding - the padding of functions to make a nice debug-output - this is automatically updated
-// whenever there are longer functions and kept at that new maximum. If you prefer
-// to have a fixed output and don't remember oversized names, put a negative value
-// in here
-var NamePadding = 40
-
-// LinePadding of line-numbers for a nice debug-output - used in the same way as
-// NamePadding
-var LinePadding = 3
-
-// Testing variable can have multiple values
-// 0 - no testing
-// 1 - put all line-numbers to 0
-// 2 - like 1, but write to TestString instead of stdout
-var Testing = 0
-
-// TestStr is only used in testing to redirect output to this string
-var TestStr = ""
-
-// StaticMsg - if this variable is set, it will be outputted between the
-// position and the message
-var StaticMsg = ""
+// outputLines can be false to suppress outputting of lines in tests
+var outputLines = true
 
 var regexpPaths, _ = regexp.Compile(".*/")
 
@@ -109,7 +103,7 @@ func lvl(lvl int, args ...interface{}) {
 	// For the testing-framework, we check the resulting string. So as not to
 	// have the tests fail every time somebody moves the functions, we put
 	// the line-# to 0
-	if Testing > 0 {
+	if !outputLines {
 		line = 0
 	}
 
@@ -163,13 +157,11 @@ func lvl(lvl int, args ...interface{}) {
 		ti := time.Now()
 		str = fmt.Sprintf("%s.%09d%s", ti.Format("06/02/01 15:04:05"), ti.Nanosecond(), str)
 	}
-	TestStr = fmt.Sprintf("%-2s%s", lvlStr, str)
-	if Testing != 2 {
-		if lvl < lvlPrint {
-			fmt.Fprint(stdErr, TestStr)
-		} else {
-			fmt.Fprint(stdOut, TestStr)
-		}
+	str = fmt.Sprintf("%-2s%s", lvlStr, str)
+	if lvl < lvlPrint {
+		fmt.Fprint(stdErr, str)
+	} else {
+		fmt.Fprint(stdOut, str)
 	}
 	if useColors {
 		ct.ResetColor()

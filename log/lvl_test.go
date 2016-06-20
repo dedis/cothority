@@ -9,35 +9,34 @@ import (
 )
 
 func init() {
-	Testing = 1
+	outputLines = false
 	SetUseColors(false)
 }
 
 func TestTime(t *testing.T) {
-	Testing = 2
 	SetDebugVisible(1)
-	defer func() { Testing = 1 }()
+	getStdOut()
 	Lvl1("No time")
-	if !strings.Contains(TestStr, "1 : (") {
-		t.Fatal("Didn't get correct string: ", TestStr)
+	str := getStdOut()
+	if !strings.Contains(str, "1 : (") {
+		t.Fatal("Didn't get correct string: ", str)
 	}
 	SetShowTime(true)
 	defer func() { SetShowTime(false) }()
 	Lvl1("With time")
-	if strings.Contains(TestStr, "1 : (") {
-		t.Fatal("Didn't get correct string: ", TestStr)
+	str = getStdOut()
+	if strings.Contains(str, "1 : (") {
+		t.Fatal("Didn't get correct string: ", str)
 	}
-	if strings.Contains(TestStr, " +") {
-		t.Fatal("Didn't get correct string: ", TestStr)
+	if strings.Contains(str, " +") {
+		t.Fatal("Didn't get correct string: ", str)
 	}
-	if !strings.Contains(TestStr, "With time") {
-		t.Fatal("Didn't get correct string: ", TestStr)
+	if !strings.Contains(str, "With time") {
+		t.Fatal("Didn't get correct string: ", str)
 	}
 }
 
 func TestFlags(t *testing.T) {
-	test := Testing
-	Testing = 2
 	lvl := DebugVisible()
 	time := ShowTime()
 	color := UseColors()
@@ -77,7 +76,6 @@ func TestFlags(t *testing.T) {
 	SetDebugVisible(lvl)
 	SetShowTime(time)
 	SetUseColors(color)
-	Testing = test
 }
 
 func TestOutputFuncs(t *testing.T) {
