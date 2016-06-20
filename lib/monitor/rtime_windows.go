@@ -3,8 +3,8 @@
 package monitor
 
 import (
-	"syscall"
 	"github.com/dedis/cothority/lib/dbg"
+	"syscall"
 )
 
 // Returns the system and the user CPU time used by the current process so far.
@@ -17,5 +17,5 @@ func getRTime() (tSys, tUsr float64) {
 
 	sys := int64(kernelTime.HighDateTime)<<32 + int64(kernelTime.LowDateTime)
 	usr := int64(userTime.HighDateTime)<<32 + int64(userTime.LowDateTime)
-	return (float64(sys) / 10000000.0), (float64(usr) / 10000000.0);
+	return (float64(sys) / 10000000.0), (float64(usr) / 10000000.0)
 }
