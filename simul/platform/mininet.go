@@ -58,6 +58,7 @@ type MiniNet struct {
 
 func (m *MiniNet) Configure(pc *PlatformConfig) {
 	// Directory setup - would also be possible in /tmp
+	// Supposes we're in `cothority/simul`
 	pwd, _ := os.Getwd()
 	m.cothorityDir = pwd + "/cothority"
 	m.mininetDir = pwd + "/platform/mininet"
@@ -178,20 +179,29 @@ func (m *MiniNet) Start(args ...string) error {
 	// proxy => the proxy redirects packets to the same port the sink is
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
-	redirection := strconv.Itoa(m.MonitorPort) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
-	login := fmt.Sprintf("%s@%s", m.Login, m.Host)
-	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
-		redirection, login}
-	exCmd := exec.Command("ssh", cmd...)
-	if err := exCmd.Start(); err != nil {
-		dbg.Fatal("Failed to start the ssh port forwarding:", err)
+	var exCmd *exec.Cmd
+	if true {
+		redirection := strconv.Itoa(m.MonitorPort) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
+		login := fmt.Sprintf("%s@%s", m.Login, m.Host)
+		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
+			redirection, login}
+		exCmd = exec.Command("ssh", cmd...)
+		if err := exCmd.Start(); err != nil {
+			dbg.Fatal("Failed to start the ssh port forwarding:", err)
+		}
+		if err := exCmd.Wait(); err != nil {
+			dbg.Fatal("ssh port forwarding exited in failure:", err)
+		}
+		// And forward that port to the mininet-cluster, which does not have any
+		// access to the outside world
+		exCmd = exec.Command("ssh", "-f", login, "'ssh -nNTf -R :"+redirection+" icsil1-conodes-exp.epfl.ch'")
+	} else {
+		redirection := strconv.Itoa(m.MonitorPort) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
+		login := fmt.Sprintf("%s@%s", m.Login, "icsil1-conodes-exp.epfl.ch")
+		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
+			redirection, login}
+		exCmd = exec.Command("ssh", cmd...)
 	}
-	if err := exCmd.Wait(); err != nil {
-		dbg.Fatal("ssh port forwarding exited in failure:", err)
-	}
-	// And forward that port to the mininet-cluster, which does not have any
-	// access to the outside world
-	exCmd = exec.Command("ssh", "-f", login, "'ssh -nNTf -R :"+redirection+" icsil1-conodes-exp.epfl.ch'")
 	dbg.Print(exCmd)
 	if err := exCmd.Start(); err != nil {
 		dbg.Fatal("Failed to start the 2nd ssh port forwarding:", err)
@@ -199,7 +209,7 @@ func (m *MiniNet) Start(args ...string) error {
 	if err := exCmd.Wait(); err != nil {
 		dbg.Fatal("2nd ssh port forwarding exited in failure:", err)
 	}
-	dbg.Lvl3("Setup remote port forwarding", cmd)
+	dbg.Lvl3("Setup remote port forwarding", exCmd)
 	go func() {
 		dbg.LLvl3("Starting simulation over mininet")
 		startcli := "echo -e \"sync\\nstart\\n\\nquit\\n\" | python cli.py"

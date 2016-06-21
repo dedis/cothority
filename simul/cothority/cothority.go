@@ -43,6 +43,7 @@ func init() {
 
 // Main starts the host and will setup the protocol.
 func main() {
+	dbg.Print("Started main at", hostAddress)
 	flag.Parse()
 	dbg.SetDebugVisible(debugVisible)
 	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible(), monitorAddress)
