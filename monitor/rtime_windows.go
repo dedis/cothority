@@ -3,7 +3,7 @@
 package monitor
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/dbg"
 	"syscall"
 )
 
