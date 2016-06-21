@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"syscall"
 	"time"
 
 	"github.com/dedis/cothority/dbg"
@@ -224,21 +223,6 @@ func EndAndCleanup() {
 		dbg.Error("Could not close connecttion:", err)
 	}
 	encoder = nil
-}
-
-// Converts microseconds to seconds.
-func iiToF(sec int64, usec int64) float64 {
-	return float64(sec) + float64(usec)/1000000.0
-}
-
-// Returns the sytem and the user time so far.
-func getRTime() (tSys, tUsr float64) {
-	rusage := &syscall.Rusage{}
-	if err := syscall.Getrusage(syscall.RUSAGE_SELF, rusage); err != nil {
-		dbg.Error("Couldn't get rusage time:", err)
-	}
-	s, u := rusage.Stime, rusage.Utime
-	return iiToF(int64(s.Sec), int64(s.Usec)), iiToF(int64(u.Sec), int64(u.Usec))
 }
 
 // Returns the difference of the given system- and user-time.
