@@ -3,8 +3,8 @@ package manage
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -28,7 +28,7 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 		tnIndex:          -1,
 	}
 	for i, tn := range n.Tree().List() {
-		if tn.Id == n.TreeNode().Id {
+		if tn.ID == n.TreeNode().ID {
 			b.tnIndex = i
 		}
 	}
@@ -46,7 +46,7 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 	return b, nil
 }
 
-// Start will contact everyone and makes the connections
+// Start will contact everyone and make the connections
 func (b *Broadcast) Start() error {
 	n := len(b.Tree().List())
 	b.repliesLeft = n * (n - 1) / 2
@@ -62,7 +62,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 	ContactNodes
 }) {
 	dbg.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
-	if msg.TreeNode.Id == b.Root().Id {
+	if msg.TreeNode.ID == b.Root().ID {
 		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
 		if b.repliesLeft == 0 {
 			dbg.Lvl3("Won't contact anybody - finishing")
@@ -81,7 +81,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 		}
 	} else {
 		// Tell the caller we're done
-		dbg.Lvl3("Sending back to", msg.TreeNode.Entity.String())
+		dbg.Lvl3("Sending back to", msg.TreeNode.ServerIdentity.String())
 		b.SendTo(msg.TreeNode, &Done{})
 	}
 }
@@ -101,7 +101,7 @@ func (b *Broadcast) handleDone(msg struct {
 		}
 		if !b.IsRoot() {
 			// Tell root we're done
-			dbg.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.Entity.String())
+			dbg.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.ServerIdentity.String())
 			b.SendTo(b.Root(), &Done{})
 		}
 

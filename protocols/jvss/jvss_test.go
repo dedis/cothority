@@ -3,9 +3,9 @@ package jvss_test
 import (
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/protocols/jvss"
+	"github.com/dedis/cothority/sda"
 )
 
 func TestJVSS(t *testing.T) {
@@ -23,7 +23,7 @@ func TestJVSS(t *testing.T) {
 	dbg.TestOutput(testing.Verbose(), 1)
 
 	dbg.Lvl1("JVSS - starting")
-	leader, err := local.CreateProtocol(name, tree)
+	leader, err := local.CreateProtocol(tree, name)
 	if err != nil {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}

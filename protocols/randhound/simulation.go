@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -34,7 +34,7 @@ func NewRHSimulation(config string) (sda.Simulation, error) {
 func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	rhs.Hosts = len(hosts)
-	rhs.CreateEntityList(sim, hosts, 2000)
+	rhs.CreateRoster(sim, hosts, 2000)
 	err := rhs.CreateTree(sim)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
-	leader, err := config.Overlay.CreateProtocol(config.Tree, "RandHound")
+	leader, err := config.Overlay.CreateProtocolSDA(config.Tree, "RandHound")
 	if err != nil {
 		return err
 	}

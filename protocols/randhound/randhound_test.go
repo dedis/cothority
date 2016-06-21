@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/protocols/randhound"
+	"github.com/dedis/cothority/sda"
 )
 
 func TestRandHound(t *testing.T) {
@@ -27,7 +27,7 @@ func TestRandHound(t *testing.T) {
 
 	// Setup and Start RandHound
 	log.Printf("RandHound - starting")
-	leader, err := local.CreateProtocol(name, tree)
+	leader, err := local.CreateProtocol(tree, name)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}

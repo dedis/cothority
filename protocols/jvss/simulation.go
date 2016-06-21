@@ -2,9 +2,9 @@ package jvss
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 // Setup configures a JVSS simulation
 func (jvs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
-	jvs.CreateEntityList(sim, hosts, 2000)
+	jvs.CreateRoster(sim, hosts, 2000)
 	err := jvs.CreateTree(sim)
 	return sim, err
 }
@@ -43,7 +43,7 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 
 	dbg.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
-	p, err := config.Overlay.CreateProtocol(config.Tree, "JVSS")
+	p, err := config.Overlay.CreateProtocolSDA(config.Tree, "JVSS")
 	if err != nil {
 		return err
 	}

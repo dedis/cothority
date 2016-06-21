@@ -1,13 +1,13 @@
-package example_channels_test
+package channels_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/example/channels"
+	"github.com/dedis/cothority/sda"
 )
 
 // Tests a 2-node system
@@ -23,7 +23,7 @@ func TestNode(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	protocol := p.(*example_channels.ProtocolExampleChannels)
+	protocol := p.(*channels.ProtocolExampleChannels)
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:

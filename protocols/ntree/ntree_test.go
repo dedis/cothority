@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/protocols/ntree"
+	"github.com/dedis/cothority/sda"
 )
 
 func TestNtree(t *testing.T) {
@@ -32,7 +32,7 @@ func TestNtree(t *testing.T) {
 		}
 
 		// Start the protocol
-		pi, err := local.CreateProtocol("NaiveTree", tree)
+		pi, err := local.CreateProtocol(tree, "NaiveTree")
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}

@@ -9,11 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/sda"
 	// Import protocols so every protocols is registered to the sda
 	"strings"
 
+	// We implicitely imports all available protocols here since it's usually
+	// done in the main for production purpose
 	_ "github.com/dedis/cothority/protocols"
 	_ "github.com/dedis/cothority/services"
 )

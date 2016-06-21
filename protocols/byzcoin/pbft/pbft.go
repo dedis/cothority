@@ -7,9 +7,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -73,7 +73,7 @@ func NewProtocol(n *sda.TreeNodeInstance) (*Protocol, error) {
 	pbft.nodeList = tree.List()
 	idx := notFound
 	for i, tn := range pbft.nodeList {
-		if tn.Id.Equals(n.TreeNode().Id) {
+		if tn.ID.Equal(n.TreeNode().ID) {
 			idx = i
 		}
 	}

@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/dbg"
 )
 
 // Platform interface that has to be implemented to add another simulation-
