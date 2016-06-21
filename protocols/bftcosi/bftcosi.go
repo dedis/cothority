@@ -102,6 +102,14 @@ type ProtocolBFTCoSi struct {
 
 	// our index in the Roster list
 	index int
+	// prepareSignature is the signature generated during the prepare phase
+	// This signature is adapted according to the exceptions that occured during
+	// the prepare phase.
+	prepareSignature []byte
+	// commitSignature is the signature generated during the commit phase
+	// This signature is adapted according to the exceptions that occured during
+	// the commit phase.
+	commitSignature []byte
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
@@ -194,12 +202,24 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 
 // Signature will generate the final signature, the output of the BFTCoSi
 // protocol.
+// The signature contains the commit round signature, with the message.
+// If the prepare phase failed, the signature will be nil and the Exceptions
+// will contain the exception from the prepare phase. It can be useful to see
+// which cosigners refused to sign (each exceptions contains the index of a
+// refusing-to-sign signer).
+// Expect this function to have an undefined behavior when called from a
+// non-root Node.
 func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
-	return &BFTSignature{
+	bftSig := &BFTSignature{
 		Sig:        bft.commit.Signature(),
 		Msg:        bft.Msg,
-		Exceptions: bft.tempExceptions,
+		Exceptions: nil,
 	}
+	if bft.signRefusal {
+		bftSig.Sig = nil
+		bftSig.Exceptions = bft.tempExceptions
+	}
+	return bftSig
 }
 
 // RegisterOnDone registers a callback to call when the bftcosi protocols has
@@ -310,7 +330,7 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 			Challenge: ch,
 			Signature: &BFTSignature{
 				Msg:        bft.Msg,
-				Sig:        bft.prepare.Signature(),
+				Sig:        bft.prepareSignature,
 				Exceptions: bft.tempExceptions,
 			},
 		}
@@ -346,7 +366,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	}
 
 	// verify if the signature is correct
-	if err := ch.Signature.Verify(bft.suite, bft.Roster().Publics()); err != nil {
+	if err := VerifyBFTSignature(bft.suite, ch.Signature, bft.Roster().Publics()); err != nil {
 		dbg.Lvl2(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
@@ -402,17 +422,34 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	if !bft.IsRoot() {
 		return bft.SendTo(bft.Parent(), bzrReturn)
 	}
+	// let's modify the cosi signature so it don't account the exception
+	// response
+	cosiSig := bft.prepare.Signature()
+	correctResponseBuff, err := bzrReturn.Response.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	// replace the old one with the corrected one
+	copy(cosiSig[32:64], correctResponseBuff)
+	bft.prepareSignature = cosiSig
 
 	// Verify the signature is correct
 	sig := &BFTSignature{
 		Msg:        bft.Msg,
-		Sig:        bft.prepare.Signature(),
+		Sig:        cosiSig,
 		Exceptions: bft.tempExceptions,
 	}
-	if err := sig.Verify(bft.suite, bft.Roster().Publics()); err != nil {
+
+	aggCommit := bft.suite.Point().Null()
+	for _, c := range bft.tempPrepareCommit {
+		aggCommit.Add(aggCommit, c)
+	}
+	if err := VerifyBFTSignature(bft.suite, sig, bft.Roster().Publics()); err != nil {
 		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
+	dbg.Lvl3(bft.Name(), "Verification of signature successful")
 	// Start the challenge of the 'commit'-round
 	if err := bft.startChallenge(RoundCommit); err != nil {
 		dbg.Error(err)
@@ -440,22 +477,23 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 		}
 	}
 
+	var err error
+	if bft.IsLeaf() {
+		r.Response, err = bft.commit.CreateResponse()
+	} else {
+		r.Response, err = bft.commit.Response(bft.tempCommitResponse)
+	}
+	if err != nil {
+		return err
+	}
+
 	if bft.signRefusal {
 		r.Exceptions = append(r.Exceptions, Exception{
 			Index:      bft.index,
 			Commitment: bft.commit.GetCommitment(),
 		})
-	} else {
-		var err error
-		if bft.IsLeaf() {
-			r.Response, err = bft.commit.CreateResponse()
-		} else {
-			// XXX TODO
-			r.Response, err = bft.commit.Response(bft.tempCommitResponse)
-		}
-		if err != nil {
-			return err
-		}
+		// don't include our own!
+		r.Response.Sub(r.Response, bft.commit.GetResponse())
 	}
 
 	// notify we have finished to participate in this signature
@@ -472,7 +510,7 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 	}
 
 	// otherwise , send the response up
-	err := bft.SendTo(bft.Parent(), r)
+	err = bft.SendTo(bft.Parent(), r)
 	bft.Done()
 	return err
 }
@@ -482,7 +520,7 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 // true => no exception, the verification is correct
 // false => exception, the verification failed
 func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
-	dbg.Lvl4(bft.Name(), "Waiting for response verification:")
+	dbg.Lvl3(bft.Name(), "Waiting for response verification:")
 	// wait the verification
 	verified := <-bft.verifyChan
 
@@ -497,9 +535,9 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 			Index:      bft.index,
 			Commitment: bft.prepare.GetCommitment(),
 		})
-		dbg.Lvl4(bft.Name(), "Response verification: failed")
 		// Don't include our response!
 		resp = bft.suite.Scalar().Set(resp).Sub(resp, bft.prepare.GetResponse())
+		dbg.Lvl3(bft.Name(), "Response verification: failed")
 	}
 
 	r := &Response{
@@ -508,7 +546,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 		Response:   resp,
 	}
 
-	dbg.Lvl4("Response verification:", verified, bft.Name())
+	dbg.Lvl3(bft.Name(), "Response verification:", verified)
 	return r, verified
 }
 

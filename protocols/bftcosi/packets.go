@@ -34,7 +34,10 @@ type BFTSignature struct {
 // signature, so it can be verified by dedis/crypto/cosi.
 // Aggregate is the aggregate public key of all signers, and the msg is the msg
 // being signed.
-func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error {
+func VerifyBFTSignature(s abstract.Suite, bs *BFTSignature, publics []abstract.Point) error {
+	if bs == nil || bs.Sig == nil || bs.Msg == nil {
+		return errors.New("Invalid signature")
+	}
 	// compute the aggregate key of all the signers
 	aggPublic := s.Point().Null()
 	for i := range publics {
@@ -77,6 +80,7 @@ func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error
 	left := s.Point().Add(rb, ka)
 
 	right := s.Point().Sub(origCommit, aggExCommit)
+
 	if !left.Equal(right) {
 		return errors.New("Commit recreated is not equal to one given")
 	}
