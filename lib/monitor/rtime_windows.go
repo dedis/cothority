@@ -13,6 +13,7 @@ func getRTime() (tSys, tUsr float64) {
 	hProcess, _ := syscall.GetCurrentProcess()
 	if err := syscall.GetProcessTimes(hProcess, &creationTime, &exitTime, &kernelTime, &userTime); err != nil {
 		dbg.Error("Couldn't get rusage time:", err)
+		return -1, -1
 	}
 
 	sys := int64(kernelTime.HighDateTime)<<32 + int64(kernelTime.LowDateTime)

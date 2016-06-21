@@ -225,11 +225,6 @@ func EndAndCleanup() {
 	encoder = nil
 }
 
-// Converts microseconds to seconds.
-func iiToF(sec int64, usec int64) float64 {
-	return float64(sec) + float64(usec)/1000000.0
-}
-
 // Returns the difference of the given system- and user-time.
 func getDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
 	nowSys, nowUsr := getRTime()
