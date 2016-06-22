@@ -27,14 +27,14 @@ type Context interface {
 
 // defaultContext is the implementation of the Context interface. It is
 // instantiated for each Service.
-type defaultContext struct {
+type DefaultContext struct {
 	*Overlay
 	*Host
 	servID ServiceID
 }
 
-func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
-	return &defaultContext{
+func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *DefaultContext {
+	return &DefaultContext{
 		Overlay: o,
 		Host:    h,
 		servID:  servID,
@@ -42,35 +42,35 @@ func newDefaultContext(h *Host, o *Overlay, servID ServiceID) *defaultContext {
 }
 
 // NewTreeNodeInstance implements the Context interface method
-func (dc *defaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
+func (dc *DefaultContext) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
 	return dc.Overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), dc.servID)
 }
 
 // SendRaw sends a message to the entity
-func (dc *defaultContext) SendRaw(e *network.Entity, msg interface{}) error {
+func (dc *DefaultContext) SendRaw(e *network.Entity, msg interface{}) error {
 	return dc.Host.SendRaw(e, msg)
 }
 
 // Entity returns the entity the service uses
-func (dc *defaultContext) Entity() *network.Entity {
+func (dc *DefaultContext) Entity() *network.Entity {
 	return dc.Host.Entity
 }
 
 // GetID returns the service-id
-func (dc *defaultContext) ServiceID() ServiceID {
+func (dc *DefaultContext) ServiceID() ServiceID {
 	return dc.servID
 }
 
 // CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
 // prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
-func (dc *defaultContext) CreateProtocolService(t *Tree, name string) (ProtocolInstance, error) {
+func (dc *DefaultContext) CreateProtocolService(t *Tree, name string) (ProtocolInstance, error) {
 	pi, err := dc.Overlay.CreateProtocolService(dc.servID, t, name)
 	return pi, err
 }
 
 // CreateProtocolSDA is like CreateProtocolService but doesn't bind a service to it,
 // so it will be handled automatically by the SDA.
-func (dc *defaultContext) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
+func (dc *DefaultContext) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
 	pi, err := dc.Overlay.CreateProtocolSDA(t, name)
 	return pi, err
 }

@@ -19,22 +19,22 @@ import (
 // state
 type Host struct {
 	// Our entity (i.e. identity over the network)
-	Entity *network.Entity
+	Entity                 *network.Entity
 	// Our private-key
-	private abstract.Secret
+	private                abstract.Secret
 	// The TCPHost
-	host network.SecureHost
+	host                   network.SecureHost
 	// Overlay handles the mapping from tree and entityList to Entity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
-	overlay *Overlay
+	overlay                *Overlay
 	// The open connections
-	connections map[network.EntityID]network.SecureConn
+	Connections            map[network.EntityID]network.SecureConn
 	// chan of received messages - testmode
-	networkChan chan network.Message
+	networkChan            chan network.Message
 	// treeMarshal that needs to be converted to Tree but host does not have the
 	// entityList associated yet.
 	// map from EntityList.ID => trees that use this entity list
-	pendingTreeMarshal map[EntityListID][]*TreeMarshal
+	pendingTreeMarshal     map[EntityListID][]*TreeMarshal
 	// pendingSDAData are a list of message we received that does not correspond
 	// to any local Tree or/and EntityList. We first request theses so we can
 	// instantiate properly protocolInstance that will use these SDAData msg.
@@ -56,13 +56,13 @@ type Host struct {
 	// is known as right now
 	workingAddress string
 	// listening is a flag to tell whether this host is listening or not
-	listening bool
+	listening              bool
 	// whether processMessages has started
 	processMessagesStarted bool
 	// tell processMessages to quit
-	ProcessMessagesQuit chan bool
+	ProcessMessagesQuit    chan bool
 
-	serviceStore *serviceStore
+	serviceStore           *serviceStore
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
@@ -71,7 +71,7 @@ func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
 	h := &Host{
 		Entity:              e,
 		workingAddress:      e.First(),
-		connections:         make(map[network.EntityID]network.SecureConn),
+		Connections:         make(map[network.EntityID]network.SecureConn),
 		pendingTreeMarshal:  make(map[EntityListID][]*TreeMarshal),
 		pendingSDAs:         make([]*Data, 0),
 		host:                network.NewSecureTCPHost(pkey, e),
@@ -173,7 +173,7 @@ func (h *Host) Close() error {
 func (h *Host) closeConnections() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
-	for _, c := range h.connections {
+	for _, c := range h.Connections {
 		dbg.Lvl4(h.Entity.First(), "Closing connection", c, c.Remote(), c.Local())
 		err := c.Close()
 		if err != nil {
@@ -182,7 +182,7 @@ func (h *Host) closeConnections() error {
 		}
 	}
 	dbg.Lvl4(h.Entity.First(), "Closing tcpHost")
-	h.connections = make(map[network.EntityID]network.SecureConn)
+	h.Connections = make(map[network.EntityID]network.SecureConn)
 	return h.host.Close()
 }
 
@@ -196,7 +196,7 @@ func (h *Host) closeConnection(c network.SecureConn) error {
 	if err != nil {
 		return err
 	}
-	delete(h.connections, c.Entity().ID)
+	delete(h.Connections, c.Entity().ID)
 	return nil
 }
 
@@ -206,7 +206,7 @@ func (h *Host) SendRaw(e *network.Entity, msg network.ProtocolMessage) error {
 		return errors.New("Can't send nil-packet")
 	}
 	h.networkLock.RLock()
-	c, ok := h.connections[e.ID]
+	c, ok := h.Connections[e.ID]
 	h.networkLock.RUnlock()
 	if !ok {
 		var err error
@@ -420,7 +420,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		// This is for testing purposes only: if the connection is missing
 		// in the map, we just return silently
 		h.networkLock.Lock()
-		_, cont := h.connections[c.Entity().ID]
+		_, cont := h.Connections[c.Entity().ID]
 		h.networkLock.Unlock()
 		if !cont {
 			dbg.Lvl3(h.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
@@ -504,12 +504,12 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	id := c.Entity()
-	_, okc := h.connections[id.ID]
+	_, okc := h.Connections[id.ID]
 	if okc {
 		// TODO - we should catch this in some way
 		dbg.Lvl3("Connection already registered", okc)
 	}
-	h.connections[id.ID] = c
+	h.Connections[id.ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.

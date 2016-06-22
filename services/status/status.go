@@ -36,20 +36,59 @@ var StatRequestType = network.RegisterMessageType(StatusRequest{})
 
 // SignatureResponse is what the Cosi service will reply to clients.
 type StatusResponse struct {
-	Connections int
+	Serv     string
+	Tot      int
+	Remote   []string
+	Received []uint64
+	Sent     []uint64
 }
 
 // StatResponseType is the type that is embedded in the Request object for a
 // StatResponse
 var StatResponseType = network.RegisterMessageType(StatusResponse{})
 
+func Received(n map[network.EntityID]network.SecureConn) []uint64 {
+	var a []uint64
+	for _, value := range n {
+		a = append(a, value.Rx())
+	}
+	return a
+}
+
+func Sent(n map[network.EntityID]network.SecureConn) []uint64 {
+	var a []uint64
+	for _, value := range n {
+		a = append(a, value.Tx())
+	}
+	return a
+
+}
+func Host(n map[network.EntityID]network.SecureConn) string {
+	var a string
+	for _, value := range n {
+		a = value.Local()
+	}
+	return a
+
+}
+func Remote(n map[network.EntityID]network.SecureConn) []string {
+	var a []string
+	for _, value := range n {
+		a = append(a, value.Remote())
+	}
+	return a
+}
+
 // SignatureRequest treats external request to this service.
 func (st *Stat) StatusRequest(e *network.Entity, req *StatusRequest) (network.ProtocolMessage, error) {
 	return &StatusResponse{
-		Connections: len(st.Context.(*sda.DefaultContext).Host.Connections),
+		Serv:     Host(st.Context.(*sda.DefaultContext).Host.Connections),
+		Remote:   Remote(st.Context.(*sda.DefaultContext).Host.Connections),
+		Tot:      len(st.Context.(*sda.DefaultContext).Host.Connections),
+		Received: Received(st.Context.(*sda.DefaultContext).Host.Connections),
+		Sent:     Sent(st.Context.(*sda.DefaultContext).Host.Connections),
 	}, nil
 }
-
 
 func newStatService(c sda.Context, path string) sda.Service {
 	s := &Stat{

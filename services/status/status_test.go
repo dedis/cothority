@@ -3,6 +3,8 @@ package status
 import (
 	"testing"
 
+	"fmt"
+
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/example/channels"
@@ -22,9 +24,10 @@ func TestServiceStatus(t *testing.T) {
 	client := NewClient()
 	dbg.Lvl1("Sending request to service...")
 	stat, err := client.GetStatus(el.List[0])
+	fmt.Println(el.List[0])
 	dbg.ErrFatal(err)
 	dbg.Lvl1(stat)
-	assert.Equal(t, 2, stat.Connections)
+	assert.Equal(t, 2, stat.Tot)
 	pi, err := local.CreateProtocol(tr, "ExampleChannels")
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
@@ -34,5 +37,5 @@ func TestServiceStatus(t *testing.T) {
 	stat, err = client.GetStatus(el.List[0])
 	dbg.ErrFatal(err)
 	dbg.Lvl1(stat)
-	assert.Equal(t, 4, stat.Connections)
+	assert.Equal(t, 4, stat.Tot)
 }
