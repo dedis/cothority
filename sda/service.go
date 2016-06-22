@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
@@ -87,7 +87,7 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
 	if _, ok := s.constructors[id]; ok {
 		// called at init time so better panic than to continue
-		dbg.Lvl1("RegisterService():", name)
+		log.Lvl1("RegisterService():", name)
 	}
 	s.constructors[id] = fn
 	s.translations[name] = id
@@ -148,7 +148,7 @@ func (s *serviceFactory) start(name string, c Context, path string) (Service, er
 		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
 	serv := fn(c, path)
-	dbg.Lvl2("Instantiated service", name)
+	log.Lvl2("Instantiated service", name)
 	return serv, nil
 }
 
@@ -173,7 +173,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
-			dbg.Panic(err)
+			log.Panic(err)
 		}
 	}
 	services := make(map[ServiceID]Service)
@@ -183,24 +183,24 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		name := ServiceFactory.Name(id)
 		pwd, err := os.Getwd()
 		if err != nil {
-			dbg.Panic(err)
+			log.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
 		if err := os.MkdirAll(configName, 0666); err != nil {
-			dbg.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
+			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
 		c := newDefaultContext(h, o, id)
 		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
-			dbg.Error("Trying to instantiate service:", err)
+			log.Error("Trying to instantiate service:", err)
 		}
-		dbg.Lvl2("Started Service", name, " (config in", configName, ")")
+		log.Lvl2("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
 		// !! register to the ProtocolFactory !!
 		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
-	dbg.Lvl3(h.workingAddress, "instantiated all services")
+	log.Lvl3(h.workingAddress, "instantiated all services")
 	return &serviceStore{services, configs}
 }
 
@@ -249,7 +249,7 @@ var RequestID = network.RegisterMessageType(ClientRequest{})
 // to think on how to change that.
 func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) {
 	sid := ServiceFactory.ServiceID(service)
-	dbg.Lvl1("Name", service, " <-> ServiceID", sid.String())
+	log.Lvl1("Name", service, " <-> ServiceID", sid.String())
 	buff, err := network.MarshalRegisteredType(r)
 	if err != nil {
 		return nil, err
@@ -323,7 +323,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 	}
 
 	// Connect to the root
-	dbg.Lvl4("Opening connection to", dst)
+	log.Lvl4("Opening connection to", dst)
 	con, err := c.host.Open(dst)
 	defer c.host.Close()
 	if err != nil {
@@ -347,12 +347,12 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 	pchan := make(chan network.Packet)
 	go func() {
 		// send the request
-		dbg.Lvlf4("Sending request %x", serviceReq.Service)
+		log.Lvlf4("Sending request %x", serviceReq.Service)
 		if err := con.Send(context.TODO(), serviceReq); err != nil {
 			close(pchan)
 			return
 		}
-		dbg.Lvl4("Waiting for the response from", reflect.ValueOf(con).Pointer())
+		log.Lvl4("Waiting for the response from", reflect.ValueOf(con).Pointer())
 		// wait for the response
 		packet, err := con.Receive(context.TODO())
 		if err != nil {
@@ -363,7 +363,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 	}()
 	select {
 	case response := <-pchan:
-		dbg.Lvlf5("Response: %+v %+v", response, response.Msg)
+		log.Lvlf5("Response: %+v %+v", response, response.Msg)
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {
@@ -396,13 +396,13 @@ func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, er
 
 // BinaryMarshaler can be used to store the client in a configuration-file
 func (c *Client) BinaryMarshaler() ([]byte, error) {
-	dbg.Fatal("Not yet implemented")
+	log.Fatal("Not yet implemented")
 	return nil, nil
 }
 
 // BinaryUnmarshaler sets the different values from a byte-slice
 func (c *Client) BinaryUnmarshaler(b []byte) error {
-	dbg.Fatal("Not yet implemented")
+	log.Fatal("Not yet implemented")
 	return nil
 }
 

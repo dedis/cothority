@@ -7,7 +7,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // Implements a simple proxy
@@ -43,23 +43,23 @@ func Proxy(redirection string) error {
 	if err := connectToSink(redirection); err != nil {
 		return err
 	}
-	dbg.Lvl2("Proxy connected to sink", redirection)
+	log.Lvl2("Proxy connected to sink", redirection)
 
 	// The proxy listens on the port one lower than itself
 	_, port, err := net.SplitHostPort(redirection)
 	if err != nil {
-		dbg.Fatal("Couldn't get port-numbre from", redirection)
+		log.Fatal("Couldn't get port-numbre from", redirection)
 	}
 	portNbr, err := strconv.Atoi(port)
 	if err != nil {
-		dbg.Fatal("Couldn't convert", port, "to a number")
+		log.Fatal("Couldn't convert", port, "to a number")
 	}
 	sinkAddr := Sink + ":" + strconv.Itoa(portNbr-1)
 	ln, err := net.Listen("tcp", sinkAddr)
 	if err != nil {
 		return fmt.Errorf("Error while binding proxy to addr %s: %v", sinkAddr, err)
 	}
-	dbg.Lvl2("Proxy listening on", sinkAddr)
+	log.Lvl2("Proxy listening on", sinkAddr)
 	newConn := make(chan bool)
 	closeConn := make(chan bool)
 	finished := false
@@ -75,10 +75,10 @@ func Proxy(redirection string) error {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl1("Error proxy accepting connection:", err)
+				log.Lvl1("Error proxy accepting connection:", err)
 				continue
 			}
-			dbg.Lvl3("Proxy accepting incoming connection from:", conn.RemoteAddr().String())
+			log.Lvl3("Proxy accepting incoming connection from:", conn.RemoteAddr().String())
 			newConn <- true
 			proxyConns[conn.RemoteAddr().String()] = json.NewEncoder(conn)
 			go proxyConnection(conn, closeConn)
@@ -98,13 +98,13 @@ func Proxy(redirection string) error {
 				if nconn == 0 {
 					// everything is finished
 					if err := serverEnc.Encode(NewSingleMeasure("end", 0)); err != nil {
-						dbg.Error("Couldn't send 'end' message:", err)
+						log.Error("Couldn't send 'end' message:", err)
 					}
 					if err := serverConn.Close(); err != nil {
-						dbg.Error("Couldn't close server connection:", err)
+						log.Error("Couldn't close server connection:", err)
 					}
 					if err := ln.Close(); err != nil {
-						dbg.Error("Couldn't close listener:", err)
+						log.Error("Couldn't close listener:", err)
 					}
 					finished = true
 					break
@@ -139,28 +139,28 @@ func proxyConnection(conn net.Conn, done chan bool) {
 			if err == io.EOF {
 				break
 			}
-			dbg.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
+			log.Lvl1("Error receiving data from", conn.RemoteAddr().String(), ":", err)
 			nerr++
 			if nerr > 1 {
-				dbg.Lvl1("Too many errors from", conn.RemoteAddr().String(), ": Abort connection")
+				log.Lvl1("Too many errors from", conn.RemoteAddr().String(), ": Abort connection")
 				break
 			}
 		}
-		dbg.Lvl3("Proxy received", m)
+		log.Lvl3("Proxy received", m)
 
 		// Proxy data back to monitor
 		if err := serverEnc.Encode(m); err != nil {
-			dbg.Lvl2("Error proxying data :", err)
+			log.Lvl2("Error proxying data :", err)
 			break
 		}
 		if m.Name == "end" {
 			// the end
-			dbg.Lvl2("Proxy detected end of measurement. Closing connection.")
+			log.Lvl2("Proxy detected end of measurement. Closing connection.")
 			break
 		}
 	}
 	if err := conn.Close(); err != nil {
-		dbg.Error("Couldn't close connection:", err)
+		log.Error("Couldn't close connection:", err)
 	}
 	done <- true
 }

@@ -6,7 +6,7 @@ import (
 
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -136,7 +136,7 @@ func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
 		err := host.Close()
 		if err != nil {
-			dbg.Error("Closing host", host.ServerIdentity.First(),
+			log.Error("Closing host", host.ServerIdentity.First(),
 				"gives error", err)
 		}
 	}
@@ -267,15 +267,15 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	root := hosts[0]
 	for _, host := range hosts {
 		host.ListenAndBind()
-		dbg.Lvlf3("Listening on %s %x", host.ServerIdentity.First(), host.ServerIdentity.ID)
+		log.Lvlf3("Listening on %s %x", host.ServerIdentity.First(), host.ServerIdentity.ID)
 		if processMessages {
 			host.StartProcessMessages()
 		}
 		if connect && root != host {
-			dbg.Lvl4("Connecting", host.ServerIdentity.First(), host.ServerIdentity.ID, "to",
+			log.Lvl4("Connecting", host.ServerIdentity.First(), host.ServerIdentity.ID, "to",
 				root.ServerIdentity.First(), root.ServerIdentity.ID)
 			if _, err := host.Connect(root.ServerIdentity); err != nil {
-				dbg.Fatal(host.ServerIdentity.Addresses, "Could not connect hosts", root.ServerIdentity.Addresses, err)
+				log.Fatal(host.ServerIdentity.Addresses, "Could not connect hosts", root.ServerIdentity.Addresses, err)
 			}
 			// Wait for connection accepted in root
 			connected := false
@@ -290,7 +290,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 				}
 				root.networkLock.Unlock()
 			}
-			dbg.Lvl4(host.ServerIdentity.First(), "is connected to root")
+			log.Lvl4(host.ServerIdentity.First(), "is connected to root")
 		}
 	}
 	return hosts

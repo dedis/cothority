@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,8 +19,8 @@ var countMut sync.Mutex
 const TestProtocolName = "DummyBFTCoSi"
 
 func TestBftCoSi(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 4)
 
 	// Register test protocol using BFTCoSi
 	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -31,7 +31,7 @@ func TestBftCoSi(t *testing.T) {
 		countMut.Lock()
 		veriCount = 0
 		countMut.Unlock()
-		dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
+		log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
 
@@ -80,9 +80,9 @@ func TestBftCoSi(t *testing.T) {
 func verify(m []byte) bool {
 	countMut.Lock()
 	veriCount++
-	dbg.Lvl1("Verification called", veriCount, "times")
+	log.Lvl1("Verification called", veriCount, "times")
 	countMut.Unlock()
-	dbg.Lvl1("Ignoring message:", string(m))
+	log.Lvl1("Ignoring message:", string(m))
 	// everything is OK, always:
 	return true
 }

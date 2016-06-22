@@ -7,7 +7,7 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/config"
 )
@@ -20,9 +20,9 @@ func init() {
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	p := NewServiceProcessor(nil)
-	dbg.ErrFatal(p.RegisterMessage(procMsg))
+	log.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
 	}
@@ -39,7 +39,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 		procMsgWrong6,
 	}
 	for _, f := range wrongFunctions {
-		dbg.Lvl2("Checking function", reflect.TypeOf(f).String())
+		log.Lvl2("Checking function", reflect.TypeOf(f).String())
 		err := p.RegisterMessage(f)
 		if err == nil {
 			t.Fatalf("Shouldn't accept function %+s", reflect.TypeOf(f).String())
@@ -48,9 +48,9 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	p := NewServiceProcessor(nil)
-	dbg.ErrFatal(p.RegisterMessage(procMsg))
+	log.ErrFatal(p.RegisterMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
 	e := network.NewServerIdentity(pair.Public, "")
@@ -75,7 +75,7 @@ func TestProcessor_GetReply(t *testing.T) {
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := NewLocalTest()
 
 	// generate 5 hosts, they don't connect, they process messages, and they
@@ -102,7 +102,7 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 func mkClientRequest(msg network.Body) []byte {
 	b, err := network.MarshalRegisteredType(msg)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	return b
 }
 

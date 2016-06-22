@@ -2,7 +2,7 @@ package byzcoinNtree
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
@@ -36,7 +36,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
-		dbg.Fatal("Couldn't get block:", err)
+		log.Fatal("Couldn't get block:", err)
 	}
 
 	sc := &sda.SimulationConfig{}
@@ -50,16 +50,16 @@ func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
-	dbg.Lvl2("Naive Tree Simulation starting with: Rounds=", e.Rounds)
+	log.Lvl2("Naive Tree Simulation starting with: Rounds=", e.Rounds)
 	server := NewNtreeServer(e.Blocksize)
 	for round := 0; round < e.Rounds; round++ {
 		client := byzcoin.NewClient(server)
 		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 		if err != nil {
-			dbg.Error("ClientSimulation:", err)
+			log.Error("ClientSimulation:", err)
 		}
 
-		dbg.Lvl1("Starting round", round)
+		log.Lvl1("Starting round", round)
 		// create an empty node
 		node := sdaConf.Overlay.NewTreeNodeInstanceFromProtoName(sdaConf.Tree, "ByzCoinNtree")
 		// instantiate a byzcoin protocol
@@ -75,18 +75,18 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		done := make(chan bool)
 		nt.RegisterOnDone(func(sig *NtreeSignature) {
 			rComplete.Record()
-			dbg.Lvl3("Done")
+			log.Lvl3("Done")
 			done <- true
 		})
 
 		go func() {
 			if err := nt.Start(); err != nil {
-				dbg.Error("Couldn't start ntree protocol:", err)
+				log.Error("Couldn't start ntree protocol:", err)
 			}
 		}()
 		// wait for the end
 		<-done
-		dbg.Lvl3("Round", round, "finished")
+		log.Lvl3("Round", round, "finished")
 
 	}
 	return nil

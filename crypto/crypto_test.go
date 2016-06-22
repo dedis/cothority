@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	code := m.Run()
-	dbg.AfterTest(nil)
+	log.AfterTest(nil)
 	os.Exit(code)
 }

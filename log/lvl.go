@@ -1,5 +1,11 @@
-// Package dbg shows more or less output using different debug-levels.
-// You can use
+// Package log is an output-library that can print nicely formatted
+// messages to the screen.
+//
+// There are log-level messages that will be printed according to the
+// current debug-level set. Furthermore a set of common messages exist
+// that are printed according to a chosen format.
+//
+// The log-level messages are:
 //	log.Lvl1("Important information")
 //	log.Lvl2("Less important information")
 //	log.Lvl3("Eventually flooding information")
@@ -16,33 +22,80 @@
 // You can also add a 'f' to the name and use it like fmt.Printf:
 //	log.Lvlf1("Level: %d/%d", now, max)
 //
-// Additional to that you also have
+// The common messages are:
+//	log.Print("Simple output")
+//	log.Info("For your information")
 //	log.Warn("Only a warning")
 //	log.Error("This is an error, but continues")
 //	log.Panic("Something really went bad - calls panic")
 //	log.Fatal("No way to continue - calls os.Exit")
 //
-// The dbg-package also takes into account the following environment-variables:
+// These messages are printed according to the value of 'Format':
+// - Format == FormatLvl - same as log.Lvl
+// - Format == FormatPython - with some nice python-style formatting
+// - Format == FormatNone - just as plain text
+//
+// The log-package also takes into account the following environment-variables:
 //	DEBUG_LVL // will act like SetDebugVisible
 //	DEBUG_TIME // if 'true' it will print the date and time
 //	DEBUG_COLOR // if 'false' it will not use colors
 // But for this the function ParseEnv() or AddFlags() has to be called.
-package dbg
+package log
 
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/daviddengcn/go-colortext"
 )
+
+// For debugging purposes we can change the output-writer
+var stdOut io.Writer
+var stdErr io.Writer
+
+func init() {
+	stdOut = os.Stdout
+	stdErr = os.Stderr
+}
+
+const (
+	lvlWarning = iota - 20
+	lvlError
+	lvlFatal
+	lvlPanic
+	lvlInfo
+	lvlPrint
+)
+
+// These formats can be used in place of the debugVisible
+const (
+	// FormatPython uses [x] and others to indicate what is shown
+	FormatPython = -1
+	// FormatNone is just pure print
+	FormatNone = 0
+)
+
+// NamePadding - the padding of functions to make a nice debug-output - this is automatically updated
+// whenever there are longer functions and kept at that new maximum. If you prefer
+// to have a fixed output and don't remember oversized names, put a negative value
+// in here
+var NamePadding = 40
+
+// LinePadding of line-numbers for a nice debug-output - used in the same way as
+// NamePadding
+var LinePadding = 3
+
+// StaticMsg - if this variable is set, it will be outputted between the
+// position and the message
+var StaticMsg = ""
 
 // These are information-debugging levels that can be turned on or off.
 // Every logging greater than 'DebugVisible' will be discarded. So you can
@@ -58,38 +111,10 @@ var useColors = true
 
 var debugMut sync.RWMutex
 
-// NamePadding - the padding of functions to make a nice debug-output - this is automatically updated
-// whenever there are longer functions and kept at that new maximum. If you prefer
-// to have a fixed output and don't remember oversized names, put a negative value
-// in here
-var NamePadding = 40
-
-// LinePadding of line-numbers for a nice debug-output - used in the same way as
-// NamePadding
-var LinePadding = 3
-
-// Testing variable can have multiple values
-// 0 - no testing
-// 1 - put all line-numbers to 0
-// 2 - like 1, but write to TestString instead of stdout
-var Testing = 0
-
-// TestStr is only used in testing to redirect output to this string
-var TestStr = ""
-
-// StaticMsg - if this variable is set, it will be outputted between the
-// position and the message
-var StaticMsg = ""
+// outputLines can be false to suppress outputting of lines in tests
+var outputLines = true
 
 var regexpPaths, _ = regexp.Compile(".*/")
-
-const (
-	lvlWarning = iota - 10
-	lvlError
-	lvlFatal
-	lvlPanic
-	lvlPrint
-)
 
 func lvl(lvl int, args ...interface{}) {
 	debugMut.Lock()
@@ -105,7 +130,7 @@ func lvl(lvl int, args ...interface{}) {
 	// For the testing-framework, we check the resulting string. So as not to
 	// have the tests fail every time somebody moves the functions, we put
 	// the line-# to 0
-	if Testing > 0 {
+	if !outputLines {
 		line = 0
 	}
 
@@ -159,13 +184,11 @@ func lvl(lvl int, args ...interface{}) {
 		ti := time.Now()
 		str = fmt.Sprintf("%s.%09d%s", ti.Format("06/02/01 15:04:05"), ti.Nanosecond(), str)
 	}
-	TestStr = fmt.Sprintf("%-2s%s", lvlStr, str)
-	if Testing != 2 {
-		if lvl < lvlPrint {
-			fmt.Fprint(os.Stderr, TestStr)
-		} else {
-			fmt.Fprint(os.Stdout, TestStr)
-		}
+	str = fmt.Sprintf("%-2s%s", lvlStr, str)
+	if lvl < lvlPrint {
+		fmt.Fprint(stdErr, str)
+	} else {
+		fmt.Fprint(stdOut, str)
 	}
 	if useColors {
 		ct.ResetColor()
@@ -187,16 +210,6 @@ func lvlf(l int, f string, args ...interface{}) {
 }
 func lvld(l int, args ...interface{}) {
 	lvl(l, args...)
-}
-
-// Print directly sends the arguments to the stdout
-func Print(args ...interface{}) {
-	lvld(lvlPrint, args...)
-}
-
-// Printf is like Print but takes a formatting-argument first
-func Printf(f string, args ...interface{}) {
-	lvlf(lvlPrint, f, args...)
 }
 
 // Lvl1 debug output is informational and always displayed
@@ -281,50 +294,6 @@ func LLvlf4(f string, args ...interface{}) { lvlf(-4, f, args...) }
 // LLvlf5 *always* prints
 func LLvlf5(f string, args ...interface{}) { lvlf(-5, f, args...) }
 
-// Warn prints out the warning
-func Warn(args ...interface{}) {
-	lvld(lvlWarning, args...)
-}
-
-// Error prints the error in a nice red color
-func Error(args ...interface{}) {
-	lvld(lvlError, args...)
-}
-
-// Panic prints out the panic message and panics
-func Panic(args ...interface{}) {
-	lvld(lvlPanic, args...)
-	panic(args)
-}
-
-// Fatal prints out the fatal message and quits
-func Fatal(args ...interface{}) {
-	lvld(lvlFatal, args...)
-	os.Exit(1)
-}
-
-// Warnf is like Warn but with a format-string
-func Warnf(f string, args ...interface{}) {
-	lvlf(lvlWarning, f, args...)
-}
-
-// Errorf is like Error but with a format-string
-func Errorf(f string, args ...interface{}) {
-	lvlf(lvlError, f, args...)
-}
-
-// Panicf is like Panic but with a format-string
-func Panicf(f string, args ...interface{}) {
-	lvlf(lvlPanic, f, args...)
-	panic(args)
-}
-
-// Fatalf is like Fatal but with a format-string
-func Fatalf(f string, args ...interface{}) {
-	lvlf(lvlFatal, f, args...)
-	os.Exit(1)
-}
-
 // TestOutput sets the DebugVisible to 0 if 'show'
 // is false, else it will set DebugVisible to 'level'
 //
@@ -377,31 +346,16 @@ func SetUseColors(show bool) {
 	useColors = show
 }
 
-// UseColors returns the actual setting of the color-usage in dbg
+// UseColors returns the actual setting of the color-usage in log
 func UseColors() bool {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 	return useColors
 }
 
-// TestFatal calls t.Fatal in the case err != nil
-func TestFatal(t *testing.T, err error, msg ...string) {
-	if err != nil {
-		lvld(lvlFatal, strings.Join(msg, " "), err)
-		os.Exit(1)
-	}
-}
-
-// ErrFatal calls log.Fatal in the case err != nil
-func ErrFatal(err error, msg ...string) {
-	if err != nil {
-		lvld(lvlFatal, strings.Join(msg, " "), err)
-		os.Exit(1)
-	}
-}
-
-// MainTest can be called from TestMain to set up some default
-// variables
+// MainTest can be called from TestMain. It will parse the flags and
+// set the DebugVisible to 3, then run the tests and check for
+// remaining go-routines.
 func MainTest(m *testing.M) {
 	flag.Parse()
 	TestOutput(testing.Verbose(), 3)
@@ -411,9 +365,9 @@ func MainTest(m *testing.M) {
 }
 
 // ParseEnv looks at the following environment-variables:
-// - DEBUG_LVL - for the actual debug-lvl - default is 1
-// - DEBUG_TIME - whether to show the timestamp - default is false
-// - DEBUG_COLOR - whether to color the output - default is true
+//   DEBUG_LVL - for the actual debug-lvl - default is 1
+//   DEBUG_TIME - whether to show the timestamp - default is false
+//   DEBUG_COLOR - whether to color the output - default is true
 func ParseEnv() {
 	var err error
 	dv := os.Getenv("DEBUG_LVL")
@@ -442,8 +396,9 @@ func ParseEnv() {
 	}
 }
 
-// AddFlags adds the flags and the variables for the debug-control
-func AddFlags() {
+// RegisterFlags adds the flags and the variables for the debug-control using
+// the standard flag-package.
+func RegisterFlags() {
 	ParseEnv()
 	flag.IntVar(&debugVisible, "debug", DebugVisible(), "Change debug level (0-5)")
 	flag.BoolVar(&showTime, "debug-time", ShowTime(), "Shows the time of each message")
