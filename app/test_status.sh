@@ -9,15 +9,15 @@ main(){
     startTest
     build
     #test Build
-    test GetStatus
+    test Network
     stopTest
 }
 
-testGetStatus(){
+testNetwork(){
     cothoritySetup
     cp group.toml cl1
-    testOut "Running getStatus"
-    testOK runCl 1 getStatus
+    testOut "Running network"
+    testOK runCl 1 network
 }
 
 testBuild(){

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/app/lib/config"
-	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 
@@ -35,12 +34,13 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Status"
 	app.Usage = "Get and print status of all servers in a file."
+	//a status is a list of connections and packets sent and received for each server in the file
 	app.Commands = []cli.Command{
 		{
-			Name:    "getStatus",
+			Name:    "network",
 			Aliases: []string{"g"},
 			Usage:   "Gets status from all entities in group file.",
-			Action:  getStatus,
+			Action:  network,
 		},
 	}
 	app.Flags = []cli.Flag{
@@ -64,14 +64,14 @@ func main() {
 
 // signFile will search for the file and sign it
 // it always returns nil as an error
-func getStatus(c *cli.Context) error {
+func network(c *cli.Context) error {
 	groupToml := c.GlobalString(optionGroup)
 	el, err := readGroup(groupToml)
-	ui.ErrFatal(err, "Couldn't read file.")
+	dbg.ErrFatal(err, "Couldn't Read File")
 	dbg.Lvl3(el)
 	cl := status.NewClient()
 	for i := 0; i < len(el.List); i++ {
-		dbg.Print("Hello: ")
+
 		dbg.Print(el.List[i])
 		sr, _ := cl.GetStatus(el.List[i])
 		printConn(sr)
@@ -102,22 +102,11 @@ func readGroup(tomlFileName string) (*sda.EntityList, error) {
 func printConn(e *status.StatusResponse) {
 	fmt.Print("Host: ", e.Serv, "\n")
 	for i := 0; i < len(e.Received); i++ {
-		fmt.Print("\n")
-		fmt.Print("Connection: ", e.Remote[i], "\n")
-		fmt.Print("Total Packets Recieved: ", e.Received[i], "\n")
-		fmt.Print("Total Packets Sent: ", e.Sent[i], "\n")
-		fmt.Print("\n")
+		fmt.Println("")
+		fmt.Println("Connection: ", e.Remote[i])
+		fmt.Println("Total Packets Recieved: ", e.Received[i])
+		fmt.Println("Total Packets Sent: ", e.Sent[i])
+		fmt.Println("")
 	}
 	fmt.Print("\n \n")
 }
-
-/*
-func write(r io.Writer, tomlFileName string) {
-	dbg.Lvl2("Reading From File")
-	f, err := os.Open(tomlFileName)
-	if err != nil {
-		return nil, err
-	}
-
-}
-*/
