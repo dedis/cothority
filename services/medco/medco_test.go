@@ -36,7 +36,7 @@ func TestServiceMedco(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		dataHolder[i] = medco_service.NewMedcoClient(el.List[i%5])
 		grp := make([]int64, 1)
-		aggr := make([]int64, 100)
+		aggr := make([]int64, 10)
 		grp[0] = int64(i%4)
 		aggr[i] = 3
 		dataHolder[i].SendSurveyResultsData(*surveyID, grp, aggr, el.Aggregate)
