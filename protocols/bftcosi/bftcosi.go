@@ -423,7 +423,8 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 		return bft.SendTo(bft.Parent(), bzrReturn)
 	}
 	// let's modify the cosi signature so it don't account the exception
-	// response
+	// response. Since cosi does not support exceptions yet, we have to remove
+	// the responses that are not supposed to be there,i.e. exceptions.
 	cosiSig := bft.prepare.Signature()
 	correctResponseBuff, err := bzrReturn.Response.MarshalBinary()
 	if err != nil {
