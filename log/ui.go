@@ -8,7 +8,7 @@ import (
 )
 
 func lvlUI(lvl int, args ...interface{}) {
-	if Format == FormatLvl {
+	if debugVisible > 0 {
 		lvld(lvl, args...)
 	} else {
 		print(lvl, args...)
@@ -92,7 +92,7 @@ func ErrFatalf(err error, f string, args ...interface{}) {
 }
 
 func print(lvl int, args ...interface{}) {
-	switch Format {
+	switch debugVisible {
 	case FormatPython:
 		prefix := []string{"[-]", "[!]", "[X]", "[Q]", "[+]", ""}
 		ind := lvl - lvlWarning

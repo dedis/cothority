@@ -45,6 +45,7 @@ package log
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"runtime"
@@ -54,6 +55,32 @@ import (
 	"time"
 
 	"github.com/daviddengcn/go-colortext"
+)
+
+// For debugging purposes we can change the output-writer
+var stdOut io.Writer
+var stdErr io.Writer
+
+func init() {
+	stdOut = os.Stdout
+	stdErr = os.Stderr
+}
+
+const (
+	lvlWarning = iota - 20
+	lvlError
+	lvlFatal
+	lvlPanic
+	lvlInfo
+	lvlPrint
+)
+
+// These formats can be used in place of the debugVisible
+const (
+	// FormatPython uses [x] and others to indicate what is shown
+	FormatPython = -1
+	// FormatNone is just pure print
+	FormatNone = 0
 )
 
 // NamePadding - the padding of functions to make a nice debug-output - this is automatically updated

@@ -3,8 +3,43 @@ package log
 import (
 	"testing"
 
+	"bufio"
+	"bytes"
+	"os"
+
 	"github.com/stretchr/testify/assert"
 )
+
+var bufStdOut bytes.Buffer
+var testStdOut *bufio.Writer
+var bufStdErr bytes.Buffer
+var testStdErr *bufio.Writer
+
+func stdToBuf() {
+	testStdOut = bufio.NewWriter(&bufStdOut)
+	stdOut = testStdOut
+	testStdErr = bufio.NewWriter(&bufStdErr)
+	stdErr = testStdErr
+}
+
+func stdToOs() {
+	stdOut = os.Stdout
+	stdErr = os.Stderr
+}
+
+func getStdOut() string {
+	testStdOut.Flush()
+	ret := bufStdOut.String()
+	bufStdOut.Reset()
+	return ret
+}
+
+func getStdErr() string {
+	testStdErr.Flush()
+	ret := bufStdErr.String()
+	bufStdErr.Reset()
+	return ret
+}
 
 func TestMain(m *testing.M) {
 	stdToBuf()
@@ -12,13 +47,13 @@ func TestMain(m *testing.M) {
 }
 
 func TestInfo(t *testing.T) {
-	Format = FormatPython
+	SetDebugVisible(FormatPython)
 	Info("Python")
 	assert.Equal(t, "[+] Python\n", getStdOut())
-	Format = FormatNone
+	SetDebugVisible(FormatNone)
 	Info("None")
 	assert.Equal(t, "None\n", getStdOut())
 	Info("None", "Python")
 	assert.Equal(t, "None Python\n", getStdOut())
-	Format = FormatLvl
+	SetDebugVisible(1)
 }
