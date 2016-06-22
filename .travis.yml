@@ -4,7 +4,7 @@ go:
   - 1.6
 
 install:
-  - make install_dev
+  - make install
 
 script:
   - make test
