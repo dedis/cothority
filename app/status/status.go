@@ -59,6 +59,7 @@ func main() {
 		dbg.SetDebugVisible(c.GlobalInt("debug"))
 		return nil
 	}
+	app.Action = network
 	app.Run(os.Args)
 }
 
@@ -82,7 +83,7 @@ func network(c *cli.Context) error {
 
 // sign takes a stream and a toml file defining the servers
 func readGroup(tomlFileName string) (*sda.EntityList, error) {
-	dbg.Lvl2("Reading From File")
+	dbg.Print("Reading From File")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return nil, err
@@ -95,18 +96,18 @@ func readGroup(tomlFileName string) (*sda.EntityList, error) {
 		return nil, errors.New("Empty or invalid group file:" +
 			tomlFileName)
 	}
-	dbg.Print(el)
+	dbg.Lvl3(el)
 	return el, err
 }
 
 func printConn(e *status.StatusResponse) {
-	fmt.Print("Host: ", e.Serv, "\n")
+	dbg.Print("Host: ", e.Serv, "\n")
 	for i := 0; i < len(e.Received); i++ {
-		fmt.Println("")
-		fmt.Println("Connection: ", e.Remote[i])
-		fmt.Println("Total Packets Recieved: ", e.Received[i])
-		fmt.Println("Total Packets Sent: ", e.Sent[i])
-		fmt.Println("")
+		dbg.Print("\n")
+		dbg.Print("Connection: ", e.Remote[i], "\n")
+		dbg.Print("Total Packets Recieved: ", e.Received[i], "\n")
+		dbg.Print("Total Packets Sent: ", e.Sent[i], "\n")
+		dbg.Print("\n")
 	}
 	fmt.Print("\n \n")
 }

@@ -8,7 +8,7 @@ STATICDIR=test
 main(){
     startTest
     build
-    #test Build
+    test Build
     test Network
     stopTest
 }
@@ -17,7 +17,8 @@ testNetwork(){
     cothoritySetup
     cp group.toml cl1
     testOut "Running network"
-    testOK runCl 1 network
+    testGrep "Connection:" runCl 1
+    testGrep "Total Packets Sent:" runCl 1
 }
 
 testBuild(){
