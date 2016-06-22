@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"math"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/sda"
 )
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
@@ -94,7 +94,7 @@ func NewNTreeRootProtocol(node *sda.TreeNodeInstance, transactions []blkparser.T
 
 // Start announces the new block to sign
 func (nt *Ntree) Start() error {
-	dbg.Lvl3(nt.Name(), "Start()")
+	log.Lvl3(nt.Name(), "Start()")
 	go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
 	for _, tn := range nt.Children() {
 		if err := nt.SendTo(tn, &BlockAnnounce{nt.block}); err != nil {
@@ -117,7 +117,7 @@ func (nt *Ntree) listen() {
 		select {
 		// Dispatch the block through the whole tree
 		case msg := <-nt.announceChan:
-			dbg.Lvl3(nt.Name(), "Received Block announcement")
+			log.Lvl3(nt.Name(), "Received Block announcement")
 			nt.block = msg.BlockAnnounce.Block
 			// verify the block
 			go byzcoin.VerifyBlock(nt.block, "", "", nt.verifyBlockChan)
@@ -128,7 +128,7 @@ func (nt *Ntree) listen() {
 			for _, tn := range nt.Children() {
 				err := nt.SendTo(tn, &msg.BlockAnnounce)
 				if err != nil {
-					dbg.Error(nt.Name(),
+					log.Error(nt.Name(),
 						"couldn't send to", tn.Name(),
 						err)
 				}
@@ -140,7 +140,7 @@ func (nt *Ntree) listen() {
 			// Dispatch the signature + expcetion made before through the whole
 			// tree
 		case msg := <-nt.roundSignatureRequestChan:
-			dbg.Lvl3(nt.Name(), " Signature Request Received")
+			log.Lvl3(nt.Name(), " Signature Request Received")
 			go nt.verifySignatureRequest(&msg.RoundSignatureRequest)
 
 			if nt.IsLeaf() {
@@ -151,7 +151,7 @@ func (nt *Ntree) listen() {
 			for _, tn := range nt.Children() {
 				err := nt.SendTo(tn, &msg.RoundSignatureRequest)
 				if err != nil {
-					dbg.Error(nt.Name(), "couldn't sent to",
+					log.Error(nt.Name(), "couldn't sent to",
 						tn.Name(), err)
 				}
 			}
@@ -164,10 +164,10 @@ func (nt *Ntree) listen() {
 
 // startBlockSignature will  send the first signature up the tree.
 func (nt *Ntree) startBlockSignature() {
-	dbg.Lvl3(nt.Name(), "Starting Block Signature Phase")
+	log.Lvl3(nt.Name(), "Starting Block Signature Phase")
 	nt.computeBlockSignature()
 	if err := nt.SendTo(nt.Parent(), nt.tempBlockSig); err != nil {
-		dbg.Error(err)
+		log.Error(err)
 	}
 
 }
@@ -179,18 +179,18 @@ func (nt *Ntree) computeBlockSignature() {
 	//marshal the blck
 	marshalled, err := json.Marshal(nt.block)
 	if err != nil {
-		dbg.Error(err)
+		log.Error(err)
 		return
 	}
 
 	// if stg is wrong, we put exceptions
 	if !ok {
-		nt.tempBlockSig.Exceptions = append(nt.tempBlockSig.Exceptions, Exception{nt.TreeNode().Id})
+		nt.tempBlockSig.Exceptions = append(nt.tempBlockSig.Exceptions, Exception{nt.TreeNode().ID})
 	} else { // we put signature
 		schnorr, _ := crypto.SignSchnorr(nt.Suite(), nt.Private(), marshalled)
 		nt.tempBlockSig.Sigs = append(nt.tempBlockSig.Sigs, schnorr)
 	}
-	dbg.Lvl3(nt.Name(), "Block Signature Computed")
+	log.Lvl3(nt.Name(), "Block Signature Computed")
 }
 
 // handleBlockSignature will look if the block is valid. If it is, we sign it.
@@ -200,7 +200,7 @@ func (nt *Ntree) handleBlockSignature(msg *NaiveBlockSignature) {
 	nt.tempBlockSig.Exceptions = append(nt.tempBlockSig.Exceptions, msg.Exceptions...)
 	nt.tempBlockSigReceived++
 	// not enough signatures for the moment
-	dbg.Lvl3(nt.Name(), "Handle Block Signature(", nt.tempBlockSigReceived, "/", len(nt.Children()), ")")
+	log.Lvl3(nt.Name(), "Handle Block Signature(", nt.tempBlockSigReceived, "/", len(nt.Children()), ")")
 	if nt.tempBlockSigReceived < len(nt.Children()) {
 		return
 	}
@@ -212,21 +212,21 @@ func (nt *Ntree) handleBlockSignature(msg *NaiveBlockSignature) {
 	}
 	// send msg up the tree
 	if err := nt.SendTo(nt.Parent(), nt.tempBlockSig); err != nil {
-		dbg.Error(err)
+		log.Error(err)
 	}
 
-	dbg.Lvl3(nt.Name(), "Handle Block Signature => Sent UP")
+	log.Lvl3(nt.Name(), "Handle Block Signature => Sent UP")
 }
 
 // startSignatureRequest is the root starting the new phase. It will broadcast
 // the signature of everyone amongst the tree.
 func (nt *Ntree) startSignatureRequest(msg *NaiveBlockSignature) {
-	dbg.Lvl3(nt.Name(), "Start Signature Request")
+	log.Lvl3(nt.Name(), "Start Signature Request")
 	sigRequest := &RoundSignatureRequest{msg}
 	go nt.verifySignatureRequest(sigRequest)
 	for _, tn := range nt.Children() {
 		if err := nt.SendTo(tn, sigRequest); err != nil {
-			dbg.Error(nt.Name(), "couldn't send to", tn.Name(), err)
+			log.Error(nt.Name(), "couldn't send to", tn.Name(), err)
 		}
 	}
 }
@@ -249,7 +249,7 @@ func (nt *Ntree) verifySignatureRequest(msg *RoundSignatureRequest) {
 		}
 	}
 
-	dbg.Lvl3(nt.Name(), "Verification of signatures =>", goodSig, "/", len(msg.Sigs), ")")
+	log.Lvl3(nt.Name(), "Verification of signatures =>", goodSig, "/", len(msg.Sigs), ")")
 	// enough good signatures ?
 	if goodSig <= 2*threshold {
 		nt.verifySignatureRequestChan <- false
@@ -260,10 +260,10 @@ func (nt *Ntree) verifySignatureRequest(msg *RoundSignatureRequest) {
 
 // Start the last phase : send up the final signature
 func (nt *Ntree) startSignatureResponse() {
-	dbg.Lvl3(nt.Name(), "Start Signature Response phase")
+	log.Lvl3(nt.Name(), "Start Signature Response phase")
 	nt.computeSignatureResponse()
 	if err := nt.SendTo(nt.Parent(), nt.tempSignatureResponse); err != nil {
-		dbg.Error(err)
+		log.Error(err)
 	}
 }
 
@@ -273,14 +273,14 @@ func (nt *Ntree) computeSignatureResponse() {
 	// wait for the verification to be done
 	ok := <-nt.verifySignatureRequestChan
 	if !ok {
-		nt.tempSignatureResponse.Exceptions = append(nt.tempSignatureResponse.Exceptions, Exception{nt.TreeNode().Id})
+		nt.tempSignatureResponse.Exceptions = append(nt.tempSignatureResponse.Exceptions, Exception{nt.TreeNode().ID})
 	} else {
 		// compute the message out of the previous signature
 		// marshal only the header here (so signature between the two phases are
 		// garanteed to be different)
 		marshalled, err := json.Marshal(nt.block.Header)
 		if err != nil {
-			dbg.Error(err)
+			log.Error(err)
 			return
 		}
 		sig, err := crypto.SignSchnorr(nt.Suite(), nt.Private(), marshalled)
@@ -298,7 +298,7 @@ func (nt *Ntree) handleRoundSignatureResponse(msg *RoundSignatureResponse) {
 	nt.tempSignatureResponse.Sigs = append(nt.tempSignatureResponse.Sigs, msg.Sigs...)
 	nt.tempSignatureResponse.Exceptions = append(nt.tempSignatureResponse.Exceptions, msg.Exceptions...)
 	nt.tempSignatureResponseReceived++
-	dbg.Lvl3(nt.Name(), "Handle Round Signature Response(", nt.tempSignatureResponseReceived, "/", len(nt.Children()))
+	log.Lvl3(nt.Name(), "Handle Round Signature Response(", nt.tempSignatureResponseReceived, "/", len(nt.Children()))
 	if nt.tempSignatureResponseReceived < len(nt.Children()) {
 		return
 	}
@@ -313,7 +313,7 @@ func (nt *Ntree) handleRoundSignatureResponse(msg *RoundSignatureResponse) {
 		return
 	}
 	if err := nt.SendTo(nt.Parent(), msg); err != nil {
-		dbg.Error(nt.Name(), "couldn't send to", nt.Name(), err)
+		log.Error(nt.Name(), "couldn't send to", nt.Name(), err)
 	}
 }
 

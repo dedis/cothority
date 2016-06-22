@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // Platform interface that has to be implemented to add another simulation-
@@ -74,16 +74,16 @@ func NewPlatform(t string) Platform {
 func ReadRunFile(p Platform, filename string) []RunConfig {
 	var runconfigs []RunConfig
 	masterConfig := NewRunConfig()
-	dbg.Lvl3("Reading file", filename)
+	log.Lvl3("Reading file", filename)
 
 	file, err := os.Open(filename)
 	defer func() {
 		if err := file.Close(); err != nil {
-			dbg.Error("Couldn' close", file.Name())
+			log.Error("Couldn' close", file.Name())
 		}
 	}()
 	if err != nil {
-		dbg.Fatal("Couldn't open file", file, err)
+		log.Fatal("Couldn't open file", file, err)
 	}
 
 	// Decoding of the first part of the run config file
@@ -91,7 +91,7 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		text := scanner.Text()
-		dbg.Lvl3("Decoding", text)
+		log.Lvl3("Decoding", text)
 		// end of the first part
 		if text == "" {
 			break
@@ -103,15 +103,15 @@ func ReadRunFile(p Platform, filename string) []RunConfig {
 		// checking if format is good
 		vals := strings.Split(text, "=")
 		if len(vals) != 2 {
-			dbg.Fatal("Simulation file:", filename, " is not properly formatted ( key = value )")
+			log.Fatal("Simulation file:", filename, " is not properly formatted ( key = value )")
 		}
 		// fill in the general config
 		masterConfig.Put(strings.TrimSpace(vals[0]), strings.TrimSpace(vals[1]))
 		// also put it in platform
 		if _, err := toml.Decode(text, p); err != nil {
-			dbg.Error("Error decoding", text)
+			log.Error("Error decoding", text)
 		}
-		dbg.Lvlf5("Platform is now %+v", p)
+		log.Lvlf5("Platform is now %+v", p)
 	}
 
 	for {

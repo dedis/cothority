@@ -1,5 +1,4 @@
 package services
 
-import (
-	_ "github.com/dedis/cothority/services/cosi"
-)
+// Importing the services so they register their services to SDA
+// automatically when importing github.com/dedis/cothority/services

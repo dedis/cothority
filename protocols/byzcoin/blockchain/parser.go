@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 )
 
@@ -65,7 +65,7 @@ func SimulDirToBlockDir(dir string) string {
 	blockDir := string(reg.ReplaceAll([]byte(dir), []byte("protocols/byzcoin/block")))
 	if _, err := os.Stat(blockDir); os.IsNotExist(err) {
 		if err := os.Mkdir(blockDir, 0777); err != nil {
-			dbg.Error("Couldn't create blocks directory", err)
+			log.Error("Couldn't create blocks directory", err)
 		}
 	}
 	return blockDir
@@ -88,7 +88,7 @@ func GetBlockName(dir string) string {
 func GetBlockDir() string {
 	dir, err := os.Getwd()
 	if err != nil {
-		dbg.Fatal("Couldn't get working dir:", err)
+		log.Fatal("Couldn't get working dir:", err)
 	}
 	return dir + "/blocks"
 }
@@ -102,7 +102,7 @@ func DownloadBlock(dir string) (string, error) {
 		"https://icsil1-box.epfl.ch:5001/fbsharing/IzTFdOxf")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	dbg.Lvl1("Cmd is", cmd)
+	log.Lvl1("Cmd is", cmd)
 	if err := cmd.Start(); err != nil {
 		return "", err
 	}

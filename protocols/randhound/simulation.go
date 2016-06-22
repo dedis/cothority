@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -34,7 +34,7 @@ func NewRHSimulation(config string) (sda.Simulation, error) {
 func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
 	rhs.Hosts = len(hosts)
-	rhs.CreateEntityList(sim, hosts, 2000)
+	rhs.CreateRoster(sim, hosts, 2000)
 	err := rhs.CreateTree(sim)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
-	leader, err := config.Overlay.CreateProtocol(config.Tree, "RandHound")
+	leader, err := config.Overlay.CreateProtocolSDA(config.Tree, "RandHound")
 	if err != nil {
 		return err
 	}
@@ -53,15 +53,15 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	dbg.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	dbg.Printf("RandHound - shards: %d\n", rhs.Shards)
+	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
+	log.Printf("RandHound - shards: %d\n", rhs.Shards)
 	if err := rh.StartProtocol(); err != nil {
-		dbg.Error("Error while starting protcol:", err)
+		log.Error("Error while starting protcol:", err)
 	}
 
 	select {
 	case <-rh.Leader.Done:
-		dbg.Print("RandHound - done")
+		log.Print("RandHound - done")
 		rnd, err := rh.Random()
 		if err != nil {
 			panic(err)
@@ -70,10 +70,10 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		if err != nil {
 			panic(err)
 		}
-		dbg.Printf("RandHound - random bytes: %v\n", rnd)
-		dbg.Printf("RandHound - sharding: %v\n", sharding)
+		log.Printf("RandHound - random bytes: %v\n", rnd)
+		log.Printf("RandHound - sharding: %v\n", sharding)
 	case <-time.After(time.Second * 60):
-		dbg.Print("RandHound - time out")
+		log.Print("RandHound - time out")
 	}
 
 	return nil
