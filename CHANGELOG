@@ -1,0 +1,5 @@
+160622 - 0.9.0
+	- Renamed Entity -> ServerIdentity
+	- Renamed EntityList -> Roster
+	- Moved lib/* to parent-directory
+	- Depend on dedis/cosi for the cosi-library
