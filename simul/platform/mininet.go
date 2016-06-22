@@ -15,10 +15,9 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cliutils"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 type MiniNet struct {
@@ -29,8 +28,10 @@ type MiniNet struct {
 	Host string
 	// Directory holding the cothority-go-file
 	cothorityDir string
-	// Working directory of mininet
+	// Directory storing the additional files
 	mininetDir string
+	// Directory for building
+	buildDir string
 	// IPs of all hosts
 	HostIPs []string
 	// Channel to communicate stopping of experiment
@@ -56,12 +57,13 @@ type MiniNet struct {
 	CloseWait int
 }
 
-func (m *MiniNet) Configure(pc *PlatformConfig) {
+func (m *MiniNet) Configure(pc *Config) {
 	// Directory setup - would also be possible in /tmp
 	// Supposes we're in `cothority/simul`
 	pwd, _ := os.Getwd()
 	m.cothorityDir = pwd + "/cothority"
 	m.mininetDir = pwd + "/platform/mininet"
+	m.buildDir = pwd + "/build"
 	m.Login = "mininet"
 	m.Host = "icsil1-conodes.epfl.ch"
 	m.ProxyAddress = "localhost"
@@ -69,8 +71,8 @@ func (m *MiniNet) Configure(pc *PlatformConfig) {
 	m.Debug = pc.Debug
 
 	// Clean the MiniNet-dir, create it and change into it
-	os.RemoveAll(m.mininetDir)
-	os.Mkdir(m.mininetDir, 0777)
+	os.RemoveAll(m.buildDir)
+	os.Mkdir(m.buildDir, 0700)
 	sda.WriteTomlConfig(*m, m.mininetDir+"/mininet.toml", m.mininetDir)
 
 	if m.Simulation == "" {
@@ -85,26 +87,24 @@ func (m *MiniNet) Configure(pc *PlatformConfig) {
 // empty = all otherwise build specific package
 func (m *MiniNet) Build(build string, arg ...string) error {
 	current, _ := os.Getwd()
-	dbg.Lvl3("Current dir is:", current, m.mininetDir)
+	dbg.Lvl3("Current dir is:", current)
 	defer os.Chdir(current)
-	os.Chdir(m.mininetDir)
+	os.Chdir(m.buildDir)
 
 	dbg.Lvl1("Building for", m.Login, m.Host, build, "cothorityDir=", m.cothorityDir)
 	start := time.Now()
 
 	// Start with a clean build-directory
-	src_dir := m.cothorityDir
-	dst := m.mininetDir + "/cothority"
+	src_dir := m.buildDir
+	dst := m.buildDir + "/cothority"
 	processor := "amd64"
 	system := "linux"
-	src_rel, _ := filepath.Rel(m.mininetDir, src_dir)
+	src_rel, _ := filepath.Rel(m.buildDir, src_dir)
 	dbg.Lvl3("Relative-path is", src_rel, " will build into ", dst)
-	out, err := cliutils.Build("./"+src_rel, dst,
+	out, err := Build("./"+src_rel, dst,
 		processor, system, arg...)
 	if err != nil {
-		cliutils.KillGo()
-		dbg.Lvl1(out)
-		dbg.Fatal(err)
+		dbg.Fatal(out, err)
 	}
 
 	dbg.Lvl1("Build is finished after", time.Since(start))
@@ -122,7 +122,7 @@ func (m *MiniNet) Cleanup() error {
 	// SSH to the MiniNet-server and end all running users-processes
 	dbg.Lvl3("Going to stop everything")
 	startcli := "echo -e \"stop\\nquit\\n\" | python cli.py"
-	err = cliutils.SshRunStdout(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
+	err = SSHRunStdout(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
 	if err != nil {
 		dbg.Lvl3(err)
 	}
@@ -151,19 +151,19 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 	dbg.Lvl3("Creating hosts")
 	mininet.readHosts()
 	dbg.Lvl3("Writing the config file :", mininet)
-	sda.WriteTomlConfig(mininet, mininetConfig, m.mininetDir)
+	sda.WriteTomlConfig(mininet, mininetConfig, m.buildDir)
 
-	simulConfig, err := sim.Setup(m.mininetDir, mininet.HostIPs)
+	simulConfig, err := sim.Setup(m.buildDir, mininet.HostIPs)
 	if err != nil {
 		return err
 	}
 	simulConfig.Config = string(rc.Toml())
 	dbg.Lvl3("Saving configuration")
-	simulConfig.Save(m.mininetDir)
+	simulConfig.Save(m.buildDir)
 
 	// Copy everything over to MiniNet
 	dbg.Lvl1("Copying over to", m.Login, "@", m.Host)
-	err = cliutils.Rsync(m.Login, m.Host, m.mininetDir+"/", "mininet_run/")
+	err = Rsync(m.Login, m.Host, m.buildDir+"/", "mininet_run/")
 	if err != nil {
 		dbg.Fatal(err)
 	}
@@ -213,7 +213,7 @@ func (m *MiniNet) Start(args ...string) error {
 	go func() {
 		dbg.LLvl3("Starting simulation over mininet")
 		startcli := "echo -e \"sync\\nstart\\n\\nquit\\n\" | python cli.py"
-		_, err := cliutils.SshRun(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
+		_, err := SSHRun(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
 		if err != nil {
 			dbg.Lvl3(err)
 		}
@@ -256,13 +256,13 @@ func (m *MiniNet) Wait() error {
  */
 func (m *MiniNet) readHosts() error {
 	// Updating the available servers
-	_, err := cliutils.SshRun(m.Login, m.Host, "cd mininet; ./icsil1_search_server.py icsil1.servers.json")
+	_, err := SSHRun(m.Login, m.Host, "cd mininet; ./icsil1_search_server.py icsil1.servers.json")
 	if err != nil {
 		return err
 	}
 	cmd := fmt.Sprintf("cd mininet/conodes && ./dispatched.py %d %s %d && "+
 		"cat sites/icsil1/nodes.txt", m.Debug, m.Simulation, monitor.DefaultSinkPort)
-	nodesSlice, err := cliutils.SshRun(m.Login, m.Host, cmd)
+	nodesSlice, err := SSHRun(m.Login, m.Host, cmd)
 	if err != nil {
 		return err
 	}
