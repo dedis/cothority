@@ -34,13 +34,13 @@ func TestDeterministicSwitching5Nodes(t *testing.T) {
 	testCipherVect := make(CipherVector, 4)
 	expRes := []int64{1, 2, 3, 6}
 	for i, p := range expRes {
-		testCipherVect[i] = *EncryptInt(suite, aggregateKey, p)
+		testCipherVect[i] = *EncryptInt(aggregateKey, p)
 	}
 
 	testCipherVect1 := make(CipherVector, 4)
 	expRes1 := []int64{1, 2, 3, 6}
 	for i, p := range expRes1 {
-		testCipherVect1[i] = *EncryptInt(suite, aggregateKey, p)
+		testCipherVect1[i] = *EncryptInt(aggregateKey, p)
 	}
 
 	var mapi map[TempID]CipherVector
@@ -113,9 +113,11 @@ func TestProbabilisticSwitching5Nodes(t *testing.T) {
 
 	select {
 	case encryptedResult := <-feedback:
-		res := DecryptIntVector(suite, clientPrivate, encryptedResult[TempID(1)])
+		cv1 := encryptedResult[TempID(1)]
+		res := DecryptIntVector(clientPrivate, &cv1)
 		dbg.Lvl1("Recieved results", res)
-		res1 := DecryptIntVector(suite, clientPrivate, encryptedResult[TempID(2)])
+		cv2 := encryptedResult[TempID(2)]
+		res1 := DecryptIntVector(clientPrivate, &cv2)
 		dbg.Lvl1("Recieved results", res1)
 		dbg.LLvl1("values in the test are not consistent, TODO but works")
 		//if reflect.DeepEqual(res, res1) {

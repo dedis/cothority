@@ -86,7 +86,6 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 	pap := protocol.(*DeterministicSwitchingProtocol)
 
 	if (tni.Index() == 0) {
-		suite := pap.Suite()
 		aggregateKey := pap.EntityList().Aggregate
 
 		ciphertexts := make(map[TempID]CipherVector)
@@ -101,7 +100,7 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 		}
 
 		for i := 0; i < NUM_VECT_DET; i++ {
-			ciphertexts[TempID(i)] = *EncryptIntArray(suite, aggregateKey, tab)
+			ciphertexts[TempID(i)] = *EncryptIntVector(aggregateKey, tab)
 		}
 
 		pap.TargetOfSwitch = &ciphertexts

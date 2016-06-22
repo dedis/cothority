@@ -52,7 +52,7 @@ func (s *SurveyStore) InsertClientResponse(cr ClientResponse) {
 		if !ok {
 			mapValue = cr.AggregatingAttributes
 		} else {
-			mapValue.Add(mapValue, cr.AggregatingAttributes)
+			mapValue = *NewCipherVector(len(mapValue)).Add(mapValue, cr.AggregatingAttributes)
 		}
 		s.LocGroupingAggregating[DEFAULT_GROUP] = mapValue
 	} else { //grouping
@@ -104,11 +104,10 @@ func (s *SurveyStore) nextId() TempID {
 }
 
 func AddInMapping(s map[GroupingKey]CipherVector, key GroupingKey, added CipherVector) {
-	if _, ok := s[key]; !ok {
+	if localResult, ok := s[key]; !ok {
 		s[key] = added
 	} else {
-		result := added.AddNoReplace(s[key], added)
-		s[key] = result
+		s[key] = *NewCipherVector(len(added)).Add(localResult, added)
 	}
 }
 

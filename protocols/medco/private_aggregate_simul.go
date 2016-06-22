@@ -19,7 +19,7 @@ func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]Grou
 
 	for i := 0; i < numberGroups; i++ {
 		newGrpattr := grpattr
-		(DeterministCipherText(newGrpattr).C).Add(DeterministCipherText(newGrpattr).C,DeterministCipherText(newGrpattr).C)
+		(DeterministCipherText(newGrpattr).Point).Add(DeterministCipherText(newGrpattr).Point,DeterministCipherText(newGrpattr).Point)
 		groupAttributes := GroupingAttributes{grpattr, newGrpattr}
 
 		grpattr = newGrpattr
@@ -33,7 +33,7 @@ func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]Grou
 				tab = append(tab, 1)
 			}
 		}
-		cipherVect := *EncryptIntArray(suite, clientPublic, tab)
+		cipherVect := *EncryptIntVector(clientPublic, tab)
 
 		testGAMap[groupAttributes.Key()] = groupAttributes
 		testCVMap[groupAttributes.Key()] = cipherVect
@@ -96,7 +96,7 @@ func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 
 		dbg.LLvl1("RESULT SIZE: ", len(result.GroupedData))
 		for i,v := range result.GroupedData{
-			dbg.Lvl1(i, " ", DecryptIntVector(suite, clientPrivate, v))
+			dbg.Lvl1(i, " ", DecryptIntVector(clientPrivate, &v))
 		}
 	}
 

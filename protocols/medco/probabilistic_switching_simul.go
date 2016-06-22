@@ -88,7 +88,6 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 		clientSecret  := suite.Secret().Pick(random.Stream)
 		clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
 
-		suite := pap.Suite()
 		aggregateKey := pap.EntityList().Aggregate
 
 		ciphertexts := make(map[TempID]DeterministCipherVector)
@@ -103,7 +102,7 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 		}
 
 		for i := 0; i < NUM_VECT_PROB; i++{
-			encrypted := *EncryptIntArray(suite, aggregateKey, tab)
+			encrypted := *EncryptIntVector(aggregateKey, tab)
 			for ind,v := range encrypted {
 				if ind == 0{
 					ciphertexts[TempID(i)] = DeterministCipherVector{DeterministCipherText{v.C}}

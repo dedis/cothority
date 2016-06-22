@@ -7,8 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/random"
-	"github.com/dedis/cothority/lib/monitor"
 )
 
 const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
@@ -84,8 +82,8 @@ func (p *KeySwitchingProtocol) Start() error {
 
 	initialMap := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
-	for k := range *p.TargetOfSwitch {
-		initialCipherVector := *InitCipherVector(p.Suite(), len((*p.TargetOfSwitch)[k]))
+	for k,_ := range *p.TargetOfSwitch {
+		initialCipherVector := *NewCipherVector(len((*p.TargetOfSwitch)[k]))
 		p.originalEphemKeys[k] = make([]abstract.Point, len((*p.TargetOfSwitch)[k]))
 		for i, c := range (*p.TargetOfSwitch)[k] {
 			initialCipherVector[i].C = c.C
@@ -107,35 +105,13 @@ func (p *KeySwitchingProtocol) Start() error {
 func (p *KeySwitchingProtocol) Dispatch() error {
 
 	keySwitchingTarget := <-p.PreviousNodeInPathChannel
-	//time measurements
-	round := monitor.NewTimeMeasure("MEDCO_COMPUT")
-	//
-	origEphemKeys := keySwitchingTarget.OriginalEphemeralKeys
 
-	randomnessContrib := p.Suite().Secret().Pick(random.Stream)
-	
-	length := len(keySwitchingTarget.KeySwitchedCipherMessage.Proof)
-	newProofs := map[TempID][]CompleteProof{}
 	for k, v := range keySwitchingTarget.Data {
-		if PROOF {
-			if length != 0 {
-				SwitchCheckMapProofs(keySwitchingTarget.KeySwitchedCipherMessage.Proof)
-			}
-		}
-		
-		keySwitchNewVec := v.SwitchForKeyNoReplace(p.Suite(), p.Private(), origEphemKeys[k], keySwitchingTarget.NewKey, randomnessContrib)
-		if PROOF {
-			dbg.LLvl1("proofs creation")
-			newProofs[k] = VectSwitchKeyProof(p.Suite(), p.Private(), randomnessContrib, origEphemKeys[k], keySwitchingTarget.NewKey, v, keySwitchNewVec)
-		}
-		keySwitchingTarget.Data[k] = keySwitchNewVec
-
+		origEphemKeys := keySwitchingTarget.OriginalEphemeralKeys[k]
+		v.KeySwitching(&v, &origEphemKeys, keySwitchingTarget.NewKey, p.Private())
+		keySwitchingTarget.Data[k] = v
 	}
-
-	keySwitchingTarget.Proof = newProofs
-	//time measurements
-	round.Record()
-	//
+	
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed key switching.")
 		p.FeedbackChannel <- keySwitchingTarget.Data

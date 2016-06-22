@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/monitor"
 )
 
 const PROBABILISTIC_SWITCHING_PROTOCOL_NAME = "ProbabilisticSwitching"
@@ -89,7 +88,7 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 		for i, dc := range (*p.TargetOfSwitch)[k] {
 			var pc CipherText
 			pc.K = network.Suite.Point().Null()
-			pc.C = dc.C
+			pc.C = dc.Point
 			targetOfSwitch[k][i] = pc
 		}
 	}
@@ -104,30 +103,12 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	//TIME measurements
-	round := monitor.NewTimeMeasure("MEDCO_COMPUT")
-	//
-	length := len(probabilisticSwitchingTarget.ProbabilisticSwitchedMessage.Proof)
-	newProofs := map[TempID][]CompleteProof{}
+	phContrib := suite.Point().Mul(suite.Point().Base(), *p.SurveyPHKey)
 	for k, v := range probabilisticSwitchingTarget.Data {
-		if PROOF {
-			if length != 0 {
-				SwitchCheckMapProofs(probabilisticSwitchingTarget.ProbabilisticSwitchedMessage.Proof)
-			}
-		}
-		schemeSwitchNewVec,rjs := v.SwitchToProbabilisticNoReplace(p.Suite(), *p.SurveyPHKey, probabilisticSwitchingTarget.TargetPublicKey)
-		if PROOF {
-			dbg.LLvl1("proofs creation")
-			//newProofs[k] = VectSwitchSchemeProof(p.Suite(), p.Private(), *p.SurveyPHKey, []abstract.Point{probabilisticSwitchingTarget.TargetPublicKey, probabilisticSwitchingTarget.TargetPublicKey, probabilisticSwitchingTarget.TargetPublicKey, probabilisticSwitchingTarget.TargetPublicKey}, v, schemeSwitchNewVec)
-			newProofs[k] = VectSwitchToProbProof(p.Suite(), *p.SurveyPHKey, rjs, probabilisticSwitchingTarget.TargetPublicKey, v, schemeSwitchNewVec)
-		}
-		probabilisticSwitchingTarget.Data[k] = schemeSwitchNewVec
+		v.ProbabilisticSwitching(&v, phContrib, probabilisticSwitchingTarget.TargetPublicKey)
+		probabilisticSwitchingTarget.Data[k] = v
 	}
-	
-	probabilisticSwitchingTarget.Proof = newProofs
-	//TIME measurements
-	round.Record()
-	//
+
 	if p.IsRoot() {
 		dbg.Lvl1(p.Entity(), "completed probabilistic switching.")
 		p.FeedbackChannel <- probabilisticSwitchingTarget.Data

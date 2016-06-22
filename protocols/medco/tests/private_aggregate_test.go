@@ -36,23 +36,23 @@ func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 	case 0:
 		// Generate test data
 		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 2, 3, 4, 5})
+		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
 		testGAMap[groupingAttrB.Key()] = groupingAttrB
-		testCVMap[groupingAttrB.Key()] = *EncryptIntArray(suite, clientPublic, []int64{0, 0, 0, 0, 0})
+		testCVMap[groupingAttrB.Key()] = *EncryptIntVector(clientPublic, []int64{0, 0, 0, 0, 0})
 	case 1:
 		testGAMap[groupingAttrB.Key()] = groupingAttrB
-		testCVMap[groupingAttrB.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 2, 3, 4, 5})
+		testCVMap[groupingAttrB.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
 	case 2:
 		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 1, 1, 1, 1})
+		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 1, 1, 1, 1})
 	case 9:
 		testGAMap[groupingAttrC.Key()] = groupingAttrC
-		testCVMap[groupingAttrC.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 0, 1, 0, 1})
+		testCVMap[groupingAttrC.Key()] = *EncryptIntVector(clientPublic, []int64{1, 0, 1, 0, 1})
 		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 2, 3, 4, 5})
+		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
 	case 5:
 		testGAMap[groupingAttrC.Key()] = groupingAttrC
-		testCVMap[groupingAttrC.Key()] = *EncryptIntArray(suite, clientPublic, []int64{0, 1, 0, 1, 0})
+		testCVMap[groupingAttrC.Key()] = *EncryptIntVector(clientPublic, []int64{0, 1, 0, 1, 0})
 	default:
 	}
 	protocol.Groups = &testGAMap
@@ -94,7 +94,7 @@ func TestPrivateAggregate10Nodes(t *testing.T) {
 		dbg.Lvl1("Recieved results:")
 		resultData := make(map[GroupingKey][]int64)
 		for k,v := range encryptedResult.GroupedData {
-			resultData[k] = DecryptIntVector(suite, clientPrivate, v)
+			resultData[k] = DecryptIntVector(clientPrivate, &v)
 			dbg.Lvl1(k, resultData[k])
 		}
 		for k,v1 := range expectedGroups {

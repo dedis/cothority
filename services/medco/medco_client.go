@@ -49,9 +49,8 @@ func (c *MedcoClient) CreateSurvey(entities *sda.EntityList, surveyDescription S
 
 func (c *MedcoClient) SendSurveyResultsData(surveyID SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
 	dbg.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
-	suite := network.Suite
-	encGrouping := EncryptIntArray(suite, groupKey, grouping)
-	encAggregating := EncryptIntArray(suite, groupKey, aggregating)
+	encGrouping := EncryptIntVector(groupKey, grouping)
+	encAggregating := EncryptIntVector(groupKey, aggregating)
 	_, err := c.Send(c.entryPoint, &SurveyResponseQuery{surveyID, ClientResponse{*encGrouping, *encAggregating}})
 	if err != nil {
 		dbg.Error("Got error when sending a message: " + err.Error())
@@ -61,7 +60,6 @@ func (c *MedcoClient) SendSurveyResultsData(surveyID SurveyID, grouping, aggrega
 }
 
 func (c *MedcoClient) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, error) {
-	suite := network.Suite
 	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {
 		dbg.Error("Got error when querying the results: " + err.Error())
@@ -72,8 +70,8 @@ func (c *MedcoClient) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int6
 		grp := make([][]int64, len(encResults.Results))
 		aggr := make([][]int64, len(encResults.Results))
 		for i, res := range encResults.Results {
-			grp[i] = DecryptIntVector(suite, c.private, res.GroupingAttributes)
-			aggr[i] = DecryptIntVector(suite, c.private, res.AggregatingAttributes)
+			grp[i] = DecryptIntVector(c.private, &res.GroupingAttributes)
+			aggr[i] = DecryptIntVector(c.private, &res.AggregatingAttributes)
 		}
 		return &grp, &aggr, nil
 	} else {

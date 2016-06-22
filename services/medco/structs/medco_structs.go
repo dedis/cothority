@@ -38,7 +38,7 @@ type SurveyDescription struct {
 func (ga *GroupingAttributes) Key() GroupingKey {
 	var key []string
 	for _, a := range DeterministCipherVector(*ga) {
-		key = append(key, a.C.String())
+		key = append(key, a.String())
 	}
 	return GroupingKey(strings.Join(key,""))
 }

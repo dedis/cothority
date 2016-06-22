@@ -127,7 +127,7 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 			for group,aggr := range childrenContribution.ChildData {
 				(*p.Groups)[group] = childrenContribution.ChildGroups[group]
 				if localAggr, ok := (*p.GroupedData)[group]; ok {
-					localAggr.Add(localAggr, aggr)
+					(*p.GroupedData)[group] = *NewCipherVector(len(aggr)).Add(localAggr, aggr)
 				} else {
 					(*p.GroupedData)[group] = aggr
 				}

@@ -30,23 +30,19 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	aggregateKey := entityList.Aggregate
 
 	// Encrypt test data with group key
-	testCipherVect := make(CipherVector, 4)
 	expRes := []int64{1, 2, 3, 6}
-	for i, p := range expRes {
-		testCipherVect[i] = *EncryptInt(suite, aggregateKey, p)
-	}
+	testCipherVect := *EncryptIntVector(aggregateKey, expRes)
 
-	testCipherVect1 := make(CipherVector, 4)
+
 	expRes1 := []int64{7, 8, 9, 7}
-	for i, p := range expRes1 {
-		testCipherVect1[i] = *EncryptInt(suite, aggregateKey, p)
-	}
-	dbg.LLvl1(testCipherVect)
+	testCipherVect1 := *EncryptIntVector(aggregateKey, expRes1)
+
+
+	dbg.LLvl1(testCipherVect, suite)
 	var mapi map[TempID]CipherVector
 	mapi = make(map[TempID]CipherVector)
 	mapi[TempID(1)] = testCipherVect
 	mapi[TempID(2)] = testCipherVect1
-	mapi[TempID(3)] = testCipherVect1
 
 	// Generate client key
 	clientPrivate := suite.Secret().Pick(random.Stream)
@@ -63,16 +59,15 @@ func TestKeySwitching5Nodes(t *testing.T) {
 
 	select {
 	case encryptedResult := <-feedback:
-		res := DecryptIntVector(suite, clientPrivate, encryptedResult[TempID(1)])
+		cv1 := encryptedResult[TempID(1)]
+		res := DecryptIntVector(clientPrivate, &cv1)
 		dbg.Lvl1("Recieved results", res)
-		res1 := DecryptIntVector(suite, clientPrivate, encryptedResult[TempID(2)])
+		cv2 := encryptedResult[TempID(2)]
+		res1 := DecryptIntVector(clientPrivate, &cv2)
 		dbg.Lvl1("Recieved results", res1)
 		if !reflect.DeepEqual(res, expRes) {
 			t.Fatal("Wrong results, expected", expRes, "but got", res)
 		}
-		//if !reflect.DeepEqual(res,expRes ){
-		//	t.Fatal("Wrong results, expected", expRes, "but got", res)
-		//}
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}

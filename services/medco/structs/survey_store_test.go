@@ -19,30 +19,30 @@ func TestStoring(t *testing.T) {
 	//construc variables
 	secKey := suite.Secret().Pick(random.Stream)
 	pubKey := suite.Point().Mul(suite.Point().Base(), secKey)
-	nullEnc :=EncryptInt(suite, pubKey, 0) //*CipherText
-	oneEnc := EncryptInt(suite, pubKey, 1)  //*CipherText
-	oneBEnc := EncryptInt(suite, pubKey, 1) //*CipherText
+	nullEnc :=EncryptInt( pubKey, 0) //*CipherText
+	oneEnc := EncryptInt(pubKey, 1)  //*CipherText
+	oneBEnc := EncryptInt(pubKey, 1) //*CipherText
 
-	oneEnc.SwitchToDeterministic(suite, secKey, pubKey)
-	oneBEnc.SwitchToDeterministic(suite, secKey, pubKey)
+	oneEnc.DeterministicSwitching(*oneEnc, secKey, pubKey)
+	oneBEnc.DeterministicSwitching(*oneBEnc, secKey, pubKey)
 
 	var dnull DeterministCipherText
 	var done DeterministCipherText
 	var doneB DeterministCipherText
-	dnull.C = nullEnc.C
-	done.C = oneEnc.C //deterministic ciphertext
-	doneB.C = oneBEnc.C
+	dnull.Point = nullEnc.C
+	done.Point = oneEnc.C //deterministic ciphertext
+	doneB.Point = oneBEnc.C
 
-	nullVectEnc := NullCipherVector(suite, 4, pubKey) //CipherVector
+	nullVectEnc := NullCipherVector(4, pubKey) //CipherVector
 	_ = nullVectEnc
 	testCipherVect1 := make(CipherVector, 4)
 	for i, p := range []int64{1, 2, 3, 6} {
-		testCipherVect1[i] = *EncryptInt(suite, pubKey, p)
+		testCipherVect1[i] = *EncryptInt(pubKey, p)
 	}
 
 	testCipherVect2 := make(CipherVector, 4)
 	for i, p := range []int64{2, 4, 8, 6} {
-		testCipherVect2[i] = *EncryptInt(suite, pubKey, p)
+		testCipherVect2[i] = *EncryptInt(pubKey, p)
 	}
 
 	//constructor test
@@ -51,9 +51,9 @@ func TestStoring(t *testing.T) {
 
 	//AddAggregate & GetAggregateLoc Test
 	//fmt.Println("FIRST AGGREGATION")
-	storage.InsertClientResponse(ClientResponse{nil, testCipherVect1})
+	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect1})
 
-	if !(len(storage.PollDeliverableResults()) == 1) {
+	if _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1) {
 		fmt.Println("aggregation error")
 		t.Errorf("aggregation error")
 	} else {
@@ -62,10 +62,10 @@ func TestStoring(t *testing.T) {
 	}
 
 	//storage.DisplayResults()
-	storage.InsertClientResponse(ClientResponse{nil, testCipherVect2})
+	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect2})
 	//fmt.Println("SECOND AGGREGATION")
 
-	if !(len(storage.PollDeliverableResults()) == 1) {
+	if  _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1)  {
 		fmt.Println("aggregation error")
 		t.Errorf("aggregation error")
 	} else {

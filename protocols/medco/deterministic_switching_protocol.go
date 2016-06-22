@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/lib/sda"
 	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/monitor"
 )
 
 const DETERMINISTIC_SWITCHING_PROTOCOL_NAME = "DeterministicSwitching"
@@ -101,35 +100,12 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	origEphemKeys := deterministicSwitchingTarget.OriginalEphemeralKeys
 
-	//time measurements
-	round := monitor.NewTimeMeasure("MEDCO_COMPUT")
-	//
-
-	length := len(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
-	newProofs := map[TempID][]CompleteProof{}
+	phContrib := suite.Point().Mul(suite.Point().Base(), *p.SurveyPHKey)
 	for k, v := range deterministicSwitchingTarget.Data {
-		if PROOF {
-			if length != 0 {
-				SwitchCheckMapProofs(deterministicSwitchingTarget.DeterministicSwitchedMessage.Proof)
-			}
-		}
-		//dbg.LLvl1(*p.SurveyPHKey)
-		schemeSwitchNewVec := v.SwitchToDeterministicNoReplace(p.Suite(), p.Private(), *p.SurveyPHKey)
-		if PROOF {
-			dbg.LLvl1("proofs creation")
-			newProofs[k] = VectSwitchSchemeProof(p.Suite(), p.Private(), *p.SurveyPHKey, origEphemKeys[k], v, schemeSwitchNewVec)
-
-		}
-		deterministicSwitchingTarget.Data[k] = schemeSwitchNewVec
+		v.DeterministicSwitching(&v, p.Private(), phContrib)
+		deterministicSwitchingTarget.Data[k] = v
 	}
-
-	//time measurements
-	round.Record()
-	//
-
-	deterministicSwitchingTarget.Proof = newProofs
 
 	if p.IsRoot() {
 		deterministicSwitchedData := make(map[TempID]DeterministCipherVector, len(deterministicSwitchingTarget.Data))

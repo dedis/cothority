@@ -74,7 +74,7 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 		}
 
 		for i := 0; i < NUM_VECT; i++{
-			ciphertexts[TempID(i)] = *EncryptIntArray(suite, aggregateKey, tab)
+			ciphertexts[TempID(i)] = *EncryptIntVector(aggregateKey, tab)
 		}
 
 
@@ -92,7 +92,7 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 		round.Record()
 		output := true
 		for _,v := range result {
-			val1 := DecryptIntVector(suite, clientSecret, v)
+			val1 := DecryptIntVector(clientSecret, &v)
 			if !reflect.DeepEqual(val1, tab){
 				dbg.Errorf("Not expected results, got ", val1, " & ", tab)
 				output = false
