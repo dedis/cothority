@@ -42,7 +42,7 @@ func init() {
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
 	flag.IntVar(&runWait, "runwait", runWait, "How long to wait for each simulation to finish - overwrites .toml-value")
 	flag.IntVar(&experimentWait, "experimentwait", experimentWait, "How long to wait for the whole experiment to finish")
-	log.AddFlags()
+	log.RegisterFlags()
 }
 
 // Reads in the platform that we want to use and prepares for the tests

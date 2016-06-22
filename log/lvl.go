@@ -326,8 +326,9 @@ func UseColors() bool {
 	return useColors
 }
 
-// MainTest can be called from TestMain to set up some default
-// variables
+// MainTest can be called from TestMain. It will parse the flags and
+// set the DebugVisible to 3, then run the tests and check for
+// remaining go-routines.
 func MainTest(m *testing.M) {
 	flag.Parse()
 	TestOutput(testing.Verbose(), 3)
@@ -337,9 +338,9 @@ func MainTest(m *testing.M) {
 }
 
 // ParseEnv looks at the following environment-variables:
-// - DEBUG_LVL - for the actual debug-lvl - default is 1
-// - DEBUG_TIME - whether to show the timestamp - default is false
-// - DEBUG_COLOR - whether to color the output - default is true
+//   DEBUG_LVL - for the actual debug-lvl - default is 1
+//   DEBUG_TIME - whether to show the timestamp - default is false
+//   DEBUG_COLOR - whether to color the output - default is true
 func ParseEnv() {
 	var err error
 	dv := os.Getenv("DEBUG_LVL")
@@ -368,8 +369,9 @@ func ParseEnv() {
 	}
 }
 
-// AddFlags adds the flags and the variables for the debug-control
-func AddFlags() {
+// RegisterFlags adds the flags and the variables for the debug-control using
+// the standard flag-package.
+func RegisterFlags() {
 	ParseEnv()
 	flag.IntVar(&debugVisible, "debug", DebugVisible(), "Change debug level (0-5)")
 	flag.BoolVar(&showTime, "debug-time", ShowTime(), "Shows the time of each message")
