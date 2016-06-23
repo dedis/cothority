@@ -106,6 +106,7 @@ func printConn(e *status.Response) {
 		log.Print("Connection: ", e.Remote[i])
 		log.Print("Total Packets Recieved: ", e.Received[i])
 		log.Print("Total Packets Sent: ", e.Sent[i])
+		log.Print("Services Available: ", e.Available)
 	}
 	fmt.Print("\n")
 }

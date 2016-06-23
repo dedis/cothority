@@ -1,6 +1,8 @@
 package status
 
 import (
+	"sort"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -32,16 +34,13 @@ type Request struct{}
 
 // Response is what the Cosi service will reply to clients.
 type Response struct {
-	Serv     string
-	Tot      int
-	Remote   []string
-	Received []uint64
-	Sent     []uint64
+	Serv      string
+	Tot       int
+	Remote    []string
+	Received  []uint64
+	Sent      []uint64
+	Available []string
 }
-
-// StatResponseType is the type that is embedded in the Request object for a
-// StatResponse
-var StatResponseType = network.RegisterMessageType(Response{})
 
 //Received gives packets received
 func Received(n map[network.ServerIdentityID]network.SecureConn) []uint64 {
@@ -83,12 +82,15 @@ func Remote(n map[network.ServerIdentityID]network.SecureConn) []string {
 
 // Request treats external request to this service.
 func (st *Stat) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
+	sorted := sda.Available()
+	sort.Strings(sorted)
 	return &Response{
-		Serv:     Host(st.Context.(*sda.DefaultContext).Host.Connections),
-		Remote:   Remote(st.Context.(*sda.DefaultContext).Host.Connections),
-		Tot:      len(st.Context.(*sda.DefaultContext).Host.Connections),
-		Received: Received(st.Context.(*sda.DefaultContext).Host.Connections),
-		Sent:     Sent(st.Context.(*sda.DefaultContext).Host.Connections),
+		Serv:      Host(st.Context.(*sda.DefaultContext).Host.Connections),
+		Remote:    Remote(st.Context.(*sda.DefaultContext).Host.Connections),
+		Tot:       len(st.Context.(*sda.DefaultContext).Host.Connections),
+		Received:  Received(st.Context.(*sda.DefaultContext).Host.Connections),
+		Sent:      Sent(st.Context.(*sda.DefaultContext).Host.Connections),
+		Available: sorted,
 	}, nil
 }
 
