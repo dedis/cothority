@@ -3,6 +3,7 @@
 package bftcosi
 
 import (
+	"crypto/sha512"
 	"sync"
 
 	"gopkg.in/dedis/cothority.v0/lib/dbg"
@@ -306,14 +307,16 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 
 // startChallenge creates the challenge and sends it to its children
 func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
-	ch, err := bft.getCosi(t).CreateChallenge(bft.Msg)
-
-	if err != nil {
-		return err
-	}
 
 	dbg.Lvl4(bft.Name(), "RoundType:", t)
 	if t == RoundPrepare {
+		// need to hash the message before so challenge in both phases are not
+		// the same
+		data := sha512.Sum512(bft.Msg)
+		ch, err := bft.prepare.CreateChallenge(data[:])
+		if err != nil {
+			return err
+		}
 		bftChal := &ChallengePrepare{
 			Challenge: ch,
 			Msg:       bft.Msg,
@@ -322,6 +325,10 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 
 		return bft.handleChallengePrepare(bftChal)
 	} else {
+		ch, err := bft.commit.CreateChallenge(bft.Msg)
+		if err != nil {
+			return err
+		}
 		// send challenge + signature
 		cc := &ChallengeCommit{
 			Challenge: ch,
@@ -363,7 +370,13 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	}
 
 	// verify if the signature is correct
-	if err := VerifyBFTSignature(bft.suite, ch.Signature, bft.Roster().Publics()); err != nil {
+	data := sha512.Sum512(ch.Signature.Msg)
+	bftPrepareSig := &BFTSignature{
+		Sig:        ch.Signature.Sig,
+		Msg:        data[:],
+		Exceptions: ch.Signature.Exceptions,
+	}
+	if err := VerifyBFTSignature(bft.suite, bftPrepareSig, bft.Roster().Publics()); err != nil {
 		dbg.Lvl2(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
@@ -427,8 +440,9 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	bft.prepareSignature = cosiSig
 
 	// Verify the signature is correct
+	data := sha512.Sum512(bft.Msg)
 	sig := &BFTSignature{
-		Msg:        bft.Msg,
+		Msg:        data[:],
 		Sig:        cosiSig,
 		Exceptions: bft.tempExceptions,
 	}
