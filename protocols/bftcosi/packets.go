@@ -1,8 +1,8 @@
 package bftcosi
 
 import (
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/cosi"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 

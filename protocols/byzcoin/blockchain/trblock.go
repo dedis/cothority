@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
 )
 
 type Block struct {
@@ -33,19 +33,19 @@ func (tr *TrBlock) MarshalBinary() ([]byte, error) {
 func (tr *TrBlock) HashSum() []byte {
 	h := sha256.New()
 	if _, err := h.Write(tr.Magic[:]); err != nil {
-		dbg.Error("Couldn't hash block:", err)
+		log.Error("Couldn't hash block:", err)
 	}
 	if err := binary.Write(h, binary.LittleEndian, tr.BlockSize); err != nil {
-		dbg.Error("Couldn't hash block:", err)
+		log.Error("Couldn't hash block:", err)
 	}
 	if _, err := h.Write([]byte(tr.HeaderHash)); err != nil {
-		dbg.Error("Couldn't hash block:", err)
+		log.Error("Couldn't hash block:", err)
 	}
 	if _, err := h.Write(tr.Header.HashSum()); err != nil {
-		dbg.Error("Couldn't hash block:", err)
+		log.Error("Couldn't hash block:", err)
 	}
 	if _, err := h.Write(tr.TransactionList.HashSum()); err != nil {
-		dbg.Error("Couldn't hash block:", err)
+		log.Error("Couldn't hash block:", err)
 	}
 	return h.Sum(nil)
 }
@@ -62,16 +62,16 @@ type Header struct {
 func (h *Header) HashSum() []byte {
 	ha := sha256.New()
 	if _, err := ha.Write([]byte(h.MerkleRoot)); err != nil {
-		dbg.Error("Couldn't hash header", err)
+		log.Error("Couldn't hash header", err)
 	}
 	if _, err := ha.Write([]byte(h.Parent)); err != nil {
-		dbg.Error("Couldn't hash header", err)
+		log.Error("Couldn't hash header", err)
 	}
 	if _, err := ha.Write([]byte(h.ParentKey)); err != nil {
-		dbg.Error("Couldn't hash header", err)
+		log.Error("Couldn't hash header", err)
 	}
 	if _, err := ha.Write([]byte(h.PublicKey)); err != nil {
-		dbg.Error("Couldn't hash header", err)
+		log.Error("Couldn't hash header", err)
 	}
 	return ha.Sum(nil)
 }
@@ -127,7 +127,7 @@ func HashHeader(h *Header) string {
 	data := fmt.Sprintf("%v", h)
 	sha := sha256.New()
 	if _, err := sha.Write([]byte(data)); err != nil {
-		dbg.Error("Couldn't hash header:", err)
+		log.Error("Couldn't hash header:", err)
 	}
 	hash := sha.Sum(nil)
 	return hex.EncodeToString(hash)

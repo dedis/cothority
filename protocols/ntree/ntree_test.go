@@ -4,17 +4,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/ntree"
+	"github.com/dedis/cothority/sda"
 )
 
 func TestNtree(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 4)
 
 	for _, nbrHosts := range []int{1, 3, 13} {
-		dbg.Lvl2("Running ntree with", nbrHosts, "hosts")
+		log.Lvl2("Running ntree with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 
 		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)

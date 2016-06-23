@@ -29,7 +29,7 @@ testBuild(){
 runCl(){
     D=cl$1/group.toml
     shift
-    dbgRun ./status -d 3 -g $D $@
+    dbgRun ./status -d 0 -g $D $@
 }
 
 build(){

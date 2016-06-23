@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/app/lib/config"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 
 	"fmt"
 
@@ -26,8 +26,8 @@ const optionGroup = "group"
 const optionGroupShort = "g"
 
 func init() {
-	dbg.SetDebugVisible(1)
-	dbg.SetUseColors(false)
+	log.SetDebugVisible(1)
+	log.SetUseColors(false)
 }
 
 func main() {
@@ -56,7 +56,7 @@ func main() {
 		},
 	}
 	app.Before = func(c *cli.Context) error {
-		dbg.SetDebugVisible(c.GlobalInt("debug"))
+		log.SetDebugVisible(c.GlobalInt("debug"))
 		return nil
 	}
 	app.Action = network
@@ -68,22 +68,21 @@ func main() {
 func network(c *cli.Context) error {
 	groupToml := c.GlobalString(optionGroup)
 	el, err := readGroup(groupToml)
-	dbg.ErrFatal(err, "Couldn't Read File")
-	dbg.Lvl3(el)
+	log.ErrFatal(err, "Couldn't Read File")
+	log.Lvl3(el)
 	cl := status.NewClient()
 	for i := 0; i < len(el.List); i++ {
-
-		dbg.Print(el.List[i])
+		log.Lvl3(el.List[i])
 		sr, _ := cl.GetStatus(el.List[i])
 		printConn(sr)
-		dbg.Print(cl)
+		log.Lvl3(cl)
 	}
 	return nil
 }
 
 // sign takes a stream and a toml file defining the servers
-func readGroup(tomlFileName string) (*sda.EntityList, error) {
-	dbg.Print("Reading From File")
+func readGroup(tomlFileName string) (*sda.Roster, error) {
+	log.Print("Reading From File")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return nil, err
@@ -96,18 +95,17 @@ func readGroup(tomlFileName string) (*sda.EntityList, error) {
 		return nil, errors.New("Empty or invalid group file:" +
 			tomlFileName)
 	}
-	dbg.Lvl3(el)
+	log.Lvl3(el)
 	return el, err
 }
 
-func printConn(e *status.StatusResponse) {
-	dbg.Print("Host: ", e.Serv, "\n")
+func printConn(e *status.Response) {
+	log.Print("Host: ", e.Serv)
 	for i := 0; i < len(e.Received); i++ {
-		dbg.Print("\n")
-		dbg.Print("Connection: ", e.Remote[i], "\n")
-		dbg.Print("Total Packets Recieved: ", e.Received[i], "\n")
-		dbg.Print("Total Packets Sent: ", e.Sent[i], "\n")
-		dbg.Print("\n")
+		log.Print()
+		log.Print("Connection: ", e.Remote[i])
+		log.Print("Total Packets Recieved: ", e.Received[i])
+		log.Print("Total Packets Sent: ", e.Sent[i])
 	}
-	fmt.Print("\n \n")
+	fmt.Print("\n")
 }

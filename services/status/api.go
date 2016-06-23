@@ -3,9 +3,9 @@ package status
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 //Client is a structure to communicate with status service
@@ -13,20 +13,21 @@ type Client struct {
 	*sda.Client
 }
 
+// NewClient makes a new Client
 func NewClient() *Client {
 	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
-//Sends requests to all other members of network and creates client
-func (c *Client) GetStatus(dst *network.Entity) (*StatusResponse, error) {
-	ServiceReq := &StatusRequest{}
+// GetStatus Sends requests to all other members of network and creates client
+func (c *Client) GetStatus(dst *network.ServerIdentity) (*Response, error) {
+	ServiceReq := &Request{}
 	//send request to all entities in the network
-	dbg.Lvl4("Sending Request to ", dst)
+	log.Lvl4("Sending Request to ", dst)
 	reply, err := c.Send(dst, ServiceReq)
 	if e := sda.ErrMsg(reply, err); e != nil {
 		return nil, e
 	}
-	sr, ok := reply.Msg.(StatusResponse)
+	sr, ok := reply.Msg.(Response)
 	if !ok {
 		return nil, errors.New("Wrong return type:")
 	}

@@ -1,9 +1,9 @@
 package status
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 // This file contains all the code to run a Stat service. It is used to reply to
@@ -16,8 +16,8 @@ const ServiceName = "Status"
 
 func init() {
 	sda.RegisterNewService(ServiceName, newStatService)
-	network.RegisterMessageType(&StatusRequest{})
-	network.RegisterMessageType(&StatusResponse{})
+	network.RegisterMessageType(&Request{})
+	network.RegisterMessageType(&Response{})
 
 }
 
@@ -27,15 +27,11 @@ type Stat struct {
 	path string
 }
 
-// SignatureRequest is what the Cosi service is expected to receive from clients.
-type StatusRequest struct{}
+// Request is what the Cosi service is expected to receive from clients.
+type Request struct{}
 
-// StatRequestType is the type that is embedded in the Request object for a
-// StatRequest
-var StatRequestType = network.RegisterMessageType(StatusRequest{})
-
-// SignatureResponse is what the Cosi service will reply to clients.
-type StatusResponse struct {
+// Response is what the Cosi service will reply to clients.
+type Response struct {
 	Serv     string
 	Tot      int
 	Remote   []string
@@ -45,9 +41,10 @@ type StatusResponse struct {
 
 // StatResponseType is the type that is embedded in the Request object for a
 // StatResponse
-var StatResponseType = network.RegisterMessageType(StatusResponse{})
+var StatResponseType = network.RegisterMessageType(Response{})
 
-func Received(n map[network.EntityID]network.SecureConn) []uint64 {
+//Received gives packets received
+func Received(n map[network.ServerIdentityID]network.SecureConn) []uint64 {
 	var a []uint64
 	for _, value := range n {
 		a = append(a, value.Rx())
@@ -55,7 +52,8 @@ func Received(n map[network.EntityID]network.SecureConn) []uint64 {
 	return a
 }
 
-func Sent(n map[network.EntityID]network.SecureConn) []uint64 {
+//Sent gives packets sent
+func Sent(n map[network.ServerIdentityID]network.SecureConn) []uint64 {
 	var a []uint64
 	for _, value := range n {
 		a = append(a, value.Tx())
@@ -63,7 +61,9 @@ func Sent(n map[network.EntityID]network.SecureConn) []uint64 {
 	return a
 
 }
-func Host(n map[network.EntityID]network.SecureConn) string {
+
+//Host is the host
+func Host(n map[network.ServerIdentityID]network.SecureConn) string {
 	var a string
 	for _, value := range n {
 		a = value.Local()
@@ -71,7 +71,9 @@ func Host(n map[network.EntityID]network.SecureConn) string {
 	return a
 
 }
-func Remote(n map[network.EntityID]network.SecureConn) []string {
+
+//Remote is who the host is connected to
+func Remote(n map[network.ServerIdentityID]network.SecureConn) []string {
 	var a []string
 	for _, value := range n {
 		a = append(a, value.Remote())
@@ -79,9 +81,9 @@ func Remote(n map[network.EntityID]network.SecureConn) []string {
 	return a
 }
 
-// SignatureRequest treats external request to this service.
-func (st *Stat) StatusRequest(e *network.Entity, req *StatusRequest) (network.ProtocolMessage, error) {
-	return &StatusResponse{
+// Request treats external request to this service.
+func (st *Stat) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
+	return &Response{
 		Serv:     Host(st.Context.(*sda.DefaultContext).Host.Connections),
 		Remote:   Remote(st.Context.(*sda.DefaultContext).Host.Connections),
 		Tot:      len(st.Context.(*sda.DefaultContext).Host.Connections),
@@ -95,12 +97,15 @@ func newStatService(c sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}
-	err := s.RegisterMessage(s.StatusRequest)
+	err := s.RegisterMessage(s.Request)
 	if err != nil {
-		dbg.ErrFatal(err, "Couldn't register message:")
+		log.ErrFatal(err, "Couldn't register message:")
 	}
+
 	return s
 }
-func (cs *Stat) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+
+//NewProtocol creates a protocol for stat, as you can see it is simultanously absolutely useless and regrettably necessary
+func (st *Stat) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	return nil, nil
 }

@@ -3,17 +3,15 @@ package status
 import (
 	"testing"
 
-	"fmt"
-
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/example/channels"
+	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestServiceStatus(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
@@ -22,11 +20,11 @@ func TestServiceStatus(t *testing.T) {
 
 	// Send a request to the service
 	client := NewClient()
-	dbg.Lvl1("Sending request to service...")
+	log.Lvl1("Sending request to service...")
 	stat, err := client.GetStatus(el.List[0])
-	fmt.Println(el.List[0])
-	dbg.ErrFatal(err)
-	dbg.Lvl1(stat)
+	log.Lvl1(el.List[0])
+	log.ErrFatal(err)
+	log.Lvl1(stat)
 	assert.Equal(t, 2, stat.Tot)
 	pi, err := local.CreateProtocol(tr, "ExampleChannels")
 	if err != nil {
@@ -35,7 +33,7 @@ func TestServiceStatus(t *testing.T) {
 	go pi.Start()
 	<-pi.(*channels.ProtocolExampleChannels).ChildCount
 	stat, err = client.GetStatus(el.List[0])
-	dbg.ErrFatal(err)
-	dbg.Lvl1(stat)
+	log.ErrFatal(err)
+	log.Lvl1(stat)
 	assert.Equal(t, 4, stat.Tot)
 }
