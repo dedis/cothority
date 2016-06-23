@@ -113,6 +113,12 @@ type ProtocolBFTCoSi struct {
 	// This signature is adapted according to the exceptions that occured during
 	// the commit phase.
 	commitSignature []byte
+
+	// commitCommitDone is to ensure the Challenge phase of the Commitment phase
+	// (the second commit) is done, before doing the challenge.
+	// It's needed because both phases are started *almost* simultaneously and
+	// the commit phase can be de-sync.
+	commitCommitDone chan bool
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
@@ -131,6 +137,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		threshold:            len(n.Tree().List()) * 2 / 3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
+		commitCommitDone:     make(chan bool, 1),
 	}
 
 	idx, _ := n.Roster().Search(bft.ServerIdentity().ID)
@@ -288,6 +295,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 			return nil
 		}
 		commitment = bft.commit.Commit(nil, bft.tempCommitCommit)
+		bft.commitCommitDone <- true
 		if bft.IsRoot() {
 			// do nothing:
 			// stop the processing of the round, wait the end of
@@ -325,11 +333,15 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 
 		return bft.handleChallengePrepare(bftChal)
 	}
+
+	// make sure the Announce->Commit has been done for the commit phase
+	<-bft.commitCommitDone
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
 	if err != nil {
 		return err
 	}
+
 	// send challenge + signature
 	cc := &ChallengeCommit{
 		Challenge: ch,
