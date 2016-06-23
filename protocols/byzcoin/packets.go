@@ -1,8 +1,8 @@
 package byzcoin
 
 import (
-	"github.com/dedis/cothority/cosi"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/cosi"
 	"github.com/dedis/cothority/sda"
 )
 

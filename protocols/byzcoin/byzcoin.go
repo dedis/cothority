@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/cosi"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/byzcoin/cosi"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
@@ -585,7 +585,7 @@ func (bz *ByzCoin) handleResponseCommit(bzr *Response) error {
 		})
 		bz.tcrMut.Unlock()
 	} else {
-		resp, err := bz.commit.Response(true, bz.tempCommitResponse)
+		resp, err := bz.commit.Response(bz.tempCommitResponse)
 		bz.tcrMut.Unlock()
 		if err != nil {
 			return err
@@ -628,7 +628,7 @@ func (bz *ByzCoin) handleResponsePrepare(bzr *Response) error {
 	bzrReturn, ok := bz.waitResponseVerification()
 	if ok {
 		// append response
-		resp, err := bz.prepare.Response(true, bz.tempPrepareResponse)
+		resp, err := bz.prepare.Response(bz.tempPrepareResponse)
 		bz.tprMut.Unlock()
 		if err != nil {
 			return err
